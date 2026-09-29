@@ -1,6 +1,9 @@
 # Git 규칙
 
-원격 저장소: 아직 없음 (GitHub 공개 예정). 생기면 여기에 주소를 적는다.
+원격 저장소: https://github.com/Music-Download-Player-App/Music-Download-Player-App (private, 앱 전용 — 서버는 별도 저장소)
+
+GitHub 설정: 기본 브랜치 `develop`, Squash · Merge commit 허용, Rebase merge 끔, merge 후 브랜치 자동 삭제.
+브랜치 보호는 규칙으로 지킨다 (`main` · `develop` 직접 push 금지).
 
 ## 브랜치
 | 브랜치 | 용도 | 만드는 곳 → 합치는 곳 |
@@ -14,7 +17,7 @@
 | `hotfix/<요약>` | 배포본 긴급 수정 | `main`에서 → `main` + `develop` |
 
 - 요약은 영어 소문자 · 하이픈. 예: `feature/player-mini-player`, `chore/pretendard-font`
-- 브랜치 하나에는 한 가지 작업만.
+- 브랜치 하나에는 한 가지 작업만 (상세 기능 하나 = 브랜치 하나). 앞 작업이 아직 합쳐지지 않았는데 이어서 해야 하면 앞 브랜치에서 따고 PR에 의존 관계를 적는다.
 
 ## 커밋 메시지
 ```
@@ -32,7 +35,7 @@ Refs: 상세 기능 #<Notion ID>   ← 관련 명세가 있으면
 
 ## Push · PR · Merge
 - 작업 브랜치 커밋 · push는 자유롭게 한다.
-- `develop` · `main`으로의 합치기는 PR로만 하고(원격이 생기기 전에는 로컬 merge), **합치기 전에 사용자 승인을 받는다.**
+- `develop` · `main`으로의 합치기는 PR로만 하고, **합치기 전에 사용자 승인을 받는다.**
 - PR 제목은 커밋 규칙과 같은 형식, 본문은 `.github/pull_request_template.md`.
 - merge 방식: 작업 브랜치 → `develop`은 Squash merge 기본, 커밋을 남겨야 하는 `ui/` 묶음은 Merge commit. `develop` → `main`은 Merge commit.
 
