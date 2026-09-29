@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'app/app.dart';
 
 void main() {
-  runApp(const MaterialApp(home: Scaffold(body: Center(child: Text('Music')))));
+  runApp(const ProviderScope(child: MusicApp()));
 }
