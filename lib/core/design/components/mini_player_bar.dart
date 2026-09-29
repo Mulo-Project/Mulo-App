@@ -13,6 +13,9 @@ class MiniPlayerBar extends StatelessWidget {
     required this.artist,
     required this.progress,
     required this.isPlaying,
+    required this.playLabel,
+    required this.pauseLabel,
+    required this.nextLabel,
     this.artwork,
     this.onTap,
     this.onPlayPause,
@@ -23,6 +26,11 @@ class MiniPlayerBar extends StatelessWidget {
   final String artist;
   final double progress;
   final bool isPlaying;
+
+  /// 버튼 설명 (다국어 문구를 밖에서 받는다).
+  final String playLabel;
+  final String pauseLabel;
+  final String nextLabel;
 
   /// 커버 아트. 없으면 주 색 그라데이션 자리 표시.
   final ImageProvider? artwork;
@@ -82,14 +90,14 @@ class MiniPlayerBar extends StatelessWidget {
                     icon: isPlaying
                         ? Icons.pause_rounded
                         : Icons.play_arrow_rounded,
-                    tooltip: isPlaying ? '일시정지' : '재생',
+                    tooltip: isPlaying ? pauseLabel : playLabel,
                     emphasized: true,
                     onPressed: onPlayPause,
                   ),
                   const SizedBox(width: AppSpacing.xs),
                   CircleIconButton(
                     icon: Icons.skip_next_rounded,
-                    tooltip: '다음 곡',
+                    tooltip: nextLabel,
                     onPressed: onNext,
                   ),
                 ],

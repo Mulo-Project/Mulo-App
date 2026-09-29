@@ -192,6 +192,9 @@ class _DesignPreviewScreenState extends ConsumerState<DesignPreviewScreen> {
                   artist: 'Sample Artist',
                   progress: _progress,
                   isPlaying: _playing,
+                  playLabel: '재생',
+                  pauseLabel: '일시정지',
+                  nextLabel: '다음 곡',
                   onPlayPause: _togglePlay,
                   onNext: () {},
                 ),
@@ -226,6 +229,14 @@ class _Header extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (Navigator.of(context).canPop()) ...[
+          CircleIconButton(
+            icon: Icons.arrow_back_rounded,
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
         Text('DESIGN SYSTEM', style: text.labelSmall),
         const SizedBox(height: AppSpacing.xxs),
         Text('미리보기', style: text.headlineLarge),
