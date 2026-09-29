@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/design/design.dart';
 import '../../../core/l10n/l10n.dart';
 import '../../../core/sample/sample_data.dart';
+import '../../covers/presentation/cover_controller.dart';
+import '../../covers/presentation/cover_sheet.dart';
 import '../../player/presentation/now_playing_view_model.dart';
 import '../domain/track.dart';
 
@@ -67,9 +69,28 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             subtitle: '${tracks[i].artist} · ${tracks[i].album}',
             tone: toneFor(tracks[i].id),
             active: tracks[i] == current,
-            trailing: Text(
-              formatDuration(tracks[i].duration),
-              style: Theme.of(context).textTheme.bodySmall,
+            artwork: coverImageOf(ref, CoverKey.track(tracks[i].id)),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  formatDuration(tracks[i].duration),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                IconButton(
+                  tooltip: l10n.coverChange,
+                  onPressed: () => showCoverSheet(
+                    context,
+                    coverKey: CoverKey.track(tracks[i].id),
+                    title: tracks[i].title,
+                    tone: toneFor(tracks[i].id),
+                  ),
+                  icon: Icon(
+                    Icons.more_vert_rounded,
+                    color: context.palette.onSurfaceMuted,
+                  ),
+                ),
+              ],
             ),
             onTap: () => vm.playQueue(tracks, index: i),
           ),

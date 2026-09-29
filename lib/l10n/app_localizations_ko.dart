@@ -324,4 +324,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get themeIce => '아이스';
+
+  @override
+  String get coverTitle => '커버 이미지';
+
+  @override
+  String get coverChange => '커버 이미지 바꾸기';
+
+  @override
+  String get coverPick => '사진에서 고르기';
+
+  @override
+  String get coverReset => '기본 이미지로';
 }

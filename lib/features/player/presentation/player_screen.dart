@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/design/design.dart';
 import '../../../core/l10n/l10n.dart';
 import '../../library/domain/track.dart';
+import '../../covers/presentation/cover_controller.dart';
+import '../../covers/presentation/cover_sheet.dart';
 import 'now_playing_view_model.dart';
 
 /// 전체 화면 플레이어 (상세 기능: 미니·전체 화면 플레이어 #19, 기본 재생 컨트롤 #14,
@@ -59,14 +61,18 @@ class PlayerScreen extends ConsumerWidget {
                               aspectRatio: 1,
                               child: Hero(
                                 tag: 'now-playing',
-                                child: GlassCard(
-                                  padding: EdgeInsets.zero,
-                                  child: Center(
-                                    child: Icon(
-                                      Icons.music_note_rounded,
-                                      size: 96,
-                                      color: p.onSurface.withValues(alpha: .8),
-                                    ),
+                                child: _PlayerCover(
+                                  image: coverImageOf(
+                                    ref,
+                                    CoverKey.track(track.id),
+                                  ),
+                                  tone: toneFor(track.id),
+                                  editLabel: l10n.coverChange,
+                                  onEdit: () => showCoverSheet(
+                                    context,
+                                    coverKey: CoverKey.track(track.id),
+                                    title: track.title,
+                                    tone: toneFor(track.id),
                                   ),
                                 ),
                               ),
@@ -261,6 +267,7 @@ class _QueueSheet extends ConsumerWidget {
               title: state.queue[i].title,
               subtitle: state.queue[i].artist,
               tone: toneFor(state.queue[i].id),
+              artwork: coverImageOf(ref, CoverKey.track(state.queue[i].id)),
               active: i == state.index,
               trailing: Text(
                 formatDuration(state.queue[i].duration),
@@ -270,6 +277,59 @@ class _QueueSheet extends ConsumerWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+/// 전체 화면 플레이어 커버: 이미지가 있으면 사진, 없으면 색 유리 + 음표.
+/// 누르면 커버 이미지 바꾸기 시트.
+class _PlayerCover extends StatelessWidget {
+  const _PlayerCover({
+    required this.image,
+    required this.tone,
+    required this.editLabel,
+    required this.onEdit,
+  });
+
+  final ImageProvider? image;
+  final GlowTone tone;
+  final String editLabel;
+  final VoidCallback onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: GlassCard(
+            tone: tone,
+            padding: EdgeInsets.zero,
+            onTap: onEdit,
+            child: image != null
+                ? SizedBox.expand(
+                    child: Image(image: image!, fit: BoxFit.cover),
+                  )
+                : Center(
+                    child: Icon(
+                      Icons.music_note_rounded,
+                      size: 96,
+                      color: p.onSurface.withValues(alpha: .8),
+                    ),
+                  ),
+          ),
+        ),
+        Positioned(
+          right: AppSpacing.md,
+          bottom: AppSpacing.md,
+          child: CircleIconButton(
+            icon: Icons.edit_rounded,
+            tooltip: editLabel,
+            size: 40,
+            onPressed: onEdit,
+          ),
+        ),
+      ],
     );
   }
 }

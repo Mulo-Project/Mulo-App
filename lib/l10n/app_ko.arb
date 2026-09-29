@@ -145,5 +145,9 @@
   "themeSunset": "선셋",
   "themeRose": "로즈",
   "themeGold": "골드",
-  "themeIce": "아이스"
+  "themeIce": "아이스",
+  "coverTitle": "커버 이미지",
+  "coverChange": "커버 이미지 바꾸기",
+  "coverPick": "사진에서 고르기",
+  "coverReset": "기본 이미지로"
 }

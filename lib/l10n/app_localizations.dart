@@ -703,6 +703,30 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'아이스'**
   String get themeIce;
+
+  /// No description provided for @coverTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'커버 이미지'**
+  String get coverTitle;
+
+  /// No description provided for @coverChange.
+  ///
+  /// In ko, this message translates to:
+  /// **'커버 이미지 바꾸기'**
+  String get coverChange;
+
+  /// No description provided for @coverPick.
+  ///
+  /// In ko, this message translates to:
+  /// **'사진에서 고르기'**
+  String get coverPick;
+
+  /// No description provided for @coverReset.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 이미지로'**
+  String get coverReset;
 }
 
 class _AppLocalizationsDelegate

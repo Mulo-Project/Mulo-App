@@ -327,4 +327,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get themeIce => 'Ice';
+
+  @override
+  String get coverTitle => 'Cover image';
+
+  @override
+  String get coverChange => 'Change cover';
+
+  @override
+  String get coverPick => 'Choose from photos';
+
+  @override
+  String get coverReset => 'Use default';
 }

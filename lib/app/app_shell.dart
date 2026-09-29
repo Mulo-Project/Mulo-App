@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../core/design/design.dart';
 import '../core/l10n/l10n.dart';
+import '../features/covers/presentation/cover_controller.dart';
 import '../features/player/presentation/now_playing_view_model.dart';
 import 'router.dart';
 
@@ -89,6 +90,7 @@ class _ShellMiniPlayer extends ConsumerWidget {
         child: MiniPlayerBar(
           title: track.title,
           artist: track.artist,
+          artwork: coverImageOf(ref, CoverKey.track(track.id)),
           progress: state.progress,
           isPlaying: state.isPlaying,
           playLabel: l10n.actionPlay,

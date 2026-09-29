@@ -100,5 +100,9 @@
   "themeSunset": "Sunset",
   "themeRose": "Rose",
   "themeGold": "Gold",
-  "themeIce": "Ice"
+  "themeIce": "Ice",
+  "coverTitle": "Cover image",
+  "coverChange": "Change cover",
+  "coverPick": "Choose from photos",
+  "coverReset": "Use default"
 }

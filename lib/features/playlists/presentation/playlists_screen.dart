@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/design/design.dart';
 import '../../../core/l10n/l10n.dart';
 import '../../../core/sample/sample_data.dart';
+import '../../covers/presentation/cover_controller.dart';
+import '../../covers/presentation/cover_sheet.dart';
 
 /// 재생목록 (상세 기능: 재생목록 관리 #20, 유튜브 재생목록 가져오기 #22). 자리 표시 데이터.
 class PlaylistsScreen extends StatelessWidget {
@@ -72,7 +75,7 @@ class PlaylistsScreen extends StatelessWidget {
   }
 }
 
-class _PlaylistCard extends StatelessWidget {
+class _PlaylistCard extends ConsumerWidget {
   const _PlaylistCard({
     required this.name,
     required this.count,
@@ -84,29 +87,76 @@ class _PlaylistCard extends StatelessWidget {
   final GlowTone tone;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final text = Theme.of(context).textTheme;
+    final p = context.palette;
+    // 재생목록 id가 생기기 전까지는 이름을 키로 쓴다.
+    final key = CoverKey.playlist(name);
+    final image = coverImageOf(ref, key);
+    void edit() =>
+        showCoverSheet(context, coverKey: key, title: name, tone: tone);
+
     return AspectRatio(
       aspectRatio: .82,
       child: GlassCard(
         tone: tone,
-        padding: const EdgeInsets.all(AppSpacing.md + AppSpacing.xxs),
+        padding: EdgeInsets.zero,
         onTap: () {},
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
           children: [
-            Text(
-              name,
-              style: text.titleMedium,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const Spacer(),
-            StatNumber('$count', size: 40),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              context.l10n.unitSongs,
-              style: text.bodySmall?.copyWith(color: context.palette.onSurface),
+            if (image != null) ...[
+              Positioned.fill(
+                child: Image(image: image, fit: BoxFit.cover),
+              ),
+              // 사진 위 글자가 읽히도록 아래쪽을 어둡게.
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        p.background.withValues(alpha: .15),
+                        p.background.withValues(alpha: .75),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.md + AppSpacing.xxs),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          name,
+                          style: text.titleMedium,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      CircleIconButton(
+                        icon: Icons.image_rounded,
+                        tooltip: context.l10n.coverChange,
+                        size: 34,
+                        onPressed: edit,
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  StatNumber('$count', size: 40),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    context.l10n.unitSongs,
+                    style: text.bodySmall?.copyWith(color: p.onSurface),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
