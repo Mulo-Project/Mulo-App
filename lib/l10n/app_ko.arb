@@ -1,0 +1,143 @@
+{
+  "@@locale": "ko",
+  "appTitle": "음악",
+  "navSearch": "검색",
+  "navDownloads": "다운로드",
+  "navLibrary": "보관함",
+  "navPlaylists": "재생목록",
+  "navSettings": "설정",
+  "actionPlay": "재생",
+  "actionPause": "일시정지",
+  "actionNext": "다음 곡",
+  "actionPrevious": "이전 곡",
+  "actionBack": "뒤로",
+  "actionMore": "더 보기",
+  "actionDownload": "받기",
+  "actionPaste": "붙여넣기",
+  "actionClear": "지우기",
+  "actionRetry": "다시 시도",
+  "actionResume": "이어 받기",
+  "actionCancel": "취소",
+  "actionPlayAll": "전체 재생",
+  "actionShuffle": "셔플",
+  "unitSongs": "곡",
+  "songCount": "{count}곡",
+  "@songCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "searchSubtitle": "찾고 받기",
+  "searchHint": "유튜브 URL이나 검색어",
+  "searchEmptyTitle": "무엇을 받을까요?",
+  "searchEmptyBody": "URL을 붙여넣거나 검색어를 입력하세요.\n유튜브 앱에서 공유를 누르면 바로 여기로 와요.",
+  "searchResultsTitle": "검색 결과",
+  "searchUrlCardLabel": "URL에서 찾은 곡",
+  "searchPlaylistLabel": "재생목록",
+  "searchSelectAll": "모두 선택",
+  "searchDownloadSelected": "{count}곡 받기",
+  "@searchDownloadSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "alreadyDownloaded": "이미 받은 곡",
+  "qualityBest": "최고",
+  "qualityNormal": "보통",
+  "qualitySaver": "절약",
+  "downloadsSubtitle": "대기열",
+  "downloadsActive": "진행 중",
+  "downloadsWaiting": "대기 {count}",
+  "@downloadsWaiting": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "downloadsPauseAll": "모두 일시정지",
+  "downloadsClearDone": "완료 지우기",
+  "statusDownloading": "받는 중",
+  "statusQueued": "대기",
+  "statusPaused": "일시정지",
+  "statusFailed": "실패",
+  "statusDone": "완료",
+  "downloadsEmpty": "받는 중인 곡이 없어요.",
+  "librarySubtitle": "내 음악",
+  "librarySongs": "곡",
+  "libraryArtists": "아티스트",
+  "libraryAlbums": "앨범",
+  "librarySearchHint": "보관함에서 찾기",
+  "sortName": "이름순",
+  "sortAdded": "추가일순",
+  "sortArtist": "아티스트순",
+  "libraryImport": "기기 음악 불러오기",
+  "libraryStorage": "{size} 사용 중",
+  "@libraryStorage": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "libraryNoMatch": "찾는 곡이 없어요.",
+  "playlistsSubtitle": "모음",
+  "playlistsNew": "새 재생목록",
+  "playlistsImport": "유튜브 재생목록 가져오기",
+  "settingsSubtitle": "앱 설정",
+  "settingsServer": "서버",
+  "settingsServerAddress": "서버 주소",
+  "settingsServerNotSet": "아직 등록 안 함",
+  "settingsConnection": "연결 상태",
+  "settingsDisconnected": "연결 안 됨",
+  "settingsMode": "다운로드 모드",
+  "settingsModeServer": "서버",
+  "settingsModeLocal": "로컬",
+  "settingsModeLiteNote": "lite 빌드는 서버 모드만 쓸 수 있어요.",
+  "settingsDownload": "다운로드",
+  "settingsSavePath": "저장 위치",
+  "settingsQuality": "기본 음질",
+  "settingsFormat": "기본 포맷",
+  "settingsEngine": "다운로드 엔진",
+  "settingsEngineVersion": "현재 {current} · 최신 {latest}",
+  "@settingsEngineVersion": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "latest": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsEngineUpdate": "업데이트",
+  "settingsPlayback": "재생",
+  "settingsHideNotification": "알림에 곡 정보 숨기기",
+  "settingsHideNotificationDesc": "알림 · 잠금화면에 \"음악 재생 중\"만 보여요.",
+  "settingsTheme": "테마",
+  "settingsFollowMood": "곡 분위기 따라가기",
+  "settingsFollowMoodDesc": "재생 중인 곡의 커버 색으로 강조 색이 바뀌어요.",
+  "settingsThemeColor": "테마 색",
+  "settingsThemeDefault": "기본",
+  "settingsThemeAlt": "코랄",
+  "settingsDesignPreview": "디자인 미리보기",
+  "settingsAbout": "정보",
+  "settingsVersion": "버전",
+  "comingSoon": "준비 중",
+  "playerNowPlaying": "지금 재생 중",
+  "playerQueue": "재생 대기열",
+  "playerRepeat": "반복",
+  "playerLyrics": "가사",
+  "playerFrom": "{source}에서 재생",
+  "@playerFrom": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  }
+}
