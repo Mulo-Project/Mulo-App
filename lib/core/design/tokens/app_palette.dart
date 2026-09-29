@@ -15,7 +15,9 @@ class AppPalette {
     required this.onSurface,
     required this.onSurfaceMuted,
     required this.outline,
-    required this.dotGrid,
+    required this.glassFill,
+    required this.glassBorder,
+    required this.glassHighlight,
     required this.primary,
     required this.onPrimary,
     required this.accent,
@@ -42,7 +44,9 @@ class AppPalette {
     onSurface: white,
     onSurfaceMuted: Color(0x99FFFFFF),
     outline: Color(0x33FFFFFF),
-    dotGrid: Color(0x14FFFFFF),
+    glassFill: Color(0x14FFFFFF),
+    glassBorder: Color(0x24FFFFFF),
+    glassHighlight: Color(0x73FFFFFF),
     primary: violet,
     onPrimary: white,
     accent: lime,
@@ -101,15 +105,21 @@ class AppPalette {
   final Color onSurfaceMuted;
   final Color outline;
 
-  /// 배경 점 격자 색 (아주 옅게).
-  final Color dotGrid;
+  /// 유리 면 채움 (배경이 비치는 옅은 흰색).
+  final Color glassFill;
+
+  /// 유리 면 테두리 기본색.
+  final Color glassBorder;
+
+  /// 유리 가장자리에 빛이 맺히는 부분 (왼쪽 위 테두리).
+  final Color glassHighlight;
 
   final Color primary;
   final Color onPrimary;
   final Color accent;
   final Color onAccent;
 
-  /// 글로우 카드용 그라데이션 (밝은 쪽 → 어두운 쪽).
+  /// 유리 카드 · 배경 빛에 쓰는 그라데이션 (밝은 쪽 → 어두운 쪽).
   final List<Color> glowPrimary;
   final List<Color> glowSecondary;
   final List<Color> glowTertiary;
@@ -121,7 +131,9 @@ class AppPalette {
     Color? onSurface,
     Color? onSurfaceMuted,
     Color? outline,
-    Color? dotGrid,
+    Color? glassFill,
+    Color? glassBorder,
+    Color? glassHighlight,
     Color? primary,
     Color? onPrimary,
     Color? accent,
@@ -137,7 +149,9 @@ class AppPalette {
       onSurface: onSurface ?? this.onSurface,
       onSurfaceMuted: onSurfaceMuted ?? this.onSurfaceMuted,
       outline: outline ?? this.outline,
-      dotGrid: dotGrid ?? this.dotGrid,
+      glassFill: glassFill ?? this.glassFill,
+      glassBorder: glassBorder ?? this.glassBorder,
+      glassHighlight: glassHighlight ?? this.glassHighlight,
       primary: primary ?? this.primary,
       onPrimary: onPrimary ?? this.onPrimary,
       accent: accent ?? this.accent,
@@ -171,7 +185,9 @@ class AppPalette {
       onSurface: c(a.onSurface, b.onSurface),
       onSurfaceMuted: c(a.onSurfaceMuted, b.onSurfaceMuted),
       outline: c(a.outline, b.outline),
-      dotGrid: c(a.dotGrid, b.dotGrid),
+      glassFill: c(a.glassFill, b.glassFill),
+      glassBorder: c(a.glassBorder, b.glassBorder),
+      glassHighlight: c(a.glassHighlight, b.glassHighlight),
       primary: c(a.primary, b.primary),
       onPrimary: c(a.onPrimary, b.onPrimary),
       accent: c(a.accent, b.accent),

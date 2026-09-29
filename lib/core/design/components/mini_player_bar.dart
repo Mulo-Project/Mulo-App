@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import '../app_theme_tokens.dart';
 import '../tokens/app_dimens.dart';
 import 'buttons.dart';
-import 'dotted_progress.dart';
+import 'glass.dart';
+import 'progress.dart';
 
-/// 하단 미니 플레이어 골격. 재생 상태는 아직 없으므로 값을 밖에서 받는다.
+/// 하단 미니 플레이어 (유리 면). 재생 상태는 밖에서 받는다.
 class MiniPlayerBar extends StatelessWidget {
   const MiniPlayerBar({
     super.key,
@@ -40,72 +41,66 @@ class MiniPlayerBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = context.palette;
     final text = Theme.of(context).textTheme;
 
-    return Material(
-      color: p.surface,
+    return GlassSurface(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadii.lg),
-        side: BorderSide(color: p.outline.withValues(alpha: .4)),
       ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.sm,
-            AppSpacing.sm,
-            AppSpacing.sm,
-            AppSpacing.sm,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  _Artwork(artwork: artwork),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          title,
-                          style: text.titleSmall,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          artist,
-                          style: text.bodySmall,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.sm,
+          AppSpacing.sm,
+          AppSpacing.sm,
+          AppSpacing.sm,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                _Artwork(artwork: artwork),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        title,
+                        style: text.titleSmall,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        artist,
+                        style: text.bodySmall,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
-                  CircleIconButton(
-                    icon: isPlaying
-                        ? Icons.pause_rounded
-                        : Icons.play_arrow_rounded,
-                    tooltip: isPlaying ? pauseLabel : playLabel,
-                    emphasized: true,
-                    onPressed: onPlayPause,
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  CircleIconButton(
-                    icon: Icons.skip_next_rounded,
-                    tooltip: nextLabel,
-                    onPressed: onNext,
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              DottedProgressBar(value: progress, height: 3, spacing: 6),
-            ],
-          ),
+                ),
+                CircleIconButton(
+                  icon: isPlaying
+                      ? Icons.pause_rounded
+                      : Icons.play_arrow_rounded,
+                  tooltip: isPlaying ? pauseLabel : playLabel,
+                  emphasized: true,
+                  onPressed: onPlayPause,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                CircleIconButton(
+                  icon: Icons.skip_next_rounded,
+                  tooltip: nextLabel,
+                  onPressed: onNext,
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            ProgressLine(value: progress, height: 3),
+          ],
         ),
       ),
     );

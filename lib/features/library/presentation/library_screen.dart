@@ -109,7 +109,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     return SafeArea(
       bottom: false,
       child: ListView(
-        padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+        padding: EdgeInsets.only(
+          bottom: AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
+        ),
         children: [
           AppTopBar(
             large: true,
@@ -222,14 +224,14 @@ class _LibraryHero extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final p = context.palette;
 
-    return GlowCard(
+    return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              DotMatrixText('$count', dotSize: 7, gap: 2.5),
+              StatNumber('$count', size: 56),
               const SizedBox(width: AppSpacing.sm),
               Padding(
                 padding: const EdgeInsets.only(bottom: 2),

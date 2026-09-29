@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../app_theme_tokens.dart';
 import '../tokens/app_dimens.dart';
+import 'glass.dart';
 
 class AppNavItem {
   const AppNavItem({
@@ -15,7 +16,7 @@ class AppNavItem {
   final String label;
 }
 
-/// 하단 탭 바. 선택된 탭은 강조 색 아이콘 + 아래 작은 점.
+/// 떠 있는 유리 탭 바. 선택된 탭은 강조 색 아이콘 + 아래 작은 점.
 class AppBottomNav extends StatelessWidget {
   const AppBottomNav({
     super.key,
@@ -30,30 +31,32 @@ class AppBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = context.palette;
     final text = Theme.of(context).textTheme;
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: p.background,
-        border: Border(top: BorderSide(color: p.outline.withValues(alpha: .5))),
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 64,
-          child: Row(
-            children: [
-              for (var i = 0; i < items.length; i++)
-                Expanded(
-                  child: _NavButton(
-                    item: items[i],
-                    selected: i == currentIndex,
-                    onTap: () => onSelected(i),
-                    labelStyle: text.labelSmall!,
+    return SafeArea(
+      top: false,
+      minimum: const EdgeInsets.only(bottom: AppSpacing.xs),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+        child: GlassSurface(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadii.lg),
+          ),
+          child: SizedBox(
+            height: AppSizes.navBarHeight,
+            child: Row(
+              children: [
+                for (var i = 0; i < items.length; i++)
+                  Expanded(
+                    child: _NavButton(
+                      item: items[i],
+                      selected: i == currentIndex,
+                      onTap: () => onSelected(i),
+                      labelStyle: text.labelSmall!,
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

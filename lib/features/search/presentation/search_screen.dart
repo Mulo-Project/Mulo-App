@@ -63,7 +63,9 @@ class _SearchScreenState extends State<SearchScreen> {
     return SafeArea(
       bottom: false,
       child: ListView(
-        padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+        padding: EdgeInsets.only(
+          bottom: AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
+        ),
         children: [
           AppTopBar(
             large: true,
@@ -127,7 +129,7 @@ class _SearchScreenState extends State<SearchScreen> {
     return [
       Padding(
         padding: AppSpacing.screen,
-        child: GlowCard(
+        child: GlassCard(
           tone: GlowTone.secondary,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -145,7 +147,7 @@ class _SearchScreenState extends State<SearchScreen> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  DotMatrixText('${_selected.length}', dotSize: 5, gap: 2),
+                  StatNumber('${_selected.length}', size: 40),
                   const SizedBox(width: AppSpacing.xs),
                   Text(
                     '/ ${l10n.songCount(tracks.length)}',
@@ -200,13 +202,23 @@ class _EmptyHint extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     return Padding(
       padding: AppSpacing.screen,
-      child: GlowCard(
+      child: GlassCard(
         tone: GlowTone.secondary,
         glow: false,
         padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           children: [
-            const DotMatrixText('- -', dotSize: 5, gap: 2),
+            GlassSurface(
+              shape: const CircleBorder(),
+              child: SizedBox.square(
+                dimension: 64,
+                child: Icon(
+                  Icons.travel_explore_rounded,
+                  size: 30,
+                  color: context.palette.accent,
+                ),
+              ),
+            ),
             const SizedBox(height: AppSpacing.lg),
             Text(l10n.searchEmptyTitle, style: text.titleLarge),
             const SizedBox(height: AppSpacing.xs),
@@ -242,7 +254,7 @@ class _UrlResultCard extends StatelessWidget {
 
     return Padding(
       padding: AppSpacing.screen,
-      child: GlowCard(
+      child: GlassCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -259,7 +271,7 @@ class _UrlResultCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            DotMatrixText(formatDuration(track.duration), dotSize: 4, gap: 1.5),
+            StatNumber(formatDuration(track.duration), size: 32),
             const SizedBox(height: AppSpacing.lg),
             SegmentedPills<Quality>(
               expand: true,

@@ -33,7 +33,7 @@ class _DesignPreviewScreenState extends ConsumerState<DesignPreviewScreen> {
 
     return Scaffold(
       backgroundColor: p.background,
-      body: DotGridBackground(
+      body: AppBackground(
         child: SafeArea(
           child: Column(
             children: [
@@ -141,7 +141,7 @@ class _DesignPreviewScreenState extends ConsumerState<DesignPreviewScreen> {
                     ),
                     const SizedBox(height: AppSpacing.xl),
                     _SectionTitle('진행 표시'),
-                    DottedProgressBar(value: _progress),
+                    ProgressLine(value: _progress),
                     const SizedBox(height: AppSpacing.xs),
                     Row(
                       children: [
@@ -172,11 +172,7 @@ class _DesignPreviewScreenState extends ConsumerState<DesignPreviewScreen> {
                     Text('Body 본문 텍스트입니다.', style: text.bodyMedium),
                     Text('Caption 보조 설명', style: text.bodySmall),
                     const SizedBox(height: AppSpacing.sm),
-                    const DotMatrixText(
-                      '0123456789:.-/%',
-                      dotSize: 3,
-                      gap: 1.5,
-                    ),
+                    const StatNumber('0123456789:.-/%', size: 22),
                   ],
                 ),
               ),
@@ -313,7 +309,7 @@ class _HeroCard extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final percent = (progress * 100).round();
 
-    return GlowCard(
+    return GlassCard(
       child: Row(
         children: [
           Expanded(
@@ -322,7 +318,7 @@ class _HeroCard extends StatelessWidget {
               children: [
                 Text('보관함', style: text.titleMedium),
                 const SizedBox(height: AppSpacing.md),
-                const DotMatrixText('128', dotSize: 7, gap: 2.5),
+                const StatNumber('128', size: 56),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
                   '곡 · 9.4 GB',
@@ -338,11 +334,10 @@ class _HeroCard extends StatelessWidget {
               ],
             ),
           ),
-          DottedProgressArc(
+          ProgressRing(
             value: progress,
             size: 132,
-            dotCount: 40,
-            child: DotMatrixText('$percent%', dotSize: 3, gap: 1.2),
+            child: StatNumber('$percent%', size: 22),
           ),
         ],
       ),
@@ -366,7 +361,7 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
-    return GlowCard(
+    return GlassCard(
       tone: tone,
       padding: const EdgeInsets.all(AppSpacing.md + AppSpacing.xxs),
       child: Column(
@@ -374,7 +369,7 @@ class _StatCard extends StatelessWidget {
         children: [
           Text(label, style: text.titleSmall),
           const SizedBox(height: AppSpacing.lg),
-          DotMatrixText(value, dotSize: 5, gap: 2),
+          StatNumber(value, size: 40),
           const SizedBox(height: AppSpacing.xs),
           Text(
             unit,

@@ -47,6 +47,16 @@ abstract final class AppSizes {
   static const double circleButton = 44;
   static const double circleButtonLarge = 56;
   static const double pillHeight = 48;
-  static const double miniPlayerHeight = 72;
+  static const double miniPlayerHeight = 84;
+  static const double navBarHeight = 64;
   static const double icon = 22;
+}
+
+/// 유리 면 설정.
+abstract final class AppGlass {
+  /// 뒤 배경 흐림 정도.
+  static const double blur = 24;
+
+  /// 색 유리 카드 채움 불투명도 (밝은 쪽 → 어두운 쪽).
+  static const List<double> tintOpacity = [.78, .5, .32];
 }

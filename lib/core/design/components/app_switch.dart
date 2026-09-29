@@ -33,9 +33,9 @@ class AppSwitch extends StatelessWidget {
             height: _height,
             padding: const EdgeInsets.all(3),
             decoration: ShapeDecoration(
-              color: value ? p.accent : p.surfaceHigh,
+              color: value ? p.accent : p.glassFill,
               shape: StadiumBorder(
-                side: BorderSide(color: value ? p.accent : p.outline),
+                side: BorderSide(color: value ? p.accent : p.glassBorder),
               ),
             ),
             child: AnimatedAlign(

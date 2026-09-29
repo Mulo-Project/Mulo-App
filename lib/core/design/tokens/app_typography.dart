@@ -4,7 +4,7 @@ import 'app_palette.dart';
 
 /// 글자 스타일. 색은 팔레트에서 받아 테마가 바뀌면 같이 바뀐다.
 ///
-/// 큰 숫자(재생 시간, 곡 수 등)는 [DotMatrixText] 컴포넌트를 쓴다.
+/// 큰 숫자(재생 시간, 곡 수 등)는 [StatNumber] 컴포넌트를 쓴다.
 abstract final class AppTypography {
   /// 기본 글꼴. pubspec.yaml `fonts`에 등록 (400 · 500 · 600 · 700).
   static const String fontFamily = 'Pretendard';

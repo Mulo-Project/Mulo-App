@@ -2,18 +2,19 @@ import 'package:flutter/material.dart';
 
 import '../app_theme_tokens.dart';
 import '../tokens/app_dimens.dart';
+import 'glass.dart';
 
 enum PillVariant {
-  /// 강조 색(라임) 채움 — 화면의 주 동작.
+  /// 강조 색(라임) 채움 + 은은한 빛 — 화면의 주 동작.
   accent,
 
   /// 주 색(바이올렛) 채움.
   primary,
 
-  /// 한 단계 뜬 어두운 면.
+  /// 무색 유리.
   tonal,
 
-  /// 테두리만.
+  /// 테두리만 (유리 테두리, 채움 없음).
   outline,
 }
 
@@ -42,62 +43,99 @@ class PillButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.palette;
     final v = selected ? PillVariant.accent : variant;
-    final (bg, fg, border) = switch (v) {
-      PillVariant.accent => (p.accent, p.onAccent, null),
-      PillVariant.primary => (p.primary, p.onPrimary, null),
-      PillVariant.tonal => (p.surfaceHigh, p.onSurface, null),
-      PillVariant.outline => (Colors.transparent, p.onSurface, p.outline),
+    final fg = switch (v) {
+      PillVariant.accent => p.onAccent,
+      PillVariant.primary => p.onPrimary,
+      PillVariant.tonal || PillVariant.outline => p.onSurface,
     };
     final enabled = onPressed != null;
     final text = Theme.of(context).textTheme.labelLarge!.copyWith(color: fg);
+    final height = compact ? 36.0 : AppSizes.pillHeight;
 
-    return Opacity(
-      opacity: enabled ? 1 : .4,
-      child: AnimatedContainer(
-        duration: AppMotion.medium,
-        curve: AppMotion.standard,
-        height: compact ? 36 : AppSizes.pillHeight,
-        decoration: ShapeDecoration(
-          color: bg,
-          shape: StadiumBorder(
-            side: border == null ? BorderSide.none : BorderSide(color: border),
-          ),
+    final content = SizedBox(
+      height: height,
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: compact ? AppSpacing.md : AppSpacing.lg,
         ),
-        child: Material(
-          type: MaterialType.transparency,
-          child: InkWell(
-            onTap: onPressed,
-            customBorder: const StadiumBorder(),
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: compact ? AppSpacing.md : AppSpacing.lg,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (icon != null) ...[
-                    Icon(icon, size: 18, color: fg),
-                    const SizedBox(width: AppSpacing.xs),
-                  ],
-                  Flexible(
-                    child: Text(
-                      label,
-                      style: text,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 18, color: fg),
+              const SizedBox(width: AppSpacing.xs),
+            ],
+            Flexible(
+              child: Text(
+                label,
+                style: text,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
+
+    final Widget button = switch (v) {
+      PillVariant.tonal => GlassSurface(
+        shape: const StadiumBorder(),
+        onTap: onPressed,
+        child: content,
+      ),
+      PillVariant.outline => GlassSurface(
+        shape: const StadiumBorder(),
+        onTap: onPressed,
+        blur: 0,
+        child: content,
+      ),
+      PillVariant.accent || PillVariant.primary => _SolidPill(
+        color: v == PillVariant.accent ? p.accent : p.primary,
+        onTap: onPressed,
+        child: content,
+      ),
+    };
+
+    return Opacity(opacity: enabled ? 1 : .4, child: button);
   }
 }
 
-/// 어두운 원형 아이콘 버튼. [emphasized]면 강조 색으로 채운다 (재생 버튼 등).
+class _SolidPill extends StatelessWidget {
+  const _SolidPill({required this.color, required this.child, this.onTap});
+
+  final Color color;
+  final VoidCallback? onTap;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => AnimatedContainer(
+    duration: AppMotion.medium,
+    curve: AppMotion.standard,
+    decoration: ShapeDecoration(
+      color: color,
+      shape: const StadiumBorder(),
+      shadows: [
+        BoxShadow(
+          color: color.withValues(alpha: .35),
+          blurRadius: 18,
+          offset: const Offset(0, 6),
+        ),
+      ],
+    ),
+    child: Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const StadiumBorder(),
+        child: child,
+      ),
+    ),
+  );
+}
+
+/// 원형 아이콘 버튼. 기본은 무색 유리, [emphasized]면 강조 색 + 빛 (재생 버튼 등).
 class CircleIconButton extends StatelessWidget {
   const CircleIconButton({
     super.key,
@@ -117,23 +155,40 @@ class CircleIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    final bg = emphasized ? p.accent : p.surfaceHigh;
-    final fg = emphasized ? p.onAccent : p.onSurface;
+    final glyph = SizedBox.square(
+      dimension: size,
+      child: Icon(
+        icon,
+        size: size * .48,
+        color: emphasized ? p.onAccent : p.onSurface,
+      ),
+    );
 
     return Tooltip(
       message: tooltip,
-      child: Material(
-        color: bg,
-        shape: const CircleBorder(),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onPressed,
-          child: SizedBox.square(
-            dimension: size,
-            child: Icon(icon, size: size * .48, color: fg),
-          ),
-        ),
-      ),
+      child: emphasized
+          ? DecoratedBox(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: p.accent.withValues(alpha: .45),
+                    blurRadius: size * .45,
+                  ),
+                ],
+              ),
+              child: Material(
+                color: p.accent,
+                shape: const CircleBorder(),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(onTap: onPressed, child: glyph),
+              ),
+            )
+          : GlassSurface(
+              shape: const CircleBorder(),
+              onTap: onPressed,
+              child: glyph,
+            ),
     );
   }
 }

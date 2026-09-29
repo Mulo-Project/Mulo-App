@@ -23,7 +23,7 @@ class PlayerScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: p.background,
-      body: DotGridBackground(
+      body: AppBackground(
         child: SafeArea(
           child: Column(
             children: [
@@ -59,7 +59,7 @@ class PlayerScreen extends ConsumerWidget {
                               aspectRatio: 1,
                               child: Hero(
                                 tag: 'now-playing',
-                                child: GlowCard(
+                                child: GlassCard(
                                   padding: EdgeInsets.zero,
                                   child: Center(
                                     child: Icon(
@@ -95,16 +95,14 @@ class PlayerScreen extends ConsumerWidget {
                         const SizedBox(height: AppSpacing.sm),
                         Row(
                           children: [
-                            DotMatrixText(
+                            StatNumber(
                               formatDuration(state.position),
-                              dotSize: 3,
-                              gap: 1.2,
+                              size: 22,
                             ),
                             const Spacer(),
-                            DotMatrixText(
+                            StatNumber(
                               '-${formatDuration(track.duration - state.position)}',
-                              dotSize: 3,
-                              gap: 1.2,
+                              size: 22,
                               color: p.onSurfaceMuted,
                             ),
                           ],
@@ -157,7 +155,7 @@ class _SeekBar extends StatelessWidget {
           onHorizontalDragUpdate: (d) => seek(d.localPosition),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-            child: DottedProgressBar(value: progress, height: 5, spacing: 9),
+            child: ProgressLine(value: progress, height: 5),
           ),
         );
       },
@@ -245,7 +243,9 @@ class _QueueSheet extends ConsumerWidget {
       maxChildSize: .9,
       builder: (context, controller) => ListView(
         controller: controller,
-        padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+        padding: EdgeInsets.only(
+          bottom: AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
+        ),
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(

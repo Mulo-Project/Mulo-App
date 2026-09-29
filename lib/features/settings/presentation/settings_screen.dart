@@ -45,7 +45,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return SafeArea(
       bottom: false,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(0, 0, 0, AppSpacing.xl),
+        padding: EdgeInsets.only(
+          bottom: AppSpacing.xl + MediaQuery.paddingOf(context).bottom,
+        ),
         children: [
           AppTopBar(
             large: true,

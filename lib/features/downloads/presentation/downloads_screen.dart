@@ -46,7 +46,9 @@ class DownloadsScreen extends StatelessWidget {
     return SafeArea(
       bottom: false,
       child: ListView(
-        padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+        padding: EdgeInsets.only(
+          bottom: AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
+        ),
         children: [
           AppTopBar(
             large: true,
@@ -67,7 +69,7 @@ class DownloadsScreen extends StatelessWidget {
           ),
           Padding(
             padding: AppSpacing.screen,
-            child: GlowCard(
+            child: GlassCard(
               tone: GlowTone.tertiary,
               child: Row(
                 children: [
@@ -80,7 +82,7 @@ class DownloadsScreen extends StatelessWidget {
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const SizedBox(height: AppSpacing.md),
-                        DotMatrixText('${active.length}', dotSize: 7, gap: 2.5),
+                        StatNumber('${active.length}', size: 56),
                         const SizedBox(height: AppSpacing.xs),
                         Text(
                           l10n.downloadsWaiting(waiting),
@@ -90,15 +92,10 @@ class DownloadsScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                  DottedProgressArc(
+                  ProgressRing(
                     value: overall,
                     size: 120,
-                    dotCount: 36,
-                    child: DotMatrixText(
-                      '${(overall * 100).round()}%',
-                      dotSize: 3,
-                      gap: 1.2,
-                    ),
+                    child: StatNumber('${(overall * 100).round()}%', size: 22),
                   ),
                 ],
               ),
@@ -172,7 +169,7 @@ class _DownloadTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (showBar) ...[
-            DottedProgressBar(value: item.progress, height: 3, spacing: 6),
+            ProgressLine(value: item.progress, height: 3),
             const SizedBox(height: AppSpacing.xs),
           ],
           Text(

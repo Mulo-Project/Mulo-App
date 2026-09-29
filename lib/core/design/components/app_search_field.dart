@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../app_theme_tokens.dart';
 import '../tokens/app_dimens.dart';
+import 'glass.dart';
 
-/// 알약 모양 입력칸. 왼쪽 돋보기, 입력이 있으면 오른쪽 지우기, 없으면 [trailing].
+/// 알약 모양 유리 입력칸. 왼쪽 돋보기, 입력이 있으면 오른쪽 지우기, 없으면 [trailing].
 class AppSearchField extends StatefulWidget {
   const AppSearchField({
     super.key,
@@ -55,51 +56,50 @@ class _AppSearchFieldState extends State<AppSearchField> {
     final text = Theme.of(context).textTheme;
     final hasText = _controller.text.isNotEmpty;
 
-    return Container(
-      height: 52,
+    return GlassSurface(
+      shape: const StadiumBorder(),
       padding: const EdgeInsets.only(
         left: AppSpacing.md,
         right: AppSpacing.xxs,
       ),
-      decoration: ShapeDecoration(
-        color: p.surfaceHigh,
-        shape: StadiumBorder(side: BorderSide(color: p.outline)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.search_rounded, color: p.onSurfaceMuted, size: 20),
-          const SizedBox(width: AppSpacing.xs),
-          Expanded(
-            child: TextField(
-              controller: _controller,
-              autofocus: widget.autofocus,
-              onChanged: widget.onChanged,
-              onSubmitted: widget.onSubmitted,
-              style: text.bodyLarge,
-              cursorColor: p.accent,
-              textInputAction: TextInputAction.search,
-              decoration: InputDecoration.collapsed(
-                hintText: widget.hint,
-                hintStyle: text.bodyLarge?.copyWith(color: p.onSurfaceMuted),
+      child: SizedBox(
+        height: 52,
+        child: Row(
+          children: [
+            Icon(Icons.search_rounded, color: p.onSurfaceMuted, size: 20),
+            const SizedBox(width: AppSpacing.xs),
+            Expanded(
+              child: TextField(
+                controller: _controller,
+                autofocus: widget.autofocus,
+                onChanged: widget.onChanged,
+                onSubmitted: widget.onSubmitted,
+                style: text.bodyLarge,
+                cursorColor: p.accent,
+                textInputAction: TextInputAction.search,
+                decoration: InputDecoration.collapsed(
+                  hintText: widget.hint,
+                  hintStyle: text.bodyLarge?.copyWith(color: p.onSurfaceMuted),
+                ),
               ),
             ),
-          ),
-          if (hasText)
-            IconButton(
-              tooltip: widget.clearTooltip,
-              onPressed: () {
-                _controller.clear();
-                widget.onChanged?.call('');
-              },
-              icon: Icon(
-                Icons.close_rounded,
-                color: p.onSurfaceMuted,
-                size: 20,
-              ),
-            )
-          else if (widget.trailing != null)
-            widget.trailing!,
-        ],
+            if (hasText)
+              IconButton(
+                tooltip: widget.clearTooltip,
+                onPressed: () {
+                  _controller.clear();
+                  widget.onChanged?.call('');
+                },
+                icon: Icon(
+                  Icons.close_rounded,
+                  color: p.onSurfaceMuted,
+                  size: 20,
+                ),
+              )
+            else if (widget.trailing != null)
+              widget.trailing!,
+          ],
+        ),
       ),
     );
   }

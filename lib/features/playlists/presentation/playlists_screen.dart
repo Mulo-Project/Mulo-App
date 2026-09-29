@@ -16,7 +16,9 @@ class PlaylistsScreen extends StatelessWidget {
     return SafeArea(
       bottom: false,
       child: ListView(
-        padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+        padding: EdgeInsets.only(
+          bottom: AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
+        ),
         children: [
           AppTopBar(
             large: true,
@@ -86,7 +88,7 @@ class _PlaylistCard extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     return AspectRatio(
       aspectRatio: .82,
-      child: GlowCard(
+      child: GlassCard(
         tone: tone,
         padding: const EdgeInsets.all(AppSpacing.md + AppSpacing.xxs),
         onTap: () {},
@@ -100,7 +102,7 @@ class _PlaylistCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
             const Spacer(),
-            DotMatrixText('$count', dotSize: 5, gap: 2),
+            StatNumber('$count', size: 40),
             const SizedBox(height: AppSpacing.xs),
             Text(
               context.l10n.unitSongs,
