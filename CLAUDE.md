@@ -34,13 +34,16 @@
 ## 폴더 구조
 ```
 lib/
-  app/            # 앱 진입, 라우터
+  app/            # 앱 진입, 라우터(go_router), 탭 틀
   core/
-    design/       # 디자인 시스템: 토큰, 테마 소스, 공통 컴포넌트
+    design/       # 디자인 시스템: 토큰, 테마 소스, 공통 컴포넌트(유리)
+    l10n/         # context.l10n
+    sample/       # UI 퍼블리싱용 가짜 데이터 (기능 연결 후 삭제)
   features/<기능>/
     presentation/ # 화면, ViewModel
     domain/       # 모델, 리포지토리 인터페이스
     data/         # 리포지토리 구현
+  l10n/           # ARB (ko 템플릿, en) + 생성 코드
 assets/fonts/     # Pretendard
 docs/             # 규칙 · 결정 · 작업 기록
 ```
@@ -48,11 +51,14 @@ docs/             # 규칙 · 결정 · 작업 기록
 ## 코드 스타일
 - `flutter analyze` 경고 0, `dart format` 적용, `flutter test` 통과 후 커밋.
 - 색 · 그라데이션은 토큰(`context.palette`, `context.tokens`)에서만 읽는다. 화면에 `Color(0x…)` · `Colors.xxx` 금지.
-- 간격 · 반경 · 시간은 `AppSpacing` · `AppRadii` · `AppMotion`, 글자는 `textTheme`(Pretendard), 큰 숫자는 `DotMatrixText`.
-- 공통 모양은 `lib/core/design/components/`에 만들고 [design-system.md](docs/design-system.md)에 적는다.
+- 간격 · 반경 · 시간은 `AppSpacing` · `AppRadii` · `AppMotion`, 글자는 `textTheme`(Pretendard), 큰 숫자는 `StatNumber`.
+- 면은 유리(`GlassSurface` · `GlassCard`), 공통 모양은 `lib/core/design/components/`에 만들고 [design-system.md](docs/design-system.md)에 적는다. Material 버튼 · AppBar · ListTile · Switch · Chip · Slider를 화면에서 직접 쓰지 않는다.
+- 화면 문구는 ARB(`lib/l10n/`, 한국어 · 영어)에서 `context.l10n`으로 가져온다.
 - 생성 코드(`*.g.dart`, `*.freezed.dart`)는 직접 고치지 않는다.
 - 저장소에 음원 파일이나 저작권 있는 곡 URL을 넣지 않는다 (README · 테스트 포함). API 키 · 비밀값도 넣지 않는다.
 
 ## 자주 쓰는 명령
 - 실행: `flutter run`
 - 확인: `flutter analyze`, `flutter test`, `flutter build apk --debug`
+- 문구 재생성: `flutter gen-l10n` (ARB 수정 후)
+- 스크린샷: `flutter test --run-skipped -t screenshot test/screenshots` → `build/screenshots/`
