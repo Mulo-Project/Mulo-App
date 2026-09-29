@@ -602,18 +602,6 @@ abstract class AppLocalizations {
   /// **'테마 색'**
   String get settingsThemeColor;
 
-  /// No description provided for @settingsThemeDefault.
-  ///
-  /// In ko, this message translates to:
-  /// **'기본'**
-  String get settingsThemeDefault;
-
-  /// No description provided for @settingsThemeAlt.
-  ///
-  /// In ko, this message translates to:
-  /// **'코랄'**
-  String get settingsThemeAlt;
-
   /// No description provided for @settingsDesignPreview.
   ///
   /// In ko, this message translates to:
@@ -667,6 +655,54 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'{source}에서 재생'**
   String playerFrom(String source);
+
+  /// No description provided for @themeViolet.
+  ///
+  /// In ko, this message translates to:
+  /// **'바이올렛'**
+  String get themeViolet;
+
+  /// No description provided for @themeCoral.
+  ///
+  /// In ko, this message translates to:
+  /// **'코랄'**
+  String get themeCoral;
+
+  /// No description provided for @themeOcean.
+  ///
+  /// In ko, this message translates to:
+  /// **'오션'**
+  String get themeOcean;
+
+  /// No description provided for @themeForest.
+  ///
+  /// In ko, this message translates to:
+  /// **'포레스트'**
+  String get themeForest;
+
+  /// No description provided for @themeSunset.
+  ///
+  /// In ko, this message translates to:
+  /// **'선셋'**
+  String get themeSunset;
+
+  /// No description provided for @themeRose.
+  ///
+  /// In ko, this message translates to:
+  /// **'로즈'**
+  String get themeRose;
+
+  /// No description provided for @themeGold.
+  ///
+  /// In ko, this message translates to:
+  /// **'골드'**
+  String get themeGold;
+
+  /// No description provided for @themeIce.
+  ///
+  /// In ko, this message translates to:
+  /// **'아이스'**
+  String get themeIce;
 }
 
 class _AppLocalizationsDelegate

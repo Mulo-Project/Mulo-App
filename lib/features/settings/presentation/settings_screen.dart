@@ -10,15 +10,9 @@ import '../../downloads/domain/download_options.dart';
 
 enum DownloadMode { server, local }
 
-/// 테마 교체 확인용 샘플 사용자 지정 테마 (코랄 · 시안).
-/// 사용자 지정 테마 화면이 생기면 저장소 값으로 바꾼다.
-const coralTheme = CustomThemeSource(
-  CustomThemeSpec(primary: Color(0xFFFF3D7F), accent: Color(0xFF33E1FF)),
-);
-
 /// 설정 (상세 기능: 서버 연결·모드 선택 #31, 저장 위치 #23, 기본 음질·포맷 #24,
 /// 다운로드 엔진 업데이트 #25, 알림 곡 정보 숨기기 #32 + 테마 D-005).
-/// 테마 색 전환만 실제로 동작하고 나머지는 자리 표시.
+/// 테마 색(프리셋, 저장됨)만 실제로 동작하고 나머지는 자리 표시.
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
@@ -36,11 +30,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
-    final themeId = ref.watch(
-      themeControllerProvider.select((s) => s.sourceId),
+    final selectedPreset = ref.watch(
+      themeControllerProvider.select((s) => s.preset),
     );
     final themeCtrl = ref.read(themeControllerProvider.notifier);
-    final isDefaultTheme = themeId == const DefaultThemeSource().id;
 
     return SafeArea(
       bottom: false,
@@ -168,15 +161,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                     SettingRow(
                       title: l10n.settingsThemeColor,
-                      below: SegmentedPills<bool>(
-                        expand: true,
-                        values: const [true, false],
-                        selected: isDefaultTheme,
-                        labelOf: (d) => d
-                            ? l10n.settingsThemeDefault
-                            : l10n.settingsThemeAlt,
-                        onChanged: (d) =>
-                            d ? themeCtrl.reset() : themeCtrl.apply(coralTheme),
+                      below: Wrap(
+                        spacing: AppSpacing.xs,
+                        runSpacing: AppSpacing.sm,
+                        children: [
+                          for (final preset in ThemePreset.values)
+                            ThemeSwatch(
+                              preview: preset.palette,
+                              label: presetLabel(l10n, preset),
+                              selected: preset == selectedPreset,
+                              onTap: () => themeCtrl.selectPreset(preset),
+                            ),
+                        ],
                       ),
                     ),
                     SettingRow(
@@ -217,3 +213,15 @@ class _Chevron extends StatelessWidget {
   Widget build(BuildContext context) =>
       Icon(Icons.chevron_right_rounded, color: context.palette.onSurfaceMuted);
 }
+
+String presetLabel(AppLocalizations l10n, ThemePreset preset) =>
+    switch (preset) {
+      ThemePreset.violet => l10n.themeViolet,
+      ThemePreset.coral => l10n.themeCoral,
+      ThemePreset.ocean => l10n.themeOcean,
+      ThemePreset.forest => l10n.themeForest,
+      ThemePreset.sunset => l10n.themeSunset,
+      ThemePreset.rose => l10n.themeRose,
+      ThemePreset.gold => l10n.themeGold,
+      ThemePreset.ice => l10n.themeIce,
+    };

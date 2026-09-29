@@ -4,12 +4,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/design/design.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> _pumpApp(
   WidgetTester tester, {
   String at = Routes.library,
   double height = 2532,
 }) async {
+  SharedPreferences.setMockInitialValues({});
   tester.view.physicalSize = Size(1170, height);
   tester.view.devicePixelRatio = 3;
   tester.platformDispatcher.localesTestValue = const [Locale('ko')];
@@ -35,7 +37,7 @@ void main() {
     expect(find.text('대기열'.toUpperCase()), findsOneWidget);
   });
 
-  testWidgets('설정에서 테마 색을 바꾸면 팔레트가 바뀐다', (tester) async {
+  testWidgets('설정에서 테마 프리셋을 고르면 팔레트가 바뀐다', (tester) async {
     await _pumpApp(tester, at: Routes.settings, height: 7000);
     expect(_palette(tester).accent, AppPalette.lime);
 
@@ -44,7 +46,7 @@ void main() {
     expect(_palette(tester).accent, isNot(AppPalette.lime));
     expect(_palette(tester).background, AppPalette.black);
 
-    await tester.tap(find.text('기본').last);
+    await tester.tap(find.text('바이올렛'));
     await tester.pumpAndSettle();
     expect(_palette(tester).accent, AppPalette.lime);
   });

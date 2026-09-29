@@ -6,7 +6,7 @@ import '../tokens/app_palette.dart';
 
 /// 팔레트를 만들어 내는 곳. 테마를 바꾸는 방법은 모두 이 인터페이스 하나로 통한다.
 ///
-/// - [DefaultThemeSource]: 기본 검정 · 바이올렛 · 라임
+/// - [ThemePreset]: 설정에서 고르는 색 프리셋 8개 (기본 = 바이올렛 · 라임)
 /// - [CustomThemeSource]: 사용자가 고른 주 색 · 강조 색 (저장소에 보관)
 /// - [MoodThemeSource]: 재생 중인 곡의 커버 아트에서 색 추출
 abstract interface class ThemeSource {
@@ -14,16 +14,6 @@ abstract interface class ThemeSource {
   String get id;
 
   FutureOr<AppPalette> resolve();
-}
-
-class DefaultThemeSource implements ThemeSource {
-  const DefaultThemeSource();
-
-  @override
-  String get id => 'default';
-
-  @override
-  AppPalette resolve() => AppPalette.defaultDark;
 }
 
 /// 사용자 지정 테마 설정값. 저장 · 복원 단위.

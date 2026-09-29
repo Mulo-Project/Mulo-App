@@ -276,12 +276,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsThemeColor => 'Theme color';
 
   @override
-  String get settingsThemeDefault => 'Default';
-
-  @override
-  String get settingsThemeAlt => 'Coral';
-
-  @override
   String get settingsDesignPreview => 'Design preview';
 
   @override
@@ -309,4 +303,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String playerFrom(String source) {
     return 'Playing from $source';
   }
+
+  @override
+  String get themeViolet => 'Violet';
+
+  @override
+  String get themeCoral => 'Coral';
+
+  @override
+  String get themeOcean => 'Ocean';
+
+  @override
+  String get themeForest => 'Forest';
+
+  @override
+  String get themeSunset => 'Sunset';
+
+  @override
+  String get themeRose => 'Rose';
+
+  @override
+  String get themeGold => 'Gold';
+
+  @override
+  String get themeIce => 'Ice';
 }

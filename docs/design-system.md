@@ -18,13 +18,18 @@
 | `app_theme_tokens.dart` | `ThemeExtension<AppThemeTokens>` (copyWith · lerp), `context.tokens` / `context.palette` |
 | `app_theme.dart` | `buildAppTheme(palette)` → ThemeData |
 | `contrast.dart` | 대비율 계산 · 보정 (`ensureContrast`, `bestOn`) |
-| `theme_source/` | `ThemeSource` 인터페이스 + Default / Custom / Mood |
+| `theme_source/` | `ThemeSource` 인터페이스 + `ThemePreset`(8개) / Custom / Mood |
 | `theme_controller.dart` | Riverpod `themeControllerProvider`, `apply(source)` / `reset()` |
 | `components/` | 아래 "컴포넌트" 표 |
 
 ## 테마 전환 흐름
 `ThemeSource.resolve()` → `AppPalette` → `ThemeController.state` → `buildAppTheme` →
 MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부드럽게 전환.
+
+## 테마 프리셋
+바이올렛(기본) · 코랄 · 오션 · 포레스트 · 선셋 · 로즈 · 골드 · 아이스. 설정 › 테마 색에서 고르고 `shared_preferences`(`theme.preset`)에 저장해 다음 실행 때 불러온다.
+프리셋은 주 색 · 강조 색 두 개만 정하고 나머지는 `AppPalette.derive`가 만든다 (배경 검정, 강조 색 대비 7:1 이상 — 테스트로 확인).
+`ThemeController.selectPreset`(저장) / `apply`(임시, 곡 분위기 등) / `reset`(고른 프리셋으로 복귀).
 
 ## 확장
 - **사용자 지정 테마**: `CustomThemeStore` 구현(예: SharedPreferences)을 붙이고, 앱 시작 시
@@ -55,6 +60,7 @@ MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부�
 | `AppSwitch` | app_switch.dart | 토글 (켜짐 = 강조 색, 꺼짐 = 유리) |
 | `SectionCard` · `SettingRow` | section_card.dart | 유리 설정 묶음 · 한 줄 |
 | `SegmentedPills` · `StatusPill` | segmented_pills.dart | 하나 고르기 유리 알약 묶음 · 상태 알약 |
+| `ThemeSwatch` | theme_swatch.dart | 테마 프리셋 미리보기 동그라미 (다른 팔레트를 그리는 유일한 컴포넌트) |
 
 Material 버튼 · AppBar · ListTile · Switch · Chip · Slider는 화면에서 직접 쓰지 않는다 (위 컴포넌트로 대체).
 

@@ -14,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> _loadFonts() async {
   Future<void> load(String family, List<String> paths) async {
@@ -48,6 +49,7 @@ void main() {
     'search-keyword': '${Routes.search}?q=night',
     'downloads': Routes.downloads,
     'settings': Routes.settings,
+    'settings-full': Routes.settings,
     'player': Routes.player,
   };
 
@@ -55,7 +57,11 @@ void main() {
     for (final e in screens.entries) {
       testWidgets('screenshot $locale-${e.key}', (tester) async {
         await tester.runAsync(_loadFonts);
-        tester.view.physicalSize = const Size(1080, 2424);
+        SharedPreferences.setMockInitialValues({});
+        tester.view.physicalSize = Size(
+          1080,
+          e.key.endsWith('-full') ? 6400 : 2424,
+        );
         tester.view.devicePixelRatio = 2.75;
         tester.platformDispatcher.localesTestValue = [Locale(locale)];
         addTearDown(tester.view.reset);

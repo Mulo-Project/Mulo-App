@@ -3,12 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/design/design.dart';
 
-/// 테마 교체가 되는지 보여 주기 위한 샘플 사용자 지정 테마 (코랄 · 시안).
-/// 실제 사용자 지정 화면이 생기면 여기 값 대신 저장소에서 읽는다.
-const _sampleCustom = CustomThemeSource(
-  CustomThemeSpec(primary: Color(0xFFFF3D7F), accent: Color(0xFF33E1FF)),
-);
-
 /// 디자인 시스템 미리보기. 실제 홈 화면이 생기기 전까지 첫 화면으로 쓴다.
 class DesignPreviewScreen extends ConsumerStatefulWidget {
   const DesignPreviewScreen({super.key});
@@ -47,9 +41,9 @@ class _DesignPreviewScreenState extends ConsumerState<DesignPreviewScreen> {
                   ),
                   children: [
                     _Header(
-                      isDefault: sourceId == const DefaultThemeSource().id,
+                      isDefault: sourceId == ThemePreset.violet.id,
                       onDefault: controller.reset,
-                      onAlternate: () => controller.apply(_sampleCustom),
+                      onAlternate: () => controller.apply(ThemePreset.coral),
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     const _Swatches(),

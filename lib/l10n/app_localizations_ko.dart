@@ -273,12 +273,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsThemeColor => '테마 색';
 
   @override
-  String get settingsThemeDefault => '기본';
-
-  @override
-  String get settingsThemeAlt => '코랄';
-
-  @override
   String get settingsDesignPreview => '디자인 미리보기';
 
   @override
@@ -306,4 +300,28 @@ class AppLocalizationsKo extends AppLocalizations {
   String playerFrom(String source) {
     return '$source에서 재생';
   }
+
+  @override
+  String get themeViolet => '바이올렛';
+
+  @override
+  String get themeCoral => '코랄';
+
+  @override
+  String get themeOcean => '오션';
+
+  @override
+  String get themeForest => '포레스트';
+
+  @override
+  String get themeSunset => '선셋';
+
+  @override
+  String get themeRose => '로즈';
+
+  @override
+  String get themeGold => '골드';
+
+  @override
+  String get themeIce => '아이스';
 }

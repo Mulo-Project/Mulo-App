@@ -84,8 +84,6 @@
   "settingsFollowMood": "Follow song mood",
   "settingsFollowMoodDesc": "Accent colors follow the current song's cover.",
   "settingsThemeColor": "Theme color",
-  "settingsThemeDefault": "Default",
-  "settingsThemeAlt": "Coral",
   "settingsDesignPreview": "Design preview",
   "settingsAbout": "About",
   "settingsVersion": "Version",
@@ -94,5 +92,13 @@
   "playerQueue": "Up next",
   "playerRepeat": "Repeat",
   "playerLyrics": "Lyrics",
-  "playerFrom": "Playing from {source}"
+  "playerFrom": "Playing from {source}",
+  "themeViolet": "Violet",
+  "themeCoral": "Coral",
+  "themeOcean": "Ocean",
+  "themeForest": "Forest",
+  "themeSunset": "Sunset",
+  "themeRose": "Rose",
+  "themeGold": "Gold",
+  "themeIce": "Ice"
 }
