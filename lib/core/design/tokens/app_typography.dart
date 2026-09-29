@@ -6,6 +6,9 @@ import 'app_palette.dart';
 ///
 /// 큰 숫자(재생 시간, 곡 수 등)는 [DotMatrixText] 컴포넌트를 쓴다.
 abstract final class AppTypography {
+  /// 기본 글꼴. pubspec.yaml `fonts`에 등록 (400 · 500 · 600 · 700).
+  static const String fontFamily = 'Pretendard';
+
   static TextTheme textTheme(AppPalette p) {
     TextStyle s(double size, FontWeight w, {double? height, double ls = 0}) =>
         TextStyle(
@@ -14,6 +17,7 @@ abstract final class AppTypography {
           height: height,
           letterSpacing: ls,
           color: p.onSurface,
+          fontFamily: fontFamily,
         );
 
     return TextTheme(
