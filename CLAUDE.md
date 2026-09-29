@@ -1,7 +1,7 @@
 # 프로젝트 규칙 (Music-Download-Play-App)
 
 유튜브 등에서 음원을 받아 저장하고 같은 앱에서 재생하는 한국어 UI 음악 앱.
-Flutter 앱(Android · Windows · macOS · Linux) + Spring Boot REST 서버(나중).
+이 저장소는 **Flutter 앱**(Android · Windows · macOS · Linux)만 담는다. Spring Boot REST 서버는 별도 저장소 (D-008).
 기능 명세 원본은 Notion [음악 다운로더 & 플레이어 기능명세서](https://app.notion.com/p/3eac450c43a581d18ef4f5a4b93bb3bb). 프로젝트 문서는 [docs/](docs/README.md).
 
 ## 진행 방식
