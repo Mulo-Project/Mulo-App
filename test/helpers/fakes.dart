@@ -5,6 +5,7 @@ import 'package:music_download_play_app/features/covers/di.dart';
 import 'package:music_download_play_app/features/covers/domain/repositories/cover_repository.dart';
 import 'package:music_download_play_app/features/downloads/di.dart';
 import 'package:music_download_play_app/features/downloads/domain/entities/download_item.dart';
+import 'package:music_download_play_app/features/downloads/domain/entities/download_request.dart';
 import 'package:music_download_play_app/features/downloads/domain/repositories/download_queue_repository.dart';
 import 'package:music_download_play_app/features/home/di.dart';
 import 'package:music_download_play_app/features/home/domain/entities/home_summary.dart';
@@ -14,6 +15,9 @@ import 'package:music_download_play_app/features/library/domain/entities/import_
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 import 'package:music_download_play_app/features/library/domain/repositories/library_repository.dart';
 import 'package:music_download_play_app/features/player/di.dart';
+import 'package:music_download_play_app/features/playlists/di.dart';
+import 'package:music_download_play_app/features/playlists/domain/entities/playlist.dart';
+import 'package:music_download_play_app/features/playlists/domain/repositories/playlist_repository.dart';
 import 'package:music_download_play_app/features/theme/di.dart';
 import 'package:music_download_play_app/features/theme/domain/entities/theme_settings.dart';
 import 'package:music_download_play_app/features/theme/domain/repositories/theme_settings_repository.dart';
@@ -142,10 +146,72 @@ class MemoryDownloadQueue implements DownloadQueueRepository {
     _changes.add([...items]);
   }
 
+  /// 받기 요청 기록.
+  final requests = <DownloadRequest>[];
+
   @override
   Stream<List<DownloadItem>> watchQueue() async* {
     yield [...items];
     yield* _changes.stream;
+  }
+
+  @override
+  Future<void> enqueue(DownloadRequest request) async {
+    requests.add(request);
+    items.add(
+      DownloadItem(
+        id: 'q${requests.length}',
+        title: request.title,
+        artist: request.artist,
+        genre: request.genre,
+        playlistIds: request.playlistIds,
+        status: DownloadStatus.queued,
+      ),
+    );
+    _changes.add([...items]);
+  }
+}
+
+/// 메모리 재생목록.
+class MemoryPlaylistRepository implements PlaylistRepository {
+  MemoryPlaylistRepository([List<Playlist> initial = const []])
+    : lists = [...initial];
+
+  final List<Playlist> lists;
+
+  /// 재생목록 id → 들어 있는 곡 id.
+  final members = <String, Set<String>>{};
+  final _changes = StreamController<List<Playlist>>.broadcast();
+
+  List<Playlist> get _now => [
+    for (final p in lists)
+      Playlist(
+        id: p.id,
+        name: p.name,
+        trackCount: members[p.id]?.length ?? p.trackCount,
+      ),
+  ];
+
+  @override
+  Stream<List<Playlist>> watchPlaylists() async* {
+    yield _now;
+    yield* _changes.stream;
+  }
+
+  @override
+  Future<Playlist> create(String name) async {
+    final made = Playlist(id: 'pl${lists.length + 1}', name: name);
+    lists.add(made);
+    _changes.add(_now);
+    return made;
+  }
+
+  @override
+  Future<void> addTrack(String trackId, Iterable<String> playlistIds) async {
+    for (final id in playlistIds) {
+      (members[id] ??= {}).add(trackId);
+    }
+    _changes.add(_now);
   }
 }
 
@@ -159,6 +225,7 @@ Future<void> setUpTestDependencies({
   ThemeSettings theme = const ThemeSettings(),
   PlayHistoryRepository? history,
   DownloadQueueRepository? downloads,
+  PlaylistRepository? playlists,
 }) async {
   await sl.reset();
   registerTheme(sl);
@@ -166,6 +233,7 @@ Future<void> setUpTestDependencies({
   registerCovers(sl);
   registerPlayer(sl);
   registerHome(sl);
+  registerPlaylists(sl);
   registerDownloads(sl);
   sl.allowReassignment = true;
   sl
@@ -189,6 +257,9 @@ Future<void> setUpTestDependencies({
     )
     ..registerLazySingleton<DownloadQueueRepository>(
       () => downloads ?? MemoryDownloadQueue(),
+    )
+    ..registerLazySingleton<PlaylistRepository>(
+      () => playlists ?? MemoryPlaylistRepository(),
     );
   sl.allowReassignment = false;
 }

@@ -10,12 +10,20 @@ class DownloadItem extends Equatable {
     required this.artist,
     required this.status,
     this.progress = 0,
+    this.genre = '',
+    this.playlistIds = const {},
     this.thumbnailUrl,
   });
 
   final String id;
   final String title;
   final String artist;
+
+  /// 받은 뒤 곡에 붙일 장르. 모르면 빈 문자열.
+  final String genre;
+
+  /// 받기가 끝나면 곡을 넣을 재생목록 id.
+  final Set<String> playlistIds;
   final DownloadStatus status;
 
   /// 0 ~ 1.
@@ -33,6 +41,8 @@ class DownloadItem extends Equatable {
     id,
     title,
     artist,
+    genre,
+    playlistIds,
     status,
     progress,
     thumbnailUrl,

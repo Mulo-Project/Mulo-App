@@ -9,8 +9,9 @@ import 'presentation/bloc/download_queue_cubit.dart';
 void registerDownloads(GetIt sl) {
   sl
     ..registerLazySingleton<DownloadQueueRepository>(
-      () => const SampleDownloadQueueRepository(),
+      () => SampleDownloadQueueRepository(),
     )
     ..registerFactory(() => WatchDownloadQueue(sl()))
-    ..registerFactory(() => DownloadQueueCubit(sl()));
+    ..registerFactory(() => EnqueueDownload(sl()))
+    ..registerFactory(() => DownloadQueueCubit(sl(), sl()));
 }

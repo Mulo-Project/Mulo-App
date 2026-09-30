@@ -1,13 +1,14 @@
+import 'dart:async';
+
 import '../../../../core/sample/sample_data.dart';
 import '../../domain/entities/download_item.dart';
+import '../../domain/entities/download_request.dart';
 import '../../domain/repositories/download_queue_repository.dart';
 
 /// 자리 표시 대기열. 다운로드 엔진(서버 · 로컬)이 연결되면 실제 저장소로 바꾼다.
+/// 새로 받기를 시작하면 대기열 끝에 "대기" 항목으로 들어간다 (실제로 받지는 않는다).
 class SampleDownloadQueueRepository implements DownloadQueueRepository {
-  const SampleDownloadQueueRepository();
-
-  @override
-  Stream<List<DownloadItem>> watchQueue() {
+  SampleDownloadQueueRepository() {
     final t = SampleData.tracks;
     DownloadItem item(int i, DownloadStatus s, double p) => DownloadItem(
       id: t[i].id,
@@ -16,12 +17,36 @@ class SampleDownloadQueueRepository implements DownloadQueueRepository {
       status: s,
       progress: p,
     );
-    return Stream.value([
+    _items = [
       item(3, DownloadStatus.downloading, .72),
       item(5, DownloadStatus.queued, 0),
       item(6, DownloadStatus.queued, 0),
       item(7, DownloadStatus.paused, .45),
       item(9, DownloadStatus.done, 1),
-    ]);
+    ];
+  }
+
+  late final List<DownloadItem> _items;
+  final _changes = StreamController<List<DownloadItem>>.broadcast();
+
+  @override
+  Stream<List<DownloadItem>> watchQueue() async* {
+    yield [..._items];
+    yield* _changes.stream;
+  }
+
+  @override
+  Future<void> enqueue(DownloadRequest request) async {
+    _items.add(
+      DownloadItem(
+        id: 'd${DateTime.now().microsecondsSinceEpoch}',
+        title: request.title,
+        artist: request.artist,
+        genre: request.genre,
+        playlistIds: request.playlistIds,
+        status: DownloadStatus.queued,
+      ),
+    );
+    _changes.add([..._items]);
   }
 }

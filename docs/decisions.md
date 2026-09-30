@@ -132,3 +132,8 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - 검색 대상은 검색창 오른쪽 메뉴에서 유튜브 / 웹. 웹은 yt-dlp 지원 사이트(SoundCloud `scsearch` 등).
 - 대기열은 `DownloadQueueRepository`(domain)로 추상화하고 지금은 자리 표시 구현. 엔진 연결 때 교체.
 
+## D-023 · 2026-10-01 · 받기 팝업 · 장르 · 재생목록 저장
+- 받기를 누르면 팝업(바텀시트)에서 제목 · 아티스트 · 장르와 **넣을 재생목록(여러 개)**을 정한 뒤 대기열에 넣는다. 재생목록은 팝업에서 바로 만들 수 있다.
+- 장르는 곡의 속성(`Track.genre`, drift `tracks.genre`, 빈 문자열 = 모름). 홈 청취 분석은 장르를 아는 곡만 센다(D-021의 "장르 뺌" 해소).
+- 재생목록은 drift `playlists` + `playlist_tracks`(곡 하나가 여러 목록에 들어감), DB 스키마 3. 곡이 아직 보관함에 없을 수 있어 요청의 재생목록은 `DownloadItem.playlistIds`에 들고 있다가 **받기가 끝나 곡이 생길 때** 넣는다(엔진 연결 때 구현).
+

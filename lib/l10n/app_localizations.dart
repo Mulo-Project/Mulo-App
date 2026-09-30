@@ -937,6 +937,66 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'대기 목록 접기'**
   String get downloadsCollapse;
+
+  /// No description provided for @downloadDialogTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'받기 정보'**
+  String get downloadDialogTitle;
+
+  /// No description provided for @downloadFieldTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'제목'**
+  String get downloadFieldTitle;
+
+  /// No description provided for @downloadFieldArtist.
+  ///
+  /// In ko, this message translates to:
+  /// **'아티스트'**
+  String get downloadFieldArtist;
+
+  /// No description provided for @downloadFieldGenre.
+  ///
+  /// In ko, this message translates to:
+  /// **'장르'**
+  String get downloadFieldGenre;
+
+  /// No description provided for @downloadPlaylistsLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'담을 재생목록'**
+  String get downloadPlaylistsLabel;
+
+  /// No description provided for @downloadPlaylistsEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 재생목록이 없어요. 아래에서 새로 만들 수 있어요.'**
+  String get downloadPlaylistsEmpty;
+
+  /// No description provided for @downloadNewPlaylist.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 재생목록'**
+  String get downloadNewPlaylist;
+
+  /// No description provided for @downloadNewPlaylistHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'이름을 입력하고 +'**
+  String get downloadNewPlaylistHint;
+
+  /// No description provided for @downloadQueued.
+  ///
+  /// In ko, this message translates to:
+  /// **'대기열에 넣었어요'**
+  String get downloadQueued;
+
+  /// No description provided for @homeTopGenre.
+  ///
+  /// In ko, this message translates to:
+  /// **'많이 들은 장르'**
+  String get homeTopGenre;
 }
 
 class _AppLocalizationsDelegate

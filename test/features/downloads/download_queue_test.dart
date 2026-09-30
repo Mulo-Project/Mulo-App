@@ -4,6 +4,8 @@ import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/di/injector.dart';
 import 'package:music_download_play_app/features/downloads/domain/entities/download_item.dart';
+import 'package:music_download_play_app/features/downloads/domain/entities/download_request.dart';
+import 'package:music_download_play_app/features/playlists/domain/entities/playlist.dart';
 import 'package:music_download_play_app/features/downloads/domain/usecases/download_usecases.dart';
 import 'package:music_download_play_app/features/downloads/presentation/bloc/download_queue_cubit.dart';
 
@@ -33,7 +35,10 @@ const _done = DownloadItem(
 void main() {
   test('cubit: 받는 곡과 대기 곡을 나눈다 (완료는 제외)', () async {
     final repo = MemoryDownloadQueue([_next, _now, _done]);
-    final cubit = DownloadQueueCubit(WatchDownloadQueue(repo))..start();
+    final cubit = DownloadQueueCubit(
+      WatchDownloadQueue(repo),
+      EnqueueDownload(repo),
+    )..start();
     await Future<void>.delayed(Duration.zero);
     expect(cubit.state.current, _now);
     expect(cubit.state.waiting, [_next]);
@@ -43,6 +48,102 @@ void main() {
     expect(cubit.state.current, isNull);
     expect(cubit.state.waiting, isEmpty);
     await cubit.close();
+  });
+
+  test('EnqueueDownload: 제목이 비면 받지 않고, 문자열 공백을 지운다', () async {
+    final repo = MemoryDownloadQueue();
+    final enqueue = EnqueueDownload(repo);
+    expect(await enqueue(const DownloadRequest(title: '  ')), isFalse);
+    expect(repo.requests, isEmpty);
+
+    expect(
+      await enqueue(
+        const DownloadRequest(
+          title: ' Song ',
+          artist: ' Me ',
+          genre: ' Pop ',
+          playlistIds: {'pl1'},
+        ),
+      ),
+      isTrue,
+    );
+    expect(repo.requests.single.title, 'Song');
+    expect(repo.requests.single.artist, 'Me');
+    expect(repo.requests.single.genre, 'Pop');
+    expect(repo.requests.single.playlistIds, {'pl1'});
+  });
+
+  Future<MemoryDownloadQueue> openWithPlaylists(
+    WidgetTester tester,
+    List<Playlist> lists,
+  ) async {
+    final queue = MemoryDownloadQueue();
+    await setUpTestDependencies(
+      downloads: queue,
+      playlists: MemoryPlaylistRepository(lists),
+    );
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    tester.platformDispatcher.localesTestValue = const [Locale('ko')];
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+    addTearDown(sl.reset);
+    await tester.pumpWidget(const MusicApp(initialLocation: Routes.search));
+    await tester.pumpAndSettle();
+    return queue;
+  }
+
+  Finder inSheet(Finder f) =>
+      find.descendant(of: find.byType(BottomSheet), matching: f);
+
+  testWidgets('받기 팝업: URL 결과에서 열어 정보 · 장르 · 재생목록을 정해 받는다', (tester) async {
+    final queue = await openWithPlaylists(tester, const [
+      Playlist(id: 'pl1', name: '운동'),
+    ]);
+    await tester.enterText(find.byType(TextField).first, 'https://youtu.be/x');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('받기').last);
+    await tester.pumpAndSettle();
+    expect(find.text('받기 정보'), findsOneWidget);
+
+    final fields = inSheet(find.byType(TextField));
+    await tester.enterText(fields.at(0), '내 제목');
+    await tester.enterText(fields.at(1), '내 가수');
+    await tester.enterText(fields.at(2), '발라드');
+
+    // 기존 재생목록 고르기 + 새 재생목록 만들기 (만들면 자동 선택)
+    await tester.tap(find.text('운동'));
+    await tester.enterText(fields.at(3), '새 목록');
+    await tester.tap(inSheet(find.byIcon(Icons.add_rounded)));
+    await tester.pumpAndSettle();
+    expect(find.text('새 목록'), findsOneWidget);
+
+    await tester.tap(inSheet(find.text('받기')));
+    await tester.pumpAndSettle();
+
+    final r = queue.requests.single;
+    expect(r.title, '내 제목');
+    expect(r.artist, '내 가수');
+    expect(r.genre, '발라드');
+    expect(r.playlistIds, {'pl1', 'pl2'});
+    expect(find.text('받기 정보'), findsNothing);
+    expect(find.text('대기열에 넣었어요'), findsOneWidget);
+  });
+
+  testWidgets('받기 팝업: 제목을 비우면 받기 버튼이 눌리지 않는다', (tester) async {
+    final queue = await openWithPlaylists(tester, const []);
+    await tester.enterText(find.byType(TextField).first, 'https://youtu.be/x');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('받기').last);
+    await tester.pumpAndSettle();
+    expect(find.text('아직 재생목록이 없어요. 아래에서 새로 만들 수 있어요.'), findsOneWidget);
+
+    await tester.enterText(inSheet(find.byType(TextField)).first, '');
+    await tester.pumpAndSettle();
+    await tester.tap(inSheet(find.text('받기')));
+    await tester.pumpAndSettle();
+    expect(queue.requests, isEmpty);
+    expect(find.text('받기 정보'), findsOneWidget);
   });
 
   Future<void> open(WidgetTester tester, List<DownloadItem> queue) async {

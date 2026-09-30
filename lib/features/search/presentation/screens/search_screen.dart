@@ -6,6 +6,7 @@ import '../../../../core/l10n/l10n.dart';
 import '../../../../core/sample/sample_data.dart';
 import '../../../downloads/domain/entities/download_options.dart';
 import '../../../downloads/presentation/bloc/download_queue_cubit.dart';
+import '../../../downloads/presentation/widgets/download_dialog.dart';
 import '../../../downloads/presentation/widgets/download_progress_card.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../domain/entities/search_source.dart';
@@ -60,6 +61,7 @@ class _SearchScreenState extends State<SearchScreen> {
           track: SampleData.tracks.first,
           quality: _quality,
           onQuality: (q) => setState(() => _quality = q),
+          onDownload: () => _download(SampleData.tracks.first, _quality),
         ),
       ],
       SearchMode.playlist => _playlist(context),
@@ -110,6 +112,22 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
+  /// 받기 팝업을 열고, 받기를 시작했으면 알린다.
+  Future<void> _download(Track track, Quality quality) async {
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    final queued = context.l10n.downloadQueued;
+    final started = await showDownloadDialog(
+      context,
+      title: track.title,
+      artist: track.artist,
+      genre: track.genre,
+      quality: quality,
+    );
+    if (started) {
+      messenger?.showSnackBar(SnackBar(content: Text(queued)));
+    }
+  }
+
   List<Widget> _keywordResults(BuildContext context) {
     final l10n = context.l10n;
     final results = [
@@ -129,7 +147,7 @@ class _SearchScreenState extends State<SearchScreen> {
               : CircleIconButton(
                   icon: Icons.download_rounded,
                   tooltip: l10n.actionDownload,
-                  onPressed: () {},
+                  onPressed: () => _download(results[i], _quality),
                 ),
         ),
     ];
@@ -275,11 +293,13 @@ class _UrlResultCard extends StatelessWidget {
     required this.track,
     required this.quality,
     required this.onQuality,
+    required this.onDownload,
   });
 
   final Track track;
   final Quality quality;
   final ValueChanged<Quality> onQuality;
+  final VoidCallback onDownload;
 
   @override
   Widget build(BuildContext context) {
@@ -324,7 +344,7 @@ class _UrlResultCard extends StatelessWidget {
               child: PillButton(
                 label: l10n.actionDownload,
                 icon: Icons.download_rounded,
-                onPressed: () {},
+                onPressed: onDownload,
               ),
             ),
           ],

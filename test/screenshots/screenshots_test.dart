@@ -87,7 +87,7 @@ void main() {
         await setUpTestDependencies(
           history: MemoryPlayHistory(plays),
           tracks: SampleData.tracks,
-          downloads: const SampleDownloadQueueRepository(),
+          downloads: SampleDownloadQueueRepository(),
           // 라이트 스크린샷은 저장된 화면 모드를 라이트로 둔다.
           theme: ThemeSettings(
             mode: e.key.endsWith('-light')

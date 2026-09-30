@@ -10,6 +10,7 @@ class Track {
     required this.album,
     required this.duration,
     required this.addedAt,
+    this.genre = '',
     this.uri = '',
     this.source = TrackSource.device,
   });
@@ -20,6 +21,9 @@ class Track {
   /// 모르면 빈 문자열 (화면에서 "알 수 없는 아티스트"로 보여 준다).
   final String artist;
   final String album;
+
+  /// 모르면 빈 문자열.
+  final String genre;
   final Duration duration;
   final DateTime addedAt;
 

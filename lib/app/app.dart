@@ -13,6 +13,7 @@ import '../features/home/presentation/bloc/play_recorder_cubit.dart';
 import '../features/library/presentation/bloc/library_cubit.dart';
 import '../features/library/presentation/bloc/library_import_cubit.dart';
 import '../features/player/presentation/bloc/now_playing_cubit.dart';
+import '../features/playlists/presentation/bloc/playlists_cubit.dart';
 import '../features/theme/presentation/bloc/theme_cubit.dart';
 import 'router.dart';
 
@@ -50,6 +51,7 @@ class _MusicAppState extends State<MusicApp> {
         BlocProvider(create: (_) => sl<NowPlayingCubit>()),
         BlocProvider(create: (_) => sl<PlayRecorderCubit>()),
         BlocProvider(create: (_) => sl<DownloadQueueCubit>()..start()),
+        BlocProvider(create: (_) => sl<PlaylistsCubit>()..start()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(
         builder: (context, t) => MaterialApp.router(

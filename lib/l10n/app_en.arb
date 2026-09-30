@@ -139,5 +139,15 @@
   "sourceYoutube": "YouTube",
   "sourceWeb": "Web",
   "downloadsExpand": "Show queue",
-  "downloadsCollapse": "Hide queue"
+  "downloadsCollapse": "Hide queue",
+  "downloadDialogTitle": "Download details",
+  "downloadFieldTitle": "Title",
+  "downloadFieldArtist": "Artist",
+  "downloadFieldGenre": "Genre",
+  "downloadPlaylistsLabel": "Add to playlists",
+  "downloadPlaylistsEmpty": "No playlists yet. Create one below.",
+  "downloadNewPlaylist": "New playlist",
+  "downloadNewPlaylistHint": "Type a name, then +",
+  "downloadQueued": "Added to the queue",
+  "homeTopGenre": "Top genre"
 }

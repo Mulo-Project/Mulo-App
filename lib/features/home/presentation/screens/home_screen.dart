@@ -153,6 +153,10 @@ class _StatsCard extends StatelessWidget {
               ? l10n.unknownArtist
               : stats.topArtists.first.artist);
 
+    final topGenre = stats.topGenres.isEmpty
+        ? '–'
+        : stats.topGenres.first.genre;
+
     Widget stat(String value, String label) => Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -181,6 +185,15 @@ class _StatsCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.xxs),
           Text(
             topArtist,
+            style: text.titleLarge,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(l10n.homeTopGenre, style: text.bodySmall),
+          const SizedBox(height: AppSpacing.xxs),
+          Text(
+            topGenre,
             style: text.titleLarge,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,

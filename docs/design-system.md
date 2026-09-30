@@ -67,6 +67,7 @@ MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부�
 | `ArtworkBox` · `toneFor()` | artwork_box.dart | 커버 자리 (없으면 그라데이션), 키별 고정 톤 |
 | `TrackTile` | track_tile.dart | 곡 한 줄 (커버 · 제목 · 부제 · 오른쪽 · 아래 줄) |
 | `AppSwitch` | app_switch.dart | 토글 (켜짐 = 강조 색) |
+| `AppTextField` | app_text_field.dart | 라벨이 위에 붙은 둥근 입력칸 (폼) |
 | `SectionCard` · `SettingRow` | section_card.dart | 설정 묶음 · 한 줄 |
 | `SegmentedPills` · `StatusPill` | segmented_pills.dart | 하나 고르기 알약 묶음 · 상태 알약 |
 | `ThemeSwatch` | theme_swatch.dart | 테마 프리셋 미리보기 동그라미 (다른 팔레트를 그리는 유일한 컴포넌트) |

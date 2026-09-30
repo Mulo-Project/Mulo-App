@@ -44,6 +44,16 @@ class ArtistPlays extends Equatable {
   List<Object?> get props => [artist, count];
 }
 
+class GenrePlays extends Equatable {
+  const GenrePlays(this.genre, this.count);
+
+  final String genre;
+  final int count;
+
+  @override
+  List<Object?> get props => [genre, count];
+}
+
 /// 청취 분석 (상세 기능: 청취 분석).
 class ListeningStats extends Equatable {
   const ListeningStats({
@@ -51,6 +61,7 @@ class ListeningStats extends Equatable {
     this.uniqueTracks = 0,
     this.listened = Duration.zero,
     this.topArtists = const [],
+    this.topGenres = const [],
   });
 
   final int plays;
@@ -58,8 +69,17 @@ class ListeningStats extends Equatable {
   final Duration listened;
   final List<ArtistPlays> topArtists;
 
+  /// 장르를 아는 곡만 센다 (장르가 빈 곡은 제외).
+  final List<GenrePlays> topGenres;
+
   @override
-  List<Object?> get props => [plays, uniqueTracks, listened, topArtists];
+  List<Object?> get props => [
+    plays,
+    uniqueTracks,
+    listened,
+    topArtists,
+    topGenres,
+  ];
 }
 
 /// 홈 화면에 필요한 것 전부.

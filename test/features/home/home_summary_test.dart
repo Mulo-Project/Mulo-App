@@ -6,11 +6,12 @@ import 'package:music_download_play_app/features/library/domain/entities/track.d
 
 import '../../helpers/fakes.dart';
 
-Track _t(String id, String artist, int day) => Track(
+Track _t(String id, String artist, int day, [String genre = '']) => Track(
   id: id,
   title: 'Song $id',
   artist: artist,
   album: '',
+  genre: genre,
   duration: const Duration(minutes: 3),
   uri: 'u:$id',
   addedAt: DateTime(2026, 9, day),
@@ -98,5 +99,29 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 10));
     expect(bloc.state.period, HomePeriod.month);
     expect(bloc.state.summary.stats.plays, 1);
+  });
+
+  test('장르 통계: 장르를 아는 곡만 세고 많은 순', () {
+    final withGenre = [
+      _t('a', 'Neon', 1, '록'),
+      _t('b', 'Neon', 2, '발라드'),
+      _t('c', 'Coral', 3), // 장르 모름
+    ];
+    final s = buildHomeSummary(
+      tracks: withGenre,
+      plays: [
+        _p('a', now.subtract(const Duration(days: 1))),
+        _p('b', now.subtract(const Duration(days: 1))),
+        _p('b', now.subtract(const Duration(days: 2))),
+        _p('c', now.subtract(const Duration(days: 2))),
+        _p('a', now.subtract(const Duration(days: 20))), // 이번 주 밖
+      ],
+      period: HomePeriod.week,
+      now: now,
+    );
+    expect(s.stats.topGenres.map((g) => (g.genre, g.count)), [
+      ('발라드', 2),
+      ('록', 1),
+    ]);
   });
 }

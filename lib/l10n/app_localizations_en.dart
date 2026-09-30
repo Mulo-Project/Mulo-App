@@ -450,4 +450,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get downloadsCollapse => 'Hide queue';
+
+  @override
+  String get downloadDialogTitle => 'Download details';
+
+  @override
+  String get downloadFieldTitle => 'Title';
+
+  @override
+  String get downloadFieldArtist => 'Artist';
+
+  @override
+  String get downloadFieldGenre => 'Genre';
+
+  @override
+  String get downloadPlaylistsLabel => 'Add to playlists';
+
+  @override
+  String get downloadPlaylistsEmpty => 'No playlists yet. Create one below.';
+
+  @override
+  String get downloadNewPlaylist => 'New playlist';
+
+  @override
+  String get downloadNewPlaylistHint => 'Type a name, then +';
+
+  @override
+  String get downloadQueued => 'Added to the queue';
+
+  @override
+  String get homeTopGenre => 'Top genre';
 }

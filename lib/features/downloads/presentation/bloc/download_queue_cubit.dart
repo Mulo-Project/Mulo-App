@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/usecase/usecase.dart';
 import '../../domain/entities/download_item.dart';
+import '../../domain/entities/download_request.dart';
 import '../../domain/usecases/download_usecases.dart';
 
 class DownloadQueueState extends Equatable {
@@ -35,9 +36,11 @@ class DownloadQueueState extends Equatable {
 
 /// 검색 탭의 다운로드 카드 · 대기열. 대기열 변경을 구독한다.
 class DownloadQueueCubit extends Cubit<DownloadQueueState> {
-  DownloadQueueCubit(this._watch) : super(const DownloadQueueState());
+  DownloadQueueCubit(this._watch, this._enqueue)
+    : super(const DownloadQueueState());
 
   final WatchDownloadQueue _watch;
+  final EnqueueDownload _enqueue;
   StreamSubscription<List<DownloadItem>>? _sub;
 
   void start() {
@@ -45,6 +48,9 @@ class DownloadQueueCubit extends Cubit<DownloadQueueState> {
     _sub = _watch(const NoParams())
         .listen((items) => emit(DownloadQueueState(items: items)));
   }
+
+  /// 팝업에서 정한 정보로 받기를 시작한다. 제목이 비어 있으면 false.
+  Future<bool> enqueue(DownloadRequest request) => _enqueue(request);
 
   @override
   Future<void> close() async {

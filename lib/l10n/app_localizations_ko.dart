@@ -446,4 +446,34 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get downloadsCollapse => '대기 목록 접기';
+
+  @override
+  String get downloadDialogTitle => '받기 정보';
+
+  @override
+  String get downloadFieldTitle => '제목';
+
+  @override
+  String get downloadFieldArtist => '아티스트';
+
+  @override
+  String get downloadFieldGenre => '장르';
+
+  @override
+  String get downloadPlaylistsLabel => '담을 재생목록';
+
+  @override
+  String get downloadPlaylistsEmpty => '아직 재생목록이 없어요. 아래에서 새로 만들 수 있어요.';
+
+  @override
+  String get downloadNewPlaylist => '새 재생목록';
+
+  @override
+  String get downloadNewPlaylistHint => '이름을 입력하고 +';
+
+  @override
+  String get downloadQueued => '대기열에 넣었어요';
+
+  @override
+  String get homeTopGenre => '많이 들은 장르';
 }

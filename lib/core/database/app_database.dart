@@ -10,6 +10,9 @@ class Tracks extends Table {
   TextColumn get title => text()();
   TextColumn get artist => text()();
   TextColumn get album => text()();
+
+  /// 장르. 모르면 빈 문자열.
+  TextColumn get genre => text().withDefault(const Constant(''))();
   IntColumn get durationMs => integer()();
   TextColumn get uri => text().unique()();
 
@@ -44,20 +47,47 @@ class Plays extends Table {
   IntColumn get listenedMs => integer().withDefault(const Constant(0))();
 }
 
+/// 재생목록 (상세 기능: 재생목록 관리 #20).
+@DataClassName('PlaylistRow')
+class Playlists extends Table {
+  TextColumn get id => text()();
+  TextColumn get name => text()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// 재생목록에 담긴 곡. 곡 하나가 여러 재생목록에 들어갈 수 있다.
+@DataClassName('PlaylistTrackRow')
+class PlaylistTracks extends Table {
+  TextColumn get playlistId => text()();
+  TextColumn get trackId => text()();
+  DateTimeColumn get addedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {playlistId, trackId};
+}
+
 /// 앱 로컬 DB (drift · SQLite). 설정값은 shared_preferences, 나머지 데이터는 여기.
-@DriftDatabase(tables: [Tracks, Covers, Plays])
+@DriftDatabase(tables: [Tracks, Covers, Plays, Playlists, PlaylistTracks])
 class AppDatabase extends _$AppDatabase {
   /// 테스트는 [executor]에 메모리 DB를 넣는다.
   AppDatabase([QueryExecutor? executor])
     : super(executor ?? driftDatabase(name: 'music_app'));
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onUpgrade: (m, from, to) async {
       if (from < 2) await m.createTable(plays);
+      if (from < 3) {
+        await m.addColumn(tracks, tracks.genre);
+        await m.createTable(playlists);
+        await m.createTable(playlistTracks);
+      }
     },
   );
 }

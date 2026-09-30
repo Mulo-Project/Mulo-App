@@ -126,11 +126,22 @@ HomeSummary buildHomeSummary({
     for (final e in artistCounts.entries) ArtistPlays(e.key, e.value),
   ]..sort((a, b) => b.count.compareTo(a.count));
 
+  // 장르 (모르는 곡은 제외)
+  final genreCounts = <String, int>{};
+  for (final pl in inPeriod) {
+    final genre = byId[pl.trackId]!.genre;
+    if (genre.isNotEmpty) genreCounts[genre] = (genreCounts[genre] ?? 0) + 1;
+  }
+  final topGenres = [
+    for (final e in genreCounts.entries) GenrePlays(e.key, e.value),
+  ]..sort((a, b) => b.count.compareTo(a.count));
+
   final stats = ListeningStats(
     plays: inPeriod.length,
     uniqueTracks: trackCounts.length,
     listened: inPeriod.fold(Duration.zero, (sum, pl) => sum + pl.listened),
     topArtists: topArtists.take(3).toList(),
+    topGenres: topGenres.take(3).toList(),
   );
 
   // 최근 재생 (중복 없이)

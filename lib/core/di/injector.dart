@@ -5,6 +5,7 @@ import '../../features/downloads/di.dart';
 import '../../features/home/di.dart';
 import '../../features/library/di.dart';
 import '../../features/player/di.dart';
+import '../../features/playlists/di.dart';
 import '../../features/theme/di.dart';
 import '../database/app_database.dart';
 
@@ -22,5 +23,6 @@ void configureDependencies({AppDatabase? database}) {
   registerCovers(sl);
   registerPlayer(sl);
   registerHome(sl);
+  registerPlaylists(sl);
   registerDownloads(sl);
 }
