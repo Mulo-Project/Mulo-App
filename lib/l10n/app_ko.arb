@@ -49,7 +49,6 @@
   "qualityBest": "최고",
   "qualityNormal": "보통",
   "qualitySaver": "절약",
-  "downloadsSubtitle": "대기열",
   "downloadsActive": "진행 중",
   "downloadsWaiting": "대기 {count}",
   "@downloadsWaiting": {
@@ -197,5 +196,10 @@
       }
     }
   },
-  "openDownloads": "다운로드 목록"
+  "searchHintWeb": "웹 음원 검색어나 URL",
+  "searchSourceTooltip": "검색 대상",
+  "sourceYoutube": "유튜브",
+  "sourceWeb": "웹",
+  "downloadsExpand": "대기 목록 펼치기",
+  "downloadsCollapse": "대기 목록 접기"
 }

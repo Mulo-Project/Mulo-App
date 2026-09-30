@@ -35,7 +35,6 @@
   "qualityBest": "Best",
   "qualityNormal": "Normal",
   "qualitySaver": "Saver",
-  "downloadsSubtitle": "Queue",
   "downloadsActive": "Active",
   "downloadsWaiting": "{count} waiting",
   "downloadsPauseAll": "Pause all",
@@ -135,5 +134,10 @@
   "homeEmptyLibraryBody": "Import or download music to see\nyour top songs and recommendations here.",
   "homeGoLibrary": "Go to library",
   "playCount": "{count} plays",
-  "openDownloads": "Downloads"
+  "searchHintWeb": "Web audio search or URL",
+  "searchSourceTooltip": "Search source",
+  "sourceYoutube": "YouTube",
+  "sourceWeb": "Web",
+  "downloadsExpand": "Show queue",
+  "downloadsCollapse": "Hide queue"
 }

@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../../core/sample/sample_data.dart';
 import '../../../downloads/domain/entities/download_options.dart';
+import '../../../downloads/presentation/bloc/download_queue_cubit.dart';
+import '../../../downloads/presentation/widgets/download_progress_card.dart';
 import '../../../library/domain/entities/track.dart';
+import '../../domain/entities/search_source.dart';
+import '../widgets/search_source_menu.dart';
 
 /// 입력에 따라 화면이 바뀐다 (자리 표시 데이터).
 enum SearchMode { empty, url, playlist, keyword }
@@ -33,6 +37,7 @@ class _SearchScreenState extends State<SearchScreen> {
   late final _controller = TextEditingController(text: widget.initialQuery);
   late String _query = widget.initialQuery;
   Quality _quality = Quality.best;
+  SearchSource _source = SearchSource.youtube;
   final Set<String> _selected = {
     for (final t in SampleData.tracks.take(8)) t.id,
   };
@@ -72,19 +77,14 @@ class _SearchScreenState extends State<SearchScreen> {
             large: true,
             title: l10n.navSearch,
             subtitle: l10n.searchSubtitle,
-            actions: [
-              CircleIconButton(
-                icon: Icons.download_rounded,
-                tooltip: l10n.openDownloads,
-                onPressed: () => context.push('/downloads'),
-              ),
-            ],
           ),
           Padding(
             padding: AppSpacing.screen,
             child: AppSearchField(
               controller: _controller,
-              hint: l10n.searchHint,
+              hint: _source == SearchSource.web
+                  ? l10n.searchHintWeb
+                  : l10n.searchHint,
               clearTooltip: l10n.actionClear,
               onChanged: (q) => setState(() => _query = q),
               trailing: IconButton(
@@ -96,8 +96,13 @@ class _SearchScreenState extends State<SearchScreen> {
                   size: 20,
                 ),
               ),
+              suffix: SearchSourceMenu(
+                source: _source,
+                onChanged: (s) => setState(() => _source = s),
+              ),
             ),
           ),
+          const _DownloadCard(),
           const SizedBox(height: AppSpacing.md),
           ...body,
         ],
@@ -198,6 +203,27 @@ class _SearchScreenState extends State<SearchScreen> {
           }),
         ),
     ];
+  }
+}
+
+/// 검색창 아래, 받는 중인 곡이 있을 때만 보인다.
+class _DownloadCard extends StatelessWidget {
+  const _DownloadCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final queue = context.watch<DownloadQueueCubit>().state;
+    final current = queue.current;
+    if (current == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.sm,
+        AppSpacing.md,
+        0,
+      ),
+      child: DownloadProgressCard(current: current, waiting: queue.waiting),
+    );
   }
 }
 

@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 
 import '../core/design/design.dart';
 import '../features/design_preview/presentation/screens/design_preview_screen.dart';
-import '../features/downloads/presentation/screens/downloads_screen.dart';
 import '../features/home/presentation/screens/home_screen.dart';
 import '../features/library/presentation/screens/library_screen.dart';
 import '../features/player/presentation/screens/player_screen.dart';
@@ -17,7 +16,6 @@ abstract final class Routes {
   static const library = '/library';
   static const playlists = '/playlists';
   static const search = '/search';
-  static const downloads = '/downloads';
   static const settings = '/settings';
   static const player = '/player';
   static const designPreview = '/design-preview';
@@ -67,15 +65,6 @@ GoRouter createRouter({String initialLocation = Routes.home}) => GoRouter(
           ),
           child: child,
         ),
-      ),
-    ),
-    // 다운로드 목록: 검색 탭에 합치기 전까지 검색 화면에서 덮어 연다.
-    GoRoute(
-      path: Routes.downloads,
-      parentNavigatorKey: _rootKey,
-      builder: (context, state) => Scaffold(
-        backgroundColor: context.palette.background,
-        body: const DownloadsScreen(),
       ),
     ),
     GoRoute(

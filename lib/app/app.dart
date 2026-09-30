@@ -8,6 +8,7 @@ import '../core/design/design.dart';
 import '../core/di/injector.dart';
 import '../core/l10n/l10n.dart';
 import '../features/covers/presentation/bloc/cover_cubit.dart';
+import '../features/downloads/presentation/bloc/download_queue_cubit.dart';
 import '../features/home/presentation/bloc/play_recorder_cubit.dart';
 import '../features/library/presentation/bloc/library_cubit.dart';
 import '../features/library/presentation/bloc/library_import_cubit.dart';
@@ -48,6 +49,7 @@ class _MusicAppState extends State<MusicApp> {
         BlocProvider(create: (_) => sl<LibraryImportCubit>()),
         BlocProvider(create: (_) => sl<NowPlayingCubit>()),
         BlocProvider(create: (_) => sl<PlayRecorderCubit>()),
+        BlocProvider(create: (_) => sl<DownloadQueueCubit>()..start()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(
         builder: (context, t) => MaterialApp.router(

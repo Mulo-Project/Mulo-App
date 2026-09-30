@@ -13,6 +13,7 @@ class AppSearchField extends StatefulWidget {
     this.onChanged,
     this.onSubmitted,
     this.trailing,
+    this.suffix,
     this.autofocus = false,
   });
 
@@ -24,6 +25,9 @@ class AppSearchField extends StatefulWidget {
 
   /// 입력이 비어 있을 때 오른쪽에 둘 위젯 (예: 붙여넣기 버튼).
   final Widget? trailing;
+
+  /// 입력 여부와 상관없이 맨 오른쪽에 항상 둘 위젯 (예: 검색 대상 메뉴).
+  final Widget? suffix;
   final bool autofocus;
 
   @override
@@ -100,6 +104,7 @@ class _AppSearchFieldState extends State<AppSearchField> {
               )
             else if (widget.trailing != null)
               widget.trailing!,
+            if (widget.suffix != null) widget.suffix!,
           ],
         ),
       ),

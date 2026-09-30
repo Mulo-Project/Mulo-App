@@ -120,9 +120,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get qualitySaver => '절약';
 
   @override
-  String get downloadsSubtitle => '대기열';
-
-  @override
   String get downloadsActive => '진행 중';
 
   @override
@@ -433,5 +430,20 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get openDownloads => '다운로드 목록';
+  String get searchHintWeb => '웹 음원 검색어나 URL';
+
+  @override
+  String get searchSourceTooltip => '검색 대상';
+
+  @override
+  String get sourceYoutube => '유튜브';
+
+  @override
+  String get sourceWeb => '웹';
+
+  @override
+  String get downloadsExpand => '대기 목록 펼치기';
+
+  @override
+  String get downloadsCollapse => '대기 목록 접기';
 }

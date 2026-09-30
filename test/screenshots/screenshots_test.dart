@@ -14,6 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/sample/sample_data.dart';
+import 'package:music_download_play_app/features/downloads/data/repositories/sample_download_queue_repository.dart';
 import 'package:music_download_play_app/features/home/domain/entities/home_summary.dart';
 import 'package:music_download_play_app/features/theme/domain/entities/theme_settings.dart';
 
@@ -52,7 +53,6 @@ void main() {
     'search-playlist':
         '${Routes.search}?q=https://youtube.com/playlist?list=example',
     'search-keyword': '${Routes.search}?q=night',
-    'downloads': Routes.downloads,
     'settings': Routes.settings,
     'settings-full': Routes.settings,
     'library-light': Routes.library,
@@ -87,6 +87,7 @@ void main() {
         await setUpTestDependencies(
           history: MemoryPlayHistory(plays),
           tracks: SampleData.tracks,
+          downloads: const SampleDownloadQueueRepository(),
           // 라이트 스크린샷은 저장된 화면 모드를 라이트로 둔다.
           theme: ThemeSettings(
             mode: e.key.endsWith('-light')

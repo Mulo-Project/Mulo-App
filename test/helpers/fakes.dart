@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:music_download_play_app/core/di/injector.dart';
 import 'package:music_download_play_app/features/covers/di.dart';
 import 'package:music_download_play_app/features/covers/domain/repositories/cover_repository.dart';
+import 'package:music_download_play_app/features/downloads/di.dart';
+import 'package:music_download_play_app/features/downloads/domain/entities/download_item.dart';
+import 'package:music_download_play_app/features/downloads/domain/repositories/download_queue_repository.dart';
 import 'package:music_download_play_app/features/home/di.dart';
 import 'package:music_download_play_app/features/home/domain/entities/home_summary.dart';
 import 'package:music_download_play_app/features/home/domain/repositories/play_history_repository.dart';
@@ -124,6 +127,28 @@ class MemoryPlayHistory implements PlayHistoryRepository {
   }
 }
 
+/// 메모리 다운로드 대기열.
+class MemoryDownloadQueue implements DownloadQueueRepository {
+  MemoryDownloadQueue([List<DownloadItem> initial = const []])
+    : items = [...initial];
+
+  final List<DownloadItem> items;
+  final _changes = StreamController<List<DownloadItem>>.broadcast();
+
+  void set(List<DownloadItem> next) {
+    items
+      ..clear()
+      ..addAll(next);
+    _changes.add([...items]);
+  }
+
+  @override
+  Stream<List<DownloadItem>> watchQueue() async* {
+    yield [...items];
+    yield* _changes.stream;
+  }
+}
+
 /// 앱 전체를 띄우는 테스트용 의존성 (DB · 파일 · 권한 없이).
 /// 각 기능의 실제 등록을 쓰고 리포지토리만 가짜로 바꾼다.
 Future<void> setUpTestDependencies({
@@ -133,6 +158,7 @@ Future<void> setUpTestDependencies({
   CoverImageSource? imageSource,
   ThemeSettings theme = const ThemeSettings(),
   PlayHistoryRepository? history,
+  DownloadQueueRepository? downloads,
 }) async {
   await sl.reset();
   registerTheme(sl);
@@ -140,6 +166,7 @@ Future<void> setUpTestDependencies({
   registerCovers(sl);
   registerPlayer(sl);
   registerHome(sl);
+  registerDownloads(sl);
   sl.allowReassignment = true;
   sl
     ..registerLazySingleton<ThemeSettingsRepository>(
@@ -159,6 +186,9 @@ Future<void> setUpTestDependencies({
     )
     ..registerLazySingleton<PlayHistoryRepository>(
       () => history ?? MemoryPlayHistory(),
+    )
+    ..registerLazySingleton<DownloadQueueRepository>(
+      () => downloads ?? MemoryDownloadQueue(),
     );
   sl.allowReassignment = false;
 }

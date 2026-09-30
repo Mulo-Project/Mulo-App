@@ -120,9 +120,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get qualitySaver => 'Saver';
 
   @override
-  String get downloadsSubtitle => 'Queue';
-
-  @override
   String get downloadsActive => 'Active';
 
   @override
@@ -437,5 +434,20 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get openDownloads => 'Downloads';
+  String get searchHintWeb => 'Web audio search or URL';
+
+  @override
+  String get searchSourceTooltip => 'Search source';
+
+  @override
+  String get sourceYoutube => 'YouTube';
+
+  @override
+  String get sourceWeb => 'Web';
+
+  @override
+  String get downloadsExpand => 'Show queue';
+
+  @override
+  String get downloadsCollapse => 'Hide queue';
 }

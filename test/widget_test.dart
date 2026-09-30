@@ -42,13 +42,11 @@ void main() {
     // 처음에는 재생 중인 곡이 없어 미니 플레이어가 없다.
     expect(find.byType(MiniPlayerBar), findsNothing);
 
-    // 다운로드는 탭이 아니라 검색 화면의 버튼으로 연다.
+    // 다운로드는 탭이 아니라 검색 탭에 합쳐졌다 (검색창 아래 카드).
     expect(find.text('다운로드'), findsNothing);
     await tester.tap(find.text('검색').last);
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('다운로드 목록'));
-    await tester.pumpAndSettle();
-    expect(find.text('대기열'.toUpperCase()), findsOneWidget);
+    expect(find.text('유튜브'), findsOneWidget);
   });
 
   testWidgets('설정에서 테마 프리셋을 고르면 팔레트가 바뀐다', (tester) async {

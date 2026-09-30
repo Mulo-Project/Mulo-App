@@ -308,12 +308,6 @@ abstract class AppLocalizations {
   /// **'절약'**
   String get qualitySaver;
 
-  /// No description provided for @downloadsSubtitle.
-  ///
-  /// In ko, this message translates to:
-  /// **'대기열'**
-  String get downloadsSubtitle;
-
   /// No description provided for @downloadsActive.
   ///
   /// In ko, this message translates to:
@@ -908,11 +902,41 @@ abstract class AppLocalizations {
   /// **'{count}회'**
   String playCount(int count);
 
-  /// No description provided for @openDownloads.
+  /// No description provided for @searchHintWeb.
   ///
   /// In ko, this message translates to:
-  /// **'다운로드 목록'**
-  String get openDownloads;
+  /// **'웹 음원 검색어나 URL'**
+  String get searchHintWeb;
+
+  /// No description provided for @searchSourceTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'검색 대상'**
+  String get searchSourceTooltip;
+
+  /// No description provided for @sourceYoutube.
+  ///
+  /// In ko, this message translates to:
+  /// **'유튜브'**
+  String get sourceYoutube;
+
+  /// No description provided for @sourceWeb.
+  ///
+  /// In ko, this message translates to:
+  /// **'웹'**
+  String get sourceWeb;
+
+  /// No description provided for @downloadsExpand.
+  ///
+  /// In ko, this message translates to:
+  /// **'대기 목록 펼치기'**
+  String get downloadsExpand;
+
+  /// No description provided for @downloadsCollapse.
+  ///
+  /// In ko, this message translates to:
+  /// **'대기 목록 접기'**
+  String get downloadsCollapse;
 }
 
 class _AppLocalizationsDelegate
