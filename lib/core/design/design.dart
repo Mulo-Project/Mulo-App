@@ -5,6 +5,7 @@ export 'app_theme.dart';
 export 'app_theme_tokens.dart';
 export 'components/app_background.dart';
 export 'components/app_bottom_nav.dart';
+export 'components/app_dropdown.dart';
 export 'components/app_search_field.dart';
 export 'components/app_switch.dart';
 export 'components/app_text_field.dart';

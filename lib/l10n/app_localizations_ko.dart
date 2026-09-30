@@ -167,6 +167,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get librarySearchHint => '보관함에서 찾기';
 
   @override
+  String get libraryGenres => '장르';
+
+  @override
+  String get unknownGenre => '알 수 없는 장르';
+
+  @override
+  String get genreBack => '장르 목록으로';
+
+  @override
+  String get sortLabel => '정렬';
+
+  @override
   String get sortName => '이름순';
 
   @override

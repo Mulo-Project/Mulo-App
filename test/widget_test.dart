@@ -86,6 +86,26 @@ void main() {
     expect(find.text('지금 재생 중'), findsOneWidget);
   });
 
+  testWidgets('보관함: 정렬 드롭다운으로 기준을 바꾸고, 장르 탭에서 장르별로 본다', (tester) async {
+    await _pumpApp(tester);
+    expect(find.text('추가일순'), findsOneWidget);
+    await tester.tap(find.text('추가일순'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('이름순'));
+    await tester.pumpAndSettle();
+    expect(find.text('이름순'), findsOneWidget);
+
+    await tester.tap(find.text('장르'));
+    await tester.pumpAndSettle();
+    expect(find.byType(TrackTile), findsWidgets);
+    await tester.tap(find.byType(TrackTile).first);
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('장르 목록으로'), findsOneWidget);
+    await tester.tap(find.byTooltip('장르 목록으로'));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('장르 목록으로'), findsNothing);
+  });
+
   testWidgets('빈 보관함: 불러오기 버튼으로 기기 음악을 추가한다', (tester) async {
     final device = FakeDeviceMusic(
       ScanFound(SampleData.tracks.take(3).toList()),

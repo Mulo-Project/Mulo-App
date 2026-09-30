@@ -7,13 +7,12 @@ import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../covers/presentation/widgets/cover_sheet.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/import_result.dart';
+import '../../domain/entities/library_sort.dart';
 import '../../domain/entities/track.dart';
 import '../bloc/library_cubit.dart';
 import '../bloc/library_import_cubit.dart';
 
-enum LibraryTab { songs, artists, albums }
-
-enum LibrarySort { name, added, artist }
+enum LibraryTab { songs, artists, albums, genres }
 
 /// 보관함 (상세 기능: 곡 목록 보기 #10, 정렬·검색 #12, 기기 음악 불러오기 #11).
 /// 곡은 보관함 DB(drift)에서 읽는다.
@@ -29,6 +28,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
   LibrarySort _sort = LibrarySort.added;
   String _query = '';
 
+  /// 장르 탭에서 골라 들어간 장르 (null이면 장르 목록). 빈 문자열은 "알 수 없는 장르".
+  String? _genre;
+
   List<Track> _filtered(List<Track> all, AppLocalizations l10n) {
     final q = _query.trim().toLowerCase();
     final list = all
@@ -37,23 +39,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
               q.isEmpty ||
               t.title.toLowerCase().contains(q) ||
               t.artist.toLowerCase().contains(q) ||
-              t.album.toLowerCase().contains(q),
+              t.album.toLowerCase().contains(q) ||
+              t.genre.toLowerCase().contains(q),
         )
         .toList();
-    switch (_sort) {
-      case LibrarySort.name:
-        list.sort((a, b) => a.title.compareTo(b.title));
-      case LibrarySort.added:
-        list.sort((a, b) => b.addedAt.compareTo(a.addedAt));
-      case LibrarySort.artist:
-        list.sort(
-          (a, b) => (
-            a.artist,
-            a.title,
-          ).toString().compareTo((b.artist, b.title).toString()),
-        );
-    }
-    return list;
+    return sortTracks(list, _sort);
   }
 
   @override
@@ -63,42 +53,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final importing = context.select((LibraryImportCubit c) => c.state.running);
     final tracks = _filtered(all, l10n);
     final vm = context.read<NowPlayingCubit>();
-    final current = context.select((NowPlayingCubit c) => c.state.track);
 
     final items = switch (_tab) {
       LibraryTab.songs => [
         for (var i = 0; i < tracks.length; i++)
-          TrackTile(
-            title: tracks[i].title,
-            subtitle:
-                '${artistOf(l10n, tracks[i])} · ${albumOf(l10n, tracks[i])}',
-            tone: toneFor(tracks[i].id),
-            active: tracks[i] == current,
-            artwork: coverImageOf(context, CoverKey.track(tracks[i].id)),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  formatDuration(tracks[i].duration),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                IconButton(
-                  tooltip: l10n.coverChange,
-                  onPressed: () => showCoverSheet(
-                    context,
-                    coverKey: CoverKey.track(tracks[i].id),
-                    title: tracks[i].title,
-                    tone: toneFor(tracks[i].id),
-                  ),
-                  icon: Icon(
-                    Icons.more_vert_rounded,
-                    color: context.palette.onSurfaceMuted,
-                  ),
-                ),
-              ],
-            ),
-            onTap: () => vm.playQueue(tracks, index: i),
-          ),
+          _songTile(context, tracks[i], i, tracks),
       ],
       LibraryTab.artists => [
         for (final e in _groupBy(tracks, (t) => artistOf(l10n, t)).entries)
@@ -128,6 +87,28 @@ class _LibraryScreenState extends State<LibraryScreen> {
             ),
             trailing: const _Chevron(),
             onTap: () => vm.playQueue(e.value),
+          ),
+      ],
+      LibraryTab.genres when _genre != null => [
+        _GenreHeader(
+          name: genreOf(l10n, _genre!),
+          backTooltip: l10n.genreBack,
+          onBack: () => setState(() => _genre = null),
+        ),
+        ..._genreSongs(context, groupByGenre(tracks)[_genre] ?? const []),
+      ],
+      LibraryTab.genres => [
+        for (final e in groupByGenre(tracks).entries)
+          TrackTile(
+            title: genreOf(l10n, e.key),
+            subtitle: l10n.songCount(e.value.length),
+            tone: toneFor(e.key),
+            leading: ArtworkBox(
+              tone: toneFor(e.key),
+              icon: Icons.category_rounded,
+            ),
+            trailing: const _Chevron(),
+            onTap: () => setState(() => _genre = e.key),
           ),
       ],
     };
@@ -187,8 +168,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     LibraryTab.songs => l10n.librarySongs,
                     LibraryTab.artists => l10n.libraryArtists,
                     LibraryTab.albums => l10n.libraryAlbums,
+                    LibraryTab.genres => l10n.libraryGenres,
                   },
-                  onChanged: (t) => setState(() => _tab = t),
+                  onChanged: (t) => setState(() {
+                    _tab = t;
+                    _genre = null;
+                  }),
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
@@ -201,18 +186,22 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
+              Padding(
                 padding: AppSpacing.screen,
-                child: SegmentedPills<LibrarySort>(
-                  values: LibrarySort.values,
-                  selected: _sort,
-                  labelOf: (s) => switch (s) {
-                    LibrarySort.name => l10n.sortName,
-                    LibrarySort.added => l10n.sortAdded,
-                    LibrarySort.artist => l10n.sortArtist,
-                  },
-                  onChanged: (s) => setState(() => _sort = s),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: AppDropdown<LibrarySort>(
+                    values: LibrarySort.values,
+                    selected: _sort,
+                    tooltip: l10n.sortLabel,
+                    icon: Icons.sort_rounded,
+                    labelOf: (s) => switch (s) {
+                      LibrarySort.name => l10n.sortName,
+                      LibrarySort.added => l10n.sortAdded,
+                      LibrarySort.artist => l10n.sortArtist,
+                    },
+                    onChanged: (s) => setState(() => _sort = s),
+                  ),
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
@@ -232,6 +221,47 @@ class _LibraryScreenState extends State<LibraryScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  List<Widget> _genreSongs(BuildContext context, List<Track> songs) => [
+    for (var i = 0; i < songs.length; i++)
+      _songTile(context, songs[i], i, songs),
+  ];
+
+  Widget _songTile(BuildContext context, Track t, int i, List<Track> queue) {
+    final l10n = context.l10n;
+    final vm = context.read<NowPlayingCubit>();
+    final current = context.select((NowPlayingCubit c) => c.state.track);
+    return TrackTile(
+      title: t.title,
+      subtitle: '${artistOf(l10n, t)} · ${albumOf(l10n, t)}',
+      tone: toneFor(t.id),
+      active: t == current,
+      artwork: coverImageOf(context, CoverKey.track(t.id)),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            formatDuration(t.duration),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          IconButton(
+            tooltip: l10n.coverChange,
+            onPressed: () => showCoverSheet(
+              context,
+              coverKey: CoverKey.track(t.id),
+              title: t.title,
+              tone: toneFor(t.id),
+            ),
+            icon: Icon(
+              Icons.more_vert_rounded,
+              color: context.palette.onSurfaceMuted,
+            ),
+          ),
+        ],
+      ),
+      onTap: () => vm.playQueue(queue, index: i),
     );
   }
 
@@ -346,6 +376,45 @@ String artistOf(AppLocalizations l10n, Track t) =>
 
 String albumOf(AppLocalizations l10n, Track t) =>
     t.album.isEmpty ? l10n.unknownAlbum : t.album;
+
+String genreOf(AppLocalizations l10n, String genre) =>
+    genre.isEmpty ? l10n.unknownGenre : genre;
+
+/// 장르 안으로 들어갔을 때 맨 위: 뒤로 가기 + 장르 이름.
+class _GenreHeader extends StatelessWidget {
+  const _GenreHeader({
+    required this.name,
+    required this.backTooltip,
+    required this.onBack,
+  });
+
+  final String name;
+  final String backTooltip;
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: AppSpacing.screen,
+      child: Row(
+        children: [
+          IconButton(
+            tooltip: backTooltip,
+            onPressed: onBack,
+            icon: const Icon(Icons.arrow_back_rounded),
+          ),
+          Expanded(
+            child: Text(
+              name,
+              style: Theme.of(context).textTheme.titleMedium,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 /// 보관함이 비었을 때: 기기 음악 불러오기 안내.
 class _EmptyLibrary extends StatelessWidget {

@@ -167,6 +167,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get librarySearchHint => 'Search library';
 
   @override
+  String get libraryGenres => 'Genres';
+
+  @override
+  String get unknownGenre => 'Unknown genre';
+
+  @override
+  String get genreBack => 'Back to genres';
+
+  @override
+  String get sortLabel => 'Sort';
+
+  @override
   String get sortName => 'Name';
 
   @override

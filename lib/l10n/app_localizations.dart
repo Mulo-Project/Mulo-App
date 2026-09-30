@@ -398,6 +398,30 @@ abstract class AppLocalizations {
   /// **'보관함에서 찾기'**
   String get librarySearchHint;
 
+  /// No description provided for @libraryGenres.
+  ///
+  /// In ko, this message translates to:
+  /// **'장르'**
+  String get libraryGenres;
+
+  /// No description provided for @unknownGenre.
+  ///
+  /// In ko, this message translates to:
+  /// **'알 수 없는 장르'**
+  String get unknownGenre;
+
+  /// No description provided for @genreBack.
+  ///
+  /// In ko, this message translates to:
+  /// **'장르 목록으로'**
+  String get genreBack;
+
+  /// No description provided for @sortLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'정렬'**
+  String get sortLabel;
+
   /// No description provided for @sortName.
   ///
   /// In ko, this message translates to:
