@@ -20,7 +20,6 @@ export 'components/stat_number.dart';
 export 'components/theme_swatch.dart';
 export 'components/track_tile.dart';
 export 'contrast.dart';
-export 'theme_controller.dart';
 export 'theme_source/mood_theme_source.dart';
 export 'theme_source/theme_presets.dart';
 export 'theme_source/theme_source.dart';

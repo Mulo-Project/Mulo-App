@@ -1,8 +1,8 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/core/database/app_database.dart';
-import 'package:music_download_play_app/features/library/data/drift_library_repository.dart';
-import 'package:music_download_play_app/features/library/domain/track.dart';
+import 'package:music_download_play_app/features/library/data/repositories/drift_library_repository.dart';
+import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 
 Track _t(String id, String uri, int day) => Track(
   id: id,

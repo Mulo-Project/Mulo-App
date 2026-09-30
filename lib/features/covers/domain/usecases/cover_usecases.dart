@@ -1,0 +1,35 @@
+import '../../../../core/usecase/usecase.dart';
+import '../repositories/cover_repository.dart';
+
+class LoadCovers implements UseCase<Map<String, String>, NoParams> {
+  const LoadCovers(this._repo);
+
+  final CoverRepository _repo;
+
+  @override
+  Future<Map<String, String>> call(NoParams _) => _repo.loadAll();
+}
+
+/// 기기에서 사진을 골라 [key]의 커버로 저장한다. 저장된 경로, 취소하면 null.
+class PickCoverFromDevice implements UseCase<String?, String> {
+  const PickCoverFromDevice(this._source, this._repo);
+
+  final CoverImageSource _source;
+  final CoverRepository _repo;
+
+  @override
+  Future<String?> call(String key) async {
+    final picked = await _source.pickFromDevice();
+    if (picked == null) return null;
+    return _repo.save(key, picked);
+  }
+}
+
+class ClearCover implements UseCase<void, String> {
+  const ClearCover(this._repo);
+
+  final CoverRepository _repo;
+
+  @override
+  Future<void> call(String key) => _repo.remove(key);
+}

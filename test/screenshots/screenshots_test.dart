@@ -10,11 +10,11 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/sample/sample_data.dart';
+import 'package:music_download_play_app/features/theme/domain/entities/theme_settings.dart';
 
 import '../helpers/fakes.dart';
 
@@ -72,18 +72,20 @@ void main() {
         addTearDown(tester.view.reset);
         addTearDown(tester.platformDispatcher.clearLocalesTestValue);
 
+        await setUpTestDependencies(
+          tracks: SampleData.tracks,
+          // 라이트 스크린샷은 저장된 화면 모드를 라이트로 둔다.
+          theme: ThemeSettings(
+            mode: e.key.endsWith('-light')
+                ? AppThemeMode.light
+                : AppThemeMode.dark,
+          ),
+        );
         final key = GlobalKey();
         await tester.pumpWidget(
           RepaintBoundary(
             key: key,
-            child: ProviderScope(
-              overrides: appTestOverrides(
-                tracks: SampleData.tracks,
-                // 라이트 스크린샷은 저장된 화면 모드를 라이트로 둔다.
-                themeMode: e.key.endsWith('-light') ? 'light' : null,
-              ),
-              child: MusicApp(initialLocation: e.value),
-            ),
+            child: MusicApp(initialLocation: e.value),
           ),
         );
         await tester.pumpAndSettle();

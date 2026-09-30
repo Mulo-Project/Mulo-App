@@ -1,4 +1,4 @@
-import '../../features/library/domain/track.dart';
+import '../../features/library/domain/entities/track.dart';
 
 /// UI 퍼블리싱용 가짜 데이터 (검색 · 다운로드 · 재생목록 화면, 테스트). 보관함은 실제 DB를 쓴다. 실제 곡 · URL을 쓰지 않는다 (저작권).
 /// 기능이 연결되면 각 기능의 리포지토리로 대체하고 이 파일은 지운다.

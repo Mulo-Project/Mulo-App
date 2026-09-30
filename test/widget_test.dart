@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/design/design.dart';
 import 'package:music_download_play_app/core/sample/sample_data.dart';
-import 'package:music_download_play_app/features/library/domain/library_repository.dart';
+import 'package:music_download_play_app/features/library/domain/entities/import_result.dart';
 
 import 'helpers/fakes.dart';
 
@@ -14,8 +12,9 @@ Future<void> _pumpApp(
   WidgetTester tester, {
   String at = Routes.library,
   double height = 2532,
-  List<Override>? overrides,
+  Future<void> Function()? setUp,
 }) async {
+  await (setUp ?? () => setUpTestDependencies(tracks: SampleData.tracks))();
   tester.view.physicalSize = Size(1170, height);
   tester.view.devicePixelRatio = 3;
   tester.platformDispatcher.localesTestValue = const [Locale('ko')];
@@ -24,12 +23,7 @@ Future<void> _pumpApp(
   addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
   addTearDown(tester.view.reset);
   addTearDown(tester.platformDispatcher.clearLocalesTestValue);
-  await tester.pumpWidget(
-    ProviderScope(
-      overrides: overrides ?? appTestOverrides(tracks: SampleData.tracks),
-      child: MusicApp(initialLocation: at),
-    ),
-  );
+  await tester.pumpWidget(MusicApp(initialLocation: at));
   await tester.pumpAndSettle();
 }
 
@@ -91,13 +85,15 @@ void main() {
   });
 
   testWidgets('빈 보관함: 불러오기 버튼으로 기기 음악을 추가한다', (tester) async {
-    final scanner = FakeScanner(ScanFound(SampleData.tracks.take(3).toList()));
-    await _pumpApp(tester, overrides: appTestOverrides(scanner: scanner));
+    final device = FakeDeviceMusic(
+      ScanFound(SampleData.tracks.take(3).toList()),
+    );
+    await _pumpApp(tester, setUp: () => setUpTestDependencies(device: device));
     expect(find.text('아직 음악이 없어요'), findsOneWidget);
 
     await tester.tap(find.text('기기 음악 불러오기').last);
     await tester.pumpAndSettle();
-    expect(scanner.calls, 1);
+    expect(device.calls, 1);
     expect(find.text('3곡을 불러왔어요'), findsOneWidget);
     expect(find.text(SampleData.tracks.first.title), findsWidgets);
   });

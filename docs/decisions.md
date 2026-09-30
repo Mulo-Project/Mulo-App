@@ -8,6 +8,7 @@
 
 ## D-002 · 2026-09-29 · 상태 관리 Riverpod
 `flutter_riverpod`(코드 생성 없이 `Notifier`). Notion 기술 스택과 같음.
+→ D-019로 대체 (BLoC).
 
 ## D-003 · 2026-09-29 · 디자인 방향
 검정 배경 + 옅은 점 격자, 둥근(32) 그라데이션 글로우 카드, 점 행렬(LED) 숫자, 알약 버튼, 원형 아이콘 버튼.
@@ -105,3 +106,11 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 사용자 요청: 테마는 시스템을 따르지 않고 앱 자체 설정에서 고르며, 기본은 다크.
 - 화면 모드는 다크 · 라이트 두 가지. 처음 설치 시 다크. 기기 다크 모드 설정은 무시한다.
 - 예전에 `system`이 저장돼 있으면 다크로 본다.
+
+## D-019 · 2026-10-01 · 클린 아키텍처 + BLoC (D-002 대체)
+사용자 요청: 앱 기능이 많고 규모가 커서 클린 아키텍처 + BLoC.
+- 상태 관리 `flutter_bloc`(Cubit 우선, 이벤트가 복잡하면 Bloc), 의존성 주입 `get_it`. Riverpod 제거.
+- 기능별 domain(entities · repositories · usecases, 순수 Dart) / data(datasources · repositories) / presentation(bloc · screens · widgets).
+- 테마도 기능으로 분리(`features/theme`): 저장 설정은 domain(`ThemeSettings` · `AppThemeMode`), 색 팔레트 계산은 presentation(`ThemeCubit` + core/design).
+- 앱 전체 bloc(테마 · 커버 · 보관함 · 불러오기 · 재생)은 MaterialApp 위 MultiBlocProvider → 바텀시트 · 전체 화면 플레이어에서도 읽힌다.
+- 의존 규칙은 `test/architecture_test.dart`가 검사.

@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/design/design.dart';
 import '../core/l10n/l10n.dart';
-import '../features/covers/presentation/cover_controller.dart';
-import '../features/player/presentation/now_playing_view_model.dart';
+import '../features/covers/presentation/bloc/cover_cubit.dart';
+import '../features/player/presentation/bloc/now_playing_cubit.dart';
 import 'router.dart';
 
 /// 탭 화면 공통 틀: 빛 배경 · 탭 내용 · 유리 미니 플레이어 · 유리 하단 탭.
-class AppShell extends ConsumerWidget {
+class AppShell extends StatelessWidget {
   const AppShell({super.key, required this.shell});
 
   final StatefulNavigationShell shell;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l10n = context.l10n;
     final p = context.palette;
 
@@ -67,15 +67,15 @@ class AppShell extends ConsumerWidget {
   }
 }
 
-class _ShellMiniPlayer extends ConsumerWidget {
+class _ShellMiniPlayer extends StatelessWidget {
   const _ShellMiniPlayer();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(nowPlayingProvider);
+  Widget build(BuildContext context) {
+    final state = context.watch<NowPlayingCubit>().state;
     final track = state.track;
     if (track == null) return const SizedBox.shrink();
-    final vm = ref.read(nowPlayingProvider.notifier);
+    final vm = context.read<NowPlayingCubit>();
     final l10n = context.l10n;
 
     return Padding(
@@ -90,7 +90,7 @@ class _ShellMiniPlayer extends ConsumerWidget {
         child: MiniPlayerBar(
           title: track.title,
           artist: track.artist,
-          artwork: coverImageOf(ref, CoverKey.track(track.id)),
+          artwork: coverImageOf(context, CoverKey.track(track.id)),
           progress: state.progress,
           isPlaying: state.isPlaying,
           playLabel: l10n.actionPlay,

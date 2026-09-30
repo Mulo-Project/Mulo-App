@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/design/design.dart';
-import '../features/design_preview/design_preview_screen.dart';
-import '../features/downloads/presentation/downloads_screen.dart';
-import '../features/library/presentation/library_screen.dart';
-import '../features/player/presentation/player_screen.dart';
-import '../features/playlists/presentation/playlists_screen.dart';
-import '../features/search/presentation/search_screen.dart';
-import '../features/settings/presentation/settings_screen.dart';
+import '../features/design_preview/presentation/screens/design_preview_screen.dart';
+import '../features/downloads/presentation/screens/downloads_screen.dart';
+import '../features/library/presentation/screens/library_screen.dart';
+import '../features/player/presentation/screens/player_screen.dart';
+import '../features/playlists/presentation/screens/playlists_screen.dart';
+import '../features/search/presentation/screens/search_screen.dart';
+import '../features/settings/presentation/screens/settings_screen.dart';
 import 'app_shell.dart';
 
 abstract final class Routes {

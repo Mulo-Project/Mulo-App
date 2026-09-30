@@ -12,9 +12,9 @@ import 'theme_source.dart';
 ///
 /// 플레이어 연결 예:
 /// ```dart
-/// ref.listen(currentTrackProvider, (_, track) {
+/// BlocListener<NowPlayingCubit, NowPlayingState>(listener: (context, s) {
 ///   if (track?.artwork != null) {
-///     ref.read(themeControllerProvider.notifier)
+///     context.read<ThemeCubit>()
 ///        .apply(MoodThemeSource(trackId: track!.id, artwork: track.artwork!));
 ///   }
 /// });
