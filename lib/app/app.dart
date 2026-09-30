@@ -8,6 +8,7 @@ import '../core/design/design.dart';
 import '../core/di/injector.dart';
 import '../core/l10n/l10n.dart';
 import '../features/covers/presentation/bloc/cover_cubit.dart';
+import '../features/home/presentation/bloc/play_recorder_cubit.dart';
 import '../features/library/presentation/bloc/library_cubit.dart';
 import '../features/library/presentation/bloc/library_import_cubit.dart';
 import '../features/player/presentation/bloc/now_playing_cubit.dart';
@@ -17,7 +18,7 @@ import 'router.dart';
 /// 앱 루트. 앱 전체에서 쓰는 bloc은 MaterialApp 위에 두어
 /// 탭 화면 · 전체 화면 플레이어 · 바텀시트 어디서든 읽을 수 있게 한다.
 class MusicApp extends StatefulWidget {
-  const MusicApp({super.key, this.initialLocation = Routes.library});
+  const MusicApp({super.key, this.initialLocation = Routes.home});
 
   /// 테스트 · 스크린샷에서 첫 화면을 바꿀 때 쓴다.
   final String initialLocation;
@@ -46,6 +47,7 @@ class _MusicAppState extends State<MusicApp> {
         BlocProvider(create: (_) => sl<LibraryCubit>()..start()),
         BlocProvider(create: (_) => sl<LibraryImportCubit>()),
         BlocProvider(create: (_) => sl<NowPlayingCubit>()),
+        BlocProvider(create: (_) => sl<PlayRecorderCubit>()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(
         builder: (context, t) => MaterialApp.router(

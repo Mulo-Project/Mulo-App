@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
@@ -71,6 +72,13 @@ class _SearchScreenState extends State<SearchScreen> {
             large: true,
             title: l10n.navSearch,
             subtitle: l10n.searchSubtitle,
+            actions: [
+              CircleIconButton(
+                icon: Icons.download_rounded,
+                tooltip: l10n.openDownloads,
+                onPressed: () => context.push('/downloads'),
+              ),
+            ],
           ),
           Padding(
             padding: AppSpacing.screen,

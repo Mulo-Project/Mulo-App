@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../core/design/design.dart';
 import '../features/design_preview/presentation/screens/design_preview_screen.dart';
 import '../features/downloads/presentation/screens/downloads_screen.dart';
+import '../features/home/presentation/screens/home_screen.dart';
 import '../features/library/presentation/screens/library_screen.dart';
 import '../features/player/presentation/screens/player_screen.dart';
 import '../features/playlists/presentation/screens/playlists_screen.dart';
@@ -12,6 +13,7 @@ import '../features/settings/presentation/screens/settings_screen.dart';
 import 'app_shell.dart';
 
 abstract final class Routes {
+  static const home = '/home';
   static const library = '/library';
   static const playlists = '/playlists';
   static const search = '/search';
@@ -25,13 +27,14 @@ final _rootKey = GlobalKey<NavigatorState>();
 
 /// 앱 라우터. 하단 탭 5개는 각자 스택을 유지하고(StatefulShellRoute),
 /// 전체 화면 플레이어 · 디자인 미리보기는 탭 위로 덮어 연다.
-GoRouter createRouter({String initialLocation = Routes.library}) => GoRouter(
+GoRouter createRouter({String initialLocation = Routes.home}) => GoRouter(
   navigatorKey: _rootKey,
   initialLocation: initialLocation,
   routes: [
     StatefulShellRoute.indexedStack(
       builder: (context, state, shell) => AppShell(shell: shell),
       branches: [
+        _branch(Routes.home, const HomeScreen(libraryRoute: Routes.library)),
         _branch(Routes.library, const LibraryScreen()),
         _branch(Routes.playlists, const PlaylistsScreen()),
         StatefulShellBranch(
@@ -48,7 +51,6 @@ GoRouter createRouter({String initialLocation = Routes.library}) => GoRouter(
             ),
           ],
         ),
-        _branch(Routes.downloads, const DownloadsScreen()),
         _branch(Routes.settings, const SettingsScreen()),
       ],
     ),
@@ -65,6 +67,15 @@ GoRouter createRouter({String initialLocation = Routes.library}) => GoRouter(
           ),
           child: child,
         ),
+      ),
+    ),
+    // 다운로드 목록: 검색 탭에 합치기 전까지 검색 화면에서 덮어 연다.
+    GoRoute(
+      path: Routes.downloads,
+      parentNavigatorKey: _rootKey,
+      builder: (context, state) => Scaffold(
+        backgroundColor: context.palette.background,
+        body: const DownloadsScreen(),
       ),
     ),
     GoRoute(

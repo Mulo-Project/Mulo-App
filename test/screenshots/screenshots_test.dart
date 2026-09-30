@@ -14,6 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/sample/sample_data.dart';
+import 'package:music_download_play_app/features/home/domain/entities/home_summary.dart';
 import 'package:music_download_play_app/features/theme/domain/entities/theme_settings.dart';
 
 import '../helpers/fakes.dart';
@@ -42,6 +43,8 @@ Future<void> _loadFonts() async {
 
 void main() {
   const screens = {
+    'home': Routes.home,
+    'home-light': Routes.home,
     'library': Routes.library,
     'playlists': Routes.playlists,
     'search': Routes.search,
@@ -72,7 +75,17 @@ void main() {
         addTearDown(tester.view.reset);
         addTearDown(tester.platformDispatcher.clearLocalesTestValue);
 
+        // 홈 스크린샷용 가짜 재생 기록 (최근 며칠).
+        final now = DateTime.now();
+        final plays = [
+          for (var i = 0; i < 14; i++)
+            PlayRecord(
+              trackId: SampleData.tracks[(i * 5) % 7].id,
+              playedAt: now.subtract(Duration(hours: i * 7)),
+            ),
+        ];
         await setUpTestDependencies(
+          history: MemoryPlayHistory(plays),
           tracks: SampleData.tracks,
           // 라이트 스크린샷은 저장된 화면 모드를 라이트로 둔다.
           theme: ThemeSettings(

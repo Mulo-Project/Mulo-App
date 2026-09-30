@@ -374,4 +374,64 @@ class AppLocalizationsKo extends AppLocalizations {
   String librarySources(int device, int downloaded) {
     return '기기 $device곡 · 받은 곡 $downloaded곡';
   }
+
+  @override
+  String get navHome => '홈';
+
+  @override
+  String get homeSubtitle => '오늘의 음악';
+
+  @override
+  String get homePeriodWeek => '이번 주';
+
+  @override
+  String get homePeriodMonth => '이번 달';
+
+  @override
+  String get homePeriodAll => '전체';
+
+  @override
+  String get homeStats => '청취 분석';
+
+  @override
+  String get homeStatPlays => '재생';
+
+  @override
+  String get homeStatTracks => '곡';
+
+  @override
+  String get homeTopArtist => '많이 들은 아티스트';
+
+  @override
+  String get homeTopTracks => '많이 들은 곡';
+
+  @override
+  String get homeRecommendations => '추천';
+
+  @override
+  String get homeRecent => '최근 재생';
+
+  @override
+  String get homeNoPlays => '아직 재생 기록이 없어요. 보관함에서 곡을 재생해 보세요.';
+
+  @override
+  String get homeNoRecommendations => '보관함에 곡이 더 있으면 추천해 드려요.';
+
+  @override
+  String get homeEmptyLibraryTitle => '보관함이 비었어요';
+
+  @override
+  String get homeEmptyLibraryBody =>
+      '기기 음악을 불러오거나 검색에서 받으면\n여기에 많이 들은 곡과 추천이 보여요.';
+
+  @override
+  String get homeGoLibrary => '보관함으로';
+
+  @override
+  String playCount(int count) {
+    return '$count회';
+  }
+
+  @override
+  String get openDownloads => '다운로드 목록';
 }

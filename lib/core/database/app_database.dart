@@ -33,13 +33,31 @@ class Covers extends Table {
   Set<Column> get primaryKey => {key};
 }
 
+/// 재생 기록 (상세 기능: 재생 기록 저장). 곡이 재생될 때마다 한 줄.
+@DataClassName('PlayRow')
+class Plays extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get trackId => text()();
+  DateTimeColumn get playedAt => dateTime()();
+
+  /// 실제로 들은 시간(ms). 재생 엔진이 붙기 전에는 0.
+  IntColumn get listenedMs => integer().withDefault(const Constant(0))();
+}
+
 /// 앱 로컬 DB (drift · SQLite). 설정값은 shared_preferences, 나머지 데이터는 여기.
-@DriftDatabase(tables: [Tracks, Covers])
+@DriftDatabase(tables: [Tracks, Covers, Plays])
 class AppDatabase extends _$AppDatabase {
   /// 테스트는 [executor]에 메모리 DB를 넣는다.
   AppDatabase([QueryExecutor? executor])
     : super(executor ?? driftDatabase(name: 'music_app'));
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onUpgrade: (m, from, to) async {
+      if (from < 2) await m.createTable(plays);
+    },
+  );
 }

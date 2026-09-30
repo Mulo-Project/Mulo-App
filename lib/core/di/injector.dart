@@ -1,6 +1,7 @@
 import 'package:get_it/get_it.dart';
 
 import '../../features/covers/di.dart';
+import '../../features/home/di.dart';
 import '../../features/library/di.dart';
 import '../../features/player/di.dart';
 import '../../features/theme/di.dart';
@@ -19,4 +20,5 @@ void configureDependencies({AppDatabase? database}) {
   registerLibrary(sl);
   registerCovers(sl);
   registerPlayer(sl);
+  registerHome(sl);
 }

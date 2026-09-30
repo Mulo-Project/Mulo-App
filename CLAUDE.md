@@ -41,7 +41,7 @@
 ## 폴더 구조
 ```
 lib/
-  app/            # 앱 진입, 라우터(go_router), 탭 틀
+  app/            # 앱 진입, 라우터(go_router), 탭 틀 (홈 · 보관함 · 재생목록 · 검색 · 설정)
   core/
     di/           # get_it 등록 (injector.dart)
     usecase/      # 유스케이스 공통 규약

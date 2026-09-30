@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../app_theme_tokens.dart';
 import '../tokens/app_dimens.dart';
-import 'glass.dart';
 
 class AppNavItem {
   const AppNavItem({
@@ -16,7 +15,7 @@ class AppNavItem {
   final String label;
 }
 
-/// 떠 있는 유리 탭 바. 선택된 탭은 강조 색 아이콘 + 아래 작은 점.
+/// 화면 아래에 붙은 단색 탭 바. 선택된 탭은 강조 색 아이콘 + 아래 작은 점.
 class AppBottomNav extends StatelessWidget {
   const AppBottomNav({
     super.key,
@@ -33,30 +32,30 @@ class AppBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
 
-    return SafeArea(
-      top: false,
-      minimum: const EdgeInsets.only(bottom: AppSpacing.xs),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-        child: GlassSurface(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadii.lg),
-          ),
-          child: SizedBox(
-            height: AppSizes.navBarHeight,
-            child: Row(
-              children: [
-                for (var i = 0; i < items.length; i++)
-                  Expanded(
-                    child: _NavButton(
-                      item: items[i],
-                      selected: i == currentIndex,
-                      onTap: () => onSelected(i),
-                      labelStyle: text.labelSmall!,
-                    ),
+    final p = context.palette;
+
+    // 화면 아래에 붙은 단색 바 (유리 없음, D-020).
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: p.surface,
+        border: Border(top: BorderSide(color: p.outline)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: AppSizes.navBarHeight,
+          child: Row(
+            children: [
+              for (var i = 0; i < items.length; i++)
+                Expanded(
+                  child: _NavButton(
+                    item: items[i],
+                    selected: i == currentIndex,
+                    onTap: () => onSelected(i),
+                    labelStyle: text.labelSmall!,
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
         ),
       ),

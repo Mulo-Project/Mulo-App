@@ -42,7 +42,11 @@ void main() {
     // 처음에는 재생 중인 곡이 없어 미니 플레이어가 없다.
     expect(find.byType(MiniPlayerBar), findsNothing);
 
-    await tester.tap(find.text('다운로드').last);
+    // 다운로드는 탭이 아니라 검색 화면의 버튼으로 연다.
+    expect(find.text('다운로드'), findsNothing);
+    await tester.tap(find.text('검색').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('다운로드 목록'));
     await tester.pumpAndSettle();
     expect(find.text('대기열'.toUpperCase()), findsOneWidget);
   });
@@ -96,6 +100,39 @@ void main() {
     expect(device.calls, 1);
     expect(find.text('3곡을 불러왔어요'), findsOneWidget);
     expect(find.text(SampleData.tracks.first.title), findsWidgets);
+  });
+
+  testWidgets('곡을 재생하면 홈의 최근 재생 · 많이 들은 곡에 나온다', (tester) async {
+    final history = MemoryPlayHistory();
+    await _pumpApp(
+      tester,
+      setUp: () =>
+          setUpTestDependencies(tracks: SampleData.tracks, history: history),
+    );
+    final first = SampleData.tracks.reduce(
+      (a, b) => a.addedAt.isAfter(b.addedAt) ? a : b,
+    );
+    await tester.tap(find.text(first.title).first);
+    await tester.pumpAndSettle();
+    expect(history.plays.map((p) => p.trackId), [first.id]);
+
+    await tester.tap(find.text('홈').last);
+    await tester.pumpAndSettle();
+    expect(find.text('많이 들은 곡'), findsOneWidget);
+    expect(find.text(first.title), findsWidgets);
+    expect(find.text('1회'), findsOneWidget);
+  });
+
+  testWidgets('홈: 보관함이 비었으면 보관함으로 안내', (tester) async {
+    await _pumpApp(
+      tester,
+      at: Routes.home,
+      setUp: () => setUpTestDependencies(),
+    );
+    expect(find.text('보관함이 비었어요'), findsOneWidget);
+    await tester.tap(find.text('보관함으로'));
+    await tester.pumpAndSettle();
+    expect(find.text('아직 음악이 없어요'), findsOneWidget);
   });
 
   test('derive는 강조 색 대비를 보정한다', () {

@@ -171,5 +171,31 @@
         "type": "int"
       }
     }
-  }
+  },
+  "navHome": "홈",
+  "homeSubtitle": "오늘의 음악",
+  "homePeriodWeek": "이번 주",
+  "homePeriodMonth": "이번 달",
+  "homePeriodAll": "전체",
+  "homeStats": "청취 분석",
+  "homeStatPlays": "재생",
+  "homeStatTracks": "곡",
+  "homeTopArtist": "많이 들은 아티스트",
+  "homeTopTracks": "많이 들은 곡",
+  "homeRecommendations": "추천",
+  "homeRecent": "최근 재생",
+  "homeNoPlays": "아직 재생 기록이 없어요. 보관함에서 곡을 재생해 보세요.",
+  "homeNoRecommendations": "보관함에 곡이 더 있으면 추천해 드려요.",
+  "homeEmptyLibraryTitle": "보관함이 비었어요",
+  "homeEmptyLibraryBody": "기기 음악을 불러오거나 검색에서 받으면\n여기에 많이 들은 곡과 추천이 보여요.",
+  "homeGoLibrary": "보관함으로",
+  "playCount": "{count}회",
+  "@playCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "openDownloads": "다운로드 목록"
 }

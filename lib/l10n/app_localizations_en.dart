@@ -378,4 +378,64 @@ class AppLocalizationsEn extends AppLocalizations {
   String librarySources(int device, int downloaded) {
     return '$device from device · $downloaded downloaded';
   }
+
+  @override
+  String get navHome => 'Home';
+
+  @override
+  String get homeSubtitle => 'Today';
+
+  @override
+  String get homePeriodWeek => 'This week';
+
+  @override
+  String get homePeriodMonth => 'This month';
+
+  @override
+  String get homePeriodAll => 'All time';
+
+  @override
+  String get homeStats => 'Listening';
+
+  @override
+  String get homeStatPlays => 'plays';
+
+  @override
+  String get homeStatTracks => 'songs';
+
+  @override
+  String get homeTopArtist => 'Top artist';
+
+  @override
+  String get homeTopTracks => 'Most played';
+
+  @override
+  String get homeRecommendations => 'For you';
+
+  @override
+  String get homeRecent => 'Recently played';
+
+  @override
+  String get homeNoPlays => 'No plays yet. Play something from your library.';
+
+  @override
+  String get homeNoRecommendations => 'Add more songs to get recommendations.';
+
+  @override
+  String get homeEmptyLibraryTitle => 'Your library is empty';
+
+  @override
+  String get homeEmptyLibraryBody =>
+      'Import or download music to see\nyour top songs and recommendations here.';
+
+  @override
+  String get homeGoLibrary => 'Go to library';
+
+  @override
+  String playCount(int count) {
+    return '$count plays';
+  }
+
+  @override
+  String get openDownloads => 'Downloads';
 }

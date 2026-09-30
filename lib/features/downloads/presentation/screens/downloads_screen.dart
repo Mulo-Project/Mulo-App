@@ -55,6 +55,12 @@ class DownloadsScreen extends StatelessWidget {
             title: l10n.navDownloads,
             subtitle: l10n.downloadsSubtitle,
             actions: [
+              if (Navigator.of(context).canPop())
+                CircleIconButton(
+                  icon: Icons.close_rounded,
+                  tooltip: l10n.actionBack,
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
               CircleIconButton(
                 icon: Icons.pause_rounded,
                 tooltip: l10n.downloadsPauseAll,

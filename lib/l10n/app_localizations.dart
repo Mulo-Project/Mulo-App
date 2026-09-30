@@ -799,6 +799,120 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'기기 {device}곡 · 받은 곡 {downloaded}곡'**
   String librarySources(int device, int downloaded);
+
+  /// No description provided for @navHome.
+  ///
+  /// In ko, this message translates to:
+  /// **'홈'**
+  String get navHome;
+
+  /// No description provided for @homeSubtitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'오늘의 음악'**
+  String get homeSubtitle;
+
+  /// No description provided for @homePeriodWeek.
+  ///
+  /// In ko, this message translates to:
+  /// **'이번 주'**
+  String get homePeriodWeek;
+
+  /// No description provided for @homePeriodMonth.
+  ///
+  /// In ko, this message translates to:
+  /// **'이번 달'**
+  String get homePeriodMonth;
+
+  /// No description provided for @homePeriodAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체'**
+  String get homePeriodAll;
+
+  /// No description provided for @homeStats.
+  ///
+  /// In ko, this message translates to:
+  /// **'청취 분석'**
+  String get homeStats;
+
+  /// No description provided for @homeStatPlays.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생'**
+  String get homeStatPlays;
+
+  /// No description provided for @homeStatTracks.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡'**
+  String get homeStatTracks;
+
+  /// No description provided for @homeTopArtist.
+  ///
+  /// In ko, this message translates to:
+  /// **'많이 들은 아티스트'**
+  String get homeTopArtist;
+
+  /// No description provided for @homeTopTracks.
+  ///
+  /// In ko, this message translates to:
+  /// **'많이 들은 곡'**
+  String get homeTopTracks;
+
+  /// No description provided for @homeRecommendations.
+  ///
+  /// In ko, this message translates to:
+  /// **'추천'**
+  String get homeRecommendations;
+
+  /// No description provided for @homeRecent.
+  ///
+  /// In ko, this message translates to:
+  /// **'최근 재생'**
+  String get homeRecent;
+
+  /// No description provided for @homeNoPlays.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 재생 기록이 없어요. 보관함에서 곡을 재생해 보세요.'**
+  String get homeNoPlays;
+
+  /// No description provided for @homeNoRecommendations.
+  ///
+  /// In ko, this message translates to:
+  /// **'보관함에 곡이 더 있으면 추천해 드려요.'**
+  String get homeNoRecommendations;
+
+  /// No description provided for @homeEmptyLibraryTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'보관함이 비었어요'**
+  String get homeEmptyLibraryTitle;
+
+  /// No description provided for @homeEmptyLibraryBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'기기 음악을 불러오거나 검색에서 받으면\n여기에 많이 들은 곡과 추천이 보여요.'**
+  String get homeEmptyLibraryBody;
+
+  /// No description provided for @homeGoLibrary.
+  ///
+  /// In ko, this message translates to:
+  /// **'보관함으로'**
+  String get homeGoLibrary;
+
+  /// No description provided for @playCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}회'**
+  String playCount(int count);
+
+  /// No description provided for @openDownloads.
+  ///
+  /// In ko, this message translates to:
+  /// **'다운로드 목록'**
+  String get openDownloads;
 }
 
 class _AppLocalizationsDelegate

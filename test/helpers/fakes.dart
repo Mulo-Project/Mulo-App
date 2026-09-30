@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:music_download_play_app/core/di/injector.dart';
 import 'package:music_download_play_app/features/covers/di.dart';
 import 'package:music_download_play_app/features/covers/domain/repositories/cover_repository.dart';
+import 'package:music_download_play_app/features/home/di.dart';
+import 'package:music_download_play_app/features/home/domain/entities/home_summary.dart';
+import 'package:music_download_play_app/features/home/domain/repositories/play_history_repository.dart';
 import 'package:music_download_play_app/features/library/di.dart';
 import 'package:music_download_play_app/features/library/domain/entities/import_result.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
@@ -97,6 +100,30 @@ class MemoryThemeSettingsRepository implements ThemeSettingsRepository {
       settings = ThemeSettings(presetId: settings.presetId, mode: mode);
 }
 
+/// 메모리 재생 기록.
+class MemoryPlayHistory implements PlayHistoryRepository {
+  MemoryPlayHistory([List<PlayRecord> initial = const []])
+    : plays = [...initial];
+
+  final List<PlayRecord> plays;
+  final _changes = StreamController<List<PlayRecord>>.broadcast();
+
+  List<PlayRecord> get _sorted =>
+      [...plays]..sort((a, b) => b.playedAt.compareTo(a.playedAt));
+
+  @override
+  Future<void> recordPlay(PlayRecord record) async {
+    plays.add(record);
+    _changes.add(_sorted);
+  }
+
+  @override
+  Stream<List<PlayRecord>> watchPlays() async* {
+    yield _sorted;
+    yield* _changes.stream;
+  }
+}
+
 /// 앱 전체를 띄우는 테스트용 의존성 (DB · 파일 · 권한 없이).
 /// 각 기능의 실제 등록을 쓰고 리포지토리만 가짜로 바꾼다.
 Future<void> setUpTestDependencies({
@@ -105,12 +132,14 @@ Future<void> setUpTestDependencies({
   CoverRepository? covers,
   CoverImageSource? imageSource,
   ThemeSettings theme = const ThemeSettings(),
+  PlayHistoryRepository? history,
 }) async {
   await sl.reset();
   registerTheme(sl);
   registerLibrary(sl);
   registerCovers(sl);
   registerPlayer(sl);
+  registerHome(sl);
   sl.allowReassignment = true;
   sl
     ..registerLazySingleton<ThemeSettingsRepository>(
@@ -127,6 +156,9 @@ Future<void> setUpTestDependencies({
     )
     ..registerLazySingleton<CoverImageSource>(
       () => imageSource ?? FakeImageSource(),
+    )
+    ..registerLazySingleton<PlayHistoryRepository>(
+      () => history ?? MemoryPlayHistory(),
     );
   sl.allowReassignment = false;
 }
