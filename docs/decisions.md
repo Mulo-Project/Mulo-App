@@ -137,3 +137,9 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - 장르는 곡의 속성(`Track.genre`, drift `tracks.genre`, 빈 문자열 = 모름). 홈 청취 분석은 장르를 아는 곡만 센다(D-021의 "장르 뺌" 해소).
 - 재생목록은 drift `playlists` + `playlist_tracks`(곡 하나가 여러 목록에 들어감), DB 스키마 3. 곡이 아직 보관함에 없을 수 있어 요청의 재생목록은 `DownloadItem.playlistIds`에 들고 있다가 **받기가 끝나 곡이 생길 때** 넣는다(엔진 연결 때 구현).
 
+
+## D-024 · 2026-10-01 · 앱 이름 Mulo · 패키지 com.mulo.app
+- 표시 이름은 **Mulo** (Android 라벨, iOS 표시 이름, Windows 창 제목 · 파일 정보).
+- 패키지 · applicationId는 `com.mulo.app`, Kotlin 패키지 경로는 `com/mulo/app/`. iOS 번들 ID도 같은 값.
+- pubspec `name`(`music_download_play_app`)은 모든 `package:` import가 걸려 있어 **바꾸지 않는다**. 실행 파일 이름(`BINARY_NAME`) · 채널 이름(`music_app/...`) · DB 파일 이름(`music_app`)도 그대로 둔다(기존 데이터 호환).
+- applicationId가 바뀌므로 기존 `com.example...` 앱은 별개 앱으로 설치된다(예전 앱은 직접 삭제).

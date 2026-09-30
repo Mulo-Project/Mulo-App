@@ -1,4 +1,4 @@
-# Music Download & Play App
+# Mulo
 
 유튜브 등에서 음원을 받아 저장하고 같은 앱에서 재생하는 한국어 UI 음악 앱 (Flutter · Android / Windows / macOS / Linux).
 

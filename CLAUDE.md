@@ -1,4 +1,4 @@
-# 프로젝트 규칙 (Music-Download-Play-App)
+# 프로젝트 규칙 (Mulo)
 
 유튜브 등에서 음원을 받아 저장하고 같은 앱에서 재생하는 한국어 UI 음악 앱.
 이 저장소는 **Flutter 앱**(Android · Windows · macOS · Linux)만 담는다. Spring Boot REST 서버는 별도 저장소 (D-008).

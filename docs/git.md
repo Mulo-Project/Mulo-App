@@ -1,6 +1,6 @@
 # Git 규칙
 
-원격 저장소: https://github.com/Music-Download-Player-App/Music-Download-Player-App (private, 앱 전용 — 서버는 별도 저장소)
+원격 저장소: https://github.com/Mulo-Project/Mulo-App (private, 앱 전용 — 서버는 별도 저장소)
 
 GitHub 설정: 기본 브랜치 `develop`, Squash · Merge commit 허용, Rebase merge 끔, merge 후 브랜치 자동 삭제.
 브랜치 보호는 규칙으로 지킨다 (`main` · `develop` 직접 push 금지).

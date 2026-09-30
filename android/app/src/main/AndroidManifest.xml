@@ -6,7 +6,7 @@
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
     <application
-        android:label="music_download_play_app"
+        android:label="Mulo"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

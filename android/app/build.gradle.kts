@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.music_download_play_app"
+    namespace = "com.mulo.app"
     // permission_handler 13이 API 37 이상으로 컴파일을 요구한다.
     compileSdk = 37
     ndkVersion = flutter.ndkVersion
@@ -17,7 +17,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.music_download_play_app"
+        applicationId = "com.mulo.app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

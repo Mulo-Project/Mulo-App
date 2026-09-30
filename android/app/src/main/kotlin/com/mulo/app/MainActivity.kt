@@ -1,4 +1,4 @@
-package com.example.music_download_play_app
+package com.mulo.app
 
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
