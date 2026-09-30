@@ -168,7 +168,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         values: AppThemeMode.values,
                         selected: mode,
                         labelOf: (m) => switch (m) {
-                          AppThemeMode.system => l10n.appearanceSystem,
                           AppThemeMode.dark => l10n.appearanceDark,
                           AppThemeMode.light => l10n.appearanceLight,
                         },

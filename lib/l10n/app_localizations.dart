@@ -728,12 +728,6 @@ abstract class AppLocalizations {
   /// **'화면 모드'**
   String get settingsAppearance;
 
-  /// No description provided for @appearanceSystem.
-  ///
-  /// In ko, this message translates to:
-  /// **'시스템'**
-  String get appearanceSystem;
-
   /// No description provided for @appearanceDark.
   ///
   /// In ko, this message translates to:

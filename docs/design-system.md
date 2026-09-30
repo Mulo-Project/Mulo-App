@@ -31,7 +31,7 @@
 MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부드럽게 전환.
 
 ## 화면 모드 (다크 · 라이트)
-설정 › 테마 › 화면 모드: 시스템(기본) · 다크 · 라이트 (D-016). 프리셋마다 `paletteFor(Brightness)`로 두 팔레트를 만든다.
+설정 › 테마 › 화면 모드: 다크(기본) · 라이트, 기기 설정은 따르지 않는다 (D-016 · D-018). 프리셋마다 `paletteFor(Brightness)`로 두 팔레트를 만든다.
 라이트 강조 색은 배경 대비 3:1로 진하게 보정. 위젯은 `context.palette`만 읽으면 두 모드 모두 맞게 나온다.
 
 ## 테마 프리셋

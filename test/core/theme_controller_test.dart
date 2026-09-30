@@ -33,7 +33,7 @@ void main() {
     final s = c.read(themeControllerProvider);
     expect(s.preset, ThemePreset.violet);
     expect(s.dark.accent, AppPalette.lime);
-    expect(s.mode, AppThemeMode.system);
+    expect(s.mode, AppThemeMode.dark);
   });
 
   test('selectPreset은 적용하고 저장한다', () async {
@@ -89,7 +89,16 @@ void main() {
   });
 
   test('저장된 화면 모드를 불러온다', () async {
-    final c = _container(_MemoryStore()..savedMode = 'dark');
+    final c = _container(_MemoryStore()..savedMode = 'light');
+    addTearDown(c.dispose);
+    c.read(themeControllerProvider);
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+    expect(c.read(themeControllerProvider).mode, AppThemeMode.light);
+  });
+
+  test('예전 값 system이 저장돼 있으면 다크', () async {
+    final c = _container(_MemoryStore()..savedMode = 'system');
     addTearDown(c.dispose);
     c.read(themeControllerProvider);
     await Future<void>.delayed(Duration.zero);

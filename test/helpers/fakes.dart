@@ -84,11 +84,14 @@ List<Override> appTestOverrides({
   List<Track> tracks = const [],
   DeviceMusicScanner? scanner,
   CoverStore? covers,
+  String? themeMode,
 }) => [
   libraryRepositoryProvider.overrideWithValue(FakeLibraryRepository(tracks)),
   deviceMusicScannerProvider.overrideWithValue(
     scanner ?? FakeScanner(const ScanFound([])),
   ),
   coverStoreProvider.overrideWithValue(covers ?? MemoryCoverStore()),
-  themePreferenceStoreProvider.overrideWithValue(MemoryThemeStore()),
+  themePreferenceStoreProvider.overrideWithValue(
+    MemoryThemeStore()..mode = themeMode,
+  ),
 ];

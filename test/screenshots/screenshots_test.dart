@@ -69,10 +69,6 @@ void main() {
         );
         tester.view.devicePixelRatio = 2.75;
         tester.platformDispatcher.localesTestValue = [Locale(locale)];
-        // 화면 모드 기본값은 '시스템'이라 기기 밝기를 바꿔 라이트를 찍는다.
-        tester.platformDispatcher.platformBrightnessTestValue =
-            e.key.endsWith('-light') ? Brightness.light : Brightness.dark;
-        addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
         addTearDown(tester.view.reset);
         addTearDown(tester.platformDispatcher.clearLocalesTestValue);
 
@@ -81,7 +77,11 @@ void main() {
           RepaintBoundary(
             key: key,
             child: ProviderScope(
-              overrides: appTestOverrides(tracks: SampleData.tracks),
+              overrides: appTestOverrides(
+                tracks: SampleData.tracks,
+                // 라이트 스크린샷은 저장된 화면 모드를 라이트로 둔다.
+                themeMode: e.key.endsWith('-light') ? 'light' : null,
+              ),
               child: MusicApp(initialLocation: e.value),
             ),
           ),

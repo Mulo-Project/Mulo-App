@@ -6,14 +6,15 @@ import 'theme_source/theme_presets.dart';
 import 'theme_source/theme_source.dart';
 import 'tokens/app_palette.dart';
 
-/// 화면 모드 (설정 › 테마). 배경 밝기만 정하고, 색은 프리셋이 정한다.
+/// 화면 모드 (설정 › 테마). 기기 설정을 따르지 않고 앱에서 고른다 (기본 다크, D-018).
+/// 배경 밝기만 정하고, 색은 프리셋이 정한다.
 enum AppThemeMode {
-  system,
   dark,
   light;
 
+  static const AppThemeMode initial = dark;
+
   ThemeMode get material => switch (this) {
-    AppThemeMode.system => ThemeMode.system,
     AppThemeMode.dark => ThemeMode.dark,
     AppThemeMode.light => ThemeMode.light,
   };
@@ -26,7 +27,7 @@ class ThemeState {
     required this.dark,
     required this.light,
     this.preset = ThemePreset.initial,
-    this.mode = AppThemeMode.system,
+    this.mode = AppThemeMode.initial,
   });
 
   /// 지금 화면에 적용된 소스 (프리셋 · 곡 분위기 등).
@@ -124,7 +125,7 @@ class ThemeController extends Notifier<ThemeState> {
     await ref.read(themePreferenceStoreProvider).savePresetId(preset.id);
   }
 
-  /// 화면 모드(시스템 · 다크 · 라이트)를 고른다. 저장한다.
+  /// 화면 모드(다크 · 라이트)를 고른다. 저장한다.
   Future<void> selectMode(AppThemeMode mode) async {
     _touched = true;
     state = state.copyWith(mode: mode);

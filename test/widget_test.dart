@@ -19,8 +19,8 @@ Future<void> _pumpApp(
   tester.view.physicalSize = Size(1170, height);
   tester.view.devicePixelRatio = 3;
   tester.platformDispatcher.localesTestValue = const [Locale('ko')];
-  // 화면 모드 기본값이 '시스템'이라 기기 밝기를 다크로 고정한다.
-  tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
+  // 앱은 기기 밝기를 따르지 않는다 (기본 다크). 기기를 라이트로 둬도 다크여야 한다.
+  tester.platformDispatcher.platformBrightnessTestValue = Brightness.light;
   addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
   addTearDown(tester.view.reset);
   addTearDown(tester.platformDispatcher.clearLocalesTestValue);
