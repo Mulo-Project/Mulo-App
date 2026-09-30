@@ -131,7 +131,7 @@ class _Artwork extends StatelessWidget {
                 ),
                 child: Icon(
                   Icons.music_note_rounded,
-                  color: context.palette.onSurface,
+                  color: context.palette.onGlow,
                   size: 20,
                 ),
               ),

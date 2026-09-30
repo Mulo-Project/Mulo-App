@@ -336,4 +336,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get coverReset => '기본 이미지로';
+
+  @override
+  String get settingsAppearance => '화면 모드';
+
+  @override
+  String get appearanceSystem => '시스템';
+
+  @override
+  String get appearanceDark => '다크';
+
+  @override
+  String get appearanceLight => '라이트';
 }

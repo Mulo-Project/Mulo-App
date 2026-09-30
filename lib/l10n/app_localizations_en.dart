@@ -339,4 +339,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get coverReset => 'Use default';
+
+  @override
+  String get settingsAppearance => 'Appearance';
+
+  @override
+  String get appearanceSystem => 'System';
+
+  @override
+  String get appearanceDark => 'Dark';
+
+  @override
+  String get appearanceLight => 'Light';
 }

@@ -149,5 +149,9 @@
   "coverTitle": "커버 이미지",
   "coverChange": "커버 이미지 바꾸기",
   "coverPick": "사진에서 고르기",
-  "coverReset": "기본 이미지로"
+  "coverReset": "기본 이미지로",
+  "settingsAppearance": "화면 모드",
+  "appearanceSystem": "시스템",
+  "appearanceDark": "다크",
+  "appearanceLight": "라이트"
 }

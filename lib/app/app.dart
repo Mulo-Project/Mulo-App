@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -30,15 +31,14 @@ class _MusicAppState extends ConsumerState<MusicApp> {
 
   @override
   Widget build(BuildContext context) {
-    final palette = ref.watch(themeControllerProvider.select((s) => s.palette));
-    final theme = buildAppTheme(palette);
+    final t = ref.watch(themeControllerProvider);
 
     return MaterialApp.router(
       onGenerateTitle: (context) => context.l10n.appTitle,
       debugShowCheckedModeBanner: false,
-      theme: theme,
-      darkTheme: theme,
-      themeMode: ThemeMode.dark,
+      theme: buildAppTheme(t.light),
+      darkTheme: buildAppTheme(t.dark),
+      themeMode: t.mode.material,
       // 테마 소스가 바뀌면 AnimatedTheme이 AppThemeTokens.lerp로 넘긴다.
       themeAnimationDuration: AppMotion.themeSwap,
       themeAnimationCurve: AppMotion.standard,
@@ -55,6 +55,14 @@ class _MusicAppState extends ConsumerState<MusicApp> {
         orElse: () => const Locale('ko'),
       ),
       routerConfig: _router,
+      // 상태 표시줄 아이콘을 배경 밝기에 맞춘다.
+      builder: (context, child) {
+        final dark = Theme.of(context).brightness == Brightness.dark;
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: dark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+          child: child!,
+        );
+      },
     );
   }
 }

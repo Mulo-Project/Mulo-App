@@ -47,7 +47,15 @@ class AppSwitch extends StatelessWidget {
                 height: _knob,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: value ? p.onAccent : p.onSurface,
+                  // 꺼짐: 다크 · 라이트 모두 흰 손잡이 (라이트에서 검은 손잡이는 무거워 보임).
+                  color: value ? p.onAccent : p.onGlow,
+                  boxShadow: [
+                    BoxShadow(
+                      color: p.scrim.withValues(alpha: .25),
+                      blurRadius: 3,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
                 ),
               ),
             ),

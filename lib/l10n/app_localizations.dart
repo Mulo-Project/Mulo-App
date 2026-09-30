@@ -727,6 +727,30 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'기본 이미지로'**
   String get coverReset;
+
+  /// No description provided for @settingsAppearance.
+  ///
+  /// In ko, this message translates to:
+  /// **'화면 모드'**
+  String get settingsAppearance;
+
+  /// No description provided for @appearanceSystem.
+  ///
+  /// In ko, this message translates to:
+  /// **'시스템'**
+  String get appearanceSystem;
+
+  /// No description provided for @appearanceDark.
+  ///
+  /// In ko, this message translates to:
+  /// **'다크'**
+  String get appearanceDark;
+
+  /// No description provided for @appearanceLight.
+  ///
+  /// In ko, this message translates to:
+  /// **'라이트'**
+  String get appearanceLight;
 }
 
 class _AppLocalizationsDelegate

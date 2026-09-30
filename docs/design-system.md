@@ -30,6 +30,10 @@
 `ThemeSource.resolve()` → `AppPalette` → `ThemeController.state` → `buildAppTheme` →
 MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부드럽게 전환.
 
+## 화면 모드 (다크 · 라이트)
+설정 › 테마 › 화면 모드: 시스템(기본) · 다크 · 라이트 (D-016). 프리셋마다 `paletteFor(Brightness)`로 두 팔레트를 만든다.
+라이트 강조 색은 배경 대비 3:1로 진하게 보정. 위젯은 `context.palette`만 읽으면 두 모드 모두 맞게 나온다.
+
 ## 테마 프리셋
 바이올렛(기본) · 코랄 · 오션 · 포레스트 · 선셋 · 로즈 · 골드 · 아이스. 설정 › 테마 색에서 고르고 `shared_preferences`(`theme.preset`)에 저장해 다음 실행 때 불러온다.
 프리셋은 주 색 · 강조 색 두 개만 정하고 나머지는 `AppPalette.derive`가 만든다 (배경 검정, 강조 색 대비 7:1 이상 — 테스트로 확인).

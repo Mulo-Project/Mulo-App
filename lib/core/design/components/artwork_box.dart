@@ -46,7 +46,7 @@ class ArtworkBox extends StatelessWidget {
                 ),
                 child: Icon(
                   icon,
-                  color: context.palette.onSurface.withValues(alpha: .85),
+                  color: context.palette.onGlow.withValues(alpha: .9),
                   size: size * .4,
                 ),
               ),

@@ -63,6 +63,47 @@ class AppPalette {
     glowTertiary: [Color(0xFFFF8A3D), Color(0xFFE5322D), Color(0xFF3A0B0B)],
   );
 
+  /// 라이트 테마 바탕 (밝은 회색 배경 · 흰 면). 색 · 글로우는 [defaultDark]와 같다.
+  static const AppPalette _lightBase = AppPalette(
+    background: Color(0xFFF4F4F7),
+    surface: white,
+    surfaceHigh: Color(0xFFEAEAF0),
+    onSurface: Color(0xFF111114),
+    onSurfaceMuted: Color(0x99111114),
+    outline: Color(0x1A000000),
+    glassFill: Color(0x8CFFFFFF),
+    glassBorder: Color(0x1F000000),
+    glassHighlight: Color(0xE6FFFFFF),
+    onGlow: white,
+    scrim: black,
+    primary: violet,
+    onPrimary: white,
+    accent: lime,
+    onAccent: black,
+    glowPrimary: [Color(0xFFE040FB), violet, Color(0xFF2A0E5C)],
+    glowSecondary: [Color(0xFF5B5BF0), Color(0xFF1B2266), Color(0xFF070A1F)],
+    glowTertiary: [Color(0xFFFF8A3D), Color(0xFFE5322D), Color(0xFF3A0B0B)],
+  );
+
+  /// 기본 라이트 테마: 강조 색(라임)은 밝은 배경에서 보이도록 진하게 (대비 3:1).
+  static final AppPalette defaultLight = _withAccent(_lightBase, lime, 3);
+
+  /// 밝기별 기본 바탕.
+  static AppPalette baseFor(Brightness b) =>
+      b == Brightness.dark ? defaultDark : _lightBase;
+
+  /// 밝기별 강조 색 최소 대비. 다크 7:1, 라이트 3:1(밝은 배경에서 형광색은 대비가 낮아서).
+  static double accentContrastFor(Brightness b) => b == Brightness.dark ? 7 : 3;
+
+  static AppPalette _withAccent(AppPalette base, Color accent, double min) {
+    final a = ensureContrast(accent, base.background, min);
+    return base.copyWith(accent: a, onAccent: bestOn(a));
+  }
+
+  /// 배경 밝기로 판단한 테마 밝기.
+  Brightness get brightness =>
+      background.computeLuminance() > .5 ? Brightness.light : Brightness.dark;
+
   /// 주 색 · 강조 색 두 개로 팔레트를 만든다.
   ///
   /// 사용자 지정 테마와 곡 분위기 테마가 공유하는 규칙:

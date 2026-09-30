@@ -1,4 +1,4 @@
-import 'package:flutter/painting.dart';
+import 'package:flutter/material.dart' show Brightness, Color;
 
 import '../tokens/app_palette.dart';
 import 'theme_source.dart';
@@ -28,12 +28,22 @@ enum ThemePreset implements ThemeSource {
   String get id => 'preset:$name';
 
   /// 기본(바이올렛)은 손으로 맞춘 기본 팔레트, 나머지는 두 색에서 유도.
-  AppPalette get palette => this == violet
-      ? AppPalette.defaultDark
-      : AppPalette.derive(primary: primary, accent: accent);
+  AppPalette paletteFor(Brightness brightness) {
+    if (this == violet) {
+      return brightness == Brightness.dark
+          ? AppPalette.defaultDark
+          : AppPalette.defaultLight;
+    }
+    return AppPalette.derive(
+      primary: primary,
+      accent: accent,
+      base: AppPalette.baseFor(brightness),
+      minAccentContrast: AppPalette.accentContrastFor(brightness),
+    );
+  }
 
   @override
-  AppPalette resolve() => palette;
+  AppPalette resolve(Brightness brightness) => paletteFor(brightness);
 
   static ThemePreset? fromId(String? id) {
     for (final p in values) {

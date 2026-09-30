@@ -7,7 +7,7 @@ import 'tokens/app_typography.dart';
 /// 팔레트 하나로 ThemeData를 만든다. 어떤 테마 소스든 여기를 거친다.
 ThemeData buildAppTheme(AppPalette p) {
   final scheme = ColorScheme(
-    brightness: Brightness.dark,
+    brightness: p.brightness,
     primary: p.primary,
     onPrimary: p.onPrimary,
     secondary: p.accent,
@@ -25,7 +25,7 @@ ThemeData buildAppTheme(AppPalette p) {
 
   return ThemeData(
     useMaterial3: true,
-    brightness: Brightness.dark,
+    brightness: p.brightness,
     fontFamily: AppTypography.fontFamily,
     colorScheme: scheme,
     scaffoldBackgroundColor: p.background,

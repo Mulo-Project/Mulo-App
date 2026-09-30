@@ -50,6 +50,10 @@ void main() {
     'downloads': Routes.downloads,
     'settings': Routes.settings,
     'settings-full': Routes.settings,
+    'library-light': Routes.library,
+    'playlists-light': Routes.playlists,
+    'settings-full-light': Routes.settings,
+    'player-light': Routes.player,
     'player': Routes.player,
   };
 
@@ -60,10 +64,14 @@ void main() {
         SharedPreferences.setMockInitialValues({});
         tester.view.physicalSize = Size(
           1080,
-          e.key.endsWith('-full') ? 6400 : 2424,
+          e.key.contains('-full') ? 6400 : 2424,
         );
         tester.view.devicePixelRatio = 2.75;
         tester.platformDispatcher.localesTestValue = [Locale(locale)];
+        // 화면 모드 기본값은 '시스템'이라 기기 밝기를 바꿔 라이트를 찍는다.
+        tester.platformDispatcher.platformBrightnessTestValue =
+            e.key.endsWith('-light') ? Brightness.light : Brightness.dark;
+        addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
         addTearDown(tester.view.reset);
         addTearDown(tester.platformDispatcher.clearLocalesTestValue);
 

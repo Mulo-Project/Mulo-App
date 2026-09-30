@@ -6,7 +6,7 @@ import 'theme_source.dart';
 /// 곡 커버 아트에서 색을 뽑아 팔레트를 만든다. (실험용 — 아직 플레이어에 연결 안 됨)
 ///
 /// 규칙:
-/// - 배경 · 표면은 검정 그대로. 글로우 그라데이션과 강조 색만 바뀐다.
+/// - 배경 · 표면은 다크/라이트 바탕 그대로. 글로우 그라데이션과 강조 색만 바뀐다.
 /// - 강조 색 대비는 [AppPalette.derive]가 배경 대비 7:1 이상으로 보정한다.
 /// - 추출 실패 시 [fallback] 팔레트를 쓴다.
 ///
@@ -34,22 +34,23 @@ class MoodThemeSource implements ThemeSource {
   String get id => 'mood:$trackId';
 
   @override
-  Future<AppPalette> resolve() async {
+  Future<AppPalette> resolve(Brightness brightness) async {
     try {
       // Flutter 내장 추출기 (Material Color Utilities). 추가 패키지 불필요.
       // 더 세밀한 추출이 필요하면 palette_generator 등으로 이 부분만 바꾼다.
       final scheme = await ColorScheme.fromImageProvider(
         provider: artwork,
-        brightness: Brightness.dark,
+        brightness: brightness,
       );
       return AppPalette.derive(
         primary: scheme.primary,
         accent: scheme.tertiary,
         tertiary: scheme.secondary,
-        base: fallback,
+        base: AppPalette.baseFor(brightness),
+        minAccentContrast: AppPalette.accentContrastFor(brightness),
       );
     } catch (_) {
-      return fallback;
+      return brightness == Brightness.dark ? fallback : AppPalette.defaultLight;
     }
   }
 }

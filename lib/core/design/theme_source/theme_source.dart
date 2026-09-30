@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/painting.dart';
+import 'package:flutter/material.dart' show Brightness, Color;
 
 import '../tokens/app_palette.dart';
 
@@ -13,7 +13,8 @@ abstract interface class ThemeSource {
   /// 같은 소스인지 비교하는 키. 컨트롤러가 중복 적용을 거른다.
   String get id;
 
-  FutureOr<AppPalette> resolve();
+  /// [brightness](다크 · 라이트)에 맞는 팔레트.
+  FutureOr<AppPalette> resolve(Brightness brightness);
 }
 
 /// 사용자 지정 테마 설정값. 저장 · 복원 단위.
@@ -64,6 +65,10 @@ class CustomThemeSource implements ThemeSource {
       'custom:${spec.primary.toARGB32()}:${spec.accent.toARGB32()}';
 
   @override
-  AppPalette resolve() =>
-      AppPalette.derive(primary: spec.primary, accent: spec.accent);
+  AppPalette resolve(Brightness brightness) => AppPalette.derive(
+    primary: spec.primary,
+    accent: spec.accent,
+    base: AppPalette.baseFor(brightness),
+    minAccentContrast: AppPalette.accentContrastFor(brightness),
+  );
 }

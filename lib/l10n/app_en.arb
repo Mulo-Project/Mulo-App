@@ -104,5 +104,9 @@
   "coverTitle": "Cover image",
   "coverChange": "Change cover",
   "coverPick": "Choose from photos",
-  "coverReset": "Use default"
+  "coverReset": "Use default",
+  "settingsAppearance": "Appearance",
+  "appearanceSystem": "System",
+  "appearanceDark": "Dark",
+  "appearanceLight": "Light"
 }

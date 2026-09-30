@@ -15,6 +15,9 @@ Future<void> _pumpApp(
   tester.view.physicalSize = Size(1170, height);
   tester.view.devicePixelRatio = 3;
   tester.platformDispatcher.localesTestValue = const [Locale('ko')];
+  // 화면 모드 기본값이 '시스템'이라 기기 밝기를 다크로 고정한다.
+  tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
+  addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
   addTearDown(tester.view.reset);
   addTearDown(tester.platformDispatcher.clearLocalesTestValue);
   await tester.pumpWidget(ProviderScope(child: MusicApp(initialLocation: at)));
@@ -25,6 +28,9 @@ AppPalette _palette(WidgetTester tester) =>
     Theme.of(tester.element(find.byType(AppBottomNav)))
         .extension<AppThemeTokens>()!
         .palette;
+
+Brightness _brightness(WidgetTester tester) =>
+    Theme.of(tester.element(find.byType(AppBottomNav))).brightness;
 
 void main() {
   testWidgets('보관함에서 시작하고 하단 탭으로 이동한다', (tester) async {
@@ -49,6 +55,19 @@ void main() {
     await tester.tap(find.text('바이올렛'));
     await tester.pumpAndSettle();
     expect(_palette(tester).accent, AppPalette.lime);
+  });
+
+  testWidgets('화면 모드: 라이트를 고르면 밝은 배경, 다크로 돌아온다', (tester) async {
+    await _pumpApp(tester, at: Routes.settings, height: 7000);
+    await tester.tap(find.text('라이트'));
+    await tester.pumpAndSettle();
+    expect(_brightness(tester), Brightness.light);
+    expect(_palette(tester).background.computeLuminance(), greaterThan(.8));
+
+    await tester.tap(find.text('다크'));
+    await tester.pumpAndSettle();
+    expect(_brightness(tester), Brightness.dark);
+    expect(_palette(tester).background, AppPalette.black);
   });
 
   testWidgets('미니 플레이어를 누르면 전체 화면 플레이어가 열린다', (tester) async {

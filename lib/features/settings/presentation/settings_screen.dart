@@ -33,6 +33,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final selectedPreset = ref.watch(
       themeControllerProvider.select((s) => s.preset),
     );
+    final mode = ref.watch(themeControllerProvider.select((s) => s.mode));
+    final brightness = Theme.of(context).brightness;
     final themeCtrl = ref.read(themeControllerProvider.notifier);
 
     return SafeArea(
@@ -160,6 +162,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ),
                     SettingRow(
+                      title: l10n.settingsAppearance,
+                      below: SegmentedPills<AppThemeMode>(
+                        expand: true,
+                        values: AppThemeMode.values,
+                        selected: mode,
+                        labelOf: (m) => switch (m) {
+                          AppThemeMode.system => l10n.appearanceSystem,
+                          AppThemeMode.dark => l10n.appearanceDark,
+                          AppThemeMode.light => l10n.appearanceLight,
+                        },
+                        onChanged: themeCtrl.selectMode,
+                      ),
+                    ),
+                    SettingRow(
                       title: l10n.settingsThemeColor,
                       below: Wrap(
                         spacing: AppSpacing.xs,
@@ -167,7 +183,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         children: [
                           for (final preset in ThemePreset.values)
                             ThemeSwatch(
-                              preview: preset.palette,
+                              preview: preset.paletteFor(brightness),
                               label: presetLabel(l10n, preset),
                               selected: preset == selectedPreset,
                               onTap: () => themeCtrl.selectPreset(preset),
