@@ -18,6 +18,8 @@ class AppPalette {
     required this.glassFill,
     required this.glassBorder,
     required this.glassHighlight,
+    required this.onGlow,
+    required this.scrim,
     required this.primary,
     required this.onPrimary,
     required this.accent,
@@ -47,6 +49,8 @@ class AppPalette {
     glassFill: Color(0x14FFFFFF),
     glassBorder: Color(0x24FFFFFF),
     glassHighlight: Color(0x73FFFFFF),
+    onGlow: white,
+    scrim: black,
     primary: violet,
     onPrimary: white,
     accent: lime,
@@ -114,6 +118,12 @@ class AppPalette {
   /// 유리 가장자리에 빛이 맺히는 부분 (왼쪽 위 테두리).
   final Color glassHighlight;
 
+  /// 색 유리 카드 · 사진 · 그라데이션 위 글자 (테마 밝기와 관계없이 밝은 색).
+  final Color onGlow;
+
+  /// 사진 위 글자를 읽히게 덮는 어두운 막.
+  final Color scrim;
+
   final Color primary;
   final Color onPrimary;
   final Color accent;
@@ -134,6 +144,8 @@ class AppPalette {
     Color? glassFill,
     Color? glassBorder,
     Color? glassHighlight,
+    Color? onGlow,
+    Color? scrim,
     Color? primary,
     Color? onPrimary,
     Color? accent,
@@ -152,6 +164,8 @@ class AppPalette {
       glassFill: glassFill ?? this.glassFill,
       glassBorder: glassBorder ?? this.glassBorder,
       glassHighlight: glassHighlight ?? this.glassHighlight,
+      onGlow: onGlow ?? this.onGlow,
+      scrim: scrim ?? this.scrim,
       primary: primary ?? this.primary,
       onPrimary: onPrimary ?? this.onPrimary,
       accent: accent ?? this.accent,
@@ -188,6 +202,8 @@ class AppPalette {
       glassFill: c(a.glassFill, b.glassFill),
       glassBorder: c(a.glassBorder, b.glassBorder),
       glassHighlight: c(a.glassHighlight, b.glassHighlight),
+      onGlow: c(a.onGlow, b.onGlow),
+      scrim: c(a.scrim, b.scrim),
       primary: c(a.primary, b.primary),
       onPrimary: c(a.onPrimary, b.onPrimary),
       accent: c(a.accent, b.accent),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../app_theme_tokens.dart';
 import '../tokens/app_dimens.dart';
+import 'cover_card.dart' show onGlow;
 
 /// 유리 면: 뒤를 흐리게 비추는 반투명 면 + 왼쪽 위에 빛이 맺히는 테두리.
 ///
@@ -184,6 +185,7 @@ class GlassCard extends StatelessWidget {
     padding: padding,
     onTap: onTap,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius)),
-    child: child,
+    // 색 유리 위 글자는 라이트 테마에서도 밝게.
+    child: onGlow(context, child),
   );
 }

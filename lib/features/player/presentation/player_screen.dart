@@ -281,7 +281,7 @@ class _QueueSheet extends ConsumerWidget {
   }
 }
 
-/// 전체 화면 플레이어 커버: 이미지가 있으면 사진, 없으면 색 유리 + 음표.
+/// 전체 화면 플레이어 커버: 이미지가 있으면 사진, 없으면 테마 색 그라데이션 + 음표.
 /// 누르면 커버 이미지 바꾸기 시트.
 class _PlayerCover extends StatelessWidget {
   const _PlayerCover({
@@ -302,19 +302,17 @@ class _PlayerCover extends StatelessWidget {
     return Stack(
       children: [
         Positioned.fill(
-          child: GlassCard(
+          child: CoverCard(
+            image: image,
             tone: tone,
-            padding: EdgeInsets.zero,
             onTap: onEdit,
             child: image != null
-                ? SizedBox.expand(
-                    child: Image(image: image!, fit: BoxFit.cover),
-                  )
+                ? null
                 : Center(
                     child: Icon(
                       Icons.music_note_rounded,
                       size: 96,
-                      color: p.onSurface.withValues(alpha: .8),
+                      color: p.onGlow.withValues(alpha: .85),
                     ),
                   ),
           ),

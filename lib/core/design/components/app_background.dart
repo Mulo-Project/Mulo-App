@@ -2,52 +2,17 @@ import 'package:flutter/material.dart';
 
 import '../app_theme_tokens.dart';
 
-/// 검정 배경 위에 테마 색 빛이 은은하게 번지는 바탕.
+/// 화면 바탕: 테마 배경색 단색 (다크 / 라이트).
 ///
-/// 유리 면(GlassSurface)은 이 빛을 흐리게 비춰서 유리처럼 보인다.
-/// 빛 색은 팔레트 글로우에서 오므로 테마(사용자 지정 · 곡 분위기)가 바뀌면 같이 바뀐다.
+/// 배경은 유리 · 빛 효과 없이 둔다 (D-015). 유리는 떠 있는 바 · 버튼 · 강조 카드에만.
 class AppBackground extends StatelessWidget {
   const AppBackground({super.key, this.child});
 
   final Widget? child;
 
   @override
-  Widget build(BuildContext context) {
-    final p = context.palette;
-
-    Widget glow(Alignment at, Color color, double size, double opacity) =>
-        Positioned.fill(
-          child: IgnorePointer(
-            child: Align(
-              alignment: at,
-              child: FractionallySizedBox(
-                widthFactor: size,
-                heightFactor: size * .6,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      colors: [
-                        color.withValues(alpha: opacity),
-                        color.withValues(alpha: 0),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-
-    return ColoredBox(
-      color: p.background,
-      child: Stack(
-        children: [
-          glow(const Alignment(-1.1, -1.05), p.glowPrimary[0], 1.5, .42),
-          glow(const Alignment(1.2, -.1), p.glowSecondary[0], 1.3, .30),
-          glow(const Alignment(-.9, 1.1), p.glowTertiary[1], 1.2, .18),
-          if (child != null) Positioned.fill(child: child!),
-        ],
-      ),
-    );
-  }
+  Widget build(BuildContext context) => ColoredBox(
+    color: context.palette.background,
+    child: child ?? const SizedBox.expand(),
+  );
 }

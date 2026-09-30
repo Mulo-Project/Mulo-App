@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../app_theme_tokens.dart';
 import '../tokens/app_dimens.dart';
-import 'glass.dart';
 
-/// 제목이 붙은 유리 묶음 (설정 목록 등). 자식 사이에 옅은 구분선.
+/// 제목이 붙은 둥근 면 묶음 (설정 목록 등). 자식 사이에 옅은 구분선.
 class SectionCard extends StatelessWidget {
   const SectionCard({super.key, this.title, required this.children});
 
@@ -29,9 +28,11 @@ class SectionCard extends StatelessWidget {
             ),
             child: Text(title!.toUpperCase(), style: text.labelSmall),
           ),
-        GlassSurface(
-          shape: RoundedRectangleBorder(
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: p.surface,
             borderRadius: BorderRadius.circular(AppRadii.lg),
+            border: Border.all(color: p.outline),
           ),
           child: Column(
             children: [
@@ -42,7 +43,7 @@ class SectionCard extends StatelessWidget {
                     thickness: 1,
                     indent: AppSpacing.md,
                     endIndent: AppSpacing.md,
-                    color: p.glassBorder,
+                    color: p.outline,
                   ),
                 children[i],
               ],

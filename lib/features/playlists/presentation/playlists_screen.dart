@@ -89,7 +89,6 @@ class _PlaylistCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final text = Theme.of(context).textTheme;
-    final p = context.palette;
     // 재생목록 id가 생기기 전까지는 이름을 키로 쓴다.
     final key = CoverKey.playlist(name);
     final image = coverImageOf(ref, key);
@@ -98,67 +97,41 @@ class _PlaylistCard extends ConsumerWidget {
 
     return AspectRatio(
       aspectRatio: .82,
-      child: GlassCard(
+      child: CoverCard(
+        image: image,
         tone: tone,
-        padding: EdgeInsets.zero,
+        shade: image != null,
         onTap: () {},
-        child: Stack(
-          children: [
-            if (image != null) ...[
-              Positioned.fill(
-                child: Image(image: image, fit: BoxFit.cover),
-              ),
-              // 사진 위 글자가 읽히도록 아래쪽을 어둡게.
-              Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        p.background.withValues(alpha: .15),
-                        p.background.withValues(alpha: .75),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.md + AppSpacing.xxs),
-              child: Column(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md + AppSpacing.xxs),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          name,
-                          style: text.titleMedium,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      CircleIconButton(
-                        icon: Icons.image_rounded,
-                        tooltip: context.l10n.coverChange,
-                        size: 34,
-                        onPressed: edit,
-                      ),
-                    ],
+                  Expanded(
+                    child: Text(
+                      name,
+                      style: text.titleMedium,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                  const Spacer(),
-                  StatNumber('$count', size: 40),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    context.l10n.unitSongs,
-                    style: text.bodySmall?.copyWith(color: p.onSurface),
+                  CircleIconButton(
+                    icon: Icons.image_rounded,
+                    tooltip: context.l10n.coverChange,
+                    size: 34,
+                    onPressed: edit,
                   ),
                 ],
               ),
-            ),
-          ],
+              const Spacer(),
+              StatNumber('$count', size: 40),
+              const SizedBox(height: AppSpacing.xs),
+              Text(context.l10n.unitSongs, style: text.bodySmall),
+            ],
+          ),
         ),
       ),
     );

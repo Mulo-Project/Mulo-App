@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../app_theme_tokens.dart';
 import '../tokens/app_dimens.dart';
-import 'glass.dart';
 
 /// 여러 값 중 하나를 고르는 알약 묶음 (음질 · 포맷 · 탭 전환).
 class SegmentedPills<T> extends StatelessWidget {
@@ -59,9 +58,12 @@ class SegmentedPills<T> extends StatelessWidget {
 
     return Opacity(
       opacity: onChanged == null ? .5 : 1,
-      child: GlassSurface(
-        shape: const StadiumBorder(),
+      child: Container(
         padding: const EdgeInsets.all(3),
+        decoration: ShapeDecoration(
+          color: p.surfaceHigh,
+          shape: StadiumBorder(side: BorderSide(color: p.outline)),
+        ),
         child: Row(
           mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
           children: [

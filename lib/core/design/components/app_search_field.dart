@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../app_theme_tokens.dart';
 import '../tokens/app_dimens.dart';
-import 'glass.dart';
 
-/// 알약 모양 유리 입력칸. 왼쪽 돋보기, 입력이 있으면 오른쪽 지우기, 없으면 [trailing].
+/// 알약 모양 입력칸. 왼쪽 돋보기, 입력이 있으면 오른쪽 지우기, 없으면 [trailing].
 class AppSearchField extends StatefulWidget {
   const AppSearchField({
     super.key,
@@ -56,8 +55,11 @@ class _AppSearchFieldState extends State<AppSearchField> {
     final text = Theme.of(context).textTheme;
     final hasText = _controller.text.isNotEmpty;
 
-    return GlassSurface(
-      shape: const StadiumBorder(),
+    return Container(
+      decoration: ShapeDecoration(
+        color: p.surfaceHigh,
+        shape: StadiumBorder(side: BorderSide(color: p.outline)),
+      ),
       padding: const EdgeInsets.only(
         left: AppSpacing.md,
         right: AppSpacing.xxs,
