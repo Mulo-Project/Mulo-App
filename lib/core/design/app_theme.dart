@@ -33,6 +33,15 @@ ThemeData buildAppTheme(AppPalette p) {
     textTheme: AppTypography.textTheme(p),
     iconTheme: IconThemeData(color: p.onSurface),
     splashFactory: InkSparkle.splashFactory,
+    // 안내 메시지: 떠 있는 둥근 알림 (탭 바 위).
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: p.onSurface,
+      contentTextStyle: AppTypography.textTheme(p).bodyMedium
+          ?.copyWith(color: p.background),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      insetPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+    ),
     extensions: [AppThemeTokens(palette: p)],
   );
 }

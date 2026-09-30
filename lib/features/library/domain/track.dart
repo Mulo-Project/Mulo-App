@@ -1,6 +1,9 @@
 import 'package:flutter/foundation.dart';
 
-/// 보관함의 곡 한 개. 지금은 자리 표시용이고, 저장소(drift)가 생기면 여기에 필드를 맞춘다.
+/// 곡이 어디서 왔는지.
+enum TrackSource { device, download }
+
+/// 보관함의 곡 한 개.
 @immutable
 class Track {
   const Track({
@@ -9,17 +12,23 @@ class Track {
     required this.artist,
     required this.album,
     required this.duration,
-    required this.addedOrder,
+    required this.addedAt,
+    this.uri = '',
+    this.source = TrackSource.device,
   });
 
   final String id;
   final String title;
+
+  /// 모르면 빈 문자열 (화면에서 "알 수 없는 아티스트"로 보여 준다).
   final String artist;
   final String album;
   final Duration duration;
+  final DateTime addedAt;
 
-  /// 추가된 순서 (클수록 최근). 추가일 정렬용.
-  final int addedOrder;
+  /// 재생 주소 (Android content://, 데스크톱 파일 경로).
+  final String uri;
+  final TrackSource source;
 
   @override
   bool operator ==(Object other) => other is Track && other.id == id;

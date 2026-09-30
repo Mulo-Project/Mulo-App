@@ -14,7 +14,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:music_download_play_app/core/sample/sample_data.dart';
+
+import '../helpers/fakes.dart';
 
 Future<void> _loadFonts() async {
   Future<void> load(String family, List<String> paths) async {
@@ -61,7 +63,6 @@ void main() {
     for (final e in screens.entries) {
       testWidgets('screenshot $locale-${e.key}', (tester) async {
         await tester.runAsync(_loadFonts);
-        SharedPreferences.setMockInitialValues({});
         tester.view.physicalSize = Size(
           1080,
           e.key.contains('-full') ? 6400 : 2424,
@@ -79,7 +80,10 @@ void main() {
         await tester.pumpWidget(
           RepaintBoundary(
             key: key,
-            child: ProviderScope(child: MusicApp(initialLocation: e.value)),
+            child: ProviderScope(
+              overrides: appTestOverrides(tracks: SampleData.tracks),
+              child: MusicApp(initialLocation: e.value),
+            ),
           ),
         );
         await tester.pumpAndSettle();

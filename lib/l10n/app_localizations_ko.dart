@@ -182,11 +182,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get libraryImport => '기기 음악 불러오기';
 
   @override
-  String libraryStorage(String size) {
-    return '$size 사용 중';
-  }
-
-  @override
   String get libraryNoMatch => '찾는 곡이 없어요.';
 
   @override
@@ -348,4 +343,38 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get appearanceLight => '라이트';
+
+  @override
+  String get libraryEmptyTitle => '아직 음악이 없어요';
+
+  @override
+  String get libraryEmptyBody => '기기에 있는 음악을 불러오거나\n검색에서 받아 보세요.';
+
+  @override
+  String get importing => '불러오는 중…';
+
+  @override
+  String importAdded(int count) {
+    return '$count곡을 불러왔어요';
+  }
+
+  @override
+  String get importNothingNew => '새로 추가된 곡이 없어요';
+
+  @override
+  String get importDenied => '음악 파일 권한이 필요해요. 설정에서 허용해 주세요.';
+
+  @override
+  String get importFailed => '음악을 불러오지 못했어요';
+
+  @override
+  String get unknownArtist => '알 수 없는 아티스트';
+
+  @override
+  String get unknownAlbum => '알 수 없는 앨범';
+
+  @override
+  String librarySources(int device, int downloaded) {
+    return '기기 $device곡 · 받은 곡 $downloaded곡';
+  }
 }

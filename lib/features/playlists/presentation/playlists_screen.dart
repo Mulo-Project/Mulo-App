@@ -89,6 +89,7 @@ class _PlaylistCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final text = Theme.of(context).textTheme;
+    final p = context.palette;
     // 재생목록 id가 생기기 전까지는 이름을 키로 쓴다.
     final key = CoverKey.playlist(name);
     final image = coverImageOf(ref, key);
@@ -113,7 +114,8 @@ class _PlaylistCard extends ConsumerWidget {
                   Expanded(
                     child: Text(
                       name,
-                      style: text.titleMedium,
+                      // 사진 · 그라데이션 위라서 두 모드 모두 밝은 글자.
+                      style: text.titleMedium?.copyWith(color: p.onGlow),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -129,7 +131,10 @@ class _PlaylistCard extends ConsumerWidget {
               const Spacer(),
               StatNumber('$count', size: 40),
               const SizedBox(height: AppSpacing.xs),
-              Text(context.l10n.unitSongs, style: text.bodySmall),
+              Text(
+                context.l10n.unitSongs,
+                style: text.bodySmall?.copyWith(color: p.onGlow),
+              ),
             ],
           ),
         ),

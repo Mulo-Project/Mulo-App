@@ -28,7 +28,9 @@
 - Flutter: MVVM + Riverpod, feature-first 폴더, 계층은 presentation / domain / data.
 - 다운로드는 `DownloaderEngine` 인터페이스 → `ServerEngine`(서버 모드) / `LocalEngine`(로컬 모드).
 - Android 빌드는 flavor `lite`(서버 모드만) / `full`(두 모드). 데스크톱은 빌드 하나에 설정으로 모드 선택.
-- 앱 로컬 DB는 drift, 설정값은 shared_preferences, 재생은 just_audio + audio_service. (Notion 기술 스택 기준)
+- 앱 로컬 DB는 drift(`lib/core/database/`, 스키마 바꾸면 `dart run build_runner build -d`), 설정값은 shared_preferences, 재생은 just_audio + audio_service. (Notion 기술 스택 기준)
+- Android 네이티브 기능(MediaStore 등)은 Kotlin + MethodChannel(`music_app/<이름>`), 채널 클래스는 `android/app/src/main/kotlin/.../`에 하나씩.
+- 기능마다 `di.dart`에 provider(리포지토리 · 소스)를 모으고, 테스트는 `test/helpers/fakes.dart`의 `appTestOverrides()`로 바꿔 끼운다.
 - 테마는 디자인 시스템(`lib/core/design/`)의 테마 소스로만 바꾼다 ([design-system.md](docs/design-system.md)).
 
 ## 폴더 구조

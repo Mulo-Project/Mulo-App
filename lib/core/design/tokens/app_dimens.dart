@@ -57,6 +57,9 @@ abstract final class AppGlass {
   /// 뒤 배경 흐림 정도.
   static const double blur = 24;
 
-  /// 색 유리 카드 채움 불투명도 (밝은 쪽 → 어두운 쪽).
+  /// 색 유리 카드 채움 불투명도 (밝은 쪽 → 어두운 쪽). 다크.
   static const List<double> tintOpacity = [.78, .5, .32];
+
+  /// 라이트: 옅게 칠해 글자는 기본 글자색(어두운 색) 그대로 읽히게.
+  static const List<double> tintOpacityLight = [.42, .26, .16];
 }

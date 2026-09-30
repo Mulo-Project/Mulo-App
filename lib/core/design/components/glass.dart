@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 import '../app_theme_tokens.dart';
 import '../tokens/app_dimens.dart';
-import 'cover_card.dart' show onGlow;
 
 /// 유리 면: 뒤를 흐리게 비추는 반투명 면 + 왼쪽 위에 빛이 맺히는 테두리.
 ///
@@ -56,7 +55,11 @@ class GlassSurface extends StatelessWidget {
             end: const Alignment(.8, 1),
             colors: [
               for (var i = 0; i < tint.length; i++)
-                tint[i].withValues(alpha: AppGlass.tintOpacity[i]),
+                tint[i].withValues(
+                  alpha: p.brightness == Brightness.dark
+                      ? AppGlass.tintOpacity[i]
+                      : AppGlass.tintOpacityLight[i],
+                ),
             ],
           );
 
@@ -185,7 +188,7 @@ class GlassCard extends StatelessWidget {
     padding: padding,
     onTap: onTap,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius)),
-    // 색 유리 위 글자는 라이트 테마에서도 밝게.
-    child: onGlow(context, child),
+    // 라이트에서는 유리를 옅게 칠하므로 글자는 기본 글자색 그대로.
+    child: child,
   );
 }

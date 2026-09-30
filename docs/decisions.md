@@ -88,3 +88,14 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - 강조 색 최소 대비: 다크 7:1, 라이트 3:1 → 라이트에서 라임은 진한 올리브 그린이 된다 (밝은 배경에서 형광 라임은 거의 안 보여서).
 - 색 유리 카드 · 사진 · 그라데이션 위 글자는 두 모드 모두 `onGlow`(흰색).
 - Android 시작 화면은 검정 그대로 (라이트에서 잠깐 검정이 보임 — 필요하면 values-notnight로 분리).
+
+## D-017 · 2026-09-30 · 보관함 DB(drift) · 기기 음악 불러오기
+- 앱 로컬 DB는 drift(SQLite, `drift_flutter`): `lib/core/database/app_database.dart`. 표: `tracks`(재생 주소 uri 유일), `covers`(키 → 앱 폴더로 복사한 이미지 경로).
+- 보관함 화면은 가짜 데이터 대신 DB를 본다. 재생 대기열도 처음엔 비어 있다 (미니 플레이어 숨김).
+- 기기 음악 불러오기(#11):
+  - Android: 명세대로 MediaStore를 네이티브에서 조회 (`MediaStoreChannel.kt`, MethodChannel `music_app/media_store`). 권한은 `permission_handler`(13+ READ_MEDIA_AUDIO, 12 이하 READ_EXTERNAL_STORAGE).
+  - 데스크톱: 폴더를 고르면 하위 폴더까지 음악 확장자 파일을 찾는다. 태그는 아직 안 읽고 파일 이름이 제목.
+  - 같은 uri는 다시 넣지 않는다. 결과는 스낵바로 (n곡 추가 · 새 곡 없음 · 권한 필요 · 실패).
+- 커버 이미지(D-014)는 이제 앱 지원 폴더 `covers/`로 복사 + DB 저장 → 다시 켜도 유지.
+- `permission_handler` 13이 compileSdk 37을 요구해서 `android/app/build.gradle.kts`의 compileSdk를 37로.
+- 라이트 모드 색 유리 카드는 옅게(`AppGlass.tintOpacityLight`) 칠하고 글자는 기본 글자색 (카드 안 글자색이 섞이던 문제 수정).

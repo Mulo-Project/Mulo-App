@@ -4,7 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/features/covers/presentation/cover_controller.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../helpers/fakes.dart';
 
 class _FakePicker implements CoverImagePicker {
   _FakePicker(this.result);
@@ -19,8 +20,14 @@ class _FakePicker implements CoverImagePicker {
   }
 }
 
-ProviderContainer _container(CoverImagePicker picker) => ProviderContainer(
-  overrides: [coverImagePickerProvider.overrideWithValue(picker)],
+ProviderContainer _container(
+  CoverImagePicker picker, [
+  MemoryCoverStore? store,
+]) => ProviderContainer(
+  overrides: [
+    coverImagePickerProvider.overrideWithValue(picker),
+    coverStoreProvider.overrideWithValue(store ?? MemoryCoverStore()),
+  ],
 );
 
 void main() {
@@ -44,18 +51,28 @@ void main() {
     expect(c.read(coverProvider), isEmpty);
   });
 
-  test('clear는 기본 이미지로 되돌린다', () {
-    final c = _container(_FakePicker(null));
+  test('clear는 기본 이미지로 되돌리고 저장소에서도 지운다', () async {
+    final store = MemoryCoverStore();
+    final c = _container(_FakePicker('/tmp/a.png'), store);
     addTearDown(c.dispose);
-    c.read(coverProvider.notifier)
-      ..set(CoverKey.track('t01'), '/tmp/a.png')
-      ..set(CoverKey.track('t02'), '/tmp/b.png')
-      ..clear(CoverKey.track('t01'));
+    final ctrl = c.read(coverProvider.notifier);
+    await ctrl.pickFor(CoverKey.track('t01'));
+    await ctrl.pickFor(CoverKey.track('t02'));
+    await ctrl.clear(CoverKey.track('t01'));
     expect(c.read(coverProvider).keys, [CoverKey.track('t02')]);
+    expect(store.saved.keys, [CoverKey.track('t02')]);
+  });
+
+  test('시작할 때 저장된 커버를 불러온다', () async {
+    final store = MemoryCoverStore()..saved['playlist:Focus'] = '/tmp/f.png';
+    final c = _container(_FakePicker(null), store);
+    addTearDown(c.dispose);
+    c.read(coverProvider);
+    await Future<void>.delayed(Duration.zero);
+    expect(c.read(coverProvider), {'playlist:Focus': '/tmp/f.png'});
   });
 
   testWidgets('재생목록 카드의 이미지 버튼으로 사진을 고른다', (tester) async {
-    SharedPreferences.setMockInitialValues({});
     tester.view.physicalSize = const Size(1170, 2532);
     tester.view.devicePixelRatio = 3;
     tester.platformDispatcher.localesTestValue = const [Locale('ko')];
@@ -65,7 +82,10 @@ void main() {
     final picker = _FakePicker('/tmp/cover.png');
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [coverImagePickerProvider.overrideWithValue(picker)],
+        overrides: [
+          ...appTestOverrides(),
+          coverImagePickerProvider.overrideWithValue(picker),
+        ],
         child: const MusicApp(initialLocation: Routes.playlists),
       ),
     );

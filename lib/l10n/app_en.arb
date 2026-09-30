@@ -55,7 +55,6 @@
   "sortAdded": "Recently added",
   "sortArtist": "Artist",
   "libraryImport": "Import device music",
-  "libraryStorage": "{size} used",
   "libraryNoMatch": "No matches.",
   "playlistsSubtitle": "Collections",
   "playlistsNew": "New playlist",
@@ -108,5 +107,15 @@
   "settingsAppearance": "Appearance",
   "appearanceSystem": "System",
   "appearanceDark": "Dark",
-  "appearanceLight": "Light"
+  "appearanceLight": "Light",
+  "libraryEmptyTitle": "No music yet",
+  "libraryEmptyBody": "Import music from this device\nor download from Search.",
+  "importing": "Importing…",
+  "importAdded": "Imported {count} songs",
+  "importNothingNew": "No new songs",
+  "importDenied": "Music access is needed. Allow it in Settings.",
+  "importFailed": "Couldn't import music",
+  "unknownArtist": "Unknown artist",
+  "unknownAlbum": "Unknown album",
+  "librarySources": "{device} from device · {downloaded} downloaded"
 }

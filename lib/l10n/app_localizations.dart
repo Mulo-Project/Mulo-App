@@ -428,12 +428,6 @@ abstract class AppLocalizations {
   /// **'기기 음악 불러오기'**
   String get libraryImport;
 
-  /// No description provided for @libraryStorage.
-  ///
-  /// In ko, this message translates to:
-  /// **'{size} 사용 중'**
-  String libraryStorage(String size);
-
   /// No description provided for @libraryNoMatch.
   ///
   /// In ko, this message translates to:
@@ -751,6 +745,66 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'라이트'**
   String get appearanceLight;
+
+  /// No description provided for @libraryEmptyTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 음악이 없어요'**
+  String get libraryEmptyTitle;
+
+  /// No description provided for @libraryEmptyBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'기기에 있는 음악을 불러오거나\n검색에서 받아 보세요.'**
+  String get libraryEmptyBody;
+
+  /// No description provided for @importing.
+  ///
+  /// In ko, this message translates to:
+  /// **'불러오는 중…'**
+  String get importing;
+
+  /// No description provided for @importAdded.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}곡을 불러왔어요'**
+  String importAdded(int count);
+
+  /// No description provided for @importNothingNew.
+  ///
+  /// In ko, this message translates to:
+  /// **'새로 추가된 곡이 없어요'**
+  String get importNothingNew;
+
+  /// No description provided for @importDenied.
+  ///
+  /// In ko, this message translates to:
+  /// **'음악 파일 권한이 필요해요. 설정에서 허용해 주세요.'**
+  String get importDenied;
+
+  /// No description provided for @importFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'음악을 불러오지 못했어요'**
+  String get importFailed;
+
+  /// No description provided for @unknownArtist.
+  ///
+  /// In ko, this message translates to:
+  /// **'알 수 없는 아티스트'**
+  String get unknownArtist;
+
+  /// No description provided for @unknownAlbum.
+  ///
+  /// In ko, this message translates to:
+  /// **'알 수 없는 앨범'**
+  String get unknownAlbum;
+
+  /// No description provided for @librarySources.
+  ///
+  /// In ko, this message translates to:
+  /// **'기기 {device}곡 · 받은 곡 {downloaded}곡'**
+  String librarySources(int device, int downloaded);
 }
 
 class _AppLocalizationsDelegate

@@ -182,11 +182,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get libraryImport => 'Import device music';
 
   @override
-  String libraryStorage(String size) {
-    return '$size used';
-  }
-
-  @override
   String get libraryNoMatch => 'No matches.';
 
   @override
@@ -351,4 +346,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appearanceLight => 'Light';
+
+  @override
+  String get libraryEmptyTitle => 'No music yet';
+
+  @override
+  String get libraryEmptyBody =>
+      'Import music from this device\nor download from Search.';
+
+  @override
+  String get importing => 'Importing…';
+
+  @override
+  String importAdded(int count) {
+    return 'Imported $count songs';
+  }
+
+  @override
+  String get importNothingNew => 'No new songs';
+
+  @override
+  String get importDenied => 'Music access is needed. Allow it in Settings.';
+
+  @override
+  String get importFailed => 'Couldn\'t import music';
+
+  @override
+  String get unknownArtist => 'Unknown artist';
+
+  @override
+  String get unknownAlbum => 'Unknown album';
+
+  @override
+  String librarySources(int device, int downloaded) {
+    return '$device from device · $downloaded downloaded';
+  }
 }

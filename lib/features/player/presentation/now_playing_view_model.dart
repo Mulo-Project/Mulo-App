@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/sample/sample_data.dart';
 import '../../library/domain/track.dart';
 
 enum PlayerRepeatMode { off, all, one }
@@ -48,15 +47,15 @@ class NowPlayingState {
   );
 }
 
-/// 재생 상태 ViewModel. 지금은 자리 표시 데이터로 화면만 움직이고,
+/// 재생 상태 ViewModel. 처음에는 대기열이 비어 있다(미니 플레이어 숨김). 지금은 화면 상태만 움직이고,
 /// 재생 엔진(just_audio + audio_service)이 붙으면 이 클래스가 엔진을 부른다.
 class NowPlayingViewModel extends Notifier<NowPlayingState> {
   @override
-  NowPlayingState build() => NowPlayingState(
-    queue: SampleData.tracks.take(6).toList(),
+  NowPlayingState build() => const NowPlayingState(
+    queue: [],
     index: 0,
-    isPlaying: true,
-    position: const Duration(minutes: 1, seconds: 42),
+    isPlaying: false,
+    position: Duration.zero,
     shuffle: false,
     repeat: PlayerRepeatMode.off,
   );

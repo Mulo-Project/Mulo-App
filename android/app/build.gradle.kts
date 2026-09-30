@@ -6,7 +6,8 @@ plugins {
 
 android {
     namespace = "com.example.music_download_play_app"
-    compileSdk = flutter.compileSdkVersion
+    // permission_handler 13이 API 37 이상으로 컴파일을 요구한다.
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
