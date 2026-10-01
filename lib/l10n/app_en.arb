@@ -64,8 +64,6 @@
   "playlistsImport": "Import YouTube playlist",
   "settingsSubtitle": "Preferences",
   "settingsServer": "Server",
-  "settingsServerAddress": "Server address",
-  "settingsServerNotSet": "Not set",
   "settingsConnection": "Connection",
   "settingsDisconnected": "Disconnected",
   "settingsMode": "Download mode",

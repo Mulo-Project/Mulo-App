@@ -209,12 +209,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsServer => 'Server';
 
   @override
-  String get settingsServerAddress => 'Server address';
-
-  @override
-  String get settingsServerNotSet => 'Not set';
-
-  @override
   String get settingsConnection => 'Connection';
 
   @override

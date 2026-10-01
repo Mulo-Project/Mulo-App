@@ -209,12 +209,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsServer => '서버';
 
   @override
-  String get settingsServerAddress => '서버 주소';
-
-  @override
-  String get settingsServerNotSet => '아직 등록 안 함';
-
-  @override
   String get settingsConnection => '연결 상태';
 
   @override

@@ -85,8 +85,6 @@
   "playlistsImport": "유튜브 재생목록 가져오기",
   "settingsSubtitle": "앱 설정",
   "settingsServer": "서버",
-  "settingsServerAddress": "서버 주소",
-  "settingsServerNotSet": "아직 등록 안 함",
   "settingsConnection": "연결 상태",
   "settingsDisconnected": "연결 안 됨",
   "settingsMode": "다운로드 모드",

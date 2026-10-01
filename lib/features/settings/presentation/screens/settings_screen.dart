@@ -62,12 +62,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   title: l10n.settingsServer,
                   children: [
                     SettingRow(
-                      title: l10n.settingsServerAddress,
-                      description: l10n.settingsServerNotSet,
-                      trailing: const _Chevron(),
-                      onTap: () {},
-                    ),
-                    SettingRow(
                       title: l10n.settingsConnection,
                       trailing: StatusPill(label: l10n.settingsDisconnected),
                     ),

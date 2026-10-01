@@ -482,18 +482,6 @@ abstract class AppLocalizations {
   /// **'서버'**
   String get settingsServer;
 
-  /// No description provided for @settingsServerAddress.
-  ///
-  /// In ko, this message translates to:
-  /// **'서버 주소'**
-  String get settingsServerAddress;
-
-  /// No description provided for @settingsServerNotSet.
-  ///
-  /// In ko, this message translates to:
-  /// **'아직 등록 안 함'**
-  String get settingsServerNotSet;
-
   /// No description provided for @settingsConnection.
   ///
   /// In ko, this message translates to:
