@@ -378,7 +378,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsThemeColor => 'Theme color';
 
   @override
-  String get settingsDesignPreview => 'Design preview';
+  String get settingsThemePreview => 'Preview';
+
+  @override
+  String get themePreviewSong => 'Midnight Signal';
+
+  @override
+  String get themePreviewArtist => 'Sample Artist';
 
   @override
   String get settingsAbout => 'About';
@@ -649,54 +655,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playlistSummaryEmpty => 'Empty';
-
-  @override
-  String get dpTitle => 'Preview';
-
-  @override
-  String get dpPaletteDefault => 'Default';
-
-  @override
-  String get dpPaletteAlt => 'Alternate palette';
-
-  @override
-  String get dpQueueWaiting => 'songs waiting';
-
-  @override
-  String get dpPlayedToday => 'Played today';
-
-  @override
-  String get dpHours => 'hours';
-
-  @override
-  String get dpSectionButtons => 'Buttons';
-
-  @override
-  String get dpDisabled => 'Disabled';
-
-  @override
-  String get dpLike => 'Like';
-
-  @override
-  String get dpSectionProgress => 'Progress';
-
-  @override
-  String get dpSectionType => 'Type';
-
-  @override
-  String get dpHeadline => 'Headline Title';
-
-  @override
-  String get dpTitleSample => 'Title Song title';
-
-  @override
-  String get dpBody => 'Body text sample.';
-
-  @override
-  String get dpCaption => 'Caption Helper text';
-
-  @override
-  String get dpSongsSize => 'songs · 9.4 GB';
 
   @override
   String get downloadPlaylistsNone => 'None';

@@ -5,6 +5,7 @@ import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/design/design.dart';
 import 'package:music_download_play_app/core/sample/sample_data.dart';
 import 'package:music_download_play_app/features/library/domain/entities/import_result.dart';
+import 'package:music_download_play_app/features/settings/presentation/widgets/theme_preview.dart';
 
 import 'helpers/fakes.dart';
 
@@ -49,13 +50,30 @@ void main() {
     expect(find.byIcon(Icons.smart_display_rounded), findsOneWidget);
   });
 
-  testWidgets('디자인 미리보기: 기기 언어가 영어면 영어로 보인다', (tester) async {
-    await _pumpApp(tester, at: Routes.designPreview, height: 7000);
+  testWidgets('설정 테마 미리보기: 프리셋 · 모드를 바꾸면 미리보기 색도 바뀌고, 영어로도 보인다', (
+    tester,
+  ) async {
+    await _pumpApp(tester, at: Routes.settings, height: 7000);
+    expect(find.byType(ThemePreview), findsOneWidget);
+    expect(find.text('미리보기'), findsOneWidget);
+    expect(find.text('대체 팔레트'), findsNothing);
+    final before = Theme.of(tester.element(find.byType(ThemePreview)))
+        .extension<AppThemeTokens>()!
+        .palette
+        .accent;
+
+    await tester.tap(find.text('코랄'));
+    await tester.pumpAndSettle();
+    final after = Theme.of(tester.element(find.byType(ThemePreview)))
+        .extension<AppThemeTokens>()!
+        .palette
+        .accent;
+    expect(after, isNot(before));
+
     tester.platformDispatcher.localesTestValue = const [Locale('en')];
     await tester.pumpAndSettle();
-    expect(find.text('Preview'), findsOneWidget);
-    expect(find.text('Alternate palette'), findsOneWidget);
-    expect(find.text('미리보기'), findsNothing);
+    expect(find.text('PREVIEW'), findsOneWidget);
+    expect(find.text('Alternate palette'), findsNothing);
   });
 
   testWidgets('설정에서 테마 프리셋을 고르면 팔레트가 바뀐다', (tester) async {

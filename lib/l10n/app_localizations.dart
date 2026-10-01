@@ -788,11 +788,23 @@ abstract class AppLocalizations {
   /// **'테마 색'**
   String get settingsThemeColor;
 
-  /// No description provided for @settingsDesignPreview.
+  /// No description provided for @settingsThemePreview.
   ///
   /// In ko, this message translates to:
-  /// **'디자인 미리보기'**
-  String get settingsDesignPreview;
+  /// **'미리보기'**
+  String get settingsThemePreview;
+
+  /// No description provided for @themePreviewSong.
+  ///
+  /// In ko, this message translates to:
+  /// **'Midnight Signal'**
+  String get themePreviewSong;
+
+  /// No description provided for @themePreviewArtist.
+  ///
+  /// In ko, this message translates to:
+  /// **'Sample Artist'**
+  String get themePreviewArtist;
 
   /// No description provided for @settingsAbout.
   ///
@@ -1297,102 +1309,6 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'비어 있어요'**
   String get playlistSummaryEmpty;
-
-  /// No description provided for @dpTitle.
-  ///
-  /// In ko, this message translates to:
-  /// **'미리보기'**
-  String get dpTitle;
-
-  /// No description provided for @dpPaletteDefault.
-  ///
-  /// In ko, this message translates to:
-  /// **'기본'**
-  String get dpPaletteDefault;
-
-  /// No description provided for @dpPaletteAlt.
-  ///
-  /// In ko, this message translates to:
-  /// **'대체 팔레트'**
-  String get dpPaletteAlt;
-
-  /// No description provided for @dpQueueWaiting.
-  ///
-  /// In ko, this message translates to:
-  /// **'곡 대기 중'**
-  String get dpQueueWaiting;
-
-  /// No description provided for @dpPlayedToday.
-  ///
-  /// In ko, this message translates to:
-  /// **'오늘 재생'**
-  String get dpPlayedToday;
-
-  /// No description provided for @dpHours.
-  ///
-  /// In ko, this message translates to:
-  /// **'시간'**
-  String get dpHours;
-
-  /// No description provided for @dpSectionButtons.
-  ///
-  /// In ko, this message translates to:
-  /// **'버튼'**
-  String get dpSectionButtons;
-
-  /// No description provided for @dpDisabled.
-  ///
-  /// In ko, this message translates to:
-  /// **'비활성'**
-  String get dpDisabled;
-
-  /// No description provided for @dpLike.
-  ///
-  /// In ko, this message translates to:
-  /// **'좋아요'**
-  String get dpLike;
-
-  /// No description provided for @dpSectionProgress.
-  ///
-  /// In ko, this message translates to:
-  /// **'진행 표시'**
-  String get dpSectionProgress;
-
-  /// No description provided for @dpSectionType.
-  ///
-  /// In ko, this message translates to:
-  /// **'글자'**
-  String get dpSectionType;
-
-  /// No description provided for @dpHeadline.
-  ///
-  /// In ko, this message translates to:
-  /// **'Headline 제목'**
-  String get dpHeadline;
-
-  /// No description provided for @dpTitleSample.
-  ///
-  /// In ko, this message translates to:
-  /// **'Title 곡 제목'**
-  String get dpTitleSample;
-
-  /// No description provided for @dpBody.
-  ///
-  /// In ko, this message translates to:
-  /// **'Body 본문 텍스트입니다.'**
-  String get dpBody;
-
-  /// No description provided for @dpCaption.
-  ///
-  /// In ko, this message translates to:
-  /// **'Caption 보조 설명'**
-  String get dpCaption;
-
-  /// No description provided for @dpSongsSize.
-  ///
-  /// In ko, this message translates to:
-  /// **'곡 · 9.4 GB'**
-  String get dpSongsSize;
 
   /// No description provided for @downloadPlaylistsNone.
   ///

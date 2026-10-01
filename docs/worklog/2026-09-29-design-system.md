@@ -16,7 +16,7 @@
   - `ThemeSource`: `DefaultThemeSource`(실제), `CustomThemeSource` + `CustomThemeStore`(메모리 구현만), `MoodThemeSource`(커버 아트 색 추출, 플레이어 미연결)
   - `ThemeController`(Riverpod): `apply(source)` · `reset()`, 늦게 끝난 추출 결과 버림. 전환 700ms 애니메이션
   - components: DotGridBackground, GlowCard, DotMatrixText, PillButton, CircleIconButton, DottedProgressArc · DottedProgressBar, MiniPlayerBar
-- `lib/features/design_preview/`: 컴포넌트 전체 + "기본 / 대체 팔레트" 전환. 첫 화면으로 연결.
+- `lib/features/design_preview/`: 컴포넌트 전체 + "기본 / 대체 팔레트" 전환. 첫 화면으로 연결.  (→ 2026-10-01 테마 미리보기로 대체, D-030)
 - 문서: [design-system.md](../design-system.md)
 
 ## 바꾼 설정

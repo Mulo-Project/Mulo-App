@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../../app/router.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../../core/sample/sample_data.dart';
@@ -12,6 +10,7 @@ import '../../../security/presentation/bloc/app_lock_cubit.dart';
 import '../../../security/presentation/screens/pin_entry_screen.dart';
 import '../../../theme/domain/entities/theme_settings.dart';
 import '../../../theme/presentation/bloc/theme_cubit.dart';
+import '../widgets/theme_preview.dart';
 
 enum DownloadMode { server, local }
 
@@ -184,6 +183,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 SectionCard(
                   title: l10n.settingsTheme,
                   children: [
+                    const ThemePreview(),
                     SettingRow(
                       title: l10n.settingsFollowMood,
                       description: l10n.settingsFollowMoodDesc,
@@ -220,11 +220,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                         ],
                       ),
-                    ),
-                    SettingRow(
-                      title: l10n.settingsDesignPreview,
-                      trailing: const _Chevron(),
-                      onTap: () => context.push(Routes.designPreview),
                     ),
                   ],
                 ),

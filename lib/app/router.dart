@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/design/design.dart';
-import '../features/design_preview/presentation/screens/design_preview_screen.dart';
 import '../features/home/presentation/screens/home_screen.dart';
 import '../features/library/presentation/screens/library_screen.dart';
 import '../features/player/presentation/screens/player_screen.dart';
@@ -18,13 +17,12 @@ abstract final class Routes {
   static const search = '/search';
   static const settings = '/settings';
   static const player = '/player';
-  static const designPreview = '/design-preview';
 }
 
 final _rootKey = GlobalKey<NavigatorState>();
 
 /// 앱 라우터. 하단 탭 5개는 각자 스택을 유지하고(StatefulShellRoute),
-/// 전체 화면 플레이어 · 디자인 미리보기는 탭 위로 덮어 연다.
+/// 전체 화면 플레이어는 탭 위로 덮어 연다.
 GoRouter createRouter({String initialLocation = Routes.home}) => GoRouter(
   navigatorKey: _rootKey,
   initialLocation: initialLocation,
@@ -67,11 +65,6 @@ GoRouter createRouter({String initialLocation = Routes.home}) => GoRouter(
           child: child,
         ),
       ),
-    ),
-    GoRoute(
-      path: Routes.designPreview,
-      parentNavigatorKey: _rootKey,
-      builder: (context, state) => const DesignPreviewScreen(),
     ),
   ],
 );
