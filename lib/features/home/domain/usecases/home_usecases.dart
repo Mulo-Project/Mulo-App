@@ -4,6 +4,7 @@ import '../../../../core/usecase/usecase.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../library/domain/repositories/library_repository.dart';
 import '../entities/home_summary.dart';
+import '../repositories/join_date_repository.dart';
 import '../repositories/play_history_repository.dart';
 
 /// 곡 재생을 기록한다 (상세 기능: 재생 기록 저장).
@@ -17,12 +18,7 @@ class RecordPlay implements UseCase<void, PlayRecord> {
 }
 
 class HomeSummaryParams {
-  const HomeSummaryParams(this.period, {this.month, this.now});
-
-  final HomePeriod period;
-
-  /// "이번 달" 기간에서 볼 달 (그 달의 아무 날). 없으면 지금이 속한 달.
-  final DateTime? month;
+  const HomeSummaryParams({this.now});
 
   /// 기준 시각 (테스트용). 없으면 지금.
   final DateTime Function()? now;
@@ -49,8 +45,6 @@ class WatchHomeSummary
         buildHomeSummary(
           tracks: tracks!,
           plays: plays!,
-          period: p.period,
-          month: p.month,
           now: (p.now ?? DateTime.now)(),
         ),
       );
@@ -84,17 +78,14 @@ class WatchHomeSummary
 
 DateTime _dayOf(DateTime t) => DateTime(t.year, t.month, t.day);
 
-/// 홈 요약 계산 (순수 함수).
-///
-/// 기간: 이번 주 = 오늘을 포함한 최근 7일, 이번 달 = [month]가 속한 달 전체, 전체 = 기록 전부.
+/// 홈 요약 계산 (순수 함수). 순위 · 통계는 전체 기간 기준이고,
+/// 기간별(주 · 월) 그래프는 [HomeSummary.days]를 [HomeSummary.range]로 잘라 그린다.
 HomeSummary buildHomeSummary({
   required List<Track> tracks,
   required List<PlayRecord> plays,
-  required HomePeriod period,
   required DateTime now,
-  DateTime? month,
   int topCount = 100,
-  int rankCount = 5,
+  int rankCount = 10,
   int recentCount = 8,
   int playlistSize = 30,
 }) {
@@ -109,90 +100,64 @@ HomeSummary buildHomeSummary({
       pl.listened > Duration.zero ? pl.listened : byId[pl.trackId]!.duration;
 
   final today = _dayOf(now);
-  final picked = month ?? now;
-  final monthStart = DateTime(picked.year, picked.month);
-  final monthEnd = DateTime(picked.year, picked.month + 1);
 
-  final (DateTime? from, DateTime? until) = switch (period) {
-    HomePeriod.week => (today.subtract(const Duration(days: 6)), null),
-    HomePeriod.month => (monthStart, monthEnd),
-    HomePeriod.all => (null, null),
-  };
-  final inPeriod = [
-    for (final pl in known)
-      if ((from == null || !pl.playedAt.isBefore(from)) &&
-          (until == null || pl.playedAt.isBefore(until)))
-        pl,
-  ];
-
-  // 많이 들은 곡
-  final trackCounts = <String, int>{};
-  for (final pl in inPeriod) {
-    trackCounts[pl.trackId] = (trackCounts[pl.trackId] ?? 0) + 1;
+  // 곡별 재생 횟수 (많이 들은 곡)
+  final allCounts = <String, int>{};
+  for (final pl in known) {
+    allCounts[pl.trackId] = (allCounts[pl.trackId] ?? 0) + 1;
   }
   final topTracks =
-      [for (final e in trackCounts.entries) TrackPlays(byId[e.key]!, e.value)]
+      [for (final e in allCounts.entries) TrackPlays(byId[e.key]!, e.value)]
         ..sort((a, b) {
           final c = b.count.compareTo(a.count);
           return c != 0 ? c : a.track.title.compareTo(b.track.title);
         });
 
-  // 아티스트 · 장르 · 앨범 순위 (장르 · 앨범은 모르는 곡을 뺀다)
-  List<MapEntry<String, int>> rank(
+  // 아티스트 · 장르 순위: 곡 목록은 그 곡을 많이 들은 순
+  List<(String, int, List<Track>)> group(
     String Function(Track) key, {
     bool skipEmpty = false,
   }) {
     final counts = <String, int>{};
-    for (final pl in inPeriod) {
-      final k = key(byId[pl.trackId]!);
+    final members = <String, List<TrackPlays>>{};
+    for (final tp in topTracks) {
+      final k = key(tp.track);
       if (skipEmpty && k.isEmpty) continue;
-      counts[k] = (counts[k] ?? 0) + 1;
+      counts[k] = (counts[k] ?? 0) + tp.count;
+      (members[k] ??= []).add(tp);
     }
-    return counts.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    final keys = counts.keys.toList()
+      ..sort((a, b) => counts[b]!.compareTo(counts[a]!));
+    return [
+      for (final k in keys.take(rankCount))
+        (k, counts[k]!, [for (final tp in members[k]!) tp.track]),
+    ];
   }
 
-  final topArtists = rank((t) => t.artist);
+  final topArtists = group((t) => t.artist);
+  final topGenres = group((t) => t.genre, skipEmpty: true);
+
+  // 날짜별
+  final dayPlays = <DateTime, int>{};
+  final dayTime = <DateTime, Duration>{};
+  for (final pl in known) {
+    final d = _dayOf(pl.playedAt);
+    dayPlays[d] = (dayPlays[d] ?? 0) + 1;
+    dayTime[d] = (dayTime[d] ?? Duration.zero) + heard(pl);
+  }
+  final days = [
+    for (final d in dayPlays.keys.toList()..sort())
+      DayListening(d, dayPlays[d]!, dayTime[d]!),
+  ];
+
   final stats = ListeningStats(
-    plays: inPeriod.length,
-    uniqueTracks: trackCounts.length,
-    listened: inPeriod.fold(Duration.zero, (sum, pl) => sum + heard(pl)),
-    topArtists: [
-      for (final e in topArtists.take(rankCount)) ArtistPlays(e.key, e.value),
-    ],
-    topGenres: [
-      for (final e in rank((t) => t.genre, skipEmpty: true).take(rankCount))
-        GenrePlays(e.key, e.value),
-    ],
-    topAlbums: [
-      for (final e in rank((t) => t.album, skipEmpty: true).take(rankCount))
-        AlbumPlays(e.key, e.value),
-    ],
-    daysListened: {for (final pl in inPeriod) _dayOf(pl.playedAt)}.length,
+    plays: known.length,
+    uniqueTracks: allCounts.length,
+    listened: known.fold(Duration.zero, (sum, pl) => sum + heard(pl)),
+    daysListened: days.length,
+    topArtists: [for (final (a, c, t) in topArtists) ArtistPlays(a, c, t)],
+    topGenres: [for (final (g, c, t) in topGenres) GenrePlays(g, c, t)],
   );
-
-  // 날짜별 (꺾은선 그래프). 이번 달은 오늘까지만 그린다.
-  final daily = <DayListening>[];
-  if (from != null) {
-    final last = period == HomePeriod.week
-        ? today
-        : (monthEnd.isAfter(today)
-              ? today
-              : monthEnd.subtract(const Duration(days: 1)));
-    final dayPlays = <DateTime, int>{};
-    final dayTime = <DateTime, Duration>{};
-    for (final pl in inPeriod) {
-      final d = _dayOf(pl.playedAt);
-      dayPlays[d] = (dayPlays[d] ?? 0) + 1;
-      dayTime[d] = (dayTime[d] ?? Duration.zero) + heard(pl);
-    }
-    for (
-      var d = from;
-      !d.isAfter(last);
-      d = DateTime(d.year, d.month, d.day + 1)
-    ) {
-      daily.add(DayListening(d, dayPlays[d] ?? 0, dayTime[d] ?? Duration.zero));
-    }
-  }
 
   // 최근 재생 (중복 없이)
   final recent = <Track>[];
@@ -203,24 +168,6 @@ HomeSummary buildHomeSummary({
   }
 
   // 추천 재생목록: 많이 들은 아티스트 · 장르의 덜 들은 곡 묶음, 안 들어본 곡, 새로 담은 곡.
-  final allCounts = <String, int>{};
-  final artistCounts = <String, int>{};
-  final genreCounts = <String, int>{};
-  for (final pl in known) {
-    final t = byId[pl.trackId]!;
-    allCounts[t.id] = (allCounts[t.id] ?? 0) + 1;
-    if (t.artist.isNotEmpty) {
-      artistCounts[t.artist] = (artistCounts[t.artist] ?? 0) + 1;
-    }
-    if (t.genre.isNotEmpty) {
-      genreCounts[t.genre] = (genreCounts[t.genre] ?? 0) + 1;
-    }
-  }
-  List<String> mostPlayed(Map<String, int> counts) =>
-      (counts.entries.toList()..sort((a, b) => b.value.compareTo(a.value)))
-          .map((e) => e.key)
-          .toList();
-
   List<Track> leastHeardFirst(Iterable<Track> list) {
     final sorted = [...list]
       ..sort((a, b) {
@@ -234,7 +181,8 @@ HomeSummary buildHomeSummary({
     ..sort((a, b) => b.addedAt.compareTo(a.addedAt));
 
   final playlists = <RecommendedPlaylist>[];
-  for (final artist in mostPlayed(artistCounts).take(2)) {
+  for (final (artist, _, _)
+      in topArtists.where((a) => a.$1.isNotEmpty).take(2)) {
     final list = leastHeardFirst(tracks.where((t) => t.artist == artist));
     if (list.length >= 2) {
       playlists.add(
@@ -242,7 +190,7 @@ HomeSummary buildHomeSummary({
       );
     }
   }
-  for (final genre in mostPlayed(genreCounts).take(1)) {
+  for (final (genre, _, _) in topGenres.take(1)) {
     final list = leastHeardFirst(tracks.where((t) => t.genre == genre));
     if (list.length >= 2) {
       playlists.add(
@@ -266,20 +214,30 @@ HomeSummary buildHomeSummary({
     );
   }
 
-  // 오늘 들은 시간
-  final todayPlays = [
+  // 오늘 들은 횟수 · 시간
+  final todays = [
     for (final pl in known)
       if (!pl.playedAt.isBefore(today) && !pl.playedAt.isAfter(now)) pl,
   ];
 
   return HomeSummary(
-    todayListened: todayPlays.fold(Duration.zero, (sum, pl) => sum + heard(pl)),
-    todayPlays: todayPlays.length,
+    todayListened: todays.fold(Duration.zero, (sum, pl) => sum + heard(pl)),
+    todayPlays: todays.length,
+    recent: recent,
+    days: days,
     topTracks: topTracks.take(topCount).toList(),
     stats: stats,
-    daily: daily,
     recommendedPlaylists: playlists,
-    recent: recent,
     libraryEmpty: tracks.isEmpty,
   );
+}
+
+/// 앱을 처음 쓴 날 (재생 기록 달력의 시작).
+class GetJoinDate implements UseCase<DateTime, NoParams> {
+  const GetJoinDate(this._repo);
+
+  final JoinDateRepository _repo;
+
+  @override
+  Future<DateTime> call(NoParams params) => _repo.joinedAt();
 }

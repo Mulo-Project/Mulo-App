@@ -570,6 +570,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeGoLibrary => 'Go to library';
 
   @override
+  String get homeChipTracks => 'Songs';
+
+  @override
+  String get homeChipArtists => 'Artists';
+
+  @override
+  String get homeChipGenres => 'Genres';
+
+  @override
+  String get homeMonthPrev => 'Previous month';
+
+  @override
+  String get homeMonthNext => 'Next month';
+
+  @override
   String get homeHistory => 'Play history';
 
   @override

@@ -96,7 +96,7 @@ GoRouter createRouter({String initialLocation = Routes.home}) => GoRouter(
               path: 'top-tracks',
               pageBuilder: (context, state) => NoTransitionPage(
                 key: state.pageKey,
-                child: topTracksScreenFrom(state.uri.queryParameters),
+                child: const TopTracksScreen(),
               ),
             ),
           ],

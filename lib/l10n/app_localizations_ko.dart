@@ -541,7 +541,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get homeRecommendations => '추천 재생목록';
 
   @override
-  String get homeRecent => '최근 재생';
+  String get homeRecent => '최근 들은 곡';
 
   @override
   String get homeNoPlays => '아직 재생 기록이 없어요. 보관함에서 곡을 재생해 보세요.';
@@ -558,6 +558,21 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get homeGoLibrary => '보관함으로';
+
+  @override
+  String get homeChipTracks => '곡';
+
+  @override
+  String get homeChipArtists => '아티스트';
+
+  @override
+  String get homeChipGenres => '장르';
+
+  @override
+  String get homeMonthPrev => '이전 달';
+
+  @override
+  String get homeMonthNext => '다음 달';
 
   @override
   String get homeHistory => '재생 기록';

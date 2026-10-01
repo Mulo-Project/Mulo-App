@@ -3,28 +3,28 @@ import 'package:flutter/material.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 
-/// 달 고르기 (달력): 해를 넘겨 가며 12개 달 중 하나를 누른다.
-/// 오늘이 속한 달 이후는 고를 수 없다. 고르면 그 달의 1일, 닫으면 null.
-Future<DateTime?> showMonthPickerSheet(
+/// 달력 팝업: 년 · 월을 고른다. [min]이 속한 달 이전(앱을 쓰기 전)과
+/// [max]가 속한 달 이후는 고를 수 없다. 고르면 그 달의 1일, 닫으면 null.
+Future<DateTime?> showMonthPickerDialog(
   BuildContext context, {
   required DateTime selected,
-  required DateTime now,
-}) => showModalBottomSheet<DateTime>(
+  required DateTime min,
+  required DateTime max,
+}) => showDialog<DateTime>(
   context: context,
-  backgroundColor: context.palette.surface,
-  showDragHandle: true,
-  useRootNavigator: true,
-  shape: const RoundedRectangleBorder(
-    borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadii.card)),
-  ),
-  builder: (_) => _MonthPicker(selected: selected, now: now),
+  builder: (_) => _MonthPicker(selected: selected, min: min, max: max),
 );
 
 class _MonthPicker extends StatefulWidget {
-  const _MonthPicker({required this.selected, required this.now});
+  const _MonthPicker({
+    required this.selected,
+    required this.min,
+    required this.max,
+  });
 
   final DateTime selected;
-  final DateTime now;
+  final DateTime min;
+  final DateTime max;
 
   @override
   State<_MonthPicker> createState() => _MonthPickerState();
@@ -38,32 +38,36 @@ class _MonthPickerState extends State<_MonthPicker> {
     final l10n = context.l10n;
     final p = context.palette;
     final text = Theme.of(context).textTheme;
-    final now = widget.now;
+    final first = DateTime(widget.min.year, widget.min.month);
+    final last = DateTime(widget.max.year, widget.max.month);
 
-    return SafeArea(
+    return Dialog(
+      backgroundColor: p.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.lg),
+      ),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.md,
-          0,
-          AppSpacing.md,
-          AppSpacing.md,
-        ),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Text(l10n.homePickMonth, style: text.titleMedium),
+            const SizedBox(height: AppSpacing.sm),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 CircleIconButton(
                   icon: Icons.chevron_left_rounded,
                   tooltip: l10n.homeYearLabel(_year - 1),
-                  onPressed: () => setState(() => _year--),
+                  onPressed: _year <= first.year
+                      ? null
+                      : () => setState(() => _year--),
                 ),
                 Text(l10n.homeYearLabel(_year), style: text.titleMedium),
                 CircleIconButton(
                   icon: Icons.chevron_right_rounded,
                   tooltip: l10n.homeYearLabel(_year + 1),
-                  onPressed: _year >= now.year
+                  onPressed: _year >= last.year
                       ? null
                       : () => setState(() => _year++),
                 ),
@@ -84,12 +88,10 @@ class _MonthPickerState extends State<_MonthPicker> {
                     selected:
                         _year == widget.selected.year &&
                         m == widget.selected.month,
-                    enabled: DateTime(
-                      _year,
-                      m,
-                    ).isBefore(DateTime(now.year, now.month + 1)),
+                    enabled:
+                        !DateTime(_year, m).isBefore(first) &&
+                        !DateTime(_year, m).isAfter(last),
                     onTap: () => Navigator.of(context).pop(DateTime(_year, m)),
-                    accent: p.accent,
                   ),
               ],
             ),
@@ -106,14 +108,12 @@ class _MonthCell extends StatelessWidget {
     required this.selected,
     required this.enabled,
     required this.onTap,
-    required this.accent,
   });
 
   final String label;
   final bool selected;
   final bool enabled;
   final VoidCallback onTap;
-  final Color accent;
 
   @override
   Widget build(BuildContext context) {
@@ -128,7 +128,7 @@ class _MonthCell extends StatelessWidget {
         child: Container(
           alignment: Alignment.center,
           decoration: ShapeDecoration(
-            color: selected ? accent : p.surfaceHigh,
+            color: selected ? p.accent : p.surfaceHigh,
             shape: const StadiumBorder(),
           ),
           child: Text(

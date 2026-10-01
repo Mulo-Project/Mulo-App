@@ -1109,7 +1109,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeRecent.
   ///
   /// In ko, this message translates to:
-  /// **'최근 재생'**
+  /// **'최근 들은 곡'**
   String get homeRecent;
 
   /// No description provided for @homeNoPlays.
@@ -1141,6 +1141,36 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'보관함으로'**
   String get homeGoLibrary;
+
+  /// No description provided for @homeChipTracks.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡'**
+  String get homeChipTracks;
+
+  /// No description provided for @homeChipArtists.
+  ///
+  /// In ko, this message translates to:
+  /// **'아티스트'**
+  String get homeChipArtists;
+
+  /// No description provided for @homeChipGenres.
+  ///
+  /// In ko, this message translates to:
+  /// **'장르'**
+  String get homeChipGenres;
+
+  /// No description provided for @homeMonthPrev.
+  ///
+  /// In ko, this message translates to:
+  /// **'이전 달'**
+  String get homeMonthPrev;
+
+  /// No description provided for @homeMonthNext.
+  ///
+  /// In ko, this message translates to:
+  /// **'다음 달'**
+  String get homeMonthNext;
 
   /// No description provided for @homeHistory.
   ///

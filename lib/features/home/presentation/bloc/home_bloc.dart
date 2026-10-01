@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/usecase/usecase.dart';
 import '../../domain/entities/home_summary.dart';
 import '../../domain/usecases/home_usecases.dart';
 
@@ -10,27 +11,9 @@ sealed class HomeEvent {
   const HomeEvent();
 }
 
-/// 홈을 열 때: 요약 구독 시작.
+/// 홈을 열 때: 요약 구독 시작 · 가입일 읽기.
 class HomeStarted extends HomeEvent {
-  const HomeStarted({this.period, this.month});
-
-  /// 처음 보여 줄 기간 · 달 (없으면 지금 상태 그대로).
-  final HomePeriod? period;
-  final DateTime? month;
-}
-
-/// "이번 달" 기간에서 볼 달 바꾸기 (그 달의 아무 날).
-class HomeMonthChanged extends HomeEvent {
-  const HomeMonthChanged(this.month);
-
-  final DateTime month;
-}
-
-/// 순위 · 분석 기간 바꾸기.
-class HomePeriodChanged extends HomeEvent {
-  const HomePeriodChanged(this.period);
-
-  final HomePeriod period;
+  const HomeStarted();
 }
 
 class _HomeSummaryUpdated extends HomeEvent {
@@ -41,18 +24,16 @@ class _HomeSummaryUpdated extends HomeEvent {
 
 class HomeState extends Equatable {
   const HomeState({
-    this.period = HomePeriod.week,
-    this.month,
     this.summary = const HomeSummary(),
+    this.joinedAt,
     this.loaded = false,
     this.revision = 0,
   });
 
-  final HomePeriod period;
-
-  /// 보고 있는 달의 1일. 없으면 지금이 속한 달.
-  final DateTime? month;
   final HomeSummary summary;
+
+  /// 앱을 처음 쓴 날. 아직 못 읽었으면 null.
+  final DateTime? joinedAt;
   final bool loaded;
 
   /// 요약을 새로 받을 때마다 올라간다. 곡은 id만으로 같다고 보기 때문에,
@@ -60,44 +41,30 @@ class HomeState extends Equatable {
   final int revision;
 
   HomeState copyWith({
-    HomePeriod? period,
-    DateTime? month,
     HomeSummary? summary,
+    DateTime? joinedAt,
     bool? loaded,
     int? revision,
   }) => HomeState(
-    period: period ?? this.period,
-    month: month ?? this.month,
     summary: summary ?? this.summary,
+    joinedAt: joinedAt ?? this.joinedAt,
     loaded: loaded ?? this.loaded,
     revision: revision ?? this.revision,
   );
 
   @override
-  List<Object?> get props => [period, month, summary, loaded, revision];
+  List<Object?> get props => [summary, joinedAt, loaded, revision];
 }
 
-/// 홈 (많이 들은 곡 · 청취 분석 · 추천 · 최근 재생). 보관함 · 재생 기록 변경을 구독한다.
+/// 홈 (최근 들은 곡 · 날짜별 청취 · 많이 들은 곡 · 추천). 보관함 · 재생 기록 변경을 구독한다.
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
-  HomeBloc(this._watch) : super(const HomeState()) {
-    on<HomeStarted>((e, emit) {
-      emit(
-        state.copyWith(
-          period: e.period,
-          month: e.month == null
-              ? null
-              : DateTime(e.month!.year, e.month!.month),
-        ),
-      );
-      _subscribe();
-    });
-    on<HomeMonthChanged>((e, emit) {
-      emit(state.copyWith(month: DateTime(e.month.year, e.month.month)));
-      _subscribe();
-    });
-    on<HomePeriodChanged>((e, emit) {
-      emit(state.copyWith(period: e.period));
-      _subscribe();
+  HomeBloc(this._watch, this._joinDate) : super(const HomeState()) {
+    on<HomeStarted>((_, emit) async {
+      _sub?.cancel();
+      _sub = _watch(const HomeSummaryParams())
+          .listen((s) => add(_HomeSummaryUpdated(s)));
+      final joined = await _joinDate(const NoParams());
+      emit(state.copyWith(joinedAt: joined));
     });
     on<_HomeSummaryUpdated>(
       (e, emit) => emit(
@@ -111,13 +78,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   }
 
   final WatchHomeSummary _watch;
+  final GetJoinDate _joinDate;
   StreamSubscription<HomeSummary>? _sub;
-
-  void _subscribe() {
-    _sub?.cancel();
-    _sub = _watch(HomeSummaryParams(state.period, month: state.month))
-        .listen((s) => add(_HomeSummaryUpdated(s)));
-  }
 
   @override
   Future<void> close() async {

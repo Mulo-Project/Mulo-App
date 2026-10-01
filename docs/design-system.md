@@ -9,7 +9,7 @@
 - 글자는 `Theme.of(context).textTheme` (글꼴 Pretendard 400 · 500 · 600 · 700), 큰 숫자는 `StatNumber`.
 - **유리**(`GlassSurface` · `GlassCard`: 뒤를 흐리게 비추는 반투명 면 + 왼쪽 위 빛 테두리)는 일부에만 쓴다 (D-015):
   가로 전체 미니 플레이어(모서리 둥글지 않음) · 하단 탭, 원형 버튼 · 보조(tonal) 버튼, 보관함 요약 카드.
-- **카드는 보관함 · 재생목록에 쓰고, 홈은 구역 패널(`SectionPanel`)로 4구역을 나눈다** (D-033 · D-035). 검색 · 설정은 면 없이 제목 + 본문 + 구분선으로 보여 준다.
+- **카드는 보관함 · 재생목록에만** 쓴다 (D-033). 홈은 구역마다 모양이 다른 전용 디자인이고 공통 컴포넌트로 묶지 않는다 (D-035). 검색 · 설정은 면 없이 제목 + 본문 + 구분선.
 - 배경(`AppBackground`)은 단색. 설정 묶음 · 입력칸 · 선택 알약 · 스위치는 평범한 면(`surface` · `surfaceHigh` + `outline`).
 - 이미지가 들어가는 카드(재생목록, 플레이어 커버)는 유리 없이 `CoverCard` (사진, 없으면 테마 색 그라데이션).
 - 색 유리 카드 · 사진 위 글자는 `onGlow`(항상 밝은 색) — `GlassCard` · `CoverCard`가 자동으로 적용.
@@ -58,8 +58,6 @@ MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부�
 | `GlassCard` | glass.dart | 색 유리 강조 카드, `GlowTone` primary · secondary · tertiary |
 | `CoverCard` · `onGlow()` | cover_card.dart | 이미지 카드 (재생목록 · 플레이어 커버), 색 · 사진 위 글자색 |
 | `StatNumber` | stat_number.dart | 큰 숫자 (곡 수, 시간, 퍼센트), 고정폭 숫자 |
-| `SectionPanel` | section_panel.dart | 홈의 구역 패널: 색 유리 면 + 아이콘 배지 · 제목 머리줄, `collapsible`이면 접기, 구역마다 `GlowTone` 다르게 |
-| `ExpandSection` | expand_section.dart | 제목을 눌러 접고 펴는 영역 (기본 펼침) |
 | `AppLineChart` | line_chart.dart | 꺾은선 그래프 (accent 선 · 점, outline 눈금, 최댓값 글자). 외부 차트 패키지 없음 |
 | `PillButton` | buttons.dart | 알약 버튼: accent · primary(단색 + 빛), tonal(유리), outline |
 | `CircleIconButton` | buttons.dart | 원형 유리 버튼, `emphasized` = 강조 색 + 빛 (재생); `onLongPress`로 길게 누르기 |

@@ -47,6 +47,7 @@ void main() {
   const screens = {
     'home': Routes.home,
     'home-light': Routes.home,
+    'home-full': Routes.home,
     'library': Routes.library,
     'playlists': Routes.playlists,
     'search': Routes.search,

@@ -186,7 +186,7 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('nav-홈')));
     await tester.pumpAndSettle();
-    expect(find.text('최근 재생'), findsOneWidget);
+    expect(find.text('최근 들은 곡'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text('많이 들은 곡'),
       300,

@@ -20,9 +20,6 @@ class PlayRecord extends Equatable {
   List<Object?> get props => [trackId, playedAt, listened];
 }
 
-/// 홈 순위 · 분석 기간.
-enum HomePeriod { week, month, all }
-
 class TrackPlays extends Equatable {
   const TrackPlays(this.track, this.count);
 
@@ -33,35 +30,29 @@ class TrackPlays extends Equatable {
   List<Object?> get props => [track.id, count];
 }
 
+/// 아티스트별 재생. [tracks]는 그 아티스트의 곡을 많이 들은 순으로 담는다.
 class ArtistPlays extends Equatable {
-  const ArtistPlays(this.artist, this.count);
+  const ArtistPlays(this.artist, this.count, this.tracks);
 
   /// 모르는 아티스트는 빈 문자열.
   final String artist;
   final int count;
+  final List<Track> tracks;
 
   @override
-  List<Object?> get props => [artist, count];
+  List<Object?> get props => [artist, count, tracks];
 }
 
+/// 장르별 재생. [tracks]는 그 장르의 곡을 많이 들은 순으로 담는다.
 class GenrePlays extends Equatable {
-  const GenrePlays(this.genre, this.count);
+  const GenrePlays(this.genre, this.count, this.tracks);
 
   final String genre;
   final int count;
+  final List<Track> tracks;
 
   @override
-  List<Object?> get props => [genre, count];
-}
-
-class AlbumPlays extends Equatable {
-  const AlbumPlays(this.album, this.count);
-
-  final String album;
-  final int count;
-
-  @override
-  List<Object?> get props => [album, count];
+  List<Object?> get props => [genre, count, tracks];
 }
 
 /// 하루치 청취 (꺾은선 그래프의 점 하나).
@@ -94,41 +85,36 @@ class RecommendedPlaylist extends Equatable {
   List<Object?> get props => [kind, label, tracks];
 }
 
-/// 청취 분석 (상세 기능: 청취 분석).
+/// 전체 기간 청취 분석 (상세 기능: 청취 분석).
 class ListeningStats extends Equatable {
   const ListeningStats({
     this.plays = 0,
     this.uniqueTracks = 0,
     this.listened = Duration.zero,
+    this.daysListened = 0,
     this.topArtists = const [],
     this.topGenres = const [],
-    this.topAlbums = const [],
-    this.daysListened = 0,
   });
 
   final int plays;
   final int uniqueTracks;
   final Duration listened;
+
+  /// 한 번이라도 들은 날 수.
+  final int daysListened;
   final List<ArtistPlays> topArtists;
 
   /// 장르를 아는 곡만 센다 (장르가 빈 곡은 제외).
   final List<GenrePlays> topGenres;
-
-  /// 앨범을 아는 곡만 센다.
-  final List<AlbumPlays> topAlbums;
-
-  /// 기간 안에 한 번이라도 들은 날 수.
-  final int daysListened;
 
   @override
   List<Object?> get props => [
     plays,
     uniqueTracks,
     listened,
+    daysListened,
     topArtists,
     topGenres,
-    topAlbums,
-    daysListened,
   ];
 }
 
@@ -137,44 +123,60 @@ class HomeSummary extends Equatable {
   const HomeSummary({
     this.todayListened = Duration.zero,
     this.todayPlays = 0,
+    this.recent = const [],
+    this.days = const [],
     this.topTracks = const [],
     this.stats = const ListeningStats(),
-    this.daily = const [],
     this.recommendedPlaylists = const [],
-    this.recent = const [],
     this.libraryEmpty = true,
   });
 
-  /// 오늘(기기 시간 0시부터) 들은 시간. 기간 선택과 무관하다.
+  /// 오늘(기기 시간 0시부터) 들은 시간.
   /// 들은 시간이 기록되지 않은 재생은 곡 길이로 어림한다.
   final Duration todayListened;
 
   /// 오늘 재생한 횟수.
   final int todayPlays;
 
-  /// 기간 안에서 많이 들은 곡 (많은 순, 최대 100곡).
-  final List<TrackPlays> topTracks;
-  final ListeningStats stats;
+  /// 최근에 들은 곡 (중복 없이, 최근 순).
+  final List<Track> recent;
 
-  /// 기간 안의 날짜별 청취 (이번 주 7일 · 고른 달의 날들). 전체 기간은 비어 있다.
-  final List<DayListening> daily;
+  /// 들은 기록이 있는 날들 (날짜 오름차순). 그래프는 [range]로 자른다.
+  final List<DayListening> days;
+
+  /// 가장 많이 들은 곡 (많은 순, 최대 100곡).
+  final List<TrackPlays> topTracks;
+
+  /// 전체 기간 통계 · 아티스트 · 장르 순위.
+  final ListeningStats stats;
 
   /// 추천 재생목록 (기기 재생 기록 기반).
   final List<RecommendedPlaylist> recommendedPlaylists;
-
-  /// 최근에 들은 곡 (중복 없이, 최근 순).
-  final List<Track> recent;
   final bool libraryEmpty;
+
+  /// [from]~[to] 날짜(양 끝 포함)의 하루치 목록. 들은 기록이 없는 날은 0으로 채운다.
+  List<DayListening> range(DateTime from, DateTime to) {
+    final byDay = {for (final d in days) d.day: d};
+    final out = <DayListening>[];
+    for (
+      var d = DateTime(from.year, from.month, from.day);
+      !d.isAfter(to);
+      d = DateTime(d.year, d.month, d.day + 1)
+    ) {
+      out.add(byDay[d] ?? DayListening(d, 0, Duration.zero));
+    }
+    return out;
+  }
 
   @override
   List<Object?> get props => [
     todayListened,
     todayPlays,
+    recent,
+    days,
     topTracks,
     stats,
-    daily,
     recommendedPlaylists,
-    recent,
     libraryEmpty,
   ];
 }

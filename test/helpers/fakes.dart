@@ -12,6 +12,7 @@ import 'package:music_download_play_app/features/downloads/domain/entities/downl
 import 'package:music_download_play_app/features/downloads/domain/repositories/download_queue_repository.dart';
 import 'package:music_download_play_app/features/home/di.dart';
 import 'package:music_download_play_app/features/home/domain/entities/home_summary.dart';
+import 'package:music_download_play_app/features/home/domain/repositories/join_date_repository.dart';
 import 'package:music_download_play_app/features/home/domain/repositories/play_history_repository.dart';
 import 'package:music_download_play_app/features/library/di.dart';
 import 'package:music_download_play_app/features/library/domain/entities/import_result.dart';
@@ -493,6 +494,7 @@ Future<void> setUpTestDependencies({
   BiometricAuthenticator? biometric,
   LoadedFolderRepository? folders,
   TrackFileRepository? trackFiles,
+  DateTime? joinedAt,
 }) async {
   await sl.reset();
   registerTheme(sl);
@@ -506,6 +508,9 @@ Future<void> setUpTestDependencies({
   registerDownloads(sl);
   sl.allowReassignment = true;
   sl
+    ..registerLazySingleton<JoinDateRepository>(
+      () => MemoryJoinDate(joinedAt ?? DateTime(2026, 1, 1)),
+    )
     ..registerLazySingleton<ThemeSettingsRepository>(
       () => MemoryThemeSettingsRepository(theme),
     )
@@ -549,4 +554,14 @@ Future<void> setUpTestDependencies({
       () => playlists ?? MemoryPlaylistRepository(const [], tracks),
     );
   sl.allowReassignment = false;
+}
+
+/// 고정된 가입일.
+class MemoryJoinDate implements JoinDateRepository {
+  const MemoryJoinDate(this.date);
+
+  final DateTime date;
+
+  @override
+  Future<DateTime> joinedAt() async => date;
 }
