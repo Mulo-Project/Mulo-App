@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 
-/// 설정 › 테마 위쪽의 미리보기. 지금 적용된 팔레트(색 · 화면 모드)로
+/// 설정 › 테마 미리보기 화면의 내용. 지금 적용된 팔레트(색 · 화면 모드)로
 /// 미니 플레이어 · 곡 줄 · 버튼 · 카드 샘플을 그려, 고르는 즉시 모습을 보여 준다.
 class ThemePreview extends StatelessWidget {
   const ThemePreview({super.key});
@@ -18,8 +18,6 @@ class ThemePreview extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.settingsThemePreview.toUpperCase(), style: text.labelSmall),
-          const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
               Expanded(

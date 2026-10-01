@@ -160,41 +160,38 @@ class _SearchScreenState extends State<SearchScreen> {
     return [
       Padding(
         padding: AppSpacing.screen,
-        child: GlassCard(
-          tone: GlowTone.secondary,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l10n.searchPlaylistLabel.toUpperCase(),
-                style: Theme.of(context).textTheme.labelSmall,
-              ),
-              const SizedBox(height: AppSpacing.xxs),
-              Text(
-                SampleData.playlists.first.$1,
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  StatNumber('${_selected.length}', size: 40),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    '/ ${l10n.songCount(tracks.length)}',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const Spacer(),
-                  PillButton(
-                    label: l10n.searchDownloadSelected(_selected.length),
-                    icon: Icons.download_rounded,
-                    compact: true,
-                    onPressed: _selected.isEmpty ? null : () {},
-                  ),
-                ],
-              ),
-            ],
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.searchPlaylistLabel.toUpperCase(),
+              style: Theme.of(context).textTheme.labelSmall,
+            ),
+            const SizedBox(height: AppSpacing.xxs),
+            Text(
+              SampleData.playlists.first.$1,
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                StatNumber('${_selected.length}', size: 40),
+                const SizedBox(width: AppSpacing.xs),
+                Text(
+                  '/ ${l10n.songCount(tracks.length)}',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const Spacer(),
+                PillButton(
+                  label: l10n.searchDownloadSelected(_selected.length),
+                  icon: Icons.download_rounded,
+                  compact: true,
+                  onPressed: _selected.isEmpty ? null : () {},
+                ),
+              ],
+            ),
+          ],
         ),
       ),
       const SizedBox(height: AppSpacing.sm),
@@ -254,10 +251,8 @@ class _EmptyHint extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     return Padding(
       padding: AppSpacing.screen,
-      child: GlassCard(
-        tone: GlowTone.secondary,
-        glow: false,
-        padding: const EdgeInsets.all(AppSpacing.xl),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
         child: Column(
           children: [
             GlassSurface(
@@ -308,47 +303,45 @@ class _UrlResultCard extends StatelessWidget {
 
     return Padding(
       padding: AppSpacing.screen,
-      child: GlassCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.searchUrlCardLabel.toUpperCase(), style: text.labelSmall),
-            const SizedBox(height: AppSpacing.md),
-            const ArtworkBox(size: 96, radius: 20, tone: GlowTone.tertiary),
-            const SizedBox(height: AppSpacing.md),
-            Text(track.title, style: text.headlineSmall),
-            const SizedBox(height: AppSpacing.xxs),
-            Text(
-              track.artist,
-              style: text.bodyMedium?.copyWith(
-                color: context.palette.onSurfaceMuted,
-              ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l10n.searchUrlCardLabel.toUpperCase(), style: text.labelSmall),
+          const SizedBox(height: AppSpacing.md),
+          const ArtworkBox(size: 96, radius: 20, tone: GlowTone.tertiary),
+          const SizedBox(height: AppSpacing.md),
+          Text(track.title, style: text.headlineSmall),
+          const SizedBox(height: AppSpacing.xxs),
+          Text(
+            track.artist,
+            style: text.bodyMedium?.copyWith(
+              color: context.palette.onSurfaceMuted,
             ),
-            const SizedBox(height: AppSpacing.md),
-            StatNumber(formatDuration(track.duration), size: 32),
-            const SizedBox(height: AppSpacing.lg),
-            SegmentedPills<Quality>(
-              expand: true,
-              values: Quality.values,
-              selected: quality,
-              labelOf: (q) => switch (q) {
-                Quality.best => l10n.qualityBest,
-                Quality.normal => l10n.qualityNormal,
-                Quality.saver => l10n.qualitySaver,
-              },
-              onChanged: onQuality,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          StatNumber(formatDuration(track.duration), size: 32),
+          const SizedBox(height: AppSpacing.lg),
+          SegmentedPills<Quality>(
+            expand: true,
+            values: Quality.values,
+            selected: quality,
+            labelOf: (q) => switch (q) {
+              Quality.best => l10n.qualityBest,
+              Quality.normal => l10n.qualityNormal,
+              Quality.saver => l10n.qualitySaver,
+            },
+            onChanged: onQuality,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          SizedBox(
+            width: double.infinity,
+            child: PillButton(
+              label: l10n.actionDownload,
+              icon: Icons.download_rounded,
+              onPressed: onDownload,
             ),
-            const SizedBox(height: AppSpacing.sm),
-            SizedBox(
-              width: double.infinity,
-              child: PillButton(
-                label: l10n.actionDownload,
-                icon: Icons.download_rounded,
-                onPressed: onDownload,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

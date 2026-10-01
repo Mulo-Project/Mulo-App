@@ -42,7 +42,7 @@ class _HomeView extends StatelessWidget {
       if (state.loaded && s.libraryEmpty)
         Padding(
           padding: AppSpacing.screen,
-          child: _EmptyCard(
+          child: _EmptyState(
             title: l10n.homeEmptyLibraryTitle,
             body: l10n.homeEmptyLibraryBody,
             action: l10n.homeGoLibrary,
@@ -52,7 +52,7 @@ class _HomeView extends StatelessWidget {
       else ...[
         Padding(
           padding: AppSpacing.screen,
-          child: _TodayCard(listened: s.todayListened, plays: s.todayPlays),
+          child: _TodaySummary(listened: s.todayListened, plays: s.todayPlays),
         ),
         const SizedBox(height: AppSpacing.md),
         Padding(
@@ -73,7 +73,7 @@ class _HomeView extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         Padding(
           padding: AppSpacing.screen,
-          child: _StatsCard(stats: s.stats),
+          child: _StatsSummary(stats: s.stats),
         ),
         const SizedBox(height: AppSpacing.xl),
         _SectionTitle(l10n.homeTopTracks),
@@ -119,8 +119,8 @@ class _HomeView extends StatelessWidget {
               artwork: coverImageOf(context, CoverKey.track(s.recent[i].id)),
               trailing: TrackMoreButton(track: s.recent[i]),
               onTap: () => player.playQueue(s.recent, index: i),
-              onLongPress: () => showTrackMenu(context, s.recent[i]),
-              onSecondaryTap: () => showTrackMenu(context, s.recent[i]),
+              onMenu: (pos) =>
+                  showTrackMenu(context, s.recent[i], globalPosition: pos),
             ),
       ],
     ];
@@ -148,8 +148,8 @@ String _artist(AppLocalizations l10n, Track t) =>
     t.artist.isEmpty ? l10n.unknownArtist : t.artist;
 
 /// 오늘 들은 시간 (재생 기록에서 계산).
-class _TodayCard extends StatelessWidget {
-  const _TodayCard({required this.listened, required this.plays});
+class _TodaySummary extends StatelessWidget {
+  const _TodaySummary({required this.listened, required this.plays});
 
   final Duration listened;
   final int plays;
@@ -163,34 +163,31 @@ class _TodayCard extends StatelessWidget {
         ? l10n.homeTodayHoursMinutes(minutes ~/ 60, minutes % 60)
         : l10n.homeTodayMinutes(minutes);
 
-    return GlassCard(
-      tone: GlowTone.primary,
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(l10n.homeToday, style: text.bodySmall),
-                const SizedBox(height: AppSpacing.xxs),
-                StatNumber(value, size: 36),
-                const SizedBox(height: AppSpacing.xxs),
-                Text(
-                  plays == 0 ? l10n.homeTodayNone : l10n.homeTodayPlays(plays),
-                  style: text.bodySmall,
-                ),
-              ],
-            ),
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.homeToday, style: text.bodySmall),
+              const SizedBox(height: AppSpacing.xxs),
+              StatNumber(value, size: 36),
+              const SizedBox(height: AppSpacing.xxs),
+              Text(
+                plays == 0 ? l10n.homeTodayNone : l10n.homeTodayPlays(plays),
+                style: text.bodySmall,
+              ),
+            ],
           ),
-          const Icon(Icons.headphones_rounded, size: 36),
-        ],
-      ),
+        ),
+        Icon(Icons.headphones_rounded, size: 36, color: context.palette.accent),
+      ],
     );
   }
 }
 
-class _StatsCard extends StatelessWidget {
-  const _StatsCard({required this.stats});
+class _StatsSummary extends StatelessWidget {
+  const _StatsSummary({required this.stats});
 
   final ListeningStats stats;
 
@@ -219,38 +216,36 @@ class _StatsCard extends StatelessWidget {
       ),
     );
 
-    return GlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(l10n.homeStats, style: text.titleMedium),
-          const SizedBox(height: AppSpacing.md),
-          Row(
-            children: [
-              stat('${stats.plays}', l10n.homeStatPlays),
-              stat('${stats.uniqueTracks}', l10n.homeStatTracks),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Text(l10n.homeTopArtist, style: text.bodySmall),
-          const SizedBox(height: AppSpacing.xxs),
-          Text(
-            topArtist,
-            style: text.titleLarge,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Text(l10n.homeTopGenre, style: text.bodySmall),
-          const SizedBox(height: AppSpacing.xxs),
-          Text(
-            topGenre,
-            style: text.titleLarge,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l10n.homeStats, style: text.titleMedium),
+        const SizedBox(height: AppSpacing.md),
+        Row(
+          children: [
+            stat('${stats.plays}', l10n.homeStatPlays),
+            stat('${stats.uniqueTracks}', l10n.homeStatTracks),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Text(l10n.homeTopArtist, style: text.bodySmall),
+        const SizedBox(height: AppSpacing.xxs),
+        Text(
+          topArtist,
+          style: text.titleLarge,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Text(l10n.homeTopGenre, style: text.bodySmall),
+        const SizedBox(height: AppSpacing.xxs),
+        Text(
+          topGenre,
+          style: text.titleLarge,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
     );
   }
 }
@@ -297,8 +292,7 @@ class _RankTile extends StatelessWidget {
         ],
       ),
       onTap: onTap,
-      onLongPress: () => showTrackMenu(context, t),
-      onSecondaryTap: () => showTrackMenu(context, t),
+      onMenu: (pos) => showTrackMenu(context, t, globalPosition: pos),
     );
   }
 }
@@ -345,8 +339,8 @@ class _RecommendCard extends StatelessWidget {
   }
 }
 
-class _EmptyCard extends StatelessWidget {
-  const _EmptyCard({
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({
     required this.title,
     required this.body,
     required this.action,
@@ -361,12 +355,15 @@ class _EmptyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
-    return GlassCard(
-      tone: GlowTone.secondary,
-      padding: const EdgeInsets.all(AppSpacing.xl),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
       child: Column(
         children: [
-          const Icon(Icons.graphic_eq_rounded, size: 40),
+          Icon(
+            Icons.graphic_eq_rounded,
+            size: 40,
+            color: context.palette.accent,
+          ),
           const SizedBox(height: AppSpacing.md),
           Text(title, style: text.titleLarge, textAlign: TextAlign.center),
           const SizedBox(height: AppSpacing.xs),

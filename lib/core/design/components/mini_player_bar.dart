@@ -6,7 +6,8 @@ import 'buttons.dart';
 import 'glass.dart';
 import 'progress.dart';
 
-/// 하단 미니 플레이어 (유리 면). 재생 상태는 밖에서 받는다.
+/// 하단 미니 플레이어 (유리 면). 가로 전체를 쓰고 모서리는 둥글리지 않는다.
+/// 재생 상태는 밖에서 받는다.
 class MiniPlayerBar extends StatelessWidget {
   const MiniPlayerBar({
     super.key,
@@ -44,9 +45,7 @@ class MiniPlayerBar extends StatelessWidget {
     final text = Theme.of(context).textTheme;
 
     return GlassSurface(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadii.lg),
-      ),
+      shape: const RoundedRectangleBorder(),
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(

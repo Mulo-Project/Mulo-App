@@ -1,5 +1,6 @@
 package com.mulo.app
 
+import android.content.Intent
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 
@@ -10,8 +11,15 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        mediaStore = MediaStoreChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
+        mediaStore = MediaStoreChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger) { this }
         lyrics = LyricsChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (mediaStore?.onActivityResult(requestCode, resultCode) == true) return
+        @Suppress("DEPRECATION")
+        super.onActivityResult(requestCode, resultCode, data)
     }
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {

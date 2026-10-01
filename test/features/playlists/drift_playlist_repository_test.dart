@@ -35,6 +35,19 @@ void main() {
     expect(lists.map((p) => p.trackCount), [2, 1]);
   });
 
+  test('removeTrack은 그 재생목록에서만 곡을 뺀다', () async {
+    final a = await repo.create('A');
+    await Future<void>.delayed(const Duration(milliseconds: 2));
+    final b = await repo.create('B');
+    await repo.addTrack('t1', [a.id, b.id]);
+    await repo.addTrack('t2', [a.id]);
+
+    await repo.removeTrack('t1', a.id);
+
+    final lists = await repo.watchPlaylists().first;
+    expect(lists.map((p) => p.trackCount), [1, 1]);
+  });
+
   test('보관함 곡의 장르가 저장된다 (없으면 빈 문자열)', () async {
     final library = DriftLibraryRepository(db);
     await library.addTracks([

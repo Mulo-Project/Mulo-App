@@ -9,7 +9,7 @@ import '../features/home/presentation/bloc/play_recorder_cubit.dart';
 import '../features/player/presentation/bloc/now_playing_cubit.dart';
 import 'router.dart';
 
-/// 탭 화면 공통 틀: 배경 · 탭 내용 · 유리 미니 플레이어 · 단색 하단 탭.
+/// 탭 화면 공통 틀: 배경 · 탭 내용 · 가로 전체 유리 미니 플레이어 · 단색 하단 탭.
 /// 재생 중인 곡이 바뀌면 재생 기록을 남긴다.
 class AppShell extends StatelessWidget {
   const AppShell({super.key, required this.shell});
@@ -87,28 +87,20 @@ class _ShellMiniPlayer extends StatelessWidget {
     final vm = context.read<NowPlayingCubit>();
     final l10n = context.l10n;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.xs,
-        0,
-        AppSpacing.xs,
-        AppSpacing.xs,
-      ),
-      child: Hero(
-        tag: 'now-playing',
-        child: MiniPlayerBar(
-          title: track.title,
-          artist: track.artist,
-          artwork: coverImageOf(context, CoverKey.track(track.id)),
-          progress: state.progress,
-          isPlaying: state.isPlaying,
-          playLabel: l10n.actionPlay,
-          pauseLabel: l10n.actionPause,
-          nextLabel: l10n.actionNext,
-          onTap: () => context.push(Routes.player),
-          onPlayPause: vm.togglePlay,
-          onNext: vm.next,
-        ),
+    return Hero(
+      tag: 'now-playing',
+      child: MiniPlayerBar(
+        title: track.title,
+        artist: track.artist,
+        artwork: coverImageOf(context, CoverKey.track(track.id)),
+        progress: state.progress,
+        isPlaying: state.isPlaying,
+        playLabel: l10n.actionPlay,
+        pauseLabel: l10n.actionPause,
+        nextLabel: l10n.actionNext,
+        onTap: () => context.push(Routes.player),
+        onPlayPause: vm.togglePlay,
+        onNext: vm.next,
       ),
     );
   }

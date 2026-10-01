@@ -138,6 +138,13 @@ class DriftPlaylistRepository implements PlaylistRepository {
   }
 
   @override
+  Future<void> removeTrack(String trackId, String playlistId) =>
+      (_db.delete(_db.playlistTracks)..where(
+            (t) => t.trackId.equals(trackId) & t.playlistId.equals(playlistId),
+          ))
+          .go();
+
+  @override
   Future<void> setColor(String playlistId, int? colorIndex) =>
       (_db.update(_db.playlists)..where((t) => t.id.equals(playlistId))).write(
         PlaylistsCompanion(colorIndex: Value(colorIndex)),

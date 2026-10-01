@@ -55,7 +55,8 @@ class LibraryCubit extends Cubit<LibraryState> {
   Future<bool> updateInfo(String trackId, TrackInfo info) =>
       _updateInfo(UpdateTrackInfoParams(trackId, info));
 
-  Future<void> delete(String trackId) => _delete(trackId);
+  /// 음악 파일과 보관함 기록을 지운다. 파일을 못 지우면 false (기록은 그대로).
+  Future<bool> delete(Track track) => _delete(track);
 
   @override
   Future<void> close() async {

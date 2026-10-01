@@ -36,9 +36,11 @@ class PinEntryScreen extends StatefulWidget {
   final PinEntryMode mode;
 
   /// 화면을 열고 끝날 때까지 기다린다. 성공하면 true.
+  /// 최상위 내비게이터에서 열어 하단 탭 · 미니 플레이어를 가린다.
   static Future<bool> open(BuildContext context, PinEntryMode mode) async {
     final done = await Navigator.of(
       context,
+      rootNavigator: true,
     ).push<bool>(MaterialPageRoute(builder: (_) => PinEntryScreen(mode: mode)));
     return done ?? false;
   }

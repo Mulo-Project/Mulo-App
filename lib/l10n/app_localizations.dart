@@ -791,8 +791,14 @@ abstract class AppLocalizations {
   /// No description provided for @settingsThemePreview.
   ///
   /// In ko, this message translates to:
-  /// **'미리보기'**
+  /// **'테마 미리보기'**
   String get settingsThemePreview;
+
+  /// No description provided for @settingsThemePreviewDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금 테마로 화면이 어떻게 보이는지 확인해요'**
+  String get settingsThemePreviewDesc;
 
   /// No description provided for @themePreviewSong.
   ///
@@ -1376,6 +1382,30 @@ abstract class AppLocalizations {
   /// **'삭제'**
   String get trackMenuDelete;
 
+  /// No description provided for @trackMenuRemoveFromPlaylist.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생목록에서 빼기'**
+  String get trackMenuRemoveFromPlaylist;
+
+  /// No description provided for @trackMenuDeleteFile.
+  ///
+  /// In ko, this message translates to:
+  /// **'파일 삭제'**
+  String get trackMenuDeleteFile;
+
+  /// No description provided for @trackRemovedFromPlaylist.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생목록에서 뺐어요'**
+  String get trackRemovedFromPlaylist;
+
+  /// No description provided for @trackDeleteFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'파일을 지우지 못했어요. 권한을 확인한 뒤 다시 시도해 주세요.'**
+  String get trackDeleteFailed;
+
   /// No description provided for @trackMenuPlayNextDone.
   ///
   /// In ko, this message translates to:
@@ -1451,7 +1481,7 @@ abstract class AppLocalizations {
   /// No description provided for @trackDeleteBody.
   ///
   /// In ko, this message translates to:
-  /// **'\"{title}\"을(를) 보관함에서 지울까요? 재생목록에서도 빠져요. 기기의 음악 파일은 지워지지 않아요.'**
+  /// **'\"{title}\"의 음악 파일을 기기에서 지울까요? 보관함과 재생목록에서도 빠지고, 되돌릴 수 없어요.'**
   String trackDeleteBody(String title);
 
   /// No description provided for @trackDeleteConfirm.
@@ -1463,7 +1493,7 @@ abstract class AppLocalizations {
   /// No description provided for @trackDeleted.
   ///
   /// In ko, this message translates to:
-  /// **'보관함에서 지웠어요'**
+  /// **'삭제했어요'**
   String get trackDeleted;
 
   /// No description provided for @trackMenuLyrics.

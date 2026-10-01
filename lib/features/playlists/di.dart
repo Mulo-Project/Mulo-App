@@ -14,6 +14,7 @@ void registerPlaylists(GetIt sl) {
     ..registerFactory(() => WatchPlaylists(sl()))
     ..registerFactory(() => CreatePlaylist(sl()))
     ..registerFactory(() => AddTrackToPlaylists(sl()))
+    ..registerFactory(() => RemoveTrackFromPlaylist(sl()))
     ..registerFactory(() => SetPlaylistColor(sl()))
-    ..registerFactory(() => PlaylistsCubit(sl(), sl(), sl(), sl()));
+    ..registerFactory(() => PlaylistsCubit(sl(), sl(), sl(), sl(), sl()));
 }

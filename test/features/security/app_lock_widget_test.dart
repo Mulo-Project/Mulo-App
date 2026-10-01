@@ -55,6 +55,8 @@ void main() {
     await tester.tap(find.byType(AppSwitch).first);
     await tester.pumpAndSettle();
     expect(find.text('PIN 정하기'), findsOneWidget);
+    // PIN 화면은 하단 탭 · 미니 플레이어를 가린다.
+    expect(find.byType(AppBottomNav), findsNothing);
 
     await _type(tester, '1234');
     await _submit(tester);

@@ -60,12 +60,18 @@ class UpdateTrackInfo implements UseCase<bool, UpdateTrackInfoParams> {
   }
 }
 
-/// 곡을 보관함에서 지운다 (파일은 그대로).
-class DeleteTrack implements UseCase<void, String> {
-  const DeleteTrack(this._repo);
+/// 곡을 지운다: 음악 파일을 지우고, 보관함 · 재생목록 · 기록에서도 뺀다.
+/// 파일을 못 지우면 아무것도 바꾸지 않고 false.
+class DeleteTrack implements UseCase<bool, Track> {
+  const DeleteTrack(this._library, this._files);
 
-  final LibraryRepository _repo;
+  final LibraryRepository _library;
+  final TrackFileRepository _files;
 
   @override
-  Future<void> call(String trackId) => _repo.delete(trackId);
+  Future<bool> call(Track track) async {
+    if (!await _files.deleteFile(track)) return false;
+    await _library.delete(track.id);
+    return true;
+  }
 }

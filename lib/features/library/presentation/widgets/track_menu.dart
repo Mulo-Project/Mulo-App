@@ -22,36 +22,102 @@ enum _TrackAction {
   lyrics,
   cover,
   delete,
+  removeFromPlaylist,
+  deleteFile,
 }
 
-/// 곡 타일의 ⋮ 버튼. 누르면 [showTrackMenu].
+/// 곡 타일의 ⋮ 버튼. 누르면 버튼 옆에 [showTrackMenu] 팝업 메뉴가 열린다.
 class TrackMoreButton extends StatelessWidget {
-  const TrackMoreButton({super.key, required this.track});
+  const TrackMoreButton({super.key, required this.track, this.playlistId});
 
   final Track track;
 
+  /// 재생목록 안의 곡이면 그 재생목록 id (삭제가 "빼기" · "파일 삭제"로 나뉜다).
+  final String? playlistId;
+
   @override
-  Widget build(BuildContext context) => IconButton(
-    tooltip: context.l10n.trackMenuTitle,
-    onPressed: () => showTrackMenu(context, track),
-    icon: Icon(Icons.more_vert_rounded, color: context.palette.onSurfaceMuted),
+  Widget build(BuildContext context) => Builder(
+    builder: (context) => IconButton(
+      tooltip: context.l10n.trackMenuTitle,
+      onPressed: () => showTrackMenu(context, track, playlistId: playlistId),
+      icon: Icon(
+        Icons.more_vert_rounded,
+        color: context.palette.onSurfaceMuted,
+      ),
+    ),
   );
 }
 
-/// 곡 메뉴 (⋮ · 길게 누르기 · 데스크톱 오른쪽 클릭에서 같은 메뉴를 연다).
-/// 항목을 고르면 시트를 닫고, 이어지는 대화상자 · 안내는 [context]에서 이어 간다.
-Future<void> showTrackMenu(BuildContext context, Track track) async {
-  final action = await showModalBottomSheet<_TrackAction>(
-    context: context,
-    backgroundColor: context.palette.surface,
-    showDragHandle: true,
-    // 탭 틀(미니 플레이어 · 탭 바) 위에 뜨도록 최상위 내비게이터에서 연다.
-    useRootNavigator: true,
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadii.card)),
-    ),
-    builder: (_) => _TrackMenuSheet(track: track),
+/// 곡 메뉴: 팝업 메뉴 (⋮ · 길게 누르기 · 데스크톱 오른쪽 클릭에서 같은 메뉴를 연다).
+/// [globalPosition]이 있으면 눌린 자리에, 없으면 [context] 위젯 옆에 띄운다.
+/// 항목을 고르면 메뉴를 닫고, 이어지는 대화상자 · 안내는 [context]에서 이어 간다.
+///
+/// [playlistId]가 있으면(재생목록 안의 곡) 삭제가 "재생목록에서 빼기"와
+/// "파일 삭제"로 나뉜다. 없으면(보관함) "삭제"는 음악 파일까지 지운다.
+Future<void> showTrackMenu(
+  BuildContext context,
+  Track track, {
+  Offset? globalPosition,
+  String? playlistId,
+}) async {
+  final l10n = context.l10n;
+  final action = await showAppMenu<_TrackAction>(
+    context,
+    globalPosition: globalPosition,
+    items: [
+      AppMenuItem(
+        value: _TrackAction.playNext,
+        icon: Icons.playlist_play_rounded,
+        label: l10n.trackMenuPlayNext,
+      ),
+      AppMenuItem(
+        value: _TrackAction.addToQueue,
+        icon: Icons.queue_music_rounded,
+        label: l10n.trackMenuAddToQueue,
+      ),
+      AppMenuItem(
+        value: _TrackAction.addToPlaylist,
+        icon: Icons.playlist_add_rounded,
+        label: l10n.trackMenuAddToPlaylist,
+      ),
+      AppMenuItem(
+        value: _TrackAction.editInfo,
+        icon: Icons.edit_rounded,
+        label: l10n.trackMenuEditInfo,
+      ),
+      AppMenuItem(
+        value: _TrackAction.lyrics,
+        icon: Icons.lyrics_rounded,
+        label: l10n.trackMenuLyrics,
+      ),
+      AppMenuItem(
+        value: _TrackAction.cover,
+        icon: Icons.image_rounded,
+        label: l10n.trackMenuCover,
+      ),
+      if (playlistId == null)
+        AppMenuItem(
+          value: _TrackAction.delete,
+          icon: Icons.delete_outline_rounded,
+          label: l10n.trackMenuDelete,
+          destructive: true,
+          dividerBefore: true,
+        )
+      else ...[
+        AppMenuItem(
+          value: _TrackAction.removeFromPlaylist,
+          icon: Icons.playlist_remove_rounded,
+          label: l10n.trackMenuRemoveFromPlaylist,
+          dividerBefore: true,
+        ),
+        AppMenuItem(
+          value: _TrackAction.deleteFile,
+          icon: Icons.delete_outline_rounded,
+          label: l10n.trackMenuDeleteFile,
+          destructive: true,
+        ),
+      ],
+    ],
   );
   if (action == null || !context.mounted) return;
   switch (action) {
@@ -74,8 +140,13 @@ Future<void> showTrackMenu(BuildContext context, Track track) async {
         title: track.title,
         tone: toneFor(track.id),
       );
-    case _TrackAction.delete:
+    case _TrackAction.delete || _TrackAction.deleteFile:
       await _delete(context, track);
+    case _TrackAction.removeFromPlaylist:
+      await context.read<PlaylistsCubit>().removeTrack(track.id, playlistId!);
+      if (context.mounted) {
+        _snack(context, context.l10n.trackRemovedFromPlaylist);
+      }
   }
 }
 
@@ -126,103 +197,15 @@ Future<void> _delete(BuildContext context, Track track) async {
     builder: (_) => _DeleteDialog(track: track),
   );
   if (ok != true) return;
+  // 파일부터 지운다. 못 지우면(권한 거절 등) 기록은 그대로 둔다.
+  if (!await library.delete(track)) {
+    if (context.mounted) _snack(context, l10n.trackDeleteFailed);
+    return;
+  }
   await covers.clear(CoverKey.track(track.id));
   await lyrics.clear(track.id);
-  await library.delete(track.id);
   player.removeFromQueue(track);
   if (context.mounted) _snack(context, l10n.trackDeleted);
-}
-
-class _TrackMenuSheet extends StatelessWidget {
-  const _TrackMenuSheet({required this.track});
-
-  final Track track;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
-    final p = context.palette;
-
-    Widget row(
-      IconData icon,
-      String label,
-      _TrackAction action, {
-      bool destructive = false,
-    }) => Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-      child: MenuRow(
-        icon: icon,
-        label: label,
-        destructive: destructive,
-        onTap: () => Navigator.of(context).pop(action),
-      ),
-    );
-
-    return SafeArea(
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg,
-            0,
-            AppSpacing.lg,
-            AppSpacing.lg,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                track.title,
-                style: text.titleLarge,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              Text(
-                track.artist.isEmpty ? l10n.unknownArtist : track.artist,
-                style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              row(
-                Icons.playlist_play_rounded,
-                l10n.trackMenuPlayNext,
-                _TrackAction.playNext,
-              ),
-              row(
-                Icons.queue_music_rounded,
-                l10n.trackMenuAddToQueue,
-                _TrackAction.addToQueue,
-              ),
-              row(
-                Icons.playlist_add_rounded,
-                l10n.trackMenuAddToPlaylist,
-                _TrackAction.addToPlaylist,
-              ),
-              row(
-                Icons.edit_rounded,
-                l10n.trackMenuEditInfo,
-                _TrackAction.editInfo,
-              ),
-              row(
-                Icons.lyrics_rounded,
-                l10n.trackMenuLyrics,
-                _TrackAction.lyrics,
-              ),
-              row(Icons.image_rounded, l10n.trackMenuCover, _TrackAction.cover),
-              row(
-                Icons.delete_outline_rounded,
-                l10n.trackMenuDelete,
-                _TrackAction.delete,
-                destructive: true,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 /// 제목 · 아티스트 · 앨범 · 장르 편집. 저장하면 [TrackInfo], 취소하면 null.

@@ -5,7 +5,9 @@ import 'package:get_it/get_it.dart';
 import 'data/datasources/device_music_data_sources.dart';
 import 'data/repositories/device_music_repository_impl.dart';
 import 'data/repositories/drift_library_repository.dart';
+import 'data/datasources/track_file_data_source.dart';
 import 'data/repositories/prefs_loaded_folder_repository.dart';
+import 'data/repositories/track_file_repository_impl.dart';
 import 'domain/repositories/library_repository.dart';
 import 'domain/usecases/library_usecases.dart';
 import 'domain/usecases/loaded_folder_usecases.dart';
@@ -27,12 +29,18 @@ void registerLibrary(GetIt sl) {
     ..registerLazySingleton<LibraryRepository>(
       () => DriftLibraryRepository(sl()),
     )
+    ..registerLazySingleton<TrackFileDataSource>(
+      PlatformTrackFileDataSource.new,
+    )
+    ..registerLazySingleton<TrackFileRepository>(
+      () => TrackFileRepositoryImpl(sl()),
+    )
     ..registerLazySingleton<LoadedFolderRepository>(
       PrefsLoadedFolderRepository.new,
     )
     ..registerFactory(() => WatchLibraryTracks(sl()))
     ..registerFactory(() => UpdateTrackInfo(sl()))
-    ..registerFactory(() => DeleteTrack(sl()))
+    ..registerFactory(() => DeleteTrack(sl(), sl()))
     ..registerFactory(() => ImportDeviceMusic(sl(), sl(), sl()))
     ..registerFactory(() => LoadLoadedFolders(sl(), sl()))
     ..registerFactory(() => AddLoadedFolder(sl()))

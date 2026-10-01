@@ -8,13 +8,19 @@ import '../../domain/usecases/playlist_usecases.dart';
 
 /// 재생목록 목록. 다운로드 팝업의 재생목록 고르기 등에서 쓴다.
 class PlaylistsCubit extends Cubit<List<Playlist>> {
-  PlaylistsCubit(this._watch, this._create, this._setColor, this._addTrack)
-    : super(const []);
+  PlaylistsCubit(
+    this._watch,
+    this._create,
+    this._setColor,
+    this._addTrack,
+    this._removeTrack,
+  ) : super(const []);
 
   final WatchPlaylists _watch;
   final CreatePlaylist _create;
   final SetPlaylistColor _setColor;
   final AddTrackToPlaylists _addTrack;
+  final RemoveTrackFromPlaylist _removeTrack;
   StreamSubscription<List<Playlist>>? _sub;
 
   void start() {
@@ -32,6 +38,10 @@ class PlaylistsCubit extends Cubit<List<Playlist>> {
   /// 곡을 재생목록들에 담는다. 이미 들어 있는 곳은 건너뛴다.
   Future<void> addTrack(String trackId, Set<String> playlistIds) =>
       _addTrack(AddTrackToPlaylistsParams(trackId, playlistIds));
+
+  /// 곡을 재생목록에서 뺀다 (보관함에는 남는다).
+  Future<void> removeTrack(String trackId, String playlistId) =>
+      _removeTrack(RemoveTrackFromPlaylistParams(trackId, playlistId));
 
   @override
   Future<void> close() async {

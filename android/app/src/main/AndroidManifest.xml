@@ -5,6 +5,10 @@
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
+    <!-- 곡 삭제: Android 9 이하는 쓰기 권한이 있어야 파일을 지울 수 있다 (10+는 삭제 동의 창) -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
     <!-- 앱 잠금 생체 인증(지문 · 얼굴) -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <application

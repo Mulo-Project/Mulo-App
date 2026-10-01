@@ -194,3 +194,14 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - 태그 가사는 `audio_metadata_reader`로 읽는다. 저장하지 않고 열 때마다 읽으며, 읽기 실패 · 미지원 형식은 모두 "가사 없음". Android `content://`는 `LyricsChannel.copyToCache`로 캐시에 복사해 읽고 지운다.
 - 비워서 저장 = 가사 삭제. 곡을 삭제하면 가사도 지운다.
 - 플레이어는 커버 ↔ 가사 전환. 싱크 가사는 재생 위치 줄 강조 + 줄 누르면 이동.
+
+## D-033 · 2026-10-01 · 공통 UI 피드백 (카드 줄이기 · 팝업 메뉴 · 파일 삭제)
+- **카드는 보관함 · 재생목록에만** 쓴다. 홈(오늘 · 통계 · 빈 상태), 검색(재생목록 헤더 · URL 결과 · 빈 상태), 보관함 빈 상태, 설정 묶음(`SectionCard`)은 카드 면(유리 · 테두리)을 없애고 제목 · 본문 · 구분선으로 보여 준다. 테마 미리보기 화면은 보관함 · 재생목록 카드 샘플만 둔다.
+- 미니 플레이어는 가로 전체 너비, 모서리 반경 없음 (바깥 여백 제거).
+- 테마 미리보기는 설정 › 테마의 한 줄(`ThemePreviewScreen`)로 열리는 **별도 화면**. D-030의 "테마 카드 맨 위 미리보기"를 바꾼다. 최상위 내비게이터에서 열어 하단 탭 · 미니 플레이어를 가린다.
+- PIN 화면(`PinEntryScreen.open`)도 최상위 내비게이터에서 열어 하단 탭 · 미니 플레이어를 가린다.
+- 곡 메뉴는 바텀 시트 대신 **팝업 메뉴**(`showAppMenu`)로 바꿨다 (D-031 갱신). ⋮ 버튼은 버튼 옆에, 길게 누르기 · 오른쪽 클릭은 눌린 자리에 뜬다. 재생목록 설정 메뉴(D-025)는 그대로 시트.
+- 커버 이미지는 **곡 타일 팝업 메뉴에서만** 바꾼다. 전체 화면 플레이어 커버의 편집 버튼 · 누르기는 없앴다.
+- **삭제는 음악 파일까지 지운다** (D-031의 "파일은 지우지 않는다"를 바꾼다). `DeleteTrack`: 파일 먼저 지우고(`TrackFileRepository`), 성공해야 보관함 · 재생목록 · 기록 · 커버 · 가사를 정리한다. 파일을 못 지우면(권한 거절 · 삭제 동의 취소) 기록은 그대로 두고 안내한다. 이미 없는 파일은 지운 것으로 본다. 곡 메뉴의 삭제 확인 문구에 "되돌릴 수 없다"를 적는다.
+  - Android `content://`는 `MediaStoreChannel.deleteAudio`: 먼저 바로 지워 보고, 앱이 만든 파일이 아니면 Android 11+는 `MediaStore.createDeleteRequest`, Android 10은 `RecoverableSecurityException`의 동의 창을 띄운다. Android 9 이하는 `WRITE_EXTERNAL_STORAGE`(maxSdk 28)로 직접 지운다. 데스크톱은 파일 경로를 `File.delete`.
+- **재생목록 안의 곡 메뉴**는 삭제가 "재생목록에서 빼기"(`PlaylistRepository.removeTrack`, 보관함 · 파일은 그대로)와 "파일 삭제"로 나뉜다. `showTrackMenu(..., playlistId:)` · `TrackMoreButton(playlistId:)`로 켠다. 재생목록 상세(곡 목록) 화면이 아직 없어 이 변형을 부르는 화면은 아직 없다 — 상세 화면을 만들 때 `playlistId`를 넘기면 된다.

@@ -44,6 +44,25 @@ class AddTrackToPlaylists implements UseCase<void, AddTrackToPlaylistsParams> {
       _repo.addTrack(p.trackId, p.playlistIds);
 }
 
+class RemoveTrackFromPlaylistParams {
+  const RemoveTrackFromPlaylistParams(this.trackId, this.playlistId);
+
+  final String trackId;
+  final String playlistId;
+}
+
+/// 곡을 재생목록에서 빼기 (보관함에는 남는다).
+class RemoveTrackFromPlaylist
+    implements UseCase<void, RemoveTrackFromPlaylistParams> {
+  const RemoveTrackFromPlaylist(this._repo);
+
+  final PlaylistRepository _repo;
+
+  @override
+  Future<void> call(RemoveTrackFromPlaylistParams p) =>
+      _repo.removeTrack(p.trackId, p.playlistId);
+}
+
 class SetPlaylistColorParams {
   const SetPlaylistColorParams(this.playlistId, this.colorIndex);
 

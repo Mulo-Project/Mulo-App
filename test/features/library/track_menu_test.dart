@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
+import 'package:music_download_play_app/features/library/presentation/screens/library_screen.dart';
+import 'package:music_download_play_app/features/library/presentation/widgets/track_menu.dart';
 import 'package:music_download_play_app/features/playlists/domain/entities/playlist.dart';
 
 import '../../helpers/fakes.dart';
@@ -20,15 +24,19 @@ Track _t(String id, String title) => Track(
 
 void main() {
   late MemoryPlaylistRepository playlists;
+  late FakeTrackFiles files;
 
   Future<void> pumpLibrary(
     WidgetTester tester, {
     List<Playlist> lists = const [Playlist(id: 'pl1', name: '출근길')],
+    bool deleteSucceeds = true,
   }) async {
     playlists = MemoryPlaylistRepository(lists);
+    files = FakeTrackFiles(succeeds: deleteSucceeds);
     await setUpTestDependencies(
       tracks: [_t('t1', '첫 곡'), _t('t2', '둘째 곡')],
       playlists: playlists,
+      trackFiles: files,
     );
     tester.view.physicalSize = const Size(1170, 2532);
     tester.view.devicePixelRatio = 3;
@@ -49,14 +57,19 @@ void main() {
     '삭제',
   ];
 
-  testWidgets('⋮ 버튼 · 길게 누르기 · 오른쪽 클릭이 같은 메뉴를 연다', (tester) async {
+  testWidgets('⋮ 버튼 · 길게 누르기 · 오른쪽 클릭이 같은 팝업 메뉴를 연다', (tester) async {
     await pumpLibrary(tester);
 
     await tester.tap(find.byTooltip('곡 메뉴').first);
     await tester.pumpAndSettle();
+    // 바닥 시트가 아니라 팝업 메뉴다.
+    expect(find.byType(BottomSheet), findsNothing);
+    expect(find.byType(PopupMenuItem<Object?>), findsNothing);
     for (final label in items) {
       expect(find.text(label), findsOneWidget, reason: label);
     }
+    // 보관함의 삭제는 하나 (재생목록 전용 항목은 없다).
+    expect(find.text('재생목록에서 빼기'), findsNothing);
     await tester.tapAt(const Offset(10, 10));
     await tester.pumpAndSettle();
     expect(find.text('정보 편집'), findsNothing);
@@ -129,15 +142,17 @@ void main() {
     expect(find.text('첫 곡'), findsOneWidget);
   });
 
-  testWidgets('삭제: 확인하면 보관함에서 빠지고, 취소하면 그대로', (tester) async {
+  testWidgets('삭제: 확인하면 음악 파일과 보관함 기록이 지워지고, 취소하면 그대로', (tester) async {
     await pumpLibrary(tester);
     await tester.tap(find.byTooltip('곡 메뉴').first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('삭제'));
     await tester.pumpAndSettle();
+    expect(find.textContaining('음악 파일'), findsOneWidget);
     await tester.tap(find.text('취소'));
     await tester.pumpAndSettle();
     expect(find.text('둘째 곡'), findsOneWidget);
+    expect(files.deleted, isEmpty);
 
     await tester.tap(find.byTooltip('곡 메뉴').first);
     await tester.pumpAndSettle();
@@ -147,5 +162,46 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('둘째 곡'), findsNothing);
     expect(find.text('첫 곡'), findsOneWidget);
+    expect(files.deleted, ['t2']);
+  });
+
+  testWidgets('파일을 못 지우면 보관함 기록은 그대로 두고 안내한다', (tester) async {
+    await pumpLibrary(tester, deleteSucceeds: false);
+    await tester.tap(find.byTooltip('곡 메뉴').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('삭제'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('삭제').last);
+    await tester.pumpAndSettle();
+    expect(find.text('둘째 곡'), findsOneWidget);
+    expect(find.textContaining('파일을 지우지 못했어요'), findsOneWidget);
+  });
+
+  testWidgets('재생목록 안의 곡: 삭제가 "빼기"와 "파일 삭제"로 나뉜다', (tester) async {
+    await pumpLibrary(tester);
+    await playlists.addTrack('t2', ['pl1']);
+    final context = tester.element(find.byType(LibraryScreen));
+    unawaited(showTrackMenu(context, _t('t2', '둘째 곡'), playlistId: 'pl1'));
+    await tester.pumpAndSettle();
+    expect(find.text('삭제'), findsNothing);
+    expect(find.text('재생목록에서 빼기'), findsOneWidget);
+    expect(find.text('파일 삭제'), findsOneWidget);
+
+    // 빼기: 재생목록에서만 빠지고 파일 · 보관함은 그대로.
+    await tester.tap(find.text('재생목록에서 빼기'));
+    await tester.pumpAndSettle();
+    expect(playlists.members['pl1'], isEmpty);
+    expect(files.deleted, isEmpty);
+    expect(find.text('둘째 곡'), findsOneWidget);
+
+    // 파일 삭제: 음악 파일과 보관함 기록까지 지운다.
+    unawaited(showTrackMenu(context, _t('t2', '둘째 곡'), playlistId: 'pl1'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('파일 삭제'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('삭제').last);
+    await tester.pumpAndSettle();
+    expect(files.deleted, ['t2']);
+    expect(find.text('둘째 곡'), findsNothing);
   });
 }

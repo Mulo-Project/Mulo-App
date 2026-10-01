@@ -83,6 +83,20 @@ class FakeLibraryRepository implements LibraryRepository {
   }
 }
 
+/// 메모리 음악 파일 (지운 곡 id를 기록한다. [succeeds]가 false면 지우기 실패).
+class FakeTrackFiles implements TrackFileRepository {
+  FakeTrackFiles({this.succeeds = true});
+
+  bool succeeds;
+  final deleted = <String>[];
+
+  @override
+  Future<bool> deleteFile(Track track) async {
+    if (succeeds) deleted.add(track.id);
+    return succeeds;
+  }
+}
+
 /// 메모리 불러오는 폴더 목록 (고르기는 [picked]를 그대로 돌려준다).
 class MemoryLoadedFolders implements LoadedFolderRepository {
   MemoryLoadedFolders({this.picked, List<String> extra = const []})
@@ -380,6 +394,12 @@ class MemoryPlaylistRepository implements PlaylistRepository {
   }
 
   @override
+  Future<void> removeTrack(String trackId, String playlistId) async {
+    members[playlistId]?.remove(trackId);
+    _changes.add(_now);
+  }
+
+  @override
   Future<void> setColor(String playlistId, int? colorIndex) async {
     colors[playlistId] = colorIndex;
     _changes.add(_now);
@@ -402,6 +422,7 @@ Future<void> setUpTestDependencies({
   AppLockRepository? appLock,
   BiometricAuthenticator? biometric,
   LoadedFolderRepository? folders,
+  TrackFileRepository? trackFiles,
 }) async {
   await sl.reset();
   registerTheme(sl);
@@ -429,6 +450,9 @@ Future<void> setUpTestDependencies({
     )
     ..registerLazySingleton<LoadedFolderRepository>(
       () => folders ?? MemoryLoadedFolders(),
+    )
+    ..registerLazySingleton<TrackFileRepository>(
+      () => trackFiles ?? FakeTrackFiles(),
     )
     ..registerLazySingleton<DeviceMusicRepository>(
       () => device ?? FakeDeviceMusic(const ScanFound([])),

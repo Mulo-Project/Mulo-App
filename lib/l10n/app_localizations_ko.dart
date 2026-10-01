@@ -370,7 +370,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsThemeColor => '테마 색';
 
   @override
-  String get settingsThemePreview => '미리보기';
+  String get settingsThemePreview => '테마 미리보기';
+
+  @override
+  String get settingsThemePreviewDesc => '지금 테마로 화면이 어떻게 보이는지 확인해요';
 
   @override
   String get themePreviewSong => 'Midnight Signal';
@@ -683,6 +686,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get trackMenuDelete => '삭제';
 
   @override
+  String get trackMenuRemoveFromPlaylist => '재생목록에서 빼기';
+
+  @override
+  String get trackMenuDeleteFile => '파일 삭제';
+
+  @override
+  String get trackRemovedFromPlaylist => '재생목록에서 뺐어요';
+
+  @override
+  String get trackDeleteFailed => '파일을 지우지 못했어요. 권한을 확인한 뒤 다시 시도해 주세요.';
+
+  @override
   String get trackMenuPlayNextDone => '다음에 재생해요';
 
   @override
@@ -722,14 +737,14 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String trackDeleteBody(String title) {
-    return '\"$title\"을(를) 보관함에서 지울까요? 재생목록에서도 빠져요. 기기의 음악 파일은 지워지지 않아요.';
+    return '\"$title\"의 음악 파일을 기기에서 지울까요? 보관함과 재생목록에서도 빠지고, 되돌릴 수 없어요.';
   }
 
   @override
   String get trackDeleteConfirm => '삭제';
 
   @override
-  String get trackDeleted => '보관함에서 지웠어요';
+  String get trackDeleted => '삭제했어요';
 
   @override
   String get trackMenuLyrics => '가사 설정';

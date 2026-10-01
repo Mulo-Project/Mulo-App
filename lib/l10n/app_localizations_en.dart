@@ -378,7 +378,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsThemeColor => 'Theme color';
 
   @override
-  String get settingsThemePreview => 'Preview';
+  String get settingsThemePreview => 'Theme preview';
+
+  @override
+  String get settingsThemePreviewDesc =>
+      'See how the screens look with the current theme';
 
   @override
   String get themePreviewSong => 'Midnight Signal';
@@ -692,6 +696,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackMenuDelete => 'Delete';
 
   @override
+  String get trackMenuRemoveFromPlaylist => 'Remove from playlist';
+
+  @override
+  String get trackMenuDeleteFile => 'Delete file';
+
+  @override
+  String get trackRemovedFromPlaylist => 'Removed from the playlist';
+
+  @override
+  String get trackDeleteFailed =>
+      'Could not delete the file. Check permissions and try again.';
+
+  @override
   String get trackMenuPlayNextDone => 'Playing next';
 
   @override
@@ -732,14 +749,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String trackDeleteBody(String title) {
-    return 'Remove \"$title\" from your library? It will also leave your playlists. The music file on your device is not deleted.';
+    return 'Delete the music file \"$title\" from your device? It will also leave your library and playlists. This cannot be undone.';
   }
 
   @override
   String get trackDeleteConfirm => 'Delete';
 
   @override
-  String get trackDeleted => 'Removed from your library';
+  String get trackDeleted => 'Deleted';
 
   @override
   String get trackMenuLyrics => 'Set lyrics';

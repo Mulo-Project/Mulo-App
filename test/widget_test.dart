@@ -50,30 +50,34 @@ void main() {
     expect(find.byIcon(Icons.smart_display_rounded), findsOneWidget);
   });
 
-  testWidgets('설정 테마 미리보기: 프리셋 · 모드를 바꾸면 미리보기 색도 바뀌고, 영어로도 보인다', (
-    tester,
-  ) async {
+  testWidgets('테마 미리보기는 설정의 별도 항목에서 열리고, 하단 탭을 가린다', (tester) async {
     await _pumpApp(tester, at: Routes.settings, height: 7000);
-    expect(find.byType(ThemePreview), findsOneWidget);
-    expect(find.text('미리보기'), findsOneWidget);
-    expect(find.text('대체 팔레트'), findsNothing);
-    final before = Theme.of(tester.element(find.byType(ThemePreview)))
-        .extension<AppThemeTokens>()!
-        .palette
-        .accent;
+    // 설정 화면 안에는 미리보기 내용이 없고 항목만 있다.
+    expect(find.byType(ThemePreview), findsNothing);
+    expect(find.text('테마 미리보기'), findsOneWidget);
 
     await tester.tap(find.text('코랄'));
     await tester.pumpAndSettle();
-    final after = Theme.of(tester.element(find.byType(ThemePreview)))
+    final coral = _palette(tester).accent;
+
+    await tester.tap(find.text('테마 미리보기'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ThemePreview), findsOneWidget);
+    expect(find.byType(AppBottomNav), findsNothing);
+    final accent = Theme.of(tester.element(find.byType(ThemePreview)))
         .extension<AppThemeTokens>()!
         .palette
         .accent;
-    expect(after, isNot(before));
+    expect(accent, coral);
 
     tester.platformDispatcher.localesTestValue = const [Locale('en')];
     await tester.pumpAndSettle();
-    expect(find.text('PREVIEW'), findsOneWidget);
-    expect(find.text('Alternate palette'), findsNothing);
+    expect(find.text('Theme preview'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Back'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ThemePreview), findsNothing);
+    expect(find.byType(AppBottomNav), findsOneWidget);
   });
 
   testWidgets('설정에서 테마 프리셋을 고르면 팔레트가 바뀐다', (tester) async {
@@ -108,6 +112,24 @@ void main() {
     await tester.tap(find.text(SampleData.tracks.first.title).first);
     await tester.pumpAndSettle();
     expect(find.byType(MiniPlayerBar), findsOneWidget);
+    // 미니 플레이어는 가로 전체를 쓰고 모서리가 둥글지 않다.
+    final bar = tester.getRect(find.byType(MiniPlayerBar));
+    expect(
+      bar.width,
+      tester.view.physicalSize.width / tester.view.devicePixelRatio,
+    );
+    final glass = tester.widget<GlassSurface>(
+      find
+          .descendant(
+            of: find.byType(MiniPlayerBar),
+            matching: find.byType(GlassSurface),
+          )
+          .first,
+    );
+    expect(
+      (glass.shape as RoundedRectangleBorder).borderRadius,
+      BorderRadius.zero,
+    );
     await tester.tap(find.byType(MiniPlayerBar));
     await tester.pumpAndSettle();
     expect(find.text('지금 재생 중'), findsOneWidget);

@@ -1,7 +1,11 @@
 package com.mulo.app
 
+import android.app.Activity
+import android.app.RecoverableSecurityException
 import android.content.ContentUris
 import android.content.Context
+import android.net.Uri
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
@@ -12,12 +16,27 @@ import java.util.concurrent.Executors
 
 /**
  * 기기 음악 불러오기 (상세 기능 #11): MediaStore에서 음악 파일 목록을 읽어 Flutter로 보낸다.
+ * 곡 삭제: 음악 파일을 지운다. 앱이 만든 파일이 아니면 Android 10+가 삭제 동의 창을 띄운다.
  * 권한 요청은 Flutter(permission_handler)가 먼저 한다.
  */
-class MediaStoreChannel(private val context: Context, messenger: BinaryMessenger) {
+class MediaStoreChannel(
+    private val context: Context,
+    messenger: BinaryMessenger,
+    private val activity: () -> Activity?,
+) {
     private val channel = MethodChannel(messenger, NAME)
     private val io = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
+
+    /** 삭제 동의 창 결과를 기다리는 요청 (동시에 하나만). */
+    private class PendingDelete(
+        val uri: Uri,
+        val result: MethodChannel.Result,
+        /** Android 10은 동의 뒤 앱이 다시 지워야 한다 (11+는 시스템이 지움). */
+        val retry: Boolean,
+    )
+
+    private var pendingDelete: PendingDelete? = null
 
     init {
         channel.setMethodCallHandler { call, result ->
@@ -32,9 +51,64 @@ class MediaStoreChannel(private val context: Context, messenger: BinaryMessenger
                         main.post { result.error("query_failed", e.message, null) }
                     }
                 }
+                "deleteAudio" -> deleteAudio(Uri.parse(call.argument<String>("uri")), result)
                 else -> result.notImplemented()
             }
         }
+    }
+
+    private fun deleteAudio(uri: Uri, result: MethodChannel.Result) {
+        if (pendingDelete != null) {
+            result.error("busy", "다른 삭제를 기다리는 중이에요", null)
+            return
+        }
+        try {
+            // 이미 없으면 0행이라도 지운 것으로 본다.
+            context.contentResolver.delete(uri, null, null)
+            result.success(true)
+        } catch (e: SecurityException) {
+            val sender = when {
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ->
+                    MediaStore.createDeleteRequest(context.contentResolver, listOf(uri)).intentSender
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && e is RecoverableSecurityException ->
+                    e.userAction.actionIntent.intentSender
+                else -> null
+            }
+            val host = activity()
+            if (sender == null || host == null) {
+                result.success(false)
+                return
+            }
+            pendingDelete = PendingDelete(uri, result, Build.VERSION.SDK_INT < Build.VERSION_CODES.R)
+            try {
+                host.startIntentSenderForResult(sender, REQUEST_DELETE, null, 0, 0, 0)
+            } catch (e: Exception) {
+                pendingDelete = null
+                result.success(false)
+            }
+        } catch (e: Exception) {
+            result.error("delete_failed", e.message, null)
+        }
+    }
+
+    /** MainActivity.onActivityResult에서 부른다. 이 채널의 요청이면 true. */
+    fun onActivityResult(requestCode: Int, resultCode: Int): Boolean {
+        if (requestCode != REQUEST_DELETE) return false
+        val pending = pendingDelete ?: return true
+        pendingDelete = null
+        if (resultCode != Activity.RESULT_OK) {
+            pending.result.success(false)
+        } else if (pending.retry) {
+            try {
+                context.contentResolver.delete(pending.uri, null, null)
+                pending.result.success(true)
+            } catch (e: Exception) {
+                pending.result.success(false)
+            }
+        } else {
+            pending.result.success(true)
+        }
+        return true
     }
 
     private fun queryAudio(): List<Map<String, Any?>> {
@@ -85,5 +159,6 @@ class MediaStoreChannel(private val context: Context, messenger: BinaryMessenger
 
     companion object {
         const val NAME = "music_app/media_store"
+        private const val REQUEST_DELETE = 4101
     }
 }

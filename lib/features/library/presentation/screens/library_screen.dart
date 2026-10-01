@@ -251,8 +251,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
         ],
       ),
       onTap: () => vm.playQueue(queue, index: i),
-      onLongPress: () => showTrackMenu(context, t),
-      onSecondaryTap: () => showTrackMenu(context, t),
+      onMenu: (pos) => showTrackMenu(context, t, globalPosition: pos),
     );
   }
 
@@ -418,12 +417,15 @@ class _EmptyLibrary extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
-    return GlassCard(
-      tone: GlowTone.secondary,
-      padding: const EdgeInsets.all(AppSpacing.xl),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
       child: Column(
         children: [
-          const Icon(Icons.library_music_rounded, size: 40),
+          Icon(
+            Icons.library_music_rounded,
+            size: 40,
+            color: context.palette.accent,
+          ),
           const SizedBox(height: AppSpacing.md),
           Text(l10n.libraryEmptyTitle, style: text.titleLarge),
           const SizedBox(height: AppSpacing.xs),

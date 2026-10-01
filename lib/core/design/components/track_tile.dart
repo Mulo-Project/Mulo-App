@@ -5,7 +5,7 @@ import '../tokens/app_dimens.dart';
 import 'artwork_box.dart';
 
 /// 곡 한 줄: 커버 · 제목 · 부제 · 오른쪽 위젯.
-class TrackTile extends StatelessWidget {
+class TrackTile extends StatefulWidget {
   const TrackTile({
     super.key,
     required this.title,
@@ -17,8 +17,7 @@ class TrackTile extends StatelessWidget {
     this.footer,
     this.active = false,
     this.onTap,
-    this.onLongPress,
-    this.onSecondaryTap,
+    this.onMenu,
   });
 
   final String title;
@@ -38,60 +37,72 @@ class TrackTile extends StatelessWidget {
   final VoidCallback? onTap;
 
   /// 길게 누르기 · 데스크톱 오른쪽 클릭 (곡 메뉴 같은 보조 동작).
-  final VoidCallback? onLongPress;
-  final VoidCallback? onSecondaryTap;
+  /// 눌린 화면 좌표를 넘기므로 팝업 메뉴를 그 자리에 띄울 수 있다.
+  final ValueChanged<Offset>? onMenu;
+
+  @override
+  State<TrackTile> createState() => _TrackTileState();
+}
+
+class _TrackTileState extends State<TrackTile> {
+  Offset _lastPointer = Offset.zero;
 
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
     final text = Theme.of(context).textTheme;
+    final w = widget;
+    final onMenu = w.onMenu;
 
-    return InkWell(
-      onTap: onTap,
-      onLongPress: onLongPress,
-      onSecondaryTap: onSecondaryTap,
-      borderRadius: BorderRadius.circular(AppRadii.sm),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.xs,
-        ),
-        child: Row(
-          children: [
-            leading ?? ArtworkBox(image: artwork, tone: tone),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: text.titleSmall?.copyWith(
-                      color: active ? p.accent : p.onSurface,
+    return Listener(
+      onPointerDown: (e) => _lastPointer = e.position,
+      child: InkWell(
+        onTap: w.onTap,
+        onLongPress: onMenu == null ? null : () => onMenu(_lastPointer),
+        onSecondaryTap: onMenu == null ? null : () => onMenu(_lastPointer),
+        borderRadius: BorderRadius.circular(AppRadii.sm),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.xs,
+          ),
+          child: Row(
+            children: [
+              w.leading ?? ArtworkBox(image: w.artwork, tone: w.tone),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      w.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: text.titleSmall?.copyWith(
+                        color: w.active ? p.accent : p.onSurface,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: text.bodySmall,
-                  ),
-                  if (footer != null) ...[
-                    const SizedBox(height: AppSpacing.xs),
-                    footer!,
+                    const SizedBox(height: 2),
+                    Text(
+                      w.subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: text.bodySmall,
+                    ),
+                    if (w.footer != null) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      w.footer!,
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-            if (trailing != null) ...[
-              const SizedBox(width: AppSpacing.xs),
-              trailing!,
+              if (w.trailing != null) ...[
+                const SizedBox(width: AppSpacing.xs),
+                w.trailing!,
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

@@ -6,7 +6,6 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
-import '../../../covers/presentation/widgets/cover_sheet.dart';
 import '../../../lyrics/presentation/widgets/lyrics_view.dart';
 import '../bloc/now_playing_cubit.dart';
 
@@ -87,13 +86,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                           CoverKey.track(track.id),
                                         ),
                                         tone: toneFor(track.id),
-                                        editLabel: l10n.coverChange,
-                                        onEdit: () => showCoverSheet(
-                                          context,
-                                          coverKey: CoverKey.track(track.id),
-                                          title: track.title,
-                                          tone: toneFor(track.id),
-                                        ),
                                       ),
                                     ),
                                   ),
@@ -302,52 +294,28 @@ class _QueueSheet extends StatelessWidget {
 }
 
 /// 전체 화면 플레이어 커버: 이미지가 있으면 사진, 없으면 테마 색 그라데이션 + 음표.
-/// 누르면 커버 이미지 바꾸기 시트.
+/// 커버 이미지는 곡 타일 메뉴에서만 바꾼다.
 class _PlayerCover extends StatelessWidget {
-  const _PlayerCover({
-    required this.image,
-    required this.tone,
-    required this.editLabel,
-    required this.onEdit,
-  });
+  const _PlayerCover({required this.image, required this.tone});
 
   final ImageProvider? image;
   final GlowTone tone;
-  final String editLabel;
-  final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: CoverCard(
-            image: image,
-            tone: tone,
-            onTap: onEdit,
-            child: image != null
-                ? null
-                : Center(
-                    child: Icon(
-                      Icons.music_note_rounded,
-                      size: 96,
-                      color: p.onGlow.withValues(alpha: .85),
-                    ),
-                  ),
-          ),
-        ),
-        Positioned(
-          right: AppSpacing.md,
-          bottom: AppSpacing.md,
-          child: CircleIconButton(
-            icon: Icons.edit_rounded,
-            tooltip: editLabel,
-            size: 40,
-            onPressed: onEdit,
-          ),
-        ),
-      ],
+    return CoverCard(
+      image: image,
+      tone: tone,
+      child: image != null
+          ? null
+          : Center(
+              child: Icon(
+                Icons.music_note_rounded,
+                size: 96,
+                color: p.onGlow.withValues(alpha: .85),
+              ),
+            ),
     );
   }
 }
