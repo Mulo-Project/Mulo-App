@@ -136,13 +136,13 @@ void main() {
     expect(find.text('첫 곡'), findsOneWidget);
     expect(find.text('가수'), findsOneWidget);
     expect(find.byTooltip('다음 곡'), findsNothing);
-    expect(find.bySemanticsLabel('대표곡 미리 듣기'), findsNothing);
+    expect(find.byTooltip('대표곡 미리 듣기'), findsNothing);
 
     await tester.tap(find.text('첫 곡'));
     await tester.pumpAndSettle();
-    expect(find.bySemanticsLabel('대표곡 미리 듣기'), findsOneWidget);
+    expect(find.byTooltip('대표곡 미리 듣기'), findsOneWidget);
 
-    await tester.tap(find.bySemanticsLabel('대표곡 미리 듣기'));
+    await tester.tap(find.byTooltip('대표곡 미리 듣기'));
     await tester.pumpAndSettle();
     expect(find.byTooltip('다음 곡'), findsOneWidget);
   });

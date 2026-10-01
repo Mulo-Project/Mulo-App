@@ -31,7 +31,7 @@ String playlistToneName(AppLocalizations l10n, GlowTone tone) => switch (tone) {
   GlowTone.tertiary => l10n.playlistColorTertiary,
 };
 
-/// 재생목록 카드: 얇은 테두리 안에 커버(이미지나 색) · 이름 · 곡 수 · 구분선 · 대표곡 칸 (접으면 한 줄, 펼치면 이미지).
+/// 재생목록 카드: 얇은 테두리 안에 커버(이미지나 색) · 이름 · 곡 수 · 구분선 · 대표곡 타일 (접으면 한 줄, 펼치면 이미지가 앞에 붙는다).
 ///
 /// 기본(둘러보기)에서는 누르면 재생목록 상세로 가고, ⋮ · 길게 누르기 · 오른쪽 클릭은 팝업 메뉴를 연다.
 /// [selected]를 주면 담기 선택 모드: 메뉴 대신 체크 표시가 붙고 [onTap]으로 고른다.
@@ -227,8 +227,9 @@ class _SelectMark extends StatelessWidget {
 /// 앱을 켜 둔 동안 펼쳐 둔 카드 (재생목록 id). 화면을 오가도 펼친 채로 둔다.
 final _expandedIds = <String>{};
 
-/// 카드 아래 대표곡 칸. 접으면 이름 · 가수 한 줄, 펼치면 커버 이미지가 크게 나온다.
-/// 펼친 이미지를 누르면 그 곡을 (이 재생목록 대기열로) 바로 재생해 미리 들어 볼 수 있다.
+/// 카드 아래 대표곡 타일. 접으면 이름 · 가수 한 줄, 누르면 타일이 자연스럽게 커지면서
+/// 앞에 커버 이미지가 나오고 부제에 가수 · 장르가 붙는다. 펼친 타일의 재생 버튼을 누르면
+/// 그 곡을 (이 재생목록 대기열로) 바로 재생해 미리 들어 볼 수 있다.
 class _Featured extends StatefulWidget {
   const _Featured({required this.playlist, required this.expandable});
 
@@ -267,26 +268,46 @@ class _FeaturedState extends State<_Featured> {
     final p = context.palette;
     final l10n = context.l10n;
     final t = widget.playlist.featured;
-    // 접은 줄 높이를 항상 확보해서 카드 높이가 들쭉날쭉하지 않게 한다.
+    // 접은 타일 높이를 항상 확보해서 카드 높이가 들쭉날쭉하지 않게 한다.
     const rowHeight = 56.0;
     if (t == null) return const SizedBox(height: rowHeight);
     final open = _expanded && widget.expandable;
+    final subtitle = open
+        ? [t.artist, t.genre].where((s) => s.isNotEmpty).join(' · ')
+        : t.artist;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        InkWell(
-          onTap: widget.expandable ? _toggle : null,
-          child: SizedBox(
-            height: rowHeight,
-            child: Padding(
-              padding: const EdgeInsets.only(
-                left: AppSpacing.sm,
-                right: AppSpacing.xxs,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
+    return AnimatedSize(
+      duration: AppMotion.medium,
+      curve: AppMotion.standard,
+      alignment: Alignment.topCenter,
+      child: InkWell(
+        onTap: widget.expandable ? _toggle : null,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: rowHeight),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              AppSpacing.sm,
+              open ? AppSpacing.xs : 0,
+              AppSpacing.xxs,
+              open ? AppSpacing.xs : 0,
+            ),
+            child: Row(
+              children: [
+                // 펼치면 앞에 이미지가 생긴다.
+                if (open) ...[
+                  ArtworkBox(
+                    image: coverImageOf(context, CoverKey.track(t.id)),
+                    size: 48,
+                    radius: 8,
+                    tone: toneFor(t.id),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                ],
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      vertical: open ? 0 : AppSpacing.xs,
+                    ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -297,9 +318,9 @@ class _FeaturedState extends State<_Featured> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        if (t.artist.isNotEmpty)
+                        if (subtitle.isNotEmpty)
                           Text(
-                            t.artist,
+                            subtitle,
                             style: text.bodySmall?.copyWith(
                               color: p.onSurfaceMuted,
                             ),
@@ -309,62 +330,20 @@ class _FeaturedState extends State<_Featured> {
                       ],
                     ),
                   ),
-                  if (widget.expandable)
-                    Icon(
-                      open
-                          ? Icons.expand_less_rounded
-                          : Icons.expand_more_rounded,
-                      color: p.onSurfaceMuted,
-                    ),
-                ],
-              ),
+                ),
+                if (open)
+                  IconButton(
+                    tooltip: l10n.playlistFeaturedPreview,
+                    onPressed: () => _preview(t),
+                    icon: Icon(Icons.play_circle_fill_rounded, color: p.accent),
+                  )
+                else if (widget.expandable)
+                  Icon(Icons.expand_more_rounded, color: p.onSurfaceMuted),
+              ],
             ),
           ),
         ),
-        AnimatedSize(
-          duration: AppMotion.medium,
-          curve: AppMotion.standard,
-          alignment: Alignment.topCenter,
-          child: open
-              ? LayoutBuilder(
-                  builder: (context, c) => Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.sm,
-                      0,
-                      AppSpacing.sm,
-                      AppSpacing.sm,
-                    ),
-                    child: Semantics(
-                      button: true,
-                      label: l10n.playlistFeaturedPreview,
-                      child: GestureDetector(
-                        onTap: () => _preview(t),
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            ArtworkBox(
-                              image: coverImageOf(
-                                context,
-                                CoverKey.track(t.id),
-                              ),
-                              size: c.maxWidth - AppSpacing.sm * 2,
-                              radius: 8,
-                              tone: toneFor(t.id),
-                            ),
-                            Icon(
-                              Icons.play_circle_fill_rounded,
-                              size: 48,
-                              color: p.onGlow.withValues(alpha: .9),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                )
-              : const SizedBox(width: double.infinity),
-        ),
-      ],
+      ),
     );
   }
 }
