@@ -28,7 +28,7 @@ class RecentSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          StatNumber(value, size: 40),
+          StatNumber(value, size: 26),
           const SizedBox(height: AppSpacing.xxs),
           Text(caption, style: text.bodySmall),
         ],
@@ -43,8 +43,8 @@ class RecentSection extends StatelessWidget {
           padding: AppSpacing.screen,
           child: DecoratedBox(
             decoration: BoxDecoration(
-              color: p.accent.withValues(alpha: .12),
-              borderRadius: BorderRadius.circular(AppRadii.lg),
+              color: p.accent.withValues(alpha: .08),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
             ),
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.md),
@@ -58,7 +58,7 @@ class RecentSection extends StatelessWidget {
                     formatListened(l10n, summary.todayListened),
                     l10n.homeToday,
                   ),
-                  Icon(Icons.headphones_rounded, size: 32, color: p.accent),
+                  Icon(Icons.headphones_rounded, size: 24, color: p.accent),
                 ],
               ),
             ),
