@@ -143,3 +143,8 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - 패키지 · applicationId는 `com.mulo.app`, Kotlin 패키지 경로는 `com/mulo/app/`. iOS 번들 ID도 같은 값.
 - pubspec `name`(`music_download_play_app`)은 모든 `package:` import가 걸려 있어 **바꾸지 않는다**. 실행 파일 이름(`BINARY_NAME`) · 채널 이름(`music_app/...`) · DB 파일 이름(`music_app`)도 그대로 둔다(기존 데이터 호환).
 - applicationId가 바뀌므로 기존 `com.example...` 앱은 별개 앱으로 설치된다(예전 앱은 직접 삭제).
+
+## D-025 · 2026-10-01 · 재생목록 카드 요약 · 카드 색
+- 요약은 DB에 저장하지 않고 조회 때 계산한다 (재생 기록 · 담긴 곡 · 곡 테이블 변경을 구독해 갱신). 곡은 재생 기록이 있는 것만 많이 들은 순 3개, 없으면 곡이 많은 아티스트 3명.
+- 카드 색은 `playlists.color_index`(글로우 톤 번호, null = 이름 해시로 자동). 임의 색(RGB)은 받지 않는다 — 테마 토큰만 쓴다는 규칙 유지.
+- 설정 메뉴는 길게 누르기 → 바텀 시트 (앱의 다른 시트와 같은 모양).

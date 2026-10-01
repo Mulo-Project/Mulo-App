@@ -492,4 +492,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeTopGenre => 'Top genre';
+
+  @override
+  String get playlistsEmpty => 'No playlists yet. Tap + above to make one.';
+
+  @override
+  String get playlistNewTitle => 'New playlist';
+
+  @override
+  String get playlistNewHint => 'Playlist name';
+
+  @override
+  String get playlistCreate => 'Create';
+
+  @override
+  String get playlistMenuImage => 'Change image';
+
+  @override
+  String get playlistMenuColor => 'Card color';
+
+  @override
+  String get playlistColorAuto => 'Auto';
+
+  @override
+  String playlistColorOption(String name) {
+    return 'Card color $name';
+  }
+
+  @override
+  String get playlistColorPrimary => 'Primary';
+
+  @override
+  String get playlistColorSecondary => 'Secondary';
+
+  @override
+  String get playlistColorTertiary => 'Accent';
+
+  @override
+  String get playlistSummaryEmpty => 'Empty';
 }

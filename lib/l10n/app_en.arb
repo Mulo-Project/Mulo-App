@@ -153,5 +153,18 @@
   "downloadNewPlaylist": "New playlist",
   "downloadNewPlaylistHint": "Type a name, then +",
   "downloadQueued": "Added to the queue",
-  "homeTopGenre": "Top genre"
+  "homeTopGenre": "Top genre",
+  "playlistsEmpty": "No playlists yet. Tap + above to make one.",
+  "playlistNewTitle": "New playlist",
+  "playlistNewHint": "Playlist name",
+  "playlistCreate": "Create",
+  "playlistMenuImage": "Change image",
+  "playlistMenuColor": "Card color",
+  "playlistColorAuto": "Auto",
+  "playlistColorOption": "Card color {name}",
+  "playlistColorPrimary": "Primary",
+  "playlistColorSecondary": "Secondary",
+  "playlistColorTertiary": "Accent",
+  "playlistSummaryEmpty": "Empty",
+  "@playlistColorOption": {"placeholders": {"name": {"type": "String"}}}
 }

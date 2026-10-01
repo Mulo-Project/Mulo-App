@@ -58,7 +58,7 @@ MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부�
 | `CoverCard` · `onGlow()` | cover_card.dart | 이미지 카드 (재생목록 · 플레이어 커버), 색 · 사진 위 글자색 |
 | `StatNumber` | stat_number.dart | 큰 숫자 (곡 수, 시간, 퍼센트), 고정폭 숫자 |
 | `PillButton` | buttons.dart | 알약 버튼: accent · primary(단색 + 빛), tonal(유리), outline |
-| `CircleIconButton` | buttons.dart | 원형 유리 버튼, `emphasized` = 강조 색 + 빛 (재생) |
+| `CircleIconButton` | buttons.dart | 원형 유리 버튼, `emphasized` = 강조 색 + 빛 (재생); `onLongPress`로 길게 누르기 |
 | `ProgressRing` · `ProgressLine` | progress.dart | 원형 · 막대 진행 표시 (강조 색 + 빛) |
 | `MiniPlayerBar` | mini_player_bar.dart | 유리 미니 플레이어 |
 | `AppTopBar` | app_top_bar.dart | 상단 바. `large` = 탭 첫 화면(부제 + 큰 제목), 기본 = 원형 버튼 사이 가운데 제목 |

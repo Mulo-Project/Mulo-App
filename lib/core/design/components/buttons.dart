@@ -144,6 +144,7 @@ class CircleIconButton extends StatelessWidget {
     this.onPressed,
     this.emphasized = false,
     this.size = AppSizes.circleButton,
+    this.onLongPress,
   });
 
   final IconData icon;
@@ -151,6 +152,9 @@ class CircleIconButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool emphasized;
   final double size;
+
+  /// 길게 누르기. 주면 길게 눌러 툴팁을 띄우지 않는다 (마우스를 올리면 그대로 뜬다).
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -164,30 +168,39 @@ class CircleIconButton extends StatelessWidget {
       ),
     );
 
+    final button = emphasized
+        ? DecoratedBox(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: p.accent.withValues(alpha: .45),
+                  blurRadius: size * .45,
+                ),
+              ],
+            ),
+            child: Material(
+              color: p.accent,
+              shape: const CircleBorder(),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(onTap: onPressed, child: glyph),
+            ),
+          )
+        : GlassSurface(
+            shape: const CircleBorder(),
+            onTap: onPressed,
+            child: glyph,
+          );
+
     return Tooltip(
       message: tooltip,
-      child: emphasized
-          ? DecoratedBox(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: p.accent.withValues(alpha: .45),
-                    blurRadius: size * .45,
-                  ),
-                ],
-              ),
-              child: Material(
-                color: p.accent,
-                shape: const CircleBorder(),
-                clipBehavior: Clip.antiAlias,
-                child: InkWell(onTap: onPressed, child: glyph),
-              ),
-            )
-          : GlassSurface(
-              shape: const CircleBorder(),
-              onTap: onPressed,
-              child: glyph,
+      triggerMode: onLongPress == null ? null : TooltipTriggerMode.manual,
+      child: onLongPress == null
+          ? button
+          : GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onLongPress: onLongPress,
+              child: button,
             ),
     );
   }

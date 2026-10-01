@@ -1021,6 +1021,78 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'많이 들은 장르'**
   String get homeTopGenre;
+
+  /// No description provided for @playlistsEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 재생목록이 없어요. 위의 +로 만들어 보세요.'**
+  String get playlistsEmpty;
+
+  /// No description provided for @playlistNewTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 재생목록'**
+  String get playlistNewTitle;
+
+  /// No description provided for @playlistNewHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생목록 이름'**
+  String get playlistNewHint;
+
+  /// No description provided for @playlistCreate.
+  ///
+  /// In ko, this message translates to:
+  /// **'만들기'**
+  String get playlistCreate;
+
+  /// No description provided for @playlistMenuImage.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미지 바꾸기'**
+  String get playlistMenuImage;
+
+  /// No description provided for @playlistMenuColor.
+  ///
+  /// In ko, this message translates to:
+  /// **'카드 색'**
+  String get playlistMenuColor;
+
+  /// No description provided for @playlistColorAuto.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동'**
+  String get playlistColorAuto;
+
+  /// No description provided for @playlistColorOption.
+  ///
+  /// In ko, this message translates to:
+  /// **'카드 색 {name}'**
+  String playlistColorOption(String name);
+
+  /// No description provided for @playlistColorPrimary.
+  ///
+  /// In ko, this message translates to:
+  /// **'주 색'**
+  String get playlistColorPrimary;
+
+  /// No description provided for @playlistColorSecondary.
+  ///
+  /// In ko, this message translates to:
+  /// **'보조 색'**
+  String get playlistColorSecondary;
+
+  /// No description provided for @playlistColorTertiary.
+  ///
+  /// In ko, this message translates to:
+  /// **'포인트 색'**
+  String get playlistColorTertiary;
+
+  /// No description provided for @playlistSummaryEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'비어 있어요'**
+  String get playlistSummaryEmpty;
 }
 
 class _AppLocalizationsDelegate

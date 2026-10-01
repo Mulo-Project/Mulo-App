@@ -16,6 +16,7 @@ class CoverCard extends StatelessWidget {
     this.radius = AppRadii.card,
     this.shade = false,
     this.onTap,
+    this.onLongPress,
     this.child,
   });
 
@@ -24,6 +25,7 @@ class CoverCard extends StatelessWidget {
   final double radius;
   final bool shade;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
   final Widget? child;
 
   @override
@@ -52,6 +54,7 @@ class CoverCard extends StatelessWidget {
               ),
         child: InkWell(
           onTap: onTap,
+          onLongPress: onLongPress,
           child: DecoratedBox(
             decoration: BoxDecoration(
               gradient: shade

@@ -16,6 +16,7 @@ import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/sample/sample_data.dart';
 import 'package:music_download_play_app/features/downloads/data/repositories/sample_download_queue_repository.dart';
 import 'package:music_download_play_app/features/home/domain/entities/home_summary.dart';
+import 'package:music_download_play_app/features/playlists/domain/entities/playlist.dart';
 import 'package:music_download_play_app/features/theme/domain/entities/theme_settings.dart';
 
 import '../helpers/fakes.dart';
@@ -88,6 +89,7 @@ void main() {
           history: MemoryPlayHistory(plays),
           tracks: SampleData.tracks,
           downloads: SampleDownloadQueueRepository(),
+          playlists: MemoryPlaylistRepository(_samplePlaylists),
           // 라이트 스크린샷은 저장된 화면 모드를 라이트로 둔다.
           theme: ThemeSettings(
             mode: e.key.endsWith('-light')
@@ -117,3 +119,25 @@ void main() {
     }
   }
 }
+
+/// 재생목록 스크린샷용 (많이 들은 곡이 있는 것 · 아티스트만 있는 것 · 빈 것).
+const _samplePlaylists = [
+  Playlist(
+    id: 'pl1',
+    name: 'Late Night Drive',
+    trackCount: 24,
+    topTracks: [
+      PlaylistTrackPreview(id: 't1', title: 'Midnight Signal', artist: 'A'),
+      PlaylistTrackPreview(id: 't2', title: 'Harbor Lights', artist: 'B'),
+      PlaylistTrackPreview(id: 't3', title: 'Soft Machines', artist: 'C'),
+    ],
+  ),
+  Playlist(
+    id: 'pl2',
+    name: 'Focus',
+    trackCount: 18,
+    topArtists: ['Lumen Field', 'Neon Harbor', 'Quiet Atlas'],
+  ),
+  Playlist(id: 'pl3', name: 'Workout Mix', trackCount: 32, colorIndex: 2),
+  Playlist(id: 'pl4', name: 'Rainy Day', trackCount: 0),
+];

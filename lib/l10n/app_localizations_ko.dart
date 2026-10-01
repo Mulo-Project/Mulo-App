@@ -488,4 +488,42 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get homeTopGenre => '많이 들은 장르';
+
+  @override
+  String get playlistsEmpty => '아직 재생목록이 없어요. 위의 +로 만들어 보세요.';
+
+  @override
+  String get playlistNewTitle => '새 재생목록';
+
+  @override
+  String get playlistNewHint => '재생목록 이름';
+
+  @override
+  String get playlistCreate => '만들기';
+
+  @override
+  String get playlistMenuImage => '이미지 바꾸기';
+
+  @override
+  String get playlistMenuColor => '카드 색';
+
+  @override
+  String get playlistColorAuto => '자동';
+
+  @override
+  String playlistColorOption(String name) {
+    return '카드 색 $name';
+  }
+
+  @override
+  String get playlistColorPrimary => '주 색';
+
+  @override
+  String get playlistColorSecondary => '보조 색';
+
+  @override
+  String get playlistColorTertiary => '포인트 색';
+
+  @override
+  String get playlistSummaryEmpty => '비어 있어요';
 }
