@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
+import '../../../../core/l10n/l10n.dart';
 import '../../../theme/presentation/bloc/theme_cubit.dart';
 
 /// 디자인 시스템 미리보기. 실제 홈 화면이 생기기 전까지 첫 화면으로 쓴다.
@@ -22,6 +23,7 @@ class _DesignPreviewScreenState extends State<DesignPreviewScreen> {
     final controller = context.read<ThemeCubit>();
     final text = Theme.of(context).textTheme;
     final p = context.palette;
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: p.background,
@@ -48,55 +50,55 @@ class _DesignPreviewScreenState extends State<DesignPreviewScreen> {
                     const SizedBox(height: AppSpacing.lg),
                     _HeroCard(progress: _progress),
                     const SizedBox(height: AppSpacing.sm),
-                    const Row(
+                    Row(
                       children: [
                         Expanded(
                           child: _StatCard(
                             tone: GlowTone.secondary,
-                            label: '다운로드',
+                            label: l10n.navDownloads,
                             value: '12',
-                            unit: '곡 대기 중',
+                            unit: l10n.dpQueueWaiting,
                           ),
                         ),
-                        SizedBox(width: AppSpacing.sm),
+                        const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: _StatCard(
                             tone: GlowTone.tertiary,
-                            label: '오늘 재생',
+                            label: l10n.dpPlayedToday,
                             value: '4.2',
-                            unit: '시간',
+                            unit: l10n.dpHours,
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.xl),
-                    _SectionTitle('버튼'),
+                    _SectionTitle(l10n.dpSectionButtons),
                     Wrap(
                       spacing: AppSpacing.xs,
                       runSpacing: AppSpacing.xs,
                       children: [
                         PillButton(
-                          label: '다운로드',
+                          label: l10n.actionDownload,
                           icon: Icons.download_rounded,
                           onPressed: () {},
                         ),
                         PillButton(
-                          label: '재생목록',
+                          label: l10n.navPlaylists,
                           variant: PillVariant.primary,
                           onPressed: () {},
                         ),
                         PillButton(
-                          label: '셔플',
+                          label: l10n.actionShuffle,
                           variant: PillVariant.tonal,
                           icon: Icons.shuffle_rounded,
                           onPressed: () {},
                         ),
                         PillButton(
-                          label: '취소',
+                          label: l10n.actionCancel,
                           variant: PillVariant.outline,
                           onPressed: () {},
                         ),
-                        const PillButton(label: '비활성', onPressed: null),
+                        PillButton(label: l10n.dpDisabled, onPressed: null),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.sm),
@@ -104,7 +106,7 @@ class _DesignPreviewScreenState extends State<DesignPreviewScreen> {
                       children: [
                         CircleIconButton(
                           icon: Icons.skip_previous_rounded,
-                          tooltip: '이전 곡',
+                          tooltip: l10n.actionPrevious,
                           onPressed: () {},
                         ),
                         const SizedBox(width: AppSpacing.sm),
@@ -112,7 +114,7 @@ class _DesignPreviewScreenState extends State<DesignPreviewScreen> {
                           icon: _playing
                               ? Icons.pause_rounded
                               : Icons.play_arrow_rounded,
-                          tooltip: '재생',
+                          tooltip: l10n.actionPlay,
                           emphasized: true,
                           size: AppSizes.circleButtonLarge,
                           onPressed: _togglePlay,
@@ -120,19 +122,19 @@ class _DesignPreviewScreenState extends State<DesignPreviewScreen> {
                         const SizedBox(width: AppSpacing.sm),
                         CircleIconButton(
                           icon: Icons.skip_next_rounded,
-                          tooltip: '다음 곡',
+                          tooltip: l10n.actionNext,
                           onPressed: () {},
                         ),
                         const Spacer(),
                         CircleIconButton(
                           icon: Icons.favorite_border_rounded,
-                          tooltip: '좋아요',
+                          tooltip: l10n.dpLike,
                           onPressed: () {},
                         ),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.xl),
-                    _SectionTitle('진행 표시'),
+                    _SectionTitle(l10n.dpSectionProgress),
                     ProgressLine(value: _progress),
                     const SizedBox(height: AppSpacing.xs),
                     Row(
@@ -157,12 +159,12 @@ class _DesignPreviewScreenState extends State<DesignPreviewScreen> {
                       ],
                     ),
                     const SizedBox(height: AppSpacing.xl),
-                    _SectionTitle('글자'),
+                    _SectionTitle(l10n.dpSectionType),
                     Text('Display', style: text.displaySmall),
-                    Text('Headline 제목', style: text.headlineSmall),
-                    Text('Title 곡 제목', style: text.titleMedium),
-                    Text('Body 본문 텍스트입니다.', style: text.bodyMedium),
-                    Text('Caption 보조 설명', style: text.bodySmall),
+                    Text(l10n.dpHeadline, style: text.headlineSmall),
+                    Text(l10n.dpTitleSample, style: text.titleMedium),
+                    Text(l10n.dpBody, style: text.bodyMedium),
+                    Text(l10n.dpCaption, style: text.bodySmall),
                     const SizedBox(height: AppSpacing.sm),
                     const StatNumber('0123456789:.-/%', size: 22),
                   ],
@@ -180,9 +182,9 @@ class _DesignPreviewScreenState extends State<DesignPreviewScreen> {
                   artist: 'Sample Artist',
                   progress: _progress,
                   isPlaying: _playing,
-                  playLabel: '재생',
-                  pauseLabel: '일시정지',
-                  nextLabel: '다음 곡',
+                  playLabel: l10n.actionPlay,
+                  pauseLabel: l10n.actionPause,
+                  nextLabel: l10n.actionNext,
                   onPlayPause: _togglePlay,
                   onNext: () {},
                 ),
@@ -227,20 +229,21 @@ class _Header extends StatelessWidget {
         ],
         Text('DESIGN SYSTEM', style: text.labelSmall),
         const SizedBox(height: AppSpacing.xxs),
-        Text('미리보기', style: text.headlineLarge),
+        Text(context.l10n.dpTitle, style: text.headlineLarge),
         const SizedBox(height: AppSpacing.md),
-        Row(
+        Wrap(
+          spacing: AppSpacing.xs,
+          runSpacing: AppSpacing.xs,
           children: [
             PillButton(
-              label: '기본',
+              label: context.l10n.dpPaletteDefault,
               compact: true,
               variant: PillVariant.tonal,
               selected: isDefault,
               onPressed: onDefault,
             ),
-            const SizedBox(width: AppSpacing.xs),
             PillButton(
-              label: '대체 팔레트',
+              label: context.l10n.dpPaletteAlt,
               compact: true,
               variant: PillVariant.tonal,
               selected: !isDefault,
@@ -308,17 +311,17 @@ class _HeroCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('보관함', style: text.titleMedium),
+                Text(context.l10n.navLibrary, style: text.titleMedium),
                 const SizedBox(height: AppSpacing.md),
                 const StatNumber('128', size: 56),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  '곡 · 9.4 GB',
+                  context.l10n.dpSongsSize,
                   style: text.bodySmall?.copyWith(color: p.onSurface),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 PillButton(
-                  label: '전체 재생',
+                  label: context.l10n.actionPlayAll,
                   icon: Icons.play_arrow_rounded,
                   compact: true,
                   onPressed: () {},

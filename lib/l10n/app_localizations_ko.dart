@@ -597,4 +597,66 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get playlistSummaryEmpty => '비어 있어요';
+
+  @override
+  String get dpTitle => '미리보기';
+
+  @override
+  String get dpPaletteDefault => '기본';
+
+  @override
+  String get dpPaletteAlt => '대체 팔레트';
+
+  @override
+  String get dpQueueWaiting => '곡 대기 중';
+
+  @override
+  String get dpPlayedToday => '오늘 재생';
+
+  @override
+  String get dpHours => '시간';
+
+  @override
+  String get dpSectionButtons => '버튼';
+
+  @override
+  String get dpDisabled => '비활성';
+
+  @override
+  String get dpLike => '좋아요';
+
+  @override
+  String get dpSectionProgress => '진행 표시';
+
+  @override
+  String get dpSectionType => '글자';
+
+  @override
+  String get dpHeadline => 'Headline 제목';
+
+  @override
+  String get dpTitleSample => 'Title 곡 제목';
+
+  @override
+  String get dpBody => 'Body 본문 텍스트입니다.';
+
+  @override
+  String get dpCaption => 'Caption 보조 설명';
+
+  @override
+  String get dpSongsSize => '곡 · 9.4 GB';
+
+  @override
+  String get downloadPlaylistsNone => '선택 안 함';
+
+  @override
+  String downloadPlaylistsSelected(int count) {
+    return '$count개 선택';
+  }
+
+  @override
+  String get downloadPlaylistsPickTitle => '재생목록 선택';
+
+  @override
+  String get downloadPlaylistsDone => '선택 완료';
 }
