@@ -1,9 +1,10 @@
 package com.mulo.app
 
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 
-class MainActivity : FlutterActivity() {
+// 생체 인증(local_auth)이 FragmentActivity를 요구한다.
+class MainActivity : FlutterFragmentActivity() {
     private var mediaStore: MediaStoreChannel? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
