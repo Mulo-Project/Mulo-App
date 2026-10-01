@@ -145,6 +145,9 @@ void main() {
     await tester.tap(find.byTooltip('대표곡 미리 듣기'));
     await tester.pumpAndSettle();
     expect(find.byTooltip('다음 곡'), findsOneWidget);
+    // 재생 중이면 카드의 버튼도 일시정지 아이콘으로 바뀐다 (미니 플레이어 것까지 둘).
+    expect(find.byTooltip('대표곡 미리 듣기'), findsNothing);
+    expect(find.byTooltip('일시정지'), findsNWidgets(2));
   });
 
   testWidgets('좋아요 목록 메뉴에는 색 · 이름 · 삭제가 없다', (tester) async {

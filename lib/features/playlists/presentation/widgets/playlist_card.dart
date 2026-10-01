@@ -315,12 +315,17 @@ class _FeaturedState extends State<_Featured> {
                         ],
                       ),
                     ),
+                    // 위 줄의 ⋮ 와 같은 칸(28)에 둬서 세로로 줄이 맞는다.
                     if (widget.expandable)
-                      Icon(
-                        open
-                            ? Icons.expand_less_rounded
-                            : Icons.expand_more_rounded,
-                        color: p.onSurfaceMuted,
+                      SizedBox.square(
+                        dimension: 28,
+                        child: Icon(
+                          open
+                              ? Icons.expand_less_rounded
+                              : Icons.expand_more_rounded,
+                          size: 20,
+                          color: p.onSurfaceMuted,
+                        ),
                       ),
                   ],
                 ),
@@ -352,10 +357,29 @@ class _FeaturedState extends State<_Featured> {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  IconButton(
-                    tooltip: l10n.playlistFeaturedPreview,
-                    onPressed: () => _preview(t),
-                    icon: Icon(Icons.play_circle_fill_rounded, color: p.accent),
+                  // 이 곡이 재생 중이면 일시정지 아이콘, 아니면 재생 아이콘.
+                  BlocBuilder<NowPlayingCubit, NowPlayingState>(
+                    buildWhen: (a, b) =>
+                        (a.track?.id == t.id) != (b.track?.id == t.id) ||
+                        a.isPlaying != b.isPlaying,
+                    builder: (context, s) {
+                      final current = s.track?.id == t.id;
+                      final playing = current && s.isPlaying;
+                      return IconButton(
+                        tooltip: playing
+                            ? l10n.actionPause
+                            : l10n.playlistFeaturedPreview,
+                        onPressed: current
+                            ? context.read<NowPlayingCubit>().togglePlay
+                            : () => _preview(t),
+                        icon: Icon(
+                          playing
+                              ? Icons.pause_circle_filled_rounded
+                              : Icons.play_circle_fill_rounded,
+                          color: p.accent,
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
