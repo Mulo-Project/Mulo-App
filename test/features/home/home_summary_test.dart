@@ -86,8 +86,14 @@ void main() {
       period: HomePeriod.all,
       now: now,
     );
-    expect(s.recommendations.first.id, 'b'); // Neon의 안 들은 곡
-    expect(s.recommendations.map((t) => t.id), isNot(contains('a')));
+    final mix = s.recommendedPlaylists.first;
+    expect(mix.kind, RecommendedKind.artistMix);
+    expect(mix.label, 'Neon');
+    expect(mix.tracks.map((t) => t.id), ['b', 'a']); // 덜 들은 곡이 먼저
+    expect(
+      s.recommendedPlaylists.map((p) => p.kind),
+      containsAll([RecommendedKind.unheard, RecommendedKind.newest]),
+    );
   });
 
   test('보관함에 없는 곡의 기록은 무시한다', () {
@@ -101,13 +107,13 @@ void main() {
     expect(s.recent, isEmpty);
   });
 
-  test('HomeBloc: 기간을 바꾸면 다시 계산한다', () async {
+  test('HomeBloc: 기간 · 달을 바꾸면 다시 계산한다', () async {
+    final today = DateTime.now();
+    final prev = DateTime(today.year, today.month - 1);
     final bloc = HomeBloc(
       WatchHomeSummary(
         FakeLibraryRepository(tracks),
-        MemoryPlayHistory([
-          _p('a', DateTime.now().subtract(const Duration(days: 20))),
-        ]),
+        MemoryPlayHistory([_p('a', DateTime(prev.year, prev.month, 15, 12))]),
       ),
     );
     addTearDown(bloc.close);
@@ -117,6 +123,9 @@ void main() {
     bloc.add(const HomePeriodChanged(HomePeriod.month));
     await Future<void>.delayed(const Duration(milliseconds: 10));
     expect(bloc.state.period, HomePeriod.month);
+    expect(bloc.state.summary.stats.plays, 0); // 이번 달에는 없음
+    bloc.add(HomeMonthChanged(prev));
+    await Future<void>.delayed(const Duration(milliseconds: 10));
     expect(bloc.state.summary.stats.plays, 1);
   });
 
@@ -142,5 +151,90 @@ void main() {
       ('발라드', 2),
       ('록', 1),
     ]);
+  });
+
+  test('이번 주는 오늘 포함 7일치 일별 데이터를 만든다', () {
+    final s = buildHomeSummary(
+      tracks: tracks,
+      plays: [
+        _p('a', DateTime(2026, 10, 1, 9)),
+        _p('a', DateTime(2026, 10, 1, 10)),
+        _p('b', DateTime(2026, 9, 28, 10)),
+        _p('c', DateTime(2026, 9, 24, 10)), // 7일 밖
+      ],
+      period: HomePeriod.week,
+      now: now,
+    );
+    expect(s.daily.length, 7);
+    expect(s.daily.first.day, DateTime(2026, 9, 25));
+    expect(s.daily.last.day, DateTime(2026, 10, 1));
+    expect(s.daily.last.plays, 2);
+    expect(s.daily.last.listened, const Duration(minutes: 6));
+    expect(s.stats.daysListened, 2);
+  });
+
+  test('이번 달은 고른 달 전체를 본다 (지난 달은 그 달 마지막 날까지)', () {
+    final plays = [
+      _p('a', DateTime(2026, 9, 3, 9)),
+      _p('b', DateTime(2026, 9, 30, 23)),
+      _p('c', DateTime(2026, 10, 1, 9)),
+    ];
+    final s = buildHomeSummary(
+      tracks: tracks,
+      plays: plays,
+      period: HomePeriod.month,
+      month: DateTime(2026, 9),
+      now: now,
+    );
+    expect(s.stats.plays, 2);
+    expect(s.daily.length, 30);
+    final thisMonth = buildHomeSummary(
+      tracks: tracks,
+      plays: plays,
+      period: HomePeriod.month,
+      now: now,
+    );
+    expect(thisMonth.stats.plays, 1);
+    expect(thisMonth.daily.length, 1); // 오늘(1일)까지만
+  });
+
+  test('전체 기간: 일별 데이터는 없고 들은 날 · 총 시간을 센다', () {
+    final s = buildHomeSummary(
+      tracks: tracks,
+      plays: [
+        _p('a', DateTime(2026, 8, 1, 9)),
+        _p('a', DateTime(2026, 8, 1, 10)),
+        _p('b', DateTime(2026, 9, 1, 9)),
+      ],
+      period: HomePeriod.all,
+      now: now,
+    );
+    expect(s.daily, isEmpty);
+    expect(s.stats.daysListened, 2);
+    expect(s.stats.listened, const Duration(minutes: 9));
+  });
+
+  test('앨범 순위: 앨범을 아는 곡만 센다, 많이 들은 곡은 100곡까지', () {
+    final withAlbum = [
+      for (var i = 0; i < 120; i++)
+        Track(
+          id: 't$i',
+          title: 'T$i',
+          artist: 'x',
+          album: i == 0 ? '' : 'Album ${i % 2}',
+          duration: const Duration(minutes: 3),
+          uri: 'u:$i',
+          addedAt: DateTime(2026, 9, 1),
+        ),
+    ];
+    final s = buildHomeSummary(
+      tracks: withAlbum,
+      plays: [for (final t in withAlbum) _p(t.id, now)],
+      period: HomePeriod.all,
+      now: now,
+    );
+    expect(s.stats.topAlbums.length, 2);
+    expect(s.stats.topAlbums.first.album, 'Album 1');
+    expect(s.topTracks.length, 100);
   });
 }

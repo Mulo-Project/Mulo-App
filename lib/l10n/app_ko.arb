@@ -252,13 +252,78 @@
   "homeStatTracks": "곡",
   "homeTopArtist": "많이 들은 아티스트",
   "homeTopTracks": "많이 들은 곡",
-  "homeRecommendations": "추천",
+  "homeRecommendations": "추천 재생목록",
   "homeRecent": "최근 재생",
   "homeNoPlays": "아직 재생 기록이 없어요. 보관함에서 곡을 재생해 보세요.",
   "homeNoRecommendations": "보관함에 곡이 더 있으면 추천해 드려요.",
   "homeEmptyLibraryTitle": "보관함이 비었어요",
   "homeEmptyLibraryBody": "기기 음악을 불러오거나 검색에서 받으면\n여기에 많이 들은 곡과 추천이 보여요.",
   "homeGoLibrary": "보관함으로",
+  "homeHistory": "재생 기록",
+  "homeMetricPlays": "재생 횟수",
+  "homeMetricTime": "재생 시간",
+  "homePickMonth": "달 고르기",
+  "homeMonthLabel": "{year}년 {month}월",
+  "@homeMonthLabel": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      },
+      "month": {
+        "type": "int"
+      }
+    }
+  },
+  "homeYearLabel": "{year}년",
+  "@homeYearLabel": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "homeMonthShort": "{month}월",
+  "@homeMonthShort": {
+    "placeholders": {
+      "month": {
+        "type": "int"
+      }
+    }
+  },
+  "homeAllDays": "들은 날",
+  "homeAllDaysValue": "{count}일",
+  "@homeAllDaysValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeAllTime": "총 재생 시간",
+  "homeAllPlays": "총 재생",
+  "homeAllTracks": "들은 곡",
+  "homeChartNone": "이 기간에는 들은 기록이 없어요.",
+  "homeTopAlbum": "많이 들은 앨범",
+  "homeTopTracksMore": "전체 보기",
+  "homeTopTracksTitle": "많이 들은 곡 TOP 100",
+  "homeRecArtist": "{artist} 믹스",
+  "@homeRecArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "homeRecGenre": "{genre} 모음",
+  "@homeRecGenre": {
+    "placeholders": {
+      "genre": {
+        "type": "String"
+      }
+    }
+  },
+  "homeRecUnheard": "아직 안 들어 본 곡",
+  "homeRecNewest": "새로 담은 곡",
   "playCount": "{count}회",
   "@playCount": {
     "placeholders": {

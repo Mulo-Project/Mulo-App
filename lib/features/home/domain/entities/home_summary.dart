@@ -54,6 +54,46 @@ class GenrePlays extends Equatable {
   List<Object?> get props => [genre, count];
 }
 
+class AlbumPlays extends Equatable {
+  const AlbumPlays(this.album, this.count);
+
+  final String album;
+  final int count;
+
+  @override
+  List<Object?> get props => [album, count];
+}
+
+/// 하루치 청취 (꺾은선 그래프의 점 하나).
+class DayListening extends Equatable {
+  const DayListening(this.day, this.plays, this.listened);
+
+  /// 그날 0시.
+  final DateTime day;
+  final int plays;
+  final Duration listened;
+
+  @override
+  List<Object?> get props => [day, plays, listened];
+}
+
+/// 추천 재생목록의 종류.
+enum RecommendedKind { artistMix, genreMix, unheard, newest }
+
+/// 추천 재생목록: 곡을 묶어 통째로 재생할 수 있다.
+class RecommendedPlaylist extends Equatable {
+  const RecommendedPlaylist(this.kind, this.tracks, {this.label = ''});
+
+  final RecommendedKind kind;
+  final List<Track> tracks;
+
+  /// 아티스트 · 장르 이름 (그 밖의 종류는 빈 문자열).
+  final String label;
+
+  @override
+  List<Object?> get props => [kind, label, tracks];
+}
+
 /// 청취 분석 (상세 기능: 청취 분석).
 class ListeningStats extends Equatable {
   const ListeningStats({
@@ -62,6 +102,8 @@ class ListeningStats extends Equatable {
     this.listened = Duration.zero,
     this.topArtists = const [],
     this.topGenres = const [],
+    this.topAlbums = const [],
+    this.daysListened = 0,
   });
 
   final int plays;
@@ -72,6 +114,12 @@ class ListeningStats extends Equatable {
   /// 장르를 아는 곡만 센다 (장르가 빈 곡은 제외).
   final List<GenrePlays> topGenres;
 
+  /// 앨범을 아는 곡만 센다.
+  final List<AlbumPlays> topAlbums;
+
+  /// 기간 안에 한 번이라도 들은 날 수.
+  final int daysListened;
+
   @override
   List<Object?> get props => [
     plays,
@@ -79,6 +127,8 @@ class ListeningStats extends Equatable {
     listened,
     topArtists,
     topGenres,
+    topAlbums,
+    daysListened,
   ];
 }
 
@@ -89,7 +139,8 @@ class HomeSummary extends Equatable {
     this.todayPlays = 0,
     this.topTracks = const [],
     this.stats = const ListeningStats(),
-    this.recommendations = const [],
+    this.daily = const [],
+    this.recommendedPlaylists = const [],
     this.recent = const [],
     this.libraryEmpty = true,
   });
@@ -101,12 +152,15 @@ class HomeSummary extends Equatable {
   /// 오늘 재생한 횟수.
   final int todayPlays;
 
-  /// 기간 안에서 많이 들은 곡 (많은 순).
+  /// 기간 안에서 많이 들은 곡 (많은 순, 최대 100곡).
   final List<TrackPlays> topTracks;
   final ListeningStats stats;
 
-  /// 추천 곡 (기기 재생 기록 기반).
-  final List<Track> recommendations;
+  /// 기간 안의 날짜별 청취 (이번 주 7일 · 고른 달의 날들). 전체 기간은 비어 있다.
+  final List<DayListening> daily;
+
+  /// 추천 재생목록 (기기 재생 기록 기반).
+  final List<RecommendedPlaylist> recommendedPlaylists;
 
   /// 최근에 들은 곡 (중복 없이, 최근 순).
   final List<Track> recent;
@@ -118,7 +172,8 @@ class HomeSummary extends Equatable {
     todayPlays,
     topTracks,
     stats,
-    recommendations,
+    daily,
+    recommendedPlaylists,
     recent,
     libraryEmpty,
   ];

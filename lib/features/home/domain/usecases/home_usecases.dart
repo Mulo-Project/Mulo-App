@@ -17,9 +17,12 @@ class RecordPlay implements UseCase<void, PlayRecord> {
 }
 
 class HomeSummaryParams {
-  const HomeSummaryParams(this.period, {this.now});
+  const HomeSummaryParams(this.period, {this.month, this.now});
 
   final HomePeriod period;
+
+  /// "이번 달" 기간에서 볼 달 (그 달의 아무 날). 없으면 지금이 속한 달.
+  final DateTime? month;
 
   /// 기준 시각 (테스트용). 없으면 지금.
   final DateTime Function()? now;
@@ -47,6 +50,7 @@ class WatchHomeSummary
           tracks: tracks!,
           plays: plays!,
           period: p.period,
+          month: p.month,
           now: (p.now ?? DateTime.now)(),
         ),
       );
@@ -78,15 +82,21 @@ class WatchHomeSummary
   }
 }
 
+DateTime _dayOf(DateTime t) => DateTime(t.year, t.month, t.day);
+
 /// 홈 요약 계산 (순수 함수).
+///
+/// 기간: 이번 주 = 오늘을 포함한 최근 7일, 이번 달 = [month]가 속한 달 전체, 전체 = 기록 전부.
 HomeSummary buildHomeSummary({
   required List<Track> tracks,
   required List<PlayRecord> plays,
   required HomePeriod period,
   required DateTime now,
-  int topCount = 5,
-  int recommendCount = 8,
+  DateTime? month,
+  int topCount = 100,
+  int rankCount = 5,
   int recentCount = 8,
+  int playlistSize = 30,
 }) {
   final byId = {for (final t in tracks) t.id: t};
   final known = [
@@ -94,14 +104,25 @@ HomeSummary buildHomeSummary({
       if (byId.containsKey(pl.trackId)) pl,
   ];
 
-  final since = switch (period) {
-    HomePeriod.week => now.subtract(const Duration(days: 7)),
-    HomePeriod.month => now.subtract(const Duration(days: 30)),
-    HomePeriod.all => null,
+  /// 들은 시간: 기록된 시간이 없으면 곡 길이로 어림한다.
+  Duration heard(PlayRecord pl) =>
+      pl.listened > Duration.zero ? pl.listened : byId[pl.trackId]!.duration;
+
+  final today = _dayOf(now);
+  final picked = month ?? now;
+  final monthStart = DateTime(picked.year, picked.month);
+  final monthEnd = DateTime(picked.year, picked.month + 1);
+
+  final (DateTime? from, DateTime? until) = switch (period) {
+    HomePeriod.week => (today.subtract(const Duration(days: 6)), null),
+    HomePeriod.month => (monthStart, monthEnd),
+    HomePeriod.all => (null, null),
   };
   final inPeriod = [
     for (final pl in known)
-      if (since == null || !pl.playedAt.isBefore(since)) pl,
+      if ((from == null || !pl.playedAt.isBefore(from)) &&
+          (until == null || pl.playedAt.isBefore(until)))
+        pl,
   ];
 
   // 많이 들은 곡
@@ -116,33 +137,62 @@ HomeSummary buildHomeSummary({
           return c != 0 ? c : a.track.title.compareTo(b.track.title);
         });
 
-  // 아티스트
-  final artistCounts = <String, int>{};
-  for (final pl in inPeriod) {
-    final artist = byId[pl.trackId]!.artist;
-    artistCounts[artist] = (artistCounts[artist] ?? 0) + 1;
+  // 아티스트 · 장르 · 앨범 순위 (장르 · 앨범은 모르는 곡을 뺀다)
+  List<MapEntry<String, int>> rank(
+    String Function(Track) key, {
+    bool skipEmpty = false,
+  }) {
+    final counts = <String, int>{};
+    for (final pl in inPeriod) {
+      final k = key(byId[pl.trackId]!);
+      if (skipEmpty && k.isEmpty) continue;
+      counts[k] = (counts[k] ?? 0) + 1;
+    }
+    return counts.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
   }
-  final topArtists = [
-    for (final e in artistCounts.entries) ArtistPlays(e.key, e.value),
-  ]..sort((a, b) => b.count.compareTo(a.count));
 
-  // 장르 (모르는 곡은 제외)
-  final genreCounts = <String, int>{};
-  for (final pl in inPeriod) {
-    final genre = byId[pl.trackId]!.genre;
-    if (genre.isNotEmpty) genreCounts[genre] = (genreCounts[genre] ?? 0) + 1;
-  }
-  final topGenres = [
-    for (final e in genreCounts.entries) GenrePlays(e.key, e.value),
-  ]..sort((a, b) => b.count.compareTo(a.count));
-
+  final topArtists = rank((t) => t.artist);
   final stats = ListeningStats(
     plays: inPeriod.length,
     uniqueTracks: trackCounts.length,
-    listened: inPeriod.fold(Duration.zero, (sum, pl) => sum + pl.listened),
-    topArtists: topArtists.take(3).toList(),
-    topGenres: topGenres.take(3).toList(),
+    listened: inPeriod.fold(Duration.zero, (sum, pl) => sum + heard(pl)),
+    topArtists: [
+      for (final e in topArtists.take(rankCount)) ArtistPlays(e.key, e.value),
+    ],
+    topGenres: [
+      for (final e in rank((t) => t.genre, skipEmpty: true).take(rankCount))
+        GenrePlays(e.key, e.value),
+    ],
+    topAlbums: [
+      for (final e in rank((t) => t.album, skipEmpty: true).take(rankCount))
+        AlbumPlays(e.key, e.value),
+    ],
+    daysListened: {for (final pl in inPeriod) _dayOf(pl.playedAt)}.length,
   );
+
+  // 날짜별 (꺾은선 그래프). 이번 달은 오늘까지만 그린다.
+  final daily = <DayListening>[];
+  if (from != null) {
+    final last = period == HomePeriod.week
+        ? today
+        : (monthEnd.isAfter(today)
+              ? today
+              : monthEnd.subtract(const Duration(days: 1)));
+    final dayPlays = <DateTime, int>{};
+    final dayTime = <DateTime, Duration>{};
+    for (final pl in inPeriod) {
+      final d = _dayOf(pl.playedAt);
+      dayPlays[d] = (dayPlays[d] ?? 0) + 1;
+      dayTime[d] = (dayTime[d] ?? Duration.zero) + heard(pl);
+    }
+    for (
+      var d = from;
+      !d.isAfter(last);
+      d = DateTime(d.year, d.month, d.day + 1)
+    ) {
+      daily.add(DayListening(d, dayPlays[d] ?? 0, dayTime[d] ?? Duration.zero));
+    }
+  }
 
   // 최근 재생 (중복 없이)
   final recent = <Track>[];
@@ -152,50 +202,83 @@ HomeSummary buildHomeSummary({
     if (recent.length == recentCount) break;
   }
 
-  // 추천: 많이 들은 아티스트의 아직 덜 들은 곡 → 부족하면 최근 추가된 안 들어본 곡.
+  // 추천 재생목록: 많이 들은 아티스트 · 장르의 덜 들은 곡 묶음, 안 들어본 곡, 새로 담은 곡.
   final allCounts = <String, int>{};
+  final artistCounts = <String, int>{};
+  final genreCounts = <String, int>{};
   for (final pl in known) {
-    allCounts[pl.trackId] = (allCounts[pl.trackId] ?? 0) + 1;
+    final t = byId[pl.trackId]!;
+    allCounts[t.id] = (allCounts[t.id] ?? 0) + 1;
+    if (t.artist.isNotEmpty) {
+      artistCounts[t.artist] = (artistCounts[t.artist] ?? 0) + 1;
+    }
+    if (t.genre.isNotEmpty) {
+      genreCounts[t.genre] = (genreCounts[t.genre] ?? 0) + 1;
+    }
   }
-  final favoriteArtists = [
-    for (final a in topArtists)
-      if (a.artist.isNotEmpty) a.artist,
-  ];
-  int artistRank(Track t) {
-    final i = favoriteArtists.indexOf(t.artist);
-    return i < 0 ? favoriteArtists.length : i;
-  }
+  List<String> mostPlayed(Map<String, int> counts) =>
+      (counts.entries.toList()..sort((a, b) => b.value.compareTo(a.value)))
+          .map((e) => e.key)
+          .toList();
 
-  final candidates =
-      [
-        for (final t in tracks)
-          if ((allCounts[t.id] ?? 0) < 2) t,
-      ]..sort((a, b) {
-        final r = artistRank(a).compareTo(artistRank(b));
-        if (r != 0) return r;
+  List<Track> leastHeardFirst(Iterable<Track> list) {
+    final sorted = [...list]
+      ..sort((a, b) {
         final c = (allCounts[a.id] ?? 0).compareTo(allCounts[b.id] ?? 0);
         return c != 0 ? c : b.addedAt.compareTo(a.addedAt);
       });
+    return sorted.take(playlistSize).toList();
+  }
 
-  // 오늘 들은 시간: 기록된 시간이 없으면 곡 길이로 어림한다.
-  final midnight = DateTime(now.year, now.month, now.day);
-  final today = [
+  final newestFirst = [...tracks]
+    ..sort((a, b) => b.addedAt.compareTo(a.addedAt));
+
+  final playlists = <RecommendedPlaylist>[];
+  for (final artist in mostPlayed(artistCounts).take(2)) {
+    final list = leastHeardFirst(tracks.where((t) => t.artist == artist));
+    if (list.length >= 2) {
+      playlists.add(
+        RecommendedPlaylist(RecommendedKind.artistMix, list, label: artist),
+      );
+    }
+  }
+  for (final genre in mostPlayed(genreCounts).take(1)) {
+    final list = leastHeardFirst(tracks.where((t) => t.genre == genre));
+    if (list.length >= 2) {
+      playlists.add(
+        RecommendedPlaylist(RecommendedKind.genreMix, list, label: genre),
+      );
+    }
+  }
+  final unheard = [
+    for (final t in newestFirst)
+      if (!allCounts.containsKey(t.id)) t,
+  ].take(playlistSize).toList();
+  if (unheard.isNotEmpty) {
+    playlists.add(RecommendedPlaylist(RecommendedKind.unheard, unheard));
+  }
+  if (newestFirst.isNotEmpty) {
+    playlists.add(
+      RecommendedPlaylist(
+        RecommendedKind.newest,
+        newestFirst.take(playlistSize).toList(),
+      ),
+    );
+  }
+
+  // 오늘 들은 시간
+  final todayPlays = [
     for (final pl in known)
-      if (!pl.playedAt.isBefore(midnight) && !pl.playedAt.isAfter(now)) pl,
+      if (!pl.playedAt.isBefore(today) && !pl.playedAt.isAfter(now)) pl,
   ];
-  final todayListened = today.fold(Duration.zero, (sum, pl) {
-    final heard = pl.listened > Duration.zero
-        ? pl.listened
-        : byId[pl.trackId]!.duration;
-    return sum + heard;
-  });
 
   return HomeSummary(
-    todayListened: todayListened,
-    todayPlays: today.length,
+    todayListened: todayPlays.fold(Duration.zero, (sum, pl) => sum + heard(pl)),
+    todayPlays: todayPlays.length,
     topTracks: topTracks.take(topCount).toList(),
     stats: stats,
-    recommendations: candidates.take(recommendCount).toList(),
+    daily: daily,
+    recommendedPlaylists: playlists,
     recent: recent,
     libraryEmpty: tracks.isEmpty,
   );

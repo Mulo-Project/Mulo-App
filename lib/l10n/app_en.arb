@@ -173,13 +173,78 @@
   "homeStatTracks": "songs",
   "homeTopArtist": "Top artist",
   "homeTopTracks": "Most played",
-  "homeRecommendations": "For you",
+  "homeRecommendations": "Recommended playlists",
   "homeRecent": "Recently played",
   "homeNoPlays": "No plays yet. Play something from your library.",
   "homeNoRecommendations": "Add more songs to get recommendations.",
   "homeEmptyLibraryTitle": "Your library is empty",
   "homeEmptyLibraryBody": "Import or download music to see\nyour top songs and recommendations here.",
   "homeGoLibrary": "Go to library",
+  "homeHistory": "Play history",
+  "homeMetricPlays": "Plays",
+  "homeMetricTime": "Time",
+  "homePickMonth": "Pick a month",
+  "homeMonthLabel": "{month}/{year}",
+  "@homeMonthLabel": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      },
+      "month": {
+        "type": "int"
+      }
+    }
+  },
+  "homeYearLabel": "{year}",
+  "@homeYearLabel": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "homeMonthShort": "{month}",
+  "@homeMonthShort": {
+    "placeholders": {
+      "month": {
+        "type": "int"
+      }
+    }
+  },
+  "homeAllDays": "Days listened",
+  "homeAllDaysValue": "{count} days",
+  "@homeAllDaysValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeAllTime": "Total listening time",
+  "homeAllPlays": "Total plays",
+  "homeAllTracks": "Songs played",
+  "homeChartNone": "Nothing played in this period.",
+  "homeTopAlbum": "Top album",
+  "homeTopTracksMore": "See all",
+  "homeTopTracksTitle": "Most played TOP 100",
+  "homeRecArtist": "{artist} mix",
+  "@homeRecArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "homeRecGenre": "{genre} picks",
+  "@homeRecGenre": {
+    "placeholders": {
+      "genre": {
+        "type": "String"
+      }
+    }
+  },
+  "homeRecUnheard": "Not heard yet",
+  "homeRecNewest": "Recently added",
   "playCount": "{count} plays",
   "searchHintWeb": "Web audio search or URL",
   "searchSourceTooltip": "Search source",

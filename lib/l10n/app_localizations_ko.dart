@@ -538,7 +538,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get homeTopTracks => '많이 들은 곡';
 
   @override
-  String get homeRecommendations => '추천';
+  String get homeRecommendations => '추천 재생목록';
 
   @override
   String get homeRecent => '최근 재생';
@@ -558,6 +558,78 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get homeGoLibrary => '보관함으로';
+
+  @override
+  String get homeHistory => '재생 기록';
+
+  @override
+  String get homeMetricPlays => '재생 횟수';
+
+  @override
+  String get homeMetricTime => '재생 시간';
+
+  @override
+  String get homePickMonth => '달 고르기';
+
+  @override
+  String homeMonthLabel(int year, int month) {
+    return '$year년 $month월';
+  }
+
+  @override
+  String homeYearLabel(int year) {
+    return '$year년';
+  }
+
+  @override
+  String homeMonthShort(int month) {
+    return '$month월';
+  }
+
+  @override
+  String get homeAllDays => '들은 날';
+
+  @override
+  String homeAllDaysValue(int count) {
+    return '$count일';
+  }
+
+  @override
+  String get homeAllTime => '총 재생 시간';
+
+  @override
+  String get homeAllPlays => '총 재생';
+
+  @override
+  String get homeAllTracks => '들은 곡';
+
+  @override
+  String get homeChartNone => '이 기간에는 들은 기록이 없어요.';
+
+  @override
+  String get homeTopAlbum => '많이 들은 앨범';
+
+  @override
+  String get homeTopTracksMore => '전체 보기';
+
+  @override
+  String get homeTopTracksTitle => '많이 들은 곡 TOP 100';
+
+  @override
+  String homeRecArtist(String artist) {
+    return '$artist 믹스';
+  }
+
+  @override
+  String homeRecGenre(String genre) {
+    return '$genre 모음';
+  }
+
+  @override
+  String get homeRecUnheard => '아직 안 들어 본 곡';
+
+  @override
+  String get homeRecNewest => '새로 담은 곡';
 
   @override
   String playCount(int count) {

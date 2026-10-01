@@ -11,6 +11,14 @@ import '../../../library/presentation/widgets/track_menu.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/home_summary.dart';
 import '../bloc/home_bloc.dart';
+import '../widgets/home_format.dart';
+import '../widgets/play_history_section.dart';
+import '../widgets/rank_tile.dart';
+import '../widgets/ranking_pages.dart';
+import 'top_tracks_screen.dart';
+
+/// 홈의 많이 들은 곡 미리보기 곡 수 (전체는 상세 화면에서 최대 100곡).
+const _topPreview = 10;
 
 /// 홈 (상세 기능: 많이 들은 곡 순위 · 청취 분석 · 추천 목록 · 최근 재생).
 class HomeScreen extends StatelessWidget {
@@ -37,6 +45,7 @@ class _HomeView extends StatelessWidget {
     final state = context.watch<HomeBloc>().state;
     final s = state.summary;
     final player = context.read<NowPlayingCubit>();
+    final preview = s.topTracks.take(_topPreview).toList();
 
     final body = <Widget>[
       if (state.loaded && s.libraryEmpty)
@@ -50,78 +59,126 @@ class _HomeView extends StatelessWidget {
           ),
         )
       else ...[
-        Padding(
-          padding: AppSpacing.screen,
-          child: _TodaySummary(listened: s.todayListened, plays: s.todayPlays),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Padding(
-          padding: AppSpacing.screen,
-          child: SegmentedPills<HomePeriod>(
-            expand: true,
-            values: HomePeriod.values,
-            selected: state.period,
-            labelOf: (p) => switch (p) {
-              HomePeriod.week => l10n.homePeriodWeek,
-              HomePeriod.month => l10n.homePeriodMonth,
-              HomePeriod.all => l10n.homePeriodAll,
-            },
-            onChanged: (p) =>
-                context.read<HomeBloc>().add(HomePeriodChanged(p)),
+        // 1. 최근 들은 곡: 오늘 들은 시간 (펼치면 최근 재생한 곡)
+        SectionPanel(
+          icon: Icons.history_rounded,
+          title: l10n.homeRecent,
+          child: ExpandSection(
+            header: _TodaySummary(
+              listened: s.todayListened,
+              plays: s.todayPlays,
+            ),
+            child: _RecentTracks(tracks: s.recent, player: player),
           ),
         ),
         const SizedBox(height: AppSpacing.md),
-        Padding(
-          padding: AppSpacing.screen,
-          child: _StatsSummary(stats: s.stats),
-        ),
-        const SizedBox(height: AppSpacing.xl),
-        _SectionTitle(l10n.homeTopTracks),
-        if (s.topTracks.isEmpty)
-          _Muted(l10n.homeNoPlays)
-        else
-          for (var i = 0; i < s.topTracks.length; i++)
-            _RankTile(
-              rank: i + 1,
-              item: s.topTracks[i],
-              onTap: () => player.playQueue([
-                for (final t in s.topTracks) t.track,
-              ], index: i),
-            ),
-        const SizedBox(height: AppSpacing.xl),
-        _SectionTitle(l10n.homeRecommendations),
-        if (s.recommendations.isEmpty)
-          _Muted(l10n.homeNoRecommendations)
-        else
-          SizedBox(
-            height: 196,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: AppSpacing.screen,
-              itemCount: s.recommendations.length,
-              separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
-              itemBuilder: (context, i) => _RecommendCard(
-                track: s.recommendations[i],
-                onTap: () => player.playQueue(s.recommendations, index: i),
+        // 2. 날짜별 청취 데이터: 기간 · 그래프 · 장르/아티스트/앨범 순위
+        SectionPanel(
+          icon: Icons.show_chart_rounded,
+          title: l10n.homeHistory,
+          tone: GlowTone.secondary,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: AppSpacing.screen,
+                child: SegmentedPills<HomePeriod>(
+                  expand: true,
+                  values: HomePeriod.values,
+                  selected: state.period,
+                  labelOf: (p) => switch (p) {
+                    HomePeriod.week => l10n.homePeriodWeek,
+                    HomePeriod.month => l10n.homePeriodMonth,
+                    HomePeriod.all => l10n.homePeriodAll,
+                  },
+                  onChanged: (p) =>
+                      context.read<HomeBloc>().add(HomePeriodChanged(p)),
+                ),
               ),
-            ),
+              const SizedBox(height: AppSpacing.md),
+              Padding(
+                padding: AppSpacing.screen,
+                child: PlayHistorySection(state: state),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              RankingPages(stats: s.stats),
+            ],
           ),
-        const SizedBox(height: AppSpacing.xl),
-        _SectionTitle(l10n.homeRecent),
-        if (s.recent.isEmpty)
-          _Muted(l10n.homeNoPlays)
-        else
-          for (var i = 0; i < s.recent.length; i++)
-            TrackTile(
-              title: s.recent[i].title,
-              subtitle: _artist(l10n, s.recent[i]),
-              tone: toneFor(s.recent[i].id),
-              artwork: coverImageOf(context, CoverKey.track(s.recent[i].id)),
-              trailing: TrackMoreButton(track: s.recent[i]),
-              onTap: () => player.playQueue(s.recent, index: i),
-              onMenu: (pos) =>
-                  showTrackMenu(context, s.recent[i], globalPosition: pos),
-            ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        // 3. 많이 들은 곡: 펼치면 TOP 10, 더 보면 TOP 100 상세
+        SectionPanel(
+          icon: Icons.leaderboard_rounded,
+          title: l10n.homeTopTracks,
+          tone: GlowTone.tertiary,
+          collapsible: true,
+          child: s.topTracks.isEmpty
+              ? _Muted(l10n.homeNoPlays)
+              : Column(
+                  children: [
+                    for (var i = 0; i < preview.length; i++)
+                      RankTile(
+                        rank: i + 1,
+                        item: preview[i],
+                        onTap: () => player.playQueue([
+                          for (final t in s.topTracks) t.track,
+                        ], index: i),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.md,
+                        AppSpacing.xs,
+                        AppSpacing.md,
+                        0,
+                      ),
+                      child: Row(
+                        children: [
+                          PillButton(
+                            compact: true,
+                            icon: Icons.play_arrow_rounded,
+                            label: l10n.actionPlayAll,
+                            onPressed: () => player.playQueue([
+                              for (final t in s.topTracks) t.track,
+                            ]),
+                          ),
+                          const SizedBox(width: AppSpacing.xs),
+                          PillButton(
+                            compact: true,
+                            variant: PillVariant.tonal,
+                            label: l10n.homeTopTracksMore,
+                            onPressed: () => context.push(
+                              topTracksLocation(state.period, state.month),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        // 4. 추천 재생목록: 옆으로 넘기며 고르면 통째로 재생
+        SectionPanel(
+          icon: Icons.auto_awesome_rounded,
+          title: l10n.homeRecommendations,
+          child: s.recommendedPlaylists.isEmpty
+              ? _Muted(l10n.homeNoRecommendations)
+              : SizedBox(
+                  height: 196,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    padding: AppSpacing.screen,
+                    itemCount: s.recommendedPlaylists.length,
+                    separatorBuilder: (_, _) =>
+                        const SizedBox(width: AppSpacing.sm),
+                    itemBuilder: (context, i) => _RecommendCard(
+                      playlist: s.recommendedPlaylists[i],
+                      onTap: () =>
+                          player.playQueue(s.recommendedPlaylists[i].tracks),
+                    ),
+                  ),
+                ),
+        ),
       ],
     ];
 
@@ -158,10 +215,6 @@ class _TodaySummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
-    final minutes = listened.inMinutes;
-    final value = minutes >= 60
-        ? l10n.homeTodayHoursMinutes(minutes ~/ 60, minutes % 60)
-        : l10n.homeTodayMinutes(minutes);
 
     return Row(
       children: [
@@ -171,7 +224,7 @@ class _TodaySummary extends StatelessWidget {
             children: [
               Text(l10n.homeToday, style: text.bodySmall),
               const SizedBox(height: AppSpacing.xxs),
-              StatNumber(value, size: 36),
+              StatNumber(formatListened(l10n, listened), size: 36),
               const SizedBox(height: AppSpacing.xxs),
               Text(
                 plays == 0 ? l10n.homeTodayNone : l10n.homeTodayPlays(plays),
@@ -181,131 +234,65 @@ class _TodaySummary extends StatelessWidget {
           ),
         ),
         Icon(Icons.headphones_rounded, size: 36, color: context.palette.accent),
+        const SizedBox(width: AppSpacing.xs),
       ],
     );
   }
 }
 
-class _StatsSummary extends StatelessWidget {
-  const _StatsSummary({required this.stats});
+/// 오늘 들은 시간을 펼치면 보이는, 최근 재생한 곡.
+class _RecentTracks extends StatelessWidget {
+  const _RecentTracks({required this.tracks, required this.player});
 
-  final ListeningStats stats;
+  final List<Track> tracks;
+  final NowPlayingCubit player;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
-    final topArtist = stats.topArtists.isEmpty
-        ? '–'
-        : (stats.topArtists.first.artist.isEmpty
-              ? l10n.unknownArtist
-              : stats.topArtists.first.artist);
-
-    final topGenre = stats.topGenres.isEmpty
-        ? '–'
-        : stats.topGenres.first.genre;
-
-    Widget stat(String value, String label) => Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          StatNumber(value, size: 40),
-          const SizedBox(height: AppSpacing.xxs),
-          Text(label, style: text.bodySmall),
-        ],
-      ),
-    );
-
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(l10n.homeStats, style: text.titleMedium),
-        const SizedBox(height: AppSpacing.md),
-        Row(
-          children: [
-            stat('${stats.plays}', l10n.homeStatPlays),
-            stat('${stats.uniqueTracks}', l10n.homeStatTracks),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Text(l10n.homeTopArtist, style: text.bodySmall),
-        const SizedBox(height: AppSpacing.xxs),
-        Text(
-          topArtist,
-          style: text.titleLarge,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Text(l10n.homeTopGenre, style: text.bodySmall),
-        const SizedBox(height: AppSpacing.xxs),
-        Text(
-          topGenre,
-          style: text.titleLarge,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
+        const SizedBox(height: AppSpacing.sm),
+        if (tracks.isEmpty)
+          _Muted(l10n.homeNoPlays)
+        else
+          for (var i = 0; i < tracks.length; i++)
+            TrackTile(
+              title: tracks[i].title,
+              subtitle: _artist(l10n, tracks[i]),
+              tone: toneFor(tracks[i].id),
+              artwork: coverImageOf(context, CoverKey.track(tracks[i].id)),
+              trailing: TrackMoreButton(track: tracks[i]),
+              onTap: () => player.playQueue(tracks, index: i),
+              onMenu: (pos) =>
+                  showTrackMenu(context, tracks[i], globalPosition: pos),
+            ),
       ],
     );
   }
 }
 
-class _RankTile extends StatelessWidget {
-  const _RankTile({required this.rank, required this.item, this.onTap});
+String _recommendTitle(AppLocalizations l10n, RecommendedPlaylist p) =>
+    switch (p.kind) {
+      RecommendedKind.artistMix => l10n.homeRecArtist(p.label),
+      RecommendedKind.genreMix => l10n.homeRecGenre(p.label),
+      RecommendedKind.unheard => l10n.homeRecUnheard,
+      RecommendedKind.newest => l10n.homeRecNewest,
+    };
 
-  final int rank;
-  final TrackPlays item;
+/// 추천 재생목록 카드: 누르면 묶음 전체를 대기열로 재생한다.
+class _RecommendCard extends StatelessWidget {
+  const _RecommendCard({required this.playlist, this.onTap});
+
+  final RecommendedPlaylist playlist;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final t = item.track;
-    return TrackTile(
-      title: t.title,
-      subtitle: _artist(l10n, t),
-      leading: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: 32,
-            child: StatNumber(
-              '$rank',
-              size: 22,
-              color: rank == 1 ? context.palette.accent : null,
-            ),
-          ),
-          ArtworkBox(
-            image: coverImageOf(context, CoverKey.track(t.id)),
-            tone: toneFor(t.id),
-          ),
-        ],
-      ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            l10n.playCount(item.count),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          TrackMoreButton(track: t),
-        ],
-      ),
-      onTap: onTap,
-      onMenu: (pos) => showTrackMenu(context, t, globalPosition: pos),
-    );
-  }
-}
-
-class _RecommendCard extends StatelessWidget {
-  const _RecommendCard({required this.track, this.onTap});
-
-  final Track track;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
+    final first = playlist.tracks.first;
     return SizedBox(
       width: 132,
       child: GestureDetector(
@@ -314,20 +301,20 @@ class _RecommendCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ArtworkBox(
-              image: coverImageOf(context, CoverKey.track(track.id)),
-              tone: toneFor(track.id),
+              image: coverImageOf(context, CoverKey.track(first.id)),
+              tone: toneFor(first.id),
               size: 132,
               radius: AppRadii.md,
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              track.title,
+              _recommendTitle(l10n, playlist),
               style: text.titleSmall,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
             Text(
-              _artist(context.l10n, track),
+              l10n.songCount(playlist.tracks.length),
               style: text.bodySmall,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -378,23 +365,6 @@ class _EmptyState extends StatelessWidget {
       ),
     );
   }
-}
-
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle(this.title);
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(
-      AppSpacing.md,
-      0,
-      AppSpacing.md,
-      AppSpacing.xs,
-    ),
-    child: Text(title, style: Theme.of(context).textTheme.titleMedium),
-  );
 }
 
 class _Muted extends StatelessWidget {

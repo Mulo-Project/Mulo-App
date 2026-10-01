@@ -548,7 +548,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeTopTracks => 'Most played';
 
   @override
-  String get homeRecommendations => 'For you';
+  String get homeRecommendations => 'Recommended playlists';
 
   @override
   String get homeRecent => 'Recently played';
@@ -568,6 +568,78 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeGoLibrary => 'Go to library';
+
+  @override
+  String get homeHistory => 'Play history';
+
+  @override
+  String get homeMetricPlays => 'Plays';
+
+  @override
+  String get homeMetricTime => 'Time';
+
+  @override
+  String get homePickMonth => 'Pick a month';
+
+  @override
+  String homeMonthLabel(int year, int month) {
+    return '$month/$year';
+  }
+
+  @override
+  String homeYearLabel(int year) {
+    return '$year';
+  }
+
+  @override
+  String homeMonthShort(int month) {
+    return '$month';
+  }
+
+  @override
+  String get homeAllDays => 'Days listened';
+
+  @override
+  String homeAllDaysValue(int count) {
+    return '$count days';
+  }
+
+  @override
+  String get homeAllTime => 'Total listening time';
+
+  @override
+  String get homeAllPlays => 'Total plays';
+
+  @override
+  String get homeAllTracks => 'Songs played';
+
+  @override
+  String get homeChartNone => 'Nothing played in this period.';
+
+  @override
+  String get homeTopAlbum => 'Top album';
+
+  @override
+  String get homeTopTracksMore => 'See all';
+
+  @override
+  String get homeTopTracksTitle => 'Most played TOP 100';
+
+  @override
+  String homeRecArtist(String artist) {
+    return '$artist mix';
+  }
+
+  @override
+  String homeRecGenre(String genre) {
+    return '$genre picks';
+  }
+
+  @override
+  String get homeRecUnheard => 'Not heard yet';
+
+  @override
+  String get homeRecNewest => 'Recently added';
 
   @override
   String playCount(int count) {

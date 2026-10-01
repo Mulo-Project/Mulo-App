@@ -12,7 +12,18 @@ sealed class HomeEvent {
 
 /// 홈을 열 때: 요약 구독 시작.
 class HomeStarted extends HomeEvent {
-  const HomeStarted();
+  const HomeStarted({this.period, this.month});
+
+  /// 처음 보여 줄 기간 · 달 (없으면 지금 상태 그대로).
+  final HomePeriod? period;
+  final DateTime? month;
+}
+
+/// "이번 달" 기간에서 볼 달 바꾸기 (그 달의 아무 날).
+class HomeMonthChanged extends HomeEvent {
+  const HomeMonthChanged(this.month);
+
+  final DateTime month;
 }
 
 /// 순위 · 분석 기간 바꾸기.
@@ -31,12 +42,16 @@ class _HomeSummaryUpdated extends HomeEvent {
 class HomeState extends Equatable {
   const HomeState({
     this.period = HomePeriod.week,
+    this.month,
     this.summary = const HomeSummary(),
     this.loaded = false,
     this.revision = 0,
   });
 
   final HomePeriod period;
+
+  /// 보고 있는 달의 1일. 없으면 지금이 속한 달.
+  final DateTime? month;
   final HomeSummary summary;
   final bool loaded;
 
@@ -46,24 +61,40 @@ class HomeState extends Equatable {
 
   HomeState copyWith({
     HomePeriod? period,
+    DateTime? month,
     HomeSummary? summary,
     bool? loaded,
     int? revision,
   }) => HomeState(
     period: period ?? this.period,
+    month: month ?? this.month,
     summary: summary ?? this.summary,
     loaded: loaded ?? this.loaded,
     revision: revision ?? this.revision,
   );
 
   @override
-  List<Object?> get props => [period, summary, loaded, revision];
+  List<Object?> get props => [period, month, summary, loaded, revision];
 }
 
 /// 홈 (많이 들은 곡 · 청취 분석 · 추천 · 최근 재생). 보관함 · 재생 기록 변경을 구독한다.
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
   HomeBloc(this._watch) : super(const HomeState()) {
-    on<HomeStarted>((_, _) => _subscribe());
+    on<HomeStarted>((e, emit) {
+      emit(
+        state.copyWith(
+          period: e.period,
+          month: e.month == null
+              ? null
+              : DateTime(e.month!.year, e.month!.month),
+        ),
+      );
+      _subscribe();
+    });
+    on<HomeMonthChanged>((e, emit) {
+      emit(state.copyWith(month: DateTime(e.month.year, e.month.month)));
+      _subscribe();
+    });
     on<HomePeriodChanged>((e, emit) {
       emit(state.copyWith(period: e.period));
       _subscribe();
@@ -84,7 +115,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
   void _subscribe() {
     _sub?.cancel();
-    _sub = _watch(HomeSummaryParams(state.period))
+    _sub = _watch(HomeSummaryParams(state.period, month: state.month))
         .listen((s) => add(_HomeSummaryUpdated(s)));
   }
 

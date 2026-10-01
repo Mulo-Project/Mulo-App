@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../core/design/design.dart';
 import '../features/home/presentation/screens/home_screen.dart';
+import '../features/home/presentation/screens/top_tracks_screen.dart';
 import '../features/library/presentation/screens/album_screen.dart';
 import '../features/library/presentation/screens/library_screen.dart';
 import '../features/player/presentation/screens/player_screen.dart';
@@ -87,7 +88,19 @@ GoRouter createRouter({String initialLocation = Routes.home}) => GoRouter(
             ),
           ],
         ),
-        _branch(Routes.home, const HomeScreen(libraryRoute: Routes.library)),
+        _branch(
+          Routes.home,
+          const HomeScreen(libraryRoute: Routes.library),
+          routes: [
+            GoRoute(
+              path: 'top-tracks',
+              pageBuilder: (context, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: topTracksScreenFrom(state.uri.queryParameters),
+              ),
+            ),
+          ],
+        ),
         StatefulShellBranch(
           routes: [
             GoRoute(

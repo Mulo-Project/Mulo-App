@@ -5,6 +5,7 @@ import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/design/design.dart';
 import 'package:music_download_play_app/core/sample/sample_data.dart';
 import 'package:music_download_play_app/features/library/domain/entities/import_result.dart';
+import 'package:music_download_play_app/features/home/presentation/screens/home_screen.dart';
 import 'package:music_download_play_app/features/settings/presentation/widgets/theme_preview.dart';
 
 import 'helpers/fakes.dart';
@@ -185,9 +186,20 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('nav-홈')));
     await tester.pumpAndSettle();
+    expect(find.text('최근 재생'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('많이 들은 곡'),
+      300,
+      scrollable: find
+          .descendant(
+            of: find.byType(HomeScreen),
+            matching: find.byType(Scrollable),
+          )
+          .first,
+    );
     expect(find.text('많이 들은 곡'), findsOneWidget);
     expect(find.text(first.title), findsWidgets);
-    expect(find.text('1회'), findsOneWidget);
+    expect(find.text('1회'), findsWidgets);
   });
 
   testWidgets('홈: 보관함이 비었으면 보관함으로 안내', (tester) async {

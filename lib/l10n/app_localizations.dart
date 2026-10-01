@@ -1103,7 +1103,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeRecommendations.
   ///
   /// In ko, this message translates to:
-  /// **'추천'**
+  /// **'추천 재생목록'**
   String get homeRecommendations;
 
   /// No description provided for @homeRecent.
@@ -1141,6 +1141,126 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'보관함으로'**
   String get homeGoLibrary;
+
+  /// No description provided for @homeHistory.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생 기록'**
+  String get homeHistory;
+
+  /// No description provided for @homeMetricPlays.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생 횟수'**
+  String get homeMetricPlays;
+
+  /// No description provided for @homeMetricTime.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생 시간'**
+  String get homeMetricTime;
+
+  /// No description provided for @homePickMonth.
+  ///
+  /// In ko, this message translates to:
+  /// **'달 고르기'**
+  String get homePickMonth;
+
+  /// No description provided for @homeMonthLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'{year}년 {month}월'**
+  String homeMonthLabel(int year, int month);
+
+  /// No description provided for @homeYearLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'{year}년'**
+  String homeYearLabel(int year);
+
+  /// No description provided for @homeMonthShort.
+  ///
+  /// In ko, this message translates to:
+  /// **'{month}월'**
+  String homeMonthShort(int month);
+
+  /// No description provided for @homeAllDays.
+  ///
+  /// In ko, this message translates to:
+  /// **'들은 날'**
+  String get homeAllDays;
+
+  /// No description provided for @homeAllDaysValue.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}일'**
+  String homeAllDaysValue(int count);
+
+  /// No description provided for @homeAllTime.
+  ///
+  /// In ko, this message translates to:
+  /// **'총 재생 시간'**
+  String get homeAllTime;
+
+  /// No description provided for @homeAllPlays.
+  ///
+  /// In ko, this message translates to:
+  /// **'총 재생'**
+  String get homeAllPlays;
+
+  /// No description provided for @homeAllTracks.
+  ///
+  /// In ko, this message translates to:
+  /// **'들은 곡'**
+  String get homeAllTracks;
+
+  /// No description provided for @homeChartNone.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 기간에는 들은 기록이 없어요.'**
+  String get homeChartNone;
+
+  /// No description provided for @homeTopAlbum.
+  ///
+  /// In ko, this message translates to:
+  /// **'많이 들은 앨범'**
+  String get homeTopAlbum;
+
+  /// No description provided for @homeTopTracksMore.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체 보기'**
+  String get homeTopTracksMore;
+
+  /// No description provided for @homeTopTracksTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'많이 들은 곡 TOP 100'**
+  String get homeTopTracksTitle;
+
+  /// No description provided for @homeRecArtist.
+  ///
+  /// In ko, this message translates to:
+  /// **'{artist} 믹스'**
+  String homeRecArtist(String artist);
+
+  /// No description provided for @homeRecGenre.
+  ///
+  /// In ko, this message translates to:
+  /// **'{genre} 모음'**
+  String homeRecGenre(String genre);
+
+  /// No description provided for @homeRecUnheard.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 안 들어 본 곡'**
+  String get homeRecUnheard;
+
+  /// No description provided for @homeRecNewest.
+  ///
+  /// In ko, this message translates to:
+  /// **'새로 담은 곡'**
+  String get homeRecNewest;
 
   /// No description provided for @playCount.
   ///
