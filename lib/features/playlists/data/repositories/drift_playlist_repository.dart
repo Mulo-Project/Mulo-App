@@ -103,6 +103,7 @@ class DriftPlaylistRepository implements PlaylistRepository {
       id: best.id,
       title: best.title,
       artist: best.artist,
+      genre: best.genre,
     );
   }
 

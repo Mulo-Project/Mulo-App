@@ -6,6 +6,7 @@ class PlaylistTrackPreview extends Equatable {
     required this.id,
     required this.title,
     required this.artist,
+    this.genre = '',
   });
 
   final String id;
@@ -14,8 +15,11 @@ class PlaylistTrackPreview extends Equatable {
   /// 모르면 빈 문자열.
   final String artist;
 
+  /// 모르면 빈 문자열.
+  final String genre;
+
   @override
-  List<Object?> get props => [id, title, artist];
+  List<Object?> get props => [id, title, artist, genre];
 }
 
 /// 재생목록 하나 (상세 기능: 재생목록 관리 #20).

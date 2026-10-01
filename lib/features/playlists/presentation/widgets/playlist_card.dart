@@ -5,7 +5,11 @@ import '../../../../app/router.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
-import '../../domain/entities/playlist.dart';
+
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../player/presentation/bloc/now_playing_cubit.dart';
+import '../bloc/playlists_cubit.dart';
 import 'playlist_menu.dart';
 
 /// 화면에 보여 줄 이름. 좋아요 목록은 저장된 이름이 없어서 번역된 이름으로 바꾼다.
@@ -27,8 +31,7 @@ String playlistToneName(AppLocalizations l10n, GlowTone tone) => switch (tone) {
   GlowTone.tertiary => l10n.playlistColorTertiary,
 };
 
-/// 재생목록 카드. 유리가 아니라 사용자가 고른 이미지나 색으로 채운다.
-/// 아래쪽에 대표곡 하나가 크게 붙는다.
+/// 재생목록 카드: 얇은 테두리 안에 커버(이미지나 색) · 이름 · 곡 수 · 구분선 · 대표곡 타일 (접으면 한 줄, 펼치면 이미지가 앞에 붙는다).
 ///
 /// 기본(둘러보기)에서는 누르면 재생목록 상세로 가고, ⋮ · 길게 누르기 · 오른쪽 클릭은 팝업 메뉴를 연다.
 /// [selected]를 주면 담기 선택 모드: 메뉴 대신 체크 표시가 붙고 [onTap]으로 고른다.
@@ -40,8 +43,6 @@ class PlaylistCard extends StatelessWidget {
     this.already = false,
     this.onTap,
   });
-
-  static const aspectRatio = .6;
 
   final Playlist playlist;
 
@@ -65,78 +66,101 @@ class PlaylistCard extends StatelessWidget {
     return _PointerMenu(
       enabled: browsing,
       onMenu: (pos) => showPlaylistMenu(context, playlist, globalPosition: pos),
-      child: CoverCard(
-        image: image,
-        tone: playlistToneOf(playlist),
-        shade: image != null,
-        onTap: onTap ?? () => context.push(Routes.playlistDetail(playlist.id)),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
+      child: Material(
+        color: p.surface,
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.sm),
+          side: BorderSide(
+            color: selected == true ? p.accent : p.outline,
+            width: selected == true ? 2 : 1,
+          ),
+        ),
+        child: InkWell(
+          onTap:
+              onTap ?? () => context.push(Routes.playlistDetail(playlist.id)),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (playlist.isFavorites) ...[
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: Icon(
-                        Icons.favorite_rounded,
-                        size: 20,
-                        color: p.onGlow,
-                      ),
+              // 윗면: 재생목록 커버 (이미지나 색). 좋아요는 하트, 선택 모드는 체크.
+              AspectRatio(
+                aspectRatio: 1.5,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    CoverCard(
+                      radius: 0,
+                      image: image,
+                      tone: playlistToneOf(playlist),
+                      child: playlist.isFavorites && image == null
+                          ? Center(
+                              child: Icon(
+                                Icons.favorite_rounded,
+                                size: 40,
+                                color: p.onGlow.withValues(alpha: .9),
+                              ),
+                            )
+                          : null,
                     ),
-                    const SizedBox(width: AppSpacing.xxs),
+                    if (!browsing)
+                      Positioned(
+                        top: AppSpacing.xxs,
+                        right: AppSpacing.xxs,
+                        child: _SelectMark(selected: selected!),
+                      ),
                   ],
-                  Expanded(
-                    child: Text(
-                      playlistNameOf(l10n, playlist),
-                      // 사진 · 그라데이션 위라서 두 모드 모두 밝은 글자.
-                      style: text.titleMedium?.copyWith(color: p.onGlow),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  if (browsing)
-                    Builder(
-                      builder: (btn) => CircleIconButton(
-                        icon: Icons.more_vert_rounded,
-                        tooltip: l10n.playlistMenuTooltip,
-                        size: 34,
-                        onPressed: () => showPlaylistMenu(btn, playlist),
-                      ),
-                    )
-                  else
-                    _SelectMark(selected: selected!),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.xxs),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  StatNumber(
-                    '${playlist.trackCount}',
-                    size: 28,
-                    color: p.onGlow,
-                  ),
-                  const SizedBox(width: AppSpacing.xxs),
-                  Text(
-                    l10n.unitSongs,
-                    style: text.bodySmall?.copyWith(color: p.onGlow),
-                  ),
-                ],
-              ),
-              if (already) ...[
-                const SizedBox(height: AppSpacing.xxs),
-                Text(
-                  l10n.playlistPickAlready,
-                  style: text.labelSmall?.copyWith(color: p.onGlow),
                 ),
-              ],
-              const Spacer(),
-              _Featured(playlist: playlist),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.sm,
+                  AppSpacing.xs,
+                  AppSpacing.xxs,
+                  0,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        playlistNameOf(l10n, playlist),
+                        style: text.titleSmall,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (browsing)
+                      Builder(
+                        builder: (btn) => SizedBox.square(
+                          dimension: 28,
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            iconSize: 20,
+                            tooltip: l10n.playlistMenuTooltip,
+                            onPressed: () => showPlaylistMenu(btn, playlist),
+                            icon: Icon(
+                              Icons.more_vert_rounded,
+                              color: p.onSurfaceMuted,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                child: Text(
+                  already
+                      ? l10n.playlistPickAlready
+                      : l10n.songCount(playlist.trackCount),
+                  style: text.bodySmall,
+                  maxLines: 1,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Divider(height: 1, thickness: 1, color: p.outline),
+              // 대표곡: 남는 높이를 차지하는 칸. 커버 · 제목 · 가수를 또렷하게.
+              _Featured(playlist: playlist, expandable: browsing),
             ],
           ),
         ),
@@ -200,63 +224,167 @@ class _SelectMark extends StatelessWidget {
   }
 }
 
-/// 카드 아래 대표곡: 커버 · 제목 · 아티스트를 크게. 곡이 없으면 안내 문구.
-class _Featured extends StatelessWidget {
-  const _Featured({required this.playlist});
+/// 앱을 켜 둔 동안 펼쳐 둔 카드 (재생목록 id). 화면을 오가도 펼친 채로 둔다.
+final _expandedIds = <String>{};
+
+/// 카드 아래 대표곡 타일. 접으면 이름 · 가수 한 줄, 누르면 아래에 한 줄이 더 생겨
+/// 작은 커버 이미지 · 장르 · 재생 버튼이 나온다. 재생 버튼을 누르면
+/// 그 곡을 (이 재생목록 대기열로) 바로 재생해 미리 들어 볼 수 있다.
+class _Featured extends StatefulWidget {
+  const _Featured({required this.playlist, required this.expandable});
 
   final Playlist playlist;
+
+  /// 담기 선택 모드에서는 펼치지 않는다.
+  final bool expandable;
+
+  @override
+  State<_Featured> createState() => _FeaturedState();
+}
+
+class _FeaturedState extends State<_Featured> {
+  late bool _expanded =
+      widget.expandable && _expandedIds.contains(widget.playlist.id);
+
+  void _toggle() => setState(() {
+    _expanded = !_expanded;
+    _expanded
+        ? _expandedIds.add(widget.playlist.id)
+        : _expandedIds.remove(widget.playlist.id);
+  });
+
+  Future<void> _preview(PlaylistTrackPreview t) async {
+    final player = context.read<NowPlayingCubit>();
+    final tracks = await context.read<PlaylistsCubit>().tracksOf(
+      widget.playlist.id,
+    );
+    final i = tracks.indexWhere((e) => e.id == t.id);
+    if (i >= 0) player.playQueue(tracks, index: i);
+  }
 
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     final p = context.palette;
-    final track = playlist.featured;
+    final l10n = context.l10n;
+    final t = widget.playlist.featured;
+    // 접은 줄 높이를 항상 확보해서 카드 높이가 들쭉날쭉하지 않게 한다.
+    const rowHeight = 56.0;
+    if (t == null) return const SizedBox(height: rowHeight);
+    final open = _expanded && widget.expandable;
 
-    if (track == null) {
-      // 곡은 있는데 대표곡을 못 구하면(보관함에서 지워진 곡뿐) 자리를 비워 둔다.
-      if (playlist.trackCount > 0) return const SizedBox.shrink();
-      return Text(
-        context.l10n.playlistSummaryEmpty,
-        style: text.bodySmall?.copyWith(color: p.onGlow.withValues(alpha: .8)),
-      );
-    }
-    return DecoratedBox(
-      decoration: ShapeDecoration(
-        color: p.scrim.withValues(alpha: .32),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadii.md),
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xs),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ArtworkBox(
-              image: coverImageOf(context, CoverKey.track(track.id)),
-              size: 72,
-              width: double.infinity,
-              radius: AppRadii.sm,
-              tone: toneFor(track.id),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              track.title,
-              style: text.titleSmall?.copyWith(color: p.onGlow),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            if (track.artist.isNotEmpty)
-              Text(
-                track.artist,
-                style: text.labelSmall?.copyWith(
-                  color: p.onGlow.withValues(alpha: .85),
+    return AnimatedSize(
+      duration: AppMotion.medium,
+      curve: AppMotion.standard,
+      alignment: Alignment.topCenter,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 위 줄은 항상 그대로: 제목 · 가수.
+          InkWell(
+            onTap: widget.expandable ? _toggle : null,
+            child: SizedBox(
+              height: rowHeight,
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  left: AppSpacing.sm,
+                  right: AppSpacing.xxs,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            t.title,
+                            style: text.titleSmall,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (t.artist.isNotEmpty)
+                            Text(
+                              t.artist,
+                              style: text.bodySmall?.copyWith(
+                                color: p.onSurfaceMuted,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                        ],
+                      ),
+                    ),
+                    // 위 줄의 ⋮ 와 같은 칸(28)에 둬서 세로로 줄이 맞는다.
+                    if (widget.expandable)
+                      SizedBox.square(
+                        dimension: 28,
+                        child: Icon(
+                          open
+                              ? Icons.expand_less_rounded
+                              : Icons.expand_more_rounded,
+                          size: 20,
+                          color: p.onSurfaceMuted,
+                        ),
+                      ),
+                  ],
+                ),
               ),
-          ],
-        ),
+            ),
+          ),
+          // 펼치면 아래에 한 줄이 더 생긴다: 작은 이미지 · 장르 · 재생 버튼.
+          if (open)
+            Padding(
+              padding: const EdgeInsets.only(
+                left: AppSpacing.sm,
+                right: AppSpacing.xxs,
+                bottom: AppSpacing.xs,
+              ),
+              child: Row(
+                children: [
+                  ArtworkBox(
+                    image: coverImageOf(context, CoverKey.track(t.id)),
+                    size: 36,
+                    radius: 6,
+                    tone: toneFor(t.id),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Expanded(
+                    child: Text(
+                      t.genre.isEmpty ? l10n.unknownGenre : t.genre,
+                      style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  // 이 곡이 재생 중이면 일시정지 아이콘, 아니면 재생 아이콘.
+                  BlocBuilder<NowPlayingCubit, NowPlayingState>(
+                    buildWhen: (a, b) =>
+                        (a.track?.id == t.id) != (b.track?.id == t.id) ||
+                        a.isPlaying != b.isPlaying,
+                    builder: (context, s) {
+                      final current = s.track?.id == t.id;
+                      final playing = current && s.isPlaying;
+                      return IconButton(
+                        tooltip: playing
+                            ? l10n.actionPause
+                            : l10n.playlistFeaturedPreview,
+                        onPressed: current
+                            ? context.read<NowPlayingCubit>().togglePlay
+                            : () => _preview(t),
+                        icon: Icon(
+                          playing
+                              ? Icons.pause_circle_filled_rounded
+                              : Icons.play_circle_fill_rounded,
+                          color: p.accent,
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }
