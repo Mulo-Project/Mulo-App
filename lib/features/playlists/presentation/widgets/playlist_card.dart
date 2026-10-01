@@ -27,8 +27,7 @@ String playlistToneName(AppLocalizations l10n, GlowTone tone) => switch (tone) {
   GlowTone.tertiary => l10n.playlistColorTertiary,
 };
 
-/// 재생목록 카드. 유리가 아니라 사용자가 고른 이미지나 색으로 채운다.
-/// 아래쪽에 대표곡 하나가 크게 붙는다.
+/// 재생목록 카드: 정사각 커버(사용자가 고른 이미지나 색) 아래에 이름 · 곡 수 · 대표곡 한 줄.
 ///
 /// 기본(둘러보기)에서는 누르면 재생목록 상세로 가고, ⋮ · 길게 누르기 · 오른쪽 클릭은 팝업 메뉴를 연다.
 /// [selected]를 주면 담기 선택 모드: 메뉴 대신 체크 표시가 붙고 [onTap]으로 고른다.
@@ -40,8 +39,6 @@ class PlaylistCard extends StatelessWidget {
     this.already = false,
     this.onTap,
   });
-
-  static const aspectRatio = .8;
 
   final Playlist playlist;
 
@@ -61,94 +58,94 @@ class PlaylistCard extends StatelessWidget {
     final l10n = context.l10n;
     final image = coverImageOf(context, CoverKey.playlist(playlist.id));
     final browsing = selected == null;
+    final featured = playlist.featured;
+    final sub = already
+        ? l10n.playlistPickAlready
+        : (featured == null
+              ? ''
+              : (featured.artist.isEmpty
+                    ? featured.title
+                    : '${featured.title} · ${featured.artist}'));
 
     return _PointerMenu(
       enabled: browsing,
       onMenu: (pos) => showPlaylistMenu(context, playlist, globalPosition: pos),
-      child: CoverCard(
-        radius: AppRadii.sm,
-        image: image,
-        tone: playlistToneOf(playlist),
-        shade: image != null,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: onTap ?? () => context.push(Routes.playlistDetail(playlist.id)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.sm,
-                AppSpacing.xs,
-                0,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            // 커버: 글자 없이 이미지나 색만. 좋아요는 하트, 선택 모드는 체크.
+            AspectRatio(
+              aspectRatio: 1,
+              child: Stack(
+                fit: StackFit.expand,
                 children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (playlist.isFavorites) ...[
-                        Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Icon(
-                            Icons.favorite_rounded,
-                            size: 20,
-                            color: p.onGlow,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.xxs),
-                      ],
-                      Expanded(
-                        child: Text(
-                          playlistNameOf(l10n, playlist),
-                          // 사진 · 그라데이션 위라서 두 모드 모두 밝은 글자.
-                          style: text.titleMedium?.copyWith(color: p.onGlow),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (browsing)
-                        Builder(
-                          builder: (btn) => CircleIconButton(
-                            icon: Icons.more_vert_rounded,
-                            tooltip: l10n.playlistMenuTooltip,
-                            size: 34,
-                            onPressed: () => showPlaylistMenu(btn, playlist),
-                          ),
-                        )
-                      else
-                        _SelectMark(selected: selected!),
-                    ],
+                  CoverCard(
+                    radius: AppRadii.sm,
+                    image: image,
+                    tone: playlistToneOf(playlist),
+                    child: playlist.isFavorites && image == null
+                        ? Center(
+                            child: Icon(
+                              Icons.favorite_rounded,
+                              size: 44,
+                              color: p.onGlow.withValues(alpha: .9),
+                            ),
+                          )
+                        : null,
                   ),
-                  const SizedBox(height: AppSpacing.xxs),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.baseline,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      StatNumber(
-                        '${playlist.trackCount}',
-                        size: 28,
-                        color: p.onGlow,
-                      ),
-                      const SizedBox(width: AppSpacing.xxs),
-                      Text(
-                        l10n.unitSongs,
-                        style: text.bodySmall?.copyWith(color: p.onGlow),
-                      ),
-                    ],
-                  ),
-                  if (already) ...[
-                    const SizedBox(height: AppSpacing.xxs),
-                    Text(
-                      l10n.playlistPickAlready,
-                      style: text.labelSmall?.copyWith(color: p.onGlow),
+                  if (!browsing)
+                    Positioned(
+                      top: AppSpacing.xxs,
+                      right: AppSpacing.xxs,
+                      child: _SelectMark(selected: selected!),
                     ),
-                  ],
                 ],
               ),
             ),
-            const Spacer(),
-            _Featured(playlist: playlist),
+            const SizedBox(height: AppSpacing.xs),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    playlistNameOf(l10n, playlist),
+                    style: text.titleSmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (browsing)
+                  Builder(
+                    builder: (btn) => SizedBox.square(
+                      dimension: 28,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        iconSize: 20,
+                        tooltip: l10n.playlistMenuTooltip,
+                        onPressed: () => showPlaylistMenu(btn, playlist),
+                        icon: Icon(
+                          Icons.more_vert_rounded,
+                          color: p.onSurfaceMuted,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            Text(
+              l10n.songCount(playlist.trackCount),
+              style: text.bodySmall,
+              maxLines: 1,
+            ),
+            // 대표곡: 한 줄 (없으면 줄만 비워 둬서 카드 높이를 맞춘다).
+            Text(
+              sub.isEmpty ? ' ' : sub,
+              style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ],
         ),
       ),
@@ -206,77 +203,6 @@ class _SelectMark extends StatelessWidget {
             : Icons.radio_button_unchecked_rounded,
         size: 26,
         color: selected ? p.accent : p.onGlow,
-      ),
-    );
-  }
-}
-
-/// 카드 아래 대표곡: 커버 · 제목 · 아티스트를 크게. 곡이 없으면 안내 문구.
-class _Featured extends StatelessWidget {
-  const _Featured({required this.playlist});
-
-  final Playlist playlist;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    final p = context.palette;
-    final track = playlist.featured;
-
-    if (track == null) {
-      // 곡은 있는데 대표곡을 못 구하면(보관함에서 지워진 곡뿐) 자리를 비워 둔다.
-      if (playlist.trackCount > 0) return const SizedBox.shrink();
-      return Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Text(
-          context.l10n.playlistSummaryEmpty,
-          style: text.bodySmall?.copyWith(
-            color: p.onGlow.withValues(alpha: .8),
-          ),
-        ),
-      );
-    }
-    return ColoredBox(
-      color: p.scrim.withValues(alpha: .6),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.xs,
-        ),
-        child: Row(
-          children: [
-            ArtworkBox(
-              image: coverImageOf(context, CoverKey.track(track.id)),
-              size: 36,
-              radius: 6,
-              tone: toneFor(track.id),
-            ),
-            const SizedBox(width: AppSpacing.xs),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    track.title,
-                    style: text.labelLarge?.copyWith(color: p.onGlow),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (track.artist.isNotEmpty)
-                    Text(
-                      track.artist,
-                      style: text.labelSmall?.copyWith(
-                        color: p.onGlow.withValues(alpha: .8),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
