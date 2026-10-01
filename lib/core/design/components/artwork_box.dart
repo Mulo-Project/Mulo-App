@@ -15,6 +15,7 @@ class ArtworkBox extends StatelessWidget {
     super.key,
     this.image,
     this.size = 48,
+    this.width,
     this.radius = 12,
     this.tone = GlowTone.primary,
     this.icon = Icons.music_note_rounded,
@@ -22,6 +23,9 @@ class ArtworkBox extends StatelessWidget {
 
   final ImageProvider? image;
   final double size;
+
+  /// 가로가 다르면 (세로 [size]) 직사각형 커버. 없으면 정사각형.
+  final double? width;
   final double radius;
   final GlowTone tone;
   final IconData icon;
@@ -31,8 +35,9 @@ class ArtworkBox extends StatelessWidget {
     final glow = context.tokens.glow(tone);
     return ClipRRect(
       borderRadius: BorderRadius.circular(radius),
-      child: SizedBox.square(
-        dimension: size,
+      child: SizedBox(
+        width: width ?? size,
+        height: size,
         child: image != null
             ? Image(image: image!, fit: BoxFit.cover)
             : DecoratedBox(

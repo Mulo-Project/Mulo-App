@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/router.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
-import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/import_result.dart';
 import '../../domain/entities/library_sort.dart';
 import '../../domain/entities/track.dart';
 import '../bloc/library_cubit.dart';
 import '../bloc/library_import_cubit.dart';
-import '../widgets/track_menu.dart';
+import '../widgets/track_list_tile.dart';
 
 enum LibraryTab { songs, artists, albums, genres }
 
@@ -87,7 +88,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
               icon: Icons.album_rounded,
             ),
             trailing: const _Chevron(),
-            onTap: () => vm.playQueue(e.value),
+            onTap: () => context.push(Routes.album(e.value.first.album)),
           ),
       ],
       LibraryTab.genres when _genre != null => [
@@ -230,30 +231,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
       _songTile(context, songs[i], i, songs),
   ];
 
-  Widget _songTile(BuildContext context, Track t, int i, List<Track> queue) {
-    final l10n = context.l10n;
-    final vm = context.read<NowPlayingCubit>();
-    final current = context.select((NowPlayingCubit c) => c.state.track);
-    return TrackTile(
-      title: t.title,
-      subtitle: '${artistOf(l10n, t)} · ${albumOf(l10n, t)}',
-      tone: toneFor(t.id),
-      active: t == current,
-      artwork: coverImageOf(context, CoverKey.track(t.id)),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            formatDuration(t.duration),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          TrackMoreButton(track: t),
-        ],
-      ),
-      onTap: () => vm.playQueue(queue, index: i),
-      onMenu: (pos) => showTrackMenu(context, t, globalPosition: pos),
-    );
-  }
+  Widget _songTile(BuildContext context, Track t, int i, List<Track> queue) =>
+      TrackListTile(track: t, queue: queue, index: i);
 
   void _import() => context.read<LibraryImportCubit>().importDeviceMusic();
 
@@ -359,16 +338,6 @@ class _Chevron extends StatelessWidget {
   Widget build(BuildContext context) =>
       Icon(Icons.chevron_right_rounded, color: context.palette.onSurfaceMuted);
 }
-
-/// 모르는 아티스트 · 앨범은 안내 문구로.
-String artistOf(AppLocalizations l10n, Track t) =>
-    t.artist.isEmpty ? l10n.unknownArtist : t.artist;
-
-String albumOf(AppLocalizations l10n, Track t) =>
-    t.album.isEmpty ? l10n.unknownAlbum : t.album;
-
-String genreOf(AppLocalizations l10n, String genre) =>
-    genre.isEmpty ? l10n.unknownGenre : genre;
 
 /// 장르 안으로 들어갔을 때 맨 위: 뒤로 가기 + 장르 이름.
 class _GenreHeader extends StatelessWidget {

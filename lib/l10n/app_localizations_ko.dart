@@ -782,4 +782,90 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get lyricsEmptyHint => '곡 옆에 같은 이름의 .lrc 파일을 두거나, 직접 넣을 수 있어요.';
+
+  @override
+  String get playlistFavorites => '좋아요';
+
+  @override
+  String get playlistMenuTooltip => '재생목록 메뉴';
+
+  @override
+  String get playlistMenuPlayAll => '전체 재생';
+
+  @override
+  String get playlistMenuRename => '이름 바꾸기';
+
+  @override
+  String get playlistMenuDelete => '재생목록 삭제';
+
+  @override
+  String get playlistImagePick => '사진에서 고르기';
+
+  @override
+  String get playlistImageReset => '기본 이미지로';
+
+  @override
+  String get playlistPlayEmpty => '재생할 곡이 없어요';
+
+  @override
+  String get playlistRenameTitle => '이름 바꾸기';
+
+  @override
+  String get playlistRenameSave => '저장';
+
+  @override
+  String get playlistDeleteTitle => '재생목록을 지울까요?';
+
+  @override
+  String playlistDeleteBody(String name) {
+    return '‘$name’을(를) 지워요. 담긴 곡은 보관함에 그대로 남아요.';
+  }
+
+  @override
+  String get playlistDeleteConfirm => '지우기';
+
+  @override
+  String get playlistDeleted => '재생목록을 지웠어요';
+
+  @override
+  String get playlistNewImage => '이미지 고르기';
+
+  @override
+  String get playlistNewImageChange => '이미지 바꾸기';
+
+  @override
+  String get playlistPickTitle => '재생목록 선택';
+
+  @override
+  String get playlistPickHint => '담을 재생목록을 골라 주세요';
+
+  @override
+  String get playlistPickDone => '완료';
+
+  @override
+  String get playlistPickAlready => '이미 담겼어요';
+
+  @override
+  String get playlistDetailEmpty => '아직 담긴 곡이 없어요. 곡 메뉴의 ‘재생목록에 추가’로 담아 보세요.';
+
+  @override
+  String get playlistNotFound => '재생목록을 찾을 수 없어요';
+
+  @override
+  String get albumNotFound => '앨범을 찾을 수 없어요';
+
+  @override
+  String get playerQueueEmpty => '대기열이 비어 있어요';
+
+  @override
+  String get trackMenuFavorite => '좋아요';
+
+  @override
+  String get trackMenuUnfavorite => '좋아요 취소';
+
+  @override
+  String get trackFavoriteOn => '좋아요에 담았어요';
+
+  @override
+  String get trackFavoriteOff => '좋아요를 취소했어요';
 }

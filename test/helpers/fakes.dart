@@ -347,42 +347,106 @@ class MemoryDownloadQueue implements DownloadQueueRepository {
 
 /// 메모리 재생목록.
 class MemoryPlaylistRepository implements PlaylistRepository {
-  MemoryPlaylistRepository([List<Playlist> initial = const []])
-    : lists = [...initial];
+  MemoryPlaylistRepository([
+    List<Playlist> initial = const [],
+    List<Track> tracks = const [],
+  ]) : lists = [...initial],
+       _tracks = {for (final t in tracks) t.id: t};
 
   final List<Playlist> lists;
+  final Map<String, Track> _tracks;
 
-  /// 재생목록 id → 들어 있는 곡 id.
+  /// 재생목록 id → 들어 있는 곡 id (담은 순서).
   final members = <String, Set<String>>{};
 
   /// 재생목록 id → 고른 카드 색.
   final colors = <String, int?>{};
-  final _changes = StreamController<List<Playlist>>.broadcast();
+  final _changes = StreamController<void>.broadcast();
 
+  PlaylistTrackPreview? _featuredOf(String id, PlaylistTrackPreview? preset) {
+    if (preset != null) return preset;
+    for (final t in members[id] ?? const <String>{}) {
+      final track = _tracks[t];
+      if (track != null) {
+        return PlaylistTrackPreview(
+          id: track.id,
+          title: track.title,
+          artist: track.artist,
+        );
+      }
+    }
+    return null;
+  }
+
+  /// 좋아요 목록이 맨 앞 (실제 저장소와 같다).
   List<Playlist> get _now => [
+    Playlist(
+      id: Playlist.favoritesId,
+      name: '',
+      trackCount: members[Playlist.favoritesId]?.length ?? 0,
+      featured: _featuredOf(Playlist.favoritesId, null),
+      trackIds: {...?members[Playlist.favoritesId]},
+    ),
     for (final p in lists)
       Playlist(
         id: p.id,
         name: p.name,
         trackCount: members[p.id]?.length ?? p.trackCount,
         colorIndex: colors.containsKey(p.id) ? colors[p.id] : p.colorIndex,
-        topTracks: p.topTracks,
-        topArtists: p.topArtists,
+        featured: _featuredOf(p.id, p.featured),
+        trackIds: {...?members[p.id]},
       ),
   ];
 
   @override
   Stream<List<Playlist>> watchPlaylists() async* {
     yield _now;
-    yield* _changes.stream;
+    yield* _changes.stream.map((_) => _now);
+  }
+
+  List<Track> _tracksOf(String id) => [
+    for (final t in members[id] ?? const <String>{})
+      if (_tracks[t] != null) _tracks[t]!,
+  ];
+
+  @override
+  Stream<List<Track>> watchTracks(String playlistId) async* {
+    yield _tracksOf(playlistId);
+    yield* _changes.stream.map((_) => _tracksOf(playlistId));
   }
 
   @override
-  Future<Playlist> create(String name) async {
-    final made = Playlist(id: 'pl${lists.length + 1}', name: name);
+  Future<Playlist> create(String name, {int? colorIndex}) async {
+    final made = Playlist(
+      id: 'pl${lists.length + 1}',
+      name: name,
+      colorIndex: colorIndex,
+    );
     lists.add(made);
-    _changes.add(_now);
+    _changes.add(null);
     return made;
+  }
+
+  @override
+  Future<void> rename(String playlistId, String name) async {
+    final i = lists.indexWhere((p) => p.id == playlistId);
+    if (i < 0) return;
+    final p = lists[i];
+    lists[i] = Playlist(
+      id: p.id,
+      name: name,
+      trackCount: p.trackCount,
+      colorIndex: p.colorIndex,
+      featured: p.featured,
+    );
+    _changes.add(null);
+  }
+
+  @override
+  Future<void> delete(String playlistId) async {
+    lists.removeWhere((p) => p.id == playlistId);
+    members.remove(playlistId);
+    _changes.add(null);
   }
 
   @override
@@ -390,19 +454,25 @@ class MemoryPlaylistRepository implements PlaylistRepository {
     for (final id in playlistIds) {
       (members[id] ??= {}).add(trackId);
     }
-    _changes.add(_now);
+    _changes.add(null);
+  }
+
+  @override
+  Future<void> addTracks(Iterable<String> trackIds, String playlistId) async {
+    (members[playlistId] ??= {}).addAll(trackIds);
+    _changes.add(null);
   }
 
   @override
   Future<void> removeTrack(String trackId, String playlistId) async {
     members[playlistId]?.remove(trackId);
-    _changes.add(_now);
+    _changes.add(null);
   }
 
   @override
   Future<void> setColor(String playlistId, int? colorIndex) async {
     colors[playlistId] = colorIndex;
-    _changes.add(_now);
+    _changes.add(null);
   }
 }
 
@@ -476,7 +546,7 @@ Future<void> setUpTestDependencies({
       () => downloads ?? MemoryDownloadQueue(),
     )
     ..registerLazySingleton<PlaylistRepository>(
-      () => playlists ?? MemoryPlaylistRepository(),
+      () => playlists ?? MemoryPlaylistRepository(const [], tracks),
     );
   sl.allowReassignment = false;
 }

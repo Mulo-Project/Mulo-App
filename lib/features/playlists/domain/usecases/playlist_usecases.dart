@@ -1,4 +1,5 @@
 import '../../../../core/usecase/usecase.dart';
+import '../../../library/domain/entities/track.dart';
 import '../entities/playlist.dart';
 import '../repositories/playlist_repository.dart';
 
@@ -12,17 +13,70 @@ class WatchPlaylists implements StreamUseCase<List<Playlist>, NoParams> {
   Stream<List<Playlist>> call(NoParams params) => _repo.watchPlaylists();
 }
 
+/// 재생목록 하나에 담긴 곡 구독.
+class WatchPlaylistTracks implements StreamUseCase<List<Track>, String> {
+  const WatchPlaylistTracks(this._repo);
+
+  final PlaylistRepository _repo;
+
+  @override
+  Stream<List<Track>> call(String playlistId) => _repo.watchTracks(playlistId);
+}
+
+class CreatePlaylistParams {
+  const CreatePlaylistParams(this.name, {this.colorIndex});
+
+  final String name;
+  final int? colorIndex;
+}
+
 /// 재생목록 만들기. 이름은 앞뒤 공백을 지우고, 비어 있으면 만들지 않는다 (null).
-class CreatePlaylist implements UseCase<Playlist?, String> {
+class CreatePlaylist implements UseCase<Playlist?, CreatePlaylistParams> {
   const CreatePlaylist(this._repo);
 
   final PlaylistRepository _repo;
 
   @override
-  Future<Playlist?> call(String name) async {
-    final trimmed = name.trim();
+  Future<Playlist?> call(CreatePlaylistParams p) async {
+    final trimmed = p.name.trim();
     if (trimmed.isEmpty) return null;
-    return _repo.create(trimmed);
+    return _repo.create(trimmed, colorIndex: p.colorIndex);
+  }
+}
+
+class RenamePlaylistParams {
+  const RenamePlaylistParams(this.playlistId, this.name);
+
+  final String playlistId;
+  final String name;
+}
+
+/// 재생목록 이름 바꾸기. 비어 있거나 좋아요 목록이면 바꾸지 않고 false.
+class RenamePlaylist implements UseCase<bool, RenamePlaylistParams> {
+  const RenamePlaylist(this._repo);
+
+  final PlaylistRepository _repo;
+
+  @override
+  Future<bool> call(RenamePlaylistParams p) async {
+    final trimmed = p.name.trim();
+    if (trimmed.isEmpty || p.playlistId == Playlist.favoritesId) return false;
+    await _repo.rename(p.playlistId, trimmed);
+    return true;
+  }
+}
+
+/// 재생목록 지우기 (곡은 보관함에 남는다). 좋아요 목록이면 지우지 않고 false.
+class DeletePlaylist implements UseCase<bool, String> {
+  const DeletePlaylist(this._repo);
+
+  final PlaylistRepository _repo;
+
+  @override
+  Future<bool> call(String playlistId) async {
+    if (playlistId == Playlist.favoritesId) return false;
+    await _repo.delete(playlistId);
+    return true;
   }
 }
 
@@ -42,6 +96,24 @@ class AddTrackToPlaylists implements UseCase<void, AddTrackToPlaylistsParams> {
   @override
   Future<void> call(AddTrackToPlaylistsParams p) =>
       _repo.addTrack(p.trackId, p.playlistIds);
+}
+
+class AddTracksToPlaylistParams {
+  const AddTracksToPlaylistParams(this.trackIds, this.playlistId);
+
+  final Set<String> trackIds;
+  final String playlistId;
+}
+
+/// 곡들을 재생목록 하나에 넣기.
+class AddTracksToPlaylist implements UseCase<void, AddTracksToPlaylistParams> {
+  const AddTracksToPlaylist(this._repo);
+
+  final PlaylistRepository _repo;
+
+  @override
+  Future<void> call(AddTracksToPlaylistParams p) =>
+      _repo.addTracks(p.trackIds, p.playlistId);
 }
 
 class RemoveTrackFromPlaylistParams {

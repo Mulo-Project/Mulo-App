@@ -13,7 +13,15 @@ void registerCovers(GetIt sl) {
     ..registerFactory(() => LoadCovers(sl()))
     ..registerFactory(() => PickCoverFromDevice(sl(), sl()))
     ..registerFactory(() => ClearCover(sl()))
+    ..registerFactory(() => PickImageFile(sl()))
+    ..registerFactory(() => SaveCover(sl()))
     ..registerFactory(
-      () => CoverCubit(load: sl(), pickFromDevice: sl(), clear: sl()),
+      () => CoverCubit(
+        load: sl(),
+        pickFromDevice: sl(),
+        clear: sl(),
+        pickFile: sl(),
+        save: sl(),
+      ),
     );
 }

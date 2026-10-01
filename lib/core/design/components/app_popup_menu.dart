@@ -11,6 +11,8 @@ class AppMenuItem<T> {
     required this.label,
     this.destructive = false,
     this.dividerBefore = false,
+    this.iconColor,
+    this.selected = false,
   });
 
   final T value;
@@ -18,6 +20,12 @@ class AppMenuItem<T> {
   final String label;
   final bool destructive;
   final bool dividerBefore;
+
+  /// 아이콘 색 (색 고르기 같은 메뉴에서 견본으로 쓴다). 없으면 글자 색.
+  final Color? iconColor;
+
+  /// 지금 고른 항목이면 오른쪽에 체크 표시.
+  final bool selected;
 }
 
 /// 눌린 자리(또는 [anchor] 위젯 옆)에 뜨는 팝업 메뉴. 고른 값을 돌려주고, 밖을 누르면 null.
@@ -67,7 +75,8 @@ Future<T?> showAppMenu<T>(
               Icon(
                 item.icon,
                 size: 20,
-                color: item.destructive ? error : p.onSurface,
+                color:
+                    item.iconColor ?? (item.destructive ? error : p.onSurface),
               ),
               const SizedBox(width: AppSpacing.sm),
               Flexible(
@@ -78,6 +87,10 @@ Future<T?> showAppMenu<T>(
                   ),
                 ),
               ),
+              if (item.selected) ...[
+                const SizedBox(width: AppSpacing.sm),
+                Icon(Icons.check_rounded, size: 18, color: p.accent),
+              ],
             ],
           ),
         ),

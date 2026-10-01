@@ -3,8 +3,12 @@ import 'package:go_router/go_router.dart';
 
 import '../core/design/design.dart';
 import '../features/home/presentation/screens/home_screen.dart';
+import '../features/library/presentation/screens/album_screen.dart';
 import '../features/library/presentation/screens/library_screen.dart';
 import '../features/player/presentation/screens/player_screen.dart';
+import '../features/player/presentation/screens/queue_screen.dart';
+import '../features/playlists/presentation/screens/playlist_detail_screen.dart';
+import '../features/playlists/presentation/screens/playlist_pick_screen.dart';
 import '../features/playlists/presentation/screens/playlists_screen.dart';
 import '../features/search/presentation/screens/search_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
@@ -17,6 +21,17 @@ abstract final class Routes {
   static const search = '/search';
   static const settings = '/settings';
   static const player = '/player';
+  static const queue = '/queue';
+
+  /// 곡을 담을 재생목록 고르기 (곡 id는 `extra`로 넘긴다).
+  static const playlistPick = '/playlists/pick';
+
+  static String playlistDetail(String id) =>
+      '/playlists/${Uri.encodeComponent(id)}';
+
+  /// [album]은 곡에 저장된 앨범 이름 (빈 문자열이면 알 수 없는 앨범).
+  static String album(String album) =>
+      Uri(path: '/library/album', queryParameters: {'name': album}).toString();
 }
 
 final _rootKey = GlobalKey<NavigatorState>();
@@ -31,8 +46,47 @@ GoRouter createRouter({String initialLocation = Routes.home}) => GoRouter(
       builder: (context, state, shell) => AppShell(shell: shell),
       branches: [
         // 탭 순서: 보관함 · 재생목록 · 홈(가운데) · 검색 · 설정.
-        _branch(Routes.library, const LibraryScreen()),
-        _branch(Routes.playlists, const PlaylistsScreen()),
+        _branch(
+          Routes.library,
+          const LibraryScreen(),
+          routes: [
+            GoRoute(
+              path: 'album',
+              pageBuilder: (context, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: AlbumScreen(
+                  album: state.uri.queryParameters['name'] ?? '',
+                ),
+              ),
+            ),
+          ],
+        ),
+        _branch(
+          Routes.playlists,
+          const PlaylistsScreen(),
+          routes: [
+            // 곡 담기 선택은 탭 틀 위로 덮어 연다.
+            GoRoute(
+              path: 'pick',
+              parentNavigatorKey: _rootKey,
+              pageBuilder: (context, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: PlaylistPickScreen(
+                  trackIds: {...?(state.extra as List<String>?)},
+                ),
+              ),
+            ),
+            GoRoute(
+              path: ':id',
+              pageBuilder: (context, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: PlaylistDetailScreen(
+                  playlistId: state.pathParameters['id']!,
+                ),
+              ),
+            ),
+          ],
+        ),
         _branch(Routes.home, const HomeScreen(libraryRoute: Routes.library)),
         StatefulShellBranch(
           routes: [
@@ -52,6 +106,11 @@ GoRouter createRouter({String initialLocation = Routes.home}) => GoRouter(
       ],
     ),
     GoRoute(
+      path: Routes.queue,
+      parentNavigatorKey: _rootKey,
+      pageBuilder: (context, state) => const MaterialPage(child: QueueScreen()),
+    ),
+    GoRoute(
       path: Routes.player,
       parentNavigatorKey: _rootKey,
       pageBuilder: (context, state) => CustomTransitionPage(
@@ -69,11 +128,16 @@ GoRouter createRouter({String initialLocation = Routes.home}) => GoRouter(
   ],
 );
 
-StatefulShellBranch _branch(String path, Widget screen) => StatefulShellBranch(
+StatefulShellBranch _branch(
+  String path,
+  Widget screen, {
+  List<RouteBase> routes = const [],
+}) => StatefulShellBranch(
   routes: [
     GoRoute(
       path: path,
       pageBuilder: (context, state) => NoTransitionPage(child: screen),
+      routes: routes,
     ),
   ],
 );

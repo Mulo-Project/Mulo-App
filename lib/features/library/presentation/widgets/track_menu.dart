@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/router.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../covers/presentation/widgets/cover_sheet.dart';
-import '../../../downloads/presentation/widgets/playlist_picker_dialog.dart';
 import '../../../lyrics/presentation/bloc/lyrics_cubit.dart';
 import '../../../lyrics/presentation/widgets/lyrics_editor.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
@@ -18,6 +19,7 @@ enum _TrackAction {
   playNext,
   addToQueue,
   addToPlaylist,
+  favorite,
   editInfo,
   lyrics,
   cover,
@@ -61,6 +63,7 @@ Future<void> showTrackMenu(
   String? playlistId,
 }) async {
   final l10n = context.l10n;
+  final favorite = context.read<PlaylistsCubit>().isFavorite(track.id);
   final action = await showAppMenu<_TrackAction>(
     context,
     globalPosition: globalPosition,
@@ -79,6 +82,11 @@ Future<void> showTrackMenu(
         value: _TrackAction.addToPlaylist,
         icon: Icons.playlist_add_rounded,
         label: l10n.trackMenuAddToPlaylist,
+      ),
+      AppMenuItem(
+        value: _TrackAction.favorite,
+        icon: favorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+        label: favorite ? l10n.trackMenuUnfavorite : l10n.trackMenuFavorite,
       ),
       AppMenuItem(
         value: _TrackAction.editInfo,
@@ -128,7 +136,16 @@ Future<void> showTrackMenu(
       context.read<NowPlayingCubit>().addToQueue(track);
       _snack(context, context.l10n.trackMenuAddedToQueue);
     case _TrackAction.addToPlaylist:
-      await _addToPlaylist(context, track);
+      // 팝업 대신 재생목록 화면으로 가서 고른다.
+      await context.push(Routes.playlistPick, extra: [track.id]);
+    case _TrackAction.favorite:
+      final on = await context.read<PlaylistsCubit>().toggleFavorite(track.id);
+      if (context.mounted) {
+        _snack(
+          context,
+          on ? context.l10n.trackFavoriteOn : context.l10n.trackFavoriteOff,
+        );
+      }
     case _TrackAction.editInfo:
       await _editInfo(context, track);
     case _TrackAction.lyrics:
@@ -153,22 +170,6 @@ Future<void> showTrackMenu(
 void _snack(BuildContext context, String message) =>
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(message)));
-
-Future<void> _addToPlaylist(BuildContext context, Track track) async {
-  final l10n = context.l10n;
-  final cubit = context.read<PlaylistsCubit>();
-  if (cubit.state.isEmpty) return _snack(context, l10n.trackMenuNoPlaylists);
-  final picked = await showPlaylistPickerDialog(
-    context,
-    playlists: cubit.state,
-    selected: const {},
-  );
-  if (picked == null || picked.isEmpty) return;
-  await cubit.addTrack(track.id, picked);
-  if (context.mounted) {
-    _snack(context, l10n.trackMenuAddedToPlaylists(picked.length));
-  }
-}
 
 Future<void> _editInfo(BuildContext context, Track track) async {
   final l10n = context.l10n;

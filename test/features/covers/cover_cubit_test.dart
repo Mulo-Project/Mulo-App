@@ -9,6 +9,8 @@ CoverCubit _cubit(MemoryCoverRepository repo, FakeImageSource source) =>
       load: LoadCovers(repo),
       pickFromDevice: PickCoverFromDevice(source, repo),
       clear: ClearCover(repo),
+      pickFile: PickImageFile(source),
+      save: SaveCover(repo),
     );
 
 void main() {
@@ -19,6 +21,16 @@ void main() {
     expect(await c.pickFromDevice(CoverKey.track('t01')), isTrue);
     expect(c.state[CoverKey.track('t01')], '/tmp/a.png');
     expect(repo.saved.keys, [CoverKey.track('t01')]);
+  });
+
+  test('pickFile은 저장 없이 경로만 돌려주고, setFromFile로 키에 저장한다', () async {
+    final repo = MemoryCoverRepository();
+    final c = _cubit(repo, FakeImageSource('/tmp/b.png'));
+    addTearDown(c.close);
+    expect(await c.pickFile(), '/tmp/b.png');
+    expect(repo.saved, isEmpty);
+    await c.setFromFile(CoverKey.playlist('pl1'), '/tmp/b.png');
+    expect(c.state[CoverKey.playlist('pl1')], '/tmp/b.png');
   });
 
   test('취소하면 바뀌지 않는다', () async {

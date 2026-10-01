@@ -795,4 +795,91 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get lyricsEmptyHint =>
       'Put a .lrc file with the same name next to the song, or add lyrics yourself.';
+
+  @override
+  String get playlistFavorites => 'Favorites';
+
+  @override
+  String get playlistMenuTooltip => 'Playlist menu';
+
+  @override
+  String get playlistMenuPlayAll => 'Play all';
+
+  @override
+  String get playlistMenuRename => 'Rename';
+
+  @override
+  String get playlistMenuDelete => 'Delete playlist';
+
+  @override
+  String get playlistImagePick => 'Choose from photos';
+
+  @override
+  String get playlistImageReset => 'Use default image';
+
+  @override
+  String get playlistPlayEmpty => 'No songs to play';
+
+  @override
+  String get playlistRenameTitle => 'Rename';
+
+  @override
+  String get playlistRenameSave => 'Save';
+
+  @override
+  String get playlistDeleteTitle => 'Delete this playlist?';
+
+  @override
+  String playlistDeleteBody(String name) {
+    return '‘$name’ will be deleted. Its songs stay in your library.';
+  }
+
+  @override
+  String get playlistDeleteConfirm => 'Delete';
+
+  @override
+  String get playlistDeleted => 'Playlist deleted';
+
+  @override
+  String get playlistNewImage => 'Choose image';
+
+  @override
+  String get playlistNewImageChange => 'Change image';
+
+  @override
+  String get playlistPickTitle => 'Choose playlists';
+
+  @override
+  String get playlistPickHint => 'Pick the playlists to add to';
+
+  @override
+  String get playlistPickDone => 'Done';
+
+  @override
+  String get playlistPickAlready => 'Already added';
+
+  @override
+  String get playlistDetailEmpty =>
+      'No songs yet. Use \"Add to playlist\" in a song\'s menu.';
+
+  @override
+  String get playlistNotFound => 'Playlist not found';
+
+  @override
+  String get albumNotFound => 'Album not found';
+
+  @override
+  String get playerQueueEmpty => 'The queue is empty';
+
+  @override
+  String get trackMenuFavorite => 'Favorite';
+
+  @override
+  String get trackMenuUnfavorite => 'Remove from favorites';
+
+  @override
+  String get trackFavoriteOn => 'Added to favorites';
+
+  @override
+  String get trackFavoriteOff => 'Removed from favorites';
 }

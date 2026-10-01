@@ -120,23 +120,27 @@ void main() {
   }
 }
 
-/// 재생목록 스크린샷용 (많이 들은 곡이 있는 것 · 아티스트만 있는 것 · 빈 것).
+/// 재생목록 스크린샷용 (대표곡이 있는 것 · 색을 고른 것 · 빈 것).
 const _samplePlaylists = [
   Playlist(
     id: 'pl1',
     name: 'Late Night Drive',
     trackCount: 24,
-    topTracks: [
-      PlaylistTrackPreview(id: 't1', title: 'Midnight Signal', artist: 'A'),
-      PlaylistTrackPreview(id: 't2', title: 'Harbor Lights', artist: 'B'),
-      PlaylistTrackPreview(id: 't3', title: 'Soft Machines', artist: 'C'),
-    ],
+    featured: PlaylistTrackPreview(
+      id: 't1',
+      title: 'Midnight Signal',
+      artist: 'Lumen Field',
+    ),
   ),
   Playlist(
     id: 'pl2',
     name: 'Focus',
     trackCount: 18,
-    topArtists: ['Lumen Field', 'Neon Harbor', 'Quiet Atlas'],
+    featured: PlaylistTrackPreview(
+      id: 't2',
+      title: 'Harbor Lights',
+      artist: 'Neon Harbor',
+    ),
   ),
   Playlist(id: 'pl3', name: 'Workout Mix', trackCount: 32, colorIndex: 2),
   Playlist(id: 'pl4', name: 'Rainy Day', trackCount: 0),

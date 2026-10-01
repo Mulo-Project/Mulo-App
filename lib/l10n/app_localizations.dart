@@ -1567,6 +1567,174 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'곡 옆에 같은 이름의 .lrc 파일을 두거나, 직접 넣을 수 있어요.'**
   String get lyricsEmptyHint;
+
+  /// No description provided for @playlistFavorites.
+  ///
+  /// In ko, this message translates to:
+  /// **'좋아요'**
+  String get playlistFavorites;
+
+  /// No description provided for @playlistMenuTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생목록 메뉴'**
+  String get playlistMenuTooltip;
+
+  /// No description provided for @playlistMenuPlayAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체 재생'**
+  String get playlistMenuPlayAll;
+
+  /// No description provided for @playlistMenuRename.
+  ///
+  /// In ko, this message translates to:
+  /// **'이름 바꾸기'**
+  String get playlistMenuRename;
+
+  /// No description provided for @playlistMenuDelete.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생목록 삭제'**
+  String get playlistMenuDelete;
+
+  /// No description provided for @playlistImagePick.
+  ///
+  /// In ko, this message translates to:
+  /// **'사진에서 고르기'**
+  String get playlistImagePick;
+
+  /// No description provided for @playlistImageReset.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 이미지로'**
+  String get playlistImageReset;
+
+  /// No description provided for @playlistPlayEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생할 곡이 없어요'**
+  String get playlistPlayEmpty;
+
+  /// No description provided for @playlistRenameTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'이름 바꾸기'**
+  String get playlistRenameTitle;
+
+  /// No description provided for @playlistRenameSave.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장'**
+  String get playlistRenameSave;
+
+  /// No description provided for @playlistDeleteTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생목록을 지울까요?'**
+  String get playlistDeleteTitle;
+
+  /// No description provided for @playlistDeleteBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'‘{name}’을(를) 지워요. 담긴 곡은 보관함에 그대로 남아요.'**
+  String playlistDeleteBody(String name);
+
+  /// No description provided for @playlistDeleteConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'지우기'**
+  String get playlistDeleteConfirm;
+
+  /// No description provided for @playlistDeleted.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생목록을 지웠어요'**
+  String get playlistDeleted;
+
+  /// No description provided for @playlistNewImage.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미지 고르기'**
+  String get playlistNewImage;
+
+  /// No description provided for @playlistNewImageChange.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미지 바꾸기'**
+  String get playlistNewImageChange;
+
+  /// No description provided for @playlistPickTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생목록 선택'**
+  String get playlistPickTitle;
+
+  /// No description provided for @playlistPickHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'담을 재생목록을 골라 주세요'**
+  String get playlistPickHint;
+
+  /// No description provided for @playlistPickDone.
+  ///
+  /// In ko, this message translates to:
+  /// **'완료'**
+  String get playlistPickDone;
+
+  /// No description provided for @playlistPickAlready.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미 담겼어요'**
+  String get playlistPickAlready;
+
+  /// No description provided for @playlistDetailEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 담긴 곡이 없어요. 곡 메뉴의 ‘재생목록에 추가’로 담아 보세요.'**
+  String get playlistDetailEmpty;
+
+  /// No description provided for @playlistNotFound.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생목록을 찾을 수 없어요'**
+  String get playlistNotFound;
+
+  /// No description provided for @albumNotFound.
+  ///
+  /// In ko, this message translates to:
+  /// **'앨범을 찾을 수 없어요'**
+  String get albumNotFound;
+
+  /// No description provided for @playerQueueEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'대기열이 비어 있어요'**
+  String get playerQueueEmpty;
+
+  /// No description provided for @trackMenuFavorite.
+  ///
+  /// In ko, this message translates to:
+  /// **'좋아요'**
+  String get trackMenuFavorite;
+
+  /// No description provided for @trackMenuUnfavorite.
+  ///
+  /// In ko, this message translates to:
+  /// **'좋아요 취소'**
+  String get trackMenuUnfavorite;
+
+  /// No description provided for @trackFavoriteOn.
+  ///
+  /// In ko, this message translates to:
+  /// **'좋아요에 담았어요'**
+  String get trackFavoriteOn;
+
+  /// No description provided for @trackFavoriteOff.
+  ///
+  /// In ko, this message translates to:
+  /// **'좋아요를 취소했어요'**
+  String get trackFavoriteOff;
 }
 
 class _AppLocalizationsDelegate

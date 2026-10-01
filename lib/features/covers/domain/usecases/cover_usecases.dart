@@ -33,3 +33,30 @@ class ClearCover implements UseCase<void, String> {
   @override
   Future<void> call(String key) => _repo.remove(key);
 }
+
+/// 기기에서 사진 한 장만 고른다 (아직 어느 커버로도 저장하지 않는다). 취소하면 null.
+class PickImageFile implements UseCase<String?, NoParams> {
+  const PickImageFile(this._source);
+
+  final CoverImageSource _source;
+
+  @override
+  Future<String?> call(NoParams _) => _source.pickFromDevice();
+}
+
+class SaveCoverParams {
+  const SaveCoverParams(this.key, this.sourcePath);
+
+  final String key;
+  final String sourcePath;
+}
+
+/// 이미 고른 파일을 [SaveCoverParams.key]의 커버로 저장한다. 저장된 경로를 돌려준다.
+class SaveCover implements UseCase<String, SaveCoverParams> {
+  const SaveCover(this._repo);
+
+  final CoverRepository _repo;
+
+  @override
+  Future<String> call(SaveCoverParams p) => _repo.save(p.key, p.sourcePath);
+}

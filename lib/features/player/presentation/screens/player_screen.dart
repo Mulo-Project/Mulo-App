@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../../app/router.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../lyrics/presentation/widgets/lyrics_view.dart';
@@ -57,7 +58,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   CircleIconButton(
                     icon: Icons.queue_music_rounded,
                     tooltip: l10n.playerQueue,
-                    onPressed: () => _showQueue(context),
+                    onPressed: () => context.push(Routes.queue),
                   ),
                 ],
               ),
@@ -136,21 +137,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  void _showQueue(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: context.palette.surface,
-      showDragHandle: true,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppRadii.card),
-        ),
-      ),
-      builder: (_) => const _QueueSheet(),
     );
   }
 }
@@ -242,53 +228,6 @@ class _Controls extends StatelessWidget {
           onTap: vm.cycleRepeat,
         ),
       ],
-    );
-  }
-}
-
-class _QueueSheet extends StatelessWidget {
-  const _QueueSheet();
-
-  @override
-  Widget build(BuildContext context) {
-    final state = context.watch<NowPlayingCubit>().state;
-    final vm = context.read<NowPlayingCubit>();
-    final text = Theme.of(context).textTheme;
-
-    return DraggableScrollableSheet(
-      expand: false,
-      initialChildSize: .6,
-      maxChildSize: .9,
-      builder: (context, controller) => ListView(
-        controller: controller,
-        padding: EdgeInsets.only(
-          bottom: AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
-        ),
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.md,
-              0,
-              AppSpacing.md,
-              AppSpacing.sm,
-            ),
-            child: Text(context.l10n.playerQueue, style: text.titleLarge),
-          ),
-          for (var i = 0; i < state.queue.length; i++)
-            TrackTile(
-              title: state.queue[i].title,
-              subtitle: state.queue[i].artist,
-              tone: toneFor(state.queue[i].id),
-              artwork: coverImageOf(context, CoverKey.track(state.queue[i].id)),
-              active: i == state.index,
-              trailing: Text(
-                formatDuration(state.queue[i].duration),
-                style: text.bodySmall,
-              ),
-              onTap: () => vm.jumpTo(i),
-            ),
-        ],
-      ),
     );
   }
 }

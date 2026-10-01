@@ -14,12 +14,16 @@ class CoverCubit extends Cubit<Map<String, String>> {
     required this._load,
     required PickCoverFromDevice pickFromDevice,
     required this._clear,
+    required this._pickFile,
+    required this._save,
   }) : _pick = pickFromDevice,
        super(const {});
 
   final LoadCovers _load;
   final PickCoverFromDevice _pick;
   final ClearCover _clear;
+  final PickImageFile _pickFile;
+  final SaveCover _save;
 
   Future<void> load() async {
     final saved = await _load(const NoParams());
@@ -33,6 +37,15 @@ class CoverCubit extends Cubit<Map<String, String>> {
     if (stored == null || isClosed) return false;
     emit({...state, key: stored});
     return true;
+  }
+
+  /// 기기에서 사진 한 장만 고른다 (아직 저장하지 않는다). 고른 파일 경로, 취소하면 null.
+  Future<String?> pickFile() => _pickFile(const NoParams());
+
+  /// [pickFile]로 고른 파일을 [key]의 커버로 저장한다.
+  Future<void> setFromFile(String key, String sourcePath) async {
+    final stored = await _save(SaveCoverParams(key, sourcePath));
+    if (!isClosed) emit({...state, key: stored});
   }
 
   Future<void> clear(String key) async {

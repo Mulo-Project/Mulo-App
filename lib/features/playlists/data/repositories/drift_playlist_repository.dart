@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../../../../core/database/app_database.dart';
+import '../../../library/domain/entities/track.dart';
 import '../../domain/entities/playlist.dart';
 import '../../domain/repositories/playlist_repository.dart';
 
@@ -9,8 +10,10 @@ class DriftPlaylistRepository implements PlaylistRepository {
 
   final AppDatabase _db;
 
-  /// 카드 요약에 보여 줄 개수.
-  static const _summarySize = 3;
+  /// 담은 순서. 시각은 초 단위로만 저장되어 같은 초에 담은 곡끼리는 넣은 순서(rowid)로 가린다.
+  static final _insertOrder = OrderingTerm.asc(
+    const CustomExpression<int>('playlist_tracks.rowid'),
+  );
 
   /// 재생목록 · 담긴 곡 · 곡 · 재생 기록 중 무엇이 바뀌어도 다시 계산한다.
   @override
@@ -37,21 +40,23 @@ class DriftPlaylistRepository implements PlaylistRepository {
       _db.playlists,
     )..orderBy([(t) => OrderingTerm.asc(t.createdAt)])).get();
 
-    // 재생목록 id → 담긴 곡.
-    final members = <String, List<TrackRow>>{};
-    final joined = await _db.select(_db.playlistTracks).join([
-      innerJoin(
-        _db.tracks,
-        _db.tracks.id.equalsExp(_db.playlistTracks.trackId),
-      ),
-    ]).get();
-    for (final r in joined) {
-      members
-          .putIfAbsent(r.readTable(_db.playlistTracks).playlistId, () => [])
-          .add(r.readTable(_db.tracks));
+    // 재생목록 id → 담긴 곡 id (담은 순서). 곡 수는 보관함에 없는 곡(지워진 곡)도
+    // 담은 기록 그대로 센다.
+    final added =
+        await (_db.select(_db.playlistTracks)..orderBy([
+              (t) => OrderingTerm.asc(t.addedAt),
+              (_) => _insertOrder,
+            ]))
+            .get();
+    final ids = <String, List<String>>{};
+    for (final r in added) {
+      ids.putIfAbsent(r.playlistId, () => []).add(r.trackId);
     }
 
-    // 곡 id → 들은 횟수.
+    // 곡 id → 곡, 곡 id → 들은 횟수.
+    final trackRows = {
+      for (final t in await _db.select(_db.tracks).get()) t.id: t,
+    };
     final plays = <String, int>{};
     final count = _db.plays.id.count();
     final counted =
@@ -63,64 +68,111 @@ class DriftPlaylistRepository implements PlaylistRepository {
       plays[r.read(_db.plays.trackId)!] = r.read(count) ?? 0;
     }
 
-    // 곡 수는 보관함에 없는 곡(지워진 곡)을 빼지 않고 담은 기록 그대로 센다.
-    final totals = <String, int>{};
-    final all = await _db.select(_db.playlistTracks).get();
-    for (final r in all) {
-      totals[r.playlistId] = (totals[r.playlistId] ?? 0) + 1;
+    Playlist build(String id, String name, int? colorIndex) {
+      final members = ids[id] ?? const <String>[];
+      return Playlist(
+        id: id,
+        name: name,
+        trackCount: members.length,
+        colorIndex: colorIndex,
+        featured: _featured([
+          for (final t in members)
+            if (trackRows[t] != null) trackRows[t]!,
+        ], plays),
+        trackIds: members.toSet(),
+      );
     }
 
     return [
-      for (final row in lists)
-        Playlist(
-          id: row.id,
-          name: row.name,
-          trackCount: totals[row.id] ?? 0,
-          colorIndex: row.colorIndex,
-          topTracks: _topTracks(members[row.id] ?? const [], plays),
-          topArtists: _topArtists(members[row.id] ?? const []),
-        ),
+      build(Playlist.favoritesId, '', null),
+      for (final row in lists) build(row.id, row.name, row.colorIndex),
     ];
   }
 
-  static List<PlaylistTrackPreview> _topTracks(
+  /// 많이 들은 곡. 들은 기록이 없으면 가장 먼저 담은 곡. ([tracks]는 담은 순서)
+  static PlaylistTrackPreview? _featured(
     List<TrackRow> tracks,
     Map<String, int> plays,
   ) {
-    final heard = tracks.where((t) => (plays[t.id] ?? 0) > 0).toList()
-      ..sort((a, b) {
-        final byPlays = plays[b.id]!.compareTo(plays[a.id]!);
-        return byPlays != 0 ? byPlays : a.title.compareTo(b.title);
-      });
-    return [
-      for (final t in heard.take(_summarySize))
-        PlaylistTrackPreview(id: t.id, title: t.title, artist: t.artist),
-    ];
-  }
-
-  static List<String> _topArtists(List<TrackRow> tracks) {
-    final counts = <String, int>{};
+    if (tracks.isEmpty) return null;
+    var best = tracks.first;
     for (final t in tracks) {
-      if (t.artist.isEmpty) continue;
-      counts[t.artist] = (counts[t.artist] ?? 0) + 1;
+      if ((plays[t.id] ?? 0) > (plays[best.id] ?? 0)) best = t;
     }
-    final names = counts.keys.toList()
-      ..sort((a, b) {
-        final byCount = counts[b]!.compareTo(counts[a]!);
-        return byCount != 0 ? byCount : a.compareTo(b);
-      });
-    return names.take(_summarySize).toList();
+    return PlaylistTrackPreview(
+      id: best.id,
+      title: best.title,
+      artist: best.artist,
+    );
   }
 
   @override
-  Future<Playlist> create(String name) async {
+  Stream<List<Track>> watchTracks(String playlistId) {
+    final query =
+        _db.select(_db.playlistTracks).join([
+            innerJoin(
+              _db.tracks,
+              _db.tracks.id.equalsExp(_db.playlistTracks.trackId),
+            ),
+          ])
+          ..where(_db.playlistTracks.playlistId.equals(playlistId))
+          ..orderBy([
+            OrderingTerm.asc(_db.playlistTracks.addedAt),
+            _insertOrder,
+          ]);
+    return query.watch().map(
+      (rows) => [for (final r in rows) _toTrack(r.readTable(_db.tracks))],
+    );
+  }
+
+  static Track _toTrack(TrackRow r) => Track(
+    id: r.id,
+    title: r.title,
+    artist: r.artist,
+    album: r.album,
+    genre: r.genre,
+    duration: Duration(milliseconds: r.durationMs),
+    addedAt: r.addedAt,
+    uri: r.uri,
+    folder: r.folder,
+    source: TrackSource.values.asNameMap()[r.source] ?? TrackSource.device,
+  );
+
+  @override
+  Future<Playlist> create(String name, {int? colorIndex}) async {
     final now = DateTime.now();
     final id = 'pl${now.microsecondsSinceEpoch}';
     await _db
         .into(_db.playlists)
-        .insert(PlaylistsCompanion.insert(id: id, name: name, createdAt: now));
-    return Playlist(id: id, name: name);
+        .insert(
+          PlaylistsCompanion.insert(
+            id: id,
+            name: name,
+            createdAt: now,
+            colorIndex: Value(colorIndex),
+          ),
+        );
+    return Playlist(id: id, name: name, colorIndex: colorIndex);
   }
+
+  @override
+  Future<void> rename(String playlistId, String name) =>
+      (_db.update(_db.playlists)..where((t) => t.id.equals(playlistId))).write(
+        PlaylistsCompanion(name: Value(name)),
+      );
+
+  @override
+  Future<void> delete(String playlistId) => _db.transaction(() async {
+    await (_db.delete(
+      _db.playlistTracks,
+    )..where((t) => t.playlistId.equals(playlistId))).go();
+    await (_db.delete(
+      _db.covers,
+    )..where((t) => t.key.equals('playlist:$playlistId'))).go();
+    await (_db.delete(
+      _db.playlists,
+    )..where((t) => t.id.equals(playlistId))).go();
+  });
 
   @override
   Future<void> addTrack(String trackId, Iterable<String> playlistIds) async {
@@ -132,6 +184,22 @@ class DriftPlaylistRepository implements PlaylistRepository {
             playlistId: id,
             trackId: trackId,
             addedAt: now,
+          ),
+      ], mode: InsertMode.insertOrIgnore);
+    });
+  }
+
+  @override
+  Future<void> addTracks(Iterable<String> trackIds, String playlistId) async {
+    final now = DateTime.now();
+    await _db.batch((b) {
+      // 담은 순서가 남도록 곡마다 시각을 조금씩 늦춘다.
+      b.insertAll(_db.playlistTracks, [
+        for (final (i, id) in trackIds.indexed)
+          PlaylistTracksCompanion.insert(
+            playlistId: playlistId,
+            trackId: id,
+            addedAt: now.add(Duration(microseconds: i)),
           ),
       ], mode: InsertMode.insertOrIgnore);
     });

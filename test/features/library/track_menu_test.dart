@@ -51,6 +51,7 @@ void main() {
     '다음에 재생',
     '대기열에 추가',
     '재생목록에 추가',
+    '좋아요',
     '정보 편집',
     '가사 설정',
     '커버 이미지 설정',
@@ -89,30 +90,52 @@ void main() {
     expect(find.text('정보 편집'), findsOneWidget);
   });
 
-  testWidgets('재생목록에 추가: 다중 선택 대화상자에서 골라 담는다', (tester) async {
+  testWidgets('재생목록에 추가: 재생목록 화면으로 가서 카드를 골라 완료한다', (tester) async {
     await pumpLibrary(tester);
     await tester.tap(find.byTooltip('곡 메뉴').first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('재생목록에 추가'));
     await tester.pumpAndSettle();
 
+    // 팝업이 아니라 화면이다. 좋아요 목록도 같이 보인다.
+    expect(find.text('재생목록 선택'), findsOneWidget);
+    expect(find.byType(Dialog), findsNothing);
+    expect(find.text('좋아요'), findsOneWidget);
+
     await tester.tap(find.text('출근길'));
     await tester.pump();
-    await tester.tap(find.text('선택 완료'));
+    await tester.tap(find.text('완료'));
     await tester.pumpAndSettle();
 
     expect(playlists.members['pl1'], {'t2'});
+    expect(find.text('재생목록 선택'), findsNothing);
     expect(find.text('1개 재생목록에 담았어요'), findsOneWidget);
   });
 
-  testWidgets('재생목록이 없으면 안내만 보여 준다', (tester) async {
-    await pumpLibrary(tester, lists: const []);
+  testWidgets('이미 담긴 재생목록은 "이미 담겼어요"로 보이고 새로 담지 않는다', (tester) async {
+    await pumpLibrary(tester);
+    await playlists.addTrack('t2', ['pl1']);
     await tester.tap(find.byTooltip('곡 메뉴').first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('재생목록에 추가'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('재생목록이 없어요'), findsOneWidget);
-    expect(find.text('선택 완료'), findsNothing);
+    expect(find.text('이미 담겼어요'), findsOneWidget);
+  });
+
+  testWidgets('좋아요: 메뉴에서 켜고 끈다', (tester) async {
+    await pumpLibrary(tester);
+    await tester.tap(find.byTooltip('곡 메뉴').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('좋아요'));
+    await tester.pumpAndSettle();
+    expect(playlists.members[Playlist.favoritesId], {'t2'});
+    expect(find.text('좋아요에 담았어요'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('곡 메뉴').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('좋아요 취소'));
+    await tester.pumpAndSettle();
+    expect(playlists.members[Playlist.favoritesId], isEmpty);
   });
 
   testWidgets('정보 편집: 저장하면 목록에 바로 반영되고, 제목이 비면 저장되지 않는다', (tester) async {
