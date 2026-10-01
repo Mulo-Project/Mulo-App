@@ -42,11 +42,6 @@ class AppShell extends StatelessWidget {
                   shell.goBranch(i, initialLocation: i == shell.currentIndex),
               items: [
                 AppNavItem(
-                  icon: Icons.home_outlined,
-                  selectedIcon: Icons.home_rounded,
-                  label: l10n.navHome,
-                ),
-                AppNavItem(
                   icon: Icons.library_music_outlined,
                   selectedIcon: Icons.library_music_rounded,
                   label: l10n.navLibrary,
@@ -55,6 +50,12 @@ class AppShell extends StatelessWidget {
                   icon: Icons.queue_music_outlined,
                   selectedIcon: Icons.queue_music_rounded,
                   label: l10n.navPlaylists,
+                ),
+                AppNavItem(
+                  icon: Icons.home_outlined,
+                  selectedIcon: Icons.home_rounded,
+                  label: l10n.navHome,
+                  highlighted: true,
                 ),
                 AppNavItem(
                   icon: Icons.search_outlined,

@@ -479,6 +479,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homePeriodAll => 'All time';
 
   @override
+  String get homeToday => 'Listened today';
+
+  @override
+  String homeTodayMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String homeTodayHoursMinutes(int hours, int minutes) {
+    return '$hours hr $minutes min';
+  }
+
+  @override
+  String homeTodayPlays(int count) {
+    return '$count plays today';
+  }
+
+  @override
+  String get homeTodayNone => 'Nothing played yet today';
+
+  @override
   String get homeStats => 'Listening';
 
   @override

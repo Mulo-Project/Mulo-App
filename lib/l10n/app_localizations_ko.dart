@@ -471,6 +471,27 @@ class AppLocalizationsKo extends AppLocalizations {
   String get homePeriodAll => '전체';
 
   @override
+  String get homeToday => '오늘 들은 시간';
+
+  @override
+  String homeTodayMinutes(int minutes) {
+    return '$minutes분';
+  }
+
+  @override
+  String homeTodayHoursMinutes(int hours, int minutes) {
+    return '$hours시간 $minutes분';
+  }
+
+  @override
+  String homeTodayPlays(int count) {
+    return '오늘 $count곡 재생';
+  }
+
+  @override
+  String get homeTodayNone => '오늘은 아직 듣지 않았어요';
+
+  @override
   String get homeStats => '청취 분석';
 
   @override

@@ -143,7 +143,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(history.plays.map((p) => p.trackId), [first.id]);
 
-    await tester.tap(find.text('홈').last);
+    await tester.tap(find.byKey(const ValueKey('nav-홈')));
     await tester.pumpAndSettle();
     expect(find.text('많이 들은 곡'), findsOneWidget);
     expect(find.text(first.title), findsWidgets);

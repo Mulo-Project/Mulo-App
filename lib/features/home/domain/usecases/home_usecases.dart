@@ -177,7 +177,22 @@ HomeSummary buildHomeSummary({
         return c != 0 ? c : b.addedAt.compareTo(a.addedAt);
       });
 
+  // 오늘 들은 시간: 기록된 시간이 없으면 곡 길이로 어림한다.
+  final midnight = DateTime(now.year, now.month, now.day);
+  final today = [
+    for (final pl in known)
+      if (!pl.playedAt.isBefore(midnight) && !pl.playedAt.isAfter(now)) pl,
+  ];
+  final todayListened = today.fold(Duration.zero, (sum, pl) {
+    final heard = pl.listened > Duration.zero
+        ? pl.listened
+        : byId[pl.trackId]!.duration;
+    return sum + heard;
+  });
+
   return HomeSummary(
+    todayListened: todayListened,
+    todayPlays: today.length,
     topTracks: topTracks.take(topCount).toList(),
     stats: stats,
     recommendations: candidates.take(recommendCount).toList(),

@@ -986,6 +986,36 @@ abstract class AppLocalizations {
   /// **'전체'**
   String get homePeriodAll;
 
+  /// No description provided for @homeToday.
+  ///
+  /// In ko, this message translates to:
+  /// **'오늘 들은 시간'**
+  String get homeToday;
+
+  /// No description provided for @homeTodayMinutes.
+  ///
+  /// In ko, this message translates to:
+  /// **'{minutes}분'**
+  String homeTodayMinutes(int minutes);
+
+  /// No description provided for @homeTodayHoursMinutes.
+  ///
+  /// In ko, this message translates to:
+  /// **'{hours}시간 {minutes}분'**
+  String homeTodayHoursMinutes(int hours, int minutes);
+
+  /// No description provided for @homeTodayPlays.
+  ///
+  /// In ko, this message translates to:
+  /// **'오늘 {count}곡 재생'**
+  String homeTodayPlays(int count);
+
+  /// No description provided for @homeTodayNone.
+  ///
+  /// In ko, this message translates to:
+  /// **'오늘은 아직 듣지 않았어요'**
+  String get homeTodayNone;
+
   /// No description provided for @homeStats.
   ///
   /// In ko, this message translates to:

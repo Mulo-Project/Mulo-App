@@ -28,6 +28,25 @@ void main() {
     _t('d', '', 4),
   ];
 
+  test('오늘 들은 시간은 오늘 0시 이후 재생만 더하고, 기록이 없으면 곡 길이로 어림한다', () {
+    final s = buildHomeSummary(
+      tracks: tracks,
+      plays: [
+        _p('a', DateTime(2026, 10, 1, 9)), // 곡 길이 3분으로 어림
+        PlayRecord(
+          trackId: 'b',
+          playedAt: DateTime(2026, 10, 1, 10),
+          listened: const Duration(minutes: 1),
+        ),
+        _p('c', DateTime(2026, 9, 30, 23, 59)), // 어제
+      ],
+      period: HomePeriod.week,
+      now: now,
+    );
+    expect(s.todayListened, const Duration(minutes: 4));
+    expect(s.todayPlays, 2);
+  });
+
   test('기간 안의 재생만 세고 많은 순으로 정렬한다', () {
     final s = buildHomeSummary(
       tracks: tracks,

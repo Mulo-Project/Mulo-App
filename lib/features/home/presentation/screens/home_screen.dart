@@ -51,6 +51,11 @@ class _HomeView extends StatelessWidget {
       else ...[
         Padding(
           padding: AppSpacing.screen,
+          child: _TodayCard(listened: s.todayListened, plays: s.todayPlays),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Padding(
+          padding: AppSpacing.screen,
           child: SegmentedPills<HomePeriod>(
             expand: true,
             values: HomePeriod.values,
@@ -137,6 +142,48 @@ class _HomeView extends StatelessWidget {
 
 String _artist(AppLocalizations l10n, Track t) =>
     t.artist.isEmpty ? l10n.unknownArtist : t.artist;
+
+/// 오늘 들은 시간 (재생 기록에서 계산).
+class _TodayCard extends StatelessWidget {
+  const _TodayCard({required this.listened, required this.plays});
+
+  final Duration listened;
+  final int plays;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final text = Theme.of(context).textTheme;
+    final minutes = listened.inMinutes;
+    final value = minutes >= 60
+        ? l10n.homeTodayHoursMinutes(minutes ~/ 60, minutes % 60)
+        : l10n.homeTodayMinutes(minutes);
+
+    return GlassCard(
+      tone: GlowTone.primary,
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l10n.homeToday, style: text.bodySmall),
+                const SizedBox(height: AppSpacing.xxs),
+                StatNumber(value, size: 36),
+                const SizedBox(height: AppSpacing.xxs),
+                Text(
+                  plays == 0 ? l10n.homeTodayNone : l10n.homeTodayPlays(plays),
+                  style: text.bodySmall,
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.headphones_rounded, size: 36),
+        ],
+      ),
+    );
+  }
+}
 
 class _StatsCard extends StatelessWidget {
   const _StatsCard({required this.stats});

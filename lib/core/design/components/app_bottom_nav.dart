@@ -8,14 +8,19 @@ class AppNavItem {
     required this.icon,
     required this.selectedIcon,
     required this.label,
+    this.highlighted = false,
   });
 
   final IconData icon;
   final IconData selectedIcon;
   final String label;
+
+  /// 가운데 대표 탭: 항상 강조 색 원 안에 아이콘을 둔다.
+  final bool highlighted;
 }
 
 /// 화면 아래에 붙은 단색 탭 바. 선택된 탭은 강조 색 아이콘 + 아래 작은 점.
+/// [AppNavItem.highlighted] 탭은 강조 색 원으로 눈에 띄게 그린다.
 class AppBottomNav extends StatelessWidget {
   const AppBottomNav({
     super.key,
@@ -49,6 +54,7 @@ class AppBottomNav extends StatelessWidget {
               for (var i = 0; i < items.length; i++)
                 Expanded(
                   child: _NavButton(
+                    key: ValueKey('nav-${items[i].label}'),
                     item: items[i],
                     selected: i == currentIndex,
                     onTap: () => onSelected(i),
@@ -65,6 +71,7 @@ class AppBottomNav extends StatelessWidget {
 
 class _NavButton extends StatelessWidget {
   const _NavButton({
+    super.key,
     required this.item,
     required this.selected,
     required this.onTap,
@@ -80,6 +87,37 @@ class _NavButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.palette;
     final color = selected ? p.accent : p.onSurfaceMuted;
+
+    if (item.highlighted) {
+      return Semantics(
+        selected: selected,
+        button: true,
+        label: item.label,
+        child: InkResponse(
+          onTap: onTap,
+          radius: 36,
+          child: ExcludeSemantics(
+            child: Center(
+              child: AnimatedContainer(
+                duration: AppMotion.fast,
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: selected ? p.accent : p.accent.withValues(alpha: .18),
+                  border: Border.all(color: p.accent, width: 1.5),
+                ),
+                child: Icon(
+                  selected ? item.selectedIcon : item.icon,
+                  color: selected ? p.onAccent : p.accent,
+                  size: AppSizes.icon + 2,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     return Semantics(
       selected: selected,

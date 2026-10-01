@@ -203,6 +203,35 @@
   "homePeriodWeek": "이번 주",
   "homePeriodMonth": "이번 달",
   "homePeriodAll": "전체",
+  "homeToday": "오늘 들은 시간",
+  "homeTodayMinutes": "{minutes}분",
+  "@homeTodayMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "homeTodayHoursMinutes": "{hours}시간 {minutes}분",
+  "@homeTodayHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "homeTodayPlays": "오늘 {count}곡 재생",
+  "@homeTodayPlays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeTodayNone": "오늘은 아직 듣지 않았어요",
   "homeStats": "청취 분석",
   "homeStatPlays": "재생",
   "homeStatTracks": "곡",

@@ -85,12 +85,21 @@ class ListeningStats extends Equatable {
 /// 홈 화면에 필요한 것 전부.
 class HomeSummary extends Equatable {
   const HomeSummary({
+    this.todayListened = Duration.zero,
+    this.todayPlays = 0,
     this.topTracks = const [],
     this.stats = const ListeningStats(),
     this.recommendations = const [],
     this.recent = const [],
     this.libraryEmpty = true,
   });
+
+  /// 오늘(기기 시간 0시부터) 들은 시간. 기간 선택과 무관하다.
+  /// 들은 시간이 기록되지 않은 재생은 곡 길이로 어림한다.
+  final Duration todayListened;
+
+  /// 오늘 재생한 횟수.
+  final int todayPlays;
 
   /// 기간 안에서 많이 들은 곡 (많은 순).
   final List<TrackPlays> topTracks;
@@ -105,6 +114,8 @@ class HomeSummary extends Equatable {
 
   @override
   List<Object?> get props => [
+    todayListened,
+    todayPlays,
     topTracks,
     stats,
     recommendations,

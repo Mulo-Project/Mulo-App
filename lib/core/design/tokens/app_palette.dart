@@ -38,6 +38,10 @@ class AppPalette {
   static const Color lime = Color(0xFFC6FF33);
   static const Color white = Color(0xFFFFFFFF);
 
+  // 라이트 테마 수채화 팔레트 원색.
+  static const Color watercolorLavender = Color(0xFF9A8CF0);
+  static const Color watercolorCoral = Color(0xFFE8708F);
+
   /// 기본 테마: 검정 배경 · 바이올렛 · 라임.
   static const AppPalette defaultDark = AppPalette(
     background: black,
@@ -63,30 +67,37 @@ class AppPalette {
     glowTertiary: [Color(0xFFFF8A3D), Color(0xFFE5322D), Color(0xFF3A0B0B)],
   );
 
-  /// 라이트 테마 바탕 (밝은 회색 배경 · 흰 면). 색 · 글로우는 [defaultDark]와 같다.
+  /// 라이트 테마 바탕 (옅은 크림빛 배경 · 흰 면). 색 · 글로우는 수채화처럼 연한 파스텔 계열.
   static const AppPalette _lightBase = AppPalette(
-    background: Color(0xFFF4F4F7),
+    background: Color(0xFFFBF8FF),
     surface: white,
-    surfaceHigh: Color(0xFFEAEAF0),
-    onSurface: Color(0xFF111114),
-    onSurfaceMuted: Color(0x99111114),
-    outline: Color(0x1A000000),
-    glassFill: Color(0x8CFFFFFF),
-    glassBorder: Color(0x1F000000),
+    surfaceHigh: Color(0xFFF1ECFA),
+    onSurface: Color(0xFF1B1830),
+    onSurfaceMuted: Color(0x991B1830),
+    outline: Color(0x1A3A2E6B),
+    glassFill: Color(0x99FFFFFF),
+    glassBorder: Color(0x1F3A2E6B),
     glassHighlight: Color(0xE6FFFFFF),
     onGlow: white,
     scrim: black,
-    primary: violet,
+    primary: watercolorLavender,
     onPrimary: white,
-    accent: lime,
-    onAccent: black,
-    glowPrimary: [Color(0xFFE040FB), violet, Color(0xFF2A0E5C)],
-    glowSecondary: [Color(0xFF5B5BF0), Color(0xFF1B2266), Color(0xFF070A1F)],
-    glowTertiary: [Color(0xFFFF8A3D), Color(0xFFE5322D), Color(0xFF3A0B0B)],
+    accent: watercolorCoral,
+    onAccent: white,
+    // 분홍 → 라벤더 → 푸른 보라 (수채화 번짐)
+    glowPrimary: [Color(0xFFF7A8CB), watercolorLavender, Color(0xFF6A78D8)],
+    // 하늘 → 물빛 → 짙은 청회
+    glowSecondary: [Color(0xFF8ECFF5), Color(0xFF6C9BE0), Color(0xFF3F5CA8)],
+    // 살구 → 산호 → 짙은 장밋빛
+    glowTertiary: [Color(0xFFFFC08A), Color(0xFFF08A8A), Color(0xFFB04A6A)],
   );
 
-  /// 기본 라이트 테마: 강조 색(라임)은 밝은 배경에서 보이도록 진하게 (대비 3:1).
-  static final AppPalette defaultLight = _withAccent(_lightBase, lime, 3);
+  /// 기본 라이트 테마: 수채화 파스텔. 강조 색은 밝은 배경에서도 보이도록 대비 3:1을 지킨다.
+  static final AppPalette defaultLight = _withAccent(
+    _lightBase,
+    watercolorCoral,
+    3,
+  );
 
   /// 밝기별 기본 바탕.
   static AppPalette baseFor(Brightness b) =>

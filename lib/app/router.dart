@@ -32,9 +32,10 @@ GoRouter createRouter({String initialLocation = Routes.home}) => GoRouter(
     StatefulShellRoute.indexedStack(
       builder: (context, state, shell) => AppShell(shell: shell),
       branches: [
-        _branch(Routes.home, const HomeScreen(libraryRoute: Routes.library)),
+        // 탭 순서: 보관함 · 재생목록 · 홈(가운데) · 검색 · 설정.
         _branch(Routes.library, const LibraryScreen()),
         _branch(Routes.playlists, const PlaylistsScreen()),
+        _branch(Routes.home, const HomeScreen(libraryRoute: Routes.library)),
         StatefulShellBranch(
           routes: [
             GoRoute(
