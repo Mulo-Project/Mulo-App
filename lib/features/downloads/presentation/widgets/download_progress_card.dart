@@ -3,20 +3,25 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/download_item.dart';
 import '../bloc/download_queue_cubit.dart';
 
-/// 검색창 아래 다운로드 카드: 받는 곡의 썸네일을 배경으로 깔고 어둡게 덮는다.
-/// 아래 화살표로 대기 중인 곡 목록을 펼친다.
+/// 검색창 아래 다운로드 영역: 카드 모양 없이 받는 곡의 썸네일을 배경으로 깔고 어둡게 덮는다.
+/// 받는 곡 정보 아래에 지금 재생 중인 곡을 작게 보이고, 그 아래 화살표로 대기 중인 곡 목록을 펼친다.
 class DownloadProgressCard extends StatefulWidget {
   const DownloadProgressCard({
     super.key,
     required this.current,
     required this.waiting,
+    required this.onPlay,
   });
 
   final DownloadItem current;
   final List<DownloadItem> waiting;
+
+  /// 대기열의 곡을 눌렀을 때 (재생할 수 있으면 재생한다).
+  final ValueChanged<DownloadItem> onPlay;
 
   @override
   State<DownloadProgressCard> createState() => _DownloadProgressCardState();
@@ -34,8 +39,7 @@ class _DownloadProgressCardState extends State<DownloadProgressCard> {
     final waiting = widget.waiting;
     final onImage = p.onGlow;
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppRadii.md),
+    return ClipRect(
       child: Stack(
         children: [
           Positioned.fill(child: _Thumbnail(item: item)),
@@ -57,7 +61,7 @@ class _DownloadProgressCardState extends State<DownloadProgressCard> {
                         style: text.labelMedium?.copyWith(color: p.accent),
                       ),
                     ),
-                    _ItemControls(item: item),
+                    _CancelButton(item: item),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.xxs),
@@ -77,6 +81,8 @@ class _DownloadProgressCardState extends State<DownloadProgressCard> {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 ProgressLine(value: item.progress, height: 4),
+                const SizedBox(height: AppSpacing.sm),
+                _NowPlayingStrip(color: onImage),
                 const SizedBox(height: AppSpacing.xs),
                 InkWell(
                   onTap: waiting.isEmpty
@@ -122,7 +128,11 @@ class _DownloadProgressCardState extends State<DownloadProgressCard> {
                       ? Column(
                           children: [
                             for (final w in waiting)
-                              _WaitingRow(item: w, color: onImage),
+                              _WaitingRow(
+                                item: w,
+                                color: onImage,
+                                onTap: () => widget.onPlay(w),
+                              ),
                           ],
                         )
                       : const SizedBox(width: double.infinity),
@@ -165,10 +175,15 @@ class _Thumbnail extends StatelessWidget {
 }
 
 class _WaitingRow extends StatelessWidget {
-  const _WaitingRow({required this.item, required this.color});
+  const _WaitingRow({
+    required this.item,
+    required this.color,
+    required this.onTap,
+  });
 
   final DownloadItem item;
   final Color color;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -177,61 +192,79 @@ class _WaitingRow extends StatelessWidget {
     final status = item.status == DownloadStatus.paused
         ? l10n.statusPaused
         : l10n.statusQueued;
-    return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.xs),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              '${item.title} · ${item.artist}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: text.bodySmall?.copyWith(color: color),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadii.sm),
+      child: Padding(
+        padding: const EdgeInsets.only(top: AppSpacing.xs),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                '${item.title} · ${item.artist}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: text.bodySmall?.copyWith(color: color),
+              ),
             ),
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          Text(
-            status,
-            style: text.labelSmall?.copyWith(
-              color: color.withValues(alpha: .7),
+            const SizedBox(width: AppSpacing.xs),
+            Text(
+              status,
+              style: text.labelSmall?.copyWith(
+                color: color.withValues(alpha: .7),
+              ),
             ),
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          _ItemControls(item: item),
-        ],
+            const SizedBox(width: AppSpacing.xs),
+            _CancelButton(item: item),
+          ],
+        ),
       ),
     );
   }
 }
 
-/// 항목 하나의 아이콘 버튼: 받는 중 · 대기는 일시정지, 일시정지는 이어받기, 모두 취소.
-class _ItemControls extends StatelessWidget {
-  const _ItemControls({required this.item});
+/// 항목 하나를 대기열에서 뺀다.
+class _CancelButton extends StatelessWidget {
+  const _CancelButton({required this.item});
 
   final DownloadItem item;
 
   @override
+  Widget build(BuildContext context) => CircleIconButton(
+    icon: Icons.close_rounded,
+    tooltip: context.l10n.actionCancel,
+    size: 32,
+    onPressed: () => context.read<DownloadQueueCubit>().cancel(item.id),
+  );
+}
+
+/// 지금 재생 중인 곡을 작게 한 줄로. 재생 중인 곡이 없으면 숨긴다.
+class _NowPlayingStrip extends StatelessWidget {
+  const _NowPlayingStrip({required this.color});
+
+  final Color color;
+
+  @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final queue = context.read<DownloadQueueCubit>();
-    final paused = item.status == DownloadStatus.paused;
-    const size = 32.0;
+    final state = context.watch<NowPlayingCubit>().state;
+    final track = state.track;
+    if (track == null) return const SizedBox.shrink();
+    final text = Theme.of(context).textTheme;
     return Row(
-      mainAxisSize: MainAxisSize.min,
       children: [
-        CircleIconButton(
-          icon: paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
-          tooltip: paused ? l10n.actionResume : l10n.actionPause,
-          size: size,
-          onPressed: () =>
-              paused ? queue.resume(item.id) : queue.pause(item.id),
+        Icon(
+          state.isPlaying ? Icons.graphic_eq_rounded : Icons.pause_rounded,
+          size: 16,
+          color: context.palette.accent,
         ),
-        const SizedBox(width: AppSpacing.xxs),
-        CircleIconButton(
-          icon: Icons.close_rounded,
-          tooltip: l10n.actionCancel,
-          size: size,
-          onPressed: () => queue.cancel(item.id),
+        const SizedBox(width: AppSpacing.xs),
+        Expanded(
+          child: Text(
+            '${track.title} · ${track.artist}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: text.bodySmall?.copyWith(color: color),
+          ),
         ),
       ],
     );

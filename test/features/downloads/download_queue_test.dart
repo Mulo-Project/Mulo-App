@@ -182,7 +182,7 @@ void main() {
     expect(find.text('Next Song · Next Artist'), findsOneWidget);
   });
 
-  testWidgets('대기열 카드: 일시정지 · 이어받기 · 취소 버튼', (tester) async {
+  testWidgets('대기열 카드: 일시정지 · 붙여넣기 버튼 없이 취소만', (tester) async {
     final queue = MemoryDownloadQueue([_now, _next]);
     await setUpTestDependencies(downloads: queue);
     tester.view.physicalSize = const Size(1170, 2532);
@@ -194,16 +194,15 @@ void main() {
     await tester.pumpWidget(const MusicApp(initialLocation: Routes.search));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.pause_rounded));
+    expect(find.byIcon(Icons.pause_rounded), findsNothing);
+    expect(find.byIcon(Icons.content_paste_rounded), findsNothing);
     await tester.tap(find.byIcon(Icons.close_rounded).first);
     await tester.pump();
-    // 대기 중인 곡 줄에도 같은 버튼이 있다.
     await tester.tap(find.byIcon(Icons.keyboard_arrow_down_rounded));
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.pause_rounded).last);
     await tester.tap(find.byIcon(Icons.close_rounded).last);
     await tester.pump();
-    expect(queue.controls, ['pause:a', 'cancel:a', 'pause:b', 'cancel:b']);
+    expect(queue.controls, ['cancel:a', 'cancel:b']);
   });
 
   testWidgets('검색 탭: 받는 곡이 없으면 카드가 없다', (tester) async {

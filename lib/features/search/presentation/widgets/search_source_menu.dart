@@ -30,6 +30,9 @@ class SearchSourceMenu extends StatelessWidget {
       SearchSource.web => Icons.public_rounded,
     };
 
+    Color tint(SearchSource s, Color fallback) =>
+        s == SearchSource.youtube ? AppPalette.youtubeRed : fallback;
+
     return PopupMenuButton<SearchSource>(
       tooltip: l10n.searchSourceTooltip,
       initialValue: source,
@@ -48,7 +51,7 @@ class SearchSourceMenu extends StatelessWidget {
                 Icon(
                   icon(s),
                   size: 20,
-                  color: s == source ? p.accent : p.onSurfaceMuted,
+                  color: tint(s, s == source ? p.accent : p.onSurfaceMuted),
                 ),
                 const SizedBox(width: AppSpacing.xs),
                 Text(label(s)),
@@ -62,7 +65,9 @@ class SearchSourceMenu extends StatelessWidget {
           height: 52,
           child: Row(
             mainAxisSize: MainAxisSize.min,
-            children: [Icon(icon(source), color: p.accent, size: 22)],
+            children: [
+              Icon(icon(source), color: tint(source, p.accent), size: 22),
+            ],
           ),
         ),
       ),

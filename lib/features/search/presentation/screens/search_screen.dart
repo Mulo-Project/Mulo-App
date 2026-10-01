@@ -9,6 +9,7 @@ import '../../../downloads/presentation/bloc/download_queue_cubit.dart';
 import '../../../downloads/presentation/widgets/download_dialog.dart';
 import '../../../downloads/presentation/widgets/download_progress_card.dart';
 import '../../../library/domain/entities/track.dart';
+import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/search_source.dart';
 import '../widgets/search_source_menu.dart';
 
@@ -89,15 +90,6 @@ class _SearchScreenState extends State<SearchScreen> {
                   : l10n.searchHint,
               clearTooltip: l10n.actionClear,
               onChanged: (q) => setState(() => _query = q),
-              trailing: IconButton(
-                tooltip: l10n.actionPaste,
-                onPressed: () {},
-                icon: Icon(
-                  Icons.content_paste_rounded,
-                  color: context.palette.onSurfaceMuted,
-                  size: 20,
-                ),
-              ),
               suffix: SearchSourceMenu(
                 source: _source,
                 onChanged: (s) => setState(() => _source = s),
@@ -230,14 +222,19 @@ class _DownloadCard extends StatelessWidget {
     final queue = context.watch<DownloadQueueCubit>().state;
     final current = queue.current;
     if (current == null) return const SizedBox.shrink();
+    final tracks = SampleData.tracks;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.sm,
-        AppSpacing.md,
-        0,
+      padding: const EdgeInsets.only(top: AppSpacing.sm),
+      child: DownloadProgressCard(
+        current: current,
+        waiting: queue.waiting,
+        onPlay: (item) {
+          final i = tracks.indexWhere((t) => t.id == item.id);
+          if (i >= 0) {
+            context.read<NowPlayingCubit>().playQueue(tracks, index: i);
+          }
+        },
       ),
-      child: DownloadProgressCard(current: current, waiting: queue.waiting),
     );
   }
 }
