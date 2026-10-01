@@ -7,6 +7,7 @@ import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../library/domain/entities/track.dart';
+import '../../../library/presentation/widgets/track_menu.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/home_summary.dart';
 import '../bloc/home_bloc.dart';
@@ -116,7 +117,10 @@ class _HomeView extends StatelessWidget {
               subtitle: _artist(l10n, s.recent[i]),
               tone: toneFor(s.recent[i].id),
               artwork: coverImageOf(context, CoverKey.track(s.recent[i].id)),
+              trailing: TrackMoreButton(track: s.recent[i]),
               onTap: () => player.playQueue(s.recent, index: i),
+              onLongPress: () => showTrackMenu(context, s.recent[i]),
+              onSecondaryTap: () => showTrackMenu(context, s.recent[i]),
             ),
       ],
     ];
@@ -282,11 +286,19 @@ class _RankTile extends StatelessWidget {
           ),
         ],
       ),
-      trailing: Text(
-        l10n.playCount(item.count),
-        style: Theme.of(context).textTheme.bodySmall,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            l10n.playCount(item.count),
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          TrackMoreButton(track: t),
+        ],
       ),
       onTap: onTap,
+      onLongPress: () => showTrackMenu(context, t),
+      onSecondaryTap: () => showTrackMenu(context, t),
     );
   }
 }

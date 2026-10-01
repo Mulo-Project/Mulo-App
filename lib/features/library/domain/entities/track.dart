@@ -1,3 +1,5 @@
+import 'track_info.dart';
+
 /// 곡이 어디서 왔는지.
 enum TrackSource { device, download }
 
@@ -34,6 +36,20 @@ class Track {
   /// 파일이 들어 있는 폴더 경로 (불러오는 폴더별 곡 수에 쓴다). 모르면 빈 문자열.
   final String folder;
   final TrackSource source;
+
+  /// 편집한 정보를 반영한 새 곡 (id · 재생 주소 등은 그대로).
+  Track withInfo(TrackInfo info) => Track(
+    id: id,
+    title: info.title,
+    artist: info.artist,
+    album: info.album,
+    genre: info.genre,
+    duration: duration,
+    addedAt: addedAt,
+    uri: uri,
+    folder: folder,
+    source: source,
+  );
 
   @override
   bool operator ==(Object other) => other is Track && other.id == id;

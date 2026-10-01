@@ -660,4 +660,74 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get downloadPlaylistsDone => '선택 완료';
+
+  @override
+  String get trackMenuTitle => '곡 메뉴';
+
+  @override
+  String get trackMenuPlayNext => '다음에 재생';
+
+  @override
+  String get trackMenuAddToQueue => '대기열에 추가';
+
+  @override
+  String get trackMenuAddToPlaylist => '재생목록에 추가';
+
+  @override
+  String get trackMenuEditInfo => '정보 편집';
+
+  @override
+  String get trackMenuCover => '커버 이미지 설정';
+
+  @override
+  String get trackMenuDelete => '삭제';
+
+  @override
+  String get trackMenuPlayNextDone => '다음에 재생해요';
+
+  @override
+  String get trackMenuAddedToQueue => '대기열에 추가했어요';
+
+  @override
+  String get trackMenuNoPlaylists => '재생목록이 없어요. 재생목록 탭에서 먼저 만들어 주세요.';
+
+  @override
+  String trackMenuAddedToPlaylists(int count) {
+    return '$count개 재생목록에 담았어요';
+  }
+
+  @override
+  String get trackEditTitle => '곡 정보 편집';
+
+  @override
+  String get trackEditName => '제목';
+
+  @override
+  String get trackEditArtist => '아티스트';
+
+  @override
+  String get trackEditAlbum => '앨범';
+
+  @override
+  String get trackEditGenre => '장르';
+
+  @override
+  String get trackEditSave => '저장';
+
+  @override
+  String get trackEditSaved => '곡 정보를 고쳤어요';
+
+  @override
+  String get trackDeleteTitle => '곡 삭제';
+
+  @override
+  String trackDeleteBody(String title) {
+    return '\"$title\"을(를) 보관함에서 지울까요? 재생목록에서도 빠져요. 기기의 음악 파일은 지워지지 않아요.';
+  }
+
+  @override
+  String get trackDeleteConfirm => '삭제';
+
+  @override
+  String get trackDeleted => '보관함에서 지웠어요';
 }

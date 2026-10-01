@@ -669,4 +669,75 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get downloadPlaylistsDone => 'Done';
+
+  @override
+  String get trackMenuTitle => 'Song menu';
+
+  @override
+  String get trackMenuPlayNext => 'Play next';
+
+  @override
+  String get trackMenuAddToQueue => 'Add to queue';
+
+  @override
+  String get trackMenuAddToPlaylist => 'Add to playlist';
+
+  @override
+  String get trackMenuEditInfo => 'Edit info';
+
+  @override
+  String get trackMenuCover => 'Cover image';
+
+  @override
+  String get trackMenuDelete => 'Delete';
+
+  @override
+  String get trackMenuPlayNextDone => 'Playing next';
+
+  @override
+  String get trackMenuAddedToQueue => 'Added to the queue';
+
+  @override
+  String get trackMenuNoPlaylists =>
+      'No playlists yet. Create one in the Playlists tab first.';
+
+  @override
+  String trackMenuAddedToPlaylists(int count) {
+    return 'Added to $count playlist(s)';
+  }
+
+  @override
+  String get trackEditTitle => 'Edit song info';
+
+  @override
+  String get trackEditName => 'Title';
+
+  @override
+  String get trackEditArtist => 'Artist';
+
+  @override
+  String get trackEditAlbum => 'Album';
+
+  @override
+  String get trackEditGenre => 'Genre';
+
+  @override
+  String get trackEditSave => 'Save';
+
+  @override
+  String get trackEditSaved => 'Song info updated';
+
+  @override
+  String get trackDeleteTitle => 'Delete song';
+
+  @override
+  String trackDeleteBody(String title) {
+    return 'Remove \"$title\" from your library? It will also leave your playlists. The music file on your device is not deleted.';
+  }
+
+  @override
+  String get trackDeleteConfirm => 'Delete';
+
+  @override
+  String get trackDeleted => 'Removed from your library';
 }

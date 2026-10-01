@@ -65,7 +65,8 @@ MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부�
 | `AppBottomNav` | app_bottom_nav.dart | 하단 탭 바 (선택 = 강조 색 + 점). `highlighted` 항목(홈, 가운데)은 강조 색 원 |
 | `AppSearchField` | app_search_field.dart | 알약 입력칸 (돋보기 · 지우기 · 오른쪽 버튼). 글자는 세로 가운데 |
 | `ArtworkBox` · `toneFor()` | artwork_box.dart | 커버 자리 (없으면 그라데이션), 키별 고정 톤 |
-| `TrackTile` | track_tile.dart | 곡 한 줄 (커버 · 제목 · 부제 · 오른쪽 · 아래 줄) |
+| `TrackTile` | track_tile.dart | 곡 한 줄 (커버 · 제목 · 부제 · 오른쪽 · 아래 줄). 길게 누르기 · 오른쪽 클릭 콜백 |
+| `MenuRow` | menu_row.dart | 메뉴 시트의 한 줄 (아이콘 + 글자, 삭제는 `destructive` 경고 색) |
 | `AppSwitch` | app_switch.dart | 토글 (켜짐 = 강조 색) |
 | `PinPad` | pin_pad.dart | PIN 입력 판 (입력 자리 점 + 숫자 키패드, 0 왼쪽 칸에 생체 버튼). 입력값은 밖에서 들고 있음 |
 | `AppTextField` | app_text_field.dart | 라벨이 위에 붙은 둥근 입력칸 (폼). 글자는 세로 가운데 |

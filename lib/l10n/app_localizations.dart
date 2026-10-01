@@ -1333,6 +1333,138 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'선택 완료'**
   String get downloadPlaylistsDone;
+
+  /// No description provided for @trackMenuTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 메뉴'**
+  String get trackMenuTitle;
+
+  /// No description provided for @trackMenuPlayNext.
+  ///
+  /// In ko, this message translates to:
+  /// **'다음에 재생'**
+  String get trackMenuPlayNext;
+
+  /// No description provided for @trackMenuAddToQueue.
+  ///
+  /// In ko, this message translates to:
+  /// **'대기열에 추가'**
+  String get trackMenuAddToQueue;
+
+  /// No description provided for @trackMenuAddToPlaylist.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생목록에 추가'**
+  String get trackMenuAddToPlaylist;
+
+  /// No description provided for @trackMenuEditInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'정보 편집'**
+  String get trackMenuEditInfo;
+
+  /// No description provided for @trackMenuCover.
+  ///
+  /// In ko, this message translates to:
+  /// **'커버 이미지 설정'**
+  String get trackMenuCover;
+
+  /// No description provided for @trackMenuDelete.
+  ///
+  /// In ko, this message translates to:
+  /// **'삭제'**
+  String get trackMenuDelete;
+
+  /// No description provided for @trackMenuPlayNextDone.
+  ///
+  /// In ko, this message translates to:
+  /// **'다음에 재생해요'**
+  String get trackMenuPlayNextDone;
+
+  /// No description provided for @trackMenuAddedToQueue.
+  ///
+  /// In ko, this message translates to:
+  /// **'대기열에 추가했어요'**
+  String get trackMenuAddedToQueue;
+
+  /// No description provided for @trackMenuNoPlaylists.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생목록이 없어요. 재생목록 탭에서 먼저 만들어 주세요.'**
+  String get trackMenuNoPlaylists;
+
+  /// No description provided for @trackMenuAddedToPlaylists.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}개 재생목록에 담았어요'**
+  String trackMenuAddedToPlaylists(int count);
+
+  /// No description provided for @trackEditTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 정보 편집'**
+  String get trackEditTitle;
+
+  /// No description provided for @trackEditName.
+  ///
+  /// In ko, this message translates to:
+  /// **'제목'**
+  String get trackEditName;
+
+  /// No description provided for @trackEditArtist.
+  ///
+  /// In ko, this message translates to:
+  /// **'아티스트'**
+  String get trackEditArtist;
+
+  /// No description provided for @trackEditAlbum.
+  ///
+  /// In ko, this message translates to:
+  /// **'앨범'**
+  String get trackEditAlbum;
+
+  /// No description provided for @trackEditGenre.
+  ///
+  /// In ko, this message translates to:
+  /// **'장르'**
+  String get trackEditGenre;
+
+  /// No description provided for @trackEditSave.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장'**
+  String get trackEditSave;
+
+  /// No description provided for @trackEditSaved.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 정보를 고쳤어요'**
+  String get trackEditSaved;
+
+  /// No description provided for @trackDeleteTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 삭제'**
+  String get trackDeleteTitle;
+
+  /// No description provided for @trackDeleteBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'\"{title}\"을(를) 보관함에서 지울까요? 재생목록에서도 빠져요. 기기의 음악 파일은 지워지지 않아요.'**
+  String trackDeleteBody(String title);
+
+  /// No description provided for @trackDeleteConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'삭제'**
+  String get trackDeleteConfirm;
+
+  /// No description provided for @trackDeleted.
+  ///
+  /// In ko, this message translates to:
+  /// **'보관함에서 지웠어요'**
+  String get trackDeleted;
 }
 
 class _AppLocalizationsDelegate

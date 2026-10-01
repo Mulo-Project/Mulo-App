@@ -4,13 +4,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
-import '../../../covers/presentation/widgets/cover_sheet.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/import_result.dart';
 import '../../domain/entities/library_sort.dart';
 import '../../domain/entities/track.dart';
 import '../bloc/library_cubit.dart';
 import '../bloc/library_import_cubit.dart';
+import '../widgets/track_menu.dart';
 
 enum LibraryTab { songs, artists, albums, genres }
 
@@ -49,7 +49,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final all = context.select((LibraryCubit c) => c.state.tracks);
+    // 곡 목록 대신 상태를 고른다: 목록끼리 비교하면 곡 정보를 고친 것을 못 알아챈다.
+    final all = context.select((LibraryCubit c) => c.state).tracks;
     final importing = context.select((LibraryImportCubit c) => c.state.running);
     final tracks = _filtered(all, l10n);
     final vm = context.read<NowPlayingCubit>();
@@ -246,22 +247,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
             formatDuration(t.duration),
             style: Theme.of(context).textTheme.bodySmall,
           ),
-          IconButton(
-            tooltip: l10n.coverChange,
-            onPressed: () => showCoverSheet(
-              context,
-              coverKey: CoverKey.track(t.id),
-              title: t.title,
-              tone: toneFor(t.id),
-            ),
-            icon: Icon(
-              Icons.more_vert_rounded,
-              color: context.palette.onSurfaceMuted,
-            ),
-          ),
+          TrackMoreButton(track: t),
         ],
       ),
       onTap: () => vm.playQueue(queue, index: i),
+      onLongPress: () => showTrackMenu(context, t),
+      onSecondaryTap: () => showTrackMenu(context, t),
     );
   }
 

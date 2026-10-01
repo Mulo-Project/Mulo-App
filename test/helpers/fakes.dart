@@ -13,6 +13,7 @@ import 'package:music_download_play_app/features/home/domain/repositories/play_h
 import 'package:music_download_play_app/features/library/di.dart';
 import 'package:music_download_play_app/features/library/domain/entities/import_result.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
+import 'package:music_download_play_app/features/library/domain/entities/track_info.dart';
 import 'package:music_download_play_app/features/library/domain/repositories/library_repository.dart';
 import 'package:music_download_play_app/features/player/di.dart';
 import 'package:music_download_play_app/features/playlists/di.dart';
@@ -49,6 +50,33 @@ class FakeLibraryRepository implements LibraryRepository {
     _tracks.addAll(added);
     _changes.add(_sorted);
     return added.length;
+  }
+
+  @override
+  Future<bool> updateInfo(String trackId, TrackInfo info) async {
+    final i = _tracks.indexWhere((t) => t.id == trackId);
+    if (i < 0) return false;
+    final t = _tracks[i];
+    _tracks[i] = Track(
+      id: t.id,
+      title: info.title,
+      artist: info.artist,
+      album: info.album,
+      genre: info.genre,
+      duration: t.duration,
+      addedAt: t.addedAt,
+      uri: t.uri,
+      folder: t.folder,
+      source: t.source,
+    );
+    _changes.add(_sorted);
+    return true;
+  }
+
+  @override
+  Future<void> delete(String trackId) async {
+    _tracks.removeWhere((t) => t.id == trackId);
+    _changes.add(_sorted);
   }
 }
 

@@ -31,11 +31,13 @@ void registerLibrary(GetIt sl) {
       PrefsLoadedFolderRepository.new,
     )
     ..registerFactory(() => WatchLibraryTracks(sl()))
+    ..registerFactory(() => UpdateTrackInfo(sl()))
+    ..registerFactory(() => DeleteTrack(sl()))
     ..registerFactory(() => ImportDeviceMusic(sl(), sl(), sl()))
     ..registerFactory(() => LoadLoadedFolders(sl(), sl()))
     ..registerFactory(() => AddLoadedFolder(sl()))
     ..registerFactory(() => RemoveLoadedFolder(sl()))
     ..registerFactory(() => LoadedFoldersCubit(sl(), sl(), sl(), sl()))
-    ..registerFactory(() => LibraryCubit(sl()))
+    ..registerFactory(() => LibraryCubit(sl(), sl(), sl()))
     ..registerFactory(() => LibraryImportCubit(sl()));
 }

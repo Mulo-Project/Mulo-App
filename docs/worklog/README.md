@@ -40,3 +40,4 @@
 | 2026-10-01 | [검색 · 다운로드 피드백 반영](2026-10-01-search-download-feedback.md) | 완료 (PR 대기) |
 | 2026-10-01 | [서버 주소 dart-define 전환](2026-10-01-server-url-dart-define.md) | 완료 (PR 대기) |
 | 2026-10-01 | [불러오는 폴더 목록 (바텀 시트)](2026-10-01-loaded-folders-sheet.md) | 완료 (PR 대기) |
+| 2026-10-01 | [곡 타일 메뉴](2026-10-01-song-tile-menu.md) | 완료 (PR 대기) |

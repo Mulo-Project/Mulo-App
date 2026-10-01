@@ -70,7 +70,7 @@ class _PlaylistMenu extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: AppSpacing.md),
-              _MenuRow(
+              MenuRow(
                 icon: Icons.image_rounded,
                 label: l10n.playlistMenuImage,
                 onTap: () {
@@ -120,47 +120,6 @@ String _toneName(AppLocalizations l10n, GlowTone tone) => switch (tone) {
   GlowTone.secondary => l10n.playlistColorSecondary,
   GlowTone.tertiary => l10n.playlistColorTertiary,
 };
-
-class _MenuRow extends StatelessWidget {
-  const _MenuRow({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final p = context.palette;
-    return Material(
-      color: p.surfaceHigh,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadii.md),
-        side: BorderSide(color: p.outline),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
-          ),
-          child: Row(
-            children: [
-              Icon(icon, size: 20, color: p.onSurface),
-              const SizedBox(width: AppSpacing.sm),
-              Text(label, style: Theme.of(context).textTheme.bodyLarge),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 /// 카드 색 고르기 동그라미. 자동은 새로고침 표시.
 class _ColorDot extends StatelessWidget {

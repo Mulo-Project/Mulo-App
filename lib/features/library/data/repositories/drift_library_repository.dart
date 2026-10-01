@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../../../../core/database/app_database.dart';
 import '../../domain/entities/track.dart';
+import '../../domain/entities/track_info.dart';
 import '../../domain/repositories/library_repository.dart';
 
 class DriftLibraryRepository implements LibraryRepository {
@@ -34,6 +35,34 @@ class DriftLibraryRepository implements LibraryRepository {
     });
     return await _count() - before;
   }
+
+  @override
+  Future<bool> updateInfo(String trackId, TrackInfo info) async {
+    final changed =
+        await (_db.update(
+          _db.tracks,
+        )..where((t) => t.id.equals(trackId))).write(
+          TracksCompanion(
+            title: Value(info.title),
+            artist: Value(info.artist),
+            album: Value(info.album),
+            genre: Value(info.genre),
+          ),
+        );
+    return changed > 0;
+  }
+
+  @override
+  Future<void> delete(String trackId) => _db.transaction(() async {
+    await (_db.delete(_db.tracks)..where((t) => t.id.equals(trackId))).go();
+    await (_db.delete(
+      _db.playlistTracks,
+    )..where((t) => t.trackId.equals(trackId))).go();
+    await (_db.delete(_db.plays)..where((t) => t.trackId.equals(trackId))).go();
+    await (_db.delete(
+      _db.covers,
+    )..where((t) => t.key.equals('track:$trackId'))).go();
+  });
 
   Future<int> _count() async {
     final count = _db.tracks.id.count();

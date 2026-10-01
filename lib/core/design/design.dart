@@ -14,6 +14,7 @@ export 'components/artwork_box.dart';
 export 'components/buttons.dart';
 export 'components/cover_card.dart';
 export 'components/glass.dart';
+export 'components/menu_row.dart';
 export 'components/mini_player_bar.dart';
 export 'components/pin_pad.dart';
 export 'components/progress.dart';

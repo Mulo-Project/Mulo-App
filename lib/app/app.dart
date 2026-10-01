@@ -54,7 +54,8 @@ class _MusicAppState extends State<MusicApp> {
         BlocProvider(create: (_) => sl<NowPlayingCubit>()),
         BlocProvider(create: (_) => sl<PlayRecorderCubit>()),
         BlocProvider(create: (_) => sl<DownloadQueueCubit>()..start()),
-        BlocProvider(create: (_) => sl<PlaylistsCubit>()..start()),
+        // 곡 메뉴에서 바로 읽으므로 재생목록 탭을 열기 전에도 미리 불러 둔다.
+        BlocProvider(lazy: false, create: (_) => sl<PlaylistsCubit>()..start()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(
         builder: (context, t) => MaterialApp.router(

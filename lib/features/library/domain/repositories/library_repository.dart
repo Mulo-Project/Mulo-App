@@ -1,5 +1,6 @@
 import '../entities/import_result.dart';
 import '../entities/track.dart';
+import '../entities/track_info.dart';
 
 /// 보관함 저장소.
 abstract interface class LibraryRepository {
@@ -8,6 +9,12 @@ abstract interface class LibraryRepository {
 
   /// 곡을 추가한다. 같은 재생 주소(uri)가 이미 있으면 건너뛴다. 새로 추가된 수를 돌려준다.
   Future<int> addTracks(List<Track> tracks);
+
+  /// 곡의 제목 · 아티스트 · 앨범 · 장르를 바꾼다. 곡이 없으면 false.
+  Future<bool> updateInfo(String trackId, TrackInfo info);
+
+  /// 곡을 보관함에서 지운다. 재생목록 · 재생 기록 · 커버 기록도 함께 지우고 파일은 건드리지 않는다.
+  Future<void> delete(String trackId);
 }
 
 /// 기기의 음악 파일 찾기 (상세 기능: 기기 음악 불러오기 #11).

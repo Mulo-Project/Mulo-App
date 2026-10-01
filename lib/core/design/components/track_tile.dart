@@ -17,6 +17,8 @@ class TrackTile extends StatelessWidget {
     this.footer,
     this.active = false,
     this.onTap,
+    this.onLongPress,
+    this.onSecondaryTap,
   });
 
   final String title;
@@ -35,6 +37,10 @@ class TrackTile extends StatelessWidget {
   final bool active;
   final VoidCallback? onTap;
 
+  /// 길게 누르기 · 데스크톱 오른쪽 클릭 (곡 메뉴 같은 보조 동작).
+  final VoidCallback? onLongPress;
+  final VoidCallback? onSecondaryTap;
+
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
@@ -42,6 +48,8 @@ class TrackTile extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
+      onLongPress: onLongPress,
+      onSecondaryTap: onSecondaryTap,
       borderRadius: BorderRadius.circular(AppRadii.sm),
       child: Padding(
         padding: const EdgeInsets.symmetric(
