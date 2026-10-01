@@ -7,6 +7,7 @@ import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../../domain/entities/download_options.dart';
 import '../../domain/entities/download_request.dart';
 import '../bloc/download_queue_cubit.dart';
+import 'playlist_picker_dialog.dart';
 
 /// 받기 팝업: 제목 · 아티스트 · 장르를 고치고, 저장할 때 넣을 재생목록을 고른다.
 /// "받기"를 누르면 대기열에 넣고 true를 돌려준다 (닫기만 하면 false).
@@ -87,6 +88,20 @@ class _DownloadSheetState extends State<_DownloadSheet> {
     });
   }
 
+  Future<void> _pickPlaylists() async {
+    final picked = await showPlaylistPickerDialog(
+      context,
+      playlists: context.read<PlaylistsCubit>().state,
+      selected: _selected,
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _selected
+        ..clear()
+        ..addAll(picked);
+    });
+  }
+
   Future<void> _start() async {
     final ok = await context.read<DownloadQueueCubit>().enqueue(
       DownloadRequest(
@@ -104,7 +119,6 @@ class _DownloadSheetState extends State<_DownloadSheet> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
-    final playlists = context.watch<PlaylistsCubit>().state;
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -140,32 +154,12 @@ class _DownloadSheetState extends State<_DownloadSheet> {
                 style: text.labelSmall,
               ),
               const SizedBox(height: AppSpacing.xxs),
-              if (playlists.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-                  child: Text(
-                    l10n.downloadPlaylistsEmpty,
-                    style: text.bodyMedium?.copyWith(
-                      color: context.palette.onSurfaceMuted,
-                    ),
-                  ),
-                ),
-              for (final pl in playlists)
-                SettingRow(
-                  title: pl.name,
-                  description: l10n.songCount(pl.trackCount),
-                  onTap: () => setState(() {
-                    _selected.contains(pl.id)
-                        ? _selected.remove(pl.id)
-                        : _selected.add(pl.id);
-                  }),
-                  trailing: AppSwitch(
-                    value: _selected.contains(pl.id),
-                    onChanged: (v) => setState(() {
-                      v ? _selected.add(pl.id) : _selected.remove(pl.id);
-                    }),
-                  ),
-                ),
+              _PlaylistPickRow(
+                summary: _selected.isEmpty
+                    ? l10n.downloadPlaylistsNone
+                    : l10n.downloadPlaylistsSelected(_selected.length),
+                onTap: _pickPlaylists,
+              ),
               const SizedBox(height: AppSpacing.xs),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -202,6 +196,33 @@ class _DownloadSheetState extends State<_DownloadSheet> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// 팝업의 재생목록 줄: 고른 개수를 보여 주고, 누르면 고르는 대화상자를 연다.
+class _PlaylistPickRow extends StatelessWidget {
+  const _PlaylistPickRow({required this.summary, required this.onTap});
+
+  final String summary;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Container(
+      decoration: ShapeDecoration(
+        color: p.surfaceHigh,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.sm),
+          side: BorderSide(color: p.outline),
+        ),
+      ),
+      child: SettingRow(
+        title: summary,
+        onTap: onTap,
+        trailing: Icon(Icons.chevron_right_rounded, color: p.onSurfaceMuted),
       ),
     );
   }

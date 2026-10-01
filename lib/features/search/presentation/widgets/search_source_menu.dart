@@ -5,6 +5,7 @@ import '../../../../core/l10n/l10n.dart';
 import '../../domain/entities/search_source.dart';
 
 /// 검색창 오른쪽 메뉴: 유튜브 / 웹 중 어디서 찾을지 고른다.
+/// 검색창에는 아이콘만, 눌러서 열리는 메뉴에는 아이콘 + 이름을 보여 준다.
 class SearchSourceMenu extends StatelessWidget {
   const SearchSourceMenu({
     super.key,
@@ -24,6 +25,11 @@ class SearchSourceMenu extends StatelessWidget {
       SearchSource.web => l10n.sourceWeb,
     };
 
+    IconData icon(SearchSource s) => switch (s) {
+      SearchSource.youtube => Icons.smart_display_rounded,
+      SearchSource.web => Icons.public_rounded,
+    };
+
     return PopupMenuButton<SearchSource>(
       tooltip: l10n.searchSourceTooltip,
       initialValue: source,
@@ -35,7 +41,20 @@ class SearchSourceMenu extends StatelessWidget {
       ),
       itemBuilder: (_) => [
         for (final s in SearchSource.values)
-          PopupMenuItem(value: s, child: Text(label(s))),
+          PopupMenuItem(
+            value: s,
+            child: Row(
+              children: [
+                Icon(
+                  icon(s),
+                  size: 20,
+                  color: s == source ? p.accent : p.onSurfaceMuted,
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                Text(label(s)),
+              ],
+            ),
+          ),
       ],
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
@@ -43,18 +62,7 @@ class SearchSourceMenu extends StatelessWidget {
           height: 52,
           child: Row(
             mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                label(source),
-                style: Theme.of(context).textTheme.labelLarge
-                    ?.copyWith(color: p.accent),
-              ),
-              Icon(
-                Icons.arrow_drop_down_rounded,
-                color: p.onSurfaceMuted,
-                size: 20,
-              ),
-            ],
+            children: [Icon(icon(source), color: p.accent, size: 22)],
           ),
         ),
       ),
