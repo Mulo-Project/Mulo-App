@@ -41,7 +41,7 @@ class PlaylistCard extends StatelessWidget {
     this.onTap,
   });
 
-  static const aspectRatio = .6;
+  static const aspectRatio = .8;
 
   final Playlist playlist;
 
@@ -66,79 +66,90 @@ class PlaylistCard extends StatelessWidget {
       enabled: browsing,
       onMenu: (pos) => showPlaylistMenu(context, playlist, globalPosition: pos),
       child: CoverCard(
+        radius: AppRadii.sm,
         image: image,
         tone: playlistToneOf(playlist),
         shade: image != null,
         onTap: onTap ?? () => context.push(Routes.playlistDetail(playlist.id)),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.sm,
+                AppSpacing.xs,
+                0,
+              ),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (playlist.isFavorites) ...[
-                    Padding(
-                      padding: const EdgeInsets.only(top: 2),
-                      child: Icon(
-                        Icons.favorite_rounded,
-                        size: 20,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (playlist.isFavorites) ...[
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Icon(
+                            Icons.favorite_rounded,
+                            size: 20,
+                            color: p.onGlow,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.xxs),
+                      ],
+                      Expanded(
+                        child: Text(
+                          playlistNameOf(l10n, playlist),
+                          // 사진 · 그라데이션 위라서 두 모드 모두 밝은 글자.
+                          style: text.titleMedium?.copyWith(color: p.onGlow),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (browsing)
+                        Builder(
+                          builder: (btn) => CircleIconButton(
+                            icon: Icons.more_vert_rounded,
+                            tooltip: l10n.playlistMenuTooltip,
+                            size: 34,
+                            onPressed: () => showPlaylistMenu(btn, playlist),
+                          ),
+                        )
+                      else
+                        _SelectMark(selected: selected!),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.xxs),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      StatNumber(
+                        '${playlist.trackCount}',
+                        size: 28,
                         color: p.onGlow,
                       ),
-                    ),
-                    const SizedBox(width: AppSpacing.xxs),
-                  ],
-                  Expanded(
-                    child: Text(
-                      playlistNameOf(l10n, playlist),
-                      // 사진 · 그라데이션 위라서 두 모드 모두 밝은 글자.
-                      style: text.titleMedium?.copyWith(color: p.onGlow),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  if (browsing)
-                    Builder(
-                      builder: (btn) => CircleIconButton(
-                        icon: Icons.more_vert_rounded,
-                        tooltip: l10n.playlistMenuTooltip,
-                        size: 34,
-                        onPressed: () => showPlaylistMenu(btn, playlist),
+                      const SizedBox(width: AppSpacing.xxs),
+                      Text(
+                        l10n.unitSongs,
+                        style: text.bodySmall?.copyWith(color: p.onGlow),
                       ),
-                    )
-                  else
-                    _SelectMark(selected: selected!),
+                    ],
+                  ),
+                  if (already) ...[
+                    const SizedBox(height: AppSpacing.xxs),
+                    Text(
+                      l10n.playlistPickAlready,
+                      style: text.labelSmall?.copyWith(color: p.onGlow),
+                    ),
+                  ],
                 ],
               ),
-              const SizedBox(height: AppSpacing.xxs),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  StatNumber(
-                    '${playlist.trackCount}',
-                    size: 28,
-                    color: p.onGlow,
-                  ),
-                  const SizedBox(width: AppSpacing.xxs),
-                  Text(
-                    l10n.unitSongs,
-                    style: text.bodySmall?.copyWith(color: p.onGlow),
-                  ),
-                ],
-              ),
-              if (already) ...[
-                const SizedBox(height: AppSpacing.xxs),
-                Text(
-                  l10n.playlistPickAlready,
-                  style: text.labelSmall?.copyWith(color: p.onGlow),
-                ),
-              ],
-              const Spacer(),
-              _Featured(playlist: playlist),
-            ],
-          ),
+            ),
+            const Spacer(),
+            _Featured(playlist: playlist),
+          ],
         ),
       ),
     );
@@ -215,46 +226,55 @@ class _Featured extends StatelessWidget {
     if (track == null) {
       // 곡은 있는데 대표곡을 못 구하면(보관함에서 지워진 곡뿐) 자리를 비워 둔다.
       if (playlist.trackCount > 0) return const SizedBox.shrink();
-      return Text(
-        context.l10n.playlistSummaryEmpty,
-        style: text.bodySmall?.copyWith(color: p.onGlow.withValues(alpha: .8)),
+      return Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Text(
+          context.l10n.playlistSummaryEmpty,
+          style: text.bodySmall?.copyWith(
+            color: p.onGlow.withValues(alpha: .8),
+          ),
+        ),
       );
     }
-    return DecoratedBox(
-      decoration: ShapeDecoration(
-        color: p.scrim.withValues(alpha: .32),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadii.md),
-        ),
-      ),
+    return ColoredBox(
+      color: p.scrim.withValues(alpha: .6),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xs),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
+        ),
+        child: Row(
           children: [
             ArtworkBox(
               image: coverImageOf(context, CoverKey.track(track.id)),
-              size: 72,
-              width: double.infinity,
-              radius: AppRadii.sm,
+              size: 36,
+              radius: 6,
               tone: toneFor(track.id),
             ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              track.title,
-              style: text.titleSmall?.copyWith(color: p.onGlow),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            if (track.artist.isNotEmpty)
-              Text(
-                track.artist,
-                style: text.labelSmall?.copyWith(
-                  color: p.onGlow.withValues(alpha: .85),
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+            const SizedBox(width: AppSpacing.xs),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    track.title,
+                    style: text.labelLarge?.copyWith(color: p.onGlow),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (track.artist.isNotEmpty)
+                    Text(
+                      track.artist,
+                      style: text.labelSmall?.copyWith(
+                        color: p.onGlow.withValues(alpha: .8),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                ],
               ),
+            ),
           ],
         ),
       ),
