@@ -24,9 +24,12 @@ class PlaylistGrid extends StatelessWidget {
             for (final pl in lists)
               SizedBox(
                 width: w,
-                child:
-                    cardBuilder?.call(context, pl) ??
-                    PlaylistCard(playlist: pl),
+                child: AspectRatio(
+                  aspectRatio: PlaylistCard.aspectRatio,
+                  child:
+                      cardBuilder?.call(context, pl) ??
+                      PlaylistCard(playlist: pl),
+                ),
               ),
           ],
         );
