@@ -10,22 +10,24 @@
 - 곡 메뉴에 **가사 설정** 항목을 더했다. 대화상자에서 직접 입력 · 붙여넣기, 또는 **.lrc · .txt 파일에서 불러오기**(글만 채워 주고 저장은 눌러야 한다)를 할 수 있고, 비워서 저장하면 가사를 지운다 (D-032).
 - 저장은 앱 폴더 `lyrics/<곡 id>.lrc`(시간 표시가 있는 싱크 가사) 또는 `.txt`(일반 글) + DB 경로 (`lyrics_files`, 스키마 6). 곡을 삭제하면 가사도 지운다.
 - 곡 옆의 같은 이름 `.lrc`(음원이 파일 경로일 때)를 직접 저장한 가사가 없을 때 읽는다.
+- 그것도 없으면 **음원 파일 태그 속 가사**(ID3 USLT · Vorbis · MP4 ©lyr 등)를 읽는다. `audio_metadata_reader`(순수 Dart)로 파싱하고, Android `content://` 곡은 네이티브 `LyricsChannel`(`music_app/lyrics`, `copyToCache`)이 캐시 폴더로 복사해 준 파일을 읽은 뒤 바로 지운다. 태그 가사에 `[mm:ss]`가 있으면 싱크로 보인다 (SYLT 같은 별도 싱크 프레임은 읽지 않는다).
 - 전체 화면 플레이어 상단에 **커버 ↔ 가사** 전환 버튼. 싱크 가사는 재생 위치의 줄을 강조하고 따라 내려가며, 줄을 누르면 그 위치로 옮긴다 (`NowPlayingCubit.seekTo`). 일반 글은 그대로 보여 주고, 가사가 없으면 안내와 가사 설정 버튼을 보여 준다.
 - LRC 해석: 한 줄에 시간 표시 여러 개, `[offset:ms]`, `[ar:]` 같은 메타 태그 무시, 소수부 1~3자리.
 - 구조: `features/lyrics` (`Lyrics` · `LyricsRepository` · `LyricsFileSource`, 유스케이스 4개, `LyricsCubit`, `LyricsView` · `showLyricsEditor`).
 - 디자인 시스템: `AppTextField`에 `maxLines`(여러 줄 입력칸).
 
 ## 바꾼 설정
-- 새 패키지 · 네이티브 변경 없음 (file_picker · path_provider 기존 사용).
+- 새 패키지: `audio_metadata_reader`. 네이티브: Android `LyricsChannel.kt` 추가, `MainActivity` 등록.
 - drift 스키마 5 → 6 (`lyrics_files` 표 추가, 생성 코드 갱신).
 - 문구(ko · en) 12개 추가 (`trackMenuLyrics` · `lyrics*` · `playerShow*`).
 
 ## 확인
 - `flutter analyze` 0, `flutter test` 전체 통과, `flutter build apk --debug` 성공.
 - 새 테스트: LRC 해석 · 현재 줄 찾기, 저장소(저장 · 확장자 바뀔 때 정리 · 비워서 지움 · 옆 .lrc · content:// 무시), 위젯(곡 메뉴에서 파일 불러와 저장 · 지움, 플레이어 가사 전환 · 줄 눌러 이동 · 가사 없음).
+- 태그 읽기 테스트: 최소 ID3v2.3 파일의 USLT, 태그 없는 파일 · 없는 파일은 null, 저장소의 읽는 순서. Android 복사 채널은 빌드만 확인했다.
 - 에뮬레이터 · 실기기에서의 직접 확인은 하지 않았다. 재생 엔진이 아직 없어 재생 위치는 화면 상태(탐색 막대 · 줄 누르기)로만 움직인다.
 
 ## 남은 일 · 질문
-- **파일 태그에 들어 있는 가사(ID3 등)** 읽기는 넣지 않았다. 태그를 읽는 패키지나 네이티브 코드가 필요하고 FD-53에도 적혀 있지 않다. 필요하면 별도 작업으로.
+- 태그 가사는 곡을 열 때마다(다른 가사가 없을 때) 읽는다. Android는 파일을 통째로 캐시로 복사하므로 큰 파일은 가사 보기가 조금 늦을 수 있다. 느리면 앞부분만 복사하거나 읽은 결과를 저장하는 방식으로 바꾼다.
 - **웹에서 가져오기**(앱 안 웹뷰 · 드래그 선택, FD-53 · FD-71)와 **LRCLIB 자동 검색**(FD-26)은 별도 기능이라 하지 않았다.
 - Android에서 `content://` 곡은 옆 `.lrc`를 찾지 못한다 (파일 경로를 알 수 없음). 그 경우 가사 설정으로 넣는다.

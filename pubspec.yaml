@@ -50,6 +50,7 @@ dependencies:
   local_auth: ^3.0.2
   flutter_secure_storage: ^11.2.0
   crypto: ^3.0.7
+  audio_metadata_reader: ^1.8.0
 
 dev_dependencies:
   flutter_test:

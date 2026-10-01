@@ -9,10 +9,14 @@ import '../datasources/file_picker_lyrics_source.dart';
 
 /// 가사를 앱 지원 폴더(`lyrics/`)에 파일로 두고 경로를 DB에 저장한다.
 class DriftLyricsRepository implements LyricsRepository {
-  DriftLyricsRepository(this._db, {Future<Directory> Function()? baseDir})
-    : _baseDir = baseDir ?? getApplicationSupportDirectory;
+  DriftLyricsRepository(
+    this._db,
+    this._embedded, {
+    Future<Directory> Function()? baseDir,
+  }) : _baseDir = baseDir ?? getApplicationSupportDirectory;
 
   final AppDatabase _db;
+  final EmbeddedLyricsSource _embedded;
   final Future<Directory> Function() _baseDir;
 
   @override
@@ -23,9 +27,13 @@ class DriftLyricsRepository implements LyricsRepository {
       if (text != null) return Lyrics.parse(text);
     }
     final sibling = _siblingLrc(trackUri);
-    if (sibling == null) return null;
-    final text = await _readQuietly(sibling);
-    return text == null ? null : Lyrics.parse(text);
+    if (sibling != null) {
+      final text = await _readQuietly(sibling);
+      final lyrics = text == null ? null : Lyrics.parse(text);
+      if (lyrics != null) return lyrics;
+    }
+    final tag = await _embedded.read(trackUri);
+    return tag == null ? null : Lyrics.parse(tag);
   }
 
   @override
