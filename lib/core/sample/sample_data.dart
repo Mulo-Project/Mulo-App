@@ -1,11 +1,13 @@
 import '../../features/library/domain/entities/track.dart';
 
-/// UI 퍼블리싱용 가짜 데이터 (검색 · 다운로드 · 재생목록 화면, 테스트). 보관함은 실제 DB를 쓴다. 실제 곡 · URL을 쓰지 않는다 (저작권).
+/// UI 퍼블리싱용 가짜 데이터 (검색 · 다운로드 화면, 테스트). 보관함 · 재생목록 · 홈은 실제 DB를 쓰고,
+/// 디버그 빌드에서는 이 곡들을 `sample_seeder.dart`가 DB에 넣어 준다. 실제 곡 · URL을 쓰지 않는다 (저작권).
 /// 기능이 연결되면 각 기능의 리포지토리로 대체하고 이 파일은 지운다.
 abstract final class SampleData {
   static final tracks = <Track>[
     Track(
       id: 't01',
+      genre: 'Pop',
       uri: 'sample://t01',
       title: 'Midnight Signal',
       artist: 'Neon Harbor',
@@ -15,6 +17,7 @@ abstract final class SampleData {
     ),
     Track(
       id: 't02',
+      genre: 'Indie',
       uri: 'sample://t02',
       title: 'Paper Satellites',
       artist: 'Lumen Field',
@@ -24,6 +27,7 @@ abstract final class SampleData {
     ),
     Track(
       id: 't03',
+      genre: 'Electronic',
       uri: 'sample://t03',
       title: 'Slow Static',
       artist: 'Neon Harbor',
@@ -33,6 +37,7 @@ abstract final class SampleData {
     ),
     Track(
       id: 't04',
+      genre: 'Pop',
       uri: 'sample://t04',
       title: 'Glasshouse',
       artist: 'Coral Drive',
@@ -42,6 +47,7 @@ abstract final class SampleData {
     ),
     Track(
       id: 't05',
+      genre: 'Ambient',
       uri: 'sample://t05',
       title: 'Violet Hour',
       artist: 'Mono Garden',
@@ -51,6 +57,7 @@ abstract final class SampleData {
     ),
     Track(
       id: 't06',
+      genre: 'Electronic',
       uri: 'sample://t06',
       title: 'Lime Light Runner',
       artist: 'Coral Drive',
@@ -60,6 +67,7 @@ abstract final class SampleData {
     ),
     Track(
       id: 't07',
+      genre: 'Indie',
       uri: 'sample://t07',
       title: 'Northbound',
       artist: 'Lumen Field',
@@ -69,6 +77,7 @@ abstract final class SampleData {
     ),
     Track(
       id: 't08',
+      genre: 'Ambient',
       uri: 'sample://t08',
       title: 'Echo Chamber',
       artist: 'Mono Garden',
@@ -78,6 +87,7 @@ abstract final class SampleData {
     ),
     Track(
       id: 't09',
+      genre: 'Lo-fi',
       uri: 'sample://t09',
       title: 'Quiet Engines',
       artist: 'Static Bloom',
@@ -87,6 +97,7 @@ abstract final class SampleData {
     ),
     Track(
       id: 't10',
+      genre: 'Lo-fi',
       uri: 'sample://t10',
       title: 'Afterimage',
       artist: 'Static Bloom',
@@ -96,6 +107,7 @@ abstract final class SampleData {
     ),
     Track(
       id: 't11',
+      genre: 'Pop',
       uri: 'sample://t11',
       title: 'Harbor Lights',
       artist: 'Neon Harbor',
@@ -105,6 +117,7 @@ abstract final class SampleData {
     ),
     Track(
       id: 't12',
+      genre: 'Indie',
       uri: 'sample://t12',
       title: 'Soft Machines',
       artist: 'Lumen Field',
