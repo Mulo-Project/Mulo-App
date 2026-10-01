@@ -227,8 +227,8 @@ class _SelectMark extends StatelessWidget {
 /// 앱을 켜 둔 동안 펼쳐 둔 카드 (재생목록 id). 화면을 오가도 펼친 채로 둔다.
 final _expandedIds = <String>{};
 
-/// 카드 아래 대표곡 타일. 접으면 이름 · 가수 한 줄, 누르면 타일이 자연스럽게 커지면서
-/// 앞에 커버 이미지가 나오고 부제에 가수 · 장르가 붙는다. 펼친 타일의 재생 버튼을 누르면
+/// 카드 아래 대표곡 타일. 접으면 이름 · 가수 한 줄, 누르면 아래에 한 줄이 더 생겨
+/// 작은 커버 이미지 · 장르 · 재생 버튼이 나온다. 재생 버튼을 누르면
 /// 그 곡을 (이 재생목록 대기열로) 바로 재생해 미리 들어 볼 수 있다.
 class _Featured extends StatefulWidget {
   const _Featured({required this.playlist, required this.expandable});
@@ -268,81 +268,99 @@ class _FeaturedState extends State<_Featured> {
     final p = context.palette;
     final l10n = context.l10n;
     final t = widget.playlist.featured;
-    // 접은 타일 높이를 항상 확보해서 카드 높이가 들쭉날쭉하지 않게 한다.
+    // 접은 줄 높이를 항상 확보해서 카드 높이가 들쭉날쭉하지 않게 한다.
     const rowHeight = 56.0;
     if (t == null) return const SizedBox(height: rowHeight);
     final open = _expanded && widget.expandable;
-    final subtitle = open
-        ? [t.artist, t.genre].where((s) => s.isNotEmpty).join(' · ')
-        : t.artist;
 
     return AnimatedSize(
       duration: AppMotion.medium,
       curve: AppMotion.standard,
       alignment: Alignment.topCenter,
-      child: InkWell(
-        onTap: widget.expandable ? _toggle : null,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: rowHeight),
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              AppSpacing.sm,
-              open ? AppSpacing.xs : 0,
-              AppSpacing.xxs,
-              open ? AppSpacing.xs : 0,
-            ),
-            child: Row(
-              children: [
-                // 펼치면 앞에 이미지가 생긴다.
-                if (open) ...[
-                  ArtworkBox(
-                    image: coverImageOf(context, CoverKey.track(t.id)),
-                    size: 48,
-                    radius: 8,
-                    tone: toneFor(t.id),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                ],
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      vertical: open ? 0 : AppSpacing.xs,
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          t.title,
-                          style: text.titleSmall,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        if (subtitle.isNotEmpty)
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 위 줄은 항상 그대로: 제목 · 가수.
+          InkWell(
+            onTap: widget.expandable ? _toggle : null,
+            child: SizedBox(
+              height: rowHeight,
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  left: AppSpacing.sm,
+                  right: AppSpacing.xxs,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Text(
-                            subtitle,
-                            style: text.bodySmall?.copyWith(
-                              color: p.onSurfaceMuted,
-                            ),
+                            t.title,
+                            style: text.titleSmall,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                      ],
+                          if (t.artist.isNotEmpty)
+                            Text(
+                              t.artist,
+                              style: text.bodySmall?.copyWith(
+                                color: p.onSurfaceMuted,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                        ],
+                      ),
+                    ),
+                    if (widget.expandable)
+                      Icon(
+                        open
+                            ? Icons.expand_less_rounded
+                            : Icons.expand_more_rounded,
+                        color: p.onSurfaceMuted,
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // 펼치면 아래에 한 줄이 더 생긴다: 작은 이미지 · 장르 · 재생 버튼.
+          if (open)
+            Padding(
+              padding: const EdgeInsets.only(
+                left: AppSpacing.sm,
+                right: AppSpacing.xxs,
+                bottom: AppSpacing.xs,
+              ),
+              child: Row(
+                children: [
+                  ArtworkBox(
+                    image: coverImageOf(context, CoverKey.track(t.id)),
+                    size: 36,
+                    radius: 6,
+                    tone: toneFor(t.id),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Expanded(
+                    child: Text(
+                      t.genre.isEmpty ? l10n.unknownGenre : t.genre,
+                      style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                ),
-                if (open)
                   IconButton(
                     tooltip: l10n.playlistFeaturedPreview,
                     onPressed: () => _preview(t),
                     icon: Icon(Icons.play_circle_fill_rounded, color: p.accent),
-                  )
-                else if (widget.expandable)
-                  Icon(Icons.expand_more_rounded, color: p.onSurfaceMuted),
-              ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ),
+        ],
       ),
     );
   }
