@@ -10,4 +10,7 @@ abstract interface class PlaylistRepository {
 
   /// 곡을 재생목록들에 넣는다. 이미 들어 있으면 건너뛴다.
   Future<void> addTrack(String trackId, Iterable<String> playlistIds);
+
+  /// 이미지가 없는 카드의 색을 정한다. [colorIndex]가 null이면 자동으로 되돌린다.
+  Future<void> setColor(String playlistId, int? colorIndex);
 }

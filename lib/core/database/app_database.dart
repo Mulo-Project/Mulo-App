@@ -54,6 +54,9 @@ class Playlists extends Table {
   TextColumn get name => text()();
   DateTimeColumn get createdAt => dateTime()();
 
+  /// 이미지가 없을 때 카드 색 (글로우 톤 번호). 안 골랐으면 null.
+  IntColumn get colorIndex => integer().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -77,7 +80,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'music_app'));
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -88,6 +91,7 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(playlists);
         await m.createTable(playlistTracks);
       }
+      if (from == 3) await m.addColumn(playlists, playlists.colorIndex);
     },
   );
 }

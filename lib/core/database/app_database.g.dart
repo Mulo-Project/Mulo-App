@@ -1098,8 +1098,19 @@ class $PlaylistsTable extends Playlists
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _colorIndexMeta = const VerificationMeta(
+    'colorIndex',
+  );
   @override
-  List<GeneratedColumn> get $columns => [id, name, createdAt];
+  late final GeneratedColumn<int> colorIndex = GeneratedColumn<int>(
+    'color_index',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, name, createdAt, colorIndex];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1133,6 +1144,12 @@ class $PlaylistsTable extends Playlists
     } else if (isInserting) {
       context.missing(_createdAtMeta);
     }
+    if (data.containsKey('color_index')) {
+      context.handle(
+        _colorIndexMeta,
+        colorIndex.isAcceptableOrUnknown(data['color_index']!, _colorIndexMeta),
+      );
+    }
     return context;
   }
 
@@ -1154,6 +1171,10 @@ class $PlaylistsTable extends Playlists
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      colorIndex: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}color_index'],
+      ),
     );
   }
 
@@ -1167,10 +1188,14 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
   final String id;
   final String name;
   final DateTime createdAt;
+
+  /// 이미지가 없을 때 카드 색 (글로우 톤 번호). 안 골랐으면 null.
+  final int? colorIndex;
   const PlaylistRow({
     required this.id,
     required this.name,
     required this.createdAt,
+    this.colorIndex,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1178,6 +1203,9 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
     map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
     map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || colorIndex != null) {
+      map['color_index'] = Variable<int>(colorIndex);
+    }
     return map;
   }
 
@@ -1186,6 +1214,9 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
       id: Value(id),
       name: Value(name),
       createdAt: Value(createdAt),
+      colorIndex: colorIndex == null && nullToAbsent
+          ? const Value.absent()
+          : Value(colorIndex),
     );
   }
 
@@ -1198,6 +1229,7 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
       id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      colorIndex: serializer.fromJson<int?>(json['colorIndex']),
     );
   }
   @override
@@ -1207,20 +1239,29 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
       'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'colorIndex': serializer.toJson<int?>(colorIndex),
     };
   }
 
-  PlaylistRow copyWith({String? id, String? name, DateTime? createdAt}) =>
-      PlaylistRow(
-        id: id ?? this.id,
-        name: name ?? this.name,
-        createdAt: createdAt ?? this.createdAt,
-      );
+  PlaylistRow copyWith({
+    String? id,
+    String? name,
+    DateTime? createdAt,
+    Value<int?> colorIndex = const Value.absent(),
+  }) => PlaylistRow(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    createdAt: createdAt ?? this.createdAt,
+    colorIndex: colorIndex.present ? colorIndex.value : this.colorIndex,
+  );
   PlaylistRow copyWithCompanion(PlaylistsCompanion data) {
     return PlaylistRow(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      colorIndex: data.colorIndex.present
+          ? data.colorIndex.value
+          : this.colorIndex,
     );
   }
 
@@ -1229,37 +1270,42 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
     return (StringBuffer('PlaylistRow(')
           ..write('id: $id, ')
           ..write('name: $name, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('colorIndex: $colorIndex')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, createdAt);
+  int get hashCode => Object.hash(id, name, createdAt, colorIndex);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is PlaylistRow &&
           other.id == this.id &&
           other.name == this.name &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.colorIndex == this.colorIndex);
 }
 
 class PlaylistsCompanion extends UpdateCompanion<PlaylistRow> {
   final Value<String> id;
   final Value<String> name;
   final Value<DateTime> createdAt;
+  final Value<int?> colorIndex;
   final Value<int> rowid;
   const PlaylistsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.colorIndex = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   PlaylistsCompanion.insert({
     required String id,
     required String name,
     required DateTime createdAt,
+    this.colorIndex = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        name = Value(name),
@@ -1268,12 +1314,14 @@ class PlaylistsCompanion extends UpdateCompanion<PlaylistRow> {
     Expression<String>? id,
     Expression<String>? name,
     Expression<DateTime>? createdAt,
+    Expression<int>? colorIndex,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (createdAt != null) 'created_at': createdAt,
+      if (colorIndex != null) 'color_index': colorIndex,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1282,12 +1330,14 @@ class PlaylistsCompanion extends UpdateCompanion<PlaylistRow> {
     Value<String>? id,
     Value<String>? name,
     Value<DateTime>? createdAt,
+    Value<int?>? colorIndex,
     Value<int>? rowid,
   }) {
     return PlaylistsCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
       createdAt: createdAt ?? this.createdAt,
+      colorIndex: colorIndex ?? this.colorIndex,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1304,6 +1354,9 @@ class PlaylistsCompanion extends UpdateCompanion<PlaylistRow> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (colorIndex.present) {
+      map['color_index'] = Variable<int>(colorIndex.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1316,6 +1369,7 @@ class PlaylistsCompanion extends UpdateCompanion<PlaylistRow> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('createdAt: $createdAt, ')
+          ..write('colorIndex: $colorIndex, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2209,12 +2263,14 @@ typedef $$PlaylistsTableCreateCompanionBuilder = PlaylistsCompanion Function({
   required String id,
   required String name,
   required DateTime createdAt,
+  Value<int?> colorIndex,
   Value<int> rowid,
 });
 typedef $$PlaylistsTableUpdateCompanionBuilder = PlaylistsCompanion Function({
   Value<String> id,
   Value<String> name,
   Value<DateTime> createdAt,
+  Value<int?> colorIndex,
   Value<int> rowid,
 });
 
@@ -2239,6 +2295,11 @@ class $$PlaylistsTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get colorIndex => $composableBuilder(
+    column: $table.colorIndex,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -2266,6 +2327,11 @@ class $$PlaylistsTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get colorIndex => $composableBuilder(
+    column: $table.colorIndex,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$PlaylistsTableAnnotationComposer
@@ -2285,6 +2351,11 @@ class $$PlaylistsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<int> get colorIndex => $composableBuilder(
+    column: $table.colorIndex,
+    builder: (column) => column,
+  );
 }
 
 class $$PlaylistsTableTableManager
@@ -2321,11 +2392,13 @@ class $$PlaylistsTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<int?> colorIndex = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PlaylistsCompanion(
                 id: id,
                 name: name,
                 createdAt: createdAt,
+                colorIndex: colorIndex,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -2333,11 +2406,13 @@ class $$PlaylistsTableTableManager
                 required String id,
                 required String name,
                 required DateTime createdAt,
+                Value<int?> colorIndex = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PlaylistsCompanion.insert(
                 id: id,
                 name: name,
                 createdAt: createdAt,
+                colorIndex: colorIndex,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

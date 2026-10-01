@@ -43,3 +43,21 @@ class AddTrackToPlaylists implements UseCase<void, AddTrackToPlaylistsParams> {
   Future<void> call(AddTrackToPlaylistsParams p) =>
       _repo.addTrack(p.trackId, p.playlistIds);
 }
+
+class SetPlaylistColorParams {
+  const SetPlaylistColorParams(this.playlistId, this.colorIndex);
+
+  final String playlistId;
+  final int? colorIndex;
+}
+
+/// 재생목록 카드 색 정하기 (null이면 자동).
+class SetPlaylistColor implements UseCase<void, SetPlaylistColorParams> {
+  const SetPlaylistColor(this._repo);
+
+  final PlaylistRepository _repo;
+
+  @override
+  Future<void> call(SetPlaylistColorParams p) =>
+      _repo.setColor(p.playlistId, p.colorIndex);
+}

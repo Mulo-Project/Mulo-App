@@ -181,6 +181,9 @@ class MemoryPlaylistRepository implements PlaylistRepository {
 
   /// 재생목록 id → 들어 있는 곡 id.
   final members = <String, Set<String>>{};
+
+  /// 재생목록 id → 고른 카드 색.
+  final colors = <String, int?>{};
   final _changes = StreamController<List<Playlist>>.broadcast();
 
   List<Playlist> get _now => [
@@ -189,6 +192,9 @@ class MemoryPlaylistRepository implements PlaylistRepository {
         id: p.id,
         name: p.name,
         trackCount: members[p.id]?.length ?? p.trackCount,
+        colorIndex: colors.containsKey(p.id) ? colors[p.id] : p.colorIndex,
+        topTracks: p.topTracks,
+        topArtists: p.topArtists,
       ),
   ];
 
@@ -211,6 +217,12 @@ class MemoryPlaylistRepository implements PlaylistRepository {
     for (final id in playlistIds) {
       (members[id] ??= {}).add(trackId);
     }
+    _changes.add(_now);
+  }
+
+  @override
+  Future<void> setColor(String playlistId, int? colorIndex) async {
+    colors[playlistId] = colorIndex;
     _changes.add(_now);
   }
 }
