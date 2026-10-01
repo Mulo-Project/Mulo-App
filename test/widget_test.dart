@@ -46,7 +46,16 @@ void main() {
     expect(find.text('다운로드'), findsNothing);
     await tester.tap(find.text('검색').last);
     await tester.pumpAndSettle();
-    expect(find.text('유튜브'), findsOneWidget);
+    expect(find.byIcon(Icons.smart_display_rounded), findsOneWidget);
+  });
+
+  testWidgets('디자인 미리보기: 기기 언어가 영어면 영어로 보인다', (tester) async {
+    await _pumpApp(tester, at: Routes.designPreview, height: 7000);
+    tester.platformDispatcher.localesTestValue = const [Locale('en')];
+    await tester.pumpAndSettle();
+    expect(find.text('Preview'), findsOneWidget);
+    expect(find.text('Alternate palette'), findsOneWidget);
+    expect(find.text('미리보기'), findsNothing);
   });
 
   testWidgets('설정에서 테마 프리셋을 고르면 팔레트가 바뀐다', (tester) async {

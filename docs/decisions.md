@@ -157,3 +157,8 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - 잠금 **끄기 · PIN 바꾸기**는 본인 확인이 필요하다: 현재 PIN을 입력하거나, 생체 인증을 켜 둔 경우 등록된 지문 · 얼굴로 대신 확인한다 (화면을 열면 생체 인증을 한 번 묻고 키패드의 지문 버튼으로 다시 부를 수 있다). 앱을 쓰는 중이라도 켜 둔 채 자리를 비운 폰에서 잠금을 풀고 끄거나 PIN을 바꿀 수 있는 것을 막기 위해 확인을 유지한다.
 - Android: `MainActivity`를 `FlutterFragmentActivity`로, `USE_BIOMETRIC` 권한 추가, `LaunchTheme` 부모를 `Theme.AppCompat.DayNight.NoActionBar`로 (local_auth 요구).
 - 클린 아키텍처: `features/security` (`AppLockRepository` · `BiometricAuthenticator` 인터페이스, 유스케이스, `AppLockCubit`). 잠금 화면은 `MaterialApp.builder`에서 앱 위에 덮는 `LockGate`.
+
+## D-027 · 2026-10-01 · 디버그 샘플 시드 · 다운로드 대기열 제어
+- 보관함 · 재생목록 · 홈이 실제 DB가 된 뒤에도 화면을 샘플로 볼 수 있도록, **디버그 빌드에서만** 보관함이 비어 있을 때 샘플 곡 · 재생목록 · 재생 기록을 DB에 넣는다 (`core/sample/sample_seeder.dart`, main에서 `kDebugMode`). 곡이 이미 있으면 건드리지 않아 실제 데이터와 섞이지 않는다.
+- 다운로드 대기열 저장소에 `pause` · `resume` · `cancel`을 추가했다. 이어받기는 항목을 대기로 되돌리고, 받는 곡이 없으면 대기 첫 곡이 이어서 받는다. 카드에 보일 곡은 받는 곡, 없으면 일시정지한 첫 곡.
+- 받기 팝업의 재생목록은 스위치 나열 대신 별도 다중 선택 대화상자로 고른다 (목록이 길어져도 팝업이 늘어나지 않게).

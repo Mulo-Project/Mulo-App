@@ -63,12 +63,12 @@ MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부�
 | `MiniPlayerBar` | mini_player_bar.dart | 유리 미니 플레이어 |
 | `AppTopBar` | app_top_bar.dart | 상단 바. `large` = 탭 첫 화면(부제 + 큰 제목), 기본 = 원형 버튼 사이 가운데 제목 |
 | `AppBottomNav` | app_bottom_nav.dart | 떠 있는 유리 탭 바 (선택 = 강조 색 + 점) |
-| `AppSearchField` | app_search_field.dart | 알약 입력칸 (돋보기 · 지우기 · 오른쪽 버튼) |
+| `AppSearchField` | app_search_field.dart | 알약 입력칸 (돋보기 · 지우기 · 오른쪽 버튼). 글자는 세로 가운데 |
 | `ArtworkBox` · `toneFor()` | artwork_box.dart | 커버 자리 (없으면 그라데이션), 키별 고정 톤 |
 | `TrackTile` | track_tile.dart | 곡 한 줄 (커버 · 제목 · 부제 · 오른쪽 · 아래 줄) |
 | `AppSwitch` | app_switch.dart | 토글 (켜짐 = 강조 색) |
 | `PinPad` | pin_pad.dart | PIN 입력 판 (입력 자리 점 + 숫자 키패드, 0 왼쪽 칸에 생체 버튼). 입력값은 밖에서 들고 있음 |
-| `AppTextField` | app_text_field.dart | 라벨이 위에 붙은 둥근 입력칸 (폼) |
+| `AppTextField` | app_text_field.dart | 라벨이 위에 붙은 둥근 입력칸 (폼). 글자는 세로 가운데 |
 | `SectionCard` · `SettingRow` | section_card.dart | 설정 묶음 · 한 줄 |
 | `SegmentedPills` · `StatusPill` | segmented_pills.dart | 하나 고르기 알약 묶음 · 상태 알약 |
 | `AppDropdown` | app_dropdown.dart | 알약 드롭다운 (정렬 기준 고르기). 선택값 · 목록 · 문구는 밖에서 받음 |
