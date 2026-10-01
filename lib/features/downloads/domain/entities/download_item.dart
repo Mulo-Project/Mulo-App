@@ -36,6 +36,18 @@ class DownloadItem extends Equatable {
       status == DownloadStatus.queued ||
       status == DownloadStatus.paused;
 
+  DownloadItem copyWith({DownloadStatus? status, double? progress}) =>
+      DownloadItem(
+        id: id,
+        title: title,
+        artist: artist,
+        status: status ?? this.status,
+        progress: progress ?? this.progress,
+        genre: genre,
+        playlistIds: playlistIds,
+        thumbnailUrl: thumbnailUrl,
+      );
+
   @override
   List<Object?> get props => [
     id,

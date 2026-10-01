@@ -38,6 +38,9 @@ void main() {
     final cubit = DownloadQueueCubit(
       WatchDownloadQueue(repo),
       EnqueueDownload(repo),
+      PauseDownload(repo),
+      ResumeDownload(repo),
+      CancelDownload(repo),
     )..start();
     await Future<void>.delayed(Duration.zero);
     expect(cubit.state.current, _now);
@@ -111,12 +114,18 @@ void main() {
     await tester.enterText(fields.at(1), '내 가수');
     await tester.enterText(fields.at(2), '발라드');
 
-    // 기존 재생목록 고르기 + 새 재생목록 만들기 (만들면 자동 선택)
-    await tester.tap(find.text('운동'));
+    // 새 재생목록 만들기 (만들면 자동 선택) + 대화상자에서 기존 재생목록 고르기
     await tester.enterText(fields.at(3), '새 목록');
     await tester.tap(inSheet(find.byIcon(Icons.add_rounded)));
     await tester.pumpAndSettle();
-    expect(find.text('새 목록'), findsOneWidget);
+    expect(find.text('1개 선택'), findsOneWidget);
+    await tester.tap(find.text('1개 선택'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('운동'));
+    await tester.pump();
+    await tester.tap(find.text('선택 완료'));
+    await tester.pumpAndSettle();
+    expect(find.text('2개 선택'), findsOneWidget);
 
     await tester.tap(inSheet(find.text('받기')));
     await tester.pumpAndSettle();
@@ -136,7 +145,12 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('받기').last);
     await tester.pumpAndSettle();
+    expect(find.text('선택 안 함'), findsOneWidget);
+    await tester.tap(find.text('선택 안 함'));
+    await tester.pumpAndSettle();
     expect(find.text('아직 재생목록이 없어요. 아래에서 새로 만들 수 있어요.'), findsOneWidget);
+    await tester.tap(find.text('선택 완료'));
+    await tester.pumpAndSettle();
 
     await tester.enterText(inSheet(find.byType(TextField)).first, '');
     await tester.pumpAndSettle();
@@ -168,6 +182,30 @@ void main() {
     expect(find.text('Next Song · Next Artist'), findsOneWidget);
   });
 
+  testWidgets('대기열 카드: 일시정지 · 이어받기 · 취소 버튼', (tester) async {
+    final queue = MemoryDownloadQueue([_now, _next]);
+    await setUpTestDependencies(downloads: queue);
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    tester.platformDispatcher.localesTestValue = const [Locale('ko')];
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+    addTearDown(sl.reset);
+    await tester.pumpWidget(const MusicApp(initialLocation: Routes.search));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.pause_rounded));
+    await tester.tap(find.byIcon(Icons.close_rounded).first);
+    await tester.pump();
+    // 대기 중인 곡 줄에도 같은 버튼이 있다.
+    await tester.tap(find.byIcon(Icons.keyboard_arrow_down_rounded));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.pause_rounded).last);
+    await tester.tap(find.byIcon(Icons.close_rounded).last);
+    await tester.pump();
+    expect(queue.controls, ['pause:a', 'cancel:a', 'pause:b', 'cancel:b']);
+  });
+
   testWidgets('검색 탭: 받는 곡이 없으면 카드가 없다', (tester) async {
     await open(tester, [_done]);
     expect(find.text('Done Song'), findsNothing);
@@ -176,12 +214,16 @@ void main() {
 
   testWidgets('검색 대상 메뉴: 유튜브 → 웹', (tester) async {
     await open(tester, const []);
+    // 검색창에는 아이콘만, 눌러서 연 메뉴에는 아이콘 + 이름.
+    expect(find.text('유튜브'), findsNothing);
+    expect(find.byIcon(Icons.smart_display_rounded), findsOneWidget);
+    await tester.tap(find.byIcon(Icons.smart_display_rounded));
+    await tester.pumpAndSettle();
     expect(find.text('유튜브'), findsOneWidget);
-    await tester.tap(find.text('유튜브'));
+    await tester.tap(find.text('웹'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('웹').last);
-    await tester.pumpAndSettle();
-    expect(find.text('웹'), findsOneWidget);
+    expect(find.byIcon(Icons.public_rounded), findsOneWidget);
+    expect(find.text('웹'), findsNothing);
     expect(find.text('웹 음원 검색어나 URL'), findsOneWidget);
   });
 }

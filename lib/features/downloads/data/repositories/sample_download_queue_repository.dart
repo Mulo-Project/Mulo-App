@@ -49,4 +49,43 @@ class SampleDownloadQueueRepository implements DownloadQueueRepository {
     );
     _changes.add([..._items]);
   }
+
+  void _replace(String id, DownloadItem Function(DownloadItem) change) {
+    final i = _items.indexWhere((e) => e.id == id);
+    if (i < 0) return;
+    _items[i] = change(_items[i]);
+    _promote();
+  }
+
+  /// 받는 곡이 없으면 대기 중인 첫 곡이 이어서 받는다.
+  void _promote() {
+    final busy = _items.any((e) => e.status == DownloadStatus.downloading);
+    if (!busy) {
+      final i = _items.indexWhere((e) => e.status == DownloadStatus.queued);
+      if (i >= 0) {
+        _items[i] = _items[i].copyWith(status: DownloadStatus.downloading);
+      }
+    }
+    _changes.add([..._items]);
+  }
+
+  @override
+  Future<void> pause(String id) async => _replace(
+    id,
+    (e) => e.isActive ? e.copyWith(status: DownloadStatus.paused) : e,
+  );
+
+  @override
+  Future<void> resume(String id) async => _replace(
+    id,
+    (e) => e.status == DownloadStatus.paused
+        ? e.copyWith(status: DownloadStatus.queued)
+        : e,
+  );
+
+  @override
+  Future<void> cancel(String id) async {
+    _items.removeWhere((e) => e.id == id);
+    _promote();
+  }
 }

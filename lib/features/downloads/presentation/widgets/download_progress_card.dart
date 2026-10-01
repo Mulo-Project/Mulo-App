@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../domain/entities/download_item.dart';
+import '../bloc/download_queue_cubit.dart';
 
 /// 검색창 아래 다운로드 카드: 받는 곡의 썸네일을 배경으로 깔고 어둡게 덮는다.
 /// 아래 화살표로 대기 중인 곡 목록을 펼친다.
@@ -45,9 +47,18 @@ class _DownloadProgressCardState extends State<DownloadProgressCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '${l10n.statusDownloading} ${(item.progress * 100).round()}%',
-                  style: text.labelMedium?.copyWith(color: p.accent),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        item.status == DownloadStatus.paused
+                            ? '${l10n.statusPaused} ${(item.progress * 100).round()}%'
+                            : '${l10n.statusDownloading} ${(item.progress * 100).round()}%',
+                        style: text.labelMedium?.copyWith(color: p.accent),
+                      ),
+                    ),
+                    _ItemControls(item: item),
+                  ],
                 ),
                 const SizedBox(height: AppSpacing.xxs),
                 Text(
@@ -185,8 +196,44 @@ class _WaitingRow extends StatelessWidget {
               color: color.withValues(alpha: .7),
             ),
           ),
+          const SizedBox(width: AppSpacing.xs),
+          _ItemControls(item: item),
         ],
       ),
+    );
+  }
+}
+
+/// 항목 하나의 아이콘 버튼: 받는 중 · 대기는 일시정지, 일시정지는 이어받기, 모두 취소.
+class _ItemControls extends StatelessWidget {
+  const _ItemControls({required this.item});
+
+  final DownloadItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final queue = context.read<DownloadQueueCubit>();
+    final paused = item.status == DownloadStatus.paused;
+    const size = 32.0;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        CircleIconButton(
+          icon: paused ? Icons.play_arrow_rounded : Icons.pause_rounded,
+          tooltip: paused ? l10n.actionResume : l10n.actionPause,
+          size: size,
+          onPressed: () =>
+              paused ? queue.resume(item.id) : queue.pause(item.id),
+        ),
+        const SizedBox(width: AppSpacing.xxs),
+        CircleIconButton(
+          icon: Icons.close_rounded,
+          tooltip: l10n.actionCancel,
+          size: size,
+          onPressed: () => queue.cancel(item.id),
+        ),
+      ],
     );
   }
 }

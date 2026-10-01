@@ -28,3 +28,33 @@ class EnqueueDownload implements UseCase<bool, DownloadRequest> {
     return true;
   }
 }
+
+/// 일시정지 (상세 기능: 다운로드 대기열 #7).
+class PauseDownload implements UseCase<void, String> {
+  const PauseDownload(this._repo);
+
+  final DownloadQueueRepository _repo;
+
+  @override
+  Future<void> call(String id) => _repo.pause(id);
+}
+
+/// 일시정지한 항목 이어받기.
+class ResumeDownload implements UseCase<void, String> {
+  const ResumeDownload(this._repo);
+
+  final DownloadQueueRepository _repo;
+
+  @override
+  Future<void> call(String id) => _repo.resume(id);
+}
+
+/// 항목 취소.
+class CancelDownload implements UseCase<void, String> {
+  const CancelDownload(this._repo);
+
+  final DownloadQueueRepository _repo;
+
+  @override
+  Future<void> call(String id) => _repo.cancel(id);
+}

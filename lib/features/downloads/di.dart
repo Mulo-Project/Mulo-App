@@ -13,5 +13,8 @@ void registerDownloads(GetIt sl) {
     )
     ..registerFactory(() => WatchDownloadQueue(sl()))
     ..registerFactory(() => EnqueueDownload(sl()))
-    ..registerFactory(() => DownloadQueueCubit(sl(), sl()));
+    ..registerFactory(() => PauseDownload(sl()))
+    ..registerFactory(() => ResumeDownload(sl()))
+    ..registerFactory(() => CancelDownload(sl()))
+    ..registerFactory(() => DownloadQueueCubit(sl(), sl(), sl(), sl(), sl()));
 }

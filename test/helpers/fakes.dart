@@ -220,6 +220,18 @@ class MemoryDownloadQueue implements DownloadQueueRepository {
     );
     _changes.add([...items]);
   }
+
+  /// 일시정지 · 이어받기 · 취소 요청 기록.
+  final controls = <String>[];
+
+  @override
+  Future<void> pause(String id) async => controls.add('pause:$id');
+
+  @override
+  Future<void> resume(String id) async => controls.add('resume:$id');
+
+  @override
+  Future<void> cancel(String id) async => controls.add('cancel:$id');
 }
 
 /// 메모리 재생목록.
