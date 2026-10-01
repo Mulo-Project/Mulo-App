@@ -382,13 +382,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsThemePreviewDesc =>
-      'See how the screens look with the current theme';
+      'Browse the real screens with a theme, then apply it';
 
   @override
-  String get themePreviewSong => 'Midnight Signal';
+  String get themePreviewHint => 'Switch tabs to check how it looks';
 
   @override
-  String get themePreviewArtist => 'Sample Artist';
+  String get themePreviewApply => 'Apply';
 
   @override
   String get settingsAbout => 'About';

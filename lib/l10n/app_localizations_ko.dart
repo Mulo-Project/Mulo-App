@@ -373,13 +373,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsThemePreview => '테마 미리보기';
 
   @override
-  String get settingsThemePreviewDesc => '지금 테마로 화면이 어떻게 보이는지 확인해요';
+  String get settingsThemePreviewDesc => '고른 테마로 앱 화면들을 직접 둘러보고 적용해요';
 
   @override
-  String get themePreviewSong => 'Midnight Signal';
+  String get themePreviewHint => '탭을 오가며 확인해 보세요';
 
   @override
-  String get themePreviewArtist => 'Sample Artist';
+  String get themePreviewApply => '적용';
 
   @override
   String get settingsAbout => '정보';

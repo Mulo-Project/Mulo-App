@@ -797,20 +797,20 @@ abstract class AppLocalizations {
   /// No description provided for @settingsThemePreviewDesc.
   ///
   /// In ko, this message translates to:
-  /// **'지금 테마로 화면이 어떻게 보이는지 확인해요'**
+  /// **'고른 테마로 앱 화면들을 직접 둘러보고 적용해요'**
   String get settingsThemePreviewDesc;
 
-  /// No description provided for @themePreviewSong.
+  /// No description provided for @themePreviewHint.
   ///
   /// In ko, this message translates to:
-  /// **'Midnight Signal'**
-  String get themePreviewSong;
+  /// **'탭을 오가며 확인해 보세요'**
+  String get themePreviewHint;
 
-  /// No description provided for @themePreviewArtist.
+  /// No description provided for @themePreviewApply.
   ///
   /// In ko, this message translates to:
-  /// **'Sample Artist'**
-  String get themePreviewArtist;
+  /// **'적용'**
+  String get themePreviewApply;
 
   /// No description provided for @settingsAbout.
   ///

@@ -7,7 +7,9 @@ import '../core/l10n/l10n.dart';
 import '../features/covers/presentation/bloc/cover_cubit.dart';
 import '../features/home/presentation/bloc/play_recorder_cubit.dart';
 import '../features/player/presentation/bloc/now_playing_cubit.dart';
+import '../features/theme/presentation/bloc/theme_cubit.dart';
 import 'router.dart';
+import 'theme_preview_bar.dart';
 
 /// 탭 화면 공통 틀: 배경 · 탭 내용 · 가로 전체 유리 미니 플레이어 · 단색 하단 탭.
 /// 재생 중인 곡이 바뀌면 재생 기록을 남긴다.
@@ -35,6 +37,8 @@ class AppShell extends StatelessWidget {
         bottomNavigationBar: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (context.select((ThemeCubit c) => c.state.previewing))
+              const ThemePreviewBar(),
             const _ShellMiniPlayer(),
             AppBottomNav(
               currentIndex: shell.currentIndex,

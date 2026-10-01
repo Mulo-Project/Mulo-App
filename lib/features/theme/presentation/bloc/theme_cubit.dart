@@ -16,6 +16,7 @@ class ThemeState extends Equatable {
     required this.light,
     this.preset = ThemePreset.initial,
     this.mode = AppThemeMode.initial,
+    this.previewing = false,
   });
 
   factory ThemeState.initial() {
@@ -38,6 +39,9 @@ class ThemeState extends Equatable {
   final ThemePreset preset;
   final AppThemeMode mode;
 
+  /// 테마 미리보기 중 (저장 전). 하단에 적용 · 취소 바가 뜬다.
+  final bool previewing;
+
   ThemeMode get materialMode =>
       mode == AppThemeMode.dark ? ThemeMode.dark : ThemeMode.light;
 
@@ -49,16 +53,18 @@ class ThemeState extends Equatable {
     AppPalette? light,
     ThemePreset? preset,
     AppThemeMode? mode,
+    bool? previewing,
   }) => ThemeState(
     sourceId: sourceId ?? this.sourceId,
     dark: dark ?? this.dark,
     light: light ?? this.light,
     preset: preset ?? this.preset,
     mode: mode ?? this.mode,
+    previewing: previewing ?? this.previewing,
   );
 
   @override
-  List<Object?> get props => [sourceId, dark, light, preset, mode];
+  List<Object?> get props => [sourceId, dark, light, preset, mode, previewing];
 }
 
 /// 앱 테마 (프리셋 · 화면 모드 · 임시 소스). 바뀌면 MaterialApp이
@@ -75,6 +81,8 @@ class ThemeCubit extends Cubit<ThemeState> {
   final SaveThemePreset _savePreset;
   final SaveThemeMode _saveMode;
   int _request = 0;
+  ThemePreset? _savedPreset;
+  AppThemeMode? _savedMode;
   bool _touched = false;
 
   /// 저장된 설정을 불러온다. 앱 시작 때 한 번.
@@ -99,6 +107,36 @@ class ThemeCubit extends Cubit<ThemeState> {
     _touched = true;
     emit(state.copyWith(mode: mode));
     await _saveMode(mode);
+  }
+
+  /// 미리보기를 시작한다. 이후 [previewPreset] · [previewMode]는 저장하지 않고,
+  /// [applyPreview]로 저장하거나 [cancelPreview]로 시작 전 테마로 돌아간다.
+  void beginPreview() {
+    if (state.previewing) return;
+    _savedPreset = state.preset;
+    _savedMode = state.mode;
+    emit(state.copyWith(previewing: true));
+  }
+
+  Future<void> previewPreset(ThemePreset preset) => _applyPreset(preset);
+
+  void previewMode(AppThemeMode mode) => emit(state.copyWith(mode: mode));
+
+  /// 미리보던 테마를 저장하고 미리보기를 끝낸다.
+  Future<void> applyPreview() async {
+    if (!state.previewing) return;
+    _touched = true;
+    emit(state.copyWith(previewing: false));
+    await _savePreset(state.preset.id);
+    await _saveMode(state.mode);
+  }
+
+  /// 미리보기를 끝내고 시작 전 테마로 돌아간다.
+  Future<void> cancelPreview() async {
+    if (!state.previewing) return;
+    final mode = _savedMode ?? state.mode;
+    emit(state.copyWith(previewing: false, mode: mode));
+    await _applyPreset(_savedPreset ?? state.preset);
   }
 
   Future<void> _applyPreset(ThemePreset preset) async {

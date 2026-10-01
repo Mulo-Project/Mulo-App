@@ -6,7 +6,7 @@ import 'package:music_download_play_app/core/design/design.dart';
 import 'package:music_download_play_app/core/sample/sample_data.dart';
 import 'package:music_download_play_app/features/library/domain/entities/import_result.dart';
 import 'package:music_download_play_app/features/home/presentation/screens/home_screen.dart';
-import 'package:music_download_play_app/features/settings/presentation/widgets/theme_preview.dart';
+import 'package:music_download_play_app/app/theme_preview_bar.dart';
 
 import 'helpers/fakes.dart';
 
@@ -51,34 +51,45 @@ void main() {
     expect(find.byIcon(Icons.smart_display_rounded), findsOneWidget);
   });
 
-  testWidgets('테마 미리보기는 설정의 별도 항목에서 열리고, 하단 탭을 가린다', (tester) async {
+  testWidgets('테마 미리보기: 실제 탭을 오가며 보고, 취소하면 원래대로 돌아간다', (tester) async {
     await _pumpApp(tester, at: Routes.settings, height: 7000);
-    // 설정 화면 안에는 미리보기 내용이 없고 항목만 있다.
-    expect(find.byType(ThemePreview), findsNothing);
-    expect(find.text('테마 미리보기'), findsOneWidget);
-
-    await tester.tap(find.text('코랄'));
-    await tester.pumpAndSettle();
-    final coral = _palette(tester).accent;
+    expect(find.byType(ThemePreviewBar), findsNothing);
+    final before = _palette(tester).accent;
 
     await tester.tap(find.text('테마 미리보기'));
     await tester.pumpAndSettle();
-    expect(find.byType(ThemePreview), findsOneWidget);
-    expect(find.byType(AppBottomNav), findsNothing);
-    final accent = Theme.of(tester.element(find.byType(ThemePreview)))
-        .extension<AppThemeTokens>()!
-        .palette
-        .accent;
-    expect(accent, coral);
-
-    tester.platformDispatcher.localesTestValue = const [Locale('en')];
-    await tester.pumpAndSettle();
-    expect(find.text('Theme preview'), findsOneWidget);
-
-    await tester.tap(find.byTooltip('Back'));
-    await tester.pumpAndSettle();
-    expect(find.byType(ThemePreview), findsNothing);
+    // 홈으로 이동하고, 하단 탭은 그대로 두며 미리보기 바가 뜬다.
+    expect(find.byType(ThemePreviewBar), findsOneWidget);
     expect(find.byType(AppBottomNav), findsOneWidget);
+
+    await tester.tap(find.text('코랄'));
+    await tester.pumpAndSettle();
+    expect(_palette(tester).accent, isNot(before));
+
+    // 다른 탭으로 가도 시험 중인 테마가 유지된다.
+    await tester.tap(find.byKey(const ValueKey('nav-보관함')));
+    await tester.pumpAndSettle();
+    expect(find.byType(ThemePreviewBar), findsOneWidget);
+    expect(_palette(tester).accent, isNot(before));
+
+    await tester.tap(find.text('취소'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ThemePreviewBar), findsNothing);
+    expect(_palette(tester).accent, before);
+  });
+
+  testWidgets('테마 미리보기에서 적용하면 그 테마가 남는다', (tester) async {
+    await _pumpApp(tester, at: Routes.settings, height: 7000);
+    final before = _palette(tester).accent;
+
+    await tester.tap(find.text('테마 미리보기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('코랄'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('적용'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ThemePreviewBar), findsNothing);
+    expect(_palette(tester).accent, isNot(before));
   });
 
   testWidgets('설정에서 테마 프리셋을 고르면 팔레트가 바뀐다', (tester) async {
