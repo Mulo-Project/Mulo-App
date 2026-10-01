@@ -8,6 +8,7 @@ import '../../../../core/l10n/l10n.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../bloc/home_bloc.dart';
 import '../widgets/history_section.dart';
+import '../widgets/home_parts.dart';
 import '../widgets/recent_section.dart';
 import '../widgets/recommend_section.dart';
 import '../widgets/top_played_section.dart';
@@ -40,7 +41,6 @@ class _HomeView extends StatelessWidget {
     final s = state.summary;
     final player = context.read<NowPlayingCubit>();
 
-    const gap = SizedBox(height: AppSpacing.xl);
     final body = <Widget>[
       if (state.loaded && s.libraryEmpty)
         Padding(
@@ -54,15 +54,15 @@ class _HomeView extends StatelessWidget {
         )
       else ...[
         RecentSection(summary: s, player: player),
-        gap,
+        const HomeDivider(),
         HistorySection(summary: s, joinedAt: state.joinedAt),
-        gap,
+        const HomeDivider(),
         TopPlayedSection(
           summary: s,
           player: player,
           onMore: () => context.push(topTracksLocation),
         ),
-        gap,
+        const HomeDivider(),
         RecommendSection(playlists: s.recommendedPlaylists, player: player),
       ],
     ];

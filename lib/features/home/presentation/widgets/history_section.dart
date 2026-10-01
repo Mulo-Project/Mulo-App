@@ -5,7 +5,6 @@ import '../../../../core/l10n/l10n.dart';
 import '../../domain/entities/home_summary.dart';
 import 'home_format.dart';
 import 'home_parts.dart';
-import 'month_picker_dialog.dart';
 
 enum _View { week, month, all }
 
@@ -13,9 +12,10 @@ enum _Metric { plays, time }
 
 DateTime _day(DateTime t) => DateTime(t.year, t.month, t.day);
 
-/// ② 날짜별 청취 데이터: 주간 · 월간 · 전체를 칩으로 고르고, 어두운 판 위에 그래프를 그린다.
-/// 월간은 가로로 넘겨 달을 옮기고, 날짜 글자를 누르면 달력 팝업(앱을 쓰기 시작한 달부터)이 뜬다.
-/// 주간 · 월간 그래프의 값은 재생 수 또는 재생 시간 (숫자 칸을 눌러 바꾼다).
+/// ② 날짜별 청취 데이터: 주간 · 월간 · 전체를 칩으로 고른다.
+/// 주간 · 월간은 같은 모양의 어두운 판 위 꺾은선 그래프이고, 월간은 년 · 월 버튼을 눌러
+/// 팝업 메뉴에서 고른다 (앱을 쓰기 시작한 달 이전은 없다). 숫자 칸(재생 수 / 시간)을 눌러
+/// 그래프 값을 바꾼다. 전체는 판 없이 큰 숫자로 보여 준다.
 class HistorySection extends StatefulWidget {
   const HistorySection({
     super.key,
@@ -26,7 +26,7 @@ class HistorySection extends StatefulWidget {
 
   final HomeSummary summary;
 
-  /// 앱을 처음 쓴 날. 이 달 이전은 월간에서 볼 수 없다. 모르면 이번 달만.
+  /// 앱을 처음 쓴 날. 이 달 이전은 월간에서 고를 수 없다. 모르면 이번 달만.
   final DateTime? joinedAt;
 
   /// 기준 시각 (테스트용). 없으면 지금.
@@ -39,8 +39,9 @@ class HistorySection extends StatefulWidget {
 class _HistorySectionState extends State<HistorySection> {
   _View _view = _View.week;
   _Metric _metric = _Metric.plays;
-  PageController? _pages;
-  int _monthPage = 0;
+
+  /// 월간에서 보는 달 (1일). 처음에는 이번 달.
+  DateTime? _month;
 
   DateTime get _now => widget.now ?? DateTime.now();
   DateTime get _lastMonth => DateTime(_now.year, _now.month);
@@ -50,52 +51,55 @@ class _HistorySectionState extends State<HistorySection> {
     return first.isAfter(_lastMonth) ? _lastMonth : first;
   }
 
-  int get _monthCount =>
-      (_lastMonth.year - _firstMonth.year) * 12 +
-      _lastMonth.month -
-      _firstMonth.month +
-      1;
-
-  DateTime _monthAt(int page) =>
-      DateTime(_firstMonth.year, _firstMonth.month + page);
-
-  /// 처음에는 가장 최근(이번 달) 페이지에서 시작한다.
-  PageController get _controller =>
-      _pages ??= PageController(initialPage: _monthPage = _monthCount - 1);
-
-  @override
-  void didUpdateWidget(HistorySection old) {
-    super.didUpdateWidget(old);
-    // 가입일을 뒤늦게 읽어 페이지 수가 바뀌면 이번 달 페이지로 다시 맞춘다.
-    if (old.joinedAt != widget.joinedAt) {
-      _pages?.dispose();
-      _pages = null;
-    }
+  DateTime get _shown {
+    final m = _month ?? _lastMonth;
+    if (m.isBefore(_firstMonth)) return _firstMonth;
+    if (m.isAfter(_lastMonth)) return _lastMonth;
+    return m;
   }
 
-  @override
-  void dispose() {
-    _pages?.dispose();
-    super.dispose();
+  Future<void> _pickYear(BuildContext anchor) async {
+    final l10n = context.l10n;
+    final shown = _shown;
+    final year = await showAppMenu<int>(
+      anchor,
+      items: [
+        for (var y = _lastMonth.year; y >= _firstMonth.year; y--)
+          AppMenuItem(
+            value: y,
+            icon: Icons.event_rounded,
+            label: l10n.homeYearLabel(y),
+            selected: y == shown.year,
+          ),
+      ],
+    );
+    if (year == null || !mounted) return;
+    // 고른 해에 같은 달이 없으면 가까운 달로 맞춘다.
+    var next = DateTime(year, shown.month);
+    if (next.isBefore(_firstMonth)) next = _firstMonth;
+    if (next.isAfter(_lastMonth)) next = _lastMonth;
+    setState(() => _month = next);
   }
 
-  void _goTo(int page) => _controller.animateToPage(
-    page.clamp(0, _monthCount - 1),
-    duration: AppMotion.medium,
-    curve: AppMotion.standard,
-  );
-
-  Future<void> _pickMonth() async {
-    final picked = await showMonthPickerDialog(
-      context,
-      selected: _monthAt(_monthPage.clamp(0, _monthCount - 1)),
-      min: _firstMonth,
-      max: _lastMonth,
+  Future<void> _pickMonth(BuildContext anchor) async {
+    final l10n = context.l10n;
+    final shown = _shown;
+    final month = await showAppMenu<int>(
+      anchor,
+      items: [
+        for (var m = 1; m <= 12; m++)
+          if (!DateTime(shown.year, m).isBefore(_firstMonth) &&
+              !DateTime(shown.year, m).isAfter(_lastMonth))
+            AppMenuItem(
+              value: m,
+              icon: Icons.calendar_month_rounded,
+              label: l10n.homeMonthShort(m),
+              selected: m == shown.month,
+            ),
+      ],
     );
-    if (picked == null) return;
-    _goTo(
-      (picked.year - _firstMonth.year) * 12 + picked.month - _firstMonth.month,
-    );
+    if (month == null || !mounted) return;
+    setState(() => _month = DateTime(shown.year, month));
   }
 
   @override
@@ -112,100 +116,73 @@ class _HistorySectionState extends State<HistorySection> {
       _View.all => l10n.homePeriodAll,
     };
 
+    Widget board(Widget caption, List<DayListening> days, bool weekly) =>
+        Padding(
+          padding: AppSpacing.screen,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: p.surfaceHigh,
+              borderRadius: BorderRadius.circular(AppRadii.lg),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  caption,
+                  const SizedBox(height: AppSpacing.xs),
+                  _Block(
+                    days: days,
+                    metric: _metric,
+                    onMetric: (m) => setState(() => _metric = m),
+                    weekly: weekly,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+
     final Widget body;
     switch (_view) {
       case _View.week:
         final week = s.range(today.subtract(const Duration(days: 6)), today);
-        body = Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              '${week.first.day.month}/${week.first.day.day} ~ ${today.month}/${today.day}',
-              style: text.bodySmall,
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            _Block(
-              days: week,
-              metric: _metric,
-              onMetric: (m) => setState(() => _metric = m),
-              weekly: true,
-            ),
-          ],
+        body = board(
+          Text(
+            '${week.first.day.month}/${week.first.day.day} ~ ${today.month}/${today.day}',
+            style: text.bodySmall,
+          ),
+          week,
+          true,
         );
       case _View.month:
-        final shown = _monthAt(_monthPage.clamp(0, _monthCount - 1));
-        body = Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                _ArrowButton(
-                  icon: Icons.chevron_left_rounded,
-                  tooltip: l10n.homeMonthPrev,
-                  onTap: _monthPage <= 0 ? null : () => _goTo(_monthPage - 1),
+        final shown = _shown;
+        final last = shown == _lastMonth
+            ? today
+            : DateTime(shown.year, shown.month + 1, 0);
+        body = board(
+          Row(
+            children: [
+              Builder(
+                builder: (b) => _PeriodButton(
+                  label: l10n.homeYearLabel(shown.year),
+                  onTap: () => _pickYear(b),
                 ),
-                Expanded(
-                  child: Center(
-                    child: InkWell(
-                      onTap: _pickMonth,
-                      borderRadius: BorderRadius.circular(AppRadii.pill),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.sm,
-                          vertical: AppSpacing.xxs,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.calendar_month_rounded,
-                              size: 18,
-                              color: p.accent,
-                            ),
-                            const SizedBox(width: AppSpacing.xxs),
-                            Text(
-                              l10n.homeMonthLabel(shown.year, shown.month),
-                              style: text.titleSmall,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                _ArrowButton(
-                  icon: Icons.chevron_right_rounded,
-                  tooltip: l10n.homeMonthNext,
-                  onTap: _monthPage >= _monthCount - 1
-                      ? null
-                      : () => _goTo(_monthPage + 1),
-                ),
-              ],
-            ),
-            SizedBox(
-              height: _Block.height,
-              child: PageView.builder(
-                controller: _controller,
-                itemCount: _monthCount,
-                onPageChanged: (i) => setState(() => _monthPage = i),
-                itemBuilder: (context, i) {
-                  final month = _monthAt(i);
-                  final last = i == _monthCount - 1
-                      ? today
-                      : DateTime(month.year, month.month + 1, 0);
-                  return _Block(
-                    days: s.range(month, last),
-                    metric: _metric,
-                    onMetric: (m) => setState(() => _metric = m),
-                    weekly: false,
-                  );
-                },
               ),
-            ),
-          ],
+              const SizedBox(width: AppSpacing.xs),
+              Builder(
+                builder: (b) => _PeriodButton(
+                  label: l10n.homeMonthShort(shown.month),
+                  onTap: () => _pickMonth(b),
+                ),
+              ),
+            ],
+          ),
+          s.range(shown, last),
+          false,
         );
       case _View.all:
-        body = _AllStats(stats: s.stats);
+        body = _AllStats(stats: s.stats, since: widget.joinedAt);
     }
 
     return Column(
@@ -223,40 +200,46 @@ class _HistorySectionState extends State<HistorySection> {
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
-        Padding(
-          padding: AppSpacing.screen,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: p.surfaceHigh,
-              borderRadius: BorderRadius.circular(AppRadii.lg),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: body,
-            ),
-          ),
-        ),
+        body,
       ],
     );
   }
 }
 
-class _ArrowButton extends StatelessWidget {
-  const _ArrowButton({required this.icon, required this.tooltip, this.onTap});
+/// 기간 글자를 강조한 작은 버튼 (눌러서 년 · 월 팝업 메뉴를 연다).
+class _PeriodButton extends StatelessWidget {
+  const _PeriodButton({required this.label, required this.onTap});
 
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback? onTap;
+  final String label;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    return IconButton(
-      onPressed: onTap,
-      tooltip: tooltip,
-      icon: Icon(icon),
-      color: p.onSurface,
-      disabledColor: p.onSurfaceMuted.withValues(alpha: .3),
+    return Material(
+      color: p.accent.withValues(alpha: .16),
+      shape: const StadiumBorder(),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: AppSpacing.xxs + 2,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: Theme.of(context).textTheme.titleSmall
+                    ?.copyWith(color: p.accent, fontWeight: FontWeight.w700),
+              ),
+              Icon(Icons.arrow_drop_down_rounded, size: 20, color: p.accent),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -270,9 +253,6 @@ class _Block extends StatelessWidget {
     required this.onMetric,
     required this.weekly,
   });
-
-  /// 월간 PageView 한 칸 높이.
-  static const height = 250.0;
 
   final List<DayListening> days;
   final _Metric metric;
@@ -400,34 +380,56 @@ class _StatChoice extends StatelessWidget {
   }
 }
 
-/// 전체: 재생 수 · 재생 시간 · 들은 날.
+/// 전체: 판 없이 큰 숫자 한 줄(총 재생 시간) + 얇은 선 아래 재생 수 · 들은 날.
 class _AllStats extends StatelessWidget {
-  const _AllStats({required this.stats});
+  const _AllStats({required this.stats, this.since});
 
   final ListeningStats stats;
+  final DateTime? since;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final p = context.palette;
     final text = Theme.of(context).textTheme;
 
-    Widget stat(String value, String label) => Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
+    Widget col(String value, String label) => Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(child: Text(label, style: text.bodyMedium)),
-          StatNumber(value, size: 30),
+          StatNumber(value, size: 26),
+          const SizedBox(height: AppSpacing.xxs),
+          Text(label, style: text.bodySmall),
         ],
       ),
     );
 
-    return Column(
-      children: [
-        stat(l10n.playCount(stats.plays), l10n.homeAllPlays),
-        stat(formatListened(l10n, stats.listened), l10n.homeAllTime),
-        stat(l10n.homeAllDaysValue(stats.daysListened), l10n.homeAllDays),
-      ],
+    return Padding(
+      padding: AppSpacing.screen,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (since != null)
+            Text(
+              l10n.homeAllSince(l10n.homeMonthLabel(since!.year, since!.month)),
+              style: text.bodySmall,
+            ),
+          const SizedBox(height: AppSpacing.xxs),
+          StatNumber(formatListened(l10n, stats.listened), size: 52),
+          const SizedBox(height: AppSpacing.xxs),
+          Text(l10n.homeAllTime, style: text.bodySmall),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+            child: Divider(height: 1, color: p.outline),
+          ),
+          Row(
+            children: [
+              col(l10n.playCount(stats.plays), l10n.homeAllPlays),
+              col(l10n.homeAllDaysValue(stats.daysListened), l10n.homeAllDays),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

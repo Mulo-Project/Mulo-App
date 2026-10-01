@@ -69,7 +69,7 @@ class DayListening extends Equatable {
 }
 
 /// 추천 재생목록의 종류.
-enum RecommendedKind { artistMix, genreMix, unheard, newest }
+enum RecommendedKind { artistMix, genreMix, rediscover, unheard, newest }
 
 /// 추천 재생목록: 곡을 묶어 통째로 재생할 수 있다.
 class RecommendedPlaylist extends Equatable {

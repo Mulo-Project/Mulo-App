@@ -1142,6 +1142,24 @@ abstract class AppLocalizations {
   /// **'보관함으로'**
   String get homeGoLibrary;
 
+  /// No description provided for @homeRecentList.
+  ///
+  /// In ko, this message translates to:
+  /// **'최근 재생'**
+  String get homeRecentList;
+
+  /// No description provided for @homeAllSince.
+  ///
+  /// In ko, this message translates to:
+  /// **'{date}부터의 기록'**
+  String homeAllSince(String date);
+
+  /// No description provided for @homeRecRediscover.
+  ///
+  /// In ko, this message translates to:
+  /// **'오랜만에 다시 듣기'**
+  String get homeRecRediscover;
+
   /// No description provided for @homeChipTracks.
   ///
   /// In ko, this message translates to:

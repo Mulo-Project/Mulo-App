@@ -259,6 +259,16 @@
   "homeEmptyLibraryTitle": "보관함이 비었어요",
   "homeEmptyLibraryBody": "기기 음악을 불러오거나 검색에서 받으면\n여기에 많이 들은 곡과 추천이 보여요.",
   "homeGoLibrary": "보관함으로",
+  "homeRecentList": "최근 재생",
+  "homeAllSince": "{date}부터의 기록",
+  "@homeAllSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "homeRecRediscover": "오랜만에 다시 듣기",
   "homeChipTracks": "곡",
   "homeChipArtists": "아티스트",
   "homeChipGenres": "장르",

@@ -11,12 +11,13 @@ String recommendTitle(AppLocalizations l10n, RecommendedPlaylist p) =>
     switch (p.kind) {
       RecommendedKind.artistMix => l10n.homeRecArtist(p.label),
       RecommendedKind.genreMix => l10n.homeRecGenre(p.label),
+      RecommendedKind.rediscover => l10n.homeRecRediscover,
       RecommendedKind.unheard => l10n.homeRecUnheard,
       RecommendedKind.newest => l10n.homeRecNewest,
     };
 
-/// ④ 추천 플레이리스트: 한 페이지에 2열 × 2줄, 옆으로 넘긴다.
-/// 한 칸은 커버 · 이름 · 곡 수 · 재생 버튼이고, 누르면 묶음 전체를 재생한다.
+/// ④ 추천 플레이리스트: 한 페이지가 추천 후보 하나이고, 옆으로 넘기면 다른 후보가 나온다.
+/// 페이지마다 곡 최대 10개를 목록으로 보여 주고, "전체 재생"은 그 후보의 곡 전부를 재생한다.
 class RecommendSection extends StatefulWidget {
   const RecommendSection({
     super.key,
@@ -27,18 +28,17 @@ class RecommendSection extends StatefulWidget {
   final List<RecommendedPlaylist> playlists;
   final NowPlayingCubit player;
 
-  static const _perPage = 4;
-  static const _rowHeight = 76.0;
-
   @override
   State<RecommendSection> createState() => _RecommendSectionState();
 }
 
 class _RecommendSectionState extends State<RecommendSection> {
-  static const _perPage = RecommendSection._perPage;
-  static const _rowHeight = RecommendSection._rowHeight;
+  static const _preview = 10;
+  static const _rowHeight = 64.0;
+  static const _headerHeight = 56.0;
 
-  final _controller = PageController(viewportFraction: .94);
+  final _controller = PageController();
+  int _page = 0;
 
   @override
   void dispose() {
@@ -49,10 +49,15 @@ class _RecommendSectionState extends State<RecommendSection> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final p = context.palette;
     final text = Theme.of(context).textTheme;
     final playlists = widget.playlists;
     final player = widget.player;
-    final pages = (playlists.length / _perPage).ceil();
+
+    final rows = playlists.fold(
+      0,
+      (m, pl) => pl.tracks.length > m ? pl.tracks.length : m,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -63,102 +68,97 @@ class _RecommendSectionState extends State<RecommendSection> {
             padding: AppSpacing.screen,
             child: Text(l10n.homeNoRecommendations, style: text.bodySmall),
           )
-        else
+        else ...[
           SizedBox(
-            height: _rowHeight * 2 + AppSpacing.xs,
+            height:
+                _headerHeight +
+                (rows > _preview ? _preview : rows) * _rowHeight,
             child: PageView.builder(
-              padEnds: false,
               controller: _controller,
-              itemCount: pages,
-              itemBuilder: (context, page) {
-                final items = playlists
-                    .skip(page * _perPage)
-                    .take(_perPage)
-                    .toList();
-                Widget cell(int i) => Expanded(
-                  child: i < items.length
-                      ? _Cell(
-                          playlist: items[i],
-                          onPlay: () => player.playQueue(items[i].tracks),
-                        )
-                      : const SizedBox.shrink(),
-                );
-                return Padding(
-                  padding: EdgeInsets.only(
-                    left: page == 0 ? AppSpacing.md : AppSpacing.xs,
-                    right: AppSpacing.xs,
-                  ),
-                  child: Column(
+              itemCount: playlists.length,
+              onPageChanged: (i) => setState(() => _page = i),
+              itemBuilder: (context, i) {
+                final pl = playlists[i];
+                final shown = pl.tracks.take(_preview).toList();
+                // coverImageOf는 context.select를 쓰므로 목록 빌더 밖의 Builder 안에서 부른다.
+                return Builder(
+                  builder: (context) => Column(
                     children: [
-                      for (var row = 0; row < 2; row++) ...[
-                        if (row > 0) const SizedBox(height: AppSpacing.xs),
-                        SizedBox(
-                          height: _rowHeight,
+                      SizedBox(
+                        height: _headerHeight,
+                        child: Padding(
+                          padding: AppSpacing.screen,
                           child: Row(
                             children: [
-                              cell(row * 2),
-                              const SizedBox(width: AppSpacing.xs),
-                              cell(row * 2 + 1),
+                              Expanded(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      recommendTitle(l10n, pl),
+                                      style: text.titleMedium,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      l10n.songCount(pl.tracks.length),
+                                      style: text.bodySmall,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              PillButton(
+                                compact: true,
+                                icon: Icons.play_arrow_rounded,
+                                label: l10n.actionPlayAll,
+                                onPressed: () => player.playQueue(pl.tracks),
+                              ),
                             ],
                           ),
                         ),
-                      ],
+                      ),
+                      for (var j = 0; j < shown.length; j++)
+                        SizedBox(
+                          height: _rowHeight,
+                          child: TrackTile(
+                            title: shown[j].title,
+                            subtitle: shown[j].artist.isEmpty
+                                ? l10n.unknownArtist
+                                : shown[j].artist,
+                            tone: toneFor(shown[j].id),
+                            artwork: coverImageOf(
+                              context,
+                              CoverKey.track(shown[j].id),
+                            ),
+                            onTap: () => player.playQueue(pl.tracks, index: j),
+                          ),
+                        ),
                     ],
                   ),
                 );
               },
             ),
           ),
-      ],
-    );
-  }
-}
-
-class _Cell extends StatelessWidget {
-  const _Cell({required this.playlist, required this.onPlay});
-
-  final RecommendedPlaylist playlist;
-  final VoidCallback onPlay;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final p = context.palette;
-    final text = Theme.of(context).textTheme;
-    final first = playlist.tracks.first;
-    return InkWell(
-      onTap: onPlay,
-      borderRadius: BorderRadius.circular(AppRadii.sm),
-      child: Row(
-        children: [
-          ArtworkBox(
-            image: coverImageOf(context, CoverKey.track(first.id)),
-            tone: toneFor(first.id),
-            size: 56,
-            radius: AppRadii.sm,
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  recommendTitle(l10n, playlist),
-                  style: text.titleSmall,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+          const SizedBox(height: AppSpacing.xs),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              for (var i = 0; i < playlists.length; i++)
+                AnimatedContainer(
+                  duration: AppMotion.medium,
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: i == _page ? 18 : 6,
+                  height: 6,
+                  decoration: ShapeDecoration(
+                    color: i == _page ? p.accent : p.outline,
+                    shape: const StadiumBorder(),
+                  ),
                 ),
-                Text(
-                  l10n.songCount(playlist.tracks.length),
-                  style: text.bodySmall,
-                ),
-              ],
-            ),
+            ],
           ),
-          Icon(Icons.play_circle_fill_rounded, size: 32, color: p.accent),
         ],
-      ),
+      ],
     );
   }
 }

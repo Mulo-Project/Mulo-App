@@ -86,7 +86,7 @@ HomeSummary buildHomeSummary({
   required DateTime now,
   int topCount = 100,
   int rankCount = 10,
-  int recentCount = 8,
+  int recentCount = 10,
   int playlistSize = 30,
 }) {
   final byId = {for (final t in tracks) t.id: t};
@@ -182,7 +182,7 @@ HomeSummary buildHomeSummary({
 
   final playlists = <RecommendedPlaylist>[];
   for (final (artist, _, _)
-      in topArtists.where((a) => a.$1.isNotEmpty).take(2)) {
+      in topArtists.where((a) => a.$1.isNotEmpty).take(3)) {
     final list = leastHeardFirst(tracks.where((t) => t.artist == artist));
     if (list.length >= 2) {
       playlists.add(
@@ -190,13 +190,28 @@ HomeSummary buildHomeSummary({
       );
     }
   }
-  for (final (genre, _, _) in topGenres.take(1)) {
+  for (final (genre, _, _) in topGenres.take(2)) {
     final list = leastHeardFirst(tracks.where((t) => t.genre == genre));
     if (list.length >= 2) {
       playlists.add(
         RecommendedPlaylist(RecommendedKind.genreMix, list, label: genre),
       );
     }
+  }
+  // 오랜만에: 들은 적은 있지만 마지막으로 들은 지 가장 오래된 곡.
+  final lastPlayed = <String, DateTime>{};
+  for (final pl in known) {
+    lastPlayed.putIfAbsent(pl.trackId, () => pl.playedAt);
+  }
+  final rediscover = [for (final id in lastPlayed.keys) byId[id]!]
+    ..sort((a, b) => lastPlayed[a.id]!.compareTo(lastPlayed[b.id]!));
+  if (rediscover.length >= 2) {
+    playlists.add(
+      RecommendedPlaylist(
+        RecommendedKind.rediscover,
+        rediscover.take(playlistSize).toList(),
+      ),
+    );
   }
   final unheard = [
     for (final t in newestFirst)

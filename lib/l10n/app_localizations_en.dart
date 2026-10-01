@@ -570,6 +570,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeGoLibrary => 'Go to library';
 
   @override
+  String get homeRecentList => 'Recently played';
+
+  @override
+  String homeAllSince(String date) {
+    return 'Since $date';
+  }
+
+  @override
+  String get homeRecRediscover => 'Play it again';
+
+  @override
   String get homeChipTracks => 'Songs';
 
   @override

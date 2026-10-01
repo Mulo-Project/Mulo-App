@@ -560,6 +560,17 @@ class AppLocalizationsKo extends AppLocalizations {
   String get homeGoLibrary => '보관함으로';
 
   @override
+  String get homeRecentList => '최근 재생';
+
+  @override
+  String homeAllSince(String date) {
+    return '$date부터의 기록';
+  }
+
+  @override
+  String get homeRecRediscover => '오랜만에 다시 듣기';
+
+  @override
   String get homeChipTracks => '곡';
 
   @override

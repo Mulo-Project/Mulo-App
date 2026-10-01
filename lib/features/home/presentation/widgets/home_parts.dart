@@ -2,7 +2,21 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/design/design.dart';
 
-/// 홈 구역의 큰 제목. [onTap]이 있으면 오른쪽에 "›"가 붙어 더 보기로 간다.
+/// 홈 구역 사이 구분: 위아래 여백 + 얇은 선 (박스 없이 영역만 나눈다).
+class HomeDivider extends StatelessWidget {
+  const HomeDivider({super.key});
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(
+      horizontal: AppSpacing.md,
+      vertical: AppSpacing.lg,
+    ),
+    child: Divider(height: 1, thickness: 1, color: context.palette.outline),
+  );
+}
+
+/// 홈 구역의 제목. [onTap]이 있으면 오른쪽에 "›"가 붙어 더 보기로 간다.
 class HomeSectionTitle extends StatelessWidget {
   const HomeSectionTitle(this.title, {super.key, this.onTap});
 
@@ -12,8 +26,8 @@ class HomeSectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    final style = Theme.of(context).textTheme.headlineSmall
-        ?.copyWith(fontWeight: FontWeight.w800);
+    final style = Theme.of(context).textTheme.titleLarge
+        ?.copyWith(fontWeight: FontWeight.w700);
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -105,4 +119,67 @@ class HomeChipRow extends StatelessWidget {
       children: chips,
     ),
   );
+}
+
+/// 접고 펼 수 있는 목록: 소제목 줄을 누르면 [child]가 접힌다 (기본 펼침).
+class HomeCollapsible extends StatefulWidget {
+  const HomeCollapsible({super.key, required this.label, required this.child});
+
+  final String label;
+  final Widget child;
+
+  @override
+  State<HomeCollapsible> createState() => _HomeCollapsibleState();
+}
+
+class _HomeCollapsibleState extends State<HomeCollapsible> {
+  bool _open = true;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Semantics(
+          button: true,
+          expanded: _open,
+          child: InkWell(
+            onTap: () => setState(() => _open = !_open),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.xs,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.label,
+                      style: Theme.of(context).textTheme.titleSmall
+                          ?.copyWith(color: p.onSurfaceMuted),
+                    ),
+                  ),
+                  AnimatedRotation(
+                    turns: _open ? .5 : 0,
+                    duration: AppMotion.medium,
+                    child: Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: p.onSurfaceMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        AnimatedSize(
+          duration: AppMotion.medium,
+          curve: AppMotion.standard,
+          alignment: Alignment.topCenter,
+          child: _open ? widget.child : const SizedBox(width: double.infinity),
+        ),
+      ],
+    );
+  }
 }

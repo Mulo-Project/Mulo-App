@@ -188,7 +188,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('최근 들은 곡'), findsOneWidget);
     await tester.scrollUntilVisible(
-      find.text('많이 들은 곡'),
+      find.text('많이 들은 곡').first,
       300,
       scrollable: find
           .descendant(
@@ -197,7 +197,7 @@ void main() {
           )
           .first,
     );
-    expect(find.text('많이 들은 곡'), findsOneWidget);
+    expect(find.text('많이 들은 곡'), findsWidgets);
     expect(find.text(first.title), findsWidgets);
     expect(find.text('1회'), findsWidgets);
   });

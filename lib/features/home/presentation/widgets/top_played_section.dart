@@ -10,21 +10,23 @@ import 'home_parts.dart';
 
 enum _Kind { tracks, artists, genres }
 
+/// 시상대에 오르는 한 칸 (곡 · 아티스트 · 장르 중 하나).
 class _Entry {
-  const _Entry(this.title, this.count, this.cover, this.onTap, {this.sub = ''});
+  const _Entry(this.title, this.count, this.cover, this.songs);
 
   final String title;
-  final String sub;
   final int count;
 
   /// 이미지를 빌려 올 대표 곡.
   final Track cover;
-  final VoidCallback onTap;
+
+  /// 이 칸에 속한 곡 (많이 들은 순).
+  final List<Track> songs;
 }
 
-/// ③ 많이 들은 곡: 곡 · 아티스트 · 장르 칩으로 고르고, 동그란 커버가 붙은 알약 카드를
-/// 가로로 넘기며 본다 (두 줄). 카드를 누르면 그 곡 · 그 아티스트 · 그 장르의 곡을 재생한다.
-/// 제목의 "›"는 많이 들은 곡 TOP 100 상세로 간다.
+/// ③ 많이 들은 곡: 곡 · 아티스트 · 장르 칩으로 영역을 고르면 1 · 2 · 3등이 시상대로 서고,
+/// 그 아래에 곡 10개 미리보기가 나온다 (접을 수 있다). 아티스트 · 장르는 시상대에서 고른
+/// 칸의 곡이 보인다. 제목의 "›"는 많이 들은 곡 TOP 100 상세로 간다.
 class TopPlayedSection extends StatefulWidget {
   const TopPlayedSection({
     super.key,
@@ -44,43 +46,28 @@ class TopPlayedSection extends StatefulWidget {
 class _TopPlayedSectionState extends State<TopPlayedSection> {
   _Kind _kind = _Kind.tracks;
 
+  /// 시상대에서 고른 칸 (곡 영역에서는 쓰지 않는다).
+  int _picked = 0;
+
   List<_Entry> _entries(AppLocalizations l10n) {
     final s = widget.summary;
-    final player = widget.player;
     return switch (_kind) {
       _Kind.tracks => [
-        for (var i = 0; i < s.topTracks.length && i < 10; i++)
-          _Entry(
-            s.topTracks[i].track.title,
-            s.topTracks[i].count,
-            s.topTracks[i].track,
-            () => player.playQueue([
-              for (final t in s.topTracks) t.track,
-            ], index: i),
-            sub: s.topTracks[i].track.artist.isEmpty
-                ? l10n.unknownArtist
-                : s.topTracks[i].track.artist,
-          ),
+        for (final t in s.topTracks.take(3))
+          _Entry(t.track.title, t.count, t.track, [t.track]),
       ],
       _Kind.artists => [
-        for (final a in s.stats.topArtists)
+        for (final a in s.stats.topArtists.take(3))
           _Entry(
             a.artist.isEmpty ? l10n.unknownArtist : a.artist,
             a.count,
             a.tracks.first,
-            () => player.playQueue(a.tracks),
-            sub: l10n.songCount(a.tracks.length),
+            a.tracks,
           ),
       ],
       _Kind.genres => [
-        for (final g in s.stats.topGenres)
-          _Entry(
-            g.genre,
-            g.count,
-            g.tracks.first,
-            () => player.playQueue(g.tracks),
-            sub: l10n.songCount(g.tracks.length),
-          ),
+        for (final g in s.stats.topGenres.take(3))
+          _Entry(g.genre, g.count, g.tracks.first, g.tracks),
       ],
     };
   }
@@ -89,13 +76,33 @@ class _TopPlayedSectionState extends State<TopPlayedSection> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
+    final s = widget.summary;
+    final player = widget.player;
     final entries = _entries(l10n);
+    final picked = _picked.clamp(0, entries.isEmpty ? 0 : entries.length - 1);
 
     String label(_Kind k) => switch (k) {
       _Kind.tracks => l10n.homeChipTracks,
       _Kind.artists => l10n.homeChipArtists,
       _Kind.genres => l10n.homeChipGenres,
     };
+
+    // 아래 목록: 곡 영역은 TOP 10, 그 밖에는 고른 칸의 곡 10개.
+    final List<Track> listed;
+    final Map<String, int> counts = {
+      for (final t in s.topTracks) t.track.id: t.count,
+    };
+    String listLabel;
+    if (_kind == _Kind.tracks) {
+      listed = [for (final t in s.topTracks.take(10)) t.track];
+      listLabel = l10n.homeTopTracks;
+    } else if (entries.isEmpty) {
+      listed = const [];
+      listLabel = '';
+    } else {
+      listed = entries[picked].songs.take(10).toList();
+      listLabel = entries[picked].title;
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -107,7 +114,10 @@ class _TopPlayedSectionState extends State<TopPlayedSection> {
               HomeChip(
                 label: label(k),
                 selected: _kind == k,
-                onTap: () => setState(() => _kind = k),
+                onTap: () => setState(() {
+                  _kind = k;
+                  _picked = 0;
+                }),
               ),
           ],
         ),
@@ -117,93 +127,177 @@ class _TopPlayedSectionState extends State<TopPlayedSection> {
             padding: AppSpacing.screen,
             child: Text(l10n.homeNoPlays, style: text.bodySmall),
           )
-        else
-          SizedBox(
-            height: _Pill.height * 2 + AppSpacing.xs,
-            child: GridView.builder(
-              key: ValueKey(_kind),
-              scrollDirection: Axis.horizontal,
-              padding: AppSpacing.screen,
-              itemCount: entries.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisExtent: 250,
-                mainAxisSpacing: AppSpacing.xs,
-                crossAxisSpacing: AppSpacing.xs,
-              ),
-              itemBuilder: (context, i) =>
-                  _Pill(rank: i + 1, entry: entries[i]),
+        else ...[
+          Padding(
+            padding: AppSpacing.screen,
+            child: _Podium(
+              entries: entries,
+              selected: _kind == _Kind.tracks ? null : picked,
+              onTap: (i) {
+                if (_kind == _Kind.tracks) {
+                  player.playQueue([
+                    for (final t in s.topTracks) t.track,
+                  ], index: i);
+                } else {
+                  setState(() => _picked = i);
+                }
+              },
             ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          HomeCollapsible(
+            label: listLabel,
+            child: Column(
+              children: [
+                for (var i = 0; i < listed.length; i++)
+                  TrackTile(
+                    title: listed[i].title,
+                    subtitle: listed[i].artist.isEmpty
+                        ? l10n.unknownArtist
+                        : listed[i].artist,
+                    tone: toneFor(listed[i].id),
+                    leading: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 28,
+                          child: StatNumber('${i + 1}', size: 18),
+                        ),
+                        ArtworkBox(
+                          image: coverImageOf(
+                            context,
+                            CoverKey.track(listed[i].id),
+                          ),
+                          tone: toneFor(listed[i].id),
+                        ),
+                      ],
+                    ),
+                    trailing: Text(
+                      l10n.playCount(counts[listed[i].id] ?? 0),
+                      style: text.bodySmall,
+                    ),
+                    onTap: () => player.playQueue(listed, index: i),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// 1등이 가운데에서 가장 높은 시상대 (2등 · 1등 · 3등 순). 칸마다 동그란 커버 · 이름 · 횟수.
+class _Podium extends StatelessWidget {
+  const _Podium({required this.entries, required this.selected, this.onTap});
+
+  final List<_Entry> entries;
+
+  /// 고른 칸 (없으면 표시하지 않는다).
+  final int? selected;
+  final ValueChanged<int>? onTap;
+
+  static const _heights = [64.0, 44.0, 30.0];
+  static const _art = [72.0, 56.0, 56.0];
+
+  @override
+  Widget build(BuildContext context) {
+    // 보이는 순서: 2등 · 1등 · 3등
+    const order = [1, 0, 2];
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        for (final i in order)
+          Expanded(
+            child: i < entries.length
+                ? _Place(
+                    rank: i,
+                    entry: entries[i],
+                    selected: selected == i,
+                    onTap: () => onTap?.call(i),
+                  )
+                : const SizedBox.shrink(),
           ),
       ],
     );
   }
 }
 
-/// 동그란 커버 + 순위 · 이름 · 재생 횟수가 붙은 알약 카드.
-class _Pill extends StatelessWidget {
-  const _Pill({required this.rank, required this.entry});
-
-  static const height = 64.0;
+class _Place extends StatelessWidget {
+  const _Place({
+    required this.rank,
+    required this.entry,
+    required this.selected,
+    required this.onTap,
+  });
 
   final int rank;
   final _Entry entry;
+  final bool selected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final p = context.palette;
     final text = Theme.of(context).textTheme;
-    return Material(
-      color: p.surfaceHigh,
-      shape: const StadiumBorder(),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: entry.onTap,
-        child: Row(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.xxs),
+    final first = rank == 0;
+    final art = _Podium._art[rank];
+
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DecoratedBox(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: selected || first ? p.accent : p.outline,
+                width: selected ? 3 : 2,
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(2),
               child: ArtworkBox(
                 image: coverImageOf(context, CoverKey.track(entry.cover.id)),
                 tone: toneFor(entry.cover.id),
-                size: height - AppSpacing.xxs * 2,
-                radius: height,
+                size: art,
+                radius: art,
               ),
             ),
-            const SizedBox(width: AppSpacing.xs),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    entry.title,
-                    style: text.titleSmall,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    entry.sub.isEmpty
-                        ? l10n.playCount(entry.count)
-                        : '${entry.sub} · ${l10n.playCount(entry.count)}',
-                    style: text.bodySmall,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxs),
+            child: Text(
+              entry.title,
+              style: text.titleSmall,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+          ),
+          Text(l10n.playCount(entry.count), style: text.bodySmall),
+          const SizedBox(height: AppSpacing.xs),
+          Container(
+            height: _Podium._heights[rank],
+            margin: const EdgeInsets.symmetric(horizontal: 2),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: first ? p.accent : p.surfaceHigh,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(AppRadii.sm),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.only(right: AppSpacing.md),
-              child: StatNumber(
-                '$rank',
-                size: 20,
-                color: rank == 1 ? p.accent : p.onSurfaceMuted,
-              ),
+            child: StatNumber(
+              '${rank + 1}',
+              size: 24,
+              color: first ? p.onAccent : p.onSurface,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

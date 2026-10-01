@@ -180,6 +180,16 @@
   "homeEmptyLibraryTitle": "Your library is empty",
   "homeEmptyLibraryBody": "Import or download music to see\nyour top songs and recommendations here.",
   "homeGoLibrary": "Go to library",
+  "homeRecentList": "Recently played",
+  "homeAllSince": "Since {date}",
+  "@homeAllSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "homeRecRediscover": "Play it again",
   "homeChipTracks": "Songs",
   "homeChipArtists": "Artists",
   "homeChipGenres": "Genres",
