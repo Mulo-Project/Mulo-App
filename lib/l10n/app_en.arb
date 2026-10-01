@@ -74,6 +74,20 @@
   "settingsModeLiteNote": "The lite build supports server mode only.",
   "settingsDownload": "Downloads",
   "settingsSavePath": "Save location",
+  "settingsLoadedFolders": "Music folders",
+  "settingsLoadedFoldersCount": "{count} folders",
+  "@settingsLoadedFoldersCount": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "loadedFoldersHint": "Music in these folders is loaded into your library, including subfolders.",
+  "loadedFoldersTrackCount": "{count} songs",
+  "@loadedFoldersTrackCount": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "loadedFoldersDefault": "Default save location",
+  "loadedFoldersAdd": "Add folder",
+  "loadedFoldersRemove": "Remove folder",
+  "loadedFoldersScanning": "Rescanning your library",
   "settingsQuality": "Default quality",
   "settingsFormat": "Default format",
   "settingsEngine": "Download engine",

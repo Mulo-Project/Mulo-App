@@ -52,15 +52,40 @@ class FakeLibraryRepository implements LibraryRepository {
   }
 }
 
+/// 메모리 불러오는 폴더 목록 (고르기는 [picked]를 그대로 돌려준다).
+class MemoryLoadedFolders implements LoadedFolderRepository {
+  MemoryLoadedFolders({this.picked, List<String> extra = const []})
+    : extra = [...extra];
+
+  String? picked;
+  List<String> extra;
+
+  @override
+  String get defaultFolder => '/music/default';
+
+  @override
+  Future<List<String>> loadExtra() async => [...extra];
+
+  @override
+  Future<void> saveExtra(List<String> folders) async => extra = [...folders];
+
+  @override
+  Future<String?> pickFolder() async => picked;
+}
+
 class FakeDeviceMusic implements DeviceMusicRepository {
   FakeDeviceMusic(this.result);
 
   ScanResult result;
   int calls = 0;
 
+  /// 마지막 scan에 넘어온 폴더.
+  List<String> lastFolders = const [];
+
   @override
-  Future<ScanResult> scan() async {
+  Future<ScanResult> scan(List<String> folders) async {
     calls++;
+    lastFolders = folders;
     return result;
   }
 }
@@ -302,6 +327,7 @@ Future<void> setUpTestDependencies({
   PlaylistRepository? playlists,
   AppLockRepository? appLock,
   BiometricAuthenticator? biometric,
+  LoadedFolderRepository? folders,
 }) async {
   await sl.reset();
   registerTheme(sl);
@@ -325,6 +351,9 @@ Future<void> setUpTestDependencies({
     )
     ..registerLazySingleton<LibraryRepository>(
       () => FakeLibraryRepository(tracks),
+    )
+    ..registerLazySingleton<LoadedFolderRepository>(
+      () => folders ?? MemoryLoadedFolders(),
     )
     ..registerLazySingleton<DeviceMusicRepository>(
       () => device ?? FakeDeviceMusic(const ScanFound([])),

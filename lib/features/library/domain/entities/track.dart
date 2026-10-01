@@ -12,6 +12,7 @@ class Track {
     required this.addedAt,
     this.genre = '',
     this.uri = '',
+    this.folder = '',
     this.source = TrackSource.device,
   });
 
@@ -29,6 +30,9 @@ class Track {
 
   /// 재생 주소 (Android content://, 데스크톱 파일 경로).
   final String uri;
+
+  /// 파일이 들어 있는 폴더 경로 (불러오는 폴더별 곡 수에 쓴다). 모르면 빈 문자열.
+  final String folder;
   final TrackSource source;
 
   @override

@@ -95,6 +95,20 @@
   "settingsModeLiteNote": "lite 빌드는 서버 모드만 쓸 수 있어요.",
   "settingsDownload": "다운로드",
   "settingsSavePath": "저장 위치",
+  "settingsLoadedFolders": "불러오는 폴더",
+  "settingsLoadedFoldersCount": "{count}개 폴더",
+  "@settingsLoadedFoldersCount": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "loadedFoldersHint": "이 폴더 안의 음악을 보관함에 불러와요. 하위 폴더도 포함돼요.",
+  "loadedFoldersTrackCount": "{count}곡",
+  "@loadedFoldersTrackCount": {
+    "placeholders": {"count": {"type": "int"}}
+  },
+  "loadedFoldersDefault": "기본 저장 위치",
+  "loadedFoldersAdd": "폴더 추가",
+  "loadedFoldersRemove": "폴더 빼기",
+  "loadedFoldersScanning": "보관함을 다시 찾는 중이에요",
   "settingsQuality": "기본 음질",
   "settingsFormat": "기본 포맷",
   "settingsEngine": "다운로드 엔진",

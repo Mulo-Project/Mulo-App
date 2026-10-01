@@ -23,6 +23,14 @@ class DriftLibraryRepository implements LibraryRepository {
       b.insertAll(_db.tracks, [
         for (final t in tracks) _toRow(t),
       ], mode: InsertMode.insertOrIgnore);
+      // 폴더 칸이 생기기 전에 넣은 곡은 다시 찾을 때 폴더를 채운다.
+      for (final t in tracks.where((t) => t.folder.isNotEmpty)) {
+        b.update(
+          _db.tracks,
+          TracksCompanion(folder: Value(t.folder)),
+          where: (r) => r.uri.equals(t.uri) & r.folder.equals(''),
+        );
+      }
     });
     return await _count() - before;
   }
@@ -44,6 +52,7 @@ class DriftLibraryRepository implements LibraryRepository {
     duration: Duration(milliseconds: r.durationMs),
     addedAt: r.addedAt,
     uri: r.uri,
+    folder: r.folder,
     source: TrackSource.values.asNameMap()[r.source] ?? TrackSource.device,
   );
 
@@ -55,6 +64,7 @@ class DriftLibraryRepository implements LibraryRepository {
     genre: Value(t.genre),
     durationMs: t.duration.inMilliseconds,
     uri: t.uri,
+    folder: Value(t.folder),
     source: t.source.name,
     addedAt: t.addedAt,
   );

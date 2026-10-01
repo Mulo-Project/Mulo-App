@@ -1,0 +1,138 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../../core/design/design.dart';
+import '../../../../core/l10n/l10n.dart';
+import '../../domain/entities/loaded_folder.dart';
+import '../bloc/loaded_folders_cubit.dart';
+
+/// 음악을 불러오는 폴더 목록: 확인 · 추가 · 삭제 (바텀 시트).
+Future<void> showLoadedFoldersSheet(BuildContext context) {
+  final cubit = context.read<LoadedFoldersCubit>();
+  return showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: context.palette.surface,
+    showDragHandle: true,
+    isScrollControlled: true,
+    useRootNavigator: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadii.card)),
+    ),
+    builder: (_) =>
+        BlocProvider.value(value: cubit, child: const LoadedFoldersSheet()),
+  );
+}
+
+class LoadedFoldersSheet extends StatelessWidget {
+  const LoadedFoldersSheet({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final text = Theme.of(context).textTheme;
+    final state = context.watch<LoadedFoldersCubit>().state;
+    final cubit = context.read<LoadedFoldersCubit>();
+
+    return SafeArea(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * .8,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            0,
+            AppSpacing.lg,
+            AppSpacing.lg,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(l10n.settingsLoadedFolders, style: text.titleLarge),
+              const SizedBox(height: AppSpacing.xxs),
+              Text(
+                state.busy
+                    ? l10n.loadedFoldersScanning
+                    : l10n.loadedFoldersHint,
+                style: text.bodySmall,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Flexible(
+                child: ListView(
+                  shrinkWrap: true,
+                  children: [
+                    for (final folder in state.folders)
+                      _FolderRow(
+                        folder: folder,
+                        onRemove: state.busy
+                            ? null
+                            : () => cubit.remove(folder.path),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              PillButton(
+                label: l10n.loadedFoldersAdd,
+                icon: Icons.create_new_folder_rounded,
+                onPressed: state.busy ? null : cubit.add,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FolderRow extends StatelessWidget {
+  const _FolderRow({required this.folder, this.onRemove});
+
+  final LoadedFolder folder;
+  final VoidCallback? onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final text = Theme.of(context).textTheme;
+    final p = context.palette;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+      child: Row(
+        children: [
+          Icon(Icons.folder_rounded, color: p.onSurfaceMuted),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  folder.path,
+                  style: text.titleSmall,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  folder.isDefault
+                      ? '${l10n.loadedFoldersDefault} · ${l10n.loadedFoldersTrackCount(folder.trackCount)}'
+                      : l10n.loadedFoldersTrackCount(folder.trackCount),
+                  style: text.bodySmall,
+                ),
+              ],
+            ),
+          ),
+          if (!folder.isDefault)
+            CircleIconButton(
+              icon: Icons.close_rounded,
+              tooltip: l10n.loadedFoldersRemove,
+              size: 36,
+              onPressed: onRemove,
+            ),
+        ],
+      ),
+    );
+  }
+}

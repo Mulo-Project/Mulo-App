@@ -7,6 +7,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../../core/sample/sample_data.dart';
 import '../../../downloads/domain/entities/download_options.dart';
+import '../../../library/presentation/widgets/loaded_folders_tile.dart';
 import '../../../security/presentation/bloc/app_lock_cubit.dart';
 import '../../../security/presentation/screens/pin_entry_screen.dart';
 import '../../../theme/domain/entities/theme_settings.dart';
@@ -95,6 +96,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       trailing: const _Chevron(),
                       onTap: () {},
                     ),
+                    const LoadedFoldersTile(),
                     SettingRow(
                       title: l10n.settingsQuality,
                       below: SegmentedPills<Quality>(

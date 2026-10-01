@@ -239,6 +239,34 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsSavePath => '저장 위치';
 
   @override
+  String get settingsLoadedFolders => '불러오는 폴더';
+
+  @override
+  String settingsLoadedFoldersCount(int count) {
+    return '$count개 폴더';
+  }
+
+  @override
+  String get loadedFoldersHint => '이 폴더 안의 음악을 보관함에 불러와요. 하위 폴더도 포함돼요.';
+
+  @override
+  String loadedFoldersTrackCount(int count) {
+    return '$count곡';
+  }
+
+  @override
+  String get loadedFoldersDefault => '기본 저장 위치';
+
+  @override
+  String get loadedFoldersAdd => '폴더 추가';
+
+  @override
+  String get loadedFoldersRemove => '폴더 빼기';
+
+  @override
+  String get loadedFoldersScanning => '보관함을 다시 찾는 중이에요';
+
+  @override
   String get settingsQuality => '기본 음질';
 
   @override

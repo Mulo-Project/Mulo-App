@@ -16,6 +16,9 @@ class Tracks extends Table {
   IntColumn get durationMs => integer()();
   TextColumn get uri => text().unique()();
 
+  /// 파일이 들어 있는 폴더 경로. 모르면 빈 문자열.
+  TextColumn get folder => text().withDefault(const Constant(''))();
+
   /// `device`(기기에서 불러옴) · `download`(앱에서 받음).
   TextColumn get source => text()();
   DateTimeColumn get addedAt => dateTime()();
@@ -80,7 +83,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'music_app'));
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -92,6 +95,7 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(playlistTracks);
       }
       if (from == 3) await m.addColumn(playlists, playlists.colorIndex);
+      if (from < 5) await m.addColumn(tracks, tracks.folder);
     },
   );
 }

@@ -240,6 +240,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSavePath => 'Save location';
 
   @override
+  String get settingsLoadedFolders => 'Music folders';
+
+  @override
+  String settingsLoadedFoldersCount(int count) {
+    return '$count folders';
+  }
+
+  @override
+  String get loadedFoldersHint =>
+      'Music in these folders is loaded into your library, including subfolders.';
+
+  @override
+  String loadedFoldersTrackCount(int count) {
+    return '$count songs';
+  }
+
+  @override
+  String get loadedFoldersDefault => 'Default save location';
+
+  @override
+  String get loadedFoldersAdd => 'Add folder';
+
+  @override
+  String get loadedFoldersRemove => 'Remove folder';
+
+  @override
+  String get loadedFoldersScanning => 'Rescanning your library';
+
+  @override
   String get settingsQuality => 'Default quality';
 
   @override

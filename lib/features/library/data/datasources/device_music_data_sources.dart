@@ -1,18 +1,19 @@
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../domain/entities/import_result.dart';
+import '../../domain/entities/loaded_folder.dart';
 import '../../domain/entities/track.dart';
 
 /// 플랫폼별 기기 음악 찾기. [DeviceMusicRepositoryImpl]이 플랫폼에 맞는 것을 쓴다.
 abstract interface class DeviceMusicDataSource {
-  Future<ScanResult> scan();
+  /// [folders] 안(하위 폴더 포함)의 음악만 찾는다.
+  Future<ScanResult> scan(List<String> folders);
 }
 
-/// Android: MediaStore에서 음악 파일을 찾는다 (네이티브 `MediaStoreChannel`).
+/// Android: MediaStore에서 음악 파일을 찾아 불러오는 폴더 안의 것만 거른다 (네이티브 `MediaStoreChannel`).
 /// Android 13+는 READ_MEDIA_AUDIO, 12 이하는 READ_EXTERNAL_STORAGE 권한.
 class MediaStoreMusicDataSource implements DeviceMusicDataSource {
   MediaStoreMusicDataSource({DateTime Function()? now})
@@ -22,7 +23,7 @@ class MediaStoreMusicDataSource implements DeviceMusicDataSource {
   final DateTime Function() _now;
 
   @override
-  Future<ScanResult> scan() async {
+  Future<ScanResult> scan(List<String> folders) async {
     if (!await _requestPermission()) return const ScanPermissionDenied();
     final rows =
         await _channel.invokeListMethod<Map<Object?, Object?>>('queryAudio') ??
@@ -30,17 +31,22 @@ class MediaStoreMusicDataSource implements DeviceMusicDataSource {
     final now = _now();
     return ScanFound([
       for (final r in rows)
-        Track(
-          id: 'device:${r['id']}',
-          title: (r['title'] as String?) ?? '',
-          artist: _clean(r['artist'] as String?),
-          album: _clean(r['album'] as String?),
-          duration: Duration(milliseconds: (r['durationMs'] as int?) ?? 0),
-          uri: r['uri']! as String,
-          addedAt: now,
-        ),
+        if (_inAny(folders, r['folder'] as String?))
+          Track(
+            id: 'device:${r['id']}',
+            title: (r['title'] as String?) ?? '',
+            artist: _clean(r['artist'] as String?),
+            album: _clean(r['album'] as String?),
+            duration: Duration(milliseconds: (r['durationMs'] as int?) ?? 0),
+            uri: r['uri']! as String,
+            folder: normalizeFolderPath((r['folder'] as String?) ?? ''),
+            addedAt: now,
+          ),
     ]);
   }
+
+  static bool _inAny(List<String> folders, String? folder) =>
+      folder != null && folders.any((f) => isInsideFolder(folder, f));
 
   Future<bool> _requestPermission() async {
     // audio(13+)와 storage(12 이하) 중 기기에 맞는 쪽만 실제로 뜬다.
@@ -52,7 +58,7 @@ class MediaStoreMusicDataSource implements DeviceMusicDataSource {
   static String _clean(String? v) => (v == null || v == '<unknown>') ? '' : v;
 }
 
-/// 데스크톱: 사용자가 고른 폴더 안의 음악 파일을 찾는다 (하위 폴더 포함).
+/// 데스크톱: 불러오는 폴더 안의 음악 파일을 직접 찾는다 (하위 폴더 포함).
 /// 태그는 아직 읽지 않고 파일 이름을 제목으로 쓴다.
 class DirectoryMusicDataSource implements DeviceMusicDataSource {
   DirectoryMusicDataSource({DateTime Function()? now})
@@ -71,10 +77,17 @@ class DirectoryMusicDataSource implements DeviceMusicDataSource {
   };
 
   @override
-  Future<ScanResult> scan() async {
-    final dir = await FilePicker.getDirectoryPath();
-    if (dir == null) return const ScanCancelled();
-    return ScanFound(await scanDirectory(Directory(dir)));
+  Future<ScanResult> scan(List<String> folders) async {
+    final tracks = <Track>[];
+    final seen = <String>{};
+    for (final folder in folders) {
+      final dir = Directory(folder);
+      if (!await dir.exists()) continue;
+      for (final t in await scanDirectory(dir)) {
+        if (seen.add(normalizeFolderPath(t.uri))) tracks.add(t);
+      }
+    }
+    return ScanFound(tracks);
   }
 
   Future<List<Track>> scanDirectory(Directory dir) async {
@@ -94,6 +107,7 @@ class DirectoryMusicDataSource implements DeviceMusicDataSource {
           album: '',
           duration: Duration.zero,
           uri: e.absolute.path,
+          folder: normalizeFolderPath(e.parent.absolute.path),
           addedAt: now,
         ),
       );

@@ -9,5 +9,5 @@ class DeviceMusicRepositoryImpl implements DeviceMusicRepository {
   final DeviceMusicDataSource _source;
 
   @override
-  Future<ScanResult> scan() => _source.scan();
+  Future<ScanResult> scan(List<String> folders) => _source.scan(folders);
 }

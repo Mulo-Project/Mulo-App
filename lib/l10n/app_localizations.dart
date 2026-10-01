@@ -542,6 +542,54 @@ abstract class AppLocalizations {
   /// **'저장 위치'**
   String get settingsSavePath;
 
+  /// No description provided for @settingsLoadedFolders.
+  ///
+  /// In ko, this message translates to:
+  /// **'불러오는 폴더'**
+  String get settingsLoadedFolders;
+
+  /// No description provided for @settingsLoadedFoldersCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}개 폴더'**
+  String settingsLoadedFoldersCount(int count);
+
+  /// No description provided for @loadedFoldersHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 폴더 안의 음악을 보관함에 불러와요. 하위 폴더도 포함돼요.'**
+  String get loadedFoldersHint;
+
+  /// No description provided for @loadedFoldersTrackCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}곡'**
+  String loadedFoldersTrackCount(int count);
+
+  /// No description provided for @loadedFoldersDefault.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 저장 위치'**
+  String get loadedFoldersDefault;
+
+  /// No description provided for @loadedFoldersAdd.
+  ///
+  /// In ko, this message translates to:
+  /// **'폴더 추가'**
+  String get loadedFoldersAdd;
+
+  /// No description provided for @loadedFoldersRemove.
+  ///
+  /// In ko, this message translates to:
+  /// **'폴더 빼기'**
+  String get loadedFoldersRemove;
+
+  /// No description provided for @loadedFoldersScanning.
+  ///
+  /// In ko, this message translates to:
+  /// **'보관함을 다시 찾는 중이에요'**
+  String get loadedFoldersScanning;
+
   /// No description provided for @settingsQuality.
   ///
   /// In ko, this message translates to:

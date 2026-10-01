@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
+import java.io.File
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
 import java.util.concurrent.Executors
@@ -44,6 +45,7 @@ class MediaStoreChannel(private val context: Context, messenger: BinaryMessenger
             MediaStore.Audio.Media.ARTIST,
             MediaStore.Audio.Media.ALBUM,
             MediaStore.Audio.Media.DURATION,
+            MediaStore.Audio.Media.DATA,
         )
         val rows = mutableListOf<Map<String, Any?>>()
         context.contentResolver.query(
@@ -58,6 +60,7 @@ class MediaStoreChannel(private val context: Context, messenger: BinaryMessenger
             val artist = c.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
             val album = c.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
             val duration = c.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
+            val data = c.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
             while (c.moveToNext()) {
                 val mediaId = c.getLong(id)
                 rows += mapOf(
@@ -67,6 +70,8 @@ class MediaStoreChannel(private val context: Context, messenger: BinaryMessenger
                     "album" to c.getString(album),
                     "durationMs" to c.getLong(duration),
                     "uri" to ContentUris.withAppendedId(collection, mediaId).toString(),
+                    // 불러오는 폴더로 거르고 폴더별 곡 수를 세는 데 쓴다.
+                    "folder" to c.getString(data)?.let { File(it).parent },
                 )
             }
         }

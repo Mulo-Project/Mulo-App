@@ -25,6 +25,7 @@ void main() {
     final useCase = ImportDeviceMusic(
       FakeDeviceMusic(ScanFound([_song])),
       FakeLibraryRepository(),
+      MemoryLoadedFolders(),
     );
     expect((await useCase(const NoParams()) as ImportAdded).count, 1);
     expect((await useCase(const NoParams()) as ImportAdded).count, 0);
@@ -32,7 +33,11 @@ void main() {
 
   test('ImportDeviceMusic: 권한 거절 · 취소', () async {
     final device = FakeDeviceMusic(const ScanPermissionDenied());
-    final useCase = ImportDeviceMusic(device, FakeLibraryRepository());
+    final useCase = ImportDeviceMusic(
+      device,
+      FakeLibraryRepository(),
+      MemoryLoadedFolders(),
+    );
     expect(await useCase(const NoParams()), isA<ImportDenied>());
     device.result = const ScanCancelled();
     expect(await useCase(const NoParams()), isA<ImportCancelled>());
@@ -43,6 +48,7 @@ void main() {
       ImportDeviceMusic(
         FakeDeviceMusic(ScanFound([_song])),
         FakeLibraryRepository(),
+        MemoryLoadedFolders(),
       ),
     );
     addTearDown(cubit.close);

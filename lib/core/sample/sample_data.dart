@@ -136,6 +136,6 @@ abstract final class SampleData {
 
   static const engineCurrent = '2026.08.12';
   static const engineLatest = '2026.09.20';
-  static const savePath = '/storage/emulated/0/Music/MusicApp';
+  static const savePath = '/storage/emulated/0/Music/Mulo';
   static const appVersion = '1.0.0';
 }
