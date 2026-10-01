@@ -43,16 +43,19 @@ class AppTextField extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: SizedBox(
             height: 48,
-            child: TextField(
-              controller: controller,
-              onChanged: onChanged,
-              onSubmitted: onSubmitted,
-              textInputAction: textInputAction,
-              style: text.bodyLarge,
-              cursorColor: p.accent,
-              decoration: InputDecoration.collapsed(
-                hintText: hint,
-                hintStyle: text.bodyLarge?.copyWith(color: p.onSurfaceMuted),
+            // 고정 높이 안에서 글자를 세로 가운데에 둔다 (Center가 입력칸 높이를 풀어 준다).
+            child: Center(
+              child: TextField(
+                controller: controller,
+                onChanged: onChanged,
+                onSubmitted: onSubmitted,
+                textInputAction: textInputAction,
+                style: text.bodyLarge,
+                cursorColor: p.accent,
+                decoration: InputDecoration.collapsed(
+                  hintText: hint,
+                  hintStyle: text.bodyLarge?.copyWith(color: p.onSurfaceMuted),
+                ),
               ),
             ),
           ),

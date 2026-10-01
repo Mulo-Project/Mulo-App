@@ -75,17 +75,22 @@ class _AppSearchFieldState extends State<AppSearchField> {
             Icon(Icons.search_rounded, color: p.onSurfaceMuted, size: 20),
             const SizedBox(width: AppSpacing.xs),
             Expanded(
-              child: TextField(
-                controller: _controller,
-                autofocus: widget.autofocus,
-                onChanged: widget.onChanged,
-                onSubmitted: widget.onSubmitted,
-                style: text.bodyLarge,
-                cursorColor: p.accent,
-                textInputAction: TextInputAction.search,
-                decoration: InputDecoration.collapsed(
-                  hintText: widget.hint,
-                  hintStyle: text.bodyLarge?.copyWith(color: p.onSurfaceMuted),
+              // 고정 높이 안에서 글자를 세로 가운데에 둔다.
+              child: Center(
+                child: TextField(
+                  controller: _controller,
+                  autofocus: widget.autofocus,
+                  onChanged: widget.onChanged,
+                  onSubmitted: widget.onSubmitted,
+                  style: text.bodyLarge,
+                  cursorColor: p.accent,
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration.collapsed(
+                    hintText: widget.hint,
+                    hintStyle: text.bodyLarge?.copyWith(
+                      color: p.onSurfaceMuted,
+                    ),
+                  ),
                 ),
               ),
             ),
