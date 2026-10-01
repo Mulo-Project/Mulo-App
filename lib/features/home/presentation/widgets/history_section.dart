@@ -404,31 +404,46 @@ class _AllStats extends StatelessWidget {
       ),
     );
 
+    // 머리말 느낌: 강조 색을 옅게 깐 영역.
     return Padding(
       padding: AppSpacing.screen,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (since != null)
-            Text(
-              l10n.homeAllSince(l10n.homeMonthLabel(since!.year, since!.month)),
-              style: text.bodySmall,
-            ),
-          const SizedBox(height: AppSpacing.xxs),
-          StatNumber(formatListened(l10n, stats.listened), size: 52),
-          const SizedBox(height: AppSpacing.xxs),
-          Text(l10n.homeAllTime, style: text.bodySmall),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-            child: Divider(height: 1, color: p.outline),
-          ),
-          Row(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: p.accent.withValues(alpha: .12),
+          borderRadius: BorderRadius.circular(AppRadii.lg),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              col(l10n.playCount(stats.plays), l10n.homeAllPlays),
-              col(l10n.homeAllDaysValue(stats.daysListened), l10n.homeAllDays),
+              if (since != null)
+                Text(
+                  l10n.homeAllSince(
+                    l10n.homeMonthLabel(since!.year, since!.month),
+                  ),
+                  style: text.bodySmall,
+                ),
+              const SizedBox(height: AppSpacing.xxs),
+              StatNumber(formatListened(l10n, stats.listened), size: 52),
+              const SizedBox(height: AppSpacing.xxs),
+              Text(l10n.homeAllTime, style: text.bodySmall),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                child: Divider(height: 1, color: p.outline),
+              ),
+              Row(
+                children: [
+                  col(l10n.playCount(stats.plays), l10n.homeAllPlays),
+                  col(
+                    l10n.homeAllDaysValue(stats.daysListened),
+                    l10n.homeAllDays,
+                  ),
+                ],
+              ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }

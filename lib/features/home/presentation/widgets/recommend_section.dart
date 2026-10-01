@@ -40,6 +40,11 @@ class _RecommendSectionState extends State<RecommendSection> {
   final _controller = PageController();
   int _page = 0;
 
+  /// 페이지 높이: 곡 수에 맞춰 남는 빈 공간이 없게 한다.
+  double _pageHeight(RecommendedPlaylist pl) =>
+      _headerHeight +
+      (pl.tracks.length > _preview ? _preview : pl.tracks.length) * _rowHeight;
+
   @override
   void dispose() {
     _controller.dispose();
@@ -54,11 +59,6 @@ class _RecommendSectionState extends State<RecommendSection> {
     final playlists = widget.playlists;
     final player = widget.player;
 
-    final rows = playlists.fold(
-      0,
-      (m, pl) => pl.tracks.length > m ? pl.tracks.length : m,
-    );
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -69,10 +69,12 @@ class _RecommendSectionState extends State<RecommendSection> {
             child: Text(l10n.homeNoRecommendations, style: text.bodySmall),
           )
         else ...[
-          SizedBox(
-            height:
-                _headerHeight +
-                (rows > _preview ? _preview : rows) * _rowHeight,
+          AnimatedContainer(
+            duration: AppMotion.medium,
+            curve: AppMotion.standard,
+            height: _pageHeight(
+              playlists[_page.clamp(0, playlists.length - 1)],
+            ),
             child: PageView.builder(
               controller: _controller,
               itemCount: playlists.length,

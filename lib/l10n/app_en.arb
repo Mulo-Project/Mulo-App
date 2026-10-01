@@ -180,6 +180,7 @@
   "homeEmptyLibraryTitle": "Your library is empty",
   "homeEmptyLibraryBody": "Import or download music to see\nyour top songs and recommendations here.",
   "homeGoLibrary": "Go to library",
+  "homeTopTracksGo": "See TOP 100",
   "homeRecentList": "Recently played",
   "homeAllSince": "Since {date}",
   "@homeAllSince": {

@@ -1142,6 +1142,12 @@ abstract class AppLocalizations {
   /// **'보관함으로'**
   String get homeGoLibrary;
 
+  /// No description provided for @homeTopTracksGo.
+  ///
+  /// In ko, this message translates to:
+  /// **'TOP 100 보러가기'**
+  String get homeTopTracksGo;
+
   /// No description provided for @homeRecentList.
   ///
   /// In ko, this message translates to:

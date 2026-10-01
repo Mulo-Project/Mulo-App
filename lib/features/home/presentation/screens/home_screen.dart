@@ -69,18 +69,23 @@ class _HomeView extends StatelessWidget {
 
     return SafeArea(
       bottom: false,
-      child: ListView(
+      // 구역이 4개뿐이라 한꺼번에 그린다: 목록을 지연 생성하면 스크롤로 벗어난 구역의
+      // 접힘 · 선택 상태가 사라진다.
+      child: SingleChildScrollView(
         padding: EdgeInsets.only(
           bottom: AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
         ),
-        children: [
-          AppTopBar(
-            large: true,
-            title: l10n.navHome,
-            subtitle: l10n.homeSubtitle,
-          ),
-          ...body,
-        ],
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppTopBar(
+              large: true,
+              title: l10n.navHome,
+              subtitle: l10n.homeSubtitle,
+            ),
+            ...body,
+          ],
+        ),
       ),
     );
   }

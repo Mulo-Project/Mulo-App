@@ -570,6 +570,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeGoLibrary => 'Go to library';
 
   @override
+  String get homeTopTracksGo => 'See TOP 100';
+
+  @override
   String get homeRecentList => 'Recently played';
 
   @override

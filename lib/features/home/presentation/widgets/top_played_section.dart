@@ -107,7 +107,7 @@ class _TopPlayedSectionState extends State<TopPlayedSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        HomeSectionTitle(l10n.homeTopTracks, onTap: widget.onMore),
+        HomeSectionTitle(l10n.homeTopTracks),
         HomeChipRow(
           chips: [
             for (final k in _Kind.values)
@@ -132,9 +132,10 @@ class _TopPlayedSectionState extends State<TopPlayedSection> {
             padding: AppSpacing.screen,
             child: _Podium(
               entries: entries,
-              selected: _kind == _Kind.tracks ? null : picked,
+              selected: picked,
               onTap: (i) {
-                if (_kind == _Kind.tracks) {
+                // 곡 영역: 이미 포커스된 칸을 다시 누르면 그 곡을 재생한다.
+                if (_kind == _Kind.tracks && i == picked) {
                   player.playQueue([
                     for (final t in s.topTracks) t.track,
                   ], index: i);
@@ -144,6 +145,10 @@ class _TopPlayedSectionState extends State<TopPlayedSection> {
               },
             ),
           ),
+          if (_kind == _Kind.tracks) ...[
+            const SizedBox(height: AppSpacing.sm),
+            _MoreTile(label: l10n.homeTopTracksGo, onTap: widget.onMore),
+          ],
           const SizedBox(height: AppSpacing.md),
           HomeCollapsible(
             label: listLabel,
@@ -161,7 +166,13 @@ class _TopPlayedSectionState extends State<TopPlayedSection> {
                       children: [
                         SizedBox(
                           width: 28,
-                          child: StatNumber('${i + 1}', size: 18),
+                          child: StatNumber(
+                            '${i + 1}',
+                            size: 18,
+                            color: _kind == _Kind.tracks && i == picked
+                                ? context.palette.accent
+                                : null,
+                          ),
                         ),
                         ArtworkBox(
                           image: coverImageOf(
@@ -194,7 +205,7 @@ class _Podium extends StatelessWidget {
   final List<_Entry> entries;
 
   /// 고른 칸 (없으면 표시하지 않는다).
-  final int? selected;
+  final int selected;
   final ValueChanged<int>? onTap;
 
   static const _heights = [64.0, 44.0, 30.0];
@@ -223,6 +234,7 @@ class _Podium extends StatelessWidget {
   }
 }
 
+/// 시상대 한 칸. 포커스된 칸은 강조 색 + 커버가 살짝 커지고, 순위는 바뀌지 않는다.
 class _Place extends StatelessWidget {
   const _Place({
     required this.rank,
@@ -241,7 +253,6 @@ class _Place extends StatelessWidget {
     final l10n = context.l10n;
     final p = context.palette;
     final text = Theme.of(context).textTheme;
-    final first = rank == 0;
     final art = _Podium._art[rank];
 
     return GestureDetector(
@@ -250,21 +261,28 @@ class _Place extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          DecoratedBox(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: selected || first ? p.accent : p.outline,
-                width: selected ? 3 : 2,
+          AnimatedScale(
+            scale: selected ? 1.12 : 1,
+            duration: AppMotion.medium,
+            curve: AppMotion.standard,
+            child: AnimatedContainer(
+              duration: AppMotion.medium,
+              curve: AppMotion.standard,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: selected ? p.accent : p.outline,
+                  width: selected ? 3 : 2,
+                ),
               ),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(2),
-              child: ArtworkBox(
-                image: coverImageOf(context, CoverKey.track(entry.cover.id)),
-                tone: toneFor(entry.cover.id),
-                size: art,
-                radius: art,
+              child: Padding(
+                padding: const EdgeInsets.all(2),
+                child: ArtworkBox(
+                  image: coverImageOf(context, CoverKey.track(entry.cover.id)),
+                  tone: toneFor(entry.cover.id),
+                  size: art,
+                  radius: art,
+                ),
               ),
             ),
           ),
@@ -281,12 +299,14 @@ class _Place extends StatelessWidget {
           ),
           Text(l10n.playCount(entry.count), style: text.bodySmall),
           const SizedBox(height: AppSpacing.xs),
-          Container(
+          AnimatedContainer(
+            duration: AppMotion.medium,
+            curve: AppMotion.standard,
             height: _Podium._heights[rank],
             margin: const EdgeInsets.symmetric(horizontal: 2),
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: first ? p.accent : p.surfaceHigh,
+              color: selected ? p.accent : p.surfaceHigh,
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(AppRadii.sm),
               ),
@@ -294,10 +314,53 @@ class _Place extends StatelessWidget {
             child: StatNumber(
               '${rank + 1}',
               size: 24,
-              color: first ? p.onAccent : p.onSurface,
+              color: selected ? p.onAccent : p.onSurface,
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// 시상대 아래의 한 줄 타일 (예: TOP 100 보러가기 ›).
+class _MoreTile extends StatelessWidget {
+  const _MoreTile({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Padding(
+      padding: AppSpacing.screen,
+      child: Material(
+        color: p.surfaceHigh,
+        borderRadius: BorderRadius.circular(AppRadii.sm),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.leaderboard_rounded, color: p.accent),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                ),
+                Icon(Icons.chevron_right_rounded, color: p.onSurfaceMuted),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

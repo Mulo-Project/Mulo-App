@@ -41,12 +41,27 @@ class RecentSection extends StatelessWidget {
         HomeSectionTitle(l10n.homeRecent),
         Padding(
           padding: AppSpacing.screen,
-          child: Row(
-            children: [
-              stat(l10n.playCount(summary.todayPlays), l10n.homeMetricPlays),
-              stat(formatListened(l10n, summary.todayListened), l10n.homeToday),
-              Icon(Icons.headphones_rounded, size: 32, color: p.accent),
-            ],
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: p.accent.withValues(alpha: .12),
+              borderRadius: BorderRadius.circular(AppRadii.lg),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Row(
+                children: [
+                  stat(
+                    l10n.playCount(summary.todayPlays),
+                    l10n.homeMetricPlays,
+                  ),
+                  stat(
+                    formatListened(l10n, summary.todayListened),
+                    l10n.homeToday,
+                  ),
+                  Icon(Icons.headphones_rounded, size: 32, color: p.accent),
+                ],
+              ),
+            ),
           ),
         ),
         const SizedBox(height: AppSpacing.md),
