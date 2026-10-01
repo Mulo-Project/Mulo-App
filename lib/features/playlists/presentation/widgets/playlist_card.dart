@@ -5,7 +5,11 @@ import '../../../../app/router.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
-import '../../domain/entities/playlist.dart';
+
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../player/presentation/bloc/now_playing_cubit.dart';
+import '../bloc/playlists_cubit.dart';
 import 'playlist_menu.dart';
 
 /// 화면에 보여 줄 이름. 좋아요 목록은 저장된 이름이 없어서 번역된 이름으로 바꾼다.
@@ -27,7 +31,7 @@ String playlistToneName(AppLocalizations l10n, GlowTone tone) => switch (tone) {
   GlowTone.tertiary => l10n.playlistColorTertiary,
 };
 
-/// 재생목록 카드: 얇은 테두리 안에 커버(이미지나 색) · 이름 · 곡 수 · 구분선 · 대표곡 칸.
+/// 재생목록 카드: 얇은 테두리 안에 커버(이미지나 색) · 이름 · 곡 수 · 구분선 · 대표곡 칸 (접으면 한 줄, 펼치면 이미지).
 ///
 /// 기본(둘러보기)에서는 누르면 재생목록 상세로 가고, ⋮ · 길게 누르기 · 오른쪽 클릭은 팝업 메뉴를 연다.
 /// [selected]를 주면 담기 선택 모드: 메뉴 대신 체크 표시가 붙고 [onTap]으로 고른다.
@@ -39,9 +43,6 @@ class PlaylistCard extends StatelessWidget {
     this.already = false,
     this.onTap,
   });
-
-  /// 카드 칸의 가로 : 세로 (대표곡 칸이 남는 높이를 차지한다).
-  static const aspectRatio = .62;
 
   final Playlist playlist;
 
@@ -61,7 +62,6 @@ class PlaylistCard extends StatelessWidget {
     final l10n = context.l10n;
     final image = coverImageOf(context, CoverKey.playlist(playlist.id));
     final browsing = selected == null;
-    final featured = playlist.featured;
 
     return _PointerMenu(
       enabled: browsing,
@@ -160,7 +160,7 @@ class PlaylistCard extends StatelessWidget {
               const SizedBox(height: AppSpacing.xs),
               Divider(height: 1, thickness: 1, color: p.outline),
               // 대표곡: 남는 높이를 차지하는 칸. 커버 · 제목 · 가수를 또렷하게.
-              Expanded(child: _Featured(track: featured)),
+              _Featured(playlist: playlist, expandable: browsing),
             ],
           ),
         ),
@@ -224,55 +224,147 @@ class _SelectMark extends StatelessWidget {
   }
 }
 
-/// 카드 아래 대표곡 칸: 커버 이미지 · 제목 · 가수. 곡이 없으면 칸만 비워 둔다.
-class _Featured extends StatelessWidget {
-  const _Featured({required this.track});
+/// 앱을 켜 둔 동안 펼쳐 둔 카드 (재생목록 id). 화면을 오가도 펼친 채로 둔다.
+final _expandedIds = <String>{};
 
-  final PlaylistTrackPreview? track;
+/// 카드 아래 대표곡 칸. 접으면 이름 · 가수 한 줄, 펼치면 커버 이미지가 크게 나온다.
+/// 펼친 이미지를 누르면 그 곡을 (이 재생목록 대기열로) 바로 재생해 미리 들어 볼 수 있다.
+class _Featured extends StatefulWidget {
+  const _Featured({required this.playlist, required this.expandable});
+
+  final Playlist playlist;
+
+  /// 담기 선택 모드에서는 펼치지 않는다.
+  final bool expandable;
+
+  @override
+  State<_Featured> createState() => _FeaturedState();
+}
+
+class _FeaturedState extends State<_Featured> {
+  late bool _expanded =
+      widget.expandable && _expandedIds.contains(widget.playlist.id);
+
+  void _toggle() => setState(() {
+    _expanded = !_expanded;
+    _expanded
+        ? _expandedIds.add(widget.playlist.id)
+        : _expandedIds.remove(widget.playlist.id);
+  });
+
+  Future<void> _preview(PlaylistTrackPreview t) async {
+    final player = context.read<NowPlayingCubit>();
+    final tracks = await context.read<PlaylistsCubit>().tracksOf(
+      widget.playlist.id,
+    );
+    final i = tracks.indexWhere((e) => e.id == t.id);
+    if (i >= 0) player.playQueue(tracks, index: i);
+  }
 
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     final p = context.palette;
-    final t = track;
-    if (t == null) return const SizedBox.shrink();
-    return LayoutBuilder(
-      builder: (context, c) => Padding(
-        padding: const EdgeInsets.all(AppSpacing.sm),
-        child: Row(
-          children: [
-            ArtworkBox(
-              image: coverImageOf(context, CoverKey.track(t.id)),
-              // 칸이 남는 만큼 커진다.
-              size: (c.maxHeight - AppSpacing.sm * 2).clamp(40.0, 72.0),
-              radius: 8,
-              tone: toneFor(t.id),
-            ),
-            const SizedBox(width: AppSpacing.xs),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
+    final l10n = context.l10n;
+    final t = widget.playlist.featured;
+    // 접은 줄 높이를 항상 확보해서 카드 높이가 들쭉날쭉하지 않게 한다.
+    const rowHeight = 56.0;
+    if (t == null) return const SizedBox(height: rowHeight);
+    final open = _expanded && widget.expandable;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        InkWell(
+          onTap: widget.expandable ? _toggle : null,
+          child: SizedBox(
+            height: rowHeight,
+            child: Padding(
+              padding: const EdgeInsets.only(
+                left: AppSpacing.sm,
+                right: AppSpacing.xxs,
+              ),
+              child: Row(
                 children: [
-                  Text(
-                    t.title,
-                    style: text.titleSmall,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          t.title,
+                          style: text.titleSmall,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (t.artist.isNotEmpty)
+                          Text(
+                            t.artist,
+                            style: text.bodySmall?.copyWith(
+                              color: p.onSurfaceMuted,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                      ],
+                    ),
                   ),
-                  if (t.artist.isNotEmpty)
-                    Text(
-                      t.artist,
-                      style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                  if (widget.expandable)
+                    Icon(
+                      open
+                          ? Icons.expand_less_rounded
+                          : Icons.expand_more_rounded,
+                      color: p.onSurfaceMuted,
                     ),
                 ],
               ),
             ),
-          ],
+          ),
         ),
-      ),
+        AnimatedSize(
+          duration: AppMotion.medium,
+          curve: AppMotion.standard,
+          alignment: Alignment.topCenter,
+          child: open
+              ? LayoutBuilder(
+                  builder: (context, c) => Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.sm,
+                      0,
+                      AppSpacing.sm,
+                      AppSpacing.sm,
+                    ),
+                    child: Semantics(
+                      button: true,
+                      label: l10n.playlistFeaturedPreview,
+                      child: GestureDetector(
+                        onTap: () => _preview(t),
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            ArtworkBox(
+                              image: coverImageOf(
+                                context,
+                                CoverKey.track(t.id),
+                              ),
+                              size: c.maxWidth - AppSpacing.sm * 2,
+                              radius: 8,
+                              tone: toneFor(t.id),
+                            ),
+                            Icon(
+                              Icons.play_circle_fill_rounded,
+                              size: 48,
+                              color: p.onGlow.withValues(alpha: .9),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+              : const SizedBox(width: double.infinity),
+        ),
+      ],
     );
   }
 }

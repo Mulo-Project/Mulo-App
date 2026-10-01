@@ -1580,6 +1580,12 @@ abstract class AppLocalizations {
   /// **'재생목록 메뉴'**
   String get playlistMenuTooltip;
 
+  /// No description provided for @playlistFeaturedPreview.
+  ///
+  /// In ko, this message translates to:
+  /// **'대표곡 미리 듣기'**
+  String get playlistFeaturedPreview;
+
   /// No description provided for @playlistMenuPlayAll.
   ///
   /// In ko, this message translates to:

@@ -803,6 +803,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistMenuTooltip => 'Playlist menu';
 
   @override
+  String get playlistFeaturedPreview => 'Preview featured song';
+
+  @override
   String get playlistMenuPlayAll => 'Play all';
 
   @override

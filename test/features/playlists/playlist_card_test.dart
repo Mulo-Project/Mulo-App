@@ -63,7 +63,7 @@ void main() {
   testWidgets('카드는 대표곡 하나를 보여 주고, 좋아요 목록이 맨 앞에 있다', (tester) async {
     await pumpPlaylists(tester);
     expect(find.text('출근길'), findsOneWidget);
-    expect(find.textContaining('첫 곡'), findsOneWidget);
+    expect(find.text('첫 곡'), findsOneWidget);
     expect(find.textContaining('둘째 곡'), findsNothing);
     expect(find.text('좋아요'), findsOneWidget);
     // 좋아요가 첫 카드.
@@ -129,6 +129,22 @@ void main() {
     await tester.tap(find.text('기본 이미지로'));
     await tester.pumpAndSettle();
     expect(covers.saved, isEmpty);
+  });
+
+  testWidgets('대표곡은 접어서 이름 · 가수만, 눌러 펼친 이미지를 누르면 재생한다', (tester) async {
+    await pumpPlaylists(tester);
+    expect(find.text('첫 곡'), findsOneWidget);
+    expect(find.text('가수'), findsOneWidget);
+    expect(find.byTooltip('다음 곡'), findsNothing);
+    expect(find.bySemanticsLabel('대표곡 미리 듣기'), findsNothing);
+
+    await tester.tap(find.text('첫 곡'));
+    await tester.pumpAndSettle();
+    expect(find.bySemanticsLabel('대표곡 미리 듣기'), findsOneWidget);
+
+    await tester.tap(find.bySemanticsLabel('대표곡 미리 듣기'));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('다음 곡'), findsOneWidget);
   });
 
   testWidgets('좋아요 목록 메뉴에는 색 · 이름 · 삭제가 없다', (tester) async {
