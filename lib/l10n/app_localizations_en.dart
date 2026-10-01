@@ -257,7 +257,82 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsEngineUpdate => 'Update';
 
   @override
-  String get settingsPlayback => 'Playback';
+  String get settingsSecurity => 'Security';
+
+  @override
+  String get settingsAppLock => 'App lock';
+
+  @override
+  String get settingsChangePin => 'Change PIN';
+
+  @override
+  String get settingsChangePinDesc =>
+      'Confirm your current PIN (or fingerprint/face), then set a new one.';
+
+  @override
+  String get settingsAppLockDesc =>
+      'Asks for a PIN (4-6 digits) when you open the app.';
+
+  @override
+  String get settingsBiometric => 'Unlock with fingerprint or face';
+
+  @override
+  String get settingsBiometricDesc =>
+      'Use your device\'s biometrics instead of the PIN.';
+
+  @override
+  String get biometricReason => 'Unlock Mulo';
+
+  @override
+  String get pinCreateTitle => 'Set a PIN';
+
+  @override
+  String get pinCreateHint => 'Enter 4-6 digits.';
+
+  @override
+  String get pinConfirmTitle => 'Confirm PIN';
+
+  @override
+  String get pinConfirmHint => 'Enter the same PIN again.';
+
+  @override
+  String get pinMismatch => 'The PINs don\'t match. Please start over.';
+
+  @override
+  String get pinCurrentTitle => 'Current PIN';
+
+  @override
+  String get pinCurrentHint => 'Enter your current PIN to turn off the lock.';
+
+  @override
+  String get pinCurrentHintChange => 'Enter your current PIN to change it.';
+
+  @override
+  String get pinCurrentHintBiometric =>
+      'Enter your current PIN or confirm with fingerprint or face.';
+
+  @override
+  String get pinWrong => 'Wrong PIN.';
+
+  @override
+  String pinCooldown(int seconds) {
+    return 'Try again in ${seconds}s.';
+  }
+
+  @override
+  String get pinSubmit => 'OK';
+
+  @override
+  String get pinBackspace => 'Delete';
+
+  @override
+  String get pinUseBiometric => 'Unlock with biometrics';
+
+  @override
+  String get lockTitle => 'Locked';
+
+  @override
+  String get lockHint => 'Enter your PIN.';
 
   @override
   String get settingsHideNotification => 'Hide song info in notification';

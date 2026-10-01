@@ -7,6 +7,8 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../../core/sample/sample_data.dart';
 import '../../../downloads/domain/entities/download_options.dart';
+import '../../../security/presentation/bloc/app_lock_cubit.dart';
+import '../../../security/presentation/screens/pin_entry_screen.dart';
 import '../../../theme/domain/entities/theme_settings.dart';
 import '../../../theme/presentation/bloc/theme_cubit.dart';
 
@@ -14,7 +16,7 @@ enum DownloadMode { server, local }
 
 /// 설정 (상세 기능: 서버 연결·모드 선택 #31, 저장 위치 #23, 기본 음질·포맷 #24,
 /// 다운로드 엔진 업데이트 #25, 알림 곡 정보 숨기기 #32 + 테마 D-005).
-/// 테마 색(프리셋, 저장됨)만 실제로 동작하고 나머지는 자리 표시.
+/// 테마 색(프리셋, 저장됨)과 앱 잠금(PIN · 생체 인증)만 실제로 동작하고 나머지는 자리 표시.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -36,6 +38,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final mode = context.select((ThemeCubit c) => c.state.mode);
     final brightness = Theme.of(context).brightness;
     final themeCtrl = context.read<ThemeCubit>();
+    final lock = context.watch<AppLockCubit>().state;
+    final lockCtrl = context.read<AppLockCubit>();
 
     return SafeArea(
       bottom: false,
@@ -137,8 +141,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 SectionCard(
-                  title: l10n.settingsPlayback,
+                  title: l10n.settingsSecurity,
                   children: [
+                    SettingRow(
+                      title: l10n.settingsAppLock,
+                      description: l10n.settingsAppLockDesc,
+                      trailing: AppSwitch(
+                        value: lock.enabled,
+                        onChanged: (on) => PinEntryScreen.open(
+                          context,
+                          on ? PinEntryMode.create : PinEntryMode.disable,
+                        ),
+                      ),
+                    ),
+                    if (lock.enabled)
+                      SettingRow(
+                        title: l10n.settingsChangePin,
+                        description: l10n.settingsChangePinDesc,
+                        trailing: const _Chevron(),
+                        onTap: () =>
+                            PinEntryScreen.open(context, PinEntryMode.change),
+                      ),
+                    if (lock.enabled && lock.biometricAvailable)
+                      SettingRow(
+                        title: l10n.settingsBiometric,
+                        description: l10n.settingsBiometricDesc,
+                        trailing: AppSwitch(
+                          value: lock.biometricEnabled,
+                          onChanged: (on) => lockCtrl.setBiometricEnabled(
+                            on,
+                            reason: l10n.biometricReason,
+                          ),
+                        ),
+                      ),
                     SettingRow(
                       title: l10n.settingsHideNotification,
                       description: l10n.settingsHideNotificationDesc,

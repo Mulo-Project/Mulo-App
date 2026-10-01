@@ -256,7 +256,78 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsEngineUpdate => '업데이트';
 
   @override
-  String get settingsPlayback => '재생';
+  String get settingsSecurity => '보안';
+
+  @override
+  String get settingsAppLock => '앱 잠금';
+
+  @override
+  String get settingsChangePin => 'PIN 바꾸기';
+
+  @override
+  String get settingsChangePinDesc => '현재 PIN(또는 지문 · 얼굴)을 확인한 뒤 새 PIN으로 바꿔요.';
+
+  @override
+  String get settingsAppLockDesc => '앱을 열 때 PIN(4~6자리)을 물어요.';
+
+  @override
+  String get settingsBiometric => '지문 · 얼굴로 열기';
+
+  @override
+  String get settingsBiometricDesc => 'PIN 대신 기기의 생체 인증으로 잠금을 풀어요.';
+
+  @override
+  String get biometricReason => 'Mulo 잠금을 풀어요';
+
+  @override
+  String get pinCreateTitle => 'PIN 정하기';
+
+  @override
+  String get pinCreateHint => '4~6자리 숫자를 입력하세요.';
+
+  @override
+  String get pinConfirmTitle => 'PIN 한 번 더';
+
+  @override
+  String get pinConfirmHint => '같은 PIN을 다시 입력하세요.';
+
+  @override
+  String get pinMismatch => 'PIN이 서로 달라요. 처음부터 다시 정해 주세요.';
+
+  @override
+  String get pinCurrentTitle => '현재 PIN';
+
+  @override
+  String get pinCurrentHint => '잠금을 끄려면 현재 PIN을 입력하세요.';
+
+  @override
+  String get pinCurrentHintChange => 'PIN을 바꾸려면 현재 PIN을 입력하세요.';
+
+  @override
+  String get pinCurrentHintBiometric => '현재 PIN을 입력하거나 지문 · 얼굴로 확인하세요.';
+
+  @override
+  String get pinWrong => 'PIN이 달라요.';
+
+  @override
+  String pinCooldown(int seconds) {
+    return '$seconds초 뒤에 다시 시도하세요.';
+  }
+
+  @override
+  String get pinSubmit => '확인';
+
+  @override
+  String get pinBackspace => '지우기';
+
+  @override
+  String get pinUseBiometric => '생체 인증으로 열기';
+
+  @override
+  String get lockTitle => '잠겨 있어요';
+
+  @override
+  String get lockHint => 'PIN을 입력하세요.';
 
   @override
   String get settingsHideNotification => '알림에 곡 정보 숨기기';

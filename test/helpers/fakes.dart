@@ -18,6 +18,9 @@ import 'package:music_download_play_app/features/player/di.dart';
 import 'package:music_download_play_app/features/playlists/di.dart';
 import 'package:music_download_play_app/features/playlists/domain/entities/playlist.dart';
 import 'package:music_download_play_app/features/playlists/domain/repositories/playlist_repository.dart';
+import 'package:music_download_play_app/features/security/di.dart';
+import 'package:music_download_play_app/features/security/domain/entities/app_lock_settings.dart';
+import 'package:music_download_play_app/features/security/domain/repositories/app_lock_repository.dart';
 import 'package:music_download_play_app/features/theme/di.dart';
 import 'package:music_download_play_app/features/theme/domain/entities/theme_settings.dart';
 import 'package:music_download_play_app/features/theme/domain/repositories/theme_settings_repository.dart';
@@ -87,6 +90,53 @@ class FakeImageSource implements CoverImageSource {
   Future<String?> pickFromDevice() async {
     calls++;
     return result;
+  }
+}
+
+/// 메모리 앱 잠금 저장소.
+class MemoryAppLockRepository implements AppLockRepository {
+  MemoryAppLockRepository({this.pin, this.biometric = false});
+
+  String? pin;
+  bool biometric;
+
+  @override
+  Future<AppLockSettings> load() async => AppLockSettings(
+    enabled: pin != null,
+    biometricEnabled: pin != null && biometric,
+  );
+
+  @override
+  Future<void> enable(String newPin) async => pin = newPin;
+
+  @override
+  Future<void> disable() async {
+    pin = null;
+    biometric = false;
+  }
+
+  @override
+  Future<bool> verifyPin(String candidate) async =>
+      pin != null && pin == candidate;
+
+  @override
+  Future<void> setBiometric(bool enabled) async => biometric = enabled;
+}
+
+class FakeBiometricAuthenticator implements BiometricAuthenticator {
+  FakeBiometricAuthenticator({this.available = false, this.succeeds = true});
+
+  bool available;
+  bool succeeds;
+  int calls = 0;
+
+  @override
+  Future<bool> isAvailable() async => available;
+
+  @override
+  Future<bool> authenticate(String reason) async {
+    calls++;
+    return succeeds;
   }
 }
 
@@ -238,9 +288,12 @@ Future<void> setUpTestDependencies({
   PlayHistoryRepository? history,
   DownloadQueueRepository? downloads,
   PlaylistRepository? playlists,
+  AppLockRepository? appLock,
+  BiometricAuthenticator? biometric,
 }) async {
   await sl.reset();
   registerTheme(sl);
+  registerSecurity(sl);
   registerLibrary(sl);
   registerCovers(sl);
   registerPlayer(sl);
@@ -251,6 +304,12 @@ Future<void> setUpTestDependencies({
   sl
     ..registerLazySingleton<ThemeSettingsRepository>(
       () => MemoryThemeSettingsRepository(theme),
+    )
+    ..registerLazySingleton<AppLockRepository>(
+      () => appLock ?? MemoryAppLockRepository(),
+    )
+    ..registerLazySingleton<BiometricAuthenticator>(
+      () => biometric ?? FakeBiometricAuthenticator(),
     )
     ..registerLazySingleton<LibraryRepository>(
       () => FakeLibraryRepository(tracks),

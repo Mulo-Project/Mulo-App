@@ -572,11 +572,149 @@ abstract class AppLocalizations {
   /// **'업데이트'**
   String get settingsEngineUpdate;
 
-  /// No description provided for @settingsPlayback.
+  /// No description provided for @settingsSecurity.
   ///
   /// In ko, this message translates to:
-  /// **'재생'**
-  String get settingsPlayback;
+  /// **'보안'**
+  String get settingsSecurity;
+
+  /// No description provided for @settingsAppLock.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱 잠금'**
+  String get settingsAppLock;
+
+  /// No description provided for @settingsChangePin.
+  ///
+  /// In ko, this message translates to:
+  /// **'PIN 바꾸기'**
+  String get settingsChangePin;
+
+  /// No description provided for @settingsChangePinDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'현재 PIN(또는 지문 · 얼굴)을 확인한 뒤 새 PIN으로 바꿔요.'**
+  String get settingsChangePinDesc;
+
+  /// No description provided for @settingsAppLockDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱을 열 때 PIN(4~6자리)을 물어요.'**
+  String get settingsAppLockDesc;
+
+  /// No description provided for @settingsBiometric.
+  ///
+  /// In ko, this message translates to:
+  /// **'지문 · 얼굴로 열기'**
+  String get settingsBiometric;
+
+  /// No description provided for @settingsBiometricDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'PIN 대신 기기의 생체 인증으로 잠금을 풀어요.'**
+  String get settingsBiometricDesc;
+
+  /// No description provided for @biometricReason.
+  ///
+  /// In ko, this message translates to:
+  /// **'Mulo 잠금을 풀어요'**
+  String get biometricReason;
+
+  /// No description provided for @pinCreateTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'PIN 정하기'**
+  String get pinCreateTitle;
+
+  /// No description provided for @pinCreateHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'4~6자리 숫자를 입력하세요.'**
+  String get pinCreateHint;
+
+  /// No description provided for @pinConfirmTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'PIN 한 번 더'**
+  String get pinConfirmTitle;
+
+  /// No description provided for @pinConfirmHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'같은 PIN을 다시 입력하세요.'**
+  String get pinConfirmHint;
+
+  /// No description provided for @pinMismatch.
+  ///
+  /// In ko, this message translates to:
+  /// **'PIN이 서로 달라요. 처음부터 다시 정해 주세요.'**
+  String get pinMismatch;
+
+  /// No description provided for @pinCurrentTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'현재 PIN'**
+  String get pinCurrentTitle;
+
+  /// No description provided for @pinCurrentHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'잠금을 끄려면 현재 PIN을 입력하세요.'**
+  String get pinCurrentHint;
+
+  /// No description provided for @pinCurrentHintChange.
+  ///
+  /// In ko, this message translates to:
+  /// **'PIN을 바꾸려면 현재 PIN을 입력하세요.'**
+  String get pinCurrentHintChange;
+
+  /// No description provided for @pinCurrentHintBiometric.
+  ///
+  /// In ko, this message translates to:
+  /// **'현재 PIN을 입력하거나 지문 · 얼굴로 확인하세요.'**
+  String get pinCurrentHintBiometric;
+
+  /// No description provided for @pinWrong.
+  ///
+  /// In ko, this message translates to:
+  /// **'PIN이 달라요.'**
+  String get pinWrong;
+
+  /// No description provided for @pinCooldown.
+  ///
+  /// In ko, this message translates to:
+  /// **'{seconds}초 뒤에 다시 시도하세요.'**
+  String pinCooldown(int seconds);
+
+  /// No description provided for @pinSubmit.
+  ///
+  /// In ko, this message translates to:
+  /// **'확인'**
+  String get pinSubmit;
+
+  /// No description provided for @pinBackspace.
+  ///
+  /// In ko, this message translates to:
+  /// **'지우기'**
+  String get pinBackspace;
+
+  /// No description provided for @pinUseBiometric.
+  ///
+  /// In ko, this message translates to:
+  /// **'생체 인증으로 열기'**
+  String get pinUseBiometric;
+
+  /// No description provided for @lockTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'잠겨 있어요'**
+  String get lockTitle;
+
+  /// No description provided for @lockHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'PIN을 입력하세요.'**
+  String get lockHint;
 
   /// No description provided for @settingsHideNotification.
   ///

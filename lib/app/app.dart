@@ -14,6 +14,8 @@ import '../features/library/presentation/bloc/library_cubit.dart';
 import '../features/library/presentation/bloc/library_import_cubit.dart';
 import '../features/player/presentation/bloc/now_playing_cubit.dart';
 import '../features/playlists/presentation/bloc/playlists_cubit.dart';
+import '../features/security/presentation/bloc/app_lock_cubit.dart';
+import '../features/security/presentation/widgets/lock_gate.dart';
 import '../features/theme/presentation/bloc/theme_cubit.dart';
 import 'router.dart';
 
@@ -45,6 +47,7 @@ class _MusicAppState extends State<MusicApp> {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => sl<ThemeCubit>()..load()),
+        BlocProvider(create: (_) => sl<AppLockCubit>()..load()),
         BlocProvider(create: (_) => sl<CoverCubit>()..load()),
         BlocProvider(create: (_) => sl<LibraryCubit>()..start()),
         BlocProvider(create: (_) => sl<LibraryImportCubit>()),
@@ -83,7 +86,7 @@ class _MusicAppState extends State<MusicApp> {
               value: dark
                   ? SystemUiOverlayStyle.light
                   : SystemUiOverlayStyle.dark,
-              child: child!,
+              child: LockGate(child: child!),
             );
           },
         ),

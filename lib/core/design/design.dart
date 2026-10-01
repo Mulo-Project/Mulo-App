@@ -15,6 +15,7 @@ export 'components/buttons.dart';
 export 'components/cover_card.dart';
 export 'components/glass.dart';
 export 'components/mini_player_bar.dart';
+export 'components/pin_pad.dart';
 export 'components/progress.dart';
 export 'components/section_card.dart';
 export 'components/segmented_pills.dart';
