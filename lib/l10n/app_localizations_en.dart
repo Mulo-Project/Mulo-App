@@ -740,4 +740,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trackDeleted => 'Removed from your library';
+
+  @override
+  String get trackMenuLyrics => 'Set lyrics';
+
+  @override
+  String get lyricsEditTitle => 'Set lyrics';
+
+  @override
+  String get lyricsEditLabel => 'Lyrics';
+
+  @override
+  String get lyricsEditHint =>
+      'Paste or type the lyrics. Lines with time stamps like [01:23.45] are saved as synced lyrics. Save empty to remove them.';
+
+  @override
+  String get lyricsLoadFile => 'Load from file (.lrc · .txt)';
+
+  @override
+  String get lyricsSave => 'Save';
+
+  @override
+  String get lyricsSaved => 'Lyrics saved';
+
+  @override
+  String get lyricsCleared => 'Lyrics removed';
+
+  @override
+  String get playerShowLyrics => 'Show lyrics';
+
+  @override
+  String get playerShowCover => 'Show cover';
+
+  @override
+  String get lyricsEmpty => 'No lyrics yet';
+
+  @override
+  String get lyricsEmptyHint =>
+      'Put a .lrc file with the same name next to the song, or add lyrics yourself.';
 }

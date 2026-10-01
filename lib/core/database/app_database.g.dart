@@ -808,6 +808,216 @@ class CoversCompanion extends UpdateCompanion<CoverRow> {
   }
 }
 
+class $LyricsFilesTable extends LyricsFiles
+    with TableInfo<$LyricsFilesTable, LyricsFileRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LyricsFilesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _trackIdMeta = const VerificationMeta(
+    'trackId',
+  );
+  @override
+  late final GeneratedColumn<String> trackId = GeneratedColumn<String>(
+    'track_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _pathMeta = const VerificationMeta('path');
+  @override
+  late final GeneratedColumn<String> path = GeneratedColumn<String>(
+    'path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [trackId, path];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'lyrics_files';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LyricsFileRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('track_id')) {
+      context.handle(
+        _trackIdMeta,
+        trackId.isAcceptableOrUnknown(data['track_id']!, _trackIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_trackIdMeta);
+    }
+    if (data.containsKey('path')) {
+      context.handle(
+        _pathMeta,
+        path.isAcceptableOrUnknown(data['path']!, _pathMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_pathMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {trackId};
+  @override
+  LyricsFileRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LyricsFileRow(
+      trackId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}track_id'],
+      )!,
+      path: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}path'],
+      )!,
+    );
+  }
+
+  @override
+  $LyricsFilesTable createAlias(String alias) {
+    return $LyricsFilesTable(attachedDatabase, alias);
+  }
+}
+
+class LyricsFileRow extends DataClass implements Insertable<LyricsFileRow> {
+  final String trackId;
+  final String path;
+  const LyricsFileRow({required this.trackId, required this.path});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['track_id'] = Variable<String>(trackId);
+    map['path'] = Variable<String>(path);
+    return map;
+  }
+
+  LyricsFilesCompanion toCompanion(bool nullToAbsent) {
+    return LyricsFilesCompanion(trackId: Value(trackId), path: Value(path));
+  }
+
+  factory LyricsFileRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LyricsFileRow(
+      trackId: serializer.fromJson<String>(json['trackId']),
+      path: serializer.fromJson<String>(json['path']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'trackId': serializer.toJson<String>(trackId),
+      'path': serializer.toJson<String>(path),
+    };
+  }
+
+  LyricsFileRow copyWith({String? trackId, String? path}) =>
+      LyricsFileRow(trackId: trackId ?? this.trackId, path: path ?? this.path);
+  LyricsFileRow copyWithCompanion(LyricsFilesCompanion data) {
+    return LyricsFileRow(
+      trackId: data.trackId.present ? data.trackId.value : this.trackId,
+      path: data.path.present ? data.path.value : this.path,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LyricsFileRow(')
+          ..write('trackId: $trackId, ')
+          ..write('path: $path')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(trackId, path);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LyricsFileRow &&
+          other.trackId == this.trackId &&
+          other.path == this.path);
+}
+
+class LyricsFilesCompanion extends UpdateCompanion<LyricsFileRow> {
+  final Value<String> trackId;
+  final Value<String> path;
+  final Value<int> rowid;
+  const LyricsFilesCompanion({
+    this.trackId = const Value.absent(),
+    this.path = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  LyricsFilesCompanion.insert({
+    required String trackId,
+    required String path,
+    this.rowid = const Value.absent(),
+  }) : trackId = Value(trackId),
+       path = Value(path);
+  static Insertable<LyricsFileRow> custom({
+    Expression<String>? trackId,
+    Expression<String>? path,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (trackId != null) 'track_id': trackId,
+      if (path != null) 'path': path,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  LyricsFilesCompanion copyWith({
+    Value<String>? trackId,
+    Value<String>? path,
+    Value<int>? rowid,
+  }) {
+    return LyricsFilesCompanion(
+      trackId: trackId ?? this.trackId,
+      path: path ?? this.path,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (trackId.present) {
+      map['track_id'] = Variable<String>(trackId.value);
+    }
+    if (path.present) {
+      map['path'] = Variable<String>(path.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LyricsFilesCompanion(')
+          ..write('trackId: $trackId, ')
+          ..write('path: $path, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $PlaysTable extends Plays with TableInfo<$PlaysTable, PlayRow> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -1699,6 +1909,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $TracksTable tracks = $TracksTable(this);
   late final $CoversTable covers = $CoversTable(this);
+  late final $LyricsFilesTable lyricsFiles = $LyricsFilesTable(this);
   late final $PlaysTable plays = $PlaysTable(this);
   late final $PlaylistsTable playlists = $PlaylistsTable(this);
   late final $PlaylistTracksTable playlistTracks = $PlaylistTracksTable(this);
@@ -1709,6 +1920,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     tracks,
     covers,
+    lyricsFiles,
     plays,
     playlists,
     playlistTracks,
@@ -2145,6 +2357,158 @@ typedef $$CoversTableProcessedTableManager =
       $$CoversTableUpdateCompanionBuilder,
       (CoverRow, BaseReferences<_$AppDatabase, $CoversTable, CoverRow>),
       CoverRow,
+      PrefetchHooks Function()
+    >;
+typedef $$LyricsFilesTableCreateCompanionBuilder =
+    LyricsFilesCompanion Function({
+      required String trackId,
+      required String path,
+      Value<int> rowid,
+    });
+typedef $$LyricsFilesTableUpdateCompanionBuilder =
+    LyricsFilesCompanion Function({
+      Value<String> trackId,
+      Value<String> path,
+      Value<int> rowid,
+    });
+
+class $$LyricsFilesTableFilterComposer
+    extends Composer<_$AppDatabase, $LyricsFilesTable> {
+  $$LyricsFilesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get trackId => $composableBuilder(
+    column: $table.trackId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get path => $composableBuilder(
+    column: $table.path,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$LyricsFilesTableOrderingComposer
+    extends Composer<_$AppDatabase, $LyricsFilesTable> {
+  $$LyricsFilesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get trackId => $composableBuilder(
+    column: $table.trackId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get path => $composableBuilder(
+    column: $table.path,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$LyricsFilesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LyricsFilesTable> {
+  $$LyricsFilesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get trackId =>
+      $composableBuilder(column: $table.trackId, builder: (column) => column);
+
+  GeneratedColumn<String> get path =>
+      $composableBuilder(column: $table.path, builder: (column) => column);
+}
+
+class $$LyricsFilesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $LyricsFilesTable,
+          LyricsFileRow,
+          $$LyricsFilesTableFilterComposer,
+          $$LyricsFilesTableOrderingComposer,
+          $$LyricsFilesTableAnnotationComposer,
+          $$LyricsFilesTableCreateCompanionBuilder,
+          $$LyricsFilesTableUpdateCompanionBuilder,
+          (
+            LyricsFileRow,
+            BaseReferences<_$AppDatabase, $LyricsFilesTable, LyricsFileRow>,
+          ),
+          LyricsFileRow,
+          PrefetchHooks Function()
+        > {
+  $$LyricsFilesTableTableManager(_$AppDatabase db, $LyricsFilesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LyricsFilesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LyricsFilesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LyricsFilesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> trackId = const Value.absent(),
+                Value<String> path = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LyricsFilesCompanion(
+                trackId: trackId,
+                path: path,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String trackId,
+                required String path,
+                Value<int> rowid = const Value.absent(),
+              }) => LyricsFilesCompanion.insert(
+                trackId: trackId,
+                path: path,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$LyricsFilesTable, LyricsFileRow>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $LyricsFilesTable,
+                    LyricsFileRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$LyricsFilesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $LyricsFilesTable,
+      LyricsFileRow,
+      $$LyricsFilesTableFilterComposer,
+      $$LyricsFilesTableOrderingComposer,
+      $$LyricsFilesTableAnnotationComposer,
+      $$LyricsFilesTableCreateCompanionBuilder,
+      $$LyricsFilesTableUpdateCompanionBuilder,
+      (
+        LyricsFileRow,
+        BaseReferences<_$AppDatabase, $LyricsFilesTable, LyricsFileRow>,
+      ),
+      LyricsFileRow,
       PrefetchHooks Function()
     >;
 typedef $$PlaysTableCreateCompanionBuilder = PlaysCompanion Function({
@@ -2701,6 +3065,8 @@ class $AppDatabaseManager {
       $$TracksTableTableManager(_db, _db.tracks);
   $$CoversTableTableManager get covers =>
       $$CoversTableTableManager(_db, _db.covers);
+  $$LyricsFilesTableTableManager get lyricsFiles =>
+      $$LyricsFilesTableTableManager(_db, _db.lyricsFiles);
   $$PlaysTableTableManager get plays =>
       $$PlaysTableTableManager(_db, _db.plays);
   $$PlaylistsTableTableManager get playlists =>

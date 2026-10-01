@@ -39,6 +39,16 @@ class Covers extends Table {
   Set<Column> get primaryKey => {key};
 }
 
+/// 사용자가 저장한 곡별 가사 (앱 폴더 `lyrics/`의 `.lrc` · `.txt` 파일 경로).
+@DataClassName('LyricsFileRow')
+class LyricsFiles extends Table {
+  TextColumn get trackId => text()();
+  TextColumn get path => text()();
+
+  @override
+  Set<Column> get primaryKey => {trackId};
+}
+
 /// 재생 기록 (상세 기능: 재생 기록 저장). 곡이 재생될 때마다 한 줄.
 @DataClassName('PlayRow')
 class Plays extends Table {
@@ -76,14 +86,16 @@ class PlaylistTracks extends Table {
 }
 
 /// 앱 로컬 DB (drift · SQLite). 설정값은 shared_preferences, 나머지 데이터는 여기.
-@DriftDatabase(tables: [Tracks, Covers, Plays, Playlists, PlaylistTracks])
+@DriftDatabase(
+  tables: [Tracks, Covers, LyricsFiles, Plays, Playlists, PlaylistTracks],
+)
 class AppDatabase extends _$AppDatabase {
   /// 테스트는 [executor]에 메모리 DB를 넣는다.
   AppDatabase([QueryExecutor? executor])
     : super(executor ?? driftDatabase(name: 'music_app'));
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -96,6 +108,7 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from == 3) await m.addColumn(playlists, playlists.colorIndex);
       if (from < 5) await m.addColumn(tracks, tracks.folder);
+      if (from < 6) await m.createTable(lyricsFiles);
     },
   );
 }

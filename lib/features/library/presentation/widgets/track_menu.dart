@@ -6,6 +6,8 @@ import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../covers/presentation/widgets/cover_sheet.dart';
 import '../../../downloads/presentation/widgets/playlist_picker_dialog.dart';
+import '../../../lyrics/presentation/bloc/lyrics_cubit.dart';
+import '../../../lyrics/presentation/widgets/lyrics_editor.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../../domain/entities/track.dart';
@@ -17,6 +19,7 @@ enum _TrackAction {
   addToQueue,
   addToPlaylist,
   editInfo,
+  lyrics,
   cover,
   delete,
 }
@@ -62,6 +65,8 @@ Future<void> showTrackMenu(BuildContext context, Track track) async {
       await _addToPlaylist(context, track);
     case _TrackAction.editInfo:
       await _editInfo(context, track);
+    case _TrackAction.lyrics:
+      await showLyricsEditor(context, track);
     case _TrackAction.cover:
       await showCoverSheet(
         context,
@@ -114,6 +119,7 @@ Future<void> _delete(BuildContext context, Track track) async {
   final library = context.read<LibraryCubit>();
   final player = context.read<NowPlayingCubit>();
   final covers = context.read<CoverCubit>();
+  final lyrics = context.read<LyricsCubit>();
   final ok = await showDialog<bool>(
     context: context,
     useRootNavigator: true,
@@ -121,6 +127,7 @@ Future<void> _delete(BuildContext context, Track track) async {
   );
   if (ok != true) return;
   await covers.clear(CoverKey.track(track.id));
+  await lyrics.clear(track.id);
   await library.delete(track.id);
   player.removeFromQueue(track);
   if (context.mounted) _snack(context, l10n.trackDeleted);
@@ -197,6 +204,11 @@ class _TrackMenuSheet extends StatelessWidget {
                 Icons.edit_rounded,
                 l10n.trackMenuEditInfo,
                 _TrackAction.editInfo,
+              ),
+              row(
+                Icons.lyrics_rounded,
+                l10n.trackMenuLyrics,
+                _TrackAction.lyrics,
               ),
               row(Icons.image_rounded, l10n.trackMenuCover, _TrackAction.cover),
               row(

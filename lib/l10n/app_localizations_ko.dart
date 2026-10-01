@@ -730,4 +730,41 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get trackDeleted => '보관함에서 지웠어요';
+
+  @override
+  String get trackMenuLyrics => '가사 설정';
+
+  @override
+  String get lyricsEditTitle => '가사 설정';
+
+  @override
+  String get lyricsEditLabel => '가사';
+
+  @override
+  String get lyricsEditHint =>
+      '가사를 붙여넣거나 입력하세요. [01:23.45] 같은 시간 표시가 있으면 싱크 가사로 저장돼요. 비워서 저장하면 가사를 지워요.';
+
+  @override
+  String get lyricsLoadFile => '파일에서 불러오기 (.lrc · .txt)';
+
+  @override
+  String get lyricsSave => '저장';
+
+  @override
+  String get lyricsSaved => '가사를 저장했어요';
+
+  @override
+  String get lyricsCleared => '가사를 지웠어요';
+
+  @override
+  String get playerShowLyrics => '가사 보기';
+
+  @override
+  String get playerShowCover => '커버 보기';
+
+  @override
+  String get lyricsEmpty => '가사가 없어요';
+
+  @override
+  String get lyricsEmptyHint => '곡 옆에 같은 이름의 .lrc 파일을 두거나, 직접 넣을 수 있어요.';
 }

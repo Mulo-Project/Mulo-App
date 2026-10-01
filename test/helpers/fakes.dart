@@ -2,6 +2,9 @@ import 'dart:async';
 
 import 'package:music_download_play_app/core/di/injector.dart';
 import 'package:music_download_play_app/features/covers/di.dart';
+import 'package:music_download_play_app/features/lyrics/di.dart';
+import 'package:music_download_play_app/features/lyrics/domain/entities/lyrics.dart';
+import 'package:music_download_play_app/features/lyrics/domain/repositories/lyrics_repository.dart';
 import 'package:music_download_play_app/features/covers/domain/repositories/cover_repository.dart';
 import 'package:music_download_play_app/features/downloads/di.dart';
 import 'package:music_download_play_app/features/downloads/domain/entities/download_item.dart';
@@ -131,6 +134,47 @@ class MemoryCoverRepository implements CoverRepository {
 
   @override
   Future<void> remove(String key) async => saved.remove(key);
+}
+
+/// 메모리 가사 저장소. [sibling]은 음원 옆 `.lrc`처럼 직접 저장하지 않은 가사.
+class MemoryLyricsRepository implements LyricsRepository {
+  MemoryLyricsRepository({this.sibling = const {}});
+
+  final saved = <String, String>{};
+  final Map<String, String> sibling;
+
+  @override
+  Future<Lyrics?> load(String trackId, String trackUri) async {
+    final text = saved[trackId] ?? sibling[trackId];
+    return text == null ? null : Lyrics.parse(text);
+  }
+
+  @override
+  Future<Lyrics?> save(String trackId, String text) async {
+    final lyrics = Lyrics.parse(text);
+    if (lyrics == null) {
+      saved.remove(trackId);
+    } else {
+      saved[trackId] = text;
+    }
+    return lyrics;
+  }
+
+  @override
+  Future<void> remove(String trackId) async => saved.remove(trackId);
+}
+
+class FakeLyricsFileSource implements LyricsFileSource {
+  FakeLyricsFileSource([this.result]);
+
+  String? result;
+  int calls = 0;
+
+  @override
+  Future<String?> pickText() async {
+    calls++;
+    return result;
+  }
 }
 
 class FakeImageSource implements CoverImageSource {
@@ -349,6 +393,8 @@ Future<void> setUpTestDependencies({
   DeviceMusicRepository? device,
   CoverRepository? covers,
   CoverImageSource? imageSource,
+  LyricsRepository? lyrics,
+  LyricsFileSource? lyricsFile,
   ThemeSettings theme = const ThemeSettings(),
   PlayHistoryRepository? history,
   DownloadQueueRepository? downloads,
@@ -362,6 +408,7 @@ Future<void> setUpTestDependencies({
   registerSecurity(sl);
   registerLibrary(sl);
   registerCovers(sl);
+  registerLyrics(sl);
   registerPlayer(sl);
   registerHome(sl);
   registerPlaylists(sl);
@@ -391,6 +438,12 @@ Future<void> setUpTestDependencies({
     )
     ..registerLazySingleton<CoverImageSource>(
       () => imageSource ?? FakeImageSource(),
+    )
+    ..registerLazySingleton<LyricsRepository>(
+      () => lyrics ?? MemoryLyricsRepository(),
+    )
+    ..registerLazySingleton<LyricsFileSource>(
+      () => lyricsFile ?? FakeLyricsFileSource(),
     )
     ..registerLazySingleton<PlayHistoryRepository>(
       () => history ?? MemoryPlayHistory(),

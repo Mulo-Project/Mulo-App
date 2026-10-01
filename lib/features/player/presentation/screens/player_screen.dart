@@ -7,12 +7,21 @@ import '../../../../core/l10n/l10n.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../covers/presentation/widgets/cover_sheet.dart';
+import '../../../lyrics/presentation/widgets/lyrics_view.dart';
 import '../bloc/now_playing_cubit.dart';
 
 /// 전체 화면 플레이어 (상세 기능: 미니·전체 화면 플레이어 #19, 기본 재생 컨트롤 #14,
 /// 셔플·반복 #15, 재생 대기열 편집 #16 — 대기열은 보기 · 선택만).
-class PlayerScreen extends StatelessWidget {
+class PlayerScreen extends StatefulWidget {
   const PlayerScreen({super.key});
+
+  @override
+  State<PlayerScreen> createState() => _PlayerScreenState();
+}
+
+class _PlayerScreenState extends State<PlayerScreen> {
+  /// 커버 ↔ 가사 전환 (상세 기능: 가사).
+  var _showLyrics = false;
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +47,15 @@ class PlayerScreen extends StatelessWidget {
                 ),
                 actions: [
                   CircleIconButton(
+                    icon: _showLyrics
+                        ? Icons.album_rounded
+                        : Icons.lyrics_rounded,
+                    tooltip: _showLyrics
+                        ? l10n.playerShowCover
+                        : l10n.playerShowLyrics,
+                    onPressed: () => setState(() => _showLyrics = !_showLyrics),
+                  ),
+                  CircleIconButton(
                     icon: Icons.queue_music_rounded,
                     tooltip: l10n.playerQueue,
                     onPressed: () => _showQueue(context),
@@ -56,28 +74,30 @@ class PlayerScreen extends StatelessWidget {
                       children: [
                         const SizedBox(height: AppSpacing.md),
                         Expanded(
-                          child: Center(
-                            child: AspectRatio(
-                              aspectRatio: 1,
-                              child: Hero(
-                                tag: 'now-playing',
-                                child: _PlayerCover(
-                                  image: coverImageOf(
-                                    context,
-                                    CoverKey.track(track.id),
-                                  ),
-                                  tone: toneFor(track.id),
-                                  editLabel: l10n.coverChange,
-                                  onEdit: () => showCoverSheet(
-                                    context,
-                                    coverKey: CoverKey.track(track.id),
-                                    title: track.title,
-                                    tone: toneFor(track.id),
+                          child: _showLyrics
+                              ? LyricsView(track: track)
+                              : Center(
+                                  child: AspectRatio(
+                                    aspectRatio: 1,
+                                    child: Hero(
+                                      tag: 'now-playing',
+                                      child: _PlayerCover(
+                                        image: coverImageOf(
+                                          context,
+                                          CoverKey.track(track.id),
+                                        ),
+                                        tone: toneFor(track.id),
+                                        editLabel: l10n.coverChange,
+                                        onEdit: () => showCoverSheet(
+                                          context,
+                                          coverKey: CoverKey.track(track.id),
+                                          title: track.title,
+                                          tone: toneFor(track.id),
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ),
-                          ),
                         ),
                         const SizedBox(height: AppSpacing.xl),
                         Text(

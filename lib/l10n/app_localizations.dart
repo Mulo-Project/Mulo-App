@@ -1465,6 +1465,78 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'보관함에서 지웠어요'**
   String get trackDeleted;
+
+  /// No description provided for @trackMenuLyrics.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사 설정'**
+  String get trackMenuLyrics;
+
+  /// No description provided for @lyricsEditTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사 설정'**
+  String get lyricsEditTitle;
+
+  /// No description provided for @lyricsEditLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사'**
+  String get lyricsEditLabel;
+
+  /// No description provided for @lyricsEditHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사를 붙여넣거나 입력하세요. [01:23.45] 같은 시간 표시가 있으면 싱크 가사로 저장돼요. 비워서 저장하면 가사를 지워요.'**
+  String get lyricsEditHint;
+
+  /// No description provided for @lyricsLoadFile.
+  ///
+  /// In ko, this message translates to:
+  /// **'파일에서 불러오기 (.lrc · .txt)'**
+  String get lyricsLoadFile;
+
+  /// No description provided for @lyricsSave.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장'**
+  String get lyricsSave;
+
+  /// No description provided for @lyricsSaved.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사를 저장했어요'**
+  String get lyricsSaved;
+
+  /// No description provided for @lyricsCleared.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사를 지웠어요'**
+  String get lyricsCleared;
+
+  /// No description provided for @playerShowLyrics.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사 보기'**
+  String get playerShowLyrics;
+
+  /// No description provided for @playerShowCover.
+  ///
+  /// In ko, this message translates to:
+  /// **'커버 보기'**
+  String get playerShowCover;
+
+  /// No description provided for @lyricsEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사가 없어요'**
+  String get lyricsEmpty;
+
+  /// No description provided for @lyricsEmptyHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 옆에 같은 이름의 .lrc 파일을 두거나, 직접 넣을 수 있어요.'**
+  String get lyricsEmptyHint;
 }
 
 class _AppLocalizationsDelegate

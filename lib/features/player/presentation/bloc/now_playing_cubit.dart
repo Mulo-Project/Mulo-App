@@ -172,6 +172,19 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     emit(state.copyWith(position: total * fraction.clamp(0.0, 1.0)));
   }
 
+  /// [position]으로 옮긴다 (곡 길이 안으로 맞춘다).
+  void seekTo(Duration position) {
+    final total = state.track?.duration;
+    if (total == null) return;
+    emit(
+      state.copyWith(
+        position: position < Duration.zero
+            ? Duration.zero
+            : (position > total ? total : position),
+      ),
+    );
+  }
+
   void toggleShuffle() => emit(state.copyWith(shuffle: !state.shuffle));
 
   void cycleRepeat() => emit(
