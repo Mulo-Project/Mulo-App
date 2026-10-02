@@ -752,7 +752,7 @@ class PlayerControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tint = neu ? context.palette.accent : null;
+    final tint = neu ? context.palette.primary : null;
     Widget wrap(Widget w, double size) =>
         neu ? NeuCircle(size: size, child: w) : w;
     return Padding(

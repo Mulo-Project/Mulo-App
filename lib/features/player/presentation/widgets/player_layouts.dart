@@ -290,7 +290,7 @@ class CustomPlayer extends StatelessWidget {
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: p.accent,
+                      color: p.primary,
                     ),
                     child: IconButton(
                       tooltip: data.state.isPlaying
@@ -302,7 +302,7 @@ class CustomPlayer extends StatelessWidget {
                             ? Icons.pause_rounded
                             : Icons.play_arrow_rounded,
                         size: 32,
-                        color: p.onAccent,
+                        color: p.onPrimary,
                       ),
                     ),
                   ),
@@ -317,21 +317,17 @@ class CustomPlayer extends StatelessWidget {
   }
 }
 
-/// 둥근 틀 윤곽을 위쪽 가운데에서 시계 방향으로 한 바퀴 도는 길.
+/// U자 틀 윤곽: 왼쪽 위에서 내려가 바닥을 돌아 오른쪽 위로 오르는 길 (위는 열려 있다).
 Path _capsulePath(Size s, double inset) {
   final r = s.width / 2 - inset;
   final cx = s.width / 2;
-  final top = inset;
   final bottom = s.height - inset;
-  final upper = Rect.fromCircle(center: Offset(cx, top + r), radius: r);
   final lower = Rect.fromCircle(center: Offset(cx, bottom - r), radius: r);
   return Path()
-    ..moveTo(cx, top)
-    ..arcTo(upper, -math.pi / 2, math.pi / 2, false)
-    ..lineTo(cx + r, bottom - r)
-    ..arcTo(lower, 0, math.pi, false)
-    ..lineTo(cx - r, top + r)
-    ..arcTo(upper, math.pi, math.pi / 2, false);
+    ..moveTo(cx - r, 0)
+    ..lineTo(cx - r, bottom - r)
+    ..arcTo(lower, math.pi, -math.pi, false)
+    ..lineTo(cx + r, 0);
 }
 
 /// 틀을 따라가는 진행 막대 + 끝의 둥근 손잡이.
@@ -430,7 +426,9 @@ class _CapsuleCover extends StatelessWidget {
         height: height,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(width / 2),
+            borderRadius: BorderRadius.vertical(
+              bottom: Radius.circular(width / 2),
+            ),
             color: p.surface,
             boxShadow: neuShadows(context, depth: 10),
           ),
@@ -438,15 +436,20 @@ class _CapsuleCover extends StatelessWidget {
             fit: StackFit.expand,
             children: [
               Padding(
-                padding: EdgeInsets.all(pad),
-                child: PlayerCover(art: art, radius: width / 2 - pad),
+                padding: EdgeInsets.fromLTRB(pad, 0, pad, pad),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.vertical(
+                    bottom: Radius.circular(width / 2 - pad),
+                  ),
+                  child: PlayerCover(art: art, radius: 0),
+                ),
               ),
               CustomPaint(
                 painter: _CapsuleProgressPainter(
                   value: data.state.progress,
                   inset: _inset,
                   track: p.onSurface.withValues(alpha: .12),
-                  fill: p.accent,
+                  fill: p.primary,
                   knobRing: p.surface,
                 ),
               ),
