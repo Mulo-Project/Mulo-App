@@ -836,6 +836,30 @@ abstract class AppLocalizations {
   /// **'재생 대기열'**
   String get playerQueue;
 
+  /// No description provided for @queueShuffle.
+  ///
+  /// In ko, this message translates to:
+  /// **'다음 곡 섞기'**
+  String get queueShuffle;
+
+  /// No description provided for @queueClear.
+  ///
+  /// In ko, this message translates to:
+  /// **'대기열 비우기'**
+  String get queueClear;
+
+  /// No description provided for @queueCleared.
+  ///
+  /// In ko, this message translates to:
+  /// **'대기열을 비웠어요'**
+  String get queueCleared;
+
+  /// No description provided for @queueReorderHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'길게 눌러 끌면 순서가 바뀌어요'**
+  String get queueReorderHint;
+
   /// No description provided for @playerRepeat.
   ///
   /// In ko, this message translates to:

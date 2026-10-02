@@ -10,12 +10,14 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/sample/sample_data.dart';
 import 'package:music_download_play_app/features/downloads/data/repositories/sample_download_queue_repository.dart';
 import 'package:music_download_play_app/features/home/domain/entities/home_summary.dart';
+import 'package:music_download_play_app/features/player/presentation/bloc/now_playing_cubit.dart';
 import 'package:music_download_play_app/features/playlists/domain/entities/playlist.dart';
 import 'package:music_download_play_app/features/theme/domain/entities/theme_settings.dart';
 
@@ -62,6 +64,8 @@ void main() {
     'settings-full-light': Routes.settings,
     'player-light': Routes.player,
     'player': Routes.player,
+    'queue': Routes.queue,
+    'library-playing': Routes.library,
   };
 
   for (final locale in ['ko', 'en']) {
@@ -106,6 +110,17 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
+
+        // 플레이어 · 대기열 · 미니 플레이어는 재생 중인 곡이 있어야 보인다.
+        if (e.key.startsWith('player') ||
+            e.key == 'queue' ||
+            e.key == 'library-playing') {
+          tester
+              .element(find.byType(Scaffold).first)
+              .read<NowPlayingCubit>()
+              .playQueue(SampleData.tracks, index: 1);
+          await tester.pumpAndSettle();
+        }
 
         await tester.runAsync(() async {
           final boundary =

@@ -22,6 +22,7 @@ class GlassSurface extends StatelessWidget {
     this.padding = EdgeInsets.zero,
     this.onTap,
     this.blur = AppGlass.blur,
+    this.rim = true,
   });
 
   final Widget child;
@@ -35,6 +36,9 @@ class GlassSurface extends StatelessWidget {
   final EdgeInsetsGeometry padding;
   final VoidCallback? onTap;
   final double blur;
+
+  /// 가장자리 빛 테두리를 그릴지. 가로 전체를 쓰는 띠(미니 플레이어)는 끄고 필요한 쪽 선만 직접 긋는다.
+  final bool rim;
 
   @override
   Widget build(BuildContext context) {
@@ -75,11 +79,13 @@ class GlassSurface extends StatelessWidget {
               onTap: onTap,
               customBorder: shape,
               child: CustomPaint(
-                foregroundPainter: _RimPainter(
-                  shape: shape,
-                  highlight: p.glassHighlight,
-                  border: p.glassBorder,
-                ),
+                foregroundPainter: rim
+                    ? _RimPainter(
+                        shape: shape,
+                        highlight: p.glassHighlight,
+                        border: p.glassBorder,
+                      )
+                    : null,
                 child: Padding(padding: padding, child: child),
               ),
             ),

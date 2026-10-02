@@ -46,4 +46,73 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byTooltip('재생 대기열'), findsOneWidget);
   });
+
+  Future<void> openQueue(WidgetTester tester) async {
+    await setUpTestDependencies(
+      tracks: [_t('t1', '첫 곡'), _t('t2', '둘째 곡'), _t('t3', '셋째 곡')],
+    );
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    tester.platformDispatcher.localesTestValue = const [Locale('ko')];
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+    await tester.pumpWidget(const MusicApp(initialLocation: Routes.library));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('첫 곡'));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('미니 플레이어의 대기열 버튼이 대기열 화면을 바로 연다', (tester) async {
+    await openQueue(tester);
+    await tester.tap(find.byTooltip('재생 대기열'));
+    await tester.pumpAndSettle();
+    expect(find.text('3곡'), findsOneWidget);
+    expect(find.text('길게 눌러 끌면 순서가 바뀌어요'), findsOneWidget);
+  });
+
+  testWidgets('대기열: 다음 곡 섞기 · 비우기, 곡 메뉴', (tester) async {
+    await openQueue(tester);
+    await tester.tap(find.byTooltip('재생 대기열'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('다음 곡 섞기'));
+    await tester.pumpAndSettle();
+    expect(find.text('3곡'), findsOneWidget);
+
+    // 보관함과 같은 곡 메뉴.
+    await tester.tap(find.byTooltip('곡 메뉴').first);
+    await tester.pumpAndSettle();
+    expect(find.text('다음에 재생'), findsOneWidget);
+    await tester.tapAt(const Offset(5, 5));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('대기열 비우기'));
+    await tester.pumpAndSettle();
+    expect(find.text('1곡'), findsOneWidget);
+    expect(find.text('대기열을 비웠어요'), findsOneWidget);
+    expect(find.text('첫 곡'), findsOneWidget);
+  });
+
+  testWidgets('대기열: 길게 눌러 끌면 순서가 바뀌고 재생 중인 곡은 그대로', (tester) async {
+    await openQueue(tester);
+    await tester.tap(find.byTooltip('재생 대기열'));
+    await tester.pumpAndSettle();
+
+    final first = tester.getCenter(find.text('첫 곡'));
+    final third = tester.getCenter(find.text('셋째 곡'));
+    final gesture = await tester.startGesture(first);
+    await tester.pump(const Duration(milliseconds: 700));
+    await gesture.moveTo(third + const Offset(0, 40));
+    await tester.pump();
+    await gesture.up();
+    await tester.pumpAndSettle();
+
+    final order = [
+      for (final t in ['첫 곡', '둘째 곡', '셋째 곡'])
+        tester.getTopLeft(find.text(t)).dy,
+    ];
+    // 첫 곡이 맨 아래로 내려갔다.
+    expect(order[0], greaterThan(order[1]));
+    expect(order[0], greaterThan(order[2]));
+  });
 }

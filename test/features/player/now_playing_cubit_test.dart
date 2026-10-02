@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/core/sample/sample_data.dart';
 import 'package:music_download_play_app/features/player/presentation/bloc/now_playing_cubit.dart';
@@ -119,6 +121,50 @@ void main() {
       }
       expect(state().queue, isEmpty);
       expect(state().isPlaying, isFalse);
+    });
+  });
+
+  group('대기열 편집', () {
+    test('moveInQueue는 곡 순서를 바꾸고 재생 중인 곡은 그대로 이어 간다', () {
+      final queue = [...state().queue];
+      vm().jumpTo(1); // 둘째 곡 재생 중
+      vm().moveInQueue(0, 2);
+      expect(state().queue, [queue[1], queue[2], queue[0]]);
+      expect(state().track, queue[1]);
+      expect(state().index, 0);
+
+      vm().moveInQueue(2, 0);
+      expect(state().queue, [queue[0], queue[1], queue[2]]);
+      expect(state().track, queue[1]);
+      expect(state().index, 1);
+    });
+
+    test('moveInQueue는 범위를 벗어나거나 제자리면 무시한다', () {
+      final before = state().queue;
+      vm()
+        ..moveInQueue(1, 1)
+        ..moveInQueue(-1, 0)
+        ..moveInQueue(0, 3);
+      expect(state().queue, before);
+    });
+
+    test('shuffleUpNext는 지금 곡과 앞의 곡은 두고 뒤의 곡만 섞는다', () {
+      final big = SampleData.tracks.take(8).toList();
+      cubit.playQueue(big, index: 2);
+      cubit.shuffleUpNext(Random(42));
+      expect(state().queue.take(3).toList(), big.take(3).toList());
+      expect(state().queue.skip(3).toSet(), big.skip(3).toSet());
+      expect(state().queue.skip(3).toList(), isNot(big.skip(3).toList()));
+      expect(state().index, 2);
+    });
+
+    test('clearQueue는 지금 재생 중인 곡만 남긴다', () {
+      vm().jumpTo(1);
+      final current = state().track;
+      vm().clearQueue();
+      expect(state().queue, [current]);
+      expect(state().index, 0);
+      expect(state().isPlaying, isTrue);
     });
   });
 }

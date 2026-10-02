@@ -6,6 +6,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../../app/router.dart';
 import '../../../library/domain/entities/track.dart';
+import '../../../library/presentation/widgets/track_menu.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../lyrics/presentation/widgets/lyrics_view.dart';
@@ -46,21 +47,16 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   tooltip: l10n.actionBack,
                   onPressed: () => context.pop(),
                 ),
+                // 보관함 곡 목록의 ⋮ 와 같은 곡 메뉴.
                 actions: [
-                  CircleIconButton(
-                    icon: _showLyrics
-                        ? Icons.album_rounded
-                        : Icons.lyrics_rounded,
-                    tooltip: _showLyrics
-                        ? l10n.playerShowCover
-                        : l10n.playerShowLyrics,
-                    onPressed: () => setState(() => _showLyrics = !_showLyrics),
-                  ),
-                  CircleIconButton(
-                    icon: Icons.queue_music_rounded,
-                    tooltip: l10n.playerQueue,
-                    onPressed: () => context.push(Routes.queue),
-                  ),
+                  if (track != null)
+                    Builder(
+                      builder: (btn) => CircleIconButton(
+                        icon: Icons.more_vert_rounded,
+                        tooltip: l10n.trackMenuTitle,
+                        onPressed: () => showTrackMenu(btn, track),
+                      ),
+                    ),
                 ],
               ),
               if (track == null)
@@ -97,43 +93,69 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                   ),
                                 ),
                         ),
-                        const SizedBox(height: AppSpacing.xl),
-                        Text(
-                          track.title,
-                          style: text.headlineMedium,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: AppSpacing.xxs),
-                        Text(
-                          '${track.artist} · ${track.album}',
-                          style: text.bodyMedium?.copyWith(
-                            color: p.onSurfaceMuted,
+                        const SizedBox(height: AppSpacing.lg),
+                        // 제목 · 아티스트는 왼쪽 정렬로 가볍게.
+                        SizedBox(
+                          width: double.infinity,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                track.title,
+                                style: text.titleLarge,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: AppSpacing.xxs),
+                              Text(
+                                [
+                                  track.artist.isEmpty
+                                      ? l10n.unknownArtist
+                                      : track.artist,
+                                  if (track.album.isNotEmpty) track.album,
+                                ].join(' · '),
+                                style: text.bodyMedium?.copyWith(
+                                  color: p.onSurfaceMuted,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: AppSpacing.xl),
+                        const SizedBox(height: AppSpacing.md),
                         _SeekBar(
                           progress: state.progress,
                           onSeek: vm.seekFraction,
                         ),
-                        const SizedBox(height: AppSpacing.sm),
                         Row(
                           children: [
-                            StatNumber(
+                            Text(
                               formatDuration(state.position),
-                              size: 22,
+                              style: text.labelMedium?.copyWith(
+                                color: p.onSurfaceMuted,
+                              ),
                             ),
                             const Spacer(),
-                            StatNumber(
+                            Text(
                               '-${formatDuration(track.duration - state.position)}',
-                              size: 22,
-                              color: p.onSurfaceMuted,
+                              style: text.labelMedium?.copyWith(
+                                color: p.onSurfaceMuted,
+                              ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: AppSpacing.lg),
+                        const SizedBox(height: AppSpacing.md),
                         _Controls(state: state, vm: vm),
-                        const SizedBox(height: AppSpacing.xl),
+                        const SizedBox(height: AppSpacing.md),
+                        _Tools(
+                          state: state,
+                          vm: vm,
+                          showLyrics: _showLyrics,
+                          onToggleLyrics: () =>
+                              setState(() => _showLyrics = !_showLyrics),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
                       ],
                     ),
                   ),
@@ -164,7 +186,7 @@ class _SeekBar extends StatelessWidget {
           onHorizontalDragUpdate: (d) => seek(d.localPosition),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-            child: ProgressLine(value: progress, height: 5),
+            child: ProgressLine(value: progress, height: 4),
           ),
         );
       },
@@ -172,6 +194,7 @@ class _SeekBar extends StatelessWidget {
   }
 }
 
+/// 가운데 큰 컨트롤: 이전 · 재생/일시정지 · 다음.
 class _Controls extends StatelessWidget {
   const _Controls({required this.state, required this.vm});
 
@@ -181,13 +204,62 @@ class _Controls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        CircleIconButton(
+          icon: Icons.skip_previous_rounded,
+          tooltip: l10n.actionPrevious,
+          size: AppSizes.circleButtonLarge,
+          onPressed: vm.previous,
+        ),
+        const SizedBox(width: AppSpacing.lg),
+        CircleIconButton(
+          icon: state.isPlaying
+              ? Icons.pause_rounded
+              : Icons.play_arrow_rounded,
+          tooltip: state.isPlaying ? l10n.actionPause : l10n.actionPlay,
+          emphasized: true,
+          size: 72,
+          onPressed: vm.togglePlay,
+        ),
+        const SizedBox(width: AppSpacing.lg),
+        CircleIconButton(
+          icon: Icons.skip_next_rounded,
+          tooltip: l10n.actionNext,
+          size: AppSizes.circleButtonLarge,
+          onPressed: vm.next,
+        ),
+      ],
+    );
+  }
+}
+
+/// 아래 보조 줄: 셔플 · 반복 · 가사 · 재생 대기열.
+class _Tools extends StatelessWidget {
+  const _Tools({
+    required this.state,
+    required this.vm,
+    required this.showLyrics,
+    required this.onToggleLyrics,
+  });
+
+  final NowPlayingState state;
+  final NowPlayingCubit vm;
+  final bool showLyrics;
+  final VoidCallback onToggleLyrics;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final p = context.palette;
 
-    Widget toggle({
+    Widget tool({
       required IconData icon,
       required String tooltip,
-      required bool on,
       required VoidCallback onTap,
+      bool on = false,
     }) => IconButton(
       tooltip: tooltip,
       onPressed: onTap,
@@ -195,42 +267,32 @@ class _Controls extends StatelessWidget {
     );
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        toggle(
+        tool(
           icon: Icons.shuffle_rounded,
           tooltip: l10n.actionShuffle,
           on: state.shuffle,
           onTap: vm.toggleShuffle,
         ),
-        CircleIconButton(
-          icon: Icons.skip_previous_rounded,
-          tooltip: l10n.actionPrevious,
-          size: AppSizes.circleButtonLarge,
-          onPressed: vm.previous,
-        ),
-        CircleIconButton(
-          icon: state.isPlaying
-              ? Icons.pause_rounded
-              : Icons.play_arrow_rounded,
-          tooltip: state.isPlaying ? l10n.actionPause : l10n.actionPlay,
-          emphasized: true,
-          size: 76,
-          onPressed: vm.togglePlay,
-        ),
-        CircleIconButton(
-          icon: Icons.skip_next_rounded,
-          tooltip: l10n.actionNext,
-          size: AppSizes.circleButtonLarge,
-          onPressed: vm.next,
-        ),
-        toggle(
+        tool(
           icon: state.repeat == PlayerRepeatMode.one
               ? Icons.repeat_one_rounded
               : Icons.repeat_rounded,
           tooltip: l10n.playerRepeat,
           on: state.repeat != PlayerRepeatMode.off,
           onTap: vm.cycleRepeat,
+        ),
+        tool(
+          icon: showLyrics ? Icons.album_rounded : Icons.lyrics_rounded,
+          tooltip: showLyrics ? l10n.playerShowCover : l10n.playerShowLyrics,
+          on: showLyrics,
+          onTap: onToggleLyrics,
+        ),
+        tool(
+          icon: Icons.queue_music_rounded,
+          tooltip: l10n.playerQueue,
+          onTap: () => context.push(Routes.queue),
         ),
       ],
     );
@@ -250,6 +312,7 @@ class _PlayerCover extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.palette;
     return CoverCard(
+      radius: AppRadii.sm,
       image: image,
       tone: tone,
       color: color,

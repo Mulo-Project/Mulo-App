@@ -102,9 +102,11 @@ class _ShellMiniPlayer extends StatelessWidget {
         playLabel: l10n.actionPlay,
         pauseLabel: l10n.actionPause,
         nextLabel: l10n.actionNext,
+        queueLabel: l10n.playerQueue,
         onTap: () => context.push(Routes.player),
         onPlayPause: vm.togglePlay,
         onNext: vm.next,
+        onQueue: () => context.push(Routes.queue),
       ),
     );
   }
