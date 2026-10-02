@@ -382,6 +382,56 @@ class AppLocalizationsEn extends AppLocalizations {
       'Browse the real screens with a theme, then apply it';
 
   @override
+  String get settingsPlayerStyle => 'Player theme';
+
+  @override
+  String get settingsPlayerStyleDesc =>
+      'Choose how the now-playing screen looks';
+
+  @override
+  String get playerStyleTitle => 'Player theme';
+
+  @override
+  String get playerStyleUse => 'Use';
+
+  @override
+  String get playerStyleInUse => 'In use';
+
+  @override
+  String get playerStyleVinyl => 'Vinyl';
+
+  @override
+  String get playerStyleVinylDesc =>
+      'A round disc cover with a progress arc around it';
+
+  @override
+  String get playerStyleSquare => 'Square';
+
+  @override
+  String get playerStyleSquareDesc =>
+      'Large square cover, slim seek bar and 10-second skips';
+
+  @override
+  String get playerStyleFullBleed => 'Full image';
+
+  @override
+  String get playerStyleFullBleedDesc =>
+      'The cover fills the top and fades into the background';
+
+  @override
+  String get playerStyleArc => 'Arc';
+
+  @override
+  String get playerStyleArcDesc =>
+      'A blurred cover backdrop and a curved arc around a glowing play button';
+
+  @override
+  String get playerRewind10 => 'Back 10 seconds';
+
+  @override
+  String get playerForward10 => 'Forward 10 seconds';
+
+  @override
   String get themePreviewHint => 'Switch tabs to check how it looks';
 
   @override

@@ -301,7 +301,7 @@ class _LibraryHero extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            StatNumber('$count', size: 56),
+            StatNumber('$count', size: 44),
             const SizedBox(width: AppSpacing.sm),
             Padding(
               padding: const EdgeInsets.only(bottom: 2),
@@ -314,7 +314,7 @@ class _LibraryHero extends StatelessWidget {
           l10n.librarySources(count - downloaded, downloaded),
           style: text.bodySmall?.copyWith(color: p.onSurface),
         ),
-        const SizedBox(height: AppSpacing.lg),
+        const SizedBox(height: AppSpacing.md),
         Wrap(
           spacing: AppSpacing.xs,
           runSpacing: AppSpacing.xs,
@@ -337,24 +337,30 @@ class _LibraryHero extends StatelessWidget {
       ],
     );
 
-    return GlassCard(
-      child: now == null
-          ? info
-          : Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(child: info),
-                const SizedBox(width: AppSpacing.md),
-                // 지금 재생 중인 곡의 이미지.
-                ArtworkBox(
-                  image: coverImageOf(context, CoverKey.track(now.id)),
-                  color: coverColorOf(context, CoverKey.track(now.id)),
-                  tone: toneFor(now.id),
-                  size: 88,
-                  radius: AppRadii.sm,
-                ),
-              ],
-            ),
+    // 카드 없이 배경 위에 바로 놓고, 아래에 얇은 구분선만 둔다.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        now == null
+            ? info
+            : Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(child: info),
+                  const SizedBox(width: AppSpacing.md),
+                  // 지금 재생 중인 곡의 이미지.
+                  ArtworkBox(
+                    image: coverImageOf(context, CoverKey.track(now.id)),
+                    color: coverColorOf(context, CoverKey.track(now.id)),
+                    tone: toneFor(now.id),
+                    size: 72,
+                    radius: AppRadii.sm,
+                  ),
+                ],
+              ),
+        const SizedBox(height: AppSpacing.lg),
+        Divider(height: 1, thickness: 1, color: p.outline),
+      ],
     );
   }
 }

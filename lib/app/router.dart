@@ -7,6 +7,7 @@ import '../features/home/presentation/screens/top_tracks_screen.dart';
 import '../features/library/presentation/screens/album_screen.dart';
 import '../features/library/presentation/screens/library_screen.dart';
 import '../features/player/presentation/screens/player_screen.dart';
+import '../features/player/presentation/screens/player_style_screen.dart';
 import '../features/player/presentation/screens/queue_screen.dart';
 import '../features/playlists/presentation/screens/playlist_detail_screen.dart';
 import '../features/playlists/presentation/screens/playlist_pick_screen.dart';
@@ -23,6 +24,9 @@ abstract final class Routes {
   static const settings = '/settings';
   static const player = '/player';
   static const queue = '/queue';
+
+  /// 설정 > 플레이어 테마.
+  static const playerTheme = '/settings/player-theme';
 
   /// 곡을 담을 재생목록 고르기 (곡 id는 `extra`로 넘긴다).
   static const playlistPick = '/playlists/pick';
@@ -115,7 +119,19 @@ GoRouter createRouter({String initialLocation = Routes.home}) => GoRouter(
             ),
           ],
         ),
-        _branch(Routes.settings, const SettingsScreen()),
+        _branch(
+          Routes.settings,
+          const SettingsScreen(),
+          routes: [
+            // 탭 틀 위로 덮어 연다.
+            GoRoute(
+              path: 'player-theme',
+              parentNavigatorKey: _rootKey,
+              pageBuilder: (context, state) =>
+                  const MaterialPage(child: PlayerStyleScreen()),
+            ),
+          ],
+        ),
       ],
     ),
     GoRoute(
