@@ -11,6 +11,7 @@ import '../features/covers/presentation/bloc/cover_color_cubit.dart';
 import '../features/covers/presentation/bloc/cover_cubit.dart';
 import '../features/lyrics/presentation/bloc/lyrics_cubit.dart';
 import '../features/downloads/presentation/bloc/download_queue_cubit.dart';
+import '../features/downloads/presentation/bloc/download_settings_cubit.dart';
 import '../features/home/presentation/bloc/play_recorder_cubit.dart';
 import '../features/library/presentation/bloc/library_cubit.dart';
 import '../features/library/presentation/bloc/library_import_cubit.dart';
@@ -58,6 +59,7 @@ class _MusicAppState extends State<MusicApp> {
         BlocProvider(create: (_) => sl<NowPlayingCubit>()),
         BlocProvider(create: (_) => sl<PlayRecorderCubit>()),
         BlocProvider(create: (_) => sl<DownloadQueueCubit>()..start()),
+        BlocProvider(create: (_) => sl<DownloadSettingsCubit>()..load()),
         // 곡 메뉴에서 바로 읽으므로 재생목록 탭을 열기 전에도 미리 불러 둔다.
         BlocProvider(lazy: false, create: (_) => sl<PlaylistsCubit>()..start()),
       ],

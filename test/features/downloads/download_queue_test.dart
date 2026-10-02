@@ -113,9 +113,12 @@ void main() {
     await tester.enterText(fields.at(0), '내 제목');
     await tester.enterText(fields.at(1), '내 가수');
     await tester.enterText(fields.at(2), '발라드');
+    // 저장 위치는 기본 저장 위치로 채워져 있고, 이 곡만 고칠 수 있다.
+    expect(find.text('/music/Mulo'), findsOneWidget);
+    await tester.enterText(fields.at(3), '/music/Mulo/발라드');
 
     // 새 재생목록 만들기 (만들면 자동 선택) + 대화상자에서 기존 재생목록 고르기
-    await tester.enterText(fields.at(3), '새 목록');
+    await tester.enterText(fields.at(4), '새 목록');
     await tester.tap(inSheet(find.byIcon(Icons.add_rounded)));
     await tester.pumpAndSettle();
     expect(find.text('1개 선택'), findsOneWidget);
@@ -134,6 +137,7 @@ void main() {
     expect(r.title, '내 제목');
     expect(r.artist, '내 가수');
     expect(r.genre, '발라드');
+    expect(r.savePath, '/music/Mulo/발라드');
     expect(r.playlistIds, {'pl1', 'pl2'});
     expect(find.text('받기 정보'), findsNothing);
     expect(find.text('대기열에 넣었어요'), findsOneWidget);
@@ -175,11 +179,11 @@ void main() {
   testWidgets('검색 탭: 받는 카드 → 화살표로 대기 목록 펼침', (tester) async {
     await open(tester, [_now, _next]);
     expect(find.text('Now Song'), findsOneWidget);
-    expect(find.text('Next Song · Next Artist'), findsNothing);
+    expect(find.text('Next Song'), findsNothing);
 
     await tester.tap(find.byIcon(Icons.keyboard_arrow_down_rounded));
     await tester.pumpAndSettle();
-    expect(find.text('Next Song · Next Artist'), findsOneWidget);
+    expect(find.text('Next Song'), findsOneWidget);
   });
 
   testWidgets('대기열 카드: 일시정지 · 붙여넣기 버튼 없이 취소만', (tester) async {
@@ -215,8 +219,8 @@ void main() {
     await open(tester, const []);
     // 검색창에는 아이콘만, 눌러서 연 메뉴에는 아이콘 + 이름.
     expect(find.text('유튜브'), findsNothing);
-    expect(find.byIcon(Icons.smart_display_rounded), findsOneWidget);
-    await tester.tap(find.byIcon(Icons.smart_display_rounded));
+    expect(find.byKey(const ValueKey('youtube-mark')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('youtube-mark')));
     await tester.pumpAndSettle();
     expect(find.text('유튜브'), findsOneWidget);
     await tester.tap(find.text('웹'));

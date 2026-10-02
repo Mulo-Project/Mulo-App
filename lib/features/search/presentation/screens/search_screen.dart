@@ -224,7 +224,7 @@ class _DownloadCard extends StatelessWidget {
     if (current == null) return const SizedBox.shrink();
     final tracks = SampleData.tracks;
     return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.sm),
+      padding: AppSpacing.screen.copyWith(top: AppSpacing.sm),
       child: DownloadProgressCard(
         current: current,
         waiting: queue.waiting,

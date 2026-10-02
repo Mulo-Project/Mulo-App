@@ -137,12 +137,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusDownloading => 'Downloading';
 
   @override
-  String get statusQueued => 'Queued';
-
-  @override
-  String get statusPaused => 'Paused';
-
-  @override
   String get statusFailed => 'Failed';
 
   @override
@@ -232,6 +226,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsSavePath => 'Save location';
+
+  @override
+  String get settingsSavePathDesc => 'App default folder';
 
   @override
   String get settingsLoadedFolders => 'Music folders';
@@ -704,6 +701,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get downloadFieldGenre => 'Genre';
+
+  @override
+  String get downloadFieldSavePath => 'Save location';
+
+  @override
+  String get downloadGenreExisting => 'Pick from existing genres';
+
+  @override
+  String get downloadPickFolder => 'Choose folder';
 
   @override
   String get downloadPlaylistsLabel => 'Add to playlists';

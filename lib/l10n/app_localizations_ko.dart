@@ -137,12 +137,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get statusDownloading => '받는 중';
 
   @override
-  String get statusQueued => '대기';
-
-  @override
-  String get statusPaused => '일시정지';
-
-  @override
   String get statusFailed => '실패';
 
   @override
@@ -231,6 +225,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsSavePath => '저장 위치';
+
+  @override
+  String get settingsSavePathDesc => '앱 기본 폴더';
 
   @override
   String get settingsLoadedFolders => '불러오는 폴더';
@@ -694,6 +691,15 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get downloadFieldGenre => '장르';
+
+  @override
+  String get downloadFieldSavePath => '저장 위치';
+
+  @override
+  String get downloadGenreExisting => '기존 장르에서 고르기';
+
+  @override
+  String get downloadPickFolder => '폴더 고르기';
 
   @override
   String get downloadPlaylistsLabel => '담을 재생목록';

@@ -10,6 +10,7 @@ import 'package:music_download_play_app/features/downloads/di.dart';
 import 'package:music_download_play_app/features/downloads/domain/entities/download_item.dart';
 import 'package:music_download_play_app/features/downloads/domain/entities/download_request.dart';
 import 'package:music_download_play_app/features/downloads/domain/repositories/download_queue_repository.dart';
+import 'package:music_download_play_app/features/downloads/domain/repositories/download_settings_repository.dart';
 import 'package:music_download_play_app/features/home/di.dart';
 import 'package:music_download_play_app/features/home/domain/entities/home_summary.dart';
 import 'package:music_download_play_app/features/home/domain/repositories/join_date_repository.dart';
@@ -149,6 +150,23 @@ class MemoryCoverRepository implements CoverRepository {
 
   @override
   Future<void> remove(String key) async => saved.remove(key);
+}
+
+/// 메모리 다운로드 설정 저장소. [picked]는 폴더 선택기가 고를 경로 (null이면 취소).
+class MemoryDownloadSettings implements DownloadSettingsRepository {
+  MemoryDownloadSettings({this.path = '/music/Mulo', this.picked});
+
+  String path;
+  String? picked;
+
+  @override
+  Future<String> loadSavePath() async => path;
+
+  @override
+  Future<void> saveSavePath(String value) async => path = value;
+
+  @override
+  Future<String?> pickFolder() async => picked;
 }
 
 /// 메모리 커버 색 저장소.
@@ -490,6 +508,7 @@ Future<void> setUpTestDependencies({
   ThemeSettings theme = const ThemeSettings(),
   PlayHistoryRepository? history,
   DownloadQueueRepository? downloads,
+  DownloadSettingsRepository? downloadSettings,
   PlaylistRepository? playlists,
   AppLockRepository? appLock,
   BiometricAuthenticator? biometric,
@@ -550,6 +569,9 @@ Future<void> setUpTestDependencies({
     )
     ..registerLazySingleton<PlayHistoryRepository>(
       () => history ?? MemoryPlayHistory(),
+    )
+    ..registerLazySingleton<DownloadSettingsRepository>(
+      () => downloadSettings ?? MemoryDownloadSettings(),
     )
     ..registerLazySingleton<DownloadQueueRepository>(
       () => downloads ?? MemoryDownloadQueue(),

@@ -3,10 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../library/presentation/bloc/library_cubit.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../../domain/entities/download_options.dart';
 import '../../domain/entities/download_request.dart';
 import '../bloc/download_queue_cubit.dart';
+import '../bloc/download_settings_cubit.dart';
 import 'playlist_picker_dialog.dart';
 
 /// 받기 팝업: 제목 · 아티스트 · 장르를 고치고, 저장할 때 넣을 재생목록을 고른다.
@@ -20,6 +22,8 @@ Future<bool> showDownloadDialog(
 }) async {
   final queue = context.read<DownloadQueueCubit>();
   final playlists = context.read<PlaylistsCubit>();
+  final settings = context.read<DownloadSettingsCubit>();
+  final library = context.read<LibraryCubit>();
   final started = await showModalBottomSheet<bool>(
     context: context,
     backgroundColor: context.palette.surface,
@@ -34,6 +38,8 @@ Future<bool> showDownloadDialog(
       providers: [
         BlocProvider.value(value: queue),
         BlocProvider.value(value: playlists),
+        BlocProvider.value(value: settings),
+        BlocProvider.value(value: library),
       ],
       child: _DownloadSheet(
         title: title,
@@ -67,6 +73,10 @@ class _DownloadSheetState extends State<_DownloadSheet> {
   late final _title = TextEditingController(text: widget.title);
   late final _artist = TextEditingController(text: widget.artist);
   late final _genre = TextEditingController(text: widget.genre);
+  // 기본 저장 위치로 채워 시작하고, 이 곡만 바꿀 수 있다 (기본값은 설정에서).
+  late final _savePath = TextEditingController(
+    text: context.read<DownloadSettingsCubit>().state,
+  );
   final _newPlaylist = TextEditingController();
   final Set<String> _selected = {};
 
@@ -75,6 +85,7 @@ class _DownloadSheetState extends State<_DownloadSheet> {
     _title.dispose();
     _artist.dispose();
     _genre.dispose();
+    _savePath.dispose();
     _newPlaylist.dispose();
     super.dispose();
   }
@@ -102,6 +113,11 @@ class _DownloadSheetState extends State<_DownloadSheet> {
     });
   }
 
+  Future<void> _pickFolder() async {
+    final path = await context.read<DownloadSettingsCubit>().pickFolder();
+    if (path != null && mounted) setState(() => _savePath.text = path);
+  }
+
   Future<void> _start() async {
     final ok = await context.read<DownloadQueueCubit>().enqueue(
       DownloadRequest(
@@ -110,6 +126,7 @@ class _DownloadSheetState extends State<_DownloadSheet> {
         genre: _genre.text,
         playlistIds: _selected,
         quality: widget.quality,
+        savePath: _savePath.text,
       ),
     );
     if (ok && mounted) Navigator.of(context).pop(true);
@@ -148,6 +165,28 @@ class _DownloadSheetState extends State<_DownloadSheet> {
               ),
               const SizedBox(height: AppSpacing.sm),
               AppTextField(label: l10n.downloadFieldGenre, controller: _genre),
+              _GenreSuggestions(
+                controller: _genre,
+                label: l10n.downloadGenreExisting,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: AppTextField(
+                      label: l10n.downloadFieldSavePath,
+                      controller: _savePath,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  CircleIconButton(
+                    icon: Icons.folder_open_rounded,
+                    tooltip: l10n.downloadPickFolder,
+                    onPressed: _pickFolder,
+                  ),
+                ],
+              ),
               const SizedBox(height: AppSpacing.lg),
               Text(
                 l10n.downloadPlaylistsLabel.toUpperCase(),
@@ -223,6 +262,60 @@ class _PlaylistPickRow extends StatelessWidget {
         title: summary,
         onTap: onTap,
         trailing: Icon(Icons.chevron_right_rounded, color: p.onSurfaceMuted),
+      ),
+    );
+  }
+}
+
+/// 보관함에 이미 있는 장르를 많은 순서로 보여 주고, 누르면 장르 칸을 그 장르로 채운다.
+class _GenreSuggestions extends StatelessWidget {
+  const _GenreSuggestions({required this.controller, required this.label});
+
+  final TextEditingController controller;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final tracks = context.select((LibraryCubit c) => c.state).tracks;
+    final counts = <String, int>{};
+    for (final t in tracks) {
+      final g = t.genre.trim();
+      if (g.isNotEmpty) counts[g] = (counts[g] ?? 0) + 1;
+    }
+    if (counts.isEmpty) return const SizedBox.shrink();
+    final genres =
+        (counts.keys.toList()..sort((a, b) {
+              final byCount = counts[b]!.compareTo(counts[a]!);
+              return byCount != 0 ? byCount : a.compareTo(b);
+            }))
+            .take(12)
+            .toList();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.xs),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: Theme.of(context).textTheme.labelSmall),
+          const SizedBox(height: AppSpacing.xs),
+          ListenableBuilder(
+            listenable: controller,
+            builder: (_, _) => Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xs,
+              children: [
+                for (final g in genres)
+                  PillButton(
+                    label: g,
+                    compact: true,
+                    variant: PillVariant.tonal,
+                    selected: controller.text.trim() == g,
+                    onPressed: () => controller.text = g,
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
