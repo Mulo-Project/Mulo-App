@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:music_download_play_app/app/app.dart';
@@ -100,32 +101,40 @@ void main() {
     expect(find.textContaining('0:10'), findsOneWidget);
   });
 
-  testWidgets('설정의 플레이어 테마에서 넘겨 보고 사용을 누르면 바뀐다', (tester) async {
-    await setUpTestDependencies(tracks: [_t('t1', '첫 곡')]);
-    tester.view.physicalSize = const Size(1170, 2532);
-    tester.view.devicePixelRatio = 3;
-    tester.platformDispatcher.localesTestValue = const [Locale('ko')];
-    addTearDown(tester.view.reset);
-    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
-    await tester.pumpWidget(const MusicApp(initialLocation: Routes.settings));
-    await tester.pumpAndSettle();
+  testWidgets('재생 화면 더 보기에서 플레이어 테마를 고르면 바로 바뀐다', (tester) async {
+    await _openPlayer(tester, PlayerStyle.square);
 
-    await tester.ensureVisible(find.text('플레이어 테마'));
+    await tester.tap(find.byTooltip('곡 메뉴'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('플레이어 테마'));
     await tester.pumpAndSettle();
-    // 처음엔 지금 쓰는 모양(네모)이 "사용 중".
-    expect(find.text('사용 중'), findsOneWidget);
 
-    await tester.drag(find.byType(PageView), const Offset(-150, 0));
+    await tester.tap(find.text('음반'));
     await tester.pumpAndSettle();
-    expect(find.text('꽉 찬 이미지'), findsOneWidget);
-    await tester.tap(find.text('사용'));
-    await tester.pumpAndSettle();
-    expect(find.text('사용 중'), findsOneWidget);
+    // 음반 모양에만 있는 수면 타이머 버튼이 나타난다.
+    expect(find.byTooltip('수면 타이머'), findsOneWidget);
+    expect(
+      tester
+          .element(find.byType(Scaffold).first)
+          .read<PlayerStyleCubit>()
+          .state,
+      PlayerStyle.vinyl,
+    );
+  });
 
-    await tester.tap(find.byTooltip('뒤로'));
+  testWidgets('음반 모양: 수면 타이머를 정하면 켜지고 끌 수 있다', (tester) async {
+    await _openPlayer(tester, PlayerStyle.vinyl);
+
+    await tester.tap(find.byTooltip('수면 타이머'));
     await tester.pumpAndSettle();
-    expect(find.text('꽉 찬 이미지'), findsOneWidget);
+    await tester.tap(find.text('30분 뒤 멈춤'));
+    await tester.pumpAndSettle();
+    expect(find.text('30분 뒤 재생을 멈춰요'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('수면 타이머'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('타이머 끄기'));
+    await tester.pumpAndSettle();
+    expect(find.text('수면 타이머를 껐어요'), findsOneWidget);
   });
 }

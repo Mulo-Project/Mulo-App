@@ -68,7 +68,6 @@ void main() {
     'player-vinyl': Routes.player,
     'player-bleed': Routes.player,
     'player-arc': Routes.player,
-    'player-theme': Routes.playerTheme,
     'queue': Routes.queue,
     'library-playing': Routes.library,
   };

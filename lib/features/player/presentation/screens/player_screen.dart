@@ -9,7 +9,7 @@ import '../widgets/player_layouts.dart';
 
 /// 전체 화면 플레이어 (상세 기능: 미니·전체 화면 플레이어 #19, 기본 재생 컨트롤 #14,
 /// 셔플·반복 #15, 재생 대기열 편집 #16 — 대기열은 보기 · 선택만).
-/// 모양은 설정의 "플레이어 테마"로 고른다 ([PlayerStyle], D-039).
+/// 모양은 더 보기 메뉴의 "플레이어 테마"로 고른다 ([PlayerStyle], D-039).
 class PlayerScreen extends StatefulWidget {
   const PlayerScreen({super.key});
 

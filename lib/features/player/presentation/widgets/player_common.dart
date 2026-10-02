@@ -80,17 +80,29 @@ class PlayerBackdrop extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.palette;
     final image = blurred ? art.image : null;
-    final strength = blurred ? .75 : .5;
     return Stack(
       fit: StackFit.expand,
       children: [
         ColoredBox(color: p.background),
         if (image != null) ...[
           ImageFiltered(
-            imageFilter: ImageFilter.blur(sigmaX: 42, sigmaY: 42),
+            imageFilter: ImageFilter.blur(sigmaX: 48, sigmaY: 48),
             child: Image(image: image, fit: BoxFit.cover),
           ),
-          ColoredBox(color: p.background.withValues(alpha: .62)),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  p.background.withValues(alpha: .45),
+                  p.background.withValues(alpha: .78),
+                  p.background,
+                ],
+                stops: const [0, .6, 1],
+              ),
+            ),
+          ),
         ] else
           DecoratedBox(
             decoration: BoxDecoration(
@@ -98,8 +110,8 @@ class PlayerBackdrop extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  art.glow[1].withValues(alpha: strength),
-                  art.glow[2].withValues(alpha: strength * .35),
+                  art.glow[1].withValues(alpha: .9),
+                  Color.lerp(art.glow[2], p.background, .35)!,
                   p.background,
                 ],
                 stops: const [0, .55, 1],
@@ -151,11 +163,11 @@ class PlayerMoreButton extends StatelessWidget {
           ? CircleIconButton(
               icon: Icons.more_vert_rounded,
               tooltip: l10n.trackMenuTitle,
-              onPressed: () => showTrackMenu(btn, track),
+              onPressed: () => showTrackMenu(btn, track, inPlayer: true),
             )
           : IconButton(
               tooltip: l10n.trackMenuTitle,
-              onPressed: () => showTrackMenu(btn, track),
+              onPressed: () => showTrackMenu(btn, track, inPlayer: true),
               icon: Icon(
                 Icons.more_vert_rounded,
                 color: context.palette.onSurface,
@@ -167,16 +179,27 @@ class PlayerMoreButton extends StatelessWidget {
 
 /// 곡 제목 · 아티스트(· 앨범).
 class PlayerTitle extends StatelessWidget {
-  const PlayerTitle({super.key, required this.track, this.center = false});
+  const PlayerTitle({
+    super.key,
+    required this.track,
+    this.center = false,
+    this.large = true,
+    this.withAlbum = true,
+  });
 
   final Track track;
   final bool center;
+
+  /// true면 큰 제목(화면 주인공), false면 한 줄 작은 제목.
+  final bool large;
+  final bool withAlbum;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final p = context.palette;
     final text = Theme.of(context).textTheme;
+    final align = center ? TextAlign.center : TextAlign.start;
     return Column(
       crossAxisAlignment: center
           ? CrossAxisAlignment.center
@@ -184,21 +207,26 @@ class PlayerTitle extends StatelessWidget {
       children: [
         Text(
           track.title,
-          style: text.titleLarge,
+          style: (large ? text.headlineSmall : text.titleMedium)?.copyWith(
+            fontWeight: FontWeight.w700,
+            height: 1.2,
+          ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          textAlign: center ? TextAlign.center : TextAlign.start,
+          textAlign: align,
         ),
-        const SizedBox(height: AppSpacing.xxs),
+        SizedBox(height: large ? AppSpacing.xxs + 2 : 2),
         Text(
           [
             track.artist.isEmpty ? l10n.unknownArtist : track.artist,
-            if (track.album.isNotEmpty) track.album,
+            if (withAlbum && track.album.isNotEmpty) track.album,
           ].join(' · '),
-          style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
+          style: (large ? text.bodyLarge : text.bodySmall)?.copyWith(
+            color: p.onSurface.withValues(alpha: .66),
+          ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          textAlign: center ? TextAlign.center : TextAlign.start,
+          textAlign: align,
         ),
       ],
     );
@@ -253,7 +281,7 @@ class PlayerLyricsPane extends StatelessWidget {
   Widget build(BuildContext context) => LyricsView(track: track);
 }
 
-/// 누르거나 끌어서 위치를 옮기는 가는 진행 막대.
+/// 누르거나 끌어서 위치를 옮기는 가는 진행 막대 (끝에 흰 손잡이).
 class PlayerSeekBar extends StatelessWidget {
   const PlayerSeekBar({
     super.key,
@@ -264,18 +292,59 @@ class PlayerSeekBar extends StatelessWidget {
   final double progress;
   final ValueChanged<double> onSeek;
 
+  static const _knob = 14.0;
+
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return LayoutBuilder(
       builder: (context, c) {
         void seek(Offset local) => onSeek(local.dx / c.maxWidth);
+        final v = progress.clamp(0.0, 1.0);
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTapDown: (d) => seek(d.localPosition),
           onHorizontalDragUpdate: (d) => seek(d.localPosition),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-            child: ProgressLine(value: progress, height: 3),
+          child: SizedBox(
+            height: 28,
+            child: Stack(
+              alignment: Alignment.centerLeft,
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  height: 4,
+                  decoration: ShapeDecoration(
+                    shape: const StadiumBorder(),
+                    color: p.onSurface.withValues(alpha: .2),
+                  ),
+                ),
+                Container(
+                  height: 4,
+                  width: c.maxWidth * v,
+                  decoration: ShapeDecoration(
+                    shape: const StadiumBorder(),
+                    color: p.onSurface,
+                  ),
+                ),
+                Positioned(
+                  left: (c.maxWidth - _knob) * v,
+                  child: Container(
+                    width: _knob,
+                    height: _knob,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: p.onSurface,
+                      boxShadow: [
+                        BoxShadow(
+                          color: p.scrim.withValues(alpha: .3),
+                          blurRadius: 6,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -292,7 +361,7 @@ class PlayerTimes extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final style = Theme.of(context).textTheme.labelMedium
-        ?.copyWith(color: context.palette.onSurfaceMuted);
+        ?.copyWith(color: context.palette.onSurface.withValues(alpha: .66));
     return Row(
       children: [
         Text(formatDuration(data.state.position), style: style),
@@ -306,31 +375,33 @@ class PlayerTimes extends StatelessWidget {
   }
 }
 
-/// "1:23 / 3:45" 알약.
-class TimePill extends StatelessWidget {
-  const TimePill({super.key, required this.data});
+/// "02:15 / 44:39" 글자.
+class TimeText extends StatelessWidget {
+  const TimeText({super.key, required this.data});
 
   final PlayerLayoutData data;
+
+  static String clock(Duration d) {
+    final h = d.inHours;
+    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final sec = d.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return h > 0 ? '$h:$m:$sec' : '$m:$sec';
+  }
 
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    return DecoratedBox(
-      decoration: ShapeDecoration(
-        color: p.onSurface.withValues(alpha: .1),
-        shape: const StadiumBorder(),
+    return Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(text: clock(data.state.position)),
+          TextSpan(
+            text: ' / ${clock(data.track.duration)}',
+            style: TextStyle(color: p.onSurface.withValues(alpha: .6)),
+          ),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: AppSpacing.xxs + 1,
-        ),
-        child: Text(
-          '${formatDuration(data.state.position)} / '
-          '${formatDuration(data.track.duration)}',
-          style: Theme.of(context).textTheme.labelMedium,
-        ),
-      ),
+      style: Theme.of(context).textTheme.labelLarge,
     );
   }
 }
@@ -451,7 +522,7 @@ class SkipButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return IconButton(
-      iconSize: 36,
+      iconSize: 40,
       tooltip: next ? l10n.actionNext : l10n.actionPrevious,
       onPressed: next ? data.vm.next : data.vm.previous,
       icon: Icon(
@@ -524,6 +595,151 @@ class GlowPlayButton extends StatelessWidget {
         emphasized: true,
         size: size,
         onPressed: data.vm.togglePlay,
+      ),
+    );
+  }
+}
+
+/// 10초 뒤로 · 앞으로.
+class SeekStepButton extends StatelessWidget {
+  const SeekStepButton({super.key, required this.data, required this.forward});
+
+  final PlayerLayoutData data;
+  final bool forward;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    const step = Duration(seconds: 10);
+    return IconButton(
+      iconSize: 28,
+      tooltip: forward ? l10n.playerForward10 : l10n.playerRewind10,
+      onPressed: () => data.vm.seekTo(
+        forward ? data.state.position + step : data.state.position - step,
+      ),
+      icon: Icon(
+        forward ? Icons.forward_10_rounded : Icons.replay_10_rounded,
+        color: context.palette.onSurface.withValues(alpha: .85),
+      ),
+    );
+  }
+}
+
+/// 재생목록에 추가 (재생목록 고르기 화면으로 간다).
+class AddToPlaylistButton extends StatelessWidget {
+  const AddToPlaylistButton({super.key, required this.trackId});
+
+  final String trackId;
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    tooltip: context.l10n.trackMenuAddToPlaylist,
+    onPressed: () => context.push(Routes.playlistPick, extra: [trackId]),
+    icon: Icon(
+      Icons.playlist_add_rounded,
+      color: context.palette.onSurfaceMuted,
+    ),
+  );
+}
+
+/// 수면 타이머: 15 · 30 · 45 · 60분 뒤에 재생을 멈춘다.
+class SleepTimerButton extends StatelessWidget {
+  const SleepTimerButton({super.key, required this.data});
+
+  final PlayerLayoutData data;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final p = context.palette;
+    final on = data.state.sleepMinutes != null;
+    return Builder(
+      builder: (btn) => IconButton(
+        tooltip: l10n.playerSleepTimer,
+        onPressed: () async {
+          final picked = await showAppMenu<int>(
+            btn,
+            items: [
+              for (final m in const [15, 30, 45, 60])
+                AppMenuItem(
+                  value: m,
+                  icon: Icons.bedtime_rounded,
+                  label: l10n.playerSleepTimerMinutes(m),
+                  selected: data.state.sleepMinutes == m,
+                ),
+              if (on)
+                AppMenuItem(
+                  value: 0,
+                  icon: Icons.timer_off_rounded,
+                  label: l10n.playerSleepTimerOff,
+                  dividerBefore: true,
+                ),
+            ],
+          );
+          if (picked == null || !btn.mounted) return;
+          data.vm.setSleepTimer(picked == 0 ? null : picked);
+          ScaffoldMessenger.of(btn).hideCurrentSnackBar();
+          ScaffoldMessenger.of(btn).showSnackBar(
+            SnackBar(
+              content: Text(
+                picked == 0
+                    ? l10n.playerSleepTimerCleared
+                    : l10n.playerSleepTimerSet(picked),
+              ),
+            ),
+          );
+        },
+        icon: Icon(
+          on ? Icons.bedtime_rounded : Icons.bedtime_outlined,
+          color: on ? p.accent : p.onSurfaceMuted,
+        ),
+      ),
+    );
+  }
+}
+
+/// 이퀄라이저 (아직 준비 중).
+class EqualizerButton extends StatelessWidget {
+  const EqualizerButton({super.key});
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    tooltip: context.l10n.playerEqualizer,
+    onPressed: () => ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(context.l10n.playerEqualizerSoon))),
+    icon: Icon(Icons.equalizer_rounded, color: context.palette.onSurfaceMuted),
+  );
+}
+
+/// "가사" 글자 버튼: 가사 보기 ↔ 커버 보기.
+class LyricsLabelButton extends StatelessWidget {
+  const LyricsLabelButton({super.key, required this.data});
+
+  final PlayerLayoutData data;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final p = context.palette;
+    return Tooltip(
+      message: data.showLyrics ? l10n.playerShowCover : l10n.playerShowLyrics,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: data.onToggleLyrics,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
+          child: Text(
+            l10n.playerLyrics,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              color: data.showLyrics ? p.accent : p.onSurface,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -623,56 +839,63 @@ class _RingSeekState extends State<RingSeek> {
   );
 }
 
-/// 가는 원형 진행 호 (12시 방향에서 시계 방향) + 끝의 점.
+/// 가는 원형 진행 호 + 끝의 손잡이.
+/// [start]에서 시계 방향으로 [sweep]만큼이 0 ~ 1 (기본: 12시 방향에서 한 바퀴).
 class ThinRingPainter extends CustomPainter {
   ThinRingPainter({
     required this.value,
     required this.track,
     required this.fill,
+    required this.shadow,
     this.stroke = 3,
+    this.knob = 6,
+    this.start = -math.pi / 2,
+    this.sweep = 2 * math.pi,
   });
 
   final double value;
   final Color track;
   final Color fill;
+  final Color shadow;
   final double stroke;
+
+  /// 손잡이 반지름.
+  final double knob;
+  final double start;
+  final double sweep;
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = size.center(Offset.zero);
-    final radius = size.shortestSide / 2 - stroke * 2;
+    final radius = size.shortestSide / 2 - knob - 1;
     final rect = Rect.fromCircle(center: center, radius: radius);
     final line = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke
       ..strokeCap = StrokeCap.round;
-    canvas.drawCircle(center, radius, line..color = track);
+    canvas.drawArc(rect, start, sweep, false, line..color = track);
     final v = value.clamp(0.0, 1.0);
-    if (v <= 0) return;
-    final sweep = 2 * math.pi * v;
-    canvas.drawArc(
-      rect,
-      -math.pi / 2,
-      sweep,
-      false,
-      line
-        ..color = fill.withValues(alpha: .5)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, stroke * 1.5),
+    final done = sweep * v;
+    if (done > 0) {
+      canvas.drawArc(rect, start, done, false, line..color = fill);
+    }
+    final end = center + Offset.fromDirection(start + done, radius);
+    canvas.drawCircle(
+      end,
+      knob,
+      Paint()
+        ..color = shadow
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
     );
-    canvas.drawArc(
-      rect,
-      -math.pi / 2,
-      sweep,
-      false,
-      line
-        ..color = fill
-        ..maskFilter = null,
-    );
-    final end = center + Offset.fromDirection(-math.pi / 2 + sweep, radius);
-    canvas.drawCircle(end, stroke * 1.9, Paint()..color = fill);
+    canvas.drawCircle(end, knob, Paint()..color = fill);
   }
 
   @override
   bool shouldRepaint(ThinRingPainter old) =>
-      old.value != value || old.track != track || old.fill != fill;
+      old.value != value ||
+      old.track != track ||
+      old.fill != fill ||
+      old.shadow != shadow ||
+      old.start != start ||
+      old.sweep != sweep;
 }
