@@ -513,10 +513,18 @@ class RepeatButton extends StatelessWidget {
 
 /// 이전 · 다음 (맨 아이콘).
 class SkipButton extends StatelessWidget {
-  const SkipButton({super.key, required this.data, required this.next});
+  const SkipButton({
+    super.key,
+    required this.data,
+    required this.next,
+    this.color,
+  });
 
   final PlayerLayoutData data;
   final bool next;
+
+  /// 아이콘 색 (없으면 테마 글자색).
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -527,7 +535,7 @@ class SkipButton extends StatelessWidget {
       onPressed: next ? data.vm.next : data.vm.previous,
       icon: Icon(
         next ? Icons.skip_next_rounded : Icons.skip_previous_rounded,
-        color: context.palette.onSurface,
+        color: color ?? context.palette.onSurface,
       ),
     );
   }
@@ -602,10 +610,18 @@ class GlowPlayButton extends StatelessWidget {
 
 /// 10초 뒤로 · 앞으로.
 class SeekStepButton extends StatelessWidget {
-  const SeekStepButton({super.key, required this.data, required this.forward});
+  const SeekStepButton({
+    super.key,
+    required this.data,
+    required this.forward,
+    this.color,
+  });
 
   final PlayerLayoutData data;
   final bool forward;
+
+  /// 아이콘 색 (없으면 테마 글자색).
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -619,7 +635,7 @@ class SeekStepButton extends StatelessWidget {
       ),
       icon: Icon(
         forward ? Icons.forward_10_rounded : Icons.replay_10_rounded,
-        color: context.palette.onSurface.withValues(alpha: .85),
+        color: color ?? context.palette.onSurface.withValues(alpha: .85),
       ),
     );
   }
@@ -712,56 +728,150 @@ class EqualizerButton extends StatelessWidget {
   );
 }
 
-/// "가사" 글자 버튼: 가사 보기 ↔ 커버 보기.
-class LyricsLabelButton extends StatelessWidget {
-  const LyricsLabelButton({super.key, required this.data});
+/// 모든 모양이 같이 쓰는 하단 조작부 (위에서 아래로):
+/// 1) 제목 · 아티스트 + 가사/커버 · 재생목록에 추가 · 좋아요
+/// 2) 10초 뒤로 · 진행 막대(+시간) · 10초 앞으로
+/// 3) 이전 · 재생 · 다음
+/// 4) 셔플 · 반복 (왼쪽), 수면 타이머 · 이퀄라이저 · 대기열 (오른쪽)
+///
+/// [seekBar]가 false면 진행 막대는 커버 쪽(호 · 커스텀)에 있어, 2줄 가운데엔 시간만 둔다.
+/// [neu]면 이전 · 다음 · 10초 버튼을 볼록한 원 위에 얹는다 (커스텀).
+class PlayerControls extends StatelessWidget {
+  const PlayerControls({
+    super.key,
+    required this.data,
+    required this.play,
+    this.seekBar = true,
+    this.neu = false,
+  });
 
   final PlayerLayoutData data;
+  final Widget play;
+  final bool seekBar;
+  final bool neu;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final p = context.palette;
-    return Tooltip(
-      message: data.showLyrics ? l10n.playerShowCover : l10n.playerShowLyrics,
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: data.onToggleLyrics,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
+    final tint = neu ? context.palette.accent : null;
+    Widget wrap(Widget w, double size) =>
+        neu ? NeuCircle(size: size, child: w) : w;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Expanded(child: PlayerTitle(track: data.track, withAlbum: false)),
+              IconButtonTheme(
+                data: IconButtonThemeData(
+                  style: IconButton.styleFrom(
+                    iconSize: 22,
+                    padding: const EdgeInsets.all(AppSpacing.xs),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    LyricsToggleButton(data: data),
+                    AddToPlaylistButton(trackId: data.track.id),
+                    PlayerLikeButton(trackId: data.track.id),
+                  ],
+                ),
+              ),
+            ],
           ),
-          child: Text(
-            l10n.playerLyrics,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: data.showLyrics ? p.accent : p.onSurface,
-              fontWeight: FontWeight.w700,
-            ),
+          const SizedBox(height: AppSpacing.xs),
+          Row(
+            children: [
+              wrap(SeekStepButton(data: data, forward: false, color: tint), 44),
+              Expanded(
+                child: seekBar
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xs,
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            PlayerSeekBar(
+                              progress: data.state.progress,
+                              onSeek: data.vm.seekFraction,
+                            ),
+                            PlayerTimes(data: data),
+                          ],
+                        ),
+                      )
+                    : Center(child: TimeText(data: data)),
+              ),
+              wrap(SeekStepButton(data: data, forward: true, color: tint), 44),
+            ],
           ),
-        ),
+          const SizedBox(height: AppSpacing.xs),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              wrap(SkipButton(data: data, next: false, color: tint), 56),
+              play,
+              wrap(SkipButton(data: data, next: true, color: tint), 56),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Row(
+            children: [
+              ShuffleButton(data: data),
+              RepeatButton(data: data),
+              const Spacer(),
+              SleepTimerButton(data: data),
+              const EqualizerButton(),
+              const QueueButton(),
+            ],
+          ),
+        ],
       ),
     );
   }
 }
 
-/// 재생 줄: 셔플 · 이전 · 재생 · 다음 · 반복.
-class PlayerTransport extends StatelessWidget {
-  const PlayerTransport({super.key, required this.data, required this.play});
+/// 소프트(뉴모피즘) 볼록 그림자: 오른쪽 아래는 어둡게, 왼쪽 위는 밝게.
+List<BoxShadow> neuShadows(BuildContext context, {double depth = 6}) {
+  final p = context.palette;
+  final light = Theme.of(context).brightness == Brightness.light;
+  return [
+    BoxShadow(
+      color: p.scrim.withValues(alpha: light ? .16 : .55),
+      offset: Offset(depth, depth),
+      blurRadius: depth * 2.2,
+    ),
+    BoxShadow(
+      color: light
+          ? AppPalette.white.withValues(alpha: .95)
+          : p.onSurface.withValues(alpha: .06),
+      offset: Offset(-depth, -depth),
+      blurRadius: depth * 2.2,
+    ),
+  ];
+}
 
-  final PlayerLayoutData data;
-  final Widget play;
+/// 볼록하게 떠 있는 원 (커스텀 모양의 버튼 바탕).
+class NeuCircle extends StatelessWidget {
+  const NeuCircle({super.key, required this.size, required this.child});
+
+  final double size;
+  final Widget child;
 
   @override
-  Widget build(BuildContext context) => Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    children: [
-      ShuffleButton(data: data),
-      SkipButton(data: data, next: false),
-      play,
-      SkipButton(data: data, next: true),
-      RepeatButton(data: data),
-    ],
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      color: context.palette.surface,
+      boxShadow: neuShadows(context, depth: size * .08),
+    ),
+    child: SizedBox.square(
+      dimension: size,
+      child: Center(child: child),
+    ),
   );
 }
 

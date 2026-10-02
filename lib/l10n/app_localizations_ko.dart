@@ -376,9 +376,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playerStyleTitle => '플레이어 테마';
 
   @override
-  String get playerStyleVinyl => '음반';
-
-  @override
   String get playerStyleSquare => '네모';
 
   @override
@@ -386,6 +383,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get playerStyleArc => '호';
+
+  @override
+  String get playerStyleCustom => '커스텀';
 
   @override
   String get playerSleepTimer => '수면 타이머';

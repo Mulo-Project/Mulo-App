@@ -800,12 +800,6 @@ abstract class AppLocalizations {
   /// **'플레이어 테마'**
   String get playerStyleTitle;
 
-  /// No description provided for @playerStyleVinyl.
-  ///
-  /// In ko, this message translates to:
-  /// **'음반'**
-  String get playerStyleVinyl;
-
   /// No description provided for @playerStyleSquare.
   ///
   /// In ko, this message translates to:
@@ -823,6 +817,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'호'**
   String get playerStyleArc;
+
+  /// No description provided for @playerStyleCustom.
+  ///
+  /// In ko, this message translates to:
+  /// **'커스텀'**
+  String get playerStyleCustom;
 
   /// No description provided for @playerSleepTimer.
   ///

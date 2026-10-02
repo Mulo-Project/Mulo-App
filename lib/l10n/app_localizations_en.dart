@@ -385,9 +385,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerStyleTitle => 'Player theme';
 
   @override
-  String get playerStyleVinyl => 'Vinyl';
-
-  @override
   String get playerStyleSquare => 'Square';
 
   @override
@@ -395,6 +392,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playerStyleArc => 'Arc';
+
+  @override
+  String get playerStyleCustom => 'Custom';
 
   @override
   String get playerSleepTimer => 'Sleep timer';

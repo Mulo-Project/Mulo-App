@@ -46,9 +46,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
   }
 
   Widget _layout(PlayerStyle style, PlayerLayoutData data) => switch (style) {
-    PlayerStyle.vinyl => VinylPlayer(data: data),
     PlayerStyle.square => SquarePlayer(data: data),
     PlayerStyle.fullBleed => FullBleedPlayer(data: data),
     PlayerStyle.arc => ArcPlayer(data: data),
+    PlayerStyle.custom => CustomPlayer(data: data),
   };
 }

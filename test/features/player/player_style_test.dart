@@ -49,13 +49,13 @@ void main() {
     final a = make();
     addTearDown(a.close);
     expect(a.state, PlayerStyle.square);
-    await a.select(PlayerStyle.vinyl);
-    expect(repo.style, PlayerStyle.vinyl);
+    await a.select(PlayerStyle.custom);
+    expect(repo.style, PlayerStyle.custom);
 
     final b = make();
     addTearDown(b.close);
     await b.load();
-    expect(b.state, PlayerStyle.vinyl);
+    expect(b.state, PlayerStyle.custom);
   });
 
   test('원 둘레 위치를 0~1로 바꾼다', () {
@@ -83,6 +83,10 @@ void main() {
       expect(find.byTooltip('반복'), findsOneWidget);
       expect(find.byTooltip('가사 보기'), findsOneWidget);
       expect(find.byTooltip('재생 대기열'), findsOneWidget);
+      expect(find.byTooltip('재생목록에 추가'), findsOneWidget);
+      expect(find.byTooltip('수면 타이머'), findsOneWidget);
+      expect(find.byTooltip('이퀄라이저'), findsOneWidget);
+      expect(find.byTooltip('10초 앞으로'), findsOneWidget);
 
       await tester.tap(find.byTooltip('좋아요'));
       await tester.pumpAndSettle();
@@ -94,7 +98,7 @@ void main() {
     });
   }
 
-  testWidgets('네모 모양은 10초 이동 버튼이 있다', (tester) async {
+  testWidgets('10초 이동 버튼이 동작한다', (tester) async {
     await _openPlayer(tester, PlayerStyle.square);
     await tester.tap(find.byTooltip('10초 앞으로'));
     await tester.pumpAndSettle();
@@ -109,27 +113,28 @@ void main() {
     await tester.tap(find.text('플레이어 테마'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('음반'));
+    await tester.tap(find.text('커스텀'));
     await tester.pumpAndSettle();
-    // 음반 모양에만 있는 수면 타이머 버튼이 나타난다.
-    expect(find.byTooltip('수면 타이머'), findsOneWidget);
     expect(
       tester
           .element(find.byType(Scaffold).first)
           .read<PlayerStyleCubit>()
           .state,
-      PlayerStyle.vinyl,
+      PlayerStyle.custom,
     );
   });
 
-  testWidgets('음반 모양: 수면 타이머를 정하면 켜지고 끌 수 있다', (tester) async {
-    await _openPlayer(tester, PlayerStyle.vinyl);
+  testWidgets('커스텀 모양: 수면 타이머를 정하면 켜지고 끌 수 있다', (tester) async {
+    await _openPlayer(tester, PlayerStyle.custom);
 
     await tester.tap(find.byTooltip('수면 타이머'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('30분 뒤 멈춤'));
     await tester.pumpAndSettle();
     expect(find.text('30분 뒤 재생을 멈춰요'), findsOneWidget);
+    // 하단 스낵바가 버튼을 가리지 않게 걷는다.
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
 
     await tester.tap(find.byTooltip('수면 타이머'));
     await tester.pumpAndSettle();

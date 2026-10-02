@@ -1,266 +1,23 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import 'player_common.dart';
 
 /// 플레이어 모양 4가지 (카드 · 상자 없이 배경 위에 바로 놓는다).
-/// 모두 같은 [PlayerLayoutData]를 받아 배치만 다르게 한다.
+/// 위쪽(커버 · 진행 표시)만 다르고, 하단 조작부는 모두 [PlayerControls] 하나를 쓴다.
 
 const _side = EdgeInsets.symmetric(horizontal: AppSpacing.lg);
 
-/// 재생 줄: 셔플 · 이전 · 재생 · 다음 · 반복.
-Widget _transport(PlayerLayoutData data, Widget play) => Padding(
+/// 가사 보기일 때 커버 자리를 채우는 가사.
+Widget _lyrics(PlayerLayoutData data) => Padding(
   padding: _side,
-  child: PlayerTransport(data: data, play: play),
+  child: PlayerLyricsPane(track: data.track),
 );
 
-/// 음반: 둥근 디스크 커버 + 둘레의 가는 진행 호, 곡 정보는 디스크 위.
-class VinylPlayer extends StatelessWidget {
-  const VinylPlayer({super.key, required this.data});
-
-  final PlayerLayoutData data;
-
-  @override
-  Widget build(BuildContext context) {
-    final art = PlayerArt.of(context, data.track);
-    final l10n = context.l10n;
-    return PlayerBackdrop(
-      art: art,
-      child: SafeArea(
-        child: Column(
-          children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  AppSpacing.xxs,
-                  0,
-                  0,
-                ),
-                child: CircleIconButton(
-                  icon: Icons.keyboard_arrow_down_rounded,
-                  tooltip: l10n.actionBack,
-                  onPressed: () => context.pop(),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-              child: Row(
-                children: [
-                  ShuffleButton(data: data),
-                  Expanded(
-                    child: PlayerTitle(
-                      track: data.track,
-                      center: true,
-                      large: false,
-                      withAlbum: false,
-                    ),
-                  ),
-                  RepeatButton(data: data),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            TimeText(data: data),
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: data.showLyrics ? AppSpacing.lg : AppSpacing.md,
-                  vertical: AppSpacing.xs,
-                ),
-                child: data.showLyrics
-                    ? PlayerLyricsPane(track: data.track)
-                    : Center(
-                        child: _Disc(data: data, art: art),
-                      ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  PlayerLikeButton(trackId: data.track.id),
-                  AddToPlaylistButton(trackId: data.track.id),
-                  SleepTimerButton(data: data),
-                  PlayerMoreButton(track: data.track, circle: false),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  SeekStepButton(data: data, forward: false),
-                  SkipButton(data: data, next: false),
-                  GlowPlayButton(data: data, size: 76),
-                  SkipButton(data: data, next: true),
-                  SeekStepButton(data: data, forward: true),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const EqualizerButton(),
-                  LyricsLabelButton(data: data),
-                  const QueueButton(),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Disc extends StatelessWidget {
-  const _Disc({required this.data, required this.art});
-
-  final PlayerLayoutData data;
-  final PlayerArt art;
-
-  @override
-  Widget build(BuildContext context) {
-    final p = context.palette;
-    final text = Theme.of(context).textTheme;
-    return LayoutBuilder(
-      builder: (context, c) {
-        final size = math.min(c.maxWidth, c.maxHeight);
-        final label = size * .5;
-        return RingSeek(
-          size: size,
-          start: -math.pi / 2,
-          sweep: 2 * math.pi,
-          inner: .9,
-          onSeek: data.vm.seekFraction,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // 음반 본체: 흐릿하게 어두운 커버 + 홈.
-              Padding(
-                padding: const EdgeInsets.all(18),
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    PlayerCover(art: art, radius: size, icon: false),
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: p.scrim.withValues(alpha: .5),
-                      ),
-                    ),
-                    CustomPaint(
-                      painter: _GroovesPainter(
-                        color: p.onSurface.withValues(alpha: .07),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Positioned.fill(
-                child: CustomPaint(
-                  painter: ThinRingPainter(
-                    value: data.state.progress,
-                    track: p.onSurface.withValues(alpha: .2),
-                    fill: p.onSurface,
-                    shadow: p.scrim.withValues(alpha: .4),
-                    stroke: 3,
-                    knob: 7,
-                  ),
-                ),
-              ),
-              // 가운데 라벨: 커버 이미지 + 곡 정보.
-              SizedBox.square(
-                dimension: label,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    PlayerCover(art: art, radius: label, icon: false),
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: p.scrim.withValues(alpha: .42),
-                        border: Border.all(
-                          color: p.onSurface.withValues(alpha: .18),
-                          width: 1.5,
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.all(label * .14),
-                      child: onGlow(
-                        context,
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              data.track.title,
-                              style: text.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: AppSpacing.xxs),
-                            Text(
-                              data.track.artist.isEmpty
-                                  ? context.l10n.unknownArtist
-                                  : data.track.artist,
-                              style: text.labelMedium,
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _GroovesPainter extends CustomPainter {
-  _GroovesPainter({required this.color});
-
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = size.center(Offset.zero);
-    final radius = size.shortestSide / 2;
-    final line = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = .8
-      ..color = color;
-    for (var r = radius * .52; r < radius - 2; r += 6) {
-      canvas.drawCircle(center, r, line);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_GroovesPainter old) => old.color != color;
-}
-
-/// 네모: 큰 정사각 커버, 제목 · 하트, 진행 막대, 재생 줄.
+/// 네모: 큰 정사각 커버, 아래 진행 막대.
 class SquarePlayer extends StatelessWidget {
   const SquarePlayer({super.key, required this.data});
 
@@ -270,7 +27,6 @@ class SquarePlayer extends StatelessWidget {
   Widget build(BuildContext context) {
     final art = PlayerArt.of(context, data.track);
     final p = context.palette;
-    final vm = data.vm;
     return PlayerBackdrop(
       art: art,
       child: SafeArea(
@@ -278,71 +34,39 @@ class SquarePlayer extends StatelessWidget {
           children: [
             PlayerTopBar(track: data.track),
             Expanded(
-              child: Padding(
-                padding: _side,
-                child: Column(
-                  children: [
-                    const SizedBox(height: AppSpacing.sm),
-                    Expanded(
-                      child: data.showLyrics
-                          ? PlayerLyricsPane(track: data.track)
-                          : Center(
-                              child: AspectRatio(
-                                aspectRatio: 1,
-                                child: DecoratedBox(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(
-                                      AppRadii.lg,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: p.scrim.withValues(alpha: .35),
-                                        blurRadius: 40,
-                                        offset: const Offset(0, 18),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Hero(
-                                    tag: 'now-playing',
-                                    child: PlayerCover(art: art),
-                                  ),
+              child: data.showLyrics
+                  ? _lyrics(data)
+                  : Padding(
+                      padding: _side,
+                      child: Center(
+                        child: AspectRatio(
+                          aspectRatio: 1,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(AppRadii.lg),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: p.scrim.withValues(alpha: .35),
+                                  blurRadius: 40,
+                                  offset: const Offset(0, 18),
                                 ),
-                              ),
+                              ],
                             ),
+                            child: Hero(
+                              tag: 'now-playing',
+                              child: PlayerCover(art: art),
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: AppSpacing.lg),
-                    Row(
-                      children: [
-                        Expanded(child: PlayerTitle(track: data.track)),
-                        PlayerLikeButton(trackId: data.track.id),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    PlayerSeekBar(
-                      progress: data.state.progress,
-                      onSeek: vm.seekFraction,
-                    ),
-                    PlayerTimes(data: data),
-                    const SizedBox(height: AppSpacing.sm),
-                    PlayerTransport(
-                      data: data,
-                      play: SolidPlayButton(data: data, size: 72),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        LyricsToggleButton(data: data),
-                        SeekStepButton(data: data, forward: false),
-                        SeekStepButton(data: data, forward: true),
-                        const QueueButton(),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                  ],
-                ),
-              ),
             ),
+            const SizedBox(height: AppSpacing.sm),
+            PlayerControls(
+              data: data,
+              play: SolidPlayButton(data: data, size: 72),
+            ),
+            const SizedBox(height: AppSpacing.xs),
           ],
         ),
       ),
@@ -360,7 +84,6 @@ class FullBleedPlayer extends StatelessWidget {
   Widget build(BuildContext context) {
     final art = PlayerArt.of(context, data.track);
     final p = context.palette;
-    final vm = data.vm;
     return ColoredBox(
       color: p.background,
       child: LayoutBuilder(
@@ -411,39 +134,11 @@ class FullBleedPlayer extends StatelessWidget {
                           )
                         : const SizedBox.shrink(),
                   ),
-                  Padding(
-                    padding: _side,
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(child: PlayerTitle(track: data.track)),
-                            PlayerLikeButton(trackId: data.track.id),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        PlayerSeekBar(
-                          progress: data.state.progress,
-                          onSeek: vm.seekFraction,
-                        ),
-                        PlayerTimes(data: data),
-                        const SizedBox(height: AppSpacing.sm),
-                        PlayerTransport(
-                          data: data,
-                          play: SolidPlayButton(data: data, size: 72),
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            LyricsToggleButton(data: data),
-                            const QueueButton(),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                      ],
-                    ),
+                  PlayerControls(
+                    data: data,
+                    play: SolidPlayButton(data: data, size: 72),
                   ),
+                  const SizedBox(height: AppSpacing.xs),
                 ],
               ),
             ),
@@ -476,11 +171,11 @@ class ArcPlayer extends StatelessWidget {
           children: [
             PlayerTopBar(track: data.track),
             Expanded(
-              child: Padding(
-                padding: _side,
-                child: data.showLyrics
-                    ? PlayerLyricsPane(track: data.track)
-                    : LayoutBuilder(
+              child: data.showLyrics
+                  ? _lyrics(data)
+                  : Padding(
+                      padding: _side,
+                      child: LayoutBuilder(
                         builder: (context, c) => Center(
                           child: _ArcCover(
                             data: data,
@@ -489,31 +184,15 @@ class ArcPlayer extends StatelessWidget {
                           ),
                         ),
                       ),
-              ),
+                    ),
             ),
             const SizedBox(height: AppSpacing.sm),
-            Padding(
-              padding: _side,
-              child: PlayerTitle(track: data.track, center: true),
+            PlayerControls(
+              data: data,
+              play: GlowPlayButton(data: data, size: 72),
+              seekBar: false,
             ),
-            const SizedBox(height: AppSpacing.md),
-            _transport(data, GlowPlayButton(data: data, size: 72)),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.xs,
-                AppSpacing.md,
-                AppSpacing.xs,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  PlayerLikeButton(trackId: data.track.id),
-                  LyricsToggleButton(data: data),
-                  const QueueButton(),
-                ],
-              ),
-            ),
+            const SizedBox(height: AppSpacing.xs),
           ],
         ),
       ),
@@ -532,8 +211,6 @@ class _ArcCover extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    final text = Theme.of(context).textTheme.labelMedium
-        ?.copyWith(color: p.onSurface.withValues(alpha: .7));
     return RingSeek(
       size: size,
       start: ArcPlayer._start,
@@ -561,20 +238,221 @@ class _ArcCover extends StatelessWidget {
               ),
             ),
           ),
-          // 열린 아래쪽: 지난 시간 · 전체 시간.
-          Positioned(
-            bottom: size * .02,
-            left: size * .26,
-            right: size * .26,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(TimeText.clock(data.state.position), style: text),
-                Text(TimeText.clock(data.track.duration), style: text),
-              ],
-            ),
-          ),
         ],
+      ),
+    );
+  }
+}
+
+/// 커스텀: 소프트(뉴모피즘) 화면. 키 큰 둥근 틀 안에 커버, 진행 막대가 틀을 따라 돈다.
+class CustomPlayer extends StatelessWidget {
+  const CustomPlayer({super.key, required this.data});
+
+  final PlayerLayoutData data;
+
+  @override
+  Widget build(BuildContext context) {
+    final art = PlayerArt.of(context, data.track);
+    final p = context.palette;
+    final l10n = context.l10n;
+    return ColoredBox(
+      color: p.surface,
+      child: SafeArea(
+        child: Column(
+          children: [
+            PlayerTopBar(track: data.track),
+            Expanded(
+              child: data.showLyrics
+                  ? _lyrics(data)
+                  : LayoutBuilder(
+                      builder: (context, c) {
+                        final w = math.min(c.maxWidth * .78, c.maxHeight / 1.2);
+                        return Center(
+                          child: _CapsuleCover(
+                            data: data,
+                            art: art,
+                            width: w,
+                            height: w * 1.2,
+                          ),
+                        );
+                      },
+                    ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            PlayerControls(
+              data: data,
+              seekBar: false,
+              neu: true,
+              play: NeuCircle(
+                size: 76,
+                child: SizedBox.square(
+                  dimension: 56,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: p.accent,
+                    ),
+                    child: IconButton(
+                      tooltip: data.state.isPlaying
+                          ? l10n.actionPause
+                          : l10n.actionPlay,
+                      onPressed: data.vm.togglePlay,
+                      icon: Icon(
+                        data.state.isPlaying
+                            ? Icons.pause_rounded
+                            : Icons.play_arrow_rounded,
+                        size: 32,
+                        color: p.onAccent,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 둥근 틀 윤곽을 위쪽 가운데에서 시계 방향으로 한 바퀴 도는 길.
+Path _capsulePath(Size s, double inset) {
+  final r = s.width / 2 - inset;
+  final cx = s.width / 2;
+  final top = inset;
+  final bottom = s.height - inset;
+  final upper = Rect.fromCircle(center: Offset(cx, top + r), radius: r);
+  final lower = Rect.fromCircle(center: Offset(cx, bottom - r), radius: r);
+  return Path()
+    ..moveTo(cx, top)
+    ..arcTo(upper, -math.pi / 2, math.pi / 2, false)
+    ..lineTo(cx + r, bottom - r)
+    ..arcTo(lower, 0, math.pi, false)
+    ..lineTo(cx - r, top + r)
+    ..arcTo(upper, math.pi, math.pi / 2, false);
+}
+
+/// 틀을 따라가는 진행 막대 + 끝의 둥근 손잡이.
+class _CapsuleProgressPainter extends CustomPainter {
+  _CapsuleProgressPainter({
+    required this.value,
+    required this.inset,
+    required this.track,
+    required this.fill,
+    required this.knobRing,
+  });
+
+  final double value;
+  final double inset;
+  final Color track;
+  final Color fill;
+  final Color knobRing;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = _capsulePath(size, inset);
+    final metric = path.computeMetrics().first;
+    final line = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4
+      ..strokeCap = StrokeCap.round;
+    canvas.drawPath(path, line..color = track);
+    final v = value.clamp(0.0, 1.0);
+    if (v > 0) {
+      canvas.drawPath(
+        metric.extractPath(0, metric.length * v),
+        line..color = fill,
+      );
+    }
+    final t = metric.getTangentForOffset(metric.length * v);
+    if (t != null) {
+      canvas.drawCircle(t.position, 9, Paint()..color = knobRing);
+      canvas.drawCircle(t.position, 6, Paint()..color = fill);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_CapsuleProgressPainter old) =>
+      old.value != value ||
+      old.track != track ||
+      old.fill != fill ||
+      old.knobRing != knobRing;
+}
+
+class _CapsuleCover extends StatelessWidget {
+  const _CapsuleCover({
+    required this.data,
+    required this.art,
+    required this.width,
+    required this.height,
+  });
+
+  final PlayerLayoutData data;
+  final PlayerArt art;
+  final double width;
+  final double height;
+
+  static const _inset = 12.0;
+
+  /// 틀 위 [local]에서 가장 가까운 곳의 위치(0 ~ 1).
+  double _fractionAt(Offset local) {
+    final metric = _capsulePath(
+      Size(width, height),
+      _inset,
+    ).computeMetrics().first;
+    var best = 0.0;
+    var bestDist = double.infinity;
+    const steps = 240;
+    for (var i = 0; i <= steps; i++) {
+      final t = metric.getTangentForOffset(metric.length * i / steps);
+      if (t == null) continue;
+      final d = (t.position - local).distanceSquared;
+      if (d < bestDist) {
+        bestDist = d;
+        best = i / steps;
+      }
+    }
+    return best;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final pad = _inset + 12;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTapDown: (d) => data.vm.seekFraction(_fractionAt(d.localPosition)),
+      onPanUpdate: (d) => data.vm.seekFraction(_fractionAt(d.localPosition)),
+      child: SizedBox(
+        width: width,
+        height: height,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(width / 2),
+            color: p.surface,
+            boxShadow: neuShadows(context, depth: 10),
+          ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Padding(
+                padding: EdgeInsets.all(pad),
+                child: PlayerCover(art: art, radius: width / 2 - pad),
+              ),
+              CustomPaint(
+                painter: _CapsuleProgressPainter(
+                  value: data.state.progress,
+                  inset: _inset,
+                  track: p.onSurface.withValues(alpha: .12),
+                  fill: p.accent,
+                  knobRing: p.surface,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
