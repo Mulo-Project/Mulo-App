@@ -76,7 +76,6 @@ void main() {
       expect(find.byTooltip('반복'), findsOneWidget);
       expect(find.byTooltip('가사 보기'), findsOneWidget);
       expect(find.byTooltip('재생 대기열'), findsOneWidget);
-      expect(find.byTooltip('재생목록에 추가'), findsOneWidget);
       expect(find.byTooltip('수면 타이머'), findsOneWidget);
       expect(find.byTooltip('이퀄라이저'), findsOneWidget);
       expect(find.byTooltip('10초 앞으로'), findsOneWidget);

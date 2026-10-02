@@ -203,6 +203,12 @@ class ArcPlayer extends StatelessWidget {
                 pathOf: _path,
                 track: p.onSurface.withValues(alpha: .2),
                 fill: p.onSurface,
+                position: data.state.position,
+                total: data.track.duration,
+                timeAt: (s, _) => Offset(
+                  s.width / 2,
+                  s.height / 2 + (_size(s) / 2 - _knob - 1),
+                ),
                 cover: (s, _) => Center(
                   child: SizedBox.square(
                     dimension: _size(s),
@@ -232,7 +238,7 @@ class CustomPlayer extends StatelessWidget {
 
   /// 틀 선이 커버 가장자리에서 안쪽으로 들어간 거리.
   static const _inset = 12.0;
-  static const _shadowRoom = 6.0;
+  static const _shadowRoom = 36.0;
 
   /// 커버 몸통 사각형 (늘린 영역 아래쪽에 놓는다).
   static Rect _body(Size s, double extend) {
@@ -276,6 +282,10 @@ class CustomPlayer extends StatelessWidget {
                 track: p.onSurface.withValues(alpha: .12),
                 fill: p.primary,
                 knobRing: p.surface,
+                position: data.state.position,
+                total: data.track.duration,
+                timeAt: (s, _) =>
+                    Offset(s.width / 2, s.height - _shadowRoom / 2 - 2),
                 cover: (s, extend) {
                   final b = _body(s, extend);
                   final pad = _inset + 12;

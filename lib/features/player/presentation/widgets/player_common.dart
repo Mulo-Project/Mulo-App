@@ -281,96 +281,138 @@ class PlayerLyricsPane extends StatelessWidget {
   Widget build(BuildContext context) => LyricsView(track: track);
 }
 
+/// 위쪽 삼각형이 붙은 현재 시간 말풍선 모양 (손잡이 바로 아래에 둔다).
+class _TriangleUp extends CustomPainter {
+  _TriangleUp(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) => canvas.drawPath(
+    Path()
+      ..moveTo(size.width / 2, 0)
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close(),
+    Paint()..color = color,
+  );
+
+  @override
+  bool shouldRepaint(_TriangleUp old) => old.color != color;
+}
+
 /// 누르거나 끌어서 위치를 옮기는 가는 진행 막대 (끝에 흰 손잡이).
+/// 총 재생 시간은 막대 위 오른쪽, 현재 시간은 손잡이 아래 위쪽 삼각형과 함께 따라간다.
 class PlayerSeekBar extends StatelessWidget {
   const PlayerSeekBar({
     super.key,
     required this.progress,
     required this.onSeek,
+    required this.position,
+    required this.total,
   });
 
   final double progress;
   final ValueChanged<double> onSeek;
+  final Duration position;
+  final Duration total;
 
   static const _knob = 14.0;
+  static const _label = 56.0;
 
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
+    final style = Theme.of(context).textTheme.labelMedium
+        ?.copyWith(color: p.onSurface.withValues(alpha: .7));
     return LayoutBuilder(
       builder: (context, c) {
         void seek(Offset local) => onSeek(local.dx / c.maxWidth);
         final v = progress.clamp(0.0, 1.0);
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTapDown: (d) => seek(d.localPosition),
-          onHorizontalDragUpdate: (d) => seek(d.localPosition),
-          child: SizedBox(
-            height: 28,
-            child: Stack(
-              alignment: Alignment.centerLeft,
-              clipBehavior: Clip.none,
-              children: [
-                Container(
-                  height: 4,
-                  decoration: ShapeDecoration(
-                    shape: const StadiumBorder(),
-                    color: p.onSurface.withValues(alpha: .2),
-                  ),
-                ),
-                Container(
-                  height: 4,
-                  width: c.maxWidth * v,
-                  decoration: ShapeDecoration(
-                    shape: const StadiumBorder(),
-                    color: p.onSurface,
-                  ),
-                ),
-                Positioned(
-                  left: (c.maxWidth - _knob) * v,
-                  child: Container(
-                    width: _knob,
-                    height: _knob,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: p.onSurface,
-                      boxShadow: [
-                        BoxShadow(
-                          color: p.scrim.withValues(alpha: .3),
-                          blurRadius: 6,
+        final knobX = (c.maxWidth - _knob) * v + _knob / 2;
+        final labelX = (knobX - _label / 2).clamp(0.0, c.maxWidth - _label);
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Align(
+              alignment: Alignment.centerRight,
+              child: Text(TimeText.clock(total), style: style),
+            ),
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTapDown: (d) => seek(d.localPosition),
+              onHorizontalDragUpdate: (d) => seek(d.localPosition),
+              child: SizedBox(
+                height: 28,
+                child: Stack(
+                  alignment: Alignment.centerLeft,
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      height: 4,
+                      decoration: ShapeDecoration(
+                        shape: const StadiumBorder(),
+                        color: p.onSurface.withValues(alpha: .2),
+                      ),
+                    ),
+                    Container(
+                      height: 4,
+                      width: c.maxWidth * v,
+                      decoration: ShapeDecoration(
+                        shape: const StadiumBorder(),
+                        color: p.onSurface,
+                      ),
+                    ),
+                    Positioned(
+                      left: (c.maxWidth - _knob) * v,
+                      child: Container(
+                        width: _knob,
+                        height: _knob,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: p.onSurface,
+                          boxShadow: [
+                            BoxShadow(
+                              color: p.scrim.withValues(alpha: .3),
+                              blurRadius: 6,
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(
+              height: 28,
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Positioned(
+                    left: knobX - 5,
+                    top: 0,
+                    child: CustomPaint(
+                      size: const Size(10, 6),
+                      painter: _TriangleUp(p.onSurface.withValues(alpha: .7)),
                     ),
                   ),
-                ),
-              ],
+                  Positioned(
+                    left: labelX,
+                    top: 7,
+                    width: _label,
+                    child: Text(
+                      TimeText.clock(position),
+                      textAlign: TextAlign.center,
+                      style: style,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         );
       },
-    );
-  }
-}
-
-/// 지난 시간 · 남은 시간.
-class PlayerTimes extends StatelessWidget {
-  const PlayerTimes({super.key, required this.data});
-
-  final PlayerLayoutData data;
-
-  @override
-  Widget build(BuildContext context) {
-    final style = Theme.of(context).textTheme.labelMedium
-        ?.copyWith(color: context.palette.onSurface.withValues(alpha: .66));
-    return Row(
-      children: [
-        Text(formatDuration(data.state.position), style: style),
-        const Spacer(),
-        Text(
-          '-${formatDuration(data.track.duration - data.state.position)}',
-          style: style,
-        ),
-      ],
     );
   }
 }
@@ -729,12 +771,12 @@ class EqualizerButton extends StatelessWidget {
 }
 
 /// 모든 모양이 같이 쓰는 하단 조작부 (위에서 아래로):
-/// 1) 제목 · 아티스트 + 가사/커버 · 재생목록에 추가 · 좋아요
-/// 2) 10초 뒤로 · 진행 막대(+시간) · 10초 앞으로
-/// 3) 이전 · 재생 · 다음
-/// 4) 셔플 · 반복 (왼쪽), 수면 타이머 · 이퀄라이저 · 대기열 (오른쪽)
+/// 1) 제목 · 아티스트 + 가사/커버 · 현재 재생목록(대기열) · 좋아요
+/// 2) 진행 막대 (총 시간은 위, 현재 시간은 손잡이 아래 삼각형)
+/// 3) 10초 뒤로 · 이전 · 재생 · 다음 · 10초 앞으로
+/// 4) 셔플 · 반복 (왼쪽), 수면 타이머 · 이퀄라이저 (오른쪽)
 ///
-/// [seekBar]가 false면 진행 막대는 커버 쪽(호 · 커스텀, [MorphSeek])에 있어, 2줄 가운데엔 시간만 둔다.
+/// [seekBar]가 false면 진행 막대는 커버 쪽(호 · 커스텀, [MorphSeek])에 있어 2번 줄은 없다.
 class PlayerControls extends StatelessWidget {
   const PlayerControls({
     super.key,
@@ -769,46 +811,31 @@ class PlayerControls extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     LyricsToggleButton(data: data),
-                    AddToPlaylistButton(trackId: data.track.id),
+                    const QueueButton(),
                     PlayerLikeButton(trackId: data.track.id),
                   ],
                 ),
               ),
             ],
           ),
+          if (seekBar) ...[
+            const SizedBox(height: AppSpacing.xs),
+            PlayerSeekBar(
+              progress: data.state.progress,
+              onSeek: data.vm.seekFraction,
+              position: data.state.position,
+              total: data.track.duration,
+            ),
+          ],
           const SizedBox(height: AppSpacing.xs),
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               SeekStepButton(data: data, forward: false),
-              Expanded(
-                child: seekBar
-                    ? Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.xs,
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            PlayerSeekBar(
-                              progress: data.state.progress,
-                              onSeek: data.vm.seekFraction,
-                            ),
-                            PlayerTimes(data: data),
-                          ],
-                        ),
-                      )
-                    : Center(child: TimeText(data: data)),
-              ),
-              SeekStepButton(data: data, forward: true),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
               SkipButton(data: data, next: false),
               play,
               SkipButton(data: data, next: true),
+              SeekStepButton(data: data, forward: true),
             ],
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -819,7 +846,6 @@ class PlayerControls extends StatelessWidget {
               const Spacer(),
               SleepTimerButton(data: data),
               const EqualizerButton(),
-              const QueueButton(),
             ],
           ),
         ],
@@ -888,6 +914,9 @@ class MorphSeek extends StatefulWidget {
     required this.track,
     required this.fill,
     this.knobRing,
+    required this.position,
+    required this.total,
+    required this.timeAt,
     this.reachTop = false,
   });
 
@@ -904,8 +933,15 @@ class MorphSeek extends StatefulWidget {
   final Color? knobRing;
   final bool reachTop;
 
+  /// 현재 · 전체 재생 시간.
+  final Duration position;
+  final Duration total;
+
+  /// 곡선 모양일 때 "현재 / 전체" 시간을 놓을 가운데 위치 (모양 아래 뚫린 곳).
+  final Offset Function(Size size, double extend) timeAt;
+
   /// 곧은 막대가 놓이는 아래 띠 높이.
-  static const band = 36.0;
+  static const band = 64.0;
   static const _samples = 200;
 
   /// [points] 중 [local]에서 가장 가까운 점의 위치(0 ~ 1)와 거리.
@@ -961,7 +997,7 @@ class _MorphSeekState extends State<MorphSeek>
 
   List<Offset> _pointsFor(Size size, double t) {
     final metric = widget.pathOf(size, _extend).computeMetrics().first;
-    final y = size.height - MorphSeek.band / 2 + 4;
+    final y = size.height - MorphSeek.band + 24;
     const inset = AppSpacing.lg;
     const n = MorphSeek._samples;
     return [
@@ -981,6 +1017,74 @@ class _MorphSeekState extends State<MorphSeek>
 
   void _seek(Offset local) =>
       widget.onSeek(MorphSeek.nearest(_points, local).$1);
+
+  /// 곡선일 때는 모양 아래 뚫린 곳에 "현재 / 전체", 곧은 막대일 때는 막대 위 총 시간과
+  /// 손잡이 아래 삼각형 + 현재 시간.
+  List<Widget> _timeLabels(BuildContext context, Size size, double t) {
+    final p = context.palette;
+    final style = Theme.of(context).textTheme.labelMedium
+        ?.copyWith(color: p.onSurface.withValues(alpha: .7));
+    const w = 120.0;
+    final gap = widget.timeAt(size, _extend);
+    final v = widget.progress.clamp(0.0, 1.0);
+    final head = _points.isEmpty
+        ? Offset.zero
+        : _points[(v * (_points.length - 1)).round()];
+    final x = (head.dx - 28).clamp(0.0, size.width - 56);
+    final lineY = size.height - MorphSeek.band + 24;
+    return [
+      if (t < 1)
+        Positioned(
+          left: gap.dx - w / 2,
+          top: gap.dy - 10,
+          width: w,
+          child: IgnorePointer(
+            child: Opacity(
+              opacity: 1 - t,
+              child: Text(
+                '${TimeText.clock(widget.position)} / ${TimeText.clock(widget.total)}',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
+            ),
+          ),
+        ),
+      if (t > 0) ...[
+        Positioned(
+          right: AppSpacing.lg,
+          top: lineY - 24,
+          child: Opacity(
+            opacity: t,
+            child: Text(TimeText.clock(widget.total), style: style),
+          ),
+        ),
+        Positioned(
+          left: head.dx - 5,
+          top: lineY + 12,
+          child: Opacity(
+            opacity: t,
+            child: CustomPaint(
+              size: const Size(10, 6),
+              painter: _TriangleUp(p.onSurface.withValues(alpha: .7)),
+            ),
+          ),
+        ),
+        Positioned(
+          left: x,
+          top: lineY + 19,
+          width: 56,
+          child: Opacity(
+            opacity: t,
+            child: Text(
+              TimeText.clock(widget.position),
+              textAlign: TextAlign.center,
+              style: style,
+            ),
+          ),
+        ),
+      ],
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1037,6 +1141,7 @@ class _MorphSeekState extends State<MorphSeek>
                               child: Opacity(opacity: t, child: widget.lyrics),
                             ),
                           ),
+                        ..._timeLabels(context, size, t),
                         Positioned.fill(
                           child: IgnorePointer(
                             child: CustomPaint(
