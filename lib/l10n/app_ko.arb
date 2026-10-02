@@ -157,7 +157,6 @@
   "playerStyleSquare": "네모",
   "playerStyleFullBleed": "꽉 찬 이미지",
   "playerStyleArc": "호",
-  "playerStyleCustom": "커스텀",
   "playerSleepTimer": "수면 타이머",
   "playerSleepTimerOff": "타이머 끄기",
   "playerSleepTimerMinutes": "{minutes}분 뒤 멈춤",

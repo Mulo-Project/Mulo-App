@@ -134,7 +134,6 @@ class _StyleOption extends StatelessWidget {
     PlayerStyle.square => Icons.crop_square_rounded,
     PlayerStyle.fullBleed => Icons.fullscreen_rounded,
     PlayerStyle.arc => Icons.data_usage_rounded,
-    PlayerStyle.custom => Icons.tune_rounded,
   };
 }
 
@@ -143,5 +142,4 @@ String playerStyleName(AppLocalizations l10n, PlayerStyle style) =>
       PlayerStyle.square => l10n.playerStyleSquare,
       PlayerStyle.fullBleed => l10n.playerStyleFullBleed,
       PlayerStyle.arc => l10n.playerStyleArc,
-      PlayerStyle.custom => l10n.playerStyleCustom,
     };

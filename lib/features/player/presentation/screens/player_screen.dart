@@ -68,6 +68,5 @@ class _PlayerScreenState extends State<PlayerScreen> {
     PlayerStyle.square => SquarePlayer(data: data),
     PlayerStyle.fullBleed => FullBleedPlayer(data: data),
     PlayerStyle.arc => ArcPlayer(data: data),
-    PlayerStyle.custom => CustomPlayer(data: data),
   };
 }

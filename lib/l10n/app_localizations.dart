@@ -818,12 +818,6 @@ abstract class AppLocalizations {
   /// **'호'**
   String get playerStyleArc;
 
-  /// No description provided for @playerStyleCustom.
-  ///
-  /// In ko, this message translates to:
-  /// **'커스텀'**
-  String get playerStyleCustom;
-
   /// No description provided for @playerSleepTimer.
   ///
   /// In ko, this message translates to:

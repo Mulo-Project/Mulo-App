@@ -385,9 +385,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playerStyleArc => '호';
 
   @override
-  String get playerStyleCustom => '커스텀';
-
-  @override
   String get playerSleepTimer => '수면 타이머';
 
   @override

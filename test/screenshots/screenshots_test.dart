@@ -65,7 +65,6 @@ void main() {
     'settings-full-light': Routes.settings,
     'player-light': Routes.player,
     'player': Routes.player,
-    'player-custom': Routes.player,
     'player-bleed': Routes.player,
     'player-arc': Routes.player,
     'queue': Routes.queue,
@@ -101,7 +100,6 @@ void main() {
           playlists: MemoryPlaylistRepository(_samplePlaylists),
           // 라이트 스크린샷은 저장된 화면 모드를 라이트로 둔다.
           playerStyle: switch (e.key) {
-            'player-custom' => PlayerStyle.custom,
             'player-bleed' => PlayerStyle.fullBleed,
             'player-arc' => PlayerStyle.arc,
             _ => PlayerStyle.square,

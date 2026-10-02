@@ -7,10 +7,7 @@ enum PlayerStyle {
   fullBleed,
 
   /// 호: 흐린 커버 배경과 빛나는 재생 버튼을 두른 곡선 진행 호.
-  arc,
-
-  /// 커스텀: 소프트(뉴모피즘) 화면. 키 큰 둥근 틀 안의 커버와 틀을 따라 도는 진행 막대.
-  custom;
+  arc;
 
   static const PlayerStyle initial = square;
 }

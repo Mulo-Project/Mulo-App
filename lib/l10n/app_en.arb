@@ -126,7 +126,6 @@
   "playerStyleSquare": "Square",
   "playerStyleFullBleed": "Full image",
   "playerStyleArc": "Arc",
-  "playerStyleCustom": "Custom",
   "playerSleepTimer": "Sleep timer",
   "playerSleepTimerOff": "Turn off timer",
   "playerSleepTimerMinutes": "Stop in {minutes} min",

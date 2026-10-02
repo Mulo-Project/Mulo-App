@@ -394,9 +394,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerStyleArc => 'Arc';
 
   @override
-  String get playerStyleCustom => 'Custom';
-
-  @override
   String get playerSleepTimer => 'Sleep timer';
 
   @override

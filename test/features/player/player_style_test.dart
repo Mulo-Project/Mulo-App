@@ -49,13 +49,13 @@ void main() {
     final a = make();
     addTearDown(a.close);
     expect(a.state, PlayerStyle.square);
-    await a.select(PlayerStyle.custom);
-    expect(repo.style, PlayerStyle.custom);
+    await a.select(PlayerStyle.arc);
+    expect(repo.style, PlayerStyle.arc);
 
     final b = make();
     addTearDown(b.close);
     await b.load();
-    expect(b.state, PlayerStyle.custom);
+    expect(b.state, PlayerStyle.arc);
   });
 
   test('진행 막대 윤곽 위 가장 가까운 점을 0~1로 바꾼다', () {
@@ -105,19 +105,19 @@ void main() {
     await tester.tap(find.text('플레이어 테마'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('커스텀'));
+    await tester.tap(find.text('호'));
     await tester.pumpAndSettle();
     expect(
       tester
           .element(find.byType(Scaffold).first)
           .read<PlayerStyleCubit>()
           .state,
-      PlayerStyle.custom,
+      PlayerStyle.arc,
     );
   });
 
-  testWidgets('커스텀 모양: 수면 타이머를 정하면 켜지고 끌 수 있다', (tester) async {
-    await _openPlayer(tester, PlayerStyle.custom);
+  testWidgets('호 모양: 수면 타이머를 정하면 켜지고 끌 수 있다', (tester) async {
+    await _openPlayer(tester, PlayerStyle.arc);
 
     await tester.tap(find.byTooltip('수면 타이머'));
     await tester.pumpAndSettle();
