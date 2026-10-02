@@ -17,15 +17,17 @@ class MiniPlayerBar extends StatelessWidget {
     required this.isPlaying,
     required this.playLabel,
     required this.pauseLabel,
+    required this.previousLabel,
     required this.nextLabel,
+    required this.positionText,
+    required this.durationText,
     required this.queueLabel,
     this.artwork,
     this.onTap,
     this.onPlayPause,
+    this.onPrevious,
     this.onNext,
     this.onQueue,
-    this.outputIcon,
-    this.outputLabel,
   });
 
   final String title;
@@ -33,9 +35,14 @@ class MiniPlayerBar extends StatelessWidget {
   final double progress;
   final bool isPlaying;
 
+  /// 현재 재생 시간 · 곡 길이 ("1:23" 형태, 밖에서 만들어 받는다).
+  final String positionText;
+  final String durationText;
+
   /// 버튼 설명 (다국어 문구를 밖에서 받는다).
   final String playLabel;
   final String pauseLabel;
+  final String previousLabel;
   final String nextLabel;
   final String queueLabel;
 
@@ -43,14 +50,11 @@ class MiniPlayerBar extends StatelessWidget {
   final ImageProvider? artwork;
   final VoidCallback? onTap;
   final VoidCallback? onPlayPause;
+  final VoidCallback? onPrevious;
   final VoidCallback? onNext;
 
   /// 재생 대기열을 바로 연다.
   final VoidCallback? onQueue;
-
-  /// 지금 출력 기기 (아이콘 + 이름). 라벨이 없으면 보이지 않는다.
-  final IconData? outputIcon;
-  final String? outputLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -97,10 +101,13 @@ class MiniPlayerBar extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        if (outputLabel != null && outputLabel!.isNotEmpty)
-                          _OutputLabel(icon: outputIcon, label: outputLabel!),
                       ],
                     ),
+                  ),
+                  _BarIcon(
+                    icon: Icons.skip_previous_rounded,
+                    tooltip: previousLabel,
+                    onPressed: onPrevious,
                   ),
                   CircleIconButton(
                     icon: isPlaying
@@ -110,22 +117,37 @@ class MiniPlayerBar extends StatelessWidget {
                     emphasized: true,
                     onPressed: onPlayPause,
                   ),
-                  // 재생 버튼만 크게, 나머지는 작은 아이콘.
-                  const SizedBox(width: AppSpacing.xxs),
                   _BarIcon(
                     icon: Icons.skip_next_rounded,
                     tooltip: nextLabel,
                     onPressed: onNext,
                   ),
-                  _BarIcon(
-                    icon: Icons.queue_music_rounded,
-                    tooltip: queueLabel,
-                    onPressed: onQueue,
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              // 재생 시간 · 진행선 · 곡 길이, 맨 오른쪽에 작은 재생목록 아이콘.
+              Row(
+                children: [
+                  _TimeText(positionText),
+                  const SizedBox(width: AppSpacing.xs),
+                  Expanded(child: ProgressLine(value: progress, height: 3)),
+                  const SizedBox(width: AppSpacing.xs),
+                  _TimeText(durationText),
+                  const SizedBox(width: AppSpacing.xs),
+                  Tooltip(
+                    message: queueLabel,
+                    child: InkResponse(
+                      onTap: onQueue,
+                      radius: 14,
+                      child: Icon(
+                        Icons.queue_music_rounded,
+                        size: 16,
+                        color: p.onSurfaceMuted,
+                      ),
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.sm),
-              ProgressLine(value: progress, height: 3),
             ],
           ),
         ),
@@ -191,35 +213,20 @@ class _BarIcon extends StatelessWidget {
   }
 }
 
-/// 현재 출력 기기: 작은 아이콘 + 이름.
-class _OutputLabel extends StatelessWidget {
-  const _OutputLabel({required this.label, this.icon});
+/// 아주 작은 시간 글자.
+class _TimeText extends StatelessWidget {
+  const _TimeText(this.value);
 
-  final IconData? icon;
-  final String label;
+  final String value;
 
   @override
   Widget build(BuildContext context) {
-    final p = context.palette;
-    return Padding(
-      padding: const EdgeInsets.only(top: 2),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: 11, color: p.accent),
-            const SizedBox(width: 3),
-          ],
-          Flexible(
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.labelSmall
-                  ?.copyWith(color: p.onSurfaceMuted, fontSize: 10),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
+    return Text(
+      value,
+      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+        color: context.palette.onSurfaceMuted,
+        fontSize: 10,
+        fontFeatures: const [FontFeature.tabularFigures()],
       ),
     );
   }
