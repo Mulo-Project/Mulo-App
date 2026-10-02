@@ -28,7 +28,6 @@ class Playlist extends Equatable {
     required this.id,
     required this.name,
     this.trackCount = 0,
-    this.colorIndex,
     this.featured,
     this.trackIds = const {},
   });
@@ -42,9 +41,6 @@ class Playlist extends Equatable {
   final String name;
   final int trackCount;
 
-  /// 이미지가 없을 때 카드 색. 글로우 톤 번호이고, 안 골랐으면 null (이름으로 자동).
-  final int? colorIndex;
-
   /// 카드에 보여 줄 대표곡: 이 재생목록에서 가장 많이 들은 곡, 들은 기록이 없으면 가장 먼저 담은 곡.
   final PlaylistTrackPreview? featured;
 
@@ -54,12 +50,5 @@ class Playlist extends Equatable {
   bool get isFavorites => id == favoritesId;
 
   @override
-  List<Object?> get props => [
-    id,
-    name,
-    trackCount,
-    colorIndex,
-    featured,
-    trackIds,
-  ];
+  List<Object?> get props => [id, name, trackCount, featured, trackIds];
 }

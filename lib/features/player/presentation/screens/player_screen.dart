@@ -6,6 +6,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../../app/router.dart';
 import '../../../library/domain/entities/track.dart';
+import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../lyrics/presentation/widgets/lyrics_view.dart';
 import '../bloc/now_playing_cubit.dart';
@@ -87,6 +88,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                           CoverKey.track(track.id),
                                         ),
                                         tone: toneFor(track.id),
+                                        color: coverColorOf(
+                                          context,
+                                          CoverKey.track(track.id),
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -235,10 +240,11 @@ class _Controls extends StatelessWidget {
 /// 전체 화면 플레이어 커버: 이미지가 있으면 사진, 없으면 테마 색 그라데이션 + 음표.
 /// 커버 이미지는 곡 타일 메뉴에서만 바꾼다.
 class _PlayerCover extends StatelessWidget {
-  const _PlayerCover({required this.image, required this.tone});
+  const _PlayerCover({required this.image, required this.tone, this.color});
 
   final ImageProvider? image;
   final GlowTone tone;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -246,6 +252,7 @@ class _PlayerCover extends StatelessWidget {
     return CoverCard(
       image: image,
       tone: tone,
+      color: color,
       child: image != null
           ? null
           : Center(

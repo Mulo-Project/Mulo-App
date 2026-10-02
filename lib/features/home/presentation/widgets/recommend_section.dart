@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/home_summary.dart';
@@ -129,6 +130,10 @@ class _RecommendSectionState extends State<RecommendSection> {
                                 ? l10n.unknownArtist
                                 : shown[j].artist,
                             tone: toneFor(shown[j].id),
+                            color: coverColorOf(
+                              context,
+                              CoverKey.track(shown[j].id),
+                            ),
                             artwork: coverImageOf(
                               context,
                               CoverKey.track(shown[j].id),

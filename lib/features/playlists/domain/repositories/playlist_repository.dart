@@ -9,8 +9,8 @@ abstract interface class PlaylistRepository {
   /// 재생목록에 담긴 곡 (담은 순서). 바뀔 때마다 다시 흘려보낸다.
   Stream<List<Track>> watchTracks(String playlistId);
 
-  /// 새 재생목록을 만든다. [colorIndex]는 이미지가 없을 때의 카드 색.
-  Future<Playlist> create(String name, {int? colorIndex});
+  /// 새 재생목록을 만든다.
+  Future<Playlist> create(String name);
 
   /// 이름을 바꾼다 (좋아요 목록은 바꿀 수 없다).
   Future<void> rename(String playlistId, String name);
@@ -26,7 +26,4 @@ abstract interface class PlaylistRepository {
 
   /// 곡을 재생목록에서 뺀다 (곡 자체는 보관함에 남는다).
   Future<void> removeTrack(String trackId, String playlistId);
-
-  /// 이미지가 없는 카드의 색을 정한다. [colorIndex]가 null이면 자동으로 되돌린다.
-  Future<void> setColor(String playlistId, int? colorIndex);
 }

@@ -7,6 +7,13 @@ abstract interface class CoverRepository {
   Future<void> remove(String key);
 }
 
+/// 커버 색 저장소: 키 → ARGB 값. 테마와 상관없이 고른 색 그대로 쓴다.
+abstract interface class CoverColorRepository {
+  Future<Map<String, int>> loadAll();
+  Future<void> save(String key, int color);
+  Future<void> remove(String key);
+}
+
 /// 기기에서 이미지 한 장을 고른다 (사진 선택기 · 파일 대화상자).
 abstract interface class CoverImageSource {
   /// 고른 파일 경로. 취소하면 null.

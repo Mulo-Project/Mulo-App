@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app_theme_tokens.dart';
+import '../glow_color.dart';
 
 /// 목록에서 항목마다 커버 톤을 고정으로 다르게 고른다 (같은 키 = 같은 톤).
 GlowTone toneFor(String key) =>
@@ -18,6 +19,7 @@ class ArtworkBox extends StatelessWidget {
     this.width,
     this.radius = 12,
     this.tone = GlowTone.primary,
+    this.color,
     this.icon = Icons.music_note_rounded,
   });
 
@@ -28,11 +30,16 @@ class ArtworkBox extends StatelessWidget {
   final double? width;
   final double radius;
   final GlowTone tone;
+
+  /// 사용자가 고른 색. 있으면 [tone] 대신 이 색으로 그린다.
+  final Color? color;
   final IconData icon;
 
   @override
   Widget build(BuildContext context) {
-    final glow = context.tokens.glow(tone);
+    final glow = color != null
+        ? glowFromColor(color!)
+        : context.tokens.glow(tone);
     return ClipRRect(
       borderRadius: BorderRadius.circular(radius),
       child: SizedBox(

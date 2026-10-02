@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../covers/presentation/bloc/cover_color_cubit.dart';
+import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/import_result.dart';
 import '../../domain/entities/library_sort.dart';
@@ -55,6 +57,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final importing = context.select((LibraryImportCubit c) => c.state.running);
     final tracks = _filtered(all, l10n);
     final vm = context.read<NowPlayingCubit>();
+    final playing = context.select((NowPlayingCubit c) => c.state.track);
 
     final items = switch (_tab) {
       LibraryTab.songs => [
@@ -85,6 +88,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
             tone: toneFor(e.key),
             leading: ArtworkBox(
               tone: toneFor(e.key),
+              color: coverColorOf(context, CoverKey.album(e.value.first.album)),
               icon: Icons.album_rounded,
             ),
             trailing: const _Chevron(),
@@ -152,6 +156,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   downloaded: all
                       .where((t) => t.source == TrackSource.download)
                       .length,
+                  playing: playing,
                   onPlayAll: () => vm.playQueue(tracks),
                   onShuffle: () {
                     vm.playQueue(tracks);
@@ -270,12 +275,16 @@ class _LibraryHero extends StatelessWidget {
   const _LibraryHero({
     required this.count,
     required this.downloaded,
+    required this.playing,
     required this.onPlayAll,
     required this.onShuffle,
   });
 
   final int count;
   final int downloaded;
+
+  /// 지금 재생 중인 곡 (없으면 null). 있으면 오른쪽에 그 곡의 이미지를 보여 준다.
+  final Track? playing;
   final VoidCallback onPlayAll;
   final VoidCallback onShuffle;
 
@@ -285,48 +294,67 @@ class _LibraryHero extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final p = context.palette;
 
+    final now = playing;
+    final info = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            StatNumber('$count', size: 56),
+            const SizedBox(width: AppSpacing.sm),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child: Text(l10n.unitSongs, style: text.titleMedium),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          l10n.librarySources(count - downloaded, downloaded),
+          style: text.bodySmall?.copyWith(color: p.onSurface),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        Wrap(
+          spacing: AppSpacing.xs,
+          runSpacing: AppSpacing.xs,
+          children: [
+            PillButton(
+              label: l10n.actionPlayAll,
+              icon: Icons.play_arrow_rounded,
+              compact: true,
+              onPressed: onPlayAll,
+            ),
+            PillButton(
+              label: l10n.actionShuffle,
+              icon: Icons.shuffle_rounded,
+              compact: true,
+              variant: PillVariant.tonal,
+              onPressed: onShuffle,
+            ),
+          ],
+        ),
+      ],
+    );
+
     return GlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              StatNumber('$count', size: 56),
-              const SizedBox(width: AppSpacing.sm),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 2),
-                child: Text(l10n.unitSongs, style: text.titleMedium),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            l10n.librarySources(count - downloaded, downloaded),
-            style: text.bodySmall?.copyWith(color: p.onSurface),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Wrap(
-            spacing: AppSpacing.xs,
-            runSpacing: AppSpacing.xs,
-            children: [
-              PillButton(
-                label: l10n.actionPlayAll,
-                icon: Icons.play_arrow_rounded,
-                compact: true,
-                onPressed: onPlayAll,
-              ),
-              PillButton(
-                label: l10n.actionShuffle,
-                icon: Icons.shuffle_rounded,
-                compact: true,
-                variant: PillVariant.tonal,
-                onPressed: onShuffle,
-              ),
-            ],
-          ),
-        ],
-      ),
+      child: now == null
+          ? info
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(child: info),
+                const SizedBox(width: AppSpacing.md),
+                // 지금 재생 중인 곡의 이미지.
+                ArtworkBox(
+                  image: coverImageOf(context, CoverKey.track(now.id)),
+                  color: coverColorOf(context, CoverKey.track(now.id)),
+                  tone: toneFor(now.id),
+                  size: 88,
+                  radius: AppRadii.sm,
+                ),
+              ],
+            ),
     );
   }
 }

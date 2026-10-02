@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/track.dart';
@@ -51,6 +52,7 @@ class TrackListTile extends StatelessWidget {
           ? '${artistOf(l10n, t)} · ${albumOf(l10n, t)}'
           : artistOf(l10n, t),
       tone: toneFor(t.id),
+      color: coverColorOf(context, CoverKey.track(t.id)),
       active: t == current,
       artwork: coverImageOf(context, CoverKey.track(t.id)),
       trailing: Row(

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../library/presentation/widgets/track_list_tile.dart';
@@ -93,6 +94,7 @@ class _Body extends StatelessWidget {
                 child: CoverCard(
                   image: image,
                   tone: playlistToneOf(pl),
+                  color: coverColorOf(context, CoverKey.playlist(pl.id)),
                   shade: image != null,
                   child: Padding(
                     padding: const EdgeInsets.all(AppSpacing.md),

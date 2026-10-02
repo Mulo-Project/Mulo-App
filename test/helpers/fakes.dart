@@ -151,6 +151,20 @@ class MemoryCoverRepository implements CoverRepository {
   Future<void> remove(String key) async => saved.remove(key);
 }
 
+/// 메모리 커버 색 저장소.
+class MemoryCoverColorRepository implements CoverColorRepository {
+  final saved = <String, int>{};
+
+  @override
+  Future<Map<String, int>> loadAll() async => {...saved};
+
+  @override
+  Future<void> save(String key, int color) async => saved[key] = color;
+
+  @override
+  Future<void> remove(String key) async => saved.remove(key);
+}
+
 /// 메모리 가사 저장소. [sibling]은 음원 옆 `.lrc`처럼 직접 저장하지 않은 가사.
 class MemoryLyricsRepository implements LyricsRepository {
   MemoryLyricsRepository({this.sibling = const {}});
@@ -360,8 +374,6 @@ class MemoryPlaylistRepository implements PlaylistRepository {
   /// 재생목록 id → 들어 있는 곡 id (담은 순서).
   final members = <String, Set<String>>{};
 
-  /// 재생목록 id → 고른 카드 색.
-  final colors = <String, int?>{};
   final _changes = StreamController<void>.broadcast();
 
   PlaylistTrackPreview? _featuredOf(String id, PlaylistTrackPreview? preset) {
@@ -393,7 +405,6 @@ class MemoryPlaylistRepository implements PlaylistRepository {
         id: p.id,
         name: p.name,
         trackCount: members[p.id]?.length ?? p.trackCount,
-        colorIndex: colors.containsKey(p.id) ? colors[p.id] : p.colorIndex,
         featured: _featuredOf(p.id, p.featured),
         trackIds: {...?members[p.id]},
       ),
@@ -417,12 +428,8 @@ class MemoryPlaylistRepository implements PlaylistRepository {
   }
 
   @override
-  Future<Playlist> create(String name, {int? colorIndex}) async {
-    final made = Playlist(
-      id: 'pl${lists.length + 1}',
-      name: name,
-      colorIndex: colorIndex,
-    );
+  Future<Playlist> create(String name) async {
+    final made = Playlist(id: 'pl${lists.length + 1}', name: name);
     lists.add(made);
     _changes.add(null);
     return made;
@@ -437,7 +444,6 @@ class MemoryPlaylistRepository implements PlaylistRepository {
       id: p.id,
       name: name,
       trackCount: p.trackCount,
-      colorIndex: p.colorIndex,
       featured: p.featured,
     );
     _changes.add(null);
@@ -469,12 +475,6 @@ class MemoryPlaylistRepository implements PlaylistRepository {
     members[playlistId]?.remove(trackId);
     _changes.add(null);
   }
-
-  @override
-  Future<void> setColor(String playlistId, int? colorIndex) async {
-    colors[playlistId] = colorIndex;
-    _changes.add(null);
-  }
 }
 
 /// 앱 전체를 띄우는 테스트용 의존성 (DB · 파일 · 권한 없이).
@@ -483,6 +483,7 @@ Future<void> setUpTestDependencies({
   List<Track> tracks = const [],
   DeviceMusicRepository? device,
   CoverRepository? covers,
+  CoverColorRepository? coverColors,
   CoverImageSource? imageSource,
   LyricsRepository? lyrics,
   LyricsFileSource? lyricsFile,
@@ -534,6 +535,9 @@ Future<void> setUpTestDependencies({
     )
     ..registerLazySingleton<CoverRepository>(
       () => covers ?? MemoryCoverRepository(),
+    )
+    ..registerLazySingleton<CoverColorRepository>(
+      () => coverColors ?? MemoryCoverColorRepository(),
     )
     ..registerLazySingleton<CoverImageSource>(
       () => imageSource ?? FakeImageSource(),

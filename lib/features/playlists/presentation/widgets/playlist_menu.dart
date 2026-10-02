@@ -3,7 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
+import '../../../covers/presentation/widgets/cover_color_sheet.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../bloc/playlists_cubit.dart';
 import 'playlist_card.dart';
@@ -12,7 +14,7 @@ enum _Action { playAll, color, image, rename, delete }
 
 enum _ImageAction { pick, reset }
 
-/// 재생목록 팝업 메뉴: 전체 재생 · 색(하위 메뉴) · 이미지(하위 메뉴) · 이름 바꾸기 · 삭제.
+/// 재생목록 팝업 메뉴: 전체 재생 · 색(색 고르기 시트) · 이미지(하위 메뉴) · 이름 바꾸기 · 삭제.
 /// 카드의 ⋮, 길게 누르기, 오른쪽 클릭, 상세 화면의 ⋮에서 같은 메뉴를 연다.
 /// [globalPosition]이 있으면 눌린 자리에, 없으면 [context] 위젯 옆에 띄운다.
 /// 좋아요 목록은 색 · 이름 · 삭제 항목이 없다.
@@ -68,7 +70,12 @@ Future<void> showPlaylistMenu(
     case _Action.playAll:
       await _playAll(context, pl);
     case _Action.color:
-      await _pickColor(context, pl, globalPosition);
+      await showCoverColorSheet(
+        context,
+        colorKey: CoverKey.playlist(pl.id),
+        title: playlistNameOf(context.l10n, pl),
+        tone: playlistToneOf(pl),
+      );
     case _Action.image:
       await _pickImage(context, pl, hasImage, globalPosition);
     case _Action.rename:
@@ -87,42 +94,6 @@ Future<void> _playAll(BuildContext context, Playlist pl) async {
     return;
   }
   context.read<NowPlayingCubit>().playQueue(tracks);
-}
-
-/// 색 하위 메뉴: 색 견본 아이콘 + 이름. 자동은 새로고침 아이콘.
-Future<void> _pickColor(
-  BuildContext context,
-  Playlist pl,
-  Offset? globalPosition,
-) async {
-  final l10n = context.l10n;
-  final tokens = context.tokens;
-  const auto = -1;
-  final picked = await showAppMenu<int>(
-    context,
-    globalPosition: globalPosition,
-    items: [
-      AppMenuItem(
-        value: auto,
-        icon: Icons.autorenew_rounded,
-        label: l10n.playlistColorAuto,
-        selected: pl.colorIndex == null,
-      ),
-      for (final tone in GlowTone.values)
-        AppMenuItem(
-          value: tone.index,
-          icon: Icons.circle,
-          iconColor: tokens.glow(tone).first,
-          label: playlistToneName(l10n, tone),
-          selected: pl.colorIndex == tone.index,
-        ),
-    ],
-  );
-  if (picked == null || !context.mounted) return;
-  await context.read<PlaylistsCubit>().setColor(
-    pl.id,
-    picked == auto ? null : picked,
-  );
 }
 
 /// 이미지 하위 메뉴: 사진에서 고르기 · (이미지가 있으면) 기본 이미지로.
@@ -180,6 +151,7 @@ Future<void> _delete(
   final l10n = context.l10n;
   final cubit = context.read<PlaylistsCubit>();
   final covers = context.read<CoverCubit>();
+  final colors = context.read<CoverColorCubit>();
   final messenger = ScaffoldMessenger.of(context);
   final ok = await showDialog<bool>(
     context: context,
@@ -189,6 +161,7 @@ Future<void> _delete(
   if (ok != true) return;
   await cubit.delete(pl.id);
   await covers.clear(CoverKey.playlist(pl.id));
+  await colors.clear(CoverKey.playlist(pl.id));
   messenger.showSnackBar(SnackBar(content: Text(l10n.playlistDeleted)));
   onDeleted?.call();
 }

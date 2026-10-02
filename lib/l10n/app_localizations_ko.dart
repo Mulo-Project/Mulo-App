@@ -735,18 +735,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playlistColorAuto => '자동';
 
   @override
-  String playlistColorOption(String name) {
-    return '카드 색 $name';
+  String get colorSheetTitle => '색 바꾸기';
+
+  @override
+  String get colorCustom => '색상 직접 고르기';
+
+  @override
+  String colorOption(int n) {
+    return '색 $n';
   }
 
   @override
-  String get playlistColorPrimary => '주 색';
-
-  @override
-  String get playlistColorSecondary => '보조 색';
-
-  @override
-  String get playlistColorTertiary => '포인트 색';
+  String get albumColorTooltip => '앨범 색 바꾸기';
 
   @override
   String get playlistSummaryEmpty => '비어 있어요';
@@ -782,6 +782,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get trackMenuCover => '커버 이미지 설정';
+
+  @override
+  String get trackMenuColor => '커버 색 바꾸기';
 
   @override
   String get trackMenuDelete => '삭제';

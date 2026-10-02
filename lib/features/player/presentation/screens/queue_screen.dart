@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../library/domain/entities/track.dart';
 import '../bloc/now_playing_cubit.dart';
@@ -67,6 +68,10 @@ class QueueScreen extends StatelessWidget {
                               title: state.queue[i].title,
                               subtitle: state.queue[i].artist,
                               tone: toneFor(state.queue[i].id),
+                              color: coverColorOf(
+                                context,
+                                CoverKey.track(state.queue[i].id),
+                              ),
                               artwork: coverImageOf(
                                 context,
                                 CoverKey.track(state.queue[i].id),

@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../core/design/design.dart';
 import '../core/di/injector.dart';
 import '../core/l10n/l10n.dart';
+import '../features/covers/presentation/bloc/cover_color_cubit.dart';
 import '../features/covers/presentation/bloc/cover_cubit.dart';
 import '../features/lyrics/presentation/bloc/lyrics_cubit.dart';
 import '../features/downloads/presentation/bloc/download_queue_cubit.dart';
@@ -50,6 +51,7 @@ class _MusicAppState extends State<MusicApp> {
         BlocProvider(create: (_) => sl<ThemeCubit>()..load()),
         BlocProvider(create: (_) => sl<AppLockCubit>()..load()),
         BlocProvider(create: (_) => sl<CoverCubit>()..load()),
+        BlocProvider(create: (_) => sl<CoverColorCubit>()..load()),
         BlocProvider(create: (_) => sl<LyricsCubit>()),
         BlocProvider(create: (_) => sl<LibraryCubit>()..start()),
         BlocProvider(create: (_) => sl<LibraryImportCubit>()),

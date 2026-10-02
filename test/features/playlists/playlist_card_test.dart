@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
+import 'package:music_download_play_app/core/design/design.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 import 'package:music_download_play_app/features/playlists/domain/entities/playlist.dart';
 
@@ -20,6 +21,7 @@ Track _t(String id, String title) => Track(
 void main() {
   late MemoryPlaylistRepository repo;
   late MemoryCoverRepository covers;
+  late MemoryCoverColorRepository colors;
 
   setUp(() {
     final tracks = [_t('t1', '첫 곡'), _t('t2', '둘째 곡')];
@@ -34,6 +36,7 @@ void main() {
     ], tracks);
     repo.members['pl1'] = {'t1', 't2'};
     covers = MemoryCoverRepository();
+    colors = MemoryCoverColorRepository();
   });
 
   Future<void> pumpPlaylists(
@@ -44,6 +47,7 @@ void main() {
       tracks: [_t('t1', '첫 곡'), _t('t2', '둘째 곡')],
       playlists: repo,
       covers: covers,
+      coverColors: colors,
       imageSource: image,
     );
     tester.view.physicalSize = const Size(1170, 2532);
@@ -90,24 +94,19 @@ void main() {
     expect(find.text('재생목록 삭제'), findsOneWidget);
   });
 
-  testWidgets('카드 색은 하위 메뉴에서 색 아이콘과 이름으로 고른다', (tester) async {
+  testWidgets('카드 색은 시트에서 견본으로 고르고 자동으로 되돌린다', (tester) async {
     await pumpPlaylists(tester);
     await openMenu(tester);
     await tester.tap(find.text('카드 색'));
     await tester.pumpAndSettle();
-    for (final label in ['자동', '주 색', '보조 색', '포인트 색']) {
-      expect(find.text(label), findsOneWidget, reason: label);
-    }
-    await tester.tap(find.text('보조 색'));
+    expect(find.text('색 바꾸기'), findsOneWidget);
+    await tester.tap(find.bySemanticsLabel('색 7'));
     await tester.pumpAndSettle();
-    expect(repo.colors['pl1'], 1);
+    expect(colors.saved['playlist:pl1'], ColorPicker.presets[6].toARGB32());
 
-    await openMenu(tester);
-    await tester.tap(find.text('카드 색'));
+    await tester.tap(find.bySemanticsLabel('자동'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('자동'));
-    await tester.pumpAndSettle();
-    expect(repo.colors['pl1'], isNull);
+    expect(colors.saved.containsKey('playlist:pl1'), isFalse);
   });
 
   testWidgets('이미지는 따로 열리는 팝업에서 고른다', (tester) async {
@@ -189,12 +188,12 @@ void main() {
     await tester.tap(find.byTooltip('새 재생목록'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(EditableText), '새 목록');
-    await tester.tap(find.bySemanticsLabel('카드 색 포인트 색'));
+    await tester.tap(find.bySemanticsLabel('색 10'));
     await tester.pump();
     await tester.tap(find.text('만들기'));
     await tester.pumpAndSettle();
     expect(find.text('새 목록'), findsOneWidget);
-    expect(repo.lists.last.colorIndex, 2);
+    expect(colors.saved['playlist:pl3'], ColorPicker.presets[9].toARGB32());
   });
 
   testWidgets('새 재생목록을 만들 때 이미지를 고르면 커버로 저장된다', (tester) async {
@@ -206,11 +205,11 @@ void main() {
     await tester.pumpAndSettle();
     // 이미지를 고르면 색 고르기는 사라진다.
     expect(find.text('이미지 바꾸기'), findsOneWidget);
-    expect(find.bySemanticsLabel('카드 색 주 색'), findsNothing);
+    expect(find.bySemanticsLabel('색 1'), findsNothing);
     await tester.tap(find.text('만들기'));
     await tester.pumpAndSettle();
     expect(covers.saved['playlist:pl3'], '/tmp/new.png');
-    expect(repo.lists.last.colorIndex, isNull);
+    expect(colors.saved, isEmpty);
   });
 
   testWidgets('카드를 누르면 재생목록 상세로 가서 담긴 곡이 보이고, 곡 메뉴는 빼기 · 파일 삭제', (

@@ -186,8 +186,7 @@ void main() {
     test('이름 바꾸기 · 삭제 (담긴 곡은 보관함에 남는다)', () async {
       final library = DriftLibraryRepository(db);
       await library.addTracks([track('a', 'A곡', '가수')]);
-      final pl = await repo.create('모음', colorIndex: 1);
-      expect((await userLists()).single.colorIndex, 1);
+      final pl = await repo.create('모음');
       await repo.addTrack('a', [pl.id]);
 
       await repo.rename(pl.id, '새 이름');
@@ -197,15 +196,6 @@ void main() {
       expect(await userLists(), isEmpty);
       expect(await repo.watchTracks(pl.id).first, isEmpty);
       expect(await library.watchTracks().first, hasLength(1));
-    });
-
-    test('카드 색을 정하고 null로 자동으로 되돌린다', () async {
-      final pl = await repo.create('모음');
-      expect((await userLists()).single.colorIndex, isNull);
-      await repo.setColor(pl.id, 2);
-      expect((await userLists()).single.colorIndex, 2);
-      await repo.setColor(pl.id, null);
-      expect((await userLists()).single.colorIndex, isNull);
     });
   });
 }

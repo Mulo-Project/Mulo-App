@@ -5,15 +5,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../bloc/playlists_cubit.dart';
-import 'playlist_card.dart';
 
 /// 새 재생목록: 이름 · (이미지가 없을 때의) 카드 색 · 이미지를 정해 만든다.
 /// 만들면 만든 재생목록 id를 돌려주고, 닫으면 null.
 Future<String?> showNewPlaylistSheet(BuildContext context) {
   final playlists = context.read<PlaylistsCubit>();
   final covers = context.read<CoverCubit>();
+  final colors = context.read<CoverColorCubit>();
   return showModalBottomSheet<String>(
     context: context,
     backgroundColor: context.palette.surface,
@@ -27,6 +28,7 @@ Future<String?> showNewPlaylistSheet(BuildContext context) {
       providers: [
         BlocProvider.value(value: playlists),
         BlocProvider.value(value: covers),
+        BlocProvider.value(value: colors),
       ],
       child: const _NewPlaylistSheet(),
     ),
@@ -44,7 +46,7 @@ class _NewPlaylistSheetState extends State<_NewPlaylistSheet> {
   final _name = TextEditingController();
 
   /// 고른 카드 색 (null이면 자동).
-  int? _colorIndex;
+  Color? _color;
 
   /// 고른 이미지 파일 (아직 저장 전).
   String? _imagePath;
@@ -63,13 +65,15 @@ class _NewPlaylistSheetState extends State<_NewPlaylistSheet> {
   Future<void> _create() async {
     final playlists = context.read<PlaylistsCubit>();
     final covers = context.read<CoverCubit>();
+    final colors = context.read<CoverColorCubit>();
     final path = _imagePath;
-    final made = await playlists.create(
-      _name.text,
-      // 이미지가 있으면 색은 카드에 보이지 않는다.
-      colorIndex: path == null ? _colorIndex : null,
-    );
+    final color = _color;
+    final made = await playlists.create(_name.text);
     if (made == null) return;
+    // 이미지가 있으면 색은 카드에 보이지 않는다.
+    if (path == null && color != null) {
+      await colors.setColor(CoverKey.playlist(made.id), color);
+    }
     if (path != null) {
       await covers.setFromFile(CoverKey.playlist(made.id), path);
     }
@@ -108,10 +112,8 @@ class _NewPlaylistSheetState extends State<_NewPlaylistSheet> {
                   ArtworkBox(
                     image: path == null ? null : FileImage(File(path)),
                     size: 64,
-                    radius: AppRadii.md,
-                    tone: _colorIndex == null
-                        ? GlowTone.primary
-                        : GlowTone.values[_colorIndex!],
+                    radius: AppRadii.sm,
+                    color: _color,
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
@@ -131,88 +133,17 @@ class _NewPlaylistSheetState extends State<_NewPlaylistSheet> {
                 const SizedBox(height: AppSpacing.md),
                 Text(l10n.playlistMenuColor, style: text.labelLarge),
                 const SizedBox(height: AppSpacing.xs),
-                Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.sm,
-                  children: [
-                    _ColorDot(
-                      label: l10n.playlistColorAuto,
-                      tone: GlowTone.primary,
-                      auto: true,
-                      selected: _colorIndex == null,
-                      onTap: () => setState(() => _colorIndex = null),
-                    ),
-                    for (final tone in GlowTone.values)
-                      _ColorDot(
-                        label: l10n.playlistColorOption(
-                          playlistToneName(l10n, tone),
-                        ),
-                        tone: tone,
-                        selected: _colorIndex == tone.index,
-                        onTap: () => setState(() => _colorIndex = tone.index),
-                      ),
-                  ],
+                ColorPicker(
+                  selected: _color,
+                  autoLabel: l10n.playlistColorAuto,
+                  customLabel: l10n.colorCustom,
+                  optionLabel: l10n.colorOption,
+                  onChanged: (c) => setState(() => _color = c),
                 ),
               ],
               const SizedBox(height: AppSpacing.lg),
               PillButton(label: l10n.playlistCreate, onPressed: _create),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// 카드 색 고르기 동그라미. 자동은 새로고침 표시.
-class _ColorDot extends StatelessWidget {
-  const _ColorDot({
-    required this.label,
-    required this.tone,
-    required this.selected,
-    required this.onTap,
-    this.auto = false,
-  });
-
-  final String label;
-  final GlowTone tone;
-  final bool selected;
-  final bool auto;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final p = context.palette;
-    final glow = context.tokens.glow(tone);
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: label,
-      child: Tooltip(
-        message: label,
-        child: GestureDetector(
-          onTap: onTap,
-          child: AnimatedContainer(
-            duration: AppMotion.medium,
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: glow,
-              ),
-              border: Border.all(
-                color: selected ? p.accent : p.outline,
-                width: selected ? 3 : 1,
-              ),
-            ),
-            child: auto
-                ? Icon(Icons.autorenew_rounded, size: 20, color: p.onGlow)
-                : (selected
-                      ? Icon(Icons.check_rounded, size: 20, color: p.onGlow)
-                      : null),
           ),
         ),
       ),

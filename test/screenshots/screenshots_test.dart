@@ -143,6 +143,6 @@ const _samplePlaylists = [
       artist: 'Neon Harbor',
     ),
   ),
-  Playlist(id: 'pl3', name: 'Workout Mix', trackCount: 32, colorIndex: 2),
+  Playlist(id: 'pl3', name: 'Workout Mix', trackCount: 32),
   Playlist(id: 'pl4', name: 'Rainy Day', trackCount: 0),
 ];
