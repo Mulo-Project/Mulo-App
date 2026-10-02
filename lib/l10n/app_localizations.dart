@@ -836,6 +836,36 @@ abstract class AppLocalizations {
   /// **'재생 대기열'**
   String get playerQueue;
 
+  /// No description provided for @outputSpeaker.
+  ///
+  /// In ko, this message translates to:
+  /// **'기기 스피커'**
+  String get outputSpeaker;
+
+  /// No description provided for @outputWired.
+  ///
+  /// In ko, this message translates to:
+  /// **'유선 이어폰'**
+  String get outputWired;
+
+  /// No description provided for @outputBluetooth.
+  ///
+  /// In ko, this message translates to:
+  /// **'블루투스'**
+  String get outputBluetooth;
+
+  /// No description provided for @outputUsb.
+  ///
+  /// In ko, this message translates to:
+  /// **'USB 오디오'**
+  String get outputUsb;
+
+  /// No description provided for @outputOther.
+  ///
+  /// In ko, this message translates to:
+  /// **'외부 출력'**
+  String get outputOther;
+
   /// No description provided for @queueShuffle.
   ///
   /// In ko, this message translates to:

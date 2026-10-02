@@ -8,11 +8,13 @@ import io.flutter.embedding.engine.FlutterEngine
 class MainActivity : FlutterFragmentActivity() {
     private var mediaStore: MediaStoreChannel? = null
     private var lyrics: LyricsChannel? = null
+    private var audioOutput: AudioOutputChannel? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         mediaStore = MediaStoreChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger) { this }
         lyrics = LyricsChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
+        audioOutput = AudioOutputChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
     }
 
     @Deprecated("Deprecated in Java")
@@ -27,6 +29,8 @@ class MainActivity : FlutterFragmentActivity() {
         mediaStore = null
         lyrics?.dispose()
         lyrics = null
+        audioOutput?.dispose()
+        audioOutput = null
         super.cleanUpFlutterEngine(flutterEngine)
     }
 }

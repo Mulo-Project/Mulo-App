@@ -403,6 +403,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerQueue => 'Up next';
 
   @override
+  String get outputSpeaker => 'Phone speaker';
+
+  @override
+  String get outputWired => 'Wired headphones';
+
+  @override
+  String get outputBluetooth => 'Bluetooth';
+
+  @override
+  String get outputUsb => 'USB audio';
+
+  @override
+  String get outputOther => 'External output';
+
+  @override
   String get queueShuffle => 'Shuffle up next';
 
   @override

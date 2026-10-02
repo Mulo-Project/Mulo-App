@@ -394,6 +394,21 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playerQueue => '재생 대기열';
 
   @override
+  String get outputSpeaker => '기기 스피커';
+
+  @override
+  String get outputWired => '유선 이어폰';
+
+  @override
+  String get outputBluetooth => '블루투스';
+
+  @override
+  String get outputUsb => 'USB 오디오';
+
+  @override
+  String get outputOther => '외부 출력';
+
+  @override
   String get queueShuffle => '다음 곡 섞기';
 
   @override
