@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../core/design/design.dart';
 import '../core/l10n/l10n.dart';
 import '../features/covers/presentation/bloc/cover_cubit.dart';
+import '../features/library/domain/entities/track.dart' show formatDuration;
 import '../features/home/presentation/bloc/play_recorder_cubit.dart';
 import '../features/player/presentation/bloc/audio_output_cubit.dart';
 import '../features/player/presentation/bloc/now_playing_cubit.dart';
@@ -87,25 +88,6 @@ class AppShell extends StatelessWidget {
   }
 }
 
-IconData _outputIcon(AudioOutputKind kind) => switch (kind) {
-  AudioOutputKind.speaker => Icons.speaker_rounded,
-  AudioOutputKind.wired => Icons.headphones_rounded,
-  AudioOutputKind.bluetooth => Icons.bluetooth_audio_rounded,
-  AudioOutputKind.usb => Icons.usb_rounded,
-  AudioOutputKind.other => Icons.volume_up_rounded,
-};
-
-String _outputLabel(AppLocalizations l10n, AudioOutput out) {
-  if (out.name.isNotEmpty) return out.name;
-  return switch (out.kind) {
-    AudioOutputKind.speaker => l10n.outputSpeaker,
-    AudioOutputKind.wired => l10n.outputWired,
-    AudioOutputKind.bluetooth => l10n.outputBluetooth,
-    AudioOutputKind.usb => l10n.outputUsb,
-    AudioOutputKind.other => l10n.outputOther,
-  };
-}
-
 class _ShellMiniPlayer extends StatelessWidget {
   const _ShellMiniPlayer();
 
@@ -116,7 +98,6 @@ class _ShellMiniPlayer extends StatelessWidget {
     if (track == null) return const SizedBox.shrink();
     final vm = context.read<NowPlayingCubit>();
     final l10n = context.l10n;
-    final out = context.watch<AudioOutputCubit>().state;
 
     return Hero(
       tag: 'now-playing',
@@ -128,14 +109,16 @@ class _ShellMiniPlayer extends StatelessWidget {
         isPlaying: state.isPlaying,
         playLabel: l10n.actionPlay,
         pauseLabel: l10n.actionPause,
+        previousLabel: l10n.actionPrevious,
         nextLabel: l10n.actionNext,
+        positionText: formatDuration(state.position),
+        durationText: formatDuration(track.duration),
         queueLabel: l10n.playerQueue,
         onTap: () => context.push(Routes.player),
         onPlayPause: vm.togglePlay,
+        onPrevious: vm.previous,
         onNext: vm.next,
         onQueue: () => context.push(Routes.queue),
-        outputIcon: out == null ? null : _outputIcon(out.kind),
-        outputLabel: out == null ? null : _outputLabel(l10n, out),
       ),
     );
   }
