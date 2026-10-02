@@ -2,6 +2,7 @@ import '../../../../core/usecase/usecase.dart';
 import '../entities/download_item.dart';
 import '../entities/download_request.dart';
 import '../repositories/download_queue_repository.dart';
+import '../repositories/download_settings_repository.dart';
 
 /// 대기열 구독 (상세 기능: 다운로드 대기열 #7).
 class WatchDownloadQueue
@@ -57,4 +58,38 @@ class CancelDownload implements UseCase<void, String> {
 
   @override
   Future<void> call(String id) => _repo.cancel(id);
+}
+
+/// 기본 저장 위치 읽기.
+class LoadSavePath implements UseCase<String, NoParams> {
+  const LoadSavePath(this._repo);
+
+  final DownloadSettingsRepository _repo;
+
+  @override
+  Future<String> call(NoParams _) => _repo.loadSavePath();
+}
+
+/// 기본 저장 위치 정하기. 앞뒤 공백을 지우고, 비어 있으면 바꾸지 않는다.
+class SaveSavePath implements UseCase<void, String> {
+  const SaveSavePath(this._repo);
+
+  final DownloadSettingsRepository _repo;
+
+  @override
+  Future<void> call(String path) async {
+    final trimmed = path.trim();
+    if (trimmed.isEmpty) return;
+    await _repo.saveSavePath(trimmed);
+  }
+}
+
+/// 폴더 선택기를 연다. 고른 폴더 경로, 취소하면 null.
+class PickSaveFolder implements UseCase<String?, NoParams> {
+  const PickSaveFolder(this._repo);
+
+  final DownloadSettingsRepository _repo;
+
+  @override
+  Future<String?> call(NoParams _) => _repo.pickFolder();
 }

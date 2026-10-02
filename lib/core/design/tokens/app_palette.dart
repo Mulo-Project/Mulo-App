@@ -41,6 +41,12 @@ class AppPalette {
   /// 브랜드 색: 테마와 상관없이 항상 같다 (유튜브 아이콘).
   static const Color youtubeRed = Color(0xFFFF0000);
 
+  /// 아이콘 위의 흰색 (유튜브 재생 삼각형, 다크 테마의 웹 아이콘).
+  static const Color markWhite = Color(0xFFFFFFFF);
+
+  /// 라이트 테마의 웹 아이콘 (흰 배경에서도 보이는 연한 회색).
+  static const Color markLightGray = Color(0xFFB0B6C0);
+
   // 라이트 테마 수채화 팔레트 원색.
   static const Color watercolorLavender = Color(0xFF9A8CF0);
   static const Color watercolorCoral = Color(0xFFE8708F);

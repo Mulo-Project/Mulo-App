@@ -7,6 +7,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../../core/sample/sample_data.dart';
 import '../../../downloads/domain/entities/download_options.dart';
+import '../../../downloads/presentation/bloc/download_settings_cubit.dart';
 import '../../../library/presentation/widgets/loaded_folders_tile.dart';
 import '../../../security/presentation/bloc/app_lock_cubit.dart';
 import '../../../security/presentation/screens/pin_entry_screen.dart';
@@ -41,6 +42,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final themeCtrl = context.read<ThemeCubit>();
     final lock = context.watch<AppLockCubit>().state;
     final lockCtrl = context.read<AppLockCubit>();
+    final savePath = context.watch<DownloadSettingsCubit>().state;
 
     return SafeArea(
       bottom: false,
@@ -86,9 +88,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     SettingRow(
                       title: l10n.settingsSavePath,
-                      description: SampleData.savePath,
+                      description: savePath.isEmpty
+                          ? l10n.settingsSavePathDesc
+                          : savePath,
                       trailing: const _Chevron(),
-                      onTap: () {},
+                      onTap: context.read<DownloadSettingsCubit>().pickAndSave,
                     ),
                     const LoadedFoldersTile(),
                     SettingRow(

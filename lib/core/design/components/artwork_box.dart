@@ -40,28 +40,34 @@ class ArtworkBox extends StatelessWidget {
     final glow = color != null
         ? glowFromColor(color!)
         : context.tokens.glow(tone);
+    final placeholder = DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: RadialGradient(
+          center: const Alignment(-.6, -.7),
+          radius: 1.4,
+          colors: glow,
+          stops: const [0, .5, 1],
+        ),
+      ),
+      child: Icon(
+        icon,
+        color: context.palette.onGlow.withValues(alpha: .9),
+        size: size * .4,
+      ),
+    );
     return ClipRRect(
       borderRadius: BorderRadius.circular(radius),
       child: SizedBox(
         width: width ?? size,
         height: size,
+        // 이미지를 못 읽으면(네트워크 썸네일 등) 그라데이션 자리로 돌아간다.
         child: image != null
-            ? Image(image: image!, fit: BoxFit.cover)
-            : DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: const Alignment(-.6, -.7),
-                    radius: 1.4,
-                    colors: glow,
-                    stops: const [0, .5, 1],
-                  ),
-                ),
-                child: Icon(
-                  icon,
-                  color: context.palette.onGlow.withValues(alpha: .9),
-                  size: size * .4,
-                ),
-              ),
+            ? Image(
+                image: image!,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => placeholder,
+              )
+            : placeholder,
       ),
     );
   }

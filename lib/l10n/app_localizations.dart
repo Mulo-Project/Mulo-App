@@ -338,18 +338,6 @@ abstract class AppLocalizations {
   /// **'받는 중'**
   String get statusDownloading;
 
-  /// No description provided for @statusQueued.
-  ///
-  /// In ko, this message translates to:
-  /// **'대기'**
-  String get statusQueued;
-
-  /// No description provided for @statusPaused.
-  ///
-  /// In ko, this message translates to:
-  /// **'일시정지'**
-  String get statusPaused;
-
   /// No description provided for @statusFailed.
   ///
   /// In ko, this message translates to:
@@ -529,6 +517,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'저장 위치'**
   String get settingsSavePath;
+
+  /// No description provided for @settingsSavePathDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱 기본 폴더'**
+  String get settingsSavePathDesc;
 
   /// No description provided for @settingsLoadedFolders.
   ///
@@ -1381,6 +1375,24 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'장르'**
   String get downloadFieldGenre;
+
+  /// No description provided for @downloadFieldSavePath.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 위치'**
+  String get downloadFieldSavePath;
+
+  /// No description provided for @downloadGenreExisting.
+  ///
+  /// In ko, this message translates to:
+  /// **'기존 장르에서 고르기'**
+  String get downloadGenreExisting;
+
+  /// No description provided for @downloadPickFolder.
+  ///
+  /// In ko, this message translates to:
+  /// **'폴더 고르기'**
+  String get downloadPickFolder;
 
   /// No description provided for @downloadPlaylistsLabel.
   ///

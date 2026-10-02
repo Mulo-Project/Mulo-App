@@ -25,13 +25,19 @@ class SearchSourceMenu extends StatelessWidget {
       SearchSource.web => l10n.sourceWeb,
     };
 
-    IconData icon(SearchSource s) => switch (s) {
-      SearchSource.youtube => Icons.smart_display_rounded,
-      SearchSource.web => Icons.public_rounded,
-    };
+    // 웹 아이콘: 다크는 흰색, 라이트는 연한 회색.
+    final webColor = Theme.of(context).brightness == Brightness.dark
+        ? AppPalette.markWhite
+        : AppPalette.markLightGray;
 
-    Color tint(SearchSource s, Color fallback) =>
-        s == SearchSource.youtube ? AppPalette.youtubeRed : fallback;
+    Widget icon(SearchSource s, double size) => switch (s) {
+      SearchSource.youtube => YoutubeMark(size: size),
+      SearchSource.web => Icon(
+        Icons.public_rounded,
+        size: size,
+        color: webColor,
+      ),
+    };
 
     return PopupMenuButton<SearchSource>(
       tooltip: l10n.searchSourceTooltip,
@@ -48,11 +54,7 @@ class SearchSourceMenu extends StatelessWidget {
             value: s,
             child: Row(
               children: [
-                Icon(
-                  icon(s),
-                  size: 20,
-                  color: tint(s, s == source ? p.accent : p.onSurfaceMuted),
-                ),
+                icon(s, 22),
                 const SizedBox(width: AppSpacing.xs),
                 Text(label(s)),
               ],
@@ -65,9 +67,7 @@ class SearchSourceMenu extends StatelessWidget {
           height: 52,
           child: Row(
             mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon(source), color: tint(source, p.accent), size: 22),
-            ],
+            children: [icon(source, 24)],
           ),
         ),
       ),

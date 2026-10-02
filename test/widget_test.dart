@@ -48,7 +48,7 @@ void main() {
     expect(find.text('다운로드'), findsNothing);
     await tester.tap(find.text('검색').last);
     await tester.pumpAndSettle();
-    expect(find.byIcon(Icons.smart_display_rounded), findsOneWidget);
+    expect(find.byKey(const ValueKey('youtube-mark')), findsOneWidget);
   });
 
   testWidgets('테마 미리보기: 실제 탭을 오가며 보고, 취소하면 원래대로 돌아간다', (tester) async {

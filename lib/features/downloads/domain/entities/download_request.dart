@@ -10,6 +10,7 @@ class DownloadRequest extends Equatable {
     this.genre = '',
     this.playlistIds = const {},
     this.quality = Quality.best,
+    this.savePath = '',
   });
 
   final String title;
@@ -20,6 +21,9 @@ class DownloadRequest extends Equatable {
   final Set<String> playlistIds;
   final Quality quality;
 
+  /// 받은 곡을 저장할 폴더. 비어 있으면 기본 저장 위치.
+  final String savePath;
+
   /// 문자열 앞뒤 공백을 지운 사본.
   DownloadRequest normalized() => DownloadRequest(
     title: title.trim(),
@@ -27,8 +31,16 @@ class DownloadRequest extends Equatable {
     genre: genre.trim(),
     playlistIds: playlistIds,
     quality: quality,
+    savePath: savePath.trim(),
   );
 
   @override
-  List<Object?> get props => [title, artist, genre, playlistIds, quality];
+  List<Object?> get props => [
+    title,
+    artist,
+    genre,
+    playlistIds,
+    quality,
+    savePath,
+  ];
 }
