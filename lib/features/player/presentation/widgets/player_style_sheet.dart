@@ -7,32 +7,48 @@ import '../bloc/player_style_cubit.dart';
 
 /// 재생 화면의 더 보기 메뉴에서 여는 "플레이어 테마" 시트.
 /// 고르면 바로 적용되고, 시트 뒤의 재생 화면이 그대로 미리 보기가 된다.
+///
+/// 시트가 떠 있는 동안 높이를 [playerStyleSheetHeight]에 알려, 재생 화면이 그만큼
+/// 줄어들어 시트 위에 화면 전체가 보이게 한다.
 Future<void> showPlayerStyleSheet(BuildContext context) =>
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: context.palette.surface,
       barrierColor: Colors.transparent,
-      showDragHandle: true,
       useRootNavigator: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadii.md)),
       ),
       builder: (_) => const _PlayerStyleSheet(),
-    );
+    ).whenComplete(() => playerStyleSheetHeight.value = 0);
 
-class _PlayerStyleSheet extends StatelessWidget {
+/// 플레이어 테마 시트가 가리는 아래쪽 높이 (시트가 없으면 0).
+final playerStyleSheetHeight = ValueNotifier<double>(0);
+
+class _PlayerStyleSheet extends StatefulWidget {
   const _PlayerStyleSheet();
 
+  @override
+  State<_PlayerStyleSheet> createState() => _PlayerStyleSheetState();
+}
+
+class _PlayerStyleSheetState extends State<_PlayerStyleSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
     final current = context.watch<PlayerStyleCubit>().state;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final box = context.findRenderObject();
+      if (mounted && box is RenderBox && box.hasSize) {
+        playerStyleSheetHeight.value = box.size.height;
+      }
+    });
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg,
-          0,
+          AppSpacing.lg,
           AppSpacing.lg,
           AppSpacing.md,
         ),

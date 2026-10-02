@@ -734,27 +734,21 @@ class EqualizerButton extends StatelessWidget {
 /// 3) 이전 · 재생 · 다음
 /// 4) 셔플 · 반복 (왼쪽), 수면 타이머 · 이퀄라이저 · 대기열 (오른쪽)
 ///
-/// [seekBar]가 false면 진행 막대는 커버 쪽(호 · 커스텀)에 있어, 2줄 가운데엔 시간만 둔다.
-/// [neu]면 이전 · 다음 · 10초 버튼을 볼록한 원 위에 얹는다 (커스텀).
+/// [seekBar]가 false면 진행 막대는 커버 쪽(호 · 커스텀, [MorphSeek])에 있어, 2줄 가운데엔 시간만 둔다.
 class PlayerControls extends StatelessWidget {
   const PlayerControls({
     super.key,
     required this.data,
     required this.play,
     this.seekBar = true,
-    this.neu = false,
   });
 
   final PlayerLayoutData data;
   final Widget play;
   final bool seekBar;
-  final bool neu;
 
   @override
   Widget build(BuildContext context) {
-    final tint = neu ? context.palette.primary : null;
-    Widget wrap(Widget w, double size) =>
-        neu ? NeuCircle(size: size, child: w) : w;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: Column(
@@ -785,7 +779,7 @@ class PlayerControls extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           Row(
             children: [
-              wrap(SeekStepButton(data: data, forward: false, color: tint), 44),
+              SeekStepButton(data: data, forward: false),
               Expanded(
                 child: seekBar
                     ? Padding(
@@ -805,16 +799,16 @@ class PlayerControls extends StatelessWidget {
                       )
                     : Center(child: TimeText(data: data)),
               ),
-              wrap(SeekStepButton(data: data, forward: true, color: tint), 44),
+              SeekStepButton(data: data, forward: true),
             ],
           ),
           const SizedBox(height: AppSpacing.xs),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              wrap(SkipButton(data: data, next: false, color: tint), 56),
+              SkipButton(data: data, next: false),
               play,
-              wrap(SkipButton(data: data, next: true, color: tint), 56),
+              SkipButton(data: data, next: true),
             ],
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -875,137 +869,263 @@ class NeuCircle extends StatelessWidget {
   );
 }
 
-/// 원 둘레를 누르거나 끌어서 위치를 옮기는 영역 ([child]는 원 안쪽).
+/// 모양 윤곽을 그리는 길. [extend]는 영역 위로 늘린 높이 (화면 맨 위까지 잇는 용도).
+typedef SeekPathBuilder = Path Function(Size size, double extend);
+
+/// 진행 막대가 모양(호 · 틀)을 따라 돌다가, 가사 보기에서는 곧은 막대로 부드럽게 펴진다.
 ///
-/// [start]에서 시계 방향으로 [sweep]만큼이 0 ~ 1. 원 안쪽([inner] 비율 이하)을
-/// 눌러 시작한 것은 무시한다 (가운데 버튼과 겹치지 않게).
-class RingSeek extends StatefulWidget {
-  const RingSeek({
+/// [straight]가 켜지면 윤곽 위의 점들이 영역 아래쪽의 곧은 막대로 옮겨 가고, 커버는 흐려지고
+/// 가사가 나타난다. [reachTop]이면 영역 위로 화면 맨 위까지 늘려서 그린다.
+class MorphSeek extends StatefulWidget {
+  const MorphSeek({
     super.key,
-    required this.size,
-    required this.start,
-    required this.sweep,
+    required this.progress,
     required this.onSeek,
-    this.inner = .7,
-    this.child,
-  });
-
-  final double size;
-  final double start;
-  final double sweep;
-  final double inner;
-  final ValueChanged<double> onSeek;
-  final Widget? child;
-
-  /// [local]이 가리키는 호 위의 위치(0 ~ 1). 호가 열린 쪽은 가까운 끝으로 붙인다.
-  static double fractionAt(
-    Offset local,
-    Size size, {
-    required double start,
-    required double sweep,
-  }) {
-    final d = local - size.center(Offset.zero);
-    final rel = (math.atan2(d.dy, d.dx) - start) % (2 * math.pi);
-    if (rel <= sweep) return rel / sweep;
-    return rel - sweep < (2 * math.pi - sweep) / 2 ? 1 : 0;
-  }
-
-  @override
-  State<RingSeek> createState() => _RingSeekState();
-}
-
-class _RingSeekState extends State<RingSeek> {
-  var _dragging = false;
-
-  bool _onRing(Offset local) {
-    final d = (local - Offset(widget.size / 2, widget.size / 2)).distance;
-    return d >= widget.size / 2 * widget.inner;
-  }
-
-  void _seek(Offset local) => widget.onSeek(
-    RingSeek.fractionAt(
-      local,
-      Size.square(widget.size),
-      start: widget.start,
-      sweep: widget.sweep,
-    ),
-  );
-
-  @override
-  Widget build(BuildContext context) => GestureDetector(
-    behavior: HitTestBehavior.translucent,
-    onTapDown: (d) {
-      if (_onRing(d.localPosition)) _seek(d.localPosition);
-    },
-    onPanStart: (d) {
-      _dragging = _onRing(d.localPosition);
-      if (_dragging) _seek(d.localPosition);
-    },
-    onPanUpdate: (d) {
-      if (_dragging) _seek(d.localPosition);
-    },
-    onPanEnd: (_) => _dragging = false,
-    child: SizedBox.square(dimension: widget.size, child: widget.child),
-  );
-}
-
-/// 가는 원형 진행 호 + 끝의 손잡이.
-/// [start]에서 시계 방향으로 [sweep]만큼이 0 ~ 1 (기본: 12시 방향에서 한 바퀴).
-class ThinRingPainter extends CustomPainter {
-  ThinRingPainter({
-    required this.value,
+    required this.straight,
+    required this.pathOf,
+    required this.cover,
+    required this.lyrics,
     required this.track,
     required this.fill,
-    required this.shadow,
-    this.stroke = 3,
-    this.knob = 6,
-    this.start = -math.pi / 2,
-    this.sweep = 2 * math.pi,
+    this.knobRing,
+    this.reachTop = false,
   });
 
-  final double value;
+  final double progress;
+  final ValueChanged<double> onSeek;
+  final bool straight;
+  final SeekPathBuilder pathOf;
+
+  /// 커버 모양 (늘린 영역 전체에 깔린다).
+  final Widget Function(Size size, double extend) cover;
+  final Widget lyrics;
   final Color track;
   final Color fill;
-  final Color shadow;
-  final double stroke;
+  final Color? knobRing;
+  final bool reachTop;
 
-  /// 손잡이 반지름.
-  final double knob;
-  final double start;
-  final double sweep;
+  /// 곧은 막대가 놓이는 아래 띠 높이.
+  static const band = 36.0;
+  static const _samples = 200;
+
+  /// [points] 중 [local]에서 가장 가까운 점의 위치(0 ~ 1)와 거리.
+  static (double, double) nearest(List<Offset> points, Offset local) {
+    var best = 0;
+    var bestDist = double.infinity;
+    for (var i = 0; i < points.length; i++) {
+      final d = (points[i] - local).distance;
+      if (d < bestDist) {
+        bestDist = d;
+        best = i;
+      }
+    }
+    return (best / (points.length - 1), bestDist);
+  }
+
+  @override
+  State<MorphSeek> createState() => _MorphSeekState();
+}
+
+class _MorphSeekState extends State<MorphSeek>
+    with SingleTickerProviderStateMixin {
+  late final _c = AnimationController(
+    vsync: this,
+    duration: AppMotion.slow,
+    value: widget.straight ? 1 : 0,
+  );
+  var _extend = 0.0;
+  var _dragging = false;
+  var _points = const <Offset>[];
+
+  @override
+  void didUpdateWidget(MorphSeek old) {
+    super.didUpdateWidget(old);
+    if (old.straight != widget.straight) {
+      widget.straight ? _c.forward() : _c.reverse();
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  void _measure() {
+    if (!widget.reachTop) return;
+    final box = context.findRenderObject();
+    if (box is! RenderBox || !box.hasSize) return;
+    final dy = box.localToGlobal(Offset.zero).dy.clamp(0.0, 400.0);
+    if ((dy - _extend).abs() > .5) setState(() => _extend = dy);
+  }
+
+  List<Offset> _pointsFor(Size size, double t) {
+    final metric = widget.pathOf(size, _extend).computeMetrics().first;
+    final y = size.height - MorphSeek.band / 2 + 4;
+    const inset = AppSpacing.lg;
+    const n = MorphSeek._samples;
+    return [
+      for (var i = 0; i <= n; i++)
+        Offset.lerp(
+          metric.getTangentForOffset(metric.length * i / n)!.position,
+          Offset(inset + (size.width - inset * 2) * i / n, y),
+          t,
+        )!,
+    ];
+  }
+
+  bool _near(Offset local, double t) {
+    final (_, dist) = MorphSeek.nearest(_points, local);
+    return dist <= 44 - 16 * t;
+  }
+
+  void _seek(Offset local) =>
+      widget.onSeek(MorphSeek.nearest(_points, local).$1);
+
+  @override
+  Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _measure();
+    });
+    final p = context.palette;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Positioned(
+          top: -_extend,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: LayoutBuilder(
+            builder: (context, c) {
+              final size = c.biggest;
+              return AnimatedBuilder(
+                animation: _c,
+                builder: (context, _) {
+                  final t = Curves.easeInOutCubic.transform(_c.value);
+                  _points = _pointsFor(size, t);
+                  return Listener(
+                    behavior: HitTestBehavior.translucent,
+                    onPointerDown: (e) {
+                      _dragging = _near(e.localPosition, t);
+                      if (_dragging) _seek(e.localPosition);
+                    },
+                    onPointerMove: (e) {
+                      if (_dragging) _seek(e.localPosition);
+                    },
+                    onPointerUp: (_) => _dragging = false,
+                    onPointerCancel: (_) => _dragging = false,
+                    child: Stack(
+                      children: [
+                        if (t < 1)
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              child: Opacity(
+                                opacity: 1 - t,
+                                child: widget.cover(size, _extend),
+                              ),
+                            ),
+                          ),
+                        if (t > 0)
+                          Positioned(
+                            top: _extend,
+                            left: 0,
+                            right: 0,
+                            bottom: MorphSeek.band,
+                            child: IgnorePointer(
+                              ignoring: t < 1,
+                              child: Opacity(opacity: t, child: widget.lyrics),
+                            ),
+                          ),
+                        Positioned.fill(
+                          child: IgnorePointer(
+                            child: CustomPaint(
+                              painter: _MorphPainter(
+                                points: _points,
+                                value: widget.progress,
+                                t: t,
+                                track: Color.lerp(
+                                  widget.track,
+                                  p.onSurface.withValues(alpha: .2),
+                                  t,
+                                )!,
+                                fill: Color.lerp(widget.fill, p.onSurface, t)!,
+                                knobRing: widget.knobRing,
+                                shadow: p.scrim.withValues(alpha: .4),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MorphPainter extends CustomPainter {
+  _MorphPainter({
+    required this.points,
+    required this.value,
+    required this.t,
+    required this.track,
+    required this.fill,
+    required this.knobRing,
+    required this.shadow,
+  });
+
+  final List<Offset> points;
+  final double value;
+  final double t;
+  final Color track;
+  final Color fill;
+  final Color? knobRing;
+  final Color shadow;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = size.center(Offset.zero);
-    final radius = size.shortestSide / 2 - knob - 1;
-    final rect = Rect.fromCircle(center: center, radius: radius);
+    if (points.length < 2) return;
     final line = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = stroke
-      ..strokeCap = StrokeCap.round;
-    canvas.drawArc(rect, start, sweep, false, line..color = track);
-    final v = value.clamp(0.0, 1.0);
-    final done = sweep * v;
-    if (done > 0) {
-      canvas.drawArc(rect, start, done, false, line..color = fill);
+      ..strokeWidth = 4
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    canvas.drawPath(Path()..addPolygon(points, false), line..color = track);
+    final v = value.clamp(0.0, 1.0) * (points.length - 1);
+    final whole = v.floor();
+    final head = whole >= points.length - 1
+        ? points.last
+        : Offset.lerp(points[whole], points[whole + 1], v - whole)!;
+    if (v > 0) {
+      canvas.drawPath(
+        Path()..addPolygon([...points.take(whole + 1), head], false),
+        line..color = fill,
+      );
     }
-    final end = center + Offset.fromDirection(start + done, radius);
+    final r = 8 - t;
+    final ring = knobRing;
+    if (ring != null) canvas.drawCircle(head, r + 3, Paint()..color = ring);
     canvas.drawCircle(
-      end,
-      knob,
+      head,
+      r,
       Paint()
         ..color = shadow
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
     );
-    canvas.drawCircle(end, knob, Paint()..color = fill);
+    canvas.drawCircle(head, r, Paint()..color = fill);
   }
 
   @override
-  bool shouldRepaint(ThinRingPainter old) =>
+  bool shouldRepaint(_MorphPainter old) =>
+      old.points != points ||
       old.value != value ||
+      old.t != t ||
       old.track != track ||
-      old.fill != fill ||
-      old.shadow != shadow ||
-      old.start != start ||
-      old.sweep != sweep;
+      old.fill != fill;
 }

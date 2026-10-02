@@ -6,6 +6,7 @@ import '../bloc/now_playing_cubit.dart';
 import '../bloc/player_style_cubit.dart';
 import '../widgets/player_common.dart';
 import '../widgets/player_layouts.dart';
+import '../widgets/player_style_sheet.dart';
 
 /// 전체 화면 플레이어 (상세 기능: 미니·전체 화면 플레이어 #19, 기본 재생 컨트롤 #14,
 /// 셔플·반복 #15, 재생 대기열 편집 #16 — 대기열은 보기 · 선택만).
@@ -31,19 +32,37 @@ class _PlayerScreenState extends State<PlayerScreen> {
       backgroundColor: context.palette.background,
       body: track == null
           ? const AppBackground()
-          : _layout(
-              style,
-              PlayerLayoutData(
-                track: track,
-                state: state,
-                vm: context.read<NowPlayingCubit>(),
-                showLyrics: _showLyrics,
-                onToggleLyrics: () =>
-                    setState(() => _showLyrics = !_showLyrics),
+          : _shrinkForSheet(
+              _layout(
+                style,
+                PlayerLayoutData(
+                  track: track,
+                  state: state,
+                  vm: context.read<NowPlayingCubit>(),
+                  showLyrics: _showLyrics,
+                  onToggleLyrics: () =>
+                      setState(() => _showLyrics = !_showLyrics),
+                ),
               ),
             ),
     );
   }
+
+  /// 플레이어 테마 시트가 떠 있으면 화면 전체를 시트 위 빈 곳에 맞게 줄여 보여준다.
+  Widget _shrinkForSheet(Widget child) => LayoutBuilder(
+    builder: (context, c) => ValueListenableBuilder<double>(
+      valueListenable: playerStyleSheetHeight,
+      builder: (context, sheet, _) => AnimatedScale(
+        scale: c.maxHeight > 0
+            ? ((c.maxHeight - sheet) / c.maxHeight).clamp(.5, 1.0)
+            : 1,
+        alignment: Alignment.topCenter,
+        duration: AppMotion.medium,
+        curve: AppMotion.standard,
+        child: child,
+      ),
+    ),
+  );
 
   Widget _layout(PlayerStyle style, PlayerLayoutData data) => switch (style) {
     PlayerStyle.square => SquarePlayer(data: data),

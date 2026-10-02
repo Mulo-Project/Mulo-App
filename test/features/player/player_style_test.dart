@@ -58,19 +58,12 @@ void main() {
     expect(b.state, PlayerStyle.custom);
   });
 
-  test('원 둘레 위치를 0~1로 바꾼다', () {
-    const size = Size.square(100);
-    // 12시 방향에서 시작하는 한 바퀴.
-    double at(Offset o) => RingSeek.fractionAt(
-      o,
-      size,
-      start: -1.5707963267948966,
-      sweep: 6.283185307179586,
-    );
-    expect(at(const Offset(50, 0)), closeTo(0, .01));
-    expect(at(const Offset(100, 50)), closeTo(.25, .01));
-    expect(at(const Offset(50, 100)), closeTo(.5, .01));
-    expect(at(const Offset(0, 50)), closeTo(.75, .01));
+  test('진행 막대 윤곽 위 가장 가까운 점을 0~1로 바꾼다', () {
+    final points = [for (var i = 0; i <= 100; i++) Offset(i.toDouble(), 0)];
+    final (a, d) = MorphSeek.nearest(points, const Offset(25, 3));
+    expect(a, closeTo(.25, .001));
+    expect(d, closeTo(3, .001));
+    expect(MorphSeek.nearest(points, const Offset(500, 0)).$1, 1);
   });
 
   for (final style in PlayerStyle.values) {
