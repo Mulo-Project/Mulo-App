@@ -10,6 +10,7 @@ import '../../../library/presentation/widgets/track_menu.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../lyrics/presentation/widgets/lyrics_view.dart';
+import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../bloc/now_playing_cubit.dart';
 
 /// 전체 화면 플레이어 (상세 기능: 미니·전체 화면 플레이어 #19, 기본 재생 컨트롤 #14,
@@ -93,67 +94,101 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                   ),
                                 ),
                         ),
-                        const SizedBox(height: AppSpacing.lg),
-                        // 제목 · 아티스트는 왼쪽 정렬로 가볍게.
-                        SizedBox(
-                          width: double.infinity,
+                        const SizedBox(height: AppSpacing.sm),
+                        // 커버와 제목 사이: 가사 · 재생 대기열.
+                        _ViewTools(
+                          showLyrics: _showLyrics,
+                          onToggleLyrics: () =>
+                              setState(() => _showLyrics = !_showLyrics),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        // 구역 1: 곡 정보 · 좋아요 · 진행 막대.
+                        GlassCard(
+                          glow: false,
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.md,
+                            AppSpacing.sm,
+                            AppSpacing.xs,
+                            AppSpacing.xs,
+                          ),
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                track.title,
-                                style: text.titleLarge,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          track.title,
+                                          style: text.titleLarge,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: AppSpacing.xxs),
+                                        Text(
+                                          [
+                                            track.artist.isEmpty
+                                                ? l10n.unknownArtist
+                                                : track.artist,
+                                            if (track.album.isNotEmpty)
+                                              track.album,
+                                          ].join(' · '),
+                                          style: text.bodyMedium?.copyWith(
+                                            color: p.onSurfaceMuted,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  _LikeButton(trackId: track.id),
+                                ],
                               ),
-                              const SizedBox(height: AppSpacing.xxs),
-                              Text(
-                                [
-                                  track.artist.isEmpty
-                                      ? l10n.unknownArtist
-                                      : track.artist,
-                                  if (track.album.isNotEmpty) track.album,
-                                ].join(' · '),
-                                style: text.bodyMedium?.copyWith(
-                                  color: p.onSurfaceMuted,
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  right: AppSpacing.sm,
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                                child: Column(
+                                  children: [
+                                    _SeekBar(
+                                      progress: state.progress,
+                                      onSeek: vm.seekFraction,
+                                    ),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          formatDuration(state.position),
+                                          style: text.labelMedium?.copyWith(
+                                            color: p.onSurfaceMuted,
+                                          ),
+                                        ),
+                                        const Spacer(),
+                                        Text(
+                                          '-${formatDuration(track.duration - state.position)}',
+                                          style: text.labelMedium?.copyWith(
+                                            color: p.onSurfaceMuted,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(height: AppSpacing.md),
-                        _SeekBar(
-                          progress: state.progress,
-                          onSeek: vm.seekFraction,
-                        ),
-                        Row(
-                          children: [
-                            Text(
-                              formatDuration(state.position),
-                              style: text.labelMedium?.copyWith(
-                                color: p.onSurfaceMuted,
-                              ),
-                            ),
-                            const Spacer(),
-                            Text(
-                              '-${formatDuration(track.duration - state.position)}',
-                              style: text.labelMedium?.copyWith(
-                                color: p.onSurfaceMuted,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        _Controls(state: state, vm: vm),
-                        const SizedBox(height: AppSpacing.md),
-                        _Tools(
-                          state: state,
-                          vm: vm,
-                          showLyrics: _showLyrics,
-                          onToggleLyrics: () =>
-                              setState(() => _showLyrics = !_showLyrics),
+                        const SizedBox(height: AppSpacing.sm),
+                        // 구역 2: 재생 컨트롤 (셔플 · 이전 · 재생 · 다음 · 반복).
+                        GlassCard(
+                          glow: false,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.sm,
+                            vertical: AppSpacing.sm,
+                          ),
+                          child: _Controls(state: state, vm: vm),
                         ),
                         const SizedBox(height: AppSpacing.md),
                       ],
@@ -194,7 +229,7 @@ class _SeekBar extends StatelessWidget {
   }
 }
 
-/// 가운데 큰 컨트롤: 이전 · 재생/일시정지 · 다음.
+/// 재생 줄: 셔플 · 이전 · 재생/일시정지 · 다음 · 반복.
 class _Controls extends StatelessWidget {
   const _Controls({required this.state, required this.vm});
 
@@ -204,17 +239,30 @@ class _Controls extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final p = context.palette;
+
+    Widget side(IconData icon, String tooltip, bool on, VoidCallback onTap) =>
+        IconButton(
+          tooltip: tooltip,
+          onPressed: onTap,
+          icon: Icon(icon, color: on ? p.accent : p.onSurfaceMuted),
+        );
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
+        side(
+          Icons.shuffle_rounded,
+          l10n.actionShuffle,
+          state.shuffle,
+          vm.toggleShuffle,
+        ),
         CircleIconButton(
           icon: Icons.skip_previous_rounded,
           tooltip: l10n.actionPrevious,
           size: AppSizes.circleButtonLarge,
           onPressed: vm.previous,
         ),
-        const SizedBox(width: AppSpacing.lg),
         CircleIconButton(
           icon: state.isPlaying
               ? Icons.pause_rounded
@@ -224,29 +272,29 @@ class _Controls extends StatelessWidget {
           size: 72,
           onPressed: vm.togglePlay,
         ),
-        const SizedBox(width: AppSpacing.lg),
         CircleIconButton(
           icon: Icons.skip_next_rounded,
           tooltip: l10n.actionNext,
           size: AppSizes.circleButtonLarge,
           onPressed: vm.next,
         ),
+        side(
+          state.repeat == PlayerRepeatMode.one
+              ? Icons.repeat_one_rounded
+              : Icons.repeat_rounded,
+          l10n.playerRepeat,
+          state.repeat != PlayerRepeatMode.off,
+          vm.cycleRepeat,
+        ),
       ],
     );
   }
 }
 
-/// 아래 보조 줄: 셔플 · 반복 · 가사 · 재생 대기열.
-class _Tools extends StatelessWidget {
-  const _Tools({
-    required this.state,
-    required this.vm,
-    required this.showLyrics,
-    required this.onToggleLyrics,
-  });
+/// 커버와 제목 사이 줄: 가사 보기 · 재생 대기열.
+class _ViewTools extends StatelessWidget {
+  const _ViewTools({required this.showLyrics, required this.onToggleLyrics});
 
-  final NowPlayingState state;
-  final NowPlayingCubit vm;
   final bool showLyrics;
   final VoidCallback onToggleLyrics;
 
@@ -255,46 +303,51 @@ class _Tools extends StatelessWidget {
     final l10n = context.l10n;
     final p = context.palette;
 
-    Widget tool({
-      required IconData icon,
-      required String tooltip,
-      required VoidCallback onTap,
-      bool on = false,
-    }) => IconButton(
-      tooltip: tooltip,
-      onPressed: onTap,
-      icon: Icon(icon, color: on ? p.accent : p.onSurfaceMuted),
-    );
-
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        tool(
-          icon: Icons.shuffle_rounded,
-          tooltip: l10n.actionShuffle,
-          on: state.shuffle,
-          onTap: vm.toggleShuffle,
-        ),
-        tool(
-          icon: state.repeat == PlayerRepeatMode.one
-              ? Icons.repeat_one_rounded
-              : Icons.repeat_rounded,
-          tooltip: l10n.playerRepeat,
-          on: state.repeat != PlayerRepeatMode.off,
-          onTap: vm.cycleRepeat,
-        ),
-        tool(
-          icon: showLyrics ? Icons.album_rounded : Icons.lyrics_rounded,
+        IconButton(
           tooltip: showLyrics ? l10n.playerShowCover : l10n.playerShowLyrics,
-          on: showLyrics,
-          onTap: onToggleLyrics,
+          onPressed: onToggleLyrics,
+          icon: Icon(
+            showLyrics ? Icons.album_rounded : Icons.lyrics_rounded,
+            color: showLyrics ? p.accent : p.onSurfaceMuted,
+          ),
         ),
-        tool(
-          icon: Icons.queue_music_rounded,
+        const SizedBox(width: AppSpacing.lg),
+        IconButton(
           tooltip: l10n.playerQueue,
-          onTap: () => context.push(Routes.queue),
+          onPressed: () => context.push(Routes.queue),
+          icon: Icon(Icons.queue_music_rounded, color: p.onSurfaceMuted),
         ),
       ],
+    );
+  }
+}
+
+/// 좋아요 하트: 곡 정보 오른쪽. 좋아요 목록에 넣고 뺀다.
+class _LikeButton extends StatelessWidget {
+  const _LikeButton({required this.trackId});
+
+  final String trackId;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final p = context.palette;
+    final cubit = context.read<PlaylistsCubit>();
+    return BlocBuilder<PlaylistsCubit, List<Playlist>>(
+      builder: (context, _) {
+        final on = cubit.isFavorite(trackId);
+        return IconButton(
+          tooltip: on ? l10n.trackMenuUnfavorite : l10n.trackMenuFavorite,
+          onPressed: () => cubit.toggleFavorite(trackId),
+          icon: Icon(
+            on ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+            color: on ? p.accent : p.onSurfaceMuted,
+          ),
+        );
+      },
     );
   }
 }

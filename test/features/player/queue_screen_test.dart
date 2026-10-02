@@ -115,4 +115,17 @@ void main() {
     expect(order[0], greaterThan(order[1]));
     expect(order[0], greaterThan(order[2]));
   });
+
+  testWidgets('전체 화면 플레이어에 좋아요 하트가 있고 누르면 켜진다', (tester) async {
+    await openQueue(tester);
+    final router = tester.element(find.byType(Scaffold).first);
+    GoRouter.of(router).push(Routes.player);
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.favorite_border_rounded), findsOneWidget);
+    await tester.tap(find.byTooltip('좋아요').last);
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.favorite_rounded), findsOneWidget);
+    expect(find.byTooltip('좋아요 취소'), findsOneWidget);
+  });
 }
