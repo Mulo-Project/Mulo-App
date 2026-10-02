@@ -66,7 +66,8 @@ MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부�
 | `AppTopBar` | app_top_bar.dart | 상단 바. `large` = 탭 첫 화면(부제 + 큰 제목), 기본 = 원형 버튼 사이 가운데 제목 |
 | `AppBottomNav` | app_bottom_nav.dart | 하단 탭 바 (선택 = 강조 색 + 점). `highlighted` 항목(홈, 가운데)은 강조 색 원 |
 | `AppSearchField` | app_search_field.dart | 알약 입력칸 (돋보기 · 지우기 · 오른쪽 버튼). 글자는 세로 가운데 |
-| `ArtworkBox` · `toneFor()` | artwork_box.dart | 커버 자리 (없으면 그라데이션), 키별 고정 톤. `width`를 주면 직사각형 |
+| `ArtworkBox` · `toneFor()` | artwork_box.dart | 커버 자리 (없으면 그라데이션), 키별 고정 톤. `width`를 주면 직사각형, `color`를 주면 사용자가 고른 색(`glowFromColor`)으로 |
+| `ColorPicker` | color_picker.dart | 커버 색 고르기 (자동 · 견본 12 · 색상 막대). 사용자가 고르는 색이라 견본은 테마 토큰이 아니라 고정 색 (토큰 규칙의 예외) |
 | `TrackTile` | track_tile.dart | 곡 한 줄 (커버 · 제목 · 부제 · 오른쪽 · 아래 줄). `onMenu(Offset)`: 길게 누르기 · 오른쪽 클릭 (눌린 좌표를 넘겨 팝업 메뉴를 그 자리에) |
 | `MenuRow` | menu_row.dart | 메뉴 시트의 한 줄 (아이콘 + 글자, 삭제는 `destructive` 경고 색) |
 | `showAppMenu` · `AppMenuItem` | app_popup_menu.dart | 팝업 메뉴 (아이콘 + 글자, `destructive` 경고 색, `dividerBefore`, 색 견본용 `iconColor`, 고른 항목 `selected` 체크). 눌린 자리 또는 위젯 옆에 최상위 내비게이터로 연다 (곡 메뉴) |

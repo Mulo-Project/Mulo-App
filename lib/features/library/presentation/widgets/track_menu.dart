@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
+import '../../../covers/presentation/widgets/cover_color_sheet.dart';
 import '../../../covers/presentation/widgets/cover_sheet.dart';
 import '../../../lyrics/presentation/bloc/lyrics_cubit.dart';
 import '../../../lyrics/presentation/widgets/lyrics_editor.dart';
@@ -23,6 +25,7 @@ enum _TrackAction {
   editInfo,
   lyrics,
   cover,
+  color,
   delete,
   removeFromPlaylist,
   deleteFile,
@@ -103,6 +106,11 @@ Future<void> showTrackMenu(
         icon: Icons.image_rounded,
         label: l10n.trackMenuCover,
       ),
+      AppMenuItem(
+        value: _TrackAction.color,
+        icon: Icons.palette_rounded,
+        label: l10n.trackMenuColor,
+      ),
       if (playlistId == null)
         AppMenuItem(
           value: _TrackAction.delete,
@@ -157,6 +165,13 @@ Future<void> showTrackMenu(
         title: track.title,
         tone: toneFor(track.id),
       );
+    case _TrackAction.color:
+      await showCoverColorSheet(
+        context,
+        colorKey: CoverKey.track(track.id),
+        title: track.title,
+        tone: toneFor(track.id),
+      );
     case _TrackAction.delete || _TrackAction.deleteFile:
       await _delete(context, track);
     case _TrackAction.removeFromPlaylist:
@@ -191,6 +206,7 @@ Future<void> _delete(BuildContext context, Track track) async {
   final library = context.read<LibraryCubit>();
   final player = context.read<NowPlayingCubit>();
   final covers = context.read<CoverCubit>();
+  final colors = context.read<CoverColorCubit>();
   final lyrics = context.read<LyricsCubit>();
   final ok = await showDialog<bool>(
     context: context,
@@ -204,6 +220,7 @@ Future<void> _delete(BuildContext context, Track track) async {
     return;
   }
   await covers.clear(CoverKey.track(track.id));
+  await colors.clear(CoverKey.track(track.id));
   await lyrics.clear(track.id);
   player.removeFromQueue(track);
   if (context.mounted) _snack(context, l10n.trackDeleted);

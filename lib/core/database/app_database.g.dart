@@ -808,6 +808,214 @@ class CoversCompanion extends UpdateCompanion<CoverRow> {
   }
 }
 
+class $CoverColorsTable extends CoverColors
+    with TableInfo<$CoverColorsTable, CoverColorRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CoverColorsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _keyMeta = const VerificationMeta('key');
+  @override
+  late final GeneratedColumn<String> key = GeneratedColumn<String>(
+    'key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _colorMeta = const VerificationMeta('color');
+  @override
+  late final GeneratedColumn<int> color = GeneratedColumn<int>(
+    'color',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [key, color];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'cover_colors';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CoverColorRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('key')) {
+      context.handle(
+        _keyMeta,
+        key.isAcceptableOrUnknown(data['key']!, _keyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_keyMeta);
+    }
+    if (data.containsKey('color')) {
+      context.handle(
+        _colorMeta,
+        color.isAcceptableOrUnknown(data['color']!, _colorMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_colorMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {key};
+  @override
+  CoverColorRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CoverColorRow(
+      key: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}key'],
+      )!,
+      color: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}color'],
+      )!,
+    );
+  }
+
+  @override
+  $CoverColorsTable createAlias(String alias) {
+    return $CoverColorsTable(attachedDatabase, alias);
+  }
+}
+
+class CoverColorRow extends DataClass implements Insertable<CoverColorRow> {
+  final String key;
+  final int color;
+  const CoverColorRow({required this.key, required this.color});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['key'] = Variable<String>(key);
+    map['color'] = Variable<int>(color);
+    return map;
+  }
+
+  CoverColorsCompanion toCompanion(bool nullToAbsent) {
+    return CoverColorsCompanion(key: Value(key), color: Value(color));
+  }
+
+  factory CoverColorRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CoverColorRow(
+      key: serializer.fromJson<String>(json['key']),
+      color: serializer.fromJson<int>(json['color']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'key': serializer.toJson<String>(key),
+      'color': serializer.toJson<int>(color),
+    };
+  }
+
+  CoverColorRow copyWith({String? key, int? color}) =>
+      CoverColorRow(key: key ?? this.key, color: color ?? this.color);
+  CoverColorRow copyWithCompanion(CoverColorsCompanion data) {
+    return CoverColorRow(
+      key: data.key.present ? data.key.value : this.key,
+      color: data.color.present ? data.color.value : this.color,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CoverColorRow(')
+          ..write('key: $key, ')
+          ..write('color: $color')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(key, color);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CoverColorRow &&
+          other.key == this.key &&
+          other.color == this.color);
+}
+
+class CoverColorsCompanion extends UpdateCompanion<CoverColorRow> {
+  final Value<String> key;
+  final Value<int> color;
+  final Value<int> rowid;
+  const CoverColorsCompanion({
+    this.key = const Value.absent(),
+    this.color = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CoverColorsCompanion.insert({
+    required String key,
+    required int color,
+    this.rowid = const Value.absent(),
+  }) : key = Value(key),
+       color = Value(color);
+  static Insertable<CoverColorRow> custom({
+    Expression<String>? key,
+    Expression<int>? color,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (key != null) 'key': key,
+      if (color != null) 'color': color,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CoverColorsCompanion copyWith({
+    Value<String>? key,
+    Value<int>? color,
+    Value<int>? rowid,
+  }) {
+    return CoverColorsCompanion(
+      key: key ?? this.key,
+      color: color ?? this.color,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (key.present) {
+      map['key'] = Variable<String>(key.value);
+    }
+    if (color.present) {
+      map['color'] = Variable<int>(color.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CoverColorsCompanion(')
+          ..write('key: $key, ')
+          ..write('color: $color, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $LyricsFilesTable extends LyricsFiles
     with TableInfo<$LyricsFilesTable, LyricsFileRow> {
   @override
@@ -1354,19 +1562,8 @@ class $PlaylistsTable extends Playlists
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _colorIndexMeta = const VerificationMeta(
-    'colorIndex',
-  );
   @override
-  late final GeneratedColumn<int> colorIndex = GeneratedColumn<int>(
-    'color_index',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
-  @override
-  List<GeneratedColumn> get $columns => [id, name, createdAt, colorIndex];
+  List<GeneratedColumn> get $columns => [id, name, createdAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1400,12 +1597,6 @@ class $PlaylistsTable extends Playlists
     } else if (isInserting) {
       context.missing(_createdAtMeta);
     }
-    if (data.containsKey('color_index')) {
-      context.handle(
-        _colorIndexMeta,
-        colorIndex.isAcceptableOrUnknown(data['color_index']!, _colorIndexMeta),
-      );
-    }
     return context;
   }
 
@@ -1427,10 +1618,6 @@ class $PlaylistsTable extends Playlists
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
-      colorIndex: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}color_index'],
-      ),
     );
   }
 
@@ -1444,14 +1631,10 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
   final String id;
   final String name;
   final DateTime createdAt;
-
-  /// 이미지가 없을 때 카드 색 (글로우 톤 번호). 안 골랐으면 null.
-  final int? colorIndex;
   const PlaylistRow({
     required this.id,
     required this.name,
     required this.createdAt,
-    this.colorIndex,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1459,9 +1642,6 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
     map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
     map['created_at'] = Variable<DateTime>(createdAt);
-    if (!nullToAbsent || colorIndex != null) {
-      map['color_index'] = Variable<int>(colorIndex);
-    }
     return map;
   }
 
@@ -1470,9 +1650,6 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
       id: Value(id),
       name: Value(name),
       createdAt: Value(createdAt),
-      colorIndex: colorIndex == null && nullToAbsent
-          ? const Value.absent()
-          : Value(colorIndex),
     );
   }
 
@@ -1485,7 +1662,6 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
       id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-      colorIndex: serializer.fromJson<int?>(json['colorIndex']),
     );
   }
   @override
@@ -1495,29 +1671,20 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
       'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'createdAt': serializer.toJson<DateTime>(createdAt),
-      'colorIndex': serializer.toJson<int?>(colorIndex),
     };
   }
 
-  PlaylistRow copyWith({
-    String? id,
-    String? name,
-    DateTime? createdAt,
-    Value<int?> colorIndex = const Value.absent(),
-  }) => PlaylistRow(
-    id: id ?? this.id,
-    name: name ?? this.name,
-    createdAt: createdAt ?? this.createdAt,
-    colorIndex: colorIndex.present ? colorIndex.value : this.colorIndex,
-  );
+  PlaylistRow copyWith({String? id, String? name, DateTime? createdAt}) =>
+      PlaylistRow(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        createdAt: createdAt ?? this.createdAt,
+      );
   PlaylistRow copyWithCompanion(PlaylistsCompanion data) {
     return PlaylistRow(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      colorIndex: data.colorIndex.present
-          ? data.colorIndex.value
-          : this.colorIndex,
     );
   }
 
@@ -1526,42 +1693,37 @@ class PlaylistRow extends DataClass implements Insertable<PlaylistRow> {
     return (StringBuffer('PlaylistRow(')
           ..write('id: $id, ')
           ..write('name: $name, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('colorIndex: $colorIndex')
+          ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, createdAt, colorIndex);
+  int get hashCode => Object.hash(id, name, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is PlaylistRow &&
           other.id == this.id &&
           other.name == this.name &&
-          other.createdAt == this.createdAt &&
-          other.colorIndex == this.colorIndex);
+          other.createdAt == this.createdAt);
 }
 
 class PlaylistsCompanion extends UpdateCompanion<PlaylistRow> {
   final Value<String> id;
   final Value<String> name;
   final Value<DateTime> createdAt;
-  final Value<int?> colorIndex;
   final Value<int> rowid;
   const PlaylistsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.createdAt = const Value.absent(),
-    this.colorIndex = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   PlaylistsCompanion.insert({
     required String id,
     required String name,
     required DateTime createdAt,
-    this.colorIndex = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        name = Value(name),
@@ -1570,14 +1732,12 @@ class PlaylistsCompanion extends UpdateCompanion<PlaylistRow> {
     Expression<String>? id,
     Expression<String>? name,
     Expression<DateTime>? createdAt,
-    Expression<int>? colorIndex,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (createdAt != null) 'created_at': createdAt,
-      if (colorIndex != null) 'color_index': colorIndex,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1586,14 +1746,12 @@ class PlaylistsCompanion extends UpdateCompanion<PlaylistRow> {
     Value<String>? id,
     Value<String>? name,
     Value<DateTime>? createdAt,
-    Value<int?>? colorIndex,
     Value<int>? rowid,
   }) {
     return PlaylistsCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
       createdAt: createdAt ?? this.createdAt,
-      colorIndex: colorIndex ?? this.colorIndex,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1610,9 +1768,6 @@ class PlaylistsCompanion extends UpdateCompanion<PlaylistRow> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
-    if (colorIndex.present) {
-      map['color_index'] = Variable<int>(colorIndex.value);
-    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1625,7 +1780,6 @@ class PlaylistsCompanion extends UpdateCompanion<PlaylistRow> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('createdAt: $createdAt, ')
-          ..write('colorIndex: $colorIndex, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1909,6 +2063,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $TracksTable tracks = $TracksTable(this);
   late final $CoversTable covers = $CoversTable(this);
+  late final $CoverColorsTable coverColors = $CoverColorsTable(this);
   late final $LyricsFilesTable lyricsFiles = $LyricsFilesTable(this);
   late final $PlaysTable plays = $PlaysTable(this);
   late final $PlaylistsTable playlists = $PlaylistsTable(this);
@@ -1920,6 +2075,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     tracks,
     covers,
+    coverColors,
     lyricsFiles,
     plays,
     playlists,
@@ -2359,6 +2515,153 @@ typedef $$CoversTableProcessedTableManager =
       CoverRow,
       PrefetchHooks Function()
     >;
+typedef $$CoverColorsTableCreateCompanionBuilder =
+    CoverColorsCompanion Function({
+      required String key,
+      required int color,
+      Value<int> rowid,
+    });
+typedef $$CoverColorsTableUpdateCompanionBuilder =
+    CoverColorsCompanion Function({
+      Value<String> key,
+      Value<int> color,
+      Value<int> rowid,
+    });
+
+class $$CoverColorsTableFilterComposer
+    extends Composer<_$AppDatabase, $CoverColorsTable> {
+  $$CoverColorsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get key => $composableBuilder(
+    column: $table.key,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get color => $composableBuilder(
+    column: $table.color,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CoverColorsTableOrderingComposer
+    extends Composer<_$AppDatabase, $CoverColorsTable> {
+  $$CoverColorsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get key => $composableBuilder(
+    column: $table.key,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get color => $composableBuilder(
+    column: $table.color,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CoverColorsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CoverColorsTable> {
+  $$CoverColorsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get key =>
+      $composableBuilder(column: $table.key, builder: (column) => column);
+
+  GeneratedColumn<int> get color =>
+      $composableBuilder(column: $table.color, builder: (column) => column);
+}
+
+class $$CoverColorsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CoverColorsTable,
+          CoverColorRow,
+          $$CoverColorsTableFilterComposer,
+          $$CoverColorsTableOrderingComposer,
+          $$CoverColorsTableAnnotationComposer,
+          $$CoverColorsTableCreateCompanionBuilder,
+          $$CoverColorsTableUpdateCompanionBuilder,
+          (
+            CoverColorRow,
+            BaseReferences<_$AppDatabase, $CoverColorsTable, CoverColorRow>,
+          ),
+          CoverColorRow,
+          PrefetchHooks Function()
+        > {
+  $$CoverColorsTableTableManager(_$AppDatabase db, $CoverColorsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CoverColorsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CoverColorsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CoverColorsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> key = const Value.absent(),
+            Value<int> color = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) => CoverColorsCompanion(key: key, color: color, rowid: rowid),
+          createCompanionCallback:
+              ({
+                required String key,
+                required int color,
+                Value<int> rowid = const Value.absent(),
+              }) => CoverColorsCompanion.insert(
+                key: key,
+                color: color,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$CoverColorsTable, CoverColorRow>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $CoverColorsTable,
+                    CoverColorRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CoverColorsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CoverColorsTable,
+      CoverColorRow,
+      $$CoverColorsTableFilterComposer,
+      $$CoverColorsTableOrderingComposer,
+      $$CoverColorsTableAnnotationComposer,
+      $$CoverColorsTableCreateCompanionBuilder,
+      $$CoverColorsTableUpdateCompanionBuilder,
+      (
+        CoverColorRow,
+        BaseReferences<_$AppDatabase, $CoverColorsTable, CoverColorRow>,
+      ),
+      CoverColorRow,
+      PrefetchHooks Function()
+    >;
 typedef $$LyricsFilesTableCreateCompanionBuilder =
     LyricsFilesCompanion Function({
       required String trackId,
@@ -2692,14 +2995,12 @@ typedef $$PlaylistsTableCreateCompanionBuilder = PlaylistsCompanion Function({
   required String id,
   required String name,
   required DateTime createdAt,
-  Value<int?> colorIndex,
   Value<int> rowid,
 });
 typedef $$PlaylistsTableUpdateCompanionBuilder = PlaylistsCompanion Function({
   Value<String> id,
   Value<String> name,
   Value<DateTime> createdAt,
-  Value<int?> colorIndex,
   Value<int> rowid,
 });
 
@@ -2724,11 +3025,6 @@ class $$PlaylistsTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get colorIndex => $composableBuilder(
-    column: $table.colorIndex,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -2756,11 +3052,6 @@ class $$PlaylistsTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
-
-  ColumnOrderings<int> get colorIndex => $composableBuilder(
-    column: $table.colorIndex,
-    builder: (column) => ColumnOrderings(column),
-  );
 }
 
 class $$PlaylistsTableAnnotationComposer
@@ -2780,11 +3071,6 @@ class $$PlaylistsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
-
-  GeneratedColumn<int> get colorIndex => $composableBuilder(
-    column: $table.colorIndex,
-    builder: (column) => column,
-  );
 }
 
 class $$PlaylistsTableTableManager
@@ -2821,13 +3107,11 @@ class $$PlaylistsTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
-                Value<int?> colorIndex = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PlaylistsCompanion(
                 id: id,
                 name: name,
                 createdAt: createdAt,
-                colorIndex: colorIndex,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -2835,13 +3119,11 @@ class $$PlaylistsTableTableManager
                 required String id,
                 required String name,
                 required DateTime createdAt,
-                Value<int?> colorIndex = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PlaylistsCompanion.insert(
                 id: id,
                 name: name,
                 createdAt: createdAt,
-                colorIndex: colorIndex,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -3065,6 +3347,8 @@ class $AppDatabaseManager {
       $$TracksTableTableManager(_db, _db.tracks);
   $$CoversTableTableManager get covers =>
       $$CoversTableTableManager(_db, _db.covers);
+  $$CoverColorsTableTableManager get coverColors =>
+      $$CoverColorsTableTableManager(_db, _db.coverColors);
   $$LyricsFilesTableTableManager get lyricsFiles =>
       $$LyricsFilesTableTableManager(_db, _db.lyricsFiles);
   $$PlaysTableTableManager get plays =>

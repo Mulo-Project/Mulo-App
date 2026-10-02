@@ -20,7 +20,6 @@ void registerPlaylists(GetIt sl) {
     ..registerFactory(() => AddTrackToPlaylists(sl()))
     ..registerFactory(() => AddTracksToPlaylist(sl()))
     ..registerFactory(() => RemoveTrackFromPlaylist(sl()))
-    ..registerFactory(() => SetPlaylistColor(sl()))
     ..registerFactory(
       () => PlaylistsCubit(
         watch: sl(),
@@ -28,7 +27,6 @@ void registerPlaylists(GetIt sl) {
         create: sl(),
         rename: sl(),
         delete: sl(),
-        setColor: sl(),
         addTrack: sl(),
         addTracks: sl(),
         removeTrack: sl(),

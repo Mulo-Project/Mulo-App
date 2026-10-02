@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../library/presentation/widgets/track_menu.dart';
 import '../../domain/entities/home_summary.dart';
@@ -40,6 +41,7 @@ class RankTile extends StatelessWidget {
           ArtworkBox(
             image: coverImageOf(context, CoverKey.track(t.id)),
             tone: toneFor(t.id),
+            color: coverColorOf(context, CoverKey.track(t.id)),
           ),
         ],
       ),

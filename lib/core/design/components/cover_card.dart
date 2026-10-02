@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../app_theme_tokens.dart';
+import '../glow_color.dart';
 import '../tokens/app_dimens.dart';
 
 /// 이미지 카드 (재생목록 · 플레이어 커버). 유리 효과 없이 이미지를 그대로 보여 준다.
@@ -13,6 +14,7 @@ class CoverCard extends StatelessWidget {
     super.key,
     this.image,
     this.tone = GlowTone.primary,
+    this.color,
     this.radius = AppRadii.card,
     this.shade = false,
     this.onTap,
@@ -22,6 +24,9 @@ class CoverCard extends StatelessWidget {
 
   final ImageProvider? image;
   final GlowTone tone;
+
+  /// 사용자가 고른 색. 있으면 [tone] 대신 이 색으로 그린다.
+  final Color? color;
   final double radius;
   final bool shade;
   final VoidCallback? onTap;
@@ -31,7 +36,9 @@ class CoverCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    final glow = context.tokens.glow(tone);
+    final glow = color != null
+        ? glowFromColor(color!)
+        : context.tokens.glow(tone);
     final shape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(radius),
     );

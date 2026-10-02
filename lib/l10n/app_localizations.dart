@@ -1460,29 +1460,29 @@ abstract class AppLocalizations {
   /// **'자동'**
   String get playlistColorAuto;
 
-  /// No description provided for @playlistColorOption.
+  /// No description provided for @colorSheetTitle.
   ///
   /// In ko, this message translates to:
-  /// **'카드 색 {name}'**
-  String playlistColorOption(String name);
+  /// **'색 바꾸기'**
+  String get colorSheetTitle;
 
-  /// No description provided for @playlistColorPrimary.
+  /// No description provided for @colorCustom.
   ///
   /// In ko, this message translates to:
-  /// **'주 색'**
-  String get playlistColorPrimary;
+  /// **'색상 직접 고르기'**
+  String get colorCustom;
 
-  /// No description provided for @playlistColorSecondary.
+  /// No description provided for @colorOption.
   ///
   /// In ko, this message translates to:
-  /// **'보조 색'**
-  String get playlistColorSecondary;
+  /// **'색 {n}'**
+  String colorOption(int n);
 
-  /// No description provided for @playlistColorTertiary.
+  /// No description provided for @albumColorTooltip.
   ///
   /// In ko, this message translates to:
-  /// **'포인트 색'**
-  String get playlistColorTertiary;
+  /// **'앨범 색 바꾸기'**
+  String get albumColorTooltip;
 
   /// No description provided for @playlistSummaryEmpty.
   ///
@@ -1549,6 +1549,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'커버 이미지 설정'**
   String get trackMenuCover;
+
+  /// No description provided for @trackMenuColor.
+  ///
+  /// In ko, this message translates to:
+  /// **'커버 색 바꾸기'**
+  String get trackMenuColor;
 
   /// No description provided for @trackMenuDelete.
   ///

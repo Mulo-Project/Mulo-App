@@ -1,5 +1,7 @@
-/// 커버 이미지를 붙일 대상의 키. 곡 · 재생목록이 같은 저장소를 쓴다.
+/// 커버 이미지 · 색을 붙일 대상의 키. 곡 · 앨범 · 재생목록이 같은 저장소를 쓴다.
+/// 앨범은 곡에 저장된 앨범 이름 그대로(빈 문자열 = 알 수 없는 앨범).
 abstract final class CoverKey {
   static String track(String id) => 'track:$id';
+  static String album(String name) => 'album:$name';
   static String playlist(String id) => 'playlist:$id';
 }

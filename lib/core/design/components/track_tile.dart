@@ -11,6 +11,7 @@ class TrackTile extends StatefulWidget {
     required this.title,
     required this.subtitle,
     this.tone = GlowTone.primary,
+    this.color,
     this.artwork,
     this.leading,
     this.trailing,
@@ -23,6 +24,9 @@ class TrackTile extends StatefulWidget {
   final String title;
   final String subtitle;
   final GlowTone tone;
+
+  /// 사용자가 고른 커버 색 (있으면 [tone] 대신).
+  final Color? color;
   final ImageProvider? artwork;
 
   /// 커버 대신 둘 위젯 (예: 선택 체크).
@@ -68,7 +72,8 @@ class _TrackTileState extends State<TrackTile> {
           ),
           child: Row(
             children: [
-              w.leading ?? ArtworkBox(image: w.artwork, tone: w.tone),
+              w.leading ??
+                  ArtworkBox(image: w.artwork, tone: w.tone, color: w.color),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Column(

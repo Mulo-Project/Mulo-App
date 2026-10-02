@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
@@ -161,6 +162,7 @@ class _TopPlayedSectionState extends State<TopPlayedSection> {
                         ? l10n.unknownArtist
                         : listed[i].artist,
                     tone: toneFor(listed[i].id),
+                    color: coverColorOf(context, CoverKey.track(listed[i].id)),
                     leading: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -180,6 +182,10 @@ class _TopPlayedSectionState extends State<TopPlayedSection> {
                             CoverKey.track(listed[i].id),
                           ),
                           tone: toneFor(listed[i].id),
+                          color: coverColorOf(
+                            context,
+                            CoverKey.track(listed[i].id),
+                          ),
                         ),
                       ],
                     ),
@@ -280,6 +286,7 @@ class _Place extends StatelessWidget {
                 child: ArtworkBox(
                   image: coverImageOf(context, CoverKey.track(entry.cover.id)),
                   tone: toneFor(entry.cover.id),
+                  color: coverColorOf(context, CoverKey.track(entry.cover.id)),
                   size: art,
                   radius: art,
                 ),

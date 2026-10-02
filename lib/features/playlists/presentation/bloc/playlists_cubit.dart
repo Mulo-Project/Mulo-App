@@ -17,7 +17,6 @@ class PlaylistsCubit extends Cubit<List<Playlist>> {
     required this._create,
     required this._rename,
     required this._delete,
-    required this._setColor,
     required this._addTrack,
     required this._addTracks,
     required this._removeTrack,
@@ -28,7 +27,6 @@ class PlaylistsCubit extends Cubit<List<Playlist>> {
   final CreatePlaylist _create;
   final RenamePlaylist _rename;
   final DeletePlaylist _delete;
-  final SetPlaylistColor _setColor;
   final AddTrackToPlaylists _addTrack;
   final AddTracksToPlaylist _addTracks;
   final RemoveTrackFromPlaylist _removeTrack;
@@ -42,9 +40,8 @@ class PlaylistsCubit extends Cubit<List<Playlist>> {
   /// 재생목록에 담긴 곡 (담은 순서). 전체 재생에 쓴다.
   Future<List<Track>> tracksOf(String id) => _watchTracks(id).first;
 
-  /// 새 재생목록. 이름이 비어 있으면 null. [colorIndex]는 이미지가 없을 때의 카드 색.
-  Future<Playlist?> create(String name, {int? colorIndex}) =>
-      _create(CreatePlaylistParams(name, colorIndex: colorIndex));
+  /// 새 재생목록. 이름이 비어 있으면 null.
+  Future<Playlist?> create(String name) => _create(name);
 
   /// 이름 바꾸기. 비어 있으면 false.
   Future<bool> rename(String id, String name) =>
@@ -52,10 +49,6 @@ class PlaylistsCubit extends Cubit<List<Playlist>> {
 
   /// 재생목록 지우기 (곡은 보관함에 남는다).
   Future<bool> delete(String id) => _delete(id);
-
-  /// 이미지가 없는 카드의 색. [colorIndex]가 null이면 자동.
-  Future<void> setColor(String id, int? colorIndex) =>
-      _setColor(SetPlaylistColorParams(id, colorIndex));
 
   /// 곡을 재생목록들에 담는다. 이미 들어 있는 곳은 건너뛴다.
   Future<void> addTrack(String trackId, Set<String> playlistIds) =>

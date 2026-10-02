@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -16,20 +17,9 @@ import 'playlist_menu.dart';
 String playlistNameOf(AppLocalizations l10n, Playlist pl) =>
     pl.isFavorites ? l10n.playlistFavorites : pl.name;
 
-/// 이미지가 없는 카드의 색. 안 골랐으면 재생목록마다 다르게 자동으로 정한다.
-GlowTone playlistToneOf(Playlist pl) {
-  if (pl.isFavorites) return GlowTone.secondary;
-  final i = pl.colorIndex;
-  if (i == null || i < 0 || i >= GlowTone.values.length) return toneFor(pl.id);
-  return GlowTone.values[i];
-}
-
-/// 카드 색 이름 (메뉴 · 만들기 화면의 견본 라벨).
-String playlistToneName(AppLocalizations l10n, GlowTone tone) => switch (tone) {
-  GlowTone.primary => l10n.playlistColorPrimary,
-  GlowTone.secondary => l10n.playlistColorSecondary,
-  GlowTone.tertiary => l10n.playlistColorTertiary,
-};
+/// 색을 안 골랐을 때 카드의 자동 톤: 좋아요는 보조 색, 나머지는 재생목록마다 다르게.
+GlowTone playlistToneOf(Playlist pl) =>
+    pl.isFavorites ? GlowTone.secondary : toneFor(pl.id);
 
 /// 재생목록 카드: 얇은 테두리 안에 커버(이미지나 색) · 이름 · 곡 수 · 구분선 · 대표곡 타일 (접으면 한 줄, 펼치면 이미지가 앞에 붙는다).
 ///
@@ -61,6 +51,7 @@ class PlaylistCard extends StatelessWidget {
     final p = context.palette;
     final l10n = context.l10n;
     final image = coverImageOf(context, CoverKey.playlist(playlist.id));
+    final color = coverColorOf(context, CoverKey.playlist(playlist.id));
     final browsing = selected == null;
 
     return _PointerMenu(
@@ -92,6 +83,7 @@ class PlaylistCard extends StatelessWidget {
                       radius: 0,
                       image: image,
                       tone: playlistToneOf(playlist),
+                      color: color,
                       child: playlist.isFavorites && image == null
                           ? Center(
                               child: Icon(
@@ -123,7 +115,7 @@ class PlaylistCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         playlistNameOf(l10n, playlist),
-                        style: text.titleSmall,
+                        style: text.titleMedium,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -297,16 +289,19 @@ class _FeaturedState extends State<_Featured> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // 대표곡은 카드 제목보다 작게.
                           Text(
                             t.title,
-                            style: text.titleSmall,
+                            style: text.labelMedium?.copyWith(
+                              color: p.onSurface,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
                           if (t.artist.isNotEmpty)
                             Text(
                               t.artist,
-                              style: text.bodySmall?.copyWith(
+                              style: text.labelSmall?.copyWith(
                                 color: p.onSurfaceMuted,
                               ),
                               maxLines: 1,
@@ -347,6 +342,7 @@ class _FeaturedState extends State<_Featured> {
                     size: 36,
                     radius: 6,
                     tone: toneFor(t.id),
+                    color: coverColorOf(context, CoverKey.track(t.id)),
                   ),
                   const SizedBox(width: AppSpacing.xs),
                   Expanded(

@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../covers/presentation/bloc/cover_color_cubit.dart';
+import '../../../covers/presentation/bloc/cover_cubit.dart';
+import '../../../covers/presentation/widgets/cover_color_sheet.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../bloc/library_cubit.dart';
 import '../widgets/track_list_tile.dart';
@@ -42,6 +45,18 @@ class AlbumScreen extends StatelessWidget {
               tooltip: l10n.actionBack,
               onPressed: () => context.pop(),
             ),
+            actions: [
+              CircleIconButton(
+                icon: Icons.palette_rounded,
+                tooltip: l10n.albumColorTooltip,
+                onPressed: () => showCoverColorSheet(
+                  context,
+                  colorKey: CoverKey.album(album),
+                  title: name,
+                  tone: toneFor(name),
+                ),
+              ),
+            ],
           ),
           if (tracks.isEmpty)
             Padding(
@@ -60,6 +75,7 @@ class AlbumScreen extends StatelessWidget {
                     size: 96,
                     radius: AppRadii.md,
                     tone: toneFor(name),
+                    color: coverColorOf(context, CoverKey.album(album)),
                     icon: Icons.album_rounded,
                   ),
                   const SizedBox(width: AppSpacing.md),

@@ -229,3 +229,12 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - **앱 가입일**: 계정이 없어 첫 실행 날짜를 shared_preferences(`app.joinedAt`)에 저장한다 (`JoinDateRepository`).
 - 들은 시간이 0으로 기록된 재생은 곡 길이로 어림한다. "재생목록처럼 재생"은 대기열에 넣는 것이고 저장하지 않는다.
 - 홈은 `SingleChildScrollView`로 한꺼번에 그린다 (구역이 4개뿐). 지연 목록은 스크롤로 벗어난 구역의 접힘 · 칩 · 포커스 상태를 지워서, 앱을 쓰는 동안 상태가 유지되게 했다.
+
+## D-036 · 2026-10-02 · 커버 색은 테마와 상관없이 자유롭게 (곡 · 앨범 · 재생목록)
+- **색은 고른 ARGB 값을 그대로 저장한다** (`cover_colors` 테이블, 키는 커버 이미지와 같은 `track:<id>` · `album:<이름>` · `playlist:<id>`). 이전의 재생목록 `colorIndex`(테마 톤 번호)는 없앴다 — 테마를 바꾸면 색이 따라 바뀌던 문제.
+- **스키마 7**: `cover_colors` 추가. 재생목록의 옛 `color_index` 열은 코드에서 안 쓰고(열은 남아 있어도 무해) 옛 값은 버린다 (자동 색으로 돌아감).
+- 곡 모델(`Track`)에는 색이 없었다 (곡은 id로 자동 톤). 곡 · 앨범도 같은 저장소를 쓴다. 곡 삭제 · 재생목록 삭제 때 색도 같이 지운다.
+- 그리기: `ArtworkBox` · `CoverCard` · `TrackTile`에 `color`를 주면 `tone` 대신 `glowFromColor(color)`(밝게 · 원래 · 어둡게 3단)로 그린다. 흰 글자가 읽히도록 너무 밝은 색은 눌러 준다.
+- 고르기: `ColorPicker`(자동 · 견본 12 · 색상 막대) + `showCoverColorSheet`. 곡 메뉴 "커버 색 바꾸기", 재생목록 메뉴 "카드 색", 앨범 화면 팔레트 버튼, 새 재생목록 만들기에서 쓴다. `CoverColorCubit`(앱 전체).
+- 재생목록 카드: 대표곡 글자는 제목보다 작게 (제목 `titleMedium`, 대표곡 `labelMedium` · `labelSmall`). 보관함 요약 카드는 재생 중인 곡이 있으면 오른쪽에 그 곡의 이미지를 보여 준다.
+

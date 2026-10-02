@@ -39,6 +39,17 @@ class Covers extends Table {
   Set<Column> get primaryKey => {key};
 }
 
+/// 사용자가 고른 커버 색 (키: `track:<id>` · `album:<이름>` · `playlist:<id>`).
+/// 테마와 상관없이 고른 색 그대로 쓰므로 ARGB 값을 저장한다.
+@DataClassName('CoverColorRow')
+class CoverColors extends Table {
+  TextColumn get key => text()();
+  IntColumn get color => integer()();
+
+  @override
+  Set<Column> get primaryKey => {key};
+}
+
 /// 사용자가 저장한 곡별 가사 (앱 폴더 `lyrics/`의 `.lrc` · `.txt` 파일 경로).
 @DataClassName('LyricsFileRow')
 class LyricsFiles extends Table {
@@ -67,9 +78,6 @@ class Playlists extends Table {
   TextColumn get name => text()();
   DateTimeColumn get createdAt => dateTime()();
 
-  /// 이미지가 없을 때 카드 색 (글로우 톤 번호). 안 골랐으면 null.
-  IntColumn get colorIndex => integer().nullable()();
-
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -87,7 +95,15 @@ class PlaylistTracks extends Table {
 
 /// 앱 로컬 DB (drift · SQLite). 설정값은 shared_preferences, 나머지 데이터는 여기.
 @DriftDatabase(
-  tables: [Tracks, Covers, LyricsFiles, Plays, Playlists, PlaylistTracks],
+  tables: [
+    Tracks,
+    Covers,
+    CoverColors,
+    LyricsFiles,
+    Plays,
+    Playlists,
+    PlaylistTracks,
+  ],
 )
 class AppDatabase extends _$AppDatabase {
   /// 테스트는 [executor]에 메모리 DB를 넣는다.
@@ -95,7 +111,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'music_app'));
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -106,9 +122,10 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(playlists);
         await m.createTable(playlistTracks);
       }
-      if (from == 3) await m.addColumn(playlists, playlists.colorIndex);
       if (from < 5) await m.addColumn(tracks, tracks.folder);
       if (from < 6) await m.createTable(lyricsFiles);
+      // 재생목록의 옛 `color_index` 열은 더 쓰지 않는다 (색은 cover_colors로).
+      if (from < 7) await m.createTable(coverColors);
     },
   );
 }

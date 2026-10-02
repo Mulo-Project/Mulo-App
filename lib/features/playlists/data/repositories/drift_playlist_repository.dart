@@ -68,13 +68,12 @@ class DriftPlaylistRepository implements PlaylistRepository {
       plays[r.read(_db.plays.trackId)!] = r.read(count) ?? 0;
     }
 
-    Playlist build(String id, String name, int? colorIndex) {
+    Playlist build(String id, String name) {
       final members = ids[id] ?? const <String>[];
       return Playlist(
         id: id,
         name: name,
         trackCount: members.length,
-        colorIndex: colorIndex,
         featured: _featured([
           for (final t in members)
             if (trackRows[t] != null) trackRows[t]!,
@@ -84,8 +83,8 @@ class DriftPlaylistRepository implements PlaylistRepository {
     }
 
     return [
-      build(Playlist.favoritesId, '', null),
-      for (final row in lists) build(row.id, row.name, row.colorIndex),
+      build(Playlist.favoritesId, ''),
+      for (final row in lists) build(row.id, row.name),
     ];
   }
 
@@ -140,20 +139,13 @@ class DriftPlaylistRepository implements PlaylistRepository {
   );
 
   @override
-  Future<Playlist> create(String name, {int? colorIndex}) async {
+  Future<Playlist> create(String name) async {
     final now = DateTime.now();
     final id = 'pl${now.microsecondsSinceEpoch}';
     await _db
         .into(_db.playlists)
-        .insert(
-          PlaylistsCompanion.insert(
-            id: id,
-            name: name,
-            createdAt: now,
-            colorIndex: Value(colorIndex),
-          ),
-        );
-    return Playlist(id: id, name: name, colorIndex: colorIndex);
+        .insert(PlaylistsCompanion.insert(id: id, name: name, createdAt: now));
+    return Playlist(id: id, name: name);
   }
 
   @override
@@ -212,10 +204,4 @@ class DriftPlaylistRepository implements PlaylistRepository {
             (t) => t.trackId.equals(trackId) & t.playlistId.equals(playlistId),
           ))
           .go();
-
-  @override
-  Future<void> setColor(String playlistId, int? colorIndex) =>
-      (_db.update(_db.playlists)..where((t) => t.id.equals(playlistId))).write(
-        PlaylistsCompanion(colorIndex: Value(colorIndex)),
-      );
 }

@@ -745,18 +745,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistColorAuto => 'Auto';
 
   @override
-  String playlistColorOption(String name) {
-    return 'Card color $name';
+  String get colorSheetTitle => 'Change color';
+
+  @override
+  String get colorCustom => 'Pick a custom hue';
+
+  @override
+  String colorOption(int n) {
+    return 'Color $n';
   }
 
   @override
-  String get playlistColorPrimary => 'Primary';
-
-  @override
-  String get playlistColorSecondary => 'Secondary';
-
-  @override
-  String get playlistColorTertiary => 'Accent';
+  String get albumColorTooltip => 'Change album color';
 
   @override
   String get playlistSummaryEmpty => 'Empty';
@@ -792,6 +792,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trackMenuCover => 'Cover image';
+
+  @override
+  String get trackMenuColor => 'Cover color';
 
   @override
   String get trackMenuDelete => 'Delete';

@@ -60,3 +60,40 @@ class SaveCover implements UseCase<String, SaveCoverParams> {
   @override
   Future<String> call(SaveCoverParams p) => _repo.save(p.key, p.sourcePath);
 }
+
+class LoadCoverColors implements UseCase<Map<String, int>, NoParams> {
+  const LoadCoverColors(this._repo);
+
+  final CoverColorRepository _repo;
+
+  @override
+  Future<Map<String, int>> call(NoParams _) => _repo.loadAll();
+}
+
+class SetCoverColorParams {
+  const SetCoverColorParams(this.key, this.color);
+
+  final String key;
+
+  /// ARGB 값.
+  final int color;
+}
+
+class SetCoverColor implements UseCase<void, SetCoverColorParams> {
+  const SetCoverColor(this._repo);
+
+  final CoverColorRepository _repo;
+
+  @override
+  Future<void> call(SetCoverColorParams p) => _repo.save(p.key, p.color);
+}
+
+/// 고른 색을 지우고 자동 색으로 되돌린다.
+class ClearCoverColor implements UseCase<void, String> {
+  const ClearCoverColor(this._repo);
+
+  final CoverColorRepository _repo;
+
+  @override
+  Future<void> call(String key) => _repo.remove(key);
+}

@@ -23,24 +23,17 @@ class WatchPlaylistTracks implements StreamUseCase<List<Track>, String> {
   Stream<List<Track>> call(String playlistId) => _repo.watchTracks(playlistId);
 }
 
-class CreatePlaylistParams {
-  const CreatePlaylistParams(this.name, {this.colorIndex});
-
-  final String name;
-  final int? colorIndex;
-}
-
 /// 재생목록 만들기. 이름은 앞뒤 공백을 지우고, 비어 있으면 만들지 않는다 (null).
-class CreatePlaylist implements UseCase<Playlist?, CreatePlaylistParams> {
+class CreatePlaylist implements UseCase<Playlist?, String> {
   const CreatePlaylist(this._repo);
 
   final PlaylistRepository _repo;
 
   @override
-  Future<Playlist?> call(CreatePlaylistParams p) async {
-    final trimmed = p.name.trim();
+  Future<Playlist?> call(String name) async {
+    final trimmed = name.trim();
     if (trimmed.isEmpty) return null;
-    return _repo.create(trimmed, colorIndex: p.colorIndex);
+    return _repo.create(trimmed);
   }
 }
 
@@ -133,22 +126,4 @@ class RemoveTrackFromPlaylist
   @override
   Future<void> call(RemoveTrackFromPlaylistParams p) =>
       _repo.removeTrack(p.trackId, p.playlistId);
-}
-
-class SetPlaylistColorParams {
-  const SetPlaylistColorParams(this.playlistId, this.colorIndex);
-
-  final String playlistId;
-  final int? colorIndex;
-}
-
-/// 재생목록 카드 색 정하기 (null이면 자동).
-class SetPlaylistColor implements UseCase<void, SetPlaylistColorParams> {
-  const SetPlaylistColor(this._repo);
-
-  final PlaylistRepository _repo;
-
-  @override
-  Future<void> call(SetPlaylistColorParams p) =>
-      _repo.setColor(p.playlistId, p.colorIndex);
 }

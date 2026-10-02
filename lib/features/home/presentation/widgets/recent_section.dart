@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../library/presentation/widgets/track_menu.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
@@ -84,6 +85,10 @@ class RecentSection extends StatelessWidget {
                             ? l10n.unknownArtist
                             : recent[i].artist,
                         tone: toneFor(recent[i].id),
+                        color: coverColorOf(
+                          context,
+                          CoverKey.track(recent[i].id),
+                        ),
                         artwork: coverImageOf(
                           context,
                           CoverKey.track(recent[i].id),
