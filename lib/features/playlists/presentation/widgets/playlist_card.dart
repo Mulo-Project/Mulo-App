@@ -21,7 +21,7 @@ String playlistNameOf(AppLocalizations l10n, Playlist pl) =>
 GlowTone playlistToneOf(Playlist pl) =>
     pl.isFavorites ? GlowTone.secondary : toneFor(pl.id);
 
-/// 재생목록 카드: 얇은 테두리 안에 커버(이미지나 색) · 이름 · 곡 수 · 구분선 · 대표곡 타일 (접으면 한 줄, 펼치면 이미지가 앞에 붙는다).
+/// 재생목록 카드: 얇은 테두리 안에 커버(이미지나 색) · 이름 · 곡 수 · 구분선 · 대표곡 타일 (접으면 제목만 작게, 펼치면 가수 · 이미지가 붙는다).
 ///
 /// 기본(둘러보기)에서는 누르면 재생목록 상세로 가고, ⋮ · 길게 누르기 · 오른쪽 클릭은 팝업 메뉴를 연다.
 /// [selected]를 주면 담기 선택 모드: 메뉴 대신 체크 표시가 붙고 [onTap]으로 고른다.
@@ -219,7 +219,7 @@ class _SelectMark extends StatelessWidget {
 /// 앱을 켜 둔 동안 펼쳐 둔 카드 (재생목록 id). 화면을 오가도 펼친 채로 둔다.
 final _expandedIds = <String>{};
 
-/// 카드 아래 대표곡 타일. 접으면 이름 · 가수 한 줄, 누르면 아래에 한 줄이 더 생겨
+/// 카드 아래 대표곡 타일. 접으면 제목만 작게, 누르면 영역이 커지며 가수와
 /// 작은 커버 이미지 · 장르 · 재생 버튼이 나온다. 재생 버튼을 누르면
 /// 그 곡을 (이 재생목록 대기열로) 바로 재생해 미리 들어 볼 수 있다.
 class _Featured extends StatefulWidget {
@@ -260,8 +260,8 @@ class _FeaturedState extends State<_Featured> {
     final p = context.palette;
     final l10n = context.l10n;
     final t = widget.playlist.featured;
-    // 접은 줄 높이를 항상 확보해서 카드 높이가 들쭉날쭉하지 않게 한다.
-    const rowHeight = 56.0;
+    // 접은 줄은 작고 낮게, 카드마다 같은 높이로 맞춘다.
+    const rowHeight = 30.0;
     if (t == null) return const SizedBox(height: rowHeight);
     final open = _expanded && widget.expandable;
 
@@ -272,33 +272,33 @@ class _FeaturedState extends State<_Featured> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 위 줄은 항상 그대로: 제목 · 가수.
+          // 접으면 제목만 작게, 펼치면 제목이 커지고 아래에 가수가 붙는다.
           InkWell(
             onTap: widget.expandable ? _toggle : null,
-            child: SizedBox(
-              height: rowHeight,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: rowHeight),
               child: Padding(
-                padding: const EdgeInsets.only(
+                padding: EdgeInsets.only(
                   left: AppSpacing.sm,
                   right: AppSpacing.xxs,
+                  top: open ? AppSpacing.xs : 0,
+                  bottom: open ? AppSpacing.xxs : 0,
                 ),
                 child: Row(
                   children: [
                     Expanded(
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // 대표곡은 카드 제목보다 작게.
                           Text(
                             t.title,
-                            style: text.labelMedium?.copyWith(
-                              color: p.onSurface,
-                            ),
+                            style: (open ? text.labelLarge : text.labelSmall)
+                                ?.copyWith(color: p.onSurface),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          if (t.artist.isNotEmpty)
+                          if (open && t.artist.isNotEmpty)
                             Text(
                               t.artist,
                               style: text.labelSmall?.copyWith(
@@ -318,7 +318,7 @@ class _FeaturedState extends State<_Featured> {
                           open
                               ? Icons.expand_less_rounded
                               : Icons.expand_more_rounded,
-                          size: 20,
+                          size: 18,
                           color: p.onSurfaceMuted,
                         ),
                       ),

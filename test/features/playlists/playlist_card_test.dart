@@ -130,15 +130,16 @@ void main() {
     expect(covers.saved, isEmpty);
   });
 
-  testWidgets('대표곡은 접어서 이름 · 가수만, 눌러 펼친 이미지를 누르면 재생한다', (tester) async {
+  testWidgets('대표곡은 접으면 제목만, 펼치면 가수와 이미지가 나오고 누르면 재생한다', (tester) async {
     await pumpPlaylists(tester);
     expect(find.text('첫 곡'), findsOneWidget);
-    expect(find.text('가수'), findsOneWidget);
+    expect(find.text('가수'), findsNothing);
     expect(find.byTooltip('다음 곡'), findsNothing);
     expect(find.byTooltip('대표곡 미리 듣기'), findsNothing);
 
     await tester.tap(find.text('첫 곡'));
     await tester.pumpAndSettle();
+    expect(find.text('가수'), findsOneWidget);
     expect(find.byTooltip('대표곡 미리 듣기'), findsOneWidget);
 
     await tester.tap(find.byTooltip('대표곡 미리 듣기'));
