@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -193,6 +195,34 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
           .values[(state.repeat.index + 1) % PlayerRepeatMode.values.length],
     ),
   );
+
+  /// 대기열에서 [from] 곡을 [to] 자리로 옮긴다 ([to]는 옮긴 뒤의 자리).
+  /// 재생 중인 곡은 그대로 이어서 재생한다.
+  void moveInQueue(int from, int to) {
+    final n = state.queue.length;
+    if (from < 0 || from >= n || to < 0 || to >= n || from == to) return;
+    final current = state.track!;
+    final queue = [...state.queue];
+    queue.insert(to, queue.removeAt(from));
+    emit(state.copyWith(queue: queue, index: queue.indexOf(current)));
+  }
+
+  /// 지금 곡 뒤의 곡들을 무작위로 섞는다 (이미 들은 곡과 지금 곡은 그대로).
+  void shuffleUpNext([Random? random]) {
+    final upNext = state.queue.skip(state.index + 1).toList();
+    if (upNext.length < 2) return;
+    upNext.shuffle(random);
+    emit(
+      state.copyWith(queue: [...state.queue.take(state.index + 1), ...upNext]),
+    );
+  }
+
+  /// 지금 재생 중인 곡만 남기고 대기열을 비운다.
+  void clearQueue() {
+    final current = state.track;
+    if (current == null || state.queue.length == 1) return;
+    emit(state.copyWith(queue: [current], index: 0));
+  }
 
   void jumpTo(int index) {
     if (index < 0 || index >= state.queue.length) return;

@@ -18,10 +18,12 @@ class MiniPlayerBar extends StatelessWidget {
     required this.playLabel,
     required this.pauseLabel,
     required this.nextLabel,
+    required this.queueLabel,
     this.artwork,
     this.onTap,
     this.onPlayPause,
     this.onNext,
+    this.onQueue,
   });
 
   final String title;
@@ -33,6 +35,7 @@ class MiniPlayerBar extends StatelessWidget {
   final String playLabel;
   final String pauseLabel;
   final String nextLabel;
+  final String queueLabel;
 
   /// 커버 아트. 없으면 주 색 그라데이션 자리 표시.
   final ImageProvider? artwork;
@@ -40,66 +43,83 @@ class MiniPlayerBar extends StatelessWidget {
   final VoidCallback? onPlayPause;
   final VoidCallback? onNext;
 
+  /// 재생 대기열을 바로 연다.
+  final VoidCallback? onQueue;
+
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
+    final p = context.palette;
 
+    // 가로 전체 띠라서 좌우 세로 선은 없애고 위쪽 가는 선만 긋는다.
     return GlassSurface(
       shape: const RoundedRectangleBorder(),
+      rim: false,
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.sm,
-          AppSpacing.sm,
-          AppSpacing.sm,
-          AppSpacing.sm,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: p.glassBorder)),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                _Artwork(artwork: artwork),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        title,
-                        style: text.titleSmall,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        artist,
-                        style: text.bodySmall,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.sm,
+            AppSpacing.sm,
+            AppSpacing.sm,
+            AppSpacing.sm,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  _Artwork(artwork: artwork),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          title,
+                          style: text.titleSmall,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          artist,
+                          style: text.bodySmall,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                CircleIconButton(
-                  icon: isPlaying
-                      ? Icons.pause_rounded
-                      : Icons.play_arrow_rounded,
-                  tooltip: isPlaying ? pauseLabel : playLabel,
-                  emphasized: true,
-                  onPressed: onPlayPause,
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                CircleIconButton(
-                  icon: Icons.skip_next_rounded,
-                  tooltip: nextLabel,
-                  onPressed: onNext,
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            ProgressLine(value: progress, height: 3),
-          ],
+                  CircleIconButton(
+                    icon: isPlaying
+                        ? Icons.pause_rounded
+                        : Icons.play_arrow_rounded,
+                    tooltip: isPlaying ? pauseLabel : playLabel,
+                    emphasized: true,
+                    onPressed: onPlayPause,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  CircleIconButton(
+                    icon: Icons.skip_next_rounded,
+                    tooltip: nextLabel,
+                    onPressed: onNext,
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  CircleIconButton(
+                    icon: Icons.queue_music_rounded,
+                    tooltip: queueLabel,
+                    onPressed: onQueue,
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              ProgressLine(value: progress, height: 3),
+            ],
+          ),
         ),
       ),
     );

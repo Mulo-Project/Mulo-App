@@ -403,6 +403,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerQueue => 'Up next';
 
   @override
+  String get queueShuffle => 'Shuffle up next';
+
+  @override
+  String get queueClear => 'Clear queue';
+
+  @override
+  String get queueCleared => 'Queue cleared';
+
+  @override
+  String get queueReorderHint => 'Press and hold, then drag to reorder';
+
+  @override
   String get playerRepeat => 'Repeat';
 
   @override

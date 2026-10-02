@@ -394,6 +394,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playerQueue => '재생 대기열';
 
   @override
+  String get queueShuffle => '다음 곡 섞기';
+
+  @override
+  String get queueClear => '대기열 비우기';
+
+  @override
+  String get queueCleared => '대기열을 비웠어요';
+
+  @override
+  String get queueReorderHint => '길게 눌러 끌면 순서가 바뀌어요';
+
+  @override
   String get playerRepeat => '반복';
 
   @override
