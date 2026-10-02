@@ -281,7 +281,7 @@ class PlayerLyricsPane extends StatelessWidget {
   Widget build(BuildContext context) => LyricsView(track: track);
 }
 
-/// 손잡이가 현재 시간 알약인 가는 진행 막대. 누르거나 끌어서 위치를 옮긴다.
+/// 기본 원형 손잡이 + 아래로 이어지는 둥근 삼각형 + 현재 재생 시간 상자를 한 덩어리로 그린 손잡이.
 /// 총 재생 시간은 막대 위 오른쪽.
 class PlayerSeekBar extends StatelessWidget {
   const PlayerSeekBar({
@@ -297,9 +297,7 @@ class PlayerSeekBar extends StatelessWidget {
   final Duration position;
   final Duration total;
 
-  static const _pillW = 52.0;
-  static const _pillH = 24.0;
-  static const _height = 44.0;
+  static const _knob = 14.0;
 
   @override
   Widget build(BuildContext context) {
@@ -308,9 +306,14 @@ class PlayerSeekBar extends StatelessWidget {
         ?.copyWith(color: p.onSurface.withValues(alpha: .7));
     return LayoutBuilder(
       builder: (context, c) {
-        final room = c.maxWidth - _pillW;
-        void seek(Offset local) => onSeek((local.dx - _pillW / 2) / room);
+        final room = c.maxWidth - _knob;
+        void seek(Offset local) => onSeek((local.dx - _knob / 2) / room);
         final v = progress.clamp(0.0, 1.0);
+        final knobX = room * v + _knob / 2;
+        final thumbX = (knobX - TimeThumb.width / 2).clamp(
+          0.0,
+          c.maxWidth - TimeThumb.width,
+        );
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -323,7 +326,7 @@ class PlayerSeekBar extends StatelessWidget {
               onTapDown: (d) => seek(d.localPosition),
               onHorizontalDragUpdate: (d) => seek(d.localPosition),
               child: SizedBox(
-                height: _height,
+                height: 28,
                 child: Stack(
                   alignment: Alignment.centerLeft,
                   clipBehavior: Clip.none,
@@ -337,20 +340,25 @@ class PlayerSeekBar extends StatelessWidget {
                     ),
                     Container(
                       height: 4,
-                      width: _pillW / 2 + room * v,
+                      width: knobX,
                       decoration: ShapeDecoration(
                         shape: const StadiumBorder(),
                         color: p.onSurface,
                       ),
                     ),
                     Positioned(
-                      left: room * v,
-                      child: TimePill(position: position),
+                      left: thumbX,
+                      top: 14 - TimeThumb.knobR,
+                      child: TimeThumb(
+                        position: position,
+                        knobX: knobX - thumbX,
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
+            const SizedBox(height: TimeThumb.height - 21),
           ],
         );
       },
@@ -358,36 +366,113 @@ class PlayerSeekBar extends StatelessWidget {
   }
 }
 
-/// 진행 막대 손잡이: 현재 재생 시간을 담은 알약.
-class TimePill extends StatelessWidget {
-  const TimePill({super.key, required this.position});
+/// 진행 막대 손잡이: 원형 손잡이 아래로 둥근 삼각형이 이어지고, 그 아래 현재 재생 시간 상자.
+/// 손잡이 원의 가운데가 가로 [knobX] (왼쪽 위 모서리 기준), 세로 [knobR]에 놓인다.
+class TimeThumb extends StatelessWidget {
+  const TimeThumb({super.key, required this.position, required this.knobX});
 
   final Duration position;
+  final double knobX;
+
+  static const width = 52.0;
+  static const height = 40.0;
+  static const knobR = 7.0;
 
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
     return IgnorePointer(
-      child: Container(
-        width: PlayerSeekBar._pillW,
-        height: PlayerSeekBar._pillH,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(PlayerSeekBar._pillH / 2),
-          color: p.onSurface,
-          boxShadow: [
-            BoxShadow(color: p.scrim.withValues(alpha: .3), blurRadius: 6),
+      child: SizedBox(
+        width: width,
+        height: height,
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: CustomPaint(
+                painter: _ThumbPainter(
+                  color: p.onSurface,
+                  shadow: p.scrim.withValues(alpha: .3),
+                  knobX: knobX,
+                ),
+              ),
+            ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: 22,
+              child: Center(
+                child: Text(
+                  TimeText.clock(position),
+                  maxLines: 1,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: p.background,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
           ],
-        ),
-        child: Text(
-          TimeText.clock(position),
-          maxLines: 1,
-          style: Theme.of(context).textTheme.labelMedium
-              ?.copyWith(color: p.background, fontWeight: FontWeight.w700),
         ),
       ),
     );
   }
+}
+
+class _ThumbPainter extends CustomPainter {
+  _ThumbPainter({
+    required this.color,
+    required this.shadow,
+    required this.knobX,
+  });
+
+  final Color color;
+  final Color shadow;
+  final double knobX;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const r = TimeThumb.knobR;
+    final x = knobX;
+    final l = (x - 7).clamp(2.0, size.width);
+    final rt = (x + 7).clamp(0.0, size.width - 2);
+    final body = RRect.fromLTRBR(
+      0,
+      size.height - 22,
+      size.width,
+      size.height,
+      const Radius.circular(11),
+    );
+    final base = Path()
+      ..addOval(Rect.fromCircle(center: Offset(x, r), radius: r))
+      ..addRRect(body);
+    final neck = Path()
+      ..moveTo(x, r + 2)
+      ..lineTo(rt, body.top + 1)
+      ..lineTo(l, body.top + 1)
+      ..close();
+    final all = Path.combine(PathOperation.union, base, neck);
+    canvas.drawPath(
+      all,
+      Paint()
+        ..color = shadow
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+    );
+    canvas.drawPath(all, Paint()..color = color);
+    // 삼각형 모서리를 둥글게.
+    canvas.drawPath(
+      neck,
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 4
+        ..strokeJoin = StrokeJoin.round,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_ThumbPainter old) =>
+      old.color != color || old.knobX != knobX || old.shadow != shadow;
 }
 
 /// "02:15 / 44:39" 글자.
@@ -745,12 +830,11 @@ class EqualizerButton extends StatelessWidget {
 
 /// 모든 모양이 같이 쓰는 하단 조작부 (위에서 아래로):
 /// 1) 제목 · 아티스트 + 가사/커버 · 현재 재생목록(대기열) · 좋아요
-/// 2) 진행 막대 (총 시간은 위, 현재 시간은 손잡이 알약) 양옆에 10초 뒤로 · 앞으로
-/// 3) 이전 · 재생 · 다음
+/// 2) 진행 막대 (총 시간은 위, 현재 시간은 손잡이 아래 둥근 삼각형 상자)
+/// 3) 10초 뒤로 · 이전 · 재생 · 다음 · 10초 앞으로
 /// 4) 셔플 · 반복 (왼쪽), 수면 타이머 · 이퀄라이저 (오른쪽)
 ///
-/// [seekBar]가 false면 진행 막대는 커버 쪽(호, [MorphSeek])에 있어 2번 줄은 없고,
-/// 10초 이동 버튼이 3번 줄의 이전 · 다음 양옆으로 간다.
+/// [seekBar]가 false면 진행 막대는 커버 쪽(호, [MorphSeek])에 있어 2번 줄은 없다.
 class PlayerControls extends StatelessWidget {
   const PlayerControls({
     super.key,
@@ -794,35 +878,22 @@ class PlayerControls extends StatelessWidget {
           ),
           if (seekBar) ...[
             const SizedBox(height: AppSpacing.xs),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                SeekStepButton(data: data, forward: false),
-                Expanded(
-                  child: PlayerSeekBar(
-                    progress: data.state.progress,
-                    onSeek: data.vm.seekFraction,
-                    position: data.state.position,
-                    total: data.track.duration,
-                  ),
-                ),
-                SeekStepButton(data: data, forward: true),
-              ],
+            PlayerSeekBar(
+              progress: data.state.progress,
+              onSeek: data.vm.seekFraction,
+              position: data.state.position,
+              total: data.track.duration,
             ),
           ],
           const SizedBox(height: AppSpacing.xs),
           Row(
-            mainAxisAlignment: seekBar
-                ? MainAxisAlignment.center
-                : MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              if (!seekBar) SeekStepButton(data: data, forward: false),
+              SeekStepButton(data: data, forward: false),
               SkipButton(data: data, next: false),
-              if (seekBar) const SizedBox(width: AppSpacing.xl),
               play,
-              if (seekBar) const SizedBox(width: AppSpacing.xl),
               SkipButton(data: data, next: true),
-              if (!seekBar) SeekStepButton(data: data, forward: true),
+              SeekStepButton(data: data, forward: true),
             ],
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -944,7 +1015,7 @@ class _MorphSeekState extends State<MorphSeek>
   List<Offset> _pointsFor(Size size, double t) {
     final metric = widget.pathOf(size, _extend).computeMetrics().first;
     final y = size.height - MorphSeek.band + 24;
-    const inset = AppSpacing.lg;
+    const inset = AppSpacing.lg + 8;
     const n = MorphSeek._samples;
     return [
       for (var i = 0; i <= n; i++)
@@ -977,10 +1048,14 @@ class _MorphSeekState extends State<MorphSeek>
         ? Offset.zero
         : _points[(v * (_points.length - 1)).round()];
     final lineY = size.height - MorphSeek.band + 24;
+    final thumbX = (head.dx - TimeThumb.width / 2).clamp(
+      0.0,
+      size.width - TimeThumb.width,
+    );
     return [
       if (t < 1) ...[
         Positioned(
-          left: gap.dx - 36 - w,
+          left: gap.dx - 76 - w,
           top: gap.dy - 10,
           width: w,
           child: IgnorePointer(
@@ -995,7 +1070,7 @@ class _MorphSeekState extends State<MorphSeek>
           ),
         ),
         Positioned(
-          left: gap.dx + 36,
+          left: gap.dx + 76,
           top: gap.dy - 10,
           width: w,
           child: IgnorePointer(
@@ -1020,11 +1095,14 @@ class _MorphSeekState extends State<MorphSeek>
           ),
         ),
         Positioned(
-          left: head.dx - PlayerSeekBar._pillW / 2,
-          top: lineY - PlayerSeekBar._pillH / 2,
+          left: thumbX,
+          top: lineY - TimeThumb.knobR,
           child: Opacity(
             opacity: t,
-            child: TimePill(position: widget.position),
+            child: TimeThumb(
+              position: widget.position,
+              knobX: head.dx - thumbX,
+            ),
           ),
         ),
       ],
