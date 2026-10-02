@@ -16,6 +16,17 @@ Widget _lyrics(PlayerLayoutData data) => Padding(
   child: PlayerLyricsPane(track: data.track),
 );
 
+/// 가사 보기일 때 바탕 전체를 배경색으로 덮는 막 (커버 · 그라데이션이 가장자리에 비치지 않게).
+Widget _lyricsVeil(BuildContext context, bool show) => Positioned.fill(
+  child: IgnorePointer(
+    child: AnimatedOpacity(
+      opacity: show ? 1 : 0,
+      duration: AppMotion.slow,
+      child: ColoredBox(color: context.palette.background),
+    ),
+  ),
+);
+
 /// 네모: 큰 정사각 커버, 아래 진행 막대.
 class SquarePlayer extends StatelessWidget {
   const SquarePlayer({super.key, required this.data});
@@ -28,46 +39,54 @@ class SquarePlayer extends StatelessWidget {
     final p = context.palette;
     return PlayerBackdrop(
       art: art,
-      child: SafeArea(
-        child: Column(
-          children: [
-            PlayerTopBar(track: data.track),
-            Expanded(
-              child: data.showLyrics
-                  ? _lyrics(data)
-                  : Padding(
-                      padding: _side,
-                      child: Center(
-                        child: AspectRatio(
-                          aspectRatio: 1,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(AppRadii.lg),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: p.scrim.withValues(alpha: .35),
-                                  blurRadius: 40,
-                                  offset: const Offset(0, 18),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          _lyricsVeil(context, data.showLyrics),
+          SafeArea(
+            child: Column(
+              children: [
+                PlayerTopBar(track: data.track),
+                Expanded(
+                  child: data.showLyrics
+                      ? _lyrics(data)
+                      : Padding(
+                          padding: _side,
+                          child: Center(
+                            child: AspectRatio(
+                              aspectRatio: 1,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadii.lg,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: p.scrim.withValues(alpha: .35),
+                                      blurRadius: 40,
+                                      offset: const Offset(0, 18),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                            child: Hero(
-                              tag: 'now-playing',
-                              child: PlayerCover(art: art),
+                                child: Hero(
+                                  tag: 'now-playing',
+                                  child: PlayerCover(art: art),
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                PlayerControls(
+                  data: data,
+                  play: SolidPlayButton(data: data, size: 72),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+              ],
             ),
-            const SizedBox(height: AppSpacing.sm),
-            PlayerControls(
-              data: data,
-              play: SolidPlayButton(data: data, size: 72),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -118,19 +137,14 @@ class FullBleedPlayer extends StatelessWidget {
                 ],
               ),
             ),
+            _lyricsVeil(context, data.showLyrics),
             SafeArea(
               child: Column(
                 children: [
                   PlayerTopBar(track: data.track),
                   Expanded(
                     child: data.showLyrics
-                        ? Padding(
-                            padding: _side,
-                            child: ColoredBox(
-                              color: p.background.withValues(alpha: .86),
-                              child: PlayerLyricsPane(track: data.track),
-                            ),
-                          )
+                        ? _lyrics(data)
                         : const SizedBox.shrink(),
                   ),
                   PlayerControls(
@@ -190,39 +204,45 @@ class ArcPlayer extends StatelessWidget {
     return PlayerBackdrop(
       art: art,
       blurred: true,
-      child: SafeArea(
-        child: Column(
-          children: [
-            PlayerTopBar(track: data.track),
-            Expanded(
-              child: MorphSeek(
-                progress: data.state.progress,
-                onSeek: data.vm.seekFraction,
-                straight: data.showLyrics,
-                pathOf: _path,
-                track: p.onSurface.withValues(alpha: .2),
-                fill: p.onSurface,
-                position: data.state.position,
-                total: data.track.duration,
-                timeAt: (s, _) => Offset(
-                  s.width / 2,
-                  s.height / 2 + (_size(s) / 2 - _knob - 1),
-                ),
-                cover: (s, _) => Center(
-                  child: SizedBox.square(
-                    dimension: _size(s),
-                    child: Padding(
-                      padding: EdgeInsets.all(_size(s) * .09),
-                      child: PlayerCover(art: art, radius: _size(s)),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          _lyricsVeil(context, data.showLyrics),
+          SafeArea(
+            child: Column(
+              children: [
+                PlayerTopBar(track: data.track),
+                Expanded(
+                  child: MorphSeek(
+                    progress: data.state.progress,
+                    onSeek: data.vm.seekFraction,
+                    straight: data.showLyrics,
+                    pathOf: _path,
+                    track: p.onSurface.withValues(alpha: .2),
+                    fill: p.onSurface,
+                    position: data.state.position,
+                    total: data.track.duration,
+                    timeAt: (s, _) => Offset(
+                      s.width / 2,
+                      s.height / 2 + (_size(s) / 2 - _knob - 1),
                     ),
+                    cover: (s, _) => Center(
+                      child: SizedBox.square(
+                        dimension: _size(s),
+                        child: Padding(
+                          padding: EdgeInsets.all(_size(s) * .09),
+                          child: PlayerCover(art: art, radius: _size(s)),
+                        ),
+                      ),
+                    ),
+                    lyrics: _lyrics(data),
                   ),
                 ),
-                lyrics: _lyrics(data),
-              ),
+                _imageSeekControls(data, GlowPlayButton(data: data, size: 72)),
+              ],
             ),
-            _imageSeekControls(data, GlowPlayButton(data: data, size: 72)),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
