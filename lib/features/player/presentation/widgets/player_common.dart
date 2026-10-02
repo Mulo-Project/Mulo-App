@@ -310,56 +310,56 @@ class PlayerSeekBar extends StatelessWidget {
         void seek(Offset local) => onSeek((local.dx - _knob / 2) / room);
         final v = progress.clamp(0.0, 1.0);
         final knobX = room * v + _knob / 2;
-        final thumbX = (knobX - TimeThumb.width / 2).clamp(
-          0.0,
-          c.maxWidth - TimeThumb.width,
-        );
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Align(
-              alignment: Alignment.centerRight,
-              child: Text(TimeText.clock(total), style: style),
-            ),
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTapDown: (d) => seek(d.localPosition),
-              onHorizontalDragUpdate: (d) => seek(d.localPosition),
-              child: SizedBox(
-                height: 28,
-                child: Stack(
-                  alignment: Alignment.centerLeft,
-                  clipBehavior: Clip.none,
-                  children: [
-                    Container(
-                      height: 4,
-                      decoration: ShapeDecoration(
-                        shape: const StadiumBorder(),
-                        color: p.onSurface.withValues(alpha: .2),
+        final thumbX = knobX - TimeThumb.width / 2;
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: TimeThumb.edge),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text(TimeText.clock(total), style: style),
+              ),
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTapDown: (d) => seek(d.localPosition),
+                onHorizontalDragUpdate: (d) => seek(d.localPosition),
+                child: SizedBox(
+                  height: 28,
+                  child: Stack(
+                    alignment: Alignment.centerLeft,
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        height: 4,
+                        decoration: ShapeDecoration(
+                          shape: const StadiumBorder(),
+                          color: p.onSurface.withValues(alpha: .2),
+                        ),
                       ),
-                    ),
-                    Container(
-                      height: 4,
-                      width: knobX,
-                      decoration: ShapeDecoration(
-                        shape: const StadiumBorder(),
-                        color: p.onSurface,
+                      Container(
+                        height: 4,
+                        width: knobX,
+                        decoration: ShapeDecoration(
+                          shape: const StadiumBorder(),
+                          color: p.onSurface,
+                        ),
                       ),
-                    ),
-                    Positioned(
-                      left: thumbX,
-                      top: 14 - TimeThumb.knobR,
-                      child: TimeThumb(
-                        position: position,
-                        knobX: knobX - thumbX,
+                      Positioned(
+                        left: thumbX,
+                        top: 14 - TimeThumb.knobR,
+                        child: TimeThumb(
+                          position: position,
+                          knobX: knobX - thumbX,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: TimeThumb.height - 21),
-          ],
+              const SizedBox(height: TimeThumb.height - 21),
+            ],
+          ),
         );
       },
     );
@@ -377,6 +377,9 @@ class TimeThumb extends StatelessWidget {
   static const width = 52.0;
   static const height = 40.0;
   static const knobR = 7.0;
+
+  /// 손잡이가 막대 끝에 가도 상자가 밀리지 않도록 막대 양끝에 두는 여백.
+  static const edge = width / 2 - knobR;
 
   @override
   Widget build(BuildContext context) {
@@ -1015,7 +1018,7 @@ class _MorphSeekState extends State<MorphSeek>
   List<Offset> _pointsFor(Size size, double t) {
     final metric = widget.pathOf(size, _extend).computeMetrics().first;
     final y = size.height - MorphSeek.band + 24;
-    const inset = AppSpacing.lg + 8;
+    const inset = AppSpacing.lg + TimeThumb.edge + TimeThumb.knobR;
     const n = MorphSeek._samples;
     return [
       for (var i = 0; i <= n; i++)
@@ -1048,10 +1051,7 @@ class _MorphSeekState extends State<MorphSeek>
         ? Offset.zero
         : _points[(v * (_points.length - 1)).round()];
     final lineY = size.height - MorphSeek.band + 24;
-    final thumbX = (head.dx - TimeThumb.width / 2).clamp(
-      0.0,
-      size.width - TimeThumb.width,
-    );
+    final thumbX = head.dx - TimeThumb.width / 2;
     return [
       if (t < 1) ...[
         Positioned(
