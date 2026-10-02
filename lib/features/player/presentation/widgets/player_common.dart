@@ -306,7 +306,7 @@ class PlayerSeekBar extends StatelessWidget {
         ?.copyWith(color: p.onSurface.withValues(alpha: .7));
     return LayoutBuilder(
       builder: (context, c) {
-        final room = c.maxWidth - _knob;
+        final room = c.maxWidth - TimeThumb.edge * 2 - _knob;
         void seek(Offset local) => onSeek((local.dx - _knob / 2) / room);
         final v = progress.clamp(0.0, 1.0);
         final knobX = room * v + _knob / 2;

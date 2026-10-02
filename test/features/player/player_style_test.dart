@@ -40,6 +40,31 @@ Future<void> _openPlayer(WidgetTester tester, PlayerStyle style) async {
 }
 
 void main() {
+  testWidgets('진행 막대: 끝에 가도 시간 상자가 막대 폭 안에 있다', (tester) async {
+    for (final v in [0.0, 1.0]) {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData.dark(),
+          home: Align(
+            alignment: Alignment.topLeft,
+            child: SizedBox(
+              width: 400,
+              child: PlayerSeekBar(
+                progress: v,
+                onSeek: (_) {},
+                position: const Duration(minutes: 3, seconds: 3),
+                total: const Duration(minutes: 3, seconds: 3),
+              ),
+            ),
+          ),
+        ),
+      );
+      final box = tester.getRect(find.byType(TimeThumb));
+      expect(box.left, greaterThanOrEqualTo(0));
+      expect(box.right, lessThanOrEqualTo(400));
+    }
+  });
+
   test('플레이어 모양을 고르면 저장하고, 다시 불러온다', () async {
     final repo = MemoryPlayerStyleRepository();
     PlayerStyleCubit make() => PlayerStyleCubit(
