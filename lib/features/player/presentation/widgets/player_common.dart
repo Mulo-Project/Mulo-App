@@ -524,10 +524,12 @@ class PlayerLikeButton extends StatelessWidget {
       builder: (context, _) {
         final on = cubit.isFavorite(trackId);
         return IconButton(
+          iconSize: 30,
           tooltip: on ? l10n.trackMenuUnfavorite : l10n.trackMenuFavorite,
           onPressed: () => cubit.toggleFavorite(trackId),
           icon: Icon(
             on ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+            size: 30,
             color: on ? p.accent : p.onSurfaceMuted,
           ),
         );
