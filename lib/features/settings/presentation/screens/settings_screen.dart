@@ -9,6 +9,9 @@ import '../../../../core/sample/sample_data.dart';
 import '../../../downloads/domain/entities/download_options.dart';
 import '../../../downloads/presentation/bloc/download_settings_cubit.dart';
 import '../../../library/presentation/widgets/loaded_folders_tile.dart';
+import '../../../player/presentation/bloc/player_style_cubit.dart';
+import '../../../player/presentation/screens/player_style_screen.dart'
+    show playerStyleName;
 import '../../../security/presentation/bloc/app_lock_cubit.dart';
 import '../../../security/presentation/screens/pin_entry_screen.dart';
 import '../../../theme/domain/entities/theme_settings.dart';
@@ -196,6 +199,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         themeCtrl.beginPreview();
                         context.go(Routes.home);
                       },
+                    ),
+                    SettingRow(
+                      title: l10n.settingsPlayerStyle,
+                      description: playerStyleName(
+                        l10n,
+                        context.watch<PlayerStyleCubit>().state,
+                      ),
+                      trailing: const _Chevron(),
+                      onTap: () => context.push(Routes.playerTheme),
                     ),
                     SettingRow(
                       title: l10n.settingsFollowMood,

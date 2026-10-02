@@ -253,3 +253,10 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - `NowPlayingCubit`: `moveInQueue(from, to)`(재생 중인 곡은 그대로 이어 감), `shuffleUpNext`(지금 곡 앞은 두고 뒤만 섞음 — 셔플 모드 `toggleShuffle`과 별개의 동작), `clearQueue`(재생 중인 곡만 남김).
 - 스크린샷 테스트에 재생 중 화면(`player` · `queue` · `library-playing`)을 추가했다.
 
+
+## D-039 · 2026-10-02 · 플레이어 · 카드 없는 재생 화면 4종 + 플레이어 테마
+- 전체 화면 플레이어에서 `GlassCard` 구역(카드 · 상자)을 없앴다. 배경은 커버(또는 테마) 색이 위에서 배경색으로 스며드는 그라데이션 위에 요소를 바로 놓는다.
+- 모양 4종 (`PlayerStyle`, 기본 네모): **음반**(원형 디스크 커버 + 가는 원형 진행 호, 곡 정보는 디스크 라벨 위, 호를 끌어 이동) · **네모**(큰 정사각 커버, 제목 · 하트 · ⋮, 가는 막대 + 시간 알약 + ±10초, 흰 원 재생 버튼) · **꽉 찬 이미지**(커버가 위쪽을 채우고 배경으로 스며듦) · **호**(흐린 커버 배경, 빛나는 재생 버튼을 두른 270° 진행 호, 이전 · 다음은 호 아래 틈).
+- 모든 모양에 셔플 · 반복 · 좋아요 · 가사 · 대기열이 있다. 위치만 다르다.
+- 설정 > 테마 > **플레이어 테마**(`/settings/player-theme`): 옆으로 넘기는 미리보기(도형 그림) + 사용 버튼. 고른 값은 shared_preferences(`player.style`)에 저장 (`PlayerStyleCubit`, 유스케이스 `LoadPlayerStyle` · `SavePlayerStyle`).
+- 레이아웃은 `PlayerLayoutData` 하나를 받는 위젯 4개(`player_layouts.dart`), 공통 조각은 `player_common.dart`. 새 모양은 열거형 값 + 레이아웃 + 미리보기만 더하면 된다.

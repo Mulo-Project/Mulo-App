@@ -18,6 +18,7 @@ import 'package:music_download_play_app/core/sample/sample_data.dart';
 import 'package:music_download_play_app/features/downloads/data/repositories/sample_download_queue_repository.dart';
 import 'package:music_download_play_app/features/home/domain/entities/home_summary.dart';
 import 'package:music_download_play_app/features/player/presentation/bloc/now_playing_cubit.dart';
+import 'package:music_download_play_app/features/player/presentation/bloc/player_style_cubit.dart';
 import 'package:music_download_play_app/features/playlists/domain/entities/playlist.dart';
 import 'package:music_download_play_app/features/theme/domain/entities/theme_settings.dart';
 
@@ -64,6 +65,10 @@ void main() {
     'settings-full-light': Routes.settings,
     'player-light': Routes.player,
     'player': Routes.player,
+    'player-vinyl': Routes.player,
+    'player-bleed': Routes.player,
+    'player-arc': Routes.player,
+    'player-theme': Routes.playerTheme,
     'queue': Routes.queue,
     'library-playing': Routes.library,
   };
@@ -96,6 +101,12 @@ void main() {
           downloads: SampleDownloadQueueRepository(),
           playlists: MemoryPlaylistRepository(_samplePlaylists),
           // 라이트 스크린샷은 저장된 화면 모드를 라이트로 둔다.
+          playerStyle: switch (e.key) {
+            'player-vinyl' => PlayerStyle.vinyl,
+            'player-bleed' => PlayerStyle.fullBleed,
+            'player-arc' => PlayerStyle.arc,
+            _ => PlayerStyle.square,
+          },
           theme: ThemeSettings(
             mode: e.key.endsWith('-light')
                 ? AppThemeMode.light
@@ -112,7 +123,7 @@ void main() {
         await tester.pumpAndSettle();
 
         // 플레이어 · 대기열 · 미니 플레이어는 재생 중인 곡이 있어야 보인다.
-        if (e.key.startsWith('player') ||
+        if ((e.key.startsWith('player') && e.key != 'player-theme') ||
             e.key == 'queue' ||
             e.key == 'library-playing') {
           tester

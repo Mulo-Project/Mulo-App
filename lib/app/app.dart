@@ -17,6 +17,7 @@ import '../features/library/presentation/bloc/library_cubit.dart';
 import '../features/library/presentation/bloc/library_import_cubit.dart';
 import '../features/player/presentation/bloc/audio_output_cubit.dart';
 import '../features/player/presentation/bloc/now_playing_cubit.dart';
+import '../features/player/presentation/bloc/player_style_cubit.dart';
 import '../features/playlists/presentation/bloc/playlists_cubit.dart';
 import '../features/security/presentation/bloc/app_lock_cubit.dart';
 import '../features/security/presentation/widgets/lock_gate.dart';
@@ -59,6 +60,7 @@ class _MusicAppState extends State<MusicApp> {
         BlocProvider(create: (_) => sl<LibraryImportCubit>()),
         BlocProvider(create: (_) => sl<NowPlayingCubit>()),
         BlocProvider(create: (_) => sl<AudioOutputCubit>()..refresh()),
+        BlocProvider(create: (_) => sl<PlayerStyleCubit>()..load()),
         BlocProvider(create: (_) => sl<PlayRecorderCubit>()),
         BlocProvider(create: (_) => sl<DownloadQueueCubit>()..start()),
         BlocProvider(create: (_) => sl<DownloadSettingsCubit>()..load()),

@@ -21,6 +21,8 @@ import 'package:music_download_play_app/features/library/domain/entities/track.d
 import 'package:music_download_play_app/features/library/domain/entities/track_info.dart';
 import 'package:music_download_play_app/features/library/domain/repositories/library_repository.dart';
 import 'package:music_download_play_app/features/player/di.dart';
+import 'package:music_download_play_app/features/player/domain/entities/player_style.dart';
+import 'package:music_download_play_app/features/player/domain/repositories/player_style_repository.dart';
 import 'package:music_download_play_app/features/playlists/di.dart';
 import 'package:music_download_play_app/features/playlists/domain/entities/playlist.dart';
 import 'package:music_download_play_app/features/playlists/domain/repositories/playlist_repository.dart';
@@ -284,6 +286,19 @@ class FakeBiometricAuthenticator implements BiometricAuthenticator {
   }
 }
 
+/// 메모리 플레이어 모양 저장소.
+class MemoryPlayerStyleRepository implements PlayerStyleRepository {
+  MemoryPlayerStyleRepository([this.style = PlayerStyle.initial]);
+
+  PlayerStyle style;
+
+  @override
+  Future<PlayerStyle> load() async => style;
+
+  @override
+  Future<void> save(PlayerStyle value) async => style = value;
+}
+
 class MemoryThemeSettingsRepository implements ThemeSettingsRepository {
   MemoryThemeSettingsRepository([this.settings = const ThemeSettings()]);
 
@@ -506,6 +521,7 @@ Future<void> setUpTestDependencies({
   LyricsRepository? lyrics,
   LyricsFileSource? lyricsFile,
   ThemeSettings theme = const ThemeSettings(),
+  PlayerStyle playerStyle = PlayerStyle.initial,
   PlayHistoryRepository? history,
   DownloadQueueRepository? downloads,
   DownloadSettingsRepository? downloadSettings,
@@ -530,6 +546,9 @@ Future<void> setUpTestDependencies({
   sl
     ..registerLazySingleton<JoinDateRepository>(
       () => MemoryJoinDate(joinedAt ?? DateTime(2026, 1, 1)),
+    )
+    ..registerLazySingleton<PlayerStyleRepository>(
+      () => MemoryPlayerStyleRepository(playerStyle),
     )
     ..registerLazySingleton<ThemeSettingsRepository>(
       () => MemoryThemeSettingsRepository(theme),

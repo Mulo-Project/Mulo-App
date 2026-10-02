@@ -794,6 +794,96 @@ abstract class AppLocalizations {
   /// **'고른 테마로 앱 화면들을 직접 둘러보고 적용해요'**
   String get settingsThemePreviewDesc;
 
+  /// No description provided for @settingsPlayerStyle.
+  ///
+  /// In ko, this message translates to:
+  /// **'플레이어 테마'**
+  String get settingsPlayerStyle;
+
+  /// No description provided for @settingsPlayerStyleDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생 화면 모양을 골라요'**
+  String get settingsPlayerStyleDesc;
+
+  /// No description provided for @playerStyleTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'플레이어 테마'**
+  String get playerStyleTitle;
+
+  /// No description provided for @playerStyleUse.
+  ///
+  /// In ko, this message translates to:
+  /// **'사용'**
+  String get playerStyleUse;
+
+  /// No description provided for @playerStyleInUse.
+  ///
+  /// In ko, this message translates to:
+  /// **'사용 중'**
+  String get playerStyleInUse;
+
+  /// No description provided for @playerStyleVinyl.
+  ///
+  /// In ko, this message translates to:
+  /// **'음반'**
+  String get playerStyleVinyl;
+
+  /// No description provided for @playerStyleVinylDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'둥근 디스크 커버 둘레로 진행 호가 돌아요'**
+  String get playerStyleVinylDesc;
+
+  /// No description provided for @playerStyleSquare.
+  ///
+  /// In ko, this message translates to:
+  /// **'네모'**
+  String get playerStyleSquare;
+
+  /// No description provided for @playerStyleSquareDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'큰 정사각 커버와 가는 진행 막대, 10초 이동'**
+  String get playerStyleSquareDesc;
+
+  /// No description provided for @playerStyleFullBleed.
+  ///
+  /// In ko, this message translates to:
+  /// **'꽉 찬 이미지'**
+  String get playerStyleFullBleed;
+
+  /// No description provided for @playerStyleFullBleedDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'커버가 위쪽을 채우고 배경으로 스며들어요'**
+  String get playerStyleFullBleedDesc;
+
+  /// No description provided for @playerStyleArc.
+  ///
+  /// In ko, this message translates to:
+  /// **'호'**
+  String get playerStyleArc;
+
+  /// No description provided for @playerStyleArcDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'흐린 커버 배경 위, 빛나는 재생 버튼을 두른 곡선 진행 호'**
+  String get playerStyleArcDesc;
+
+  /// No description provided for @playerRewind10.
+  ///
+  /// In ko, this message translates to:
+  /// **'10초 뒤로'**
+  String get playerRewind10;
+
+  /// No description provided for @playerForward10.
+  ///
+  /// In ko, this message translates to:
+  /// **'10초 앞으로'**
+  String get playerForward10;
+
   /// No description provided for @themePreviewHint.
   ///
   /// In ko, this message translates to:
