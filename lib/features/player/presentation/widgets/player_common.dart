@@ -883,7 +883,7 @@ class MorphSeek extends StatefulWidget {
   final Duration position;
   final Duration total;
 
-  /// 곡선 모양일 때 "현재 / 전체" 시간을 놓을 가운데 위치 (모양 아래 뚫린 곳).
+  /// 곡선 모양일 때 현재 · 전체 시간을 양옆에 놓을 가운데 위치 (모양 아래 뚫린 곳).
   final Offset Function(Size size, double extend) timeAt;
 
   /// 곧은 막대가 놓이는 아래 띠 높이.
@@ -964,13 +964,13 @@ class _MorphSeekState extends State<MorphSeek>
   void _seek(Offset local) =>
       widget.onSeek(MorphSeek.nearest(_points, local).$1);
 
-  /// 곡선일 때는 모양 아래 뚫린 곳에 "현재 / 전체", 곧은 막대일 때는 막대 위 총 시간과
+  /// 곡선일 때는 모양 아래 뚫린 곳 양옆에 현재(왼쪽) · 전체(오른쪽) 시간, 곧은 막대일 때는 막대 위 총 시간과
   /// 손잡이 아래 삼각형 + 현재 시간.
   List<Widget> _timeLabels(BuildContext context, Size size, double t) {
     final p = context.palette;
     final style = Theme.of(context).textTheme.labelMedium
         ?.copyWith(color: p.onSurface.withValues(alpha: .7));
-    const w = 120.0;
+    const w = 72.0;
     final gap = widget.timeAt(size, _extend);
     final v = widget.progress.clamp(0.0, 1.0);
     final head = _points.isEmpty
@@ -978,22 +978,38 @@ class _MorphSeekState extends State<MorphSeek>
         : _points[(v * (_points.length - 1)).round()];
     final lineY = size.height - MorphSeek.band + 24;
     return [
-      if (t < 1)
+      if (t < 1) ...[
         Positioned(
-          left: gap.dx - w / 2,
+          left: gap.dx - 36 - w,
           top: gap.dy - 10,
           width: w,
           child: IgnorePointer(
             child: Opacity(
               opacity: 1 - t,
               child: Text(
-                '${TimeText.clock(widget.position)} / ${TimeText.clock(widget.total)}',
-                textAlign: TextAlign.center,
+                TimeText.clock(widget.position),
+                textAlign: TextAlign.right,
                 style: Theme.of(context).textTheme.labelLarge,
               ),
             ),
           ),
         ),
+        Positioned(
+          left: gap.dx + 36,
+          top: gap.dy - 10,
+          width: w,
+          child: IgnorePointer(
+            child: Opacity(
+              opacity: 1 - t,
+              child: Text(
+                TimeText.clock(widget.total),
+                textAlign: TextAlign.left,
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
+            ),
+          ),
+        ),
+      ],
       if (t > 0) ...[
         Positioned(
           right: AppSpacing.lg,
