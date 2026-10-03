@@ -31,9 +31,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
   LibrarySort _sort = LibrarySort.added;
   String _query = '';
 
-  /// 장르 탭에서 골라 들어간 장르 (null이면 장르 목록). 빈 문자열은 "알 수 없는 장르".
-  String? _genre;
-
   List<Track> _filtered(List<Track> all, AppLocalizations l10n) {
     final q = _query.trim().toLowerCase();
     final list = all
@@ -104,14 +101,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
             onTap: () => context.push(Routes.album(e.value.first.album)),
           ),
       ],
-      LibraryTab.genres when _genre != null => [
-        _GenreHeader(
-          name: genreOf(l10n, _genre!),
-          backTooltip: l10n.genreBack,
-          onBack: () => setState(() => _genre = null),
-        ),
-        ..._genreSongs(context, groupByGenre(tracks)[_genre] ?? const []),
-      ],
       LibraryTab.genres => [
         for (final e in groupByGenre(tracks).entries)
           TrackTile(
@@ -123,7 +112,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
               icon: Icons.category_rounded,
             ),
             trailing: const _Chevron(),
-            onTap: () => setState(() => _genre = e.key),
+            onTap: () => context.push(Routes.genre(e.key)),
           ),
       ],
     };
@@ -167,10 +156,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       .length,
                   playing: playing,
                   onPlayAll: () => vm.playQueue(tracks),
-                  onShuffle: () {
-                    vm.playQueue(tracks);
-                    if (!vm.state.shuffle) vm.toggleShuffle();
-                  },
+                  onShuffle: () => vm.playShuffled(tracks),
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -186,10 +172,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     LibraryTab.albums => l10n.libraryAlbums,
                     LibraryTab.genres => l10n.libraryGenres,
                   },
-                  onChanged: (t) => setState(() {
-                    _tab = t;
-                    _genre = null;
-                  }),
+                  onChanged: (t) => setState(() => _tab = t),
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
@@ -239,11 +222,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
       ),
     );
   }
-
-  List<Widget> _genreSongs(BuildContext context, List<Track> songs) => [
-    for (var i = 0; i < songs.length; i++)
-      _songTile(context, songs[i], i, songs),
-  ];
 
   Widget _songTile(BuildContext context, Track t, int i, List<Track> queue) =>
       TrackListTile(track: t, queue: queue, index: i);
@@ -380,42 +358,6 @@ class _Chevron extends StatelessWidget {
   @override
   Widget build(BuildContext context) =>
       Icon(Icons.chevron_right_rounded, color: context.palette.onSurfaceMuted);
-}
-
-/// 장르 안으로 들어갔을 때 맨 위: 뒤로 가기 + 장르 이름.
-class _GenreHeader extends StatelessWidget {
-  const _GenreHeader({
-    required this.name,
-    required this.backTooltip,
-    required this.onBack,
-  });
-
-  final String name;
-  final String backTooltip;
-  final VoidCallback onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: AppSpacing.screen,
-      child: Row(
-        children: [
-          IconButton(
-            tooltip: backTooltip,
-            onPressed: onBack,
-            icon: const Icon(Icons.arrow_back_rounded),
-          ),
-          Expanded(
-            child: Text(
-              name,
-              style: Theme.of(context).textTheme.titleMedium,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 /// 보관함이 비었을 때: 기기 음악 불러오기 안내.

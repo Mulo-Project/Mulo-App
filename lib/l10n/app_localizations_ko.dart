@@ -167,7 +167,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get unknownGenre => '알 수 없는 장르';
 
   @override
-  String get genreBack => '장르 목록으로';
+  String get genreNotFound => '장르를 찾을 수 없어요';
 
   @override
   String get sortLabel => '정렬';
@@ -1131,6 +1131,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get playlistMenuPlayAll => '전체 재생';
+
+  @override
+  String get playlistMenuShuffle => '셔플 재생';
 
   @override
   String get playlistMenuRename => '이름 바꾸기';

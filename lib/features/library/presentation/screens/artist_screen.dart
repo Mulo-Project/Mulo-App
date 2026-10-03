@@ -7,8 +7,8 @@ import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../covers/presentation/widgets/decorate_sheet.dart';
-import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../bloc/library_cubit.dart';
+import '../widgets/play_shuffle_row.dart';
 import '../widgets/track_list_tile.dart';
 
 /// 아티스트 화면: 아티스트의 곡 목록과 전체 재생.
@@ -105,15 +105,7 @@ class ArtistScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            Padding(
-              padding: AppSpacing.screen,
-              child: PillButton(
-                label: l10n.actionPlay,
-                icon: Icons.play_arrow_rounded,
-                onPressed: () =>
-                    context.read<NowPlayingCubit>().playQueue(tracks),
-              ),
-            ),
+            PlayShuffleRow(tracks: tracks),
             const SizedBox(height: AppSpacing.sm),
             for (final (i, t) in tracks.indexed)
               TrackListTile(track: t, queue: tracks, index: i),

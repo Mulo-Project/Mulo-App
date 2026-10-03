@@ -398,11 +398,11 @@ abstract class AppLocalizations {
   /// **'알 수 없는 장르'**
   String get unknownGenre;
 
-  /// No description provided for @genreBack.
+  /// No description provided for @genreNotFound.
   ///
   /// In ko, this message translates to:
-  /// **'장르 목록으로'**
-  String get genreBack;
+  /// **'장르를 찾을 수 없어요'**
+  String get genreNotFound;
 
   /// No description provided for @sortLabel.
   ///
@@ -2209,6 +2209,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'전체 재생'**
   String get playlistMenuPlayAll;
+
+  /// No description provided for @playlistMenuShuffle.
+  ///
+  /// In ko, this message translates to:
+  /// **'셔플 재생'**
+  String get playlistMenuShuffle;
 
   /// No description provided for @playlistMenuRename.
   ///

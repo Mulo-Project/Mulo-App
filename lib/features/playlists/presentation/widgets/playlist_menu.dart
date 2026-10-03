@@ -10,9 +10,9 @@ import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../bloc/playlists_cubit.dart';
 import 'playlist_card.dart';
 
-enum _Action { playAll, decorate, rename, delete }
+enum _Action { playAll, shuffle, decorate, rename, delete }
 
-/// 재생목록 팝업 메뉴: 전체 재생 · 꾸미기(이미지 · 색 시트) · 이름 바꾸기 · 삭제.
+/// 재생목록 팝업 메뉴: 전체 재생 · 셔플 재생 · 꾸미기(이미지 · 색 시트) · 이름 바꾸기 · 삭제.
 /// 카드의 ⋮, 길게 누르기, 오른쪽 클릭, 상세 화면의 ⋮에서 같은 메뉴를 연다.
 /// [globalPosition]이 있으면 눌린 자리에, 없으면 [context] 위젯 옆에 띄운다.
 /// 좋아요 목록은 이름 · 삭제 항목이 없고, 꾸미기에서 색을 고를 수 없다.
@@ -31,6 +31,11 @@ Future<void> showPlaylistMenu(
         value: _Action.playAll,
         icon: Icons.play_arrow_rounded,
         label: l10n.playlistMenuPlayAll,
+      ),
+      AppMenuItem(
+        value: _Action.shuffle,
+        icon: Icons.shuffle_rounded,
+        label: l10n.playlistMenuShuffle,
       ),
       AppMenuItem(
         value: _Action.decorate,
@@ -57,6 +62,8 @@ Future<void> showPlaylistMenu(
   switch (action) {
     case _Action.playAll:
       await _playAll(context, pl);
+    case _Action.shuffle:
+      await _playAll(context, pl, shuffle: true);
     case _Action.decorate:
       await showDecorateSheet(
         context,
@@ -72,7 +79,11 @@ Future<void> showPlaylistMenu(
   }
 }
 
-Future<void> _playAll(BuildContext context, Playlist pl) async {
+Future<void> _playAll(
+  BuildContext context,
+  Playlist pl, {
+  bool shuffle = false,
+}) async {
   final tracks = await context.read<PlaylistsCubit>().tracksOf(pl.id);
   if (!context.mounted) return;
   if (tracks.isEmpty) {
@@ -80,7 +91,8 @@ Future<void> _playAll(BuildContext context, Playlist pl) async {
         .showSnackBar(SnackBar(content: Text(context.l10n.playlistPlayEmpty)));
     return;
   }
-  context.read<NowPlayingCubit>().playQueue(tracks);
+  final now = context.read<NowPlayingCubit>();
+  shuffle ? now.playShuffled(tracks) : now.playQueue(tracks);
 }
 
 Future<void> _rename(BuildContext context, Playlist pl) async {

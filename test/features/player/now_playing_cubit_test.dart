@@ -20,6 +20,13 @@ void main() {
     expect(state().isPlaying, isTrue);
   });
 
+  test('playShuffled는 처음부터 재생하고 셔플을 켠다', () {
+    vm().playShuffled(SampleData.tracks.take(2).toList());
+    expect(state().shuffle, isTrue);
+    expect(state().index, 0);
+    expect(state().queue.length, 2);
+  });
+
   test('togglePlay는 재생/일시정지를 바꾼다', () {
     vm().togglePlay();
     expect(state().isPlaying, isFalse);
