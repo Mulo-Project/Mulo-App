@@ -5,8 +5,9 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../library/domain/entities/track.dart';
 import '../bloc/lyrics_cubit.dart';
+import '../screens/lyrics_web_screen.dart';
 
-/// 곡 메뉴의 "가사 설정": 직접 입력 · 붙여넣기 · 파일(.lrc · .txt)에서 불러오기.
+/// 곡 메뉴의 "가사 설정": 직접 입력 · 붙여넣기 · 파일(.lrc · .txt) · 웹 검색(Android)에서 불러오기.
 /// 저장하면 곡의 가사로 저장하고(비우면 지움) 안내를 띄운다.
 Future<void> showLyricsEditor(BuildContext context, Track track) async {
   final l10n = context.l10n;
@@ -58,6 +59,11 @@ class _LyricsEditorDialogState extends State<_LyricsEditorDialog> {
     if (picked != null && mounted) _text.text = picked;
   }
 
+  Future<void> _searchWeb() async {
+    final picked = await showLyricsWeb(context, widget.track);
+    if (picked != null && mounted) _text.text = picked;
+  }
+
   @override
   void dispose() {
     _text.dispose();
@@ -102,6 +108,15 @@ class _LyricsEditorDialogState extends State<_LyricsEditorDialog> {
               variant: PillVariant.tonal,
               onPressed: _pickFile,
             ),
+            if (lyricsWebSupported) ...[
+              const SizedBox(height: AppSpacing.xs),
+              PillButton(
+                label: l10n.lyricsWebSearch,
+                icon: Icons.travel_explore_rounded,
+                variant: PillVariant.tonal,
+                onPressed: _searchWeb,
+              ),
+            ],
             const SizedBox(height: AppSpacing.xs),
             PillButton(
               label: l10n.lyricsSave,
