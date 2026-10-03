@@ -69,6 +69,15 @@ void main() {
       expect(first.canUndo, isFalse);
     });
 
+    test('줄을 묶으면 묶음 하나가 한 번에 찍히고 공백으로 이어진다', () {
+      final d = SyncDraft.from(plain, group: 2);
+      expect(d.texts, ['첫 줄 둘째 줄', '셋째 줄']);
+      final done = d
+          .stamp(const Duration(seconds: 1))
+          .stamp(const Duration(seconds: 5));
+      expect(done.toLrc(), '[00:01.00]첫 줄 둘째 줄\n[00:05.00]셋째 줄');
+    });
+
     test('이미 싱크된 가사는 시간을 이어받는다', () {
       final d = SyncDraft.from(Lyrics.parse('[00:01.00]가\n[00:02.00]나')!);
       expect(d.isComplete, isTrue);
@@ -76,7 +85,7 @@ void main() {
     });
   });
 
-  testWidgets('가사 메뉴 › 싱크 맞추기: 지금을 눌러 찍고 저장하면 싱크 가사로 저장된다', (tester) async {
+  testWidgets('가사 화면 › 싱크 설정: 지금을 눌러 찍고 저장하면 싱크 가사로 저장된다', (tester) async {
     tester.view.physicalSize = const Size(1170, 2532);
     tester.view.devicePixelRatio = 3;
     tester.platformDispatcher.localesTestValue = const [Locale('ko')];
@@ -93,9 +102,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('가사 보기'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('가사 편집'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('싱크 맞추기'));
+    await tester.tap(find.text('싱크 설정'));
     await tester.pumpAndSettle();
 
     final player = tester.element(find.text('가 줄')).read<NowPlayingCubit>();
@@ -123,5 +130,39 @@ void main() {
     await tester.pumpAndSettle();
     expect(lyrics.saved['t1'], '[00:03.50]가 줄\n[00:10.00]나 줄');
     expect(find.text('가사를 저장했어요'), findsOneWidget);
+  });
+
+  testWidgets('싱크 설정: 묶을 줄 수를 정하면 한 번에 찍는 단위가 바뀐다', (tester) async {
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    tester.platformDispatcher.localesTestValue = const [Locale('ko')];
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+
+    final lyrics = MemoryLyricsRepository(
+      sibling: {'t1': '가 줄\n나 줄\n다 줄\n라 줄'},
+    );
+    await setUpTestDependencies(tracks: [_t('t1', '첫 곡')], lyrics: lyrics);
+    await tester.pumpWidget(const MusicApp(initialLocation: Routes.player));
+    await tester.pumpAndSettle();
+    tester.element(find.byType(PlayerScreen)).read<NowPlayingCubit>().playQueue(
+      [_t('t1', '첫 곡')],
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('가사 보기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('싱크 설정'));
+    await tester.pumpAndSettle();
+    expect(find.text('0/4줄'), findsOneWidget);
+
+    await tester.tap(find.text('2줄'));
+    await tester.pumpAndSettle();
+    expect(find.text('0/2줄'), findsOneWidget);
+    expect(find.text('가 줄 나 줄'), findsOneWidget);
+
+    // 찍기 시작하면 묶음 줄 수는 더 못 바꾼다.
+    await tester.tap(find.text('지금'));
+    await tester.pumpAndSettle();
+    expect(find.text('2줄'), findsNothing);
   });
 }

@@ -102,6 +102,9 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
       builder: (context, state) {
         final draft = state.draft;
         final sync = context.read<LyricsSyncCubit>();
+        if (_keys.length != draft.length) {
+          _keys = List.generate(draft.length, (_) => GlobalKey());
+        }
         return Scaffold(
           backgroundColor: p.background,
           body: SafeArea(
@@ -163,6 +166,31 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
                     ),
                   ),
                 ),
+                if (sync.canGroup && draft.stamped == 0)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.lg,
+                      AppSpacing.sm,
+                      AppSpacing.lg,
+                      0,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            l10n.lyricsSyncGroup,
+                            style: text.labelLarge,
+                          ),
+                        ),
+                        SegmentedPills<int>(
+                          values: const [1, 2, 3, 4],
+                          selected: state.group,
+                          labelOf: l10n.lyricsSyncGroupLines,
+                          onChanged: sync.setGroup,
+                        ),
+                      ],
+                    ),
+                  ),
                 Expanded(
                   child: draft.length == 0
                       ? Center(child: Text(l10n.lyricsSyncEmpty))
@@ -264,23 +292,31 @@ class _LineRow extends StatelessWidget {
         if (selected && time != null)
           Padding(
             padding: const EdgeInsets.only(
-              left: AppSpacing.sm,
+              left: AppSpacing.xs,
+              right: AppSpacing.xs,
               bottom: AppSpacing.xs,
             ),
-            child: Wrap(
-              spacing: AppSpacing.xs,
-              runSpacing: AppSpacing.xs,
-              crossAxisAlignment: WrapCrossAlignment.center,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                for (final ms in const [-500, -100, 100, 500])
-                  PlainButton(
-                    label: '${ms > 0 ? '+' : '−'}${ms.abs() / 1000}s',
-                    onPressed: () => sync.nudge(Duration(milliseconds: ms)),
-                  ),
                 PlainButton(
                   icon: Icons.replay_rounded,
+                  label: l10n.lyricsSyncReset,
                   tooltip: l10n.lyricsSyncReplay,
                   onPressed: onReplay,
+                ),
+                Expanded(
+                  child: Wrap(
+                    alignment: WrapAlignment.end,
+                    children: [
+                      for (final ms in const [-500, -100, 100, 500])
+                        PlainButton(
+                          label: '${ms > 0 ? '+' : '−'}${ms.abs() / 1000}s',
+                          onPressed: () =>
+                              sync.nudge(Duration(milliseconds: ms)),
+                        ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -322,29 +358,29 @@ class _ControlBar extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           Row(
             children: [
-              PlainButton(
+              CircleIconButton(
                 icon: Icons.undo_rounded,
                 tooltip: l10n.lyricsSyncUndo,
                 onPressed: draft.canUndo ? sync.undo : null,
               ),
-              const SizedBox(width: AppSpacing.xs),
-              PlainButton(
+              const SizedBox(width: AppSpacing.sm),
+              CircleIconButton(
                 icon: np.state.isPlaying
                     ? Icons.pause_rounded
                     : Icons.play_arrow_rounded,
                 tooltip: np.state.isPlaying
                     ? l10n.lyricsSyncPause
                     : l10n.lyricsSyncPlay,
+                emphasized: true,
                 onPressed: np.togglePlay,
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Align(
                   alignment: Alignment.centerRight,
-                  child: PlainButton(
+                  child: PillButton(
                     label: l10n.lyricsSyncNow,
                     icon: Icons.touch_app_rounded,
-                    accent: true,
                     onPressed: draft.current >= draft.length ? null : onNow,
                   ),
                 ),

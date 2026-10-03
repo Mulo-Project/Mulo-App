@@ -939,13 +939,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackDeleted => 'Deleted';
 
   @override
-  String get lyricsMenuTooltip => 'Edit lyrics';
-
-  @override
   String get lyricsMenuEdit => 'Edit lyrics';
-
-  @override
-  String get lyricsMenuWeb => 'Import from the web';
 
   @override
   String get lyricsEditTitle => 'Set lyrics';
@@ -955,13 +949,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lyricsEditHint =>
-      'Paste or type the lyrics. Lines with time stamps like [01:23.45] are saved as synced lyrics. Save empty to remove them.';
+      'Paste or type the lyrics. Save empty to remove them.';
 
   @override
-  String get lyricsLoadFile => 'Load from file (.lrc · .txt)';
+  String get lyricsLoadFile => 'Load from file';
 
   @override
-  String get lyricsWebSearch => 'Search the web and import';
+  String get lyricsWebSearch => 'Import from the web';
 
   @override
   String get lyricsWebTitle => 'Search lyrics';
@@ -1004,9 +998,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsCleared => 'Lyrics removed';
 
   @override
-  String get lyricsSyncOpen => 'Sync lyrics (stamp each line)';
-
-  @override
   String get lyricsSyncTitle => 'Sync lyrics';
 
   @override
@@ -1027,6 +1018,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lyricsSyncReplay => 'Replay from this line';
+
+  @override
+  String get lyricsSyncReset => 'Back to this sync';
+
+  @override
+  String get lyricsSyncGroup => 'Lines per sync';
+
+  @override
+  String lyricsSyncGroupLines(int n) {
+    return '$n';
+  }
 
   @override
   String get lyricsSyncNeedAll => 'Stamp every line to save.';

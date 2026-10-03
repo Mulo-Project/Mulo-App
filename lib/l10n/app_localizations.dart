@@ -1820,23 +1820,11 @@ abstract class AppLocalizations {
   /// **'삭제했어요'**
   String get trackDeleted;
 
-  /// No description provided for @lyricsMenuTooltip.
-  ///
-  /// In ko, this message translates to:
-  /// **'가사 편집'**
-  String get lyricsMenuTooltip;
-
   /// No description provided for @lyricsMenuEdit.
   ///
   /// In ko, this message translates to:
   /// **'가사 편집'**
   String get lyricsMenuEdit;
-
-  /// No description provided for @lyricsMenuWeb.
-  ///
-  /// In ko, this message translates to:
-  /// **'웹에서 가져오기'**
-  String get lyricsMenuWeb;
 
   /// No description provided for @lyricsEditTitle.
   ///
@@ -1853,19 +1841,19 @@ abstract class AppLocalizations {
   /// No description provided for @lyricsEditHint.
   ///
   /// In ko, this message translates to:
-  /// **'가사를 붙여넣거나 입력하세요. [01:23.45] 같은 시간 표시가 있으면 싱크 가사로 저장돼요. 비워서 저장하면 가사를 지워요.'**
+  /// **'가사를 붙여넣거나 입력하세요. 비워서 저장하면 가사를 지워요.'**
   String get lyricsEditHint;
 
   /// No description provided for @lyricsLoadFile.
   ///
   /// In ko, this message translates to:
-  /// **'파일에서 불러오기 (.lrc · .txt)'**
+  /// **'파일에서 불러오기'**
   String get lyricsLoadFile;
 
   /// No description provided for @lyricsWebSearch.
   ///
   /// In ko, this message translates to:
-  /// **'웹에서 검색해 가져오기'**
+  /// **'웹에서 가져오기'**
   String get lyricsWebSearch;
 
   /// No description provided for @lyricsWebTitle.
@@ -1940,12 +1928,6 @@ abstract class AppLocalizations {
   /// **'가사를 지웠어요'**
   String get lyricsCleared;
 
-  /// No description provided for @lyricsSyncOpen.
-  ///
-  /// In ko, this message translates to:
-  /// **'싱크 맞추기 (줄마다 시간 찍기)'**
-  String get lyricsSyncOpen;
-
   /// No description provided for @lyricsSyncTitle.
   ///
   /// In ko, this message translates to:
@@ -1987,6 +1969,24 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'이 줄부터 다시 듣기'**
   String get lyricsSyncReplay;
+
+  /// No description provided for @lyricsSyncReset.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 싱크로'**
+  String get lyricsSyncReset;
+
+  /// No description provided for @lyricsSyncGroup.
+  ///
+  /// In ko, this message translates to:
+  /// **'한 번에 묶을 줄 수'**
+  String get lyricsSyncGroup;
+
+  /// No description provided for @lyricsSyncGroupLines.
+  ///
+  /// In ko, this message translates to:
+  /// **'{n}줄'**
+  String lyricsSyncGroupLines(int n);
 
   /// No description provided for @lyricsSyncNeedAll.
   ///

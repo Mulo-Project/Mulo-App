@@ -5,33 +5,22 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../library/domain/entities/track.dart';
 import '../bloc/lyrics_cubit.dart';
-import '../screens/lyrics_sync_screen.dart';
 import '../screens/lyrics_web_screen.dart';
 
-/// 플레이어 가사 화면의 "가사 편집": 직접 입력 · 붙여넣기 · 파일(.lrc · .txt) · 웹 검색(Android)에서 불러오기.
+/// 플레이어 가사 화면의 "가사 편집" 페이지: 직접 입력 · 붙여넣기 · 파일(.lrc · .txt) · 웹 검색(Android)에서 불러오기.
 /// 저장하면 곡의 가사로 저장하고(비우면 지움) 안내를 띄운다.
-///
-/// [initialText]가 있으면 저장된 가사 대신 그 글로 시작한다 (웹에서 가져온 글 검토용).
-Future<void> showLyricsEditor(
-  BuildContext context,
-  Track track, {
-  String? initialText,
-}) async {
+Future<void> showLyricsEditor(BuildContext context, Track track) async {
   final l10n = context.l10n;
   final cubit = context.read<LyricsCubit>();
-  final text = await showDialog<String>(
-    context: context,
-    useRootNavigator: true,
-    builder: (_) => _LyricsEditorDialog(
-      track: track,
-      cubit: cubit,
-      initialText: initialText,
+  final messenger = ScaffoldMessenger.of(context);
+  final text = await Navigator.of(context, rootNavigator: true).push<String>(
+    MaterialPageRoute(
+      builder: (_) => _LyricsEditorScreen(track: track, cubit: cubit),
     ),
   );
   if (text == null) return;
   await cubit.save(track.id, text);
-  if (!context.mounted) return;
-  ScaffoldMessenger.of(context).showSnackBar(
+  messenger.showSnackBar(
     SnackBar(
       content: Text(
         text.trim().isEmpty ? l10n.lyricsCleared : l10n.lyricsSaved,
@@ -40,33 +29,23 @@ Future<void> showLyricsEditor(
   );
 }
 
-class _LyricsEditorDialog extends StatefulWidget {
-  const _LyricsEditorDialog({
-    required this.track,
-    required this.cubit,
-    this.initialText,
-  });
+class _LyricsEditorScreen extends StatefulWidget {
+  const _LyricsEditorScreen({required this.track, required this.cubit});
 
   final Track track;
   final LyricsCubit cubit;
-  final String? initialText;
 
   @override
-  State<_LyricsEditorDialog> createState() => _LyricsEditorDialogState();
+  State<_LyricsEditorScreen> createState() => _LyricsEditorScreenState();
 }
 
-class _LyricsEditorDialogState extends State<_LyricsEditorDialog> {
+class _LyricsEditorScreenState extends State<_LyricsEditorScreen> {
   final _text = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    final initial = widget.initialText;
-    if (initial != null) {
-      _text.text = initial;
-    } else {
-      _loadCurrent();
-    }
+    _loadCurrent();
   }
 
   Future<void> _loadCurrent() async {
@@ -85,12 +64,6 @@ class _LyricsEditorDialogState extends State<_LyricsEditorDialog> {
     if (picked != null && mounted) _text.text = picked;
   }
 
-  /// 지금 글을 곡에 맞춰 싱크한다. 저장하면 이 창도 닫으며 그 LRC로 저장한다.
-  Future<void> _sync() async {
-    final synced = await showLyricsSync(context, widget.track, _text.text);
-    if (synced != null && mounted) Navigator.of(context).pop(synced);
-  }
-
   @override
   void dispose() {
     _text.dispose();
@@ -101,71 +74,81 @@ class _LyricsEditorDialogState extends State<_LyricsEditorDialog> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
-    return Dialog(
-      backgroundColor: context.palette.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadii.card),
-      ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+    final p = context.palette;
+    return Scaffold(
+      backgroundColor: p.background,
+      resizeToAvoidBottomInset: true,
+      body: SafeArea(
         child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(l10n.lyricsEditTitle, style: text.titleLarge),
-            Text(
-              widget.track.title,
-              style: text.bodyMedium?.copyWith(
-                color: context.palette.onSurfaceMuted,
+            AppTopBar(
+              title: l10n.lyricsEditTitle,
+              leading: CircleIconButton(
+                icon: Icons.close_rounded,
+                tooltip: l10n.actionCancel,
+                onPressed: () => Navigator.of(context).pop(),
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: AppSpacing.md),
-            AppTextField(
-              label: l10n.lyricsEditLabel,
-              controller: _text,
-              hint: l10n.lyricsEditHint,
-              maxLines: 10,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Wrap(
-              alignment: WrapAlignment.center,
-              children: [
-                PlainButton(
-                  label: l10n.lyricsLoadFile,
-                  icon: Icons.file_open_rounded,
-                  onPressed: _pickFile,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  widget.track.title,
+                  style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                if (lyricsWebSupported)
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: AppTextField(
+                  label: l10n.lyricsEditLabel,
+                  controller: _text,
+                  hint: l10n.lyricsEditHint,
+                  expands: true,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: Row(
+                children: [
                   PlainButton(
-                    label: l10n.lyricsWebSearch,
-                    icon: Icons.travel_explore_rounded,
-                    onPressed: _searchWeb,
+                    label: l10n.lyricsLoadFile,
+                    icon: Icons.file_open_rounded,
+                    onPressed: _pickFile,
                   ),
-                PlainButton(
-                  label: l10n.lyricsSyncOpen,
-                  icon: Icons.av_timer_rounded,
-                  onPressed: _sync,
-                ),
-              ],
+                  if (lyricsWebSupported)
+                    PlainButton(
+                      label: l10n.lyricsWebSearch,
+                      icon: Icons.travel_explore_rounded,
+                      onPressed: _searchWeb,
+                    ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  PlainButton(
+                    label: l10n.actionCancel,
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  PlainButton(
+                    label: l10n.lyricsSave,
+                    accent: true,
+                    onPressed: () => Navigator.of(context).pop(_text.text),
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: AppSpacing.sm),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                PlainButton(
-                  label: l10n.actionCancel,
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                PlainButton(
-                  label: l10n.lyricsSave,
-                  accent: true,
-                  onPressed: () => Navigator.of(context).pop(_text.text),
-                ),
-              ],
-            ),
           ],
         ),
       ),

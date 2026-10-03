@@ -8,7 +8,8 @@ class SyncDraft extends Equatable {
   const SyncDraft._(this.texts, this.times, this.current, this._history);
 
   /// [lyrics]의 빈 줄을 뺀 줄로 시작한다. 이미 싱크 가사면 그 시간을 이어받는다.
-  factory SyncDraft.from(Lyrics lyrics) {
+  /// 일반 글이면 [group]줄씩 하나로 묶어 한 번에 시간을 찍는다 (묶인 줄은 공백으로 이어 붙인다).
+  factory SyncDraft.from(Lyrics lyrics, {int group = 1}) {
     if (lyrics.isSynced) {
       final lines = [
         for (final l in lyrics.lines)
@@ -21,9 +22,14 @@ class SyncDraft extends Equatable {
         const [],
       );
     }
-    final texts = [
+    final lines = [
       for (final line in lyrics.plain.split('\n'))
         if (line.trim().isNotEmpty) line.trim(),
+    ];
+    final size = group < 1 ? 1 : group;
+    final texts = [
+      for (var i = 0; i < lines.length; i += size)
+        lines.skip(i).take(size).join(' '),
     ];
     return SyncDraft._(texts, List.filled(texts.length, null), 0, const []);
   }
