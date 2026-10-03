@@ -254,6 +254,18 @@ abstract class AppLocalizations {
   /// **'URL을 붙여넣거나 검색어를 입력하세요.\n유튜브 앱에서 공유를 누르면 바로 여기로 와요.'**
   String get searchEmptyBody;
 
+  /// No description provided for @searchNotReadyTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 받을 수 없어요'**
+  String get searchNotReadyTitle;
+
+  /// No description provided for @searchNotReadyBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'다운로드 엔진(yt-dlp)을 아직 연결하지 않았어요.\n연결되면 여기서 검색하고 받을 수 있어요.'**
+  String get searchNotReadyBody;
+
   /// No description provided for @searchResultsTitle.
   ///
   /// In ko, this message translates to:

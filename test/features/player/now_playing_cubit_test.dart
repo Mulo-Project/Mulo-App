@@ -1,7 +1,9 @@
 import 'dart:math';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:music_download_play_app/core/sample/sample_data.dart';
+
+import '../../helpers/test_data.dart';
+
 import 'package:music_download_play_app/features/player/presentation/bloc/now_playing_cubit.dart';
 
 void main() {
@@ -10,7 +12,7 @@ void main() {
   NowPlayingState state() => cubit.state;
 
   setUp(() {
-    cubit = NowPlayingCubit()..playQueue(SampleData.tracks.take(3).toList());
+    cubit = NowPlayingCubit()..playQueue(TestData.tracks.take(3).toList());
   });
   tearDown(() => cubit.close());
 
@@ -21,7 +23,7 @@ void main() {
   });
 
   test('playShuffled는 처음부터 재생하고 셔플을 켠다', () {
-    vm().playShuffled(SampleData.tracks.take(2).toList());
+    vm().playShuffled(TestData.tracks.take(2).toList());
     expect(state().shuffle, isTrue);
     expect(state().index, 0);
     expect(state().queue.length, 2);
@@ -75,7 +77,7 @@ void main() {
   });
 
   group('곡 메뉴: 대기열 조작', () {
-    final extra = SampleData.tracks[3];
+    final extra = TestData.tracks[3];
 
     test('playNext는 지금 곡 바로 뒤에 끼우고 재생 위치는 그대로', () {
       vm().next();
@@ -89,7 +91,7 @@ void main() {
       vm().playNext(last);
       expect(state().queue.length, 3);
       expect(state().queue[1], last);
-      expect(state().track, SampleData.tracks.first);
+      expect(state().track, TestData.tracks.first);
     });
 
     test('대기열이 비어 있으면 playNext · addToQueue는 바로 재생한다', () {
@@ -156,7 +158,7 @@ void main() {
     });
 
     test('shuffleUpNext는 지금 곡과 앞의 곡은 두고 뒤의 곡만 섞는다', () {
-      final big = SampleData.tracks.take(8).toList();
+      final big = TestData.tracks.take(8).toList();
       cubit.playQueue(big, index: 2);
       cubit.shuffleUpNext(Random(42));
       expect(state().queue.take(3).toList(), big.take(3).toList());

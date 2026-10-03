@@ -3,9 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router.dart';
+import '../../../../core/app_info.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
-import '../../../../core/sample/sample_data.dart';
 import '../../../downloads/domain/entities/download_options.dart';
 import '../../../downloads/presentation/bloc/download_settings_cubit.dart';
 import '../../../library/presentation/widgets/loaded_folders_tile.dart';
@@ -123,24 +123,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 SectionCard(
-                  title: l10n.settingsEngine,
-                  children: [
-                    SettingRow(
-                      title: 'yt-dlp',
-                      description: l10n.settingsEngineVersion(
-                        SampleData.engineCurrent,
-                        SampleData.engineLatest,
-                      ),
-                      trailing: PillButton(
-                        label: l10n.settingsEngineUpdate,
-                        compact: true,
-                        onPressed: () {},
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                SectionCard(
                   title: l10n.settingsSecurity,
                   children: [
                     SettingRow(
@@ -243,7 +225,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     SettingRow(
                       title: l10n.settingsVersion,
                       trailing: Text(
-                        SampleData.appVersion,
+                        appVersion,
                         style: text.bodyMedium?.copyWith(
                           color: context.palette.onSurfaceMuted,
                         ),

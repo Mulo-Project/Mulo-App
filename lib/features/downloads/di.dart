@@ -1,7 +1,7 @@
 import 'package:get_it/get_it.dart';
 
 import 'data/repositories/prefs_download_settings_repository.dart';
-import 'data/repositories/sample_download_queue_repository.dart';
+import 'data/repositories/memory_download_queue_repository.dart';
 import 'domain/repositories/download_queue_repository.dart';
 import 'domain/repositories/download_settings_repository.dart';
 import 'domain/usecases/download_usecases.dart';
@@ -12,7 +12,7 @@ import 'presentation/bloc/download_settings_cubit.dart';
 void registerDownloads(GetIt sl) {
   sl
     ..registerLazySingleton<DownloadQueueRepository>(
-      () => SampleDownloadQueueRepository(),
+      MemoryDownloadQueueRepository.new,
     )
     ..registerLazySingleton<DownloadSettingsRepository>(
       PrefsDownloadSettingsRepository.new,

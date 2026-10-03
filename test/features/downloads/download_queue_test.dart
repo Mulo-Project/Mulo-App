@@ -10,6 +10,7 @@ import 'package:music_download_play_app/features/downloads/domain/usecases/downl
 import 'package:music_download_play_app/features/downloads/presentation/bloc/download_queue_cubit.dart';
 
 import '../../helpers/fakes.dart';
+import '../../helpers/open_download_dialog.dart';
 
 const _now = DownloadItem(
   id: 'a',
@@ -99,14 +100,11 @@ void main() {
   Finder inSheet(Finder f) =>
       find.descendant(of: find.byType(BottomSheet), matching: f);
 
-  testWidgets('받기 팝업: URL 결과에서 열어 정보 · 장르 · 재생목록을 정해 받는다', (tester) async {
+  testWidgets('받기 팝업: 정보 · 장르 · 재생목록을 정해 받는다', (tester) async {
     final queue = await openWithPlaylists(tester, const [
       Playlist(id: 'pl1', name: '운동'),
     ]);
-    await tester.enterText(find.byType(TextField).first, 'https://youtu.be/x');
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('받기').last);
-    await tester.pumpAndSettle();
+    await openDownloadDialog(tester);
     expect(find.text('받기 정보'), findsOneWidget);
 
     final fields = inSheet(find.byType(TextField));
@@ -140,15 +138,11 @@ void main() {
     expect(r.savePath, '/music/Mulo/발라드');
     expect(r.playlistIds, {'pl1', 'pl2'});
     expect(find.text('받기 정보'), findsNothing);
-    expect(find.text('대기열에 넣었어요'), findsOneWidget);
   });
 
   testWidgets('받기 팝업: 제목을 비우면 받기 버튼이 눌리지 않는다', (tester) async {
     final queue = await openWithPlaylists(tester, const []);
-    await tester.enterText(find.byType(TextField).first, 'https://youtu.be/x');
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('받기').last);
-    await tester.pumpAndSettle();
+    await openDownloadDialog(tester);
     expect(find.text('선택 안 함'), findsOneWidget);
     await tester.tap(find.text('선택 안 함'));
     await tester.pumpAndSettle();

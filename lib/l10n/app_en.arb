@@ -26,6 +26,8 @@
   "searchHint": "YouTube URL or keywords",
   "searchEmptyTitle": "What do you want to save?",
   "searchEmptyBody": "Paste a URL or type keywords.\nShare from the YouTube app to open it here.",
+  "searchNotReadyTitle": "Downloads are not ready yet",
+  "searchNotReadyBody": "The download engine (yt-dlp) is not connected yet.\nSearch and download will work once it is.",
   "searchResultsTitle": "Results",
   "searchUrlCardLabel": "Found from URL",
   "searchPlaylistLabel": "Playlist",

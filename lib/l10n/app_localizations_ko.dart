@@ -91,6 +91,13 @@ class AppLocalizationsKo extends AppLocalizations {
       'URL을 붙여넣거나 검색어를 입력하세요.\n유튜브 앱에서 공유를 누르면 바로 여기로 와요.';
 
   @override
+  String get searchNotReadyTitle => '아직 받을 수 없어요';
+
+  @override
+  String get searchNotReadyBody =>
+      '다운로드 엔진(yt-dlp)을 아직 연결하지 않았어요.\n연결되면 여기서 검색하고 받을 수 있어요.';
+
+  @override
   String get searchResultsTitle => '검색 결과';
 
   @override

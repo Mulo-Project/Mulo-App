@@ -1,14 +1,12 @@
-import '../../features/library/domain/entities/track.dart';
+import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 
-/// UI 퍼블리싱용 가짜 데이터 (검색 · 다운로드 화면, 테스트). 보관함 · 재생목록 · 홈은 실제 DB를 쓰고,
-/// 디버그 빌드에서는 이 곡들을 `sample_seeder.dart`가 DB에 넣어 준다. 실제 곡 · URL을 쓰지 않는다 (저작권).
-/// 기능이 연결되면 각 기능의 리포지토리로 대체하고 이 파일은 지운다.
-abstract final class SampleData {
+/// 테스트 · 스크린샷용 가짜 곡 (앱 코드에서는 쓰지 않는다). 실제 곡 · URL을 쓰지 않는다 (저작권).
+abstract final class TestData {
   static final tracks = <Track>[
     Track(
       id: 't01',
       genre: 'Pop',
-      uri: 'sample://t01',
+      uri: 'test://t01',
       title: 'Midnight Signal',
       artist: 'Neon Harbor',
       album: 'Afterglow',
@@ -18,7 +16,7 @@ abstract final class SampleData {
     Track(
       id: 't02',
       genre: 'Indie',
-      uri: 'sample://t02',
+      uri: 'test://t02',
       title: 'Paper Satellites',
       artist: 'Lumen Field',
       album: 'Orbit Tapes',
@@ -28,7 +26,7 @@ abstract final class SampleData {
     Track(
       id: 't03',
       genre: 'Electronic',
-      uri: 'sample://t03',
+      uri: 'test://t03',
       title: 'Slow Static',
       artist: 'Neon Harbor',
       album: 'Afterglow',
@@ -38,7 +36,7 @@ abstract final class SampleData {
     Track(
       id: 't04',
       genre: 'Pop',
-      uri: 'sample://t04',
+      uri: 'test://t04',
       title: 'Glasshouse',
       artist: 'Coral Drive',
       album: 'Tidal',
@@ -48,7 +46,7 @@ abstract final class SampleData {
     Track(
       id: 't05',
       genre: 'Ambient',
-      uri: 'sample://t05',
+      uri: 'test://t05',
       title: 'Violet Hour',
       artist: 'Mono Garden',
       album: 'Bloom',
@@ -58,7 +56,7 @@ abstract final class SampleData {
     Track(
       id: 't06',
       genre: 'Electronic',
-      uri: 'sample://t06',
+      uri: 'test://t06',
       title: 'Lime Light Runner',
       artist: 'Coral Drive',
       album: 'Tidal',
@@ -68,7 +66,7 @@ abstract final class SampleData {
     Track(
       id: 't07',
       genre: 'Indie',
-      uri: 'sample://t07',
+      uri: 'test://t07',
       title: 'Northbound',
       artist: 'Lumen Field',
       album: 'Orbit Tapes',
@@ -78,7 +76,7 @@ abstract final class SampleData {
     Track(
       id: 't08',
       genre: 'Ambient',
-      uri: 'sample://t08',
+      uri: 'test://t08',
       title: 'Echo Chamber',
       artist: 'Mono Garden',
       album: 'Bloom',
@@ -88,7 +86,7 @@ abstract final class SampleData {
     Track(
       id: 't09',
       genre: 'Lo-fi',
-      uri: 'sample://t09',
+      uri: 'test://t09',
       title: 'Quiet Engines',
       artist: 'Static Bloom',
       album: 'Low Light',
@@ -98,7 +96,7 @@ abstract final class SampleData {
     Track(
       id: 't10',
       genre: 'Lo-fi',
-      uri: 'sample://t10',
+      uri: 'test://t10',
       title: 'Afterimage',
       artist: 'Static Bloom',
       album: 'Low Light',
@@ -108,7 +106,7 @@ abstract final class SampleData {
     Track(
       id: 't11',
       genre: 'Pop',
-      uri: 'sample://t11',
+      uri: 'test://t11',
       title: 'Harbor Lights',
       artist: 'Neon Harbor',
       album: 'Nightline',
@@ -118,7 +116,7 @@ abstract final class SampleData {
     Track(
       id: 't12',
       genre: 'Indie',
-      uri: 'sample://t12',
+      uri: 'test://t12',
       title: 'Soft Machines',
       artist: 'Lumen Field',
       album: 'Orbit Tapes',
@@ -133,8 +131,4 @@ abstract final class SampleData {
     ('Workout Mix', 32),
     ('Rainy Day', 12),
   ];
-
-  static const engineCurrent = '2026.08.12';
-  static const engineLatest = '2026.09.20';
-  static const appVersion = '1.0.0';
 }

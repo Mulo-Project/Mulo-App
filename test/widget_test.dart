@@ -3,7 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/design/design.dart';
-import 'package:music_download_play_app/core/sample/sample_data.dart';
+
+import 'helpers/test_data.dart';
+
 import 'package:music_download_play_app/features/library/domain/entities/import_result.dart';
 import 'package:music_download_play_app/features/home/presentation/screens/home_screen.dart';
 import 'package:music_download_play_app/app/theme_preview_bar.dart';
@@ -16,7 +18,7 @@ Future<void> _pumpApp(
   double height = 2532,
   Future<void> Function()? setUp,
 }) async {
-  await (setUp ?? () => setUpTestDependencies(tracks: SampleData.tracks))();
+  await (setUp ?? () => setUpTestDependencies(tracks: TestData.tracks))();
   tester.view.physicalSize = Size(1170, height);
   tester.view.devicePixelRatio = 3;
   tester.platformDispatcher.localesTestValue = const [Locale('ko')];
@@ -121,7 +123,7 @@ void main() {
 
   testWidgets('곡을 누르면 미니 플레이어가 뜨고, 누르면 전체 화면 플레이어', (tester) async {
     await _pumpApp(tester);
-    await tester.tap(find.text(SampleData.tracks.first.title).first);
+    await tester.tap(find.text(TestData.tracks.first.title).first);
     await tester.pumpAndSettle();
     expect(find.byType(MiniPlayerBar), findsOneWidget);
     // 미니 플레이어는 가로 전체를 쓰고 모서리가 둥글지 않다.
@@ -168,9 +170,7 @@ void main() {
   });
 
   testWidgets('빈 보관함: 불러오기 버튼으로 기기 음악을 추가한다', (tester) async {
-    final device = FakeDeviceMusic(
-      ScanFound(SampleData.tracks.take(3).toList()),
-    );
+    final device = FakeDeviceMusic(ScanFound(TestData.tracks.take(3).toList()));
     await _pumpApp(tester, setUp: () => setUpTestDependencies(device: device));
     expect(find.text('아직 음악이 없어요'), findsOneWidget);
 
@@ -178,7 +178,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(device.calls, 1);
     expect(find.text('3곡을 불러왔어요'), findsOneWidget);
-    expect(find.text(SampleData.tracks.first.title), findsWidgets);
+    expect(find.text(TestData.tracks.first.title), findsWidgets);
   });
 
   testWidgets('곡을 재생하면 홈의 최근 재생 · 많이 들은 곡에 나온다', (tester) async {
@@ -186,9 +186,9 @@ void main() {
     await _pumpApp(
       tester,
       setUp: () =>
-          setUpTestDependencies(tracks: SampleData.tracks, history: history),
+          setUpTestDependencies(tracks: TestData.tracks, history: history),
     );
-    final first = SampleData.tracks.reduce(
+    final first = TestData.tracks.reduce(
       (a, b) => a.addedAt.isAfter(b.addedAt) ? a : b,
     );
     await tester.tap(find.text(first.title).first);

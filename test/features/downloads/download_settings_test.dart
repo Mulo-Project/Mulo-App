@@ -6,6 +6,7 @@ import 'package:music_download_play_app/core/di/injector.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 
 import '../../helpers/fakes.dart';
+import '../../helpers/open_download_dialog.dart';
 
 Track _t(String id, String genre) => Track(
   id: id,
@@ -65,10 +66,7 @@ void main() {
       Routes.search,
       tracks: [_t('1', '발라드'), _t('2', '발라드'), _t('3', '록'), _t('4', '')],
     );
-    await tester.enterText(find.byType(TextField).first, 'https://youtu.be/x');
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('받기').last);
-    await tester.pumpAndSettle();
+    await openDownloadDialog(tester);
 
     final sheet = find.byType(BottomSheet);
     Finder inSheet(Finder f) => find.descendant(of: sheet, matching: f);
