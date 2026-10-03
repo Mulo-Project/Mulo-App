@@ -307,6 +307,15 @@ class _FeaturedState extends State<_Featured> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
+                          if (open)
+                            Text(
+                              t.genre.isEmpty ? l10n.unknownGenre : t.genre,
+                              style: text.labelSmall?.copyWith(
+                                color: p.onSurfaceMuted,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                         ],
                       ),
                     ),
@@ -345,14 +354,7 @@ class _FeaturedState extends State<_Featured> {
                     color: coverColorOf(context, CoverKey.track(t.id)),
                   ),
                   const SizedBox(width: AppSpacing.xs),
-                  Expanded(
-                    child: Text(
-                      t.genre.isEmpty ? l10n.unknownGenre : t.genre,
-                      style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
+                  const Spacer(),
                   // 이 곡이 재생 중이면 일시정지 아이콘, 아니면 재생 아이콘.
                   BlocBuilder<NowPlayingCubit, NowPlayingState>(
                     buildWhen: (a, b) =>
