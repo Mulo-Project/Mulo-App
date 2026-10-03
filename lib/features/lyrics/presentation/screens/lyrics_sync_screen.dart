@@ -128,6 +128,17 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
     context.read<LyricsSyncCubit>().stamp(position);
   }
 
+  /// 되돌리기: 찍은 줄이 풀리면 그 앞 줄부터 다시 들려줘 이어서 찍을 수 있게 한다.
+  void _undo() {
+    final sync = context.read<LyricsSyncCubit>();
+    final before = sync.state.draft.current;
+    sync.undo();
+    final draft = sync.state.draft;
+    if (draft.current == before) return;
+    final prev = draft.current > 0 ? draft.times[draft.current - 1] : null;
+    _replay(prev ?? Duration.zero);
+  }
+
   /// [time]보다 조금 앞에서 다시 재생한다 (찍은 곳이 맞는지 앞 소리까지 듣도록).
   void _replay(Duration time) {
     final np = context.read<NowPlayingCubit>();
@@ -259,13 +270,17 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
                                     onTap: () => i == draft.current
                                         ? _now()
                                         : sync.select(i),
-                                    onReplay: () => _replay(draft.times[i]!),
+                                    onReplay: () {
+                                      final time = draft.times[i]!;
+                                      sync.rewindTo(i);
+                                      _replay(time);
+                                    },
                                   ),
                               ],
                             ),
                           ),
                   ),
-                  _ControlBar(onNow: _now),
+                  _ControlBar(onNow: _now, onUndo: _undo),
                 ],
               ),
             ),
@@ -408,9 +423,10 @@ class _LineRow extends StatelessWidget {
 }
 
 class _ControlBar extends StatelessWidget {
-  const _ControlBar({required this.onNow});
+  const _ControlBar({required this.onNow, required this.onUndo});
 
   final VoidCallback onNow;
+  final VoidCallback onUndo;
 
   @override
   Widget build(BuildContext context) {
@@ -433,7 +449,7 @@ class _ControlBar extends StatelessWidget {
               CircleIconButton(
                 icon: Icons.undo_rounded,
                 tooltip: l10n.lyricsSyncUndo,
-                onPressed: draft.canUndo ? sync.undo : null,
+                onPressed: draft.canUndo ? onUndo : null,
               ),
               const SizedBox(width: AppSpacing.sm),
               CircleIconButton(

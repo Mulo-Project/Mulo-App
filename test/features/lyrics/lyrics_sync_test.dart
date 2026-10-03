@@ -69,6 +69,33 @@ void main() {
       expect(first.canUndo, isFalse);
     });
 
+    test('이 싱크로: 그 줄까지만 남기고 뒤는 등록을 푼다', () {
+      final d = SyncDraft.from(plain)
+          .stamp(const Duration(seconds: 1))
+          .stamp(const Duration(seconds: 2))
+          .stamp(const Duration(seconds: 3))
+          .rewindTo(0);
+      expect(d.times, [const Duration(seconds: 1), null, null]);
+      expect(d.current, 1);
+      expect(d.undo().stamped, 3);
+    });
+
+    test('도중 저장은 찍은 줄까지만 시간을 붙이고, 이어서 찍을 수 있다', () {
+      final d = SyncDraft.from(plain).stamp(const Duration(seconds: 1));
+      final lrc = d.toPartialLrc();
+      expect(lrc, '[00:01.00]첫 줄\n둘째 줄\n셋째 줄');
+      final saved = Lyrics.parse(lrc)!;
+      expect(saved.lines.length, 1);
+      final resumed = SyncDraft.from(saved);
+      expect(resumed.texts, ['첫 줄', '둘째 줄', '셋째 줄']);
+      expect(resumed.current, 1);
+      expect(resumed.stamped, 1);
+    });
+
+    test('시간이 붙은 txt도 싱크 가사로 읽는다', () {
+      expect(Lyrics.parse('[00:01.00]가\n[00:02.50]나')!.isSynced, isTrue);
+    });
+
     test('줄을 묶으면 묶음 하나가 한 번에 찍히고 공백으로 이어진다', () {
       final d = SyncDraft.from(plain, group: 2);
       expect(d.texts, ['첫 줄 둘째 줄', '셋째 줄']);

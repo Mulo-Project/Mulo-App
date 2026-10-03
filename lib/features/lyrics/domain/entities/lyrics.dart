@@ -14,7 +14,7 @@ class LyricLine extends Equatable {
 /// 곡 하나의 가사. [raw]는 저장된 원문(.lrc 또는 일반 글).
 /// 시간 표시(`[01:02.30]`)가 하나라도 있으면 싱크 가사 ([lines]), 없으면 일반 글 ([plain]).
 class Lyrics extends Equatable {
-  const Lyrics._(this.raw, this.lines, this.plain);
+  const Lyrics._(this.raw, this.lines, this.plain, this.pending);
 
   /// [raw]를 읽어 가사를 만든다. 내용이 비면 null.
   static Lyrics? parse(String raw) {
@@ -24,6 +24,7 @@ class Lyrics extends Equatable {
     var offset = Duration.zero;
     final lines = <LyricLine>[];
     final plain = <String>[];
+    var pending = <String>[];
     for (final line in text.split('\n')) {
       final stamps = <Duration>[];
       var rest = line.trimLeft();
@@ -51,6 +52,7 @@ class Lyrics extends Equatable {
           continue;
         }
         plain.add(line.trimRight());
+        if (line.trim().isNotEmpty) pending.add(line.trim());
         continue;
       }
       final body = rest.trimRight();
@@ -58,10 +60,11 @@ class Lyrics extends Equatable {
         lines.add(LyricLine(t, body));
       }
       plain.add(body);
+      pending = [];
     }
 
     final plainText = plain.join('\n').trim();
-    if (lines.isEmpty) return Lyrics._(raw, const [], plainText);
+    if (lines.isEmpty) return Lyrics._(raw, const [], plainText, const []);
     final shifted = [
       for (final l in lines)
         LyricLine(
@@ -69,7 +72,7 @@ class Lyrics extends Equatable {
           l.text,
         ),
     ]..sort((a, b) => a.time.compareTo(b.time));
-    return Lyrics._(raw, shifted, plainText);
+    return Lyrics._(raw, shifted, plainText, pending);
   }
 
   static final _stamp = RegExp(r'\[(\d{1,3}):(\d{1,2})(?:[.:](\d{1,3}))?\]');
@@ -86,6 +89,9 @@ class Lyrics extends Equatable {
 
   /// 시간 표시를 뺀 글 (일반 글 보기용).
   final String plain;
+
+  /// 싱크 가사에서 마지막 시간 표시 뒤에 시간 없이 남은 줄 (도중에 저장한 싱크의 안 찍은 뒷부분).
+  final List<String> pending;
 
   bool get isSynced => lines.isNotEmpty;
 

@@ -17,10 +17,11 @@ class SyncDraft extends Equatable {
         for (final l in lyrics.lines)
           if (l.text.isNotEmpty) l,
       ];
+      // 도중에 저장해 둔 가사는 아직 안 찍은 뒷줄이 따로 남아 있다.
       return SyncDraft._(
-        [for (final l in lines) l.text],
-        List.filled(lines.length, 1),
-        [for (final l in lines) l.time],
+        [for (final l in lines) l.text, ...lyrics.pending],
+        List.filled(lines.length + lyrics.pending.length, 1),
+        [for (final l in lines) l.time, for (final _ in lyrics.pending) null],
         lines.length,
         const [],
       );
@@ -131,6 +132,15 @@ class SyncDraft extends Equatable {
       ? this
       : _change(times: times, current: index);
 
+  /// [index] 칸까지만 찍은 상태로 두고 뒤쪽은 찍지 않은 상태로 되돌린다. 다음은 [index]+1 칸.
+  SyncDraft rewindTo(int index) {
+    if (index < 0 || index >= length) return this;
+    return _change(
+      times: [for (var i = 0; i < length; i++) i <= index ? times[i] : null],
+      current: index + 1,
+    );
+  }
+
   /// 직전 변경을 되돌린다.
   SyncDraft undo() {
     if (_history.isEmpty) return this;
@@ -150,15 +160,21 @@ class SyncDraft extends Equatable {
       if (times[i] != null) '${formatStamp(times[i]!)}${texts[i]}',
   ].join('\n');
 
-  /// 도중에 저장할 때의 LRC. 아직 안 찍은 줄도 가사가 사라지지 않게 앞 줄의 시간을 빌려 남긴다.
+  /// 도중에 저장할 때의 LRC. 마지막으로 찍은 줄까지만 시간을 붙이고, 그 뒤 줄은 시간 없는 글로 남겨
+  /// 가사 화면에는 찍은 줄까지만 나오고 나중에 이어서 찍을 수 있게 한다.
+  /// 중간에 건너뛴 줄은 가사가 사라지지 않게 앞 줄의 시간을 빌린다.
   String toPartialLrc() {
+    final last = times.lastIndexWhere((t) => t != null);
     var at = Duration.zero;
     return [
       for (var i = 0; i < length; i++)
-        () {
-          at = times[i] ?? at;
-          return '${formatStamp(at)}${texts[i]}';
-        }(),
+        if (i > last)
+          texts[i]
+        else
+          () {
+            at = times[i] ?? at;
+            return '${formatStamp(at)}${texts[i]}';
+          }(),
     ].join('\n');
   }
 

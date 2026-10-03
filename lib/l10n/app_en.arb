@@ -351,7 +351,7 @@
   "lyricsMenuEdit": "Edit lyrics",
   "lyricsEditTitle": "Set lyrics",
   "lyricsEditLabel": "Lyrics",
-  "lyricsEditHint": "Paste or type the lyrics. Save empty to remove them.",
+  "lyricsEditHint": "Paste or type the lyrics. Text with times like [01:02.30], or an .lrc / .txt file with them, becomes synced lyrics. Save empty to remove them.",
   "lyricsLoadFile": "Load from file",
   "lyricsWebSearch": "Import from the web",
   "lyricsWebTitle": "Search lyrics",

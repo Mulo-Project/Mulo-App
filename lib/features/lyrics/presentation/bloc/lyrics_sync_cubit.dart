@@ -116,6 +116,13 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
     );
   }
 
+  /// [index] 줄의 싱크만 남기고 뒤쪽은 등록을 풀어, 다음 줄부터 다시 찍게 한다.
+  void rewindTo(int index) {
+    final draft = state.draft.rewindTo(index);
+    if (draft == state.draft) return;
+    emit(LyricsSyncState(draft, selected: index, group: state.group));
+  }
+
   void undo() {
     if (!state.draft.canUndo) return;
     final draft = state.draft.undo();

@@ -936,7 +936,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsEditLabel => '가사';
 
   @override
-  String get lyricsEditHint => '가사를 붙여넣거나 입력하세요. 비워서 저장하면 가사를 지워요.';
+  String get lyricsEditHint =>
+      '가사를 붙여넣거나 입력하세요. [01:02.30]처럼 시간이 붙은 글이나 .lrc · .txt 파일을 불러오면 싱크 가사가 돼요. 비워서 저장하면 가사를 지워요.';
 
   @override
   String get lyricsLoadFile => '파일에서 불러오기';
