@@ -150,6 +150,18 @@ class SyncDraft extends Equatable {
       if (times[i] != null) '${formatStamp(times[i]!)}${texts[i]}',
   ].join('\n');
 
+  /// 도중에 저장할 때의 LRC. 아직 안 찍은 줄도 가사가 사라지지 않게 앞 줄의 시간을 빌려 남긴다.
+  String toPartialLrc() {
+    var at = Duration.zero;
+    return [
+      for (var i = 0; i < length; i++)
+        () {
+          at = times[i] ?? at;
+          return '${formatStamp(at)}${texts[i]}';
+        }(),
+    ].join('\n');
+  }
+
   /// `01:02.30`에 대괄호를 씌운 LRC 시간 표시 (1/100초 단위).
   static String formatStamp(Duration d) {
     final cs = (d.inMilliseconds / 10).round();

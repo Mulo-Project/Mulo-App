@@ -12,9 +12,10 @@ Future<LyricsImportMode?> showLyricsImportMode(BuildContext context) {
   return showDialog<LyricsImportMode>(
     context: context,
     useRootNavigator: true,
-    builder: (dialogContext) => _LyricsDialog(
+    builder: (dialogContext) => AppDialog(
       title: l10n.lyricsImportExistsTitle,
       body: l10n.lyricsImportExistsBody,
+      closeTooltip: l10n.actionCancel,
       actions: [
         PillButton(
           label: l10n.lyricsImportReplace,
@@ -27,11 +28,6 @@ Future<LyricsImportMode?> showLyricsImportMode(BuildContext context) {
           onPressed: () =>
               Navigator.of(dialogContext).pop(LyricsImportMode.append),
         ),
-        PillButton(
-          label: l10n.actionCancel,
-          variant: PillVariant.tonal,
-          onPressed: () => Navigator.of(dialogContext).pop(),
-        ),
       ],
     ),
   );
@@ -43,18 +39,18 @@ Future<bool> confirmLyricsGroupReset(BuildContext context) async {
   final ok = await showDialog<bool>(
     context: context,
     useRootNavigator: true,
-    builder: (dialogContext) => _LyricsDialog(
+    builder: (dialogContext) => AppDialog(
       title: l10n.lyricsSyncResetTitle,
       body: l10n.lyricsSyncResetBody,
       actions: [
         PillButton(
-          label: l10n.lyricsSyncResetConfirm,
-          onPressed: () => Navigator.of(dialogContext).pop(true),
-        ),
-        PillButton(
           label: l10n.actionCancel,
           variant: PillVariant.tonal,
           onPressed: () => Navigator.of(dialogContext).pop(false),
+        ),
+        PillButton(
+          label: l10n.lyricsSyncResetConfirm,
+          onPressed: () => Navigator.of(dialogContext).pop(true),
         ),
       ],
     ),
@@ -86,7 +82,7 @@ class _GroupPickDialogState extends State<_GroupPickDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return _LyricsDialog(
+    return AppDialog(
       title: l10n.lyricsSyncGroup,
       body: l10n.lyricsSyncGroupSetupBody,
       content: Center(
@@ -107,53 +103,32 @@ class _GroupPickDialogState extends State<_GroupPickDialog> {
   }
 }
 
-class _LyricsDialog extends StatelessWidget {
-  const _LyricsDialog({
-    required this.title,
-    required this.body,
-    required this.actions,
-    this.content,
-  });
+/// 싱크를 다 못 찍고 나갈 때의 선택.
+enum LyricsSyncLeave { save, discard }
 
-  final String title;
-  final String body;
-  final Widget? content;
-  final List<Widget> actions;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    return Dialog(
-      backgroundColor: context.palette.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadii.card),
-      ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(title, style: text.titleLarge),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              body,
-              style: text.bodyMedium?.copyWith(
-                color: context.palette.onSurfaceMuted,
-              ),
-            ),
-            if (content != null) ...[
-              const SizedBox(height: AppSpacing.md),
-              content!,
-            ],
-            const SizedBox(height: AppSpacing.lg),
-            for (var i = 0; i < actions.length; i++) ...[
-              if (i > 0) const SizedBox(height: AppSpacing.xs),
-              actions[i],
-            ],
-          ],
+/// 싱크 맞추기 도중 나가려 할 때 저장하고 나갈지 묻는다. X로 닫으면 null (계속 맞춘다).
+Future<LyricsSyncLeave?> askLyricsSyncLeave(BuildContext context) {
+  final l10n = context.l10n;
+  return showDialog<LyricsSyncLeave>(
+    context: context,
+    useRootNavigator: true,
+    builder: (dialogContext) => AppDialog(
+      title: l10n.lyricsSyncLeaveTitle,
+      body: l10n.lyricsSyncLeaveBody,
+      closeTooltip: l10n.lyricsSyncLeaveStay,
+      actions: [
+        PillButton(
+          label: l10n.lyricsSyncLeaveDiscard,
+          variant: PillVariant.tonal,
+          onPressed: () =>
+              Navigator.of(dialogContext).pop(LyricsSyncLeave.discard),
         ),
-      ),
-    );
-  }
+        PillButton(
+          label: l10n.lyricsSyncLeaveSave,
+          onPressed: () =>
+              Navigator.of(dialogContext).pop(LyricsSyncLeave.save),
+        ),
+      ],
+    ),
+  );
 }

@@ -193,39 +193,22 @@ class _RenameDialogState extends State<_RenameDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Dialog(
-      backgroundColor: context.palette.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadii.card),
+    return AppDialog(
+      title: l10n.playlistRenameTitle,
+      content: AppTextField(
+        label: l10n.playlistNewHint,
+        controller: _name,
+        textInputAction: TextInputAction.done,
+        onSubmitted: (_) => _save(),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              l10n.playlistRenameTitle,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            AppTextField(
-              label: l10n.playlistNewHint,
-              controller: _name,
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _save(),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            PillButton(label: l10n.playlistRenameSave, onPressed: _save),
-            const SizedBox(height: AppSpacing.xs),
-            PillButton(
-              label: l10n.actionCancel,
-              variant: PillVariant.tonal,
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ],
+      actions: [
+        PillButton(
+          label: l10n.actionCancel,
+          variant: PillVariant.tonal,
+          onPressed: () => Navigator.of(context).pop(),
         ),
-      ),
+        PillButton(label: l10n.playlistRenameSave, onPressed: _save),
+      ],
     );
   }
 }
@@ -238,36 +221,21 @@ class _DeleteDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
-    return Dialog(
-      backgroundColor: context.palette.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadii.card),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(l10n.playlistDeleteTitle, style: text.titleLarge),
-            const SizedBox(height: AppSpacing.sm),
-            Text(l10n.playlistDeleteBody(name), style: text.bodyMedium),
-            const SizedBox(height: AppSpacing.lg),
-            PillButton(
-              label: l10n.playlistDeleteConfirm,
-              icon: Icons.delete_outline_rounded,
-              onPressed: () => Navigator.of(context).pop(true),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            PillButton(
-              label: l10n.actionCancel,
-              variant: PillVariant.tonal,
-              onPressed: () => Navigator.of(context).pop(false),
-            ),
-          ],
+    return AppDialog(
+      title: l10n.playlistDeleteTitle,
+      body: l10n.playlistDeleteBody(name),
+      actions: [
+        PillButton(
+          label: l10n.actionCancel,
+          variant: PillVariant.tonal,
+          onPressed: () => Navigator.of(context).pop(false),
         ),
-      ),
+        PillButton(
+          label: l10n.playlistDeleteConfirm,
+          icon: Icons.delete_outline_rounded,
+          onPressed: () => Navigator.of(context).pop(true),
+        ),
+      ],
     );
   }
 }

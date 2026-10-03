@@ -93,6 +93,21 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
     sync.setGroup(group);
   }
 
+  /// 나가기: 다 찍었으면 그대로 나가고, 덜 찍었으면 저장하고 나갈지 묻는다.
+  Future<void> _confirmLeave() async {
+    final sync = context.read<LyricsSyncCubit>();
+    final draft = sync.state.draft;
+    if (draft.stamped == 0) {
+      Navigator.of(context).pop();
+      return;
+    }
+    final choice = await askLyricsSyncLeave(context);
+    if (choice == null || !mounted) return;
+    Navigator.of(context).pop(
+      choice == LyricsSyncLeave.save ? sync.state.draft.toPartialLrc() : null,
+    );
+  }
+
   void _scrollTo(int index) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final ctx = index >= 0 && index < _keys.length
@@ -141,109 +156,118 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
           _keys.add(GlobalKey());
         }
         if (_keys.length > draft.length) _keys.length = draft.length;
-        return Scaffold(
-          backgroundColor: p.background,
-          body: SafeArea(
-            child: Column(
-              children: [
-                AppTopBar(
-                  title: l10n.lyricsSyncTitle,
-                  leading: CircleIconButton(
-                    icon: Icons.close_rounded,
-                    tooltip: l10n.actionCancel,
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                  actions: [
-                    if (sync.canGroup)
-                      Builder(
-                        builder: (buttonContext) => CircleIconButton(
-                          icon: Icons.more_vert_rounded,
-                          tooltip: l10n.lyricsSyncDefaultLines,
-                          onPressed: () => _changeDefaultGroup(buttonContext),
-                        ),
-                      ),
-                    CircleIconButton(
-                      icon: Icons.check_rounded,
-                      tooltip: draft.isComplete
-                          ? l10n.lyricsSyncSave
-                          : l10n.lyricsSyncNeedAll,
-                      emphasized: draft.isComplete,
-                      onPressed: draft.isComplete
-                          ? () => Navigator.of(context).pop(draft.toLrc())
-                          : null,
+        // 한 줄이라도 찍은 채로 나가면 저장할지 묻는다.
+        return PopScope(
+          canPop: draft.stamped == 0,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop) _confirmLeave();
+          },
+          child: Scaffold(
+            backgroundColor: p.background,
+            body: SafeArea(
+              child: Column(
+                children: [
+                  AppTopBar(
+                    title: l10n.lyricsSyncTitle,
+                    leading: CircleIconButton(
+                      icon: Icons.close_rounded,
+                      tooltip: l10n.actionCancel,
+                      onPressed: _confirmLeave,
                     ),
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.lg,
-                    AppSpacing.xxs,
-                    AppSpacing.lg,
-                    AppSpacing.xxs,
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          widget.track.title,
-                          style: text.titleSmall,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                    actions: [
+                      if (sync.canGroup)
+                        Builder(
+                          builder: (buttonContext) => CircleIconButton(
+                            icon: Icons.more_vert_rounded,
+                            tooltip: l10n.lyricsSyncDefaultLines,
+                            onPressed: () => _changeDefaultGroup(buttonContext),
+                          ),
                         ),
-                      ),
-                      Text(
-                        l10n.lyricsSyncProgress(draft.stamped, draft.length),
-                        style: text.labelLarge?.copyWith(color: p.accent),
+                      CircleIconButton(
+                        icon: Icons.check_rounded,
+                        tooltip: draft.isComplete
+                            ? l10n.lyricsSyncSave
+                            : l10n.lyricsSyncNeedAll,
+                        emphasized: draft.isComplete,
+                        onPressed: draft.isComplete
+                            ? () => Navigator.of(context).pop(draft.toLrc())
+                            : null,
                       ),
                     ],
                   ),
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: _ClockText(),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.lg,
-                  ),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      l10n.lyricsSyncHint,
-                      style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.lg,
+                      AppSpacing.xxs,
+                      AppSpacing.lg,
+                      AppSpacing.xxs,
                     ),
-                  ),
-                ),
-                Expanded(
-                  child: draft.length == 0
-                      ? Center(child: Text(l10n.lyricsSyncEmpty))
-                      : SingleChildScrollView(
-                          padding: const EdgeInsets.all(AppSpacing.md),
-                          child: Column(
-                            children: [
-                              for (var i = 0; i < draft.length; i++)
-                                _LineRow(
-                                  key: _keys[i],
-                                  index: i,
-                                  draft: draft,
-                                  selected: state.selected == i,
-                                  editing: state.editing == i,
-                                  canGroup: sync.canGroup,
-                                  clock: _clock,
-                                  onTap: () => i == draft.current
-                                      ? _now()
-                                      : sync.select(i),
-                                  onReplay: () => _replay(draft.times[i]!),
-                                ),
-                            ],
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            widget.track.title,
+                            style: text.titleSmall,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                ),
-                _ControlBar(onNow: _now),
-              ],
+                        Text(
+                          l10n.lyricsSyncProgress(draft.stamped, draft.length),
+                          style: text.labelLarge?.copyWith(color: p.accent),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: _ClockText(),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                    ),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        l10n.lyricsSyncHint,
+                        style: text.bodySmall?.copyWith(
+                          color: p.onSurfaceMuted,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: draft.length == 0
+                        ? Center(child: Text(l10n.lyricsSyncEmpty))
+                        : SingleChildScrollView(
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            child: Column(
+                              children: [
+                                for (var i = 0; i < draft.length; i++)
+                                  _LineRow(
+                                    key: _keys[i],
+                                    index: i,
+                                    draft: draft,
+                                    selected: state.selected == i,
+                                    editing: state.editing == i,
+                                    canGroup: sync.canGroup,
+                                    clock: _clock,
+                                    onTap: () => i == draft.current
+                                        ? _now()
+                                        : sync.select(i),
+                                    onReplay: () => _replay(draft.times[i]!),
+                                  ),
+                              ],
+                            ),
+                          ),
+                  ),
+                  _ControlBar(onNow: _now),
+                ],
+              ),
             ),
           ),
         );
@@ -330,47 +354,50 @@ class _LineRow extends StatelessWidget {
               right: AppSpacing.xs,
               bottom: AppSpacing.xs,
             ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                PlainButton(
-                  icon: Icons.replay_rounded,
-                  label: l10n.lyricsSyncReset,
-                  tooltip: l10n.lyricsSyncReplay,
-                  onPressed: onReplay,
+                // 위: 시간 맞추기 버튼
+                Wrap(
+                  children: [
+                    for (final ms in const [-500, -100, 100, 500])
+                      PlainButton(
+                        label: '${ms > 0 ? '+' : '−'}${ms.abs() / 1000}s',
+                        onPressed: () => sync.nudge(Duration(milliseconds: ms)),
+                      ),
+                  ],
                 ),
-                if (canGroup)
-                  Builder(
-                    builder: (buttonContext) => PlainButton(
-                      icon: Icons.more_vert_rounded,
-                      tooltip: l10n.actionMore,
-                      onPressed: () async {
-                        final pick = await showAppMenu<bool>(
-                          buttonContext,
-                          items: [
-                            AppMenuItem(
-                              value: true,
-                              icon: Icons.view_headline_rounded,
-                              label: l10n.lyricsSyncGroupEdit,
-                            ),
-                          ],
-                        );
-                        if (pick == true) sync.startGroupEdit(index);
-                      },
+                // 아래: 이 싱크로 · 옵션
+                Row(
+                  children: [
+                    PlainButton(
+                      icon: Icons.replay_rounded,
+                      label: l10n.lyricsSyncReset,
+                      tooltip: l10n.lyricsSyncReplay,
+                      onPressed: onReplay,
                     ),
-                  ),
-                Expanded(
-                  child: Wrap(
-                    alignment: WrapAlignment.end,
-                    children: [
-                      for (final ms in const [-500, -100, 100, 500])
-                        PlainButton(
-                          label: '${ms > 0 ? '+' : '−'}${ms.abs() / 1000}s',
-                          onPressed: () =>
-                              sync.nudge(Duration(milliseconds: ms)),
+                    const Spacer(),
+                    if (canGroup)
+                      Builder(
+                        builder: (buttonContext) => PlainButton(
+                          icon: Icons.more_vert_rounded,
+                          tooltip: l10n.actionMore,
+                          onPressed: () async {
+                            final pick = await showAppMenu<bool>(
+                              buttonContext,
+                              items: [
+                                AppMenuItem(
+                                  value: true,
+                                  icon: Icons.view_headline_rounded,
+                                  label: l10n.lyricsSyncGroupEdit,
+                                ),
+                              ],
+                            );
+                            if (pick == true) sync.startGroupEdit(index);
+                          },
                         ),
-                    ],
-                  ),
+                      ),
+                  ],
                 ),
               ],
             ),

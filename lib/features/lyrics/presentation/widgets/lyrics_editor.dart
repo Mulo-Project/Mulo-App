@@ -146,6 +146,7 @@ class _LyricsEditorScreenState extends State<_LyricsEditorScreen> {
                 ],
               ),
             ),
+            const SizedBox(height: AppSpacing.md),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               child: Row(

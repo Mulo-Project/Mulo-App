@@ -1065,6 +1065,22 @@ class AppLocalizationsEn extends AppLocalizations {
       'Pick how many lines to stamp at once. You can change it later from the top menu.';
 
   @override
+  String get lyricsSyncLeaveTitle => 'Sync is not saved';
+
+  @override
+  String get lyricsSyncLeaveBody =>
+      'Not every line has a time yet, so leaving now discards your timing. Save what you have before leaving?';
+
+  @override
+  String get lyricsSyncLeaveSave => 'Save and leave';
+
+  @override
+  String get lyricsSyncLeaveDiscard => 'Leave without saving';
+
+  @override
+  String get lyricsSyncLeaveStay => 'Keep syncing';
+
+  @override
   String get lyricsSyncGroupOk => 'OK';
 
   @override

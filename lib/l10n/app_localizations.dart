@@ -2048,6 +2048,36 @@ abstract class AppLocalizations {
   /// **'한 번에 시간을 찍을 줄 수를 골라 주세요. 나중에 위쪽 메뉴에서 바꿀 수 있어요.'**
   String get lyricsSyncGroupSetupBody;
 
+  /// No description provided for @lyricsSyncLeaveTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'싱크가 저장되지 않아요'**
+  String get lyricsSyncLeaveTitle;
+
+  /// No description provided for @lyricsSyncLeaveBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 모든 줄에 시간을 찍지 않았어요. 지금 나가면 찍은 시간이 사라져요. 지금까지 찍은 싱크를 저장하고 나갈까요?'**
+  String get lyricsSyncLeaveBody;
+
+  /// No description provided for @lyricsSyncLeaveSave.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 후 나가기'**
+  String get lyricsSyncLeaveSave;
+
+  /// No description provided for @lyricsSyncLeaveDiscard.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 안 하고 나가기'**
+  String get lyricsSyncLeaveDiscard;
+
+  /// No description provided for @lyricsSyncLeaveStay.
+  ///
+  /// In ko, this message translates to:
+  /// **'계속 맞추기'**
+  String get lyricsSyncLeaveStay;
+
   /// No description provided for @lyricsSyncGroupOk.
   ///
   /// In ko, this message translates to:
