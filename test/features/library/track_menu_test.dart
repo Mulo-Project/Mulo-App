@@ -47,15 +47,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  const items = [
-    '다음에 재생',
-    '대기열에 추가',
-    '재생목록에 추가',
-    '좋아요',
-    '정보 편집',
-    '커버 이미지 설정',
-    '삭제',
-  ];
+  const items = ['다음에 재생', '대기열에 추가', '재생목록에 추가', '좋아요', '정보 편집', '꾸미기', '삭제'];
 
   testWidgets('⋮ 버튼 · 길게 누르기 · 오른쪽 클릭이 같은 팝업 메뉴를 연다', (tester) async {
     await pumpLibrary(tester);

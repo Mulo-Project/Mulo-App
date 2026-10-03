@@ -5,19 +5,17 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
-import '../../../covers/presentation/widgets/cover_color_sheet.dart';
+import '../../../covers/presentation/widgets/decorate_sheet.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../bloc/playlists_cubit.dart';
 import 'playlist_card.dart';
 
-enum _Action { playAll, color, image, rename, delete }
+enum _Action { playAll, decorate, rename, delete }
 
-enum _ImageAction { pick, reset }
-
-/// 재생목록 팝업 메뉴: 전체 재생 · 색(색 고르기 시트) · 이미지(하위 메뉴) · 이름 바꾸기 · 삭제.
+/// 재생목록 팝업 메뉴: 전체 재생 · 꾸미기(이미지 · 색 시트) · 이름 바꾸기 · 삭제.
 /// 카드의 ⋮, 길게 누르기, 오른쪽 클릭, 상세 화면의 ⋮에서 같은 메뉴를 연다.
 /// [globalPosition]이 있으면 눌린 자리에, 없으면 [context] 위젯 옆에 띄운다.
-/// 좋아요 목록은 색 · 이름 · 삭제 항목이 없다.
+/// 좋아요 목록은 이름 · 삭제 항목이 없고, 꾸미기에서 색을 고를 수 없다.
 Future<void> showPlaylistMenu(
   BuildContext context,
   Playlist pl, {
@@ -25,9 +23,6 @@ Future<void> showPlaylistMenu(
   VoidCallback? onDeleted,
 }) async {
   final l10n = context.l10n;
-  final hasImage = context.read<CoverCubit>().state.containsKey(
-    CoverKey.playlist(pl.id),
-  );
   final action = await showAppMenu<_Action>(
     context,
     globalPosition: globalPosition,
@@ -37,17 +32,10 @@ Future<void> showPlaylistMenu(
         icon: Icons.play_arrow_rounded,
         label: l10n.playlistMenuPlayAll,
       ),
-      // 색은 이미지가 없을 때만 카드에 보인다.
-      if (!pl.isFavorites && !hasImage)
-        AppMenuItem(
-          value: _Action.color,
-          icon: Icons.palette_rounded,
-          label: l10n.playlistMenuColor,
-        ),
       AppMenuItem(
-        value: _Action.image,
-        icon: Icons.image_rounded,
-        label: l10n.playlistMenuImage,
+        value: _Action.decorate,
+        icon: Icons.auto_awesome_rounded,
+        label: l10n.playlistMenuDecorate,
       ),
       if (!pl.isFavorites) ...[
         AppMenuItem(
@@ -69,15 +57,14 @@ Future<void> showPlaylistMenu(
   switch (action) {
     case _Action.playAll:
       await _playAll(context, pl);
-    case _Action.color:
-      await showCoverColorSheet(
+    case _Action.decorate:
+      await showDecorateSheet(
         context,
-        colorKey: CoverKey.playlist(pl.id),
+        coverKey: CoverKey.playlist(pl.id),
         title: playlistNameOf(context.l10n, pl),
         tone: playlistToneOf(pl),
+        allowColor: !pl.isFavorites,
       );
-    case _Action.image:
-      await _pickImage(context, pl, hasImage, globalPosition);
     case _Action.rename:
       await _rename(context, pl);
     case _Action.delete:
@@ -94,42 +81,6 @@ Future<void> _playAll(BuildContext context, Playlist pl) async {
     return;
   }
   context.read<NowPlayingCubit>().playQueue(tracks);
-}
-
-/// 이미지 하위 메뉴: 사진에서 고르기 · (이미지가 있으면) 기본 이미지로.
-Future<void> _pickImage(
-  BuildContext context,
-  Playlist pl,
-  bool hasImage,
-  Offset? globalPosition,
-) async {
-  final l10n = context.l10n;
-  final covers = context.read<CoverCubit>();
-  final action = await showAppMenu<_ImageAction>(
-    context,
-    globalPosition: globalPosition,
-    items: [
-      AppMenuItem(
-        value: _ImageAction.pick,
-        icon: Icons.photo_library_rounded,
-        label: l10n.playlistImagePick,
-      ),
-      if (hasImage)
-        AppMenuItem(
-          value: _ImageAction.reset,
-          icon: Icons.restart_alt_rounded,
-          label: l10n.playlistImageReset,
-        ),
-    ],
-  );
-  switch (action) {
-    case _ImageAction.pick:
-      await covers.pickFromDevice(CoverKey.playlist(pl.id));
-    case _ImageAction.reset:
-      await covers.clear(CoverKey.playlist(pl.id));
-    case null:
-      break;
-  }
 }
 
 Future<void> _rename(BuildContext context, Playlist pl) async {

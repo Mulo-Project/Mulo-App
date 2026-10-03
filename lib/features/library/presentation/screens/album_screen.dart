@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app/router.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
-import '../../../covers/presentation/widgets/cover_color_sheet.dart';
+import '../../../covers/presentation/widgets/decorate_sheet.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../bloc/library_cubit.dart';
 import '../widgets/track_list_tile.dart';
@@ -46,14 +47,21 @@ class AlbumScreen extends StatelessWidget {
               onPressed: () => context.pop(),
             ),
             actions: [
+              if (tracks.isNotEmpty)
+                CircleIconButton(
+                  icon: Icons.edit_rounded,
+                  tooltip: l10n.albumRenameTooltip,
+                  onPressed: () => _rename(context),
+                ),
               CircleIconButton(
-                icon: Icons.palette_rounded,
-                tooltip: l10n.albumColorTooltip,
-                onPressed: () => showCoverColorSheet(
+                icon: Icons.auto_awesome_rounded,
+                tooltip: l10n.decorateAlbumTooltip,
+                onPressed: () => showDecorateSheet(
                   context,
-                  colorKey: CoverKey.album(album),
+                  coverKey: CoverKey.album(album),
                   title: name,
                   tone: toneFor(name),
+                  icon: Icons.album_rounded,
                 ),
               ),
             ],
@@ -74,6 +82,7 @@ class AlbumScreen extends StatelessWidget {
                   ArtworkBox(
                     size: 96,
                     radius: AppRadii.md,
+                    image: coverImageOf(context, CoverKey.album(album)),
                     tone: toneFor(name),
                     color: coverColorOf(context, CoverKey.album(album)),
                     icon: Icons.album_rounded,
@@ -122,6 +131,83 @@ class AlbumScreen extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+
+  /// 앨범 이름 바꾸기: 곡들의 앨범을 고치고, 앨범에 붙인 이미지 · 색을 새 이름으로 옮긴다.
+  Future<void> _rename(BuildContext context) async {
+    final l10n = context.l10n;
+    final library = context.read<LibraryCubit>();
+    final covers = context.read<CoverCubit>();
+    final colors = context.read<CoverColorCubit>();
+    final router = GoRouter.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final to = await showDialog<String>(
+      context: context,
+      useRootNavigator: true,
+      builder: (_) => _RenameDialog(initial: album),
+    );
+    if (to == null || to.trim() == album) return;
+    final newName = to.trim();
+    final from = CoverKey.album(album);
+    final dest = CoverKey.album(newName);
+    final image = covers.state[from];
+    final color = colors.state[from];
+    await library.renameAlbum(album, newName);
+    // 합치는 경우(새 이름에 이미 설정이 있으면)에는 그쪽을 남긴다.
+    if (image != null && !covers.state.containsKey(dest)) {
+      await covers.setFromFile(dest, image);
+    }
+    if (color != null && !colors.state.containsKey(dest)) {
+      await colors.setColor(dest, Color(color));
+    }
+    await covers.clear(from);
+    await colors.clear(from);
+    messenger.showSnackBar(SnackBar(content: Text(l10n.albumRenameDone)));
+    router.pushReplacement(Routes.album(newName));
+  }
+}
+
+/// 새 앨범 이름 입력. 저장하면 이름, 취소하면 null. 빈 이름은 알 수 없는 앨범이 된다.
+class _RenameDialog extends StatefulWidget {
+  const _RenameDialog({required this.initial});
+
+  final String initial;
+
+  @override
+  State<_RenameDialog> createState() => _RenameDialogState();
+}
+
+class _RenameDialogState extends State<_RenameDialog> {
+  late final _name = TextEditingController(text: widget.initial);
+
+  @override
+  void dispose() {
+    _name.dispose();
+    super.dispose();
+  }
+
+  void _save() => Navigator.of(context).pop(_name.text);
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return AppDialog(
+      title: l10n.albumRenameTitle,
+      content: AppTextField(
+        label: l10n.albumRenameHint,
+        controller: _name,
+        textInputAction: TextInputAction.done,
+        onSubmitted: (_) => _save(),
+      ),
+      actions: [
+        PillButton(
+          label: l10n.actionCancel,
+          variant: PillVariant.tonal,
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        PillButton(label: l10n.albumRenameSave, onPressed: _save),
+      ],
     );
   }
 }

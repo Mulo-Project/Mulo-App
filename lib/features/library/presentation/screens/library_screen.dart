@@ -71,12 +71,20 @@ class _LibraryScreenState extends State<LibraryScreen> {
             subtitle: l10n.songCount(e.value.length),
             tone: toneFor(e.key),
             leading: ArtworkBox(
+              image: coverImageOf(
+                context,
+                CoverKey.artist(e.value.first.artist),
+              ),
               tone: toneFor(e.key),
+              color: coverColorOf(
+                context,
+                CoverKey.artist(e.value.first.artist),
+              ),
               radius: 24,
               icon: Icons.person_rounded,
             ),
             trailing: const _Chevron(),
-            onTap: () => vm.playQueue(e.value),
+            onTap: () => context.push(Routes.artist(e.value.first.artist)),
           ),
       ],
       LibraryTab.albums => [
@@ -87,6 +95,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 '${artistOf(l10n, e.value.first)} · ${l10n.songCount(e.value.length)}',
             tone: toneFor(e.key),
             leading: ArtworkBox(
+              image: coverImageOf(context, CoverKey.album(e.value.first.album)),
               tone: toneFor(e.key),
               color: coverColorOf(context, CoverKey.album(e.value.first.album)),
               icon: Icons.album_rounded,

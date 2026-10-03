@@ -5,6 +5,7 @@ import '../core/design/design.dart';
 import '../features/home/presentation/screens/home_screen.dart';
 import '../features/home/presentation/screens/top_tracks_screen.dart';
 import '../features/library/presentation/screens/album_screen.dart';
+import '../features/library/presentation/screens/artist_screen.dart';
 import '../features/library/presentation/screens/library_screen.dart';
 import '../features/player/presentation/screens/player_screen.dart';
 import '../features/player/presentation/screens/queue_screen.dart';
@@ -33,6 +34,12 @@ abstract final class Routes {
   /// [album]은 곡에 저장된 앨범 이름 (빈 문자열이면 알 수 없는 앨범).
   static String album(String album) =>
       Uri(path: '/library/album', queryParameters: {'name': album}).toString();
+
+  /// [artist]는 곡에 저장된 아티스트 이름 (빈 문자열이면 알 수 없는 아티스트).
+  static String artist(String artist) => Uri(
+    path: '/library/artist',
+    queryParameters: {'name': artist},
+  ).toString();
 }
 
 final _rootKey = GlobalKey<NavigatorState>();
@@ -51,6 +58,15 @@ GoRouter createRouter({String initialLocation = Routes.home}) => GoRouter(
           Routes.library,
           const LibraryScreen(),
           routes: [
+            GoRoute(
+              path: 'artist',
+              pageBuilder: (context, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: ArtistScreen(
+                  artist: state.uri.queryParameters['name'] ?? '',
+                ),
+              ),
+            ),
             GoRoute(
               path: 'album',
               pageBuilder: (context, state) => NoTransitionPage(
