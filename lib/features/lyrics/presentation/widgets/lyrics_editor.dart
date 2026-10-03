@@ -5,6 +5,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../library/domain/entities/track.dart';
 import '../bloc/lyrics_cubit.dart';
+import '../screens/lyrics_sync_screen.dart';
 import '../screens/lyrics_web_screen.dart';
 
 /// 곡 메뉴의 "가사 설정": 직접 입력 · 붙여넣기 · 파일(.lrc · .txt) · 웹 검색(Android)에서 불러오기.
@@ -64,6 +65,12 @@ class _LyricsEditorDialogState extends State<_LyricsEditorDialog> {
     if (picked != null && mounted) _text.text = picked;
   }
 
+  /// 지금 글을 곡에 맞춰 싱크한다. 저장하면 이 창도 닫으며 그 LRC로 저장한다.
+  Future<void> _sync() async {
+    final synced = await showLyricsSync(context, widget.track, _text.text);
+    if (synced != null && mounted) Navigator.of(context).pop(synced);
+  }
+
   @override
   void dispose() {
     _text.dispose();
@@ -117,6 +124,13 @@ class _LyricsEditorDialogState extends State<_LyricsEditorDialog> {
                 onPressed: _searchWeb,
               ),
             ],
+            const SizedBox(height: AppSpacing.xs),
+            PillButton(
+              label: l10n.lyricsSyncOpen,
+              icon: Icons.av_timer_rounded,
+              variant: PillVariant.tonal,
+              onPressed: _sync,
+            ),
             const SizedBox(height: AppSpacing.xs),
             PillButton(
               label: l10n.lyricsSave,

@@ -1928,6 +1928,78 @@ abstract class AppLocalizations {
   /// **'가사를 지웠어요'**
   String get lyricsCleared;
 
+  /// No description provided for @lyricsSyncOpen.
+  ///
+  /// In ko, this message translates to:
+  /// **'싱크 맞추기 (줄마다 시간 찍기)'**
+  String get lyricsSyncOpen;
+
+  /// No description provided for @lyricsSyncTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'싱크 맞추기'**
+  String get lyricsSyncTitle;
+
+  /// No description provided for @lyricsSyncHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'노래에 맞춰 \'지금\'을 눌러 줄마다 시간을 찍어요. 찍은 줄을 누르면 시간을 다듬을 수 있어요.'**
+  String get lyricsSyncHint;
+
+  /// No description provided for @lyricsSyncNow.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금'**
+  String get lyricsSyncNow;
+
+  /// No description provided for @lyricsSyncUndo.
+  ///
+  /// In ko, this message translates to:
+  /// **'되돌리기'**
+  String get lyricsSyncUndo;
+
+  /// No description provided for @lyricsSyncSave.
+  ///
+  /// In ko, this message translates to:
+  /// **'싱크 저장'**
+  String get lyricsSyncSave;
+
+  /// No description provided for @lyricsSyncReplay.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 줄부터 다시 듣기'**
+  String get lyricsSyncReplay;
+
+  /// No description provided for @lyricsSyncNeedAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'모든 줄에 시간을 찍으면 저장할 수 있어요.'**
+  String get lyricsSyncNeedAll;
+
+  /// No description provided for @lyricsSyncEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'싱크를 맞출 가사가 없어요. 먼저 가사를 입력해 주세요.'**
+  String get lyricsSyncEmpty;
+
+  /// No description provided for @lyricsSyncPlay.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생'**
+  String get lyricsSyncPlay;
+
+  /// No description provided for @lyricsSyncPause.
+  ///
+  /// In ko, this message translates to:
+  /// **'일시정지'**
+  String get lyricsSyncPause;
+
+  /// No description provided for @lyricsSyncProgress.
+  ///
+  /// In ko, this message translates to:
+  /// **'{done}/{total}줄'**
+  String lyricsSyncProgress(int done, int total);
+
   /// No description provided for @playerShowLyrics.
   ///
   /// In ko, this message translates to:

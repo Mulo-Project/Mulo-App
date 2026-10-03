@@ -983,6 +983,45 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsCleared => '가사를 지웠어요';
 
   @override
+  String get lyricsSyncOpen => '싱크 맞추기 (줄마다 시간 찍기)';
+
+  @override
+  String get lyricsSyncTitle => '싱크 맞추기';
+
+  @override
+  String get lyricsSyncHint =>
+      '노래에 맞춰 \'지금\'을 눌러 줄마다 시간을 찍어요. 찍은 줄을 누르면 시간을 다듬을 수 있어요.';
+
+  @override
+  String get lyricsSyncNow => '지금';
+
+  @override
+  String get lyricsSyncUndo => '되돌리기';
+
+  @override
+  String get lyricsSyncSave => '싱크 저장';
+
+  @override
+  String get lyricsSyncReplay => '이 줄부터 다시 듣기';
+
+  @override
+  String get lyricsSyncNeedAll => '모든 줄에 시간을 찍으면 저장할 수 있어요.';
+
+  @override
+  String get lyricsSyncEmpty => '싱크를 맞출 가사가 없어요. 먼저 가사를 입력해 주세요.';
+
+  @override
+  String get lyricsSyncPlay => '재생';
+
+  @override
+  String get lyricsSyncPause => '일시정지';
+
+  @override
+  String lyricsSyncProgress(int done, int total) {
+    return '$done/$total줄';
+  }
+
+  @override
   String get playerShowLyrics => '가사 보기';
 
   @override

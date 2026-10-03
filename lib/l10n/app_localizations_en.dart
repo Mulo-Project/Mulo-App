@@ -998,6 +998,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsCleared => 'Lyrics removed';
 
   @override
+  String get lyricsSyncOpen => 'Sync lyrics (stamp each line)';
+
+  @override
+  String get lyricsSyncTitle => 'Sync lyrics';
+
+  @override
+  String get lyricsSyncHint =>
+      'Tap \'Now\' along with the song to stamp each line. Tap a stamped line to fine-tune its time.';
+
+  @override
+  String get lyricsSyncNow => 'Now';
+
+  @override
+  String get lyricsSyncUndo => 'Undo';
+
+  @override
+  String get lyricsSyncSave => 'Save sync';
+
+  @override
+  String get lyricsSyncReplay => 'Replay from this line';
+
+  @override
+  String get lyricsSyncNeedAll => 'Stamp every line to save.';
+
+  @override
+  String get lyricsSyncEmpty => 'No lyrics to sync. Add lyrics first.';
+
+  @override
+  String get lyricsSyncPlay => 'Play';
+
+  @override
+  String get lyricsSyncPause => 'Pause';
+
+  @override
+  String lyricsSyncProgress(int done, int total) {
+    return '$done/$total lines';
+  }
+
+  @override
   String get playerShowLyrics => 'Show lyrics';
 
   @override
