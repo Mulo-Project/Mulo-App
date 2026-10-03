@@ -1010,6 +1010,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsSyncTitle => 'Sync lyrics';
 
   @override
+  String get lyricsSyncSetting => 'Sync settings';
+
+  @override
   String get lyricsSyncHint =>
       'Tap \'Now\' along with the song to stamp each line. Tap a stamped line to fine-tune its time.';
 

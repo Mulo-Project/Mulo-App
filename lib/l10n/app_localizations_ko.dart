@@ -995,6 +995,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsSyncTitle => '싱크 맞추기';
 
   @override
+  String get lyricsSyncSetting => '싱크 설정';
+
+  @override
   String get lyricsSyncHint =>
       '노래에 맞춰 \'지금\'을 눌러 줄마다 시간을 찍어요. 찍은 줄을 누르면 시간을 다듬을 수 있어요.';
 

@@ -456,6 +456,7 @@
   "lyricsCleared": "가사를 지웠어요",
   "lyricsSyncOpen": "싱크 맞추기 (줄마다 시간 찍기)",
   "lyricsSyncTitle": "싱크 맞추기",
+  "lyricsSyncSetting": "싱크 설정",
   "lyricsSyncHint": "노래에 맞춰 '지금'을 눌러 줄마다 시간을 찍어요. 찍은 줄을 누르면 시간을 다듬을 수 있어요.",
   "lyricsSyncNow": "지금",
   "lyricsSyncUndo": "되돌리기",

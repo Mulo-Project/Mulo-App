@@ -129,38 +129,42 @@ class _LyricsEditorDialogState extends State<_LyricsEditorDialog> {
               maxLines: 10,
             ),
             const SizedBox(height: AppSpacing.md),
-            PillButton(
-              label: l10n.lyricsLoadFile,
-              icon: Icons.file_open_rounded,
-              variant: PillVariant.tonal,
-              onPressed: _pickFile,
+            Wrap(
+              alignment: WrapAlignment.center,
+              children: [
+                PlainButton(
+                  label: l10n.lyricsLoadFile,
+                  icon: Icons.file_open_rounded,
+                  onPressed: _pickFile,
+                ),
+                if (lyricsWebSupported)
+                  PlainButton(
+                    label: l10n.lyricsWebSearch,
+                    icon: Icons.travel_explore_rounded,
+                    onPressed: _searchWeb,
+                  ),
+                PlainButton(
+                  label: l10n.lyricsSyncOpen,
+                  icon: Icons.av_timer_rounded,
+                  onPressed: _sync,
+                ),
+              ],
             ),
-            if (lyricsWebSupported) ...[
-              const SizedBox(height: AppSpacing.xs),
-              PillButton(
-                label: l10n.lyricsWebSearch,
-                icon: Icons.travel_explore_rounded,
-                variant: PillVariant.tonal,
-                onPressed: _searchWeb,
-              ),
-            ],
-            const SizedBox(height: AppSpacing.xs),
-            PillButton(
-              label: l10n.lyricsSyncOpen,
-              icon: Icons.av_timer_rounded,
-              variant: PillVariant.tonal,
-              onPressed: _sync,
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            PillButton(
-              label: l10n.lyricsSave,
-              onPressed: () => Navigator.of(context).pop(_text.text),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            PillButton(
-              label: l10n.actionCancel,
-              variant: PillVariant.tonal,
-              onPressed: () => Navigator.of(context).pop(),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                PlainButton(
+                  label: l10n.actionCancel,
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                const SizedBox(width: AppSpacing.xs),
+                PlainButton(
+                  label: l10n.lyricsSave,
+                  accent: true,
+                  onPressed: () => Navigator.of(context).pop(_text.text),
+                ),
+              ],
             ),
           ],
         ),

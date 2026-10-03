@@ -1952,6 +1952,12 @@ abstract class AppLocalizations {
   /// **'싱크 맞추기'**
   String get lyricsSyncTitle;
 
+  /// No description provided for @lyricsSyncSetting.
+  ///
+  /// In ko, this message translates to:
+  /// **'싱크 설정'**
+  String get lyricsSyncSetting;
+
   /// No description provided for @lyricsSyncHint.
   ///
   /// In ko, this message translates to:

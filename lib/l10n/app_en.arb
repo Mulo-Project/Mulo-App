@@ -370,6 +370,7 @@
   "lyricsCleared": "Lyrics removed",
   "lyricsSyncOpen": "Sync lyrics (stamp each line)",
   "lyricsSyncTitle": "Sync lyrics",
+  "lyricsSyncSetting": "Sync settings",
   "lyricsSyncHint": "Tap 'Now' along with the song to stamp each line. Tap a stamped line to fine-tune its time.",
   "lyricsSyncNow": "Now",
   "lyricsSyncUndo": "Undo",

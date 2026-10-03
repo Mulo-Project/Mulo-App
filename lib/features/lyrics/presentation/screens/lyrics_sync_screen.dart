@@ -273,16 +273,13 @@ class _LineRow extends StatelessWidget {
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 for (final ms in const [-500, -100, 100, 500])
-                  PillButton(
+                  PlainButton(
                     label: '${ms > 0 ? '+' : '−'}${ms.abs() / 1000}s',
-                    variant: PillVariant.tonal,
-                    compact: true,
                     onPressed: () => sync.nudge(Duration(milliseconds: ms)),
                   ),
-                CircleIconButton(
+                PlainButton(
                   icon: Icons.replay_rounded,
                   tooltip: l10n.lyricsSyncReplay,
-                  size: 36,
                   onPressed: onReplay,
                 ),
               ],
@@ -325,13 +322,13 @@ class _ControlBar extends StatelessWidget {
           const SizedBox(height: AppSpacing.xs),
           Row(
             children: [
-              CircleIconButton(
+              PlainButton(
                 icon: Icons.undo_rounded,
                 tooltip: l10n.lyricsSyncUndo,
                 onPressed: draft.canUndo ? sync.undo : null,
               ),
               const SizedBox(width: AppSpacing.xs),
-              CircleIconButton(
+              PlainButton(
                 icon: np.state.isPlaying
                     ? Icons.pause_rounded
                     : Icons.play_arrow_rounded,
@@ -342,10 +339,14 @@ class _ControlBar extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
-                child: PillButton(
-                  label: l10n.lyricsSyncNow,
-                  icon: Icons.touch_app_rounded,
-                  onPressed: draft.current >= draft.length ? null : onNow,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: PlainButton(
+                    label: l10n.lyricsSyncNow,
+                    icon: Icons.touch_app_rounded,
+                    accent: true,
+                    onPressed: draft.current >= draft.length ? null : onNow,
+                  ),
                 ),
               ),
             ],

@@ -34,7 +34,6 @@ class LyricsMenuButton extends StatelessWidget {
 /// 웹에서 가져온 글은 편집기에 채워 열어 검토 후 저장하게 한다.
 Future<void> showLyricsMenu(BuildContext context, Track track) async {
   final l10n = context.l10n;
-  final cubit = context.read<LyricsCubit>();
   final action = await showAppMenu<_LyricsAction>(
     context,
     items: [
@@ -65,18 +64,23 @@ Future<void> showLyricsMenu(BuildContext context, Track track) async {
       if (picked == null || !context.mounted) return;
       await showLyricsEditor(context, track, initialText: picked);
     case _LyricsAction.sync:
-      final current = await cubit.currentText(track);
-      if (!context.mounted) return;
-      if (current.trim().isEmpty) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(l10n.lyricsSyncEmpty)));
-        return;
-      }
-      final synced = await showLyricsSync(context, track, current);
-      if (synced == null) return;
-      await cubit.save(track.id, synced);
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(l10n.lyricsSaved)));
+      await startLyricsSync(context, track);
   }
+}
+
+/// 저장된 가사로 싱크 맞추기 화면을 열고, 저장하면 곡의 가사로 저장한다.
+Future<void> startLyricsSync(BuildContext context, Track track) async {
+  final l10n = context.l10n;
+  final cubit = context.read<LyricsCubit>();
+  final messenger = ScaffoldMessenger.of(context);
+  final current = await cubit.currentText(track);
+  if (!context.mounted) return;
+  if (current.trim().isEmpty) {
+    messenger.showSnackBar(SnackBar(content: Text(l10n.lyricsSyncEmpty)));
+    return;
+  }
+  final synced = await showLyricsSync(context, track, current);
+  if (synced == null) return;
+  await cubit.save(track.id, synced);
+  messenger.showSnackBar(SnackBar(content: Text(l10n.lyricsSaved)));
 }

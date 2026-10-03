@@ -122,9 +122,7 @@ void main() {
     await tester.tap(find.byTooltip('가사 보기'));
     await tester.pumpAndSettle();
     expect(find.text('가사가 없어요'), findsOneWidget);
-    await tester.tap(find.text('가사 편집'));
-    await tester.pumpAndSettle();
-    expect(find.text('싱크 맞추기'), findsOneWidget);
+    expect(find.text('싱크 설정'), findsOneWidget);
     await tester.tap(find.text('가사 편집').last);
     await tester.pumpAndSettle();
     expect(find.byType(Dialog), findsOneWidget);

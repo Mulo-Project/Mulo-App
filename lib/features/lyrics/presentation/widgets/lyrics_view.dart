@@ -6,6 +6,7 @@ import '../../../../core/l10n/l10n.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../bloc/lyrics_cubit.dart';
+import 'lyrics_editor.dart';
 import 'lyrics_menu.dart';
 
 /// 전체 화면 플레이어의 가사 보기. 싱크 가사는 재생 위치의 줄을 강조하고 따라 내려가며,
@@ -56,13 +57,29 @@ class _LyricsViewState extends State<LyricsView> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
+    final l10n = context.l10n;
+    return Column(
       children: [
-        Positioned.fill(child: _body(context)),
-        Positioned(
-          top: 0,
-          right: 0,
+        Align(
+          alignment: Alignment.centerRight,
           child: LyricsMenuButton(track: widget.track),
+        ),
+        Expanded(child: _body(context)),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            PlainButton(
+              label: l10n.lyricsSyncSetting,
+              icon: Icons.av_timer_rounded,
+              onPressed: () => startLyricsSync(context, widget.track),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            PlainButton(
+              label: l10n.lyricsMenuEdit,
+              icon: Icons.edit_rounded,
+              onPressed: () => showLyricsEditor(context, widget.track),
+            ),
+          ],
         ),
       ],
     );
@@ -91,11 +108,10 @@ class _LyricsViewState extends State<LyricsView> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.md),
-            PillButton(
-              label: l10n.lyricsMenuTooltip,
-              icon: Icons.edit_note_rounded,
-              variant: PillVariant.tonal,
-              onPressed: () => showLyricsMenu(context, widget.track),
+            PlainButton(
+              label: l10n.lyricsMenuEdit,
+              icon: Icons.edit_rounded,
+              onPressed: () => showLyricsEditor(context, widget.track),
             ),
           ],
         ),
