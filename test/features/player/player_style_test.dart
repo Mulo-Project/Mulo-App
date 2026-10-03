@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:music_download_play_app/app/app.dart';
@@ -39,6 +40,31 @@ Future<void> _openPlayer(WidgetTester tester, PlayerStyle style) async {
 }
 
 void main() {
+  testWidgets('진행 막대: 끝에 가도 시간 상자가 막대 폭 안에 있다', (tester) async {
+    for (final v in [0.0, 1.0]) {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData.dark(),
+          home: Align(
+            alignment: Alignment.topLeft,
+            child: SizedBox(
+              width: 400,
+              child: PlayerSeekBar(
+                progress: v,
+                onSeek: (_) {},
+                position: const Duration(minutes: 3, seconds: 3),
+                total: const Duration(minutes: 3, seconds: 3),
+              ),
+            ),
+          ),
+        ),
+      );
+      final box = tester.getRect(find.byType(TimeThumb));
+      expect(box.left, greaterThanOrEqualTo(0));
+      expect(box.right, lessThanOrEqualTo(400));
+    }
+  });
+
   test('플레이어 모양을 고르면 저장하고, 다시 불러온다', () async {
     final repo = MemoryPlayerStyleRepository();
     PlayerStyleCubit make() => PlayerStyleCubit(
@@ -48,28 +74,21 @@ void main() {
     final a = make();
     addTearDown(a.close);
     expect(a.state, PlayerStyle.square);
-    await a.select(PlayerStyle.vinyl);
-    expect(repo.style, PlayerStyle.vinyl);
+    await a.select(PlayerStyle.arc);
+    expect(repo.style, PlayerStyle.arc);
 
     final b = make();
     addTearDown(b.close);
     await b.load();
-    expect(b.state, PlayerStyle.vinyl);
+    expect(b.state, PlayerStyle.arc);
   });
 
-  test('원 둘레 위치를 0~1로 바꾼다', () {
-    const size = Size.square(100);
-    // 12시 방향에서 시작하는 한 바퀴.
-    double at(Offset o) => RingSeek.fractionAt(
-      o,
-      size,
-      start: -1.5707963267948966,
-      sweep: 6.283185307179586,
-    );
-    expect(at(const Offset(50, 0)), closeTo(0, .01));
-    expect(at(const Offset(100, 50)), closeTo(.25, .01));
-    expect(at(const Offset(50, 100)), closeTo(.5, .01));
-    expect(at(const Offset(0, 50)), closeTo(.75, .01));
+  test('진행 막대 윤곽 위 가장 가까운 점을 0~1로 바꾼다', () {
+    final points = [for (var i = 0; i <= 100; i++) Offset(i.toDouble(), 0)];
+    final (a, d) = MorphSeek.nearest(points, const Offset(25, 3));
+    expect(a, closeTo(.25, .001));
+    expect(d, closeTo(3, .001));
+    expect(MorphSeek.nearest(points, const Offset(500, 0)).$1, 1);
   });
 
   for (final style in PlayerStyle.values) {
@@ -82,6 +101,9 @@ void main() {
       expect(find.byTooltip('반복'), findsOneWidget);
       expect(find.byTooltip('가사 보기'), findsOneWidget);
       expect(find.byTooltip('재생 대기열'), findsOneWidget);
+      expect(find.byTooltip('수면 타이머'), findsOneWidget);
+      expect(find.byTooltip('이퀄라이저'), findsOneWidget);
+      expect(find.byTooltip('10초 앞으로'), findsOneWidget);
 
       await tester.tap(find.byTooltip('좋아요'));
       await tester.pumpAndSettle();
@@ -93,39 +115,48 @@ void main() {
     });
   }
 
-  testWidgets('네모 모양은 10초 이동 버튼이 있다', (tester) async {
+  testWidgets('10초 이동 버튼이 동작한다', (tester) async {
     await _openPlayer(tester, PlayerStyle.square);
     await tester.tap(find.byTooltip('10초 앞으로'));
     await tester.pumpAndSettle();
     expect(find.textContaining('0:10'), findsOneWidget);
   });
 
-  testWidgets('설정의 플레이어 테마에서 넘겨 보고 사용을 누르면 바뀐다', (tester) async {
-    await setUpTestDependencies(tracks: [_t('t1', '첫 곡')]);
-    tester.view.physicalSize = const Size(1170, 2532);
-    tester.view.devicePixelRatio = 3;
-    tester.platformDispatcher.localesTestValue = const [Locale('ko')];
-    addTearDown(tester.view.reset);
-    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
-    await tester.pumpWidget(const MusicApp(initialLocation: Routes.settings));
-    await tester.pumpAndSettle();
+  testWidgets('재생 화면 더 보기에서 플레이어 테마를 고르면 바로 바뀐다', (tester) async {
+    await _openPlayer(tester, PlayerStyle.square);
 
-    await tester.ensureVisible(find.text('플레이어 테마'));
+    await tester.tap(find.byTooltip('곡 메뉴'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('플레이어 테마'));
     await tester.pumpAndSettle();
-    // 처음엔 지금 쓰는 모양(네모)이 "사용 중".
-    expect(find.text('사용 중'), findsOneWidget);
 
-    await tester.drag(find.byType(PageView), const Offset(-150, 0));
+    await tester.tap(find.text('호'));
     await tester.pumpAndSettle();
-    expect(find.text('꽉 찬 이미지'), findsOneWidget);
-    await tester.tap(find.text('사용'));
-    await tester.pumpAndSettle();
-    expect(find.text('사용 중'), findsOneWidget);
+    expect(
+      tester
+          .element(find.byType(Scaffold).first)
+          .read<PlayerStyleCubit>()
+          .state,
+      PlayerStyle.arc,
+    );
+  });
 
-    await tester.tap(find.byTooltip('뒤로'));
+  testWidgets('호 모양: 수면 타이머를 정하면 켜지고 끌 수 있다', (tester) async {
+    await _openPlayer(tester, PlayerStyle.arc);
+
+    await tester.tap(find.byTooltip('수면 타이머'));
     await tester.pumpAndSettle();
-    expect(find.text('꽉 찬 이미지'), findsOneWidget);
+    await tester.tap(find.text('30분 뒤 멈춤'));
+    await tester.pumpAndSettle();
+    expect(find.text('30분 뒤 재생을 멈춰요'), findsOneWidget);
+    // 하단 스낵바가 버튼을 가리지 않게 걷는다.
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('수면 타이머'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('타이머 끄기'));
+    await tester.pumpAndSettle();
+    expect(find.text('수면 타이머를 껐어요'), findsOneWidget);
   });
 }

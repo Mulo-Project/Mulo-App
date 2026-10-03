@@ -373,43 +373,44 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsThemePreviewDesc => '고른 테마로 앱 화면들을 직접 둘러보고 적용해요';
 
   @override
-  String get settingsPlayerStyle => '플레이어 테마';
-
-  @override
-  String get settingsPlayerStyleDesc => '재생 화면 모양을 골라요';
-
-  @override
   String get playerStyleTitle => '플레이어 테마';
-
-  @override
-  String get playerStyleUse => '사용';
-
-  @override
-  String get playerStyleInUse => '사용 중';
-
-  @override
-  String get playerStyleVinyl => '음반';
-
-  @override
-  String get playerStyleVinylDesc => '둥근 디스크 커버 둘레로 진행 호가 돌아요';
 
   @override
   String get playerStyleSquare => '네모';
 
   @override
-  String get playerStyleSquareDesc => '큰 정사각 커버와 가는 진행 막대, 10초 이동';
-
-  @override
   String get playerStyleFullBleed => '꽉 찬 이미지';
-
-  @override
-  String get playerStyleFullBleedDesc => '커버가 위쪽을 채우고 배경으로 스며들어요';
 
   @override
   String get playerStyleArc => '호';
 
   @override
-  String get playerStyleArcDesc => '흐린 커버 배경 위, 빛나는 재생 버튼을 두른 곡선 진행 호';
+  String get playerSleepTimer => '수면 타이머';
+
+  @override
+  String get playerSleepTimerOff => '타이머 끄기';
+
+  @override
+  String playerSleepTimerMinutes(int minutes) {
+    return '$minutes분 뒤 멈춤';
+  }
+
+  @override
+  String playerSleepTimerSet(int minutes) {
+    return '$minutes분 뒤 재생을 멈춰요';
+  }
+
+  @override
+  String get playerSleepTimerCleared => '수면 타이머를 껐어요';
+
+  @override
+  String get playerEqualizer => '이퀄라이저';
+
+  @override
+  String get playerEqualizerSoon => '이퀄라이저는 준비 중이에요';
+
+  @override
+  String get playerLyrics => '가사';
 
   @override
   String get playerRewind10 => '10초 뒤로';
@@ -467,9 +468,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get playerRepeat => '반복';
-
-  @override
-  String get playerLyrics => '가사';
 
   @override
   String playerFrom(String source) {

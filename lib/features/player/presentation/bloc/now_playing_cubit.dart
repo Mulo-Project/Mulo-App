@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:equatable/equatable.dart';
@@ -8,6 +9,8 @@ import '../../domain/entities/player_repeat_mode.dart';
 
 export '../../domain/entities/player_repeat_mode.dart';
 
+const Object _keep = Object();
+
 class NowPlayingState extends Equatable {
   const NowPlayingState({
     required this.queue,
@@ -16,6 +19,7 @@ class NowPlayingState extends Equatable {
     required this.position,
     required this.shuffle,
     required this.repeat,
+    this.sleepMinutes,
   });
 
   final List<Track> queue;
@@ -24,6 +28,9 @@ class NowPlayingState extends Equatable {
   final Duration position;
   final bool shuffle;
   final PlayerRepeatMode repeat;
+
+  /// 수면 타이머로 정한 분 (꺼져 있으면 null).
+  final int? sleepMinutes;
 
   Track? get track => queue.isEmpty ? null : queue[index];
 
@@ -39,6 +46,7 @@ class NowPlayingState extends Equatable {
     Duration? position,
     bool? shuffle,
     PlayerRepeatMode? repeat,
+    Object? sleepMinutes = _keep,
   }) => NowPlayingState(
     queue: queue ?? this.queue,
     index: index ?? this.index,
@@ -46,6 +54,9 @@ class NowPlayingState extends Equatable {
     position: position ?? this.position,
     shuffle: shuffle ?? this.shuffle,
     repeat: repeat ?? this.repeat,
+    sleepMinutes: identical(sleepMinutes, _keep)
+        ? this.sleepMinutes
+        : sleepMinutes as int?,
   );
 
   @override
@@ -56,6 +67,7 @@ class NowPlayingState extends Equatable {
     position,
     shuffle,
     repeat,
+    sleepMinutes,
   ];
 }
 
@@ -73,6 +85,27 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
           repeat: PlayerRepeatMode.off,
         ),
       );
+
+  Timer? _sleep;
+
+  /// [minutes]분 뒤에 재생을 멈춘다. null이면 타이머를 끈다.
+  void setSleepTimer(int? minutes) {
+    _sleep?.cancel();
+    _sleep = null;
+    if (minutes != null) {
+      _sleep = Timer(Duration(minutes: minutes), () {
+        _sleep = null;
+        emit(state.copyWith(isPlaying: false, sleepMinutes: null));
+      });
+    }
+    emit(state.copyWith(sleepMinutes: minutes));
+  }
+
+  @override
+  Future<void> close() {
+    _sleep?.cancel();
+    return super.close();
+  }
 
   void togglePlay() => emit(state.copyWith(isPlaying: !state.isPlaying));
 

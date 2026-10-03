@@ -12,12 +12,14 @@ import '../../../covers/presentation/widgets/cover_sheet.dart';
 import '../../../lyrics/presentation/bloc/lyrics_cubit.dart';
 import '../../../lyrics/presentation/widgets/lyrics_editor.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
+import '../../../player/presentation/widgets/player_style_sheet.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../../domain/entities/track.dart';
 import '../../domain/entities/track_info.dart';
 import '../bloc/library_cubit.dart';
 
 enum _TrackAction {
+  playerStyle,
   playNext,
   addToQueue,
   addToPlaylist,
@@ -55,6 +57,7 @@ class TrackMoreButton extends StatelessWidget {
 
 /// 곡 메뉴: 팝업 메뉴 (⋮ · 길게 누르기 · 데스크톱 오른쪽 클릭에서 같은 메뉴를 연다).
 /// [globalPosition]이 있으면 눌린 자리에, 없으면 [context] 위젯 옆에 띄운다.
+/// [inPlayer]면 맨 위에 "플레이어 테마"가 더해진다 (재생 화면의 더 보기).
 /// 항목을 고르면 메뉴를 닫고, 이어지는 대화상자 · 안내는 [context]에서 이어 간다.
 ///
 /// [playlistId]가 있으면(재생목록 안의 곡) 삭제가 "재생목록에서 빼기"와
@@ -64,6 +67,7 @@ Future<void> showTrackMenu(
   Track track, {
   Offset? globalPosition,
   String? playlistId,
+  bool inPlayer = false,
 }) async {
   final l10n = context.l10n;
   final favorite = context.read<PlaylistsCubit>().isFavorite(track.id);
@@ -71,8 +75,15 @@ Future<void> showTrackMenu(
     context,
     globalPosition: globalPosition,
     items: [
+      if (inPlayer)
+        AppMenuItem(
+          value: _TrackAction.playerStyle,
+          icon: Icons.style_rounded,
+          label: l10n.playerStyleTitle,
+        ),
       AppMenuItem(
         value: _TrackAction.playNext,
+        dividerBefore: inPlayer,
         icon: Icons.playlist_play_rounded,
         label: l10n.trackMenuPlayNext,
       ),
@@ -137,6 +148,8 @@ Future<void> showTrackMenu(
   );
   if (action == null || !context.mounted) return;
   switch (action) {
+    case _TrackAction.playerStyle:
+      await showPlayerStyleSheet(context);
     case _TrackAction.playNext:
       context.read<NowPlayingCubit>().playNext(track);
       _snack(context, context.l10n.trackMenuPlayNextDone);
