@@ -927,7 +927,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get trackDeleted => '삭제했어요';
 
   @override
-  String get trackMenuLyrics => '가사 설정';
+  String get lyricsMenuTooltip => '가사 편집';
+
+  @override
+  String get lyricsMenuEdit => '가사 편집';
+
+  @override
+  String get lyricsMenuWeb => '웹에서 가져오기';
 
   @override
   String get lyricsEditTitle => '가사 설정';

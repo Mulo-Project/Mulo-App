@@ -28,21 +28,27 @@ void main() {
     addTearDown(tester.platformDispatcher.clearLocalesTestValue);
   }
 
-  testWidgets('곡 메뉴 › 가사 설정: 파일에서 불러와 저장하고, 비워 저장하면 지운다', (tester) async {
+  /// 플레이어에서 첫 곡을 틀고 가사 보기로 바꾼 뒤 가사 메뉴를 연다.
+  Future<void> openLyricsMenu(WidgetTester tester) async {
+    await tester.pumpWidget(const MusicApp(initialLocation: Routes.player));
+    await tester.pumpAndSettle();
+    tester.element(find.byType(PlayerScreen)).read<NowPlayingCubit>().playQueue(
+      [_t('t1', '첫 곡')],
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('가사 보기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('가사 편집'));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('가사 메뉴 › 가사 편집: 파일에서 불러와 저장하고, 비워 저장하면 지운다', (tester) async {
     phone(tester);
     final lyrics = MemoryLyricsRepository();
     final file = FakeLyricsFileSource('[00:01.00]불러온 가사');
-    await setUpTestDependencies(
-      tracks: [_t('t1', '첫 곡')],
-      lyrics: lyrics,
-      lyricsFile: file,
-    );
-    await tester.pumpWidget(const MusicApp(initialLocation: Routes.library));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.byTooltip('곡 메뉴').first);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('가사 설정'));
+    await setUpTestDependencies(lyrics: lyrics, lyricsFile: file);
+    await openLyricsMenu(tester);
+    await tester.tap(find.text('가사 편집').last);
     await tester.pumpAndSettle();
 
     await tester.tap(find.textContaining('파일에서 불러오기'));
@@ -57,9 +63,9 @@ void main() {
 
     // 다시 열면 저장된 글이 채워지고, 비워 저장하면 지운다.
     await tester.pump(const Duration(seconds: 5));
-    await tester.tap(find.byTooltip('곡 메뉴').first);
+    await tester.tap(find.byTooltip('가사 편집'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('가사 설정'));
+    await tester.tap(find.text('가사 편집').last);
     await tester.pumpAndSettle();
     expect(find.text('[00:01.00]불러온 가사'), findsOneWidget);
     await tester.enterText(
@@ -103,7 +109,7 @@ void main() {
     expect(find.text('둘째 줄'), findsNothing);
   });
 
-  testWidgets('플레이어: 가사가 없으면 안내와 가사 설정 버튼', (tester) async {
+  testWidgets('플레이어: 가사가 없으면 안내와 가사 편집 버튼', (tester) async {
     phone(tester);
     await setUpTestDependencies();
     await tester.pumpWidget(const MusicApp(initialLocation: Routes.player));
@@ -116,7 +122,10 @@ void main() {
     await tester.tap(find.byTooltip('가사 보기'));
     await tester.pumpAndSettle();
     expect(find.text('가사가 없어요'), findsOneWidget);
-    await tester.tap(find.text('가사 설정'));
+    await tester.tap(find.text('가사 편집'));
+    await tester.pumpAndSettle();
+    expect(find.text('싱크 맞추기'), findsOneWidget);
+    await tester.tap(find.text('가사 편집').last);
     await tester.pumpAndSettle();
     expect(find.byType(Dialog), findsOneWidget);
   });

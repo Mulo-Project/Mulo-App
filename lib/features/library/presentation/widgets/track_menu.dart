@@ -10,7 +10,6 @@ import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../covers/presentation/widgets/cover_color_sheet.dart';
 import '../../../covers/presentation/widgets/cover_sheet.dart';
 import '../../../lyrics/presentation/bloc/lyrics_cubit.dart';
-import '../../../lyrics/presentation/widgets/lyrics_editor.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../../player/presentation/widgets/player_style_sheet.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
@@ -25,7 +24,6 @@ enum _TrackAction {
   addToPlaylist,
   favorite,
   editInfo,
-  lyrics,
   cover,
   color,
   delete,
@@ -108,11 +106,6 @@ Future<void> showTrackMenu(
         label: l10n.trackMenuEditInfo,
       ),
       AppMenuItem(
-        value: _TrackAction.lyrics,
-        icon: Icons.lyrics_rounded,
-        label: l10n.trackMenuLyrics,
-      ),
-      AppMenuItem(
         value: _TrackAction.cover,
         icon: Icons.image_rounded,
         label: l10n.trackMenuCover,
@@ -169,8 +162,6 @@ Future<void> showTrackMenu(
       }
     case _TrackAction.editInfo:
       await _editInfo(context, track);
-    case _TrackAction.lyrics:
-      await showLyricsEditor(context, track);
     case _TrackAction.cover:
       await showCoverSheet(
         context,

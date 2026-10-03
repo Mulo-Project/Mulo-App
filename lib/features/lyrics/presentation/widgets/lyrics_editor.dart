@@ -8,15 +8,25 @@ import '../bloc/lyrics_cubit.dart';
 import '../screens/lyrics_sync_screen.dart';
 import '../screens/lyrics_web_screen.dart';
 
-/// 곡 메뉴의 "가사 설정": 직접 입력 · 붙여넣기 · 파일(.lrc · .txt) · 웹 검색(Android)에서 불러오기.
+/// 플레이어 가사 화면의 "가사 편집": 직접 입력 · 붙여넣기 · 파일(.lrc · .txt) · 웹 검색(Android)에서 불러오기.
 /// 저장하면 곡의 가사로 저장하고(비우면 지움) 안내를 띄운다.
-Future<void> showLyricsEditor(BuildContext context, Track track) async {
+///
+/// [initialText]가 있으면 저장된 가사 대신 그 글로 시작한다 (웹에서 가져온 글 검토용).
+Future<void> showLyricsEditor(
+  BuildContext context,
+  Track track, {
+  String? initialText,
+}) async {
   final l10n = context.l10n;
   final cubit = context.read<LyricsCubit>();
   final text = await showDialog<String>(
     context: context,
     useRootNavigator: true,
-    builder: (_) => _LyricsEditorDialog(track: track, cubit: cubit),
+    builder: (_) => _LyricsEditorDialog(
+      track: track,
+      cubit: cubit,
+      initialText: initialText,
+    ),
   );
   if (text == null) return;
   await cubit.save(track.id, text);
@@ -31,10 +41,15 @@ Future<void> showLyricsEditor(BuildContext context, Track track) async {
 }
 
 class _LyricsEditorDialog extends StatefulWidget {
-  const _LyricsEditorDialog({required this.track, required this.cubit});
+  const _LyricsEditorDialog({
+    required this.track,
+    required this.cubit,
+    this.initialText,
+  });
 
   final Track track;
   final LyricsCubit cubit;
+  final String? initialText;
 
   @override
   State<_LyricsEditorDialog> createState() => _LyricsEditorDialogState();
@@ -46,7 +61,12 @@ class _LyricsEditorDialogState extends State<_LyricsEditorDialog> {
   @override
   void initState() {
     super.initState();
-    _loadCurrent();
+    final initial = widget.initialText;
+    if (initial != null) {
+      _text.text = initial;
+    } else {
+      _loadCurrent();
+    }
   }
 
   Future<void> _loadCurrent() async {

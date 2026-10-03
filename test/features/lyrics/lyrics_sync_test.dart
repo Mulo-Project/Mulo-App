@@ -7,6 +7,7 @@ import 'package:music_download_play_app/features/library/domain/entities/track.d
 import 'package:music_download_play_app/features/lyrics/domain/entities/lyrics.dart';
 import 'package:music_download_play_app/features/lyrics/domain/entities/sync_draft.dart';
 import 'package:music_download_play_app/features/player/presentation/bloc/now_playing_cubit.dart';
+import 'package:music_download_play_app/features/player/presentation/screens/player_screen.dart';
 
 import '../../helpers/fakes.dart';
 
@@ -75,7 +76,7 @@ void main() {
     });
   });
 
-  testWidgets('가사 설정 › 싱크 맞추기: 지금을 눌러 찍고 저장하면 싱크 가사로 저장된다', (tester) async {
+  testWidgets('가사 메뉴 › 싱크 맞추기: 지금을 눌러 찍고 저장하면 싱크 가사로 저장된다', (tester) async {
     tester.view.physicalSize = const Size(1170, 2532);
     tester.view.devicePixelRatio = 3;
     tester.platformDispatcher.localesTestValue = const [Locale('ko')];
@@ -84,14 +85,17 @@ void main() {
 
     final lyrics = MemoryLyricsRepository(sibling: {'t1': '가 줄\n나 줄'});
     await setUpTestDependencies(tracks: [_t('t1', '첫 곡')], lyrics: lyrics);
-    await tester.pumpWidget(const MusicApp(initialLocation: Routes.library));
+    await tester.pumpWidget(const MusicApp(initialLocation: Routes.player));
     await tester.pumpAndSettle();
-
-    await tester.tap(find.byTooltip('곡 메뉴').first);
+    tester.element(find.byType(PlayerScreen)).read<NowPlayingCubit>().playQueue(
+      [_t('t1', '첫 곡')],
+    );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('가사 설정'));
+    await tester.tap(find.byTooltip('가사 보기'));
     await tester.pumpAndSettle();
-    await tester.tap(find.textContaining('싱크 맞추기'));
+    await tester.tap(find.byTooltip('가사 편집'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('싱크 맞추기'));
     await tester.pumpAndSettle();
 
     final player = tester.element(find.text('가 줄')).read<NowPlayingCubit>();

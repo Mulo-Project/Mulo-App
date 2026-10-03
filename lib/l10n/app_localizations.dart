@@ -1820,11 +1820,23 @@ abstract class AppLocalizations {
   /// **'삭제했어요'**
   String get trackDeleted;
 
-  /// No description provided for @trackMenuLyrics.
+  /// No description provided for @lyricsMenuTooltip.
   ///
   /// In ko, this message translates to:
-  /// **'가사 설정'**
-  String get trackMenuLyrics;
+  /// **'가사 편집'**
+  String get lyricsMenuTooltip;
+
+  /// No description provided for @lyricsMenuEdit.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사 편집'**
+  String get lyricsMenuEdit;
+
+  /// No description provided for @lyricsMenuWeb.
+  ///
+  /// In ko, this message translates to:
+  /// **'웹에서 가져오기'**
+  String get lyricsMenuWeb;
 
   /// No description provided for @lyricsEditTitle.
   ///

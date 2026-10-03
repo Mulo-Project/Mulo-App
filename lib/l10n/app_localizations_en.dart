@@ -939,7 +939,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackDeleted => 'Deleted';
 
   @override
-  String get trackMenuLyrics => 'Set lyrics';
+  String get lyricsMenuTooltip => 'Edit lyrics';
+
+  @override
+  String get lyricsMenuEdit => 'Edit lyrics';
+
+  @override
+  String get lyricsMenuWeb => 'Import from the web';
 
   @override
   String get lyricsEditTitle => 'Set lyrics';
