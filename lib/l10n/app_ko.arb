@@ -33,6 +33,8 @@
   "searchHint": "유튜브 URL이나 검색어",
   "searchEmptyTitle": "무엇을 받을까요?",
   "searchEmptyBody": "URL을 붙여넣거나 검색어를 입력하세요.\n유튜브 앱에서 공유를 누르면 바로 여기로 와요.",
+  "searchNotReadyTitle": "아직 받을 수 없어요",
+  "searchNotReadyBody": "다운로드 엔진(yt-dlp)을 아직 연결하지 않았어요.\n연결되면 여기서 검색하고 받을 수 있어요.",
   "searchResultsTitle": "검색 결과",
   "searchUrlCardLabel": "URL에서 찾은 곡",
   "searchPlaylistLabel": "재생목록",

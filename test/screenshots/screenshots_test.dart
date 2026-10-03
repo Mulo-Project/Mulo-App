@@ -14,8 +14,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
-import 'package:music_download_play_app/core/sample/sample_data.dart';
-import 'package:music_download_play_app/features/downloads/data/repositories/sample_download_queue_repository.dart';
+
+import '../helpers/test_data.dart';
+
 import 'package:music_download_play_app/features/home/domain/entities/home_summary.dart';
 import 'package:music_download_play_app/features/player/presentation/bloc/now_playing_cubit.dart';
 import 'package:music_download_play_app/features/player/presentation/bloc/player_style_cubit.dart';
@@ -89,14 +90,14 @@ void main() {
         final plays = [
           for (var i = 0; i < 14; i++)
             PlayRecord(
-              trackId: SampleData.tracks[(i * 5) % 7].id,
+              trackId: TestData.tracks[(i * 5) % 7].id,
               playedAt: now.subtract(Duration(hours: i * 7)),
             ),
         ];
         await setUpTestDependencies(
           history: MemoryPlayHistory(plays),
-          tracks: SampleData.tracks,
-          downloads: SampleDownloadQueueRepository(),
+          tracks: TestData.tracks,
+          downloads: MemoryDownloadQueue(),
           playlists: MemoryPlaylistRepository(_samplePlaylists),
           // 라이트 스크린샷은 저장된 화면 모드를 라이트로 둔다.
           playerStyle: switch (e.key) {
@@ -126,7 +127,7 @@ void main() {
           tester
               .element(find.byType(Scaffold).first)
               .read<NowPlayingCubit>()
-              .playQueue(SampleData.tracks, index: 1);
+              .playQueue(TestData.tracks, index: 1);
           await tester.pumpAndSettle();
         }
 

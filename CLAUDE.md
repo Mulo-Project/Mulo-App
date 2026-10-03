@@ -48,7 +48,6 @@ lib/
     database/     # drift DB
     design/       # 디자인 시스템: 토큰, 테마 소스, 공통 컴포넌트(유리)
     l10n/         # context.l10n
-    sample/       # UI 퍼블리싱용 가짜 데이터 (기능 연결 후 삭제)
   features/<기능>/
     domain/       # entities/ repositories/ usecases/  (순수 Dart)
     data/         # datasources/ repositories/

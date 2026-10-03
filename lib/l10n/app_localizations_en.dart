@@ -91,6 +91,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Paste a URL or type keywords.\nShare from the YouTube app to open it here.';
 
   @override
+  String get searchNotReadyTitle => 'Downloads are not ready yet';
+
+  @override
+  String get searchNotReadyBody =>
+      'The download engine (yt-dlp) is not connected yet.\nSearch and download will work once it is.';
+
+  @override
   String get searchResultsTitle => 'Results';
 
   @override
