@@ -8,7 +8,7 @@
 
 ## 한 일
 - 가사 편집기에 "웹에서 검색해 가져오기" 버튼(Android만) 추가. WebView에서 검색 → 가사를 끌어서 선택 → "가져오기"로 편집기에 삽입.
-- `lyrics_web_screen.dart` 추가, ARB 문구(ko · en) 추가. 결정: D-040.
+- `lyrics_web_screen.dart` 추가, ARB 문구(ko · en) 추가. 결정: D-046.
 
 ## 바꾼 설정
 - pubspec: `webview_flutter` 추가.
