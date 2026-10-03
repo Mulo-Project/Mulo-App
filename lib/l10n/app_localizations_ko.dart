@@ -945,6 +945,21 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsLoadFile => '파일에서 불러오기 (.lrc · .txt)';
 
   @override
+  String get lyricsWebSearch => '웹에서 검색해 가져오기';
+
+  @override
+  String get lyricsWebTitle => '가사 검색';
+
+  @override
+  String get lyricsWebHint => '가사를 길게 눌러 끌어서 고른 뒤 \'가져오기\'를 누르세요.';
+
+  @override
+  String get lyricsWebImport => '가져오기';
+
+  @override
+  String get lyricsWebNothingSelected => '고른 글이 없어요. 가사를 끌어서 먼저 골라 주세요.';
+
+  @override
   String get lyricsSave => '저장';
 
   @override

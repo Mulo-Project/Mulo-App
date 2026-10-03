@@ -1862,6 +1862,36 @@ abstract class AppLocalizations {
   /// **'파일에서 불러오기 (.lrc · .txt)'**
   String get lyricsLoadFile;
 
+  /// No description provided for @lyricsWebSearch.
+  ///
+  /// In ko, this message translates to:
+  /// **'웹에서 검색해 가져오기'**
+  String get lyricsWebSearch;
+
+  /// No description provided for @lyricsWebTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사 검색'**
+  String get lyricsWebTitle;
+
+  /// No description provided for @lyricsWebHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사를 길게 눌러 끌어서 고른 뒤 \'가져오기\'를 누르세요.'**
+  String get lyricsWebHint;
+
+  /// No description provided for @lyricsWebImport.
+  ///
+  /// In ko, this message translates to:
+  /// **'가져오기'**
+  String get lyricsWebImport;
+
+  /// No description provided for @lyricsWebNothingSelected.
+  ///
+  /// In ko, this message translates to:
+  /// **'고른 글이 없어요. 가사를 끌어서 먼저 골라 주세요.'**
+  String get lyricsWebNothingSelected;
+
   /// No description provided for @lyricsSave.
   ///
   /// In ko, this message translates to:

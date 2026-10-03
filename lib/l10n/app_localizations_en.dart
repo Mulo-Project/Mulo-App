@@ -962,6 +962,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsLoadFile => 'Load from file (.lrc · .txt)';
 
   @override
+  String get lyricsWebSearch => 'Search the web and import';
+
+  @override
+  String get lyricsWebTitle => 'Search lyrics';
+
+  @override
+  String get lyricsWebHint =>
+      'Long-press and drag to select the lyrics, then tap Import.';
+
+  @override
+  String get lyricsWebImport => 'Import';
+
+  @override
+  String get lyricsWebNothingSelected =>
+      'Nothing is selected. Select the lyrics first.';
+
+  @override
   String get lyricsSave => 'Save';
 
   @override

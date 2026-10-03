@@ -260,3 +260,9 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - 모든 모양에 셔플 · 반복 · 좋아요 · 가사 · 대기열이 있다. 위치만 다르다.
 - 설정 > 테마 > **플레이어 테마**(`/settings/player-theme`): 옆으로 넘기는 미리보기(도형 그림) + 사용 버튼. 고른 값은 shared_preferences(`player.style`)에 저장 (`PlayerStyleCubit`, 유스케이스 `LoadPlayerStyle` · `SavePlayerStyle`).
 - 레이아웃은 `PlayerLayoutData` 하나를 받는 위젯 4개(`player_layouts.dart`), 공통 조각은 `player_common.dart`. 새 모양은 열거형 값 + 레이아웃 + 미리보기만 더하면 된다.
+
+## D-040 · 2026-10-03 · 가사 · 웹 검색으로 가져오기 (Android)
+- 가사 설정 편집기에 "웹에서 검색해 가져오기"를 더했다. 앱 안 WebView(`webview_flutter`)가 "제목 아티스트 가사"를 검색해 열고, 사용자가 가사를 끌어서 고른 뒤 "가져오기"를 누르면 고른 글(`window.getSelection()`)을 편집기에 넣는다. 저장은 기존 흐름 그대로.
+- 자동 스크래핑 · 가사 API(LRCLIB 등)는 하지 않는다. 사용자가 직접 고른 글만 쓴다.
+- Android만 지원한다 (`lyricsWebSupported`). 데스크톱에서는 버튼을 숨기고 직접 입력 · 파일로 쓴다.
+- 인터넷 권한(`INTERNET`)을 main 매니페스트에 추가했다.
