@@ -939,7 +939,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackDeleted => 'Deleted';
 
   @override
-  String get trackMenuLyrics => 'Set lyrics';
+  String get lyricsMenuEdit => 'Edit lyrics';
 
   @override
   String get lyricsEditTitle => 'Set lyrics';
@@ -949,13 +949,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lyricsEditHint =>
-      'Paste or type the lyrics. Lines with time stamps like [01:23.45] are saved as synced lyrics. Save empty to remove them.';
+      'Paste or type the lyrics. Save empty to remove them.';
 
   @override
-  String get lyricsLoadFile => 'Load from file (.lrc · .txt)';
+  String get lyricsLoadFile => 'Load from file';
 
   @override
-  String get lyricsWebSearch => 'Search the web and import';
+  String get lyricsWebSearch => 'Import from the web';
 
   @override
   String get lyricsWebTitle => 'Search lyrics';
@@ -998,10 +998,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsCleared => 'Lyrics removed';
 
   @override
-  String get lyricsSyncOpen => 'Sync lyrics (stamp each line)';
+  String get lyricsSyncTitle => 'Sync lyrics';
 
   @override
-  String get lyricsSyncTitle => 'Sync lyrics';
+  String get lyricsSyncSetting => 'Sync settings';
 
   @override
   String get lyricsSyncHint =>
@@ -1020,6 +1020,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsSyncReplay => 'Replay from this line';
 
   @override
+  String get lyricsSyncReset => 'Back to this sync';
+
+  @override
+  String get lyricsSyncGroup => 'Lines per sync';
+
+  @override
+  String lyricsSyncGroupLines(int n) {
+    return '$n';
+  }
+
+  @override
   String get lyricsSyncNeedAll => 'Stamp every line to save.';
 
   @override
@@ -1035,6 +1046,65 @@ class AppLocalizationsEn extends AppLocalizations {
   String lyricsSyncProgress(int done, int total) {
     return '$done/$total lines';
   }
+
+  @override
+  String get lyricsImportExistsTitle => 'Lyrics already exist';
+
+  @override
+  String get lyricsImportExistsBody =>
+      'How should the imported lyrics be added?';
+
+  @override
+  String get lyricsImportReplace => 'Replace';
+
+  @override
+  String get lyricsImportAppend => 'Append';
+
+  @override
+  String get lyricsSyncGroupSetupBody =>
+      'Pick how many lines to stamp at once. You can change it later from the top menu.';
+
+  @override
+  String get lyricsSyncLeaveTitle => 'Sync is not saved';
+
+  @override
+  String get lyricsSyncLeaveBody =>
+      'Not every line has a time yet, so leaving now discards your timing. Save what you have before leaving?';
+
+  @override
+  String get lyricsSyncLeaveSave => 'Save and leave';
+
+  @override
+  String get lyricsSyncLeaveDiscard => 'Leave without saving';
+
+  @override
+  String get lyricsSyncLeaveStay => 'Keep syncing';
+
+  @override
+  String get lyricsSyncGroupOk => 'OK';
+
+  @override
+  String get lyricsSyncDefaultLines => 'Change default lines';
+
+  @override
+  String get lyricsSyncResetTitle => 'Groupings will be lost';
+
+  @override
+  String get lyricsSyncResetBody =>
+      'Changing the default line count removes custom groupings and stamped times, and splits the lyrics again with the chosen count. Continue?';
+
+  @override
+  String get lyricsSyncResetConfirm => 'Change';
+
+  @override
+  String get lyricsSyncGroupEdit => 'Group lines';
+
+  @override
+  String get lyricsSyncGroupDone => 'Done';
+
+  @override
+  String get lyricsSyncGroupPanelHint =>
+      'Tap or drag to pick the last line to group. This sync\'s time must be stamped again.';
 
   @override
   String get playerShowLyrics => 'Show lyrics';

@@ -43,6 +43,8 @@ class _LyricsWebScreenState extends State<LyricsWebScreen> {
   final _scratch = TextEditingController();
   bool _loading = true;
   bool _scratchOpen = false;
+  double _scratchHeight = 140;
+  static const _scratchMin = 80.0;
 
   @override
   void initState() {
@@ -159,11 +161,38 @@ class _LyricsWebScreenState extends State<LyricsWebScreen> {
                   ),
                   if (_scratchOpen) ...[
                     const SizedBox(height: AppSpacing.xs),
-                    AppTextField(
-                      label: l10n.lyricsWebScratchTitle,
-                      controller: _scratch,
-                      hint: l10n.lyricsWebScratchHint,
-                      maxLines: 5,
+                    // 위쪽 손잡이를 끌어 모은 글 영역 높이를 조절한다.
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onVerticalDragUpdate: (d) => setState(
+                        () => _scratchHeight = (_scratchHeight - d.delta.dy)
+                            .clamp(
+                              _scratchMin,
+                              MediaQuery.sizeOf(context).height * .6,
+                            ),
+                      ),
+                      child: SizedBox(
+                        height: 20,
+                        child: Center(
+                          child: Container(
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: context.palette.onSurfaceMuted,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      height: _scratchHeight,
+                      child: AppTextField(
+                        label: l10n.lyricsWebScratchTitle,
+                        controller: _scratch,
+                        hint: l10n.lyricsWebScratchHint,
+                        expands: true,
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     PillButton(

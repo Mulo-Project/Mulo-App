@@ -42,61 +42,40 @@ class _PlaylistPickerState extends State<_PlaylistPicker> {
     final p = context.palette;
     final text = Theme.of(context).textTheme;
 
-    return Dialog(
-      backgroundColor: p.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadii.card),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(l10n.downloadPlaylistsPickTitle, style: text.titleLarge),
-            const SizedBox(height: AppSpacing.sm),
-            Flexible(
-              child: ListView(
-                shrinkWrap: true,
-                children: [
-                  for (final pl in widget.playlists)
-                    SettingRow(
-                      title: playlistNameOf(l10n, pl),
-                      description: l10n.songCount(pl.trackCount),
-                      onTap: () => _toggle(pl.id),
-                      trailing: Icon(
-                        _selected.contains(pl.id)
-                            ? Icons.check_circle_rounded
-                            : Icons.radio_button_unchecked_rounded,
-                        color: _selected.contains(pl.id)
-                            ? p.accent
-                            : p.onSurfaceMuted,
-                      ),
-                    ),
-                  // 좋아요 말고 직접 만든 재생목록이 없을 때의 안내.
-                  if (widget.playlists.every((pl) => pl.isFavorites))
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: AppSpacing.sm,
-                      ),
-                      child: Text(
-                        l10n.downloadPlaylistsEmpty,
-                        style: text.bodyMedium?.copyWith(
-                          color: p.onSurfaceMuted,
-                        ),
-                      ),
-                    ),
-                ],
+    return AppDialog(
+      title: l10n.downloadPlaylistsPickTitle,
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final pl in widget.playlists)
+            SettingRow(
+              title: playlistNameOf(l10n, pl),
+              description: l10n.songCount(pl.trackCount),
+              onTap: () => _toggle(pl.id),
+              trailing: Icon(
+                _selected.contains(pl.id)
+                    ? Icons.check_circle_rounded
+                    : Icons.radio_button_unchecked_rounded,
+                color: _selected.contains(pl.id) ? p.accent : p.onSurfaceMuted,
               ),
             ),
-            const SizedBox(height: AppSpacing.md),
-            PillButton(
-              label: l10n.downloadPlaylistsDone,
-              onPressed: () => Navigator.of(context).pop(_selected),
+          // 좋아요 말고 직접 만든 재생목록이 없을 때의 안내.
+          if (widget.playlists.every((pl) => pl.isFavorites))
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+              child: Text(
+                l10n.downloadPlaylistsEmpty,
+                style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
+              ),
             ),
-          ],
-        ),
+        ],
       ),
+      actions: [
+        PillButton(
+          label: l10n.downloadPlaylistsDone,
+          onPressed: () => Navigator.of(context).pop(_selected),
+        ),
+      ],
     );
   }
 }

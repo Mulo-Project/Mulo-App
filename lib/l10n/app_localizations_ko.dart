@@ -927,7 +927,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get trackDeleted => '삭제했어요';
 
   @override
-  String get trackMenuLyrics => '가사 설정';
+  String get lyricsMenuEdit => '가사 편집';
 
   @override
   String get lyricsEditTitle => '가사 설정';
@@ -936,14 +936,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsEditLabel => '가사';
 
   @override
-  String get lyricsEditHint =>
-      '가사를 붙여넣거나 입력하세요. [01:23.45] 같은 시간 표시가 있으면 싱크 가사로 저장돼요. 비워서 저장하면 가사를 지워요.';
+  String get lyricsEditHint => '가사를 붙여넣거나 입력하세요. 비워서 저장하면 가사를 지워요.';
 
   @override
-  String get lyricsLoadFile => '파일에서 불러오기 (.lrc · .txt)';
+  String get lyricsLoadFile => '파일에서 불러오기';
 
   @override
-  String get lyricsWebSearch => '웹에서 검색해 가져오기';
+  String get lyricsWebSearch => '웹에서 가져오기';
 
   @override
   String get lyricsWebTitle => '가사 검색';
@@ -983,10 +982,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsCleared => '가사를 지웠어요';
 
   @override
-  String get lyricsSyncOpen => '싱크 맞추기 (줄마다 시간 찍기)';
+  String get lyricsSyncTitle => '싱크 맞추기';
 
   @override
-  String get lyricsSyncTitle => '싱크 맞추기';
+  String get lyricsSyncSetting => '싱크 설정';
 
   @override
   String get lyricsSyncHint =>
@@ -1005,6 +1004,17 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsSyncReplay => '이 줄부터 다시 듣기';
 
   @override
+  String get lyricsSyncReset => '이 싱크로';
+
+  @override
+  String get lyricsSyncGroup => '한 번에 묶을 줄 수';
+
+  @override
+  String lyricsSyncGroupLines(int n) {
+    return '$n줄';
+  }
+
+  @override
   String get lyricsSyncNeedAll => '모든 줄에 시간을 찍으면 저장할 수 있어요.';
 
   @override
@@ -1020,6 +1030,64 @@ class AppLocalizationsKo extends AppLocalizations {
   String lyricsSyncProgress(int done, int total) {
     return '$done/$total줄';
   }
+
+  @override
+  String get lyricsImportExistsTitle => '가사가 이미 있어요';
+
+  @override
+  String get lyricsImportExistsBody => '불러온 가사를 어떻게 넣을까요?';
+
+  @override
+  String get lyricsImportReplace => '바꾸기';
+
+  @override
+  String get lyricsImportAppend => '뒤에 붙이기';
+
+  @override
+  String get lyricsSyncGroupSetupBody =>
+      '한 번에 시간을 찍을 줄 수를 골라 주세요. 나중에 위쪽 메뉴에서 바꿀 수 있어요.';
+
+  @override
+  String get lyricsSyncLeaveTitle => '싱크가 저장되지 않아요';
+
+  @override
+  String get lyricsSyncLeaveBody =>
+      '아직 모든 줄에 시간을 찍지 않았어요. 지금 나가면 찍은 시간이 사라져요. 지금까지 찍은 싱크를 저장하고 나갈까요?';
+
+  @override
+  String get lyricsSyncLeaveSave => '저장 후 나가기';
+
+  @override
+  String get lyricsSyncLeaveDiscard => '저장 안 하고 나가기';
+
+  @override
+  String get lyricsSyncLeaveStay => '계속 맞추기';
+
+  @override
+  String get lyricsSyncGroupOk => '확인';
+
+  @override
+  String get lyricsSyncDefaultLines => '기본 줄 수 변경';
+
+  @override
+  String get lyricsSyncResetTitle => '묶음이 사라져요';
+
+  @override
+  String get lyricsSyncResetBody =>
+      '기본 줄 수를 바꾸면 직접 묶은 줄과 찍은 시간이 모두 사라지고, 고른 줄 수로 다시 나뉘어요. 계속할까요?';
+
+  @override
+  String get lyricsSyncResetConfirm => '바꾸기';
+
+  @override
+  String get lyricsSyncGroupEdit => '줄 묶기';
+
+  @override
+  String get lyricsSyncGroupDone => '완료';
+
+  @override
+  String get lyricsSyncGroupPanelHint =>
+      '묶을 마지막 줄을 누르거나 끌어서 고르세요. 이 싱크의 시간은 다시 찍어야 해요.';
 
   @override
   String get playerShowLyrics => '가사 보기';

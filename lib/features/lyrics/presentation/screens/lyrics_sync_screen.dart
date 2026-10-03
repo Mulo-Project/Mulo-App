@@ -7,6 +7,7 @@ import '../../../library/domain/entities/track.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/lyrics.dart';
 import '../bloc/lyrics_sync_cubit.dart';
+import '../widgets/lyrics_dialogs.dart';
 
 /// 가사 글 [text]를 곡에 맞춰 줄마다 시간을 찍는 화면을 연다.
 /// 저장하면 LRC 글을, 닫으면 null을 돌려준다. [text]가 비어 있으면 열지 않고 null.
@@ -50,6 +51,7 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
     // 이 곡을 재생 중이 아니면 이 곡을 처음부터 틀고, 같은 곡이면 이어서 듣는다.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      _askDefaultGroup();
       final np = context.read<NowPlayingCubit>();
       if (np.state.track != widget.track) {
         np.playQueue([widget.track]);
@@ -57,6 +59,53 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
         np.togglePlay();
       }
     });
+  }
+
+  /// 싱크가 아직 없는 일반 글이면 기본으로 한 번에 찍을 줄 수를 먼저 묻는다.
+  Future<void> _askDefaultGroup() async {
+    final sync = context.read<LyricsSyncCubit>();
+    if (!sync.canGroup) return;
+    final group = await pickLyricsDefaultGroup(
+      context,
+      initial: sync.state.group,
+    );
+    if (group != null) sync.setGroup(group);
+  }
+
+  /// 위쪽 메뉴: 기본 줄 수를 바꾼다. 직접 묶은 줄이 있으면 사라진다고 먼저 알린다.
+  Future<void> _changeDefaultGroup(BuildContext buttonContext) async {
+    final l10n = context.l10n;
+    final sync = context.read<LyricsSyncCubit>();
+    final group = await showAppMenu<int>(
+      buttonContext,
+      items: [
+        for (final n in const [1, 2, 3, 4])
+          AppMenuItem(
+            value: n,
+            icon: Icons.format_line_spacing_rounded,
+            label: l10n.lyricsSyncGroupLines(n),
+            selected: n == sync.state.group,
+          ),
+      ],
+    );
+    if (group == null || group == sync.state.group || !mounted) return;
+    if (sync.loseOnSetGroup && !await confirmLyricsGroupReset(context)) return;
+    sync.setGroup(group);
+  }
+
+  /// 나가기: 다 찍었으면 그대로 나가고, 덜 찍었으면 저장하고 나갈지 묻는다.
+  Future<void> _confirmLeave() async {
+    final sync = context.read<LyricsSyncCubit>();
+    final draft = sync.state.draft;
+    if (draft.stamped == 0) {
+      Navigator.of(context).pop();
+      return;
+    }
+    final choice = await askLyricsSyncLeave(context);
+    if (choice == null || !mounted) return;
+    Navigator.of(context).pop(
+      choice == LyricsSyncLeave.save ? sync.state.draft.toPartialLrc() : null,
+    );
   }
 
   void _scrollTo(int index) {
@@ -102,92 +151,123 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
       builder: (context, state) {
         final draft = state.draft;
         final sync = context.read<LyricsSyncCubit>();
-        return Scaffold(
-          backgroundColor: p.background,
-          body: SafeArea(
-            child: Column(
-              children: [
-                AppTopBar(
-                  title: l10n.lyricsSyncTitle,
-                  leading: CircleIconButton(
-                    icon: Icons.close_rounded,
-                    tooltip: l10n.actionCancel,
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                  actions: [
-                    CircleIconButton(
-                      icon: Icons.check_rounded,
-                      tooltip: draft.isComplete
-                          ? l10n.lyricsSyncSave
-                          : l10n.lyricsSyncNeedAll,
-                      emphasized: draft.isComplete,
-                      onPressed: draft.isComplete
-                          ? () => Navigator.of(context).pop(draft.toLrc())
-                          : null,
+        // 줄을 다시 묶어도 같은 칸은 같은 키를 쓴다 (끌고 있는 위젯이 다시 만들어지지 않게).
+        while (_keys.length < draft.length) {
+          _keys.add(GlobalKey());
+        }
+        if (_keys.length > draft.length) _keys.length = draft.length;
+        // 한 줄이라도 찍은 채로 나가면 저장할지 묻는다.
+        return PopScope(
+          canPop: draft.stamped == 0,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop) _confirmLeave();
+          },
+          child: Scaffold(
+            backgroundColor: p.background,
+            body: SafeArea(
+              child: Column(
+                children: [
+                  AppTopBar(
+                    title: l10n.lyricsSyncTitle,
+                    leading: CircleIconButton(
+                      icon: Icons.close_rounded,
+                      tooltip: l10n.actionCancel,
+                      onPressed: _confirmLeave,
                     ),
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.lg,
-                    AppSpacing.xxs,
-                    AppSpacing.lg,
-                    AppSpacing.xxs,
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          widget.track.title,
-                          style: text.titleSmall,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                    actions: [
+                      if (sync.canGroup)
+                        Builder(
+                          builder: (buttonContext) => CircleIconButton(
+                            icon: Icons.more_vert_rounded,
+                            tooltip: l10n.lyricsSyncDefaultLines,
+                            onPressed: () => _changeDefaultGroup(buttonContext),
+                          ),
                         ),
-                      ),
-                      Text(
-                        l10n.lyricsSyncProgress(draft.stamped, draft.length),
-                        style: text.labelLarge?.copyWith(color: p.accent),
+                      CircleIconButton(
+                        icon: Icons.check_rounded,
+                        tooltip: draft.isComplete
+                            ? l10n.lyricsSyncSave
+                            : l10n.lyricsSyncNeedAll,
+                        emphasized: draft.isComplete,
+                        onPressed: draft.isComplete
+                            ? () => Navigator.of(context).pop(draft.toLrc())
+                            : null,
                       ),
                     ],
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.lg,
-                  ),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      l10n.lyricsSyncHint,
-                      style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.lg,
+                      AppSpacing.xxs,
+                      AppSpacing.lg,
+                      AppSpacing.xxs,
                     ),
-                  ),
-                ),
-                Expanded(
-                  child: draft.length == 0
-                      ? Center(child: Text(l10n.lyricsSyncEmpty))
-                      : SingleChildScrollView(
-                          padding: const EdgeInsets.all(AppSpacing.md),
-                          child: Column(
-                            children: [
-                              for (var i = 0; i < draft.length; i++)
-                                _LineRow(
-                                  key: _keys[i],
-                                  index: i,
-                                  draft: draft,
-                                  selected: state.selected == i,
-                                  clock: _clock,
-                                  onTap: () => i == draft.current
-                                      ? _now()
-                                      : sync.select(i),
-                                  onReplay: () => _replay(draft.times[i]!),
-                                ),
-                            ],
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            widget.track.title,
+                            style: text.titleSmall,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                ),
-                _ControlBar(onNow: _now),
-              ],
+                        Text(
+                          l10n.lyricsSyncProgress(draft.stamped, draft.length),
+                          style: text.labelLarge?.copyWith(color: p.accent),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: _ClockText(),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                    ),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        l10n.lyricsSyncHint,
+                        style: text.bodySmall?.copyWith(
+                          color: p.onSurfaceMuted,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: draft.length == 0
+                        ? Center(child: Text(l10n.lyricsSyncEmpty))
+                        : SingleChildScrollView(
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            child: Column(
+                              children: [
+                                for (var i = 0; i < draft.length; i++)
+                                  _LineRow(
+                                    key: _keys[i],
+                                    index: i,
+                                    draft: draft,
+                                    selected: state.selected == i,
+                                    editing: state.editing == i,
+                                    canGroup: sync.canGroup,
+                                    clock: _clock,
+                                    onTap: () => i == draft.current
+                                        ? _now()
+                                        : sync.select(i),
+                                    onReplay: () => _replay(draft.times[i]!),
+                                  ),
+                              ],
+                            ),
+                          ),
+                  ),
+                  _ControlBar(onNow: _now),
+                ],
+              ),
             ),
           ),
         );
@@ -202,6 +282,8 @@ class _LineRow extends StatelessWidget {
     required this.index,
     required this.draft,
     required this.selected,
+    required this.editing,
+    required this.canGroup,
     required this.clock,
     required this.onTap,
     required this.onReplay,
@@ -210,6 +292,8 @@ class _LineRow extends StatelessWidget {
   final int index;
   final SyncDraft draft;
   final bool selected;
+  final bool editing;
+  final bool canGroup;
   final String Function(Duration) clock;
   final VoidCallback onTap;
   final VoidCallback onReplay;
@@ -261,29 +345,59 @@ class _LineRow extends StatelessWidget {
             ),
           ),
         ),
-        if (selected && time != null)
+        if (editing)
+          _GroupPanel(draft: draft, index: index)
+        else if (selected && time != null)
           Padding(
             padding: const EdgeInsets.only(
-              left: AppSpacing.sm,
+              left: AppSpacing.xs,
+              right: AppSpacing.xs,
               bottom: AppSpacing.xs,
             ),
-            child: Wrap(
-              spacing: AppSpacing.xs,
-              runSpacing: AppSpacing.xs,
-              crossAxisAlignment: WrapCrossAlignment.center,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                for (final ms in const [-500, -100, 100, 500])
-                  PillButton(
-                    label: '${ms > 0 ? '+' : '−'}${ms.abs() / 1000}s',
-                    variant: PillVariant.tonal,
-                    compact: true,
-                    onPressed: () => sync.nudge(Duration(milliseconds: ms)),
-                  ),
-                CircleIconButton(
-                  icon: Icons.replay_rounded,
-                  tooltip: l10n.lyricsSyncReplay,
-                  size: 36,
-                  onPressed: onReplay,
+                // 위: 시간 맞추기 버튼
+                Wrap(
+                  children: [
+                    for (final ms in const [-500, -100, 100, 500])
+                      PlainButton(
+                        label: '${ms > 0 ? '+' : '−'}${ms.abs() / 1000}s',
+                        onPressed: () => sync.nudge(Duration(milliseconds: ms)),
+                      ),
+                  ],
+                ),
+                // 아래: 이 싱크로 · 옵션
+                Row(
+                  children: [
+                    PlainButton(
+                      icon: Icons.replay_rounded,
+                      label: l10n.lyricsSyncReset,
+                      tooltip: l10n.lyricsSyncReplay,
+                      onPressed: onReplay,
+                    ),
+                    const Spacer(),
+                    if (canGroup)
+                      Builder(
+                        builder: (buttonContext) => PlainButton(
+                          icon: Icons.more_vert_rounded,
+                          tooltip: l10n.actionMore,
+                          onPressed: () async {
+                            final pick = await showAppMenu<bool>(
+                              buttonContext,
+                              items: [
+                                AppMenuItem(
+                                  value: true,
+                                  icon: Icons.view_headline_rounded,
+                                  label: l10n.lyricsSyncGroupEdit,
+                                ),
+                              ],
+                            );
+                            if (pick == true) sync.startGroupEdit(index);
+                          },
+                        ),
+                      ),
+                  ],
                 ),
               ],
             ),
@@ -304,7 +418,6 @@ class _ControlBar extends StatelessWidget {
     final np = context.watch<NowPlayingCubit>();
     final sync = context.watch<LyricsSyncCubit>();
     final draft = sync.state.draft;
-    final text = Theme.of(context).textTheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.md,
@@ -315,14 +428,6 @@ class _ControlBar extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            '${formatDuration(np.state.position)} / '
-            '${formatDuration(np.state.track?.duration ?? Duration.zero)}',
-            style: text.labelMedium?.copyWith(
-              color: context.palette.onSurfaceMuted,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
           Row(
             children: [
               CircleIconButton(
@@ -330,7 +435,7 @@ class _ControlBar extends StatelessWidget {
                 tooltip: l10n.lyricsSyncUndo,
                 onPressed: draft.canUndo ? sync.undo : null,
               ),
-              const SizedBox(width: AppSpacing.xs),
+              const SizedBox(width: AppSpacing.sm),
               CircleIconButton(
                 icon: np.state.isPlaying
                     ? Icons.pause_rounded
@@ -338,17 +443,123 @@ class _ControlBar extends StatelessWidget {
                 tooltip: np.state.isPlaying
                     ? l10n.lyricsSyncPause
                     : l10n.lyricsSyncPlay,
+                emphasized: true,
                 onPressed: np.togglePlay,
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
-                child: PillButton(
-                  label: l10n.lyricsSyncNow,
-                  icon: Icons.touch_app_rounded,
-                  onPressed: draft.current >= draft.length ? null : onNow,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: PillButton(
+                    label: l10n.lyricsSyncNow,
+                    icon: Icons.touch_app_rounded,
+                    onPressed: draft.current >= draft.length ? null : onNow,
+                  ),
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 지금 재생 위치 / 곡 전체 시간. 몇 줄 남았는지 보이는 위쪽에 둔다.
+class _ClockText extends StatelessWidget {
+  const _ClockText();
+
+  @override
+  Widget build(BuildContext context) {
+    final np = context.watch<NowPlayingCubit>();
+    return Text(
+      '${formatDuration(np.state.position)} / '
+      '${formatDuration(np.state.track?.duration ?? Duration.zero)}',
+      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+        color: context.palette.onSurfaceMuted,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      ),
+    );
+  }
+}
+
+/// 한 칸에 묶을 줄을 고르는 영역. 묶을 마지막 줄을 누르거나 위아래로 끌어 고른다.
+class _GroupPanel extends StatelessWidget {
+  const _GroupPanel({required this.draft, required this.index});
+
+  final SyncDraft draft;
+  final int index;
+
+  static const _rowHeight = 36.0;
+  static const _extra = 6;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final p = context.palette;
+    final text = Theme.of(context).textTheme;
+    final sync = context.read<LyricsSyncCubit>();
+    final start = draft.startOf(index);
+    final end = start + draft.sizes[index];
+    final shown = (end + _extra).clamp(0, draft.lines.length);
+
+    void pick(double dy) {
+      final line = (start + dy ~/ _rowHeight).clamp(start, shown - 1);
+      sync.regroup(line);
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.xs,
+        0,
+        AppSpacing.xs,
+        AppSpacing.xs,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            l10n.lyricsSyncGroupPanelHint,
+            style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTapDown: (d) => pick(d.localPosition.dy),
+            onVerticalDragStart: (d) => pick(d.localPosition.dy),
+            onVerticalDragUpdate: (d) => pick(d.localPosition.dy),
+            child: Column(
+              children: [
+                for (var i = start; i < shown; i++)
+                  Container(
+                    height: _rowHeight,
+                    alignment: Alignment.centerLeft,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                    ),
+                    decoration: BoxDecoration(
+                      color: i < end ? p.accent.withValues(alpha: .18) : null,
+                      borderRadius: BorderRadius.circular(AppRadii.sm),
+                    ),
+                    child: Text(
+                      draft.lines[i],
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: text.bodyMedium?.copyWith(
+                        color: i < end ? p.onSurface : p.onSurfaceMuted,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: PlainButton(
+              label: l10n.lyricsSyncGroupDone,
+              accent: true,
+              onPressed: sync.endGroupEdit,
+            ),
           ),
         ],
       ),

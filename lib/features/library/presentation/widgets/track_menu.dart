@@ -10,7 +10,6 @@ import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../covers/presentation/widgets/cover_color_sheet.dart';
 import '../../../covers/presentation/widgets/cover_sheet.dart';
 import '../../../lyrics/presentation/bloc/lyrics_cubit.dart';
-import '../../../lyrics/presentation/widgets/lyrics_editor.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../../player/presentation/widgets/player_style_sheet.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
@@ -25,7 +24,6 @@ enum _TrackAction {
   addToPlaylist,
   favorite,
   editInfo,
-  lyrics,
   cover,
   color,
   delete,
@@ -108,11 +106,6 @@ Future<void> showTrackMenu(
         label: l10n.trackMenuEditInfo,
       ),
       AppMenuItem(
-        value: _TrackAction.lyrics,
-        icon: Icons.lyrics_rounded,
-        label: l10n.trackMenuLyrics,
-      ),
-      AppMenuItem(
         value: _TrackAction.cover,
         icon: Icons.image_rounded,
         label: l10n.trackMenuCover,
@@ -169,8 +162,6 @@ Future<void> showTrackMenu(
       }
     case _TrackAction.editInfo:
       await _editInfo(context, track);
-    case _TrackAction.lyrics:
-      await showLyricsEditor(context, track);
     case _TrackAction.cover:
       await showCoverSheet(
         context,
@@ -279,45 +270,33 @@ class _TrackInfoDialogState extends State<_TrackInfoDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Dialog(
-      backgroundColor: context.palette.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadii.card),
+    return AppDialog(
+      title: l10n.trackEditTitle,
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          AppTextField(label: l10n.trackEditName, controller: _title),
+          const SizedBox(height: AppSpacing.sm),
+          AppTextField(label: l10n.trackEditArtist, controller: _artist),
+          const SizedBox(height: AppSpacing.sm),
+          AppTextField(label: l10n.trackEditAlbum, controller: _album),
+          const SizedBox(height: AppSpacing.sm),
+          AppTextField(
+            label: l10n.trackEditGenre,
+            controller: _genre,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => _save(),
+          ),
+        ],
       ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              l10n.trackEditTitle,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            AppTextField(label: l10n.trackEditName, controller: _title),
-            const SizedBox(height: AppSpacing.sm),
-            AppTextField(label: l10n.trackEditArtist, controller: _artist),
-            const SizedBox(height: AppSpacing.sm),
-            AppTextField(label: l10n.trackEditAlbum, controller: _album),
-            const SizedBox(height: AppSpacing.sm),
-            AppTextField(
-              label: l10n.trackEditGenre,
-              controller: _genre,
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _save(),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            PillButton(label: l10n.trackEditSave, onPressed: _save),
-            const SizedBox(height: AppSpacing.xs),
-            PillButton(
-              label: l10n.actionCancel,
-              variant: PillVariant.tonal,
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ],
+      actions: [
+        PillButton(
+          label: l10n.actionCancel,
+          variant: PillVariant.tonal,
+          onPressed: () => Navigator.of(context).pop(),
         ),
-      ),
+        PillButton(label: l10n.trackEditSave, onPressed: _save),
+      ],
     );
   }
 }
@@ -330,36 +309,21 @@ class _DeleteDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
-    return Dialog(
-      backgroundColor: context.palette.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadii.card),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(l10n.trackDeleteTitle, style: text.titleLarge),
-            const SizedBox(height: AppSpacing.sm),
-            Text(l10n.trackDeleteBody(track.title), style: text.bodyMedium),
-            const SizedBox(height: AppSpacing.lg),
-            PillButton(
-              label: l10n.trackDeleteConfirm,
-              icon: Icons.delete_outline_rounded,
-              onPressed: () => Navigator.of(context).pop(true),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            PillButton(
-              label: l10n.actionCancel,
-              variant: PillVariant.tonal,
-              onPressed: () => Navigator.of(context).pop(false),
-            ),
-          ],
+    return AppDialog(
+      title: l10n.trackDeleteTitle,
+      body: l10n.trackDeleteBody(track.title),
+      actions: [
+        PillButton(
+          label: l10n.actionCancel,
+          variant: PillVariant.tonal,
+          onPressed: () => Navigator.of(context).pop(false),
         ),
-      ),
+        PillButton(
+          label: l10n.trackDeleteConfirm,
+          icon: Icons.delete_outline_rounded,
+          onPressed: () => Navigator.of(context).pop(true),
+        ),
+      ],
     );
   }
 }

@@ -7,6 +7,7 @@ import '../../../library/domain/entities/track.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../bloc/lyrics_cubit.dart';
 import 'lyrics_editor.dart';
+import 'lyrics_sync_start.dart';
 
 /// 전체 화면 플레이어의 가사 보기. 싱크 가사는 재생 위치의 줄을 강조하고 따라 내려가며,
 /// 줄을 누르면 그 위치로 옮긴다. 일반 글 가사는 그대로 보여 준다.
@@ -57,6 +58,37 @@ class _LyricsViewState extends State<LyricsView> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final hasLyrics =
+        context.watch<LyricsCubit>().state.trackId == widget.track.id &&
+        context.watch<LyricsCubit>().state.lyrics != null;
+    return Column(
+      children: [
+        Expanded(child: _body(context)),
+        if (hasLyrics)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                PlainButton(
+                  label: l10n.lyricsSyncSetting,
+                  icon: Icons.av_timer_rounded,
+                  onPressed: () => startLyricsSync(context, widget.track),
+                ),
+                PlainButton(
+                  label: l10n.lyricsMenuEdit,
+                  icon: Icons.edit_rounded,
+                  onPressed: () => showLyricsEditor(context, widget.track),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _body(BuildContext context) {
+    final l10n = context.l10n;
     final p = context.palette;
     final text = Theme.of(context).textTheme;
     final state = context.watch<LyricsCubit>().state;
@@ -78,10 +110,9 @@ class _LyricsViewState extends State<LyricsView> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.md),
-            PillButton(
-              label: l10n.trackMenuLyrics,
+            PlainButton(
+              label: l10n.lyricsMenuEdit,
               icon: Icons.edit_rounded,
-              variant: PillVariant.tonal,
               onPressed: () => showLyricsEditor(context, widget.track),
             ),
           ],

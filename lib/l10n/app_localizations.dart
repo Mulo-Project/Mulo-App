@@ -1820,11 +1820,11 @@ abstract class AppLocalizations {
   /// **'삭제했어요'**
   String get trackDeleted;
 
-  /// No description provided for @trackMenuLyrics.
+  /// No description provided for @lyricsMenuEdit.
   ///
   /// In ko, this message translates to:
-  /// **'가사 설정'**
-  String get trackMenuLyrics;
+  /// **'가사 편집'**
+  String get lyricsMenuEdit;
 
   /// No description provided for @lyricsEditTitle.
   ///
@@ -1841,19 +1841,19 @@ abstract class AppLocalizations {
   /// No description provided for @lyricsEditHint.
   ///
   /// In ko, this message translates to:
-  /// **'가사를 붙여넣거나 입력하세요. [01:23.45] 같은 시간 표시가 있으면 싱크 가사로 저장돼요. 비워서 저장하면 가사를 지워요.'**
+  /// **'가사를 붙여넣거나 입력하세요. 비워서 저장하면 가사를 지워요.'**
   String get lyricsEditHint;
 
   /// No description provided for @lyricsLoadFile.
   ///
   /// In ko, this message translates to:
-  /// **'파일에서 불러오기 (.lrc · .txt)'**
+  /// **'파일에서 불러오기'**
   String get lyricsLoadFile;
 
   /// No description provided for @lyricsWebSearch.
   ///
   /// In ko, this message translates to:
-  /// **'웹에서 검색해 가져오기'**
+  /// **'웹에서 가져오기'**
   String get lyricsWebSearch;
 
   /// No description provided for @lyricsWebTitle.
@@ -1928,17 +1928,17 @@ abstract class AppLocalizations {
   /// **'가사를 지웠어요'**
   String get lyricsCleared;
 
-  /// No description provided for @lyricsSyncOpen.
-  ///
-  /// In ko, this message translates to:
-  /// **'싱크 맞추기 (줄마다 시간 찍기)'**
-  String get lyricsSyncOpen;
-
   /// No description provided for @lyricsSyncTitle.
   ///
   /// In ko, this message translates to:
   /// **'싱크 맞추기'**
   String get lyricsSyncTitle;
+
+  /// No description provided for @lyricsSyncSetting.
+  ///
+  /// In ko, this message translates to:
+  /// **'싱크 설정'**
+  String get lyricsSyncSetting;
 
   /// No description provided for @lyricsSyncHint.
   ///
@@ -1970,6 +1970,24 @@ abstract class AppLocalizations {
   /// **'이 줄부터 다시 듣기'**
   String get lyricsSyncReplay;
 
+  /// No description provided for @lyricsSyncReset.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 싱크로'**
+  String get lyricsSyncReset;
+
+  /// No description provided for @lyricsSyncGroup.
+  ///
+  /// In ko, this message translates to:
+  /// **'한 번에 묶을 줄 수'**
+  String get lyricsSyncGroup;
+
+  /// No description provided for @lyricsSyncGroupLines.
+  ///
+  /// In ko, this message translates to:
+  /// **'{n}줄'**
+  String lyricsSyncGroupLines(int n);
+
   /// No description provided for @lyricsSyncNeedAll.
   ///
   /// In ko, this message translates to:
@@ -1999,6 +2017,114 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'{done}/{total}줄'**
   String lyricsSyncProgress(int done, int total);
+
+  /// No description provided for @lyricsImportExistsTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사가 이미 있어요'**
+  String get lyricsImportExistsTitle;
+
+  /// No description provided for @lyricsImportExistsBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'불러온 가사를 어떻게 넣을까요?'**
+  String get lyricsImportExistsBody;
+
+  /// No description provided for @lyricsImportReplace.
+  ///
+  /// In ko, this message translates to:
+  /// **'바꾸기'**
+  String get lyricsImportReplace;
+
+  /// No description provided for @lyricsImportAppend.
+  ///
+  /// In ko, this message translates to:
+  /// **'뒤에 붙이기'**
+  String get lyricsImportAppend;
+
+  /// No description provided for @lyricsSyncGroupSetupBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'한 번에 시간을 찍을 줄 수를 골라 주세요. 나중에 위쪽 메뉴에서 바꿀 수 있어요.'**
+  String get lyricsSyncGroupSetupBody;
+
+  /// No description provided for @lyricsSyncLeaveTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'싱크가 저장되지 않아요'**
+  String get lyricsSyncLeaveTitle;
+
+  /// No description provided for @lyricsSyncLeaveBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 모든 줄에 시간을 찍지 않았어요. 지금 나가면 찍은 시간이 사라져요. 지금까지 찍은 싱크를 저장하고 나갈까요?'**
+  String get lyricsSyncLeaveBody;
+
+  /// No description provided for @lyricsSyncLeaveSave.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 후 나가기'**
+  String get lyricsSyncLeaveSave;
+
+  /// No description provided for @lyricsSyncLeaveDiscard.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 안 하고 나가기'**
+  String get lyricsSyncLeaveDiscard;
+
+  /// No description provided for @lyricsSyncLeaveStay.
+  ///
+  /// In ko, this message translates to:
+  /// **'계속 맞추기'**
+  String get lyricsSyncLeaveStay;
+
+  /// No description provided for @lyricsSyncGroupOk.
+  ///
+  /// In ko, this message translates to:
+  /// **'확인'**
+  String get lyricsSyncGroupOk;
+
+  /// No description provided for @lyricsSyncDefaultLines.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 줄 수 변경'**
+  String get lyricsSyncDefaultLines;
+
+  /// No description provided for @lyricsSyncResetTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'묶음이 사라져요'**
+  String get lyricsSyncResetTitle;
+
+  /// No description provided for @lyricsSyncResetBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 줄 수를 바꾸면 직접 묶은 줄과 찍은 시간이 모두 사라지고, 고른 줄 수로 다시 나뉘어요. 계속할까요?'**
+  String get lyricsSyncResetBody;
+
+  /// No description provided for @lyricsSyncResetConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'바꾸기'**
+  String get lyricsSyncResetConfirm;
+
+  /// No description provided for @lyricsSyncGroupEdit.
+  ///
+  /// In ko, this message translates to:
+  /// **'줄 묶기'**
+  String get lyricsSyncGroupEdit;
+
+  /// No description provided for @lyricsSyncGroupDone.
+  ///
+  /// In ko, this message translates to:
+  /// **'완료'**
+  String get lyricsSyncGroupDone;
+
+  /// No description provided for @lyricsSyncGroupPanelHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'묶을 마지막 줄을 누르거나 끌어서 고르세요. 이 싱크의 시간은 다시 찍어야 해요.'**
+  String get lyricsSyncGroupPanelHint;
 
   /// No description provided for @playerShowLyrics.
   ///

@@ -205,3 +205,57 @@ class CircleIconButton extends StatelessWidget {
     );
   }
 }
+
+/// 작고 단순한 글자 · 아이콘 버튼. 면 · 테두리 없이 눌림 효과만 있다 (보조 동작, 한 줄에 여러 개).
+class PlainButton extends StatelessWidget {
+  const PlainButton({
+    super.key,
+    this.label,
+    this.icon,
+    this.tooltip,
+    this.onPressed,
+    this.accent = false,
+  }) : assert(label != null || icon != null);
+
+  final String? label;
+  final IconData? icon;
+  final String? tooltip;
+  final VoidCallback? onPressed;
+
+  /// 강조 색으로 그린다 (저장 같은 주 동작).
+  final bool accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final fg = accent ? p.accent : p.onSurface;
+    final style = Theme.of(context).textTheme.labelMedium!.copyWith(color: fg);
+    final button = Opacity(
+      opacity: onPressed == null ? .4 : 1,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(AppRadii.sm),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: AppSpacing.xs,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (icon != null) Icon(icon, size: 16, color: fg),
+                if (icon != null && label != null)
+                  const SizedBox(width: AppSpacing.xxs),
+                if (label != null) Flexible(child: Text(label!, style: style)),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    return tooltip == null ? button : Tooltip(message: tooltip!, child: button);
+  }
+}
