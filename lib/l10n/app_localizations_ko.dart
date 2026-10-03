@@ -949,13 +949,29 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsWebTitle => '가사 검색';
 
   @override
-  String get lyricsWebHint => '가사를 길게 눌러 끌어서 고른 뒤 \'가져오기\'를 누르세요.';
+  String get lyricsWebHint =>
+      '가사를 길게 눌러 끌어서 고른 뒤 \'담기\'를 누르세요. 여러 번 담은 뒤 \'가져오기\'로 한꺼번에 넣어요.';
 
   @override
   String get lyricsWebImport => '가져오기';
 
   @override
   String get lyricsWebNothingSelected => '고른 글이 없어요. 가사를 끌어서 먼저 골라 주세요.';
+
+  @override
+  String get lyricsWebAdd => '담기';
+
+  @override
+  String get lyricsWebScratchTitle => '모은 글';
+
+  @override
+  String get lyricsWebScratchHint => '담은 글이 여기 쌓여요. 직접 고치거나 지울 수 있어요.';
+
+  @override
+  String get lyricsWebClear => '모두 비우기';
+
+  @override
+  String get lyricsWebScratchEmpty => '모은 글이 없어요. 가사를 골라 \'담기\'를 먼저 눌러 주세요.';
 
   @override
   String get lyricsSave => '저장';

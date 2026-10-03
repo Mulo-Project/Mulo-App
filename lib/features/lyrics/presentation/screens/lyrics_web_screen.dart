@@ -21,8 +21,8 @@ Uri lyricsSearchUri(Track track) {
   return Uri.https('www.google.com', '/search', {'q': query});
 }
 
-/// 앱 안 웹 화면에서 가사를 검색하고, 사용자가 끌어서 고른 글을 돌려준다.
-/// 취소하거나 고른 글이 없으면 null.
+/// 앱 안 웹 화면에서 가사를 검색하고, 사용자가 끌어서 "담기"한 글 모음을 돌려준다.
+/// 취소하거나 모은 글이 없으면 null.
 Future<String?> showLyricsWeb(BuildContext context, Track track) {
   return Navigator.of(context, rootNavigator: true).push<String>(
     MaterialPageRoute(builder: (_) => LyricsWebScreen(track: track)),
@@ -40,7 +40,9 @@ class LyricsWebScreen extends StatefulWidget {
 
 class _LyricsWebScreenState extends State<LyricsWebScreen> {
   late final WebViewController _controller;
+  final _scratch = TextEditingController();
   bool _loading = true;
+  bool _scratchOpen = false;
 
   @override
   void initState() {
@@ -56,19 +58,42 @@ class _LyricsWebScreenState extends State<LyricsWebScreen> {
       ..loadRequest(lyricsSearchUri(widget.track));
   }
 
-  Future<void> _import() async {
+  /// 웹에서 고른 글을 모음 맨 아래에 새 줄로 붙인다.
+  Future<void> _add() async {
     final raw = await _controller.runJavaScriptReturningResult(
       'window.getSelection().toString()',
     );
-    final text = _decode(raw);
+    final text = _decode(raw).trim();
     if (!mounted) return;
-    if (text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.lyricsWebNothingSelected)),
-      );
+    if (text.isEmpty) {
+      _snack(context.l10n.lyricsWebNothingSelected);
+      return;
+    }
+    final current = _scratch.text;
+    _scratch.text = current.trim().isEmpty
+        ? text
+        : '${current.trimRight()}\n$text';
+    setState(() => _scratchOpen = true);
+  }
+
+  void _import() {
+    final text = _scratch.text.trim();
+    if (text.isEmpty) {
+      _snack(context.l10n.lyricsWebScratchEmpty);
       return;
     }
     Navigator.of(context).pop(text);
+  }
+
+  void _snack(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  @override
+  void dispose() {
+    _scratch.dispose();
+    super.dispose();
   }
 
   /// Android는 JS 문자열 결과를 JSON 문자열(따옴표 · 이스케이프 포함)로 준다.
@@ -112,6 +137,44 @@ class _LyricsWebScreenState extends State<LyricsWebScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => setState(() => _scratchOpen = !_scratchOpen),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            l10n.lyricsWebScratchTitle,
+                            style: Theme.of(context).textTheme.titleSmall,
+                          ),
+                        ),
+                        Icon(
+                          _scratchOpen
+                              ? Icons.keyboard_arrow_down_rounded
+                              : Icons.keyboard_arrow_up_rounded,
+                          color: context.palette.onSurfaceMuted,
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (_scratchOpen) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    AppTextField(
+                      label: l10n.lyricsWebScratchTitle,
+                      controller: _scratch,
+                      hint: l10n.lyricsWebScratchHint,
+                      maxLines: 5,
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    PillButton(
+                      label: l10n.lyricsWebClear,
+                      icon: Icons.delete_outline_rounded,
+                      variant: PillVariant.tonal,
+                      compact: true,
+                      onPressed: () => _scratch.clear(),
+                    ),
+                  ],
+                  const SizedBox(height: AppSpacing.xs),
                   Text(
                     l10n.lyricsWebHint,
                     style: Theme.of(context).textTheme.bodySmall
@@ -119,10 +182,25 @@ class _LyricsWebScreenState extends State<LyricsWebScreen> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: AppSpacing.xs),
-                  PillButton(
-                    label: l10n.lyricsWebImport,
-                    icon: Icons.download_rounded,
-                    onPressed: _import,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: PillButton(
+                          label: l10n.lyricsWebAdd,
+                          icon: Icons.playlist_add_rounded,
+                          variant: PillVariant.tonal,
+                          onPressed: _add,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      Expanded(
+                        child: PillButton(
+                          label: l10n.lyricsWebImport,
+                          icon: Icons.download_rounded,
+                          onPressed: _import,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

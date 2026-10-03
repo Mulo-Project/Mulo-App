@@ -962,7 +962,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lyricsWebHint =>
-      'Long-press and drag to select the lyrics, then tap Import.';
+      'Long-press and drag to select text, then tap Add. Add as many times as you like, then tap Import.';
 
   @override
   String get lyricsWebImport => 'Import';
@@ -970,6 +970,23 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get lyricsWebNothingSelected =>
       'Nothing is selected. Select the lyrics first.';
+
+  @override
+  String get lyricsWebAdd => 'Add';
+
+  @override
+  String get lyricsWebScratchTitle => 'Collected text';
+
+  @override
+  String get lyricsWebScratchHint =>
+      'Added text piles up here. You can edit or delete it.';
+
+  @override
+  String get lyricsWebClear => 'Clear all';
+
+  @override
+  String get lyricsWebScratchEmpty =>
+      'Nothing collected yet. Select lyrics and tap Add first.';
 
   @override
   String get lyricsSave => 'Save';

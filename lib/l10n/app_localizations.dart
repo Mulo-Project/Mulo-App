@@ -1865,7 +1865,7 @@ abstract class AppLocalizations {
   /// No description provided for @lyricsWebHint.
   ///
   /// In ko, this message translates to:
-  /// **'가사를 길게 눌러 끌어서 고른 뒤 \'가져오기\'를 누르세요.'**
+  /// **'가사를 길게 눌러 끌어서 고른 뒤 \'담기\'를 누르세요. 여러 번 담은 뒤 \'가져오기\'로 한꺼번에 넣어요.'**
   String get lyricsWebHint;
 
   /// No description provided for @lyricsWebImport.
@@ -1879,6 +1879,36 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'고른 글이 없어요. 가사를 끌어서 먼저 골라 주세요.'**
   String get lyricsWebNothingSelected;
+
+  /// No description provided for @lyricsWebAdd.
+  ///
+  /// In ko, this message translates to:
+  /// **'담기'**
+  String get lyricsWebAdd;
+
+  /// No description provided for @lyricsWebScratchTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'모은 글'**
+  String get lyricsWebScratchTitle;
+
+  /// No description provided for @lyricsWebScratchHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'담은 글이 여기 쌓여요. 직접 고치거나 지울 수 있어요.'**
+  String get lyricsWebScratchHint;
+
+  /// No description provided for @lyricsWebClear.
+  ///
+  /// In ko, this message translates to:
+  /// **'모두 비우기'**
+  String get lyricsWebClear;
+
+  /// No description provided for @lyricsWebScratchEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'모은 글이 없어요. 가사를 골라 \'담기\'를 먼저 눌러 주세요.'**
+  String get lyricsWebScratchEmpty;
 
   /// No description provided for @lyricsSave.
   ///
