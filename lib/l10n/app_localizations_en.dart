@@ -949,7 +949,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lyricsEditHint =>
-      'Paste or type the lyrics. Save empty to remove them.';
+      'Paste or type the lyrics. Text with times like [01:02.30], or an .lrc / .txt file with them, becomes synced lyrics. Save empty to remove them.';
 
   @override
   String get lyricsLoadFile => 'Load from file';

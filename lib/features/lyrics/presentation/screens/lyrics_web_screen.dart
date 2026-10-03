@@ -118,123 +118,136 @@ class _LyricsWebScreenState extends State<LyricsWebScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Scaffold(
-      backgroundColor: context.palette.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            AppTopBar(
-              title: l10n.lyricsWebTitle,
-              leading: CircleIconButton(
-                icon: Icons.close_rounded,
-                tooltip: l10n.actionCancel,
-                onPressed: () => Navigator.of(context).pop(),
+    // 뒤로가기는 웹 기록을 먼저 되돌리고, 더 갈 곳이 없을 때만 화면을 닫는다.
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final navigator = Navigator.of(context);
+        if (await _controller.canGoBack()) {
+          await _controller.goBack();
+        } else {
+          navigator.pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: context.palette.background,
+        body: SafeArea(
+          child: Column(
+            children: [
+              AppTopBar(
+                title: l10n.lyricsWebTitle,
+                leading: CircleIconButton(
+                  icon: Icons.close_rounded,
+                  tooltip: l10n.actionCancel,
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
               ),
-            ),
-            if (_loading) const LinearProgressIndicator(minHeight: 2),
-            Expanded(child: WebViewWidget(controller: _controller)),
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () => setState(() => _scratchOpen = !_scratchOpen),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            l10n.lyricsWebScratchTitle,
-                            style: Theme.of(context).textTheme.titleSmall,
+              if (_loading) const LinearProgressIndicator(minHeight: 2),
+              Expanded(child: WebViewWidget(controller: _controller)),
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => setState(() => _scratchOpen = !_scratchOpen),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              l10n.lyricsWebScratchTitle,
+                              style: Theme.of(context).textTheme.titleSmall,
+                            ),
+                          ),
+                          Icon(
+                            _scratchOpen
+                                ? Icons.keyboard_arrow_down_rounded
+                                : Icons.keyboard_arrow_up_rounded,
+                            color: context.palette.onSurfaceMuted,
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (_scratchOpen) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      // 위쪽 손잡이를 끌어 모은 글 영역 높이를 조절한다.
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onVerticalDragUpdate: (d) => setState(
+                          () => _scratchHeight = (_scratchHeight - d.delta.dy)
+                              .clamp(
+                                _scratchMin,
+                                MediaQuery.sizeOf(context).height * .6,
+                              ),
+                        ),
+                        child: SizedBox(
+                          height: 20,
+                          child: Center(
+                            child: Container(
+                              width: 40,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: context.palette.onSurfaceMuted,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
                           ),
                         ),
-                        Icon(
-                          _scratchOpen
-                              ? Icons.keyboard_arrow_down_rounded
-                              : Icons.keyboard_arrow_up_rounded,
-                          color: context.palette.onSurfaceMuted,
+                      ),
+                      SizedBox(
+                        height: _scratchHeight,
+                        child: AppTextField(
+                          label: l10n.lyricsWebScratchTitle,
+                          controller: _scratch,
+                          hint: l10n.lyricsWebScratchHint,
+                          expands: true,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      PillButton(
+                        label: l10n.lyricsWebClear,
+                        icon: Icons.delete_outline_rounded,
+                        variant: PillVariant.tonal,
+                        compact: true,
+                        onPressed: () => _scratch.clear(),
+                      ),
+                    ],
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      l10n.lyricsWebHint,
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(color: context.palette.onSurfaceMuted),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: PillButton(
+                            label: l10n.lyricsWebAdd,
+                            icon: Icons.playlist_add_rounded,
+                            variant: PillVariant.tonal,
+                            onPressed: _add,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Expanded(
+                          child: PillButton(
+                            label: l10n.lyricsWebImport,
+                            icon: Icons.download_rounded,
+                            onPressed: _import,
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                  if (_scratchOpen) ...[
-                    const SizedBox(height: AppSpacing.xs),
-                    // 위쪽 손잡이를 끌어 모은 글 영역 높이를 조절한다.
-                    GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onVerticalDragUpdate: (d) => setState(
-                        () => _scratchHeight = (_scratchHeight - d.delta.dy)
-                            .clamp(
-                              _scratchMin,
-                              MediaQuery.sizeOf(context).height * .6,
-                            ),
-                      ),
-                      child: SizedBox(
-                        height: 20,
-                        child: Center(
-                          child: Container(
-                            width: 40,
-                            height: 4,
-                            decoration: BoxDecoration(
-                              color: context.palette.onSurfaceMuted,
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      height: _scratchHeight,
-                      child: AppTextField(
-                        label: l10n.lyricsWebScratchTitle,
-                        controller: _scratch,
-                        hint: l10n.lyricsWebScratchHint,
-                        expands: true,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    PillButton(
-                      label: l10n.lyricsWebClear,
-                      icon: Icons.delete_outline_rounded,
-                      variant: PillVariant.tonal,
-                      compact: true,
-                      onPressed: () => _scratch.clear(),
-                    ),
                   ],
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    l10n.lyricsWebHint,
-                    style: Theme.of(context).textTheme.bodySmall
-                        ?.copyWith(color: context.palette.onSurfaceMuted),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: PillButton(
-                          label: l10n.lyricsWebAdd,
-                          icon: Icons.playlist_add_rounded,
-                          variant: PillVariant.tonal,
-                          onPressed: _add,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      Expanded(
-                        child: PillButton(
-                          label: l10n.lyricsWebImport,
-                          icon: Icons.download_rounded,
-                          onPressed: _import,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
