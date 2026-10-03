@@ -22,6 +22,7 @@ import 'package:music_download_play_app/features/library/domain/entities/track_i
 import 'package:music_download_play_app/features/library/domain/repositories/library_repository.dart';
 import 'package:music_download_play_app/features/player/di.dart';
 import 'package:music_download_play_app/features/player/domain/entities/player_style.dart';
+import 'package:music_download_play_app/features/player/domain/repositories/audio_player_repository.dart';
 import 'package:music_download_play_app/features/player/domain/repositories/player_style_repository.dart';
 import 'package:music_download_play_app/features/playlists/di.dart';
 import 'package:music_download_play_app/features/playlists/domain/entities/playlist.dart';
@@ -524,6 +525,7 @@ Future<void> setUpTestDependencies({
   PlayerStyle playerStyle = PlayerStyle.initial,
   PlayHistoryRepository? history,
   DownloadQueueRepository? downloads,
+  AudioPlayerRepository? audio,
   DownloadSettingsRepository? downloadSettings,
   PlaylistRepository? playlists,
   AppLockRepository? appLock,
@@ -586,6 +588,9 @@ Future<void> setUpTestDependencies({
     ..registerLazySingleton<LyricsFileSource>(
       () => lyricsFile ?? FakeLyricsFileSource(),
     )
+    ..registerLazySingleton<AudioPlayerRepository>(
+      () => audio ?? FakeAudioPlayer(),
+    )
     ..registerLazySingleton<PlayHistoryRepository>(
       () => history ?? MemoryPlayHistory(),
     )
@@ -609,4 +614,57 @@ class MemoryJoinDate implements JoinDateRepository {
 
   @override
   Future<DateTime> joinedAt() async => date;
+}
+
+/// 재생 엔진 가짜: 불러온 곡 · 재생 상태를 기록하고, 위치 · 곡 끝은 테스트가 흘려보낸다.
+class FakeAudioPlayer implements AudioPlayerRepository {
+  final _position = StreamController<Duration>.broadcast();
+  final _completed = StreamController<void>.broadcast();
+
+  /// 지금 불러온 곡 주소.
+  String? loaded;
+  bool playing = false;
+  Duration? lastSeek;
+
+  /// 불러오기를 실패시킬 주소.
+  final failing = <String>{};
+
+  /// 엔진에 한 일의 기록 ('load:uri', 'play', 'pause', 'seek:1000').
+  final calls = <String>[];
+
+  void emitPosition(Duration p) => _position.add(p);
+
+  void complete() => _completed.add(null);
+
+  @override
+  Stream<Duration> watchPosition() => _position.stream;
+
+  @override
+  Stream<void> watchCompleted() => _completed.stream;
+
+  @override
+  Future<void> load(String uri) async {
+    calls.add('load:$uri');
+    if (failing.contains(uri)) throw StateError('cannot load');
+    loaded = uri;
+    playing = false;
+  }
+
+  @override
+  Future<void> play() async {
+    calls.add('play');
+    playing = true;
+  }
+
+  @override
+  Future<void> pause() async {
+    calls.add('pause');
+    playing = false;
+  }
+
+  @override
+  Future<void> seek(Duration position) async {
+    calls.add('seek:${position.inMilliseconds}');
+    lastSeek = position;
+  }
 }
