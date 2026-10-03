@@ -71,6 +71,33 @@ void main() {
     expect(find.text('가사를 지웠어요'), findsOneWidget);
   });
 
+  testWidgets('가사 편집 페이지: 가사가 있을 때 가져오면 바꿀지 붙일지 묻는다', (tester) async {
+    phone(tester);
+    final lyrics = MemoryLyricsRepository(sibling: {'t1': '기존 가사'});
+    final file = FakeLyricsFileSource('[00:01.00]불러온 가사');
+    await setUpTestDependencies(lyrics: lyrics, lyricsFile: file);
+    await openLyricsEditor(tester);
+
+    await tester.tap(find.textContaining('파일에서 불러오기'));
+    await tester.pumpAndSettle();
+    expect(find.text('가사가 이미 있어요'), findsOneWidget);
+    await tester.tap(find.text('뒤에 붙이기'));
+    await tester.pumpAndSettle();
+    expect(find.text('기존 가사\n[00:01.00]불러온 가사'), findsOneWidget);
+
+    await tester.tap(find.textContaining('파일에서 불러오기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('바꾸기'));
+    await tester.pumpAndSettle();
+    expect(find.text('[00:01.00]불러온 가사'), findsOneWidget);
+
+    await tester.tap(find.textContaining('파일에서 불러오기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('취소').last);
+    await tester.pumpAndSettle();
+    expect(find.text('[00:01.00]불러온 가사'), findsOneWidget);
+  });
+
   testWidgets('플레이어: 가사 보기로 바꾸면 줄이 보이고, 줄을 누르면 그 위치로 간다', (tester) async {
     phone(tester);
     await setUpTestDependencies(

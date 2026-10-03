@@ -2018,6 +2018,84 @@ abstract class AppLocalizations {
   /// **'{done}/{total}줄'**
   String lyricsSyncProgress(int done, int total);
 
+  /// No description provided for @lyricsImportExistsTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사가 이미 있어요'**
+  String get lyricsImportExistsTitle;
+
+  /// No description provided for @lyricsImportExistsBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'불러온 가사를 어떻게 넣을까요?'**
+  String get lyricsImportExistsBody;
+
+  /// No description provided for @lyricsImportReplace.
+  ///
+  /// In ko, this message translates to:
+  /// **'바꾸기'**
+  String get lyricsImportReplace;
+
+  /// No description provided for @lyricsImportAppend.
+  ///
+  /// In ko, this message translates to:
+  /// **'뒤에 붙이기'**
+  String get lyricsImportAppend;
+
+  /// No description provided for @lyricsSyncGroupSetupBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'한 번에 시간을 찍을 줄 수를 골라 주세요. 나중에 위쪽 메뉴에서 바꿀 수 있어요.'**
+  String get lyricsSyncGroupSetupBody;
+
+  /// No description provided for @lyricsSyncGroupOk.
+  ///
+  /// In ko, this message translates to:
+  /// **'확인'**
+  String get lyricsSyncGroupOk;
+
+  /// No description provided for @lyricsSyncDefaultLines.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 줄 수 변경'**
+  String get lyricsSyncDefaultLines;
+
+  /// No description provided for @lyricsSyncResetTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'묶음이 사라져요'**
+  String get lyricsSyncResetTitle;
+
+  /// No description provided for @lyricsSyncResetBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 줄 수를 바꾸면 직접 묶은 줄과 찍은 시간이 모두 사라지고, 고른 줄 수로 다시 나뉘어요. 계속할까요?'**
+  String get lyricsSyncResetBody;
+
+  /// No description provided for @lyricsSyncResetConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'바꾸기'**
+  String get lyricsSyncResetConfirm;
+
+  /// No description provided for @lyricsSyncGroupEdit.
+  ///
+  /// In ko, this message translates to:
+  /// **'줄 묶기'**
+  String get lyricsSyncGroupEdit;
+
+  /// No description provided for @lyricsSyncGroupDone.
+  ///
+  /// In ko, this message translates to:
+  /// **'완료'**
+  String get lyricsSyncGroupDone;
+
+  /// No description provided for @lyricsSyncGroupPanelHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'묶을 마지막 줄을 누르거나 끌어서 고르세요. 이 싱크의 시간은 다시 찍어야 해요.'**
+  String get lyricsSyncGroupPanelHint;
+
   /// No description provided for @playerShowLyrics.
   ///
   /// In ko, this message translates to:

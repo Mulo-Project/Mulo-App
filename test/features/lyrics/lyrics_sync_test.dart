@@ -78,6 +78,20 @@ void main() {
       expect(done.toLrc(), '[00:01.00]첫 줄 둘째 줄\n[00:05.00]셋째 줄');
     });
 
+    test('한 칸만 다시 묶으면 남는 줄은 기본 줄 수로 다시 나뉘고 시간은 지워진다', () {
+      final lyrics = Lyrics.parse('가\n나\n다\n라\n마')!;
+      final d = SyncDraft.from(lyrics).stamp(const Duration(seconds: 1));
+      final three = d.regroup(0, 2);
+      expect(three.texts, ['가 나 다', '라', '마']);
+      expect(three.stamped, 0);
+      expect(three.current, 0);
+      // 줄이면 남는 줄이 기본 줄 수 칸으로, 늘리면 삼킨 칸은 사라진다.
+      expect(three.regroup(0, 0, group: 2).texts, ['가', '나 다', '라', '마']);
+      expect(three.regroup(1, 4).texts, ['가 나 다', '라 마']);
+      expect(three.isCustom(1), isTrue);
+      expect(SyncDraft.from(lyrics, group: 2).isCustom(2), isFalse);
+    });
+
     test('이미 싱크된 가사는 시간을 이어받는다', () {
       final d = SyncDraft.from(Lyrics.parse('[00:01.00]가\n[00:02.00]나')!);
       expect(d.isComplete, isTrue);
@@ -103,6 +117,8 @@ void main() {
     await tester.tap(find.byTooltip('가사 보기'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('싱크 설정'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('확인'));
     await tester.pumpAndSettle();
 
     final player = tester.element(find.text('가 줄')).read<NowPlayingCubit>();
@@ -132,16 +148,14 @@ void main() {
     expect(find.text('가사를 저장했어요'), findsOneWidget);
   });
 
-  testWidgets('싱크 설정: 묶을 줄 수를 정하면 한 번에 찍는 단위가 바뀐다', (tester) async {
+  Future<void> openSync(WidgetTester tester, String text) async {
     tester.view.physicalSize = const Size(1170, 2532);
     tester.view.devicePixelRatio = 3;
     tester.platformDispatcher.localesTestValue = const [Locale('ko')];
     addTearDown(tester.view.reset);
     addTearDown(tester.platformDispatcher.clearLocalesTestValue);
 
-    final lyrics = MemoryLyricsRepository(
-      sibling: {'t1': '가 줄\n나 줄\n다 줄\n라 줄'},
-    );
+    final lyrics = MemoryLyricsRepository(sibling: {'t1': text});
     await setUpTestDependencies(tracks: [_t('t1', '첫 곡')], lyrics: lyrics);
     await tester.pumpWidget(const MusicApp(initialLocation: Routes.player));
     await tester.pumpAndSettle();
@@ -153,16 +167,76 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('싱크 설정'));
     await tester.pumpAndSettle();
-    expect(find.text('0/4줄'), findsOneWidget);
+  }
 
+  testWidgets('싱크 설정: 처음 들어가면 기본 줄 수를 묻고, 위쪽 메뉴로 바꾸면 경고한다', (tester) async {
+    await openSync(tester, '가 줄\n나 줄\n다 줄\n라 줄');
+    expect(find.text('한 번에 묶을 줄 수'), findsOneWidget);
     await tester.tap(find.text('2줄'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('확인'));
     await tester.pumpAndSettle();
     expect(find.text('0/2줄'), findsOneWidget);
     expect(find.text('가 줄 나 줄'), findsOneWidget);
 
-    // 찍기 시작하면 묶음 줄 수는 더 못 바꾼다.
+    // 찍은 시간이 있으면 바꾸기 전에 경고한다. 취소하면 그대로.
     await tester.tap(find.text('지금'));
     await tester.pumpAndSettle();
-    expect(find.text('2줄'), findsNothing);
+    await tester.tap(find.byTooltip('기본 줄 수 변경'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('1줄').last);
+    await tester.pumpAndSettle();
+    expect(find.text('묶음이 사라져요'), findsOneWidget);
+    await tester.tap(find.text('취소'));
+    await tester.pumpAndSettle();
+    expect(find.text('1/2줄'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('기본 줄 수 변경'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('1줄').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('바꾸기'));
+    await tester.pumpAndSettle();
+    expect(find.text('0/4줄'), findsOneWidget);
+  });
+
+  testWidgets('싱크 설정: 찍은 싱크를 고르고 더 보기 메뉴로 줄을 직접 묶는다', (tester) async {
+    await openSync(tester, '가 줄\n나 줄\n다 줄\n라 줄');
+    await tester.tap(find.text('확인'));
+    await tester.pumpAndSettle();
+    expect(find.text('0/4줄'), findsOneWidget);
+
+    await tester.tap(find.text('지금'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('더 보기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('줄 묶기'));
+    await tester.pumpAndSettle();
+
+    // 영역 안의 세 번째 줄을 누르면 앞의 세 줄이 한 싱크가 된다.
+    await tester.tap(find.text('다 줄').first);
+    await tester.pumpAndSettle();
+    expect(find.text('0/2줄'), findsOneWidget);
+    expect(find.text('가 줄 나 줄 다 줄'), findsOneWidget);
+
+    await tester.tap(find.text('완료'));
+    await tester.pumpAndSettle();
+    expect(find.text('완료'), findsNothing);
+  });
+
+  testWidgets('싱크 설정: 상단에 줄 수와 함께 재생 시간이 보인다', (tester) async {
+    await openSync(tester, '가 줄\n나 줄');
+    await tester.tap(find.text('확인'));
+    await tester.pumpAndSettle();
+    final clock = find.textContaining(' / ');
+    expect(clock, findsOneWidget);
+    expect(
+      tester.getTopLeft(clock).dy,
+      lessThan(tester.getTopLeft(find.text('지금')).dy),
+    );
+    expect(
+      tester.getTopLeft(clock).dy,
+      lessThan(tester.getTopLeft(find.text('가 줄')).dy),
+    );
   });
 }

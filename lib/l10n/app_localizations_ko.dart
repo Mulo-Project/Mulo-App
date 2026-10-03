@@ -1032,6 +1032,48 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get lyricsImportExistsTitle => '가사가 이미 있어요';
+
+  @override
+  String get lyricsImportExistsBody => '불러온 가사를 어떻게 넣을까요?';
+
+  @override
+  String get lyricsImportReplace => '바꾸기';
+
+  @override
+  String get lyricsImportAppend => '뒤에 붙이기';
+
+  @override
+  String get lyricsSyncGroupSetupBody =>
+      '한 번에 시간을 찍을 줄 수를 골라 주세요. 나중에 위쪽 메뉴에서 바꿀 수 있어요.';
+
+  @override
+  String get lyricsSyncGroupOk => '확인';
+
+  @override
+  String get lyricsSyncDefaultLines => '기본 줄 수 변경';
+
+  @override
+  String get lyricsSyncResetTitle => '묶음이 사라져요';
+
+  @override
+  String get lyricsSyncResetBody =>
+      '기본 줄 수를 바꾸면 직접 묶은 줄과 찍은 시간이 모두 사라지고, 고른 줄 수로 다시 나뉘어요. 계속할까요?';
+
+  @override
+  String get lyricsSyncResetConfirm => '바꾸기';
+
+  @override
+  String get lyricsSyncGroupEdit => '줄 묶기';
+
+  @override
+  String get lyricsSyncGroupDone => '완료';
+
+  @override
+  String get lyricsSyncGroupPanelHint =>
+      '묶을 마지막 줄을 누르거나 끌어서 고르세요. 이 싱크의 시간은 다시 찍어야 해요.';
+
+  @override
   String get playerShowLyrics => '가사 보기';
 
   @override

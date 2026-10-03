@@ -6,6 +6,7 @@ import '../../../../core/l10n/l10n.dart';
 import '../../../library/domain/entities/track.dart';
 import '../bloc/lyrics_cubit.dart';
 import '../screens/lyrics_web_screen.dart';
+import 'lyrics_dialogs.dart';
 
 /// 플레이어 가사 화면의 "가사 편집" 페이지: 직접 입력 · 붙여넣기 · 파일(.lrc · .txt) · 웹 검색(Android)에서 불러오기.
 /// 저장하면 곡의 가사로 저장하고(비우면 지움) 안내를 띄운다.
@@ -56,12 +57,27 @@ class _LyricsEditorScreenState extends State<_LyricsEditorScreen> {
 
   Future<void> _pickFile() async {
     final picked = await widget.cubit.pickFile();
-    if (picked != null && mounted) _text.text = picked;
+    if (picked != null && mounted) await _apply(picked);
   }
 
   Future<void> _searchWeb() async {
     final picked = await showLyricsWeb(context, widget.track);
-    if (picked != null && mounted) _text.text = picked;
+    if (picked != null && mounted) await _apply(picked);
+  }
+
+  /// 가져온 글을 넣는다. 가사가 이미 있으면 바꿀지 뒤에 붙일지 먼저 묻는다.
+  Future<void> _apply(String imported) async {
+    final current = _text.text;
+    if (current.trim().isEmpty) {
+      _text.text = imported;
+      return;
+    }
+    final mode = await showLyricsImportMode(context);
+    if (mode == null || !mounted) return;
+    _text.text = switch (mode) {
+      LyricsImportMode.replace => imported,
+      LyricsImportMode.append => '${current.trimRight()}\n$imported',
+    };
   }
 
   @override
@@ -131,19 +147,23 @@ class _LyricsEditorScreenState extends State<_LyricsEditorScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  PlainButton(
-                    label: l10n.actionCancel,
-                    onPressed: () => Navigator.of(context).pop(),
+                  Expanded(
+                    child: PillButton(
+                      label: l10n.actionCancel,
+                      variant: PillVariant.tonal,
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
                   ),
-                  const SizedBox(width: AppSpacing.xs),
-                  PlainButton(
-                    label: l10n.lyricsSave,
-                    accent: true,
-                    onPressed: () => Navigator.of(context).pop(_text.text),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: PillButton(
+                      label: l10n.lyricsSave,
+                      icon: Icons.check_rounded,
+                      onPressed: () => Navigator.of(context).pop(_text.text),
+                    ),
                   ),
                 ],
               ),

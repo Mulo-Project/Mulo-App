@@ -1048,6 +1048,49 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get lyricsImportExistsTitle => 'Lyrics already exist';
+
+  @override
+  String get lyricsImportExistsBody =>
+      'How should the imported lyrics be added?';
+
+  @override
+  String get lyricsImportReplace => 'Replace';
+
+  @override
+  String get lyricsImportAppend => 'Append';
+
+  @override
+  String get lyricsSyncGroupSetupBody =>
+      'Pick how many lines to stamp at once. You can change it later from the top menu.';
+
+  @override
+  String get lyricsSyncGroupOk => 'OK';
+
+  @override
+  String get lyricsSyncDefaultLines => 'Change default lines';
+
+  @override
+  String get lyricsSyncResetTitle => 'Groupings will be lost';
+
+  @override
+  String get lyricsSyncResetBody =>
+      'Changing the default line count removes custom groupings and stamped times, and splits the lyrics again with the chosen count. Continue?';
+
+  @override
+  String get lyricsSyncResetConfirm => 'Change';
+
+  @override
+  String get lyricsSyncGroupEdit => 'Group lines';
+
+  @override
+  String get lyricsSyncGroupDone => 'Done';
+
+  @override
+  String get lyricsSyncGroupPanelHint =>
+      'Tap or drag to pick the last line to group. This sync\'s time must be stamped again.';
+
+  @override
   String get playerShowLyrics => 'Show lyrics';
 
   @override
