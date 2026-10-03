@@ -220,6 +220,13 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     );
   }
 
+  /// [queue]를 처음부터 재생하되 셔플을 켠다.
+  void playShuffled(List<Track> queue) {
+    if (queue.isEmpty) return;
+    playQueue(queue);
+    if (!state.shuffle) toggleShuffle();
+  }
+
   void toggleShuffle() => emit(state.copyWith(shuffle: !state.shuffle));
 
   void cycleRepeat() => emit(

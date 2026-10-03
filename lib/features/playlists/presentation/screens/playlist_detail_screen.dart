@@ -8,8 +8,8 @@ import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../library/domain/entities/track.dart';
+import '../../../library/presentation/widgets/play_shuffle_row.dart';
 import '../../../library/presentation/widgets/track_list_tile.dart';
-import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../bloc/playlist_tracks_cubit.dart';
 import '../bloc/playlists_cubit.dart';
 import '../widgets/playlist_card.dart';
@@ -119,15 +119,9 @@ class _Body extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            Padding(
-              padding: AppSpacing.screen,
-              child: PillButton(
-                label: l10n.playlistMenuPlayAll,
-                icon: Icons.play_arrow_rounded,
-                onPressed: tracks == null || tracks.isEmpty
-                    ? null
-                    : () => context.read<NowPlayingCubit>().playQueue(tracks),
-              ),
+            PlayShuffleRow(
+              tracks: tracks ?? const <Track>[],
+              playLabel: l10n.playlistMenuPlayAll,
             ),
             const SizedBox(height: AppSpacing.sm),
             if (tracks != null && tracks.isEmpty)

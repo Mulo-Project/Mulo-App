@@ -161,10 +161,10 @@ void main() {
     expect(find.byType(TrackTile), findsWidgets);
     await tester.tap(find.byType(TrackTile).first);
     await tester.pumpAndSettle();
-    expect(find.byTooltip('장르 목록으로'), findsOneWidget);
-    await tester.tap(find.byTooltip('장르 목록으로'));
+    expect(find.byTooltip('뒤로'), findsOneWidget);
+    await tester.tap(find.byTooltip('뒤로'));
     await tester.pumpAndSettle();
-    expect(find.byTooltip('장르 목록으로'), findsNothing);
+    expect(find.byTooltip('뒤로'), findsNothing);
   });
 
   testWidgets('빈 보관함: 불러오기 버튼으로 기기 음악을 추가한다', (tester) async {

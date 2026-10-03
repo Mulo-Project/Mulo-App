@@ -167,7 +167,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unknownGenre => 'Unknown genre';
 
   @override
-  String get genreBack => 'Back to genres';
+  String get genreNotFound => 'Genre not found';
 
   @override
   String get sortLabel => 'Sort';
@@ -1148,6 +1148,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playlistMenuPlayAll => 'Play all';
+
+  @override
+  String get playlistMenuShuffle => 'Shuffle play';
 
   @override
   String get playlistMenuRename => 'Rename';
