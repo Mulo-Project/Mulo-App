@@ -1034,18 +1034,6 @@ abstract class AppLocalizations {
   /// **'아이스'**
   String get themeIce;
 
-  /// No description provided for @coverTitle.
-  ///
-  /// In ko, this message translates to:
-  /// **'커버 이미지'**
-  String get coverTitle;
-
-  /// No description provided for @coverChange.
-  ///
-  /// In ko, this message translates to:
-  /// **'커버 이미지 바꾸기'**
-  String get coverChange;
-
   /// No description provided for @coverPick.
   ///
   /// In ko, this message translates to:
@@ -1586,11 +1574,83 @@ abstract class AppLocalizations {
   /// **'만들기'**
   String get playlistCreate;
 
-  /// No description provided for @playlistMenuImage.
+  /// No description provided for @decorateTitle.
   ///
   /// In ko, this message translates to:
-  /// **'이미지 바꾸기'**
-  String get playlistMenuImage;
+  /// **'꾸미기'**
+  String get decorateTitle;
+
+  /// No description provided for @decorateImage.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미지'**
+  String get decorateImage;
+
+  /// No description provided for @decorateColor.
+  ///
+  /// In ko, this message translates to:
+  /// **'색'**
+  String get decorateColor;
+
+  /// No description provided for @decorateAlbumTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'앨범 꾸미기'**
+  String get decorateAlbumTooltip;
+
+  /// No description provided for @decorateArtistTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'아티스트 꾸미기'**
+  String get decorateArtistTooltip;
+
+  /// No description provided for @playlistMenuDecorate.
+  ///
+  /// In ko, this message translates to:
+  /// **'꾸미기'**
+  String get playlistMenuDecorate;
+
+  /// No description provided for @trackMenuDecorate.
+  ///
+  /// In ko, this message translates to:
+  /// **'꾸미기'**
+  String get trackMenuDecorate;
+
+  /// No description provided for @albumRenameTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'앨범 이름 바꾸기'**
+  String get albumRenameTooltip;
+
+  /// No description provided for @albumRenameTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'앨범 이름 바꾸기'**
+  String get albumRenameTitle;
+
+  /// No description provided for @albumRenameHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'앨범 이름'**
+  String get albumRenameHint;
+
+  /// No description provided for @albumRenameSave.
+  ///
+  /// In ko, this message translates to:
+  /// **'바꾸기'**
+  String get albumRenameSave;
+
+  /// No description provided for @albumRenameDone.
+  ///
+  /// In ko, this message translates to:
+  /// **'앨범 이름을 바꿨어요'**
+  String get albumRenameDone;
+
+  /// No description provided for @artistNotFound.
+  ///
+  /// In ko, this message translates to:
+  /// **'아티스트를 찾을 수 없어요'**
+  String get artistNotFound;
 
   /// No description provided for @playlistMenuColor.
   ///
@@ -1604,12 +1664,6 @@ abstract class AppLocalizations {
   /// **'자동'**
   String get playlistColorAuto;
 
-  /// No description provided for @colorSheetTitle.
-  ///
-  /// In ko, this message translates to:
-  /// **'색 바꾸기'**
-  String get colorSheetTitle;
-
   /// No description provided for @colorCustom.
   ///
   /// In ko, this message translates to:
@@ -1621,12 +1675,6 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'색 {n}'**
   String colorOption(int n);
-
-  /// No description provided for @albumColorTooltip.
-  ///
-  /// In ko, this message translates to:
-  /// **'앨범 색 바꾸기'**
-  String get albumColorTooltip;
 
   /// No description provided for @playlistSummaryEmpty.
   ///
@@ -1687,18 +1735,6 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'정보 편집'**
   String get trackMenuEditInfo;
-
-  /// No description provided for @trackMenuCover.
-  ///
-  /// In ko, this message translates to:
-  /// **'커버 이미지 설정'**
-  String get trackMenuCover;
-
-  /// No description provided for @trackMenuColor.
-  ///
-  /// In ko, this message translates to:
-  /// **'커버 색 바꾸기'**
-  String get trackMenuColor;
 
   /// No description provided for @trackMenuDelete.
   ///
@@ -2185,18 +2221,6 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'재생목록 삭제'**
   String get playlistMenuDelete;
-
-  /// No description provided for @playlistImagePick.
-  ///
-  /// In ko, this message translates to:
-  /// **'사진에서 고르기'**
-  String get playlistImagePick;
-
-  /// No description provided for @playlistImageReset.
-  ///
-  /// In ko, this message translates to:
-  /// **'기본 이미지로'**
-  String get playlistImageReset;
 
   /// No description provided for @playlistPlayEmpty.
   ///

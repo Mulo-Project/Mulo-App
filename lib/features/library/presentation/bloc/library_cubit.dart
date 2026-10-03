@@ -55,6 +55,27 @@ class LibraryCubit extends Cubit<LibraryState> {
   Future<bool> updateInfo(String trackId, TrackInfo info) =>
       _updateInfo(UpdateTrackInfoParams(trackId, info));
 
+  /// 앨범 이름을 바꾼다: [from] 앨범의 모든 곡의 앨범을 [to]로 고친다.
+  /// 이미 있는 앨범 이름이면 그 앨범과 합쳐진다. 바뀐 곡 수를 돌려준다.
+  Future<int> renameAlbum(String from, String to) async {
+    final name = to.trim();
+    if (name == from) return 0;
+    var changed = 0;
+    for (final t in state.tracks.where((t) => t.album == from).toList()) {
+      final ok = await updateInfo(
+        t.id,
+        TrackInfo(
+          title: t.title,
+          artist: t.artist,
+          album: name,
+          genre: t.genre,
+        ),
+      );
+      if (ok) changed++;
+    }
+    return changed;
+  }
+
   /// 음악 파일과 보관함 기록을 지운다. 파일을 못 지우면 false (기록은 그대로).
   Future<bool> delete(Track track) => _delete(track);
 

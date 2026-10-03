@@ -499,12 +499,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get themeIce => '아이스';
 
   @override
-  String get coverTitle => '커버 이미지';
-
-  @override
-  String get coverChange => '커버 이미지 바꾸기';
-
-  @override
   String get coverPick => '사진에서 고르기';
 
   @override
@@ -802,7 +796,43 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playlistCreate => '만들기';
 
   @override
-  String get playlistMenuImage => '이미지 바꾸기';
+  String get decorateTitle => '꾸미기';
+
+  @override
+  String get decorateImage => '이미지';
+
+  @override
+  String get decorateColor => '색';
+
+  @override
+  String get decorateAlbumTooltip => '앨범 꾸미기';
+
+  @override
+  String get decorateArtistTooltip => '아티스트 꾸미기';
+
+  @override
+  String get playlistMenuDecorate => '꾸미기';
+
+  @override
+  String get trackMenuDecorate => '꾸미기';
+
+  @override
+  String get albumRenameTooltip => '앨범 이름 바꾸기';
+
+  @override
+  String get albumRenameTitle => '앨범 이름 바꾸기';
+
+  @override
+  String get albumRenameHint => '앨범 이름';
+
+  @override
+  String get albumRenameSave => '바꾸기';
+
+  @override
+  String get albumRenameDone => '앨범 이름을 바꿨어요';
+
+  @override
+  String get artistNotFound => '아티스트를 찾을 수 없어요';
 
   @override
   String get playlistMenuColor => '카드 색';
@@ -811,18 +841,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playlistColorAuto => '자동';
 
   @override
-  String get colorSheetTitle => '색 바꾸기';
-
-  @override
   String get colorCustom => '색상 직접 고르기';
 
   @override
   String colorOption(int n) {
     return '색 $n';
   }
-
-  @override
-  String get albumColorTooltip => '앨범 색 바꾸기';
 
   @override
   String get playlistSummaryEmpty => '비어 있어요';
@@ -855,12 +879,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get trackMenuEditInfo => '정보 편집';
-
-  @override
-  String get trackMenuCover => '커버 이미지 설정';
-
-  @override
-  String get trackMenuColor => '커버 색 바꾸기';
 
   @override
   String get trackMenuDelete => '삭제';
@@ -1119,12 +1137,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get playlistMenuDelete => '재생목록 삭제';
-
-  @override
-  String get playlistImagePick => '사진에서 고르기';
-
-  @override
-  String get playlistImageReset => '기본 이미지로';
 
   @override
   String get playlistPlayEmpty => '재생할 곡이 없어요';

@@ -81,7 +81,7 @@ void main() {
     await pumpPlaylists(tester);
     await openMenu(tester);
     expect(find.byType(BottomSheet), findsNothing);
-    for (final label in ['전체 재생', '카드 색', '이미지 바꾸기', '이름 바꾸기', '재생목록 삭제']) {
+    for (final label in ['전체 재생', '꾸미기', '이름 바꾸기', '재생목록 삭제']) {
       expect(find.text(label), findsOneWidget, reason: label);
     }
   });
@@ -90,16 +90,16 @@ void main() {
     await pumpPlaylists(tester);
     await tester.longPress(find.text('출근길'));
     await tester.pumpAndSettle();
-    expect(find.text('카드 색'), findsOneWidget);
+    expect(find.text('꾸미기'), findsOneWidget);
     expect(find.text('재생목록 삭제'), findsOneWidget);
   });
 
-  testWidgets('카드 색은 시트에서 견본으로 고르고 자동으로 되돌린다', (tester) async {
+  testWidgets('꾸미기 시트에서 색 견본으로 고르고 자동으로 되돌린다', (tester) async {
     await pumpPlaylists(tester);
     await openMenu(tester);
-    await tester.tap(find.text('카드 색'));
+    await tester.tap(find.text('꾸미기'));
     await tester.pumpAndSettle();
-    expect(find.text('색 바꾸기'), findsOneWidget);
+    expect(find.text('색'), findsOneWidget);
     await tester.tap(find.bySemanticsLabel('색 7'));
     await tester.pumpAndSettle();
     expect(colors.saved['playlist:pl1'], ColorPicker.presets[6].toARGB32());
@@ -109,10 +109,10 @@ void main() {
     expect(colors.saved.containsKey('playlist:pl1'), isFalse);
   });
 
-  testWidgets('이미지는 따로 열리는 팝업에서 고른다', (tester) async {
+  testWidgets('꾸미기 시트에서 이미지를 고르고 기본 이미지로 되돌린다', (tester) async {
     await pumpPlaylists(tester, image: FakeImageSource('/tmp/pl.png'));
     await openMenu(tester);
-    await tester.tap(find.text('이미지 바꾸기'));
+    await tester.tap(find.text('꾸미기'));
     await tester.pumpAndSettle();
     expect(find.text('사진에서 고르기'), findsOneWidget);
     expect(find.text('기본 이미지로'), findsNothing);
@@ -120,11 +120,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(covers.saved['playlist:pl1'], '/tmp/pl.png');
 
-    // 이미지가 생기면 색 항목은 숨고, 기본 이미지로 되돌릴 수 있다.
-    await openMenu(tester);
-    expect(find.text('카드 색'), findsNothing);
-    await tester.tap(find.text('이미지 바꾸기'));
-    await tester.pumpAndSettle();
+    // 시트가 열린 채로 되돌릴 수 있고, 색 견본도 그대로 있다.
+    expect(find.bySemanticsLabel('색 1'), findsOneWidget);
     await tester.tap(find.text('기본 이미지로'));
     await tester.pumpAndSettle();
     expect(covers.saved, isEmpty);
@@ -150,12 +147,11 @@ void main() {
     expect(find.byTooltip('일시정지'), findsNWidgets(2));
   });
 
-  testWidgets('좋아요 목록 메뉴에는 색 · 이름 · 삭제가 없다', (tester) async {
+  testWidgets('좋아요 목록 메뉴에는 이름 · 삭제가 없다', (tester) async {
     await pumpPlaylists(tester);
     await openMenu(tester, card: 0);
     expect(find.text('전체 재생'), findsOneWidget);
-    expect(find.text('이미지 바꾸기'), findsOneWidget);
-    expect(find.text('카드 색'), findsNothing);
+    expect(find.text('꾸미기'), findsOneWidget);
     expect(find.text('이름 바꾸기'), findsNothing);
     expect(find.text('재생목록 삭제'), findsNothing);
   });

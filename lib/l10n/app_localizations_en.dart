@@ -508,12 +508,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themeIce => 'Ice';
 
   @override
-  String get coverTitle => 'Cover image';
-
-  @override
-  String get coverChange => 'Change cover';
-
-  @override
   String get coverPick => 'Choose from photos';
 
   @override
@@ -812,7 +806,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistCreate => 'Create';
 
   @override
-  String get playlistMenuImage => 'Change image';
+  String get decorateTitle => 'Customize';
+
+  @override
+  String get decorateImage => 'Image';
+
+  @override
+  String get decorateColor => 'Color';
+
+  @override
+  String get decorateAlbumTooltip => 'Customize album';
+
+  @override
+  String get decorateArtistTooltip => 'Customize artist';
+
+  @override
+  String get playlistMenuDecorate => 'Customize';
+
+  @override
+  String get trackMenuDecorate => 'Customize';
+
+  @override
+  String get albumRenameTooltip => 'Rename album';
+
+  @override
+  String get albumRenameTitle => 'Rename album';
+
+  @override
+  String get albumRenameHint => 'Album name';
+
+  @override
+  String get albumRenameSave => 'Rename';
+
+  @override
+  String get albumRenameDone => 'Album renamed';
+
+  @override
+  String get artistNotFound => 'Artist not found';
 
   @override
   String get playlistMenuColor => 'Card color';
@@ -821,18 +851,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistColorAuto => 'Auto';
 
   @override
-  String get colorSheetTitle => 'Change color';
-
-  @override
   String get colorCustom => 'Pick a custom hue';
 
   @override
   String colorOption(int n) {
     return 'Color $n';
   }
-
-  @override
-  String get albumColorTooltip => 'Change album color';
 
   @override
   String get playlistSummaryEmpty => 'Empty';
@@ -865,12 +889,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trackMenuEditInfo => 'Edit info';
-
-  @override
-  String get trackMenuCover => 'Cover image';
-
-  @override
-  String get trackMenuColor => 'Cover color';
 
   @override
   String get trackMenuDelete => 'Delete';
@@ -1136,12 +1154,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playlistMenuDelete => 'Delete playlist';
-
-  @override
-  String get playlistImagePick => 'Choose from photos';
-
-  @override
-  String get playlistImageReset => 'Use default image';
 
   @override
   String get playlistPlayEmpty => 'No songs to play';

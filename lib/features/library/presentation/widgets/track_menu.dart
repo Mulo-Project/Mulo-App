@@ -7,8 +7,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
-import '../../../covers/presentation/widgets/cover_color_sheet.dart';
-import '../../../covers/presentation/widgets/cover_sheet.dart';
+import '../../../covers/presentation/widgets/decorate_sheet.dart';
 import '../../../lyrics/presentation/bloc/lyrics_cubit.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../../player/presentation/widgets/player_style_sheet.dart';
@@ -24,8 +23,7 @@ enum _TrackAction {
   addToPlaylist,
   favorite,
   editInfo,
-  cover,
-  color,
+  decorate,
   delete,
   removeFromPlaylist,
   deleteFile,
@@ -106,14 +104,9 @@ Future<void> showTrackMenu(
         label: l10n.trackMenuEditInfo,
       ),
       AppMenuItem(
-        value: _TrackAction.cover,
-        icon: Icons.image_rounded,
-        label: l10n.trackMenuCover,
-      ),
-      AppMenuItem(
-        value: _TrackAction.color,
-        icon: Icons.palette_rounded,
-        label: l10n.trackMenuColor,
+        value: _TrackAction.decorate,
+        icon: Icons.auto_awesome_rounded,
+        label: l10n.trackMenuDecorate,
       ),
       if (playlistId == null)
         AppMenuItem(
@@ -162,17 +155,10 @@ Future<void> showTrackMenu(
       }
     case _TrackAction.editInfo:
       await _editInfo(context, track);
-    case _TrackAction.cover:
-      await showCoverSheet(
+    case _TrackAction.decorate:
+      await showDecorateSheet(
         context,
         coverKey: CoverKey.track(track.id),
-        title: track.title,
-        tone: toneFor(track.id),
-      );
-    case _TrackAction.color:
-      await showCoverColorSheet(
-        context,
-        colorKey: CoverKey.track(track.id),
         title: track.title,
         tone: toneFor(track.id),
       );
