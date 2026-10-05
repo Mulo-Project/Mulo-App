@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 
 import '../../features/covers/di.dart';
 import '../../features/downloads/di.dart';
+import '../../features/engine/di.dart';
 import '../../features/home/di.dart';
 import '../../features/library/di.dart';
 import '../../features/lyrics/di.dart';
@@ -30,5 +31,6 @@ void configureDependencies({AppDatabase? database}) {
   registerHome(sl);
   registerPlaylists(sl);
   registerDownloads(sl);
+  registerEngine(sl);
   registerSearch(sl);
 }

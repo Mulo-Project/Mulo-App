@@ -100,6 +100,18 @@
   "settingsEngine": "Download engine",
   "settingsEngineVersion": "Current {current} · Latest {latest}",
   "settingsEngineUpdate": "Update",
+  "settingsEngineInstall": "Install",
+  "settingsEngineNotInstalled": "yt-dlp is missing. Install it to search and download.",
+  "settingsEngineInstalling": "Downloading…",
+  "settingsEngineFailed": "Could not install. Check your internet connection.",
+  "settingsEngineInstalled": "yt-dlp {version}",
+  "@settingsEngineInstalled": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "settingsSecurity": "Security",
   "settingsAppLock": "App lock",
   "settingsChangePin": "Change PIN",

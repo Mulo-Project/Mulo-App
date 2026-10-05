@@ -306,6 +306,23 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsEngineUpdate => '업데이트';
 
   @override
+  String get settingsEngineInstall => '설치';
+
+  @override
+  String get settingsEngineNotInstalled => 'yt-dlp가 없어요. 설치하면 검색하고 받을 수 있어요.';
+
+  @override
+  String get settingsEngineInstalling => '내려받는 중…';
+
+  @override
+  String get settingsEngineFailed => '설치하지 못했어요. 인터넷 연결을 확인해 주세요.';
+
+  @override
+  String settingsEngineInstalled(String version) {
+    return 'yt-dlp $version';
+  }
+
+  @override
   String get settingsSecurity => '보안';
 
   @override

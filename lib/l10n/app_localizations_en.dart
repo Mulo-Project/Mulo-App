@@ -309,6 +309,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsEngineUpdate => 'Update';
 
   @override
+  String get settingsEngineInstall => 'Install';
+
+  @override
+  String get settingsEngineNotInstalled =>
+      'yt-dlp is missing. Install it to search and download.';
+
+  @override
+  String get settingsEngineInstalling => 'Downloading…';
+
+  @override
+  String get settingsEngineFailed =>
+      'Could not install. Check your internet connection.';
+
+  @override
+  String settingsEngineInstalled(String version) {
+    return 'yt-dlp $version';
+  }
+
+  @override
   String get settingsSecurity => 'Security';
 
   @override

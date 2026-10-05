@@ -7,6 +7,9 @@ import 'package:music_download_play_app/features/lyrics/domain/entities/lyrics.d
 import 'package:music_download_play_app/features/lyrics/domain/repositories/lyrics_repository.dart';
 import 'package:music_download_play_app/features/covers/domain/repositories/cover_repository.dart';
 import 'package:music_download_play_app/features/downloads/di.dart';
+import 'package:music_download_play_app/features/engine/di.dart';
+import 'package:music_download_play_app/features/engine/domain/entities/engine_status.dart';
+import 'package:music_download_play_app/features/engine/domain/repositories/engine_manager.dart';
 import 'package:music_download_play_app/features/downloads/domain/entities/download_item.dart';
 import 'package:music_download_play_app/features/downloads/domain/entities/download_request.dart';
 import 'package:music_download_play_app/features/downloads/domain/repositories/download_queue_repository.dart';
@@ -530,6 +533,7 @@ Future<void> setUpTestDependencies({
   PlayHistoryRepository? history,
   DownloadQueueRepository? downloads,
   DownloaderEngine? engine,
+  EngineManager? engineManager,
   AudioPlayerRepository? audio,
   DownloadSettingsRepository? downloadSettings,
   PlaylistRepository? playlists,
@@ -549,6 +553,7 @@ Future<void> setUpTestDependencies({
   registerHome(sl);
   registerPlaylists(sl);
   registerDownloads(sl);
+  registerEngine(sl);
   registerSearch(sl);
   sl.allowReassignment = true;
   sl
@@ -602,6 +607,9 @@ Future<void> setUpTestDependencies({
     )
     ..registerLazySingleton<DownloadSettingsRepository>(
       () => downloadSettings ?? MemoryDownloadSettings(),
+    )
+    ..registerLazySingleton<EngineManager>(
+      () => engineManager ?? FakeEngineManager(),
     )
     ..registerLazySingleton<DownloaderEngine>(
       () => engine ?? FakeDownloaderEngine(),
@@ -710,5 +718,35 @@ class FakeDownloaderEngine implements DownloaderEngine {
     infos.add(url);
     if (error != null) throw error!;
     return info!;
+  }
+}
+
+/// 설치 여부만 흉내 내는 엔진 관리자. [installed]가 false면 [install]로 설치된다.
+class FakeEngineManager implements EngineManager {
+  FakeEngineManager({
+    this.supported = true,
+    this.installed = false,
+    this.failInstall = false,
+  });
+
+  final bool supported;
+  bool installed;
+  final bool failInstall;
+  int installs = 0;
+
+  @override
+  Future<EngineStatus> status() async => EngineStatus(
+    supported: supported,
+    installed: installed,
+    version: installed ? '2026.01.01' : null,
+    managed: installed,
+  );
+
+  @override
+  Future<EngineStatus> install() async {
+    installs++;
+    if (failInstall) throw Exception('fail');
+    installed = true;
+    return status();
   }
 }

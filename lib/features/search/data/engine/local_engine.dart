@@ -33,16 +33,18 @@ Future<({int exitCode, String stdout, String stderr})> _defaultRun(
 /// 로컬 모드: 이 기기에서 yt-dlp를 직접 실행해 찾는다 (데스크톱).
 /// Android 로컬(full 빌드)은 아직 없다.
 class LocalEngine implements DownloaderEngine {
-  LocalEngine({this.executable = 'yt-dlp', RunProcess? run})
-    : _run = run ?? _defaultRun;
+  LocalEngine({Future<String> Function()? resolveExecutable, RunProcess? run})
+    : _resolve = resolveExecutable ?? (() async => 'yt-dlp'),
+      _run = run ?? _defaultRun;
 
-  final String executable;
+  /// 실행할 yt-dlp 경로 (앱이 받은 것 또는 PATH의 `yt-dlp`).
+  final Future<String> Function() _resolve;
   final RunProcess _run;
 
   /// yt-dlp를 실행할 수 있는지 (`--version`).
   Future<bool> isAvailable() async {
     try {
-      final r = await _run(executable, const ['--version']);
+      final r = await _run(await _resolve(), const ['--version']);
       return r.exitCode == 0;
     } on ProcessException {
       return false;
@@ -105,7 +107,7 @@ class LocalEngine implements DownloaderEngine {
   Future<String> _exec(List<String> args) async {
     final ({int exitCode, String stdout, String stderr}) r;
     try {
-      r = await _run(executable, args);
+      r = await _run(await _resolve(), args);
     } on ProcessException {
       throw const EngineException(EngineFailure.unavailable, 'yt-dlp');
     }

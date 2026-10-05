@@ -131,6 +131,18 @@
     }
   },
   "settingsEngineUpdate": "업데이트",
+  "settingsEngineInstall": "설치",
+  "settingsEngineNotInstalled": "yt-dlp가 없어요. 설치하면 검색하고 받을 수 있어요.",
+  "settingsEngineInstalling": "내려받는 중…",
+  "settingsEngineFailed": "설치하지 못했어요. 인터넷 연결을 확인해 주세요.",
+  "settingsEngineInstalled": "yt-dlp {version}",
+  "@settingsEngineInstalled": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "settingsSecurity": "보안",
   "settingsAppLock": "앱 잠금",
   "settingsChangePin": "PIN 바꾸기",

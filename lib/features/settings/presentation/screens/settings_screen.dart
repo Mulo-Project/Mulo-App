@@ -5,9 +5,11 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router.dart';
 import '../../../../core/app_info.dart';
 import '../../../../core/design/design.dart';
+import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../downloads/domain/entities/download_options.dart';
 import '../../../downloads/presentation/bloc/download_settings_cubit.dart';
+import '../../../engine/presentation/bloc/engine_cubit.dart';
 import '../../../library/presentation/widgets/loaded_folders_tile.dart';
 import '../../../security/presentation/bloc/app_lock_cubit.dart';
 import '../../../security/presentation/screens/pin_entry_screen.dart';
@@ -95,6 +97,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       onTap: context.read<DownloadSettingsCubit>().pickAndSave,
                     ),
                     const LoadedFoldersTile(),
+                    const _EngineRow(),
                     SettingRow(
                       title: l10n.settingsQuality,
                       below: SegmentedPills<Quality>(
@@ -261,3 +264,51 @@ String presetLabel(AppLocalizations l10n, ThemePreset preset) =>
       ThemePreset.gold => l10n.themeGold,
       ThemePreset.ice => l10n.themeIce,
     };
+
+/// 다운로드 엔진(yt-dlp) 줄: 설치 여부 · 버전, 설치 · 업데이트 버튼 (데스크톱만).
+class _EngineRow extends StatefulWidget {
+  const _EngineRow();
+
+  @override
+  State<_EngineRow> createState() => _EngineRowState();
+}
+
+class _EngineRowState extends State<_EngineRow> {
+  late final EngineCubit _cubit = sl<EngineCubit>()..load();
+
+  @override
+  void dispose() {
+    _cubit.close();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return BlocBuilder<EngineCubit, EngineState>(
+      bloc: _cubit,
+      builder: (context, state) {
+        final status = state.status;
+        if (status == null || !status.supported) return const SizedBox.shrink();
+        final description = state.busy
+            ? l10n.settingsEngineInstalling
+            : state.failed
+            ? l10n.settingsEngineFailed
+            : status.installed
+            ? l10n.settingsEngineInstalled(status.version ?? '')
+            : l10n.settingsEngineNotInstalled;
+        return SettingRow(
+          title: l10n.settingsEngine,
+          description: description,
+          trailing: PillButton(
+            compact: true,
+            label: status.installed
+                ? l10n.settingsEngineUpdate
+                : l10n.settingsEngineInstall,
+            onPressed: state.busy ? null : _cubit.install,
+          ),
+        );
+      },
+    );
+  }
+}

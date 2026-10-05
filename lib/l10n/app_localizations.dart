@@ -662,6 +662,36 @@ abstract class AppLocalizations {
   /// **'업데이트'**
   String get settingsEngineUpdate;
 
+  /// No description provided for @settingsEngineInstall.
+  ///
+  /// In ko, this message translates to:
+  /// **'설치'**
+  String get settingsEngineInstall;
+
+  /// No description provided for @settingsEngineNotInstalled.
+  ///
+  /// In ko, this message translates to:
+  /// **'yt-dlp가 없어요. 설치하면 검색하고 받을 수 있어요.'**
+  String get settingsEngineNotInstalled;
+
+  /// No description provided for @settingsEngineInstalling.
+  ///
+  /// In ko, this message translates to:
+  /// **'내려받는 중…'**
+  String get settingsEngineInstalling;
+
+  /// No description provided for @settingsEngineFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'설치하지 못했어요. 인터넷 연결을 확인해 주세요.'**
+  String get settingsEngineFailed;
+
+  /// No description provided for @settingsEngineInstalled.
+  ///
+  /// In ko, this message translates to:
+  /// **'yt-dlp {version}'**
+  String settingsEngineInstalled(String version);
+
   /// No description provided for @settingsSecurity.
   ///
   /// In ko, this message translates to:
