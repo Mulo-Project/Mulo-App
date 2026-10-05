@@ -2,13 +2,19 @@ import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 
+import 'android_yt_dlp.dart';
+
 import '../domain/entities/engine_status.dart';
 import '../domain/repositories/engine_manager.dart';
 
 /// 데스크톱에서 yt-dlp 공식 릴리스를 앱 전용 폴더(`<앱 데이터>/engine`)에 받아 둔다.
 /// 앱이 받은 파일이 없으면 PATH의 `yt-dlp`를 쓴다.
+/// Android(full 빌드)는 APK 안의 yt-dlp를 쓰고, "설치"는 그 yt-dlp를 최신으로 올린다.
 class YtDlpManager implements EngineManager {
-  YtDlpManager({this.releaseBase = _release});
+  YtDlpManager({this.releaseBase = _release, AndroidYtDlp? android})
+    : _android = android ?? AndroidYtDlp();
+
+  final AndroidYtDlp _android;
 
   static const _release =
       'https://github.com/yt-dlp/yt-dlp/releases/latest/download';
@@ -42,6 +48,17 @@ class YtDlpManager implements EngineManager {
 
   @override
   Future<EngineStatus> status() async {
+    if (Platform.isAndroid) {
+      if (!await _android.isAvailable()) {
+        return const EngineStatus(supported: false);
+      }
+      final version = await _android.version();
+      return EngineStatus(
+        installed: version != null,
+        version: version,
+        managed: true,
+      );
+    }
     if (!_desktop) return const EngineStatus(supported: false);
     final exe = await executablePath();
     final managed = exe != 'yt-dlp';
@@ -62,8 +79,12 @@ class YtDlpManager implements EngineManager {
 
   @override
   Future<EngineStatus> install() async {
+    if (Platform.isAndroid) {
+      await _android.update();
+      return status();
+    }
     if (!_desktop) {
-      throw UnsupportedError('engine install is desktop only');
+      throw UnsupportedError('engine install is desktop and Android only');
     }
     final target = await _managedFile();
     await target.parent.create(recursive: true);

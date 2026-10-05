@@ -351,3 +351,11 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - 설정 > 다운로드에 "다운로드 엔진" 줄을 더했다 (카드 없이 기존 설정 줄). 설치 여부 · 버전을 보여 주고 "설치"(이미 있으면 "업데이트") 버튼이 yt-dlp 공식 최신 릴리스(GitHub `releases/latest/download`)를 앱 데이터 폴더 `engine/`에 받는다. 새 패키지 없음 (`dart:io`, 기존 `path_provider`).
 - `LocalEngine`은 앱이 받은 yt-dlp가 있으면 그것을, 없으면 PATH의 `yt-dlp`를 쓴다. `RoutingDownloaderEngine`은 로컬을 못 쓰는 동안 호출마다 다시 확인하므로 설치 직후 앱 재시작 없이 로컬로 바뀐다.
 - Android에서는 줄이 숨겨진다 (로컬 Android 엔진은 별도 작업). 서버의 최신 버전 비교 · 자동 업데이트 알림은 하지 않는다 (필요하면 "업데이트"를 누른다).
+
+## D-056 · 2026-10-06 · Android 로컬 엔진: flavor lite/full + youtubedl-android
+- Android 빌드에 flavor `edition`(lite · full)을 더했다. `pubspec.yaml`의 `default-flavor: full`이라 `flutter run` · `flutter build apk --debug`는 그대로 full로 빌드된다. lite는 `--flavor lite`.
+- full만 `io.github.junkfood02.youtubedl-android:library:0.18.1`(파이썬 · yt-dlp를 APK에 포함, GPL-3.0)을 쓴다. `jniLibs.useLegacyPackaging = true`가 필요하다. Android 10+는 내려받은 실행 파일을 실행할 수 없어서 desktop처럼 받아 쓰지 못한다.
+- 네이티브 채널 `music_app/ytdlp` (`YtDlpChannel`)는 flavor별 소스(`src/full` · `src/lite`)에 같은 이름으로 둔다. lite는 `available`이 false인 빈 구현. 메서드: `available` · `version` · `run(url, options)` · `update`.
+- Dart는 `AndroidYtDlp`(engine 기능 data)가 채널을 감싸고, `LocalEngine`이 `Process.run` 대신 `AndroidYtDlp.run`을 쓴다. `RoutingDownloaderEngine`은 Android에서도 로컬이 되면 로컬, 아니면 서버.
+- 설정의 엔진 줄은 Android full에서 "업데이트"(yt-dlp를 최신 안정판으로)로 보이고, lite에서는 숨겨진다.
+- 첫 실행은 파이썬을 풀어서 몇 초 걸린다 (첫 검색 · 엔진 줄 확인 때). ffmpeg는 오디오 추출이 필요한 받기 작업에서 더한다.
