@@ -803,6 +803,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sourceWeb => 'Web';
 
   @override
+  String get searchFilterAll => 'All';
+
+  @override
   String videoCategory(String name) {
     String _temp0 = intl.Intl.selectLogic(name, {
       'FilmAnimation': 'Film & Animation',

@@ -1556,6 +1556,12 @@ abstract class AppLocalizations {
   /// **'웹'**
   String get sourceWeb;
 
+  /// No description provided for @searchFilterAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체'**
+  String get searchFilterAll;
+
   /// No description provided for @videoCategory.
   ///
   /// In ko, this message translates to:

@@ -790,6 +790,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get sourceWeb => '웹';
 
   @override
+  String get searchFilterAll => '전체';
+
+  @override
   String videoCategory(String name) {
     String _temp0 = intl.Intl.selectLogic(name, {
       'FilmAnimation': '영화/애니메이션',

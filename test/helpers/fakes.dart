@@ -31,6 +31,7 @@ import 'package:music_download_play_app/features/playlists/di.dart';
 import 'package:music_download_play_app/features/playlists/domain/entities/playlist.dart';
 import 'package:music_download_play_app/features/playlists/domain/repositories/playlist_repository.dart';
 import 'package:music_download_play_app/features/search/di.dart';
+import 'package:music_download_play_app/features/search/domain/entities/engine_exception.dart';
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
 import 'package:music_download_play_app/features/search/domain/entities/search_source.dart';
 import 'package:music_download_play_app/features/search/domain/repositories/downloader_engine.dart';
@@ -691,12 +692,16 @@ class FakeDownloaderEngine implements DownloaderEngine {
   FakeDownloaderEngine({
     this.pages = const [SearchPage(items: [], hasNext: false)],
     this.info,
+    this.infoByUrl = const {},
     this.error,
   });
 
   /// 쪽 번호 순서대로 돌려줄 검색 결과.
   final List<SearchPage> pages;
   final MediaInfo? info;
+
+  /// 주소별로 따로 돌려줄 곡 정보 (없으면 [info], 그것도 없으면 못 찾음).
+  final Map<String, MediaInfo> infoByUrl;
   final Object? error;
   final searches = <(String, SearchSource, int)>[];
   final infos = <String>[];
@@ -717,7 +722,9 @@ class FakeDownloaderEngine implements DownloaderEngine {
   Future<MediaInfo> fetchInfo(String url) async {
     infos.add(url);
     if (error != null) throw error!;
-    return info!;
+    final found = infoByUrl[url] ?? info;
+    if (found == null) throw const EngineException(EngineFailure.notFound);
+    return found;
   }
 }
 

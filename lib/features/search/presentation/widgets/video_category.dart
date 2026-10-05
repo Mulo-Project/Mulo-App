@@ -19,9 +19,6 @@ const _categoryKeys = {
   'Nonprofits & Activism': 'Nonprofits',
 };
 
-/// 곡에 붙은 첫 분류를 화면에 보일 이름으로 (없으면 null). 모르는 분류는 원문 그대로.
-String? categoryLabel(AppLocalizations l10n, List<String> categories) {
-  if (categories.isEmpty) return null;
-  final name = categories.first;
-  return l10n.videoCategory(_categoryKeys[name] ?? name);
-}
+/// 유튜브 분류를 화면에 보일 이름으로. 모르는 분류는 원문 그대로.
+String categoryLabel(AppLocalizations l10n, String name) =>
+    l10n.videoCategory(_categoryKeys[name] ?? name);

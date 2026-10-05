@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -16,6 +18,7 @@ class SearchState extends Equatable {
     this.loadingMore = false,
     this.playlistTitle,
     this.failure,
+    this.category,
   });
 
   final SearchStatus status;
@@ -29,6 +32,36 @@ class SearchState extends Equatable {
   final String? playlistTitle;
   final EngineFailure? failure;
 
+  /// 고른 분류 필터. null이면 전체.
+  final String? category;
+
+  /// 지금까지 알아낸 분류들 (처음 나온 순서).
+  List<String> get categories =>
+      {for (final h in items) ...h.categories}.toList();
+
+  /// 분류 필터를 적용한 목록.
+  List<MediaHit> get visibleItems => category == null
+      ? items
+      : [
+          for (final h in items)
+            if (h.categories.contains(category)) h,
+        ];
+
+  SearchState copyWith({
+    List<MediaHit>? items,
+    bool? hasNext,
+    bool? loadingMore,
+    String? Function()? category,
+  }) => SearchState(
+    status: status,
+    items: items ?? this.items,
+    hasNext: hasNext ?? this.hasNext,
+    loadingMore: loadingMore ?? this.loadingMore,
+    playlistTitle: playlistTitle,
+    failure: failure,
+    category: category == null ? this.category : category(),
+  );
+
   @override
   List<Object?> get props => [
     status,
@@ -37,6 +70,7 @@ class SearchState extends Equatable {
     loadingMore,
     playlistTitle,
     failure,
+    category,
   ];
 }
 
@@ -53,6 +87,12 @@ class SearchCubit extends Cubit<SearchState> {
   SearchSource _source = SearchSource.youtube;
   int _page = 0;
 
+  /// 분류를 알아보려고 이미 불러 본 곡 주소 (실패해도 다시 하지 않는다).
+  final _probed = <String>{};
+
+  /// 분류를 한 번에 알아보는 곡 수.
+  static const _probeParallel = 3;
+
   /// 입력이 곡 주소인지 (http · https 주소).
   static bool isUrl(String text) {
     final uri = Uri.tryParse(text.trim());
@@ -67,6 +107,7 @@ class SearchCubit extends Cubit<SearchState> {
     _query = query;
     _source = source;
     _page = 0;
+    _probed.clear();
     if (query.isEmpty) {
       emit(const SearchState());
       return;
@@ -87,6 +128,7 @@ class SearchCubit extends Cubit<SearchState> {
             playlistTitle: title,
           ),
         });
+        if (info is PlaylistInfo) unawaited(_probeCategories(id));
       } else {
         final page = await _search(SearchParams(query, source));
         if (id != _request) return;
@@ -97,6 +139,7 @@ class SearchCubit extends Cubit<SearchState> {
             hasNext: page.hasNext,
           ),
         );
+        unawaited(_probeCategories(id));
       }
     } on EngineException catch (e) {
       if (id != _request) return;
@@ -109,14 +152,7 @@ class SearchCubit extends Cubit<SearchState> {
     final s = state;
     if (s.status != SearchStatus.loaded || !s.hasNext || s.loadingMore) return;
     final id = _request;
-    emit(
-      SearchState(
-        status: SearchStatus.loaded,
-        items: s.items,
-        hasNext: true,
-        loadingMore: true,
-      ),
-    );
+    emit(s.copyWith(hasNext: true, loadingMore: true));
     try {
       final page = await _search(
         SearchParams(_query, _source, page: _page + 1),
@@ -125,18 +161,58 @@ class SearchCubit extends Cubit<SearchState> {
       _page++;
       final known = {for (final h in s.items) h.id};
       emit(
-        SearchState(
-          status: SearchStatus.loaded,
+        s.copyWith(
           items: [...s.items, ...page.items.where((h) => known.add(h.id))],
           hasNext: page.hasNext,
+          loadingMore: false,
         ),
       );
+      unawaited(_probeCategories(id));
     } on EngineException {
       if (id != _request) return;
       // 이어 보기 실패는 이미 나온 결과를 두고 다시 누를 수 있게 한다.
-      emit(
-        SearchState(status: SearchStatus.loaded, items: s.items, hasNext: true),
-      );
+      emit(s.copyWith(hasNext: true, loadingMore: false));
     }
+  }
+
+  /// 분류 필터를 고른다 (null이면 전체). 이미 고른 것을 다시 누르면 푼다.
+  void selectCategory(String? category) {
+    final now = state.category == category ? null : category;
+    emit(state.copyWith(category: () => now));
+  }
+
+  /// 목록 항목은 분류가 비어 있어서, 곡마다 정보를 읽어 분류를 채운다.
+  /// 몇 곡씩 뒤에서 읽고, 읽은 곡부터 [categories]에 나타난다.
+  Future<void> _probeCategories(int request) async {
+    Future<void> worker() async {
+      while (request == _request && !isClosed) {
+        final next = state.items
+            .where((h) => h.categories.isEmpty && !_probed.contains(h.url))
+            .firstOrNull;
+        if (next == null) return;
+        _probed.add(next.url);
+        try {
+          final info = await _info(next.url);
+          if (request != _request || isClosed) return;
+          final cats = switch (info) {
+            VideoInfo(:final hit) => hit.categories,
+            PlaylistInfo() => const <String>[],
+          };
+          if (cats.isEmpty) continue;
+          emit(
+            state.copyWith(
+              items: [
+                for (final h in state.items)
+                  h.url == next.url ? h.withCategories(cats) : h,
+              ],
+            ),
+          );
+        } on EngineException {
+          // 분류를 못 읽은 곡은 그냥 필터에 안 걸린다.
+        }
+      }
+    }
+
+    await Future.wait([for (var i = 0; i < _probeParallel; i++) worker()]);
   }
 }

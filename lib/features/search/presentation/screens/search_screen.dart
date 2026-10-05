@@ -200,7 +200,8 @@ class _Results extends StatelessWidget {
           padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
           child: Text(label, style: text.titleMedium),
         ),
-        for (final hit in state.items) _HitTile(hit: hit),
+        if (state.categories.isNotEmpty) const _CategoryFilter(),
+        for (final hit in state.visibleItems) _HitTile(hit: hit),
         if (state.hasNext)
           Padding(
             padding: const EdgeInsets.only(top: AppSpacing.sm),
@@ -219,6 +220,33 @@ class _Results extends StatelessWidget {
   }
 }
 
+/// 결과 위의 분류 필터: 전체 + 지금까지 알아낸 유튜브 분류.
+/// 분류는 곡마다 뒤에서 읽기 때문에 시간이 지나며 늘어난다.
+class _CategoryFilter extends StatelessWidget {
+  const _CategoryFilter();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final cubit = context.read<SearchCubit>();
+    final state = context.watch<SearchCubit>().state;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: AppSpacing.screen,
+        child: SegmentedPills<String?>(
+          values: [null, ...state.categories],
+          selected: state.category,
+          labelOf: (c) =>
+              c == null ? l10n.searchFilterAll : categoryLabel(l10n, c),
+          onChanged: cubit.selectCategory,
+        ),
+      ),
+    );
+  }
+}
+
 class _HitTile extends StatelessWidget {
   const _HitTile({required this.hit});
 
@@ -230,7 +258,6 @@ class _HitTile extends StatelessWidget {
     final subtitle = [
       if (hit.uploader.isNotEmpty) hit.uploader,
       if (hit.duration != null) formatDuration(hit.duration!),
-      ?categoryLabel(l10n, hit.categories),
       if (hit.downloaded) l10n.alreadyDownloaded,
     ].join(' · ');
     final thumb = hit.thumbnailUrl;

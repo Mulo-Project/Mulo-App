@@ -16,8 +16,12 @@ import 'package:music_download_play_app/features/search/presentation/bloc/search
 
 import '../../helpers/fakes.dart';
 
-MediaHit _hit(String id) =>
-    MediaHit(id: id, title: 'Title $id', url: 'https://example.com/$id');
+MediaHit _hit(String id, [List<String> categories = const []]) => MediaHit(
+  id: id,
+  title: 'Title $id',
+  url: 'https://example.com/$id',
+  categories: categories,
+);
 
 SearchCubit _cubit(FakeDownloaderEngine e) =>
     SearchCubit(SearchTracks(e), FetchMediaInfo(e));
@@ -41,6 +45,43 @@ void main() {
       expect(cubit.state.items.map((h) => h.id), ['a', 'b', 'c']); // 중복 b 제외
       expect(cubit.state.hasNext, isFalse);
       expect(engine.searches.last.$3, 1);
+    });
+
+    test('검색 결과의 분류를 뒤에서 채워 필터할 수 있다', () async {
+      final engine = FakeDownloaderEngine(
+        pages: [
+          SearchPage(items: [_hit('a'), _hit('b'), _hit('c')], hasNext: false),
+        ],
+        infoByUrl: {
+          'https://example.com/a': VideoInfo(_hit('a', ['Music'])),
+          'https://example.com/b': VideoInfo(_hit('b', ['Gaming'])),
+          // c는 분류를 못 읽는다.
+        },
+      );
+      final cubit = _cubit(engine);
+      await cubit.submit('q', SearchSource.youtube);
+      await pumpEventQueue();
+
+      expect(cubit.state.categories, ['Music', 'Gaming']);
+      expect(cubit.state.visibleItems.length, 3);
+
+      cubit.selectCategory('Gaming');
+      expect(cubit.state.visibleItems.map((h) => h.id), ['b']);
+
+      cubit.selectCategory('Gaming'); // 다시 누르면 풀린다
+      expect(cubit.state.category, isNull);
+      expect(cubit.state.visibleItems.length, 3);
+    });
+
+    test('곡 하나 주소는 이미 분류가 있어 다시 읽지 않는다', () async {
+      final engine = FakeDownloaderEngine(
+        info: VideoInfo(_hit('v', ['Music'])),
+      );
+      final cubit = _cubit(engine);
+      await cubit.submit('https://youtu.be/v', SearchSource.youtube);
+      await pumpEventQueue();
+      expect(engine.infos, ['https://youtu.be/v']);
+      expect(cubit.state.categories, ['Music']);
     });
 
     test('URL이면 정보를 불러온다 (곡 하나 · 재생목록)', () async {
@@ -350,26 +391,35 @@ void main() {
       expect(find.widgetWithText(TextField, 'Found Song'), findsOneWidget);
     });
 
-    testWidgets('분류가 있는 곡은 목록에 분류 이름이 함께 보인다', (tester) async {
+    testWidgets('분류 필터를 고르면 그 분류의 곡만 남는다', (tester) async {
       final engine = FakeDownloaderEngine(
-        info: const VideoInfo(
-          MediaHit(
-            id: 'v',
-            title: 'Tagged Song',
-            url: 'https://example.com/v',
-            categories: ['Music'],
-          ),
-        ),
+        pages: [
+          SearchPage(items: [_hit('a'), _hit('b')], hasNext: false),
+        ],
+        infoByUrl: {
+          'https://example.com/a': VideoInfo(_hit('a', ['Music'])),
+          'https://example.com/b': VideoInfo(_hit('b', ['Gaming'])),
+        },
       );
       await setUpTestDependencies(engine: engine);
       await openSearch(tester);
 
-      await tester.enterText(find.byType(TextField), 'https://example.com/v');
+      await tester.enterText(find.byType(TextField), 'hello');
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pumpAndSettle();
 
-      expect(find.text('Tagged Song'), findsOneWidget);
-      expect(find.textContaining('Music'), findsOneWidget);
+      expect(find.text('Title a'), findsOneWidget);
+      expect(find.text('Title b'), findsOneWidget);
+      expect(find.text('All'), findsOneWidget);
+
+      await tester.tap(find.text('Gaming'));
+      await tester.pumpAndSettle();
+      expect(find.text('Title a'), findsNothing);
+      expect(find.text('Title b'), findsOneWidget);
+
+      await tester.tap(find.text('All'));
+      await tester.pumpAndSettle();
+      expect(find.text('Title a'), findsOneWidget);
     });
 
     testWidgets('쓸 수 있는 엔진이 없으면 안내를 보여 준다', (tester) async {
