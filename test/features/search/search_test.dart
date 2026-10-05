@@ -10,6 +10,7 @@ import 'package:music_download_play_app/features/search/data/engine/routing_engi
 import 'package:music_download_play_app/features/search/data/engine/server_engine.dart';
 import 'package:music_download_play_app/features/search/domain/entities/engine_exception.dart';
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
+import 'package:music_download_play_app/features/search/domain/entities/search_sort.dart';
 import 'package:music_download_play_app/features/search/domain/entities/search_source.dart';
 import 'package:music_download_play_app/features/search/domain/usecases/search_usecases.dart';
 import 'package:music_download_play_app/features/search/presentation/bloc/search_cubit.dart';
@@ -73,9 +74,62 @@ void main() {
       cubit.selectCategory('Gaming');
       expect(cubit.state.visibleItems.map((h) => h.id), ['b']);
 
-      cubit.selectCategory('Gaming'); // 다시 누르면 풀린다
+      cubit.selectCategory(null);
       expect(cubit.state.category, isNull);
       expect(cubit.state.visibleItems.length, 3);
+    });
+
+    test('이미 알아낸 곡의 분류는 다음 검색에서 다시 읽지 않는다', () async {
+      final engine = FakeDownloaderEngine(
+        pages: [
+          SearchPage(items: [_hit('a')], hasNext: false),
+        ],
+        infoByUrl: {
+          'https://example.com/a': VideoInfo(_hit('a', ['Music'])),
+        },
+      );
+      final cubit = _cubit(engine);
+      await cubit.submit('q', SearchSource.youtube);
+      await pumpEventQueue();
+      expect(engine.infos, ['https://example.com/a']);
+
+      await cubit.submit('q2', SearchSource.youtube);
+      await pumpEventQueue();
+      expect(engine.infos.length, 1); // 두 번째 검색은 기억한 분류를 쓴다
+      expect(cubit.state.items.single.categories, ['Music']);
+    });
+
+    test('정렬: 짧은 순 · 긴 순 · 제목순 (길이를 모르는 곡은 맨 뒤)', () async {
+      MediaHit hit(String id, String title, int? sec) => MediaHit(
+        id: id,
+        title: title,
+        url: 'https://example.com/$id',
+        duration: sec == null ? null : Duration(seconds: sec),
+      );
+      final engine = FakeDownloaderEngine(
+        pages: [
+          SearchPage(
+            items: [
+              hit('a', 'b song', 200),
+              hit('b', 'A song', null),
+              hit('c', 'c song', 100),
+            ],
+            hasNext: false,
+          ),
+        ],
+      );
+      final cubit = _cubit(engine);
+      await cubit.submit('q', SearchSource.youtube);
+      await pumpEventQueue();
+      List<String> ids() => cubit.state.visibleItems.map((h) => h.id).toList();
+
+      expect(ids(), ['a', 'b', 'c']); // 관련도순 = 찾은 순서
+      cubit.selectSort(SearchSort.shortest);
+      expect(ids(), ['c', 'a', 'b']);
+      cubit.selectSort(SearchSort.longest);
+      expect(ids(), ['a', 'c', 'b']);
+      cubit.selectSort(SearchSort.title);
+      expect(ids(), ['b', 'a', 'c']);
     });
 
     test('곡 하나 주소는 이미 분류가 있어 다시 읽지 않는다', () async {
@@ -416,16 +470,44 @@ void main() {
       expect(find.text('Title a'), findsOneWidget);
       expect(find.text('Title b'), findsOneWidget);
       expect(find.text('All'), findsOneWidget);
-      expect(find.text('Music'), findsOneWidget); // 고정 목록이라 바로 보인다
 
-      await tester.tap(find.text('Gaming'));
+      await tester.tap(find.text('All')); // 필터 메뉴를 연다
+      await tester.pumpAndSettle();
+      expect(find.text('Music'), findsOneWidget); // 고정 목록이라 읽기 전에도 있다
+      await tester.tap(find.text('Gaming').last);
       await tester.pumpAndSettle();
       expect(find.text('Title a'), findsNothing);
       expect(find.text('Title b'), findsOneWidget);
 
-      await tester.tap(find.text('All'));
+      await tester.tap(find.text('Gaming')); // 다시 열어서 전체로
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.text('All').last,
+        -100,
+        scrollable: find.byType(Scrollable).last,
+      );
+      await tester.tap(find.text('All').last);
       await tester.pumpAndSettle();
       expect(find.text('Title a'), findsOneWidget);
+    });
+
+    testWidgets('아래로 내려가 끝에 닿으면 다음 결과가 자동으로 붙는다', (tester) async {
+      final engine = FakeDownloaderEngine(
+        pages: [
+          SearchPage(items: [_hit('a'), _hit('b')], hasNext: true),
+          SearchPage(items: [_hit('c')], hasNext: false),
+        ],
+        infoByUrl: {},
+      );
+      await setUpTestDependencies(engine: engine);
+      await openSearch(tester);
+
+      await tester.enterText(find.byType(TextField), 'hello');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      expect(engine.searches.map((e) => e.$3), [0, 1]); // 버튼 없이 이어 붙음
+      expect(find.text('Title c'), findsOneWidget);
     });
 
     testWidgets('쓸 수 있는 엔진이 없으면 안내를 보여 준다', (tester) async {

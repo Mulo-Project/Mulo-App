@@ -793,6 +793,24 @@ class AppLocalizationsKo extends AppLocalizations {
   String get searchFilterAll => '전체';
 
   @override
+  String get searchFilterTooltip => '분류로 거르기';
+
+  @override
+  String get searchSortTooltip => '정렬';
+
+  @override
+  String get searchSortRelevance => '관련도순';
+
+  @override
+  String get searchSortShortest => '짧은 순';
+
+  @override
+  String get searchSortLongest => '긴 순';
+
+  @override
+  String get searchSortTitle => '제목순';
+
+  @override
   String get searchCategoryChecking => '분류를 확인하는 중이에요. 읽은 곡부터 나와요.';
 
   @override
