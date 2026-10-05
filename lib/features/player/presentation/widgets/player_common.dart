@@ -288,12 +288,18 @@ class PlayerSeekBar extends StatelessWidget {
     super.key,
     required this.progress,
     required this.onSeek,
+    this.onSeekStart,
+    this.onSeekEnd,
     required this.position,
     required this.total,
   });
 
   final double progress;
   final ValueChanged<double> onSeek;
+
+  /// 끌기(또는 누르기) 시작 · 끝. 끝날 때 한 번만 실제로 옮기는 데 쓴다.
+  final VoidCallback? onSeekStart;
+  final VoidCallback? onSeekEnd;
   final Duration position;
   final Duration total;
 
@@ -322,8 +328,16 @@ class PlayerSeekBar extends StatelessWidget {
               ),
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
-                onTapDown: (d) => seek(d.localPosition),
+                onTapDown: (d) {
+                  onSeekStart?.call();
+                  seek(d.localPosition);
+                },
+                onTapUp: (_) => onSeekEnd?.call(),
+                onTapCancel: () => onSeekEnd?.call(),
+                onHorizontalDragStart: (_) => onSeekStart?.call(),
                 onHorizontalDragUpdate: (d) => seek(d.localPosition),
+                onHorizontalDragEnd: (_) => onSeekEnd?.call(),
+                onHorizontalDragCancel: () => onSeekEnd?.call(),
                 child: SizedBox(
                   height: 28,
                   child: Stack(
@@ -886,6 +900,8 @@ class PlayerControls extends StatelessWidget {
             PlayerSeekBar(
               progress: data.state.progress,
               onSeek: data.vm.seekFraction,
+              onSeekStart: data.vm.beginScrub,
+              onSeekEnd: data.vm.endScrub,
               position: data.state.position,
               total: data.track.duration,
             ),
@@ -929,6 +945,8 @@ class MorphSeek extends StatefulWidget {
     super.key,
     required this.progress,
     required this.onSeek,
+    this.onSeekStart,
+    this.onSeekEnd,
     required this.straight,
     required this.pathOf,
     required this.cover,
@@ -944,6 +962,8 @@ class MorphSeek extends StatefulWidget {
 
   final double progress;
   final ValueChanged<double> onSeek;
+  final VoidCallback? onSeekStart;
+  final VoidCallback? onSeekEnd;
   final bool straight;
   final SeekPathBuilder pathOf;
 
@@ -1035,6 +1055,11 @@ class _MorphSeekState extends State<MorphSeek>
   bool _near(Offset local, double t) {
     final (_, dist) = MorphSeek.nearest(_points, local);
     return dist <= 44 - 16 * t;
+  }
+
+  void _endDrag() {
+    if (_dragging) widget.onSeekEnd?.call();
+    _dragging = false;
   }
 
   void _seek(Offset local) =>
@@ -1137,13 +1162,16 @@ class _MorphSeekState extends State<MorphSeek>
                     behavior: HitTestBehavior.translucent,
                     onPointerDown: (e) {
                       _dragging = _near(e.localPosition, t);
-                      if (_dragging) _seek(e.localPosition);
+                      if (_dragging) {
+                        widget.onSeekStart?.call();
+                        _seek(e.localPosition);
+                      }
                     },
                     onPointerMove: (e) {
                       if (_dragging) _seek(e.localPosition);
                     },
-                    onPointerUp: (_) => _dragging = false,
-                    onPointerCancel: (_) => _dragging = false,
+                    onPointerUp: (_) => _endDrag(),
+                    onPointerCancel: (_) => _endDrag(),
                     child: Stack(
                       children: [
                         if (t < 1)
