@@ -2,15 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
+import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../downloads/presentation/bloc/download_queue_cubit.dart';
+import '../../../downloads/presentation/widgets/download_dialog.dart';
 import '../../../downloads/presentation/widgets/download_progress_card.dart';
+import '../../../library/domain/entities/track.dart' show formatDuration;
+import '../../domain/entities/engine_exception.dart';
+import '../../domain/entities/media_info.dart';
 import '../../domain/entities/search_source.dart';
+import '../bloc/search_cubit.dart';
 import '../widgets/search_source_menu.dart';
 
 /// 검색 · URL 입력 (상세 기능: URL로 곡 정보 불러오기 #1, 키워드 검색 #2,
 /// 재생목록 URL 불러오기 #3, 공유 메뉴로 받기 #4, 음질 선택 #6, 중복 다운로드 방지 #9).
-/// 다운로드 엔진(yt-dlp)이 연결되기 전이라 입력하면 "준비 중" 안내만 보인다.
+/// 입력하고 확인을 누르면 찾는다. 곡을 누르면 받기 팝업이 열린다.
+/// 지금은 대기열에만 넣고 실제 받기는 다음 작업에서 이어진다.
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key, this.initialQuery = ''});
 
@@ -22,61 +29,68 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   late final _controller = TextEditingController(text: widget.initialQuery);
-  late String _query = widget.initialQuery;
+  late final SearchCubit _cubit = sl<SearchCubit>();
   SearchSource _source = SearchSource.youtube;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialQuery.trim().isNotEmpty) _submit();
+  }
 
   @override
   void dispose() {
     _controller.dispose();
+    _cubit.close();
     super.dispose();
   }
+
+  void _submit() => _cubit.submit(_controller.text, _source);
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
 
-    return SafeArea(
-      bottom: false,
-      child: ListView(
-        padding: EdgeInsets.only(
-          bottom: AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
-        ),
-        children: [
-          AppTopBar(
-            large: true,
-            title: l10n.navSearch,
-            subtitle: l10n.searchSubtitle,
+    return BlocProvider.value(
+      value: _cubit,
+      child: SafeArea(
+        bottom: false,
+        child: ListView(
+          padding: EdgeInsets.only(
+            bottom: AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
           ),
-          Padding(
-            padding: AppSpacing.screen,
-            child: AppSearchField(
-              controller: _controller,
-              hint: _source == SearchSource.web
-                  ? l10n.searchHintWeb
-                  : l10n.searchHint,
-              clearTooltip: l10n.actionClear,
-              onChanged: (q) => setState(() => _query = q),
-              suffix: SearchSourceMenu(
-                source: _source,
-                onChanged: (s) => setState(() => _source = s),
+          children: [
+            AppTopBar(
+              large: true,
+              title: l10n.navSearch,
+              subtitle: l10n.searchSubtitle,
+            ),
+            Padding(
+              padding: AppSpacing.screen,
+              child: AppSearchField(
+                controller: _controller,
+                hint: _source == SearchSource.web
+                    ? l10n.searchHintWeb
+                    : l10n.searchHint,
+                clearTooltip: l10n.actionClear,
+                onChanged: (q) {
+                  if (q.trim().isEmpty) _submit();
+                },
+                onSubmitted: (_) => _submit(),
+                suffix: SearchSourceMenu(
+                  source: _source,
+                  onChanged: (s) {
+                    setState(() => _source = s);
+                    if (_controller.text.trim().isNotEmpty) _submit();
+                  },
+                ),
               ),
             ),
-          ),
-          const _DownloadCard(),
-          const SizedBox(height: AppSpacing.md),
-          if (_query.trim().isEmpty)
-            _Hint(
-              icon: AppIcons.explore,
-              title: l10n.searchEmptyTitle,
-              body: l10n.searchEmptyBody,
-            )
-          else
-            _Hint(
-              icon: AppIcons.hourglassEmpty,
-              title: l10n.searchNotReadyTitle,
-              body: l10n.searchNotReadyBody,
-            ),
-        ],
+            const _DownloadCard(),
+            const SizedBox(height: AppSpacing.md),
+            _Body(onRetry: _submit),
+          ],
+        ),
       ),
     );
   }
@@ -96,19 +110,159 @@ class _DownloadCard extends StatelessWidget {
       child: DownloadProgressCard(
         current: current,
         waiting: queue.waiting,
-        // 받은 곡을 보관함 곡과 이어 재생하는 건 다운로드 엔진이 붙은 뒤에 한다.
+        // 받은 곡을 보관함 곡과 이어 재생하는 건 실제 받기를 붙인 뒤에 한다.
         onPlay: (_) {},
       ),
     );
   }
 }
 
+class _Body extends StatelessWidget {
+  const _Body({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final state = context.watch<SearchCubit>().state;
+
+    switch (state.status) {
+      case SearchStatus.idle:
+        return _Hint(
+          icon: AppIcons.explore,
+          title: l10n.searchEmptyTitle,
+          body: l10n.searchEmptyBody,
+        );
+      case SearchStatus.loading:
+        return const Padding(
+          padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
+          child: Center(child: CircularProgressIndicator()),
+        );
+      case SearchStatus.failed:
+        final failure = state.failure;
+        if (failure == EngineFailure.unavailable) {
+          return _Hint(
+            icon: AppIcons.hourglassEmpty,
+            title: l10n.searchNotReadyTitle,
+            body: l10n.searchNotReadyBody,
+          );
+        }
+        return _Hint(
+          icon: AppIcons.hourglassEmpty,
+          title: l10n.searchErrorTitle,
+          body: switch (failure) {
+            EngineFailure.network => l10n.searchNetworkBody,
+            EngineFailure.unauthorized => l10n.searchAuthBody,
+            EngineFailure.notFound => l10n.searchNotFoundBody,
+            _ => l10n.searchErrorBody,
+          },
+          action: PillButton(
+            label: l10n.actionRetry,
+            icon: AppIcons.refresh,
+            onPressed: onRetry,
+          ),
+        );
+      case SearchStatus.loaded:
+        if (state.items.isEmpty) {
+          return _Hint(
+            icon: AppIcons.search,
+            title: l10n.searchNoResultsTitle,
+            body: l10n.searchNoResultsBody,
+          );
+        }
+        return _Results(state: state);
+    }
+  }
+}
+
+class _Results extends StatelessWidget {
+  const _Results({required this.state});
+
+  final SearchState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final text = Theme.of(context).textTheme;
+    final isPlaylist = state.playlistTitle != null;
+    final label = isPlaylist
+        ? '${l10n.searchPlaylistLabel} · ${state.playlistTitle}'
+        : state.items.length == 1 && state.hasNext == false
+        ? l10n.searchUrlCardLabel
+        : l10n.searchResultsTitle;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
+          child: Text(label, style: text.titleMedium),
+        ),
+        for (final hit in state.items) _HitTile(hit: hit),
+        if (state.hasNext)
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.sm),
+            child: Center(
+              child: state.loadingMore
+                  ? const CircularProgressIndicator()
+                  : PillButton(
+                      label: l10n.searchLoadMore,
+                      variant: PillVariant.tonal,
+                      onPressed: context.read<SearchCubit>().loadMore,
+                    ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _HitTile extends StatelessWidget {
+  const _HitTile({required this.hit});
+
+  final MediaHit hit;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final subtitle = [
+      if (hit.uploader.isNotEmpty) hit.uploader,
+      if (hit.duration != null) formatDuration(hit.duration!),
+      if (hit.downloaded) l10n.alreadyDownloaded,
+    ].join(' · ');
+    final thumb = hit.thumbnailUrl;
+
+    return TrackTile(
+      title: hit.title,
+      subtitle: subtitle,
+      tone: toneFor(hit.id),
+      artwork: thumb == null ? null : NetworkImage(thumb),
+      trailing: CircleIconButton(
+        icon: AppIcons.download,
+        tooltip: l10n.actionDownload,
+        onPressed: () => _download(context),
+      ),
+      onTap: () => _download(context),
+    );
+  }
+
+  void _download(BuildContext context) =>
+      showDownloadDialog(context, title: hit.title, artist: hit.uploader);
+}
+
 class _Hint extends StatelessWidget {
-  const _Hint({required this.icon, required this.title, required this.body});
+  const _Hint({
+    required this.icon,
+    required this.title,
+    required this.body,
+    this.action,
+  });
 
   final IconData icon;
   final String title;
   final String body;
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
@@ -136,6 +290,10 @@ class _Hint extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
+            if (action != null) ...[
+              const SizedBox(height: AppSpacing.lg),
+              action!,
+            ],
           ],
         ),
       ),

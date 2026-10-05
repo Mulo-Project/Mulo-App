@@ -257,14 +257,62 @@ abstract class AppLocalizations {
   /// No description provided for @searchNotReadyTitle.
   ///
   /// In ko, this message translates to:
-  /// **'아직 받을 수 없어요'**
+  /// **'쓸 수 있는 엔진이 없어요'**
   String get searchNotReadyTitle;
 
   /// No description provided for @searchNotReadyBody.
   ///
   /// In ko, this message translates to:
-  /// **'다운로드 엔진(yt-dlp)을 아직 연결하지 않았어요.\n연결되면 여기서 검색하고 받을 수 있어요.'**
+  /// **'서버 주소가 빌드에 없고 이 기기에 yt-dlp도 없어서 검색할 수 없어요.\n서버를 연결하거나 yt-dlp를 설치해 주세요.'**
   String get searchNotReadyBody;
+
+  /// No description provided for @searchErrorTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'불러오지 못했어요'**
+  String get searchErrorTitle;
+
+  /// No description provided for @searchErrorBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'잠시 뒤에 다시 시도해 주세요.'**
+  String get searchErrorBody;
+
+  /// No description provided for @searchNetworkBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'서버에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.'**
+  String get searchNetworkBody;
+
+  /// No description provided for @searchAuthBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'서버가 로그인을 요구해요.'**
+  String get searchAuthBody;
+
+  /// No description provided for @searchNotFoundBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 주소는 받을 수 없는 곳이에요.'**
+  String get searchNotFoundBody;
+
+  /// No description provided for @searchNoResultsTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'결과가 없어요'**
+  String get searchNoResultsTitle;
+
+  /// No description provided for @searchNoResultsBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'다른 검색어로 찾아보세요.'**
+  String get searchNoResultsBody;
+
+  /// No description provided for @searchLoadMore.
+  ///
+  /// In ko, this message translates to:
+  /// **'더 보기'**
+  String get searchLoadMore;
 
   /// No description provided for @searchResultsTitle.
   ///

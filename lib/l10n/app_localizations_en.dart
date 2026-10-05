@@ -91,11 +91,36 @@ class AppLocalizationsEn extends AppLocalizations {
       'Paste a URL or type keywords.\nShare from the YouTube app to open it here.';
 
   @override
-  String get searchNotReadyTitle => 'Downloads are not ready yet';
+  String get searchNotReadyTitle => 'No engine available';
 
   @override
   String get searchNotReadyBody =>
-      'The download engine (yt-dlp) is not connected yet.\nSearch and download will work once it is.';
+      'This build has no server address and yt-dlp is not installed on this device, so search is unavailable.\nConnect a server or install yt-dlp.';
+
+  @override
+  String get searchErrorTitle => 'Could not load';
+
+  @override
+  String get searchErrorBody => 'Please try again in a moment.';
+
+  @override
+  String get searchNetworkBody =>
+      'Could not reach the server. Check your internet connection.';
+
+  @override
+  String get searchAuthBody => 'The server requires a sign-in.';
+
+  @override
+  String get searchNotFoundBody => 'This address cannot be downloaded.';
+
+  @override
+  String get searchNoResultsTitle => 'No results';
+
+  @override
+  String get searchNoResultsBody => 'Try a different search.';
+
+  @override
+  String get searchLoadMore => 'Load more';
 
   @override
   String get searchResultsTitle => 'Results';
