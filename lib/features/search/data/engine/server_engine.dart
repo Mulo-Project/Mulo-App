@@ -92,6 +92,10 @@ class ServerEngine implements DownloaderEngine {
       thumbnailUrl: j['thumbnail'] as String?,
       categories: parseCategories(j['categories']),
       downloaded: j['downloaded'] == true,
+      channelUrl: parseText(j['channelUrl']),
+      viewCount: parseCount(j['viewCount']),
+      uploadedAt: parseDate(j['uploadDate']),
+      description: parseText(j['description']) ?? '',
     );
   }
 

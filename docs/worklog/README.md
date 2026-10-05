@@ -64,3 +64,4 @@
 | 2026-10-06 | [yt-dlp 엔진 연결 (검색 · 곡 정보)](2026-10-06-ytdlp-search-engine.md) | 완료 (PR 대기) |
 | 2026-10-06 | [Android 로컬 엔진 (youtubedl-android)](2026-10-06-android-local-engine.md) | 완료 (PR 대기) |
 | 2026-10-06 | [유튜브 분류 읽기 · 검색창 유튜브 표시](2026-10-06-youtube-category.md) | 완료 |
+| 2026-10-06 | [검색 결과 상세 보기 (영상 · 채널)](2026-10-06-search-detail.md) | 완료 (PR 대기) |

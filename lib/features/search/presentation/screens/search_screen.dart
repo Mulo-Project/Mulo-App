@@ -12,6 +12,7 @@ import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/search_source.dart';
 import '../bloc/search_cubit.dart';
+import 'media_detail_screen.dart';
 import '../widgets/search_source_menu.dart';
 import '../widgets/video_category.dart';
 
@@ -247,6 +248,8 @@ class _CategoryFilter extends StatelessWidget {
   }
 }
 
+enum _HitAction { detail, download }
+
 class _HitTile extends StatelessWidget {
   const _HitTile({required this.hit});
 
@@ -267,17 +270,58 @@ class _HitTile extends StatelessWidget {
       subtitle: subtitle,
       tone: toneFor(hit.id),
       artwork: thumb == null ? null : NetworkImage(thumb),
-      trailing: CircleIconButton(
-        icon: AppIcons.download,
-        tooltip: l10n.actionDownload,
-        onPressed: () => _download(context),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircleIconButton(
+            icon: AppIcons.download,
+            tooltip: l10n.actionDownload,
+            onPressed: () => _download(context),
+          ),
+          Builder(
+            builder: (context) => IconButton(
+              tooltip: l10n.searchHitMenuTitle,
+              onPressed: () => _menu(context),
+              icon: Icon(AppIcons.more, color: context.palette.onSurfaceMuted),
+            ),
+          ),
+        ],
       ),
       onTap: () => _download(context),
+      onMenu: (position) => _menu(context, position),
     );
   }
 
   void _download(BuildContext context) =>
       showDownloadDialog(context, title: hit.title, artist: hit.uploader);
+
+  /// 곡 옵션 메뉴: ⋮ · 길게 누르기 · 데스크톱 오른쪽 클릭.
+  Future<void> _menu(BuildContext context, [Offset? position]) async {
+    final l10n = context.l10n;
+    final action = await showAppMenu<_HitAction>(
+      context,
+      globalPosition: position,
+      items: [
+        AppMenuItem(
+          value: _HitAction.detail,
+          icon: AppIcons.info,
+          label: l10n.searchHitMenuDetail,
+        ),
+        AppMenuItem(
+          value: _HitAction.download,
+          icon: AppIcons.download,
+          label: l10n.actionDownload,
+        ),
+      ],
+    );
+    if (action == null || !context.mounted) return;
+    switch (action) {
+      case _HitAction.detail:
+        await showMediaDetail(context, hit);
+      case _HitAction.download:
+        _download(context);
+    }
+  }
 }
 
 class _Hint extends StatelessWidget {

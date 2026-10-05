@@ -5,3 +5,22 @@ List<String> parseCategories(Object? raw) => raw is List
           if (c is String && c.trim().isNotEmpty) c.trim(),
       ]
     : const [];
+
+/// JSON의 숫자 칸 (정수 · 실수 모두 정수로, 아니면 null).
+int? parseCount(Object? raw) => raw is num ? raw.round() : null;
+
+/// JSON의 날짜 칸: yt-dlp의 `20240131` 또는 ISO `2024-01-31...` (아니면 null).
+DateTime? parseDate(Object? raw) {
+  if (raw is! String) return null;
+  final s = raw.trim();
+  if (RegExp(r'^\d{8}$').hasMatch(s)) {
+    return DateTime.tryParse(
+      '${s.substring(0, 4)}-${s.substring(4, 6)}-${s.substring(6)}',
+    );
+  }
+  return DateTime.tryParse(s);
+}
+
+/// JSON의 문자열 칸 (비어 있으면 null).
+String? parseText(Object? raw) =>
+    raw is String && raw.trim().isNotEmpty ? raw.trim() : null;

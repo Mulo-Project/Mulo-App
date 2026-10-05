@@ -35,6 +35,7 @@ import 'package:music_download_play_app/features/search/domain/entities/engine_e
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
 import 'package:music_download_play_app/features/search/domain/entities/search_source.dart';
 import 'package:music_download_play_app/features/search/domain/repositories/downloader_engine.dart';
+import 'package:music_download_play_app/features/search/domain/repositories/link_opener.dart';
 import 'package:music_download_play_app/features/security/di.dart';
 import 'package:music_download_play_app/features/security/domain/entities/app_lock_settings.dart';
 import 'package:music_download_play_app/features/security/domain/repositories/app_lock_repository.dart';
@@ -534,6 +535,7 @@ Future<void> setUpTestDependencies({
   PlayHistoryRepository? history,
   DownloadQueueRepository? downloads,
   DownloaderEngine? engine,
+  LinkOpener? linkOpener,
   EngineManager? engineManager,
   AudioPlayerRepository? audio,
   DownloadSettingsRepository? downloadSettings,
@@ -615,6 +617,7 @@ Future<void> setUpTestDependencies({
     ..registerLazySingleton<DownloaderEngine>(
       () => engine ?? FakeDownloaderEngine(),
     )
+    ..registerLazySingleton<LinkOpener>(() => linkOpener ?? FakeLinkOpener())
     ..registerLazySingleton<DownloadQueueRepository>(
       () => downloads ?? MemoryDownloadQueue(),
     )
@@ -725,6 +728,20 @@ class FakeDownloaderEngine implements DownloaderEngine {
     final found = infoByUrl[url] ?? info;
     if (found == null) throw const EngineException(EngineFailure.notFound);
     return found;
+  }
+}
+
+/// 연 주소를 기록하는 링크 열기. [opens]가 false면 열지 못한 것처럼 답한다.
+class FakeLinkOpener implements LinkOpener {
+  FakeLinkOpener({this.opens = true});
+
+  final bool opens;
+  final opened = <String>[];
+
+  @override
+  Future<bool> open(String url) async {
+    opened.add(url);
+    return opens;
   }
 }
 

@@ -367,3 +367,11 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - 목록(`--flat-playlist`) 항목에는 분류가 없어서, 결과가 나온 뒤 `SearchCubit`이 곡마다 `FetchMediaInfo`를 3곡씩 뒤에서 불러 분류를 채운다. 읽은 곡부터 필터에 분류가 나타나 필터 줄은 시간이 지나며 늘어난다. 읽기에 실패한 곡은 다시 시도하지 않고 `전체`에서만 보인다. 곡 하나 주소는 이미 분류가 있어 다시 읽지 않는다. 곡마다 yt-dlp를 한 번씩 더 실행하므로 데이터 · 시간이 더 든다 (Android는 더 느리다).
 - 유튜브 분류는 `Music` 같은 큰 갈래라 록 · 힙합 같은 **장르는 아니다**. 받기 팝업의 장르는 자동으로 채우지 않고, 음악이 아닌 영상(게임 · 뉴스 등)을 가려내는 용도로 쓴다.
 - `YoutubeMark`는 아이콘 글리프 대신 `CustomPainter`로 직접 그린다: 빨간 둥근 사각형 안에 모서리가 둥근 흰 삼각형을 절반 높이로, 무게중심이 가운데 오도록 약간 오른쪽에 둔다.
+
+## D-058 · 2026-10-06 · 검색 결과 상세 보기 (영상 · 채널)
+- 검색 결과 줄에 ⋮ 옵션 메뉴(길게 누르기 · 데스크톱 오른쪽 클릭도 같은 메뉴)를 더하고 "상세 보기"를 넣었다. 줄을 누르면 받기 팝업이 열리는 건 그대로다.
+- 상세 화면(`MediaDetailScreen`)은 탭 틀 위로 덮어 여는 전체 화면이다. 카드 없이 큰 썸네일(16:9, 높이 상한 260) + 제목 + 채널 줄 + 구분선 정보 줄(길이 · 조회수 · 올린 날 · 분류) + 설명(4줄, 더 보기) + 아래 고정 버튼(영상 보기 · 받기)으로 구성한다.
+- 영상 · 채널 보기는 앱 안 플레이어 없이 **기기의 유튜브 앱(없으면 브라우저)으로 연다** (`url_launcher`, `LaunchMode.externalApplication`). 앱 안 WebView 재생은 Android에서만 되고 데스크톱은 WebView가 없어서 쓰지 않았다. 유튜브가 아닌 곳(웹 검색)은 버튼 문구가 "원본 페이지 열기"가 된다.
+- `MediaHit`에 `channelUrl` · `viewCount` · `uploadedAt` · `description`을 더했다. 목록(`--flat-playlist`)에는 없는 값이 많아서, 상세 화면을 열면 `MediaDetailCubit`이 곡 정보를 한 번 더 읽어 비어 있는 것만 채운다(`MediaHit.filledFrom`). 못 읽으면 목록에서 알던 정보만 보여 준다. 로컬 엔진은 yt-dlp 키 `channel_url`(없으면 `uploader_url`) · `view_count` · `upload_date` · `description`을 읽는다.
+- **서버 엔진은 `channelUrl` · `viewCount` · `uploadDate`(ISO 또는 `yyyyMMdd`) · `description` 키를 선택 필드로 읽는다.** 서버 명세에 없는 추가라 서버 저장소 반영이 필요하다 (없으면 해당 줄이 숨겨질 뿐 동작은 그대로).
+- 주소 열기는 도메인 인터페이스 `LinkOpener` + 유스케이스 `OpenLink` + 데이터 `UrlLauncherLinkOpener`로 나눠, 화면 · 테스트가 플러그인을 직접 부르지 않는다. 아이콘 `info` · `openInNew`를 `AppIcons`에 더했다.

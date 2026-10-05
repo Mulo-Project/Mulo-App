@@ -11,6 +11,10 @@ class MediaHit extends Equatable {
     this.thumbnailUrl,
     this.categories = const [],
     this.downloaded = false,
+    this.channelUrl,
+    this.viewCount,
+    this.uploadedAt,
+    this.description = '',
   });
 
   /// 사이트 안의 곡 id (유튜브면 videoId).
@@ -32,16 +36,55 @@ class MediaHit extends Equatable {
   /// 이미 받은 곡인지 (서버가 알려 준 경우).
   final bool downloaded;
 
+  /// 올린 채널 주소 (모르면 null).
+  final String? channelUrl;
+  final int? viewCount;
+
+  /// 올린 날 (날짜만 의미 있다).
+  final DateTime? uploadedAt;
+
+  /// 영상 설명. 없으면 빈 문자열.
+  final String description;
+
   /// 분류만 채운 사본.
-  MediaHit withCategories(List<String> categories) => MediaHit(
+  MediaHit withCategories(List<String> categories) =>
+      _copy(categories: categories);
+
+  /// [full](곡 하나를 자세히 읽은 것)에서 이 항목에 없는 정보를 채운 사본.
+  /// 목록에서 알던 제목 · 길이 같은 것은 그대로 두고, 비어 있는 것만 더한다.
+  MediaHit filledFrom(MediaHit full) => _copy(
+    uploader: uploader.isEmpty ? full.uploader : uploader,
+    duration: duration ?? full.duration,
+    thumbnailUrl: thumbnailUrl ?? full.thumbnailUrl,
+    categories: categories.isEmpty ? full.categories : categories,
+    channelUrl: channelUrl ?? full.channelUrl,
+    viewCount: viewCount ?? full.viewCount,
+    uploadedAt: uploadedAt ?? full.uploadedAt,
+    description: description.isEmpty ? full.description : description,
+  );
+
+  MediaHit _copy({
+    String? uploader,
+    Duration? duration,
+    String? thumbnailUrl,
+    List<String>? categories,
+    String? channelUrl,
+    int? viewCount,
+    DateTime? uploadedAt,
+    String? description,
+  }) => MediaHit(
     id: id,
     title: title,
     url: url,
-    uploader: uploader,
-    duration: duration,
-    thumbnailUrl: thumbnailUrl,
-    categories: categories,
+    uploader: uploader ?? this.uploader,
+    duration: duration ?? this.duration,
+    thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
+    categories: categories ?? this.categories,
     downloaded: downloaded,
+    channelUrl: channelUrl ?? this.channelUrl,
+    viewCount: viewCount ?? this.viewCount,
+    uploadedAt: uploadedAt ?? this.uploadedAt,
+    description: description ?? this.description,
   );
 
   @override
@@ -54,6 +97,10 @@ class MediaHit extends Equatable {
     thumbnailUrl,
     categories,
     downloaded,
+    channelUrl,
+    viewCount,
+    uploadedAt,
+    description,
   ];
 }
 

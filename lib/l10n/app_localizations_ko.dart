@@ -793,6 +793,53 @@ class AppLocalizationsKo extends AppLocalizations {
   String get searchFilterAll => '전체';
 
   @override
+  String get searchHitMenuTitle => '곡 옵션';
+
+  @override
+  String get searchHitMenuDetail => '상세 보기';
+
+  @override
+  String get mediaDetailTitle => '상세 정보';
+
+  @override
+  String get mediaDetailWatchYoutube => '유튜브에서 보기';
+
+  @override
+  String get mediaDetailOpenOriginal => '원본 페이지 열기';
+
+  @override
+  String get mediaDetailChannel => '채널';
+
+  @override
+  String get mediaDetailOpenChannel => '채널 보기';
+
+  @override
+  String get mediaDetailDuration => '길이';
+
+  @override
+  String get mediaDetailViews => '조회수';
+
+  @override
+  String get mediaDetailUploaded => '올린 날';
+
+  @override
+  String get mediaDetailCategory => '분류';
+
+  @override
+  String get mediaDetailDescription => '설명';
+
+  @override
+  String get mediaDetailLess => '접기';
+
+  @override
+  String get mediaDetailOpenFailed => '열 수 있는 앱이 없어요.';
+
+  @override
+  String mediaDetailViewCount(String count) {
+    return '$count회';
+  }
+
+  @override
   String videoCategory(String name) {
     String _temp0 = intl.Intl.selectLogic(name, {
       'FilmAnimation': '영화/애니메이션',

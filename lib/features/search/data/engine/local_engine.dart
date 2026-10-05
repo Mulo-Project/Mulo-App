@@ -153,6 +153,10 @@ class LocalEngine implements DownloaderEngine {
       duration: seconds is num ? Duration(seconds: seconds.round()) : null,
       thumbnailUrl: thumb,
       categories: parseCategories(j['categories']),
+      channelUrl: parseText(j['channel_url'] ?? j['uploader_url']),
+      viewCount: parseCount(j['view_count']),
+      uploadedAt: parseDate(j['upload_date']),
+      description: parseText(j['description']) ?? '',
     );
   }
 }

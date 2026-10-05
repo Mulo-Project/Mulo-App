@@ -398,6 +398,28 @@
   "sourceYoutube": "유튜브",
   "sourceWeb": "웹",
   "searchFilterAll": "전체",
+  "searchHitMenuTitle": "곡 옵션",
+  "searchHitMenuDetail": "상세 보기",
+  "mediaDetailTitle": "상세 정보",
+  "mediaDetailWatchYoutube": "유튜브에서 보기",
+  "mediaDetailOpenOriginal": "원본 페이지 열기",
+  "mediaDetailChannel": "채널",
+  "mediaDetailOpenChannel": "채널 보기",
+  "mediaDetailDuration": "길이",
+  "mediaDetailViews": "조회수",
+  "mediaDetailUploaded": "올린 날",
+  "mediaDetailCategory": "분류",
+  "mediaDetailDescription": "설명",
+  "mediaDetailLess": "접기",
+  "mediaDetailOpenFailed": "열 수 있는 앱이 없어요.",
+  "mediaDetailViewCount": "{count}회",
+  "@mediaDetailViewCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "videoCategory": "{name, select, FilmAnimation{영화/애니메이션} Autos{자동차} Music{음악} Pets{동물} Sports{스포츠} Travel{여행} Gaming{게임} People{인물/블로그} Comedy{코미디} Entertainment{엔터테인먼트} News{뉴스/정치} Howto{노하우/스타일} Education{교육} Science{과학/기술} Nonprofits{비영리/사회운동} other{{name}}}",
   "@videoCategory": {
     "placeholders": {

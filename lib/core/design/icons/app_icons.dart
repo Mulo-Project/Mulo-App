@@ -436,4 +436,14 @@ abstract final class AppIcons {
     fontFamily: 'PhosphorRegular',
     matchTextDirection: true,
   );
+  static const IconData info = IconData(
+    0xe2ce,
+    fontFamily: 'PhosphorRegular',
+    matchTextDirection: true,
+  );
+  static const IconData openInNew = IconData(
+    0xe5de,
+    fontFamily: 'PhosphorRegular',
+    matchTextDirection: true,
+  );
 }

@@ -5,10 +5,12 @@ import 'package:get_it/get_it.dart';
 import '../../core/config/app_config.dart';
 import '../engine/data/android_yt_dlp.dart';
 import '../engine/data/yt_dlp_manager.dart';
+import 'data/datasources/url_launcher_link_opener.dart';
 import 'data/engine/local_engine.dart';
 import 'data/engine/routing_engine.dart';
 import 'data/engine/server_engine.dart';
 import 'domain/repositories/downloader_engine.dart';
+import 'domain/repositories/link_opener.dart';
 import 'domain/usecases/search_usecases.dart';
 import 'presentation/bloc/search_cubit.dart';
 
@@ -27,7 +29,9 @@ void registerSearch(GetIt sl) {
             : null,
       ),
     )
+    ..registerLazySingleton<LinkOpener>(UrlLauncherLinkOpener.new)
     ..registerFactory(() => SearchTracks(sl()))
     ..registerFactory(() => FetchMediaInfo(sl()))
+    ..registerFactory(() => OpenLink(sl()))
     ..registerFactory(() => SearchCubit(sl(), sl()));
 }
