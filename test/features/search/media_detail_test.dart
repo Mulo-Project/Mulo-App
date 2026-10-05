@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
+import 'package:music_download_play_app/core/design/design.dart';
 import 'package:music_download_play_app/features/search/data/engine/local_engine.dart';
 import 'package:music_download_play_app/features/search/data/engine/server_engine.dart';
 import 'package:music_download_play_app/features/search/domain/entities/engine_exception.dart';
@@ -383,6 +384,68 @@ void main() {
       await tester.tap(find.byKey(toggle));
       await tester.pumpAndSettle();
       expect(find.text('Show more'), findsOneWidget);
+    });
+
+    testWidgets('긴 채널 이름은 잘리지 않고 흐르는 글자로 보인다', (tester) async {
+      tester.view.physicalSize = const Size(400, 1600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      const name =
+          'A very very long channel name that cannot fit in one line at all';
+      const hit = MediaHit(
+        id: 'v',
+        title: 'Song',
+        url: 'https://www.youtube.com/watch?v=v',
+        uploader: name,
+      );
+      final engine = FakeDownloaderEngine(
+        pages: const [
+          SearchPage(items: [hit], hasNext: false),
+        ],
+        info: const VideoInfo(hit),
+      );
+      await setUpTestDependencies(engine: engine, linkOpener: FakeLinkOpener());
+      await openSearchResult(tester);
+      await tester.tap(find.text('Song'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+
+      expect(
+        find.byWidgetPredicate((w) => w is MarqueeText && w.text == name),
+        findsOneWidget,
+      );
+      expect(find.byType(ShaderMask), findsWidgets); // 넘치면 흐른다
+      // 화면을 정리해 반복 애니메이션을 멈춘다.
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('더 보기 버튼은 가운데에 놓인다', (tester) async {
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final long = [for (var i = 1; i <= 12; i++) 'Line $i'].join('\n');
+      final engine = FakeDownloaderEngine(
+        pages: const [
+          SearchPage(items: [_listHit], hasNext: false),
+        ],
+        info: VideoInfo(
+          MediaHit(
+            id: 'v',
+            title: 'Song',
+            url: _listHit.url,
+            description: long,
+          ),
+        ),
+      );
+      await setUpTestDependencies(engine: engine, linkOpener: FakeLinkOpener());
+      await openSearchResult(tester);
+      await tester.tap(find.text('Song'));
+      await tester.pumpAndSettle();
+
+      final center = tester.getCenter(
+        find.byKey(const ValueKey('detail-description-toggle')),
+      );
+      expect(center.dx, closeTo(400, 1));
     });
 
     testWidgets('짧은 설명에는 더 보기 버튼이 없다', (tester) async {

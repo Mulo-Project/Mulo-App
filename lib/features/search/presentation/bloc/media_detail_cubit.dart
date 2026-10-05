@@ -32,8 +32,22 @@ class MediaDetailCubit extends Cubit<MediaDetailState> {
   final FetchChannelInfo _fetchChannel;
   final OpenLink _openLink;
 
+  /// 곡 정보와 채널 정보를 따로 동시에 읽고, 읽히는 대로 화면에 채운다.
+  /// 채널 주소를 이미 알면(검색 목록에 있다) 곡 정보를 기다리지 않고 바로 읽는다.
   Future<void> load() async {
     emit(MediaDetailState(hit: state.hit, loading: true));
+    final early = _needsChannel(state.hit) ? _loadChannel() : null;
+    await _loadInfo();
+    // 곡 정보에서 비로소 채널 주소를 알게 된 경우.
+    await (early ?? (_needsChannel(state.hit) ? _loadChannel() : null));
+  }
+
+  /// 채널 주소는 아는데 이미지 · 구독자 수가 비어 있는지.
+  static bool _needsChannel(MediaHit hit) =>
+      hit.channelUrl != null &&
+      (hit.channelThumbnailUrl == null || hit.subscriberCount == null);
+
+  Future<void> _loadInfo() async {
     try {
       final info = await _fetch(state.hit.url);
       if (isClosed) return;
@@ -49,21 +63,19 @@ class MediaDetailCubit extends Cubit<MediaDetailState> {
       if (isClosed) return;
       emit(MediaDetailState(hit: state.hit));
     }
-    await _loadChannel();
   }
 
   /// 채널 이미지 · 구독자 수는 곡 정보에 없을 수 있어 따로 읽는다 (못 읽으면 그대로 둔다).
   Future<void> _loadChannel() async {
-    final hit = state.hit;
-    final url = hit.channelUrl;
-    if (url == null ||
-        (hit.channelThumbnailUrl != null && hit.subscriberCount != null)) {
-      return;
-    }
     try {
-      final channel = await _fetchChannel(url);
+      final channel = await _fetchChannel(state.hit.channelUrl!);
       if (isClosed) return;
-      emit(MediaDetailState(hit: state.hit.withChannel(channel)));
+      emit(
+        MediaDetailState(
+          hit: state.hit.withChannel(channel),
+          loading: state.loading,
+        ),
+      );
     } on EngineException {
       // 채널 정보가 없어도 상세 보기는 그대로 쓸 수 있다.
     }

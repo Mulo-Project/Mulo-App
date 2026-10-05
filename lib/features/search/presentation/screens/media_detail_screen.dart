@@ -306,12 +306,8 @@ class _ChannelRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                hit.uploader,
-                style: text.titleSmall,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+              // 긴 채널 이름은 잘라 내지 않고 옆으로 흘려 끝까지 보여 준다.
+              MarqueeText(hit.uploader, style: text.titleSmall),
               if (subscribers != null)
                 Text(
                   subscribers!,
@@ -391,11 +387,13 @@ class _DescriptionState extends State<_Description> {
               onTap: toggle,
               child: body,
             ),
-            PlainButton(
-              key: const ValueKey('detail-description-toggle'),
-              label: _open ? l10n.mediaDetailLess : l10n.mediaDetailMore,
-              icon: _open ? AppIcons.chevronUp : AppIcons.chevronDown,
-              onPressed: toggle,
+            Center(
+              child: PlainButton(
+                key: const ValueKey('detail-description-toggle'),
+                label: _open ? l10n.mediaDetailLess : l10n.mediaDetailMore,
+                icon: _open ? AppIcons.chevronUp : AppIcons.chevronDown,
+                onPressed: toggle,
+              ),
             ),
           ],
         );
