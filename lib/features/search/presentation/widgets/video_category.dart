@@ -19,6 +19,25 @@ const _categoryKeys = {
   'Nonprofits & Activism': 'Nonprofits',
 };
 
+/// 필터에 늘어놓는 유튜브 분류 (유튜브가 정해 둔 고정 목록, 음악이 맨 앞).
+const youtubeCategories = [
+  'Music',
+  'Entertainment',
+  'Gaming',
+  'Film & Animation',
+  'Comedy',
+  'People & Blogs',
+  'Sports',
+  'Howto & Style',
+  'Education',
+  'Science & Technology',
+  'News & Politics',
+  'Travel & Events',
+  'Autos & Vehicles',
+  'Pets & Animals',
+  'Nonprofits & Activism',
+];
+
 /// 유튜브 분류를 화면에 보일 이름으로. 모르는 분류는 원문 그대로.
 String categoryLabel(AppLocalizations l10n, String name) =>
     l10n.videoCategory(_categoryKeys[name] ?? name);

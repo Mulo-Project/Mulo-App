@@ -793,6 +793,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get searchFilterAll => '전체';
 
   @override
+  String get searchCategoryChecking => '분류를 확인하는 중이에요. 읽은 곡부터 나와요.';
+
+  @override
   String videoCategory(String name) {
     String _temp0 = intl.Intl.selectLogic(name, {
       'FilmAnimation': '영화/애니메이션',

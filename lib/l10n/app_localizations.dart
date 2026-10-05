@@ -1562,6 +1562,12 @@ abstract class AppLocalizations {
   /// **'전체'**
   String get searchFilterAll;
 
+  /// No description provided for @searchCategoryChecking.
+  ///
+  /// In ko, this message translates to:
+  /// **'분류를 확인하는 중이에요. 읽은 곡부터 나와요.'**
+  String get searchCategoryChecking;
+
   /// No description provided for @videoCategory.
   ///
   /// In ko, this message translates to:

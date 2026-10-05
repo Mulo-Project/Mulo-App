@@ -200,7 +200,7 @@ class _Results extends StatelessWidget {
           padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
           child: Text(label, style: text.titleMedium),
         ),
-        if (state.categories.isNotEmpty) const _CategoryFilter(),
+        if (state.items.length > 1) const _CategoryFilter(),
         for (final hit in state.visibleItems) _HitTile(hit: hit),
         if (state.hasNext)
           Padding(
@@ -220,8 +220,8 @@ class _Results extends StatelessWidget {
   }
 }
 
-/// 결과 위의 분류 필터: 전체 + 지금까지 알아낸 유튜브 분류.
-/// 분류는 곡마다 뒤에서 읽기 때문에 시간이 지나며 늘어난다.
+/// 결과 위의 분류 필터: 전체 + 유튜브 분류 (고정 목록이라 바로 보인다).
+/// 곡의 분류는 뒤에서 읽기 때문에, 읽는 동안은 읽은 곡부터 걸린다.
 class _CategoryFilter extends StatelessWidget {
   const _CategoryFilter();
 
@@ -230,18 +230,34 @@ class _CategoryFilter extends StatelessWidget {
     final l10n = context.l10n;
     final cubit = context.read<SearchCubit>();
     final state = context.watch<SearchCubit>().state;
+    final text = Theme.of(context).textTheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        padding: AppSpacing.screen,
-        child: SegmentedPills<String?>(
-          values: [null, ...state.categories],
-          selected: state.category,
-          labelOf: (c) =>
-              c == null ? l10n.searchFilterAll : categoryLabel(l10n, c),
-          onChanged: cubit.selectCategory,
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: AppSpacing.screen,
+            child: SegmentedPills<String?>(
+              values: [null, ...youtubeCategories],
+              selected: state.category,
+              labelOf: (c) =>
+                  c == null ? l10n.searchFilterAll : categoryLabel(l10n, c),
+              onChanged: cubit.selectCategory,
+            ),
+          ),
+          if (state.probing && state.category != null)
+            Padding(
+              padding: AppSpacing.screen.copyWith(top: AppSpacing.xs),
+              child: Text(
+                l10n.searchCategoryChecking,
+                style: text.bodySmall?.copyWith(
+                  color: context.palette.onSurfaceMuted,
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

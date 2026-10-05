@@ -62,7 +62,12 @@ void main() {
       await cubit.submit('q', SearchSource.youtube);
       await pumpEventQueue();
 
-      expect(cubit.state.categories, ['Music', 'Gaming']);
+      expect(cubit.state.items.map((h) => h.categories), [
+        ['Music'],
+        ['Gaming'],
+        isEmpty,
+      ]);
+      expect(cubit.state.probing, isFalse);
       expect(cubit.state.visibleItems.length, 3);
 
       cubit.selectCategory('Gaming');
@@ -81,7 +86,7 @@ void main() {
       await cubit.submit('https://youtu.be/v', SearchSource.youtube);
       await pumpEventQueue();
       expect(engine.infos, ['https://youtu.be/v']);
-      expect(cubit.state.categories, ['Music']);
+      expect(cubit.state.items.single.categories, ['Music']);
     });
 
     test('URL이면 정보를 불러온다 (곡 하나 · 재생목록)', () async {
@@ -411,6 +416,7 @@ void main() {
       expect(find.text('Title a'), findsOneWidget);
       expect(find.text('Title b'), findsOneWidget);
       expect(find.text('All'), findsOneWidget);
+      expect(find.text('Music'), findsOneWidget); // 고정 목록이라 바로 보인다
 
       await tester.tap(find.text('Gaming'));
       await tester.pumpAndSettle();
