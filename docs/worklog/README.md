@@ -63,3 +63,4 @@
 | 2026-10-06 | [제목 마키 · 부드러운 아이콘](2026-10-06-marquee-rounded-icons.md) | 완료 (merge 대기) |
 | 2026-10-06 | [yt-dlp 엔진 연결 (검색 · 곡 정보)](2026-10-06-ytdlp-search-engine.md) | 완료 (PR 대기) |
 | 2026-10-06 | [Android 로컬 엔진 (youtubedl-android)](2026-10-06-android-local-engine.md) | 완료 (PR 대기) |
+| 2026-10-06 | [유튜브 분류 읽기 · 검색창 유튜브 표시](2026-10-06-youtube-category.md) | 완료 |

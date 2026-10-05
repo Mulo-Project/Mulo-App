@@ -13,6 +13,7 @@ import '../../domain/entities/media_info.dart';
 import '../../domain/entities/search_source.dart';
 import '../bloc/search_cubit.dart';
 import '../widgets/search_source_menu.dart';
+import '../widgets/video_category.dart';
 
 /// 검색 · URL 입력 (상세 기능: URL로 곡 정보 불러오기 #1, 키워드 검색 #2,
 /// 재생목록 URL 불러오기 #3, 공유 메뉴로 받기 #4, 음질 선택 #6, 중복 다운로드 방지 #9).
@@ -229,6 +230,7 @@ class _HitTile extends StatelessWidget {
     final subtitle = [
       if (hit.uploader.isNotEmpty) hit.uploader,
       if (hit.duration != null) formatDuration(hit.duration!),
+      ?categoryLabel(l10n, hit.categories),
       if (hit.downloaded) l10n.alreadyDownloaded,
     ].join(' · ');
     final thumb = hit.thumbnailUrl;
