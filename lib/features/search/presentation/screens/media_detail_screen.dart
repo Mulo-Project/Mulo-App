@@ -97,6 +97,12 @@ class _DetailViewState extends State<_DetailView> {
           l10n.mediaDetailUploaded,
           MaterialLocalizations.of(context).formatCompactDate(uploaded),
         ),
+      if (hit.creators.length > 1)
+        (
+          l10n.mediaDetailCollaborators,
+          // 대표 채널은 위 채널 줄에 있어서 나머지 공동 작업자만 적는다.
+          hit.creators.where((c) => c != hit.uploader).join(' · '),
+        ),
       if (hit.categories.isNotEmpty)
         (
           l10n.mediaDetailCategory,

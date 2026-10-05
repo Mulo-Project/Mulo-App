@@ -837,6 +837,9 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get mediaDetailCollaborators => '공동 작업자';
+
+  @override
   String get mediaDetailLess => '접기';
 
   @override

@@ -419,6 +419,7 @@
       }
     }
   },
+  "mediaDetailCollaborators": "공동 작업자",
   "mediaDetailLess": "접기",
   "mediaDetailOpenFailed": "열 수 있는 앱이 없어요.",
   "mediaDetailViewCount": "{count}회",

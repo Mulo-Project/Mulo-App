@@ -18,6 +18,7 @@ class MediaHit extends Equatable {
     this.likeCount,
     this.subscriberCount,
     this.channelThumbnailUrl,
+    this.creators = const [],
   });
 
   /// 사이트 안의 곡 id (유튜브면 videoId).
@@ -56,14 +57,25 @@ class MediaHit extends Equatable {
   final int? subscriberCount;
   final String? channelThumbnailUrl;
 
+  /// 영상을 함께 올린 채널들의 이름 (유튜브 "공동 작업자"). 대표 채널이 맨 앞이고,
+  /// 공동 작업이 아니면 비어 있다. 곡 하나를 자세히 읽었을 때만 있다.
+  final List<String> creators;
+
   /// 분류만 채운 사본.
   MediaHit withCategories(List<String> categories) =>
       _copy(categories: categories);
 
   /// [full](곡 하나를 자세히 읽은 것)에서 이 항목에 없는 정보를 채운 사본.
   /// 목록에서 알던 제목 · 길이 같은 것은 그대로 두고, 비어 있는 것만 더한다.
+  ///
+  /// 공동 작업 영상은 목록의 올린 사람이 "A and B"처럼 합쳐진 이름이고 채널 주소도 없다.
+  /// 이름만 그대로 두면 채널 주소 · 이미지 · 구독자 수(대표 채널의 것)와 어긋나므로,
+  /// 이때는 자세히 읽은 쪽의 대표 채널 이름을 쓴다.
   MediaHit filledFrom(MediaHit full) => _copy(
-    uploader: uploader.isEmpty ? full.uploader : uploader,
+    uploader: uploader.isEmpty || full.creators.length > 1
+        ? full.uploader
+        : uploader,
+    creators: full.creators,
     duration: duration ?? full.duration,
     thumbnailUrl: thumbnailUrl ?? full.thumbnailUrl,
     categories: categories.isEmpty ? full.categories : categories,
@@ -94,6 +106,7 @@ class MediaHit extends Equatable {
     int? likeCount,
     int? subscriberCount,
     String? channelThumbnailUrl,
+    List<String>? creators,
   }) => MediaHit(
     id: id,
     title: title,
@@ -110,6 +123,7 @@ class MediaHit extends Equatable {
     likeCount: likeCount ?? this.likeCount,
     subscriberCount: subscriberCount ?? this.subscriberCount,
     channelThumbnailUrl: channelThumbnailUrl ?? this.channelThumbnailUrl,
+    creators: creators ?? this.creators,
   );
 
   @override
@@ -129,6 +143,7 @@ class MediaHit extends Equatable {
     likeCount,
     subscriberCount,
     channelThumbnailUrl,
+    creators,
   ];
 }
 

@@ -182,6 +182,80 @@ void main() {
     expect(merged.title, 'Song');
   });
 
+  group('공동 작업자(여러 채널이 함께 올린 영상)', () {
+    // 목록에서는 이름이 합쳐지고 채널 주소가 없다. 자세히 읽으면 대표 채널이 나온다.
+    const listed = MediaHit(
+      id: 'c',
+      title: 'Collab',
+      url: 'https://www.youtube.com/watch?v=c',
+      uploader: 'Sauce + and William Osman 2',
+    );
+    const full = MediaHit(
+      id: 'c',
+      title: 'Collab',
+      url: 'https://www.youtube.com/watch?v=c',
+      uploader: 'Sauce +',
+      channelUrl: 'https://www.youtube.com/channel/UC2Ei',
+      creators: ['Sauce +', 'William Osman 2'],
+    );
+
+    test('filledFrom은 합쳐진 이름 대신 대표 채널 이름을 쓴다', () {
+      final merged = listed.filledFrom(full);
+      expect(merged.uploader, 'Sauce +');
+      expect(merged.channelUrl, 'https://www.youtube.com/channel/UC2Ei');
+      expect(merged.creators, ['Sauce +', 'William Osman 2']);
+    });
+
+    test('공동 작업이 아니면 목록의 이름을 그대로 둔다', () {
+      const solo = MediaHit(id: 's', title: 'S', url: 'u', uploader: 'Chan');
+      final merged = solo.filledFrom(
+        const MediaHit(
+          id: 's',
+          title: 'S',
+          url: 'u',
+          uploader: 'Chan (full)',
+          creators: ['Chan'],
+        ),
+      );
+      expect(merged.uploader, 'Chan');
+    });
+
+    test('LocalEngine이 creators를 읽는다', () async {
+      final engine = LocalEngine(
+        run: (_, _) async => (
+          exitCode: 0,
+          stdout: jsonEncode({
+            'id': 'c',
+            'title': 'Collab',
+            'channel': 'Sauce +',
+            'channel_url': 'https://www.youtube.com/channel/UC2Ei',
+            'creators': ['Sauce +', ' ', 'William Osman 2'],
+          }),
+          stderr: '',
+        ),
+      );
+      final hit = ((await engine.fetchInfo('https://x/c')) as VideoInfo).hit;
+      expect(hit.creators, ['Sauce +', 'William Osman 2']);
+    });
+
+    test('상세는 대표 채널의 주소로 채널 정보를 읽고 이름도 대표 채널로 바뀐다', () async {
+      final engine = FakeDownloaderEngine(
+        info: const VideoInfo(full),
+        channel: const ChannelInfo(subscriberCount: 243),
+      );
+      final cubit = MediaDetailCubit(
+        listed,
+        FetchMediaInfo(engine),
+        FetchChannelInfo(engine),
+        OpenLink(FakeLinkOpener()),
+      );
+      await cubit.load();
+      expect(engine.channels, ['https://www.youtube.com/channel/UC2Ei']);
+      expect(cubit.state.hit.uploader, 'Sauce +');
+      expect(cubit.state.hit.subscriberCount, 243);
+    });
+  });
+
   group('MediaDetailCubit', () {
     test('곡 정보를 읽어 빈 정보를 채운다', () async {
       final engine = FakeDownloaderEngine(info: VideoInfo(_fullHit));
@@ -446,6 +520,43 @@ void main() {
         find.byKey(const ValueKey('detail-description-toggle')),
       );
       expect(center.dx, closeTo(400, 1));
+    });
+
+    testWidgets('공동 작업 영상은 대표 채널과 나머지 공동 작업자를 보여 준다', (tester) async {
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      const listed = MediaHit(
+        id: 'c',
+        title: 'Collab',
+        url: 'https://www.youtube.com/watch?v=c',
+        uploader: 'Sauce + and William Osman 2',
+      );
+      const full = MediaHit(
+        id: 'c',
+        title: 'Collab',
+        url: 'https://www.youtube.com/watch?v=c',
+        uploader: 'Sauce +',
+        channelUrl: 'https://www.youtube.com/channel/UC2Ei',
+        creators: ['Sauce +', 'William Osman 2'],
+      );
+      final engine = FakeDownloaderEngine(
+        pages: const [
+          SearchPage(items: [listed], hasNext: false),
+        ],
+        info: const VideoInfo(full),
+        channel: const ChannelInfo(subscriberCount: 243),
+      );
+      await setUpTestDependencies(engine: engine, linkOpener: FakeLinkOpener());
+      await openSearchResult(tester);
+      await tester.tap(find.text('Collab'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Sauce +'), findsOneWidget); // 대표 채널
+      expect(find.text('243 subscribers'), findsOneWidget);
+      expect(find.text('Collaborators'), findsOneWidget);
+      expect(find.text('William Osman 2'), findsOneWidget);
+      expect(find.text('Sauce + and William Osman 2'), findsNothing);
     });
 
     testWidgets('짧은 설명에는 더 보기 버튼이 없다', (tester) async {
