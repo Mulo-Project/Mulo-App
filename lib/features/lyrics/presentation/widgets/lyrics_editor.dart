@@ -100,7 +100,7 @@ class _LyricsEditorScreenState extends State<_LyricsEditorScreen> {
             AppTopBar(
               title: l10n.lyricsEditTitle,
               leading: CircleIconButton(
-                icon: Icons.close_rounded,
+                icon: AppIcons.close,
                 tooltip: l10n.actionCancel,
                 onPressed: () => Navigator.of(context).pop(),
               ),
@@ -134,13 +134,13 @@ class _LyricsEditorScreenState extends State<_LyricsEditorScreen> {
                 children: [
                   PlainButton(
                     label: l10n.lyricsLoadFile,
-                    icon: Icons.file_open_rounded,
+                    icon: AppIcons.fileOpen,
                     onPressed: _pickFile,
                   ),
                   if (lyricsWebSupported)
                     PlainButton(
                       label: l10n.lyricsWebSearch,
-                      icon: Icons.travel_explore_rounded,
+                      icon: AppIcons.explore,
                       onPressed: _searchWeb,
                     ),
                 ],
@@ -162,7 +162,7 @@ class _LyricsEditorScreenState extends State<_LyricsEditorScreen> {
                   Expanded(
                     child: PillButton(
                       label: l10n.lyricsSave,
-                      icon: Icons.check_rounded,
+                      icon: AppIcons.check,
                       onPressed: () => Navigator.of(context).pop(_text.text),
                     ),
                   ),

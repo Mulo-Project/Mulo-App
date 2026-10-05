@@ -64,13 +64,13 @@ class _PlaylistPickScreenState extends State<PlaylistPickScreen> {
               AppTopBar(
                 title: l10n.playlistPickTitle,
                 leading: CircleIconButton(
-                  icon: Icons.arrow_back_rounded,
+                  icon: AppIcons.back,
                   tooltip: l10n.actionBack,
                   onPressed: () => context.pop(),
                 ),
                 actions: [
                   CircleIconButton(
-                    icon: Icons.add_rounded,
+                    icon: AppIcons.add,
                     tooltip: l10n.playlistsNew,
                     emphasized: true,
                     onPressed: _new,
@@ -121,7 +121,7 @@ class _PlaylistPickScreenState extends State<PlaylistPickScreen> {
                   width: double.infinity,
                   child: PillButton(
                     label: l10n.playlistPickDone,
-                    icon: Icons.check_rounded,
+                    icon: AppIcons.check,
                     onPressed: _done,
                   ),
                 ),

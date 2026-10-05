@@ -32,11 +32,7 @@ class SearchSourceMenu extends StatelessWidget {
 
     Widget icon(SearchSource s, double size) => switch (s) {
       SearchSource.youtube => YoutubeMark(size: size),
-      SearchSource.web => Icon(
-        Icons.public_rounded,
-        size: size,
-        color: webColor,
-      ),
+      SearchSource.web => Icon(AppIcons.globe, size: size, color: webColor),
     };
 
     return PopupMenuButton<SearchSource>(

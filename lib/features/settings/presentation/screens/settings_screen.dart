@@ -247,7 +247,7 @@ class _Chevron extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      Icon(Icons.chevron_right_rounded, color: context.palette.onSurfaceMuted);
+      Icon(AppIcons.chevronRight, color: context.palette.onSurfaceMuted);
 }
 
 String presetLabel(AppLocalizations l10n, ThemePreset preset) =>

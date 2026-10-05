@@ -18,6 +18,10 @@ Future<void> _pumpApp(
   double height = 2532,
   Future<void> Function()? setUp,
 }) async {
+  // 긴 제목이 흐르는 마키가 pumpAndSettle을 붙잡지 않게 동작 줄이기를 켠다.
+  tester.platformDispatcher.accessibilityFeaturesTestValue =
+      const FakeAccessibilityFeatures(disableAnimations: true);
+  addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
   await (setUp ?? () => setUpTestDependencies(tracks: TestData.tracks))();
   tester.view.physicalSize = Size(1170, height);
   tester.view.devicePixelRatio = 3;

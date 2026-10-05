@@ -355,7 +355,7 @@ class _MoreTile extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(Icons.leaderboard_rounded, color: p.accent),
+                Icon(AppIcons.leaderboard, color: p.accent),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
@@ -363,7 +363,7 @@ class _MoreTile extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                 ),
-                Icon(Icons.chevron_right_rounded, color: p.onSurfaceMuted),
+                Icon(AppIcons.chevronRight, color: p.onSurfaceMuted),
               ],
             ),
           ),

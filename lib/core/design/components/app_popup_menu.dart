@@ -1,3 +1,5 @@
+import '../icons/app_icons.dart';
+
 import 'package:flutter/material.dart';
 
 import '../app_theme_tokens.dart';
@@ -89,7 +91,7 @@ Future<T?> showAppMenu<T>(
               ),
               if (item.selected) ...[
                 const SizedBox(width: AppSpacing.sm),
-                Icon(Icons.check_rounded, size: 18, color: p.accent),
+                Icon(AppIcons.check, size: 18, color: p.accent),
               ],
             ],
           ),

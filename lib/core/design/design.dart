@@ -36,3 +36,5 @@ export 'theme_source/theme_source.dart';
 export 'tokens/app_dimens.dart';
 export 'tokens/app_palette.dart';
 export 'tokens/app_typography.dart';
+export 'icons/app_icons.dart';
+export 'components/marquee_text.dart';

@@ -67,7 +67,7 @@ class _HistorySectionState extends State<HistorySection> {
         for (var y = _lastMonth.year; y >= _firstMonth.year; y--)
           AppMenuItem(
             value: y,
-            icon: Icons.event_rounded,
+            icon: AppIcons.event,
             label: l10n.homeYearLabel(y),
             selected: y == shown.year,
           ),
@@ -92,7 +92,7 @@ class _HistorySectionState extends State<HistorySection> {
               !DateTime(shown.year, m).isAfter(_lastMonth))
             AppMenuItem(
               value: m,
-              icon: Icons.calendar_month_rounded,
+              icon: AppIcons.calendar,
               label: l10n.homeMonthShort(m),
               selected: m == shown.month,
             ),
@@ -235,7 +235,7 @@ class _PeriodButton extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleSmall
                     ?.copyWith(color: p.accent, fontWeight: FontWeight.w700),
               ),
-              Icon(Icons.arrow_drop_down_rounded, size: 20, color: p.accent),
+              Icon(AppIcons.dropDown, size: 20, color: p.accent),
             ],
           ),
         ),

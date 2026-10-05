@@ -1,8 +1,11 @@
+import '../icons/app_icons.dart';
+
 import 'package:flutter/material.dart';
 
 import '../app_theme_tokens.dart';
 import '../tokens/app_dimens.dart';
 import 'buttons.dart';
+import 'marquee_text.dart';
 import 'glass.dart';
 import 'progress.dart';
 
@@ -89,12 +92,7 @@ class MiniPlayerBar extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          title,
-                          style: text.titleSmall,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        MarqueeText(title, style: text.titleSmall),
                         Text(
                           artist,
                           style: text.bodySmall,
@@ -105,20 +103,18 @@ class MiniPlayerBar extends StatelessWidget {
                     ),
                   ),
                   _BarIcon(
-                    icon: Icons.skip_previous_rounded,
+                    icon: AppIcons.skipPrevious,
                     tooltip: previousLabel,
                     onPressed: onPrevious,
                   ),
                   CircleIconButton(
-                    icon: isPlaying
-                        ? Icons.pause_rounded
-                        : Icons.play_arrow_rounded,
+                    icon: isPlaying ? AppIcons.pause : AppIcons.play,
                     tooltip: isPlaying ? pauseLabel : playLabel,
                     emphasized: true,
                     onPressed: onPlayPause,
                   ),
                   _BarIcon(
-                    icon: Icons.skip_next_rounded,
+                    icon: AppIcons.skipNext,
                     tooltip: nextLabel,
                     onPressed: onNext,
                   ),
@@ -140,7 +136,7 @@ class MiniPlayerBar extends StatelessWidget {
                       onTap: onQueue,
                       radius: 14,
                       child: Icon(
-                        Icons.queue_music_rounded,
+                        AppIcons.queue,
                         size: 16,
                         color: p.onSurfaceMuted,
                       ),
@@ -179,7 +175,7 @@ class _Artwork extends StatelessWidget {
                   ),
                 ),
                 child: Icon(
-                  Icons.music_note_rounded,
+                  AppIcons.musicNote,
                   color: context.palette.onGlow,
                   size: 20,
                 ),

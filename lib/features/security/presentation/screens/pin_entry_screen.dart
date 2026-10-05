@@ -185,7 +185,7 @@ class _PinEntryScreenState extends State<PinEntryScreen> {
               AppTopBar(
                 title: title,
                 leading: CircleIconButton(
-                  icon: Icons.arrow_back_rounded,
+                  icon: AppIcons.back,
                   tooltip: MaterialLocalizations.of(context).backButtonTooltip,
                   onPressed: () => Navigator.of(context).pop(false),
                 ),
@@ -222,9 +222,7 @@ class _PinEntryScreenState extends State<PinEntryScreen> {
                                   child: GestureDetector(
                                     behavior: HitTestBehavior.opaque,
                                     onTap: _tryBiometric,
-                                    child: const Icon(
-                                      Icons.fingerprint_rounded,
-                                    ),
+                                    child: const Icon(AppIcons.fingerprint),
                                   ),
                                 )
                               : null,

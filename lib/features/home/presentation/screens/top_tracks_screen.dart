@@ -44,7 +44,7 @@ class _Body extends StatelessWidget {
           AppTopBar(
             title: l10n.homeTopTracksTitle,
             leading: CircleIconButton(
-              icon: Icons.arrow_back_rounded,
+              icon: AppIcons.back,
               tooltip: l10n.actionBack,
               onPressed: () => context.pop(),
             ),
@@ -63,7 +63,7 @@ class _Body extends StatelessWidget {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: PillButton(
-                  icon: Icons.play_arrow_rounded,
+                  icon: AppIcons.play,
                   label: l10n.actionPlayAll,
                   onPressed: tracks.isEmpty
                       ? null

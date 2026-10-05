@@ -1,3 +1,5 @@
+import '../icons/app_icons.dart';
+
 import 'package:flutter/material.dart';
 
 import '../app_theme_tokens.dart';
@@ -93,7 +95,7 @@ class PinPad extends StatelessWidget {
               plain: true,
               onTap: enabled ? onBackspace : null,
               semanticLabel: backspaceLabel,
-              child: const Icon(Icons.backspace_outlined),
+              child: const Icon(AppIcons.backspace),
             ),
           ],
         ),

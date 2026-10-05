@@ -111,11 +111,7 @@ class _EmptyState extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
       child: Column(
         children: [
-          Icon(
-            Icons.graphic_eq_rounded,
-            size: 40,
-            color: context.palette.accent,
-          ),
+          Icon(AppIcons.equalizer, size: 40, color: context.palette.accent),
           const SizedBox(height: AppSpacing.md),
           Text(title, style: text.titleLarge, textAlign: TextAlign.center),
           const SizedBox(height: AppSpacing.xs),
@@ -123,7 +119,7 @@ class _EmptyState extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
           PillButton(
             label: action,
-            icon: Icons.library_music_rounded,
+            icon: AppIcons.library,
             onPressed: onAction,
           ),
         ],

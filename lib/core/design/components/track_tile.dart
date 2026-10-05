@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../app_theme_tokens.dart';
 import '../tokens/app_dimens.dart';
 import 'artwork_box.dart';
+import 'marquee_text.dart';
 
 /// 곡 한 줄: 커버 · 제목 · 부제 · 오른쪽 위젯.
 class TrackTile extends StatefulWidget {
@@ -80,10 +81,9 @@ class _TrackTileState extends State<TrackTile> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
+                    MarqueeText(
                       w.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      scroll: w.active,
                       style: text.titleSmall?.copyWith(
                         color: w.active ? p.accent : p.onSurface,
                       ),

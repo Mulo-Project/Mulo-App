@@ -29,12 +29,12 @@ class PlayShuffleRow extends StatelessWidget {
         children: [
           PillButton(
             label: playLabel ?? l10n.actionPlay,
-            icon: Icons.play_arrow_rounded,
+            icon: AppIcons.play,
             onPressed: empty ? null : () => now.playQueue(tracks),
           ),
           PillButton(
             label: l10n.actionShuffle,
-            icon: Icons.shuffle_rounded,
+            icon: AppIcons.shuffle,
             variant: PillVariant.tonal,
             onPressed: empty ? null : () => now.playShuffled(tracks),
           ),

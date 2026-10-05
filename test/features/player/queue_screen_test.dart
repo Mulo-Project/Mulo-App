@@ -1,3 +1,4 @@
+import 'package:music_download_play_app/core/design/icons/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -122,10 +123,10 @@ void main() {
     GoRouter.of(router).push(Routes.player);
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.favorite_border_rounded), findsOneWidget);
+    expect(find.byIcon(AppIcons.favoriteOutline), findsOneWidget);
     await tester.tap(find.byTooltip('좋아요').last);
     await tester.pumpAndSettle();
-    expect(find.byIcon(Icons.favorite_rounded), findsOneWidget);
+    expect(find.byIcon(AppIcons.favorite), findsOneWidget);
     expect(find.byTooltip('좋아요 취소'), findsOneWidget);
   });
 }

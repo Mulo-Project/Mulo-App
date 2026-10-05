@@ -181,7 +181,7 @@ class _DownloadSheetState extends State<_DownloadSheet> {
                   ),
                   const SizedBox(width: AppSpacing.xs),
                   CircleIconButton(
-                    icon: Icons.folder_open_rounded,
+                    icon: AppIcons.folderOpen,
                     tooltip: l10n.downloadPickFolder,
                     onPressed: _pickFolder,
                   ),
@@ -214,7 +214,7 @@ class _DownloadSheetState extends State<_DownloadSheet> {
                   ),
                   const SizedBox(width: AppSpacing.xs),
                   CircleIconButton(
-                    icon: Icons.add_rounded,
+                    icon: AppIcons.add,
                     tooltip: l10n.playlistsNew,
                     onPressed: _createPlaylist,
                   ),
@@ -227,7 +227,7 @@ class _DownloadSheetState extends State<_DownloadSheet> {
                   width: double.infinity,
                   child: PillButton(
                     label: l10n.actionDownload,
-                    icon: Icons.download_rounded,
+                    icon: AppIcons.download,
                     onPressed: _title.text.trim().isEmpty ? null : _start,
                   ),
                 ),
@@ -261,7 +261,7 @@ class _PlaylistPickRow extends StatelessWidget {
       child: SettingRow(
         title: summary,
         onTap: onTap,
-        trailing: Icon(Icons.chevron_right_rounded, color: p.onSurfaceMuted),
+        trailing: Icon(AppIcons.chevronRight, color: p.onSurfaceMuted),
       ),
     );
   }

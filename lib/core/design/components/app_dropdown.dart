@@ -1,3 +1,5 @@
+import '../icons/app_icons.dart';
+
 import 'package:flutter/material.dart';
 
 import '../app_theme_tokens.dart';
@@ -49,7 +51,7 @@ class AppDropdown<T> extends StatelessWidget {
                 SizedBox(
                   width: 24,
                   child: v == selected
-                      ? Icon(Icons.check_rounded, size: 18, color: p.accent)
+                      ? Icon(AppIcons.check, size: 18, color: p.accent)
                       : null,
                 ),
                 Text(labelOf(v), style: text),
@@ -75,11 +77,7 @@ class AppDropdown<T> extends StatelessWidget {
               const SizedBox(width: AppSpacing.xs),
             ],
             Text(labelOf(selected), style: text),
-            Icon(
-              Icons.arrow_drop_down_rounded,
-              size: 22,
-              color: p.onSurfaceMuted,
-            ),
+            Icon(AppIcons.dropDown, size: 22, color: p.onSurfaceMuted),
           ],
         ),
       ),
