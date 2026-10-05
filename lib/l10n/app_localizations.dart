@@ -1664,6 +1664,42 @@ abstract class AppLocalizations {
   /// **'{count}회'**
   String mediaDetailViewCount(String count);
 
+  /// No description provided for @searchFilterTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'분류로 거르기'**
+  String get searchFilterTooltip;
+
+  /// No description provided for @searchSortTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'정렬'**
+  String get searchSortTooltip;
+
+  /// No description provided for @searchSortRelevance.
+  ///
+  /// In ko, this message translates to:
+  /// **'관련도순'**
+  String get searchSortRelevance;
+
+  /// No description provided for @searchSortShortest.
+  ///
+  /// In ko, this message translates to:
+  /// **'짧은 순'**
+  String get searchSortShortest;
+
+  /// No description provided for @searchSortLongest.
+  ///
+  /// In ko, this message translates to:
+  /// **'긴 순'**
+  String get searchSortLongest;
+
+  /// No description provided for @searchSortTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'제목순'**
+  String get searchSortTitle;
+
   /// No description provided for @searchCategoryChecking.
   ///
   /// In ko, this message translates to:

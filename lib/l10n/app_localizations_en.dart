@@ -861,6 +861,24 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get searchFilterTooltip => 'Filter by category';
+
+  @override
+  String get searchSortTooltip => 'Sort';
+
+  @override
+  String get searchSortRelevance => 'Relevance';
+
+  @override
+  String get searchSortShortest => 'Shortest';
+
+  @override
+  String get searchSortLongest => 'Longest';
+
+  @override
+  String get searchSortTitle => 'Title';
+
+  @override
   String get searchCategoryChecking =>
       'Checking categories. Songs appear as they are read.';
 

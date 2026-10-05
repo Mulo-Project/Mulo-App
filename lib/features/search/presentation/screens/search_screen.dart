@@ -10,6 +10,7 @@ import '../../../downloads/presentation/widgets/download_progress_card.dart';
 import '../../../library/domain/entities/track.dart' show formatDuration;
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
+import '../../domain/entities/search_sort.dart';
 import '../../domain/entities/search_source.dart';
 import '../bloc/search_cubit.dart';
 import 'media_detail_screen.dart';
@@ -201,64 +202,119 @@ class _Results extends StatelessWidget {
           padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
           child: Text(label, style: text.titleMedium),
         ),
-        if (state.items.length > 1) const _CategoryFilter(),
-        for (final hit in state.visibleItems) _HitTile(hit: hit),
-        if (state.hasNext)
+        if (state.items.length > 1)
           Padding(
-            padding: const EdgeInsets.only(top: AppSpacing.sm),
-            child: Center(
-              child: state.loadingMore
-                  ? const CircularProgressIndicator()
-                  : PillButton(
-                      label: l10n.searchLoadMore,
-                      variant: PillVariant.tonal,
-                      onPressed: context.read<SearchCubit>().loadMore,
-                    ),
+            padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
+            child: const Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xs,
+              children: [_CategoryFilter(), _SortMenu()],
             ),
           ),
+        if (state.category != null && state.probing)
+          Padding(
+            padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
+            child: Text(
+              l10n.searchCategoryChecking,
+              style: text.bodySmall?.copyWith(
+                color: context.palette.onSurfaceMuted,
+              ),
+            ),
+          ),
+        for (final hit in state.visibleItems) _HitTile(hit: hit),
+        if (state.hasNext)
+          // 끝까지 내려와 이 줄이 화면에 들어오면 다음 결과를 불러온다.
+          // 곡이 늘 때마다 새로 만들어서(key) 다음 쪽도 같은 방식으로 이어진다.
+          _LoadMoreTrigger(key: ValueKey(state.items.length)),
       ],
     );
   }
 }
 
-/// 결과 위의 분류 필터: 전체 + 유튜브 분류 (고정 목록이라 바로 보인다).
-/// 곡의 분류는 뒤에서 읽기 때문에, 읽는 동안은 읽은 곡부터 걸린다.
+/// 결과 제목 줄 아래의 분류 필터: 누르면 유튜브 분류 목록이 펼쳐진다.
+/// 목록은 고정이라 바로 보이고, 곡의 분류는 뒤에서 읽어 읽은 곡부터 걸린다.
 class _CategoryFilter extends StatelessWidget {
   const _CategoryFilter();
+
+  /// 드롭다운은 null을 못 고르므로 "전체"는 빈 문자열로 둔다.
+  static const _all = '';
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final cubit = context.read<SearchCubit>();
-    final state = context.watch<SearchCubit>().state;
-    final text = Theme.of(context).textTheme;
+    final category = context.watch<SearchCubit>().state.category;
+    return AppDropdown<String>(
+      values: const [_all, ...youtubeCategories],
+      selected: category ?? _all,
+      labelOf: (c) => c == _all ? l10n.searchFilterAll : categoryLabel(l10n, c),
+      tooltip: l10n.searchFilterTooltip,
+      onChanged: (c) => cubit.selectCategory(c == _all ? null : c),
+    );
+  }
+}
+
+/// 정렬 메뉴 (받아 온 결과 안에서 순서만 바꾼다).
+class _SortMenu extends StatelessWidget {
+  const _SortMenu();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final cubit = context.read<SearchCubit>();
+    return AppDropdown<SearchSort>(
+      values: SearchSort.values,
+      selected: context.watch<SearchCubit>().state.sort,
+      labelOf: (s) => switch (s) {
+        SearchSort.relevance => l10n.searchSortRelevance,
+        SearchSort.shortest => l10n.searchSortShortest,
+        SearchSort.longest => l10n.searchSortLongest,
+        SearchSort.title => l10n.searchSortTitle,
+      },
+      tooltip: l10n.searchSortTooltip,
+      onChanged: cubit.selectSort,
+    );
+  }
+}
+
+/// 결과 맨 아래: 화면에 들어오면 다음 쪽을 불러온다 (무한 스크롤).
+/// 불러오기가 끝났는데도 더 있으면(실패한 경우) 다시 누를 수 있는 버튼을 보여 준다.
+class _LoadMoreTrigger extends StatefulWidget {
+  const _LoadMoreTrigger({super.key});
+
+  @override
+  State<_LoadMoreTrigger> createState() => _LoadMoreTriggerState();
+}
+
+class _LoadMoreTriggerState extends State<_LoadMoreTrigger> {
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+  }
+
+  Future<void> _load() async {
+    if (!mounted) return;
+    setState(() => _loading = true);
+    await context.read<SearchCubit>().loadMore();
+    if (mounted) setState(() => _loading = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final loadingMore = context.watch<SearchCubit>().state.loadingMore;
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: AppSpacing.screen,
-            child: SegmentedPills<String?>(
-              values: [null, ...youtubeCategories],
-              selected: state.category,
-              labelOf: (c) =>
-                  c == null ? l10n.searchFilterAll : categoryLabel(l10n, c),
-              onChanged: cubit.selectCategory,
-            ),
-          ),
-          if (state.probing && state.category != null)
-            Padding(
-              padding: AppSpacing.screen.copyWith(top: AppSpacing.xs),
-              child: Text(
-                l10n.searchCategoryChecking,
-                style: text.bodySmall?.copyWith(
-                  color: context.palette.onSurfaceMuted,
-                ),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+      child: Center(
+        child: _loading || loadingMore
+            ? const CircularProgressIndicator()
+            : PillButton(
+                label: context.l10n.searchLoadMore,
+                variant: PillVariant.tonal,
+                onPressed: _load,
               ),
-            ),
-        ],
       ),
     );
   }

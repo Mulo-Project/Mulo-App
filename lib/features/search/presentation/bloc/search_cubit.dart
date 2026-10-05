@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
+import '../../domain/entities/search_sort.dart';
 import '../../domain/entities/search_source.dart';
 import '../../domain/usecases/search_usecases.dart';
 
@@ -20,6 +21,7 @@ class SearchState extends Equatable {
     this.failure,
     this.category,
     this.probing = false,
+    this.sort = SearchSort.relevance,
   });
 
   final SearchStatus status;
@@ -39,13 +41,40 @@ class SearchState extends Equatable {
   /// 곡마다 분류를 읽는 중인지 (읽은 곡부터 필터에 걸린다).
   final bool probing;
 
-  /// 분류 필터를 적용한 목록.
-  List<MediaHit> get visibleItems => category == null
-      ? items
-      : [
-          for (final h in items)
-            if (h.categories.contains(category)) h,
-        ];
+  /// 고른 정렬 순서.
+  final SearchSort sort;
+
+  /// 분류 필터와 정렬을 적용한 목록.
+  List<MediaHit> get visibleItems {
+    final shown = category == null
+        ? [...items]
+        : [
+            for (final h in items)
+              if (h.categories.contains(category)) h,
+          ];
+    // 길이를 모르는 곡은 어느 쪽 정렬이든 맨 뒤로 보낸다.
+    int byDuration(MediaHit a, MediaHit b, int sign) {
+      final x = a.duration, y = b.duration;
+      if (x == null || y == null) {
+        return x == null && y == null ? 0 : (x == null ? 1 : -1);
+      }
+      return sign * x.compareTo(y);
+    }
+
+    switch (sort) {
+      case SearchSort.relevance:
+        break;
+      case SearchSort.shortest:
+        shown.sort((a, b) => byDuration(a, b, 1));
+      case SearchSort.longest:
+        shown.sort((a, b) => byDuration(a, b, -1));
+      case SearchSort.title:
+        shown.sort(
+          (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()),
+        );
+    }
+    return shown;
+  }
 
   SearchState copyWith({
     List<MediaHit>? items,
@@ -53,6 +82,7 @@ class SearchState extends Equatable {
     bool? loadingMore,
     String? Function()? category,
     bool? probing,
+    SearchSort? sort,
   }) => SearchState(
     status: status,
     items: items ?? this.items,
@@ -62,6 +92,7 @@ class SearchState extends Equatable {
     failure: failure,
     category: category == null ? this.category : category(),
     probing: probing ?? this.probing,
+    sort: sort ?? this.sort,
   );
 
   @override
@@ -74,6 +105,7 @@ class SearchState extends Equatable {
     failure,
     category,
     probing,
+    sort,
   ];
 }
 
@@ -94,7 +126,10 @@ class SearchCubit extends Cubit<SearchState> {
   final _probed = <String>{};
 
   /// 분류를 한 번에 알아보는 곡 수.
-  static const _probeParallel = 6;
+  static const _probeParallel = 8;
+
+  /// 이미 알아낸 곡의 분류 (곡 주소 → 분류). 같은 곡이 다시 나오면 바로 쓴다.
+  final _categoryCache = <String, List<String>>{};
 
   /// 입력이 곡 주소인지 (http · https 주소).
   static bool isUrl(String text) {
@@ -178,16 +213,27 @@ class SearchCubit extends Cubit<SearchState> {
     }
   }
 
-  /// 분류 필터를 고른다 (null이면 전체). 이미 고른 것을 다시 누르면 푼다.
-  void selectCategory(String? category) {
-    final now = state.category == category ? null : category;
-    emit(state.copyWith(category: () => now));
-  }
+  /// 정렬 순서를 고른다.
+  void selectSort(SearchSort sort) => emit(state.copyWith(sort: sort));
+
+  /// 분류 필터를 고른다 (null이면 전체).
+  void selectCategory(String? category) =>
+      emit(state.copyWith(category: () => category));
 
   /// 목록 항목은 분류가 비어 있어서, 곡마다 정보를 읽어 분류를 채운다.
   /// 몇 곡씩 뒤에서 읽고, 읽은 곡부터 분류 필터에 걸린다.
   Future<void> _probeCategories(int request) async {
-    emit(state.copyWith(probing: true));
+    emit(
+      state.copyWith(
+        probing: true,
+        items: [
+          for (final h in state.items)
+            h.categories.isEmpty && _categoryCache.containsKey(h.url)
+                ? h.withCategories(_categoryCache[h.url]!)
+                : h,
+        ],
+      ),
+    );
     Future<void> worker() async {
       while (request == _request && !isClosed) {
         final next = state.items
@@ -203,6 +249,7 @@ class SearchCubit extends Cubit<SearchState> {
             PlaylistInfo() => const <String>[],
           };
           if (cats.isEmpty) continue;
+          _categoryCache[next.url] = cats;
           emit(
             state.copyWith(
               items: [

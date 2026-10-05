@@ -54,7 +54,13 @@ class AppDropdown<T> extends StatelessWidget {
                       ? Icon(AppIcons.check, size: 18, color: p.accent)
                       : null,
                 ),
-                Text(labelOf(v), style: text),
+                Flexible(
+                  child: Text(
+                    labelOf(v),
+                    style: text,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
               ],
             ),
           ),
