@@ -853,6 +853,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get searchCategoryChecking =>
+      'Checking categories. Songs appear as they are read.';
+
+  @override
   String videoCategory(String name) {
     String _temp0 = intl.Intl.selectLogic(name, {
       'FilmAnimation': 'Film & Animation',

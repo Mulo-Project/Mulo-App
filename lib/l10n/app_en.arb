@@ -334,6 +334,7 @@
       }
     }
   },
+  "searchCategoryChecking": "Checking categories. Songs appear as they are read.",
   "videoCategory": "{name, select, FilmAnimation{Film & Animation} Autos{Autos & Vehicles} Music{Music} Pets{Pets & Animals} Sports{Sports} Travel{Travel & Events} Gaming{Gaming} People{People & Blogs} Comedy{Comedy} Entertainment{Entertainment} News{News & Politics} Howto{Howto & Style} Education{Education} Science{Science & Technology} Nonprofits{Nonprofits & Activism} other{{name}}}",
   "downloadsExpand": "Show queue",
   "downloadsCollapse": "Hide queue",

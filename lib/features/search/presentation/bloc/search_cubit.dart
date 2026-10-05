@@ -19,6 +19,7 @@ class SearchState extends Equatable {
     this.playlistTitle,
     this.failure,
     this.category,
+    this.probing = false,
   });
 
   final SearchStatus status;
@@ -35,9 +36,8 @@ class SearchState extends Equatable {
   /// 고른 분류 필터. null이면 전체.
   final String? category;
 
-  /// 지금까지 알아낸 분류들 (처음 나온 순서).
-  List<String> get categories =>
-      {for (final h in items) ...h.categories}.toList();
+  /// 곡마다 분류를 읽는 중인지 (읽은 곡부터 필터에 걸린다).
+  final bool probing;
 
   /// 분류 필터를 적용한 목록.
   List<MediaHit> get visibleItems => category == null
@@ -52,6 +52,7 @@ class SearchState extends Equatable {
     bool? hasNext,
     bool? loadingMore,
     String? Function()? category,
+    bool? probing,
   }) => SearchState(
     status: status,
     items: items ?? this.items,
@@ -60,6 +61,7 @@ class SearchState extends Equatable {
     playlistTitle: playlistTitle,
     failure: failure,
     category: category == null ? this.category : category(),
+    probing: probing ?? this.probing,
   );
 
   @override
@@ -71,6 +73,7 @@ class SearchState extends Equatable {
     playlistTitle,
     failure,
     category,
+    probing,
   ];
 }
 
@@ -91,7 +94,7 @@ class SearchCubit extends Cubit<SearchState> {
   final _probed = <String>{};
 
   /// 분류를 한 번에 알아보는 곡 수.
-  static const _probeParallel = 3;
+  static const _probeParallel = 6;
 
   /// 입력이 곡 주소인지 (http · https 주소).
   static bool isUrl(String text) {
@@ -182,8 +185,9 @@ class SearchCubit extends Cubit<SearchState> {
   }
 
   /// 목록 항목은 분류가 비어 있어서, 곡마다 정보를 읽어 분류를 채운다.
-  /// 몇 곡씩 뒤에서 읽고, 읽은 곡부터 [categories]에 나타난다.
+  /// 몇 곡씩 뒤에서 읽고, 읽은 곡부터 분류 필터에 걸린다.
   Future<void> _probeCategories(int request) async {
+    emit(state.copyWith(probing: true));
     Future<void> worker() async {
       while (request == _request && !isClosed) {
         final next = state.items
@@ -214,5 +218,8 @@ class SearchCubit extends Cubit<SearchState> {
     }
 
     await Future.wait([for (var i = 0; i < _probeParallel; i++) worker()]);
+    if (request == _request && !isClosed) {
+      emit(state.copyWith(probing: false));
+    }
   }
 }
