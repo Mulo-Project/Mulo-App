@@ -6,12 +6,13 @@ import '../entities/search_source.dart';
 ///
 /// 실패는 [EngineException]으로 던진다.
 abstract interface class DownloaderEngine {
-  /// 키워드 검색. [page]는 0부터.
+  /// 키워드 검색. [page]는 0부터. [newest]면 올린 날 최신 순으로 찾는다.
   Future<SearchPage> search(
     String query, {
     SearchSource source = SearchSource.youtube,
     int page = 0,
     int size = 20,
+    bool newest = false,
   });
 
   /// URL로 곡 또는 재생목록 정보를 가져온다.
