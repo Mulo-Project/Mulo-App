@@ -63,6 +63,47 @@ void main() {
     expect(state().index, 0);
   });
 
+  test('첫 곡에서 previous는 마지막 곡으로', () {
+    vm().previous();
+    expect(state().index, 2);
+    expect(state().position, Duration.zero);
+  });
+
+  group('셔플', () {
+    final tracks = TestData.tracks.take(6).toList();
+    setUp(() => cubit.playQueue(tracks));
+
+    test('켜면 지금 곡은 맨 앞, 나머지는 섞이고 끄면 원래 순서', () {
+      vm().toggleShuffle();
+      expect(state().queue.first, tracks.first);
+      expect(state().queue.toSet(), tracks.toSet());
+      vm().toggleShuffle();
+      expect(state().queue, tracks);
+      expect(state().index, 0);
+    });
+
+    test('한 바퀴(전체 반복) 돌면 순서를 새로 섞는다', () {
+      vm()
+        ..cycleRepeat()
+        ..toggleShuffle();
+      final first = [...state().queue];
+      for (var i = 0; i < first.length; i++) {
+        vm().next();
+      }
+      expect(state().index, 0);
+      expect(state().queue.toSet(), tracks.toSet());
+      expect(state().queue.first, isNot(first.last));
+    });
+  });
+
+  test('시크바를 끄는 동안 위치는 바뀌고 끝나면 정상 동작', () {
+    vm()
+      ..beginScrub()
+      ..seekFraction(.5)
+      ..endScrub();
+    expect(state().progress, closeTo(.5, .001));
+  });
+
   test('cycleRepeat은 꺼짐 → 전체 → 한 곡 → 꺼짐', () {
     vm().cycleRepeat();
     vm().cycleRepeat();

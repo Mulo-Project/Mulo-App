@@ -20,7 +20,10 @@ class QueueScreen extends StatelessWidget {
     final l10n = context.l10n;
     final p = context.palette;
     final text = Theme.of(context).textTheme;
-    final state = context.watch<NowPlayingCubit>().state;
+    // 재생 위치(초마다 바뀜)는 보지 않는다: 끄는 동안 목록이 다시 그려지면 끊긴다.
+    final (queue, index, playing) = context.select(
+      (NowPlayingCubit c) => (c.state.queue, c.state.index, c.state.isPlaying),
+    );
     final vm = context.read<NowPlayingCubit>();
 
     return Scaffold(
@@ -38,7 +41,7 @@ class QueueScreen extends StatelessWidget {
                 ),
               ),
               Expanded(
-                child: state.queue.isEmpty
+                child: queue.isEmpty
                     ? Center(
                         child: Text(
                           l10n.playerQueueEmpty,
@@ -54,7 +57,7 @@ class QueueScreen extends StatelessWidget {
                               MediaQuery.paddingOf(context).bottom,
                         ),
                         header: _QueueHeader(
-                          count: state.queue.length,
+                          count: queue.length,
                           onShuffle: vm.shuffleUpNext,
                           onClear: () {
                             vm.clearQueue();
@@ -71,17 +74,17 @@ class QueueScreen extends StatelessWidget {
                           elevation: 0,
                           child: child,
                         ),
-                        itemCount: state.queue.length,
+                        itemCount: queue.length,
                         onReorderItem: vm.moveInQueue,
                         itemBuilder: (context, i) {
-                          final t = state.queue[i];
+                          final t = queue[i];
                           return ReorderableDelayedDragStartListener(
                             key: ValueKey(t.id),
                             index: i,
                             child: _QueueTile(
                               track: t,
-                              active: i == state.index,
-                              playing: state.isPlaying,
+                              active: i == index,
+                              playing: playing,
                               onTap: () => vm.jumpTo(i),
                             ),
                           );

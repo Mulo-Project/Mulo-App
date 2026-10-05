@@ -77,8 +77,9 @@ class NowPlayingState extends Equatable {
 /// [audio]가 있으면 상태가 바뀔 때 재생 엔진(just_audio)도 같이 움직이고, 엔진의 재생 위치 ·
 /// 곡 끝 알림이 상태로 돌아온다. 없으면 화면 상태만 움직인다 (테스트).
 class NowPlayingCubit extends Cubit<NowPlayingState> {
-  NowPlayingCubit({AudioPlayback? audio})
+  NowPlayingCubit({AudioPlayback? audio, Random? random})
     : _audio = audio,
+      _random = random ?? Random(),
       super(
         const NowPlayingState(
           queue: [],
@@ -97,6 +98,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   }
 
   final AudioPlayback? _audio;
+  final Random _random;
   var _subs = <StreamSubscription<Object?>>[];
 
   /// 엔진 작업은 순서대로 하나씩 (곡을 불러오는 동안 재생 · 이동이 끼어들지 않게).
@@ -107,6 +109,12 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
 
   /// 엔진이 알려 준 위치를 상태에 넣는 중 (이때는 엔진을 다시 움직이지 않는다).
   var _fromEngine = false;
+
+  /// 시크바를 끄는 중: 위치는 화면 상태만 바꾸고, 엔진 이동은 손을 뗄 때 한 번만 한다.
+  var _scrubbing = false;
+
+  /// 셔플을 켜기 전 순서 (끄면 이 순서로 되돌린다).
+  List<Track>? _original;
 
   void _run(Future<void> Function(AudioPlayback audio) job) {
     final audio = _audio;
@@ -119,7 +127,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     super.onChange(change);
     final from = change.currentState;
     final to = change.nextState;
-    if (_audio == null || _fromEngine) return;
+    if (_audio == null || _fromEngine || _scrubbing) return;
 
     final track = to.track;
     if (track == null) {
@@ -162,7 +170,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   }
 
   void _onEnginePosition(Duration position) {
-    if (!_ready || position == state.position) return;
+    if (!_ready || _scrubbing || position == state.position) return;
     _fromEngine = true;
     emit(state.copyWith(position: position));
     _fromEngine = false;
@@ -222,10 +230,24 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
 
   void playQueue(List<Track> queue, {int index = 0}) {
     if (queue.isEmpty) return;
+    final at = index.clamp(0, queue.length - 1);
+    if (state.shuffle) {
+      // 셔플 중이면 고른 곡을 맨 앞에 두고 나머지를 섞는다.
+      _original = queue;
+      emit(
+        state.copyWith(
+          queue: [queue[at], ..._shuffled(queue.where((t) => t != queue[at]))],
+          index: 0,
+          position: Duration.zero,
+          isPlaying: true,
+        ),
+      );
+      return;
+    }
     emit(
       state.copyWith(
         queue: queue,
-        index: index.clamp(0, queue.length - 1),
+        index: at,
         position: Duration.zero,
         isPlaying: true,
       ),
@@ -295,6 +317,17 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     if (state.queue.isEmpty) return;
     final last = state.index == state.queue.length - 1;
     if (last && state.repeat == PlayerRepeatMode.off) return;
+    if (last && state.shuffle && state.queue.length > 1) {
+      // 셔플 중 한 바퀴를 다 돌았으면 순서를 새로 섞는다 (방금 들은 곡이 맨 앞에 오지 않게).
+      emit(
+        state.copyWith(
+          queue: _shuffled(state.queue, avoidFirst: state.track),
+          index: 0,
+          position: Duration.zero,
+        ),
+      );
+      return;
+    }
     emit(
       state.copyWith(
         index: last ? 0 : state.index + 1,
@@ -303,13 +336,30 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     );
   }
 
-  /// 3초 넘게 들었으면 처음으로, 아니면 이전 곡.
+  /// 3초 넘게 들었으면 처음으로, 아니면 이전 곡 (첫 곡이면 마지막 곡).
   void previous() {
-    if (state.position > const Duration(seconds: 3) || state.index == 0) {
+    if (state.position > const Duration(seconds: 3) || state.queue.length < 2) {
       emit(state.copyWith(position: Duration.zero));
       return;
     }
+    if (state.index == 0) {
+      emit(
+        state.copyWith(index: state.queue.length - 1, position: Duration.zero),
+      );
+      return;
+    }
     emit(state.copyWith(index: state.index - 1, position: Duration.zero));
+  }
+
+  /// 시크바 끌기 시작.
+  void beginScrub() => _scrubbing = true;
+
+  /// 시크바 끌기 끝: 지금 위치로 엔진을 한 번 옮긴다.
+  void endScrub() {
+    if (!_scrubbing) return;
+    _scrubbing = false;
+    final position = state.position;
+    _run((a) => a.seek(position));
   }
 
   void seekFraction(double fraction) {
@@ -338,7 +388,52 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     if (!state.shuffle) toggleShuffle();
   }
 
-  void toggleShuffle() => emit(state.copyWith(shuffle: !state.shuffle));
+  /// 셔플을 켜면 지금 곡을 맨 앞에 두고 나머지를 섞고, 끄면 켜기 전 순서로 되돌린다.
+  void toggleShuffle() {
+    final current = state.track;
+    if (current == null) {
+      emit(state.copyWith(shuffle: !state.shuffle));
+      return;
+    }
+    if (!state.shuffle) {
+      _original = state.queue;
+      emit(
+        state.copyWith(
+          shuffle: true,
+          queue: [
+            current,
+            ..._shuffled(state.queue.where((t) => t != current)),
+          ],
+          index: 0,
+        ),
+      );
+      return;
+    }
+    final original = _original ?? state.queue;
+    _original = null;
+    final queue = [
+      ...original.where(state.queue.contains),
+      ...state.queue.where((t) => !original.contains(t)),
+    ];
+    emit(
+      state.copyWith(
+        shuffle: false,
+        queue: queue,
+        index: queue.indexOf(current),
+      ),
+    );
+  }
+
+  /// [source]를 섞은 새 목록. [avoidFirst]가 맨 앞에 오면 한 번 더 섞는다 (곡이 둘 이상일 때).
+  List<Track> _shuffled(Iterable<Track> source, {Track? avoidFirst}) {
+    final list = source.toList();
+    if (list.length < 2) return list;
+    list.shuffle(_random);
+    if (avoidFirst != null && list.first == avoidFirst) {
+      list.add(list.removeAt(0));
+    }
+    return list;
+  }
 
   void cycleRepeat() => emit(
     state.copyWith(
@@ -362,7 +457,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   void shuffleUpNext([Random? random]) {
     final upNext = state.queue.skip(state.index + 1).toList();
     if (upNext.length < 2) return;
-    upNext.shuffle(random);
+    upNext.shuffle(random ?? _random);
     emit(
       state.copyWith(queue: [...state.queue.take(state.index + 1), ...upNext]),
     );

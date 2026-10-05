@@ -216,6 +216,8 @@ class ArcPlayer extends StatelessWidget {
                   child: MorphSeek(
                     progress: data.state.progress,
                     onSeek: data.vm.seekFraction,
+                    onSeekStart: data.vm.beginScrub,
+                    onSeekEnd: data.vm.endScrub,
                     straight: data.showLyrics,
                     pathOf: _path,
                     track: p.onSurface.withValues(alpha: .2),
