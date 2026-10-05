@@ -38,7 +38,7 @@ class SearchState extends Equatable {
   /// 고른 분류 필터. null이면 전체.
   final String? category;
 
-  /// 곡마다 분류를 읽는 중인지 (읽은 곡부터 필터에 걸린다).
+  /// 곡마다 분류 · 올린 날을 읽는 중인지 (읽은 곡부터 필터 · 정렬에 반영된다).
   final bool probing;
 
   /// 고른 정렬 순서.
@@ -52,22 +52,33 @@ class SearchState extends Equatable {
             for (final h in items)
               if (h.categories.contains(category)) h,
           ];
-    // 길이를 모르는 곡은 어느 쪽 정렬이든 맨 뒤로 보낸다.
-    int byDuration(MediaHit a, MediaHit b, int sign) {
-      final x = a.duration, y = b.duration;
+    // 값을 모르는 곡은 어느 쪽 정렬이든 맨 뒤로 보낸다.
+    int byValue<T extends Comparable<Object>>(
+      T? x,
+      T? y, {
+      bool descending = false,
+    }) {
       if (x == null || y == null) {
         return x == null && y == null ? 0 : (x == null ? 1 : -1);
       }
-      return sign * x.compareTo(y);
+      return descending ? y.compareTo(x) : x.compareTo(y);
     }
 
     switch (sort) {
       case SearchSort.relevance:
         break;
+      case SearchSort.popular:
+        shown.sort(
+          (a, b) => byValue(a.viewCount, b.viewCount, descending: true),
+        );
+      case SearchSort.newest:
+        shown.sort(
+          (a, b) => byValue(a.uploadedAt, b.uploadedAt, descending: true),
+        );
       case SearchSort.shortest:
-        shown.sort((a, b) => byDuration(a, b, 1));
+        shown.sort((a, b) => byValue(a.duration, b.duration));
       case SearchSort.longest:
-        shown.sort((a, b) => byDuration(a, b, -1));
+        shown.sort((a, b) => byValue(a.duration, b.duration, descending: true));
       case SearchSort.title:
         shown.sort(
           (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()),
@@ -128,8 +139,8 @@ class SearchCubit extends Cubit<SearchState> {
   /// 분류를 한 번에 알아보는 곡 수.
   static const _probeParallel = 8;
 
-  /// 이미 알아낸 곡의 분류 (곡 주소 → 분류). 같은 곡이 다시 나오면 바로 쓴다.
-  final _categoryCache = <String, List<String>>{};
+  /// 이미 자세히 읽은 곡 (곡 주소 → 정보). 같은 곡이 다시 나오면 바로 쓴다.
+  final _infoCache = <String, MediaHit>{};
 
   /// 입력이 곡 주소인지 (http · https 주소).
   static bool isUrl(String text) {
@@ -220,16 +231,16 @@ class SearchCubit extends Cubit<SearchState> {
   void selectCategory(String? category) =>
       emit(state.copyWith(category: () => category));
 
-  /// 목록 항목은 분류가 비어 있어서, 곡마다 정보를 읽어 분류를 채운다.
-  /// 몇 곡씩 뒤에서 읽고, 읽은 곡부터 분류 필터에 걸린다.
+  /// 목록 항목은 분류 · 올린 날이 비어 있어서, 곡마다 정보를 읽어 채운다.
+  /// 몇 곡씩 뒤에서 읽고, 읽은 곡부터 분류 필터 · 최신순에 반영된다.
   Future<void> _probeCategories(int request) async {
     emit(
       state.copyWith(
         probing: true,
         items: [
           for (final h in state.items)
-            h.categories.isEmpty && _categoryCache.containsKey(h.url)
-                ? h.withCategories(_categoryCache[h.url]!)
+            _infoCache.containsKey(h.url) && h.categories.isEmpty
+                ? h.filledFrom(_infoCache[h.url]!)
                 : h,
         ],
       ),
@@ -237,24 +248,25 @@ class SearchCubit extends Cubit<SearchState> {
     Future<void> worker() async {
       while (request == _request && !isClosed) {
         final next = state.items
-            .where((h) => h.categories.isEmpty && !_probed.contains(h.url))
+            .where(
+              (h) =>
+                  h.categories.isEmpty &&
+                  !_probed.contains(h.url) &&
+                  !_infoCache.containsKey(h.url),
+            )
             .firstOrNull;
         if (next == null) return;
         _probed.add(next.url);
         try {
           final info = await _info(next.url);
           if (request != _request || isClosed) return;
-          final cats = switch (info) {
-            VideoInfo(:final hit) => hit.categories,
-            PlaylistInfo() => const <String>[],
-          };
-          if (cats.isEmpty) continue;
-          _categoryCache[next.url] = cats;
+          if (info is! VideoInfo) continue;
+          _infoCache[next.url] = info.hit;
           emit(
             state.copyWith(
               items: [
                 for (final h in state.items)
-                  h.url == next.url ? h.withCategories(cats) : h,
+                  h.url == next.url ? h.filledFrom(info.hit) : h,
               ],
             ),
           );

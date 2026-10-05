@@ -99,6 +99,41 @@ void main() {
       expect(cubit.state.items.single.categories, ['Music']);
     });
 
+    test('정렬: 인기순은 조회수, 최신순은 올린 날 (읽은 정보로 채워진다)', () async {
+      MediaHit hit(String id, {int? views, DateTime? at}) => MediaHit(
+        id: id,
+        title: 'T$id',
+        url: 'https://example.com/$id',
+        viewCount: views,
+        uploadedAt: at,
+      );
+      final engine = FakeDownloaderEngine(
+        pages: [
+          SearchPage(
+            // 목록에는 조회수만 있고 올린 날은 없다 (c는 조회수도 모른다).
+            items: [hit('a', views: 10), hit('b', views: 500), hit('c')],
+            hasNext: false,
+          ),
+        ],
+        infoByUrl: {
+          'https://example.com/a': VideoInfo(hit('a', at: DateTime(2024, 3))),
+          'https://example.com/b': VideoInfo(hit('b', at: DateTime(2023, 1))),
+          'https://example.com/c': VideoInfo(
+            hit('c', views: 1, at: DateTime(2025, 6)),
+          ),
+        },
+      );
+      final cubit = _cubit(engine);
+      await cubit.submit('q', SearchSource.youtube);
+      await pumpEventQueue();
+      List<String> ids() => cubit.state.visibleItems.map((h) => h.id).toList();
+
+      cubit.selectSort(SearchSort.popular);
+      expect(ids(), ['b', 'a', 'c']); // c는 읽은 뒤 조회수 1
+      cubit.selectSort(SearchSort.newest);
+      expect(ids(), ['c', 'a', 'b']);
+    });
+
     test('정렬: 짧은 순 · 긴 순 · 제목순 (길이를 모르는 곡은 맨 뒤)', () async {
       MediaHit hit(String id, String title, int? sec) => MediaHit(
         id: id,

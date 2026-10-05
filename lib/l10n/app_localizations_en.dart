@@ -870,6 +870,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchSortRelevance => 'Relevance';
 
   @override
+  String get searchSortPopular => 'Most viewed';
+
+  @override
+  String get searchSortNewest => 'Newest';
+
+  @override
   String get searchSortShortest => 'Shortest';
 
   @override
@@ -880,7 +886,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchCategoryChecking =>
-      'Checking categories. Songs appear as they are read.';
+      'Checking categories and dates. Songs update as they are read.';
 
   @override
   String videoCategory(String name) {

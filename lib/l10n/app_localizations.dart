@@ -1682,6 +1682,18 @@ abstract class AppLocalizations {
   /// **'관련도순'**
   String get searchSortRelevance;
 
+  /// No description provided for @searchSortPopular.
+  ///
+  /// In ko, this message translates to:
+  /// **'인기순'**
+  String get searchSortPopular;
+
+  /// No description provided for @searchSortNewest.
+  ///
+  /// In ko, this message translates to:
+  /// **'최신순'**
+  String get searchSortNewest;
+
   /// No description provided for @searchSortShortest.
   ///
   /// In ko, this message translates to:
@@ -1703,7 +1715,7 @@ abstract class AppLocalizations {
   /// No description provided for @searchCategoryChecking.
   ///
   /// In ko, this message translates to:
-  /// **'분류를 확인하는 중이에요. 읽은 곡부터 나와요.'**
+  /// **'분류 · 올린 날을 확인하는 중이에요. 읽은 곡부터 반영돼요.'**
   String get searchCategoryChecking;
 
   /// No description provided for @videoCategory.

@@ -211,7 +211,8 @@ class _Results extends StatelessWidget {
               children: [_CategoryFilter(), _SortMenu()],
             ),
           ),
-        if (state.category != null && state.probing)
+        if (state.probing &&
+            (state.category != null || state.sort == SearchSort.newest))
           Padding(
             padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
             child: Text(
@@ -267,6 +268,8 @@ class _SortMenu extends StatelessWidget {
       selected: context.watch<SearchCubit>().state.sort,
       labelOf: (s) => switch (s) {
         SearchSort.relevance => l10n.searchSortRelevance,
+        SearchSort.popular => l10n.searchSortPopular,
+        SearchSort.newest => l10n.searchSortNewest,
         SearchSort.shortest => l10n.searchSortShortest,
         SearchSort.longest => l10n.searchSortLongest,
         SearchSort.title => l10n.searchSortTitle,

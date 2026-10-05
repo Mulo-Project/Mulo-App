@@ -857,6 +857,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get searchSortRelevance => '관련도순';
 
   @override
+  String get searchSortPopular => '인기순';
+
+  @override
+  String get searchSortNewest => '최신순';
+
+  @override
   String get searchSortShortest => '짧은 순';
 
   @override
@@ -866,7 +872,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get searchSortTitle => '제목순';
 
   @override
-  String get searchCategoryChecking => '분류를 확인하는 중이에요. 읽은 곡부터 나와요.';
+  String get searchCategoryChecking => '분류 · 올린 날을 확인하는 중이에요. 읽은 곡부터 반영돼요.';
 
   @override
   String videoCategory(String name) {
