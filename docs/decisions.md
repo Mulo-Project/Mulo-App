@@ -335,3 +335,8 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - 곡 끝: 한 곡 반복이면 처음부터, 아니면 다음 곡, 마지막이면 전체 반복일 때만 처음으로 (끄면 멈춤).
 - 셔플은 아직 표시만 한다 (다음 곡 순서는 대기열 그대로). 백그라운드 재생 · 알림 조작(`audio_service`)은 다음 작업.
 - 테스트는 `FakeAudioPlayer`(test/helpers/fakes.dart)로 엔진을 바꾼다. `NowPlayingCubit()`처럼 엔진 없이 만들면 화면 상태만 움직인다.
+
+## D-053 · 2026-10-06 · 아이콘은 AppIcons 한 곳, 글리프는 Phosphor 폰트 · 긴 제목은 마키
+- 화면 · 컴포넌트는 Material `Icons.xxx`를 쓰지 않고 `AppIcons.xxx`만 쓴다. 글리프는 Phosphor(MIT) 폰트(Regular · Fill)를 `assets/fonts/phosphor/`에 번들하고 코드포인트를 `AppIcons`에 적는다. 세트 교체 · 직접 그린 아이콘 폰트로의 교체는 `AppIcons`만 고치면 된다.
+- `phosphor_flutter` 패키지는 현재 Flutter에서 `IconData`가 final이라 컴파일되지 않아 쓰지 않는다.
+- 제목은 `MarqueeText`: 칸을 넘칠 때만 흐르고, 목록은 재생 중인 줄만 흐른다. 접근성 "동작 줄이기"가 켜져 있으면 `…`로 줄인다.
