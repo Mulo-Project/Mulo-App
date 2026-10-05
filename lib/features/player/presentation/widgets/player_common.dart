@@ -174,9 +174,36 @@ class PlayerMoreButton extends StatelessWidget {
   }
 }
 
-/// 곡 제목 · 아티스트(· 앨범).
-class PlayerTitle extends StatelessWidget {
-  const PlayerTitle({
+/// 곡 제목 한 줄 (칸을 넘치면 흐른다).
+class PlayerTitleText extends StatelessWidget {
+  const PlayerTitleText({
+    super.key,
+    required this.track,
+    this.center = false,
+    this.large = true,
+  });
+
+  final Track track;
+  final bool center;
+  final bool large;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return MarqueeText(
+      track.title,
+      style: (large ? text.headlineSmall : text.titleMedium)?.copyWith(
+        fontWeight: FontWeight.w700,
+        height: 1.2,
+      ),
+      textAlign: center ? TextAlign.center : TextAlign.start,
+    );
+  }
+}
+
+/// 아티스트(· 앨범) 한 줄.
+class PlayerSubtitleText extends StatelessWidget {
+  const PlayerSubtitleText({
     super.key,
     required this.track,
     this.center = false,
@@ -186,8 +213,6 @@ class PlayerTitle extends StatelessWidget {
 
   final Track track;
   final bool center;
-
-  /// true면 큰 제목(화면 주인공), false면 한 줄 작은 제목.
   final bool large;
   final bool withAlbum;
 
@@ -196,34 +221,17 @@ class PlayerTitle extends StatelessWidget {
     final l10n = context.l10n;
     final p = context.palette;
     final text = Theme.of(context).textTheme;
-    final align = center ? TextAlign.center : TextAlign.start;
-    return Column(
-      crossAxisAlignment: center
-          ? CrossAxisAlignment.center
-          : CrossAxisAlignment.start,
-      children: [
-        MarqueeText(
-          track.title,
-          style: (large ? text.headlineSmall : text.titleMedium)?.copyWith(
-            fontWeight: FontWeight.w700,
-            height: 1.2,
-          ),
-          textAlign: align,
-        ),
-        SizedBox(height: large ? AppSpacing.xxs + 2 : 2),
-        Text(
-          [
-            track.artist.isEmpty ? l10n.unknownArtist : track.artist,
-            if (withAlbum && track.album.isNotEmpty) track.album,
-          ].join(' · '),
-          style: (large ? text.bodyLarge : text.bodySmall)?.copyWith(
-            color: p.onSurface.withValues(alpha: .66),
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textAlign: align,
-        ),
-      ],
+    return Text(
+      [
+        track.artist.isEmpty ? l10n.unknownArtist : track.artist,
+        if (withAlbum && track.album.isNotEmpty) track.album,
+      ].join(' · '),
+      style: (large ? text.bodyLarge : text.bodySmall)?.copyWith(
+        color: p.onSurface.withValues(alpha: .66),
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      textAlign: center ? TextAlign.center : TextAlign.start,
     );
   }
 }
@@ -860,9 +868,11 @@ class PlayerControls extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // 제목과 붙은 버튼은 제목 줄 가운데에 맞추고, 아티스트는 아래 줄에 혼자 둔다.
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Expanded(child: PlayerTitle(track: data.track, withAlbum: false)),
+              Expanded(child: PlayerTitleText(track: data.track)),
               IconButtonTheme(
                 data: IconButtonThemeData(
                   style: IconButton.styleFrom(
@@ -881,6 +891,11 @@ class PlayerControls extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 2),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: PlayerSubtitleText(track: data.track, withAlbum: false),
           ),
           if (seekBar) ...[
             const SizedBox(height: AppSpacing.xs),

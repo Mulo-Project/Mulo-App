@@ -11,6 +11,8 @@
 - 아이콘: 화면의 `Icons.xxx`(Material) 전부를 `AppIcons.xxx` 한 곳의 매핑으로 바꿨다. 글리프는 Phosphor(둥글고 부드러운 선)이고, 재생 · 일시정지 · 이전 · 다음 · 좋아요 · 선택된 탭처럼 면이 필요한 곳만 Fill. 나중에 세트를 바꾸거나 직접 그린 아이콘으로 교체할 때 `AppIcons`와 폰트만 고친다.
 - Phosphor를 고른 이유: Material Rounded보다 선이 가늘고 모서리가 둥글어 검정 · 보라 · 라임의 모던한 톤에 맞고, 같은 모양의 Fill 짝이 있어 활성 상태 표현이 쉽다.
 
+- 재생 화면: 제목과 붙은 버튼(가사 · 대기열 · 좋아요)을 한 줄에서 제목 줄 세로 가운데로 맞추고, 아티스트는 아래 줄에 혼자 둔다 (모든 플레이어 모양이 쓰는 `PlayerControls` 한 곳 수정, `PlayerTitle`을 `PlayerTitleText` · `PlayerSubtitleText`로 나눔).
+
 ## 바꾼 설정
 - `pubspec.yaml`: 폰트 `PhosphorRegular` · `PhosphorFill` 추가 (`assets/fonts/phosphor/`, MIT 라이선스 파일 포함). 패키지는 추가하지 않았다. `phosphor_flutter` 2.1.0은 현재 Flutter에서 `IconData`가 final이라 컴파일되지 않아, 폰트 파일만 가져오고 코드포인트를 `AppIcons`에 직접 적었다.
 - `windows/flutter/generated_plugin*` 변경분은 이 작업과 무관해 포함하지 않았다.
