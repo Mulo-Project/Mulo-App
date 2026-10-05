@@ -328,3 +328,10 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - 검색 화면은 입력하면 "아직 받을 수 없어요(엔진 연결 전)" 안내만 보인다. 가짜 검색 결과 · URL 카드 · 재생목록 선택 화면은 지웠다. 설정의 yt-dlp 엔진 카드(가짜 버전)도 뺐다 (엔진 연결 때 다시 만든다). 앱 버전은 `core/app_info.dart`.
 - 테스트 · 스크린샷용 곡은 `test/helpers/test_data.dart`(`TestData`)로 옮겼다. 앱 코드는 쓰지 않는다.
 - 재생은 아직 화면 상태만 움직인다 (`just_audio` · `audio_service` 미도입). 다음 작업으로 연결한다.
+
+## D-052 · 2026-10-04 · 실제 재생: just_audio, Windows · Linux는 media_kit
+- 재생 엔진은 `AudioPlayerRepository`(domain) 뒤에 두고, 구현은 `just_audio`(`JustAudioPlayerRepository`). Windows · Linux는 just_audio 기본 구현이 없어 `just_audio_media_kit`(+ `media_kit_libs_*`)을 켠다 (`initAudioBackend`, main에서 한 번). Android · macOS는 just_audio 자체 구현.
+- `NowPlayingCubit`은 상태가 주인이다: 상태가 바뀌면(`onChange`) 엔진을 부르고(곡 불러오기 · 재생 · 일시정지 · 이동), 엔진의 재생 위치 · 곡 끝 알림은 상태로 돌아온다. 엔진 호출은 한 줄로 이어서 한다 (불러오는 동안 재생 · 이동이 끼어들지 않게). 못 불러오면(없는 파일 · 주소 없음) 재생을 멈춘다.
+- 곡 끝: 한 곡 반복이면 처음부터, 아니면 다음 곡, 마지막이면 전체 반복일 때만 처음으로 (끄면 멈춤).
+- 셔플은 아직 표시만 한다 (다음 곡 순서는 대기열 그대로). 백그라운드 재생 · 알림 조작(`audio_service`)은 다음 작업.
+- 테스트는 `FakeAudioPlayer`(test/helpers/fakes.dart)로 엔진을 바꾼다. `NowPlayingCubit()`처럼 엔진 없이 만들면 화면 상태만 움직인다.

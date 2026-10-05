@@ -4,8 +4,10 @@ import 'dart:math';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/usecase/usecase.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../domain/entities/player_repeat_mode.dart';
+import '../../domain/usecases/audio_playback_usecases.dart';
 
 export '../../domain/entities/player_repeat_mode.dart';
 
@@ -72,10 +74,12 @@ class NowPlayingState extends Equatable {
 }
 
 /// 재생 상태. 처음에는 대기열이 비어 있다(미니 플레이어 숨김).
-/// 지금은 화면 상태만 움직이고, 재생 엔진(just_audio + audio_service)이 붙으면 엔진을 부른다.
+/// [audio]가 있으면 상태가 바뀔 때 재생 엔진(just_audio)도 같이 움직이고, 엔진의 재생 위치 ·
+/// 곡 끝 알림이 상태로 돌아온다. 없으면 화면 상태만 움직인다 (테스트).
 class NowPlayingCubit extends Cubit<NowPlayingState> {
-  NowPlayingCubit()
-    : super(
+  NowPlayingCubit({AudioPlayback? audio})
+    : _audio = audio,
+      super(
         const NowPlayingState(
           queue: [],
           index: 0,
@@ -84,7 +88,111 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
           shuffle: false,
           repeat: PlayerRepeatMode.off,
         ),
-      );
+      ) {
+    if (audio == null) return;
+    _subs = [
+      audio.watchPosition(const NoParams()).listen(_onEnginePosition),
+      audio.watchCompleted(const NoParams()).listen((_) => _onCompleted()),
+    ];
+  }
+
+  final AudioPlayback? _audio;
+  var _subs = <StreamSubscription<Object?>>[];
+
+  /// 엔진 작업은 순서대로 하나씩 (곡을 불러오는 동안 재생 · 이동이 끼어들지 않게).
+  Future<void> _tail = Future.value();
+
+  /// 곡을 불러오는 중에는 엔진의 옛 재생 위치를 상태에 넣지 않는다.
+  var _ready = false;
+
+  /// 엔진이 알려 준 위치를 상태에 넣는 중 (이때는 엔진을 다시 움직이지 않는다).
+  var _fromEngine = false;
+
+  void _run(Future<void> Function(AudioPlayback audio) job) {
+    final audio = _audio;
+    if (audio == null) return;
+    _tail = _tail.then((_) => job(audio)).catchError((Object _) {});
+  }
+
+  @override
+  void onChange(Change<NowPlayingState> change) {
+    super.onChange(change);
+    final from = change.currentState;
+    final to = change.nextState;
+    if (_audio == null || _fromEngine) return;
+
+    final track = to.track;
+    if (track == null) {
+      if (from.track != null || from.isPlaying != to.isPlaying) {
+        _ready = false;
+        _run((a) => a.pause(const NoParams()));
+      }
+      return;
+    }
+    if (track.uri != from.track?.uri) {
+      _ready = false;
+      _run((a) => _loadCurrent(a, track.uri));
+    } else {
+      if (from.position != to.position) _run((a) => a.seek(to.position));
+      if (from.isPlaying != to.isPlaying) {
+        _run(
+          (a) => to.isPlaying
+              ? a.play(const NoParams())
+              : a.pause(const NoParams()),
+        );
+      }
+    }
+  }
+
+  /// [uri]를 불러와 지금 상태가 재생 중이면 재생한다. 못 불러오면 멈춘다.
+  Future<void> _loadCurrent(AudioPlayback a, String uri) async {
+    if (state.track?.uri != uri) return; // 그새 다른 곡으로 바뀜: 그 곡의 작업이 따로 있다.
+    try {
+      if (uri.isEmpty) throw StateError('empty uri');
+      await a.load(uri);
+      if (state.track?.uri != uri) return;
+      _ready = true;
+      if (state.position > Duration.zero) await a.seek(state.position);
+      if (state.isPlaying) await a.play(const NoParams());
+    } on Object {
+      if (!isClosed && state.track?.uri == uri) {
+        emit(state.copyWith(isPlaying: false, position: Duration.zero));
+      }
+    }
+  }
+
+  void _onEnginePosition(Duration position) {
+    if (!_ready || position == state.position) return;
+    _fromEngine = true;
+    emit(state.copyWith(position: position));
+    _fromEngine = false;
+  }
+
+  /// 곡 끝: 한 곡 반복이면 처음부터 다시, 아니면 다음 곡 (마지막 곡이면 반복 설정에 따라).
+  void _onCompleted() {
+    if (state.track == null) return;
+    if (state.repeat == PlayerRepeatMode.one) {
+      _run((a) async {
+        await a.seek(Duration.zero);
+        await a.play(const NoParams());
+      });
+      return;
+    }
+    final last = state.index == state.queue.length - 1;
+    if (last && state.repeat == PlayerRepeatMode.off) {
+      emit(state.copyWith(isPlaying: false, position: Duration.zero));
+      return;
+    }
+    if (last && state.queue.length == 1) {
+      // 같은 곡 하나뿐인 전체 반복: 곡은 그대로라 불러오지 않고 처음부터 다시.
+      _run((a) async {
+        await a.seek(Duration.zero);
+        await a.play(const NoParams());
+      });
+      return;
+    }
+    next();
+  }
 
   Timer? _sleep;
 
@@ -104,6 +212,9 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   @override
   Future<void> close() {
     _sleep?.cancel();
+    for (final s in _subs) {
+      s.cancel();
+    }
     return super.close();
   }
 
