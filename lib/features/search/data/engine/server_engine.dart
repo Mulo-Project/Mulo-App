@@ -6,6 +6,7 @@ import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/search_source.dart';
 import '../../domain/repositories/downloader_engine.dart';
+import 'json_fields.dart';
 
 /// GET 요청 하나: 상태 코드와 본문을 돌려준다 (테스트에서 바꿔 끼운다).
 typedef HttpGet = Future<({int status, String body})> Function(
@@ -89,6 +90,7 @@ class ServerEngine implements DownloaderEngine {
       uploader: j['uploader'] as String? ?? '',
       duration: seconds is num ? Duration(seconds: seconds.round()) : null,
       thumbnailUrl: j['thumbnail'] as String?,
+      categories: parseCategories(j['categories']),
       downloaded: j['downloaded'] == true,
     );
   }

@@ -167,6 +167,22 @@ void main() {
         EngineFailure.network,
       );
     });
+
+    test('서버 응답의 categories를 읽는다', () async {
+      final engine = ServerEngine(
+        baseUrl: 'https://s',
+        get: (_, _) async => (
+          status: 200,
+          body: jsonEncode({
+            'videoId': 'v',
+            'title': 'T',
+            'categories': ['Gaming'],
+          }),
+        ),
+      );
+      final info = await engine.fetchInfo('https://x/v');
+      expect((info as VideoInfo).hit.categories, ['Gaming']);
+    });
   });
 
   group('LocalEngine', () {
@@ -214,6 +230,34 @@ void main() {
       final info = await engine.fetchInfo('https://x/list');
       expect(info, isA<PlaylistInfo>());
       expect((info as PlaylistInfo).entries.single.title, 'Ta');
+    });
+
+    test('곡 하나를 읽으면 유튜브 분류(categories)가 담긴다', () async {
+      final engine = LocalEngine(
+        run: (_, _) async => (
+          exitCode: 0,
+          stdout: jsonEncode({
+            'id': 'v',
+            'title': 'T',
+            'categories': ['Music', ' ', 3],
+          }),
+          stderr: '',
+        ),
+      );
+      final info = await engine.fetchInfo('https://x/v');
+      expect((info as VideoInfo).hit.categories, ['Music']);
+    });
+
+    test('목록 검색 결과에는 분류가 없어 빈 목록이다', () async {
+      final engine = LocalEngine(
+        run: (_, _) async => (
+          exitCode: 0,
+          stdout: '${jsonEncode({'id': 'a', 'title': 'Ta'})}\n',
+          stderr: '',
+        ),
+      );
+      final page = await engine.search('q', size: 1);
+      expect(page.items.single.categories, isEmpty);
     });
 
     test('yt-dlp가 없으면 사용할 수 없다', () async {
@@ -304,6 +348,28 @@ void main() {
       await tester.tap(find.text('Found Song'));
       await tester.pumpAndSettle();
       expect(find.widgetWithText(TextField, 'Found Song'), findsOneWidget);
+    });
+
+    testWidgets('분류가 있는 곡은 목록에 분류 이름이 함께 보인다', (tester) async {
+      final engine = FakeDownloaderEngine(
+        info: const VideoInfo(
+          MediaHit(
+            id: 'v',
+            title: 'Tagged Song',
+            url: 'https://example.com/v',
+            categories: ['Music'],
+          ),
+        ),
+      );
+      await setUpTestDependencies(engine: engine);
+      await openSearch(tester);
+
+      await tester.enterText(find.byType(TextField), 'https://example.com/v');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Tagged Song'), findsOneWidget);
+      expect(find.textContaining('Music'), findsOneWidget);
     });
 
     testWidgets('쓸 수 있는 엔진이 없으면 안내를 보여 준다', (tester) async {
