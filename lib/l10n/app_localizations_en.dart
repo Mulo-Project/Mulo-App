@@ -241,6 +241,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsDisconnected => 'Disconnected';
 
   @override
+  String get settingsServerConfigured => 'Server address set';
+
+  @override
   String get settingsMode => 'Download mode';
 
   @override

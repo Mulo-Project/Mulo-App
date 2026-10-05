@@ -74,6 +74,7 @@
   "settingsServer": "Server",
   "settingsConnection": "Connection",
   "settingsDisconnected": "Disconnected",
+  "settingsServerConfigured": "Server address set",
   "settingsMode": "Download mode",
   "settingsModeServer": "Server",
   "settingsModeLocal": "Local",

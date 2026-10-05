@@ -95,6 +95,7 @@
   "settingsServer": "서버",
   "settingsConnection": "연결 상태",
   "settingsDisconnected": "연결 안 됨",
+  "settingsServerConfigured": "서버 주소 설정됨",
   "settingsMode": "다운로드 모드",
   "settingsModeServer": "서버",
   "settingsModeLocal": "로컬",

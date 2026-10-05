@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:music_download_play_app/core/design/design.dart';
+import 'package:music_download_play_app/features/settings/presentation/screens/settings_screen.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/di/injector.dart';
@@ -50,5 +52,27 @@ void main() {
     await tester.pumpWidget(const MusicApp(initialLocation: Routes.settings));
     await tester.pumpAndSettle();
     expect(find.text('Download engine'), findsNothing);
+  });
+
+  testWidgets('설정: 로컬 엔진을 쓸 수 있으면 다운로드 모드가 로컬로 보인다', (tester) async {
+    await setUpTestDependencies(
+      engineManager: FakeEngineManager(installed: true),
+    );
+    await tester.pumpWidget(const MusicApp(initialLocation: Routes.settings));
+    await tester.pumpAndSettle();
+    final pills = tester.widget<SegmentedPills<DownloadMode>>(
+      find.byType(SegmentedPills<DownloadMode>),
+    );
+    expect(pills.selected, DownloadMode.local);
+  });
+
+  testWidgets('설정: 로컬 엔진이 없으면 서버 모드로 보인다', (tester) async {
+    await setUpTestDependencies(engineManager: FakeEngineManager());
+    await tester.pumpWidget(const MusicApp(initialLocation: Routes.settings));
+    await tester.pumpAndSettle();
+    final pills = tester.widget<SegmentedPills<DownloadMode>>(
+      find.byType(SegmentedPills<DownloadMode>),
+    );
+    expect(pills.selected, DownloadMode.server);
   });
 }

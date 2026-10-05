@@ -542,6 +542,12 @@ abstract class AppLocalizations {
   /// **'연결 안 됨'**
   String get settingsDisconnected;
 
+  /// No description provided for @settingsServerConfigured.
+  ///
+  /// In ko, this message translates to:
+  /// **'서버 주소 설정됨'**
+  String get settingsServerConfigured;
+
   /// No description provided for @settingsMode.
   ///
   /// In ko, this message translates to:

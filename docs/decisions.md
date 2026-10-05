@@ -359,3 +359,4 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - Dart는 `AndroidYtDlp`(engine 기능 data)가 채널을 감싸고, `LocalEngine`이 `Process.run` 대신 `AndroidYtDlp.run`을 쓴다. `RoutingDownloaderEngine`은 Android에서도 로컬이 되면 로컬, 아니면 서버.
 - 설정의 엔진 줄은 Android full에서 "업데이트"(yt-dlp를 최신 안정판으로)로 보이고, lite에서는 숨겨진다.
 - 첫 실행은 파이썬을 풀어서 몇 초 걸린다 (첫 검색 · 엔진 줄 확인 때). ffmpeg는 오디오 추출이 필요한 받기 작업에서 더한다.
+- (D-056 보강) 설정 "서버" 묶음은 가짜 고정값(항상 서버 선택, 연결 안 됨)이었다. 이제 모드는 엔진 상태로 정해져 보인다: 쓸 수 있는 로컬 yt-dlp가 있으면 로컬, 없으면 서버. 연결 칸은 서버 주소가 빌드에 들어 있는지만 보여 준다. 모드를 직접 바꾸는 버튼은 없다 (자동 선택).

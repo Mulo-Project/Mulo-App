@@ -240,6 +240,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsDisconnected => '연결 안 됨';
 
   @override
+  String get settingsServerConfigured => '서버 주소 설정됨';
+
+  @override
   String get settingsMode => '다운로드 모드';
 
   @override
