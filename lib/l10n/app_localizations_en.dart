@@ -806,9 +806,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchFilterAll => 'All';
 
   @override
-  String get searchHitMenuTitle => 'Song options';
-
-  @override
   String get searchHitMenuDetail => 'View details';
 
   @override
@@ -840,6 +837,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mediaDetailDescription => 'Description';
+
+  @override
+  String get mediaDetailMore => 'Show more';
+
+  @override
+  String get mediaDetailLikes => 'Likes';
+
+  @override
+  String mediaDetailSubscribers(String count) {
+    return '$count subscribers';
+  }
 
   @override
   String get mediaDetailLess => 'Show less';

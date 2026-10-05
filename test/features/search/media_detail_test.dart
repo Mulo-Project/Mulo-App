@@ -32,10 +32,18 @@ final _fullHit = MediaHit(
   viewCount: 12345,
   uploadedAt: DateTime(2024, 1, 31),
   description: 'Line one\nLine two',
+  likeCount: 4321,
+  subscriberCount: 2500000,
+  channelThumbnailUrl: 'https://img/avatar.png',
 );
 
 MediaDetailCubit _cubit(FakeDownloaderEngine e, FakeLinkOpener o) =>
-    MediaDetailCubit(_listHit, FetchMediaInfo(e), OpenLink(o));
+    MediaDetailCubit(
+      _listHit,
+      FetchMediaInfo(e),
+      FetchChannelInfo(e),
+      OpenLink(o),
+    );
 
 void main() {
   group('엔진 응답의 상세 정보', () {
@@ -74,6 +82,71 @@ void main() {
       expect(hit.viewCount, isNull);
       expect(hit.uploadedAt, isNull);
       expect(hit.description, '');
+    });
+
+    test('LocalEngine: 좋아요 · 구독자 수를 읽는다', () async {
+      final engine = LocalEngine(
+        run: (_, _) async => (
+          exitCode: 0,
+          stdout: jsonEncode({
+            'id': 'v',
+            'title': 'T',
+            'like_count': 10,
+            'channel_follower_count': 2500,
+          }),
+          stderr: '',
+        ),
+      );
+      final hit = ((await engine.fetchInfo('https://x/v')) as VideoInfo).hit;
+      expect(hit.likeCount, 10);
+      expect(hit.subscriberCount, 2500);
+    });
+
+    test('LocalEngine.fetchChannel: 채널 이미지(배너 제외)와 구독자 수', () async {
+      List<String>? args;
+      final engine = LocalEngine(
+        run: (_, a) async {
+          args = a;
+          return (
+            exitCode: 0,
+            stdout: jsonEncode({
+              'channel_follower_count': 2500000,
+              'thumbnails': [
+                {'id': '0', 'url': 'https://img/banner.jpg'},
+                {'id': 'avatar_uncropped', 'url': 'https://img/avatar.jpg'},
+              ],
+            }),
+            stderr: '',
+          );
+        },
+      );
+      final channel = await engine.fetchChannel('https://www.youtube.com/@c');
+      expect(channel.thumbnailUrl, 'https://img/avatar.jpg');
+      expect(channel.subscriberCount, 2500000);
+      expect(args, containsAllInOrder(['--playlist-items', '0']));
+    });
+
+    test('ServerEngine: 채널 조회는 없고 곡 정보의 구독자 · 이미지를 읽는다', () async {
+      final engine = ServerEngine(
+        baseUrl: 'https://s',
+        get: (_, _) async => (
+          status: 200,
+          body: jsonEncode({
+            'videoId': 'v',
+            'title': 'T',
+            'likeCount': 3,
+            'subscriberCount': 4,
+            'channelThumbnail': 'https://img/c.png',
+          }),
+        ),
+      );
+      final hit = ((await engine.fetchInfo('https://x/v')) as VideoInfo).hit;
+      expect([hit.likeCount, hit.subscriberCount], [3, 4]);
+      expect(hit.channelThumbnailUrl, 'https://img/c.png');
+      expect(
+        () => engine.fetchChannel('https://c'),
+        throwsA(isA<EngineException>()),
+      );
     });
 
     test('ServerEngine: 같은 정보를 읽는다', () async {
@@ -129,6 +202,53 @@ void main() {
       expect(cubit.state.hit, _listHit);
     });
 
+    test('채널 이미지 · 구독자 수는 채널 정보를 따로 읽어 채운다', () async {
+      final engine = FakeDownloaderEngine(
+        info: VideoInfo(
+          MediaHit(
+            id: 'v',
+            title: 'Song',
+            url: _listHit.url,
+            channelUrl: 'https://www.youtube.com/@chan',
+          ),
+        ),
+        channel: const ChannelInfo(
+          thumbnailUrl: 'https://img/a.png',
+          subscriberCount: 99,
+        ),
+      );
+      final cubit = _cubit(engine, FakeLinkOpener());
+      await cubit.load();
+      expect(engine.channels, ['https://www.youtube.com/@chan']);
+      expect(cubit.state.hit.channelThumbnailUrl, 'https://img/a.png');
+      expect(cubit.state.hit.subscriberCount, 99);
+    });
+
+    test('채널 정보를 못 읽어도 나머지는 그대로다', () async {
+      final engine = FakeDownloaderEngine(
+        info: VideoInfo(
+          MediaHit(
+            id: 'v',
+            title: 'Song',
+            url: _listHit.url,
+            channelUrl: 'https://c',
+            viewCount: 5,
+          ),
+        ),
+      );
+      final cubit = _cubit(engine, FakeLinkOpener());
+      await cubit.load();
+      expect(cubit.state.hit.viewCount, 5);
+      expect(cubit.state.hit.channelThumbnailUrl, isNull);
+    });
+
+    test('곡 정보에 채널 정보가 이미 있으면 다시 읽지 않는다', () async {
+      final engine = FakeDownloaderEngine(info: VideoInfo(_fullHit));
+      final cubit = _cubit(engine, FakeLinkOpener());
+      await cubit.load();
+      expect(engine.channels, isEmpty);
+    });
+
     test('open은 링크 열기에 맡기고 결과를 돌려준다', () async {
       final opener = FakeLinkOpener(opens: false);
       final cubit = _cubit(FakeDownloaderEngine(), opener);
@@ -146,6 +266,14 @@ void main() {
   });
 
   group('상세 보기 화면', () {
+    Future<void> openSearchResult(WidgetTester tester) async {
+      await tester.pumpWidget(const MusicApp(initialLocation: Routes.search));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'hello');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+    }
+
     Future<FakeLinkOpener> openDetail(
       WidgetTester tester, {
       bool opens = true,
@@ -162,20 +290,15 @@ void main() {
         info: VideoInfo(_fullHit),
       );
       await setUpTestDependencies(engine: engine, linkOpener: opener);
-      await tester.pumpWidget(const MusicApp(initialLocation: Routes.search));
-      await tester.pumpAndSettle();
-      await tester.enterText(find.byType(TextField), 'hello');
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.byTooltip('Song options'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('View details'));
+      await openSearchResult(tester);
+      await tester.tap(find.text('Song'));
       await tester.pumpAndSettle();
       return opener;
     }
 
-    testWidgets('옵션 메뉴의 상세 보기에서 채널 · 조회수 · 설명이 보인다', (tester) async {
+    testWidgets('곡을 누르면 상세 보기에서 채널 · 구독자 · 좋아요 · 조회수 · 설명이 보인다', (
+      tester,
+    ) async {
       await openDetail(tester);
 
       expect(find.text('Details'), findsOneWidget);
@@ -183,6 +306,9 @@ void main() {
       expect(find.text('View channel'), findsOneWidget);
       expect(find.text('3:05'), findsOneWidget);
       expect(find.textContaining('views'), findsOneWidget);
+      expect(find.text('Likes'), findsOneWidget);
+      expect(find.text('4.32K'), findsOneWidget);
+      expect(find.text('2.5M subscribers'), findsOneWidget);
       expect(find.text('Music'), findsOneWidget);
       expect(find.textContaining('Line one'), findsOneWidget);
     });
@@ -204,6 +330,67 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('detail-watch')));
       await tester.pumpAndSettle();
       expect(find.text('No app can open this link.'), findsOneWidget);
+    });
+
+    testWidgets('길게 누르면 옵션 메뉴가 뜨고 상세 보기를 고를 수 있다', (tester) async {
+      await openSearchResult(tester);
+      await tester.longPress(find.text('Song'));
+      await tester.pumpAndSettle();
+      expect(find.text('View details'), findsOneWidget);
+      expect(find.text('Details'), findsNothing);
+
+      await tester.tap(find.text('View details'));
+      await tester.pumpAndSettle();
+      expect(find.text('Details'), findsOneWidget);
+    });
+
+    testWidgets('긴 설명만 더 보기가 나오고 누르면 펼쳐진다', (tester) async {
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final long = [for (var i = 1; i <= 12; i++) 'Line $i'].join('\n');
+      final engine = FakeDownloaderEngine(
+        pages: const [
+          SearchPage(items: [_listHit], hasNext: false),
+        ],
+        info: VideoInfo(
+          MediaHit(
+            id: 'v',
+            title: 'Song',
+            url: _listHit.url,
+            description: long,
+          ),
+        ),
+      );
+      await setUpTestDependencies(engine: engine, linkOpener: FakeLinkOpener());
+      await openSearchResult(tester);
+      await tester.tap(find.text('Song'));
+      await tester.pumpAndSettle();
+
+      const toggle = ValueKey('detail-description-toggle');
+      expect(find.text('Show more'), findsOneWidget);
+      expect(find.textContaining('Line 12'), findsOneWidget); // 잘려도 글은 있다
+      final collapsed = tester.getSize(find.textContaining('Line 1')).height;
+
+      await tester.tap(find.byKey(toggle));
+      await tester.pumpAndSettle();
+      expect(find.text('Show less'), findsOneWidget);
+      expect(
+        tester.getSize(find.textContaining('Line 1')).height,
+        greaterThan(collapsed),
+      );
+
+      await tester.tap(find.byKey(toggle));
+      await tester.pumpAndSettle();
+      expect(find.text('Show more'), findsOneWidget);
+    });
+
+    testWidgets('짧은 설명에는 더 보기 버튼이 없다', (tester) async {
+      await openDetail(tester);
+      expect(
+        find.byKey(const ValueKey('detail-description-toggle')),
+        findsNothing,
+      );
     });
 
     testWidgets('받기를 누르면 받기 팝업이 열린다', (tester) async {

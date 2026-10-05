@@ -15,6 +15,9 @@ class MediaHit extends Equatable {
     this.viewCount,
     this.uploadedAt,
     this.description = '',
+    this.likeCount,
+    this.subscriberCount,
+    this.channelThumbnailUrl,
   });
 
   /// 사이트 안의 곡 id (유튜브면 videoId).
@@ -46,6 +49,13 @@ class MediaHit extends Equatable {
   /// 영상 설명. 없으면 빈 문자열.
   final String description;
 
+  /// 좋아요 수 (유튜브는 싫어요 수를 알려 주지 않는다).
+  final int? likeCount;
+
+  /// 채널 구독자 수 · 채널 이미지.
+  final int? subscriberCount;
+  final String? channelThumbnailUrl;
+
   /// 분류만 채운 사본.
   MediaHit withCategories(List<String> categories) =>
       _copy(categories: categories);
@@ -61,6 +71,15 @@ class MediaHit extends Equatable {
     viewCount: viewCount ?? full.viewCount,
     uploadedAt: uploadedAt ?? full.uploadedAt,
     description: description.isEmpty ? full.description : description,
+    likeCount: likeCount ?? full.likeCount,
+    subscriberCount: subscriberCount ?? full.subscriberCount,
+    channelThumbnailUrl: channelThumbnailUrl ?? full.channelThumbnailUrl,
+  );
+
+  /// 채널 정보를 채운 사본.
+  MediaHit withChannel(ChannelInfo channel) => _copy(
+    subscriberCount: channel.subscriberCount,
+    channelThumbnailUrl: channel.thumbnailUrl,
   );
 
   MediaHit _copy({
@@ -72,6 +91,9 @@ class MediaHit extends Equatable {
     int? viewCount,
     DateTime? uploadedAt,
     String? description,
+    int? likeCount,
+    int? subscriberCount,
+    String? channelThumbnailUrl,
   }) => MediaHit(
     id: id,
     title: title,
@@ -85,6 +107,9 @@ class MediaHit extends Equatable {
     viewCount: viewCount ?? this.viewCount,
     uploadedAt: uploadedAt ?? this.uploadedAt,
     description: description ?? this.description,
+    likeCount: likeCount ?? this.likeCount,
+    subscriberCount: subscriberCount ?? this.subscriberCount,
+    channelThumbnailUrl: channelThumbnailUrl ?? this.channelThumbnailUrl,
   );
 
   @override
@@ -101,7 +126,21 @@ class MediaHit extends Equatable {
     viewCount,
     uploadedAt,
     description,
+    likeCount,
+    subscriberCount,
+    channelThumbnailUrl,
   ];
+}
+
+/// 채널 정보 (상세 보기에서 채널 이미지 · 구독자 수를 보여 주려고).
+class ChannelInfo extends Equatable {
+  const ChannelInfo({this.thumbnailUrl, this.subscriberCount});
+
+  final String? thumbnailUrl;
+  final int? subscriberCount;
+
+  @override
+  List<Object?> get props => [thumbnailUrl, subscriberCount];
 }
 
 /// 키워드 검색 한 쪽.

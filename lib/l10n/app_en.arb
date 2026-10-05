@@ -312,7 +312,6 @@
   "sourceYoutube": "YouTube",
   "sourceWeb": "Web",
   "searchFilterAll": "All",
-  "searchHitMenuTitle": "Song options",
   "searchHitMenuDetail": "View details",
   "mediaDetailTitle": "Details",
   "mediaDetailWatchYoutube": "Watch on YouTube",
@@ -324,6 +323,16 @@
   "mediaDetailUploaded": "Uploaded",
   "mediaDetailCategory": "Category",
   "mediaDetailDescription": "Description",
+  "mediaDetailMore": "Show more",
+  "mediaDetailLikes": "Likes",
+  "mediaDetailSubscribers": "{count} subscribers",
+  "@mediaDetailSubscribers": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "mediaDetailLess": "Show less",
   "mediaDetailOpenFailed": "No app can open this link.",
   "mediaDetailViewCount": "{count} views",

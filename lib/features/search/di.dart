@@ -32,6 +32,7 @@ void registerSearch(GetIt sl) {
     ..registerLazySingleton<LinkOpener>(UrlLauncherLinkOpener.new)
     ..registerFactory(() => SearchTracks(sl()))
     ..registerFactory(() => FetchMediaInfo(sl()))
+    ..registerFactory(() => FetchChannelInfo(sl()))
     ..registerFactory(() => OpenLink(sl()))
     ..registerFactory(() => SearchCubit(sl(), sl()));
 }

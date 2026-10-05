@@ -33,6 +33,16 @@ class FetchMediaInfo implements UseCase<MediaInfo, String> {
   Future<MediaInfo> call(String url) => _engine.fetchInfo(url.trim());
 }
 
+/// 채널 이미지 · 구독자 수 불러오기 (상세 보기).
+class FetchChannelInfo implements UseCase<ChannelInfo, String> {
+  const FetchChannelInfo(this._engine);
+
+  final DownloaderEngine _engine;
+
+  @override
+  Future<ChannelInfo> call(String url) => _engine.fetchChannel(url.trim());
+}
+
 /// 곡 · 채널 주소를 기기의 기본 앱으로 열기 (상세 보기에서 영상 보기 · 채널 보기).
 class OpenLink implements UseCase<bool, String> {
   const OpenLink(this._opener);

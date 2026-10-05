@@ -286,24 +286,12 @@ class _HitTile extends StatelessWidget {
       subtitle: subtitle,
       tone: toneFor(hit.id),
       artwork: thumb == null ? null : NetworkImage(thumb),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CircleIconButton(
-            icon: AppIcons.download,
-            tooltip: l10n.actionDownload,
-            onPressed: () => _download(context),
-          ),
-          Builder(
-            builder: (context) => IconButton(
-              tooltip: l10n.searchHitMenuTitle,
-              onPressed: () => _menu(context),
-              icon: Icon(AppIcons.more, color: context.palette.onSurfaceMuted),
-            ),
-          ),
-        ],
+      trailing: CircleIconButton(
+        icon: AppIcons.download,
+        tooltip: l10n.actionDownload,
+        onPressed: () => _download(context),
       ),
-      onTap: () => _download(context),
+      onTap: () => showMediaDetail(context, hit),
       onMenu: (position) => _menu(context, position),
     );
   }
@@ -311,8 +299,8 @@ class _HitTile extends StatelessWidget {
   void _download(BuildContext context) =>
       showDownloadDialog(context, title: hit.title, artist: hit.uploader);
 
-  /// 곡 옵션 메뉴: ⋮ · 길게 누르기 · 데스크톱 오른쪽 클릭.
-  Future<void> _menu(BuildContext context, [Offset? position]) async {
+  /// 곡 옵션 메뉴: 길게 누르기 · 데스크톱 오른쪽 클릭.
+  Future<void> _menu(BuildContext context, Offset position) async {
     final l10n = context.l10n;
     final action = await showAppMenu<_HitAction>(
       context,

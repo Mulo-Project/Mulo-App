@@ -696,6 +696,7 @@ class FakeDownloaderEngine implements DownloaderEngine {
     this.pages = const [SearchPage(items: [], hasNext: false)],
     this.info,
     this.infoByUrl = const {},
+    this.channel,
     this.error,
   });
 
@@ -705,9 +706,13 @@ class FakeDownloaderEngine implements DownloaderEngine {
 
   /// 주소별로 따로 돌려줄 곡 정보 (없으면 [info], 그것도 없으면 못 찾음).
   final Map<String, MediaInfo> infoByUrl;
+
+  /// [fetchChannel]이 돌려줄 채널 정보 (없으면 `unavailable`).
+  final ChannelInfo? channel;
   final Object? error;
   final searches = <(String, SearchSource, int)>[];
   final infos = <String>[];
+  final channels = <String>[];
 
   @override
   Future<SearchPage> search(
@@ -727,6 +732,14 @@ class FakeDownloaderEngine implements DownloaderEngine {
     if (error != null) throw error!;
     final found = infoByUrl[url] ?? info;
     if (found == null) throw const EngineException(EngineFailure.notFound);
+    return found;
+  }
+
+  @override
+  Future<ChannelInfo> fetchChannel(String url) async {
+    channels.add(url);
+    final found = channel;
+    if (found == null) throw const EngineException(EngineFailure.unavailable);
     return found;
   }
 }

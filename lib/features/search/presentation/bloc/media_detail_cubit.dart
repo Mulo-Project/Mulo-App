@@ -21,29 +21,51 @@ class MediaDetailState extends Equatable {
 /// 검색 결과 하나의 상세 보기. 목록 항목에 없는 정보(채널 주소 · 조회수 · 올린 날 · 설명)를
 /// 곡 정보를 한 번 더 읽어 채운다. 못 읽으면 알던 정보만 그대로 보여 준다.
 class MediaDetailCubit extends Cubit<MediaDetailState> {
-  MediaDetailCubit(MediaHit hit, this._fetch, this._openLink)
-    : super(MediaDetailState(hit: hit));
+  MediaDetailCubit(
+    MediaHit hit,
+    this._fetch,
+    this._fetchChannel,
+    this._openLink,
+  ) : super(MediaDetailState(hit: hit));
 
   final FetchMediaInfo _fetch;
+  final FetchChannelInfo _fetchChannel;
   final OpenLink _openLink;
 
   Future<void> load() async {
-    final hit = state.hit;
-    emit(MediaDetailState(hit: hit, loading: true));
+    emit(MediaDetailState(hit: state.hit, loading: true));
     try {
-      final info = await _fetch(hit.url);
+      final info = await _fetch(state.hit.url);
       if (isClosed) return;
       emit(
         MediaDetailState(
           hit: switch (info) {
-            VideoInfo(hit: final full) => hit.filledFrom(full),
-            PlaylistInfo() => hit,
+            VideoInfo(hit: final full) => state.hit.filledFrom(full),
+            PlaylistInfo() => state.hit,
           },
         ),
       );
     } on EngineException {
       if (isClosed) return;
-      emit(MediaDetailState(hit: hit));
+      emit(MediaDetailState(hit: state.hit));
+    }
+    await _loadChannel();
+  }
+
+  /// 채널 이미지 · 구독자 수는 곡 정보에 없을 수 있어 따로 읽는다 (못 읽으면 그대로 둔다).
+  Future<void> _loadChannel() async {
+    final hit = state.hit;
+    final url = hit.channelUrl;
+    if (url == null ||
+        (hit.channelThumbnailUrl != null && hit.subscriberCount != null)) {
+      return;
+    }
+    try {
+      final channel = await _fetchChannel(url);
+      if (isClosed) return;
+      emit(MediaDetailState(hit: state.hit.withChannel(channel)));
+    } on EngineException {
+      // 채널 정보가 없어도 상세 보기는 그대로 쓸 수 있다.
     }
   }
 

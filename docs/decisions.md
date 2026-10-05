@@ -369,9 +369,12 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - `YoutubeMark`는 아이콘 글리프 대신 `CustomPainter`로 직접 그린다: 빨간 둥근 사각형 안에 모서리가 둥근 흰 삼각형을 절반 높이로, 무게중심이 가운데 오도록 약간 오른쪽에 둔다.
 
 ## D-058 · 2026-10-06 · 검색 결과 상세 보기 (영상 · 채널)
-- 검색 결과 줄에 ⋮ 옵션 메뉴(길게 누르기 · 데스크톱 오른쪽 클릭도 같은 메뉴)를 더하고 "상세 보기"를 넣었다. 줄을 누르면 받기 팝업이 열리는 건 그대로다.
+- 검색 결과 줄을 누르면 상세 화면이 열리고, 길게 누르기(데스크톱은 오른쪽 클릭)는 옵션 메뉴(상세 보기 · 받기)를 띄운다. 줄 오른쪽 받기 버튼은 그대로 두고 ⋮ 버튼은 두지 않는다.
 - 상세 화면(`MediaDetailScreen`)은 탭 틀 위로 덮어 여는 전체 화면이다. 카드 없이 큰 썸네일(16:9, 높이 상한 260) + 제목 + 채널 줄 + 구분선 정보 줄(길이 · 조회수 · 올린 날 · 분류) + 설명(4줄, 더 보기) + 아래 고정 버튼(영상 보기 · 받기)으로 구성한다.
 - 영상 · 채널 보기는 앱 안 플레이어 없이 **기기의 유튜브 앱(없으면 브라우저)으로 연다** (`url_launcher`, `LaunchMode.externalApplication`). 앱 안 WebView 재생은 Android에서만 되고 데스크톱은 WebView가 없어서 쓰지 않았다. 유튜브가 아닌 곳(웹 검색)은 버튼 문구가 "원본 페이지 열기"가 된다.
 - `MediaHit`에 `channelUrl` · `viewCount` · `uploadedAt` · `description`을 더했다. 목록(`--flat-playlist`)에는 없는 값이 많아서, 상세 화면을 열면 `MediaDetailCubit`이 곡 정보를 한 번 더 읽어 비어 있는 것만 채운다(`MediaHit.filledFrom`). 못 읽으면 목록에서 알던 정보만 보여 준다. 로컬 엔진은 yt-dlp 키 `channel_url`(없으면 `uploader_url`) · `view_count` · `upload_date` · `description`을 읽는다.
 - **서버 엔진은 `channelUrl` · `viewCount` · `uploadDate`(ISO 또는 `yyyyMMdd`) · `description` 키를 선택 필드로 읽는다.** 서버 명세에 없는 추가라 서버 저장소 반영이 필요하다 (없으면 해당 줄이 숨겨질 뿐 동작은 그대로).
 - 주소 열기는 도메인 인터페이스 `LinkOpener` + 유스케이스 `OpenLink` + 데이터 `UrlLauncherLinkOpener`로 나눠, 화면 · 테스트가 플러그인을 직접 부르지 않는다. 아이콘 `info` · `openInNew`를 `AppIcons`에 더했다.
+- (D-058 보강) 상세 화면에 좋아요 수, 채널 이미지 · 구독자 수를 더했다. 좋아요 · 구독자는 곡 정보(`like_count` · `channel_follower_count`)에서, 채널 이미지는 로컬 엔진이 채널 주소를 `--playlist-items 0`으로 읽어 `avatar*` 썸네일에서 가져온다(`DownloaderEngine.fetchChannel`, 영상 목록은 받지 않는다). 서버 엔진은 채널 조회가 없어 곡 정보의 `likeCount` · `subscriberCount` · `channelThumbnail`만 읽는다. 채널 정보를 못 읽어도 나머지는 그대로 보인다.
+- 유튜브는 싫어요 수를 더는 공개하지 않고 yt-dlp에도 하이프 순위가 없어서 둘은 표시하지 않는다 (외부 서비스가 필요해 범위 밖).
+- 설명은 4줄을 넘을 때만 "더 보기"가 나온다 (글자 크기를 반영해 재서 판단). 짧은 설명에는 버튼이 없고, 설명 글을 눌러도 펼쳐지고 접힌다.

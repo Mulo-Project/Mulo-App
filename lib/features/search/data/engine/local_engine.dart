@@ -105,6 +105,27 @@ class LocalEngine implements DownloaderEngine {
     return VideoInfo(_hit(j));
   }
 
+  @override
+  Future<ChannelInfo> fetchChannel(String url) async {
+    // 채널 탭의 영상은 받지 않고(`--playlist-items 0`) 채널 자체 정보만 읽는다.
+    final out = await _exec([
+      '--flat-playlist',
+      '--playlist-items',
+      '0',
+      '--dump-single-json',
+      '--no-warnings',
+      url,
+    ]);
+    final j = _decode(out);
+    if (j == null) {
+      throw const EngineException(EngineFailure.failed, 'bad response');
+    }
+    return ChannelInfo(
+      thumbnailUrl: avatarUrl(j['thumbnails']),
+      subscriberCount: parseCount(j['channel_follower_count']),
+    );
+  }
+
   Future<String> _exec(List<String> args) async {
     final ({int exitCode, String stdout, String stderr}) r;
     try {
@@ -157,6 +178,8 @@ class LocalEngine implements DownloaderEngine {
       viewCount: parseCount(j['view_count']),
       uploadedAt: parseDate(j['upload_date']),
       description: parseText(j['description']) ?? '',
+      likeCount: parseCount(j['like_count']),
+      subscriberCount: parseCount(j['channel_follower_count']),
     );
   }
 }

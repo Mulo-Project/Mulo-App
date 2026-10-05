@@ -793,9 +793,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get searchFilterAll => '전체';
 
   @override
-  String get searchHitMenuTitle => '곡 옵션';
-
-  @override
   String get searchHitMenuDetail => '상세 보기';
 
   @override
@@ -827,6 +824,17 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get mediaDetailDescription => '설명';
+
+  @override
+  String get mediaDetailMore => '더 보기';
+
+  @override
+  String get mediaDetailLikes => '좋아요';
+
+  @override
+  String mediaDetailSubscribers(String count) {
+    return '구독자 $count명';
+  }
 
   @override
   String get mediaDetailLess => '접기';

@@ -39,8 +39,12 @@ class MediaDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => BlocProvider(
-    create: (_) =>
-        MediaDetailCubit(hit, sl<FetchMediaInfo>(), sl<OpenLink>())..load(),
+    create: (_) => MediaDetailCubit(
+      hit,
+      sl<FetchMediaInfo>(),
+      sl<FetchChannelInfo>(),
+      sl<OpenLink>(),
+    )..load(),
     child: const _DetailView(),
   );
 }
@@ -53,8 +57,6 @@ class _DetailView extends StatefulWidget {
 }
 
 class _DetailViewState extends State<_DetailView> {
-  bool _descriptionOpen = false;
-
   Future<void> _open(String url) async {
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
@@ -84,6 +86,11 @@ class _DetailViewState extends State<_DetailView> {
           l10n.mediaDetailViewCount(
             NumberFormat.compact(locale: locale).format(views),
           ),
+        ),
+      if (hit.likeCount != null)
+        (
+          l10n.mediaDetailLikes,
+          NumberFormat.compact(locale: locale).format(hit.likeCount),
         ),
       if (uploaded != null)
         (
@@ -125,31 +132,18 @@ class _DetailViewState extends State<_DetailView> {
                     const SizedBox(height: AppSpacing.md),
                     Text(hit.title, style: text.titleLarge),
                     if (hit.uploader.isNotEmpty) ...[
-                      const SizedBox(height: AppSpacing.sm),
-                      Row(
-                        children: [
-                          Icon(
-                            AppIcons.person,
-                            size: 20,
-                            color: p.onSurfaceMuted,
-                          ),
-                          const SizedBox(width: AppSpacing.xs),
-                          Expanded(
-                            child: Text(
-                              hit.uploader,
-                              style: text.titleSmall,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (hit.channelUrl != null)
-                            PlainButton(
-                              label: l10n.mediaDetailOpenChannel,
-                              icon: AppIcons.openInNew,
-                              accent: true,
-                              onPressed: () => _open(hit.channelUrl!),
-                            ),
-                        ],
+                      const SizedBox(height: AppSpacing.md),
+                      _ChannelRow(
+                        hit: hit,
+                        subscribers: hit.subscriberCount == null
+                            ? null
+                            : l10n.mediaDetailSubscribers(
+                                NumberFormat.compact(locale: locale)
+                                    .format(hit.subscriberCount),
+                              ),
+                        onOpen: hit.channelUrl == null
+                            ? null
+                            : () => _open(hit.channelUrl!),
                       ),
                     ],
                     if (rows.isNotEmpty) ...[
@@ -164,30 +158,7 @@ class _DetailViewState extends State<_DetailView> {
                       const SizedBox(height: AppSpacing.md),
                       Text(l10n.mediaDetailDescription, style: text.titleSmall),
                       const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        hit.description,
-                        style: text.bodyMedium?.copyWith(
-                          color: p.onSurfaceMuted,
-                        ),
-                        maxLines: _descriptionOpen ? null : 4,
-                        overflow: _descriptionOpen
-                            ? TextOverflow.visible
-                            : TextOverflow.ellipsis,
-                      ),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: PlainButton(
-                          label: _descriptionOpen
-                              ? l10n.mediaDetailLess
-                              : l10n.searchLoadMore,
-                          icon: _descriptionOpen
-                              ? AppIcons.chevronUp
-                              : AppIcons.chevronDown,
-                          onPressed: () => setState(
-                            () => _descriptionOpen = !_descriptionOpen,
-                          ),
-                        ),
-                      ),
+                      _Description(hit.description),
                     ],
                     const SizedBox(height: AppSpacing.md),
                   ],
@@ -304,6 +275,131 @@ class _InfoRow extends StatelessWidget {
           Expanded(child: Text(value, style: text.bodyMedium)),
         ],
       ),
+    );
+  }
+}
+
+/// 채널 줄: 채널 이미지 · 이름 · 구독자 수, 오른쪽에 채널 보기.
+class _ChannelRow extends StatelessWidget {
+  const _ChannelRow({required this.hit, this.subscribers, this.onOpen});
+
+  final MediaHit hit;
+  final String? subscribers;
+  final VoidCallback? onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final image = hit.channelThumbnailUrl;
+    return Row(
+      children: [
+        ArtworkBox(
+          key: const ValueKey('detail-channel-image'),
+          image: image == null ? null : NetworkImage(image),
+          size: 44,
+          radius: 22,
+          tone: toneFor(hit.uploader),
+          icon: AppIcons.person,
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                hit.uploader,
+                style: text.titleSmall,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (subscribers != null)
+                Text(
+                  subscribers!,
+                  style: text.bodySmall,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+            ],
+          ),
+        ),
+        if (onOpen != null)
+          PlainButton(
+            label: context.l10n.mediaDetailOpenChannel,
+            icon: AppIcons.openInNew,
+            accent: true,
+            onPressed: onOpen,
+          ),
+      ],
+    );
+  }
+}
+
+/// 영상 설명: 4줄까지 보이고, 그보다 길 때만 "더 보기"가 나온다.
+/// 설명 글이나 버튼을 누르면 펼치고 접는다.
+class _Description extends StatefulWidget {
+  const _Description(this.text);
+
+  final String text;
+
+  static const collapsedLines = 4;
+
+  @override
+  State<_Description> createState() => _DescriptionState();
+}
+
+class _DescriptionState extends State<_Description> {
+  bool _open = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final style = Theme.of(context).textTheme.bodyMedium
+        ?.copyWith(color: context.palette.onSurfaceMuted);
+
+    return LayoutBuilder(
+      builder: (context, box) {
+        final painter = TextPainter(
+          text: TextSpan(text: widget.text, style: style),
+          maxLines: _Description.collapsedLines,
+          textDirection: Directionality.of(context),
+          textScaler: MediaQuery.textScalerOf(context),
+        )..layout(maxWidth: box.maxWidth);
+        final overflows = painter.didExceedMaxLines;
+        painter.dispose();
+
+        final body = AnimatedSize(
+          duration: AppMotion.medium,
+          curve: AppMotion.standard,
+          alignment: Alignment.topLeft,
+          child: Text(
+            widget.text,
+            style: style,
+            maxLines: _open || !overflows ? null : _Description.collapsedLines,
+            overflow: _open || !overflows
+                ? TextOverflow.visible
+                : TextOverflow.ellipsis,
+          ),
+        );
+        if (!overflows) return body;
+
+        void toggle() => setState(() => _open = !_open);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: toggle,
+              child: body,
+            ),
+            PlainButton(
+              key: const ValueKey('detail-description-toggle'),
+              label: _open ? l10n.mediaDetailLess : l10n.mediaDetailMore,
+              icon: _open ? AppIcons.chevronUp : AppIcons.chevronDown,
+              onPressed: toggle,
+            ),
+          ],
+        );
+      },
     );
   }
 }

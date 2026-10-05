@@ -1562,12 +1562,6 @@ abstract class AppLocalizations {
   /// **'전체'**
   String get searchFilterAll;
 
-  /// No description provided for @searchHitMenuTitle.
-  ///
-  /// In ko, this message translates to:
-  /// **'곡 옵션'**
-  String get searchHitMenuTitle;
-
   /// No description provided for @searchHitMenuDetail.
   ///
   /// In ko, this message translates to:
@@ -1633,6 +1627,24 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'설명'**
   String get mediaDetailDescription;
+
+  /// No description provided for @mediaDetailMore.
+  ///
+  /// In ko, this message translates to:
+  /// **'더 보기'**
+  String get mediaDetailMore;
+
+  /// No description provided for @mediaDetailLikes.
+  ///
+  /// In ko, this message translates to:
+  /// **'좋아요'**
+  String get mediaDetailLikes;
+
+  /// No description provided for @mediaDetailSubscribers.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독자 {count}명'**
+  String mediaDetailSubscribers(String count);
 
   /// No description provided for @mediaDetailLess.
   ///
