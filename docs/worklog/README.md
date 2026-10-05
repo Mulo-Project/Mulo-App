@@ -60,3 +60,4 @@
 | 2026-10-04 | [가짜 데이터 제거](2026-10-04-remove-sample-data.md) | 완료 |
 | 2026-10-04 | [실제 재생 (just_audio)](2026-10-04-real-playback.md) | 완료 |
 | 2026-10-05 | [시크바 끊김 · 대기열 드래그 · 이전 곡 · 셔플](2026-10-05-player-seek-queue-shuffle.md) | 완료 (merge 대기) |
+| 2026-10-06 | [제목 마키 · 부드러운 아이콘](2026-10-06-marquee-rounded-icons.md) | 완료 (merge 대기) |

@@ -138,7 +138,7 @@ class _LyricsWebScreenState extends State<LyricsWebScreen> {
               AppTopBar(
                 title: l10n.lyricsWebTitle,
                 leading: CircleIconButton(
-                  icon: Icons.close_rounded,
+                  icon: AppIcons.close,
                   tooltip: l10n.actionCancel,
                   onPressed: () => Navigator.of(context).pop(),
                 ),
@@ -164,8 +164,8 @@ class _LyricsWebScreenState extends State<LyricsWebScreen> {
                           ),
                           Icon(
                             _scratchOpen
-                                ? Icons.keyboard_arrow_down_rounded
-                                : Icons.keyboard_arrow_up_rounded,
+                                ? AppIcons.chevronDown
+                                : AppIcons.chevronUp,
                             color: context.palette.onSurfaceMuted,
                           ),
                         ],
@@ -209,7 +209,7 @@ class _LyricsWebScreenState extends State<LyricsWebScreen> {
                       const SizedBox(height: AppSpacing.xs),
                       PillButton(
                         label: l10n.lyricsWebClear,
-                        icon: Icons.delete_outline_rounded,
+                        icon: AppIcons.delete,
                         variant: PillVariant.tonal,
                         compact: true,
                         onPressed: () => _scratch.clear(),
@@ -228,7 +228,7 @@ class _LyricsWebScreenState extends State<LyricsWebScreen> {
                         Expanded(
                           child: PillButton(
                             label: l10n.lyricsWebAdd,
-                            icon: Icons.playlist_add_rounded,
+                            icon: AppIcons.playlistAdd,
                             variant: PillVariant.tonal,
                             onPressed: _add,
                           ),
@@ -237,7 +237,7 @@ class _LyricsWebScreenState extends State<LyricsWebScreen> {
                         Expanded(
                           child: PillButton(
                             label: l10n.lyricsWebImport,
-                            icon: Icons.download_rounded,
+                            icon: AppIcons.download,
                             onPressed: _import,
                           ),
                         ),

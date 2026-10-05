@@ -42,20 +42,20 @@ class ArtistScreen extends StatelessWidget {
           AppTopBar(
             title: name,
             leading: CircleIconButton(
-              icon: Icons.arrow_back_rounded,
+              icon: AppIcons.back,
               tooltip: l10n.actionBack,
               onPressed: () => context.pop(),
             ),
             actions: [
               CircleIconButton(
-                icon: Icons.auto_awesome_rounded,
+                icon: AppIcons.sparkle,
                 tooltip: l10n.decorateArtistTooltip,
                 onPressed: () => showDecorateSheet(
                   context,
                   coverKey: key,
                   title: name,
                   tone: toneFor(name),
-                  icon: Icons.person_rounded,
+                  icon: AppIcons.person,
                 ),
               ),
             ],
@@ -79,7 +79,7 @@ class ArtistScreen extends StatelessWidget {
                     image: coverImageOf(context, key),
                     tone: toneFor(name),
                     color: coverColorOf(context, key),
-                    icon: Icons.person_rounded,
+                    icon: AppIcons.person,
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(

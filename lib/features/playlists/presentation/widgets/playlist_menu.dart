@@ -29,28 +29,28 @@ Future<void> showPlaylistMenu(
     items: [
       AppMenuItem(
         value: _Action.playAll,
-        icon: Icons.play_arrow_rounded,
+        icon: AppIcons.play,
         label: l10n.playlistMenuPlayAll,
       ),
       AppMenuItem(
         value: _Action.shuffle,
-        icon: Icons.shuffle_rounded,
+        icon: AppIcons.shuffle,
         label: l10n.playlistMenuShuffle,
       ),
       AppMenuItem(
         value: _Action.decorate,
-        icon: Icons.auto_awesome_rounded,
+        icon: AppIcons.sparkle,
         label: l10n.playlistMenuDecorate,
       ),
       if (!pl.isFavorites) ...[
         AppMenuItem(
           value: _Action.rename,
-          icon: Icons.edit_rounded,
+          icon: AppIcons.edit,
           label: l10n.playlistMenuRename,
         ),
         AppMenuItem(
           value: _Action.delete,
-          icon: Icons.delete_outline_rounded,
+          icon: AppIcons.delete,
           label: l10n.playlistMenuDelete,
           destructive: true,
           dividerBefore: true,
@@ -195,7 +195,7 @@ class _DeleteDialog extends StatelessWidget {
         ),
         PillButton(
           label: l10n.playlistDeleteConfirm,
-          icon: Icons.delete_outline_rounded,
+          icon: AppIcons.delete,
           onPressed: () => Navigator.of(context).pop(true),
         ),
       ],

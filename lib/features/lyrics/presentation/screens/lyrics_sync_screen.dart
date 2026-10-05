@@ -82,7 +82,7 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
         for (final n in const [1, 2, 3, 4])
           AppMenuItem(
             value: n,
-            icon: Icons.format_line_spacing_rounded,
+            icon: AppIcons.lineSpacing,
             label: l10n.lyricsSyncGroupLines(n),
             selected: n == sync.state.group,
           ),
@@ -181,7 +181,7 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
                   AppTopBar(
                     title: l10n.lyricsSyncTitle,
                     leading: CircleIconButton(
-                      icon: Icons.close_rounded,
+                      icon: AppIcons.close,
                       tooltip: l10n.actionCancel,
                       onPressed: _confirmLeave,
                     ),
@@ -189,13 +189,13 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
                       if (sync.canGroup)
                         Builder(
                           builder: (buttonContext) => CircleIconButton(
-                            icon: Icons.more_vert_rounded,
+                            icon: AppIcons.more,
                             tooltip: l10n.lyricsSyncDefaultLines,
                             onPressed: () => _changeDefaultGroup(buttonContext),
                           ),
                         ),
                       CircleIconButton(
-                        icon: Icons.check_rounded,
+                        icon: AppIcons.check,
                         tooltip: draft.isComplete
                             ? l10n.lyricsSyncSave
                             : l10n.lyricsSyncNeedAll,
@@ -386,7 +386,7 @@ class _LineRow extends StatelessWidget {
                 Row(
                   children: [
                     PlainButton(
-                      icon: Icons.replay_rounded,
+                      icon: AppIcons.replay,
                       label: l10n.lyricsSyncReset,
                       tooltip: l10n.lyricsSyncReplay,
                       onPressed: onReplay,
@@ -395,7 +395,7 @@ class _LineRow extends StatelessWidget {
                     if (canGroup)
                       Builder(
                         builder: (buttonContext) => PlainButton(
-                          icon: Icons.more_vert_rounded,
+                          icon: AppIcons.more,
                           tooltip: l10n.actionMore,
                           onPressed: () async {
                             final pick = await showAppMenu<bool>(
@@ -403,7 +403,7 @@ class _LineRow extends StatelessWidget {
                               items: [
                                 AppMenuItem(
                                   value: true,
-                                  icon: Icons.view_headline_rounded,
+                                  icon: AppIcons.dragHandle,
                                   label: l10n.lyricsSyncGroupEdit,
                                 ),
                               ],
@@ -447,15 +447,13 @@ class _ControlBar extends StatelessWidget {
           Row(
             children: [
               CircleIconButton(
-                icon: Icons.undo_rounded,
+                icon: AppIcons.undo,
                 tooltip: l10n.lyricsSyncUndo,
                 onPressed: draft.canUndo ? onUndo : null,
               ),
               const SizedBox(width: AppSpacing.sm),
               CircleIconButton(
-                icon: np.state.isPlaying
-                    ? Icons.pause_rounded
-                    : Icons.play_arrow_rounded,
+                icon: np.state.isPlaying ? AppIcons.pause : AppIcons.play,
                 tooltip: np.state.isPlaying
                     ? l10n.lyricsSyncPause
                     : l10n.lyricsSyncPlay,
@@ -468,7 +466,7 @@ class _ControlBar extends StatelessWidget {
                   alignment: Alignment.centerRight,
                   child: PillButton(
                     label: l10n.lyricsSyncNow,
-                    icon: Icons.touch_app_rounded,
+                    icon: AppIcons.touch,
                     onPressed: draft.current >= draft.length ? null : onNow,
                   ),
                 ),

@@ -121,7 +121,7 @@ class _NewPlaylistSheetState extends State<_NewPlaylistSheet> {
                       label: path == null
                           ? l10n.playlistNewImage
                           : l10n.playlistNewImageChange,
-                      icon: Icons.photo_library_rounded,
+                      icon: AppIcons.photoLibrary,
                       variant: PillVariant.tonal,
                       onPressed: _pickImage,
                     ),

@@ -1,3 +1,5 @@
+import '../icons/app_icons.dart';
+
 import 'package:flutter/material.dart';
 
 import '../app_theme_tokens.dart';
@@ -58,11 +60,7 @@ class ColorPicker extends StatelessWidget {
               label: autoLabel,
               selected: selected == null,
               onTap: () => onChanged(null),
-              child: Icon(
-                Icons.autorenew_rounded,
-                size: 18,
-                color: p.onSurface,
-              ),
+              child: Icon(AppIcons.refresh, size: 18, color: p.onSurface),
             ),
             for (final (i, c) in presets.indexed)
               _Dot(
@@ -129,7 +127,7 @@ class _Dot extends StatelessWidget {
               child:
                   child ??
                   (selected
-                      ? Icon(Icons.check_rounded, size: 20, color: p.onGlow)
+                      ? Icon(AppIcons.check, size: 20, color: p.onGlow)
                       : null),
             ),
           ),

@@ -66,13 +66,13 @@ class _SearchScreenState extends State<SearchScreen> {
           const SizedBox(height: AppSpacing.md),
           if (_query.trim().isEmpty)
             _Hint(
-              icon: Icons.travel_explore_rounded,
+              icon: AppIcons.explore,
               title: l10n.searchEmptyTitle,
               body: l10n.searchEmptyBody,
             )
           else
             _Hint(
-              icon: Icons.hourglass_empty_rounded,
+              icon: AppIcons.hourglassEmpty,
               title: l10n.searchNotReadyTitle,
               body: l10n.searchNotReadyBody,
             ),

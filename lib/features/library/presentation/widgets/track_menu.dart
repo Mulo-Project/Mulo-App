@@ -43,10 +43,7 @@ class TrackMoreButton extends StatelessWidget {
     builder: (context) => IconButton(
       tooltip: context.l10n.trackMenuTitle,
       onPressed: () => showTrackMenu(context, track, playlistId: playlistId),
-      icon: Icon(
-        Icons.more_vert_rounded,
-        color: context.palette.onSurfaceMuted,
-      ),
+      icon: Icon(AppIcons.more, color: context.palette.onSurfaceMuted),
     ),
   );
 }
@@ -74,44 +71,44 @@ Future<void> showTrackMenu(
       if (inPlayer)
         AppMenuItem(
           value: _TrackAction.playerStyle,
-          icon: Icons.style_rounded,
+          icon: AppIcons.style,
           label: l10n.playerStyleTitle,
         ),
       AppMenuItem(
         value: _TrackAction.playNext,
         dividerBefore: inPlayer,
-        icon: Icons.playlist_play_rounded,
+        icon: AppIcons.playlistPlay,
         label: l10n.trackMenuPlayNext,
       ),
       AppMenuItem(
         value: _TrackAction.addToQueue,
-        icon: Icons.queue_music_rounded,
+        icon: AppIcons.queue,
         label: l10n.trackMenuAddToQueue,
       ),
       AppMenuItem(
         value: _TrackAction.addToPlaylist,
-        icon: Icons.playlist_add_rounded,
+        icon: AppIcons.playlistAdd,
         label: l10n.trackMenuAddToPlaylist,
       ),
       AppMenuItem(
         value: _TrackAction.favorite,
-        icon: favorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+        icon: favorite ? AppIcons.favorite : AppIcons.favoriteOutline,
         label: favorite ? l10n.trackMenuUnfavorite : l10n.trackMenuFavorite,
       ),
       AppMenuItem(
         value: _TrackAction.editInfo,
-        icon: Icons.edit_rounded,
+        icon: AppIcons.edit,
         label: l10n.trackMenuEditInfo,
       ),
       AppMenuItem(
         value: _TrackAction.decorate,
-        icon: Icons.auto_awesome_rounded,
+        icon: AppIcons.sparkle,
         label: l10n.trackMenuDecorate,
       ),
       if (playlistId == null)
         AppMenuItem(
           value: _TrackAction.delete,
-          icon: Icons.delete_outline_rounded,
+          icon: AppIcons.delete,
           label: l10n.trackMenuDelete,
           destructive: true,
           dividerBefore: true,
@@ -119,13 +116,13 @@ Future<void> showTrackMenu(
       else ...[
         AppMenuItem(
           value: _TrackAction.removeFromPlaylist,
-          icon: Icons.playlist_remove_rounded,
+          icon: AppIcons.playlistRemove,
           label: l10n.trackMenuRemoveFromPlaylist,
           dividerBefore: true,
         ),
         AppMenuItem(
           value: _TrackAction.deleteFile,
-          icon: Icons.delete_outline_rounded,
+          icon: AppIcons.delete,
           label: l10n.trackMenuDeleteFile,
           destructive: true,
         ),
@@ -306,7 +303,7 @@ class _DeleteDialog extends StatelessWidget {
         ),
         PillButton(
           label: l10n.trackDeleteConfirm,
-          icon: Icons.delete_outline_rounded,
+          icon: AppIcons.delete,
           onPressed: () => Navigator.of(context).pop(true),
         ),
       ],

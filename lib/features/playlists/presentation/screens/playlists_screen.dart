@@ -30,7 +30,7 @@ class PlaylistsScreen extends StatelessWidget {
             subtitle: l10n.playlistsSubtitle,
             actions: [
               CircleIconButton(
-                icon: Icons.add_rounded,
+                icon: AppIcons.add,
                 tooltip: l10n.playlistsNew,
                 emphasized: true,
                 onPressed: () => showNewPlaylistSheet(context),
@@ -41,7 +41,7 @@ class PlaylistsScreen extends StatelessWidget {
             padding: AppSpacing.screen,
             child: PillButton(
               label: l10n.playlistsImport,
-              icon: Icons.link_rounded,
+              icon: AppIcons.link,
               variant: PillVariant.tonal,
               onPressed: () {},
             ),

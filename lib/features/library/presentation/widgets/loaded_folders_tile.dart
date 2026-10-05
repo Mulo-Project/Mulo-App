@@ -31,7 +31,7 @@ class _Tile extends StatelessWidget {
       title: l10n.settingsLoadedFolders,
       description: l10n.settingsLoadedFoldersCount(count == 0 ? 1 : count),
       trailing: Icon(
-        Icons.chevron_right_rounded,
+        AppIcons.chevronRight,
         color: context.palette.onSurfaceMuted,
       ),
       onTap: () => showLoadedFoldersSheet(context),

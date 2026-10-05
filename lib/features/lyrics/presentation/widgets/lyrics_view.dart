@@ -72,12 +72,12 @@ class _LyricsViewState extends State<LyricsView> {
               children: [
                 PlainButton(
                   label: l10n.lyricsSyncSetting,
-                  icon: Icons.av_timer_rounded,
+                  icon: AppIcons.timer,
                   onPressed: () => startLyricsSync(context, widget.track),
                 ),
                 PlainButton(
                   label: l10n.lyricsMenuEdit,
-                  icon: Icons.edit_rounded,
+                  icon: AppIcons.edit,
                   onPressed: () => showLyricsEditor(context, widget.track),
                 ),
               ],
@@ -112,7 +112,7 @@ class _LyricsViewState extends State<LyricsView> {
             const SizedBox(height: AppSpacing.md),
             PlainButton(
               label: l10n.lyricsMenuEdit,
-              icon: Icons.edit_rounded,
+              icon: AppIcons.edit,
               onPressed: () => showLyricsEditor(context, widget.track),
             ),
           ],

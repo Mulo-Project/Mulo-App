@@ -35,7 +35,7 @@ class QueueScreen extends StatelessWidget {
               AppTopBar(
                 title: l10n.playerQueue,
                 leading: CircleIconButton(
-                  icon: Icons.arrow_back_rounded,
+                  icon: AppIcons.back,
                   tooltip: l10n.actionBack,
                   onPressed: () => context.pop(),
                 ),
@@ -133,14 +133,14 @@ class _QueueHeader extends StatelessWidget {
             ),
           ),
           CircleIconButton(
-            icon: Icons.shuffle_rounded,
+            icon: AppIcons.shuffle,
             tooltip: l10n.queueShuffle,
             size: 40,
             onPressed: onShuffle,
           ),
           const SizedBox(width: AppSpacing.xs),
           CircleIconButton(
-            icon: Icons.delete_sweep_rounded,
+            icon: AppIcons.deleteAll,
             tooltip: l10n.queueClear,
             size: 40,
             onPressed: onClear,
@@ -194,7 +194,7 @@ class _QueueTile extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(right: AppSpacing.xs),
                   child: Icon(
-                    playing ? Icons.graphic_eq_rounded : Icons.pause_rounded,
+                    playing ? AppIcons.equalizer : AppIcons.pause,
                     size: 18,
                     color: p.accent,
                   ),

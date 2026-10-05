@@ -75,7 +75,7 @@ class LoadedFoldersSheet extends StatelessWidget {
               const SizedBox(height: AppSpacing.md),
               PillButton(
                 label: l10n.loadedFoldersAdd,
-                icon: Icons.create_new_folder_rounded,
+                icon: AppIcons.newFolder,
                 onPressed: state.busy ? null : cubit.add,
               ),
             ],
@@ -102,7 +102,7 @@ class _FolderRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
       child: Row(
         children: [
-          Icon(Icons.folder_rounded, color: p.onSurfaceMuted),
+          Icon(AppIcons.folder, color: p.onSurfaceMuted),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Column(
@@ -126,7 +126,7 @@ class _FolderRow extends StatelessWidget {
           ),
           if (!folder.isDefault)
             CircleIconButton(
-              icon: Icons.close_rounded,
+              icon: AppIcons.close,
               tooltip: l10n.loadedFoldersRemove,
               size: 36,
               onPressed: onRemove,

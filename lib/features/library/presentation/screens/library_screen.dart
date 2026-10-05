@@ -78,7 +78,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 CoverKey.artist(e.value.first.artist),
               ),
               radius: 24,
-              icon: Icons.person_rounded,
+              icon: AppIcons.person,
             ),
             trailing: const _Chevron(),
             onTap: () => context.push(Routes.artist(e.value.first.artist)),
@@ -95,7 +95,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
               image: coverImageOf(context, CoverKey.album(e.value.first.album)),
               tone: toneFor(e.key),
               color: coverColorOf(context, CoverKey.album(e.value.first.album)),
-              icon: Icons.album_rounded,
+              icon: AppIcons.album,
             ),
             trailing: const _Chevron(),
             onTap: () => context.push(Routes.album(e.value.first.album)),
@@ -107,10 +107,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
             title: genreOf(l10n, e.key),
             subtitle: l10n.songCount(e.value.length),
             tone: toneFor(e.key),
-            leading: ArtworkBox(
-              tone: toneFor(e.key),
-              icon: Icons.category_rounded,
-            ),
+            leading: ArtworkBox(tone: toneFor(e.key), icon: AppIcons.category),
             trailing: const _Chevron(),
             onTap: () => context.push(Routes.genre(e.key)),
           ),
@@ -134,8 +131,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
               actions: [
                 CircleIconButton(
                   icon: importing
-                      ? Icons.hourglass_top_rounded
-                      : Icons.drive_folder_upload_rounded,
+                      ? AppIcons.hourglassTop
+                      : AppIcons.folderUpload,
                   tooltip: l10n.libraryImport,
                   onPressed: importing ? null : _import,
                 ),
@@ -193,7 +190,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     values: LibrarySort.values,
                     selected: _sort,
                     tooltip: l10n.sortLabel,
-                    icon: Icons.sort_rounded,
+                    icon: AppIcons.sort,
                     labelOf: (s) => switch (s) {
                       LibrarySort.name => l10n.sortName,
                       LibrarySort.added => l10n.sortAdded,
@@ -308,13 +305,13 @@ class _LibraryHero extends StatelessWidget {
           children: [
             PillButton(
               label: l10n.actionPlayAll,
-              icon: Icons.play_arrow_rounded,
+              icon: AppIcons.play,
               compact: true,
               onPressed: onPlayAll,
             ),
             PillButton(
               label: l10n.actionShuffle,
-              icon: Icons.shuffle_rounded,
+              icon: AppIcons.shuffle,
               compact: true,
               variant: PillVariant.tonal,
               onPressed: onShuffle,
@@ -357,7 +354,7 @@ class _Chevron extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      Icon(Icons.chevron_right_rounded, color: context.palette.onSurfaceMuted);
+      Icon(AppIcons.chevronRight, color: context.palette.onSurfaceMuted);
 }
 
 /// 보관함이 비었을 때: 기기 음악 불러오기 안내.
@@ -375,11 +372,7 @@ class _EmptyLibrary extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
       child: Column(
         children: [
-          Icon(
-            Icons.library_music_rounded,
-            size: 40,
-            color: context.palette.accent,
-          ),
+          Icon(AppIcons.library, size: 40, color: context.palette.accent),
           const SizedBox(height: AppSpacing.md),
           Text(l10n.libraryEmptyTitle, style: text.titleLarge),
           const SizedBox(height: AppSpacing.xs),
@@ -391,7 +384,7 @@ class _EmptyLibrary extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
           PillButton(
             label: importing ? l10n.importing : l10n.libraryImport,
-            icon: Icons.drive_folder_upload_rounded,
+            icon: AppIcons.folderUpload,
             onPressed: importing ? null : onImport,
           ),
         ],

@@ -54,8 +54,8 @@ class _PlaylistPickerState extends State<_PlaylistPicker> {
               onTap: () => _toggle(pl.id),
               trailing: Icon(
                 _selected.contains(pl.id)
-                    ? Icons.check_circle_rounded
-                    : Icons.radio_button_unchecked_rounded,
+                    ? AppIcons.checkCircle
+                    : AppIcons.radioOff,
                 color: _selected.contains(pl.id) ? p.accent : p.onSurfaceMuted,
               ),
             ),

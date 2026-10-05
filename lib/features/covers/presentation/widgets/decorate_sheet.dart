@@ -15,7 +15,7 @@ Future<void> showDecorateSheet(
   required String coverKey,
   required String title,
   GlowTone tone = GlowTone.primary,
-  IconData icon = Icons.music_note_rounded,
+  IconData icon = AppIcons.musicNote,
   bool allowColor = true,
 }) {
   final covers = context.read<CoverCubit>();
@@ -120,7 +120,7 @@ class _DecorateSheet extends StatelessWidget {
                   Expanded(
                     child: PillButton(
                       label: l10n.coverPick,
-                      icon: Icons.photo_library_rounded,
+                      icon: AppIcons.photoLibrary,
                       onPressed: () => covers.pickFromDevice(coverKey),
                     ),
                   ),
@@ -129,7 +129,7 @@ class _DecorateSheet extends StatelessWidget {
                     Expanded(
                       child: PillButton(
                         label: l10n.coverReset,
-                        icon: Icons.restart_alt_rounded,
+                        icon: AppIcons.restart,
                         variant: PillVariant.tonal,
                         onPressed: () => covers.clear(coverKey),
                       ),

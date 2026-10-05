@@ -57,7 +57,7 @@ class _Body extends StatelessWidget {
           AppTopBar(
             title: pl == null ? '' : playlistNameOf(l10n, pl),
             leading: CircleIconButton(
-              icon: Icons.arrow_back_rounded,
+              icon: AppIcons.back,
               tooltip: l10n.actionBack,
               onPressed: () => context.pop(),
             ),
@@ -65,7 +65,7 @@ class _Body extends StatelessWidget {
               if (pl != null)
                 Builder(
                   builder: (btn) => CircleIconButton(
-                    icon: Icons.more_vert_rounded,
+                    icon: AppIcons.more,
                     tooltip: l10n.playlistMenuTooltip,
                     onPressed: () => showPlaylistMenu(
                       btn,

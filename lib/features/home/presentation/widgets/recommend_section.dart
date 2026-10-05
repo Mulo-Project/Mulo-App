@@ -113,7 +113,7 @@ class _RecommendSectionState extends State<RecommendSection> {
                               ),
                               PillButton(
                                 compact: true,
-                                icon: Icons.play_arrow_rounded,
+                                icon: AppIcons.play,
                                 label: l10n.actionPlayAll,
                                 onPressed: () => player.playQueue(pl.tracks),
                               ),

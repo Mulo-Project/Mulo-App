@@ -62,6 +62,7 @@ MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부�
 | `PillButton` | buttons.dart | 알약 버튼: accent · primary(단색 + 빛), tonal(유리), outline |
 | `CircleIconButton` | buttons.dart | 원형 유리 버튼, `emphasized` = 강조 색 + 빛 (재생); `onLongPress`로 길게 누르기 |
 | `PlainButton` | buttons.dart | 면 없는 작은 글자 · 아이콘 버튼 (보조 동작 · 한 줄 여러 개) |
+| `MarqueeText` | marquee_text.dart | 한 줄 제목. 칸보다 길 때만 잠깐 멈췄다가 옆으로 흐르고(끝은 흐리게), 들어가면 일반 글자. `scroll: false`면 `…`로 줄임. 플레이어 · 미니 플레이어 · 재생 중인 곡 줄에 쓴다 (목록 전체가 움직이지 않게 나머지 줄은 `…`) |
 | `ProgressRing` · `ProgressLine` | progress.dart | 원형 · 막대 진행 표시 (강조 색 + 빛) |
 | `MiniPlayerBar` | mini_player_bar.dart | 유리 미니 플레이어 (가로 전체 · 모서리 직각 · 위쪽 선만, 재생 버튼만 원형, 다음 · 대기열은 배경 없는 작은 아이콘, 제목 아래에 작은 출력 기기 표시 `outputIcon`/`outputLabel`). `GlassSurface(rim: false)`로 가장자리 빛 테두리를 끈다 |
 | `AppTopBar` | app_top_bar.dart | 상단 바. `large` = 탭 첫 화면(부제 + 큰 제목), 기본 = 원형 버튼 사이 가운데 제목 |
@@ -87,3 +88,9 @@ Material 버튼 · AppBar · ListTile · Switch · Chip · Slider는 화면에�
 - `Scaffold(extendBody: true)`: 내용이 유리 미니 플레이어 · 탭 바 뒤로 흘러가며 흐리게 비친다.
 - 탭 화면의 스크롤 목록은 아래 여백을 `MediaQuery.paddingOf(context).bottom`만큼 더 둔다.
 - 유리(BackdropFilter)는 비용이 있으니 목록의 줄마다 쓰지 않는다 (카드 · 묶음 · 바에만).
+
+## 아이콘
+- 화면 · 컴포넌트는 `Icons.xxx`(Material)를 직접 쓰지 않고 `AppIcons.xxx`([lib/core/design/icons/app_icons.dart](../lib/core/design/icons/app_icons.dart))만 쓴다.
+- 글리프는 Phosphor(MIT)의 둥글고 부드러운 선 아이콘이다. 재생 · 일시정지 · 이전 · 다음 · 좋아요 등 면이 필요한 곳은 Fill 폰트를 쓴다. 폰트는 `assets/fonts/phosphor/`(라이선스 포함).
+- Phosphor 패키지(`phosphor_flutter`)는 현재 Flutter에서 컴파일되지 않아(`IconData`가 final) 폰트 파일만 가져오고 코드포인트는 `AppIcons`에 직접 적었다.
+- 세트를 바꾸거나 직접 그린 아이콘 폰트로 교체할 때는 `AppIcons`의 정의와 폰트만 고치면 된다.

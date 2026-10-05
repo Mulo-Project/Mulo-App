@@ -1,3 +1,5 @@
+import '../icons/app_icons.dart';
+
 import 'package:flutter/material.dart';
 
 import '../app_theme_tokens.dart';
@@ -73,7 +75,7 @@ class AppDialog extends StatelessWidget {
                 Expanded(child: Text(title, style: text.titleLarge)),
                 if (closeTooltip != null)
                   PlainButton(
-                    icon: Icons.close_rounded,
+                    icon: AppIcons.close,
                     tooltip: closeTooltip,
                     onPressed: onClose ?? () => Navigator.of(context).pop(),
                   ),

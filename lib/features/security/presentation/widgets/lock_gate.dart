@@ -145,7 +145,7 @@ class _LockScreenState extends State<LockScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.lock_outline_rounded, size: 36, color: p.accent),
+                  Icon(AppIcons.lock, size: 36, color: p.accent),
                   const SizedBox(height: AppSpacing.sm),
                   Text(l10n.lockTitle, style: text.headlineMedium),
                   const SizedBox(height: AppSpacing.xxs),
@@ -175,7 +175,7 @@ class _LockScreenState extends State<LockScreen> {
                             child: GestureDetector(
                               behavior: HitTestBehavior.opaque,
                               onTap: _tryBiometric,
-                              child: const Icon(Icons.fingerprint_rounded),
+                              child: const Icon(AppIcons.fingerprint),
                             ),
                           )
                         : null,

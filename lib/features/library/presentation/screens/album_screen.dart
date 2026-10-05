@@ -42,26 +42,26 @@ class AlbumScreen extends StatelessWidget {
           AppTopBar(
             title: name,
             leading: CircleIconButton(
-              icon: Icons.arrow_back_rounded,
+              icon: AppIcons.back,
               tooltip: l10n.actionBack,
               onPressed: () => context.pop(),
             ),
             actions: [
               if (tracks.isNotEmpty)
                 CircleIconButton(
-                  icon: Icons.edit_rounded,
+                  icon: AppIcons.edit,
                   tooltip: l10n.albumRenameTooltip,
                   onPressed: () => _rename(context),
                 ),
               CircleIconButton(
-                icon: Icons.auto_awesome_rounded,
+                icon: AppIcons.sparkle,
                 tooltip: l10n.decorateAlbumTooltip,
                 onPressed: () => showDecorateSheet(
                   context,
                   coverKey: CoverKey.album(album),
                   title: name,
                   tone: toneFor(name),
-                  icon: Icons.album_rounded,
+                  icon: AppIcons.album,
                 ),
               ),
             ],
@@ -85,7 +85,7 @@ class AlbumScreen extends StatelessWidget {
                     image: coverImageOf(context, CoverKey.album(album)),
                     tone: toneFor(name),
                     color: coverColorOf(context, CoverKey.album(album)),
-                    icon: Icons.album_rounded,
+                    icon: AppIcons.album,
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(

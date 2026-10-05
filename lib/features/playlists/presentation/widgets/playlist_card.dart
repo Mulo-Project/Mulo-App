@@ -87,7 +87,7 @@ class PlaylistCard extends StatelessWidget {
                       child: playlist.isFavorites && image == null
                           ? Center(
                               child: Icon(
-                                Icons.favorite_rounded,
+                                AppIcons.favorite,
                                 size: 40,
                                 color: p.onGlow.withValues(alpha: .9),
                               ),
@@ -129,10 +129,7 @@ class PlaylistCard extends StatelessWidget {
                             iconSize: 20,
                             tooltip: l10n.playlistMenuTooltip,
                             onPressed: () => showPlaylistMenu(btn, playlist),
-                            icon: Icon(
-                              Icons.more_vert_rounded,
-                              color: p.onSurfaceMuted,
-                            ),
+                            icon: Icon(AppIcons.more, color: p.onSurfaceMuted),
                           ),
                         ),
                       ),
@@ -206,9 +203,7 @@ class _SelectMark extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.xxs),
       child: Icon(
-        selected
-            ? Icons.check_circle_rounded
-            : Icons.radio_button_unchecked_rounded,
+        selected ? AppIcons.checkCircle : AppIcons.radioOff,
         size: 26,
         color: selected ? p.accent : p.onGlow,
       ),
@@ -324,9 +319,7 @@ class _FeaturedState extends State<_Featured> {
                       SizedBox.square(
                         dimension: 28,
                         child: Icon(
-                          open
-                              ? Icons.expand_less_rounded
-                              : Icons.expand_more_rounded,
+                          open ? AppIcons.expandLess : AppIcons.expandMore,
                           size: 18,
                           color: p.onSurfaceMuted,
                         ),
@@ -371,9 +364,7 @@ class _FeaturedState extends State<_Featured> {
                             ? context.read<NowPlayingCubit>().togglePlay
                             : () => _preview(t),
                         icon: Icon(
-                          playing
-                              ? Icons.pause_circle_filled_rounded
-                              : Icons.play_circle_fill_rounded,
+                          playing ? AppIcons.pauseCircle : AppIcons.playCircle,
                           color: p.accent,
                         ),
                       );

@@ -1,3 +1,5 @@
+import '../icons/app_icons.dart';
+
 import 'package:flutter/material.dart';
 
 import '../app_theme_tokens.dart';
@@ -75,7 +77,7 @@ class ThemeSwatch extends StatelessWidget {
                           ),
                           child: selected
                               ? Icon(
-                                  Icons.check_rounded,
+                                  AppIcons.check,
                                   size: 14,
                                   color: preview.onAccent,
                                 )

@@ -1,3 +1,5 @@
+import '../icons/app_icons.dart';
+
 import 'package:flutter/material.dart';
 
 import '../app_theme_tokens.dart';
@@ -20,7 +22,7 @@ class ArtworkBox extends StatelessWidget {
     this.radius = 12,
     this.tone = GlowTone.primary,
     this.color,
-    this.icon = Icons.music_note_rounded,
+    this.icon = AppIcons.musicNote,
   });
 
   final ImageProvider? image;

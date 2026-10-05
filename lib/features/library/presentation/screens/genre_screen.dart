@@ -38,7 +38,7 @@ class GenreScreen extends StatelessWidget {
           AppTopBar(
             title: name,
             leading: CircleIconButton(
-              icon: Icons.arrow_back_rounded,
+              icon: AppIcons.back,
               tooltip: l10n.actionBack,
               onPressed: () => context.pop(),
             ),
@@ -60,7 +60,7 @@ class GenreScreen extends StatelessWidget {
                     size: 96,
                     radius: AppRadii.md,
                     tone: toneFor(genre),
-                    icon: Icons.category_rounded,
+                    icon: AppIcons.category,
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(

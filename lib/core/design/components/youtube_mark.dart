@@ -1,3 +1,5 @@
+import '../icons/app_icons.dart';
+
 import 'package:flutter/material.dart';
 
 import '../tokens/app_palette.dart';
@@ -20,11 +22,7 @@ class YoutubeMark extends StatelessWidget {
         borderRadius: BorderRadius.circular(size * .22),
       ),
       alignment: Alignment.center,
-      child: Icon(
-        Icons.play_arrow_rounded,
-        size: size * .62,
-        color: AppPalette.markWhite,
-      ),
+      child: Icon(AppIcons.play, size: size * .62, color: AppPalette.markWhite),
     );
   }
 }

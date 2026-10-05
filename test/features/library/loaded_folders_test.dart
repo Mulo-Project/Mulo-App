@@ -1,3 +1,5 @@
+import 'package:music_download_play_app/core/design/icons/app_icons.dart';
+
 import 'dart:io';
 
 import 'package:drift/native.dart';
@@ -167,6 +169,6 @@ void main() {
     expect(find.text('1곡'), findsOneWidget);
     expect(find.text('폴더 추가'), findsOneWidget);
     // 기본 저장 위치에는 삭제 버튼이 없다.
-    expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+    expect(find.byIcon(AppIcons.close), findsOneWidget);
   });
 }

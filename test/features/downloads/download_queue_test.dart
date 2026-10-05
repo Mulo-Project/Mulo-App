@@ -1,3 +1,4 @@
+import 'package:music_download_play_app/core/design/icons/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
@@ -117,7 +118,7 @@ void main() {
 
     // 새 재생목록 만들기 (만들면 자동 선택) + 대화상자에서 기존 재생목록 고르기
     await tester.enterText(fields.at(4), '새 목록');
-    await tester.tap(inSheet(find.byIcon(Icons.add_rounded)));
+    await tester.tap(inSheet(find.byIcon(AppIcons.add)));
     await tester.pumpAndSettle();
     expect(find.text('1개 선택'), findsOneWidget);
     await tester.tap(find.text('1개 선택'));
@@ -175,7 +176,7 @@ void main() {
     expect(find.text('Now Song'), findsOneWidget);
     expect(find.text('Next Song'), findsNothing);
 
-    await tester.tap(find.byIcon(Icons.keyboard_arrow_down_rounded));
+    await tester.tap(find.byIcon(AppIcons.chevronDown));
     await tester.pumpAndSettle();
     expect(find.text('Next Song'), findsOneWidget);
   });
@@ -192,13 +193,13 @@ void main() {
     await tester.pumpWidget(const MusicApp(initialLocation: Routes.search));
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.pause_rounded), findsNothing);
-    expect(find.byIcon(Icons.content_paste_rounded), findsNothing);
-    await tester.tap(find.byIcon(Icons.close_rounded).first);
+    expect(find.byIcon(AppIcons.pause), findsNothing);
+    expect(find.byIcon(AppIcons.paste), findsNothing);
+    await tester.tap(find.byIcon(AppIcons.close).first);
     await tester.pump();
-    await tester.tap(find.byIcon(Icons.keyboard_arrow_down_rounded));
+    await tester.tap(find.byIcon(AppIcons.chevronDown));
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(Icons.close_rounded).last);
+    await tester.tap(find.byIcon(AppIcons.close).last);
     await tester.pump();
     expect(queue.controls, ['cancel:a', 'cancel:b']);
   });
@@ -206,7 +207,7 @@ void main() {
   testWidgets('검색 탭: 받는 곡이 없으면 카드가 없다', (tester) async {
     await open(tester, [_done]);
     expect(find.text('Done Song'), findsNothing);
-    expect(find.byIcon(Icons.keyboard_arrow_down_rounded), findsNothing);
+    expect(find.byIcon(AppIcons.chevronDown), findsNothing);
   });
 
   testWidgets('검색 대상 메뉴: 유튜브 → 웹', (tester) async {
@@ -219,7 +220,7 @@ void main() {
     expect(find.text('유튜브'), findsOneWidget);
     await tester.tap(find.text('웹'));
     await tester.pumpAndSettle();
-    expect(find.byIcon(Icons.public_rounded), findsOneWidget);
+    expect(find.byIcon(AppIcons.globe), findsOneWidget);
     expect(find.text('웹'), findsNothing);
     expect(find.text('웹 음원 검색어나 URL'), findsOneWidget);
   });

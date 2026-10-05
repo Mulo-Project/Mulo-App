@@ -49,7 +49,7 @@ class HomeSectionTitle extends StatelessWidget {
             ),
             if (onTap != null) ...[
               const SizedBox(width: AppSpacing.xxs),
-              Icon(Icons.chevron_right_rounded, color: p.onSurfaceMuted),
+              Icon(AppIcons.chevronRight, color: p.onSurfaceMuted),
             ],
           ],
         ),
@@ -163,10 +163,7 @@ class _HomeCollapsibleState extends State<HomeCollapsible> {
                   AnimatedRotation(
                     turns: _open ? .5 : 0,
                     duration: AppMotion.medium,
-                    child: Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      color: p.onSurfaceMuted,
-                    ),
+                    child: Icon(AppIcons.chevronDown, color: p.onSurfaceMuted),
                   ),
                 ],
               ),

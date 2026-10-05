@@ -137,7 +137,7 @@ class PlayerTopBar extends StatelessWidget {
     return AppTopBar(
       title: l10n.playerNowPlaying,
       leading: CircleIconButton(
-        icon: Icons.keyboard_arrow_down_rounded,
+        icon: AppIcons.chevronDown,
         tooltip: l10n.actionBack,
         onPressed: () => context.pop(),
       ),
@@ -161,17 +161,14 @@ class PlayerMoreButton extends StatelessWidget {
     return Builder(
       builder: (btn) => circle
           ? CircleIconButton(
-              icon: Icons.more_vert_rounded,
+              icon: AppIcons.more,
               tooltip: l10n.trackMenuTitle,
               onPressed: () => showTrackMenu(btn, track, inPlayer: true),
             )
           : IconButton(
               tooltip: l10n.trackMenuTitle,
               onPressed: () => showTrackMenu(btn, track, inPlayer: true),
-              icon: Icon(
-                Icons.more_vert_rounded,
-                color: context.palette.onSurface,
-              ),
+              icon: Icon(AppIcons.more, color: context.palette.onSurface),
             ),
     );
   }
@@ -205,14 +202,12 @@ class PlayerTitle extends StatelessWidget {
           ? CrossAxisAlignment.center
           : CrossAxisAlignment.start,
       children: [
-        Text(
+        MarqueeText(
           track.title,
           style: (large ? text.headlineSmall : text.titleMedium)?.copyWith(
             fontWeight: FontWeight.w700,
             height: 1.2,
           ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
           textAlign: align,
         ),
         SizedBox(height: large ? AppSpacing.xxs + 2 : 2),
@@ -261,7 +256,7 @@ class PlayerCover extends StatelessWidget {
           : LayoutBuilder(
               builder: (context, c) => Center(
                 child: Icon(
-                  Icons.music_note_rounded,
+                  AppIcons.musicNote,
                   size: math.min(c.maxWidth, c.maxHeight) * .34,
                   color: p.onGlow.withValues(alpha: .85),
                 ),
@@ -542,7 +537,7 @@ class PlayerLikeButton extends StatelessWidget {
           tooltip: on ? l10n.trackMenuUnfavorite : l10n.trackMenuFavorite,
           onPressed: () => cubit.toggleFavorite(trackId),
           icon: Icon(
-            on ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+            on ? AppIcons.favorite : AppIcons.favoriteOutline,
             size: 30,
             color: on ? p.accent : p.onSurfaceMuted,
           ),
@@ -566,7 +561,7 @@ class LyricsToggleButton extends StatelessWidget {
       tooltip: data.showLyrics ? l10n.playerShowCover : l10n.playerShowLyrics,
       onPressed: data.onToggleLyrics,
       icon: Icon(
-        data.showLyrics ? Icons.album_rounded : Icons.lyrics_rounded,
+        data.showLyrics ? AppIcons.album : AppIcons.lyrics,
         color: data.showLyrics ? p.accent : p.onSurfaceMuted,
       ),
     );
@@ -581,10 +576,7 @@ class QueueButton extends StatelessWidget {
   Widget build(BuildContext context) => IconButton(
     tooltip: context.l10n.playerQueue,
     onPressed: () => context.push(Routes.queue),
-    icon: Icon(
-      Icons.queue_music_rounded,
-      color: context.palette.onSurfaceMuted,
-    ),
+    icon: Icon(AppIcons.queue, color: context.palette.onSurfaceMuted),
   );
 }
 
@@ -599,7 +591,7 @@ class ShuffleButton extends StatelessWidget {
     tooltip: context.l10n.actionShuffle,
     onPressed: data.vm.toggleShuffle,
     icon: Icon(
-      Icons.shuffle_rounded,
+      AppIcons.shuffle,
       color: data.state.shuffle
           ? context.palette.accent
           : context.palette.onSurfaceMuted,
@@ -621,9 +613,7 @@ class RepeatButton extends StatelessWidget {
       tooltip: context.l10n.playerRepeat,
       onPressed: data.vm.cycleRepeat,
       icon: Icon(
-        repeat == PlayerRepeatMode.one
-            ? Icons.repeat_one_rounded
-            : Icons.repeat_rounded,
+        repeat == PlayerRepeatMode.one ? AppIcons.repeatOne : AppIcons.repeat,
         color: repeat != PlayerRepeatMode.off ? p.accent : p.onSurfaceMuted,
       ),
     );
@@ -653,7 +643,7 @@ class SkipButton extends StatelessWidget {
       tooltip: next ? l10n.actionNext : l10n.actionPrevious,
       onPressed: next ? data.vm.next : data.vm.previous,
       icon: Icon(
-        next ? Icons.skip_next_rounded : Icons.skip_previous_rounded,
+        next ? AppIcons.skipNext : AppIcons.skipPrevious,
         color: color ?? context.palette.onSurface,
       ),
     );
@@ -683,7 +673,7 @@ class SolidPlayButton extends StatelessWidget {
           child: SizedBox.square(
             dimension: size,
             child: Icon(
-              playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+              playing ? AppIcons.pause : AppIcons.play,
               size: size * .52,
               color: p.background,
             ),
@@ -717,7 +707,7 @@ class GlowPlayButton extends StatelessWidget {
         ],
       ),
       child: CircleIconButton(
-        icon: playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
+        icon: playing ? AppIcons.pause : AppIcons.play,
         tooltip: playing ? l10n.actionPause : l10n.actionPlay,
         emphasized: true,
         size: size,
@@ -753,7 +743,7 @@ class SeekStepButton extends StatelessWidget {
         forward ? data.state.position + step : data.state.position - step,
       ),
       icon: Icon(
-        forward ? Icons.forward_10_rounded : Icons.replay_10_rounded,
+        forward ? AppIcons.forward10 : AppIcons.replay10,
         color: color ?? context.palette.onSurface.withValues(alpha: .85),
       ),
     );
@@ -770,10 +760,7 @@ class AddToPlaylistButton extends StatelessWidget {
   Widget build(BuildContext context) => IconButton(
     tooltip: context.l10n.trackMenuAddToPlaylist,
     onPressed: () => context.push(Routes.playlistPick, extra: [trackId]),
-    icon: Icon(
-      Icons.playlist_add_rounded,
-      color: context.palette.onSurfaceMuted,
-    ),
+    icon: Icon(AppIcons.playlistAdd, color: context.palette.onSurfaceMuted),
   );
 }
 
@@ -798,14 +785,14 @@ class SleepTimerButton extends StatelessWidget {
               for (final m in const [15, 30, 45, 60])
                 AppMenuItem(
                   value: m,
-                  icon: Icons.bedtime_rounded,
+                  icon: AppIcons.sleep,
                   label: l10n.playerSleepTimerMinutes(m),
                   selected: data.state.sleepMinutes == m,
                 ),
               if (on)
                 AppMenuItem(
                   value: 0,
-                  icon: Icons.timer_off_rounded,
+                  icon: AppIcons.timerOff,
                   label: l10n.playerSleepTimerOff,
                   dividerBefore: true,
                 ),
@@ -825,7 +812,7 @@ class SleepTimerButton extends StatelessWidget {
           );
         },
         icon: Icon(
-          on ? Icons.bedtime_rounded : Icons.bedtime_outlined,
+          on ? AppIcons.sleep : AppIcons.sleepOutline,
           color: on ? p.accent : p.onSurfaceMuted,
         ),
       ),
@@ -843,7 +830,7 @@ class EqualizerButton extends StatelessWidget {
     onPressed: () => ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(context.l10n.playerEqualizerSoon))),
-    icon: Icon(Icons.equalizer_rounded, color: context.palette.onSurfaceMuted),
+    icon: Icon(AppIcons.eq, color: context.palette.onSurfaceMuted),
   );
 }
 

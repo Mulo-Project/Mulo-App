@@ -131,9 +131,9 @@ class _StyleOption extends StatelessWidget {
   }
 
   IconData get _icon => switch (style) {
-    PlayerStyle.square => Icons.crop_square_rounded,
-    PlayerStyle.fullBleed => Icons.fullscreen_rounded,
-    PlayerStyle.arc => Icons.data_usage_rounded,
+    PlayerStyle.square => AppIcons.square,
+    PlayerStyle.fullBleed => AppIcons.fullscreen,
+    PlayerStyle.arc => AppIcons.usage,
   };
 }
 

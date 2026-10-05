@@ -95,7 +95,7 @@ class _DownloadProgressCardState extends State<DownloadProgressCard> {
                         turns: _expanded ? .5 : 0,
                         duration: AppMotion.fast,
                         child: Icon(
-                          Icons.keyboard_arrow_down_rounded,
+                          AppIcons.chevronDown,
                           color: p.onSurfaceMuted,
                         ),
                       ),
@@ -144,7 +144,7 @@ class _CancelButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => CircleIconButton(
-    icon: Icons.close_rounded,
+    icon: AppIcons.close,
     tooltip: context.l10n.actionCancel,
     size: 32,
     onPressed: () => context.read<DownloadQueueCubit>().cancel(item.id),
@@ -172,7 +172,7 @@ class _NowPlayingStrip extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            state.isPlaying ? Icons.graphic_eq_rounded : Icons.pause_rounded,
+            state.isPlaying ? AppIcons.equalizer : AppIcons.pause,
             size: 16,
             color: p.accent,
           ),

@@ -1,3 +1,5 @@
+import '../icons/app_icons.dart';
+
 import 'package:flutter/material.dart';
 
 import '../app_theme_tokens.dart';
@@ -72,7 +74,7 @@ class _AppSearchFieldState extends State<AppSearchField> {
         height: 52,
         child: Row(
           children: [
-            Icon(Icons.search_rounded, color: p.onSurfaceMuted, size: 20),
+            Icon(AppIcons.search, color: p.onSurfaceMuted, size: 20),
             const SizedBox(width: AppSpacing.xs),
             Expanded(
               // 고정 높이 안에서 글자를 세로 가운데에 둔다.
@@ -101,11 +103,7 @@ class _AppSearchFieldState extends State<AppSearchField> {
                   _controller.clear();
                   widget.onChanged?.call('');
                 },
-                icon: Icon(
-                  Icons.close_rounded,
-                  color: p.onSurfaceMuted,
-                  size: 20,
-                ),
+                icon: Icon(AppIcons.close, color: p.onSurfaceMuted, size: 20),
               )
             else if (widget.trailing != null)
               widget.trailing!,

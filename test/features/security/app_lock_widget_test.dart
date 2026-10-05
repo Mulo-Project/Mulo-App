@@ -162,7 +162,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(bio.calls, 2);
     expect(find.text('PIN 정하기'), findsOneWidget);
-    await tester.tap(find.byIcon(Icons.arrow_back_rounded));
+    await tester.tap(find.byIcon(AppIcons.back));
     await tester.pumpAndSettle();
     expect(lock.pin, '1234');
 
