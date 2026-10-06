@@ -1,5 +1,7 @@
+import 'package:music_download_play_app/core/design/components/app_dialog.dart';
 import 'package:music_download_play_app/core/design/icons/app_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:music_download_play_app/core/design/components/color_picker.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
@@ -116,15 +118,21 @@ void main() {
     expect(find.text('/music/Mulo'), findsOneWidget);
     await tester.enterText(fields.at(3), '/music/Mulo/발라드');
 
-    // 새 재생목록 만들기 (만들면 자동 선택) + 대화상자에서 기존 재생목록 고르기
-    await tester.enterText(fields.at(4), '새 목록');
-    await tester.tap(inSheet(find.byIcon(AppIcons.add)));
-    await tester.pumpAndSettle();
-    expect(find.text('1개 선택'), findsOneWidget);
-    await tester.tap(find.text('1개 선택'));
+    // 재생목록 선택 대화상자에서 기존 재생목록을 고르고, 새로 만든다 (만들면 자동 선택).
+    await tester.tap(find.text('선택 안 함'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('운동'));
     await tester.pump();
+    final dialog = find.byType(AppDialog);
+    await tester.enterText(
+      find.descendant(of: dialog, matching: find.byType(TextField)),
+      '새 목록',
+    );
+    await tester.tap(
+      find.descendant(of: dialog, matching: find.byIcon(AppIcons.add)),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('새 목록'), findsWidgets);
     await tester.tap(find.text('선택 완료'));
     await tester.pumpAndSettle();
     expect(find.text('2개 선택'), findsOneWidget);
@@ -139,6 +147,37 @@ void main() {
     expect(r.savePath, '/music/Mulo/발라드');
     expect(r.playlistIds, {'pl1', 'pl2'});
     expect(find.text('받기 정보'), findsNothing);
+  });
+
+  testWidgets('받기 팝업: 색을 골라 받고, 장르 기본 색으로 저장하면 다음에 채워진다', (tester) async {
+    final colors = MemoryCoverColorRepository();
+    final queue = MemoryDownloadQueue();
+    await setUpTestDependencies(downloads: queue, coverColors: colors);
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    tester.platformDispatcher.localesTestValue = const [Locale('ko')];
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+    addTearDown(sl.reset);
+    await tester.pumpWidget(const MusicApp(initialLocation: Routes.search));
+    await tester.pumpAndSettle();
+
+    await openDownloadDialog(tester);
+    final fields = inSheet(find.byType(TextField));
+    await tester.enterText(fields.at(2), '발라드');
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.bySemanticsLabel('색 3'));
+    await tester.tap(find.bySemanticsLabel('색 3'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.textContaining('기본 색으로 저장'));
+    await tester.tap(find.textContaining('기본 색으로 저장'));
+    await tester.pumpAndSettle();
+    await tester.tap(inSheet(find.text('받기')));
+    await tester.pumpAndSettle();
+
+    final red = ColorPicker.presets[2].toARGB32();
+    expect(queue.requests.single.color, red);
+    expect(colors.saved['genre:발라드'], red);
   });
 
   testWidgets('받기 팝업: 제목을 비우면 받기 버튼이 눌리지 않는다', (tester) async {

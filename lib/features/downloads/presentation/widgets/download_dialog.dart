@@ -5,6 +5,8 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../library/presentation/bloc/library_cubit.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
+import '../../../covers/domain/entities/cover_key.dart';
+import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../domain/entities/download_options.dart';
 import '../../domain/entities/download_request.dart';
 import '../bloc/download_queue_cubit.dart';
@@ -25,6 +27,7 @@ Future<bool> showDownloadDialog(
   final playlists = context.read<PlaylistsCubit>();
   final settings = context.read<DownloadSettingsCubit>();
   final library = context.read<LibraryCubit>();
+  final colors = context.read<CoverColorCubit>();
   final started = await showModalBottomSheet<bool>(
     context: context,
     backgroundColor: context.palette.surface,
@@ -41,6 +44,7 @@ Future<bool> showDownloadDialog(
         BlocProvider.value(value: playlists),
         BlocProvider.value(value: settings),
         BlocProvider.value(value: library),
+        BlocProvider.value(value: colors),
       ],
       child: _DownloadSheet(
         title: title,
@@ -81,8 +85,21 @@ class _DownloadSheetState extends State<_DownloadSheet> {
   late final _savePath = TextEditingController(
     text: context.read<DownloadSettingsCubit>().state,
   );
-  final _newPlaylist = TextEditingController();
   final Set<String> _selected = {};
+
+  // 직접 고른 색. 안 골랐으면 장르의 기본 색을 따라간다 (없으면 자동).
+  Color? _picked;
+  var _pickedSet = false;
+  var _saveAsGenreDefault = false;
+
+  Color? _genreColor() {
+    final genre = _genre.text.trim();
+    if (genre.isEmpty) return null;
+    final v = context.read<CoverColorCubit>().state[CoverKey.genre(genre)];
+    return v == null ? null : Color(v);
+  }
+
+  Color? get _color => _pickedSet ? _picked : _genreColor();
 
   @override
   void dispose() {
@@ -90,23 +107,13 @@ class _DownloadSheetState extends State<_DownloadSheet> {
     _artist.dispose();
     _genre.dispose();
     _savePath.dispose();
-    _newPlaylist.dispose();
     super.dispose();
-  }
-
-  Future<void> _createPlaylist() async {
-    final made = await context.read<PlaylistsCubit>().create(_newPlaylist.text);
-    if (made == null || !mounted) return;
-    setState(() {
-      _newPlaylist.clear();
-      _selected.add(made.id);
-    });
   }
 
   Future<void> _pickPlaylists() async {
     final picked = await showPlaylistPickerDialog(
       context,
-      playlists: context.read<PlaylistsCubit>().state,
+      playlists: context.read<PlaylistsCubit>(),
       selected: _selected,
     );
     if (picked == null || !mounted) return;
@@ -123,7 +130,15 @@ class _DownloadSheetState extends State<_DownloadSheet> {
   }
 
   Future<void> _start() async {
-    final ok = await context.read<DownloadQueueCubit>().enqueue(
+    final color = _color;
+    final queue = context.read<DownloadQueueCubit>();
+    final colors = context.read<CoverColorCubit>();
+    final genre = _genre.text.trim();
+    // 이 장르의 기본 색으로 저장하면 다음에 같은 장르를 받을 때 미리 채워진다.
+    if (_saveAsGenreDefault && genre.isNotEmpty && color != null) {
+      await colors.setColor(CoverKey.genre(genre), color);
+    }
+    final ok = await queue.enqueue(
       DownloadRequest(
         title: _title.text,
         artist: _artist.text,
@@ -132,6 +147,7 @@ class _DownloadSheetState extends State<_DownloadSheet> {
         quality: widget.quality,
         savePath: _savePath.text,
         duration: widget.duration,
+        color: color?.toARGB32(),
       ),
     );
     if (ok && mounted) Navigator.of(context).pop(true);
@@ -174,6 +190,41 @@ class _DownloadSheetState extends State<_DownloadSheet> {
                 controller: _genre,
                 label: l10n.downloadGenreExisting,
               ),
+              const SizedBox(height: AppSpacing.md),
+              Text(l10n.decorateColor, style: text.labelLarge),
+              const SizedBox(height: AppSpacing.xs),
+              ListenableBuilder(
+                listenable: _genre,
+                builder: (_, _) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ColorPicker(
+                      selected: _color,
+                      autoLabel: l10n.playlistColorAuto,
+                      customLabel: l10n.colorCustom,
+                      optionLabel: l10n.colorOption,
+                      onChanged: (c) => setState(() {
+                        _picked = c;
+                        _pickedSet = true;
+                      }),
+                    ),
+                    if (_genre.text.trim().isNotEmpty && _color != null)
+                      SettingRow(
+                        title: l10n.downloadColorSaveForGenre(
+                          _genre.text.trim(),
+                        ),
+                        trailing: AppSwitch(
+                          value: _saveAsGenreDefault,
+                          onChanged: (v) =>
+                              setState(() => _saveAsGenreDefault = v),
+                        ),
+                        onTap: () => setState(
+                          () => _saveAsGenreDefault = !_saveAsGenreDefault,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
               const SizedBox(height: AppSpacing.sm),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -181,6 +232,7 @@ class _DownloadSheetState extends State<_DownloadSheet> {
                   Expanded(
                     child: AppTextField(
                       label: l10n.downloadFieldSavePath,
+
                       controller: _savePath,
                     ),
                   ),
@@ -203,27 +255,6 @@ class _DownloadSheetState extends State<_DownloadSheet> {
                     ? l10n.downloadPlaylistsNone
                     : l10n.downloadPlaylistsSelected(_selected.length),
                 onTap: _pickPlaylists,
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Expanded(
-                    child: AppTextField(
-                      label: l10n.downloadNewPlaylist,
-                      controller: _newPlaylist,
-                      hint: l10n.downloadNewPlaylistHint,
-                      textInputAction: TextInputAction.done,
-                      onSubmitted: (_) => _createPlaylist(),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  CircleIconButton(
-                    icon: AppIcons.add,
-                    tooltip: l10n.playlistsNew,
-                    onPressed: _createPlaylist,
-                  ),
-                ],
               ),
               const SizedBox(height: AppSpacing.lg),
               ListenableBuilder(

@@ -1101,6 +1101,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistSummaryEmpty => 'Empty';
 
   @override
+  String downloadColorSaveForGenre(String genre) {
+    return 'Save as the default color for \'$genre\'';
+  }
+
+  @override
   String get downloadPlaylistsNone => 'None';
 
   @override

@@ -107,7 +107,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
             title: genreOf(l10n, e.key),
             subtitle: l10n.songCount(e.value.length),
             tone: toneFor(e.key),
-            leading: ArtworkBox(tone: toneFor(e.key), icon: AppIcons.category),
+            leading: ArtworkBox(
+              tone: toneFor(e.key),
+              color: coverColorOf(context, CoverKey.genre(e.key)),
+              icon: AppIcons.category,
+            ),
             trailing: const _Chevron(),
             onTap: () => context.push(Routes.genre(e.key)),
           ),

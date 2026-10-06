@@ -505,6 +505,41 @@ void main() {
       expect(find.widgetWithText(TextField, 'Found Song'), findsOneWidget);
     });
 
+    testWidgets('이미 받은 곡만 채널 이름 옆에 전체 길이가 보인다', (tester) async {
+      final engine = FakeDownloaderEngine(
+        pages: [
+          const SearchPage(
+            items: [
+              MediaHit(
+                id: 'a',
+                title: 'Have It',
+                url: 'https://example.com/a',
+                uploader: 'Chan',
+                duration: Duration(minutes: 3, seconds: 5),
+                downloaded: true,
+              ),
+              MediaHit(
+                id: 'b',
+                title: 'New One',
+                url: 'https://example.com/b',
+                uploader: 'Chan',
+                duration: Duration(minutes: 4, seconds: 1),
+              ),
+            ],
+            hasNext: false,
+          ),
+        ],
+      );
+      await setUpTestDependencies(engine: engine);
+      await openSearch(tester);
+      await tester.enterText(find.byType(TextField), 'x');
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Chan · 3:05'), findsOneWidget);
+      expect(find.textContaining('4:01'), findsNothing);
+    });
+
     testWidgets('정렬 메뉴에서 최신순을 고르면 날짜 순으로 다시 찾는다', (tester) async {
       final engine = FakeDownloaderEngine(
         pages: [

@@ -9,6 +9,7 @@ import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/preview_progress.dart';
 import '../bloc/preview_cubit.dart';
+import '../screens/media_detail_screen.dart';
 
 /// [hit] 미리 듣기를 시작하거나(이미 듣는 중이면) 멈춘다.
 /// 소리가 나기 시작하면 메인 재생은 멈추고, 시작하지 못하면 안내를 띄운다.
@@ -168,6 +169,7 @@ class PreviewMiniBar extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final loading = state.status == PreviewStatus.loading;
     final progress = state.progress;
+    final hit = state.hit;
     return Padding(
       key: const ValueKey('preview-mini-bar'),
       padding: const EdgeInsets.symmetric(
@@ -183,14 +185,24 @@ class PreviewMiniBar extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  state.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: text.bodySmall,
+                // 제목을 누르면 이 곡의 상세 화면(유튜브 정보)을 연다.
+                GestureDetector(
+                  key: const ValueKey('preview-mini-open'),
+                  behavior: HitTestBehavior.opaque,
+                  onTap: hit == null
+                      ? null
+                      : () => showMediaDetail(context, hit),
+                  child: Text(
+                    state.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: text.bodySmall,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.xxs),
-                ProgressLine(value: loading ? 0 : state.fraction, height: 3),
+                loading
+                    ? const ProgressLine(value: 0, height: 3)
+                    : PreviewSeekLine(fraction: state.fraction, height: 3),
               ],
             ),
           ),
@@ -217,6 +229,64 @@ String _timeText(PreviewProgress? progress) {
   final d = progress?.duration;
   return '${formatDuration(progress?.position ?? Duration.zero)}'
       ' / ${d == null ? '--:--' : formatDuration(d)}';
+}
+
+/// 눌러서 · 끌어서 옮길 수 있는 미리 듣기 진행 막대.
+/// 끌고 있는 동안은 손가락 자리를 보여 주고, 손을 뗄 때 한 번만 실제로 옮긴다.
+/// 길이를 아직 모르면 옮기지 않는다.
+class PreviewSeekLine extends StatefulWidget {
+  const PreviewSeekLine({super.key, required this.fraction, this.height = 4});
+
+  final double fraction;
+  final double height;
+
+  @override
+  State<PreviewSeekLine> createState() => _PreviewSeekLineState();
+}
+
+class _PreviewSeekLineState extends State<PreviewSeekLine> {
+  double? _drag;
+
+  double _at(double dx, double width) =>
+      width <= 0 ? 0 : (dx / width).clamp(0.0, 1.0);
+
+  void _commit() {
+    final v = _drag;
+    setState(() => _drag = null);
+    if (v != null) context.read<PreviewCubit>().seekTo(v);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, c) {
+        final w = c.maxWidth;
+        return GestureDetector(
+          key: const ValueKey('preview-seek'),
+          behavior: HitTestBehavior.opaque,
+          onTapDown: (d) => setState(() => _drag = _at(d.localPosition.dx, w)),
+          onTapUp: (_) => _commit(),
+          onTapCancel: () => setState(() => _drag = null),
+          onHorizontalDragStart: (d) =>
+              setState(() => _drag = _at(d.localPosition.dx, w)),
+          onHorizontalDragUpdate: (d) =>
+              setState(() => _drag = _at(d.localPosition.dx, w)),
+          onHorizontalDragEnd: (_) => _commit(),
+          onHorizontalDragCancel: () => setState(() => _drag = null),
+          // 누를 자리를 넉넉히 (막대는 얇아서).
+          child: SizedBox(
+            height: widget.height + 16,
+            child: Center(
+              child: ProgressLine(
+                value: _drag ?? widget.fraction,
+                height: widget.height,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 /// 미리 듣는 곡의 재생 진행도: 얼마나 들었는지 막대 + 시간.
@@ -247,7 +317,7 @@ class PreviewProgressBar extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ProgressLine(value: state.fraction),
+        PreviewSeekLine(fraction: state.fraction),
         if (showTime) ...[
           const SizedBox(height: AppSpacing.xs),
           Row(

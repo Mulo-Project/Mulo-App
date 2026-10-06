@@ -89,6 +89,16 @@ class PlayPreview implements UseCase<void, AudioStream> {
   Future<void> call(AudioStream stream) => _player.play(stream);
 }
 
+/// 미리 듣기 재생 위치 옮기기.
+class SeekPreview implements UseCase<void, Duration> {
+  const SeekPreview(this._player);
+
+  final PreviewPlayer _player;
+
+  @override
+  Future<void> call(Duration position) => _player.seek(position);
+}
+
 /// 미리 듣기 멈추기.
 class StopPreview implements UseCase<void, NoParams> {
   const StopPreview(this._player);

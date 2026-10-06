@@ -1084,6 +1084,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playlistSummaryEmpty => '비어 있어요';
 
   @override
+  String downloadColorSaveForGenre(String genre) {
+    return '\'$genre\' 장르의 기본 색으로 저장';
+  }
+
+  @override
   String get downloadPlaylistsNone => '선택 안 함';
 
   @override

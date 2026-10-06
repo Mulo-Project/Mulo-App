@@ -14,6 +14,7 @@ class DownloadItem extends Equatable {
     this.playlistIds = const {},
     this.thumbnailUrl,
     this.duration,
+    this.color,
   });
 
   final String id;
@@ -34,6 +35,9 @@ class DownloadItem extends Equatable {
   /// 곡 길이. 모르면 null.
   final Duration? duration;
 
+  /// 받은 뒤 곡에 쓸 커버 색(ARGB). 비어 있으면 자동 색.
+  final int? color;
+
   /// 아직 끝나지 않은 항목 (받는 중 · 대기 · 일시정지).
   bool get isActive =>
       status == DownloadStatus.downloading ||
@@ -51,6 +55,7 @@ class DownloadItem extends Equatable {
         playlistIds: playlistIds,
         thumbnailUrl: thumbnailUrl,
         duration: duration,
+        color: color,
       );
 
   @override
@@ -64,5 +69,6 @@ class DownloadItem extends Equatable {
     progress,
     thumbnailUrl,
     duration,
+    color,
   ];
 }
