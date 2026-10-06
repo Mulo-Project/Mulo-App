@@ -6,5 +6,8 @@ abstract final class CoverKey {
 
   /// 아티스트도 곡에 저장된 이름 그대로(빈 문자열 = 알 수 없는 아티스트).
   static String artist(String name) => 'artist:$name';
+
+  /// 장르별 기본 색 (받는 곡에 미리 채워진다).
+  static String genre(String name) => 'genre:$name';
   static String playlist(String id) => 'playlist:$id';
 }
