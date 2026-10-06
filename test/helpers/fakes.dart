@@ -869,6 +869,12 @@ class FakePreviewPlayer implements PreviewPlayer {
     playing = true;
   }
 
+  /// 옮긴 위치 순서.
+  final seeks = <Duration>[];
+
+  @override
+  Future<void> seek(Duration position) async => seeks.add(position);
+
   @override
   Future<void> stop() async {
     stops++;

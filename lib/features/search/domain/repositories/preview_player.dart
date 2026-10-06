@@ -8,6 +8,9 @@ abstract interface class PreviewPlayer {
   /// [stream]을 불러와 재생을 시작한다. 이미 재생 중이면 바꿔 끼운다.
   Future<void> play(AudioStream stream);
 
+  /// 재생 위치를 [position]으로 옮긴다 (재생 중이 아니면 아무 일도 없다).
+  Future<void> seek(Duration position);
+
   /// 재생을 멈추고 놓는다.
   Future<void> stop();
 

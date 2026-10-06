@@ -7,6 +7,7 @@ import '../../../../core/l10n/l10n.dart';
 import '../../../downloads/presentation/bloc/download_queue_cubit.dart';
 import '../../../downloads/presentation/widgets/download_dialog.dart';
 import '../../../downloads/presentation/widgets/download_progress_card.dart';
+import '../../../library/domain/entities/track.dart' show formatDuration;
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/search_sort.dart';
@@ -305,6 +306,8 @@ class _HitTile extends StatelessWidget {
     final l10n = context.l10n;
     final subtitle = [
       if (hit.uploader.isNotEmpty) hit.uploader,
+      // 이미 받은 곡은 채널 이름 옆에 전체 길이도 보인다.
+      if (hit.downloaded && hit.duration != null) formatDuration(hit.duration!),
       if (hit.downloaded) l10n.alreadyDownloaded,
     ].join(' · ');
     final thumb = hit.thumbnailUrl;
