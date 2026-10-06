@@ -9,8 +9,10 @@ import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/design/design.dart';
 import 'package:music_download_play_app/features/player/presentation/bloc/now_playing_cubit.dart';
 import 'package:music_download_play_app/features/search/data/engine/cached_engine.dart';
+import 'package:music_download_play_app/features/search/data/engine/explode_engine.dart';
 import 'package:music_download_play_app/features/search/data/engine/local_engine.dart';
 import 'package:music_download_play_app/features/search/data/engine/server_engine.dart';
+import 'package:music_download_play_app/features/search/domain/entities/audio_stream.dart';
 import 'package:music_download_play_app/features/search/domain/entities/engine_exception.dart';
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
 import 'package:music_download_play_app/features/search/domain/usecases/search_usecases.dart';
@@ -28,6 +30,8 @@ PreviewCubit _cubit(FakeDownloaderEngine e, FakePreviewPlayer p) =>
       PlayPreview(p),
       StopPreview(p),
       WatchPreviewCompleted(p),
+      WatchPreviewProgress(p),
+      WatchPreviewFailures(p),
     );
 
 void main() {
@@ -55,6 +59,58 @@ void main() {
       expect(args![args!.indexOf('-f') + 1], contains('bestaudio'));
       expect(args!.last, 'https://x/v');
     });
+
+    test('LocalEngine: 기본으로 실패하면 다른 클라이언트로 한 번 더 읽는다', () async {
+      final calls = <List<String>>[];
+      final engine = LocalEngine(
+        run: (_, a) async {
+          calls.add(a);
+          if (calls.length == 1) {
+            return (exitCode: 1, stdout: '', stderr: 'format not available');
+          }
+          return (
+            exitCode: 0,
+            stdout: jsonEncode({'url': 'https://rr.googlevideo.com/audio'}),
+            stderr: '',
+          );
+        },
+      );
+      final stream = await engine.resolveAudioStream('https://x/v');
+      expect(stream.url, 'https://rr.googlevideo.com/audio');
+      expect(calls, hasLength(2));
+      expect(calls.last, contains('youtube:player_client=android_vr'));
+    });
+
+    test(
+      'YoutubeExplodeEngine: 유튜브 곡은 라이브러리가 읽은 주소를 쓰고, 못 읽으면 안쪽 엔진으로 넘긴다',
+      () async {
+        final inner = FakeDownloaderEngine();
+        var fail = false;
+        final engine = YoutubeExplodeEngine(
+          inner,
+          reader: (id) async {
+            if (fail) throw const EngineException(EngineFailure.failed);
+            return AudioStream(url: 'https://explode/$id');
+          },
+        );
+        const url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+        expect(
+          (await engine.resolveAudioStream(url)).url,
+          'https://explode/dQw4w9WgXcQ',
+        );
+        fail = true;
+        expect(
+          (await engine.resolveAudioStream(url)).url,
+          'https://stream.test/$url',
+        );
+        // 유튜브 주소가 아니면 처음부터 안쪽 엔진.
+        fail = false;
+        expect(
+          (await engine.resolveAudioStream('https://soundcloud.com/a/b')).url,
+          'https://stream.test/https://soundcloud.com/a/b',
+        );
+      },
+    );
 
     test('LocalEngine: 주소가 없으면 실패다', () async {
       final engine = LocalEngine(
@@ -100,6 +156,30 @@ void main() {
   });
 
   group('PreviewCubit', () {
+    test('재생 중에 실패하면 멈추고 까닭을 알린다', () async {
+      final player = FakePreviewPlayer();
+      final cubit = _cubit(FakeDownloaderEngine(info: VideoInfo(_a)), player);
+      await cubit.toggle(_a);
+      expect(cubit.state.status, PreviewStatus.playing);
+      player.fail('Source error');
+      await Future<void>.delayed(Duration.zero);
+      expect(cubit.state.status, PreviewStatus.idle);
+      expect(cubit.state.error, 'Source error');
+      await cubit.close();
+    });
+
+    test('재생 위치가 오면 들은 비율이 바뀌고, 멈추면 지워진다', () async {
+      final player = FakePreviewPlayer();
+      final cubit = _cubit(FakeDownloaderEngine(info: VideoInfo(_a)), player);
+      await cubit.toggle(_a);
+      player.progress(const Duration(seconds: 30), const Duration(minutes: 2));
+      await Future<void>.delayed(Duration.zero);
+      expect(cubit.state.fraction, closeTo(.25, .001));
+      await cubit.stop();
+      expect(cubit.state.progress, isNull);
+      await cubit.close();
+    });
+
     test('누르면 스트림 주소를 받아 재생하고, 다시 누르면 멈춘다', () async {
       final engine = FakeDownloaderEngine();
       final player = FakePreviewPlayer();
@@ -262,6 +342,24 @@ void main() {
       await tester.pumpAndSettle();
       expect(player.playing, isFalse);
       expect(find.byTooltip('Preview'), findsOneWidget);
+    });
+
+    testWidgets('듣는 동안 줄과 상세 화면에 재생 진행도가 보인다', (tester) async {
+      final player = await openSearch(tester);
+      expect(find.byKey(const ValueKey('preview-progress')), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('preview-row-button')));
+      await tester.pumpAndSettle();
+      player.progress(const Duration(seconds: 30), const Duration(minutes: 2));
+      await tester.pump();
+      expect(find.byKey(const ValueKey('preview-progress')), findsOneWidget);
+      expect(find.byType(ProgressLine), findsOneWidget);
+
+      await tester.tap(find.text('Song'));
+      await tester.pumpAndSettle();
+      player.progress(const Duration(seconds: 30), const Duration(minutes: 2));
+      await tester.pump();
+      expect(find.text('0:30 / 2:00'), findsOneWidget);
     });
 
     testWidgets('상세 화면 버튼으로 미리 듣고, 화면을 나가면 멈춘다', (tester) async {

@@ -6,6 +6,7 @@ import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/search_source.dart';
 import '../../domain/repositories/downloader_engine.dart';
+import 'audio_format_policy.dart';
 import 'json_fields.dart';
 
 /// 프로세스 실행 하나 (테스트에서 바꿔 끼운다).
@@ -137,30 +138,49 @@ class LocalEngine implements DownloaderEngine {
   @override
   Future<AudioStream> resolveAudioStream(String url) async {
     // 오디오만 있는 형식 하나를 골라(macOS도 풀 수 있는 m4a 먼저) 주소만 읽는다.
-    final out = await _exec([
-      '-f',
-      'bestaudio[ext=m4a]/bestaudio/best',
-      '--no-playlist',
-      '--dump-single-json',
-      '--no-warnings',
-      url,
-    ]);
-    final j = _decode(out);
-    final streamUrl = parseText(j?['url']);
-    if (j == null || streamUrl == null) {
-      throw const EngineException(EngineFailure.failed, 'bad response');
+    Future<AudioStream> read(List<String> extra) async {
+      final out = await _exec([
+        '-f',
+        ytDlpAudioSelector(),
+        '--no-playlist',
+        '--dump-single-json',
+        '--no-warnings',
+        ...extra,
+        url,
+      ]);
+      final j = _decode(out);
+      final streamUrl = parseText(j?['url']);
+      if (j == null || streamUrl == null) {
+        throw const EngineException(EngineFailure.failed, 'bad response');
+      }
+      final headers = j['http_headers'];
+      return AudioStream(
+        url: streamUrl,
+        headers: headers is Map
+            ? {
+                for (final e in headers.entries)
+                  if (e.key is String && e.value is String)
+                    e.key as String: e.value as String,
+              }
+            : const {},
+      );
     }
-    final headers = j['http_headers'];
-    return AudioStream(
-      url: streamUrl,
-      headers: headers is Map
-          ? {
-              for (final e in headers.entries)
-                if (e.key is String && e.value is String)
-                  e.key as String: e.value as String,
-            }
-          : const {},
-    );
+
+    try {
+      return await read(const []);
+    } on EngineException catch (first) {
+      if (first.failure != EngineFailure.failed) rethrow;
+      // 기본 클라이언트로는 오디오 형식을 못 읽는 경우가 있다 (JS 실행기가 없는 환경 등).
+      // 그런 환경에서도 주소를 주는 클라이언트로 한 번 더 시도하고, 그래도 안 되면 첫 오류를 알린다.
+      try {
+        return await read(const [
+          '--extractor-args',
+          'youtube:player_client=android_vr',
+        ]);
+      } on EngineException {
+        throw first;
+      }
+    }
   }
 
   Future<String> _exec(List<String> args) async {

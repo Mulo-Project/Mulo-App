@@ -40,6 +40,21 @@ void main() {
     expect(taps, 1);
   });
 
+  testWidgets('busy면 줄 버튼 · 알약 버튼에 돌아가는 표시가 보인다', (tester) async {
+    await tester.pumpWidget(
+      _host(
+        const Column(
+          children: [
+            RowIconButton(icon: Icons.headphones, tooltip: '듣기', busy: true),
+            PillButton(label: '준비 중', icon: Icons.headphones, busy: true),
+          ],
+        ),
+      ),
+    );
+    expect(find.byType(CircularProgressIndicator), findsNWidgets(2));
+    expect(find.byIcon(Icons.headphones), findsNothing);
+  });
+
   testWidgets('ArtworkBox는 큰 이미지를 칸 크기로 줄여 디코딩한다', (tester) async {
     await tester.pumpWidget(
       _host(

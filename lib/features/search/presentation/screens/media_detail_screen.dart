@@ -234,6 +234,7 @@ class _DetailViewState extends State<_DetailView> {
                       ),
                     const SizedBox(height: AppSpacing.sm),
                     Center(child: PreviewButton(hit: hit)),
+                    PreviewProgressBar(hitId: hit.id, showTime: true),
                     const SizedBox(height: AppSpacing.md),
                     Text(hit.title, style: text.titleLarge),
                     if (hit.uploader.isNotEmpty) ...[

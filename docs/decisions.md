@@ -405,3 +405,11 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - **멈추는 때**: 같은 곡 버튼을 다시 누를 때, 검색 줄 오른쪽 미리 듣기 버튼을 다시 누를 때, 상세 화면을 나갈 때, 하단 탭을 다른 탭으로 옮길 때, 상세에서 영상 · 채널을 다른 앱으로 열 때, 메인 재생이 시작될 때.
 - 서버 모드(`ServerEngine`)는 서버 명세에 스트림 주소 조회가 없어서 `unavailable`을 던지고, 화면은 "이 기기에서는 미리 듣기를 쓸 수 없어요."를 보여 준다. 그래서 **서버 전용인 Android lite 빌드에서는 미리 듣기가 안 된다** (데스크톱 · Android full은 된다). 서버에 스트림 조회 API가 생기면 `ServerEngine.resolveAudioStream`만 채우면 된다.
 - 미리 듣기는 길이를 자르지 않고 곡 전체를 재생한다 (명세에 구간 제한이 없어 기본값으로 정함).
+
+## D-062 · 2026-10-06 · 미리 듣기 스트림 주소는 youtube_explode_dart로 먼저 읽는다
+- yt-dlp는 JS 실행기(Deno 등)가 없는 환경(Android 라이브러리 포함)에서 YouTube 오디오 형식을 못 주는 경우가 있어 Android에서 미리 듣기가 실패했다 (검색 · 곡 정보는 형식이 필요 없어 됐다).
+- `YoutubeExplodeEngine`(`CachedDownloaderEngine` 안, `RoutingDownloaderEngine` 밖)이 유튜브 곡의 `resolveAudioStream`만 `youtube_explode_dart`(순수 Dart, BSD)로 먼저 읽는다 (`androidVr` → `androidSdkless` 클라이언트, m4a 우선). 못 읽거나 유튜브 주소가 아니면 안쪽 엔진(yt-dlp · 서버)으로 넘긴다. 이 PC(JS 실행기 없음)에서 실제 스트림 목록을 읽는 것을 확인했다.
+- 서버 전용 Android lite에서도 유튜브 곡은 미리 듣기가 된다 (앱이 직접 읽으므로).
+- yt-dlp 쪽에도 `android_vr` 클라이언트 재시도를 남겼고, Android 네이티브 호출은 옵션을 값과 짝으로 넘긴다.
+- JS 실행기(QuickJS)를 넣는 방법은 실행 파일 빌드 · 번들이 커서 보류했다. 이 라이브러리가 막히면 그때 한다.
+- **오디오 형식은 OS별 정책 한 곳**(`audio_format_policy.dart`)에서 정한다. 지금은 Android 기준으로 webm/opus를 먼저 고른다 (DASH m4a는 Android 플레이어가 못 여는 일이 있었다). iOS · macOS는 webm/opus를 못 풀어 m4a가 필요하므로 iOS를 만들 때 이 정책의 Apple 분기를 확인한다. 개발은 Android만 하고 iOS는 이후.
