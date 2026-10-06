@@ -1,3 +1,4 @@
+import 'package:music_download_play_app/core/design/components/app_dialog.dart';
 import 'package:music_download_play_app/core/design/icons/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -116,15 +117,21 @@ void main() {
     expect(find.text('/music/Mulo'), findsOneWidget);
     await tester.enterText(fields.at(3), '/music/Mulo/발라드');
 
-    // 새 재생목록 만들기 (만들면 자동 선택) + 대화상자에서 기존 재생목록 고르기
-    await tester.enterText(fields.at(4), '새 목록');
-    await tester.tap(inSheet(find.byIcon(AppIcons.add)));
-    await tester.pumpAndSettle();
-    expect(find.text('1개 선택'), findsOneWidget);
-    await tester.tap(find.text('1개 선택'));
+    // 재생목록 선택 대화상자에서 기존 재생목록을 고르고, 새로 만든다 (만들면 자동 선택).
+    await tester.tap(find.text('선택 안 함'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('운동'));
     await tester.pump();
+    final dialog = find.byType(AppDialog);
+    await tester.enterText(
+      find.descendant(of: dialog, matching: find.byType(TextField)),
+      '새 목록',
+    );
+    await tester.tap(
+      find.descendant(of: dialog, matching: find.byIcon(AppIcons.add)),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('새 목록'), findsWidgets);
     await tester.tap(find.text('선택 완료'));
     await tester.pumpAndSettle();
     expect(find.text('2개 선택'), findsOneWidget);

@@ -17,6 +17,7 @@ import 'package:music_download_play_app/features/search/domain/entities/engine_e
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
 import 'package:music_download_play_app/features/search/domain/usecases/search_usecases.dart';
 import 'package:music_download_play_app/features/search/presentation/bloc/preview_cubit.dart';
+import 'package:music_download_play_app/features/search/presentation/screens/media_detail_screen.dart';
 
 import '../../helpers/fakes.dart';
 import '../../helpers/test_data.dart';
@@ -28,6 +29,7 @@ PreviewCubit _cubit(FakeDownloaderEngine e, FakePreviewPlayer p) =>
     PreviewCubit(
       ResolveAudioStream(e),
       PlayPreview(p),
+      SeekPreview(p),
       StopPreview(p),
       WatchPreviewCompleted(p),
       WatchPreviewProgress(p),
@@ -177,6 +179,21 @@ void main() {
       expect(cubit.state.fraction, closeTo(.25, .001));
       await cubit.stop();
       expect(cubit.state.progress, isNull);
+      await cubit.close();
+    });
+
+    test('seekTo: 길이의 비율 자리로 옮기고, 길이를 모르면 옮기지 않는다', () async {
+      final player = FakePreviewPlayer();
+      final cubit = _cubit(FakeDownloaderEngine(info: VideoInfo(_a)), player);
+      await cubit.toggle(_a);
+      await cubit.seekTo(.5);
+      expect(player.seeks, isEmpty);
+      player.progress(const Duration(seconds: 10), const Duration(minutes: 2));
+      await Future<void>.delayed(Duration.zero);
+      await cubit.seekTo(.5);
+      expect(player.seeks, [const Duration(minutes: 1)]);
+      expect(cubit.state.progress?.position, const Duration(minutes: 1));
+      expect(cubit.state.hit, _a);
       await cubit.close();
     });
 
@@ -364,6 +381,27 @@ void main() {
       expect(find.byKey(const ValueKey('preview-position')), findsOneWidget);
       expect(find.text('0:30'), findsWidgets);
       expect(find.text('2:00'), findsWidgets);
+    });
+
+    testWidgets('미리 듣기 줄의 막대를 누르면 그 자리로 옮기고, 제목을 누르면 상세가 열린다', (tester) async {
+      final player = await openSearch(tester);
+      await tester.tap(find.byKey(const ValueKey('preview-row-button')));
+      await tester.pumpAndSettle();
+      player.progress(const Duration(seconds: 30), const Duration(minutes: 2));
+      await tester.pump();
+
+      final bar = find.descendant(
+        of: find.byKey(const ValueKey('preview-mini-bar')),
+        matching: find.byKey(const ValueKey('preview-seek')),
+      );
+      final r = tester.getRect(bar);
+      await tester.tapAt(Offset(r.left + r.width * .75, r.center.dy));
+      await tester.pump();
+      expect(player.seeks.single.inSeconds, closeTo(90, 2));
+
+      await tester.tap(find.byKey(const ValueKey('preview-mini-open')));
+      await tester.pumpAndSettle();
+      expect(find.byType(MediaDetailScreen), findsOneWidget);
     });
 
     testWidgets('준비하는 동안 남은 시간 원이 보이고, 소리가 나면 사라진다', (tester) async {

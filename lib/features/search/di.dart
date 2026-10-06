@@ -48,10 +48,13 @@ void registerSearch(GetIt sl) {
     ..registerLazySingleton<PreviewPlayer>(JustAudioPreviewPlayer.new)
     ..registerFactory(() => ResolveAudioStream(sl()))
     ..registerFactory(() => PlayPreview(sl()))
+    ..registerFactory(() => SeekPreview(sl()))
     ..registerFactory(() => StopPreview(sl()))
     ..registerFactory(() => WatchPreviewCompleted(sl()))
     ..registerFactory(() => WatchPreviewProgress(sl()))
     ..registerFactory(() => WatchPreviewFailures(sl()))
-    ..registerFactory(() => PreviewCubit(sl(), sl(), sl(), sl(), sl(), sl()))
+    ..registerFactory(
+      () => PreviewCubit(sl(), sl(), sl(), sl(), sl(), sl(), sl()),
+    )
     ..registerFactory(() => SearchCubit(sl(), sl()));
 }

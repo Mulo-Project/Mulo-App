@@ -14,6 +14,7 @@ enum PreviewStatus { idle, loading, playing }
 class PreviewState extends Equatable {
   const PreviewState({
     this.hitId,
+    this.hit,
     this.status = PreviewStatus.idle,
     this.progress,
     this.error,
@@ -31,6 +32,9 @@ class PreviewState extends Equatable {
 
   /// 미리 듣는 중(또는 준비 중)인 검색 결과의 id. 아무것도 안 듣고 있으면 null.
   final String? hitId;
+
+  /// 미리 듣는 검색 결과 (미리 듣기 줄을 눌러 상세를 열 때 쓴다).
+  final MediaHit? hit;
   final PreviewStatus status;
 
   /// 재생 중에 실패해 멈췄을 때의 까닭 (그 밖에는 null).
@@ -52,6 +56,7 @@ class PreviewState extends Equatable {
   @override
   List<Object?> get props => [
     hitId,
+    hit,
     status,
     progress,
     error,
@@ -68,6 +73,7 @@ class PreviewCubit extends Cubit<PreviewState> {
   PreviewCubit(
     this._resolve,
     this._play,
+    this._seek,
     this._stop,
     WatchPreviewCompleted watchCompleted,
     WatchPreviewProgress watchProgress,
@@ -80,6 +86,7 @@ class PreviewCubit extends Cubit<PreviewState> {
 
   final ResolveAudioStream _resolve;
   final PlayPreview _play;
+  final SeekPreview _seek;
   final StopPreview _stop;
   late final StreamSubscription<void> _completed;
   late final StreamSubscription<PreviewProgress> _progress;
@@ -96,6 +103,7 @@ class PreviewCubit extends Cubit<PreviewState> {
     emit(
       PreviewState(
         hitId: state.hitId,
+        hit: state.hit,
         status: state.status,
         progress: p,
         title: state.title,
@@ -130,6 +138,7 @@ class PreviewCubit extends Cubit<PreviewState> {
     emit(
       PreviewState(
         hitId: hit.id,
+        hit: hit,
         status: PreviewStatus.loading,
         title: hit.title,
         loadStartedAt: startedAt,
@@ -156,6 +165,7 @@ class PreviewCubit extends Cubit<PreviewState> {
       emit(
         PreviewState(
           hitId: hit.id,
+          hit: hit,
           status: PreviewStatus.playing,
           title: hit.title,
         ),
@@ -173,6 +183,28 @@ class PreviewCubit extends Cubit<PreviewState> {
       lastFailureDetail = '$e';
       return EngineFailure.failed;
     }
+  }
+
+  /// 재생 위치를 전체 길이의 [fraction](0 ~ 1) 자리로 옮긴다.
+  /// 길이를 아직 모르면 아무 일도 없다.
+  Future<void> seekTo(double fraction) async {
+    final p = state.progress;
+    final d = p?.duration;
+    if (isClosed || state.status != PreviewStatus.playing) return;
+    if (p == null || d == null || d == Duration.zero) return;
+    final target = Duration(
+      milliseconds: (d.inMilliseconds * fraction.clamp(0.0, 1.0)).round(),
+    );
+    emit(
+      PreviewState(
+        hitId: state.hitId,
+        hit: state.hit,
+        status: state.status,
+        progress: PreviewProgress(position: target, duration: d),
+        title: state.title,
+      ),
+    );
+    await _seek(target);
   }
 
   /// 미리 듣기를 멈춘다 (듣고 있지 않으면 아무 일도 없다).
