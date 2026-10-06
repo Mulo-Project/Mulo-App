@@ -116,13 +116,23 @@ void main() {
     expect(find.text('/music/Mulo'), findsOneWidget);
     await tester.enterText(fields.at(3), '/music/Mulo/발라드');
 
-    // 새 재생목록 만들기 (만들면 자동 선택) + 대화상자에서 기존 재생목록 고르기
-    await tester.enterText(fields.at(4), '새 목록');
-    await tester.tap(inSheet(find.byIcon(AppIcons.add)));
+    // 재생목록 대화상자에서 새 재생목록 만들기 (만들면 자동 선택) + 기존 재생목록 고르기
+    expect(find.text('새 재생목록'), findsNothing);
+    await tester.tap(find.text('선택 안 함'));
     await tester.pumpAndSettle();
-    expect(find.text('1개 선택'), findsOneWidget);
-    await tester.tap(find.text('1개 선택'));
+    final inDialog = find.descendant(
+      of: find.byType(Dialog),
+      matching: find.byType(TextField),
+    );
+    await tester.enterText(inDialog, '새 목록');
+    await tester.tap(
+      find.descendant(
+        of: find.byType(Dialog),
+        matching: find.byIcon(AppIcons.add),
+      ),
+    );
     await tester.pumpAndSettle();
+    expect(find.text('새 목록'), findsOneWidget);
     await tester.tap(find.text('운동'));
     await tester.pump();
     await tester.tap(find.text('선택 완료'));

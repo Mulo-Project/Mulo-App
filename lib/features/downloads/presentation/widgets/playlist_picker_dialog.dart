@@ -1,28 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
-import '../../../playlists/domain/entities/playlist.dart';
+import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../../../playlists/presentation/widgets/playlist_card.dart';
 
-/// 곡을 담을 재생목록을 여러 개 고르는 대화상자.
+/// 곡을 담을 재생목록을 여러 개 고르는 대화상자. 아래 입력칸에서 새 재생목록도 만든다
+/// (만들면 바로 선택된다).
 /// "선택 완료"를 누르면 고른 id 모음을, 바깥을 눌러 닫으면 null을 돌려준다.
 Future<Set<String>?> showPlaylistPickerDialog(
   BuildContext context, {
-  required List<Playlist> playlists,
   required Set<String> selected,
 }) {
+  // 대화상자는 최상위 내비게이터에서 열려 위젯 트리 밖이므로 cubit을 넘겨 준다.
+  final playlists = context.read<PlaylistsCubit>();
   return showDialog<Set<String>>(
     context: context,
     useRootNavigator: true,
-    builder: (_) => _PlaylistPicker(playlists: playlists, selected: selected),
+    builder: (_) => BlocProvider.value(
+      value: playlists,
+      child: _PlaylistPicker(selected: selected),
+    ),
   );
 }
 
 class _PlaylistPicker extends StatefulWidget {
-  const _PlaylistPicker({required this.playlists, required this.selected});
+  const _PlaylistPicker({required this.selected});
 
-  final List<Playlist> playlists;
   final Set<String> selected;
 
   @override
@@ -31,23 +36,40 @@ class _PlaylistPicker extends StatefulWidget {
 
 class _PlaylistPickerState extends State<_PlaylistPicker> {
   late final Set<String> _selected = {...widget.selected};
+  final _newName = TextEditingController();
+
+  @override
+  void dispose() {
+    _newName.dispose();
+    super.dispose();
+  }
 
   void _toggle(String id) => setState(() {
     _selected.contains(id) ? _selected.remove(id) : _selected.add(id);
   });
+
+  Future<void> _create() async {
+    final made = await context.read<PlaylistsCubit>().create(_newName.text);
+    if (made == null || !mounted) return;
+    setState(() {
+      _newName.clear();
+      _selected.add(made.id);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final p = context.palette;
     final text = Theme.of(context).textTheme;
+    final playlists = context.select((PlaylistsCubit c) => c.state);
 
     return AppDialog(
       title: l10n.downloadPlaylistsPickTitle,
       content: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          for (final pl in widget.playlists)
+          for (final pl in playlists)
             SettingRow(
               title: playlistNameOf(l10n, pl),
               description: l10n.songCount(pl.trackCount),
@@ -60,7 +82,7 @@ class _PlaylistPickerState extends State<_PlaylistPicker> {
               ),
             ),
           // 좋아요 말고 직접 만든 재생목록이 없을 때의 안내.
-          if (widget.playlists.every((pl) => pl.isFavorites))
+          if (playlists.every((pl) => pl.isFavorites))
             Padding(
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
               child: Text(
@@ -68,6 +90,27 @@ class _PlaylistPickerState extends State<_PlaylistPicker> {
                 style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
               ),
             ),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: AppTextField(
+                  label: l10n.downloadNewPlaylist,
+                  controller: _newName,
+                  hint: l10n.downloadNewPlaylistHint,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => _create(),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              CircleIconButton(
+                icon: AppIcons.add,
+                tooltip: l10n.playlistsNew,
+                onPressed: _create,
+              ),
+            ],
+          ),
         ],
       ),
       actions: [

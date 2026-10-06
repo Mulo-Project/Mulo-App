@@ -77,7 +77,6 @@ class _DownloadSheetState extends State<_DownloadSheet> {
   late final _savePath = TextEditingController(
     text: context.read<DownloadSettingsCubit>().state,
   );
-  final _newPlaylist = TextEditingController();
   final Set<String> _selected = {};
 
   @override
@@ -86,25 +85,11 @@ class _DownloadSheetState extends State<_DownloadSheet> {
     _artist.dispose();
     _genre.dispose();
     _savePath.dispose();
-    _newPlaylist.dispose();
     super.dispose();
   }
 
-  Future<void> _createPlaylist() async {
-    final made = await context.read<PlaylistsCubit>().create(_newPlaylist.text);
-    if (made == null || !mounted) return;
-    setState(() {
-      _newPlaylist.clear();
-      _selected.add(made.id);
-    });
-  }
-
   Future<void> _pickPlaylists() async {
-    final picked = await showPlaylistPickerDialog(
-      context,
-      playlists: context.read<PlaylistsCubit>().state,
-      selected: _selected,
-    );
+    final picked = await showPlaylistPickerDialog(context, selected: _selected);
     if (picked == null || !mounted) return;
     setState(() {
       _selected
@@ -198,27 +183,6 @@ class _DownloadSheetState extends State<_DownloadSheet> {
                     ? l10n.downloadPlaylistsNone
                     : l10n.downloadPlaylistsSelected(_selected.length),
                 onTap: _pickPlaylists,
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Expanded(
-                    child: AppTextField(
-                      label: l10n.downloadNewPlaylist,
-                      controller: _newPlaylist,
-                      hint: l10n.downloadNewPlaylistHint,
-                      textInputAction: TextInputAction.done,
-                      onSubmitted: (_) => _createPlaylist(),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  CircleIconButton(
-                    icon: AppIcons.add,
-                    tooltip: l10n.playlistsNew,
-                    onPressed: _createPlaylist,
-                  ),
-                ],
               ),
               const SizedBox(height: AppSpacing.lg),
               ListenableBuilder(
