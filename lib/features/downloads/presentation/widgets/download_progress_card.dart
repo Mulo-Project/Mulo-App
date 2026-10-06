@@ -62,15 +62,23 @@ class _DownloadProgressCardState extends State<DownloadProgressCard> {
             footer: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ProgressLine(value: item.progress, height: 4),
-                const SizedBox(height: AppSpacing.xxs),
+                if (item.status != DownloadStatus.failed) ...[
+                  ProgressLine(value: item.progress, height: 4),
+                  const SizedBox(height: AppSpacing.xxs),
+                ],
                 Text(
-                  '${l10n.statusDownloading} ${(item.progress * 100).round()}%',
-                  style: text.labelSmall?.copyWith(color: p.accent),
+                  _statusText(l10n, item),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: text.labelSmall?.copyWith(
+                    color: item.status == DownloadStatus.failed
+                        ? p.onSurfaceMuted
+                        : p.accent,
+                  ),
                 ),
               ],
             ),
-            trailing: _CancelButton(item: item),
+            trailing: _ItemActions(item: item),
           ),
           const _NowPlayingStrip(),
           Divider(height: 1, thickness: 1, color: p.outline),
@@ -121,7 +129,7 @@ class _DownloadProgressCardState extends State<DownloadProgressCard> {
                           subtitle: _subtitle(w),
                           tone: toneFor(w.id),
                           artwork: _thumbnail(w),
-                          trailing: _CancelButton(item: w),
+                          trailing: _ItemActions(item: w),
                           onTap: () => widget.onPlay(w),
                         ),
                     ],
@@ -132,6 +140,17 @@ class _DownloadProgressCardState extends State<DownloadProgressCard> {
       ),
     );
   }
+
+  static String _statusText(AppLocalizations l10n, DownloadItem item) =>
+      switch (item.status) {
+        DownloadStatus.failed =>
+          item.error.isEmpty
+              ? l10n.statusFailed
+              : '${l10n.statusFailed} · ${item.error}',
+        DownloadStatus.paused => l10n.statusPaused,
+        DownloadStatus.queued => l10n.statusQueued,
+        _ => '${l10n.statusDownloading} ${(item.progress * 100).round()}%',
+      };
 
   /// 아티스트 · 길이 (모르는 건 뺀다).
   static String _subtitle(DownloadItem item) => [
@@ -147,7 +166,31 @@ class _DownloadProgressCardState extends State<DownloadProgressCard> {
   }
 }
 
-/// 항목 하나를 대기열에서 뺀다. 받는 중인 곡은 한 번 더 물어본다.
+/// 실패한 항목은 다시 받기, 그 밖에는 취소.
+class _ItemActions extends StatelessWidget {
+  const _ItemActions({required this.item});
+
+  final DownloadItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    if (item.status != DownloadStatus.failed) return _CancelButton(item: item);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        CircleIconButton(
+          icon: AppIcons.refresh,
+          tooltip: context.l10n.actionRetry,
+          size: 32,
+          onPressed: () => context.read<DownloadQueueCubit>().retry(item.id),
+        ),
+        _CancelButton(item: item),
+      ],
+    );
+  }
+}
+
+/// 항목 하나를 대기열에서 뺀다.
 class _CancelButton extends StatelessWidget {
   const _CancelButton({required this.item});
 

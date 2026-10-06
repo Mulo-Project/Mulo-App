@@ -171,6 +171,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get statusFailed => '실패';
 
   @override
+  String get statusPaused => '일시정지';
+
+  @override
+  String get statusQueued => '대기';
+
+  @override
   String get statusDone => '완료';
 
   @override

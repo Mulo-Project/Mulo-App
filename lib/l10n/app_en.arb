@@ -51,6 +51,8 @@
   "downloadsClearDone": "Clear finished",
   "statusDownloading": "Downloading",
   "statusFailed": "Failed",
+  "statusPaused": "Paused",
+  "statusQueued": "Queued",
   "statusDone": "Done",
   "downloadsEmpty": "Nothing downloading.",
   "librarySubtitle": "My music",

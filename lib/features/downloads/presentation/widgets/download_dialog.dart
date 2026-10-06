@@ -24,6 +24,7 @@ Future<bool> showDownloadDialog(
   Quality quality = Quality.best,
   Duration? duration,
   String? thumbnailUrl,
+  required String url,
 }) async {
   final queue = context.read<DownloadQueueCubit>();
   final playlists = context.read<PlaylistsCubit>();
@@ -57,6 +58,7 @@ Future<bool> showDownloadDialog(
         quality: quality,
         duration: duration,
         thumbnailUrl: thumbnailUrl,
+        url: url,
       ),
     ),
   );
@@ -69,6 +71,7 @@ class _DownloadSheet extends StatefulWidget {
     required this.artist,
     required this.genre,
     required this.quality,
+    required this.url,
     this.duration,
     this.thumbnailUrl,
   });
@@ -79,6 +82,7 @@ class _DownloadSheet extends StatefulWidget {
   final Quality quality;
   final Duration? duration;
   final String? thumbnailUrl;
+  final String url;
 
   @override
   State<_DownloadSheet> createState() => _DownloadSheetState();
@@ -172,6 +176,7 @@ class _DownloadSheetState extends State<_DownloadSheet> {
         color: color?.toARGB32(),
         thumbnailUrl: widget.thumbnailUrl,
         cover: _cover,
+        url: widget.url,
       ),
     );
     if (ok && mounted) Navigator.of(context).pop(true);

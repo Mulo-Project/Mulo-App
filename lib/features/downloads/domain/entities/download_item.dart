@@ -18,6 +18,8 @@ class DownloadItem extends Equatable {
     this.cover,
     this.duration,
     this.color,
+    this.url = '',
+    this.error = '',
   });
 
   final String id;
@@ -44,26 +46,37 @@ class DownloadItem extends Equatable {
   /// 받은 뒤 곡에 쓸 커버 색(ARGB). 비어 있으면 자동 색.
   final int? color;
 
+  /// 받을 곡의 원본 주소 (유튜브 등). 다시 받을 때 쓴다.
+  final String url;
+
+  /// 실패한 까닭 (사용자에게 보여 줄 안내). 실패가 아니면 빈 문자열.
+  final String error;
+
   /// 아직 끝나지 않은 항목 (받는 중 · 대기 · 일시정지).
   bool get isActive =>
       status == DownloadStatus.downloading ||
       status == DownloadStatus.queued ||
       status == DownloadStatus.paused;
 
-  DownloadItem copyWith({DownloadStatus? status, double? progress}) =>
-      DownloadItem(
-        id: id,
-        title: title,
-        artist: artist,
-        status: status ?? this.status,
-        progress: progress ?? this.progress,
-        genre: genre,
-        playlistIds: playlistIds,
-        thumbnailUrl: thumbnailUrl,
-        cover: cover,
-        duration: duration,
-        color: color,
-      );
+  DownloadItem copyWith({
+    DownloadStatus? status,
+    double? progress,
+    String? error,
+  }) => DownloadItem(
+    id: id,
+    title: title,
+    artist: artist,
+    status: status ?? this.status,
+    progress: progress ?? this.progress,
+    genre: genre,
+    playlistIds: playlistIds,
+    thumbnailUrl: thumbnailUrl,
+    cover: cover,
+    duration: duration,
+    color: color,
+    url: url,
+    error: error ?? this.error,
+  );
 
   @override
   List<Object?> get props => [
@@ -78,5 +91,7 @@ class DownloadItem extends Equatable {
     cover,
     duration,
     color,
+    url,
+    error,
   ];
 }

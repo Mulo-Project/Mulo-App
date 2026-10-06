@@ -9,6 +9,11 @@ Future<void> openDownloadDialog(
   String? thumbnailUrl,
 }) async {
   final context = tester.element(find.byType(Scaffold).first);
-  showDownloadDialog(context, title: title, thumbnailUrl: thumbnailUrl);
+  showDownloadDialog(
+    context,
+    title: title,
+    thumbnailUrl: thumbnailUrl,
+    url: 'https://youtu.be/abc',
+  );
   await tester.pumpAndSettle();
 }

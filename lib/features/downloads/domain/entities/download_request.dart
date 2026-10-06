@@ -16,6 +16,7 @@ class DownloadRequest extends Equatable {
     this.color,
     this.thumbnailUrl,
     this.cover,
+    this.url = '',
   });
 
   final String title;
@@ -41,6 +42,9 @@ class DownloadRequest extends Equatable {
   /// 받은 곡에 붙일 커버(이미지 · 확대 · 위치). 기본은 [thumbnailUrl]의 웹 이미지, 없으면 null.
   final CoverArt? cover;
 
+  /// 받을 곡의 원본 주소 (유튜브 등). 비어 있으면 받을 수 없다.
+  final String url;
+
   /// 문자열 앞뒤 공백을 지운 사본.
   DownloadRequest normalized() => DownloadRequest(
     title: title.trim(),
@@ -53,6 +57,7 @@ class DownloadRequest extends Equatable {
     color: color,
     thumbnailUrl: thumbnailUrl,
     cover: cover,
+    url: url.trim(),
   );
 
   @override
@@ -67,5 +72,6 @@ class DownloadRequest extends Equatable {
     color,
     thumbnailUrl,
     cover,
+    url,
   ];
 }
