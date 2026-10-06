@@ -6,6 +6,7 @@ import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/search_source.dart';
 import '../../domain/repositories/downloader_engine.dart';
+import 'audio_format_policy.dart';
 import 'json_fields.dart';
 
 /// 프로세스 실행 하나 (테스트에서 바꿔 끼운다).
@@ -140,7 +141,7 @@ class LocalEngine implements DownloaderEngine {
     Future<AudioStream> read(List<String> extra) async {
       final out = await _exec([
         '-f',
-        'bestaudio[ext=m4a]/bestaudio/best',
+        ytDlpAudioSelector(),
         '--no-playlist',
         '--dump-single-json',
         '--no-warnings',

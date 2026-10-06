@@ -412,4 +412,4 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - 서버 전용 Android lite에서도 유튜브 곡은 미리 듣기가 된다 (앱이 직접 읽으므로).
 - yt-dlp 쪽에도 `android_vr` 클라이언트 재시도를 남겼고, Android 네이티브 호출은 옵션을 값과 짝으로 넘긴다.
 - JS 실행기(QuickJS)를 넣는 방법은 실행 파일 빌드 · 번들이 커서 보류했다. 이 라이브러리가 막히면 그때 한다.
-
+- **오디오 형식은 OS별 정책 한 곳**(`audio_format_policy.dart`)에서 정한다. 지금은 Android 기준으로 webm/opus를 먼저 고른다 (DASH m4a는 Android 플레이어가 못 여는 일이 있었다). iOS · macOS는 webm/opus를 못 풀어 m4a가 필요하므로 iOS를 만들 때 이 정책의 Apple 분기를 확인한다. 개발은 Android만 하고 iOS는 이후.
