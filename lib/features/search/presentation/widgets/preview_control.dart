@@ -19,14 +19,24 @@ Future<void> togglePreview(BuildContext context, MediaHit hit) async {
 
   final failure = await preview.toggle(hit);
   if (failure != null) {
+    // 까닭을 알 수 있게 엔진이 알려 준 마지막 줄을 덧붙인다.
+    final detail = preview.lastFailureDetail
+        .split('\n')
+        .map((l) => l.trim())
+        .lastWhere((l) => l.isNotEmpty, orElse: () => '');
+    final message = switch (failure) {
+      EngineFailure.unavailable => l10n.searchPreviewUnavailable,
+      EngineFailure.network => l10n.searchNetworkBody,
+      EngineFailure.notFound => l10n.searchNotFoundBody,
+      _ => l10n.searchPreviewFailed,
+    };
     messenger.showSnackBar(
       SnackBar(
-        content: Text(switch (failure) {
-          EngineFailure.unavailable => l10n.searchPreviewUnavailable,
-          EngineFailure.network => l10n.searchNetworkBody,
-          EngineFailure.notFound => l10n.searchNotFoundBody,
-          _ => l10n.searchPreviewFailed,
-        }),
+        content: Text(
+          detail.isEmpty || failure == EngineFailure.unavailable
+              ? message
+              : '$message\n${detail.length > 140 ? detail.substring(0, 140) : detail}',
+        ),
       ),
     );
     return;

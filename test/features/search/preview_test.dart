@@ -57,6 +57,27 @@ void main() {
       expect(args!.last, 'https://x/v');
     });
 
+    test('LocalEngine: 기본으로 실패하면 다른 클라이언트로 한 번 더 읽는다', () async {
+      final calls = <List<String>>[];
+      final engine = LocalEngine(
+        run: (_, a) async {
+          calls.add(a);
+          if (calls.length == 1) {
+            return (exitCode: 1, stdout: '', stderr: 'format not available');
+          }
+          return (
+            exitCode: 0,
+            stdout: jsonEncode({'url': 'https://rr.googlevideo.com/audio'}),
+            stderr: '',
+          );
+        },
+      );
+      final stream = await engine.resolveAudioStream('https://x/v');
+      expect(stream.url, 'https://rr.googlevideo.com/audio');
+      expect(calls, hasLength(2));
+      expect(calls.last, contains('youtube:player_client=android_vr'));
+    });
+
     test('LocalEngine: 주소가 없으면 실패다', () async {
       final engine = LocalEngine(
         run: (_, _) async =>

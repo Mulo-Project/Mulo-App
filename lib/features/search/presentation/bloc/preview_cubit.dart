@@ -69,6 +69,9 @@ class PreviewCubit extends Cubit<PreviewState> {
   static const _resolveTimeout = Duration(seconds: 60);
   static const _playTimeout = Duration(seconds: 30);
 
+  /// 마지막으로 시작하지 못했을 때의 자세한 까닭 (안내에 덧붙여 보여 준다).
+  String lastFailureDetail = '';
+
   /// 시작 · 멈춤마다 올린다. 느리게 돌아온 이전 요청의 결과를 버리려고.
   var _generation = 0;
 
@@ -98,11 +101,13 @@ class PreviewCubit extends Cubit<PreviewState> {
     } on EngineException catch (e) {
       if (generation != _generation || isClosed) return null;
       emit(const PreviewState());
+      lastFailureDetail = e.message;
       return e.failure;
-    } catch (_) {
+    } catch (e) {
       // 예상 못 한 오류에도 "준비 중"에 멈춰 있지 않게 실패로 돌린다.
       if (generation != _generation || isClosed) return null;
       emit(const PreviewState());
+      lastFailureDetail = '$e';
       return EngineFailure.failed;
     }
   }
