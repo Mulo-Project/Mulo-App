@@ -793,6 +793,21 @@ class AppLocalizationsKo extends AppLocalizations {
   String get searchHitMenuDetail => '상세 보기';
 
   @override
+  String get searchPreview => '미리 듣기';
+
+  @override
+  String get searchPreviewStop => '미리 듣기 멈추기';
+
+  @override
+  String get searchPreviewLoading => '미리 듣기 준비 중';
+
+  @override
+  String get searchPreviewFailed => '미리 듣기를 시작하지 못했어요.';
+
+  @override
+  String get searchPreviewUnavailable => '이 기기에서는 미리 듣기를 쓸 수 없어요.';
+
+  @override
   String get mediaDetailTitle => '상세 정보';
 
   @override

@@ -1562,6 +1562,36 @@ abstract class AppLocalizations {
   /// **'상세 보기'**
   String get searchHitMenuDetail;
 
+  /// No description provided for @searchPreview.
+  ///
+  /// In ko, this message translates to:
+  /// **'미리 듣기'**
+  String get searchPreview;
+
+  /// No description provided for @searchPreviewStop.
+  ///
+  /// In ko, this message translates to:
+  /// **'미리 듣기 멈추기'**
+  String get searchPreviewStop;
+
+  /// No description provided for @searchPreviewLoading.
+  ///
+  /// In ko, this message translates to:
+  /// **'미리 듣기 준비 중'**
+  String get searchPreviewLoading;
+
+  /// No description provided for @searchPreviewFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'미리 듣기를 시작하지 못했어요.'**
+  String get searchPreviewFailed;
+
+  /// No description provided for @searchPreviewUnavailable.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 기기에서는 미리 듣기를 쓸 수 없어요.'**
+  String get searchPreviewUnavailable;
+
   /// No description provided for @mediaDetailTitle.
   ///
   /// In ko, this message translates to:

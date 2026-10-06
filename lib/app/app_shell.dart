@@ -9,6 +9,7 @@ import '../features/library/domain/entities/track.dart' show formatDuration;
 import '../features/home/presentation/bloc/play_recorder_cubit.dart';
 import '../features/player/presentation/bloc/audio_output_cubit.dart';
 import '../features/player/presentation/bloc/now_playing_cubit.dart';
+import '../features/search/presentation/bloc/preview_cubit.dart';
 import '../features/theme/presentation/bloc/theme_cubit.dart';
 import 'router.dart';
 import 'theme_preview_bar.dart';
@@ -39,50 +40,60 @@ class AppShell extends StatelessWidget {
         listenWhen: (a, b) =>
             a.track?.id != b.track?.id || a.isPlaying != b.isPlaying,
         listener: (context, _) => context.read<AudioOutputCubit>().refresh(),
-        child: Scaffold(
-          backgroundColor: p.background,
-          extendBody: true,
-          body: AppBackground(child: shell),
-          bottomNavigationBar: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (context.select((ThemeCubit c) => c.state.previewing))
-                const ThemePreviewBar(),
-              const _ShellMiniPlayer(),
-              AppBottomNav(
-                currentIndex: shell.currentIndex,
-                onSelected: (i) =>
-                    shell.goBranch(i, initialLocation: i == shell.currentIndex),
-                items: [
-                  AppNavItem(
-                    icon: AppIcons.libraryOutline,
-                    selectedIcon: AppIcons.library,
-                    label: l10n.navLibrary,
-                  ),
-                  AppNavItem(
-                    icon: AppIcons.queueOutline,
-                    selectedIcon: AppIcons.queue,
-                    label: l10n.navPlaylists,
-                  ),
-                  AppNavItem(
-                    icon: AppIcons.homeOutline,
-                    selectedIcon: AppIcons.home,
-                    label: l10n.navHome,
-                    highlighted: true,
-                  ),
-                  AppNavItem(
-                    icon: AppIcons.searchOutline,
-                    selectedIcon: AppIcons.search,
-                    label: l10n.navSearch,
-                  ),
-                  AppNavItem(
-                    icon: AppIcons.tuneOutline,
-                    selectedIcon: AppIcons.tune,
-                    label: l10n.navSettings,
-                  ),
-                ],
-              ),
-            ],
+        child: BlocListener<NowPlayingCubit, NowPlayingState>(
+          // 메인 재생이 시작되면 미리 듣기는 멈춘다 (두 소리가 겹치지 않게).
+          listenWhen: (a, b) => !a.isPlaying && b.isPlaying,
+          listener: (context, _) => context.read<PreviewCubit>().stop(),
+          child: Scaffold(
+            backgroundColor: p.background,
+            extendBody: true,
+            body: AppBackground(child: shell),
+            bottomNavigationBar: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (context.select((ThemeCubit c) => c.state.previewing))
+                  const ThemePreviewBar(),
+                const _ShellMiniPlayer(),
+                AppBottomNav(
+                  currentIndex: shell.currentIndex,
+                  onSelected: (i) {
+                    // 다른 탭으로 가면 미리 듣기는 멈춘다.
+                    if (i != shell.currentIndex) {
+                      context.read<PreviewCubit>().stop();
+                    }
+                    shell.goBranch(i, initialLocation: i == shell.currentIndex);
+                  },
+                  items: [
+                    AppNavItem(
+                      icon: AppIcons.libraryOutline,
+                      selectedIcon: AppIcons.library,
+                      label: l10n.navLibrary,
+                    ),
+                    AppNavItem(
+                      icon: AppIcons.queueOutline,
+                      selectedIcon: AppIcons.queue,
+                      label: l10n.navPlaylists,
+                    ),
+                    AppNavItem(
+                      icon: AppIcons.homeOutline,
+                      selectedIcon: AppIcons.home,
+                      label: l10n.navHome,
+                      highlighted: true,
+                    ),
+                    AppNavItem(
+                      icon: AppIcons.searchOutline,
+                      selectedIcon: AppIcons.search,
+                      label: l10n.navSearch,
+                    ),
+                    AppNavItem(
+                      icon: AppIcons.tuneOutline,
+                      selectedIcon: AppIcons.tune,
+                      label: l10n.navSettings,
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import '../../domain/entities/audio_stream.dart';
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/search_source.dart';
@@ -130,6 +131,35 @@ class LocalEngine implements DownloaderEngine {
     return ChannelInfo(
       thumbnailUrl: avatarUrl(j['thumbnails']),
       subscriberCount: parseCount(j['channel_follower_count']),
+    );
+  }
+
+  @override
+  Future<AudioStream> resolveAudioStream(String url) async {
+    // 오디오만 있는 형식 하나를 골라(macOS도 풀 수 있는 m4a 먼저) 주소만 읽는다.
+    final out = await _exec([
+      '-f',
+      'bestaudio[ext=m4a]/bestaudio/best',
+      '--no-playlist',
+      '--dump-single-json',
+      '--no-warnings',
+      url,
+    ]);
+    final j = _decode(out);
+    final streamUrl = parseText(j?['url']);
+    if (j == null || streamUrl == null) {
+      throw const EngineException(EngineFailure.failed, 'bad response');
+    }
+    final headers = j['http_headers'];
+    return AudioStream(
+      url: streamUrl,
+      headers: headers is Map
+          ? {
+              for (final e in headers.entries)
+                if (e.key is String && e.value is String)
+                  e.key as String: e.value as String,
+            }
+          : const {},
     );
   }
 

@@ -12,6 +12,8 @@ import '../../../library/domain/entities/track.dart' show formatDuration;
 import '../../domain/entities/media_info.dart';
 import '../../domain/usecases/search_usecases.dart';
 import '../bloc/media_detail_cubit.dart';
+import '../bloc/preview_cubit.dart';
+import '../widgets/preview_control.dart';
 import '../widgets/video_category.dart';
 
 /// 검색 결과 하나의 상세 보기: 큰 썸네일, 채널, 길이 · 조회수 · 올린 날 · 분류 · 설명.
@@ -57,6 +59,21 @@ class _DetailView extends StatefulWidget {
 }
 
 class _DetailViewState extends State<_DetailView> {
+  late final PreviewCubit _preview;
+
+  @override
+  void initState() {
+    super.initState();
+    _preview = context.read<PreviewCubit>();
+  }
+
+  /// 화면을 벗어나면 미리 듣기는 멈춘다.
+  @override
+  void dispose() {
+    _preview.stop();
+    super.dispose();
+  }
+
   Future<void> _open(String url) async {
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
@@ -135,6 +152,8 @@ class _DetailViewState extends State<_DetailView> {
                   padding: AppSpacing.screen.copyWith(top: AppSpacing.sm),
                   children: [
                     _Thumbnail(hit: hit, onPlay: () => _open(hit.url)),
+                    const SizedBox(height: AppSpacing.sm),
+                    Center(child: PreviewButton(hit: hit)),
                     const SizedBox(height: AppSpacing.md),
                     Text(hit.title, style: text.titleLarge),
                     if (hit.uploader.isNotEmpty) ...[

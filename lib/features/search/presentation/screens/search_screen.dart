@@ -12,8 +12,10 @@ import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/search_sort.dart';
 import '../../domain/entities/search_source.dart';
+import '../bloc/preview_cubit.dart';
 import '../bloc/search_cubit.dart';
 import 'media_detail_screen.dart';
+import '../widgets/preview_control.dart';
 import '../widgets/search_source_menu.dart';
 
 /// 검색 · URL 입력 (상세 기능: URL로 곡 정보 불러오기 #1, 키워드 검색 #2,
@@ -292,7 +294,7 @@ class _LoadMoreTriggerState extends State<_LoadMoreTrigger> {
   }
 }
 
-enum _HitAction { detail, download }
+enum _HitAction { detail, preview, download }
 
 class _HitTile extends StatelessWidget {
   const _HitTile({required this.hit});
@@ -314,10 +316,16 @@ class _HitTile extends StatelessWidget {
       subtitle: subtitle,
       tone: toneFor(hit.id),
       artwork: thumb == null ? null : NetworkImage(thumb),
-      trailing: CircleIconButton(
-        icon: AppIcons.download,
-        tooltip: l10n.actionDownload,
-        onPressed: () => _download(context),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          PreviewIndicator(hitId: hit.id),
+          CircleIconButton(
+            icon: AppIcons.download,
+            tooltip: l10n.actionDownload,
+            onPressed: () => _download(context),
+          ),
+        ],
       ),
       onTap: () => showMediaDetail(context, hit),
       onMenu: (position) => _menu(context, position),
@@ -330,6 +338,7 @@ class _HitTile extends StatelessWidget {
   /// 곡 옵션 메뉴: 길게 누르기 · 데스크톱 오른쪽 클릭.
   Future<void> _menu(BuildContext context, Offset position) async {
     final l10n = context.l10n;
+    final previewing = context.read<PreviewCubit>().state.isActive(hit.id);
     final action = await showAppMenu<_HitAction>(
       context,
       globalPosition: position,
@@ -338,6 +347,11 @@ class _HitTile extends StatelessWidget {
           value: _HitAction.detail,
           icon: AppIcons.info,
           label: l10n.searchHitMenuDetail,
+        ),
+        AppMenuItem(
+          value: _HitAction.preview,
+          icon: previewing ? AppIcons.pause : AppIcons.headphones,
+          label: previewing ? l10n.searchPreviewStop : l10n.searchPreview,
         ),
         AppMenuItem(
           value: _HitAction.download,
@@ -350,6 +364,8 @@ class _HitTile extends StatelessWidget {
     switch (action) {
       case _HitAction.detail:
         await showMediaDetail(context, hit);
+      case _HitAction.preview:
+        await togglePreview(context, hit);
       case _HitAction.download:
         _download(context);
     }

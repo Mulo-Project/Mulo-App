@@ -31,11 +31,13 @@ import 'package:music_download_play_app/features/playlists/di.dart';
 import 'package:music_download_play_app/features/playlists/domain/entities/playlist.dart';
 import 'package:music_download_play_app/features/playlists/domain/repositories/playlist_repository.dart';
 import 'package:music_download_play_app/features/search/di.dart';
+import 'package:music_download_play_app/features/search/domain/entities/audio_stream.dart';
 import 'package:music_download_play_app/features/search/domain/entities/engine_exception.dart';
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
 import 'package:music_download_play_app/features/search/domain/entities/search_source.dart';
 import 'package:music_download_play_app/features/search/domain/repositories/downloader_engine.dart';
 import 'package:music_download_play_app/features/search/domain/repositories/link_opener.dart';
+import 'package:music_download_play_app/features/search/domain/repositories/preview_player.dart';
 import 'package:music_download_play_app/features/security/di.dart';
 import 'package:music_download_play_app/features/security/domain/entities/app_lock_settings.dart';
 import 'package:music_download_play_app/features/security/domain/repositories/app_lock_repository.dart';
@@ -548,6 +550,7 @@ Future<void> setUpTestDependencies({
   DownloadQueueRepository? downloads,
   DownloaderEngine? engine,
   LinkOpener? linkOpener,
+  PreviewPlayer? previewPlayer,
   EngineManager? engineManager,
   AudioPlayerRepository? audio,
   DownloadSettingsRepository? downloadSettings,
@@ -630,6 +633,9 @@ Future<void> setUpTestDependencies({
       () => engine ?? FakeDownloaderEngine(),
     )
     ..registerLazySingleton<LinkOpener>(() => linkOpener ?? FakeLinkOpener())
+    ..registerLazySingleton<PreviewPlayer>(
+      () => previewPlayer ?? FakePreviewPlayer(),
+    )
     ..registerLazySingleton<DownloadQueueRepository>(
       () => downloads ?? MemoryDownloadQueue(),
     )
@@ -710,6 +716,8 @@ class FakeDownloaderEngine implements DownloaderEngine {
     this.infoByUrl = const {},
     this.channel,
     this.error,
+    this.streamFailure,
+    this.streamGate,
   });
 
   /// 쪽 번호 순서대로 돌려줄 검색 결과.
@@ -728,6 +736,15 @@ class FakeDownloaderEngine implements DownloaderEngine {
   final newestFlags = <bool>[];
   final infos = <String>[];
   final channels = <String>[];
+
+  /// [resolveAudioStream]에 넘어온 곡 주소들.
+  final streams = <String>[];
+
+  /// 스트림 주소 조회를 실패시킬 까닭 (없으면 성공).
+  final EngineFailure? streamFailure;
+
+  /// 스트림 주소 조회가 끝나길 기다리게 하려면 넣는다 (느린 yt-dlp 흉내).
+  final Future<void>? streamGate;
 
   @override
   Future<SearchPage> search(
@@ -758,6 +775,15 @@ class FakeDownloaderEngine implements DownloaderEngine {
     final found = channel;
     if (found == null) throw const EngineException(EngineFailure.unavailable);
     return found;
+  }
+
+  @override
+  Future<AudioStream> resolveAudioStream(String url) async {
+    streams.add(url);
+    await streamGate;
+    final failure = streamFailure;
+    if (failure != null) throw EngineException(failure);
+    return AudioStream(url: 'https://stream.test/$url');
   }
 }
 
@@ -803,4 +829,39 @@ class FakeEngineManager implements EngineManager {
     installed = true;
     return status();
   }
+}
+
+/// 미리 듣기 플레이어 가짜: 재생한 주소와 멈춘 횟수를 기록하고, 곡 끝은 테스트가 흘려보낸다.
+class FakePreviewPlayer implements PreviewPlayer {
+  FakePreviewPlayer({this.failure});
+
+  /// 재생 시작을 실패시킬 까닭 (없으면 성공).
+  final EngineFailure? failure;
+  final _completed = StreamController<void>.broadcast();
+
+  /// 재생을 시작한 스트림 주소 순서.
+  final played = <String>[];
+  int stops = 0;
+
+  /// 지금 소리가 나고 있는지.
+  bool playing = false;
+
+  void complete() => _completed.add(null);
+
+  @override
+  Future<void> play(AudioStream stream) async {
+    final f = failure;
+    if (f != null) throw EngineException(f);
+    played.add(stream.url);
+    playing = true;
+  }
+
+  @override
+  Future<void> stop() async {
+    stops++;
+    playing = false;
+  }
+
+  @override
+  Stream<void> watchCompleted() => _completed.stream;
 }
