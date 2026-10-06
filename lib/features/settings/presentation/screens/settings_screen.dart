@@ -4,10 +4,13 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../app/router.dart';
 import '../../../../core/app_info.dart';
+import '../../../../core/config/app_config.dart';
 import '../../../../core/design/design.dart';
+import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../downloads/domain/entities/download_options.dart';
 import '../../../downloads/presentation/bloc/download_settings_cubit.dart';
+import '../../../engine/presentation/bloc/engine_cubit.dart';
 import '../../../library/presentation/widgets/loaded_folders_tile.dart';
 import '../../../security/presentation/bloc/app_lock_cubit.dart';
 import '../../../security/presentation/screens/pin_entry_screen.dart';
@@ -31,6 +34,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   AudioFormat _format = AudioFormat.m4a;
   bool _hideNotification = false;
   bool _followMood = false;
+  late final EngineCubit _engine = sl<EngineCubit>()..load();
+
+  @override
+  void dispose() {
+    _engine.close();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,28 +70,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             padding: AppSpacing.screen,
             child: Column(
               children: [
-                SectionCard(
-                  title: l10n.settingsServer,
-                  children: [
-                    SettingRow(
-                      title: l10n.settingsConnection,
-                      trailing: StatusPill(label: l10n.settingsDisconnected),
-                    ),
-                    SettingRow(
-                      title: l10n.settingsMode,
-                      description: l10n.settingsModeLiteNote,
-                      below: SegmentedPills<DownloadMode>(
-                        expand: true,
-                        values: DownloadMode.values,
-                        selected: DownloadMode.server,
-                        labelOf: (m) => switch (m) {
-                          DownloadMode.server => l10n.settingsModeServer,
-                          DownloadMode.local => l10n.settingsModeLocal,
-                        },
-                      ),
-                    ),
-                  ],
-                ),
+                _ServerSection(cubit: _engine),
                 const SizedBox(height: AppSpacing.lg),
                 SectionCard(
                   title: l10n.settingsDownload,
@@ -95,6 +84,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       onTap: context.read<DownloadSettingsCubit>().pickAndSave,
                     ),
                     const LoadedFoldersTile(),
+                    _EngineRow(cubit: _engine),
                     SettingRow(
                       title: l10n.settingsQuality,
                       below: SegmentedPills<Quality>(
@@ -261,3 +251,89 @@ String presetLabel(AppLocalizations l10n, ThemePreset preset) =>
       ThemePreset.gold => l10n.themeGold,
       ThemePreset.ice => l10n.themeIce,
     };
+
+/// 서버 묶음: 지금 쓰는 모드(엔진 상태로 정해짐)와 서버 주소가 빌드에 있는지를 보여 준다.
+/// 모드는 자동으로 정해져서 바꾸는 버튼은 없다 (로컬 yt-dlp를 쓸 수 있으면 로컬).
+class _ServerSection extends StatelessWidget {
+  const _ServerSection({required this.cubit});
+
+  final EngineCubit cubit;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return BlocBuilder<EngineCubit, EngineState>(
+      bloc: cubit,
+      builder: (context, state) {
+        final status = state.status;
+        final localReady =
+            status != null && status.supported && status.installed;
+        return SectionCard(
+          title: l10n.settingsServer,
+          children: [
+            SettingRow(
+              title: l10n.settingsConnection,
+              trailing: StatusPill(
+                label: AppConfig.hasApiBaseUrl
+                    ? l10n.settingsServerConfigured
+                    : l10n.settingsDisconnected,
+              ),
+            ),
+            SettingRow(
+              title: l10n.settingsMode,
+              description: status != null && !status.supported
+                  ? l10n.settingsModeLiteNote
+                  : null,
+              below: SegmentedPills<DownloadMode>(
+                expand: true,
+                values: DownloadMode.values,
+                selected: localReady ? DownloadMode.local : DownloadMode.server,
+                labelOf: (m) => switch (m) {
+                  DownloadMode.server => l10n.settingsModeServer,
+                  DownloadMode.local => l10n.settingsModeLocal,
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// 다운로드 엔진(yt-dlp) 줄: 설치 여부 · 버전, 설치 · 업데이트 버튼 (데스크톱 · Android full).
+class _EngineRow extends StatelessWidget {
+  const _EngineRow({required this.cubit});
+
+  final EngineCubit cubit;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return BlocBuilder<EngineCubit, EngineState>(
+      bloc: cubit,
+      builder: (context, state) {
+        final status = state.status;
+        if (status == null || !status.supported) return const SizedBox.shrink();
+        final description = state.busy
+            ? l10n.settingsEngineInstalling
+            : state.failed
+            ? l10n.settingsEngineFailed
+            : status.installed
+            ? l10n.settingsEngineInstalled(status.version ?? '')
+            : l10n.settingsEngineNotInstalled;
+        return SettingRow(
+          title: l10n.settingsEngine,
+          description: description,
+          trailing: PillButton(
+            compact: true,
+            label: status.installed
+                ? l10n.settingsEngineUpdate
+                : l10n.settingsEngineInstall,
+            onPressed: state.busy ? null : cubit.install,
+          ),
+        );
+      },
+    );
+  }
+}

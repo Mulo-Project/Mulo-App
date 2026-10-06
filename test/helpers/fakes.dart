@@ -7,6 +7,9 @@ import 'package:music_download_play_app/features/lyrics/domain/entities/lyrics.d
 import 'package:music_download_play_app/features/lyrics/domain/repositories/lyrics_repository.dart';
 import 'package:music_download_play_app/features/covers/domain/repositories/cover_repository.dart';
 import 'package:music_download_play_app/features/downloads/di.dart';
+import 'package:music_download_play_app/features/engine/di.dart';
+import 'package:music_download_play_app/features/engine/domain/entities/engine_status.dart';
+import 'package:music_download_play_app/features/engine/domain/repositories/engine_manager.dart';
 import 'package:music_download_play_app/features/downloads/domain/entities/download_item.dart';
 import 'package:music_download_play_app/features/downloads/domain/entities/download_request.dart';
 import 'package:music_download_play_app/features/downloads/domain/repositories/download_queue_repository.dart';
@@ -27,6 +30,12 @@ import 'package:music_download_play_app/features/player/domain/repositories/play
 import 'package:music_download_play_app/features/playlists/di.dart';
 import 'package:music_download_play_app/features/playlists/domain/entities/playlist.dart';
 import 'package:music_download_play_app/features/playlists/domain/repositories/playlist_repository.dart';
+import 'package:music_download_play_app/features/search/di.dart';
+import 'package:music_download_play_app/features/search/domain/entities/engine_exception.dart';
+import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
+import 'package:music_download_play_app/features/search/domain/entities/search_source.dart';
+import 'package:music_download_play_app/features/search/domain/repositories/downloader_engine.dart';
+import 'package:music_download_play_app/features/search/domain/repositories/link_opener.dart';
 import 'package:music_download_play_app/features/security/di.dart';
 import 'package:music_download_play_app/features/security/domain/entities/app_lock_settings.dart';
 import 'package:music_download_play_app/features/security/domain/repositories/app_lock_repository.dart';
@@ -525,6 +534,9 @@ Future<void> setUpTestDependencies({
   PlayerStyle playerStyle = PlayerStyle.initial,
   PlayHistoryRepository? history,
   DownloadQueueRepository? downloads,
+  DownloaderEngine? engine,
+  LinkOpener? linkOpener,
+  EngineManager? engineManager,
   AudioPlayerRepository? audio,
   DownloadSettingsRepository? downloadSettings,
   PlaylistRepository? playlists,
@@ -544,6 +556,8 @@ Future<void> setUpTestDependencies({
   registerHome(sl);
   registerPlaylists(sl);
   registerDownloads(sl);
+  registerEngine(sl);
+  registerSearch(sl);
   sl.allowReassignment = true;
   sl
     ..registerLazySingleton<JoinDateRepository>(
@@ -597,6 +611,13 @@ Future<void> setUpTestDependencies({
     ..registerLazySingleton<DownloadSettingsRepository>(
       () => downloadSettings ?? MemoryDownloadSettings(),
     )
+    ..registerLazySingleton<EngineManager>(
+      () => engineManager ?? FakeEngineManager(),
+    )
+    ..registerLazySingleton<DownloaderEngine>(
+      () => engine ?? FakeDownloaderEngine(),
+    )
+    ..registerLazySingleton<LinkOpener>(() => linkOpener ?? FakeLinkOpener())
     ..registerLazySingleton<DownloadQueueRepository>(
       () => downloads ?? MemoryDownloadQueue(),
     )
@@ -666,5 +687,108 @@ class FakeAudioPlayer implements AudioPlayerRepository {
   Future<void> seek(Duration position) async {
     calls.add('seek:${position.inMilliseconds}');
     lastSeek = position;
+  }
+}
+
+/// 정해 둔 답을 돌려주는 엔진. [error]가 있으면 그것을 던진다.
+class FakeDownloaderEngine implements DownloaderEngine {
+  FakeDownloaderEngine({
+    this.pages = const [SearchPage(items: [], hasNext: false)],
+    this.info,
+    this.infoByUrl = const {},
+    this.channel,
+    this.error,
+  });
+
+  /// 쪽 번호 순서대로 돌려줄 검색 결과.
+  final List<SearchPage> pages;
+  final MediaInfo? info;
+
+  /// 주소별로 따로 돌려줄 곡 정보 (없으면 [info], 그것도 없으면 못 찾음).
+  final Map<String, MediaInfo> infoByUrl;
+
+  /// [fetchChannel]이 돌려줄 채널 정보 (없으면 `unavailable`).
+  final ChannelInfo? channel;
+  final Object? error;
+  final searches = <(String, SearchSource, int)>[];
+
+  /// 검색마다 최신순으로 찾았는지.
+  final newestFlags = <bool>[];
+  final infos = <String>[];
+  final channels = <String>[];
+
+  @override
+  Future<SearchPage> search(
+    String query, {
+    SearchSource source = SearchSource.youtube,
+    int page = 0,
+    int size = 20,
+    bool newest = false,
+  }) async {
+    searches.add((query, source, page));
+    newestFlags.add(newest);
+    if (error != null) throw error!;
+    return page < pages.length ? pages[page] : pages.last;
+  }
+
+  @override
+  Future<MediaInfo> fetchInfo(String url) async {
+    infos.add(url);
+    if (error != null) throw error!;
+    final found = infoByUrl[url] ?? info;
+    if (found == null) throw const EngineException(EngineFailure.notFound);
+    return found;
+  }
+
+  @override
+  Future<ChannelInfo> fetchChannel(String url) async {
+    channels.add(url);
+    final found = channel;
+    if (found == null) throw const EngineException(EngineFailure.unavailable);
+    return found;
+  }
+}
+
+/// 연 주소를 기록하는 링크 열기. [opens]가 false면 열지 못한 것처럼 답한다.
+class FakeLinkOpener implements LinkOpener {
+  FakeLinkOpener({this.opens = true});
+
+  final bool opens;
+  final opened = <String>[];
+
+  @override
+  Future<bool> open(String url) async {
+    opened.add(url);
+    return opens;
+  }
+}
+
+/// 설치 여부만 흉내 내는 엔진 관리자. [installed]가 false면 [install]로 설치된다.
+class FakeEngineManager implements EngineManager {
+  FakeEngineManager({
+    this.supported = true,
+    this.installed = false,
+    this.failInstall = false,
+  });
+
+  final bool supported;
+  bool installed;
+  final bool failInstall;
+  int installs = 0;
+
+  @override
+  Future<EngineStatus> status() async => EngineStatus(
+    supported: supported,
+    installed: installed,
+    version: installed ? '2026.01.01' : null,
+    managed: installed,
+  );
+
+  @override
+  Future<EngineStatus> install() async {
+    installs++;
+    if (failInstall) throw Exception('fail');
+    installed = true;
+    return status();
   }
 }

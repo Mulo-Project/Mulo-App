@@ -26,8 +26,16 @@
   "searchHint": "YouTube URL or keywords",
   "searchEmptyTitle": "What do you want to save?",
   "searchEmptyBody": "Paste a URL or type keywords.\nShare from the YouTube app to open it here.",
-  "searchNotReadyTitle": "Downloads are not ready yet",
-  "searchNotReadyBody": "The download engine (yt-dlp) is not connected yet.\nSearch and download will work once it is.",
+  "searchNotReadyTitle": "No engine available",
+  "searchNotReadyBody": "This build has no server address and yt-dlp is not installed on this device, so search is unavailable.\nConnect a server or install yt-dlp.",
+  "searchErrorTitle": "Could not load",
+  "searchErrorBody": "Please try again in a moment.",
+  "searchNetworkBody": "Could not reach the server. Check your internet connection.",
+  "searchAuthBody": "The server requires a sign-in.",
+  "searchNotFoundBody": "This address cannot be downloaded.",
+  "searchNoResultsTitle": "No results",
+  "searchNoResultsBody": "Try a different search.",
+  "searchLoadMore": "Load more",
   "searchResultsTitle": "Results",
   "searchUrlCardLabel": "Found from URL",
   "searchPlaylistLabel": "Playlist",
@@ -66,6 +74,7 @@
   "settingsServer": "Server",
   "settingsConnection": "Connection",
   "settingsDisconnected": "Disconnected",
+  "settingsServerConfigured": "Server address set",
   "settingsMode": "Download mode",
   "settingsModeServer": "Server",
   "settingsModeLocal": "Local",
@@ -92,6 +101,18 @@
   "settingsEngine": "Download engine",
   "settingsEngineVersion": "Current {current} · Latest {latest}",
   "settingsEngineUpdate": "Update",
+  "settingsEngineInstall": "Install",
+  "settingsEngineNotInstalled": "yt-dlp is missing. Install it to search and download.",
+  "settingsEngineInstalling": "Downloading…",
+  "settingsEngineFailed": "Could not install. Check your internet connection.",
+  "settingsEngineInstalled": "yt-dlp {version}",
+  "@settingsEngineInstalled": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "settingsSecurity": "Security",
   "settingsAppLock": "App lock",
   "settingsChangePin": "Change PIN",
@@ -290,6 +311,46 @@
   "searchSourceTooltip": "Search source",
   "sourceYoutube": "YouTube",
   "sourceWeb": "Web",
+  "searchHitMenuDetail": "View details",
+  "mediaDetailTitle": "Details",
+  "mediaDetailWatchYoutube": "Watch on YouTube",
+  "mediaDetailOpenOriginal": "Open original page",
+  "mediaDetailChannel": "Channel",
+  "mediaDetailOpenChannel": "View channel",
+  "mediaDetailDuration": "Length",
+  "mediaDetailViews": "Views",
+  "mediaDetailUploaded": "Uploaded",
+  "mediaDetailCategory": "Category",
+  "mediaDetailDescription": "Description",
+  "mediaDetailMore": "Show more",
+  "mediaDetailLikes": "Likes",
+  "mediaDetailSubscribers": "{count} subscribers",
+  "@mediaDetailSubscribers": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "mediaDetailCollaborators": "Collaborators",
+  "mediaDetailLess": "Show less",
+  "mediaDetailOpenFailed": "No app can open this link.",
+  "mediaDetailViewCount": "{count} views",
+  "@mediaDetailViewCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "searchSortTooltip": "Sort",
+  "searchSortRelevance": "Relevance",
+  "searchSortPopular": "Most viewed",
+  "searchSortNewest": "Newest",
+  "searchSortShortest": "Shortest",
+  "searchSortLongest": "Longest",
+  "searchSortTitle": "Title",
+  "videoCategory": "{name, select, FilmAnimation{Film & Animation} Autos{Autos & Vehicles} Music{Music} Pets{Pets & Animals} Sports{Sports} Travel{Travel & Events} Gaming{Gaming} People{People & Blogs} Comedy{Comedy} Entertainment{Entertainment} News{News & Politics} Howto{Howto & Style} Education{Education} Science{Science & Technology} Nonprofits{Nonprofits & Activism} other{{name}}}",
   "downloadsExpand": "Show queue",
   "downloadsCollapse": "Hide queue",
   "downloadDialogTitle": "Download details",

@@ -2,11 +2,13 @@ import 'package:get_it/get_it.dart';
 
 import '../../features/covers/di.dart';
 import '../../features/downloads/di.dart';
+import '../../features/engine/di.dart';
 import '../../features/home/di.dart';
 import '../../features/library/di.dart';
 import '../../features/lyrics/di.dart';
 import '../../features/player/di.dart';
 import '../../features/playlists/di.dart';
+import '../../features/search/di.dart';
 import '../../features/security/di.dart';
 import '../../features/theme/di.dart';
 import '../database/app_database.dart';
@@ -29,4 +31,6 @@ void configureDependencies({AppDatabase? database}) {
   registerHome(sl);
   registerPlaylists(sl);
   registerDownloads(sl);
+  registerEngine(sl);
+  registerSearch(sl);
 }

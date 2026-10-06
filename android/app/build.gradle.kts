@@ -15,6 +15,18 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    // 에디션: lite는 서버 모드만, full은 로컬 엔진(youtubedl-android)을 APK에 넣는다.
+    flavorDimensions += "edition"
+    productFlavors {
+        create("lite") { dimension = "edition" }
+        create("full") { dimension = "edition" }
+    }
+
+    packaging {
+        // youtubedl-android가 네이티브 라이브러리(파이썬 · yt-dlp)를 파일로 풀어 실행한다.
+        jniLibs { useLegacyPackaging = true }
+    }
+
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.mulo.app"
@@ -43,6 +55,10 @@ kotlin {
     compilerOptions {
         jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
     }
+}
+
+dependencies {
+    "fullImplementation"("io.github.junkfood02.youtubedl-android:library:0.18.1")
 }
 
 flutter {

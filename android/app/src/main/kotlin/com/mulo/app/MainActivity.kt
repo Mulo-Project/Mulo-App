@@ -9,12 +9,14 @@ class MainActivity : FlutterFragmentActivity() {
     private var mediaStore: MediaStoreChannel? = null
     private var lyrics: LyricsChannel? = null
     private var audioOutput: AudioOutputChannel? = null
+    private var ytDlp: YtDlpChannel? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         mediaStore = MediaStoreChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger) { this }
         lyrics = LyricsChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
         audioOutput = AudioOutputChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
+        ytDlp = YtDlpChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
     }
 
     @Deprecated("Deprecated in Java")
@@ -31,6 +33,8 @@ class MainActivity : FlutterFragmentActivity() {
         lyrics = null
         audioOutput?.dispose()
         audioOutput = null
+        ytDlp?.dispose()
+        ytDlp = null
         super.cleanUpFlutterEngine(flutterEngine)
     }
 }

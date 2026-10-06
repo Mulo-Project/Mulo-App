@@ -340,3 +340,46 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - 화면 · 컴포넌트는 Material `Icons.xxx`를 쓰지 않고 `AppIcons.xxx`만 쓴다. 글리프는 Phosphor(MIT) 폰트(Regular · Fill)를 `assets/fonts/phosphor/`에 번들하고 코드포인트를 `AppIcons`에 적는다. 세트 교체 · 직접 그린 아이콘 폰트로의 교체는 `AppIcons`만 고치면 된다.
 - `phosphor_flutter` 패키지는 현재 Flutter에서 `IconData`가 final이라 컴파일되지 않아 쓰지 않는다.
 - 제목은 `MarqueeText`: 칸을 넘칠 때만 흐르고, 목록은 재생 중인 줄만 흐른다. 접근성 "동작 줄이기"가 켜져 있으면 `…`로 줄인다.
+
+## D-054 · 2026-10-06 · 엔진 연결 1단계: 검색 · 곡 정보
+- `DownloaderEngine`(`features/search/domain`)에 `search` · `fetchInfo`만 둔다. 받기는 다음 작업에서 같은 인터페이스에 더한다. 구현은 `ServerEngine`(Notion API 명세의 `/search` · `/info`) · `LocalEngine`(데스크톱 yt-dlp 프로세스). 오류는 `EngineException(EngineFailure)`로 통일.
+- 엔진 선택은 `RoutingDownloaderEngine`이 자동으로 한다: 로컬 yt-dlp 가능 → 로컬, 아니면 서버, 둘 다 없으면 "엔진 없음" 안내. 설정에서 모드를 고르는 화면은 나중. Android는 서버만 (full 빌드의 로컬은 아직 없음).
+- 검색 입력이 http(s) 주소면 곡 정보 조회, 아니면 키워드 검색. 확인(엔터)을 눌러야 찾는다 (글자마다 부르지 않음). "더 보기"로 쪽을 이어 붙인다.
+- 웹 검색(SoundCloud 등)은 서버에 `source=web` 쿼리를 보내고, 로컬은 `scsearch`를 쓴다. 서버 명세에 없는 추가라 서버 저장소 반영이 필요하다.
+
+## D-055 · 2026-10-06 · 설정에서 yt-dlp 자동 설치 (데스크톱)
+- 설정 > 다운로드에 "다운로드 엔진" 줄을 더했다 (카드 없이 기존 설정 줄). 설치 여부 · 버전을 보여 주고 "설치"(이미 있으면 "업데이트") 버튼이 yt-dlp 공식 최신 릴리스(GitHub `releases/latest/download`)를 앱 데이터 폴더 `engine/`에 받는다. 새 패키지 없음 (`dart:io`, 기존 `path_provider`).
+- `LocalEngine`은 앱이 받은 yt-dlp가 있으면 그것을, 없으면 PATH의 `yt-dlp`를 쓴다. `RoutingDownloaderEngine`은 로컬을 못 쓰는 동안 호출마다 다시 확인하므로 설치 직후 앱 재시작 없이 로컬로 바뀐다.
+- Android에서는 줄이 숨겨진다 (로컬 Android 엔진은 별도 작업). 서버의 최신 버전 비교 · 자동 업데이트 알림은 하지 않는다 (필요하면 "업데이트"를 누른다).
+
+## D-056 · 2026-10-06 · Android 로컬 엔진: flavor lite/full + youtubedl-android
+- Android 빌드에 flavor `edition`(lite · full)을 더했다. `pubspec.yaml`의 `default-flavor: full`이라 `flutter run` · `flutter build apk --debug`는 그대로 full로 빌드된다. lite는 `--flavor lite`.
+- full만 `io.github.junkfood02.youtubedl-android:library:0.18.1`(파이썬 · yt-dlp를 APK에 포함, GPL-3.0)을 쓴다. `jniLibs.useLegacyPackaging = true`가 필요하다. Android 10+는 내려받은 실행 파일을 실행할 수 없어서 desktop처럼 받아 쓰지 못한다.
+- 네이티브 채널 `music_app/ytdlp` (`YtDlpChannel`)는 flavor별 소스(`src/full` · `src/lite`)에 같은 이름으로 둔다. lite는 `available`이 false인 빈 구현. 메서드: `available` · `version` · `run(url, options)` · `update`.
+- Dart는 `AndroidYtDlp`(engine 기능 data)가 채널을 감싸고, `LocalEngine`이 `Process.run` 대신 `AndroidYtDlp.run`을 쓴다. `RoutingDownloaderEngine`은 Android에서도 로컬이 되면 로컬, 아니면 서버.
+- 설정의 엔진 줄은 Android full에서 "업데이트"(yt-dlp를 최신 안정판으로)로 보이고, lite에서는 숨겨진다.
+- 첫 실행은 파이썬을 풀어서 몇 초 걸린다 (첫 검색 · 엔진 줄 확인 때). ffmpeg는 오디오 추출이 필요한 받기 작업에서 더한다.
+- (D-056 보강) 설정 "서버" 묶음은 가짜 고정값(항상 서버 선택, 연결 안 됨)이었다. 이제 모드는 엔진 상태로 정해져 보인다: 쓸 수 있는 로컬 yt-dlp가 있으면 로컬, 없으면 서버. 연결 칸은 서버 주소가 빌드에 들어 있는지만 보여 준다. 모드를 직접 바꾸는 버튼은 없다 (자동 선택).
+
+## D-057 · 2026-10-06 · 검색 결과 정렬 · 무한 스크롤, 유튜브 분류 읽기, 유튜브 표시 다시 그리기
+- 유튜브가 영상에 붙이는 분류는 yt-dlp 정보의 `categories`(예: `Music`, `Gaming`)로 읽을 수 있다. `MediaHit.categories`로 담고 로컬 엔진(yt-dlp JSON) · 서버 엔진(`categories` 배열, 서버 명세에 없는 선택 필드) 둘 다 읽는다. 분류 이름은 ARB `videoCategory`로 현지화한다(`categoryLabel`, 모르는 분류는 원문).
+- **검색 결과를 분류로 거르는 필터는 두지 않는다.** 분류는 목록(`--flat-playlist`) 항목에 없고, 곡마다 yt-dlp로 정보를 읽어야만 알 수 있다. 결과마다 뒤에서 읽는 방식을 써 봤지만 검색이 더 느려진다고 판단해 뺐다. 분류는 곡 정보를 연 곳(곡 하나 주소 · 상세 보기)에서만 쓴다. 유튜브 분류는 `Music` 같은 큰 갈래라 장르(록 · 힙합)도 아니다. 다시 하려면 서버 검색 응답에 `categories`를 넣거나 YouTube Data API(API 키 필요)를 써야 한다.
+- 검색 결과는 곡마다 상세 정보를 뒤에서 읽지 않는다. 목록에 있는 정보만으로 정렬하고, 상세는 곡을 열 때 읽는다 (`SearchCubit`).
+- 정렬(`SearchSort`, `AppDropdown` 팝업): 관련도(찾은 순서) · 인기순(조회수, 목록에 있는 값 그대로) · 최신순 · 짧은 순 · 긴 순 · 제목순. 인기순 · 길이 · 제목은 받아 온 결과 안에서만 바꾸고 값을 모르는 곡은 맨 뒤로 보낸다. **최신순은 올린 날을 곡마다 읽지 않고 yt-dlp의 날짜 순 검색(`ytsearchdate` · `scsearchdate`)으로 찾아 온다.** 그래서 최신순을 고르면 첫 쪽부터 다시 찾고(`DownloaderEngine.search(newest:)`, 서버는 `sort=date` 쿼리, 서버 명세에 없는 추가), 최신순에서 관련도순으로 돌아올 때도 다시 찾는다. 최신순은 키워드 검색에서만 메뉴에 나온다 (URL로 불러온 곡 · 재생목록은 검색이 아니라서).
+- 더 보기 버튼 대신 무한 스크롤: 결과 맨 아래 줄이 화면에 들어오면 다음 쪽을 불러온다. 불러오기에 실패하면 버튼이 나타나 다시 누를 수 있다.
+- `YoutubeMark`는 아이콘 글리프 대신 `CustomPainter`로 직접 그린다 (YouTube Music 모양): 꽉 찬 빨간 원(#FF0000), 지름 54% 흰 링(두께 2.5%, 안쪽도 빨강), 링 중앙에 각진 재생 삼각형(#F1F1F1, 폭 22% · 높이 26%, 시각적 중심을 위해 약간 오른쪽). 그림자 · 그라데이션 없음. 색은 팔레트 토큰(`youtubeRed` · `markWhite` · `youtubeMarkWhite`).
+
+## D-058 · 2026-10-06 · 검색 결과 상세 보기 (영상 · 채널)
+- 검색 결과 줄을 누르면 상세 화면이 열리고, 길게 누르기(데스크톱은 오른쪽 클릭)는 옵션 메뉴(상세 보기 · 받기)를 띄운다. 줄 오른쪽 받기 버튼은 그대로 두고 ⋮ 버튼은 두지 않는다.
+- 상세 화면(`MediaDetailScreen`)은 탭 틀 위로 덮어 여는 전체 화면이다. 카드 없이 큰 썸네일(16:9, 높이 상한 260) + 제목 + 채널 줄 + 구분선 정보 줄(길이 · 조회수 · 올린 날 · 분류) + 설명(4줄, 더 보기) + 아래 고정 버튼(영상 보기 · 받기)으로 구성한다.
+- 영상 · 채널 보기는 앱 안 플레이어 없이 **기기의 유튜브 앱(없으면 브라우저)으로 연다** (`url_launcher`, `LaunchMode.externalApplication`). 앱 안 WebView 재생은 Android에서만 되고 데스크톱은 WebView가 없어서 쓰지 않았다. 유튜브가 아닌 곳(웹 검색)은 버튼 문구가 "원본 페이지 열기"가 된다.
+- `MediaHit`에 `channelUrl` · `viewCount` · `uploadedAt` · `description`을 더했다. 목록(`--flat-playlist`)에는 없는 값이 많아서, 상세 화면을 열면 `MediaDetailCubit`이 곡 정보를 한 번 더 읽어 비어 있는 것만 채운다(`MediaHit.filledFrom`). 못 읽으면 목록에서 알던 정보만 보여 준다. 로컬 엔진은 yt-dlp 키 `channel_url`(없으면 `uploader_url`) · `view_count` · `upload_date` · `description`을 읽는다.
+- **서버 엔진은 `channelUrl` · `viewCount` · `uploadDate`(ISO 또는 `yyyyMMdd`) · `description` 키를 선택 필드로 읽는다.** 서버 명세에 없는 추가라 서버 저장소 반영이 필요하다 (없으면 해당 줄이 숨겨질 뿐 동작은 그대로).
+- 주소 열기는 도메인 인터페이스 `LinkOpener` + 유스케이스 `OpenLink` + 데이터 `UrlLauncherLinkOpener`로 나눠, 화면 · 테스트가 플러그인을 직접 부르지 않는다. 아이콘 `info` · `openInNew`를 `AppIcons`에 더했다.
+- (D-058 보강) 상세 화면에 좋아요 수, 채널 이미지 · 구독자 수를 더했다. 좋아요 · 구독자는 곡 정보(`like_count` · `channel_follower_count`)에서, 채널 이미지는 로컬 엔진이 채널 주소를 `--playlist-items 0`으로 읽어 `avatar*` 썸네일에서 가져온다(`DownloaderEngine.fetchChannel`, 영상 목록은 받지 않는다). 서버 엔진은 채널 조회가 없어 곡 정보의 `likeCount` · `subscriberCount` · `channelThumbnail`만 읽는다. 채널 정보를 못 읽어도 나머지는 그대로 보인다.
+- 유튜브는 싫어요 수를 더는 공개하지 않고 yt-dlp에도 하이프 순위가 없어서 둘은 표시하지 않는다 (외부 서비스가 필요해 범위 밖).
+- 설명은 4줄을 넘을 때만 "더 보기"가 나온다 (글자 크기를 반영해 재서 판단). 짧은 설명에는 버튼이 없고, 설명 글을 눌러도 펼쳐지고 접힌다.
+- (D-058 보강 2) 채널 이름은 `MarqueeText`로 잘리지 않고 흘러서 끝까지 보이고, 설명 "더 보기" 버튼은 가운데 정렬한다.
+- 상세 보기 로딩: 곡 정보와 채널 정보를 따로 동시에 읽고 읽히는 대로 채운다 (채널 주소가 목록에 이미 있으면 곡 정보를 기다리지 않는다). 엔진을 `CachedDownloaderEngine`으로 감싸 곡 · 채널 정보를 15분(최대 300개) 기억하고 읽는 중인 요청도 함께 쓴다. 같은 곡을 다시 열면 바로 보인다 (검색이 곡마다 뒤에서 읽던 정보는 카테고리 작업에서 없앴다). 실패와 검색 결과는 기억하지 않는다. yt-dlp 호출 자체(곡 하나 2~5초)는 줄이지 못한다.
+- (D-058 보강 3) 유튜브 공동 작업자(여러 채널이 함께 올린 영상): yt-dlp 검색 목록 항목은 올린 사람이 "A and B"로 합쳐져 있고 채널 주소가 없다. 곡 하나를 읽으면 `channel`이 대표 채널(첫 번째)이고 `channel_url` · `channel_follower_count`도 그 채널의 것이며 `creators`에 전원의 이름이 있다. 이름을 목록 것 그대로 두면 이름과 채널 이미지 · 구독자 수 · 채널 보기 주소가 서로 다른 채널이 되므로, `MediaHit.filledFrom`은 `creators`가 둘 이상이면 대표 채널 이름을 쓰고 상세에 "공동 작업자" 줄로 나머지 이름을 적는다. 다른 공동 작업자의 채널 주소 · 이미지는 yt-dlp가 주지 않아 대표 채널만 링크한다. 목록 타일의 올린 사람은 합쳐진 이름 그대로 둔다 (크레딧 표시).
+- (D-058 보강 4) 곡 정보가 느린 까닭: 곡 하나를 읽는 yt-dlp 호출이 이 PC에서 약 2.4~3.5초(+ 첫 호출 시작 비용), 채널 정보가 약 1.4~1.7초라서 처음 열 때 둘이 겹쳐 3~4초가 든다 (Android는 첫 호출에 파이썬을 푸는 시간이 더해진다). 쓰지 않는 DASH · HLS 목록과 번역 자막을 건너뛰는 `--extractor-args youtube:skip=dash,hls,translated_subs`를 곡 정보 읽기에 더해 약 1.9초로 줄였다 (분류 · 좋아요 · 구독자 · 채널 등 쓰는 필드는 그대로, 실측). `skip=js` 같은 더 센 옵션은 서명을 못 풀어 실패해서 쓰지 않는다. 받기 팝업은 정보를 읽지 않고 목록에서 이미 아는 제목 · 채널로 바로 열린다.
