@@ -1,4 +1,6 @@
+// ignore_for_file: experimental_member_use
 import 'dart:async';
+import 'dart:io';
 
 import 'package:just_audio/just_audio.dart';
 
@@ -35,12 +37,27 @@ class JustAudioPreviewPlayer implements PreviewPlayer {
   Future<void> play(AudioStream stream) async {
     final player = _ensure();
     try {
-      await player.setAudioSource(
-        AudioSource.uri(
-          Uri.parse(stream.url),
-          headers: stream.headers.isEmpty ? null : stream.headers,
-        ),
-      );
+      try {
+        await player.setAudioSource(
+          AudioSource.uri(
+            Uri.parse(stream.url),
+            headers: stream.headers.isEmpty ? null : stream.headers,
+          ),
+        );
+      } on PlayerException catch (direct) {
+        // 플레이어(ExoPlayer 등)가 직접 못 열면(Source error) 앱이 받아서 넘겨 준다.
+        // 앱의 HTTP로는 열리는 주소가 있다 (주소 확인에 쓴 것과 같은 방식).
+        try {
+          await player.setAudioSource(
+            _HttpRangeSource(Uri.parse(stream.url), stream.headers),
+          );
+        } on PlayerException catch (viaApp) {
+          throw EngineException(
+            EngineFailure.failed,
+            'direct: ${direct.message} | app: ${viaApp.message}',
+          );
+        }
+      }
     } on PlayerInterruptedException {
       // 불러오는 중에 멈춤 · 다른 곡으로 바뀜: 호출한 쪽이 이미 알고 있다.
       return;
@@ -77,5 +94,43 @@ class JustAudioPreviewPlayer implements PreviewPlayer {
     await _player?.dispose();
     _player = null;
     await _completed.close();
+  }
+}
+
+/// 주소를 앱의 HTTP(`dart:io`)로 받아 플레이어에 넘기는 소스. 구간 요청(Range)을 그대로 전달한다.
+class _HttpRangeSource extends StreamAudioSource {
+  _HttpRangeSource(this._url, this._headers);
+
+  final Uri _url;
+  final Map<String, String> _headers;
+
+  @override
+  Future<StreamAudioResponse> request([int? start, int? end]) async {
+    final client = HttpClient()..idleTimeout = const Duration(seconds: 5);
+    final req = await client.getUrl(_url);
+    _headers.forEach(req.headers.set);
+    req.headers.set(
+      'range',
+      'bytes=${start ?? 0}-${end == null ? '' : end - 1}',
+    );
+    final resp = await req.close();
+    if (resp.statusCode >= 400) {
+      client.close(force: true);
+      throw HttpException('HTTP ${resp.statusCode}', uri: _url);
+    }
+    // 총 길이: `Content-Range: bytes 0-1023/1300631`의 끝 숫자, 없으면 본문 길이.
+    final range = resp.headers.value('content-range');
+    final total = range == null
+        ? null
+        : int.tryParse(range.split('/').last.trim());
+    final offset = start ?? 0;
+    return StreamAudioResponse(
+      sourceLength:
+          total ?? (resp.contentLength < 0 ? null : resp.contentLength),
+      contentLength: resp.contentLength < 0 ? null : resp.contentLength,
+      offset: offset,
+      stream: resp,
+      contentType: resp.headers.contentType?.mimeType ?? 'audio/mp4',
+    );
   }
 }
