@@ -70,6 +70,29 @@ void main() {
       expect(hit.description, 'hello');
     });
 
+    test('LocalEngine: 곡 정보는 쓰지 않는 DASH · HLS를 건너뛰어 읽는다', () async {
+      List<String>? args;
+      final engine = LocalEngine(
+        run: (_, a) async {
+          args = a;
+          return (
+            exitCode: 0,
+            stdout: jsonEncode({'id': 'v', 'title': 'T'}),
+            stderr: '',
+          );
+        },
+      );
+      await engine.fetchInfo('https://x/v');
+      expect(
+        args,
+        containsAllInOrder([
+          '--extractor-args',
+          'youtube:skip=dash,hls,translated_subs',
+        ]),
+      );
+      expect(args!.last, 'https://x/v');
+    });
+
     test('LocalEngine: 없는 칸은 비어 있다', () async {
       final engine = LocalEngine(
         run: (_, _) async => (
