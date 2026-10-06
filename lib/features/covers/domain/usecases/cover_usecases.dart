@@ -1,28 +1,14 @@
 import '../../../../core/usecase/usecase.dart';
+import '../entities/cover_art.dart';
 import '../repositories/cover_repository.dart';
 
-class LoadCovers implements UseCase<Map<String, String>, NoParams> {
+class LoadCovers implements UseCase<Map<String, CoverArt>, NoParams> {
   const LoadCovers(this._repo);
 
   final CoverRepository _repo;
 
   @override
-  Future<Map<String, String>> call(NoParams _) => _repo.loadAll();
-}
-
-/// 기기에서 사진을 골라 [key]의 커버로 저장한다. 저장된 경로, 취소하면 null.
-class PickCoverFromDevice implements UseCase<String?, String> {
-  const PickCoverFromDevice(this._source, this._repo);
-
-  final CoverImageSource _source;
-  final CoverRepository _repo;
-
-  @override
-  Future<String?> call(String key) async {
-    final picked = await _source.pickFromDevice();
-    if (picked == null) return null;
-    return _repo.save(key, picked);
-  }
+  Future<Map<String, CoverArt>> call(NoParams _) => _repo.loadAll();
 }
 
 class ClearCover implements UseCase<void, String> {
@@ -45,20 +31,67 @@ class PickImageFile implements UseCase<String?, NoParams> {
 }
 
 class SaveCoverParams {
-  const SaveCoverParams(this.key, this.sourcePath);
+  const SaveCoverParams(
+    this.key,
+    this.sourcePath, [
+    this.transform = CoverTransform.identity,
+  ]);
 
   final String key;
   final String sourcePath;
+  final CoverTransform transform;
 }
 
-/// 이미 고른 파일을 [SaveCoverParams.key]의 커버로 저장한다. 저장된 경로를 돌려준다.
-class SaveCover implements UseCase<String, SaveCoverParams> {
+/// 이미 고른 파일을 [SaveCoverParams.key]의 커버로 저장한다. 저장된 커버를 돌려준다.
+class SaveCover implements UseCase<CoverArt, SaveCoverParams> {
   const SaveCover(this._repo);
 
   final CoverRepository _repo;
 
   @override
-  Future<String> call(SaveCoverParams p) => _repo.save(p.key, p.sourcePath);
+  Future<CoverArt> call(SaveCoverParams p) =>
+      _repo.save(p.key, p.sourcePath, transform: p.transform);
+}
+
+class SaveWebCoverParams {
+  const SaveWebCoverParams(
+    this.key,
+    this.url, [
+    this.transform = CoverTransform.identity,
+  ]);
+
+  final String key;
+  final String url;
+  final CoverTransform transform;
+}
+
+/// 웹 이미지를 [SaveWebCoverParams.key]의 커버로 쓴다. 파일은 받지 않고 주소만 저장한다.
+class SaveWebCover implements UseCase<CoverArt, SaveWebCoverParams> {
+  const SaveWebCover(this._repo);
+
+  final CoverRepository _repo;
+
+  @override
+  Future<CoverArt> call(SaveWebCoverParams p) =>
+      _repo.saveUrl(p.key, p.url, transform: p.transform);
+}
+
+class SetCoverTransformParams {
+  const SetCoverTransformParams(this.key, this.transform);
+
+  final String key;
+  final CoverTransform transform;
+}
+
+/// 이미 붙인 커버의 확대 · 위치만 바꾼다.
+class SetCoverTransform implements UseCase<void, SetCoverTransformParams> {
+  const SetCoverTransform(this._repo);
+
+  final CoverRepository _repo;
+
+  @override
+  Future<void> call(SetCoverTransformParams p) =>
+      _repo.saveTransform(p.key, p.transform);
 }
 
 class LoadCoverColors implements UseCase<Map<String, int>, NoParams> {

@@ -53,7 +53,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('꾸미기'), findsOneWidget);
-    expect(find.text('사진에서 고르기'), findsOneWidget);
+    expect(find.text('이미지 고르기'), findsOneWidget);
     expect(find.text('색'), findsOneWidget);
   });
 

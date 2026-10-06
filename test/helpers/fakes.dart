@@ -5,6 +5,7 @@ import 'package:music_download_play_app/features/covers/di.dart';
 import 'package:music_download_play_app/features/lyrics/di.dart';
 import 'package:music_download_play_app/features/lyrics/domain/entities/lyrics.dart';
 import 'package:music_download_play_app/features/lyrics/domain/repositories/lyrics_repository.dart';
+import 'package:music_download_play_app/features/covers/domain/entities/cover_art.dart';
 import 'package:music_download_play_app/features/covers/domain/repositories/cover_repository.dart';
 import 'package:music_download_play_app/features/downloads/di.dart';
 import 'package:music_download_play_app/features/engine/di.dart';
@@ -153,16 +154,32 @@ class FakeDeviceMusic implements DeviceMusicRepository {
   }
 }
 
-/// 파일 복사 없이 경로만 기억하는 커버 저장소.
+/// 파일 복사 없이 경로 · 주소만 기억하는 커버 저장소.
 class MemoryCoverRepository implements CoverRepository {
-  final saved = <String, String>{};
+  final saved = <String, CoverArt>{};
 
   @override
-  Future<Map<String, String>> loadAll() async => {...saved};
+  Future<Map<String, CoverArt>> loadAll() async => {...saved};
 
   @override
-  Future<String> save(String key, String sourcePath) async =>
-      saved[key] = sourcePath;
+  Future<CoverArt> save(
+    String key,
+    String sourcePath, {
+    CoverTransform transform = CoverTransform.identity,
+  }) async => saved[key] = CoverArt.file(sourcePath, transform: transform);
+
+  @override
+  Future<CoverArt> saveUrl(
+    String key,
+    String url, {
+    CoverTransform transform = CoverTransform.identity,
+  }) async => saved[key] = CoverArt.web(url, transform: transform);
+
+  @override
+  Future<void> saveTransform(String key, CoverTransform transform) async {
+    final art = saved[key];
+    if (art != null) saved[key] = art.withTransform(transform);
+  }
 
   @override
   Future<void> remove(String key) async => saved.remove(key);

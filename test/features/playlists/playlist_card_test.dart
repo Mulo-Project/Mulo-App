@@ -1,12 +1,52 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/design/design.dart';
+import 'package:music_download_play_app/features/covers/domain/entities/cover_art.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 import 'package:music_download_play_app/features/playlists/domain/entities/playlist.dart';
 
 import '../../helpers/fakes.dart';
+
+/// 1x1 PNG 파일 (꾸미기 화면이 실제로 읽을 수 있는 그림).
+String _pngFile() {
+  final dir = Directory.systemTemp.createTempSync('cover_test');
+  addTearDown(() => dir.deleteSync(recursive: true));
+  return (File('${dir.path}/pick.png')..writeAsBytesSync(
+        base64Decode(
+          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+        ),
+      ))
+      .path;
+}
+
+/// 그림 파일은 실제 비동기로 읽으므로, 돌아가는 표시가 사라질 때까지 기다린다.
+Future<void> _waitImage(WidgetTester tester) async {
+  for (var i = 0; i < 20; i++) {
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 100)),
+    );
+    await tester.pump();
+    if (find.byType(CircularProgressIndicator).evaluate().isEmpty) break;
+  }
+  await tester.pumpAndSettle();
+}
+
+/// 이미지 고르기 → 기기에서 → 위치 맞추는 화면에서 적용.
+Future<void> _pickFromDeviceAndApply(WidgetTester tester) async {
+  await tester.tap(find.text('기기에서 고르기'));
+  // 읽는 동안 돌아가는 표시가 있어 pumpAndSettle은 끝나지 않는다.
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 500));
+  await _waitImage(tester);
+  expect(find.text('이미지 위치'), findsOneWidget);
+  await tester.tap(find.text('적용'));
+  await tester.pumpAndSettle();
+}
 
 Track _t(String id, String title) => Track(
   id: id,
@@ -110,20 +150,45 @@ void main() {
   });
 
   testWidgets('꾸미기 시트에서 이미지를 고르고 기본 이미지로 되돌린다', (tester) async {
-    await pumpPlaylists(tester, image: FakeImageSource('/tmp/pl.png'));
+    final path = _pngFile();
+    await pumpPlaylists(tester, image: FakeImageSource(path));
     await openMenu(tester);
     await tester.tap(find.text('꾸미기'));
     await tester.pumpAndSettle();
-    expect(find.text('사진에서 고르기'), findsOneWidget);
+    expect(find.text('이미지 고르기'), findsOneWidget);
     expect(find.text('기본 이미지로'), findsNothing);
-    await tester.tap(find.text('사진에서 고르기'));
+    expect(find.text('위치 조정'), findsNothing);
+    await tester.tap(find.text('이미지 고르기'));
     await tester.pumpAndSettle();
-    expect(covers.saved['playlist:pl1'], '/tmp/pl.png');
+    await _pickFromDeviceAndApply(tester);
+    expect(covers.saved['playlist:pl1'], CoverArt.file(path));
+    expect(find.text('위치 조정'), findsOneWidget);
 
     // 시트가 열린 채로 되돌릴 수 있고, 색 견본도 그대로 있다.
     expect(find.bySemanticsLabel('색 1'), findsOneWidget);
     await tester.tap(find.text('기본 이미지로'));
     await tester.pumpAndSettle();
+    expect(covers.saved, isEmpty);
+  });
+
+  testWidgets('웹 이미지를 고르면 위치 맞추는 화면으로 간다 (읽지 못하면 적용할 수 없다)', (tester) async {
+    await pumpPlaylists(tester);
+    await openMenu(tester);
+    await tester.tap(find.text('꾸미기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('이미지 고르기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('웹에서 가져오기'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(EditableText), 'https://x.test/a.jpg');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('이 주소의 이미지 쓰기'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('이미지 위치'), findsOneWidget);
+    // 테스트 환경은 네트워크가 없어 읽기에 실패하고, 그러면 저장되지 않는다.
+    await _waitImage(tester);
+    expect(find.text('이미지를 불러오지 못했어요'), findsOneWidget);
     expect(covers.saved, isEmpty);
   });
 
@@ -194,18 +259,20 @@ void main() {
   });
 
   testWidgets('새 재생목록을 만들 때 이미지를 고르면 커버로 저장된다', (tester) async {
-    await pumpPlaylists(tester, image: FakeImageSource('/tmp/new.png'));
+    final path = _pngFile();
+    await pumpPlaylists(tester, image: FakeImageSource(path));
     await tester.tap(find.byTooltip('새 재생목록'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(EditableText), '새 목록');
     await tester.tap(find.text('이미지 고르기'));
     await tester.pumpAndSettle();
+    await _pickFromDeviceAndApply(tester);
     // 이미지를 고르면 색 고르기는 사라진다.
     expect(find.text('이미지 바꾸기'), findsOneWidget);
     expect(find.bySemanticsLabel('색 1'), findsNothing);
     await tester.tap(find.text('만들기'));
     await tester.pumpAndSettle();
-    expect(covers.saved['playlist:pl3'], '/tmp/new.png');
+    expect(covers.saved['playlist:pl3'], CoverArt.file(path));
     expect(colors.saved, isEmpty);
   });
 
