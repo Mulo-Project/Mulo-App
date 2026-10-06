@@ -257,14 +257,62 @@ abstract class AppLocalizations {
   /// No description provided for @searchNotReadyTitle.
   ///
   /// In ko, this message translates to:
-  /// **'아직 받을 수 없어요'**
+  /// **'쓸 수 있는 엔진이 없어요'**
   String get searchNotReadyTitle;
 
   /// No description provided for @searchNotReadyBody.
   ///
   /// In ko, this message translates to:
-  /// **'다운로드 엔진(yt-dlp)을 아직 연결하지 않았어요.\n연결되면 여기서 검색하고 받을 수 있어요.'**
+  /// **'서버 주소가 빌드에 없고 이 기기에 yt-dlp도 없어서 검색할 수 없어요.\n서버를 연결하거나 yt-dlp를 설치해 주세요.'**
   String get searchNotReadyBody;
+
+  /// No description provided for @searchErrorTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'불러오지 못했어요'**
+  String get searchErrorTitle;
+
+  /// No description provided for @searchErrorBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'잠시 뒤에 다시 시도해 주세요.'**
+  String get searchErrorBody;
+
+  /// No description provided for @searchNetworkBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'서버에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.'**
+  String get searchNetworkBody;
+
+  /// No description provided for @searchAuthBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'서버가 로그인을 요구해요.'**
+  String get searchAuthBody;
+
+  /// No description provided for @searchNotFoundBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 주소는 받을 수 없는 곳이에요.'**
+  String get searchNotFoundBody;
+
+  /// No description provided for @searchNoResultsTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'결과가 없어요'**
+  String get searchNoResultsTitle;
+
+  /// No description provided for @searchNoResultsBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'다른 검색어로 찾아보세요.'**
+  String get searchNoResultsBody;
+
+  /// No description provided for @searchLoadMore.
+  ///
+  /// In ko, this message translates to:
+  /// **'더 보기'**
+  String get searchLoadMore;
 
   /// No description provided for @searchResultsTitle.
   ///
@@ -494,6 +542,12 @@ abstract class AppLocalizations {
   /// **'연결 안 됨'**
   String get settingsDisconnected;
 
+  /// No description provided for @settingsServerConfigured.
+  ///
+  /// In ko, this message translates to:
+  /// **'서버 주소 설정됨'**
+  String get settingsServerConfigured;
+
   /// No description provided for @settingsMode.
   ///
   /// In ko, this message translates to:
@@ -613,6 +667,36 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'업데이트'**
   String get settingsEngineUpdate;
+
+  /// No description provided for @settingsEngineInstall.
+  ///
+  /// In ko, this message translates to:
+  /// **'설치'**
+  String get settingsEngineInstall;
+
+  /// No description provided for @settingsEngineNotInstalled.
+  ///
+  /// In ko, this message translates to:
+  /// **'yt-dlp가 없어요. 설치하면 검색하고 받을 수 있어요.'**
+  String get settingsEngineNotInstalled;
+
+  /// No description provided for @settingsEngineInstalling.
+  ///
+  /// In ko, this message translates to:
+  /// **'내려받는 중…'**
+  String get settingsEngineInstalling;
+
+  /// No description provided for @settingsEngineFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'설치하지 못했어요. 인터넷 연결을 확인해 주세요.'**
+  String get settingsEngineFailed;
+
+  /// No description provided for @settingsEngineInstalled.
+  ///
+  /// In ko, this message translates to:
+  /// **'yt-dlp {version}'**
+  String settingsEngineInstalled(String version);
 
   /// No description provided for @settingsSecurity.
   ///
@@ -1471,6 +1555,162 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'웹'**
   String get sourceWeb;
+
+  /// No description provided for @searchHitMenuDetail.
+  ///
+  /// In ko, this message translates to:
+  /// **'상세 보기'**
+  String get searchHitMenuDetail;
+
+  /// No description provided for @mediaDetailTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'상세 정보'**
+  String get mediaDetailTitle;
+
+  /// No description provided for @mediaDetailWatchYoutube.
+  ///
+  /// In ko, this message translates to:
+  /// **'유튜브에서 보기'**
+  String get mediaDetailWatchYoutube;
+
+  /// No description provided for @mediaDetailOpenOriginal.
+  ///
+  /// In ko, this message translates to:
+  /// **'원본 페이지 열기'**
+  String get mediaDetailOpenOriginal;
+
+  /// No description provided for @mediaDetailChannel.
+  ///
+  /// In ko, this message translates to:
+  /// **'채널'**
+  String get mediaDetailChannel;
+
+  /// No description provided for @mediaDetailOpenChannel.
+  ///
+  /// In ko, this message translates to:
+  /// **'채널 보기'**
+  String get mediaDetailOpenChannel;
+
+  /// No description provided for @mediaDetailDuration.
+  ///
+  /// In ko, this message translates to:
+  /// **'길이'**
+  String get mediaDetailDuration;
+
+  /// No description provided for @mediaDetailViews.
+  ///
+  /// In ko, this message translates to:
+  /// **'조회수'**
+  String get mediaDetailViews;
+
+  /// No description provided for @mediaDetailUploaded.
+  ///
+  /// In ko, this message translates to:
+  /// **'올린 날'**
+  String get mediaDetailUploaded;
+
+  /// No description provided for @mediaDetailCategory.
+  ///
+  /// In ko, this message translates to:
+  /// **'분류'**
+  String get mediaDetailCategory;
+
+  /// No description provided for @mediaDetailDescription.
+  ///
+  /// In ko, this message translates to:
+  /// **'설명'**
+  String get mediaDetailDescription;
+
+  /// No description provided for @mediaDetailMore.
+  ///
+  /// In ko, this message translates to:
+  /// **'더 보기'**
+  String get mediaDetailMore;
+
+  /// No description provided for @mediaDetailLikes.
+  ///
+  /// In ko, this message translates to:
+  /// **'좋아요'**
+  String get mediaDetailLikes;
+
+  /// No description provided for @mediaDetailSubscribers.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독자 {count}명'**
+  String mediaDetailSubscribers(String count);
+
+  /// No description provided for @mediaDetailCollaborators.
+  ///
+  /// In ko, this message translates to:
+  /// **'공동 작업자'**
+  String get mediaDetailCollaborators;
+
+  /// No description provided for @mediaDetailLess.
+  ///
+  /// In ko, this message translates to:
+  /// **'접기'**
+  String get mediaDetailLess;
+
+  /// No description provided for @mediaDetailOpenFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'열 수 있는 앱이 없어요.'**
+  String get mediaDetailOpenFailed;
+
+  /// No description provided for @mediaDetailViewCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}회'**
+  String mediaDetailViewCount(String count);
+
+  /// No description provided for @searchSortTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'정렬'**
+  String get searchSortTooltip;
+
+  /// No description provided for @searchSortRelevance.
+  ///
+  /// In ko, this message translates to:
+  /// **'관련도순'**
+  String get searchSortRelevance;
+
+  /// No description provided for @searchSortPopular.
+  ///
+  /// In ko, this message translates to:
+  /// **'인기순'**
+  String get searchSortPopular;
+
+  /// No description provided for @searchSortNewest.
+  ///
+  /// In ko, this message translates to:
+  /// **'최신순'**
+  String get searchSortNewest;
+
+  /// No description provided for @searchSortShortest.
+  ///
+  /// In ko, this message translates to:
+  /// **'짧은 순'**
+  String get searchSortShortest;
+
+  /// No description provided for @searchSortLongest.
+  ///
+  /// In ko, this message translates to:
+  /// **'긴 순'**
+  String get searchSortLongest;
+
+  /// No description provided for @searchSortTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'제목순'**
+  String get searchSortTitle;
+
+  /// No description provided for @videoCategory.
+  ///
+  /// In ko, this message translates to:
+  /// **'{name, select, FilmAnimation{영화/애니메이션} Autos{자동차} Music{음악} Pets{동물} Sports{스포츠} Travel{여행} Gaming{게임} People{인물/블로그} Comedy{코미디} Entertainment{엔터테인먼트} News{뉴스/정치} Howto{노하우/스타일} Education{교육} Science{과학/기술} Nonprofits{비영리/사회운동} other{{name}}}'**
+  String videoCategory(String name);
 
   /// No description provided for @downloadsExpand.
   ///

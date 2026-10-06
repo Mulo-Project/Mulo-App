@@ -33,8 +33,16 @@
   "searchHint": "유튜브 URL이나 검색어",
   "searchEmptyTitle": "무엇을 받을까요?",
   "searchEmptyBody": "URL을 붙여넣거나 검색어를 입력하세요.\n유튜브 앱에서 공유를 누르면 바로 여기로 와요.",
-  "searchNotReadyTitle": "아직 받을 수 없어요",
-  "searchNotReadyBody": "다운로드 엔진(yt-dlp)을 아직 연결하지 않았어요.\n연결되면 여기서 검색하고 받을 수 있어요.",
+  "searchNotReadyTitle": "쓸 수 있는 엔진이 없어요",
+  "searchNotReadyBody": "서버 주소가 빌드에 없고 이 기기에 yt-dlp도 없어서 검색할 수 없어요.\n서버를 연결하거나 yt-dlp를 설치해 주세요.",
+  "searchErrorTitle": "불러오지 못했어요",
+  "searchErrorBody": "잠시 뒤에 다시 시도해 주세요.",
+  "searchNetworkBody": "서버에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.",
+  "searchAuthBody": "서버가 로그인을 요구해요.",
+  "searchNotFoundBody": "이 주소는 받을 수 없는 곳이에요.",
+  "searchNoResultsTitle": "결과가 없어요",
+  "searchNoResultsBody": "다른 검색어로 찾아보세요.",
+  "searchLoadMore": "더 보기",
   "searchResultsTitle": "검색 결과",
   "searchUrlCardLabel": "URL에서 찾은 곡",
   "searchPlaylistLabel": "재생목록",
@@ -87,6 +95,7 @@
   "settingsServer": "서버",
   "settingsConnection": "연결 상태",
   "settingsDisconnected": "연결 안 됨",
+  "settingsServerConfigured": "서버 주소 설정됨",
   "settingsMode": "다운로드 모드",
   "settingsModeServer": "서버",
   "settingsModeLocal": "로컬",
@@ -123,6 +132,18 @@
     }
   },
   "settingsEngineUpdate": "업데이트",
+  "settingsEngineInstall": "설치",
+  "settingsEngineNotInstalled": "yt-dlp가 없어요. 설치하면 검색하고 받을 수 있어요.",
+  "settingsEngineInstalling": "내려받는 중…",
+  "settingsEngineFailed": "설치하지 못했어요. 인터넷 연결을 확인해 주세요.",
+  "settingsEngineInstalled": "yt-dlp {version}",
+  "@settingsEngineInstalled": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "settingsSecurity": "보안",
   "settingsAppLock": "앱 잠금",
   "settingsChangePin": "PIN 바꾸기",
@@ -376,6 +397,53 @@
   "searchSourceTooltip": "검색 대상",
   "sourceYoutube": "유튜브",
   "sourceWeb": "웹",
+  "searchHitMenuDetail": "상세 보기",
+  "mediaDetailTitle": "상세 정보",
+  "mediaDetailWatchYoutube": "유튜브에서 보기",
+  "mediaDetailOpenOriginal": "원본 페이지 열기",
+  "mediaDetailChannel": "채널",
+  "mediaDetailOpenChannel": "채널 보기",
+  "mediaDetailDuration": "길이",
+  "mediaDetailViews": "조회수",
+  "mediaDetailUploaded": "올린 날",
+  "mediaDetailCategory": "분류",
+  "mediaDetailDescription": "설명",
+  "mediaDetailMore": "더 보기",
+  "mediaDetailLikes": "좋아요",
+  "mediaDetailSubscribers": "구독자 {count}명",
+  "@mediaDetailSubscribers": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "mediaDetailCollaborators": "공동 작업자",
+  "mediaDetailLess": "접기",
+  "mediaDetailOpenFailed": "열 수 있는 앱이 없어요.",
+  "mediaDetailViewCount": "{count}회",
+  "@mediaDetailViewCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "searchSortTooltip": "정렬",
+  "searchSortRelevance": "관련도순",
+  "searchSortPopular": "인기순",
+  "searchSortNewest": "최신순",
+  "searchSortShortest": "짧은 순",
+  "searchSortLongest": "긴 순",
+  "searchSortTitle": "제목순",
+  "videoCategory": "{name, select, FilmAnimation{영화/애니메이션} Autos{자동차} Music{음악} Pets{동물} Sports{스포츠} Travel{여행} Gaming{게임} People{인물/블로그} Comedy{코미디} Entertainment{엔터테인먼트} News{뉴스/정치} Howto{노하우/스타일} Education{교육} Science{과학/기술} Nonprofits{비영리/사회운동} other{{name}}}",
+  "@videoCategory": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "downloadsExpand": "대기 목록 펼치기",
   "downloadsCollapse": "대기 목록 접기",
   "downloadDialogTitle": "받기 정보",

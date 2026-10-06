@@ -91,11 +91,35 @@ class AppLocalizationsKo extends AppLocalizations {
       'URL을 붙여넣거나 검색어를 입력하세요.\n유튜브 앱에서 공유를 누르면 바로 여기로 와요.';
 
   @override
-  String get searchNotReadyTitle => '아직 받을 수 없어요';
+  String get searchNotReadyTitle => '쓸 수 있는 엔진이 없어요';
 
   @override
   String get searchNotReadyBody =>
-      '다운로드 엔진(yt-dlp)을 아직 연결하지 않았어요.\n연결되면 여기서 검색하고 받을 수 있어요.';
+      '서버 주소가 빌드에 없고 이 기기에 yt-dlp도 없어서 검색할 수 없어요.\n서버를 연결하거나 yt-dlp를 설치해 주세요.';
+
+  @override
+  String get searchErrorTitle => '불러오지 못했어요';
+
+  @override
+  String get searchErrorBody => '잠시 뒤에 다시 시도해 주세요.';
+
+  @override
+  String get searchNetworkBody => '서버에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.';
+
+  @override
+  String get searchAuthBody => '서버가 로그인을 요구해요.';
+
+  @override
+  String get searchNotFoundBody => '이 주소는 받을 수 없는 곳이에요.';
+
+  @override
+  String get searchNoResultsTitle => '결과가 없어요';
+
+  @override
+  String get searchNoResultsBody => '다른 검색어로 찾아보세요.';
+
+  @override
+  String get searchLoadMore => '더 보기';
 
   @override
   String get searchResultsTitle => '검색 결과';
@@ -216,6 +240,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsDisconnected => '연결 안 됨';
 
   @override
+  String get settingsServerConfigured => '서버 주소 설정됨';
+
+  @override
   String get settingsMode => '다운로드 모드';
 
   @override
@@ -280,6 +307,23 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsEngineUpdate => '업데이트';
+
+  @override
+  String get settingsEngineInstall => '설치';
+
+  @override
+  String get settingsEngineNotInstalled => 'yt-dlp가 없어요. 설치하면 검색하고 받을 수 있어요.';
+
+  @override
+  String get settingsEngineInstalling => '내려받는 중…';
+
+  @override
+  String get settingsEngineFailed => '설치하지 못했어요. 인터넷 연결을 확인해 주세요.';
+
+  @override
+  String settingsEngineInstalled(String version) {
+    return 'yt-dlp $version';
+  }
 
   @override
   String get settingsSecurity => '보안';
@@ -744,6 +788,108 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get sourceWeb => '웹';
+
+  @override
+  String get searchHitMenuDetail => '상세 보기';
+
+  @override
+  String get mediaDetailTitle => '상세 정보';
+
+  @override
+  String get mediaDetailWatchYoutube => '유튜브에서 보기';
+
+  @override
+  String get mediaDetailOpenOriginal => '원본 페이지 열기';
+
+  @override
+  String get mediaDetailChannel => '채널';
+
+  @override
+  String get mediaDetailOpenChannel => '채널 보기';
+
+  @override
+  String get mediaDetailDuration => '길이';
+
+  @override
+  String get mediaDetailViews => '조회수';
+
+  @override
+  String get mediaDetailUploaded => '올린 날';
+
+  @override
+  String get mediaDetailCategory => '분류';
+
+  @override
+  String get mediaDetailDescription => '설명';
+
+  @override
+  String get mediaDetailMore => '더 보기';
+
+  @override
+  String get mediaDetailLikes => '좋아요';
+
+  @override
+  String mediaDetailSubscribers(String count) {
+    return '구독자 $count명';
+  }
+
+  @override
+  String get mediaDetailCollaborators => '공동 작업자';
+
+  @override
+  String get mediaDetailLess => '접기';
+
+  @override
+  String get mediaDetailOpenFailed => '열 수 있는 앱이 없어요.';
+
+  @override
+  String mediaDetailViewCount(String count) {
+    return '$count회';
+  }
+
+  @override
+  String get searchSortTooltip => '정렬';
+
+  @override
+  String get searchSortRelevance => '관련도순';
+
+  @override
+  String get searchSortPopular => '인기순';
+
+  @override
+  String get searchSortNewest => '최신순';
+
+  @override
+  String get searchSortShortest => '짧은 순';
+
+  @override
+  String get searchSortLongest => '긴 순';
+
+  @override
+  String get searchSortTitle => '제목순';
+
+  @override
+  String videoCategory(String name) {
+    String _temp0 = intl.Intl.selectLogic(name, {
+      'FilmAnimation': '영화/애니메이션',
+      'Autos': '자동차',
+      'Music': '음악',
+      'Pets': '동물',
+      'Sports': '스포츠',
+      'Travel': '여행',
+      'Gaming': '게임',
+      'People': '인물/블로그',
+      'Comedy': '코미디',
+      'Entertainment': '엔터테인먼트',
+      'News': '뉴스/정치',
+      'Howto': '노하우/스타일',
+      'Education': '교육',
+      'Science': '과학/기술',
+      'Nonprofits': '비영리/사회운동',
+      'other': '$name',
+    });
+    return '$_temp0';
+  }
 
   @override
   String get downloadsExpand => '대기 목록 펼치기';
