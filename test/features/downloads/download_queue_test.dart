@@ -44,6 +44,7 @@ void main() {
       EnqueueDownload(repo),
       PauseDownload(repo),
       ResumeDownload(repo),
+      RetryDownload(repo),
       CancelDownload(repo),
     )..start();
     await Future<void>.delayed(Duration.zero);
@@ -60,13 +61,19 @@ void main() {
   test('EnqueueDownload: 제목이 비면 받지 않고, 문자열 공백을 지운다', () async {
     final repo = MemoryDownloadQueue();
     final enqueue = EnqueueDownload(repo);
-    expect(await enqueue(const DownloadRequest(title: '  ')), isFalse);
+    expect(
+      await enqueue(
+        const DownloadRequest(title: '  ', url: 'https://youtu.be/a'),
+      ),
+      isFalse,
+    );
     expect(repo.requests, isEmpty);
 
     expect(
       await enqueue(
         const DownloadRequest(
           title: ' Song ',
+          url: ' https://youtu.be/a ',
           artist: ' Me ',
           genre: ' Pop ',
           playlistIds: {'pl1'},
@@ -137,6 +144,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('2개 선택'), findsOneWidget);
 
+    await tester.ensureVisible(inSheet(find.text('받기')));
     await tester.tap(inSheet(find.text('받기')));
     await tester.pumpAndSettle();
 
@@ -172,6 +180,7 @@ void main() {
     await tester.ensureVisible(find.textContaining('기본 색으로 저장'));
     await tester.tap(find.textContaining('기본 색으로 저장'));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(inSheet(find.text('받기')));
     await tester.tap(inSheet(find.text('받기')));
     await tester.pumpAndSettle();
 
@@ -192,6 +201,7 @@ void main() {
 
     await tester.enterText(inSheet(find.byType(TextField)).first, '');
     await tester.pumpAndSettle();
+    await tester.ensureVisible(inSheet(find.text('받기')));
     await tester.tap(inSheet(find.text('받기')));
     await tester.pumpAndSettle();
     expect(queue.requests, isEmpty);
@@ -236,9 +246,13 @@ void main() {
     expect(find.byIcon(AppIcons.paste), findsNothing);
     await tester.tap(find.byIcon(AppIcons.close).first);
     await tester.pump();
+    await tester.tap(find.text('취소하기'));
+    await tester.pump();
     await tester.tap(find.byIcon(AppIcons.chevronDown));
     await tester.pumpAndSettle();
     await tester.tap(find.byIcon(AppIcons.close).last);
+    await tester.pump();
+    await tester.tap(find.text('취소하기'));
     await tester.pump();
     expect(queue.controls, ['cancel:a', 'cancel:b']);
   });

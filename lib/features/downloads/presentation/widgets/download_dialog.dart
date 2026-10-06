@@ -5,8 +5,9 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../library/presentation/bloc/library_cubit.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
-import '../../../covers/domain/entities/cover_key.dart';
+import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
+import '../../../covers/presentation/widgets/cover_picker.dart';
 import '../../domain/entities/download_options.dart';
 import '../../domain/entities/download_request.dart';
 import '../bloc/download_queue_cubit.dart';
@@ -23,12 +24,14 @@ Future<bool> showDownloadDialog(
   Quality quality = Quality.best,
   Duration? duration,
   String? thumbnailUrl,
+  required String url,
 }) async {
   final queue = context.read<DownloadQueueCubit>();
   final playlists = context.read<PlaylistsCubit>();
   final settings = context.read<DownloadSettingsCubit>();
   final library = context.read<LibraryCubit>();
   final colors = context.read<CoverColorCubit>();
+  final covers = context.read<CoverCubit>();
   final started = await showModalBottomSheet<bool>(
     context: context,
     backgroundColor: context.palette.surface,
@@ -46,6 +49,7 @@ Future<bool> showDownloadDialog(
         BlocProvider.value(value: settings),
         BlocProvider.value(value: library),
         BlocProvider.value(value: colors),
+        BlocProvider.value(value: covers),
       ],
       child: _DownloadSheet(
         title: title,
@@ -54,6 +58,7 @@ Future<bool> showDownloadDialog(
         quality: quality,
         duration: duration,
         thumbnailUrl: thumbnailUrl,
+        url: url,
       ),
     ),
   );
@@ -66,6 +71,7 @@ class _DownloadSheet extends StatefulWidget {
     required this.artist,
     required this.genre,
     required this.quality,
+    required this.url,
     this.duration,
     this.thumbnailUrl,
   });
@@ -76,6 +82,7 @@ class _DownloadSheet extends StatefulWidget {
   final Quality quality;
   final Duration? duration;
   final String? thumbnailUrl;
+  final String url;
 
   @override
   State<_DownloadSheet> createState() => _DownloadSheetState();
@@ -95,6 +102,21 @@ class _DownloadSheetState extends State<_DownloadSheet> {
   Color? _picked;
   var _pickedSet = false;
   var _saveAsGenreDefault = false;
+
+  // 커버: 유튜브 썸네일(웹 이미지)이 기본. 바꾸면 고른 이미지와 확대 · 위치를 따른다.
+  // 웹 이미지는 주소만 쓰고 내려받지 않는다.
+  late final CoverArt? _defaultCover = widget.thumbnailUrl == null
+      ? null
+      : CoverArt.web(widget.thumbnailUrl!);
+
+  Future<void> _changeCover() async {
+    final picked = await pickCoverArt(context);
+    if (picked != null && mounted) setState(() => _cover = picked);
+  }
+
+  late CoverArt? _cover = _defaultCover;
+
+  void _resetCover() => setState(() => _cover = _defaultCover);
 
   Color? _genreColor() {
     final genre = _genre.text.trim();
@@ -153,6 +175,8 @@ class _DownloadSheetState extends State<_DownloadSheet> {
         duration: widget.duration,
         color: color?.toARGB32(),
         thumbnailUrl: widget.thumbnailUrl,
+        cover: _cover,
+        url: widget.url,
       ),
     );
     if (ok && mounted) Navigator.of(context).pop(true);
@@ -181,6 +205,16 @@ class _DownloadSheetState extends State<_DownloadSheet> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(l10n.downloadDialogTitle, style: text.titleLarge),
+              const SizedBox(height: AppSpacing.md),
+              _CoverRow(
+                art: _cover,
+                label: l10n.downloadFieldCover,
+                changeLabel: l10n.downloadCoverChange,
+                resetLabel: l10n.downloadCoverDefault,
+                canReset: _cover != _defaultCover,
+                onChange: _changeCover,
+                onReset: _resetCover,
+              ),
               const SizedBox(height: AppSpacing.md),
               AppTextField(label: l10n.downloadFieldTitle, controller: _title),
               const SizedBox(height: AppSpacing.sm),
@@ -262,21 +296,102 @@ class _DownloadSheetState extends State<_DownloadSheet> {
                 onTap: _pickPlaylists,
               ),
               const SizedBox(height: AppSpacing.lg),
-              ListenableBuilder(
-                listenable: _title,
-                builder: (_, _) => SizedBox(
-                  width: double.infinity,
-                  child: PillButton(
-                    label: l10n.actionDownload,
-                    icon: AppIcons.download,
-                    onPressed: _title.text.trim().isEmpty ? null : _start,
+              Row(
+                children: [
+                  Expanded(
+                    child: PillButton(
+                      label: l10n.actionCancel,
+                      variant: PillVariant.tonal,
+                      onPressed: () => Navigator.of(context).pop(false),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    flex: 2,
+                    child: ListenableBuilder(
+                      listenable: _title,
+                      builder: (_, _) => PillButton(
+                        label: l10n.actionDownload,
+                        icon: AppIcons.download,
+                        onPressed: _title.text.trim().isEmpty ? null : _start,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+/// 팝업 맨 위의 커버: 작은 정사각형 + 바꾸기 · 기본으로. 상자 없이 한 줄로 둔다.
+class _CoverRow extends StatelessWidget {
+  const _CoverRow({
+    required this.art,
+    required this.label,
+    required this.changeLabel,
+    required this.resetLabel,
+    required this.canReset,
+    required this.onChange,
+    required this.onReset,
+  });
+
+  final CoverArt? art;
+  final String label;
+  final String changeLabel;
+  final String resetLabel;
+  final bool canReset;
+  final VoidCallback onChange;
+  final VoidCallback onReset;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return Row(
+      children: [
+        GestureDetector(
+          onTap: onChange,
+          child: ArtworkBox(
+            image: art == null ? null : imageOfCoverArt(art!),
+            size: 72,
+            radius: AppRadii.sm,
+          ),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: text.labelLarge),
+              const SizedBox(height: AppSpacing.xs),
+              Wrap(
+                spacing: AppSpacing.xs,
+                runSpacing: AppSpacing.xs,
+                children: [
+                  PillButton(
+                    label: changeLabel,
+                    icon: AppIcons.photoLibrary,
+                    compact: true,
+                    variant: PillVariant.tonal,
+                    onPressed: onChange,
+                  ),
+                  if (canReset)
+                    PillButton(
+                      label: resetLabel,
+                      icon: AppIcons.restart,
+                      compact: true,
+                      variant: PillVariant.tonal,
+                      onPressed: onReset,
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

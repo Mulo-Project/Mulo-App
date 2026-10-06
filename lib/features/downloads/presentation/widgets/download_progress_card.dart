@@ -3,6 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../../core/cache/cached_web_image.dart';
+import '../../../covers/presentation/bloc/cover_cubit.dart'
+    show imageOfCoverArt;
 import '../../../library/domain/entities/track.dart' show formatDuration;
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/download_item.dart';
@@ -59,15 +62,23 @@ class _DownloadProgressCardState extends State<DownloadProgressCard> {
             footer: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ProgressLine(value: item.progress, height: 4),
-                const SizedBox(height: AppSpacing.xxs),
+                if (item.status != DownloadStatus.failed) ...[
+                  ProgressLine(value: item.progress, height: 4),
+                  const SizedBox(height: AppSpacing.xxs),
+                ],
                 Text(
-                  '${l10n.statusDownloading} ${(item.progress * 100).round()}%',
-                  style: text.labelSmall?.copyWith(color: p.accent),
+                  _statusText(l10n, item),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: text.labelSmall?.copyWith(
+                    color: item.status == DownloadStatus.failed
+                        ? p.onSurfaceMuted
+                        : p.accent,
+                  ),
                 ),
               ],
             ),
-            trailing: _CancelButton(item: item),
+            trailing: _ItemActions(item: item),
           ),
           const _NowPlayingStrip(),
           Divider(height: 1, thickness: 1, color: p.outline),
@@ -118,7 +129,7 @@ class _DownloadProgressCardState extends State<DownloadProgressCard> {
                           subtitle: _subtitle(w),
                           tone: toneFor(w.id),
                           artwork: _thumbnail(w),
-                          trailing: _CancelButton(item: w),
+                          trailing: _ItemActions(item: w),
                           onTap: () => widget.onPlay(w),
                         ),
                     ],
@@ -130,6 +141,17 @@ class _DownloadProgressCardState extends State<DownloadProgressCard> {
     );
   }
 
+  static String _statusText(AppLocalizations l10n, DownloadItem item) =>
+      switch (item.status) {
+        DownloadStatus.failed =>
+          item.error.isEmpty
+              ? l10n.statusFailed
+              : '${l10n.statusFailed} · ${item.error}',
+        DownloadStatus.paused => l10n.statusPaused,
+        DownloadStatus.queued => l10n.statusQueued,
+        _ => '${l10n.statusDownloading} ${(item.progress * 100).round()}%',
+      };
+
   /// 아티스트 · 길이 (모르는 건 뺀다).
   static String _subtitle(DownloadItem item) => [
     if (item.artist.isNotEmpty) item.artist,
@@ -138,8 +160,33 @@ class _DownloadProgressCardState extends State<DownloadProgressCard> {
 
   /// 받는 곡의 썸네일. 없으면 곡 타일처럼 그라데이션 자리를 보여 준다.
   static ImageProvider? _thumbnail(DownloadItem item) {
+    if (item.cover case final art?) return imageOfCoverArt(art);
     final url = item.thumbnailUrl;
-    return url == null ? null : NetworkImage(url);
+    return url == null ? null : CachedWebImage(url);
+  }
+}
+
+/// 실패한 항목은 다시 받기, 그 밖에는 취소.
+class _ItemActions extends StatelessWidget {
+  const _ItemActions({required this.item});
+
+  final DownloadItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    if (item.status != DownloadStatus.failed) return _CancelButton(item: item);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        CircleIconButton(
+          icon: AppIcons.refresh,
+          tooltip: context.l10n.actionRetry,
+          size: 32,
+          onPressed: () => context.read<DownloadQueueCubit>().retry(item.id),
+        ),
+        _CancelButton(item: item),
+      ],
+    );
   }
 }
 
@@ -149,13 +196,53 @@ class _CancelButton extends StatelessWidget {
 
   final DownloadItem item;
 
+  Future<void> _cancel(BuildContext context) async {
+    final queue = context.read<DownloadQueueCubit>();
+    if (item.isActive) {
+      final ok = await showDialog<bool>(
+        context: context,
+        useRootNavigator: true,
+        builder: (_) => _CancelDialog(title: item.title),
+      );
+      if (ok != true) return;
+    }
+    await queue.cancel(item.id);
+  }
+
   @override
   Widget build(BuildContext context) => CircleIconButton(
     icon: AppIcons.close,
     tooltip: context.l10n.actionCancel,
     size: 32,
-    onPressed: () => context.read<DownloadQueueCubit>().cancel(item.id),
+    onPressed: () => _cancel(context),
   );
+}
+
+class _CancelDialog extends StatelessWidget {
+  const _CancelDialog({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return AppDialog(
+      title: l10n.downloadCancelTitle,
+      body: l10n.downloadCancelBody(title),
+      actions: [
+        PillButton(
+          label: l10n.downloadCancelKeep,
+          variant: PillVariant.tonal,
+          onPressed: () => Navigator.of(context).pop(false),
+        ),
+        PillButton(
+          label: l10n.downloadCancelConfirm,
+          icon: AppIcons.close,
+          onPressed: () => Navigator.of(context).pop(true),
+        ),
+      ],
+    );
+  }
 }
 
 /// 지금 재생 중인 곡을 작게 한 줄로. 재생 중인 곡이 없으면 숨긴다.

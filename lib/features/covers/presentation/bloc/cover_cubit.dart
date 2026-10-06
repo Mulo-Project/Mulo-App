@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/cache/cached_web_image.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../domain/entities/cover_art.dart';
 import '../../domain/usecases/cover_usecases.dart';
@@ -89,7 +90,7 @@ ImageProvider imageOfCoverArt(CoverArt art) {
 
 /// 확대 · 위치를 적용하기 전의 원본 이미지.
 ImageProvider sourceImageOfCoverArt(CoverArt art) =>
-    art.isWeb ? NetworkImage(art.url!) : FileImage(File(art.path!));
+    art.isWeb ? CachedWebImage(art.url!) : FileImage(File(art.path!));
 
 /// [key]의 커버 이미지. 없으면 null (기본 그라데이션 커버).
 ImageProvider? coverImageOf(BuildContext context, String key) {

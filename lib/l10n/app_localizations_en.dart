@@ -172,6 +172,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusFailed => 'Failed';
 
   @override
+  String get statusPaused => 'Paused';
+
+  @override
+  String get statusQueued => 'Queued';
+
+  @override
   String get statusDone => 'Done';
 
   @override
@@ -995,6 +1001,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get downloadDialogTitle => 'Download details';
+
+  @override
+  String get downloadFieldCover => 'Cover';
+
+  @override
+  String get downloadCoverChange => 'Change';
+
+  @override
+  String get downloadCoverDefault => 'Use default';
+
+  @override
+  String get downloadCancelTitle => 'Cancel download';
+
+  @override
+  String downloadCancelBody(String title) {
+    return 'Cancel downloading \"$title\"? What has been downloaded so far will be discarded.';
+  }
+
+  @override
+  String get downloadCancelKeep => 'Keep downloading';
+
+  @override
+  String get downloadCancelConfirm => 'Cancel download';
 
   @override
   String get downloadFieldTitle => 'Title';

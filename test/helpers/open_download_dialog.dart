@@ -6,8 +6,14 @@ import 'package:music_download_play_app/features/downloads/presentation/widgets/
 Future<void> openDownloadDialog(
   WidgetTester tester, {
   String title = 'Song',
+  String? thumbnailUrl,
 }) async {
   final context = tester.element(find.byType(Scaffold).first);
-  showDownloadDialog(context, title: title);
+  showDownloadDialog(
+    context,
+    title: title,
+    thumbnailUrl: thumbnailUrl,
+    url: 'https://youtu.be/abc',
+  );
   await tester.pumpAndSettle();
 }

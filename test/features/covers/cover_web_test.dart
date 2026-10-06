@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:flutter/painting.dart';
+import 'package:music_download_play_app/core/cache/cached_web_image.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/features/covers/presentation/bloc/cover_cubit.dart';
 import 'package:music_download_play_app/features/covers/presentation/bloc/cover_web_cubit.dart';
@@ -76,7 +77,7 @@ void main() {
     test('손대지 않은 그림은 원본 그대로, 옮긴 그림은 잘라 내는 이미지', () {
       expect(
         imageOfCoverArt(const CoverArt.web('https://x.test/a.jpg')),
-        isA<NetworkImage>(),
+        isA<CachedWebImage>(),
       );
       expect(
         imageOfCoverArt(
