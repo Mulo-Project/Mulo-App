@@ -35,7 +35,7 @@ Future<void> togglePreview(BuildContext context, MediaHit hit) async {
         content: Text(
           detail.isEmpty || failure == EngineFailure.unavailable
               ? message
-              : '$message\n${detail.length > 140 ? detail.substring(0, 140) : detail}',
+              : '$message\n${detail.length > 240 ? detail.substring(0, 240) : detail}',
         ),
       ),
     );

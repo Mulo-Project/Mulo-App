@@ -45,17 +45,34 @@ class YoutubeExplodeEngine implements DownloaderEngine {
   @override
   Future<AudioStream> resolveAudioStream(String url) async {
     final id = VideoId.parseVideoId(url);
+    Object? explodeError;
     if (id != null) {
       try {
         final stream = await _reader(id);
         if (stream != null) return stream;
-      } on Object {
+      } on Object catch (e) {
         // 이 라이브러리가 못 읽으면 안쪽 엔진으로 넘어간다.
+        explodeError = e is EngineException ? e.message : e;
       }
     }
-    return _inner.resolveAudioStream(url);
+    try {
+      return await _inner.resolveAudioStream(url);
+    } on EngineException catch (e) {
+      // 둘 다 못 읽었으면 두 까닭을 같이 알린다 (안내에 보여 원인을 알 수 있게).
+      if (explodeError == null) rethrow;
+      throw EngineException(
+        e.failure,
+        'youtube_explode: ${_oneLine(explodeError)} | ${_oneLine(e.message)}',
+      );
+    }
   }
 }
+
+String _oneLine(Object? o) => '$o'
+    .split('\n')
+    .map((l) => l.trim())
+    .where((l) => l.isNotEmpty)
+    .join(' / ');
 
 /// 안드로이드 · 기본 클라이언트 순으로 m4a(AAC) 오디오를 먼저 골라 주소를 읽는다.
 /// (macOS의 just_audio는 webm/opus를 못 푼다.)
