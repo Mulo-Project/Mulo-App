@@ -54,13 +54,13 @@ MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부�
 | 컴포넌트 | 파일 | 용도 |
 |---|---|---|
 | `AppBackground` | app_background.dart | 단색 배경 (앱 틀 · 플레이어) |
-| `GlassSurface` | glass.dart | 유리 면 기본형 (무색 또는 `tint` 색), 모양 · 탭 · 빛 |
+| `GlassSurface` | glass.dart | 유리 면 기본형 (무색 또는 `tint` 색), 모양 · 탭 · 빛. `blur: 0`이면 흐림 층(BackdropFilter)을 만들지 않는다 — 목록 줄마다 놓는 것은 0으로 (스크롤 끊김) |
 | `GlassCard` | glass.dart | 색 유리 강조 카드, `GlowTone` primary · secondary · tertiary |
 | `CoverCard` · `onGlow()` | cover_card.dart | 이미지 카드 (재생목록 · 플레이어 커버), 색 · 사진 위 글자색 |
 | `StatNumber` | stat_number.dart | 큰 숫자 (곡 수, 시간, 퍼센트), 고정폭 숫자 |
 | `AppLineChart` | line_chart.dart | 꺾은선 그래프 (accent 선 · 점, outline 눈금, 최댓값 글자). 외부 차트 패키지 없음 |
 | `PillButton` | buttons.dart | 알약 버튼: accent · primary(단색 + 빛), tonal(유리), outline |
-| `CircleIconButton` | buttons.dart | 원형 유리 버튼, `emphasized` = 강조 색 + 빛 (재생); `onLongPress`로 길게 누르기 |
+| `CircleIconButton` | buttons.dart | 원형 유리 버튼, `emphasized` = 강조 색 + 빛 (재생); `onLongPress`로 길게 누르기; 목록 줄마다 놓을 때는 `blur: 0` |
 | `PlainButton` | buttons.dart | 면 없는 작은 글자 · 아이콘 버튼 (보조 동작 · 한 줄 여러 개) |
 | `MarqueeText` | marquee_text.dart | 한 줄 제목. 칸보다 길 때만 잠깐 멈췄다가 옆으로 흐르고(끝은 흐리게), 들어가면 일반 글자. `scroll: false`면 `…`로 줄임. 플레이어 · 미니 플레이어 · 재생 중인 곡 줄에 쓴다 (목록 전체가 움직이지 않게 나머지 줄은 `…`) |
 | `ProgressRing` · `ProgressLine` | progress.dart | 원형 · 막대 진행 표시 (강조 색 + 빛) |
@@ -68,7 +68,7 @@ MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부�
 | `AppTopBar` | app_top_bar.dart | 상단 바. `large` = 탭 첫 화면(부제 + 큰 제목), 기본 = 원형 버튼 사이 가운데 제목 |
 | `AppBottomNav` | app_bottom_nav.dart | 하단 탭 바 (선택 = 강조 색 + 점). `highlighted` 항목(홈, 가운데)은 강조 색 원 |
 | `AppSearchField` | app_search_field.dart | 알약 입력칸 (돋보기 · 지우기 · 오른쪽 버튼). 글자는 세로 가운데 |
-| `ArtworkBox` · `toneFor()` | artwork_box.dart | 커버 자리 (없으면 그라데이션), 키별 고정 톤. `width`를 주면 직사각형, `color`를 주면 사용자가 고른 색(`glowFromColor`)으로 |
+| `ArtworkBox` · `toneFor()` | artwork_box.dart | 커버 자리 (없으면 그라데이션), 키별 고정 톤. `width`를 주면 직사각형, `color`를 주면 사용자가 고른 색(`glowFromColor`)으로. 이미지는 칸 크기의 2배(화면 배율 포함) 안으로 줄여 디코딩한다 (`ResizeImage`) |
 | `YoutubeMark` | youtube_mark.dart | 유튜브 표시 (직접 그린 빨간 원 + 흰 링 + 흰 재생 삼각형, YouTube Music 모양, 테마와 무관) |
 | `ColorPicker` | color_picker.dart | 커버 색 고르기 (자동 · 견본 12 · 색상 막대). 사용자가 고르는 색이라 견본은 테마 토큰이 아니라 고정 색 (토큰 규칙의 예외) |
 | `TrackTile` | track_tile.dart | 곡 한 줄 (커버 · 제목 · 부제 · 오른쪽 · 아래 줄). `onMenu(Offset)`: 길게 누르기 · 오른쪽 클릭 (눌린 좌표를 넘겨 팝업 메뉴를 그 자리에) |

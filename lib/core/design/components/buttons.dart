@@ -145,6 +145,7 @@ class CircleIconButton extends StatelessWidget {
     this.emphasized = false,
     this.size = AppSizes.circleButton,
     this.onLongPress,
+    this.blur = AppGlass.blur,
   });
 
   final IconData icon;
@@ -152,6 +153,9 @@ class CircleIconButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final bool emphasized;
   final double size;
+
+  /// 유리 뒤를 흐리는 정도. 목록 줄마다 놓는 버튼은 0으로 줘서 흐림 층을 없앤다 (스크롤이 가벼워진다).
+  final double blur;
 
   /// 길게 누르기. 주면 길게 눌러 툴팁을 띄우지 않는다 (마우스를 올리면 그대로 뜬다).
   final VoidCallback? onLongPress;
@@ -188,6 +192,7 @@ class CircleIconButton extends StatelessWidget {
           )
         : GlassSurface(
             shape: const CircleBorder(),
+            blur: blur,
             onTap: onPressed,
             child: glyph,
           );

@@ -317,6 +317,8 @@ class _HitTile extends StatelessWidget {
       trailing: CircleIconButton(
         icon: AppIcons.download,
         tooltip: l10n.actionDownload,
+        // 줄마다 흐림 층을 만들면 목록 스크롤이 끊긴다.
+        blur: 0,
         onPressed: () => _download(context),
       ),
       onTap: () => showMediaDetail(context, hit),
