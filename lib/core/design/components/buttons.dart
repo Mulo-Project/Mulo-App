@@ -237,6 +237,7 @@ class RowIconButton extends StatelessWidget {
     this.onPressed,
     this.accent = false,
     this.busy = false,
+    this.busyChild,
   });
 
   final IconData icon;
@@ -248,6 +249,9 @@ class RowIconButton extends StatelessWidget {
 
   /// 일하는 중: 아이콘 대신 돌아가는 표시를 보인다 (누를 수는 있다).
   final bool busy;
+
+  /// [busy]일 때 돌아가는 표시 대신 둘 위젯 (예: 남은 시간 원). 없으면 기본 표시.
+  final Widget? busyChild;
 
   @override
   Widget build(BuildContext context) {
@@ -262,7 +266,9 @@ class RowIconButton extends StatelessWidget {
           child: SizedBox.square(
             dimension: AppSizes.rowButton,
             child: busy
-                ? Center(child: _Spinner(size: 18, color: p.accent))
+                ? Center(
+                    child: busyChild ?? _Spinner(size: 18, color: p.accent),
+                  )
                 : Icon(
                     icon,
                     size: AppSizes.rowButton * .56,

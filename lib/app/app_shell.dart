@@ -10,6 +10,7 @@ import '../features/home/presentation/bloc/play_recorder_cubit.dart';
 import '../features/player/presentation/bloc/audio_output_cubit.dart';
 import '../features/player/presentation/bloc/now_playing_cubit.dart';
 import '../features/search/presentation/bloc/preview_cubit.dart';
+import '../features/search/presentation/widgets/preview_control.dart';
 import '../features/theme/presentation/bloc/theme_cubit.dart';
 import 'router.dart';
 import 'theme_preview_bar.dart';
@@ -62,14 +63,12 @@ class AppShell extends StatelessWidget {
                 children: [
                   if (context.select((ThemeCubit c) => c.state.previewing))
                     const ThemePreviewBar(),
+                  // 미리 듣기는 화면을 옮겨도 이어지고, 여기서 멈출 수 있다.
+                  const PreviewMiniBar(),
                   const _ShellMiniPlayer(),
                   AppBottomNav(
                     currentIndex: shell.currentIndex,
                     onSelected: (i) {
-                      // 다른 탭으로 가면 미리 듣기는 멈춘다.
-                      if (i != shell.currentIndex) {
-                        context.read<PreviewCubit>().stop();
-                      }
                       shell.goBranch(
                         i,
                         initialLocation: i == shell.currentIndex,

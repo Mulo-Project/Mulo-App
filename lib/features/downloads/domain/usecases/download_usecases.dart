@@ -1,5 +1,6 @@
 import '../../../../core/usecase/usecase.dart';
 import '../entities/download_item.dart';
+import '../entities/download_options.dart';
 import '../entities/download_request.dart';
 import '../repositories/download_queue_repository.dart';
 import '../repositories/download_settings_repository.dart';
@@ -58,6 +59,16 @@ class CancelDownload implements UseCase<void, String> {
 
   @override
   Future<void> call(String id) => _repo.cancel(id);
+}
+
+/// 설정에서 고를 수 있는 저장 형식.
+class GetSelectableFormats implements UseCase<List<AudioFormat>, NoParams> {
+  const GetSelectableFormats(this._repo);
+
+  final DownloadSettingsRepository _repo;
+
+  @override
+  Future<List<AudioFormat>> call(NoParams _) async => _repo.selectableFormats();
 }
 
 /// 기본 저장 위치 읽기.

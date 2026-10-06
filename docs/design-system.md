@@ -65,6 +65,7 @@ MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부�
 | `PlainButton` | buttons.dart | 면 없는 작은 글자 · 아이콘 버튼 (보조 동작 · 한 줄 여러 개) |
 | `MarqueeText` | marquee_text.dart | 한 줄 제목. 칸보다 길 때만 잠깐 멈췄다가 옆으로 흐르고(끝은 흐리게), 들어가면 일반 글자. `scroll: false`면 `…`로 줄임. 플레이어 · 미니 플레이어 · 재생 중인 곡 줄에 쓴다 (목록 전체가 움직이지 않게 나머지 줄은 `…`) |
 | `ProgressRing` · `ProgressLine` | progress.dart | 원형 · 막대 진행 표시 (강조 색 + 빛) |
+| `CountdownRing` | progress.dart | 버튼 안에 들어가는 작은 원형 진행 (가운데에 남은 초) |
 | `MiniPlayerBar` | mini_player_bar.dart | 유리 미니 플레이어 (가로 전체 · 모서리 직각 · 위쪽 선만, 재생 버튼만 원형, 다음 · 대기열은 배경 없는 작은 아이콘, 제목 아래에 작은 출력 기기 표시 `outputIcon`/`outputLabel`). `GlassSurface(rim: false)`로 가장자리 빛 테두리를 끈다 |
 | `AppTopBar` | app_top_bar.dart | 상단 바. `large` = 탭 첫 화면(부제 + 큰 제목), 기본 = 원형 버튼 사이 가운데 제목 |
 | `AppBottomNav` | app_bottom_nav.dart | 하단 탭 바 (선택 = 강조 색 + 점). `highlighted` 항목(홈, 가운데)은 강조 색 원 |

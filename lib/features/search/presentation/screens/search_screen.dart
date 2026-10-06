@@ -332,8 +332,12 @@ class _HitTile extends StatelessWidget {
     );
   }
 
-  void _download(BuildContext context) =>
-      showDownloadDialog(context, title: hit.title, artist: hit.uploader);
+  void _download(BuildContext context) => showDownloadDialog(
+    context,
+    title: hit.title,
+    artist: hit.uploader,
+    duration: hit.duration,
+  );
 
   /// 곡 옵션 메뉴: 길게 누르기 · 데스크톱 오른쪽 클릭.
   Future<void> _menu(BuildContext context, Offset position) async {

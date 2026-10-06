@@ -17,6 +17,7 @@ void registerDownloads(GetIt sl) {
     ..registerLazySingleton<DownloadSettingsRepository>(
       PrefsDownloadSettingsRepository.new,
     )
+    ..registerFactory(() => GetSelectableFormats(sl()))
     ..registerFactory(() => LoadSavePath(sl()))
     ..registerFactory(() => SaveSavePath(sl()))
     ..registerFactory(() => PickSaveFolder(sl()))

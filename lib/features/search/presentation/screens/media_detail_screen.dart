@@ -86,13 +86,6 @@ class _DetailViewState extends State<_DetailView> {
     _preview = context.read<PreviewCubit>();
   }
 
-  /// 화면을 벗어나면 미리 듣기는 멈춘다.
-  @override
-  void dispose() {
-    _preview.stop();
-    super.dispose();
-  }
-
   /// 앱 안에서 영상을 틀고 있는지 / 틀어 보려다 막혀서 유튜브로만 열 수 있는지.
   bool _playing = false;
   bool _embedBlocked = false;
@@ -299,6 +292,7 @@ class _DetailViewState extends State<_DetailView> {
                         context,
                         title: hit.title,
                         artist: hit.uploader,
+                        duration: hit.duration,
                       ),
                     ),
                   ],

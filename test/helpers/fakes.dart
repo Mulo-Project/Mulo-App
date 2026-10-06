@@ -11,6 +11,7 @@ import 'package:music_download_play_app/features/engine/di.dart';
 import 'package:music_download_play_app/features/engine/domain/entities/engine_status.dart';
 import 'package:music_download_play_app/features/engine/domain/repositories/engine_manager.dart';
 import 'package:music_download_play_app/features/downloads/domain/entities/download_item.dart';
+import 'package:music_download_play_app/features/downloads/domain/entities/download_options.dart';
 import 'package:music_download_play_app/features/downloads/domain/entities/download_request.dart';
 import 'package:music_download_play_app/features/downloads/domain/repositories/download_queue_repository.dart';
 import 'package:music_download_play_app/features/downloads/domain/repositories/download_settings_repository.dart';
@@ -173,6 +174,12 @@ class MemoryDownloadSettings implements DownloadSettingsRepository {
 
   String path;
   String? picked;
+
+  @override
+  List<AudioFormat> selectableFormats() => formats;
+
+  /// 설정에서 고를 수 있는 저장 형식 (기본은 전부).
+  List<AudioFormat> formats = AudioFormat.values;
 
   @override
   Future<String> loadSavePath() async => path;

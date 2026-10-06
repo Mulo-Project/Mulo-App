@@ -287,7 +287,7 @@ void main() {
     }
 
     Future<void> previewFromMenu(WidgetTester tester) async {
-      await tester.longPress(find.text('Song'));
+      await tester.longPress(find.text('Song').first);
       await tester.pumpAndSettle();
       await tester.tap(find.text('Preview'));
       await tester.pumpAndSettle();
@@ -299,9 +299,9 @@ void main() {
 
       await previewFromMenu(tester);
       expect(player.playing, isTrue);
-      expect(find.byTooltip('Stop preview'), findsOneWidget);
+      expect(find.byTooltip('Stop preview'), findsWidgets);
 
-      await tester.longPress(find.text('Song'));
+      await tester.longPress(find.text('Song').first);
       await tester.pumpAndSettle();
       expect(find.text('Stop preview'), findsOneWidget);
       await tester.tap(find.text('Stop preview'));
@@ -310,7 +310,7 @@ void main() {
       expect(find.byTooltip('Stop preview'), findsNothing);
 
       await previewFromMenu(tester);
-      await tester.tap(find.byTooltip('Stop preview'));
+      await tester.tap(find.byKey(const ValueKey('preview-row-button')));
       await tester.pumpAndSettle();
       expect(player.playing, isFalse);
     });
@@ -336,12 +336,13 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('preview-row-button')));
       await tester.pumpAndSettle();
       expect(player.playing, isTrue);
-      expect(find.byTooltip('Stop preview'), findsOneWidget);
+      expect(find.byKey(const ValueKey('preview-mini-bar')), findsOneWidget);
 
       await tester.tap(find.byKey(const ValueKey('preview-row-button')));
       await tester.pumpAndSettle();
       expect(player.playing, isFalse);
       expect(find.byTooltip('Preview'), findsOneWidget);
+      expect(find.byKey(const ValueKey('preview-mini-bar')), findsNothing);
     });
 
     testWidgets('듣는 동안 줄과 상세 화면에 재생 진행도가 보인다', (tester) async {
@@ -353,18 +354,48 @@ void main() {
       player.progress(const Duration(seconds: 30), const Duration(minutes: 2));
       await tester.pump();
       expect(find.byKey(const ValueKey('preview-progress')), findsOneWidget);
-      expect(find.byType(ProgressLine), findsOneWidget);
+      // 줄 안 막대 + 아래쪽 미리 듣기 줄의 막대.
+      expect(find.byType(ProgressLine), findsNWidgets(2));
 
-      await tester.tap(find.text('Song'));
+      await tester.tap(find.text('Song').first);
       await tester.pumpAndSettle();
       player.progress(const Duration(seconds: 30), const Duration(minutes: 2));
       await tester.pump();
-      expect(find.text('0:30 / 2:00'), findsOneWidget);
+      expect(find.byKey(const ValueKey('preview-position')), findsOneWidget);
+      expect(find.text('0:30'), findsWidgets);
+      expect(find.text('2:00'), findsWidgets);
     });
 
-    testWidgets('상세 화면 버튼으로 미리 듣고, 화면을 나가면 멈춘다', (tester) async {
+    testWidgets('준비하는 동안 남은 시간 원이 보이고, 소리가 나면 사라진다', (tester) async {
+      await openSearch(tester);
+      expect(find.byKey(const ValueKey('preview-loading-ring')), findsNothing);
+      final state = tester
+          .element(find.byType(AppBottomNav))
+          .read<PreviewCubit>();
+      state.emit(
+        PreviewState(
+          hitId: 'x',
+          status: PreviewStatus.loading,
+          title: 'T',
+          loadStartedAt: DateTime.now(),
+          expectedLoad: const Duration(seconds: 5),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 50));
+      await tester.pump(const Duration(milliseconds: 50));
+      expect(
+        find.byKey(const ValueKey('preview-loading-ring')),
+        findsOneWidget,
+      );
+      expect(find.text('5'), findsOneWidget);
+      state.emit(const PreviewState());
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('preview-loading-ring')), findsNothing);
+    });
+
+    testWidgets('상세 화면 버튼으로 미리 듣고, 화면을 나가도 이어진다', (tester) async {
       final player = await openSearch(tester);
-      await tester.tap(find.text('Song'));
+      await tester.tap(find.text('Song').first);
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Preview'));
@@ -374,18 +405,29 @@ void main() {
 
       await tester.tap(find.byTooltip('Back'));
       await tester.pumpAndSettle();
+      expect(player.playing, isTrue);
+      expect(find.byKey(const ValueKey('preview-mini-bar')), findsOneWidget);
+
+      // 다른 화면의 미리 듣기 줄에서 멈춘다.
+      await tester.tap(
+        find.descendant(
+          of: find.byKey(const ValueKey('preview-mini-bar')),
+          matching: find.byType(RowIconButton),
+        ),
+      );
+      await tester.pumpAndSettle();
       expect(player.playing, isFalse);
-      expect(find.byTooltip('Stop preview'), findsNothing);
     });
 
-    testWidgets('다른 탭으로 가면 멈춘다', (tester) async {
+    testWidgets('다른 탭으로 가도 이어진다', (tester) async {
       final player = await openSearch(tester);
       await previewFromMenu(tester);
       expect(player.playing, isTrue);
 
       await tester.tap(find.byKey(const ValueKey('nav-Home')));
       await tester.pumpAndSettle();
-      expect(player.playing, isFalse);
+      expect(player.playing, isTrue);
+      expect(find.byKey(const ValueKey('preview-mini-bar')), findsOneWidget);
     });
 
     testWidgets('메인 재생과 섞이지 않는다: 미리 들으면 메인은 멈추고, 메인을 틀면 미리 듣기가 멈춘다', (

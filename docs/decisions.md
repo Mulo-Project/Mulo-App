@@ -413,3 +413,9 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - yt-dlp 쪽에도 `android_vr` 클라이언트 재시도를 남겼고, Android 네이티브 호출은 옵션을 값과 짝으로 넘긴다.
 - JS 실행기(QuickJS)를 넣는 방법은 실행 파일 빌드 · 번들이 커서 보류했다. 이 라이브러리가 막히면 그때 한다.
 - **오디오 형식은 OS별 정책 한 곳**(`audio_format_policy.dart`)에서 정한다. 지금은 Android 기준으로 webm/opus를 먼저 고른다 (DASH m4a는 Android 플레이어가 못 여는 일이 있었다). iOS · macOS는 webm/opus를 못 풀어 m4a가 필요하므로 iOS를 만들 때 이 정책의 Apple 분기를 확인한다. 개발은 Android만 하고 iOS는 이후.
+
+## D-063 · 2026-10-06 · 미리 듣기는 앱 전체에서 이어지고, 저장 형식 설정과 무관하다
+- `PreviewCubit`(앱 전체 하나)이 소유자다. 상세 화면을 나가거나 하단 탭을 옮겨도 멈추지 않는다 (D-061의 "멈추는 때"에서 이 두 가지를 뺐다). 멈추는 때: 같은 곡 버튼, 앱 셸의 **미리 듣기 줄**(`PreviewMiniBar`, 미니 플레이어 위, 제목 · 진행 · 멈춤) 버튼, 영상 · 채널을 다른 앱으로 열 때, 앱 안 영상을 틀 때, 메인 재생이 시작될 때.
+- 소리가 나기까지는 원형 표시(`CountdownRing`)에 남은 초를 보인다. 걸리는 시간은 이번까지 걸린 시간을 이어서 어림한다 (처음 6초, 2 ~ 30초). 어림이 지나도 시작하지 않으면 마지막 1초에서 기다린다.
+- 미리 듣기 형식은 설정과 무관하게 `audio_format_policy.dart`(OS별)로만 고른다. 설정의 저장 형식은 추출 · 저장에만 쓴다.
+- 설정의 저장 형식은 Android에서 m4a를 숨긴다 (`selectableSaveFormats()`, 같은 정책 파일). 다운로드 대기열 타일은 곡 길이를 이어서 보인다 (`DownloadRequest.duration` → `DownloadItem.duration`). 검색 결과 타일은 길이를 보이지 않는다.

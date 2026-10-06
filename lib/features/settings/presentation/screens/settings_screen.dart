@@ -8,7 +8,9 @@ import '../../../../core/config/app_config.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../../core/usecase/usecase.dart';
 import '../../../downloads/domain/entities/download_options.dart';
+import '../../../downloads/domain/usecases/download_usecases.dart';
 import '../../../downloads/presentation/bloc/download_settings_cubit.dart';
 import '../../../engine/presentation/bloc/engine_cubit.dart';
 import '../../../library/presentation/widgets/loaded_folders_tile.dart';
@@ -31,10 +33,27 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   Quality _quality = Quality.best;
-  AudioFormat _format = AudioFormat.m4a;
+  AudioFormat _format = AudioFormat.opus;
+
+  /// 이 기기에서 고를 수 있는 저장 형식 (OS별 정책, 불러오기 전엔 비어 있다).
+  List<AudioFormat> _formats = const [];
   bool _hideNotification = false;
   bool _followMood = false;
   late final EngineCubit _engine = sl<EngineCubit>()..load();
+
+  @override
+  void initState() {
+    super.initState();
+    sl<GetSelectableFormats>()(const NoParams()).then((formats) {
+      if (!mounted) return;
+      setState(() {
+        _formats = formats;
+        if (!formats.contains(_format) && formats.isNotEmpty) {
+          _format = formats.first;
+        }
+      });
+    });
+  }
 
   @override
   void dispose() {
@@ -99,16 +118,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         onChanged: (q) => setState(() => _quality = q),
                       ),
                     ),
-                    SettingRow(
-                      title: l10n.settingsFormat,
-                      below: SegmentedPills<AudioFormat>(
-                        expand: true,
-                        values: AudioFormat.values,
-                        selected: _format,
-                        labelOf: (f) => f.name,
-                        onChanged: (f) => setState(() => _format = f),
+                    if (_formats.isNotEmpty)
+                      SettingRow(
+                        title: l10n.settingsFormat,
+                        below: SegmentedPills<AudioFormat>(
+                          expand: true,
+                          values: _formats,
+                          selected: _format,
+                          labelOf: (f) => f.name,
+                          onChanged: (f) => setState(() => _format = f),
+                        ),
                       ),
-                    ),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.lg),

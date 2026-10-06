@@ -17,7 +17,17 @@ class PreviewState extends Equatable {
     this.status = PreviewStatus.idle,
     this.progress,
     this.error,
+    this.title = '',
+    this.loadStartedAt,
+    this.expectedLoad = Duration.zero,
   });
+
+  /// 미리 듣는 곡 제목 (다른 화면의 미리 듣기 줄에 보여 준다).
+  final String title;
+
+  /// 준비 중일 때 시작한 시각과 걸릴 것으로 보는 시간 (남은 시간 표시용).
+  final DateTime? loadStartedAt;
+  final Duration expectedLoad;
 
   /// 미리 듣는 중(또는 준비 중)인 검색 결과의 id. 아무것도 안 듣고 있으면 null.
   final String? hitId;
@@ -40,7 +50,15 @@ class PreviewState extends Equatable {
   bool isActive(String id) => hitId == id && status != PreviewStatus.idle;
 
   @override
-  List<Object?> get props => [hitId, status, progress, error];
+  List<Object?> get props => [
+    hitId,
+    status,
+    progress,
+    error,
+    title,
+    loadStartedAt,
+    expectedLoad,
+  ];
 }
 
 /// 검색 결과 미리 듣기: 다운로드 없이 오디오 스트림 주소를 받아 바로 재생한다.
@@ -75,12 +93,22 @@ class PreviewCubit extends Cubit<PreviewState> {
 
   void _onProgress(PreviewProgress p) {
     if (isClosed || state.status != PreviewStatus.playing) return;
-    emit(PreviewState(hitId: state.hitId, status: state.status, progress: p));
+    emit(
+      PreviewState(
+        hitId: state.hitId,
+        status: state.status,
+        progress: p,
+        title: state.title,
+      ),
+    );
   }
 
   /// 이만큼 걸려도 안 되면 "준비 중"에 멈춰 있지 않고 실패로 돌린다.
   static const _resolveTimeout = Duration(seconds: 60);
   static const _playTimeout = Duration(seconds: 30);
+
+  /// 소리가 나기까지 걸린 시간을 이어서 어림한 값 (처음엔 기본값).
+  Duration _loadEstimate = const Duration(seconds: 6);
 
   /// 마지막으로 시작하지 못했을 때의 자세한 까닭 (안내에 덧붙여 보여 준다).
   String lastFailureDetail = '';
@@ -98,7 +126,16 @@ class PreviewCubit extends Cubit<PreviewState> {
     final generation = ++_generation;
     // 앞에 듣던 곡은 새 곡 주소를 알아내는 동안에도 바로 멈춘다.
     if (state.status != PreviewStatus.idle) unawaited(_stop(const NoParams()));
-    emit(PreviewState(hitId: hit.id, status: PreviewStatus.loading));
+    final startedAt = DateTime.now();
+    emit(
+      PreviewState(
+        hitId: hit.id,
+        status: PreviewStatus.loading,
+        title: hit.title,
+        loadStartedAt: startedAt,
+        expectedLoad: _loadEstimate,
+      ),
+    );
     try {
       final stream = await _resolve(hit.url).timeout(_resolveTimeout);
       if (generation != _generation || isClosed) return null;
@@ -109,7 +146,20 @@ class PreviewCubit extends Cubit<PreviewState> {
         if (state.status == PreviewStatus.idle) await _stop(const NoParams());
         return null;
       }
-      emit(PreviewState(hitId: hit.id, status: PreviewStatus.playing));
+      // 다음 곡의 "남은 시간"을 어림하려고 이번에 걸린 시간을 반영한다.
+      final took = DateTime.now().difference(startedAt);
+      _loadEstimate = Duration(
+        milliseconds: ((_loadEstimate.inMilliseconds + took.inMilliseconds) / 2)
+            .round()
+            .clamp(2000, 30000),
+      );
+      emit(
+        PreviewState(
+          hitId: hit.id,
+          status: PreviewStatus.playing,
+          title: hit.title,
+        ),
+      );
       return null;
     } on EngineException catch (e) {
       if (generation != _generation || isClosed) return null;
