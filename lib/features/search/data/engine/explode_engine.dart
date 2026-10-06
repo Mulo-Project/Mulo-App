@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 import '../../domain/entities/audio_stream.dart';
@@ -74,8 +76,7 @@ String _oneLine(Object? o) => '$o'
     .where((l) => l.isNotEmpty)
     .join(' / ');
 
-/// 안드로이드 · 기본 클라이언트 순으로 m4a(AAC) 오디오를 먼저 골라 주소를 읽는다.
-/// (macOS의 just_audio는 webm/opus를 못 푼다.)
+/// 안드로이드용 클라이언트로 오디오 형식 하나를 골라 주소를 읽는다.
 Future<AudioStream?> _readWithExplode(String videoId) async {
   final yt = YoutubeExplode();
   try {
@@ -85,8 +86,13 @@ Future<AudioStream?> _readWithExplode(String videoId) async {
     );
     final audio = manifest.audioOnly;
     if (audio.isEmpty) return null;
-    final m4a = audio.where((s) => s.container == StreamContainer.mp4);
-    final best = (m4a.isNotEmpty ? m4a : audio).toList()
+    // Apple(macOS · iOS)의 just_audio는 webm/opus를 못 풀어 m4a(AAC)를, 그 밖에는 webm/opus를
+    // 먼저 고른다. (Android에서 DASH m4a(`ftypdash`)를 플레이어가 못 여는 일이 있었다.)
+    final preferred = (Platform.isMacOS || Platform.isIOS)
+        ? StreamContainer.mp4
+        : StreamContainer.webM;
+    final same = audio.where((s) => s.container == preferred);
+    final best = (same.isNotEmpty ? same : audio).toList()
       ..sort((a, b) => b.bitrate.compareTo(a.bitrate));
     return AudioStream(
       url: best.first.url.toString(),
