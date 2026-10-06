@@ -340,6 +340,7 @@ class _HitTile extends StatelessWidget {
     title: hit.title,
     artist: hit.uploader,
     duration: hit.duration,
+    thumbnailUrl: hit.thumbnailUrl,
   );
 
   /// 곡 옵션 메뉴: 길게 누르기 · 데스크톱 오른쪽 클릭.

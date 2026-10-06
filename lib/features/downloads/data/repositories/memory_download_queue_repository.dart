@@ -25,6 +25,7 @@ class MemoryDownloadQueueRepository implements DownloadQueueRepository {
         artist: request.artist,
         genre: request.genre,
         color: request.color,
+        thumbnailUrl: request.thumbnailUrl,
         playlistIds: request.playlistIds,
         status: DownloadStatus.queued,
         duration: request.duration,
