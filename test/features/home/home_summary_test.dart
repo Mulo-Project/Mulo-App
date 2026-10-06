@@ -23,7 +23,11 @@ Track _t(
   addedAt: DateTime(2026, 9, day),
 );
 
-PlayRecord _p(String id, DateTime at) => PlayRecord(trackId: id, playedAt: at);
+PlayRecord _p(String id, DateTime at, [Duration? listened]) => PlayRecord(
+  trackId: id,
+  playedAt: at,
+  listened: listened ?? const Duration(minutes: 3),
+);
 
 void main() {
   final now = DateTime(2026, 10, 1, 12);
@@ -37,9 +41,10 @@ void main() {
   HomeSummary build(List<PlayRecord> plays, [List<Track>? library]) =>
       buildHomeSummary(tracks: library ?? tracks, plays: plays, now: now);
 
-  test('오늘 들은 시간은 오늘 0시 이후 재생만 더하고, 기록이 없으면 곡 길이로 어림한다', () {
+  test('오늘 들은 시간은 오늘 0시 이후 재생에서 실제로 들은 시간만 더한다 (곡 길이가 아니라)', () {
     final s = build([
-      _p('a', DateTime(2026, 10, 1, 9)), // 곡 길이 3분으로 어림
+      // 곡은 3분이지만 20초만 들음
+      _p('a', DateTime(2026, 10, 1, 9), const Duration(seconds: 20)),
       PlayRecord(
         trackId: 'b',
         playedAt: DateTime(2026, 10, 1, 10),
@@ -47,7 +52,7 @@ void main() {
       ),
       _p('c', DateTime(2026, 9, 30, 23, 59)), // 어제
     ]);
-    expect(s.todayListened, const Duration(minutes: 4));
+    expect(s.todayListened, const Duration(seconds: 80));
     expect(s.todayPlays, 2);
   });
 

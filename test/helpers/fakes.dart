@@ -338,8 +338,20 @@ class MemoryPlayHistory implements PlayHistoryRepository {
       [...plays]..sort((a, b) => b.playedAt.compareTo(a.playedAt));
 
   @override
-  Future<void> recordPlay(PlayRecord record) async {
+  Future<int> recordPlay(PlayRecord record) async {
     plays.add(record);
+    _changes.add(_sorted);
+    return plays.length - 1;
+  }
+
+  @override
+  Future<void> updateListened(int id, Duration listened) async {
+    final p = plays[id];
+    plays[id] = PlayRecord(
+      trackId: p.trackId,
+      playedAt: p.playedAt,
+      listened: listened,
+    );
     _changes.add(_sorted);
   }
 

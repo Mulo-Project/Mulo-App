@@ -16,8 +16,9 @@ void registerHome(GetIt sl) {
     )
     ..registerLazySingleton<JoinDateRepository>(PrefsJoinDateRepository.new)
     ..registerFactory(() => RecordPlay(sl()))
+    ..registerFactory(() => UpdatePlayListened(sl()))
     ..registerFactory(() => WatchHomeSummary(sl(), sl()))
     ..registerFactory(() => GetJoinDate(sl()))
     ..registerFactory(() => HomeBloc(sl(), sl()))
-    ..registerFactory(() => PlayRecorderCubit(sl()));
+    ..registerFactory(() => PlayRecorderCubit(sl(), sl()));
 }

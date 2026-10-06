@@ -92,6 +92,7 @@ void main() {
             PlayRecord(
               trackId: TestData.tracks[(i * 5) % 7].id,
               playedAt: now.subtract(Duration(hours: i * 7)),
+              listened: const Duration(minutes: 3),
             ),
         ];
         await setUpTestDependencies(

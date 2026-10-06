@@ -14,7 +14,7 @@ import 'router.dart';
 import 'theme_preview_bar.dart';
 
 /// 탭 화면 공통 틀: 배경 · 탭 내용 · 가로 전체 유리 미니 플레이어 · 단색 하단 탭.
-/// 재생 중인 곡이 바뀌면 재생 기록을 남긴다.
+/// 재생 상태를 따라 재생 기록(곡 · 실제 재생 시간)을 남긴다.
 class AppShell extends StatelessWidget {
   const AppShell({super.key, required this.shell});
 
@@ -28,10 +28,12 @@ class AppShell extends StatelessWidget {
     // 내용이 유리 미니 플레이어 · 탭 바 뒤로 흘러가도록 extendBody.
     // 화면은 MediaQuery.paddingOf(context).bottom 만큼 아래 여백을 둔다.
     return BlocListener<NowPlayingCubit, NowPlayingState>(
-      listenWhen: (a, b) =>
-          b.isPlaying && b.track != null && a.track?.id != b.track?.id,
       listener: (context, s) =>
-          context.read<PlayRecorderCubit>().trackStarted(s.track!.id),
+          context.read<PlayRecorderCubit>().playbackChanged(
+            trackId: s.track?.id,
+            position: s.position,
+            isPlaying: s.isPlaying,
+          ),
       child: BlocListener<NowPlayingCubit, NowPlayingState>(
         // 곡이 바뀌거나 재생을 시작 · 멈출 때 출력 기기를 다시 확인한다.
         listenWhen: (a, b) =>

@@ -7,14 +7,31 @@ import '../entities/home_summary.dart';
 import '../repositories/join_date_repository.dart';
 import '../repositories/play_history_repository.dart';
 
-/// 곡 재생을 기록한다 (상세 기능: 재생 기록 저장).
-class RecordPlay implements UseCase<void, PlayRecord> {
+/// 곡 재생을 기록한다 (상세 기능: 재생 기록 저장). 기록의 id를 돌려준다.
+class RecordPlay implements UseCase<int, PlayRecord> {
   const RecordPlay(this._repo);
 
   final PlayHistoryRepository _repo;
 
   @override
-  Future<void> call(PlayRecord record) => _repo.recordPlay(record);
+  Future<int> call(PlayRecord record) => _repo.recordPlay(record);
+}
+
+class PlayListened {
+  const PlayListened(this.id, this.listened);
+
+  final int id;
+  final Duration listened;
+}
+
+/// 재생 기록의 들은 시간을 갱신한다.
+class UpdatePlayListened implements UseCase<void, PlayListened> {
+  const UpdatePlayListened(this._repo);
+
+  final PlayHistoryRepository _repo;
+
+  @override
+  Future<void> call(PlayListened p) => _repo.updateListened(p.id, p.listened);
 }
 
 class HomeSummaryParams {
@@ -95,10 +112,6 @@ HomeSummary buildHomeSummary({
       if (byId.containsKey(pl.trackId)) pl,
   ];
 
-  /// 들은 시간: 기록된 시간이 없으면 곡 길이로 어림한다.
-  Duration heard(PlayRecord pl) =>
-      pl.listened > Duration.zero ? pl.listened : byId[pl.trackId]!.duration;
-
   final today = _dayOf(now);
 
   // 곡별 재생 횟수 (많이 들은 곡)
@@ -143,7 +156,7 @@ HomeSummary buildHomeSummary({
   for (final pl in known) {
     final d = _dayOf(pl.playedAt);
     dayPlays[d] = (dayPlays[d] ?? 0) + 1;
-    dayTime[d] = (dayTime[d] ?? Duration.zero) + heard(pl);
+    dayTime[d] = (dayTime[d] ?? Duration.zero) + pl.listened;
   }
   final days = [
     for (final d in dayPlays.keys.toList()..sort())
@@ -153,7 +166,7 @@ HomeSummary buildHomeSummary({
   final stats = ListeningStats(
     plays: known.length,
     uniqueTracks: allCounts.length,
-    listened: known.fold(Duration.zero, (sum, pl) => sum + heard(pl)),
+    listened: known.fold(Duration.zero, (sum, pl) => sum + pl.listened),
     daysListened: days.length,
     topArtists: [for (final (a, c, t) in topArtists) ArtistPlays(a, c, t)],
     topGenres: [for (final (g, c, t) in topGenres) GenrePlays(g, c, t)],
@@ -236,7 +249,7 @@ HomeSummary buildHomeSummary({
   ];
 
   return HomeSummary(
-    todayListened: todays.fold(Duration.zero, (sum, pl) => sum + heard(pl)),
+    todayListened: todays.fold(Duration.zero, (sum, pl) => sum + pl.listened),
     todayPlays: todays.length,
     recent: recent,
     days: days,
