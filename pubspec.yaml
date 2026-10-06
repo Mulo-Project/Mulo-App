@@ -79,6 +79,9 @@ dev_dependencies:
 flutter:
   generate: true
 
+  # Android 빌드 에디션: --flavor를 안 주면 full(로컬 엔진 포함). lite는 서버 모드만.
+  default-flavor: full
+
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.

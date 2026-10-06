@@ -542,6 +542,12 @@ abstract class AppLocalizations {
   /// **'연결 안 됨'**
   String get settingsDisconnected;
 
+  /// No description provided for @settingsServerConfigured.
+  ///
+  /// In ko, this message translates to:
+  /// **'서버 주소 설정됨'**
+  String get settingsServerConfigured;
+
   /// No description provided for @settingsMode.
   ///
   /// In ko, this message translates to:
@@ -1549,6 +1555,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'웹'**
   String get sourceWeb;
+
+  /// No description provided for @videoCategory.
+  ///
+  /// In ko, this message translates to:
+  /// **'{name, select, FilmAnimation{영화/애니메이션} Autos{자동차} Music{음악} Pets{동물} Sports{스포츠} Travel{여행} Gaming{게임} People{인물/블로그} Comedy{코미디} Entertainment{엔터테인먼트} News{뉴스/정치} Howto{노하우/스타일} Education{교육} Science{과학/기술} Nonprofits{비영리/사회운동} other{{name}}}'**
+  String videoCategory(String name);
 
   /// No description provided for @downloadsExpand.
   ///

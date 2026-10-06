@@ -241,6 +241,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsDisconnected => 'Disconnected';
 
   @override
+  String get settingsServerConfigured => 'Server address set';
+
+  @override
   String get settingsMode => 'Download mode';
 
   @override
@@ -798,6 +801,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sourceWeb => 'Web';
+
+  @override
+  String videoCategory(String name) {
+    String _temp0 = intl.Intl.selectLogic(name, {
+      'FilmAnimation': 'Film & Animation',
+      'Autos': 'Autos & Vehicles',
+      'Music': 'Music',
+      'Pets': 'Pets & Animals',
+      'Sports': 'Sports',
+      'Travel': 'Travel & Events',
+      'Gaming': 'Gaming',
+      'People': 'People & Blogs',
+      'Comedy': 'Comedy',
+      'Entertainment': 'Entertainment',
+      'News': 'News & Politics',
+      'Howto': 'Howto & Style',
+      'Education': 'Education',
+      'Science': 'Science & Technology',
+      'Nonprofits': 'Nonprofits & Activism',
+      'other': '$name',
+    });
+    return '$_temp0';
+  }
 
   @override
   String get downloadsExpand => 'Show queue';

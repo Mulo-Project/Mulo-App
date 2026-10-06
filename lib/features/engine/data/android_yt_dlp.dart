@@ -1,0 +1,73 @@
+import 'dart:io';
+
+import 'package:flutter/services.dart';
+
+/// Android 로컬 엔진: 네이티브(`music_app/ytdlp`)가 APK에 들어 있는 yt-dlp를 실행한다.
+/// lite 빌드에는 실제 구현이 없어 [isAvailable]이 false다.
+class AndroidYtDlp {
+  AndroidYtDlp({MethodChannel? channel})
+    : _channel = channel ?? const MethodChannel('music_app/ytdlp');
+
+  final MethodChannel _channel;
+
+  /// 이 빌드에 로컬 엔진이 들어 있는지 (full).
+  Future<bool> isAvailable() async {
+    if (!Platform.isAndroid) return false;
+    try {
+      return await _channel.invokeMethod<bool>('available') ?? false;
+    } on PlatformException {
+      return false;
+    } on MissingPluginException {
+      return false;
+    }
+  }
+
+  /// yt-dlp 버전. 실행할 수 없으면 null.
+  Future<String?> version() async {
+    try {
+      final r = await _channel.invokeMapMethod<String, Object?>('version');
+      final v = r?['version'] as String?;
+      return v == null || v.isEmpty ? null : v;
+    } on PlatformException {
+      return null;
+    } on MissingPluginException {
+      return null;
+    }
+  }
+
+  /// yt-dlp를 최신 안정 버전으로 올리고 새 버전을 돌려준다. 실패하면 예외.
+  Future<String?> update() async {
+    final r = await _channel.invokeMapMethod<String, Object?>('update');
+    return r?['version'] as String?;
+  }
+
+  /// 데스크톱 `Process.run`과 같은 모양으로 실행한다 (`LocalEngine`이 같이 쓴다).
+  /// 마지막 인자는 주소(또는 `ytsearch…:검색어`), 앞은 옵션이다.
+  /// 실행할 수 없는 빌드면 [ProcessException]을 던진다.
+  Future<({int exitCode, String stdout, String stderr})> run(
+    String executable,
+    List<String> args,
+  ) async {
+    if (args.length == 1 && args.first == '--version') {
+      final v = await version();
+      if (v == null) throw ProcessException(executable, args);
+      return (exitCode: 0, stdout: v, stderr: '');
+    }
+    if (args.isEmpty) throw ProcessException(executable, args);
+    try {
+      final r = await _channel.invokeMapMethod<String, Object?>('run', {
+        'url': args.last,
+        'options': args.sublist(0, args.length - 1),
+      });
+      return (
+        exitCode: (r?['exitCode'] as num?)?.toInt() ?? 1,
+        stdout: r?['stdout'] as String? ?? '',
+        stderr: r?['stderr'] as String? ?? '',
+      );
+    } on MissingPluginException {
+      throw ProcessException(executable, args);
+    } on PlatformException catch (e) {
+      return (exitCode: 1, stdout: '', stderr: e.message ?? '');
+    }
+  }
+}

@@ -5,6 +5,7 @@ import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/search_source.dart';
 import '../../domain/repositories/downloader_engine.dart';
+import 'json_fields.dart';
 
 /// 프로세스 실행 하나 (테스트에서 바꿔 끼운다).
 typedef RunProcess =
@@ -151,6 +152,7 @@ class LocalEngine implements DownloaderEngine {
       uploader: (j['uploader'] ?? j['channel'] ?? '') as String,
       duration: seconds is num ? Duration(seconds: seconds.round()) : null,
       thumbnailUrl: thumb,
+      categories: parseCategories(j['categories']),
     );
   }
 }

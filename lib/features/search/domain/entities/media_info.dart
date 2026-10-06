@@ -9,6 +9,7 @@ class MediaHit extends Equatable {
     this.uploader = '',
     this.duration,
     this.thumbnailUrl,
+    this.categories = const [],
     this.downloaded = false,
   });
 
@@ -24,6 +25,10 @@ class MediaHit extends Equatable {
   final Duration? duration;
   final String? thumbnailUrl;
 
+  /// 유튜브가 영상에 붙인 분류 (yt-dlp의 `categories`, 예: `Music`).
+  /// 곡 하나를 자세히 읽었을 때만 있고, 검색 목록에는 보통 비어 있다.
+  final List<String> categories;
+
   /// 이미 받은 곡인지 (서버가 알려 준 경우).
   final bool downloaded;
 
@@ -35,6 +40,7 @@ class MediaHit extends Equatable {
     uploader,
     duration,
     thumbnailUrl,
+    categories,
     downloaded,
   ];
 }
