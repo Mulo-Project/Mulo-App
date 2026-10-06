@@ -463,11 +463,18 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     );
   }
 
-  /// 지금 재생 중인 곡만 남기고 대기열을 비운다.
+  /// 대기열을 모두 비운다. 재생 중인 곡도 멈추고 지워진다 (미니 플레이어는 사라진다).
   void clearQueue() {
-    final current = state.track;
-    if (current == null || state.queue.length == 1) return;
-    emit(state.copyWith(queue: [current], index: 0));
+    if (state.queue.isEmpty) return;
+    _original = null;
+    emit(
+      state.copyWith(
+        queue: const [],
+        index: 0,
+        isPlaying: false,
+        position: Duration.zero,
+      ),
+    );
   }
 
   void jumpTo(int index) {
