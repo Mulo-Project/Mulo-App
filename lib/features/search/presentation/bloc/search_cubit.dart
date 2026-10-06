@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -19,8 +17,7 @@ class SearchState extends Equatable {
     this.loadingMore = false,
     this.playlistTitle,
     this.failure,
-    this.category,
-    this.probing = false,
+    this.keyword = false,
     this.sort = SearchSort.relevance,
   });
 
@@ -35,50 +32,43 @@ class SearchState extends Equatable {
   final String? playlistTitle;
   final EngineFailure? failure;
 
-  /// 고른 분류 필터. null이면 전체.
-  final String? category;
-
-  /// 곡마다 분류 · 올린 날을 읽는 중인지 (읽은 곡부터 필터 · 정렬에 반영된다).
-  final bool probing;
+  /// 키워드 검색 결과인지 (URL로 불러온 곡 · 재생목록이 아니라). 최신순은 검색을
+  /// 다시 해야 해서 키워드 검색일 때만 쓸 수 있다.
+  final bool keyword;
 
   /// 고른 정렬 순서.
   final SearchSort sort;
 
-  /// 분류 필터와 정렬을 적용한 목록.
+  /// 정렬을 적용한 목록. 최신순은 엔진이 날짜 순으로 찾아 준 그대로다.
   List<MediaHit> get visibleItems {
-    final shown = category == null
-        ? [...items]
-        : [
-            for (final h in items)
-              if (h.categories.contains(category)) h,
-          ];
-    // 값을 모르는 곡은 어느 쪽 정렬이든 맨 뒤로 보낸다.
-    int byValue<T extends Comparable<Object>>(
-      T? x,
-      T? y, {
-      bool descending = false,
-    }) {
+    final shown = [...items];
+    // 길이를 모르는 곡은 어느 쪽 정렬이든 맨 뒤로 보낸다.
+    int byDuration(MediaHit a, MediaHit b, int sign) {
+      final x = a.duration, y = b.duration;
       if (x == null || y == null) {
         return x == null && y == null ? 0 : (x == null ? 1 : -1);
       }
-      return descending ? y.compareTo(x) : x.compareTo(y);
+      return sign * x.compareTo(y);
+    }
+
+    // 조회수를 모르는 곡은 맨 뒤로 보낸다.
+    int byViews(MediaHit a, MediaHit b) {
+      final x = a.viewCount, y = b.viewCount;
+      if (x == null || y == null) {
+        return x == null && y == null ? 0 : (x == null ? 1 : -1);
+      }
+      return y.compareTo(x);
     }
 
     switch (sort) {
-      case SearchSort.relevance:
+      case SearchSort.relevance || SearchSort.newest:
         break;
       case SearchSort.popular:
-        shown.sort(
-          (a, b) => byValue(a.viewCount, b.viewCount, descending: true),
-        );
-      case SearchSort.newest:
-        shown.sort(
-          (a, b) => byValue(a.uploadedAt, b.uploadedAt, descending: true),
-        );
+        shown.sort(byViews);
       case SearchSort.shortest:
-        shown.sort((a, b) => byValue(a.duration, b.duration));
+        shown.sort((a, b) => byDuration(a, b, 1));
       case SearchSort.longest:
-        shown.sort((a, b) => byValue(a.duration, b.duration, descending: true));
+        shown.sort((a, b) => byDuration(a, b, -1));
       case SearchSort.title:
         shown.sort(
           (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()),
@@ -91,8 +81,6 @@ class SearchState extends Equatable {
     List<MediaHit>? items,
     bool? hasNext,
     bool? loadingMore,
-    String? Function()? category,
-    bool? probing,
     SearchSort? sort,
   }) => SearchState(
     status: status,
@@ -101,8 +89,7 @@ class SearchState extends Equatable {
     loadingMore: loadingMore ?? this.loadingMore,
     playlistTitle: playlistTitle,
     failure: failure,
-    category: category == null ? this.category : category(),
-    probing: probing ?? this.probing,
+    keyword: keyword,
     sort: sort ?? this.sort,
   );
 
@@ -114,14 +101,16 @@ class SearchState extends Equatable {
     loadingMore,
     playlistTitle,
     failure,
-    category,
-    probing,
+    keyword,
     sort,
   ];
 }
 
 /// 검색 탭: 키워드 검색(쪽 이어 보기)과 URL 곡 정보 (상세 기능 #1 #2).
 /// URL이면 정보를, 아니면 검색을 한다. 늦게 온 옛 요청의 답은 버린다.
+///
+/// 곡마다 상세 정보를 뒤에서 읽지 않는다 (느려진다). 목록에 있는 정보만으로
+/// 정렬하고, 상세는 곡을 열 때 읽는다.
 class SearchCubit extends Cubit<SearchState> {
   SearchCubit(this._search, this._info) : super(const SearchState());
 
@@ -133,14 +122,9 @@ class SearchCubit extends Cubit<SearchState> {
   SearchSource _source = SearchSource.youtube;
   int _page = 0;
 
-  /// 분류를 알아보려고 이미 불러 본 곡 주소 (실패해도 다시 하지 않는다).
-  final _probed = <String>{};
-
-  /// 분류를 한 번에 알아보는 곡 수.
-  static const _probeParallel = 8;
-
-  /// 이미 자세히 읽은 곡 (곡 주소 → 정보). 같은 곡이 다시 나오면 바로 쓴다.
-  final _infoCache = <String, MediaHit>{};
+  /// 지금 결과를 최신순(날짜 순 검색)으로 찾아 왔는지. 고른 정렬이 최신순에서
+  /// 다른 정렬로 바뀌어도 찾아 온 순서는 그대로라, 따로 기억한다.
+  bool _newestFetched = false;
 
   /// 입력이 곡 주소인지 (http · https 주소).
   static bool isUrl(String text) {
@@ -156,7 +140,7 @@ class SearchCubit extends Cubit<SearchState> {
     _query = query;
     _source = source;
     _page = 0;
-    _probed.clear();
+    _newestFetched = false;
     if (query.isEmpty) {
       emit(const SearchState());
       return;
@@ -177,23 +161,30 @@ class SearchCubit extends Cubit<SearchState> {
             playlistTitle: title,
           ),
         });
-        if (info is PlaylistInfo) unawaited(_probeCategories(id));
       } else {
-        final page = await _search(SearchParams(query, source));
-        if (id != _request) return;
-        emit(
-          SearchState(
-            status: SearchStatus.loaded,
-            items: page.items,
-            hasNext: page.hasNext,
-          ),
-        );
-        unawaited(_probeCategories(id));
+        await _searchKeyword(id, SearchSort.relevance);
       }
     } on EngineException catch (e) {
       if (id != _request) return;
       emit(SearchState(status: SearchStatus.failed, failure: e.failure));
     }
+  }
+
+  /// 키워드로 첫 쪽을 찾아 담는다. [sort]를 그대로 고른 정렬로 둔다.
+  Future<void> _searchKeyword(int id, SearchSort sort) async {
+    final newest = sort == SearchSort.newest;
+    final page = await _search(SearchParams(_query, _source, newest: newest));
+    if (id != _request) return;
+    _newestFetched = newest;
+    emit(
+      SearchState(
+        status: SearchStatus.loaded,
+        items: page.items,
+        hasNext: page.hasNext,
+        keyword: true,
+        sort: sort,
+      ),
+    );
   }
 
   /// 결과 아래에서 다음 쪽을 이어 붙인다 (키워드 검색만).
@@ -204,7 +195,7 @@ class SearchCubit extends Cubit<SearchState> {
     emit(s.copyWith(hasNext: true, loadingMore: true));
     try {
       final page = await _search(
-        SearchParams(_query, _source, page: _page + 1),
+        SearchParams(_query, _source, page: _page + 1, newest: _newestFetched),
       );
       if (id != _request) return;
       _page++;
@@ -216,7 +207,6 @@ class SearchCubit extends Cubit<SearchState> {
           loadingMore: false,
         ),
       );
-      unawaited(_probeCategories(id));
     } on EngineException {
       if (id != _request) return;
       // 이어 보기 실패는 이미 나온 결과를 두고 다시 누를 수 있게 한다.
@@ -224,61 +214,29 @@ class SearchCubit extends Cubit<SearchState> {
     }
   }
 
-  /// 정렬 순서를 고른다.
-  void selectSort(SearchSort sort) => emit(state.copyWith(sort: sort));
-
-  /// 분류 필터를 고른다 (null이면 전체).
-  void selectCategory(String? category) =>
-      emit(state.copyWith(category: () => category));
-
-  /// 목록 항목은 분류 · 올린 날이 비어 있어서, 곡마다 정보를 읽어 채운다.
-  /// 몇 곡씩 뒤에서 읽고, 읽은 곡부터 분류 필터 · 최신순에 반영된다.
-  Future<void> _probeCategories(int request) async {
-    emit(
-      state.copyWith(
-        probing: true,
-        items: [
-          for (final h in state.items)
-            _infoCache.containsKey(h.url) && h.categories.isEmpty
-                ? h.filledFrom(_infoCache[h.url]!)
-                : h,
-        ],
-      ),
-    );
-    Future<void> worker() async {
-      while (request == _request && !isClosed) {
-        final next = state.items
-            .where(
-              (h) =>
-                  h.categories.isEmpty &&
-                  !_probed.contains(h.url) &&
-                  !_infoCache.containsKey(h.url),
-            )
-            .firstOrNull;
-        if (next == null) return;
-        _probed.add(next.url);
-        try {
-          final info = await _info(next.url);
-          if (request != _request || isClosed) return;
-          if (info is! VideoInfo) continue;
-          _infoCache[next.url] = info.hit;
-          emit(
-            state.copyWith(
-              items: [
-                for (final h in state.items)
-                  h.url == next.url ? h.filledFrom(info.hit) : h,
-              ],
-            ),
-          );
-        } on EngineException {
-          // 분류를 못 읽은 곡은 그냥 필터에 안 걸린다.
-        }
-      }
+  /// 정렬 순서를 고른다. 최신순을 고르거나, 최신순으로 찾은 결과에서 관련도순으로
+  /// 돌아올 때는 찾는 순서가 달라지므로 첫 쪽부터 다시 찾는다.
+  /// 그 밖에는 받아 온 결과 안에서만 바꾼다.
+  Future<void> selectSort(SearchSort sort) async {
+    final s = state;
+    if (s.sort == sort) return;
+    final reload =
+        s.keyword &&
+        s.status == SearchStatus.loaded &&
+        ((sort == SearchSort.newest && !_newestFetched) ||
+            (sort == SearchSort.relevance && _newestFetched));
+    if (!reload) {
+      emit(s.copyWith(sort: sort));
+      return;
     }
-
-    await Future.wait([for (var i = 0; i < _probeParallel; i++) worker()]);
-    if (request == _request && !isClosed) {
-      emit(state.copyWith(probing: false));
+    final id = ++_request;
+    _page = 0;
+    emit(SearchState(status: SearchStatus.loading, keyword: true, sort: sort));
+    try {
+      await _searchKeyword(id, sort);
+    } on EngineException catch (e) {
+      if (id != _request) return;
+      emit(SearchState(status: SearchStatus.failed, failure: e.failure));
     }
   }
 }

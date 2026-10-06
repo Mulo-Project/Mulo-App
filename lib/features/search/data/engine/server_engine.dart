@@ -50,12 +50,14 @@ class ServerEngine implements DownloaderEngine {
     SearchSource source = SearchSource.youtube,
     int page = 0,
     int size = 20,
+    bool newest = false,
   }) async {
     final json = await _getJson('/search', {
       'q': query,
       'page': '$page',
       'size': '$size',
       if (source == SearchSource.web) 'source': 'web',
+      if (newest) 'sort': 'date',
     });
     final items = (json['items'] as List? ?? const [])
         .whereType<Map<String, dynamic>>()

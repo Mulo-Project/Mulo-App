@@ -3,7 +3,7 @@ import '../../domain/entities/search_source.dart';
 import '../../domain/repositories/downloader_engine.dart';
 
 /// 곡 · 채널 정보를 잠깐 기억해 같은 주소를 다시 읽지 않는 엔진 덮개.
-/// 검색이 곡마다 읽어 둔 정보를 상세 보기가 바로 쓰고, 같은 곡을 다시 열어도 빠르다.
+/// 같은 곡을 다시 열어도 빠르다.
 /// 읽는 중인 요청도 함께 쓰므로 같은 주소를 동시에 두 번 부르지 않는다.
 /// 실패는 기억하지 않는다. 검색은 항상 새로 한다.
 class CachedDownloaderEngine implements DownloaderEngine {
@@ -28,7 +28,14 @@ class CachedDownloaderEngine implements DownloaderEngine {
     SearchSource source = SearchSource.youtube,
     int page = 0,
     int size = 20,
-  }) => _inner.search(query, source: source, page: page, size: size);
+    bool newest = false,
+  }) => _inner.search(
+    query,
+    source: source,
+    page: page,
+    size: size,
+    newest: newest,
+  );
 
   @override
   Future<MediaInfo> fetchInfo(String url) =>

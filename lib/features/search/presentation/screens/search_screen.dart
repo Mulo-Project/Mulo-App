@@ -15,7 +15,6 @@ import '../../domain/entities/search_source.dart';
 import '../bloc/search_cubit.dart';
 import 'media_detail_screen.dart';
 import '../widgets/search_source_menu.dart';
-import '../widgets/video_category.dart';
 
 /// 검색 · URL 입력 (상세 기능: URL로 곡 정보 불러오기 #1, 키워드 검색 #2,
 /// 재생목록 URL 불러오기 #3, 공유 메뉴로 받기 #4, 음질 선택 #6, 중복 다운로드 방지 #9).
@@ -205,21 +204,9 @@ class _Results extends StatelessWidget {
         if (state.items.length > 1)
           Padding(
             padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
-            child: const Wrap(
-              spacing: AppSpacing.xs,
-              runSpacing: AppSpacing.xs,
-              children: [_CategoryFilter(), _SortMenu()],
-            ),
-          ),
-        if (state.probing &&
-            (state.category != null || state.sort == SearchSort.newest))
-          Padding(
-            padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
-            child: Text(
-              l10n.searchCategoryChecking,
-              style: text.bodySmall?.copyWith(
-                color: context.palette.onSurfaceMuted,
-              ),
+            child: const Align(
+              alignment: Alignment.centerLeft,
+              child: _SortMenu(),
             ),
           ),
         for (final hit in state.visibleItems) _HitTile(hit: hit),
@@ -232,29 +219,6 @@ class _Results extends StatelessWidget {
   }
 }
 
-/// 결과 제목 줄 아래의 분류 필터: 누르면 유튜브 분류 목록이 펼쳐진다.
-/// 목록은 고정이라 바로 보이고, 곡의 분류는 뒤에서 읽어 읽은 곡부터 걸린다.
-class _CategoryFilter extends StatelessWidget {
-  const _CategoryFilter();
-
-  /// 드롭다운은 null을 못 고르므로 "전체"는 빈 문자열로 둔다.
-  static const _all = '';
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final cubit = context.read<SearchCubit>();
-    final category = context.watch<SearchCubit>().state.category;
-    return AppDropdown<String>(
-      values: const [_all, ...youtubeCategories],
-      selected: category ?? _all,
-      labelOf: (c) => c == _all ? l10n.searchFilterAll : categoryLabel(l10n, c),
-      tooltip: l10n.searchFilterTooltip,
-      onChanged: (c) => cubit.selectCategory(c == _all ? null : c),
-    );
-  }
-}
-
 /// 정렬 메뉴 (받아 온 결과 안에서 순서만 바꾼다).
 class _SortMenu extends StatelessWidget {
   const _SortMenu();
@@ -263,9 +227,14 @@ class _SortMenu extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final cubit = context.read<SearchCubit>();
+    final state = context.watch<SearchCubit>().state;
     return AppDropdown<SearchSort>(
-      values: SearchSort.values,
-      selected: context.watch<SearchCubit>().state.sort,
+      // 최신순은 검색을 날짜 순으로 다시 하는 것이라 키워드 검색일 때만 있다.
+      values: [
+        for (final s in SearchSort.values)
+          if (s != SearchSort.newest || state.keyword) s,
+      ],
+      selected: state.sort,
       labelOf: (s) => switch (s) {
         SearchSort.relevance => l10n.searchSortRelevance,
         SearchSort.popular => l10n.searchSortPopular,

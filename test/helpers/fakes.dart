@@ -711,6 +711,9 @@ class FakeDownloaderEngine implements DownloaderEngine {
   final ChannelInfo? channel;
   final Object? error;
   final searches = <(String, SearchSource, int)>[];
+
+  /// 검색마다 최신순으로 찾았는지.
+  final newestFlags = <bool>[];
   final infos = <String>[];
   final channels = <String>[];
 
@@ -720,8 +723,10 @@ class FakeDownloaderEngine implements DownloaderEngine {
     SearchSource source = SearchSource.youtube,
     int page = 0,
     int size = 20,
+    bool newest = false,
   }) async {
     searches.add((query, source, page));
+    newestFlags.add(newest);
     if (error != null) throw error!;
     return page < pages.length ? pages[page] : pages.last;
   }

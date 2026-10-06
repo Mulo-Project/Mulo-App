@@ -803,9 +803,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sourceWeb => 'Web';
 
   @override
-  String get searchFilterAll => 'All';
-
-  @override
   String get searchHitMenuDetail => 'View details';
 
   @override
@@ -861,9 +858,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get searchFilterTooltip => 'Filter by category';
-
-  @override
   String get searchSortTooltip => 'Sort';
 
   @override
@@ -883,10 +877,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchSortTitle => 'Title';
-
-  @override
-  String get searchCategoryChecking =>
-      'Checking categories and dates. Songs update as they are read.';
 
   @override
   String videoCategory(String name) {
