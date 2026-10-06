@@ -81,7 +81,13 @@ Future<AudioStream?> _readWithExplode(String videoId) async {
   try {
     final manifest = await yt.videos.streamsClient.getManifest(
       videoId,
-      ytClients: [YoutubeApiClient.androidVr, YoutubeApiClient.androidSdkless],
+      // visionOS를 먼저: 이 주소는 전체 구간을 받을 수 있다. 안드로이드 클라이언트 주소는
+      // PO 토큰이 없으면 앞 일부만 주고 나머지는 403이라 재생이 끊긴다 (D-064).
+      ytClients: [
+        _visionOs,
+        YoutubeApiClient.androidVr,
+        YoutubeApiClient.androidSdkless,
+      ],
     );
     final audio = manifest.audioOnly;
     if (audio.isEmpty) return null;
@@ -100,9 +106,11 @@ Future<AudioStream?> _readWithExplode(String videoId) async {
         AudioStream(
           url: s.url.toString(),
           headers: {
-            'user-agent': s.url.queryParameters['c'] == 'ANDROID'
-                ? _androidUserAgent
-                : _userAgent,
+            'user-agent': switch (s.url.queryParameters['c']) {
+              'ANDROID' => _androidUserAgent,
+              'VISIONOS' => _visionOsUserAgent,
+              _ => _userAgent,
+            },
           },
           fallbacks: rest,
         );
@@ -113,6 +121,28 @@ Future<AudioStream?> _readWithExplode(String videoId) async {
     yt.close();
   }
 }
+
+const _visionOsUserAgent =
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 15_7_3) AppleWebKit/605.1.15 '
+    '(KHTML, like Gecko) Version/26.0 Safari/605.1.15';
+
+/// yt-dlp의 visionos 클라이언트와 같은 설정 (JS 실행기 · PO 토큰 없이 전체 구간 주소를 준다).
+const _visionOs = YoutubeApiClient({
+  'context': {
+    'client': {
+      'clientName': 'VISIONOS',
+      'clientVersion': '1.02',
+      'deviceMake': 'Apple',
+      'deviceModel': 'RealityDevice17,1',
+      'userAgent': _visionOsUserAgent,
+      'osName': 'visionOS',
+      'osVersion': '26.5.23O471',
+      'hl': 'en',
+      'timeZone': 'UTC',
+      'utcOffsetMinutes': 0,
+    },
+  },
+}, 'https://www.youtube.com/youtubei/v1/player?prettyPrint=false');
 
 const _androidUserAgent =
     'com.google.android.youtube/20.10.38 (Linux; U; Android 11) gzip';

@@ -161,12 +161,8 @@ Future<String> _probe(AudioStream stream) async {
   try {
     final req = await client.getUrl(uri);
     stream.headers.forEach(req.headers.set);
-    if (q['c'] == 'ANDROID') {
-      req.headers.set(
-        'user-agent',
-        'com.google.android.youtube/20.10.38 (Linux; U; Android 11) gzip',
-      );
-    }
+    final agent = _agentFor(uri);
+    if (agent != null) req.headers.set('user-agent', agent);
     req.headers.set('range', 'bytes=0-1023');
     final resp = await req.close().timeout(const Duration(seconds: 10));
     final bytes = <int>[];
@@ -185,6 +181,16 @@ Future<String> _probe(AudioStream stream) async {
   }
 }
 
+/// 주소를 만든 클라이언트(`c=`)와 같은 user-agent. 모르는 클라이언트면 null (기존 헤더 그대로).
+String? _agentFor(Uri url) => switch (url.queryParameters['c']) {
+  'ANDROID' =>
+    'com.google.android.youtube/20.10.38 (Linux; U; Android 11) gzip',
+  'VISIONOS' =>
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 15_7_3) AppleWebKit/605.1.15 '
+        '(KHTML, like Gecko) Version/26.0 Safari/605.1.15',
+  _ => null,
+};
+
 /// 주소를 앱의 HTTP(`dart:io`)로 받아 플레이어에 넘기는 소스. 구간 요청(Range)을 그대로 전달한다.
 class _HttpRangeSource extends StreamAudioSource {
   _HttpRangeSource(this._url, this._headers);
@@ -193,8 +199,6 @@ class _HttpRangeSource extends StreamAudioSource {
   final Map<String, String> _headers;
 
   static const _chunk = 10379935;
-  static const _androidUserAgent =
-      'com.google.android.youtube/20.10.38 (Linux; U; Android 11) gzip';
 
   @override
   Future<StreamAudioResponse> request([int? start, int? end]) async {
@@ -208,9 +212,8 @@ class _HttpRangeSource extends StreamAudioSource {
         ? from + _chunk - 1
         : (end - 1 < from + _chunk - 1 ? end - 1 : from + _chunk - 1);
     req.headers.set('range', 'bytes=$from-$last');
-    if (_url.queryParameters['c'] == 'ANDROID') {
-      req.headers.set('user-agent', _androidUserAgent);
-    }
+    final agent = _agentFor(_url);
+    if (agent != null) req.headers.set('user-agent', agent);
     final resp = await req.close();
     if (resp.statusCode >= 400) {
       client.close(force: true);

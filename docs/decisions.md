@@ -419,3 +419,8 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - 소리가 나기까지는 원형 표시(`CountdownRing`)에 남은 초를 보인다. 걸리는 시간은 이번까지 걸린 시간을 이어서 어림한다 (처음 6초, 2 ~ 30초). 어림이 지나도 시작하지 않으면 마지막 1초에서 기다린다.
 - 미리 듣기 형식은 설정과 무관하게 `audio_format_policy.dart`(OS별)로만 고른다. 설정의 저장 형식은 추출 · 저장에만 쓴다.
 - 설정의 저장 형식은 Android에서 m4a를 숨긴다 (`selectableSaveFormats()`, 같은 정책 파일). 다운로드 대기열 타일은 곡 길이를 이어서 보인다 (`DownloadRequest.duration` → `DownloadItem.duration`). 검색 결과 타일은 길이를 보이지 않는다.
+
+## D-064 · 2026-10-06 · 미리 듣기 주소는 visionOS 클라이언트로 먼저 읽는다
+- `c=ANDROID` 주소는 PO 토큰이 없으면 첫 수백 KB만 주고 그 뒤 구간은 403이다 (이 PC에서 재현: `bytes=0-262143`만 206, 그 밖에는 403. youtube_explode 자체 다운로드도 멈춘다). 기기 로그의 403이 이것이다.
+- yt-dlp 기본 클라이언트인 visionOS(JS 실행기 · PO 토큰 불필요)를 `YoutubeApiClient`로 정의해 가장 먼저 쓴다. 같은 곡에서 중간 구간 · 끝 없는 구간 요청이 모두 206인 것을 확인했다. 안 되면 androidVr → androidSdkless 순서로 넘어간다.
+- 주소를 만든 클라이언트(`c=`)별 user-agent로 요청한다. 앱 중계는 약 10MB씩 구간을 정해 받는다.
