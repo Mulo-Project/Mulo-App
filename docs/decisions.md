@@ -391,6 +391,13 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - `PlayHistoryRepository.recordPlay`가 기록 id를 돌려주고 `updateListened(id, listened)`를 더했다 (유스케이스 `UpdatePlayListened`). 스키마를 8로 올려, 들은 시간이 0이던 옛 기록은 **그때의 곡 길이로 한 번 채웠다** (옛 통계 숫자는 그대로 두되 이제부터는 실제 시간). 곡이 지워졌으면 0.
 - 한 곡 반복 · 한 곡짜리 전체 반복은 곡이 안 바뀌어 같은 기록에 계속 쌓이고 재생 횟수는 늘지 않는다 (기존 동작 유지). 시크바를 끄는 동안 흐른 소리는 더하지 않는다.
 
+## D-060 · 2026-10-06 · 상세 화면의 앱 안 영상 재생 (Android 임베드)
+- Android에서는 상세 화면 썸네일의 재생 버튼을 누르면 그 자리에서 유튜브 IFrame 임베드(`webview_flutter`)가 재생된다. 영상 id가 유튜브 id 형식일 때만 HTML에 넣는다. 페이지가 `Player` 채널로 `ready` · `error:<번호>`를 알린다.
+- 임베드 금지(오류 101 · 150 · 153)나 그 밖의 오류, 15초 안에 준비 신호가 없으면 앱 안 재생을 접고 "앱 안에서 재생할 수 없어요" 안내를 보이며, 이후 재생 버튼도 유튜브로 연다. 유튜브가 아닌 곳의 곡과 Windows · 기타 플랫폼은 처음부터 유튜브로 연다 (데스크톱은 `webview_flutter`가 없다).
+- 아래 "유튜브에서 보기" 버튼은 앱 안 재생과 상관없이 늘 유튜브로 연다. 임베드 안의 링크가 다른 사이트로 가지 않게 유튜브 · 구글 도메인 밖 이동은 막는다. 자동 재생을 위해 `webview_flutter_android`를 직접 의존성으로 넣어 `setMediaPlaybackRequiresUserGesture(false)`를 쓴다 (이미 `webview_flutter`가 가져오던 패키지).
+- 앱 안 영상은 UI에서 곡 재생(just_audio)을 멈추지 않는다. 임베드 전체 화면 버튼은 WebView 기본 설정에서 동작하지 않을 수 있다 (필요하면 후속 작업).
+- 검색 결과 타일에서는 곡 길이를 뺐다 (상세 화면 · 보관함 타일은 그대로).
+
 ## D-061 · 2026-10-06 · 검색 결과 미리 듣기 (다운로드 없이 스트림 재생)
 - 검색 결과(상세 화면의 "미리 듣기" 버튼, 검색 줄 길게 누르기 메뉴의 "미리 듣기")를 받지 않고 바로 들어 볼 수 있다. 로컬 엔진(`LocalEngine`)이 `yt-dlp -f bestaudio[ext=m4a]/bestaudio/best --no-playlist --dump-single-json`으로 오디오 스트림 주소(`url` · `http_headers`)만 읽고(`DownloaderEngine.resolveAudioStream`, 엔티티 `AudioStream`), 미리 듣기 전용 플레이어가 그 주소를 재생한다. m4a(AAC)를 먼저 고르는 까닭은 macOS(just_audio 자체 구현)가 webm/opus를 못 풀기 때문이다. 스트림 주소는 곡 정보와 같이 `CachedDownloaderEngine`이 15분 기억한다.
 - **메인 재생과 섞지 않는다.** 미리 듣기는 `PreviewPlayer`(도메인 인터페이스) → `JustAudioPreviewPlayer`(별도 `AudioPlayer`, 처음 쓸 때 만든다)로 대기열 · 미니 플레이어 · 재생 기록 · audio_service와 무관하다. 소리가 나기 시작하면 메인 재생은 일시정지하고(대기열은 그대로), 메인 재생이 시작되면 미리 듣기가 멈춘다 (`AppShell`의 `NowPlayingCubit` 리스너).

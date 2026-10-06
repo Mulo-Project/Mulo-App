@@ -866,6 +866,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mediaDetailCollaborators => 'Collaborators';
 
   @override
+  String get mediaDetailPlayInApp => 'Play in app';
+
+  @override
+  String get mediaDetailEmbedBlocked =>
+      'This video can\'t be played in the app. Use the button below to open it on YouTube.';
+
+  @override
   String get mediaDetailLess => 'Show less';
 
   @override
