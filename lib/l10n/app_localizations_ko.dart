@@ -980,6 +980,29 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadDialogTitle => '받기 정보';
 
   @override
+  String get downloadFieldCover => '커버';
+
+  @override
+  String get downloadCoverChange => '바꾸기';
+
+  @override
+  String get downloadCoverDefault => '기본으로';
+
+  @override
+  String get downloadCancelTitle => '받기 취소';
+
+  @override
+  String downloadCancelBody(String title) {
+    return '\"$title\" 받기를 취소할까요? 지금까지 받은 부분은 사라져요.';
+  }
+
+  @override
+  String get downloadCancelKeep => '계속 받기';
+
+  @override
+  String get downloadCancelConfirm => '취소하기';
+
+  @override
   String get downloadFieldTitle => '제목';
 
   @override

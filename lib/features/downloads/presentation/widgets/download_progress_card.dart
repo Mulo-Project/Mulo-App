@@ -3,6 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../../core/cache/cached_web_image.dart';
+import '../../../covers/presentation/bloc/cover_cubit.dart'
+    show imageOfCoverArt;
 import '../../../library/domain/entities/track.dart' show formatDuration;
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/download_item.dart';
@@ -138,24 +141,65 @@ class _DownloadProgressCardState extends State<DownloadProgressCard> {
 
   /// 받는 곡의 썸네일. 없으면 곡 타일처럼 그라데이션 자리를 보여 준다.
   static ImageProvider? _thumbnail(DownloadItem item) {
+    if (item.cover case final art?) return imageOfCoverArt(art);
     final url = item.thumbnailUrl;
-    return url == null ? null : NetworkImage(url);
+    return url == null ? null : CachedWebImage(url);
   }
 }
 
-/// 항목 하나를 대기열에서 뺀다.
+/// 항목 하나를 대기열에서 뺀다. 받는 중인 곡은 한 번 더 물어본다.
 class _CancelButton extends StatelessWidget {
   const _CancelButton({required this.item});
 
   final DownloadItem item;
+
+  Future<void> _cancel(BuildContext context) async {
+    final queue = context.read<DownloadQueueCubit>();
+    if (item.isActive) {
+      final ok = await showDialog<bool>(
+        context: context,
+        useRootNavigator: true,
+        builder: (_) => _CancelDialog(title: item.title),
+      );
+      if (ok != true) return;
+    }
+    await queue.cancel(item.id);
+  }
 
   @override
   Widget build(BuildContext context) => CircleIconButton(
     icon: AppIcons.close,
     tooltip: context.l10n.actionCancel,
     size: 32,
-    onPressed: () => context.read<DownloadQueueCubit>().cancel(item.id),
+    onPressed: () => _cancel(context),
   );
+}
+
+class _CancelDialog extends StatelessWidget {
+  const _CancelDialog({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return AppDialog(
+      title: l10n.downloadCancelTitle,
+      body: l10n.downloadCancelBody(title),
+      actions: [
+        PillButton(
+          label: l10n.downloadCancelKeep,
+          variant: PillVariant.tonal,
+          onPressed: () => Navigator.of(context).pop(false),
+        ),
+        PillButton(
+          label: l10n.downloadCancelConfirm,
+          icon: AppIcons.close,
+          onPressed: () => Navigator.of(context).pop(true),
+        ),
+      ],
+    );
+  }
 }
 
 /// 지금 재생 중인 곡을 작게 한 줄로. 재생 중인 곡이 없으면 숨긴다.

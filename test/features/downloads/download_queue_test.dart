@@ -137,6 +137,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('2개 선택'), findsOneWidget);
 
+    await tester.ensureVisible(inSheet(find.text('받기')));
     await tester.tap(inSheet(find.text('받기')));
     await tester.pumpAndSettle();
 
@@ -172,6 +173,7 @@ void main() {
     await tester.ensureVisible(find.textContaining('기본 색으로 저장'));
     await tester.tap(find.textContaining('기본 색으로 저장'));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(inSheet(find.text('받기')));
     await tester.tap(inSheet(find.text('받기')));
     await tester.pumpAndSettle();
 
@@ -192,6 +194,7 @@ void main() {
 
     await tester.enterText(inSheet(find.byType(TextField)).first, '');
     await tester.pumpAndSettle();
+    await tester.ensureVisible(inSheet(find.text('받기')));
     await tester.tap(inSheet(find.text('받기')));
     await tester.pumpAndSettle();
     expect(queue.requests, isEmpty);
@@ -236,9 +239,13 @@ void main() {
     expect(find.byIcon(AppIcons.paste), findsNothing);
     await tester.tap(find.byIcon(AppIcons.close).first);
     await tester.pump();
+    await tester.tap(find.text('취소하기'));
+    await tester.pump();
     await tester.tap(find.byIcon(AppIcons.chevronDown));
     await tester.pumpAndSettle();
     await tester.tap(find.byIcon(AppIcons.close).last);
+    await tester.pump();
+    await tester.tap(find.text('취소하기'));
     await tester.pump();
     expect(queue.controls, ['cancel:a', 'cancel:b']);
   });

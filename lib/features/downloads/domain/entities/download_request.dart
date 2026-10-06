@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../../covers/domain/entities/cover_art.dart';
 import 'download_options.dart';
 
 /// 받기 팝업에서 사용자가 정한 것: 곡 정보 · 장르 · 받은 뒤 넣을 재생목록.
@@ -14,6 +15,7 @@ class DownloadRequest extends Equatable {
     this.duration,
     this.color,
     this.thumbnailUrl,
+    this.cover,
   });
 
   final String title;
@@ -36,6 +38,9 @@ class DownloadRequest extends Equatable {
   /// 영상 대표 이미지 주소(웹). 받은 곡의 기본 커버로 쓴다. 없으면 null.
   final String? thumbnailUrl;
 
+  /// 받은 곡에 붙일 커버(이미지 · 확대 · 위치). 기본은 [thumbnailUrl]의 웹 이미지, 없으면 null.
+  final CoverArt? cover;
+
   /// 문자열 앞뒤 공백을 지운 사본.
   DownloadRequest normalized() => DownloadRequest(
     title: title.trim(),
@@ -47,6 +52,7 @@ class DownloadRequest extends Equatable {
     duration: duration,
     color: color,
     thumbnailUrl: thumbnailUrl,
+    cover: cover,
   );
 
   @override
@@ -60,5 +66,6 @@ class DownloadRequest extends Equatable {
     duration,
     color,
     thumbnailUrl,
+    cover,
   ];
 }

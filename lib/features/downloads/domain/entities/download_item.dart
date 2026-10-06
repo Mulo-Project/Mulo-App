@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '../../../covers/domain/entities/cover_art.dart';
+
 enum DownloadStatus { downloading, queued, paused, failed, done }
 
 /// 다운로드 대기열의 곡 하나 (상세 기능: 다운로드 대기열 #7).
@@ -13,6 +15,7 @@ class DownloadItem extends Equatable {
     this.genre = '',
     this.playlistIds = const {},
     this.thumbnailUrl,
+    this.cover,
     this.duration,
     this.color,
   });
@@ -31,6 +34,9 @@ class DownloadItem extends Equatable {
   /// 0 ~ 1.
   final double progress;
   final String? thumbnailUrl;
+
+  /// 받은 뒤 곡에 붙일 커버. 없으면 자동 커버.
+  final CoverArt? cover;
 
   /// 곡 길이. 모르면 null.
   final Duration? duration;
@@ -54,6 +60,7 @@ class DownloadItem extends Equatable {
         genre: genre,
         playlistIds: playlistIds,
         thumbnailUrl: thumbnailUrl,
+        cover: cover,
         duration: duration,
         color: color,
       );
@@ -68,6 +75,7 @@ class DownloadItem extends Equatable {
     status,
     progress,
     thumbnailUrl,
+    cover,
     duration,
     color,
   ];

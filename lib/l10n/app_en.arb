@@ -380,6 +380,13 @@
   "downloadsExpand": "Show queue",
   "downloadsCollapse": "Hide queue",
   "downloadDialogTitle": "Download details",
+  "downloadFieldCover": "Cover",
+  "downloadCoverChange": "Change",
+  "downloadCoverDefault": "Use default",
+  "downloadCancelTitle": "Cancel download",
+  "downloadCancelBody": "Cancel downloading \"{title}\"? What has been downloaded so far will be discarded.",
+  "downloadCancelKeep": "Keep downloading",
+  "downloadCancelConfirm": "Cancel download",
   "downloadFieldTitle": "Title",
   "downloadFieldArtist": "Artist",
   "downloadFieldGenre": "Genre",
@@ -535,5 +542,6 @@
   "@colorOption": {"placeholders": {"n": {"type": "int"}}},
   "@trackMenuAddedToPlaylists": {"placeholders": {"count": {"type": "int"}}},
   "@playlistDeleteBody": {"placeholders": {"name": {"type": "String"}}},
-  "@trackDeleteBody": {"placeholders": {"title": {"type": "String"}}}
+  "@trackDeleteBody": {"placeholders": {"title": {"type": "String"}}},
+  "@downloadCancelBody": {"placeholders": {"title": {"type": "String"}}}
 }

@@ -1886,6 +1886,48 @@ abstract class AppLocalizations {
   /// **'받기 정보'**
   String get downloadDialogTitle;
 
+  /// No description provided for @downloadFieldCover.
+  ///
+  /// In ko, this message translates to:
+  /// **'커버'**
+  String get downloadFieldCover;
+
+  /// No description provided for @downloadCoverChange.
+  ///
+  /// In ko, this message translates to:
+  /// **'바꾸기'**
+  String get downloadCoverChange;
+
+  /// No description provided for @downloadCoverDefault.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본으로'**
+  String get downloadCoverDefault;
+
+  /// No description provided for @downloadCancelTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'받기 취소'**
+  String get downloadCancelTitle;
+
+  /// No description provided for @downloadCancelBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'\"{title}\" 받기를 취소할까요? 지금까지 받은 부분은 사라져요.'**
+  String downloadCancelBody(String title);
+
+  /// No description provided for @downloadCancelKeep.
+  ///
+  /// In ko, this message translates to:
+  /// **'계속 받기'**
+  String get downloadCancelKeep;
+
+  /// No description provided for @downloadCancelConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'취소하기'**
+  String get downloadCancelConfirm;
+
   /// No description provided for @downloadFieldTitle.
   ///
   /// In ko, this message translates to:
