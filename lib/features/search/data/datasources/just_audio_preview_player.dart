@@ -65,7 +65,7 @@ class JustAudioPreviewPlayer implements PreviewPlayer {
         } on PlayerException catch (viaApp) {
           throw EngineException(
             EngineFailure.failed,
-            'direct: ${direct.message} | app: ${viaApp.message}',
+            'direct: ${direct.message} | app: ${viaApp.message} | ${await _probe(stream)}',
           );
         }
       }
@@ -102,11 +102,11 @@ class JustAudioPreviewPlayer implements PreviewPlayer {
         unawaited(player.play().catchError((Object _) {}));
         return;
       } on Object catch (e) {
-        _failures.add('direct: $reason | app: $e');
+        _failures.add('direct: $reason | app: $e | ${await _probe(stream)}');
         return;
       }
     }
-    _failures.add('app: $reason');
+    _failures.add('app: $reason | ${await _probe(stream)}');
   }
 
   @override
@@ -134,6 +134,34 @@ class JustAudioPreviewPlayer implements PreviewPlayer {
     await _player?.dispose();
     _player = null;
     await _completed.close();
+  }
+}
+
+/// 실패 까닭을 알 수 있게 주소를 앱의 HTTP로 한 번 요청해 상태 · 형식을 한 줄로 돌려준다.
+Future<String> _probe(AudioStream stream) async {
+  final uri = Uri.parse(stream.url);
+  final q = uri.queryParameters;
+  final info =
+      'host=${uri.host} c=${q['c']} mime=${q['mime']} itag=${q['itag']}';
+  final client = HttpClient()..connectionTimeout = const Duration(seconds: 8);
+  try {
+    final req = await client.getUrl(uri);
+    stream.headers.forEach(req.headers.set);
+    req.headers.set('range', 'bytes=0-1023');
+    final resp = await req.close().timeout(const Duration(seconds: 10));
+    final bytes = <int>[];
+    await for (final b in resp) {
+      bytes.addAll(b);
+      if (bytes.length >= 12) break;
+    }
+    final head = String.fromCharCodes(
+      bytes.take(12).map((b) => b >= 32 && b < 127 ? b : 46),
+    );
+    return 'probe HTTP ${resp.statusCode} ${resp.headers.contentType} len=${resp.contentLength} head="$head" $info';
+  } on Object catch (e) {
+    return 'probe error $e $info';
+  } finally {
+    client.close(force: true);
   }
 }
 
