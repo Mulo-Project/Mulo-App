@@ -2,20 +2,19 @@ import 'package:flutter/material.dart';
 
 import '../tokens/app_palette.dart';
 
-/// 유튜브 표시: 빨간 둥근 사각형 안에 둥근 흰 재생 삼각형 (테마와 상관없다).
-/// 아이콘 글리프 대신 직접 그려서 어느 크기에서도 모서리가 또렷하다.
+/// 유튜브 표시: 꽉 찬 빨간 원 안에 흰 링, 링 안에 각진 흰 재생 삼각형 (YouTube Music 모양).
+/// 테마와 상관없이 같은 색이고, 아이콘 글리프 대신 직접 그려서 어느 크기에서도 또렷하다.
 class YoutubeMark extends StatelessWidget {
   const YoutubeMark({super.key, this.size = 24});
 
-  /// 가로 길이. 세로는 70%.
+  /// 원의 지름.
   final double size;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return SizedBox.square(
       key: const ValueKey('youtube-mark'),
-      width: size,
-      height: size * .7,
+      dimension: size,
       child: CustomPaint(painter: _YoutubeMarkPainter()),
     );
   }
@@ -24,36 +23,34 @@ class YoutubeMark extends StatelessWidget {
 class _YoutubeMarkPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
+    final d = size.shortestSide;
+    final c = size.center(Offset.zero);
 
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(Offset.zero & size, Radius.circular(h * .3)),
-      Paint()..color = AppPalette.youtubeRed,
-    );
-
-    // 삼각형은 세로의 절반 높이. 무게중심이 가운데 오도록 약간 오른쪽으로 둔다.
-    final th = h * .5;
-    final tw = th * .88;
-    final left = (w - tw) / 2 + tw * .08;
-    final top = (h - th) / 2;
-    final tri = Path()
-      ..moveTo(left, top)
-      ..lineTo(left + tw, top + th / 2)
-      ..lineTo(left, top + th)
-      ..close();
-    final white = AppPalette.markWhite;
-    // 같은 색 외곽선으로 세 꼭짓점을 둥글게 만든다.
     canvas
-      ..drawPath(
-        tri,
+      ..drawCircle(c, d / 2, Paint()..color = AppPalette.youtubeRed)
+      // 흰 링: 지름 54%, 두께 2.5%, 안쪽도 빨강.
+      ..drawCircle(
+        c,
+        d * .27,
         Paint()
-          ..color = white
+          ..color = AppPalette.markWhite
           ..style = PaintingStyle.stroke
-          ..strokeWidth = h * .08
-          ..strokeJoin = StrokeJoin.round,
-      )
-      ..drawPath(tri, Paint()..color = white);
+          ..strokeWidth = d * .025,
+      );
+
+    // 재생 삼각형: 폭 22% · 높이 26%, 모서리는 각지게. 시각적 중심을 위해 약간 오른쪽.
+    final tw = d * .22;
+    final th = d * .26;
+    final left = c.dx - tw / 2 + d * .015;
+    final top = c.dy - th / 2;
+    canvas.drawPath(
+      Path()
+        ..moveTo(left, top)
+        ..lineTo(left + tw, c.dy)
+        ..lineTo(left, top + th)
+        ..close(),
+      Paint()..color = AppPalette.youtubeMarkWhite,
+    );
   }
 
   @override
