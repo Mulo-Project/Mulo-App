@@ -46,6 +46,9 @@ abstract final class AppMotion {
 abstract final class AppSizes {
   static const double circleButton = 44;
   static const double circleButtonLarge = 56;
+
+  /// 목록 줄 오른쪽의 작은 아이콘 버튼 ([RowIconButton]).
+  static const double rowButton = 36;
   static const double pillHeight = 48;
   static const double miniPlayerHeight = 84;
   static const double navBarHeight = 64;

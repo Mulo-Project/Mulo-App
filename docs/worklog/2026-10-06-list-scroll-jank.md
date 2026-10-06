@@ -13,9 +13,9 @@
 
 ## 한 일
 - `GlassSurface`: `blur`가 0이면 `BackdropFilter`를 만들지 않는다 (겉모양은 그대로, 0은 원래 흐림이 없었다).
-- `CircleIconButton`에 `blur` 인자 추가. 검색 결과 줄의 받기 버튼은 `blur: 0`.
+- 면 없는 작은 아이콘 버튼 `RowIconButton`(36px) 추가. 검색 결과 줄의 받기 버튼을 유리 `CircleIconButton`에서 바꿨다 (줄마다 유리를 두지 않는다).
 - `ArtworkBox`: 이미지를 칸 크기의 2배(화면 배율 포함) 안으로 줄여 디코딩 (`ResizeImage`, 비율 유지). 검색 · 보관함 · 홈 · 재생목록의 모든 커버가 같이 가벼워진다.
-- `test/core/list_perf_test.dart`: blur 0이면 흐림 층 없음, 버튼 눌림, 커버 축소 디코딩.
+- `test/core/list_perf_test.dart`: blur 0이면 흐림 층 없음, 줄 버튼 크기 · 눌림, 커버 축소 디코딩.
 
 ## 바꾼 설정
 - 없음 (pubspec · Gradle · Manifest · 패키지 변경 없음).

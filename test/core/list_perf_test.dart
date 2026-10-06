@@ -20,20 +20,23 @@ void main() {
     expect(find.byType(BackdropFilter), findsOneWidget);
   });
 
-  testWidgets('원형 버튼에 blur 0을 주면 흐림 층 없이 눌린다', (tester) async {
+  testWidgets('목록 줄 버튼은 흐림 층 없이 작게 그려지고 눌린다', (tester) async {
     var taps = 0;
     await tester.pumpWidget(
       _host(
-        CircleIconButton(
+        RowIconButton(
           icon: Icons.download,
           tooltip: '받기',
-          blur: 0,
           onPressed: () => taps++,
         ),
       ),
     );
     expect(find.byType(BackdropFilter), findsNothing);
-    await tester.tap(find.byType(CircleIconButton));
+    expect(
+      tester.getSize(find.byType(RowIconButton)),
+      const Size.square(AppSizes.rowButton),
+    );
+    await tester.tap(find.byType(RowIconButton));
     expect(taps, 1);
   });
 
