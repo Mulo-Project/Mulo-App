@@ -527,6 +527,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get queueCleared => 'Queue cleared';
 
   @override
+  String get queueClearTitle => 'Clear the queue?';
+
+  @override
+  String get queueClearBody =>
+      'The current song stops and every song leaves the queue. Your library is not affected.';
+
+  @override
+  String get queueClearConfirm => 'Clear';
+
+  @override
   String get queueReorderHint => 'Press and hold, then drag to reorder';
 
   @override

@@ -515,6 +515,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get queueCleared => '대기열을 비웠어요';
 
   @override
+  String get queueClearTitle => '대기열을 비울까요?';
+
+  @override
+  String get queueClearBody => '재생 중인 곡도 멈추고 대기열에서 모두 사라져요. 보관함의 곡은 그대로 남아요.';
+
+  @override
+  String get queueClearConfirm => '비우기';
+
+  @override
   String get queueReorderHint => '길게 눌러 끌면 순서가 바뀌어요';
 
   @override
