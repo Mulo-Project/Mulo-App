@@ -28,6 +28,7 @@ PreviewCubit _cubit(FakeDownloaderEngine e, FakePreviewPlayer p) =>
       PlayPreview(p),
       StopPreview(p),
       WatchPreviewCompleted(p),
+      WatchPreviewProgress(p),
     );
 
 void main() {
@@ -100,6 +101,18 @@ void main() {
   });
 
   group('PreviewCubit', () {
+    test('재생 위치가 오면 들은 비율이 바뀌고, 멈추면 지워진다', () async {
+      final player = FakePreviewPlayer();
+      final cubit = _cubit(FakeDownloaderEngine(info: VideoInfo(_a)), player);
+      await cubit.toggle(_a);
+      player.progress(const Duration(seconds: 30), const Duration(minutes: 2));
+      await Future<void>.delayed(Duration.zero);
+      expect(cubit.state.fraction, closeTo(.25, .001));
+      await cubit.stop();
+      expect(cubit.state.progress, isNull);
+      await cubit.close();
+    });
+
     test('누르면 스트림 주소를 받아 재생하고, 다시 누르면 멈춘다', () async {
       final engine = FakeDownloaderEngine();
       final player = FakePreviewPlayer();
@@ -262,6 +275,24 @@ void main() {
       await tester.pumpAndSettle();
       expect(player.playing, isFalse);
       expect(find.byTooltip('Preview'), findsOneWidget);
+    });
+
+    testWidgets('듣는 동안 줄과 상세 화면에 재생 진행도가 보인다', (tester) async {
+      final player = await openSearch(tester);
+      expect(find.byKey(const ValueKey('preview-progress')), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('preview-row-button')));
+      await tester.pumpAndSettle();
+      player.progress(const Duration(seconds: 30), const Duration(minutes: 2));
+      await tester.pump();
+      expect(find.byKey(const ValueKey('preview-progress')), findsOneWidget);
+      expect(find.byType(ProgressLine), findsOneWidget);
+
+      await tester.tap(find.text('Song'));
+      await tester.pumpAndSettle();
+      player.progress(const Duration(seconds: 30), const Duration(minutes: 2));
+      await tester.pump();
+      expect(find.text('0:30 / 2:00'), findsOneWidget);
     });
 
     testWidgets('상세 화면 버튼으로 미리 듣고, 화면을 나가면 멈춘다', (tester) async {

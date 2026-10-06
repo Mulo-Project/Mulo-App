@@ -6,21 +6,37 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
+import '../../domain/entities/preview_progress.dart';
 import '../../domain/usecases/search_usecases.dart';
 
 enum PreviewStatus { idle, loading, playing }
 
 class PreviewState extends Equatable {
-  const PreviewState({this.hitId, this.status = PreviewStatus.idle});
+  const PreviewState({
+    this.hitId,
+    this.status = PreviewStatus.idle,
+    this.progress,
+  });
 
   /// 미리 듣는 중(또는 준비 중)인 검색 결과의 id. 아무것도 안 듣고 있으면 null.
   final String? hitId;
   final PreviewStatus status;
 
+  /// 재생 중일 때 어디까지 들었는지 (아직 소리가 안 나면 null).
+  final PreviewProgress? progress;
+
+  /// 들은 비율 0 ~ 1 (길이를 모르면 0).
+  double get fraction {
+    final p = progress;
+    final d = p?.duration;
+    if (p == null || d == null || d == Duration.zero) return 0;
+    return (p.position.inMilliseconds / d.inMilliseconds).clamp(0.0, 1.0);
+  }
+
   bool isActive(String id) => hitId == id && status != PreviewStatus.idle;
 
   @override
-  List<Object?> get props => [hitId, status];
+  List<Object?> get props => [hitId, status, progress];
 }
 
 /// 검색 결과 미리 듣기: 다운로드 없이 오디오 스트림 주소를 받아 바로 재생한다.
@@ -32,14 +48,26 @@ class PreviewCubit extends Cubit<PreviewState> {
     this._play,
     this._stop,
     WatchPreviewCompleted watchCompleted,
+    WatchPreviewProgress watchProgress,
   ) : super(const PreviewState()) {
     _completed = watchCompleted(const NoParams()).listen((_) => stop());
+    _progress = watchProgress(const NoParams()).listen(_onProgress);
   }
 
   final ResolveAudioStream _resolve;
   final PlayPreview _play;
   final StopPreview _stop;
   late final StreamSubscription<void> _completed;
+  late final StreamSubscription<PreviewProgress> _progress;
+
+  void _onProgress(PreviewProgress p) {
+    if (isClosed || state.status != PreviewStatus.playing) return;
+    emit(PreviewState(hitId: state.hitId, status: state.status, progress: p));
+  }
+
+  /// 이만큼 걸려도 안 되면 "준비 중"에 멈춰 있지 않고 실패로 돌린다.
+  static const _resolveTimeout = Duration(seconds: 60);
+  static const _playTimeout = Duration(seconds: 30);
 
   /// 시작 · 멈춤마다 올린다. 느리게 돌아온 이전 요청의 결과를 버리려고.
   var _generation = 0;
@@ -56,9 +84,9 @@ class PreviewCubit extends Cubit<PreviewState> {
     if (state.status != PreviewStatus.idle) unawaited(_stop(const NoParams()));
     emit(PreviewState(hitId: hit.id, status: PreviewStatus.loading));
     try {
-      final stream = await _resolve(hit.url);
+      final stream = await _resolve(hit.url).timeout(_resolveTimeout);
       if (generation != _generation || isClosed) return null;
-      await _play(stream);
+      await _play(stream).timeout(_playTimeout);
       if (generation != _generation || isClosed) {
         // 불러오는 사이에 멈춤이 눌렸다면 늦게 시작된 소리를 끈다.
         // (다른 곡이 눌린 거라면 그 곡의 소리라서 그대로 둔다.)
@@ -71,6 +99,11 @@ class PreviewCubit extends Cubit<PreviewState> {
       if (generation != _generation || isClosed) return null;
       emit(const PreviewState());
       return e.failure;
+    } catch (_) {
+      // 예상 못 한 오류에도 "준비 중"에 멈춰 있지 않게 실패로 돌린다.
+      if (generation != _generation || isClosed) return null;
+      emit(const PreviewState());
+      return EngineFailure.failed;
     }
   }
 
@@ -85,6 +118,7 @@ class PreviewCubit extends Cubit<PreviewState> {
   @override
   Future<void> close() async {
     await _completed.cancel();
+    await _progress.cancel();
     await _stop(const NoParams());
     return super.close();
   }

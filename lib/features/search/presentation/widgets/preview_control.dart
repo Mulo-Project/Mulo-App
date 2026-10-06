@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../library/domain/entities/track.dart' show formatDuration;
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
@@ -99,6 +100,49 @@ class PreviewRowButton extends StatelessWidget {
       accent: status != PreviewStatus.idle,
       busy: status == PreviewStatus.loading,
       onPressed: () => togglePreview(context, hit),
+    );
+  }
+}
+
+/// 미리 듣는 곡의 재생 진행도: 얼마나 들었는지 막대 + 시간.
+/// 이 곡을 듣고 있지 않으면 아무것도 그리지 않는다. [showTime]이면 막대 아래에 시간도 보인다.
+class PreviewProgressBar extends StatelessWidget {
+  const PreviewProgressBar({
+    super.key,
+    required this.hitId,
+    this.showTime = false,
+  });
+
+  final String hitId;
+  final bool showTime;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.select(
+      (PreviewCubit c) => c.state.isActive(hitId) ? c.state : null,
+    );
+    if (state == null || state.status != PreviewStatus.playing) {
+      return const SizedBox.shrink();
+    }
+    final text = Theme.of(context).textTheme.bodySmall;
+    final progress = state.progress;
+    final duration = progress?.duration;
+    return Column(
+      key: const ValueKey('preview-progress'),
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ProgressLine(value: state.fraction),
+        if (showTime) ...[
+          const SizedBox(height: AppSpacing.xxs),
+          Text(
+            '${formatDuration(progress?.position ?? Duration.zero)}'
+            ' / ${duration == null ? '--:--' : formatDuration(duration)}',
+            style: text,
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ],
     );
   }
 }

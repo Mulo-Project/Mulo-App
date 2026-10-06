@@ -326,6 +326,7 @@ class _HitTile extends StatelessWidget {
           ),
         ],
       ),
+      footer: PreviewProgressBar(hitId: hit.id),
       onTap: () => showMediaDetail(context, hit),
       onMenu: (position) => _menu(context, position),
     );

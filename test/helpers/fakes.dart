@@ -32,6 +32,7 @@ import 'package:music_download_play_app/features/playlists/domain/entities/playl
 import 'package:music_download_play_app/features/playlists/domain/repositories/playlist_repository.dart';
 import 'package:music_download_play_app/features/search/di.dart';
 import 'package:music_download_play_app/features/search/domain/entities/audio_stream.dart';
+import 'package:music_download_play_app/features/search/domain/entities/preview_progress.dart';
 import 'package:music_download_play_app/features/search/domain/entities/engine_exception.dart';
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
 import 'package:music_download_play_app/features/search/domain/entities/search_source.dart';
@@ -838,6 +839,7 @@ class FakePreviewPlayer implements PreviewPlayer {
   /// 재생 시작을 실패시킬 까닭 (없으면 성공).
   final EngineFailure? failure;
   final _completed = StreamController<void>.broadcast();
+  final _progress = StreamController<PreviewProgress>.broadcast();
 
   /// 재생을 시작한 스트림 주소 순서.
   final played = <String>[];
@@ -847,6 +849,9 @@ class FakePreviewPlayer implements PreviewPlayer {
   bool playing = false;
 
   void complete() => _completed.add(null);
+
+  void progress(Duration position, Duration? duration) =>
+      _progress.add(PreviewProgress(position: position, duration: duration));
 
   @override
   Future<void> play(AudioStream stream) async {
@@ -864,4 +869,7 @@ class FakePreviewPlayer implements PreviewPlayer {
 
   @override
   Stream<void> watchCompleted() => _completed.stream;
+
+  @override
+  Stream<PreviewProgress> watchProgress() => _progress.stream;
 }

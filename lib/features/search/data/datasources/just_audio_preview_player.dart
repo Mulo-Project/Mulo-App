@@ -4,6 +4,7 @@ import 'package:just_audio/just_audio.dart';
 
 import '../../domain/entities/audio_stream.dart';
 import '../../domain/entities/engine_exception.dart';
+import '../../domain/entities/preview_progress.dart';
 import '../../domain/repositories/preview_player.dart';
 
 /// 미리 듣기용 just_audio 플레이어. 메인 재생의 플레이어와는 별개라 대기열 · 미니 플레이어에
@@ -11,7 +12,9 @@ import '../../domain/repositories/preview_player.dart';
 class JustAudioPreviewPlayer implements PreviewPlayer {
   AudioPlayer? _player;
   final _completed = StreamController<void>.broadcast();
+  final _progress = StreamController<PreviewProgress>.broadcast();
   StreamSubscription<ProcessingState>? _processing;
+  StreamSubscription<Duration>? _position;
 
   AudioPlayer _ensure() {
     final existing = _player;
@@ -20,6 +23,11 @@ class JustAudioPreviewPlayer implements PreviewPlayer {
     _processing = player.processingStateStream
         .where((s) => s == ProcessingState.completed)
         .listen((_) => _completed.add(null));
+    _position = player.positionStream.listen(
+      (p) => _progress.add(
+        PreviewProgress(position: p, duration: player.duration),
+      ),
+    );
     return _player = player;
   }
 
@@ -40,6 +48,11 @@ class JustAudioPreviewPlayer implements PreviewPlayer {
       throw EngineException(EngineFailure.failed, e.message ?? '');
     } on FormatException catch (e) {
       throw EngineException(EngineFailure.failed, e.message);
+    } on EngineException {
+      rethrow;
+    } catch (e) {
+      // 그 밖의 오류도 "불러오는 중"에 멈춰 있지 않게 실패로 돌려준다.
+      throw EngineException(EngineFailure.failed, '$e');
     }
     // 재생은 곡 끝까지 끝나지 않는 Future라 기다리지 않는다.
     unawaited(player.play());
@@ -54,8 +67,13 @@ class JustAudioPreviewPlayer implements PreviewPlayer {
   @override
   Stream<void> watchCompleted() => _completed.stream;
 
+  @override
+  Stream<PreviewProgress> watchProgress() => _progress.stream;
+
   Future<void> dispose() async {
     await _processing?.cancel();
+    await _position?.cancel();
+    await _progress.close();
     await _player?.dispose();
     _player = null;
     await _completed.close();
