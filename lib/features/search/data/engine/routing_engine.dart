@@ -34,8 +34,14 @@ class RoutingDownloaderEngine implements DownloaderEngine {
     SearchSource source = SearchSource.youtube,
     int page = 0,
     int size = 20,
-  }) async =>
-      (await _pick()).search(query, source: source, page: page, size: size);
+    bool newest = false,
+  }) async => (await _pick()).search(
+    query,
+    source: source,
+    page: page,
+    size: size,
+    newest: newest,
+  );
 
   @override
   Future<MediaInfo> fetchInfo(String url) async =>

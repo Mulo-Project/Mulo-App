@@ -48,55 +48,62 @@ void main() {
       expect(engine.searches.last.$3, 1);
     });
 
-    test('검색 결과의 분류를 뒤에서 채워 필터할 수 있다', () async {
+    test('검색 결과의 곡마다 상세 정보를 뒤에서 읽지 않는다', () async {
       final engine = FakeDownloaderEngine(
         pages: [
           SearchPage(items: [_hit('a'), _hit('b'), _hit('c')], hasNext: false),
         ],
         infoByUrl: {
           'https://example.com/a': VideoInfo(_hit('a', ['Music'])),
-          'https://example.com/b': VideoInfo(_hit('b', ['Gaming'])),
-          // c는 분류를 못 읽는다.
         },
       );
       final cubit = _cubit(engine);
       await cubit.submit('q', SearchSource.youtube);
       await pumpEventQueue();
-
-      expect(cubit.state.items.map((h) => h.categories), [
-        ['Music'],
-        ['Gaming'],
-        isEmpty,
-      ]);
-      expect(cubit.state.probing, isFalse);
-      expect(cubit.state.visibleItems.length, 3);
-
-      cubit.selectCategory('Gaming');
-      expect(cubit.state.visibleItems.map((h) => h.id), ['b']);
-
-      cubit.selectCategory(null);
-      expect(cubit.state.category, isNull);
-      expect(cubit.state.visibleItems.length, 3);
+      expect(cubit.state.items.length, 3);
+      expect(engine.infos, isEmpty);
     });
 
-    test('이미 알아낸 곡의 분류는 다음 검색에서 다시 읽지 않는다', () async {
+    test('최신순은 날짜 순으로 다시 찾고, 벗어나면 관련도 순으로 다시 찾는다', () async {
       final engine = FakeDownloaderEngine(
         pages: [
-          SearchPage(items: [_hit('a')], hasNext: false),
+          SearchPage(items: [_hit('a'), _hit('b')], hasNext: true),
+          SearchPage(items: [_hit('c')], hasNext: false),
         ],
-        infoByUrl: {
-          'https://example.com/a': VideoInfo(_hit('a', ['Music'])),
-        },
       );
       final cubit = _cubit(engine);
       await cubit.submit('q', SearchSource.youtube);
-      await pumpEventQueue();
-      expect(engine.infos, ['https://example.com/a']);
+      expect(engine.newestFlags, [false]);
+      expect(cubit.state.keyword, isTrue);
 
-      await cubit.submit('q2', SearchSource.youtube);
-      await pumpEventQueue();
-      expect(engine.infos.length, 1); // 두 번째 검색은 기억한 분류를 쓴다
-      expect(cubit.state.items.single.categories, ['Music']);
+      await cubit.selectSort(SearchSort.newest);
+      expect(engine.newestFlags, [false, true]);
+      expect(cubit.state.sort, SearchSort.newest);
+      expect(cubit.state.status, SearchStatus.loaded);
+
+      await cubit.loadMore(); // 다음 쪽도 날짜 순으로
+      expect(engine.newestFlags.last, isTrue);
+
+      await cubit.selectSort(SearchSort.shortest); // 받아 온 안에서만: 다시 찾지 않음
+      expect(engine.newestFlags.length, 3);
+
+      await cubit.selectSort(SearchSort.relevance); // 최신순에서 벗어남
+      expect(engine.newestFlags.last, isFalse);
+      expect(engine.newestFlags.length, 4);
+    });
+
+    test('URL로 불러온 목록에는 최신순을 쓸 수 없다 (다시 찾지 않는다)', () async {
+      final engine = FakeDownloaderEngine(
+        info: PlaylistInfo(title: 'L', entries: [_hit('x'), _hit('y')]),
+      );
+      final cubit = _cubit(engine);
+      await cubit.submit(
+        'https://youtube.com/playlist?list=1',
+        SearchSource.youtube,
+      );
+      expect(cubit.state.keyword, isFalse);
+      await cubit.selectSort(SearchSort.newest);
+      expect(engine.searches, isEmpty);
     });
 
     test('정렬: 짧은 순 · 긴 순 · 제목순 (길이를 모르는 곡은 맨 뒤)', () async {
@@ -268,6 +275,21 @@ void main() {
       );
     });
 
+    test('최신순이면 sort=date를 보낸다', () async {
+      final calls = <Uri>[];
+      final engine = ServerEngine(
+        baseUrl: 'https://s',
+        get: (uri, _) async {
+          calls.add(uri);
+          return (status: 200, body: '{"items":[],"hasNext":false}');
+        },
+      );
+      await engine.search('q');
+      await engine.search('q', newest: true);
+      expect(calls[0].queryParameters.containsKey('sort'), isFalse);
+      expect(calls[1].queryParameters['sort'], 'date');
+    });
+
     test('서버 응답의 categories를 읽는다', () async {
       final engine = ServerEngine(
         baseUrl: 'https://s',
@@ -313,6 +335,16 @@ void main() {
 
       await engine.search('노래', source: SearchSource.web, size: 1);
       expect(args!.last, 'scsearch1:노래');
+
+      await engine.search('노래', size: 3, newest: true);
+      expect(args!.last, 'ytsearchdate3:노래'); // 최신순은 날짜 순 검색
+      await engine.search(
+        '노래',
+        source: SearchSource.web,
+        size: 1,
+        newest: true,
+      );
+      expect(args!.last, 'scsearchdate1:노래');
     });
 
     test('재생목록 정보를 읽는다', () async {
@@ -450,15 +482,11 @@ void main() {
       expect(find.widgetWithText(TextField, 'Found Song'), findsOneWidget);
     });
 
-    testWidgets('분류 필터를 고르면 그 분류의 곡만 남는다', (tester) async {
+    testWidgets('정렬 메뉴에서 최신순을 고르면 날짜 순으로 다시 찾는다', (tester) async {
       final engine = FakeDownloaderEngine(
         pages: [
           SearchPage(items: [_hit('a'), _hit('b')], hasNext: false),
         ],
-        infoByUrl: {
-          'https://example.com/a': VideoInfo(_hit('a', ['Music'])),
-          'https://example.com/b': VideoInfo(_hit('b', ['Gaming'])),
-        },
       );
       await setUpTestDependencies(engine: engine);
       await openSearch(tester);
@@ -466,28 +494,13 @@ void main() {
       await tester.enterText(find.byType(TextField), 'hello');
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pumpAndSettle();
+      expect(engine.newestFlags, [false]);
 
-      expect(find.text('Title a'), findsOneWidget);
-      expect(find.text('Title b'), findsOneWidget);
-      expect(find.text('All'), findsOneWidget);
-
-      await tester.tap(find.text('All')); // 필터 메뉴를 연다
+      await tester.tap(find.text('Relevance')); // 정렬 메뉴를 연다
       await tester.pumpAndSettle();
-      expect(find.text('Music'), findsOneWidget); // 고정 목록이라 읽기 전에도 있다
-      await tester.tap(find.text('Gaming').last);
+      await tester.tap(find.text('Newest'));
       await tester.pumpAndSettle();
-      expect(find.text('Title a'), findsNothing);
-      expect(find.text('Title b'), findsOneWidget);
-
-      await tester.tap(find.text('Gaming')); // 다시 열어서 전체로
-      await tester.pumpAndSettle();
-      await tester.scrollUntilVisible(
-        find.text('All').last,
-        -100,
-        scrollable: find.byType(Scrollable).last,
-      );
-      await tester.tap(find.text('All').last);
-      await tester.pumpAndSettle();
+      expect(engine.newestFlags, [false, true]);
       expect(find.text('Title a'), findsOneWidget);
     });
 

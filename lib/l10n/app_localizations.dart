@@ -1556,12 +1556,6 @@ abstract class AppLocalizations {
   /// **'웹'**
   String get sourceWeb;
 
-  /// No description provided for @searchFilterAll.
-  ///
-  /// In ko, this message translates to:
-  /// **'전체'**
-  String get searchFilterAll;
-
   /// No description provided for @searchHitMenuDetail.
   ///
   /// In ko, this message translates to:
@@ -1670,17 +1664,17 @@ abstract class AppLocalizations {
   /// **'{count}회'**
   String mediaDetailViewCount(String count);
 
-  /// No description provided for @searchFilterTooltip.
-  ///
-  /// In ko, this message translates to:
-  /// **'분류로 거르기'**
-  String get searchFilterTooltip;
-
   /// No description provided for @searchSortTooltip.
   ///
   /// In ko, this message translates to:
   /// **'정렬'**
   String get searchSortTooltip;
+
+  /// No description provided for @searchSortNewest.
+  ///
+  /// In ko, this message translates to:
+  /// **'최신순'**
+  String get searchSortNewest;
 
   /// No description provided for @searchSortRelevance.
   ///
@@ -1705,12 +1699,6 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'제목순'**
   String get searchSortTitle;
-
-  /// No description provided for @searchCategoryChecking.
-  ///
-  /// In ko, this message translates to:
-  /// **'분류를 확인하는 중이에요. 읽은 곡부터 나와요.'**
-  String get searchCategoryChecking;
 
   /// No description provided for @videoCategory.
   ///

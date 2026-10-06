@@ -790,9 +790,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get sourceWeb => '웹';
 
   @override
-  String get searchFilterAll => '전체';
-
-  @override
   String get searchHitMenuDetail => '상세 보기';
 
   @override
@@ -851,10 +848,10 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get searchFilterTooltip => '분류로 거르기';
+  String get searchSortTooltip => '정렬';
 
   @override
-  String get searchSortTooltip => '정렬';
+  String get searchSortNewest => '최신순';
 
   @override
   String get searchSortRelevance => '관련도순';
@@ -867,9 +864,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get searchSortTitle => '제목순';
-
-  @override
-  String get searchCategoryChecking => '분류를 확인하는 중이에요. 읽은 곡부터 나와요.';
 
   @override
   String videoCategory(String name) {
