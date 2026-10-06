@@ -10,10 +10,10 @@ import '../../../downloads/presentation/widgets/download_progress_card.dart';
 import '../../../library/domain/entities/track.dart' show formatDuration;
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
+import '../../domain/entities/search_sort.dart';
 import '../../domain/entities/search_source.dart';
 import '../bloc/search_cubit.dart';
 import '../widgets/search_source_menu.dart';
-import '../widgets/video_category.dart';
 
 /// 검색 · URL 입력 (상세 기능: URL로 곡 정보 불러오기 #1, 키워드 검색 #2,
 /// 재생목록 URL 불러오기 #3, 공유 메뉴로 받기 #4, 음질 선택 #6, 중복 다운로드 방지 #9).
@@ -200,21 +200,92 @@ class _Results extends StatelessWidget {
           padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
           child: Text(label, style: text.titleMedium),
         ),
-        for (final hit in state.items) _HitTile(hit: hit),
-        if (state.hasNext)
+        if (state.items.length > 1)
           Padding(
-            padding: const EdgeInsets.only(top: AppSpacing.sm),
-            child: Center(
-              child: state.loadingMore
-                  ? const CircularProgressIndicator()
-                  : PillButton(
-                      label: l10n.searchLoadMore,
-                      variant: PillVariant.tonal,
-                      onPressed: context.read<SearchCubit>().loadMore,
-                    ),
+            padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
+            child: const Align(
+              alignment: Alignment.centerLeft,
+              child: _SortMenu(),
             ),
           ),
+        for (final hit in state.visibleItems) _HitTile(hit: hit),
+        if (state.hasNext)
+          // 끝까지 내려와 이 줄이 화면에 들어오면 다음 결과를 불러온다.
+          // 곡이 늘 때마다 새로 만들어서(key) 다음 쪽도 같은 방식으로 이어진다.
+          _LoadMoreTrigger(key: ValueKey(state.items.length)),
       ],
+    );
+  }
+}
+
+/// 정렬 메뉴 (받아 온 결과 안에서 순서만 바꾼다).
+class _SortMenu extends StatelessWidget {
+  const _SortMenu();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final cubit = context.read<SearchCubit>();
+    final state = context.watch<SearchCubit>().state;
+    return AppDropdown<SearchSort>(
+      // 최신순은 검색을 날짜 순으로 다시 하는 것이라 키워드 검색일 때만 있다.
+      values: [
+        for (final s in SearchSort.values)
+          if (s != SearchSort.newest || state.keyword) s,
+      ],
+      selected: state.sort,
+      labelOf: (s) => switch (s) {
+        SearchSort.relevance => l10n.searchSortRelevance,
+        SearchSort.newest => l10n.searchSortNewest,
+        SearchSort.shortest => l10n.searchSortShortest,
+        SearchSort.longest => l10n.searchSortLongest,
+        SearchSort.title => l10n.searchSortTitle,
+      },
+      tooltip: l10n.searchSortTooltip,
+      onChanged: cubit.selectSort,
+    );
+  }
+}
+
+/// 결과 맨 아래: 화면에 들어오면 다음 쪽을 불러온다 (무한 스크롤).
+/// 불러오기가 끝났는데도 더 있으면(실패한 경우) 다시 누를 수 있는 버튼을 보여 준다.
+class _LoadMoreTrigger extends StatefulWidget {
+  const _LoadMoreTrigger({super.key});
+
+  @override
+  State<_LoadMoreTrigger> createState() => _LoadMoreTriggerState();
+}
+
+class _LoadMoreTriggerState extends State<_LoadMoreTrigger> {
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+  }
+
+  Future<void> _load() async {
+    if (!mounted) return;
+    setState(() => _loading = true);
+    await context.read<SearchCubit>().loadMore();
+    if (mounted) setState(() => _loading = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final loadingMore = context.watch<SearchCubit>().state.loadingMore;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+      child: Center(
+        child: _loading || loadingMore
+            ? const CircularProgressIndicator()
+            : PillButton(
+                label: context.l10n.searchLoadMore,
+                variant: PillVariant.tonal,
+                onPressed: _load,
+              ),
+      ),
     );
   }
 }
@@ -230,7 +301,6 @@ class _HitTile extends StatelessWidget {
     final subtitle = [
       if (hit.uploader.isNotEmpty) hit.uploader,
       if (hit.duration != null) formatDuration(hit.duration!),
-      ?categoryLabel(l10n, hit.categories),
       if (hit.downloaded) l10n.alreadyDownloaded,
     ].join(' · ');
     final thumb = hit.thumbnailUrl;

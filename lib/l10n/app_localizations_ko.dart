@@ -790,6 +790,24 @@ class AppLocalizationsKo extends AppLocalizations {
   String get sourceWeb => '웹';
 
   @override
+  String get searchSortTooltip => '정렬';
+
+  @override
+  String get searchSortNewest => '최신순';
+
+  @override
+  String get searchSortRelevance => '관련도순';
+
+  @override
+  String get searchSortShortest => '짧은 순';
+
+  @override
+  String get searchSortLongest => '긴 순';
+
+  @override
+  String get searchSortTitle => '제목순';
+
+  @override
   String videoCategory(String name) {
     String _temp0 = intl.Intl.selectLogic(name, {
       'FilmAnimation': '영화/애니메이션',

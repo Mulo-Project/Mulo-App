@@ -803,6 +803,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sourceWeb => 'Web';
 
   @override
+  String get searchSortTooltip => 'Sort';
+
+  @override
+  String get searchSortNewest => 'Newest';
+
+  @override
+  String get searchSortRelevance => 'Relevance';
+
+  @override
+  String get searchSortShortest => 'Shortest';
+
+  @override
+  String get searchSortLongest => 'Longest';
+
+  @override
+  String get searchSortTitle => 'Title';
+
+  @override
   String videoCategory(String name) {
     String _temp0 = intl.Intl.selectLogic(name, {
       'FilmAnimation': 'Film & Animation',
