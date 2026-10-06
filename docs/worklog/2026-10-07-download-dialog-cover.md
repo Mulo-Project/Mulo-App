@@ -11,7 +11,7 @@
 - 받기 팝업에 "취소" 버튼, 받는 곡 취소 시 확인 대화상자.
 - 웹 커버 오프라인 캐시(`lib/core/cache/cached_web_image.dart`): 첫 표시 때 작은 사본을 캐시 폴더에 저장.
 - `DownloadRequest` · `DownloadItem`에 `cover` 추가. 대기열 타일은 고른 커버로 그린다.
-- 결정: D-069.
+- 결정: D-070.
 
 ## 바꾼 설정
 - 없음 (pubspec 변경 없음, `crypto` · `path_provider` 기존 의존성 사용). 문구 6개 추가(ARB).
