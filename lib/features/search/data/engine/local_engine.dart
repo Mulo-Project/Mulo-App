@@ -90,6 +90,10 @@ class LocalEngine implements DownloaderEngine {
       '--flat-playlist',
       '--dump-single-json',
       '--no-warnings',
+      // 곡 정보에는 필요 없는 DASH · HLS 목록과 번역 자막을 받지 않아 더 빠르다.
+      // (실측: 곡 하나 약 2.4~3.5초 → 1.9초, 쓰는 필드는 그대로)
+      '--extractor-args',
+      'youtube:skip=dash,hls,translated_subs',
       url,
     ]);
     final j = _decode(out);
@@ -106,6 +110,27 @@ class LocalEngine implements DownloaderEngine {
       );
     }
     return VideoInfo(_hit(j));
+  }
+
+  @override
+  Future<ChannelInfo> fetchChannel(String url) async {
+    // 채널 탭의 영상은 받지 않고(`--playlist-items 0`) 채널 자체 정보만 읽는다.
+    final out = await _exec([
+      '--flat-playlist',
+      '--playlist-items',
+      '0',
+      '--dump-single-json',
+      '--no-warnings',
+      url,
+    ]);
+    final j = _decode(out);
+    if (j == null) {
+      throw const EngineException(EngineFailure.failed, 'bad response');
+    }
+    return ChannelInfo(
+      thumbnailUrl: avatarUrl(j['thumbnails']),
+      subscriberCount: parseCount(j['channel_follower_count']),
+    );
   }
 
   Future<String> _exec(List<String> args) async {
@@ -156,6 +181,13 @@ class LocalEngine implements DownloaderEngine {
       duration: seconds is num ? Duration(seconds: seconds.round()) : null,
       thumbnailUrl: thumb,
       categories: parseCategories(j['categories']),
+      channelUrl: parseText(j['channel_url'] ?? j['uploader_url']),
+      viewCount: parseCount(j['view_count']),
+      uploadedAt: parseDate(j['upload_date']),
+      description: parseText(j['description']) ?? '',
+      likeCount: parseCount(j['like_count']),
+      subscriberCount: parseCount(j['channel_follower_count']),
+      creators: parseStrings(j['creators']),
     );
   }
 }

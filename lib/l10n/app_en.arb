@@ -311,6 +311,38 @@
   "searchSourceTooltip": "Search source",
   "sourceYoutube": "YouTube",
   "sourceWeb": "Web",
+  "searchHitMenuDetail": "View details",
+  "mediaDetailTitle": "Details",
+  "mediaDetailWatchYoutube": "Watch on YouTube",
+  "mediaDetailOpenOriginal": "Open original page",
+  "mediaDetailChannel": "Channel",
+  "mediaDetailOpenChannel": "View channel",
+  "mediaDetailDuration": "Length",
+  "mediaDetailViews": "Views",
+  "mediaDetailUploaded": "Uploaded",
+  "mediaDetailCategory": "Category",
+  "mediaDetailDescription": "Description",
+  "mediaDetailMore": "Show more",
+  "mediaDetailLikes": "Likes",
+  "mediaDetailSubscribers": "{count} subscribers",
+  "@mediaDetailSubscribers": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "mediaDetailCollaborators": "Collaborators",
+  "mediaDetailLess": "Show less",
+  "mediaDetailOpenFailed": "No app can open this link.",
+  "mediaDetailViewCount": "{count} views",
+  "@mediaDetailViewCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "searchSortTooltip": "Sort",
   "searchSortNewest": "Newest",
   "searchSortRelevance": "Relevance",

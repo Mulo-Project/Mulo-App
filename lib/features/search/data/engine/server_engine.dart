@@ -81,6 +81,12 @@ class ServerEngine implements DownloaderEngine {
     return VideoInfo(_hit(json));
   }
 
+  /// 서버 명세에 채널 조회가 없어서 쓰지 않는다. 상세 보기는 곡 정보에 실려 온
+  /// `subscriberCount` · `channelThumbnail`만 보여 준다.
+  @override
+  Future<ChannelInfo> fetchChannel(String url) async =>
+      throw const EngineException(EngineFailure.unavailable);
+
   MediaHit _hit(Map<String, dynamic> j) {
     final id = j['videoId'] as String? ?? '';
     final seconds = j['durationSec'];
@@ -94,6 +100,14 @@ class ServerEngine implements DownloaderEngine {
       thumbnailUrl: j['thumbnail'] as String?,
       categories: parseCategories(j['categories']),
       downloaded: j['downloaded'] == true,
+      channelUrl: parseText(j['channelUrl']),
+      viewCount: parseCount(j['viewCount']),
+      uploadedAt: parseDate(j['uploadDate']),
+      description: parseText(j['description']) ?? '',
+      likeCount: parseCount(j['likeCount']),
+      subscriberCount: parseCount(j['subscriberCount']),
+      channelThumbnailUrl: parseText(j['channelThumbnail']),
+      creators: parseStrings(j['creators']),
     );
   }
 

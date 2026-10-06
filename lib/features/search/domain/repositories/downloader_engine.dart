@@ -17,4 +17,8 @@ abstract interface class DownloaderEngine {
 
   /// URL로 곡 또는 재생목록 정보를 가져온다.
   Future<MediaInfo> fetchInfo(String url);
+
+  /// 채널 주소로 채널 이미지 · 구독자 수를 가져온다. 알 수 없으면 [EngineException]
+  /// (`unavailable` 포함)을 던진다.
+  Future<ChannelInfo> fetchChannel(String url);
 }

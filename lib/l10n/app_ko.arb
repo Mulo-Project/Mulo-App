@@ -397,6 +397,38 @@
   "searchSourceTooltip": "검색 대상",
   "sourceYoutube": "유튜브",
   "sourceWeb": "웹",
+  "searchHitMenuDetail": "상세 보기",
+  "mediaDetailTitle": "상세 정보",
+  "mediaDetailWatchYoutube": "유튜브에서 보기",
+  "mediaDetailOpenOriginal": "원본 페이지 열기",
+  "mediaDetailChannel": "채널",
+  "mediaDetailOpenChannel": "채널 보기",
+  "mediaDetailDuration": "길이",
+  "mediaDetailViews": "조회수",
+  "mediaDetailUploaded": "올린 날",
+  "mediaDetailCategory": "분류",
+  "mediaDetailDescription": "설명",
+  "mediaDetailMore": "더 보기",
+  "mediaDetailLikes": "좋아요",
+  "mediaDetailSubscribers": "구독자 {count}명",
+  "@mediaDetailSubscribers": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "mediaDetailCollaborators": "공동 작업자",
+  "mediaDetailLess": "접기",
+  "mediaDetailOpenFailed": "열 수 있는 앱이 없어요.",
+  "mediaDetailViewCount": "{count}회",
+  "@mediaDetailViewCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "searchSortTooltip": "정렬",
   "searchSortNewest": "최신순",
   "searchSortRelevance": "관련도순",

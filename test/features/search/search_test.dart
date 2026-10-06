@@ -448,7 +448,7 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('입력 후 확인하면 결과가 나오고 곡을 누르면 받기 팝업이 열린다', (tester) async {
+    testWidgets('입력 후 확인하면 결과가 나오고 받기 버튼을 누르면 받기 팝업이 열린다', (tester) async {
       final engine = FakeDownloaderEngine(
         pages: [
           const SearchPage(
@@ -477,7 +477,7 @@ void main() {
       expect(find.textContaining('Some Artist'), findsOneWidget);
       expect(find.textContaining('3:05'), findsOneWidget);
 
-      await tester.tap(find.text('Found Song'));
+      await tester.tap(find.byTooltip('Download'));
       await tester.pumpAndSettle();
       expect(find.widgetWithText(TextField, 'Found Song'), findsOneWidget);
     });

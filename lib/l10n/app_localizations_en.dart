@@ -803,6 +803,64 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sourceWeb => 'Web';
 
   @override
+  String get searchHitMenuDetail => 'View details';
+
+  @override
+  String get mediaDetailTitle => 'Details';
+
+  @override
+  String get mediaDetailWatchYoutube => 'Watch on YouTube';
+
+  @override
+  String get mediaDetailOpenOriginal => 'Open original page';
+
+  @override
+  String get mediaDetailChannel => 'Channel';
+
+  @override
+  String get mediaDetailOpenChannel => 'View channel';
+
+  @override
+  String get mediaDetailDuration => 'Length';
+
+  @override
+  String get mediaDetailViews => 'Views';
+
+  @override
+  String get mediaDetailUploaded => 'Uploaded';
+
+  @override
+  String get mediaDetailCategory => 'Category';
+
+  @override
+  String get mediaDetailDescription => 'Description';
+
+  @override
+  String get mediaDetailMore => 'Show more';
+
+  @override
+  String get mediaDetailLikes => 'Likes';
+
+  @override
+  String mediaDetailSubscribers(String count) {
+    return '$count subscribers';
+  }
+
+  @override
+  String get mediaDetailCollaborators => 'Collaborators';
+
+  @override
+  String get mediaDetailLess => 'Show less';
+
+  @override
+  String get mediaDetailOpenFailed => 'No app can open this link.';
+
+  @override
+  String mediaDetailViewCount(String count) {
+    return '$count views';
+  }
+
+  @override
   String get searchSortTooltip => 'Sort';
 
   @override

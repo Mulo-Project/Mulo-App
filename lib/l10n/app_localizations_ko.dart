@@ -790,6 +790,64 @@ class AppLocalizationsKo extends AppLocalizations {
   String get sourceWeb => '웹';
 
   @override
+  String get searchHitMenuDetail => '상세 보기';
+
+  @override
+  String get mediaDetailTitle => '상세 정보';
+
+  @override
+  String get mediaDetailWatchYoutube => '유튜브에서 보기';
+
+  @override
+  String get mediaDetailOpenOriginal => '원본 페이지 열기';
+
+  @override
+  String get mediaDetailChannel => '채널';
+
+  @override
+  String get mediaDetailOpenChannel => '채널 보기';
+
+  @override
+  String get mediaDetailDuration => '길이';
+
+  @override
+  String get mediaDetailViews => '조회수';
+
+  @override
+  String get mediaDetailUploaded => '올린 날';
+
+  @override
+  String get mediaDetailCategory => '분류';
+
+  @override
+  String get mediaDetailDescription => '설명';
+
+  @override
+  String get mediaDetailMore => '더 보기';
+
+  @override
+  String get mediaDetailLikes => '좋아요';
+
+  @override
+  String mediaDetailSubscribers(String count) {
+    return '구독자 $count명';
+  }
+
+  @override
+  String get mediaDetailCollaborators => '공동 작업자';
+
+  @override
+  String get mediaDetailLess => '접기';
+
+  @override
+  String get mediaDetailOpenFailed => '열 수 있는 앱이 없어요.';
+
+  @override
+  String mediaDetailViewCount(String count) {
+    return '$count회';
+  }
+
+  @override
   String get searchSortTooltip => '정렬';
 
   @override

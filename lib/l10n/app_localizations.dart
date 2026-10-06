@@ -1556,6 +1556,114 @@ abstract class AppLocalizations {
   /// **'웹'**
   String get sourceWeb;
 
+  /// No description provided for @searchHitMenuDetail.
+  ///
+  /// In ko, this message translates to:
+  /// **'상세 보기'**
+  String get searchHitMenuDetail;
+
+  /// No description provided for @mediaDetailTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'상세 정보'**
+  String get mediaDetailTitle;
+
+  /// No description provided for @mediaDetailWatchYoutube.
+  ///
+  /// In ko, this message translates to:
+  /// **'유튜브에서 보기'**
+  String get mediaDetailWatchYoutube;
+
+  /// No description provided for @mediaDetailOpenOriginal.
+  ///
+  /// In ko, this message translates to:
+  /// **'원본 페이지 열기'**
+  String get mediaDetailOpenOriginal;
+
+  /// No description provided for @mediaDetailChannel.
+  ///
+  /// In ko, this message translates to:
+  /// **'채널'**
+  String get mediaDetailChannel;
+
+  /// No description provided for @mediaDetailOpenChannel.
+  ///
+  /// In ko, this message translates to:
+  /// **'채널 보기'**
+  String get mediaDetailOpenChannel;
+
+  /// No description provided for @mediaDetailDuration.
+  ///
+  /// In ko, this message translates to:
+  /// **'길이'**
+  String get mediaDetailDuration;
+
+  /// No description provided for @mediaDetailViews.
+  ///
+  /// In ko, this message translates to:
+  /// **'조회수'**
+  String get mediaDetailViews;
+
+  /// No description provided for @mediaDetailUploaded.
+  ///
+  /// In ko, this message translates to:
+  /// **'올린 날'**
+  String get mediaDetailUploaded;
+
+  /// No description provided for @mediaDetailCategory.
+  ///
+  /// In ko, this message translates to:
+  /// **'분류'**
+  String get mediaDetailCategory;
+
+  /// No description provided for @mediaDetailDescription.
+  ///
+  /// In ko, this message translates to:
+  /// **'설명'**
+  String get mediaDetailDescription;
+
+  /// No description provided for @mediaDetailMore.
+  ///
+  /// In ko, this message translates to:
+  /// **'더 보기'**
+  String get mediaDetailMore;
+
+  /// No description provided for @mediaDetailLikes.
+  ///
+  /// In ko, this message translates to:
+  /// **'좋아요'**
+  String get mediaDetailLikes;
+
+  /// No description provided for @mediaDetailSubscribers.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독자 {count}명'**
+  String mediaDetailSubscribers(String count);
+
+  /// No description provided for @mediaDetailCollaborators.
+  ///
+  /// In ko, this message translates to:
+  /// **'공동 작업자'**
+  String get mediaDetailCollaborators;
+
+  /// No description provided for @mediaDetailLess.
+  ///
+  /// In ko, this message translates to:
+  /// **'접기'**
+  String get mediaDetailLess;
+
+  /// No description provided for @mediaDetailOpenFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'열 수 있는 앱이 없어요.'**
+  String get mediaDetailOpenFailed;
+
+  /// No description provided for @mediaDetailViewCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}회'**
+  String mediaDetailViewCount(String count);
+
   /// No description provided for @searchSortTooltip.
   ///
   /// In ko, this message translates to:
