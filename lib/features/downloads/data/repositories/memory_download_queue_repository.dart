@@ -26,6 +26,7 @@ class MemoryDownloadQueueRepository implements DownloadQueueRepository {
         genre: request.genre,
         playlistIds: request.playlistIds,
         status: DownloadStatus.queued,
+        duration: request.duration,
       ),
     );
     _changes.add([..._items]);

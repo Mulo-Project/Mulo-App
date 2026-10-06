@@ -145,3 +145,83 @@ class ProgressLine extends StatelessWidget {
     );
   }
 }
+
+/// 작은 원형 진행 표시: 얇은 트랙 위를 강조 색 호가 맨 위에서부터 시계 방향으로 채운다.
+/// 가운데에 [child]를 둔다 (보통 남은 초). 버튼 안에 들어가는 크기용.
+class CountdownRing extends StatelessWidget {
+  const CountdownRing({
+    super.key,
+    required this.value,
+    this.size = 32,
+    this.stroke = 2.5,
+    this.child,
+  });
+
+  /// 0 ~ 1.
+  final double value;
+  final double size;
+  final double stroke;
+  final Widget? child;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return CustomPaint(
+      size: Size.square(size),
+      painter: _CountdownPainter(
+        value: value.clamp(0.0, 1.0),
+        stroke: stroke,
+        track: p.glassBorder,
+        fill: p.accent,
+      ),
+      child: SizedBox.square(
+        dimension: size,
+        child: Center(child: child),
+      ),
+    );
+  }
+}
+
+class _CountdownPainter extends CustomPainter {
+  _CountdownPainter({
+    required this.value,
+    required this.stroke,
+    required this.track,
+    required this.fill,
+  });
+
+  final double value;
+  final double stroke;
+  final Color track;
+  final Color fill;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Rect.fromCircle(
+      center: size.center(Offset.zero),
+      radius: (size.shortestSide - stroke) / 2,
+    );
+    Paint line(Color c) => Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = stroke
+      ..strokeCap = StrokeCap.round
+      ..color = c;
+    canvas.drawArc(rect, 0, 2 * math.pi, false, line(track));
+    if (value > 0) {
+      canvas.drawArc(
+        rect,
+        -math.pi / 2,
+        2 * math.pi * value,
+        false,
+        line(fill),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_CountdownPainter old) =>
+      old.value != value ||
+      old.stroke != stroke ||
+      old.track != track ||
+      old.fill != fill;
+}

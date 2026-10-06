@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../library/domain/entities/track.dart' show formatDuration;
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/download_item.dart';
 import '../bloc/download_queue_cubit.dart';
@@ -52,7 +53,7 @@ class _DownloadProgressCardState extends State<DownloadProgressCard> {
           // 받는 곡: 이미지 · 제목 · 아티스트 · 진행 막대.
           TrackTile(
             title: item.title,
-            subtitle: item.artist,
+            subtitle: _subtitle(item),
             tone: toneFor(item.id),
             artwork: _thumbnail(item),
             footer: Column(
@@ -114,7 +115,7 @@ class _DownloadProgressCardState extends State<DownloadProgressCard> {
                       for (final w in waiting)
                         TrackTile(
                           title: w.title,
-                          subtitle: w.artist,
+                          subtitle: _subtitle(w),
                           tone: toneFor(w.id),
                           artwork: _thumbnail(w),
                           trailing: _CancelButton(item: w),
@@ -128,6 +129,12 @@ class _DownloadProgressCardState extends State<DownloadProgressCard> {
       ),
     );
   }
+
+  /// 아티스트 · 길이 (모르는 건 뺀다).
+  static String _subtitle(DownloadItem item) => [
+    if (item.artist.isNotEmpty) item.artist,
+    if (item.duration != null) formatDuration(item.duration!),
+  ].join(' · ');
 
   /// 받는 곡의 썸네일. 없으면 곡 타일처럼 그라데이션 자리를 보여 준다.
   static ImageProvider? _thumbnail(DownloadItem item) {

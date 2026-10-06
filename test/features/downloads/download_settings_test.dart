@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/di/injector.dart';
+import 'package:music_download_play_app/features/downloads/domain/entities/download_options.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 
 import '../../helpers/fakes.dart';
@@ -78,5 +79,14 @@ void main() {
     await tester.tap(inSheet(find.text('록')));
     await tester.pump();
     expect(find.text('록'), findsNWidgets(2)); // 입력칸 + 제안 칩
+  });
+
+  testWidgets('설정의 저장 형식은 기기 정책이 허용한 것만 보여 준다', (tester) async {
+    final settings = MemoryDownloadSettings()
+      ..formats = const [AudioFormat.opus, AudioFormat.mp3];
+    await pump(tester, Routes.settings, settings: settings, height: 7000);
+    expect(find.text('opus'), findsOneWidget);
+    expect(find.text('mp3'), findsOneWidget);
+    expect(find.text('m4a'), findsNothing);
   });
 }

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 import '../../domain/entities/audio_stream.dart';
@@ -75,32 +77,121 @@ String _oneLine(Object? o) => '$o'
     .where((l) => l.isNotEmpty)
     .join(' / ');
 
-/// 안드로이드용 클라이언트로 오디오 형식 하나를 골라 주소를 읽는다.
+/// 클라이언트를 차례로 써 보며 "실제로 끝까지 받을 수 있는" 오디오 주소를 읽는다.
+///
+/// 클라이언트마다 주소의 허용 조건이 달라(예: PO 토큰 없는 안드로이드 주소는 앞 일부만 주고 403)
+/// 주소를 읽은 것만으로는 재생된다고 할 수 없다. 그래서 파일 중간 구간을 실제로 요청해 보고(probe)
+/// 206이 오는 클라이언트의 주소를 쓴다. 모두 실패하면 읽은 주소 중 첫째를 그대로 돌려준다.
 Future<AudioStream?> _readWithExplode(String videoId) async {
   final yt = YoutubeExplode();
+  final errors = <String>[];
+  AudioStream? firstReadable;
   try {
-    final manifest = await yt.videos.streamsClient.getManifest(
-      videoId,
-      ytClients: [YoutubeApiClient.androidVr, YoutubeApiClient.androidSdkless],
-    );
-    final audio = manifest.audioOnly;
-    if (audio.isEmpty) return null;
-    final preferred = preferredAudioFormat() == AudioFormat.m4a
-        ? StreamContainer.mp4
-        : StreamContainer.webM;
-    final same = audio.where((s) => s.container == preferred);
-    final best = (same.isNotEmpty ? same : audio).toList()
-      ..sort((a, b) => b.bitrate.compareTo(a.bitrate));
-    return AudioStream(
-      url: best.first.url.toString(),
-      headers: const {'user-agent': _userAgent},
-    );
+    for (final client in [
+      _visionOs,
+      YoutubeApiClient.androidVr,
+      YoutubeApiClient.androidSdkless,
+    ]) {
+      final List<AudioOnlyStreamInfo> ordered;
+      try {
+        final manifest = await yt.videos.streamsClient.getManifest(
+          videoId,
+          ytClients: [client],
+        );
+        ordered = _orderAudio(manifest.audioOnly.toList());
+      } on Object catch (e) {
+        errors.add(_oneLine(e).split(' / ').first);
+        continue;
+      }
+      if (ordered.isEmpty) continue;
+      final stream = _toStream(ordered.first, [
+        for (final s in ordered.skip(1).take(3)) _toStream(s),
+      ]);
+      firstReadable ??= stream;
+      if (await _canReadMiddle(ordered.first)) return stream;
+      errors.add('${ordered.first.url.queryParameters['c']}: 구간 403');
+    }
+    if (firstReadable != null) return firstReadable;
+    throw EngineException(EngineFailure.failed, errors.join(' | '));
+  } on EngineException {
+    rethrow;
   } on Object catch (e) {
     throw EngineException(EngineFailure.failed, '$e');
   } finally {
     yt.close();
   }
 }
+
+/// 정책 형식을 먼저, 그다음 나머지 (비트레이트 높은 순). 앞의 것이 안 열리면 플레이어가 차례로 써 본다.
+List<AudioOnlyStreamInfo> _orderAudio(List<AudioOnlyStreamInfo> audio) {
+  final preferred = preferredAudioFormat() == AudioFormat.m4a
+      ? StreamContainer.mp4
+      : StreamContainer.webM;
+  return audio..sort((a, b) {
+    final byFormat = (b.container == preferred ? 1 : 0).compareTo(
+      a.container == preferred ? 1 : 0,
+    );
+    return byFormat != 0 ? byFormat : b.bitrate.compareTo(a.bitrate);
+  });
+}
+
+AudioStream _toStream(StreamInfo s, [List<AudioStream> rest = const []]) =>
+    AudioStream(
+      url: s.url.toString(),
+      headers: {
+        'user-agent': switch (s.url.queryParameters['c']) {
+          'ANDROID' => _androidUserAgent,
+          'VISIONOS' => _visionOsUserAgent,
+          _ => _userAgent,
+        },
+      },
+      fallbacks: rest,
+    );
+
+/// 파일 가운데 1KB를 실제로 요청해 206이 오는지 본다 (못 받는 주소를 미리 걸러내려고).
+Future<bool> _canReadMiddle(AudioOnlyStreamInfo s) async {
+  final client = HttpClient()..connectionTimeout = const Duration(seconds: 6);
+  try {
+    final total = s.size.totalBytes;
+    final from = total > 4096 ? total ~/ 2 : 0;
+    final req = await client.getUrl(s.url);
+    _toStream(s).headers.forEach(req.headers.set);
+    req.headers.set('range', 'bytes=$from-${from + 1023}');
+    final resp = await req.close().timeout(const Duration(seconds: 8));
+    await resp.drain<void>();
+    return resp.statusCode == 206 || resp.statusCode == 200;
+  } on Object {
+    // 확인 자체가 안 되면(네트워크 등) 거르지 않고 쓴다.
+    return true;
+  } finally {
+    client.close(force: true);
+  }
+}
+
+const _visionOsUserAgent =
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 15_7_3) AppleWebKit/605.1.15 '
+    '(KHTML, like Gecko) Version/26.0 Safari/605.1.15';
+
+/// yt-dlp의 visionos 클라이언트와 같은 설정 (JS 실행기 · PO 토큰 없이 전체 구간 주소를 준다).
+const _visionOs = YoutubeApiClient({
+  'context': {
+    'client': {
+      'clientName': 'VISIONOS',
+      'clientVersion': '1.02',
+      'deviceMake': 'Apple',
+      'deviceModel': 'RealityDevice17,1',
+      'userAgent': _visionOsUserAgent,
+      'osName': 'visionOS',
+      'osVersion': '26.5.23O471',
+      'hl': 'en',
+      'timeZone': 'UTC',
+      'utcOffsetMinutes': 0,
+    },
+  },
+}, 'https://www.youtube.com/youtubei/v1/player?prettyPrint=false');
+
+const _androidUserAgent =
+    'com.google.android.youtube/20.10.38 (Linux; U; Android 11) gzip';
 
 const _userAgent =
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '

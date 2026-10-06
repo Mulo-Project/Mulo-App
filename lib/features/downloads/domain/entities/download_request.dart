@@ -11,6 +11,7 @@ class DownloadRequest extends Equatable {
     this.playlistIds = const {},
     this.quality = Quality.best,
     this.savePath = '',
+    this.duration,
   });
 
   final String title;
@@ -24,6 +25,9 @@ class DownloadRequest extends Equatable {
   /// 받은 곡을 저장할 폴더. 비어 있으면 기본 저장 위치.
   final String savePath;
 
+  /// 곡 길이. 모르면 null (대기열 타일에 그대로 이어서 보여 준다).
+  final Duration? duration;
+
   /// 문자열 앞뒤 공백을 지운 사본.
   DownloadRequest normalized() => DownloadRequest(
     title: title.trim(),
@@ -32,6 +36,7 @@ class DownloadRequest extends Equatable {
     playlistIds: playlistIds,
     quality: quality,
     savePath: savePath.trim(),
+    duration: duration,
   );
 
   @override
@@ -42,5 +47,6 @@ class DownloadRequest extends Equatable {
     playlistIds,
     quality,
     savePath,
+    duration,
   ];
 }

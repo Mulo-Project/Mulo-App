@@ -7,6 +7,7 @@ import '../../../library/domain/entities/track.dart' show formatDuration;
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
+import '../../domain/entities/preview_progress.dart';
 import '../bloc/preview_cubit.dart';
 
 /// [hit] 미리 듣기를 시작하거나(이미 듣는 중이면) 멈춘다.
@@ -91,10 +92,10 @@ class PreviewRowButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final status = context.select(
-      (PreviewCubit c) =>
-          c.state.isActive(hit.id) ? c.state.status : PreviewStatus.idle,
+    final state = context.select(
+      (PreviewCubit c) => c.state.isActive(hit.id) ? c.state : null,
     );
+    final status = state?.status ?? PreviewStatus.idle;
     return RowIconButton(
       key: const ValueKey('preview-row-button'),
       icon: switch (status) {
@@ -109,9 +110,113 @@ class PreviewRowButton extends StatelessWidget {
       },
       accent: status != PreviewStatus.idle,
       busy: status == PreviewStatus.loading,
+      busyChild: state == null ? null : PreviewLoadingRing(state: state),
       onPressed: () => togglePreview(context, hit),
     );
   }
+}
+
+/// 소리가 나기까지 남은 시간을 보여 주는 작은 원: 호가 차오르고 가운데에 남은 초가 있다.
+/// 어림한 시간이 지나도 시작하지 않으면 마지막 1초에서 기다린다.
+class PreviewLoadingRing extends StatelessWidget {
+  const PreviewLoadingRing({super.key, required this.state, this.size = 28});
+
+  final PreviewState state;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final started = state.loadStartedAt;
+    final total = state.expectedLoad;
+    if (started == null || total <= Duration.zero) {
+      return SizedBox.square(dimension: size);
+    }
+    final elapsed = DateTime.now().difference(started);
+    final begin = (elapsed.inMilliseconds / total.inMilliseconds).clamp(
+      0.0,
+      1.0,
+    );
+    final text = Theme.of(context).textTheme.labelSmall;
+    return TweenAnimationBuilder<double>(
+      key: ValueKey(started),
+      tween: Tween(begin: begin, end: 1),
+      duration: total * (1 - begin),
+      builder: (context, v, _) {
+        final left = (total.inSeconds * (1 - v)).ceil().clamp(1, 99);
+        return CountdownRing(
+          key: const ValueKey('preview-loading-ring'),
+          value: v,
+          size: size,
+          child: Text('$left', style: text?.copyWith(fontSize: 10)),
+        );
+      },
+    );
+  }
+}
+
+/// 다른 화면에서도 보이는 미리 듣기 줄: 제목 · 진행 막대 · 시간 · 멈춤 버튼.
+/// 미리 듣기가 없으면 아무것도 그리지 않는다.
+class PreviewMiniBar extends StatelessWidget {
+  const PreviewMiniBar({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<PreviewCubit>().state;
+    if (state.status == PreviewStatus.idle) return const SizedBox.shrink();
+    final l10n = context.l10n;
+    final p = context.palette;
+    final text = Theme.of(context).textTheme;
+    final loading = state.status == PreviewStatus.loading;
+    final progress = state.progress;
+    return Padding(
+      key: const ValueKey('preview-mini-bar'),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs,
+      ),
+      child: Row(
+        children: [
+          Icon(AppIcons.headphones, size: 18, color: p.accent),
+          const SizedBox(width: AppSpacing.xs),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  state.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: text.bodySmall,
+                ),
+                const SizedBox(height: AppSpacing.xxs),
+                ProgressLine(value: loading ? 0 : state.fraction, height: 3),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          if (loading)
+            PreviewLoadingRing(state: state, size: 24)
+          else
+            Text(
+              _timeText(progress),
+              style: text.labelSmall?.copyWith(color: p.onSurfaceMuted),
+            ),
+          RowIconButton(
+            icon: AppIcons.close,
+            tooltip: l10n.searchPreviewStop,
+            onPressed: () => context.read<PreviewCubit>().stop(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String _timeText(PreviewProgress? progress) {
+  final d = progress?.duration;
+  return '${formatDuration(progress?.position ?? Duration.zero)}'
+      ' / ${d == null ? '--:--' : formatDuration(d)}';
 }
 
 /// 미리 듣는 곡의 재생 진행도: 얼마나 들었는지 막대 + 시간.
@@ -137,22 +242,42 @@ class PreviewProgressBar extends StatelessWidget {
     final text = Theme.of(context).textTheme.bodySmall;
     final progress = state.progress;
     final duration = progress?.duration;
-    return Column(
+    final bar = Column(
       key: const ValueKey('preview-progress'),
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ProgressLine(value: state.fraction),
         if (showTime) ...[
-          const SizedBox(height: AppSpacing.xxs),
-          Text(
-            '${formatDuration(progress?.position ?? Duration.zero)}'
-            ' / ${duration == null ? '--:--' : formatDuration(duration)}',
-            style: text,
-            textAlign: TextAlign.center,
+          const SizedBox(height: AppSpacing.xs),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                formatDuration(progress?.position ?? Duration.zero),
+                key: const ValueKey('preview-position'),
+                style: text,
+              ),
+              Text(
+                duration == null ? '--:--' : formatDuration(duration),
+                key: const ValueKey('preview-duration'),
+                style: text,
+              ),
+            ],
           ),
         ],
       ],
     );
+    return showTime
+        ? Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xs,
+              AppSpacing.sm,
+              AppSpacing.xs,
+              0,
+            ),
+            child: bar,
+          )
+        : bar;
   }
 }
