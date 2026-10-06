@@ -215,11 +215,11 @@ void main() {
 
     testWidgets('길게 누르기 메뉴에서 미리 듣고, 메뉴나 멈춤 버튼으로 멈춘다', (tester) async {
       final player = await openSearch(tester);
-      expect(find.byKey(const ValueKey('preview-indicator')), findsNothing);
+      expect(find.byTooltip('Stop preview'), findsNothing);
 
       await previewFromMenu(tester);
       expect(player.playing, isTrue);
-      expect(find.byKey(const ValueKey('preview-indicator')), findsOneWidget);
+      expect(find.byTooltip('Stop preview'), findsOneWidget);
 
       await tester.longPress(find.text('Song'));
       await tester.pumpAndSettle();
@@ -227,10 +227,10 @@ void main() {
       await tester.tap(find.text('Stop preview'));
       await tester.pumpAndSettle();
       expect(player.playing, isFalse);
-      expect(find.byKey(const ValueKey('preview-indicator')), findsNothing);
+      expect(find.byTooltip('Stop preview'), findsNothing);
 
       await previewFromMenu(tester);
-      await tester.tap(find.byKey(const ValueKey('preview-indicator')));
+      await tester.tap(find.byTooltip('Stop preview'));
       await tester.pumpAndSettle();
       expect(player.playing, isFalse);
     });
@@ -250,6 +250,20 @@ void main() {
       expect(player.played, isEmpty);
     });
 
+    testWidgets('검색 줄의 미리 듣기 버튼으로 바로 듣고 같은 버튼으로 멈춘다', (tester) async {
+      final player = await openSearch(tester);
+
+      await tester.tap(find.byKey(const ValueKey('preview-row-button')));
+      await tester.pumpAndSettle();
+      expect(player.playing, isTrue);
+      expect(find.byTooltip('Stop preview'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('preview-row-button')));
+      await tester.pumpAndSettle();
+      expect(player.playing, isFalse);
+      expect(find.byTooltip('Preview'), findsOneWidget);
+    });
+
     testWidgets('상세 화면 버튼으로 미리 듣고, 화면을 나가면 멈춘다', (tester) async {
       final player = await openSearch(tester);
       await tester.tap(find.text('Song'));
@@ -263,7 +277,7 @@ void main() {
       await tester.tap(find.byTooltip('Back'));
       await tester.pumpAndSettle();
       expect(player.playing, isFalse);
-      expect(find.byKey(const ValueKey('preview-indicator')), findsNothing);
+      expect(find.byTooltip('Stop preview'), findsNothing);
     });
 
     testWidgets('다른 탭으로 가면 멈춘다', (tester) async {

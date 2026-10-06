@@ -399,9 +399,9 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - 검색 결과 타일에서는 곡 길이를 뺐다 (상세 화면 · 보관함 타일은 그대로).
 
 ## D-061 · 2026-10-06 · 검색 결과 미리 듣기 (다운로드 없이 스트림 재생)
-- 검색 결과(상세 화면의 "미리 듣기" 버튼, 검색 줄 길게 누르기 메뉴의 "미리 듣기")를 받지 않고 바로 들어 볼 수 있다. 로컬 엔진(`LocalEngine`)이 `yt-dlp -f bestaudio[ext=m4a]/bestaudio/best --no-playlist --dump-single-json`으로 오디오 스트림 주소(`url` · `http_headers`)만 읽고(`DownloaderEngine.resolveAudioStream`, 엔티티 `AudioStream`), 미리 듣기 전용 플레이어가 그 주소를 재생한다. m4a(AAC)를 먼저 고르는 까닭은 macOS(just_audio 자체 구현)가 webm/opus를 못 풀기 때문이다. 스트림 주소는 곡 정보와 같이 `CachedDownloaderEngine`이 15분 기억한다.
+- 검색 결과(상세 화면의 "미리 듣기" 버튼, 검색 줄 오른쪽의 작은 아이콘 버튼(`RowIconButton`, 듣는 중이면 강조 색 + 멈춤 아이콘), 길게 누르기 메뉴의 "미리 듣기")를 받지 않고 바로 들어 볼 수 있다. 로컬 엔진(`LocalEngine`)이 `yt-dlp -f bestaudio[ext=m4a]/bestaudio/best --no-playlist --dump-single-json`으로 오디오 스트림 주소(`url` · `http_headers`)만 읽고(`DownloaderEngine.resolveAudioStream`, 엔티티 `AudioStream`), 미리 듣기 전용 플레이어가 그 주소를 재생한다. m4a(AAC)를 먼저 고르는 까닭은 macOS(just_audio 자체 구현)가 webm/opus를 못 풀기 때문이다. 스트림 주소는 곡 정보와 같이 `CachedDownloaderEngine`이 15분 기억한다.
 - **메인 재생과 섞지 않는다.** 미리 듣기는 `PreviewPlayer`(도메인 인터페이스) → `JustAudioPreviewPlayer`(별도 `AudioPlayer`, 처음 쓸 때 만든다)로 대기열 · 미니 플레이어 · 재생 기록 · audio_service와 무관하다. 소리가 나기 시작하면 메인 재생은 일시정지하고(대기열은 그대로), 메인 재생이 시작되면 미리 듣기가 멈춘다 (`AppShell`의 `NowPlayingCubit` 리스너).
 - 앱 전체에서 `PreviewCubit` 하나(`MultiBlocProvider`)가 상태를 쥔다 (`hitId` + 준비 중 · 재생 중). 한 번에 한 곡만 들리고, 다른 곡을 누르면 앞의 곡은 바로 멈춘다. 준비 중에 멈추거나 다른 곡을 누르면 늦게 도착한 결과는 버린다 (세대 번호). 끝까지 재생되면 멈춘 상태로 돌아온다.
-- **멈추는 때**: 같은 곡 버튼을 다시 누를 때, 검색 줄의 멈춤 버튼(미리 듣는 곡 줄에만 보인다), 상세 화면을 나갈 때, 하단 탭을 다른 탭으로 옮길 때, 상세에서 영상 · 채널을 다른 앱으로 열 때, 메인 재생이 시작될 때.
+- **멈추는 때**: 같은 곡 버튼을 다시 누를 때, 검색 줄 오른쪽 미리 듣기 버튼을 다시 누를 때, 상세 화면을 나갈 때, 하단 탭을 다른 탭으로 옮길 때, 상세에서 영상 · 채널을 다른 앱으로 열 때, 메인 재생이 시작될 때.
 - 서버 모드(`ServerEngine`)는 서버 명세에 스트림 주소 조회가 없어서 `unavailable`을 던지고, 화면은 "이 기기에서는 미리 듣기를 쓸 수 없어요."를 보여 준다. 그래서 **서버 전용인 Android lite 빌드에서는 미리 듣기가 안 된다** (데스크톱 · Android full은 된다). 서버에 스트림 조회 API가 생기면 `ServerEngine.resolveAudioStream`만 채우면 된다.
 - 미리 듣기는 길이를 자르지 않고 곡 전체를 재생한다 (명세에 구간 제한이 없어 기본값으로 정함).

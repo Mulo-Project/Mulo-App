@@ -68,27 +68,34 @@ class PreviewButton extends StatelessWidget {
   }
 }
 
-/// 검색 결과 줄 오른쪽: 이 곡을 미리 듣는 중(또는 준비 중)일 때만 보이는 멈춤 버튼.
-class PreviewIndicator extends StatelessWidget {
-  const PreviewIndicator({super.key, required this.hitId});
+/// 검색 결과 줄 오른쪽의 미리 듣기 버튼 (면 없는 작은 아이콘 버튼).
+/// 누르면 미리 듣고, 준비 중이거나 듣는 중이면 강조 색으로 바뀌어 누를 때 멈춘다.
+class PreviewRowButton extends StatelessWidget {
+  const PreviewRowButton({super.key, required this.hit});
 
-  final String hitId;
+  final MediaHit hit;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final status = context.select(
       (PreviewCubit c) =>
-          c.state.isActive(hitId) ? c.state.status : PreviewStatus.idle,
+          c.state.isActive(hit.id) ? c.state.status : PreviewStatus.idle,
     );
-    if (status == PreviewStatus.idle) return const SizedBox.shrink();
-    final loading = status == PreviewStatus.loading;
-    return CircleIconButton(
-      key: const ValueKey('preview-indicator'),
-      icon: loading ? AppIcons.hourglassTop : AppIcons.pause,
-      tooltip: loading ? l10n.searchPreviewLoading : l10n.searchPreviewStop,
-      emphasized: !loading,
-      onPressed: context.read<PreviewCubit>().stop,
+    return RowIconButton(
+      key: const ValueKey('preview-row-button'),
+      icon: switch (status) {
+        PreviewStatus.idle => AppIcons.headphones,
+        PreviewStatus.loading => AppIcons.hourglassTop,
+        PreviewStatus.playing => AppIcons.pause,
+      },
+      tooltip: switch (status) {
+        PreviewStatus.idle => l10n.searchPreview,
+        PreviewStatus.loading => l10n.searchPreviewLoading,
+        PreviewStatus.playing => l10n.searchPreviewStop,
+      },
+      accent: status != PreviewStatus.idle,
+      onPressed: () => togglePreview(context, hit),
     );
   }
 }
