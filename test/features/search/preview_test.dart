@@ -9,8 +9,10 @@ import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/design/design.dart';
 import 'package:music_download_play_app/features/player/presentation/bloc/now_playing_cubit.dart';
 import 'package:music_download_play_app/features/search/data/engine/cached_engine.dart';
+import 'package:music_download_play_app/features/search/data/engine/explode_engine.dart';
 import 'package:music_download_play_app/features/search/data/engine/local_engine.dart';
 import 'package:music_download_play_app/features/search/data/engine/server_engine.dart';
+import 'package:music_download_play_app/features/search/domain/entities/audio_stream.dart';
 import 'package:music_download_play_app/features/search/domain/entities/engine_exception.dart';
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
 import 'package:music_download_play_app/features/search/domain/usecases/search_usecases.dart';
@@ -77,6 +79,37 @@ void main() {
       expect(calls, hasLength(2));
       expect(calls.last, contains('youtube:player_client=android_vr'));
     });
+
+    test(
+      'YoutubeExplodeEngine: 유튜브 곡은 라이브러리가 읽은 주소를 쓰고, 못 읽으면 안쪽 엔진으로 넘긴다',
+      () async {
+        final inner = FakeDownloaderEngine();
+        var fail = false;
+        final engine = YoutubeExplodeEngine(
+          inner,
+          reader: (id) async {
+            if (fail) throw const EngineException(EngineFailure.failed);
+            return AudioStream(url: 'https://explode/$id');
+          },
+        );
+        const url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+        expect(
+          (await engine.resolveAudioStream(url)).url,
+          'https://explode/dQw4w9WgXcQ',
+        );
+        fail = true;
+        expect(
+          (await engine.resolveAudioStream(url)).url,
+          'https://stream.test/$url',
+        );
+        // 유튜브 주소가 아니면 처음부터 안쪽 엔진.
+        fail = false;
+        expect(
+          (await engine.resolveAudioStream('https://soundcloud.com/a/b')).url,
+          'https://stream.test/https://soundcloud.com/a/b',
+        );
+      },
+    );
 
     test('LocalEngine: 주소가 없으면 실패다', () async {
       final engine = LocalEngine(
