@@ -13,7 +13,7 @@ class PlayRecord extends Equatable {
   final String trackId;
   final DateTime playedAt;
 
-  /// 실제로 들은 시간. 재생 엔진이 붙기 전에는 0.
+  /// 실제로 재생된 시간 (일시정지 · 건너뛴 구간 제외).
   final Duration listened;
 
   @override
@@ -132,7 +132,6 @@ class HomeSummary extends Equatable {
   });
 
   /// 오늘(기기 시간 0시부터) 들은 시간.
-  /// 들은 시간이 기록되지 않은 재생은 곡 길이로 어림한다.
   final Duration todayListened;
 
   /// 오늘 재생한 횟수.

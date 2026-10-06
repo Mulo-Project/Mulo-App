@@ -10,7 +10,7 @@ class DriftPlayHistoryRepository implements PlayHistoryRepository {
   final AppDatabase _db;
 
   @override
-  Future<void> recordPlay(PlayRecord record) => _db
+  Future<int> recordPlay(PlayRecord record) => _db
       .into(_db.plays)
       .insert(
         PlaysCompanion.insert(
@@ -18,6 +18,12 @@ class DriftPlayHistoryRepository implements PlayHistoryRepository {
           playedAt: record.playedAt,
           listenedMs: Value(record.listened.inMilliseconds),
         ),
+      );
+
+  @override
+  Future<void> updateListened(int id, Duration listened) =>
+      (_db.update(_db.plays)..where((p) => p.id.equals(id))).write(
+        PlaysCompanion(listenedMs: Value(listened.inMilliseconds)),
       );
 
   @override

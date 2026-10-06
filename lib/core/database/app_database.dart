@@ -67,7 +67,7 @@ class Plays extends Table {
   TextColumn get trackId => text()();
   DateTimeColumn get playedAt => dateTime()();
 
-  /// 실제로 들은 시간(ms). 재생 엔진이 붙기 전에는 0.
+  /// 실제로 재생된 시간(ms). 재생하는 동안 계속 갱신된다.
   IntColumn get listenedMs => integer().withDefault(const Constant(0))();
 }
 
@@ -93,6 +93,12 @@ class PlaylistTracks extends Table {
   Set<Column> get primaryKey => {playlistId, trackId};
 }
 
+/// 들은 시간이 0인 재생에 곡 길이를 채우는 SQL (스키마 8 보정).
+const backfillListenedSql =
+    'UPDATE plays SET listened_ms = COALESCE('
+    '(SELECT duration_ms FROM tracks WHERE tracks.id = plays.track_id), 0) '
+    'WHERE listened_ms = 0';
+
 /// 앱 로컬 DB (drift · SQLite). 설정값은 shared_preferences, 나머지 데이터는 여기.
 @DriftDatabase(
   tables: [
@@ -111,7 +117,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'music_app'));
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -126,6 +132,8 @@ class AppDatabase extends _$AppDatabase {
       if (from < 6) await m.createTable(lyricsFiles);
       // 재생목록의 옛 `color_index` 열은 더 쓰지 않는다 (색은 cover_colors로).
       if (from < 7) await m.createTable(coverColors);
+      // 들은 시간이 기록되지 않던 옛 재생은 곡 길이로 한 번 채운다 (이제부터는 실제 재생 시간만 쌓는다).
+      if (from < 8) await customStatement(backfillListenedSql);
     },
   );
 }
