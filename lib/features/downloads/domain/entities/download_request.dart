@@ -13,6 +13,7 @@ class DownloadRequest extends Equatable {
     this.savePath = '',
     this.duration,
     this.color,
+    this.thumbnailUrl,
   });
 
   final String title;
@@ -32,6 +33,9 @@ class DownloadRequest extends Equatable {
   /// 받은 곡의 커버 색(ARGB). 비어 있으면 자동 색.
   final int? color;
 
+  /// 영상 대표 이미지 주소(웹). 받은 곡의 기본 커버로 쓴다. 없으면 null.
+  final String? thumbnailUrl;
+
   /// 문자열 앞뒤 공백을 지운 사본.
   DownloadRequest normalized() => DownloadRequest(
     title: title.trim(),
@@ -42,6 +46,7 @@ class DownloadRequest extends Equatable {
     savePath: savePath.trim(),
     duration: duration,
     color: color,
+    thumbnailUrl: thumbnailUrl,
   );
 
   @override
@@ -54,5 +59,6 @@ class DownloadRequest extends Equatable {
     savePath,
     duration,
     color,
+    thumbnailUrl,
   ];
 }

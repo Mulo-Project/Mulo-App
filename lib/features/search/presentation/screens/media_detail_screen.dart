@@ -293,6 +293,7 @@ class _DetailViewState extends State<_DetailView> {
                         title: hit.title,
                         artist: hit.uploader,
                         duration: hit.duration,
+                        thumbnailUrl: hit.thumbnailUrl,
                       ),
                     ),
                   ],

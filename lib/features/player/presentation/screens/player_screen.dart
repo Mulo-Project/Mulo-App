@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/design.dart';
 import '../bloc/now_playing_cubit.dart';
@@ -22,11 +23,44 @@ class _PlayerScreenState extends State<PlayerScreen> {
   /// 커버 ↔ 가사 전환 (상세 기능: 가사).
   var _showLyrics = false;
 
+  Animation<double>? _covered;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 위에 덮인 화면(대기열 등)이 닫혀 다시 맨 위가 되면 빈 화면인지 본다.
+    final next = ModalRoute.of(context)?.secondaryAnimation;
+    if (next == _covered) return;
+    _covered?.removeStatusListener(_onCoverStatus);
+    _covered = next?..addStatusListener(_onCoverStatus);
+  }
+
+  @override
+  void dispose() {
+    _covered?.removeStatusListener(_onCoverStatus);
+    super.dispose();
+  }
+
+  void _onCoverStatus(AnimationStatus status) {
+    if (status == AnimationStatus.dismissed) _closeIfEmpty();
+  }
+
+  /// 재생할 곡이 없으면(대기열을 비웠을 때) 빈 플레이어를 닫는다.
+  void _closeIfEmpty() {
+    if (!mounted || context.read<NowPlayingCubit>().state.track != null) return;
+    if ((ModalRoute.of(context)?.isCurrent ?? false) && context.canPop()) {
+      context.pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = context.watch<NowPlayingCubit>().state;
     final style = context.watch<PlayerStyleCubit>().state;
     final track = state.track;
+    if (track == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _closeIfEmpty());
+    }
 
     return Scaffold(
       backgroundColor: context.palette.background,
