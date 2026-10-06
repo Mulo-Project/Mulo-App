@@ -57,7 +57,20 @@ class YtDlpChannel(private val context: Context, messenger: BinaryMessenger) {
 
     private fun execute(url: String, options: List<String>): Map<String, Any?> {
         val request = YoutubeDLRequest(url)
-        options.forEach { request.addOption(it) }
+        // "-f 값"처럼 값이 붙는 옵션은 짝으로 넘긴다. 하나씩 따로 넣으면 라이브러리가
+        // 옵션을 키로 모아 순서가 뒤섞여 yt-dlp가 값을 주소로 읽을 수 있다.
+        var i = 0
+        while (i < options.size) {
+            val option = options[i]
+            val value = options.getOrNull(i + 1)
+            if (option.startsWith("-") && value != null && !value.startsWith("-")) {
+                request.addOption(option, value)
+                i += 2
+            } else {
+                request.addOption(option)
+                i += 1
+            }
+        }
         return try {
             val r = YoutubeDL.getInstance().execute(request)
             mapOf("exitCode" to r.exitCode, "stdout" to r.out, "stderr" to r.err)
