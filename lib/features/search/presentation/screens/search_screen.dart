@@ -237,6 +237,7 @@ class _SortMenu extends StatelessWidget {
       selected: state.sort,
       labelOf: (s) => switch (s) {
         SearchSort.relevance => l10n.searchSortRelevance,
+        SearchSort.popular => l10n.searchSortPopular,
         SearchSort.newest => l10n.searchSortNewest,
         SearchSort.shortest => l10n.searchSortShortest,
         SearchSort.longest => l10n.searchSortLongest,

@@ -864,10 +864,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchSortTooltip => 'Sort';
 
   @override
-  String get searchSortNewest => 'Newest';
+  String get searchSortRelevance => 'Relevance';
 
   @override
-  String get searchSortRelevance => 'Relevance';
+  String get searchSortPopular => 'Most viewed';
+
+  @override
+  String get searchSortNewest => 'Newest';
 
   @override
   String get searchSortShortest => 'Shortest';

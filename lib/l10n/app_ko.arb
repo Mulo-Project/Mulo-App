@@ -430,8 +430,9 @@
     }
   },
   "searchSortTooltip": "정렬",
-  "searchSortNewest": "최신순",
   "searchSortRelevance": "관련도순",
+  "searchSortPopular": "인기순",
+  "searchSortNewest": "최신순",
   "searchSortShortest": "짧은 순",
   "searchSortLongest": "긴 순",
   "searchSortTitle": "제목순",

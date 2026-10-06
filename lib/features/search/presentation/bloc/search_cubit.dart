@@ -51,9 +51,20 @@ class SearchState extends Equatable {
       return sign * x.compareTo(y);
     }
 
+    // 조회수를 모르는 곡은 맨 뒤로 보낸다.
+    int byViews(MediaHit a, MediaHit b) {
+      final x = a.viewCount, y = b.viewCount;
+      if (x == null || y == null) {
+        return x == null && y == null ? 0 : (x == null ? 1 : -1);
+      }
+      return y.compareTo(x);
+    }
+
     switch (sort) {
       case SearchSort.relevance || SearchSort.newest:
         break;
+      case SearchSort.popular:
+        shown.sort(byViews);
       case SearchSort.shortest:
         shown.sort((a, b) => byDuration(a, b, 1));
       case SearchSort.longest:

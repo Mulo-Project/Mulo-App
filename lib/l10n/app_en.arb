@@ -344,8 +344,9 @@
     }
   },
   "searchSortTooltip": "Sort",
-  "searchSortNewest": "Newest",
   "searchSortRelevance": "Relevance",
+  "searchSortPopular": "Most viewed",
+  "searchSortNewest": "Newest",
   "searchSortShortest": "Shortest",
   "searchSortLongest": "Longest",
   "searchSortTitle": "Title",

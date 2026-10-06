@@ -851,10 +851,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get searchSortTooltip => '정렬';
 
   @override
-  String get searchSortNewest => '최신순';
+  String get searchSortRelevance => '관련도순';
 
   @override
-  String get searchSortRelevance => '관련도순';
+  String get searchSortPopular => '인기순';
+
+  @override
+  String get searchSortNewest => '최신순';
 
   @override
   String get searchSortShortest => '짧은 순';

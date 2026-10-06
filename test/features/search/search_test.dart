@@ -106,6 +106,28 @@ void main() {
       expect(engine.searches, isEmpty);
     });
 
+    test('정렬: 인기순은 목록의 조회수 많은 순 (모르는 곡은 맨 뒤)', () async {
+      MediaHit hit(String id, int? views) => MediaHit(
+        id: id,
+        title: 'T$id',
+        url: 'https://example.com/$id',
+        viewCount: views,
+      );
+      final engine = FakeDownloaderEngine(
+        pages: [
+          SearchPage(
+            items: [hit('a', 10), hit('b', null), hit('c', 500)],
+            hasNext: false,
+          ),
+        ],
+      );
+      final cubit = _cubit(engine);
+      await cubit.submit('q', SearchSource.youtube);
+      cubit.selectSort(SearchSort.popular);
+      expect(cubit.state.visibleItems.map((h) => h.id), ['c', 'a', 'b']);
+      expect(engine.searches.length, 1); // 다시 찾지 않는다
+    });
+
     test('정렬: 짧은 순 · 긴 순 · 제목순 (길이를 모르는 곡은 맨 뒤)', () async {
       MediaHit hit(String id, String title, int? sec) => MediaHit(
         id: id,
