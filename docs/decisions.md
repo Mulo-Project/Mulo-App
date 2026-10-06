@@ -340,3 +340,14 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - 화면 · 컴포넌트는 Material `Icons.xxx`를 쓰지 않고 `AppIcons.xxx`만 쓴다. 글리프는 Phosphor(MIT) 폰트(Regular · Fill)를 `assets/fonts/phosphor/`에 번들하고 코드포인트를 `AppIcons`에 적는다. 세트 교체 · 직접 그린 아이콘 폰트로의 교체는 `AppIcons`만 고치면 된다.
 - `phosphor_flutter` 패키지는 현재 Flutter에서 `IconData`가 final이라 컴파일되지 않아 쓰지 않는다.
 - 제목은 `MarqueeText`: 칸을 넘칠 때만 흐르고, 목록은 재생 중인 줄만 흐른다. 접근성 "동작 줄이기"가 켜져 있으면 `…`로 줄인다.
+
+## D-054 · 2026-10-06 · 엔진 연결 1단계: 검색 · 곡 정보
+- `DownloaderEngine`(`features/search/domain`)에 `search` · `fetchInfo`만 둔다. 받기는 다음 작업에서 같은 인터페이스에 더한다. 구현은 `ServerEngine`(Notion API 명세의 `/search` · `/info`) · `LocalEngine`(데스크톱 yt-dlp 프로세스). 오류는 `EngineException(EngineFailure)`로 통일.
+- 엔진 선택은 `RoutingDownloaderEngine`이 자동으로 한다: 로컬 yt-dlp 가능 → 로컬, 아니면 서버, 둘 다 없으면 "엔진 없음" 안내. 설정에서 모드를 고르는 화면은 나중. Android는 서버만 (full 빌드의 로컬은 아직 없음).
+- 검색 입력이 http(s) 주소면 곡 정보 조회, 아니면 키워드 검색. 확인(엔터)을 눌러야 찾는다 (글자마다 부르지 않음). "더 보기"로 쪽을 이어 붙인다.
+- 웹 검색(SoundCloud 등)은 서버에 `source=web` 쿼리를 보내고, 로컬은 `scsearch`를 쓴다. 서버 명세에 없는 추가라 서버 저장소 반영이 필요하다.
+
+## D-055 · 2026-10-06 · 설정에서 yt-dlp 자동 설치 (데스크톱)
+- 설정 > 다운로드에 "다운로드 엔진" 줄을 더했다 (카드 없이 기존 설정 줄). 설치 여부 · 버전을 보여 주고 "설치"(이미 있으면 "업데이트") 버튼이 yt-dlp 공식 최신 릴리스(GitHub `releases/latest/download`)를 앱 데이터 폴더 `engine/`에 받는다. 새 패키지 없음 (`dart:io`, 기존 `path_provider`).
+- `LocalEngine`은 앱이 받은 yt-dlp가 있으면 그것을, 없으면 PATH의 `yt-dlp`를 쓴다. `RoutingDownloaderEngine`은 로컬을 못 쓰는 동안 호출마다 다시 확인하므로 설치 직후 앱 재시작 없이 로컬로 바뀐다.
+- Android에서는 줄이 숨겨진다 (로컬 Android 엔진은 별도 작업). 서버의 최신 버전 비교 · 자동 업데이트 알림은 하지 않는다 (필요하면 "업데이트"를 누른다).

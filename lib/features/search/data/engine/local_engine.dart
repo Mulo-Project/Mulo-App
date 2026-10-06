@@ -1,0 +1,156 @@
+import 'dart:convert';
+import 'dart:io';
+
+import '../../domain/entities/engine_exception.dart';
+import '../../domain/entities/media_info.dart';
+import '../../domain/entities/search_source.dart';
+import '../../domain/repositories/downloader_engine.dart';
+
+/// 프로세스 실행 하나 (테스트에서 바꿔 끼운다).
+typedef RunProcess =
+    Future<({int exitCode, String stdout, String stderr})> Function(
+      String executable,
+      List<String> args,
+    );
+
+Future<({int exitCode, String stdout, String stderr})> _defaultRun(
+  String executable,
+  List<String> args,
+) async {
+  final r = await Process.run(
+    executable,
+    args,
+    stdoutEncoding: utf8,
+    stderrEncoding: utf8,
+  );
+  return (
+    exitCode: r.exitCode,
+    stdout: r.stdout as String,
+    stderr: r.stderr as String,
+  );
+}
+
+/// 로컬 모드: 이 기기에서 yt-dlp를 직접 실행해 찾는다 (데스크톱).
+/// Android 로컬(full 빌드)은 아직 없다.
+class LocalEngine implements DownloaderEngine {
+  LocalEngine({Future<String> Function()? resolveExecutable, RunProcess? run})
+    : _resolve = resolveExecutable ?? (() async => 'yt-dlp'),
+      _run = run ?? _defaultRun;
+
+  /// 실행할 yt-dlp 경로 (앱이 받은 것 또는 PATH의 `yt-dlp`).
+  final Future<String> Function() _resolve;
+  final RunProcess _run;
+
+  /// yt-dlp를 실행할 수 있는지 (`--version`).
+  Future<bool> isAvailable() async {
+    try {
+      final r = await _run(await _resolve(), const ['--version']);
+      return r.exitCode == 0;
+    } on ProcessException {
+      return false;
+    }
+  }
+
+  @override
+  Future<SearchPage> search(
+    String query, {
+    SearchSource source = SearchSource.youtube,
+    int page = 0,
+    int size = 20,
+  }) async {
+    // 사이트 검색은 쪽 개념이 없어서 (page+1)*size개를 받아 해당 쪽만 자른다.
+    final want = (page + 1) * size;
+    final prefix = source == SearchSource.web ? 'scsearch' : 'ytsearch';
+    final out = await _exec([
+      '--flat-playlist',
+      '--dump-json',
+      '--no-warnings',
+      '$prefix$want:$query',
+    ]);
+    final all = <MediaHit>[];
+    for (final line in const LineSplitter().convert(out)) {
+      if (line.trim().isEmpty) continue;
+      final j = _decode(line);
+      if (j != null) all.add(_hit(j));
+    }
+    final start = page * size;
+    return SearchPage(
+      items: start >= all.length ? const [] : all.sublist(start),
+      hasNext: all.length >= want,
+    );
+  }
+
+  @override
+  Future<MediaInfo> fetchInfo(String url) async {
+    final out = await _exec([
+      '--flat-playlist',
+      '--dump-single-json',
+      '--no-warnings',
+      url,
+    ]);
+    final j = _decode(out);
+    if (j == null) {
+      throw const EngineException(EngineFailure.failed, 'bad response');
+    }
+    if (j['_type'] == 'playlist') {
+      return PlaylistInfo(
+        title: j['title'] as String? ?? '',
+        entries: (j['entries'] as List? ?? const [])
+            .whereType<Map<String, dynamic>>()
+            .map(_hit)
+            .toList(),
+      );
+    }
+    return VideoInfo(_hit(j));
+  }
+
+  Future<String> _exec(List<String> args) async {
+    final ({int exitCode, String stdout, String stderr}) r;
+    try {
+      r = await _run(await _resolve(), args);
+    } on ProcessException {
+      throw const EngineException(EngineFailure.unavailable, 'yt-dlp');
+    }
+    if (r.exitCode != 0) {
+      final err = r.stderr.trim();
+      final failure = err.contains('Unsupported URL')
+          ? EngineFailure.notFound
+          : err.contains('Unable to download') || err.contains('getaddrinfo')
+          ? EngineFailure.network
+          : EngineFailure.failed;
+      throw EngineException(failure, err);
+    }
+    return r.stdout;
+  }
+
+  Map<String, dynamic>? _decode(String s) {
+    try {
+      final j = jsonDecode(s);
+      return j is Map<String, dynamic> ? j : null;
+    } on FormatException {
+      return null;
+    }
+  }
+
+  MediaHit _hit(Map<String, dynamic> j) {
+    final id = j['id'] as String? ?? '';
+    final seconds = j['duration'];
+    final thumbs = j['thumbnails'];
+    var thumb = j['thumbnail'] as String?;
+    if (thumb == null && thumbs is List && thumbs.isNotEmpty) {
+      final last = thumbs.last;
+      if (last is Map) thumb = last['url'] as String?;
+    }
+    return MediaHit(
+      id: id,
+      title: j['title'] as String? ?? '',
+      url:
+          (j['webpage_url'] as String?) ??
+          (j['url'] as String?) ??
+          'https://www.youtube.com/watch?v=$id',
+      uploader: (j['uploader'] ?? j['channel'] ?? '') as String,
+      duration: seconds is num ? Duration(seconds: seconds.round()) : null,
+      thumbnailUrl: thumb,
+    );
+  }
+}

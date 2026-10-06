@@ -91,11 +91,35 @@ class AppLocalizationsKo extends AppLocalizations {
       'URL을 붙여넣거나 검색어를 입력하세요.\n유튜브 앱에서 공유를 누르면 바로 여기로 와요.';
 
   @override
-  String get searchNotReadyTitle => '아직 받을 수 없어요';
+  String get searchNotReadyTitle => '쓸 수 있는 엔진이 없어요';
 
   @override
   String get searchNotReadyBody =>
-      '다운로드 엔진(yt-dlp)을 아직 연결하지 않았어요.\n연결되면 여기서 검색하고 받을 수 있어요.';
+      '서버 주소가 빌드에 없고 이 기기에 yt-dlp도 없어서 검색할 수 없어요.\n서버를 연결하거나 yt-dlp를 설치해 주세요.';
+
+  @override
+  String get searchErrorTitle => '불러오지 못했어요';
+
+  @override
+  String get searchErrorBody => '잠시 뒤에 다시 시도해 주세요.';
+
+  @override
+  String get searchNetworkBody => '서버에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.';
+
+  @override
+  String get searchAuthBody => '서버가 로그인을 요구해요.';
+
+  @override
+  String get searchNotFoundBody => '이 주소는 받을 수 없는 곳이에요.';
+
+  @override
+  String get searchNoResultsTitle => '결과가 없어요';
+
+  @override
+  String get searchNoResultsBody => '다른 검색어로 찾아보세요.';
+
+  @override
+  String get searchLoadMore => '더 보기';
 
   @override
   String get searchResultsTitle => '검색 결과';
@@ -280,6 +304,23 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsEngineUpdate => '업데이트';
+
+  @override
+  String get settingsEngineInstall => '설치';
+
+  @override
+  String get settingsEngineNotInstalled => 'yt-dlp가 없어요. 설치하면 검색하고 받을 수 있어요.';
+
+  @override
+  String get settingsEngineInstalling => '내려받는 중…';
+
+  @override
+  String get settingsEngineFailed => '설치하지 못했어요. 인터넷 연결을 확인해 주세요.';
+
+  @override
+  String settingsEngineInstalled(String version) {
+    return 'yt-dlp $version';
+  }
 
   @override
   String get settingsSecurity => '보안';
