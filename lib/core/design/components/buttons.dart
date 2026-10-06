@@ -28,6 +28,7 @@ class PillButton extends StatelessWidget {
     this.variant = PillVariant.accent,
     this.selected = false,
     this.compact = false,
+    this.busy = false,
   });
 
   final String label;
@@ -38,6 +39,9 @@ class PillButton extends StatelessWidget {
   /// 토글 · 필터로 쓸 때 선택 상태. true면 accent 모양으로 그린다.
   final bool selected;
   final bool compact;
+
+  /// 일하는 중: 아이콘 자리에 돌아가는 표시를 보인다 (누를 수는 있다).
+  final bool busy;
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +66,10 @@ class PillButton extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (icon != null) ...[
+            if (busy) ...[
+              _Spinner(size: 16, color: fg),
+              const SizedBox(width: AppSpacing.xs),
+            ] else if (icon != null) ...[
               Icon(icon, size: 18, color: fg),
               const SizedBox(width: AppSpacing.xs),
             ],
@@ -206,6 +213,20 @@ class CircleIconButton extends StatelessWidget {
   }
 }
 
+/// 작게 돌아가는 진행 표시 (버튼 안에서 "불러오는 중"을 보일 때).
+class _Spinner extends StatelessWidget {
+  const _Spinner({required this.size, required this.color});
+
+  final double size;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => SizedBox.square(
+    dimension: size,
+    child: CircularProgressIndicator(strokeWidth: 2, color: color),
+  );
+}
+
 /// 목록 줄 오른쪽에 놓는 작은 아이콘 버튼. 유리 면 · 흐림 없이 아이콘만 있고 눌림 효과만 있다
 /// (줄마다 놓여도 스크롤이 가볍다). [accent]면 강조 색, [active]면 켜진 상태(예: 미리 듣는 중).
 class RowIconButton extends StatelessWidget {
@@ -215,6 +236,7 @@ class RowIconButton extends StatelessWidget {
     required this.tooltip,
     this.onPressed,
     this.accent = false,
+    this.busy = false,
   });
 
   final IconData icon;
@@ -223,6 +245,9 @@ class RowIconButton extends StatelessWidget {
 
   /// 강조 색으로 그린다 (켜진 상태 · 주 동작).
   final bool accent;
+
+  /// 일하는 중: 아이콘 대신 돌아가는 표시를 보인다 (누를 수는 있다).
+  final bool busy;
 
   @override
   Widget build(BuildContext context) {
@@ -236,11 +261,13 @@ class RowIconButton extends StatelessWidget {
           customBorder: const CircleBorder(),
           child: SizedBox.square(
             dimension: AppSizes.rowButton,
-            child: Icon(
-              icon,
-              size: AppSizes.rowButton * .56,
-              color: accent ? p.accent : p.onSurface,
-            ),
+            child: busy
+                ? Center(child: _Spinner(size: 18, color: p.accent))
+                : Icon(
+                    icon,
+                    size: AppSizes.rowButton * .56,
+                    color: accent ? p.accent : p.onSurface,
+                  ),
           ),
         ),
       ),

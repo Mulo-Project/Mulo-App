@@ -61,7 +61,7 @@ MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부�
 | `AppLineChart` | line_chart.dart | 꺾은선 그래프 (accent 선 · 점, outline 눈금, 최댓값 글자). 외부 차트 패키지 없음 |
 | `PillButton` | buttons.dart | 알약 버튼: accent · primary(단색 + 빛), tonal(유리), outline |
 | `CircleIconButton` | buttons.dart | 원형 유리 버튼, `emphasized` = 강조 색 + 빛 (재생); `onLongPress`로 길게 누르기 |
-| `RowIconButton` | buttons.dart | 목록 줄 오른쪽 작은 아이콘 버튼 (36px, 면 · 흐림 없음, `accent` = 강조 색). 줄마다 `CircleIconButton`(유리)을 놓으면 스크롤이 끊긴다 |
+| `RowIconButton` | buttons.dart | 목록 줄 오른쪽 작은 아이콘 버튼 (36px, 면 · 흐림 없음, `accent` = 강조 색, `busy` = 돌아가는 표시). 줄마다 `CircleIconButton`(유리)을 놓으면 스크롤이 끊긴다 |
 | `PlainButton` | buttons.dart | 면 없는 작은 글자 · 아이콘 버튼 (보조 동작 · 한 줄 여러 개) |
 | `MarqueeText` | marquee_text.dart | 한 줄 제목. 칸보다 길 때만 잠깐 멈췄다가 옆으로 흐르고(끝은 흐리게), 들어가면 일반 글자. `scroll: false`면 `…`로 줄임. 플레이어 · 미니 플레이어 · 재생 중인 곡 줄에 쓴다 (목록 전체가 움직이지 않게 나머지 줄은 `…`) |
 | `ProgressRing` · `ProgressLine` | progress.dart | 원형 · 막대 진행 표시 (강조 색 + 빛) |

@@ -20,11 +20,12 @@ Future<void> togglePreview(BuildContext context, MediaHit hit) async {
   if (failure != null) {
     messenger.showSnackBar(
       SnackBar(
-        content: Text(
-          failure == EngineFailure.unavailable
-              ? l10n.searchPreviewUnavailable
-              : l10n.searchPreviewFailed,
-        ),
+        content: Text(switch (failure) {
+          EngineFailure.unavailable => l10n.searchPreviewUnavailable,
+          EngineFailure.network => l10n.searchNetworkBody,
+          EngineFailure.notFound => l10n.searchNotFoundBody,
+          _ => l10n.searchPreviewFailed,
+        }),
       ),
     );
     return;
@@ -63,6 +64,7 @@ class PreviewButton extends StatelessWidget {
         PreviewStatus.playing => AppIcons.pause,
       },
       variant: PillVariant.tonal,
+      busy: status == PreviewStatus.loading,
       onPressed: () => togglePreview(context, hit),
     );
   }
@@ -95,6 +97,7 @@ class PreviewRowButton extends StatelessWidget {
         PreviewStatus.playing => l10n.searchPreviewStop,
       },
       accent: status != PreviewStatus.idle,
+      busy: status == PreviewStatus.loading,
       onPressed: () => togglePreview(context, hit),
     );
   }
