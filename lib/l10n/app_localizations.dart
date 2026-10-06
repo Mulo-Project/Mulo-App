@@ -404,6 +404,18 @@ abstract class AppLocalizations {
   /// **'실패'**
   String get statusFailed;
 
+  /// No description provided for @statusPaused.
+  ///
+  /// In ko, this message translates to:
+  /// **'일시정지'**
+  String get statusPaused;
+
+  /// No description provided for @statusQueued.
+  ///
+  /// In ko, this message translates to:
+  /// **'대기'**
+  String get statusQueued;
+
   /// No description provided for @statusDone.
   ///
   /// In ko, this message translates to:

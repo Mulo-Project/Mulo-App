@@ -15,6 +15,9 @@ abstract interface class DownloadQueueRepository {
   /// 일시정지한 항목을 다시 받는다 (대기열 맨 뒤에서 이어서).
   Future<void> resume(String id);
 
+  /// 실패한 항목을 처음부터 다시 받는다 (대기열 맨 뒤에서).
+  Future<void> retry(String id);
+
   /// 항목을 대기열에서 뺀다 (받던 중이면 멈추고 버린다).
   Future<void> cancel(String id);
 }

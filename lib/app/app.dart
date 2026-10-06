@@ -11,6 +11,7 @@ import '../features/covers/presentation/bloc/cover_color_cubit.dart';
 import '../features/covers/presentation/bloc/cover_cubit.dart';
 import '../features/lyrics/presentation/bloc/lyrics_cubit.dart';
 import '../features/downloads/presentation/bloc/download_queue_cubit.dart';
+import '../features/downloads/presentation/widgets/download_completion_listener.dart';
 import '../features/downloads/presentation/bloc/download_settings_cubit.dart';
 import '../features/home/presentation/bloc/play_recorder_cubit.dart';
 import '../features/library/presentation/bloc/library_cubit.dart';
@@ -99,7 +100,7 @@ class _MusicAppState extends State<MusicApp> {
               value: dark
                   ? SystemUiOverlayStyle.light
                   : SystemUiOverlayStyle.dark,
-              child: LockGate(child: child!),
+              child: DownloadCompletionListener(child: LockGate(child: child!)),
             );
           },
         ),

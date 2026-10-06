@@ -8,6 +8,6 @@ Future<void> openDownloadDialog(
   String title = 'Song',
 }) async {
   final context = tester.element(find.byType(Scaffold).first);
-  showDownloadDialog(context, title: title);
+  showDownloadDialog(context, title: title, url: 'https://youtu.be/abc');
   await tester.pumpAndSettle();
 }

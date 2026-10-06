@@ -450,3 +450,11 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - 검색 결과 · 상세에서 받기를 누르면 영상 대표 이미지 주소(`thumbnailUrl`)를 `DownloadRequest` → `DownloadItem`으로 이어 간다. 받기가 끝나 곡이 만들어질 때 `CoverArt.web(url)`로 곡 커버에 붙인다 (직접 고른 커버가 없을 때만).
 - 이미지는 **주소만** 저장한다(D-067과 같다). 파일로 내려받지 않으며, 보여 줄 때는 이미지 캐시를 쓴다. 그래서 오프라인에서는 캐시에 없는 썸네일이 보이지 않는다. 오프라인 표시가 필요해지면 받을 때 작은 사본을 앱 폴더에 저장하는 방식으로 바꾼다 (미정).
 - 대기열에서 모든 곡을 지운 뒤 빈 전체 화면 플레이어가 남지 않도록, 재생할 곡이 없으면 플레이어를 닫는다.
+
+## D-069 · 2026-10-07 · 실제 받기: 미리 듣기와 같은 주소 해석기로 오디오를 구간 요청해 받는다
+- 대기열(`EngineDownloadQueueRepository`)이 한 곡씩 받는다: `DownloaderEngine.resolveAudioStream(url)`(미리 듣기와 같은 경로: youtube_explode + visionOS 클라이언트 + 중간 구간 확인, D-062 ~ D-064) → `HttpAudioFileDownloader`가 10MB씩 `Range`로 임시 파일에 받음 → 음악 폴더에 저장 → 보관함 곡 · 재생목록 · 커버 · 색을 만든다. 주소가 안 열리면 `fallbacks`의 다른 형식 주소를 차례로 쓴다. 구간마다 2번까지 다시 시도하고, 403 · 404 · 410은 바로 다음 주소로 넘어간다.
+- **저장 형식은 스트림 원본 그대로**다 (Android는 webm/opus → `.weba`, `audio/webm`). Android에 변환기(ffmpeg 등)가 없고, 설정의 "포맷"(opus · mp3)은 아직 저장되지도 않는다. 그래서 mp3 변환 · 음질(`Quality`) 선택은 연결하지 않았다 (남은 일). macOS · iOS는 정책(`audio_format_policy.dart`)대로 m4a를 받는다.
+- 저장: Android는 MediaStore(`music_app/media_store`의 `saveAudio`, `Music/Mulo` 또는 저장 위치가 `Music/…` 등 음악 폴더 아래일 때 그 상대 경로)에 `IS_PENDING`으로 쓰고 끝나면 공개한다. 반환된 `content://` 주소가 곡의 `uri`가 되어, 기기 음악 불러오기가 같은 파일을 다시 찾아도 중복되지 않는다 (uri 같으면 건너뜀). 그 밖의 OS는 폴더에 파일로 옮긴다. 음악 폴더 밖 Android 경로는 `Music/Mulo`로 대신한다.
+- 곡: `id = download:<대기열 id>`, `source = download`, 길이는 요청에 있는 값(없으면 0). `CoverArt.web(thumbnailUrl)`을 곡 커버로, `DownloadRequest.color`를 곡 색으로, 고른 재생목록에 곡을 담는다 (D-066 · D-068). DB에 직접 넣으므로 앱 셸의 `DownloadCompletionListener`가 끝난 곡이 생기면 `CoverCubit` · `CoverColorCubit`을 다시 읽는다.
+- 상태: 대기 → 받는 중 → 끝남(목록에 두었다가 다음 받기 때 치움) / 실패(안내 문장을 남기고 카드에 "다시 받기"). 일시정지는 받던 것을 멈추고 처음부터 다시 받는다 (이어받기 없음). 취소는 임시 파일을 지우고 목록에서 뺀다. 대기열은 메모리에만 있어 앱을 끄면 사라진다 (저장은 남은 일).
+- `DownloadRequest.url`을 추가했다 (받기 팝업이 원본 주소를 받아 넘긴다). 주소가 비면 받지 않는다.

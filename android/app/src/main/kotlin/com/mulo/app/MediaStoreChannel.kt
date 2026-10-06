@@ -3,9 +3,11 @@ package com.mulo.app
 import android.app.Activity
 import android.app.RecoverableSecurityException
 import android.content.ContentUris
+import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
@@ -51,10 +53,71 @@ class MediaStoreChannel(
                         main.post { result.error("query_failed", e.message, null) }
                     }
                 }
+                "saveAudio" -> io.execute {
+                    try {
+                        val uri = saveAudio(
+                            path = call.argument<String>("path")!!,
+                            displayName = call.argument<String>("displayName")!!,
+                            mime = call.argument<String>("mime")!!,
+                            relativePath = call.argument<String>("relativePath")!!,
+                            title = call.argument<String>("title") ?: "",
+                            artist = call.argument<String>("artist") ?: "",
+                        )
+                        main.post { result.success(uri) }
+                    } catch (e: Exception) {
+                        main.post { result.error("save_failed", e.message, null) }
+                    }
+                }
                 "deleteAudio" -> deleteAudio(Uri.parse(call.argument<String>("uri")), result)
                 else -> result.notImplemented()
             }
         }
+    }
+
+    /**
+     * 받아 둔 임시 파일을 MediaStore의 음악 폴더(`Music/Mulo` 등)로 저장하고 content:// 주소를 돌려준다.
+     * 다 쓸 때까지 IS_PENDING으로 숨겨 두어 반쪽 파일이 목록에 뜨지 않게 한다.
+     */
+    private fun saveAudio(
+        path: String,
+        displayName: String,
+        mime: String,
+        relativePath: String,
+        title: String,
+        artist: String,
+    ): String {
+        val resolver = context.contentResolver
+        val values = ContentValues().apply {
+            put(MediaStore.Audio.Media.DISPLAY_NAME, displayName)
+            put(MediaStore.Audio.Media.MIME_TYPE, mime)
+            if (title.isNotEmpty()) put(MediaStore.Audio.Media.TITLE, title)
+            if (artist.isNotEmpty()) put(MediaStore.Audio.Media.ARTIST, artist)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                put(MediaStore.Audio.Media.RELATIVE_PATH, relativePath)
+                put(MediaStore.Audio.Media.IS_PENDING, 1)
+            } else {
+                // Android 9 이하: 상대 경로 칸이 없어 파일 위치를 직접 정한다.
+                val dir = File(Environment.getExternalStorageDirectory(), relativePath)
+                dir.mkdirs()
+                put(MediaStore.Audio.Media.DATA, File(dir, displayName).absolutePath)
+            }
+        }
+        val collection = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+        val uri = resolver.insert(collection, values)
+            ?: throw IllegalStateException("MediaStore에 곡을 만들지 못했어요")
+        try {
+            resolver.openOutputStream(uri)!!.use { out ->
+                File(path).inputStream().use { it.copyTo(out) }
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val done = ContentValues().apply { put(MediaStore.Audio.Media.IS_PENDING, 0) }
+                resolver.update(uri, done, null, null)
+            }
+        } catch (e: Exception) {
+            resolver.delete(uri, null, null)
+            throw e
+        }
+        return uri.toString()
     }
 
     private fun deleteAudio(uri: Uri, result: MethodChannel.Result) {

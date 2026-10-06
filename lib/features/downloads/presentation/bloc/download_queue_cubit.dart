@@ -13,7 +13,7 @@ class DownloadQueueState extends Equatable {
 
   final List<DownloadItem> items;
 
-  /// 카드에 보여 줄 곡: 지금 받는 곡, 없으면 일시정지한 첫 곡 (이어받기 버튼을 보이려고).
+  /// 카드에 보여 줄 곡: 지금 받는 곡, 없으면 일시정지한 첫 곡, 없으면 실패한 첫 곡 (다시 받기 버튼을 보이려고).
   DownloadItem? get current {
     for (final i in items) {
       if (i.status == DownloadStatus.downloading) return i;
@@ -21,15 +21,22 @@ class DownloadQueueState extends Equatable {
     for (final i in items) {
       if (i.status == DownloadStatus.paused) return i;
     }
+    for (final i in items) {
+      if (i.status == DownloadStatus.failed) return i;
+    }
     return null;
   }
+
+  /// 받기가 끝난 곡 수 (끝난 곡이 생기면 커버 · 색을 다시 읽으려고 센다).
+  int get doneCount =>
+      items.where((i) => i.status == DownloadStatus.done).length;
 
   /// 현재 곡을 뺀, 아직 끝나지 않은 곡들.
   List<DownloadItem> get waiting {
     final now = current;
     return [
       for (final i in items)
-        if (i.isActive && i != now) i,
+        if ((i.isActive || i.status == DownloadStatus.failed) && i != now) i,
     ];
   }
 
@@ -44,6 +51,7 @@ class DownloadQueueCubit extends Cubit<DownloadQueueState> {
     this._enqueue,
     this._pause,
     this._resume,
+    this._retry,
     this._cancel,
   ) : super(const DownloadQueueState());
 
@@ -51,6 +59,7 @@ class DownloadQueueCubit extends Cubit<DownloadQueueState> {
   final EnqueueDownload _enqueue;
   final PauseDownload _pause;
   final ResumeDownload _resume;
+  final RetryDownload _retry;
   final CancelDownload _cancel;
   StreamSubscription<List<DownloadItem>>? _sub;
 
@@ -66,6 +75,8 @@ class DownloadQueueCubit extends Cubit<DownloadQueueState> {
   Future<void> pause(String id) => _pause(id);
 
   Future<void> resume(String id) => _resume(id);
+
+  Future<void> retry(String id) => _retry(id);
 
   Future<void> cancel(String id) => _cancel(id);
 

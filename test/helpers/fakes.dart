@@ -439,6 +439,9 @@ class MemoryDownloadQueue implements DownloadQueueRepository {
   Future<void> resume(String id) async => controls.add('resume:$id');
 
   @override
+  Future<void> retry(String id) async => controls.add('retry:$id');
+
+  @override
   Future<void> cancel(String id) async => controls.add('cancel:$id');
 }
 

@@ -172,6 +172,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusFailed => 'Failed';
 
   @override
+  String get statusPaused => 'Paused';
+
+  @override
+  String get statusQueued => 'Queued';
+
+  @override
   String get statusDone => 'Done';
 
   @override

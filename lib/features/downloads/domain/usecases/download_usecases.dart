@@ -17,7 +17,7 @@ class WatchDownloadQueue
 }
 
 /// 받기 시작: 팝업에서 정한 정보로 대기열에 넣는다 (상세 기능: 곡 정보 편집, 재생목록에 담기).
-/// 제목이 비어 있으면 받을 수 없다.
+/// 제목이나 원본 주소가 비어 있으면 받을 수 없다.
 class EnqueueDownload implements UseCase<bool, DownloadRequest> {
   const EnqueueDownload(this._repo);
 
@@ -25,7 +25,9 @@ class EnqueueDownload implements UseCase<bool, DownloadRequest> {
 
   @override
   Future<bool> call(DownloadRequest request) async {
-    if (request.title.trim().isEmpty) return false;
+    if (request.title.trim().isEmpty || request.url.trim().isEmpty) {
+      return false;
+    }
     await _repo.enqueue(request.normalized());
     return true;
   }
@@ -49,6 +51,16 @@ class ResumeDownload implements UseCase<void, String> {
 
   @override
   Future<void> call(String id) => _repo.resume(id);
+}
+
+/// 실패한 항목 다시 받기.
+class RetryDownload implements UseCase<void, String> {
+  const RetryDownload(this._repo);
+
+  final DownloadQueueRepository _repo;
+
+  @override
+  Future<void> call(String id) => _repo.retry(id);
 }
 
 /// 항목 취소.
