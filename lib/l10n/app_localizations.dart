@@ -1151,7 +1151,7 @@ abstract class AppLocalizations {
   /// No description provided for @coverPick.
   ///
   /// In ko, this message translates to:
-  /// **'사진에서 고르기'**
+  /// **'이미지 고르기'**
   String get coverPick;
 
   /// No description provided for @coverReset.
@@ -1159,6 +1159,102 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'기본 이미지로'**
   String get coverReset;
+
+  /// No description provided for @coverSourceTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'어디서 가져올까요?'**
+  String get coverSourceTitle;
+
+  /// No description provided for @coverSourceDevice.
+  ///
+  /// In ko, this message translates to:
+  /// **'기기에서 고르기'**
+  String get coverSourceDevice;
+
+  /// No description provided for @coverSourceWeb.
+  ///
+  /// In ko, this message translates to:
+  /// **'웹에서 가져오기'**
+  String get coverSourceWeb;
+
+  /// No description provided for @coverAdjust.
+  ///
+  /// In ko, this message translates to:
+  /// **'위치 조정'**
+  String get coverAdjust;
+
+  /// No description provided for @coverWebHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미지 주소 또는 검색어'**
+  String get coverWebHint;
+
+  /// No description provided for @coverWebHelp.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미지 주소(https://…)를 붙여 넣거나, 검색어로 찾아 고르세요.'**
+  String get coverWebHelp;
+
+  /// No description provided for @coverWebUseUrl.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 주소의 이미지 쓰기'**
+  String get coverWebUseUrl;
+
+  /// No description provided for @coverWebEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'찾은 이미지가 없어요'**
+  String get coverWebEmpty;
+
+  /// No description provided for @coverWebFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'검색하지 못했어요. 잠시 뒤 다시 해 주세요'**
+  String get coverWebFailed;
+
+  /// No description provided for @coverEditTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미지 위치'**
+  String get coverEditTitle;
+
+  /// No description provided for @coverEditHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'끌어서 옮기고, 두 손가락이나 마우스 휠로 크기를 바꿔요'**
+  String get coverEditHint;
+
+  /// No description provided for @coverEditZoomIn.
+  ///
+  /// In ko, this message translates to:
+  /// **'확대'**
+  String get coverEditZoomIn;
+
+  /// No description provided for @coverEditZoomOut.
+  ///
+  /// In ko, this message translates to:
+  /// **'축소'**
+  String get coverEditZoomOut;
+
+  /// No description provided for @coverEditReset.
+  ///
+  /// In ko, this message translates to:
+  /// **'원래대로'**
+  String get coverEditReset;
+
+  /// No description provided for @coverEditApply.
+  ///
+  /// In ko, this message translates to:
+  /// **'적용'**
+  String get coverEditApply;
+
+  /// No description provided for @coverEditLoadFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미지를 불러오지 못했어요'**
+  String get coverEditLoadFailed;
 
   /// No description provided for @settingsAppearance.
   ///

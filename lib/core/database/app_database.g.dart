@@ -624,8 +624,47 @@ class $CoversTable extends Covers with TableInfo<$CoversTable, CoverRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _urlMeta = const VerificationMeta('url');
   @override
-  List<GeneratedColumn> get $columns => [key, path];
+  late final GeneratedColumn<String> url = GeneratedColumn<String>(
+    'url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _scaleMeta = const VerificationMeta('scale');
+  @override
+  late final GeneratedColumn<double> scale = GeneratedColumn<double>(
+    'scale',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _dxMeta = const VerificationMeta('dx');
+  @override
+  late final GeneratedColumn<double> dx = GeneratedColumn<double>(
+    'dx',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _dyMeta = const VerificationMeta('dy');
+  @override
+  late final GeneratedColumn<double> dy = GeneratedColumn<double>(
+    'dy',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [key, path, url, scale, dx, dy];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -654,6 +693,24 @@ class $CoversTable extends Covers with TableInfo<$CoversTable, CoverRow> {
     } else if (isInserting) {
       context.missing(_pathMeta);
     }
+    if (data.containsKey('url')) {
+      context.handle(
+        _urlMeta,
+        url.isAcceptableOrUnknown(data['url']!, _urlMeta),
+      );
+    }
+    if (data.containsKey('scale')) {
+      context.handle(
+        _scaleMeta,
+        scale.isAcceptableOrUnknown(data['scale']!, _scaleMeta),
+      );
+    }
+    if (data.containsKey('dx')) {
+      context.handle(_dxMeta, dx.isAcceptableOrUnknown(data['dx']!, _dxMeta));
+    }
+    if (data.containsKey('dy')) {
+      context.handle(_dyMeta, dy.isAcceptableOrUnknown(data['dy']!, _dyMeta));
+    }
     return context;
   }
 
@@ -671,6 +728,22 @@ class $CoversTable extends Covers with TableInfo<$CoversTable, CoverRow> {
         DriftSqlType.string,
         data['${effectivePrefix}path'],
       )!,
+      url: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}url'],
+      ),
+      scale: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}scale'],
+      )!,
+      dx: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}dx'],
+      )!,
+      dy: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}dy'],
+      )!,
     );
   }
 
@@ -683,19 +756,47 @@ class $CoversTable extends Covers with TableInfo<$CoversTable, CoverRow> {
 class CoverRow extends DataClass implements Insertable<CoverRow> {
   final String key;
 
-  /// 앱 폴더로 복사한 이미지 파일 경로.
+  /// 앱 폴더로 복사한 이미지 파일 경로. 웹 이미지([url])면 빈 문자열.
   final String path;
-  const CoverRow({required this.key, required this.path});
+
+  /// 웹 이미지 주소 (파일은 복사하지 않는다). 기기 사진이면 null.
+  final String? url;
+
+  /// 보여 줄 때의 확대 배율과 위치(칸 한 변에 대한 비율).
+  final double scale;
+  final double dx;
+  final double dy;
+  const CoverRow({
+    required this.key,
+    required this.path,
+    this.url,
+    required this.scale,
+    required this.dx,
+    required this.dy,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['key'] = Variable<String>(key);
     map['path'] = Variable<String>(path);
+    if (!nullToAbsent || url != null) {
+      map['url'] = Variable<String>(url);
+    }
+    map['scale'] = Variable<double>(scale);
+    map['dx'] = Variable<double>(dx);
+    map['dy'] = Variable<double>(dy);
     return map;
   }
 
   CoversCompanion toCompanion(bool nullToAbsent) {
-    return CoversCompanion(key: Value(key), path: Value(path));
+    return CoversCompanion(
+      key: Value(key),
+      path: Value(path),
+      url: url == null && nullToAbsent ? const Value.absent() : Value(url),
+      scale: Value(scale),
+      dx: Value(dx),
+      dy: Value(dy),
+    );
   }
 
   factory CoverRow.fromJson(
@@ -706,6 +807,10 @@ class CoverRow extends DataClass implements Insertable<CoverRow> {
     return CoverRow(
       key: serializer.fromJson<String>(json['key']),
       path: serializer.fromJson<String>(json['path']),
+      url: serializer.fromJson<String?>(json['url']),
+      scale: serializer.fromJson<double>(json['scale']),
+      dx: serializer.fromJson<double>(json['dx']),
+      dy: serializer.fromJson<double>(json['dy']),
     );
   }
   @override
@@ -714,15 +819,36 @@ class CoverRow extends DataClass implements Insertable<CoverRow> {
     return <String, dynamic>{
       'key': serializer.toJson<String>(key),
       'path': serializer.toJson<String>(path),
+      'url': serializer.toJson<String?>(url),
+      'scale': serializer.toJson<double>(scale),
+      'dx': serializer.toJson<double>(dx),
+      'dy': serializer.toJson<double>(dy),
     };
   }
 
-  CoverRow copyWith({String? key, String? path}) =>
-      CoverRow(key: key ?? this.key, path: path ?? this.path);
+  CoverRow copyWith({
+    String? key,
+    String? path,
+    Value<String?> url = const Value.absent(),
+    double? scale,
+    double? dx,
+    double? dy,
+  }) => CoverRow(
+    key: key ?? this.key,
+    path: path ?? this.path,
+    url: url.present ? url.value : this.url,
+    scale: scale ?? this.scale,
+    dx: dx ?? this.dx,
+    dy: dy ?? this.dy,
+  );
   CoverRow copyWithCompanion(CoversCompanion data) {
     return CoverRow(
       key: data.key.present ? data.key.value : this.key,
       path: data.path.present ? data.path.value : this.path,
+      url: data.url.present ? data.url.value : this.url,
+      scale: data.scale.present ? data.scale.value : this.scale,
+      dx: data.dx.present ? data.dx.value : this.dx,
+      dy: data.dy.present ? data.dy.value : this.dy,
     );
   }
 
@@ -730,42 +856,72 @@ class CoverRow extends DataClass implements Insertable<CoverRow> {
   String toString() {
     return (StringBuffer('CoverRow(')
           ..write('key: $key, ')
-          ..write('path: $path')
+          ..write('path: $path, ')
+          ..write('url: $url, ')
+          ..write('scale: $scale, ')
+          ..write('dx: $dx, ')
+          ..write('dy: $dy')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(key, path);
+  int get hashCode => Object.hash(key, path, url, scale, dx, dy);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is CoverRow && other.key == this.key && other.path == this.path);
+      (other is CoverRow &&
+          other.key == this.key &&
+          other.path == this.path &&
+          other.url == this.url &&
+          other.scale == this.scale &&
+          other.dx == this.dx &&
+          other.dy == this.dy);
 }
 
 class CoversCompanion extends UpdateCompanion<CoverRow> {
   final Value<String> key;
   final Value<String> path;
+  final Value<String?> url;
+  final Value<double> scale;
+  final Value<double> dx;
+  final Value<double> dy;
   final Value<int> rowid;
   const CoversCompanion({
     this.key = const Value.absent(),
     this.path = const Value.absent(),
+    this.url = const Value.absent(),
+    this.scale = const Value.absent(),
+    this.dx = const Value.absent(),
+    this.dy = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   CoversCompanion.insert({
     required String key,
     required String path,
+    this.url = const Value.absent(),
+    this.scale = const Value.absent(),
+    this.dx = const Value.absent(),
+    this.dy = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : key = Value(key),
        path = Value(path);
   static Insertable<CoverRow> custom({
     Expression<String>? key,
     Expression<String>? path,
+    Expression<String>? url,
+    Expression<double>? scale,
+    Expression<double>? dx,
+    Expression<double>? dy,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (key != null) 'key': key,
       if (path != null) 'path': path,
+      if (url != null) 'url': url,
+      if (scale != null) 'scale': scale,
+      if (dx != null) 'dx': dx,
+      if (dy != null) 'dy': dy,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -773,11 +929,19 @@ class CoversCompanion extends UpdateCompanion<CoverRow> {
   CoversCompanion copyWith({
     Value<String>? key,
     Value<String>? path,
+    Value<String?>? url,
+    Value<double>? scale,
+    Value<double>? dx,
+    Value<double>? dy,
     Value<int>? rowid,
   }) {
     return CoversCompanion(
       key: key ?? this.key,
       path: path ?? this.path,
+      url: url ?? this.url,
+      scale: scale ?? this.scale,
+      dx: dx ?? this.dx,
+      dy: dy ?? this.dy,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -791,6 +955,18 @@ class CoversCompanion extends UpdateCompanion<CoverRow> {
     if (path.present) {
       map['path'] = Variable<String>(path.value);
     }
+    if (url.present) {
+      map['url'] = Variable<String>(url.value);
+    }
+    if (scale.present) {
+      map['scale'] = Variable<double>(scale.value);
+    }
+    if (dx.present) {
+      map['dx'] = Variable<double>(dx.value);
+    }
+    if (dy.present) {
+      map['dy'] = Variable<double>(dy.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -802,6 +978,10 @@ class CoversCompanion extends UpdateCompanion<CoverRow> {
     return (StringBuffer('CoversCompanion(')
           ..write('key: $key, ')
           ..write('path: $path, ')
+          ..write('url: $url, ')
+          ..write('scale: $scale, ')
+          ..write('dx: $dx, ')
+          ..write('dy: $dy, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1356,7 +1536,7 @@ class PlayRow extends DataClass implements Insertable<PlayRow> {
   final String trackId;
   final DateTime playedAt;
 
-  /// 실제로 들은 시간(ms). 재생 엔진이 붙기 전에는 0.
+  /// 실제로 재생된 시간(ms). 재생하는 동안 계속 갱신된다.
   final int listenedMs;
   const PlayRow({
     required this.id,
@@ -2384,11 +2564,19 @@ typedef $$TracksTableProcessedTableManager =
 typedef $$CoversTableCreateCompanionBuilder = CoversCompanion Function({
   required String key,
   required String path,
+  Value<String?> url,
+  Value<double> scale,
+  Value<double> dx,
+  Value<double> dy,
   Value<int> rowid,
 });
 typedef $$CoversTableUpdateCompanionBuilder = CoversCompanion Function({
   Value<String> key,
   Value<String> path,
+  Value<String?> url,
+  Value<double> scale,
+  Value<double> dx,
+  Value<double> dy,
   Value<int> rowid,
 });
 
@@ -2408,6 +2596,26 @@ class $$CoversTableFilterComposer
 
   ColumnFilters<String> get path => $composableBuilder(
     column: $table.path,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get url => $composableBuilder(
+    column: $table.url,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get scale => $composableBuilder(
+    column: $table.scale,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get dx => $composableBuilder(
+    column: $table.dx,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get dy => $composableBuilder(
+    column: $table.dy,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -2430,6 +2638,26 @@ class $$CoversTableOrderingComposer
     column: $table.path,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get url => $composableBuilder(
+    column: $table.url,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get scale => $composableBuilder(
+    column: $table.scale,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get dx => $composableBuilder(
+    column: $table.dx,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get dy => $composableBuilder(
+    column: $table.dy,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$CoversTableAnnotationComposer
@@ -2446,6 +2674,18 @@ class $$CoversTableAnnotationComposer
 
   GeneratedColumn<String> get path =>
       $composableBuilder(column: $table.path, builder: (column) => column);
+
+  GeneratedColumn<String> get url =>
+      $composableBuilder(column: $table.url, builder: (column) => column);
+
+  GeneratedColumn<double> get scale =>
+      $composableBuilder(column: $table.scale, builder: (column) => column);
+
+  GeneratedColumn<double> get dx =>
+      $composableBuilder(column: $table.dx, builder: (column) => column);
+
+  GeneratedColumn<double> get dy =>
+      $composableBuilder(column: $table.dy, builder: (column) => column);
 }
 
 class $$CoversTableTableManager
@@ -2474,16 +2714,42 @@ class $$CoversTableTableManager
               $$CoversTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$CoversTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> key = const Value.absent(),
-            Value<String> path = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) => CoversCompanion(key: key, path: path, rowid: rowid),
-          createCompanionCallback: ({
-            required String key,
-            required String path,
-            Value<int> rowid = const Value.absent(),
-          }) => CoversCompanion.insert(key: key, path: path, rowid: rowid),
+          updateCompanionCallback:
+              ({
+                Value<String> key = const Value.absent(),
+                Value<String> path = const Value.absent(),
+                Value<String?> url = const Value.absent(),
+                Value<double> scale = const Value.absent(),
+                Value<double> dx = const Value.absent(),
+                Value<double> dy = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CoversCompanion(
+                key: key,
+                path: path,
+                url: url,
+                scale: scale,
+                dx: dx,
+                dy: dy,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String key,
+                required String path,
+                Value<String?> url = const Value.absent(),
+                Value<double> scale = const Value.absent(),
+                Value<double> dx = const Value.absent(),
+                Value<double> dy = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CoversCompanion.insert(
+                key: key,
+                path: path,
+                url: url,
+                scale: scale,
+                dx: dx,
+                dy: dy,
+                rowid: rowid,
+              ),
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (

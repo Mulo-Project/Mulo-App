@@ -5,6 +5,8 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../bloc/cover_color_cubit.dart';
 import '../bloc/cover_cubit.dart';
+import 'cover_editor_page.dart';
+import 'cover_picker.dart';
 
 /// 꾸미기 시트: 곡 · 앨범 · 아티스트 · 재생목록의 이미지와 색을 한 곳에서 바꾼다.
 /// 미리보기를 보면서 사진을 고르거나 색을 고르면 바로 저장된다.
@@ -61,11 +63,28 @@ class _DecorateSheet extends StatelessWidget {
   final IconData icon;
   final bool allowColor;
 
+  /// 이미지를 고르고 확대 · 위치를 맞춘 뒤 저장한다.
+  Future<void> _pick(BuildContext context, CoverCubit covers) async {
+    final picked = await pickCoverArt(context);
+    if (picked != null) await covers.setArt(coverKey, picked);
+  }
+
+  /// 이미 붙인 이미지의 확대 · 위치만 다시 맞춘다.
+  Future<void> _adjust(
+    BuildContext context,
+    CoverCubit covers,
+    CoverArt art,
+  ) async {
+    final edited = await showCoverEditor(context, art);
+    if (edited != null) await covers.setTransform(coverKey, edited.transform);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
     final image = coverImageOf(context, coverKey);
+    final art = context.select<CoverCubit, CoverArt?>((c) => c.state[coverKey]);
     final color = coverColorOf(context, coverKey);
     final covers = context.read<CoverCubit>();
     final colors = context.read<CoverColorCubit>();
@@ -121,7 +140,7 @@ class _DecorateSheet extends StatelessWidget {
                     child: PillButton(
                       label: l10n.coverPick,
                       icon: AppIcons.photoLibrary,
-                      onPressed: () => covers.pickFromDevice(coverKey),
+                      onPressed: () => _pick(context, covers),
                     ),
                   ),
                   if (image != null) ...[
@@ -137,6 +156,15 @@ class _DecorateSheet extends StatelessWidget {
                   ],
                 ],
               ),
+              if (art != null) ...[
+                const SizedBox(height: AppSpacing.xs),
+                PillButton(
+                  label: l10n.coverAdjust,
+                  icon: AppIcons.tune,
+                  variant: PillVariant.tonal,
+                  onPressed: () => _adjust(context, covers, art),
+                ),
+              ],
               if (allowColor) ...[
                 const SizedBox(height: AppSpacing.lg),
                 Text(l10n.decorateColor, style: text.labelLarge),

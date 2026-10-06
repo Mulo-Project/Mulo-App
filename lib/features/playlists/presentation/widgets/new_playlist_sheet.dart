@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -7,6 +5,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
+import '../../../covers/presentation/widgets/cover_picker.dart';
 import '../bloc/playlists_cubit.dart';
 
 /// 새 재생목록: 이름 · (이미지가 없을 때의) 카드 색 · 이미지를 정해 만든다.
@@ -48,8 +47,8 @@ class _NewPlaylistSheetState extends State<_NewPlaylistSheet> {
   /// 고른 카드 색 (null이면 자동).
   Color? _color;
 
-  /// 고른 이미지 파일 (아직 저장 전).
-  String? _imagePath;
+  /// 고른 이미지 (아직 저장 전).
+  CoverArt? _art;
 
   @override
   void dispose() {
@@ -58,25 +57,23 @@ class _NewPlaylistSheetState extends State<_NewPlaylistSheet> {
   }
 
   Future<void> _pickImage() async {
-    final path = await context.read<CoverCubit>().pickFile();
-    if (path != null && mounted) setState(() => _imagePath = path);
+    final art = await pickCoverArt(context);
+    if (art != null && mounted) setState(() => _art = art);
   }
 
   Future<void> _create() async {
     final playlists = context.read<PlaylistsCubit>();
     final covers = context.read<CoverCubit>();
     final colors = context.read<CoverColorCubit>();
-    final path = _imagePath;
+    final art = _art;
     final color = _color;
     final made = await playlists.create(_name.text);
     if (made == null) return;
     // 이미지가 있으면 색은 카드에 보이지 않는다.
-    if (path == null && color != null) {
+    if (art == null && color != null) {
       await colors.setColor(CoverKey.playlist(made.id), color);
     }
-    if (path != null) {
-      await covers.setFromFile(CoverKey.playlist(made.id), path);
-    }
+    if (art != null) await covers.setArt(CoverKey.playlist(made.id), art);
     if (mounted) Navigator.of(context).pop(made.id);
   }
 
@@ -84,7 +81,7 @@ class _NewPlaylistSheetState extends State<_NewPlaylistSheet> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
-    final path = _imagePath;
+    final art = _art;
     return Padding(
       padding: EdgeInsets.fromLTRB(
         AppSpacing.lg,
@@ -110,7 +107,7 @@ class _NewPlaylistSheetState extends State<_NewPlaylistSheet> {
               Row(
                 children: [
                   ArtworkBox(
-                    image: path == null ? null : FileImage(File(path)),
+                    image: art == null ? null : imageOfCoverArt(art),
                     size: 64,
                     radius: AppRadii.sm,
                     color: _color,
@@ -118,7 +115,7 @@ class _NewPlaylistSheetState extends State<_NewPlaylistSheet> {
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: PillButton(
-                      label: path == null
+                      label: art == null
                           ? l10n.playlistNewImage
                           : l10n.playlistNewImageChange,
                       icon: AppIcons.photoLibrary,
@@ -129,7 +126,7 @@ class _NewPlaylistSheetState extends State<_NewPlaylistSheet> {
                 ],
               ),
               // 색은 이미지가 없을 때만 카드에 보인다.
-              if (path == null) ...[
+              if (art == null) ...[
                 const SizedBox(height: AppSpacing.md),
                 Text(l10n.playlistMenuColor, style: text.labelLarge),
                 const SizedBox(height: AppSpacing.xs),

@@ -32,8 +32,16 @@ class Tracks extends Table {
 class Covers extends Table {
   TextColumn get key => text()();
 
-  /// 앱 폴더로 복사한 이미지 파일 경로.
+  /// 앱 폴더로 복사한 이미지 파일 경로. 웹 이미지([url])면 빈 문자열.
   TextColumn get path => text()();
+
+  /// 웹 이미지 주소 (파일은 복사하지 않는다). 기기 사진이면 null.
+  TextColumn get url => text().nullable()();
+
+  /// 보여 줄 때의 확대 배율과 위치(칸 한 변에 대한 비율).
+  RealColumn get scale => real().withDefault(const Constant(1))();
+  RealColumn get dx => real().withDefault(const Constant(0))();
+  RealColumn get dy => real().withDefault(const Constant(0))();
 
   @override
   Set<Column> get primaryKey => {key};
@@ -117,7 +125,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'music_app'));
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -134,6 +142,13 @@ class AppDatabase extends _$AppDatabase {
       if (from < 7) await m.createTable(coverColors);
       // 들은 시간이 기록되지 않던 옛 재생은 곡 길이로 한 번 채운다 (이제부터는 실제 재생 시간만 쌓는다).
       if (from < 8) await customStatement(backfillListenedSql);
+      // 커버에 웹 이미지 주소와 확대 · 위치를 더한다.
+      if (from < 9) {
+        await m.addColumn(covers, covers.url);
+        await m.addColumn(covers, covers.scale);
+        await m.addColumn(covers, covers.dx);
+        await m.addColumn(covers, covers.dy);
+      }
     },
   );
 }

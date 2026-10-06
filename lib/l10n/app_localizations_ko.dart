@@ -559,10 +559,58 @@ class AppLocalizationsKo extends AppLocalizations {
   String get themeIce => '아이스';
 
   @override
-  String get coverPick => '사진에서 고르기';
+  String get coverPick => '이미지 고르기';
 
   @override
   String get coverReset => '기본 이미지로';
+
+  @override
+  String get coverSourceTitle => '어디서 가져올까요?';
+
+  @override
+  String get coverSourceDevice => '기기에서 고르기';
+
+  @override
+  String get coverSourceWeb => '웹에서 가져오기';
+
+  @override
+  String get coverAdjust => '위치 조정';
+
+  @override
+  String get coverWebHint => '이미지 주소 또는 검색어';
+
+  @override
+  String get coverWebHelp => '이미지 주소(https://…)를 붙여 넣거나, 검색어로 찾아 고르세요.';
+
+  @override
+  String get coverWebUseUrl => '이 주소의 이미지 쓰기';
+
+  @override
+  String get coverWebEmpty => '찾은 이미지가 없어요';
+
+  @override
+  String get coverWebFailed => '검색하지 못했어요. 잠시 뒤 다시 해 주세요';
+
+  @override
+  String get coverEditTitle => '이미지 위치';
+
+  @override
+  String get coverEditHint => '끌어서 옮기고, 두 손가락이나 마우스 휠로 크기를 바꿔요';
+
+  @override
+  String get coverEditZoomIn => '확대';
+
+  @override
+  String get coverEditZoomOut => '축소';
+
+  @override
+  String get coverEditReset => '원래대로';
+
+  @override
+  String get coverEditApply => '적용';
+
+  @override
+  String get coverEditLoadFailed => '이미지를 불러오지 못했어요';
 
   @override
   String get settingsAppearance => '화면 모드';

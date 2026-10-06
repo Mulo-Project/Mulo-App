@@ -572,10 +572,60 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themeIce => 'Ice';
 
   @override
-  String get coverPick => 'Choose from photos';
+  String get coverPick => 'Choose image';
 
   @override
   String get coverReset => 'Use default';
+
+  @override
+  String get coverSourceTitle => 'Where from?';
+
+  @override
+  String get coverSourceDevice => 'From this device';
+
+  @override
+  String get coverSourceWeb => 'From the web';
+
+  @override
+  String get coverAdjust => 'Adjust position';
+
+  @override
+  String get coverWebHint => 'Image URL or search words';
+
+  @override
+  String get coverWebHelp =>
+      'Paste an image URL (https://…) or search and pick one.';
+
+  @override
+  String get coverWebUseUrl => 'Use the image at this URL';
+
+  @override
+  String get coverWebEmpty => 'No images found';
+
+  @override
+  String get coverWebFailed => 'Couldn\'t search. Try again in a moment';
+
+  @override
+  String get coverEditTitle => 'Image position';
+
+  @override
+  String get coverEditHint =>
+      'Drag to move; pinch or use the mouse wheel to zoom';
+
+  @override
+  String get coverEditZoomIn => 'Zoom in';
+
+  @override
+  String get coverEditZoomOut => 'Zoom out';
+
+  @override
+  String get coverEditReset => 'Reset';
+
+  @override
+  String get coverEditApply => 'Apply';
+
+  @override
+  String get coverEditLoadFailed => 'Couldn\'t load the image';
 
   @override
   String get settingsAppearance => 'Appearance';

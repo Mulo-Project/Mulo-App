@@ -148,7 +148,7 @@ class AlbumScreen extends StatelessWidget {
     await library.renameAlbum(album, newName);
     // 합치는 경우(새 이름에 이미 설정이 있으면)에는 그쪽을 남긴다.
     if (image != null && !covers.state.containsKey(dest)) {
-      await covers.setFromFile(dest, image);
+      await covers.setArt(dest, image);
     }
     if (color != null && !colors.state.containsKey(dest)) {
       await colors.setColor(dest, Color(color));
