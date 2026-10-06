@@ -88,13 +88,21 @@ Future<AudioStream?> _readWithExplode(String videoId) async {
     final preferred = preferredAudioFormat() == AudioFormat.m4a
         ? StreamContainer.mp4
         : StreamContainer.webM;
-    final same = audio.where((s) => s.container == preferred);
-    final best = (same.isNotEmpty ? same : audio).toList()
-      ..sort((a, b) => b.bitrate.compareTo(a.bitrate));
-    return AudioStream(
-      url: best.first.url.toString(),
-      headers: const {'user-agent': _userAgent},
-    );
+    // 정책 형식을 먼저, 그다음 나머지. 앞의 것이 안 열리면 플레이어가 차례로 써 본다.
+    final ordered = audio.toList()
+      ..sort((a, b) {
+        final byFormat = (b.container == preferred ? 1 : 0).compareTo(
+          a.container == preferred ? 1 : 0,
+        );
+        return byFormat != 0 ? byFormat : b.bitrate.compareTo(a.bitrate);
+      });
+    AudioStream of(StreamInfo s, [List<AudioStream> rest = const []]) =>
+        AudioStream(
+          url: s.url.toString(),
+          headers: const {'user-agent': _userAgent},
+          fallbacks: rest,
+        );
+    return of(ordered.first, [for (final s in ordered.skip(1).take(3)) of(s)]);
   } on Object catch (e) {
     throw EngineException(EngineFailure.failed, '$e');
   } finally {

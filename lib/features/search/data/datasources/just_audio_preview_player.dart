@@ -43,6 +43,20 @@ class JustAudioPreviewPlayer implements PreviewPlayer {
 
   @override
   Future<void> play(AudioStream stream) async {
+    // 형식이 무엇이든 재생은 되게: 안 열리면 다른 형식 주소로 차례로 시도한다.
+    EngineException? first;
+    for (final candidate in [stream, ...stream.fallbacks]) {
+      try {
+        await _playOne(candidate);
+        return;
+      } on EngineException catch (e) {
+        first ??= e;
+      }
+    }
+    throw first!;
+  }
+
+  Future<void> _playOne(AudioStream stream) async {
     final player = _ensure();
     _stream = stream;
     _viaApp = false;
