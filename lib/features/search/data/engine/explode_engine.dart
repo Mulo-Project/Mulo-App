@@ -99,7 +99,11 @@ Future<AudioStream?> _readWithExplode(String videoId) async {
     AudioStream of(StreamInfo s, [List<AudioStream> rest = const []]) =>
         AudioStream(
           url: s.url.toString(),
-          headers: const {'user-agent': _userAgent},
+          headers: {
+            'user-agent': s.url.queryParameters['c'] == 'ANDROID'
+                ? _androidUserAgent
+                : _userAgent,
+          },
           fallbacks: rest,
         );
     return of(ordered.first, [for (final s in ordered.skip(1).take(3)) of(s)]);
@@ -109,6 +113,9 @@ Future<AudioStream?> _readWithExplode(String videoId) async {
     yt.close();
   }
 }
+
+const _androidUserAgent =
+    'com.google.android.youtube/20.10.38 (Linux; U; Android 11) gzip';
 
 const _userAgent =
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '

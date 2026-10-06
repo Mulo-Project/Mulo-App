@@ -161,6 +161,12 @@ Future<String> _probe(AudioStream stream) async {
   try {
     final req = await client.getUrl(uri);
     stream.headers.forEach(req.headers.set);
+    if (q['c'] == 'ANDROID') {
+      req.headers.set(
+        'user-agent',
+        'com.google.android.youtube/20.10.38 (Linux; U; Android 11) gzip',
+      );
+    }
     req.headers.set('range', 'bytes=0-1023');
     final resp = await req.close().timeout(const Duration(seconds: 10));
     final bytes = <int>[];
@@ -186,15 +192,25 @@ class _HttpRangeSource extends StreamAudioSource {
   final Uri _url;
   final Map<String, String> _headers;
 
+  static const _chunk = 10379935;
+  static const _androidUserAgent =
+      'com.google.android.youtube/20.10.38 (Linux; U; Android 11) gzip';
+
   @override
   Future<StreamAudioResponse> request([int? start, int? end]) async {
     final client = HttpClient()..idleTimeout = const Duration(seconds: 5);
     final req = await client.getUrl(_url);
     _headers.forEach(req.headers.set);
-    req.headers.set(
-      'range',
-      'bytes=${start ?? 0}-${end == null ? '' : end - 1}',
-    );
+    // 안드로이드 클라이언트 주소는 끝을 안 정한 구간 요청을 403으로 막는다.
+    // 그래서 항상 한 번에 받을 크기를 정해(youtube_explode와 같은 약 10MB) 요청한다.
+    final from = start ?? 0;
+    final last = end == null
+        ? from + _chunk - 1
+        : (end - 1 < from + _chunk - 1 ? end - 1 : from + _chunk - 1);
+    req.headers.set('range', 'bytes=$from-$last');
+    if (_url.queryParameters['c'] == 'ANDROID') {
+      req.headers.set('user-agent', _androidUserAgent);
+    }
     final resp = await req.close();
     if (resp.statusCode >= 400) {
       client.close(force: true);
