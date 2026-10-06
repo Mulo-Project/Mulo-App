@@ -1646,6 +1646,18 @@ abstract class AppLocalizations {
   /// **'공동 작업자'**
   String get mediaDetailCollaborators;
 
+  /// No description provided for @mediaDetailPlayInApp.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱에서 재생'**
+  String get mediaDetailPlayInApp;
+
+  /// No description provided for @mediaDetailEmbedBlocked.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 영상은 앱 안에서 재생할 수 없어요. 아래 버튼으로 유튜브에서 열어 보세요.'**
+  String get mediaDetailEmbedBlocked;
+
   /// No description provided for @mediaDetailLess.
   ///
   /// In ko, this message translates to:

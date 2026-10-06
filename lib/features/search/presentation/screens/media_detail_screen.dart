@@ -13,6 +13,7 @@ import '../../domain/entities/media_info.dart';
 import '../../domain/usecases/search_usecases.dart';
 import '../bloc/media_detail_cubit.dart';
 import '../widgets/video_category.dart';
+import '../widgets/youtube_embed.dart';
 
 /// 검색 결과 하나의 상세 보기: 큰 썸네일, 채널, 길이 · 조회수 · 올린 날 · 분류 · 설명.
 /// 영상 보기와 채널 보기는 기기의 유튜브 앱(없으면 브라우저)으로 연다.
@@ -33,9 +34,20 @@ bool isYoutubeUrl(String url) {
 }
 
 class MediaDetailScreen extends StatelessWidget {
-  const MediaDetailScreen({super.key, required this.hit});
+  const MediaDetailScreen({
+    super.key,
+    required this.hit,
+    @visibleForTesting this.inAppVideo,
+    @visibleForTesting this.playerBuilder,
+  });
 
   final MediaHit hit;
+
+  /// 앱 안 재생 가능 여부를 바꿔 쓴다 (테스트용, 기본은 플랫폼에 따른다).
+  final bool? inAppVideo;
+
+  /// 앱 안 플레이어를 바꿔 쓴다 (테스트용, 기본은 [YoutubeEmbedPlayer]).
+  final Widget Function(String videoId, VoidCallback onFailed)? playerBuilder;
 
   @override
   Widget build(BuildContext context) => BlocProvider(
@@ -45,18 +57,28 @@ class MediaDetailScreen extends StatelessWidget {
       sl<FetchChannelInfo>(),
       sl<OpenLink>(),
     )..load(),
-    child: const _DetailView(),
+    child: _DetailView(
+      inAppVideo: inAppVideo ?? inAppVideoSupported,
+      playerBuilder: playerBuilder,
+    ),
   );
 }
 
 class _DetailView extends StatefulWidget {
-  const _DetailView();
+  const _DetailView({required this.inAppVideo, this.playerBuilder});
+
+  final bool inAppVideo;
+  final Widget Function(String videoId, VoidCallback onFailed)? playerBuilder;
 
   @override
   State<_DetailView> createState() => _DetailViewState();
 }
 
 class _DetailViewState extends State<_DetailView> {
+  /// 앱 안에서 영상을 틀고 있는지 / 틀어 보려다 막혀서 유튜브로만 열 수 있는지.
+  bool _playing = false;
+  bool _embedBlocked = false;
+
   Future<void> _open(String url) async {
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
@@ -64,6 +86,23 @@ class _DetailViewState extends State<_DetailView> {
     if (opened) return;
     messenger.showSnackBar(SnackBar(content: Text(l10n.mediaDetailOpenFailed)));
   }
+
+  /// 이 영상을 앱 안에서 틀어 볼 수 있는가 (Android 유튜브 영상, 아직 막힌 적 없음).
+  bool _canEmbed(MediaHit hit) =>
+      widget.inAppVideo &&
+      !_embedBlocked &&
+      isYoutubeUrl(hit.url) &&
+      isYoutubeVideoId(hit.id);
+
+  /// 썸네일의 재생 버튼: 앱 안에서 틀 수 있으면 그 자리에서, 아니면 유튜브로 연다.
+  void _play(MediaHit hit) =>
+      _canEmbed(hit) ? setState(() => _playing = true) : _open(hit.url);
+
+  /// 임베드가 막힌(또는 못 불러온) 영상은 앱 안 재생을 접고 유튜브로 열게 한다.
+  void _onEmbedFailed() => setState(() {
+    _playing = false;
+    _embedBlocked = true;
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -134,7 +173,41 @@ class _DetailViewState extends State<_DetailView> {
                 child: ListView(
                   padding: AppSpacing.screen.copyWith(top: AppSpacing.sm),
                   children: [
-                    _Thumbnail(hit: hit, onPlay: () => _open(hit.url)),
+                    if (_playing && _canEmbed(hit))
+                      (widget.playerBuilder ??
+                          (id, onFailed) => YoutubeEmbedPlayer(
+                            key: ValueKey('embed-$id'),
+                            videoId: id,
+                            onFailed: (_) => onFailed(),
+                          ))(hit.id, _onEmbedFailed)
+                    else
+                      _Thumbnail(
+                        hit: hit,
+                        inApp: _canEmbed(hit),
+                        onPlay: () => _play(hit),
+                      ),
+                    if (_embedBlocked)
+                      Padding(
+                        padding: const EdgeInsets.only(top: AppSpacing.sm),
+                        child: Row(
+                          key: const ValueKey('detail-embed-blocked'),
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              AppIcons.info,
+                              size: 18,
+                              color: p.onSurfaceMuted,
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            Expanded(
+                              child: Text(
+                                l10n.mediaDetailEmbedBlocked,
+                                style: text.bodySmall,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     const SizedBox(height: AppSpacing.md),
                     Text(hit.title, style: text.titleLarge),
                     if (hit.uploader.isNotEmpty) ...[
@@ -217,9 +290,16 @@ const _maxThumbHeight = 260.0;
 
 /// 16:9 썸네일. 가운데 재생 버튼을 누르면 영상을 연다.
 class _Thumbnail extends StatelessWidget {
-  const _Thumbnail({required this.hit, required this.onPlay});
+  const _Thumbnail({
+    required this.hit,
+    required this.onPlay,
+    this.inApp = false,
+  });
 
   final MediaHit hit;
+
+  /// 앱 안에서 재생되는 버튼인가 (툴팁 문구만 다르다).
+  final bool inApp;
   final VoidCallback onPlay;
 
   @override
@@ -242,7 +322,9 @@ class _Thumbnail extends StatelessWidget {
               ),
               CircleIconButton(
                 icon: AppIcons.play,
-                tooltip: context.l10n.mediaDetailWatchYoutube,
+                tooltip: inApp
+                    ? context.l10n.mediaDetailPlayInApp
+                    : context.l10n.mediaDetailWatchYoutube,
                 emphasized: true,
                 size: AppSizes.circleButtonLarge,
                 onPressed: onPlay,

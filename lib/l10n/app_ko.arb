@@ -419,6 +419,8 @@
     }
   },
   "mediaDetailCollaborators": "공동 작업자",
+  "mediaDetailPlayInApp": "앱에서 재생",
+  "mediaDetailEmbedBlocked": "이 영상은 앱 안에서 재생할 수 없어요. 아래 버튼으로 유튜브에서 열어 보세요.",
   "mediaDetailLess": "접기",
   "mediaDetailOpenFailed": "열 수 있는 앱이 없어요.",
   "mediaDetailViewCount": "{count}회",
