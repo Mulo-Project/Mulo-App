@@ -332,6 +332,7 @@
       }
     }
   },
+  "mediaDetailCollaborators": "Collaborators",
   "mediaDetailLess": "Show less",
   "mediaDetailOpenFailed": "No app can open this link.",
   "mediaDetailViewCount": "{count} views",

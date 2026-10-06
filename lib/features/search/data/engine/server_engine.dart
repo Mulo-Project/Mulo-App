@@ -107,6 +107,7 @@ class ServerEngine implements DownloaderEngine {
       likeCount: parseCount(j['likeCount']),
       subscriberCount: parseCount(j['subscriberCount']),
       channelThumbnailUrl: parseText(j['channelThumbnail']),
+      creators: parseStrings(j['creators']),
     );
   }
 

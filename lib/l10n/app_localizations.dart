@@ -1640,6 +1640,12 @@ abstract class AppLocalizations {
   /// **'구독자 {count}명'**
   String mediaDetailSubscribers(String count);
 
+  /// No description provided for @mediaDetailCollaborators.
+  ///
+  /// In ko, this message translates to:
+  /// **'공동 작업자'**
+  String get mediaDetailCollaborators;
+
   /// No description provided for @mediaDetailLess.
   ///
   /// In ko, this message translates to:

@@ -1,10 +1,13 @@
-/// JSON의 분류 목록에서 비어 있지 않은 문자열만 (없거나 목록이 아니면 빈 목록).
-List<String> parseCategories(Object? raw) => raw is List
+/// JSON의 문자열 목록에서 비어 있지 않은 것만 (없거나 목록이 아니면 빈 목록).
+List<String> parseStrings(Object? raw) => raw is List
     ? [
         for (final c in raw)
           if (c is String && c.trim().isNotEmpty) c.trim(),
       ]
     : const [];
+
+/// JSON의 분류 목록 (yt-dlp `categories`).
+List<String> parseCategories(Object? raw) => parseStrings(raw);
 
 /// JSON의 숫자 칸 (정수 · 실수 모두 정수로, 아니면 null).
 int? parseCount(Object? raw) => raw is num ? raw.round() : null;

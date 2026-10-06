@@ -183,6 +183,7 @@ class LocalEngine implements DownloaderEngine {
       description: parseText(j['description']) ?? '',
       likeCount: parseCount(j['like_count']),
       subscriberCount: parseCount(j['channel_follower_count']),
+      creators: parseStrings(j['creators']),
     );
   }
 }

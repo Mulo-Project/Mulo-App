@@ -847,6 +847,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get mediaDetailCollaborators => 'Collaborators';
+
+  @override
   String get mediaDetailLess => 'Show less';
 
   @override
