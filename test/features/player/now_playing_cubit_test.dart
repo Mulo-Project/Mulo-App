@@ -208,13 +208,12 @@ void main() {
       expect(state().index, 2);
     });
 
-    test('clearQueue는 지금 재생 중인 곡만 남긴다', () {
+    test('clearQueue는 재생 중인 곡까지 모두 비우고 멈춘다', () {
       vm().jumpTo(1);
-      final current = state().track;
       vm().clearQueue();
-      expect(state().queue, [current]);
-      expect(state().index, 0);
-      expect(state().isPlaying, isTrue);
+      expect(state().queue, isEmpty);
+      expect(state().track, isNull);
+      expect(state().isPlaying, isFalse);
     });
   });
 }

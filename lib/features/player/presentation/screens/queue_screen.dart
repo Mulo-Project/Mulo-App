@@ -10,7 +10,47 @@ import '../../../library/domain/entities/track.dart';
 import '../../../library/presentation/widgets/track_menu.dart';
 import '../bloc/now_playing_cubit.dart';
 
-/// 재생 대기열 화면: 곡 수 · 다음 곡 섞기 · 비우기, 지금 재생 중인 곡 강조,
+/// 비우기 확인창. 확인하면 재생도 멈추고 대기열을 모두 비운다.
+Future<void> _confirmClear(BuildContext context) async {
+  final l10n = context.l10n;
+  final vm = context.read<NowPlayingCubit>();
+  final messenger = ScaffoldMessenger.of(context);
+  final ok = await showDialog<bool>(
+    context: context,
+    useRootNavigator: true,
+    builder: (_) => const _ClearDialog(),
+  );
+  if (ok != true) return;
+  vm.clearQueue();
+  messenger.showSnackBar(SnackBar(content: Text(l10n.queueCleared)));
+}
+
+class _ClearDialog extends StatelessWidget {
+  const _ClearDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return AppDialog(
+      title: l10n.queueClearTitle,
+      body: l10n.queueClearBody,
+      actions: [
+        PillButton(
+          label: l10n.actionCancel,
+          variant: PillVariant.tonal,
+          onPressed: () => Navigator.of(context).pop(false),
+        ),
+        PillButton(
+          label: l10n.queueClearConfirm,
+          icon: AppIcons.delete,
+          onPressed: () => Navigator.of(context).pop(true),
+        ),
+      ],
+    );
+  }
+}
+
+/// 재생 대기열 화면: 곡 수 · 다음 곡 섞기 · 비우기(위에 고정), 지금 재생 중인 곡 강조,
 /// 곡을 누르면 그 곡부터 재생, ⋮는 곡 메뉴(보관함과 같은 메뉴), 길게 눌러 끌면 순서가 바뀐다.
 class QueueScreen extends StatelessWidget {
   const QueueScreen({super.key});
@@ -40,6 +80,13 @@ class QueueScreen extends StatelessWidget {
                   onPressed: () => context.pop(),
                 ),
               ),
+              // 곡 수 · 섞기 · 비우기 줄은 목록이 스크롤돼도 고정한다.
+              if (queue.isNotEmpty)
+                _QueueHeader(
+                  count: queue.length,
+                  onShuffle: vm.shuffleUpNext,
+                  onClear: () => _confirmClear(context),
+                ),
               Expanded(
                 child: queue.isEmpty
                     ? Center(
@@ -55,16 +102,6 @@ class QueueScreen extends StatelessWidget {
                           bottom:
                               AppSpacing.lg +
                               MediaQuery.paddingOf(context).bottom,
-                        ),
-                        header: _QueueHeader(
-                          count: queue.length,
-                          onShuffle: vm.shuffleUpNext,
-                          onClear: () {
-                            vm.clearQueue();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(l10n.queueCleared)),
-                            );
-                          },
                         ),
                         // 길게 눌러야 끌린다 (기본 손잡이는 쓰지 않는다).
                         buildDefaultDragHandles: false,

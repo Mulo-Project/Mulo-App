@@ -87,11 +87,21 @@ void main() {
     await tester.tapAt(const Offset(5, 5));
     await tester.pumpAndSettle();
 
+    // 취소하면 그대로.
     await tester.tap(find.byTooltip('대기열 비우기'));
     await tester.pumpAndSettle();
-    expect(find.text('1곡'), findsOneWidget);
-    expect(find.text('대기열을 비웠어요'), findsOneWidget);
-    expect(find.text('첫 곡'), findsOneWidget);
+    expect(find.text('대기열을 비울까요?'), findsOneWidget);
+    await tester.tap(find.text('취소'));
+    await tester.pumpAndSettle();
+    expect(find.text('3곡'), findsOneWidget);
+
+    // 확인하면 재생 중인 곡까지 모두 비운다.
+    await tester.tap(find.byTooltip('대기열 비우기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('비우기'));
+    await tester.pumpAndSettle();
+    expect(find.text('대기열이 비어 있어요'), findsOneWidget);
+    expect(find.text('첫 곡'), findsNothing);
   });
 
   testWidgets('대기열: 길게 눌러 끌면 순서가 바뀌고 재생 중인 곡은 그대로', (tester) async {

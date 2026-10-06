@@ -1064,6 +1064,24 @@ abstract class AppLocalizations {
   /// **'대기열을 비웠어요'**
   String get queueCleared;
 
+  /// No description provided for @queueClearTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'대기열을 비울까요?'**
+  String get queueClearTitle;
+
+  /// No description provided for @queueClearBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생 중인 곡도 멈추고 대기열에서 모두 사라져요. 보관함의 곡은 그대로 남아요.'**
+  String get queueClearBody;
+
+  /// No description provided for @queueClearConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'비우기'**
+  String get queueClearConfirm;
+
   /// No description provided for @queueReorderHint.
   ///
   /// In ko, this message translates to:
