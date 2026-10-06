@@ -837,6 +837,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get mediaDetailCollaborators => '공동 작업자';
 
   @override
+  String get mediaDetailPlayInApp => '앱에서 재생';
+
+  @override
+  String get mediaDetailEmbedBlocked =>
+      '이 영상은 앱 안에서 재생할 수 없어요. 아래 버튼으로 유튜브에서 열어 보세요.';
+
+  @override
   String get mediaDetailLess => '접기';
 
   @override
