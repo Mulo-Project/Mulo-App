@@ -12,6 +12,7 @@ class DownloadRequest extends Equatable {
     this.quality = Quality.best,
     this.savePath = '',
     this.duration,
+    this.color,
   });
 
   final String title;
@@ -28,6 +29,9 @@ class DownloadRequest extends Equatable {
   /// 곡 길이. 모르면 null (대기열 타일에 그대로 이어서 보여 준다).
   final Duration? duration;
 
+  /// 받은 곡의 커버 색(ARGB). 비어 있으면 자동 색.
+  final int? color;
+
   /// 문자열 앞뒤 공백을 지운 사본.
   DownloadRequest normalized() => DownloadRequest(
     title: title.trim(),
@@ -37,6 +41,7 @@ class DownloadRequest extends Equatable {
     quality: quality,
     savePath: savePath.trim(),
     duration: duration,
+    color: color,
   );
 
   @override
@@ -48,5 +53,6 @@ class DownloadRequest extends Equatable {
     quality,
     savePath,
     duration,
+    color,
   ];
 }

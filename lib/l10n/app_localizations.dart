@@ -1994,6 +1994,12 @@ abstract class AppLocalizations {
   /// **'비어 있어요'**
   String get playlistSummaryEmpty;
 
+  /// No description provided for @downloadColorSaveForGenre.
+  ///
+  /// In ko, this message translates to:
+  /// **'\'{genre}\' 장르의 기본 색으로 저장'**
+  String downloadColorSaveForGenre(String genre);
+
   /// No description provided for @downloadPlaylistsNone.
   ///
   /// In ko, this message translates to:
