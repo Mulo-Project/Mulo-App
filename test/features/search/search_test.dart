@@ -497,7 +497,8 @@ void main() {
       expect(engine.searches.single.$1, 'hello');
       expect(find.text('Found Song'), findsOneWidget);
       expect(find.textContaining('Some Artist'), findsOneWidget);
-      expect(find.textContaining('3:05'), findsOneWidget);
+      // 재생 시간은 타일이 아니라 상세 화면에서만 보여 준다.
+      expect(find.textContaining('3:05'), findsNothing);
 
       await tester.tap(find.byTooltip('Download'));
       await tester.pumpAndSettle();
