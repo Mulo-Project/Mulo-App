@@ -31,6 +31,7 @@ PreviewCubit _cubit(FakeDownloaderEngine e, FakePreviewPlayer p) =>
       StopPreview(p),
       WatchPreviewCompleted(p),
       WatchPreviewProgress(p),
+      WatchPreviewFailures(p),
     );
 
 void main() {
@@ -155,6 +156,18 @@ void main() {
   });
 
   group('PreviewCubit', () {
+    test('재생 중에 실패하면 멈추고 까닭을 알린다', () async {
+      final player = FakePreviewPlayer();
+      final cubit = _cubit(FakeDownloaderEngine(info: VideoInfo(_a)), player);
+      await cubit.toggle(_a);
+      expect(cubit.state.status, PreviewStatus.playing);
+      player.fail('Source error');
+      await Future<void>.delayed(Duration.zero);
+      expect(cubit.state.status, PreviewStatus.idle);
+      expect(cubit.state.error, 'Source error');
+      await cubit.close();
+    });
+
     test('재생 위치가 오면 들은 비율이 바뀌고, 멈추면 지워진다', () async {
       final player = FakePreviewPlayer();
       final cubit = _cubit(FakeDownloaderEngine(info: VideoInfo(_a)), player);

@@ -16,11 +16,15 @@ class PreviewState extends Equatable {
     this.hitId,
     this.status = PreviewStatus.idle,
     this.progress,
+    this.error,
   });
 
   /// 미리 듣는 중(또는 준비 중)인 검색 결과의 id. 아무것도 안 듣고 있으면 null.
   final String? hitId;
   final PreviewStatus status;
+
+  /// 재생 중에 실패해 멈췄을 때의 까닭 (그 밖에는 null).
+  final String? error;
 
   /// 재생 중일 때 어디까지 들었는지 (아직 소리가 안 나면 null).
   final PreviewProgress? progress;
@@ -36,7 +40,7 @@ class PreviewState extends Equatable {
   bool isActive(String id) => hitId == id && status != PreviewStatus.idle;
 
   @override
-  List<Object?> get props => [hitId, status, progress];
+  List<Object?> get props => [hitId, status, progress, error];
 }
 
 /// 검색 결과 미리 듣기: 다운로드 없이 오디오 스트림 주소를 받아 바로 재생한다.
@@ -49,9 +53,11 @@ class PreviewCubit extends Cubit<PreviewState> {
     this._stop,
     WatchPreviewCompleted watchCompleted,
     WatchPreviewProgress watchProgress,
+    WatchPreviewFailures watchFailures,
   ) : super(const PreviewState()) {
     _completed = watchCompleted(const NoParams()).listen((_) => stop());
     _progress = watchProgress(const NoParams()).listen(_onProgress);
+    _failures = watchFailures(const NoParams()).listen(_onFailure);
   }
 
   final ResolveAudioStream _resolve;
@@ -59,6 +65,13 @@ class PreviewCubit extends Cubit<PreviewState> {
   final StopPreview _stop;
   late final StreamSubscription<void> _completed;
   late final StreamSubscription<PreviewProgress> _progress;
+  late final StreamSubscription<String> _failures;
+
+  /// 재생 중에 실패하면 멈춘 상태로 돌리고 까닭을 [PreviewState.error]로 알린다.
+  void _onFailure(String reason) {
+    if (isClosed || state.status == PreviewStatus.idle) return;
+    emit(PreviewState(error: reason));
+  }
 
   void _onProgress(PreviewProgress p) {
     if (isClosed || state.status != PreviewStatus.playing) return;
@@ -124,6 +137,7 @@ class PreviewCubit extends Cubit<PreviewState> {
   Future<void> close() async {
     await _completed.cancel();
     await _progress.cancel();
+    await _failures.cancel();
     await _stop(const NoParams());
     return super.close();
   }

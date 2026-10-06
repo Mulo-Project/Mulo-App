@@ -51,6 +51,7 @@ void registerSearch(GetIt sl) {
     ..registerFactory(() => StopPreview(sl()))
     ..registerFactory(() => WatchPreviewCompleted(sl()))
     ..registerFactory(() => WatchPreviewProgress(sl()))
-    ..registerFactory(() => PreviewCubit(sl(), sl(), sl(), sl(), sl()))
+    ..registerFactory(() => WatchPreviewFailures(sl()))
+    ..registerFactory(() => PreviewCubit(sl(), sl(), sl(), sl(), sl(), sl()))
     ..registerFactory(() => SearchCubit(sl(), sl()));
 }

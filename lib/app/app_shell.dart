@@ -44,55 +44,68 @@ class AppShell extends StatelessWidget {
           // 메인 재생이 시작되면 미리 듣기는 멈춘다 (두 소리가 겹치지 않게).
           listenWhen: (a, b) => !a.isPlaying && b.isPlaying,
           listener: (context, _) => context.read<PreviewCubit>().stop(),
-          child: Scaffold(
-            backgroundColor: p.background,
-            extendBody: true,
-            body: AppBackground(child: shell),
-            bottomNavigationBar: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (context.select((ThemeCubit c) => c.state.previewing))
-                  const ThemePreviewBar(),
-                const _ShellMiniPlayer(),
-                AppBottomNav(
-                  currentIndex: shell.currentIndex,
-                  onSelected: (i) {
-                    // 다른 탭으로 가면 미리 듣기는 멈춘다.
-                    if (i != shell.currentIndex) {
-                      context.read<PreviewCubit>().stop();
-                    }
-                    shell.goBranch(i, initialLocation: i == shell.currentIndex);
-                  },
-                  items: [
-                    AppNavItem(
-                      icon: AppIcons.libraryOutline,
-                      selectedIcon: AppIcons.library,
-                      label: l10n.navLibrary,
-                    ),
-                    AppNavItem(
-                      icon: AppIcons.queueOutline,
-                      selectedIcon: AppIcons.queue,
-                      label: l10n.navPlaylists,
-                    ),
-                    AppNavItem(
-                      icon: AppIcons.homeOutline,
-                      selectedIcon: AppIcons.home,
-                      label: l10n.navHome,
-                      highlighted: true,
-                    ),
-                    AppNavItem(
-                      icon: AppIcons.searchOutline,
-                      selectedIcon: AppIcons.search,
-                      label: l10n.navSearch,
-                    ),
-                    AppNavItem(
-                      icon: AppIcons.tuneOutline,
-                      selectedIcon: AppIcons.tune,
-                      label: l10n.navSettings,
-                    ),
-                  ],
+          child: BlocListener<PreviewCubit, PreviewState>(
+            // 미리 듣기가 재생 중에 막혔으면 까닭을 알린다.
+            listenWhen: (a, b) => b.error != null && a.error != b.error,
+            listener: (context, s) => ScaffoldMessenger.of(context)
+                .showSnackBar(
+                  SnackBar(
+                    content: Text('${l10n.searchPreviewFailed}\n${s.error}'),
+                  ),
                 ),
-              ],
+            child: Scaffold(
+              backgroundColor: p.background,
+              extendBody: true,
+              body: AppBackground(child: shell),
+              bottomNavigationBar: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (context.select((ThemeCubit c) => c.state.previewing))
+                    const ThemePreviewBar(),
+                  const _ShellMiniPlayer(),
+                  AppBottomNav(
+                    currentIndex: shell.currentIndex,
+                    onSelected: (i) {
+                      // 다른 탭으로 가면 미리 듣기는 멈춘다.
+                      if (i != shell.currentIndex) {
+                        context.read<PreviewCubit>().stop();
+                      }
+                      shell.goBranch(
+                        i,
+                        initialLocation: i == shell.currentIndex,
+                      );
+                    },
+                    items: [
+                      AppNavItem(
+                        icon: AppIcons.libraryOutline,
+                        selectedIcon: AppIcons.library,
+                        label: l10n.navLibrary,
+                      ),
+                      AppNavItem(
+                        icon: AppIcons.queueOutline,
+                        selectedIcon: AppIcons.queue,
+                        label: l10n.navPlaylists,
+                      ),
+                      AppNavItem(
+                        icon: AppIcons.homeOutline,
+                        selectedIcon: AppIcons.home,
+                        label: l10n.navHome,
+                        highlighted: true,
+                      ),
+                      AppNavItem(
+                        icon: AppIcons.searchOutline,
+                        selectedIcon: AppIcons.search,
+                        label: l10n.navSearch,
+                      ),
+                      AppNavItem(
+                        icon: AppIcons.tuneOutline,
+                        selectedIcon: AppIcons.tune,
+                        label: l10n.navSettings,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),

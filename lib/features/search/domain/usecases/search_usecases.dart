@@ -118,3 +118,13 @@ class WatchPreviewProgress implements StreamUseCase<PreviewProgress, NoParams> {
   @override
   Stream<PreviewProgress> call(NoParams params) => _player.watchProgress();
 }
+
+/// 미리 듣기가 재생 중에 실패했을 때 그 까닭.
+class WatchPreviewFailures implements StreamUseCase<String, NoParams> {
+  const WatchPreviewFailures(this._player);
+
+  final PreviewPlayer _player;
+
+  @override
+  Stream<String> call(NoParams params) => _player.watchFailures();
+}

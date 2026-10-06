@@ -840,6 +840,7 @@ class FakePreviewPlayer implements PreviewPlayer {
   final EngineFailure? failure;
   final _completed = StreamController<void>.broadcast();
   final _progress = StreamController<PreviewProgress>.broadcast();
+  final _failures = StreamController<String>.broadcast();
 
   /// 재생을 시작한 스트림 주소 순서.
   final played = <String>[];
@@ -869,6 +870,11 @@ class FakePreviewPlayer implements PreviewPlayer {
 
   @override
   Stream<void> watchCompleted() => _completed.stream;
+
+  void fail(String reason) => _failures.add(reason);
+
+  @override
+  Stream<String> watchFailures() => _failures.stream;
 
   @override
   Stream<PreviewProgress> watchProgress() => _progress.stream;

@@ -15,7 +15,13 @@ class JustAudioPreviewPlayer implements PreviewPlayer {
   AudioPlayer? _player;
   final _completed = StreamController<void>.broadcast();
   final _progress = StreamController<PreviewProgress>.broadcast();
+  final _failures = StreamController<String>.broadcast();
   StreamSubscription<ProcessingState>? _processing;
+  StreamSubscription<PlaybackEvent>? _events;
+
+  /// 지금 재생 중인 스트림과, 앱의 HTTP로 받아 넘기는 방식으로 바꿨는지.
+  AudioStream? _stream;
+  var _viaApp = false;
   StreamSubscription<Duration>? _position;
 
   AudioPlayer _ensure() {
@@ -30,12 +36,16 @@ class JustAudioPreviewPlayer implements PreviewPlayer {
         PreviewProgress(position: p, duration: player.duration),
       ),
     );
+    // 재생이 시작된 뒤의 오류(주소가 중간에 막힘 등)는 여기로 온다.
+    _events = player.playbackEventStream.listen((_) {}, onError: _onError);
     return _player = player;
   }
 
   @override
   Future<void> play(AudioStream stream) async {
     final player = _ensure();
+    _stream = stream;
+    _viaApp = false;
     try {
       try {
         await player.setAudioSource(
@@ -48,6 +58,7 @@ class JustAudioPreviewPlayer implements PreviewPlayer {
         // 플레이어(ExoPlayer 등)가 직접 못 열면(Source error) 앱이 받아서 넘겨 준다.
         // 앱의 HTTP로는 열리는 주소가 있다 (주소 확인에 쓴 것과 같은 방식).
         try {
+          _viaApp = true;
           await player.setAudioSource(
             _HttpRangeSource(Uri.parse(stream.url), stream.headers),
           );
@@ -72,12 +83,36 @@ class JustAudioPreviewPlayer implements PreviewPlayer {
       throw EngineException(EngineFailure.failed, '$e');
     }
     // 재생은 곡 끝까지 끝나지 않는 Future라 기다리지 않는다.
-    unawaited(player.play());
+    unawaited(player.play().catchError((Object _) {}));
+  }
+
+  Future<void> _onError(Object error, StackTrace _) async {
+    final stream = _stream;
+    final player = _player;
+    if (stream == null || player == null) return;
+    final reason = error is PlayerException ? error.message : '$error';
+    if (!_viaApp) {
+      // 직접 열었는데 재생 중에 막혔다: 앱의 HTTP로 받아 넘기는 방식으로 이어서 틀어 본다.
+      _viaApp = true;
+      try {
+        await player.setAudioSource(
+          _HttpRangeSource(Uri.parse(stream.url), stream.headers),
+          initialPosition: player.position,
+        );
+        unawaited(player.play().catchError((Object _) {}));
+        return;
+      } on Object catch (e) {
+        _failures.add('direct: $reason | app: $e');
+        return;
+      }
+    }
+    _failures.add('app: $reason');
   }
 
   @override
   Future<void> stop() async {
     // 불러오는 중이어도 멈출 수 있다 (진행 중이던 setAudioSource가 중단된다).
+    _stream = null;
     await _player?.stop();
   }
 
@@ -85,11 +120,16 @@ class JustAudioPreviewPlayer implements PreviewPlayer {
   Stream<void> watchCompleted() => _completed.stream;
 
   @override
+  Stream<String> watchFailures() => _failures.stream;
+
+  @override
   Stream<PreviewProgress> watchProgress() => _progress.stream;
 
   Future<void> dispose() async {
     await _processing?.cancel();
     await _position?.cancel();
+    await _events?.cancel();
+    await _failures.close();
     await _progress.close();
     await _player?.dispose();
     _player = null;

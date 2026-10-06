@@ -14,6 +14,9 @@ abstract interface class PreviewPlayer {
   /// 끝까지 재생했을 때마다 한 번씩.
   Stream<void> watchCompleted();
 
+  /// 재생이 시작된 뒤에 소리가 끊기는 오류(주소가 중간에 막힘 등)가 났을 때 그 까닭.
+  Stream<String> watchFailures();
+
   /// 재생 위치가 바뀔 때마다 (재생 중에만).
   Stream<PreviewProgress> watchProgress();
 }
