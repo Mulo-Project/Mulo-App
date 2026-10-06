@@ -1,3 +1,4 @@
+import '../entities/audio_stream.dart';
 import '../entities/media_info.dart';
 import '../entities/search_source.dart';
 
@@ -21,4 +22,8 @@ abstract interface class DownloaderEngine {
   /// 채널 주소로 채널 이미지 · 구독자 수를 가져온다. 알 수 없으면 [EngineException]
   /// (`unavailable` 포함)을 던진다.
   Future<ChannelInfo> fetchChannel(String url);
+
+  /// 곡을 받지 않고 바로 들을 수 있는 오디오 스트림 주소를 알아낸다 (미리 듣기).
+  /// 쓸 수 없는 엔진은 [EngineException] (`unavailable`)을 던진다.
+  Future<AudioStream> resolveAudioStream(String url);
 }

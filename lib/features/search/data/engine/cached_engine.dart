@@ -1,3 +1,4 @@
+import '../../domain/entities/audio_stream.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/search_source.dart';
 import '../../domain/repositories/downloader_engine.dart';
@@ -21,6 +22,7 @@ class CachedDownloaderEngine implements DownloaderEngine {
 
   final _infos = <String, _Entry<MediaInfo>>{};
   final _channels = <String, _Entry<ChannelInfo>>{};
+  final _streams = <String, _Entry<AudioStream>>{};
 
   @override
   Future<SearchPage> search(
@@ -44,6 +46,10 @@ class CachedDownloaderEngine implements DownloaderEngine {
   @override
   Future<ChannelInfo> fetchChannel(String url) =>
       _cached(_channels, url, () => _inner.fetchChannel(url));
+
+  @override
+  Future<AudioStream> resolveAudioStream(String url) =>
+      _cached(_streams, url, () => _inner.resolveAudioStream(url));
 
   Future<T> _cached<T>(
     Map<String, _Entry<T>> cache,

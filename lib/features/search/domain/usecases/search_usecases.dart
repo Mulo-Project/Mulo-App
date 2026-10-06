@@ -1,8 +1,10 @@
 import '../../../../core/usecase/usecase.dart';
+import '../entities/audio_stream.dart';
 import '../entities/media_info.dart';
 import '../entities/search_source.dart';
 import '../repositories/downloader_engine.dart';
 import '../repositories/link_opener.dart';
+import '../repositories/preview_player.dart';
 
 class SearchParams {
   const SearchParams(
@@ -63,4 +65,45 @@ class OpenLink implements UseCase<bool, String> {
 
   @override
   Future<bool> call(String url) => _opener.open(url);
+}
+
+/// 곡 주소로 바로 들을 수 있는 오디오 스트림 주소 알아내기 (미리 듣기).
+class ResolveAudioStream implements UseCase<AudioStream, String> {
+  const ResolveAudioStream(this._engine);
+
+  final DownloaderEngine _engine;
+
+  @override
+  Future<AudioStream> call(String url) =>
+      _engine.resolveAudioStream(url.trim());
+}
+
+/// 미리 듣기 시작 (메인 재생과 따로 재생한다).
+class PlayPreview implements UseCase<void, AudioStream> {
+  const PlayPreview(this._player);
+
+  final PreviewPlayer _player;
+
+  @override
+  Future<void> call(AudioStream stream) => _player.play(stream);
+}
+
+/// 미리 듣기 멈추기.
+class StopPreview implements UseCase<void, NoParams> {
+  const StopPreview(this._player);
+
+  final PreviewPlayer _player;
+
+  @override
+  Future<void> call(NoParams params) => _player.stop();
+}
+
+/// 미리 듣기가 끝까지 재생됐을 때마다 한 번씩.
+class WatchPreviewCompleted implements StreamUseCase<void, NoParams> {
+  const WatchPreviewCompleted(this._player);
+
+  final PreviewPlayer _player;
+
+  @override
+  Stream<void> call(NoParams params) => _player.watchCompleted();
 }

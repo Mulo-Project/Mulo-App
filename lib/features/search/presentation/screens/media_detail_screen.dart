@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -12,6 +13,8 @@ import '../../../library/domain/entities/track.dart' show formatDuration;
 import '../../domain/entities/media_info.dart';
 import '../../domain/usecases/search_usecases.dart';
 import '../bloc/media_detail_cubit.dart';
+import '../bloc/preview_cubit.dart';
+import '../widgets/preview_control.dart';
 import '../widgets/video_category.dart';
 import '../widgets/youtube_embed.dart';
 
@@ -75,11 +78,28 @@ class _DetailView extends StatefulWidget {
 }
 
 class _DetailViewState extends State<_DetailView> {
+  late final PreviewCubit _preview;
+
+  @override
+  void initState() {
+    super.initState();
+    _preview = context.read<PreviewCubit>();
+  }
+
+  /// 화면을 벗어나면 미리 듣기는 멈춘다.
+  @override
+  void dispose() {
+    _preview.stop();
+    super.dispose();
+  }
+
   /// 앱 안에서 영상을 틀고 있는지 / 틀어 보려다 막혀서 유튜브로만 열 수 있는지.
   bool _playing = false;
   bool _embedBlocked = false;
 
   Future<void> _open(String url) async {
+    // 영상 · 채널은 다른 앱으로 열리니 미리 듣기 소리가 겹치지 않게 멈춘다.
+    _preview.stop();
     final l10n = context.l10n;
     final messenger = ScaffoldMessenger.of(context);
     final opened = await context.read<MediaDetailCubit>().open(url);
@@ -95,8 +115,12 @@ class _DetailViewState extends State<_DetailView> {
       isYoutubeVideoId(hit.id);
 
   /// 썸네일의 재생 버튼: 앱 안에서 틀 수 있으면 그 자리에서, 아니면 유튜브로 연다.
-  void _play(MediaHit hit) =>
-      _canEmbed(hit) ? setState(() => _playing = true) : _open(hit.url);
+  void _play(MediaHit hit) {
+    if (!_canEmbed(hit)) return unawaited(_open(hit.url));
+    // 앱 안 영상과 미리 듣기 소리가 겹치지 않게 미리 듣기는 멈춘다.
+    _preview.stop();
+    setState(() => _playing = true);
+  }
 
   /// 임베드가 막힌(또는 못 불러온) 영상은 앱 안 재생을 접고 유튜브로 열게 한다.
   void _onEmbedFailed() => setState(() {
@@ -208,6 +232,8 @@ class _DetailViewState extends State<_DetailView> {
                           ],
                         ),
                       ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Center(child: PreviewButton(hit: hit)),
                     const SizedBox(height: AppSpacing.md),
                     Text(hit.title, style: text.titleLarge),
                     if (hit.uploader.isNotEmpty) ...[

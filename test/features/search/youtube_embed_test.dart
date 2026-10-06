@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:music_download_play_app/core/di/injector.dart';
+import 'package:music_download_play_app/features/search/presentation/bloc/preview_cubit.dart';
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
 import 'package:music_download_play_app/features/search/presentation/screens/media_detail_screen.dart';
 import 'package:music_download_play_app/features/search/presentation/widgets/youtube_embed.dart';
@@ -60,17 +63,20 @@ void main() {
         MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: MediaDetailScreen(
-            hit: hit,
-            inAppVideo: inApp,
-            playerBuilder: (id, onFailed) {
-              fail = onFailed;
-              return SizedBox(
-                key: ValueKey('fake-player-$id'),
-                height: 100,
-                child: const Text('PLAYER'),
-              );
-            },
+          home: BlocProvider(
+            create: (_) => sl<PreviewCubit>(),
+            child: MediaDetailScreen(
+              hit: hit,
+              inAppVideo: inApp,
+              playerBuilder: (id, onFailed) {
+                fail = onFailed;
+                return SizedBox(
+                  key: ValueKey('fake-player-$id'),
+                  height: 100,
+                  child: const Text('PLAYER'),
+                );
+              },
+            ),
           ),
         ),
       );

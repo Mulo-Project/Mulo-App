@@ -806,6 +806,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchHitMenuDetail => 'View details';
 
   @override
+  String get searchPreview => 'Preview';
+
+  @override
+  String get searchPreviewStop => 'Stop preview';
+
+  @override
+  String get searchPreviewLoading => 'Preparing preview';
+
+  @override
+  String get searchPreviewFailed => 'Couldn\'t start the preview.';
+
+  @override
+  String get searchPreviewUnavailable =>
+      'Preview isn\'t available on this device.';
+
+  @override
   String get mediaDetailTitle => 'Details';
 
   @override
