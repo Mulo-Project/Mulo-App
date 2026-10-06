@@ -25,6 +25,12 @@ import 'package:music_download_play_app/features/library/domain/entities/import_
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track_info.dart';
 import 'package:music_download_play_app/features/library/domain/repositories/library_repository.dart';
+import 'package:music_download_play_app/features/notifications/di.dart';
+import 'package:music_download_play_app/features/notifications/domain/entities/media_session_info.dart';
+import 'package:music_download_play_app/features/notifications/domain/entities/notification_settings.dart';
+import 'package:music_download_play_app/features/notifications/domain/repositories/download_notifier.dart';
+import 'package:music_download_play_app/features/notifications/domain/repositories/media_session.dart';
+import 'package:music_download_play_app/features/notifications/domain/repositories/notification_settings_repository.dart';
 import 'package:music_download_play_app/features/player/di.dart';
 import 'package:music_download_play_app/features/player/domain/entities/player_style.dart';
 import 'package:music_download_play_app/features/player/domain/repositories/audio_player_repository.dart';
@@ -601,8 +607,14 @@ Future<void> setUpTestDependencies({
   registerDownloads(sl);
   registerEngine(sl);
   registerSearch(sl);
+  registerNotifications(sl);
   sl.allowReassignment = true;
   sl
+    ..registerLazySingleton<NotificationSettingsRepository>(
+      MemoryNotificationSettings.new,
+    )
+    ..registerLazySingleton<DownloadNotifier>(FakeDownloadNotifier.new)
+    ..registerLazySingleton<MediaSession>(FakeMediaSession.new)
     ..registerLazySingleton<JoinDateRepository>(
       () => MemoryJoinDate(joinedAt ?? DateTime(2026, 1, 1)),
     )
@@ -911,4 +923,65 @@ class FakePreviewPlayer implements PreviewPlayer {
 
   @override
   Stream<PreviewProgress> watchProgress() => _progress.stream;
+}
+
+/// 메모리 알림 설정.
+class MemoryNotificationSettings implements NotificationSettingsRepository {
+  NotificationSettings settings = const NotificationSettings();
+  bool granted = true;
+
+  @override
+  Future<NotificationSettings> load() async => settings;
+
+  @override
+  Future<void> save(NotificationSettings s) async => settings = s;
+
+  @override
+  Future<bool> isPermissionGranted() async => granted;
+
+  @override
+  Future<bool> requestPermission() async => granted;
+
+  @override
+  Future<void> openSystemSettings() async {}
+}
+
+/// 받기 알림 기록 ('progress:제목:42', 'clear', 'done:id', 'failed:id').
+class FakeDownloadNotifier implements DownloadNotifier {
+  final calls = <String>[];
+
+  @override
+  Future<void> showProgress({
+    required String title,
+    required String body,
+    int? percent,
+  }) async => calls.add('progress:$title:$percent');
+
+  @override
+  Future<void> clearProgress() async => calls.add('clear');
+
+  @override
+  Future<void> showResult({
+    required String id,
+    required String title,
+    required String body,
+    required bool failed,
+  }) async => calls.add('${failed ? 'failed' : 'done'}:$id');
+
+  @override
+  Future<void> clearResults() async => calls.add('clearResults');
+}
+
+/// 재생 알림 가짜: 받은 상태를 기록하고, 알림 조작은 테스트가 흘려보낸다.
+class FakeMediaSession implements MediaSession {
+  final _commands = StreamController<MediaCommand>.broadcast();
+  final updates = <MediaSessionInfo?>[];
+
+  void press(MediaCommand c) => _commands.add(c);
+
+  @override
+  Stream<MediaCommand> watchCommands() => _commands.stream;
+
+  @override
+  Future<void> update(MediaSessionInfo? info) async => updates.add(info);
 }

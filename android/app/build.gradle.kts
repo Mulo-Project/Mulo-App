@@ -13,6 +13,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // flutter_local_notifications가 java.time 등을 쓴다.
+        isCoreLibraryDesugaringEnabled = true
     }
 
     // 에디션: lite는 서버 모드만, full은 로컬 엔진(youtubedl-android)을 APK에 넣는다.
@@ -58,6 +60,7 @@ kotlin {
 }
 
 dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
     "fullImplementation"("io.github.junkfood02.youtubedl-android:library:0.18.1")
 }
 

@@ -1,0 +1,189 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../../core/usecase/usecase.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../downloads/domain/entities/download_item.dart';
+import '../../../library/domain/entities/track.dart';
+import '../../domain/entities/media_session_info.dart';
+import '../../domain/entities/notification_settings.dart';
+import '../../domain/usecases/notification_usecases.dart';
+
+/// 앱 상태(받기 대기열 · 재생 상태)를 알림창에 옮긴다. 화면이 없고 상태도 없다:
+/// 바뀐 것만 골라 알림 유스케이스를 부른다.
+class NotificationSyncCubit extends Cubit<void> {
+  NotificationSyncCubit(this._actions) : super(null);
+
+  final NotificationActions _actions;
+
+  /// 알림 · 잠금화면에서 누른 조작.
+  Stream<MediaCommand> get commands => _actions.watchCommands(const NoParams());
+
+  var _askedPermission = false;
+
+  /// 알림을 처음 띄울 때 한 번만 시스템 권한을 묻는다 (거절하면 설정에서 안내).
+  Future<void> _ensurePermission() async {
+    if (_askedPermission) return;
+    _askedPermission = true;
+    if (!await _actions.isPermissionGranted(const NoParams())) {
+      await _actions.requestPermission(const NoParams());
+    }
+  }
+
+  // ── 받기 ──
+
+  Map<String, DownloadStatus> _statuses = const {};
+  var _progressShown = false;
+  String? _lastProgress;
+
+  /// 받기 대기열이 바뀔 때마다. 진행 알림은 한 개(지금 받는 곡)를 갱신하고,
+  /// 끝남 · 실패는 상태가 바뀐 순간 곡마다 한 번씩 알린다.
+  Future<void> syncDownloads(
+    List<DownloadItem> items,
+    NotificationSettings settings,
+    AppLocalizations l10n,
+  ) async {
+    final before = _statuses;
+    _statuses = {for (final i in items) i.id: i.status};
+    final hide = settings.hideSongInfo;
+
+    if (settings.downloadResult) {
+      for (final i in items) {
+        if (before[i.id] == i.status) continue;
+        if (i.status == DownloadStatus.done) {
+          await _ensurePermission();
+          await _actions.showResult(
+            DownloadResultNotice(
+              id: i.id,
+              title: l10n.notifDownloadDoneTitle,
+              body: hide
+                  ? l10n.notifDownloadDoneHidden
+                  : _titleLine(i.title, i.artist),
+              failed: false,
+            ),
+          );
+        } else if (i.status == DownloadStatus.failed) {
+          await _ensurePermission();
+          await _actions.showResult(
+            DownloadResultNotice(
+              id: i.id,
+              title: l10n.notifDownloadFailedTitle,
+              body: hide
+                  ? l10n.notifDownloadFailedHidden
+                  : [i.title, if (i.error.isNotEmpty) i.error].join('\n'),
+              failed: true,
+            ),
+          );
+        }
+      }
+    } else {
+      await _actions.clearResults(const NoParams());
+    }
+
+    DownloadItem? current;
+    for (final i in items) {
+      if (i.status == DownloadStatus.downloading) {
+        current = i;
+        break;
+      }
+    }
+    final waiting = items
+        .where((i) => i.status == DownloadStatus.queued)
+        .length;
+
+    if (!settings.downloadProgress || (current == null && waiting == 0)) {
+      await _clearProgress();
+      return;
+    }
+    // 다음 곡으로 넘어가는 사이(받는 곡 없음, 대기만 있음)는 알림을 그대로 둔다.
+    if (current == null) return;
+
+    final percent = (current.progress * 100).round().clamp(0, 100);
+    final title = hide ? l10n.notifDownloadHiddenTitle : current.title;
+    final body = waiting > 0
+        ? l10n.notifDownloadProgressMore(percent, waiting)
+        : l10n.notifDownloadProgressBody(percent);
+    final key = '$title|$body|$percent';
+    if (_progressShown && key == _lastProgress) return;
+    await _ensurePermission();
+    _progressShown = true;
+    _lastProgress = key;
+    await _actions.showProgress(
+      DownloadProgressNotice(title: title, body: body, percent: percent),
+    );
+  }
+
+  Future<void> _clearProgress() async {
+    if (!_progressShown) return;
+    _progressShown = false;
+    _lastProgress = null;
+    await _actions.clearProgress(const NoParams());
+  }
+
+  String _titleLine(String title, String artist) =>
+      artist.isEmpty ? title : '$title · $artist';
+
+  // ── 재생 ──
+
+  MediaSessionInfo? _session;
+  DateTime? _sessionAt;
+
+  /// 재생 상태가 바뀔 때마다. [track]이 없거나 재생 알림이 꺼져 있으면 알림을 치운다.
+  /// 위치는 알림이 흘러가는 대로 따라가므로, 예상과 크게 어긋날 때(이동)만 다시 보낸다.
+  Future<void> syncPlayback({
+    required Track? track,
+    required bool isPlaying,
+    required Duration position,
+    required bool hasPrevious,
+    required bool hasNext,
+    required String? artUri,
+    required NotificationSettings settings,
+    required AppLocalizations l10n,
+    DateTime? now,
+  }) async {
+    if (track == null || !settings.playback) {
+      if (_session == null) return;
+      _session = null;
+      _sessionAt = null;
+      await _actions.updateSession(null);
+      return;
+    }
+    final hide = settings.hideSongInfo;
+    final next = MediaSessionInfo(
+      title: hide ? l10n.notifHiddenTitle : track.title,
+      artist: hide
+          ? ''
+          : (track.artist.isEmpty ? l10n.unknownArtist : track.artist),
+      album: hide ? '' : track.album,
+      artUri: hide ? null : artUri,
+      duration: track.duration,
+      position: position,
+      playing: isPlaying,
+      hasPrevious: hasPrevious,
+      hasNext: hasNext,
+    );
+    final at = now ?? DateTime.now();
+    final last = _session;
+    if (last != null && _sessionAt != null) {
+      final sameExceptPosition =
+          last.title == next.title &&
+          last.artist == next.artist &&
+          last.album == next.album &&
+          last.artUri == next.artUri &&
+          last.duration == next.duration &&
+          last.playing == next.playing &&
+          last.hasPrevious == next.hasPrevious &&
+          last.hasNext == next.hasNext;
+      final expected = last.playing
+          ? last.position + at.difference(_sessionAt!)
+          : last.position;
+      final drift = (expected - position).abs();
+      if (sameExceptPosition && drift < const Duration(milliseconds: 1500)) {
+        return;
+      }
+    }
+    _session = next;
+    _sessionAt = at;
+    await _ensurePermission();
+    await _actions.updateSession(next);
+  }
+}
