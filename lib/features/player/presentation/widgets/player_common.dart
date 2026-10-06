@@ -843,7 +843,7 @@ class EqualizerButton extends StatelessWidget {
 }
 
 /// 모든 모양이 같이 쓰는 하단 조작부 (위에서 아래로):
-/// 1) 제목 · 아티스트 + 가사/커버 · 현재 재생목록(대기열) · 좋아요
+/// 1) 제목 (한 줄) / 아티스트 + 가사/커버 · 현재 재생목록(대기열) · 좋아요 (같은 줄)
 /// 2) 진행 막대 (총 시간은 위, 현재 시간은 손잡이 아래 둥근 삼각형 상자)
 /// 3) 10초 뒤로 · 이전 · 재생 · 다음 · 10초 앞으로
 /// 4) 셔플 · 반복 (왼쪽), 수면 타이머 · 이퀄라이저 (오른쪽)
@@ -868,11 +868,18 @@ class PlayerControls extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // 제목과 붙은 버튼은 제목 줄 가운데에 맞추고, 아티스트는 아래 줄에 혼자 둔다.
+          // 제목은 위 한 줄에 혼자 두고(길면 흐른다), 버튼은 아티스트 줄 가운데에 맞춘다.
+          Align(
+            alignment: Alignment.centerLeft,
+            child: PlayerTitleText(track: data.track),
+          ),
+          const SizedBox(height: 2),
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Expanded(child: PlayerTitleText(track: data.track)),
+              Expanded(
+                child: PlayerSubtitleText(track: data.track, withAlbum: false),
+              ),
               IconButtonTheme(
                 data: IconButtonThemeData(
                   style: IconButton.styleFrom(
@@ -891,11 +898,6 @@ class PlayerControls extends StatelessWidget {
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 2),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: PlayerSubtitleText(track: data.track, withAlbum: false),
           ),
           if (seekBar) ...[
             const SizedBox(height: AppSpacing.xs),
