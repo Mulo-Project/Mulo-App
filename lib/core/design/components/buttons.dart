@@ -206,6 +206,48 @@ class CircleIconButton extends StatelessWidget {
   }
 }
 
+/// 목록 줄 오른쪽에 놓는 작은 아이콘 버튼. 유리 면 · 흐림 없이 아이콘만 있고 눌림 효과만 있다
+/// (줄마다 놓여도 스크롤이 가볍다). [accent]면 강조 색, [active]면 켜진 상태(예: 미리 듣는 중).
+class RowIconButton extends StatelessWidget {
+  const RowIconButton({
+    super.key,
+    required this.icon,
+    required this.tooltip,
+    this.onPressed,
+    this.accent = false,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback? onPressed;
+
+  /// 강조 색으로 그린다 (켜진 상태 · 주 동작).
+  final bool accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: onPressed,
+          customBorder: const CircleBorder(),
+          child: SizedBox.square(
+            dimension: AppSizes.rowButton,
+            child: Icon(
+              icon,
+              size: AppSizes.rowButton * .56,
+              color: accent ? p.accent : p.onSurface,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// 작고 단순한 글자 · 아이콘 버튼. 면 · 테두리 없이 눌림 효과만 있다 (보조 동작, 한 줄에 여러 개).
 class PlainButton extends StatelessWidget {
   const PlainButton({

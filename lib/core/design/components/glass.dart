@@ -35,6 +35,9 @@ class GlassSurface extends StatelessWidget {
   final bool glow;
   final EdgeInsetsGeometry padding;
   final VoidCallback? onTap;
+
+  /// 뒤를 흐리는 정도. 0이면 흐림 없이 반투명 면만 그린다 (목록 줄마다 두는 버튼처럼
+  /// 한 화면에 많이 놓일 때는 0으로 두어야 스크롤이 끊기지 않는다).
   final double blur;
 
   /// 가장자리 빛 테두리를 그릴지. 가로 전체를 쓰는 띠(미니 플레이어)는 끄고 필요한 쪽 선만 직접 긋는다.
@@ -67,31 +70,36 @@ class GlassSurface extends StatelessWidget {
             ],
           );
 
-    Widget surface = ClipPath(
-      clipper: ShapeBorderClipper(shape: shape),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-        child: Material(
-          type: MaterialType.transparency,
-          child: Ink(
-            decoration: ShapeDecoration(gradient: fill, shape: shape),
-            child: InkWell(
-              onTap: onTap,
-              customBorder: shape,
-              child: CustomPaint(
-                foregroundPainter: rim
-                    ? _RimPainter(
-                        shape: shape,
-                        highlight: p.glassHighlight,
-                        border: p.glassBorder,
-                      )
-                    : null,
-                child: Padding(padding: padding, child: child),
-              ),
-            ),
+    final body = Material(
+      type: MaterialType.transparency,
+      child: Ink(
+        decoration: ShapeDecoration(gradient: fill, shape: shape),
+        child: InkWell(
+          onTap: onTap,
+          customBorder: shape,
+          child: CustomPaint(
+            foregroundPainter: rim
+                ? _RimPainter(
+                    shape: shape,
+                    highlight: p.glassHighlight,
+                    border: p.glassBorder,
+                  )
+                : null,
+            child: Padding(padding: padding, child: child),
           ),
         ),
       ),
+    );
+
+    Widget surface = ClipPath(
+      clipper: ShapeBorderClipper(shape: shape),
+      // blur가 0이면 흐릴 것이 없으니 BackdropFilter(= 뒤 화면을 따로 그리는 층)를 만들지 않는다.
+      child: blur > 0
+          ? BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+              child: body,
+            )
+          : body,
     );
 
     if (glow && tint != null) {

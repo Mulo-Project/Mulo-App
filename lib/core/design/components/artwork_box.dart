@@ -57,15 +57,21 @@ class ArtworkBox extends StatelessWidget {
         size: size * .4,
       ),
     );
+    final boxWidth = width ?? size;
     return ClipRRect(
       borderRadius: BorderRadius.circular(radius),
       child: SizedBox(
-        width: width ?? size,
+        width: boxWidth,
         height: size,
         // 이미지를 못 읽으면(네트워크 썸네일 등) 그라데이션 자리로 돌아간다.
         child: image != null
             ? Image(
-                image: image!,
+                image: _decodedAtBoxSize(
+                  image!,
+                  boxWidth,
+                  size,
+                  MediaQuery.devicePixelRatioOf(context),
+                ),
                 fit: BoxFit.cover,
                 errorBuilder: (_, _, _) => placeholder,
               )
@@ -74,3 +80,18 @@ class ArtworkBox extends StatelessWidget {
     );
   }
 }
+
+/// 칸에 필요한 만큼만 디코딩한다. 유튜브 썸네일 같은 큰 원본(1280x720 등)을 48px 칸에
+/// 그대로 풀면 목록을 스크롤할 때마다 디코딩 · 메모리 부담으로 끊긴다.
+/// 비율은 유지하고(fit), 짧은 쪽이 칸을 채울 만큼은 남도록 칸의 2배 안으로 줄인다.
+ImageProvider _decodedAtBoxSize(
+  ImageProvider image,
+  double width,
+  double height,
+  double devicePixelRatio,
+) => ResizeImage(
+  image,
+  width: (width * devicePixelRatio * 2).ceil(),
+  height: (height * devicePixelRatio * 2).ceil(),
+  policy: ResizeImagePolicy.fit,
+);

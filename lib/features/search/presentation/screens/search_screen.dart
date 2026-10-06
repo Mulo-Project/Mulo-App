@@ -312,7 +312,8 @@ class _HitTile extends StatelessWidget {
       subtitle: subtitle,
       tone: toneFor(hit.id),
       artwork: thumb == null ? null : NetworkImage(thumb),
-      trailing: CircleIconButton(
+      // 줄마다 유리(흐림 층)를 두면 목록 스크롤이 끊겨서 면 없는 작은 버튼을 쓴다.
+      trailing: RowIconButton(
         icon: AppIcons.download,
         tooltip: l10n.actionDownload,
         onPressed: () => _download(context),
