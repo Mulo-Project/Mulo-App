@@ -638,5 +638,19 @@
   "@trackMenuAddedToPlaylists": {"placeholders": {"count": {"type": "int"}}},
   "@playlistDeleteBody": {"placeholders": {"name": {"type": "String"}}},
   "@trackDeleteBody": {"placeholders": {"title": {"type": "String"}}},
-  "@downloadCancelBody": {"placeholders": {"title": {"type": "String"}}}
+  "@downloadCancelBody": {"placeholders": {"title": {"type": "String"}}},
+  "playlistImportHint": "유튜브 재생목록 주소",
+  "playlistImportEmptyTitle": "재생목록 주소를 붙여 넣어 주세요",
+  "playlistImportEmptyBody": "곡 목록이 나오면 받을 곡을 고를 수 있어요.",
+  "playlistImportNotPlaylistTitle": "재생목록 주소가 아니에요",
+  "playlistImportNotPlaylistBody": "곡 하나의 주소예요. 재생목록 주소를 붙여 넣어 주세요.",
+  "playlistImportNoTracksTitle": "곡이 없어요",
+  "playlistImportNoTracksBody": "이 재생목록에는 받을 수 있는 곡이 없어요.",
+  "playlistImportSelectAll": "전체 선택",
+  "playlistImportClear": "선택 해제",
+  "playlistImportStart": "{count}곡 받기",
+  "playlistImportStarted": "{count}곡을 받기 시작했어요",
+  "searchPlaylistPick": "골라서 받기",
+  "@playlistImportStart": {"placeholders": {"count": {"type": "int"}}},
+  "@playlistImportStarted": {"placeholders": {"count": {"type": "int"}}}
 }

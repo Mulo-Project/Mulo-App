@@ -1471,4 +1471,44 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get trackFavoriteOff => '좋아요를 취소했어요';
+
+  @override
+  String get playlistImportHint => '유튜브 재생목록 주소';
+
+  @override
+  String get playlistImportEmptyTitle => '재생목록 주소를 붙여 넣어 주세요';
+
+  @override
+  String get playlistImportEmptyBody => '곡 목록이 나오면 받을 곡을 고를 수 있어요.';
+
+  @override
+  String get playlistImportNotPlaylistTitle => '재생목록 주소가 아니에요';
+
+  @override
+  String get playlistImportNotPlaylistBody => '곡 하나의 주소예요. 재생목록 주소를 붙여 넣어 주세요.';
+
+  @override
+  String get playlistImportNoTracksTitle => '곡이 없어요';
+
+  @override
+  String get playlistImportNoTracksBody => '이 재생목록에는 받을 수 있는 곡이 없어요.';
+
+  @override
+  String get playlistImportSelectAll => '전체 선택';
+
+  @override
+  String get playlistImportClear => '선택 해제';
+
+  @override
+  String playlistImportStart(int count) {
+    return '$count곡 받기';
+  }
+
+  @override
+  String playlistImportStarted(int count) {
+    return '$count곡을 받기 시작했어요';
+  }
+
+  @override
+  String get searchPlaylistPick => '골라서 받기';
 }

@@ -3,6 +3,7 @@ import 'package:get_it/get_it.dart';
 import 'data/repositories/drift_playlist_repository.dart';
 import 'domain/repositories/playlist_repository.dart';
 import 'domain/usecases/playlist_usecases.dart';
+import 'presentation/bloc/playlist_import_cubit.dart';
 import 'presentation/bloc/playlist_tracks_cubit.dart';
 import 'presentation/bloc/playlists_cubit.dart';
 
@@ -32,5 +33,6 @@ void registerPlaylists(GetIt sl) {
         removeTrack: sl(),
       ),
     )
-    ..registerFactory(() => PlaylistTracksCubit(sl()));
+    ..registerFactory(() => PlaylistTracksCubit(sl()))
+    ..registerFactory(() => PlaylistImportCubit(sl(), sl(), sl()));
 }
