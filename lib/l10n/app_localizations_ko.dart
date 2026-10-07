@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -1672,6 +1671,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get notifHiddenTitle => '음악 재생 중';
+
+  @override
+  String get notifPreviewLabel => '미리 듣기';
 
   @override
   String get notifChannelPlayback => '재생';

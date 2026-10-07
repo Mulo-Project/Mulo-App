@@ -8,6 +8,7 @@ import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../downloads/presentation/bloc/download_queue_cubit.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
+import '../../../search/presentation/bloc/preview_cubit.dart';
 import '../../domain/entities/media_session_info.dart';
 import '../bloc/notification_settings_cubit.dart';
 import '../bloc/notification_sync_cubit.dart';
@@ -52,6 +53,27 @@ class _NotificationBridgeState extends State<NotificationBridge>
   }
 
   void _onCommand(MediaCommand command) {
+    // 미리 듣는 동안 알림은 미리 듣기의 것: 멈추기 · 옮기기만 받는다.
+    final preview = context.read<PreviewCubit>();
+    if (preview.state.status == PreviewStatus.playing) {
+      switch (command.type) {
+        case MediaCommandType.pause:
+        case MediaCommandType.stop:
+          preview.stop();
+        case MediaCommandType.seek:
+          final to = command.position;
+          final total = preview.state.progress?.duration;
+          if (to != null && total != null && total > Duration.zero) {
+            preview.seekTo(to.inMilliseconds / total.inMilliseconds);
+          }
+        case MediaCommandType.play:
+        case MediaCommandType.next:
+        case MediaCommandType.previous:
+        case MediaCommandType.favorite:
+          break;
+      }
+      return;
+    }
     final player = context.read<NowPlayingCubit>();
     final playing = player.state.isPlaying;
     switch (command.type) {
@@ -93,7 +115,18 @@ class _NotificationBridgeState extends State<NotificationBridge>
     final cover = track == null
         ? null
         : context.read<CoverCubit>().state[CoverKey.track(track.id)];
+    final previewing = context.read<PreviewCubit>().state;
+    final hit = previewing.hit;
     context.read<NotificationSyncCubit>().syncPlayback(
+      preview: previewing.status == PreviewStatus.playing && hit != null
+          ? PreviewNotice(
+              title: previewing.title,
+              uploader: hit.uploader,
+              artUri: hit.thumbnailUrl,
+              position: previewing.progress?.position ?? Duration.zero,
+              duration: previewing.progress?.duration,
+            )
+          : null,
       track: track,
       isPlaying: now.isPlaying,
       position: now.position,
@@ -121,6 +154,9 @@ class _NotificationBridgeState extends State<NotificationBridge>
         listener: (_, _) => _syncDownloads(),
       ),
       BlocListener<NowPlayingCubit, NowPlayingState>(
+        listener: (_, _) => _syncPlayback(),
+      ),
+      BlocListener<PreviewCubit, PreviewState>(
         listener: (_, _) => _syncPlayback(),
       ),
       BlocListener<PlaylistsCubit, List<Playlist>>(

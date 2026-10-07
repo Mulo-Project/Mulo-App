@@ -26,7 +26,7 @@ class MuloAudioHandler extends BaseAudioHandler {
     }
     final art = info.artUri == null ? null : Uri.tryParse(info.artUri!);
     final item = MediaItem(
-      id: 'mulo.now_playing',
+      id: info.preview ? 'mulo.preview' : 'mulo.now_playing',
       title: info.title,
       artist: info.artist.isEmpty ? null : info.artist,
       album: info.album.isEmpty ? null : info.album,
@@ -45,28 +45,31 @@ class MuloAudioHandler extends BaseAudioHandler {
       mediaItem.add(item);
     }
 
-    final controls = [
-      if (info.hasPrevious) MediaControl.skipToPrevious,
-      info.playing ? MediaControl.pause : MediaControl.play,
-      if (info.hasNext) MediaControl.skipToNext,
-      // 펼친 알림에만 보이는 좋아요 · 닫기 (접힌 알림은 위 세 개만).
-      MediaControl.custom(
-        androidIcon: info.favorite
-            ? 'drawable/ic_notif_favorite'
-            : 'drawable/ic_notif_favorite_outline',
-        label: info.favorite
-            ? systemL10n().trackMenuUnfavorite
-            : systemL10n().trackMenuFavorite,
-        name: _favoriteAction,
-      ),
-      MediaControl.stop,
-    ];
+    // 미리 듣기: 멈추기만 있다 (누르면 앞에 듣던 곡으로 돌아간다).
+    final controls = info.preview
+        ? [MediaControl.stop]
+        : [
+            if (info.hasPrevious) MediaControl.skipToPrevious,
+            info.playing ? MediaControl.pause : MediaControl.play,
+            if (info.hasNext) MediaControl.skipToNext,
+            // 펼친 알림에만 보이는 좋아요 · 닫기 (접힌 알림은 위 세 개만).
+            MediaControl.custom(
+              androidIcon: info.favorite
+                  ? 'drawable/ic_notif_favorite'
+                  : 'drawable/ic_notif_favorite_outline',
+              label: info.favorite
+                  ? systemL10n().trackMenuUnfavorite
+                  : systemL10n().trackMenuFavorite,
+              name: _favoriteAction,
+            ),
+            MediaControl.stop,
+          ];
     playbackState.add(
       PlaybackState(
         controls: controls,
         systemActions: const {MediaAction.seek, MediaAction.stop},
         androidCompactActionIndices: [
-          for (var i = 0; i < controls.length - 2; i++) i,
+          for (var i = 0; i < (info.preview ? 1 : controls.length - 2); i++) i,
         ],
         processingState: AudioProcessingState.ready,
         playing: info.playing,

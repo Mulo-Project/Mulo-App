@@ -170,56 +170,67 @@ class PreviewMiniBar extends StatelessWidget {
     final loading = state.status == PreviewStatus.loading;
     final progress = state.progress;
     final hit = state.hit;
+    // 본문 · 미니 플레이어와 구분되도록 강조색을 깐 둥근 띠로 그린다.
     return Padding(
-      key: const ValueKey('preview-mini-bar'),
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
         vertical: AppSpacing.xs,
       ),
-      child: Row(
-        children: [
-          Icon(AppIcons.headphones, size: 18, color: p.accent),
-          const SizedBox(width: AppSpacing.xs),
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 제목을 누르면 이 곡의 상세 화면(유튜브 정보)을 연다.
-                GestureDetector(
-                  key: const ValueKey('preview-mini-open'),
-                  behavior: HitTestBehavior.opaque,
-                  onTap: hit == null
-                      ? null
-                      : () => showMediaDetail(context, hit),
-                  child: Text(
-                    state.title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: text.bodySmall,
-                  ),
+      child: DecoratedBox(
+        key: const ValueKey('preview-mini-bar'),
+        decoration: BoxDecoration(
+          color: Color.alphaBlend(p.accent.withValues(alpha: .28), p.surface),
+          borderRadius: BorderRadius.circular(AppRadii.sm),
+          border: Border.all(color: p.accent.withValues(alpha: .6)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.only(left: AppSpacing.sm),
+          child: Row(
+            children: [
+              Icon(AppIcons.headphones, size: 18, color: p.accent),
+              const SizedBox(width: AppSpacing.xs),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 제목을 누르면 이 곡의 상세 화면(유튜브 정보)을 연다.
+                    GestureDetector(
+                      key: const ValueKey('preview-mini-open'),
+                      behavior: HitTestBehavior.opaque,
+                      onTap: hit == null
+                          ? null
+                          : () => showMediaDetail(context, hit),
+                      child: Text(
+                        state.title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: text.bodySmall,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xxs),
+                    loading
+                        ? const ProgressLine(value: 0, height: 3)
+                        : PreviewSeekLine(fraction: state.fraction, height: 3),
+                  ],
                 ),
-                const SizedBox(height: AppSpacing.xxs),
-                loading
-                    ? const ProgressLine(value: 0, height: 3)
-                    : PreviewSeekLine(fraction: state.fraction, height: 3),
-              ],
-            ),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              if (loading)
+                PreviewLoadingRing(state: state, size: 24)
+              else
+                Text(
+                  _timeText(progress),
+                  style: text.labelSmall?.copyWith(color: p.onSurfaceMuted),
+                ),
+              RowIconButton(
+                icon: AppIcons.close,
+                tooltip: l10n.searchPreviewStop,
+                onPressed: () => context.read<PreviewCubit>().stop(),
+              ),
+            ],
           ),
-          const SizedBox(width: AppSpacing.xs),
-          if (loading)
-            PreviewLoadingRing(state: state, size: 24)
-          else
-            Text(
-              _timeText(progress),
-              style: text.labelSmall?.copyWith(color: p.onSurfaceMuted),
-            ),
-          RowIconButton(
-            icon: AppIcons.close,
-            tooltip: l10n.searchPreviewStop,
-            onPressed: () => context.read<PreviewCubit>().stop(),
-          ),
-        ],
+        ),
       ),
     );
   }

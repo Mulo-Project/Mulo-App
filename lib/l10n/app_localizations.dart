@@ -3182,6 +3182,12 @@ abstract class AppLocalizations {
   /// **'음악 재생 중'**
   String get notifHiddenTitle;
 
+  /// No description provided for @notifPreviewLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'미리 듣기'**
+  String get notifPreviewLabel;
+
   /// No description provided for @notifChannelPlayback.
   ///
   /// In ko, this message translates to:

@@ -614,6 +614,7 @@
   "settingsNotifyPermissionDesc": "Turn on Mulo notifications in your phone settings to see them.",
   "settingsNotifyOpenSettings": "Open settings",
   "notifHiddenTitle": "Playing music",
+  "notifPreviewLabel": "Preview",
   "notifChannelPlayback": "Playback",
   "notifChannelDownloadProgress": "Downloading",
   "notifChannelDownloadDone": "Download complete",

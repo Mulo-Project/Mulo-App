@@ -707,6 +707,7 @@
   "settingsNotifyPermissionDesc": "휴대폰 설정에서 Mulo 알림을 켜야 알림이 보여요.",
   "settingsNotifyOpenSettings": "설정 열기",
   "notifHiddenTitle": "음악 재생 중",
+  "notifPreviewLabel": "미리 듣기",
   "notifChannelPlayback": "재생",
   "notifChannelDownloadProgress": "받는 중",
   "notifChannelDownloadDone": "받기 완료",
