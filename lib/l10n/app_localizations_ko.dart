@@ -1683,6 +1683,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get notifPreviewLabel => '미리 듣기';
 
   @override
+  String get notifStop => '닫기';
+
+  @override
   String get notifChannelPlayback => '재생';
 
   @override

@@ -617,6 +617,7 @@
   "settingsNotifyOpenSettings": "Open settings",
   "notifHiddenTitle": "Playing music",
   "notifPreviewLabel": "Preview",
+  "notifStop": "Close",
   "notifChannelPlayback": "Playback",
   "notifChannelDownloadProgress": "Downloading",
   "notifChannelDownloadDone": "Download complete",

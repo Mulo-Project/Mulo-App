@@ -10,6 +10,14 @@ import 'notification_texts.dart';
 /// 상태를 받아 알림에 그리고, 누른 버튼은 [commands]로 앱에 돌려준다.
 class MuloAudioHandler extends BaseAudioHandler {
   static const _favoriteAction = 'favorite';
+  static const _stopAction = 'stop_playback';
+
+  /// 닫기(정지) 버튼: 기본 아이콘이 다른 버튼보다 커 보여, 크기를 맞춘 아이콘을 쓴다.
+  static MediaControl get _stopControl => MediaControl.custom(
+    androidIcon: 'drawable/ic_notif_stop',
+    label: systemL10n().notifStop,
+    name: _stopAction,
+  );
 
   final _commands = StreamController<MediaCommand>.broadcast();
 
@@ -47,10 +55,7 @@ class MuloAudioHandler extends BaseAudioHandler {
 
     // 미리 듣기: 일시정지 · 멈추기만 있다 (멈추면 앞에 듣던 곡으로 돌아간다).
     final controls = info.preview
-        ? [
-            info.playing ? MediaControl.pause : MediaControl.play,
-            MediaControl.stop,
-          ]
+        ? [info.playing ? MediaControl.pause : MediaControl.play, _stopControl]
         : [
             if (info.hasPrevious) MediaControl.skipToPrevious,
             info.playing ? MediaControl.pause : MediaControl.play,
@@ -65,7 +70,7 @@ class MuloAudioHandler extends BaseAudioHandler {
                   : systemL10n().trackMenuFavorite,
               name: _favoriteAction,
             ),
-            MediaControl.stop,
+            _stopControl,
           ];
     playbackState.add(
       PlaybackState(
@@ -109,6 +114,8 @@ class MuloAudioHandler extends BaseAudioHandler {
   ]) async {
     if (name == _favoriteAction) {
       _commands.add(const MediaCommand(MediaCommandType.favorite));
+    } else if (name == _stopAction) {
+      await stop();
     }
   }
 
