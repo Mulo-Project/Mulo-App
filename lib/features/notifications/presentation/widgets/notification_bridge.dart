@@ -7,6 +7,7 @@ import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../downloads/domain/entities/download_item.dart';
 import '../../../downloads/presentation/bloc/download_queue_cubit.dart';
+import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../../search/domain/entities/media_info.dart';
 import '../../../search/presentation/bloc/preview_cubit.dart';
@@ -101,6 +102,11 @@ class _NotificationBridgeState extends State<NotificationBridge>
         player.next();
       case MediaCommandType.previous:
         player.previous();
+      case MediaCommandType.favorite:
+        final track = player.state.track;
+        if (track != null) {
+          context.read<PlaylistsCubit>().toggleFavorite(track.id);
+        }
       case MediaCommandType.seek:
         final to = command.position;
         if (to != null) player.seekTo(to);
@@ -131,6 +137,8 @@ class _NotificationBridgeState extends State<NotificationBridge>
       position: now.position,
       hasPrevious: now.queue.length > 1 || now.position > Duration.zero,
       hasNext: now.queue.length > 1,
+      favorite:
+          track != null && context.read<PlaylistsCubit>().isFavorite(track.id),
       artUri: _artUri(cover),
       settings: settings.settings,
       l10n: context.l10n,
@@ -151,6 +159,9 @@ class _NotificationBridgeState extends State<NotificationBridge>
         listener: (_, _) => _syncDownloads(),
       ),
       BlocListener<NowPlayingCubit, NowPlayingState>(
+        listener: (_, _) => _syncPlayback(),
+      ),
+      BlocListener<PlaylistsCubit, List<Playlist>>(
         listener: (_, _) => _syncPlayback(),
       ),
       BlocListener<CoverCubit, Map<String, CoverArt>>(

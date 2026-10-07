@@ -180,6 +180,7 @@ class NotificationSyncCubit extends Cubit<void> {
     required bool hasPrevious,
     required bool hasNext,
     required String? artUri,
+    bool favorite = false,
     required NotificationSettings settings,
     required AppLocalizations l10n,
     DateTime? now,
@@ -204,6 +205,7 @@ class NotificationSyncCubit extends Cubit<void> {
       playing: isPlaying,
       hasPrevious: hasPrevious,
       hasNext: hasNext,
+      favorite: favorite,
     );
     final at = now ?? DateTime.now();
     final last = _session;
@@ -216,7 +218,8 @@ class NotificationSyncCubit extends Cubit<void> {
           last.duration == next.duration &&
           last.playing == next.playing &&
           last.hasPrevious == next.hasPrevious &&
-          last.hasNext == next.hasNext;
+          last.hasNext == next.hasNext &&
+          last.favorite == next.favorite;
       final expected = last.playing
           ? last.position + at.difference(_sessionAt!)
           : last.position;
