@@ -1744,6 +1744,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get notifDownloadCancel => '취소';
 
   @override
+  String get notifDownloadPausePreview => '일시정지';
+
+  @override
+  String get notifDownloadResumePreview => '이어 듣기';
+
+  @override
+  String get notifDownloadStopPreview => '중지';
+
+  @override
   String get notifDownloadDoneTitle => '받기 완료';
 
   @override

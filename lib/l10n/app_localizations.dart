@@ -3308,6 +3308,24 @@ abstract class AppLocalizations {
   /// **'취소'**
   String get notifDownloadCancel;
 
+  /// No description provided for @notifDownloadPausePreview.
+  ///
+  /// In ko, this message translates to:
+  /// **'일시정지'**
+  String get notifDownloadPausePreview;
+
+  /// No description provided for @notifDownloadResumePreview.
+  ///
+  /// In ko, this message translates to:
+  /// **'이어 듣기'**
+  String get notifDownloadResumePreview;
+
+  /// No description provided for @notifDownloadStopPreview.
+  ///
+  /// In ko, this message translates to:
+  /// **'중지'**
+  String get notifDownloadStopPreview;
+
   /// No description provided for @notifDownloadDoneTitle.
   ///
   /// In ko, this message translates to:

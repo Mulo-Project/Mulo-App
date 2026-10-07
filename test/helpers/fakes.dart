@@ -1103,6 +1103,8 @@ class FakeDownloadNotifier implements DownloadNotifier {
     String? subText,
     String? previewLabel,
     String? cancelLabel,
+    String? pauseLabel,
+    String? stopLabel,
   }) async {
     shown.add({
       'title': title,
@@ -1111,6 +1113,8 @@ class FakeDownloadNotifier implements DownloadNotifier {
       'foreground': foreground,
       'preview': previewLabel,
       'cancel': cancelLabel,
+      'pause': pauseLabel,
+      'stop': stopLabel,
     });
     calls.add('progress:$title:$percent');
   }

@@ -173,6 +173,28 @@ void main() {
     expect(notifier.shown.single['body'], contains('다음 곡: 곡2'));
   });
 
+  test('지금 곡을 미리 듣는 중이면 미리듣기 버튼이 일시정지 · 중지로 바뀐다', () async {
+    final downloading = [item('1', DownloadStatus.downloading, .3)];
+    await cubit.syncDownloads(downloading, on, l10n);
+    expect(notifier.shown.last['preview'], '미리듣기');
+    expect(notifier.shown.last['pause'], isNull);
+    await cubit.syncDownloads(downloading, on, l10n, previewingId: '1');
+    expect(notifier.shown.last['preview'], isNull);
+    expect(notifier.shown.last['pause'], '일시정지');
+    expect(notifier.shown.last['stop'], '중지');
+    await cubit.syncDownloads(
+      downloading,
+      on,
+      l10n,
+      previewingId: '1',
+      previewPaused: true,
+    );
+    expect(notifier.shown.last['pause'], '이어 듣기');
+    // 다른 곡을 미리 듣는 중이면 이 곡의 버튼은 그대로.
+    await cubit.syncDownloads(downloading, on, l10n, previewingId: 'x');
+    expect(notifier.shown.last['preview'], '미리듣기');
+  });
+
   final track = Track(
     id: 't',
     title: '노래',

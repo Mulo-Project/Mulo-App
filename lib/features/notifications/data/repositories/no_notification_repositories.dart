@@ -16,6 +16,8 @@ class NoDownloadNotifier implements DownloadNotifier {
     String? subText,
     String? previewLabel,
     String? cancelLabel,
+    String? pauseLabel,
+    String? stopLabel,
   }) async {}
 
   @override

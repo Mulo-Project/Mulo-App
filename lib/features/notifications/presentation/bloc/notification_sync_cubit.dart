@@ -47,8 +47,10 @@ class NotificationSyncCubit extends Cubit<void> {
   Future<void> syncDownloads(
     List<DownloadItem> items,
     NotificationSettings settings,
-    AppLocalizations l10n,
-  ) async {
+    AppLocalizations l10n, {
+    String? previewingId,
+    bool previewPaused = false,
+  }) async {
     final before = _statuses;
     _statuses = {for (final i in items) i.id: i.status};
     final hide = settings.hideSongInfo;
@@ -146,9 +148,18 @@ class NotificationSyncCubit extends Cubit<void> {
       batch.length,
       overallPercent,
     );
-    final preview = hide ? null : l10n.notifDownloadPreview;
+    // 이 곡을 미리 듣는 중이면 미리듣기 버튼 자리에 일시정지(이어 듣기) · 중지를 둔다.
+    final previewing = !hide && previewingId == current.id;
+    final preview = hide || previewing ? null : l10n.notifDownloadPreview;
+    final pause = previewing
+        ? (previewPaused
+              ? l10n.notifDownloadResumePreview
+              : l10n.notifDownloadPausePreview)
+        : null;
+    final stop = previewing ? l10n.notifDownloadStopPreview : null;
     final cancel = l10n.notifDownloadCancel;
-    final key = '$title|$body|$subText|$overallPercent|$keepAlive|$preview';
+    final key =
+        '$title|$body|$subText|$overallPercent|$keepAlive|$preview|$pause';
     if (_progressShown && key == _lastProgress) return;
     await _ensurePermission();
     _progressShown = true;
@@ -162,6 +173,8 @@ class NotificationSyncCubit extends Cubit<void> {
         subText: subText,
         previewLabel: preview,
         cancelLabel: cancel,
+        pauseLabel: pause,
+        stopLabel: stop,
       ),
     );
   }

@@ -8,10 +8,6 @@ import '../../../../core/design/tokens/app_palette.dart';
 import '../../domain/repositories/download_notifier.dart';
 import '../datasources/notification_texts.dart';
 
-/// Android 알림창에 받기 진행 · 결과를 띄운다 (flutter_local_notifications).
-/// 알림 버튼은 앱 화면을 열지 않고, 백그라운드 isolate가 포트로 주 isolate에 넘긴다.
-/// 받는 중 알림은 [showProgress]의 `foreground`가 true일 때 포그라운드 서비스(dataSync)로 띄워
-/// 앱이 뒤로 가거나 닫혀도 받기가 이어지게 한다. 알림의 미리 듣기 버튼은 앱을 앞으로 가져와 [watchActions]로 알린다.
 const _actionPort = 'com.mulo.app.download_actions';
 
 /// 알림 버튼을 눌렀을 때 (백그라운드 isolate) 주 isolate의 [LocalDownloadNotifier]로 넘긴다.
@@ -21,11 +17,17 @@ void downloadNotificationBackgroundHandler(NotificationResponse response) {
   if (id != null) IsolateNameServer.lookupPortByName(_actionPort)?.send(id);
 }
 
+/// Android 알림창에 받기 진행 · 결과를 띄운다 (flutter_local_notifications).
+/// 알림 버튼은 앱 화면을 열지 않고, 백그라운드 isolate가 포트로 주 isolate에 넘긴다.
+/// 받는 중 알림은 [showProgress]의 `foreground`가 true일 때 포그라운드 서비스(dataSync)로 띄워
+/// 앱이 뒤로 가거나 닫혀도 받기가 이어지게 한다. 알림의 미리 듣기 버튼은 [watchActions]로 알린다.
 class LocalDownloadNotifier implements DownloadNotifier {
   static const _icon = 'ic_stat_mulo';
   static const _progressId = 2001;
   static const _previewAction = 'preview';
   static const _cancelAction = 'cancel';
+  static const _pauseAction = 'pausePreview';
+  static const _stopAction = 'stopPreview';
   static const _progressChannel = 'com.mulo.app.download_progress';
   static const _doneChannel = 'com.mulo.app.download_done';
   static const _failedChannel = 'com.mulo.app.download_failed';
@@ -44,6 +46,28 @@ class LocalDownloadNotifier implements DownloadNotifier {
         AndroidFlutterLocalNotificationsPlugin
       >();
 
+  final _lastAction = <String, DateTime>{};
+
+  /// 버튼 누름을 조작으로 바꿔 알린다. 두 길(주 isolate · 백그라운드 isolate)로 겹쳐 와도 한 번만.
+  void _dispatch(String id) {
+    final action = switch (id) {
+      _previewAction => DownloadNotificationAction.preview,
+      _pauseAction => DownloadNotificationAction.pausePreview,
+      _stopAction => DownloadNotificationAction.stopPreview,
+      _cancelAction => DownloadNotificationAction.cancel,
+      _ => null,
+    };
+    if (action == null) return;
+    final now = DateTime.now();
+    final last = _lastAction[id];
+    if (last != null &&
+        now.difference(last) < const Duration(milliseconds: 700)) {
+      return;
+    }
+    _lastAction[id] = now;
+    _actions.add(action);
+  }
+
   Future<void> _ensureInit() => _init ??= _initialize();
 
   Future<void> _initialize() async {
@@ -51,19 +75,17 @@ class LocalDownloadNotifier implements DownloadNotifier {
       const InitializationSettings(
         android: AndroidInitializationSettings(_icon),
       ),
+      onDidReceiveNotificationResponse: (r) {
+        final id = r.actionId;
+        if (id != null) _dispatch(id);
+      },
       onDidReceiveBackgroundNotificationResponse:
           downloadNotificationBackgroundHandler,
     );
     final port = ReceivePort();
     IsolateNameServer.removePortNameMapping(_actionPort);
     IsolateNameServer.registerPortWithName(port.sendPort, _actionPort);
-    port.listen((id) {
-      if (id == _previewAction) {
-        _actions.add(DownloadNotificationAction.preview);
-      } else if (id == _cancelAction) {
-        _actions.add(DownloadNotificationAction.cancel);
-      }
-    });
+    port.listen((id) => _dispatch(id as String));
     final l10n = systemL10n();
     final android = _android;
     await android?.createNotificationChannel(
@@ -99,6 +121,8 @@ class LocalDownloadNotifier implements DownloadNotifier {
     String? subText,
     String? previewLabel,
     String? cancelLabel,
+    String? pauseLabel,
+    String? stopLabel,
     String? bigText,
   }) => AndroidNotificationDetails(
     _progressChannel,
@@ -119,7 +143,21 @@ class LocalDownloadNotifier implements DownloadNotifier {
     showWhen: false,
     subText: subText,
     actions: [
-      if (previewLabel != null)
+      if (pauseLabel != null)
+        AndroidNotificationAction(
+          _pauseAction,
+          pauseLabel,
+          showsUserInterface: false,
+          cancelNotification: false,
+        ),
+      if (stopLabel != null)
+        AndroidNotificationAction(
+          _stopAction,
+          stopLabel,
+          showsUserInterface: false,
+          cancelNotification: false,
+        ),
+      if (previewLabel != null && pauseLabel == null)
         AndroidNotificationAction(
           _previewAction,
           previewLabel,
@@ -147,6 +185,8 @@ class LocalDownloadNotifier implements DownloadNotifier {
     String? subText,
     String? previewLabel,
     String? cancelLabel,
+    String? pauseLabel,
+    String? stopLabel,
   }) async {
     await _ensureInit();
     final details = _progressDetails(
@@ -154,6 +194,8 @@ class LocalDownloadNotifier implements DownloadNotifier {
       subText: subText,
       previewLabel: previewLabel,
       cancelLabel: cancelLabel,
+      pauseLabel: pauseLabel,
+      stopLabel: stopLabel,
       bigText: body,
     );
     // 앞에 붙들기를 끈 경우: 서비스를 내리고 보통 알림으로 보인다.

@@ -1780,6 +1780,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifDownloadCancel => 'Cancel';
 
   @override
+  String get notifDownloadPausePreview => 'Pause';
+
+  @override
+  String get notifDownloadResumePreview => 'Resume';
+
+  @override
+  String get notifDownloadStopPreview => 'Stop';
+
+  @override
   String get notifDownloadDoneTitle => 'Download complete';
 
   @override

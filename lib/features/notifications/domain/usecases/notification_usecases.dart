@@ -55,6 +55,8 @@ class DownloadProgressNotice {
     this.subText,
     this.previewLabel,
     this.cancelLabel,
+    this.pauseLabel,
+    this.stopLabel,
   });
 
   final String title;
@@ -64,6 +66,8 @@ class DownloadProgressNotice {
   final String? subText;
   final String? previewLabel;
   final String? cancelLabel;
+  final String? pauseLabel;
+  final String? stopLabel;
 }
 
 class ShowDownloadProgress implements UseCase<void, DownloadProgressNotice> {
@@ -79,6 +83,8 @@ class ShowDownloadProgress implements UseCase<void, DownloadProgressNotice> {
     subText: params.subText,
     previewLabel: params.previewLabel,
     cancelLabel: params.cancelLabel,
+    pauseLabel: params.pauseLabel,
+    stopLabel: params.stopLabel,
   );
 }
 

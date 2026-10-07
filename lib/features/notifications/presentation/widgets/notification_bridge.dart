@@ -79,6 +79,14 @@ class _NotificationBridgeState extends State<NotificationBridge>
       return;
     }
     final preview = context.read<PreviewCubit>();
+    if (action == DownloadNotificationAction.pausePreview) {
+      if (preview.state.isActive(current.id)) preview.togglePause();
+      return;
+    }
+    if (action == DownloadNotificationAction.stopPreview) {
+      if (preview.state.isActive(current.id)) preview.stop();
+      return;
+    }
     if (preview.state.isActive(current.id)) return;
     // 메인 재생과 겹치지 않게 재생 중이면 멈춘다.
     final player = context.read<NowPlayingCubit>();
@@ -142,6 +150,11 @@ class _NotificationBridgeState extends State<NotificationBridge>
     }
   }
 
+  PreviewState? get _previewing {
+    final s = context.read<PreviewCubit>().state;
+    return s.status == PreviewStatus.idle ? null : s;
+  }
+
   void _syncDownloads() {
     final settings = context.read<NotificationSettingsCubit>().state;
     if (!settings.loaded) return;
@@ -149,6 +162,8 @@ class _NotificationBridgeState extends State<NotificationBridge>
       context.read<DownloadQueueCubit>().state.items,
       settings.settings,
       context.l10n,
+      previewingId: _previewing?.hitId,
+      previewPaused: _previewing?.paused ?? false,
     );
   }
 
@@ -218,7 +233,10 @@ class _NotificationBridgeState extends State<NotificationBridge>
         }),
       ),
       BlocListener<PreviewCubit, PreviewState>(
-        listener: (_, _) => _syncPlayback(),
+        listener: (_, _) {
+          _syncPlayback();
+          _syncDownloads();
+        },
       ),
       BlocListener<PlaylistsCubit, List<Playlist>>(
         listener: (_, _) => _syncPlayback(),

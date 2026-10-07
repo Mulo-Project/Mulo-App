@@ -3,6 +3,12 @@ enum DownloadNotificationAction {
   /// 지금 받는 곡을 미리 듣는다 (받기는 그대로 이어진다).
   preview,
 
+  /// 미리 듣는 중인 곡을 일시정지하거나 이어 듣는다.
+  pausePreview,
+
+  /// 미리 듣기를 멈춘다.
+  stopPreview,
+
   /// 지금 받는 곡의 받기를 취소한다.
   cancel,
 }
@@ -15,6 +21,7 @@ abstract interface class DownloadNotifier {
   /// 받는 중 알림을 띄우거나 갱신한다. [percent]가 null이면 길이를 모르는 진행 표시.
   /// [foreground]면 앱이 뒤로 가거나 닫혀도 받기가 이어지게 붙들어 두는 알림이다.
   /// [subText]는 알림 머리말(전체 진행), [previewLabel]이 있으면 미리 듣기 버튼을 단다.
+  /// 지금 곡을 미리 듣는 중이면 [previewLabel] 대신 [pauseLabel] · [stopLabel] 버튼을 단다.
   Future<void> showProgress({
     required String title,
     required String body,
@@ -23,6 +30,8 @@ abstract interface class DownloadNotifier {
     String? subText,
     String? previewLabel,
     String? cancelLabel,
+    String? pauseLabel,
+    String? stopLabel,
   });
 
   /// 받는 중 알림을 치운다.
