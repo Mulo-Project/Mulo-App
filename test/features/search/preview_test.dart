@@ -7,6 +7,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/design/design.dart';
+import 'package:music_download_play_app/core/di/injector.dart';
+import 'package:music_download_play_app/features/notifications/domain/repositories/media_session.dart';
 import 'package:music_download_play_app/features/player/presentation/bloc/now_playing_cubit.dart';
 import 'package:music_download_play_app/features/search/data/engine/cached_engine.dart';
 import 'package:music_download_play_app/features/search/data/engine/explode_engine.dart';
@@ -379,6 +381,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(player.playing, isTrue);
       expect(find.byKey(const ValueKey('preview-mini-bar')), findsOneWidget);
+      // 재생 알림이 미리 듣는 곡으로 바뀐다.
+      final session = sl<MediaSession>() as FakeMediaSession;
+      expect(session.updates.last?.preview, isTrue);
 
       await tester.tap(find.byKey(const ValueKey('preview-row-button')));
       await tester.pumpAndSettle();
