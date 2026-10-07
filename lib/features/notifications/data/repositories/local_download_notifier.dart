@@ -14,10 +14,6 @@ const _actionPort = 'com.mulo.app.download_actions';
 @pragma('vm:entry-point')
 void downloadNotificationBackgroundHandler(NotificationResponse response) {
   final id = response.actionId;
-  // ignore: avoid_print
-  print(
-    'MULODBG bg handler id=$id port=${IsolateNameServer.lookupPortByName(_actionPort)}',
-  );
   if (id != null) IsolateNameServer.lookupPortByName(_actionPort)?.send(id);
 }
 
