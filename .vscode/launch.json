@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Mulo (구글 로그인 값 포함)",
+      "request": "launch",
+      "type": "dart",
+      "args": ["--dart-define-from-file=dart_defines.local.json"]
+    },
+    {
+      "name": "Mulo (값 없이)",
+      "request": "launch",
+      "type": "dart"
+    }
+  ]
+}

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 /// 빌드 때 정해지는 값. 앱 안에서 바꾸지 않는다 (D-029).
 ///
 /// 서버는 개발자가 배포한 하나뿐이라 주소를 빌드에 넣는다:
@@ -37,6 +39,11 @@ class AppConfig {
     'MULO_GOOGLE_DESKTOP_CLIENT_SECRET',
     defaultValue: '',
   );
+
+  /// 이 기기에서 구글 로그인을 쓰려면 빌드에 넣어야 하는 dart-define 이름 (안내 문구용).
+  static String get googleRequiredKeys => Platform.isAndroid
+      ? 'MULO_GOOGLE_SERVER_CLIENT_ID'
+      : 'MULO_GOOGLE_DESKTOP_CLIENT_ID · MULO_GOOGLE_DESKTOP_CLIENT_SECRET';
 
   static bool get hasGoogleDesktopClient =>
       googleDesktopClientId.isNotEmpty && googleDesktopClientSecret.isNotEmpty;

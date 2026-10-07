@@ -350,7 +350,9 @@ class _AccountSection extends StatelessWidget {
     } else {
       description = switch (state.support) {
         AccountSupport.available => l10n.settingsAccountSignedOutDesc,
-        AccountSupport.notConfigured => l10n.settingsAccountNotConfigured,
+        AccountSupport.notConfigured => l10n.settingsAccountNotConfigured(
+          AppConfig.googleRequiredKeys,
+        ),
         AccountSupport.unsupportedPlatform => l10n.settingsAccountUnsupported,
       };
     }

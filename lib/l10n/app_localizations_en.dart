@@ -1576,8 +1576,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAccountSignOut => 'Sign out';
 
   @override
-  String get settingsAccountNotConfigured =>
-      'Google sign-in is not set up in this build';
+  String settingsAccountNotConfigured(String keys) {
+    return 'Google sign-in values ($keys) are missing from this build, so it can\'t be used. See docs/google-login-setup.md';
+  }
+
+  @override
+  String get playlistImportSignInPromptTitle => 'Google sign-in needed';
+
+  @override
+  String get playlistImportSignInPromptBody =>
+      'Sign in with your Google account to load your YouTube playlists. Sign in now?';
+
+  @override
+  String get playlistImportSignInAllow => 'Sign in';
 
   @override
   String get settingsAccountUnsupported =>

@@ -505,3 +505,8 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 ## D-071 · 2026-10-07 · 설정에서도 플레이어 테마를 고른다
 - 설정 > 테마에 "플레이어 테마" 행을 더했다 (네모 · 꽉 찬 이미지 · 호, `SegmentedPills`). 재생 화면 ⋮ 메뉴 시트와 같은 `PlayerStyleCubit`을 써서 어느 쪽에서 골라도 같이 바뀐다.
 - 음반(D-041)은 호와 구분이 안 되는 이유로 뺀 상태를 유지한다.
+
+## D-077 · 2026-10-07 · 내 재생목록 로그인 안내 + 구글 설정 안내
+- 로그인하지 않은 채 "내 재생목록"을 누르면 구글 로그인을 할지 묻는 창(허용 · 취소)을 띄우고, 허용하면 로그인 후 곧바로 재생목록을 불러온다. 취소하면 아무것도 하지 않는다.
+- 구글 클라이언트 ID가 빌드에 없으면(D-073) 설정의 로그인 버튼은 꺼진 채로 두고, 안내 문구에 기기별로 빠진 dart-define 이름을 적는다 (`AppConfig.googleRequiredKeys`).
+- 설정 방법은 [google-login-setup.md](google-login-setup.md)에 단계별로 적었다. 값은 `dart_defines.local.json`(gitignore)에 두고 `--dart-define-from-file`로 넣으며, VS Code는 `.vscode/launch.json`이 읽는다.
