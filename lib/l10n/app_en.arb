@@ -409,6 +409,7 @@
   "downloadPlaylistsEmpty": "No playlists yet. Create one below.",
   "downloadNewPlaylist": "New playlist",
   "downloadNewPlaylistHint": "Type a name, then +",
+  "downloadAlreadyInQueue": "This song is already downloading or queued",
   "downloadQueued": "Added to the queue",
   "homeTopGenre": "Top genre",
   "playlistsEmpty": "No playlists yet. Tap + above to make one.",

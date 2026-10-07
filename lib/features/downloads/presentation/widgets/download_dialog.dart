@@ -156,8 +156,16 @@ class _DownloadSheetState extends State<_DownloadSheet> {
   }
 
   Future<void> _start() async {
-    final color = _color;
     final queue = context.read<DownloadQueueCubit>();
+    // 같은 곡이 이미 대기열에 있으면 또 넣지 않는다.
+    if (queue.isInQueue(widget.url)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.downloadAlreadyInQueue)),
+      );
+      Navigator.of(context).pop(false);
+      return;
+    }
+    final color = _color;
     final colors = context.read<CoverColorCubit>();
     final genre = _genre.text.trim();
     // 이 장르의 기본 색으로 저장하면 다음에 같은 장르를 받을 때 미리 채워진다.

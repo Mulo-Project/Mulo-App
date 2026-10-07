@@ -503,6 +503,7 @@
   "downloadNewPlaylist": "새 재생목록",
   "downloadNewPlaylistHint": "이름을 입력하고 +",
   "downloadQueued": "대기열에 넣었어요",
+  "downloadAlreadyInQueue": "이미 받는 중이거나 대기 중인 곡이에요",
   "homeTopGenre": "많이 들은 장르",
   "playlistsEmpty": "아직 재생목록이 없어요. 위의 +로 만들어 보세요.",
   "playlistNewTitle": "새 재생목록",

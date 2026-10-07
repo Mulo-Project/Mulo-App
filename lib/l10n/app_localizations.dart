@@ -2048,6 +2048,12 @@ abstract class AppLocalizations {
   /// **'대기열에 넣었어요'**
   String get downloadQueued;
 
+  /// No description provided for @downloadAlreadyInQueue.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미 받는 중이거나 대기 중인 곡이에요'**
+  String get downloadAlreadyInQueue;
+
   /// No description provided for @homeTopGenre.
   ///
   /// In ko, this message translates to:

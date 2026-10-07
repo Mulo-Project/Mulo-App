@@ -1087,6 +1087,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadQueued => 'Added to the queue';
 
   @override
+  String get downloadAlreadyInQueue =>
+      'This song is already downloading or queued';
+
+  @override
   String get homeTopGenre => 'Top genre';
 
   @override

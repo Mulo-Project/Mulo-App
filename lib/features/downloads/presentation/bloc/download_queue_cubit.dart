@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../domain/entities/download_item.dart';
 import '../../domain/entities/download_request.dart';
+import '../../domain/entities/download_source.dart';
 import '../../domain/usecases/download_usecases.dart';
 
 class DownloadQueueState extends Equatable {
@@ -96,6 +97,14 @@ class DownloadQueueCubit extends Cubit<DownloadQueueState> {
     _sub?.cancel();
     _sub = _watch(const NoParams())
         .listen((items) => emit(DownloadQueueState(items: items)));
+  }
+
+  /// 같은 원본 주소의 곡이 이미 받는 중 · 대기 · 일시정지인지.
+  bool isInQueue(String url) {
+    final key = downloadSourceKey(url);
+    return state.items.any(
+      (e) => e.isActive && downloadSourceKey(e.url) == key,
+    );
   }
 
   /// 팝업에서 정한 정보로 받기를 시작한다. 제목이 비어 있으면 false.
