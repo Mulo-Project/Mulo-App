@@ -1591,6 +1591,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playlistImportLoginExpiredBody => '로그인이 풀렸어요. 다시 로그인해 주세요.';
 
   @override
+  String get playlistImportNoChannelTitle => '유튜브 채널이 없어요';
+
+  @override
+  String get playlistImportNoChannelBody =>
+      '이 구글 계정에는 유튜브 채널이 없어서 내 재생목록을 불러올 수 없어요. 유튜브에서 채널을 만들거나, 재생목록 링크를 위 입력창에 붙여 넣어 가져와 보세요. (비공개 재생목록은 \"일부 공개\"로 바꿔야 해요)';
+
+  @override
   String get searchPlaylistFind => '재생목록으로 찾기';
 
   @override

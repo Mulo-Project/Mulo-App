@@ -39,6 +39,9 @@ enum AccountFailure {
 
   /// 로그인이 풀렸거나 유튜브 읽기 권한이 없다.
   unauthorized,
+
+  /// 이 구글 계정에는 유튜브 채널이 없다 (재생목록 API는 채널의 것만 읽는다).
+  noChannel,
   failed,
 }
 

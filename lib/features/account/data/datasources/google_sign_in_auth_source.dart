@@ -28,17 +28,9 @@ class GoogleSignInAuthSource implements GoogleAuthSource {
 
   @override
   Future<GoogleAccount?> restore() async {
-    try {
-      await _ready();
-      final a =
-          await (_google.attemptLightweightAuthentication() ??
-              Future<GoogleSignInAccount?>.value());
-      _account = a;
-      return a == null ? null : _map(a);
-    } on Object {
-      // 되살리지 못하면 로그아웃 상태로 둔다 (설정에서 다시 로그인).
-      return null;
-    }
+    // 앱을 켤 때 `attemptLightweightAuthentication`을 부르면 구글 로그인 창이 저절로 뜰 수
+    // 있어서 부르지 않는다. 로그인은 사용자가 관련 버튼을 눌렀을 때만 띄운다 (D-079).
+    return null;
   }
 
   @override

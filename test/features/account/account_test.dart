@@ -117,5 +117,17 @@ void main() {
       expect(cubit.state.status, PlaylistImportStatus.failed);
       expect(cubit.state.accountFailure, AccountFailure.unauthorized);
     });
+
+    test('유튜브 채널이 없는 계정이면 채널이 없다고 알린다', () async {
+      final cubit = _importCubit(
+        FakeAccountRepository(
+          account: const GoogleAccount(id: 'u', email: 'a@b.c'),
+          playlistsError: const AccountException(AccountFailure.noChannel),
+        ),
+      );
+      await cubit.loadMine();
+      expect(cubit.state.status, PlaylistImportStatus.failed);
+      expect(cubit.state.accountFailure, AccountFailure.noChannel);
+    });
   });
 }

@@ -583,6 +583,8 @@
   "playlistImportLoginTitle": "Sign in required",
   "playlistImportLoginBody": "Sign in with your Google account to load your YouTube playlists.",
   "playlistImportLoginExpiredBody": "You were signed out. Please sign in again.",
+  "playlistImportNoChannelTitle": "No YouTube channel",
+  "playlistImportNoChannelBody": "This Google account has no YouTube channel, so your playlists can't be loaded. Create a channel on YouTube, or paste a playlist link in the field above. (Private playlists must be set to \"Unlisted\" first.)",
   "searchPlaylistFind": "Find as playlist",
   "@playlistImportStart": {"placeholders": {"count": {"type": "int"}}},
   "@playlistImportResultSubtitle": {"placeholders": {"channel": {"type": "String"}, "count": {"type": "int"}}},
