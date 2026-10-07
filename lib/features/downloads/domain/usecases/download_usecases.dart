@@ -85,6 +85,17 @@ class CancelDownload implements UseCase<void, String> {
   Future<void> call(String id) => _repo.cancel(id);
 }
 
+/// 끝나지 않은 받기를 모두 취소한다 ([playlistId]가 있으면 그 재생목록 것만). 취소한 곡 수를 돌려준다.
+class CancelAllDownloads implements UseCase<int, String?> {
+  const CancelAllDownloads(this._repo);
+
+  final DownloadQueueRepository _repo;
+
+  @override
+  Future<int> call(String? playlistId) =>
+      _repo.cancelAll(playlistId: playlistId);
+}
+
 /// 설정에서 고를 수 있는 저장 형식.
 class GetSelectableFormats implements UseCase<List<AudioFormat>, NoParams> {
   const GetSelectableFormats(this._repo);

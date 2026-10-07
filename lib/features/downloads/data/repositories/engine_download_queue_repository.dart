@@ -218,6 +218,21 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
     _emit();
   }
 
+  @override
+  Future<int> cancelAll({String? playlistId}) async {
+    await _ensureLoaded();
+    final ids = [
+      for (final e in _items)
+        if (e.status != DownloadStatus.done &&
+            (playlistId == null || e.playlistIds.contains(playlistId)))
+          e.id,
+    ];
+    for (final id in ids) {
+      await cancel(id);
+    }
+    return ids.length;
+  }
+
   DownloadItem? _find(String id) {
     for (final e in _items) {
       if (e.id == id) return e;

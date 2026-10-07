@@ -1,47 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/cache/cached_web_image.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
-import '../../../../core/cache/cached_web_image.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart'
     show imageOfCoverArt;
 import '../../../library/domain/entities/track.dart' show formatDuration;
-import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/download_item.dart';
 import '../bloc/download_queue_cubit.dart';
 
-/// 검색창 아래 다운로드 영역: 주변 목록과 같은 얇은 테두리 카드 안에 받는 곡(이미지 · 진행 막대),
-/// 지금 재생 중인 곡을 작게, 그 아래 화살표로 펼치는 대기 목록을 둔다.
-/// 대기 목록은 곡 타일과 같은 모양이고 상태 글자는 없다.
-class DownloadProgressCard extends StatefulWidget {
+/// 검색창 아래 다운로드 영역: 지금 받는 곡 하나와 전체 진행도, 전체 취소 버튼만 보여 준다.
+/// 곡별 진행은 그 곡이 담길 재생목록 상세에서 본다.
+class DownloadProgressCard extends StatelessWidget {
   const DownloadProgressCard({
     super.key,
     required this.current,
-    required this.waiting,
-    required this.onPlay,
+    required this.total,
+    required this.done,
+    required this.progress,
   });
 
   final DownloadItem current;
-  final List<DownloadItem> waiting;
 
-  /// 대기열의 곡을 눌렀을 때 (재생할 수 있으면 재생한다).
-  final ValueChanged<DownloadItem> onPlay;
+  /// 대기열의 곡 수와 그중 끝난 곡 수.
+  final int total;
+  final int done;
 
-  @override
-  State<DownloadProgressCard> createState() => _DownloadProgressCardState();
-}
-
-class _DownloadProgressCardState extends State<DownloadProgressCard> {
-  bool _expanded = false;
+  /// 전체 진행도 (0 ~ 1).
+  final double progress;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final p = context.palette;
     final text = Theme.of(context).textTheme;
-    final item = widget.current;
-    final waiting = widget.waiting;
+    final item = current;
 
     return Material(
       color: p.surface,
@@ -53,122 +47,126 @@ class _DownloadProgressCardState extends State<DownloadProgressCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 받는 곡: 이미지 · 제목 · 아티스트 · 진행 막대.
           TrackTile(
             title: item.title,
-            subtitle: _subtitle(item),
+            subtitle: downloadSubtitle(item),
             tone: toneFor(item.id),
-            artwork: _thumbnail(item),
-            footer: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            artwork: downloadThumbnail(item),
+            footer: Text(
+              downloadStatusText(l10n, item),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: text.labelSmall?.copyWith(
+                color: item.status == DownloadStatus.failed
+                    ? p.onSurfaceMuted
+                    : p.accent,
+              ),
+            ),
+            trailing: DownloadItemActions(item: item),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              0,
+              AppSpacing.xs,
+              AppSpacing.xs,
+            ),
+            child: Row(
               children: [
-                if (item.status != DownloadStatus.failed) ...[
-                  ProgressLine(value: item.progress, height: 4),
-                  const SizedBox(height: AppSpacing.xxs),
-                ],
+                Expanded(child: ProgressLine(value: progress, height: 4)),
+                const SizedBox(width: AppSpacing.sm),
                 Text(
-                  _statusText(l10n, item),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: text.labelSmall?.copyWith(
-                    color: item.status == DownloadStatus.failed
-                        ? p.onSurfaceMuted
-                        : p.accent,
-                  ),
+                  l10n.downloadsOverall(done, total),
+                  style: text.labelMedium?.copyWith(color: p.onSurfaceMuted),
                 ),
+                const SizedBox(width: AppSpacing.xs),
+                const CancelAllDownloadsButton(),
               ],
             ),
-            trailing: _ItemActions(item: item),
-          ),
-          const _NowPlayingStrip(),
-          Divider(height: 1, thickness: 1, color: p.outline),
-          InkWell(
-            onTap: waiting.isEmpty
-                ? null
-                : () => setState(() => _expanded = !_expanded),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.xs,
-              ),
-              child: Row(
-                children: [
-                  Text(
-                    l10n.downloadsWaiting(waiting.length),
-                    style: text.labelMedium?.copyWith(color: p.onSurfaceMuted),
-                  ),
-                  const Spacer(),
-                  if (waiting.isNotEmpty)
-                    Tooltip(
-                      message: _expanded
-                          ? l10n.downloadsCollapse
-                          : l10n.downloadsExpand,
-                      child: AnimatedRotation(
-                        turns: _expanded ? .5 : 0,
-                        duration: AppMotion.fast,
-                        child: Icon(
-                          AppIcons.chevronDown,
-                          color: p.onSurfaceMuted,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-          AnimatedSize(
-            duration: AppMotion.medium,
-            curve: AppMotion.standard,
-            alignment: Alignment.topCenter,
-            child: _expanded
-                ? Column(
-                    children: [
-                      for (final w in waiting)
-                        TrackTile(
-                          title: w.title,
-                          subtitle: _subtitle(w),
-                          tone: toneFor(w.id),
-                          artwork: _thumbnail(w),
-                          trailing: _ItemActions(item: w),
-                          onTap: () => widget.onPlay(w),
-                        ),
-                    ],
-                  )
-                : const SizedBox(width: double.infinity),
           ),
         ],
       ),
     );
   }
+}
 
-  static String _statusText(AppLocalizations l10n, DownloadItem item) =>
-      switch (item.status) {
-        DownloadStatus.failed =>
-          item.error.isEmpty
-              ? l10n.statusFailed
-              : '${l10n.statusFailed} · ${item.error}',
-        DownloadStatus.paused => l10n.statusPaused,
-        DownloadStatus.queued => l10n.statusQueued,
-        _ => '${l10n.statusDownloading} ${(item.progress * 100).round()}%',
-      };
+/// 상태 글자: 받는 중 N% · 대기 · 일시정지 · 실패 (까닭).
+String downloadStatusText(AppLocalizations l10n, DownloadItem item) =>
+    switch (item.status) {
+      DownloadStatus.failed =>
+        item.error.isEmpty
+            ? l10n.statusFailed
+            : '${l10n.statusFailed} · ${item.error}',
+      DownloadStatus.paused => l10n.statusPaused,
+      DownloadStatus.queued => l10n.statusQueued,
+      _ => '${l10n.statusDownloading} ${(item.progress * 100).round()}%',
+    };
 
-  /// 아티스트 · 길이 (모르는 건 뺀다).
-  static String _subtitle(DownloadItem item) => [
-    if (item.artist.isNotEmpty) item.artist,
-    if (item.duration != null) formatDuration(item.duration!),
-  ].join(' · ');
+/// 아티스트 · 길이 (모르는 건 뺀다).
+String downloadSubtitle(DownloadItem item) => [
+  if (item.artist.isNotEmpty) item.artist,
+  if (item.duration != null) formatDuration(item.duration!),
+].join(' · ');
 
-  /// 받는 곡의 썸네일. 없으면 곡 타일처럼 그라데이션 자리를 보여 준다.
-  static ImageProvider? _thumbnail(DownloadItem item) {
-    if (item.cover case final art?) return imageOfCoverArt(art);
-    final url = item.thumbnailUrl;
-    return url == null ? null : CachedWebImage(url);
-  }
+/// 받는 곡의 썸네일. 없으면 곡 타일처럼 그라데이션 자리를 보여 준다.
+ImageProvider? downloadThumbnail(DownloadItem item) {
+  if (item.cover case final art?) return imageOfCoverArt(art);
+  final url = item.thumbnailUrl;
+  return url == null ? null : CachedWebImage(url);
+}
+
+/// 끝나지 않은 받기를 모두 취소하는 버튼. 누르면 먼저 확인한다.
+/// [playlistId]를 주면 그 재생목록에 담기로 한 곡만 취소한다.
+class CancelAllDownloadsButton extends StatelessWidget {
+  const CancelAllDownloadsButton({super.key, this.playlistId});
+
+  final String? playlistId;
+
+  @override
+  Widget build(BuildContext context) => CircleIconButton(
+    icon: AppIcons.close,
+    tooltip: context.l10n.downloadsCancelAll,
+    size: 32,
+    onPressed: () => cancelAllDownloads(context, playlistId: playlistId),
+  );
+}
+
+/// 확인을 받고 끝나지 않은 받기를 모두 취소한다.
+Future<void> cancelAllDownloads(
+  BuildContext context, {
+  String? playlistId,
+}) async {
+  final queue = context.read<DownloadQueueCubit>();
+  final count = playlistId == null
+      ? queue.state.unfinishedCount
+      : queue.state.unfinishedFor(playlistId).length;
+  if (count == 0) return;
+  final ok = await showDialog<bool>(
+    context: context,
+    useRootNavigator: true,
+    builder: (dialog) => AppDialog(
+      title: context.l10n.downloadsCancelAllTitle,
+      body: context.l10n.downloadsCancelAllBody(count),
+      actions: [
+        PillButton(
+          label: context.l10n.downloadCancelKeep,
+          variant: PillVariant.tonal,
+          onPressed: () => Navigator.of(dialog).pop(false),
+        ),
+        PillButton(
+          label: context.l10n.downloadsCancelAll,
+          icon: AppIcons.close,
+          onPressed: () => Navigator.of(dialog).pop(true),
+        ),
+      ],
+    ),
+  );
+  if (ok == true) await queue.cancelAll(playlistId: playlistId);
 }
 
 /// 실패한 항목은 다시 받기, 그 밖에는 취소.
-class _ItemActions extends StatelessWidget {
-  const _ItemActions({required this.item});
+class DownloadItemActions extends StatelessWidget {
+  const DownloadItemActions({super.key, required this.item});
 
   final DownloadItem item;
 
@@ -241,46 +239,6 @@ class _CancelDialog extends StatelessWidget {
           onPressed: () => Navigator.of(context).pop(true),
         ),
       ],
-    );
-  }
-}
-
-/// 지금 재생 중인 곡을 작게 한 줄로. 재생 중인 곡이 없으면 숨긴다.
-class _NowPlayingStrip extends StatelessWidget {
-  const _NowPlayingStrip();
-
-  @override
-  Widget build(BuildContext context) {
-    final state = context.watch<NowPlayingCubit>().state;
-    final track = state.track;
-    if (track == null) return const SizedBox.shrink();
-    final p = context.palette;
-    final text = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        0,
-        AppSpacing.md,
-        AppSpacing.xs,
-      ),
-      child: Row(
-        children: [
-          Icon(
-            state.isPlaying ? AppIcons.equalizer : AppIcons.pause,
-            size: 16,
-            color: p.accent,
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          Expanded(
-            child: Text(
-              '${track.title} · ${track.artist}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: text.bodySmall,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

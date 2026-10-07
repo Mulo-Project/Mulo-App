@@ -1010,6 +1010,27 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadCancelConfirm => '취소하기';
 
   @override
+  String get downloadsCancelAll => '전체 취소';
+
+  @override
+  String get downloadsCancelAllTitle => '받기 모두 취소';
+
+  @override
+  String downloadsCancelAllBody(int count) {
+    return '받는 중이거나 기다리는 $count곡의 받기를 모두 취소할까요? 지금까지 받은 부분은 사라져요.';
+  }
+
+  @override
+  String downloadsOverall(int done, int total) {
+    return '$done/$total곡';
+  }
+
+  @override
+  String playlistDownloadsTitle(int count) {
+    return '받는 중 $count곡';
+  }
+
+  @override
   String get downloadFieldTitle => '제목';
 
   @override

@@ -7,6 +7,9 @@ import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
+import '../../../downloads/domain/entities/download_item.dart';
+import '../../../downloads/presentation/bloc/download_queue_cubit.dart';
+import '../../../downloads/presentation/widgets/download_progress_card.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../library/presentation/widgets/play_shuffle_row.dart';
 import '../../../library/presentation/widgets/track_list_tile.dart';
@@ -45,6 +48,9 @@ class _Body extends StatelessWidget {
       (c) => c.state.where((e) => e.id == playlistId).firstOrNull,
     );
     final tracks = context.watch<PlaylistTracksCubit>().state;
+    final downloads = context.select<DownloadQueueCubit, List<DownloadItem>>(
+      (c) => c.state.unfinishedFor(playlistId),
+    );
     final image = coverImageOf(context, CoverKey.playlist(playlistId));
 
     return SafeArea(
@@ -124,7 +130,9 @@ class _Body extends StatelessWidget {
               playLabel: l10n.playlistMenuPlayAll,
             ),
             const SizedBox(height: AppSpacing.sm),
-            if (tracks != null && tracks.isEmpty)
+            if (downloads.isNotEmpty)
+              _Downloads(playlistId: playlistId, items: downloads),
+            if (tracks != null && tracks.isEmpty && downloads.isEmpty)
               Padding(
                 padding: AppSpacing.screen.copyWith(top: AppSpacing.md),
                 child: Text(
@@ -143,6 +151,72 @@ class _Body extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+/// 이 재생목록에 담으려고 받는 곡들: 곡마다 진행도, 맨 위에 전체 취소.
+class _Downloads extends StatelessWidget {
+  const _Downloads({required this.playlistId, required this.items});
+
+  final String playlistId;
+  final List<DownloadItem> items;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final p = context.palette;
+    final text = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.xs,
+            AppSpacing.xs,
+            AppSpacing.xs,
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.playlistDownloadsTitle(items.length),
+                  style: text.titleSmall?.copyWith(color: p.onSurfaceMuted),
+                ),
+              ),
+              CancelAllDownloadsButton(playlistId: playlistId),
+            ],
+          ),
+        ),
+        for (final item in items)
+          TrackTile(
+            title: item.title,
+            subtitle: downloadSubtitle(item),
+            tone: toneFor(item.id),
+            artwork: downloadThumbnail(item),
+            footer: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (item.status != DownloadStatus.failed) ...[
+                  ProgressLine(value: item.progress, height: 4),
+                  const SizedBox(height: AppSpacing.xxs),
+                ],
+                Text(
+                  downloadStatusText(l10n, item),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: text.labelSmall?.copyWith(
+                    color: item.status == DownloadStatus.failed
+                        ? p.onSurfaceMuted
+                        : p.accent,
+                  ),
+                ),
+              ],
+            ),
+            trailing: DownloadItemActions(item: item),
+          ),
+      ],
     );
   }
 }
