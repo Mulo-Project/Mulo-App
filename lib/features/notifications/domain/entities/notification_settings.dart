@@ -7,6 +7,7 @@ class NotificationSettings extends Equatable {
     this.downloadResult = true,
     this.playback = true,
     this.hideSongInfo = false,
+    this.backgroundDownload = true,
   });
 
   /// 받는 동안 진행 알림.
@@ -21,16 +22,22 @@ class NotificationSettings extends Equatable {
   /// 켜면 알림 · 잠금화면에 제목 · 아티스트 · 커버를 보이지 않는다.
   final bool hideSongInfo;
 
+  /// 켜면 앱이 뒤로 가거나 닫혀도 받기가 이어지게 포그라운드 서비스로 붙들어 둔다.
+  /// 끄면 앱이 화면에 있는 동안에만 받는다 (알림은 진행 알림 설정을 따른다).
+  final bool backgroundDownload;
+
   NotificationSettings copyWith({
     bool? downloadProgress,
     bool? downloadResult,
     bool? playback,
     bool? hideSongInfo,
+    bool? backgroundDownload,
   }) => NotificationSettings(
     downloadProgress: downloadProgress ?? this.downloadProgress,
     downloadResult: downloadResult ?? this.downloadResult,
     playback: playback ?? this.playback,
     hideSongInfo: hideSongInfo ?? this.hideSongInfo,
+    backgroundDownload: backgroundDownload ?? this.backgroundDownload,
   );
 
   @override
@@ -39,5 +46,6 @@ class NotificationSettings extends Equatable {
     downloadResult,
     playback,
     hideSongInfo,
+    backgroundDownload,
   ];
 }

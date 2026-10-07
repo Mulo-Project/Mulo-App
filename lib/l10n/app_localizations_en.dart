@@ -415,6 +415,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lockHint => 'Enter your PIN.';
 
   @override
+  String get settingsBackgroundDownload => 'Background downloads';
+
+  @override
+  String get settingsBackgroundDownloadDesc =>
+      'Keeps downloading when the app is in the background or closed. A notification stays up while downloading.';
+
+  @override
   String get settingsHideNotification => 'Hide song info in notification';
 
   @override
@@ -1709,9 +1716,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String notifDownloadProgressMore(int percent, int count) {
-    return 'Downloading · $percent% · $count waiting';
+  String notifDownloadProgressNext(int percent, String next) {
+    return 'Downloading · $percent% · Next: $next';
   }
+
+  @override
+  String notifDownloadOverall(int done, int total, int percent) {
+    return 'Overall $done/$total · $percent%';
+  }
+
+  @override
+  String get notifDownloadPreview => 'Preview';
 
   @override
   String get notifDownloadDoneTitle => 'Download complete';

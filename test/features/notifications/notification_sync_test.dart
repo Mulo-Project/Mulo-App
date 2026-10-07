@@ -80,7 +80,80 @@ void main() {
     );
     await cubit.syncDownloads(
       [item('1', DownloadStatus.downloading, .2)],
+      on.copyWith(downloadProgress: false, backgroundDownload: false),
+      l10n,
+    );
+    expect(notifier.calls.last, 'clear');
+  });
+
+  test('진행 알림에 지금 곡 · 다음 곡 · 전체 진행률과 미리듣기 버튼을 담는다', () async {
+    // 끝난 곡도 이번 묶음에 세려면 받는 동안 한 번은 보여야 한다.
+    await cubit.syncDownloads(
+      [
+        item('1', DownloadStatus.downloading, .9),
+        item('2', DownloadStatus.queued),
+        item('3', DownloadStatus.queued),
+        item('4', DownloadStatus.queued),
+      ],
+      on,
+      l10n,
+    );
+    notifier.shown.clear();
+    notifier.calls.clear();
+    await cubit.syncDownloads(
+      [
+        item('1', DownloadStatus.done, 1),
+        item('2', DownloadStatus.downloading, .5),
+        item('3', DownloadStatus.queued),
+        item('4', DownloadStatus.queued),
+      ],
+      on,
+      l10n,
+    );
+    final shown = notifier.shown.single;
+    expect(shown['title'], '곡2');
+    expect(shown['body'], contains('다음 곡: 곡3'));
+    expect(shown['subText'], '전체 1/4곡 · 38%');
+    expect(shown['preview'], '미리듣기');
+    expect(notifier.calls.last, 'progress:곡2:38');
+  });
+
+  test('곡 정보 숨기기를 켜면 제목 · 다음 곡 · 미리듣기를 알림에 담지 않는다', () async {
+    await cubit.syncDownloads(
+      [
+        item('1', DownloadStatus.downloading, .5),
+        item('2', DownloadStatus.queued),
+      ],
+      on.copyWith(hideSongInfo: true),
+      l10n,
+    );
+    final shown = notifier.shown.single;
+    expect(shown['title'], l10n.notifDownloadHiddenTitle);
+    expect(shown['body'], isNot(contains('곡2')));
+    expect(shown['preview'], isNull);
+  });
+
+  test('백그라운드 받기 설정이 앞에 붙들기를 정하고, 진행 알림이 꺼져도 붙든다', () async {
+    final downloading = [item('1', DownloadStatus.downloading, .2)];
+    await cubit.syncDownloads(downloading, on, l10n);
+    expect(notifier.shown.last['foreground'], isTrue);
+    await cubit.syncDownloads(
+      downloading,
+      on.copyWith(backgroundDownload: false),
+      l10n,
+    );
+    expect(notifier.shown.last['foreground'], isFalse);
+    // 진행 알림은 껐지만 백그라운드 받기는 켠 경우: 서비스에 필요한 알림만 남는다.
+    await cubit.syncDownloads(
+      [item('1', DownloadStatus.downloading, .3)],
       on.copyWith(downloadProgress: false),
+      l10n,
+    );
+    expect(notifier.shown.last['foreground'], isTrue);
+    // 둘 다 끄면 알림도 서비스도 없다.
+    await cubit.syncDownloads(
+      [item('1', DownloadStatus.downloading, .4)],
+      on.copyWith(downloadProgress: false, backgroundDownload: false),
       l10n,
     );
     expect(notifier.calls.last, 'clear');

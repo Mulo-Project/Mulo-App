@@ -6,6 +6,7 @@ import '../../../downloads/domain/entities/download_item.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../domain/entities/media_session_info.dart';
 import '../../domain/entities/notification_settings.dart';
+import '../../domain/repositories/download_notifier.dart';
 import '../../domain/usecases/notification_usecases.dart';
 
 /// 앱 상태(받기 대기열 · 재생 상태)를 알림창에 옮긴다. 화면이 없고 상태도 없다:
@@ -17,6 +18,10 @@ class NotificationSyncCubit extends Cubit<void> {
 
   /// 알림 · 잠금화면에서 누른 조작.
   Stream<MediaCommand> get commands => _actions.watchCommands(const NoParams());
+
+  /// 받기 알림에서 누른 조작.
+  Stream<DownloadNotificationAction> get downloadActions =>
+      _actions.watchDownloadActions(const NoParams());
 
   var _askedPermission = false;
 
@@ -33,6 +38,7 @@ class NotificationSyncCubit extends Cubit<void> {
 
   Map<String, DownloadStatus> _statuses = const {};
   var _progressShown = false;
+  final _batch = <String>{};
   String? _lastProgress;
 
   /// 받기 대기열이 바뀔 때마다. 진행 알림은 한 개(지금 받는 곡)를 갱신하고,
@@ -86,29 +92,67 @@ class NotificationSyncCubit extends Cubit<void> {
         break;
       }
     }
-    final waiting = items
-        .where((i) => i.status == DownloadStatus.queued)
-        .length;
+    final active = items.where((i) => i.isActive).toList();
+    // 한 묶음 = 대기열이 비었다가 다시 채워지기 전까지. 전체 진행률은 이 묶음 기준.
+    if (active.isEmpty) {
+      _batch.clear();
+    } else {
+      _batch.addAll(active.map((i) => i.id));
+    }
 
-    if (!settings.downloadProgress || (current == null && waiting == 0)) {
+    final keepAlive = settings.backgroundDownload;
+    if (!(settings.downloadProgress || keepAlive) ||
+        (current == null && active.isEmpty)) {
       await _clearProgress();
       return;
     }
     // 다음 곡으로 넘어가는 사이(받는 곡 없음, 대기만 있음)는 알림을 그대로 둔다.
     if (current == null) return;
 
+    final batch = items
+        .where(
+          (i) => _batch.contains(i.id) && i.status != DownloadStatus.failed,
+        )
+        .toList();
+    final done = batch.where((i) => i.status == DownloadStatus.done).length;
+    final overall = batch.isEmpty
+        ? 0.0
+        : batch
+                  .map(
+                    (i) => i.status == DownloadStatus.done ? 1.0 : i.progress,
+                  )
+                  .reduce((a, b) => a + b) /
+              batch.length;
+    final overallPercent = (overall * 100).round().clamp(0, 100);
+    final nextItem = items
+        .where((i) => i.status == DownloadStatus.queued)
+        .firstOrNull;
+
     final percent = (current.progress * 100).round().clamp(0, 100);
     final title = hide ? l10n.notifDownloadHiddenTitle : current.title;
-    final body = waiting > 0
-        ? l10n.notifDownloadProgressMore(percent, waiting)
+    final body = nextItem != null && !hide
+        ? l10n.notifDownloadProgressNext(percent, nextItem.title)
         : l10n.notifDownloadProgressBody(percent);
-    final key = '$title|$body|$percent';
+    final subText = l10n.notifDownloadOverall(
+      done,
+      batch.length,
+      overallPercent,
+    );
+    final preview = hide ? null : l10n.notifDownloadPreview;
+    final key = '$title|$body|$subText|$overallPercent|$keepAlive|$preview';
     if (_progressShown && key == _lastProgress) return;
     await _ensurePermission();
     _progressShown = true;
     _lastProgress = key;
     await _actions.showProgress(
-      DownloadProgressNotice(title: title, body: body, percent: percent),
+      DownloadProgressNotice(
+        title: title,
+        body: body,
+        percent: overallPercent,
+        foreground: keepAlive,
+        subText: subText,
+        previewLabel: preview,
+      ),
     );
   }
 

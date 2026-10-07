@@ -854,6 +854,18 @@ abstract class AppLocalizations {
   /// **'PIN을 입력하세요.'**
   String get lockHint;
 
+  /// No description provided for @settingsBackgroundDownload.
+  ///
+  /// In ko, this message translates to:
+  /// **'백그라운드 받기'**
+  String get settingsBackgroundDownload;
+
+  /// No description provided for @settingsBackgroundDownloadDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱이 뒤로 가거나 닫혀도 받기를 이어 가요. 켜 두면 받는 동안 알림이 항상 떠 있어요.'**
+  String get settingsBackgroundDownloadDesc;
+
   /// No description provided for @settingsHideNotification.
   ///
   /// In ko, this message translates to:
@@ -3182,11 +3194,23 @@ abstract class AppLocalizations {
   /// **'받는 중 · {percent}%'**
   String notifDownloadProgressBody(int percent);
 
-  /// No description provided for @notifDownloadProgressMore.
+  /// No description provided for @notifDownloadProgressNext.
   ///
   /// In ko, this message translates to:
-  /// **'받는 중 · {percent}% · {count}곡 대기'**
-  String notifDownloadProgressMore(int percent, int count);
+  /// **'받는 중 · {percent}% · 다음 곡: {next}'**
+  String notifDownloadProgressNext(int percent, String next);
+
+  /// No description provided for @notifDownloadOverall.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체 {done}/{total}곡 · {percent}%'**
+  String notifDownloadOverall(int done, int total, int percent);
+
+  /// No description provided for @notifDownloadPreview.
+  ///
+  /// In ko, this message translates to:
+  /// **'미리듣기'**
+  String get notifDownloadPreview;
 
   /// No description provided for @notifDownloadDoneTitle.
   ///

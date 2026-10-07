@@ -170,6 +170,8 @@
   "pinUseBiometric": "생체 인증으로 열기",
   "lockTitle": "잠겨 있어요",
   "lockHint": "PIN을 입력하세요.",
+  "settingsBackgroundDownload": "백그라운드 받기",
+  "settingsBackgroundDownloadDesc": "앱이 뒤로 가거나 닫혀도 받기를 이어 가요. 켜 두면 받는 동안 알림이 항상 떠 있어요.",
   "settingsHideNotification": "알림에 곡 정보 숨기기",
   "settingsHideNotificationDesc": "알림 · 잠금화면에 \"음악 재생 중\"만 보이고, 받기 알림에서도 곡 정보를 숨겨요.",
   "settingsTheme": "테마",
@@ -707,11 +709,14 @@
   "notifChannelDownloadFailed": "받기 실패",
   "notifDownloadHiddenTitle": "곡 받는 중",
   "notifDownloadProgressBody": "받는 중 · {percent}%",
-  "notifDownloadProgressMore": "받는 중 · {percent}% · {count}곡 대기",
+  "notifDownloadProgressNext": "받는 중 · {percent}% · 다음 곡: {next}",
+  "notifDownloadOverall": "전체 {done}/{total}곡 · {percent}%",
+  "notifDownloadPreview": "미리듣기",
   "notifDownloadDoneTitle": "받기 완료",
   "notifDownloadDoneHidden": "곡이 보관함에 추가됐어요",
   "notifDownloadFailedTitle": "받기 실패",
   "notifDownloadFailedHidden": "곡을 받지 못했어요",
   "@notifDownloadProgressBody": {"placeholders": {"percent": {"type": "int"}}},
-  "@notifDownloadProgressMore": {"placeholders": {"percent": {"type": "int"}, "count": {"type": "int"}}}
+  "@notifDownloadProgressNext": {"placeholders": {"percent": {"type": "int"}, "next": {"type": "String"}}},
+  "@notifDownloadOverall": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}, "percent": {"type": "int"}}}
 }
