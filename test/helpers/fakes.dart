@@ -879,6 +879,9 @@ class FakeDownloaderEngine implements DownloaderEngine {
   final infos = <String>[];
   final channels = <String>[];
 
+  /// [resolveAudioStream]을 부를 때마다 새로 읽으라고 했는지.
+  final refreshFlags = <bool>[];
+
   /// [resolveAudioStream]에 넘어온 곡 주소들.
   final streams = <String>[];
 
@@ -931,8 +934,12 @@ class FakeDownloaderEngine implements DownloaderEngine {
   }
 
   @override
-  Future<AudioStream> resolveAudioStream(String url) async {
+  Future<AudioStream> resolveAudioStream(
+    String url, {
+    bool refresh = false,
+  }) async {
     streams.add(url);
+    refreshFlags.add(refresh);
     await streamGate;
     final failure = streamFailure;
     if (failure != null) throw EngineException(failure);

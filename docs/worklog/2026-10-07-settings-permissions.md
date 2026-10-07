@@ -7,7 +7,7 @@
 - 상세 기능: 공통 작업 (설정)
 
 ## 한 일
-- `features/permissions/` 추가 (domain · data · presentation · di). `PermissionsCubit`이 권한별 상태를 읽고, 토글을 누르면 요청 창 또는 시스템 설정을 연다 ([D-084](../decisions.md)).
+- `features/permissions/` 추가 (domain · data · presentation · di). `PermissionsCubit`이 권한별 상태를 읽고, 토글을 누르면 요청 창 또는 시스템 설정을 연다 ([D-086](../decisions.md)).
 - 설정 목록의 알림 묶음 아래에 "권한" 묶음 (`PermissionsSection`). 문구는 ARB(ko · en).
 
 ## 바꾼 설정

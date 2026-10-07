@@ -23,6 +23,9 @@ class _FakeDownloader implements AudioFileDownloader {
 
   int failures;
   Completer<void>? gate;
+
+  /// 받기를 시작해 [gate]에서 기다리기 시작하면 완료된다 (그 전에 멈추면 받은 것이 없다).
+  var entered = Completer<void>();
   final urls = <String>[];
 
   /// 이어받기로 불린 기록: 그때 임시 파일 길이와 넘겨받은 형식.
@@ -42,6 +45,7 @@ class _FakeDownloader implements AudioFileDownloader {
     if (length > 0) resumes.add((length: length, mime: resumeMime));
     onMime?.call('audio/webm');
     onProgress(.5);
+    if (!entered.isCompleted) entered.complete();
     await gate?.future;
     if (token.isCancelled) {
       // 멈추면 받은 만큼은 파일에 남는다.
@@ -207,8 +211,21 @@ void main() {
     expect(tmp.listSync(), isEmpty, reason: '임시 파일은 지운다');
   });
 
-  test('실패하면 안내가 남고, 다시 받기로 이어서 성공한다', () async {
+  test('주소가 막히면(403) 기억한 주소를 버리고 새로 읽어 한 번 더 받는다', () async {
     final dl = _FakeDownloader(failures: 1);
+    final repo = build(dl);
+    await repo.enqueue(request);
+    final items = await settled(
+      repo,
+      (l) => l.isNotEmpty && l.single.status == DownloadStatus.done,
+    );
+    expect(dl.urls, hasLength(2));
+    expect(engine.refreshFlags, [false, true]);
+    expect(items.single.error, isEmpty);
+  });
+
+  test('실패하면 안내가 남고, 다시 받기로 이어서 성공한다', () async {
+    final dl = _FakeDownloader(failures: 2);
     final repo = build(dl);
     await repo.enqueue(request);
     var items = await settled(
@@ -223,7 +240,7 @@ void main() {
       repo,
       (l) => l.isNotEmpty && l.single.status == DownloadStatus.done,
     );
-    expect(dl.urls, hasLength(2));
+    expect(dl.urls, hasLength(3));
     expect(items.single.error, isEmpty);
     expect(await library.watchTracks().first, hasLength(1));
   });
@@ -279,6 +296,7 @@ void main() {
       (l) => l.isNotEmpty && l.single.status == DownloadStatus.downloading,
     );
     final id = items.single.id;
+    await dl.entered.future;
     await repo.pause(id);
     dl.gate!.complete();
     await Future<void>.delayed(const Duration(milliseconds: 50));

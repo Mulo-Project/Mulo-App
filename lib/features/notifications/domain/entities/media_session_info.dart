@@ -12,6 +12,7 @@ class MediaSessionInfo extends Equatable {
     this.artUri,
     this.hasPrevious = true,
     this.hasNext = true,
+    this.favorite = false,
   });
 
   final String title;
@@ -26,6 +27,9 @@ class MediaSessionInfo extends Equatable {
   final bool hasPrevious;
   final bool hasNext;
 
+  /// 지금 곡이 좋아요(즐겨찾기)에 들어 있는지 (알림의 하트 모양).
+  final bool favorite;
+
   /// 커버 주소만 바꾼 사본.
   MediaSessionInfo withArtUri(String? uri) => MediaSessionInfo(
     title: title,
@@ -37,6 +41,7 @@ class MediaSessionInfo extends Equatable {
     playing: playing,
     hasPrevious: hasPrevious,
     hasNext: hasNext,
+    favorite: favorite,
   );
 
   @override
@@ -50,10 +55,11 @@ class MediaSessionInfo extends Equatable {
     playing,
     hasPrevious,
     hasNext,
+    favorite,
   ];
 }
 
-enum MediaCommandType { play, pause, next, previous, seek, stop }
+enum MediaCommandType { play, pause, next, previous, seek, stop, favorite }
 
 /// 알림 · 잠금화면 · 이어폰 버튼에서 온 조작.
 class MediaCommand extends Equatable {

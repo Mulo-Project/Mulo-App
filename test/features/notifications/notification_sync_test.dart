@@ -121,6 +121,27 @@ void main() {
     expect(session.updates.last!.playing, isFalse);
   });
 
+  test('좋아요 상태가 바뀌면 알림을 다시 보낸다', () async {
+    Future<void> sync(bool favorite) => cubit.syncPlayback(
+      track: track,
+      isPlaying: true,
+      position: Duration.zero,
+      hasPrevious: true,
+      hasNext: true,
+      artUri: null,
+      favorite: favorite,
+      settings: on,
+      l10n: l10n,
+      now: DateTime(2026),
+    );
+    await sync(false);
+    await sync(false);
+    expect(session.updates, hasLength(1));
+    await sync(true);
+    expect(session.updates, hasLength(2));
+    expect(session.updates.last!.favorite, isTrue);
+  });
+
   test('곡 정보 숨기기를 켜면 제목 · 아티스트 · 커버를 보내지 않는다', () async {
     await play(on.copyWith(hideSongInfo: true));
     final info = session.updates.single!;

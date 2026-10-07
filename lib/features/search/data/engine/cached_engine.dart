@@ -55,8 +55,14 @@ class CachedDownloaderEngine implements DownloaderEngine {
       _cached(_channels, url, () => _inner.fetchChannel(url));
 
   @override
-  Future<AudioStream> resolveAudioStream(String url) =>
-      _cached(_streams, url, () => _inner.resolveAudioStream(url));
+  Future<AudioStream> resolveAudioStream(String url, {bool refresh = false}) {
+    if (refresh) _streams.remove(url);
+    return _cached(
+      _streams,
+      url,
+      () => _inner.resolveAudioStream(url, refresh: refresh),
+    );
+  }
 
   Future<T> _cached<T>(
     Map<String, _Entry<T>> cache,

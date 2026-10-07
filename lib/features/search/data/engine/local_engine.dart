@@ -187,7 +187,10 @@ class LocalEngine implements DownloaderEngine {
   }
 
   @override
-  Future<AudioStream> resolveAudioStream(String url) async {
+  Future<AudioStream> resolveAudioStream(
+    String url, {
+    bool refresh = false,
+  }) async {
     // 오디오만 있는 형식 하나를 골라(macOS도 풀 수 있는 m4a 먼저) 주소만 읽는다.
     Future<AudioStream> read(List<String> extra) async {
       final out = await _exec([

@@ -318,35 +318,50 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
     try {
       final quality = request.quality ?? await _settings.loadQuality();
       final format = request.format ?? await _settings.loadFormat();
-      final stream = await _engine.resolveAudioStream(request.url);
-      if (token.isCancelled) throw const DownloadAborted();
       final dir = await _tempDir();
       await dir.create(recursive: true);
       temp = File(_partPath(dir, id));
       var lastShown = 0.0;
-      var audio = await _downloader.download(
-        stream,
-        temp,
-        token: token,
-        resumeMime: _partMime[id],
-        onMime: (mime) {
-          _partMime[id] = mime;
-          _persist();
-        },
-        onProgress: (p) {
-          if (token.isCancelled || (p - lastShown < _progressStep && p < 1)) {
-            return;
-          }
-          lastShown = p;
-          _set(
-            id,
-            (e) => e.status == DownloadStatus.downloading
-                ? e.copyWith(progress: p)
-                : e,
-            persist: false,
-          );
-        },
-      );
+      Future<DownloadedAudio> fetch({required bool refresh}) async {
+        final stream = await _engine.resolveAudioStream(
+          request.url,
+          refresh: refresh,
+        );
+        if (token.isCancelled) throw const DownloadAborted();
+        return _downloader.download(
+          stream,
+          temp!,
+          token: token,
+          resumeMime: refresh ? null : _partMime[id],
+          onMime: (mime) {
+            _partMime[id] = mime;
+            _persist();
+          },
+          onProgress: (p) {
+            if (token.isCancelled || (p - lastShown < _progressStep && p < 1)) {
+              return;
+            }
+            lastShown = p;
+            _set(
+              id,
+              (e) => e.status == DownloadStatus.downloading
+                  ? e.copyWith(progress: p)
+                  : e,
+              persist: false,
+            );
+          },
+        );
+      }
+
+      DownloadedAudio audio;
+      try {
+        audio = await fetch(refresh: false);
+      } on DownloadFailed {
+        // 주소가 막혔거나(403) 만료됐을 수 있다: 기억해 둔 주소를 버리고 새로 읽어 처음부터 한 번 더 받는다.
+        if (token.isCancelled) throw const DownloadAborted();
+        lastShown = 0;
+        audio = await fetch(refresh: true);
+      }
       if (token.isCancelled) throw const DownloadAborted();
 
       // 설정의 형식 · 음질대로 바꾼다. 변환기가 없거나 실패하면 받은 그대로 저장한다.
