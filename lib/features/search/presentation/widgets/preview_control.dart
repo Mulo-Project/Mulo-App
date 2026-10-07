@@ -206,12 +206,8 @@ class PreviewMiniBar extends StatelessWidget {
                       onTap: hit == null
                           ? null
                           : () => showMediaDetail(context, hit),
-                      child: Text(
-                        state.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: text.bodySmall,
-                      ),
+                      // 길면 미니 플레이어처럼 흘러간다.
+                      child: MarqueeText(state.title, style: text.bodySmall),
                     ),
                     const SizedBox(height: AppSpacing.xs),
                     loading
