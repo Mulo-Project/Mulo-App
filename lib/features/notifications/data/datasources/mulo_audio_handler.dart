@@ -37,13 +37,15 @@ class MuloAudioHandler extends BaseAudioHandler {
       if (info.hasPrevious) MediaControl.skipToPrevious,
       info.playing ? MediaControl.pause : MediaControl.play,
       if (info.hasNext) MediaControl.skipToNext,
+      // 펼친 알림에만 보이는 닫기 (접힌 알림은 위 세 개만).
+      MediaControl.stop,
     ];
     playbackState.add(
       PlaybackState(
         controls: controls,
-        systemActions: const {MediaAction.seek},
+        systemActions: const {MediaAction.seek, MediaAction.stop},
         androidCompactActionIndices: [
-          for (var i = 0; i < controls.length; i++) i,
+          for (var i = 0; i < controls.length - 1; i++) i,
         ],
         processingState: AudioProcessingState.ready,
         playing: info.playing,

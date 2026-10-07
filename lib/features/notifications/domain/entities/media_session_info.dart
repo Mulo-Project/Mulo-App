@@ -26,6 +26,19 @@ class MediaSessionInfo extends Equatable {
   final bool hasPrevious;
   final bool hasNext;
 
+  /// 커버 주소만 바꾼 사본.
+  MediaSessionInfo withArtUri(String? uri) => MediaSessionInfo(
+    title: title,
+    artist: artist,
+    album: album,
+    artUri: uri,
+    duration: duration,
+    position: position,
+    playing: playing,
+    hasPrevious: hasPrevious,
+    hasNext: hasNext,
+  );
+
   @override
   List<Object?> get props => [
     title,
