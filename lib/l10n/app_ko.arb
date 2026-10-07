@@ -661,7 +661,7 @@
   "settingsAccountSignIn": "로그인",
   "settingsAccountSignOut": "로그아웃",
   "settingsAccountNotConfigured": "이 빌드에는 구글 로그인이 설정되지 않았어요",
-  "settingsAccountUnsupported": "구글 로그인은 Android에서만 쓸 수 있어요",
+  "settingsAccountUnsupported": "이 기기에서는 구글 로그인을 쓸 수 없어요",
   "settingsAccountFailed": "로그인하지 못했어요. 다시 시도해 주세요",
   "playlistImportMine": "내 재생목록",
   "playlistImportMineTitle": "내 유튜브 재생목록",

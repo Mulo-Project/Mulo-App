@@ -2,11 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:google_sign_in/google_sign_in.dart';
-
 import '../../../../core/config/app_config.dart';
 import '../../../search/domain/entities/media_info.dart';
 import '../../domain/entities/google_account.dart';
+import '../datasources/google_auth_source.dart';
+import '../datasources/google_sign_in_auth_source.dart';
+import '../datasources/loopback_google_auth.dart';
 import '../../domain/repositories/account_repository.dart';
 
 /// GET 요청 하나 (테스트에서 바꿔 끼운다).
@@ -31,112 +32,55 @@ Future<({int status, String body})> _defaultGet(
   }
 }
 
-/// 구글 로그인(`google_sign_in`)과 YouTube Data API v3 `playlists?mine=true`.
-/// Android만 지원한다. 로그인은 서버 클라이언트 ID가 빌드에 있어야 한다.
+/// 구글 로그인 + YouTube Data API v3 `playlists?mine=true` (읽기 전용).
+/// 로그인 방식은 기기에 따라 다르다: Android는 `google_sign_in`, 데스크톱은 브라우저
+/// 로그인([LoopbackGoogleAuth]). 빌드에 해당 클라이언트 ID가 없으면 쓸 수 없다.
 class GoogleAccountRepository implements AccountRepository {
-  GoogleAccountRepository({GoogleSignIn? signIn, AccountHttpGet? get})
-    : _google = signIn ?? GoogleSignIn.instance,
+  GoogleAccountRepository({GoogleAuthSource? auth, AccountHttpGet? get})
+    : _auth = auth ?? _platformAuth(),
       _get = get ?? _defaultGet;
-
-  static const _scopes = ['https://www.googleapis.com/auth/youtube.readonly'];
 
   /// 한 번에 50개씩, 많아도 이만큼 쪽까지만 읽는다.
   static const _maxPages = 6;
 
-  final GoogleSignIn _google;
+  final GoogleAuthSource? _auth;
   final AccountHttpGet _get;
-  Future<void>? _init;
-  GoogleSignInAccount? _account;
+
+  static GoogleAuthSource? _platformAuth() {
+    if (Platform.isAndroid) {
+      return AppConfig.hasGoogleClient ? GoogleSignInAuthSource() : null;
+    }
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      return AppConfig.hasGoogleDesktopClient ? LoopbackGoogleAuth() : null;
+    }
+    return null;
+  }
 
   @override
-  AccountSupport get support => !Platform.isAndroid
-      ? AccountSupport.unsupportedPlatform
-      : !AppConfig.hasGoogleClient
+  AccountSupport get support => _auth != null
+      ? AccountSupport.available
+      : Platform.isAndroid ||
+            Platform.isWindows ||
+            Platform.isLinux ||
+            Platform.isMacOS
       ? AccountSupport.notConfigured
-      : AccountSupport.available;
+      : AccountSupport.unsupportedPlatform;
 
-  Future<void> _ready() {
-    if (support != AccountSupport.available) {
-      throw const AccountException(AccountFailure.unsupported);
-    }
-    return _init ??= _google.initialize(
-      serverClientId: AppConfig.googleServerClientId,
-    );
-  }
-
-  GoogleAccount _map(GoogleSignInAccount a) => GoogleAccount(
-    id: a.id,
-    email: a.email,
-    displayName: a.displayName,
-    photoUrl: a.photoUrl,
-  );
+  GoogleAuthSource get _source =>
+      _auth ?? (throw const AccountException(AccountFailure.unsupported));
 
   @override
-  Future<GoogleAccount?> restore() async {
-    if (support != AccountSupport.available) return null;
-    try {
-      await _ready();
-      final a =
-          await (_google.attemptLightweightAuthentication() ??
-              Future<GoogleSignInAccount?>.value());
-      _account = a;
-      return a == null ? null : _map(a);
-    } on Object {
-      // 되살리지 못하면 로그아웃 상태로 둔다 (설정에서 다시 로그인).
-      return null;
-    }
-  }
+  Future<GoogleAccount?> restore() async => _auth?.restore();
 
   @override
-  Future<GoogleAccount> signIn() async {
-    await _ready();
-    try {
-      final a = await _google.authenticate(scopeHint: _scopes);
-      _account = a;
-      return _map(a);
-    } on GoogleSignInException catch (e) {
-      throw AccountException(switch (e.code) {
-        GoogleSignInExceptionCode.canceled ||
-        GoogleSignInExceptionCode.interrupted ||
-        GoogleSignInExceptionCode.uiUnavailable => AccountFailure.cancelled,
-        _ => AccountFailure.failed,
-      }, '${e.code}');
-    }
-  }
+  Future<GoogleAccount> signIn() => _source.signIn();
 
   @override
-  Future<void> signOut() async {
-    _account = null;
-    if (support != AccountSupport.available) return;
-    await _ready();
-    await _google.signOut();
-  }
-
-  /// 유튜브 읽기 권한이 든 접근 토큰. 이미 허락했으면 조용히, 아니면 허락 창을 띄운다.
-  Future<String> _token() async {
-    final account = _account;
-    if (account == null) {
-      throw const AccountException(AccountFailure.unauthorized);
-    }
-    try {
-      final client = account.authorizationClient;
-      final auth =
-          await client.authorizationForScopes(_scopes) ??
-          await client.authorizeScopes(_scopes);
-      return auth.accessToken;
-    } on GoogleSignInException catch (e) {
-      throw AccountException(
-        e.code == GoogleSignInExceptionCode.canceled
-            ? AccountFailure.cancelled
-            : AccountFailure.unauthorized,
-        '${e.code}',
-      );
-    }
-  }
+  Future<void> signOut() async => _auth?.signOut();
 
   @override
   Future<List<PlaylistHit>> myPlaylists() async {
-    final token = await _token();
+    final token = await _source.accessToken();
     final out = <PlaylistHit>[];
     String? pageToken;
     for (var i = 0; i < _maxPages; i++) {

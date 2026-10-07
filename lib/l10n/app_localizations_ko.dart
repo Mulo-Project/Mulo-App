@@ -1546,7 +1546,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsAccountNotConfigured => '이 빌드에는 구글 로그인이 설정되지 않았어요';
 
   @override
-  String get settingsAccountUnsupported => '구글 로그인은 Android에서만 쓸 수 있어요';
+  String get settingsAccountUnsupported => '이 기기에서는 구글 로그인을 쓸 수 없어요';
 
   @override
   String get settingsAccountFailed => '로그인하지 못했어요. 다시 시도해 주세요';

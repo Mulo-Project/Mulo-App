@@ -2957,7 +2957,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsAccountUnsupported.
   ///
   /// In ko, this message translates to:
-  /// **'구글 로그인은 Android에서만 쓸 수 있어요'**
+  /// **'이 기기에서는 구글 로그인을 쓸 수 없어요'**
   String get settingsAccountUnsupported;
 
   /// No description provided for @settingsAccountFailed.

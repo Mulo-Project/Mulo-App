@@ -22,6 +22,22 @@ class AppConfig {
     defaultValue: '',
   );
 
-  /// 구글 클라이언트 ID가 빌드에 들어 있는지 (없으면 로그인을 쓸 수 없다).
+  /// 구글 클라이언트 ID가 빌드에 들어 있는지 (없으면 Android 로그인을 쓸 수 없다).
   static bool get hasGoogleClient => googleServerClientId.isNotEmpty;
+
+  /// 데스크톱 구글 로그인용 "데스크톱 앱" OAuth 클라이언트 ID · 비밀값.
+  /// 구글이 데스크톱 클라이언트에도 비밀값을 요구하지만 앱에 들어가는 값이라 비밀로 지켜지지는
+  /// 않는다 (PKCE가 코드를 지킨다). 저장소에는 넣지 않고 빌드에 넣는다:
+  /// `--dart-define=MULO_GOOGLE_DESKTOP_CLIENT_ID=... --dart-define=MULO_GOOGLE_DESKTOP_CLIENT_SECRET=...`
+  static const String googleDesktopClientId = String.fromEnvironment(
+    'MULO_GOOGLE_DESKTOP_CLIENT_ID',
+    defaultValue: '',
+  );
+  static const String googleDesktopClientSecret = String.fromEnvironment(
+    'MULO_GOOGLE_DESKTOP_CLIENT_SECRET',
+    defaultValue: '',
+  );
+
+  static bool get hasGoogleDesktopClient =>
+      googleDesktopClientId.isNotEmpty && googleDesktopClientSecret.isNotEmpty;
 }

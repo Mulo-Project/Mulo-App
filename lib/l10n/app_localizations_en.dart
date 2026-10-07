@@ -1576,7 +1576,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsAccountUnsupported =>
-      'Google sign-in is only available on Android';
+      'Google sign-in is not available on this device';
 
   @override
   String get settingsAccountFailed => 'Could not sign in. Please try again';

@@ -568,7 +568,7 @@
   "settingsAccountSignIn": "Sign in",
   "settingsAccountSignOut": "Sign out",
   "settingsAccountNotConfigured": "Google sign-in is not set up in this build",
-  "settingsAccountUnsupported": "Google sign-in is only available on Android",
+  "settingsAccountUnsupported": "Google sign-in is not available on this device",
   "settingsAccountFailed": "Could not sign in. Please try again",
   "playlistImportMine": "My playlists",
   "playlistImportMineTitle": "My YouTube playlists",

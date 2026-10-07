@@ -480,6 +480,6 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - 내 유튜브 재생목록을 불러오려고 설정에 "계정" 묶음을 두고 구글 계정 로그인 · 로그아웃을 넣었다 (앱 서버 로그인과는 별개). `features/account/` (domain · data · presentation), 앱 전체 `AccountCubit`.
 - 구현: `google_sign_in` 7.x로 로그인하고 `youtube.readonly` 범위의 접근 토큰으로 YouTube Data API v3 `playlists?mine=true`를 읽는다 (50개씩 최대 6쪽). 토큰은 앱이 저장하지 않고 필요할 때마다 `google_sign_in`에서 받는다. 읽기 전용이다.
 - 가져오기 화면의 "내 재생목록" 버튼: 로그인돼 있지 않으면 먼저 로그인 창을 띄우고, 로그인이 풀렸으면 다시 로그인하라고 안내한다. 고르면 기존 곡 고르기로 이어진다.
-- **Android만** 지원한다 (`google_sign_in`이 데스크톱을 지원하지 않는다). 데스크톱은 설정에 "Android에서만"이라고 안내한다.
-- 빌드 설정: 웹 애플리케이션 OAuth 클라이언트 ID를 `--dart-define=MULO_GOOGLE_SERVER_CLIENT_ID=...`로 넣는다 (`AppConfig`). 없으면 로그인 버튼이 꺼지고 "이 빌드에는 설정되지 않았어요"를 보여 준다. 저장소에는 ID를 넣지 않는다.
-- 출시 전 해야 할 일 (코드로 할 수 없음): Google Cloud 프로젝트에서 YouTube Data API v3를 켜고, OAuth 동의 화면을 만들고, Android OAuth 클라이언트(패키지 `com.mulo.app` + 디버그 · 릴리스 SHA-1)와 웹 클라이언트를 만든다. `youtube.readonly`는 민감 범위라 공개 배포 전에는 구글 검수가 필요하고, 검수 전에는 테스트 사용자만 로그인할 수 있다. 실제 로그인은 이 설정이 끝난 기기에서 확인해야 한다.
+- 로그인 방식은 기기마다 다르다: Android는 `google_sign_in`, **데스크톱(Windows · macOS · Linux)은 `google_sign_in`이 지원하지 않아서** 기본 브라우저로 구글 로그인을 열고 이 기기(`127.0.0.1` 임시 포트)로 돌아오는 인증 코드를 받는 OAuth "데스크톱 앱" 흐름 + PKCE로 직접 구현했다 (`LoopbackGoogleAuth`). 데스크톱은 새로고침 토큰만 보안 저장소(`flutter_secure_storage`)에 두고 접근 토큰은 메모리에만 둔다. 로그아웃하면 구글에 허락 취소(revoke)도 보낸다.
+- 빌드 설정 (`AppConfig`): Android는 웹 애플리케이션 OAuth 클라이언트 ID `--dart-define=MULO_GOOGLE_SERVER_CLIENT_ID=...`, 데스크톱은 "데스크톱 앱" OAuth 클라이언트의 `MULO_GOOGLE_DESKTOP_CLIENT_ID` · `MULO_GOOGLE_DESKTOP_CLIENT_SECRET`. 없으면 로그인 버튼이 꺼지고 "이 빌드에는 설정되지 않았어요"를 보여 준다. 저장소에는 넣지 않는다. 데스크톱 클라이언트 비밀값은 구글이 요구하지만 앱에 들어가는 값이라 비밀로 지켜지지 않으며 PKCE가 코드를 지킨다.
+- 출시 전 해야 할 일 (코드로 할 수 없음): Google Cloud 프로젝트에서 YouTube Data API v3를 켜고, OAuth 동의 화면을 만들고, Android OAuth 클라이언트(패키지 `com.mulo.app` + 디버그 · 릴리스 SHA-1)와 웹 클라이언트, 데스크톱용 "데스크톱 앱" 클라이언트를 만든다. `youtube.readonly`는 민감 범위라 공개 배포 전에는 구글 검수가 필요하고, 검수 전에는 테스트 사용자만 로그인할 수 있다. 실제 로그인은 이 설정이 끝난 기기에서 확인해야 한다.
