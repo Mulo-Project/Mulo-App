@@ -3,13 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/usecase/usecase.dart';
 import '../../../../l10n/app_localizations.dart';
-import '../../../downloads/domain/entities/download_item.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../domain/entities/media_session_info.dart';
 import '../../domain/entities/notification_settings.dart';
 import '../../domain/usecases/notification_usecases.dart';
 
-/// 앱 상태(받기 대기열 · 재생 상태)를 알림창에 옮긴다. 화면이 없고 상태도 없다:
+/// 앱 상태(재생 상태)를 알림창에 옮긴다. 화면이 없고 상태도 없다:
 /// 바뀐 것만 골라 알림 유스케이스를 부른다.
 class NotificationSyncCubit extends Cubit<void> {
   NotificationSyncCubit(this._actions) : super(null);
@@ -29,58 +28,6 @@ class NotificationSyncCubit extends Cubit<void> {
       await _actions.requestPermission(const NoParams());
     }
   }
-
-  // ── 받기 ──
-
-  Map<String, DownloadStatus> _statuses = const {};
-
-  /// 받기 대기열이 바뀔 때마다.
-  /// 끝남 · 실패는 상태가 바뀐 순간 곡마다 한 번씩 알린다 (받는 중 진행 알림은 없다).
-  Future<void> syncDownloads(
-    List<DownloadItem> items,
-    NotificationSettings settings,
-    AppLocalizations l10n,
-  ) async {
-    final before = _statuses;
-    _statuses = {for (final i in items) i.id: i.status};
-    final hide = settings.hideSongInfo;
-
-    if (settings.downloadResult) {
-      for (final i in items) {
-        if (before[i.id] == i.status) continue;
-        if (i.status == DownloadStatus.done) {
-          await _ensurePermission();
-          await _actions.showResult(
-            DownloadResultNotice(
-              id: i.id,
-              title: l10n.notifDownloadDoneTitle,
-              body: hide
-                  ? l10n.notifDownloadDoneHidden
-                  : _titleLine(i.title, i.artist),
-              failed: false,
-            ),
-          );
-        } else if (i.status == DownloadStatus.failed) {
-          await _ensurePermission();
-          await _actions.showResult(
-            DownloadResultNotice(
-              id: i.id,
-              title: l10n.notifDownloadFailedTitle,
-              body: hide
-                  ? l10n.notifDownloadFailedHidden
-                  : [i.title, if (i.error.isNotEmpty) i.error].join('\n'),
-              failed: true,
-            ),
-          );
-        }
-      }
-    } else {
-      await _actions.clearResults(const NoParams());
-    }
-  }
-
-  String _titleLine(String title, String artist) =>
-      artist.isEmpty ? title : '$title · $artist';
 
   // ── 재생 ──
 

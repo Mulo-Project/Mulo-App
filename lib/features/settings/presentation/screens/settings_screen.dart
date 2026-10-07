@@ -200,14 +200,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       ),
                     SettingRow(
-                      title: l10n.settingsNotifyDownloadResult,
-                      description: l10n.settingsNotifyDownloadResultDesc,
-                      trailing: AppSwitch(
-                        value: notify.settings.downloadResult,
-                        onChanged: notifyCtrl.setDownloadResult,
-                      ),
-                    ),
-                    SettingRow(
                       title: l10n.settingsNotifyPlayback,
                       description: l10n.settingsNotifyPlaybackDesc,
                       trailing: AppSwitch(

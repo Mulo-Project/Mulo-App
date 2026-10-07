@@ -1697,13 +1697,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsNotifications => 'Notifications';
 
   @override
-  String get settingsNotifyDownloadResult => 'Download results';
-
-  @override
-  String get settingsNotifyDownloadResultDesc =>
-      'Tells you when a download finishes or fails.';
-
-  @override
   String get settingsNotifyPlayback => 'Playback controls';
 
   @override
@@ -1734,22 +1727,4 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifChannelPlayback => 'Playback';
-
-  @override
-  String get notifChannelDownloadDone => 'Download complete';
-
-  @override
-  String get notifChannelDownloadFailed => 'Download failed';
-
-  @override
-  String get notifDownloadDoneTitle => 'Download complete';
-
-  @override
-  String get notifDownloadDoneHidden => 'A song was added to your library';
-
-  @override
-  String get notifDownloadFailedTitle => 'Download failed';
-
-  @override
-  String get notifDownloadFailedHidden => 'A song could not be downloaded';
 }

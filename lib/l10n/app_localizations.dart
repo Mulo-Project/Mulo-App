@@ -3164,18 +3164,6 @@ abstract class AppLocalizations {
   /// **'알림'**
   String get settingsNotifications;
 
-  /// No description provided for @settingsNotifyDownloadResult.
-  ///
-  /// In ko, this message translates to:
-  /// **'받기 결과 알림'**
-  String get settingsNotifyDownloadResult;
-
-  /// No description provided for @settingsNotifyDownloadResultDesc.
-  ///
-  /// In ko, this message translates to:
-  /// **'받기가 끝나거나 실패하면 알려요.'**
-  String get settingsNotifyDownloadResultDesc;
-
   /// No description provided for @settingsNotifyPlayback.
   ///
   /// In ko, this message translates to:
@@ -3235,42 +3223,6 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'재생'**
   String get notifChannelPlayback;
-
-  /// No description provided for @notifChannelDownloadDone.
-  ///
-  /// In ko, this message translates to:
-  /// **'받기 완료'**
-  String get notifChannelDownloadDone;
-
-  /// No description provided for @notifChannelDownloadFailed.
-  ///
-  /// In ko, this message translates to:
-  /// **'받기 실패'**
-  String get notifChannelDownloadFailed;
-
-  /// No description provided for @notifDownloadDoneTitle.
-  ///
-  /// In ko, this message translates to:
-  /// **'받기 완료'**
-  String get notifDownloadDoneTitle;
-
-  /// No description provided for @notifDownloadDoneHidden.
-  ///
-  /// In ko, this message translates to:
-  /// **'곡이 보관함에 추가됐어요'**
-  String get notifDownloadDoneHidden;
-
-  /// No description provided for @notifDownloadFailedTitle.
-  ///
-  /// In ko, this message translates to:
-  /// **'받기 실패'**
-  String get notifDownloadFailedTitle;
-
-  /// No description provided for @notifDownloadFailedHidden.
-  ///
-  /// In ko, this message translates to:
-  /// **'곡을 받지 못했어요'**
-  String get notifDownloadFailedHidden;
 }
 
 class _AppLocalizationsDelegate

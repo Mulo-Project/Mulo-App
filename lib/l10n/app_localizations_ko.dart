@@ -1664,12 +1664,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsNotifications => '알림';
 
   @override
-  String get settingsNotifyDownloadResult => '받기 결과 알림';
-
-  @override
-  String get settingsNotifyDownloadResultDesc => '받기가 끝나거나 실패하면 알려요.';
-
-  @override
   String get settingsNotifyPlayback => '재생 알림';
 
   @override
@@ -1698,22 +1692,4 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get notifChannelPlayback => '재생';
-
-  @override
-  String get notifChannelDownloadDone => '받기 완료';
-
-  @override
-  String get notifChannelDownloadFailed => '받기 실패';
-
-  @override
-  String get notifDownloadDoneTitle => '받기 완료';
-
-  @override
-  String get notifDownloadDoneHidden => '곡이 보관함에 추가됐어요';
-
-  @override
-  String get notifDownloadFailedTitle => '받기 실패';
-
-  @override
-  String get notifDownloadFailedHidden => '곡을 받지 못했어요';
 }

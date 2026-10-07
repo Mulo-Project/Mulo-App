@@ -7,7 +7,6 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
-import '../../../downloads/presentation/bloc/download_queue_cubit.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../../theme/presentation/bloc/theme_cubit.dart';
@@ -16,7 +15,7 @@ import '../../domain/entities/media_session_info.dart';
 import '../bloc/notification_settings_cubit.dart';
 import '../bloc/notification_sync_cubit.dart';
 
-/// 받기 대기열 · 재생 상태를 알림창으로 옮기고, 알림에서 누른 재생 조작을 재생 상태에 돌려준다.
+/// 재생 상태를 알림창으로 옮기고, 알림에서 누른 재생 조작을 재생 상태에 돌려준다.
 /// 앱 셸 한 곳에서 감싼다 ([NotificationSyncCubit]이 바뀐 것만 골라 알림을 부른다).
 class NotificationBridge extends StatefulWidget {
   const NotificationBridge({super.key, required this.child});
@@ -102,16 +101,6 @@ class _NotificationBridgeState extends State<NotificationBridge>
     }
   }
 
-  void _syncDownloads() {
-    final settings = context.read<NotificationSettingsCubit>().state;
-    if (!settings.loaded) return;
-    context.read<NotificationSyncCubit>().syncDownloads(
-      context.read<DownloadQueueCubit>().state.items,
-      settings.settings,
-      context.l10n,
-    );
-  }
-
   void _syncPlayback() {
     final settings = context.read<NotificationSettingsCubit>().state;
     if (!settings.loaded) return;
@@ -165,9 +154,6 @@ class _NotificationBridgeState extends State<NotificationBridge>
   @override
   Widget build(BuildContext context) => MultiBlocListener(
     listeners: [
-      BlocListener<DownloadQueueCubit, DownloadQueueState>(
-        listener: (_, _) => _syncDownloads(),
-      ),
       BlocListener<NowPlayingCubit, NowPlayingState>(
         listener: (_, _) => _syncPlayback(),
       ),
@@ -192,7 +178,6 @@ class _NotificationBridgeState extends State<NotificationBridge>
       BlocListener<NotificationSettingsCubit, NotificationSettingsState>(
         listenWhen: (a, b) => a.settings != b.settings || a.loaded != b.loaded,
         listener: (_, _) {
-          _syncDownloads();
           _syncPlayback();
         },
       ),

@@ -9,7 +9,6 @@ import '../../domain/repositories/notification_settings_repository.dart';
 /// 알림 설정을 shared_preferences에, 시스템 알림 권한은 permission_handler로 다룬다.
 class PrefsNotificationSettingsRepository
     implements NotificationSettingsRepository {
-  static const _result = 'notification.downloadResult';
   static const _playback = 'notification.playback';
   static const _hide = 'notification.hideSongInfo';
 
@@ -20,7 +19,6 @@ class PrefsNotificationSettingsRepository
   Future<NotificationSettings> load() async {
     final prefs = await SharedPreferences.getInstance();
     return NotificationSettings(
-      downloadResult: prefs.getBool(_result) ?? true,
       playback: prefs.getBool(_playback) ?? true,
       hideSongInfo: prefs.getBool(_hide) ?? false,
     );
@@ -29,7 +27,6 @@ class PrefsNotificationSettingsRepository
   @override
   Future<void> save(NotificationSettings settings) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_result, settings.downloadResult);
     await prefs.setBool(_playback, settings.playback);
     await prefs.setBool(_hide, settings.hideSongInfo);
   }

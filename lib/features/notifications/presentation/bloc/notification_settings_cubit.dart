@@ -88,9 +88,6 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
     }
   }
 
-  Future<void> setDownloadResult(bool on) =>
-      _update(state.settings.copyWith(downloadResult: on), needsPermission: on);
-
   Future<void> setPlayback(bool on) =>
       _update(state.settings.copyWith(playback: on), needsPermission: on);
 

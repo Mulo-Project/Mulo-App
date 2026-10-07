@@ -32,7 +32,6 @@ import 'package:music_download_play_app/features/library/domain/repositories/lib
 import 'package:music_download_play_app/features/notifications/di.dart';
 import 'package:music_download_play_app/features/notifications/domain/entities/media_session_info.dart';
 import 'package:music_download_play_app/features/notifications/domain/entities/notification_settings.dart';
-import 'package:music_download_play_app/features/notifications/domain/repositories/download_notifier.dart';
 import 'package:music_download_play_app/features/notifications/domain/repositories/media_session.dart';
 import 'package:music_download_play_app/features/notifications/domain/repositories/notification_settings_repository.dart';
 import 'package:music_download_play_app/features/permissions/di.dart';
@@ -662,7 +661,6 @@ Future<void> setUpTestDependencies({
     ..registerLazySingleton<NotificationSettingsRepository>(
       MemoryNotificationSettings.new,
     )
-    ..registerLazySingleton<DownloadNotifier>(FakeDownloadNotifier.new)
     ..registerLazySingleton<PermissionRepository>(FakePermissionRepository.new)
     ..registerLazySingleton<MediaSession>(FakeMediaSession.new)
     ..registerLazySingleton<JoinDateRepository>(
@@ -1082,22 +1080,6 @@ class MemoryNotificationSettings implements NotificationSettingsRepository {
 
   @override
   Future<void> openSystemSettings() async {}
-}
-
-/// 받기 결과 알림 기록 ('done:id', 'failed:id', 'clearResults').
-class FakeDownloadNotifier implements DownloadNotifier {
-  final calls = <String>[];
-
-  @override
-  Future<void> showResult({
-    required String id,
-    required String title,
-    required String body,
-    required bool failed,
-  }) async => calls.add('${failed ? 'failed' : 'done'}:$id');
-
-  @override
-  Future<void> clearResults() async => calls.add('clearResults');
 }
 
 /// 재생 알림 가짜: 받은 상태를 기록하고, 알림 조작은 테스트가 흘려보낸다.

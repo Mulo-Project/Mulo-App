@@ -1,10 +1,8 @@
 import 'dart:ui' show Locale;
 
-import 'package:music_download_play_app/features/notifications/domain/repositories/download_notifier.dart';
 import 'package:music_download_play_app/features/notifications/domain/repositories/media_session.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/core/di/injector.dart';
-import 'package:music_download_play_app/features/downloads/domain/entities/download_item.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 import 'package:music_download_play_app/features/notifications/domain/entities/media_session_info.dart';
 import 'package:music_download_play_app/features/notifications/domain/entities/notification_settings.dart';
@@ -13,11 +11,7 @@ import 'package:music_download_play_app/l10n/app_localizations.dart';
 
 import '../../helpers/fakes.dart';
 
-DownloadItem item(String id, DownloadStatus s, [double p = 0]) =>
-    DownloadItem(id: id, title: '곡$id', artist: '가수', status: s, progress: p);
-
 void main() {
-  late FakeDownloadNotifier notifier;
   late FakeMediaSession session;
   late NotificationSyncCubit cubit;
   final l10n = lookupAppLocalizations(const Locale('ko'));
@@ -25,27 +19,8 @@ void main() {
 
   setUp(() async {
     await setUpTestDependencies();
-    notifier = sl<DownloadNotifier>() as FakeDownloadNotifier;
     session = sl<MediaSession>() as FakeMediaSession;
     cubit = sl<NotificationSyncCubit>();
-  });
-
-  test('끝남 · 실패는 곡마다 한 번만 알리고, 결과 알림을 끄면 알리지 않는다', () async {
-    await cubit.syncDownloads(
-      [item('1', DownloadStatus.downloading)],
-      on,
-      l10n,
-    );
-    await cubit.syncDownloads([item('1', DownloadStatus.failed)], on, l10n);
-    await cubit.syncDownloads([item('1', DownloadStatus.failed)], on, l10n);
-    expect(notifier.calls.where((c) => c == 'failed:1'), hasLength(1));
-    notifier.calls.clear();
-    await cubit.syncDownloads(
-      [item('2', DownloadStatus.done)],
-      on.copyWith(downloadResult: false),
-      l10n,
-    );
-    expect(notifier.calls.where((c) => c.startsWith('done')), isEmpty);
   });
 
   final track = Track(

@@ -611,8 +611,6 @@
   "permAudioDesc": "Used to load music stored on this device.",
   "permBlockedDesc": "Blocked. Tap to turn it on in system settings.",
   "settingsNotifications": "Notifications",
-  "settingsNotifyDownloadResult": "Download results",
-  "settingsNotifyDownloadResultDesc": "Tells you when a download finishes or fails.",
   "settingsNotifyPlayback": "Playback controls",
   "settingsNotifyPlaybackDesc": "Control playback from the notification shade and lock screen.",
   "settingsNotifyPermission": "System notifications are off",
@@ -622,11 +620,5 @@
   "notifPreviewLabel": "Preview",
   "notifHiddenNote": "Song info hidden",
   "notifStop": "Close",
-  "notifChannelPlayback": "Playback",
-  "notifChannelDownloadDone": "Download complete",
-  "notifChannelDownloadFailed": "Download failed",
-  "notifDownloadDoneTitle": "Download complete",
-  "notifDownloadDoneHidden": "A song was added to your library",
-  "notifDownloadFailedTitle": "Download failed",
-  "notifDownloadFailedHidden": "A song could not be downloaded"
+  "notifChannelPlayback": "Playback"
 }
