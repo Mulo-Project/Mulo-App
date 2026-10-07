@@ -2888,6 +2888,12 @@ abstract class AppLocalizations {
   /// **'{count}곡을 받기 시작했어요'**
   String playlistImportStarted(int count);
 
+  /// No description provided for @playlistImportStartedSkipped.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}곡을 받기 시작했어요 (이미 받은 {skipped}곡은 건너뛰었어요)'**
+  String playlistImportStartedSkipped(int count, int skipped);
+
   /// No description provided for @searchPlaylistPick.
   ///
   /// In ko, this message translates to:

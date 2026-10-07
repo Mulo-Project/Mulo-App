@@ -74,26 +74,37 @@ class PlaylistImportResult extends Equatable {
     required this.playlistId,
     required this.thumbnailUrl,
     required this.queued,
+    this.skipped = 0,
   });
 
   final String playlistId;
   final String? thumbnailUrl;
   final int queued;
 
+  /// 이미 받았거나 받는 중이라 다시 받지 않은 곡 수 (이미 받은 곡은 새 재생목록에는 담긴다).
+  final int skipped;
+
   @override
-  List<Object?> get props => [playlistId, thumbnailUrl, queued];
+  List<Object?> get props => [playlistId, thumbnailUrl, queued, skipped];
 }
 
 /// 유튜브 재생목록 가져오기 (상세 기능: 유튜브 재생목록 가져오기 #22):
 /// 주소로 곡 목록을 읽고, 고른 곡을 같은 이름의 새 재생목록으로 받는다.
-/// 늦게 온 옛 요청의 답은 버린다.
+/// 이미 받은 곡은 다시 받지 않고 새 재생목록에만 담는다. 늦게 온 옛 요청의 답은 버린다.
 class PlaylistImportCubit extends Cubit<PlaylistImportState> {
-  PlaylistImportCubit(this._info, this._enqueue, this._create)
-    : super(const PlaylistImportState());
+  PlaylistImportCubit(
+    this._info,
+    this._enqueue,
+    this._create,
+    this._findExisting,
+    this._addTracks,
+  ) : super(const PlaylistImportState());
 
   final FetchMediaInfo _info;
   final EnqueueDownload _enqueue;
   final CreatePlaylist _create;
+  final FindExistingDownload _findExisting;
+  final AddTracksToPlaylist _addTracks;
 
   int _request = 0;
 
@@ -166,7 +177,16 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
     final made = await _create(state.title.isEmpty ? '?' : state.title);
     if (made == null) return null;
     var queued = 0;
+    var skipped = 0;
+    final already = <String>{};
     for (final hit in picked) {
+      // 이미 받은 곡은 다시 받지 않는다 (재생목록은 다시 가져와도 같은 곡이 쌓이지 않도록).
+      final existing = await _findExisting(hit.url);
+      if (existing.exists) {
+        skipped++;
+        if (existing.trackId case final id?) already.add(id);
+        continue;
+      }
       final ok = await _enqueue(
         DownloadRequest(
           title: hit.title,
@@ -179,10 +199,14 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
       );
       if (ok) queued++;
     }
+    if (already.isNotEmpty) {
+      await _addTracks(AddTracksToPlaylistParams(already, made.id));
+    }
     return PlaylistImportResult(
       playlistId: made.id,
       thumbnailUrl: state.thumbnailUrl,
       queued: queued,
+      skipped: skipped,
     );
   }
 }

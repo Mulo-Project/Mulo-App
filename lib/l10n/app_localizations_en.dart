@@ -1538,5 +1538,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String playlistImportStartedSkipped(int count, int skipped) {
+    return 'Started downloading $count songs ($skipped already downloaded were skipped)';
+  }
+
+  @override
   String get searchPlaylistPick => 'Choose & download';
 }

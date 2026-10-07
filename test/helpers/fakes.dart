@@ -14,6 +14,7 @@ import 'package:music_download_play_app/features/engine/domain/repositories/engi
 import 'package:music_download_play_app/features/downloads/domain/entities/download_item.dart';
 import 'package:music_download_play_app/features/downloads/domain/entities/download_options.dart';
 import 'package:music_download_play_app/features/downloads/domain/entities/download_request.dart';
+import 'package:music_download_play_app/features/downloads/domain/entities/download_source.dart';
 import 'package:music_download_play_app/features/downloads/domain/repositories/download_queue_repository.dart';
 import 'package:music_download_play_app/features/downloads/domain/repositories/download_settings_repository.dart';
 import 'package:music_download_play_app/features/home/di.dart';
@@ -203,6 +204,21 @@ class MemoryDownloadSettings implements DownloadSettingsRepository {
 
   @override
   Future<void> saveSavePath(String value) async => path = value;
+
+  Quality quality = Quality.best;
+  AudioFormat format = AudioFormat.opus;
+
+  @override
+  Future<Quality> loadQuality() async => quality;
+
+  @override
+  Future<void> saveQuality(Quality value) async => quality = value;
+
+  @override
+  Future<AudioFormat> loadFormat() async => format;
+
+  @override
+  Future<void> saveFormat(AudioFormat value) async => format = value;
 
   @override
   Future<String?> pickFolder() async => picked;
@@ -406,6 +422,13 @@ class MemoryDownloadQueue implements DownloadQueueRepository {
 
   /// 받기 요청 기록.
   final requests = <DownloadRequest>[];
+
+  /// 원본 주소 → 이미 받은 곡 · 받는 중 (재생목록 가져오기 건너뛰기 시험용).
+  final existing = <String, ExistingDownload>{};
+
+  @override
+  Future<ExistingDownload> findExisting(String url) async =>
+      existing[url] ?? ExistingDownload.none;
 
   @override
   Stream<List<DownloadItem>> watchQueue() async* {

@@ -1510,5 +1510,10 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String playlistImportStartedSkipped(int count, int skipped) {
+    return '$count곡을 받기 시작했어요 (이미 받은 $skipped곡은 건너뛰었어요)';
+  }
+
+  @override
   String get searchPlaylistPick => '골라서 받기';
 }

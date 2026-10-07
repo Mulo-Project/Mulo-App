@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:music_download_play_app/features/downloads/domain/entities/download_source.dart';
 import 'package:music_download_play_app/features/downloads/domain/usecases/download_usecases.dart';
 import 'package:music_download_play_app/features/playlists/domain/usecases/playlist_usecases.dart';
 import 'package:music_download_play_app/features/playlists/presentation/bloc/playlist_import_cubit.dart';
@@ -32,6 +33,8 @@ _setUp(MediaInfo info) {
       FetchMediaInfo(engine),
       EnqueueDownload(queue),
       CreatePlaylist(lists),
+      FindExistingDownload(queue),
+      AddTracksToPlaylist(lists),
     ),
     queue: queue,
     lists: lists,
@@ -89,6 +92,25 @@ void main() {
     );
     final made = (await s.lists.watchPlaylists().first).last;
     expect(made.name, '내 목록');
+  });
+
+  test('이미 받은 곡은 다시 받지 않고 새 재생목록에만 담는다', () async {
+    final s = _setUp(
+      PlaylistInfo(title: '내 목록', entries: [_hit('a'), _hit('b'), _hit('c')]),
+    );
+    s.queue.existing['https://example.com/a'] = const ExistingDownload(
+      trackId: 'download:old',
+    );
+    s.queue.existing['https://example.com/b'] = const ExistingDownload(
+      inQueue: true,
+    );
+    await s.cubit.load(_url);
+    final result = await s.cubit.start();
+
+    expect(result?.queued, 1);
+    expect(result?.skipped, 2);
+    expect(s.queue.requests.map((r) => r.title), ['Title c']);
+    expect(s.lists.members[result!.playlistId], {'download:old'});
   });
 
   test('고른 곡이 없으면 아무것도 만들지 않는다', () async {

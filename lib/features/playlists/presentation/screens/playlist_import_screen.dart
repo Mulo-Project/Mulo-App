@@ -61,7 +61,16 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
     }
     router.pop();
     messenger.showSnackBar(
-      SnackBar(content: Text(l10n.playlistImportStarted(result.queued))),
+      SnackBar(
+        content: Text(
+          result.skipped == 0
+              ? l10n.playlistImportStarted(result.queued)
+              : l10n.playlistImportStartedSkipped(
+                  result.queued,
+                  result.skipped,
+                ),
+        ),
+      ),
     );
   }
 

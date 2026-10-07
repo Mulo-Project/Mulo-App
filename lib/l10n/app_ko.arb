@@ -650,6 +650,8 @@
   "playlistImportClear": "선택 해제",
   "playlistImportStart": "{count}곡 받기",
   "playlistImportStarted": "{count}곡을 받기 시작했어요",
+  "playlistImportStartedSkipped": "{count}곡을 받기 시작했어요 (이미 받은 {skipped}곡은 건너뛰었어요)",
+  "@playlistImportStartedSkipped": {"placeholders": {"count": {"type": "int"}, "skipped": {"type": "int"}}},
   "searchPlaylistPick": "골라서 받기",
   "@playlistImportStart": {"placeholders": {"count": {"type": "int"}}},
   "@playlistImportStarted": {"placeholders": {"count": {"type": "int"}}}

@@ -21,7 +21,7 @@ Future<bool> showDownloadDialog(
   required String title,
   String artist = '',
   String genre = '',
-  Quality quality = Quality.best,
+  Quality? quality,
   Duration? duration,
   String? thumbnailUrl,
   required String url,
@@ -70,7 +70,7 @@ class _DownloadSheet extends StatefulWidget {
     required this.title,
     required this.artist,
     required this.genre,
-    required this.quality,
+    this.quality,
     required this.url,
     this.duration,
     this.thumbnailUrl,
@@ -79,7 +79,7 @@ class _DownloadSheet extends StatefulWidget {
   final String title;
   final String artist;
   final String genre;
-  final Quality quality;
+  final Quality? quality;
   final Duration? duration;
   final String? thumbnailUrl;
   final String url;

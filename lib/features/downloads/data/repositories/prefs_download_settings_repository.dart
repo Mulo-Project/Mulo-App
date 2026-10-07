@@ -10,6 +10,8 @@ import '../../domain/repositories/download_settings_repository.dart';
 /// 기본 저장 위치를 shared_preferences에 저장한다.
 class PrefsDownloadSettingsRepository implements DownloadSettingsRepository {
   static const _key = 'download.savePath';
+  static const _qualityKey = 'download.quality';
+  static const _formatKey = 'download.format';
 
   @override
   List<AudioFormat> selectableFormats() => selectableSaveFormats();
@@ -22,6 +24,38 @@ class PrefsDownloadSettingsRepository implements DownloadSettingsRepository {
   @override
   Future<void> saveSavePath(String path) async =>
       (await SharedPreferences.getInstance()).setString(_key, path);
+
+  @override
+  Future<Quality> loadQuality() async {
+    final name = (await SharedPreferences.getInstance()).getString(_qualityKey);
+    return Quality.values.where((q) => q.name == name).firstOrNull ??
+        Quality.best;
+  }
+
+  @override
+  Future<void> saveQuality(Quality quality) async =>
+      (await SharedPreferences.getInstance()).setString(
+        _qualityKey,
+        quality.name,
+      );
+
+  @override
+  Future<AudioFormat> loadFormat() async {
+    final name = (await SharedPreferences.getInstance()).getString(_formatKey);
+    final formats = selectableFormats();
+    final saved = AudioFormat.values.where((f) => f.name == name).firstOrNull;
+    if (saved != null && formats.contains(saved)) return saved;
+    return formats.contains(AudioFormat.opus)
+        ? AudioFormat.opus
+        : formats.firstOrNull ?? AudioFormat.opus;
+  }
+
+  @override
+  Future<void> saveFormat(AudioFormat format) async =>
+      (await SharedPreferences.getInstance()).setString(
+        _formatKey,
+        format.name,
+      );
 
   @override
   Future<String?> pickFolder() => FilePicker.getDirectoryPath();
