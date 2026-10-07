@@ -885,6 +885,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchPreviewStop => 'Stop preview';
 
   @override
+  String get searchPreviewPause => 'Pause preview';
+
+  @override
+  String get searchPreviewResume => 'Resume preview';
+
+  @override
   String get searchPreviewLoading => 'Preparing preview';
 
   @override
@@ -1727,6 +1733,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifHiddenTitle => 'Playing music';
+
+  @override
+  String get notifPreviewLabel => 'Preview';
+
+  @override
+  String get notifHiddenNote => 'Song info hidden';
+
+  @override
+  String get notifStop => 'Close';
 
   @override
   String get notifChannelPlayback => 'Playback';

@@ -3,13 +3,16 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../downloads/domain/entities/download_item.dart';
 import '../../../downloads/presentation/bloc/download_queue_cubit.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../../search/domain/entities/media_info.dart';
+import '../../../theme/presentation/bloc/theme_cubit.dart';
 import '../../../search/presentation/bloc/preview_cubit.dart';
 import '../../domain/entities/media_session_info.dart';
 import '../../domain/repositories/download_notifier.dart';
@@ -93,6 +96,29 @@ class _NotificationBridgeState extends State<NotificationBridge>
   }
 
   void _onCommand(MediaCommand command) {
+    // 미리 듣는 동안 알림은 미리 듣기의 것: 멈추기 · 옮기기만 받는다.
+    final preview = context.read<PreviewCubit>();
+    if (preview.state.status == PreviewStatus.playing) {
+      switch (command.type) {
+        case MediaCommandType.pause:
+          if (!preview.state.paused) preview.togglePause();
+        case MediaCommandType.play:
+          if (preview.state.paused) preview.togglePause();
+        case MediaCommandType.stop:
+          preview.stop();
+        case MediaCommandType.seek:
+          final to = command.position;
+          final total = preview.state.progress?.duration;
+          if (to != null && total != null && total > Duration.zero) {
+            preview.seekTo(to.inMilliseconds / total.inMilliseconds);
+          }
+        case MediaCommandType.next:
+        case MediaCommandType.previous:
+        case MediaCommandType.favorite:
+          break;
+      }
+      return;
+    }
     final player = context.read<NowPlayingCubit>();
     final playing = player.state.isPlaying;
     switch (command.type) {
@@ -134,7 +160,28 @@ class _NotificationBridgeState extends State<NotificationBridge>
     final cover = track == null
         ? null
         : context.read<CoverCubit>().state[CoverKey.track(track.id)];
+    final previewing = context.read<PreviewCubit>().state;
+    final hit = previewing.hit;
+    final isPreview = previewing.status == PreviewStatus.playing && hit != null;
+    // 커버가 없을 때 그릴 기본 커버는 앱 안 곡 칸과 같은 색: 고른 색 > 곡마다 정해진 톤.
+    final chosen = isPreview || track == null
+        ? null
+        : context.read<CoverColorCubit>().state[CoverKey.track(track.id)];
+    final glow = chosen != null
+        ? glowFromColor(Color(chosen))
+        : context.tokens.glow(toneFor(isPreview ? hit.id : track?.id ?? ''));
     context.read<NotificationSyncCubit>().syncPlayback(
+      preview: isPreview
+          ? PreviewNotice(
+              title: previewing.title,
+              uploader: hit.uploader,
+              artUri: hit.thumbnailUrl,
+              position: previewing.progress?.position ?? Duration.zero,
+              duration: previewing.progress?.duration,
+              paused: previewing.paused,
+            )
+          : null,
+      coverColors: [for (final c in glow) c.toARGB32()],
       track: track,
       isPlaying: now.isPlaying,
       position: now.position,
@@ -164,7 +211,19 @@ class _NotificationBridgeState extends State<NotificationBridge>
       BlocListener<NowPlayingCubit, NowPlayingState>(
         listener: (_, _) => _syncPlayback(),
       ),
+      BlocListener<ThemeCubit, ThemeState>(
+        listenWhen: (a, b) => a != b,
+        listener: (_, _) => WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _syncPlayback();
+        }),
+      ),
+      BlocListener<PreviewCubit, PreviewState>(
+        listener: (_, _) => _syncPlayback(),
+      ),
       BlocListener<PlaylistsCubit, List<Playlist>>(
+        listener: (_, _) => _syncPlayback(),
+      ),
+      BlocListener<CoverColorCubit, Map<String, int>>(
         listener: (_, _) => _syncPlayback(),
       ),
       BlocListener<CoverCubit, Map<String, CoverArt>>(

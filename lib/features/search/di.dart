@@ -50,12 +50,14 @@ void registerSearch(GetIt sl) {
     ..registerFactory(() => ResolveAudioStream(sl()))
     ..registerFactory(() => PlayPreview(sl()))
     ..registerFactory(() => SeekPreview(sl()))
+    ..registerFactory(() => PausePreview(sl()))
+    ..registerFactory(() => ResumePreview(sl()))
     ..registerFactory(() => StopPreview(sl()))
     ..registerFactory(() => WatchPreviewCompleted(sl()))
     ..registerFactory(() => WatchPreviewProgress(sl()))
     ..registerFactory(() => WatchPreviewFailures(sl()))
     ..registerFactory(
-      () => PreviewCubit(sl(), sl(), sl(), sl(), sl(), sl(), sl()),
+      () => PreviewCubit(sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl()),
     )
     ..registerFactory(() => SearchCubit(sl(), sl()));
 }

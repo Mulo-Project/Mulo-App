@@ -7,6 +7,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/design/design.dart';
+import 'package:music_download_play_app/core/di/injector.dart';
+import 'package:music_download_play_app/features/notifications/domain/repositories/media_session.dart';
 import 'package:music_download_play_app/features/player/presentation/bloc/now_playing_cubit.dart';
 import 'package:music_download_play_app/features/search/data/engine/cached_engine.dart';
 import 'package:music_download_play_app/features/search/data/engine/explode_engine.dart';
@@ -30,6 +32,8 @@ PreviewCubit _cubit(FakeDownloaderEngine e, FakePreviewPlayer p) =>
       ResolveAudioStream(e),
       PlayPreview(p),
       SeekPreview(p),
+      PausePreview(p),
+      ResumePreview(p),
       StopPreview(p),
       WatchPreviewCompleted(p),
       WatchPreviewProgress(p),
@@ -179,6 +183,29 @@ void main() {
       expect(cubit.state.fraction, closeTo(.25, .001));
       await cubit.stop();
       expect(cubit.state.progress, isNull);
+      await cubit.close();
+    });
+
+    test('togglePause: 일시정지와 이어 듣기를 오가고, 위치는 그대로 둔다', () async {
+      final player = FakePreviewPlayer();
+      final cubit = _cubit(FakeDownloaderEngine(info: VideoInfo(_a)), player);
+      await cubit.togglePause();
+      expect(player.pauses, 0);
+      await cubit.toggle(_a);
+      player.progress(const Duration(seconds: 30), const Duration(minutes: 2));
+      await Future<void>.delayed(Duration.zero);
+      await cubit.togglePause();
+      expect(cubit.state.paused, isTrue);
+      expect(cubit.state.status, PreviewStatus.playing);
+      expect(player.pauses, 1);
+      player.progress(const Duration(seconds: 31), const Duration(minutes: 2));
+      await Future<void>.delayed(Duration.zero);
+      expect(cubit.state.paused, isTrue);
+      await cubit.togglePause();
+      expect(cubit.state.paused, isFalse);
+      expect(player.resumes, 1);
+      await cubit.stop();
+      expect(cubit.state.paused, isFalse);
       await cubit.close();
     });
 
@@ -354,6 +381,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(player.playing, isTrue);
       expect(find.byKey(const ValueKey('preview-mini-bar')), findsOneWidget);
+      // 재생 알림이 미리 듣는 곡으로 바뀐다.
+      final session = sl<MediaSession>() as FakeMediaSession;
+      expect(session.updates.last?.preview, isTrue);
 
       await tester.tap(find.byKey(const ValueKey('preview-row-button')));
       await tester.pumpAndSettle();
@@ -446,12 +476,23 @@ void main() {
       expect(player.playing, isTrue);
       expect(find.byKey(const ValueKey('preview-mini-bar')), findsOneWidget);
 
-      // 다른 화면의 미리 듣기 줄에서 멈춘다.
+      // 다른 화면의 미리 듣기 줄에서 잠시 멈췄다 이어 듣는다.
+      await tester.tap(find.byKey(const ValueKey('preview-mini-pause')));
+      await tester.pumpAndSettle();
+      expect(player.playing, isFalse);
+      expect(find.byKey(const ValueKey('preview-mini-bar')), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('preview-mini-pause')));
+      await tester.pumpAndSettle();
+      expect(player.playing, isTrue);
+
+      // 멈추기는 끝낸다.
       await tester.tap(
-        find.descendant(
-          of: find.byKey(const ValueKey('preview-mini-bar')),
-          matching: find.byType(RowIconButton),
-        ),
+        find
+            .descendant(
+              of: find.byKey(const ValueKey('preview-mini-bar')),
+              matching: find.byType(RowIconButton),
+            )
+            .last,
       );
       await tester.pumpAndSettle();
       expect(player.playing, isFalse);

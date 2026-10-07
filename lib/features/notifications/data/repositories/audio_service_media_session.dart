@@ -55,24 +55,26 @@ class AudioServiceMediaSession implements MediaSession {
     return _artCopies[uri] = file.uri.toString();
   }
 
-  String? _defaultArt;
+  final _defaultArt = <String, String>{};
 
-  /// 커버가 없는 곡에 보여 줄 앱 기본 커버 (보라 그라데이션 + 음표). 처음 한 번 그려 파일로 둔다.
-  Future<String?> _defaultCover() async {
-    if (_defaultArt != null) return _defaultArt;
+  /// 커버가 없는 곡에 보여 줄 앱 기본 커버 (테마색 그라데이션 + 음표). 색마다 한 번 그려 파일로 둔다.
+  Future<String?> _defaultCover(List<int> colors) async {
+    final key = colors.map((c) => c.toRadixString(16)).join('_');
+    final known = _defaultArt[key];
+    if (known != null) return known;
     try {
       final dir = await getApplicationSupportDirectory();
-      final file = File('${dir.path}/notification_default_cover.png');
+      final file = File('${dir.path}/notification_cover_$key.png');
       if (!file.existsSync()) {
-        await file.writeAsBytes(await _paintDefaultCover());
+        await file.writeAsBytes(await _paintDefaultCover(colors));
       }
-      return _defaultArt = file.uri.toString();
+      return _defaultArt[key] = file.uri.toString();
     } catch (_) {
       return null;
     }
   }
 
-  static Future<Uint8List> _paintDefaultCover() async {
+  static Future<Uint8List> _paintDefaultCover(List<int> colors) async {
     const size = 512.0;
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
@@ -83,7 +85,7 @@ class AudioServiceMediaSession implements MediaSession {
         ..shader = ui.Gradient.radial(
           const Offset(size * .2, size * .15),
           size * 1.4,
-          [AppPalette.watercolorLavender, AppPalette.violet, AppPalette.black],
+          [for (final c in colors) Color(c)],
           const [0, .5, 1],
         ),
     );
@@ -118,7 +120,11 @@ class AudioServiceMediaSession implements MediaSession {
       handler?.show(null);
       return;
     }
-    final art = await _localArt(info.artUri) ?? await _defaultCover();
+    final art =
+        await _localArt(info.artUri) ??
+        (info.coverColors.length == 3
+            ? await _defaultCover(info.coverColors)
+            : null);
     // 기다리는 사이 더 새 요청이 왔으면 이 요청은 버린다.
     if (seq != _seq) return;
     handler?.show(art == info.artUri ? info : info.withArtUri(art));
