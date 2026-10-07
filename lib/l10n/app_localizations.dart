@@ -3200,6 +3200,12 @@ abstract class AppLocalizations {
   /// **'미리 듣기'**
   String get notifPreviewLabel;
 
+  /// No description provided for @notifHiddenNote.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 정보 숨김'**
+  String get notifHiddenNote;
+
   /// No description provided for @notifStop.
   ///
   /// In ko, this message translates to:

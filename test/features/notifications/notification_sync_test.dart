@@ -147,7 +147,7 @@ void main() {
     await play(on.copyWith(hideSongInfo: true));
     final info = session.updates.single!;
     expect(info.title, '음악 재생 중');
-    expect(info.artist, isEmpty);
+    expect(info.artist, '곡 정보 숨김');
     expect(info.artUri, isNull);
   });
 
@@ -217,7 +217,7 @@ void main() {
       await sync(preview: notice, settings: on.copyWith(hideSongInfo: true));
       final info = session.updates.last!;
       expect(info.title, '음악 재생 중');
-      expect(info.artist, '미리 듣기');
+      expect(info.artist, '곡 정보 숨김 · 미리 듣기');
       expect(info.artUri, isNull);
     });
 

@@ -710,6 +710,7 @@
   "settingsNotifyOpenSettings": "설정 열기",
   "notifHiddenTitle": "음악 재생 중",
   "notifPreviewLabel": "미리 듣기",
+  "notifHiddenNote": "곡 정보 숨김",
   "notifStop": "닫기",
   "notifChannelPlayback": "재생",
   "notifChannelDownloadProgress": "받는 중",

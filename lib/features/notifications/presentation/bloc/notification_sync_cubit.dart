@@ -155,7 +155,9 @@ class NotificationSyncCubit extends Cubit<void> {
     final next = preview != null
         ? MediaSessionInfo(
             title: hide ? l10n.notifHiddenTitle : preview.title,
-            artist: hide || preview.uploader.isEmpty
+            artist: hide
+                ? '${l10n.notifHiddenNote} · ${l10n.notifPreviewLabel}'
+                : preview.uploader.isEmpty
                 ? l10n.notifPreviewLabel
                 : '${preview.uploader} · ${l10n.notifPreviewLabel}',
             artUri: hide ? null : preview.artUri,
@@ -169,7 +171,7 @@ class NotificationSyncCubit extends Cubit<void> {
         : MediaSessionInfo(
             title: hide ? l10n.notifHiddenTitle : track!.title,
             artist: hide
-                ? ''
+                ? l10n.notifHiddenNote
                 : (track!.artist.isEmpty ? l10n.unknownArtist : track.artist),
             album: hide ? '' : track!.album,
             artUri: hide ? null : artUri,

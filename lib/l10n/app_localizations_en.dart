@@ -1718,6 +1718,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifPreviewLabel => 'Preview';
 
   @override
+  String get notifHiddenNote => 'Song info hidden';
+
+  @override
   String get notifStop => 'Close';
 
   @override
