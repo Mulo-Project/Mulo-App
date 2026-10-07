@@ -31,7 +31,16 @@ class MuloAudioHandler extends BaseAudioHandler {
       artUri: art,
     );
     // 곡 · 커버가 같으면 다시 보내지 않는다 (알림이 깜빡이지 않게).
-    if (mediaItem.value != item) mediaItem.add(item);
+    // MediaItem의 ==는 id만 비교하고 id가 늘 같으므로, 보이는 값을 직접 견준다.
+    final shown = mediaItem.value;
+    if (shown == null ||
+        shown.title != item.title ||
+        shown.artist != item.artist ||
+        shown.album != item.album ||
+        shown.duration != item.duration ||
+        shown.artUri != item.artUri) {
+      mediaItem.add(item);
+    }
 
     final controls = [
       if (info.hasPrevious) MediaControl.skipToPrevious,
