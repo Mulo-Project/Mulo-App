@@ -505,6 +505,7 @@
   "downloadNewPlaylist": "새 재생목록",
   "downloadNewPlaylistHint": "이름을 입력하고 +",
   "downloadQueued": "대기열에 넣었어요",
+  "downloadAlreadyDownloaded": "이미 받은 곡이에요",
   "downloadStateDownloading": "받는 중",
   "downloadStateQueued": "대기 중",
   "downloadStateDone": "받음",

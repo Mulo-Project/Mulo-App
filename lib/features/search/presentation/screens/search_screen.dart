@@ -368,7 +368,12 @@ class _HitTile extends StatelessWidget {
         l10n.downloadStateQueued,
       ),
       DownloadStatus.done => (AppIcons.checkCircle, l10n.downloadStateDone),
-      _ when hit.downloaded => (AppIcons.checkCircle, l10n.downloadStateDone),
+      _
+          when hit.downloaded ||
+              context.select<DownloadQueueCubit, bool>(
+                (c) => c.isDownloaded(hit.url),
+              ) =>
+        (AppIcons.checkCircle, l10n.downloadStateDone),
       _ => (AppIcons.download, l10n.actionDownload),
     };
 

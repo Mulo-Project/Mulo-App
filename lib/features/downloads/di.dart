@@ -57,13 +57,14 @@ void registerDownloads(GetIt sl) {
     ..registerFactory(() => WatchDownloadQueue(sl()))
     ..registerFactory(() => EnqueueDownload(sl()))
     ..registerFactory(() => FindExistingDownload(sl()))
+    ..registerFactory(() => LoadDownloadedKeys(sl()))
     ..registerFactory(() => PauseDownload(sl()))
     ..registerFactory(() => ResumeDownload(sl()))
     ..registerFactory(() => RetryDownload(sl()))
     ..registerFactory(() => CancelDownload(sl()))
     ..registerFactory(() => CancelAllDownloads(sl()))
     ..registerFactory(
-      () => DownloadQueueCubit(sl(), sl(), sl(), sl(), sl(), sl(), sl()),
+      () => DownloadQueueCubit(sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl()),
     );
 }
 

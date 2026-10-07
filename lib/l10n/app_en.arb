@@ -412,6 +412,7 @@
   "downloadNewPlaylist": "New playlist",
   "downloadNewPlaylistHint": "Type a name, then +",
   "downloadAlreadyInQueue": "This song is already downloading or queued",
+  "downloadAlreadyDownloaded": "This song is already downloaded",
   "downloadStateDownloading": "Downloading",
   "downloadStateQueued": "Queued",
   "downloadStateDone": "Downloaded",

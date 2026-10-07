@@ -1077,6 +1077,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadQueued => '대기열에 넣었어요';
 
   @override
+  String get downloadAlreadyDownloaded => '이미 받은 곡이에요';
+
+  @override
   String get downloadStateDownloading => '받는 중';
 
   @override

@@ -443,6 +443,9 @@ class MemoryDownloadQueue implements DownloadQueueRepository {
       existing[url] ?? ExistingDownload.none;
 
   @override
+  Future<Set<String>> downloadedKeys() async => {};
+
+  @override
   Stream<List<DownloadItem>> watchQueue() async* {
     yield [...items];
     yield* _changes.stream;

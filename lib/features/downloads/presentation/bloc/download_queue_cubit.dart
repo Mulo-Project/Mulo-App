@@ -10,9 +10,15 @@ import '../../domain/entities/download_source.dart';
 import '../../domain/usecases/download_usecases.dart';
 
 class DownloadQueueState extends Equatable {
-  const DownloadQueueState({this.items = const []});
+  const DownloadQueueState({
+    this.items = const [],
+    this.downloadedKeys = const {},
+  });
 
   final List<DownloadItem> items;
+
+  /// 이미 받아 보관함에 있는 곡들의 원본 주소 키.
+  final Set<String> downloadedKeys;
 
   /// 카드에 보여 줄 곡: 지금 받는 곡, 없으면 일시정지한 첫 곡, 없으면 실패한 첫 곡 (다시 받기 버튼을 보이려고).
   DownloadItem? get current {
@@ -69,7 +75,7 @@ class DownloadQueueState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [items];
+  List<Object?> get props => [items, downloadedKeys];
 }
 
 /// 검색 탭의 다운로드 카드 · 대기열. 대기열 변경을 구독한다.
@@ -81,8 +87,9 @@ class DownloadQueueCubit extends Cubit<DownloadQueueState> {
     this._resume,
     this._retry,
     this._cancel,
-    this._cancelAll,
-  ) : super(const DownloadQueueState());
+    this._cancelAll, [
+    this._loadDownloaded,
+  ]) : super(const DownloadQueueState());
 
   final WatchDownloadQueue _watch;
   final EnqueueDownload _enqueue;
@@ -91,13 +98,42 @@ class DownloadQueueCubit extends Cubit<DownloadQueueState> {
   final RetryDownload _retry;
   final CancelDownload _cancel;
   final CancelAllDownloads _cancelAll;
+  final LoadDownloadedKeys? _loadDownloaded;
   StreamSubscription<List<DownloadItem>>? _sub;
 
   void start() {
     _sub?.cancel();
-    _sub = _watch(const NoParams())
-        .listen((items) => emit(DownloadQueueState(items: items)));
+    var done = -1;
+    _sub = _watch(const NoParams()).listen((items) {
+      emit(
+        DownloadQueueState(items: items, downloadedKeys: state.downloadedKeys),
+      );
+      // 처음 한 번, 그리고 받기가 끝난 곡이 늘 때마다 받은 곡 목록을 다시 읽는다.
+      final count = items.where((i) => i.status == DownloadStatus.done).length;
+      if (count != done) {
+        done = count;
+        _refreshDownloaded();
+      }
+    });
   }
+
+  Future<void> _refreshDownloaded() async {
+    final load = _loadDownloaded;
+    if (load == null) return;
+    final keys = await load(const NoParams());
+    if (!isClosed) {
+      emit(DownloadQueueState(items: state.items, downloadedKeys: keys));
+    }
+  }
+
+  /// 이미 받아 보관함에 있는 곡인지.
+  bool isDownloaded(String url) =>
+      state.downloadedKeys.contains(downloadSourceKey(url)) ||
+      state.items.any(
+        (e) =>
+            e.status == DownloadStatus.done &&
+            downloadSourceKey(e.url) == downloadSourceKey(url),
+      );
 
   /// 같은 원본 주소의 곡이 이미 받는 중 · 대기 · 일시정지인지.
   bool isInQueue(String url) {

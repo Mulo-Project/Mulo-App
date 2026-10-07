@@ -45,6 +45,16 @@ class FindExistingDownload implements UseCase<ExistingDownload, String> {
   Future<ExistingDownload> call(String url) => _repo.findExisting(url);
 }
 
+/// 이미 받은 곡들의 원본 주소 키 (받기 버튼을 "받음"으로 보이고 다시 받지 못하게).
+class LoadDownloadedKeys implements UseCase<Set<String>, NoParams> {
+  const LoadDownloadedKeys(this._repo);
+
+  final DownloadQueueRepository _repo;
+
+  @override
+  Future<Set<String>> call(NoParams params) => _repo.downloadedKeys();
+}
+
 /// 일시정지 (상세 기능: 다운로드 대기열 #7).
 class PauseDownload implements UseCase<void, String> {
   const PauseDownload(this._repo);

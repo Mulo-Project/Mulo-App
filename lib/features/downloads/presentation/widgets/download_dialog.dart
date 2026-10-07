@@ -27,6 +27,20 @@ Future<bool> showDownloadDialog(
   required String url,
 }) async {
   final queue = context.read<DownloadQueueCubit>();
+  // 이미 받았거나 받는 중인 곡은 팝업을 열지 않고 알린다.
+  if (queue.isDownloaded(url) || queue.isInQueue(url)) {
+    final l10n = context.l10n;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          queue.isDownloaded(url)
+              ? l10n.downloadAlreadyDownloaded
+              : l10n.downloadAlreadyInQueue,
+        ),
+      ),
+    );
+    return false;
+  }
   final playlists = context.read<PlaylistsCubit>();
   final settings = context.read<DownloadSettingsCubit>();
   final library = context.read<LibraryCubit>();

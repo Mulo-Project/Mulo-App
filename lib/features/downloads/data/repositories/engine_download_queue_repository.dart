@@ -156,6 +156,16 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
   }
 
   @override
+  Future<Set<String>> downloadedKeys() async {
+    await _ensureLoaded();
+    final ids = {for (final t in await _library.watchTracks().first) t.id};
+    return {
+      for (final e in _sources.entries)
+        if (ids.contains(e.value)) e.key,
+    };
+  }
+
+  @override
   Future<void> enqueue(DownloadRequest request) async {
     await _ensureLoaded();
     // 끝난 곡은 새로 받기 시작할 때 목록에서 치운다.
