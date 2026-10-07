@@ -12,9 +12,9 @@ class MuloAudioHandler extends BaseAudioHandler {
   static const _favoriteAction = 'favorite';
   static const _stopAction = 'stop_playback';
 
-  /// 닫기(정지) 버튼: 기본 아이콘이 다른 버튼보다 커 보여, 크기를 맞춘 아이콘을 쓴다.
+  /// 닫기(X) 버튼: 눌러서 알림을 끈다. 기본 정지 아이콘은 다른 버튼보다 커 보여 크기를 맞춘 X 아이콘을 쓴다.
   static MediaControl get _stopControl => MediaControl.custom(
-    androidIcon: 'drawable/ic_notif_stop',
+    androidIcon: 'drawable/ic_notif_close',
     label: systemL10n().notifStop,
     name: _stopAction,
   );
