@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../downloads/presentation/bloc/download_queue_cubit.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
@@ -119,11 +120,18 @@ class _NotificationBridgeState extends State<NotificationBridge>
     final cover = track == null
         ? null
         : context.read<CoverCubit>().state[CoverKey.track(track.id)];
-    final p = context.palette;
     final previewing = context.read<PreviewCubit>().state;
     final hit = previewing.hit;
+    final isPreview = previewing.status == PreviewStatus.playing && hit != null;
+    // 커버가 없을 때 그릴 기본 커버는 앱 안 곡 칸과 같은 색: 고른 색 > 곡마다 정해진 톤.
+    final chosen = isPreview || track == null
+        ? null
+        : context.read<CoverColorCubit>().state[CoverKey.track(track.id)];
+    final glow = chosen != null
+        ? glowFromColor(Color(chosen))
+        : context.tokens.glow(toneFor(isPreview ? hit.id : track?.id ?? ''));
     context.read<NotificationSyncCubit>().syncPlayback(
-      preview: previewing.status == PreviewStatus.playing && hit != null
+      preview: isPreview
           ? PreviewNotice(
               title: previewing.title,
               uploader: hit.uploader,
@@ -133,11 +141,7 @@ class _NotificationBridgeState extends State<NotificationBridge>
               paused: previewing.paused,
             )
           : null,
-      coverColors: [
-        p.accent.toARGB32(),
-        p.primary.toARGB32(),
-        Color.lerp(p.primary, const Color(0xFF000000), .65)!.toARGB32(),
-      ],
+      coverColors: [for (final c in glow) c.toARGB32()],
       track: track,
       isPlaying: now.isPlaying,
       position: now.position,
@@ -177,6 +181,9 @@ class _NotificationBridgeState extends State<NotificationBridge>
         listener: (_, _) => _syncPlayback(),
       ),
       BlocListener<PlaylistsCubit, List<Playlist>>(
+        listener: (_, _) => _syncPlayback(),
+      ),
+      BlocListener<CoverColorCubit, Map<String, int>>(
         listener: (_, _) => _syncPlayback(),
       ),
       BlocListener<CoverCubit, Map<String, CoverArt>>(

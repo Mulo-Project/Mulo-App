@@ -55,7 +55,7 @@ class MuloAudioHandler extends BaseAudioHandler {
 
     // 미리 듣기: 일시정지 · 멈추기만 있다 (멈추면 앞에 듣던 곡으로 돌아간다).
     final controls = info.preview
-        ? [info.playing ? MediaControl.pause : MediaControl.play, _stopControl]
+        ? [_stopControl, info.playing ? MediaControl.pause : MediaControl.play]
         : [
             if (info.hasPrevious) MediaControl.skipToPrevious,
             info.playing ? MediaControl.pause : MediaControl.play,
@@ -77,7 +77,10 @@ class MuloAudioHandler extends BaseAudioHandler {
         controls: controls,
         systemActions: const {MediaAction.seek, MediaAction.stop},
         androidCompactActionIndices: [
-          for (var i = 0; i < (info.preview ? 1 : controls.length - 2); i++) i,
+          if (info.preview)
+            1
+          else
+            for (var i = 0; i < controls.length - 2; i++) i,
         ],
         processingState: AudioProcessingState.ready,
         playing: info.playing,
