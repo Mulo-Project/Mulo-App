@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../account/domain/entities/google_account.dart';
+import '../../../account/presentation/bloc/account_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../library/domain/entities/track.dart' show formatDuration;
 import '../../../search/domain/entities/engine_exception.dart';
@@ -42,6 +44,35 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
   }
 
   void _load() => _cubit.submit(_controller.text);
+
+  /// 내 재생목록: 로그인돼 있지 않으면 먼저 로그인한 뒤 불러온다.
+  Future<void> _openMine() async {
+    final account = context.read<AccountCubit>();
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
+    final support = account.state.support;
+    if (support != AccountSupport.available) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            support == AccountSupport.notConfigured
+                ? l10n.settingsAccountNotConfigured
+                : l10n.settingsAccountUnsupported,
+          ),
+        ),
+      );
+      return;
+    }
+    if (!account.state.signedIn && await account.signIn() == null) {
+      if (account.state.failure != null) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(l10n.settingsAccountFailed)),
+        );
+      }
+      return;
+    }
+    await _cubit.loadMine();
+  }
 
   Future<void> _start() async {
     if (_starting) return;
@@ -95,8 +126,24 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
                     onSubmitted: (_) => _load(),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                Expanded(child: _Body(onRetry: _load)),
+                Padding(
+                  padding: AppSpacing.screen.copyWith(
+                    top: AppSpacing.xs,
+                    bottom: AppSpacing.xs,
+                  ),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: PillButton(
+                      label: l10n.playlistImportMine,
+                      icon: AppIcons.playlistPlay,
+                      variant: PillVariant.tonal,
+                      onPressed: _openMine,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: _Body(onRetry: _load, onSignIn: _openMine),
+                ),
                 _Footer(starting: _starting, onStart: _start),
               ],
             ),
@@ -108,9 +155,12 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
 }
 
 class _Body extends StatelessWidget {
-  const _Body({required this.onRetry});
+  const _Body({required this.onRetry, required this.onSignIn});
 
   final VoidCallback onRetry;
+
+  /// 내 재생목록을 읽으려면 로그인해야 할 때 누르는 버튼의 동작.
+  final VoidCallback onSignIn;
 
   @override
   Widget build(BuildContext context) {
@@ -151,14 +201,27 @@ class _Body extends StatelessWidget {
         return const Center(child: CircularProgressIndicator());
       case PlaylistImportStatus.results:
         if (state.results.isEmpty) {
-          return message(
-            l10n.playlistImportNoResultsTitle,
-            l10n.playlistImportNoResultsBody,
-          );
+          return state.mine
+              ? message(
+                  l10n.playlistImportMineEmptyTitle,
+                  l10n.playlistImportMineEmptyBody,
+                )
+              : message(
+                  l10n.playlistImportNoResultsTitle,
+                  l10n.playlistImportNoResultsBody,
+                );
         }
         return ListView(
           padding: const EdgeInsets.only(bottom: AppSpacing.md),
           children: [
+            if (state.mine)
+              Padding(
+                padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
+                child: Text(
+                  l10n.playlistImportMineTitle,
+                  style: text.titleMedium,
+                ),
+              ),
             for (final hit in state.results)
               _ResultRow(
                 hit: hit,
@@ -167,6 +230,23 @@ class _Body extends StatelessWidget {
           ],
         );
       case PlaylistImportStatus.failed:
+        if (state.mine) {
+          final expired = state.accountFailure == AccountFailure.unauthorized;
+          return message(
+            expired ? l10n.playlistImportLoginTitle : l10n.searchErrorTitle,
+            switch (state.accountFailure) {
+              AccountFailure.unauthorized =>
+                l10n.playlistImportLoginExpiredBody,
+              AccountFailure.network => l10n.searchNetworkBody,
+              _ => l10n.searchErrorBody,
+            },
+            action: PillButton(
+              label: expired ? l10n.settingsAccountSignIn : l10n.actionRetry,
+              icon: expired ? AppIcons.person : AppIcons.refresh,
+              onPressed: onSignIn,
+            ),
+          );
+        }
         if (state.notPlaylist) {
           return message(
             l10n.playlistImportNotPlaylistTitle,

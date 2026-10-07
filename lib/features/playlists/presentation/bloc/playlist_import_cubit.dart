@@ -1,6 +1,9 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../account/domain/entities/google_account.dart';
+import '../../../account/domain/usecases/account_usecases.dart';
+import '../../../../core/usecase/usecase.dart';
 import '../../../downloads/domain/entities/download_request.dart';
 import '../../../downloads/domain/usecases/download_usecases.dart';
 import '../../../search/domain/entities/engine_exception.dart';
@@ -22,6 +25,8 @@ class PlaylistImportState extends Equatable {
     this.notPlaylist = false,
     this.results = const [],
     this.query = '',
+    this.mine = false,
+    this.accountFailure,
   });
 
   final PlaylistImportStatus status;
@@ -46,6 +51,12 @@ class PlaylistImportState extends Equatable {
   /// [results]를 찾은 검색어.
   final String query;
 
+  /// [results]가 로그인한 계정의 재생목록인지 (검색 결과가 아니라).
+  final bool mine;
+
+  /// 내 재생목록을 읽다 실패한 까닭 (로그인이 풀렸는지 등).
+  final AccountFailure? accountFailure;
+
   bool get allSelected =>
       entries.isNotEmpty && selected.length == entries.length;
 
@@ -65,6 +76,7 @@ class PlaylistImportState extends Equatable {
     notPlaylist: notPlaylist,
     results: results,
     query: query,
+    mine: mine,
   );
 
   @override
@@ -78,6 +90,8 @@ class PlaylistImportState extends Equatable {
     notPlaylist,
     results,
     query,
+    mine,
+    accountFailure,
   ];
 }
 
@@ -101,11 +115,17 @@ class PlaylistImportResult extends Equatable {
 /// 주소로 곡 목록을 읽고, 고른 곡을 같은 이름의 새 재생목록으로 받는다.
 /// 늦게 온 옛 요청의 답은 버린다.
 class PlaylistImportCubit extends Cubit<PlaylistImportState> {
-  PlaylistImportCubit(this._info, this._search, this._enqueue, this._create)
-    : super(const PlaylistImportState());
+  PlaylistImportCubit(
+    this._info,
+    this._search,
+    this._mine,
+    this._enqueue,
+    this._create,
+  ) : super(const PlaylistImportState());
 
   final FetchMediaInfo _info;
   final SearchPlaylists _search;
+  final FetchMyPlaylists _mine;
   final EnqueueDownload _enqueue;
   final CreatePlaylist _create;
 
@@ -154,6 +174,32 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
     }
   }
 
+  /// 로그인한 계정의 유튜브 재생목록을 불러와 목록으로 보여 준다 (로그인은 미리 돼 있어야 한다).
+  Future<void> loadMine() async {
+    final id = ++_request;
+    emit(const PlaylistImportState(status: PlaylistImportStatus.loading));
+    try {
+      final items = await _mine(const NoParams());
+      if (id != _request) return;
+      emit(
+        PlaylistImportState(
+          status: PlaylistImportStatus.results,
+          results: items,
+          mine: true,
+        ),
+      );
+    } on AccountException catch (e) {
+      if (id != _request) return;
+      emit(
+        PlaylistImportState(
+          status: PlaylistImportStatus.failed,
+          accountFailure: e.failure,
+          mine: true,
+        ),
+      );
+    }
+  }
+
   /// 찾은 재생목록 하나를 골라 곡 목록을 읽는다.
   Future<void> open(PlaylistHit hit) => load(hit.url);
 
@@ -165,6 +211,7 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
         status: PlaylistImportStatus.results,
         results: state.results,
         query: state.query,
+        mine: state.mine,
       ),
     );
   }
@@ -178,11 +225,13 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
     }
     final keep = state.results;
     final keepQuery = state.query;
+    final keepMine = state.mine;
     emit(
       PlaylistImportState(
         status: PlaylistImportStatus.loading,
         results: keep,
         query: keepQuery,
+        mine: keepMine,
       ),
     );
     try {
@@ -206,6 +255,7 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
               selected: {for (final e in usable) e.id},
               results: keep,
               query: keepQuery,
+              mine: keepMine,
             ),
           );
         case VideoInfo():
@@ -215,6 +265,7 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
               notPlaylist: true,
               results: keep,
               query: keepQuery,
+              mine: keepMine,
             ),
           );
       }
@@ -226,6 +277,7 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
           failure: e.failure,
           results: keep,
           query: keepQuery,
+          mine: keepMine,
         ),
       );
     }

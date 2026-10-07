@@ -475,3 +475,11 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - 주소를 모르는 사용자를 위해 가져오기 화면 입력칸이 이름과 주소를 모두 받는다 (`http` · `youtube.com/` · `youtu.be/`가 들어 있으면 주소). 별도 탭을 만들지 않고 결과는 한 줄짜리 목록(카드 없음)으로 보여 준다.
 - `DownloaderEngine.searchPlaylists`를 더했다. yt-dlp는 유튜브 검색 결과 쪽의 재생목록 필터(`sp=EgIQAw%253D%253D`)를, 서버는 `/search?type=playlist`를 쓴다. 안쪽 엔진이 못 하면 `YoutubeExplodeEngine`이 `youtube_explode_dart` 검색으로 대신한다 (Android lite에서 서버에 기능이 없어도 되게). 이 경로는 채널 이름을 주지 않는다.
 - 내 유튜브 계정의 재생목록 불러오기는 구현하지 않았다: Google Cloud 프로젝트 + OAuth 동의 화면(`youtube.readonly`는 민감 범위라 공개하려면 구글 검수), Android는 Google 로그인(`google_sign_in`)과 SHA-1 등록, 데스크톱은 별도 OAuth 흐름이 필요하다. 앱 정책(비밀값 저장소 미포함 · 로그인 없는 사용)과 맞는지 먼저 정해야 한다.
+
+## D-073 · 2026-10-07 · 구글 계정 로그인과 내 유튜브 재생목록
+- 내 유튜브 재생목록을 불러오려고 설정에 "계정" 묶음을 두고 구글 계정 로그인 · 로그아웃을 넣었다 (앱 서버 로그인과는 별개). `features/account/` (domain · data · presentation), 앱 전체 `AccountCubit`.
+- 구현: `google_sign_in` 7.x로 로그인하고 `youtube.readonly` 범위의 접근 토큰으로 YouTube Data API v3 `playlists?mine=true`를 읽는다 (50개씩 최대 6쪽). 토큰은 앱이 저장하지 않고 필요할 때마다 `google_sign_in`에서 받는다. 읽기 전용이다.
+- 가져오기 화면의 "내 재생목록" 버튼: 로그인돼 있지 않으면 먼저 로그인 창을 띄우고, 로그인이 풀렸으면 다시 로그인하라고 안내한다. 고르면 기존 곡 고르기로 이어진다.
+- **Android만** 지원한다 (`google_sign_in`이 데스크톱을 지원하지 않는다). 데스크톱은 설정에 "Android에서만"이라고 안내한다.
+- 빌드 설정: 웹 애플리케이션 OAuth 클라이언트 ID를 `--dart-define=MULO_GOOGLE_SERVER_CLIENT_ID=...`로 넣는다 (`AppConfig`). 없으면 로그인 버튼이 꺼지고 "이 빌드에는 설정되지 않았어요"를 보여 준다. 저장소에는 ID를 넣지 않는다.
+- 출시 전 해야 할 일 (코드로 할 수 없음): Google Cloud 프로젝트에서 YouTube Data API v3를 켜고, OAuth 동의 화면을 만들고, Android OAuth 클라이언트(패키지 `com.mulo.app` + 디버그 · 릴리스 SHA-1)와 웹 클라이언트를 만든다. `youtube.readonly`는 민감 범위라 공개 배포 전에는 구글 검수가 필요하고, 검수 전에는 테스트 사용자만 로그인할 수 있다. 실제 로그인은 이 설정이 끝난 기기에서 확인해야 한다.

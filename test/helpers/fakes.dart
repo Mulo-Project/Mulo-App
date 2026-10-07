@@ -1,6 +1,9 @@
 import 'dart:async';
 
 import 'package:music_download_play_app/core/di/injector.dart';
+import 'package:music_download_play_app/features/account/di.dart';
+import 'package:music_download_play_app/features/account/domain/entities/google_account.dart';
+import 'package:music_download_play_app/features/account/domain/repositories/account_repository.dart';
 import 'package:music_download_play_app/features/covers/di.dart';
 import 'package:music_download_play_app/features/lyrics/di.dart';
 import 'package:music_download_play_app/features/lyrics/domain/entities/lyrics.dart';
@@ -584,6 +587,7 @@ Future<void> setUpTestDependencies({
   DownloadSettingsRepository? downloadSettings,
   PlaylistRepository? playlists,
   AppLockRepository? appLock,
+  AccountRepository? account,
   BiometricAuthenticator? biometric,
   LoadedFolderRepository? folders,
   TrackFileRepository? trackFiles,
@@ -592,6 +596,7 @@ Future<void> setUpTestDependencies({
   await sl.reset();
   registerTheme(sl);
   registerSecurity(sl);
+  registerAccount(sl);
   registerLibrary(sl);
   registerCovers(sl);
   registerLyrics(sl);
@@ -614,6 +619,9 @@ Future<void> setUpTestDependencies({
     )
     ..registerLazySingleton<AppLockRepository>(
       () => appLock ?? MemoryAppLockRepository(),
+    )
+    ..registerLazySingleton<AccountRepository>(
+      () => account ?? FakeAccountRepository(),
     )
     ..registerLazySingleton<BiometricAuthenticator>(
       () => biometric ?? FakeBiometricAuthenticator(),
@@ -733,6 +741,53 @@ class FakeAudioPlayer implements AudioPlayerRepository {
   Future<void> seek(Duration position) async {
     calls.add('seek:${position.inMilliseconds}');
     lastSeek = position;
+  }
+}
+
+/// 로그인 · 내 재생목록을 메모리로 흉내 내는 계정 저장소.
+class FakeAccountRepository implements AccountRepository {
+  FakeAccountRepository({
+    this.support = AccountSupport.available,
+    this.account,
+    this.playlists = const [],
+    this.signInError,
+    this.playlistsError,
+  });
+
+  @override
+  final AccountSupport support;
+  GoogleAccount? account;
+  final List<PlaylistHit> playlists;
+  final AccountException? signInError;
+  final AccountException? playlistsError;
+  var signIns = 0;
+
+  @override
+  Future<GoogleAccount?> restore() async => account;
+
+  @override
+  Future<GoogleAccount> signIn() async {
+    signIns++;
+    final error = signInError;
+    if (error != null) throw error;
+    return account = const GoogleAccount(
+      id: 'u1',
+      email: 'me@example.com',
+      displayName: '나',
+    );
+  }
+
+  @override
+  Future<void> signOut() async => account = null;
+
+  @override
+  Future<List<PlaylistHit>> myPlaylists() async {
+    final error = playlistsError;
+    if (error != null) throw error;
+    if (account == null) {
+      throw const AccountException(AccountFailure.unauthorized);
+    }
+    return playlists;
   }
 }
 

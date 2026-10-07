@@ -2918,6 +2918,96 @@ abstract class AppLocalizations {
   /// **'골라서 받기'**
   String get searchPlaylistPick;
 
+  /// No description provided for @settingsAccount.
+  ///
+  /// In ko, this message translates to:
+  /// **'계정'**
+  String get settingsAccount;
+
+  /// No description provided for @settingsGoogleAccount.
+  ///
+  /// In ko, this message translates to:
+  /// **'구글 계정'**
+  String get settingsGoogleAccount;
+
+  /// No description provided for @settingsAccountSignedOutDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그인하면 내 유튜브 재생목록을 불러올 수 있어요'**
+  String get settingsAccountSignedOutDesc;
+
+  /// No description provided for @settingsAccountSignIn.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그인'**
+  String get settingsAccountSignIn;
+
+  /// No description provided for @settingsAccountSignOut.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그아웃'**
+  String get settingsAccountSignOut;
+
+  /// No description provided for @settingsAccountNotConfigured.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 빌드에는 구글 로그인이 설정되지 않았어요'**
+  String get settingsAccountNotConfigured;
+
+  /// No description provided for @settingsAccountUnsupported.
+  ///
+  /// In ko, this message translates to:
+  /// **'구글 로그인은 Android에서만 쓸 수 있어요'**
+  String get settingsAccountUnsupported;
+
+  /// No description provided for @settingsAccountFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그인하지 못했어요. 다시 시도해 주세요'**
+  String get settingsAccountFailed;
+
+  /// No description provided for @playlistImportMine.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 재생목록'**
+  String get playlistImportMine;
+
+  /// No description provided for @playlistImportMineTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 유튜브 재생목록'**
+  String get playlistImportMineTitle;
+
+  /// No description provided for @playlistImportMineEmptyTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생목록이 없어요'**
+  String get playlistImportMineEmptyTitle;
+
+  /// No description provided for @playlistImportMineEmptyBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 계정에는 만든 재생목록이 없어요.'**
+  String get playlistImportMineEmptyBody;
+
+  /// No description provided for @playlistImportLoginTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그인이 필요해요'**
+  String get playlistImportLoginTitle;
+
+  /// No description provided for @playlistImportLoginBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 유튜브 재생목록을 불러오려면 구글 계정으로 로그인해 주세요.'**
+  String get playlistImportLoginBody;
+
+  /// No description provided for @playlistImportLoginExpiredBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그인이 풀렸어요. 다시 로그인해 주세요.'**
+  String get playlistImportLoginExpiredBody;
+
   /// No description provided for @searchPlaylistFind.
   ///
   /// In ko, this message translates to:

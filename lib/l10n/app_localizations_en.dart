@@ -1555,5 +1555,55 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchPlaylistPick => 'Choose & download';
 
   @override
+  String get settingsAccount => 'Account';
+
+  @override
+  String get settingsGoogleAccount => 'Google account';
+
+  @override
+  String get settingsAccountSignedOutDesc =>
+      'Sign in to load your YouTube playlists';
+
+  @override
+  String get settingsAccountSignIn => 'Sign in';
+
+  @override
+  String get settingsAccountSignOut => 'Sign out';
+
+  @override
+  String get settingsAccountNotConfigured =>
+      'Google sign-in is not set up in this build';
+
+  @override
+  String get settingsAccountUnsupported =>
+      'Google sign-in is only available on Android';
+
+  @override
+  String get settingsAccountFailed => 'Could not sign in. Please try again';
+
+  @override
+  String get playlistImportMine => 'My playlists';
+
+  @override
+  String get playlistImportMineTitle => 'My YouTube playlists';
+
+  @override
+  String get playlistImportMineEmptyTitle => 'No playlists';
+
+  @override
+  String get playlistImportMineEmptyBody => 'This account has no playlists.';
+
+  @override
+  String get playlistImportLoginTitle => 'Sign in required';
+
+  @override
+  String get playlistImportLoginBody =>
+      'Sign in with your Google account to load your YouTube playlists.';
+
+  @override
+  String get playlistImportLoginExpiredBody =>
+      'You were signed out. Please sign in again.';
+
+  @override
   String get searchPlaylistFind => 'Find as playlist';
 }

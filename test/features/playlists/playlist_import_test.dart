@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter_test/flutter_test.dart';
+import 'package:music_download_play_app/features/account/domain/usecases/account_usecases.dart';
 import 'package:music_download_play_app/features/downloads/domain/usecases/download_usecases.dart';
 import 'package:music_download_play_app/features/playlists/domain/usecases/playlist_usecases.dart';
 import 'package:music_download_play_app/features/playlists/presentation/bloc/playlist_import_cubit.dart';
@@ -34,6 +35,7 @@ _setUp(MediaInfo info) {
     cubit: PlaylistImportCubit(
       FetchMediaInfo(engine),
       SearchPlaylists(engine),
+      FetchMyPlaylists(FakeAccountRepository()),
       EnqueueDownload(queue),
       CreatePlaylist(lists),
     ),
@@ -126,6 +128,7 @@ void _searchTests() {
     final cubit = PlaylistImportCubit(
       FetchMediaInfo(engine),
       SearchPlaylists(engine),
+      FetchMyPlaylists(FakeAccountRepository()),
       EnqueueDownload(queue),
       CreatePlaylist(lists),
     );
@@ -152,6 +155,7 @@ void _searchTests() {
     final cubit = PlaylistImportCubit(
       FetchMediaInfo(engine),
       SearchPlaylists(engine),
+      FetchMyPlaylists(FakeAccountRepository()),
       EnqueueDownload(MemoryDownloadQueue()),
       CreatePlaylist(MemoryPlaylistRepository()),
     );

@@ -13,4 +13,15 @@ class AppConfig {
 
   /// 서버 주소가 빌드에 들어 있는지.
   static bool get hasApiBaseUrl => apiBaseUrl.isNotEmpty;
+
+  /// 구글 로그인용 웹 클라이언트 ID (Google Cloud의 "웹 애플리케이션" OAuth 클라이언트).
+  /// 비밀값이 아니라 공개 ID지만 저장소에는 넣지 않고 빌드에 넣는다:
+  /// `--dart-define=MULO_GOOGLE_SERVER_CLIENT_ID=xxxx.apps.googleusercontent.com`
+  static const String googleServerClientId = String.fromEnvironment(
+    'MULO_GOOGLE_SERVER_CLIENT_ID',
+    defaultValue: '',
+  );
+
+  /// 구글 클라이언트 ID가 빌드에 들어 있는지 (없으면 로그인을 쓸 수 없다).
+  static bool get hasGoogleClient => googleServerClientId.isNotEmpty;
 }
