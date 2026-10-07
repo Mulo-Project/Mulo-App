@@ -1642,6 +1642,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'You were signed out. Please sign in again.';
 
   @override
+  String get playlistImportNoChannelTitle => 'No YouTube channel';
+
+  @override
+  String get playlistImportNoChannelBody =>
+      'This Google account has no YouTube channel, so your playlists can\'t be loaded. Create a channel on YouTube, or paste a playlist link in the field above. (Private playlists must be set to \"Unlisted\" first.)';
+
+  @override
   String get searchPlaylistFind => 'Find as playlist';
 
   @override

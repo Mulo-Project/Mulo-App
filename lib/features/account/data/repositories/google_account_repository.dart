@@ -115,11 +115,24 @@ class GoogleAccountRepository implements AccountRepository {
     } on HttpException catch (e) {
       throw AccountException(AccountFailure.network, e.message);
     }
-    if (res.status == 401 || res.status == 403) {
-      throw const AccountException(AccountFailure.unauthorized);
+    // 유튜브 채널이 없는 구글 계정은 `mine=true`에 404(channelNotFound)가 온다.
+    if (res.status == 404) {
+      throw AccountException(AccountFailure.noChannel, _errorDetail(res.body));
     }
     if (res.status < 200 || res.status >= 300) {
-      throw AccountException(AccountFailure.failed, '${res.status}');
+      final detail = '${res.status} ${_errorDetail(res.body)}'.trim();
+      // API를 켜지 않았거나 할당량 문제인 403은 로그인이 풀린 것이 아니다.
+      final notAuth =
+          res.status == 401 ||
+          (res.status == 403 &&
+              !RegExp(
+                'accessNotConfigured|SERVICE_DISABLED|has not been used|quota',
+                caseSensitive: false,
+              ).hasMatch(res.body));
+      throw AccountException(
+        notAuth ? AccountFailure.unauthorized : AccountFailure.failed,
+        detail,
+      );
     }
     try {
       return jsonDecode(res.body) as Map<String, dynamic>;
@@ -129,6 +142,23 @@ class GoogleAccountRepository implements AccountRepository {
       throw const AccountException(AccountFailure.failed, 'bad response');
     }
   }
+}
+
+/// 구글 API 오류 본문에서 사람이 읽을 한 줄을 뽑는다 (없으면 빈 문자열).
+String _errorDetail(String body) {
+  try {
+    final error = (jsonDecode(body) as Map)['error'];
+    if (error is Map) {
+      final reason =
+          error['errors'] is List && (error['errors'] as List).isNotEmpty
+          ? ((error['errors'] as List).first as Map)['reason']
+          : error['status'];
+      return '${reason ?? ''} ${error['message'] ?? ''}'.trim();
+    }
+  } on Object {
+    // 본문이 JSON이 아니면 그대로 쓰지 않는다.
+  }
+  return '';
 }
 
 /// YouTube Data API `playlists` 항목 하나를 재생목록 결과로 (id가 없으면 null).

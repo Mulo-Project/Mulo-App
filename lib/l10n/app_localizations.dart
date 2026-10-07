@@ -3062,6 +3062,18 @@ abstract class AppLocalizations {
   /// **'로그인이 풀렸어요. 다시 로그인해 주세요.'**
   String get playlistImportLoginExpiredBody;
 
+  /// No description provided for @playlistImportNoChannelTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'유튜브 채널이 없어요'**
+  String get playlistImportNoChannelTitle;
+
+  /// No description provided for @playlistImportNoChannelBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 구글 계정에는 유튜브 채널이 없어서 내 재생목록을 불러올 수 없어요. 유튜브에서 채널을 만들거나, 재생목록 링크를 위 입력창에 붙여 넣어 가져와 보세요. (비공개 재생목록은 \"일부 공개\"로 바꿔야 해요)'**
+  String get playlistImportNoChannelBody;
+
   /// No description provided for @searchPlaylistFind.
   ///
   /// In ko, this message translates to:
