@@ -1622,6 +1622,24 @@ class AppLocalizationsKo extends AppLocalizations {
   String get searchPlaylistFind => '재생목록으로 찾기';
 
   @override
+  String get settingsPermissions => '권한';
+
+  @override
+  String get permNotifications => '알림';
+
+  @override
+  String get permNotificationsDesc => '받기가 앱 밖에서도 이어지고 재생 알림이 보여요.';
+
+  @override
+  String get permAudio => '음악 파일 접근';
+
+  @override
+  String get permAudioDesc => '기기에 있는 음악을 불러오는 데 써요.';
+
+  @override
+  String get permBlockedDesc => '요청이 막혀 있어요. 눌러서 휴대폰 설정에서 켜 주세요.';
+
+  @override
   String get settingsNotifications => '알림';
 
   @override

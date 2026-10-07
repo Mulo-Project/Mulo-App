@@ -1652,6 +1652,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchPlaylistFind => 'Find as playlist';
 
   @override
+  String get settingsPermissions => 'Permissions';
+
+  @override
+  String get permNotifications => 'Notifications';
+
+  @override
+  String get permNotificationsDesc =>
+      'Keeps downloads running in the background and shows playback controls.';
+
+  @override
+  String get permAudio => 'Music file access';
+
+  @override
+  String get permAudioDesc => 'Used to load music stored on this device.';
+
+  @override
+  String get permBlockedDesc =>
+      'Blocked. Tap to turn it on in system settings.';
+
+  @override
   String get settingsNotifications => 'Notifications';
 
   @override

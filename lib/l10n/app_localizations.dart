@@ -3080,6 +3080,42 @@ abstract class AppLocalizations {
   /// **'재생목록으로 찾기'**
   String get searchPlaylistFind;
 
+  /// No description provided for @settingsPermissions.
+  ///
+  /// In ko, this message translates to:
+  /// **'권한'**
+  String get settingsPermissions;
+
+  /// No description provided for @permNotifications.
+  ///
+  /// In ko, this message translates to:
+  /// **'알림'**
+  String get permNotifications;
+
+  /// No description provided for @permNotificationsDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'받기가 앱 밖에서도 이어지고 재생 알림이 보여요.'**
+  String get permNotificationsDesc;
+
+  /// No description provided for @permAudio.
+  ///
+  /// In ko, this message translates to:
+  /// **'음악 파일 접근'**
+  String get permAudio;
+
+  /// No description provided for @permAudioDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'기기에 있는 음악을 불러오는 데 써요.'**
+  String get permAudioDesc;
+
+  /// No description provided for @permBlockedDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'요청이 막혀 있어요. 눌러서 휴대폰 설정에서 켜 주세요.'**
+  String get permBlockedDesc;
+
   /// No description provided for @settingsNotifications.
   ///
   /// In ko, this message translates to:

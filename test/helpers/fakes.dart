@@ -35,6 +35,9 @@ import 'package:music_download_play_app/features/notifications/domain/entities/n
 import 'package:music_download_play_app/features/notifications/domain/repositories/download_notifier.dart';
 import 'package:music_download_play_app/features/notifications/domain/repositories/media_session.dart';
 import 'package:music_download_play_app/features/notifications/domain/repositories/notification_settings_repository.dart';
+import 'package:music_download_play_app/features/permissions/di.dart';
+import 'package:music_download_play_app/features/permissions/domain/entities/app_permission.dart';
+import 'package:music_download_play_app/features/permissions/domain/repositories/permission_repository.dart';
 import 'package:music_download_play_app/features/player/di.dart';
 import 'package:music_download_play_app/features/player/domain/entities/player_style.dart';
 import 'package:music_download_play_app/features/player/domain/repositories/audio_player_repository.dart';
@@ -650,12 +653,14 @@ Future<void> setUpTestDependencies({
   registerEngine(sl);
   registerSearch(sl);
   registerNotifications(sl);
+  registerPermissions(sl);
   sl.allowReassignment = true;
   sl
     ..registerLazySingleton<NotificationSettingsRepository>(
       MemoryNotificationSettings.new,
     )
     ..registerLazySingleton<DownloadNotifier>(FakeDownloadNotifier.new)
+    ..registerLazySingleton<PermissionRepository>(FakePermissionRepository.new)
     ..registerLazySingleton<MediaSession>(FakeMediaSession.new)
     ..registerLazySingleton<JoinDateRepository>(
       () => MemoryJoinDate(joinedAt ?? DateTime(2026, 1, 1)),
@@ -1099,4 +1104,25 @@ class FakeMediaSession implements MediaSession {
 
   @override
   Future<void> update(MediaSessionInfo? info) async => updates.add(info);
+}
+
+class FakePermissionRepository implements PermissionRepository {
+  final levels = <AppPermission, PermissionLevel>{
+    for (final p in AppPermission.values) p: PermissionLevel.denied,
+  };
+  int openedSettings = 0;
+
+  @override
+  List<AppPermission> get supported => AppPermission.values;
+
+  @override
+  Future<PermissionLevel> status(AppPermission permission) async =>
+      levels[permission]!;
+
+  @override
+  Future<PermissionLevel> request(AppPermission permission) async =>
+      levels[permission] = PermissionLevel.granted;
+
+  @override
+  Future<void> openSystemSettings() async => openedSettings++;
 }
