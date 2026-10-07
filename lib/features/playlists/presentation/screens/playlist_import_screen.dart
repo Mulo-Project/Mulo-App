@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/config/app_config.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
@@ -56,21 +57,32 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
         SnackBar(
           content: Text(
             support == AccountSupport.notConfigured
-                ? l10n.settingsAccountNotConfigured
+                ? l10n.settingsAccountNotConfigured(
+                    AppConfig.googleRequiredKeys,
+                  )
                 : l10n.settingsAccountUnsupported,
           ),
         ),
       );
       return;
     }
-    if (!account.state.signedIn && await account.signIn() == null) {
-      if (account.state.failure != null) {
-        messenger.showSnackBar(
-          SnackBar(content: Text(l10n.settingsAccountFailed)),
-        );
+    if (!account.state.signedIn) {
+      final allow = await showDialog<bool>(
+        context: context,
+        useRootNavigator: true,
+        builder: (_) => const _SignInPromptDialog(),
+      );
+      if (allow != true) return;
+      if (await account.signIn() == null) {
+        if (account.state.failure != null) {
+          messenger.showSnackBar(
+            SnackBar(content: Text(l10n.settingsAccountFailed)),
+          );
+        }
+        return;
       }
-      return;
     }
+    if (!mounted) return;
     await _cubit.loadMine();
   }
 
@@ -159,6 +171,32 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// 로그인하지 않고 "내 재생목록"을 눌렀을 때: 구글 로그인을 할지 묻는다.
+class _SignInPromptDialog extends StatelessWidget {
+  const _SignInPromptDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return AppDialog(
+      title: l10n.playlistImportSignInPromptTitle,
+      body: l10n.playlistImportSignInPromptBody,
+      actions: [
+        PillButton(
+          label: l10n.actionCancel,
+          variant: PillVariant.tonal,
+          onPressed: () => Navigator.of(context).pop(false),
+        ),
+        PillButton(
+          label: l10n.playlistImportSignInAllow,
+          icon: AppIcons.person,
+          onPressed: () => Navigator.of(context).pop(true),
+        ),
+      ],
     );
   }
 }

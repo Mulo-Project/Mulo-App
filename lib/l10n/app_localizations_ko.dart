@@ -1549,7 +1549,19 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsAccountSignOut => '로그아웃';
 
   @override
-  String get settingsAccountNotConfigured => '이 빌드에는 구글 로그인이 설정되지 않았어요';
+  String settingsAccountNotConfigured(String keys) {
+    return '구글 로그인 설정값($keys)이 이 빌드에 없어서 쓸 수 없어요. docs/google-login-setup.md를 보고 설정해 주세요';
+  }
+
+  @override
+  String get playlistImportSignInPromptTitle => '구글 로그인이 필요해요';
+
+  @override
+  String get playlistImportSignInPromptBody =>
+      '내 유튜브 재생목록을 불러오려면 구글 계정으로 로그인해야 해요. 지금 로그인할까요?';
+
+  @override
+  String get playlistImportSignInAllow => '로그인';
 
   @override
   String get settingsAccountUnsupported => '이 기기에서는 구글 로그인을 쓸 수 없어요';

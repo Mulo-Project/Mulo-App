@@ -2957,8 +2957,26 @@ abstract class AppLocalizations {
   /// No description provided for @settingsAccountNotConfigured.
   ///
   /// In ko, this message translates to:
-  /// **'이 빌드에는 구글 로그인이 설정되지 않았어요'**
-  String get settingsAccountNotConfigured;
+  /// **'구글 로그인 설정값({keys})이 이 빌드에 없어서 쓸 수 없어요. docs/google-login-setup.md를 보고 설정해 주세요'**
+  String settingsAccountNotConfigured(String keys);
+
+  /// No description provided for @playlistImportSignInPromptTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'구글 로그인이 필요해요'**
+  String get playlistImportSignInPromptTitle;
+
+  /// No description provided for @playlistImportSignInPromptBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 유튜브 재생목록을 불러오려면 구글 계정으로 로그인해야 해요. 지금 로그인할까요?'**
+  String get playlistImportSignInPromptBody;
+
+  /// No description provided for @playlistImportSignInAllow.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그인'**
+  String get playlistImportSignInAllow;
 
   /// No description provided for @settingsAccountUnsupported.
   ///
