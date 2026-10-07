@@ -45,6 +45,13 @@ class RoutingDownloaderEngine implements DownloaderEngine {
   );
 
   @override
+  Future<PlaylistSearchPage> searchPlaylists(
+    String query, {
+    int page = 0,
+    int size = 20,
+  }) async => (await _pick()).searchPlaylists(query, page: page, size: size);
+
+  @override
   Future<MediaInfo> fetchInfo(String url) async =>
       (await _pick()).fetchInfo(url);
 

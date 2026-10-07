@@ -470,6 +470,19 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - 가져오기 화면(`/playlists/import`, `PlaylistImportScreen`)은 재생목록 탭의 "유튜브 재생목록 가져오기" 버튼과 검색 탭의 재생목록 결과("골라서 받기")에서 연다. 곡은 처음에 모두 선택돼 있고, 전체 선택 / 해제와 곡별 선택을 할 수 있다.
 - "받기"를 누르면 유튜브 재생목록과 같은 이름의 **새 재생목록**을 만들고(`CreatePlaylist`), 고른 곡을 `EnqueueDownload`로 대기열에 넣는다. 각 요청의 `playlistIds`에 새 재생목록을 담아 받기가 끝나는 대로 재생목록에 들어간다. 재생목록 커버는 대표 이미지 주소의 웹 커버(D-067)다.
 - 같은 재생목록을 다시 가져오면 재생목록이 하나 더 생긴다 (이미 받은 곡 건너뛰기 · 기존 재생목록에 이어 담기는 하지 않았다 — 남은 일).
+
+## D-072 · 2026-10-07 · 재생목록 키워드 검색
+- 주소를 모르는 사용자를 위해 가져오기 화면 입력칸이 이름과 주소를 모두 받는다 (`http` · `youtube.com/` · `youtu.be/`가 들어 있으면 주소). 별도 탭을 만들지 않고 결과는 한 줄짜리 목록(카드 없음)으로 보여 준다.
+- `DownloaderEngine.searchPlaylists`를 더했다. yt-dlp는 유튜브 검색 결과 쪽의 재생목록 필터(`sp=EgIQAw%253D%253D`)를, 서버는 `/search?type=playlist`를 쓴다. 안쪽 엔진이 못 하면 `YoutubeExplodeEngine`이 `youtube_explode_dart` 검색으로 대신한다 (Android lite에서 서버에 기능이 없어도 되게). 이 경로는 채널 이름을 주지 않는다.
+- 내 유튜브 계정의 재생목록 불러오기는 구현하지 않았다: Google Cloud 프로젝트 + OAuth 동의 화면(`youtube.readonly`는 민감 범위라 공개하려면 구글 검수), Android는 Google 로그인(`google_sign_in`)과 SHA-1 등록, 데스크톱은 별도 OAuth 흐름이 필요하다. 앱 정책(비밀값 저장소 미포함 · 로그인 없는 사용)과 맞는지 먼저 정해야 한다.
+
+## D-073 · 2026-10-07 · 구글 계정 로그인과 내 유튜브 재생목록
+- 내 유튜브 재생목록을 불러오려고 설정에 "계정" 묶음을 두고 구글 계정 로그인 · 로그아웃을 넣었다 (앱 서버 로그인과는 별개). `features/account/` (domain · data · presentation), 앱 전체 `AccountCubit`.
+- 구현: `google_sign_in` 7.x로 로그인하고 `youtube.readonly` 범위의 접근 토큰으로 YouTube Data API v3 `playlists?mine=true`를 읽는다 (50개씩 최대 6쪽). 토큰은 앱이 저장하지 않고 필요할 때마다 `google_sign_in`에서 받는다. 읽기 전용이다.
+- 가져오기 화면의 "내 재생목록" 버튼: 로그인돼 있지 않으면 먼저 로그인 창을 띄우고, 로그인이 풀렸으면 다시 로그인하라고 안내한다. 고르면 기존 곡 고르기로 이어진다.
+- 로그인 방식은 기기마다 다르다: Android는 `google_sign_in`, **데스크톱(Windows · macOS · Linux)은 `google_sign_in`이 지원하지 않아서** 기본 브라우저로 구글 로그인을 열고 이 기기(`127.0.0.1` 임시 포트)로 돌아오는 인증 코드를 받는 OAuth "데스크톱 앱" 흐름 + PKCE로 직접 구현했다 (`LoopbackGoogleAuth`). 데스크톱은 새로고침 토큰만 보안 저장소(`flutter_secure_storage`)에 두고 접근 토큰은 메모리에만 둔다. 로그아웃하면 구글에 허락 취소(revoke)도 보낸다.
+- 빌드 설정 (`AppConfig`): Android는 웹 애플리케이션 OAuth 클라이언트 ID `--dart-define=MULO_GOOGLE_SERVER_CLIENT_ID=...`, 데스크톱은 "데스크톱 앱" OAuth 클라이언트의 `MULO_GOOGLE_DESKTOP_CLIENT_ID` · `MULO_GOOGLE_DESKTOP_CLIENT_SECRET`. 없으면 로그인 버튼이 꺼지고 "이 빌드에는 설정되지 않았어요"를 보여 준다. 저장소에는 넣지 않는다. 데스크톱 클라이언트 비밀값은 구글이 요구하지만 앱에 들어가는 값이라 비밀로 지켜지지 않으며 PKCE가 코드를 지킨다.
+- 출시 전 해야 할 일 (코드로 할 수 없음): Google Cloud 프로젝트에서 YouTube Data API v3를 켜고, OAuth 동의 화면을 만들고, Android OAuth 클라이언트(패키지 `com.mulo.app` + 디버그 · 릴리스 SHA-1)와 웹 클라이언트, 데스크톱용 "데스크톱 앱" 클라이언트를 만든다. `youtube.readonly`는 민감 범위라 공개 배포 전에는 구글 검수가 필요하고, 검수 전에는 테스트 사용자만 로그인할 수 있다. 실제 로그인은 이 설정이 끝난 기기에서 확인해야 한다.
 ## D-072 · 2026-10-07 · 알림: 받기 진행 · 결과, 재생 알림, 곡 정보 숨기기
 - Android 알림만 만든다 (다른 OS는 아무것도 띄우지 않는 구현). 기능 폴더 `features/notifications`: domain(설정 · `DownloadNotifier` · `MediaSession`), data(`flutter_local_notifications` · `audio_service`), presentation(`NotificationSettingsCubit`, 화면 없는 `NotificationSyncCubit`, 앱 셸을 감싸는 `NotificationBridge`).
 - **받기 알림**: 받는 곡 하나의 진행 알림(제목, `받는 중 · 42% · N곡 대기`, 진행 막대)을 갱신하고, 곡마다 끝남 · 실패를 한 번씩 알린다. 진행 알림은 포그라운드 서비스(dataSync)라서 앱이 뒤로 가도 받기가 이어진다. 알림 채널은 받는 중(조용) · 받기 완료(조용) · 받기 실패(기본).

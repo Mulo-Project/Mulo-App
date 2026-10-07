@@ -1474,13 +1474,28 @@ class AppLocalizationsKo extends AppLocalizations {
   String get trackFavoriteOff => '좋아요를 취소했어요';
 
   @override
-  String get playlistImportHint => '유튜브 재생목록 주소';
+  String get playlistImportHint => '재생목록 이름이나 주소';
 
   @override
-  String get playlistImportEmptyTitle => '재생목록 주소를 붙여 넣어 주세요';
+  String get playlistImportEmptyTitle => '재생목록을 찾아 보세요';
 
   @override
-  String get playlistImportEmptyBody => '곡 목록이 나오면 받을 곡을 고를 수 있어요.';
+  String get playlistImportEmptyBody =>
+      '이름으로 찾거나 주소를 붙여 넣으면, 곡 목록에서 받을 곡을 고를 수 있어요.';
+
+  @override
+  String get playlistImportNoResultsTitle => '찾은 재생목록이 없어요';
+
+  @override
+  String get playlistImportNoResultsBody => '다른 검색어로 찾아 보세요.';
+
+  @override
+  String get playlistImportBackToResults => '검색 결과';
+
+  @override
+  String playlistImportResultSubtitle(String channel, int count) {
+    return '$channel · $count곡';
+  }
 
   @override
   String get playlistImportNotPlaylistTitle => '재생목록 주소가 아니에요';
@@ -1512,6 +1527,54 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get searchPlaylistPick => '골라서 받기';
+
+  @override
+  String get settingsAccount => '계정';
+
+  @override
+  String get settingsGoogleAccount => '구글 계정';
+
+  @override
+  String get settingsAccountSignedOutDesc => '로그인하면 내 유튜브 재생목록을 불러올 수 있어요';
+
+  @override
+  String get settingsAccountSignIn => '로그인';
+
+  @override
+  String get settingsAccountSignOut => '로그아웃';
+
+  @override
+  String get settingsAccountNotConfigured => '이 빌드에는 구글 로그인이 설정되지 않았어요';
+
+  @override
+  String get settingsAccountUnsupported => '이 기기에서는 구글 로그인을 쓸 수 없어요';
+
+  @override
+  String get settingsAccountFailed => '로그인하지 못했어요. 다시 시도해 주세요';
+
+  @override
+  String get playlistImportMine => '내 재생목록';
+
+  @override
+  String get playlistImportMineTitle => '내 유튜브 재생목록';
+
+  @override
+  String get playlistImportMineEmptyTitle => '재생목록이 없어요';
+
+  @override
+  String get playlistImportMineEmptyBody => '이 계정에는 만든 재생목록이 없어요.';
+
+  @override
+  String get playlistImportLoginTitle => '로그인이 필요해요';
+
+  @override
+  String get playlistImportLoginBody => '내 유튜브 재생목록을 불러오려면 구글 계정으로 로그인해 주세요.';
+
+  @override
+  String get playlistImportLoginExpiredBody => '로그인이 풀렸어요. 다시 로그인해 주세요.';
+
+  @override
+  String get searchPlaylistFind => '재생목록으로 찾기';
 
   @override
   String get settingsNotifications => '알림';

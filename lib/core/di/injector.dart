@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 
+import '../../features/account/di.dart';
 import '../../features/covers/di.dart';
 import '../../features/downloads/di.dart';
 import '../../features/engine/di.dart';
@@ -25,6 +26,7 @@ void configureDependencies({AppDatabase? database}) {
   );
   registerTheme(sl);
   registerSecurity(sl);
+  registerAccount(sl);
   registerLibrary(sl);
   registerCovers(sl);
   registerLyrics(sl);

@@ -169,6 +169,53 @@ class SearchPage extends Equatable {
   List<Object?> get props => [items, hasNext];
 }
 
+/// 재생목록 검색 결과 하나 (곡 목록은 고른 뒤 주소로 읽는다).
+class PlaylistHit extends Equatable {
+  const PlaylistHit({
+    required this.id,
+    required this.title,
+    required this.url,
+    this.channel = '',
+    this.thumbnailUrl,
+    this.trackCount,
+  });
+
+  /// 유튜브 재생목록 id.
+  final String id;
+  final String title;
+
+  /// 곡 목록을 읽을 재생목록 주소.
+  final String url;
+
+  /// 만든 채널 이름. 모르면 빈 문자열.
+  final String channel;
+  final String? thumbnailUrl;
+
+  /// 곡 수. 모르면 null.
+  final int? trackCount;
+
+  @override
+  List<Object?> get props => [
+    id,
+    title,
+    url,
+    channel,
+    thumbnailUrl,
+    trackCount,
+  ];
+}
+
+/// 재생목록 검색 한 쪽.
+class PlaylistSearchPage extends Equatable {
+  const PlaylistSearchPage({required this.items, required this.hasNext});
+
+  final List<PlaylistHit> items;
+  final bool hasNext;
+
+  @override
+  List<Object?> get props => [items, hasNext];
+}
+
 /// URL로 알아낸 정보: 곡 하나 또는 재생목록.
 sealed class MediaInfo extends Equatable {
   const MediaInfo();
