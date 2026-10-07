@@ -48,6 +48,24 @@ void main() {
       expect(engine.searches.last.$3, 1);
     });
 
+    test('이어 보기를 기다리는 사이 바꾼 정렬이 되돌아가지 않는다', () async {
+      final engine = FakeDownloaderEngine(
+        pages: [
+          SearchPage(items: [_hit('b'), _hit('a')], hasNext: true),
+          SearchPage(items: [_hit('c')], hasNext: false),
+        ],
+      );
+      final cubit = _cubit(engine);
+      await cubit.submit('q', SearchSource.youtube);
+
+      final more = cubit.loadMore();
+      await cubit.selectSort(SearchSort.title);
+      await more;
+
+      expect(cubit.state.sort, SearchSort.title);
+      expect(cubit.state.visibleItems.map((h) => h.id), ['a', 'b', 'c']);
+    });
+
     test('검색 결과의 곡마다 상세 정보를 뒤에서 읽지 않는다', () async {
       final engine = FakeDownloaderEngine(
         pages: [

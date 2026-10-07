@@ -202,10 +202,12 @@ class SearchCubit extends Cubit<SearchState> {
       );
       if (id != _request) return;
       _page++;
-      final known = {for (final h in s.items) h.id};
+      // 기다리는 사이에 정렬을 바꿨을 수 있어, 시작할 때 본 상태가 아니라 지금 상태에 이어 붙인다.
+      final now = state;
+      final known = {for (final h in now.items) h.id};
       emit(
-        s.copyWith(
-          items: [...s.items, ...page.items.where((h) => known.add(h.id))],
+        now.copyWith(
+          items: [...now.items, ...page.items.where((h) => known.add(h.id))],
           hasNext: page.hasNext,
           loadingMore: false,
         ),
@@ -213,7 +215,7 @@ class SearchCubit extends Cubit<SearchState> {
     } on EngineException {
       if (id != _request) return;
       // 이어 보기 실패는 이미 나온 결과를 두고 다시 누를 수 있게 한다.
-      emit(s.copyWith(hasNext: true, loadingMore: false));
+      emit(state.copyWith(hasNext: true, loadingMore: false));
     }
   }
 
