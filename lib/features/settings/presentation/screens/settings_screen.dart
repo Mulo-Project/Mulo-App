@@ -14,6 +14,8 @@ import '../../../downloads/domain/usecases/download_usecases.dart';
 import '../../../downloads/presentation/bloc/download_settings_cubit.dart';
 import '../../../engine/presentation/bloc/engine_cubit.dart';
 import '../../../library/presentation/widgets/loaded_folders_tile.dart';
+import '../../../player/presentation/bloc/player_style_cubit.dart';
+import '../../../player/presentation/widgets/player_style_sheet.dart';
 import '../../../security/presentation/bloc/app_lock_cubit.dart';
 import '../../../security/presentation/screens/pin_entry_screen.dart';
 import '../../../theme/domain/entities/theme_settings.dart';
@@ -224,6 +226,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               onTap: () => themeCtrl.selectPreset(preset),
                             ),
                         ],
+                      ),
+                    ),
+                    SettingRow(
+                      title: l10n.playerStyleTitle,
+                      below: SegmentedPills<PlayerStyle>(
+                        expand: true,
+                        values: PlayerStyle.values,
+                        selected: context.watch<PlayerStyleCubit>().state,
+                        labelOf: (s) => playerStyleName(l10n, s),
+                        onChanged: context.read<PlayerStyleCubit>().select,
                       ),
                     ),
                   ],
