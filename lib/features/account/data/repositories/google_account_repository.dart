@@ -115,6 +115,8 @@ class GoogleAccountRepository implements AccountRepository {
     } on HttpException catch (e) {
       throw AccountException(AccountFailure.network, e.message);
     }
+    // 유튜브 채널이 없는 구글 계정은 `mine=true`에 404(channelNotFound)가 온다: 재생목록 없음.
+    if (res.status == 404) return const <String, dynamic>{};
     if (res.status < 200 || res.status >= 300) {
       final detail = '${res.status} ${_errorDetail(res.body)}'.trim();
       // API를 켜지 않았거나 할당량 문제인 403은 로그인이 풀린 것이 아니다.
