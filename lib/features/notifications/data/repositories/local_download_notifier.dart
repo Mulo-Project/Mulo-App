@@ -14,6 +14,8 @@ const _actionPort = 'com.mulo.app.download_actions';
 @pragma('vm:entry-point')
 void downloadNotificationBackgroundHandler(NotificationResponse response) {
   final id = response.actionId;
+  // ignore: avoid_print
+  print('MULODBG bg handler id=$id port=${IsolateNameServer.lookupPortByName(_actionPort)}');
   if (id != null) IsolateNameServer.lookupPortByName(_actionPort)?.send(id);
 }
 
@@ -50,6 +52,8 @@ class LocalDownloadNotifier implements DownloadNotifier {
 
   /// 버튼 누름을 조작으로 바꿔 알린다. 두 길(주 isolate · 백그라운드 isolate)로 겹쳐 와도 한 번만.
   void _dispatch(String id) {
+    // ignore: avoid_print
+    print('MULODBG dispatch id=$id');
     final action = switch (id) {
       _previewAction => DownloadNotificationAction.preview,
       _pauseAction => DownloadNotificationAction.pausePreview,
@@ -147,28 +151,28 @@ class LocalDownloadNotifier implements DownloadNotifier {
         AndroidNotificationAction(
           _pauseAction,
           pauseLabel,
-          showsUserInterface: true,
+          showsUserInterface: false,
           cancelNotification: false,
         ),
       if (stopLabel != null)
         AndroidNotificationAction(
           _stopAction,
           stopLabel,
-          showsUserInterface: true,
+          showsUserInterface: false,
           cancelNotification: false,
         ),
       if (previewLabel != null && pauseLabel == null)
         AndroidNotificationAction(
           _previewAction,
           previewLabel,
-          showsUserInterface: true,
+          showsUserInterface: false,
           cancelNotification: false,
         ),
       if (cancelLabel != null)
         AndroidNotificationAction(
           _cancelAction,
           cancelLabel,
-          showsUserInterface: true,
+          showsUserInterface: false,
           cancelNotification: false,
         ),
     ],
