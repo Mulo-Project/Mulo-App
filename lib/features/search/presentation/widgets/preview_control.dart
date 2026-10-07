@@ -170,7 +170,7 @@ class PreviewMiniBar extends StatelessWidget {
     final loading = state.status == PreviewStatus.loading;
     final progress = state.progress;
     final hit = state.hit;
-    // 본문 · 미니 플레이어와 구분되도록 강조색을 깐 둥근 띠로 그린다.
+    // 본문 · 미니 플레이어와 구분되도록 강조색을 투명하게 깐 둥근 띠로 그린다.
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
@@ -179,16 +179,21 @@ class PreviewMiniBar extends StatelessWidget {
       child: DecoratedBox(
         key: const ValueKey('preview-mini-bar'),
         decoration: BoxDecoration(
-          color: Color.alphaBlend(p.accent.withValues(alpha: .28), p.surface),
+          color: p.accent.withValues(alpha: .14),
           borderRadius: BorderRadius.circular(AppRadii.sm),
-          border: Border.all(color: p.accent.withValues(alpha: .6)),
+          border: Border.all(color: p.accent.withValues(alpha: .32)),
         ),
         child: Padding(
-          padding: const EdgeInsets.only(left: AppSpacing.sm),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.xxs,
+            AppSpacing.xxs,
+            AppSpacing.xxs,
+          ),
           child: Row(
             children: [
               Icon(AppIcons.headphones, size: 18, color: p.accent),
-              const SizedBox(width: AppSpacing.xs),
+              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -208,14 +213,14 @@ class PreviewMiniBar extends StatelessWidget {
                         style: text.bodySmall,
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.xxs),
+                    const SizedBox(height: AppSpacing.xs),
                     loading
                         ? const ProgressLine(value: 0, height: 3)
                         : PreviewSeekLine(fraction: state.fraction, height: 3),
                   ],
                 ),
               ),
-              const SizedBox(width: AppSpacing.xs),
+              const SizedBox(width: AppSpacing.sm),
               if (loading)
                 PreviewLoadingRing(state: state, size: 24)
               else
