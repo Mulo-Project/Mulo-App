@@ -465,6 +465,20 @@ class MemoryDownloadQueue implements DownloadQueueRepository {
   final controls = <String>[];
 
   @override
+  Future<int> cancelAll({String? playlistId}) async {
+    controls.add('cancelAll:${playlistId ?? ''}');
+    final gone = [
+      for (final e in items)
+        if (e.status != DownloadStatus.done &&
+            (playlistId == null || e.playlistIds.contains(playlistId)))
+          e,
+    ];
+    items.removeWhere(gone.contains);
+    _changes.add([...items]);
+    return gone.length;
+  }
+
+  @override
   Future<void> pause(String id) async => controls.add('pause:$id');
 
   @override

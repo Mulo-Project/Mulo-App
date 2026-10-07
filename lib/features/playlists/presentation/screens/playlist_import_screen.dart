@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/config/app_config.dart';
 import '../../../../core/design/design.dart';
+import '../../../../app/router.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../account/domain/entities/google_account.dart';
@@ -102,7 +103,8 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
     if (thumb != null && thumb.isNotEmpty) {
       await covers.setFromUrl(CoverKey.playlist(result.playlistId), thumb);
     }
-    router.pop();
+    // 만든 재생목록 상세로 바로 가서 곡별 받기 진행을 보여 준다.
+    router.pushReplacement(Routes.playlistDetail(result.playlistId));
     messenger.showSnackBar(
       SnackBar(
         content: Text(

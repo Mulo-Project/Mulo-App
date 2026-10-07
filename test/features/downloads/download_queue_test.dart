@@ -37,7 +37,7 @@ const _done = DownloadItem(
 );
 
 void main() {
-  test('cubit: 받는 곡과 대기 곡을 나눈다 (완료는 제외)', () async {
+  test('cubit: 받는 곡을 고르고 남은 곡 수 · 전체 진행도를 센다', () async {
     final repo = MemoryDownloadQueue([_next, _now, _done]);
     final cubit = DownloadQueueCubit(
       WatchDownloadQueue(repo),
@@ -46,15 +46,50 @@ void main() {
       ResumeDownload(repo),
       RetryDownload(repo),
       CancelDownload(repo),
+      CancelAllDownloads(repo),
     )..start();
     await Future<void>.delayed(Duration.zero);
     expect(cubit.state.current, _now);
-    expect(cubit.state.waiting, [_next]);
+    expect(cubit.state.unfinishedCount, 2);
+    expect(cubit.state.overallProgress, closeTo((.5 + 0 + 1) / 3, 1e-9));
+    expect(cubit.state.unfinishedFor('none'), isEmpty);
 
     repo.set([_done]);
     await Future<void>.delayed(Duration.zero);
     expect(cubit.state.current, isNull);
-    expect(cubit.state.waiting, isEmpty);
+    expect(cubit.state.unfinishedCount, 0);
+    expect(cubit.state.overallProgress, 1);
+    await cubit.close();
+  });
+
+  test('cubit: 전체 취소는 끝나지 않은 곡만 뺀다 (재생목록을 주면 그 곡만)', () async {
+    const inList = DownloadItem(
+      id: 'p',
+      title: 'In List',
+      artist: '',
+      status: DownloadStatus.queued,
+      playlistIds: {'pl'},
+    );
+    final repo = MemoryDownloadQueue([_now, inList, _done]);
+    final cubit = DownloadQueueCubit(
+      WatchDownloadQueue(repo),
+      EnqueueDownload(repo),
+      PauseDownload(repo),
+      ResumeDownload(repo),
+      RetryDownload(repo),
+      CancelDownload(repo),
+      CancelAllDownloads(repo),
+    )..start();
+    await Future<void>.delayed(Duration.zero);
+    expect(cubit.state.unfinishedFor('pl'), [inList]);
+
+    expect(await cubit.cancelAll(playlistId: 'pl'), 1);
+    await Future<void>.delayed(Duration.zero);
+    expect(cubit.state.items, [_now, _done]);
+
+    expect(await cubit.cancelAll(), 1);
+    await Future<void>.delayed(Duration.zero);
+    expect(cubit.state.items, [_done]);
     await cubit.close();
   });
 
@@ -220,17 +255,15 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('검색 탭: 받는 카드 → 화살표로 대기 목록 펼침', (tester) async {
+  testWidgets('검색 탭: 받는 카드는 현재 곡과 전체 진행도만 보인다', (tester) async {
     await open(tester, [_now, _next]);
     expect(find.text('Now Song'), findsOneWidget);
     expect(find.text('Next Song'), findsNothing);
-
-    await tester.tap(find.byIcon(AppIcons.chevronDown));
-    await tester.pumpAndSettle();
-    expect(find.text('Next Song'), findsOneWidget);
+    expect(find.text('0/2곡'), findsOneWidget);
+    expect(find.byIcon(AppIcons.chevronDown), findsNothing);
   });
 
-  testWidgets('대기열 카드: 일시정지 · 붙여넣기 버튼 없이 취소만', (tester) async {
+  testWidgets('대기열 카드: 곡 취소 · 전체 취소', (tester) async {
     final queue = MemoryDownloadQueue([_now, _next]);
     await setUpTestDependencies(downloads: queue);
     tester.view.physicalSize = const Size(1170, 2532);
@@ -244,17 +277,89 @@ void main() {
 
     expect(find.byIcon(AppIcons.pause), findsNothing);
     expect(find.byIcon(AppIcons.paste), findsNothing);
+    // 곡 취소 (곡 줄의 버튼이 먼저, 전체 취소는 그 아래).
     await tester.tap(find.byIcon(AppIcons.close).first);
-    await tester.pump();
-    await tester.tap(find.text('취소하기'));
-    await tester.pump();
-    await tester.tap(find.byIcon(AppIcons.chevronDown));
     await tester.pumpAndSettle();
-    await tester.tap(find.byIcon(AppIcons.close).last);
-    await tester.pump();
     await tester.tap(find.text('취소하기'));
-    await tester.pump();
-    expect(queue.controls, ['cancel:a', 'cancel:b']);
+    await tester.pumpAndSettle();
+    expect(queue.controls, ['cancel:a']);
+  });
+
+  testWidgets('검색 탭: 전체 취소는 확인한 뒤 모두 뺀다', (tester) async {
+    final queue = MemoryDownloadQueue([_now, _next]);
+    await setUpTestDependencies(downloads: queue);
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    tester.platformDispatcher.localesTestValue = const [Locale('ko')];
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+    addTearDown(sl.reset);
+    await tester.pumpWidget(const MusicApp(initialLocation: Routes.search));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('전체 취소'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('계속 받기'));
+    await tester.pumpAndSettle();
+    expect(queue.controls, isEmpty);
+
+    await tester.tap(find.byTooltip('전체 취소'));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(of: find.byType(AppDialog), matching: find.text('전체 취소')),
+    );
+    await tester.pumpAndSettle();
+    expect(queue.controls, ['cancelAll:']);
+    expect(find.text('Now Song'), findsNothing);
+  });
+
+  testWidgets('재생목록 상세: 이 재생목록에 담을 곡마다 진행도, 전체 취소는 그 곡만', (tester) async {
+    const mine = DownloadItem(
+      id: 'm',
+      title: 'Mine Song',
+      artist: 'A',
+      status: DownloadStatus.downloading,
+      progress: .25,
+      playlistIds: {'pl'},
+    );
+    const other = DownloadItem(
+      id: 'o',
+      title: 'Other Song',
+      artist: 'B',
+      status: DownloadStatus.queued,
+      playlistIds: {'other'},
+    );
+    final queue = MemoryDownloadQueue([mine, other]);
+    await setUpTestDependencies(
+      downloads: queue,
+      playlists: MemoryPlaylistRepository([
+        const Playlist(id: 'pl', name: '가져온 목록', trackCount: 0),
+      ]),
+    );
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    tester.platformDispatcher.localesTestValue = const [Locale('ko')];
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+    addTearDown(sl.reset);
+    await tester.pumpWidget(
+      MusicApp(initialLocation: Routes.playlistDetail('pl')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('받는 중 1곡'), findsOneWidget);
+    expect(find.text('Mine Song'), findsOneWidget);
+    expect(find.text('받는 중 25%'), findsOneWidget);
+    expect(find.text('Other Song'), findsNothing);
+
+    await tester.tap(find.byTooltip('전체 취소'));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(of: find.byType(AppDialog), matching: find.text('전체 취소')),
+    );
+    await tester.pumpAndSettle();
+    expect(queue.controls, ['cancelAll:pl']);
+    expect(find.text('Mine Song'), findsNothing);
   });
 
   testWidgets('검색 탭: 받는 곡이 없으면 카드가 없다', (tester) async {

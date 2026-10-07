@@ -31,13 +31,25 @@ class DownloadQueueState extends Equatable {
   int get doneCount =>
       items.where((i) => i.status == DownloadStatus.done).length;
 
-  /// 현재 곡을 뺀, 아직 끝나지 않은 곡들.
-  List<DownloadItem> get waiting {
-    final now = current;
-    return [
-      for (final i in items)
-        if ((i.isActive || i.status == DownloadStatus.failed) && i != now) i,
-    ];
+  /// 아직 끝나지 않은(받는 중 · 대기 · 일시정지 · 실패) 곡 수.
+  int get unfinishedCount =>
+      items.where((i) => i.status != DownloadStatus.done).length;
+
+  /// [playlistId] 재생목록에 담기로 한, 아직 끝나지 않은 곡들 (재생목록 화면의 받기 영역).
+  List<DownloadItem> unfinishedFor(String playlistId) => [
+    for (final i in items)
+      if (i.status != DownloadStatus.done && i.playlistIds.contains(playlistId))
+        i,
+  ];
+
+  /// 큐에 있는 곡 전체의 받기 진행도 (0 ~ 1). 끝난 곡은 1로 센다.
+  double get overallProgress {
+    if (items.isEmpty) return 0;
+    final sum = items.fold<double>(
+      0,
+      (a, i) => a + (i.status == DownloadStatus.done ? 1 : i.progress),
+    );
+    return (sum / items.length).clamp(0, 1);
   }
 
   @override
@@ -53,6 +65,7 @@ class DownloadQueueCubit extends Cubit<DownloadQueueState> {
     this._resume,
     this._retry,
     this._cancel,
+    this._cancelAll,
   ) : super(const DownloadQueueState());
 
   final WatchDownloadQueue _watch;
@@ -61,6 +74,7 @@ class DownloadQueueCubit extends Cubit<DownloadQueueState> {
   final ResumeDownload _resume;
   final RetryDownload _retry;
   final CancelDownload _cancel;
+  final CancelAllDownloads _cancelAll;
   StreamSubscription<List<DownloadItem>>? _sub;
 
   void start() {
@@ -79,6 +93,9 @@ class DownloadQueueCubit extends Cubit<DownloadQueueState> {
   Future<void> retry(String id) => _retry(id);
 
   Future<void> cancel(String id) => _cancel(id);
+
+  /// 끝나지 않은 받기를 모두 취소한다 ([playlistId]가 있으면 그 재생목록 것만). 취소한 곡 수를 돌려준다.
+  Future<int> cancelAll({String? playlistId}) => _cancelAll(playlistId);
 
   @override
   Future<void> close() async {

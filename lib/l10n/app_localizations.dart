@@ -1940,6 +1940,36 @@ abstract class AppLocalizations {
   /// **'취소하기'**
   String get downloadCancelConfirm;
 
+  /// No description provided for @downloadsCancelAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체 취소'**
+  String get downloadsCancelAll;
+
+  /// No description provided for @downloadsCancelAllTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'받기 모두 취소'**
+  String get downloadsCancelAllTitle;
+
+  /// No description provided for @downloadsCancelAllBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'받는 중이거나 기다리는 {count}곡의 받기를 모두 취소할까요? 지금까지 받은 부분은 사라져요.'**
+  String downloadsCancelAllBody(int count);
+
+  /// No description provided for @downloadsOverall.
+  ///
+  /// In ko, this message translates to:
+  /// **'{done}/{total}곡'**
+  String downloadsOverall(int done, int total);
+
+  /// No description provided for @playlistDownloadsTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'받는 중 {count}곡'**
+  String playlistDownloadsTitle(int count);
+
   /// No description provided for @downloadFieldTitle.
   ///
   /// In ko, this message translates to:

@@ -24,4 +24,8 @@ abstract interface class DownloadQueueRepository {
 
   /// 항목을 대기열에서 뺀다 (받던 중이면 멈추고 버린다).
   Future<void> cancel(String id);
+
+  /// 끝나지 않은 항목(받는 중 · 대기 · 일시정지 · 실패)을 모두 뺀다. [playlistId]를 주면
+  /// 그 재생목록에 담기로 한 항목만 뺀다. 뺀 곡 수를 돌려준다.
+  Future<int> cancelAll({String? playlistId});
 }

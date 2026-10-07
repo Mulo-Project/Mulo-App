@@ -61,8 +61,9 @@ void registerDownloads(GetIt sl) {
     ..registerFactory(() => ResumeDownload(sl()))
     ..registerFactory(() => RetryDownload(sl()))
     ..registerFactory(() => CancelDownload(sl()))
+    ..registerFactory(() => CancelAllDownloads(sl()))
     ..registerFactory(
-      () => DownloadQueueCubit(sl(), sl(), sl(), sl(), sl(), sl()),
+      () => DownloadQueueCubit(sl(), sl(), sl(), sl(), sl(), sl(), sl()),
     );
 }
 

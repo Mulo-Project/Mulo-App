@@ -115,9 +115,9 @@ class _DownloadCard extends StatelessWidget {
       padding: AppSpacing.screen.copyWith(top: AppSpacing.sm),
       child: DownloadProgressCard(
         current: current,
-        waiting: queue.waiting,
-        // 받은 곡을 보관함 곡과 이어 재생하는 건 실제 받기를 붙인 뒤에 한다.
-        onPlay: (_) {},
+        total: queue.items.length,
+        done: queue.doneCount,
+        progress: queue.overallProgress,
       ),
     );
   }
