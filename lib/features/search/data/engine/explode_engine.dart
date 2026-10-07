@@ -66,7 +66,10 @@ class YoutubeExplodeEngine implements DownloaderEngine {
   Future<ChannelInfo> fetchChannel(String url) => _inner.fetchChannel(url);
 
   @override
-  Future<AudioStream> resolveAudioStream(String url) async {
+  Future<AudioStream> resolveAudioStream(
+    String url, {
+    bool refresh = false,
+  }) async {
     final id = VideoId.parseVideoId(url);
     Object? explodeError;
     if (id != null) {
@@ -79,7 +82,7 @@ class YoutubeExplodeEngine implements DownloaderEngine {
       }
     }
     try {
-      return await _inner.resolveAudioStream(url);
+      return await _inner.resolveAudioStream(url, refresh: refresh);
     } on EngineException catch (e) {
       // 둘 다 못 읽었으면 두 까닭을 같이 알린다 (안내에 보여 원인을 알 수 있게).
       if (explodeError == null) rethrow;
@@ -207,6 +210,7 @@ AudioStream _toStream(StreamInfo s, [List<AudioStream> rest = const []]) =>
       headers: {
         'user-agent': switch (s.url.queryParameters['c']) {
           'ANDROID' => _androidUserAgent,
+          'ANDROID_VR' => _androidVrUserAgent,
           'VISIONOS' => _visionOsUserAgent,
           _ => _userAgent,
         },
@@ -255,6 +259,10 @@ const _visionOs = YoutubeApiClient({
     },
   },
 }, 'https://www.youtube.com/youtubei/v1/player?prettyPrint=false');
+
+const _androidVrUserAgent =
+    'com.google.android.apps.youtube.vr.oculus/1.62.27 '
+    '(Linux; U; Android 12L; eureka-user Build/SQ3A.220605.009.A1) gzip';
 
 const _androidUserAgent =
     'com.google.android.youtube/20.10.38 (Linux; U; Android 11) gzip';

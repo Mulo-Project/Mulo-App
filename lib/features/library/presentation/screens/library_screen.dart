@@ -64,6 +64,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
       LibraryTab.artists => [
         for (final e in _groupBy(tracks, (t) => artistOf(l10n, t)).entries)
           TrackTile(
+            key: ValueKey(e.key),
             title: e.key,
             subtitle: l10n.songCount(e.value.length),
             tone: toneFor(e.key),
@@ -87,6 +88,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
       LibraryTab.albums => [
         for (final e in _groupBy(tracks, (t) => albumOf(l10n, t)).entries)
           TrackTile(
+            key: ValueKey(e.key),
             title: e.key,
             subtitle:
                 '${artistOf(l10n, e.value.first)} · ${l10n.songCount(e.value.length)}',
@@ -104,6 +106,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
       LibraryTab.genres => [
         for (final e in groupByGenre(tracks).entries)
           TrackTile(
+            key: ValueKey(e.key),
             title: genreOf(l10n, e.key),
             subtitle: l10n.songCount(e.value.length),
             tone: toneFor(e.key),
@@ -225,7 +228,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   Widget _songTile(BuildContext context, Track t, int i, List<Track> queue) =>
-      TrackListTile(track: t, queue: queue, index: i);
+      TrackListTile(key: ValueKey(t.id), track: t, queue: queue, index: i);
 
   void _import() => context.read<LibraryImportCubit>().importDeviceMusic();
 

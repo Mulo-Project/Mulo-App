@@ -32,5 +32,7 @@ abstract interface class DownloaderEngine {
 
   /// 곡을 받지 않고 바로 들을 수 있는 오디오 스트림 주소를 알아낸다 (미리 듣기).
   /// 쓸 수 없는 엔진은 [EngineException] (`unavailable`)을 던진다.
-  Future<AudioStream> resolveAudioStream(String url);
+  ///
+  /// [refresh]가 true면 기억해 둔 주소를 쓰지 않고 새로 읽는다 (받다가 403 등으로 막혔을 때 다시 읽기).
+  Future<AudioStream> resolveAudioStream(String url, {bool refresh = false});
 }
