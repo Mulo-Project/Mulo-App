@@ -14,6 +14,7 @@ class MediaSessionInfo extends Equatable {
     this.hasNext = true,
     this.favorite = false,
     this.preview = false,
+    this.coverColors = const [],
   });
 
   final String title;
@@ -34,6 +35,9 @@ class MediaSessionInfo extends Equatable {
   /// 검색 결과 미리 듣기인지 (재생 알림을 잠시 빌려 쓴다. 이전 · 다음 · 좋아요는 없다).
   final bool preview;
 
+  /// 커버가 없을 때 그릴 앱 기본 커버의 색(ARGB 정수 세 개, 테마색). 비어 있으면 커버를 두지 않는다.
+  final List<int> coverColors;
+
   /// 커버 주소만 바꾼 사본.
   MediaSessionInfo withArtUri(String? uri) => MediaSessionInfo(
     title: title,
@@ -47,6 +51,7 @@ class MediaSessionInfo extends Equatable {
     hasNext: hasNext,
     favorite: favorite,
     preview: preview,
+    coverColors: coverColors,
   );
 
   @override
@@ -62,6 +67,7 @@ class MediaSessionInfo extends Equatable {
     hasNext,
     favorite,
     preview,
+    coverColors,
   ];
 }
 

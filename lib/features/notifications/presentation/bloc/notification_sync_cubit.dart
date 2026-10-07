@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/usecase/usecase.dart';
@@ -140,6 +141,7 @@ class NotificationSyncCubit extends Cubit<void> {
     required String? artUri,
     bool favorite = false,
     PreviewNotice? preview,
+    List<int> coverColors = const [],
     required NotificationSettings settings,
     required AppLocalizations l10n,
     DateTime? now,
@@ -167,6 +169,7 @@ class NotificationSyncCubit extends Cubit<void> {
             hasPrevious: false,
             hasNext: false,
             preview: true,
+            coverColors: hide ? const [] : coverColors,
           )
         : MediaSessionInfo(
             title: hide ? l10n.notifHiddenTitle : track!.title,
@@ -181,6 +184,7 @@ class NotificationSyncCubit extends Cubit<void> {
             hasPrevious: hasPrevious,
             hasNext: hasNext,
             favorite: favorite,
+            coverColors: hide ? const [] : coverColors,
           );
     final at = now ?? DateTime.now();
     final last = _session;
@@ -195,7 +199,8 @@ class NotificationSyncCubit extends Cubit<void> {
           last.hasPrevious == next.hasPrevious &&
           last.hasNext == next.hasNext &&
           last.favorite == next.favorite &&
-          last.preview == next.preview;
+          last.preview == next.preview &&
+          listEquals(last.coverColors, next.coverColors);
       final expected = last.playing
           ? last.position + at.difference(_sessionAt!)
           : last.position;

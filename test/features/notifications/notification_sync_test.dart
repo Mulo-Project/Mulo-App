@@ -227,6 +227,25 @@ void main() {
     });
   });
 
+  test('기본 커버 색은 숨기기를 끄면 보내고 켜면 보내지 않는다', () async {
+    Future<void> sync(NotificationSettings s) => cubit.syncPlayback(
+      track: track,
+      isPlaying: true,
+      position: Duration.zero,
+      hasPrevious: true,
+      hasNext: true,
+      artUri: null,
+      coverColors: const [1, 2, 3],
+      settings: s,
+      l10n: l10n,
+      now: DateTime(2026),
+    );
+    await sync(on);
+    expect(session.updates.last!.coverColors, [1, 2, 3]);
+    await sync(on.copyWith(hideSongInfo: true));
+    expect(session.updates.last!.coverColors, isEmpty);
+  });
+
   test('재생 알림을 끄면 알림을 치운다', () async {
     await play(on);
     await play(on.copyWith(playback: false));

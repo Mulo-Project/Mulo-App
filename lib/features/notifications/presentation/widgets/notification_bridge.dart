@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../downloads/presentation/bloc/download_queue_cubit.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
+import '../../../theme/presentation/bloc/theme_cubit.dart';
 import '../../../search/presentation/bloc/preview_cubit.dart';
 import '../../domain/entities/media_session_info.dart';
 import '../bloc/notification_settings_cubit.dart';
@@ -117,6 +119,7 @@ class _NotificationBridgeState extends State<NotificationBridge>
     final cover = track == null
         ? null
         : context.read<CoverCubit>().state[CoverKey.track(track.id)];
+    final p = context.palette;
     final previewing = context.read<PreviewCubit>().state;
     final hit = previewing.hit;
     context.read<NotificationSyncCubit>().syncPlayback(
@@ -130,6 +133,11 @@ class _NotificationBridgeState extends State<NotificationBridge>
               paused: previewing.paused,
             )
           : null,
+      coverColors: [
+        p.accent.toARGB32(),
+        p.primary.toARGB32(),
+        Color.lerp(p.primary, const Color(0xFF000000), .65)!.toARGB32(),
+      ],
       track: track,
       isPlaying: now.isPlaying,
       position: now.position,
@@ -158,6 +166,12 @@ class _NotificationBridgeState extends State<NotificationBridge>
       ),
       BlocListener<NowPlayingCubit, NowPlayingState>(
         listener: (_, _) => _syncPlayback(),
+      ),
+      BlocListener<ThemeCubit, ThemeState>(
+        listenWhen: (a, b) => a != b,
+        listener: (_, _) => WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _syncPlayback();
+        }),
       ),
       BlocListener<PreviewCubit, PreviewState>(
         listener: (_, _) => _syncPlayback(),

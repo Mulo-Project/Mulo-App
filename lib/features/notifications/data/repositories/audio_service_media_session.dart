@@ -1,6 +1,12 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:audio_service/audio_service.dart';
+import 'package:flutter/material.dart' show Icons;
+import 'package:flutter/painting.dart';
+import 'package:flutter/services.dart' show Uint8List;
+import 'package:path_provider/path_provider.dart';
 
 import '../../../../core/cache/cached_web_image.dart';
 import '../../../../core/design/tokens/app_palette.dart';
@@ -49,6 +55,62 @@ class AudioServiceMediaSession implements MediaSession {
     return _artCopies[uri] = file.uri.toString();
   }
 
+  final _defaultArt = <String, String>{};
+
+  /// 커버가 없는 곡에 보여 줄 앱 기본 커버 (테마색 그라데이션 + 음표). 색마다 한 번 그려 파일로 둔다.
+  Future<String?> _defaultCover(List<int> colors) async {
+    final key = colors.map((c) => c.toRadixString(16)).join('_');
+    final known = _defaultArt[key];
+    if (known != null) return known;
+    try {
+      final dir = await getApplicationSupportDirectory();
+      final file = File('${dir.path}/notification_cover_$key.png');
+      if (!file.existsSync()) {
+        await file.writeAsBytes(await _paintDefaultCover(colors));
+      }
+      return _defaultArt[key] = file.uri.toString();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<Uint8List> _paintDefaultCover(List<int> colors) async {
+    const size = 512.0;
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    final rect = Offset.zero & const Size(size, size);
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = ui.Gradient.radial(
+          const Offset(size * .2, size * .15),
+          size * 1.4,
+          [for (final c in colors) Color(c)],
+          const [0, .5, 1],
+        ),
+    );
+    const icon = Icons.music_note_rounded;
+    final painter = TextPainter(
+      textDirection: TextDirection.ltr,
+      text: TextSpan(
+        text: String.fromCharCode(icon.codePoint),
+        style: TextStyle(
+          fontFamily: icon.fontFamily,
+          package: icon.fontPackage,
+          fontSize: size * .45,
+          color: AppPalette.white.withValues(alpha: .9),
+        ),
+      ),
+    )..layout();
+    painter.paint(
+      canvas,
+      Offset((size - painter.width) / 2, (size - painter.height) / 2),
+    );
+    final image = await recorder.endRecording().toImage(512, 512);
+    final data = await image.toByteData(format: ui.ImageByteFormat.png);
+    return data!.buffer.asUint8List();
+  }
+
   @override
   Future<void> update(MediaSessionInfo? info) async {
     final seq = ++_seq;
@@ -58,7 +120,11 @@ class AudioServiceMediaSession implements MediaSession {
       handler?.show(null);
       return;
     }
-    final art = await _localArt(info.artUri);
+    final art =
+        await _localArt(info.artUri) ??
+        (info.coverColors.length == 3
+            ? await _defaultCover(info.coverColors)
+            : null);
     // 기다리는 사이 더 새 요청이 왔으면 이 요청은 버린다.
     if (seq != _seq) return;
     handler?.show(art == info.artUri ? info : info.withArtUri(art));
