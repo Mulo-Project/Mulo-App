@@ -88,7 +88,7 @@ class DownloadQueueCubit extends Cubit<DownloadQueueState> {
     this._retry,
     this._cancel,
     this._cancelAll, [
-    this._loadDownloaded,
+    this._watchDownloaded,
   ]) : super(const DownloadQueueState());
 
   final WatchDownloadQueue _watch;
@@ -98,42 +98,30 @@ class DownloadQueueCubit extends Cubit<DownloadQueueState> {
   final RetryDownload _retry;
   final CancelDownload _cancel;
   final CancelAllDownloads _cancelAll;
-  final LoadDownloadedKeys? _loadDownloaded;
+  final WatchDownloadedKeys? _watchDownloaded;
   StreamSubscription<List<DownloadItem>>? _sub;
+
+  StreamSubscription<Set<String>>? _keysSub;
 
   void start() {
     _sub?.cancel();
-    var done = -1;
+    _keysSub?.cancel();
     _sub = _watch(const NoParams()).listen((items) {
       emit(
         DownloadQueueState(items: items, downloadedKeys: state.downloadedKeys),
       );
-      // 처음 한 번, 그리고 받기가 끝난 곡이 늘 때마다 받은 곡 목록을 다시 읽는다.
-      final count = items.where((i) => i.status == DownloadStatus.done).length;
-      if (count != done) {
-        done = count;
-        _refreshDownloaded();
+    });
+    // 곡을 받거나 지울 때마다 받은 곡 목록이 새로 온다 (지운 곡은 다시 받을 수 있다).
+    _keysSub = _watchDownloaded?.call(const NoParams()).listen((keys) {
+      if (!isClosed) {
+        emit(DownloadQueueState(items: state.items, downloadedKeys: keys));
       }
     });
   }
 
-  Future<void> _refreshDownloaded() async {
-    final load = _loadDownloaded;
-    if (load == null) return;
-    final keys = await load(const NoParams());
-    if (!isClosed) {
-      emit(DownloadQueueState(items: state.items, downloadedKeys: keys));
-    }
-  }
-
   /// 이미 받아 보관함에 있는 곡인지.
   bool isDownloaded(String url) =>
-      state.downloadedKeys.contains(downloadSourceKey(url)) ||
-      state.items.any(
-        (e) =>
-            e.status == DownloadStatus.done &&
-            downloadSourceKey(e.url) == downloadSourceKey(url),
-      );
+      state.downloadedKeys.contains(downloadSourceKey(url));
 
   /// 같은 원본 주소의 곡이 이미 받는 중 · 대기 · 일시정지인지.
   bool isInQueue(String url) {
@@ -160,6 +148,7 @@ class DownloadQueueCubit extends Cubit<DownloadQueueState> {
   @override
   Future<void> close() async {
     await _sub?.cancel();
+    await _keysSub?.cancel();
     return super.close();
   }
 }

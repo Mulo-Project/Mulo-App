@@ -354,7 +354,7 @@ class _HitTile extends StatelessWidget {
       for (final e in c.state.items) {
         if (downloadSourceKey(e.url) != key) continue;
         if (e.status == DownloadStatus.downloading) return e.status;
-        if (e.isActive || e.status == DownloadStatus.done) found = e.status;
+        if (e.isActive) found = e.status;
       }
       return found;
     });
@@ -367,7 +367,6 @@ class _HitTile extends StatelessWidget {
         AppIcons.hourglassEmpty,
         l10n.downloadStateQueued,
       ),
-      DownloadStatus.done => (AppIcons.checkCircle, l10n.downloadStateDone),
       _
           when hit.downloaded ||
               context.select<DownloadQueueCubit, bool>(

@@ -46,13 +46,13 @@ class FindExistingDownload implements UseCase<ExistingDownload, String> {
 }
 
 /// 이미 받은 곡들의 원본 주소 키 (받기 버튼을 "받음"으로 보이고 다시 받지 못하게).
-class LoadDownloadedKeys implements UseCase<Set<String>, NoParams> {
-  const LoadDownloadedKeys(this._repo);
+class WatchDownloadedKeys implements StreamUseCase<Set<String>, NoParams> {
+  const WatchDownloadedKeys(this._repo);
 
   final DownloadQueueRepository _repo;
 
   @override
-  Future<Set<String>> call(NoParams params) => _repo.downloadedKeys();
+  Stream<Set<String>> call(NoParams params) => _repo.watchDownloadedKeys();
 }
 
 /// 일시정지 (상세 기능: 다운로드 대기열 #7).

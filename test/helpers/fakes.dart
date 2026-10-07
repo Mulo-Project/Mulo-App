@@ -443,7 +443,7 @@ class MemoryDownloadQueue implements DownloadQueueRepository {
       existing[url] ?? ExistingDownload.none;
 
   @override
-  Future<Set<String>> downloadedKeys() async => {};
+  Stream<Set<String>> watchDownloadedKeys() => Stream.value({});
 
   @override
   Stream<List<DownloadItem>> watchQueue() async* {

@@ -57,7 +57,7 @@ void registerDownloads(GetIt sl) {
     ..registerFactory(() => WatchDownloadQueue(sl()))
     ..registerFactory(() => EnqueueDownload(sl()))
     ..registerFactory(() => FindExistingDownload(sl()))
-    ..registerFactory(() => LoadDownloadedKeys(sl()))
+    ..registerFactory(() => WatchDownloadedKeys(sl()))
     ..registerFactory(() => PauseDownload(sl()))
     ..registerFactory(() => ResumeDownload(sl()))
     ..registerFactory(() => RetryDownload(sl()))
