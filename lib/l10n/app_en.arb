@@ -561,6 +561,8 @@
   "playlistImportClear": "Clear selection",
   "playlistImportStart": "Download {count} songs",
   "playlistImportStarted": "Started downloading {count} songs",
+  "playlistImportStartedSkipped": "Started downloading {count} songs ({skipped} already downloaded were skipped)",
+  "@playlistImportStartedSkipped": {"placeholders": {"count": {"type": "int"}, "skipped": {"type": "int"}}},
   "searchPlaylistPick": "Choose & download",
   "settingsAccount": "Account",
   "settingsGoogleAccount": "Google account",

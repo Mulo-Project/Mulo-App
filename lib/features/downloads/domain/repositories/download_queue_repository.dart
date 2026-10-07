@@ -1,10 +1,14 @@
 import '../entities/download_item.dart';
 import '../entities/download_request.dart';
+import '../entities/download_source.dart';
 
 /// 다운로드 대기열 저장소.
 abstract interface class DownloadQueueRepository {
   /// 대기열 전체 (받는 순서). 바뀔 때마다 다시 흘려보낸다.
   Stream<List<DownloadItem>> watchQueue();
+
+  /// 같은 원본 주소의 곡을 이미 받았는지 · 받는 중인지 (재생목록 가져오기가 건너뛸 곡을 가린다).
+  Future<ExistingDownload> findExisting(String url);
 
   /// 받기를 대기열에 넣는다.
   Future<void> enqueue(DownloadRequest request);

@@ -10,6 +10,7 @@ class MainActivity : AudioServiceFragmentActivity() {
     private var lyrics: LyricsChannel? = null
     private var audioOutput: AudioOutputChannel? = null
     private var ytDlp: YtDlpChannel? = null
+    private var transcoder: TranscoderChannel? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -17,6 +18,7 @@ class MainActivity : AudioServiceFragmentActivity() {
         lyrics = LyricsChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
         audioOutput = AudioOutputChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
         ytDlp = YtDlpChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
+        transcoder = TranscoderChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
     }
 
     @Deprecated("Deprecated in Java")
@@ -35,6 +37,8 @@ class MainActivity : AudioServiceFragmentActivity() {
         audioOutput = null
         ytDlp?.dispose()
         ytDlp = null
+        transcoder?.dispose()
+        transcoder = null
         super.cleanUpFlutterEngine(flutterEngine)
     }
 }

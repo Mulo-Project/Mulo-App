@@ -43,11 +43,17 @@ class DownloadedAudio {
 abstract interface class AudioFileDownloader {
   /// [stream]을 [target]에 받는다. 열리지 않으면 [AudioStream.fallbacks]를 차례로 쓴다.
   /// [onProgress]는 0 ~ 1 (크기를 알 때만). 멈추면 [DownloadAborted], 못 받으면 [DownloadFailed].
+  ///
+  /// [target]에 받다 만 내용이 있고 [resumeMime](그때 받던 형식)이 주어지면, 새 주소의 형식이 같을 때
+  /// 이어서 받는다(HTTP Range). 형식이 다르거나 모르면 처음부터 다시 쓴다. 멈춰도 받은 만큼은 [target]에 남긴다.
+  /// [onMime]은 받는 형식이 정해지면 한 번 알린다 (이어받기 표시로 저장해 두라는 뜻).
   Future<DownloadedAudio> download(
     AudioStream stream,
     File target, {
     required DownloadCancelToken token,
     required void Function(double progress) onProgress,
+    String? resumeMime,
+    void Function(String mime)? onMime,
   });
 }
 
@@ -70,15 +76,20 @@ class HttpAudioFileDownloader implements AudioFileDownloader {
     File target, {
     required DownloadCancelToken token,
     required void Function(double progress) onProgress,
+    String? resumeMime,
+    void Function(String mime)? onMime,
   }) async {
     final errors = <String>[];
+    var resume = resumeMime;
     for (final s in [stream, ...stream.fallbacks]) {
       if (token.isCancelled) throw const DownloadAborted();
       try {
-        return await _downloadOne(s, target, token, onProgress);
+        return await _downloadOne(s, target, token, onProgress, resume, onMime);
       } on DownloadFailed catch (e) {
         errors.add(e.message);
       }
+      // 앞 주소가 남긴 부분 파일은 다른 주소와 이어 붙이지 않는다.
+      resume = null;
     }
     throw DownloadFailed(errors.join(' | '));
   }
@@ -88,6 +99,8 @@ class HttpAudioFileDownloader implements AudioFileDownloader {
     File target,
     DownloadCancelToken token,
     void Function(double) onProgress,
+    String? resumeMime,
+    void Function(String mime)? onMime,
   ) async {
     final client = HttpClient()
       ..connectionTimeout = const Duration(seconds: 15);
@@ -95,11 +108,20 @@ class HttpAudioFileDownloader implements AudioFileDownloader {
     var sinkOpen = false;
     try {
       final url = Uri.parse(stream.url);
-      sink = target.openWrite();
-      sinkOpen = true;
+      final urlMime = url.queryParameters['mime'];
       var offset = 0;
+      if (resumeMime != null && await target.exists()) {
+        final same = urlMime == null || _normalizeMime(urlMime) == resumeMime;
+        final length = await target.length();
+        if (same && length > 0) offset = length;
+      }
+      sink = target.openWrite(
+        mode: offset > 0 ? FileMode.append : FileMode.write,
+      );
+      sinkOpen = true;
       int? total;
-      String? mime = url.queryParameters['mime'];
+      String? mime = offset > 0 ? resumeMime : urlMime;
+      var announced = false;
       while (total == null || offset < total) {
         if (token.isCancelled) throw const DownloadAborted();
         final end = offset + chunkSize - 1;
@@ -113,6 +135,11 @@ class HttpAudioFileDownloader implements AudioFileDownloader {
         );
         mime ??= chunk.mime;
         total = chunk.total ?? (offset + chunk.bytes.length);
+        if (chunk.bytes.isEmpty) {
+          // 이미 다 받아 둔 파일을 이어받으려 한 경우(범위 밖 요청)는 끝난 것으로 본다.
+          if (offset > 0 && offset >= total) break;
+          throw const DownloadFailed('빈 응답');
+        }
         if (chunk.wholeBody) {
           // 서버가 구간을 무시하고 전부 보냈다: 앞에서 받은 것을 버리고 처음부터 쓴다.
           offset = 0;
@@ -121,11 +148,13 @@ class HttpAudioFileDownloader implements AudioFileDownloader {
         }
         sink.add(chunk.bytes);
         offset += chunk.bytes.length;
-        if (chunk.bytes.isEmpty) {
-          throw const DownloadFailed('빈 응답');
+        if (!announced) {
+          announced = true;
+          onMime?.call(_normalizeMime(mime));
         }
         onProgress(total == 0 ? 0 : (offset / total).clamp(0, 1).toDouble());
       }
+      onProgress(1);
       await sink.flush();
       await sink.close();
       sinkOpen = false;
@@ -164,6 +193,11 @@ class HttpAudioFileDownloader implements AudioFileDownloader {
         req.headers.set('range', 'bytes=$from-$to');
         final resp = await req.close().timeout(const Duration(seconds: 20));
         final status = resp.statusCode;
+        if (status == 416 && from > 0) {
+          // 받아 둔 만큼이 이미 전체다.
+          await resp.drain<void>();
+          return _Chunk(const [], from, false, null);
+        }
         if (status != 206 && status != 200) {
           await resp.drain<void>();
           // 403 등은 다시 해도 같다. 다음 형식 주소로 넘어간다.

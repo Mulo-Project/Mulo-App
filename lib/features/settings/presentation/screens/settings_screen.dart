@@ -13,6 +13,7 @@ import '../../../account/domain/entities/google_account.dart';
 import '../../../account/presentation/bloc/account_cubit.dart';
 import '../../../downloads/domain/entities/download_options.dart';
 import '../../../downloads/domain/usecases/download_usecases.dart';
+import '../../../downloads/presentation/bloc/download_preferences_cubit.dart';
 import '../../../downloads/presentation/bloc/download_settings_cubit.dart';
 import '../../../engine/presentation/bloc/engine_cubit.dart';
 import '../../../library/presentation/widgets/loaded_folders_tile.dart';
@@ -37,9 +38,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  Quality _quality = Quality.best;
-  AudioFormat _format = AudioFormat.opus;
-
   /// 이 기기에서 고를 수 있는 저장 형식 (OS별 정책, 불러오기 전엔 비어 있다).
   List<AudioFormat> _formats = const [];
   bool _followMood = false;
@@ -52,9 +50,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (!mounted) return;
       setState(() {
         _formats = formats;
-        if (!formats.contains(_format) && formats.isNotEmpty) {
-          _format = formats.first;
-        }
       });
     });
   }
@@ -76,6 +71,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final lock = context.watch<AppLockCubit>().state;
     final lockCtrl = context.read<AppLockCubit>();
     final savePath = context.watch<DownloadSettingsCubit>().state;
+    final prefs = context.watch<DownloadPreferencesCubit>().state;
     final notify = context.watch<NotificationSettingsCubit>().state;
     final notifyCtrl = context.read<NotificationSettingsCubit>();
 
@@ -115,13 +111,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       below: SegmentedPills<Quality>(
                         expand: true,
                         values: Quality.values,
-                        selected: _quality,
+                        selected: prefs.quality,
                         labelOf: (q) => switch (q) {
                           Quality.best => l10n.qualityBest,
                           Quality.normal => l10n.qualityNormal,
                           Quality.saver => l10n.qualitySaver,
                         },
-                        onChanged: (q) => setState(() => _quality = q),
+                        onChanged: context
+                            .read<DownloadPreferencesCubit>()
+                            .setQuality,
                       ),
                     ),
                     if (_formats.isNotEmpty)
@@ -130,9 +128,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         below: SegmentedPills<AudioFormat>(
                           expand: true,
                           values: _formats,
-                          selected: _format,
+                          selected: prefs.format,
                           labelOf: (f) => f.name,
-                          onChanged: (f) => setState(() => _format = f),
+                          onChanged: context
+                              .read<DownloadPreferencesCubit>()
+                              .setFormat,
                         ),
                       ),
                   ],

@@ -1,7 +1,9 @@
 import '../../../../core/usecase/usecase.dart';
 import '../entities/download_item.dart';
 import '../entities/download_options.dart';
+import '../entities/download_preferences.dart';
 import '../entities/download_request.dart';
+import '../entities/download_source.dart';
 import '../repositories/download_queue_repository.dart';
 import '../repositories/download_settings_repository.dart';
 
@@ -31,6 +33,16 @@ class EnqueueDownload implements UseCase<bool, DownloadRequest> {
     await _repo.enqueue(request.normalized());
     return true;
   }
+}
+
+/// 이미 받은 곡인지 찾기: 원본 주소가 같은 곡이 보관함에 있거나 대기열에 있는지.
+class FindExistingDownload implements UseCase<ExistingDownload, String> {
+  const FindExistingDownload(this._repo);
+
+  final DownloadQueueRepository _repo;
+
+  @override
+  Future<ExistingDownload> call(String url) => _repo.findExisting(url);
 }
 
 /// 일시정지 (상세 기능: 다운로드 대기열 #7).
@@ -115,4 +127,38 @@ class PickSaveFolder implements UseCase<String?, NoParams> {
 
   @override
   Future<String?> call(NoParams _) => _repo.pickFolder();
+}
+
+/// 기본 음질 · 저장 형식 읽기.
+class LoadDownloadPreferences
+    implements UseCase<DownloadPreferences, NoParams> {
+  const LoadDownloadPreferences(this._repo);
+
+  final DownloadSettingsRepository _repo;
+
+  @override
+  Future<DownloadPreferences> call(NoParams _) async => DownloadPreferences(
+    quality: await _repo.loadQuality(),
+    format: await _repo.loadFormat(),
+  );
+}
+
+/// 기본 음질 정하기.
+class SaveDownloadQuality implements UseCase<void, Quality> {
+  const SaveDownloadQuality(this._repo);
+
+  final DownloadSettingsRepository _repo;
+
+  @override
+  Future<void> call(Quality quality) => _repo.saveQuality(quality);
+}
+
+/// 기본 저장 형식 정하기.
+class SaveDownloadFormat implements UseCase<void, AudioFormat> {
+  const SaveDownloadFormat(this._repo);
+
+  final DownloadSettingsRepository _repo;
+
+  @override
+  Future<void> call(AudioFormat format) => _repo.saveFormat(format);
 }

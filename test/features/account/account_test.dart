@@ -20,12 +20,16 @@ AccountCubit _accountCubit(FakeAccountRepository repo) => AccountCubit(
 
 PlaylistImportCubit _importCubit(FakeAccountRepository repo) {
   final engine = FakeDownloaderEngine();
+  final queue = MemoryDownloadQueue();
+  final lists = MemoryPlaylistRepository();
   return PlaylistImportCubit(
     FetchMediaInfo(engine),
     SearchPlaylists(engine),
     FetchMyPlaylists(repo),
-    EnqueueDownload(MemoryDownloadQueue()),
-    CreatePlaylist(MemoryPlaylistRepository()),
+    EnqueueDownload(queue),
+    CreatePlaylist(lists),
+    FindExistingDownload(queue),
+    AddTracksToPlaylist(lists),
   );
 }
 

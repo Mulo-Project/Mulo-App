@@ -62,6 +62,8 @@ kotlin {
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
     "fullImplementation"("io.github.junkfood02.youtubedl-android:library:0.18.1")
+    // 받은 오디오를 mp3 · opus로 바꾸는 ffmpeg (APK에 네이티브로 들어간다).
+    "fullImplementation"("io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1")
 }
 
 flutter {
