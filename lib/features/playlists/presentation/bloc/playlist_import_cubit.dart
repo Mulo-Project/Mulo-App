@@ -27,6 +27,7 @@ class PlaylistImportState extends Equatable {
     this.query = '',
     this.mine = false,
     this.accountFailure,
+    this.accountDetail = '',
   });
 
   final PlaylistImportStatus status;
@@ -56,6 +57,9 @@ class PlaylistImportState extends Equatable {
 
   /// 내 재생목록을 읽다 실패한 까닭 (로그인이 풀렸는지 등).
   final AccountFailure? accountFailure;
+
+  /// 내 재생목록 읽기 실패의 자세한 까닭 (구글 응답 · 예외, 진단용).
+  final String accountDetail;
 
   bool get allSelected =>
       entries.isNotEmpty && selected.length == entries.length;
@@ -92,6 +96,7 @@ class PlaylistImportState extends Equatable {
     query,
     mine,
     accountFailure,
+    accountDetail,
   ];
 }
 
@@ -202,6 +207,17 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
         PlaylistImportState(
           status: PlaylistImportStatus.failed,
           accountFailure: e.failure,
+          accountDetail: e.message,
+          mine: true,
+        ),
+      );
+    } on Object catch (e) {
+      if (id != _request) return;
+      emit(
+        PlaylistImportState(
+          status: PlaylistImportStatus.failed,
+          accountFailure: AccountFailure.failed,
+          accountDetail: '$e',
           mine: true,
         ),
       );

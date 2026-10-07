@@ -282,11 +282,14 @@ class _Body extends StatelessWidget {
           return message(
             expired ? l10n.playlistImportLoginTitle : l10n.searchErrorTitle,
             switch (state.accountFailure) {
-              AccountFailure.unauthorized =>
-                l10n.playlistImportLoginExpiredBody,
-              AccountFailure.network => l10n.searchNetworkBody,
-              _ => l10n.searchErrorBody,
-            },
+                  AccountFailure.unauthorized =>
+                    l10n.playlistImportLoginExpiredBody,
+                  AccountFailure.network => l10n.searchNetworkBody,
+                  _ => l10n.searchErrorBody,
+                }.trimRight() +
+                (state.accountDetail.isEmpty
+                    ? ''
+                    : '\n(${state.accountDetail})'),
             action: PillButton(
               label: expired ? l10n.settingsAccountSignIn : l10n.actionRetry,
               icon: expired ? AppIcons.person : AppIcons.refresh,
