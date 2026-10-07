@@ -8,6 +8,7 @@ import '../../features/home/di.dart';
 import '../../features/library/di.dart';
 import '../../features/lyrics/di.dart';
 import '../../features/notifications/di.dart';
+import '../../features/permissions/di.dart';
 import '../../features/player/di.dart';
 import '../../features/playlists/di.dart';
 import '../../features/search/di.dart';
@@ -37,4 +38,5 @@ void configureDependencies({AppDatabase? database}) {
   registerEngine(sl);
   registerSearch(sl);
   registerNotifications(sl);
+  registerPermissions(sl);
 }
