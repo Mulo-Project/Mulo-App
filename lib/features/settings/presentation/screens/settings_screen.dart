@@ -200,22 +200,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       ),
                     SettingRow(
-                      title: l10n.settingsBackgroundDownload,
-                      description: l10n.settingsBackgroundDownloadDesc,
-                      trailing: AppSwitch(
-                        value: notify.settings.backgroundDownload,
-                        onChanged: notifyCtrl.setBackgroundDownload,
-                      ),
-                    ),
-                    SettingRow(
-                      title: l10n.settingsNotifyDownloadProgress,
-                      description: l10n.settingsNotifyDownloadProgressDesc,
-                      trailing: AppSwitch(
-                        value: notify.settings.downloadProgress,
-                        onChanged: notifyCtrl.setDownloadProgress,
-                      ),
-                    ),
-                    SettingRow(
                       title: l10n.settingsNotifyDownloadResult,
                       description: l10n.settingsNotifyDownloadResultDesc,
                       trailing: AppSwitch(

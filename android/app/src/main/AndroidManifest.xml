@@ -14,12 +14,11 @@
         android:maxSdkVersion="28" />
     <!-- 앱 잠금 생체 인증(지문 · 얼굴) -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
-    <!-- 알림: Android 13+ 알림 권한, 재생 · 받기 포그라운드 서비스 -->
+    <!-- 알림: Android 13+ 알림 권한, 재생 포그라운드 서비스 -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <application
         android:label="Mulo"
         android:name="${applicationName}"
@@ -65,12 +64,6 @@
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
         </receiver>
-        <!-- 받는 중 알림 (flutter_local_notifications 포그라운드 서비스) -->
-        <service
-            android:name="com.dexterous.flutterlocalnotifications.ForegroundService"
-            android:exported="false"
-            android:stopWithTask="false"
-            android:foregroundServiceType="dataSync" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
