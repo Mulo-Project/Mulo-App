@@ -60,6 +60,8 @@ class RoutingDownloaderEngine implements DownloaderEngine {
       (await _pick()).fetchChannel(url);
 
   @override
-  Future<AudioStream> resolveAudioStream(String url) async =>
-      (await _pick()).resolveAudioStream(url);
+  Future<AudioStream> resolveAudioStream(
+    String url, {
+    bool refresh = false,
+  }) async => (await _pick()).resolveAudioStream(url, refresh: refresh);
 }
