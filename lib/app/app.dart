@@ -17,6 +17,9 @@ import '../features/downloads/presentation/bloc/download_settings_cubit.dart';
 import '../features/home/presentation/bloc/play_recorder_cubit.dart';
 import '../features/library/presentation/bloc/library_cubit.dart';
 import '../features/library/presentation/bloc/library_import_cubit.dart';
+import '../features/notifications/presentation/bloc/notification_settings_cubit.dart';
+import '../features/notifications/presentation/bloc/notification_sync_cubit.dart';
+import '../features/notifications/presentation/widgets/notification_bridge.dart';
 import '../features/player/presentation/bloc/audio_output_cubit.dart';
 import '../features/player/presentation/bloc/now_playing_cubit.dart';
 import '../features/player/presentation/bloc/player_style_cubit.dart';
@@ -69,6 +72,11 @@ class _MusicAppState extends State<MusicApp> {
         BlocProvider(create: (_) => sl<PreviewCubit>()),
         BlocProvider(create: (_) => sl<DownloadQueueCubit>()..start()),
         BlocProvider(create: (_) => sl<DownloadSettingsCubit>()..load()),
+        BlocProvider(
+          lazy: false,
+          create: (_) => sl<NotificationSettingsCubit>()..load(),
+        ),
+        BlocProvider(lazy: false, create: (_) => sl<NotificationSyncCubit>()),
         // 곡 메뉴에서 바로 읽으므로 재생목록 탭을 열기 전에도 미리 불러 둔다.
         BlocProvider(lazy: false, create: (_) => sl<PlaylistsCubit>()..start()),
       ],
@@ -102,7 +110,11 @@ class _MusicAppState extends State<MusicApp> {
               value: dark
                   ? SystemUiOverlayStyle.light
                   : SystemUiOverlayStyle.dark,
-              child: DownloadCompletionListener(child: LockGate(child: child!)),
+              child: NotificationBridge(
+                child: DownloadCompletionListener(
+                  child: LockGate(child: child!),
+                ),
+              ),
             );
           },
         ),

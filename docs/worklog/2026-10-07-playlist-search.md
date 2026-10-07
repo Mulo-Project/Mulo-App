@@ -11,7 +11,7 @@
 - 하나를 누르면 기존 곡 고르기 흐름으로 이어지고, "검색 결과"로 돌아올 수 있다.
 - 검색 탭의 키워드 결과에 "재생목록으로 찾기"를 두어 같은 검색어로 가져오기 화면을 연다.
 - `DownloaderEngine.searchPlaylists` · `SearchPlaylists` 유스케이스 추가. 로컬(yt-dlp)은 유튜브 재생목록 필터 검색 주소를 읽고, 서버는 `GET /search?type=playlist`를 부르며, 둘 다 안 되면 `youtube_explode_dart`로 찾는다 (이 경우 채널 이름은 모른다).
-- 결정: D-072.
+- 결정: D-074.
 
 ## 바꾼 설정
 - 없음 (새 패키지 · 네이티브 변경 없음). 문구는 ARB(ko · en)에 추가.
