@@ -61,10 +61,9 @@ class _NotificationBridgeState extends State<NotificationBridge>
     }
   }
 
-  /// 받기 알림의 미리 듣기: 지금 받는 곡을 받지 않고 바로 듣는다 (받기는 그대로 이어진다).
-  /// 이미 듣는 중이면 그대로 둔다.
+  /// 받기 알림의 버튼. 미리 듣기: 지금 받는 곡을 받지 않고 바로 듣는다 (받기는 그대로 이어진다).
+  /// 이미 듣는 중이면 그대로 둔다. 취소: 지금 받는 곡을 대기열에서 뺀다.
   void _onDownloadAction(DownloadNotificationAction action) {
-    if (action != DownloadNotificationAction.preview) return;
     final current = context
         .read<DownloadQueueCubit>()
         .state
@@ -72,6 +71,10 @@ class _NotificationBridgeState extends State<NotificationBridge>
         .where((i) => i.status == DownloadStatus.downloading)
         .firstOrNull;
     if (current == null) return;
+    if (action == DownloadNotificationAction.cancel) {
+      context.read<DownloadQueueCubit>().cancel(current.id);
+      return;
+    }
     final preview = context.read<PreviewCubit>();
     if (preview.state.isActive(current.id)) return;
     // 메인 재생과 겹치지 않게 재생 중이면 멈춘다.

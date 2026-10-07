@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:isolate';
+import 'dart:ui' show IsolateNameServer;
 
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
@@ -7,12 +9,23 @@ import '../../domain/repositories/download_notifier.dart';
 import '../datasources/notification_texts.dart';
 
 /// Android 알림창에 받기 진행 · 결과를 띄운다 (flutter_local_notifications).
+/// 알림 버튼은 앱 화면을 열지 않고, 백그라운드 isolate가 포트로 주 isolate에 넘긴다.
 /// 받는 중 알림은 [showProgress]의 `foreground`가 true일 때 포그라운드 서비스(dataSync)로 띄워
 /// 앱이 뒤로 가거나 닫혀도 받기가 이어지게 한다. 알림의 미리 듣기 버튼은 앱을 앞으로 가져와 [watchActions]로 알린다.
+const _actionPort = 'com.mulo.app.download_actions';
+
+/// 알림 버튼을 눌렀을 때 (백그라운드 isolate) 주 isolate의 [LocalDownloadNotifier]로 넘긴다.
+@pragma('vm:entry-point')
+void downloadNotificationBackgroundHandler(NotificationResponse response) {
+  final id = response.actionId;
+  if (id != null) IsolateNameServer.lookupPortByName(_actionPort)?.send(id);
+}
+
 class LocalDownloadNotifier implements DownloadNotifier {
   static const _icon = 'ic_stat_mulo';
   static const _progressId = 2001;
   static const _previewAction = 'preview';
+  static const _cancelAction = 'cancel';
   static const _progressChannel = 'com.mulo.app.download_progress';
   static const _doneChannel = 'com.mulo.app.download_done';
   static const _failedChannel = 'com.mulo.app.download_failed';
@@ -38,12 +51,19 @@ class LocalDownloadNotifier implements DownloadNotifier {
       const InitializationSettings(
         android: AndroidInitializationSettings(_icon),
       ),
-      onDidReceiveNotificationResponse: (response) {
-        if (response.actionId == _previewAction) {
-          _actions.add(DownloadNotificationAction.preview);
-        }
-      },
+      onDidReceiveBackgroundNotificationResponse:
+          downloadNotificationBackgroundHandler,
     );
+    final port = ReceivePort();
+    IsolateNameServer.removePortNameMapping(_actionPort);
+    IsolateNameServer.registerPortWithName(port.sendPort, _actionPort);
+    port.listen((id) {
+      if (id == _previewAction) {
+        _actions.add(DownloadNotificationAction.preview);
+      } else if (id == _cancelAction) {
+        _actions.add(DownloadNotificationAction.cancel);
+      }
+    });
     final l10n = systemL10n();
     final android = _android;
     await android?.createNotificationChannel(
@@ -78,6 +98,8 @@ class LocalDownloadNotifier implements DownloadNotifier {
     int? percent, {
     String? subText,
     String? previewLabel,
+    String? cancelLabel,
+    String? bigText,
   }) => AndroidNotificationDetails(
     _progressChannel,
     systemL10n().notifChannelDownloadProgress,
@@ -101,10 +123,18 @@ class LocalDownloadNotifier implements DownloadNotifier {
         AndroidNotificationAction(
           _previewAction,
           previewLabel,
-          showsUserInterface: true,
+          showsUserInterface: false,
+          cancelNotification: false,
+        ),
+      if (cancelLabel != null)
+        AndroidNotificationAction(
+          _cancelAction,
+          cancelLabel,
+          showsUserInterface: false,
           cancelNotification: false,
         ),
     ],
+    styleInformation: bigText == null ? null : BigTextStyleInformation(bigText),
     visibility: NotificationVisibility.private,
   );
 
@@ -116,12 +146,15 @@ class LocalDownloadNotifier implements DownloadNotifier {
     bool foreground = true,
     String? subText,
     String? previewLabel,
+    String? cancelLabel,
   }) async {
     await _ensureInit();
     final details = _progressDetails(
       percent,
       subText: subText,
       previewLabel: previewLabel,
+      cancelLabel: cancelLabel,
+      bigText: body,
     );
     // 앞에 붙들기를 끈 경우: 서비스를 내리고 보통 알림으로 보인다.
     if (!foreground) {

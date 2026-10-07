@@ -15,6 +15,7 @@ class NoDownloadNotifier implements DownloadNotifier {
     bool foreground = true,
     String? subText,
     String? previewLabel,
+    String? cancelLabel,
   }) async {}
 
   @override

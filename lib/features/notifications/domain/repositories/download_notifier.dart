@@ -2,6 +2,9 @@
 enum DownloadNotificationAction {
   /// 지금 받는 곡을 미리 듣는다 (받기는 그대로 이어진다).
   preview,
+
+  /// 지금 받는 곡의 받기를 취소한다.
+  cancel,
 }
 
 /// 받기 알림 (진행 · 결과). 글자는 호출하는 쪽이 정해서 넘긴다.
@@ -19,6 +22,7 @@ abstract interface class DownloadNotifier {
     bool foreground = true,
     String? subText,
     String? previewLabel,
+    String? cancelLabel,
   });
 
   /// 받는 중 알림을 치운다.

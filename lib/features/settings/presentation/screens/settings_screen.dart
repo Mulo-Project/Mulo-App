@@ -18,6 +18,7 @@ import '../../../downloads/presentation/bloc/download_settings_cubit.dart';
 import '../../../engine/presentation/bloc/engine_cubit.dart';
 import '../../../library/presentation/widgets/loaded_folders_tile.dart';
 import '../../../notifications/presentation/bloc/notification_settings_cubit.dart';
+import '../../../permissions/presentation/widgets/permissions_section.dart';
 import '../../../player/presentation/bloc/player_style_cubit.dart';
 import '../../../player/presentation/widgets/player_style_sheet.dart';
 import '../../../security/presentation/bloc/app_lock_cubit.dart';
@@ -233,6 +234,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
                 const SizedBox(height: AppSpacing.lg),
+                const PermissionsSection(),
                 SectionCard(
                   title: l10n.settingsTheme,
                   children: [

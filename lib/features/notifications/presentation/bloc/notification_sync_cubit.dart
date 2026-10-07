@@ -130,15 +130,19 @@ class NotificationSyncCubit extends Cubit<void> {
 
     final percent = (current.progress * 100).round().clamp(0, 100);
     final title = hide ? l10n.notifDownloadHiddenTitle : current.title;
-    final body = nextItem != null && !hide
+    final progressLine = nextItem != null && !hide
         ? l10n.notifDownloadProgressNext(percent, nextItem.title)
         : l10n.notifDownloadProgressBody(percent);
+    final body = hide || current.artist.isEmpty
+        ? progressLine
+        : '${current.artist} · $progressLine';
     final subText = l10n.notifDownloadOverall(
       done,
       batch.length,
       overallPercent,
     );
     final preview = hide ? null : l10n.notifDownloadPreview;
+    final cancel = l10n.notifDownloadCancel;
     final key = '$title|$body|$subText|$overallPercent|$keepAlive|$preview';
     if (_progressShown && key == _lastProgress) return;
     await _ensurePermission();
@@ -152,6 +156,7 @@ class NotificationSyncCubit extends Cubit<void> {
         foreground: keepAlive,
         subText: subText,
         previewLabel: preview,
+        cancelLabel: cancel,
       ),
     );
   }

@@ -113,6 +113,8 @@ void main() {
     final shown = notifier.shown.single;
     expect(shown['title'], '곡2');
     expect(shown['body'], contains('다음 곡: 곡3'));
+    expect(shown['body'], startsWith('가수 · '));
+    expect(shown['cancel'], '취소');
     expect(shown['subText'], '전체 1/4곡 · 38%');
     expect(shown['preview'], '미리듣기');
     expect(notifier.calls.last, 'progress:곡2:38');

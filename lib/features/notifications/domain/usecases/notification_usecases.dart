@@ -54,6 +54,7 @@ class DownloadProgressNotice {
     this.foreground = true,
     this.subText,
     this.previewLabel,
+    this.cancelLabel,
   });
 
   final String title;
@@ -62,6 +63,7 @@ class DownloadProgressNotice {
   final bool foreground;
   final String? subText;
   final String? previewLabel;
+  final String? cancelLabel;
 }
 
 class ShowDownloadProgress implements UseCase<void, DownloadProgressNotice> {
@@ -76,6 +78,7 @@ class ShowDownloadProgress implements UseCase<void, DownloadProgressNotice> {
     foreground: params.foreground,
     subText: params.subText,
     previewLabel: params.previewLabel,
+    cancelLabel: params.cancelLabel,
   );
 }
 
