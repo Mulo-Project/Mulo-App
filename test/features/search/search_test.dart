@@ -497,15 +497,15 @@ void main() {
       expect(engine.searches.single.$1, 'hello');
       expect(find.text('Found Song'), findsOneWidget);
       expect(find.textContaining('Some Artist'), findsOneWidget);
-      // 재생 시간은 타일이 아니라 상세 화면에서만 보여 준다.
-      expect(find.textContaining('3:05'), findsNothing);
+      // 재생 시간은 채널 이름 옆에 보인다.
+      expect(find.textContaining('Some Artist · 3:05'), findsOneWidget);
 
       await tester.tap(find.byTooltip('Download'));
       await tester.pumpAndSettle();
       expect(find.widgetWithText(TextField, 'Found Song'), findsOneWidget);
     });
 
-    testWidgets('이미 받은 곡만 채널 이름 옆에 전체 길이가 보인다', (tester) async {
+    testWidgets('받은 곡이든 아니든 채널 이름 옆에 전체 길이가 보인다', (tester) async {
       final engine = FakeDownloaderEngine(
         pages: [
           const SearchPage(
@@ -537,7 +537,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.textContaining('Chan · 3:05'), findsOneWidget);
-      expect(find.textContaining('4:01'), findsNothing);
+      expect(find.textContaining('Chan · 4:01'), findsOneWidget);
     });
 
     testWidgets('정렬 메뉴에서 최신순을 고르면 날짜 순으로 다시 찾는다', (tester) async {

@@ -7,6 +7,7 @@ import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/design/design.dart';
 import 'package:music_download_play_app/features/covers/domain/entities/cover_art.dart';
+import 'package:music_download_play_app/features/downloads/domain/entities/download_item.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 import 'package:music_download_play_app/features/playlists/domain/entities/playlist.dart';
 
@@ -82,6 +83,7 @@ void main() {
   Future<void> pumpPlaylists(
     WidgetTester tester, {
     FakeImageSource? image,
+    MemoryDownloadQueue? downloads,
   }) async {
     await setUpTestDependencies(
       tracks: [_t('t1', '첫 곡'), _t('t2', '둘째 곡')],
@@ -89,6 +91,7 @@ void main() {
       covers: covers,
       coverColors: colors,
       imageSource: image,
+      downloads: downloads,
     );
     tester.view.physicalSize = const Size(1170, 2532);
     tester.view.devicePixelRatio = 3;
@@ -115,6 +118,26 @@ void main() {
       tester.getTopLeft(find.text('좋아요')).dx,
       lessThan(tester.getTopLeft(find.text('출근길')).dx),
     );
+  });
+
+  testWidgets('받는 중인 곡이 있으면 대표곡 자리에 그 곡과 진행 막대를 보인다', (tester) async {
+    await pumpPlaylists(
+      tester,
+      downloads: MemoryDownloadQueue(const [
+        DownloadItem(
+          id: 'd1',
+          title: '받는 곡',
+          artist: '가수',
+          status: DownloadStatus.downloading,
+          progress: .4,
+          playlistIds: {'pl1'},
+        ),
+      ]),
+    );
+    expect(find.text('받는 곡'), findsOneWidget);
+    expect(find.textContaining('40%'), findsOneWidget);
+    expect(find.byType(ProgressLine), findsOneWidget);
+    expect(find.text('첫 곡'), findsNothing);
   });
 
   testWidgets('⋮ 를 누르면 팝업 메뉴가 열린다 (바닥 시트 아님)', (tester) async {
