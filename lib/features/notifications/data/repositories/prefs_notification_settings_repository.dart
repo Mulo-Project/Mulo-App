@@ -13,6 +13,7 @@ class PrefsNotificationSettingsRepository
   static const _result = 'notification.downloadResult';
   static const _playback = 'notification.playback';
   static const _hide = 'notification.hideSongInfo';
+  static const _background = 'notification.backgroundDownload';
 
   /// 알림 권한이 따로 있는 OS (Android 13+ · iOS). 데스크톱은 늘 허용으로 본다.
   bool get _needsPermission => Platform.isAndroid || Platform.isIOS;
@@ -25,6 +26,7 @@ class PrefsNotificationSettingsRepository
       downloadResult: prefs.getBool(_result) ?? true,
       playback: prefs.getBool(_playback) ?? true,
       hideSongInfo: prefs.getBool(_hide) ?? false,
+      backgroundDownload: prefs.getBool(_background) ?? true,
     );
   }
 
@@ -35,6 +37,7 @@ class PrefsNotificationSettingsRepository
     await prefs.setBool(_result, settings.downloadResult);
     await prefs.setBool(_playback, settings.playback);
     await prefs.setBool(_hide, settings.hideSongInfo);
+    await prefs.setBool(_background, settings.backgroundDownload);
   }
 
   @override

@@ -51,11 +51,23 @@ class DownloadProgressNotice {
     required this.title,
     required this.body,
     this.percent,
+    this.foreground = true,
+    this.subText,
+    this.previewLabel,
+    this.cancelLabel,
+    this.pauseLabel,
+    this.stopLabel,
   });
 
   final String title;
   final String body;
   final int? percent;
+  final bool foreground;
+  final String? subText;
+  final String? previewLabel;
+  final String? cancelLabel;
+  final String? pauseLabel;
+  final String? stopLabel;
 }
 
 class ShowDownloadProgress implements UseCase<void, DownloadProgressNotice> {
@@ -67,6 +79,12 @@ class ShowDownloadProgress implements UseCase<void, DownloadProgressNotice> {
     title: params.title,
     body: params.body,
     percent: params.percent,
+    foreground: params.foreground,
+    subText: params.subText,
+    previewLabel: params.previewLabel,
+    cancelLabel: params.cancelLabel,
+    pauseLabel: params.pauseLabel,
+    stopLabel: params.stopLabel,
   );
 }
 
@@ -113,6 +131,16 @@ class ClearDownloadResults implements UseCase<void, NoParams> {
   Future<void> call(NoParams params) => _notifier.clearResults();
 }
 
+class WatchDownloadActions
+    implements StreamUseCase<DownloadNotificationAction, NoParams> {
+  const WatchDownloadActions(this._notifier);
+  final DownloadNotifier _notifier;
+
+  @override
+  Stream<DownloadNotificationAction> call(NoParams params) =>
+      _notifier.watchActions();
+}
+
 class WatchMediaCommands implements StreamUseCase<MediaCommand, NoParams> {
   const WatchMediaCommands(this._session);
   final MediaSession _session;
@@ -137,6 +165,7 @@ class NotificationActions {
     required this.showResult,
     required this.clearResults,
     required this.watchCommands,
+    required this.watchDownloadActions,
     required this.updateSession,
     required this.isPermissionGranted,
     required this.requestPermission,
@@ -147,6 +176,7 @@ class NotificationActions {
   final ShowDownloadResult showResult;
   final ClearDownloadResults clearResults;
   final WatchMediaCommands watchCommands;
+  final WatchDownloadActions watchDownloadActions;
   final UpdateMediaSession updateSession;
   final IsNotificationPermissionGranted isPermissionGranted;
   final RequestNotificationPermission requestPermission;

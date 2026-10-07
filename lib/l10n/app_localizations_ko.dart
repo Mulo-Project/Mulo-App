@@ -406,6 +406,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lockHint => 'PIN을 입력하세요.';
 
   @override
+  String get settingsBackgroundDownload => '백그라운드 받기';
+
+  @override
+  String get settingsBackgroundDownloadDesc =>
+      '앱이 뒤로 가거나 닫혀도 받기를 이어 가요. 켜 두면 받는 동안 알림이 항상 떠 있어요.';
+
+  @override
   String get settingsHideNotification => '알림에 곡 정보 숨기기';
 
   @override
@@ -1070,6 +1077,21 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadQueued => '대기열에 넣었어요';
 
   @override
+  String get downloadAlreadyDownloaded => '이미 받은 곡이에요';
+
+  @override
+  String get downloadStateDownloading => '받는 중';
+
+  @override
+  String get downloadStateQueued => '대기 중';
+
+  @override
+  String get downloadStateDone => '받음';
+
+  @override
+  String get downloadAlreadyInQueue => '이미 받는 중이거나 대기 중인 곡이에요';
+
+  @override
   String get homeTopGenre => '많이 들은 장르';
 
   @override
@@ -1709,9 +1731,29 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String notifDownloadProgressMore(int percent, int count) {
-    return '받는 중 · $percent% · $count곡 대기';
+  String notifDownloadProgressNext(int percent, String next) {
+    return '받는 중 · $percent% · 다음 곡: $next';
   }
+
+  @override
+  String notifDownloadOverall(int done, int total, int percent) {
+    return '전체 $done/$total곡 · $percent%';
+  }
+
+  @override
+  String get notifDownloadPreview => '미리듣기';
+
+  @override
+  String get notifDownloadCancel => '취소';
+
+  @override
+  String get notifDownloadPausePreview => '일시정지';
+
+  @override
+  String get notifDownloadResumePreview => '이어 듣기';
+
+  @override
+  String get notifDownloadStopPreview => '중지';
 
   @override
   String get notifDownloadDoneTitle => '받기 완료';

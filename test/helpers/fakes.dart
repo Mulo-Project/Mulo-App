@@ -443,6 +443,9 @@ class MemoryDownloadQueue implements DownloadQueueRepository {
       existing[url] ?? ExistingDownload.none;
 
   @override
+  Stream<Set<String>> watchDownloadedKeys() => Stream.value({});
+
+  @override
   Stream<List<DownloadItem>> watchQueue() async* {
     yield [...items];
     yield* _changes.stream;
@@ -1085,12 +1088,39 @@ class MemoryNotificationSettings implements NotificationSettingsRepository {
 class FakeDownloadNotifier implements DownloadNotifier {
   final calls = <String>[];
 
+  /// 마지막 진행 알림의 내용 (제목 · 본문 · 머리말 · 앞에 붙들기 · 미리 듣기 버튼).
+  final shown = <Map<String, Object?>>[];
+  final _actions = StreamController<DownloadNotificationAction>.broadcast();
+
+  void press(DownloadNotificationAction a) => _actions.add(a);
+
+  @override
+  Stream<DownloadNotificationAction> watchActions() => _actions.stream;
+
   @override
   Future<void> showProgress({
     required String title,
     required String body,
     int? percent,
-  }) async => calls.add('progress:$title:$percent');
+    bool foreground = true,
+    String? subText,
+    String? previewLabel,
+    String? cancelLabel,
+    String? pauseLabel,
+    String? stopLabel,
+  }) async {
+    shown.add({
+      'title': title,
+      'body': body,
+      'subText': subText,
+      'foreground': foreground,
+      'preview': previewLabel,
+      'cancel': cancelLabel,
+      'pause': pauseLabel,
+      'stop': stopLabel,
+    });
+    calls.add('progress:$title:$percent');
+  }
 
   @override
   Future<void> clearProgress() async => calls.add('clear');

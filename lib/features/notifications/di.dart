@@ -37,6 +37,7 @@ void registerNotifications(GetIt sl) {
         showResult: ShowDownloadResult(sl()),
         clearResults: ClearDownloadResults(sl()),
         watchCommands: WatchMediaCommands(sl()),
+        watchDownloadActions: WatchDownloadActions(sl()),
         updateSession: UpdateMediaSession(sl()),
         isPermissionGranted: IsNotificationPermissionGranted(sl()),
         requestPermission: RequestNotificationPermission(sl()),

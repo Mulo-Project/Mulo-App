@@ -27,6 +27,20 @@ Future<bool> showDownloadDialog(
   required String url,
 }) async {
   final queue = context.read<DownloadQueueCubit>();
+  // 이미 받았거나 받는 중인 곡은 팝업을 열지 않고 알린다.
+  if (queue.isDownloaded(url) || queue.isInQueue(url)) {
+    final l10n = context.l10n;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          queue.isDownloaded(url)
+              ? l10n.downloadAlreadyDownloaded
+              : l10n.downloadAlreadyInQueue,
+        ),
+      ),
+    );
+    return false;
+  }
   final playlists = context.read<PlaylistsCubit>();
   final settings = context.read<DownloadSettingsCubit>();
   final library = context.read<LibraryCubit>();
@@ -156,8 +170,16 @@ class _DownloadSheetState extends State<_DownloadSheet> {
   }
 
   Future<void> _start() async {
-    final color = _color;
     final queue = context.read<DownloadQueueCubit>();
+    // 같은 곡이 이미 대기열에 있으면 또 넣지 않는다.
+    if (queue.isInQueue(widget.url)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.downloadAlreadyInQueue)),
+      );
+      Navigator.of(context).pop(false);
+      return;
+    }
+    final color = _color;
     final colors = context.read<CoverColorCubit>();
     final genre = _genre.text.trim();
     // 이 장르의 기본 색으로 저장하면 다음에 같은 장르를 받을 때 미리 채워진다.
