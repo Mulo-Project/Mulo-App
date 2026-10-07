@@ -69,6 +69,13 @@ class JustAudioPreviewPlayer implements PreviewPlayer {
           ),
         );
       } on PlayerException catch (direct) {
+        // 재생 목록(m3u8 · mpd) 주소는 조각을 앱이 이어 줄 수 없어 앱 HTTP 방식으로 넘기지 않는다.
+        if (_isManifest(stream.url)) {
+          throw EngineException(
+            EngineFailure.failed,
+            'direct: ${direct.message}',
+          );
+        }
         // 플레이어(ExoPlayer 등)가 직접 못 열면(Source error) 앱이 받아서 넘겨 준다.
         // 앱의 HTTP로는 열리는 주소가 있다 (주소 확인에 쓴 것과 같은 방식).
         try {
@@ -252,4 +259,10 @@ class _HttpRangeSource extends StreamAudioSource {
       contentType: resp.headers.contentType?.mimeType ?? 'audio/mp4',
     );
   }
+}
+
+/// HLS · DASH 재생 목록 주소인가 (조각을 받아 이어야 해서 [_HttpRangeSource]로는 못 튼다).
+bool _isManifest(String url) {
+  final path = Uri.tryParse(url)?.path.toLowerCase() ?? '';
+  return path.endsWith('.m3u8') || path.endsWith('.mpd');
 }

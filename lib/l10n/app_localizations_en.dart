@@ -906,6 +906,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mediaDetailChannel => 'Channel';
 
   @override
+  String get mediaDetailSite => 'Source';
+
+  @override
+  String get mediaDetailUploader => 'Uploaded by';
+
+  @override
   String get mediaDetailOpenChannel => 'View channel';
 
   @override

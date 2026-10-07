@@ -344,6 +344,8 @@
   "mediaDetailWatchYoutube": "Watch on YouTube",
   "mediaDetailOpenOriginal": "Open original page",
   "mediaDetailChannel": "Channel",
+  "mediaDetailSite": "Source",
+  "mediaDetailUploader": "Uploaded by",
   "mediaDetailOpenChannel": "View channel",
   "mediaDetailDuration": "Length",
   "mediaDetailViews": "Views",

@@ -138,8 +138,10 @@ void main() {
       );
       await open(tester, hit: web);
       expect(find.byTooltip('Play in app'), findsNothing);
-      await tester.tap(find.byTooltip('Watch on YouTube').first);
+      await tester.tap(find.byTooltip('Open original page').first);
       await tester.pumpAndSettle();
+      expect(find.text('soundcloud.com'), findsOneWidget);
+      expect(find.text('Open channel'), findsNothing);
       expect(opener.opened, [web.url]);
     });
   });

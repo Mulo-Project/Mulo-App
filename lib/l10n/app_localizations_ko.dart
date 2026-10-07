@@ -890,6 +890,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get mediaDetailChannel => '채널';
 
   @override
+  String get mediaDetailSite => '출처';
+
+  @override
+  String get mediaDetailUploader => '올린 사람';
+
+  @override
   String get mediaDetailOpenChannel => '채널 보기';
 
   @override

@@ -36,6 +36,12 @@ bool isYoutubeUrl(String url) {
       host.endsWith('.youtube.com');
 }
 
+/// 웹 항목에 보여 줄 사이트 이름: 주소의 도메인에서 앞의 `www.`를 뺀 것 (모르면 빈 문자열).
+String siteNameOf(String url) {
+  final host = Uri.tryParse(url)?.host.toLowerCase() ?? '';
+  return host.startsWith('www.') ? host.substring(4) : host;
+}
+
 class MediaDetailScreen extends StatelessWidget {
   const MediaDetailScreen({
     super.key,
@@ -130,10 +136,14 @@ class _DetailViewState extends State<_DetailView> {
     final hit = state.hit;
     final locale = Localizations.localeOf(context).toString();
     final youtube = isYoutubeUrl(hit.url);
+    final site = youtube ? '' : siteNameOf(hit.url);
 
     final views = hit.viewCount;
     final uploaded = hit.uploadedAt;
     final rows = <(String, String)>[
+      if (!youtube && site.isNotEmpty) (l10n.mediaDetailSite, site),
+      if (!youtube && hit.uploader.isNotEmpty)
+        (l10n.mediaDetailUploader, hit.uploader),
       if (hit.duration != null)
         (l10n.mediaDetailDuration, formatDuration(hit.duration!)),
       if (views != null)
@@ -143,7 +153,7 @@ class _DetailViewState extends State<_DetailView> {
             NumberFormat.compact(locale: locale).format(views),
           ),
         ),
-      if (hit.likeCount != null)
+      if (youtube && hit.likeCount != null)
         (
           l10n.mediaDetailLikes,
           NumberFormat.compact(locale: locale).format(hit.likeCount),
@@ -153,13 +163,13 @@ class _DetailViewState extends State<_DetailView> {
           l10n.mediaDetailUploaded,
           MaterialLocalizations.of(context).formatCompactDate(uploaded),
         ),
-      if (hit.creators.length > 1)
+      if (youtube && hit.creators.length > 1)
         (
           l10n.mediaDetailCollaborators,
           // 대표 채널은 위 채널 줄에 있어서 나머지 공동 작업자만 적는다.
           hit.creators.where((c) => c != hit.uploader).join(' · '),
         ),
-      if (hit.categories.isNotEmpty)
+      if (youtube && hit.categories.isNotEmpty)
         (
           l10n.mediaDetailCategory,
           hit.categories.map((c) => categoryLabel(l10n, c)).join(' · '),
@@ -201,6 +211,7 @@ class _DetailViewState extends State<_DetailView> {
                       _Thumbnail(
                         hit: hit,
                         inApp: _canEmbed(hit),
+                        youtube: youtube,
                         onPlay: () => _play(hit),
                       ),
                     if (_embedBlocked)
@@ -230,7 +241,7 @@ class _DetailViewState extends State<_DetailView> {
                     PreviewProgressBar(hitId: hit.id, showTime: true),
                     const SizedBox(height: AppSpacing.md),
                     Text(hit.title, style: text.titleLarge),
-                    if (hit.uploader.isNotEmpty) ...[
+                    if (youtube && hit.uploader.isNotEmpty) ...[
                       const SizedBox(height: AppSpacing.md),
                       _ChannelRow(
                         hit: hit,
@@ -317,12 +328,16 @@ class _Thumbnail extends StatelessWidget {
     required this.hit,
     required this.onPlay,
     this.inApp = false,
+    this.youtube = true,
   });
 
   final MediaHit hit;
 
   /// 앱 안에서 재생되는 버튼인가 (툴팁 문구만 다르다).
   final bool inApp;
+
+  /// 유튜브 영상인가 (아니면 툴팁이 "원본 페이지 열기").
+  final bool youtube;
   final VoidCallback onPlay;
 
   @override
@@ -347,7 +362,9 @@ class _Thumbnail extends StatelessWidget {
                 icon: AppIcons.play,
                 tooltip: inApp
                     ? context.l10n.mediaDetailPlayInApp
-                    : context.l10n.mediaDetailWatchYoutube,
+                    : youtube
+                    ? context.l10n.mediaDetailWatchYoutube
+                    : context.l10n.mediaDetailOpenOriginal,
                 emphasized: true,
                 size: AppSizes.circleButtonLarge,
                 onPressed: onPlay,

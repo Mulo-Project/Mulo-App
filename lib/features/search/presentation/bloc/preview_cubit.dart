@@ -156,9 +156,21 @@ class PreviewCubit extends Cubit<PreviewState> {
       ),
     );
     try {
-      final stream = await _resolve(hit.url).timeout(_resolveTimeout);
+      final stream = await _resolve(hit.url).timeout(
+        _resolveTimeout,
+        onTimeout: () => throw const EngineException(
+          EngineFailure.failed,
+          'resolve timeout (60s): 주소를 읽지 못함',
+        ),
+      );
       if (generation != _generation || isClosed) return null;
-      await _play(stream).timeout(_playTimeout);
+      await _play(stream).timeout(
+        _playTimeout,
+        onTimeout: () => throw EngineException(
+          EngineFailure.failed,
+          'play timeout (30s): ${Uri.tryParse(stream.url)?.host} ${stream.url.contains('.m3u8') ? 'm3u8' : ''}',
+        ),
+      );
       if (generation != _generation || isClosed) {
         // 불러오는 사이에 멈춤이 눌렸다면 늦게 시작된 소리를 끈다.
         // (다른 곡이 눌린 거라면 그 곡의 소리라서 그대로 둔다.)
