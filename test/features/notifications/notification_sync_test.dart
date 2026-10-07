@@ -161,6 +161,17 @@ void main() {
     expect(notifier.calls.last, 'clear');
   });
 
+  test('받기를 시작하자마자(아직 대기 상태여도) 진행 알림을 바로 띄운다', () async {
+    await cubit.syncDownloads(
+      [item('1', DownloadStatus.queued), item('2', DownloadStatus.queued)],
+      on,
+      l10n,
+    );
+    expect(notifier.shown, hasLength(1));
+    expect(notifier.shown.single['title'], '곡1');
+    expect(notifier.shown.single['body'], contains('다음 곡: 곡2'));
+  });
+
   final track = Track(
     id: 't',
     title: '노래',

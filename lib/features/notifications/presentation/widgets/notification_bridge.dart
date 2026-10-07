@@ -68,7 +68,7 @@ class _NotificationBridgeState extends State<NotificationBridge>
         .read<DownloadQueueCubit>()
         .state
         .items
-        .where((i) => i.status == DownloadStatus.downloading)
+        .where((i) => i.isActive && i.status != DownloadStatus.paused)
         .firstOrNull;
     if (current == null) return;
     if (action == DownloadNotificationAction.cancel) {

@@ -93,6 +93,10 @@ class NotificationSyncCubit extends Cubit<void> {
       }
     }
     final active = items.where((i) => i.isActive).toList();
+    // 알림이 아직 없으면 받기를 시작한 직후(대기 → 받는 중 사이)에도 첫 대기 곡으로 바로 띄운다.
+    current ??= _progressShown
+        ? null
+        : items.where((i) => i.status == DownloadStatus.queued).firstOrNull;
     // 한 묶음 = 대기열이 비었다가 다시 채워지기 전까지. 전체 진행률은 이 묶음 기준.
     if (active.isEmpty) {
       _batch.clear();
@@ -125,7 +129,7 @@ class NotificationSyncCubit extends Cubit<void> {
               batch.length;
     final overallPercent = (overall * 100).round().clamp(0, 100);
     final nextItem = items
-        .where((i) => i.status == DownloadStatus.queued)
+        .where((i) => i.status == DownloadStatus.queued && i.id != current!.id)
         .firstOrNull;
 
     final percent = (current.progress * 100).round().clamp(0, 100);
