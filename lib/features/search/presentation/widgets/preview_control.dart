@@ -7,7 +7,6 @@ import '../../../library/domain/entities/track.dart' show formatDuration;
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
-import '../../domain/entities/preview_progress.dart';
 import '../bloc/preview_cubit.dart';
 import '../screens/media_detail_screen.dart';
 
@@ -209,7 +208,25 @@ class PreviewMiniBar extends StatelessWidget {
                       // 길면 미니 플레이어처럼 흘러간다.
                       child: MarqueeText(state.title, style: text.bodySmall),
                     ),
-                    const SizedBox(height: AppSpacing.xs),
+                    const SizedBox(height: AppSpacing.xxs),
+                    // 재생 시간은 진행 막대 양 끝 위에 아주 작게.
+                    if (!loading)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            formatDuration(progress?.position ?? Duration.zero),
+                            style: _timeStyle(text, p),
+                          ),
+                          Text(
+                            progress?.duration == null
+                                ? '--:--'
+                                : formatDuration(progress!.duration!),
+                            style: _timeStyle(text, p),
+                          ),
+                        ],
+                      ),
+                    const SizedBox(height: AppSpacing.xxs),
                     loading
                         ? const ProgressLine(value: 0, height: 3)
                         : PreviewSeekLine(fraction: state.fraction, height: 3),
@@ -217,13 +234,7 @@ class PreviewMiniBar extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
-              if (loading)
-                PreviewLoadingRing(state: state, size: 24)
-              else
-                Text(
-                  _timeText(progress),
-                  style: text.labelSmall?.copyWith(color: p.onSurfaceMuted),
-                ),
+              if (loading) PreviewLoadingRing(state: state, size: 24),
               if (!loading)
                 RowIconButton(
                   key: const ValueKey('preview-mini-pause'),
@@ -246,11 +257,8 @@ class PreviewMiniBar extends StatelessWidget {
   }
 }
 
-String _timeText(PreviewProgress? progress) {
-  final d = progress?.duration;
-  return '${formatDuration(progress?.position ?? Duration.zero)}'
-      ' / ${d == null ? '--:--' : formatDuration(d)}';
-}
+TextStyle? _timeStyle(TextTheme text, AppPalette p) => text.labelSmall
+    ?.copyWith(fontSize: 9, height: 1.1, color: p.onSurfaceMuted);
 
 /// 눌러서 · 끌어서 옮길 수 있는 미리 듣기 진행 막대.
 /// 끌고 있는 동안은 손가락 자리를 보여 주고, 손을 뗄 때 한 번만 실제로 옮긴다.
