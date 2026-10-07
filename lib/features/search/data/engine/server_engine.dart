@@ -127,8 +127,10 @@ class ServerEngine implements DownloaderEngine {
   /// 서버 명세에 스트림 주소 조회가 없어서 쓰지 않는다. 미리 듣기는 이 기기에서
   /// yt-dlp를 실행할 수 있을 때(로컬 엔진)만 된다.
   @override
-  Future<AudioStream> resolveAudioStream(String url) async =>
-      throw const EngineException(EngineFailure.unavailable);
+  Future<AudioStream> resolveAudioStream(
+    String url, {
+    bool refresh = false,
+  }) async => throw const EngineException(EngineFailure.unavailable);
 
   MediaHit _hit(Map<String, dynamic> j) {
     final id = j['videoId'] as String? ?? '';

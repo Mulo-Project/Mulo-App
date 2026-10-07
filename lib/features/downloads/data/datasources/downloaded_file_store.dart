@@ -57,10 +57,11 @@ class PlatformDownloadedFileStore implements DownloadedFileStore {
   }) async {
     if (Platform.isAndroid) {
       final relative = androidRelativePath(folder);
+      final media = androidMediaType(extension, mime);
       final uri = await _channel.invokeMethod<String>('saveAudio', {
         'path': source.path,
-        'displayName': '$name.$extension',
-        'mime': mime,
+        'displayName': '$name.${media.extension}',
+        'mime': media.mime,
         'relativePath': relative,
         'title': title,
         'artist': artist,
@@ -81,6 +82,15 @@ class PlatformDownloadedFileStore implements DownloadedFileStore {
     }
     return SavedAudio(uri: target.path, folder: normalizeFolderPath(dir.path));
   }
+
+  /// MediaStore가 받아 주는 형식으로 바꾼다. webm(`audio/webm`)은 "Unsupported MIME type"으로 거절하므로
+  /// 같은 opus 오디오를 ogg(`.opus`)로 등록한다 (플레이어는 파일 내용을 보고 풀어서 그대로 재생된다).
+  static ({String extension, String mime}) androidMediaType(
+    String extension,
+    String mime,
+  ) => mime == 'audio/webm' || extension == 'weba' || extension == 'webm'
+      ? (extension: 'opus', mime: 'audio/ogg')
+      : (extension: extension, mime: mime);
 
   /// Android 저장 폴더 → MediaStore 상대 경로. 음악 계열 폴더 밖이면 `Music/Mulo`.
   static String androidRelativePath(String folder) {

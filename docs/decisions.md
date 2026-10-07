@@ -531,3 +531,8 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 
 ## D-083 · 2026-10-07 · 재생목록 카드에 받는 곡과 진행 막대
 - 재생목록 탭 카드는 그 재생목록에 담기로 한 곡을 받는 중이면, 카드 아래 대표곡 칸을 받는 곡 제목 · 진행 막대 · 상태(%)로 바꾼다. 받는 곡이 없으면 대기 · 일시정지 곡을, 실패만 남았으면 원래 대표곡을 보인다. 받기가 끝나면 대표곡으로 돌아온다.
+
+## D-084 · 2026-10-07 · 받기 완료 오류(webm 저장 거절)와 403 재시도
+- 원인 1: Android MediaStore가 `audio/webm`을 "Unsupported MIME type"으로 거절해(기기 로그 확인) 다 받은 뒤 `saveAudio`가 `save_failed` PlatformException을 냈다. 받은 webm/opus는 ogg(`.opus`, `audio/ogg`)로 등록한다 (내용은 그대로, 플레이어가 내용을 보고 푼다).
+- 원인 2(가능성): 받다가 403이면 "다시 받기"도 15분 동안 기억한 같은 주소를 써서 계속 막혔다. 막히면 주소를 새로 읽어(`resolveAudioStream(refresh: true)`) 처음부터 한 번 더 받는다. androidVr 클라이언트 주소는 같은 클라이언트의 user-agent로 요청한다.
+- 이 PC에서는 조사 중 유튜브가 모든 곡을 "unavailable"로 막아 403 자체는 재현하지 못했다. 기기에서 계속 막히면 [troubleshooting-preview.md](troubleshooting-preview.md)의 확인 순서를 따른다.
