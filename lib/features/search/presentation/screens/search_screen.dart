@@ -340,8 +340,8 @@ class _HitTile extends StatelessWidget {
     final l10n = context.l10n;
     final subtitle = [
       if (hit.uploader.isNotEmpty) hit.uploader,
-      // 이미 받은 곡은 채널 이름 옆에 전체 길이도 보인다.
-      if (hit.downloaded && hit.duration != null) formatDuration(hit.duration!),
+      // 채널 이름 옆에 전체 길이도 보인다.
+      if (hit.duration != null) formatDuration(hit.duration!),
       if (hit.downloaded) l10n.alreadyDownloaded,
     ].join(' · ');
     final thumb = hit.thumbnailUrl;
