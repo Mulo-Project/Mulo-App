@@ -77,6 +77,7 @@ class ServerEngine implements DownloaderEngine {
             .whereType<Map<String, dynamic>>()
             .map(_hit)
             .toList(),
+        thumbnailUrl: parseText(json['thumbnail']),
       );
     }
     return VideoInfo(_hit(json));

@@ -184,11 +184,18 @@ final class VideoInfo extends MediaInfo {
 }
 
 final class PlaylistInfo extends MediaInfo {
-  const PlaylistInfo({required this.title, required this.entries});
+  const PlaylistInfo({
+    required this.title,
+    required this.entries,
+    this.thumbnailUrl,
+  });
 
   final String title;
   final List<MediaHit> entries;
 
+  /// 재생목록 대표 이미지 주소. 모르면 null.
+  final String? thumbnailUrl;
+
   @override
-  List<Object?> get props => [title, entries];
+  List<Object?> get props => [title, entries, thumbnailUrl];
 }

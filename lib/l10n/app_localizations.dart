@@ -2822,6 +2822,78 @@ abstract class AppLocalizations {
   /// **'좋아요를 취소했어요'**
   String get trackFavoriteOff;
 
+  /// No description provided for @playlistImportHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'유튜브 재생목록 주소'**
+  String get playlistImportHint;
+
+  /// No description provided for @playlistImportEmptyTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생목록 주소를 붙여 넣어 주세요'**
+  String get playlistImportEmptyTitle;
+
+  /// No description provided for @playlistImportEmptyBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 목록이 나오면 받을 곡을 고를 수 있어요.'**
+  String get playlistImportEmptyBody;
+
+  /// No description provided for @playlistImportNotPlaylistTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생목록 주소가 아니에요'**
+  String get playlistImportNotPlaylistTitle;
+
+  /// No description provided for @playlistImportNotPlaylistBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 하나의 주소예요. 재생목록 주소를 붙여 넣어 주세요.'**
+  String get playlistImportNotPlaylistBody;
+
+  /// No description provided for @playlistImportNoTracksTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡이 없어요'**
+  String get playlistImportNoTracksTitle;
+
+  /// No description provided for @playlistImportNoTracksBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 재생목록에는 받을 수 있는 곡이 없어요.'**
+  String get playlistImportNoTracksBody;
+
+  /// No description provided for @playlistImportSelectAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체 선택'**
+  String get playlistImportSelectAll;
+
+  /// No description provided for @playlistImportClear.
+  ///
+  /// In ko, this message translates to:
+  /// **'선택 해제'**
+  String get playlistImportClear;
+
+  /// No description provided for @playlistImportStart.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}곡 받기'**
+  String playlistImportStart(int count);
+
+  /// No description provided for @playlistImportStarted.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}곡을 받기 시작했어요'**
+  String playlistImportStarted(int count);
+
+  /// No description provided for @searchPlaylistPick.
+  ///
+  /// In ko, this message translates to:
+  /// **'골라서 받기'**
+  String get searchPlaylistPick;
+
   /// No description provided for @settingsNotifications.
   ///
   /// In ko, this message translates to:

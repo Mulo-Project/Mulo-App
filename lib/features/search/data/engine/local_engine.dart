@@ -109,6 +109,7 @@ class LocalEngine implements DownloaderEngine {
             .whereType<Map<String, dynamic>>()
             .map(_hit)
             .toList(),
+        thumbnailUrl: _thumbnailOf(j),
       );
     }
     return VideoInfo(_hit(j));
@@ -211,15 +212,21 @@ class LocalEngine implements DownloaderEngine {
     }
   }
 
-  MediaHit _hit(Map<String, dynamic> j) {
-    final id = j['id'] as String? ?? '';
-    final seconds = j['duration'];
+  /// `thumbnail`, 없으면 `thumbnails`의 마지막(가장 큰) 이미지 주소.
+  String? _thumbnailOf(Map<String, dynamic> j) {
     final thumbs = j['thumbnails'];
     var thumb = j['thumbnail'] as String?;
     if (thumb == null && thumbs is List && thumbs.isNotEmpty) {
       final last = thumbs.last;
       if (last is Map) thumb = last['url'] as String?;
     }
+    return thumb;
+  }
+
+  MediaHit _hit(Map<String, dynamic> j) {
+    final id = j['id'] as String? ?? '';
+    final seconds = j['duration'];
+    final thumb = _thumbnailOf(j);
     return MediaHit(
       id: id,
       title: j['title'] as String? ?? '',

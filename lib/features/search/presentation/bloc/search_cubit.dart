@@ -119,6 +119,9 @@ class SearchCubit extends Cubit<SearchState> {
 
   int _request = 0;
   String _query = '';
+
+  /// 마지막으로 찾은 입력 (재생목록 주소를 가져오기 화면으로 넘길 때 쓴다).
+  String get query => _query;
   SearchSource _source = SearchSource.youtube;
   int _page = 0;
 

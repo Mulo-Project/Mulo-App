@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../../app/router.dart';
 import '../bloc/playlists_cubit.dart';
 import '../widgets/new_playlist_sheet.dart';
 import '../widgets/playlist_grid.dart';
@@ -43,7 +45,7 @@ class PlaylistsScreen extends StatelessWidget {
               label: l10n.playlistsImport,
               icon: AppIcons.link,
               variant: PillVariant.tonal,
-              onPressed: () {},
+              onPressed: () => context.push(Routes.playlistImport),
             ),
           ),
           const SizedBox(height: AppSpacing.md),

@@ -465,6 +465,11 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - D-068의 "오프라인 표시" 미정 건을 정했다: 웹 커버는 주소를 그대로 기억하되, 처음 보여 줄 때 작은 사본을 앱 **캐시 폴더**(`cover_cache/`)에 남기고(`CachedWebImage`) 다음부터 오프라인에서도 그 사본으로 그린다. 사본은 캐시라 시스템이 지워도 다시 받아 채운다. DB에는 계속 주소만 저장한다 (D-067 유지).
 - 안드로이드 미디어 파일 썸네일(MediaStore)에는 기대지 않는다: 받은 .weba 등에는 대표 이미지가 들어 있지 않다.
 
+## D-073 · 2026-10-07 · 유튜브 재생목록 가져오기
+- 재생목록 주소를 읽는 것은 기존 `FetchMediaInfo`(→ `DownloaderEngine.fetchInfo`)를 그대로 쓴다. `PlaylistInfo`에 `thumbnailUrl`(대표 이미지)을 더했다 (yt-dlp `thumbnail` · `thumbnails`, 서버는 `thumbnail`). 모르면 첫 곡의 썸네일을 쓴다.
+- 가져오기 화면(`/playlists/import`, `PlaylistImportScreen`)은 재생목록 탭의 "유튜브 재생목록 가져오기" 버튼과 검색 탭의 재생목록 결과("골라서 받기")에서 연다. 곡은 처음에 모두 선택돼 있고, 전체 선택 / 해제와 곡별 선택을 할 수 있다.
+- "받기"를 누르면 유튜브 재생목록과 같은 이름의 **새 재생목록**을 만들고(`CreatePlaylist`), 고른 곡을 `EnqueueDownload`로 대기열에 넣는다. 각 요청의 `playlistIds`에 새 재생목록을 담아 받기가 끝나는 대로 재생목록에 들어간다. 재생목록 커버는 대표 이미지 주소의 웹 커버(D-067)다.
+- 같은 재생목록을 다시 가져오면 재생목록이 하나 더 생긴다 (이미 받은 곡 건너뛰기 · 기존 재생목록에 이어 담기는 하지 않았다 — 남은 일).
 ## D-072 · 2026-10-07 · 알림: 받기 진행 · 결과, 재생 알림, 곡 정보 숨기기
 - Android 알림만 만든다 (다른 OS는 아무것도 띄우지 않는 구현). 기능 폴더 `features/notifications`: domain(설정 · `DownloadNotifier` · `MediaSession`), data(`flutter_local_notifications` · `audio_service`), presentation(`NotificationSettingsCubit`, 화면 없는 `NotificationSyncCubit`, 앱 셸을 감싸는 `NotificationBridge`).
 - **받기 알림**: 받는 곡 하나의 진행 알림(제목, `받는 중 · 42% · N곡 대기`, 진행 막대)을 갱신하고, 곡마다 끝남 · 실패를 한 번씩 알린다. 진행 알림은 포그라운드 서비스(dataSync)라서 앱이 뒤로 가도 받기가 이어진다. 알림 채널은 받는 중(조용) · 받기 완료(조용) · 받기 실패(기본).

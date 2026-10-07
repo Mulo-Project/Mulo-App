@@ -1498,6 +1498,49 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackFavoriteOff => 'Removed from favorites';
 
   @override
+  String get playlistImportHint => 'YouTube playlist link';
+
+  @override
+  String get playlistImportEmptyTitle => 'Paste a playlist link';
+
+  @override
+  String get playlistImportEmptyBody =>
+      'Once the tracks show up, pick the ones to download.';
+
+  @override
+  String get playlistImportNotPlaylistTitle => 'That is not a playlist link';
+
+  @override
+  String get playlistImportNotPlaylistBody =>
+      'This link is a single track. Paste a playlist link instead.';
+
+  @override
+  String get playlistImportNoTracksTitle => 'No tracks';
+
+  @override
+  String get playlistImportNoTracksBody =>
+      'This playlist has no tracks that can be downloaded.';
+
+  @override
+  String get playlistImportSelectAll => 'Select all';
+
+  @override
+  String get playlistImportClear => 'Clear selection';
+
+  @override
+  String playlistImportStart(int count) {
+    return 'Download $count songs';
+  }
+
+  @override
+  String playlistImportStarted(int count) {
+    return 'Started downloading $count songs';
+  }
+
+  @override
+  String get searchPlaylistPick => 'Choose & download';
+
+  @override
   String get settingsNotifications => 'Notifications';
 
   @override

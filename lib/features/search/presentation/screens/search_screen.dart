@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/router.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
@@ -203,6 +205,22 @@ class _Results extends StatelessWidget {
           padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
           child: Text(label, style: text.titleMedium),
         ),
+        if (isPlaylist)
+          Padding(
+            padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: PillButton(
+                label: l10n.searchPlaylistPick,
+                icon: AppIcons.download,
+                variant: PillVariant.tonal,
+                onPressed: () => context.push(
+                  Routes.playlistImport,
+                  extra: context.read<SearchCubit>().query,
+                ),
+              ),
+            ),
+          ),
         if (state.items.length > 1)
           Padding(
             padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),

@@ -11,6 +11,7 @@ import '../features/library/presentation/screens/library_screen.dart';
 import '../features/player/presentation/screens/player_screen.dart';
 import '../features/player/presentation/screens/queue_screen.dart';
 import '../features/playlists/presentation/screens/playlist_detail_screen.dart';
+import '../features/playlists/presentation/screens/playlist_import_screen.dart';
 import '../features/playlists/presentation/screens/playlist_pick_screen.dart';
 import '../features/playlists/presentation/screens/playlists_screen.dart';
 import '../features/search/presentation/screens/search_screen.dart';
@@ -28,6 +29,9 @@ abstract final class Routes {
 
   /// 곡을 담을 재생목록 고르기 (곡 id는 `extra`로 넘긴다).
   static const playlistPick = '/playlists/pick';
+
+  /// 유튜브 재생목록 가져오기 (주소를 미리 채우려면 문자열을 `extra`로 넘긴다).
+  static const playlistImport = '/playlists/import';
 
   static String playlistDetail(String id) =>
       '/playlists/${Uri.encodeComponent(id)}';
@@ -104,6 +108,16 @@ GoRouter createRouter({String initialLocation = Routes.home}) => GoRouter(
                 key: state.pageKey,
                 child: PlaylistPickScreen(
                   trackIds: {...?(state.extra as List<String>?)},
+                ),
+              ),
+            ),
+            GoRoute(
+              path: 'import',
+              parentNavigatorKey: _rootKey,
+              pageBuilder: (context, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: PlaylistImportScreen(
+                  initialUrl: state.extra as String? ?? '',
                 ),
               ),
             ),
