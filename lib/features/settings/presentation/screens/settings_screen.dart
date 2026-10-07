@@ -14,6 +14,9 @@ import '../../../downloads/domain/usecases/download_usecases.dart';
 import '../../../downloads/presentation/bloc/download_settings_cubit.dart';
 import '../../../engine/presentation/bloc/engine_cubit.dart';
 import '../../../library/presentation/widgets/loaded_folders_tile.dart';
+import '../../../notifications/presentation/bloc/notification_settings_cubit.dart';
+import '../../../player/presentation/bloc/player_style_cubit.dart';
+import '../../../player/presentation/widgets/player_style_sheet.dart';
 import '../../../security/presentation/bloc/app_lock_cubit.dart';
 import '../../../security/presentation/screens/pin_entry_screen.dart';
 import '../../../theme/domain/entities/theme_settings.dart';
@@ -23,7 +26,7 @@ enum DownloadMode { server, local }
 
 /// 설정 (상세 기능: 서버 연결·모드 선택 #31, 저장 위치 #23, 기본 음질·포맷 #24,
 /// 다운로드 엔진 업데이트 #25, 알림 곡 정보 숨기기 #32 + 테마 D-005).
-/// 테마 색(프리셋, 저장됨)과 앱 잠금(PIN · 생체 인증)만 실제로 동작하고 나머지는 자리 표시.
+/// 테마 색(프리셋, 저장됨) · 앱 잠금(PIN · 생체 인증) · 알림 설정만 실제로 동작하고 나머지는 자리 표시.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -37,7 +40,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   /// 이 기기에서 고를 수 있는 저장 형식 (OS별 정책, 불러오기 전엔 비어 있다).
   List<AudioFormat> _formats = const [];
-  bool _hideNotification = false;
   bool _followMood = false;
   late final EngineCubit _engine = sl<EngineCubit>()..load();
 
@@ -72,6 +74,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final lock = context.watch<AppLockCubit>().state;
     final lockCtrl = context.read<AppLockCubit>();
     final savePath = context.watch<DownloadSettingsCubit>().state;
+    final notify = context.watch<NotificationSettingsCubit>().state;
+    final notifyCtrl = context.read<NotificationSettingsCubit>();
 
     return SafeArea(
       bottom: false,
@@ -170,8 +174,48 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       title: l10n.settingsHideNotification,
                       description: l10n.settingsHideNotificationDesc,
                       trailing: AppSwitch(
-                        value: _hideNotification,
-                        onChanged: (v) => setState(() => _hideNotification = v),
+                        value: notify.settings.hideSongInfo,
+                        onChanged: notifyCtrl.setHideSongInfo,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                SectionCard(
+                  title: l10n.settingsNotifications,
+                  children: [
+                    if (!notify.permissionGranted)
+                      SettingRow(
+                        title: l10n.settingsNotifyPermission,
+                        description: l10n.settingsNotifyPermissionDesc,
+                        trailing: PillButton(
+                          compact: true,
+                          label: l10n.settingsNotifyOpenSettings,
+                          onPressed: notifyCtrl.openSystemSettings,
+                        ),
+                      ),
+                    SettingRow(
+                      title: l10n.settingsNotifyDownloadProgress,
+                      description: l10n.settingsNotifyDownloadProgressDesc,
+                      trailing: AppSwitch(
+                        value: notify.settings.downloadProgress,
+                        onChanged: notifyCtrl.setDownloadProgress,
+                      ),
+                    ),
+                    SettingRow(
+                      title: l10n.settingsNotifyDownloadResult,
+                      description: l10n.settingsNotifyDownloadResultDesc,
+                      trailing: AppSwitch(
+                        value: notify.settings.downloadResult,
+                        onChanged: notifyCtrl.setDownloadResult,
+                      ),
+                    ),
+                    SettingRow(
+                      title: l10n.settingsNotifyPlayback,
+                      description: l10n.settingsNotifyPlaybackDesc,
+                      trailing: AppSwitch(
+                        value: notify.settings.playback,
+                        onChanged: notifyCtrl.setPlayback,
                       ),
                     ),
                   ],
@@ -224,6 +268,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               onTap: () => themeCtrl.selectPreset(preset),
                             ),
                         ],
+                      ),
+                    ),
+                    SettingRow(
+                      title: l10n.playerStyleTitle,
+                      below: SegmentedPills<PlayerStyle>(
+                        expand: true,
+                        values: PlayerStyle.values,
+                        selected: context.watch<PlayerStyleCubit>().state,
+                        labelOf: (s) => playerStyleName(l10n, s),
+                        onChanged: context.read<PlayerStyleCubit>().select,
                       ),
                     ),
                   ],

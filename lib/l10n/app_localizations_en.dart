@@ -419,7 +419,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsHideNotificationDesc =>
-      'Shows only \"Playing music\" on notifications and lock screen.';
+      'Shows only \"Playing music\" on notifications and lock screen, and hides song info in download notifications too.';
 
   @override
   String get settingsTheme => 'Theme';
@@ -1539,4 +1539,78 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchPlaylistPick => 'Choose & download';
+
+  @override
+  String get settingsNotifications => 'Notifications';
+
+  @override
+  String get settingsNotifyDownloadProgress => 'Download progress';
+
+  @override
+  String get settingsNotifyDownloadProgressDesc =>
+      'Shows progress in the notification shade. Downloads keep going when the app is in the background.';
+
+  @override
+  String get settingsNotifyDownloadResult => 'Download results';
+
+  @override
+  String get settingsNotifyDownloadResultDesc =>
+      'Tells you when a download finishes or fails.';
+
+  @override
+  String get settingsNotifyPlayback => 'Playback controls';
+
+  @override
+  String get settingsNotifyPlaybackDesc =>
+      'Control playback from the notification shade and lock screen.';
+
+  @override
+  String get settingsNotifyPermission => 'System notifications are off';
+
+  @override
+  String get settingsNotifyPermissionDesc =>
+      'Turn on Mulo notifications in your phone settings to see them.';
+
+  @override
+  String get settingsNotifyOpenSettings => 'Open settings';
+
+  @override
+  String get notifHiddenTitle => 'Playing music';
+
+  @override
+  String get notifChannelPlayback => 'Playback';
+
+  @override
+  String get notifChannelDownloadProgress => 'Downloading';
+
+  @override
+  String get notifChannelDownloadDone => 'Download complete';
+
+  @override
+  String get notifChannelDownloadFailed => 'Download failed';
+
+  @override
+  String get notifDownloadHiddenTitle => 'Downloading a song';
+
+  @override
+  String notifDownloadProgressBody(int percent) {
+    return 'Downloading · $percent%';
+  }
+
+  @override
+  String notifDownloadProgressMore(int percent, int count) {
+    return 'Downloading · $percent% · $count waiting';
+  }
+
+  @override
+  String get notifDownloadDoneTitle => 'Download complete';
+
+  @override
+  String get notifDownloadDoneHidden => 'A song was added to your library';
+
+  @override
+  String get notifDownloadFailedTitle => 'Download failed';
+
+  @override
+  String get notifDownloadFailedHidden => 'A song could not be downloaded';
 }

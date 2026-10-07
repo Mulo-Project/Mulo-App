@@ -32,6 +32,11 @@ set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS_RELEASE}")
 # Use Unicode for all projects.
 add_definitions(-DUNICODE -D_UNICODE)
 
+# VS 18(MSVC 14.51)에서 <experimental/coroutine>이 STL1011 오류를 내는 플러그인
+# (local_auth_windows, permission_handler_windows)을 위해 경고를 끈다.
+# 플러그인 타겟은 아래에서 include되므로 그 전에 선언해야 적용된다.
+add_compile_definitions(_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS)
+
 # Compilation settings that should be applied to most targets.
 #
 # Be cautious about adding new options here, as plugins use this function by
