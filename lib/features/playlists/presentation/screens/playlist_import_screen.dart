@@ -279,22 +279,32 @@ class _Body extends StatelessWidget {
       case PlaylistImportStatus.failed:
         if (state.mine) {
           final expired = state.accountFailure == AccountFailure.unauthorized;
+          final noChannel = state.accountFailure == AccountFailure.noChannel;
+          final body = switch (state.accountFailure) {
+            AccountFailure.unauthorized => l10n.playlistImportLoginExpiredBody,
+            AccountFailure.noChannel => l10n.playlistImportNoChannelBody,
+            AccountFailure.network => l10n.searchNetworkBody,
+            _ => l10n.searchErrorBody,
+          };
           return message(
-            expired ? l10n.playlistImportLoginTitle : l10n.searchErrorTitle,
-            switch (state.accountFailure) {
-                  AccountFailure.unauthorized =>
-                    l10n.playlistImportLoginExpiredBody,
-                  AccountFailure.network => l10n.searchNetworkBody,
-                  _ => l10n.searchErrorBody,
-                }.trimRight() +
-                (state.accountDetail.isEmpty
-                    ? ''
-                    : '\n(${state.accountDetail})'),
-            action: PillButton(
-              label: expired ? l10n.settingsAccountSignIn : l10n.actionRetry,
-              icon: expired ? AppIcons.person : AppIcons.refresh,
-              onPressed: onSignIn,
-            ),
+            expired
+                ? l10n.playlistImportLoginTitle
+                : noChannel
+                ? l10n.playlistImportNoChannelTitle
+                : l10n.searchErrorTitle,
+            // 채널이 없는 것은 예상된 상황이라 자세한 사유는 붙이지 않는다.
+            noChannel || state.accountDetail.isEmpty
+                ? body
+                : '$body\n(${state.accountDetail})',
+            action: noChannel
+                ? null
+                : PillButton(
+                    label: expired
+                        ? l10n.settingsAccountSignIn
+                        : l10n.actionRetry,
+                    icon: expired ? AppIcons.person : AppIcons.refresh,
+                    onPressed: onSignIn,
+                  ),
           );
         }
         if (state.notPlaylist) {
