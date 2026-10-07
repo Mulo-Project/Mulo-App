@@ -163,7 +163,6 @@ class _NotificationBridgeState extends State<NotificationBridge>
       settings.settings,
       context.l10n,
       previewingId: _previewing?.hitId,
-      previewPaused: _previewing?.paused ?? false,
     );
   }
 

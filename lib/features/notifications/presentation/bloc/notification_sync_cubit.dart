@@ -49,7 +49,6 @@ class NotificationSyncCubit extends Cubit<void> {
     NotificationSettings settings,
     AppLocalizations l10n, {
     String? previewingId,
-    bool previewPaused = false,
   }) async {
     final before = _statuses;
     _statuses = {for (final i in items) i.id: i.status};
@@ -148,18 +147,13 @@ class NotificationSyncCubit extends Cubit<void> {
       batch.length,
       overallPercent,
     );
-    // 이 곡을 미리 듣는 중이면 미리듣기 버튼 자리에 일시정지(이어 듣기) · 중지를 둔다.
+    // 이 곡을 미리 듣는 중이면 미리듣기 버튼 자리를 중지 버튼으로 바꾼다.
     final previewing = !hide && previewingId == current.id;
     final preview = hide || previewing ? null : l10n.notifDownloadPreview;
-    final pause = previewing
-        ? (previewPaused
-              ? l10n.notifDownloadResumePreview
-              : l10n.notifDownloadPausePreview)
-        : null;
     final stop = previewing ? l10n.notifDownloadStopPreview : null;
     final cancel = l10n.notifDownloadCancel;
     final key =
-        '$title|$body|$subText|$overallPercent|$keepAlive|$preview|$pause';
+        '$title|$body|$subText|$overallPercent|$keepAlive|$preview|$stop';
     if (_progressShown && key == _lastProgress) return;
     await _ensurePermission();
     _progressShown = true;
@@ -173,7 +167,6 @@ class NotificationSyncCubit extends Cubit<void> {
         subText: subText,
         previewLabel: preview,
         cancelLabel: cancel,
-        pauseLabel: pause,
         stopLabel: stop,
       ),
     );
