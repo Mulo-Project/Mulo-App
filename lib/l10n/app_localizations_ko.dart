@@ -409,7 +409,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsHideNotification => '알림에 곡 정보 숨기기';
 
   @override
-  String get settingsHideNotificationDesc => '알림 · 잠금화면에 \"음악 재생 중\"만 보여요.';
+  String get settingsHideNotificationDesc =>
+      '알림 · 잠금화면에 \"음악 재생 중\"만 보이고, 받기 알림에서도 곡 정보를 숨겨요.';
 
   @override
   String get settingsTheme => '테마';
@@ -1471,4 +1472,75 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get trackFavoriteOff => '좋아요를 취소했어요';
+
+  @override
+  String get settingsNotifications => '알림';
+
+  @override
+  String get settingsNotifyDownloadProgress => '받기 진행 알림';
+
+  @override
+  String get settingsNotifyDownloadProgressDesc =>
+      '받는 동안 진행 상황을 알림창에 보여요. 앱이 뒤로 가도 받기가 이어져요.';
+
+  @override
+  String get settingsNotifyDownloadResult => '받기 결과 알림';
+
+  @override
+  String get settingsNotifyDownloadResultDesc => '받기가 끝나거나 실패하면 알려요.';
+
+  @override
+  String get settingsNotifyPlayback => '재생 알림';
+
+  @override
+  String get settingsNotifyPlaybackDesc => '알림창 · 잠금화면에서 재생을 조작해요.';
+
+  @override
+  String get settingsNotifyPermission => '시스템 알림이 꺼져 있어요';
+
+  @override
+  String get settingsNotifyPermissionDesc => '휴대폰 설정에서 Mulo 알림을 켜야 알림이 보여요.';
+
+  @override
+  String get settingsNotifyOpenSettings => '설정 열기';
+
+  @override
+  String get notifHiddenTitle => '음악 재생 중';
+
+  @override
+  String get notifChannelPlayback => '재생';
+
+  @override
+  String get notifChannelDownloadProgress => '받는 중';
+
+  @override
+  String get notifChannelDownloadDone => '받기 완료';
+
+  @override
+  String get notifChannelDownloadFailed => '받기 실패';
+
+  @override
+  String get notifDownloadHiddenTitle => '곡 받는 중';
+
+  @override
+  String notifDownloadProgressBody(int percent) {
+    return '받는 중 · $percent%';
+  }
+
+  @override
+  String notifDownloadProgressMore(int percent, int count) {
+    return '받는 중 · $percent% · $count곡 대기';
+  }
+
+  @override
+  String get notifDownloadDoneTitle => '받기 완료';
+
+  @override
+  String get notifDownloadDoneHidden => '곡이 보관함에 추가됐어요';
+
+  @override
+  String get notifDownloadFailedTitle => '받기 실패';
+
+  @override
+  String get notifDownloadFailedHidden => '곡을 받지 못했어요';
 }
