@@ -157,7 +157,7 @@ class NotificationSyncCubit extends Cubit<void> {
             title: hide ? l10n.notifHiddenTitle : preview.title,
             artist: hide || preview.uploader.isEmpty
                 ? l10n.notifPreviewLabel
-                : '${l10n.notifPreviewLabel} · ${preview.uploader}',
+                : '${preview.uploader} · ${l10n.notifPreviewLabel}',
             artUri: hide ? null : preview.artUri,
             duration: preview.duration ?? Duration.zero,
             position: preview.position,

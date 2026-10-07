@@ -182,7 +182,7 @@ void main() {
       final shown = session.updates.last!;
       expect(shown.preview, isTrue);
       expect(shown.title, '미리 곡');
-      expect(shown.artist, '미리 듣기 · 채널');
+      expect(shown.artist, '채널 · 미리 듣기');
       expect(shown.hasNext, isFalse);
       await sync(current: track);
       expect(session.updates.last!.title, '노래');
