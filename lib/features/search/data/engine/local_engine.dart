@@ -87,6 +87,56 @@ class LocalEngine implements DownloaderEngine {
   }
 
   @override
+  Future<PlaylistSearchPage> searchPlaylists(
+    String query, {
+    int page = 0,
+    int size = 20,
+  }) async {
+    // 유튜브 검색 결과 쪽의 "재생목록" 필터 주소를 목록으로 읽는다.
+    final want = (page + 1) * size;
+    final out = await _exec([
+      '--flat-playlist',
+      '--dump-json',
+      '--no-warnings',
+      '--playlist-end',
+      '$want',
+      Uri.https('www.youtube.com', '/results', {
+        'search_query': query,
+        'sp': 'EgIQAw%3D%3D',
+      }).toString(),
+    ]);
+    final all = <PlaylistHit>[];
+    for (final line in const LineSplitter().convert(out)) {
+      if (line.trim().isEmpty) continue;
+      final j = _decode(line);
+      final hit = j == null ? null : _playlistHit(j);
+      if (hit != null) all.add(hit);
+    }
+    final start = page * size;
+    return PlaylistSearchPage(
+      items: start >= all.length ? const [] : all.sublist(start),
+      hasNext: all.length >= want,
+    );
+  }
+
+  PlaylistHit? _playlistHit(Map<String, dynamic> j) {
+    final url = parseText(j['url']) ?? parseText(j['webpage_url']);
+    final id = parseText(j['id']) ?? _listId(url);
+    if (id == null || url == null || !url.contains('list=')) return null;
+    return PlaylistHit(
+      id: id,
+      title: j['title'] as String? ?? '',
+      url: url,
+      channel: parseText(j['uploader'] ?? j['channel']) ?? '',
+      thumbnailUrl: _thumbnailOf(j),
+      trackCount: parseCount(j['playlist_count'] ?? j['n_entries']),
+    );
+  }
+
+  String? _listId(String? url) =>
+      url == null ? null : Uri.tryParse(url)?.queryParameters['list'];
+
+  @override
   Future<MediaInfo> fetchInfo(String url) async {
     final out = await _exec([
       '--flat-playlist',

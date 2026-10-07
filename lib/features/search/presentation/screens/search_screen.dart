@@ -221,6 +221,22 @@ class _Results extends StatelessWidget {
               ),
             ),
           ),
+        if (state.keyword)
+          Padding(
+            padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: PillButton(
+                label: l10n.searchPlaylistFind,
+                icon: AppIcons.search,
+                variant: PillVariant.tonal,
+                onPressed: () => context.push(
+                  Routes.playlistImport,
+                  extra: context.read<SearchCubit>().query,
+                ),
+              ),
+            ),
+          ),
         if (state.items.length > 1)
           Padding(
             padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),

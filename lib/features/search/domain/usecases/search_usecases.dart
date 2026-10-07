@@ -38,6 +38,25 @@ class SearchTracks implements UseCase<SearchPage, SearchParams> {
   );
 }
 
+class PlaylistSearchParams {
+  const PlaylistSearchParams(this.query, {this.page = 0});
+
+  final String query;
+  final int page;
+}
+
+/// 키워드로 유튜브 재생목록 찾기 (상세 기능: 유튜브 재생목록 가져오기 #22).
+class SearchPlaylists
+    implements UseCase<PlaylistSearchPage, PlaylistSearchParams> {
+  const SearchPlaylists(this._engine);
+
+  final DownloaderEngine _engine;
+
+  @override
+  Future<PlaylistSearchPage> call(PlaylistSearchParams p) =>
+      _engine.searchPlaylists(p.query.trim(), page: p.page);
+}
+
 /// URL로 곡 · 재생목록 정보 불러오기 (상세 기능: URL로 곡 정보 불러오기 #1).
 class FetchMediaInfo implements UseCase<MediaInfo, String> {
   const FetchMediaInfo(this._engine);

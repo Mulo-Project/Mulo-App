@@ -67,6 +67,41 @@ class ServerEngine implements DownloaderEngine {
     return SearchPage(items: items, hasNext: json['hasNext'] == true);
   }
 
+  /// 서버 `GET /api/v1/search?type=playlist` — 서버 명세에 아직 없다.
+  /// 서버가 몰라서 실패하면 바깥 덮개가 다른 방법으로 찾는다.
+  @override
+  Future<PlaylistSearchPage> searchPlaylists(
+    String query, {
+    int page = 0,
+    int size = 20,
+  }) async {
+    final json = await _getJson('/search', {
+      'q': query,
+      'type': 'playlist',
+      'page': '$page',
+      'size': '$size',
+    });
+    final items = <PlaylistHit>[];
+    for (final j in (json['items'] as List? ?? const [])) {
+      if (j is! Map<String, dynamic>) continue;
+      final id = parseText(j['playlistId'] ?? j['id']);
+      if (id == null) continue;
+      items.add(
+        PlaylistHit(
+          id: id,
+          title: j['title'] as String? ?? '',
+          url:
+              parseText(j['url']) ??
+              'https://www.youtube.com/playlist?list=$id',
+          channel: parseText(j['uploader'] ?? j['channel']) ?? '',
+          thumbnailUrl: parseText(j['thumbnail']),
+          trackCount: parseCount(j['trackCount'] ?? j['videoCount']),
+        ),
+      );
+    }
+    return PlaylistSearchPage(items: items, hasNext: json['hasNext'] == true);
+  }
+
   @override
   Future<MediaInfo> fetchInfo(String url) async {
     final json = await _getJson('/info', {'url': url});

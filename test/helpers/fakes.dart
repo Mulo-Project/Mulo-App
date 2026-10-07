@@ -746,7 +746,12 @@ class FakeDownloaderEngine implements DownloaderEngine {
     this.error,
     this.streamFailure,
     this.streamGate,
+    this.playlistPage = const PlaylistSearchPage(items: [], hasNext: false),
   });
+
+  /// [searchPlaylists]가 돌려줄 결과와 받은 검색어들.
+  final PlaylistSearchPage playlistPage;
+  final playlistSearches = <String>[];
 
   /// 쪽 번호 순서대로 돌려줄 검색 결과.
   final List<SearchPage> pages;
@@ -786,6 +791,17 @@ class FakeDownloaderEngine implements DownloaderEngine {
     newestFlags.add(newest);
     if (error != null) throw error!;
     return page < pages.length ? pages[page] : pages.last;
+  }
+
+  @override
+  Future<PlaylistSearchPage> searchPlaylists(
+    String query, {
+    int page = 0,
+    int size = 20,
+  }) async {
+    playlistSearches.add(query);
+    if (error != null) throw error!;
+    return playlistPage;
   }
 
   @override

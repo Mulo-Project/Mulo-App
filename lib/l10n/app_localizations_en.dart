@@ -1498,14 +1498,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackFavoriteOff => 'Removed from favorites';
 
   @override
-  String get playlistImportHint => 'YouTube playlist link';
+  String get playlistImportHint => 'Playlist name or link';
 
   @override
-  String get playlistImportEmptyTitle => 'Paste a playlist link';
+  String get playlistImportEmptyTitle => 'Find a playlist';
 
   @override
   String get playlistImportEmptyBody =>
-      'Once the tracks show up, pick the ones to download.';
+      'Search by name or paste a link, then pick the tracks to download.';
+
+  @override
+  String get playlistImportNoResultsTitle => 'No playlists found';
+
+  @override
+  String get playlistImportNoResultsBody => 'Try a different search.';
+
+  @override
+  String get playlistImportBackToResults => 'Search results';
+
+  @override
+  String playlistImportResultSubtitle(String channel, int count) {
+    return '$channel · $count songs';
+  }
 
   @override
   String get playlistImportNotPlaylistTitle => 'That is not a playlist link';
@@ -1539,4 +1553,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchPlaylistPick => 'Choose & download';
+
+  @override
+  String get searchPlaylistFind => 'Find as playlist';
 }

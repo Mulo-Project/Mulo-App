@@ -1473,13 +1473,28 @@ class AppLocalizationsKo extends AppLocalizations {
   String get trackFavoriteOff => '좋아요를 취소했어요';
 
   @override
-  String get playlistImportHint => '유튜브 재생목록 주소';
+  String get playlistImportHint => '재생목록 이름이나 주소';
 
   @override
-  String get playlistImportEmptyTitle => '재생목록 주소를 붙여 넣어 주세요';
+  String get playlistImportEmptyTitle => '재생목록을 찾아 보세요';
 
   @override
-  String get playlistImportEmptyBody => '곡 목록이 나오면 받을 곡을 고를 수 있어요.';
+  String get playlistImportEmptyBody =>
+      '이름으로 찾거나 주소를 붙여 넣으면, 곡 목록에서 받을 곡을 고를 수 있어요.';
+
+  @override
+  String get playlistImportNoResultsTitle => '찾은 재생목록이 없어요';
+
+  @override
+  String get playlistImportNoResultsBody => '다른 검색어로 찾아 보세요.';
+
+  @override
+  String get playlistImportBackToResults => '검색 결과';
+
+  @override
+  String playlistImportResultSubtitle(String channel, int count) {
+    return '$channel · $count곡';
+  }
 
   @override
   String get playlistImportNotPlaylistTitle => '재생목록 주소가 아니에요';
@@ -1511,4 +1526,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get searchPlaylistPick => '골라서 받기';
+
+  @override
+  String get searchPlaylistFind => '재생목록으로 찾기';
 }

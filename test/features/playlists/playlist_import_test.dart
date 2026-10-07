@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/features/downloads/domain/usecases/download_usecases.dart';
 import 'package:music_download_play_app/features/playlists/domain/usecases/playlist_usecases.dart';
 import 'package:music_download_play_app/features/playlists/presentation/bloc/playlist_import_cubit.dart';
+import 'package:music_download_play_app/features/search/data/engine/local_engine.dart';
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
 import 'package:music_download_play_app/features/search/domain/usecases/search_usecases.dart';
 
@@ -30,6 +33,7 @@ _setUp(MediaInfo info) {
   return (
     cubit: PlaylistImportCubit(
       FetchMediaInfo(engine),
+      SearchPlaylists(engine),
       EnqueueDownload(queue),
       CreatePlaylist(lists),
     ),
@@ -39,6 +43,7 @@ _setUp(MediaInfo info) {
 }
 
 void main() {
+  _searchTests();
   test('주소를 읽으면 곡을 모두 고른 채로 보여 주고, 대표 이미지는 첫 곡으로 대신한다', () async {
     final s = _setUp(
       PlaylistInfo(
@@ -97,5 +102,92 @@ void main() {
     s.cubit.toggleAll();
     expect(await s.cubit.start(), isNull);
     expect(s.queue.requests, isEmpty);
+  });
+}
+
+void _searchTests() {
+  const found = PlaylistHit(
+    id: 'PL1',
+    title: '운동할 때',
+    url: _url,
+    channel: '채널',
+    trackCount: 30,
+  );
+
+  test('키워드를 넣으면 재생목록을 찾아 보여 주고, 하나를 열면 곡 목록을 읽는다', () async {
+    final queue = MemoryDownloadQueue();
+    final lists = MemoryPlaylistRepository();
+    final engine = FakeDownloaderEngine(
+      infoByUrl: {
+        _url: PlaylistInfo(title: '운동할 때', entries: [_hit('a')]),
+      },
+      playlistPage: const PlaylistSearchPage(items: [found], hasNext: false),
+    );
+    final cubit = PlaylistImportCubit(
+      FetchMediaInfo(engine),
+      SearchPlaylists(engine),
+      EnqueueDownload(queue),
+      CreatePlaylist(lists),
+    );
+
+    await cubit.submit('운동');
+    expect(engine.playlistSearches, ['운동']);
+    expect(cubit.state.status, PlaylistImportStatus.results);
+    expect(cubit.state.results, [found]);
+
+    await cubit.open(found);
+    expect(cubit.state.status, PlaylistImportStatus.loaded);
+    expect(cubit.state.results, [found]);
+
+    cubit.backToResults();
+    expect(cubit.state.status, PlaylistImportStatus.results);
+  });
+
+  test('주소를 넣으면 검색하지 않고 바로 곡 목록을 읽는다', () async {
+    final engine = FakeDownloaderEngine(
+      infoByUrl: {
+        _url: PlaylistInfo(title: 't', entries: [_hit('a')]),
+      },
+    );
+    final cubit = PlaylistImportCubit(
+      FetchMediaInfo(engine),
+      SearchPlaylists(engine),
+      EnqueueDownload(MemoryDownloadQueue()),
+      CreatePlaylist(MemoryPlaylistRepository()),
+    );
+    await cubit.submit(_url);
+    expect(engine.playlistSearches, isEmpty);
+    expect(cubit.state.status, PlaylistImportStatus.loaded);
+  });
+
+  test('LocalEngine: 재생목록 검색 결과에서 이름 · 채널 · 곡 수를 읽는다', () async {
+    List<String>? args;
+    final engine = LocalEngine(
+      run: (_, a) async {
+        args = a;
+        return (
+          exitCode: 0,
+          stdout:
+              '${jsonEncode({
+                'id': 'PL1',
+                'title': 'T',
+                'url': 'https://www.youtube.com/playlist?list=PL1',
+                'uploader': 'U',
+                'playlist_count': 12,
+                'thumbnails': [
+                  {'url': 'th'},
+                ],
+              })}\n'
+              '${jsonEncode({'id': 'vid', 'title': 'video', 'url': 'https://www.youtube.com/watch?v=vid'})}\n',
+          stderr: '',
+        );
+      },
+    );
+    final page = await engine.searchPlaylists('q');
+    expect(args!.last, contains('sp=EgIQAw%253D%253D'));
+    expect(page.items, hasLength(1));
+    expect(page.items.single.channel, 'U');
+    expect(page.items.single.trackCount, 12);
+    expect(page.items.single.thumbnailUrl, 'th');
   });
 }

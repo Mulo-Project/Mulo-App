@@ -41,7 +41,7 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
     super.dispose();
   }
 
-  void _load() => _cubit.load(_controller.text);
+  void _load() => _cubit.submit(_controller.text);
 
   Future<void> _start() async {
     if (_starting) return;
@@ -149,6 +149,23 @@ class _Body extends StatelessWidget {
         );
       case PlaylistImportStatus.loading:
         return const Center(child: CircularProgressIndicator());
+      case PlaylistImportStatus.results:
+        if (state.results.isEmpty) {
+          return message(
+            l10n.playlistImportNoResultsTitle,
+            l10n.playlistImportNoResultsBody,
+          );
+        }
+        return ListView(
+          padding: const EdgeInsets.only(bottom: AppSpacing.md),
+          children: [
+            for (final hit in state.results)
+              _ResultRow(
+                hit: hit,
+                onTap: () => context.read<PlaylistImportCubit>().open(hit),
+              ),
+          ],
+        );
       case PlaylistImportStatus.failed:
         if (state.notPlaylist) {
           return message(
@@ -198,6 +215,19 @@ class _Tracks extends StatelessWidget {
     return ListView(
       padding: EdgeInsets.only(bottom: AppSpacing.md),
       children: [
+        if (state.results.isNotEmpty)
+          Padding(
+            padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: PillButton(
+                label: l10n.playlistImportBackToResults,
+                icon: AppIcons.back,
+                variant: PillVariant.tonal,
+                onPressed: cubit.backToResults,
+              ),
+            ),
+          ),
         Padding(
           padding: AppSpacing.screen,
           child: Row(
@@ -256,6 +286,33 @@ class _Tracks extends StatelessWidget {
             onTap: () => cubit.toggle(hit.id),
           ),
       ],
+    );
+  }
+}
+
+/// 찾은 재생목록 한 줄: 대표 이미지 · 이름 · 채널 · 곡 수. 누르면 곡 목록을 읽는다.
+class _ResultRow extends StatelessWidget {
+  const _ResultRow({required this.hit, required this.onTap});
+
+  final PlaylistHit hit;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final p = context.palette;
+    final thumb = hit.thumbnailUrl;
+    final count = hit.trackCount;
+    return TrackTile(
+      title: hit.title,
+      subtitle: [
+        if (hit.channel.isNotEmpty) hit.channel,
+        if (count != null) l10n.songCount(count),
+      ].join(' · '),
+      tone: toneFor(hit.id),
+      artwork: thumb == null ? null : NetworkImage(thumb),
+      trailing: Icon(AppIcons.chevronRight, color: p.onSurfaceMuted),
+      onTap: onTap,
     );
   }
 }

@@ -8,7 +8,8 @@ import '../../../search/domain/entities/media_info.dart';
 import '../../../search/domain/usecases/search_usecases.dart';
 import '../../domain/usecases/playlist_usecases.dart';
 
-enum PlaylistImportStatus { idle, loading, loaded, failed }
+/// [results]는 키워드로 찾은 재생목록 목록을 보여 주는 상태.
+enum PlaylistImportStatus { idle, loading, results, loaded, failed }
 
 class PlaylistImportState extends Equatable {
   const PlaylistImportState({
@@ -19,6 +20,8 @@ class PlaylistImportState extends Equatable {
     this.selected = const {},
     this.failure,
     this.notPlaylist = false,
+    this.results = const [],
+    this.query = '',
   });
 
   final PlaylistImportStatus status;
@@ -37,6 +40,12 @@ class PlaylistImportState extends Equatable {
   /// 주소는 읽었지만 재생목록이 아니라 곡 하나였다.
   final bool notPlaylist;
 
+  /// 키워드로 찾은 재생목록들. 하나를 골라 곡을 읽은 뒤에도 남겨 두어 돌아올 수 있다.
+  final List<PlaylistHit> results;
+
+  /// [results]를 찾은 검색어.
+  final String query;
+
   bool get allSelected =>
       entries.isNotEmpty && selected.length == entries.length;
 
@@ -54,6 +63,8 @@ class PlaylistImportState extends Equatable {
     selected: selected ?? this.selected,
     failure: failure,
     notPlaylist: notPlaylist,
+    results: results,
+    query: query,
   );
 
   @override
@@ -65,6 +76,8 @@ class PlaylistImportState extends Equatable {
     selected,
     failure,
     notPlaylist,
+    results,
+    query,
   ];
 }
 
@@ -88,14 +101,73 @@ class PlaylistImportResult extends Equatable {
 /// 주소로 곡 목록을 읽고, 고른 곡을 같은 이름의 새 재생목록으로 받는다.
 /// 늦게 온 옛 요청의 답은 버린다.
 class PlaylistImportCubit extends Cubit<PlaylistImportState> {
-  PlaylistImportCubit(this._info, this._enqueue, this._create)
+  PlaylistImportCubit(this._info, this._search, this._enqueue, this._create)
     : super(const PlaylistImportState());
 
   final FetchMediaInfo _info;
+  final SearchPlaylists _search;
   final EnqueueDownload _enqueue;
   final CreatePlaylist _create;
 
   int _request = 0;
+
+  /// 입력이 재생목록 주소면 곡 목록을 읽고, 아니면 키워드로 재생목록을 찾는다.
+  Future<void> submit(String input) {
+    final text = input.trim();
+    return _looksLikeUrl(text) ? load(text) : search(text);
+  }
+
+  static bool _looksLikeUrl(String text) =>
+      text.startsWith('http://') ||
+      text.startsWith('https://') ||
+      text.contains('youtube.com/') ||
+      text.contains('youtu.be/');
+
+  /// 키워드로 유튜브 재생목록을 찾아 목록으로 보여 준다.
+  Future<void> search(String query) async {
+    final id = ++_request;
+    final q = query.trim();
+    if (q.isEmpty) {
+      emit(const PlaylistImportState());
+      return;
+    }
+    emit(PlaylistImportState(status: PlaylistImportStatus.loading, query: q));
+    try {
+      final page = await _search(PlaylistSearchParams(q));
+      if (id != _request) return;
+      emit(
+        PlaylistImportState(
+          status: PlaylistImportStatus.results,
+          results: page.items,
+          query: q,
+        ),
+      );
+    } on EngineException catch (e) {
+      if (id != _request) return;
+      emit(
+        PlaylistImportState(
+          status: PlaylistImportStatus.failed,
+          failure: e.failure,
+          query: q,
+        ),
+      );
+    }
+  }
+
+  /// 찾은 재생목록 하나를 골라 곡 목록을 읽는다.
+  Future<void> open(PlaylistHit hit) => load(hit.url);
+
+  /// 곡 목록에서 찾은 재생목록 목록으로 돌아간다.
+  void backToResults() {
+    _request++;
+    emit(
+      PlaylistImportState(
+        status: PlaylistImportStatus.results,
+        results: state.results,
+        query: state.query,
+      ),
+    );
+  }
 
   /// 주소의 재생목록을 읽는다. 처음에는 곡을 모두 고른 채로 둔다.
   Future<void> load(String url) async {
@@ -104,7 +176,15 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
       emit(const PlaylistImportState());
       return;
     }
-    emit(const PlaylistImportState(status: PlaylistImportStatus.loading));
+    final keep = state.results;
+    final keepQuery = state.query;
+    emit(
+      PlaylistImportState(
+        status: PlaylistImportStatus.loading,
+        results: keep,
+        query: keepQuery,
+      ),
+    );
     try {
       final info = await _info(url);
       if (id != _request) return;
@@ -124,13 +204,17 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
                   usable.map((e) => e.thumbnailUrl).nonNulls.firstOrNull,
               entries: usable,
               selected: {for (final e in usable) e.id},
+              results: keep,
+              query: keepQuery,
             ),
           );
         case VideoInfo():
           emit(
-            const PlaylistImportState(
+            PlaylistImportState(
               status: PlaylistImportStatus.failed,
               notPlaylist: true,
+              results: keep,
+              query: keepQuery,
             ),
           );
       }
@@ -140,6 +224,8 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
         PlaylistImportState(
           status: PlaylistImportStatus.failed,
           failure: e.failure,
+          results: keep,
+          query: keepQuery,
         ),
       );
     }

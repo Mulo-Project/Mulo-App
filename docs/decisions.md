@@ -470,3 +470,8 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - 가져오기 화면(`/playlists/import`, `PlaylistImportScreen`)은 재생목록 탭의 "유튜브 재생목록 가져오기" 버튼과 검색 탭의 재생목록 결과("골라서 받기")에서 연다. 곡은 처음에 모두 선택돼 있고, 전체 선택 / 해제와 곡별 선택을 할 수 있다.
 - "받기"를 누르면 유튜브 재생목록과 같은 이름의 **새 재생목록**을 만들고(`CreatePlaylist`), 고른 곡을 `EnqueueDownload`로 대기열에 넣는다. 각 요청의 `playlistIds`에 새 재생목록을 담아 받기가 끝나는 대로 재생목록에 들어간다. 재생목록 커버는 대표 이미지 주소의 웹 커버(D-067)다.
 - 같은 재생목록을 다시 가져오면 재생목록이 하나 더 생긴다 (이미 받은 곡 건너뛰기 · 기존 재생목록에 이어 담기는 하지 않았다 — 남은 일).
+
+## D-072 · 2026-10-07 · 재생목록 키워드 검색
+- 주소를 모르는 사용자를 위해 가져오기 화면 입력칸이 이름과 주소를 모두 받는다 (`http` · `youtube.com/` · `youtu.be/`가 들어 있으면 주소). 별도 탭을 만들지 않고 결과는 한 줄짜리 목록(카드 없음)으로 보여 준다.
+- `DownloaderEngine.searchPlaylists`를 더했다. yt-dlp는 유튜브 검색 결과 쪽의 재생목록 필터(`sp=EgIQAw%253D%253D`)를, 서버는 `/search?type=playlist`를 쓴다. 안쪽 엔진이 못 하면 `YoutubeExplodeEngine`이 `youtube_explode_dart` 검색으로 대신한다 (Android lite에서 서버에 기능이 없어도 되게). 이 경로는 채널 이름을 주지 않는다.
+- 내 유튜브 계정의 재생목록 불러오기는 구현하지 않았다: Google Cloud 프로젝트 + OAuth 동의 화면(`youtube.readonly`는 민감 범위라 공개하려면 구글 검수), Android는 Google 로그인(`google_sign_in`)과 SHA-1 등록, 데스크톱은 별도 OAuth 흐름이 필요하다. 앱 정책(비밀값 저장소 미포함 · 로그인 없는 사용)과 맞는지 먼저 정해야 한다.

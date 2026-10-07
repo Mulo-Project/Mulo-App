@@ -39,6 +39,26 @@ class YoutubeExplodeEngine implements DownloaderEngine {
     newest: newest,
   );
 
+  /// 안쪽 엔진(yt-dlp · 서버)이 채널 이름까지 알려 주므로 먼저 묻고, 쓸 수 없거나
+  /// 실패하면 이 라이브러리로 찾는다 (채널 이름은 모른다).
+  @override
+  Future<PlaylistSearchPage> searchPlaylists(
+    String query, {
+    int page = 0,
+    int size = 20,
+  }) async {
+    try {
+      return await _inner.searchPlaylists(query, page: page, size: size);
+    } on EngineException catch (e) {
+      if (e.failure == EngineFailure.network) rethrow;
+      try {
+        return await _playlistSearch(query, page, size);
+      } on Object {
+        throw e;
+      }
+    }
+  }
+
   @override
   Future<MediaInfo> fetchInfo(String url) => _inner.fetchInfo(url);
 
@@ -68,6 +88,52 @@ class YoutubeExplodeEngine implements DownloaderEngine {
         'youtube_explode: ${_oneLine(explodeError)} | ${_oneLine(e.message)}',
       );
     }
+  }
+}
+
+/// 라이브러리의 재생목록 검색 (한 번에 20개라 필요한 만큼 다음 쪽을 넘겨 읽는다).
+Future<PlaylistSearchPage> _playlistSearch(
+  String query,
+  int page,
+  int size,
+) async {
+  final yt = YoutubeExplode();
+  try {
+    var list = await yt.search.searchContent(
+      query,
+      filter: TypeFilters.playlist,
+    );
+    final all = <PlaylistHit>[];
+    final want = (page + 1) * size;
+    while (true) {
+      for (final r in list) {
+        if (r is! SearchPlaylist) continue;
+        final id = r.id.value;
+        all.add(
+          PlaylistHit(
+            id: id,
+            title: r.title,
+            url: 'https://www.youtube.com/playlist?list=$id',
+            thumbnailUrl: r.thumbnails.isEmpty
+                ? null
+                : r.thumbnails.last.url.toString(),
+            trackCount: r.videoCount,
+          ),
+        );
+      }
+      if (all.length >= want) break;
+      final next = await list.nextPage();
+      if (next == null) break;
+      list = next;
+    }
+    final start = page * size;
+    final end = all.length < want ? all.length : want;
+    return PlaylistSearchPage(
+      items: start >= end ? const [] : all.sublist(start, end),
+      hasNext: all.length > want,
+    );
+  } finally {
+    yt.close();
   }
 }
 

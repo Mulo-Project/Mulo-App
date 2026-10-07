@@ -2825,20 +2825,44 @@ abstract class AppLocalizations {
   /// No description provided for @playlistImportHint.
   ///
   /// In ko, this message translates to:
-  /// **'유튜브 재생목록 주소'**
+  /// **'재생목록 이름이나 주소'**
   String get playlistImportHint;
 
   /// No description provided for @playlistImportEmptyTitle.
   ///
   /// In ko, this message translates to:
-  /// **'재생목록 주소를 붙여 넣어 주세요'**
+  /// **'재생목록을 찾아 보세요'**
   String get playlistImportEmptyTitle;
 
   /// No description provided for @playlistImportEmptyBody.
   ///
   /// In ko, this message translates to:
-  /// **'곡 목록이 나오면 받을 곡을 고를 수 있어요.'**
+  /// **'이름으로 찾거나 주소를 붙여 넣으면, 곡 목록에서 받을 곡을 고를 수 있어요.'**
   String get playlistImportEmptyBody;
+
+  /// No description provided for @playlistImportNoResultsTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'찾은 재생목록이 없어요'**
+  String get playlistImportNoResultsTitle;
+
+  /// No description provided for @playlistImportNoResultsBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'다른 검색어로 찾아 보세요.'**
+  String get playlistImportNoResultsBody;
+
+  /// No description provided for @playlistImportBackToResults.
+  ///
+  /// In ko, this message translates to:
+  /// **'검색 결과'**
+  String get playlistImportBackToResults;
+
+  /// No description provided for @playlistImportResultSubtitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'{channel} · {count}곡'**
+  String playlistImportResultSubtitle(String channel, int count);
 
   /// No description provided for @playlistImportNotPlaylistTitle.
   ///
@@ -2893,6 +2917,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'골라서 받기'**
   String get searchPlaylistPick;
+
+  /// No description provided for @searchPlaylistFind.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생목록으로 찾기'**
+  String get searchPlaylistFind;
 }
 
 class _AppLocalizationsDelegate
