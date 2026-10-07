@@ -6,6 +6,8 @@ import '../../../../app/router.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../downloads/domain/entities/download_item.dart';
+import '../../../downloads/domain/entities/download_source.dart';
 import '../../../downloads/presentation/bloc/download_queue_cubit.dart';
 import '../../../downloads/presentation/widgets/download_dialog.dart';
 import '../../../downloads/presentation/widgets/download_progress_card.dart';
@@ -345,6 +347,30 @@ class _HitTile extends StatelessWidget {
       if (hit.downloaded) l10n.alreadyDownloaded,
     ].join(' · ');
     final thumb = hit.thumbnailUrl;
+    // 받기 버튼 아이콘은 이 곡의 받기 상태를 따른다 (받는 중 · 대기 · 받음).
+    final key = downloadSourceKey(hit.url);
+    final status = context.select<DownloadQueueCubit, DownloadStatus?>((c) {
+      DownloadStatus? found;
+      for (final e in c.state.items) {
+        if (downloadSourceKey(e.url) != key) continue;
+        if (e.status == DownloadStatus.downloading) return e.status;
+        if (e.isActive || e.status == DownloadStatus.done) found = e.status;
+      }
+      return found;
+    });
+    final (icon, tooltip) = switch (status) {
+      DownloadStatus.downloading => (
+        AppIcons.hourglassTop,
+        l10n.downloadStateDownloading,
+      ),
+      DownloadStatus.queued || DownloadStatus.paused => (
+        AppIcons.hourglassEmpty,
+        l10n.downloadStateQueued,
+      ),
+      DownloadStatus.done => (AppIcons.checkCircle, l10n.downloadStateDone),
+      _ when hit.downloaded => (AppIcons.checkCircle, l10n.downloadStateDone),
+      _ => (AppIcons.download, l10n.actionDownload),
+    };
 
     return TrackTile(
       title: hit.title,
@@ -357,8 +383,8 @@ class _HitTile extends StatelessWidget {
         children: [
           PreviewRowButton(hit: hit),
           RowIconButton(
-            icon: AppIcons.download,
-            tooltip: l10n.actionDownload,
+            icon: icon,
+            tooltip: tooltip,
             onPressed: () => _download(context),
           ),
         ],

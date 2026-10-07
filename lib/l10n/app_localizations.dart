@@ -2048,6 +2048,24 @@ abstract class AppLocalizations {
   /// **'대기열에 넣었어요'**
   String get downloadQueued;
 
+  /// No description provided for @downloadStateDownloading.
+  ///
+  /// In ko, this message translates to:
+  /// **'받는 중'**
+  String get downloadStateDownloading;
+
+  /// No description provided for @downloadStateQueued.
+  ///
+  /// In ko, this message translates to:
+  /// **'대기 중'**
+  String get downloadStateQueued;
+
+  /// No description provided for @downloadStateDone.
+  ///
+  /// In ko, this message translates to:
+  /// **'받음'**
+  String get downloadStateDone;
+
   /// No description provided for @downloadAlreadyInQueue.
   ///
   /// In ko, this message translates to:
