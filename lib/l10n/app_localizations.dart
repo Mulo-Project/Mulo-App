@@ -1700,6 +1700,18 @@ abstract class AppLocalizations {
   /// **'미리 듣기 멈추기'**
   String get searchPreviewStop;
 
+  /// No description provided for @searchPreviewPause.
+  ///
+  /// In ko, this message translates to:
+  /// **'미리 듣기 일시정지'**
+  String get searchPreviewPause;
+
+  /// No description provided for @searchPreviewResume.
+  ///
+  /// In ko, this message translates to:
+  /// **'미리 듣기 이어 듣기'**
+  String get searchPreviewResume;
+
   /// No description provided for @searchPreviewLoading.
   ///
   /// In ko, this message translates to:

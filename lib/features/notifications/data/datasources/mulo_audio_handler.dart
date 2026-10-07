@@ -45,9 +45,12 @@ class MuloAudioHandler extends BaseAudioHandler {
       mediaItem.add(item);
     }
 
-    // 미리 듣기: 멈추기만 있다 (누르면 앞에 듣던 곡으로 돌아간다).
+    // 미리 듣기: 일시정지 · 멈추기만 있다 (멈추면 앞에 듣던 곡으로 돌아간다).
     final controls = info.preview
-        ? [MediaControl.stop]
+        ? [
+            info.playing ? MediaControl.pause : MediaControl.play,
+            MediaControl.stop,
+          ]
         : [
             if (info.hasPrevious) MediaControl.skipToPrevious,
             info.playing ? MediaControl.pause : MediaControl.play,

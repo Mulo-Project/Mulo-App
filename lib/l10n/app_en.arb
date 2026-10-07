@@ -335,6 +335,8 @@
   "searchHitMenuDetail": "View details",
   "searchPreview": "Preview",
   "searchPreviewStop": "Stop preview",
+  "searchPreviewPause": "Pause preview",
+  "searchPreviewResume": "Resume preview",
   "searchPreviewLoading": "Preparing preview",
   "searchPreviewFailed": "Couldn't start the preview.",
   "searchPreviewUnavailable": "Preview isn't available on this device.",

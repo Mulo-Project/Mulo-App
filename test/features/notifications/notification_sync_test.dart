@@ -189,6 +189,23 @@ void main() {
       expect(session.updates.last!.preview, isFalse);
     });
 
+    test('일시정지하면 알림도 멈춘 모양으로 바뀐다', () async {
+      await sync(current: track, preview: notice);
+      expect(session.updates.last!.playing, isTrue);
+      await sync(
+        current: track,
+        preview: const PreviewNotice(
+          title: '미리 곡',
+          uploader: '채널',
+          position: Duration(seconds: 5),
+          duration: Duration(minutes: 2),
+          paused: true,
+        ),
+      );
+      expect(session.updates.last!.preview, isTrue);
+      expect(session.updates.last!.playing, isFalse);
+    });
+
     test('재생 중인 곡이 없어도 보이고, 끝나면 알림을 치운다', () async {
       await sync(preview: notice);
       expect(session.updates.last!.preview, isTrue);

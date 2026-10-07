@@ -223,6 +223,15 @@ class PreviewMiniBar extends StatelessWidget {
                   _timeText(progress),
                   style: text.labelSmall?.copyWith(color: p.onSurfaceMuted),
                 ),
+              if (!loading)
+                RowIconButton(
+                  key: const ValueKey('preview-mini-pause'),
+                  icon: state.paused ? AppIcons.play : AppIcons.pause,
+                  tooltip: state.paused
+                      ? l10n.searchPreviewResume
+                      : l10n.searchPreviewPause,
+                  onPressed: () => context.read<PreviewCubit>().togglePause(),
+                ),
               RowIconButton(
                 icon: AppIcons.close,
                 tooltip: l10n.searchPreviewStop,

@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -860,6 +861,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get searchPreviewStop => '미리 듣기 멈추기';
+
+  @override
+  String get searchPreviewPause => '미리 듣기 일시정지';
+
+  @override
+  String get searchPreviewResume => '미리 듣기 이어 듣기';
 
   @override
   String get searchPreviewLoading => '미리 듣기 준비 중';

@@ -421,6 +421,8 @@
   "searchHitMenuDetail": "상세 보기",
   "searchPreview": "미리 듣기",
   "searchPreviewStop": "미리 듣기 멈추기",
+  "searchPreviewPause": "미리 듣기 일시정지",
+  "searchPreviewResume": "미리 듣기 이어 듣기",
   "searchPreviewLoading": "미리 듣기 준비 중",
   "searchPreviewFailed": "미리 듣기를 시작하지 못했어요.",
   "searchPreviewUnavailable": "이 기기에서는 미리 듣기를 쓸 수 없어요.",

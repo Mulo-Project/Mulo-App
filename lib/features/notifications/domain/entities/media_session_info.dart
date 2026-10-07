@@ -75,7 +75,11 @@ class PreviewNotice extends Equatable {
     required this.position,
     this.duration,
     this.artUri,
+    this.paused = false,
   });
+
+  /// 잠시 멈춰 둔 상태.
+  final bool paused;
 
   final String title;
   final String uploader;
@@ -84,7 +88,14 @@ class PreviewNotice extends Equatable {
   final Duration? duration;
 
   @override
-  List<Object?> get props => [title, uploader, artUri, position, duration];
+  List<Object?> get props => [
+    title,
+    uploader,
+    artUri,
+    position,
+    duration,
+    paused,
+  ];
 }
 
 /// 알림 · 잠금화면 · 이어폰 버튼에서 온 조작.

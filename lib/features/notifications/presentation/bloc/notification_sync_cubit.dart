@@ -161,7 +161,7 @@ class NotificationSyncCubit extends Cubit<void> {
             artUri: hide ? null : preview.artUri,
             duration: preview.duration ?? Duration.zero,
             position: preview.position,
-            playing: true,
+            playing: !preview.paused,
             hasPrevious: false,
             hasNext: false,
             preview: true,

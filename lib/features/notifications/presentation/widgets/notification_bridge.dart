@@ -58,6 +58,9 @@ class _NotificationBridgeState extends State<NotificationBridge>
     if (preview.state.status == PreviewStatus.playing) {
       switch (command.type) {
         case MediaCommandType.pause:
+          if (!preview.state.paused) preview.togglePause();
+        case MediaCommandType.play:
+          if (preview.state.paused) preview.togglePause();
         case MediaCommandType.stop:
           preview.stop();
         case MediaCommandType.seek:
@@ -66,7 +69,6 @@ class _NotificationBridgeState extends State<NotificationBridge>
           if (to != null && total != null && total > Duration.zero) {
             preview.seekTo(to.inMilliseconds / total.inMilliseconds);
           }
-        case MediaCommandType.play:
         case MediaCommandType.next:
         case MediaCommandType.previous:
         case MediaCommandType.favorite:
@@ -125,6 +127,7 @@ class _NotificationBridgeState extends State<NotificationBridge>
               artUri: hit.thumbnailUrl,
               position: previewing.progress?.position ?? Duration.zero,
               duration: previewing.progress?.duration,
+              paused: previewing.paused,
             )
           : null,
       track: track,
