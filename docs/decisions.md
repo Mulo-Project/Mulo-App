@@ -566,3 +566,9 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 - 지금 받는 곡을 미리 듣는 중이면 받기 알림의 "미리듣기" 버튼이 "일시정지(이어 듣기) · 중지"로 바뀐다. 알림 버튼 누름은 주 isolate · 백그라운드 isolate 두 길로 받아 한 번만 처리한다.
 - 이미 받아 보관함에 있는 곡은 검색 결과 받기 버튼이 체크 아이콘으로 남고, 눌러도 받기 팝업을 열지 않고 "이미 받은 곡이에요"를 알린다 (받는 중 · 대기 곡은 "이미 받는 중이거나 대기 중인 곡이에요"). 판단은 원본 주소 키로 하고, 받은 곡 목록은 대기열 상태(`downloadedKeys`)가 들고 있다.
 - 받기 알림 버튼은 앱을 열지 않는 방식이 실기기에서 전달되지 않아, 화면을 거치되 MainActivity가 곧바로 뒤로 보낸다(`moveTaskToBack`). 알림 버튼 코드 id 목록은 MainActivity와 알림 구현이 같이 쓴다.
+
+## D-090 · 2026-10-07 · 받기 알림 · 포그라운드 서비스를 네이티브(Kotlin)로
+- 받기 알림(진행 · 결과), 받기를 붙들어 두는 포그라운드 서비스(dataSync), 알림 버튼 수신을 `flutter_local_notifications`에서 네이티브로 옮겼다. 채널 `music_app/download_notification`(`DownloadNotificationPlugin`), `DownloadForegroundService`, `DownloadActionReceiver`, 알림 모양은 `DownloadNotifications`. Dart `LocalDownloadNotifier`는 내용을 넘기고 버튼 누름(`action`)을 받는 얇은 어댑터이고 상위 로직(`DownloadNotifier` 인터페이스)은 그대로다.
+- 포그라운드 서비스는 앱 프로세스를 살려 두는 장치일 뿐 따로 도는 프로세스가 아니다. 받기는 여전히 Dart가 같은 프로세스에서 한다. 프로세스가 죽으면 Dart도 죽는다.
+- 알림 버튼은 `BroadcastReceiver`가 받아 엔진에 묶인 채널(화면이 아니라 `FlutterPlugin`)로 Dart에 보낸다. 앱 화면을 열지 않으므로 D-089의 MainActivity `moveTaskToBack` 우회와 두 isolate 이중 전달을 없앴다. 엔진은 `audio_service`가 들고 있어 화면이 닫혀도 살아 있고, 엔진이 없으면 버튼은 아무 일도 하지 않는다.
+- 플러그인 서비스가 재시작될 때 나던 NPE도 같이 없어졌다 (서비스는 `START_NOT_STICKY`, 보여 줄 내용이 없으면 바로 끝난다).
