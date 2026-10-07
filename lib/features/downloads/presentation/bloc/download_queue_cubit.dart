@@ -42,6 +42,21 @@ class DownloadQueueState extends Equatable {
         i,
   ];
 
+  /// [playlistId] 재생목록 카드에 보여 줄 곡: 지금 받는 곡, 없으면 대기 · 일시정지한 첫 곡. 실패만 남았으면 null.
+  DownloadItem? activeFor(String playlistId) {
+    final mine = unfinishedFor(playlistId);
+    for (final s in const [
+      DownloadStatus.downloading,
+      DownloadStatus.queued,
+      DownloadStatus.paused,
+    ]) {
+      for (final i in mine) {
+        if (i.status == s) return i;
+      }
+    }
+    return null;
+  }
+
   /// 큐에 있는 곡 전체의 받기 진행도 (0 ~ 1). 끝난 곡은 1로 센다.
   double get overallProgress {
     if (items.isEmpty) return 0;

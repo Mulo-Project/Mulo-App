@@ -6,6 +6,9 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
+import '../../../downloads/domain/entities/download_item.dart';
+import '../../../downloads/presentation/bloc/download_queue_cubit.dart';
+import '../../../downloads/presentation/widgets/download_progress_card.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -257,6 +260,11 @@ class _FeaturedState extends State<_Featured> {
     final t = widget.playlist.featured;
     // 접은 줄은 작고 낮게, 카드마다 같은 높이로 맞춘다.
     const rowHeight = 30.0;
+    // 이 재생목록에 담을 곡을 받는 중이면 대표곡 자리에 그 곡과 진행 막대를 보인다.
+    final dl = context.select<DownloadQueueCubit, DownloadItem?>(
+      (c) => c.state.activeFor(widget.playlist.id),
+    );
+    if (dl != null) return _DownloadingRow(item: dl, minHeight: rowHeight);
     if (t == null) return const SizedBox(height: rowHeight);
     final open = _expanded && widget.expandable;
 
@@ -374,6 +382,50 @@ class _FeaturedState extends State<_Featured> {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// 대표곡 자리에 보이는 받기 줄: 받는 곡 제목 · 진행 막대 · 상태(%).
+class _DownloadingRow extends StatelessWidget {
+  const _DownloadingRow({required this.item, required this.minHeight});
+
+  final DownloadItem item;
+  final double minHeight;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final p = context.palette;
+    return ConstrainedBox(
+      constraints: BoxConstraints(minHeight: minHeight),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              item.title,
+              style: text.labelSmall?.copyWith(color: p.onSurface),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: AppSpacing.xxs),
+            ProgressLine(value: item.progress, height: 4),
+            const SizedBox(height: AppSpacing.xxs),
+            Text(
+              downloadStatusText(context.l10n, item),
+              style: text.labelSmall?.copyWith(color: p.accent),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
       ),
     );
   }
