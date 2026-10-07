@@ -25,8 +25,14 @@ AudioFormat preferredAudioFormat() =>
     (Platform.isIOS || Platform.isMacOS) ? AudioFormat.m4a : AudioFormat.webm;
 
 /// yt-dlp `-f` 값: 먼저 고를 형식, 없으면 아무 오디오.
-String ytDlpAudioSelector([AudioFormat? format]) =>
-    switch (format ?? preferredAudioFormat()) {
-      AudioFormat.webm => 'bestaudio[ext=webm]/bestaudio/best',
-      AudioFormat.m4a => 'bestaudio[ext=m4a]/bestaudio/best',
-    };
+///
+/// [web]이면(유튜브 밖 사이트) 조각으로 나뉜 스트림(HLS · DASH)보다 한 파일로 받는 HTTP 형식을
+/// 먼저 고른다. 사운드클라우드는 HLS를 가장 좋은 형식으로 알려 주는데, 플레이어가 이를 못 열면
+/// 앱이 대신 받아 넘기는 방법도 쓸 수 없어 미리 듣기가 시간 초과로 끝났다.
+String ytDlpAudioSelector([AudioFormat? format, bool web = false]) {
+  if (web) return 'bestaudio[protocol^=http]/bestaudio/best';
+  return switch (format ?? preferredAudioFormat()) {
+    AudioFormat.webm => 'bestaudio[ext=webm]/bestaudio/best',
+    AudioFormat.m4a => 'bestaudio[ext=m4a]/bestaudio/best',
+  };
+}

@@ -195,7 +195,7 @@ class LocalEngine implements DownloaderEngine {
     Future<AudioStream> read(List<String> extra) async {
       final out = await _exec([
         '-f',
-        ytDlpAudioSelector(),
+        ytDlpAudioSelector(null, !_isYoutube(url)),
         '--no-playlist',
         '--dump-single-json',
         '--no-warnings',
@@ -235,6 +235,13 @@ class LocalEngine implements DownloaderEngine {
         throw first;
       }
     }
+  }
+
+  bool _isYoutube(String url) {
+    final host = Uri.tryParse(url)?.host.toLowerCase() ?? '';
+    return host == 'youtu.be' ||
+        host == 'youtube.com' ||
+        host.endsWith('.youtube.com');
   }
 
   Future<String> _exec(List<String> args) async {

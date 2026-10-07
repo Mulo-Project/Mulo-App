@@ -69,6 +69,13 @@ class JustAudioPreviewPlayer implements PreviewPlayer {
           ),
         );
       } on PlayerException catch (direct) {
+        // 조각 목록(HLS · DASH)은 앱이 한 파일처럼 받아 넘길 수 없다: 바로 실패로 알린다.
+        if (_isSegmented(stream.url)) {
+          throw EngineException(
+            EngineFailure.failed,
+            'direct: ${direct.message}',
+          );
+        }
         // 플레이어(ExoPlayer 등)가 직접 못 열면(Source error) 앱이 받아서 넘겨 준다.
         // 앱의 HTTP로는 열리는 주소가 있다 (주소 확인에 쓴 것과 같은 방식).
         try {
@@ -105,6 +112,10 @@ class JustAudioPreviewPlayer implements PreviewPlayer {
     final player = _player;
     if (stream == null || player == null) return;
     final reason = error is PlayerException ? error.message : '$error';
+    if (_isSegmented(stream.url)) {
+      _failures.add('direct: $reason');
+      return;
+    }
     if (!_viaApp) {
       // 직접 열었는데 재생 중에 막혔다: 앱의 HTTP로 받아 넘기는 방식으로 이어서 틀어 본다.
       _viaApp = true;
@@ -155,6 +166,12 @@ class JustAudioPreviewPlayer implements PreviewPlayer {
     _player = null;
     await _completed.close();
   }
+}
+
+/// 주소가 HLS(m3u8) · DASH(mpd) 목록인가.
+bool _isSegmented(String url) {
+  final path = Uri.tryParse(url)?.path.toLowerCase() ?? '';
+  return path.endsWith('.m3u8') || path.endsWith('.mpd');
 }
 
 /// 실패 까닭을 알 수 있게 주소를 앱의 HTTP로 한 번 요청해 상태 · 형식을 한 줄로 돌려준다.

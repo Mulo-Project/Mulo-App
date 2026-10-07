@@ -138,7 +138,8 @@ void main() {
       );
       await open(tester, hit: web);
       expect(find.byTooltip('Play in app'), findsNothing);
-      await tester.tap(find.byTooltip('Watch on YouTube').first);
+      expect(find.byTooltip('Watch on YouTube'), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('detail-watch')));
       await tester.pumpAndSettle();
       expect(opener.opened, [web.url]);
     });

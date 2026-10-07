@@ -411,6 +411,39 @@ void main() {
       expect(find.textContaining('Line one'), findsOneWidget);
     });
 
+    testWidgets('웹(유튜브 밖) 곡은 사이트 이름을 앞세운 다른 상세 화면이다', (tester) async {
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      const web = MediaHit(
+        id: 's',
+        title: 'Song',
+        url: 'https://soundcloud.com/artist/song',
+        uploader: 'Artist',
+      );
+      final opener = FakeLinkOpener();
+      final engine = FakeDownloaderEngine(
+        pages: const [
+          SearchPage(items: [web], hasNext: false),
+        ],
+        info: const VideoInfo(web),
+      );
+      await setUpTestDependencies(engine: engine, linkOpener: opener);
+      await openSearchResult(tester);
+      await tester.tap(find.text('Song'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('web-detail-site')), findsOneWidget);
+      expect(find.text('SoundCloud'), findsOneWidget);
+      expect(find.text('Open on SoundCloud'), findsOneWidget);
+      expect(find.text('Artist'), findsOneWidget);
+      expect(find.text('View channel'), findsNothing);
+      expect(find.textContaining('subscribers'), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('detail-watch')));
+      await tester.pumpAndSettle();
+      expect(opener.opened, [web.url]);
+    });
     testWidgets('영상 보기 · 채널 보기는 해당 주소를 연다', (tester) async {
       final opener = await openDetail(tester);
 

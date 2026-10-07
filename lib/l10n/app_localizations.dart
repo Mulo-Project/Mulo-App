@@ -1736,6 +1736,30 @@ abstract class AppLocalizations {
   /// **'원본 페이지 열기'**
   String get mediaDetailOpenOriginal;
 
+  /// No description provided for @mediaDetailWebBadge.
+  ///
+  /// In ko, this message translates to:
+  /// **'웹 검색 결과'**
+  String get mediaDetailWebBadge;
+
+  /// No description provided for @mediaDetailOpenSite.
+  ///
+  /// In ko, this message translates to:
+  /// **'{site}에서 열기'**
+  String mediaDetailOpenSite(String site);
+
+  /// No description provided for @mediaDetailArtist.
+  ///
+  /// In ko, this message translates to:
+  /// **'아티스트'**
+  String get mediaDetailArtist;
+
+  /// No description provided for @mediaDetailOpenArtist.
+  ///
+  /// In ko, this message translates to:
+  /// **'아티스트 페이지'**
+  String get mediaDetailOpenArtist;
+
   /// No description provided for @mediaDetailChannel.
   ///
   /// In ko, this message translates to:

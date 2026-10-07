@@ -16,6 +16,7 @@ import '../bloc/media_detail_cubit.dart';
 import '../bloc/preview_cubit.dart';
 import '../widgets/preview_control.dart';
 import '../widgets/video_category.dart';
+import '../widgets/web_media_detail.dart';
 import '../widgets/youtube_embed.dart';
 
 /// 검색 결과 하나의 상세 보기: 큰 썸네일, 채널, 길이 · 조회수 · 올린 날 · 분류 · 설명.
@@ -130,6 +131,15 @@ class _DetailViewState extends State<_DetailView> {
     final hit = state.hit;
     final locale = Localizations.localeOf(context).toString();
     final youtube = isYoutubeUrl(hit.url);
+    if (!youtube) {
+      // 웹(유튜브 밖 사이트) 곡은 사이트를 앞세운 다른 배치로 보여 준다.
+      return WebMediaDetail(
+        hit: hit,
+        loading: state.loading,
+        onOpen: _open,
+        onBack: () => Navigator.of(context).pop(),
+      );
+    }
 
     final views = hit.viewCount;
     final uploaded = hit.uploadedAt;

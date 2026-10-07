@@ -897,6 +897,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mediaDetailOpenOriginal => 'Open original page';
 
   @override
+  String get mediaDetailWebBadge => 'Web search result';
+
+  @override
+  String mediaDetailOpenSite(String site) {
+    return 'Open on $site';
+  }
+
+  @override
+  String get mediaDetailArtist => 'Artist';
+
+  @override
+  String get mediaDetailOpenArtist => 'Artist page';
+
+  @override
   String get mediaDetailChannel => 'Channel';
 
   @override

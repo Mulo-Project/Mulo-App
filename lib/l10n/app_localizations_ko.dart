@@ -881,6 +881,20 @@ class AppLocalizationsKo extends AppLocalizations {
   String get mediaDetailOpenOriginal => '원본 페이지 열기';
 
   @override
+  String get mediaDetailWebBadge => '웹 검색 결과';
+
+  @override
+  String mediaDetailOpenSite(String site) {
+    return '$site에서 열기';
+  }
+
+  @override
+  String get mediaDetailArtist => '아티스트';
+
+  @override
+  String get mediaDetailOpenArtist => '아티스트 페이지';
+
+  @override
   String get mediaDetailChannel => '채널';
 
   @override

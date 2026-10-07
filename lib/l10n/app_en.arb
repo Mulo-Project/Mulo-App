@@ -341,6 +341,17 @@
   "mediaDetailTitle": "Details",
   "mediaDetailWatchYoutube": "Watch on YouTube",
   "mediaDetailOpenOriginal": "Open original page",
+  "mediaDetailWebBadge": "Web search result",
+  "mediaDetailOpenSite": "Open on {site}",
+  "@mediaDetailOpenSite": {
+    "placeholders": {
+      "site": {
+        "type": "String"
+      }
+    }
+  },
+  "mediaDetailArtist": "Artist",
+  "mediaDetailOpenArtist": "Artist page",
   "mediaDetailChannel": "Channel",
   "mediaDetailOpenChannel": "View channel",
   "mediaDetailDuration": "Length",
