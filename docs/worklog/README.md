@@ -83,3 +83,4 @@
 | 2026-10-07 | [구글 계정 로그인 · 내 유튜브 재생목록](2026-10-07-google-account.md) | 완료 (PR 대기) |
 | 2026-10-07 | [알림 기능 (받기 · 재생 · 설정)](2026-10-07-notifications.md) | 완료 (PR 대기) |
 | 2026-10-07 | [설정의 플레이어 테마 선택](2026-10-07-settings-player-theme.md) | 완료 (merge 대기) |
+| 2026-10-07 | [재생 알림 디자인 개선](2026-10-07-playback-notification-design.md) | 완료 (merge 대기) |

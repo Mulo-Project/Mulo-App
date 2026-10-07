@@ -33,6 +33,19 @@ class CachedWebImage extends ImageProvider<CachedWebImage> {
     debugLabel: url,
   );
 
+  /// [url]의 저장된 사본 파일 (없으면 받아서 저장). 알림처럼 [ImageProvider]를 못 쓰는 곳용.
+  /// 받지 못하거나 저장하지 못하면 null.
+  static Future<File?> localCopy(String url) async {
+    try {
+      final image = CachedWebImage(url);
+      await image._bytes();
+      final file = await image._cacheFile();
+      return file != null && await file.exists() ? file : null;
+    } on Object {
+      return null;
+    }
+  }
+
   Future<ui.Codec> _load(ImageDecoderCallback decode) async {
     final bytes = await _bytes();
     final buffer = await ui.ImmutableBuffer.fromUint8List(bytes);

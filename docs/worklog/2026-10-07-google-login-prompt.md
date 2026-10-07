@@ -6,7 +6,7 @@
 - 브랜치 · 커밋: `feature/youtube-login-prompt`
 
 ## 한 일
-- 로그아웃 상태에서 "내 재생목록"을 누르면 로그인 여부를 묻는 창을 띄우고 허용 시 로그인 → 목록 불러오기 (D-077).
+- 로그아웃 상태에서 "내 재생목록"을 누르면 로그인 여부를 묻는 창을 띄우고 허용 시 로그인 → 목록 불러오기 (D-078).
 - 클라이언트 ID가 없을 때 설정 · 가져오기 화면 문구에 빠진 dart-define 이름 표시.
 - `docs/google-login-setup.md`, `dart_defines.example.json`, `.vscode/launch.json` 추가.
 
