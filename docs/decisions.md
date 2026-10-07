@@ -465,13 +465,13 @@ MVP 화면을 `lib/core/sample/sample_data.dart`의 가짜 데이터로 먼저 �
 - D-068의 "오프라인 표시" 미정 건을 정했다: 웹 커버는 주소를 그대로 기억하되, 처음 보여 줄 때 작은 사본을 앱 **캐시 폴더**(`cover_cache/`)에 남기고(`CachedWebImage`) 다음부터 오프라인에서도 그 사본으로 그린다. 사본은 캐시라 시스템이 지워도 다시 받아 채운다. DB에는 계속 주소만 저장한다 (D-067 유지).
 - 안드로이드 미디어 파일 썸네일(MediaStore)에는 기대지 않는다: 받은 .weba 등에는 대표 이미지가 들어 있지 않다.
 
-## D-071 · 2026-10-07 · 유튜브 재생목록 가져오기
+## D-073 · 2026-10-07 · 유튜브 재생목록 가져오기
 - 재생목록 주소를 읽는 것은 기존 `FetchMediaInfo`(→ `DownloaderEngine.fetchInfo`)를 그대로 쓴다. `PlaylistInfo`에 `thumbnailUrl`(대표 이미지)을 더했다 (yt-dlp `thumbnail` · `thumbnails`, 서버는 `thumbnail`). 모르면 첫 곡의 썸네일을 쓴다.
 - 가져오기 화면(`/playlists/import`, `PlaylistImportScreen`)은 재생목록 탭의 "유튜브 재생목록 가져오기" 버튼과 검색 탭의 재생목록 결과("골라서 받기")에서 연다. 곡은 처음에 모두 선택돼 있고, 전체 선택 / 해제와 곡별 선택을 할 수 있다.
 - "받기"를 누르면 유튜브 재생목록과 같은 이름의 **새 재생목록**을 만들고(`CreatePlaylist`), 고른 곡을 `EnqueueDownload`로 대기열에 넣는다. 각 요청의 `playlistIds`에 새 재생목록을 담아 받기가 끝나는 대로 재생목록에 들어간다. 재생목록 커버는 대표 이미지 주소의 웹 커버(D-067)다.
 - 같은 재생목록을 다시 가져오면 재생목록이 하나 더 생긴다 (이미 받은 곡 건너뛰기 · 기존 재생목록에 이어 담기는 하지 않았다 — 남은 일).
 
-## D-074 · 2026-10-07 · 받기 마무리: 형식 · 음질 변환, 이어받기, 대기열 저장, 이미 받은 곡 건너뛰기
+## D-076 · 2026-10-07 · 받기 마무리: 형식 · 음질 변환, 이어받기, 대기열 저장, 이미 받은 곡 건너뛰기
 D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어받기 없음 · 메모리 대기열은 이 결정으로 바뀐다).
 - **형식 · 음질 변환**: 설정의 기본 음질 · 포맷은 이제 저장된다 (`shared_preferences`, `DownloadPreferencesCubit`). 받을 때(`DownloadRequest.quality · format`이 null이면 설정값)를 읽어 받은 뒤 `AudioTranscoder`로 바꾼다.
   - mp3: 항상 변환 (최고 192 · 보통 128 · 절약 96 kbps, `libmp3lame`). opus: 최고는 받은 원본(webm/opus) 그대로, 보통 · 절약은 `libopus` 96 · 64 kbps로 다시 인코딩(`.opus`). m4a는 변환하지 않는다 (Android 설정에서 숨겨 있고 Apple은 원본이 이미 m4a).
@@ -483,3 +483,25 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 - **이미 받은 곡 건너뛰기**: 곡 id는 그대로 `download:<대기열 id>`이고, "원본 주소 → 곡 id" 기록(`download.sources`)을 따로 둔다. 주소는 `downloadSourceKey`로 같은 영상끼리 같은 키가 되게 한다 (`watch?v=` · `youtu.be` · `shorts` · `embed` 등, 재생목록 · 시간 덧붙임 무시). `DownloadQueueRepository.findExisting(url)`이 보관함에 아직 있는 곡이나 대기열의 같은 곡을 알려 준다 (보관함에서 지운 곡은 받은 곡으로 치지 않는다).
   - 유튜브 재생목록 가져오기는 이미 받은 곡을 다시 받지 않고 **새 재생목록에는 담는다**. 대기열에서 받는 중인 곡도 건너뛴다. 끝나고 "N곡을 받기 시작했어요 (이미 받은 M곡은 건너뛰었어요)"로 알린다. 곡 하나를 직접 받는 흐름은 그대로 다시 받을 수 있다 (막지 않는다).
 - Android 변환 · 이어받기는 기기에서 확인하지 못했다 (단위 테스트로 Range 이어받기 · 대기열 저장 · 변환 흐름까지 검증).
+## D-074 · 2026-10-07 · 재생목록 키워드 검색
+- 주소를 모르는 사용자를 위해 가져오기 화면 입력칸이 이름과 주소를 모두 받는다 (`http` · `youtube.com/` · `youtu.be/`가 들어 있으면 주소). 별도 탭을 만들지 않고 결과는 한 줄짜리 목록(카드 없음)으로 보여 준다.
+- `DownloaderEngine.searchPlaylists`를 더했다. yt-dlp는 유튜브 검색 결과 쪽의 재생목록 필터(`sp=EgIQAw%253D%253D`)를, 서버는 `/search?type=playlist`를 쓴다. 안쪽 엔진이 못 하면 `YoutubeExplodeEngine`이 `youtube_explode_dart` 검색으로 대신한다 (Android lite에서 서버에 기능이 없어도 되게). 이 경로는 채널 이름을 주지 않는다.
+- 내 유튜브 계정의 재생목록 불러오기는 구현하지 않았다: Google Cloud 프로젝트 + OAuth 동의 화면(`youtube.readonly`는 민감 범위라 공개하려면 구글 검수), Android는 Google 로그인(`google_sign_in`)과 SHA-1 등록, 데스크톱은 별도 OAuth 흐름이 필요하다. 앱 정책(비밀값 저장소 미포함 · 로그인 없는 사용)과 맞는지 먼저 정해야 한다.
+
+## D-075 · 2026-10-07 · 구글 계정 로그인과 내 유튜브 재생목록
+- 내 유튜브 재생목록을 불러오려고 설정에 "계정" 묶음을 두고 구글 계정 로그인 · 로그아웃을 넣었다 (앱 서버 로그인과는 별개). `features/account/` (domain · data · presentation), 앱 전체 `AccountCubit`.
+- 구현: `google_sign_in` 7.x로 로그인하고 `youtube.readonly` 범위의 접근 토큰으로 YouTube Data API v3 `playlists?mine=true`를 읽는다 (50개씩 최대 6쪽). 토큰은 앱이 저장하지 않고 필요할 때마다 `google_sign_in`에서 받는다. 읽기 전용이다.
+- 가져오기 화면의 "내 재생목록" 버튼: 로그인돼 있지 않으면 먼저 로그인 창을 띄우고, 로그인이 풀렸으면 다시 로그인하라고 안내한다. 고르면 기존 곡 고르기로 이어진다.
+- 로그인 방식은 기기마다 다르다: Android는 `google_sign_in`, **데스크톱(Windows · macOS · Linux)은 `google_sign_in`이 지원하지 않아서** 기본 브라우저로 구글 로그인을 열고 이 기기(`127.0.0.1` 임시 포트)로 돌아오는 인증 코드를 받는 OAuth "데스크톱 앱" 흐름 + PKCE로 직접 구현했다 (`LoopbackGoogleAuth`). 데스크톱은 새로고침 토큰만 보안 저장소(`flutter_secure_storage`)에 두고 접근 토큰은 메모리에만 둔다. 로그아웃하면 구글에 허락 취소(revoke)도 보낸다.
+- 빌드 설정 (`AppConfig`): Android는 웹 애플리케이션 OAuth 클라이언트 ID `--dart-define=MULO_GOOGLE_SERVER_CLIENT_ID=...`, 데스크톱은 "데스크톱 앱" OAuth 클라이언트의 `MULO_GOOGLE_DESKTOP_CLIENT_ID` · `MULO_GOOGLE_DESKTOP_CLIENT_SECRET`. 없으면 로그인 버튼이 꺼지고 "이 빌드에는 설정되지 않았어요"를 보여 준다. 저장소에는 넣지 않는다. 데스크톱 클라이언트 비밀값은 구글이 요구하지만 앱에 들어가는 값이라 비밀로 지켜지지 않으며 PKCE가 코드를 지킨다.
+- 출시 전 해야 할 일 (코드로 할 수 없음): Google Cloud 프로젝트에서 YouTube Data API v3를 켜고, OAuth 동의 화면을 만들고, Android OAuth 클라이언트(패키지 `com.mulo.app` + 디버그 · 릴리스 SHA-1)와 웹 클라이언트, 데스크톱용 "데스크톱 앱" 클라이언트를 만든다. `youtube.readonly`는 민감 범위라 공개 배포 전에는 구글 검수가 필요하고, 검수 전에는 테스트 사용자만 로그인할 수 있다. 실제 로그인은 이 설정이 끝난 기기에서 확인해야 한다.
+## D-072 · 2026-10-07 · 알림: 받기 진행 · 결과, 재생 알림, 곡 정보 숨기기
+- Android 알림만 만든다 (다른 OS는 아무것도 띄우지 않는 구현). 기능 폴더 `features/notifications`: domain(설정 · `DownloadNotifier` · `MediaSession`), data(`flutter_local_notifications` · `audio_service`), presentation(`NotificationSettingsCubit`, 화면 없는 `NotificationSyncCubit`, 앱 셸을 감싸는 `NotificationBridge`).
+- **받기 알림**: 받는 곡 하나의 진행 알림(제목, `받는 중 · 42% · N곡 대기`, 진행 막대)을 갱신하고, 곡마다 끝남 · 실패를 한 번씩 알린다. 진행 알림은 포그라운드 서비스(dataSync)라서 앱이 뒤로 가도 받기가 이어진다. 알림 채널은 받는 중(조용) · 받기 완료(조용) · 받기 실패(기본).
+- **재생 알림**: audio_service의 `MuloAudioHandler`는 보여 주기만 한다. 재생 상태의 주인은 그대로 `NowPlayingCubit`이고, 알림 · 잠금화면 · 이어폰 버튼은 `MediaCommand`로 돌아와 Cubit을 움직인다. 이전 · 재생/일시정지 · 다음 + 이동 막대, 커버(웹 주소 또는 파일), 강조 색 #7D39EB, 단색 음표 작은 아이콘. 위치는 알림이 흘러가는 대로 두고 이동할 때만 다시 보낸다.
+- **곡 정보 숨기기**(#32)가 실제로 동작한다: 켜면 재생 알림은 "음악 재생 중"만(아티스트 · 커버 없음), 받기 알림은 곡 이름 대신 "곡 받는 중" 등으로 쓴다. 설정을 읽기 전에는 알림을 띄우지 않는다.
+- 설정에 **알림** 섹션: 받기 진행 · 받기 결과 · 재생 알림 스위치(shared_preferences). 시스템 알림 권한이 꺼져 있으면 "설정 열기" 줄이 나온다. 권한은 알림을 처음 띄울 때 한 번, 또는 스위치를 켤 때 묻는다.
+- 알림을 눌러 특정 화면으로 가기, 알림에서 받기 취소는 하지 않는다 (앱만 열린다).
+## D-071 · 2026-10-07 · 설정에서도 플레이어 테마를 고른다
+- 설정 > 테마에 "플레이어 테마" 행을 더했다 (네모 · 꽉 찬 이미지 · 호, `SegmentedPills`). 재생 화면 ⋮ 메뉴 시트와 같은 `PlayerStyleCubit`을 써서 어느 쪽에서 골라도 같이 바뀐다.
+- 음반(D-041)은 호와 구분이 안 되는 이유로 뺀 상태를 유지한다.

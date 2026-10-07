@@ -409,7 +409,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsHideNotification => '알림에 곡 정보 숨기기';
 
   @override
-  String get settingsHideNotificationDesc => '알림 · 잠금화면에 \"음악 재생 중\"만 보여요.';
+  String get settingsHideNotificationDesc =>
+      '알림 · 잠금화면에 \"음악 재생 중\"만 보이고, 받기 알림에서도 곡 정보를 숨겨요.';
 
   @override
   String get settingsTheme => '테마';
@@ -1473,13 +1474,28 @@ class AppLocalizationsKo extends AppLocalizations {
   String get trackFavoriteOff => '좋아요를 취소했어요';
 
   @override
-  String get playlistImportHint => '유튜브 재생목록 주소';
+  String get playlistImportHint => '재생목록 이름이나 주소';
 
   @override
-  String get playlistImportEmptyTitle => '재생목록 주소를 붙여 넣어 주세요';
+  String get playlistImportEmptyTitle => '재생목록을 찾아 보세요';
 
   @override
-  String get playlistImportEmptyBody => '곡 목록이 나오면 받을 곡을 고를 수 있어요.';
+  String get playlistImportEmptyBody =>
+      '이름으로 찾거나 주소를 붙여 넣으면, 곡 목록에서 받을 곡을 고를 수 있어요.';
+
+  @override
+  String get playlistImportNoResultsTitle => '찾은 재생목록이 없어요';
+
+  @override
+  String get playlistImportNoResultsBody => '다른 검색어로 찾아 보세요.';
+
+  @override
+  String get playlistImportBackToResults => '검색 결과';
+
+  @override
+  String playlistImportResultSubtitle(String channel, int count) {
+    return '$channel · $count곡';
+  }
 
   @override
   String get playlistImportNotPlaylistTitle => '재생목록 주소가 아니에요';
@@ -1516,4 +1532,123 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get searchPlaylistPick => '골라서 받기';
+
+  @override
+  String get settingsAccount => '계정';
+
+  @override
+  String get settingsGoogleAccount => '구글 계정';
+
+  @override
+  String get settingsAccountSignedOutDesc => '로그인하면 내 유튜브 재생목록을 불러올 수 있어요';
+
+  @override
+  String get settingsAccountSignIn => '로그인';
+
+  @override
+  String get settingsAccountSignOut => '로그아웃';
+
+  @override
+  String get settingsAccountNotConfigured => '이 빌드에는 구글 로그인이 설정되지 않았어요';
+
+  @override
+  String get settingsAccountUnsupported => '이 기기에서는 구글 로그인을 쓸 수 없어요';
+
+  @override
+  String get settingsAccountFailed => '로그인하지 못했어요. 다시 시도해 주세요';
+
+  @override
+  String get playlistImportMine => '내 재생목록';
+
+  @override
+  String get playlistImportMineTitle => '내 유튜브 재생목록';
+
+  @override
+  String get playlistImportMineEmptyTitle => '재생목록이 없어요';
+
+  @override
+  String get playlistImportMineEmptyBody => '이 계정에는 만든 재생목록이 없어요.';
+
+  @override
+  String get playlistImportLoginTitle => '로그인이 필요해요';
+
+  @override
+  String get playlistImportLoginBody => '내 유튜브 재생목록을 불러오려면 구글 계정으로 로그인해 주세요.';
+
+  @override
+  String get playlistImportLoginExpiredBody => '로그인이 풀렸어요. 다시 로그인해 주세요.';
+
+  @override
+  String get searchPlaylistFind => '재생목록으로 찾기';
+
+  @override
+  String get settingsNotifications => '알림';
+
+  @override
+  String get settingsNotifyDownloadProgress => '받기 진행 알림';
+
+  @override
+  String get settingsNotifyDownloadProgressDesc =>
+      '받는 동안 진행 상황을 알림창에 보여요. 앱이 뒤로 가도 받기가 이어져요.';
+
+  @override
+  String get settingsNotifyDownloadResult => '받기 결과 알림';
+
+  @override
+  String get settingsNotifyDownloadResultDesc => '받기가 끝나거나 실패하면 알려요.';
+
+  @override
+  String get settingsNotifyPlayback => '재생 알림';
+
+  @override
+  String get settingsNotifyPlaybackDesc => '알림창 · 잠금화면에서 재생을 조작해요.';
+
+  @override
+  String get settingsNotifyPermission => '시스템 알림이 꺼져 있어요';
+
+  @override
+  String get settingsNotifyPermissionDesc => '휴대폰 설정에서 Mulo 알림을 켜야 알림이 보여요.';
+
+  @override
+  String get settingsNotifyOpenSettings => '설정 열기';
+
+  @override
+  String get notifHiddenTitle => '음악 재생 중';
+
+  @override
+  String get notifChannelPlayback => '재생';
+
+  @override
+  String get notifChannelDownloadProgress => '받는 중';
+
+  @override
+  String get notifChannelDownloadDone => '받기 완료';
+
+  @override
+  String get notifChannelDownloadFailed => '받기 실패';
+
+  @override
+  String get notifDownloadHiddenTitle => '곡 받는 중';
+
+  @override
+  String notifDownloadProgressBody(int percent) {
+    return '받는 중 · $percent%';
+  }
+
+  @override
+  String notifDownloadProgressMore(int percent, int count) {
+    return '받는 중 · $percent% · $count곡 대기';
+  }
+
+  @override
+  String get notifDownloadDoneTitle => '받기 완료';
+
+  @override
+  String get notifDownloadDoneHidden => '곡이 보관함에 추가됐어요';
+
+  @override
+  String get notifDownloadFailedTitle => '받기 실패';
+
+  @override
+  String get notifDownloadFailedHidden => '곡을 받지 못했어요';
 }

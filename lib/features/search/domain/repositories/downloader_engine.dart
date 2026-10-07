@@ -16,6 +16,13 @@ abstract interface class DownloaderEngine {
     bool newest = false,
   });
 
+  /// 키워드로 유튜브 재생목록을 찾는다. [page]는 0부터.
+  Future<PlaylistSearchPage> searchPlaylists(
+    String query, {
+    int page = 0,
+    int size = 20,
+  });
+
   /// URL로 곡 또는 재생목록 정보를 가져온다.
   Future<MediaInfo> fetchInfo(String url);
 

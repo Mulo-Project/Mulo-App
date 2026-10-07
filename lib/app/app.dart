@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../core/design/design.dart';
 import '../core/di/injector.dart';
 import '../core/l10n/l10n.dart';
+import '../features/account/presentation/bloc/account_cubit.dart';
 import '../features/covers/presentation/bloc/cover_color_cubit.dart';
 import '../features/covers/presentation/bloc/cover_cubit.dart';
 import '../features/lyrics/presentation/bloc/lyrics_cubit.dart';
@@ -17,6 +18,9 @@ import '../features/downloads/presentation/bloc/download_settings_cubit.dart';
 import '../features/home/presentation/bloc/play_recorder_cubit.dart';
 import '../features/library/presentation/bloc/library_cubit.dart';
 import '../features/library/presentation/bloc/library_import_cubit.dart';
+import '../features/notifications/presentation/bloc/notification_settings_cubit.dart';
+import '../features/notifications/presentation/bloc/notification_sync_cubit.dart';
+import '../features/notifications/presentation/widgets/notification_bridge.dart';
 import '../features/player/presentation/bloc/audio_output_cubit.dart';
 import '../features/player/presentation/bloc/now_playing_cubit.dart';
 import '../features/player/presentation/bloc/player_style_cubit.dart';
@@ -56,6 +60,7 @@ class _MusicAppState extends State<MusicApp> {
       providers: [
         BlocProvider(create: (_) => sl<ThemeCubit>()..load()),
         BlocProvider(create: (_) => sl<AppLockCubit>()..load()),
+        BlocProvider(create: (_) => sl<AccountCubit>()..load()),
         BlocProvider(create: (_) => sl<CoverCubit>()..load()),
         BlocProvider(create: (_) => sl<CoverColorCubit>()..load()),
         BlocProvider(create: (_) => sl<LyricsCubit>()),
@@ -69,6 +74,11 @@ class _MusicAppState extends State<MusicApp> {
         BlocProvider(create: (_) => sl<DownloadQueueCubit>()..start()),
         BlocProvider(create: (_) => sl<DownloadSettingsCubit>()..load()),
         BlocProvider(create: (_) => sl<DownloadPreferencesCubit>()..load()),
+        BlocProvider(
+          lazy: false,
+          create: (_) => sl<NotificationSettingsCubit>()..load(),
+        ),
+        BlocProvider(lazy: false, create: (_) => sl<NotificationSyncCubit>()),
         // 곡 메뉴에서 바로 읽으므로 재생목록 탭을 열기 전에도 미리 불러 둔다.
         BlocProvider(lazy: false, create: (_) => sl<PlaylistsCubit>()..start()),
       ],
@@ -102,7 +112,11 @@ class _MusicAppState extends State<MusicApp> {
               value: dark
                   ? SystemUiOverlayStyle.light
                   : SystemUiOverlayStyle.dark,
-              child: DownloadCompletionListener(child: LockGate(child: child!)),
+              child: NotificationBridge(
+                child: DownloadCompletionListener(
+                  child: LockGate(child: child!),
+                ),
+              ),
             );
           },
         ),

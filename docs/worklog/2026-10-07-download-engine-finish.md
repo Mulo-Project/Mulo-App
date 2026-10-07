@@ -7,7 +7,7 @@
 - 상세 기능: 오디오 추출 저장 (#5), 음질 선택 (#6), 다운로드 대기열 (#7), 기본 음질 · 포맷 설정 (#24), 유튜브 재생목록 가져오기 (#22)
 
 ## 한 일
-- 결정은 D-074. 설정의 기본 음질 · 포맷을 저장하고(`DownloadPreferencesCubit`), 받은 뒤 mp3 · 낮은 음질 opus로 바꾼다 (`AudioTranscoder` → Android `TranscoderChannel`, full 빌드의 ffmpeg).
+- 결정은 D-076. 설정의 기본 음질 · 포맷을 저장하고(`DownloadPreferencesCubit`), 받은 뒤 mp3 · 낮은 음질 opus로 바꾼다 (`AudioTranscoder` → Android `TranscoderChannel`, full 빌드의 ffmpeg).
 - 이어받기: `HttpAudioFileDownloader`가 받다 만 파일 뒤부터 `Range`로 이어 받는다 (형식 확인 · 416 · 구간 무시 서버 처리). 일시정지 · 실패 때 임시 파일을 남기고, 완료 · 취소 때 지운다.
 - 대기열 저장: `DownloadQueueStore`(shared_preferences JSON). 앱을 다시 켜면 받던 곡을 이어 받는다. 임시 파일은 앱 전용 폴더로 옮겼다.
 - 이미 받은 곡 건너뛰기: `downloadSourceKey` · `findExisting` · `FindExistingDownload`. 재생목록 가져오기가 받은 곡은 건너뛰고 새 재생목록에만 담는다 (안내 문구 추가). #69(재생목록 가져오기) 브랜치를 합쳐서 이어 만들었다.

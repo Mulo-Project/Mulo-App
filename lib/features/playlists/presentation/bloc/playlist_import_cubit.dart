@@ -1,6 +1,9 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../account/domain/entities/google_account.dart';
+import '../../../account/domain/usecases/account_usecases.dart';
+import '../../../../core/usecase/usecase.dart';
 import '../../../downloads/domain/entities/download_request.dart';
 import '../../../downloads/domain/usecases/download_usecases.dart';
 import '../../../search/domain/entities/engine_exception.dart';
@@ -8,7 +11,8 @@ import '../../../search/domain/entities/media_info.dart';
 import '../../../search/domain/usecases/search_usecases.dart';
 import '../../domain/usecases/playlist_usecases.dart';
 
-enum PlaylistImportStatus { idle, loading, loaded, failed }
+/// [results]는 키워드로 찾은 재생목록 목록을 보여 주는 상태.
+enum PlaylistImportStatus { idle, loading, results, loaded, failed }
 
 class PlaylistImportState extends Equatable {
   const PlaylistImportState({
@@ -19,6 +23,10 @@ class PlaylistImportState extends Equatable {
     this.selected = const {},
     this.failure,
     this.notPlaylist = false,
+    this.results = const [],
+    this.query = '',
+    this.mine = false,
+    this.accountFailure,
   });
 
   final PlaylistImportStatus status;
@@ -37,6 +45,18 @@ class PlaylistImportState extends Equatable {
   /// 주소는 읽었지만 재생목록이 아니라 곡 하나였다.
   final bool notPlaylist;
 
+  /// 키워드로 찾은 재생목록들. 하나를 골라 곡을 읽은 뒤에도 남겨 두어 돌아올 수 있다.
+  final List<PlaylistHit> results;
+
+  /// [results]를 찾은 검색어.
+  final String query;
+
+  /// [results]가 로그인한 계정의 재생목록인지 (검색 결과가 아니라).
+  final bool mine;
+
+  /// 내 재생목록을 읽다 실패한 까닭 (로그인이 풀렸는지 등).
+  final AccountFailure? accountFailure;
+
   bool get allSelected =>
       entries.isNotEmpty && selected.length == entries.length;
 
@@ -54,6 +74,9 @@ class PlaylistImportState extends Equatable {
     selected: selected ?? this.selected,
     failure: failure,
     notPlaylist: notPlaylist,
+    results: results,
+    query: query,
+    mine: mine,
   );
 
   @override
@@ -65,6 +88,10 @@ class PlaylistImportState extends Equatable {
     selected,
     failure,
     notPlaylist,
+    results,
+    query,
+    mine,
+    accountFailure,
   ];
 }
 
@@ -94,6 +121,8 @@ class PlaylistImportResult extends Equatable {
 class PlaylistImportCubit extends Cubit<PlaylistImportState> {
   PlaylistImportCubit(
     this._info,
+    this._search,
+    this._mine,
     this._enqueue,
     this._create,
     this._findExisting,
@@ -101,12 +130,99 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
   ) : super(const PlaylistImportState());
 
   final FetchMediaInfo _info;
+  final SearchPlaylists _search;
+  final FetchMyPlaylists _mine;
   final EnqueueDownload _enqueue;
   final CreatePlaylist _create;
   final FindExistingDownload _findExisting;
   final AddTracksToPlaylist _addTracks;
 
   int _request = 0;
+
+  /// 입력이 재생목록 주소면 곡 목록을 읽고, 아니면 키워드로 재생목록을 찾는다.
+  Future<void> submit(String input) {
+    final text = input.trim();
+    return _looksLikeUrl(text) ? load(text) : search(text);
+  }
+
+  static bool _looksLikeUrl(String text) =>
+      text.startsWith('http://') ||
+      text.startsWith('https://') ||
+      text.contains('youtube.com/') ||
+      text.contains('youtu.be/');
+
+  /// 키워드로 유튜브 재생목록을 찾아 목록으로 보여 준다.
+  Future<void> search(String query) async {
+    final id = ++_request;
+    final q = query.trim();
+    if (q.isEmpty) {
+      emit(const PlaylistImportState());
+      return;
+    }
+    emit(PlaylistImportState(status: PlaylistImportStatus.loading, query: q));
+    try {
+      final page = await _search(PlaylistSearchParams(q));
+      if (id != _request) return;
+      emit(
+        PlaylistImportState(
+          status: PlaylistImportStatus.results,
+          results: page.items,
+          query: q,
+        ),
+      );
+    } on EngineException catch (e) {
+      if (id != _request) return;
+      emit(
+        PlaylistImportState(
+          status: PlaylistImportStatus.failed,
+          failure: e.failure,
+          query: q,
+        ),
+      );
+    }
+  }
+
+  /// 로그인한 계정의 유튜브 재생목록을 불러와 목록으로 보여 준다 (로그인은 미리 돼 있어야 한다).
+  Future<void> loadMine() async {
+    final id = ++_request;
+    emit(const PlaylistImportState(status: PlaylistImportStatus.loading));
+    try {
+      final items = await _mine(const NoParams());
+      if (id != _request) return;
+      emit(
+        PlaylistImportState(
+          status: PlaylistImportStatus.results,
+          results: items,
+          mine: true,
+        ),
+      );
+    } on AccountException catch (e) {
+      if (id != _request) return;
+      emit(
+        PlaylistImportState(
+          status: PlaylistImportStatus.failed,
+          accountFailure: e.failure,
+          mine: true,
+        ),
+      );
+    }
+  }
+
+  /// 찾은 재생목록 하나를 골라 곡 목록을 읽는다.
+  Future<void> open(PlaylistHit hit) => load(hit.url);
+
+  /// 곡 목록에서 찾은 재생목록 목록으로 돌아간다.
+  void backToResults() {
+    _request++;
+    emit(
+      PlaylistImportState(
+        status: PlaylistImportStatus.results,
+        results: state.results,
+        query: state.query,
+        mine: state.mine,
+      ),
+    );
+  }
 
   /// 주소의 재생목록을 읽는다. 처음에는 곡을 모두 고른 채로 둔다.
   Future<void> load(String url) async {
@@ -115,7 +231,17 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
       emit(const PlaylistImportState());
       return;
     }
-    emit(const PlaylistImportState(status: PlaylistImportStatus.loading));
+    final keep = state.results;
+    final keepQuery = state.query;
+    final keepMine = state.mine;
+    emit(
+      PlaylistImportState(
+        status: PlaylistImportStatus.loading,
+        results: keep,
+        query: keepQuery,
+        mine: keepMine,
+      ),
+    );
     try {
       final info = await _info(url);
       if (id != _request) return;
@@ -135,13 +261,19 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
                   usable.map((e) => e.thumbnailUrl).nonNulls.firstOrNull,
               entries: usable,
               selected: {for (final e in usable) e.id},
+              results: keep,
+              query: keepQuery,
+              mine: keepMine,
             ),
           );
         case VideoInfo():
           emit(
-            const PlaylistImportState(
+            PlaylistImportState(
               status: PlaylistImportStatus.failed,
               notPlaylist: true,
+              results: keep,
+              query: keepQuery,
+              mine: keepMine,
             ),
           );
       }
@@ -151,6 +283,9 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
         PlaylistImportState(
           status: PlaylistImportStatus.failed,
           failure: e.failure,
+          results: keep,
+          query: keepQuery,
+          mine: keepMine,
         ),
       );
     }

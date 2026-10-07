@@ -419,7 +419,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsHideNotificationDesc =>
-      'Shows only \"Playing music\" on notifications and lock screen.';
+      'Shows only \"Playing music\" on notifications and lock screen, and hides song info in download notifications too.';
 
   @override
   String get settingsTheme => 'Theme';
@@ -1498,14 +1498,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackFavoriteOff => 'Removed from favorites';
 
   @override
-  String get playlistImportHint => 'YouTube playlist link';
+  String get playlistImportHint => 'Playlist name or link';
 
   @override
-  String get playlistImportEmptyTitle => 'Paste a playlist link';
+  String get playlistImportEmptyTitle => 'Find a playlist';
 
   @override
   String get playlistImportEmptyBody =>
-      'Once the tracks show up, pick the ones to download.';
+      'Search by name or paste a link, then pick the tracks to download.';
+
+  @override
+  String get playlistImportNoResultsTitle => 'No playlists found';
+
+  @override
+  String get playlistImportNoResultsBody => 'Try a different search.';
+
+  @override
+  String get playlistImportBackToResults => 'Search results';
+
+  @override
+  String playlistImportResultSubtitle(String channel, int count) {
+    return '$channel · $count songs';
+  }
 
   @override
   String get playlistImportNotPlaylistTitle => 'That is not a playlist link';
@@ -1544,4 +1558,131 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchPlaylistPick => 'Choose & download';
+
+  @override
+  String get settingsAccount => 'Account';
+
+  @override
+  String get settingsGoogleAccount => 'Google account';
+
+  @override
+  String get settingsAccountSignedOutDesc =>
+      'Sign in to load your YouTube playlists';
+
+  @override
+  String get settingsAccountSignIn => 'Sign in';
+
+  @override
+  String get settingsAccountSignOut => 'Sign out';
+
+  @override
+  String get settingsAccountNotConfigured =>
+      'Google sign-in is not set up in this build';
+
+  @override
+  String get settingsAccountUnsupported =>
+      'Google sign-in is not available on this device';
+
+  @override
+  String get settingsAccountFailed => 'Could not sign in. Please try again';
+
+  @override
+  String get playlistImportMine => 'My playlists';
+
+  @override
+  String get playlistImportMineTitle => 'My YouTube playlists';
+
+  @override
+  String get playlistImportMineEmptyTitle => 'No playlists';
+
+  @override
+  String get playlistImportMineEmptyBody => 'This account has no playlists.';
+
+  @override
+  String get playlistImportLoginTitle => 'Sign in required';
+
+  @override
+  String get playlistImportLoginBody =>
+      'Sign in with your Google account to load your YouTube playlists.';
+
+  @override
+  String get playlistImportLoginExpiredBody =>
+      'You were signed out. Please sign in again.';
+
+  @override
+  String get searchPlaylistFind => 'Find as playlist';
+
+  @override
+  String get settingsNotifications => 'Notifications';
+
+  @override
+  String get settingsNotifyDownloadProgress => 'Download progress';
+
+  @override
+  String get settingsNotifyDownloadProgressDesc =>
+      'Shows progress in the notification shade. Downloads keep going when the app is in the background.';
+
+  @override
+  String get settingsNotifyDownloadResult => 'Download results';
+
+  @override
+  String get settingsNotifyDownloadResultDesc =>
+      'Tells you when a download finishes or fails.';
+
+  @override
+  String get settingsNotifyPlayback => 'Playback controls';
+
+  @override
+  String get settingsNotifyPlaybackDesc =>
+      'Control playback from the notification shade and lock screen.';
+
+  @override
+  String get settingsNotifyPermission => 'System notifications are off';
+
+  @override
+  String get settingsNotifyPermissionDesc =>
+      'Turn on Mulo notifications in your phone settings to see them.';
+
+  @override
+  String get settingsNotifyOpenSettings => 'Open settings';
+
+  @override
+  String get notifHiddenTitle => 'Playing music';
+
+  @override
+  String get notifChannelPlayback => 'Playback';
+
+  @override
+  String get notifChannelDownloadProgress => 'Downloading';
+
+  @override
+  String get notifChannelDownloadDone => 'Download complete';
+
+  @override
+  String get notifChannelDownloadFailed => 'Download failed';
+
+  @override
+  String get notifDownloadHiddenTitle => 'Downloading a song';
+
+  @override
+  String notifDownloadProgressBody(int percent) {
+    return 'Downloading · $percent%';
+  }
+
+  @override
+  String notifDownloadProgressMore(int percent, int count) {
+    return 'Downloading · $percent% · $count waiting';
+  }
+
+  @override
+  String get notifDownloadDoneTitle => 'Download complete';
+
+  @override
+  String get notifDownloadDoneHidden => 'A song was added to your library';
+
+  @override
+  String get notifDownloadFailedTitle => 'Download failed';
+
+  @override
+  String get notifDownloadFailedHidden => 'A song could not be downloaded';
 }

@@ -40,6 +40,13 @@ class CachedDownloaderEngine implements DownloaderEngine {
   );
 
   @override
+  Future<PlaylistSearchPage> searchPlaylists(
+    String query, {
+    int page = 0,
+    int size = 20,
+  }) => _inner.searchPlaylists(query, page: page, size: size);
+
+  @override
   Future<MediaInfo> fetchInfo(String url) =>
       _cached(_infos, url, () => _inner.fetchInfo(url));
 
