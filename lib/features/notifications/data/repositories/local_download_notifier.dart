@@ -18,7 +18,7 @@ void downloadNotificationBackgroundHandler(NotificationResponse response) {
 }
 
 /// Android 알림창에 받기 진행 · 결과를 띄운다 (flutter_local_notifications).
-/// 알림 버튼은 앱 화면을 열지 않고, 백그라운드 isolate가 포트로 주 isolate에 넘긴다.
+/// 알림 버튼은 앱을 앞으로 가져오며 주 isolate의 콜백으로 전달된다 (앱 화면을 열지 않는 방식은 실기기에서 전달되지 않았다).
 /// 받는 중 알림은 [showProgress]의 `foreground`가 true일 때 포그라운드 서비스(dataSync)로 띄워
 /// 앱이 뒤로 가거나 닫혀도 받기가 이어지게 한다. 알림의 미리 듣기 버튼은 [watchActions]로 알린다.
 class LocalDownloadNotifier implements DownloadNotifier {
@@ -147,28 +147,28 @@ class LocalDownloadNotifier implements DownloadNotifier {
         AndroidNotificationAction(
           _pauseAction,
           pauseLabel,
-          showsUserInterface: false,
+          showsUserInterface: true,
           cancelNotification: false,
         ),
       if (stopLabel != null)
         AndroidNotificationAction(
           _stopAction,
           stopLabel,
-          showsUserInterface: false,
+          showsUserInterface: true,
           cancelNotification: false,
         ),
       if (previewLabel != null && pauseLabel == null)
         AndroidNotificationAction(
           _previewAction,
           previewLabel,
-          showsUserInterface: false,
+          showsUserInterface: true,
           cancelNotification: false,
         ),
       if (cancelLabel != null)
         AndroidNotificationAction(
           _cancelAction,
           cancelLabel,
-          showsUserInterface: false,
+          showsUserInterface: true,
           cancelNotification: false,
         ),
     ],
