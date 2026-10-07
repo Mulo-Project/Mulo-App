@@ -73,6 +73,8 @@ class ArtworkBox extends StatelessWidget {
                   MediaQuery.devicePixelRatioOf(context),
                 ),
                 fit: BoxFit.cover,
+                // 정렬로 칸의 이미지가 바뀔 때 빈 칸이 번쩍이지 않게 이전 그림을 유지한다.
+                gaplessPlayback: true,
                 errorBuilder: (_, _, _) => placeholder,
               )
             : placeholder,
