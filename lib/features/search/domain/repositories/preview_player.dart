@@ -11,6 +11,12 @@ abstract interface class PreviewPlayer {
   /// 재생 위치를 [position]으로 옮긴다 (재생 중이 아니면 아무 일도 없다).
   Future<void> seek(Duration position);
 
+  /// 소리를 잠시 멈춘다 (자리는 그대로).
+  Future<void> pause();
+
+  /// 잠시 멈춘 자리에서 다시 재생한다.
+  Future<void> resume();
+
   /// 재생을 멈추고 놓는다.
   Future<void> stop();
 

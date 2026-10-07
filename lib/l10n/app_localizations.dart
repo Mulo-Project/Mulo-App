@@ -1700,6 +1700,18 @@ abstract class AppLocalizations {
   /// **'미리 듣기 멈추기'**
   String get searchPreviewStop;
 
+  /// No description provided for @searchPreviewPause.
+  ///
+  /// In ko, this message translates to:
+  /// **'미리 듣기 일시정지'**
+  String get searchPreviewPause;
+
+  /// No description provided for @searchPreviewResume.
+  ///
+  /// In ko, this message translates to:
+  /// **'미리 듣기 이어 듣기'**
+  String get searchPreviewResume;
+
   /// No description provided for @searchPreviewLoading.
   ///
   /// In ko, this message translates to:
@@ -3181,6 +3193,24 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'음악 재생 중'**
   String get notifHiddenTitle;
+
+  /// No description provided for @notifPreviewLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'미리 듣기'**
+  String get notifPreviewLabel;
+
+  /// No description provided for @notifHiddenNote.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 정보 숨김'**
+  String get notifHiddenNote;
+
+  /// No description provided for @notifStop.
+  ///
+  /// In ko, this message translates to:
+  /// **'닫기'**
+  String get notifStop;
 
   /// No description provided for @notifChannelPlayback.
   ///

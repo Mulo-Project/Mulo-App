@@ -10,6 +10,14 @@ import 'notification_texts.dart';
 /// 상태를 받아 알림에 그리고, 누른 버튼은 [commands]로 앱에 돌려준다.
 class MuloAudioHandler extends BaseAudioHandler {
   static const _favoriteAction = 'favorite';
+  static const _stopAction = 'stop_playback';
+
+  /// 닫기(X) 버튼: 눌러서 알림을 끈다. 기본 정지 아이콘은 다른 버튼보다 커 보여 크기를 맞춘 X 아이콘을 쓴다.
+  static MediaControl get _stopControl => MediaControl.custom(
+    androidIcon: 'drawable/ic_notif_close',
+    label: systemL10n().notifStop,
+    name: _stopAction,
+  );
 
   final _commands = StreamController<MediaCommand>.broadcast();
 
@@ -26,7 +34,7 @@ class MuloAudioHandler extends BaseAudioHandler {
     }
     final art = info.artUri == null ? null : Uri.tryParse(info.artUri!);
     final item = MediaItem(
-      id: 'mulo.now_playing',
+      id: info.preview ? 'mulo.preview' : 'mulo.now_playing',
       title: info.title,
       artist: info.artist.isEmpty ? null : info.artist,
       album: info.album.isEmpty ? null : info.album,
@@ -45,28 +53,34 @@ class MuloAudioHandler extends BaseAudioHandler {
       mediaItem.add(item);
     }
 
-    final controls = [
-      if (info.hasPrevious) MediaControl.skipToPrevious,
-      info.playing ? MediaControl.pause : MediaControl.play,
-      if (info.hasNext) MediaControl.skipToNext,
-      // 펼친 알림에만 보이는 좋아요 · 닫기 (접힌 알림은 위 세 개만).
-      MediaControl.custom(
-        androidIcon: info.favorite
-            ? 'drawable/ic_notif_favorite'
-            : 'drawable/ic_notif_favorite_outline',
-        label: info.favorite
-            ? systemL10n().trackMenuUnfavorite
-            : systemL10n().trackMenuFavorite,
-        name: _favoriteAction,
-      ),
-      MediaControl.stop,
-    ];
+    // 미리 듣기: 일시정지 · 멈추기만 있다 (멈추면 앞에 듣던 곡으로 돌아간다).
+    final controls = info.preview
+        ? [_stopControl, info.playing ? MediaControl.pause : MediaControl.play]
+        : [
+            if (info.hasPrevious) MediaControl.skipToPrevious,
+            info.playing ? MediaControl.pause : MediaControl.play,
+            if (info.hasNext) MediaControl.skipToNext,
+            // 펼친 알림에만 보이는 좋아요 · 닫기 (접힌 알림은 위 세 개만).
+            MediaControl.custom(
+              androidIcon: info.favorite
+                  ? 'drawable/ic_notif_favorite'
+                  : 'drawable/ic_notif_favorite_outline',
+              label: info.favorite
+                  ? systemL10n().trackMenuUnfavorite
+                  : systemL10n().trackMenuFavorite,
+              name: _favoriteAction,
+            ),
+            _stopControl,
+          ];
     playbackState.add(
       PlaybackState(
         controls: controls,
         systemActions: const {MediaAction.seek, MediaAction.stop},
         androidCompactActionIndices: [
-          for (var i = 0; i < controls.length - 2; i++) i,
+          if (info.preview)
+            1
+          else
+            for (var i = 0; i < controls.length - 2; i++) i,
         ],
         processingState: AudioProcessingState.ready,
         playing: info.playing,
@@ -103,6 +117,8 @@ class MuloAudioHandler extends BaseAudioHandler {
   ]) async {
     if (name == _favoriteAction) {
       _commands.add(const MediaCommand(MediaCommandType.favorite));
+    } else if (name == _stopAction) {
+      await stop();
     }
   }
 

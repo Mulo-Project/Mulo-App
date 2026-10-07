@@ -130,6 +130,18 @@ class JustAudioPreviewPlayer implements PreviewPlayer {
   }
 
   @override
+  Future<void> pause() async {
+    if (_stream == null) return;
+    await _player?.pause();
+  }
+
+  @override
+  Future<void> resume() async {
+    if (_stream == null) return;
+    unawaited(_player?.play().catchError((Object _) {}));
+  }
+
+  @override
   Future<void> stop() async {
     // 불러오는 중이어도 멈출 수 있다 (진행 중이던 setAudioSource가 중단된다).
     _stream = null;

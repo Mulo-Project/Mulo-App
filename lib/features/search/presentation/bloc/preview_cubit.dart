@@ -21,7 +21,11 @@ class PreviewState extends Equatable {
     this.title = '',
     this.loadStartedAt,
     this.expectedLoad = Duration.zero,
+    this.paused = false,
   });
+
+  /// 소리가 나던 중에 잠시 멈춰 둔 상태 ([PreviewStatus.playing]일 때만 뜻이 있다).
+  final bool paused;
 
   /// 미리 듣는 곡 제목 (다른 화면의 미리 듣기 줄에 보여 준다).
   final String title;
@@ -63,6 +67,7 @@ class PreviewState extends Equatable {
     title,
     loadStartedAt,
     expectedLoad,
+    paused,
   ];
 }
 
@@ -74,6 +79,8 @@ class PreviewCubit extends Cubit<PreviewState> {
     this._resolve,
     this._play,
     this._seek,
+    this._pause,
+    this._resume,
     this._stop,
     WatchPreviewCompleted watchCompleted,
     WatchPreviewProgress watchProgress,
@@ -87,6 +94,8 @@ class PreviewCubit extends Cubit<PreviewState> {
   final ResolveAudioStream _resolve;
   final PlayPreview _play;
   final SeekPreview _seek;
+  final PausePreview _pause;
+  final ResumePreview _resume;
   final StopPreview _stop;
   late final StreamSubscription<void> _completed;
   late final StreamSubscription<PreviewProgress> _progress;
@@ -107,6 +116,7 @@ class PreviewCubit extends Cubit<PreviewState> {
         status: state.status,
         progress: p,
         title: state.title,
+        paused: state.paused,
       ),
     );
   }
@@ -202,9 +212,27 @@ class PreviewCubit extends Cubit<PreviewState> {
         status: state.status,
         progress: PreviewProgress(position: target, duration: d),
         title: state.title,
+        paused: state.paused,
       ),
     );
     await _seek(target);
+  }
+
+  /// 듣는 중이면 잠시 멈추고, 잠시 멈춘 상태면 이어서 듣는다.
+  Future<void> togglePause() async {
+    if (isClosed || state.status != PreviewStatus.playing) return;
+    final paused = !state.paused;
+    emit(
+      PreviewState(
+        hitId: state.hitId,
+        hit: state.hit,
+        status: state.status,
+        progress: state.progress,
+        title: state.title,
+        paused: paused,
+      ),
+    );
+    await (paused ? _pause : _resume)(const NoParams());
   }
 
   /// 미리 듣기를 멈춘다 (듣고 있지 않으면 아무 일도 없다).

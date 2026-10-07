@@ -863,6 +863,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get searchPreviewStop => '미리 듣기 멈추기';
 
   @override
+  String get searchPreviewPause => '미리 듣기 일시정지';
+
+  @override
+  String get searchPreviewResume => '미리 듣기 이어 듣기';
+
+  @override
   String get searchPreviewLoading => '미리 듣기 준비 중';
 
   @override
@@ -1672,6 +1678,15 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get notifHiddenTitle => '음악 재생 중';
+
+  @override
+  String get notifPreviewLabel => '미리 듣기';
+
+  @override
+  String get notifHiddenNote => '곡 정보 숨김';
+
+  @override
+  String get notifStop => '닫기';
 
   @override
   String get notifChannelPlayback => '재생';

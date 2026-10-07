@@ -118,6 +118,26 @@ class SeekPreview implements UseCase<void, Duration> {
   Future<void> call(Duration position) => _player.seek(position);
 }
 
+/// 미리 듣기 잠시 멈추기.
+class PausePreview implements UseCase<void, NoParams> {
+  const PausePreview(this._player);
+
+  final PreviewPlayer _player;
+
+  @override
+  Future<void> call(NoParams params) => _player.pause();
+}
+
+/// 잠시 멈춘 미리 듣기 이어 듣기.
+class ResumePreview implements UseCase<void, NoParams> {
+  const ResumePreview(this._player);
+
+  final PreviewPlayer _player;
+
+  @override
+  Future<void> call(NoParams params) => _player.resume();
+}
+
 /// 미리 듣기 멈추기.
 class StopPreview implements UseCase<void, NoParams> {
   const StopPreview(this._player);
