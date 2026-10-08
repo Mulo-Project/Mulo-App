@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -33,8 +35,35 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   StatefulNavigationShell get shell => widget.shell;
 
-  /// 받기 줄을 접어 플로팅 버튼으로 둔 상태 (앱을 켜 두는 동안만).
+  /// 받기 줄을 접어 둔 상태 (앱을 켜 두는 동안만).
   var _downloadMinimized = false;
+
+  /// 플로팅 버튼을 보이는 중인가. 띠가 다 접힌 뒤에 나타나고 띠가 펴지기 전에 사라진다
+  /// (띠 높이가 변하는 동안 버튼이 같이 오르내리지 않게).
+  var _floatShown = false;
+  Timer? _dockTimer;
+
+  void _minimizeDownloads() {
+    _dockTimer?.cancel();
+    setState(() => _downloadMinimized = true);
+    _dockTimer = Timer(AppMotion.medium, () {
+      if (mounted && _downloadMinimized) setState(() => _floatShown = true);
+    });
+  }
+
+  void _restoreDownloads() {
+    _dockTimer?.cancel();
+    setState(() => _floatShown = false);
+    _dockTimer = Timer(AppMotion.fast, () {
+      if (mounted) setState(() => _downloadMinimized = false);
+    });
+  }
+
+  @override
+  void dispose() {
+    _dockTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,9 +75,13 @@ class _AppShellState extends State<AppShell> {
     return BlocListener<DownloadQueueCubit, DownloadQueueState>(
       // 받을 곡이 모두 사라지면 다음 받기는 받기 줄로 다시 시작한다.
       listenWhen: (a, b) => a.current != null && b.current == null,
-      listener: (context, _) => setState(() {
-        _downloadMinimized = false;
-      }),
+      listener: (context, _) {
+        _dockTimer?.cancel();
+        setState(() {
+          _downloadMinimized = false;
+          _floatShown = false;
+        });
+      },
       child: BlocListener<NowPlayingCubit, NowPlayingState>(
         listener: (context, s) =>
             context.read<PlayRecorderCubit>().playbackChanged(
@@ -90,12 +123,10 @@ class _AppShellState extends State<AppShell> {
                           fit: StackFit.expand,
                           children: [...previous, ?current],
                         ),
-                        child: _downloadMinimized
+                        child: _floatShown
                             ? DownloadFloatButton(
                                 key: const ValueKey('download-float-on'),
-                                onRestore: () => setState(() {
-                                  _downloadMinimized = false;
-                                }),
+                                onRestore: _restoreDownloads,
                               )
                             : const SizedBox.shrink(
                                 key: ValueKey('download-float-off'),
@@ -126,9 +157,7 @@ class _AppShellState extends State<AppShell> {
                             )
                           : DownloadBar(
                               key: const ValueKey('download-shown'),
-                              onMinimize: () => setState(() {
-                                _downloadMinimized = true;
-                              }),
+                              onMinimize: _minimizeDownloads,
                             ),
                     ),
                     const _ShellMiniPlayer(),

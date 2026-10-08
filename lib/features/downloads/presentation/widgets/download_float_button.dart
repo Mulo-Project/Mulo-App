@@ -30,11 +30,11 @@ class DownloadFloatButton extends StatelessWidget {
         Positioned(
           right: AppSpacing.md,
           bottom: barHeight + AppSpacing.md,
-          // 띠가 접히는 동안 뒤늦게 제자리에서 커진다.
+          // 띠가 다 접힌 뒤 제자리에서 커지며 나타난다.
           child: TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: 1),
             duration: AppMotion.medium,
-            curve: const Interval(.25, 1, curve: Curves.easeOutBack),
+            curve: Curves.easeOutBack,
             builder: (context, t, child) => Transform.scale(
               scale: t,
               child: Opacity(opacity: t.clamp(0.0, 1.0), child: child),
