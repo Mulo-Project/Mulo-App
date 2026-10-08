@@ -280,7 +280,7 @@ void main() {
     expect(find.text('Next Song'), findsNothing);
   });
 
-  testWidgets('받기 줄: 지금 곡을 일시정지한다', (tester) async {
+  testWidgets('받기 줄: 전체 일시정지 · 받는 곡 정보 숨기기', (tester) async {
     final queue = MemoryDownloadQueue([_now, _next]);
     await setUpTestDependencies(downloads: queue);
     tester.view.physicalSize = const Size(1170, 2532);
@@ -292,9 +292,18 @@ void main() {
     await tester.pumpWidget(const MusicApp(initialLocation: Routes.search));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const ValueKey('download-pause')));
+    await tester.tap(find.byKey(const ValueKey('download-pause-all')));
     await tester.pumpAndSettle();
-    expect(queue.controls, ['pause:a']);
+    expect(queue.controls, ['pause:a', 'pause:b']);
+
+    // 받는 곡 정보를 숨기고 다시 보인다.
+    expect(find.text('Now Song'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('download-current-toggle')));
+    await tester.pumpAndSettle();
+    expect(find.text('Now Song'), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('download-current-toggle')));
+    await tester.pumpAndSettle();
+    expect(find.text('Now Song'), findsOneWidget);
   });
 
   testWidgets('대기열 카드: 곡 취소 · 전체 취소', (tester) async {

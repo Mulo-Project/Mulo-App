@@ -69,6 +69,9 @@
     }
   },
   "downloadsPauseAll": "모두 일시정지",
+  "downloadsResumeAll": "모두 이어 받기",
+  "downloadsHideCurrent": "받는 곡 정보 숨기기",
+  "downloadsShowCurrent": "받는 곡 정보 보이기",
   "downloadsClearDone": "완료 지우기",
   "statusDownloading": "받는 중",
   "statusFailed": "실패",

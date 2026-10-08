@@ -163,6 +163,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadsPauseAll => 'Pause all';
 
   @override
+  String get downloadsResumeAll => 'Resume all';
+
+  @override
+  String get downloadsHideCurrent => 'Hide current song';
+
+  @override
+  String get downloadsShowCurrent => 'Show current song';
+
+  @override
   String get downloadsClearDone => 'Clear finished';
 
   @override

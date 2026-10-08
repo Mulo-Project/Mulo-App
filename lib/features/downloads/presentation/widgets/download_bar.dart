@@ -25,6 +25,9 @@ class DownloadBar extends StatefulWidget {
 class _DownloadBarState extends State<DownloadBar> {
   var _expanded = false;
 
+  /// 지금 받는 곡 영역(이미지 · 제목 · 진행도)을 보일지. 접은 상태에서만 뜻이 있다.
+  var _showCurrent = true;
+
   @override
   Widget build(BuildContext context) {
     final queue = context.watch<DownloadQueueCubit>().state;
@@ -33,48 +36,43 @@ class _DownloadBarState extends State<DownloadBar> {
     final l10n = context.l10n;
     final p = context.palette;
     final text = Theme.of(context).textTheme;
+    final muted = text.labelSmall?.copyWith(color: p.onSurfaceMuted);
+    final cubit = context.read<DownloadQueueCubit>();
     final pending = [
       for (final i in queue.items)
         if (i.status != DownloadStatus.done) i,
     ];
-    final others = [
-      for (final i in pending)
-        if (i.id != current.id) i,
-    ];
+    final allPaused = queue.allPaused;
 
-    // 가로 전체 직각 띠인 미니 플레이어와 구분되도록, 좌우로 띄운 둥근 카드에 강조색 테두리를 둔다.
-    return Padding(
-      // 좌우는 화면 내용과 같은 여백(md)에 맞추고, 위아래는 미니 플레이어 · 본문과 숨 쉴 틈을 둔다.
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.sm,
-        AppSpacing.md,
-        AppSpacing.xs,
-      ),
-      child: GlassSurface(
-        key: const ValueKey('download-bar'),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadii.md),
-          side: BorderSide(color: p.accent.withValues(alpha: .4)),
+    // 미니 플레이어와 같은 가로 전체 유리 띠. 강조색을 아주 옅게 깔아 자연스럽게 구분한다.
+    return GlassSurface(
+      key: const ValueKey('download-bar'),
+      shape: const RoundedRectangleBorder(),
+      rim: false,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: p.accent.withValues(alpha: .08),
+          border: Border(
+            top: BorderSide(color: p.accent.withValues(alpha: .35)),
+          ),
         ),
-        rim: false,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // 위 영역: 전체 현황.
+            // 위(작게): 전체 현황 · 전체 일시정지 · 전체 취소.
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.md,
                 AppSpacing.xxs,
                 AppSpacing.xs,
-                AppSpacing.xxs,
+                0,
               ),
               child: Row(
                 children: [
                   Text(
                     '${l10n.downloadsOverall(queue.doneCount, queue.items.length)}'
                     ' · ${l10n.downloadsRemaining(pending.length)}',
-                    style: text.labelSmall?.copyWith(color: p.onSurfaceMuted),
+                    style: muted,
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
@@ -83,60 +81,92 @@ class _DownloadBarState extends State<DownloadBar> {
                       height: 2,
                     ),
                   ),
+                  const SizedBox(width: AppSpacing.xs),
+                  CircleIconButton(
+                    key: const ValueKey('download-pause-all'),
+                    icon: allPaused ? AppIcons.play : AppIcons.pause,
+                    tooltip: allPaused
+                        ? l10n.downloadsResumeAll
+                        : l10n.downloadsPauseAll,
+                    size: 32,
+                    onPressed: allPaused ? cubit.resumeAll : cubit.pauseAll,
+                  ),
                   const CancelAllDownloadsButton(),
                 ],
               ),
             ),
-            Divider(height: 1, thickness: 1, color: p.glassBorder),
-            // 아래 영역: 지금 받는 곡.
-            _DownloadRow(
-              item: current,
-              key: const ValueKey('download-current'),
-            ),
-            // 펼치기는 지금 곡 바로 밑에.
-            if (others.isNotEmpty)
-              InkWell(
-                key: const ValueKey('download-bar-toggle'),
-                onTap: () => setState(() => _expanded = !_expanded),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        _expanded ? AppIcons.expandLess : AppIcons.expandMore,
-                        size: 18,
-                        color: p.onSurfaceMuted,
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      Text(
-                        _expanded
-                            ? l10n.downloadsCollapse
-                            : l10n.downloadsExpand,
-                        style: text.labelSmall?.copyWith(
-                          color: p.onSurfaceMuted,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            if (_expanded && others.isNotEmpty) ...[
-              Divider(height: 1, thickness: 1, color: p.glassBorder),
+            // 접었을 땐 지금 받는 곡, 펼치면 지금 곡까지 포함한 전체 목록.
+            if (_expanded)
               ConstrainedBox(
                 constraints: BoxConstraints(
-                  maxHeight: MediaQuery.sizeOf(context).height * .3,
+                  maxHeight: MediaQuery.sizeOf(context).height * .35,
                 ),
                 child: ListView(
                   key: const ValueKey('download-bar-list'),
                   shrinkWrap: true,
                   padding: EdgeInsets.zero,
                   children: [
-                    for (final item in others) _DownloadRow(item: item),
+                    for (final item in pending) _DownloadRow(item: item),
                   ],
                 ),
+              )
+            else if (_showCurrent)
+              _DownloadRow(
+                item: current,
+                key: const ValueKey('download-current'),
               ),
-            ],
+            // 펼치기는 목록 바로 밑에. 접은 상태에선 받는 곡 정보를 숨길 수도 있다.
+            Row(
+              children: [
+                Expanded(
+                  child: InkWell(
+                    key: const ValueKey('download-bar-toggle'),
+                    onTap: () => setState(() => _expanded = !_expanded),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSpacing.xs,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            _expanded
+                                ? AppIcons.expandLess
+                                : AppIcons.expandMore,
+                            size: 18,
+                            color: p.onSurfaceMuted,
+                          ),
+                          const SizedBox(width: AppSpacing.xs),
+                          Text(
+                            _expanded
+                                ? l10n.downloadsCollapse
+                                : l10n.downloadsExpand,
+                            style: muted,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                if (!_expanded)
+                  InkWell(
+                    key: const ValueKey('download-current-toggle'),
+                    onTap: () => setState(() => _showCurrent = !_showCurrent),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: AppSpacing.xs,
+                      ),
+                      child: Text(
+                        _showCurrent
+                            ? l10n.downloadsHideCurrent
+                            : l10n.downloadsShowCurrent,
+                        style: muted,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ],
         ),
       ),
@@ -183,10 +213,10 @@ class _DownloadRow extends StatelessWidget {
       onTap: () => _openDetail(context),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
-          AppSpacing.sm,
-          AppSpacing.sm,
+          AppSpacing.md,
           AppSpacing.xs,
-          AppSpacing.sm,
+          AppSpacing.xs,
+          AppSpacing.xs,
         ),
         child: Row(
           children: [
@@ -230,24 +260,6 @@ class _DownloadRow extends StatelessWidget {
                 ],
               ),
             ),
-            if (item.status == DownloadStatus.downloading ||
-                item.status == DownloadStatus.paused)
-              CircleIconButton(
-                key: const ValueKey('download-pause'),
-                icon: item.status == DownloadStatus.paused
-                    ? AppIcons.play
-                    : AppIcons.pause,
-                tooltip: item.status == DownloadStatus.paused
-                    ? l10n.actionResume
-                    : l10n.actionPause,
-                size: 32,
-                onPressed: () {
-                  final queue = context.read<DownloadQueueCubit>();
-                  item.status == DownloadStatus.paused
-                      ? queue.resume(item.id)
-                      : queue.pause(item.id);
-                },
-              ),
             DownloadItemActions(item: item),
           ],
         ),

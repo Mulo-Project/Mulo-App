@@ -386,6 +386,24 @@ abstract class AppLocalizations {
   /// **'모두 일시정지'**
   String get downloadsPauseAll;
 
+  /// No description provided for @downloadsResumeAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'모두 이어 받기'**
+  String get downloadsResumeAll;
+
+  /// No description provided for @downloadsHideCurrent.
+  ///
+  /// In ko, this message translates to:
+  /// **'받는 곡 정보 숨기기'**
+  String get downloadsHideCurrent;
+
+  /// No description provided for @downloadsShowCurrent.
+  ///
+  /// In ko, this message translates to:
+  /// **'받는 곡 정보 보이기'**
+  String get downloadsShowCurrent;
+
   /// No description provided for @downloadsClearDone.
   ///
   /// In ko, this message translates to:
