@@ -50,6 +50,9 @@ object PlaybackHub {
     var isNotificationVisible = false
         private set
 
+    /** 닫기(X)로 알림을 치운 상태: 다시 재생하기 전까지 알림을 띄우지 않는다. */
+    private var dismissed = false
+
     private var sink: EventChannel.EventSink? = null
     private var pendingLoad: MethodChannel.Result? = null
     private var initialized = false
@@ -87,6 +90,7 @@ object PlaybackHub {
     fun load(uri: String, result: MethodChannel.Result) {
         pendingLoad?.error("interrupted", "다른 곡을 불러와 중단됨", null)
         pendingLoad = result
+        dismissed = false
         exo.playWhenReady = false
         exo.setMediaItem(MediaItem.fromUri(uri))
         exo.prepare()
@@ -95,6 +99,7 @@ object PlaybackHub {
 
     fun play() {
         if (exo.mediaItemCount == 0) return
+        dismissed = false
         // 끝까지 들은 곡은 처음부터 다시.
         if (exo.playbackState == Player.STATE_ENDED) exo.seekTo(0)
         exo.playWhenReady = true
@@ -119,9 +124,17 @@ object PlaybackHub {
         val info = SessionInfo(map)
         sessionPlayer.info = info
         session.setCustomLayout(customLayout(info))
+        if (dismissed) return
         isNotificationVisible = true
         ensureService()
         service?.showSession()
+    }
+
+    /** 닫기(X): 재생을 멈추고 알림(포그라운드 서비스)을 치운다. 세션 · 프로세스는 남고, 다시 재생하면 알림이 돌아온다. */
+    private fun dismissNotification() {
+        dismissed = true
+        isNotificationVisible = false
+        service?.hideSession()
     }
 
     private fun ensureService() {
@@ -183,6 +196,13 @@ object PlaybackHub {
 
         override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
             if (reason == Player.PLAY_WHEN_READY_CHANGE_REASON_END_OF_MEDIA_ITEM) return
+            if (playWhenReady && dismissed) {
+                // 이어폰 · 다른 경로로 다시 재생이 시작됐다: 알림도 다시 띄운다.
+                dismissed = false
+                isNotificationVisible = true
+                ensureService()
+                service?.showSession()
+            }
             emit(mapOf("type" to "playing", "value" to playWhenReady))
         }
 
@@ -234,9 +254,12 @@ object PlaybackHub {
         ): ListenableFuture<SessionResult> {
             when (customCommand.customAction) {
                 ACTION_FAVORITE -> emitCommand("favorite", null)
-                // 닫기(X): 재생만 멈춘다 (미리 듣기면 Dart가 미리 듣기를 끝낸다).
+                // 닫기(X): 재생을 멈추고 알림을 치운다 (미리 듣기면 Dart가 미리 듣기를 끝낸다).
                 ACTION_CLOSE -> {
-                    if (sessionPlayer.info?.preview != true) exo.pause()
+                    if (sessionPlayer.info?.preview != true) {
+                        exo.pause()
+                        dismissNotification()
+                    }
                     emitCommand("stop", null)
                 }
             }

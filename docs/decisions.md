@@ -579,6 +579,6 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 ## D-093 · 2026-10-08 · Android 재생 엔진 · 알림을 Kotlin 네이티브로
 - 경계(사용자 합의): OS에 묶인 것(재생 엔진 · 미디어 세션 · 알림 · 포그라운드 서비스)만 네이티브, 보관함 · 재생목록 · 대기열 규칙 · 상태 · 화면은 Dart. 약속은 [native-playback.md](native-playback.md). Windows는 나중에 같은 약속을 C++로 구현한다.
 - Android: `PlaybackHub`(ExoPlayer + MediaSession) · `MuloPlaybackService`(Media3 `MediaSessionService`) · `PlaybackChannel`. Dart는 `AudioPlayerRepository`(엔진) · `MediaSession`(알림) 인터페이스 뒤에서 명령만 보낸다 (`NativeAudioPlayerRepository` · `NativeMediaSession`). 그 밖의 OS는 기존 just_audio 구현 그대로. `audio_service` 의존을 없앴다.
-- 고친 버그: (1) 다른 앱이 오디오 포커스를 뺏어 엔진이 멈추면 `AudioPlayerRepository.watchPlaying()`으로 알려 `NowPlayingCubit.isPlaying`을 맞춘다 (재생 버튼이 다시 먹는다). 우리가 시킨 작업 중에 오는 신호는 무시한다. (2) 미리 듣기가 포커스를 가져가면 메인은 멈추고 끝나도 자동 복귀하지 않는다 (일시정지로 둔다). (3) 서비스 수명은 Kotlin이 쥔다: 닫기(X) · 밀어서 지우기 · 앱 종료는 재생만 멈추고 세션은 남긴다. 닫기(X)는 알림을 치우지 않고 일시정지 알림으로 둔다 (이전엔 알림이 사라졌다). (4) 미리 듣기는 같은 재생 알림에 '미리 듣기'로 합쳐 보인다 (세션 플레이어가 미리 듣기 상태를 그대로 비춘다).
+- 고친 버그: (1) 다른 앱이 오디오 포커스를 뺏어 엔진이 멈추면 `AudioPlayerRepository.watchPlaying()`으로 알려 `NowPlayingCubit.isPlaying`을 맞춘다 (재생 버튼이 다시 먹는다). 우리가 시킨 작업 중에 오는 신호는 무시한다. (2) 미리 듣기가 포커스를 가져가면 메인은 멈추고 끝나도 자동 복귀하지 않는다 (일시정지로 둔다). (3) 서비스 수명은 Kotlin이 쥔다: 닫기(X) · 밀어서 지우기 · 앱 종료는 재생만 멈추고 세션은 남긴다. 닫기(X)는 재생을 멈추고 알림(포그라운드 서비스)을 치우되 세션 · 프로세스는 남기며, 다시 재생하면 알림이 돌아온다. (4) 미리 듣기는 같은 재생 알림에 '미리 듣기'로 합쳐 보인다 (세션 플레이어가 미리 듣기 상태를 그대로 비춘다).
 - 미리 듣기 **소리**는 아직 Dart의 just_audio가 낸다 (헤더 · 앱 HTTP 대체 경로를 Kotlin으로 옮기는 일은 따로). 알림 표시 · 조작만 네이티브 세션이 맡는다.
 
