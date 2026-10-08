@@ -33,9 +33,8 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   StatefulNavigationShell get shell => widget.shell;
 
-  /// 받기 줄을 접어 플로팅 버튼으로 둔 상태와 그 버튼의 자리 (앱을 켜 두는 동안만).
+  /// 받기 줄을 접어 플로팅 버튼으로 둔 상태 (앱을 켜 두는 동안만).
   var _downloadMinimized = false;
-  Offset? _floatPosition;
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +48,6 @@ class _AppShellState extends State<AppShell> {
       listenWhen: (a, b) => a.current != null && b.current == null,
       listener: (context, _) => setState(() {
         _downloadMinimized = false;
-        _floatPosition = null;
       }),
       child: BlocListener<NowPlayingCubit, NowPlayingState>(
         listener: (context, s) =>
@@ -105,9 +103,6 @@ class _AppShellState extends State<AppShell> {
                         child: _downloadMinimized
                             ? DownloadFloatButton(
                                 key: const ValueKey('download-float-on'),
-                                position: _floatPosition,
-                                onMoved: (o) =>
-                                    setState(() => _floatPosition = o),
                                 onRestore: () => setState(() {
                                   _downloadMinimized = false;
                                 }),
@@ -143,7 +138,6 @@ class _AppShellState extends State<AppShell> {
                               key: const ValueKey('download-shown'),
                               onMinimize: () => setState(() {
                                 _downloadMinimized = true;
-                                _floatPosition = null;
                               }),
                             ),
                     ),
