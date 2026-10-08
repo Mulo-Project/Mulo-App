@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 시작 화면: 앱 배경과 같은 검정 -->
+<!-- 시작 화면: 앱 배경과 같은 검정 + 가운데 음표 (Flutter 첫 화면이 뜰 때까지 보인다) -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/app_background" />
+    <item
+        android:drawable="@drawable/ic_launch_note"
+        android:gravity="center" />
 </layer-list>

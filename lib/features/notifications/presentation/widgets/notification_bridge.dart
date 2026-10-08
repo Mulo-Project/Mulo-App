@@ -39,7 +39,8 @@ class _NotificationBridgeState extends State<NotificationBridge>
   Future<void>? _restoring;
 
   /// 알림을 눌러 앱이 새로 켜졌다: 대기열을 복원하고 플레이어 화면으로 갈 때까지 첫 화면이 비치지 않게 덮는다.
-  var _splash = false;
+  // 첫 프레임부터 덮어 둔다 (시작 화면과 같은 모양). 알림으로 켠 게 아니면 바로 걷는다.
+  var _splash = true;
   var _openPending = false;
   late final Future<void> _boot = _checkLaunch();
 
@@ -90,7 +91,11 @@ class _NotificationBridgeState extends State<NotificationBridge>
     final opened = await context
         .read<NowPlayingCubit>()
         .takeOpenPlayerRequest();
-    if (!mounted || !opened) return;
+    if (!mounted) return;
+    if (!opened) {
+      _hideSplash();
+      return;
+    }
     setState(() {
       _openPending = true;
       _splash = true;
@@ -326,14 +331,15 @@ class _NotificationBridgeState extends State<NotificationBridge>
 class _LaunchCover extends StatelessWidget {
   const _LaunchCover();
 
+  /// 안드로이드 시작 화면(`launch_background`)과 같은 검정 바탕 + 흰 음표: 이어 붙어도 바뀌어 보이지 않는다.
   @override
   Widget build(BuildContext context) => ColoredBox(
-    color: context.palette.background,
+    color: AppPalette.black,
     child: Center(
       child: Icon(
-        Icons.music_note_rounded,
+        Icons.music_note,
         size: 56,
-        color: context.palette.accent,
+        color: AppPalette.white.withValues(alpha: .9),
       ),
     ),
   );
