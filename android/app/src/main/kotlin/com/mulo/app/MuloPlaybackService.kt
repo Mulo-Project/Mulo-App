@@ -7,7 +7,7 @@ import androidx.media3.session.MediaSessionService
 
 /**
  * 재생 알림 · 포그라운드 서비스. 소리와 세션은 [PlaybackHub]가 쥐고, 이 서비스는 알림을 띄우고
- * 재생 중에 프로세스가 죽지 않게 지킨다. 닫기(X) · 밀어서 지우기 · 앱 종료는 재생만 멈출 뿐 서비스와 세션은 남긴다.
+ * 재생 중에 프로세스가 죽지 않게 지킨다. 서비스와 세션 객체는 Kotlin이 쥐고 닫기(X) · 밀어서 지우기로 죽지 않는다.
  */
 class MuloPlaybackService : MediaSessionService() {
     override fun onCreate() {
@@ -33,9 +33,9 @@ class MuloPlaybackService : MediaSessionService() {
         if (sessions.contains(PlaybackHub.session)) removeSession(PlaybackHub.session)
     }
 
-    // 기본 동작(재생 중이 아니면 서비스 종료)을 쓰지 않는다: 세션을 남겨 두고 재생만 멈춘다.
+    // 앱이 최근 작업에서 밀려 사라지면 대기열도 사라지므로 재생 · 알림을 비운다 (서비스 · 세션 객체는 남는다).
     override fun onTaskRemoved(rootIntent: Intent?) {
-        PlaybackHub.onTaskRemoved()
+        PlaybackHub.reset()
     }
 
     override fun onDestroy() {

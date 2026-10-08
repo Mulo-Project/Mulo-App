@@ -146,10 +146,20 @@ object PlaybackHub {
         }
     }
 
-    /** 앱이 최근 작업에서 밀려 사라졌을 때: 재생만 멈추고 서비스 · 세션은 그대로 둔다. */
-    fun onTaskRemoved() {
-        exo.playWhenReady = false
-        emitCommand("stop", null)
+    /**
+     * 재생 · 알림을 처음 상태로 되돌린다 (소리 멈춤, 곡 비움, 알림 치움).
+     * 앱 화면이 새로 시작될 때(Dart의 대기열은 비어 있다)와 최근 작업에서 밀려 사라질 때 부른다:
+     * 대기열을 잃은 채 옛 곡의 알림이나 소리만 남지 않게 한다.
+     */
+    fun reset() {
+        pendingLoad?.error("interrupted", "재생이 초기화됨", null)
+        pendingLoad = null
+        exo.stop()
+        exo.clearMediaItems()
+        dismissed = false
+        isNotificationVisible = false
+        sessionPlayer.info = null
+        service?.hideSession()
     }
 
     private fun customLayout(info: SessionInfo): ImmutableList<CommandButton> {

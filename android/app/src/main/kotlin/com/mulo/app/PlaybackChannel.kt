@@ -12,6 +12,8 @@ class PlaybackChannel(context: Context, messenger: BinaryMessenger) {
 
     init {
         PlaybackHub.init(context.applicationContext)
+        // 앱 화면이 새로 시작되면 Dart의 대기열은 비어 있다: 옛 알림 · 소리를 남기지 않는다.
+        PlaybackHub.reset()
         methods.setMethodCallHandler { call, result ->
             when (call.method) {
                 "load" -> PlaybackHub.load(call.arguments as String, result)
