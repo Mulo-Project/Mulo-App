@@ -90,6 +90,7 @@ class PillButton extends StatelessWidget {
       PillVariant.tonal => GlassSurface(
         shape: const StadiumBorder(),
         onTap: onPressed,
+        blur: 0,
         child: content,
       ),
       PillVariant.outline => GlassSurface(
@@ -196,6 +197,7 @@ class CircleIconButton extends StatelessWidget {
         : GlassSurface(
             shape: const CircleBorder(),
             onTap: onPressed,
+            blur: 0,
             child: glyph,
           );
 
