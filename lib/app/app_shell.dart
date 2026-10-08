@@ -174,7 +174,12 @@ class _PreviewMiniPlayer extends StatelessWidget {
     return MiniPlayerBar(
       key: const ValueKey('preview-mini-player'),
       title: preview.title,
-      artist: loading ? l10n.searchPreviewLoading : (hit?.uploader ?? ''),
+      artist: loading
+          ? l10n.searchPreviewLoading
+          : [
+              l10n.searchPreview,
+              if (hit?.uploader case final u? when u.isNotEmpty) u,
+            ].join(' · '),
       artwork: thumb == null ? null : CachedWebImage(thumb),
       progress: preview.fraction,
       isPlaying: !preview.paused,

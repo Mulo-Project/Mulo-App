@@ -110,6 +110,17 @@ class MiniPlayerBar extends StatelessWidget {
                       ],
                     ),
                   ),
+                  // 제목 영역(누르면 상세/플레이어)과 조작 버튼 영역을 가는 선으로 가른다.
+                  const SizedBox(width: AppSpacing.xs),
+                  SizedBox(
+                    height: 32,
+                    child: VerticalDivider(
+                      width: 1,
+                      thickness: 1,
+                      color: p.glassBorder,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
                   if (showSkip)
                     _BarIcon(
                       icon: AppIcons.skipPrevious,

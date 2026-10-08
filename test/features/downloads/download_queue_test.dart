@@ -1,3 +1,4 @@
+import 'package:music_download_play_app/features/search/presentation/screens/media_detail_screen.dart';
 import 'package:music_download_play_app/core/design/components/app_dialog.dart';
 import 'package:music_download_play_app/core/design/icons/app_icons.dart';
 import 'package:flutter/material.dart';
@@ -265,7 +266,14 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('download-bar-toggle')));
     await tester.pumpAndSettle();
     expect(find.text('Next Song'), findsOneWidget);
-    expect(find.text('Now Song'), findsNWidgets(2));
+    expect(find.text('Now Song'), findsOneWidget);
+
+    // 목록의 곡을 누르면 그 곡의 상세 화면이 열린다.
+    await tester.tap(find.text('Next Song'));
+    await tester.pumpAndSettle();
+    expect(find.byType(MediaDetailScreen), findsOneWidget);
+    await tester.tap(find.byTooltip('뒤로').last);
+    await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const ValueKey('download-bar-toggle')));
     await tester.pumpAndSettle();
@@ -359,9 +367,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('받는 중 1곡'), findsOneWidget);
-    // 목록 줄 하나 + 하단 받기 줄의 현재 곡.
+    // 하단 받기 줄의 현재 곡.
     expect(find.text('Mine Song'), findsNWidgets(2));
-    expect(find.text('받는 중 25%'), findsOneWidget);
+    expect(find.text('받는 중 25%'), findsNWidgets(2)); // 재생목록 영역 + 받기 줄
     expect(find.text('Other Song'), findsNothing);
 
     await tester.tap(find.byTooltip('전체 취소').first);
