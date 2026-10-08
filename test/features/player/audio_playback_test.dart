@@ -20,6 +20,7 @@ void main() {
       audio: AudioPlayback(
         watchPosition: WatchAudioPosition(engine),
         watchCompleted: WatchAudioCompleted(engine),
+        watchPlaying: WatchAudioPlaying(engine),
         load: LoadAudio(engine),
         play: PlayAudio(engine),
         pause: PauseAudio(engine),
@@ -45,6 +46,36 @@ void main() {
     cubit.togglePlay();
     await settle();
     expect(engine.playing, isTrue);
+  });
+
+  test('다른 앱이 오디오 포커스를 가져가 엔진이 멈추면 재생 상태도 멈춘다', () async {
+    cubit.playQueue(tracks);
+    await settle();
+    engine.emitPlaying(false);
+    await settle();
+    expect(cubit.state.isPlaying, isFalse);
+    // 재생 버튼이 다시 먹는다.
+    cubit.togglePlay();
+    await settle();
+    expect(cubit.state.isPlaying, isTrue);
+    expect(engine.playing, isTrue);
+  });
+
+  test('포커스를 돌려받아 엔진이 다시 시작하면 재생 상태도 따라간다', () async {
+    cubit.playQueue(tracks);
+    await settle();
+    engine.emitPlaying(false);
+    await settle();
+    engine.emitPlaying(true);
+    await settle();
+    expect(cubit.state.isPlaying, isTrue);
+  });
+
+  test('곡을 불러오는 동안 엔진이 보낸 정지 신호는 상태에 넣지 않는다', () async {
+    cubit.playQueue(tracks);
+    engine.emitPlaying(false); // 불러오기 작업이 아직 끝나기 전
+    await settle();
+    expect(cubit.state.isPlaying, isTrue);
   });
 
   test('다음 곡 · 이전 곡은 새 곡을 불러온다', () async {

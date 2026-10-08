@@ -1,11 +1,12 @@
 package com.mulo.app
 
 import android.content.Intent
-import com.ryanheise.audioservice.AudioServiceFragmentActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 
-// 생체 인증(local_auth)이 FragmentActivity를 요구한다. 재생 알림(audio_service)은 같은 엔진을 서비스와 나눠 쓴다.
-class MainActivity : AudioServiceFragmentActivity() {
+// 생체 인증(local_auth)이 FragmentActivity를 요구한다. 재생 · 알림은 PlaybackHub(서비스)가 쥐고 PlaybackChannel로 이어진다.
+class MainActivity : FlutterFragmentActivity() {
+    private var playback: PlaybackChannel? = null
     private var mediaStore: MediaStoreChannel? = null
     private var lyrics: LyricsChannel? = null
     private var audioOutput: AudioOutputChannel? = null
@@ -19,6 +20,7 @@ class MainActivity : AudioServiceFragmentActivity() {
         audioOutput = AudioOutputChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
         ytDlp = YtDlpChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
         transcoder = TranscoderChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
+        playback = PlaybackChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
     }
 
     @Deprecated("Deprecated in Java")
@@ -39,6 +41,8 @@ class MainActivity : AudioServiceFragmentActivity() {
         ytDlp = null
         transcoder?.dispose()
         transcoder = null
+        playback?.dispose()
+        playback = null
         super.cleanUpFlutterEngine(flutterEngine)
     }
 }

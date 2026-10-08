@@ -94,6 +94,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     _subs = [
       audio.watchPosition(const NoParams()).listen(_onEnginePosition),
       audio.watchCompleted(const NoParams()).listen((_) => _onCompleted()),
+      audio.watchPlaying(const NoParams()).listen(_onEnginePlaying),
     ];
   }
 
@@ -116,10 +117,33 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   /// 셔플을 켜기 전 순서 (끄면 이 순서로 되돌린다).
   List<Track>? _original;
 
+  /// 아직 끝나지 않은 엔진 작업 수. 작업 중에 오는 재생 신호는 우리가 시킨 것이라 상태에 넣지 않는다.
+  var _pending = 0;
+
   void _run(Future<void> Function(AudioPlayback audio) job) {
     final audio = _audio;
     if (audio == null) return;
-    _tail = _tail.then((_) => job(audio)).catchError((Object _) {});
+    _pending++;
+    _tail = _tail
+        .then((_) => job(audio))
+        .catchError((Object _) {})
+        .whenComplete(() => _pending--);
+  }
+
+  /// 엔진이 재생 · 정지를 알려 왔을 때: 다른 앱에 오디오 포커스를 뺏겨 멈췄거나(전화, 영상)
+  /// 돌려받아 다시 시작한 것을 재생 상태에 맞춘다. 우리가 시킨 작업 중의 신호는 무시한다.
+  void _onEnginePlaying(bool playing) {
+    if (isClosed ||
+        !_ready ||
+        _pending > 0 ||
+        _scrubbing ||
+        state.track == null ||
+        state.isPlaying == playing) {
+      return;
+    }
+    _fromEngine = true;
+    emit(state.copyWith(isPlaying: playing));
+    _fromEngine = false;
   }
 
   @override

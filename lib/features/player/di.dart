@@ -1,8 +1,13 @@
+import 'dart:io';
+
 import 'package:get_it/get_it.dart';
+
+import '../../core/platform/native_playback_channel.dart';
 
 import 'data/datasources/audio_engine_source.dart';
 import 'data/datasources/audio_output_source.dart';
 import 'data/repositories/just_audio_player_repository.dart';
+import 'data/repositories/native_audio_player_repository.dart';
 import 'data/repositories/platform_audio_output_repository.dart';
 import 'data/repositories/prefs_player_style_repository.dart';
 import 'domain/repositories/audio_output_repository.dart';
@@ -17,14 +22,19 @@ import 'presentation/bloc/player_style_cubit.dart';
 
 void registerPlayer(GetIt sl) {
   sl
+    ..registerLazySingleton(NativePlaybackChannel.new)
     ..registerLazySingleton(AudioEngineSource.new)
+    // Android는 네이티브 서비스(ExoPlayer)가 소리를 내고, 그 밖의 OS는 just_audio.
     ..registerLazySingleton<AudioPlayerRepository>(
-      () => JustAudioPlayerRepository(sl()),
+      () => Platform.isAndroid
+          ? NativeAudioPlayerRepository(sl())
+          : JustAudioPlayerRepository(sl()),
     )
     ..registerFactory(
       () => AudioPlayback(
         watchPosition: WatchAudioPosition(sl()),
         watchCompleted: WatchAudioCompleted(sl()),
+        watchPlaying: WatchAudioPlaying(sl()),
         load: LoadAudio(sl()),
         play: PlayAudio(sl()),
         pause: PauseAudio(sl()),

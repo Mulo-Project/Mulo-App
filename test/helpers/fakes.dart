@@ -750,6 +750,7 @@ class MemoryJoinDate implements JoinDateRepository {
 class FakeAudioPlayer implements AudioPlayerRepository {
   final _position = StreamController<Duration>.broadcast();
   final _completed = StreamController<void>.broadcast();
+  final _playing = StreamController<bool>.broadcast();
 
   /// 지금 불러온 곡 주소.
   String? loaded;
@@ -765,6 +766,15 @@ class FakeAudioPlayer implements AudioPlayerRepository {
   void emitPosition(Duration p) => _position.add(p);
 
   void complete() => _completed.add(null);
+
+  /// 엔진이 스스로 재생 상태를 바꿨다고 알린다 (다른 앱에 오디오 포커스를 뺏김 등).
+  void emitPlaying(bool value) {
+    playing = value;
+    _playing.add(value);
+  }
+
+  @override
+  Stream<bool> watchPlaying() => _playing.stream;
 
   @override
   Stream<Duration> watchPosition() => _position.stream;

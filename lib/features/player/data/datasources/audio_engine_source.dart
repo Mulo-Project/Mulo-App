@@ -19,6 +19,8 @@ class AudioEngineSource {
 
   Stream<Duration> get position => _player.positionStream;
 
+  Stream<bool> get playing => _player.playingStream;
+
   Stream<void> get completed => _player.processingStateStream.where(
     (s) => s == ProcessingState.completed,
   );

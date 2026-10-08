@@ -17,6 +17,14 @@ class WatchAudioCompleted implements StreamUseCase<void, NoParams> {
   Stream<void> call(NoParams params) => _repo.watchCompleted();
 }
 
+class WatchAudioPlaying implements StreamUseCase<bool, NoParams> {
+  const WatchAudioPlaying(this._repo);
+  final AudioPlayerRepository _repo;
+
+  @override
+  Stream<bool> call(NoParams params) => _repo.watchPlaying();
+}
+
 class LoadAudio implements UseCase<void, String> {
   const LoadAudio(this._repo);
   final AudioPlayerRepository _repo;
@@ -54,6 +62,7 @@ class AudioPlayback {
   const AudioPlayback({
     required this.watchPosition,
     required this.watchCompleted,
+    required this.watchPlaying,
     required this.load,
     required this.play,
     required this.pause,
@@ -62,6 +71,7 @@ class AudioPlayback {
 
   final WatchAudioPosition watchPosition;
   final WatchAudioCompleted watchCompleted;
+  final WatchAudioPlaying watchPlaying;
   final LoadAudio load;
   final PlayAudio play;
   final PauseAudio pause;
