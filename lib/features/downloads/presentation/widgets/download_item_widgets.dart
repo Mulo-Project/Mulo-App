@@ -44,7 +44,8 @@ class CancelAllDownloadsButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => CircleIconButton(
-    icon: AppIcons.close,
+    // 곡 하나 취소(X)와 달라 보이게 "모두 비우기" 모양.
+    icon: AppIcons.deleteAll,
     tooltip: context.l10n.downloadsCancelAll,
     size: 32,
     onPressed: () => cancelAllDownloads(context, playlistId: playlistId),
