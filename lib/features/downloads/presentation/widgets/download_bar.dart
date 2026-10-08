@@ -63,9 +63,9 @@ class _DownloadBarState extends State<DownloadBar> {
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.md,
-                AppSpacing.xxs,
+                AppSpacing.xs,
                 AppSpacing.md,
-                0,
+                AppSpacing.xs,
               ),
               child: Row(
                 children: [
@@ -215,9 +215,9 @@ class _DownloadRow extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.md,
-          AppSpacing.xs,
+          AppSpacing.sm,
           AppSpacing.md,
-          AppSpacing.xs,
+          AppSpacing.sm,
         ),
         child: Row(
           children: [
