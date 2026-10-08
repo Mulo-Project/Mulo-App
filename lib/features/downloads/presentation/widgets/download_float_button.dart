@@ -30,22 +30,36 @@ class DownloadFloatButton extends StatelessWidget {
         Positioned(
           right: AppSpacing.md,
           bottom: barHeight + AppSpacing.md,
-          child: GestureDetector(
-            key: const ValueKey('download-float'),
-            onTap: onRestore,
-            child: Tooltip(
-              message: l10n.downloadsExpand,
-              child: GlassSurface(
-                shape: CircleBorder(
-                  side: BorderSide(color: p.accent.withValues(alpha: .4)),
-                ),
-                child: SizedBox.square(
-                  dimension: size,
-                  child: Center(
-                    child: CountdownRing(
-                      value: queue.overallProgress,
-                      size: size - 12,
-                      child: Icon(AppIcons.download, size: 20, color: p.accent),
+          // 띠가 접히는 동안 뒤늦게 제자리에서 커진다.
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: 1),
+            duration: AppMotion.medium,
+            curve: const Interval(.25, 1, curve: Curves.easeOutBack),
+            builder: (context, t, child) => Transform.scale(
+              scale: t,
+              child: Opacity(opacity: t.clamp(0.0, 1.0), child: child),
+            ),
+            child: GestureDetector(
+              key: const ValueKey('download-float'),
+              onTap: onRestore,
+              child: Tooltip(
+                message: l10n.downloadsExpand,
+                child: GlassSurface(
+                  shape: CircleBorder(
+                    side: BorderSide(color: p.accent.withValues(alpha: .4)),
+                  ),
+                  child: SizedBox.square(
+                    dimension: size,
+                    child: Center(
+                      child: CountdownRing(
+                        value: queue.overallProgress,
+                        size: size - 12,
+                        child: Icon(
+                          AppIcons.download,
+                          size: 20,
+                          color: p.accent,
+                        ),
+                      ),
                     ),
                   ),
                 ),

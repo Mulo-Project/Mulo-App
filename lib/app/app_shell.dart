@@ -81,21 +81,11 @@ class _AppShellState extends State<AppShell> {
                   children: [
                     AppBackground(child: shell),
                     Positioned.fill(
-                      // 버튼은 접힐 때 하단에서 커지며 나타나고, 펴질 때 작아지며 사라진다.
+                      // 버튼은 띠가 접히는 동안 제자리에서 커지며 나타나고(버튼 쪽에서 처리), 펴질 때는 흐려지며 사라진다.
                       child: AnimatedSwitcher(
                         duration: AppMotion.medium,
                         transitionBuilder: (child, animation) =>
-                            ScaleTransition(
-                              scale: CurvedAnimation(
-                                parent: animation,
-                                curve: AppMotion.emphasized,
-                              ),
-                              alignment: Alignment.bottomCenter,
-                              child: FadeTransition(
-                                opacity: animation,
-                                child: child,
-                              ),
-                            ),
+                            FadeTransition(opacity: animation, child: child),
                         layoutBuilder: (current, previous) => Stack(
                           fit: StackFit.expand,
                           children: [...previous, ?current],
