@@ -8,4 +8,7 @@ class NoMediaSession implements MediaSession {
 
   @override
   Future<void> update(MediaSessionInfo? info) async {}
+
+  @override
+  Future<void> updateQueueArt(Map<String, String> artById) async {}
 }

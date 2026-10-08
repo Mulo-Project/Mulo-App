@@ -115,6 +115,10 @@ class NativeMediaSession implements MediaSession {
   }
 
   @override
+  Future<void> updateQueueArt(Map<String, String> artById) =>
+      _channel.setQueueArt(artById);
+
+  @override
   Future<void> update(MediaSessionInfo? info) async {
     final seq = ++_seq;
     if (info == null) {

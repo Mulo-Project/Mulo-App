@@ -1166,6 +1166,12 @@ class FakeMediaSession implements MediaSession {
 
   @override
   Future<void> update(MediaSessionInfo? info) async => updates.add(info);
+
+  Map<String, String> queueArt = const {};
+
+  @override
+  Future<void> updateQueueArt(Map<String, String> artById) async =>
+      queueArt = artById;
 }
 
 class FakePermissionRepository implements PermissionRepository {

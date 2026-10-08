@@ -87,6 +87,7 @@ class SessionPlayer(
             .setTitle(meta.title ?: "")
             .setArtist((meta.artist?.toString() ?: info.unknownArtist).ifEmpty { null })
             .setAlbumTitle(meta.albumTitle)
+            .setArtworkUri(meta.artworkUri ?: PlaybackHub.artFor(item.mediaId))
             .build()
     }
 

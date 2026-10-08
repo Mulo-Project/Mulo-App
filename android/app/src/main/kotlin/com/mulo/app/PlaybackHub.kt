@@ -3,6 +3,7 @@ package com.mulo.app
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -64,6 +65,9 @@ object PlaybackHub {
     /** 앱(Dart)만 해석하는 문자열 (셔플 여부 · 섞기 전 순서). 그대로 보관했다가 돌려준다. */
     private var extras = ""
 
+    /** 대기열 곡별 커버 주소 (곡 id → 주소). 앱이 꺼진 사이 곡이 넘어가도 알림에 커버가 나오게 한다. */
+    private var artById = mapOf<String, String>()
+
     /** 알림을 눌러 앱이 새로 켜졌는데 Dart가 아직 받아 가지 않은 요청. */
     private var openPlayerRequested = false
 
@@ -117,6 +121,7 @@ object PlaybackHub {
             .setArtist((map["artist"] as? String)?.ifEmpty { null })
             .setAlbumTitle((map["album"] as? String)?.ifEmpty { null })
             .setDurationMs((map["durationMs"] as? Number)?.toLong()?.takeIf { it > 0 })
+            .setArtworkUri((map["id"] as? String)?.let { artById[it] }?.let { Uri.parse(it) })
             .build()
         return MediaItem.Builder()
             .setMediaId(map["id"] as? String ?: "")
@@ -193,6 +198,21 @@ object PlaybackHub {
 
     fun seek(ms: Long) {
         if (exo.mediaItemCount > 0) exo.seekTo(ms)
+    }
+
+    fun artFor(id: String): Uri? = artById[id]?.let { Uri.parse(it) }
+
+    /** 대기열 곡별 커버 주소를 받는다. 지금 곡은 앱이 [setSession]으로 보내므로 건드리지 않는다. */
+    fun setQueueArt(map: Map<*, *>) {
+        artById = map.entries.mapNotNull { (k, v) -> if (k is String && v is String) k to v else null }.toMap()
+        for (i in 0 until exo.mediaItemCount) {
+            if (i == exo.currentMediaItemIndex) continue
+            val item = exo.getMediaItemAt(i)
+            val art = artById[item.mediaId]?.let { Uri.parse(it) }
+            if (item.mediaMetadata.artworkUri == art) continue
+            val metadata = item.mediaMetadata.buildUpon().setArtworkUri(art).build()
+            exo.replaceMediaItem(i, item.buildUpon().setMediaMetadata(metadata).build())
+        }
     }
 
     /** 지금 쥐고 있는 대기열 스냅샷 (앱을 다시 켰을 때 복원용). 곡이 없으면 null. */

@@ -45,6 +45,10 @@ class NativePlaybackChannel {
   Future<void> seek(Duration position) =>
       _method.invokeMethod('seek', position.inMilliseconds);
 
+  /// 대기열 곡별 커버 주소 (곡 id → 주소). 지금 곡이 아닌 곡의 알림 커버로 쓴다.
+  Future<void> setQueueArt(Map<String, String> artById) =>
+      _method.invokeMethod('setQueueArt', artById);
+
   /// 알림 · 잠금화면에 보여 줄 내용. null이면 알림을 치운다 (재생은 그대로).
   Future<void> setSession(Map<String, Object?>? session) =>
       _method.invokeMethod('setSession', session);

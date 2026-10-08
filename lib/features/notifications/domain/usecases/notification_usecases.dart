@@ -61,17 +61,28 @@ class UpdateMediaSession implements UseCase<void, MediaSessionInfo?> {
   Future<void> call(MediaSessionInfo? params) => _session.update(params);
 }
 
+class UpdateMediaQueueArt implements UseCase<void, Map<String, String>> {
+  const UpdateMediaQueueArt(this._session);
+  final MediaSession _session;
+
+  @override
+  Future<void> call(Map<String, String> params) =>
+      _session.updateQueueArt(params);
+}
+
 /// 알림 유스케이스 묶음 (알림 동기화 Cubit이 한 번에 받는다).
 class NotificationActions {
   const NotificationActions({
     required this.watchCommands,
     required this.updateSession,
+    required this.updateQueueArt,
     required this.isPermissionGranted,
     required this.requestPermission,
   });
 
   final WatchMediaCommands watchCommands;
   final UpdateMediaSession updateSession;
+  final UpdateMediaQueueArt updateQueueArt;
   final IsNotificationPermissionGranted isPermissionGranted;
   final RequestNotificationPermission requestPermission;
 }

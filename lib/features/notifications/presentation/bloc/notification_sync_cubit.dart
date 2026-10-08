@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show listEquals;
+import 'package:flutter/foundation.dart' show listEquals, mapEquals;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/usecase/usecase.dart';
@@ -27,6 +27,22 @@ class NotificationSyncCubit extends Cubit<void> {
     if (!await _actions.isPermissionGranted(const NoParams())) {
       await _actions.requestPermission(const NoParams());
     }
+  }
+
+  var _queueArt = const <String, String>{};
+
+  /// 대기열 곡별 커버 주소를 알림에 넘긴다 (앱이 꺼진 사이 넘어간 곡에도 커버가 나오게).
+  /// 곡 정보 숨기기가 켜져 있으면 비운다. 바뀐 것만 보낸다.
+  Future<void> syncQueueArt(
+    Map<String, String> artById, {
+    required NotificationSettings settings,
+  }) async {
+    final next = settings.playback && !settings.hideSongInfo
+        ? artById
+        : const <String, String>{};
+    if (mapEquals(next, _queueArt)) return;
+    _queueArt = next;
+    await _actions.updateQueueArt(next);
   }
 
   // ── 재생 ──

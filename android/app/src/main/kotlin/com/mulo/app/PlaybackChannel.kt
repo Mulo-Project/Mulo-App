@@ -15,6 +15,7 @@ class PlaybackChannel(context: Context, messenger: BinaryMessenger) {
         methods.setMethodCallHandler { call, result ->
             when (call.method) {
                 "setQueue" -> PlaybackHub.setQueue(call.arguments as Map<*, *>, result)
+                "setQueueArt" -> { PlaybackHub.setQueueArt(call.arguments as Map<*, *>); result.success(null) }
                 "skipTo" -> { PlaybackHub.skipTo((call.arguments as Number).toInt()); result.success(null) }
                 "getState" -> result.success(PlaybackHub.getState())
                 "takeOpenPlayerRequest" -> result.success(PlaybackHub.takeOpenPlayerRequest())
