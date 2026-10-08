@@ -329,6 +329,27 @@ void main() {
     expect(queue.controls, ['cancel:a']);
   });
 
+  testWidgets('받기 취소 확인 창의 버튼은 한 줄에 나란히 놓인다', (tester) async {
+    await open(tester, [_now, _next]);
+    await tester.tap(find.byTooltip('전체 취소'));
+    await tester.pumpAndSettle();
+    final keep = tester.getCenter(find.text('계속 받기'));
+    final cancel = tester.getCenter(
+      find.descendant(of: find.byType(AppDialog), matching: find.text('전체 취소')),
+    );
+    expect(keep.dy, closeTo(cancel.dy, 1));
+    expect(keep.dx, lessThan(cancel.dx));
+
+    await tester.tap(find.text('계속 받기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('취소').first);
+    await tester.pumpAndSettle();
+    expect(
+      tester.getCenter(find.text('계속 받기')).dy,
+      closeTo(tester.getCenter(find.text('취소하기')).dy, 1),
+    );
+  });
+
   testWidgets('검색 탭: 전체 취소는 확인한 뒤 모두 뺀다', (tester) async {
     final queue = MemoryDownloadQueue([_now, _next]);
     await setUpTestDependencies(downloads: queue);

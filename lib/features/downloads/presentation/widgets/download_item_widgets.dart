@@ -75,7 +75,6 @@ Future<void> cancelAllDownloads(
         ),
         PillButton(
           label: context.l10n.downloadsCancelAll,
-          icon: AppIcons.close,
           onPressed: () => Navigator.of(dialog).pop(true),
         ),
       ],
@@ -102,6 +101,7 @@ class DownloadItemActions extends StatelessWidget {
           size: 32,
           onPressed: () => context.read<DownloadQueueCubit>().retry(item.id),
         ),
+        const SizedBox(width: AppSpacing.xs),
         _CancelButton(item: item),
       ],
     );
@@ -155,7 +155,6 @@ class _CancelDialog extends StatelessWidget {
         ),
         PillButton(
           label: l10n.downloadCancelConfirm,
-          icon: AppIcons.close,
           onPressed: () => Navigator.of(context).pop(true),
         ),
       ],
