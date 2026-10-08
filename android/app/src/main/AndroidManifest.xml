@@ -46,20 +46,19 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <!-- 재생 알림 · 잠금화면 (audio_service) -->
+        <!-- 재생 알림 · 잠금화면 · 포그라운드 서비스 (Media3 미디어 세션) -->
         <service
-            android:name="com.ryanheise.audioservice.AudioService"
+            android:name=".MuloPlaybackService"
             android:foregroundServiceType="mediaPlayback"
-            android:exported="true"
-            tools:ignore="Instantiatable">
+            android:exported="true">
             <intent-filter>
+                <action android:name="androidx.media3.session.MediaSessionService" />
                 <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
         </service>
         <receiver
-            android:name="com.ryanheise.audioservice.MediaButtonReceiver"
-            android:exported="true"
-            tools:ignore="Instantiatable">
+            android:name="androidx.media3.session.MediaButtonReceiver"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>

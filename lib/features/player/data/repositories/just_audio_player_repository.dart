@@ -15,6 +15,9 @@ class JustAudioPlayerRepository implements AudioPlayerRepository {
   Stream<void> watchCompleted() => _source.completed;
 
   @override
+  Stream<bool> watchPlaying() => _source.playing;
+
+  @override
   Future<void> load(String uri) => _source.load(uri);
 
   // just_audio의 play()는 곡이 끝날 때까지 끝나지 않아 기다리지 않는다.

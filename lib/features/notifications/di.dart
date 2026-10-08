@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:get_it/get_it.dart';
 
-import 'data/repositories/audio_service_media_session.dart';
+import 'data/repositories/native_media_session.dart';
 import 'data/repositories/no_notification_repositories.dart';
 import 'data/repositories/prefs_notification_settings_repository.dart';
 import 'domain/repositories/media_session.dart';
@@ -18,7 +18,7 @@ void registerNotifications(GetIt sl) {
       PrefsNotificationSettingsRepository.new,
     )
     ..registerLazySingleton<MediaSession>(
-      () => Platform.isAndroid ? AudioServiceMediaSession() : NoMediaSession(),
+      () => Platform.isAndroid ? NativeMediaSession(sl()) : NoMediaSession(),
     )
     ..registerFactory(() => LoadNotificationSettings(sl()))
     ..registerFactory(() => SaveNotificationSettings(sl()))
