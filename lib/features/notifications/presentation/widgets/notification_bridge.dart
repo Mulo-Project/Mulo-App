@@ -4,6 +4,7 @@ import 'package:flutter/material.dart' show Icons;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/cache/cached_web_image.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
@@ -167,20 +168,54 @@ class _NotificationBridgeState extends State<NotificationBridge>
     }
   }
 
+  /// 웹 커버 주소 → 저장된 사본(file 주소). 사본이 있으면 오프라인에서도 알림에 뜬다.
+  final _artCopies = <String, String>{};
+  var _artSeq = 0;
+
+  /// 지금 곡 앞뒤로 사본을 미리 받아 둘 곡 수 (전체를 받으면 큰 대기열에서 낭비다).
+  static const _copyBefore = 3;
+  static const _copyAfter = 20;
+
   /// 대기열 곡별 커버를 네이티브에 알린다 (앱이 꺼진 사이 곡이 넘어가도 알림에 커버가 나오게).
+  /// 웹 커버는 지금 곡 앞뒤 일부만 사본을 받아 그 파일 주소로 보내고, 나머지는 주소 그대로 보낸다.
   void _syncQueueArt() {
     final settings = context.read<NotificationSettingsCubit>().state;
     if (!settings.loaded) return;
     final covers = context.read<CoverCubit>().state;
+    final now = context.read<NowPlayingCubit>().state;
+    final sync = context.read<NotificationSyncCubit>();
+    final seq = ++_artSeq;
     final art = <String, String>{};
-    for (final t in context.read<NowPlayingCubit>().state.queue) {
-      final uri = _artUri(covers[CoverKey.track(t.id)]);
-      if (uri != null) art[t.id] = uri;
+    final toCopy = <String>[];
+    for (var i = 0; i < now.queue.length; i++) {
+      final t = now.queue[i];
+      final cover = covers[CoverKey.track(t.id)];
+      final uri = _artUri(cover);
+      if (uri == null) continue;
+      final copy = cover!.isWeb ? _artCopies[uri] : null;
+      art[t.id] = copy ?? uri;
+      if (cover.isWeb &&
+          copy == null &&
+          i >= now.index - _copyBefore &&
+          i <= now.index + _copyAfter) {
+        toCopy.add(uri);
+      }
     }
-    context.read<NotificationSyncCubit>().syncQueueArt(
-      art,
-      settings: settings.settings,
-    );
+    sync.syncQueueArt(art, settings: settings.settings);
+    if (toCopy.isNotEmpty) _fetchCopies(toCopy, seq);
+  }
+
+  Future<void> _fetchCopies(List<String> urls, int seq) async {
+    var added = false;
+    for (final url in urls) {
+      final file = await CachedWebImage.localCopy(url);
+      if (file == null) continue;
+      _artCopies[url] = file.uri.toString();
+      added = true;
+      // 더 새 요청이 시작됐으면 그쪽이 이어서 처리한다.
+      if (!mounted || seq != _artSeq) return;
+    }
+    if (added && mounted && seq == _artSeq) _syncQueueArt();
   }
 
   void _syncPlayback() {
@@ -265,7 +300,8 @@ class _NotificationBridgeState extends State<NotificationBridge>
         },
       ),
       BlocListener<NowPlayingCubit, NowPlayingState>(
-        listenWhen: (a, b) => !identical(a.queue, b.queue),
+        listenWhen: (a, b) =>
+            !identical(a.queue, b.queue) || a.index != b.index,
         listener: (_, _) => _syncQueueArt(),
       ),
       BlocListener<NotificationSettingsCubit, NotificationSettingsState>(
