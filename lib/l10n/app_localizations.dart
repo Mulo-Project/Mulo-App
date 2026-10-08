@@ -854,18 +854,6 @@ abstract class AppLocalizations {
   /// **'PIN을 입력하세요.'**
   String get lockHint;
 
-  /// No description provided for @settingsBackgroundDownload.
-  ///
-  /// In ko, this message translates to:
-  /// **'백그라운드 받기'**
-  String get settingsBackgroundDownload;
-
-  /// No description provided for @settingsBackgroundDownloadDesc.
-  ///
-  /// In ko, this message translates to:
-  /// **'앱이 뒤로 가거나 닫혀도 받기를 이어 가요. 켜 두면 받는 동안 알림이 항상 떠 있어요.'**
-  String get settingsBackgroundDownloadDesc;
-
   /// No description provided for @settingsHideNotification.
   ///
   /// In ko, this message translates to:
@@ -3176,30 +3164,6 @@ abstract class AppLocalizations {
   /// **'알림'**
   String get settingsNotifications;
 
-  /// No description provided for @settingsNotifyDownloadProgress.
-  ///
-  /// In ko, this message translates to:
-  /// **'받기 진행 알림'**
-  String get settingsNotifyDownloadProgress;
-
-  /// No description provided for @settingsNotifyDownloadProgressDesc.
-  ///
-  /// In ko, this message translates to:
-  /// **'받는 동안 진행 상황을 알림창에 보여요. 앱이 뒤로 가도 받기가 이어져요.'**
-  String get settingsNotifyDownloadProgressDesc;
-
-  /// No description provided for @settingsNotifyDownloadResult.
-  ///
-  /// In ko, this message translates to:
-  /// **'받기 결과 알림'**
-  String get settingsNotifyDownloadResult;
-
-  /// No description provided for @settingsNotifyDownloadResultDesc.
-  ///
-  /// In ko, this message translates to:
-  /// **'받기가 끝나거나 실패하면 알려요.'**
-  String get settingsNotifyDownloadResultDesc;
-
   /// No description provided for @settingsNotifyPlayback.
   ///
   /// In ko, this message translates to:
@@ -3259,102 +3223,6 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'재생'**
   String get notifChannelPlayback;
-
-  /// No description provided for @notifChannelDownloadProgress.
-  ///
-  /// In ko, this message translates to:
-  /// **'받는 중'**
-  String get notifChannelDownloadProgress;
-
-  /// No description provided for @notifChannelDownloadDone.
-  ///
-  /// In ko, this message translates to:
-  /// **'받기 완료'**
-  String get notifChannelDownloadDone;
-
-  /// No description provided for @notifChannelDownloadFailed.
-  ///
-  /// In ko, this message translates to:
-  /// **'받기 실패'**
-  String get notifChannelDownloadFailed;
-
-  /// No description provided for @notifDownloadHiddenTitle.
-  ///
-  /// In ko, this message translates to:
-  /// **'곡 받는 중'**
-  String get notifDownloadHiddenTitle;
-
-  /// No description provided for @notifDownloadProgressBody.
-  ///
-  /// In ko, this message translates to:
-  /// **'받는 중 · {percent}%'**
-  String notifDownloadProgressBody(int percent);
-
-  /// No description provided for @notifDownloadProgressNext.
-  ///
-  /// In ko, this message translates to:
-  /// **'받는 중 · {percent}% · 다음 곡: {next}'**
-  String notifDownloadProgressNext(int percent, String next);
-
-  /// No description provided for @notifDownloadOverall.
-  ///
-  /// In ko, this message translates to:
-  /// **'전체 {done}/{total}곡 · {percent}%'**
-  String notifDownloadOverall(int done, int total, int percent);
-
-  /// No description provided for @notifDownloadPreview.
-  ///
-  /// In ko, this message translates to:
-  /// **'미리듣기'**
-  String get notifDownloadPreview;
-
-  /// No description provided for @notifDownloadCancel.
-  ///
-  /// In ko, this message translates to:
-  /// **'취소'**
-  String get notifDownloadCancel;
-
-  /// No description provided for @notifDownloadPausePreview.
-  ///
-  /// In ko, this message translates to:
-  /// **'일시정지'**
-  String get notifDownloadPausePreview;
-
-  /// No description provided for @notifDownloadResumePreview.
-  ///
-  /// In ko, this message translates to:
-  /// **'이어 듣기'**
-  String get notifDownloadResumePreview;
-
-  /// No description provided for @notifDownloadStopPreview.
-  ///
-  /// In ko, this message translates to:
-  /// **'중지'**
-  String get notifDownloadStopPreview;
-
-  /// No description provided for @notifDownloadDoneTitle.
-  ///
-  /// In ko, this message translates to:
-  /// **'받기 완료'**
-  String get notifDownloadDoneTitle;
-
-  /// No description provided for @notifDownloadDoneHidden.
-  ///
-  /// In ko, this message translates to:
-  /// **'곡이 보관함에 추가됐어요'**
-  String get notifDownloadDoneHidden;
-
-  /// No description provided for @notifDownloadFailedTitle.
-  ///
-  /// In ko, this message translates to:
-  /// **'받기 실패'**
-  String get notifDownloadFailedTitle;
-
-  /// No description provided for @notifDownloadFailedHidden.
-  ///
-  /// In ko, this message translates to:
-  /// **'곡을 받지 못했어요'**
-  String get notifDownloadFailedHidden;
 }
 
 class _AppLocalizationsDelegate

@@ -415,13 +415,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lockHint => 'Enter your PIN.';
 
   @override
-  String get settingsBackgroundDownload => 'Background downloads';
-
-  @override
-  String get settingsBackgroundDownloadDesc =>
-      'Keeps downloading when the app is in the background or closed. A notification stays up while downloading.';
-
-  @override
   String get settingsHideNotification => 'Hide song info in notification';
 
   @override
@@ -1704,20 +1697,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsNotifications => 'Notifications';
 
   @override
-  String get settingsNotifyDownloadProgress => 'Download progress';
-
-  @override
-  String get settingsNotifyDownloadProgressDesc =>
-      'Shows progress in the notification shade. Downloads keep going when the app is in the background.';
-
-  @override
-  String get settingsNotifyDownloadResult => 'Download results';
-
-  @override
-  String get settingsNotifyDownloadResultDesc =>
-      'Tells you when a download finishes or fails.';
-
-  @override
   String get settingsNotifyPlayback => 'Playback controls';
 
   @override
@@ -1748,58 +1727,4 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifChannelPlayback => 'Playback';
-
-  @override
-  String get notifChannelDownloadProgress => 'Downloading';
-
-  @override
-  String get notifChannelDownloadDone => 'Download complete';
-
-  @override
-  String get notifChannelDownloadFailed => 'Download failed';
-
-  @override
-  String get notifDownloadHiddenTitle => 'Downloading a song';
-
-  @override
-  String notifDownloadProgressBody(int percent) {
-    return 'Downloading · $percent%';
-  }
-
-  @override
-  String notifDownloadProgressNext(int percent, String next) {
-    return 'Downloading · $percent% · Next: $next';
-  }
-
-  @override
-  String notifDownloadOverall(int done, int total, int percent) {
-    return 'Overall $done/$total · $percent%';
-  }
-
-  @override
-  String get notifDownloadPreview => 'Preview';
-
-  @override
-  String get notifDownloadCancel => 'Cancel';
-
-  @override
-  String get notifDownloadPausePreview => 'Pause';
-
-  @override
-  String get notifDownloadResumePreview => 'Resume';
-
-  @override
-  String get notifDownloadStopPreview => 'Stop';
-
-  @override
-  String get notifDownloadDoneTitle => 'Download complete';
-
-  @override
-  String get notifDownloadDoneHidden => 'A song was added to your library';
-
-  @override
-  String get notifDownloadFailedTitle => 'Download failed';
-
-  @override
-  String get notifDownloadFailedHidden => 'A song could not be downloaded';
 }

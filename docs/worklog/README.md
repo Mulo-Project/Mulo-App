@@ -86,3 +86,4 @@
 | 2026-10-07 | [재생 알림 디자인 개선](2026-10-07-playback-notification-design.md) | 완료 (merge 대기) |
 | 2026-10-07 | [미리 듣기를 재생 알림에 합치기](2026-10-07-preview-in-media-notification.md) | 완료 (merge 대기) |
 | 2026-10-07 | [백그라운드 받기 설정과 받기 알림 개편](2026-10-07-background-download.md) | 완료 (PR 대기) |
+| 2026-10-07 | [받기 포그라운드 서비스 · 진행 알림 제거](2026-10-07-remove-download-service.md) | 진행 중 (확인 대기) |
