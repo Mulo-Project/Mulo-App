@@ -1,6 +1,7 @@
 package com.mulo.app
 
 import android.content.Intent
+import android.os.Bundle
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 
@@ -12,6 +13,21 @@ class MainActivity : FlutterFragmentActivity() {
     private var audioOutput: AudioOutputChannel? = null
     private var ytDlp: YtDlpChannel? = null
     private var transcoder: TranscoderChannel? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        handleIntent(intent)
+    }
+
+    // 재생 알림을 누르면 현재 곡의 플레이어 화면으로 간다 (앱이 이미 떠 있을 때).
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        if (intent?.action == PlaybackHub.ACTION_OPEN_PLAYER) PlaybackHub.onOpenPlayerRequested()
+    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)

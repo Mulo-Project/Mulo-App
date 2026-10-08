@@ -15,6 +15,8 @@ class MediaSessionInfo extends Equatable {
     this.favorite = false,
     this.preview = false,
     this.coverColors = const [],
+    this.trackId = '',
+    this.hidden = false,
   });
 
   final String title;
@@ -38,6 +40,12 @@ class MediaSessionInfo extends Equatable {
   /// 커버가 없을 때 그릴 앱 기본 커버의 색(ARGB 정수 세 개, 테마색). 비어 있으면 커버를 두지 않는다.
   final List<int> coverColors;
 
+  /// 지금 곡의 id. 앱이 꺼진 사이 곡이 넘어가면 네이티브가 이 내용이 옛 곡의 것임을 알아본다.
+  final String trackId;
+
+  /// 곡 정보 숨기기 설정이 켜져 있는지 (앱이 꺼진 사이 넘어간 곡에도 지킨다).
+  final bool hidden;
+
   /// 커버 주소만 바꾼 사본.
   MediaSessionInfo withArtUri(String? uri) => MediaSessionInfo(
     title: title,
@@ -52,6 +60,8 @@ class MediaSessionInfo extends Equatable {
     favorite: favorite,
     preview: preview,
     coverColors: coverColors,
+    trackId: trackId,
+    hidden: hidden,
   );
 
   @override
@@ -68,6 +78,8 @@ class MediaSessionInfo extends Equatable {
     favorite,
     preview,
     coverColors,
+    trackId,
+    hidden,
   ];
 }
 

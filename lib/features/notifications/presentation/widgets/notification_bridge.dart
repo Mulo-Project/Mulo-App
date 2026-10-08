@@ -7,6 +7,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
+import '../../../library/presentation/bloc/library_cubit.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../../theme/presentation/bloc/theme_cubit.dart';
@@ -18,9 +19,12 @@ import '../bloc/notification_sync_cubit.dart';
 /// 재생 상태를 알림창으로 옮기고, 알림에서 누른 재생 조작을 재생 상태에 돌려준다.
 /// 앱 셸 한 곳에서 감싼다 ([NotificationSyncCubit]이 바뀐 것만 골라 알림을 부른다).
 class NotificationBridge extends StatefulWidget {
-  const NotificationBridge({super.key, required this.child});
+  const NotificationBridge({super.key, required this.child, this.onOpenPlayer});
 
   final Widget child;
+
+  /// 알림을 눌렀을 때 플레이어 화면을 연다 (재생 중인 곡이 있을 때만 부른다).
+  final VoidCallback? onOpenPlayer;
 
   @override
   State<NotificationBridge> createState() => _NotificationBridgeState();
@@ -29,6 +33,8 @@ class NotificationBridge extends StatefulWidget {
 class _NotificationBridgeState extends State<NotificationBridge>
     with WidgetsBindingObserver {
   StreamSubscription<MediaCommand>? _commands;
+  StreamSubscription<void>? _openRequests;
+  Future<void>? _restoring;
 
   @override
   void initState() {
@@ -37,13 +43,37 @@ class _NotificationBridgeState extends State<NotificationBridge>
     _commands = context.read<NotificationSyncCubit>().commands.listen(
       _onCommand,
     );
+    _openRequests = context.read<NowPlayingCubit>().openPlayerRequests.listen(
+      (_) => _openPlayer(),
+    );
+    if (context.read<LibraryCubit>().state.loaded) _restore();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _commands?.cancel();
+    _openRequests?.cancel();
     super.dispose();
+  }
+
+  /// 앱이 새로 켜졌을 때 한 번: 네이티브가 쥐고 있는 대기열을 되살리고,
+  /// 알림을 눌러 켠 것이면 현재 곡의 플레이어 화면을 연다.
+  void _restore() {
+    _restoring ??= () async {
+      final player = context.read<NowPlayingCubit>();
+      final byId = {
+        for (final t in context.read<LibraryCubit>().state.tracks) t.id: t,
+      };
+      await player.restore((id) => byId[id]);
+      if (mounted && await player.takeOpenPlayerRequest()) _openPlayer();
+    }();
+  }
+
+  Future<void> _openPlayer() async {
+    await _restoring;
+    if (!mounted || context.read<NowPlayingCubit>().state.track == null) return;
+    widget.onOpenPlayer?.call();
   }
 
   /// 시스템 설정에서 알림 권한을 바꾸고 돌아왔을 수 있다.
@@ -154,6 +184,10 @@ class _NotificationBridgeState extends State<NotificationBridge>
   @override
   Widget build(BuildContext context) => MultiBlocListener(
     listeners: [
+      BlocListener<LibraryCubit, LibraryState>(
+        listenWhen: (a, b) => !a.loaded && b.loaded,
+        listener: (_, _) => _restore(),
+      ),
       BlocListener<NowPlayingCubit, NowPlayingState>(
         listener: (_, _) => _syncPlayback(),
       ),

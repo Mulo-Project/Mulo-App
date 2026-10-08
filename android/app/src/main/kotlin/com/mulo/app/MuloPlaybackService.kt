@@ -1,6 +1,5 @@
 package com.mulo.app
 
-import android.content.Intent
 import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
@@ -31,11 +30,6 @@ class MuloPlaybackService : MediaSessionService() {
 
     fun hideSession() {
         if (sessions.contains(PlaybackHub.session)) removeSession(PlaybackHub.session)
-    }
-
-    // 앱이 최근 작업에서 밀려 사라지면 대기열도 사라지므로 재생 · 알림을 비운다 (서비스 · 세션 객체는 남는다).
-    override fun onTaskRemoved(rootIntent: Intent?) {
-        PlaybackHub.reset()
     }
 
     override fun onDestroy() {

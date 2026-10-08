@@ -90,6 +90,8 @@ class NotificationSyncCubit extends Cubit<void> {
             hasPrevious: hasPrevious,
             hasNext: hasNext,
             favorite: favorite,
+            trackId: track.id,
+            hidden: hide,
             coverColors: hide ? const [] : coverColors,
           );
     final at = now ?? DateTime.now();
@@ -105,6 +107,8 @@ class NotificationSyncCubit extends Cubit<void> {
           last.hasPrevious == next.hasPrevious &&
           last.hasNext == next.hasNext &&
           last.favorite == next.favorite &&
+          last.trackId == next.trackId &&
+          last.hidden == next.hidden &&
           last.preview == next.preview &&
           listEquals(last.coverColors, next.coverColors);
       final expected = last.playing
