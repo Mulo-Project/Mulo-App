@@ -63,20 +63,27 @@ class PreviewButton extends StatelessWidget {
       (PreviewCubit c) =>
           c.state.isActive(hit.id) ? c.state.status : PreviewStatus.idle,
     );
+    // 미니 플레이어에서 잠시 멈춰 둔 상태면 "이어 듣기"로 보이고, 누르면 이어서 듣는다.
+    final paused = context.select(
+      (PreviewCubit c) => c.state.isActive(hit.id) && c.state.paused,
+    );
     return PillButton(
       label: switch (status) {
         PreviewStatus.idle => l10n.searchPreview,
         PreviewStatus.loading => l10n.searchPreviewLoading,
-        PreviewStatus.playing => l10n.searchPreviewStop,
+        PreviewStatus.playing =>
+          paused ? l10n.searchPreviewResume : l10n.searchPreviewStop,
       },
       icon: switch (status) {
         PreviewStatus.idle => AppIcons.headphones,
         PreviewStatus.loading => AppIcons.hourglassTop,
-        PreviewStatus.playing => AppIcons.pause,
+        PreviewStatus.playing => paused ? AppIcons.play : AppIcons.pause,
       },
       variant: PillVariant.tonal,
       busy: status == PreviewStatus.loading,
-      onPressed: () => togglePreview(context, hit),
+      onPressed: paused
+          ? () => context.read<PreviewCubit>().togglePause()
+          : () => togglePreview(context, hit),
     );
   }
 }

@@ -6,6 +6,7 @@ import '../../../../core/l10n/l10n.dart';
 import '../../../search/domain/entities/media_info.dart';
 import '../../../search/presentation/screens/media_detail_screen.dart';
 import '../../domain/entities/download_item.dart';
+import '../../domain/entities/download_source.dart';
 import '../bloc/download_queue_cubit.dart';
 import 'download_item_widgets.dart';
 
@@ -43,10 +44,11 @@ class _DownloadBarState extends State<DownloadBar> {
 
     // 가로 전체 직각 띠인 미니 플레이어와 구분되도록, 좌우로 띄운 둥근 카드에 강조색 테두리를 둔다.
     return Padding(
+      // 좌우는 화면 내용과 같은 여백(md)에 맞추고, 위아래는 미니 플레이어 · 본문과 숨 쉴 틈을 둔다.
       padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
         AppSpacing.sm,
-        AppSpacing.xs,
-        AppSpacing.sm,
+        AppSpacing.md,
         AppSpacing.xs,
       ),
       child: GlassSurface(
@@ -148,10 +150,16 @@ class _DownloadRow extends StatelessWidget {
 
   final DownloadItem item;
 
+  /// 검색 결과와 같은 id(유튜브면 영상 id)로 만들어야 상세 화면의 미리 듣기 상태가 맞는다.
+  String get _hitId {
+    final key = downloadSourceKey(item.url);
+    return key.startsWith('youtube:') ? key.substring(8) : item.url;
+  }
+
   void _openDetail(BuildContext context) => showMediaDetail(
     context,
     MediaHit(
-      id: item.id,
+      id: _hitId,
       title: item.title,
       url: item.url,
       uploader: item.artist,
@@ -175,7 +183,7 @@ class _DownloadRow extends StatelessWidget {
       onTap: () => _openDetail(context),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(
-          AppSpacing.md,
+          AppSpacing.sm,
           AppSpacing.sm,
           AppSpacing.xs,
           AppSpacing.sm,

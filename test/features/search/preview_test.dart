@@ -10,6 +10,7 @@ import 'package:music_download_play_app/core/design/design.dart';
 import 'package:music_download_play_app/core/di/injector.dart';
 import 'package:music_download_play_app/features/notifications/domain/repositories/media_session.dart';
 import 'package:music_download_play_app/features/player/presentation/bloc/now_playing_cubit.dart';
+import 'package:music_download_play_app/features/search/presentation/widgets/preview_control.dart';
 import 'package:music_download_play_app/features/search/data/engine/cached_engine.dart';
 import 'package:music_download_play_app/features/search/data/engine/explode_engine.dart';
 import 'package:music_download_play_app/features/search/data/engine/local_engine.dart';
@@ -459,6 +460,18 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Preview'));
+      await tester.pumpAndSettle();
+      expect(player.playing, isTrue);
+      expect(find.text('Stop preview'), findsOneWidget);
+
+      // 다른 곳에서 잠시 멈춰 두면 상세 화면 버튼도 "이어 듣기"로 바뀌고, 누르면 이어 듣는다.
+      await tester
+          .element(find.byType(PreviewButton))
+          .read<PreviewCubit>()
+          .togglePause();
+      await tester.pumpAndSettle();
+      expect(find.text('Resume preview'), findsOneWidget);
+      await tester.tap(find.text('Resume preview'));
       await tester.pumpAndSettle();
       expect(player.playing, isTrue);
       expect(find.text('Stop preview'), findsOneWidget);
