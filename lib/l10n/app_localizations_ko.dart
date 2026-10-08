@@ -162,6 +162,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadsPauseAll => '모두 일시정지';
 
   @override
+  String get downloadsResumeAll => '모두 이어 받기';
+
+  @override
+  String get downloadsHideCurrent => '받는 곡 정보 숨기기';
+
+  @override
+  String get downloadsShowCurrent => '받는 곡 정보 보이기';
+
+  @override
   String get downloadsClearDone => '완료 지우기';
 
   @override
@@ -981,6 +990,11 @@ class AppLocalizationsKo extends AppLocalizations {
       'other': '$name',
     });
     return '$_temp0';
+  }
+
+  @override
+  String downloadsRemaining(int count) {
+    return '$count곡 남음';
   }
 
   @override

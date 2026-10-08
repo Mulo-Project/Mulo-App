@@ -31,6 +31,8 @@ class MiniPlayerBar extends StatelessWidget {
     this.onPrevious,
     this.onNext,
     this.onQueue,
+    this.showSkip = true,
+    this.queueIcon = AppIcons.queue,
   });
 
   final String title;
@@ -58,6 +60,12 @@ class MiniPlayerBar extends StatelessWidget {
 
   /// 재생 대기열을 바로 연다.
   final VoidCallback? onQueue;
+
+  /// 이전 · 다음 버튼을 보일지 (미리 듣기처럼 넘길 곡이 없을 땐 숨긴다).
+  final bool showSkip;
+
+  /// 맨 오른쪽 작은 아이콘 ([queueLabel]이 그 설명). 기본은 재생목록.
+  final IconData queueIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -102,22 +110,35 @@ class MiniPlayerBar extends StatelessWidget {
                       ],
                     ),
                   ),
-                  _BarIcon(
-                    icon: AppIcons.skipPrevious,
-                    tooltip: previousLabel,
-                    onPressed: onPrevious,
+                  // 제목 영역(누르면 상세/플레이어)과 조작 버튼 영역을 가는 선으로 가른다.
+                  const SizedBox(width: AppSpacing.xs),
+                  SizedBox(
+                    height: 32,
+                    child: VerticalDivider(
+                      width: 1,
+                      thickness: 1,
+                      color: p.glassBorder,
+                    ),
                   ),
+                  const SizedBox(width: AppSpacing.xs),
+                  if (showSkip)
+                    _BarIcon(
+                      icon: AppIcons.skipPrevious,
+                      tooltip: previousLabel,
+                      onPressed: onPrevious,
+                    ),
                   CircleIconButton(
                     icon: isPlaying ? AppIcons.pause : AppIcons.play,
                     tooltip: isPlaying ? pauseLabel : playLabel,
                     emphasized: true,
                     onPressed: onPlayPause,
                   ),
-                  _BarIcon(
-                    icon: AppIcons.skipNext,
-                    tooltip: nextLabel,
-                    onPressed: onNext,
-                  ),
+                  if (showSkip)
+                    _BarIcon(
+                      icon: AppIcons.skipNext,
+                      tooltip: nextLabel,
+                      onPressed: onNext,
+                    ),
                 ],
               ),
               const SizedBox(height: AppSpacing.xs),
@@ -135,11 +156,7 @@ class MiniPlayerBar extends StatelessWidget {
                     child: InkResponse(
                       onTap: onQueue,
                       radius: 14,
-                      child: Icon(
-                        AppIcons.queue,
-                        size: 16,
-                        color: p.onSurfaceMuted,
-                      ),
+                      child: Icon(queueIcon, size: 16, color: p.onSurfaceMuted),
                     ),
                   ),
                 ],

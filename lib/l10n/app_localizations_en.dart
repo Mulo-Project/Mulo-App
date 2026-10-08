@@ -163,6 +163,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadsPauseAll => 'Pause all';
 
   @override
+  String get downloadsResumeAll => 'Resume all';
+
+  @override
+  String get downloadsHideCurrent => 'Hide current song';
+
+  @override
+  String get downloadsShowCurrent => 'Show current song';
+
+  @override
   String get downloadsClearDone => 'Clear finished';
 
   @override
@@ -996,6 +1005,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Nonprofits': 'Nonprofits & Activism',
       'other': '$name',
     });
+    return '$_temp0';
+  }
+
+  @override
+  String downloadsRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count left',
+      one: '1 left',
+    );
     return '$_temp0';
   }
 

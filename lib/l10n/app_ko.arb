@@ -69,6 +69,9 @@
     }
   },
   "downloadsPauseAll": "모두 일시정지",
+  "downloadsResumeAll": "모두 이어 받기",
+  "downloadsHideCurrent": "받는 곡 정보 숨기기",
+  "downloadsShowCurrent": "받는 곡 정보 보이기",
   "downloadsClearDone": "완료 지우기",
   "statusDownloading": "받는 중",
   "statusFailed": "실패",
@@ -474,6 +477,8 @@
       }
     }
   },
+  "downloadsRemaining": "{count}곡 남음",
+  "@downloadsRemaining": {"placeholders": {"count": {"type": "int"}}},
   "downloadsExpand": "대기 목록 펼치기",
   "downloadsCollapse": "대기 목록 접기",
   "downloadDialogTitle": "받기 정보",

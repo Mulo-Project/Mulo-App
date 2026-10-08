@@ -64,6 +64,16 @@ class DownloadQueueState extends Equatable {
     return null;
   }
 
+  /// 끝나지 않은 곡이 모두 일시정지 상태인가 (전체 일시정지 버튼이 "이어 받기"로 바뀐다).
+  bool get allPaused {
+    final live = items.where(
+      (i) =>
+          i.status != DownloadStatus.done && i.status != DownloadStatus.failed,
+    );
+    return live.isNotEmpty &&
+        live.every((i) => i.status == DownloadStatus.paused);
+  }
+
   /// 큐에 있는 곡 전체의 받기 진행도 (0 ~ 1). 끝난 곡은 1로 센다.
   double get overallProgress {
     if (items.isEmpty) return 0;
@@ -137,6 +147,23 @@ class DownloadQueueCubit extends Cubit<DownloadQueueState> {
   Future<void> pause(String id) => _pause(id);
 
   Future<void> resume(String id) => _resume(id);
+
+  /// 받는 중 · 대기 중인 곡을 모두 일시정지한다.
+  Future<void> pauseAll() async {
+    for (final i in state.items) {
+      if (i.status == DownloadStatus.downloading ||
+          i.status == DownloadStatus.queued) {
+        await _pause(i.id);
+      }
+    }
+  }
+
+  /// 일시정지한 곡을 모두 이어 받는다.
+  Future<void> resumeAll() async {
+    for (final i in state.items) {
+      if (i.status == DownloadStatus.paused) await _resume(i.id);
+    }
+  }
 
   Future<void> retry(String id) => _retry(id);
 

@@ -10,6 +10,7 @@ import 'package:music_download_play_app/features/covers/domain/entities/cover_ar
 import 'package:music_download_play_app/features/downloads/domain/entities/download_item.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 import 'package:music_download_play_app/features/playlists/domain/entities/playlist.dart';
+import 'package:music_download_play_app/features/playlists/presentation/widgets/playlist_card.dart';
 
 import '../../helpers/fakes.dart';
 
@@ -134,9 +135,11 @@ void main() {
         ),
       ]),
     );
-    expect(find.text('받는 곡'), findsOneWidget);
-    expect(find.textContaining('40%'), findsOneWidget);
-    expect(find.byType(ProgressLine), findsOneWidget);
+    Finder inCard(Finder f) =>
+        find.descendant(of: find.byType(PlaylistCard), matching: f);
+    expect(inCard(find.text('받는 곡')), findsOneWidget);
+    expect(inCard(find.textContaining('40%')), findsOneWidget);
+    expect(inCard(find.byType(ProgressLine)), findsOneWidget);
     expect(find.text('첫 곡'), findsNothing);
   });
 

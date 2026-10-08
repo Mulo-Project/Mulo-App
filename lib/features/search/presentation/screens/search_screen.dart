@@ -10,7 +10,6 @@ import '../../../downloads/domain/entities/download_item.dart';
 import '../../../downloads/domain/entities/download_source.dart';
 import '../../../downloads/presentation/bloc/download_queue_cubit.dart';
 import '../../../downloads/presentation/widgets/download_dialog.dart';
-import '../../../downloads/presentation/widgets/download_progress_card.dart';
 import '../../../library/domain/entities/track.dart' show formatDuration;
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
@@ -94,32 +93,10 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
               ),
             ),
-            const _DownloadCard(),
             const SizedBox(height: AppSpacing.md),
             _Body(onRetry: _submit),
           ],
         ),
-      ),
-    );
-  }
-}
-
-/// 검색창 아래, 받는 중인 곡이 있을 때만 보인다.
-class _DownloadCard extends StatelessWidget {
-  const _DownloadCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final queue = context.watch<DownloadQueueCubit>().state;
-    final current = queue.current;
-    if (current == null) return const SizedBox.shrink();
-    return Padding(
-      padding: AppSpacing.screen.copyWith(top: AppSpacing.sm),
-      child: DownloadProgressCard(
-        current: current,
-        total: queue.items.length,
-        done: queue.doneCount,
-        progress: queue.overallProgress,
       ),
     );
   }
