@@ -11,7 +11,9 @@ import '../features/player/presentation/bloc/audio_output_cubit.dart';
 import '../features/player/presentation/bloc/now_playing_cubit.dart';
 import '../features/search/presentation/bloc/preview_cubit.dart';
 import '../core/cache/cached_web_image.dart';
+import '../features/downloads/presentation/bloc/download_queue_cubit.dart';
 import '../features/downloads/presentation/widgets/download_bar.dart';
+import '../features/downloads/presentation/widgets/download_float_button.dart';
 import '../features/search/presentation/screens/media_detail_screen.dart';
 import '../features/theme/presentation/bloc/theme_cubit.dart';
 import 'router.dart';
@@ -19,10 +21,21 @@ import 'theme_preview_bar.dart';
 
 /// 탭 화면 공통 틀: 배경 · 탭 내용 · 가로 전체 유리 미니 플레이어 · 단색 하단 탭.
 /// 재생 상태를 따라 재생 기록(곡 · 실제 재생 시간)을 남긴다.
-class AppShell extends StatelessWidget {
+class AppShell extends StatefulWidget {
   const AppShell({super.key, required this.shell});
 
   final StatefulNavigationShell shell;
+
+  @override
+  State<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends State<AppShell> {
+  StatefulNavigationShell get shell => widget.shell;
+
+  /// 받기 줄을 접어 플로팅 버튼으로 둔 상태와 그 버튼의 자리 (앱을 켜 두는 동안만).
+  var _downloadMinimized = false;
+  Offset? _floatPosition;
 
   @override
   Widget build(BuildContext context) {
@@ -31,81 +44,108 @@ class AppShell extends StatelessWidget {
 
     // 내용이 유리 미니 플레이어 · 탭 바 뒤로 흘러가도록 extendBody.
     // 화면은 MediaQuery.paddingOf(context).bottom 만큼 아래 여백을 둔다.
-    return BlocListener<NowPlayingCubit, NowPlayingState>(
-      listener: (context, s) =>
-          context.read<PlayRecorderCubit>().playbackChanged(
-            trackId: s.track?.id,
-            position: s.position,
-            isPlaying: s.isPlaying,
-          ),
+    return BlocListener<DownloadQueueCubit, DownloadQueueState>(
+      // 받을 곡이 모두 사라지면 다음 받기는 받기 줄로 다시 시작한다.
+      listenWhen: (a, b) => a.current != null && b.current == null,
+      listener: (context, _) => setState(() {
+        _downloadMinimized = false;
+        _floatPosition = null;
+      }),
       child: BlocListener<NowPlayingCubit, NowPlayingState>(
-        // 곡이 바뀌거나 재생을 시작 · 멈출 때 출력 기기를 다시 확인한다.
-        listenWhen: (a, b) =>
-            a.track?.id != b.track?.id || a.isPlaying != b.isPlaying,
-        listener: (context, _) => context.read<AudioOutputCubit>().refresh(),
+        listener: (context, s) =>
+            context.read<PlayRecorderCubit>().playbackChanged(
+              trackId: s.track?.id,
+              position: s.position,
+              isPlaying: s.isPlaying,
+            ),
         child: BlocListener<NowPlayingCubit, NowPlayingState>(
-          // 메인 재생이 시작되면 미리 듣기는 멈춘다 (두 소리가 겹치지 않게).
-          listenWhen: (a, b) => !a.isPlaying && b.isPlaying,
-          listener: (context, _) => context.read<PreviewCubit>().stop(),
-          child: BlocListener<PreviewCubit, PreviewState>(
-            // 미리 듣기가 재생 중에 막혔으면 까닭을 알린다.
-            listenWhen: (a, b) => b.error != null && a.error != b.error,
-            listener: (context, s) => ScaffoldMessenger.of(context)
-                .showSnackBar(
-                  SnackBar(
-                    content: Text('${l10n.searchPreviewFailed}\n${s.error}'),
+          // 곡이 바뀌거나 재생을 시작 · 멈출 때 출력 기기를 다시 확인한다.
+          listenWhen: (a, b) =>
+              a.track?.id != b.track?.id || a.isPlaying != b.isPlaying,
+          listener: (context, _) => context.read<AudioOutputCubit>().refresh(),
+          child: BlocListener<NowPlayingCubit, NowPlayingState>(
+            // 메인 재생이 시작되면 미리 듣기는 멈춘다 (두 소리가 겹치지 않게).
+            listenWhen: (a, b) => !a.isPlaying && b.isPlaying,
+            listener: (context, _) => context.read<PreviewCubit>().stop(),
+            child: BlocListener<PreviewCubit, PreviewState>(
+              // 미리 듣기가 재생 중에 막혔으면 까닭을 알린다.
+              listenWhen: (a, b) => b.error != null && a.error != b.error,
+              listener: (context, s) => ScaffoldMessenger.of(context)
+                  .showSnackBar(
+                    SnackBar(
+                      content: Text('${l10n.searchPreviewFailed}\n${s.error}'),
+                    ),
                   ),
+              child: Scaffold(
+                backgroundColor: p.background,
+                extendBody: true,
+                body: Stack(
+                  children: [
+                    AppBackground(child: shell),
+                    if (_downloadMinimized)
+                      Positioned.fill(
+                        child: DownloadFloatButton(
+                          position: _floatPosition,
+                          onMoved: (o) => setState(() => _floatPosition = o),
+                          onRestore: () => setState(() {
+                            _downloadMinimized = false;
+                            _floatPosition = null;
+                          }),
+                        ),
+                      ),
+                  ],
                 ),
-            child: Scaffold(
-              backgroundColor: p.background,
-              extendBody: true,
-              body: AppBackground(child: shell),
-              bottomNavigationBar: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (context.select((ThemeCubit c) => c.state.previewing))
-                    const ThemePreviewBar(),
-                  // 받는 곡이 있으면 모든 탭에서 보이는 얇은 진행 줄 (눌러서 목록 펼치기).
-                  const DownloadBar(),
-                  const _ShellMiniPlayer(),
-                  AppBottomNav(
-                    currentIndex: shell.currentIndex,
-                    onSelected: (i) {
-                      shell.goBranch(
-                        i,
-                        initialLocation: i == shell.currentIndex,
-                      );
-                    },
-                    items: [
-                      AppNavItem(
-                        icon: AppIcons.libraryOutline,
-                        selectedIcon: AppIcons.library,
-                        label: l10n.navLibrary,
+                bottomNavigationBar: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (context.select((ThemeCubit c) => c.state.previewing))
+                      const ThemePreviewBar(),
+                    // 받는 곡이 있으면 모든 탭에서 보이는 얇은 진행 줄 (눌러서 목록 펼치기).
+                    if (!_downloadMinimized)
+                      DownloadBar(
+                        onMinimize: () =>
+                            setState(() => _downloadMinimized = true),
                       ),
-                      AppNavItem(
-                        icon: AppIcons.queueOutline,
-                        selectedIcon: AppIcons.queue,
-                        label: l10n.navPlaylists,
-                      ),
-                      AppNavItem(
-                        icon: AppIcons.homeOutline,
-                        selectedIcon: AppIcons.home,
-                        label: l10n.navHome,
-                        highlighted: true,
-                      ),
-                      AppNavItem(
-                        icon: AppIcons.searchOutline,
-                        selectedIcon: AppIcons.search,
-                        label: l10n.navSearch,
-                      ),
-                      AppNavItem(
-                        icon: AppIcons.tuneOutline,
-                        selectedIcon: AppIcons.tune,
-                        label: l10n.navSettings,
-                      ),
-                    ],
-                  ),
-                ],
+                    const _ShellMiniPlayer(),
+                    AppBottomNav(
+                      currentIndex: shell.currentIndex,
+                      onSelected: (i) {
+                        shell.goBranch(
+                          i,
+                          initialLocation: i == shell.currentIndex,
+                        );
+                      },
+                      items: [
+                        AppNavItem(
+                          icon: AppIcons.libraryOutline,
+                          selectedIcon: AppIcons.library,
+                          label: l10n.navLibrary,
+                        ),
+                        AppNavItem(
+                          icon: AppIcons.queueOutline,
+                          selectedIcon: AppIcons.queue,
+                          label: l10n.navPlaylists,
+                        ),
+                        AppNavItem(
+                          icon: AppIcons.homeOutline,
+                          selectedIcon: AppIcons.home,
+                          label: l10n.navHome,
+                          highlighted: true,
+                        ),
+                        AppNavItem(
+                          icon: AppIcons.searchOutline,
+                          selectedIcon: AppIcons.search,
+                          label: l10n.navSearch,
+                        ),
+                        AppNavItem(
+                          icon: AppIcons.tuneOutline,
+                          selectedIcon: AppIcons.tune,
+                          label: l10n.navSettings,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

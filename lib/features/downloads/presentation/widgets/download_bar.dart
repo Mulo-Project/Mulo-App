@@ -16,7 +16,10 @@ import 'download_item_widgets.dart';
 /// 위 줄을 누르면 아래로 나머지 대기 곡이 펼쳐지고, 곡을 누르면 그 곡의 상세 화면이 열린다.
 /// 받는 곡이 없으면 아무것도 그리지 않는다. 유리는 이 띠 하나에만 쓰고, 곡 줄에는 쓰지 않는다.
 class DownloadBar extends StatefulWidget {
-  const DownloadBar({super.key});
+  const DownloadBar({super.key, this.onMinimize});
+
+  /// 위쪽 손잡이를 누르거나 아래로 쓸면 불린다 (플로팅 버튼으로 접기).
+  final VoidCallback? onMinimize;
 
   @override
   State<DownloadBar> createState() => _DownloadBarState();
@@ -59,11 +62,33 @@ class _DownloadBarState extends State<DownloadBar> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // 손잡이: 누르거나 아래로 쓸면 플로팅 버튼으로 접힌다.
+            GestureDetector(
+              key: const ValueKey('download-minimize'),
+              behavior: HitTestBehavior.opaque,
+              onTap: widget.onMinimize,
+              onVerticalDragEnd: (d) {
+                if ((d.primaryVelocity ?? 0) > 0) widget.onMinimize?.call();
+              },
+              child: SizedBox(
+                height: 16,
+                width: double.infinity,
+                child: Center(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: p.onSurfaceMuted.withValues(alpha: .4),
+                      borderRadius: BorderRadius.circular(AppRadii.pill),
+                    ),
+                    child: const SizedBox(width: 36, height: 4),
+                  ),
+                ),
+              ),
+            ),
             // 위(작게): 전체 현황 · 전체 일시정지 · 전체 취소.
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.md,
-                AppSpacing.xs,
+                0,
                 AppSpacing.md,
                 AppSpacing.xs,
               ),

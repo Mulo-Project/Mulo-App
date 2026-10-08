@@ -329,6 +329,39 @@ void main() {
     expect(queue.controls, ['cancel:a']);
   });
 
+  testWidgets('받기 줄을 접어 플로팅 버튼으로 두고, 하단에 가져다 놓으면 다시 켜진다', (tester) async {
+    await open(tester, [_now, _next]);
+    expect(find.byKey(const ValueKey('download-bar')), findsOneWidget);
+    expect(find.byKey(const ValueKey('download-float')), findsNothing);
+
+    // 손잡이를 누르면 접힌다.
+    await tester.tap(find.byKey(const ValueKey('download-minimize')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('download-bar')), findsNothing);
+    final float = find.byKey(const ValueKey('download-float'));
+    expect(float, findsOneWidget);
+
+    // 위쪽으로 끌어 두면 그 자리에 남는다.
+    final before = tester.getCenter(float);
+    await tester.drag(float, const Offset(-100, -200));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('download-bar')), findsNothing);
+    expect(tester.getCenter(float).dy, lessThan(before.dy - 100));
+
+    // 하단 바 자리까지 끌어다 놓으면 받기 줄이 다시 켜진다.
+    await tester.drag(float, const Offset(0, 800));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('download-bar')), findsOneWidget);
+    expect(find.byKey(const ValueKey('download-float')), findsNothing);
+
+    // 접었다가 버튼을 눌러도 켜진다.
+    await tester.tap(find.byKey(const ValueKey('download-minimize')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('download-float')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('download-bar')), findsOneWidget);
+  });
+
   testWidgets('받기 취소 확인 창의 버튼은 한 줄에 나란히 놓인다', (tester) async {
     await open(tester, [_now, _next]);
     await tester.tap(find.byTooltip('전체 취소'));
