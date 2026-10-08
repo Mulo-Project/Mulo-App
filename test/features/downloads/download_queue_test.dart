@@ -362,6 +362,21 @@ void main() {
     expect(find.byKey(const ValueKey('download-bar')), findsOneWidget);
   });
 
+  testWidgets('받기 줄 손잡이를 아래로 끌면 접히고, 조금만 끌면 제자리로 돌아간다', (tester) async {
+    await open(tester, [_now, _next]);
+    final handle = find.byKey(const ValueKey('download-minimize'));
+
+    await tester.drag(handle, const Offset(0, 20));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('download-bar')), findsOneWidget);
+    expect(find.byKey(const ValueKey('download-float')), findsNothing);
+
+    await tester.drag(handle, const Offset(0, 120));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('download-bar')), findsNothing);
+    expect(find.byKey(const ValueKey('download-float')), findsOneWidget);
+  });
+
   testWidgets('받기 취소 확인 창의 버튼은 한 줄에 나란히 놓인다', (tester) async {
     await open(tester, [_now, _next]);
     await tester.tap(find.byTooltip('전체 취소'));

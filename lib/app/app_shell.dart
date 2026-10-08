@@ -82,17 +82,41 @@ class _AppShellState extends State<AppShell> {
                 body: Stack(
                   children: [
                     AppBackground(child: shell),
-                    if (_downloadMinimized)
-                      Positioned.fill(
-                        child: DownloadFloatButton(
-                          position: _floatPosition,
-                          onMoved: (o) => setState(() => _floatPosition = o),
-                          onRestore: () => setState(() {
-                            _downloadMinimized = false;
-                            _floatPosition = null;
-                          }),
+                    Positioned.fill(
+                      // 버튼은 접힐 때 하단에서 커지며 나타나고, 펴질 때 작아지며 사라진다.
+                      child: AnimatedSwitcher(
+                        duration: AppMotion.medium,
+                        transitionBuilder: (child, animation) =>
+                            ScaleTransition(
+                              scale: CurvedAnimation(
+                                parent: animation,
+                                curve: AppMotion.emphasized,
+                              ),
+                              alignment: Alignment.bottomCenter,
+                              child: FadeTransition(
+                                opacity: animation,
+                                child: child,
+                              ),
+                            ),
+                        layoutBuilder: (current, previous) => Stack(
+                          fit: StackFit.expand,
+                          children: [...previous, ?current],
                         ),
+                        child: _downloadMinimized
+                            ? DownloadFloatButton(
+                                key: const ValueKey('download-float-on'),
+                                position: _floatPosition,
+                                onMoved: (o) =>
+                                    setState(() => _floatPosition = o),
+                                onRestore: () => setState(() {
+                                  _downloadMinimized = false;
+                                }),
+                              )
+                            : const SizedBox.shrink(
+                                key: ValueKey('download-float-off'),
+                              ),
                       ),
+                    ),
                   ],
                 ),
                 bottomNavigationBar: Column(
@@ -101,11 +125,28 @@ class _AppShellState extends State<AppShell> {
                     if (context.select((ThemeCubit c) => c.state.previewing))
                       const ThemePreviewBar(),
                     // 받는 곡이 있으면 모든 탭에서 보이는 얇은 진행 줄 (눌러서 목록 펼치기).
-                    if (!_downloadMinimized)
-                      DownloadBar(
-                        onMinimize: () =>
-                            setState(() => _downloadMinimized = true),
+                    // 접고 펼 때 아래로 접히고 위로 펴지는 움직임을 준다.
+                    AnimatedSwitcher(
+                      duration: AppMotion.medium,
+                      switchInCurve: AppMotion.standard,
+                      switchOutCurve: AppMotion.standard,
+                      transitionBuilder: (child, animation) => SizeTransition(
+                        sizeFactor: animation,
+                        alignment: Alignment.bottomCenter,
+                        child: FadeTransition(opacity: animation, child: child),
                       ),
+                      child: _downloadMinimized
+                          ? const SizedBox.shrink(
+                              key: ValueKey('download-gone'),
+                            )
+                          : DownloadBar(
+                              key: const ValueKey('download-shown'),
+                              onMinimize: () => setState(() {
+                                _downloadMinimized = true;
+                                _floatPosition = null;
+                              }),
+                            ),
+                    ),
                     const _ShellMiniPlayer(),
                     AppBottomNav(
                       currentIndex: shell.currentIndex,
