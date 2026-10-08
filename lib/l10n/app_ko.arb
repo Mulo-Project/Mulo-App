@@ -474,6 +474,8 @@
       }
     }
   },
+  "downloadsRemaining": "{count}곡 남음",
+  "@downloadsRemaining": {"placeholders": {"count": {"type": "int"}}},
   "downloadsExpand": "대기 목록 펼치기",
   "downloadsCollapse": "대기 목록 접기",
   "downloadDialogTitle": "받기 정보",

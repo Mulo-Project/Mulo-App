@@ -10,7 +10,9 @@ import '../features/home/presentation/bloc/play_recorder_cubit.dart';
 import '../features/player/presentation/bloc/audio_output_cubit.dart';
 import '../features/player/presentation/bloc/now_playing_cubit.dart';
 import '../features/search/presentation/bloc/preview_cubit.dart';
-import '../features/search/presentation/widgets/preview_control.dart';
+import '../core/cache/cached_web_image.dart';
+import '../features/downloads/presentation/widgets/download_bar.dart';
+import '../features/search/presentation/screens/media_detail_screen.dart';
 import '../features/theme/presentation/bloc/theme_cubit.dart';
 import 'router.dart';
 import 'theme_preview_bar.dart';
@@ -63,8 +65,8 @@ class AppShell extends StatelessWidget {
                 children: [
                   if (context.select((ThemeCubit c) => c.state.previewing))
                     const ThemePreviewBar(),
-                  // 미리 듣기는 화면을 옮겨도 이어지고, 여기서 멈출 수 있다.
-                  const PreviewMiniBar(),
+                  // 받는 곡이 있으면 모든 탭에서 보이는 얇은 진행 줄 (눌러서 목록 펼치기).
+                  const DownloadBar(),
                   const _ShellMiniPlayer(),
                   AppBottomNav(
                     currentIndex: shell.currentIndex,
@@ -113,11 +115,18 @@ class AppShell extends StatelessWidget {
   }
 }
 
+/// 미니 플레이어. 미리 듣는 동안은 미리 듣는 곡이 이 자리를 대신한다
+/// (누르면 그 곡의 상세 화면). 재생 대기열과 위치는 건드리지 않아서,
+/// 미리 듣기가 끝나면 듣던 대기열이 그대로 돌아온다.
 class _ShellMiniPlayer extends StatelessWidget {
   const _ShellMiniPlayer();
 
   @override
   Widget build(BuildContext context) {
+    final preview = context.watch<PreviewCubit>().state;
+    if (preview.status != PreviewStatus.idle) {
+      return _PreviewMiniPlayer(preview: preview);
+    }
     final state = context.watch<NowPlayingCubit>().state;
     final track = state.track;
     if (track == null) return const SizedBox.shrink();
@@ -145,6 +154,42 @@ class _ShellMiniPlayer extends StatelessWidget {
         onNext: vm.next,
         onQueue: () => context.push(Routes.queue),
       ),
+    );
+  }
+}
+
+class _PreviewMiniPlayer extends StatelessWidget {
+  const _PreviewMiniPlayer({required this.preview});
+
+  final PreviewState preview;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final cubit = context.read<PreviewCubit>();
+    final hit = preview.hit;
+    final loading = preview.status == PreviewStatus.loading;
+    final duration = preview.progress?.duration;
+    final thumb = hit?.thumbnailUrl;
+    return MiniPlayerBar(
+      key: const ValueKey('preview-mini-player'),
+      title: preview.title,
+      artist: loading ? l10n.searchPreviewLoading : (hit?.uploader ?? ''),
+      artwork: thumb == null ? null : CachedWebImage(thumb),
+      progress: preview.fraction,
+      isPlaying: !preview.paused,
+      playLabel: l10n.searchPreviewResume,
+      pauseLabel: l10n.searchPreviewPause,
+      previousLabel: l10n.actionPrevious,
+      nextLabel: l10n.actionNext,
+      positionText: formatDuration(preview.progress?.position ?? Duration.zero),
+      durationText: duration == null ? '--:--' : formatDuration(duration),
+      queueLabel: l10n.searchPreviewStop,
+      showSkip: false,
+      queueIcon: AppIcons.close,
+      onTap: hit == null ? null : () => showMediaDetail(context, hit),
+      onPlayPause: loading ? null : cubit.togglePause,
+      onQueue: cubit.stop,
     );
   }
 }

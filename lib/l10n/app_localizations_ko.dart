@@ -984,6 +984,11 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String downloadsRemaining(int count) {
+    return '$count곡 남음';
+  }
+
+  @override
   String get downloadsExpand => '대기 목록 펼치기';
 
   @override

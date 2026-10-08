@@ -381,6 +381,8 @@
   "searchSortLongest": "Longest",
   "searchSortTitle": "Title",
   "videoCategory": "{name, select, FilmAnimation{Film & Animation} Autos{Autos & Vehicles} Music{Music} Pets{Pets & Animals} Sports{Sports} Travel{Travel & Events} Gaming{Gaming} People{People & Blogs} Comedy{Comedy} Entertainment{Entertainment} News{News & Politics} Howto{Howto & Style} Education{Education} Science{Science & Technology} Nonprofits{Nonprofits & Activism} other{{name}}}",
+  "downloadsRemaining": "{count, plural, =1{1 left} other{{count} left}}",
+  "@downloadsRemaining": {"placeholders": {"count": {"type": "int"}}},
   "downloadsExpand": "Show queue",
   "downloadsCollapse": "Hide queue",
   "downloadDialogTitle": "Download details",

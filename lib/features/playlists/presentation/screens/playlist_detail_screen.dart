@@ -9,7 +9,7 @@ import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../downloads/domain/entities/download_item.dart';
 import '../../../downloads/presentation/bloc/download_queue_cubit.dart';
-import '../../../downloads/presentation/widgets/download_progress_card.dart';
+import '../../../downloads/presentation/widgets/download_item_widgets.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../library/presentation/widgets/play_shuffle_row.dart';
 import '../../../library/presentation/widgets/track_list_tile.dart';

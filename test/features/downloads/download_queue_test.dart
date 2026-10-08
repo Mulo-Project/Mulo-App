@@ -255,12 +255,21 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('검색 탭: 받는 카드는 현재 곡과 전체 진행도만 보인다', (tester) async {
+  testWidgets('받기 줄: 현재 곡과 남은 곡 수만 보이고, 누르면 목록이 펼쳐진다', (tester) async {
     await open(tester, [_now, _next]);
+    expect(find.byKey(const ValueKey('download-bar')), findsOneWidget);
     expect(find.text('Now Song'), findsOneWidget);
     expect(find.text('Next Song'), findsNothing);
-    expect(find.text('0/2곡'), findsOneWidget);
-    expect(find.byIcon(AppIcons.chevronDown), findsNothing);
+    expect(find.textContaining('2곡 남음'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('download-bar-toggle')));
+    await tester.pumpAndSettle();
+    expect(find.text('Next Song'), findsOneWidget);
+    expect(find.text('Now Song'), findsNWidgets(2));
+
+    await tester.tap(find.byKey(const ValueKey('download-bar-toggle')));
+    await tester.pumpAndSettle();
+    expect(find.text('Next Song'), findsNothing);
   });
 
   testWidgets('대기열 카드: 곡 취소 · 전체 취소', (tester) async {
@@ -277,8 +286,10 @@ void main() {
 
     expect(find.byIcon(AppIcons.pause), findsNothing);
     expect(find.byIcon(AppIcons.paste), findsNothing);
-    // 곡 취소 (곡 줄의 버튼이 먼저, 전체 취소는 그 아래).
-    await tester.tap(find.byIcon(AppIcons.close).first);
+    // 펼친 목록에서 곡 하나만 취소한다.
+    await tester.tap(find.byKey(const ValueKey('download-bar-toggle')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('취소').first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('취소하기'));
     await tester.pumpAndSettle();
@@ -348,11 +359,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('받는 중 1곡'), findsOneWidget);
-    expect(find.text('Mine Song'), findsOneWidget);
+    // 목록 줄 하나 + 하단 받기 줄의 현재 곡.
+    expect(find.text('Mine Song'), findsNWidgets(2));
     expect(find.text('받는 중 25%'), findsOneWidget);
     expect(find.text('Other Song'), findsNothing);
 
-    await tester.tap(find.byTooltip('전체 취소'));
+    await tester.tap(find.byTooltip('전체 취소').first);
     await tester.pumpAndSettle();
     await tester.tap(
       find.descendant(of: find.byType(AppDialog), matching: find.text('전체 취소')),
