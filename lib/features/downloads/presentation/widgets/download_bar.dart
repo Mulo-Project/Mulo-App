@@ -41,56 +41,48 @@ class _DownloadBarState extends State<DownloadBar> {
         if (i.id != current.id) i,
     ];
 
-    return GlassSurface(
-      key: const ValueKey('download-bar'),
-      shape: const RoundedRectangleBorder(),
-      rim: false,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: p.glassBorder)),
+    // 가로 전체 직각 띠인 미니 플레이어와 구분되도록, 좌우로 띄운 둥근 카드에 강조색 테두리를 둔다.
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.sm,
+        AppSpacing.xs,
+        AppSpacing.sm,
+        AppSpacing.xs,
+      ),
+      child: GlassSurface(
+        key: const ValueKey('download-bar'),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.md),
+          side: BorderSide(color: p.accent.withValues(alpha: .4)),
         ),
+        rim: false,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             // 위 영역: 전체 현황.
-            InkWell(
-              key: const ValueKey('download-bar-toggle'),
-              onTap: () => setState(() => _expanded = !_expanded),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  AppSpacing.xxs,
-                  AppSpacing.xs,
-                  AppSpacing.xxs,
-                ),
-                child: Row(
-                  children: [
-                    Text(
-                      '${l10n.downloadsOverall(queue.doneCount, queue.items.length)}'
-                      ' · ${l10n.downloadsRemaining(pending.length)}',
-                      style: text.labelSmall?.copyWith(color: p.onSurfaceMuted),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.xxs,
+                AppSpacing.xs,
+                AppSpacing.xxs,
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    '${l10n.downloadsOverall(queue.doneCount, queue.items.length)}'
+                    ' · ${l10n.downloadsRemaining(pending.length)}',
+                    style: text.labelSmall?.copyWith(color: p.onSurfaceMuted),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: ProgressLine(
+                      value: queue.overallProgress,
+                      height: 2,
                     ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: ProgressLine(
-                        value: queue.overallProgress,
-                        height: 2,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    Tooltip(
-                      message: _expanded
-                          ? l10n.downloadsCollapse
-                          : l10n.downloadsExpand,
-                      child: Icon(
-                        _expanded ? AppIcons.expandMore : AppIcons.expandLess,
-                        size: 18,
-                        color: p.onSurfaceMuted,
-                      ),
-                    ),
-                    const CancelAllDownloadsButton(),
-                  ],
-                ),
+                  ),
+                  const CancelAllDownloadsButton(),
+                ],
               ),
             ),
             Divider(height: 1, thickness: 1, color: p.glassBorder),
@@ -99,6 +91,34 @@ class _DownloadBarState extends State<DownloadBar> {
               item: current,
               key: const ValueKey('download-current'),
             ),
+            // 펼치기는 지금 곡 바로 밑에.
+            if (others.isNotEmpty)
+              InkWell(
+                key: const ValueKey('download-bar-toggle'),
+                onTap: () => setState(() => _expanded = !_expanded),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        _expanded ? AppIcons.expandLess : AppIcons.expandMore,
+                        size: 18,
+                        color: p.onSurfaceMuted,
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      Text(
+                        _expanded
+                            ? l10n.downloadsCollapse
+                            : l10n.downloadsExpand,
+                        style: text.labelSmall?.copyWith(
+                          color: p.onSurfaceMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             if (_expanded && others.isNotEmpty) ...[
               Divider(height: 1, thickness: 1, color: p.glassBorder),
               ConstrainedBox(
@@ -202,6 +222,24 @@ class _DownloadRow extends StatelessWidget {
                 ],
               ),
             ),
+            if (item.status == DownloadStatus.downloading ||
+                item.status == DownloadStatus.paused)
+              CircleIconButton(
+                key: const ValueKey('download-pause'),
+                icon: item.status == DownloadStatus.paused
+                    ? AppIcons.play
+                    : AppIcons.pause,
+                tooltip: item.status == DownloadStatus.paused
+                    ? l10n.actionResume
+                    : l10n.actionPause,
+                size: 32,
+                onPressed: () {
+                  final queue = context.read<DownloadQueueCubit>();
+                  item.status == DownloadStatus.paused
+                      ? queue.resume(item.id)
+                      : queue.pause(item.id);
+                },
+              ),
             DownloadItemActions(item: item),
           ],
         ),

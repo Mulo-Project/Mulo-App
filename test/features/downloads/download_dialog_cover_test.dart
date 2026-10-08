@@ -82,8 +82,6 @@ void main() {
       ],
     );
 
-    await tester.tap(find.byKey(const ValueKey('download-bar-toggle')));
-    await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('취소').first);
     await tester.pumpAndSettle();
     expect(find.text('받기 취소'), findsOneWidget);

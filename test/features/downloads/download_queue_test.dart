@@ -280,6 +280,23 @@ void main() {
     expect(find.text('Next Song'), findsNothing);
   });
 
+  testWidgets('받기 줄: 지금 곡을 일시정지한다', (tester) async {
+    final queue = MemoryDownloadQueue([_now, _next]);
+    await setUpTestDependencies(downloads: queue);
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    tester.platformDispatcher.localesTestValue = const [Locale('ko')];
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+    addTearDown(sl.reset);
+    await tester.pumpWidget(const MusicApp(initialLocation: Routes.search));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('download-pause')));
+    await tester.pumpAndSettle();
+    expect(queue.controls, ['pause:a']);
+  });
+
   testWidgets('대기열 카드: 곡 취소 · 전체 취소', (tester) async {
     final queue = MemoryDownloadQueue([_now, _next]);
     await setUpTestDependencies(downloads: queue);
@@ -292,7 +309,6 @@ void main() {
     await tester.pumpWidget(const MusicApp(initialLocation: Routes.search));
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(AppIcons.pause), findsNothing);
     expect(find.byIcon(AppIcons.paste), findsNothing);
     // 펼친 목록에서 곡 하나만 취소한다.
     await tester.tap(find.byKey(const ValueKey('download-bar-toggle')));
