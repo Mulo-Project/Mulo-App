@@ -318,9 +318,10 @@ object PlaybackHub {
         }
 
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+            // 현재 곡이 바뀌었으니 좋아요 버튼 모양을 다시 맞춘다 (앱이 모르는 곡이면 숨긴다).
+            refreshLayout()
             // 목록을 바꾸느라 생긴 전환은 앱이 시킨 것이라 알리지 않는다.
             if (mediaItem == null || reason == Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) return
-            refreshLayout()
             emit(mapOf("type" to "track", "index" to exo.currentMediaItemIndex, "id" to mediaItem.mediaId))
         }
 
