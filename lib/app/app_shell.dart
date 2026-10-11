@@ -65,6 +65,95 @@ class _AppShellState extends State<AppShell> {
     super.dispose();
   }
 
+  /// 받기 줄의 실제 높이 (바깥 크기 변화를 재서 갱신). 줄이 오르내리는 동안 본문 레이아웃이
+  /// 매 프레임 바뀌지 않게, 본문의 아래 여백은 이 값으로 한 번만 바꾼다.
+  final _barKey = GlobalKey();
+  var _barHeight = 0.0;
+
+  bool _measureBar(SizeChangedLayoutNotification _) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final h = (_barKey.currentContext?.size?.height) ?? 0.0;
+      if (mounted && h != _barHeight) setState(() => _barHeight = h);
+    });
+    return true;
+  }
+
+  /// 본문(탭 화면) 위에 받기 줄 · 플로팅 버튼을 얹는다. 둘 다 본문 크기를 바꾸지 않고 위에 겹치며,
+  /// 목록 맨 아래가 가려지지 않도록 본문의 아래 여백만 그만큼 더해 준다.
+  Widget _body(BuildContext context) {
+    final mq = MediaQuery.of(context);
+    final navHeight = mq.padding.bottom;
+    final barShown = !_downloadMinimized;
+    final inset = barShown
+        ? _barHeight
+        : _floatShown
+        ? DownloadFloatButton.size + AppSpacing.md * 2
+        : 0.0;
+    return Stack(
+      children: [
+        AppBackground(
+          child: MediaQuery(
+            data: mq.copyWith(
+              padding: mq.padding.copyWith(bottom: navHeight + inset),
+            ),
+            child: shell,
+          ),
+        ),
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: navHeight,
+          // 높이를 바꾸지 않고 아래로 미끄러져 접히고 위로 올라와 펴진다 (본문이 다시 그려지지 않게).
+          child: NotificationListener<SizeChangedLayoutNotification>(
+            onNotification: _measureBar,
+            child: SizeChangedLayoutNotifier(
+              child: RepaintBoundary(
+                key: _barKey,
+                child: AnimatedSwitcher(
+                  duration: AppMotion.medium,
+                  switchInCurve: AppMotion.standard,
+                  switchOutCurve: AppMotion.standard,
+                  transitionBuilder: (child, animation) => FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween(
+                        begin: const Offset(0, 1),
+                        end: Offset.zero,
+                      ).animate(animation),
+                      child: child,
+                    ),
+                  ),
+                  child: _downloadMinimized
+                      ? const SizedBox.shrink(key: ValueKey('download-gone'))
+                      : DownloadBar(
+                          key: const ValueKey('download-shown'),
+                          onMinimize: _minimizeDownloads,
+                        ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        Positioned.fill(
+          // 버튼은 띠가 접힌 뒤 제자리에서 커지며 나타나고(버튼 쪽에서 처리), 펴질 때는 흐려지며 사라진다.
+          child: AnimatedSwitcher(
+            duration: AppMotion.medium,
+            transitionBuilder: (child, animation) =>
+                FadeTransition(opacity: animation, child: child),
+            layoutBuilder: (current, previous) =>
+                Stack(fit: StackFit.expand, children: [...previous, ?current]),
+            child: _floatShown
+                ? DownloadFloatButton(
+                    key: const ValueKey('download-float-on'),
+                    onRestore: _restoreDownloads,
+                  )
+                : const SizedBox.shrink(key: ValueKey('download-float-off')),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -110,56 +199,12 @@ class _AppShellState extends State<AppShell> {
               child: Scaffold(
                 backgroundColor: p.background,
                 extendBody: true,
-                body: Stack(
-                  children: [
-                    AppBackground(child: shell),
-                    Positioned.fill(
-                      // 버튼은 띠가 접히는 동안 제자리에서 커지며 나타나고(버튼 쪽에서 처리), 펴질 때는 흐려지며 사라진다.
-                      child: AnimatedSwitcher(
-                        duration: AppMotion.medium,
-                        transitionBuilder: (child, animation) =>
-                            FadeTransition(opacity: animation, child: child),
-                        layoutBuilder: (current, previous) => Stack(
-                          fit: StackFit.expand,
-                          children: [...previous, ?current],
-                        ),
-                        child: _floatShown
-                            ? DownloadFloatButton(
-                                key: const ValueKey('download-float-on'),
-                                onRestore: _restoreDownloads,
-                              )
-                            : const SizedBox.shrink(
-                                key: ValueKey('download-float-off'),
-                              ),
-                      ),
-                    ),
-                  ],
-                ),
+                body: Builder(builder: (context) => _body(context)),
                 bottomNavigationBar: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (context.select((ThemeCubit c) => c.state.previewing))
                       const ThemePreviewBar(),
-                    // 받는 곡이 있으면 모든 탭에서 보이는 얇은 진행 줄 (눌러서 목록 펼치기).
-                    // 접고 펼 때 아래로 접히고 위로 펴지는 움직임을 준다.
-                    AnimatedSwitcher(
-                      duration: AppMotion.medium,
-                      switchInCurve: AppMotion.standard,
-                      switchOutCurve: AppMotion.standard,
-                      transitionBuilder: (child, animation) => SizeTransition(
-                        sizeFactor: animation,
-                        alignment: Alignment.bottomCenter,
-                        child: FadeTransition(opacity: animation, child: child),
-                      ),
-                      child: _downloadMinimized
-                          ? const SizedBox.shrink(
-                              key: ValueKey('download-gone'),
-                            )
-                          : DownloadBar(
-                              key: const ValueKey('download-shown'),
-                              onMinimize: _minimizeDownloads,
-                            ),
-                    ),
                     const _ShellMiniPlayer(),
                     AppBottomNav(
                       currentIndex: shell.currentIndex,

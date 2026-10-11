@@ -13,6 +13,8 @@ import 'package:music_download_play_app/features/playlists/domain/entities/playl
 import 'package:music_download_play_app/features/downloads/domain/usecases/download_usecases.dart';
 import 'package:music_download_play_app/features/downloads/presentation/bloc/download_queue_cubit.dart';
 
+import 'package:music_download_play_app/features/search/presentation/screens/search_screen.dart';
+
 import '../../helpers/fakes.dart';
 import '../../helpers/open_download_dialog.dart';
 
@@ -346,6 +348,34 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('download-bar')), findsOneWidget);
     expect(find.byKey(const ValueKey('download-float')), findsNothing);
+  });
+
+  testWidgets('받기 줄 · 플로팅 버튼이 목록을 가리지 않게 화면 아래 여백이 그만큼 늘고, 줄을 접고 펴도 한 번만 바뀐다', (
+    tester,
+  ) async {
+    await open(tester, [_now, _next]);
+    double bottom() =>
+        MediaQuery.paddingOf(tester.element(find.byType(SearchScreen))).bottom;
+    final bar = tester.getSize(find.byKey(const ValueKey('download-bar')));
+    final withBar = bottom();
+
+    // 접는 동안 여백은 바뀌어도 끝난 뒤에는 플로팅 버튼 높이만큼이다.
+    await tester.tap(find.byKey(const ValueKey('download-minimize')));
+    await tester.pumpAndSettle();
+    final withFloat = bottom();
+    expect(withFloat, lessThan(withBar));
+    expect(withFloat, greaterThan(withBar - bar.height));
+
+    // 펴면 줄 높이만큼으로 돌아온다 (펴지는 동안 프레임마다 바뀌지 않고 한 값을 유지).
+    await tester.tap(find.byKey(const ValueKey('download-float')));
+    final seen = <double>{};
+    for (var i = 0; i < 12; i++) {
+      await tester.pump(const Duration(milliseconds: 40));
+      seen.add(bottom());
+    }
+    await tester.pumpAndSettle();
+    expect(bottom(), withBar);
+    expect(seen.length, lessThanOrEqualTo(3));
   });
 
   testWidgets('받기 줄 손잡이를 아래로 끌면 접히고, 조금만 끌면 제자리로 돌아간다', (tester) async {

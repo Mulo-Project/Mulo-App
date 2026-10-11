@@ -593,3 +593,7 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 - D-091로 없앴던 받기 진행 알림(진행 막대 · 미리듣기/일시정지/중지/취소 버튼) · 결과 알림 · 받기 포그라운드 서비스(dataSync) · 관련 설정(백그라운드 받기 · 받기 진행 알림 · 받기 결과 알림)을 되살렸다. 받기는 여전히 Dart가 같은 프로세스에서 하고, 서비스는 앱이 뒤로 가도 프로세스를 살려 두는 역할만 한다.
 - 구현은 D-090 방향으로 네이티브(Kotlin)다: `DownloadNotificationPlugin`(엔진에 묶인 채널 `music_app/download_notification`) · `DownloadNotifications` · `DownloadForegroundService` · `DownloadActionReceiver`. 알림 버튼은 수신기가 받아 살아 있는 엔진으로 바로 전달하므로 앱 화면을 앞으로 띄우지 않고, MainActivity의 `moveTaskToBack` 우회도 쓰지 않는다. `flutter_local_notifications`는 다시 쓰지 않는다.
 - Dart 쪽(`DownloadNotifier` · `LocalDownloadNotifier` · 동기화 · 설정 · 문구 · 테스트)은 D-091 이전 구조를 그대로 되돌렸고, 재생 알림(D-093 · D-094)과는 엔진 · 서비스를 따로 쓴다.
+
+## D-096 · 2026-10-11 · 받기 줄은 본문 위 오버레이로 미끄러지고, 본문 아래 여백은 한 번만 바꾼다 (D-092 보완)
+- 받기 줄이 `Scaffold.bottomNavigationBar` 안에서 `SizeTransition`으로 높이가 바뀌면 `extendBody`인 본문의 `MediaQuery` 아래 여백이 매 프레임 바뀌어 현재 탭 화면이 계속 다시 레이아웃돼 펴질 때 렉이 걸렸다. 줄을 본문 `Stack` 위의 오버레이(미니 플레이어 · 탭 바 바로 위)로 옮기고 `SlideTransition`+페이드(크기 변화 없음)로 접고 편다.
+- 목록이 줄 · 플로팅 버튼에 가려지지 않게 앱 셸이 본문(탭 화면)의 `MediaQuery` 아래 여백에 줄 높이(접었을 땐 플로팅 버튼 높이+간격)를 더해 내려준다. 높이는 `SizeChangedLayoutNotifier`로 재고, 여백은 애니메이션 중에 연속으로 바꾸지 않고 상태가 바뀔 때 한 번만 바꾼다. 화면 코드는 그대로다.
