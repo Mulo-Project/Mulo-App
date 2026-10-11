@@ -16,11 +16,7 @@ String sourceLabel(BuildContext context, SearchSource s) {
 /// 사이트 표시 (유튜브는 로고, 나머지는 브랜드 색 동그라미).
 Widget sourceMark(SearchSource s, double size) => switch (s) {
   SearchSource.youtube => YoutubeMark(size: size),
-  SearchSource.soundcloud => SiteMark(
-    letter: 'S',
-    color: AppPalette.soundcloudOrange,
-    size: size,
-  ),
+  SearchSource.soundcloud => SoundcloudMark(size: size),
 };
 
 /// 검색창 왼쪽 버튼: 어느 사이트에서 찾을지 고른다.

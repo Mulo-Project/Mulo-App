@@ -43,6 +43,7 @@ class AppPalette {
 
   /// 검색 사이트 표시의 브랜드 색 (테마와 상관없이 같다).
   static const Color soundcloudOrange = Color(0xFFFF5500);
+  static const Color soundcloudInk = Color(0xFF151515);
 
   /// 유튜브 재생 삼각형의 흰색 (순백이 아니라 살짝 눌린 흰색).
   static const Color youtubeMarkWhite = Color(0xFFF1F1F1);

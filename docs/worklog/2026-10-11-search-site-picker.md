@@ -9,7 +9,7 @@
 ## 한 일
 - [D-097](../decisions.md): 검색 대상을 YouTube · SoundCloud로 나누고, 검색창 앞은 사이트 고르기 · 뒤는 검색 실행 버튼.
 - 검색 시작 화면에 "링크 붙여넣기" 버튼: 클립보드의 링크를 넣고 곡 정보를 불러온다.
-- `AppSearchField`에 `leading` 추가, `SiteMark` 컴포넌트 추가.
+- `AppSearchField`에 `leading` 추가, `SoundcloudMark`(공식 아이콘 모양) 추가.
 
 ## 바꾼 설정
 - pubspec · Gradle · Manifest: 변경 없음. ARB: 사이트 이름 · 붙여넣기 문구 추가, `sourceWeb` · `searchHintWeb` 제거.
