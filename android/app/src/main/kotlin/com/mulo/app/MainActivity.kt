@@ -13,6 +13,7 @@ class MainActivity : FlutterFragmentActivity() {
     private var audioOutput: AudioOutputChannel? = null
     private var ytDlp: YtDlpChannel? = null
     private var transcoder: TranscoderChannel? = null
+    private var subscriptions: SubscriptionChannel? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,6 +31,7 @@ class MainActivity : FlutterFragmentActivity() {
         if (intent?.action == DownloadNotifications.ACTION_OPEN_DOWNLOAD) {
             intent.getStringExtra(DownloadNotifications.EXTRA_OPEN_ID)?.let { DownloadNotificationPlugin.requestOpen(it) }
         }
+        if (intent?.action == NewVideoNotifications.ACTION_OPEN) SubscriptionChannel.requestOpen()
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -44,6 +46,7 @@ class MainActivity : FlutterFragmentActivity() {
         ytDlp = YtDlpChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
         transcoder = TranscoderChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
         playback = PlaybackChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
+        subscriptions = SubscriptionChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
     }
 
     @Deprecated("Deprecated in Java")
@@ -66,6 +69,8 @@ class MainActivity : FlutterFragmentActivity() {
         transcoder = null
         playback?.dispose()
         playback = null
+        subscriptions?.dispose()
+        subscriptions = null
         super.cleanUpFlutterEngine(flutterEngine)
     }
 }

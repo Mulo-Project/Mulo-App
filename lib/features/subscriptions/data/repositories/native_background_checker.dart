@@ -19,7 +19,7 @@ class NativeBackgroundChecker implements BackgroundChecker {
   final _opens = StreamController<void>.broadcast();
 
   Future<void> _onCall(MethodCall call) async {
-    if (call.method == 'open') _opens.add(null);
+    if (call.method == 'open' && await takeOpenRequest()) _opens.add(null);
   }
 
   /// 채널 호출이 실패해도(네이티브가 없는 빌드 등) 앱 동작은 막지 않는다.
