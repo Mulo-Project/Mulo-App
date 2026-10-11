@@ -597,3 +597,9 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 ## D-096 · 2026-10-11 · 받기 줄은 본문 위 오버레이로 미끄러지고, 본문 아래 여백은 한 번만 바꾼다 (D-092 보완)
 - 받기 줄이 `Scaffold.bottomNavigationBar` 안에서 `SizeTransition`으로 높이가 바뀌면 `extendBody`인 본문의 `MediaQuery` 아래 여백이 매 프레임 바뀌어 현재 탭 화면이 계속 다시 레이아웃돼 펴질 때 렉이 걸렸다. 줄을 본문 `Stack` 위의 오버레이(미니 플레이어 · 탭 바 바로 위)로 옮기고 `SlideTransition`+페이드(크기 변화 없음)로 접고 편다.
 - 목록이 줄 · 플로팅 버튼에 가려지지 않게 앱 셸이 본문(탭 화면)의 `MediaQuery` 아래 여백에 줄 높이(접었을 땐 플로팅 버튼 높이+간격)를 더해 내려준다. 높이는 `SizeChangedLayoutNotifier`로 재고, 여백은 애니메이션 중에 연속으로 바꾸지 않고 상태가 바뀔 때 한 번만 바꾼다. 화면 코드는 그대로다.
+
+## D-097 · 2026-10-11 · 검색 대상은 키워드 검색이 되는 사이트만 개별로 고르고, 검색창은 앞 = 사이트 · 뒤 = 검색 실행
+- yt-dlp(2026.08.19) 검색 접두사 확인 결과 음원용으로 쓸 만한 곳은 YouTube(`ytsearch`) · SoundCloud(`scsearch`) · bilibili(`bilisearch`) · niconico(`nicosearch`). `SearchSource`를 이 넷으로 늘리고 "웹" 묶음은 없앴다. Bandcamp · Mixcloud · Audiomack 등은 검색이 없어 링크로만 받는다.
+- 날짜 순(`…date`)은 유튜브 · niconico만 쓴다. SoundCloud · bilibili는 최신순 메뉴를 숨기고, 엔진도 일반 검색으로 처리한다.
+- 서버 `source`: SoundCloud는 기존 명세값 `web` 그대로, 나머지는 `bilibili` · `niconico` (서버 저장소 반영 필요).
+- 검색창 앞(leading)은 돋보기 대신 사이트 고르기, 뒤(suffix)는 검색 실행 버튼. 시작 화면(검색 전)에 "링크 붙여넣기"를 두고 클립보드의 링크를 넣어 곧바로 곡 정보를 불러온다(기존 URL → 곡 정보 흐름 재사용).

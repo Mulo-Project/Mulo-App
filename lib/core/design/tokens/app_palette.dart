@@ -41,6 +41,11 @@ class AppPalette {
   /// 브랜드 색: 테마와 상관없이 항상 같다 (유튜브 아이콘).
   static const Color youtubeRed = Color(0xFFFF0000);
 
+  /// 검색 사이트 표시의 브랜드 색 (테마와 상관없이 같다).
+  static const Color soundcloudOrange = Color(0xFFFF5500);
+  static const Color bilibiliPink = Color(0xFFFB7299);
+  static const Color niconicoGray = Color(0xFF6B6F76);
+
   /// 유튜브 재생 삼각형의 흰색 (순백이 아니라 살짝 눌린 흰색).
   static const Color youtubeMarkWhite = Color(0xFFF1F1F1);
 

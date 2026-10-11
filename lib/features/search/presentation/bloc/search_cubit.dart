@@ -123,6 +123,9 @@ class SearchCubit extends Cubit<SearchState> {
   /// 마지막으로 찾은 입력 (재생목록 주소를 가져오기 화면으로 넘길 때 쓴다).
   String get query => _query;
   SearchSource _source = SearchSource.youtube;
+
+  /// 마지막으로 찾은 사이트.
+  SearchSource get source => _source;
   int _page = 0;
 
   /// 지금 결과를 최신순(날짜 순 검색)으로 찾아 왔는지. 고른 정렬이 최신순에서

@@ -25,7 +25,7 @@
   "searchSubtitle": "Find & download",
   "searchHint": "YouTube URL or keywords",
   "searchEmptyTitle": "What do you want to save?",
-  "searchEmptyBody": "Paste a URL or type keywords.\nShare from the YouTube app to open it here.",
+  "searchEmptyBody": "Paste a link or type keywords.\nPick the site to search with the icon on the left.",
   "searchNotReadyTitle": "No engine available",
   "searchNotReadyBody": "This build has no server address and yt-dlp is not installed on this device, so search is unavailable.\nConnect a server or install yt-dlp.",
   "searchErrorTitle": "Could not load",
@@ -333,10 +333,20 @@
   "homeRecUnheard": "Not heard yet",
   "homeRecNewest": "Recently added",
   "playCount": "{count} plays",
-  "searchHintWeb": "Web audio search or URL",
+  "searchHintSite": "{site} URL or keywords",
+  "sourceSoundcloud": "SoundCloud",
+  "sourceBilibili": "bilibili",
+  "sourceNiconico": "niconico",
+  "searchSubmitTooltip": "Search",
+  "searchPasteLink": "Paste link",
+  "searchPasteEmpty": "No link on the clipboard",
+  "@searchHintSite": {
+    "placeholders": {
+      "site": { "type": "String" }
+    }
+  },
   "searchSourceTooltip": "Search source",
   "sourceYoutube": "YouTube",
-  "sourceWeb": "Web",
   "searchHitMenuDetail": "View details",
   "searchPreview": "Preview",
   "searchPreviewStop": "Stop preview",

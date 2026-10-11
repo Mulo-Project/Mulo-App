@@ -88,7 +88,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get searchEmptyBody =>
-      'URL을 붙여넣거나 검색어를 입력하세요.\n유튜브 앱에서 공유를 누르면 바로 여기로 와요.';
+      '링크를 붙여 넣거나 검색어를 입력하세요.\n왼쪽 아이콘으로 찾을 사이트를 고를 수 있어요.';
 
   @override
   String get searchNotReadyTitle => '쓸 수 있는 엔진이 없어요';
@@ -858,16 +858,33 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get searchHintWeb => '웹 음원 검색어나 URL';
+  String searchHintSite(String site) {
+    return '$site URL이나 검색어';
+  }
+
+  @override
+  String get sourceSoundcloud => 'SoundCloud';
+
+  @override
+  String get sourceBilibili => 'bilibili';
+
+  @override
+  String get sourceNiconico => 'niconico';
+
+  @override
+  String get searchSubmitTooltip => '검색';
+
+  @override
+  String get searchPasteLink => '링크 붙여넣기';
+
+  @override
+  String get searchPasteEmpty => '클립보드에 링크가 없어요';
 
   @override
   String get searchSourceTooltip => '검색 대상';
 
   @override
   String get sourceYoutube => '유튜브';
-
-  @override
-  String get sourceWeb => '웹';
 
   @override
   String get searchHitMenuDetail => '상세 보기';

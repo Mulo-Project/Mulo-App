@@ -64,9 +64,10 @@ class LocalEngine implements DownloaderEngine {
   }) async {
     // 사이트 검색은 쪽 개념이 없어서 (page+1)*size개를 받아 해당 쪽만 자른다.
     final want = (page + 1) * size;
-    // 최신순은 yt-dlp의 날짜 순 검색(ytsearchdate · scsearchdate)으로 찾는다.
-    final base = source == SearchSource.web ? 'scsearch' : 'ytsearch';
-    final prefix = newest ? '${base}date' : base;
+    // 최신순은 날짜 순 검색(ytsearchdate · nicosearchdate)이 있는 사이트만 쓴다.
+    final prefix = newest && source.supportsNewest
+        ? '${source.searchKey}date'
+        : source.searchKey;
     final out = await _exec([
       '--flat-playlist',
       '--dump-json',
