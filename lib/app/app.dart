@@ -48,6 +48,13 @@ class _MusicAppState extends State<MusicApp> {
     initialLocation: widget.initialLocation,
   );
 
+  /// 재생 알림을 눌렀을 때: 현재 곡의 플레이어 화면을 연다 (이미 열려 있으면 그대로).
+  void _openPlayer() {
+    if (_router.routerDelegate.currentConfiguration.uri.path != Routes.player) {
+      _router.push(Routes.player);
+    }
+  }
+
   @override
   void dispose() {
     _router.dispose();
@@ -113,6 +120,7 @@ class _MusicAppState extends State<MusicApp> {
                   ? SystemUiOverlayStyle.light
                   : SystemUiOverlayStyle.dark,
               child: NotificationBridge(
+                onOpenPlayer: _openPlayer,
                 child: DownloadCompletionListener(
                   child: LockGate(child: child!),
                 ),

@@ -115,6 +115,10 @@ class NativeMediaSession implements MediaSession {
   }
 
   @override
+  Future<void> updateQueueArt(Map<String, String> artById) =>
+      _channel.setQueueArt(artById);
+
+  @override
   Future<void> update(MediaSessionInfo? info) async {
     final seq = ++_seq;
     if (info == null) {
@@ -130,6 +134,7 @@ class NativeMediaSession implements MediaSession {
     if (seq != _seq) return;
     final l10n = systemL10n();
     await _channel.setSession({
+      'trackId': info.trackId,
       'title': info.title,
       'artist': info.artist,
       'album': info.album,
@@ -137,13 +142,15 @@ class NativeMediaSession implements MediaSession {
       'durationMs': info.duration.inMilliseconds,
       'positionMs': info.position.inMilliseconds,
       'playing': info.playing,
-      'hasPrevious': info.hasPrevious,
-      'hasNext': info.hasNext,
       'favorite': info.favorite,
       'preview': info.preview,
       'favoriteLabel': l10n.trackMenuFavorite,
       'unfavoriteLabel': l10n.trackMenuUnfavorite,
       'closeLabel': l10n.notifStop,
+      'hideSongInfo': info.hidden,
+      'hiddenTitle': l10n.notifHiddenTitle,
+      'hiddenNote': l10n.notifHiddenNote,
+      'unknownArtist': l10n.unknownArtist,
     });
   }
 }

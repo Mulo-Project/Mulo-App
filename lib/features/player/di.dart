@@ -23,7 +23,7 @@ import 'presentation/bloc/player_style_cubit.dart';
 void registerPlayer(GetIt sl) {
   sl
     ..registerLazySingleton(NativePlaybackChannel.new)
-    ..registerLazySingleton(AudioEngineSource.new)
+    ..registerLazySingleton<AudioEngineSource>(JustAudioEngineSource.new)
     // Android는 네이티브 서비스(ExoPlayer)가 소리를 내고, 그 밖의 OS는 just_audio.
     ..registerLazySingleton<AudioPlayerRepository>(
       () => Platform.isAndroid
@@ -33,12 +33,17 @@ void registerPlayer(GetIt sl) {
     ..registerFactory(
       () => AudioPlayback(
         watchPosition: WatchAudioPosition(sl()),
-        watchCompleted: WatchAudioCompleted(sl()),
+        watchTrackChange: WatchAudioTrackChange(sl()),
+        watchEnded: WatchAudioEnded(sl()),
         watchPlaying: WatchAudioPlaying(sl()),
-        load: LoadAudio(sl()),
+        watchOpenPlayer: WatchOpenPlayer(sl()),
+        setQueue: SetAudioQueue(sl()),
+        skipTo: SkipAudioTo(sl()),
         play: PlayAudio(sl()),
         pause: PauseAudio(sl()),
         seek: SeekAudio(sl()),
+        restore: RestoreAudioQueue(sl()),
+        takeOpenPlayerRequest: TakeOpenPlayerRequest(sl()),
       ),
     )
     ..registerFactory(() => NowPlayingCubit(audio: sl()))

@@ -39,6 +39,7 @@ import 'package:music_download_play_app/features/permissions/domain/entities/app
 import 'package:music_download_play_app/features/permissions/domain/repositories/permission_repository.dart';
 import 'package:music_download_play_app/features/player/di.dart';
 import 'package:music_download_play_app/features/player/domain/entities/player_style.dart';
+import 'package:music_download_play_app/features/player/domain/entities/playback_snapshot.dart';
 import 'package:music_download_play_app/features/player/domain/repositories/audio_player_repository.dart';
 import 'package:music_download_play_app/features/player/domain/repositories/player_style_repository.dart';
 import 'package:music_download_play_app/features/playlists/di.dart';
@@ -746,11 +747,19 @@ class MemoryJoinDate implements JoinDateRepository {
   Future<DateTime> joinedAt() async => date;
 }
 
-/// 재생 엔진 가짜: 불러온 곡 · 재생 상태를 기록하고, 위치 · 곡 끝은 테스트가 흘려보낸다.
+/// 재생 엔진 가짜: 받은 대기열 · 재생 상태를 기록하고, 위치 · 곡 넘김 · 끝은 테스트가 흘려보낸다.
 class FakeAudioPlayer implements AudioPlayerRepository {
   final _position = StreamController<Duration>.broadcast();
-  final _completed = StreamController<void>.broadcast();
+  final _track = StreamController<PlaybackTrackChange>.broadcast();
+  final _ended = StreamController<void>.broadcast();
   final _playing = StreamController<bool>.broadcast();
+  final _openPlayer = StreamController<void>.broadcast();
+
+  /// 마지막으로 받은 대기열 스냅샷.
+  PlaybackSnapshot? snapshot;
+
+  /// 엔진이 지금 보고 있는 곡 번호.
+  var index = 0;
 
   /// 지금 불러온 곡 주소.
   String? loaded;
@@ -760,12 +769,33 @@ class FakeAudioPlayer implements AudioPlayerRepository {
   /// 불러오기를 실패시킬 주소.
   final failing = <String>{};
 
-  /// 엔진에 한 일의 기록 ('load:uri', 'play', 'pause', 'seek:1000').
+  /// 엔진에 한 일의 기록 ('queue:uri', 'skip:1', 'play', 'pause', 'seek:1000').
   final calls = <String>[];
+
+  /// [restore]가 돌려줄 대기열 (앱을 다시 켠 상황).
+  PlaybackSnapshot? restoreSnapshot;
+
+  /// [takeOpenPlayerRequest]가 돌려줄 값 (알림을 눌러 앱이 새로 켜진 상황).
+  var openPlayerRequested = false;
 
   void emitPosition(Duration p) => _position.add(p);
 
-  void complete() => _completed.add(null);
+  /// 엔진이 스스로 다음 곡으로 넘어갔다고 알린다 (곡 끝, 알림의 다음 버튼).
+  void emitTrack(int i) {
+    index = i;
+    final item = snapshot!.items[i];
+    loaded = item.uri;
+    _track.add(PlaybackTrackChange(i, item.id));
+  }
+
+  /// 반복 없이 대기열 끝까지 들었다고 알린다.
+  void end() {
+    playing = false;
+    _ended.add(null);
+  }
+
+  /// 알림을 눌렀다고 알린다 (앱이 켜져 있는 중).
+  void emitOpenPlayer() => _openPlayer.add(null);
 
   /// 엔진이 스스로 재생 상태를 바꿨다고 알린다 (다른 앱에 오디오 포커스를 뺏김 등).
   void emitPlaying(bool value) {
@@ -780,14 +810,36 @@ class FakeAudioPlayer implements AudioPlayerRepository {
   Stream<Duration> watchPosition() => _position.stream;
 
   @override
-  Stream<void> watchCompleted() => _completed.stream;
+  Stream<PlaybackTrackChange> watchTrackChange() => _track.stream;
 
   @override
-  Future<void> load(String uri) async {
-    calls.add('load:$uri');
-    if (failing.contains(uri)) throw StateError('cannot load');
-    loaded = uri;
-    playing = false;
+  Stream<void> watchEnded() => _ended.stream;
+
+  @override
+  Stream<void> watchOpenPlayer() => _openPlayer.stream;
+
+  @override
+  Future<void> setQueue(PlaybackSnapshot s) async {
+    final current = s.current;
+    calls.add('queue:${current?.uri}');
+    snapshot = s;
+    index = s.index;
+    if (current == null) {
+      loaded = null;
+      playing = false;
+      return;
+    }
+    if (failing.contains(current.uri)) throw StateError('cannot load');
+    loaded = current.uri;
+    playing = s.playing;
+    if (s.position != null) lastSeek = s.position;
+  }
+
+  @override
+  Future<void> skipTo(int i) async {
+    calls.add('skip:$i');
+    index = i;
+    loaded = snapshot!.items[i].uri;
   }
 
   @override
@@ -806,6 +858,16 @@ class FakeAudioPlayer implements AudioPlayerRepository {
   Future<void> seek(Duration position) async {
     calls.add('seek:${position.inMilliseconds}');
     lastSeek = position;
+  }
+
+  @override
+  Future<PlaybackSnapshot?> restore() async => restoreSnapshot;
+
+  @override
+  Future<bool> takeOpenPlayerRequest() async {
+    final requested = openPlayerRequested;
+    openPlayerRequested = false;
+    return requested;
   }
 }
 
@@ -1104,6 +1166,12 @@ class FakeMediaSession implements MediaSession {
 
   @override
   Future<void> update(MediaSessionInfo? info) async => updates.add(info);
+
+  Map<String, String> queueArt = const {};
+
+  @override
+  Future<void> updateQueueArt(Map<String, String> artById) async =>
+      queueArt = artById;
 }
 
 class FakePermissionRepository implements PermissionRepository {

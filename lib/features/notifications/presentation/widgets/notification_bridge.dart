@@ -1,12 +1,15 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart' show Icons;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/cache/cached_web_image.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
+import '../../../library/presentation/bloc/library_cubit.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../../theme/presentation/bloc/theme_cubit.dart';
@@ -18,9 +21,12 @@ import '../bloc/notification_sync_cubit.dart';
 /// 재생 상태를 알림창으로 옮기고, 알림에서 누른 재생 조작을 재생 상태에 돌려준다.
 /// 앱 셸 한 곳에서 감싼다 ([NotificationSyncCubit]이 바뀐 것만 골라 알림을 부른다).
 class NotificationBridge extends StatefulWidget {
-  const NotificationBridge({super.key, required this.child});
+  const NotificationBridge({super.key, required this.child, this.onOpenPlayer});
 
   final Widget child;
+
+  /// 알림을 눌렀을 때 플레이어 화면을 연다 (재생 중인 곡이 있을 때만 부른다).
+  final VoidCallback? onOpenPlayer;
 
   @override
   State<NotificationBridge> createState() => _NotificationBridgeState();
@@ -29,6 +35,14 @@ class NotificationBridge extends StatefulWidget {
 class _NotificationBridgeState extends State<NotificationBridge>
     with WidgetsBindingObserver {
   StreamSubscription<MediaCommand>? _commands;
+  StreamSubscription<void>? _openRequests;
+  Future<void>? _restoring;
+
+  /// 알림을 눌러 앱이 새로 켜졌다: 대기열을 복원하고 플레이어 화면으로 갈 때까지 첫 화면이 비치지 않게 덮는다.
+  // 첫 프레임부터 덮어 둔다 (시작 화면과 같은 모양). 알림으로 켠 게 아니면 바로 걷는다.
+  var _splash = true;
+  var _openPending = false;
+  late final Future<void> _boot = _checkLaunch();
 
   @override
   void initState() {
@@ -37,13 +51,71 @@ class _NotificationBridgeState extends State<NotificationBridge>
     _commands = context.read<NotificationSyncCubit>().commands.listen(
       _onCommand,
     );
+    _openRequests = context.read<NowPlayingCubit>().openPlayerRequests.listen(
+      (_) => _openPlayer(),
+    );
+    _boot.then((_) {
+      if (mounted && context.read<LibraryCubit>().state.loaded) _restore();
+    });
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _commands?.cancel();
+    _openRequests?.cancel();
     super.dispose();
+  }
+
+  /// 앱이 새로 켜졌을 때 한 번: 네이티브가 쥐고 있는 대기열을 되살리고,
+  /// 알림을 눌러 켠 것이면 현재 곡의 플레이어 화면을 연다.
+  void _restore() {
+    _restoring ??= () async {
+      await _boot;
+      if (!mounted) return;
+      final player = context.read<NowPlayingCubit>();
+      final byId = {
+        for (final t in context.read<LibraryCubit>().state.tracks) t.id: t,
+      };
+      await player.restore((id) => byId[id]);
+      if (!mounted || !_openPending) return;
+      _openPending = false;
+      _pushPlayer();
+      await Future<void>.delayed(AppMotion.slow);
+      _hideSplash();
+    }();
+  }
+
+  /// 알림을 눌러 새로 켜졌는지 확인한다. 그렇다면 복원이 끝날 때까지 덮개를 씌운다.
+  Future<void> _checkLaunch() async {
+    final opened = await context
+        .read<NowPlayingCubit>()
+        .takeOpenPlayerRequest();
+    if (!mounted) return;
+    if (!opened) {
+      _hideSplash();
+      return;
+    }
+    setState(() {
+      _openPending = true;
+      _splash = true;
+    });
+    // 보관함이 끝내 안 불러와져도 앱이 덮인 채로 남지 않게 한다.
+    Future<void>.delayed(const Duration(seconds: 6), _hideSplash);
+  }
+
+  void _hideSplash() {
+    if (mounted && _splash) setState(() => _splash = false);
+  }
+
+  Future<void> _openPlayer() async {
+    await _restoring;
+    if (mounted) _pushPlayer();
+  }
+
+  void _pushPlayer() {
+    if (context.read<NowPlayingCubit>().state.track == null) return;
+    widget.onOpenPlayer?.call();
   }
 
   /// 시스템 설정에서 알림 권한을 바꾸고 돌아왔을 수 있다.
@@ -101,6 +173,56 @@ class _NotificationBridgeState extends State<NotificationBridge>
     }
   }
 
+  /// 웹 커버 주소 → 저장된 사본(file 주소). 사본이 있으면 오프라인에서도 알림에 뜬다.
+  final _artCopies = <String, String>{};
+  var _artSeq = 0;
+
+  /// 지금 곡 앞뒤로 사본을 미리 받아 둘 곡 수 (전체를 받으면 큰 대기열에서 낭비다).
+  static const _copyBefore = 3;
+  static const _copyAfter = 20;
+
+  /// 대기열 곡별 커버를 네이티브에 알린다 (앱이 꺼진 사이 곡이 넘어가도 알림에 커버가 나오게).
+  /// 웹 커버는 지금 곡 앞뒤 일부만 사본을 받아 그 파일 주소로 보내고, 나머지는 주소 그대로 보낸다.
+  void _syncQueueArt() {
+    final settings = context.read<NotificationSettingsCubit>().state;
+    if (!settings.loaded) return;
+    final covers = context.read<CoverCubit>().state;
+    final now = context.read<NowPlayingCubit>().state;
+    final sync = context.read<NotificationSyncCubit>();
+    final seq = ++_artSeq;
+    final art = <String, String>{};
+    final toCopy = <String>[];
+    for (var i = 0; i < now.queue.length; i++) {
+      final t = now.queue[i];
+      final cover = covers[CoverKey.track(t.id)];
+      final uri = _artUri(cover);
+      if (uri == null) continue;
+      final copy = cover!.isWeb ? _artCopies[uri] : null;
+      art[t.id] = copy ?? uri;
+      if (cover.isWeb &&
+          copy == null &&
+          i >= now.index - _copyBefore &&
+          i <= now.index + _copyAfter) {
+        toCopy.add(uri);
+      }
+    }
+    sync.syncQueueArt(art, settings: settings.settings);
+    if (toCopy.isNotEmpty) _fetchCopies(toCopy, seq);
+  }
+
+  Future<void> _fetchCopies(List<String> urls, int seq) async {
+    var added = false;
+    for (final url in urls) {
+      final file = await CachedWebImage.localCopy(url);
+      if (file == null) continue;
+      _artCopies[url] = file.uri.toString();
+      added = true;
+      // 더 새 요청이 시작됐으면 그쪽이 이어서 처리한다.
+      if (!mounted || seq != _artSeq) return;
+    }
+    if (added && mounted && seq == _artSeq) _syncQueueArt();
+  }
+
   void _syncPlayback() {
     final settings = context.read<NotificationSettingsCubit>().state;
     if (!settings.loaded) return;
@@ -154,6 +276,10 @@ class _NotificationBridgeState extends State<NotificationBridge>
   @override
   Widget build(BuildContext context) => MultiBlocListener(
     listeners: [
+      BlocListener<LibraryCubit, LibraryState>(
+        listenWhen: (a, b) => !a.loaded && b.loaded,
+        listener: (_, _) => _restore(),
+      ),
       BlocListener<NowPlayingCubit, NowPlayingState>(
         listener: (_, _) => _syncPlayback(),
       ),
@@ -173,15 +299,48 @@ class _NotificationBridgeState extends State<NotificationBridge>
         listener: (_, _) => _syncPlayback(),
       ),
       BlocListener<CoverCubit, Map<String, CoverArt>>(
-        listener: (_, _) => _syncPlayback(),
+        listener: (_, _) {
+          _syncPlayback();
+          _syncQueueArt();
+        },
+      ),
+      BlocListener<NowPlayingCubit, NowPlayingState>(
+        listenWhen: (a, b) =>
+            !identical(a.queue, b.queue) || a.index != b.index,
+        listener: (_, _) => _syncQueueArt(),
       ),
       BlocListener<NotificationSettingsCubit, NotificationSettingsState>(
         listenWhen: (a, b) => a.settings != b.settings || a.loaded != b.loaded,
         listener: (_, _) {
           _syncPlayback();
+          _syncQueueArt();
         },
       ),
     ],
-    child: widget.child,
+    child: Stack(
+      fit: StackFit.expand,
+      children: [
+        widget.child,
+        if (_splash || _openPending) const _LaunchCover(),
+      ],
+    ),
+  );
+}
+
+/// 알림을 눌러 새로 켜졌을 때 대기열을 복원하고 플레이어 화면으로 가는 동안 첫 화면을 가리는 덮개.
+class _LaunchCover extends StatelessWidget {
+  const _LaunchCover();
+
+  /// 안드로이드 시작 화면(`launch_background`)과 같은 검정 바탕 + 흰 음표: 이어 붙어도 바뀌어 보이지 않는다.
+  @override
+  Widget build(BuildContext context) => ColoredBox(
+    color: AppPalette.black,
+    child: Center(
+      child: Icon(
+        Icons.music_note,
+        size: 56,
+        color: AppPalette.white.withValues(alpha: .9),
+      ),
+    ),
   );
 }

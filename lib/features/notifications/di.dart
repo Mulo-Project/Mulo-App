@@ -29,6 +29,7 @@ void registerNotifications(GetIt sl) {
       () => NotificationActions(
         watchCommands: WatchMediaCommands(sl()),
         updateSession: UpdateMediaSession(sl()),
+        updateQueueArt: UpdateMediaQueueArt(sl()),
         isPermissionGranted: IsNotificationPermissionGranted(sl()),
         requestPermission: RequestNotificationPermission(sl()),
       ),
