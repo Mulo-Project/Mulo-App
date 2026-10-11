@@ -271,8 +271,16 @@ class LocalEngine implements DownloaderEngine {
     final thumbs = j['thumbnails'];
     var thumb = j['thumbnail'] as String?;
     if (thumb == null && thumbs is List && thumbs.isNotEmpty) {
+      // SoundCloud는 원본 크기가 맨 뒤라 목록에 쓰기엔 크다. 폭을 아는 것 중 500 이하에서 가장 큰 것을 쓴다.
+      Map? pick;
+      for (final t in thumbs) {
+        if (t is! Map) continue;
+        final w = t['width'];
+        if (w is num && w <= 500) pick = t;
+      }
       final last = thumbs.last;
-      if (last is Map) thumb = last['url'] as String?;
+      final chosen = pick ?? (last is Map ? last : null);
+      thumb = chosen?['url'] as String?;
     }
     return thumb;
   }
