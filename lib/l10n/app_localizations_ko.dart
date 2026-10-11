@@ -1965,4 +1965,31 @@ class AppLocalizationsKo extends AppLocalizations {
   String notifNewVideosBody(String channels, String count) {
     return '$channels · 새 영상 $count개';
   }
+
+  @override
+  String get channelSearchTitle => '채널 검색';
+
+  @override
+  String get channelSearchHint => '채널 이름으로 찾기';
+
+  @override
+  String get channelSearchIdle => '구독할 채널 이름을 검색해 보세요';
+
+  @override
+  String get channelSearchLoading => '채널을 찾는 중이에요';
+
+  @override
+  String get channelSearchEmpty => '찾은 채널이 없어요';
+
+  @override
+  String get channelSearchFailed => '채널을 찾지 못했어요. 잠시 뒤 다시 시도해 주세요';
+
+  @override
+  String get subscriptionsTestTitle => '임시 · 모양 확인용';
+
+  @override
+  String get subscriptionsTestNotification => '새 영상 알림 띄우기';
+
+  @override
+  String get subscriptionsTestNewVideos => '새 영상 화면 미리 보기';
 }

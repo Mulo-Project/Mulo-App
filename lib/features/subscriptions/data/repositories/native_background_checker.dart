@@ -68,6 +68,9 @@ class NativeBackgroundChecker implements BackgroundChecker {
 
   @override
   Future<void> clearNotification() => _call<void>('clearNotification');
+
+  @override
+  Future<void> showTestNotification() => _call<void>('showTest');
 }
 
 /// 백그라운드 확인이 없는 OS: 아무것도 하지 않는다.
@@ -89,4 +92,7 @@ class NoBackgroundChecker implements BackgroundChecker {
 
   @override
   Future<void> clearNotification() async {}
+
+  @override
+  Future<void> showTestNotification() async {}
 }

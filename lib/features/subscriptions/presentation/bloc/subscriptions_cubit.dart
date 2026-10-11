@@ -23,6 +23,9 @@ class SubscriptionsState extends Equatable {
   bool get hasEnabled => channels.any((c) => c.enabled);
 
   /// 이 채널 주소(또는 채널 id가 든 주소)를 구독 중인지.
+  /// 이 채널 id를 구독 중인지.
+  bool isSubscribedId(String id) => channels.any((c) => c.id == id);
+
   bool isSubscribed(String? channelUrl) {
     if (channelUrl == null || channelUrl.isEmpty) return false;
     return channels.any(
@@ -57,6 +60,7 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
     this._sync,
     this._requestPermission,
     this._texts,
+    this._showTest,
   ) : super(const SubscriptionsState());
 
   final LoadSubscribedChannels _loadChannels;
@@ -67,6 +71,7 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
   final SyncBackgroundCheck _sync;
   final RequestNotificationPermission _requestPermission;
   final BackgroundTexts Function() _texts;
+  final ShowTestNewVideosNotification _showTest;
 
   Future<void>? _loading;
 
@@ -91,7 +96,10 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
 
   Future<SubscribeResult> subscribe(SubscribeParams params) async {
     await load();
-    if (state.isSubscribed(params.channelUrl)) return SubscribeResult.already;
+    if (state.isSubscribed(params.channelUrl) ||
+        (params.channelId != null && state.isSubscribedId(params.channelId!))) {
+      return SubscribeResult.already;
+    }
     final channel = await _create(params);
     if (channel == null) return SubscribeResult.failed;
     if (state.channels.any((c) => c.id == channel.id)) {
@@ -155,4 +163,11 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
 
   Future<void> setWifiOnly(bool value) =>
       _setSettings(state.settings.copyWith(wifiOnly: value));
+
+  /// 알림 모양 확인용 임시 기능: 알림 권한을 요청하고 샘플 새 영상 알림을 띄운다.
+  Future<void> showTestNotification() async {
+    await load();
+    await _requestPermission(const NoParams());
+    await _showTest(const NoParams());
+  }
 }

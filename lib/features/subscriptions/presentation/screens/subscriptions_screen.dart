@@ -7,6 +7,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../domain/entities/subscribed_channel.dart';
+import '../bloc/new_videos_cubit.dart';
 import '../bloc/subscriptions_cubit.dart';
 
 /// 구독한 채널 목록: 채널별 켜고 끄기 · 음악만 · 구독 해제. 위에서 새 영상 목록으로 간다.
@@ -41,19 +42,27 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                     onPressed: () => context.pop(),
                   ),
                 ),
-                if (state.channels.isNotEmpty)
-                  Padding(
-                    padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: PillButton(
-                        label: l10n.subscriptionsNewVideos,
-                        icon: AppIcons.download,
-                        variant: PillVariant.tonal,
-                        onPressed: () => context.push(Routes.newVideos),
+                Padding(
+                  padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
+                  child: Wrap(
+                    spacing: AppSpacing.xs,
+                    runSpacing: AppSpacing.xs,
+                    children: [
+                      PillButton(
+                        label: l10n.channelSearchTitle,
+                        icon: AppIcons.search,
+                        onPressed: () => context.push(Routes.channelSearch),
                       ),
-                    ),
+                      if (state.channels.isNotEmpty)
+                        PillButton(
+                          label: l10n.subscriptionsNewVideos,
+                          icon: AppIcons.download,
+                          variant: PillVariant.tonal,
+                          onPressed: () => context.push(Routes.newVideos),
+                        ),
+                    ],
                   ),
+                ),
                 Expanded(
                   child: state.channels.isEmpty
                       ? Center(
@@ -85,10 +94,59 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                           ],
                         ),
                 ),
+                _TestButtons(
+                  onNotification: _cubit.showTestNotification,
+                  onNewVideos: () {
+                    sl<NewVideosCubit>().showSample();
+                    context.push(Routes.newVideos);
+                  },
+                ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// 임시: 알림과 새 영상 화면이 어떻게 보이는지 확인하는 버튼 (확인이 끝나면 지운다).
+class _TestButtons extends StatelessWidget {
+  const _TestButtons({required this.onNotification, required this.onNewVideos});
+
+  final VoidCallback onNotification;
+  final VoidCallback onNewVideos;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return Padding(
+      padding: AppSpacing.screen.copyWith(
+        top: AppSpacing.xs,
+        bottom: AppSpacing.md,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.subscriptionsTestTitle,
+            style: Theme.of(context).textTheme.labelSmall,
+          ),
+          Wrap(
+            children: [
+              PlainButton(
+                label: l10n.subscriptionsTestNotification,
+                icon: AppIcons.sparkle,
+                onPressed: onNotification,
+              ),
+              PlainButton(
+                label: l10n.subscriptionsTestNewVideos,
+                icon: AppIcons.sparkle,
+                onPressed: onNewVideos,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

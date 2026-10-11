@@ -34,6 +34,11 @@ class SubscriptionChannel(private val context: Context, messenger: BinaryMesseng
                         pendingOpen = false
                         result.success(open)
                     }
+                    "showTest" -> {
+                        // 알림 모양 확인용 임시 기능: 샘플 채널 이름으로 알림을 지금 띄운다.
+                        NewVideoNotifications.show(context, listOf("Sample A", "Sample B"), 3)
+                        result.success(null)
+                    }
                     "clearNotification" -> {
                         NewVideoNotifications.clear(context)
                         result.success(null)

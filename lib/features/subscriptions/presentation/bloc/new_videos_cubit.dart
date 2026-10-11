@@ -35,6 +35,7 @@ class NewVideosState extends Equatable {
     this.resolved = const {},
     this.selected = const {},
     this.queued = 0,
+    this.sample = false,
   });
 
   final NewVideosStatus status;
@@ -51,6 +52,9 @@ class NewVideosState extends Equatable {
 
   /// 마지막으로 받기 대기열에 넣은 곡 수.
   final int queued;
+
+  /// 화면 모양 확인용 샘플 데이터인지 (받기는 하지 않는다).
+  final bool sample;
 
   /// "음악만" 채널의 영상은 분류를 확인하기 전에는 보이지 않는다.
   bool _visible(SubscribedChannel c, FeedVideo v) =>
@@ -89,6 +93,7 @@ class NewVideosState extends Equatable {
     Set<String>? resolved,
     Set<String>? selected,
     int? queued,
+    bool? sample,
   }) => NewVideosState(
     status: status ?? this.status,
     checked: checked ?? this.checked,
@@ -96,6 +101,7 @@ class NewVideosState extends Equatable {
     resolved: resolved ?? this.resolved,
     selected: selected ?? this.selected,
     queued: queued ?? this.queued,
+    sample: sample ?? this.sample,
   );
 
   @override
@@ -106,6 +112,7 @@ class NewVideosState extends Equatable {
     resolved,
     selected,
     queued,
+    sample,
   ];
 }
 
@@ -218,6 +225,10 @@ class NewVideosCubit extends Cubit<NewVideosState> {
   /// 고른 영상을 받기 대기열에 넣는다 (이미 받았거나 받는 중인 곡은 건너뛴다). 넣은 곡 수를 돌려준다.
   Future<int> startSelected() async {
     var queued = 0;
+    if (state.sample) {
+      emit(state.copyWith(selected: {}, queued: 0));
+      return 0;
+    }
     for (final g in state.groups) {
       for (final v in g.videos) {
         if (!state.selected.contains(v.id)) continue;
@@ -239,8 +250,43 @@ class NewVideosCubit extends Cubit<NewVideosState> {
     return queued;
   }
 
+  /// 화면 모양 확인용 임시 기능: 샘플 새 영상을 채워 넣는다 (실제 구독 · 받기와 무관).
+  void showSample() {
+    ++_generation;
+    final base = DateTime.now().toUtc();
+    const names = ['샘플 채널 A', '샘플 채널 B'];
+    emit(
+      NewVideosState(
+        status: NewVideosStatus.done,
+        sample: true,
+        checked: [
+          for (var c = 0; c < names.length; c++)
+            ChannelNewVideos(
+              channel: SubscribedChannel(
+                id: 'sample-$c',
+                name: names[c],
+                baselineAt: base,
+              ),
+              videos: [
+                for (var v = 0; v < 3 - c; v++)
+                  FeedVideo(
+                    id: 'sample-$c-$v',
+                    title: '${names[c]}의 새 영상 ${v + 1}',
+                    publishedAt: base.subtract(Duration(hours: 5 * v + c)),
+                  ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
   /// 화면을 닫을 때: 확인한 채널은 여기까지 봤다고 표시하고 목록을 비운다 (다음에 다시 뜨지 않는다).
   Future<void> markSeen() async {
+    if (state.sample) {
+      emit(const NewVideosState(status: NewVideosStatus.done));
+      return;
+    }
     final seen = {
       for (final r in state.checked)
         if (r.latestPublishedAt != null) r.channel.id: r.latestPublishedAt!,

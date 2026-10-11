@@ -3709,6 +3709,60 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'{channels} · 새 영상 {count}개'**
   String notifNewVideosBody(String channels, String count);
+
+  /// No description provided for @channelSearchTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'채널 검색'**
+  String get channelSearchTitle;
+
+  /// No description provided for @channelSearchHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'채널 이름으로 찾기'**
+  String get channelSearchHint;
+
+  /// No description provided for @channelSearchIdle.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독할 채널 이름을 검색해 보세요'**
+  String get channelSearchIdle;
+
+  /// No description provided for @channelSearchLoading.
+  ///
+  /// In ko, this message translates to:
+  /// **'채널을 찾는 중이에요'**
+  String get channelSearchLoading;
+
+  /// No description provided for @channelSearchEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'찾은 채널이 없어요'**
+  String get channelSearchEmpty;
+
+  /// No description provided for @channelSearchFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'채널을 찾지 못했어요. 잠시 뒤 다시 시도해 주세요'**
+  String get channelSearchFailed;
+
+  /// No description provided for @subscriptionsTestTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'임시 · 모양 확인용'**
+  String get subscriptionsTestTitle;
+
+  /// No description provided for @subscriptionsTestNotification.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 영상 알림 띄우기'**
+  String get subscriptionsTestNotification;
+
+  /// No description provided for @subscriptionsTestNewVideos.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 영상 화면 미리 보기'**
+  String get subscriptionsTestNewVideos;
 }
 
 class _AppLocalizationsDelegate

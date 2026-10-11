@@ -2013,4 +2013,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String notifNewVideosBody(String channels, String count) {
     return '$channels · $count new videos';
   }
+
+  @override
+  String get channelSearchTitle => 'Find channels';
+
+  @override
+  String get channelSearchHint => 'Search by channel name';
+
+  @override
+  String get channelSearchIdle => 'Search for a channel to subscribe to';
+
+  @override
+  String get channelSearchLoading => 'Searching for channels';
+
+  @override
+  String get channelSearchEmpty => 'No channels found';
+
+  @override
+  String get channelSearchFailed =>
+      'Couldn\'t search for channels. Please try again later';
+
+  @override
+  String get subscriptionsTestTitle => 'Temporary · preview only';
+
+  @override
+  String get subscriptionsTestNotification => 'Show new-video notification';
+
+  @override
+  String get subscriptionsTestNewVideos => 'Preview new videos screen';
 }

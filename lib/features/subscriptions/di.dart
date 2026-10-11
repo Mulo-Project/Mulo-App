@@ -3,13 +3,16 @@ import 'dart:io';
 import 'package:get_it/get_it.dart';
 
 import '../notifications/data/datasources/notification_texts.dart';
+import 'data/datasources/explode_channel_searcher.dart';
 import 'data/datasources/youtube_feed_client.dart';
 import 'data/repositories/native_background_checker.dart';
 import 'data/repositories/prefs_subscription_repository.dart';
 import 'domain/repositories/background_checker.dart';
 import 'domain/repositories/channel_feed.dart';
+import 'domain/repositories/channel_searcher.dart';
 import 'domain/repositories/subscription_repository.dart';
 import 'domain/usecases/subscription_usecases.dart';
+import 'presentation/bloc/channel_search_cubit.dart';
 import 'presentation/bloc/new_videos_cubit.dart';
 import 'presentation/bloc/subscriptions_cubit.dart';
 
@@ -20,6 +23,7 @@ void registerSubscriptions(GetIt sl) {
       PrefsSubscriptionRepository.new,
     )
     ..registerLazySingleton<ChannelFeed>(YoutubeFeedClient.new)
+    ..registerLazySingleton<ChannelSearcher>(ExplodeChannelSearcher.new)
     ..registerLazySingleton<BackgroundChecker>(
       () => Platform.isAndroid
           ? NativeBackgroundChecker()
@@ -35,6 +39,9 @@ void registerSubscriptions(GetIt sl) {
     ..registerFactory(() => TakeNewVideosOpen(sl()))
     ..registerFactory(() => WatchNewVideosOpens(sl()))
     ..registerFactory(() => ClearNewVideosNotification(sl()))
+    ..registerFactory(() => SearchChannels(sl()))
+    ..registerFactory(() => ChannelSearchCubit(sl()))
+    ..registerFactory(() => ShowTestNewVideosNotification(sl()))
     ..registerLazySingleton(
       () => SubscriptionsCubit(
         sl(),
@@ -45,6 +52,7 @@ void registerSubscriptions(GetIt sl) {
         sl(),
         sl(),
         _backgroundTexts,
+        sl(),
       ),
     )
     ..registerLazySingleton(

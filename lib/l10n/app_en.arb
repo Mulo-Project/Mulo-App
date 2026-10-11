@@ -710,5 +710,14 @@
   "settingsCheckWifiOnlyDesc": "Only checks while connected to Wi-Fi to save mobile data.",
   "notifChannelNewVideos": "New videos",
   "notifNewVideosTitle": "New videos from your subscriptions",
-  "notifNewVideosBody": "{channels} · {count} new videos"
+  "notifNewVideosBody": "{channels} · {count} new videos",
+  "channelSearchTitle": "Find channels",
+  "channelSearchHint": "Search by channel name",
+  "channelSearchIdle": "Search for a channel to subscribe to",
+  "channelSearchLoading": "Searching for channels",
+  "channelSearchEmpty": "No channels found",
+  "channelSearchFailed": "Couldn't search for channels. Please try again later",
+  "subscriptionsTestTitle": "Temporary · preview only",
+  "subscriptionsTestNotification": "Show new-video notification",
+  "subscriptionsTestNewVideos": "Preview new videos screen"
 }

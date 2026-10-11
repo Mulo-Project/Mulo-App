@@ -1,9 +1,11 @@
 import '../../../../core/usecase/usecase.dart';
+import '../entities/channel_hit.dart';
 import '../entities/channel_new_videos.dart';
 import '../entities/subscribed_channel.dart';
 import '../entities/subscription_settings.dart';
 import '../repositories/background_checker.dart';
 import '../repositories/channel_feed.dart';
+import '../repositories/channel_searcher.dart';
 import '../repositories/subscription_repository.dart';
 
 class LoadSubscribedChannels
@@ -52,11 +54,22 @@ class SubscribeParams {
     required this.channelUrl,
     required this.name,
     this.thumbnailUrl,
+    this.channelId,
   });
+
+  /// 채널 검색 결과로 구독할 때: 채널 id를 이미 알고 있다.
+  SubscribeParams.fromHit(ChannelHit hit)
+    : channelUrl = hit.url,
+      name = hit.name,
+      thumbnailUrl = hit.thumbnailUrl,
+      channelId = hit.id;
 
   final String channelUrl;
   final String name;
   final String? thumbnailUrl;
+
+  /// 알고 있으면 채널 페이지를 읽지 않는다.
+  final String? channelId;
 }
 
 /// 채널 주소에서 채널 id를 알아내 구독 채널을 만든다. 첫 구독이라 기준 시각은 지금이다
@@ -73,7 +86,7 @@ class CreateSubscription
   Future<SubscribedChannel?> call(SubscribeParams params) async {
     final String? id;
     try {
-      id = await _feed.resolveChannelId(params.channelUrl);
+      id = params.channelId ?? await _feed.resolveChannelId(params.channelUrl);
     } on Object {
       return null;
     }
@@ -183,4 +196,24 @@ class ClearNewVideosNotification implements UseCase<void, NoParams> {
 
   @override
   Future<void> call(NoParams params) => _checker.clearNotification();
+}
+
+/// 키워드로 채널 찾기.
+class SearchChannels implements UseCase<List<ChannelHit>, String> {
+  const SearchChannels(this._searcher);
+
+  final ChannelSearcher _searcher;
+
+  @override
+  Future<List<ChannelHit>> call(String query) => _searcher.search(query.trim());
+}
+
+/// 새 영상 알림을 지금 한 번 띄운다 (알림 모양 확인용 임시 기능).
+class ShowTestNewVideosNotification implements UseCase<void, NoParams> {
+  const ShowTestNewVideosNotification(this._checker);
+
+  final BackgroundChecker _checker;
+
+  @override
+  Future<void> call(NoParams params) => _checker.showTestNotification();
 }

@@ -822,5 +822,14 @@
   "notifChannelNewVideos": "새 영상",
   "notifNewVideosTitle": "구독 채널에 새 영상이 올라왔어요",
   "notifNewVideosBody": "{channels} · 새 영상 {count}개",
-  "@notifNewVideosBody": {"placeholders": {"channels": {"type": "String"}, "count": {"type": "String"}}}
+  "@notifNewVideosBody": {"placeholders": {"channels": {"type": "String"}, "count": {"type": "String"}}},
+  "channelSearchTitle": "채널 검색",
+  "channelSearchHint": "채널 이름으로 찾기",
+  "channelSearchIdle": "구독할 채널 이름을 검색해 보세요",
+  "channelSearchLoading": "채널을 찾는 중이에요",
+  "channelSearchEmpty": "찾은 채널이 없어요",
+  "channelSearchFailed": "채널을 찾지 못했어요. 잠시 뒤 다시 시도해 주세요",
+  "subscriptionsTestTitle": "임시 · 모양 확인용",
+  "subscriptionsTestNotification": "새 영상 알림 띄우기",
+  "subscriptionsTestNewVideos": "새 영상 화면 미리 보기"
 }
