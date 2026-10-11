@@ -24,6 +24,7 @@ import '../../../player/presentation/bloc/player_style_cubit.dart';
 import '../../../player/presentation/widgets/player_style_sheet.dart';
 import '../../../security/presentation/bloc/app_lock_cubit.dart';
 import '../../../security/presentation/screens/pin_entry_screen.dart';
+import '../../../subscriptions/presentation/widgets/subscriptions_section.dart';
 import '../../../theme/domain/entities/theme_settings.dart';
 import '../../../theme/presentation/bloc/theme_cubit.dart';
 
@@ -242,6 +243,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ],
                 ),
+                const SizedBox(height: AppSpacing.lg),
+                const SubscriptionsSection(),
                 const SizedBox(height: AppSpacing.lg),
                 const PermissionsSection(),
                 SectionCard(

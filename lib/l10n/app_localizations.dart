@@ -3487,6 +3487,330 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'곡을 받지 못했어요'**
   String get notifDownloadFailedHidden;
+
+  /// No description provided for @subscribeAction.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독'**
+  String get subscribeAction;
+
+  /// No description provided for @subscribedAction.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독 중'**
+  String get subscribedAction;
+
+  /// No description provided for @subscribeAdded.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독했어요. 지금부터 올라오는 영상을 알려 드려요'**
+  String get subscribeAdded;
+
+  /// No description provided for @subscribeFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 채널은 구독할 수 없어요'**
+  String get subscribeFailed;
+
+  /// No description provided for @unsubscribed.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독을 해제했어요'**
+  String get unsubscribed;
+
+  /// No description provided for @subscriptionsTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독 채널'**
+  String get subscriptionsTitle;
+
+  /// No description provided for @subscriptionsSubtitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 영상 골라 받기'**
+  String get subscriptionsSubtitle;
+
+  /// No description provided for @subscriptionsEmptyTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독한 채널이 없어요'**
+  String get subscriptionsEmptyTitle;
+
+  /// No description provided for @subscriptionsEmptyBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'영상 상세에서 채널의 구독을 누르면 새 영상이 올라올 때 골라서 받을 수 있어요.'**
+  String get subscriptionsEmptyBody;
+
+  /// No description provided for @subscriptionsNewVideos.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 영상 보기'**
+  String get subscriptionsNewVideos;
+
+  /// No description provided for @subscriptionsUnsubscribe.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독 해제'**
+  String get subscriptionsUnsubscribe;
+
+  /// No description provided for @subscriptionsCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}개 채널'**
+  String subscriptionsCount(int count);
+
+  /// No description provided for @newVideosTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 영상'**
+  String get newVideosTitle;
+
+  /// No description provided for @newVideosChecking.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 영상을 확인하고 있어요'**
+  String get newVideosChecking;
+
+  /// No description provided for @newVideosEmptyTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 영상이 없어요'**
+  String get newVideosEmptyTitle;
+
+  /// No description provided for @newVideosEmptyBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독한 채널에 새 영상이 올라오면 여기에서 골라 받을 수 있어요.'**
+  String get newVideosEmptyBody;
+
+  /// No description provided for @newVideosStart.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}곡 받기'**
+  String newVideosStart(int count);
+
+  /// No description provided for @newVideosStarted.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}곡을 받기 시작했어요'**
+  String newVideosStarted(int count);
+
+  /// No description provided for @newVideosSkipped.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미 받은 곡이라 새로 받을 곡이 없어요'**
+  String get newVideosSkipped;
+
+  /// No description provided for @newVideosSelectAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'모두 선택'**
+  String get newVideosSelectAll;
+
+  /// No description provided for @newVideosSelectNone.
+  ///
+  /// In ko, this message translates to:
+  /// **'선택 해제'**
+  String get newVideosSelectNone;
+
+  /// No description provided for @newVideosAnnounce.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독 채널에 새 영상이 {count}개 있어요'**
+  String newVideosAnnounce(int count);
+
+  /// No description provided for @newVideosOpen.
+  ///
+  /// In ko, this message translates to:
+  /// **'보기'**
+  String get newVideosOpen;
+
+  /// No description provided for @settingsSubscriptions.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독'**
+  String get settingsSubscriptions;
+
+  /// No description provided for @settingsSubscriptionChannels.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독 채널'**
+  String get settingsSubscriptionChannels;
+
+  /// No description provided for @settingsCheckOnLaunch.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱을 켤 때 새 영상 확인'**
+  String get settingsCheckOnLaunch;
+
+  /// No description provided for @settingsCheckOnLaunchDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독한 채널에 새 영상이 있으면 알려 주고 골라서 받게 해요.'**
+  String get settingsCheckOnLaunchDesc;
+
+  /// No description provided for @settingsBackgroundCheck.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱이 꺼져 있어도 확인'**
+  String get settingsBackgroundCheck;
+
+  /// No description provided for @settingsBackgroundCheckDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'주기적으로 확인하고 새 영상이 있으면 알림으로 알려요.'**
+  String get settingsBackgroundCheckDesc;
+
+  /// No description provided for @settingsCheckInterval.
+  ///
+  /// In ko, this message translates to:
+  /// **'확인 주기'**
+  String get settingsCheckInterval;
+
+  /// No description provided for @settingsCheckIntervalHours.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}시간'**
+  String settingsCheckIntervalHours(int count);
+
+  /// No description provided for @settingsCheckWifiOnly.
+  ///
+  /// In ko, this message translates to:
+  /// **'와이파이에서만 확인'**
+  String get settingsCheckWifiOnly;
+
+  /// No description provided for @settingsCheckWifiOnlyDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'데이터를 쓰지 않도록 와이파이에 연결됐을 때만 확인해요.'**
+  String get settingsCheckWifiOnlyDesc;
+
+  /// No description provided for @notifChannelNewVideos.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 영상'**
+  String get notifChannelNewVideos;
+
+  /// No description provided for @notifNewVideosTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독 채널에 새 영상이 올라왔어요'**
+  String get notifNewVideosTitle;
+
+  /// No description provided for @notifNewVideosBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'{channels} · 새 영상 {count}개'**
+  String notifNewVideosBody(String channels, String count);
+
+  /// No description provided for @channelSearchTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'채널 검색'**
+  String get channelSearchTitle;
+
+  /// No description provided for @channelSearchHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'채널 이름으로 찾기'**
+  String get channelSearchHint;
+
+  /// No description provided for @channelSearchIdle.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독할 채널 이름을 검색해 보세요'**
+  String get channelSearchIdle;
+
+  /// No description provided for @channelSearchLoading.
+  ///
+  /// In ko, this message translates to:
+  /// **'채널을 찾는 중이에요'**
+  String get channelSearchLoading;
+
+  /// No description provided for @channelSearchEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'찾은 채널이 없어요'**
+  String get channelSearchEmpty;
+
+  /// No description provided for @channelSearchFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'채널을 찾지 못했어요. 잠시 뒤 다시 시도해 주세요'**
+  String get channelSearchFailed;
+
+  /// No description provided for @subscriptionsTestTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'임시 · 모양 확인용'**
+  String get subscriptionsTestTitle;
+
+  /// No description provided for @subscriptionsTestNotification.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 영상 알림 띄우기'**
+  String get subscriptionsTestNotification;
+
+  /// No description provided for @subscriptionsTestNewVideos.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 영상 화면 미리 보기'**
+  String get subscriptionsTestNewVideos;
+
+  /// No description provided for @categoryAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'모든 분류'**
+  String get categoryAll;
+
+  /// No description provided for @subscriptionsCategories.
+  ///
+  /// In ko, this message translates to:
+  /// **'알림 받을 분류'**
+  String get subscriptionsCategories;
+
+  /// No description provided for @subscriptionsCategoriesDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'고른 분류의 새 영상만 알리고 보여 줘요. 고르지 않으면 모든 분류예요.'**
+  String get subscriptionsCategoriesDesc;
+
+  /// No description provided for @channelInfoVideoCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'영상 {count}개'**
+  String channelInfoVideoCount(int count);
+
+  /// No description provided for @channelSaveFolder.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 위치'**
+  String get channelSaveFolder;
+
+  /// No description provided for @channelSaveFolderDefault.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 저장 위치'**
+  String get channelSaveFolderDefault;
+
+  /// No description provided for @channelSaveFolderChange.
+  ///
+  /// In ko, this message translates to:
+  /// **'변경'**
+  String get channelSaveFolderChange;
+
+  /// No description provided for @channelSaveFolderReset.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본으로'**
+  String get channelSaveFolderReset;
+
+  /// No description provided for @notifNewVideoDownloadNow.
+  ///
+  /// In ko, this message translates to:
+  /// **'바로 받기'**
+  String get notifNewVideoDownloadNow;
 }
 
 class _AppLocalizationsDelegate

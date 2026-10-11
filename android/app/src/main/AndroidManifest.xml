@@ -73,6 +73,10 @@
         <receiver
             android:name=".DownloadActionReceiver"
             android:exported="false" />
+        <!-- 새 영상 알림의 취소 버튼 수신기 -->
+        <receiver
+            android:name=".NewVideoActionReceiver"
+            android:exported="false" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

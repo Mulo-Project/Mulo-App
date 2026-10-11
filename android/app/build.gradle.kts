@@ -64,6 +64,8 @@ dependencies {
     // 재생 엔진(ExoPlayer) · 미디어 세션 · 재생 알림 (PlaybackHub / MuloPlaybackService).
     implementation("androidx.media3:media3-exoplayer:1.7.1")
     implementation("androidx.media3:media3-session:1.7.1")
+    // 구독 채널의 새 영상을 주기적으로 확인 (NewVideoWorker).
+    implementation("androidx.work:work-runtime-ktx:2.10.1")
     "fullImplementation"("io.github.junkfood02.youtubedl-android:library:0.18.1")
     // 받은 오디오를 mp3 · opus로 바꾸는 ffmpeg (APK에 네이티브로 들어간다).
     "fullImplementation"("io.github.junkfood02.youtubedl-android:ffmpeg:0.18.1")

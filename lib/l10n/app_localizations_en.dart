@@ -1884,4 +1884,188 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifDownloadFailedHidden => 'A song could not be downloaded';
+
+  @override
+  String get subscribeAction => 'Subscribe';
+
+  @override
+  String get subscribedAction => 'Subscribed';
+
+  @override
+  String get subscribeAdded =>
+      'Subscribed. You\'ll be told about videos posted from now on';
+
+  @override
+  String get subscribeFailed => 'This channel can\'t be subscribed to';
+
+  @override
+  String get unsubscribed => 'Unsubscribed';
+
+  @override
+  String get subscriptionsTitle => 'Subscriptions';
+
+  @override
+  String get subscriptionsSubtitle => 'Pick new videos to download';
+
+  @override
+  String get subscriptionsEmptyTitle => 'No subscribed channels';
+
+  @override
+  String get subscriptionsEmptyBody =>
+      'Tap Subscribe on a video\'s channel and you can pick new videos to download when they are posted.';
+
+  @override
+  String get subscriptionsNewVideos => 'See new videos';
+
+  @override
+  String get subscriptionsUnsubscribe => 'Unsubscribe';
+
+  @override
+  String subscriptionsCount(int count) {
+    return '$count channels';
+  }
+
+  @override
+  String get newVideosTitle => 'New videos';
+
+  @override
+  String get newVideosChecking => 'Checking for new videos';
+
+  @override
+  String get newVideosEmptyTitle => 'No new videos';
+
+  @override
+  String get newVideosEmptyBody =>
+      'When subscribed channels post new videos, you can pick them to download here.';
+
+  @override
+  String newVideosStart(int count) {
+    return 'Download $count';
+  }
+
+  @override
+  String newVideosStarted(int count) {
+    return 'Started downloading $count songs';
+  }
+
+  @override
+  String get newVideosSkipped => 'Those songs are already downloaded';
+
+  @override
+  String get newVideosSelectAll => 'Select all';
+
+  @override
+  String get newVideosSelectNone => 'Clear selection';
+
+  @override
+  String newVideosAnnounce(int count) {
+    return '$count new videos from your subscriptions';
+  }
+
+  @override
+  String get newVideosOpen => 'View';
+
+  @override
+  String get settingsSubscriptions => 'Subscriptions';
+
+  @override
+  String get settingsSubscriptionChannels => 'Subscribed channels';
+
+  @override
+  String get settingsCheckOnLaunch => 'Check for new videos on launch';
+
+  @override
+  String get settingsCheckOnLaunchDesc =>
+      'Tell me when subscribed channels have new videos and let me pick what to download.';
+
+  @override
+  String get settingsBackgroundCheck => 'Check even when the app is closed';
+
+  @override
+  String get settingsBackgroundCheckDesc =>
+      'Checks periodically and notifies you of new videos.';
+
+  @override
+  String get settingsCheckInterval => 'Check every';
+
+  @override
+  String settingsCheckIntervalHours(int count) {
+    return '${count}h';
+  }
+
+  @override
+  String get settingsCheckWifiOnly => 'Check on Wi-Fi only';
+
+  @override
+  String get settingsCheckWifiOnlyDesc =>
+      'Only checks while connected to Wi-Fi to save mobile data.';
+
+  @override
+  String get notifChannelNewVideos => 'New videos';
+
+  @override
+  String get notifNewVideosTitle => 'New videos from your subscriptions';
+
+  @override
+  String notifNewVideosBody(String channels, String count) {
+    return '$channels · $count new videos';
+  }
+
+  @override
+  String get channelSearchTitle => 'Find channels';
+
+  @override
+  String get channelSearchHint => 'Search by channel name';
+
+  @override
+  String get channelSearchIdle => 'Search for a channel to subscribe to';
+
+  @override
+  String get channelSearchLoading => 'Searching for channels';
+
+  @override
+  String get channelSearchEmpty => 'No channels found';
+
+  @override
+  String get channelSearchFailed =>
+      'Couldn\'t search for channels. Please try again later';
+
+  @override
+  String get subscriptionsTestTitle => 'Temporary · preview only';
+
+  @override
+  String get subscriptionsTestNotification => 'Show new-video notification';
+
+  @override
+  String get subscriptionsTestNewVideos => 'Preview new videos screen';
+
+  @override
+  String get categoryAll => 'All categories';
+
+  @override
+  String get subscriptionsCategories => 'Categories to be notified about';
+
+  @override
+  String get subscriptionsCategoriesDesc =>
+      'Only new videos in the chosen categories are shown and notified. Pick none for all categories.';
+
+  @override
+  String channelInfoVideoCount(int count) {
+    return '$count videos';
+  }
+
+  @override
+  String get channelSaveFolder => 'Save folder';
+
+  @override
+  String get channelSaveFolderDefault => 'Default save folder';
+
+  @override
+  String get channelSaveFolderChange => 'Change';
+
+  @override
+  String get channelSaveFolderReset => 'Use default';
+
+  @override
+  String get notifNewVideoDownloadNow => 'Download now';
 }

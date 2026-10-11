@@ -13,6 +13,7 @@ import '../../features/player/di.dart';
 import '../../features/playlists/di.dart';
 import '../../features/search/di.dart';
 import '../../features/security/di.dart';
+import '../../features/subscriptions/di.dart';
 import '../../features/theme/di.dart';
 import '../database/app_database.dart';
 
@@ -39,4 +40,5 @@ void configureDependencies({AppDatabase? database}) {
   registerSearch(sl);
   registerNotifications(sl);
   registerPermissions(sl);
+  registerSubscriptions(sl);
 }

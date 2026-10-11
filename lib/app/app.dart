@@ -30,6 +30,8 @@ import '../features/search/domain/entities/media_info.dart';
 import '../features/search/presentation/screens/media_detail_screen.dart';
 import '../features/security/presentation/bloc/app_lock_cubit.dart';
 import '../features/security/presentation/widgets/lock_gate.dart';
+import '../features/subscriptions/presentation/widgets/new_videos_launcher.dart';
+import '../features/subscriptions/presentation/widgets/new_videos_sheet.dart';
 import '../features/theme/presentation/bloc/theme_cubit.dart';
 import '../features/theme/presentation/widgets/mood_theme_follower.dart';
 import 'router.dart';
@@ -63,6 +65,12 @@ class _MusicAppState extends State<MusicApp> {
     _router.routerDelegate.navigatorKey.currentState?.push<void>(
       MaterialPageRoute(builder: (_) => MediaDetailScreen(hit: hit)),
     );
+  }
+
+  /// 새 영상 안내 · 알림을 눌렀을 때: 구독 채널의 새 영상 목록을 바텀시트로 연다 (이미 열려 있으면 그대로).
+  void _openNewVideos() {
+    final context = _router.routerDelegate.navigatorKey.currentContext;
+    if (context != null) showNewVideosSheet(context);
   }
 
   @override
@@ -138,7 +146,10 @@ class _MusicAppState extends State<MusicApp> {
                 onOpenDownload: _openDownload,
                 child: MoodThemeFollower(
                   child: DownloadCompletionListener(
-                    child: LockGate(child: child!),
+                    child: NewVideosLauncher(
+                      onOpen: _openNewVideos,
+                      child: LockGate(child: child!),
+                    ),
                   ),
                 ),
               ),

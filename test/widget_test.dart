@@ -58,7 +58,7 @@ void main() {
   });
 
   testWidgets('테마 미리보기: 실제 탭을 오가며 보고, 취소하면 원래대로 돌아간다', (tester) async {
-    await _pumpApp(tester, at: Routes.settings, height: 7000);
+    await _pumpApp(tester, at: Routes.settings, height: 8000);
     expect(find.byType(ThemePreviewBar), findsNothing);
     final before = _palette(tester).accent;
 
@@ -85,7 +85,7 @@ void main() {
   });
 
   testWidgets('테마 미리보기에서 적용하면 그 테마가 남는다', (tester) async {
-    await _pumpApp(tester, at: Routes.settings, height: 7000);
+    await _pumpApp(tester, at: Routes.settings, height: 8000);
     final before = _palette(tester).accent;
 
     await tester.tap(find.text('테마 미리보기'));
@@ -99,7 +99,7 @@ void main() {
   });
 
   testWidgets('설정에서 테마 프리셋을 고르면 팔레트가 바뀐다', (tester) async {
-    await _pumpApp(tester, at: Routes.settings, height: 7000);
+    await _pumpApp(tester, at: Routes.settings, height: 8000);
     expect(_palette(tester).accent, AppPalette.lime);
 
     await tester.tap(find.text('코랄'));
@@ -113,7 +113,7 @@ void main() {
   });
 
   testWidgets('화면 모드: 라이트를 고르면 밝은 배경, 다크로 돌아온다', (tester) async {
-    await _pumpApp(tester, at: Routes.settings, height: 7000);
+    await _pumpApp(tester, at: Routes.settings, height: 8000);
     await tester.tap(find.text('라이트'));
     await tester.pumpAndSettle();
     expect(_brightness(tester), Brightness.light);

@@ -111,6 +111,11 @@ object DownloadNotifications {
             .setVisibility(Notification.VISIBILITY_PRIVATE)
         (a["color"] as? Number)?.let { b.setColor(it.toInt()) }
         (a["subText"] as? String)?.let { b.setSubText(it) }
+        // 곡 이미지: 아직 못 받았으면 받은 뒤 같은 내용으로 알림을 다시 그린다.
+        val art = a["artUri"] as? String
+        NotificationArt.get(art) {
+            lastProgress?.takeIf { it["artUri"] == art }?.let { showProgress(context, it) }
+        }?.let { b.setLargeIcon(it) }
         val percent = (a["percent"] as? Number)?.toInt()
         b.setProgress(100, percent ?: 0, percent == null)
         launchIntent(context, a["openId"] as? String)?.let { b.setContentIntent(it) }
@@ -146,6 +151,7 @@ object DownloadNotifications {
             .setCategory(Notification.CATEGORY_STATUS)
             .setVisibility(Notification.VISIBILITY_PRIVATE)
         (a["color"] as? Number)?.let { b.setColor(it.toInt()) }
+        NotificationArt.get(a["artUri"] as? String) { showResult(context, a) }?.let { b.setLargeIcon(it) }
         launchIntent(context, a["openId"] as? String)?.let { b.setContentIntent(it) }
         synchronized(resultIds) { resultIds.add(id) }
         manager(context).notify(id, b.build())

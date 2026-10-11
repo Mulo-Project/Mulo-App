@@ -136,6 +136,29 @@ void main() {
     expect(shown['preview'], isNull);
   });
 
+  test('받는 곡의 이미지를 진행 · 완료 알림에 담고, 곡 정보 숨기기를 켜면 담지 않는다', () async {
+    const art = 'https://example.com/thumb.jpg';
+    DownloadItem withArt(DownloadStatus s) => DownloadItem(
+      id: '1',
+      title: '곡1',
+      artist: '가수',
+      status: s,
+      thumbnailUrl: art,
+    );
+    await cubit.syncDownloads([withArt(DownloadStatus.downloading)], on, l10n);
+    expect(notifier.shown.single['artUri'], art);
+    await cubit.syncDownloads([withArt(DownloadStatus.done)], on, l10n);
+    expect(notifier.resultArt['1'], art);
+
+    // 숨기기를 켜면 이미지도 담지 않는다.
+    await cubit.syncDownloads(
+      [withArt(DownloadStatus.downloading)],
+      on.copyWith(hideSongInfo: true),
+      l10n,
+    );
+    expect(notifier.shown.last['artUri'], isNull);
+  });
+
   test('백그라운드 받기 설정이 앞에 붙들기를 정하고, 진행 알림이 꺼져도 붙든다', () async {
     final downloading = [item('1', DownloadStatus.downloading, .2)];
     await cubit.syncDownloads(downloading, on, l10n);

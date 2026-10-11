@@ -58,6 +58,7 @@ class DownloadProgressNotice {
     this.pauseLabel,
     this.stopLabel,
     this.openId,
+    this.artUri,
   });
 
   final String title;
@@ -72,6 +73,9 @@ class DownloadProgressNotice {
 
   /// 알림을 누르면 상세 화면을 열 받기 항목의 id.
   final String? openId;
+
+  /// 알림의 큰 아이콘 자리에 보일 곡 이미지 (웹 주소 또는 파일 경로).
+  final String? artUri;
 }
 
 class ShowDownloadProgress implements UseCase<void, DownloadProgressNotice> {
@@ -90,6 +94,7 @@ class ShowDownloadProgress implements UseCase<void, DownloadProgressNotice> {
     pauseLabel: params.pauseLabel,
     stopLabel: params.stopLabel,
     openId: params.openId,
+    artUri: params.artUri,
   );
 }
 
@@ -107,12 +112,16 @@ class DownloadResultNotice {
     required this.title,
     required this.body,
     required this.failed,
+    this.artUri,
   });
 
   final String id;
   final String title;
   final String body;
   final bool failed;
+
+  /// 알림의 큰 아이콘 자리에 보일 곡 이미지 (웹 주소 또는 파일 경로).
+  final String? artUri;
 }
 
 class ShowDownloadResult implements UseCase<void, DownloadResultNotice> {
@@ -125,6 +134,7 @@ class ShowDownloadResult implements UseCase<void, DownloadResultNotice> {
     title: params.title,
     body: params.body,
     failed: params.failed,
+    artUri: params.artUri,
   );
 }
 

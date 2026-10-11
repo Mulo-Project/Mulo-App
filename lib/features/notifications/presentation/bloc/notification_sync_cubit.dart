@@ -91,6 +91,7 @@ class NotificationSyncCubit extends Cubit<void> {
                   ? l10n.notifDownloadDoneHidden
                   : _titleLine(i.title, i.artist),
               failed: false,
+              artUri: hide ? null : i.thumbnailUrl,
             ),
           );
         } else if (i.status == DownloadStatus.failed) {
@@ -103,6 +104,7 @@ class NotificationSyncCubit extends Cubit<void> {
                   ? l10n.notifDownloadFailedHidden
                   : [i.title, if (i.error.isNotEmpty) i.error].join('\n'),
               failed: true,
+              artUri: hide ? null : i.thumbnailUrl,
             ),
           );
         }
@@ -176,8 +178,9 @@ class NotificationSyncCubit extends Cubit<void> {
     final preview = hide || previewing ? null : l10n.notifDownloadPreview;
     final stop = previewing ? l10n.notifDownloadStopPreview : null;
     final cancel = l10n.notifDownloadCancel;
+    final art = hide ? null : current.thumbnailUrl;
     final key =
-        '$title|$body|$subText|$overallPercent|$keepAlive|$preview|$stop|${current.id}';
+        '$title|$body|$subText|$overallPercent|$keepAlive|$preview|$stop|${current.id}|$art';
     if (_progressShown && key == _lastProgress) return;
     await _ensurePermission();
     _progressShown = true;
@@ -193,6 +196,7 @@ class NotificationSyncCubit extends Cubit<void> {
         cancelLabel: cancel,
         stopLabel: stop,
         openId: current.id,
+        artUri: art,
       ),
     );
   }
