@@ -31,6 +31,10 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        // 받기 알림은 화면이 아니라 엔진에 묶는다 (화면이 닫혀도 버튼이 Dart로 전달된다).
+        if (!flutterEngine.plugins.has(DownloadNotificationPlugin::class.java)) {
+            flutterEngine.plugins.add(DownloadNotificationPlugin())
+        }
         mediaStore = MediaStoreChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger) { this }
         lyrics = LyricsChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
         audioOutput = AudioOutputChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
