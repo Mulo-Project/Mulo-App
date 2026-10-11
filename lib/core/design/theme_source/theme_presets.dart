@@ -13,25 +13,25 @@ enum ThemePreset implements ThemeSource {
     Color(0xFFFF3D7F),
     Color(0xFF33E1FF),
     lightPrimary: Color(0xFFF2487F),
-    lightAccent: Color(0xFF1A9FCB),
+    lightAccent: Color(0xFF11B5E6),
   ),
   ocean(
     Color(0xFF1E6BFF),
     Color(0xFF5CF2D6),
     lightPrimary: Color(0xFF2F7BFF),
-    lightAccent: Color(0xFF0E9E8C),
+    lightAccent: Color(0xFF00B8A0),
   ),
   forest(
     Color(0xFF1FA35C),
     Color(0xFFFFD166),
     lightPrimary: Color(0xFF2DAA6A),
-    lightAccent: Color(0xFFD08A00),
+    lightAccent: Color(0xFFF2A900),
   ),
   sunset(
     Color(0xFFFF6B2C),
     Color(0xFFFFD23F),
     lightPrimary: Color(0xFFFF7A3D),
-    lightAccent: Color(0xFFD9820B),
+    lightAccent: Color(0xFFFF8A00),
   ),
   rose(
     Color(0xFFE0457B),
@@ -43,13 +43,13 @@ enum ThemePreset implements ThemeSource {
     Color(0xFFC9962B),
     Color(0xFFFFF1B8),
     lightPrimary: Color(0xFFD9A23A),
-    lightAccent: Color(0xFFA8691A),
+    lightAccent: Color(0xFFE0A100),
   ),
   ice(
     Color(0xFF6FA8FF),
     Color(0xFFE6F4FF),
     lightPrimary: Color(0xFF5E9BFF),
-    lightAccent: Color(0xFF2A9FD6),
+    lightAccent: Color(0xFF3AB0F0),
   );
 
   const ThemePreset(

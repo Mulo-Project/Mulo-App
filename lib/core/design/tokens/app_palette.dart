@@ -114,15 +114,15 @@ class AppPalette {
   static final AppPalette defaultLight = _withAccent(
     _lightBase,
     watercolorCoral,
-    3,
+    accentContrastFor(Brightness.light),
   );
 
   /// 밝기별 기본 바탕.
   static AppPalette baseFor(Brightness b) =>
       b == Brightness.dark ? defaultDark : _lightBase;
 
-  /// 밝기별 강조 색 최소 대비. 다크 7:1, 라이트 3:1(밝은 배경에서 형광색은 대비가 낮아서).
-  static double accentContrastFor(Brightness b) => b == Brightness.dark ? 7 : 3;
+  /// 밝기별 강조 색 최소 대비. 다크 7:1, 라이트 2:1 (라이트에서 더 올리면 색이 어두워져 탁해진다).
+  static double accentContrastFor(Brightness b) => b == Brightness.dark ? 7 : 2;
 
   static AppPalette _withAccent(AppPalette base, Color accent, double min) {
     final a = ensureContrast(accent, base.background, min);
@@ -148,7 +148,9 @@ class AppPalette {
   }) {
     final bg = base.background;
     final safeAccent = ensureContrast(accent, bg, minAccentContrast);
-    final safePrimary = ensureContrast(primary, bg, 3);
+    // 라이트에서는 대비를 크게 요구하면 색이 탁하게 깎이므로 낮게 둔다 (주 색은 면 · 글로우에 쓴다).
+    final lightBg = bg.computeLuminance() > .5;
+    final safePrimary = ensureContrast(primary, bg, lightBg ? 1.5 : 3);
     final third = tertiary ?? _shiftHue(safePrimary, -60);
 
     return base.copyWith(
@@ -156,17 +158,33 @@ class AppPalette {
       onPrimary: bestOn(safePrimary),
       accent: safeAccent,
       onAccent: bestOn(safeAccent),
-      glowPrimary: [
-        _shiftHue(_lighten(safePrimary, .12), 30),
-        safePrimary,
-        _darken(safePrimary, .32),
-      ],
-      glowSecondary: [
-        _lighten(_shiftHue(safePrimary, 40), .02),
-        _darken(safePrimary, .28),
-        _darken(safePrimary, .42),
-      ],
-      glowTertiary: [_lighten(third, .08), third, _darken(third, .36)],
+      // 라이트에서는 어둡게 깎지 않고 색상만 옮겨 맑은 수채화 번짐으로 만든다
+      // (어둡게 깎으면 주황 · 노랑이 갈색으로 탁해진다).
+      glowPrimary: lightBg
+          ? [
+              _lighten(_shiftHue(safePrimary, 28), .16),
+              safePrimary,
+              _shiftHue(safePrimary, -28),
+            ]
+          : [
+              _shiftHue(_lighten(safePrimary, .12), 30),
+              safePrimary,
+              _darken(safePrimary, .32),
+            ],
+      glowSecondary: lightBg
+          ? [
+              _lighten(_shiftHue(safePrimary, 48), .14),
+              _shiftHue(safePrimary, 62),
+              _shiftHue(safePrimary, 78),
+            ]
+          : [
+              _lighten(_shiftHue(safePrimary, 40), .02),
+              _darken(safePrimary, .28),
+              _darken(safePrimary, .42),
+            ],
+      glowTertiary: lightBg
+          ? [_lighten(third, .16), third, _shiftHue(third, -26)]
+          : [_lighten(third, .08), third, _darken(third, .36)],
     );
   }
 
