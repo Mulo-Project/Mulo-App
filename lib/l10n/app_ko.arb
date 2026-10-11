@@ -445,6 +445,19 @@
   "mediaDetailTitle": "상세 정보",
   "mediaDetailWatchYoutube": "유튜브에서 보기",
   "mediaDetailOpenOriginal": "원본 페이지 열기",
+  "mediaDetailListenOriginal": "원본 사이트에서 듣기",
+  "mediaDetailListenSoundcloud": "SoundCloud에서 듣기",
+  "mediaDetailOpenArtist": "아티스트 보기",
+  "mediaDetailPlays": "재생수",
+  "mediaDetailGenre": "장르",
+  "mediaDetailFollowers": "팔로워 {count}명",
+  "@mediaDetailFollowers": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "mediaDetailChannel": "채널",
   "mediaDetailOpenChannel": "채널 보기",
   "mediaDetailDuration": "길이",

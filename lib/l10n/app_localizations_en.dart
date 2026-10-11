@@ -941,6 +941,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mediaDetailOpenOriginal => 'Open original page';
 
   @override
+  String get mediaDetailListenOriginal => 'Listen on the original site';
+
+  @override
+  String get mediaDetailListenSoundcloud => 'Listen on SoundCloud';
+
+  @override
+  String get mediaDetailOpenArtist => 'View artist';
+
+  @override
+  String get mediaDetailPlays => 'Plays';
+
+  @override
+  String get mediaDetailGenre => 'Genre';
+
+  @override
+  String mediaDetailFollowers(String count) {
+    return '$count followers';
+  }
+
+  @override
   String get mediaDetailChannel => 'Channel';
 
   @override

@@ -28,6 +28,12 @@ Future<void> showMediaDetail(BuildContext context, MediaHit hit) {
   ).push<void>(MaterialPageRoute(builder: (_) => MediaDetailScreen(hit: hit)));
 }
 
+/// SoundCloud 주소인가 (음원 사이트라 영상이 아니라 커버 · 아티스트 모양으로 보여 주려고).
+bool isSoundcloudUrl(String url) {
+  final host = Uri.tryParse(url)?.host.toLowerCase() ?? '';
+  return host == 'soundcloud.com' || host.endsWith('.soundcloud.com');
+}
+
 /// 유튜브 주소인가 (영상 보기 문구를 "유튜브에서 보기"로 하려고).
 bool isYoutubeUrl(String url) {
   final host = Uri.tryParse(url)?.host.toLowerCase() ?? '';
@@ -130,6 +136,8 @@ class _DetailViewState extends State<_DetailView> {
     final hit = state.hit;
     final locale = Localizations.localeOf(context).toString();
     final youtube = isYoutubeUrl(hit.url);
+    // 유튜브가 아닌 곳(SoundCloud 등)은 영상이 아니라 음원이다: 커버 · 아티스트 · 재생수로 보여 준다.
+    final audio = !youtube;
 
     final views = hit.viewCount;
     final uploaded = hit.uploadedAt;
@@ -138,7 +146,7 @@ class _DetailViewState extends State<_DetailView> {
         (l10n.mediaDetailDuration, formatDuration(hit.duration!)),
       if (views != null)
         (
-          l10n.mediaDetailViews,
+          audio ? l10n.mediaDetailPlays : l10n.mediaDetailViews,
           l10n.mediaDetailViewCount(
             NumberFormat.compact(locale: locale).format(views),
           ),
@@ -161,7 +169,7 @@ class _DetailViewState extends State<_DetailView> {
         ),
       if (hit.categories.isNotEmpty)
         (
-          l10n.mediaDetailCategory,
+          audio ? l10n.mediaDetailGenre : l10n.mediaDetailCategory,
           hit.categories.map((c) => categoryLabel(l10n, c)).join(' · '),
         ),
     ];
@@ -201,6 +209,7 @@ class _DetailViewState extends State<_DetailView> {
                       _Thumbnail(
                         hit: hit,
                         inApp: _canEmbed(hit),
+                        audio: audio,
                         onPlay: () => _play(hit),
                       ),
                     if (_embedBlocked)
@@ -234,9 +243,12 @@ class _DetailViewState extends State<_DetailView> {
                       const SizedBox(height: AppSpacing.md),
                       _ChannelRow(
                         hit: hit,
+                        audio: audio,
                         subscribers: hit.subscriberCount == null
                             ? null
-                            : l10n.mediaDetailSubscribers(
+                            : (audio
+                                  ? l10n.mediaDetailFollowers
+                                  : l10n.mediaDetailSubscribers)(
                                 NumberFormat.compact(locale: locale)
                                     .format(hit.subscriberCount),
                               ),
@@ -277,7 +289,9 @@ class _DetailViewState extends State<_DetailView> {
                         key: const ValueKey('detail-watch'),
                         label: youtube
                             ? l10n.mediaDetailWatchYoutube
-                            : l10n.mediaDetailOpenOriginal,
+                            : isSoundcloudUrl(hit.url)
+                            ? l10n.mediaDetailListenSoundcloud
+                            : l10n.mediaDetailListenOriginal,
                         icon: AppIcons.play,
                         onPressed: () => _open(hit.url),
                       ),
@@ -311,15 +325,19 @@ class _DetailViewState extends State<_DetailView> {
 /// 썸네일 높이 상한.
 const _maxThumbHeight = 260.0;
 
-/// 16:9 썸네일. 가운데 재생 버튼을 누르면 영상을 연다.
+/// 16:9 썸네일(음원이면 정사각형 커버). 가운데 재생 버튼을 누르면 영상(음원은 원본 페이지)을 연다.
 class _Thumbnail extends StatelessWidget {
   const _Thumbnail({
     required this.hit,
     required this.onPlay,
     this.inApp = false,
+    this.audio = false,
   });
 
   final MediaHit hit;
+
+  /// 음원(영상이 아님): 정사각형 커버로 보여 준다.
+  final bool audio;
 
   /// 앱 안에서 재생되는 버튼인가 (툴팁 문구만 다르다).
   final bool inApp;
@@ -331,14 +349,16 @@ class _Thumbnail extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, box) {
         // 넓은 화면(데스크톱)에서 너무 커지지 않게 높이를 제한하고 가운데에 둔다.
-        final width = math.min(box.maxWidth, _maxThumbHeight * 16 / 9);
+        final width = audio
+            ? math.min(box.maxWidth, _maxThumbHeight)
+            : math.min(box.maxWidth, _maxThumbHeight * 16 / 9);
         return Center(
           child: Stack(
             alignment: Alignment.center,
             children: [
               ArtworkBox(
                 image: thumb == null ? null : NetworkImage(thumb),
-                size: width * 9 / 16,
+                size: audio ? width : width * 9 / 16,
                 width: width,
                 radius: AppRadii.md,
                 tone: toneFor(hit.id),
@@ -347,6 +367,8 @@ class _Thumbnail extends StatelessWidget {
                 icon: AppIcons.play,
                 tooltip: inApp
                     ? context.l10n.mediaDetailPlayInApp
+                    : audio
+                    ? context.l10n.mediaDetailListenOriginal
                     : context.l10n.mediaDetailWatchYoutube,
                 emphasized: true,
                 size: AppSizes.circleButtonLarge,
@@ -392,9 +414,17 @@ class _InfoRow extends StatelessWidget {
 
 /// 채널 줄: 채널 이미지 · 이름 · 구독자 수, 오른쪽에 채널 보기.
 class _ChannelRow extends StatelessWidget {
-  const _ChannelRow({required this.hit, this.subscribers, this.onOpen});
+  const _ChannelRow({
+    required this.hit,
+    this.audio = false,
+    this.subscribers,
+    this.onOpen,
+  });
 
   final MediaHit hit;
+
+  /// 음원이면 "채널 보기" 대신 "아티스트 보기".
+  final bool audio;
   final String? subscribers;
   final VoidCallback? onOpen;
 
@@ -431,7 +461,9 @@ class _ChannelRow extends StatelessWidget {
         ),
         if (onOpen != null)
           PlainButton(
-            label: context.l10n.mediaDetailOpenChannel,
+            label: audio
+                ? context.l10n.mediaDetailOpenArtist
+                : context.l10n.mediaDetailOpenChannel,
             icon: AppIcons.openInNew,
             accent: true,
             onPressed: onOpen,

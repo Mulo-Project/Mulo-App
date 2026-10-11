@@ -1814,6 +1814,42 @@ abstract class AppLocalizations {
   /// **'원본 페이지 열기'**
   String get mediaDetailOpenOriginal;
 
+  /// No description provided for @mediaDetailListenOriginal.
+  ///
+  /// In ko, this message translates to:
+  /// **'원본 사이트에서 듣기'**
+  String get mediaDetailListenOriginal;
+
+  /// No description provided for @mediaDetailListenSoundcloud.
+  ///
+  /// In ko, this message translates to:
+  /// **'SoundCloud에서 듣기'**
+  String get mediaDetailListenSoundcloud;
+
+  /// No description provided for @mediaDetailOpenArtist.
+  ///
+  /// In ko, this message translates to:
+  /// **'아티스트 보기'**
+  String get mediaDetailOpenArtist;
+
+  /// No description provided for @mediaDetailPlays.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생수'**
+  String get mediaDetailPlays;
+
+  /// No description provided for @mediaDetailGenre.
+  ///
+  /// In ko, this message translates to:
+  /// **'장르'**
+  String get mediaDetailGenre;
+
+  /// No description provided for @mediaDetailFollowers.
+  ///
+  /// In ko, this message translates to:
+  /// **'팔로워 {count}명'**
+  String mediaDetailFollowers(String count);
+
   /// No description provided for @mediaDetailChannel.
   ///
   /// In ko, this message translates to:

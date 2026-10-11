@@ -924,6 +924,26 @@ class AppLocalizationsKo extends AppLocalizations {
   String get mediaDetailOpenOriginal => '원본 페이지 열기';
 
   @override
+  String get mediaDetailListenOriginal => '원본 사이트에서 듣기';
+
+  @override
+  String get mediaDetailListenSoundcloud => 'SoundCloud에서 듣기';
+
+  @override
+  String get mediaDetailOpenArtist => '아티스트 보기';
+
+  @override
+  String get mediaDetailPlays => '재생수';
+
+  @override
+  String get mediaDetailGenre => '장르';
+
+  @override
+  String mediaDetailFollowers(String count) {
+    return '팔로워 $count명';
+  }
+
+  @override
   String get mediaDetailChannel => '채널';
 
   @override
