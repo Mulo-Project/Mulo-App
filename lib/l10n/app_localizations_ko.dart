@@ -415,6 +415,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lockHint => 'PIN을 입력하세요.';
 
   @override
+  String get settingsBackgroundDownload => '백그라운드 받기';
+
+  @override
+  String get settingsBackgroundDownloadDesc =>
+      '앱이 뒤로 가거나 닫혀도 받기를 이어 가요. 켜 두면 받는 동안 알림이 항상 떠 있어요.';
+
+  @override
   String get settingsHideNotification => '알림에 곡 정보 숨기기';
 
   @override
@@ -1678,6 +1685,19 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsNotifications => '알림';
 
   @override
+  String get settingsNotifyDownloadProgress => '받기 진행 알림';
+
+  @override
+  String get settingsNotifyDownloadProgressDesc =>
+      '받는 동안 진행 상황을 알림창에 보여요. 앱이 뒤로 가도 받기가 이어져요.';
+
+  @override
+  String get settingsNotifyDownloadResult => '받기 결과 알림';
+
+  @override
+  String get settingsNotifyDownloadResultDesc => '받기가 끝나거나 실패하면 알려요.';
+
+  @override
   String get settingsNotifyPlayback => '재생 알림';
 
   @override
@@ -1706,4 +1726,58 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get notifChannelPlayback => '재생';
+
+  @override
+  String get notifChannelDownloadProgress => '받는 중';
+
+  @override
+  String get notifChannelDownloadDone => '받기 완료';
+
+  @override
+  String get notifChannelDownloadFailed => '받기 실패';
+
+  @override
+  String get notifDownloadHiddenTitle => '곡 받는 중';
+
+  @override
+  String notifDownloadProgressBody(int percent) {
+    return '받는 중 · $percent%';
+  }
+
+  @override
+  String notifDownloadProgressNext(int percent, String next) {
+    return '받는 중 · $percent% · 다음 곡: $next';
+  }
+
+  @override
+  String notifDownloadOverall(int done, int total, int percent) {
+    return '전체 $done/$total곡 · $percent%';
+  }
+
+  @override
+  String get notifDownloadPreview => '미리듣기';
+
+  @override
+  String get notifDownloadCancel => '취소';
+
+  @override
+  String get notifDownloadPausePreview => '일시정지';
+
+  @override
+  String get notifDownloadResumePreview => '이어 듣기';
+
+  @override
+  String get notifDownloadStopPreview => '중지';
+
+  @override
+  String get notifDownloadDoneTitle => '받기 완료';
+
+  @override
+  String get notifDownloadDoneHidden => '곡이 보관함에 추가됐어요';
+
+  @override
+  String get notifDownloadFailedTitle => '받기 실패';
+
+  @override
+  String get notifDownloadFailedHidden => '곡을 받지 못했어요';
 }

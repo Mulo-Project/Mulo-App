@@ -32,6 +32,7 @@ import 'package:music_download_play_app/features/library/domain/repositories/lib
 import 'package:music_download_play_app/features/notifications/di.dart';
 import 'package:music_download_play_app/features/notifications/domain/entities/media_session_info.dart';
 import 'package:music_download_play_app/features/notifications/domain/entities/notification_settings.dart';
+import 'package:music_download_play_app/features/notifications/domain/repositories/download_notifier.dart';
 import 'package:music_download_play_app/features/notifications/domain/repositories/media_session.dart';
 import 'package:music_download_play_app/features/notifications/domain/repositories/notification_settings_repository.dart';
 import 'package:music_download_play_app/features/permissions/di.dart';
@@ -662,6 +663,7 @@ Future<void> setUpTestDependencies({
     ..registerLazySingleton<NotificationSettingsRepository>(
       MemoryNotificationSettings.new,
     )
+    ..registerLazySingleton<DownloadNotifier>(FakeDownloadNotifier.new)
     ..registerLazySingleton<PermissionRepository>(FakePermissionRepository.new)
     ..registerLazySingleton<MediaSession>(FakeMediaSession.new)
     ..registerLazySingleton<JoinDateRepository>(
@@ -1152,6 +1154,59 @@ class MemoryNotificationSettings implements NotificationSettingsRepository {
 
   @override
   Future<void> openSystemSettings() async {}
+}
+
+/// 받기 알림 기록 ('progress:제목:42', 'clear', 'done:id', 'failed:id').
+class FakeDownloadNotifier implements DownloadNotifier {
+  final calls = <String>[];
+
+  /// 마지막 진행 알림의 내용 (제목 · 본문 · 머리말 · 앞에 붙들기 · 미리 듣기 버튼).
+  final shown = <Map<String, Object?>>[];
+  final _actions = StreamController<DownloadNotificationAction>.broadcast();
+
+  void press(DownloadNotificationAction a) => _actions.add(a);
+
+  @override
+  Stream<DownloadNotificationAction> watchActions() => _actions.stream;
+
+  @override
+  Future<void> showProgress({
+    required String title,
+    required String body,
+    int? percent,
+    bool foreground = true,
+    String? subText,
+    String? previewLabel,
+    String? cancelLabel,
+    String? pauseLabel,
+    String? stopLabel,
+  }) async {
+    shown.add({
+      'title': title,
+      'body': body,
+      'subText': subText,
+      'foreground': foreground,
+      'preview': previewLabel,
+      'cancel': cancelLabel,
+      'pause': pauseLabel,
+      'stop': stopLabel,
+    });
+    calls.add('progress:$title:$percent');
+  }
+
+  @override
+  Future<void> clearProgress() async => calls.add('clear');
+
+  @override
+  Future<void> showResult({
+    required String id,
+    required String title,
+    required String body,
+    required bool failed,
+  }) async => calls.add('${failed ? 'failed' : 'done'}:$id');
+
+  @override
+  Future<void> clearResults() async => calls.add('clearResults');
 }
 
 /// 재생 알림 가짜: 받은 상태를 기록하고, 알림 조작은 테스트가 흘려보낸다.
