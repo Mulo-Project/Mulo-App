@@ -603,6 +603,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get coverAdjust => '위치 조정';
 
   @override
+  String get coverWebBrowserHelp => '마음에 드는 이미지를 누르면 바로 편집 화면으로 가요.';
+
+  @override
   String get coverWebHint => '이미지 주소 또는 검색어';
 
   @override

@@ -205,6 +205,7 @@
   "coverSourceDevice": "From this device",
   "coverSourceWeb": "From the web",
   "coverAdjust": "Adjust position",
+  "coverWebBrowserHelp": "Tap an image to go straight to the editor.",
   "coverWebHint": "Image URL or search words",
   "coverWebHelp": "Paste an image URL (https://…) or search and pick one.",
   "coverWebUseUrl": "Use the image at this URL",

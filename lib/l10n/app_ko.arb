@@ -243,6 +243,7 @@
   "coverSourceDevice": "기기에서 고르기",
   "coverSourceWeb": "웹에서 가져오기",
   "coverAdjust": "위치 조정",
+  "coverWebBrowserHelp": "마음에 드는 이미지를 누르면 바로 편집 화면으로 가요.",
   "coverWebHint": "이미지 주소 또는 검색어",
   "coverWebHelp": "이미지 주소(https://…)를 붙여 넣거나, 검색어로 찾아 고르세요.",
   "coverWebUseUrl": "이 주소의 이미지 쓰기",

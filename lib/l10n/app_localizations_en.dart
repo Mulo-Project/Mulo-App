@@ -615,6 +615,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get coverAdjust => 'Adjust position';
 
   @override
+  String get coverWebBrowserHelp =>
+      'Tap an image to go straight to the editor.';
+
+  @override
   String get coverWebHint => 'Image URL or search words';
 
   @override

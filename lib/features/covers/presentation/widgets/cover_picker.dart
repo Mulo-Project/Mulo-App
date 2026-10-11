@@ -7,6 +7,7 @@ import '../../../../core/l10n/l10n.dart';
 import '../bloc/cover_cubit.dart';
 import '../bloc/cover_web_cubit.dart';
 import 'cover_editor_page.dart';
+import 'cover_web_browser.dart';
 
 /// 커버 이미지를 새로 고른다: 기기 사진이나 웹 이미지를 고르고, 확대 · 위치를 맞춘 뒤
 /// 돌려준다. 어느 단계에서든 닫으면 null. 저장은 부른 쪽에서 [CoverCubit.setArt]로 한다.
@@ -34,6 +35,14 @@ Future<CoverArt?> pickCoverArt(
     case _Source.device:
       final path = await covers.pickFile();
       picked = path == null ? null : CoverArt.file(path);
+    case _Source.web when coverWebBrowserSupported:
+      // 브라우저에서 이미지를 누르면 편집 화면으로 가고, 편집에서 뒤로 가면 브라우저로 돌아온다.
+      return Navigator.of(context, rootNavigator: true).push<CoverArt>(
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (_) => CoverWebBrowser(initialQuery: initialQuery),
+        ),
+      );
     case _Source.web:
       final url = await Navigator.of(context, rootNavigator: true).push<String>(
         MaterialPageRoute(

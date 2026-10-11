@@ -1232,6 +1232,12 @@ abstract class AppLocalizations {
   /// **'위치 조정'**
   String get coverAdjust;
 
+  /// No description provided for @coverWebBrowserHelp.
+  ///
+  /// In ko, this message translates to:
+  /// **'마음에 드는 이미지를 누르면 바로 편집 화면으로 가요.'**
+  String get coverWebBrowserHelp;
+
   /// No description provided for @coverWebHint.
   ///
   /// In ko, this message translates to:
