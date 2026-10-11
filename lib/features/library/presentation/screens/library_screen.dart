@@ -146,9 +146,18 @@ class _LibraryScreenState extends State<LibraryScreen> {
       ],
     };
 
-    return BlocListener<LibraryImportCubit, LibraryImportState>(
-      listenWhen: (a, b) => a.seq != b.seq,
-      listener: _showOutcome,
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<LibraryImportCubit, LibraryImportState>(
+          listenWhen: (a, b) => a.seq != b.seq,
+          listener: _showOutcome,
+        ),
+        // 내장 커버는 DB에 직접 저장되므로 메모리의 커버 목록을 다시 읽는다.
+        BlocListener<LibraryImportCubit, LibraryImportState>(
+          listenWhen: (a, b) => a.coversSeq != b.coversSeq,
+          listener: (context, _) => context.read<CoverCubit>().load(),
+        ),
+      ],
       child: SafeArea(
         bottom: false,
         child: CustomScrollView(

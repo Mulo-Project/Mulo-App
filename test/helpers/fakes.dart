@@ -176,6 +176,24 @@ class FakeDeviceMusic implements DeviceMusicRepository {
   }
 }
 
+/// 곡 uri별로 미리 정한 내장 커버 경로를 돌려주는 가짜 (없으면 null).
+class FakeEmbeddedCovers implements EmbeddedCoverRepository {
+  FakeEmbeddedCovers([this.byUri = const {}]);
+
+  final Map<String, String> byUri;
+  final extracted = <String>[];
+  final discarded = <String>[];
+
+  @override
+  Future<String?> extract(Track track) async {
+    extracted.add(track.uri);
+    return byUri[track.uri];
+  }
+
+  @override
+  Future<void> discard(String path) async => discarded.add(path);
+}
+
 /// 파일 복사 없이 경로 · 주소만 기억하는 커버 저장소.
 class MemoryCoverRepository implements CoverRepository {
   final saved = <String, CoverArt>{};

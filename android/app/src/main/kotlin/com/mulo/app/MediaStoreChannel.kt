@@ -5,6 +5,7 @@ import android.app.RecoverableSecurityException
 import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -18,6 +19,7 @@ import java.util.concurrent.Executors
 
 /**
  * 기기 음악 불러오기 (상세 기능 #11): MediaStore에서 음악 파일 목록을 읽어 Flutter로 보낸다.
+ * 내장 커버: 곡 파일의 내장 이미지를 꺼낸다.
  * 곡 삭제: 음악 파일을 지운다. 앱이 만든 파일이 아니면 Android 10+가 삭제 동의 창을 띄운다.
  * 권한 요청은 Flutter(permission_handler)가 먼저 한다.
  */
@@ -66,6 +68,18 @@ class MediaStoreChannel(
                         main.post { result.success(uri) }
                     } catch (e: Exception) {
                         main.post { result.error("save_failed", e.message, null) }
+                    }
+                }
+                "embeddedPicture" -> {
+                    val uri = Uri.parse(call.argument<String>("uri"))
+                    io.execute {
+                        // 내장 커버가 없거나 못 읽으면 null (기본 커버 유지).
+                        val bytes = try {
+                            embeddedPicture(uri)
+                        } catch (e: Exception) {
+                            null
+                        }
+                        main.post { result.success(bytes) }
                     }
                 }
                 "deleteAudio" -> deleteAudio(Uri.parse(call.argument<String>("uri")), result)
@@ -118,6 +132,17 @@ class MediaStoreChannel(
             throw e
         }
         return uri.toString()
+    }
+
+    /** 음악 파일에 내장된 커버 이미지(ID3 APIC · m4a covr · FLAC picture 등)의 원본 바이트. 없으면 null. */
+    private fun embeddedPicture(uri: Uri): ByteArray? {
+        val retriever = MediaMetadataRetriever()
+        try {
+            retriever.setDataSource(context, uri)
+            return retriever.embeddedPicture
+        } finally {
+            retriever.release()
+        }
     }
 
     private fun deleteAudio(uri: Uri, result: MethodChannel.Result) {
