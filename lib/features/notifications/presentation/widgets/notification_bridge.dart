@@ -10,15 +10,19 @@ import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../library/presentation/bloc/library_cubit.dart';
+import '../../../downloads/domain/entities/download_item.dart';
+import '../../../downloads/presentation/bloc/download_queue_cubit.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
+import '../../../search/domain/entities/media_info.dart';
 import '../../../theme/presentation/bloc/theme_cubit.dart';
 import '../../../search/presentation/bloc/preview_cubit.dart';
 import '../../domain/entities/media_session_info.dart';
+import '../../domain/repositories/download_notifier.dart';
 import '../bloc/notification_settings_cubit.dart';
 import '../bloc/notification_sync_cubit.dart';
 
-/// 재생 상태를 알림창으로 옮기고, 알림에서 누른 재생 조작을 재생 상태에 돌려준다.
+/// 받기 대기열 · 재생 상태를 알림창으로 옮기고, 알림에서 누른 재생 조작을 재생 상태에 돌려준다.
 /// 앱 셸 한 곳에서 감싼다 ([NotificationSyncCubit]이 바뀐 것만 골라 알림을 부른다).
 class NotificationBridge extends StatefulWidget {
   const NotificationBridge({super.key, required this.child, this.onOpenPlayer});
@@ -43,6 +47,7 @@ class _NotificationBridgeState extends State<NotificationBridge>
   var _splash = true;
   var _openPending = false;
   late final Future<void> _boot = _checkLaunch();
+  StreamSubscription<DownloadNotificationAction>? _downloadActions;
 
   @override
   void initState() {
@@ -57,6 +62,10 @@ class _NotificationBridgeState extends State<NotificationBridge>
     _boot.then((_) {
       if (mounted && context.read<LibraryCubit>().state.loaded) _restore();
     });
+    _downloadActions = context
+        .read<NotificationSyncCubit>()
+        .downloadActions
+        .listen(_onDownloadAction);
   }
 
   @override
@@ -64,6 +73,7 @@ class _NotificationBridgeState extends State<NotificationBridge>
     WidgetsBinding.instance.removeObserver(this);
     _commands?.cancel();
     _openRequests?.cancel();
+    _downloadActions?.cancel();
     super.dispose();
   }
 
@@ -124,6 +134,45 @@ class _NotificationBridgeState extends State<NotificationBridge>
     if (state == AppLifecycleState.resumed) {
       context.read<NotificationSettingsCubit>().refreshPermission();
     }
+  }
+
+  /// 받기 알림의 버튼. 미리 듣기: 지금 받는 곡을 받지 않고 바로 듣는다 (받기는 그대로 이어진다).
+  /// 이미 듣는 중이면 그대로 둔다. 취소: 지금 받는 곡을 대기열에서 뺀다.
+  void _onDownloadAction(DownloadNotificationAction action) {
+    final current = context
+        .read<DownloadQueueCubit>()
+        .state
+        .items
+        .where((i) => i.isActive && i.status != DownloadStatus.paused)
+        .firstOrNull;
+    if (current == null) return;
+    if (action == DownloadNotificationAction.cancel) {
+      context.read<DownloadQueueCubit>().cancel(current.id);
+      return;
+    }
+    final preview = context.read<PreviewCubit>();
+    if (action == DownloadNotificationAction.pausePreview) {
+      if (preview.state.isActive(current.id)) preview.togglePause();
+      return;
+    }
+    if (action == DownloadNotificationAction.stopPreview) {
+      if (preview.state.isActive(current.id)) preview.stop();
+      return;
+    }
+    if (preview.state.isActive(current.id)) return;
+    // 메인 재생과 겹치지 않게 재생 중이면 멈춘다.
+    final player = context.read<NowPlayingCubit>();
+    if (player.state.isPlaying) player.togglePlay();
+    preview.toggle(
+      MediaHit(
+        id: current.id,
+        title: current.title,
+        url: current.url,
+        uploader: current.artist,
+        duration: current.duration,
+        thumbnailUrl: current.thumbnailUrl,
+      ),
+    );
   }
 
   void _onCommand(MediaCommand command) {
@@ -223,6 +272,22 @@ class _NotificationBridgeState extends State<NotificationBridge>
     if (added && mounted && seq == _artSeq) _syncQueueArt();
   }
 
+  PreviewState? get _previewing {
+    final s = context.read<PreviewCubit>().state;
+    return s.status == PreviewStatus.idle ? null : s;
+  }
+
+  void _syncDownloads() {
+    final settings = context.read<NotificationSettingsCubit>().state;
+    if (!settings.loaded) return;
+    context.read<NotificationSyncCubit>().syncDownloads(
+      context.read<DownloadQueueCubit>().state.items,
+      settings.settings,
+      context.l10n,
+      previewingId: _previewing?.hitId,
+    );
+  }
+
   void _syncPlayback() {
     final settings = context.read<NotificationSettingsCubit>().state;
     if (!settings.loaded) return;
@@ -280,6 +345,9 @@ class _NotificationBridgeState extends State<NotificationBridge>
         listenWhen: (a, b) => !a.loaded && b.loaded,
         listener: (_, _) => _restore(),
       ),
+      BlocListener<DownloadQueueCubit, DownloadQueueState>(
+        listener: (_, _) => _syncDownloads(),
+      ),
       BlocListener<NowPlayingCubit, NowPlayingState>(
         listener: (_, _) => _syncPlayback(),
       ),
@@ -290,7 +358,10 @@ class _NotificationBridgeState extends State<NotificationBridge>
         }),
       ),
       BlocListener<PreviewCubit, PreviewState>(
-        listener: (_, _) => _syncPlayback(),
+        listener: (_, _) {
+          _syncPlayback();
+          _syncDownloads();
+        },
       ),
       BlocListener<PlaylistsCubit, List<Playlist>>(
         listener: (_, _) => _syncPlayback(),
@@ -312,6 +383,7 @@ class _NotificationBridgeState extends State<NotificationBridge>
       BlocListener<NotificationSettingsCubit, NotificationSettingsState>(
         listenWhen: (a, b) => a.settings != b.settings || a.loaded != b.loaded,
         listener: (_, _) {
+          _syncDownloads();
           _syncPlayback();
           _syncQueueArt();
         },

@@ -588,3 +588,8 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 - 앱을 다시 켜면 `getState`로 대기열을 복원한다 (`NowPlayingCubit.restore`). 셔플 여부 · 원래 순서는 Dart만 해석하는 `extras`로 맡겨 둔다. 알림을 누르면 PendingIntent로 앱을 열고 복원 뒤 `/player`로 간다.
 - D-093의 수명 규칙 변경: 앱 화면 시작 · 최근 작업에서 밀기에 하던 `PlaybackHub.reset()`을 없앴다. 앱을 밀어도 계속 재생한다 (재생 중이 아니면 Media3 기본 동작대로 서비스가 내려가고 알림도 사라진다). 프로세스가 죽은 뒤의 복원은 하지 않는다.
 - 기본값(사용자가 바꿀 수 있음): 앱이 꺼진 사이 곡이 넘어가면 알림의 좋아요 별을 숨긴다(곡별 좋아요를 싣지 않는다). 곡 정보 숨기기 설정은 글자까지 `setSession`으로 받아 두어 지킨다. 셔플 중 앱이 꺼진 사이 한 바퀴를 돌면 같은 순서로 반복한다(다시 섞기는 앱이 켜져 있을 때).
+
+## D-095 · 2026-10-11 · 받기 알림 · 포그라운드 서비스 복원 (D-091 되돌림, 네이티브 Kotlin)
+- D-091로 없앴던 받기 진행 알림(진행 막대 · 미리듣기/일시정지/중지/취소 버튼) · 결과 알림 · 받기 포그라운드 서비스(dataSync) · 관련 설정(백그라운드 받기 · 받기 진행 알림 · 받기 결과 알림)을 되살렸다. 받기는 여전히 Dart가 같은 프로세스에서 하고, 서비스는 앱이 뒤로 가도 프로세스를 살려 두는 역할만 한다.
+- 구현은 D-090 방향으로 네이티브(Kotlin)다: `DownloadNotificationPlugin`(엔진에 묶인 채널 `music_app/download_notification`) · `DownloadNotifications` · `DownloadForegroundService` · `DownloadActionReceiver`. 알림 버튼은 수신기가 받아 살아 있는 엔진으로 바로 전달하므로 앱 화면을 앞으로 띄우지 않고, MainActivity의 `moveTaskToBack` 우회도 쓰지 않는다. `flutter_local_notifications`는 다시 쓰지 않는다.
+- Dart 쪽(`DownloadNotifier` · `LocalDownloadNotifier` · 동기화 · 설정 · 문구 · 테스트)은 D-091 이전 구조를 그대로 되돌렸고, 재생 알림(D-093 · D-094)과는 엔진 · 서비스를 따로 쓴다.
