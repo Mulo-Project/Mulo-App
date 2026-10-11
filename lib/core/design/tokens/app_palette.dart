@@ -55,8 +55,8 @@ class AppPalette {
   static const Color markLightGray = Color(0xFFB0B6C0);
 
   // 라이트 테마 수채화 팔레트 원색.
-  static const Color watercolorLavender = Color(0xFF9A8CF0);
-  static const Color watercolorCoral = Color(0xFFE8708F);
+  static const Color watercolorLavender = Color(0xFF7C6CEA);
+  static const Color watercolorCoral = Color(0xFFE5487A);
 
   /// 기본 테마: 검정 배경 · 바이올렛 · 라임.
   static const AppPalette defaultDark = AppPalette(
@@ -83,17 +83,19 @@ class AppPalette {
     glowTertiary: [Color(0xFFFF8A3D), Color(0xFFE5322D), Color(0xFF3A0B0B)],
   );
 
-  /// 라이트 테마 바탕 (옅은 크림빛 배경 · 흰 면). 색 · 글로우는 수채화처럼 연한 파스텔 계열.
+  /// 라이트 테마 바탕: 살짝 푸른 라벤더 회색 배경 위에 흰 면이 또렷이 뜬다.
+  /// 배경과 면의 밝기 차 · 진한 글자 · 짙은 구분선으로 면이 번져 보이지 않게 하고,
+  /// 색 · 글로우는 채도를 올린 수채화 파스텔로 둔다.
   static const AppPalette _lightBase = AppPalette(
-    background: Color(0xFFFBF8FF),
+    background: Color(0xFFF1EFF9),
     surface: white,
-    surfaceHigh: Color(0xFFF1ECFA),
-    onSurface: Color(0xFF1B1830),
-    onSurfaceMuted: Color(0x991B1830),
-    outline: Color(0x1A3A2E6B),
-    glassFill: Color(0x99FFFFFF),
-    glassBorder: Color(0x1F3A2E6B),
-    glassHighlight: Color(0xE6FFFFFF),
+    surfaceHigh: Color(0xFFE6E2F4),
+    onSurface: Color(0xFF16132B),
+    onSurfaceMuted: Color(0xB316132B),
+    outline: Color(0x293A2E6B),
+    glassFill: Color(0xCCFFFFFF),
+    glassBorder: Color(0x333A2E6B),
+    glassHighlight: Color(0xFFFFFFFF),
     onGlow: white,
     scrim: black,
     primary: watercolorLavender,
@@ -101,11 +103,11 @@ class AppPalette {
     accent: watercolorCoral,
     onAccent: white,
     // 분홍 → 라벤더 → 푸른 보라 (수채화 번짐)
-    glowPrimary: [Color(0xFFF7A8CB), watercolorLavender, Color(0xFF6A78D8)],
+    glowPrimary: [Color(0xFFF08AB6), watercolorLavender, Color(0xFF5560D2)],
     // 하늘 → 물빛 → 짙은 청회
-    glowSecondary: [Color(0xFF8ECFF5), Color(0xFF6C9BE0), Color(0xFF3F5CA8)],
+    glowSecondary: [Color(0xFF7CC4F2), Color(0xFF5E8FDB), Color(0xFF3A56A6)],
     // 살구 → 산호 → 짙은 장밋빛
-    glowTertiary: [Color(0xFFFFC08A), Color(0xFFF08A8A), Color(0xFFB04A6A)],
+    glowTertiary: [Color(0xFFFFB77A), Color(0xFFF0807F), Color(0xFFB04465)],
   );
 
   /// 기본 라이트 테마: 수채화 파스텔. 강조 색은 밝은 배경에서도 보이도록 대비 3:1을 지킨다.

@@ -18,6 +18,7 @@ class TrackTile extends StatefulWidget {
     this.trailing,
     this.footer,
     this.active = false,
+    this.number,
     this.onTap,
     this.onMenu,
   });
@@ -39,6 +40,9 @@ class TrackTile extends StatefulWidget {
 
   /// 지금 재생 중인 곡이면 제목을 강조 색으로.
   final bool active;
+
+  /// 목록에서 몇 번째 곡인지 (있으면 커버 앞에 작은 숫자로).
+  final int? number;
   final VoidCallback? onTap;
 
   /// 길게 누르기 · 데스크톱 오른쪽 클릭 (곡 메뉴 같은 보조 동작).
@@ -73,6 +77,16 @@ class _TrackTileState extends State<TrackTile> {
           ),
           child: Row(
             children: [
+              if (w.number != null)
+                SizedBox(
+                  width: 28,
+                  child: Text(
+                    '${w.number}',
+                    style: text.labelMedium?.copyWith(
+                      color: w.active ? p.accent : p.onSurfaceMuted,
+                    ),
+                  ),
+                ),
               w.leading ??
                   ArtworkBox(image: w.artwork, tone: w.tone, color: w.color),
               const SizedBox(width: AppSpacing.sm),

@@ -518,6 +518,12 @@ abstract class AppLocalizations {
   /// **'아티스트순'**
   String get sortArtist;
 
+  /// No description provided for @sortCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 수순'**
+  String get sortCount;
+
   /// No description provided for @libraryImport.
   ///
   /// In ko, this message translates to:
@@ -2336,6 +2342,18 @@ abstract class AppLocalizations {
   /// **'삭제'**
   String get trackMenuDelete;
 
+  /// No description provided for @trackMenuRemoveFromQueue.
+  ///
+  /// In ko, this message translates to:
+  /// **'대기열에서 빼기'**
+  String get trackMenuRemoveFromQueue;
+
+  /// No description provided for @trackRemovedFromQueue.
+  ///
+  /// In ko, this message translates to:
+  /// **'대기열에서 뺐어요.'**
+  String get trackRemovedFromQueue;
+
   /// No description provided for @trackMenuRemoveFromPlaylist.
   ///
   /// In ko, this message translates to:
@@ -3289,6 +3307,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'곡 정보 숨김'**
   String get notifHiddenNote;
+
+  /// No description provided for @notifHiddenNotePosition.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 정보 숨김 · {n}/{total}번째 곡'**
+  String notifHiddenNotePosition(String n, String total);
 
   /// No description provided for @notifStop.
   ///

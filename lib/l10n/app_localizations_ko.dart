@@ -228,6 +228,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get sortArtist => '아티스트순';
 
   @override
+  String get sortCount => '곡 수순';
+
+  @override
   String get libraryImport => '기기 음악 불러오기';
 
   @override
@@ -1225,6 +1228,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get trackMenuDelete => '삭제';
 
   @override
+  String get trackMenuRemoveFromQueue => '대기열에서 빼기';
+
+  @override
+  String get trackRemovedFromQueue => '대기열에서 뺐어요.';
+
+  @override
   String get trackMenuRemoveFromPlaylist => '재생목록에서 빼기';
 
   @override
@@ -1731,6 +1740,11 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get notifHiddenNote => '곡 정보 숨김';
+
+  @override
+  String notifHiddenNotePosition(String n, String total) {
+    return '곡 정보 숨김 · $n/$total번째 곡';
+  }
 
   @override
   String get notifStop => '닫기';

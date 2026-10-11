@@ -65,7 +65,7 @@ class _DecorateSheet extends StatelessWidget {
 
   /// 이미지를 고르고 확대 · 위치를 맞춘 뒤 저장한다.
   Future<void> _pick(BuildContext context, CoverCubit covers) async {
-    final picked = await pickCoverArt(context);
+    final picked = await pickCoverArt(context, initialQuery: title);
     if (picked != null) await covers.setArt(coverKey, picked);
   }
 

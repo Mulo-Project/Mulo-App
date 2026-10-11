@@ -124,7 +124,7 @@ class _DownloadSheetState extends State<_DownloadSheet> {
       : CoverArt.web(widget.thumbnailUrl!);
 
   Future<void> _changeCover() async {
-    final picked = await pickCoverArt(context);
+    final picked = await pickCoverArt(context, initialQuery: _title.text);
     if (picked != null && mounted) setState(() => _cover = picked);
   }
 

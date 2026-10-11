@@ -374,12 +374,25 @@ class MemoryThemeSettingsRepository implements ThemeSettingsRepository {
   Future<ThemeSettings> load() async => settings;
 
   @override
-  Future<void> savePreset(String presetId) async =>
-      settings = ThemeSettings(presetId: presetId, mode: settings.mode);
+  Future<void> savePreset(String presetId) async => settings = ThemeSettings(
+    presetId: presetId,
+    mode: settings.mode,
+    followMood: settings.followMood,
+  );
 
   @override
-  Future<void> saveMode(AppThemeMode mode) async =>
-      settings = ThemeSettings(presetId: settings.presetId, mode: mode);
+  Future<void> saveMode(AppThemeMode mode) async => settings = ThemeSettings(
+    presetId: settings.presetId,
+    mode: mode,
+    followMood: settings.followMood,
+  );
+
+  @override
+  Future<void> saveFollowMood(bool value) async => settings = ThemeSettings(
+    presetId: settings.presetId,
+    mode: settings.mode,
+    followMood: value,
+  );
 }
 
 /// 메모리 재생 기록.
@@ -1169,6 +1182,24 @@ class FakeDownloadNotifier implements DownloadNotifier {
   @override
   Stream<DownloadNotificationAction> watchActions() => _actions.stream;
 
+  final _opens = StreamController<String>.broadcast();
+
+  /// 알림 본문을 눌러 앱이 이미 떠 있는 채로 열린 것처럼 한다.
+  void pressBody(String id) => _opens.add(id);
+
+  @override
+  Stream<String> watchOpenRequests() => _opens.stream;
+
+  /// 알림을 눌러 새로 켜진 것처럼 줄 id (한 번 받으면 비운다).
+  String? launchedWith;
+
+  @override
+  Future<String?> takeOpenRequest() async {
+    final id = launchedWith;
+    launchedWith = null;
+    return id;
+  }
+
   @override
   Future<void> showProgress({
     required String title,
@@ -1180,6 +1211,7 @@ class FakeDownloadNotifier implements DownloadNotifier {
     String? cancelLabel,
     String? pauseLabel,
     String? stopLabel,
+    String? openId,
   }) async {
     shown.add({
       'title': title,
@@ -1190,6 +1222,7 @@ class FakeDownloadNotifier implements DownloadNotifier {
       'cancel': cancelLabel,
       'pause': pauseLabel,
       'stop': stopLabel,
+      'openId': openId,
     });
     calls.add('progress:$title:$percent');
   }

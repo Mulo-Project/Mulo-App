@@ -553,7 +553,8 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   /// [queue]를 처음부터 재생하되 셔플을 켠다.
   void playShuffled(List<Track> queue) {
     if (queue.isEmpty) return;
-    playQueue(queue);
+    // 첫 곡이 아니라 무작위 곡에서 시작한다 (아니면 늘 목록 맨 위 곡이 먼저 나온다).
+    playQueue(queue, index: _random.nextInt(queue.length));
     if (!state.shuffle) toggleShuffle();
   }
 

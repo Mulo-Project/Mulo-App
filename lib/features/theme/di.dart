@@ -14,7 +14,13 @@ void registerTheme(GetIt sl) {
     ..registerFactory(() => LoadThemeSettings(sl()))
     ..registerFactory(() => SaveThemePreset(sl()))
     ..registerFactory(() => SaveThemeMode(sl()))
+    ..registerFactory(() => SaveFollowMood(sl()))
     ..registerFactory(
-      () => ThemeCubit(loadSettings: sl(), savePreset: sl(), saveMode: sl()),
+      () => ThemeCubit(
+        loadSettings: sl(),
+        savePreset: sl(),
+        saveMode: sl(),
+        saveFollowMood: sl(),
+      ),
     );
 }

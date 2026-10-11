@@ -57,6 +57,7 @@ class DownloadProgressNotice {
     this.cancelLabel,
     this.pauseLabel,
     this.stopLabel,
+    this.openId,
   });
 
   final String title;
@@ -68,6 +69,9 @@ class DownloadProgressNotice {
   final String? cancelLabel;
   final String? pauseLabel;
   final String? stopLabel;
+
+  /// 알림을 누르면 상세 화면을 열 받기 항목의 id.
+  final String? openId;
 }
 
 class ShowDownloadProgress implements UseCase<void, DownloadProgressNotice> {
@@ -85,6 +89,7 @@ class ShowDownloadProgress implements UseCase<void, DownloadProgressNotice> {
     cancelLabel: params.cancelLabel,
     pauseLabel: params.pauseLabel,
     stopLabel: params.stopLabel,
+    openId: params.openId,
   );
 }
 
@@ -141,6 +146,22 @@ class WatchDownloadActions
       _notifier.watchActions();
 }
 
+class WatchDownloadOpens implements StreamUseCase<String, NoParams> {
+  const WatchDownloadOpens(this._notifier);
+  final DownloadNotifier _notifier;
+
+  @override
+  Stream<String> call(NoParams params) => _notifier.watchOpenRequests();
+}
+
+class TakeDownloadOpen implements UseCase<String?, NoParams> {
+  const TakeDownloadOpen(this._notifier);
+  final DownloadNotifier _notifier;
+
+  @override
+  Future<String?> call(NoParams params) => _notifier.takeOpenRequest();
+}
+
 class WatchMediaCommands implements StreamUseCase<MediaCommand, NoParams> {
   const WatchMediaCommands(this._session);
   final MediaSession _session;
@@ -175,6 +196,8 @@ class NotificationActions {
     required this.clearResults,
     required this.watchCommands,
     required this.watchDownloadActions,
+    required this.watchDownloadOpens,
+    required this.takeDownloadOpen,
     required this.updateSession,
     required this.updateQueueArt,
     required this.isPermissionGranted,
@@ -187,6 +210,8 @@ class NotificationActions {
   final ClearDownloadResults clearResults;
   final WatchMediaCommands watchCommands;
   final WatchDownloadActions watchDownloadActions;
+  final WatchDownloadOpens watchDownloadOpens;
+  final TakeDownloadOpen takeDownloadOpen;
   final UpdateMediaSession updateSession;
   final UpdateMediaQueueArt updateQueueArt;
   final IsNotificationPermissionGranted isPermissionGranted;

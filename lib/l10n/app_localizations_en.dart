@@ -229,6 +229,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sortArtist => 'Artist';
 
   @override
+  String get sortCount => 'Song count';
+
+  @override
   String get libraryImport => 'Import device music';
 
   @override
@@ -1248,6 +1251,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackMenuDelete => 'Delete';
 
   @override
+  String get trackMenuRemoveFromQueue => 'Remove from queue';
+
+  @override
+  String get trackRemovedFromQueue => 'Removed from the queue.';
+
+  @override
   String get trackMenuRemoveFromPlaylist => 'Remove from playlist';
 
   @override
@@ -1773,6 +1782,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifHiddenNote => 'Song info hidden';
+
+  @override
+  String notifHiddenNotePosition(String n, String total) {
+    return 'Song info hidden · track $n of $total';
+  }
 
   @override
   String get notifStop => 'Close';

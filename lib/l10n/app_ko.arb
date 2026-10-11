@@ -91,6 +91,7 @@
   "sortName": "이름순",
   "sortAdded": "추가일순",
   "sortArtist": "아티스트순",
+  "sortCount": "곡 수순",
   "libraryImport": "기기 음악 불러오기",
   "libraryNoMatch": "찾는 곡이 없어요.",
   "playlistsSubtitle": "모음",
@@ -557,6 +558,8 @@
   "trackMenuAddToPlaylist": "재생목록에 추가",
   "trackMenuEditInfo": "정보 편집",
   "trackMenuDelete": "삭제",
+  "trackMenuRemoveFromQueue": "대기열에서 빼기",
+  "trackRemovedFromQueue": "대기열에서 뺐어요.",
   "trackMenuRemoveFromPlaylist": "재생목록에서 빼기",
   "trackMenuDeleteFile": "파일 삭제",
   "trackRemovedFromPlaylist": "재생목록에서 뺐어요",
@@ -731,6 +734,13 @@
   "notifHiddenTitle": "음악 재생 중",
   "notifPreviewLabel": "미리 듣기",
   "notifHiddenNote": "곡 정보 숨김",
+  "notifHiddenNotePosition": "곡 정보 숨김 · {n}/{total}번째 곡",
+  "@notifHiddenNotePosition": {
+    "placeholders": {
+      "n": {"type": "String"},
+      "total": {"type": "String"}
+    }
+  },
   "notifStop": "닫기",
   "notifChannelPlayback": "재생",
   "notifChannelDownloadProgress": "받는 중",

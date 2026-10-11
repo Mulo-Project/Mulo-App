@@ -12,6 +12,7 @@ ThemeCubit _cubit(MemoryThemeSettingsRepository repo) => ThemeCubit(
   loadSettings: LoadThemeSettings(repo),
   savePreset: SaveThemePreset(repo),
   saveMode: SaveThemeMode(repo),
+  saveFollowMood: SaveFollowMood(repo),
 );
 
 void main() {

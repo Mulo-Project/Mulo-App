@@ -26,23 +26,37 @@ enum _TrackAction {
   decorate,
   delete,
   removeFromPlaylist,
+  removeFromQueue,
   deleteFile,
 }
 
 /// 곡 타일의 ⋮ 버튼. 누르면 버튼 옆에 [showTrackMenu] 팝업 메뉴가 열린다.
 class TrackMoreButton extends StatelessWidget {
-  const TrackMoreButton({super.key, required this.track, this.playlistId});
+  const TrackMoreButton({
+    super.key,
+    required this.track,
+    this.playlistId,
+    this.inQueue = false,
+  });
 
   final Track track;
 
   /// 재생목록 안의 곡이면 그 재생목록 id (삭제가 "빼기" · "파일 삭제"로 나뉜다).
   final String? playlistId;
 
+  /// 재생 대기열 화면의 곡이면 true ("대기열에 추가" 대신 "대기열에서 빼기").
+  final bool inQueue;
+
   @override
   Widget build(BuildContext context) => Builder(
     builder: (context) => IconButton(
       tooltip: context.l10n.trackMenuTitle,
-      onPressed: () => showTrackMenu(context, track, playlistId: playlistId),
+      onPressed: () => showTrackMenu(
+        context,
+        track,
+        playlistId: playlistId,
+        inQueue: inQueue,
+      ),
       icon: Icon(AppIcons.more, color: context.palette.onSurfaceMuted),
     ),
   );
@@ -60,6 +74,7 @@ Future<void> showTrackMenu(
   Track track, {
   Offset? globalPosition,
   String? playlistId,
+  bool inQueue = false,
   bool inPlayer = false,
 }) async {
   final l10n = context.l10n;
@@ -80,11 +95,12 @@ Future<void> showTrackMenu(
         icon: AppIcons.playlistPlay,
         label: l10n.trackMenuPlayNext,
       ),
-      AppMenuItem(
-        value: _TrackAction.addToQueue,
-        icon: AppIcons.queue,
-        label: l10n.trackMenuAddToQueue,
-      ),
+      if (!inQueue)
+        AppMenuItem(
+          value: _TrackAction.addToQueue,
+          icon: AppIcons.queue,
+          label: l10n.trackMenuAddToQueue,
+        ),
       AppMenuItem(
         value: _TrackAction.addToPlaylist,
         icon: AppIcons.playlistAdd,
@@ -105,7 +121,7 @@ Future<void> showTrackMenu(
         icon: AppIcons.sparkle,
         label: l10n.trackMenuDecorate,
       ),
-      if (playlistId == null)
+      if (playlistId == null && !inQueue)
         AppMenuItem(
           value: _TrackAction.delete,
           icon: AppIcons.delete,
@@ -114,12 +130,20 @@ Future<void> showTrackMenu(
           dividerBefore: true,
         )
       else ...[
-        AppMenuItem(
-          value: _TrackAction.removeFromPlaylist,
-          icon: AppIcons.playlistRemove,
-          label: l10n.trackMenuRemoveFromPlaylist,
-          dividerBefore: true,
-        ),
+        if (inQueue)
+          AppMenuItem(
+            value: _TrackAction.removeFromQueue,
+            icon: AppIcons.playlistRemove,
+            label: l10n.trackMenuRemoveFromQueue,
+            dividerBefore: true,
+          )
+        else
+          AppMenuItem(
+            value: _TrackAction.removeFromPlaylist,
+            icon: AppIcons.playlistRemove,
+            label: l10n.trackMenuRemoveFromPlaylist,
+            dividerBefore: true,
+          ),
         AppMenuItem(
           value: _TrackAction.deleteFile,
           icon: AppIcons.delete,
@@ -161,6 +185,9 @@ Future<void> showTrackMenu(
       );
     case _TrackAction.delete || _TrackAction.deleteFile:
       await _delete(context, track);
+    case _TrackAction.removeFromQueue:
+      context.read<NowPlayingCubit>().removeFromQueue(track);
+      _snack(context, context.l10n.trackRemovedFromQueue);
     case _TrackAction.removeFromPlaylist:
       await context.read<PlaylistsCubit>().removeTrack(track.id, playlistId!);
       if (context.mounted) {

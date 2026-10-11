@@ -91,6 +91,9 @@ class AppLockCubit extends Cubit<AppLockState> {
   final AuthenticateBiometric _authenticateBiometric;
   final DateTime Function() _now;
 
+  /// 앱이 화면에서 사라진 시각 (돌아올 때 얼마나 비웠는지 본다).
+  DateTime? _leftAt;
+
   /// 앱 시작 때 한 번. 켜져 있으면 잠근 채로 시작한다.
   Future<void> load() async {
     final saved = await _load(const NoParams());
@@ -105,6 +108,24 @@ class AppLockCubit extends Cubit<AppLockState> {
         locked: saved.enabled,
       ),
     );
+  }
+
+  /// 이 시간 넘게 앱을 벗어났다 돌아오면 다시 잠근다. 짧은 앱 전환 ·
+  /// 파일 선택창 · 권한 창을 다녀올 때마다 잠기지 않게 하는 여유다.
+  static const relockAfter = Duration(seconds: 10);
+
+  /// 앱이 백그라운드로 갔다.
+  void appLeft() => _leftAt ??= _now();
+
+  /// 앱이 다시 앞으로 왔다 (알림을 눌러 돌아온 경우 포함).
+  /// 잠금이 켜져 있고 [relockAfter] 넘게 비웠으면 잠금 화면을 먼저 띄운다.
+  void appReturned() {
+    final left = _leftAt;
+    _leftAt = null;
+    if (left == null || !state.loaded || !state.enabled || state.locked) return;
+    if (_now().difference(left) >= relockAfter) {
+      emit(state.copyWith(locked: true));
+    }
   }
 
   bool get inCooldown {

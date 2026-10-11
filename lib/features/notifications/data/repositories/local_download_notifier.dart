@@ -21,11 +21,31 @@ class LocalDownloadNotifier implements DownloadNotifier {
   final MethodChannel _channel;
   Future<void>? _init;
   final _actions = StreamController<DownloadNotificationAction>.broadcast();
+  final _opens = StreamController<String>.broadcast();
 
   @override
   Stream<DownloadNotificationAction> watchActions() => _actions.stream;
 
+  @override
+  Stream<String> watchOpenRequests() => _opens.stream;
+
+  @override
+  Future<String?> takeOpenRequest() async {
+    try {
+      return await _channel.invokeMethod<String>('takeOpen');
+    } on PlatformException {
+      return null;
+    } on MissingPluginException {
+      return null;
+    }
+  }
+
   Future<void> _onCall(MethodCall call) async {
+    if (call.method == 'open') {
+      final id = await takeOpenRequest();
+      if (id != null) _opens.add(id);
+      return;
+    }
     if (call.method != 'action') return;
     final action = switch (call.arguments) {
       'preview' => DownloadNotificationAction.preview,
@@ -69,6 +89,7 @@ class LocalDownloadNotifier implements DownloadNotifier {
     String? cancelLabel,
     String? pauseLabel,
     String? stopLabel,
+    String? openId,
   }) => _call('showProgress', {
     'title': title,
     'body': body,
@@ -79,6 +100,7 @@ class LocalDownloadNotifier implements DownloadNotifier {
     'cancelLabel': cancelLabel,
     'pauseLabel': pauseLabel,
     'stopLabel': stopLabel,
+    'openId': openId,
     'color': AppPalette.violet.toARGB32(),
   });
 
@@ -96,6 +118,7 @@ class LocalDownloadNotifier implements DownloadNotifier {
     required bool failed,
   }) => _call('showResult', {
     'id': id,
+    'openId': id,
     'title': title,
     'body': body,
     'failed': failed,

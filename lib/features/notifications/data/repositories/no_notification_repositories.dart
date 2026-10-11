@@ -8,6 +8,12 @@ class NoDownloadNotifier implements DownloadNotifier {
   Stream<DownloadNotificationAction> watchActions() => const Stream.empty();
 
   @override
+  Stream<String> watchOpenRequests() => const Stream.empty();
+
+  @override
+  Future<String?> takeOpenRequest() async => null;
+
+  @override
   Future<void> showProgress({
     required String title,
     required String body,
@@ -18,6 +24,7 @@ class NoDownloadNotifier implements DownloadNotifier {
     String? cancelLabel,
     String? pauseLabel,
     String? stopLabel,
+    String? openId,
   }) async {}
 
   @override

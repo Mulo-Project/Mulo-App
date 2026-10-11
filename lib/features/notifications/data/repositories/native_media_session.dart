@@ -149,7 +149,9 @@ class NativeMediaSession implements MediaSession {
       'closeLabel': l10n.notifStop,
       'hideSongInfo': info.hidden,
       'hiddenTitle': l10n.notifHiddenTitle,
-      'hiddenNote': l10n.notifHiddenNote,
+      // {n} · {total}은 네이티브가 대기열 순번으로 바꿔 끼운다.
+      'hiddenNote': l10n.notifHiddenNotePosition('{n}', '{total}'),
+      'hiddenNoteSingle': l10n.notifHiddenNote,
       'unknownArtist': l10n.unknownArtist,
     });
   }

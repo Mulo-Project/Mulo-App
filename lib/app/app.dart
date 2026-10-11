@@ -26,9 +26,12 @@ import '../features/player/presentation/bloc/now_playing_cubit.dart';
 import '../features/player/presentation/bloc/player_style_cubit.dart';
 import '../features/playlists/presentation/bloc/playlists_cubit.dart';
 import '../features/search/presentation/bloc/preview_cubit.dart';
+import '../features/search/domain/entities/media_info.dart';
+import '../features/search/presentation/screens/media_detail_screen.dart';
 import '../features/security/presentation/bloc/app_lock_cubit.dart';
 import '../features/security/presentation/widgets/lock_gate.dart';
 import '../features/theme/presentation/bloc/theme_cubit.dart';
+import '../features/theme/presentation/widgets/mood_theme_follower.dart';
 import 'router.dart';
 
 /// 앱 루트. 앱 전체에서 쓰는 bloc은 MaterialApp 위에 두어
@@ -53,6 +56,13 @@ class _MusicAppState extends State<MusicApp> {
     if (_router.routerDelegate.currentConfiguration.uri.path != Routes.player) {
       _router.push(Routes.player);
     }
+  }
+
+  /// 받기 알림을 눌렀을 때: 그 곡의 상세 화면을 맨 위에 연다.
+  void _openDownload(MediaHit hit) {
+    _router.routerDelegate.navigatorKey.currentState?.push<void>(
+      MaterialPageRoute(builder: (_) => MediaDetailScreen(hit: hit)),
+    );
   }
 
   @override
@@ -90,6 +100,10 @@ class _MusicAppState extends State<MusicApp> {
         BlocProvider(lazy: false, create: (_) => sl<PlaylistsCubit>()..start()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(
+        // 화면에 보이는 색 · 모드가 바뀔 때만 앱 전체를 다시 만든다
+        // (프리셋 선택 기록 · 미리보기 표시만 바뀌는 상태는 거른다).
+        buildWhen: (a, b) =>
+            a.dark != b.dark || a.light != b.light || a.mode != b.mode,
         builder: (context, t) => MaterialApp.router(
           onGenerateTitle: (context) => context.l10n.appTitle,
           debugShowCheckedModeBanner: false,
@@ -121,8 +135,11 @@ class _MusicAppState extends State<MusicApp> {
                   : SystemUiOverlayStyle.dark,
               child: NotificationBridge(
                 onOpenPlayer: _openPlayer,
-                child: DownloadCompletionListener(
-                  child: LockGate(child: child!),
+                onOpenDownload: _openDownload,
+                child: MoodThemeFollower(
+                  child: DownloadCompletionListener(
+                    child: LockGate(child: child!),
+                  ),
                 ),
               ),
             );
