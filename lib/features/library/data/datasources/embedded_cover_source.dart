@@ -11,15 +11,38 @@ abstract interface class EmbeddedPictureReader {
 }
 
 /// Android: `content://` 곡은 네이티브 `MediaMetadataRetriever` (`music_app/media_store`).
+/// 이 방법이 못 읽는 ogg · opus · webm 계열은 캐시로 복사해 태그를 직접 읽는다
+/// (`music_app/lyrics`의 `copyToCache`, 읽은 뒤 바로 지움). 다른 형식은 복사하지 않는다.
 class MediaStorePictureReader implements EmbeddedPictureReader {
-  MediaStorePictureReader({MethodChannel? channel})
-    : _channel = channel ?? const MethodChannel('music_app/media_store');
+  MediaStorePictureReader({MethodChannel? channel, MethodChannel? copyChannel})
+    : _channel = channel ?? const MethodChannel('music_app/media_store'),
+      _copy = copyChannel ?? const MethodChannel('music_app/lyrics');
 
   final MethodChannel _channel;
+  final MethodChannel _copy;
+
+  static final _tagOnly = RegExp(r'ogg|opus|webm|weba', caseSensitive: false);
 
   @override
-  Future<Uint8List?> read(String uri) =>
-      _channel.invokeMethod<Uint8List>('embeddedPicture', {'uri': uri});
+  Future<Uint8List?> read(String uri) async {
+    final bytes = await _channel.invokeMethod<Uint8List>('embeddedPicture', {
+      'uri': uri,
+    });
+    if (bytes != null && bytes.isNotEmpty) return bytes;
+    final mime = await _channel.invokeMethod<String>('mimeType', {'uri': uri});
+    if (mime == null || !_tagOnly.hasMatch(mime)) return null;
+    final temp = await _copy.invokeMethod<String>('copyToCache', uri);
+    if (temp == null) return null;
+    try {
+      return await FilePictureReader().read(temp);
+    } finally {
+      try {
+        File(temp).deleteSync();
+      } on FileSystemException {
+        // 이미 없으면 그만.
+      }
+    }
+  }
 }
 
 /// 데스크톱: 파일 태그를 직접 읽는다 (audio_metadata_reader: mp3 · flac · m4a · ogg 등).

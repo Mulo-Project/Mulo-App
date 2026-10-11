@@ -82,6 +82,13 @@ class MediaStoreChannel(
                         main.post { result.success(bytes) }
                     }
                 }
+                "mimeType" -> result.success(
+                    try {
+                        context.contentResolver.getType(Uri.parse(call.argument<String>("uri")))
+                    } catch (e: Exception) {
+                        null
+                    },
+                )
                 "deleteAudio" -> deleteAudio(Uri.parse(call.argument<String>("uri")), result)
                 else -> result.notImplemented()
             }
