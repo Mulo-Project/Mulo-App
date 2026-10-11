@@ -58,6 +58,13 @@ import 'package:music_download_play_app/features/search/domain/repositories/prev
 import 'package:music_download_play_app/features/security/di.dart';
 import 'package:music_download_play_app/features/security/domain/entities/app_lock_settings.dart';
 import 'package:music_download_play_app/features/security/domain/repositories/app_lock_repository.dart';
+import 'package:music_download_play_app/features/subscriptions/di.dart';
+import 'package:music_download_play_app/features/subscriptions/domain/entities/feed_video.dart';
+import 'package:music_download_play_app/features/subscriptions/domain/entities/subscribed_channel.dart';
+import 'package:music_download_play_app/features/subscriptions/domain/entities/subscription_settings.dart';
+import 'package:music_download_play_app/features/subscriptions/domain/repositories/background_checker.dart';
+import 'package:music_download_play_app/features/subscriptions/domain/repositories/channel_feed.dart';
+import 'package:music_download_play_app/features/subscriptions/domain/repositories/subscription_repository.dart';
 import 'package:music_download_play_app/features/theme/di.dart';
 import 'package:music_download_play_app/features/theme/domain/entities/theme_settings.dart';
 import 'package:music_download_play_app/features/theme/domain/repositories/theme_settings_repository.dart';
@@ -655,6 +662,8 @@ Future<void> setUpTestDependencies({
   LoadedFolderRepository? folders,
   TrackFileRepository? trackFiles,
   DateTime? joinedAt,
+  SubscriptionRepository? subscriptions,
+  ChannelFeed? channelFeed,
 }) async {
   await sl.reset();
   registerTheme(sl);
@@ -671,8 +680,14 @@ Future<void> setUpTestDependencies({
   registerSearch(sl);
   registerNotifications(sl);
   registerPermissions(sl);
+  registerSubscriptions(sl);
   sl.allowReassignment = true;
   sl
+    ..registerLazySingleton<SubscriptionRepository>(
+      () => subscriptions ?? MemorySubscriptionRepository(),
+    )
+    ..registerLazySingleton<ChannelFeed>(() => channelFeed ?? FakeChannelFeed())
+    ..registerLazySingleton<BackgroundChecker>(FakeBackgroundChecker.new)
     ..registerLazySingleton<NotificationSettingsRepository>(
       MemoryNotificationSettings.new,
     )
@@ -1281,4 +1296,82 @@ class FakePermissionRepository implements PermissionRepository {
 
   @override
   Future<void> openSystemSettings() async => openedSettings++;
+}
+
+/// 메모리 구독 저장소.
+class MemorySubscriptionRepository implements SubscriptionRepository {
+  MemorySubscriptionRepository({
+    List<SubscribedChannel> channels = const [],
+    this.settings = const SubscriptionSettings(),
+  }) : channels = [...channels];
+
+  List<SubscribedChannel> channels;
+  SubscriptionSettings settings;
+
+  @override
+  Future<List<SubscribedChannel>> loadChannels() async => [...channels];
+
+  @override
+  Future<void> saveChannels(List<SubscribedChannel> value) async =>
+      channels = [...value];
+
+  @override
+  Future<SubscriptionSettings> loadSettings() async => settings;
+
+  @override
+  Future<void> saveSettings(SubscriptionSettings value) async =>
+      settings = value;
+}
+
+/// 채널 id별로 정해 둔 피드를 돌려주는 가짜 채널 피드.
+class FakeChannelFeed implements ChannelFeed {
+  FakeChannelFeed({this.feeds = const {}, this.failing = const {}});
+
+  final Map<String, List<FeedVideo>> feeds;
+
+  /// 읽을 때 실패하는 채널 id.
+  final Set<String> failing;
+
+  @override
+  Future<String?> resolveChannelId(String channelUrl) async {
+    final m = RegExp(r'/channel/(UC[0-9A-Za-z_-]{22})').firstMatch(channelUrl);
+    return m?.group(1);
+  }
+
+  @override
+  Future<List<FeedVideo>> fetch(String channelId) async {
+    if (failing.contains(channelId)) throw StateError('feed failed');
+    return feeds[channelId] ?? const [];
+  }
+}
+
+/// 마지막으로 받은 동기화 내용을 기록하는 가짜 백그라운드 확인.
+class FakeBackgroundChecker implements BackgroundChecker {
+  List<SubscribedChannel>? lastChannels;
+  SubscriptionSettings? lastSettings;
+  var cleared = 0;
+  var openRequested = false;
+
+  @override
+  Future<void> sync(
+    List<SubscribedChannel> channels,
+    SubscriptionSettings settings,
+    BackgroundTexts texts,
+  ) async {
+    lastChannels = channels;
+    lastSettings = settings;
+  }
+
+  @override
+  Future<bool> takeOpenRequest() async {
+    final v = openRequested;
+    openRequested = false;
+    return v;
+  }
+
+  @override
+  Stream<void> watchOpenRequests() => const Stream.empty();
+
+  @override
+  Future<void> clearNotification() async => cleared++;
 }

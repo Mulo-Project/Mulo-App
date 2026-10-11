@@ -10,6 +10,7 @@ import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../downloads/presentation/widgets/download_dialog.dart';
 import '../../../library/domain/entities/track.dart' show formatDuration;
+import '../../../subscriptions/presentation/widgets/subscribe_button.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/usecases/search_usecases.dart';
 import '../bloc/media_detail_cubit.dart';
@@ -459,6 +460,12 @@ class _ChannelRow extends StatelessWidget {
             ],
           ),
         ),
+        if (!audio)
+          SubscribeButton(
+            channelUrl: hit.channelUrl,
+            name: hit.uploader,
+            thumbnailUrl: hit.channelThumbnailUrl,
+          ),
         if (onOpen != null)
           PlainButton(
             label: audio

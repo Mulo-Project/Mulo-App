@@ -1841,4 +1841,128 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get notifDownloadFailedHidden => '곡을 받지 못했어요';
+
+  @override
+  String get subscribeAction => '구독';
+
+  @override
+  String get subscribedAction => '구독 중';
+
+  @override
+  String get subscribeAdded => '구독했어요. 지금부터 올라오는 영상을 알려 드려요';
+
+  @override
+  String get subscribeFailed => '이 채널은 구독할 수 없어요';
+
+  @override
+  String get unsubscribed => '구독을 해제했어요';
+
+  @override
+  String get subscriptionsTitle => '구독 채널';
+
+  @override
+  String get subscriptionsSubtitle => '새 영상 골라 받기';
+
+  @override
+  String get subscriptionsEmptyTitle => '구독한 채널이 없어요';
+
+  @override
+  String get subscriptionsEmptyBody =>
+      '영상 상세에서 채널의 구독을 누르면 새 영상이 올라올 때 골라서 받을 수 있어요.';
+
+  @override
+  String get subscriptionsNewVideos => '새 영상 보기';
+
+  @override
+  String get subscriptionsMusicOnly => '음악만';
+
+  @override
+  String get subscriptionsUnsubscribe => '구독 해제';
+
+  @override
+  String subscriptionsCount(int count) {
+    return '$count개 채널';
+  }
+
+  @override
+  String get newVideosTitle => '새 영상';
+
+  @override
+  String get newVideosChecking => '새 영상을 확인하고 있어요';
+
+  @override
+  String get newVideosEmptyTitle => '새 영상이 없어요';
+
+  @override
+  String get newVideosEmptyBody => '구독한 채널에 새 영상이 올라오면 여기에서 골라 받을 수 있어요.';
+
+  @override
+  String newVideosStart(int count) {
+    return '$count곡 받기';
+  }
+
+  @override
+  String newVideosStarted(int count) {
+    return '$count곡을 받기 시작했어요';
+  }
+
+  @override
+  String get newVideosSkipped => '이미 받은 곡이라 새로 받을 곡이 없어요';
+
+  @override
+  String get newVideosSelectAll => '모두 선택';
+
+  @override
+  String get newVideosSelectNone => '선택 해제';
+
+  @override
+  String newVideosAnnounce(int count) {
+    return '구독 채널에 새 영상이 $count개 있어요';
+  }
+
+  @override
+  String get newVideosOpen => '보기';
+
+  @override
+  String get settingsSubscriptions => '구독';
+
+  @override
+  String get settingsSubscriptionChannels => '구독 채널';
+
+  @override
+  String get settingsCheckOnLaunch => '앱을 켤 때 새 영상 확인';
+
+  @override
+  String get settingsCheckOnLaunchDesc => '구독한 채널에 새 영상이 있으면 알려 주고 골라서 받게 해요.';
+
+  @override
+  String get settingsBackgroundCheck => '앱이 꺼져 있어도 확인';
+
+  @override
+  String get settingsBackgroundCheckDesc => '주기적으로 확인하고 새 영상이 있으면 알림으로 알려요.';
+
+  @override
+  String get settingsCheckInterval => '확인 주기';
+
+  @override
+  String settingsCheckIntervalHours(int count) {
+    return '$count시간';
+  }
+
+  @override
+  String get settingsCheckWifiOnly => '와이파이에서만 확인';
+
+  @override
+  String get settingsCheckWifiOnlyDesc => '데이터를 쓰지 않도록 와이파이에 연결됐을 때만 확인해요.';
+
+  @override
+  String get notifChannelNewVideos => '새 영상';
+
+  @override
+  String get notifNewVideosTitle => '구독 채널에 새 영상이 올라왔어요';
+
+  @override
+  String notifNewVideosBody(String channels, String count) {
+    return '$channels · 새 영상 $count개';
+  }
 }
