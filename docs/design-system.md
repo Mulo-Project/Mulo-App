@@ -61,7 +61,7 @@ MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부�
 | `AppLineChart` | line_chart.dart | 꺾은선 그래프 (accent 선 · 점, outline 눈금, 최댓값 글자). 외부 차트 패키지 없음 |
 | `PillButton` | buttons.dart | 알약 버튼: accent · primary(단색 + 빛), tonal(유리), outline |
 | `CircleIconButton` | buttons.dart | 원형 유리 버튼, `emphasized` = 강조 색 + 빛 (재생); `onLongPress`로 길게 누르기 |
-| `RowIconButton` | buttons.dart | 목록 줄 오른쪽 작은 아이콘 버튼 (36px, 면 · 흐림 없음, `accent` = 강조 색, `busy` = 돌아가는 표시). 줄마다 `CircleIconButton`(유리)을 놓으면 스크롤이 끊긴다 |
+| `RowIconButton` | buttons.dart | 목록 줄 오른쪽 작은 아이콘 버튼 (36px, 면 · 흐림 없음, `accent` = 강조 색, `filled` = 강조 색으로 채운 동그라미(검색 실행 등), `busy` = 돌아가는 표시). 줄마다 `CircleIconButton`(유리)을 놓으면 스크롤이 끊긴다 |
 | `PlainButton` | buttons.dart | 면 없는 작은 글자 · 아이콘 버튼 (보조 동작 · 한 줄 여러 개) |
 | `MarqueeText` | marquee_text.dart | 한 줄 제목. 칸보다 길 때만 잠깐 멈췄다가 옆으로 흐르고(끝은 흐리게), 들어가면 일반 글자. `scroll: false`면 `…`로 줄임. 플레이어 · 미니 플레이어 · 재생 중인 곡 줄에 쓴다 (목록 전체가 움직이지 않게 나머지 줄은 `…`) |
 | `ProgressRing` · `ProgressLine` | progress.dart | 원형 · 막대 진행 표시 (강조 색 + 빛) |
@@ -72,6 +72,7 @@ MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부�
 | `AppSearchField` | app_search_field.dart | 알약 입력칸 (돋보기 · 지우기 · 오른쪽 버튼). 글자는 세로 가운데 |
 | `ArtworkBox` · `toneFor()` | artwork_box.dart | 커버 자리 (없으면 그라데이션), 키별 고정 톤. `width`를 주면 직사각형, `color`를 주면 사용자가 고른 색(`glowFromColor`)으로. 이미지는 칸 크기의 2배(화면 배율 포함) 안으로 줄여 디코딩한다 (`ResizeImage`) |
 | `YoutubeMark` | youtube_mark.dart | 유튜브 표시 (직접 그린 빨간 원 + 흰 링 + 흰 재생 삼각형, YouTube Music 모양, 테마와 무관) |
+| `SoundcloudMark` | soundcloud_mark.dart | 사운드클라우드 표시 (주황 둥근 사각형 + 검정 파형 막대 + 구름, 테마와 무관) |
 | `ColorPicker` | color_picker.dart | 커버 색 고르기 (자동 · 견본 12 · 색상 막대). 사용자가 고르는 색이라 견본은 테마 토큰이 아니라 고정 색 (토큰 규칙의 예외) |
 | `TrackTile` | track_tile.dart | 곡 한 줄 (커버 · 제목 · 부제 · 오른쪽 · 아래 줄). `onMenu(Offset)`: 길게 누르기 · 오른쪽 클릭 (눌린 좌표를 넘겨 팝업 메뉴를 그 자리에) |
 | `MenuRow` | menu_row.dart | 메뉴 시트의 한 줄 (아이콘 + 글자, 삭제는 `destructive` 경고 색) |

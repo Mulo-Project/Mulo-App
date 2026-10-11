@@ -57,7 +57,7 @@ class ServerEngine implements DownloaderEngine {
       'q': query,
       'page': '$page',
       'size': '$size',
-      if (source == SearchSource.web) 'source': 'web',
+      if (source.serverQuery != null) 'source': source.serverQuery!,
       if (newest) 'sort': 'date',
     });
     final items = (json['items'] as List? ?? const [])

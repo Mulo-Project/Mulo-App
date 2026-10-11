@@ -37,10 +37,10 @@ void main() {
         ],
       );
       final cubit = _cubit(engine);
-      await cubit.submit('  아이유 ', SearchSource.web);
+      await cubit.submit('  아이유 ', SearchSource.soundcloud);
       expect(cubit.state.status, SearchStatus.loaded);
       expect(cubit.state.items.map((h) => h.id), ['a', 'b']);
-      expect(engine.searches.single, ('아이유', SearchSource.web, 0));
+      expect(engine.searches.single, ('아이유', SearchSource.soundcloud, 0));
 
       await cubit.loadMore();
       expect(cubit.state.items.map((h) => h.id), ['a', 'b', 'c']); // 중복 b 제외
@@ -185,7 +185,10 @@ void main() {
         info: PlaylistInfo(title: '내 목록', entries: [_hit('x'), _hit('y')]),
       );
       final c2 = _cubit(list);
-      await c2.submit('https://youtube.com/playlist?list=1', SearchSource.web);
+      await c2.submit(
+        'https://youtube.com/playlist?list=1',
+        SearchSource.soundcloud,
+      );
       expect(c2.state.playlistTitle, '내 목록');
       expect(c2.state.items, hasLength(2));
     });
@@ -260,7 +263,7 @@ void main() {
       expect(info, isA<VideoInfo>());
       expect((info as VideoInfo).hit.downloaded, isTrue);
 
-      await engine.search('q', source: SearchSource.web);
+      await engine.search('q', source: SearchSource.soundcloud);
       expect(calls.last.queryParameters['source'], 'web');
     });
 
@@ -355,18 +358,18 @@ void main() {
       expect(page.items.map((h) => h.id), ['c']);
       expect(page.hasNext, isFalse);
 
-      await engine.search('노래', source: SearchSource.web, size: 1);
+      await engine.search('노래', source: SearchSource.soundcloud, size: 1);
       expect(args!.last, 'scsearch1:노래');
 
       await engine.search('노래', size: 3, newest: true);
       expect(args!.last, 'ytsearchdate3:노래'); // 최신순은 날짜 순 검색
       await engine.search(
         '노래',
-        source: SearchSource.web,
+        source: SearchSource.soundcloud,
         size: 1,
         newest: true,
       );
-      expect(args!.last, 'scsearchdate1:노래');
+      expect(args!.last, 'scsearch1:노래'); // 날짜 순 검색이 없는 사이트는 그대로
     });
 
     test('재생목록 정보를 읽는다', () async {

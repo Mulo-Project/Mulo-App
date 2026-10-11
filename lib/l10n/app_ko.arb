@@ -32,7 +32,7 @@
   "searchSubtitle": "찾고 받기",
   "searchHint": "유튜브 URL이나 검색어",
   "searchEmptyTitle": "무엇을 받을까요?",
-  "searchEmptyBody": "URL을 붙여넣거나 검색어를 입력하세요.\n유튜브 앱에서 공유를 누르면 바로 여기로 와요.",
+  "searchEmptyBody": "링크를 붙여 넣거나 검색어를 입력하세요.\n왼쪽 아이콘으로 찾을 사이트를 고를 수 있어요.",
   "searchNotReadyTitle": "쓸 수 있는 엔진이 없어요",
   "searchNotReadyBody": "서버 주소가 빌드에 없고 이 기기에 yt-dlp도 없어서 검색할 수 없어요.\n서버를 연결하거나 yt-dlp를 설치해 주세요.",
   "searchErrorTitle": "불러오지 못했어요",
@@ -419,10 +419,18 @@
       }
     }
   },
-  "searchHintWeb": "웹 음원 검색어나 URL",
+  "searchHintSite": "{site} URL이나 검색어",
+  "sourceSoundcloud": "SoundCloud",
+  "searchSubmitTooltip": "검색",
+  "searchPasteLink": "링크 붙여넣기",
+  "searchPasteEmpty": "클립보드에 링크가 없어요",
+  "@searchHintSite": {
+    "placeholders": {
+      "site": { "type": "String" }
+    }
+  },
   "searchSourceTooltip": "검색 대상",
   "sourceYoutube": "유튜브",
-  "sourceWeb": "웹",
   "searchHitMenuDetail": "상세 보기",
   "searchPreview": "미리 듣기",
   "searchPreviewStop": "미리 듣기 멈추기",

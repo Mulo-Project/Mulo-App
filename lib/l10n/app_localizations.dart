@@ -251,7 +251,7 @@ abstract class AppLocalizations {
   /// No description provided for @searchEmptyBody.
   ///
   /// In ko, this message translates to:
-  /// **'URL을 붙여넣거나 검색어를 입력하세요.\n유튜브 앱에서 공유를 누르면 바로 여기로 와요.'**
+  /// **'링크를 붙여 넣거나 검색어를 입력하세요.\n왼쪽 아이콘으로 찾을 사이트를 고를 수 있어요.'**
   String get searchEmptyBody;
 
   /// No description provided for @searchNotReadyTitle.
@@ -1688,11 +1688,35 @@ abstract class AppLocalizations {
   /// **'{count}회'**
   String playCount(int count);
 
-  /// No description provided for @searchHintWeb.
+  /// No description provided for @searchHintSite.
   ///
   /// In ko, this message translates to:
-  /// **'웹 음원 검색어나 URL'**
-  String get searchHintWeb;
+  /// **'{site} URL이나 검색어'**
+  String searchHintSite(String site);
+
+  /// No description provided for @sourceSoundcloud.
+  ///
+  /// In ko, this message translates to:
+  /// **'SoundCloud'**
+  String get sourceSoundcloud;
+
+  /// No description provided for @searchSubmitTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'검색'**
+  String get searchSubmitTooltip;
+
+  /// No description provided for @searchPasteLink.
+  ///
+  /// In ko, this message translates to:
+  /// **'링크 붙여넣기'**
+  String get searchPasteLink;
+
+  /// No description provided for @searchPasteEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'클립보드에 링크가 없어요'**
+  String get searchPasteEmpty;
 
   /// No description provided for @searchSourceTooltip.
   ///
@@ -1705,12 +1729,6 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'유튜브'**
   String get sourceYoutube;
-
-  /// No description provided for @sourceWeb.
-  ///
-  /// In ko, this message translates to:
-  /// **'웹'**
-  String get sourceWeb;
 
   /// No description provided for @searchHitMenuDetail.
   ///

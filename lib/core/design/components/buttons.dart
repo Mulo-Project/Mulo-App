@@ -238,6 +238,7 @@ class RowIconButton extends StatelessWidget {
     required this.tooltip,
     this.onPressed,
     this.accent = false,
+    this.filled = false,
     this.busy = false,
     this.busyChild,
   });
@@ -248,6 +249,9 @@ class RowIconButton extends StatelessWidget {
 
   /// 강조 색으로 그린다 (켜진 상태 · 주 동작).
   final bool accent;
+
+  /// 강조 색으로 채운 동그라미 위에 그린다 (검색 실행 같은 주 버튼).
+  final bool filled;
 
   /// 일하는 중: 아이콘 대신 돌아가는 표시를 보인다 (누를 수는 있다).
   final bool busy;
@@ -265,8 +269,12 @@ class RowIconButton extends StatelessWidget {
         child: InkWell(
           onTap: onPressed,
           customBorder: const CircleBorder(),
-          child: SizedBox.square(
-            dimension: AppSizes.rowButton,
+          child: Ink(
+            width: AppSizes.rowButton,
+            height: AppSizes.rowButton,
+            decoration: filled
+                ? BoxDecoration(color: p.accent, shape: BoxShape.circle)
+                : null,
             child: busy
                 ? Center(
                     child: busyChild ?? _Spinner(size: 18, color: p.accent),
@@ -274,7 +282,11 @@ class RowIconButton extends StatelessWidget {
                 : Icon(
                     icon,
                     size: AppSizes.rowButton * .56,
-                    color: accent ? p.accent : p.onSurface,
+                    color: filled
+                        ? p.onAccent
+                        : accent
+                        ? p.accent
+                        : p.onSurface,
                   ),
           ),
         ),

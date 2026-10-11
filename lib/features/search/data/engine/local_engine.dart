@@ -64,9 +64,10 @@ class LocalEngine implements DownloaderEngine {
   }) async {
     // 사이트 검색은 쪽 개념이 없어서 (page+1)*size개를 받아 해당 쪽만 자른다.
     final want = (page + 1) * size;
-    // 최신순은 yt-dlp의 날짜 순 검색(ytsearchdate · scsearchdate)으로 찾는다.
-    final base = source == SearchSource.web ? 'scsearch' : 'ytsearch';
-    final prefix = newest ? '${base}date' : base;
+    // 최신순은 날짜 순 검색(ytsearchdate · nicosearchdate)이 있는 사이트만 쓴다.
+    final prefix = newest && source.supportsNewest
+        ? '${source.searchKey}date'
+        : source.searchKey;
     final out = await _exec([
       '--flat-playlist',
       '--dump-json',
@@ -270,8 +271,16 @@ class LocalEngine implements DownloaderEngine {
     final thumbs = j['thumbnails'];
     var thumb = j['thumbnail'] as String?;
     if (thumb == null && thumbs is List && thumbs.isNotEmpty) {
+      // SoundCloud는 원본 크기가 맨 뒤라 목록에 쓰기엔 크다. 폭을 아는 것 중 500 이하에서 가장 큰 것을 쓴다.
+      Map? pick;
+      for (final t in thumbs) {
+        if (t is! Map) continue;
+        final w = t['width'];
+        if (w is num && w <= 500) pick = t;
+      }
       final last = thumbs.last;
-      if (last is Map) thumb = last['url'] as String?;
+      final chosen = pick ?? (last is Map ? last : null);
+      thumb = chosen?['url'] as String?;
     }
     return thumb;
   }

@@ -320,7 +320,7 @@ void main() {
     await tester.pumpWidget(const MusicApp(initialLocation: Routes.search));
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(AppIcons.paste), findsNothing);
+    expect(find.byIcon(AppIcons.paste), findsOneWidget); // 시작 화면의 링크 붙여넣기 버튼 하나
     // 펼친 목록에서 곡 하나만 취소한다.
     await tester.tap(find.byKey(const ValueKey('download-bar-toggle')));
     await tester.pumpAndSettle();
@@ -498,7 +498,7 @@ void main() {
     expect(find.byIcon(AppIcons.chevronDown), findsNothing);
   });
 
-  testWidgets('검색 대상 메뉴: 유튜브 → 웹', (tester) async {
+  testWidgets('검색 대상 메뉴: 유튜브 → SoundCloud, 오른쪽 버튼으로 검색', (tester) async {
     await open(tester, const []);
     // 검색창에는 아이콘만, 눌러서 연 메뉴에는 아이콘 + 이름.
     expect(find.text('유튜브'), findsNothing);
@@ -506,10 +506,11 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('youtube-mark')));
     await tester.pumpAndSettle();
     expect(find.text('유튜브'), findsOneWidget);
-    await tester.tap(find.text('웹'));
+    await tester.tap(find.text('SoundCloud'));
     await tester.pumpAndSettle();
-    expect(find.byIcon(AppIcons.globe), findsOneWidget);
-    expect(find.text('웹'), findsNothing);
-    expect(find.text('웹 음원 검색어나 URL'), findsOneWidget);
+    expect(find.byKey(const ValueKey('youtube-mark')), findsNothing);
+    expect(find.text('SoundCloud URL이나 검색어'), findsOneWidget);
+    // 오른쪽 검색 버튼
+    expect(find.byTooltip('검색'), findsOneWidget);
   });
 }

@@ -88,7 +88,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchEmptyBody =>
-      'Paste a URL or type keywords.\nShare from the YouTube app to open it here.';
+      'Paste a link or type keywords.\nPick the site to search with the icon on the left.';
 
   @override
   String get searchNotReadyTitle => 'No engine available';
@@ -873,16 +873,27 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get searchHintWeb => 'Web audio search or URL';
+  String searchHintSite(String site) {
+    return '$site URL or keywords';
+  }
+
+  @override
+  String get sourceSoundcloud => 'SoundCloud';
+
+  @override
+  String get searchSubmitTooltip => 'Search';
+
+  @override
+  String get searchPasteLink => 'Paste link';
+
+  @override
+  String get searchPasteEmpty => 'No link on the clipboard';
 
   @override
   String get searchSourceTooltip => 'Search source';
 
   @override
   String get sourceYoutube => 'YouTube';
-
-  @override
-  String get sourceWeb => 'Web';
 
   @override
   String get searchHitMenuDetail => 'View details';

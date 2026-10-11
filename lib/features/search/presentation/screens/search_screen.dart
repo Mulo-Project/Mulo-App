@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -54,6 +55,20 @@ class _SearchScreenState extends State<SearchScreen> {
 
   void _submit() => _cubit.submit(_controller.text, _source);
 
+  /// 클립보드의 링크를 입력칸에 넣고 바로 곡 정보를 불러온다.
+  Future<void> _pasteLink() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final empty = context.l10n.searchPasteEmpty;
+    final text = (await Clipboard.getData(Clipboard.kTextPlain))?.text?.trim();
+    if (!mounted) return;
+    if (text == null || !SearchCubit.isUrl(text)) {
+      messenger.showSnackBar(SnackBar(content: Text(empty)));
+      return;
+    }
+    _controller.text = text;
+    _submit();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -76,25 +91,31 @@ class _SearchScreenState extends State<SearchScreen> {
               padding: AppSpacing.screen,
               child: AppSearchField(
                 controller: _controller,
-                hint: _source == SearchSource.web
-                    ? l10n.searchHintWeb
-                    : l10n.searchHint,
+                hint: _source == SearchSource.youtube
+                    ? l10n.searchHint
+                    : l10n.searchHintSite(sourceLabel(context, _source)),
                 clearTooltip: l10n.actionClear,
                 onChanged: (q) {
                   if (q.trim().isEmpty) _submit();
                 },
                 onSubmitted: (_) => _submit(),
-                suffix: SearchSourceMenu(
+                leading: SearchSourceMenu(
                   source: _source,
                   onChanged: (s) {
                     setState(() => _source = s);
                     if (_controller.text.trim().isNotEmpty) _submit();
                   },
                 ),
+                suffix: RowIconButton(
+                  icon: AppIcons.search,
+                  tooltip: l10n.searchSubmitTooltip,
+                  filled: true,
+                  onPressed: _submit,
+                ),
               ),
             ),
             const SizedBox(height: AppSpacing.md),
-            _Body(onRetry: _submit),
+            _Body(onRetry: _submit, onPaste: _pasteLink),
           ],
         ),
       ),
@@ -103,9 +124,10 @@ class _SearchScreenState extends State<SearchScreen> {
 }
 
 class _Body extends StatelessWidget {
-  const _Body({required this.onRetry});
+  const _Body({required this.onRetry, required this.onPaste});
 
   final VoidCallback onRetry;
+  final VoidCallback onPaste;
 
   @override
   Widget build(BuildContext context) {
@@ -118,6 +140,12 @@ class _Body extends StatelessWidget {
           icon: AppIcons.explore,
           title: l10n.searchEmptyTitle,
           body: l10n.searchEmptyBody,
+          action: PillButton(
+            label: l10n.searchPasteLink,
+            icon: AppIcons.paste,
+            variant: PillVariant.tonal,
+            onPressed: onPaste,
+          ),
         );
       case SearchStatus.loading:
         return const Padding(
@@ -247,7 +275,9 @@ class _SortMenu extends StatelessWidget {
       // 최신순은 검색을 날짜 순으로 다시 하는 것이라 키워드 검색일 때만 있다.
       values: [
         for (final s in SearchSort.values)
-          if (s != SearchSort.newest || state.keyword) s,
+          if (s != SearchSort.newest ||
+              (state.keyword && cubit.source.supportsNewest))
+            s,
       ],
       selected: state.sort,
       labelOf: (s) => switch (s) {
