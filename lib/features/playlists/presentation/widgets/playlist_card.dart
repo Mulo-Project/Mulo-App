@@ -294,21 +294,18 @@ class _FeaturedState extends State<_Featured> {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          // 대표곡 제목 · 가수가 칸보다 길면 옆으로 흘러간다.
+                          MarqueeText(
                             t.title,
                             style: (open ? text.labelLarge : text.labelSmall)
                                 ?.copyWith(color: p.onSurface),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
                           if (open && t.artist.isNotEmpty)
-                            Text(
+                            MarqueeText(
                               t.artist,
                               style: text.labelSmall?.copyWith(
                                 color: p.onSurfaceMuted,
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
                             ),
                           if (open)
                             Text(
