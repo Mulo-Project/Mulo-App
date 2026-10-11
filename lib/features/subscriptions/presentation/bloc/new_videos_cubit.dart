@@ -43,10 +43,10 @@ class NewVideosState extends Equatable {
   /// 확인한 결과 (거르기 전).
   final List<ChannelNewVideos> checked;
 
-  /// "음악만"에 걸려 숨긴 영상 id.
+  /// 채널의 분류 조건에 맞지 않아 숨긴 영상 id.
   final Set<String> hidden;
 
-  /// "음악만" 채널에서 분류를 이미 확인한 영상 id.
+  /// 분류를 거르는 채널에서 분류를 이미 확인한 영상 id.
   final Set<String> resolved;
   final Set<String> selected;
 
@@ -56,13 +56,16 @@ class NewVideosState extends Equatable {
   /// 화면 모양 확인용 샘플 데이터인지 (받기는 하지 않는다).
   final bool sample;
 
-  /// "음악만" 채널의 영상은 분류를 확인하기 전에는 보이지 않는다.
+  /// 분류를 거르는 채널의 영상은 분류를 확인하기 전에는 보이지 않는다.
   bool _visible(SubscribedChannel c, FeedVideo v) =>
-      !hidden.contains(v.id) && (!c.musicOnly || resolved.contains(v.id));
+      !hidden.contains(v.id) &&
+      (!c.filtersCategories || resolved.contains(v.id));
 
   /// 분류 확인이 남은 영상이 있는지.
   bool get resolving => checked.any(
-    (r) => r.channel.musicOnly && r.videos.any((v) => !resolved.contains(v.id)),
+    (r) =>
+        r.channel.filtersCategories &&
+        r.videos.any((v) => !resolved.contains(v.id)),
   );
 
   List<NewVideosGroup> get groups => [
@@ -161,22 +164,22 @@ class NewVideosCubit extends Cubit<NewVideosState> {
     unawaited(_resolveCategories(gen));
   }
 
-  /// "음악만" 채널의 새 영상은 분류(Music)를 읽어 아닌 것을 숨긴다. 읽지 못하면 그대로 보여 준다.
+  /// 분류를 거르는 채널의 새 영상은 분류를 읽어 조건에 맞지 않는 것을 숨긴다. 읽지 못하면 그대로 보여 준다.
   Future<void> _resolveCategories(int gen) async {
     final todo = [
       for (final r in state.checked)
-        if (r.channel.musicOnly)
-          for (final v in r.videos) v,
+        if (r.channel.filtersCategories)
+          for (final v in r.videos) (r.channel, v),
     ];
     var next = 0;
     Future<void> worker() async {
       while (next < todo.length) {
-        final v = todo[next++];
-        var music = true;
+        final (channel, v) = todo[next++];
+        var accepted = true;
         try {
           final info = await _info(v.url);
-          if (info case VideoInfo(:final hit) when hit.categories.isNotEmpty) {
-            music = hit.categories.contains('Music');
+          if (info case VideoInfo(:final hit)) {
+            accepted = channel.accepts(hit.categories);
           }
         } on Object {
           // 읽지 못하면 걸러내지 않는다.
@@ -185,8 +188,8 @@ class NewVideosCubit extends Cubit<NewVideosState> {
         emit(
           state.copyWith(
             resolved: {...state.resolved, v.id},
-            hidden: music ? null : {...state.hidden, v.id},
-            selected: music ? null : ({...state.selected}..remove(v.id)),
+            hidden: accepted ? null : {...state.hidden, v.id},
+            selected: accepted ? null : ({...state.selected}..remove(v.id)),
           ),
         );
       }

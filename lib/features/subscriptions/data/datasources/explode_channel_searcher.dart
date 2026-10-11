@@ -21,6 +21,7 @@ class ExplodeChannelSearcher implements ChannelSearcher {
               name: r.name,
               description: r.description,
               thumbnailUrl: _thumbnail(r.thumbnails),
+              videoCount: r.videoCount,
             ),
       ];
     } finally {

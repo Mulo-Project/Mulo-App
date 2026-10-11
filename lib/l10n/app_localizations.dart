@@ -3548,12 +3548,6 @@ abstract class AppLocalizations {
   /// **'새 영상 보기'**
   String get subscriptionsNewVideos;
 
-  /// No description provided for @subscriptionsMusicOnly.
-  ///
-  /// In ko, this message translates to:
-  /// **'음악만'**
-  String get subscriptionsMusicOnly;
-
   /// No description provided for @subscriptionsUnsubscribe.
   ///
   /// In ko, this message translates to:
@@ -3763,6 +3757,30 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'새 영상 화면 미리 보기'**
   String get subscriptionsTestNewVideos;
+
+  /// No description provided for @categoryAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'모든 분류'**
+  String get categoryAll;
+
+  /// No description provided for @subscriptionsCategories.
+  ///
+  /// In ko, this message translates to:
+  /// **'알림 받을 분류'**
+  String get subscriptionsCategories;
+
+  /// No description provided for @subscriptionsCategoriesDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'고른 분류의 새 영상만 알리고 보여 줘요. 고르지 않으면 모든 분류예요.'**
+  String get subscriptionsCategoriesDesc;
+
+  /// No description provided for @channelInfoVideoCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'영상 {count}개'**
+  String channelInfoVideoCount(int count);
 }
 
 class _AppLocalizationsDelegate

@@ -55,10 +55,11 @@ class SubscribeParams {
     required this.name,
     this.thumbnailUrl,
     this.channelId,
+    this.categories = const {},
   });
 
   /// 채널 검색 결과로 구독할 때: 채널 id를 이미 알고 있다.
-  SubscribeParams.fromHit(ChannelHit hit)
+  SubscribeParams.fromHit(ChannelHit hit, {this.categories = const {}})
     : channelUrl = hit.url,
       name = hit.name,
       thumbnailUrl = hit.thumbnailUrl,
@@ -70,6 +71,9 @@ class SubscribeParams {
 
   /// 알고 있으면 채널 페이지를 읽지 않는다.
   final String? channelId;
+
+  /// 알림 · 새 영상에 넣을 분류 (비어 있으면 모든 분류).
+  final Set<String> categories;
 }
 
 /// 채널 주소에서 채널 id를 알아내 구독 채널을 만든다. 첫 구독이라 기준 시각은 지금이다
@@ -96,6 +100,7 @@ class CreateSubscription
       name: params.name,
       url: params.channelUrl,
       thumbnailUrl: params.thumbnailUrl,
+      categories: params.categories,
       baselineAt: _now().toUtc(),
     );
   }

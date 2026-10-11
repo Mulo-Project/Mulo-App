@@ -1874,9 +1874,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get subscriptionsNewVideos => '새 영상 보기';
 
   @override
-  String get subscriptionsMusicOnly => '음악만';
-
-  @override
   String get subscriptionsUnsubscribe => '구독 해제';
 
   @override
@@ -1992,4 +1989,19 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get subscriptionsTestNewVideos => '새 영상 화면 미리 보기';
+
+  @override
+  String get categoryAll => '모든 분류';
+
+  @override
+  String get subscriptionsCategories => '알림 받을 분류';
+
+  @override
+  String get subscriptionsCategoriesDesc =>
+      '고른 분류의 새 영상만 알리고 보여 줘요. 고르지 않으면 모든 분류예요.';
+
+  @override
+  String channelInfoVideoCount(int count) {
+    return '영상 $count개';
+  }
 }

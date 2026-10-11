@@ -9,6 +9,7 @@ import '../../domain/entities/channel_hit.dart';
 import '../../domain/usecases/subscription_usecases.dart';
 import '../bloc/channel_search_cubit.dart';
 import '../bloc/subscriptions_cubit.dart';
+import '../widgets/channel_info_sheet.dart';
 
 /// 채널 검색: 키워드로 채널을 찾아 구독한다.
 class ChannelSearchScreen extends StatefulWidget {
@@ -121,6 +122,8 @@ class _ChannelSearchScreenState extends State<ChannelSearchScreen> {
                                         hit: hit,
                                         subscribed: subs.isSubscribedId(hit.id),
                                         onToggle: () => _toggle(hit),
+                                        onOpen: () =>
+                                            showChannelInfoSheet(context, hit),
                                       ),
                                   ],
                                 ),
@@ -142,11 +145,13 @@ class _Row extends StatelessWidget {
     required this.hit,
     required this.subscribed,
     required this.onToggle,
+    required this.onOpen,
   });
 
   final ChannelHit hit;
   final bool subscribed;
   final VoidCallback onToggle;
+  final VoidCallback onOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -163,7 +168,7 @@ class _Row extends StatelessWidget {
         accent: !subscribed,
         onPressed: onToggle,
       ),
-      onTap: onToggle,
+      onTap: onOpen,
     );
   }
 }

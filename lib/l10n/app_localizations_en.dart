@@ -1918,9 +1918,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get subscriptionsNewVideos => 'See new videos';
 
   @override
-  String get subscriptionsMusicOnly => 'Music only';
-
-  @override
   String get subscriptionsUnsubscribe => 'Unsubscribe';
 
   @override
@@ -2041,4 +2038,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get subscriptionsTestNewVideos => 'Preview new videos screen';
+
+  @override
+  String get categoryAll => 'All categories';
+
+  @override
+  String get subscriptionsCategories => 'Categories to be notified about';
+
+  @override
+  String get subscriptionsCategoriesDesc =>
+      'Only new videos in the chosen categories are shown and notified. Pick none for all categories.';
+
+  @override
+  String channelInfoVideoCount(int count) {
+    return '$count videos';
+  }
 }

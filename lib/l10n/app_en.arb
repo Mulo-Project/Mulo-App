@@ -684,7 +684,6 @@
   "subscriptionsEmptyTitle": "No subscribed channels",
   "subscriptionsEmptyBody": "Tap Subscribe on a video's channel and you can pick new videos to download when they are posted.",
   "subscriptionsNewVideos": "See new videos",
-  "subscriptionsMusicOnly": "Music only",
   "subscriptionsUnsubscribe": "Unsubscribe",
   "subscriptionsCount": "{count} channels",
   "newVideosTitle": "New videos",
@@ -719,5 +718,9 @@
   "channelSearchFailed": "Couldn't search for channels. Please try again later",
   "subscriptionsTestTitle": "Temporary · preview only",
   "subscriptionsTestNotification": "Show new-video notification",
-  "subscriptionsTestNewVideos": "Preview new videos screen"
+  "subscriptionsTestNewVideos": "Preview new videos screen",
+  "categoryAll": "All categories",
+  "subscriptionsCategories": "Categories to be notified about",
+  "subscriptionsCategoriesDesc": "Only new videos in the chosen categories are shown and notified. Pick none for all categories.",
+  "channelInfoVideoCount": "{count} videos"
 }

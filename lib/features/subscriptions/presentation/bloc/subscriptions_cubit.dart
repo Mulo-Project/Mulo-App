@@ -124,10 +124,11 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
       c.id == id ? c.copyWith(enabled: enabled) : c,
   ]);
 
-  Future<void> setMusicOnly(String id, bool musicOnly) => _setChannels([
-    for (final c in state.channels)
-      c.id == id ? c.copyWith(musicOnly: musicOnly) : c,
-  ]);
+  Future<void> setCategories(String id, Set<String> categories) =>
+      _setChannels([
+        for (final c in state.channels)
+          c.id == id ? c.copyWith(categories: categories) : c,
+      ]);
 
   /// 채널별로 여기까지 봤다고 표시한다 (기준 시각을 당긴다).
   Future<void> markSeen(Map<String, DateTime> seenUntil) async {

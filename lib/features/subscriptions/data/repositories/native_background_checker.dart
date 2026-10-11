@@ -50,6 +50,7 @@ class NativeBackgroundChecker implements BackgroundChecker {
               'id': c.id,
               'name': c.name,
               'baselineMs': c.baselineAt.millisecondsSinceEpoch,
+              'categories': c.categories.toList(),
             },
       ],
       'channelName': texts.channelName,

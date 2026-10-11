@@ -4,8 +4,16 @@ import android.content.Context
 import org.json.JSONArray
 import org.json.JSONObject
 
-/** 구독 채널 하나 (Dart가 넘긴 값). [baselineMs]보다 늦게 올라온 영상이 새 영상이다. */
-data class SubscribedChannel(val id: String, val name: String, val baselineMs: Long)
+/**
+ * 구독 채널 하나 (Dart가 넘긴 값). [baselineMs]보다 늦게 올라온 영상이 새 영상이다.
+ * [categories]가 비어 있지 않으면 그 유튜브 분류의 영상만 알린다 (분류를 모르는 영상은 알린다).
+ */
+data class SubscribedChannel(
+    val id: String,
+    val name: String,
+    val baselineMs: Long,
+    val categories: Set<String> = emptySet(),
+)
 
 /**
  * 백그라운드 확인에 필요한 값을 SharedPreferences에 보관한다 (앱이 꺼져 있어도 워커가 읽는다).
@@ -29,7 +37,8 @@ object SubscriptionStore {
                 JSONObject()
                     .put("id", id)
                     .put("name", m["name"] as? String ?: "")
-                    .put("baselineMs", (m["baselineMs"] as? Number)?.toLong() ?: 0L),
+                    .put("baselineMs", (m["baselineMs"] as? Number)?.toLong() ?: 0L)
+                    .put("categories", JSONArray((m["categories"] as? List<*>)?.filterIsInstance<String>() ?: emptyList<String>())),
             )
         }
         val config = JSONObject()
@@ -54,7 +63,13 @@ object SubscriptionStore {
         val arr = config(context)?.optJSONArray("channels") ?: return emptyList()
         return (0 until arr.length()).mapNotNull { i ->
             val o = arr.optJSONObject(i) ?: return@mapNotNull null
-            SubscribedChannel(o.getString("id"), o.optString("name"), o.optLong("baselineMs"))
+            val cats = o.optJSONArray("categories")
+            SubscribedChannel(
+                o.getString("id"),
+                o.optString("name"),
+                o.optLong("baselineMs"),
+                if (cats == null) emptySet() else (0 until cats.length()).map { cats.getString(it) }.toSet(),
+            )
         }
     }
 

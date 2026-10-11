@@ -41,7 +41,7 @@ final _t0 = DateTime.utc(2026, 10, 5);
 
 SubscribedChannel _channel({
   bool enabled = true,
-  bool musicOnly = false,
+  Set<String> categories = const {},
   DateTime? baseline,
 }) => SubscribedChannel(
   id: _channelId,
@@ -49,7 +49,7 @@ SubscribedChannel _channel({
   url: 'https://www.youtube.com/channel/$_channelId',
   baselineAt: baseline ?? _t0,
   enabled: enabled,
-  musicOnly: musicOnly,
+  categories: categories,
 );
 
 FeedVideo _video(String id, DateTime at) =>
@@ -253,9 +253,11 @@ void main() {
       expect(cubit.state.selected, isEmpty);
     });
 
-    test('음악만: 음악 분류가 아닌 영상은 숨기고 읽지 못한 것은 보여 준다', () async {
+    test('분류 조건: 맞지 않는 분류는 숨기고 분류를 모르는 영상은 보여 준다', () async {
       final cubit = await boot(
-        channels: [_channel(musicOnly: true)],
+        channels: [
+          _channel(categories: {'Music'}),
+        ],
         feeds: {
           _channelId: [
             _video('music', DateTime.utc(2026, 10, 6)),

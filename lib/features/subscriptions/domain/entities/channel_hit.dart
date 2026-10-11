@@ -7,6 +7,7 @@ class ChannelHit extends Equatable {
     required this.name,
     this.description = '',
     this.thumbnailUrl,
+    this.videoCount,
   });
 
   /// 유튜브 채널 id (`UC…`).
@@ -17,8 +18,11 @@ class ChannelHit extends Equatable {
   final String description;
   final String? thumbnailUrl;
 
+  /// 올린 영상 수. 모르면 null.
+  final int? videoCount;
+
   String get url => 'https://www.youtube.com/channel/$id';
 
   @override
-  List<Object?> get props => [id, name, description, thumbnailUrl];
+  List<Object?> get props => [id, name, description, thumbnailUrl, videoCount];
 }

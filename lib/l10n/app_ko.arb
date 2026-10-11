@@ -790,7 +790,6 @@
   "subscriptionsEmptyTitle": "구독한 채널이 없어요",
   "subscriptionsEmptyBody": "영상 상세에서 채널의 구독을 누르면 새 영상이 올라올 때 골라서 받을 수 있어요.",
   "subscriptionsNewVideos": "새 영상 보기",
-  "subscriptionsMusicOnly": "음악만",
   "subscriptionsUnsubscribe": "구독 해제",
   "subscriptionsCount": "{count}개 채널",
   "@subscriptionsCount": {"placeholders": {"count": {"type": "int"}}},
@@ -831,5 +830,10 @@
   "channelSearchFailed": "채널을 찾지 못했어요. 잠시 뒤 다시 시도해 주세요",
   "subscriptionsTestTitle": "임시 · 모양 확인용",
   "subscriptionsTestNotification": "새 영상 알림 띄우기",
-  "subscriptionsTestNewVideos": "새 영상 화면 미리 보기"
+  "subscriptionsTestNewVideos": "새 영상 화면 미리 보기",
+  "categoryAll": "모든 분류",
+  "subscriptionsCategories": "알림 받을 분류",
+  "subscriptionsCategoriesDesc": "고른 분류의 새 영상만 알리고 보여 줘요. 고르지 않으면 모든 분류예요.",
+  "channelInfoVideoCount": "영상 {count}개",
+  "@channelInfoVideoCount": {"placeholders": {"count": {"type": "int"}}}
 }

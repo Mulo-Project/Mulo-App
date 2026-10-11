@@ -12,6 +12,7 @@ import 'domain/repositories/channel_feed.dart';
 import 'domain/repositories/channel_searcher.dart';
 import 'domain/repositories/subscription_repository.dart';
 import 'domain/usecases/subscription_usecases.dart';
+import 'presentation/bloc/channel_info_cubit.dart';
 import 'presentation/bloc/channel_search_cubit.dart';
 import 'presentation/bloc/new_videos_cubit.dart';
 import 'presentation/bloc/subscriptions_cubit.dart';
@@ -41,6 +42,7 @@ void registerSubscriptions(GetIt sl) {
     ..registerFactory(() => ClearNewVideosNotification(sl()))
     ..registerFactory(() => SearchChannels(sl()))
     ..registerFactory(() => ChannelSearchCubit(sl()))
+    ..registerFactory(() => ChannelInfoCubit(sl()))
     ..registerFactory(() => ShowTestNewVideosNotification(sl()))
     ..registerLazySingleton(
       () => SubscriptionsCubit(

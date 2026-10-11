@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/core/di/injector.dart';
 import 'package:music_download_play_app/features/downloads/domain/repositories/download_queue_repository.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/entities/channel_hit.dart';
+import 'package:music_download_play_app/features/subscriptions/domain/entities/subscribed_channel.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/repositories/background_checker.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/repositories/channel_searcher.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/usecases/subscription_usecases.dart';
@@ -64,6 +65,32 @@ void main() {
       );
       await subs.unsubscribe(hit.id);
       expect(subs.state.isSubscribedId(hit.id), isFalse);
+    });
+  });
+
+  group('분류 조건', () {
+    test('조건이 없으면 모두, 있으면 맞는 분류와 분류를 모르는 영상만 받아들인다', () {
+      final all = SubscribedChannel(
+        id: 'a',
+        name: 'a',
+        baselineAt: DateTime(2026),
+      );
+      final music = all.copyWith(categories: {'Music'});
+      expect(all.accepts(['Gaming']), isTrue);
+      expect(music.accepts(['Music', 'Entertainment']), isTrue);
+      expect(music.accepts(['Gaming']), isFalse);
+      expect(music.accepts(const []), isTrue);
+    });
+
+    test('구독할 때 고른 분류가 저장되고 나중에 바꿀 수 있다', () async {
+      final subs = sl<SubscriptionsCubit>();
+      const hit = ChannelHit(id: 'UCaaaaaaaaaaaaaaaaaaaaaa', name: 'Channel A');
+      await subs.subscribe(
+        SubscribeParams.fromHit(hit, categories: {'Music', 'Gaming'}),
+      );
+      expect(subs.state.channels.single.categories, {'Music', 'Gaming'});
+      await subs.setCategories(hit.id, {});
+      expect(subs.state.channels.single.filtersCategories, isFalse);
     });
   });
 

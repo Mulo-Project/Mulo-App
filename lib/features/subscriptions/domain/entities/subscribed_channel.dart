@@ -9,7 +9,7 @@ class SubscribedChannel extends Equatable {
     this.url = '',
     this.thumbnailUrl,
     this.enabled = true,
-    this.musicOnly = false,
+    this.categories = const {},
   });
 
   /// 유튜브 채널 id (`UC…`).
@@ -21,15 +21,26 @@ class SubscribedChannel extends Equatable {
   /// 꺼 두면 새 영상을 확인하지 않는다 (구독은 그대로).
   final bool enabled;
 
-  /// 켜면 분류가 음악(Music)인 영상만 새 영상으로 보여 준다.
-  final bool musicOnly;
+  /// 알림 · 새 영상 목록에 넣을 유튜브 영상 분류 (yt-dlp의 `categories`, 예: `Music`).
+  /// 비어 있으면 모든 분류. 분류를 알 수 없는 영상은 걸러내지 않고 보여 준다.
+  final Set<String> categories;
 
   /// 이 시각 이후에 올라온 영상이 "새 영상". 구독할 때 지금으로 잡아 기존 영상은 보이지 않는다.
   final DateTime baselineAt;
 
+  /// 이 채널이 분류를 걸러서 보여 주는지.
+  bool get filtersCategories => categories.isNotEmpty;
+
+  /// 영상의 분류 [videoCategories]가 이 채널의 분류 조건에 맞는지.
+  /// 조건이 없거나 영상 분류를 모르면 맞는 것으로 본다.
+  bool accepts(List<String> videoCategories) =>
+      categories.isEmpty ||
+      videoCategories.isEmpty ||
+      videoCategories.any(categories.contains);
+
   SubscribedChannel copyWith({
     bool? enabled,
-    bool? musicOnly,
+    Set<String>? categories,
     DateTime? baselineAt,
   }) => SubscribedChannel(
     id: id,
@@ -37,7 +48,7 @@ class SubscribedChannel extends Equatable {
     url: url,
     thumbnailUrl: thumbnailUrl,
     enabled: enabled ?? this.enabled,
-    musicOnly: musicOnly ?? this.musicOnly,
+    categories: categories ?? this.categories,
     baselineAt: baselineAt ?? this.baselineAt,
   );
 
@@ -48,7 +59,7 @@ class SubscribedChannel extends Equatable {
     url,
     thumbnailUrl,
     enabled,
-    musicOnly,
+    categories,
     baselineAt,
   ];
 }

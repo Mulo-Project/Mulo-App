@@ -9,6 +9,7 @@ import '../../../../core/l10n/l10n.dart';
 import '../../domain/entities/subscribed_channel.dart';
 import '../bloc/new_videos_cubit.dart';
 import '../bloc/subscriptions_cubit.dart';
+import '../widgets/category_choices.dart';
 
 /// 구독한 채널 목록: 채널별 켜고 끄기 · 음악만 · 구독 해제. 위에서 새 영상 목록으로 간다.
 class SubscriptionsScreen extends StatefulWidget {
@@ -191,13 +192,11 @@ class _ChannelRow extends StatelessWidget {
                 Align(
                   alignment: Alignment.centerLeft,
                   child: PlainButton(
-                    label: l10n.subscriptionsMusicOnly,
-                    icon: channel.musicOnly
-                        ? AppIcons.checkCircle
-                        : AppIcons.radioOff,
-                    accent: channel.musicOnly,
+                    label: categorySummary(context, channel.categories),
+                    icon: AppIcons.edit,
+                    accent: channel.filtersCategories,
                     onPressed: () =>
-                        cubit.setMusicOnly(channel.id, !channel.musicOnly),
+                        showCategoryPickerSheet(context, cubit, channel),
                   ),
                 ),
               ],
@@ -216,4 +215,61 @@ class _ChannelRow extends StatelessWidget {
       ),
     );
   }
+}
+
+/// 채널의 알림 받을 분류를 고르는 시트. 고를 때마다 바로 저장한다.
+Future<void> showCategoryPickerSheet(
+  BuildContext context,
+  SubscriptionsCubit cubit,
+  SubscribedChannel channel,
+) {
+  final l10n = context.l10n;
+  var selected = channel.categories;
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    backgroundColor: context.palette.surface,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadii.md)),
+    ),
+    builder: (sheetContext) => StatefulBuilder(
+      builder: (_, setState) => SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                channel.name,
+                style: Theme.of(sheetContext).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                l10n.subscriptionsCategoriesDesc,
+                style: Theme.of(sheetContext).textTheme.bodySmall,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              CategoryChoices(
+                selected: selected,
+                onToggle: (name) {
+                  setState(() {
+                    selected = selected.contains(name)
+                        ? ({...selected}..remove(name))
+                        : {...selected, name};
+                  });
+                  cubit.setCategories(channel.id, selected);
+                },
+                onClear: () {
+                  setState(() => selected = const {});
+                  cubit.setCategories(channel.id, selected);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
 }

@@ -68,7 +68,7 @@ class PrefsSubscriptionRepository implements SubscriptionRepository {
     'url': c.url,
     'thumbnail': c.thumbnailUrl,
     'enabled': c.enabled,
-    'musicOnly': c.musicOnly,
+    'categories': c.categories.toList(),
     'baselineAt': c.baselineAt.toUtc().toIso8601String(),
   };
 
@@ -82,7 +82,11 @@ class PrefsSubscriptionRepository implements SubscriptionRepository {
       url: j['url'] as String? ?? '',
       thumbnailUrl: j['thumbnail'] as String?,
       enabled: j['enabled'] as bool? ?? true,
-      musicOnly: j['musicOnly'] as bool? ?? false,
+      categories: {
+        ...(j['categories'] as List? ?? const []).whereType<String>(),
+        // 예전 "음악만" 값.
+        if (j['musicOnly'] == true) 'Music',
+      },
       baselineAt: baseline.toUtc(),
     );
   }
