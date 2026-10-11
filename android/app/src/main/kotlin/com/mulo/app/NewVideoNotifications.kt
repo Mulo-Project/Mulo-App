@@ -9,12 +9,8 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.drawable.Icon
 import android.os.Build
-import java.net.HttpURLConnection
-import java.net.URL
 
 /**
  * 구독 채널 새 영상 알림. 영상마다 알림 하나를 띄우고 "바로 받기" · "취소" 버튼을 단다.
@@ -80,7 +76,7 @@ object NewVideoNotifications {
             .setWhen(v.publishedMs)
             .setShowWhen(true)
         SubscriptionStore.color(context).takeIf { it != 0 }?.let { b.setColor(it) }
-        loadBitmap(v.thumbnailUrl)?.let { b.setLargeIcon(it) }
+        NotificationArt.loadBlocking(v.thumbnailUrl)?.let { b.setLargeIcon(it) }
         openIntent(context)?.let { b.setContentIntent(it) }
         downloadIntent(context, v, id)?.let { addAction(b, SubscriptionStore.text(context, "downloadLabel"), it) }
         addAction(b, SubscriptionStore.text(context, "cancelLabel"), dismissIntent(context, id))
@@ -116,23 +112,6 @@ object NewVideoNotifications {
 
     private fun smallIcon(context: Context) =
         context.resources.getIdentifier("ic_stat_mulo", "drawable", context.packageName)
-
-    /** 알림 썸네일. 못 받으면 null (알림은 썸네일 없이 띄운다). */
-    private fun loadBitmap(url: String?): Bitmap? {
-        if (url.isNullOrEmpty()) return null
-        return try {
-            val conn = URL(url).openConnection() as HttpURLConnection
-            try {
-                conn.connectTimeout = 5_000
-                conn.readTimeout = 5_000
-                if (conn.responseCode != 200) null else conn.inputStream.use { BitmapFactory.decodeStream(it) }
-            } finally {
-                conn.disconnect()
-            }
-        } catch (e: Exception) {
-            null
-        }
-    }
 
     /** 알림 본문 누름: 앱을 열고 새 영상 목록으로 보낸다 (MainActivity가 [ACTION_OPEN]을 받는다). */
     private fun openIntent(context: Context): PendingIntent? {

@@ -28,6 +28,7 @@ abstract interface class DownloadNotifier {
   /// 받는 중 알림을 띄우거나 갱신한다. [percent]가 null이면 길이를 모르는 진행 표시.
   /// [foreground]면 앱이 뒤로 가거나 닫혀도 받기가 이어지게 붙들어 두는 알림이다.
   /// [openId]는 알림을 누르면 상세 화면을 열 받기 항목의 id, [subText]는 알림 머리말(전체 진행), [previewLabel]이 있으면 미리 듣기 버튼을 단다.
+  /// [artUri]는 알림의 큰 아이콘 자리에 보일 곡 이미지(웹 주소 또는 파일 경로, 없으면 null).
   /// 지금 곡을 미리 듣는 중이면 [previewLabel] 대신 [pauseLabel] · [stopLabel] 버튼을 단다.
   Future<void> showProgress({
     required String title,
@@ -40,6 +41,7 @@ abstract interface class DownloadNotifier {
     String? pauseLabel,
     String? stopLabel,
     String? openId,
+    String? artUri,
   });
 
   /// 받는 중 알림을 치운다.
@@ -51,6 +53,7 @@ abstract interface class DownloadNotifier {
     required String title,
     required String body,
     required bool failed,
+    String? artUri,
   });
 
   /// 받기 결과 알림을 모두 치운다.

@@ -90,6 +90,7 @@ class LocalDownloadNotifier implements DownloadNotifier {
     String? pauseLabel,
     String? stopLabel,
     String? openId,
+    String? artUri,
   }) => _call('showProgress', {
     'title': title,
     'body': body,
@@ -101,6 +102,7 @@ class LocalDownloadNotifier implements DownloadNotifier {
     'pauseLabel': pauseLabel,
     'stopLabel': stopLabel,
     'openId': openId,
+    'artUri': artUri,
     'color': AppPalette.violet.toARGB32(),
   });
 
@@ -116,12 +118,14 @@ class LocalDownloadNotifier implements DownloadNotifier {
     required String title,
     required String body,
     required bool failed,
+    String? artUri,
   }) => _call('showResult', {
     'id': id,
     'openId': id,
     'title': title,
     'body': body,
     'failed': failed,
+    'artUri': artUri,
     'color': AppPalette.violet.toARGB32(),
   });
 

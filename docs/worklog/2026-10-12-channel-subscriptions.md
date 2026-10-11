@@ -17,6 +17,7 @@
 - 알림을 새 영상마다 하나씩(최대 8개 + 묶음), 버튼 "바로 받기" · "취소". 채널별 저장 위치. 새 영상 목록을 바텀시트로 바꾸고 화면 · 시트 여백 · 정렬을 맞췄다.
 - Kotlin: `NewVideoNotifications` · `NewVideoWorker` 개편, `NewVideoActionReceiver`(Manifest 등록) 추가, `MainActivity`가 "바로 받기" 인텐트를 받는다.
 - 채널 정보 시트에 채널 배너(youtube_explode 채널 정보), 저장 위치를 폭을 채운 한 줄로 다시 디자인, 시트 글자 키움, 새 영상 목록 채널 이미지, 구독이 없을 때 안내 가운데 정렬, 검색창과 목록 사이 간격.
+- 받기 진행 · 완료 알림에 곡 썸네일을 큰 아이콘으로(`NotificationArt`). `DownloadNotifier.showProgress` · `showResult`에 `artUri` 추가.
 
 ## 바꾼 설정
 - Gradle: `androidx.work:work-runtime-ktx:2.10.1` 추가. pubspec · Manifest 변경 없음(INTERNET · POST_NOTIFICATIONS는 이미 있음).

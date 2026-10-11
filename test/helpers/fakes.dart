@@ -1189,6 +1189,9 @@ class MemoryNotificationSettings implements NotificationSettingsRepository {
 class FakeDownloadNotifier implements DownloadNotifier {
   final calls = <String>[];
 
+  /// 결과 알림에 담긴 곡 이미지 (알림 id → 주소).
+  final resultArt = <String, String?>{};
+
   /// 마지막 진행 알림의 내용 (제목 · 본문 · 머리말 · 앞에 붙들기 · 미리 듣기 버튼).
   final shown = <Map<String, Object?>>[];
   final _actions = StreamController<DownloadNotificationAction>.broadcast();
@@ -1228,6 +1231,7 @@ class FakeDownloadNotifier implements DownloadNotifier {
     String? pauseLabel,
     String? stopLabel,
     String? openId,
+    String? artUri,
   }) async {
     shown.add({
       'title': title,
@@ -1239,6 +1243,7 @@ class FakeDownloadNotifier implements DownloadNotifier {
       'pause': pauseLabel,
       'stop': stopLabel,
       'openId': openId,
+      'artUri': artUri,
     });
     calls.add('progress:$title:$percent');
   }
@@ -1252,7 +1257,11 @@ class FakeDownloadNotifier implements DownloadNotifier {
     required String title,
     required String body,
     required bool failed,
-  }) async => calls.add('${failed ? 'failed' : 'done'}:$id');
+    String? artUri,
+  }) async {
+    resultArt[id] = artUri;
+    calls.add('${failed ? 'failed' : 'done'}:$id');
+  }
 
   @override
   Future<void> clearResults() async => calls.add('clearResults');

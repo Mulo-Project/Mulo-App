@@ -25,6 +25,7 @@ class NoDownloadNotifier implements DownloadNotifier {
     String? pauseLabel,
     String? stopLabel,
     String? openId,
+    String? artUri,
   }) async {}
 
   @override
@@ -36,6 +37,7 @@ class NoDownloadNotifier implements DownloadNotifier {
     required String title,
     required String body,
     required bool failed,
+    String? artUri,
   }) async {}
 
   @override
