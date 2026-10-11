@@ -44,6 +44,10 @@ class _SaveFolderDialog extends StatelessWidget {
       if (cur.isNotEmpty && !listed) cur,
       for (final f in folders) f.path,
     ];
+    final defaults = {
+      for (final f in folders)
+        if (f.isDefault) normalizeFolderPath(f.path),
+    };
 
     return AppDialog(
       title: l10n.saveFolderTitle,
@@ -62,6 +66,7 @@ class _SaveFolderDialog extends StatelessWidget {
                   for (final path in paths)
                     _FolderOption(
                       path: path,
+                      isDefault: defaults.contains(normalizeFolderPath(path)),
                       selected:
                           normalizeFolderPath(path) == normalizeFolderPath(cur),
                       onTap: () => Navigator.of(context).pop(path),
@@ -93,11 +98,15 @@ class _FolderOption extends StatelessWidget {
   const _FolderOption({
     required this.path,
     required this.selected,
+    required this.isDefault,
     required this.onTap,
   });
 
   final String path;
   final bool selected;
+
+  /// 앱 기본 저장 위치인지 (이름 옆에 작게 표시).
+  final bool isDefault;
   final VoidCallback onTap;
 
   @override
@@ -120,13 +129,28 @@ class _FolderOption extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
-              child: Text(
-                path,
-                style: text.titleSmall?.copyWith(
-                  color: selected ? p.accent : p.onSurface,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 폴더 이름을 크게, 전체 경로는 작고 흐리게.
+                  Text(
+                    _nameOf(path) +
+                        (isDefault
+                            ? ' · ${context.l10n.loadedFoldersDefault}'
+                            : ''),
+                    style: text.titleSmall?.copyWith(
+                      color: selected ? p.accent : p.onSurface,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    path,
+                    style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
             ),
             if (selected) Icon(AppIcons.check, size: 18, color: p.accent),
@@ -135,4 +159,10 @@ class _FolderOption extends StatelessWidget {
       ),
     );
   }
+}
+
+/// 경로의 마지막 폴더 이름 (비면 경로 그대로).
+String _nameOf(String path) {
+  final parts = normalizeFolderPath(path).split('/').where((e) => e.isNotEmpty);
+  return parts.isEmpty ? path : parts.last;
 }
