@@ -506,8 +506,6 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('youtube-mark')));
     await tester.pumpAndSettle();
     expect(find.text('유튜브'), findsOneWidget);
-    expect(find.text('bilibili'), findsOneWidget);
-    expect(find.text('niconico'), findsOneWidget);
     await tester.tap(find.text('SoundCloud'));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('youtube-mark')), findsNothing);

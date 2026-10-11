@@ -10,8 +10,6 @@ String sourceLabel(BuildContext context, SearchSource s) {
   return switch (s) {
     SearchSource.youtube => l10n.sourceYoutube,
     SearchSource.soundcloud => l10n.sourceSoundcloud,
-    SearchSource.bilibili => l10n.sourceBilibili,
-    SearchSource.niconico => l10n.sourceNiconico,
   };
 }
 
@@ -21,16 +19,6 @@ Widget sourceMark(SearchSource s, double size) => switch (s) {
   SearchSource.soundcloud => SiteMark(
     letter: 'S',
     color: AppPalette.soundcloudOrange,
-    size: size,
-  ),
-  SearchSource.bilibili => SiteMark(
-    letter: 'B',
-    color: AppPalette.bilibiliPink,
-    size: size,
-  ),
-  SearchSource.niconico => SiteMark(
-    letter: 'N',
-    color: AppPalette.niconicoGray,
     size: size,
   ),
 };

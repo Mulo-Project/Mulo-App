@@ -421,8 +421,6 @@
   },
   "searchHintSite": "{site} URL이나 검색어",
   "sourceSoundcloud": "SoundCloud",
-  "sourceBilibili": "bilibili",
-  "sourceNiconico": "niconico",
   "searchSubmitTooltip": "검색",
   "searchPasteLink": "링크 붙여넣기",
   "searchPasteEmpty": "클립보드에 링크가 없어요",

@@ -1700,18 +1700,6 @@ abstract class AppLocalizations {
   /// **'SoundCloud'**
   String get sourceSoundcloud;
 
-  /// No description provided for @sourceBilibili.
-  ///
-  /// In ko, this message translates to:
-  /// **'bilibili'**
-  String get sourceBilibili;
-
-  /// No description provided for @sourceNiconico.
-  ///
-  /// In ko, this message translates to:
-  /// **'niconico'**
-  String get sourceNiconico;
-
   /// No description provided for @searchSubmitTooltip.
   ///
   /// In ko, this message translates to:

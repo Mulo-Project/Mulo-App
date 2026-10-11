@@ -7,7 +7,7 @@
 - 상세 기능: 키워드 검색 (#2), URL로 곡 정보 불러오기 (#1)
 
 ## 한 일
-- [D-097](../decisions.md): 검색 대상을 YouTube · SoundCloud · bilibili · niconico로 나누고, 검색창 앞은 사이트 고르기 · 뒤는 검색 실행 버튼.
+- [D-097](../decisions.md): 검색 대상을 YouTube · SoundCloud로 나누고, 검색창 앞은 사이트 고르기 · 뒤는 검색 실행 버튼.
 - 검색 시작 화면에 "링크 붙여넣기" 버튼: 클립보드의 링크를 넣고 곡 정보를 불러온다.
 - `AppSearchField`에 `leading` 추가, `SiteMark` 컴포넌트 추가.
 
@@ -18,4 +18,4 @@
 - `flutter analyze` 경고 0, `flutter test` 통과.
 
 ## 남은 일 · 질문
-- 서버 저장소에 `source=bilibili|niconico` 반영. 최신 yt-dlp(2026.08.19)에는 `ytsearchdate`가 보이지 않아 유튜브 최신순이 실제로 되는지 기기 확인 필요.
+- 최신 yt-dlp(2026.08.19)에는 `ytsearchdate`가 보이지 않아 유튜브 최신순이 실제로 되는지 기기 확인 필요.

@@ -335,8 +335,6 @@
   "playCount": "{count} plays",
   "searchHintSite": "{site} URL or keywords",
   "sourceSoundcloud": "SoundCloud",
-  "sourceBilibili": "bilibili",
-  "sourceNiconico": "niconico",
   "searchSubmitTooltip": "Search",
   "searchPasteLink": "Paste link",
   "searchPasteEmpty": "No link on the clipboard",

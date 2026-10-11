@@ -370,10 +370,6 @@ void main() {
         newest: true,
       );
       expect(args!.last, 'scsearch1:노래'); // 날짜 순 검색이 없는 사이트는 그대로
-      await engine.search('노래', source: SearchSource.niconico, size: 2);
-      expect(args!.last, 'nicosearch2:노래');
-      await engine.search('노래', source: SearchSource.bilibili, size: 2);
-      expect(args!.last, 'bilisearch2:노래');
     });
 
     test('재생목록 정보를 읽는다', () async {

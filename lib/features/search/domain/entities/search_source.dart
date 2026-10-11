@@ -2,9 +2,7 @@
 /// (그 밖의 사이트는 주소를 붙여 넣어 받는다).
 enum SearchSource {
   youtube('ytsearch', supportsNewest: true),
-  soundcloud('scsearch', serverValue: 'web'),
-  bilibili('bilisearch'),
-  niconico('nicosearch', supportsNewest: true);
+  soundcloud('scsearch', serverValue: 'web');
 
   const SearchSource(
     this.searchKey, {

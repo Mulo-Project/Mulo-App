@@ -866,12 +866,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get sourceSoundcloud => 'SoundCloud';
 
   @override
-  String get sourceBilibili => 'bilibili';
-
-  @override
-  String get sourceNiconico => 'niconico';
-
-  @override
   String get searchSubmitTooltip => '검색';
 
   @override
