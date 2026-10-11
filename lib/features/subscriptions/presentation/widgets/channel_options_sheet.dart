@@ -53,9 +53,14 @@ Future<void> showChannelOptionsSheet(
               ],
             ),
             const SizedBox(height: AppSpacing.lg),
-            Text(l10n.subscriptionsCategories, style: text.titleSmall),
-            const SizedBox(height: 2),
-            Text(l10n.subscriptionsCategoriesDesc, style: text.bodySmall),
+            Text(l10n.subscriptionsCategories, style: text.titleMedium),
+            const SizedBox(height: AppSpacing.xxs),
+            Text(
+              l10n.subscriptionsCategoriesDesc,
+              style: text.bodyMedium?.copyWith(
+                color: sheetContext.palette.onSurfaceMuted,
+              ),
+            ),
             const SizedBox(height: AppSpacing.sm),
             CategoryChoices(
               selected: channel.categories,

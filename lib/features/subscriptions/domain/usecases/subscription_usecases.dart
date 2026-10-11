@@ -1,4 +1,5 @@
 import '../../../../core/usecase/usecase.dart';
+import '../entities/channel_details.dart';
 import '../entities/channel_hit.dart';
 import '../entities/channel_new_videos.dart';
 import '../entities/new_video_download_request.dart';
@@ -262,4 +263,14 @@ class MoveAppToBack implements UseCase<void, NoParams> {
 
   @override
   Future<void> call(NoParams params) => _checker.moveAppToBack();
+}
+
+/// 채널 상세(배너 · 구독자 수) 읽기.
+class FetchChannelDetails implements UseCase<ChannelDetails, String> {
+  const FetchChannelDetails(this._searcher);
+
+  final ChannelSearcher _searcher;
+
+  @override
+  Future<ChannelDetails> call(String channelId) => _searcher.details(channelId);
 }

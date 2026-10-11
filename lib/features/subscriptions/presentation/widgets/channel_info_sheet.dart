@@ -42,7 +42,7 @@ class _ChannelInfoSheetState extends State<_ChannelInfoSheet> {
           .where((c) => c.id == widget.hit.id)
           .firstOrNull;
       _info.load(
-        widget.hit.url,
+        widget.hit.id,
         categories: existing?.categories ?? const {},
         savePath: existing?.savePath ?? '',
       );
@@ -105,6 +105,10 @@ class _ChannelInfoSheetState extends State<_ChannelInfoSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (info.bannerUrl != null) ...[
+              _Banner(url: info.bannerUrl!),
+              const SizedBox(height: AppSpacing.md),
+            ],
             Row(
               children: [
                 ArtworkBox(
@@ -131,7 +135,9 @@ class _ChannelInfoSheetState extends State<_ChannelInfoSheet> {
                           if (hit.videoCount != null && hit.videoCount! > 0)
                             l10n.channelInfoVideoCount(hit.videoCount!),
                         ].join(' · '),
-                        style: text.bodySmall,
+                        style: text.bodyMedium?.copyWith(
+                          color: p.onSurfaceMuted,
+                        ),
                       ),
                     ],
                   ),
@@ -148,9 +154,12 @@ class _ChannelInfoSheetState extends State<_ChannelInfoSheet> {
               ),
             ],
             const SizedBox(height: AppSpacing.lg),
-            Text(l10n.subscriptionsCategories, style: text.titleSmall),
-            const SizedBox(height: 2),
-            Text(l10n.subscriptionsCategoriesDesc, style: text.bodySmall),
+            Text(l10n.subscriptionsCategories, style: text.titleMedium),
+            const SizedBox(height: AppSpacing.xxs),
+            Text(
+              l10n.subscriptionsCategoriesDesc,
+              style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
+            ),
             const SizedBox(height: AppSpacing.sm),
             CategoryChoices(
               selected: info.categories,
@@ -196,4 +205,29 @@ class _ChannelInfoSheetState extends State<_ChannelInfoSheet> {
       ),
     );
   }
+}
+
+/// 채널 배너: 가로로 긴 이미지를 둥근 모서리로 보여 준다. 못 불러오면 자리를 비운다.
+class _Banner extends StatelessWidget {
+  const _Banner({required this.url});
+
+  final String url;
+
+  @override
+  Widget build(BuildContext context) => ClipRRect(
+    borderRadius: BorderRadius.circular(AppRadii.md),
+    child: AspectRatio(
+      aspectRatio: 16 / 5,
+      child: Image.network(
+        url,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => const SizedBox.shrink(),
+        frameBuilder: (context, child, frame, sync) => AnimatedOpacity(
+          opacity: frame == null && !sync ? 0 : 1,
+          duration: AppMotion.medium,
+          child: child,
+        ),
+      ),
+    ),
+  );
 }

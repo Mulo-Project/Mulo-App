@@ -80,6 +80,7 @@ class _ChannelSearchScreenState extends State<ChannelSearchScreen> {
                   onSubmitted: _cubit.search,
                 ),
               ),
+              const SizedBox(height: AppSpacing.sm),
               Expanded(
                 child: BlocBuilder<ChannelSearchCubit, ChannelSearchState>(
                   bloc: _cubit,

@@ -73,23 +73,23 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                   ),
                 ),
                 Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.lg),
-                    children: [
-                      if (state.channels.isEmpty)
-                        const _Empty()
-                      else
-                        for (final c in state.channels)
-                          _ChannelRow(channel: c, cubit: _cubit),
-                      _TestButtons(
-                        onNotification: _cubit.showTestNotification,
-                        onNewVideos: () {
-                          sl<NewVideosCubit>().showSample();
-                          showNewVideosSheet(context);
-                        },
-                      ),
-                    ],
-                  ),
+                  child: state.channels.isEmpty
+                      // 구독이 없으면 안내를 남은 자리 한가운데에 둔다.
+                      ? const Center(child: _Empty())
+                      : ListView(
+                          padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                          children: [
+                            for (final c in state.channels)
+                              _ChannelRow(channel: c, cubit: _cubit),
+                          ],
+                        ),
+                ),
+                _TestButtons(
+                  onNotification: _cubit.showTestNotification,
+                  onNewVideos: () {
+                    sl<NewVideosCubit>().showSample();
+                    showNewVideosSheet(context);
+                  },
                 ),
               ],
             ),
@@ -108,13 +108,9 @@ class _Empty extends StatelessWidget {
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.xl,
-        AppSpacing.md,
-        AppSpacing.xl,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             l10n.subscriptionsEmptyTitle,
@@ -187,9 +183,9 @@ class _TestButtons extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.md,
-        AppSpacing.lg,
+        AppSpacing.sm,
         AppSpacing.md,
-        0,
+        AppSpacing.md,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

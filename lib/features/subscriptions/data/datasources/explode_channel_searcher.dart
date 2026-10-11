@@ -1,5 +1,6 @@
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
+import '../../domain/entities/channel_details.dart';
 import '../../domain/entities/channel_hit.dart';
 import '../../domain/repositories/channel_searcher.dart';
 
@@ -24,6 +25,21 @@ class ExplodeChannelSearcher implements ChannelSearcher {
               videoCount: r.videoCount,
             ),
       ];
+    } finally {
+      yt.close();
+    }
+  }
+
+  @override
+  Future<ChannelDetails> details(String channelId) async {
+    final yt = YoutubeExplode();
+    try {
+      final c = await yt.channels.get(channelId);
+      return ChannelDetails(
+        bannerUrl: c.bannerUrl.isEmpty ? null : c.bannerUrl,
+        logoUrl: c.logoUrl.isEmpty ? null : c.logoUrl,
+        subscriberCount: c.subscribersCount,
+      );
     } finally {
       yt.close();
     }

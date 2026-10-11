@@ -16,6 +16,7 @@
 - 채널 검색 결과를 누르면 채널 정보 시트(구독자 수 · 영상 수 · 소개)와 알림 받을 분류 고르기. "음악만"을 채널별 분류 여러 개 고르기(`categories`)로 바꿨다. 백그라운드 워커도 영상 페이지의 분류를 읽어 알림을 거른다.
 - 알림을 새 영상마다 하나씩(최대 8개 + 묶음), 버튼 "바로 받기" · "취소". 채널별 저장 위치. 새 영상 목록을 바텀시트로 바꾸고 화면 · 시트 여백 · 정렬을 맞췄다.
 - Kotlin: `NewVideoNotifications` · `NewVideoWorker` 개편, `NewVideoActionReceiver`(Manifest 등록) 추가, `MainActivity`가 "바로 받기" 인텐트를 받는다.
+- 채널 정보 시트에 채널 배너(youtube_explode 채널 정보), 저장 위치를 폭을 채운 한 줄로 다시 디자인, 시트 글자 키움, 새 영상 목록 채널 이미지, 구독이 없을 때 안내 가운데 정렬, 검색창과 목록 사이 간격.
 
 ## 바꾼 설정
 - Gradle: `androidx.work:work-runtime-ktx:2.10.1` 추가. pubspec · Manifest 변경 없음(INTERNET · POST_NOTIFICATIONS는 이미 있음).

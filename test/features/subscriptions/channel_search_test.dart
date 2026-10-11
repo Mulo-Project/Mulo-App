@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/core/di/injector.dart';
 import 'package:music_download_play_app/features/downloads/domain/repositories/download_queue_repository.dart';
+import 'package:music_download_play_app/features/subscriptions/domain/entities/channel_details.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/entities/channel_hit.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/entities/new_video_download_request.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/entities/subscribed_channel.dart';
@@ -19,6 +20,10 @@ class _FakeSearcher implements ChannelSearcher {
 
   final bool fail;
   final queries = <String>[];
+
+  @override
+  Future<ChannelDetails> details(String channelId) async =>
+      const ChannelDetails(bannerUrl: 'https://example.com/banner.jpg');
 
   @override
   Future<List<ChannelHit>> search(String query) async {

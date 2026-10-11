@@ -121,7 +121,6 @@ class _Body extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
-    final p = context.palette;
     final state = context.watch<NewVideosCubit>().state;
     final cubit = context.read<NewVideosCubit>();
     final groups = state.groups;
@@ -166,10 +165,20 @@ class _Body extends StatelessWidget {
             ),
             child: Row(
               children: [
+                ArtworkBox(
+                  image: g.channel.thumbnailUrl == null
+                      ? null
+                      : NetworkImage(g.channel.thumbnailUrl!),
+                  size: 32,
+                  radius: 16,
+                  tone: toneFor(g.channel.id),
+                  icon: AppIcons.person,
+                ),
+                const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
                     g.channel.name,
-                    style: text.labelLarge?.copyWith(color: p.onSurfaceMuted),
+                    style: text.titleSmall,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),

@@ -44,6 +44,7 @@ void registerSubscriptions(GetIt sl) {
     ..registerFactory(() => WatchNewVideoDownloads(sl()))
     ..registerFactory(() => MoveAppToBack(sl()))
     ..registerFactory(() => SearchChannels(sl()))
+    ..registerFactory(() => FetchChannelDetails(sl()))
     ..registerFactory(() => ChannelSearchCubit(sl()))
     ..registerFactory(() => ChannelInfoCubit(sl()))
     ..registerFactory(() => ShowTestNewVideosNotification(sl()))
