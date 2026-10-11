@@ -10,6 +10,20 @@ import '../../domain/entities/download_source.dart';
 import '../bloc/download_queue_cubit.dart';
 import 'download_item_widgets.dart';
 
+/// 받기 항목을 상세 화면이 여는 검색 결과로 바꾼다.
+/// 검색 결과와 같은 id(유튜브면 영상 id)로 만들어야 상세 화면의 미리 듣기 상태가 맞는다.
+MediaHit mediaHitOfDownload(DownloadItem item) {
+  final key = downloadSourceKey(item.url);
+  return MediaHit(
+    id: key.startsWith('youtube:') ? key.substring(8) : item.url,
+    title: item.title,
+    url: item.url,
+    uploader: item.artist,
+    duration: item.duration,
+    thumbnailUrl: item.thumbnailUrl,
+  );
+}
+
 /// 모든 탭 아래쪽(미니 플레이어 위)에 붙는 받기 줄. 두 영역으로 나뉜다.
 /// - 위(작게): 전체 진행도 · 받은 곡 수 · 남은 곡 수 · 펼치기 · 전체 취소.
 /// - 아래: 지금 받는 곡의 이미지 · 제목(길면 흐른다) · 아티스트 · 장르 · 진행도.
@@ -236,23 +250,8 @@ class _DownloadRow extends StatelessWidget {
 
   final DownloadItem item;
 
-  /// 검색 결과와 같은 id(유튜브면 영상 id)로 만들어야 상세 화면의 미리 듣기 상태가 맞는다.
-  String get _hitId {
-    final key = downloadSourceKey(item.url);
-    return key.startsWith('youtube:') ? key.substring(8) : item.url;
-  }
-
-  void _openDetail(BuildContext context) => showMediaDetail(
-    context,
-    MediaHit(
-      id: _hitId,
-      title: item.title,
-      url: item.url,
-      uploader: item.artist,
-      duration: item.duration,
-      thumbnailUrl: item.thumbnailUrl,
-    ),
-  );
+  void _openDetail(BuildContext context) =>
+      showMediaDetail(context, mediaHitOfDownload(item));
 
   @override
   Widget build(BuildContext context) {

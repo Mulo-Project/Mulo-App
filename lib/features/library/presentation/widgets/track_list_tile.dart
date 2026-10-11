@@ -30,6 +30,7 @@ class TrackListTile extends StatelessWidget {
     required this.index,
     this.playlistId,
     this.showAlbum = true,
+    this.showNumber = false,
   });
 
   final Track track;
@@ -39,6 +40,9 @@ class TrackListTile extends StatelessWidget {
 
   /// 부제에 앨범도 보여 줄지 (앨범 화면에서는 아티스트만).
   final bool showAlbum;
+
+  /// 커버 앞에 목록 속 순번을 보여 줄지 (재생목록 상세).
+  final bool showNumber;
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +61,7 @@ class TrackListTile extends StatelessWidget {
       tone: toneFor(t.id),
       color: coverColorOf(context, CoverKey.track(t.id)),
       active: isCurrent,
+      number: showNumber ? index + 1 : null,
       artwork: coverImageOf(context, CoverKey.track(t.id)),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,

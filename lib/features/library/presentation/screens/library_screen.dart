@@ -28,8 +28,28 @@ class LibraryScreen extends StatefulWidget {
 
 class _LibraryScreenState extends State<LibraryScreen> {
   LibraryTab _tab = LibraryTab.songs;
-  LibrarySort _sort = LibrarySort.added;
+
+  /// 탭마다 고른 정렬. 탭에 맞는 기준만 고를 수 있다 ([_sortOptions]).
+  final _sorts = <LibraryTab, LibrarySort>{};
   String _query = '';
+
+  static const _songSorts = [
+    LibrarySort.name,
+    LibrarySort.added,
+    LibrarySort.artist,
+  ];
+  static const _groupSorts = [
+    LibrarySort.name,
+    LibrarySort.count,
+    LibrarySort.added,
+  ];
+
+  List<LibrarySort> get _sortOptions =>
+      _tab == LibraryTab.songs ? _songSorts : _groupSorts;
+
+  LibrarySort get _sort =>
+      _sorts[_tab] ??
+      (_tab == LibraryTab.songs ? LibrarySort.added : LibrarySort.name);
 
   List<Track> _filtered(List<Track> all, AppLocalizations l10n) {
     final q = _query.trim().toLowerCase();
@@ -43,7 +63,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
               t.genre.toLowerCase().contains(q),
         )
         .toList();
-    return sortTracks(list, _sort);
+    return _tab == LibraryTab.songs ? sortTracks(list, _sort) : list;
   }
 
   @override
@@ -61,7 +81,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final items = switch (_tab) {
       LibraryTab.songs => <Widget>[],
       LibraryTab.artists => [
-        for (final e in _groupBy(tracks, (t) => artistOf(l10n, t)).entries)
+        for (final e in sortGroups(
+          _groupBy(tracks, (t) => artistOf(l10n, t)),
+          _sort,
+        ).entries)
           TrackTile(
             key: ValueKey(e.key),
             title: e.key,
@@ -85,7 +108,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
           ),
       ],
       LibraryTab.albums => [
-        for (final e in _groupBy(tracks, (t) => albumOf(l10n, t)).entries)
+        for (final e in sortGroups(
+          _groupBy(tracks, (t) => albumOf(l10n, t)),
+          _sort,
+        ).entries)
           TrackTile(
             key: ValueKey(e.key),
             title: e.key,
@@ -103,7 +129,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
           ),
       ],
       LibraryTab.genres => [
-        for (final e in groupByGenre(tracks).entries)
+        for (final e in sortGroups(groupByGenre(tracks), _sort).entries)
           TrackTile(
             key: ValueKey(e.key),
             title: genreOf(l10n, e.key),
@@ -195,7 +221,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: AppDropdown<LibrarySort>(
-                        values: LibrarySort.values,
+                        values: _sortOptions,
                         selected: _sort,
                         tooltip: l10n.sortLabel,
                         icon: AppIcons.sort,
@@ -203,8 +229,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
                           LibrarySort.name => l10n.sortName,
                           LibrarySort.added => l10n.sortAdded,
                           LibrarySort.artist => l10n.sortArtist,
+                          LibrarySort.count => l10n.sortCount,
                         },
-                        onChanged: (s) => setState(() => _sort = s),
+                        onChanged: (s) => setState(() => _sorts[_tab] = s),
                       ),
                     ),
                   ),

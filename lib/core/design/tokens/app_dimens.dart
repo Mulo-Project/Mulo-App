@@ -36,7 +36,8 @@ abstract final class AppMotion {
   static const Duration slow = Duration(milliseconds: 450);
 
   /// 테마 소스가 바뀔 때 색이 넘어가는 시간 (곡 전환 시 분위기 테마 포함).
-  static const Duration themeSwap = Duration(milliseconds: 700);
+  /// 넘어가는 동안 앱 전체가 프레임마다 다시 그려지므로 짧게 둔다.
+  static const Duration themeSwap = Duration(milliseconds: 260);
 
   static const Curve standard = Curves.easeOutCubic;
   static const Curve emphasized = Curves.easeInOutCubicEmphasized;

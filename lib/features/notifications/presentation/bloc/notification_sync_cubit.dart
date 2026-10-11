@@ -24,6 +24,14 @@ class NotificationSyncCubit extends Cubit<void> {
   Stream<DownloadNotificationAction> get downloadActions =>
       _actions.watchDownloadActions(const NoParams());
 
+  /// 받기 알림 본문을 눌러 열라는 요청 (받기 항목 id).
+  Stream<String> get downloadOpens =>
+      _actions.watchDownloadOpens(const NoParams());
+
+  /// 알림을 눌러 앱이 켜졌다면 눌린 받기 항목 id (한 번 받으면 비운다).
+  Future<String?> takeDownloadOpen() =>
+      _actions.takeDownloadOpen(const NoParams());
+
   var _askedPermission = false;
 
   /// 알림을 처음 띄울 때 한 번만 시스템 권한을 묻는다 (거절하면 설정에서 안내).
@@ -169,7 +177,7 @@ class NotificationSyncCubit extends Cubit<void> {
     final stop = previewing ? l10n.notifDownloadStopPreview : null;
     final cancel = l10n.notifDownloadCancel;
     final key =
-        '$title|$body|$subText|$overallPercent|$keepAlive|$preview|$stop';
+        '$title|$body|$subText|$overallPercent|$keepAlive|$preview|$stop|${current.id}';
     if (_progressShown && key == _lastProgress) return;
     await _ensurePermission();
     _progressShown = true;
@@ -184,6 +192,7 @@ class NotificationSyncCubit extends Cubit<void> {
         previewLabel: preview,
         cancelLabel: cancel,
         stopLabel: stop,
+        openId: current.id,
       ),
     );
   }
@@ -215,6 +224,8 @@ class NotificationSyncCubit extends Cubit<void> {
     required bool hasNext,
     required String? artUri,
     bool favorite = false,
+    int queueIndex = 0,
+    int queueLength = 0,
     PreviewNotice? preview,
     List<int> coverColors = const [],
     required NotificationSettings settings,
@@ -248,8 +259,14 @@ class NotificationSyncCubit extends Cubit<void> {
           )
         : MediaSessionInfo(
             title: hide ? l10n.notifHiddenTitle : track!.title,
+            // 숨김 중에는 곡이 넘어가는 걸 알 수 있게 대기열 속 순번을 보여 준다.
             artist: hide
-                ? l10n.notifHiddenNote
+                ? (queueLength > 1
+                      ? l10n.notifHiddenNotePosition(
+                          '${queueIndex + 1}',
+                          '$queueLength',
+                        )
+                      : l10n.notifHiddenNote)
                 : (track!.artist.isEmpty ? l10n.unknownArtist : track.artist),
             album: hide ? '' : track!.album,
             artUri: hide ? null : artUri,

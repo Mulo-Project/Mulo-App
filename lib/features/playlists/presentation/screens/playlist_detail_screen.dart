@@ -147,6 +147,7 @@ class _Body extends StatelessWidget {
                   queue: tracks!,
                   index: i,
                   playlistId: playlistId,
+                  showNumber: true,
                 ),
           ],
         ],

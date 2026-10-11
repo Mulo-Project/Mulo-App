@@ -84,11 +84,11 @@ class _AppShellState extends State<AppShell> {
     final mq = MediaQuery.of(context);
     final navHeight = mq.padding.bottom;
     final barShown = !_downloadMinimized;
+    // 접는 순간 한 번에 버튼 높이로 바꾼다 (버튼이 나타나는 시점까지 기다리면
+    // 접는 애니메이션이 끝날 때 본문이 한 번 더 다시 레이아웃돼 버벅인다).
     final inset = barShown
         ? _barHeight
-        : _floatShown
-        ? DownloadFloatButton.size + AppSpacing.md * 2
-        : 0.0;
+        : DownloadFloatButton.size + AppSpacing.md * 2;
     return Stack(
       children: [
         AppBackground(
@@ -96,7 +96,8 @@ class _AppShellState extends State<AppShell> {
             data: mq.copyWith(
               padding: mq.padding.copyWith(bottom: navHeight + inset),
             ),
-            child: shell,
+            // 받기 줄 · 버튼이 움직이는 동안 본문을 다시 그리지 않게 따로 그린다.
+            child: RepaintBoundary(child: shell),
           ),
         ),
         Positioned(
@@ -113,15 +114,13 @@ class _AppShellState extends State<AppShell> {
                   duration: AppMotion.medium,
                   switchInCurve: AppMotion.standard,
                   switchOutCurve: AppMotion.standard,
-                  transitionBuilder: (child, animation) => FadeTransition(
-                    opacity: animation,
-                    child: SlideTransition(
-                      position: Tween(
-                        begin: const Offset(0, 1),
-                        end: Offset.zero,
-                      ).animate(animation),
-                      child: child,
-                    ),
+                  // 흐림(유리 블러) 위에 페이드를 얹으면 프레임마다 층을 다시 만들어 버벅이므로 슬라이드만 쓴다.
+                  transitionBuilder: (child, animation) => SlideTransition(
+                    position: Tween(
+                      begin: const Offset(0, 1),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: child,
                   ),
                   child: _downloadMinimized
                       ? const SizedBox.shrink(key: ValueKey('download-gone'))

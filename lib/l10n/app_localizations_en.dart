@@ -229,6 +229,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sortArtist => 'Artist';
 
   @override
+  String get sortCount => 'Song count';
+
+  @override
   String get libraryImport => 'Import device music';
 
   @override
@@ -441,6 +444,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTheme => 'Theme';
 
   @override
+  String get settingsThemeColorFollowing =>
+      'Following the playing song\'s colors while Follow song mood is on.';
+
+  @override
   String get settingsFollowMood => 'Follow song mood';
 
   @override
@@ -610,6 +617,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get coverAdjust => 'Adjust position';
+
+  @override
+  String get coverWebBrowserHelp =>
+      'Tap an image to go straight to the editor.';
 
   @override
   String get coverWebHint => 'Image URL or search words';
@@ -930,6 +941,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mediaDetailOpenOriginal => 'Open original page';
 
   @override
+  String get mediaDetailListenOriginal => 'Listen on the original site';
+
+  @override
+  String get mediaDetailListenSoundcloud => 'Listen on SoundCloud';
+
+  @override
+  String get mediaDetailOpenArtist => 'View artist';
+
+  @override
+  String get mediaDetailPlays => 'Plays';
+
+  @override
+  String get mediaDetailGenre => 'Genre';
+
+  @override
+  String mediaDetailFollowers(String count) {
+    return '$count followers';
+  }
+
+  @override
   String get mediaDetailChannel => 'Channel';
 
   @override
@@ -1106,6 +1137,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadGenreExisting => 'Pick from existing genres';
 
   @override
+  String get saveFolderTitle => 'Choose save location';
+
+  @override
+  String get saveFolderEmpty => 'No loaded folders yet. Pick one yourself.';
+
+  @override
+  String get saveFolderPickOther => 'Pick another';
+
+  @override
   String get downloadPickFolder => 'Choose folder';
 
   @override
@@ -1246,6 +1286,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trackMenuDelete => 'Delete';
+
+  @override
+  String get trackMenuRemoveFromQueue => 'Remove from queue';
+
+  @override
+  String get trackRemovedFromQueue => 'Removed from the queue.';
 
   @override
   String get trackMenuRemoveFromPlaylist => 'Remove from playlist';
@@ -1773,6 +1819,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifHiddenNote => 'Song info hidden';
+
+  @override
+  String notifHiddenNotePosition(String n, String total) {
+    return 'Song info hidden · track $n of $total';
+  }
 
   @override
   String get notifStop => 'Close';

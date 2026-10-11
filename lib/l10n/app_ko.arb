@@ -91,6 +91,7 @@
   "sortName": "이름순",
   "sortAdded": "추가일순",
   "sortArtist": "아티스트순",
+  "sortCount": "곡 수순",
   "libraryImport": "기기 음악 불러오기",
   "libraryNoMatch": "찾는 곡이 없어요.",
   "playlistsSubtitle": "모음",
@@ -178,6 +179,7 @@
   "settingsHideNotification": "알림에 곡 정보 숨기기",
   "settingsHideNotificationDesc": "알림 · 잠금화면에 \"음악 재생 중\"만 보이고, 받기 알림에서도 곡 정보를 숨겨요.",
   "settingsTheme": "테마",
+  "settingsThemeColorFollowing": "곡 분위기 따라가기가 켜져 있어 재생 중인 곡의 색을 따라가요.",
   "settingsFollowMood": "곡 분위기 따라가기",
   "settingsFollowMoodDesc": "재생 중인 곡의 커버 색으로 강조 색이 바뀌어요.",
   "settingsThemeColor": "테마 색",
@@ -242,6 +244,7 @@
   "coverSourceDevice": "기기에서 고르기",
   "coverSourceWeb": "웹에서 가져오기",
   "coverAdjust": "위치 조정",
+  "coverWebBrowserHelp": "마음에 드는 이미지를 누르면 바로 편집 화면으로 가요.",
   "coverWebHint": "이미지 주소 또는 검색어",
   "coverWebHelp": "이미지 주소(https://…)를 붙여 넣거나, 검색어로 찾아 고르세요.",
   "coverWebUseUrl": "이 주소의 이미지 쓰기",
@@ -442,6 +445,19 @@
   "mediaDetailTitle": "상세 정보",
   "mediaDetailWatchYoutube": "유튜브에서 보기",
   "mediaDetailOpenOriginal": "원본 페이지 열기",
+  "mediaDetailListenOriginal": "원본 사이트에서 듣기",
+  "mediaDetailListenSoundcloud": "SoundCloud에서 듣기",
+  "mediaDetailOpenArtist": "아티스트 보기",
+  "mediaDetailPlays": "재생수",
+  "mediaDetailGenre": "장르",
+  "mediaDetailFollowers": "팔로워 {count}명",
+  "@mediaDetailFollowers": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "mediaDetailChannel": "채널",
   "mediaDetailOpenChannel": "채널 보기",
   "mediaDetailDuration": "길이",
@@ -512,6 +528,9 @@
   "downloadFieldGenre": "장르",
   "downloadFieldSavePath": "저장 위치",
   "downloadGenreExisting": "기존 장르에서 고르기",
+  "saveFolderTitle": "저장 위치 고르기",
+  "saveFolderEmpty": "불러오는 폴더가 없어요. 직접 선택해 주세요.",
+  "saveFolderPickOther": "직접 선택",
   "downloadPickFolder": "폴더 고르기",
   "downloadPlaylistsLabel": "담을 재생목록",
   "downloadPlaylistsEmpty": "아직 재생목록이 없어요. 아래에서 새로 만들 수 있어요.",
@@ -557,6 +576,8 @@
   "trackMenuAddToPlaylist": "재생목록에 추가",
   "trackMenuEditInfo": "정보 편집",
   "trackMenuDelete": "삭제",
+  "trackMenuRemoveFromQueue": "대기열에서 빼기",
+  "trackRemovedFromQueue": "대기열에서 뺐어요.",
   "trackMenuRemoveFromPlaylist": "재생목록에서 빼기",
   "trackMenuDeleteFile": "파일 삭제",
   "trackRemovedFromPlaylist": "재생목록에서 뺐어요",
@@ -731,6 +752,13 @@
   "notifHiddenTitle": "음악 재생 중",
   "notifPreviewLabel": "미리 듣기",
   "notifHiddenNote": "곡 정보 숨김",
+  "notifHiddenNotePosition": "곡 정보 숨김 · {n}/{total}번째 곡",
+  "@notifHiddenNotePosition": {
+    "placeholders": {
+      "n": {"type": "String"},
+      "total": {"type": "String"}
+    }
+  },
   "notifStop": "닫기",
   "notifChannelPlayback": "재생",
   "notifChannelDownloadProgress": "받는 중",

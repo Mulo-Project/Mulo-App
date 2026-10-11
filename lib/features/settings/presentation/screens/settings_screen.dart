@@ -15,6 +15,7 @@ import '../../../downloads/domain/entities/download_options.dart';
 import '../../../downloads/domain/usecases/download_usecases.dart';
 import '../../../downloads/presentation/bloc/download_preferences_cubit.dart';
 import '../../../downloads/presentation/bloc/download_settings_cubit.dart';
+import '../../../downloads/presentation/widgets/save_folder_dialog.dart';
 import '../../../engine/presentation/bloc/engine_cubit.dart';
 import '../../../library/presentation/widgets/loaded_folders_tile.dart';
 import '../../../notifications/presentation/bloc/notification_settings_cubit.dart';
@@ -41,7 +42,6 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   /// 이 기기에서 고를 수 있는 저장 형식 (OS별 정책, 불러오기 전엔 비어 있다).
   List<AudioFormat> _formats = const [];
-  bool _followMood = false;
   late final EngineCubit _engine = sl<EngineCubit>()..load();
 
   @override
@@ -67,6 +67,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final text = Theme.of(context).textTheme;
     final selectedPreset = context.select((ThemeCubit c) => c.state.preset);
     final mode = context.select((ThemeCubit c) => c.state.mode);
+    final followMood = context.select((ThemeCubit c) => c.state.followMood);
     final brightness = Theme.of(context).brightness;
     final themeCtrl = context.read<ThemeCubit>();
     final lock = context.watch<AppLockCubit>().state;
@@ -103,7 +104,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ? l10n.settingsSavePathDesc
                           : savePath,
                       trailing: const _Chevron(),
-                      onTap: context.read<DownloadSettingsCubit>().pickAndSave,
+                      onTap: () async {
+                        final cubit = context.read<DownloadSettingsCubit>();
+                        final path = await showSaveFolderDialog(
+                          context,
+                          current: savePath,
+                          pickOther: cubit.pickFolder,
+                        );
+                        if (path != null) await cubit.setSavePath(path);
+                      },
                     ),
                     const LoadedFoldersTile(),
                     _EngineRow(cubit: _engine),
@@ -242,17 +251,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       title: l10n.settingsThemePreview,
                       description: l10n.settingsThemePreviewDesc,
                       trailing: const _Chevron(),
-                      onTap: () {
-                        themeCtrl.beginPreview();
-                        context.go(Routes.home);
-                      },
+                      // 곡 분위기 따라가기 중에는 색이 곡마다 정해지므로 프리셋 미리보기는 쓰지 않는다.
+                      onTap: followMood
+                          ? null
+                          : () {
+                              themeCtrl.beginPreview();
+                              context.go(Routes.home);
+                            },
                     ),
                     SettingRow(
                       title: l10n.settingsFollowMood,
                       description: l10n.settingsFollowMoodDesc,
                       trailing: AppSwitch(
-                        value: _followMood,
-                        onChanged: (v) => setState(() => _followMood = v),
+                        value: followMood,
+                        onChanged: themeCtrl.setFollowMood,
                       ),
                     ),
                     SettingRow(
@@ -270,18 +282,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     SettingRow(
                       title: l10n.settingsThemeColor,
-                      below: Wrap(
-                        spacing: AppSpacing.xs,
-                        runSpacing: AppSpacing.sm,
-                        children: [
-                          for (final preset in ThemePreset.values)
-                            ThemeSwatch(
-                              preview: preset.paletteFor(brightness),
-                              label: presetLabel(l10n, preset),
-                              selected: preset == selectedPreset,
-                              onTap: () => themeCtrl.selectPreset(preset),
-                            ),
-                        ],
+                      description: followMood
+                          ? l10n.settingsThemeColorFollowing
+                          : null,
+                      below: Opacity(
+                        opacity: followMood ? .4 : 1,
+                        child: IgnorePointer(
+                          ignoring: followMood,
+                          child: Wrap(
+                            spacing: AppSpacing.xs,
+                            runSpacing: AppSpacing.sm,
+                            children: [
+                              for (final preset in ThemePreset.values)
+                                ThemeSwatch(
+                                  preview: preset.paletteFor(brightness),
+                                  label: presetLabel(l10n, preset),
+                                  selected: preset == selectedPreset,
+                                  onTap: () => themeCtrl.selectPreset(preset),
+                                ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                     SettingRow(

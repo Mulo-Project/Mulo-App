@@ -518,6 +518,12 @@ abstract class AppLocalizations {
   /// **'아티스트순'**
   String get sortArtist;
 
+  /// No description provided for @sortCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 수순'**
+  String get sortCount;
+
   /// No description provided for @libraryImport.
   ///
   /// In ko, this message translates to:
@@ -902,6 +908,12 @@ abstract class AppLocalizations {
   /// **'테마'**
   String get settingsTheme;
 
+  /// No description provided for @settingsThemeColorFollowing.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 분위기 따라가기가 켜져 있어 재생 중인 곡의 색을 따라가요.'**
+  String get settingsThemeColorFollowing;
+
   /// No description provided for @settingsFollowMood.
   ///
   /// In ko, this message translates to:
@@ -1225,6 +1237,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'위치 조정'**
   String get coverAdjust;
+
+  /// No description provided for @coverWebBrowserHelp.
+  ///
+  /// In ko, this message translates to:
+  /// **'마음에 드는 이미지를 누르면 바로 편집 화면으로 가요.'**
+  String get coverWebBrowserHelp;
 
   /// No description provided for @coverWebHint.
   ///
@@ -1796,6 +1814,42 @@ abstract class AppLocalizations {
   /// **'원본 페이지 열기'**
   String get mediaDetailOpenOriginal;
 
+  /// No description provided for @mediaDetailListenOriginal.
+  ///
+  /// In ko, this message translates to:
+  /// **'원본 사이트에서 듣기'**
+  String get mediaDetailListenOriginal;
+
+  /// No description provided for @mediaDetailListenSoundcloud.
+  ///
+  /// In ko, this message translates to:
+  /// **'SoundCloud에서 듣기'**
+  String get mediaDetailListenSoundcloud;
+
+  /// No description provided for @mediaDetailOpenArtist.
+  ///
+  /// In ko, this message translates to:
+  /// **'아티스트 보기'**
+  String get mediaDetailOpenArtist;
+
+  /// No description provided for @mediaDetailPlays.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생수'**
+  String get mediaDetailPlays;
+
+  /// No description provided for @mediaDetailGenre.
+  ///
+  /// In ko, this message translates to:
+  /// **'장르'**
+  String get mediaDetailGenre;
+
+  /// No description provided for @mediaDetailFollowers.
+  ///
+  /// In ko, this message translates to:
+  /// **'팔로워 {count}명'**
+  String mediaDetailFollowers(String count);
+
   /// No description provided for @mediaDetailChannel.
   ///
   /// In ko, this message translates to:
@@ -2066,6 +2120,24 @@ abstract class AppLocalizations {
   /// **'기존 장르에서 고르기'**
   String get downloadGenreExisting;
 
+  /// No description provided for @saveFolderTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 위치 고르기'**
+  String get saveFolderTitle;
+
+  /// No description provided for @saveFolderEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'불러오는 폴더가 없어요. 직접 선택해 주세요.'**
+  String get saveFolderEmpty;
+
+  /// No description provided for @saveFolderPickOther.
+  ///
+  /// In ko, this message translates to:
+  /// **'직접 선택'**
+  String get saveFolderPickOther;
+
   /// No description provided for @downloadPickFolder.
   ///
   /// In ko, this message translates to:
@@ -2335,6 +2407,18 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'삭제'**
   String get trackMenuDelete;
+
+  /// No description provided for @trackMenuRemoveFromQueue.
+  ///
+  /// In ko, this message translates to:
+  /// **'대기열에서 빼기'**
+  String get trackMenuRemoveFromQueue;
+
+  /// No description provided for @trackRemovedFromQueue.
+  ///
+  /// In ko, this message translates to:
+  /// **'대기열에서 뺐어요.'**
+  String get trackRemovedFromQueue;
 
   /// No description provided for @trackMenuRemoveFromPlaylist.
   ///
@@ -3289,6 +3373,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'곡 정보 숨김'**
   String get notifHiddenNote;
+
+  /// No description provided for @notifHiddenNotePosition.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 정보 숨김 · {n}/{total}번째 곡'**
+  String notifHiddenNotePosition(String n, String total);
 
   /// No description provided for @notifStop.
   ///

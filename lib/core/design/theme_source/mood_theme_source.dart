@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../tokens/app_palette.dart';
 import 'theme_source.dart';
 
-/// 곡 커버 아트에서 색을 뽑아 팔레트를 만든다. (실험용 — 아직 플레이어에 연결 안 됨)
+/// 곡 커버 아트에서 색을 뽑아 팔레트를 만든다. (설정의 "곡 분위기 따라가기"가 켜져 있으면 재생 곡마다 적용)
 ///
 /// 규칙:
 /// - 배경 · 표면은 다크/라이트 바탕 그대로. 글로우 그라데이션과 강조 색만 바뀐다.
@@ -53,4 +53,23 @@ class MoodThemeSource implements ThemeSource {
       return brightness == Brightness.dark ? fallback : AppPalette.defaultLight;
     }
   }
+}
+
+/// 사용자가 곡에 직접 고른 커버 색으로 팔레트를 만든다 (이미지에서 뽑을 필요가 없다).
+class MoodColorThemeSource implements ThemeSource {
+  const MoodColorThemeSource({required this.trackId, required this.color});
+
+  final String trackId;
+  final Color color;
+
+  @override
+  String get id => 'mood-color:$trackId:${color.toARGB32()}';
+
+  @override
+  AppPalette resolve(Brightness brightness) => AppPalette.derive(
+    primary: color,
+    accent: color,
+    base: AppPalette.baseFor(brightness),
+    minAccentContrast: AppPalette.accentContrastFor(brightness),
+  );
 }

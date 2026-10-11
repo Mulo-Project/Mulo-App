@@ -27,6 +27,9 @@ class MainActivity : FlutterFragmentActivity() {
 
     private fun handleIntent(intent: Intent?) {
         if (intent?.action == PlaybackHub.ACTION_OPEN_PLAYER) PlaybackHub.onOpenPlayerRequested()
+        if (intent?.action == DownloadNotifications.ACTION_OPEN_DOWNLOAD) {
+            intent.getStringExtra(DownloadNotifications.EXTRA_OPEN_ID)?.let { DownloadNotificationPlugin.requestOpen(it) }
+        }
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {

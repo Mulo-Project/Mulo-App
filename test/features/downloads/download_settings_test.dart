@@ -39,7 +39,9 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('설정의 저장 위치를 폴더 선택기로 바꾸면 기본 저장 위치가 된다', (tester) async {
+  testWidgets('설정의 저장 위치: 대화상자에서 "직접 선택"으로 폴더 선택기를 열면 기본 저장 위치가 된다', (
+    tester,
+  ) async {
     final settings = MemoryDownloadSettings(
       path: '/music/Mulo',
       picked: '/music/내폴더',
@@ -49,15 +51,29 @@ void main() {
 
     await tester.tap(find.text('저장 위치'));
     await tester.pumpAndSettle();
+    // 바로 선택기가 뜨지 않고 목록 대화상자가 먼저 뜬다.
+    expect(find.text('저장 위치 고르기'), findsOneWidget);
+    expect(settings.path, '/music/Mulo');
+
+    await tester.tap(find.text('직접 선택'));
+    await tester.pumpAndSettle();
     expect(settings.path, '/music/내폴더');
     expect(find.text('/music/내폴더'), findsOneWidget);
   });
 
-  testWidgets('선택기를 취소하면 저장 위치는 그대로다', (tester) async {
+  testWidgets('저장 위치 대화상자: 지금 위치를 고르면 그대로, 선택기를 취소해도 그대로다', (tester) async {
     final settings = MemoryDownloadSettings(path: '/music/Mulo');
     await pump(tester, Routes.settings, settings: settings, height: 7000);
     await tester.tap(find.text('저장 위치'));
     await tester.pumpAndSettle();
+    // 선택기를 취소하면 대화상자는 그대로 남는다.
+    await tester.tap(find.text('직접 선택'));
+    await tester.pumpAndSettle();
+    expect(find.text('저장 위치 고르기'), findsOneWidget);
+    expect(settings.path, '/music/Mulo');
+    await tester.tap(find.text('취소'));
+    await tester.pumpAndSettle();
+    expect(find.text('저장 위치 고르기'), findsNothing);
     expect(settings.path, '/music/Mulo');
   });
 

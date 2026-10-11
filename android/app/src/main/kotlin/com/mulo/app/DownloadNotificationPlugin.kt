@@ -50,6 +50,11 @@ class DownloadNotificationPlugin : FlutterPlugin, MethodChannel.MethodCallHandle
                 }
                 "showResult" -> DownloadNotifications.showResult(ctx, args)
                 "clearResults" -> DownloadNotifications.clearResults(ctx)
+                "takeOpen" -> {
+                    val id = pendingOpen
+                    pendingOpen = null
+                    return result.success(id)
+                }
                 else -> return result.notImplemented()
             }
             result.success(null)
@@ -64,6 +69,16 @@ class DownloadNotificationPlugin : FlutterPlugin, MethodChannel.MethodCallHandle
 
         @Volatile
         private var active: MethodChannel? = null
+
+        /** 알림 본문을 눌러 열라고 한 받기 항목 id. Dart가 `takeOpen`으로 가져가면 비운다. */
+        @Volatile
+        private var pendingOpen: String? = null
+
+        /** 받기 알림 본문 누름: id를 맡겨 두고 Dart에 알린다 (엔진이 아직 없으면 Dart가 켜질 때 가져간다). */
+        fun requestOpen(id: String) {
+            pendingOpen = id
+            main.post { active?.invokeMethod("open", null) }
+        }
 
         /** 알림 버튼 누름을 Dart로 보낸다. 엔진이 없으면(앱 프로세스가 없었던 경우) 할 일이 없다. */
         fun dispatch(action: String) {

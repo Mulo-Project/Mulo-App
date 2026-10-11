@@ -16,6 +16,7 @@ class ThemeState extends Equatable {
     required this.light,
     this.preset = ThemePreset.initial,
     this.mode = AppThemeMode.initial,
+    this.followMood = false,
     this.previewing = false,
   });
 
@@ -39,6 +40,9 @@ class ThemeState extends Equatable {
   final ThemePreset preset;
   final AppThemeMode mode;
 
+  /// 곡 분위기 따라가기 (켜면 재생 중인 곡의 색으로 테마를 자동 적용).
+  final bool followMood;
+
   /// 테마 미리보기 중 (저장 전). 하단에 적용 · 취소 바가 뜬다.
   final bool previewing;
 
@@ -53,6 +57,7 @@ class ThemeState extends Equatable {
     AppPalette? light,
     ThemePreset? preset,
     AppThemeMode? mode,
+    bool? followMood,
     bool? previewing,
   }) => ThemeState(
     sourceId: sourceId ?? this.sourceId,
@@ -60,11 +65,20 @@ class ThemeState extends Equatable {
     light: light ?? this.light,
     preset: preset ?? this.preset,
     mode: mode ?? this.mode,
+    followMood: followMood ?? this.followMood,
     previewing: previewing ?? this.previewing,
   );
 
   @override
-  List<Object?> get props => [sourceId, dark, light, preset, mode, previewing];
+  List<Object?> get props => [
+    sourceId,
+    dark,
+    light,
+    preset,
+    mode,
+    followMood,
+    previewing,
+  ];
 }
 
 /// 앱 테마 (프리셋 · 화면 모드 · 임시 소스). 바뀌면 MaterialApp이
@@ -74,12 +88,14 @@ class ThemeCubit extends Cubit<ThemeState> {
     required LoadThemeSettings loadSettings,
     required this._savePreset,
     required this._saveMode,
+    required this._saveFollowMood,
   }) : _load = loadSettings,
        super(ThemeState.initial());
 
   final LoadThemeSettings _load;
   final SaveThemePreset _savePreset;
   final SaveThemeMode _saveMode;
+  final SaveFollowMood _saveFollowMood;
   int _request = 0;
   ThemePreset? _savedPreset;
   AppThemeMode? _savedMode;
@@ -90,7 +106,7 @@ class ThemeCubit extends Cubit<ThemeState> {
     final saved = await _load(const NoParams());
     // 불러오는 사이에 사용자가 이미 바꿨으면 덮어쓰지 않는다.
     if (_touched || isClosed) return;
-    emit(state.copyWith(mode: saved.mode));
+    emit(state.copyWith(mode: saved.mode, followMood: saved.followMood));
     final preset = ThemePreset.fromId(saved.presetId);
     if (preset != null) await _applyPreset(preset);
   }
@@ -107,6 +123,14 @@ class ThemeCubit extends Cubit<ThemeState> {
     _touched = true;
     emit(state.copyWith(mode: mode));
     await _saveMode(mode);
+  }
+
+  /// 곡 분위기 따라가기를 켜고 끈다. 저장한다. 끄면 고른 프리셋으로 돌아간다.
+  Future<void> setFollowMood(bool value) async {
+    _touched = true;
+    emit(state.copyWith(followMood: value));
+    await _saveFollowMood(value);
+    if (!value) await reset();
   }
 
   /// 미리보기를 시작한다. 이후 [previewPreset] · [previewMode]는 저장하지 않고,

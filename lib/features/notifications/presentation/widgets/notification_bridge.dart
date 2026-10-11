@@ -12,6 +12,7 @@ import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../library/presentation/bloc/library_cubit.dart';
 import '../../../downloads/domain/entities/download_item.dart';
 import '../../../downloads/presentation/bloc/download_queue_cubit.dart';
+import '../../../downloads/presentation/widgets/download_bar.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../../search/domain/entities/media_info.dart';
@@ -25,12 +26,20 @@ import '../bloc/notification_sync_cubit.dart';
 /// 받기 대기열 · 재생 상태를 알림창으로 옮기고, 알림에서 누른 재생 조작을 재생 상태에 돌려준다.
 /// 앱 셸 한 곳에서 감싼다 ([NotificationSyncCubit]이 바뀐 것만 골라 알림을 부른다).
 class NotificationBridge extends StatefulWidget {
-  const NotificationBridge({super.key, required this.child, this.onOpenPlayer});
+  const NotificationBridge({
+    super.key,
+    required this.child,
+    this.onOpenPlayer,
+    this.onOpenDownload,
+  });
 
   final Widget child;
 
   /// 알림을 눌렀을 때 플레이어 화면을 연다 (재생 중인 곡이 있을 때만 부른다).
   final VoidCallback? onOpenPlayer;
+
+  /// 받기 알림(진행 · 완료)을 눌렀을 때 그 곡의 상세 화면을 연다.
+  final ValueChanged<MediaHit>? onOpenDownload;
 
   @override
   State<NotificationBridge> createState() => _NotificationBridgeState();
@@ -48,6 +57,7 @@ class _NotificationBridgeState extends State<NotificationBridge>
   var _openPending = false;
   late final Future<void> _boot = _checkLaunch();
   StreamSubscription<DownloadNotificationAction>? _downloadActions;
+  StreamSubscription<String>? _downloadOpens;
 
   @override
   void initState() {
@@ -66,6 +76,12 @@ class _NotificationBridgeState extends State<NotificationBridge>
         .read<NotificationSyncCubit>()
         .downloadActions
         .listen(_onDownloadAction);
+    final sync = context.read<NotificationSyncCubit>();
+    _downloadOpens = sync.downloadOpens.listen((id) => _openDownload(id));
+    // 받기 알림을 눌러 앱이 새로 켜졌다면 그 곡의 상세 화면으로 간다.
+    sync.takeDownloadOpen().then((id) {
+      if (id != null && mounted) _openDownload(id);
+    });
   }
 
   @override
@@ -74,6 +90,7 @@ class _NotificationBridgeState extends State<NotificationBridge>
     _commands?.cancel();
     _openRequests?.cancel();
     _downloadActions?.cancel();
+    _downloadOpens?.cancel();
     super.dispose();
   }
 
@@ -134,6 +151,28 @@ class _NotificationBridgeState extends State<NotificationBridge>
     if (state == AppLifecycleState.resumed) {
       context.read<NotificationSettingsCubit>().refreshPermission();
     }
+  }
+
+  /// 받기 알림 본문을 눌렀다: 그 항목의 상세 화면을 연다.
+  /// 앱이 막 켜져 받기 대기열을 아직 못 읽었을 수 있어서 잠시 기다려 본다 (끝내 없으면 그대로 둔다).
+  void _openDownload(String id, [int tries = 0]) {
+    if (!mounted) return;
+    final item = context
+        .read<DownloadQueueCubit>()
+        .state
+        .items
+        .where((i) => i.id == id)
+        .firstOrNull;
+    if (item == null) {
+      if (tries < 10) {
+        Future<void>.delayed(
+          const Duration(milliseconds: 300),
+          () => _openDownload(id, tries + 1),
+        );
+      }
+      return;
+    }
+    widget.onOpenDownload?.call(mediaHitOfDownload(item));
   }
 
   /// 받기 알림의 버튼. 미리 듣기: 지금 받는 곡을 받지 않고 바로 듣는다 (받기는 그대로 이어진다).
@@ -323,6 +362,8 @@ class _NotificationBridgeState extends State<NotificationBridge>
       position: now.position,
       hasPrevious: now.queue.length > 1 || now.position > Duration.zero,
       hasNext: now.queue.length > 1,
+      queueIndex: now.index,
+      queueLength: now.queue.length,
       favorite:
           track != null && context.read<PlaylistsCubit>().isFavorite(track.id),
       artUri: _artUri(cover),
@@ -352,7 +393,7 @@ class _NotificationBridgeState extends State<NotificationBridge>
         listener: (_, _) => _syncPlayback(),
       ),
       BlocListener<ThemeCubit, ThemeState>(
-        listenWhen: (a, b) => a != b,
+        listenWhen: (a, b) => a.dark != b.dark || a.light != b.light,
         listener: (_, _) => WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) _syncPlayback();
         }),

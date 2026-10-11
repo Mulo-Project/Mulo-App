@@ -120,6 +120,7 @@ class QueueScreen extends StatelessWidget {
                             index: i,
                             child: _QueueTile(
                               track: t,
+                              number: i + 1,
                               active: i == index,
                               playing: playing,
                               onTap: () => vm.jumpTo(i),
@@ -192,12 +193,14 @@ class _QueueHeader extends StatelessWidget {
 class _QueueTile extends StatelessWidget {
   const _QueueTile({
     required this.track,
+    required this.number,
     required this.active,
     required this.playing,
     required this.onTap,
   });
 
   final Track track;
+  final int number;
   final bool active;
   final bool playing;
   final VoidCallback onTap;
@@ -224,6 +227,7 @@ class _QueueTile extends StatelessWidget {
           color: coverColorOf(context, key),
           artwork: coverImageOf(context, key),
           active: active,
+          number: number,
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -237,7 +241,7 @@ class _QueueTile extends StatelessWidget {
                   ),
                 ),
               Text(formatDuration(track.duration), style: text.bodySmall),
-              TrackMoreButton(track: track),
+              TrackMoreButton(track: track, inQueue: true),
             ],
           ),
           onTap: onTap,

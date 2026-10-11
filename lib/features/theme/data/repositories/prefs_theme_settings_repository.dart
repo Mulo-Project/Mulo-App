@@ -7,6 +7,7 @@ import '../../domain/repositories/theme_settings_repository.dart';
 class PrefsThemeSettingsRepository implements ThemeSettingsRepository {
   static const _presetKey = 'theme.preset';
   static const _modeKey = 'theme.mode';
+  static const _followMoodKey = 'theme.followMood';
 
   Future<SharedPreferences> get _prefs => SharedPreferences.getInstance();
 
@@ -19,6 +20,7 @@ class PrefsThemeSettingsRepository implements ThemeSettingsRepository {
       mode:
           AppThemeMode.values.asNameMap()[prefs.getString(_modeKey)] ??
           AppThemeMode.initial,
+      followMood: prefs.getBool(_followMoodKey) ?? false,
     );
   }
 
@@ -29,4 +31,8 @@ class PrefsThemeSettingsRepository implements ThemeSettingsRepository {
   @override
   Future<void> saveMode(AppThemeMode mode) async =>
       (await _prefs).setString(_modeKey, mode.name);
+
+  @override
+  Future<void> saveFollowMood(bool value) async =>
+      (await _prefs).setBool(_followMoodKey, value);
 }

@@ -32,6 +32,7 @@ class SessionInfo(map: Map<*, *>) {
     val hideSongInfo = map["hideSongInfo"] as? Boolean ?: false
     val hiddenTitle = map["hiddenTitle"] as? String ?: ""
     val hiddenNote = map["hiddenNote"] as? String ?: ""
+    val hiddenNoteSingle = map["hiddenNoteSingle"] as? String ?: ""
     val unknownArtist = map["unknownArtist"] as? String ?: ""
 }
 
@@ -80,7 +81,14 @@ class SessionPlayer(
         }
         // 앱이 모르는 새 곡 (앱이 꺼진 사이 넘어갔다): 대기열에 실린 정보로 보여 준다.
         if (info.hideSongInfo) {
-            return MediaMetadata.Builder().setTitle(info.hiddenTitle).setArtist(info.hiddenNote.ifEmpty { null }).build()
+            val count = exo.mediaItemCount
+            // 대기열 속 순번을 보여 줘서 곡이 넘어가는 걸 알 수 있게 한다.
+            val note = if (count > 1) {
+                info.hiddenNote.replace("{n}", "${exo.currentMediaItemIndex + 1}").replace("{total}", "$count")
+            } else {
+                info.hiddenNoteSingle
+            }
+            return MediaMetadata.Builder().setTitle(info.hiddenTitle).setArtist(note.ifEmpty { null }).build()
         }
         val meta = item.mediaMetadata
         return MediaMetadata.Builder()

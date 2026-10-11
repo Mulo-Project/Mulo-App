@@ -228,6 +228,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get sortArtist => '아티스트순';
 
   @override
+  String get sortCount => '곡 수순';
+
+  @override
   String get libraryImport => '기기 음악 불러오기';
 
   @override
@@ -432,6 +435,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsTheme => '테마';
 
   @override
+  String get settingsThemeColorFollowing =>
+      '곡 분위기 따라가기가 켜져 있어 재생 중인 곡의 색을 따라가요.';
+
+  @override
   String get settingsFollowMood => '곡 분위기 따라가기';
 
   @override
@@ -598,6 +605,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get coverAdjust => '위치 조정';
+
+  @override
+  String get coverWebBrowserHelp => '마음에 드는 이미지를 누르면 바로 편집 화면으로 가요.';
 
   @override
   String get coverWebHint => '이미지 주소 또는 검색어';
@@ -914,6 +924,26 @@ class AppLocalizationsKo extends AppLocalizations {
   String get mediaDetailOpenOriginal => '원본 페이지 열기';
 
   @override
+  String get mediaDetailListenOriginal => '원본 사이트에서 듣기';
+
+  @override
+  String get mediaDetailListenSoundcloud => 'SoundCloud에서 듣기';
+
+  @override
+  String get mediaDetailOpenArtist => '아티스트 보기';
+
+  @override
+  String get mediaDetailPlays => '재생수';
+
+  @override
+  String get mediaDetailGenre => '장르';
+
+  @override
+  String mediaDetailFollowers(String count) {
+    return '팔로워 $count명';
+  }
+
+  @override
   String get mediaDetailChannel => '채널';
 
   @override
@@ -1084,6 +1114,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadGenreExisting => '기존 장르에서 고르기';
 
   @override
+  String get saveFolderTitle => '저장 위치 고르기';
+
+  @override
+  String get saveFolderEmpty => '불러오는 폴더가 없어요. 직접 선택해 주세요.';
+
+  @override
+  String get saveFolderPickOther => '직접 선택';
+
+  @override
   String get downloadPickFolder => '폴더 고르기';
 
   @override
@@ -1223,6 +1262,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get trackMenuDelete => '삭제';
+
+  @override
+  String get trackMenuRemoveFromQueue => '대기열에서 빼기';
+
+  @override
+  String get trackRemovedFromQueue => '대기열에서 뺐어요.';
 
   @override
   String get trackMenuRemoveFromPlaylist => '재생목록에서 빼기';
@@ -1731,6 +1776,11 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get notifHiddenNote => '곡 정보 숨김';
+
+  @override
+  String notifHiddenNotePosition(String n, String total) {
+    return '곡 정보 숨김 · $n/$total번째 곡';
+  }
 
   @override
   String get notifStop => '닫기';

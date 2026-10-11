@@ -57,7 +57,7 @@ class _NewPlaylistSheetState extends State<_NewPlaylistSheet> {
   }
 
   Future<void> _pickImage() async {
-    final art = await pickCoverArt(context);
+    final art = await pickCoverArt(context, initialQuery: _name.text);
     if (art != null && mounted) setState(() => _art = art);
   }
 

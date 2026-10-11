@@ -18,6 +18,10 @@ object DownloadNotifications {
     private const val FAILED_CHANNEL = "com.mulo.app.download_failed"
     private const val RESULT_ID_BASE = 3000
 
+    /** 받기 알림 본문을 눌러 앱을 열 때 인텐트에 싣는 값 (Dart의 받기 항목 id). */
+    const val ACTION_OPEN_DOWNLOAD = "com.mulo.app.download.OPEN"
+    const val EXTRA_OPEN_ID = "openId"
+
     // 알림 버튼 → 수신기 → Dart. 키는 Dart와 맞춘 이름.
     val ACTIONS = linkedMapOf(
         "preview" to "com.mulo.app.download.PREVIEW",
@@ -60,10 +64,17 @@ object DownloadNotifications {
     private fun smallIcon(context: Context) =
         context.resources.getIdentifier("ic_stat_mulo", "drawable", context.packageName)
 
-    private fun launchIntent(context: Context): PendingIntent? =
-        context.packageManager.getLaunchIntentForPackage(context.packageName)?.let {
-            PendingIntent.getActivity(context, 0, it, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+    /** 알림을 누르면 앱을 연다. [openId]가 있으면 그 받기 항목의 상세 화면으로 간다. */
+    private fun launchIntent(context: Context, openId: String?): PendingIntent? {
+        val launch = context.packageManager.getLaunchIntentForPackage(context.packageName) ?: return null
+        if (!openId.isNullOrEmpty()) {
+            launch.action = ACTION_OPEN_DOWNLOAD
+            launch.putExtra(EXTRA_OPEN_ID, openId)
         }
+        // 항목마다 요청 코드를 달리해야 알림마다 자기 항목을 가리킨다.
+        val code = if (openId.isNullOrEmpty()) 0 else 1 + (openId.hashCode() and 0xFFFFF)
+        return PendingIntent.getActivity(context, code, launch, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+    }
 
     private fun actionIntent(context: Context, key: String): PendingIntent {
         val intent = Intent(ACTIONS.getValue(key))
@@ -102,7 +113,7 @@ object DownloadNotifications {
         (a["subText"] as? String)?.let { b.setSubText(it) }
         val percent = (a["percent"] as? Number)?.toInt()
         b.setProgress(100, percent ?: 0, percent == null)
-        launchIntent(context)?.let { b.setContentIntent(it) }
+        launchIntent(context, a["openId"] as? String)?.let { b.setContentIntent(it) }
         val pause = a["pauseLabel"] as? String
         val stop = a["stopLabel"] as? String
         val preview = a["previewLabel"] as? String
@@ -135,7 +146,7 @@ object DownloadNotifications {
             .setCategory(Notification.CATEGORY_STATUS)
             .setVisibility(Notification.VISIBILITY_PRIVATE)
         (a["color"] as? Number)?.let { b.setColor(it.toInt()) }
-        launchIntent(context)?.let { b.setContentIntent(it) }
+        launchIntent(context, a["openId"] as? String)?.let { b.setContentIntent(it) }
         synchronized(resultIds) { resultIds.add(id) }
         manager(context).notify(id, b.build())
     }
