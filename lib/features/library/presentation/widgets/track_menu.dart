@@ -89,13 +89,14 @@ Future<void> showTrackMenu(
           icon: AppIcons.style,
           label: l10n.playerStyleTitle,
         ),
-      AppMenuItem(
-        value: _TrackAction.playNext,
-        dividerBefore: inPlayer,
-        icon: AppIcons.playlistPlay,
-        label: l10n.trackMenuPlayNext,
-      ),
-      if (!inQueue)
+      // 지금 재생 중인 곡의 메뉴(재생 화면)에서는 "다음 재생" · "대기열에 추가"를 뺀다.
+      if (!inPlayer)
+        AppMenuItem(
+          value: _TrackAction.playNext,
+          icon: AppIcons.playlistPlay,
+          label: l10n.trackMenuPlayNext,
+        ),
+      if (!inQueue && !inPlayer)
         AppMenuItem(
           value: _TrackAction.addToQueue,
           icon: AppIcons.queue,
@@ -103,6 +104,7 @@ Future<void> showTrackMenu(
         ),
       AppMenuItem(
         value: _TrackAction.addToPlaylist,
+        dividerBefore: inPlayer,
         icon: AppIcons.playlistAdd,
         label: l10n.trackMenuAddToPlaylist,
       ),
