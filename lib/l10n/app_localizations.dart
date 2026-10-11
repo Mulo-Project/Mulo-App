@@ -908,6 +908,12 @@ abstract class AppLocalizations {
   /// **'테마'**
   String get settingsTheme;
 
+  /// No description provided for @settingsThemeColorFollowing.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 분위기 따라가기가 켜져 있어 재생 중인 곡의 색을 따라가요.'**
+  String get settingsThemeColorFollowing;
+
   /// No description provided for @settingsFollowMood.
   ///
   /// In ko, this message translates to:

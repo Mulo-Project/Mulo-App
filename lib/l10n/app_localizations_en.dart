@@ -444,6 +444,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTheme => 'Theme';
 
   @override
+  String get settingsThemeColorFollowing =>
+      'Following the playing song\'s colors while Follow song mood is on.';
+
+  @override
   String get settingsFollowMood => 'Follow song mood';
 
   @override

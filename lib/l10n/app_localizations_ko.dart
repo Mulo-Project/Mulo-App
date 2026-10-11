@@ -435,6 +435,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsTheme => '테마';
 
   @override
+  String get settingsThemeColorFollowing =>
+      '곡 분위기 따라가기가 켜져 있어 재생 중인 곡의 색을 따라가요.';
+
+  @override
   String get settingsFollowMood => '곡 분위기 따라가기';
 
   @override

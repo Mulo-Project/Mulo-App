@@ -179,6 +179,7 @@
   "settingsHideNotification": "알림에 곡 정보 숨기기",
   "settingsHideNotificationDesc": "알림 · 잠금화면에 \"음악 재생 중\"만 보이고, 받기 알림에서도 곡 정보를 숨겨요.",
   "settingsTheme": "테마",
+  "settingsThemeColorFollowing": "곡 분위기 따라가기가 켜져 있어 재생 중인 곡의 색을 따라가요.",
   "settingsFollowMood": "곡 분위기 따라가기",
   "settingsFollowMoodDesc": "재생 중인 곡의 커버 색으로 강조 색이 바뀌어요.",
   "settingsThemeColor": "테마 색",

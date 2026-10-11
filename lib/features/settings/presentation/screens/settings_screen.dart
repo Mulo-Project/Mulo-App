@@ -242,10 +242,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       title: l10n.settingsThemePreview,
                       description: l10n.settingsThemePreviewDesc,
                       trailing: const _Chevron(),
-                      onTap: () {
-                        themeCtrl.beginPreview();
-                        context.go(Routes.home);
-                      },
+                      // 곡 분위기 따라가기 중에는 색이 곡마다 정해지므로 프리셋 미리보기는 쓰지 않는다.
+                      onTap: followMood
+                          ? null
+                          : () {
+                              themeCtrl.beginPreview();
+                              context.go(Routes.home);
+                            },
                     ),
                     SettingRow(
                       title: l10n.settingsFollowMood,
@@ -270,18 +273,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     SettingRow(
                       title: l10n.settingsThemeColor,
-                      below: Wrap(
-                        spacing: AppSpacing.xs,
-                        runSpacing: AppSpacing.sm,
-                        children: [
-                          for (final preset in ThemePreset.values)
-                            ThemeSwatch(
-                              preview: preset.paletteFor(brightness),
-                              label: presetLabel(l10n, preset),
-                              selected: preset == selectedPreset,
-                              onTap: () => themeCtrl.selectPreset(preset),
-                            ),
-                        ],
+                      description: followMood
+                          ? l10n.settingsThemeColorFollowing
+                          : null,
+                      below: Opacity(
+                        opacity: followMood ? .4 : 1,
+                        child: IgnorePointer(
+                          ignoring: followMood,
+                          child: Wrap(
+                            spacing: AppSpacing.xs,
+                            runSpacing: AppSpacing.sm,
+                            children: [
+                              for (final preset in ThemePreset.values)
+                                ThemeSwatch(
+                                  preview: preset.paletteFor(brightness),
+                                  label: presetLabel(l10n, preset),
+                                  selected: preset == selectedPreset,
+                                  onTap: () => themeCtrl.selectPreset(preset),
+                                ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                     SettingRow(
