@@ -835,5 +835,10 @@
   "subscriptionsCategories": "알림 받을 분류",
   "subscriptionsCategoriesDesc": "고른 분류의 새 영상만 알리고 보여 줘요. 고르지 않으면 모든 분류예요.",
   "channelInfoVideoCount": "영상 {count}개",
-  "@channelInfoVideoCount": {"placeholders": {"count": {"type": "int"}}}
+  "@channelInfoVideoCount": {"placeholders": {"count": {"type": "int"}}},
+  "channelSaveFolder": "저장 위치",
+  "channelSaveFolderDefault": "기본 저장 위치",
+  "channelSaveFolderChange": "변경",
+  "channelSaveFolderReset": "기본으로",
+  "notifNewVideoDownloadNow": "바로 받기"
 }

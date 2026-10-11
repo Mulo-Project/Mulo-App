@@ -40,6 +40,9 @@ void registerSubscriptions(GetIt sl) {
     ..registerFactory(() => TakeNewVideosOpen(sl()))
     ..registerFactory(() => WatchNewVideosOpens(sl()))
     ..registerFactory(() => ClearNewVideosNotification(sl()))
+    ..registerFactory(() => TakeNewVideoDownloads(sl()))
+    ..registerFactory(() => WatchNewVideoDownloads(sl()))
+    ..registerFactory(() => MoveAppToBack(sl()))
     ..registerFactory(() => SearchChannels(sl()))
     ..registerFactory(() => ChannelSearchCubit(sl()))
     ..registerFactory(() => ChannelInfoCubit(sl()))
@@ -58,7 +61,7 @@ void registerSubscriptions(GetIt sl) {
       ),
     )
     ..registerLazySingleton(
-      () => NewVideosCubit(sl(), sl(), sl(), sl(), sl(), sl()),
+      () => NewVideosCubit(sl(), sl(), sl(), sl(), sl(), sl(), sl()),
     );
 }
 
@@ -69,5 +72,7 @@ BackgroundTexts _backgroundTexts() {
     channelName: l10n.notifChannelNewVideos,
     title: l10n.notifNewVideosTitle,
     body: l10n.notifNewVideosBody('%CHANNELS%', '%COUNT%'),
+    downloadLabel: l10n.notifNewVideoDownloadNow,
+    cancelLabel: l10n.actionCancel,
   );
 }

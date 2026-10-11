@@ -14,6 +14,8 @@
 - 채널 검색 화면(`ChannelSearchScreen` · `ChannelSearchCubit`): 이름으로 채널을 찾아 바로 구독 · 해제.
 - 임시 확인 버튼 2개(구독 채널 화면 맨 아래): 샘플 새 영상 알림 띄우기 / 샘플 새 영상 화면 미리 보기. 확인 후 제거 예정.
 - 채널 검색 결과를 누르면 채널 정보 시트(구독자 수 · 영상 수 · 소개)와 알림 받을 분류 고르기. "음악만"을 채널별 분류 여러 개 고르기(`categories`)로 바꿨다. 백그라운드 워커도 영상 페이지의 분류를 읽어 알림을 거른다.
+- 알림을 새 영상마다 하나씩(최대 8개 + 묶음), 버튼 "바로 받기" · "취소". 채널별 저장 위치. 새 영상 목록을 바텀시트로 바꾸고 화면 · 시트 여백 · 정렬을 맞췄다.
+- Kotlin: `NewVideoNotifications` · `NewVideoWorker` 개편, `NewVideoActionReceiver`(Manifest 등록) 추가, `MainActivity`가 "바로 받기" 인텐트를 받는다.
 
 ## 바꾼 설정
 - Gradle: `androidx.work:work-runtime-ktx:2.10.1` 추가. pubspec · Manifest 변경 없음(INTERNET · POST_NOTIFICATIONS는 이미 있음).

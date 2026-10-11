@@ -17,7 +17,6 @@ import '../features/playlists/presentation/screens/playlists_screen.dart';
 import '../features/search/presentation/screens/search_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
 import '../features/subscriptions/presentation/screens/channel_search_screen.dart';
-import '../features/subscriptions/presentation/screens/new_videos_screen.dart';
 import '../features/subscriptions/presentation/screens/subscriptions_screen.dart';
 import 'app_shell.dart';
 
@@ -30,9 +29,8 @@ abstract final class Routes {
   static const player = '/player';
   static const queue = '/queue';
 
-  /// 구독 채널 목록 · 구독 채널의 새 영상 목록 (설정 아래, 탭 틀 위로 덮어 연다).
+  /// 구독 채널 목록 · 채널 검색 (설정 아래, 탭 틀 위로 덮어 연다).
   static const subscriptions = '/settings/subscriptions';
-  static const newVideos = '/settings/new-videos';
   static const channelSearch = '/settings/channel-search';
 
   /// 곡을 담을 재생목록 고르기 (곡 id는 `extra`로 넘긴다).
@@ -185,14 +183,6 @@ GoRouter createRouter({String initialLocation = Routes.home}) => GoRouter(
               pageBuilder: (context, state) => NoTransitionPage(
                 key: state.pageKey,
                 child: const ChannelSearchScreen(),
-              ),
-            ),
-            GoRoute(
-              path: 'new-videos',
-              parentNavigatorKey: _rootKey,
-              pageBuilder: (context, state) => NoTransitionPage(
-                key: state.pageKey,
-                child: const NewVideosScreen(),
               ),
             ),
           ],

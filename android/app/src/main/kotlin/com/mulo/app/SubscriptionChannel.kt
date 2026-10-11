@@ -16,7 +16,11 @@ import java.util.concurrent.TimeUnit
  * 채널 구독 새 영상 확인(`music_app/subscriptions`). Dart가 구독 채널 · 설정을 넘기면 WorkManager가
  * 주기적으로 확인한다 ([NewVideoWorker]). 알림을 누르면 [requestOpen]으로 Dart에 알린다.
  */
-class SubscriptionChannel(private val context: Context, messenger: BinaryMessenger) {
+class SubscriptionChannel(
+    private val context: Context,
+    messenger: BinaryMessenger,
+    private val moveToBack: () -> Unit,
+) {
     private val channel = MethodChannel(messenger, NAME)
 
     init {
@@ -34,9 +38,26 @@ class SubscriptionChannel(private val context: Context, messenger: BinaryMesseng
                         pendingOpen = false
                         result.success(open)
                     }
+                    "takeDownloads" -> {
+                        val list = synchronized(pendingDownloads) {
+                            pendingDownloads.toList().also { pendingDownloads.clear() }
+                        }
+                        result.success(list)
+                    }
+                    "moveToBack" -> {
+                        moveToBack()
+                        result.success(null)
+                    }
                     "showTest" -> {
-                        // 알림 모양 확인용 임시 기능: 샘플 채널 이름으로 알림을 지금 띄운다.
-                        NewVideoNotifications.show(context, listOf("Sample A", "Sample B"), 3)
+                        // 알림 모양 확인용 임시 기능: 샘플 영상 알림을 지금 띄운다.
+                        val now = System.currentTimeMillis()
+                        NewVideoNotifications.showVideos(
+                            context,
+                            listOf(
+                                NewVideo("sample-1", "Sample video title 1", "sample-a", "Sample channel A", null, now),
+                                NewVideo("sample-2", "Sample video title 2 (a longer title to check how it wraps)", "sample-b", "Sample channel B", null, now - 60_000),
+                            ),
+                        )
                         result.success(null)
                     }
                     "clearNotification" -> {
@@ -67,6 +88,15 @@ class SubscriptionChannel(private val context: Context, messenger: BinaryMesseng
         /** 새 영상 알림을 눌러 열라고 한 요청. Dart가 `takeOpen`으로 가져가면 비운다. */
         @Volatile
         private var pendingOpen = false
+
+        /** 알림의 "바로 받기"로 들어온, Dart가 아직 가져가지 않은 받기 요청. */
+        private val pendingDownloads = mutableListOf<Map<String, Any?>>()
+
+        /** "바로 받기" 누름: 요청을 맡겨 두고 Dart에 알린다 (엔진이 아직 없으면 Dart가 켜질 때 가져간다). */
+        fun requestDownload(request: Map<String, Any?>) {
+            synchronized(pendingDownloads) { pendingDownloads.add(request) }
+            main.post { active?.invokeMethod("download", null) }
+        }
 
         /** 알림 누름: 요청을 맡겨 두고 Dart에 알린다 (엔진이 아직 없으면 Dart가 켜질 때 가져간다). */
         fun requestOpen() {

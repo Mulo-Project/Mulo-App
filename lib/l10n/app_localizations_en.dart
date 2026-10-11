@@ -2053,4 +2053,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String channelInfoVideoCount(int count) {
     return '$count videos';
   }
+
+  @override
+  String get channelSaveFolder => 'Save folder';
+
+  @override
+  String get channelSaveFolderDefault => 'Default save folder';
+
+  @override
+  String get channelSaveFolderChange => 'Change';
+
+  @override
+  String get channelSaveFolderReset => 'Use default';
+
+  @override
+  String get notifNewVideoDownloadNow => 'Download now';
 }

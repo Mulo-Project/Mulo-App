@@ -46,6 +46,8 @@ object SubscriptionStore {
             .put("channelName", args["channelName"] as? String ?: "")
             .put("title", args["title"] as? String ?: "")
             .put("body", args["body"] as? String ?: "")
+            .put("downloadLabel", args["downloadLabel"] as? String ?: "")
+            .put("cancelLabel", args["cancelLabel"] as? String ?: "")
             .put("color", (args["color"] as? Number)?.toInt() ?: 0)
         // 구독을 해제한 채널의 알림 기록은 버린다.
         val notified = loadNotified(context)

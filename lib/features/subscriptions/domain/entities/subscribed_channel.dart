@@ -10,6 +10,7 @@ class SubscribedChannel extends Equatable {
     this.thumbnailUrl,
     this.enabled = true,
     this.categories = const {},
+    this.savePath = '',
   });
 
   /// 유튜브 채널 id (`UC…`).
@@ -24,6 +25,9 @@ class SubscribedChannel extends Equatable {
   /// 알림 · 새 영상 목록에 넣을 유튜브 영상 분류 (yt-dlp의 `categories`, 예: `Music`).
   /// 비어 있으면 모든 분류. 분류를 알 수 없는 영상은 걸러내지 않고 보여 준다.
   final Set<String> categories;
+
+  /// 이 채널의 새 영상을 받아 저장할 폴더. 비어 있으면 설정의 기본 저장 위치.
+  final String savePath;
 
   /// 이 시각 이후에 올라온 영상이 "새 영상". 구독할 때 지금으로 잡아 기존 영상은 보이지 않는다.
   final DateTime baselineAt;
@@ -41,6 +45,7 @@ class SubscribedChannel extends Equatable {
   SubscribedChannel copyWith({
     bool? enabled,
     Set<String>? categories,
+    String? savePath,
     DateTime? baselineAt,
   }) => SubscribedChannel(
     id: id,
@@ -49,6 +54,7 @@ class SubscribedChannel extends Equatable {
     thumbnailUrl: thumbnailUrl,
     enabled: enabled ?? this.enabled,
     categories: categories ?? this.categories,
+    savePath: savePath ?? this.savePath,
     baselineAt: baselineAt ?? this.baselineAt,
   );
 
@@ -60,6 +66,7 @@ class SubscribedChannel extends Equatable {
     thumbnailUrl,
     enabled,
     categories,
+    savePath,
     baselineAt,
   ];
 }

@@ -1,6 +1,7 @@
 import '../../../../core/usecase/usecase.dart';
 import '../entities/channel_hit.dart';
 import '../entities/channel_new_videos.dart';
+import '../entities/new_video_download_request.dart';
 import '../entities/subscribed_channel.dart';
 import '../entities/subscription_settings.dart';
 import '../repositories/background_checker.dart';
@@ -56,14 +57,18 @@ class SubscribeParams {
     this.thumbnailUrl,
     this.channelId,
     this.categories = const {},
+    this.savePath = '',
   });
 
   /// 채널 검색 결과로 구독할 때: 채널 id를 이미 알고 있다.
-  SubscribeParams.fromHit(ChannelHit hit, {this.categories = const {}})
-    : channelUrl = hit.url,
-      name = hit.name,
-      thumbnailUrl = hit.thumbnailUrl,
-      channelId = hit.id;
+  SubscribeParams.fromHit(
+    ChannelHit hit, {
+    this.categories = const {},
+    this.savePath = '',
+  }) : channelUrl = hit.url,
+       name = hit.name,
+       thumbnailUrl = hit.thumbnailUrl,
+       channelId = hit.id;
 
   final String channelUrl;
   final String name;
@@ -74,6 +79,9 @@ class SubscribeParams {
 
   /// 알림 · 새 영상에 넣을 분류 (비어 있으면 모든 분류).
   final Set<String> categories;
+
+  /// 새 영상을 받아 저장할 폴더 (비어 있으면 기본 저장 위치).
+  final String savePath;
 }
 
 /// 채널 주소에서 채널 id를 알아내 구독 채널을 만든다. 첫 구독이라 기준 시각은 지금이다
@@ -101,6 +109,7 @@ class CreateSubscription
       url: params.channelUrl,
       thumbnailUrl: params.thumbnailUrl,
       categories: params.categories,
+      savePath: params.savePath,
       baselineAt: _now().toUtc(),
     );
   }
@@ -221,4 +230,36 @@ class ShowTestNewVideosNotification implements UseCase<void, NoParams> {
 
   @override
   Future<void> call(NoParams params) => _checker.showTestNotification();
+}
+
+/// 알림의 "바로 받기"로 들어온 받기 요청을 가져온다.
+class TakeNewVideoDownloads
+    implements UseCase<List<NewVideoDownloadRequest>, NoParams> {
+  const TakeNewVideoDownloads(this._checker);
+
+  final BackgroundChecker _checker;
+
+  @override
+  Future<List<NewVideoDownloadRequest>> call(NoParams params) =>
+      _checker.takeDownloadRequests();
+}
+
+class WatchNewVideoDownloads
+    implements StreamUseCase<NewVideoDownloadRequest, NoParams> {
+  const WatchNewVideoDownloads(this._checker);
+
+  final BackgroundChecker _checker;
+
+  @override
+  Stream<NewVideoDownloadRequest> call(NoParams params) =>
+      _checker.watchDownloadRequests();
+}
+
+class MoveAppToBack implements UseCase<void, NoParams> {
+  const MoveAppToBack(this._checker);
+
+  final BackgroundChecker _checker;
+
+  @override
+  Future<void> call(NoParams params) => _checker.moveAppToBack();
 }

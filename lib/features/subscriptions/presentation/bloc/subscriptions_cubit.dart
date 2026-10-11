@@ -130,6 +130,11 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
           c.id == id ? c.copyWith(categories: categories) : c,
       ]);
 
+  /// 이 채널의 새 영상을 저장할 폴더를 바꾼다 (비우면 기본 저장 위치).
+  Future<void> setSavePath(String id, String path) => _setChannels([
+    for (final c in state.channels) c.id == id ? c.copyWith(savePath: path) : c,
+  ]);
+
   /// 채널별로 여기까지 봤다고 표시한다 (기준 시각을 당긴다).
   Future<void> markSeen(Map<String, DateTime> seenUntil) async {
     final next = markSeenChannels(state.channels, seenUntil);

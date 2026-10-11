@@ -8,6 +8,7 @@ class ChannelInfoState extends Equatable {
     this.loading = true,
     this.subscriberCount,
     this.categories = const {},
+    this.savePath = '',
   });
 
   /// 구독자 수를 읽는 중인지.
@@ -17,51 +18,57 @@ class ChannelInfoState extends Equatable {
   /// 알림 받을 분류 (비어 있으면 모든 분류).
   final Set<String> categories;
 
+  /// 새 영상을 저장할 폴더 (비어 있으면 기본 저장 위치).
+  final String savePath;
+
+  ChannelInfoState copyWith({
+    bool? loading,
+    int? subscriberCount,
+    Set<String>? categories,
+    String? savePath,
+  }) => ChannelInfoState(
+    loading: loading ?? this.loading,
+    subscriberCount: subscriberCount ?? this.subscriberCount,
+    categories: categories ?? this.categories,
+    savePath: savePath ?? this.savePath,
+  );
+
   @override
-  List<Object?> get props => [loading, subscriberCount, categories];
+  List<Object?> get props => [loading, subscriberCount, categories, savePath];
 }
 
-/// 채널 정보 시트: 구독자 수를 읽고, 알림 받을 분류를 고른다.
+/// 채널 정보 시트: 구독자 수를 읽고, 알림 받을 분류 · 저장 위치를 고른다.
 class ChannelInfoCubit extends Cubit<ChannelInfoState> {
   ChannelInfoCubit(this._fetch) : super(const ChannelInfoState());
 
   final FetchChannelInfo _fetch;
 
-  Future<void> load(String channelUrl, Set<String> categories) async {
-    emit(ChannelInfoState(categories: categories));
+  /// [categories] · [savePath]는 이미 구독 중인 채널이면 저장돼 있는 값.
+  Future<void> load(
+    String channelUrl, {
+    Set<String> categories = const {},
+    String savePath = '',
+  }) async {
+    emit(ChannelInfoState(categories: categories, savePath: savePath));
     try {
       final info = await _fetch(channelUrl);
       if (isClosed) return;
       emit(
-        ChannelInfoState(
-          loading: false,
-          subscriberCount: info.subscriberCount,
-          categories: state.categories,
-        ),
+        state.copyWith(loading: false, subscriberCount: info.subscriberCount),
       );
     } on Object {
       if (isClosed) return;
-      emit(ChannelInfoState(loading: false, categories: state.categories));
+      emit(state.copyWith(loading: false));
     }
   }
 
   void toggleCategory(String name) {
     final next = {...state.categories};
     next.contains(name) ? next.remove(name) : next.add(name);
-    emit(
-      ChannelInfoState(
-        loading: state.loading,
-        subscriberCount: state.subscriberCount,
-        categories: next,
-      ),
-    );
+    emit(state.copyWith(categories: next));
   }
 
-  void clearCategories() => emit(
-    ChannelInfoState(
-      loading: state.loading,
-      subscriberCount: state.subscriberCount,
-      categories: const {},
-    ),
-  );
+  void clearCategories() => emit(state.copyWith(categories: const {}));
+
+  void setSavePath(String path) => emit(state.copyWith(savePath: path));
 }

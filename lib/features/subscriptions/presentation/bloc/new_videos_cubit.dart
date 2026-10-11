@@ -10,6 +10,7 @@ import '../../../search/domain/entities/media_info.dart';
 import '../../../search/domain/usecases/search_usecases.dart';
 import '../../domain/entities/channel_new_videos.dart';
 import '../../domain/entities/feed_video.dart';
+import '../../domain/entities/new_video_download_request.dart';
 import '../../domain/entities/subscribed_channel.dart';
 import '../../domain/usecases/subscription_usecases.dart';
 import 'subscriptions_cubit.dart';
@@ -128,6 +129,7 @@ class NewVideosCubit extends Cubit<NewVideosState> {
     this._enqueue,
     this._findExisting,
     this._clear,
+    this._moveToBack,
   ) : super(const NewVideosState());
 
   final SubscriptionsCubit _subs;
@@ -136,6 +138,7 @@ class NewVideosCubit extends Cubit<NewVideosState> {
   final EnqueueDownload _enqueue;
   final FindExistingDownload _findExisting;
   final ClearNewVideosNotification _clear;
+  final MoveAppToBack _moveToBack;
 
   int _generation = 0;
 
@@ -150,7 +153,22 @@ class NewVideosCubit extends Cubit<NewVideosState> {
     }
     final gen = ++_generation;
     emit(state.copyWith(status: NewVideosStatus.checking));
-    final results = await _check(channels);
+    final found = await _check(channels);
+    // 이미 받았거나 받는 중인 영상은 새 영상 목록에서 뺀다.
+    final results = <ChannelNewVideos>[];
+    for (final r in found) {
+      final videos = <FeedVideo>[];
+      for (final v in r.videos) {
+        if (!(await _findExisting(v.url)).exists) videos.add(v);
+      }
+      results.add(
+        ChannelNewVideos(
+          channel: r.channel,
+          videos: videos,
+          latestPublishedAt: r.latestPublishedAt,
+        ),
+      );
+    }
     if (gen != _generation || isClosed) return;
     emit(
       NewVideosState(
@@ -242,6 +260,7 @@ class NewVideosCubit extends Cubit<NewVideosState> {
             artist: v.author.isNotEmpty ? v.author : g.channel.name,
             thumbnailUrl: v.thumbnailUrl,
             url: v.url,
+            savePath: g.channel.savePath,
           ),
         );
         if (ok) queued++;
@@ -250,6 +269,33 @@ class NewVideosCubit extends Cubit<NewVideosState> {
     if (!isClosed) {
       emit(state.copyWith(selected: {}, queued: queued));
     }
+    return queued;
+  }
+
+  /// 알림의 "바로 받기"로 들어온 요청을 받기 대기열에 넣는다 (그 채널에 정한 저장 위치로).
+  /// 앱이 화면에 없는 상태에서 켜진 것이면 받기를 시작한 뒤 앱을 다시 뒤로 보낸다.
+  /// 대기열에 넣었으면 true.
+  Future<bool> handleDownloadRequest(NewVideoDownloadRequest request) async {
+    if (request.isSample) return false;
+    await _subs.load();
+    final channel = _subs.state.channels
+        .where((c) => c.id == request.channelId)
+        .firstOrNull;
+    var queued = false;
+    if (!(await _findExisting(request.url)).exists) {
+      queued = await _enqueue(
+        DownloadRequest(
+          title: request.title,
+          artist: request.channelName.isNotEmpty
+              ? request.channelName
+              : channel?.name ?? '',
+          thumbnailUrl: request.thumbnailUrl,
+          url: request.url,
+          savePath: channel?.savePath ?? '',
+        ),
+      );
+    }
+    if (request.background) await _moveToBack(const NoParams());
     return queued;
   }
 

@@ -60,6 +60,7 @@ import 'package:music_download_play_app/features/security/domain/entities/app_lo
 import 'package:music_download_play_app/features/security/domain/repositories/app_lock_repository.dart';
 import 'package:music_download_play_app/features/subscriptions/di.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/entities/feed_video.dart';
+import 'package:music_download_play_app/features/subscriptions/domain/entities/new_video_download_request.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/entities/subscribed_channel.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/entities/subscription_settings.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/repositories/background_checker.dart';
@@ -1376,6 +1377,20 @@ class FakeBackgroundChecker implements BackgroundChecker {
   Future<void> clearNotification() async => cleared++;
 
   var testShown = 0;
+  var movedToBack = 0;
+  final downloadRequests = <NewVideoDownloadRequest>[];
+
+  @override
+  Future<List<NewVideoDownloadRequest>> takeDownloadRequests() async => [
+    ...downloadRequests,
+  ];
+
+  @override
+  Stream<NewVideoDownloadRequest> watchDownloadRequests() =>
+      const Stream.empty();
+
+  @override
+  Future<void> moveAppToBack() async => movedToBack++;
 
   @override
   Future<void> showTestNotification() async => testShown++;

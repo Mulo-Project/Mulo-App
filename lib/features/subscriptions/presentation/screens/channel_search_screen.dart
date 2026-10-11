@@ -162,11 +162,15 @@ class _Row extends StatelessWidget {
       subtitle: hit.description,
       tone: toneFor(hit.id),
       artwork: thumb == null ? null : NetworkImage(thumb),
-      trailing: PlainButton(
-        label: subscribed ? l10n.subscribedAction : l10n.subscribeAction,
-        icon: subscribed ? AppIcons.check : AppIcons.add,
-        accent: !subscribed,
-        onPressed: onToggle,
+      // 버튼 안쪽 여백만큼 밀어 글자 오른쪽 끝을 검색창 · 다른 줄의 오른쪽 끝과 맞춘다.
+      trailing: Transform.translate(
+        offset: const Offset(AppSpacing.sm, 0),
+        child: PlainButton(
+          label: subscribed ? l10n.subscribedAction : l10n.subscribeAction,
+          icon: subscribed ? AppIcons.check : AppIcons.add,
+          accent: !subscribed,
+          onPressed: onToggle,
+        ),
       ),
       onTap: onOpen,
     );

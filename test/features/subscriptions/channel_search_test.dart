@@ -2,7 +2,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/core/di/injector.dart';
 import 'package:music_download_play_app/features/downloads/domain/repositories/download_queue_repository.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/entities/channel_hit.dart';
+import 'package:music_download_play_app/features/subscriptions/domain/entities/new_video_download_request.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/entities/subscribed_channel.dart';
+import 'package:music_download_play_app/features/downloads/domain/entities/download_source.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/repositories/background_checker.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/repositories/channel_searcher.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/usecases/subscription_usecases.dart';
@@ -91,6 +93,67 @@ void main() {
       expect(subs.state.channels.single.categories, {'Music', 'Gaming'});
       await subs.setCategories(hit.id, {});
       expect(subs.state.channels.single.filtersCategories, isFalse);
+    });
+  });
+
+  group('채널별 저장 위치와 알림의 바로 받기', () {
+    const hit = ChannelHit(id: 'UCaaaaaaaaaaaaaaaaaaaaaa', name: 'Channel A');
+    const request = NewVideoDownloadRequest(
+      videoId: 'v1',
+      title: 'Song',
+      channelId: 'UCaaaaaaaaaaaaaaaaaaaaaa',
+      channelName: 'Channel A',
+    );
+
+    test('구독할 때 정한 저장 위치가 저장되고 바꾸거나 되돌릴 수 있다', () async {
+      final subs = sl<SubscriptionsCubit>();
+      await subs.subscribe(SubscribeParams.fromHit(hit, savePath: '/music/a'));
+      expect(subs.state.channels.single.savePath, '/music/a');
+      await subs.setSavePath(hit.id, '');
+      expect(subs.state.channels.single.savePath, isEmpty);
+    });
+
+    test('바로 받기는 그 채널의 저장 위치로 받기 대기열에 넣는다', () async {
+      final subs = sl<SubscriptionsCubit>();
+      await subs.subscribe(SubscribeParams.fromHit(hit, savePath: '/music/a'));
+      final queued = await sl<NewVideosCubit>().handleDownloadRequest(request);
+      expect(queued, isTrue);
+      final queue = sl<DownloadQueueRepository>() as MemoryDownloadQueue;
+      expect(queue.requests.single.savePath, '/music/a');
+      expect(queue.requests.single.url, 'https://www.youtube.com/watch?v=v1');
+      expect((sl<BackgroundChecker>() as FakeBackgroundChecker).movedToBack, 0);
+    });
+
+    test('앱이 뒤에 있다가 켜진 요청은 받기를 시작한 뒤 앱을 다시 뒤로 보낸다', () async {
+      await sl<SubscriptionsCubit>().subscribe(SubscribeParams.fromHit(hit));
+      await sl<NewVideosCubit>().handleDownloadRequest(
+        const NewVideoDownloadRequest(
+          videoId: 'v1',
+          title: 'Song',
+          channelId: 'UCaaaaaaaaaaaaaaaaaaaaaa',
+          background: true,
+        ),
+      );
+      expect((sl<BackgroundChecker>() as FakeBackgroundChecker).movedToBack, 1);
+    });
+
+    test('이미 받았거나 샘플인 영상은 다시 받지 않는다', () async {
+      final queue = sl<DownloadQueueRepository>() as MemoryDownloadQueue;
+      queue.existing['https://www.youtube.com/watch?v=v1'] =
+          const ExistingDownload(inQueue: true);
+      final cubit = sl<NewVideosCubit>();
+      expect(await cubit.handleDownloadRequest(request), isFalse);
+      expect(
+        await cubit.handleDownloadRequest(
+          const NewVideoDownloadRequest(
+            videoId: 'sample-1',
+            title: 's',
+            channelId: 'sample-a',
+          ),
+        ),
+        isFalse,
+      );
+      expect(queue.requests, isEmpty);
     });
   });
 

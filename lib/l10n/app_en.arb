@@ -722,5 +722,10 @@
   "categoryAll": "All categories",
   "subscriptionsCategories": "Categories to be notified about",
   "subscriptionsCategoriesDesc": "Only new videos in the chosen categories are shown and notified. Pick none for all categories.",
-  "channelInfoVideoCount": "{count} videos"
+  "channelInfoVideoCount": "{count} videos",
+  "channelSaveFolder": "Save folder",
+  "channelSaveFolderDefault": "Default save folder",
+  "channelSaveFolderChange": "Change",
+  "channelSaveFolderReset": "Use default",
+  "notifNewVideoDownloadNow": "Download now"
 }

@@ -69,6 +69,7 @@ class PrefsSubscriptionRepository implements SubscriptionRepository {
     'thumbnail': c.thumbnailUrl,
     'enabled': c.enabled,
     'categories': c.categories.toList(),
+    'savePath': c.savePath,
     'baselineAt': c.baselineAt.toUtc().toIso8601String(),
   };
 
@@ -87,6 +88,7 @@ class PrefsSubscriptionRepository implements SubscriptionRepository {
         // 예전 "음악만" 값.
         if (j['musicOnly'] == true) 'Music',
       },
+      savePath: j['savePath'] as String? ?? '',
       baselineAt: baseline.toUtc(),
     );
   }

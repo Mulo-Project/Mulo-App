@@ -2004,4 +2004,19 @@ class AppLocalizationsKo extends AppLocalizations {
   String channelInfoVideoCount(int count) {
     return '영상 $count개';
   }
+
+  @override
+  String get channelSaveFolder => '저장 위치';
+
+  @override
+  String get channelSaveFolderDefault => '기본 저장 위치';
+
+  @override
+  String get channelSaveFolderChange => '변경';
+
+  @override
+  String get channelSaveFolderReset => '기본으로';
+
+  @override
+  String get notifNewVideoDownloadNow => '바로 받기';
 }

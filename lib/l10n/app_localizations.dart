@@ -3781,6 +3781,36 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'영상 {count}개'**
   String channelInfoVideoCount(int count);
+
+  /// No description provided for @channelSaveFolder.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 위치'**
+  String get channelSaveFolder;
+
+  /// No description provided for @channelSaveFolderDefault.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 저장 위치'**
+  String get channelSaveFolderDefault;
+
+  /// No description provided for @channelSaveFolderChange.
+  ///
+  /// In ko, this message translates to:
+  /// **'변경'**
+  String get channelSaveFolderChange;
+
+  /// No description provided for @channelSaveFolderReset.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본으로'**
+  String get channelSaveFolderReset;
+
+  /// No description provided for @notifNewVideoDownloadNow.
+  ///
+  /// In ko, this message translates to:
+  /// **'바로 받기'**
+  String get notifNewVideoDownloadNow;
 }
 
 class _AppLocalizationsDelegate

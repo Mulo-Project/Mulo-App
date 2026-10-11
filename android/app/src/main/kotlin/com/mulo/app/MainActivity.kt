@@ -15,6 +15,9 @@ class MainActivity : FlutterFragmentActivity() {
     private var transcoder: TranscoderChannel? = null
     private var subscriptions: SubscriptionChannel? = null
 
+    /** 화면에 떠 있는지. 새 인텐트가 들어올 때 앱이 뒤에 있었는지 알려고 쓴다. */
+    private var resumed = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         handleIntent(intent)
@@ -32,6 +35,32 @@ class MainActivity : FlutterFragmentActivity() {
             intent.getStringExtra(DownloadNotifications.EXTRA_OPEN_ID)?.let { DownloadNotificationPlugin.requestOpen(it) }
         }
         if (intent?.action == NewVideoNotifications.ACTION_OPEN) SubscriptionChannel.requestOpen()
+        if (intent?.action == NewVideoNotifications.ACTION_DOWNLOAD) {
+            intent.getStringExtra("videoId")?.let { videoId ->
+                NewVideoNotifications.cancel(this, intent.getIntExtra(NewVideoNotifications.EXTRA_NOTIFICATION_ID, 0))
+                SubscriptionChannel.requestDownload(
+                    mapOf(
+                        "videoId" to videoId,
+                        "title" to intent.getStringExtra("title"),
+                        "channelId" to intent.getStringExtra("channelId"),
+                        "channelName" to intent.getStringExtra("channelName"),
+                        "thumbnail" to intent.getStringExtra("thumbnail"),
+                        // 앱이 뒤에 있었다면 받기를 시작한 뒤 다시 뒤로 보낸다.
+                        "background" to !resumed,
+                    ),
+                )
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        resumed = true
+    }
+
+    override fun onPause() {
+        resumed = false
+        super.onPause()
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
@@ -46,7 +75,9 @@ class MainActivity : FlutterFragmentActivity() {
         ytDlp = YtDlpChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
         transcoder = TranscoderChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
         playback = PlaybackChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
-        subscriptions = SubscriptionChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
+        subscriptions = SubscriptionChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger) {
+            moveTaskToBack(true)
+        }
     }
 
     @Deprecated("Deprecated in Java")

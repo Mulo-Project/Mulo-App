@@ -10,8 +10,11 @@ import '../../domain/entities/subscribed_channel.dart';
 import '../bloc/new_videos_cubit.dart';
 import '../bloc/subscriptions_cubit.dart';
 import '../widgets/category_choices.dart';
+import '../widgets/channel_options_sheet.dart';
+import '../widgets/new_videos_sheet.dart';
 
-/// 구독한 채널 목록: 채널별 켜고 끄기 · 음악만 · 구독 해제. 위에서 새 영상 목록으로 간다.
+/// 구독한 채널 목록: 채널별 켜고 끄기, 줄을 누르면 알림 분류 · 저장 위치 · 구독 해제 옵션.
+/// 위에서 채널 검색과 새 영상 목록(바텀시트)으로 간다.
 class SubscriptionsScreen extends StatefulWidget {
   const SubscriptionsScreen({super.key});
 
@@ -26,7 +29,6 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final p = context.palette;
-    final text = Theme.of(context).textTheme;
     return Scaffold(
       backgroundColor: p.background,
       body: AppBackground(
@@ -44,63 +46,50 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                   ),
                 ),
                 Padding(
-                  padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
-                  child: Wrap(
-                    spacing: AppSpacing.xs,
-                    runSpacing: AppSpacing.xs,
-                    children: [
-                      PillButton(
-                        label: l10n.channelSearchTitle,
-                        icon: AppIcons.search,
-                        onPressed: () => context.push(Routes.channelSearch),
-                      ),
-                      if (state.channels.isNotEmpty)
+                  padding: AppSpacing.screen.copyWith(
+                    top: AppSpacing.xs,
+                    bottom: AppSpacing.sm,
+                  ),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Wrap(
+                      spacing: AppSpacing.xs,
+                      runSpacing: AppSpacing.xs,
+                      children: [
                         PillButton(
-                          label: l10n.subscriptionsNewVideos,
-                          icon: AppIcons.download,
-                          variant: PillVariant.tonal,
-                          onPressed: () => context.push(Routes.newVideos),
+                          label: l10n.channelSearchTitle,
+                          icon: AppIcons.search,
+                          onPressed: () => context.push(Routes.channelSearch),
                         ),
-                    ],
+                        if (state.channels.isNotEmpty)
+                          PillButton(
+                            label: l10n.subscriptionsNewVideos,
+                            icon: AppIcons.download,
+                            variant: PillVariant.tonal,
+                            onPressed: () => showNewVideosSheet(context),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
                 Expanded(
-                  child: state.channels.isEmpty
-                      ? Center(
-                          child: Padding(
-                            padding: AppSpacing.screen,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  l10n.subscriptionsEmptyTitle,
-                                  style: text.titleMedium,
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: AppSpacing.xs),
-                                Text(
-                                  l10n.subscriptionsEmptyBody,
-                                  style: text.bodySmall,
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                      : ListView(
-                          padding: const EdgeInsets.only(bottom: AppSpacing.lg),
-                          children: [
-                            for (final c in state.channels)
-                              _ChannelRow(channel: c, cubit: _cubit),
-                          ],
-                        ),
-                ),
-                _TestButtons(
-                  onNotification: _cubit.showTestNotification,
-                  onNewVideos: () {
-                    sl<NewVideosCubit>().showSample();
-                    context.push(Routes.newVideos);
-                  },
+                  child: ListView(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+                    children: [
+                      if (state.channels.isEmpty)
+                        const _Empty()
+                      else
+                        for (final c in state.channels)
+                          _ChannelRow(channel: c, cubit: _cubit),
+                      _TestButtons(
+                        onNotification: _cubit.showTestNotification,
+                        onNewVideos: () {
+                          sl<NewVideosCubit>().showSample();
+                          showNewVideosSheet(context);
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -111,7 +100,80 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
   }
 }
 
-/// 임시: 알림과 새 영상 화면이 어떻게 보이는지 확인하는 버튼 (확인이 끝나면 지운다).
+class _Empty extends StatelessWidget {
+  const _Empty();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final text = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.xl,
+        AppSpacing.md,
+        AppSpacing.xl,
+      ),
+      child: Column(
+        children: [
+          Text(
+            l10n.subscriptionsEmptyTitle,
+            style: text.titleMedium,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            l10n.subscriptionsEmptyBody,
+            style: text.bodySmall,
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 채널 한 줄: 이미지 · 이름 · 분류와 저장 위치 요약, 오른쪽에 켜고 끄기. 줄을 누르면 옵션 시트.
+class _ChannelRow extends StatelessWidget {
+  const _ChannelRow({required this.channel, required this.cubit});
+
+  final SubscribedChannel channel;
+  final SubscriptionsCubit cubit;
+
+  /// 폴더 경로의 마지막 이름 (요약에 짧게 보이려고).
+  static String _folderName(String path) {
+    final parts = path.split(RegExp(r'[\\/]')).where((s) => s.isNotEmpty);
+    return parts.isEmpty ? path : parts.last;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final thumb = channel.thumbnailUrl;
+    return Opacity(
+      opacity: channel.enabled ? 1 : .5,
+      child: TrackTile(
+        title: channel.name,
+        subtitle: [
+          categorySummary(context, channel.categories),
+          if (channel.savePath.isNotEmpty) _folderName(channel.savePath),
+        ].join(' · '),
+        leading: ArtworkBox(
+          image: thumb == null ? null : NetworkImage(thumb),
+          radius: 24,
+          tone: toneFor(channel.id),
+          icon: AppIcons.person,
+        ),
+        trailing: AppSwitch(
+          value: channel.enabled,
+          onChanged: (v) => cubit.setEnabled(channel.id, v),
+        ),
+        onTap: () => showChannelOptionsSheet(context, cubit, channel.id),
+      ),
+    );
+  }
+}
+
+/// 임시: 알림과 새 영상 목록이 어떻게 보이는지 확인하는 버튼 (확인이 끝나면 지운다).
 class _TestButtons extends StatelessWidget {
   const _TestButtons({required this.onNotification, required this.onNewVideos});
 
@@ -121,155 +183,43 @@ class _TestButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final p = context.palette;
     return Padding(
-      padding: AppSpacing.screen.copyWith(
-        top: AppSpacing.xs,
-        bottom: AppSpacing.md,
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.lg,
+        AppSpacing.md,
+        0,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Divider(height: 1, color: p.outline),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             l10n.subscriptionsTestTitle,
             style: Theme.of(context).textTheme.labelSmall,
           ),
-          Wrap(
-            children: [
-              PlainButton(
-                label: l10n.subscriptionsTestNotification,
-                icon: AppIcons.sparkle,
-                onPressed: onNotification,
-              ),
-              PlainButton(
-                label: l10n.subscriptionsTestNewVideos,
-                icon: AppIcons.sparkle,
-                onPressed: onNewVideos,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ChannelRow extends StatelessWidget {
-  const _ChannelRow({required this.channel, required this.cubit});
-
-  final SubscribedChannel channel;
-  final SubscriptionsCubit cubit;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
-    final thumb = channel.thumbnailUrl;
-    return Padding(
-      padding: AppSpacing.screen.copyWith(
-        top: AppSpacing.xs,
-        bottom: AppSpacing.xs,
-      ),
-      child: Row(
-        children: [
-          ArtworkBox(
-            image: thumb == null ? null : NetworkImage(thumb),
-            size: 44,
-            radius: 22,
-            tone: toneFor(channel.id),
-            icon: AppIcons.person,
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          // 글자 왼쪽 끝을 위 글과 맞추려고 버튼 안쪽 여백만큼 당긴다.
+          Transform.translate(
+            offset: const Offset(-AppSpacing.sm, 0),
+            child: Wrap(
               children: [
-                Text(
-                  channel.name,
-                  style: text.titleSmall,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                PlainButton(
+                  label: l10n.subscriptionsTestNotification,
+                  icon: AppIcons.sparkle,
+                  onPressed: onNotification,
                 ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: PlainButton(
-                    label: categorySummary(context, channel.categories),
-                    icon: AppIcons.edit,
-                    accent: channel.filtersCategories,
-                    onPressed: () =>
-                        showCategoryPickerSheet(context, cubit, channel),
-                  ),
+                PlainButton(
+                  label: l10n.subscriptionsTestNewVideos,
+                  icon: AppIcons.sparkle,
+                  onPressed: onNewVideos,
                 ),
               ],
             ),
           ),
-          AppSwitch(
-            value: channel.enabled,
-            onChanged: (v) => cubit.setEnabled(channel.id, v),
-          ),
-          RowIconButton(
-            icon: AppIcons.delete,
-            tooltip: l10n.subscriptionsUnsubscribe,
-            onPressed: () => cubit.unsubscribe(channel.id),
-          ),
         ],
       ),
     );
   }
-}
-
-/// 채널의 알림 받을 분류를 고르는 시트. 고를 때마다 바로 저장한다.
-Future<void> showCategoryPickerSheet(
-  BuildContext context,
-  SubscriptionsCubit cubit,
-  SubscribedChannel channel,
-) {
-  final l10n = context.l10n;
-  var selected = channel.categories;
-  return showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    backgroundColor: context.palette.surface,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadii.md)),
-    ),
-    builder: (sheetContext) => StatefulBuilder(
-      builder: (_, setState) => SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                channel.name,
-                style: Theme.of(sheetContext).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 2),
-              Text(
-                l10n.subscriptionsCategoriesDesc,
-                style: Theme.of(sheetContext).textTheme.bodySmall,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              CategoryChoices(
-                selected: selected,
-                onToggle: (name) {
-                  setState(() {
-                    selected = selected.contains(name)
-                        ? ({...selected}..remove(name))
-                        : {...selected, name};
-                  });
-                  cubit.setCategories(channel.id, selected);
-                },
-                onClear: () {
-                  setState(() => selected = const {});
-                  cubit.setCategories(channel.id, selected);
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    ),
-  );
 }

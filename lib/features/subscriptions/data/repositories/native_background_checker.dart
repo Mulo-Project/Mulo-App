@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 
 import '../../../../core/design/tokens/app_palette.dart';
+import '../../domain/entities/new_video_download_request.dart';
 import '../../domain/entities/subscribed_channel.dart';
 import '../../domain/entities/subscription_settings.dart';
 import '../../domain/repositories/background_checker.dart';
@@ -17,9 +18,15 @@ class NativeBackgroundChecker implements BackgroundChecker {
 
   final MethodChannel _channel;
   final _opens = StreamController<void>.broadcast();
+  final _downloads = StreamController<NewVideoDownloadRequest>.broadcast();
 
   Future<void> _onCall(MethodCall call) async {
     if (call.method == 'open' && await takeOpenRequest()) _opens.add(null);
+    if (call.method == 'download') {
+      for (final r in await takeDownloadRequests()) {
+        _downloads.add(r);
+      }
+    }
   }
 
   /// 채널 호출이 실패해도(네이티브가 없는 빌드 등) 앱 동작은 막지 않는다.
@@ -56,6 +63,8 @@ class NativeBackgroundChecker implements BackgroundChecker {
       'channelName': texts.channelName,
       'title': texts.title,
       'body': texts.body,
+      'downloadLabel': texts.downloadLabel,
+      'cancelLabel': texts.cancelLabel,
       'color': AppPalette.violet.toARGB32(),
     });
   }
@@ -66,6 +75,29 @@ class NativeBackgroundChecker implements BackgroundChecker {
 
   @override
   Stream<void> watchOpenRequests() => _opens.stream;
+
+  @override
+  Future<List<NewVideoDownloadRequest>> takeDownloadRequests() async {
+    final raw = await _call<List<Object?>>('takeDownloads') ?? const [];
+    return [
+      for (final m in raw.whereType<Map<Object?, Object?>>())
+        if (m['videoId'] is String && m['channelId'] is String)
+          NewVideoDownloadRequest(
+            videoId: m['videoId']! as String,
+            title: m['title'] as String? ?? '',
+            channelId: m['channelId']! as String,
+            channelName: m['channelName'] as String? ?? '',
+            thumbnailUrl: m['thumbnail'] as String?,
+            background: m['background'] == true,
+          ),
+    ];
+  }
+
+  @override
+  Stream<NewVideoDownloadRequest> watchDownloadRequests() => _downloads.stream;
+
+  @override
+  Future<void> moveAppToBack() => _call<void>('moveToBack');
 
   @override
   Future<void> clearNotification() => _call<void>('clearNotification');
@@ -90,6 +122,17 @@ class NoBackgroundChecker implements BackgroundChecker {
 
   @override
   Stream<void> watchOpenRequests() => const Stream.empty();
+
+  @override
+  Future<List<NewVideoDownloadRequest>> takeDownloadRequests() async =>
+      const [];
+
+  @override
+  Stream<NewVideoDownloadRequest> watchDownloadRequests() =>
+      const Stream.empty();
+
+  @override
+  Future<void> moveAppToBack() async {}
 
   @override
   Future<void> clearNotification() async {}
