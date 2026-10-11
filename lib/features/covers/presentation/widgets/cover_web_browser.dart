@@ -44,6 +44,19 @@ const _pickScript = '''
 })();
 ''';
 
+/// 검색 사이트의 이미지 상세 주소에 실려 있는 원본 이미지 주소 (없으면 null).
+/// Bing은 상세를 `...&mediaurl=<원본>`으로, Google은 `imgurl=<원본>`으로 연다.
+/// 상세 화면은 iframe · 주소 이동으로 열려 눌림 스크립트가 못 잡을 수 있어서 주소에서도 읽는다.
+String? originalImageUrlOf(String pageUrl) {
+  final uri = Uri.tryParse(pageUrl);
+  if (uri == null) return null;
+  for (final key in const ['mediaurl', 'imgurl']) {
+    final v = uri.queryParameters[key];
+    if (v != null && v.startsWith(RegExp('https?://'))) return v;
+  }
+  return null;
+}
+
 /// 웹 이미지 고르기(브라우저): 이름으로 검색한 이미지 결과에서 이미지를 누르면 곧바로
 /// 확대 · 위치 편집 화면으로 간다. 편집 화면에서 뒤로 가면 이 브라우저가 그대로 남고,
 /// "적용"하면 맞춘 [CoverArt]를 돌려주며 닫힌다. 브라우저를 닫으면 null.
@@ -74,6 +87,20 @@ class _CoverWebBrowserState extends State<CoverWebBrowser> {
       )
       ..setNavigationDelegate(
         NavigationDelegate(
+          // 이미지 상세로 가려는 이동(원본 주소가 실린 주소)은 막고 그 이미지를 고른 것으로 본다.
+          onNavigationRequest: (request) {
+            final url = originalImageUrlOf(request.url);
+            if (url == null) return NavigationDecision.navigate;
+            _pick(url);
+            return NavigationDecision.prevent;
+          },
+          // 주소만 바뀌는 이동(pushState)도 같게 본다.
+          onUrlChange: (change) {
+            final url = change.url == null
+                ? null
+                : originalImageUrlOf(change.url!);
+            if (url != null) _pick(url);
+          },
           onPageStarted: (_) {
             if (mounted) setState(() => _loading = true);
           },
@@ -112,6 +139,11 @@ class _CoverWebBrowserState extends State<CoverWebBrowser> {
     _editing = true;
     final art = await showCoverEditor(context, CoverArt.web(url));
     _editing = false;
+    // 상세 주소로 넘어가 있었다면 결과 목록으로 되돌려 다른 이미지를 고를 수 있게 한다.
+    final now = await _web.currentUrl();
+    if (art == null && now != null && originalImageUrlOf(now) != null) {
+      await _web.goBack();
+    }
     // 뒤로 가면(null) 브라우저를 그대로 둔다. 적용했으면 맞춘 이미지를 돌려주며 닫는다.
     if (art != null && mounted) Navigator.of(context).pop(art);
   }
