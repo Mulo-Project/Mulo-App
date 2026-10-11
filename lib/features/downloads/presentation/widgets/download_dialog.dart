@@ -13,6 +13,7 @@ import '../../domain/entities/download_request.dart';
 import '../bloc/download_queue_cubit.dart';
 import '../bloc/download_settings_cubit.dart';
 import 'playlist_picker_dialog.dart';
+import 'save_folder_dialog.dart';
 
 /// 받기 팝업: 제목 · 아티스트 · 장르를 고치고, 저장할 때 넣을 재생목록을 고른다.
 /// "받기"를 누르면 대기열에 넣고 true를 돌려준다 (닫기만 하면 false).
@@ -165,7 +166,12 @@ class _DownloadSheetState extends State<_DownloadSheet> {
   }
 
   Future<void> _pickFolder() async {
-    final path = await context.read<DownloadSettingsCubit>().pickFolder();
+    final settings = context.read<DownloadSettingsCubit>();
+    final path = await showSaveFolderDialog(
+      context,
+      current: _savePath.text,
+      pickOther: settings.pickFolder,
+    );
     if (path != null && mounted) setState(() => _savePath.text = path);
   }
 

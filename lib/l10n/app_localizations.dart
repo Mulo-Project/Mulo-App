@@ -2084,6 +2084,24 @@ abstract class AppLocalizations {
   /// **'기존 장르에서 고르기'**
   String get downloadGenreExisting;
 
+  /// No description provided for @saveFolderTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 위치 고르기'**
+  String get saveFolderTitle;
+
+  /// No description provided for @saveFolderEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'불러오는 폴더가 없어요. 직접 선택해 주세요.'**
+  String get saveFolderEmpty;
+
+  /// No description provided for @saveFolderPickOther.
+  ///
+  /// In ko, this message translates to:
+  /// **'직접 선택'**
+  String get saveFolderPickOther;
+
   /// No description provided for @downloadPickFolder.
   ///
   /// In ko, this message translates to:

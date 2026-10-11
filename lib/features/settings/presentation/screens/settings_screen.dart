@@ -15,6 +15,7 @@ import '../../../downloads/domain/entities/download_options.dart';
 import '../../../downloads/domain/usecases/download_usecases.dart';
 import '../../../downloads/presentation/bloc/download_preferences_cubit.dart';
 import '../../../downloads/presentation/bloc/download_settings_cubit.dart';
+import '../../../downloads/presentation/widgets/save_folder_dialog.dart';
 import '../../../engine/presentation/bloc/engine_cubit.dart';
 import '../../../library/presentation/widgets/loaded_folders_tile.dart';
 import '../../../notifications/presentation/bloc/notification_settings_cubit.dart';
@@ -103,7 +104,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ? l10n.settingsSavePathDesc
                           : savePath,
                       trailing: const _Chevron(),
-                      onTap: context.read<DownloadSettingsCubit>().pickAndSave,
+                      onTap: () async {
+                        final cubit = context.read<DownloadSettingsCubit>();
+                        final path = await showSaveFolderDialog(
+                          context,
+                          current: savePath,
+                          pickOther: cubit.pickFolder,
+                        );
+                        if (path != null) await cubit.setSavePath(path);
+                      },
                     ),
                     const LoadedFoldersTile(),
                     _EngineRow(cubit: _engine),

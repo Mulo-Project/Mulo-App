@@ -1117,6 +1117,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadGenreExisting => 'Pick from existing genres';
 
   @override
+  String get saveFolderTitle => 'Choose save location';
+
+  @override
+  String get saveFolderEmpty => 'No loaded folders yet. Pick one yourself.';
+
+  @override
+  String get saveFolderPickOther => 'Pick another';
+
+  @override
   String get downloadPickFolder => 'Choose folder';
 
   @override

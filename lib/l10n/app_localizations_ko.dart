@@ -1094,6 +1094,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadGenreExisting => '기존 장르에서 고르기';
 
   @override
+  String get saveFolderTitle => '저장 위치 고르기';
+
+  @override
+  String get saveFolderEmpty => '불러오는 폴더가 없어요. 직접 선택해 주세요.';
+
+  @override
+  String get saveFolderPickOther => '직접 선택';
+
+  @override
   String get downloadPickFolder => '폴더 고르기';
 
   @override
