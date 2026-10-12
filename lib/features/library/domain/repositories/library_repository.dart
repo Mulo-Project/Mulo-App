@@ -30,6 +30,15 @@ abstract interface class DeviceMusicRepository {
   Future<ScanResult> scan(List<String> folders);
 }
 
+/// 음악 파일에 내장된 커버 이미지 (ID3 APIC · m4a covr · FLAC picture 등).
+abstract interface class EmbeddedCoverRepository {
+  /// [track] 파일의 내장 커버를 작게 줄인 임시 이미지 파일 경로. 없거나 못 읽으면 null.
+  /// 쓴 뒤에는 [discard]로 지운다.
+  Future<String?> extract(Track track);
+
+  Future<void> discard(String path);
+}
+
 /// 음악을 불러오는 폴더 목록 (상세 기능: 불러오는 폴더 목록).
 abstract interface class LoadedFolderRepository {
   /// 기본 저장 위치. 항상 목록에 포함되고 지울 수 없다.
