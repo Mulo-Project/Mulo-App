@@ -57,9 +57,11 @@ class NativePlaybackChannel {
   Future<void> setOutputBehavior({
     required bool pauseOnDisconnect,
     required bool resumeOnConnect,
+    required bool resumeWithoutNotification,
   }) => _method.invokeMethod('setOutputBehavior', {
     'pauseOnDisconnect': pauseOnDisconnect,
     'resumeOnConnect': resumeOnConnect,
+    'resumeWithoutNotification': resumeWithoutNotification,
   });
 
   /// 알림 · 잠금화면에 보여 줄 내용. null이면 알림을 치운다 (재생은 그대로).

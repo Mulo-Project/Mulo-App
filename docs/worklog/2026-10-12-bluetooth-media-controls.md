@@ -12,6 +12,8 @@
 - 설정 '재생 설정'에 '기기가 끊기면 일시정지'(기본 켜짐) · '기기가 연결되면 이어 재생'(기본 꺼짐). 로직은 모두 Kotlin, Flutter는 값 저장과 전달만.
 - 출력 기기가 바뀌면(`AudioDeviceCallback`) 앱에 `changed`를 보내 플레이어의 기기 이름을 갱신.
 
+- (후속) 설정 '알림이 없어도 블루투스로 재생'(기본 꺼짐), 기기별 이퀄라이저 ([D-104](../decisions.md), [equalizer.md](../equalizer.md)).
+
 ## 바꾼 설정
 - AndroidManifest: 미디어 버튼 리시버를 `androidx.media3.session.MediaButtonReceiver` → `.MuloMediaButtonReceiver`로 교체. 권한 · 패키지 변화 없음.
 - 채널: `music_app/playback`에 `setOutputBehavior`, `music_app/audio_output`에 네이티브→Dart `changed` 추가 ([native-playback.md](../native-playback.md)).

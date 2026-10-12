@@ -164,12 +164,40 @@ class EqualizerSettings extends Equatable {
 }
 
 /// 시작할 때 읽는 묶음: 기기 능력(없으면 null = 지원하지 않음)과 저장된 값.
+/// 지금 소리가 나가는 출력 기기. [hasProfile]이면 이 기기 전용 이퀄라이저 값이 있다.
+class EqualizerDevice extends Equatable {
+  const EqualizerDevice({
+    required this.key,
+    required this.kind,
+    this.name = '',
+    this.hasProfile = false,
+  });
+
+  /// 기기 구분 열쇠 (종류 + 이름).
+  final String key;
+
+  /// `speaker` `wired` `bluetooth` `usb` 중 하나.
+  final String kind;
+  final String name;
+  final bool hasProfile;
+
+  @override
+  List<Object?> get props => [key, kind, name, hasProfile];
+}
+
 class EqualizerSetup extends Equatable {
-  const EqualizerSetup({required this.info, required this.settings});
+  const EqualizerSetup({
+    required this.info,
+    required this.settings,
+    this.device,
+  });
 
   final EqualizerInfo? info;
   final EqualizerSettings settings;
 
+  /// 지금 출력 기기 (알 수 없으면 null). [settings]는 이 기기 전용 값이 있으면 그 값이다.
+  final EqualizerDevice? device;
+
   @override
-  List<Object?> get props => [info, settings];
+  List<Object?> get props => [info, settings, device];
 }

@@ -73,7 +73,10 @@ object PlaybackHub {
     private var dismissed = false
 
     /** 미디어 버튼을 무시해야 하는 상태인지 (서비스가 새로 떴을 때 확인한다). */
-    val isGated get() = dismissed
+    val isGated get() = dismissed && !resumeWithoutNotification
+
+    /** 알림을 지운 뒤에도 버튼으로 이어 재생하는 설정. */
+    private var resumeWithoutNotification = false
 
     /** 저장해 둔 대기열로 되살린 상태: 앱(Dart)이 아직 알림 내용을 보내기 전이라 좋아요 버튼은 숨긴다. */
     private var restoredFromStore = false
@@ -124,9 +127,12 @@ object PlaybackHub {
             .build()
         exo.addListener(playerListener)
         EqualizerEngine.attach(exo.audioSessionId)
+        // 앱 없이 프로세스가 새로 떠도 지금 출력 기기에 맞는 이퀄라이저 값을 적용한다.
+        EqualizerProfiles.applyCurrent(context)
 
         sessionPlayer = SessionPlayer(exo) { name, positionMs -> emitCommand(name, positionMs) }
         resumeOnConnect = PlaybackStore.resumeOnConnect(context)
+        resumeWithoutNotification = PlaybackStore.resumeWithoutNotification(context)
         (context.getSystemService(Context.AUDIO_SERVICE) as AudioManager)
             .registerAudioDeviceCallback(deviceCallback, main)
 
@@ -219,7 +225,7 @@ object PlaybackHub {
 
     /** 이어 재생해도 되는 상태인지 저장한다: 알림을 지우지 않았고 대기열이 있을 때. */
     private fun syncResumable() {
-        PlaybackStore.setResumable(context, !dismissed && exo.mediaItemCount > 0)
+        PlaybackStore.setResumable(context, (!dismissed || resumeWithoutNotification) && exo.mediaItemCount > 0)
     }
 
     // ── Dart → 네이티브 ──
@@ -574,7 +580,13 @@ object PlaybackHub {
 
     /** 출력 기기가 새로 연결됐다: 이어폰 분리로 멈춘 재생을 설정에 따라 이어서 재생한다. */
     private val deviceCallback = object : AudioDeviceCallback() {
+        override fun onAudioDevicesRemoved(removedDevices: Array<out AudioDeviceInfo>) {
+            EqualizerProfiles.onOutputChanged(context)
+        }
+
         override fun onAudioDevicesAdded(addedDevices: Array<out AudioDeviceInfo>) {
+            // 기기가 바뀌었으니 그 기기 전용 이퀄라이저 값을 적용한다.
+            EqualizerProfiles.onOutputChanged(context)
             if (!resumeOnConnect || pausedByNoisyAt == 0L || dismissed || exo.mediaItemCount == 0) return
             if (addedDevices.none { AudioOutputs.isHeadset(it) }) return
             // 오래 전에 멈춘 재생이 갑자기 켜지지 않게 10분 안에 다시 연결됐을 때만.
@@ -584,6 +596,22 @@ object PlaybackHub {
             }
             play()
         }
+    }
+
+    /** 정리된 세션을 미디어 버튼이 되살린다 (알림을 지운 뒤에도 이어 재생하는 설정일 때). */
+    fun reviveForButton() {
+        if (!dismissed || !initialized) return
+        revive()
+        if (sessionPlayer.info != null) {
+            isNotificationVisible = true
+            service?.showSession()
+        }
+    }
+
+    fun setResumeWithoutNotification(value: Boolean) {
+        PlaybackStore.setResumeWithoutNotification(context, value)
+        resumeWithoutNotification = value
+        syncResumable()
     }
 
     /** 출력 기기 동작 설정 (앱이 꺼져도 지켜야 해서 네이티브에도 저장한다). */
@@ -609,7 +637,7 @@ object PlaybackHub {
             session: MediaSession,
             controllerInfo: MediaSession.ControllerInfo,
             intent: Intent,
-        ): Boolean = dismissed
+        ): Boolean = isGated
 
         override fun onCustomCommand(
             session: MediaSession,

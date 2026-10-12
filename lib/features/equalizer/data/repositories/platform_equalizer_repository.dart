@@ -7,7 +7,8 @@ import '../../../../core/platform/equalizer_channel.dart';
 import '../../domain/entities/equalizer_settings.dart';
 import '../../domain/repositories/equalizer_repository.dart';
 
-/// 값은 shared_preferences(JSON 한 덩어리)에 저장하고, Android 재생 엔진의 Equalizer · BassBoost에 반영한다.
+/// 기본 값은 shared_preferences(JSON 한 덩어리)에 저장하고, Android 재생 엔진의 Equalizer · BassBoost에 반영한다.
+/// 출력 기기 전용 값은 네이티브가 쥐고(`EqualizerProfiles`), 기기가 바뀌면 네이티브가 알아서 바꿔 적용한다.
 /// Android가 아니면 `info`가 null이라 화면에 나오지 않는다.
 class PlatformEqualizerRepository implements EqualizerRepository {
   PlatformEqualizerRepository(this._channel);
@@ -19,10 +20,27 @@ class PlatformEqualizerRepository implements EqualizerRepository {
   @override
   Future<EqualizerSetup> load() async {
     final prefs = await SharedPreferences.getInstance();
-    return EqualizerSetup(
-      info: await _info(),
-      settings: _decode(prefs.getString(_key)),
-    );
+    final base = _decode(prefs.getString(_key));
+    final info = await _info();
+    if (info == null) return EqualizerSetup(info: null, settings: base);
+    // 전용 값이 없는 기기에 쓸 기본 값을 네이티브에도 알려 둔다.
+    final device = await _device();
+    try {
+      await _channel.setBase(_encode(base));
+      if (device?.hasProfile == true) {
+        final profile = await _channel.profile();
+        if (profile != null) {
+          return EqualizerSetup(
+            info: info,
+            settings: _decode(jsonEncode(profile)),
+            device: device,
+          );
+        }
+      }
+    } on Object {
+      // 네이티브를 못 부르면 기본 값으로 쓴다.
+    }
+    return EqualizerSetup(info: info, settings: base, device: device);
   }
 
   Future<EqualizerInfo?> _info() async {
@@ -40,6 +58,21 @@ class PlatformEqualizerRepository implements EqualizerRepository {
         virtualizerSupported: map['virtualizer'] == true,
         reverbSupported: map['reverb'] == true,
         limiterSupported: map['limiter'] == true,
+      );
+    } on Object {
+      return null;
+    }
+  }
+
+  Future<EqualizerDevice?> _device() async {
+    try {
+      final map = await _channel.device();
+      if (map == null) return null;
+      return EqualizerDevice(
+        key: '${map['key']}',
+        kind: '${map['type']}',
+        name: '${map['name'] ?? ''}',
+        hasProfile: map['hasProfile'] == true,
       );
     } on Object {
       return null;
@@ -65,25 +98,61 @@ class PlatformEqualizerRepository implements EqualizerRepository {
 
   @override
   Future<void> save(EqualizerSettings settings) async {
+    if ((await _device())?.hasProfile == true) {
+      try {
+        await _channel.saveProfile(_encode(settings));
+        return;
+      } on Object {
+        // 저장하지 못하면 기본 값으로 저장한다.
+      }
+    }
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      _key,
-      jsonEncode({
-        'enabled': settings.enabled,
-        'preset': settings.preset.name,
-        'levels': settings.levels,
-        'bassBoost': settings.bassBoost,
-        'virtualizer': settings.virtualizer,
-        'reverb': settings.reverb.name,
-        'limiter': settings.limiter,
-      }),
-    );
+    await prefs.setString(_key, jsonEncode(_encode(settings, named: true)));
+    if (Platform.isAndroid) {
+      try {
+        await _channel.setBase(_encode(settings));
+      } on Object {
+        // 다음 시작 때 다시 알려 준다.
+      }
+    }
   }
+
+  @override
+  Future<void> setDeviceProfile(
+    bool enabled,
+    EqualizerSettings settings,
+  ) async {
+    if (!Platform.isAndroid) return;
+    try {
+      if (enabled) {
+        await _channel.saveProfile(_encode(settings));
+      } else {
+        await _channel.deleteProfile();
+      }
+    } on Object {
+      // 네이티브를 못 부르면 바뀌지 않는다.
+    }
+  }
+
+  @override
+  Stream<void> watchDevice() => _channel.deviceChanges;
+
+  /// 네이티브에 보내는 모양 (`reverb`는 번호). [named]면 저장용으로 이름을 쓴다.
+  Map<String, Object?> _encode(EqualizerSettings s, {bool named = false}) => {
+    'enabled': s.enabled,
+    'preset': s.preset.name,
+    'levels': s.levels,
+    'bassBoost': s.bassBoost,
+    'virtualizer': s.virtualizer,
+    'reverb': named ? s.reverb.name : s.reverb.index,
+    'limiter': s.limiter,
+  };
 
   EqualizerSettings _decode(String? raw) {
     if (raw == null) return const EqualizerSettings();
     try {
       final map = jsonDecode(raw) as Map<String, dynamic>;
+      final reverb = map['reverb'];
       return EqualizerSettings(
         enabled: map['enabled'] == true,
         preset: EqualizerPreset.values.firstWhere(
@@ -95,10 +164,15 @@ class PlatformEqualizerRepository implements EqualizerRepository {
         ],
         bassBoost: (map['bassBoost'] as num?)?.toDouble() ?? 0,
         virtualizer: (map['virtualizer'] as num?)?.toDouble() ?? 0,
-        reverb: EqualizerReverb.values.firstWhere(
-          (r) => r.name == map['reverb'],
-          orElse: () => EqualizerReverb.none,
-        ),
+        reverb: reverb is num
+            ? EqualizerReverb.values[reverb.toInt().clamp(
+                0,
+                EqualizerReverb.values.length - 1,
+              )]
+            : EqualizerReverb.values.firstWhere(
+                (r) => r.name == reverb,
+                orElse: () => EqualizerReverb.none,
+              ),
         limiter: map['limiter'] != false,
       );
     } on Object {

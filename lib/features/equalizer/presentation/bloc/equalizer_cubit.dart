@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -11,6 +13,7 @@ class EqualizerState extends Equatable {
     this.settings = const EqualizerSettings(),
     this.saved = const EqualizerSettings(),
     this.loaded = false,
+    this.device,
   });
 
   /// 기기 능력. 읽기 전이거나 이퀄라이저를 쓸 수 없으면 null.
@@ -23,13 +26,16 @@ class EqualizerState extends Equatable {
   final EqualizerSettings saved;
   final bool loaded;
 
+  /// 지금 출력 기기 (알 수 없으면 null). 기기마다 전용 값을 둘 수 있다.
+  final EqualizerDevice? device;
+
   bool get supported => info != null;
 
   /// 저장하지 않은 변경이 있다.
   bool get dirty => settings != saved;
 
   @override
-  List<Object?> get props => [info, settings, saved, loaded];
+  List<Object?> get props => [info, settings, saved, loaded, device];
 }
 
 /// 이퀄라이저. 켜고 끄기는 바로 저장하고, 소리를 다듬는 값(프리셋 · 대역 · 효과)은 손대는 즉시 소리에는
@@ -39,16 +45,35 @@ class EqualizerCubit extends Cubit<EqualizerState> {
     required LoadEqualizer loadEqualizer,
     required ApplyEqualizer applyEqualizer,
     required SaveEqualizer saveEqualizer,
+    required SetEqualizerDeviceProfile setDeviceProfile,
+    required WatchEqualizerDevice watchDevice,
   }) : _load = loadEqualizer,
        _apply = applyEqualizer,
        _save = saveEqualizer,
+       _setProfile = setDeviceProfile,
+       _watch = watchDevice,
        super(const EqualizerState());
 
   final LoadEqualizer _load;
   final ApplyEqualizer _apply;
   final SaveEqualizer _save;
+  final SetEqualizerDeviceProfile _setProfile;
+  final WatchEqualizerDevice _watch;
+  StreamSubscription<void>? _deviceChanges;
 
   Future<void> load() async {
+    await _reload();
+    if (isClosed || _deviceChanges != null || !state.supported) return;
+    // 출력 기기가 바뀌면 네이티브가 새 기기의 값을 적용한다: 화면도 그 값을 따라간다.
+    final changes = await _watch(const NoParams());
+    if (isClosed) return;
+    _deviceChanges = changes.listen((_) {
+      // 손보던 값이 있으면 덮어쓰지 않는다.
+      if (!state.dirty) _reload();
+    });
+  }
+
+  Future<void> _reload() async {
     final setup = await _load(const NoParams());
     if (isClosed) return;
     emit(
@@ -57,8 +82,16 @@ class EqualizerCubit extends Cubit<EqualizerState> {
         settings: setup.settings,
         saved: setup.settings,
         loaded: true,
+        device: setup.device,
       ),
     );
+  }
+
+  /// 지금 출력 기기 전용 값으로 따로 저장할지. 켜면 지금 값이 이 기기 전용이 되고,
+  /// 끄면 이 기기도 기본 저장 값을 쓴다.
+  Future<void> setDeviceProfile(bool value) async {
+    await _setProfile((enabled: value, settings: state.settings));
+    await _reload();
   }
 
   /// 켜고 끄기는 설정이라 바로 저장한다 (저장 전 손본 값은 저장하지 않고 그대로 둔다).
@@ -150,6 +183,13 @@ class EqualizerCubit extends Cubit<EqualizerState> {
       settings: next,
       saved: saved ?? state.saved,
       loaded: true,
+      device: state.device,
     ),
   );
+
+  @override
+  Future<void> close() {
+    _deviceChanges?.cancel();
+    return super.close();
+  }
 }

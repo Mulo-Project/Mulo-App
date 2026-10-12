@@ -477,6 +477,13 @@ class AppLocalizationsKo extends AppLocalizations {
       '끊겨서 멈춘 재생을 10분 안에 다시 연결하면 이어서 재생해요';
 
   @override
+  String get settingsResumeWithoutNotification => '알림이 없어도 블루투스로 재생';
+
+  @override
+  String get settingsResumeWithoutNotificationDesc =>
+      '알림을 지웠거나 재생이 끝난 뒤에도 블루투스 기기의 재생 버튼으로 마지막 곡을 이어서 재생해요';
+
+  @override
   String get playerStyleTitle => '플레이어 테마';
 
   @override
@@ -2057,6 +2064,14 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get equalizerEnableDesc => '켜면 아래 설정대로 소리를 다듬어요. 기본은 꺼짐이에요';
+
+  @override
+  String get equalizerDeviceProfile => '이 기기 전용으로 저장';
+
+  @override
+  String equalizerDeviceProfileDesc(String device) {
+    return '$device에 연결되면 이 설정을 자동으로 적용해요';
+  }
 
   @override
   String get equalizerPreset => '프리셋';

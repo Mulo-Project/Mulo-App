@@ -36,3 +36,23 @@ class SaveEqualizer implements UseCase<void, EqualizerSettings> {
   @override
   Future<void> call(EqualizerSettings settings) => _repo.save(settings);
 }
+
+class SetEqualizerDeviceProfile
+    implements UseCase<void, ({bool enabled, EqualizerSettings settings})> {
+  const SetEqualizerDeviceProfile(this._repo);
+
+  final EqualizerRepository _repo;
+
+  @override
+  Future<void> call(({bool enabled, EqualizerSettings settings}) params) =>
+      _repo.setDeviceProfile(params.enabled, params.settings);
+}
+
+class WatchEqualizerDevice implements UseCase<Stream<void>, NoParams> {
+  const WatchEqualizerDevice(this._repo);
+
+  final EqualizerRepository _repo;
+
+  @override
+  Future<Stream<void>> call(NoParams _) async => _repo.watchDevice();
+}

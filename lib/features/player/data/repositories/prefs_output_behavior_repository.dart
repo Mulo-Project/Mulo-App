@@ -13,6 +13,7 @@ class PrefsOutputBehaviorRepository implements OutputBehaviorRepository {
 
   static const _pauseKey = 'player.pauseOnDisconnect';
   static const _resumeKey = 'player.resumeOnConnect';
+  static const _noNotifKey = 'player.resumeWithoutNotification';
 
   final NativePlaybackChannel _channel;
 
@@ -22,6 +23,7 @@ class PrefsOutputBehaviorRepository implements OutputBehaviorRepository {
     return OutputBehavior(
       pauseOnDisconnect: prefs.getBool(_pauseKey) ?? true,
       resumeOnConnect: prefs.getBool(_resumeKey) ?? false,
+      resumeWithoutNotification: prefs.getBool(_noNotifKey) ?? false,
     );
   }
 
@@ -30,6 +32,7 @@ class PrefsOutputBehaviorRepository implements OutputBehaviorRepository {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_pauseKey, value.pauseOnDisconnect);
     await prefs.setBool(_resumeKey, value.resumeOnConnect);
+    await prefs.setBool(_noNotifKey, value.resumeWithoutNotification);
     await apply(value);
   }
 
@@ -40,6 +43,7 @@ class PrefsOutputBehaviorRepository implements OutputBehaviorRepository {
       await _channel.setOutputBehavior(
         pauseOnDisconnect: value.pauseOnDisconnect,
         resumeOnConnect: value.resumeOnConnect,
+        resumeWithoutNotification: value.resumeWithoutNotification,
       );
     } on Object {
       // 재생 서비스를 못 부르면 다음 시작 때 다시 반영된다.

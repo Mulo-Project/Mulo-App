@@ -32,6 +32,8 @@ class MuloPlaybackService : MediaSessionService() {
             stopSelf(startId)
             return START_NOT_STICKY
         }
+        // 알림을 지운 뒤에도 버튼으로 재생하는 설정이면 정리된 세션을 되살린다.
+        if (intent?.action == Intent.ACTION_MEDIA_BUTTON) PlaybackHub.reviveForButton()
         return super.onStartCommand(intent, flags, startId)
     }
 

@@ -80,6 +80,18 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
                                   onChanged: cubit.setEnabled,
                                 ),
                               ),
+                              if (state.device case final device?) ...[
+                                SettingRow(
+                                  title: l10n.equalizerDeviceProfile,
+                                  description: l10n.equalizerDeviceProfileDesc(
+                                    _deviceLabel(l10n, device),
+                                  ),
+                                  trailing: AppSwitch(
+                                    value: device.hasProfile,
+                                    onChanged: cubit.setDeviceProfile,
+                                  ),
+                                ),
+                              ],
                               divider(),
                               gap(AppSpacing.sm),
                               padded(_Label(l10n.equalizerPreset)),
@@ -218,6 +230,17 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
       ),
     );
   }
+}
+
+/// 기기 이름 (이름이 없으면 종류 이름).
+String _deviceLabel(AppLocalizations l10n, EqualizerDevice device) {
+  if (device.name.isNotEmpty) return device.name;
+  return switch (device.kind) {
+    'wired' => l10n.outputWired,
+    'bluetooth' => l10n.outputBluetooth,
+    'usb' => l10n.outputUsb,
+    _ => l10n.outputSpeaker,
+  };
 }
 
 String _presetLabel(AppLocalizations l10n, EqualizerPreset preset) =>

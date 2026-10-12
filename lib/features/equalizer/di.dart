@@ -15,11 +15,15 @@ void registerEqualizer(GetIt sl) {
     ..registerFactory(() => LoadEqualizer(sl()))
     ..registerFactory(() => ApplyEqualizer(sl()))
     ..registerFactory(() => SaveEqualizer(sl()))
+    ..registerFactory(() => SetEqualizerDeviceProfile(sl()))
+    ..registerFactory(() => WatchEqualizerDevice(sl()))
     ..registerFactory(
       () => EqualizerCubit(
         loadEqualizer: sl(),
         applyEqualizer: sl(),
         saveEqualizer: sl(),
+        setDeviceProfile: sl(),
+        watchDevice: sl(),
       ),
     );
 }

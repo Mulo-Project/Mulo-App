@@ -489,6 +489,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'If playback stopped because of a disconnect, resume when a device reconnects within 10 minutes';
 
   @override
+  String get settingsResumeWithoutNotification =>
+      'Play from Bluetooth without a notification';
+
+  @override
+  String get settingsResumeWithoutNotificationDesc =>
+      'Even after you dismiss the notification or playback ends, the play button on a Bluetooth device resumes the last song';
+
+  @override
   String get playerStyleTitle => 'Player theme';
 
   @override
@@ -2109,6 +2117,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get equalizerEnableDesc =>
       'Shapes the sound with the settings below. Off by default';
+
+  @override
+  String get equalizerDeviceProfile => 'Save for this device only';
+
+  @override
+  String equalizerDeviceProfileDesc(String device) {
+    return 'Applies these settings automatically when $device is connected';
+  }
 
   @override
   String get equalizerPreset => 'Presets';

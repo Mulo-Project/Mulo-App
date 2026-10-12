@@ -38,6 +38,9 @@ class OutputBehaviorCubit extends Cubit<OutputBehavior> {
   Future<void> setResumeOnConnect(bool value) =>
       _set(state.copyWith(resumeOnConnect: value));
 
+  Future<void> setResumeWithoutNotification(bool value) =>
+      _set(state.copyWith(resumeWithoutNotification: value));
+
   Future<void> _set(OutputBehavior value) async {
     _touched = true;
     emit(value);

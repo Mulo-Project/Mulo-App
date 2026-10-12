@@ -442,6 +442,12 @@ class MemoryEqualizerRepository implements EqualizerRepository {
 
   @override
   Future<void> save(EqualizerSettings s) async => settings = s;
+
+  @override
+  Future<void> setDeviceProfile(bool enabled, EqualizerSettings s) async {}
+
+  @override
+  Stream<void> watchDevice() => const Stream.empty();
 }
 
 class MemoryThemeSettingsRepository implements ThemeSettingsRepository {

@@ -986,6 +986,18 @@ abstract class AppLocalizations {
   /// **'끊겨서 멈춘 재생을 10분 안에 다시 연결하면 이어서 재생해요'**
   String get settingsResumeOnConnectDesc;
 
+  /// No description provided for @settingsResumeWithoutNotification.
+  ///
+  /// In ko, this message translates to:
+  /// **'알림이 없어도 블루투스로 재생'**
+  String get settingsResumeWithoutNotification;
+
+  /// No description provided for @settingsResumeWithoutNotificationDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'알림을 지웠거나 재생이 끝난 뒤에도 블루투스 기기의 재생 버튼으로 마지막 곡을 이어서 재생해요'**
+  String get settingsResumeWithoutNotificationDesc;
+
   /// No description provided for @playerStyleTitle.
   ///
   /// In ko, this message translates to:
@@ -3883,6 +3895,18 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'켜면 아래 설정대로 소리를 다듬어요. 기본은 꺼짐이에요'**
   String get equalizerEnableDesc;
+
+  /// No description provided for @equalizerDeviceProfile.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 기기 전용으로 저장'**
+  String get equalizerDeviceProfile;
+
+  /// No description provided for @equalizerDeviceProfileDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'{device}에 연결되면 이 설정을 자동으로 적용해요'**
+  String equalizerDeviceProfileDesc(String device);
 
   /// No description provided for @equalizerPreset.
   ///

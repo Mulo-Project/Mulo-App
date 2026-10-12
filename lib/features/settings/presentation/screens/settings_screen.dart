@@ -286,6 +286,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               .setResumeOnConnect,
                         ),
                       ),
+                      SettingRow(
+                        title: l10n.settingsResumeWithoutNotification,
+                        description: l10n.settingsResumeWithoutNotificationDesc,
+                        trailing: AppSwitch(
+                          value: context
+                              .watch<OutputBehaviorCubit>()
+                              .state
+                              .resumeWithoutNotification,
+                          onChanged: context
+                              .read<OutputBehaviorCubit>()
+                              .setResumeWithoutNotification,
+                        ),
+                      ),
                     ],
                     // 이퀄라이저를 쓸 수 없는 환경(Android 밖)에서는 줄을 숨긴다.
                     if (context.watch<EqualizerCubit>().state.supported)

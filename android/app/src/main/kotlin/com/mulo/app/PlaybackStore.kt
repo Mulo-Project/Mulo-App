@@ -44,6 +44,7 @@ object PlaybackStore {
 
     private const val PAUSE_ON_DISCONNECT = "pauseOnDisconnect"
     private const val RESUME_ON_CONNECT = "resumeOnConnect"
+    private const val RESUME_WITHOUT_NOTIFICATION = "resumeWithoutNotification"
 
     private fun prefs(context: Context) = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
@@ -133,6 +134,13 @@ object PlaybackStore {
     fun pauseOnDisconnect(context: Context) = prefs(context).getBoolean(PAUSE_ON_DISCONNECT, true)
 
     fun resumeOnConnect(context: Context) = prefs(context).getBoolean(RESUME_ON_CONNECT, false)
+
+    /** 알림을 지운 뒤나 재생이 끝난 뒤에도 블루투스 버튼으로 이어 재생할지 (기본 꺼짐). */
+    fun resumeWithoutNotification(context: Context) = prefs(context).getBoolean(RESUME_WITHOUT_NOTIFICATION, false)
+
+    fun setResumeWithoutNotification(context: Context, value: Boolean) {
+        prefs(context).edit().putBoolean(RESUME_WITHOUT_NOTIFICATION, value).apply()
+    }
 
     fun saveOutputBehavior(context: Context, pauseOnDisconnect: Boolean, resumeOnConnect: Boolean) {
         prefs(context).edit()

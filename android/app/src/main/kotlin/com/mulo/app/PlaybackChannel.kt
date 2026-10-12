@@ -25,6 +25,7 @@ class PlaybackChannel(context: Context, messenger: BinaryMessenger) {
                 "setOutputBehavior" -> {
                     val args = call.arguments as Map<*, *>
                     PlaybackHub.setOutputBehavior(args["pauseOnDisconnect"] as? Boolean ?: true, args["resumeOnConnect"] as? Boolean ?: false)
+                    PlaybackHub.setResumeWithoutNotification(args["resumeWithoutNotification"] as? Boolean ?: false)
                     result.success(null)
                 }
                 "setMixWithOthers" -> { PlaybackHub.setMixWithOthers(call.arguments as? Boolean ?: false); result.success(null) }
