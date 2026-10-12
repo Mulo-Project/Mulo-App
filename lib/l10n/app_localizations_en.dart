@@ -34,6 +34,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionPause => 'Pause';
 
   @override
+  String get playerFloatExpand => 'Back to mini player';
+
+  @override
   String get actionNext => 'Next';
 
   @override

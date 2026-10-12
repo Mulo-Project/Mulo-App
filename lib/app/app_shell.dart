@@ -1,13 +1,15 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/design/design.dart';
 import '../core/l10n/l10n.dart';
 import '../features/covers/presentation/bloc/cover_cubit.dart';
-import '../features/library/domain/entities/track.dart' show formatDuration;
+import '../features/library/domain/entities/track.dart'
+    show Track, formatDuration;
 import '../features/home/presentation/bloc/play_recorder_cubit.dart';
 import '../features/player/presentation/bloc/audio_output_cubit.dart';
 import '../features/player/presentation/bloc/now_playing_cubit.dart';
@@ -18,6 +20,7 @@ import '../features/downloads/presentation/widgets/download_bar.dart';
 import '../features/downloads/presentation/widgets/download_float_button.dart';
 import '../features/search/presentation/screens/media_detail_screen.dart';
 import '../features/theme/presentation/bloc/theme_cubit.dart';
+import 'mini_float_layer.dart';
 import 'router.dart';
 import 'theme_preview_bar.dart';
 
@@ -59,9 +62,81 @@ class _AppShellState extends State<AppShell> {
     });
   }
 
+  /// 미니 플레이어를 플로팅 버튼으로 바꿔 둔 상태 (앱을 켜 두는 동안만).
+  var _miniFloating = false;
+
+  /// 길게 눌러 미니 플레이어에서 버튼을 끌어내는 중 (손가락을 뗄 때까지).
+  var _miniGripping = false;
+
+  /// 버튼의 왼쪽 위 위치 (본문 좌표). 끄는 동안 셸 전체가 다시 그려지지 않게 따로 둔다.
+  final _floatPos = ValueNotifier(Offset.zero);
+  final _floatMoving = ValueNotifier(false);
+  final _bodyKey = GlobalKey();
+  final _miniKey = GlobalKey();
+  var _miniHeight = 0.0;
+  var _geometry = const MiniFloatGeometry(area: Rect.zero, safe: Rect.zero);
+  var _grab = const Offset(
+    FloatingPlayerButton.size / 2,
+    FloatingPlayerButton.size / 2,
+  );
+
+  Offset _toBody(Offset global) {
+    final box = _bodyKey.currentContext?.findRenderObject() as RenderBox?;
+    return box == null ? global : box.globalToLocal(global);
+  }
+
+  void _gripStart(Offset global) {
+    HapticFeedback.mediumImpact();
+    _miniHeight = _miniKey.currentContext?.size?.height ?? _miniHeight;
+    _grab = const Offset(
+      FloatingPlayerButton.size / 2,
+      FloatingPlayerButton.size / 2,
+    );
+    _floatMoving.value = true;
+    _floatPos.value = MiniFloatGeometry.clampTo(
+      _geometry.area,
+      _toBody(global) - _grab,
+    );
+    setState(() {
+      _miniFloating = true;
+      _miniGripping = true;
+    });
+  }
+
+  void _gripMove(Offset global) => _floatPos.value = MiniFloatGeometry.clampTo(
+    _geometry.area,
+    _toBody(global) - _grab,
+  );
+
+  void _gripEnd() {
+    _settleFloat();
+    setState(() => _miniGripping = false);
+  }
+
+  void _panStart(DragStartDetails d) {
+    _grab = d.localPosition;
+    _floatMoving.value = true;
+  }
+
+  void _panUpdate(DragUpdateDetails d) => _floatPos.value =
+      MiniFloatGeometry.clampTo(_geometry.safe, _floatPos.value + d.delta);
+
+  /// 놓으면 가까운 가장자리로 튕기듯 붙는다.
+  void _settleFloat() {
+    _floatMoving.value = false;
+    _floatPos.value = _geometry.snap(_floatPos.value);
+  }
+
+  void _restoreMini() {
+    HapticFeedback.selectionClick();
+    setState(() => _miniFloating = false);
+  }
+
   @override
   void dispose() {
     _dockTimer?.cancel();
+    _floatPos.dispose();
+    _floatMoving.dispose();
     super.dispose();
   }
 
@@ -89,7 +164,30 @@ class _AppShellState extends State<AppShell> {
     final inset = barShown
         ? _barHeight
         : DownloadFloatButton.size + AppSpacing.md * 2;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // 플로팅 버튼이 머물 수 있는 영역: 상태 표시줄 · 하단 바 · 받기 줄(버튼) 위.
+        const s = FloatingPlayerButton.size;
+        const m = AppSpacing.md;
+        final w = constraints.maxWidth;
+        final h = constraints.maxHeight;
+        _geometry = MiniFloatGeometry(
+          area: Rect.fromLTRB(0, 0, w - s, h - s),
+          safe: Rect.fromLTRB(
+            m,
+            mq.padding.top + m,
+            w - s - m,
+            h - navHeight - inset - s - m,
+          ),
+        );
+        return _bodyStack(mq, navHeight, inset);
+      },
+    );
+  }
+
+  Widget _bodyStack(MediaQueryData mq, double navHeight, double inset) {
     return Stack(
+      key: _bodyKey,
       children: [
         AppBackground(
           child: MediaQuery(
@@ -149,6 +247,17 @@ class _AppShellState extends State<AppShell> {
                 : const SizedBox.shrink(key: ValueKey('download-float-off')),
           ),
         ),
+        if (_miniFloating)
+          MiniFloatLayer(
+            position: _floatPos,
+            moving: _floatMoving,
+            geometry: _geometry,
+            gripping: _miniGripping,
+            onPanStart: _panStart,
+            onPanUpdate: _panUpdate,
+            onPanEnd: (_) => _settleFloat(),
+            onExpand: _restoreMini,
+          ),
       ],
     );
   }
@@ -204,7 +313,15 @@ class _AppShellState extends State<AppShell> {
                   children: [
                     if (context.select((ThemeCubit c) => c.state.previewing))
                       const ThemePreviewBar(),
-                    const _ShellMiniPlayer(),
+                    _ShellMiniPlayer(
+                      measureKey: _miniKey,
+                      floating: _miniFloating,
+                      gripping: _miniGripping,
+                      placeholderHeight: _miniHeight,
+                      onGripStart: _gripStart,
+                      onGripMove: _gripMove,
+                      onGripEnd: _gripEnd,
+                    ),
                     AppBottomNav(
                       currentIndex: shell.currentIndex,
                       onSelected: (i) {
@@ -257,7 +374,28 @@ class _AppShellState extends State<AppShell> {
 /// (누르면 그 곡의 상세 화면). 재생 대기열과 위치는 건드리지 않아서,
 /// 미리 듣기가 끝나면 듣던 대기열이 그대로 돌아온다.
 class _ShellMiniPlayer extends StatelessWidget {
-  const _ShellMiniPlayer();
+  const _ShellMiniPlayer({
+    required this.measureKey,
+    required this.floating,
+    required this.gripping,
+    required this.placeholderHeight,
+    required this.onGripStart,
+    required this.onGripMove,
+    required this.onGripEnd,
+  });
+
+  final Key measureKey;
+
+  /// 플로팅 버튼으로 바뀐 상태: 띠는 자리를 비운다.
+  final bool floating;
+
+  /// 길게 눌러 끌어내는 중: 띠는 보이지 않되 높이는 그대로 둔다
+  /// (손가락을 뗄 때까지 제스처가 살아 있고 본문 여백도 흔들리지 않게).
+  final bool gripping;
+  final double placeholderHeight;
+  final ValueChanged<Offset> onGripStart;
+  final ValueChanged<Offset> onGripMove;
+  final VoidCallback onGripEnd;
 
   @override
   Widget build(BuildContext context) {
@@ -268,9 +406,32 @@ class _ShellMiniPlayer extends StatelessWidget {
     final state = context.watch<NowPlayingCubit>().state;
     final track = state.track;
     if (track == null) return const SizedBox.shrink();
+    if (floating && !gripping) return const SizedBox.shrink();
     final vm = context.read<NowPlayingCubit>();
     final l10n = context.l10n;
 
+    // 길게 누른 채 끌면 띠가 플로팅 버튼으로 바뀐다.
+    return GestureDetector(
+      onLongPressStart: (d) => onGripStart(d.globalPosition),
+      onLongPressMoveUpdate: (d) => onGripMove(d.globalPosition),
+      onLongPressEnd: (_) => onGripEnd(),
+      onLongPressCancel: gripping ? onGripEnd : null,
+      child: gripping
+          ? SizedBox(height: placeholderHeight, width: double.infinity)
+          : KeyedSubtree(
+              key: measureKey,
+              child: _bar(context, state, track, vm, l10n),
+            ),
+    );
+  }
+
+  Widget _bar(
+    BuildContext context,
+    NowPlayingState state,
+    Track track,
+    NowPlayingCubit vm,
+    AppLocalizations l10n,
+  ) {
     return Hero(
       tag: 'now-playing',
       child: MiniPlayerBar(

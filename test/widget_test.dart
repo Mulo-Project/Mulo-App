@@ -153,6 +153,48 @@ void main() {
     expect(find.text('지금 재생 중'), findsOneWidget);
   });
 
+  testWidgets('미니 플레이어를 길게 눌러 끌면 플로팅 버튼이 되고, 놓으면 가장자리에 붙고, 눌러서 돌아온다', (
+    tester,
+  ) async {
+    await _pumpApp(tester);
+    await tester.tap(find.text(TestData.tracks.first.title).first);
+    await tester.pumpAndSettle();
+    final bar = tester.getRect(find.byType(MiniPlayerBar));
+
+    final g = await tester.startGesture(bar.topLeft + const Offset(24, 24));
+    await tester.pump(const Duration(milliseconds: 700));
+    await g.moveBy(const Offset(60, -300));
+    await tester.pump();
+    // 끄는 동안 띠는 비고 버튼이 손가락을 따라간다.
+    expect(find.byType(MiniPlayerBar), findsNothing);
+    expect(find.byKey(const ValueKey('mini-float')), findsOneWidget);
+    await g.up();
+    await tester.pumpAndSettle();
+
+    final screen = tester.view.physicalSize / tester.view.devicePixelRatio;
+    final float = tester.getRect(find.byType(FloatingPlayerButton));
+    // 가까운 왼쪽 가장자리에 붙고, 하단 바 위에 머문다.
+    expect(float.left, AppSpacing.md);
+    expect(float.bottom, lessThan(screen.height - 80));
+    expect(find.byType(MiniPlayerBar), findsNothing);
+
+    // 떠 있는 버튼을 끌어 옮기면 반대쪽 가장자리로도 붙는다.
+    await tester.drag(
+      find.byType(FloatingPlayerButton),
+      Offset(screen.width, 0),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      tester.getRect(find.byType(FloatingPlayerButton)).right,
+      screen.width - AppSpacing.md,
+    );
+
+    await tester.tap(find.byTooltip('미니 플레이어로 돌아가기'));
+    await tester.pumpAndSettle();
+    expect(find.byType(MiniPlayerBar), findsOneWidget);
+    expect(find.byType(FloatingPlayerButton), findsNothing);
+  });
+
   testWidgets('보관함: 정렬 드롭다운으로 기준을 바꾸고, 장르 탭에서 장르별로 본다', (tester) async {
     await _pumpApp(tester);
     expect(find.text('추가일순'), findsOneWidget);

@@ -17,6 +17,7 @@ export 'components/artwork_box.dart';
 export 'components/buttons.dart';
 export 'components/color_picker.dart';
 export 'components/cover_card.dart';
+export 'components/floating_player_button.dart';
 export 'components/glass.dart';
 export 'components/line_chart.dart';
 export 'components/menu_row.dart';

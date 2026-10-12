@@ -146,6 +146,12 @@ abstract class AppLocalizations {
   /// **'일시정지'**
   String get actionPause;
 
+  /// No description provided for @playerFloatExpand.
+  ///
+  /// In ko, this message translates to:
+  /// **'미니 플레이어로 돌아가기'**
+  String get playerFloatExpand;
+
   /// No description provided for @actionNext.
   ///
   /// In ko, this message translates to:
