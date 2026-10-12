@@ -137,6 +137,79 @@ class PlatformEqualizerRepository implements EqualizerRepository {
   @override
   Stream<void> watchDevice() => _channel.deviceChanges;
 
+  @override
+  Future<List<EqualizerUserPreset>> presets() async {
+    if (!Platform.isAndroid) return const [];
+    try {
+      final list = await _channel.presets() ?? const [];
+      return [
+        for (final p in list.whereType<Map<Object?, Object?>>())
+          EqualizerUserPreset(
+            id: '${p['id']}',
+            name: '${p['name'] ?? ''}',
+            settings: _decode(jsonEncode(p)),
+          ),
+      ];
+    } on Object {
+      return const [];
+    }
+  }
+
+  @override
+  Future<void> savePreset(EqualizerUserPreset preset) async {
+    if (!Platform.isAndroid) return;
+    try {
+      await _channel.savePreset({
+        ..._encode(preset.settings),
+        'id': preset.id,
+        'name': preset.name,
+      });
+    } on Object {
+      // 저장하지 못하면 목록에 나타나지 않는다.
+    }
+  }
+
+  @override
+  Future<void> deletePreset(String id) async {
+    if (!Platform.isAndroid) return;
+    try {
+      await _channel.deletePreset(id);
+    } on Object {
+      // 지우지 못하면 목록에 남는다.
+    }
+  }
+
+  @override
+  Future<List<EqualizerDevice>> devices() async {
+    if (!Platform.isAndroid) return const [];
+    try {
+      final list = await _channel.devices() ?? const [];
+      return [
+        for (final d in list.whereType<Map<Object?, Object?>>())
+          EqualizerDevice(
+            key: '${d['key']}',
+            kind: '${d['type']}',
+            name: '${d['name'] ?? ''}',
+            hasProfile: d['hasProfile'] == true,
+            presetId: d['presetId'] as String?,
+            current: d['current'] == true,
+          ),
+      ];
+    } on Object {
+      return const [];
+    }
+  }
+
+  @override
+  Future<void> assignPreset(String deviceKey, String? presetId) async {
+    if (!Platform.isAndroid) return;
+    try {
+      await _channel.assignPreset(deviceKey, presetId);
+    } on Object {
+      // 지정하지 못하면 그대로다.
+    }
+  }
+
   /// 네이티브에 보내는 모양 (`reverb`는 번호). [named]면 저장용으로 이름을 쓴다.
   Map<String, Object?> _encode(EqualizerSettings s, {bool named = false}) => {
     'enabled': s.enabled,

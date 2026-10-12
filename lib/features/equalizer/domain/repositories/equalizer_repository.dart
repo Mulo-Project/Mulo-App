@@ -18,4 +18,19 @@ abstract interface class EqualizerRepository {
 
   /// 출력 기기가 바뀔 때마다 알려 준다 (네이티브가 새 기기의 값을 이미 적용했다).
   Stream<void> watchDevice();
+
+  /// 만들어 둔 내 프리셋 (만든 순서).
+  Future<List<EqualizerUserPreset>> presets();
+
+  /// 내 프리셋을 만들거나 고친다. 이 프리셋을 지정한 기기의 값도 함께 바뀐다.
+  Future<void> savePreset(EqualizerUserPreset preset);
+
+  /// 내 프리셋을 지운다 (지정했던 기기는 마지막 값을 그대로 쓴다).
+  Future<void> deletePreset(String id);
+
+  /// 연결된 적 있는 출력 기기 (지금 기기가 맨 위).
+  Future<List<EqualizerDevice>> devices();
+
+  /// [deviceKey] 기기에 내 프리셋을 지정한다. [presetId]가 null이면 전용 값을 없앤다.
+  Future<void> assignPreset(String deviceKey, String? presetId);
 }

@@ -16,6 +16,7 @@ import '../features/downloads/presentation/widgets/download_completion_listener.
 import '../features/downloads/presentation/bloc/download_preferences_cubit.dart';
 import '../features/downloads/presentation/bloc/download_settings_cubit.dart';
 import '../features/equalizer/presentation/bloc/equalizer_cubit.dart';
+import '../features/equalizer/presentation/bloc/equalizer_library_cubit.dart';
 import '../features/home/presentation/bloc/play_recorder_cubit.dart';
 import '../features/library/presentation/bloc/library_cubit.dart';
 import '../features/library/presentation/bloc/library_import_cubit.dart';
@@ -105,6 +106,7 @@ class _MusicAppState extends State<MusicApp> {
         BlocProvider(create: (_) => sl<OutputBehaviorCubit>()..load()),
         // 시작할 때 저장된 이퀄라이저 값을 재생 엔진에 반영해야 하므로 바로 만든다.
         BlocProvider(lazy: false, create: (_) => sl<EqualizerCubit>()..load()),
+        BlocProvider(create: (_) => sl<EqualizerLibraryCubit>()..load()),
         BlocProvider(create: (_) => sl<PlayRecorderCubit>()),
         BlocProvider(create: (_) => sl<PreviewCubit>()),
         BlocProvider(create: (_) => sl<DownloadQueueCubit>()..start()),

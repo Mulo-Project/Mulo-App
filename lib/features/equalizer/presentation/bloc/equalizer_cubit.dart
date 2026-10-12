@@ -139,6 +139,13 @@ class EqualizerCubit extends Cubit<EqualizerState> {
   void selectReverb(EqualizerReverb reverb) =>
       _preview(state.settings.copyWith(reverb: reverb));
 
+  /// 만들어 둔 프리셋의 값을 소리에 반영한다 (저장은 [save]를 눌러야 한다).
+  void applyUserPreset(EqualizerSettings preset) {
+    final info = state.info;
+    if (info == null) return;
+    _preview(preset.fitTo(info).copyWith(enabled: state.settings.enabled));
+  }
+
   void setLimiter(bool value) =>
       _preview(state.settings.copyWith(limiter: value));
 

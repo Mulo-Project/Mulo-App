@@ -585,6 +585,7 @@ object PlaybackHub {
         }
 
         override fun onAudioDevicesAdded(addedDevices: Array<out AudioDeviceInfo>) {
+            EqualizerProfiles.remember(context, addedDevices)
             // 기기가 바뀌었으니 그 기기 전용 이퀄라이저 값을 적용한다.
             EqualizerProfiles.onOutputChanged(context)
             if (!resumeOnConnect || pausedByNoisyAt == 0L || dismissed || exo.mediaItemCount == 0) return

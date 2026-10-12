@@ -2074,6 +2074,56 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get equalizerMyPresets => '내 프리셋';
+
+  @override
+  String get equalizerMyPresetsHint => '길게 누르면 지워요';
+
+  @override
+  String get equalizerPresetSaveNew => '지금 값 저장';
+
+  @override
+  String get equalizerPresetNameTitle => '프리셋 이름';
+
+  @override
+  String get equalizerPresetNameHint => '예: 이어폰용, 차량용';
+
+  @override
+  String get equalizerPresetSave => '저장';
+
+  @override
+  String get equalizerPresetDeleteTitle => '프리셋 지우기';
+
+  @override
+  String equalizerPresetDeleteBody(String name) {
+    return '\"$name\" 프리셋을 지워요. 이 프리셋을 지정한 기기는 마지막 값을 그대로 써요';
+  }
+
+  @override
+  String get equalizerDevicesTitle => '기기별 이퀄라이저';
+
+  @override
+  String get equalizerDevicesEmpty => '아직 연결된 블루투스 · 이어폰 기기가 없어요';
+
+  @override
+  String get equalizerDeviceDefault => '기본 설정';
+
+  @override
+  String get equalizerDeviceCustom => '직접 설정';
+
+  @override
+  String get equalizerDeviceCurrent => '지금 연결됨';
+
+  @override
+  String equalizerDevicePickTitle(String device) {
+    return '$device에 쓸 프리셋';
+  }
+
+  @override
+  String get equalizerDeviceNoPresets =>
+      '이퀄라이저 화면에서 \"지금 값 저장\"으로 프리셋을 먼저 만들어 주세요';
+
+  @override
   String get equalizerPreset => '프리셋';
 
   @override

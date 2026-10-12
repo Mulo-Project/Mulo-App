@@ -32,6 +32,14 @@ class EqualizerChannel(private val context: Context, messenger: BinaryMessenger)
                 "profile" -> result.success(EqualizerProfiles.currentProfile(context))
                 "saveProfile" -> { EqualizerProfiles.saveProfile(context, call.arguments as Map<*, *>); result.success(null) }
                 "deleteProfile" -> { EqualizerProfiles.deleteProfile(context); result.success(null) }
+                "presets" -> result.success(EqualizerProfiles.presets(context))
+                "savePreset" -> { EqualizerProfiles.savePreset(context, call.arguments as Map<*, *>); result.success(null) }
+                "deletePreset" -> { EqualizerProfiles.deletePreset(context, call.arguments as String); result.success(null) }
+                "devices" -> result.success(EqualizerProfiles.devices(context))
+                "assignPreset" -> {
+                    EqualizerProfiles.assignPreset(context, call.argument<String>("key") ?: "", call.argument<String>("presetId"))
+                    result.success(null)
+                }
                 "setBase" -> { EqualizerProfiles.setBase(context, call.arguments as Map<*, *>); result.success(null) }
                 else -> result.notImplemented()
             }

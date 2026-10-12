@@ -171,6 +171,8 @@ class EqualizerDevice extends Equatable {
     required this.kind,
     this.name = '',
     this.hasProfile = false,
+    this.presetId,
+    this.current = false,
   });
 
   /// 기기 구분 열쇠 (종류 + 이름).
@@ -181,8 +183,30 @@ class EqualizerDevice extends Equatable {
   final String name;
   final bool hasProfile;
 
+  /// 지정한 내 프리셋 (직접 만든 전용 값이면 null).
+  final String? presetId;
+
+  /// 지금 소리가 나가는 기기인지.
+  final bool current;
+
   @override
-  List<Object?> get props => [key, kind, name, hasProfile];
+  List<Object?> get props => [key, kind, name, hasProfile, presetId, current];
+}
+
+/// 이름을 붙여 만들어 둔 이퀄라이저 값 (내 프리셋). 기기에 지정해 쓴다.
+class EqualizerUserPreset extends Equatable {
+  const EqualizerUserPreset({
+    required this.id,
+    required this.name,
+    required this.settings,
+  });
+
+  final String id;
+  final String name;
+  final EqualizerSettings settings;
+
+  @override
+  List<Object?> get props => [id, name, settings];
 }
 
 class EqualizerSetup extends Equatable {

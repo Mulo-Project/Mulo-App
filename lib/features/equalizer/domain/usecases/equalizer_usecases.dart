@@ -56,3 +56,51 @@ class WatchEqualizerDevice implements UseCase<Stream<void>, NoParams> {
   @override
   Future<Stream<void>> call(NoParams _) async => _repo.watchDevice();
 }
+
+class LoadEqualizerPresets
+    implements UseCase<List<EqualizerUserPreset>, NoParams> {
+  const LoadEqualizerPresets(this._repo);
+
+  final EqualizerRepository _repo;
+
+  @override
+  Future<List<EqualizerUserPreset>> call(NoParams _) => _repo.presets();
+}
+
+class SaveEqualizerPreset implements UseCase<void, EqualizerUserPreset> {
+  const SaveEqualizerPreset(this._repo);
+
+  final EqualizerRepository _repo;
+
+  @override
+  Future<void> call(EqualizerUserPreset preset) => _repo.savePreset(preset);
+}
+
+class DeleteEqualizerPreset implements UseCase<void, String> {
+  const DeleteEqualizerPreset(this._repo);
+
+  final EqualizerRepository _repo;
+
+  @override
+  Future<void> call(String id) => _repo.deletePreset(id);
+}
+
+class LoadEqualizerDevices implements UseCase<List<EqualizerDevice>, NoParams> {
+  const LoadEqualizerDevices(this._repo);
+
+  final EqualizerRepository _repo;
+
+  @override
+  Future<List<EqualizerDevice>> call(NoParams _) => _repo.devices();
+}
+
+class AssignEqualizerPreset
+    implements UseCase<void, ({String deviceKey, String? presetId})> {
+  const AssignEqualizerPreset(this._repo);
+
+  final EqualizerRepository _repo;
+
+  @override
+  Future<void> call(({String deviceKey, String? presetId}) params) =>
+      _repo.assignPreset(params.deviceKey, params.presetId);
+}

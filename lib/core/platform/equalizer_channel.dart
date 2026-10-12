@@ -51,6 +51,24 @@ class EqualizerChannel {
   Future<void> setBase(Map<String, Object?> values) =>
       _method.invokeMethod('setBase', values);
 
+  /// 이름을 붙여 만들어 둔 내 프리셋 (`id` `name` + `apply` 인자와 같은 값).
+  Future<List<Object?>?> presets() =>
+      _method.invokeListMethod<Object?>('presets');
+
+  Future<void> savePreset(Map<String, Object?> preset) =>
+      _method.invokeMethod('savePreset', preset);
+
+  Future<void> deletePreset(String id) =>
+      _method.invokeMethod('deletePreset', id);
+
+  /// 연결된 적 있는 출력 기기 `{key, type, name, hasProfile, presetId, current}`.
+  Future<List<Object?>?> devices() =>
+      _method.invokeListMethod<Object?>('devices');
+
+  /// [key] 기기에 내 프리셋을 지정한다 ([presetId]가 null이면 전용 값을 없앤다).
+  Future<void> assignPreset(String key, String? presetId) =>
+      _method.invokeMethod('assignPreset', {'key': key, 'presetId': presetId});
+
   /// 출력 기기가 바뀌어 네이티브가 새 값을 적용했을 때 알려 준다.
   Stream<void> get deviceChanges {
     return (_deviceChanges ??= StreamController<void>.broadcast(

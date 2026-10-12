@@ -18,6 +18,7 @@ import '../../../downloads/presentation/bloc/download_settings_cubit.dart';
 import '../../../downloads/presentation/widgets/save_folder_dialog.dart';
 import '../../../engine/presentation/bloc/engine_cubit.dart';
 import '../../../equalizer/presentation/bloc/equalizer_cubit.dart';
+import '../../../equalizer/presentation/widgets/device_equalizer_section.dart';
 import '../../../library/presentation/widgets/loaded_folders_tile.dart';
 import '../../../notifications/presentation/bloc/notification_settings_cubit.dart';
 import '../../../permissions/presentation/widgets/permissions_section.dart';
@@ -318,6 +319,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
                 const SizedBox(height: AppSpacing.lg),
+                const DeviceEqualizerSection(),
                 const SubscriptionsSection(),
                 const SizedBox(height: AppSpacing.lg),
                 const PermissionsSection(),

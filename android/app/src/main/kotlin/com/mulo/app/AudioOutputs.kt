@@ -15,6 +15,15 @@ object AudioOutputs {
     private val WIRED = intArrayOf(AudioDeviceInfo.TYPE_WIRED_HEADPHONES, AudioDeviceInfo.TYPE_WIRED_HEADSET)
     private val USB = intArrayOf(AudioDeviceInfo.TYPE_USB_DEVICE, AudioDeviceInfo.TYPE_USB_HEADSET)
 
+    /** 기기 종류 (`bluetooth` `wired` `usb`). 내장 스피커 등 그 밖의 기기는 null. */
+    fun kindOf(device: AudioDeviceInfo): String? = when {
+        !device.isSink -> null
+        device.type in BLUETOOTH -> "bluetooth"
+        device.type in WIRED -> "wired"
+        device.type in USB -> "usb"
+        else -> null
+    }
+
     /** 연결되면 "이어폰을 꽂았다"고 볼 기기인지 (내장 스피커 · 통화용 기기는 제외). */
     fun isHeadset(device: AudioDeviceInfo): Boolean =
         device.isSink && (device.type in BLUETOOTH || device.type in WIRED || device.type in USB)

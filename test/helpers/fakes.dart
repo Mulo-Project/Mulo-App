@@ -448,6 +448,27 @@ class MemoryEqualizerRepository implements EqualizerRepository {
 
   @override
   Stream<void> watchDevice() => const Stream.empty();
+
+  final List<EqualizerUserPreset> userPresets = [];
+
+  @override
+  Future<List<EqualizerUserPreset>> presets() async => [...userPresets];
+
+  @override
+  Future<void> savePreset(EqualizerUserPreset preset) async {
+    userPresets.removeWhere((p) => p.id == preset.id);
+    userPresets.add(preset);
+  }
+
+  @override
+  Future<void> deletePreset(String id) async =>
+      userPresets.removeWhere((p) => p.id == id);
+
+  @override
+  Future<List<EqualizerDevice>> devices() async => const [];
+
+  @override
+  Future<void> assignPreset(String deviceKey, String? presetId) async {}
 }
 
 class MemoryThemeSettingsRepository implements ThemeSettingsRepository {
