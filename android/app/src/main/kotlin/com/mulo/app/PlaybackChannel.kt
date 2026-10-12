@@ -22,6 +22,7 @@ class PlaybackChannel(context: Context, messenger: BinaryMessenger) {
                 "play" -> { PlaybackHub.play(); result.success(null) }
                 "pause" -> { PlaybackHub.pause(); result.success(null) }
                 "seek" -> { PlaybackHub.seek((call.arguments as Number).toLong()); result.success(null) }
+                "setMixWithOthers" -> { PlaybackHub.setMixWithOthers(call.arguments as? Boolean ?: false); result.success(null) }
                 "setSession" -> { PlaybackHub.setSession(call.arguments as? Map<*, *>); result.success(null) }
                 else -> result.notImplemented()
             }

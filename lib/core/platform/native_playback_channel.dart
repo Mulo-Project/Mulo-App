@@ -49,6 +49,10 @@ class NativePlaybackChannel {
   Future<void> setQueueArt(Map<String, String> artById) =>
       _method.invokeMethod('setQueueArt', artById);
 
+  /// 다른 앱 소리와 겹쳐 재생할지. false면 다른 앱이 소리를 낼 때 멈춘다 (오디오 포커스).
+  Future<void> setMixWithOthers(bool mix) =>
+      _method.invokeMethod('setMixWithOthers', mix);
+
   /// 알림 · 잠금화면에 보여 줄 내용. null이면 알림을 치운다 (재생은 그대로).
   Future<void> setSession(Map<String, Object?>? session) =>
       _method.invokeMethod('setSession', session);

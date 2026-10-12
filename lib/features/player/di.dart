@@ -9,14 +9,18 @@ import 'data/datasources/audio_output_source.dart';
 import 'data/repositories/just_audio_player_repository.dart';
 import 'data/repositories/native_audio_player_repository.dart';
 import 'data/repositories/platform_audio_output_repository.dart';
+import 'data/repositories/prefs_mix_with_others_repository.dart';
 import 'data/repositories/prefs_player_style_repository.dart';
 import 'domain/repositories/audio_output_repository.dart';
 import 'domain/repositories/audio_player_repository.dart';
 import 'domain/usecases/audio_playback_usecases.dart';
+import 'domain/repositories/mix_with_others_repository.dart';
 import 'domain/repositories/player_style_repository.dart';
 import 'domain/usecases/get_audio_output.dart';
+import 'domain/usecases/mix_with_others_usecases.dart';
 import 'domain/usecases/player_style_usecases.dart';
 import 'presentation/bloc/audio_output_cubit.dart';
+import 'presentation/bloc/mix_with_others_cubit.dart';
 import 'presentation/bloc/now_playing_cubit.dart';
 import 'presentation/bloc/player_style_cubit.dart';
 
@@ -58,5 +62,11 @@ void registerPlayer(GetIt sl) {
     )
     ..registerFactory(() => LoadPlayerStyle(sl()))
     ..registerFactory(() => SavePlayerStyle(sl()))
-    ..registerFactory(() => PlayerStyleCubit(loadStyle: sl(), saveStyle: sl()));
+    ..registerFactory(() => PlayerStyleCubit(loadStyle: sl(), saveStyle: sl()))
+    ..registerLazySingleton<MixWithOthersRepository>(
+      () => PrefsMixWithOthersRepository(sl()),
+    )
+    ..registerFactory(() => LoadMixWithOthers(sl()))
+    ..registerFactory(() => SaveMixWithOthers(sl()))
+    ..registerFactory(() => MixWithOthersCubit(loadMix: sl(), saveMix: sl()));
 }
