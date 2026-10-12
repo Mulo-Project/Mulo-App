@@ -34,6 +34,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get actionPause => '일시정지';
 
   @override
+  String get playerFloatExpand => '미니 플레이어로 돌아가기';
+
+  @override
   String get actionNext => '다음 곡';
 
   @override
