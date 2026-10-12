@@ -8,6 +8,10 @@ class PlatformAudioOutputRepository implements AudioOutputRepository {
   final AudioOutputSource _source;
 
   @override
+  @override
+  Stream<void> watchChanges() => _source.changes;
+
+  @override
   Future<AudioOutput?> current() async {
     final m = await _source.current();
     if (m == null) return null;

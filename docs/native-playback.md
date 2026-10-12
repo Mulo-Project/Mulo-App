@@ -20,6 +20,7 @@ Dart 쪽 도메인 인터페이스: `AudioPlayerRepository`(엔진 · 대기열)
 | `getState` | – | 지금 쥐고 있는 스냅샷 (+ `playing` · `positionMs`). 곡이 없으면 null. 앱을 다시 켰을 때 복원용 |
 | `takeOpenPlayerRequest` | – | 알림을 눌러 앱이 **새로 켜졌는지** 한 번 알려 주고 비운다 |
 | `setMixWithOthers` | bool | true면 오디오 포커스를 쓰지 않아 다른 앱 소리와 겹쳐 재생 (기본 false: 뺏기면 멈춤) |
+| `setOutputBehavior` | 맵 `pauseOnDisconnect` `resumeOnConnect` | 이어폰 분리 · 블루투스 끊김 때 일시정지할지(기본 true, `ACTION_AUDIO_BECOMING_NOISY`), 기기가 다시 연결되면 그 때문에 멈춘 재생을 이어갈지(기본 false, 끊긴 뒤 10분 안). 네이티브에도 저장해 앱이 꺼져도 지킨다 |
 | `setSession` | 아래 맵 또는 null | null이면 알림을 치운다 (재생은 그대로) |
 
 `setQueue` 스냅샷 맵: `items`(`id uri title artist album durationMs`의 목록, **Dart가 정한 순서**) `index` `playing` `repeat`(`off` `all` `one`) `positionMs`(없으면 같은 곡을 계속 듣는 것으로 보고 위치를 그대로 둔다) `extras`.
@@ -43,11 +44,16 @@ Dart 쪽 도메인 인터페이스: `AudioPlayerRepository`(엔진 · 대기열)
 | `openPlayer` | – | 앱이 떠 있는 중에 알림을 눌렀다 → 현재 곡의 플레이어 화면을 연다 |
 
 ## 수명 규칙
-- 서비스 · 세션 · **대기열**은 네이티브가 쥔다. 닫기(X)는 재생을 멈추고 알림(포그라운드 서비스)을 치우되 세션은 남기며 다시 재생하면 알림이 돌아온다. 알림 밀어서 지우기는 **재생만 멈추고** 서비스 · 세션은 남긴다.
-- 앱을 끄거나(최근 작업에서 밀기) 화면이 사라져도 **재생은 계속**되고 다음 곡으로 이어진다. 프로세스가 죽으면 대기열도 사라진다 (복원 대상 아님).
+- 서비스 · 세션 · **대기열**은 네이티브가 쥔다. 대기열 · 위치 · 반복 · 알림 내용은 SharedPreferences(`PlaybackStore`)에도 저장해 두어, **프로세스가 죽어도** 블루투스 버튼(`MuloMediaButtonReceiver` → `MuloPlaybackService`)이나 앱 재시작으로 되살린다.
+- **세션 정리 정책**: 닫기(X) · 알림 밀어서 지우기 · 정지 · 반복 없이 끝까지 재생 · 최근 작업에서 밀었는데 멈춰 있던 경우에는 알림을 치우고 미디어 세션을 release하며 이어 재생 불가(`resumable=false`)로 표시한다. 이 상태의 블루투스 / 이어폰 버튼은 무시한다. 대기열은 남아 앱에서 보이고, 앱에서 다시 재생하면 세션이 새로 만들어진다. 일시정지로 알림이 살아 있을 때(`resumable=true`)는 버튼으로 이어 재생하며, 프로세스가 죽었어도 저장된 대기열로 이어 재생한다.
+- 앱을 끄거나(최근 작업에서 밀기) 화면이 사라져도 **재생은 계속**되고 다음 곡으로 이어진다.
 - 앱이 다시 켜지면 Dart가 `getState`로 대기열 · 현재 곡 · 위치 · 반복 · `extras`를 읽어 상태를 복원한다 (보관함에서 사라진 곡은 건너뛰고 네이티브 대기열도 맞춘다). 이때는 네이티브를 다시 움직이지 않는다.
 - 재생 · 일시정지 · 이동 · 이전 · 다음은 Dart 없이도 네이티브가 직접 처리한다 (화면이 사라져도 알림 버튼이 먹는다). 이전은 3초 넘게 들었으면 처음으로, 아니면 이전 곡(첫 곡이면 마지막 곡), 다음은 마지막 곡이면 전체 반복일 때만 처음으로. 좋아요는 Dart에 `command`로 넘긴다.
 - Dart 쪽 셔플 한 바퀴: 셔플 중 `track` 이벤트가 마지막 → 처음으로 감기면 Dart가 새 순서로 스냅샷을 다시 보낸다 (듣던 곡은 그대로). 앱이 꺼진 사이는 같은 순서로 반복한다.
 - 알림을 눌러 앱이 **새로 켜졌을 때**는 복원 · 이동이 끝날 때까지 앱 쪽이 덮개(음표 아이콘)로 첫 화면을 가려서, 홈 → 플레이어로 차례로 넘어가는 것이 보이지 않게 한다.
 - 알림을 누르면 PendingIntent(`com.mulo.app.OPEN_PLAYER`)로 앱을 연다. 앱이 떠 있으면 `openPlayer` 이벤트, 새로 켜졌으면 `takeOpenPlayerRequest`가 true를 준다. Dart는 대기열 복원을 끝낸 뒤 플레이어 화면(`/player`)을 연다.
 - 오디오 포커스: 영상 등으로 빼앗기면 엔진이 멈추고 `playing:false`가 온다. `NowPlayingCubit`이 `isPlaying`을 맞춰 재생 버튼이 다시 먹는다.
+
+## 출력 기기 (Android)
+- `music_app/audio_output`: `current`(지금 출력 기기 `{type, name}`)와, 기기가 연결되거나 끊길 때 네이티브가 Dart로 보내는 `changed`. 앱은 `changed`를 받으면 `current`를 다시 읽어 플레이어(미니 플레이어)의 기기 이름을 바꾼다.
+- 끊김 처리는 ExoPlayer의 `setHandleAudioBecomingNoisy`, 연결 때 이어 재생은 `AudioDeviceCallback`(블루투스 · 유선 · USB 기기가 추가될 때)로 네이티브가 한다. 이어 재생은 **끊김 때문에 멈춘 재생**을, 끊긴 지 10분 안에, 알림을 지우지 않았을 때만 한다 (프로세스가 살아 있을 때).

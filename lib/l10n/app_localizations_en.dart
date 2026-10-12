@@ -475,6 +475,28 @@ class AppLocalizationsEn extends AppLocalizations {
       'Keep playing when another app makes sound. Audio may overlap and get loud';
 
   @override
+  String get settingsPauseOnDisconnect => 'Pause when device disconnects';
+
+  @override
+  String get settingsPauseOnDisconnectDesc =>
+      'Stop playback when earphones are unplugged or Bluetooth disconnects';
+
+  @override
+  String get settingsResumeOnConnect => 'Resume when device connects';
+
+  @override
+  String get settingsResumeOnConnectDesc =>
+      'If playback stopped because of a disconnect, resume when a device reconnects within 10 minutes';
+
+  @override
+  String get settingsResumeWithoutNotification =>
+      'Play from Bluetooth without a notification';
+
+  @override
+  String get settingsResumeWithoutNotificationDesc =>
+      'Even after you dismiss the notification or playback ends, the play button on a Bluetooth device resumes the last song';
+
+  @override
   String get playerStyleTitle => 'Player theme';
 
   @override
@@ -2095,6 +2117,71 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get equalizerEnableDesc =>
       'Shapes the sound with the settings below. Off by default';
+
+  @override
+  String get equalizerDeviceProfile => 'Save for this device only';
+
+  @override
+  String equalizerDeviceProfileDesc(String device) {
+    return 'Applies these settings automatically when $device is connected';
+  }
+
+  @override
+  String get equalizerMyPresets => 'My presets';
+
+  @override
+  String get equalizerMyPresetsHint => 'Long-press to delete';
+
+  @override
+  String get equalizerPresetSaveNew => 'Save current';
+
+  @override
+  String get equalizerPresetNameTitle => 'Preset name';
+
+  @override
+  String get equalizerPresetNameHint => 'e.g. Earbuds, Car';
+
+  @override
+  String get equalizerPresetSave => 'Save';
+
+  @override
+  String get equalizerPresetDeleteTitle => 'Delete preset';
+
+  @override
+  String equalizerPresetDeleteBody(String name) {
+    return 'Delete \"$name\"? Devices using it keep their last values';
+  }
+
+  @override
+  String get equalizerDevicesTitle => 'Equalizer per device';
+
+  @override
+  String get equalizerDevicesEmpty =>
+      'No Bluetooth or earphone devices connected yet';
+
+  @override
+  String get equalizerDeviceDefault => 'Default settings';
+
+  @override
+  String get equalizerDeviceCustom => 'Custom';
+
+  @override
+  String get equalizerDeviceEdit => 'Edit in equalizer';
+
+  @override
+  String get equalizerEditingDevice => 'Editing the settings for this device';
+
+  @override
+  String get equalizerDeviceCurrent => 'Connected now';
+
+  @override
+  String equalizerDevicePickTitle(String device) {
+    return 'Preset for $device';
+  }
+
+  @override
+  String get equalizerDeviceNoPresets =>
+      'Create a preset first with \"Save current\" on the equalizer screen';
 
   @override
   String get equalizerPreset => 'Presets';

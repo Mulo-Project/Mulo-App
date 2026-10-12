@@ -46,6 +46,8 @@ import 'package:music_download_play_app/features/equalizer/di.dart';
 import 'package:music_download_play_app/features/equalizer/domain/entities/equalizer_settings.dart';
 import 'package:music_download_play_app/features/equalizer/domain/repositories/equalizer_repository.dart';
 import 'package:music_download_play_app/features/player/domain/repositories/mix_with_others_repository.dart';
+import 'package:music_download_play_app/features/player/domain/entities/output_behavior.dart';
+import 'package:music_download_play_app/features/player/domain/repositories/output_behavior_repository.dart';
 import 'package:music_download_play_app/features/player/domain/repositories/player_style_repository.dart';
 import 'package:music_download_play_app/features/playlists/di.dart';
 import 'package:music_download_play_app/features/playlists/domain/entities/playlist.dart';
@@ -408,6 +410,19 @@ class MemoryMixWithOthersRepository implements MixWithOthersRepository {
   Future<void> apply(bool v) async {}
 }
 
+class MemoryOutputBehaviorRepository implements OutputBehaviorRepository {
+  OutputBehavior value = const OutputBehavior();
+
+  @override
+  Future<OutputBehavior> load() async => value;
+
+  @override
+  Future<void> save(OutputBehavior v) async => value = v;
+
+  @override
+  Future<void> apply(OutputBehavior v) async {}
+}
+
 class MemoryEqualizerRepository implements EqualizerRepository {
   MemoryEqualizerRepository({
     this.info,
@@ -427,6 +442,40 @@ class MemoryEqualizerRepository implements EqualizerRepository {
 
   @override
   Future<void> save(EqualizerSettings s) async => settings = s;
+
+  @override
+  Future<void> setDeviceProfile(bool enabled, EqualizerSettings s) async {}
+
+  @override
+  Stream<void> watchDevice() => const Stream.empty();
+
+  @override
+  Future<EqualizerSetup> loadForDevice(String deviceKey) => load();
+
+  @override
+  Future<void> saveForDevice(String deviceKey, EqualizerSettings s) async =>
+      settings = s;
+
+  final List<EqualizerUserPreset> userPresets = [];
+
+  @override
+  Future<List<EqualizerUserPreset>> presets() async => [...userPresets];
+
+  @override
+  Future<void> savePreset(EqualizerUserPreset preset) async {
+    userPresets.removeWhere((p) => p.id == preset.id);
+    userPresets.add(preset);
+  }
+
+  @override
+  Future<void> deletePreset(String id) async =>
+      userPresets.removeWhere((p) => p.id == id);
+
+  @override
+  Future<List<EqualizerDevice>> devices() async => const [];
+
+  @override
+  Future<void> assignPreset(String deviceKey, String? presetId) async {}
 }
 
 class MemoryThemeSettingsRepository implements ThemeSettingsRepository {
@@ -760,6 +809,9 @@ Future<void> setUpTestDependencies({
     )
     ..registerLazySingleton<MixWithOthersRepository>(
       MemoryMixWithOthersRepository.new,
+    )
+    ..registerLazySingleton<OutputBehaviorRepository>(
+      MemoryOutputBehaviorRepository.new,
     )
     ..registerLazySingleton<EqualizerRepository>(MemoryEqualizerRepository.new)
     ..registerLazySingleton<ThemeSettingsRepository>(

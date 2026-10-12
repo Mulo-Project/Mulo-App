@@ -186,7 +186,9 @@ GoRouter createRouter({String initialLocation = Routes.home}) => GoRouter(
               parentNavigatorKey: _rootKey,
               pageBuilder: (context, state) => NoTransitionPage(
                 key: state.pageKey,
-                child: const EqualizerScreen(),
+                child: EqualizerScreen(
+                  deviceKey: state.uri.queryParameters['device'],
+                ),
               ),
             ),
             GoRoute(

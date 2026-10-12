@@ -18,10 +18,12 @@ import '../../../downloads/presentation/bloc/download_settings_cubit.dart';
 import '../../../downloads/presentation/widgets/save_folder_dialog.dart';
 import '../../../engine/presentation/bloc/engine_cubit.dart';
 import '../../../equalizer/presentation/bloc/equalizer_cubit.dart';
+import '../../../equalizer/presentation/widgets/device_equalizer_section.dart';
 import '../../../library/presentation/widgets/loaded_folders_tile.dart';
 import '../../../notifications/presentation/bloc/notification_settings_cubit.dart';
 import '../../../permissions/presentation/widgets/permissions_section.dart';
 import '../../../player/presentation/bloc/mix_with_others_cubit.dart';
+import '../../../player/presentation/bloc/output_behavior_cubit.dart';
 import '../../../player/presentation/bloc/player_style_cubit.dart';
 import '../../../player/presentation/widgets/player_style_sheet.dart';
 import '../../../security/presentation/bloc/app_lock_cubit.dart';
@@ -257,6 +259,48 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         onChanged: context.read<MixWithOthersCubit>().set,
                       ),
                     ),
+                    // 출력 기기 동작은 Android 재생 서비스가 처리한다. 그 밖의 OS에서는 줄을 숨긴다.
+                    if (context.watch<OutputBehaviorCubit>().supported) ...[
+                      SettingRow(
+                        title: l10n.settingsPauseOnDisconnect,
+                        description: l10n.settingsPauseOnDisconnectDesc,
+                        trailing: AppSwitch(
+                          value: context
+                              .watch<OutputBehaviorCubit>()
+                              .state
+                              .pauseOnDisconnect,
+                          onChanged: context
+                              .read<OutputBehaviorCubit>()
+                              .setPauseOnDisconnect,
+                        ),
+                      ),
+                      SettingRow(
+                        title: l10n.settingsResumeOnConnect,
+                        description: l10n.settingsResumeOnConnectDesc,
+                        trailing: AppSwitch(
+                          value: context
+                              .watch<OutputBehaviorCubit>()
+                              .state
+                              .resumeOnConnect,
+                          onChanged: context
+                              .read<OutputBehaviorCubit>()
+                              .setResumeOnConnect,
+                        ),
+                      ),
+                      SettingRow(
+                        title: l10n.settingsResumeWithoutNotification,
+                        description: l10n.settingsResumeWithoutNotificationDesc,
+                        trailing: AppSwitch(
+                          value: context
+                              .watch<OutputBehaviorCubit>()
+                              .state
+                              .resumeWithoutNotification,
+                          onChanged: context
+                              .read<OutputBehaviorCubit>()
+                              .setResumeWithoutNotification,
+                        ),
+                      ),
+                    ],
                     // 이퀄라이저를 쓸 수 없는 환경(Android 밖)에서는 줄을 숨긴다.
                     if (context.watch<EqualizerCubit>().state.supported)
                       SettingRow(
@@ -275,6 +319,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
                 const SizedBox(height: AppSpacing.lg),
+                const DeviceEqualizerSection(),
                 const SubscriptionsSection(),
                 const SizedBox(height: AppSpacing.lg),
                 const PermissionsSection(),

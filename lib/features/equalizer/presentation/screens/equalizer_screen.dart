@@ -6,11 +6,16 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../domain/entities/equalizer_settings.dart';
 import '../bloc/equalizer_cubit.dart';
+import '../bloc/equalizer_library_cubit.dart';
+import '../widgets/device_equalizer_section.dart';
 
 /// 이퀄라이저: 켜고 끄기 · 프리셋 · 대역별 조절 · 효과. 손대는 즉시 소리에 반영되고,
 /// "저장"을 눌러야 저장된다 (저장하지 않고 나가면 저장된 값으로 되돌아간다).
 class EqualizerScreen extends StatefulWidget {
-  const EqualizerScreen({super.key});
+  const EqualizerScreen({super.key, this.deviceKey});
+
+  /// 지금 기기가 아니라 이 기기(열쇠)의 값을 고친다. null이면 지금 연결된 기기.
+  final String? deviceKey;
 
   @override
   State<EqualizerScreen> createState() => _EqualizerScreenState();
@@ -20,8 +25,16 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
   late final EqualizerCubit _cubit = context.read<EqualizerCubit>();
 
   @override
+  void initState() {
+    super.initState();
+    final key = widget.deviceKey;
+    if (key != null) _cubit.editDevice(key);
+  }
+
+  @override
   void dispose() {
     _cubit.discard();
+    if (widget.deviceKey != null) _cubit.editDevice(null);
     super.dispose();
   }
 
@@ -80,6 +93,25 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
                                   onChanged: cubit.setEnabled,
                                 ),
                               ),
+                              if (state.device case final device?) ...[
+                                if (widget.deviceKey != null)
+                                  SettingRow(
+                                    title: deviceLabel(l10n, device),
+                                    description: l10n.equalizerEditingDevice,
+                                  )
+                                else
+                                  SettingRow(
+                                    title: l10n.equalizerDeviceProfile,
+                                    description: l10n
+                                        .equalizerDeviceProfileDesc(
+                                          deviceLabel(l10n, device),
+                                        ),
+                                    trailing: AppSwitch(
+                                      value: device.hasProfile,
+                                      onChanged: cubit.setDeviceProfile,
+                                    ),
+                                  ),
+                              ],
                               divider(),
                               gap(AppSpacing.sm),
                               padded(_Label(l10n.equalizerPreset)),
@@ -101,6 +133,61 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
                                               : null,
                                         ),
                                   ],
+                                ),
+                              ),
+                              gap(),
+                              padded(_Label(l10n.equalizerMyPresets)),
+                              padded(
+                                BlocBuilder<
+                                  EqualizerLibraryCubit,
+                                  EqualizerLibraryState
+                                >(
+                                  builder: (context, lib) => Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Wrap(
+                                        spacing: AppSpacing.xs,
+                                        runSpacing: AppSpacing.xs,
+                                        children: [
+                                          for (final preset in lib.presets)
+                                            GestureDetector(
+                                              onLongPress: () => _confirmDelete(
+                                                context,
+                                                preset,
+                                              ),
+                                              child: PillButton(
+                                                compact: true,
+                                                variant: PillVariant.tonal,
+                                                label: preset.name,
+                                                onPressed: on
+                                                    ? () =>
+                                                          cubit.applyUserPreset(
+                                                            preset.settings,
+                                                          )
+                                                    : null,
+                                              ),
+                                            ),
+                                          PillButton(
+                                            compact: true,
+                                            icon: AppIcons.add,
+                                            label: l10n.equalizerPresetSaveNew,
+                                            onPressed: () => _askName(
+                                              context,
+                                              state.settings,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      if (lib.presets.isNotEmpty) ...[
+                                        const SizedBox(height: AppSpacing.xs),
+                                        Text(
+                                          l10n.equalizerMyPresetsHint,
+                                          style: text.bodySmall,
+                                        ),
+                                      ],
+                                    ],
+                                  ),
                                 ),
                               ),
                               gap(),
@@ -300,6 +387,90 @@ class _Band extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.xs),
         Text(_hz(hz), style: text.labelSmall),
+      ],
+    );
+  }
+}
+
+/// 지금 값을 새 프리셋으로 저장하려고 이름을 묻는다.
+Future<void> _askName(BuildContext context, EqualizerSettings settings) async {
+  final library = context.read<EqualizerLibraryCubit>();
+  final name = await showDialog<String>(
+    context: context,
+    builder: (_) => const _NameDialog(),
+  );
+  if (name != null) await library.saveNew(name, settings);
+}
+
+Future<void> _confirmDelete(
+  BuildContext context,
+  EqualizerUserPreset preset,
+) async {
+  final library = context.read<EqualizerLibraryCubit>();
+  final ok = await showDialog<bool>(
+    context: context,
+    builder: (context) {
+      final l10n = context.l10n;
+      return AppDialog(
+        title: l10n.equalizerPresetDeleteTitle,
+        body: l10n.equalizerPresetDeleteBody(preset.name),
+        actions: [
+          PillButton(
+            label: l10n.actionCancel,
+            variant: PillVariant.tonal,
+            onPressed: () => Navigator.of(context).pop(false),
+          ),
+          PillButton(
+            label: l10n.equalizerPresetDeleteTitle,
+            icon: AppIcons.delete,
+            onPressed: () => Navigator.of(context).pop(true),
+          ),
+        ],
+      );
+    },
+  );
+  if (ok == true) await library.delete(preset.id);
+}
+
+class _NameDialog extends StatefulWidget {
+  const _NameDialog();
+
+  @override
+  State<_NameDialog> createState() => _NameDialogState();
+}
+
+class _NameDialogState extends State<_NameDialog> {
+  final _name = TextEditingController();
+
+  @override
+  void dispose() {
+    _name.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    if (_name.text.trim().isEmpty) return;
+    Navigator.of(context).pop(_name.text);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return AppDialog(
+      title: l10n.equalizerPresetNameTitle,
+      content: AppTextField(
+        label: l10n.equalizerPresetNameHint,
+        controller: _name,
+        textInputAction: TextInputAction.done,
+        onSubmitted: (_) => _save(),
+      ),
+      actions: [
+        PillButton(
+          label: l10n.actionCancel,
+          variant: PillVariant.tonal,
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        PillButton(label: l10n.equalizerPresetSave, onPressed: _save),
       ],
     );
   }

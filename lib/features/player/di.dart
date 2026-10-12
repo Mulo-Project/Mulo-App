@@ -10,17 +10,21 @@ import 'data/repositories/just_audio_player_repository.dart';
 import 'data/repositories/native_audio_player_repository.dart';
 import 'data/repositories/platform_audio_output_repository.dart';
 import 'data/repositories/prefs_mix_with_others_repository.dart';
+import 'data/repositories/prefs_output_behavior_repository.dart';
 import 'data/repositories/prefs_player_style_repository.dart';
 import 'domain/repositories/audio_output_repository.dart';
 import 'domain/repositories/audio_player_repository.dart';
 import 'domain/usecases/audio_playback_usecases.dart';
 import 'domain/repositories/mix_with_others_repository.dart';
+import 'domain/repositories/output_behavior_repository.dart';
 import 'domain/repositories/player_style_repository.dart';
 import 'domain/usecases/get_audio_output.dart';
 import 'domain/usecases/mix_with_others_usecases.dart';
+import 'domain/usecases/output_behavior_usecases.dart';
 import 'domain/usecases/player_style_usecases.dart';
 import 'presentation/bloc/audio_output_cubit.dart';
 import 'presentation/bloc/mix_with_others_cubit.dart';
+import 'presentation/bloc/output_behavior_cubit.dart';
 import 'presentation/bloc/now_playing_cubit.dart';
 import 'presentation/bloc/player_style_cubit.dart';
 
@@ -56,7 +60,8 @@ void registerPlayer(GetIt sl) {
       () => PlatformAudioOutputRepository(sl()),
     )
     ..registerFactory(() => GetAudioOutput(sl()))
-    ..registerFactory(() => AudioOutputCubit(sl()))
+    ..registerFactory(() => AudioOutputCubit(sl(), sl()))
+    ..registerFactory(() => WatchAudioOutputChanges(sl()))
     ..registerLazySingleton<PlayerStyleRepository>(
       PrefsPlayerStyleRepository.new,
     )
@@ -68,5 +73,13 @@ void registerPlayer(GetIt sl) {
     )
     ..registerFactory(() => LoadMixWithOthers(sl()))
     ..registerFactory(() => SaveMixWithOthers(sl()))
-    ..registerFactory(() => MixWithOthersCubit(loadMix: sl(), saveMix: sl()));
+    ..registerFactory(() => MixWithOthersCubit(loadMix: sl(), saveMix: sl()))
+    ..registerLazySingleton<OutputBehaviorRepository>(
+      () => PrefsOutputBehaviorRepository(sl()),
+    )
+    ..registerFactory(() => LoadOutputBehavior(sl()))
+    ..registerFactory(() => SaveOutputBehavior(sl()))
+    ..registerFactory(
+      () => OutputBehaviorCubit(loadBehavior: sl(), saveBehavior: sl()),
+    );
 }

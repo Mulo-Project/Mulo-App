@@ -3,10 +3,14 @@ package com.mulo.app
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.media.AudioDeviceCallback
+import android.media.AudioDeviceInfo
+import android.media.AudioManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -36,6 +40,7 @@ import io.flutter.plugin.common.MethodChannel
  * 앱(Dart)에는 [PlaybackChannel]로 명령을 받고 이벤트를 돌려준다. 모든 호출은 메인 스레드.
  */
 object PlaybackHub {
+    private const val RESUME_WINDOW_MS = 10 * 60 * 1000L
     private const val ACTION_FAVORITE = "com.mulo.app.FAVORITE"
     private const val ACTION_CLOSE = "com.mulo.app.CLOSE"
     const val ACTION_OPEN_PLAYER = "com.mulo.app.OPEN_PLAYER"
@@ -49,7 +54,9 @@ object PlaybackHub {
         private set
     lateinit var sessionPlayer: SessionPlayer
         private set
-    lateinit var session: MediaSession
+
+    /** 미디어 세션. 알림을 지웠거나 재생을 끝낸 뒤에는 정리(release)되어 null이고, 다시 재생하면 새로 만든다. */
+    var session: MediaSession? = null
         private set
 
     /** 알림 서비스 (떠 있을 때만). */
@@ -59,8 +66,25 @@ object PlaybackHub {
     var isNotificationVisible = false
         private set
 
-    /** 닫기(X)로 알림을 치운 상태: 다시 재생하기 전까지 알림을 띄우지 않는다. */
+    /**
+     * 사용자가 알림을 지웠거나(닫기 · 밀어서 지우기) 재생을 끝낸 상태: 세션을 정리해 두고,
+     * 앱에서 다시 재생하기 전까지 알림을 띄우지 않으며 블루투스 · 이어폰 버튼도 받지 않는다.
+     */
     private var dismissed = false
+
+    /** 미디어 버튼을 무시해야 하는 상태인지 (서비스가 새로 떴을 때 확인한다). */
+    val isGated get() = dismissed && !resumeWithoutNotification
+
+    /** 알림을 지운 뒤에도 버튼으로 이어 재생하는 설정. */
+    private var resumeWithoutNotification = false
+
+    /** 저장해 둔 대기열로 되살린 상태: 앱(Dart)이 아직 알림 내용을 보내기 전이라 좋아요 버튼은 숨긴다. */
+    private var restoredFromStore = false
+
+    /** 이어폰 분리 · 블루투스 끊김으로 멈춘 시각 (SystemClock). 0이면 그렇게 멈춘 게 아니다. */
+    private var pausedByNoisyAt = 0L
+    private var resumeOnConnect = false
+    private var tickCount = 0
 
     private var sink: EventChannel.EventSink? = null
     private var pendingLoad: MethodChannel.Result? = null
@@ -98,13 +122,32 @@ object PlaybackHub {
                 AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).build(),
                 true,
             )
-            .setHandleAudioBecomingNoisy(true)
+            .setHandleAudioBecomingNoisy(PlaybackStore.pauseOnDisconnect(context))
             .setWakeMode(C.WAKE_MODE_LOCAL)
             .build()
         exo.addListener(playerListener)
         EqualizerEngine.attach(exo.audioSessionId)
+        // 앱 없이 프로세스가 새로 떠도 지금 출력 기기에 맞는 이퀄라이저 값을 적용한다.
+        EqualizerProfiles.applyCurrent(context)
 
         sessionPlayer = SessionPlayer(exo) { name, positionMs -> emitCommand(name, positionMs) }
+        resumeOnConnect = PlaybackStore.resumeOnConnect(context)
+        resumeWithoutNotification = PlaybackStore.resumeWithoutNotification(context)
+        (context.getSystemService(Context.AUDIO_SERVICE) as AudioManager)
+            .registerAudioDeviceCallback(deviceCallback, main)
+
+        // 프로세스가 새로 떴다면 저장해 둔 대기열을 되살린다 (블루투스 버튼 · 앱 재시작으로 이어 재생).
+        val stored = PlaybackStore.load(context)
+        if (stored != null) {
+            restore(stored)
+            dismissed = !stored.resumable
+            // 이어 재생할 수 있는 상태면 서비스가 뜰 때 알림에도 올린다.
+            isNotificationVisible = stored.resumable
+        }
+        if (!dismissed) buildSession()
+    }
+
+    private fun buildSession() {
         val builder = MediaSession.Builder(context, sessionPlayer)
             .setId("mulo")
             .setCallback(sessionCallback)
@@ -116,6 +159,73 @@ object PlaybackHub {
             PendingIntent.getActivity(context, 0, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT),
         )
         session = builder.build()
+        refreshLayout()
+    }
+
+    private fun releaseSession() {
+        session?.release()
+        session = null
+    }
+
+    /** 저장해 둔 대기열을 플레이어에 올린다. 소리는 내지 않고(일시정지), 재생이 시작될 때 준비한다. */
+    private fun restore(stored: StoredPlayback) {
+        extras = stored.extras
+        artById = stored.items.mapNotNull { i -> i.art?.let { i.id to it } }.toMap()
+        exo.repeatMode = repeatModeOf(stored.repeat)
+        exo.setMediaItems(
+            stored.items.map { i ->
+                val metadata = MediaMetadata.Builder()
+                    .setTitle(i.title)
+                    .setArtist(i.artist.ifEmpty { null })
+                    .setAlbumTitle(i.album.ifEmpty { null })
+                    .setDurationMs(i.durationMs.takeIf { it > 0 })
+                    .setArtworkUri(i.art?.let { Uri.parse(it) })
+                    .build()
+                MediaItem.Builder().setMediaId(i.id).setUri(i.uri).setMediaMetadata(metadata).build()
+            },
+            stored.index,
+            stored.positionMs,
+        )
+        exo.playWhenReady = false
+        val saved = SessionInfo(stored.session ?: emptyMap<String, Any?>())
+        // 저장된 알림 내용은 미리 듣기가 아닌 메인 재생의 것만 쓴다.
+        sessionPlayer.info = if (saved.preview) SessionInfo(emptyMap<String, Any?>()) else saved
+        restoredFromStore = true
+    }
+
+    // ── 저장 ──
+
+    private fun persistQueue() {
+        if (!initialized) return
+        if (exo.mediaItemCount == 0) {
+            PlaybackStore.clear(context)
+            return
+        }
+        val items = (0 until exo.mediaItemCount).map { i ->
+            val item = exo.getMediaItemAt(i)
+            StoredItem(
+                id = item.mediaId,
+                uri = item.localConfiguration?.uri?.toString() ?: "",
+                title = item.mediaMetadata.title?.toString() ?: "",
+                artist = item.mediaMetadata.artist?.toString() ?: "",
+                album = item.mediaMetadata.albumTitle?.toString() ?: "",
+                durationMs = item.mediaMetadata.durationMs ?: 0L,
+                art = item.mediaMetadata.artworkUri?.toString(),
+            )
+        }
+        PlaybackStore.saveQueue(context, items, extras)
+        persistPosition()
+        syncResumable()
+    }
+
+    private fun persistPosition() {
+        if (!initialized || exo.mediaItemCount == 0) return
+        PlaybackStore.savePosition(context, exo.currentMediaItemIndex, exo.currentPosition, repeatNameOf(exo.repeatMode))
+    }
+
+    /** 이어 재생해도 되는 상태인지 저장한다: 알림을 지우지 않았고 대기열이 있을 때. */
+    private fun syncResumable() {
+        PlaybackStore.setResumable(context, (!dismissed || resumeWithoutNotification) && exo.mediaItemCount > 0)
     }
 
     // ── Dart → 네이티브 ──
@@ -163,10 +273,11 @@ object PlaybackHub {
         if (items.isEmpty()) {
             exo.stop()
             exo.clearMediaItems()
+            persistQueue()
             result.success(null)
             return
         }
-        dismissed = false
+        revive()
         val index = ((map["index"] as? Number)?.toInt() ?: 0).coerceIn(0, items.size - 1)
         val mediaItems = items.map { mediaItemOf(it) }
         val keepCurrent = exo.mediaItemCount > 0 &&
@@ -183,6 +294,7 @@ object PlaybackHub {
             if (positionMs != null) exo.seekTo(positionMs)
             exo.playWhenReady = playing
             sessionPlayer.refresh()
+            persistQueue()
             result.success(null)
         } else {
             pendingLoad = result
@@ -190,26 +302,38 @@ object PlaybackHub {
             exo.playWhenReady = playing
             exo.prepare()
             sessionPlayer.refresh()
+            persistQueue()
         }
+    }
+
+    /** 앱에서 다시 재생을 시작한다: 정리해 둔 세션을 되살리고 이어폰 분리로 멈춘 기록을 비운다. */
+    private fun revive() {
+        pausedByNoisyAt = 0L
+        if (!dismissed && session != null) return
+        dismissed = false
+        if (session == null) buildSession()
+        syncResumable()
     }
 
     /** 대기열은 그대로 두고 [index]번 곡으로 처음부터 옮긴다. */
     fun skipTo(index: Int) {
         if (index < 0 || index >= exo.mediaItemCount) return
-        dismissed = false
+        revive()
         exo.seekTo(index, 0L)
         if (exo.playbackState == Player.STATE_IDLE) exo.prepare()
     }
 
     fun play() {
         if (exo.mediaItemCount == 0) return
-        dismissed = false
+        revive()
         // 끝까지 들은 곡은 처음부터 다시.
         if (exo.playbackState == Player.STATE_ENDED) exo.seekTo(0)
+        if (exo.playbackState == Player.STATE_IDLE) exo.prepare()
         exo.playWhenReady = true
     }
 
     fun pause() {
+        pausedByNoisyAt = 0L
         exo.playWhenReady = false
     }
 
@@ -238,6 +362,7 @@ object PlaybackHub {
             val metadata = item.mediaMetadata.buildUpon().setArtworkUri(art).build()
             exo.replaceMediaItem(i, item.buildUpon().setMediaMetadata(metadata).build())
         }
+        persistQueue()
     }
 
     /** 지금 쥐고 있는 대기열 스냅샷 (앱을 다시 켰을 때 복원용). 곡이 없으면 null. */
@@ -283,14 +408,17 @@ object PlaybackHub {
 
     /** [map]이 null이면 알림을 치운다 (재생은 그대로). */
     fun setSession(map: Map<*, *>?) {
+        restoredFromStore = false
         if (map == null) {
             isNotificationVisible = false
             sessionPlayer.info = null
             service?.hideSession()
+            PlaybackStore.saveSession(context, null)
             return
         }
         val info = SessionInfo(map)
         sessionPlayer.info = info
+        if (!info.preview) PlaybackStore.saveSession(context, map)
         refreshLayout()
         if (dismissed) return
         isNotificationVisible = true
@@ -301,14 +429,29 @@ object PlaybackHub {
     /** 알림 버튼 모양을 다시 맞춘다 (좋아요 모양은 Dart가 아는 현재 곡일 때만 보인다). */
     private fun refreshLayout() {
         val info = sessionPlayer.info ?: return
-        session.setCustomLayout(customLayout(info, sessionPlayer.infoMatchesCurrent()))
+        session?.setCustomLayout(customLayout(info, sessionPlayer.infoMatchesCurrent() && !restoredFromStore))
     }
 
-    /** 닫기(X): 재생을 멈추고 알림(포그라운드 서비스)을 치운다. 세션 · 프로세스는 남고, 다시 재생하면 알림이 돌아온다. */
-    private fun dismissNotification() {
+    /**
+     * 세션 정리: 닫기(X) · 알림 밀어서 지우기 · 끝까지 재생 · 앱을 밀었는데 멈춰 있을 때.
+     * 알림을 치우고 미디어 세션을 release해서 이어폰 · 차량 버튼이 곡을 저절로 켜지 않게 한다.
+     * 대기열은 남아 있어(앱을 열면 보인다) 앱에서 다시 재생하면 세션이 새로 만들어진다.
+     */
+    fun endSession() {
+        if (!initialized) return
+        exo.pause()
+        pausedByNoisyAt = 0L
         dismissed = true
         isNotificationVisible = false
         service?.hideSession()
+        releaseSession()
+        persistPosition()
+        syncResumable()
+    }
+
+    /** 세션 안에서 불린 정리 요청은 콜백이 끝난 뒤에 처리한다 (세션을 쓰는 중에 release하지 않게). */
+    fun endSessionSoon() {
+        main.post { endSession() }
     }
 
     private fun ensureService() {
@@ -353,6 +496,8 @@ object PlaybackHub {
         override fun run() {
             if (!exo.isPlaying) return
             emit(mapOf("type" to "position", "ms" to exo.currentPosition))
+            // 위치는 5초마다 저장한다 (프로세스가 죽어도 거의 그 자리에서 이어진다).
+            if (++tickCount % 20 == 0) persistPosition()
             main.postDelayed(this, 250)
         }
     }
@@ -367,6 +512,7 @@ object PlaybackHub {
         }
 
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+            persistPosition()
             // 현재 곡이 바뀌었으니 좋아요 버튼 모양을 다시 맞춘다 (앱이 모르는 곡이면 숨긴다).
             refreshLayout()
             // 목록을 바꾸느라 생긴 전환은 앱이 시킨 것이라 알리지 않는다.
@@ -376,19 +522,19 @@ object PlaybackHub {
 
         override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
             if (reason == Player.PLAY_WHEN_READY_CHANGE_REASON_END_OF_MEDIA_ITEM) return
-            if (playWhenReady && dismissed) {
-                // 이어폰 · 다른 경로로 다시 재생이 시작됐다: 알림도 다시 띄운다.
-                dismissed = false
-                isNotificationVisible = true
-                ensureService()
-                service?.showSession()
+            // 이어폰 분리 · 블루투스 끊김으로 멈췄는지 기억해 둔다 (다시 연결되면 이어 재생하는 설정용).
+            pausedByNoisyAt = if (!playWhenReady && reason == Player.PLAY_WHEN_READY_CHANGE_REASON_AUDIO_BECOMING_NOISY) {
+                SystemClock.elapsedRealtime()
+            } else {
+                0L
             }
+            persistPosition()
             emit(mapOf("type" to "playing", "value" to playWhenReady))
         }
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             main.removeCallbacks(ticker)
-            if (isPlaying) main.post(ticker)
+            if (isPlaying) main.post(ticker) else persistPosition()
         }
 
         override fun onPlaybackStateChanged(playbackState: Int) {
@@ -396,8 +542,11 @@ object PlaybackHub {
                 pendingLoad?.success(null)
                 pendingLoad = null
             }
-            // 반복 없이 대기열 끝까지 들었다.
-            if (playbackState == Player.STATE_ENDED) emit(mapOf("type" to "ended"))
+            // 반복 없이 대기열 끝까지 들었다: 앱에 알리고 세션을 정리한다.
+            if (playbackState == Player.STATE_ENDED) {
+                emit(mapOf("type" to "ended"))
+                endSessionSoon()
+            }
         }
 
         override fun onPositionDiscontinuity(
@@ -424,8 +573,53 @@ object PlaybackHub {
             } else {
                 exo.pause()
                 emit(mapOf("type" to "ended"))
+                endSessionSoon()
             }
         }
+    }
+
+    /** 출력 기기가 새로 연결됐다: 이어폰 분리로 멈춘 재생을 설정에 따라 이어서 재생한다. */
+    private val deviceCallback = object : AudioDeviceCallback() {
+        override fun onAudioDevicesRemoved(removedDevices: Array<out AudioDeviceInfo>) {
+            EqualizerProfiles.onOutputChanged(context)
+        }
+
+        override fun onAudioDevicesAdded(addedDevices: Array<out AudioDeviceInfo>) {
+            EqualizerProfiles.remember(context, addedDevices)
+            // 기기가 바뀌었으니 그 기기 전용 이퀄라이저 값을 적용한다.
+            EqualizerProfiles.onOutputChanged(context)
+            if (!resumeOnConnect || pausedByNoisyAt == 0L || dismissed || exo.mediaItemCount == 0) return
+            if (addedDevices.none { AudioOutputs.isHeadset(it) }) return
+            // 오래 전에 멈춘 재생이 갑자기 켜지지 않게 10분 안에 다시 연결됐을 때만.
+            if (SystemClock.elapsedRealtime() - pausedByNoisyAt > RESUME_WINDOW_MS) {
+                pausedByNoisyAt = 0L
+                return
+            }
+            play()
+        }
+    }
+
+    /** 정리된 세션을 미디어 버튼이 되살린다 (알림을 지운 뒤에도 이어 재생하는 설정일 때). */
+    fun reviveForButton() {
+        if (!dismissed || !initialized) return
+        revive()
+        if (sessionPlayer.info != null) {
+            isNotificationVisible = true
+            service?.showSession()
+        }
+    }
+
+    fun setResumeWithoutNotification(value: Boolean) {
+        PlaybackStore.setResumeWithoutNotification(context, value)
+        resumeWithoutNotification = value
+        syncResumable()
+    }
+
+    /** 출력 기기 동작 설정 (앱이 꺼져도 지켜야 해서 네이티브에도 저장한다). */
+    fun setOutputBehavior(pauseOnDisconnect: Boolean, resumeOnConnect: Boolean) {
+        PlaybackStore.saveOutputBehavior(context, pauseOnDisconnect, resumeOnConnect)
+        this.resumeOnConnect = resumeOnConnect
+        exo.setHandleAudioBecomingNoisy(pauseOnDisconnect)
     }
 
     private val sessionCallback = object : MediaSession.Callback {
@@ -439,6 +633,13 @@ object PlaybackHub {
                 .build()
         }
 
+        // 이어폰 · 차량의 미디어 버튼. 알림을 지웠거나 재생을 끝낸 뒤라면 받지 않는다.
+        override fun onMediaButtonEvent(
+            session: MediaSession,
+            controllerInfo: MediaSession.ControllerInfo,
+            intent: Intent,
+        ): Boolean = isGated
+
         override fun onCustomCommand(
             session: MediaSession,
             controller: MediaSession.ControllerInfo,
@@ -449,10 +650,7 @@ object PlaybackHub {
                 ACTION_FAVORITE -> emitCommand("favorite", null)
                 // 닫기(X): 재생을 멈추고 알림을 치운다 (미리 듣기면 Dart가 미리 듣기를 끝낸다).
                 ACTION_CLOSE -> {
-                    if (sessionPlayer.info?.preview != true) {
-                        exo.pause()
-                        dismissNotification()
-                    }
+                    if (sessionPlayer.info?.preview != true) endSessionSoon()
                     emitCommand("stop", null)
                 }
             }

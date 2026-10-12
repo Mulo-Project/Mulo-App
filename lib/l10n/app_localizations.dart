@@ -962,6 +962,42 @@ abstract class AppLocalizations {
   /// **'다른 앱에서 소리가 나도 멈추지 않고 같이 들려요. 소리가 겹쳐 시끄러울 수 있어요'**
   String get settingsMixWithOthersDesc;
 
+  /// No description provided for @settingsPauseOnDisconnect.
+  ///
+  /// In ko, this message translates to:
+  /// **'기기가 끊기면 일시정지'**
+  String get settingsPauseOnDisconnect;
+
+  /// No description provided for @settingsPauseOnDisconnectDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'이어폰을 빼거나 블루투스 연결이 끊기면 재생을 멈춰요'**
+  String get settingsPauseOnDisconnectDesc;
+
+  /// No description provided for @settingsResumeOnConnect.
+  ///
+  /// In ko, this message translates to:
+  /// **'기기가 연결되면 이어 재생'**
+  String get settingsResumeOnConnect;
+
+  /// No description provided for @settingsResumeOnConnectDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'끊겨서 멈춘 재생을 10분 안에 다시 연결하면 이어서 재생해요'**
+  String get settingsResumeOnConnectDesc;
+
+  /// No description provided for @settingsResumeWithoutNotification.
+  ///
+  /// In ko, this message translates to:
+  /// **'알림이 없어도 블루투스로 재생'**
+  String get settingsResumeWithoutNotification;
+
+  /// No description provided for @settingsResumeWithoutNotificationDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'알림을 지웠거나 재생이 끝난 뒤에도 블루투스 기기의 재생 버튼으로 마지막 곡을 이어서 재생해요'**
+  String get settingsResumeWithoutNotificationDesc;
+
   /// No description provided for @playerStyleTitle.
   ///
   /// In ko, this message translates to:
@@ -3859,6 +3895,120 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'켜면 아래 설정대로 소리를 다듬어요. 기본은 꺼짐이에요'**
   String get equalizerEnableDesc;
+
+  /// No description provided for @equalizerDeviceProfile.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 기기 전용으로 저장'**
+  String get equalizerDeviceProfile;
+
+  /// No description provided for @equalizerDeviceProfileDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'{device}에 연결되면 이 설정을 자동으로 적용해요'**
+  String equalizerDeviceProfileDesc(String device);
+
+  /// No description provided for @equalizerMyPresets.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 프리셋'**
+  String get equalizerMyPresets;
+
+  /// No description provided for @equalizerMyPresetsHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'길게 누르면 지워요'**
+  String get equalizerMyPresetsHint;
+
+  /// No description provided for @equalizerPresetSaveNew.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금 값 저장'**
+  String get equalizerPresetSaveNew;
+
+  /// No description provided for @equalizerPresetNameTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'프리셋 이름'**
+  String get equalizerPresetNameTitle;
+
+  /// No description provided for @equalizerPresetNameHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'예: 이어폰용, 차량용'**
+  String get equalizerPresetNameHint;
+
+  /// No description provided for @equalizerPresetSave.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장'**
+  String get equalizerPresetSave;
+
+  /// No description provided for @equalizerPresetDeleteTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'프리셋 지우기'**
+  String get equalizerPresetDeleteTitle;
+
+  /// No description provided for @equalizerPresetDeleteBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'\"{name}\" 프리셋을 지워요. 이 프리셋을 지정한 기기는 마지막 값을 그대로 써요'**
+  String equalizerPresetDeleteBody(String name);
+
+  /// No description provided for @equalizerDevicesTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'기기별 이퀄라이저'**
+  String get equalizerDevicesTitle;
+
+  /// No description provided for @equalizerDevicesEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 연결된 블루투스 · 이어폰 기기가 없어요'**
+  String get equalizerDevicesEmpty;
+
+  /// No description provided for @equalizerDeviceDefault.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 설정'**
+  String get equalizerDeviceDefault;
+
+  /// No description provided for @equalizerDeviceCustom.
+  ///
+  /// In ko, this message translates to:
+  /// **'직접 설정'**
+  String get equalizerDeviceCustom;
+
+  /// No description provided for @equalizerDeviceEdit.
+  ///
+  /// In ko, this message translates to:
+  /// **'이퀄라이저에서 직접 설정'**
+  String get equalizerDeviceEdit;
+
+  /// No description provided for @equalizerEditingDevice.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 기기에 쓸 값을 고치는 중이에요'**
+  String get equalizerEditingDevice;
+
+  /// No description provided for @equalizerDeviceCurrent.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금 연결됨'**
+  String get equalizerDeviceCurrent;
+
+  /// No description provided for @equalizerDevicePickTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'{device}에 쓸 프리셋'**
+  String equalizerDevicePickTitle(String device);
+
+  /// No description provided for @equalizerDeviceNoPresets.
+  ///
+  /// In ko, this message translates to:
+  /// **'이퀄라이저 화면에서 \"지금 값 저장\"으로 프리셋을 먼저 만들어 주세요'**
+  String get equalizerDeviceNoPresets;
 
   /// No description provided for @equalizerPreset.
   ///

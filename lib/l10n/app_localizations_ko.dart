@@ -464,6 +464,26 @@ class AppLocalizationsKo extends AppLocalizations {
       '다른 앱에서 소리가 나도 멈추지 않고 같이 들려요. 소리가 겹쳐 시끄러울 수 있어요';
 
   @override
+  String get settingsPauseOnDisconnect => '기기가 끊기면 일시정지';
+
+  @override
+  String get settingsPauseOnDisconnectDesc => '이어폰을 빼거나 블루투스 연결이 끊기면 재생을 멈춰요';
+
+  @override
+  String get settingsResumeOnConnect => '기기가 연결되면 이어 재생';
+
+  @override
+  String get settingsResumeOnConnectDesc =>
+      '끊겨서 멈춘 재생을 10분 안에 다시 연결하면 이어서 재생해요';
+
+  @override
+  String get settingsResumeWithoutNotification => '알림이 없어도 블루투스로 재생';
+
+  @override
+  String get settingsResumeWithoutNotificationDesc =>
+      '알림을 지웠거나 재생이 끝난 뒤에도 블루투스 기기의 재생 버튼으로 마지막 곡을 이어서 재생해요';
+
+  @override
   String get playerStyleTitle => '플레이어 테마';
 
   @override
@@ -2044,6 +2064,70 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get equalizerEnableDesc => '켜면 아래 설정대로 소리를 다듬어요. 기본은 꺼짐이에요';
+
+  @override
+  String get equalizerDeviceProfile => '이 기기 전용으로 저장';
+
+  @override
+  String equalizerDeviceProfileDesc(String device) {
+    return '$device에 연결되면 이 설정을 자동으로 적용해요';
+  }
+
+  @override
+  String get equalizerMyPresets => '내 프리셋';
+
+  @override
+  String get equalizerMyPresetsHint => '길게 누르면 지워요';
+
+  @override
+  String get equalizerPresetSaveNew => '지금 값 저장';
+
+  @override
+  String get equalizerPresetNameTitle => '프리셋 이름';
+
+  @override
+  String get equalizerPresetNameHint => '예: 이어폰용, 차량용';
+
+  @override
+  String get equalizerPresetSave => '저장';
+
+  @override
+  String get equalizerPresetDeleteTitle => '프리셋 지우기';
+
+  @override
+  String equalizerPresetDeleteBody(String name) {
+    return '\"$name\" 프리셋을 지워요. 이 프리셋을 지정한 기기는 마지막 값을 그대로 써요';
+  }
+
+  @override
+  String get equalizerDevicesTitle => '기기별 이퀄라이저';
+
+  @override
+  String get equalizerDevicesEmpty => '아직 연결된 블루투스 · 이어폰 기기가 없어요';
+
+  @override
+  String get equalizerDeviceDefault => '기본 설정';
+
+  @override
+  String get equalizerDeviceCustom => '직접 설정';
+
+  @override
+  String get equalizerDeviceEdit => '이퀄라이저에서 직접 설정';
+
+  @override
+  String get equalizerEditingDevice => '이 기기에 쓸 값을 고치는 중이에요';
+
+  @override
+  String get equalizerDeviceCurrent => '지금 연결됨';
+
+  @override
+  String equalizerDevicePickTitle(String device) {
+    return '$device에 쓸 프리셋';
+  }
+
+  @override
+  String get equalizerDeviceNoPresets =>
+      '이퀄라이저 화면에서 \"지금 값 저장\"으로 프리셋을 먼저 만들어 주세요';
 
   @override
   String get equalizerPreset => '프리셋';

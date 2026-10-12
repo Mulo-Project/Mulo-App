@@ -170,13 +170,16 @@ class SessionPlayer(
             onCommand(if (playWhenReady) "play" else "pause", null)
         } else if (exo.mediaItemCount > 0) {
             if (playWhenReady && exo.playbackState == Player.STATE_ENDED) exo.seekTo(0)
+            // 저장된 대기열에서 되살린 직후(프로세스가 새로 뜬 뒤)에는 아직 준비되지 않았다.
+            if (playWhenReady && exo.playbackState == Player.STATE_IDLE) exo.prepare()
             exo.playWhenReady = playWhenReady
         }
         return Futures.immediateVoidFuture()
     }
 
     override fun handleStop(): ListenableFuture<*> {
-        if (!previewing) exo.pause()
+        // 알림을 밀어서 지우거나 정지 버튼을 눌렀다: 재생을 멈추고 세션을 정리한다.
+        if (!previewing) PlaybackHub.endSessionSoon()
         onCommand("stop", null)
         return Futures.immediateVoidFuture()
     }
