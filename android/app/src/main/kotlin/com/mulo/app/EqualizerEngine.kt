@@ -31,6 +31,7 @@ object EqualizerEngine {
     private var reverbPreset = 0
     private var limiterOn = true
     private var auxOn = false
+    private var reverbGlobal = false
 
     @Synchronized
     fun attach(newSessionId: Int) {
@@ -90,7 +91,14 @@ object EqualizerEngine {
     private fun ensureReverb() {
         if (reverb == null) {
             reverb = runCatching { PresetReverb(0, 0) }
-                .onFailure { Log.w(TAG, "PresetReverb 생성 실패", it) }.getOrNull()
+                .onFailure { Log.w(TAG, "전역 PresetReverb 생성 실패", it) }.getOrNull()
+            reverbGlobal = reverb != null
+        }
+        // 전역으로 못 만들면 곡 세션에 직접 붙인다 (기기에 따라 효과가 약할 수 있다).
+        if (reverb == null && sessionId != 0) {
+            reverb = runCatching { PresetReverb(0, sessionId) }
+                .onFailure { Log.w(TAG, "세션 PresetReverb 생성 실패", it) }.getOrNull()
+            reverbGlobal = false
         }
     }
 
@@ -125,7 +133,7 @@ object EqualizerEngine {
                 r.enabled = reverbOn
             }
             // 보조 효과는 바뀔 때만 건다 (건드리면 출력이 다시 열릴 수 있다).
-            if (reverbOn != auxOn) {
+            if (reverbGlobal && reverbOn != auxOn) {
                 runCatching {
                     if (reverbOn) PlaybackHub.exo.setAuxEffectInfo(AuxEffectInfo(r.id, 1f))
                     else PlaybackHub.exo.clearAuxEffectInfo()
@@ -161,6 +169,10 @@ object EqualizerEngine {
         runCatching { bassBoost?.release() }
         runCatching { virtualizer?.release() }
         runCatching { limiter?.release() }
+        if (!reverbGlobal) {
+            runCatching { reverb?.release() }
+            reverb = null
+        }
         equalizer = null
         bassBoost = null
         virtualizer = null
