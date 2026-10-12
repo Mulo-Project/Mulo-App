@@ -31,6 +31,7 @@ import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
+import org.json.JSONObject
 
 /**
  * 재생의 주인: 소리를 내는 ExoPlayer, 미디어 세션, 알림 서비스 연결을 프로세스에 하나씩 쥔다.
@@ -94,6 +95,9 @@ object PlaybackHub {
 
     /** 앱(Dart)만 해석하는 문자열 (셔플 여부 · 섞기 전 순서). 그대로 보관했다가 돌려준다. */
     private var extras = ""
+
+    /** 직전에 재생하던 곡의 id (한 바퀴 돌아 첫 곡으로 넘어왔는지 알아보려고). */
+    private var lastMediaId: String? = null
 
     /** 대기열 곡별 커버 주소 (곡 id → 주소). 앱이 꺼진 사이 곡이 넘어가도 알림에 커버가 나오게 한다. */
     private var artById = mapOf<String, String>()
@@ -503,6 +507,31 @@ object PlaybackHub {
         sink?.success(map)
     }
 
+    /** 앱이 저장해 둔 대기열 정보에 셔플이 켜져 있는지. */
+    private val shuffleOn: Boolean
+        get() = try {
+            extras.isNotEmpty() && JSONObject(extras).optBoolean("shuffle", false)
+        } catch (_: Exception) {
+            false
+        }
+
+    /**
+     * 셔플 중 대기열을 한 바퀴 다 돌아 첫 곡으로 넘어왔으면 나머지 곡을 새로 섞는다 (같은 순서로 다시 돌지 않게).
+     * 앱(Dart)이 붙어 있으면 앱이 같은 일을 하므로, 앱을 밀어 서비스만 남았을 때만 여기서 한다.
+     * 지금 곡(첫 곡)은 끊기지 않게 그대로 두고, 방금 들은 곡이 바로 다음에 오지 않게 한다.
+     * 섞기 전 순서(extras의 original)는 그대로라 앱을 다시 열어 셔플을 끄면 원래 순서로 돌아간다.
+     */
+    private fun reshuffleAfterLap(previousId: String?) {
+        val count = exo.mediaItemCount
+        if (sink != null || previousId == null || count < 3 || !shuffleOn) return
+        if (exo.currentMediaItemIndex != 0 || exo.getMediaItemAt(count - 1).mediaId != previousId) return
+        val rest = (1 until count).map { exo.getMediaItemAt(it) }.shuffled().toMutableList()
+        if (rest.first().mediaId == previousId) rest.add(rest.removeAt(0))
+        exo.removeMediaItems(1, count)
+        exo.addMediaItems(rest)
+        persistQueue()
+    }
+
     private fun emitCommand(name: String, positionMs: Long?) {
         emit(mapOf("type" to "command", "name" to name, "positionMs" to positionMs))
     }
@@ -527,6 +556,9 @@ object PlaybackHub {
         }
 
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+            val previousId = lastMediaId
+            lastMediaId = mediaItem?.mediaId
+            if (reason != Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) reshuffleAfterLap(previousId)
             persistPosition()
             // 현재 곡이 바뀌었으니 좋아요 버튼 모양을 다시 맞춘다 (앱이 모르는 곡이면 숨긴다).
             refreshLayout()
