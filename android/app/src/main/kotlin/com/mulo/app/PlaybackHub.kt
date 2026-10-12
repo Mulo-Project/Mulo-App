@@ -431,7 +431,10 @@ object PlaybackHub {
     /** 알림 버튼 모양을 다시 맞춘다 (좋아요 모양은 Dart가 아는 현재 곡일 때만 보인다). */
     private fun refreshLayout() {
         val info = sessionPlayer.info ?: return
-        session?.setCustomLayout(customLayout(info, sessionPlayer.infoMatchesCurrent() && !restoredFromStore))
+        // 좋아요 · 셔플은 Dart가 처리하므로 Dart가 붙어 있을 때만 둔다. 앱을 밀어 화면이 사라진 뒤
+        // (포그라운드 서비스만 남아 재생 중)에는 눌러도 받을 곳이 없어 닫기만 둔다.
+        val dartReady = sink != null
+        session?.setCustomLayout(customLayout(info, dartReady && sessionPlayer.infoMatchesCurrent() && !restoredFromStore))
     }
 
     /**
@@ -492,6 +495,8 @@ object PlaybackHub {
 
     fun setSink(newSink: EventChannel.EventSink?) {
         sink = newSink
+        // Dart가 붙거나 떨어지면 알림 버튼(좋아요 · 셔플 ↔ 닫기)을 다시 맞춘다.
+        if (initialized) main.post { refreshLayout() }
     }
 
     private fun emit(map: Map<String, Any?>) {
