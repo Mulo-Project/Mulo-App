@@ -236,7 +236,7 @@ class _QueueTile extends StatelessWidget {
                   padding: const EdgeInsets.only(right: AppSpacing.xs),
                   child: Icon(
                     playing ? AppIcons.equalizer : AppIcons.pause,
-                    size: 18,
+                    size: AppSizes.iconSm,
                     color: p.accent,
                   ),
                 ),

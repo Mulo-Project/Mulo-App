@@ -467,37 +467,6 @@ class _Hint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    return Padding(
-      padding: AppSpacing.screen,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
-        child: Column(
-          children: [
-            GlassSurface(
-              shape: const CircleBorder(),
-              child: SizedBox.square(
-                dimension: 64,
-                child: Icon(icon, size: 30, color: context.palette.accent),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(title, style: text.titleLarge),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              body,
-              style: text.bodyMedium?.copyWith(
-                color: context.palette.onSurfaceMuted,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            if (action != null) ...[
-              const SizedBox(height: AppSpacing.lg),
-              action!,
-            ],
-          ],
-        ),
-      ),
-    );
+    return EmptyState(icon: icon, title: title, body: body, action: action);
   }
 }

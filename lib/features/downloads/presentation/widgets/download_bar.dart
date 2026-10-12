@@ -202,7 +202,7 @@ class _DownloadBarState extends State<DownloadBar> {
                               _expanded
                                   ? AppIcons.expandLess
                                   : AppIcons.expandMore,
-                              size: 18,
+                              size: AppSizes.iconSm,
                               color: p.onSurfaceMuted,
                             ),
                             const SizedBox(width: AppSpacing.xs),
@@ -350,7 +350,7 @@ class _Thumb extends StatelessWidget {
                 child: Icon(
                   AppIcons.musicNote,
                   color: context.palette.onGlow,
-                  size: 22,
+                  size: AppSizes.icon,
                 ),
               ),
       ),

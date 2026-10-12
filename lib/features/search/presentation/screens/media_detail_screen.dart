@@ -222,7 +222,7 @@ class _DetailViewState extends State<_DetailView> {
                           children: [
                             Icon(
                               AppIcons.info,
-                              size: 18,
+                              size: AppSizes.iconSm,
                               color: p.onSurfaceMuted,
                             ),
                             const SizedBox(width: AppSpacing.xs),

@@ -465,7 +465,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsThemePreviewDesc =>
-      'Browse the real screens with a theme, then apply it';
+      'Browse the real screens with a theme, then apply it.';
 
   @override
   String get settingsPlayback => 'Playback options';
@@ -475,21 +475,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsMixWithOthersDesc =>
-      'Keep playing when another app makes sound. Audio may overlap and get loud';
+      'Keep playing when another app makes sound. Audio may overlap and get loud.';
 
   @override
   String get settingsPauseOnDisconnect => 'Pause when device disconnects';
 
   @override
   String get settingsPauseOnDisconnectDesc =>
-      'Stop playback when earphones are unplugged or Bluetooth disconnects';
+      'Stop playback when earphones are unplugged or Bluetooth disconnects.';
 
   @override
   String get settingsResumeOnConnect => 'Resume when device connects';
 
   @override
   String get settingsResumeOnConnectDesc =>
-      'If playback stopped because of a disconnect, resume when a device reconnects within 10 minutes';
+      'If playback stopped because of a disconnect, resume when a device reconnects within 10 minutes.';
 
   @override
   String get settingsResumeWithoutNotification =>
@@ -497,7 +497,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsResumeWithoutNotificationDesc =>
-      'Even after you dismiss the notification or playback ends, the play button on a Bluetooth device resumes the last song';
+      'Even after you dismiss the notification or playback ends, the play button on a Bluetooth device resumes the last song.';
 
   @override
   String get playerStyleTitle => 'Player theme';
@@ -1726,7 +1726,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsAccountSignedOutDesc =>
-      'Sign in to load your YouTube playlists';
+      'Sign in to load your YouTube playlists.';
 
   @override
   String get settingsAccountSignIn => 'Sign in';
@@ -2119,14 +2119,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get equalizerEnableDesc =>
-      'Shapes the sound with the settings below. Off by default';
+      'Shapes the sound with the settings below. Off by default.';
 
   @override
   String get equalizerDeviceProfile => 'Save for this device only';
 
   @override
   String equalizerDeviceProfileDesc(String device) {
-    return 'Applies these settings automatically when $device is connected';
+    return 'Applies these settings automatically when $device is connected.';
   }
 
   @override
@@ -2196,7 +2196,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get equalizerBassBoost => 'Bass boost';
 
   @override
-  String get equalizerBassBoostDesc => 'Makes low sounds heavier';
+  String get equalizerBassBoostDesc => 'Makes low sounds heavier.';
 
   @override
   String get equalizerReset => 'Reset';
@@ -2235,19 +2235,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get equalizerVirtualizer => 'Spatial sound';
 
   @override
-  String get equalizerVirtualizerDesc => 'Widens the sound on headphones';
+  String get equalizerVirtualizerDesc => 'Widens the sound on headphones.';
 
   @override
   String get equalizerReverb => 'Reverb';
 
   @override
-  String get equalizerReverbDesc => 'Adds the echo of a room or hall';
+  String get equalizerReverbDesc => 'Adds the echo of a room or hall.';
 
   @override
   String get equalizerLimiter => 'Prevent clipping';
 
   @override
-  String get equalizerLimiterDesc => 'Keeps loud sound from distorting';
+  String get equalizerLimiterDesc => 'Keeps loud sound from distorting.';
 
   @override
   String get equalizerReverbNone => 'None';

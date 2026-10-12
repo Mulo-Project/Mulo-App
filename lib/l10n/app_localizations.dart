@@ -947,7 +947,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsThemePreviewDesc.
   ///
   /// In ko, this message translates to:
-  /// **'고른 테마로 앱 화면들을 직접 둘러보고 적용해요'**
+  /// **'고른 테마로 앱 화면들을 직접 둘러보고 적용해요.'**
   String get settingsThemePreviewDesc;
 
   /// No description provided for @settingsPlayback.
@@ -965,7 +965,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsMixWithOthersDesc.
   ///
   /// In ko, this message translates to:
-  /// **'다른 앱에서 소리가 나도 멈추지 않고 같이 들려요. 소리가 겹쳐 시끄러울 수 있어요'**
+  /// **'다른 앱에서 소리가 나도 멈추지 않고 같이 들려요. 소리가 겹쳐 시끄러울 수 있어요.'**
   String get settingsMixWithOthersDesc;
 
   /// No description provided for @settingsPauseOnDisconnect.
@@ -977,7 +977,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsPauseOnDisconnectDesc.
   ///
   /// In ko, this message translates to:
-  /// **'이어폰을 빼거나 블루투스 연결이 끊기면 재생을 멈춰요'**
+  /// **'이어폰을 빼거나 블루투스 연결이 끊기면 재생을 멈춰요.'**
   String get settingsPauseOnDisconnectDesc;
 
   /// No description provided for @settingsResumeOnConnect.
@@ -989,7 +989,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsResumeOnConnectDesc.
   ///
   /// In ko, this message translates to:
-  /// **'끊겨서 멈춘 재생을 10분 안에 다시 연결하면 이어서 재생해요'**
+  /// **'끊겨서 멈춘 재생을 10분 안에 다시 연결하면 이어서 재생해요.'**
   String get settingsResumeOnConnectDesc;
 
   /// No description provided for @settingsResumeWithoutNotification.
@@ -1001,7 +1001,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsResumeWithoutNotificationDesc.
   ///
   /// In ko, this message translates to:
-  /// **'알림을 지웠거나 재생이 끝난 뒤에도 블루투스 기기의 재생 버튼으로 마지막 곡을 이어서 재생해요'**
+  /// **'알림을 지웠거나 재생이 끝난 뒤에도 블루투스 기기의 재생 버튼으로 마지막 곡을 이어서 재생해요.'**
   String get settingsResumeWithoutNotificationDesc;
 
   /// No description provided for @playerStyleTitle.
@@ -3203,7 +3203,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsAccountSignedOutDesc.
   ///
   /// In ko, this message translates to:
-  /// **'로그인하면 내 유튜브 재생목록을 불러올 수 있어요'**
+  /// **'로그인하면 내 유튜브 재생목록을 불러올 수 있어요.'**
   String get settingsAccountSignedOutDesc;
 
   /// No description provided for @settingsAccountSignIn.
@@ -3899,7 +3899,7 @@ abstract class AppLocalizations {
   /// No description provided for @equalizerEnableDesc.
   ///
   /// In ko, this message translates to:
-  /// **'켜면 아래 설정대로 소리를 다듬어요. 기본은 꺼짐이에요'**
+  /// **'켜면 아래 설정대로 소리를 다듬어요. 기본은 꺼짐이에요.'**
   String get equalizerEnableDesc;
 
   /// No description provided for @equalizerDeviceProfile.
@@ -3911,7 +3911,7 @@ abstract class AppLocalizations {
   /// No description provided for @equalizerDeviceProfileDesc.
   ///
   /// In ko, this message translates to:
-  /// **'{device}에 연결되면 이 설정을 자동으로 적용해요'**
+  /// **'{device}에 연결되면 이 설정을 자동으로 적용해요.'**
   String equalizerDeviceProfileDesc(String device);
 
   /// No description provided for @equalizerMyPresets.
@@ -4037,7 +4037,7 @@ abstract class AppLocalizations {
   /// No description provided for @equalizerBassBoostDesc.
   ///
   /// In ko, this message translates to:
-  /// **'낮은 소리를 더 묵직하게 해요'**
+  /// **'낮은 소리를 더 묵직하게 해요.'**
   String get equalizerBassBoostDesc;
 
   /// No description provided for @equalizerReset.
@@ -4115,7 +4115,7 @@ abstract class AppLocalizations {
   /// No description provided for @equalizerVirtualizerDesc.
   ///
   /// In ko, this message translates to:
-  /// **'이어폰에서 소리가 더 넓게 퍼져 들려요'**
+  /// **'이어폰에서 소리가 더 넓게 퍼져 들려요.'**
   String get equalizerVirtualizerDesc;
 
   /// No description provided for @equalizerReverb.
@@ -4127,7 +4127,7 @@ abstract class AppLocalizations {
   /// No description provided for @equalizerReverbDesc.
   ///
   /// In ko, this message translates to:
-  /// **'방이나 홀에서 듣는 것 같은 잔향을 더해요'**
+  /// **'방이나 홀에서 듣는 것 같은 잔향을 더해요.'**
   String get equalizerReverbDesc;
 
   /// No description provided for @equalizerLimiter.
@@ -4139,7 +4139,7 @@ abstract class AppLocalizations {
   /// No description provided for @equalizerLimiterDesc.
   ///
   /// In ko, this message translates to:
-  /// **'소리를 많이 키워도 갈라지지 않게 눌러 줘요'**
+  /// **'소리를 많이 키워도 갈라지지 않게 눌러 줘요.'**
   String get equalizerLimiterDesc;
 
   /// No description provided for @equalizerReverbNone.
