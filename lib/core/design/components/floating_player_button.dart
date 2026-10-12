@@ -143,7 +143,7 @@ class FloatingPlayerButton extends StatelessWidget {
                     child: SizedBox.square(
                       dimension: _badge,
                       child: Icon(
-                        AppIcons.expandLess,
+                        AppIcons.dockDown,
                         size: 20,
                         color: p.onAccent,
                       ),
