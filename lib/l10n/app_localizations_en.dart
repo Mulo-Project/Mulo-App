@@ -509,9 +509,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerEqualizer => 'Equalizer';
 
   @override
-  String get playerEqualizerSoon => 'Equalizer is coming soon';
-
-  @override
   String get playerLyrics => 'Lyrics';
 
   @override
@@ -2182,4 +2179,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get equalizerReverbPlate => 'Plate';
+
+  @override
+  String get equalizerSave => 'Save';
 }

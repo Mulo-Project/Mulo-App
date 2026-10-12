@@ -16,7 +16,8 @@ Flutter는 화면과 값 저장만 맡고, 소리 처리는 **네이티브 효�
 ## 앱 쪽
 - 저장: shared_preferences `player.equalizer`(JSON: enabled · preset · levels · bassBoost). 기본은 **꺼짐**, 평평한 값.
 - 화면: 설정 › 재생 설정 › 이퀄라이저(`/settings/equalizer`). Android가 아니면 줄을 숨긴다. 슬라이더는 `AppSlider`(디자인 시스템).
-- 슬라이더를 끄는 동안은 엔진에만 반영하고, 손을 뗄 때 저장한다.
+- 켜고 끄기는 바로 저장한다. 프리셋 · 대역 · 효과는 손대는 즉시 소리에 반영하지만 **저장 버튼**을 눌러야 저장하고, 저장하지 않고 화면을 나가면 저장된 값으로 되돌린다 (`EqualizerCubit.discard`). 처음으로는 평평한 기본으로 되돌릴 뿐 저장은 따로 누른다.
+- 플레이어 화면의 이퀄라이저 버튼(`EqualizerButton`)도 같은 화면(`/settings/equalizer`)으로 연다.
 
 ## 프리셋 곡선
 프리셋은 표준이 없어서 업계 관례(저음 강조 · 보컬 중고음 · 록의 V자 등)를 바탕으로 직접 정한 5점 dB 곡선이다 (낮은 소리 → 높은 소리, 기기 대역 수에 맞춰 편다).

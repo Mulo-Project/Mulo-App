@@ -169,7 +169,6 @@
   "@playerSleepTimerSet": {"placeholders": {"minutes": {"type": "int"}}},
   "playerSleepTimerCleared": "Sleep timer is off",
   "playerEqualizer": "Equalizer",
-  "playerEqualizerSoon": "Equalizer is coming soon",
   "playerLyrics": "Lyrics",
   "playerRewind10": "Back 10 seconds",
   "playerForward10": "Forward 10 seconds",
@@ -765,5 +764,6 @@
   "equalizerReverbLargeRoom": "Large room",
   "equalizerReverbMediumHall": "Medium hall",
   "equalizerReverbLargeHall": "Large hall",
-  "equalizerReverbPlate": "Plate"
+  "equalizerReverbPlate": "Plate",
+  "equalizerSave": "Save"
 }

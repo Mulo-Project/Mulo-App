@@ -828,16 +828,14 @@ class SleepTimerButton extends StatelessWidget {
   }
 }
 
-/// 이퀄라이저 (아직 준비 중).
+/// 이퀄라이저 화면으로 간다 (플레이어 위로 덮어 열고, 뒤로 가면 플레이어로 돌아온다).
 class EqualizerButton extends StatelessWidget {
   const EqualizerButton({super.key});
 
   @override
   Widget build(BuildContext context) => IconButton(
     tooltip: context.l10n.playerEqualizer,
-    onPressed: () => ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(context.l10n.playerEqualizerSoon))),
+    onPressed: () => context.push(Routes.equalizer),
     icon: Icon(AppIcons.eq, color: context.palette.onSurfaceMuted),
   );
 }

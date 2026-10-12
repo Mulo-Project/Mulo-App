@@ -498,9 +498,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playerEqualizer => '이퀄라이저';
 
   @override
-  String get playerEqualizerSoon => '이퀄라이저는 준비 중이에요';
-
-  @override
   String get playerLyrics => '가사';
 
   @override
@@ -2131,4 +2128,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get equalizerReverbPlate => '플레이트';
+
+  @override
+  String get equalizerSave => '저장';
 }

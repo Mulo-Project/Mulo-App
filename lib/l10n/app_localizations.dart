@@ -1022,12 +1022,6 @@ abstract class AppLocalizations {
   /// **'이퀄라이저'**
   String get playerEqualizer;
 
-  /// No description provided for @playerEqualizerSoon.
-  ///
-  /// In ko, this message translates to:
-  /// **'이퀄라이저는 준비 중이에요'**
-  String get playerEqualizerSoon;
-
   /// No description provided for @playerLyrics.
   ///
   /// In ko, this message translates to:
@@ -4033,6 +4027,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'플레이트'**
   String get equalizerReverbPlate;
+
+  /// No description provided for @equalizerSave.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장'**
+  String get equalizerSave;
 }
 
 class _AppLocalizationsDelegate
