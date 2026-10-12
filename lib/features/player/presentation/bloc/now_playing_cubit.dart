@@ -623,15 +623,6 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     emit(state.copyWith(queue: queue, index: queue.indexOf(current)));
   }
 
-  /// 대기열 전체를 무작위로 섞는다. 지금 곡은 끊기지 않게 맨 앞에 두고 나머지(이미 들은 곡 포함)를 섞는다.
-  void shuffleQueue([Random? random]) {
-    final current = state.track;
-    if (current == null || state.queue.length < 2) return;
-    final rest = state.queue.where((t) => t != current).toList()
-      ..shuffle(random ?? _random);
-    emit(state.copyWith(queue: [current, ...rest], index: 0));
-  }
-
   /// 대기열을 모두 비운다. 재생 중인 곡도 멈추고 지워진다 (미니 플레이어는 사라진다).
   void clearQueue() {
     if (state.queue.isEmpty) return;

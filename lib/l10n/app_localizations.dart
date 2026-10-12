@@ -1154,11 +1154,17 @@ abstract class AppLocalizations {
   /// **'외부 출력'**
   String get outputOther;
 
-  /// No description provided for @queueShuffle.
+  /// No description provided for @shuffleOn.
   ///
   /// In ko, this message translates to:
-  /// **'전체 섞기'**
-  String get queueShuffle;
+  /// **'셔플 켜기'**
+  String get shuffleOn;
+
+  /// No description provided for @shuffleOff.
+  ///
+  /// In ko, this message translates to:
+  /// **'셔플 끄기'**
+  String get shuffleOff;
 
   /// No description provided for @queueClear.
   ///

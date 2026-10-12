@@ -30,6 +30,7 @@ class NativeMediaSession implements MediaSession {
     'seek': MediaCommandType.seek,
     'stop': MediaCommandType.stop,
     'favorite': MediaCommandType.favorite,
+    'shuffle': MediaCommandType.shuffle,
   };
 
   @override
@@ -143,9 +144,12 @@ class NativeMediaSession implements MediaSession {
       'positionMs': info.position.inMilliseconds,
       'playing': info.playing,
       'favorite': info.favorite,
+      'shuffle': info.shuffle,
       'preview': info.preview,
       'favoriteLabel': l10n.trackMenuFavorite,
       'unfavoriteLabel': l10n.trackMenuUnfavorite,
+      'shuffleOnLabel': l10n.shuffleOn,
+      'shuffleOffLabel': l10n.shuffleOff,
       'closeLabel': l10n.notifStop,
       'hideSongInfo': info.hidden,
       'hiddenTitle': l10n.notifHiddenTitle,

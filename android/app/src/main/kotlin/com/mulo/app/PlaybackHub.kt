@@ -43,9 +43,11 @@ object PlaybackHub {
     private const val RESUME_WINDOW_MS = 10 * 60 * 1000L
     private const val ACTION_FAVORITE = "com.mulo.app.FAVORITE"
     private const val ACTION_CLOSE = "com.mulo.app.CLOSE"
+    private const val ACTION_SHUFFLE = "com.mulo.app.SHUFFLE"
     const val ACTION_OPEN_PLAYER = "com.mulo.app.OPEN_PLAYER"
     private val favoriteCommand = SessionCommand(ACTION_FAVORITE, Bundle.EMPTY)
     private val closeCommand = SessionCommand(ACTION_CLOSE, Bundle.EMPTY)
+    private val shuffleCommand = SessionCommand(ACTION_SHUFFLE, Bundle.EMPTY)
 
     private lateinit var context: Context
     private val main = Handler(Looper.getMainLooper())
@@ -475,7 +477,15 @@ object PlaybackHub {
             .setDisplayName(if (info.favorite) info.unfavoriteLabel else info.favoriteLabel)
             .setSessionCommand(favoriteCommand)
             .build()
-        return ImmutableList.of(favorite, close)
+        // 재생 중에는 닫기(X) 대신 셔플을 둔다 (알림 오른쪽 칸은 둘뿐). 셔플 순서는 앱이 쥐고 있어서
+        // 앱이 아는 현재 곡일 때만 보이고, 앱이 꺼진 사이에는 위처럼 닫기만 둔다.
+        // 재생 중인 알림은 일시정지한 뒤 밀어서 지울 수 있다.
+        val shuffle = CommandButton.Builder(CommandButton.ICON_UNDEFINED)
+            .setCustomIconResId(if (info.shuffle) R.drawable.ic_notif_shuffle_on else R.drawable.ic_notif_shuffle_off)
+            .setDisplayName(if (info.shuffle) info.shuffleOffLabel else info.shuffleOnLabel)
+            .setSessionCommand(shuffleCommand)
+            .build()
+        return ImmutableList.of(favorite, shuffle)
     }
 
     // ── 네이티브 → Dart ──
@@ -627,6 +637,7 @@ object PlaybackHub {
             val commands = MediaSession.ConnectionResult.DEFAULT_SESSION_COMMANDS.buildUpon()
                 .add(favoriteCommand)
                 .add(closeCommand)
+                .add(shuffleCommand)
                 .build()
             return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
                 .setAvailableSessionCommands(commands)
@@ -648,6 +659,7 @@ object PlaybackHub {
         ): ListenableFuture<SessionResult> {
             when (customCommand.customAction) {
                 ACTION_FAVORITE -> emitCommand("favorite", null)
+                ACTION_SHUFFLE -> emitCommand("shuffle", null)
                 // 닫기(X): 재생을 멈추고 알림을 치운다 (미리 듣기면 Dart가 미리 듣기를 끝낸다).
                 ACTION_CLOSE -> {
                     if (sessionPlayer.info?.preview != true) endSessionSoon()

@@ -50,7 +50,7 @@ class _ClearDialog extends StatelessWidget {
   }
 }
 
-/// 재생 대기열 화면: 곡 수 · 전체 섞기 · 비우기(위에 고정), 지금 재생 중인 곡 강조,
+/// 재생 대기열 화면: 곡 수 · 셔플 켜기/끄기 · 비우기(위에 고정), 지금 재생 중인 곡 강조,
 /// 곡을 누르면 그 곡부터 재생, ⋮는 곡 메뉴(보관함과 같은 메뉴), 길게 눌러 끌면 순서가 바뀐다.
 class QueueScreen extends StatelessWidget {
   const QueueScreen({super.key});
@@ -61,8 +61,9 @@ class QueueScreen extends StatelessWidget {
     final p = context.palette;
     final text = Theme.of(context).textTheme;
     // 재생 위치(초마다 바뀜)는 보지 않는다: 끄는 동안 목록이 다시 그려지면 끊긴다.
-    final (queue, index, playing) = context.select(
-      (NowPlayingCubit c) => (c.state.queue, c.state.index, c.state.isPlaying),
+    final (queue, index, playing, shuffle) = context.select(
+      (NowPlayingCubit c) =>
+          (c.state.queue, c.state.index, c.state.isPlaying, c.state.shuffle),
     );
     final vm = context.read<NowPlayingCubit>();
 
@@ -84,7 +85,8 @@ class QueueScreen extends StatelessWidget {
               if (queue.isNotEmpty)
                 _QueueHeader(
                   count: queue.length,
-                  onShuffle: vm.shuffleQueue,
+                  shuffle: shuffle,
+                  onShuffle: vm.toggleShuffle,
                   onClear: () => _confirmClear(context),
                 ),
               Expanded(
@@ -137,15 +139,19 @@ class QueueScreen extends StatelessWidget {
   }
 }
 
-/// 맨 위 줄: 곡 수와 안내, 전체 섞기 · 대기열 비우기.
+/// 맨 위 줄: 곡 수와 안내, 셔플 켜기/끄기(플레이어의 셔플과 같은 설정) · 대기열 비우기.
 class _QueueHeader extends StatelessWidget {
   const _QueueHeader({
     required this.count,
+    required this.shuffle,
     required this.onShuffle,
     required this.onClear,
   });
 
   final int count;
+
+  /// 셔플이 켜져 있는지 (켜져 있으면 강조 색).
+  final bool shuffle;
   final VoidCallback onShuffle;
   final VoidCallback onClear;
 
@@ -172,7 +178,8 @@ class _QueueHeader extends StatelessWidget {
           ),
           RowIconButton(
             icon: AppIcons.shuffle,
-            tooltip: l10n.queueShuffle,
+            tooltip: shuffle ? l10n.shuffleOff : l10n.shuffleOn,
+            accent: shuffle,
             onPressed: onShuffle,
           ),
           RowIconButton(

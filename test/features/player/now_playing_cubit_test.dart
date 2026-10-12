@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/test_data.dart';
@@ -196,17 +194,6 @@ void main() {
         ..moveInQueue(-1, 0)
         ..moveInQueue(0, 3);
       expect(state().queue, before);
-    });
-
-    test('shuffleQueue는 지금 곡을 맨 앞에 두고 나머지 전체(들은 곡 포함)를 섞는다', () {
-      final big = TestData.tracks.take(8).toList();
-      cubit.playQueue(big, index: 2);
-      cubit.shuffleQueue(Random(42));
-      expect(state().index, 0);
-      expect(state().queue.first, big[2]);
-      expect(state().queue.toSet(), big.toSet());
-      expect(state().queue.length, big.length);
-      expect(state().queue, isNot(big));
     });
 
     test('clearQueue는 재생 중인 곡까지 모두 비우고 멈춘다', () {

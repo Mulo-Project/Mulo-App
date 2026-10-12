@@ -234,6 +234,7 @@ class _NotificationBridgeState extends State<NotificationBridge>
         case MediaCommandType.next:
         case MediaCommandType.previous:
         case MediaCommandType.favorite:
+        case MediaCommandType.shuffle:
           break;
       }
       return;
@@ -255,6 +256,8 @@ class _NotificationBridgeState extends State<NotificationBridge>
         if (track != null) {
           context.read<PlaylistsCubit>().toggleFavorite(track.id);
         }
+      case MediaCommandType.shuffle:
+        player.toggleShuffle();
       case MediaCommandType.seek:
         final to = command.position;
         if (to != null) player.seekTo(to);
@@ -366,6 +369,7 @@ class _NotificationBridgeState extends State<NotificationBridge>
       queueLength: now.queue.length,
       favorite:
           track != null && context.read<PlaylistsCubit>().isFavorite(track.id),
+      shuffle: now.shuffle,
       artUri: _artUri(cover),
       settings: settings.settings,
       l10n: context.l10n,
