@@ -22,7 +22,7 @@ class FloatingPlayerButton extends StatelessWidget {
   });
 
   static const size = 60.0;
-  static const _badge = 22.0;
+  static const _badge = 26.0;
 
   final double progress;
   final bool isPlaying;
@@ -108,12 +108,19 @@ class FloatingPlayerButton extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: p.accent,
+                      border: Border.all(color: p.surface, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: p.accent.withValues(alpha: .55),
+                          blurRadius: 10,
+                        ),
+                      ],
                     ),
                     child: SizedBox.square(
                       dimension: _badge,
                       child: Icon(
                         AppIcons.expandLess,
-                        size: 16,
+                        size: 20,
                         color: p.onAccent,
                       ),
                     ),
