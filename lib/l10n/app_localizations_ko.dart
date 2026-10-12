@@ -2112,6 +2112,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get equalizerDeviceCustom => '직접 설정';
 
   @override
+  String get equalizerDeviceEdit => '이퀄라이저에서 직접 설정';
+
+  @override
   String get equalizerDeviceCurrent => '지금 연결됨';
 
   @override

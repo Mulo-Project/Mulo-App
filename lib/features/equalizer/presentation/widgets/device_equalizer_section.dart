@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/router.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../domain/entities/equalizer_settings.dart';
@@ -103,6 +105,18 @@ class DeviceEqualizerSection extends StatelessWidget {
                     onTap: () {
                       library.assign(device.key, preset.id);
                       Navigator.of(sheet).pop();
+                    },
+                  ),
+                ],
+                // 이퀄라이저 화면은 지금 연결된 기기의 값을 고친다.
+                if (device.current) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  MenuRow(
+                    icon: AppIcons.edit,
+                    label: l10n.equalizerDeviceEdit,
+                    onTap: () {
+                      Navigator.of(sheet).pop();
+                      context.push(Routes.equalizer);
                     },
                   ),
                 ],

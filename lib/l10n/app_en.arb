@@ -759,6 +759,7 @@
   "equalizerDevicesEmpty": "No Bluetooth or earphone devices connected yet",
   "equalizerDeviceDefault": "Default settings",
   "equalizerDeviceCustom": "Custom",
+  "equalizerDeviceEdit": "Edit in equalizer",
   "equalizerDeviceCurrent": "Connected now",
   "equalizerDevicePickTitle": "Preset for {device}",
   "@equalizerDevicePickTitle": {"placeholders": {"device": {"type": "String"}}},

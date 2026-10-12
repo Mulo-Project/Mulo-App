@@ -872,6 +872,7 @@
   "equalizerDevicesEmpty": "아직 연결된 블루투스 · 이어폰 기기가 없어요",
   "equalizerDeviceDefault": "기본 설정",
   "equalizerDeviceCustom": "직접 설정",
+  "equalizerDeviceEdit": "이퀄라이저에서 직접 설정",
   "equalizerDeviceCurrent": "지금 연결됨",
   "equalizerDevicePickTitle": "{device}에 쓸 프리셋",
   "@equalizerDevicePickTitle": {"placeholders": {"device": {"type": "String"}}},

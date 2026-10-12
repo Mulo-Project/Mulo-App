@@ -3980,6 +3980,12 @@ abstract class AppLocalizations {
   /// **'직접 설정'**
   String get equalizerDeviceCustom;
 
+  /// No description provided for @equalizerDeviceEdit.
+  ///
+  /// In ko, this message translates to:
+  /// **'이퀄라이저에서 직접 설정'**
+  String get equalizerDeviceEdit;
+
   /// No description provided for @equalizerDeviceCurrent.
   ///
   /// In ko, this message translates to:
