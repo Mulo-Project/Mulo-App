@@ -77,7 +77,7 @@ class _AppShellState extends State<AppShell> {
   var _geometry = const MiniFloatGeometry(area: Rect.zero, safe: Rect.zero);
   var _grab = const Offset(
     FloatingPlayerButton.size / 2,
-    FloatingPlayerButton.size / 2,
+    FloatingPlayerButton.height - FloatingPlayerButton.size / 2,
   );
 
   Offset _toBody(Offset global) {
@@ -90,7 +90,7 @@ class _AppShellState extends State<AppShell> {
     _miniHeight = _miniKey.currentContext?.size?.height ?? _miniHeight;
     _grab = const Offset(
       FloatingPlayerButton.size / 2,
-      FloatingPlayerButton.size / 2,
+      FloatingPlayerButton.height - FloatingPlayerButton.size / 2,
     );
     _floatMoving.value = true;
     _floatPos.value = MiniFloatGeometry.clampTo(
@@ -168,16 +168,17 @@ class _AppShellState extends State<AppShell> {
       builder: (context, constraints) {
         // 플로팅 버튼이 머물 수 있는 영역: 상태 표시줄 · 하단 바 · 받기 줄(버튼) 위.
         const s = FloatingPlayerButton.size;
+        const sh = FloatingPlayerButton.height;
         const m = AppSpacing.md;
         final w = constraints.maxWidth;
         final h = constraints.maxHeight;
         _geometry = MiniFloatGeometry(
-          area: Rect.fromLTRB(0, 0, w - s, h - s),
+          area: Rect.fromLTRB(0, 0, w - s, h - sh),
           safe: Rect.fromLTRB(
             m,
             mq.padding.top + m,
             w - s - m,
-            h - navHeight - inset - s - m,
+            h - navHeight - inset - sh - m,
           ),
         );
         return _bodyStack(mq, navHeight, inset);

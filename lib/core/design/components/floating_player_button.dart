@@ -23,6 +23,10 @@ class FloatingPlayerButton extends StatelessWidget {
 
   static const size = 60.0;
   static const _badge = 26.0;
+  static const _badgePad = 9.0;
+
+  /// 전체 높이: 위의 돌아가기 점(누르는 범위 포함) + 둥근 버튼. 점은 버튼에서 떨어져 있어 누르기 편하다.
+  static const height = size + _badge + _badgePad * 2;
 
   final double progress;
   final bool isPlaying;
@@ -39,12 +43,17 @@ class FloatingPlayerButton extends StatelessWidget {
     final glow = context.tokens.glow(GlowTone.primary);
     const ring = 3.0;
 
-    return SizedBox.square(
-      dimension: size,
+    return SizedBox(
+      width: size,
+      height: height,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          Positioned.fill(
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: size,
             child: Tooltip(
               message: isPlaying ? pauseLabel : playLabel,
               child: GlassSurface(
@@ -94,16 +103,16 @@ class FloatingPlayerButton extends StatelessWidget {
             ),
           ),
           Positioned(
-            top: -4,
-            right: -4,
+            top: 0,
+            left: (size - _badge - _badgePad * 2) / 2,
             child: Tooltip(
               message: expandLabel,
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: onExpand,
-                // 작은 점이라 눌리는 범위만 조금 넓힌다.
+                // 작은 점이라 눌리는 범위만 넓힌다 (버튼과는 떨어져 있다).
                 child: Padding(
-                  padding: const EdgeInsets.all(6),
+                  padding: const EdgeInsets.all(_badgePad),
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
