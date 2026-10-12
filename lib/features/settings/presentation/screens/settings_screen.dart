@@ -363,17 +363,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       opacity: followMood ? .4 : 1,
                       child: IgnorePointer(
                         ignoring: followMood,
-                        child: Wrap(
-                          spacing: AppSpacing.xs,
-                          runSpacing: AppSpacing.sm,
+                        // 한 줄에 4개씩 칸을 똑같이 나눠 가운데에 둔다 (왼쪽으로 몰리지 않게).
+                        child: Column(
                           children: [
-                            for (final preset in ThemePreset.values)
-                              ThemeSwatch(
-                                preview: preset.paletteFor(brightness),
-                                label: presetLabel(l10n, preset),
-                                selected: preset == selectedPreset,
-                                onTap: () => themeCtrl.selectPreset(preset),
+                            for (
+                              var row = 0;
+                              row < ThemePreset.values.length;
+                              row += 4
+                            ) ...[
+                              if (row > 0)
+                                const SizedBox(height: AppSpacing.sm),
+                              Row(
+                                children: [
+                                  for (var i = row; i < row + 4; i++)
+                                    Expanded(
+                                      child: i < ThemePreset.values.length
+                                          ? Center(
+                                              child: ThemeSwatch(
+                                                preview: ThemePreset.values[i]
+                                                    .paletteFor(brightness),
+                                                label: presetLabel(
+                                                  l10n,
+                                                  ThemePreset.values[i],
+                                                ),
+                                                selected:
+                                                    ThemePreset.values[i] ==
+                                                    selectedPreset,
+                                                onTap: () =>
+                                                    themeCtrl.selectPreset(
+                                                      ThemePreset.values[i],
+                                                    ),
+                                              ),
+                                            )
+                                          : const SizedBox.shrink(),
+                                    ),
+                                ],
                               ),
+                            ],
                           ],
                         ),
                       ),

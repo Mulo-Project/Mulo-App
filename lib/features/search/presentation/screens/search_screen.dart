@@ -109,7 +109,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 suffix: RowIconButton(
                   icon: AppIcons.search,
                   tooltip: l10n.searchSubmitTooltip,
-                  filled: true,
+                  accent: true,
                   onPressed: _submit,
                 ),
               ),
