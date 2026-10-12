@@ -19,11 +19,11 @@ enum EqualizerPreset {
     bass => const [6, 4, 1, 0, 0],
     treble => const [0, 0, 1, 4, 6],
     vocal => const [-2, 0, 3, 3, -1],
-    rock => const [4, 2, -2, 2, 4],
-    pop => const [-1, 2, 4, 1, -1],
-    jazz => const [3, 1, -1, 1, 3],
-    classical => const [3, 2, 0, 2, 3],
-    dance => const [5, 3, 0, 2, 3],
+    rock => const [4, 1, -2, 1, 4],
+    pop => const [2, 1, 0, 3, 1],
+    jazz => const [2, 2, 1, 0, -2],
+    classical => const [0, 0, 0, 2, 3],
+    dance => const [6, 3, -1, 0, 1],
     custom => null,
   };
 
@@ -45,6 +45,17 @@ enum EqualizerPreset {
   }
 }
 
+/// 공간 울림(리버브). 번호는 Android `PresetReverb`의 프리셋 번호와 같다.
+enum EqualizerReverb {
+  none,
+  smallRoom,
+  mediumRoom,
+  largeRoom,
+  mediumHall,
+  largeHall,
+  plate,
+}
+
 /// 기기가 알려 주는 이퀄라이저 능력 (Android: Equalizer / BassBoost).
 class EqualizerInfo extends Equatable {
   const EqualizerInfo({
@@ -52,6 +63,9 @@ class EqualizerInfo extends Equatable {
     required this.minDb,
     required this.maxDb,
     required this.bassBoostSupported,
+    this.virtualizerSupported = false,
+    this.reverbSupported = false,
+    this.limiterSupported = false,
   });
 
   /// 대역별 중심 주파수 (Hz), 낮은 쪽부터.
@@ -59,9 +73,22 @@ class EqualizerInfo extends Equatable {
   final double minDb;
   final double maxDb;
   final bool bassBoostSupported;
+  final bool virtualizerSupported;
+  final bool reverbSupported;
+
+  /// 클리핑 방지 리미터 (Android 9+).
+  final bool limiterSupported;
 
   @override
-  List<Object?> get props => [bandHz, minDb, maxDb, bassBoostSupported];
+  List<Object?> get props => [
+    bandHz,
+    minDb,
+    maxDb,
+    bassBoostSupported,
+    virtualizerSupported,
+    reverbSupported,
+    limiterSupported,
+  ];
 }
 
 /// 저장되는 이퀄라이저 값. 기본은 꺼짐 · 평평한 소리.
@@ -71,6 +98,9 @@ class EqualizerSettings extends Equatable {
     this.preset = EqualizerPreset.flat,
     this.levels = const [],
     this.bassBoost = 0,
+    this.virtualizer = 0,
+    this.reverb = EqualizerReverb.none,
+    this.limiter = true,
   });
 
   final bool enabled;
@@ -82,16 +112,29 @@ class EqualizerSettings extends Equatable {
   /// 저음 강화 0 ~ 1.
   final double bassBoost;
 
+  /// 입체 음향 0 ~ 1.
+  final double virtualizer;
+  final EqualizerReverb reverb;
+
+  /// 클리핑 방지 (소리를 키워도 찢어지지 않게). 기본 켜짐.
+  final bool limiter;
+
   EqualizerSettings copyWith({
     bool? enabled,
     EqualizerPreset? preset,
     List<double>? levels,
     double? bassBoost,
+    double? virtualizer,
+    EqualizerReverb? reverb,
+    bool? limiter,
   }) => EqualizerSettings(
     enabled: enabled ?? this.enabled,
     preset: preset ?? this.preset,
     levels: levels ?? this.levels,
     bassBoost: bassBoost ?? this.bassBoost,
+    virtualizer: virtualizer ?? this.virtualizer,
+    reverb: reverb ?? this.reverb,
+    limiter: limiter ?? this.limiter,
   );
 
   /// 기기 대역 수에 맞춰 [levels]를 고른다 (수가 다르면 프리셋 곡선으로 다시 만든다).
@@ -103,11 +146,21 @@ class EqualizerSettings extends Equatable {
     return copyWith(
       levels: fitted,
       bassBoost: info.bassBoostSupported ? bassBoost.clamp(0.0, 1.0) : 0,
+      virtualizer: info.virtualizerSupported ? virtualizer.clamp(0.0, 1.0) : 0,
+      reverb: info.reverbSupported ? reverb : EqualizerReverb.none,
     );
   }
 
   @override
-  List<Object?> get props => [enabled, preset, levels, bassBoost];
+  List<Object?> get props => [
+    enabled,
+    preset,
+    levels,
+    bassBoost,
+    virtualizer,
+    reverb,
+    limiter,
+  ];
 }
 
 /// 시작할 때 읽는 묶음: 기기 능력(없으면 null = 지원하지 않음)과 저장된 값.

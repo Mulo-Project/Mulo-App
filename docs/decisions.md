@@ -647,4 +647,5 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 ## D-102 · 2026-10-12 · 이퀄라이저는 네이티브 효과, Flutter는 UI와 값 저장만
 - Android는 ExoPlayer 오디오 세션에 `Equalizer` · `BassBoost`를 붙인다(Kotlin `EqualizerEngine`). 대역 수 · dB 범위는 기기마다 달라 앱이 `info`로 읽어 화면을 그리고, 프리셋은 5점 곡선을 기기 대역 수에 맞춰 편다. 기본 꺼짐.
 - 값은 shared_preferences JSON 한 덩어리. 앱을 켤 때 저장값을 엔진에 다시 반영한다. Android 밖에서는 이퀄라이저 줄을 숨긴다.
+- 이퀄라이저 화면에 입체 음향 · 공간 울림 · 소리 찢어짐 방지(리미터, 기본 켜짐)도 둔다. 장르 프리셋 값은 표준이 없어 업계 관례로 직접 정했다. Visualizer(RECORD_AUDIO 필요)와 시스템 전체 EQ는 넣지 않는다.
 - 자세한 약속은 [equalizer.md](equalizer.md).

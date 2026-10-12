@@ -11,6 +11,9 @@ const _info = EqualizerInfo(
   minDb: -15,
   maxDb: 15,
   bassBoostSupported: true,
+  virtualizerSupported: true,
+  reverbSupported: true,
+  limiterSupported: true,
 );
 
 void main() {
@@ -80,6 +83,37 @@ void main() {
     expect(cubit.state.settings.levels.length, 5);
     expect(cubit.state.settings.levels.first, 4);
     expect(cubit.state.settings.enabled, isTrue);
+  });
+
+  test('입체 음향 · 공간 울림 · 클리핑 방지를 바꾸면 저장하고 엔진에 반영한다', () async {
+    final cubit = await make();
+    expect(cubit.state.settings.limiter, isTrue); // 기본 켜짐
+    cubit.setVirtualizerPreview(.5);
+    expect(repo.applied?.virtualizer, .5);
+    await cubit.selectReverb(EqualizerReverb.largeHall);
+    await cubit.setLimiter(false);
+    expect(repo.settings.reverb, EqualizerReverb.largeHall);
+    expect(repo.settings.limiter, isFalse);
+    expect(repo.settings.virtualizer, .5);
+  });
+
+  test('기기가 지원하지 않는 효과는 저장값이 있어도 꺼 둔다', () async {
+    final cubit = await make(
+      info: const EqualizerInfo(
+        bandHz: [60, 230, 910, 3600, 14000],
+        minDb: -15,
+        maxDb: 15,
+        bassBoostSupported: false,
+      ),
+      settings: const EqualizerSettings(
+        virtualizer: .7,
+        reverb: EqualizerReverb.plate,
+        bassBoost: .4,
+      ),
+    );
+    expect(cubit.state.settings.virtualizer, 0);
+    expect(cubit.state.settings.reverb, EqualizerReverb.none);
+    expect(cubit.state.settings.bassBoost, 0);
   });
 
   test('처음으로는 평평하게 되돌린다', () async {

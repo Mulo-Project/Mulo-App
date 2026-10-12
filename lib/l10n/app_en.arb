@@ -751,6 +751,19 @@
   "equalizerPresetPop": "Pop",
   "equalizerPresetJazz": "Jazz",
   "equalizerPresetClassical": "Classical",
-  "equalizerPresetDance": "Dance",
-  "equalizerPresetCustom": "Custom"
+  "equalizerPresetDance": "Hip-hop / EDM",
+  "equalizerPresetCustom": "Custom",
+  "equalizerVirtualizer": "Spatial sound",
+  "equalizerVirtualizerDesc": "Widens the sound on headphones",
+  "equalizerReverb": "Reverb",
+  "equalizerReverbDesc": "Adds the echo of a room or hall",
+  "equalizerLimiter": "Prevent clipping",
+  "equalizerLimiterDesc": "Keeps loud sound from distorting",
+  "equalizerReverbNone": "None",
+  "equalizerReverbSmallRoom": "Small room",
+  "equalizerReverbMediumRoom": "Medium room",
+  "equalizerReverbLargeRoom": "Large room",
+  "equalizerReverbMediumHall": "Medium hall",
+  "equalizerReverbLargeHall": "Large hall",
+  "equalizerReverbPlate": "Plate"
 }

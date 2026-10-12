@@ -20,6 +20,9 @@ class EqualizerChannel(context: Context, messenger: BinaryMessenger) {
                         call.argument<Boolean>("enabled") ?: false,
                         levels,
                         call.argument<Number>("bassBoost")?.toDouble() ?: 0.0,
+                        call.argument<Number>("virtualizer")?.toDouble() ?: 0.0,
+                        call.argument<Number>("reverb")?.toInt() ?: 0,
+                        call.argument<Boolean>("limiter") ?: true,
                     )
                     result.success(null)
                 }

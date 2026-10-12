@@ -12,14 +12,21 @@ class EqualizerChannel {
   Future<Map<Object?, Object?>?> info() =>
       _method.invokeMapMethod<Object?, Object?>('info');
 
-  /// [levels]는 대역별 dB, [bassBoost]는 0 ~ 1.
+  /// [levels]는 대역별 dB, [bassBoost] · [virtualizer]는 0 ~ 1, [reverb]는 PresetReverb 번호(0 = 없음),
+  /// [limiter]는 클리핑 방지.
   Future<void> apply({
     required bool enabled,
     required List<double> levels,
     required double bassBoost,
+    required double virtualizer,
+    required int reverb,
+    required bool limiter,
   }) => _method.invokeMethod('apply', {
     'enabled': enabled,
     'levels': levels,
     'bassBoost': bassBoost,
+    'virtualizer': virtualizer,
+    'reverb': reverb,
+    'limiter': limiter,
   });
 }

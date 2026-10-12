@@ -114,6 +114,55 @@ class EqualizerScreen extends StatelessWidget {
                                   ),
                                 ),
                               ],
+                              if (info.virtualizerSupported) ...[
+                                const SizedBox(height: AppSpacing.md),
+                                SettingRow(
+                                  title: l10n.equalizerVirtualizer,
+                                  description: l10n.equalizerVirtualizerDesc,
+                                  below: AppSlider(
+                                    value: s.virtualizer,
+                                    semanticLabel: l10n.equalizerVirtualizer,
+                                    onChanged: on
+                                        ? cubit.setVirtualizerPreview
+                                        : null,
+                                    onChangeEnd: cubit.commit,
+                                  ),
+                                ),
+                              ],
+                              if (info.reverbSupported) ...[
+                                const SizedBox(height: AppSpacing.md),
+                                SettingRow(
+                                  title: l10n.equalizerReverb,
+                                  description: l10n.equalizerReverbDesc,
+                                  below: Wrap(
+                                    spacing: AppSpacing.xs,
+                                    runSpacing: AppSpacing.xs,
+                                    children: [
+                                      for (final r in EqualizerReverb.values)
+                                        PillButton(
+                                          compact: true,
+                                          variant: PillVariant.tonal,
+                                          selected: s.reverb == r,
+                                          label: _reverbLabel(l10n, r),
+                                          onPressed: on
+                                              ? () => cubit.selectReverb(r)
+                                              : null,
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                              if (info.limiterSupported) ...[
+                                const SizedBox(height: AppSpacing.md),
+                                SettingRow(
+                                  title: l10n.equalizerLimiter,
+                                  description: l10n.equalizerLimiterDesc,
+                                  trailing: AppSwitch(
+                                    value: s.limiter,
+                                    onChanged: on ? cubit.setLimiter : null,
+                                  ),
+                                ),
+                              ],
                               const SizedBox(height: AppSpacing.md),
                               Align(
                                 alignment: Alignment.centerLeft,
@@ -150,6 +199,16 @@ String _presetLabel(AppLocalizations l10n, EqualizerPreset preset) =>
       EqualizerPreset.dance => l10n.equalizerPresetDance,
       EqualizerPreset.custom => l10n.equalizerPresetCustom,
     };
+
+String _reverbLabel(AppLocalizations l10n, EqualizerReverb r) => switch (r) {
+  EqualizerReverb.none => l10n.equalizerReverbNone,
+  EqualizerReverb.smallRoom => l10n.equalizerReverbSmallRoom,
+  EqualizerReverb.mediumRoom => l10n.equalizerReverbMediumRoom,
+  EqualizerReverb.largeRoom => l10n.equalizerReverbLargeRoom,
+  EqualizerReverb.mediumHall => l10n.equalizerReverbMediumHall,
+  EqualizerReverb.largeHall => l10n.equalizerReverbLargeHall,
+  EqualizerReverb.plate => l10n.equalizerReverbPlate,
+};
 
 class _Label extends StatelessWidget {
   const _Label(this.text);

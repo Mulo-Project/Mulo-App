@@ -2088,8 +2088,47 @@ class AppLocalizationsKo extends AppLocalizations {
   String get equalizerPresetClassical => '클래식';
 
   @override
-  String get equalizerPresetDance => '댄스';
+  String get equalizerPresetDance => '힙합 · EDM';
 
   @override
   String get equalizerPresetCustom => '직접 조절';
+
+  @override
+  String get equalizerVirtualizer => '입체 음향';
+
+  @override
+  String get equalizerVirtualizerDesc => '이어폰에서 소리가 더 넓게 퍼져 들려요';
+
+  @override
+  String get equalizerReverb => '공간 울림';
+
+  @override
+  String get equalizerReverbDesc => '방이나 홀에서 듣는 것 같은 잔향을 더해요';
+
+  @override
+  String get equalizerLimiter => '소리 찢어짐 방지';
+
+  @override
+  String get equalizerLimiterDesc => '소리를 많이 키워도 갈라지지 않게 눌러 줘요';
+
+  @override
+  String get equalizerReverbNone => '없음';
+
+  @override
+  String get equalizerReverbSmallRoom => '작은 방';
+
+  @override
+  String get equalizerReverbMediumRoom => '중간 방';
+
+  @override
+  String get equalizerReverbLargeRoom => '큰 방';
+
+  @override
+  String get equalizerReverbMediumHall => '중간 홀';
+
+  @override
+  String get equalizerReverbLargeHall => '큰 홀';
+
+  @override
+  String get equalizerReverbPlate => '플레이트';
 }

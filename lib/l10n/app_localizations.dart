@@ -3947,7 +3947,7 @@ abstract class AppLocalizations {
   /// No description provided for @equalizerPresetDance.
   ///
   /// In ko, this message translates to:
-  /// **'댄스'**
+  /// **'힙합 · EDM'**
   String get equalizerPresetDance;
 
   /// No description provided for @equalizerPresetCustom.
@@ -3955,6 +3955,84 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'직접 조절'**
   String get equalizerPresetCustom;
+
+  /// No description provided for @equalizerVirtualizer.
+  ///
+  /// In ko, this message translates to:
+  /// **'입체 음향'**
+  String get equalizerVirtualizer;
+
+  /// No description provided for @equalizerVirtualizerDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'이어폰에서 소리가 더 넓게 퍼져 들려요'**
+  String get equalizerVirtualizerDesc;
+
+  /// No description provided for @equalizerReverb.
+  ///
+  /// In ko, this message translates to:
+  /// **'공간 울림'**
+  String get equalizerReverb;
+
+  /// No description provided for @equalizerReverbDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'방이나 홀에서 듣는 것 같은 잔향을 더해요'**
+  String get equalizerReverbDesc;
+
+  /// No description provided for @equalizerLimiter.
+  ///
+  /// In ko, this message translates to:
+  /// **'소리 찢어짐 방지'**
+  String get equalizerLimiter;
+
+  /// No description provided for @equalizerLimiterDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'소리를 많이 키워도 갈라지지 않게 눌러 줘요'**
+  String get equalizerLimiterDesc;
+
+  /// No description provided for @equalizerReverbNone.
+  ///
+  /// In ko, this message translates to:
+  /// **'없음'**
+  String get equalizerReverbNone;
+
+  /// No description provided for @equalizerReverbSmallRoom.
+  ///
+  /// In ko, this message translates to:
+  /// **'작은 방'**
+  String get equalizerReverbSmallRoom;
+
+  /// No description provided for @equalizerReverbMediumRoom.
+  ///
+  /// In ko, this message translates to:
+  /// **'중간 방'**
+  String get equalizerReverbMediumRoom;
+
+  /// No description provided for @equalizerReverbLargeRoom.
+  ///
+  /// In ko, this message translates to:
+  /// **'큰 방'**
+  String get equalizerReverbLargeRoom;
+
+  /// No description provided for @equalizerReverbMediumHall.
+  ///
+  /// In ko, this message translates to:
+  /// **'중간 홀'**
+  String get equalizerReverbMediumHall;
+
+  /// No description provided for @equalizerReverbLargeHall.
+  ///
+  /// In ko, this message translates to:
+  /// **'큰 홀'**
+  String get equalizerReverbLargeHall;
+
+  /// No description provided for @equalizerReverbPlate.
+  ///
+  /// In ko, this message translates to:
+  /// **'플레이트'**
+  String get equalizerReverbPlate;
 }
 
 class _AppLocalizationsDelegate

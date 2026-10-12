@@ -864,6 +864,19 @@
   "equalizerPresetPop": "팝",
   "equalizerPresetJazz": "재즈",
   "equalizerPresetClassical": "클래식",
-  "equalizerPresetDance": "댄스",
-  "equalizerPresetCustom": "직접 조절"
+  "equalizerPresetDance": "힙합 · EDM",
+  "equalizerPresetCustom": "직접 조절",
+  "equalizerVirtualizer": "입체 음향",
+  "equalizerVirtualizerDesc": "이어폰에서 소리가 더 넓게 퍼져 들려요",
+  "equalizerReverb": "공간 울림",
+  "equalizerReverbDesc": "방이나 홀에서 듣는 것 같은 잔향을 더해요",
+  "equalizerLimiter": "소리 찢어짐 방지",
+  "equalizerLimiterDesc": "소리를 많이 키워도 갈라지지 않게 눌러 줘요",
+  "equalizerReverbNone": "없음",
+  "equalizerReverbSmallRoom": "작은 방",
+  "equalizerReverbMediumRoom": "중간 방",
+  "equalizerReverbLargeRoom": "큰 방",
+  "equalizerReverbMediumHall": "중간 홀",
+  "equalizerReverbLargeHall": "큰 홀",
+  "equalizerReverbPlate": "플레이트"
 }

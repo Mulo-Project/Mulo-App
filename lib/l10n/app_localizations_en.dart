@@ -2139,8 +2139,47 @@ class AppLocalizationsEn extends AppLocalizations {
   String get equalizerPresetClassical => 'Classical';
 
   @override
-  String get equalizerPresetDance => 'Dance';
+  String get equalizerPresetDance => 'Hip-hop / EDM';
 
   @override
   String get equalizerPresetCustom => 'Custom';
+
+  @override
+  String get equalizerVirtualizer => 'Spatial sound';
+
+  @override
+  String get equalizerVirtualizerDesc => 'Widens the sound on headphones';
+
+  @override
+  String get equalizerReverb => 'Reverb';
+
+  @override
+  String get equalizerReverbDesc => 'Adds the echo of a room or hall';
+
+  @override
+  String get equalizerLimiter => 'Prevent clipping';
+
+  @override
+  String get equalizerLimiterDesc => 'Keeps loud sound from distorting';
+
+  @override
+  String get equalizerReverbNone => 'None';
+
+  @override
+  String get equalizerReverbSmallRoom => 'Small room';
+
+  @override
+  String get equalizerReverbMediumRoom => 'Medium room';
+
+  @override
+  String get equalizerReverbLargeRoom => 'Large room';
+
+  @override
+  String get equalizerReverbMediumHall => 'Medium hall';
+
+  @override
+  String get equalizerReverbLargeHall => 'Large hall';
+
+  @override
+  String get equalizerReverbPlate => 'Plate';
 }

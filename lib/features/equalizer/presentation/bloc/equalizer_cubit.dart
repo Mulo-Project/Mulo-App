@@ -83,6 +83,15 @@ class EqualizerCubit extends Cubit<EqualizerState> {
   void setBassBoostPreview(double value) =>
       _preview(state.settings.copyWith(bassBoost: value.clamp(0.0, 1.0)));
 
+  void setVirtualizerPreview(double value) =>
+      _preview(state.settings.copyWith(virtualizer: value.clamp(0.0, 1.0)));
+
+  Future<void> selectReverb(EqualizerReverb reverb) =>
+      _change(state.settings.copyWith(reverb: reverb));
+
+  Future<void> setLimiter(bool value) =>
+      _change(state.settings.copyWith(limiter: value));
+
   /// 슬라이더에서 손을 뗐다: 지금 값을 저장한다.
   Future<void> commit() => _save(state.settings);
 
@@ -94,6 +103,8 @@ class EqualizerCubit extends Cubit<EqualizerState> {
         preset: EqualizerPreset.flat,
         levels: EqualizerPreset.flat.levelsFor(info.bandHz.length),
         bassBoost: 0,
+        virtualizer: 0,
+        reverb: EqualizerReverb.none,
       ),
     );
   }

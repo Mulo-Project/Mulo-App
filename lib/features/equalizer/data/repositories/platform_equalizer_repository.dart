@@ -37,6 +37,9 @@ class PlatformEqualizerRepository implements EqualizerRepository {
         minDb: (map['minDb'] as num).toDouble(),
         maxDb: (map['maxDb'] as num).toDouble(),
         bassBoostSupported: map['bassBoost'] == true,
+        virtualizerSupported: map['virtualizer'] == true,
+        reverbSupported: map['reverb'] == true,
+        limiterSupported: map['limiter'] == true,
       );
     } on Object {
       return null;
@@ -51,6 +54,9 @@ class PlatformEqualizerRepository implements EqualizerRepository {
         enabled: settings.enabled,
         levels: settings.levels,
         bassBoost: settings.bassBoost,
+        virtualizer: settings.virtualizer,
+        reverb: settings.reverb.index,
+        limiter: settings.limiter,
       );
     } on Object {
       // 엔진을 못 부르면 다음 시작 때 다시 반영된다.
@@ -67,6 +73,9 @@ class PlatformEqualizerRepository implements EqualizerRepository {
         'preset': settings.preset.name,
         'levels': settings.levels,
         'bassBoost': settings.bassBoost,
+        'virtualizer': settings.virtualizer,
+        'reverb': settings.reverb.name,
+        'limiter': settings.limiter,
       }),
     );
   }
@@ -85,6 +94,12 @@ class PlatformEqualizerRepository implements EqualizerRepository {
           for (final v in (map['levels'] as List)) (v as num).toDouble(),
         ],
         bassBoost: (map['bassBoost'] as num?)?.toDouble() ?? 0,
+        virtualizer: (map['virtualizer'] as num?)?.toDouble() ?? 0,
+        reverb: EqualizerReverb.values.firstWhere(
+          (r) => r.name == map['reverb'],
+          orElse: () => EqualizerReverb.none,
+        ),
+        limiter: map['limiter'] != false,
       );
     } on Object {
       return const EqualizerSettings();
