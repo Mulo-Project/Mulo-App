@@ -10,3 +10,12 @@ class GetAudioOutput implements UseCase<AudioOutput?, NoParams> {
   @override
   Future<AudioOutput?> call(NoParams params) => _repo.current();
 }
+
+class WatchAudioOutputChanges implements UseCase<Stream<void>, NoParams> {
+  const WatchAudioOutputChanges(this._repo);
+
+  final AudioOutputRepository _repo;
+
+  @override
+  Future<Stream<void>> call(NoParams params) async => _repo.watchChanges();
+}

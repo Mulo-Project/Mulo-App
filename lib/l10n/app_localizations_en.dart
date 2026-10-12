@@ -475,6 +475,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Keep playing when another app makes sound. Audio may overlap and get loud';
 
   @override
+  String get settingsPauseOnDisconnect => 'Pause when device disconnects';
+
+  @override
+  String get settingsPauseOnDisconnectDesc =>
+      'Stop playback when earphones are unplugged or Bluetooth disconnects';
+
+  @override
+  String get settingsResumeOnConnect => 'Resume when device connects';
+
+  @override
+  String get settingsResumeOnConnectDesc =>
+      'If playback stopped because of a disconnect, resume when a device reconnects within 10 minutes';
+
+  @override
   String get playerStyleTitle => 'Player theme';
 
   @override

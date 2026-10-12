@@ -962,6 +962,30 @@ abstract class AppLocalizations {
   /// **'다른 앱에서 소리가 나도 멈추지 않고 같이 들려요. 소리가 겹쳐 시끄러울 수 있어요'**
   String get settingsMixWithOthersDesc;
 
+  /// No description provided for @settingsPauseOnDisconnect.
+  ///
+  /// In ko, this message translates to:
+  /// **'기기가 끊기면 일시정지'**
+  String get settingsPauseOnDisconnect;
+
+  /// No description provided for @settingsPauseOnDisconnectDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'이어폰을 빼거나 블루투스 연결이 끊기면 재생을 멈춰요'**
+  String get settingsPauseOnDisconnectDesc;
+
+  /// No description provided for @settingsResumeOnConnect.
+  ///
+  /// In ko, this message translates to:
+  /// **'기기가 연결되면 이어 재생'**
+  String get settingsResumeOnConnect;
+
+  /// No description provided for @settingsResumeOnConnectDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'끊겨서 멈춘 재생을 10분 안에 다시 연결하면 이어서 재생해요'**
+  String get settingsResumeOnConnectDesc;
+
   /// No description provided for @playerStyleTitle.
   ///
   /// In ko, this message translates to:

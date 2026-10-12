@@ -24,6 +24,7 @@ import '../features/notifications/presentation/bloc/notification_sync_cubit.dart
 import '../features/notifications/presentation/widgets/notification_bridge.dart';
 import '../features/player/presentation/bloc/audio_output_cubit.dart';
 import '../features/player/presentation/bloc/now_playing_cubit.dart';
+import '../features/player/presentation/bloc/output_behavior_cubit.dart';
 import '../features/player/presentation/bloc/mix_with_others_cubit.dart';
 import '../features/player/presentation/bloc/player_style_cubit.dart';
 import '../features/playlists/presentation/bloc/playlists_cubit.dart';
@@ -94,9 +95,14 @@ class _MusicAppState extends State<MusicApp> {
         BlocProvider(create: (_) => sl<LibraryCubit>()..start()),
         BlocProvider(create: (_) => sl<LibraryImportCubit>()),
         BlocProvider(create: (_) => sl<NowPlayingCubit>()),
-        BlocProvider(create: (_) => sl<AudioOutputCubit>()..refresh()),
+        BlocProvider(
+          create: (_) => sl<AudioOutputCubit>()
+            ..refresh()
+            ..watch(),
+        ),
         BlocProvider(create: (_) => sl<PlayerStyleCubit>()..load()),
         BlocProvider(create: (_) => sl<MixWithOthersCubit>()..load()),
+        BlocProvider(create: (_) => sl<OutputBehaviorCubit>()..load()),
         // 시작할 때 저장된 이퀄라이저 값을 재생 엔진에 반영해야 하므로 바로 만든다.
         BlocProvider(lazy: false, create: (_) => sl<EqualizerCubit>()..load()),
         BlocProvider(create: (_) => sl<PlayRecorderCubit>()),

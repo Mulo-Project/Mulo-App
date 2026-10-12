@@ -53,6 +53,15 @@ class NativePlaybackChannel {
   Future<void> setMixWithOthers(bool mix) =>
       _method.invokeMethod('setMixWithOthers', mix);
 
+  /// 출력 기기 동작: 끊기면 일시정지할지, 연결되면 (끊겨서 멈춘 재생을) 이어 재생할지. 네이티브가 처리한다.
+  Future<void> setOutputBehavior({
+    required bool pauseOnDisconnect,
+    required bool resumeOnConnect,
+  }) => _method.invokeMethod('setOutputBehavior', {
+    'pauseOnDisconnect': pauseOnDisconnect,
+    'resumeOnConnect': resumeOnConnect,
+  });
+
   /// 알림 · 잠금화면에 보여 줄 내용. null이면 알림을 치운다 (재생은 그대로).
   Future<void> setSession(Map<String, Object?>? session) =>
       _method.invokeMethod('setSession', session);
