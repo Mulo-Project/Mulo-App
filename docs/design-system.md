@@ -78,6 +78,7 @@ MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부�
 | `MenuRow` | menu_row.dart | 메뉴 시트의 한 줄 (아이콘 + 글자, 삭제는 `destructive` 경고 색) |
 | `showAppMenu` · `AppMenuItem` | app_popup_menu.dart | 팝업 메뉴 (아이콘 + 글자, `destructive` 경고 색, `dividerBefore`, 색 견본용 `iconColor`, 고른 항목 `selected` 체크). 눌린 자리 또는 위젯 옆에 최상위 내비게이터로 연다 (곡 메뉴) |
 | `AppSwitch` | app_switch.dart | 토글 (켜짐 = 강조 색) |
+| `AppSlider` | app_slider.dart | 가는 막대 슬라이더 (가로 · 세로, 이퀄라이저) |
 | `PinPad` | pin_pad.dart | PIN 입력 판 (입력 자리 점 + 숫자 키패드, 0 왼쪽 칸에 생체 버튼). 입력값은 밖에서 들고 있음 |
 | `AppTextField` | app_text_field.dart | 라벨이 위에 붙은 둥근 입력칸 (폼). 글자는 세로 가운데. `maxLines`를 주면 여러 줄 |
 | `SectionCard` · `SettingRow` | section_card.dart | 설정 묶음(제목 + 구분선, 카드 면 없음) · 한 줄 |

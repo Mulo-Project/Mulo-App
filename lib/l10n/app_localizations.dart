@@ -3829,6 +3829,132 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'바로 받기'**
   String get notifNewVideoDownloadNow;
+
+  /// No description provided for @equalizerTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'이퀄라이저'**
+  String get equalizerTitle;
+
+  /// No description provided for @equalizerOn.
+  ///
+  /// In ko, this message translates to:
+  /// **'켜짐'**
+  String get equalizerOn;
+
+  /// No description provided for @equalizerOff.
+  ///
+  /// In ko, this message translates to:
+  /// **'꺼짐'**
+  String get equalizerOff;
+
+  /// No description provided for @equalizerUnsupported.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 기기에서는 이퀄라이저를 쓸 수 없어요'**
+  String get equalizerUnsupported;
+
+  /// No description provided for @equalizerEnable.
+  ///
+  /// In ko, this message translates to:
+  /// **'이퀄라이저 사용'**
+  String get equalizerEnable;
+
+  /// No description provided for @equalizerEnableDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'켜면 아래 설정대로 소리를 다듬어요. 기본은 꺼짐이에요'**
+  String get equalizerEnableDesc;
+
+  /// No description provided for @equalizerPreset.
+  ///
+  /// In ko, this message translates to:
+  /// **'프리셋'**
+  String get equalizerPreset;
+
+  /// No description provided for @equalizerBands.
+  ///
+  /// In ko, this message translates to:
+  /// **'대역별 조절'**
+  String get equalizerBands;
+
+  /// No description provided for @equalizerBassBoost.
+  ///
+  /// In ko, this message translates to:
+  /// **'저음 강화'**
+  String get equalizerBassBoost;
+
+  /// No description provided for @equalizerBassBoostDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'낮은 소리를 더 묵직하게 해요'**
+  String get equalizerBassBoostDesc;
+
+  /// No description provided for @equalizerReset.
+  ///
+  /// In ko, this message translates to:
+  /// **'처음으로'**
+  String get equalizerReset;
+
+  /// No description provided for @equalizerPresetFlat.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본'**
+  String get equalizerPresetFlat;
+
+  /// No description provided for @equalizerPresetBass.
+  ///
+  /// In ko, this message translates to:
+  /// **'저음 강조'**
+  String get equalizerPresetBass;
+
+  /// No description provided for @equalizerPresetTreble.
+  ///
+  /// In ko, this message translates to:
+  /// **'고음 강조'**
+  String get equalizerPresetTreble;
+
+  /// No description provided for @equalizerPresetVocal.
+  ///
+  /// In ko, this message translates to:
+  /// **'보컬'**
+  String get equalizerPresetVocal;
+
+  /// No description provided for @equalizerPresetRock.
+  ///
+  /// In ko, this message translates to:
+  /// **'록'**
+  String get equalizerPresetRock;
+
+  /// No description provided for @equalizerPresetPop.
+  ///
+  /// In ko, this message translates to:
+  /// **'팝'**
+  String get equalizerPresetPop;
+
+  /// No description provided for @equalizerPresetJazz.
+  ///
+  /// In ko, this message translates to:
+  /// **'재즈'**
+  String get equalizerPresetJazz;
+
+  /// No description provided for @equalizerPresetClassical.
+  ///
+  /// In ko, this message translates to:
+  /// **'클래식'**
+  String get equalizerPresetClassical;
+
+  /// No description provided for @equalizerPresetDance.
+  ///
+  /// In ko, this message translates to:
+  /// **'댄스'**
+  String get equalizerPresetDance;
+
+  /// No description provided for @equalizerPresetCustom.
+  ///
+  /// In ko, this message translates to:
+  /// **'직접 조절'**
+  String get equalizerPresetCustom;
 }
 
 class _AppLocalizationsDelegate

@@ -1,0 +1,122 @@
+import 'package:equatable/equatable.dart';
+
+/// 이퀄라이저 프리셋. [custom]은 대역을 직접 만진 상태.
+enum EqualizerPreset {
+  flat,
+  bass,
+  treble,
+  vocal,
+  rock,
+  pop,
+  jazz,
+  classical,
+  dance,
+  custom;
+
+  /// 낮은 소리 → 높은 소리 5점의 dB 곡선. 기기 대역 수에 맞춰 [levelsFor]가 펴 준다.
+  List<double>? get _curve => switch (this) {
+    flat => const [0, 0, 0, 0, 0],
+    bass => const [6, 4, 1, 0, 0],
+    treble => const [0, 0, 1, 4, 6],
+    vocal => const [-2, 0, 3, 3, -1],
+    rock => const [4, 2, -2, 2, 4],
+    pop => const [-1, 2, 4, 1, -1],
+    jazz => const [3, 1, -1, 1, 3],
+    classical => const [3, 2, 0, 2, 3],
+    dance => const [5, 3, 0, 2, 3],
+    custom => null,
+  };
+
+  /// [bands]개 대역의 dB (기기가 허용하는 [minDb]~[maxDb]로 자른다).
+  List<double> levelsFor(int bands, {double minDb = -15, double maxDb = 15}) {
+    final curve = _curve ?? const [0.0, 0.0, 0.0, 0.0, 0.0];
+    if (bands <= 0) return const [];
+    return [
+      for (var i = 0; i < bands; i++)
+        _sample(curve, bands == 1 ? 0 : i / (bands - 1)).clamp(minDb, maxDb),
+    ];
+  }
+
+  static double _sample(List<double> curve, double t) {
+    final pos = t * (curve.length - 1);
+    final lo = pos.floor();
+    final hi = pos.ceil();
+    return curve[lo] + (curve[hi] - curve[lo]) * (pos - lo);
+  }
+}
+
+/// 기기가 알려 주는 이퀄라이저 능력 (Android: Equalizer / BassBoost).
+class EqualizerInfo extends Equatable {
+  const EqualizerInfo({
+    required this.bandHz,
+    required this.minDb,
+    required this.maxDb,
+    required this.bassBoostSupported,
+  });
+
+  /// 대역별 중심 주파수 (Hz), 낮은 쪽부터.
+  final List<int> bandHz;
+  final double minDb;
+  final double maxDb;
+  final bool bassBoostSupported;
+
+  @override
+  List<Object?> get props => [bandHz, minDb, maxDb, bassBoostSupported];
+}
+
+/// 저장되는 이퀄라이저 값. 기본은 꺼짐 · 평평한 소리.
+class EqualizerSettings extends Equatable {
+  const EqualizerSettings({
+    this.enabled = false,
+    this.preset = EqualizerPreset.flat,
+    this.levels = const [],
+    this.bassBoost = 0,
+  });
+
+  final bool enabled;
+  final EqualizerPreset preset;
+
+  /// 대역별 dB (대역 수는 기기에 맞춘다).
+  final List<double> levels;
+
+  /// 저음 강화 0 ~ 1.
+  final double bassBoost;
+
+  EqualizerSettings copyWith({
+    bool? enabled,
+    EqualizerPreset? preset,
+    List<double>? levels,
+    double? bassBoost,
+  }) => EqualizerSettings(
+    enabled: enabled ?? this.enabled,
+    preset: preset ?? this.preset,
+    levels: levels ?? this.levels,
+    bassBoost: bassBoost ?? this.bassBoost,
+  );
+
+  /// 기기 대역 수에 맞춰 [levels]를 고른다 (수가 다르면 프리셋 곡선으로 다시 만든다).
+  EqualizerSettings fitTo(EqualizerInfo info) {
+    final n = info.bandHz.length;
+    final fitted = levels.length == n
+        ? [for (final v in levels) v.clamp(info.minDb, info.maxDb)]
+        : preset.levelsFor(n, minDb: info.minDb, maxDb: info.maxDb);
+    return copyWith(
+      levels: fitted,
+      bassBoost: info.bassBoostSupported ? bassBoost.clamp(0.0, 1.0) : 0,
+    );
+  }
+
+  @override
+  List<Object?> get props => [enabled, preset, levels, bassBoost];
+}
+
+/// 시작할 때 읽는 묶음: 기기 능력(없으면 null = 지원하지 않음)과 저장된 값.
+class EqualizerSetup extends Equatable {
+  const EqualizerSetup({required this.info, required this.settings});
+
+  final EqualizerInfo? info;
+  final EqualizerSettings settings;
+
+  @override
+  List<Object?> get props => [info, settings];
+}

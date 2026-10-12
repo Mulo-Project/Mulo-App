@@ -17,6 +17,7 @@ import '../../../downloads/presentation/bloc/download_preferences_cubit.dart';
 import '../../../downloads/presentation/bloc/download_settings_cubit.dart';
 import '../../../downloads/presentation/widgets/save_folder_dialog.dart';
 import '../../../engine/presentation/bloc/engine_cubit.dart';
+import '../../../equalizer/presentation/bloc/equalizer_cubit.dart';
 import '../../../library/presentation/widgets/loaded_folders_tile.dart';
 import '../../../notifications/presentation/bloc/notification_settings_cubit.dart';
 import '../../../permissions/presentation/widgets/permissions_section.dart';
@@ -256,6 +257,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         onChanged: context.read<MixWithOthersCubit>().set,
                       ),
                     ),
+                    // 이퀄라이저를 쓸 수 없는 환경(Android 밖)에서는 줄을 숨긴다.
+                    if (context.watch<EqualizerCubit>().state.supported)
+                      SettingRow(
+                        title: l10n.equalizerTitle,
+                        description:
+                            context
+                                .watch<EqualizerCubit>()
+                                .state
+                                .settings
+                                .enabled
+                            ? l10n.equalizerOn
+                            : l10n.equalizerOff,
+                        trailing: const _Chevron(),
+                        onTap: () => context.push(Routes.equalizer),
+                      ),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.lg),

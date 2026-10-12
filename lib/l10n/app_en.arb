@@ -676,7 +676,8 @@
   "notifDownloadFailedHidden": "A song could not be downloaded",
   "@notifDownloadProgressBody": {"placeholders": {"percent": {"type": "int"}}},
   "@notifDownloadProgressNext": {"placeholders": {"percent": {"type": "int"}, "next": {"type": "String"}}},
-  "@notifDownloadOverall": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}, "percent": {"type": "int"}}},
+  "@notifDownloadOverall": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}, "percent": {"type": "int"}}}
+,
   "subscribeAction": "Subscribe",
   "subscribedAction": "Subscribed",
   "subscribeAdded": "Subscribed. You'll be told about videos posted from now on",
@@ -730,5 +731,26 @@
   "channelSaveFolderDefault": "Default save folder",
   "channelSaveFolderChange": "Change",
   "channelSaveFolderReset": "Use default",
-  "notifNewVideoDownloadNow": "Download now"
+  "notifNewVideoDownloadNow": "Download now",
+  "equalizerTitle": "Equalizer",
+  "equalizerOn": "On",
+  "equalizerOff": "Off",
+  "equalizerUnsupported": "The equalizer isn't available on this device",
+  "equalizerEnable": "Use equalizer",
+  "equalizerEnableDesc": "Shapes the sound with the settings below. Off by default",
+  "equalizerPreset": "Presets",
+  "equalizerBands": "Bands",
+  "equalizerBassBoost": "Bass boost",
+  "equalizerBassBoostDesc": "Makes low sounds heavier",
+  "equalizerReset": "Reset",
+  "equalizerPresetFlat": "Flat",
+  "equalizerPresetBass": "Bass",
+  "equalizerPresetTreble": "Treble",
+  "equalizerPresetVocal": "Vocal",
+  "equalizerPresetRock": "Rock",
+  "equalizerPresetPop": "Pop",
+  "equalizerPresetJazz": "Jazz",
+  "equalizerPresetClassical": "Classical",
+  "equalizerPresetDance": "Dance",
+  "equalizerPresetCustom": "Custom"
 }

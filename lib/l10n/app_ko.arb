@@ -782,7 +782,8 @@
   "notifDownloadFailedHidden": "곡을 받지 못했어요",
   "@notifDownloadProgressBody": {"placeholders": {"percent": {"type": "int"}}},
   "@notifDownloadProgressNext": {"placeholders": {"percent": {"type": "int"}, "next": {"type": "String"}}},
-  "@notifDownloadOverall": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}, "percent": {"type": "int"}}},
+  "@notifDownloadOverall": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}, "percent": {"type": "int"}}}
+,
   "subscribeAction": "구독",
   "subscribedAction": "구독 중",
   "subscribeAdded": "구독했어요. 지금부터 올라오는 영상을 알려 드려요",
@@ -843,5 +844,26 @@
   "channelSaveFolderDefault": "기본 저장 위치",
   "channelSaveFolderChange": "변경",
   "channelSaveFolderReset": "기본으로",
-  "notifNewVideoDownloadNow": "바로 받기"
+  "notifNewVideoDownloadNow": "바로 받기",
+  "equalizerTitle": "이퀄라이저",
+  "equalizerOn": "켜짐",
+  "equalizerOff": "꺼짐",
+  "equalizerUnsupported": "이 기기에서는 이퀄라이저를 쓸 수 없어요",
+  "equalizerEnable": "이퀄라이저 사용",
+  "equalizerEnableDesc": "켜면 아래 설정대로 소리를 다듬어요. 기본은 꺼짐이에요",
+  "equalizerPreset": "프리셋",
+  "equalizerBands": "대역별 조절",
+  "equalizerBassBoost": "저음 강화",
+  "equalizerBassBoostDesc": "낮은 소리를 더 묵직하게 해요",
+  "equalizerReset": "처음으로",
+  "equalizerPresetFlat": "기본",
+  "equalizerPresetBass": "저음 강조",
+  "equalizerPresetTreble": "고음 강조",
+  "equalizerPresetVocal": "보컬",
+  "equalizerPresetRock": "록",
+  "equalizerPresetPop": "팝",
+  "equalizerPresetJazz": "재즈",
+  "equalizerPresetClassical": "클래식",
+  "equalizerPresetDance": "댄스",
+  "equalizerPresetCustom": "직접 조절"
 }

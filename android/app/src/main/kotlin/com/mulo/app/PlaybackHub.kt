@@ -86,6 +86,7 @@ object PlaybackHub {
             .setWakeMode(C.WAKE_MODE_LOCAL)
             .build()
         exo.addListener(playerListener)
+        EqualizerEngine.attach(exo.audioSessionId)
 
         sessionPlayer = SessionPlayer(exo) { name, positionMs -> emitCommand(name, positionMs) }
         val builder = MediaSession.Builder(context, sessionPlayer)
@@ -341,6 +342,10 @@ object PlaybackHub {
     }
 
     private val playerListener = object : Player.Listener {
+        override fun onAudioSessionIdChanged(audioSessionId: Int) {
+            EqualizerEngine.attach(audioSessionId)
+        }
+
         override fun onEvents(player: Player, events: Player.Events) {
             sessionPlayer.refresh()
         }

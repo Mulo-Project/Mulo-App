@@ -2029,4 +2029,67 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get notifNewVideoDownloadNow => '바로 받기';
+
+  @override
+  String get equalizerTitle => '이퀄라이저';
+
+  @override
+  String get equalizerOn => '켜짐';
+
+  @override
+  String get equalizerOff => '꺼짐';
+
+  @override
+  String get equalizerUnsupported => '이 기기에서는 이퀄라이저를 쓸 수 없어요';
+
+  @override
+  String get equalizerEnable => '이퀄라이저 사용';
+
+  @override
+  String get equalizerEnableDesc => '켜면 아래 설정대로 소리를 다듬어요. 기본은 꺼짐이에요';
+
+  @override
+  String get equalizerPreset => '프리셋';
+
+  @override
+  String get equalizerBands => '대역별 조절';
+
+  @override
+  String get equalizerBassBoost => '저음 강화';
+
+  @override
+  String get equalizerBassBoostDesc => '낮은 소리를 더 묵직하게 해요';
+
+  @override
+  String get equalizerReset => '처음으로';
+
+  @override
+  String get equalizerPresetFlat => '기본';
+
+  @override
+  String get equalizerPresetBass => '저음 강조';
+
+  @override
+  String get equalizerPresetTreble => '고음 강조';
+
+  @override
+  String get equalizerPresetVocal => '보컬';
+
+  @override
+  String get equalizerPresetRock => '록';
+
+  @override
+  String get equalizerPresetPop => '팝';
+
+  @override
+  String get equalizerPresetJazz => '재즈';
+
+  @override
+  String get equalizerPresetClassical => '클래식';
+
+  @override
+  String get equalizerPresetDance => '댄스';
+
+  @override
+  String get equalizerPresetCustom => '직접 조절';
 }
