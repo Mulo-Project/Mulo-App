@@ -589,8 +589,11 @@ object PlaybackHub {
                 pendingLoad?.success(null)
                 pendingLoad = null
             }
-            // 반복 없이 대기열 끝까지 들었다: 앱에 알리고 세션을 정리한다.
+            // 반복 없이 대기열 끝까지 들었다 (슬라이더를 끝까지 끈 경우 포함): 첫 곡으로 돌아가 멈춰 두고
+            // 앱에 알리고 세션을 정리한다. 다시 재생하면 첫 곡부터 나온다.
             if (playbackState == Player.STATE_ENDED) {
+                exo.playWhenReady = false
+                exo.seekTo(0, 0L)
                 emit(mapOf("type" to "ended"))
                 endSessionSoon()
             }

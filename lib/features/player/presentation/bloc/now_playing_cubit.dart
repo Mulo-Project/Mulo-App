@@ -309,11 +309,11 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     }
   }
 
-  /// 대기열 끝까지 들었다 (반복 없음): 마지막 곡에서 멈춘다.
+  /// 대기열 끝까지 들었다 (반복 없음): 엔진이 첫 곡으로 돌아가 멈춘 것과 같게 첫 곡에서 멈춘다.
   void _onEnded() {
     if (isClosed || state.track == null) return;
     _fromEngine = true;
-    emit(state.copyWith(isPlaying: false, position: Duration.zero));
+    emit(state.copyWith(index: 0, isPlaying: false, position: Duration.zero));
     _fromEngine = false;
   }
 
