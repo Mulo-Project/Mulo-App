@@ -6,6 +6,11 @@
 - 위젯은 색 · 그라데이션을 **토큰에서만** 읽는다: `context.palette.accent`, `context.tokens.glow(GlowTone.primary)`.
   `Color(0x…)`, `Colors.xxx`를 화면 코드에 쓰지 않는다. (예외: 테마 소스 입력값)
 - 간격 · 반경 · 시간은 `AppSpacing` · `AppRadii` · `AppMotion` · `AppSizes`.
+- 반경은 작게: 기본 `AppRadii.sm`(12), 큰 카드 · 시트 · 대화상자도 16~20 (D-106).
+- 아이콘 크기는 `AppSizes` 단계만 쓴다: `iconXs` 16 (글자 옆 작은 표시) · `iconSm` 18 (체크 · 펼치기) · `iconMd` 20 (줄 · 메뉴 · 입력칸) · `icon` 22 (버튼 안 기본) · `iconLg` 24 · `iconEmpty` 40 (빈 화면).
+- 제목과 바로 아래 부제 사이는 `AppSpacing.hair`(2).
+- 바텀 시트는 모두 `showAppSheet`로 열고 안쪽 여백은 `appSheetPadding`(가로 16), 제목은 `AppSheetTitle`. 빈 화면 안내는 `EmptyState`.
+- 설명 문구(`...Desc`)와 안내 본문은 문장이면 마침표로 끝낸다. 제목 · 버튼 · 안내 메시지(스낵바)는 마침표 없이.
 - 글자는 `Theme.of(context).textTheme` (글꼴 Pretendard 400 · 500 · 600 · 700), 큰 숫자는 `StatNumber`.
 - **유리**(`GlassSurface` · `GlassCard`: 뒤를 흐리게 비추는 반투명 면 + 왼쪽 위 빛 테두리)는 일부에만 쓴다 (D-015):
   가로 전체 미니 플레이어(모서리 둥글지 않음) · 하단 탭, 원형 버튼 · 보조(tonal) 버튼, 보관함 요약 카드.
@@ -76,7 +81,9 @@ MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부�
 | `SoundcloudMark` | soundcloud_mark.dart | 사운드클라우드 표시 (주황 둥근 사각형 + 검정 파형 막대 + 구름, 테마와 무관) |
 | `ColorPicker` | color_picker.dart | 커버 색 고르기 (자동 · 견본 12 · 색상 막대). 사용자가 고르는 색이라 견본은 테마 토큰이 아니라 고정 색 (토큰 규칙의 예외) |
 | `TrackTile` | track_tile.dart | 곡 한 줄 (커버 · 제목 · 부제 · 오른쪽 · 아래 줄). `onMenu(Offset)`: 길게 누르기 · 오른쪽 클릭 (눌린 좌표를 넘겨 팝업 메뉴를 그 자리에) |
-| `MenuRow` | menu_row.dart | 메뉴 시트의 한 줄 (아이콘 + 글자, 삭제는 `destructive` 경고 색) |
+| `MenuRow` | menu_row.dart | 메뉴 시트의 한 줄 (아이콘 + 글자, 삭제는 `destructive` 경고 색). 면 · 테두리 없이 줄만, 가로 여백 없이 시트 제목과 왼쪽 선을 맞춘다 |
+| `showAppSheet` · `AppSheetTitle` · `appSheetPadding` | app_sheet.dart | 공통 바텀 시트 (손잡이 · 윗모서리 `AppRadii.sheet` · 최상위 내비게이터), 시트 제목(titleLarge + 작은 부제), 안쪽 여백 |
+| `EmptyState` | empty_state.dart | 빈 화면 · 안내 묶음: (강조 색 아이콘 40) · 제목(titleMedium) · 옅은 설명 · (버튼), 가운데 정렬 |
 | `showAppMenu` · `AppMenuItem` | app_popup_menu.dart | 팝업 메뉴 (아이콘 + 글자, `destructive` 경고 색, `dividerBefore`, 색 견본용 `iconColor`, 고른 항목 `selected` 체크). 눌린 자리 또는 위젯 옆에 최상위 내비게이터로 연다 (곡 메뉴) |
 | `AppSwitch` | app_switch.dart | 토글 (켜짐 = 강조 색) |
 | `AppSlider` | app_slider.dart | 가는 막대 슬라이더 (가로 · 세로, 이퀄라이저) |
