@@ -41,6 +41,16 @@ class DeviceEqualizerSection extends StatelessWidget {
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // 연결 상태 점: 지금 연결돼(소리가 나가고) 있으면 강조 색, 아니면 옅은 색.
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: device.current ? p.accent : p.outline,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
                   Text(
                     lib.presetById(device.presetId)?.name ??
                         (device.hasProfile
