@@ -60,7 +60,11 @@ class ColorPicker extends StatelessWidget {
               label: autoLabel,
               selected: selected == null,
               onTap: () => onChanged(null),
-              child: Icon(AppIcons.refresh, size: 18, color: p.onSurface),
+              child: Icon(
+                AppIcons.refresh,
+                size: AppSizes.iconSm,
+                color: p.onSurface,
+              ),
             ),
             for (final (i, c) in presets.indexed)
               _Dot(
@@ -127,7 +131,11 @@ class _Dot extends StatelessWidget {
               child:
                   child ??
                   (selected
-                      ? Icon(AppIcons.check, size: 20, color: p.onGlow)
+                      ? Icon(
+                          AppIcons.check,
+                          size: AppSizes.iconMd,
+                          color: p.onGlow,
+                        )
                       : null),
             ),
           ),

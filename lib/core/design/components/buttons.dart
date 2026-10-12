@@ -70,7 +70,7 @@ class PillButton extends StatelessWidget {
               _Spinner(size: 16, color: fg),
               const SizedBox(width: AppSpacing.xs),
             ] else if (icon != null) ...[
-              Icon(icon, size: 18, color: fg),
+              Icon(icon, size: AppSizes.iconSm, color: fg),
               const SizedBox(width: AppSpacing.xs),
             ],
             Flexible(
@@ -335,7 +335,7 @@ class PlainButton extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                if (icon != null) Icon(icon, size: 16, color: fg),
+                if (icon != null) Icon(icon, size: AppSizes.iconXs, color: fg),
                 if (icon != null && label != null)
                   const SizedBox(width: AppSpacing.xxs),
                 if (label != null) Flexible(child: Text(label!, style: style)),

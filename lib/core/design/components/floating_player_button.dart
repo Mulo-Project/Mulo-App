@@ -101,7 +101,7 @@ class FloatingPlayerButton extends StatelessWidget {
                               color: p.scrim.withValues(alpha: .5),
                               child: Icon(
                                 isPlaying ? AppIcons.pause : AppIcons.play,
-                                size: 22,
+                                size: AppSizes.icon,
                                 color: p.onGlow,
                               ),
                             ),
@@ -144,7 +144,7 @@ class FloatingPlayerButton extends StatelessWidget {
                       dimension: _badge,
                       child: Icon(
                         AppIcons.expandOut,
-                        size: 20,
+                        size: AppSizes.iconMd,
                         color: p.onAccent,
                       ),
                     ),

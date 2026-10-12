@@ -102,7 +102,7 @@ class _TrackTileState extends State<TrackTile> {
                         color: w.active ? p.accent : p.onSurface,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppSpacing.hair),
                     Text(
                       w.subtitle,
                       maxLines: 1,

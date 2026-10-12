@@ -79,7 +79,11 @@ class _AppSearchFieldState extends State<AppSearchField> {
         child: Row(
           children: [
             widget.leading ??
-                Icon(AppIcons.search, color: p.onSurfaceMuted, size: 20),
+                Icon(
+                  AppIcons.search,
+                  color: p.onSurfaceMuted,
+                  size: AppSizes.iconMd,
+                ),
             const SizedBox(width: AppSpacing.xs),
             Expanded(
               // 고정 높이 안에서 글자를 세로 가운데에 둔다.
@@ -108,7 +112,11 @@ class _AppSearchFieldState extends State<AppSearchField> {
                   _controller.clear();
                   widget.onChanged?.call('');
                 },
-                icon: Icon(AppIcons.close, color: p.onSurfaceMuted, size: 20),
+                icon: Icon(
+                  AppIcons.close,
+                  color: p.onSurfaceMuted,
+                  size: AppSizes.iconMd,
+                ),
               )
             else if (widget.trailing != null)
               widget.trailing!,
