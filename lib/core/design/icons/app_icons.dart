@@ -6,9 +6,9 @@ import 'package:flutter/widgets.dart';
 /// 재생 컨트롤 · 선택 상태처럼 면이 필요한 곳만 채움(Fill)을 쓴다.
 /// 아이콘 세트를 바꾸거나 직접 그린 아이콘으로 교체할 때는 이 파일(과 폰트)만 고친다.
 abstract final class AppIcons {
-  /// 선 위로 내려앉는 화살표: 플로팅 버튼을 아래 미니 플레이어 띠로 돌려보낸다.
+  /// 안쪽으로 모이는 두 화살표: 플로팅 버튼을 미니 플레이어 띠로 접어 넣는다.
   static const IconData dockDown = IconData(
-    0xe05c,
+    0xe09e,
     fontFamily: 'PhosphorRegular',
     matchTextDirection: true,
   );
