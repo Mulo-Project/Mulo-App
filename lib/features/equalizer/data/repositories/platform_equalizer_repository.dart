@@ -135,6 +135,43 @@ class PlatformEqualizerRepository implements EqualizerRepository {
   }
 
   @override
+  Future<EqualizerSetup> loadForDevice(String deviceKey) async {
+    final prefs = await SharedPreferences.getInstance();
+    final base = _decode(prefs.getString(_key));
+    final info = await _info();
+    if (info == null) return EqualizerSetup(info: null, settings: base);
+    final device = (await devices())
+        .where((d) => d.key == deviceKey)
+        .firstOrNull;
+    try {
+      final profile = await _channel.profileFor(deviceKey);
+      if (profile != null) {
+        return EqualizerSetup(
+          info: info,
+          settings: _decode(jsonEncode(profile)),
+          device: device,
+        );
+      }
+    } on Object {
+      // 읽지 못하면 기본 값으로 보여 준다.
+    }
+    return EqualizerSetup(info: info, settings: base, device: device);
+  }
+
+  @override
+  Future<void> saveForDevice(
+    String deviceKey,
+    EqualizerSettings settings,
+  ) async {
+    if (!Platform.isAndroid) return;
+    try {
+      await _channel.saveProfileFor(deviceKey, _encode(settings));
+    } on Object {
+      // 저장하지 못하면 그대로다.
+    }
+  }
+
+  @override
   Stream<void> watchDevice() => _channel.deviceChanges;
 
   @override

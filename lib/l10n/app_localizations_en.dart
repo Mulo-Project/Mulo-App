@@ -2169,6 +2169,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get equalizerDeviceEdit => 'Edit in equalizer';
 
   @override
+  String get equalizerEditingDevice => 'Editing the settings for this device';
+
+  @override
   String get equalizerDeviceCurrent => 'Connected now';
 
   @override

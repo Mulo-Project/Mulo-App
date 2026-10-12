@@ -449,6 +449,13 @@ class MemoryEqualizerRepository implements EqualizerRepository {
   @override
   Stream<void> watchDevice() => const Stream.empty();
 
+  @override
+  Future<EqualizerSetup> loadForDevice(String deviceKey) => load();
+
+  @override
+  Future<void> saveForDevice(String deviceKey, EqualizerSettings s) async =>
+      settings = s;
+
   final List<EqualizerUserPreset> userPresets = [];
 
   @override

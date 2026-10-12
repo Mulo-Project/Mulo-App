@@ -51,6 +51,14 @@ class EqualizerChannel {
   Future<void> setBase(Map<String, Object?> values) =>
       _method.invokeMethod('setBase', values);
 
+  /// [key] 기기의 전용 값 (없으면 null).
+  Future<Map<Object?, Object?>?> profileFor(String key) =>
+      _method.invokeMapMethod<Object?, Object?>('profileFor', key);
+
+  /// [key] 기기의 전용 값을 저장한다 (지금 기기가 아니어도).
+  Future<void> saveProfileFor(String key, Map<String, Object?> values) =>
+      _method.invokeMethod('saveProfileFor', {'key': key, 'values': values});
+
   /// 이름을 붙여 만들어 둔 내 프리셋 (`id` `name` + `apply` 인자와 같은 값).
   Future<List<Object?>?> presets() =>
       _method.invokeListMethod<Object?>('presets');

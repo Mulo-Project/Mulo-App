@@ -108,15 +108,22 @@ class DeviceEqualizerSection extends StatelessWidget {
                     },
                   ),
                 ],
-                // 이퀄라이저 화면은 지금 연결된 기기의 값을 고친다.
-                if (device.current) ...[
+                // 이퀄라이저 화면에서 이 기기의 값을 직접 고친다 (연결돼 있지 않아도 된다).
+                ...[
                   const SizedBox(height: AppSpacing.md),
                   MenuRow(
                     icon: AppIcons.edit,
                     label: l10n.equalizerDeviceEdit,
                     onTap: () {
                       Navigator.of(sheet).pop();
-                      context.push(Routes.equalizer);
+                      context.push(
+                        device.current
+                            ? Routes.equalizer
+                            : Uri(
+                                path: Routes.equalizer,
+                                queryParameters: {'device': device.key},
+                              ).toString(),
+                      );
                     },
                   ),
                 ],

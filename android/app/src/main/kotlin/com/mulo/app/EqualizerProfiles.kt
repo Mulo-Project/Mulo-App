@@ -60,6 +60,16 @@ object EqualizerProfiles {
         return load(context, PROFILES).optJSONObject(key)?.let { toMap(it) }
     }
 
+    /** [key] 기기의 전용 값 (없으면 null). */
+    fun profileFor(context: Context, key: String): Map<String, Any?>? =
+        load(context, PROFILES).optJSONObject(key)?.let { toMap(it) }
+
+    /** [key] 기기의 전용 값을 저장한다 (그 기기가 지금 기기가 아니어도). */
+    fun saveProfileFor(context: Context, key: String, values: Map<*, *>) {
+        putProfile(context, key, values)
+        onOutputChanged(context)
+    }
+
     fun saveProfile(context: Context, values: Map<*, *>) =
         putProfile(context, currentDevice(context)["key"] as String, values)
 

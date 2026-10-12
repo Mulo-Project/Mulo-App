@@ -760,6 +760,7 @@
   "equalizerDeviceDefault": "Default settings",
   "equalizerDeviceCustom": "Custom",
   "equalizerDeviceEdit": "Edit in equalizer",
+  "equalizerEditingDevice": "Editing the settings for this device",
   "equalizerDeviceCurrent": "Connected now",
   "equalizerDevicePickTitle": "Preset for {device}",
   "@equalizerDevicePickTitle": {"placeholders": {"device": {"type": "String"}}},

@@ -17,6 +17,8 @@ void registerEqualizer(GetIt sl) {
     ..registerFactory(() => ApplyEqualizer(sl()))
     ..registerFactory(() => SaveEqualizer(sl()))
     ..registerFactory(() => SetEqualizerDeviceProfile(sl()))
+    ..registerFactory(() => LoadEqualizerForDevice(sl()))
+    ..registerFactory(() => SaveEqualizerForDevice(sl()))
     ..registerFactory(() => LoadEqualizerPresets(sl()))
     ..registerFactory(() => SaveEqualizerPreset(sl()))
     ..registerFactory(() => DeleteEqualizerPreset(sl()))
@@ -39,6 +41,8 @@ void registerEqualizer(GetIt sl) {
         applyEqualizer: sl(),
         saveEqualizer: sl(),
         setDeviceProfile: sl(),
+        loadForDevice: sl(),
+        saveForDevice: sl(),
         watchDevice: sl(),
       ),
     );

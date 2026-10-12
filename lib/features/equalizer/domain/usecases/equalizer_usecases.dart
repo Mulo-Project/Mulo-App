@@ -104,3 +104,33 @@ class AssignEqualizerPreset
   Future<void> call(({String deviceKey, String? presetId}) params) =>
       _repo.assignPreset(params.deviceKey, params.presetId);
 }
+
+/// 지금 기기가 아닌 [deviceKey] 기기의 값을 읽는다 (대역 수에 맞춰 편다).
+class LoadEqualizerForDevice implements UseCase<EqualizerSetup, String> {
+  const LoadEqualizerForDevice(this._repo);
+
+  final EqualizerRepository _repo;
+
+  @override
+  Future<EqualizerSetup> call(String deviceKey) async {
+    final setup = await _repo.loadForDevice(deviceKey);
+    final info = setup.info;
+    if (info == null) return setup;
+    return EqualizerSetup(
+      info: info,
+      settings: setup.settings.fitTo(info),
+      device: setup.device,
+    );
+  }
+}
+
+class SaveEqualizerForDevice
+    implements UseCase<void, ({String deviceKey, EqualizerSettings settings})> {
+  const SaveEqualizerForDevice(this._repo);
+
+  final EqualizerRepository _repo;
+
+  @override
+  Future<void> call(({String deviceKey, EqualizerSettings settings}) p) =>
+      _repo.saveForDevice(p.deviceKey, p.settings);
+}

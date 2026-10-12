@@ -873,6 +873,7 @@
   "equalizerDeviceDefault": "기본 설정",
   "equalizerDeviceCustom": "직접 설정",
   "equalizerDeviceEdit": "이퀄라이저에서 직접 설정",
+  "equalizerEditingDevice": "이 기기에 쓸 값을 고치는 중이에요",
   "equalizerDeviceCurrent": "지금 연결됨",
   "equalizerDevicePickTitle": "{device}에 쓸 프리셋",
   "@equalizerDevicePickTitle": {"placeholders": {"device": {"type": "String"}}},

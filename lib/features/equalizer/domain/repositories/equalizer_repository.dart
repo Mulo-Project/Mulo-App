@@ -13,6 +13,12 @@ abstract interface class EqualizerRepository {
   /// 값을 저장한다. 지금 출력 기기 전용 값이 있으면 그쪽에, 없으면 기본 저장 값에 저장한다.
   Future<void> save(EqualizerSettings settings);
 
+  /// [deviceKey] 기기의 값 (전용 값이 있으면 그 값, 없으면 기본 저장 값). 화면에서 그 기기를 직접 고칠 때 쓴다.
+  Future<EqualizerSetup> loadForDevice(String deviceKey);
+
+  /// [deviceKey] 기기의 전용 값으로 저장한다 (지금 기기가 아니어도).
+  Future<void> saveForDevice(String deviceKey, EqualizerSettings settings);
+
   /// 지금 출력 기기 전용 값을 만들거나([enabled] true, [settings]를 저장) 지운다 (기본 저장 값을 다시 쓴다).
   Future<void> setDeviceProfile(bool enabled, EqualizerSettings settings);
 

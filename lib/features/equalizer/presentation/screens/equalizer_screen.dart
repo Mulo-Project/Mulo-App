@@ -12,7 +12,10 @@ import '../widgets/device_equalizer_section.dart';
 /// 이퀄라이저: 켜고 끄기 · 프리셋 · 대역별 조절 · 효과. 손대는 즉시 소리에 반영되고,
 /// "저장"을 눌러야 저장된다 (저장하지 않고 나가면 저장된 값으로 되돌아간다).
 class EqualizerScreen extends StatefulWidget {
-  const EqualizerScreen({super.key});
+  const EqualizerScreen({super.key, this.deviceKey});
+
+  /// 지금 기기가 아니라 이 기기(열쇠)의 값을 고친다. null이면 지금 연결된 기기.
+  final String? deviceKey;
 
   @override
   State<EqualizerScreen> createState() => _EqualizerScreenState();
@@ -22,8 +25,16 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
   late final EqualizerCubit _cubit = context.read<EqualizerCubit>();
 
   @override
+  void initState() {
+    super.initState();
+    final key = widget.deviceKey;
+    if (key != null) _cubit.editDevice(key);
+  }
+
+  @override
   void dispose() {
     _cubit.discard();
+    if (widget.deviceKey != null) _cubit.editDevice(null);
     super.dispose();
   }
 
@@ -83,16 +94,23 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
                                 ),
                               ),
                               if (state.device case final device?) ...[
-                                SettingRow(
-                                  title: l10n.equalizerDeviceProfile,
-                                  description: l10n.equalizerDeviceProfileDesc(
-                                    deviceLabel(l10n, device),
+                                if (widget.deviceKey != null)
+                                  SettingRow(
+                                    title: deviceLabel(l10n, device),
+                                    description: l10n.equalizerEditingDevice,
+                                  )
+                                else
+                                  SettingRow(
+                                    title: l10n.equalizerDeviceProfile,
+                                    description: l10n
+                                        .equalizerDeviceProfileDesc(
+                                          deviceLabel(l10n, device),
+                                        ),
+                                    trailing: AppSwitch(
+                                      value: device.hasProfile,
+                                      onChanged: cubit.setDeviceProfile,
+                                    ),
                                   ),
-                                  trailing: AppSwitch(
-                                    value: device.hasProfile,
-                                    onChanged: cubit.setDeviceProfile,
-                                  ),
-                                ),
                               ],
                               divider(),
                               gap(AppSpacing.sm),

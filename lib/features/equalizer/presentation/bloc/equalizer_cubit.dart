@@ -46,12 +46,16 @@ class EqualizerCubit extends Cubit<EqualizerState> {
     required ApplyEqualizer applyEqualizer,
     required SaveEqualizer saveEqualizer,
     required SetEqualizerDeviceProfile setDeviceProfile,
+    required LoadEqualizerForDevice loadForDevice,
+    required SaveEqualizerForDevice saveForDevice,
     required WatchEqualizerDevice watchDevice,
   }) : _load = loadEqualizer,
        _apply = applyEqualizer,
        _save = saveEqualizer,
        _setProfile = setDeviceProfile,
        _watch = watchDevice,
+       _loadFor = loadForDevice,
+       _saveFor = saveForDevice,
        super(const EqualizerState());
 
   final LoadEqualizer _load;
@@ -59,7 +63,28 @@ class EqualizerCubit extends Cubit<EqualizerState> {
   final SaveEqualizer _save;
   final SetEqualizerDeviceProfile _setProfile;
   final WatchEqualizerDevice _watch;
+  final LoadEqualizerForDevice _loadFor;
+  final SaveEqualizerForDevice _saveFor;
   StreamSubscription<void>? _deviceChanges;
+
+  /// 지금 연결된 기기가 아니라 이 기기의 값을 고치는 중이면 그 기기 열쇠 (아니면 null).
+  String? _targetKey;
+
+  /// [key] 기기의 값을 고치러 들어간다 (null이면 지금 기기로 돌아간다).
+  /// 다른 기기의 값을 고치는 동안은 소리에 반영하지 않고, 저장하면 그 기기 전용 값이 된다.
+  Future<void> editDevice(String? key) async {
+    _targetKey = key;
+    await _reload();
+  }
+
+  void _applyLive(EqualizerSettings s) {
+    if (_targetKey == null) _apply(s);
+  }
+
+  Future<void> _persist(EqualizerSettings s) {
+    final key = _targetKey;
+    return key == null ? _save(s) : _saveFor((deviceKey: key, settings: s));
+  }
 
   Future<void> load() async {
     await _reload();
@@ -69,12 +94,15 @@ class EqualizerCubit extends Cubit<EqualizerState> {
     if (isClosed) return;
     _deviceChanges = changes.listen((_) {
       // 손보던 값이 있으면 덮어쓰지 않는다.
-      if (!state.dirty) _reload();
+      if (!state.dirty && _targetKey == null) _reload();
     });
   }
 
   Future<void> _reload() async {
-    final setup = await _load(const NoParams());
+    final key = _targetKey;
+    final setup = key == null
+        ? await _load(const NoParams())
+        : await _loadFor(key);
     if (isClosed) return;
     emit(
       EqualizerState(
@@ -99,8 +127,8 @@ class EqualizerCubit extends Cubit<EqualizerState> {
     final next = state.settings.copyWith(enabled: value);
     final saved = state.saved.copyWith(enabled: value);
     _emit(next, saved: saved);
-    _apply(next);
-    await _save(saved);
+    _applyLive(next);
+    await _persist(saved);
   }
 
   void selectPreset(EqualizerPreset preset) {
@@ -169,19 +197,19 @@ class EqualizerCubit extends Cubit<EqualizerState> {
   Future<void> save() async {
     final now = state.settings;
     _emit(now, saved: now);
-    await _save(now);
+    await _persist(now);
   }
 
   /// 저장하지 않은 변경을 버리고 저장된 값으로 소리를 되돌린다.
   void discard() {
     if (!state.dirty) return;
     _emit(state.saved);
-    _apply(state.saved);
+    _applyLive(state.saved);
   }
 
   void _preview(EqualizerSettings next) {
     _emit(next);
-    _apply(next);
+    _applyLive(next);
   }
 
   void _emit(EqualizerSettings next, {EqualizerSettings? saved}) => emit(
