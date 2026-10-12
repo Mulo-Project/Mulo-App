@@ -7,6 +7,7 @@
 | [design-system.md](design-system.md) | 디자인 시스템 (토큰 · 테마 소스 · 컴포넌트) |
 | [google-login-setup.md](google-login-setup.md) | 구글 로그인 설정 (Cloud 프로젝트 · 클라이언트 ID · 실행 값) |
 | [decisions.md](decisions.md) | 설계 결정 기록 |
+| [equalizer.md](equalizer.md) | 이퀄라이저 (네이티브 통로 · 저장) |
 | [troubleshooting-preview.md](troubleshooting-preview.md) | 미리 듣기 문제 해결 기록 |
 | [worklog/](worklog/README.md) | 작업 기록 (작업 하나 = 파일 하나) |
 

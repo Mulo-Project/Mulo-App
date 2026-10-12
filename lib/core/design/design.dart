@@ -9,6 +9,7 @@ export 'components/app_dialog.dart';
 export 'components/app_dropdown.dart';
 export 'components/app_popup_menu.dart';
 export 'components/app_search_field.dart';
+export 'components/app_slider.dart';
 export 'components/app_switch.dart';
 export 'components/app_text_field.dart';
 export 'components/app_top_bar.dart';

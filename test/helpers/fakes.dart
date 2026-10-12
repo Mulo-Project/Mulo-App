@@ -42,6 +42,9 @@ import 'package:music_download_play_app/features/player/di.dart';
 import 'package:music_download_play_app/features/player/domain/entities/player_style.dart';
 import 'package:music_download_play_app/features/player/domain/entities/playback_snapshot.dart';
 import 'package:music_download_play_app/features/player/domain/repositories/audio_player_repository.dart';
+import 'package:music_download_play_app/features/equalizer/di.dart';
+import 'package:music_download_play_app/features/equalizer/domain/entities/equalizer_settings.dart';
+import 'package:music_download_play_app/features/equalizer/domain/repositories/equalizer_repository.dart';
 import 'package:music_download_play_app/features/player/domain/repositories/mix_with_others_repository.dart';
 import 'package:music_download_play_app/features/player/domain/repositories/player_style_repository.dart';
 import 'package:music_download_play_app/features/playlists/di.dart';
@@ -405,6 +408,27 @@ class MemoryMixWithOthersRepository implements MixWithOthersRepository {
   Future<void> apply(bool v) async {}
 }
 
+class MemoryEqualizerRepository implements EqualizerRepository {
+  MemoryEqualizerRepository({
+    this.info,
+    this.settings = const EqualizerSettings(),
+  });
+
+  final EqualizerInfo? info;
+  EqualizerSettings settings;
+  EqualizerSettings? applied;
+
+  @override
+  Future<EqualizerSetup> load() async =>
+      EqualizerSetup(info: info, settings: settings);
+
+  @override
+  Future<void> apply(EqualizerSettings s) async => applied = s;
+
+  @override
+  Future<void> save(EqualizerSettings s) async => settings = s;
+}
+
 class MemoryThemeSettingsRepository implements ThemeSettingsRepository {
   MemoryThemeSettingsRepository([this.settings = const ThemeSettings()]);
 
@@ -706,6 +730,7 @@ Future<void> setUpTestDependencies({
   registerCovers(sl);
   registerLyrics(sl);
   registerPlayer(sl);
+  registerEqualizer(sl);
   registerHome(sl);
   registerPlaylists(sl);
   registerDownloads(sl);
@@ -736,6 +761,7 @@ Future<void> setUpTestDependencies({
     ..registerLazySingleton<MixWithOthersRepository>(
       MemoryMixWithOthersRepository.new,
     )
+    ..registerLazySingleton<EqualizerRepository>(MemoryEqualizerRepository.new)
     ..registerLazySingleton<ThemeSettingsRepository>(
       () => MemoryThemeSettingsRepository(theme),
     )

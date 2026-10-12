@@ -4,6 +4,7 @@ import '../../features/account/di.dart';
 import '../../features/covers/di.dart';
 import '../../features/downloads/di.dart';
 import '../../features/engine/di.dart';
+import '../../features/equalizer/di.dart';
 import '../../features/home/di.dart';
 import '../../features/library/di.dart';
 import '../../features/lyrics/di.dart';
@@ -33,6 +34,7 @@ void configureDependencies({AppDatabase? database}) {
   registerCovers(sl);
   registerLyrics(sl);
   registerPlayer(sl);
+  registerEqualizer(sl);
   registerHome(sl);
   registerPlaylists(sl);
   registerDownloads(sl);

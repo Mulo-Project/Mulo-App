@@ -509,9 +509,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerEqualizer => 'Equalizer';
 
   @override
-  String get playerEqualizerSoon => 'Equalizer is coming soon';
-
-  @override
   String get playerLyrics => 'Lyrics';
 
   @override
@@ -2078,4 +2075,111 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifNewVideoDownloadNow => 'Download now';
+
+  @override
+  String get equalizerTitle => 'Equalizer';
+
+  @override
+  String get equalizerOn => 'On';
+
+  @override
+  String get equalizerOff => 'Off';
+
+  @override
+  String get equalizerUnsupported =>
+      'The equalizer isn\'t available on this device';
+
+  @override
+  String get equalizerEnable => 'Use equalizer';
+
+  @override
+  String get equalizerEnableDesc =>
+      'Shapes the sound with the settings below. Off by default';
+
+  @override
+  String get equalizerPreset => 'Presets';
+
+  @override
+  String get equalizerBands => 'Bands';
+
+  @override
+  String get equalizerBassBoost => 'Bass boost';
+
+  @override
+  String get equalizerBassBoostDesc => 'Makes low sounds heavier';
+
+  @override
+  String get equalizerReset => 'Reset';
+
+  @override
+  String get equalizerPresetFlat => 'Flat';
+
+  @override
+  String get equalizerPresetBass => 'Bass';
+
+  @override
+  String get equalizerPresetTreble => 'Treble';
+
+  @override
+  String get equalizerPresetVocal => 'Vocal';
+
+  @override
+  String get equalizerPresetRock => 'Rock';
+
+  @override
+  String get equalizerPresetPop => 'Pop';
+
+  @override
+  String get equalizerPresetJazz => 'Jazz';
+
+  @override
+  String get equalizerPresetClassical => 'Classical';
+
+  @override
+  String get equalizerPresetDance => 'Hip-hop / EDM';
+
+  @override
+  String get equalizerPresetCustom => 'Custom';
+
+  @override
+  String get equalizerVirtualizer => 'Spatial sound';
+
+  @override
+  String get equalizerVirtualizerDesc => 'Widens the sound on headphones';
+
+  @override
+  String get equalizerReverb => 'Reverb';
+
+  @override
+  String get equalizerReverbDesc => 'Adds the echo of a room or hall';
+
+  @override
+  String get equalizerLimiter => 'Prevent clipping';
+
+  @override
+  String get equalizerLimiterDesc => 'Keeps loud sound from distorting';
+
+  @override
+  String get equalizerReverbNone => 'None';
+
+  @override
+  String get equalizerReverbSmallRoom => 'Small room';
+
+  @override
+  String get equalizerReverbMediumRoom => 'Medium room';
+
+  @override
+  String get equalizerReverbLargeRoom => 'Large room';
+
+  @override
+  String get equalizerReverbMediumHall => 'Medium hall';
+
+  @override
+  String get equalizerReverbLargeHall => 'Large hall';
+
+  @override
+  String get equalizerReverbPlate => 'Plate';
+
+  @override
+  String get equalizerSave => 'Save';
 }

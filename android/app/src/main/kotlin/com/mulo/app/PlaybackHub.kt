@@ -13,7 +13,11 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
+import androidx.media3.common.audio.AudioProcessor
+import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.audio.AudioSink
+import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.session.CommandButton
 import androidx.media3.session.MediaSession
 import androidx.media3.session.SessionCommand
@@ -76,7 +80,19 @@ object PlaybackHub {
         initialized = true
         context = appContext.applicationContext
 
-        exo = ExoPlayer.Builder(context)
+        // 공간 울림은 오디오 출력 앞단의 프로세서로 처리한다 (기기 효과보다 확실히 들린다).
+        val renderers = object : DefaultRenderersFactory(context) {
+            override fun buildAudioSink(
+                context: Context,
+                enableFloatOutput: Boolean,
+                enableAudioTrackPlaybackParams: Boolean,
+            ): AudioSink = DefaultAudioSink.Builder(context)
+                .setEnableFloatOutput(enableFloatOutput)
+                .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
+                .setAudioProcessors(arrayOf<AudioProcessor>(EqualizerEngine.reverbProcessor))
+                .build()
+        }
+        exo = ExoPlayer.Builder(context, renderers)
             // 다른 앱이 소리를 가져가면(영상, 통화) 멈추고, 이어폰이 빠지면 멈춘다.
             .setAudioAttributes(
                 AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).build(),
@@ -86,6 +102,7 @@ object PlaybackHub {
             .setWakeMode(C.WAKE_MODE_LOCAL)
             .build()
         exo.addListener(playerListener)
+        EqualizerEngine.attach(exo.audioSessionId)
 
         sessionPlayer = SessionPlayer(exo) { name, positionMs -> emitCommand(name, positionMs) }
         val builder = MediaSession.Builder(context, sessionPlayer)
@@ -341,6 +358,10 @@ object PlaybackHub {
     }
 
     private val playerListener = object : Player.Listener {
+        override fun onAudioSessionIdChanged(audioSessionId: Int) {
+            EqualizerEngine.attach(audioSessionId)
+        }
+
         override fun onEvents(player: Player, events: Player.Events) {
             sessionPlayer.refresh()
         }

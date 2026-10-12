@@ -8,6 +8,7 @@ import io.flutter.embedding.engine.FlutterEngine
 // 생체 인증(local_auth)이 FragmentActivity를 요구한다. 재생 · 알림은 PlaybackHub(서비스)가 쥐고 PlaybackChannel로 이어진다.
 class MainActivity : FlutterFragmentActivity() {
     private var playback: PlaybackChannel? = null
+    private var equalizer: EqualizerChannel? = null
     private var mediaStore: MediaStoreChannel? = null
     private var lyrics: LyricsChannel? = null
     private var audioOutput: AudioOutputChannel? = null
@@ -75,6 +76,7 @@ class MainActivity : FlutterFragmentActivity() {
         ytDlp = YtDlpChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
         transcoder = TranscoderChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
         playback = PlaybackChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
+        equalizer = EqualizerChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
         subscriptions = SubscriptionChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger) {
             moveTaskToBack(true)
         }
@@ -100,6 +102,8 @@ class MainActivity : FlutterFragmentActivity() {
         transcoder = null
         playback?.dispose()
         playback = null
+        equalizer?.dispose()
+        equalizer = null
         subscriptions?.dispose()
         subscriptions = null
         super.cleanUpFlutterEngine(flutterEngine)

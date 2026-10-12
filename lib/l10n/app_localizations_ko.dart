@@ -498,9 +498,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playerEqualizer => '이퀄라이저';
 
   @override
-  String get playerEqualizerSoon => '이퀄라이저는 준비 중이에요';
-
-  @override
   String get playerLyrics => '가사';
 
   @override
@@ -2029,4 +2026,109 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get notifNewVideoDownloadNow => '바로 받기';
+
+  @override
+  String get equalizerTitle => '이퀄라이저';
+
+  @override
+  String get equalizerOn => '켜짐';
+
+  @override
+  String get equalizerOff => '꺼짐';
+
+  @override
+  String get equalizerUnsupported => '이 기기에서는 이퀄라이저를 쓸 수 없어요';
+
+  @override
+  String get equalizerEnable => '이퀄라이저 사용';
+
+  @override
+  String get equalizerEnableDesc => '켜면 아래 설정대로 소리를 다듬어요. 기본은 꺼짐이에요';
+
+  @override
+  String get equalizerPreset => '프리셋';
+
+  @override
+  String get equalizerBands => '대역별 조절';
+
+  @override
+  String get equalizerBassBoost => '저음 강화';
+
+  @override
+  String get equalizerBassBoostDesc => '낮은 소리를 더 묵직하게 해요';
+
+  @override
+  String get equalizerReset => '처음으로';
+
+  @override
+  String get equalizerPresetFlat => '기본';
+
+  @override
+  String get equalizerPresetBass => '저음 강조';
+
+  @override
+  String get equalizerPresetTreble => '고음 강조';
+
+  @override
+  String get equalizerPresetVocal => '보컬';
+
+  @override
+  String get equalizerPresetRock => '록';
+
+  @override
+  String get equalizerPresetPop => '팝';
+
+  @override
+  String get equalizerPresetJazz => '재즈';
+
+  @override
+  String get equalizerPresetClassical => '클래식';
+
+  @override
+  String get equalizerPresetDance => '힙합 · EDM';
+
+  @override
+  String get equalizerPresetCustom => '직접 조절';
+
+  @override
+  String get equalizerVirtualizer => '입체 음향';
+
+  @override
+  String get equalizerVirtualizerDesc => '이어폰에서 소리가 더 넓게 퍼져 들려요';
+
+  @override
+  String get equalizerReverb => '공간 울림';
+
+  @override
+  String get equalizerReverbDesc => '방이나 홀에서 듣는 것 같은 잔향을 더해요';
+
+  @override
+  String get equalizerLimiter => '소리 찢어짐 방지';
+
+  @override
+  String get equalizerLimiterDesc => '소리를 많이 키워도 갈라지지 않게 눌러 줘요';
+
+  @override
+  String get equalizerReverbNone => '없음';
+
+  @override
+  String get equalizerReverbSmallRoom => '작은 방';
+
+  @override
+  String get equalizerReverbMediumRoom => '중간 방';
+
+  @override
+  String get equalizerReverbLargeRoom => '큰 방';
+
+  @override
+  String get equalizerReverbMediumHall => '중간 홀';
+
+  @override
+  String get equalizerReverbLargeHall => '큰 홀';
+
+  @override
+  String get equalizerReverbPlate => '플레이트';
+
+  @override
+  String get equalizerSave => '저장';
 }
