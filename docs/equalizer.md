@@ -9,7 +9,7 @@ Flutter는 화면과 값 저장만 맡고, 소리 처리는 **네이티브 효�
 | `apply` | `enabled` `levels`(대역별 dB 목록) `bassBoost`(0~1) `virtualizer`(0~1) `reverb`(PresetReverb 번호, 0=없음) `limiter`(bool) | 값을 엔진에 반영한다. 꺼짐이면 모든 효과를 끈다 |
 
 ## Android 구현
-- `EqualizerEngine`(Kotlin)이 ExoPlayer(`PlaybackHub.exo`)의 `audioSessionId`에 `Equalizer` · `BassBoost` · `Virtualizer`(입체 음향) · `PresetReverb`(공간 울림) · `DynamicsProcessing` 리미터(소리 찢어짐 방지, Android 9+)를 붙인다. 리미터는 기본 켜짐(임계 -2dB). 세션 번호가 바뀌면(`onAudioSessionIdChanged`) 효과를 다시 만들고 마지막 값을 다시 넣는다.
+- `EqualizerEngine`(Kotlin)이 ExoPlayer(`PlaybackHub.exo`)의 `audioSessionId`에 `Equalizer` · `BassBoost` · `Virtualizer`(입체 음향) · `PresetReverb`(공간 울림, 곡 세션이 아니라 전역 보조 효과로 만들어 `ExoPlayer.setAuxEffectInfo`로 건다) · `DynamicsProcessing` 리미터(소리 찢어짐 방지, Android 9+)를 붙인다. 리미터는 기본 켜짐(임계 -2dB). 세션 번호가 바뀌면(`onAudioSessionIdChanged`) 효과를 다시 만들고 마지막 값을 다시 넣는다.
 - 대역 수 · dB 범위는 기기마다 달라서(보통 5대역, ±15dB) Dart가 `info`로 읽어 슬라이더를 그린다. 프리셋은 5점 곡선이고 기기 대역 수에 맞춰 펴 준다 (`EqualizerPreset.levelsFor`).
 - 마지막 값은 `PlaybackHub`가 살아 있는 동안 네이티브가 쥐지만, 프로세스가 새로 뜨면 Dart(`EqualizerCubit`, 앱 시작 때 `load`)가 저장값을 다시 `apply`한다.
 

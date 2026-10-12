@@ -6,6 +6,7 @@ import android.media.audiofx.Equalizer
 import android.media.audiofx.PresetReverb
 import android.media.audiofx.Virtualizer
 import android.os.Build
+import androidx.media3.common.AuxEffectInfo
 
 /**
  * ExoPlayer의 오디오 세션에 붙이는 이퀄라이저 + 저음 강화 + 입체 음향(Virtualizer) + 공간 울림(PresetReverb)
@@ -37,7 +38,7 @@ object EqualizerEngine {
         equalizer = runCatching { Equalizer(0, newSessionId) }.getOrNull()
         bassBoost = runCatching { BassBoost(0, newSessionId) }.getOrNull()
         virtualizer = runCatching { Virtualizer(0, newSessionId) }.getOrNull()
-        reverb = runCatching { PresetReverb(0, newSessionId) }.getOrNull()
+        ensureReverb()
         limiter = createLimiter(newSessionId)
         push()
     }
@@ -76,6 +77,14 @@ object EqualizerEngine {
         push()
     }
 
+    /**
+     * 리버브는 곡 세션에 끼우는 효과가 아니라 보조(aux) 효과라서, 전역(세션 0)에 하나 만들어 두고
+     * 플레이어의 보조 효과로 건다. 세션에 직접 붙이면 많은 기기에서 소리가 달라지지 않는다.
+     */
+    private fun ensureReverb() {
+        if (reverb == null) reverb = runCatching { PresetReverb(0, 0) }.getOrNull()
+    }
+
     private fun push() {
         equalizer?.let { eq ->
             runCatching {
@@ -100,10 +109,15 @@ object EqualizerEngine {
                 v.enabled = enabled && virtual > 0
             }
         }
+        val reverbOn = enabled && reverbPreset > 0
         reverb?.let { r ->
             runCatching {
                 r.preset = reverbPreset.coerceIn(0, 6).toShort()
-                r.enabled = enabled && reverbPreset > 0
+                r.enabled = reverbOn
+            }
+            runCatching {
+                if (reverbOn) PlaybackHub.exo.setAuxEffectInfo(AuxEffectInfo(r.id, 1f))
+                else PlaybackHub.exo.clearAuxEffectInfo()
             }
         }
         limiter?.let { dp -> runCatching { dp.enabled = enabled && limiterOn } }
@@ -133,12 +147,10 @@ object EqualizerEngine {
         runCatching { equalizer?.release() }
         runCatching { bassBoost?.release() }
         runCatching { virtualizer?.release() }
-        runCatching { reverb?.release() }
         runCatching { limiter?.release() }
         equalizer = null
         bassBoost = null
         virtualizer = null
-        reverb = null
         limiter = null
     }
 }
