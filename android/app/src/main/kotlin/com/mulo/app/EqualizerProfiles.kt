@@ -165,6 +165,11 @@ object EqualizerProfiles {
                 "key" to curKey, "type" to current["type"], "name" to current["name"], "lastSeen" to 0L,
             )
         }
+        // 기기 스피커는 연결된 적 없어도 항상 목록에 둔다 (스피커 전용 값을 정할 수 있게).
+        val speakerKey = keyOf("speaker", "")
+        if (!result.containsKey(speakerKey)) {
+            result[speakerKey] = mutableMapOf("key" to speakerKey, "type" to "speaker", "name" to "", "lastSeen" to 0L)
+        }
         for (k in profiles.keys()) {
             if (!result.containsKey(k)) {
                 result[k] = mutableMapOf(
