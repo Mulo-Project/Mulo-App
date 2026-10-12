@@ -71,12 +71,12 @@ void main() {
     expect(find.text('길게 눌러 끌면 순서가 바뀌어요'), findsOneWidget);
   });
 
-  testWidgets('대기열: 다음 곡 섞기 · 비우기, 곡 메뉴', (tester) async {
+  testWidgets('대기열: 전체 섞기 · 비우기, 곡 메뉴', (tester) async {
     await openQueue(tester);
     await tester.tap(find.byTooltip('재생 대기열'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('다음 곡 섞기'));
+    await tester.tap(find.byTooltip('전체 섞기'));
     await tester.pumpAndSettle();
     expect(find.text('3곡'), findsOneWidget);
 

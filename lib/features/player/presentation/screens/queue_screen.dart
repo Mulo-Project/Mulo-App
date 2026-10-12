@@ -50,7 +50,7 @@ class _ClearDialog extends StatelessWidget {
   }
 }
 
-/// 재생 대기열 화면: 곡 수 · 다음 곡 섞기 · 비우기(위에 고정), 지금 재생 중인 곡 강조,
+/// 재생 대기열 화면: 곡 수 · 전체 섞기 · 비우기(위에 고정), 지금 재생 중인 곡 강조,
 /// 곡을 누르면 그 곡부터 재생, ⋮는 곡 메뉴(보관함과 같은 메뉴), 길게 눌러 끌면 순서가 바뀐다.
 class QueueScreen extends StatelessWidget {
   const QueueScreen({super.key});
@@ -84,7 +84,7 @@ class QueueScreen extends StatelessWidget {
               if (queue.isNotEmpty)
                 _QueueHeader(
                   count: queue.length,
-                  onShuffle: vm.shuffleUpNext,
+                  onShuffle: vm.shuffleQueue,
                   onClear: () => _confirmClear(context),
                 ),
               Expanded(
@@ -137,7 +137,7 @@ class QueueScreen extends StatelessWidget {
   }
 }
 
-/// 맨 위 줄: 곡 수와 안내, 다음 곡 섞기 · 대기열 비우기.
+/// 맨 위 줄: 곡 수와 안내, 전체 섞기 · 대기열 비우기.
 class _QueueHeader extends StatelessWidget {
   const _QueueHeader({
     required this.count,
@@ -170,17 +170,14 @@ class _QueueHeader extends StatelessWidget {
               ],
             ),
           ),
-          CircleIconButton(
+          RowIconButton(
             icon: AppIcons.shuffle,
             tooltip: l10n.queueShuffle,
-            size: 40,
             onPressed: onShuffle,
           ),
-          const SizedBox(width: AppSpacing.xs),
-          CircleIconButton(
+          RowIconButton(
             icon: AppIcons.deleteAll,
             tooltip: l10n.queueClear,
-            size: 40,
             onPressed: onClear,
           ),
         ],
@@ -211,6 +208,7 @@ class _QueueTile extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final key = CoverKey.track(track.id);
 
+    // 바깥 xs + 안쪽 xs = 16: 번호가 위 곡 수 글자와 같은 왼쪽 선에서 시작한다.
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
       child: DecoratedBox(
@@ -228,6 +226,7 @@ class _QueueTile extends StatelessWidget {
           artwork: coverImageOf(context, key),
           active: active,
           number: number,
+          horizontalPadding: AppSpacing.xs,
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [

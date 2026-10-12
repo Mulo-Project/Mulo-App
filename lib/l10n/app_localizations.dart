@@ -1157,7 +1157,7 @@ abstract class AppLocalizations {
   /// No description provided for @queueShuffle.
   ///
   /// In ko, this message translates to:
-  /// **'다음 곡 섞기'**
+  /// **'전체 섞기'**
   String get queueShuffle;
 
   /// No description provided for @queueClear.

@@ -579,7 +579,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get outputOther => 'External output';
 
   @override
-  String get queueShuffle => 'Shuffle up next';
+  String get queueShuffle => 'Shuffle all';
 
   @override
   String get queueClear => 'Clear queue';

@@ -566,7 +566,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get outputOther => '외부 출력';
 
   @override
-  String get queueShuffle => '다음 곡 섞기';
+  String get queueShuffle => '전체 섞기';
 
   @override
   String get queueClear => '대기열 비우기';
