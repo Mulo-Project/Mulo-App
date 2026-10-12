@@ -28,6 +28,14 @@ class MiniFloatGeometry {
     final mid = (safe.left + safe.right) / 2;
     return Offset(c.dx < mid ? safe.left : safe.right, c.dy);
   }
+
+  /// 돌아가기 점이 뻗는 쪽: 화면 안쪽(가운데 방향)으로, 위쪽 벽에 가까우면 아래로.
+  /// 버튼이 벽에 닿으면 점이 부드럽게 반대쪽 면으로 옮겨 간다.
+  Offset bubbleSide(Offset p) {
+    final mid = (safe.left + safe.right) / 2;
+    final nearTop = p.dy - safe.top < FloatingPlayerButton.reach + 40;
+    return Offset(p.dx < mid ? 1 : -1, nearTop ? 1 : -1);
+  }
 }
 
 /// 본문 위에 얹는 미니 플레이어 플로팅 버튼. 부모 [Stack]이 본문 전체 크기여야 한다.
@@ -76,8 +84,8 @@ class MiniFloatLayer extends StatelessWidget {
         final area = gripping ? geometry.area : geometry.safe;
         final o = MiniFloatGeometry.clampTo(area, position.value);
         return AnimatedPositioned(
-          left: o.dx,
-          top: o.dy,
+          left: o.dx - FloatingPlayerButton.reach,
+          top: o.dy - FloatingPlayerButton.reach,
           duration: moving.value ? Duration.zero : AppMotion.slow,
           curve: Curves.easeOutBack,
           child: TweenAnimationBuilder<double>(
@@ -103,6 +111,7 @@ class MiniFloatLayer extends StatelessWidget {
                       playLabel: l10n.actionPlay,
                       pauseLabel: l10n.actionPause,
                       expandLabel: l10n.playerFloatExpand,
+                      bubbleSide: geometry.bubbleSide(o),
                       artwork: coverImageOf(context, CoverKey.track(track.id)),
                       onPlayPause: context.read<NowPlayingCubit>().togglePlay,
                       onExpand: onExpand,

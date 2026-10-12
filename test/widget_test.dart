@@ -172,7 +172,11 @@ void main() {
     await tester.pumpAndSettle();
 
     final screen = tester.view.physicalSize / tester.view.devicePixelRatio;
-    final float = tester.getRect(find.byType(FloatingPlayerButton));
+    final circle = find.descendant(
+      of: find.byType(FloatingPlayerButton),
+      matching: find.byType(GlassSurface),
+    );
+    final float = tester.getRect(circle);
     // 가까운 왼쪽 가장자리에 붙고, 하단 바 위에 머문다.
     expect(float.left, AppSpacing.md);
     expect(float.bottom, lessThan(screen.height - 80));
@@ -184,10 +188,7 @@ void main() {
       Offset(screen.width, 0),
     );
     await tester.pumpAndSettle();
-    expect(
-      tester.getRect(find.byType(FloatingPlayerButton)).right,
-      screen.width - AppSpacing.md,
-    );
+    expect(tester.getRect(circle).right, screen.width - AppSpacing.md);
 
     await tester.tap(find.byTooltip('미니 플레이어로 돌아가기'));
     await tester.pumpAndSettle();
