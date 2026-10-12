@@ -642,3 +642,4 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 - 읽는 방법은 OS별로 나눴다: Android는 `MediaStoreChannel.embeddedPicture`(`MediaMetadataRetriever`, 파일을 복사하지 않음), 데스크톱은 `audio_metadata_reader`. MediaStore 썸네일은 D-070대로 쓰지 않는다.
 - 긴 변 512px PNG로 줄여 앱 캐시의 임시 파일로 만든 뒤 기존 `SaveCover`(앱 폴더 `covers/`, 곡을 지우면 함께 지움)로 저장하고 임시 파일은 지운다. 원본 크기 그림을 보관하지 않는다.
 - 이미 가져온 곡은 **다시 불러올 때** 커버가 비어 있는 곡만 채운다. 직접 고른 커버 · 웹 썸네일 · 받은 곡은 건드리지 않고, 파일이 사라진 커버는 빈 것으로 본다.
+- (D-101 이어서) **받을 때 고른 커버를 파일 태그에도 넣는다**(`CoverTagWriter`): 저장 직전에 고른 커버(없으면 썸네일)를 고른 확대 · 위치대로 정사각형 512px PNG로 잘라 ID3(mp3) · m4a 태그에 쓴다. 그래서 다른 음악 앱에서도 커버가 보인다. `audio_metadata_reader`가 태그 쓰기를 지원하는 mp3(ID3 태그가 이미 있는 것 — ffmpeg 출력은 있다) · m4a만 쓰고, opus · ogg · webm(`lite`의 원본 `.weba` 포함)은 태그 쓰기를 지원하지 않아 건드리지 않는다. 앱 안 커버는 항상 DB에 따로 있다. 못 써도 받기는 실패하지 않는다.

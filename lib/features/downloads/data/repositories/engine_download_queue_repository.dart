@@ -15,6 +15,7 @@ import '../../domain/repositories/download_queue_repository.dart';
 import '../../domain/repositories/download_settings_repository.dart';
 import '../datasources/audio_file_downloader.dart';
 import '../datasources/audio_transcoder.dart';
+import '../datasources/cover_tag_writer.dart';
 import '../datasources/download_queue_store.dart';
 import '../datasources/downloaded_file_store.dart';
 
@@ -39,6 +40,7 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
     required this._transcoder,
     required this._queueStore,
     required this._tempDir,
+    this._coverTags,
     DateTime Function()? now,
   }) : _now = now ?? DateTime.now;
 
@@ -51,6 +53,7 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
   final CoverColorRepository _colors;
   final DownloadSettingsRepository _settings;
   final AudioTranscoder _transcoder;
+  final CoverTagWriter? _coverTags;
   final DownloadQueueStore _queueStore;
   final Future<Directory> Function() _tempDir;
   final DateTime Function() _now;
@@ -406,6 +409,15 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
         if (token.isCancelled) throw const DownloadAborted();
         if (result != null) audio = result;
       }
+
+      // 고른 커버(없으면 썸네일)를 파일 태그에도 넣는다. 쓸 수 없는 형식이면 그대로 저장한다.
+      await _coverTags?.embed(
+        audio.file,
+        extension: audio.extension,
+        cover: request.cover,
+        thumbnailUrl: request.thumbnailUrl,
+      );
+      if (token.isCancelled) throw const DownloadAborted();
 
       final folder = request.savePath.isNotEmpty
           ? request.savePath

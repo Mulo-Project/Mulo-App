@@ -11,6 +11,8 @@
 - Android `MediaStoreChannel`에 `embeddedPicture`, 데스크톱은 `audio_metadata_reader`로 읽고 512px로 줄여 저장.
 - `FillEmbeddedCovers` 유스케이스, `EmbeddedCoverRepository`, `LibraryImportCubit`(`coversSeq`), 보관함 화면의 커버 다시 읽기.
 
+- 받을 때 고른 커버를 mp3 · m4a 태그에도 씀 (`CoverTagWriter`, 받기 대기열 저장 직전). opus · `.weba`는 쓰기 미지원이라 파일에는 안 들어감.
+
 ## 바꾼 설정
 - Kotlin: `MediaStoreChannel.kt`에 호출 하나 추가. pubspec · Manifest 변경 없음 (`audio_metadata_reader`는 이미 사용 중).
 
