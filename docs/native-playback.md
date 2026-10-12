@@ -19,6 +19,7 @@ Dart 쪽 도메인 인터페이스: `AudioPlayerRepository`(엔진 · 대기열)
 | `setQueueArt` | 맵 (곡 id → 커버 주소) | 대기열 곡별 커버. 지금 곡이 아닌 곡의 알림 커버로 쓴다 (앱이 꺼진 사이 곡이 넘어가도 커버가 나오게). 곡 정보 숨기기가 켜져 있으면 빈 맵 |
 | `getState` | – | 지금 쥐고 있는 스냅샷 (+ `playing` · `positionMs`). 곡이 없으면 null. 앱을 다시 켰을 때 복원용 |
 | `takeOpenPlayerRequest` | – | 알림을 눌러 앱이 **새로 켜졌는지** 한 번 알려 주고 비운다 |
+| `setMixWithOthers` | bool | true면 오디오 포커스를 쓰지 않아 다른 앱 소리와 겹쳐 재생 (기본 false: 뺏기면 멈춤) |
 | `setSession` | 아래 맵 또는 null | null이면 알림을 치운다 (재생은 그대로) |
 
 `setQueue` 스냅샷 맵: `items`(`id uri title artist album durationMs`의 목록, **Dart가 정한 순서**) `index` `playing` `repeat`(`off` `all` `one`) `positionMs`(없으면 같은 곡을 계속 듣는 것으로 보고 위치를 그대로 둔다) `extras`.

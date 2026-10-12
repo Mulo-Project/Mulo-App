@@ -23,6 +23,7 @@ import '../features/notifications/presentation/bloc/notification_sync_cubit.dart
 import '../features/notifications/presentation/widgets/notification_bridge.dart';
 import '../features/player/presentation/bloc/audio_output_cubit.dart';
 import '../features/player/presentation/bloc/now_playing_cubit.dart';
+import '../features/player/presentation/bloc/mix_with_others_cubit.dart';
 import '../features/player/presentation/bloc/player_style_cubit.dart';
 import '../features/playlists/presentation/bloc/playlists_cubit.dart';
 import '../features/search/presentation/bloc/preview_cubit.dart';
@@ -94,6 +95,7 @@ class _MusicAppState extends State<MusicApp> {
         BlocProvider(create: (_) => sl<NowPlayingCubit>()),
         BlocProvider(create: (_) => sl<AudioOutputCubit>()..refresh()),
         BlocProvider(create: (_) => sl<PlayerStyleCubit>()..load()),
+        BlocProvider(create: (_) => sl<MixWithOthersCubit>()..load()),
         BlocProvider(create: (_) => sl<PlayRecorderCubit>()),
         BlocProvider(create: (_) => sl<PreviewCubit>()),
         BlocProvider(create: (_) => sl<DownloadQueueCubit>()..start()),

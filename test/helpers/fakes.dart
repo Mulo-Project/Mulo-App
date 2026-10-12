@@ -42,6 +42,7 @@ import 'package:music_download_play_app/features/player/di.dart';
 import 'package:music_download_play_app/features/player/domain/entities/player_style.dart';
 import 'package:music_download_play_app/features/player/domain/entities/playback_snapshot.dart';
 import 'package:music_download_play_app/features/player/domain/repositories/audio_player_repository.dart';
+import 'package:music_download_play_app/features/player/domain/repositories/mix_with_others_repository.dart';
 import 'package:music_download_play_app/features/player/domain/repositories/player_style_repository.dart';
 import 'package:music_download_play_app/features/playlists/di.dart';
 import 'package:music_download_play_app/features/playlists/domain/entities/playlist.dart';
@@ -391,6 +392,19 @@ class MemoryPlayerStyleRepository implements PlayerStyleRepository {
   Future<void> save(PlayerStyle value) async => style = value;
 }
 
+class MemoryMixWithOthersRepository implements MixWithOthersRepository {
+  bool value = false;
+
+  @override
+  Future<bool> load() async => value;
+
+  @override
+  Future<void> save(bool v) async => value = v;
+
+  @override
+  Future<void> apply(bool v) async {}
+}
+
 class MemoryThemeSettingsRepository implements ThemeSettingsRepository {
   MemoryThemeSettingsRepository([this.settings = const ThemeSettings()]);
 
@@ -718,6 +732,9 @@ Future<void> setUpTestDependencies({
     )
     ..registerLazySingleton<PlayerStyleRepository>(
       () => MemoryPlayerStyleRepository(playerStyle),
+    )
+    ..registerLazySingleton<MixWithOthersRepository>(
+      MemoryMixWithOthersRepository.new,
     )
     ..registerLazySingleton<ThemeSettingsRepository>(
       () => MemoryThemeSettingsRepository(theme),

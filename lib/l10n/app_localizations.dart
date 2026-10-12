@@ -944,6 +944,24 @@ abstract class AppLocalizations {
   /// **'고른 테마로 앱 화면들을 직접 둘러보고 적용해요'**
   String get settingsThemePreviewDesc;
 
+  /// No description provided for @settingsPlayback.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생 설정'**
+  String get settingsPlayback;
+
+  /// No description provided for @settingsMixWithOthers.
+  ///
+  /// In ko, this message translates to:
+  /// **'다른 앱과 함께 재생'**
+  String get settingsMixWithOthers;
+
+  /// No description provided for @settingsMixWithOthersDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'다른 앱에서 소리가 나도 멈추지 않고 같이 들려요. 소리가 겹쳐 시끄러울 수 있어요'**
+  String get settingsMixWithOthersDesc;
+
   /// No description provided for @playerStyleTitle.
   ///
   /// In ko, this message translates to:

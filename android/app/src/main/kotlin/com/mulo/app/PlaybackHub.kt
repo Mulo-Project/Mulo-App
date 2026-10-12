@@ -202,6 +202,14 @@ object PlaybackHub {
 
     fun artFor(id: String): Uri? = artById[id]?.let { Uri.parse(it) }
 
+    /** true면 오디오 포커스를 따로 다루지 않아 다른 앱 소리와 겹쳐 재생한다. false면 뺏기면 멈춘다. */
+    fun setMixWithOthers(mix: Boolean) {
+        exo.setAudioAttributes(
+            AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).build(),
+            !mix,
+        )
+    }
+
     /** 대기열 곡별 커버 주소를 받는다. 지금 곡은 앱이 [setSession]으로 보내므로 건드리지 않는다. */
     fun setQueueArt(map: Map<*, *>) {
         artById = map.entries.mapNotNull { (k, v) -> if (k is String && v is String) k to v else null }.toMap()

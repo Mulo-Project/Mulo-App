@@ -465,6 +465,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Browse the real screens with a theme, then apply it';
 
   @override
+  String get settingsPlayback => 'Playback options';
+
+  @override
+  String get settingsMixWithOthers => 'Play with other apps';
+
+  @override
+  String get settingsMixWithOthersDesc =>
+      'Keep playing when another app makes sound. Audio may overlap and get loud';
+
+  @override
   String get playerStyleTitle => 'Player theme';
 
   @override

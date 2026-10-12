@@ -454,6 +454,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsThemePreviewDesc => '고른 테마로 앱 화면들을 직접 둘러보고 적용해요';
 
   @override
+  String get settingsPlayback => '재생 설정';
+
+  @override
+  String get settingsMixWithOthers => '다른 앱과 함께 재생';
+
+  @override
+  String get settingsMixWithOthersDesc =>
+      '다른 앱에서 소리가 나도 멈추지 않고 같이 들려요. 소리가 겹쳐 시끄러울 수 있어요';
+
+  @override
   String get playerStyleTitle => '플레이어 테마';
 
   @override
