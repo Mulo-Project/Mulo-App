@@ -309,6 +309,7 @@ object PlaybackHub {
     /** 앱에서 다시 재생을 시작한다: 정리해 둔 세션을 되살리고 이어폰 분리로 멈춘 기록을 비운다. */
     private fun revive() {
         pausedByNoisyAt = 0L
+        previewRevived = false
         if (!dismissed && session != null) return
         dismissed = false
         if (session == null) buildSession()
@@ -406,21 +407,38 @@ object PlaybackHub {
         }
     }
 
+    /** 미리 듣기 내용이 알림에 올라 있는지. 화면이 없어도 Flutter 엔진(미리 듣기 소리)을 살려 둘 이유가 된다. */
+    val isPreviewing get() = initialized && sessionPlayer.info?.preview == true
+
+    /** 알림을 지운(닫기) 상태에서 미리 듣기 때문에 세션을 잠깐 되살린 상태. 미리 듣기가 끝나면 다시 치운다. */
+    private var previewRevived = false
+
     /** [map]이 null이면 알림을 치운다 (재생은 그대로). */
     fun setSession(map: Map<*, *>?) {
         restoredFromStore = false
-        if (map == null) {
+        val info = map?.let { SessionInfo(it) }
+        if (previewRevived && info?.preview != true) {
+            previewRevived = false
+            service?.hideSession()
+            releaseSession()
+        }
+        MuloEngine.releaseWhenIdle()
+        if (info == null) {
             isNotificationVisible = false
             sessionPlayer.info = null
             service?.hideSession()
             PlaybackStore.saveSession(context, null)
             return
         }
-        val info = SessionInfo(map)
+        // 닫기(X) 뒤에도 미리 듣기는 알림(포그라운드 서비스)에 올라야 앱이 뒤로 가도 이어진다.
+        if (dismissed && info.preview) {
+            previewRevived = true
+            if (session == null) buildSession()
+        }
         sessionPlayer.info = info
         if (!info.preview) PlaybackStore.saveSession(context, map)
         refreshLayout()
-        if (dismissed) return
+        if (dismissed && !previewRevived) return
         isNotificationVisible = true
         ensureService()
         service?.showSession()
