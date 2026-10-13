@@ -106,7 +106,7 @@ class _ChannelInfoSheetState extends State<_ChannelInfoSheet> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (info.bannerUrl != null) ...[
-              _Banner(url: info.bannerUrl!),
+              ChannelBanner(url: info.bannerUrl!),
               const SizedBox(height: AppSpacing.md),
             ],
             Row(
@@ -208,8 +208,8 @@ class _ChannelInfoSheetState extends State<_ChannelInfoSheet> {
 }
 
 /// 채널 배너: 가로로 긴 이미지를 둥근 모서리로 보여 준다. 못 불러오면 자리를 비운다.
-class _Banner extends StatelessWidget {
-  const _Banner({required this.url});
+class ChannelBanner extends StatelessWidget {
+  const ChannelBanner({super.key, required this.url});
 
   final String url;
 
