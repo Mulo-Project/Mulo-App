@@ -6,6 +6,7 @@ import android.os.Handler
 import android.os.Looper
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.engine.FlutterEngineCache
+import io.flutter.embedding.engine.dart.DartExecutor
 import io.flutter.plugins.GeneratedPluginRegistrant
 
 /**
@@ -54,6 +55,8 @@ object MuloEngine {
         )
         engine = created
         FlutterEngineCache.getInstance().put(CACHE_ID, created)
+        // 캐시된 엔진은 화면(Fragment)이 Dart를 시작해 주지 않으므로, 채널을 다 붙인 뒤 여기서 시작한다.
+        created.dartExecutor.executeDartEntrypoint(DartExecutor.DartEntrypoint.createDefault())
         return created
     }
 

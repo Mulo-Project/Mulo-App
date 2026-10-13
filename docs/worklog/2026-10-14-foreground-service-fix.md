@@ -29,3 +29,4 @@
 - 원인: `FlutterFragmentActivity`가 새 엔진용 Fragment를 만들 때 `destroy_engine_with_fragment=true`를 넣어, 화면이 닫히면 `shouldDestroyEngineWithHost()` 재정의와 상관없이 엔진을 destroy했다. `MuloEngine`은 죽은 엔진을 계속 쥐고 있었다.
 - 수정: 엔진을 `FlutterEngineCache`에 넣고 `MainActivity.getCachedEngineId()`로 붙인다 (이때만 `shouldDestroyEngineWithHost=false`가 적용된다). 엔진을 정리할 때 캐시에서도 뺀다.
 - 실기기 확인 필요: 받는 중 앱 밀기 → 계속 받는지, 다시 켰을 때 충돌 없는지.
+- 보완: 캐시 엔진은 화면이 Dart를 시작해 주지 않아(`getCachedEngineId`가 있으면 `doInitialFlutterViewRun`이 바로 돌아간다) 앱이 뜨지 않았다. `MuloEngine.obtain`에서 채널을 붙인 뒤 `executeDartEntrypoint`로 직접 시작한다.
