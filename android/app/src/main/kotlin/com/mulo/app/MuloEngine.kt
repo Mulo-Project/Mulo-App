@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.embedding.engine.FlutterEngineCache
 import io.flutter.plugins.GeneratedPluginRegistrant
 
 /**
@@ -13,6 +14,9 @@ import io.flutter.plugins.GeneratedPluginRegistrant
  * 그런 일이 없고 화면도 없으면 엔진을 정리한다. 채널은 엔진과 같은 수명이고, 화면이 필요한 일은 [activity]로 한다.
  */
 object MuloEngine {
+    /** 엔진 캐시 이름. 화면(Fragment)은 새 엔진이 아니라 캐시의 이 엔진을 써야 화면이 닫혀도 엔진이 같이 죽지 않는다. */
+    const val CACHE_ID = "mulo_engine"
+
     private val main = Handler(Looper.getMainLooper())
     private var engine: FlutterEngine? = null
     private var channels: List<() -> Unit> = emptyList()
@@ -49,6 +53,7 @@ object MuloEngine {
             transcoder::dispose, playback::dispose, equalizer::dispose, subscriptions::dispose,
         )
         engine = created
+        FlutterEngineCache.getInstance().put(CACHE_ID, created)
         return created
     }
 
@@ -62,6 +67,7 @@ object MuloEngine {
     private fun release() {
         val current = engine ?: return
         engine = null
+        FlutterEngineCache.getInstance().remove(CACHE_ID)
         channels.forEach { it() }
         channels = emptyList()
         mediaStore = null

@@ -23,3 +23,9 @@
 - 최근 작업에서 앱을 밀면 `MuloPlaybackService.onTaskRemoved`가 메인 플레이어(`exo`)가 멈춰 있다는 이유로 세션을 정리해, 미리 듣기 알림이 함께 사라졌다 (미리 듣기는 Dart 플레이어가 소리를 낸다).
 - 미리 듣기가 소리를 내는 동안은 정리하지 않고, 멈춘 미리 듣기는 알림만 치운다 (`PlaybackHub.isPreviewPlaying`).
 - 실기기 확인 필요: 미리 듣기 중 최근 작업에서 앱 밀기 → 알림 · 소리 유지.
+
+## 추가 수정 2 (2026-10-14, PR 107에 합침): 앱을 밀면 엔진이 죽던 문제
+- 증상: 앱을 밀면 받기가 멈추고, 다시 켜면 `FlutterJNI is not attached to native`로 충돌 (폰 logcat 확인).
+- 원인: `FlutterFragmentActivity`가 새 엔진용 Fragment를 만들 때 `destroy_engine_with_fragment=true`를 넣어, 화면이 닫히면 `shouldDestroyEngineWithHost()` 재정의와 상관없이 엔진을 destroy했다. `MuloEngine`은 죽은 엔진을 계속 쥐고 있었다.
+- 수정: 엔진을 `FlutterEngineCache`에 넣고 `MainActivity.getCachedEngineId()`로 붙인다 (이때만 `shouldDestroyEngineWithHost=false`가 적용된다). 엔진을 정리할 때 캐시에서도 뺀다.
+- 실기기 확인 필요: 받는 중 앱 밀기 → 계속 받는지, 다시 켰을 때 충돌 없는지.

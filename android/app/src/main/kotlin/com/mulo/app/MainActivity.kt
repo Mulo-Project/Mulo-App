@@ -60,6 +60,13 @@ class MainActivity : FlutterFragmentActivity() {
     // 엔진은 화면보다 오래 산다 ([MuloEngine]): 받기 · 미리 듣기가 최근 작업에서 밀어도 이어지게.
     override fun provideFlutterEngine(context: Context): FlutterEngine = MuloEngine.obtain(context)
 
+    // 새 엔진을 만드는 Fragment는 화면과 함께 엔진을 destroy한다(provideFlutterEngine과 상관없이).
+    // 캐시된 엔진으로 붙여야 shouldDestroyEngineWithHost(false)가 먹는다.
+    override fun getCachedEngineId(): String {
+        MuloEngine.obtain(this)
+        return MuloEngine.CACHE_ID
+    }
+
     override fun shouldDestroyEngineWithHost(): Boolean = false
 
     override fun onDestroy() {
