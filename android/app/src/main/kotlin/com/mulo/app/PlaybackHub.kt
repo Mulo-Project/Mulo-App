@@ -410,6 +410,9 @@ object PlaybackHub {
     /** 미리 듣기 내용이 알림에 올라 있는지. 화면이 없어도 Flutter 엔진(미리 듣기 소리)을 살려 둘 이유가 된다. */
     val isPreviewing get() = initialized && sessionPlayer.info?.preview == true
 
+    /** 미리 듣기가 지금 소리를 내고 있는지. */
+    val isPreviewPlaying get() = isPreviewing && sessionPlayer.info?.playing == true
+
     /** 알림을 지운(닫기) 상태에서 미리 듣기 때문에 세션을 잠깐 되살린 상태. 미리 듣기가 끝나면 다시 치운다. */
     private var previewRevived = false
 

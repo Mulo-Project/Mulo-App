@@ -18,3 +18,8 @@
 ## 확인
 - `flutter analyze` 0, `flutter test` 통과, `flutter build apk --debug --flavor lite` 성공.
 - 실기기 확인 필요: 받는 중 최근 작업에서 밀기 → 계속 받는지, 알림을 닫은 뒤 미리 듣기 → 앱을 뒤로 보내도 이어지는지.
+
+## 추가 수정 (2026-10-14, PR 107에 합침)
+- 최근 작업에서 앱을 밀면 `MuloPlaybackService.onTaskRemoved`가 메인 플레이어(`exo`)가 멈춰 있다는 이유로 세션을 정리해, 미리 듣기 알림이 함께 사라졌다 (미리 듣기는 Dart 플레이어가 소리를 낸다).
+- 미리 듣기가 소리를 내는 동안은 정리하지 않고, 멈춘 미리 듣기는 알림만 치운다 (`PlaybackHub.isPreviewPlaying`).
+- 실기기 확인 필요: 미리 듣기 중 최근 작업에서 앱 밀기 → 알림 · 소리 유지.
