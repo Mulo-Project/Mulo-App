@@ -99,3 +99,4 @@
 | 2026-10-12 | [다른 앱과 함께 재생 설정](2026-10-12-play-with-other-apps.md) | 진행 중 (PR 확인 대기) |
 | 2026-10-12 | [미니 플레이어 플로팅 버튼](2026-10-12-mini-player-float.md) | 완료 (PR 대기) |
 | 2026-10-12 | [블루투스 · 출력 기기 연동](2026-10-12-bluetooth-media-controls.md) | 진행 중 (기기 확인 대기) |
+| 2026-10-14 | [구독 새 영상 알림 점검 · 진단](2026-10-14-subscription-check-diagnostics.md) | 완료 (merge 대기) |

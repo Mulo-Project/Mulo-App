@@ -17,15 +17,20 @@ import kotlinx.coroutines.withContext
 class NewVideoWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         val channels = SubscriptionStore.channels(applicationContext)
-        if (channels.isEmpty()) return@withContext Result.success()
+        if (channels.isEmpty()) {
+            record(0, 0, 0, false)
+            return@withContext Result.success()
+        }
 
+        var failed = 0
         val toNotify = mutableListOf<NewVideo>()
         val latest = HashMap<String, Long>()
         for (c in channels) {
             val videos = try {
                 fetchVideos(c)
             } catch (e: Exception) {
-                // 이 채널은 다음 주기에 다시 본다.
+                // 이 채널은 다음 주기에 다시 본다 (실패 수는 기록해 설정 화면에 보인다).
+                failed++
                 continue
             }
             // 앱에서 이미 본 시각과 이미 알린 시각 중 늦은 쪽 이후만 새 영상이다.
@@ -43,11 +48,25 @@ class NewVideoWorker(context: Context, params: WorkerParameters) : CoroutineWork
                 category == null || category in c.categories
             }
         }
-        if (toNotify.isNotEmpty()) {
-            NewVideoNotifications.showVideos(applicationContext, toNotify)
-        }
-        SubscriptionStore.markNotified(applicationContext, latest)
-        Result.success()
+        // 알림이 막혀 있으면 띄우지 못한 것이므로 "알린 것"으로 치지 않는다 (나중에 허용하면 알린다).
+        val shown = NewVideoNotifications.showVideos(applicationContext, toNotify)
+        if (shown) SubscriptionStore.markNotified(applicationContext, latest)
+        record(channels.size, failed, toNotify.size, !shown)
+        // 모든 채널을 못 읽었으면 (네트워크 문제 등) 곧 다시 시도한다.
+        if (failed == channels.size) Result.retry() else Result.success()
+    }
+
+    private fun record(total: Int, failed: Int, notified: Int, blocked: Boolean) {
+        SubscriptionStore.saveRun(
+            applicationContext,
+            mapOf(
+                "atMs" to System.currentTimeMillis(),
+                "channels" to total,
+                "failed" to failed,
+                "notified" to notified,
+                "blocked" to blocked,
+            ),
+        )
     }
 
     /** 채널 RSS에서 영상들을 읽는다. */

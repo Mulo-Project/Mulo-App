@@ -2033,6 +2033,38 @@ class AppLocalizationsEn extends AppLocalizations {
       'Only checks while connected to Wi-Fi to save mobile data.';
 
   @override
+  String get settingsCheckNow => 'Check now';
+
+  @override
+  String get settingsCheckNowChecking => 'Checking…';
+
+  @override
+  String get settingsCheckStatusNever => 'Not checked yet.';
+
+  @override
+  String settingsCheckStatusLast(String time) {
+    return 'Last checked $time';
+  }
+
+  @override
+  String settingsCheckStatusNotified(int count) {
+    return 'Notified $count new videos.';
+  }
+
+  @override
+  String settingsCheckStatusFailed(int count) {
+    return 'Could not read $count channels.';
+  }
+
+  @override
+  String get settingsCheckStatusBlocked =>
+      'Notifications are off, so new videos were not announced. Turn on Mulo notifications (including New videos) in device settings.';
+
+  @override
+  String get settingsCheckStatusNotScheduled =>
+      'Periodic checking is not scheduled. Try turning the switch above off and on.';
+
+  @override
   String get notifChannelNewVideos => 'New videos';
 
   @override

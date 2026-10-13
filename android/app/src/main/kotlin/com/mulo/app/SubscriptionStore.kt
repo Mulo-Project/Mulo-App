@@ -23,6 +23,7 @@ object SubscriptionStore {
     private const val PREFS = "mulo_subscriptions"
     private const val KEY_CONFIG = "config"
     private const val KEY_NOTIFIED = "notified"
+    private const val KEY_LAST_RUN = "lastRun"
 
     private fun prefs(context: Context) = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
@@ -91,5 +92,16 @@ object SubscriptionStore {
         val notified = loadNotified(context)
         until.forEach { (id, ms) -> if (ms > notified.optLong(id, 0L)) notified.put(id, ms) }
         prefs(context).edit().putString(KEY_NOTIFIED, notified.toString()).apply()
+    }
+
+    /** 마지막 확인의 결과 (설정 화면에서 보여 주는 진단용). */
+    fun saveRun(context: Context, run: Map<String, Any>) {
+        prefs(context).edit().putString(KEY_LAST_RUN, JSONObject(run).toString()).apply()
+    }
+
+    fun lastRun(context: Context): Map<String, Any?> {
+        val o = prefs(context).getString(KEY_LAST_RUN, null)
+            ?.let { runCatching { JSONObject(it) }.getOrNull() } ?: return emptyMap()
+        return o.keys().asSequence().associateWith { o.opt(it) }
     }
 }

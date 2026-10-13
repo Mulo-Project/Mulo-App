@@ -37,6 +37,8 @@ void registerSubscriptions(GetIt sl) {
     ..registerFactory(() => CreateSubscription(sl()))
     ..registerFactory(() => CheckNewVideos(sl()))
     ..registerFactory(() => SyncBackgroundCheck(sl()))
+    ..registerFactory(() => CheckNewVideosNow(sl()))
+    ..registerFactory(() => GetBackgroundStatus(sl()))
     ..registerFactory(() => TakeNewVideosOpen(sl()))
     ..registerFactory(() => WatchNewVideosOpens(sl()))
     ..registerFactory(() => ClearNewVideosNotification(sl()))
@@ -58,6 +60,8 @@ void registerSubscriptions(GetIt sl) {
         sl(),
         sl(),
         _backgroundTexts,
+        sl(),
+        sl(),
         sl(),
       ),
     )

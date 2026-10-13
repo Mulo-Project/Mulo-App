@@ -3740,6 +3740,54 @@ abstract class AppLocalizations {
   /// **'데이터를 쓰지 않도록 와이파이에 연결됐을 때만 확인해요.'**
   String get settingsCheckWifiOnlyDesc;
 
+  /// No description provided for @settingsCheckNow.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금 확인'**
+  String get settingsCheckNow;
+
+  /// No description provided for @settingsCheckNowChecking.
+  ///
+  /// In ko, this message translates to:
+  /// **'확인하는 중…'**
+  String get settingsCheckNowChecking;
+
+  /// No description provided for @settingsCheckStatusNever.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 확인한 적이 없어요.'**
+  String get settingsCheckStatusNever;
+
+  /// No description provided for @settingsCheckStatusLast.
+  ///
+  /// In ko, this message translates to:
+  /// **'마지막 확인 {time}'**
+  String settingsCheckStatusLast(String time);
+
+  /// No description provided for @settingsCheckStatusNotified.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 영상 {count}개를 알렸어요.'**
+  String settingsCheckStatusNotified(int count);
+
+  /// No description provided for @settingsCheckStatusFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'채널 {count}개를 읽지 못했어요.'**
+  String settingsCheckStatusFailed(int count);
+
+  /// No description provided for @settingsCheckStatusBlocked.
+  ///
+  /// In ko, this message translates to:
+  /// **'알림이 꺼져 있어 알리지 못했어요. 기기 설정에서 Mulo 알림(새 영상 포함)을 켜 주세요.'**
+  String get settingsCheckStatusBlocked;
+
+  /// No description provided for @settingsCheckStatusNotScheduled.
+  ///
+  /// In ko, this message translates to:
+  /// **'주기 확인이 예약되지 않았어요. 위 스위치를 껐다 켜 보세요.'**
+  String get settingsCheckStatusNotScheduled;
+
   /// No description provided for @notifChannelNewVideos.
   ///
   /// In ko, this message translates to:

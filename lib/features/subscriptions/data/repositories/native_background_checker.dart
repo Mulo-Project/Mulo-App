@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 
 import '../../../../core/design/tokens/app_palette.dart';
+import '../../domain/entities/background_status.dart';
 import '../../domain/entities/new_video_download_request.dart';
 import '../../domain/entities/subscribed_channel.dart';
 import '../../domain/entities/subscription_settings.dart';
@@ -104,6 +105,27 @@ class NativeBackgroundChecker implements BackgroundChecker {
 
   @override
   Future<void> showTestNotification() => _call<void>('showTest');
+
+  @override
+  Future<void> checkNow() => _call<void>('checkNow');
+
+  @override
+  Future<BackgroundStatus?> status() async {
+    final m = await _call<Map<Object?, Object?>>('status');
+    if (m == null || m.isEmpty) return null;
+    final at = m['lastRunMs'];
+    return BackgroundStatus(
+      scheduled: m['scheduled'] == true,
+      notificationsBlocked: m['notificationsBlocked'] == true,
+      lastRunAt: at is num
+          ? DateTime.fromMillisecondsSinceEpoch(at.toInt())
+          : null,
+      channels: (m['channels'] as num?)?.toInt() ?? 0,
+      failedChannels: (m['failed'] as num?)?.toInt() ?? 0,
+      notified: (m['notified'] as num?)?.toInt() ?? 0,
+      blocked: m['blocked'] == true,
+    );
+  }
 }
 
 /// 백그라운드 확인이 없는 OS: 아무것도 하지 않는다.
@@ -139,4 +161,10 @@ class NoBackgroundChecker implements BackgroundChecker {
 
   @override
   Future<void> showTestNotification() async {}
+
+  @override
+  Future<void> checkNow() async {}
+
+  @override
+  Future<BackgroundStatus?> status() async => null;
 }

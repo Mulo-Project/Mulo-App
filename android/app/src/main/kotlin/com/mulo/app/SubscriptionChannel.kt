@@ -6,10 +6,13 @@ import android.os.Looper
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkInfo
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 /**
@@ -60,6 +63,18 @@ class SubscriptionChannel(
                         )
                         result.success(null)
                     }
+                    "checkNow" -> {
+                        checkNow(context)
+                        result.success(null)
+                    }
+                    "status" -> io.execute {
+                        val status = try {
+                            status(context)
+                        } catch (e: Exception) {
+                            emptyMap()
+                        }
+                        main.post { result.success(status) }
+                    }
                     "clearNotification" -> {
                         NewVideoNotifications.clear(context)
                         result.success(null)
@@ -80,7 +95,34 @@ class SubscriptionChannel(
     companion object {
         const val NAME = "music_app/subscriptions"
         const val WORK_NAME = "mulo_new_videos"
+        const val CHECK_NOW_NAME = "mulo_new_videos_now"
         private val main = Handler(Looper.getMainLooper())
+        private val io = Executors.newSingleThreadExecutor()
+
+        /** 주기를 기다리지 않고 지금 한 번 확인한다 (와이파이 전용 설정과 상관없이 연결만 있으면). */
+        fun checkNow(context: Context) {
+            val request = OneTimeWorkRequestBuilder<NewVideoWorker>()
+                .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+                .build()
+            WorkManager.getInstance(context)
+                .enqueueUniqueWork(CHECK_NOW_NAME, androidx.work.ExistingWorkPolicy.REPLACE, request)
+        }
+
+        /** 진단용 상태: 예약 여부, 알림 막힘, 마지막 확인 결과. */
+        fun status(context: Context): Map<String, Any?> {
+            val infos = WorkManager.getInstance(context).getWorkInfosForUniqueWork(WORK_NAME).get()
+            val scheduled = infos.any { it.state != WorkInfo.State.CANCELLED && it.state != WorkInfo.State.FAILED }
+            val run = SubscriptionStore.lastRun(context)
+            return mapOf(
+                "scheduled" to scheduled,
+                "notificationsBlocked" to NewVideoNotifications.isBlocked(context),
+                "lastRunMs" to (run["atMs"] as? Number)?.toLong(),
+                "channels" to (run["channels"] as? Number)?.toInt(),
+                "failed" to (run["failed"] as? Number)?.toInt(),
+                "notified" to (run["notified"] as? Number)?.toInt(),
+                "blocked" to (run["blocked"] == true),
+            )
+        }
 
         @Volatile
         private var active: MethodChannel? = null
