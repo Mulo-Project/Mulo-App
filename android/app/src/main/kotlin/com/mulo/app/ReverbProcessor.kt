@@ -20,9 +20,9 @@ class ReverbProcessor : BaseAudioProcessor() {
     private var preset = 0
 
     // 프리셋별 (잔향 길이 0~1, 고음 감쇠 0~1, 섞는 양 0~1).
-    private val roomSize = floatArrayOf(0f, .55f, .70f, .82f, .88f, .94f, .90f)
-    private val damping = floatArrayOf(0f, .50f, .40f, .35f, .30f, .25f, .10f)
-    private val wetLevel = floatArrayOf(0f, .30f, .35f, .40f, .45f, .55f, .50f)
+    private val roomSize = floatArrayOf(0f, .40f, .55f, .68f, .75f, .85f, .80f)
+    private val damping = floatArrayOf(0f, .60f, .50f, .45f, .40f, .35f, .20f)
+    private val wetLevel = floatArrayOf(0f, .15f, .20f, .25f, .28f, .35f, .32f)
 
     private var channels = 0
     private var combs: Array<Array<Comb>> = emptyArray()
