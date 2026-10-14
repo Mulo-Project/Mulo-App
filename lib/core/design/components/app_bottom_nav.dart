@@ -135,7 +135,7 @@ class _NavButton extends StatelessWidget {
                 color: color,
                 size: AppSizes.icon,
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: AppSpacing.hair),
               Text(
                 item.label,
                 style: labelStyle.copyWith(

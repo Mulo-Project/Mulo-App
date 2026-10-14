@@ -48,7 +48,7 @@ class SavePathRow extends StatelessWidget {
             children: [
               Icon(
                 AppIcons.folder,
-                size: 24,
+                size: AppSizes.iconLg,
                 color: path.isEmpty ? p.onSurfaceMuted : p.accent,
               ),
               const SizedBox(width: AppSpacing.sm),
@@ -57,7 +57,7 @@ class SavePathRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(l10n.channelSaveFolder, style: text.titleSmall),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppSpacing.hair),
                     Text(
                       path.isEmpty ? l10n.channelSaveFolderDefault : path,
                       style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),

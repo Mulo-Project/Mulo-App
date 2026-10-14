@@ -309,11 +309,11 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     }
   }
 
-  /// 대기열 끝까지 들었다 (반복 없음): 마지막 곡에서 멈춘다.
+  /// 대기열 끝까지 들었다 (반복 없음): 엔진이 첫 곡으로 돌아가 멈춘 것과 같게 첫 곡에서 멈춘다.
   void _onEnded() {
     if (isClosed || state.track == null) return;
     _fromEngine = true;
-    emit(state.copyWith(isPlaying: false, position: Duration.zero));
+    emit(state.copyWith(index: 0, isPlaying: false, position: Duration.zero));
     _fromEngine = false;
   }
 
@@ -482,10 +482,10 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     }
   }
 
+  /// 다음 곡. 마지막 곡이면 반복 설정과 상관없이 처음으로 돌아간다 (곡 끝에서 저절로 넘어갈 때만 반복을 따른다).
   void next() {
     if (state.queue.isEmpty) return;
     final last = state.index == state.queue.length - 1;
-    if (last && state.repeat == PlayerRepeatMode.off) return;
     if (last && state.shuffle && state.queue.length > 1) {
       // 셔플 중 한 바퀴를 다 돌았으면 순서를 새로 섞는다 (방금 들은 곡이 맨 앞에 오지 않게).
       emit(
@@ -621,16 +621,6 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     final queue = [...state.queue];
     queue.insert(to, queue.removeAt(from));
     emit(state.copyWith(queue: queue, index: queue.indexOf(current)));
-  }
-
-  /// 지금 곡 뒤의 곡들을 무작위로 섞는다 (이미 들은 곡과 지금 곡은 그대로).
-  void shuffleUpNext([Random? random]) {
-    final upNext = state.queue.skip(state.index + 1).toList();
-    if (upNext.length < 2) return;
-    upNext.shuffle(random ?? _random);
-    emit(
-      state.copyWith(queue: [...state.queue.take(state.index + 1), ...upNext]),
-    );
   }
 
   /// 대기열을 모두 비운다. 재생 중인 곡도 멈추고 지워진다 (미니 플레이어는 사라진다).

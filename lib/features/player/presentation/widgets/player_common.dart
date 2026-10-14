@@ -540,13 +540,12 @@ class PlayerLikeButton extends StatelessWidget {
     return BlocBuilder<PlaylistsCubit, List<Playlist>>(
       builder: (context, _) {
         final on = cubit.isFavorite(trackId);
+        // 같은 줄의 가사 · 대기열 버튼과 같은 크기 (줄의 IconButtonTheme을 따른다).
         return IconButton(
-          iconSize: 30,
           tooltip: on ? l10n.trackMenuUnfavorite : l10n.trackMenuFavorite,
           onPressed: () => cubit.toggleFavorite(trackId),
           icon: Icon(
             on ? AppIcons.favorite : AppIcons.favoriteOutline,
-            size: 30,
             color: on ? p.accent : p.onSurfaceMuted,
           ),
         );
@@ -871,7 +870,7 @@ class PlayerControls extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: PlayerTitleText(track: data.track),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: AppSpacing.hair),
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [

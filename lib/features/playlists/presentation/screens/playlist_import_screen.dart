@@ -215,29 +215,10 @@ class _Body extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final state = context.watch<PlaylistImportCubit>().state;
-    final p = context.palette;
     final text = Theme.of(context).textTheme;
 
     Widget message(String title, String body, {Widget? action}) => Center(
-      child: Padding(
-        padding: AppSpacing.screen,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(title, style: text.titleMedium, textAlign: TextAlign.center),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              body,
-              style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
-              textAlign: TextAlign.center,
-            ),
-            if (action != null) ...[
-              const SizedBox(height: AppSpacing.md),
-              action,
-            ],
-          ],
-        ),
-      ),
+      child: EmptyState(title: title, body: body, action: action),
     );
 
     switch (state.status) {

@@ -424,27 +424,14 @@ class _EmptyLibrary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
-      child: Column(
-        children: [
-          Icon(AppIcons.library, size: 40, color: context.palette.accent),
-          const SizedBox(height: AppSpacing.md),
-          Text(l10n.libraryEmptyTitle, style: text.titleLarge),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            l10n.libraryEmptyBody,
-            style: text.bodyMedium,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          PillButton(
-            label: importing ? l10n.importing : l10n.libraryImport,
-            icon: AppIcons.folderUpload,
-            onPressed: importing ? null : onImport,
-          ),
-        ],
+    return EmptyState(
+      icon: AppIcons.library,
+      title: l10n.libraryEmptyTitle,
+      body: l10n.libraryEmptyBody,
+      action: PillButton(
+        label: importing ? l10n.importing : l10n.libraryImport,
+        icon: AppIcons.folderUpload,
+        onPressed: importing ? null : onImport,
       ),
     );
   }

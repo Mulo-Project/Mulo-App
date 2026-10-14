@@ -23,10 +23,13 @@ class SessionInfo(map: Map<*, *>) {
     val positionMs = (map["positionMs"] as? Number)?.toLong() ?: 0L
     val playing = map["playing"] as? Boolean ?: false
     val favorite = map["favorite"] as? Boolean ?: false
+    val shuffle = map["shuffle"] as? Boolean ?: false
     val preview = map["preview"] as? Boolean ?: false
     val favoriteLabel = map["favoriteLabel"] as? String ?: ""
     val unfavoriteLabel = map["unfavoriteLabel"] as? String ?: ""
     val closeLabel = map["closeLabel"] as? String ?: ""
+    val shuffleOnLabel = map["shuffleOnLabel"] as? String ?: ""
+    val shuffleOffLabel = map["shuffleOffLabel"] as? String ?: ""
 
     /** 곡 정보 숨기기 설정: 앱이 꺼진 사이 넘어간 곡에도 지켜야 해서 글자까지 받아 둔다. */
     val hideSongInfo = map["hideSongInfo"] as? Boolean ?: false
@@ -199,15 +202,12 @@ class SessionPlayer(
         return Futures.immediateVoidFuture()
     }
 
-    /** 다음 곡. 마지막 곡이면 전체 반복일 때만 처음으로 돌아간다. */
+    /** 다음 곡. 마지막 곡이면 반복 설정과 상관없이 처음으로 돌아간다 (앱의 다음 버튼과 같다). */
     private fun skipNext() {
         val count = exo.mediaItemCount
         if (count == 0) return
         val next = exo.currentMediaItemIndex + 1
-        when {
-            next < count -> exo.seekTo(next, 0L)
-            exo.repeatMode == Player.REPEAT_MODE_ALL -> exo.seekTo(0, 0L)
-        }
+        exo.seekTo(if (next < count) next else 0, 0L)
     }
 
     private fun skipPrevious() {

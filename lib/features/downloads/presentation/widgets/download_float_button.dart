@@ -56,7 +56,7 @@ class DownloadFloatButton extends StatelessWidget {
                         size: size - 12,
                         child: Icon(
                           AppIcons.download,
-                          size: 20,
+                          size: AppSizes.iconMd,
                           color: p.accent,
                         ),
                       ),

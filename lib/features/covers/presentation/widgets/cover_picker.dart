@@ -18,14 +18,8 @@ Future<CoverArt?> pickCoverArt(
   String initialQuery = '',
 }) async {
   final covers = context.read<CoverCubit>();
-  final source = await showModalBottomSheet<_Source>(
-    context: context,
-    backgroundColor: context.palette.surface,
-    showDragHandle: true,
-    useRootNavigator: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadii.md)),
-    ),
+  final source = await showAppSheet<_Source>(
+    context,
     builder: (_) => const _SourceSheet(),
   );
   if (source == null || !context.mounted) return null;
@@ -67,20 +61,14 @@ class _SourceSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg,
-          0,
-          AppSpacing.lg,
-          AppSpacing.lg,
-        ),
+        padding: appSheetPadding,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(l10n.coverSourceTitle, style: text.titleMedium),
+            AppSheetTitle(l10n.coverSourceTitle),
             const SizedBox(height: AppSpacing.md),
             PillButton(
               label: l10n.coverSourceDevice,

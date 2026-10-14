@@ -43,11 +43,10 @@ class CancelAllDownloadsButton extends StatelessWidget {
   final String? playlistId;
 
   @override
-  Widget build(BuildContext context) => CircleIconButton(
+  Widget build(BuildContext context) => RowIconButton(
     // 곡 하나 취소(X)와 달라 보이게 "모두 비우기" 모양.
     icon: AppIcons.deleteAll,
     tooltip: context.l10n.downloadsCancelAll,
-    size: 32,
     onPressed: () => cancelAllDownloads(context, playlistId: playlistId),
   );
 }
@@ -96,10 +95,9 @@ class DownloadItemActions extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        CircleIconButton(
+        RowIconButton(
           icon: AppIcons.refresh,
           tooltip: context.l10n.actionRetry,
-          size: 32,
           onPressed: () => context.read<DownloadQueueCubit>().retry(item.id),
         ),
         const SizedBox(width: AppSpacing.xs),
@@ -129,10 +127,9 @@ class _CancelButton extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => CircleIconButton(
+  Widget build(BuildContext context) => RowIconButton(
     icon: AppIcons.close,
     tooltip: context.l10n.actionCancel,
-    size: 32,
     onPressed: () => _cancel(context),
   );
 }

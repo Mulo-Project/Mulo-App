@@ -235,7 +235,7 @@ class _PeriodButton extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleSmall
                     ?.copyWith(color: p.accent, fontWeight: FontWeight.w700),
               ),
-              Icon(AppIcons.dropDown, size: 20, color: p.accent),
+              Icon(AppIcons.dropDown, size: AppSizes.iconMd, color: p.accent),
             ],
           ),
         ),

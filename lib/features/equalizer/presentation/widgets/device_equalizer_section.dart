@@ -61,7 +61,7 @@ class DeviceEqualizerSection extends StatelessWidget {
                   const SizedBox(width: AppSpacing.xs),
                   Icon(
                     AppIcons.chevronRight,
-                    size: 18,
+                    size: AppSizes.iconSm,
                     color: p.onSurfaceMuted,
                   ),
                 ],
@@ -74,29 +74,23 @@ class DeviceEqualizerSection extends StatelessWidget {
 
   Future<void> _pick(BuildContext context, EqualizerDevice device) {
     final library = context.read<EqualizerLibraryCubit>();
-    return showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: context.palette.surface,
-      useRootNavigator: true,
+    return showAppSheet<void>(
+      context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadii.md)),
-      ),
       builder: (sheet) {
         final l10n = sheet.l10n;
         final presets = library.state.presets;
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
+            padding: appSheetPadding,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                AppSheetTitle(
                   l10n.equalizerDevicePickTitle(deviceLabel(l10n, device)),
-                  style: Theme.of(sheet).textTheme.titleMedium,
                 ),
-                const SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.xs),
                 MenuRow(
                   icon: device.hasProfile ? AppIcons.equalizer : AppIcons.check,
                   label: l10n.equalizerDeviceDefault,
@@ -105,8 +99,7 @@ class DeviceEqualizerSection extends StatelessWidget {
                     Navigator.of(sheet).pop();
                   },
                 ),
-                for (final preset in presets) ...[
-                  const SizedBox(height: AppSpacing.xs),
+                for (final preset in presets)
                   MenuRow(
                     icon: preset.id == device.presetId
                         ? AppIcons.check
@@ -117,10 +110,9 @@ class DeviceEqualizerSection extends StatelessWidget {
                       Navigator.of(sheet).pop();
                     },
                   ),
-                ],
                 // 이퀄라이저 화면에서 이 기기의 값을 직접 고친다 (연결돼 있지 않아도 된다).
                 ...[
-                  const SizedBox(height: AppSpacing.md),
+                  Divider(height: AppSpacing.md, color: sheet.palette.outline),
                   MenuRow(
                     icon: AppIcons.edit,
                     label: l10n.equalizerDeviceEdit,

@@ -20,10 +20,11 @@ class SectionCard extends StatelessWidget {
       children: [
         if (title != null)
           Padding(
+            // 제목도 줄 글자와 같은 [AppSpacing.md]에서 시작해 왼쪽 선을 맞춘다.
             padding: const EdgeInsets.fromLTRB(
-              AppSpacing.xs,
+              AppSpacing.md,
               0,
-              AppSpacing.xs,
+              AppSpacing.md,
               AppSpacing.xs,
             ),
             child: Text(title!.toUpperCase(), style: text.labelSmall),
@@ -71,7 +72,7 @@ class SettingRow extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(AppRadii.lg),
+      borderRadius: BorderRadius.circular(AppRadii.sm),
       child: Padding(
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
@@ -88,7 +89,7 @@ class SettingRow extends StatelessWidget {
                     children: [
                       Text(title, style: text.titleSmall),
                       if (description != null) ...[
-                        const SizedBox(height: 2),
+                        const SizedBox(height: AppSpacing.hair),
                         Text(description!, style: text.bodySmall),
                       ],
                     ],

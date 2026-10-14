@@ -2,6 +2,8 @@ import 'package:flutter/widgets.dart';
 
 /// 간격 (4pt 그리드).
 abstract final class AppSpacing {
+  /// 제목과 바로 아래 부제 사이 같은 아주 좁은 틈.
+  static const double hair = 2;
   static const double xxs = 4;
   static const double xs = 8;
   static const double sm = 12;
@@ -14,14 +16,17 @@ abstract final class AppSpacing {
   static const EdgeInsets screen = EdgeInsets.symmetric(horizontal: md);
 }
 
-/// 모서리 반경.
+/// 모서리 반경. 작게 쓴다 (기본 12 안팎).
 abstract final class AppRadii {
   static const double sm = 12;
-  static const double md = 20;
-  static const double lg = 28;
+  static const double md = 16;
+  static const double lg = 20;
 
-  /// 레퍼런스의 큰 카드.
-  static const double card = 32;
+  /// 큰 카드 (재생목록 · 보관함 요약 · 플레이어 커버).
+  static const double card = 20;
+
+  /// 바텀 시트 윗모서리 · 대화상자 · 안내 메시지.
+  static const double sheet = md;
   static const double pill = 999;
 
   static const BorderRadius cardRadius = BorderRadius.all(
@@ -53,7 +58,15 @@ abstract final class AppSizes {
   static const double pillHeight = 48;
   static const double miniPlayerHeight = 84;
   static const double navBarHeight = 64;
+
+  /// 아이콘 크기 단계. 글자 옆 작은 표시는 [iconXs] · [iconSm], 줄 · 메뉴는 [iconMd],
+  /// 버튼 안 기본은 [icon], 조금 큰 강조는 [iconLg], 빈 화면 안내는 [iconEmpty].
+  static const double iconXs = 16;
+  static const double iconSm = 18;
+  static const double iconMd = 20;
   static const double icon = 22;
+  static const double iconLg = 24;
+  static const double iconEmpty = 40;
 }
 
 /// 유리 면 설정.

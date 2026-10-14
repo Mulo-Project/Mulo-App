@@ -454,7 +454,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsThemePreview => '테마 미리보기';
 
   @override
-  String get settingsThemePreviewDesc => '고른 테마로 앱 화면들을 직접 둘러보고 적용해요';
+  String get settingsThemePreviewDesc => '고른 테마로 앱 화면들을 직접 둘러보고 적용해요.';
 
   @override
   String get settingsPlayback => '재생 설정';
@@ -464,27 +464,27 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsMixWithOthersDesc =>
-      '다른 앱에서 소리가 나도 멈추지 않고 같이 들려요. 소리가 겹쳐 시끄러울 수 있어요';
+      '다른 앱에서 소리가 나도 멈추지 않고 같이 들려요. 소리가 겹쳐 시끄러울 수 있어요.';
 
   @override
   String get settingsPauseOnDisconnect => '기기가 끊기면 일시정지';
 
   @override
-  String get settingsPauseOnDisconnectDesc => '이어폰을 빼거나 블루투스 연결이 끊기면 재생을 멈춰요';
+  String get settingsPauseOnDisconnectDesc => '이어폰을 빼거나 블루투스 연결이 끊기면 재생을 멈춰요.';
 
   @override
   String get settingsResumeOnConnect => '기기가 연결되면 이어 재생';
 
   @override
   String get settingsResumeOnConnectDesc =>
-      '끊겨서 멈춘 재생을 10분 안에 다시 연결하면 이어서 재생해요';
+      '끊겨서 멈춘 재생을 10분 안에 다시 연결하면 이어서 재생해요.';
 
   @override
   String get settingsResumeWithoutNotification => '알림이 없어도 블루투스로 재생';
 
   @override
   String get settingsResumeWithoutNotificationDesc =>
-      '알림을 지웠거나 재생이 끝난 뒤에도 블루투스 기기의 재생 버튼으로 마지막 곡을 이어서 재생해요';
+      '알림을 지웠거나 재생이 끝난 뒤에도 블루투스 기기의 재생 버튼으로 마지막 곡을 이어서 재생해요.';
 
   @override
   String get playerStyleTitle => '플레이어 테마';
@@ -566,7 +566,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get outputOther => '외부 출력';
 
   @override
-  String get queueShuffle => '다음 곡 섞기';
+  String get shuffleOn => '셔플 켜기';
+
+  @override
+  String get shuffleOff => '셔플 끄기';
 
   @override
   String get queueClear => '대기열 비우기';
@@ -1689,7 +1692,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsGoogleAccount => '구글 계정';
 
   @override
-  String get settingsAccountSignedOutDesc => '로그인하면 내 유튜브 재생목록을 불러올 수 있어요';
+  String get settingsAccountSignedOutDesc => '로그인하면 내 유튜브 재생목록을 불러올 수 있어요.';
 
   @override
   String get settingsAccountSignIn => '로그인';
@@ -2066,14 +2069,14 @@ class AppLocalizationsKo extends AppLocalizations {
   String get equalizerEnable => '이퀄라이저 사용';
 
   @override
-  String get equalizerEnableDesc => '켜면 아래 설정대로 소리를 다듬어요. 기본은 꺼짐이에요';
+  String get equalizerEnableDesc => '켜면 아래 설정대로 소리를 다듬어요. 기본은 꺼짐이에요.';
 
   @override
   String get equalizerDeviceProfile => '이 기기 전용으로 저장';
 
   @override
   String equalizerDeviceProfileDesc(String device) {
-    return '$device에 연결되면 이 설정을 자동으로 적용해요';
+    return '$device에 연결되면 이 설정을 자동으로 적용해요.';
   }
 
   @override
@@ -2142,7 +2145,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get equalizerBassBoost => '저음 강화';
 
   @override
-  String get equalizerBassBoostDesc => '낮은 소리를 더 묵직하게 해요';
+  String get equalizerBassBoostDesc => '낮은 소리를 더 묵직하게 해요.';
 
   @override
   String get equalizerReset => '처음으로';
@@ -2181,19 +2184,19 @@ class AppLocalizationsKo extends AppLocalizations {
   String get equalizerVirtualizer => '입체 음향';
 
   @override
-  String get equalizerVirtualizerDesc => '이어폰에서 소리가 더 넓게 퍼져 들려요';
+  String get equalizerVirtualizerDesc => '이어폰에서 소리가 더 넓게 퍼져 들려요.';
 
   @override
   String get equalizerReverb => '공간 울림';
 
   @override
-  String get equalizerReverbDesc => '방이나 홀에서 듣는 것 같은 잔향을 더해요';
+  String get equalizerReverbDesc => '방이나 홀에서 듣는 것 같은 잔향을 더해요.';
 
   @override
   String get equalizerLimiter => '소리 찢어짐 방지';
 
   @override
-  String get equalizerLimiterDesc => '소리를 많이 키워도 갈라지지 않게 눌러 줘요';
+  String get equalizerLimiterDesc => '소리를 많이 키워도 갈라지지 않게 눌러 줘요.';
 
   @override
   String get equalizerReverbNone => '없음';
