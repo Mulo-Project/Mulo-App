@@ -542,6 +542,17 @@ object PlaybackHub {
         }
 
         override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+            if (!playWhenReady) {
+                val why = when (reason) {
+                    Player.PLAY_WHEN_READY_CHANGE_REASON_AUDIO_FOCUS_LOSS -> "audio_focus_loss"
+                    Player.PLAY_WHEN_READY_CHANGE_REASON_AUDIO_BECOMING_NOISY -> "becoming_noisy"
+                    Player.PLAY_WHEN_READY_CHANGE_REASON_USER_REQUEST -> "user_request"
+                    Player.PLAY_WHEN_READY_CHANGE_REASON_REMOTE -> "remote"
+                    Player.PLAY_WHEN_READY_CHANGE_REASON_END_OF_MEDIA_ITEM -> "end_of_item"
+                    else -> "reason_$reason"
+                }
+                PlaybackStore.logStop(context, "pause: $why")
+            }
             if (reason == Player.PLAY_WHEN_READY_CHANGE_REASON_END_OF_MEDIA_ITEM) return
             // 이어폰 분리 · 블루투스 끊김으로 멈췄는지 기억해 둔다 (다시 연결되면 이어 재생하는 설정용).
             pausedByNoisyAt = if (!playWhenReady && reason == Player.PLAY_WHEN_READY_CHANGE_REASON_AUDIO_BECOMING_NOISY) {
@@ -580,7 +591,14 @@ object PlaybackHub {
             }
         }
 
+        override fun onPlaybackSuppressionReasonChanged(playbackSuppressionReason: Int) {
+            if (playbackSuppressionReason != Player.PLAYBACK_SUPPRESSION_REASON_NONE) {
+                PlaybackStore.logStop(context, "suppressed: $playbackSuppressionReason")
+            }
+        }
+
         override fun onPlayerError(error: PlaybackException) {
+            PlaybackStore.logStop(context, "error: ${error.errorCodeName} ${error.message}")
             val load = pendingLoad
             if (load != null) {
                 load.error("load_failed", error.message, null)
