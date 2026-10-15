@@ -3446,6 +3446,12 @@ abstract class AppLocalizations {
   /// **'미리 듣기'**
   String get notifPreviewLabel;
 
+  /// No description provided for @notifSleepAt.
+  ///
+  /// In ko, this message translates to:
+  /// **'{time}에 수면 타이머'**
+  String notifSleepAt(String time);
+
   /// No description provided for @notifHiddenNote.
   ///
   /// In ko, this message translates to:

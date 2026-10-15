@@ -1817,6 +1817,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get notifPreviewLabel => '미리 듣기';
 
   @override
+  String notifSleepAt(String time) {
+    return '$time에 수면 타이머';
+  }
+
+  @override
   String get notifHiddenNote => '곡 정보 숨김';
 
   @override

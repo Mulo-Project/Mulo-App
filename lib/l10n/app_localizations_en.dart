@@ -1862,6 +1862,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifPreviewLabel => 'Preview';
 
   @override
+  String notifSleepAt(String time) {
+    return 'Sleep timer at $time';
+  }
+
+  @override
   String get notifHiddenNote => 'Song info hidden';
 
   @override

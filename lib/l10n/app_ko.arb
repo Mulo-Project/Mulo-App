@@ -764,6 +764,8 @@
   "settingsNotifyOpenSettings": "설정 열기",
   "notifHiddenTitle": "음악 재생 중",
   "notifPreviewLabel": "미리 듣기",
+  "notifSleepAt": "{time}에 수면 타이머",
+  "@notifSleepAt": {"placeholders": {"time": {"type": "String"}}},
   "notifHiddenNote": "곡 정보 숨김",
   "notifHiddenNotePosition": "곡 정보 숨김 · {n}/{total}번째 곡",
   "@notifHiddenNotePosition": {

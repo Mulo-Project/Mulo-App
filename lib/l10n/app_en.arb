@@ -664,6 +664,8 @@
   "settingsNotifyOpenSettings": "Open settings",
   "notifHiddenTitle": "Playing music",
   "notifPreviewLabel": "Preview",
+  "notifSleepAt": "Sleep timer at {time}",
+  "@notifSleepAt": {"placeholders": {"time": {"type": "String"}}},
   "notifHiddenNote": "Song info hidden",
   "notifHiddenNotePosition": "Song info hidden · track {n} of {total}",
   "notifStop": "Close",
