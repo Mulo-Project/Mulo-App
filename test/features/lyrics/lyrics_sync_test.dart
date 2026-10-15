@@ -274,11 +274,13 @@ void main() {
       );
     });
 
-    test('앞 싱크보다 이른 위치에서 찍으면 앞 싱크 시간으로 채운다', () {
+    test('앞 싱크보다 이른 위치에서 찍으면 앞에 있던 더 늦은 싱크가 그 시간까지 내려온다', () {
       final d = SyncDraft.from(plain)
           .stamp(const Duration(seconds: 5))
           .stamp(const Duration(seconds: 3));
-      expect(d.times[1], const Duration(seconds: 5));
+      expect(d.times[0], const Duration(seconds: 3));
+      expect(d.times[1], const Duration(seconds: 3));
+      expect(d.undo().times[0], const Duration(seconds: 5));
     });
 
     test('되돌리기는 찍기와 조정을 차례로 취소한다', () {
