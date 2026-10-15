@@ -47,16 +47,9 @@ Future<bool> showDownloadDialog(
   final library = context.read<LibraryCubit>();
   final colors = context.read<CoverColorCubit>();
   final covers = context.read<CoverCubit>();
-  final started = await showModalBottomSheet<bool>(
-    context: context,
-    backgroundColor: context.palette.surface,
-    showDragHandle: true,
+  final started = await showAppSheet<bool>(
+    context,
     isScrollControlled: true,
-    // 탭 틀(미니 플레이어 · 탭 바) 위에 뜨도록 최상위 내비게이터에서 연다.
-    useRootNavigator: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadii.card)),
-    ),
     builder: (_) => MultiBlocProvider(
       providers: [
         BlocProvider.value(value: queue),
@@ -222,12 +215,7 @@ class _DownloadSheetState extends State<_DownloadSheet> {
           bottom: MediaQuery.viewInsetsOf(context).bottom,
         ),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg,
-            0,
-            AppSpacing.lg,
-            AppSpacing.lg,
-          ),
+          padding: appSheetPadding,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,

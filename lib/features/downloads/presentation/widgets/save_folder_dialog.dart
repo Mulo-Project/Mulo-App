@@ -153,7 +153,8 @@ class _FolderOption extends StatelessWidget {
                 ],
               ),
             ),
-            if (selected) Icon(AppIcons.check, size: 18, color: p.accent),
+            if (selected)
+              Icon(AppIcons.check, size: AppSizes.iconSm, color: p.accent),
           ],
         ),
       ),

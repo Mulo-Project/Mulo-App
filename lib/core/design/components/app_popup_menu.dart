@@ -76,7 +76,7 @@ Future<T?> showAppMenu<T>(
             children: [
               Icon(
                 item.icon,
-                size: 20,
+                size: AppSizes.iconMd,
                 color:
                     item.iconColor ?? (item.destructive ? error : p.onSurface),
               ),
@@ -91,7 +91,7 @@ Future<T?> showAppMenu<T>(
               ),
               if (item.selected) ...[
                 const SizedBox(width: AppSpacing.sm),
-                Icon(AppIcons.check, size: 18, color: p.accent),
+                Icon(AppIcons.check, size: AppSizes.iconSm, color: p.accent),
               ],
             ],
           ),

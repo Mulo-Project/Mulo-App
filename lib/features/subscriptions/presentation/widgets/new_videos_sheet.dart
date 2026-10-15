@@ -7,7 +7,6 @@ import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../domain/entities/feed_video.dart';
 import '../bloc/new_videos_cubit.dart';
-import 'subscription_sheet.dart';
 
 var _open = false;
 
@@ -19,8 +18,10 @@ Future<void> showNewVideosSheet(BuildContext context) async {
   _open = true;
   final cubit = sl<NewVideosCubit>();
   try {
-    await showSubscriptionSheet<void>(
+    await showAppSheet<void>(
       context,
+      isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => const _NewVideosSheet(),
     );
   } finally {
@@ -128,26 +129,9 @@ class _Body extends StatelessWidget {
     if (groups.isEmpty) {
       final busy = state.status == NewVideosStatus.checking || state.resolving;
       return Center(
-        child: Padding(
-          padding: AppSpacing.screen,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                busy ? l10n.newVideosChecking : l10n.newVideosEmptyTitle,
-                style: text.titleMedium,
-                textAlign: TextAlign.center,
-              ),
-              if (!busy) ...[
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  l10n.newVideosEmptyBody,
-                  style: text.bodySmall,
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ],
-          ),
+        child: EmptyState(
+          title: busy ? l10n.newVideosChecking : l10n.newVideosEmptyTitle,
+          body: busy ? null : l10n.newVideosEmptyBody,
         ),
       );
     }

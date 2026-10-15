@@ -10,17 +10,12 @@ import '../bloc/player_style_cubit.dart';
 ///
 /// 시트가 떠 있는 동안 높이를 [playerStyleSheetHeight]에 알려, 재생 화면이 그만큼
 /// 줄어들어 시트 위에 화면 전체가 보이게 한다.
-Future<void> showPlayerStyleSheet(BuildContext context) =>
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: context.palette.surface,
-      barrierColor: Colors.transparent,
-      useRootNavigator: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadii.md)),
-      ),
-      builder: (_) => const _PlayerStyleSheet(),
-    ).whenComplete(() => playerStyleSheetHeight.value = 0);
+Future<void> showPlayerStyleSheet(BuildContext context) => showAppSheet<void>(
+  context,
+  showDragHandle: false,
+  barrierColor: Colors.transparent,
+  builder: (_) => const _PlayerStyleSheet(),
+).whenComplete(() => playerStyleSheetHeight.value = 0);
 
 /// 플레이어 테마 시트가 가리는 아래쪽 높이 (시트가 없으면 0).
 final playerStyleSheetHeight = ValueNotifier<double>(0);
@@ -36,7 +31,6 @@ class _PlayerStyleSheetState extends State<_PlayerStyleSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
     final current = context.watch<PlayerStyleCubit>().state;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final box = context.findRenderObject();
@@ -56,7 +50,7 @@ class _PlayerStyleSheetState extends State<_PlayerStyleSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.playerStyleTitle, style: text.titleMedium),
+            AppSheetTitle(l10n.playerStyleTitle),
             const SizedBox(height: AppSpacing.md),
             Row(
               children: [

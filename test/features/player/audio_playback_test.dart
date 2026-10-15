@@ -156,13 +156,13 @@ void main() {
     expect(cubit.state.index, 1);
   });
 
-  test('대기열 끝까지 들으면 마지막 곡에서 멈춘다', () async {
+  test('대기열 끝까지 들으면 첫 곡으로 돌아가 멈춘다', () async {
     cubit.playQueue(tracks, index: 2);
     await settle();
     engine.end();
     await settle();
     expect(cubit.state.isPlaying, isFalse);
-    expect(cubit.state.index, 2);
+    expect(cubit.state.index, 0);
     expect(cubit.state.position, Duration.zero);
   });
 

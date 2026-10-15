@@ -31,6 +31,7 @@ import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
+import org.json.JSONObject
 
 /**
  * 재생의 주인: 소리를 내는 ExoPlayer, 미디어 세션, 알림 서비스 연결을 프로세스에 하나씩 쥔다.
@@ -43,9 +44,11 @@ object PlaybackHub {
     private const val RESUME_WINDOW_MS = 10 * 60 * 1000L
     private const val ACTION_FAVORITE = "com.mulo.app.FAVORITE"
     private const val ACTION_CLOSE = "com.mulo.app.CLOSE"
+    private const val ACTION_SHUFFLE = "com.mulo.app.SHUFFLE"
     const val ACTION_OPEN_PLAYER = "com.mulo.app.OPEN_PLAYER"
     private val favoriteCommand = SessionCommand(ACTION_FAVORITE, Bundle.EMPTY)
     private val closeCommand = SessionCommand(ACTION_CLOSE, Bundle.EMPTY)
+    private val shuffleCommand = SessionCommand(ACTION_SHUFFLE, Bundle.EMPTY)
 
     private lateinit var context: Context
     private val main = Handler(Looper.getMainLooper())
@@ -92,6 +95,9 @@ object PlaybackHub {
 
     /** 앱(Dart)만 해석하는 문자열 (셔플 여부 · 섞기 전 순서). 그대로 보관했다가 돌려준다. */
     private var extras = ""
+
+    /** 직전에 재생하던 곡의 id (한 바퀴 돌아 첫 곡으로 넘어왔는지 알아보려고). */
+    private var lastMediaId: String? = null
 
     /** 대기열 곡별 커버 주소 (곡 id → 주소). 앱이 꺼진 사이 곡이 넘어가도 알림에 커버가 나오게 한다. */
     private var artById = mapOf<String, String>()
@@ -450,7 +456,10 @@ object PlaybackHub {
     /** 알림 버튼 모양을 다시 맞춘다 (좋아요 모양은 Dart가 아는 현재 곡일 때만 보인다). */
     private fun refreshLayout() {
         val info = sessionPlayer.info ?: return
-        session?.setCustomLayout(customLayout(info, sessionPlayer.infoMatchesCurrent() && !restoredFromStore))
+        // 좋아요 · 셔플은 Dart가 처리하므로 Dart가 붙어 있을 때만 둔다. 앱을 밀어 화면이 사라진 뒤
+        // (포그라운드 서비스만 남아 재생 중)에는 눌러도 받을 곳이 없어 닫기만 둔다.
+        val dartReady = sink != null
+        session?.setCustomLayout(customLayout(info, dartReady && sessionPlayer.infoMatchesCurrent() && !restoredFromStore))
     }
 
     /**
@@ -496,17 +505,52 @@ object PlaybackHub {
             .setDisplayName(if (info.favorite) info.unfavoriteLabel else info.favoriteLabel)
             .setSessionCommand(favoriteCommand)
             .build()
-        return ImmutableList.of(favorite, close)
+        // 재생 중에는 닫기(X) 대신 셔플을 둔다 (알림 오른쪽 칸은 둘뿐). 셔플 순서는 앱이 쥐고 있어서
+        // 앱이 아는 현재 곡일 때만 보이고, 앱이 꺼진 사이에는 위처럼 닫기만 둔다.
+        // 재생 중인 알림은 일시정지한 뒤 밀어서 지울 수 있다.
+        val shuffle = CommandButton.Builder(CommandButton.ICON_UNDEFINED)
+            .setCustomIconResId(if (info.shuffle) R.drawable.ic_notif_shuffle_on else R.drawable.ic_notif_shuffle_off)
+            .setDisplayName(if (info.shuffle) info.shuffleOffLabel else info.shuffleOnLabel)
+            .setSessionCommand(shuffleCommand)
+            .build()
+        return ImmutableList.of(favorite, shuffle)
     }
 
     // ── 네이티브 → Dart ──
 
     fun setSink(newSink: EventChannel.EventSink?) {
         sink = newSink
+        // Dart가 붙거나 떨어지면 알림 버튼(좋아요 · 셔플 ↔ 닫기)을 다시 맞춘다.
+        if (initialized) main.post { refreshLayout() }
     }
 
     private fun emit(map: Map<String, Any?>) {
         sink?.success(map)
+    }
+
+    /** 앱이 저장해 둔 대기열 정보에 셔플이 켜져 있는지. */
+    private val shuffleOn: Boolean
+        get() = try {
+            extras.isNotEmpty() && JSONObject(extras).optBoolean("shuffle", false)
+        } catch (_: Exception) {
+            false
+        }
+
+    /**
+     * 셔플 중 대기열을 한 바퀴 다 돌아 첫 곡으로 넘어왔으면 나머지 곡을 새로 섞는다 (같은 순서로 다시 돌지 않게).
+     * 앱(Dart)이 붙어 있으면 앱이 같은 일을 하므로, 앱을 밀어 서비스만 남았을 때만 여기서 한다.
+     * 지금 곡(첫 곡)은 끊기지 않게 그대로 두고, 방금 들은 곡이 바로 다음에 오지 않게 한다.
+     * 섞기 전 순서(extras의 original)는 그대로라 앱을 다시 열어 셔플을 끄면 원래 순서로 돌아간다.
+     */
+    private fun reshuffleAfterLap(previousId: String?) {
+        val count = exo.mediaItemCount
+        if (sink != null || previousId == null || count < 3 || !shuffleOn) return
+        if (exo.currentMediaItemIndex != 0 || exo.getMediaItemAt(count - 1).mediaId != previousId) return
+        val rest = (1 until count).map { exo.getMediaItemAt(it) }.shuffled().toMutableList()
+        if (rest.first().mediaId == previousId) rest.add(rest.removeAt(0))
+        exo.removeMediaItems(1, count)
+        exo.addMediaItems(rest)
+        persistQueue()
     }
 
     private fun emitCommand(name: String, positionMs: Long?) {
@@ -533,6 +577,9 @@ object PlaybackHub {
         }
 
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+            val previousId = lastMediaId
+            lastMediaId = mediaItem?.mediaId
+            if (reason != Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) reshuffleAfterLap(previousId)
             persistPosition()
             // 현재 곡이 바뀌었으니 좋아요 버튼 모양을 다시 맞춘다 (앱이 모르는 곡이면 숨긴다).
             refreshLayout()
@@ -574,8 +621,11 @@ object PlaybackHub {
                 pendingLoad?.success(null)
                 pendingLoad = null
             }
-            // 반복 없이 대기열 끝까지 들었다: 앱에 알리고 세션을 정리한다.
+            // 반복 없이 대기열 끝까지 들었다 (슬라이더를 끝까지 끈 경우 포함): 첫 곡으로 돌아가 멈춰 두고
+            // 앱에 알리고 세션을 정리한다. 다시 재생하면 첫 곡부터 나온다.
             if (playbackState == Player.STATE_ENDED) {
+                exo.playWhenReady = false
+                exo.seekTo(0, 0L)
                 emit(mapOf("type" to "ended"))
                 endSessionSoon()
             }
@@ -666,6 +716,7 @@ object PlaybackHub {
             val commands = MediaSession.ConnectionResult.DEFAULT_SESSION_COMMANDS.buildUpon()
                 .add(favoriteCommand)
                 .add(closeCommand)
+                .add(shuffleCommand)
                 .build()
             return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
                 .setAvailableSessionCommands(commands)
@@ -687,6 +738,7 @@ object PlaybackHub {
         ): ListenableFuture<SessionResult> {
             when (customCommand.customAction) {
                 ACTION_FAVORITE -> emitCommand("favorite", null)
+                ACTION_SHUFFLE -> emitCommand("shuffle", null)
                 // 닫기(X): 재생을 멈추고 알림을 치운다 (미리 듣기면 Dart가 미리 듣기를 끝낸다).
                 ACTION_CLOSE -> {
                     if (sessionPlayer.info?.preview != true) endSessionSoon()

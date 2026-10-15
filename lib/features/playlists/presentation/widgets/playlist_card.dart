@@ -325,7 +325,7 @@ class _FeaturedState extends State<_Featured> {
                         dimension: 28,
                         child: Icon(
                           open ? AppIcons.expandLess : AppIcons.expandMore,
-                          size: 18,
+                          size: AppSizes.iconSm,
                           color: p.onSurfaceMuted,
                         ),
                       ),

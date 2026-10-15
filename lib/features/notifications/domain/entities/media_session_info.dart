@@ -13,6 +13,7 @@ class MediaSessionInfo extends Equatable {
     this.hasPrevious = true,
     this.hasNext = true,
     this.favorite = false,
+    this.shuffle = false,
     this.preview = false,
     this.coverColors = const [],
     this.trackId = '',
@@ -33,6 +34,9 @@ class MediaSessionInfo extends Equatable {
 
   /// 지금 곡이 좋아요(즐겨찾기)에 들어 있는지 (알림의 하트 모양).
   final bool favorite;
+
+  /// 셔플이 켜져 있는지 (알림의 셔플 버튼 모양).
+  final bool shuffle;
 
   /// 검색 결과 미리 듣기인지 (재생 알림을 잠시 빌려 쓴다. 이전 · 다음 · 좋아요는 없다).
   final bool preview;
@@ -58,6 +62,7 @@ class MediaSessionInfo extends Equatable {
     hasPrevious: hasPrevious,
     hasNext: hasNext,
     favorite: favorite,
+    shuffle: shuffle,
     preview: preview,
     coverColors: coverColors,
     trackId: trackId,
@@ -76,6 +81,7 @@ class MediaSessionInfo extends Equatable {
     hasPrevious,
     hasNext,
     favorite,
+    shuffle,
     preview,
     coverColors,
     trackId,
@@ -83,7 +89,16 @@ class MediaSessionInfo extends Equatable {
   ];
 }
 
-enum MediaCommandType { play, pause, next, previous, seek, stop, favorite }
+enum MediaCommandType {
+  play,
+  pause,
+  next,
+  previous,
+  seek,
+  stop,
+  favorite,
+  shuffle,
+}
 
 /// 재생 알림에 잠시 보여 줄 미리 듣기 (소리가 나는 동안만 만든다).
 class PreviewNotice extends Equatable {

@@ -11,7 +11,6 @@ import '../bloc/subscriptions_cubit.dart';
 import 'category_choices.dart';
 import 'channel_info_sheet.dart' show ChannelBanner;
 import 'save_path_row.dart';
-import 'subscription_sheet.dart';
 
 /// 구독한 채널의 옵션 시트: 알림 받을 분류 · 저장 위치를 바꾸거나 구독을 해제한다.
 /// 고를 때마다 바로 저장한다.
@@ -19,8 +18,10 @@ Future<void> showChannelOptionsSheet(
   BuildContext context,
   SubscriptionsCubit cubit,
   String channelId,
-) => showSubscriptionSheet<void>(
+) => showAppSheet<void>(
   context,
+  isScrollControlled: true,
+  useSafeArea: true,
   builder: (_) => BlocBuilder<SubscriptionsCubit, SubscriptionsState>(
     bloc: cubit,
     builder: (sheetContext, state) {
@@ -32,7 +33,7 @@ Future<void> showChannelOptionsSheet(
       final text = Theme.of(sheetContext).textTheme;
       final thumb = channel.thumbnailUrl;
       return SingleChildScrollView(
-        padding: sheetPadding,
+        padding: appSheetPadding,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,

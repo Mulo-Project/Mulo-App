@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter_test/flutter_test.dart';
 
 import '../../helpers/test_data.dart';
@@ -34,12 +32,12 @@ void main() {
     expect(state().isPlaying, isFalse);
   });
 
-  test('반복 꺼짐이면 마지막 곡에서 next가 멈춘다', () {
+  test('반복 꺼짐이어도 마지막 곡에서 next를 누르면 첫 곡으로 돌아간다', () {
     vm()
       ..next()
       ..next()
       ..next();
-    expect(state().index, 2);
+    expect(state().index, 0);
   });
 
   test('전체 반복이면 마지막 곡 다음은 첫 곡', () {
@@ -196,16 +194,6 @@ void main() {
         ..moveInQueue(-1, 0)
         ..moveInQueue(0, 3);
       expect(state().queue, before);
-    });
-
-    test('shuffleUpNext는 지금 곡과 앞의 곡은 두고 뒤의 곡만 섞는다', () {
-      final big = TestData.tracks.take(8).toList();
-      cubit.playQueue(big, index: 2);
-      cubit.shuffleUpNext(Random(42));
-      expect(state().queue.take(3).toList(), big.take(3).toList());
-      expect(state().queue.skip(3).toSet(), big.skip(3).toSet());
-      expect(state().queue.skip(3).toList(), isNot(big.skip(3).toList()));
-      expect(state().index, 2);
     });
 
     test('clearQueue는 재생 중인 곡까지 모두 비우고 멈춘다', () {

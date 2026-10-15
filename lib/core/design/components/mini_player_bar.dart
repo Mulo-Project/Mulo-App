@@ -156,7 +156,11 @@ class MiniPlayerBar extends StatelessWidget {
                     child: InkResponse(
                       onTap: onQueue,
                       radius: 14,
-                      child: Icon(queueIcon, size: 16, color: p.onSurfaceMuted),
+                      child: Icon(
+                        queueIcon,
+                        size: AppSizes.iconXs,
+                        color: p.onSurfaceMuted,
+                      ),
                     ),
                   ),
                 ],
@@ -194,7 +198,7 @@ class _Artwork extends StatelessWidget {
                 child: Icon(
                   AppIcons.musicNote,
                   color: context.palette.onGlow,
-                  size: 20,
+                  size: AppSizes.iconMd,
                 ),
               ),
       ),
@@ -219,7 +223,11 @@ class _BarIcon extends StatelessWidget {
         radius: 20,
         child: SizedBox.square(
           dimension: 36,
-          child: Icon(icon, size: 22, color: context.palette.onSurfaceMuted),
+          child: Icon(
+            icon,
+            size: AppSizes.icon,
+            color: context.palette.onSurfaceMuted,
+          ),
         ),
       ),
     );

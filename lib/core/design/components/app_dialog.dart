@@ -43,7 +43,7 @@ class AppDialog extends StatelessWidget {
     for (final a in actions) {
       if (a is! PillButton) continue;
       final padding = (a.compact ? AppSpacing.md : AppSpacing.lg) * 2;
-      final icon = a.icon == null ? 0.0 : 18 + AppSpacing.xs;
+      final icon = a.icon == null ? 0.0 : AppSizes.iconSm + AppSpacing.xs;
       final painter = TextPainter(
         text: TextSpan(text: a.label, style: style),
         textDirection: TextDirection.ltr,
@@ -62,7 +62,7 @@ class AppDialog extends StatelessWidget {
     return Dialog(
       backgroundColor: p.surface,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadii.card),
+        borderRadius: BorderRadius.circular(AppRadii.sheet),
       ),
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg),

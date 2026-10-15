@@ -100,10 +100,14 @@ void main() {
 
   test('마지막 곡이 끝나면 반복이 꺼져 있을 때 끝났다고 알린다', () async {
     await repo.setQueue(_snapshot(index: 2));
+    engine.calls.clear();
     engine.complete();
+    await settle();
     await settle();
     expect(ended, 1);
     expect(changes, isEmpty);
+    // 첫 곡으로 돌아가 멈춰 둔다.
+    expect(engine.calls, ['load:file:///t0.mp3', 'pause']);
   });
 
   test('전체 반복이면 마지막 곡 뒤에 처음 곡으로 돌아간다', () async {

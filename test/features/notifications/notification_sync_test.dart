@@ -265,6 +265,27 @@ void main() {
     expect(session.updates.last!.favorite, isTrue);
   });
 
+  test('셔플을 켜고 끄면 알림을 다시 보낸다 (알림의 셔플 버튼 모양)', () async {
+    Future<void> sync(bool shuffle) => cubit.syncPlayback(
+      track: track,
+      isPlaying: true,
+      position: Duration.zero,
+      hasPrevious: true,
+      hasNext: true,
+      artUri: null,
+      shuffle: shuffle,
+      settings: on,
+      l10n: l10n,
+      now: DateTime(2026),
+    );
+    await sync(false);
+    await sync(false);
+    expect(session.updates, hasLength(1));
+    await sync(true);
+    expect(session.updates, hasLength(2));
+    expect(session.updates.last!.shuffle, isTrue);
+  });
+
   test('곡 정보 숨기기를 켜면 제목 · 아티스트 · 커버를 보내지 않는다', () async {
     await play(on.copyWith(hideSongInfo: true));
     final info = session.updates.single!;

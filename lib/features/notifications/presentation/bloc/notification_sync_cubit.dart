@@ -228,6 +228,7 @@ class NotificationSyncCubit extends Cubit<void> {
     required bool hasNext,
     required String? artUri,
     bool favorite = false,
+    bool shuffle = false,
     int queueIndex = 0,
     int queueLength = 0,
     PreviewNotice? preview,
@@ -280,6 +281,7 @@ class NotificationSyncCubit extends Cubit<void> {
             hasPrevious: hasPrevious,
             hasNext: hasNext,
             favorite: favorite,
+            shuffle: shuffle,
             trackId: track.id,
             hidden: hide,
             coverColors: hide ? const [] : coverColors,
@@ -297,6 +299,7 @@ class NotificationSyncCubit extends Cubit<void> {
           last.hasPrevious == next.hasPrevious &&
           last.hasNext == next.hasNext &&
           last.favorite == next.favorite &&
+          last.shuffle == next.shuffle &&
           last.trackId == next.trackId &&
           last.hidden == next.hidden &&
           last.preview == next.preview &&

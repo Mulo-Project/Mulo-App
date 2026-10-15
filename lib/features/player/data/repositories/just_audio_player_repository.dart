@@ -101,6 +101,14 @@ class JustAudioPlayerRepository implements AudioPlayerRepository {
       return;
     }
     if (last && _repeat == PlayerRepeatMode.off) {
+      // 대기열 끝: 첫 곡으로 돌아가 멈춰 둔다 (다시 재생하면 첫 곡부터).
+      _index = 0;
+      try {
+        await _open(_items[0]);
+        await pause();
+      } on Object {
+        // 못 열어도 끝난 것으로 알린다.
+      }
       _ended.add(null);
       return;
     }

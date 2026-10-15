@@ -11,13 +11,14 @@ import '../bloc/channel_info_cubit.dart';
 import '../bloc/subscriptions_cubit.dart';
 import 'category_choices.dart';
 import 'save_path_row.dart';
-import 'subscription_sheet.dart';
 
 /// 채널 검색 결과를 눌렀을 때 뜨는 간단한 채널 정보 시트: 이미지 · 이름 · 구독자 수 · 소개,
 /// 알림 받을 분류 · 저장 위치 고르기, 구독 · 구독 해제.
 Future<void> showChannelInfoSheet(BuildContext context, ChannelHit hit) =>
-    showSubscriptionSheet<void>(
+    showAppSheet<void>(
       context,
+      isScrollControlled: true,
+      useSafeArea: true,
       builder: (_) => _ChannelInfoSheet(hit: hit),
     );
 
@@ -98,7 +99,7 @@ class _ChannelInfoSheetState extends State<_ChannelInfoSheet> {
     final locale = Localizations.localeOf(context).toString();
     final thumb = hit.thumbnailUrl;
     return SingleChildScrollView(
-      padding: sheetPadding,
+      padding: appSheetPadding,
       child: BlocBuilder<ChannelInfoCubit, ChannelInfoState>(
         bloc: _info,
         builder: (context, info) => Column(
@@ -124,7 +125,7 @@ class _ChannelInfoSheetState extends State<_ChannelInfoSheet> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(hit.name, style: text.titleMedium),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: AppSpacing.hair),
                       Text(
                         [
                           if (info.subscriberCount != null)
