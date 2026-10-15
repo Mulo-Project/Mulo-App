@@ -122,6 +122,13 @@ class SyncDraft extends Equatable {
     return _change(times: next, current: current + 1);
   }
 
+  /// 가장 뒤에 찍은 싱크 하나를 지우고 그 칸이 다음에 찍을 칸이 되게 한다. 찍은 게 없으면 그대로.
+  SyncDraft unstampLast() {
+    final last = times.lastIndexWhere((t) => t != null);
+    if (last < 0) return this;
+    return _change(times: [...times]..[last] = null, current: last);
+  }
+
   /// [index] 줄의 시간을 [delta]만큼 옮긴다. 찍지 않은 줄이면 그대로. 앞뒤로 찍힌 이웃 싱크의 시간을 넘지 않는다 (이웃은 움직이지 않는다).
   SyncDraft nudge(int index, Duration delta) {
     final t = index < 0 || index >= length ? null : times[index];

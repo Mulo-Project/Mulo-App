@@ -155,20 +155,16 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
     context.read<LyricsSyncCubit>().stamp(position);
   }
 
-  /// 이전 싱크로: 지금까지 완료한 가장 마지막 싱크 칸에 포커스하고 재생도 그 시간으로 옮긴다.
-  /// 이미 포커스한 칸이 있으면 한 칸씩 더 앞으로 간다.
+  /// 뒤로: 가장 뒤에 찍은 싱크를 하나 지우고 그 줄로 돌아간다. 누를 때마다 한 칸씩 지운다.
   void _previous() {
     final sync = context.read<LyricsSyncCubit>();
     final draft = sync.state.draft;
-    final at = sync.state.selected;
-    var target = at != null && at < draft.current ? at - 1 : draft.current - 1;
-    while (target >= 0 && draft.times[target] == null) {
-      target--;
-    }
-    if (target < 0) return;
-    final time = draft.times[target]!;
-    sync.select(target);
-    context.read<NowPlayingCubit>().seekTo(time);
+    final last = draft.times.lastIndexWhere((t) => t != null);
+    if (last < 0) return;
+    final time = draft.times[last]!;
+    sync.stepBack();
+    // 지운 싱크 조금 앞에서부터 다시 들려줘, 이어서 지금으로 다시 찍을 수 있게 한다.
+    _replay(time);
   }
 
   /// 끌고 있는 손가락 아래 칸을 찾아 묶을 범위의 끝으로 삼는다 (위로도 아래로도).

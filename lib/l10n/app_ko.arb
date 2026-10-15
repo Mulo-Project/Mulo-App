@@ -630,7 +630,7 @@
   "lyricsSyncHint": "노래에 맞춰 '지금'을 눌러 줄마다 시간을 찍어요. 찍은 줄을 누르면 시간을 다듬을 수 있어요.",
   "lyricsSyncNow": "지금",
   "lyricsSyncUndo": "되돌리기",
-  "lyricsSyncPrevious": "이전 싱크로",
+  "lyricsSyncPrevious": "싱크 한 칸 지우고 뒤로",
   "lyricsSyncSave": "싱크 저장",
   "lyricsSyncGroup": "한 번에 묶을 줄 수",
   "lyricsSyncGroupLines": "{n}줄",

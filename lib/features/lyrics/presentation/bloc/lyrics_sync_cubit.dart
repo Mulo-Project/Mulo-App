@@ -206,6 +206,14 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
     );
   }
 
+  /// 가장 뒤에 찍은 싱크를 하나 지우고 그 칸으로 돌아간다 (다시 찍으려는 뒤로 가기). 되돌리기로 복구된다.
+  void stepBack() {
+    final draft = state.draft;
+    final next = draft.unstampLast();
+    if (next == draft) return;
+    _put(next, selected: _lastStamped(next));
+  }
+
   /// 선택한 줄의 시간을 [delta]만큼 옮긴다.
   void nudge(Duration delta) {
     final at = state.selected;

@@ -96,6 +96,20 @@ void main() {
     expect(d.undo().times[2], const Duration(seconds: 3));
   });
 
+  test('뒤로(stepBack)는 가장 뒤에 찍은 싱크를 하나씩 지우고 되돌리기로 복구된다', () {
+    final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다')!)
+      ..stamp(const Duration(seconds: 1))
+      ..stamp(const Duration(seconds: 2));
+    cubit.stepBack();
+    expect(cubit.state.draft.times, [const Duration(seconds: 1), null, null]);
+    expect(cubit.state.draft.current, 1);
+    cubit.stepBack();
+    expect(cubit.state.draft.stamped, 0);
+    expect(cubit.state.draft.current, 0);
+    cubit.undo();
+    expect(cubit.state.draft.times[0], const Duration(seconds: 1));
+  });
+
   test('같은 시간에 지금을 또 눌러도 자동으로 묶이지 않고 줄이 따로 남는다', () {
     final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다')!)
       ..stamp(const Duration(seconds: 2))
@@ -565,7 +579,9 @@ void main() {
     expect(find.text('--:--.--'), findsNWidgets(2));
   });
 
-  testWidgets('싱크 설정: 이전 싱크로 버튼은 완료한 싱크를 한 칸씩 거슬러 포커스한다', (tester) async {
+  testWidgets('싱크 설정: 뒤로 버튼은 가장 뒤에 찍은 싱크를 한 칸씩 지우고 그 앞에서 다시 들려준다', (
+    tester,
+  ) async {
     await openSync(tester, '가 줄\n나 줄\n다 줄');
     await tester.tap(find.text('확인'));
     await tester.pumpAndSettle();
@@ -579,11 +595,17 @@ void main() {
     await tester.pump();
     await tester.tap(find.text('지금'));
     await tester.pumpAndSettle();
+    expect(find.text('2/3줄'), findsOneWidget);
 
-    await tester.tap(find.byTooltip('이전 싱크로'));
+    await tester.tap(find.byTooltip('싱크 한 칸 지우고 뒤로'));
     await tester.pumpAndSettle();
-    expect(player.state.position, const Duration(seconds: 2));
-    expect(find.text('+0.1s'), findsWidgets);
+    expect(find.text('1/3줄'), findsOneWidget);
+    expect(player.state.position, const Duration(seconds: 4));
+    expect(player.state.isPlaying, isTrue);
+
+    await tester.tap(find.byTooltip('싱크 한 칸 지우고 뒤로'));
+    await tester.pumpAndSettle();
+    expect(find.text('0/3줄'), findsOneWidget);
   });
 
   testWidgets('싱크 설정: 재생 시간이 슬라이더 아래, 지금 버튼 위에 보인다', (tester) async {

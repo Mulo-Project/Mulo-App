@@ -2735,7 +2735,7 @@ abstract class AppLocalizations {
   /// No description provided for @lyricsSyncPrevious.
   ///
   /// In ko, this message translates to:
-  /// **'이전 싱크로'**
+  /// **'싱크 한 칸 지우고 뒤로'**
   String get lyricsSyncPrevious;
 
   /// No description provided for @lyricsSyncSave.

@@ -1467,7 +1467,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsSyncUndo => 'Undo';
 
   @override
-  String get lyricsSyncPrevious => 'Previous sync';
+  String get lyricsSyncPrevious => 'Remove last sync and go back';
 
   @override
   String get lyricsSyncSave => 'Save sync';

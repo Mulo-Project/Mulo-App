@@ -1436,7 +1436,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsSyncUndo => '되돌리기';
 
   @override
-  String get lyricsSyncPrevious => '이전 싱크로';
+  String get lyricsSyncPrevious => '싱크 한 칸 지우고 뒤로';
 
   @override
   String get lyricsSyncSave => '싱크 저장';
