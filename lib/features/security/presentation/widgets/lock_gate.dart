@@ -42,6 +42,7 @@ class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
         cubit.appLeft();
       case AppLifecycleState.resumed:
         cubit.appReturned();
+        cubit.refreshBiometric();
       case AppLifecycleState.inactive:
       case AppLifecycleState.detached:
         break;
@@ -108,7 +109,8 @@ class _LockScreenState extends State<LockScreen> {
   Future<void> _tryBiometric() async {
     if (!mounted) return;
     final cubit = context.read<AppLockCubit>();
-    if (!cubit.state.biometricEnabled) return;
+    await cubit.refreshBiometric();
+    if (!mounted || !cubit.state.biometricEnabled) return;
     await cubit.unlockWithBiometric(context.l10n.biometricReason);
   }
 

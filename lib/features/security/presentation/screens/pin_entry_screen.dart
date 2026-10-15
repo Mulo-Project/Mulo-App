@@ -88,7 +88,8 @@ class _PinEntryScreenState extends State<PinEntryScreen> {
   Future<void> _tryBiometric() async {
     if (!mounted || _stage != _Stage.current || _busy) return;
     final cubit = context.read<AppLockCubit>();
-    if (!cubit.state.biometricEnabled) return;
+    await cubit.refreshBiometric();
+    if (!mounted || !cubit.state.biometricEnabled) return;
     final ok = await cubit.confirmWithBiometric(context.l10n.biometricReason);
     if (ok && mounted) await _currentConfirmed();
   }

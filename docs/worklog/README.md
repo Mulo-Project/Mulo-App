@@ -37,6 +37,7 @@
 | 2026-10-01 | [앱 이름 Mulo · 패키지 com.mulo.app](2026-10-01-rename-mulo.md) | 완료 (PR 대기) |
 | 2026-10-01 | [재생목록 카드 · 요약 · 설정 메뉴](2026-10-01-playlist-card.md) | 완료 (PR 대기) |
 | 2026-10-01 | [설정 보안 섹션 · 앱 잠금](2026-10-01-settings-security.md) | 완료 (PR 대기) |
+| 2026-10-15 | [지문 인증 재확인 (시작 직후 굳음)](2026-10-15-biometric-recheck-on-resume.md) | 완료 (PR 대기) |
 | 2026-10-01 | [검색 · 다운로드 피드백 반영](2026-10-01-search-download-feedback.md) | 완료 (PR 대기) |
 | 2026-10-01 | [서버 주소 dart-define 전환](2026-10-01-server-url-dart-define.md) | 완료 (PR 대기) |
 | 2026-10-01 | [불러오는 폴더 목록 (바텀 시트)](2026-10-01-loaded-folders-sheet.md) | 완료 (PR 대기) |
