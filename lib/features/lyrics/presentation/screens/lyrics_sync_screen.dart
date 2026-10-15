@@ -650,15 +650,26 @@ class _LineRow extends StatelessWidget {
       ],
     );
     // 포커스된 싱크 칸(시간 조정 버튼까지)은 영역 전체에 색을 깐다.
-    return AnimatedContainer(
-      duration: AppMotion.fast,
-      decoration: BoxDecoration(
-        color: selected || inRange
-            ? p.accent.withValues(alpha: inRange ? .22 : .16)
-            : null,
-        borderRadius: BorderRadius.circular(AppRadii.sm),
-      ),
-      child: block,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AnimatedContainer(
+          duration: AppMotion.fast,
+          decoration: BoxDecoration(
+            color: selected || inRange
+                ? p.accent.withValues(alpha: inRange ? .22 : .16)
+                : null,
+            borderRadius: BorderRadius.circular(AppRadii.sm),
+          ),
+          child: block,
+        ),
+        // 싱크 칸 사이를 구분하는 가는 선.
+        Container(
+          height: 1,
+          margin: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+          color: p.outline,
+        ),
+      ],
     );
   }
 }
