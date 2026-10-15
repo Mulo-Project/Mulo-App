@@ -2888,6 +2888,24 @@ abstract class AppLocalizations {
   /// **'기본 줄 수 변경'**
   String get lyricsSyncDefaultLines;
 
+  /// No description provided for @lyricsSyncSkipTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'찍어 둔 싱크가 사라져요'**
+  String get lyricsSyncSkipTitle;
+
+  /// No description provided for @lyricsSyncSkipBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'건너뛰면 사이에 이미 찍어 둔 줄들이 한 칸으로 묶이면서 그 싱크가 지워져요. 계속할까요?'**
+  String get lyricsSyncSkipBody;
+
+  /// No description provided for @lyricsSyncSkipConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'묶기'**
+  String get lyricsSyncSkipConfirm;
+
   /// No description provided for @lyricsSyncResetTitle.
   ///
   /// In ko, this message translates to:

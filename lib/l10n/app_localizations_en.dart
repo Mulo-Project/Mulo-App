@@ -1557,6 +1557,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsSyncDefaultLines => 'Change default lines';
 
   @override
+  String get lyricsSyncSkipTitle => 'Stamped syncs will be lost';
+
+  @override
+  String get lyricsSyncSkipBody =>
+      'Skipping merges the lines in between into one block and removes the syncs already stamped there. Continue?';
+
+  @override
+  String get lyricsSyncSkipConfirm => 'Merge';
+
+  @override
   String get lyricsSyncResetTitle => 'Groupings will be lost';
 
   @override

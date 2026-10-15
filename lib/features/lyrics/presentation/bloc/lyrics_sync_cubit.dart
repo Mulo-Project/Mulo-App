@@ -83,6 +83,19 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
     );
   }
 
+  /// [index] 칸을 눌러 건너뛰면 그 사이에 이미 찍어 둔 싱크가 묶음에 삼켜져 사라지는가.
+  bool skipErasesStamped(int index) {
+    final draft = state.draft;
+    if (!canGroup || index < 0 || index >= draft.length) return false;
+    if (draft.times[index] != null) return false;
+    final first = draft.times.indexOf(null);
+    if (index <= first) return false;
+    for (var i = first + 1; i < index; i++) {
+      if (draft.times[i] != null) return true;
+    }
+    return false;
+  }
+
   /// 줄을 눌렀을 때: 찍은 줄은 선택하고 다음 줄부터 다시 찍도록 옮긴다 (뒤쪽 싱크는 새로 찍으면 덮어쓴다).
   /// 아직 안 찍은 뒤쪽 줄이면 그 사이 줄을 건너뛰는 것이므로, 건너뛴 줄들을 그 줄과 한 칸(같은 시간)으로 묶는다.
   void select(int index) {

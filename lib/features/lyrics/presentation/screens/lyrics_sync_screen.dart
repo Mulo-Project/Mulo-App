@@ -350,8 +350,16 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
                                     selected: state.selected == i,
                                     canGroup: sync.canGroup,
                                     clock: _clock,
-                                    onTap: () {
+                                    onTap: () async {
                                       if (i == draft.current) return _now();
+                                      // 건너뛰면 사이에 찍어 둔 싱크가 사라지니 먼저 묻는다.
+                                      if (sync.skipErasesStamped(i) &&
+                                          !await confirmLyricsSkipMerge(
+                                            context,
+                                          )) {
+                                        return;
+                                      }
+                                      if (!context.mounted) return;
                                       sync.select(i);
                                       // 찍어 둔 줄이면 재생도 그 싱크 위치로 옮긴다.
                                       final time = draft.times[i];

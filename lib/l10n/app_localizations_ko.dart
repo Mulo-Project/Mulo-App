@@ -1524,6 +1524,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsSyncDefaultLines => '기본 줄 수 변경';
 
   @override
+  String get lyricsSyncSkipTitle => '찍어 둔 싱크가 사라져요';
+
+  @override
+  String get lyricsSyncSkipBody =>
+      '건너뛰면 사이에 이미 찍어 둔 줄들이 한 칸으로 묶이면서 그 싱크가 지워져요. 계속할까요?';
+
+  @override
+  String get lyricsSyncSkipConfirm => '묶기';
+
+  @override
   String get lyricsSyncResetTitle => '묶음이 사라져요';
 
   @override

@@ -59,6 +59,18 @@ void main() {
     expect(cubit.state.draft.times[1], const Duration(seconds: 2));
   });
 
+  test('건너뛰면 사이에 찍어 둔 싱크가 사라질 때만 알아챈다', () {
+    final cubit = LyricsSyncCubit(Lyrics.parse('a\nb\nc\nd\ne')!)
+      ..stamp(const Duration(seconds: 1))
+      ..select(2)
+      ..stamp(const Duration(seconds: 2))
+      ..stamp(const Duration(seconds: 3));
+    cubit.split(1);
+    // 칸: [a] [b] [c] [d] [e], 시간: 1초 - - 3초 -
+    expect(cubit.skipErasesStamped(4), isTrue);
+    expect(cubit.skipErasesStamped(2), isFalse);
+  });
+
   group('SyncDraft', () {
     final plain = Lyrics.parse('첫 줄\n\n둘째 줄\n셋째 줄')!;
 
