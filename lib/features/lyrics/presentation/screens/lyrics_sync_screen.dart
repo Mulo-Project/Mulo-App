@@ -78,11 +78,10 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
     super.dispose();
   }
 
-  /// 자동 멈춤: 다음에 찍을 줄에 이미 싱크가 있으면, 재생이 그 시간에 닿을 때 멈춘다.
+  /// 자동 멈춤: 포커스한 싱크 바로 다음 칸에 이미 싱크가 있으면, 재생이 그 시간에 닿을 때 멈춘다.
   void _watchPass(NowPlayingState s) {
     if (!_autoPause || !mounted || !s.isPlaying) return;
-    final draft = context.read<LyricsSyncCubit>().state.draft;
-    final at = draft.current < draft.length ? draft.times[draft.current] : null;
+    final at = context.read<LyricsSyncCubit>().nextStampAfterFocus;
     if (at == null || s.position < at) return;
     // 이미 지나 있던 곳에서 재생을 시작한 경우는 멈추지 않는다 (한 번 닿는 순간만).
     if (s.position - at > const Duration(seconds: 1)) return;
@@ -228,6 +227,7 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
         draft: draft,
         selected: state.selected == i,
         inRange: dragRange,
+        afterFocus: state.selected != null && i == state.selected! + 1,
         canGroup: sync.canGroup,
         clock: _clock,
         onLongPress: sync.canGroup && merged ? () => sync.expand(i) : null,
@@ -312,11 +312,10 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
     _replay(prev ?? Duration.zero);
   }
 
-  /// 자동 멈춤이 켜져 있으면 다음에 찍을 줄의 기존 싱크 시간이 앞으로 갈 수 있는 끝이다.
+  /// 자동 멈춤이 켜져 있으면 포커스한 싱크 다음 칸의 기존 싱크 시간이 앞으로 갈 수 있는 끝이다.
   Duration? get _limit {
     if (!_autoPause) return null;
-    final draft = context.read<LyricsSyncCubit>().state.draft;
-    return draft.current < draft.length ? draft.times[draft.current] : null;
+    return context.read<LyricsSyncCubit>().nextStampAfterFocus;
   }
 
   Duration _clampLimit(Duration target) {
@@ -506,6 +505,7 @@ class _LineRow extends StatelessWidget {
     required this.draft,
     required this.selected,
     this.inRange = false,
+    this.afterFocus = false,
     required this.canGroup,
     required this.clock,
     required this.onTap,
@@ -516,6 +516,7 @@ class _LineRow extends StatelessWidget {
   final SyncDraft draft;
   final bool selected;
   final bool inRange;
+  final bool afterFocus;
   final bool canGroup;
   final String Function(Duration) clock;
   final VoidCallback onTap;
@@ -532,9 +533,9 @@ class _LineRow extends StatelessWidget {
         ? p.accent
         : (time == null ? p.onSurfaceMuted : p.onSurface);
     final sync = context.read<LyricsSyncCubit>();
-    // 다음에 찍을 줄의 기존 싱크 시간을 재생이 이미 지나갔는가.
+    // 포커스한 싱크 바로 다음 칸의 기존 싱크 시간을 재생이 이미 지나갔는가.
     final passed =
-        isCurrent &&
+        afterFocus &&
         time != null &&
         context.select<NowPlayingCubit, bool>((c) => c.state.position > time);
 

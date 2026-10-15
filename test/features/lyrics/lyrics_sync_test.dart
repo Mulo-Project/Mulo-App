@@ -85,9 +85,11 @@ void main() {
       ..stamp(const Duration(seconds: 2))
       ..stamp(const Duration(seconds: 3));
     cubit.select(0);
-    expect(cubit.state.draft.current, 1);
+    // 찍은 줄을 눌러도 다음에 찍을 칸은 그대로다
+    expect(cubit.state.selected, 0);
+    expect(cubit.state.draft.current, 3);
     cubit.select(4);
-    expect(cubit.state.draft.current, 1);
+    expect(cubit.state.draft.current, 3);
     expect(cubit.state.draft.texts, ['가', '나', '다', '라', '마']);
   });
 
