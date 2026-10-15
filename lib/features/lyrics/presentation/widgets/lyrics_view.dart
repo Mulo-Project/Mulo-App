@@ -174,6 +174,24 @@ class _LyricsViewState extends State<LyricsView> {
                 ),
               ),
             ),
+          // 도중에 저장해 아직 싱크가 없는 뒷부분도 가사는 모두 보여 준다 (강조 · 이동은 싱크된 줄까지만).
+          for (final line in lyrics.pending)
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: AppSpacing.xs,
+              ),
+              child: SizedBox(
+                width: double.infinity,
+                child: Text(
+                  line,
+                  textAlign: TextAlign.center,
+                  style: text.bodyLarge?.copyWith(
+                    color: p.onSurfaceMuted.withValues(alpha: .6),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );

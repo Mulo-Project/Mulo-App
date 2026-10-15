@@ -71,6 +71,25 @@ void main() {
     expect(find.text('가사를 지웠어요'), findsOneWidget);
   });
 
+  testWidgets('플레이어: 중간 저장한 싱크 가사도 안 찍은 뒷부분까지 모두 보여 준다', (tester) async {
+    phone(tester);
+    final lyrics = MemoryLyricsRepository(
+      sibling: {'t1': '[00:02.00]첫 줄\n둘째 줄\n셋째 줄'},
+    );
+    await setUpTestDependencies(lyrics: lyrics);
+    await tester.pumpWidget(const MusicApp(initialLocation: Routes.player));
+    await tester.pumpAndSettle();
+    tester.element(find.byType(PlayerScreen)).read<NowPlayingCubit>().playQueue(
+      [_t('t1', '첫 곡')],
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('가사 보기'));
+    await tester.pumpAndSettle();
+    expect(find.text('첫 줄'), findsOneWidget);
+    expect(find.text('둘째 줄'), findsOneWidget);
+    expect(find.text('셋째 줄'), findsOneWidget);
+  });
+
   testWidgets('가사 편집 페이지: 가사가 있을 때 가져오면 바꿀지 붙일지 묻는다', (tester) async {
     phone(tester);
     final lyrics = MemoryLyricsRepository(sibling: {'t1': '기존 가사'});
