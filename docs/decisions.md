@@ -690,3 +690,10 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 - **릴리스 용량**: 릴리스에서 R8 코드 축소 · 리소스 축소를 켠다 (`android/app/proguard-rules.pro`에 youtubedl-android · jackson 유지 규칙). ABI는 빌드 명령으로 나눈다: 배포는 `flutter build apk --release --flavor full --split-per-abi`. 한 덩어리(arm64 · armv7 · x86_64) 188MB가 arm64 분할로 약 71MB(armv7 65MB, x86_64 75MB)가 된다. 용량 대부분은 ABI마다 들어가는 `libffmpeg.zip.so`(30~38MB)와 `libpython.zip.so`(13~14MB)다. R8 효과 · 기기 동작은 실기기에서 확인해야 한다.
 - **수면 타이머**: 팝업 메뉴(15 · 30 · 45 · 60분) 대신 시계 모양 대화상자로 바꿨다. 시간(0~12) · 분(0~59) 휠(`WheelPicker`, `lib/core/design/components/wheel_picker.dart`)을 돌려 정하고 "시작", 켜져 있으면 "타이머 끄기".
 - **받기 줄**: 손잡이를 낮추고, 펼치기 줄과 "받는 곡 숨기기"를 없애 한 줄(현황을 누르면 펼침)로 합쳤다. 펼침 높이는 `AnimatedSize`로 이어지고 위쪽 선은 미니 플레이어와 같은 `glassBorder`다. 받는 곡 썸네일은 미니 플레이어와 같은 44.
+
+## D-108 · 2026-10-15 · 용량 · 성능 정리와 알림 셔플을 앱 없이도
+
+- 용량 측정(release): lite 39MB · full arm64 71MB · armv7 65MB · x86_64 75MB · full 통합 APK 188MB. full은 `libffmpeg.zip.so`(36MB) + `libpython.zip.so`(14MB)가 대부분이고, youtubedl-android가 첫 실행에 이를 앱 데이터로 풀어 쓴다. 통합 APK(모든 ABI)로 설치하면 400MB에 가까워지므로 **배포는 `--split-per-abi`(arm64)** 로 한다. 기기에서 푸는 용량은 `jniLibs.useLegacyPackaging = true`(youtubedl-android가 파일 경로로 연다) 때문에 줄이지 못한다.
+- 웹 커버 사본(`cover_cache`)은 시작할 때 64MB를 넘으면 오래된 것부터 지우고, 내장 커버 임시 폴더는 비운다 (`CacheCleaner`).
+- 곡이 많은 상세 화면(앨범 · 아티스트 · 장르 · 재생목록)은 `LazyTrackList`로 보이는 곡 줄만 만든다. 플로팅 재생 버튼은 위치 틱마다 다시 그리지 않고, 미니 플레이어 띠는 `RepaintBoundary`로 격리한다.
+- 알림 셔플 버튼은 앱(Dart)이 없을 때도 둔다 (D-106 보강 3을 대체). Dart가 붙어 있으면 `command shuffle`, 없으면 네이티브가 `extras`(`shuffle` · `original`)를 고쳐 직접 섞고 되돌린다. 없을 땐 좋아요 자리에 닫기(X)가 온다. 자세한 약속은 [native-playback.md](native-playback.md).

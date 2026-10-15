@@ -31,6 +31,7 @@ import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
+import org.json.JSONArray
 import org.json.JSONObject
 
 /**
@@ -271,7 +272,9 @@ object PlaybackHub {
         val items = (map["items"] as? List<*>)?.mapNotNull { it as? Map<*, *> } ?: emptyList()
         val playing = map["playing"] as? Boolean ?: false
         val positionMs = (map["positionMs"] as? Number)?.toLong()
+        val wasShuffled = shuffleOn
         extras = map["extras"] as? String ?: ""
+        if (wasShuffled != shuffleOn) main.post { refreshLayout() }
         exo.repeatMode = repeatModeOf(map["repeat"] as? String)
         pendingLoad?.error("interrupted", "다른 대기열을 불러와 중단됨", null)
         pendingLoad = null
@@ -456,10 +459,9 @@ object PlaybackHub {
     /** 알림 버튼 모양을 다시 맞춘다 (좋아요 모양은 Dart가 아는 현재 곡일 때만 보인다). */
     private fun refreshLayout() {
         val info = sessionPlayer.info ?: return
-        // 좋아요 · 셔플은 Dart가 처리하므로 Dart가 붙어 있을 때만 둔다. 앱을 밀어 화면이 사라진 뒤
-        // (포그라운드 서비스만 남아 재생 중)에는 눌러도 받을 곳이 없어 닫기만 둔다.
-        val dartReady = sink != null
-        session?.setCustomLayout(customLayout(info, dartReady && sessionPlayer.infoMatchesCurrent() && !restoredFromStore))
+        // 좋아요는 Dart가 처리하므로 Dart가 붙어 있을 때만 둔다. 앱을 밀어 화면이 사라진 뒤
+        // (포그라운드 서비스만 남아 재생 중)에는 좋아요 대신 닫기를 두고, 셔플은 네이티브가 처리한다.
+        session?.setCustomLayout(customLayout(info, sessionPlayer.infoMatchesCurrent() && !restoredFromStore, sink != null))
     }
 
     /**
@@ -493,26 +495,28 @@ object PlaybackHub {
         }
     }
 
-    private fun customLayout(info: SessionInfo, current: Boolean): ImmutableList<CommandButton> {
+    private fun customLayout(info: SessionInfo, current: Boolean, dartReady: Boolean): ImmutableList<CommandButton> {
         val close = CommandButton.Builder(CommandButton.ICON_UNDEFINED)
             .setCustomIconResId(R.drawable.ic_notif_close)
             .setDisplayName(info.closeLabel)
             .setSessionCommand(closeCommand)
             .build()
-        if (info.preview || !current) return ImmutableList.of(close)
+        if (info.preview) return ImmutableList.of(close)
+        // 셔플 순서는 extras가 쥐고 있어 앱이 없어도 네이티브가 켜고 끌 수 있다: 아이콘도 extras를 따른다.
+        val shuffled = shuffleOn
+        val shuffle = CommandButton.Builder(CommandButton.ICON_UNDEFINED)
+            .setCustomIconResId(if (shuffled) R.drawable.ic_notif_shuffle_on else R.drawable.ic_notif_shuffle_off)
+            .setDisplayName(if (shuffled) info.shuffleOffLabel else info.shuffleOnLabel)
+            .setSessionCommand(shuffleCommand)
+            .build()
+        // 좋아요는 앱(Dart)이 아는 현재 곡일 때만 둔다. 아니면 셔플 · 닫기(X).
+        if (!current || !dartReady) return ImmutableList.of(shuffle, close)
         val favorite = CommandButton.Builder(CommandButton.ICON_UNDEFINED)
             .setCustomIconResId(if (info.favorite) R.drawable.ic_notif_favorite else R.drawable.ic_notif_favorite_outline)
             .setDisplayName(if (info.favorite) info.unfavoriteLabel else info.favoriteLabel)
             .setSessionCommand(favoriteCommand)
             .build()
-        // 재생 중에는 닫기(X) 대신 셔플을 둔다 (알림 오른쪽 칸은 둘뿐). 셔플 순서는 앱이 쥐고 있어서
-        // 앱이 아는 현재 곡일 때만 보이고, 앱이 꺼진 사이에는 위처럼 닫기만 둔다.
         // 재생 중인 알림은 일시정지한 뒤 밀어서 지울 수 있다.
-        val shuffle = CommandButton.Builder(CommandButton.ICON_UNDEFINED)
-            .setCustomIconResId(if (info.shuffle) R.drawable.ic_notif_shuffle_on else R.drawable.ic_notif_shuffle_off)
-            .setDisplayName(if (info.shuffle) info.shuffleOffLabel else info.shuffleOnLabel)
-            .setSessionCommand(shuffleCommand)
-            .build()
         return ImmutableList.of(favorite, shuffle)
     }
 
@@ -551,6 +555,58 @@ object PlaybackHub {
         exo.removeMediaItems(1, count)
         exo.addMediaItems(rest)
         persistQueue()
+    }
+
+    /**
+     * 알림의 셔플 버튼. 앱(Dart)이 붙어 있으면 Dart에 넘기고(순서는 Dart가 쥔다),
+     * 앱을 밀어 서비스만 남았으면 여기서 직접 켜고 끈다.
+     * 켜면 지금 곡을 맨 앞에 두고 나머지를 섞으며 원래 순서를 extras의 original에 적어 둔다.
+     * 끄면 original 순서로 되돌린다. 듣던 곡은 끊기지 않는다. 앱을 다시 열면 `getState`의 extras로 이어 받는다.
+     */
+    private fun toggleShuffle() {
+        if (sink != null) {
+            emitCommand("shuffle", null)
+            return
+        }
+        val count = exo.mediaItemCount
+        if (count == 0) return
+        val current = exo.currentMediaItemIndex
+        val all = (0 until count).map { exo.getMediaItemAt(it) }
+        val json = try {
+            if (extras.isNotEmpty()) JSONObject(extras) else JSONObject()
+        } catch (_: Exception) {
+            JSONObject()
+        }
+        val currentItem = all[current]
+        val others = all.filterIndexed { i, _ -> i != current }
+        val before: List<MediaItem>
+        val after: List<MediaItem>
+        if (!shuffleOn) {
+            val rest = others.shuffled()
+            before = emptyList()
+            after = rest
+            json.put("shuffle", true)
+            json.put("original", JSONArray(all.map { it.mediaId }))
+        } else {
+            val original = json.optJSONArray("original")
+            val ids = (0 until (original?.length() ?: 0)).map { original!!.getString(it) }
+            val byId = all.groupBy { it.mediaId }
+            val ordered = ids.mapNotNull { byId[it]?.firstOrNull() }.distinct() +
+                all.filter { it.mediaId !in ids }
+            val at = ordered.indexOf(currentItem).takeIf { it >= 0 } ?: 0
+            before = ordered.subList(0, at)
+            after = ordered.subList(at + 1, ordered.size)
+            json.put("shuffle", false)
+            json.remove("original")
+        }
+        if (current < count - 1) exo.removeMediaItems(current + 1, count)
+        if (current > 0) exo.removeMediaItems(0, current)
+        if (before.isNotEmpty()) exo.addMediaItems(0, before)
+        if (after.isNotEmpty()) exo.addMediaItems(after)
+        extras = json.toString()
+        persistQueue()
+        sessionPlayer.refresh()
+        refreshLayout()
     }
 
     private fun emitCommand(name: String, positionMs: Long?) {
@@ -738,7 +794,7 @@ object PlaybackHub {
         ): ListenableFuture<SessionResult> {
             when (customCommand.customAction) {
                 ACTION_FAVORITE -> emitCommand("favorite", null)
-                ACTION_SHUFFLE -> emitCommand("shuffle", null)
+                ACTION_SHUFFLE -> toggleShuffle()
                 // 닫기(X): 재생을 멈추고 알림을 치운다 (미리 듣기면 Dart가 미리 듣기를 끝낸다).
                 ACTION_CLOSE -> {
                     if (sessionPlayer.info?.preview != true) endSessionSoon()

@@ -420,7 +420,10 @@ class _ShellMiniPlayer extends StatelessWidget {
           ? SizedBox(height: placeholderHeight, width: double.infinity)
           : KeyedSubtree(
               key: measureKey,
-              child: _bar(context, state, track, vm, l10n),
+              // 위치가 바뀔 때마다 띠만 다시 그리고 아래 화면까지 번지지 않게 한다.
+              child: RepaintBoundary(
+                child: _bar(context, state, track, vm, l10n),
+              ),
             ),
     );
   }
