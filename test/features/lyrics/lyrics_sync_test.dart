@@ -71,6 +71,45 @@ void main() {
     expect(cubit.skipErasesStamped(2), isFalse);
   });
 
+  test('묶인 칸을 펼쳐 한 줄의 시간을 바꾸면 그 줄만 따로 남고, 영역 밖을 누르면 같은 시간끼리 다시 합쳐진다', () {
+    final cubit = LyricsSyncCubit(Lyrics.parse('a\nb\nc\nd')!)
+      ..stamp(const Duration(seconds: 1))
+      ..select(3)
+      ..stamp(const Duration(seconds: 5));
+    // 칸: [a] [b c d]
+    expect(cubit.state.draft.texts, ['a', 'b\nc\nd']);
+
+    cubit.expand(1);
+    expect(cubit.state.draft.texts, ['a', 'b', 'c', 'd']);
+    expect(cubit.state.expanded, (1, 3));
+    expect(
+      cubit.state.draft.times.skip(1),
+      everyElement(const Duration(seconds: 5)),
+    );
+
+    // 가운데 줄의 시간을 옮긴다 (영역 안이라 그대로 펼쳐 있다)
+    cubit.select(2);
+    cubit.nudge(const Duration(milliseconds: 500));
+    expect(cubit.state.expanded, (1, 3));
+    expect(cubit.state.draft.times[2], const Duration(milliseconds: 5500));
+
+    // 영역 밖(첫 칸)을 누르면 접히고, 시간이 같던 줄(b)과 (d)는 이웃이 아니라 따로 남는다
+    cubit.select(0);
+    expect(cubit.state.expanded, isNull);
+    expect(cubit.state.draft.texts, ['a', 'b', 'c', 'd']);
+  });
+
+  test('펼친 줄의 시간이 그대로면 영역 밖을 누를 때 원래대로 합쳐진다', () {
+    final cubit = LyricsSyncCubit(Lyrics.parse('a\nb\nc\nd')!)
+      ..stamp(const Duration(seconds: 1))
+      ..select(3)
+      ..stamp(const Duration(seconds: 5))
+      ..expand(1)
+      ..select(0);
+    expect(cubit.state.expanded, isNull);
+    expect(cubit.state.draft.texts, ['a', 'b\nc\nd']);
+  });
+
   group('SyncDraft', () {
     final plain = Lyrics.parse('첫 줄\n\n둘째 줄\n셋째 줄')!;
 
@@ -344,6 +383,29 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('0/4줄'), findsOneWidget);
     expect(find.text('3줄 같은 시간으로 묶음'), findsNothing);
+  });
+
+  testWidgets('싱크 설정: 묶인 칸을 꾹 누르면 줄별로 펼쳐지고 영역 밖을 누르면 접힌다', (tester) async {
+    await openSync(tester, '가 줄\n나 줄\n다 줄\n라 줄');
+    await tester.tap(find.text('확인'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('다 줄'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('지금'));
+    await tester.pumpAndSettle();
+    expect(find.text('가 줄\n나 줄\n다 줄'), findsOneWidget);
+
+    await tester.longPress(find.text('가 줄\n나 줄\n다 줄'));
+    await tester.pumpAndSettle();
+    expect(find.text('가 줄'), findsOneWidget);
+    expect(find.text('나 줄'), findsOneWidget);
+    expect(find.text('다 줄'), findsOneWidget);
+    expect(find.textContaining('줄별로 펼쳤어요'), findsOneWidget);
+
+    await tester.tap(find.text('라 줄'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('줄별로 펼쳤어요'), findsNothing);
+    expect(find.text('가 줄\n나 줄\n다 줄'), findsOneWidget);
   });
 
   testWidgets('싱크 설정: 이전 싱크로 버튼은 완료한 싱크를 한 칸씩 거슬러 포커스한다', (tester) async {

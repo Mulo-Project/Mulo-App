@@ -141,6 +141,52 @@ class SyncDraft extends Equatable {
     );
   }
 
+  /// [index] 칸의 줄을 한 줄짜리 칸으로 나눈다. 나눠도 시간은 모두 이 칸의 시간 그대로다.
+  /// 되돌리기 기록은 비운다.
+  SyncDraft explode(int index) {
+    if (index < 0 || index >= length || sizes[index] < 2) return this;
+    final n = sizes[index];
+    return SyncDraft._(
+      lines,
+      [...sizes.take(index), ...List.filled(n, 1), ...sizes.skip(index + 1)],
+      [
+        ...times.take(index),
+        ...List<Duration?>.filled(n, times[index]),
+        ...times.skip(index + 1),
+      ],
+      current > index ? current + n - 1 : current,
+      const [],
+    );
+  }
+
+  /// [start]부터 [count]칸 안에서 이웃한 칸의 시간이 같으면 한 칸으로 다시 합친다.
+  /// 돌려주는 [map]은 옛 칸 번호가 새 칸 번호로 어떻게 바뀌었는지다. 되돌리기 기록은 비운다.
+  ({SyncDraft draft, List<int> map}) mergeEqual(int start, int count) {
+    final newSizes = <int>[];
+    final newTimes = <Duration?>[];
+    final map = <int>[];
+    for (var i = 0; i < length; i++) {
+      final inRange = i >= start && i < start + count;
+      final joins =
+          inRange &&
+          i > start &&
+          newSizes.isNotEmpty &&
+          times[i] == times[i - 1];
+      if (joins) {
+        newSizes[newSizes.length - 1] += sizes[i];
+      } else {
+        newSizes.add(sizes[i]);
+        newTimes.add(times[i]);
+      }
+      map.add(newSizes.length - 1);
+    }
+    final next = current >= length ? newSizes.length : map[current];
+    return (
+      draft: SyncDraft._(lines, newSizes, newTimes, next, const []),
+      map: map,
+    );
+  }
+
   /// 직전 변경을 되돌린다.
   SyncDraft undo() {
     if (_history.isEmpty) return this;

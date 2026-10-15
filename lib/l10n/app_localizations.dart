@@ -2888,6 +2888,12 @@ abstract class AppLocalizations {
   /// **'기본 줄 수 변경'**
   String get lyricsSyncDefaultLines;
 
+  /// No description provided for @lyricsSyncExpandedHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'줄별로 펼쳤어요 · 시간을 따로 정할 수 있고, 영역 밖을 누르면 시간이 같은 줄은 다시 합쳐져요'**
+  String get lyricsSyncExpandedHint;
+
   /// No description provided for @lyricsSyncSkipTitle.
   ///
   /// In ko, this message translates to:

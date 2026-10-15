@@ -1557,6 +1557,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsSyncDefaultLines => 'Change default lines';
 
   @override
+  String get lyricsSyncExpandedHint =>
+      'Lines shown separately · set each time; tap outside to re-merge lines with the same time';
+
+  @override
   String get lyricsSyncSkipTitle => 'Stamped syncs will be lost';
 
   @override

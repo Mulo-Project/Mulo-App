@@ -1524,6 +1524,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsSyncDefaultLines => '기본 줄 수 변경';
 
   @override
+  String get lyricsSyncExpandedHint =>
+      '줄별로 펼쳤어요 · 시간을 따로 정할 수 있고, 영역 밖을 누르면 시간이 같은 줄은 다시 합쳐져요';
+
+  @override
   String get lyricsSyncSkipTitle => '찍어 둔 싱크가 사라져요';
 
   @override

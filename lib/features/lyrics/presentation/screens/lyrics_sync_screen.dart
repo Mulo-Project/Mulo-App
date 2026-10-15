@@ -169,6 +169,83 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
     context.read<NowPlayingCubit>().seekTo(time);
   }
 
+  /// 가사 칸 목록. 줄별로 펼친 영역이 있으면 그 칸들을 색 바탕 한 영역으로 묶어 보여 준다.
+  List<Widget> _rows(BuildContext context, LyricsSyncState state) {
+    final draft = state.draft;
+    final sync = context.read<LyricsSyncCubit>();
+    final l10n = context.l10n;
+    final p = context.palette;
+    final ex = state.expanded;
+
+    Widget row(int i) => _LineRow(
+      key: _keys[i],
+      index: i,
+      draft: draft,
+      selected: state.selected == i,
+      canGroup: sync.canGroup,
+      clock: _clock,
+      onLongPress: sync.canGroup && draft.sizes[i] > 1
+          ? () => sync.expand(i)
+          : null,
+      onTap: () async {
+        if (i == draft.current) return _now();
+        // 건너뛰면 사이에 찍어 둔 싱크가 사라지니 먼저 묻는다.
+        if (sync.skipErasesStamped(i) &&
+            !await confirmLyricsSkipMerge(context)) {
+          return;
+        }
+        if (!context.mounted) return;
+        sync.select(i);
+        // 찍어 둔 줄이면 재생도 그 싱크 위치로 옮긴다.
+        final time = draft.times[i];
+        if (time != null) {
+          context.read<NowPlayingCubit>().seekTo(time);
+        }
+      },
+    );
+
+    final out = <Widget>[];
+    var i = 0;
+    while (i < draft.length) {
+      if (ex != null && i == ex.$1) {
+        final end = (ex.$1 + ex.$2).clamp(0, draft.length);
+        out.add(
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+            decoration: BoxDecoration(
+              color: p.accent.withValues(alpha: .08),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.sm,
+                    AppSpacing.xs,
+                    AppSpacing.sm,
+                    0,
+                  ),
+                  child: Text(
+                    l10n.lyricsSyncExpandedHint,
+                    style: Theme.of(context).textTheme.labelSmall
+                        ?.copyWith(color: p.accent),
+                  ),
+                ),
+                for (var j = i; j < end; j++) row(j),
+              ],
+            ),
+          ),
+        );
+        i = end;
+      } else {
+        out.add(row(i));
+        i++;
+      }
+    }
+    return out;
+  }
+
   /// 되돌리기: 찍은 줄이 풀리면 그 앞 줄부터 다시 들려줘 이어서 찍을 수 있게 한다.
   void _undo() {
     final sync = context.read<LyricsSyncCubit>();
@@ -340,38 +417,7 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
                         ? Center(child: Text(l10n.lyricsSyncEmpty))
                         : SingleChildScrollView(
                             padding: const EdgeInsets.all(AppSpacing.md),
-                            child: Column(
-                              children: [
-                                for (var i = 0; i < draft.length; i++)
-                                  _LineRow(
-                                    key: _keys[i],
-                                    index: i,
-                                    draft: draft,
-                                    selected: state.selected == i,
-                                    canGroup: sync.canGroup,
-                                    clock: _clock,
-                                    onTap: () async {
-                                      if (i == draft.current) return _now();
-                                      // 건너뛰면 사이에 찍어 둔 싱크가 사라지니 먼저 묻는다.
-                                      if (sync.skipErasesStamped(i) &&
-                                          !await confirmLyricsSkipMerge(
-                                            context,
-                                          )) {
-                                        return;
-                                      }
-                                      if (!context.mounted) return;
-                                      sync.select(i);
-                                      // 찍어 둔 줄이면 재생도 그 싱크 위치로 옮긴다.
-                                      final time = draft.times[i];
-                                      if (time != null) {
-                                        context.read<NowPlayingCubit>().seekTo(
-                                          time,
-                                        );
-                                      }
-                                    },
-                                  ),
-                              ],
-                            ),
+                            child: Column(children: [..._rows(context, state)]),
                           ),
                   ),
                   _ControlBar(
@@ -404,6 +450,7 @@ class _LineRow extends StatelessWidget {
     required this.canGroup,
     required this.clock,
     required this.onTap,
+    this.onLongPress,
   });
 
   final int index;
@@ -412,6 +459,7 @@ class _LineRow extends StatelessWidget {
   final bool canGroup;
   final String Function(Duration) clock;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -436,6 +484,7 @@ class _LineRow extends StatelessWidget {
         InkWell(
           borderRadius: BorderRadius.circular(AppRadii.sm),
           onTap: onTap,
+          onLongPress: onLongPress,
           child: Container(
             // 다음에 찍을 줄은 왼쪽에 강조 선을 둔다.
             decoration: BoxDecoration(

@@ -7,16 +7,23 @@ import '../../domain/entities/sync_draft.dart';
 export '../../domain/entities/sync_draft.dart';
 
 /// 싱크 맞추기 화면 상태. [selected]는 시간을 다듬고 있는 칸 (없으면 null),
-/// [group]은 기본으로 한 번에 시간을 찍는 줄 수.
+/// [group]은 기본으로 한 번에 시간을 찍는 줄 수, [expanded]는 줄별로 펼쳐 둔 묶음 영역
+/// (첫 칸 번호, 칸 수. 없으면 null).
 class LyricsSyncState extends Equatable {
-  const LyricsSyncState(this.draft, {this.selected, this.group = 1});
+  const LyricsSyncState(
+    this.draft, {
+    this.selected,
+    this.group = 1,
+    this.expanded,
+  });
 
   final SyncDraft draft;
   final int? selected;
   final int group;
+  final (int, int)? expanded;
 
   @override
-  List<Object?> get props => [draft, selected, group];
+  List<Object?> get props => [draft, selected, group, expanded];
 }
 
 /// 줄마다 재생 위치를 찍고, 시간을 미세 조정하고, 되돌린다. 저장은 호출한 쪽이 한다.
@@ -41,6 +48,64 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
     emit(LyricsSyncState(SyncDraft.from(_lyrics, group: group), group: group));
   }
 
+  /// 펼친 영역이 있으면 시간이 같은 이웃 칸을 다시 합친 모습과, 옛 칸 번호를 새 번호로 옮기는 [map].
+  ({SyncDraft draft, int Function(int) map}) _collapsed() {
+    final ex = state.expanded;
+    if (ex == null) return (draft: state.draft, map: (i) => i);
+    final r = state.draft.mergeEqual(ex.$1, ex.$2);
+    return (draft: r.draft, map: (i) => i < r.map.length ? r.map[i] : i);
+  }
+
+  /// 펼친 영역을 접어 상태에 반영하고, 옛 칸 번호를 새 번호로 바꾸는 함수를 돌려준다.
+  int Function(int) _collapseNow() {
+    if (state.expanded == null) return (i) => i;
+    final r = _collapsed();
+    final sel = state.selected;
+    emit(
+      LyricsSyncState(
+        r.draft,
+        selected: sel == null ? null : r.map(sel),
+        group: state.group,
+      ),
+    );
+    return r.map;
+  }
+
+  /// 상태를 내보낸다. 포커스(선택한 칸, 없으면 다음에 찍을 칸)가 펼친 영역 밖이면 영역을 접는다.
+  void _put(SyncDraft draft, {int? selected}) {
+    var d = draft;
+    var sel = selected;
+    var ex = state.expanded;
+    if (ex != null) {
+      final focus = sel ?? d.current;
+      if (focus < ex.$1 || focus >= ex.$1 + ex.$2) {
+        final r = d.mergeEqual(ex.$1, ex.$2);
+        d = r.draft;
+        sel = sel == null || sel >= r.map.length ? sel : r.map[sel];
+        ex = null;
+      }
+    }
+    emit(LyricsSyncState(d, selected: sel, group: state.group, expanded: ex));
+  }
+
+  /// 묶인 [index] 칸을 줄별로 펼친다. 줄마다 시간을 따로 정할 수 있고, 영역 밖으로 포커스가 나가면
+  /// 시간이 같은 줄은 다시 합쳐진다.
+  void expand(int index) {
+    if (!canGroup || index < 0 || index >= state.draft.length) return;
+    final r = _collapsed();
+    final target = r.map(index);
+    if (target >= r.draft.length || r.draft.sizes[target] < 2) return;
+    final n = r.draft.sizes[target];
+    emit(
+      LyricsSyncState(
+        r.draft.explode(target),
+        selected: target,
+        group: state.group,
+        expanded: (target, n),
+      ),
+    );
+  }
+
   /// [index] 칸이 기본 줄 수보다 많이 묶여 있는가 (건너뛰어 같은 시간으로 묶인 칸).
   bool isMerged(int index) =>
       index >= 0 &&
@@ -50,12 +115,14 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
   /// 건너뛰어 묶인 [index] 칸을 기본 줄 수로 다시 나눈다. 이 칸의 시간은 지워진다.
   void split(int index) {
     if (!canGroup || !isMerged(index)) return;
+    final at = _collapseNow()(index);
     final draft = state.draft;
-    final last = draft.startOf(index) + state.group - 1;
+    if (at >= draft.length || draft.sizes[at] <= state.group) return;
+    final last = draft.startOf(at) + state.group - 1;
     emit(
       LyricsSyncState(
-        draft.regroup(index, last, group: state.group),
-        selected: index,
+        draft.regroup(at, last, group: state.group),
+        selected: at,
         group: state.group,
       ),
     );
@@ -67,9 +134,10 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
     var at = draft.current;
     if (at >= draft.length) return;
     // 아직 안 찍은 칸을 멈춘 채 또 눌러 직전 줄과 완전히 같은 시간이 되면 같은 칸으로 묶는다 (1/100초 단위).
-    // 이미 찍힌 칸을 다시 찍을 때(덮어쓰기)는 묶지 않는다.
+    // 이미 찍힌 칸을 다시 찍을 때(덮어쓰기)와 줄별로 펼친 영역 안에서는 묶지 않는다.
     final prev = at > 0 ? draft.times[at - 1] : null;
     if (canGroup &&
+        state.expanded == null &&
         draft.times[at] == null &&
         prev != null &&
         (position - prev).inMilliseconds.abs() < 10) {
@@ -78,9 +146,7 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
       at -= 1;
       position = prev;
     }
-    emit(
-      LyricsSyncState(draft.stamp(position), selected: at, group: state.group),
-    );
+    _put(draft.stamp(position), selected: at);
   }
 
   /// [index] 칸을 눌러 건너뛰면 그 사이에 이미 찍어 둔 싱크가 묶음에 삼켜져 사라지는가.
@@ -99,21 +165,35 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
   /// 줄을 눌렀을 때: 찍은 줄은 선택하고 다음 줄부터 다시 찍도록 옮긴다 (뒤쪽 싱크는 새로 찍으면 덮어쓴다).
   /// 아직 안 찍은 뒤쪽 줄이면 그 사이 줄을 건너뛰는 것이므로, 건너뛴 줄들을 그 줄과 한 칸(같은 시간)으로 묶는다.
   void select(int index) {
+    if (index < 0 || index >= state.draft.length) return;
+    final ex = state.expanded;
+    // 펼친 영역 밖을 누르면 영역을 먼저 접고, 접힌 뒤의 칸 번호로 이어서 처리한다.
+    if (ex != null && (index < ex.$1 || index >= ex.$1 + ex.$2)) {
+      select(_collapseNow()(index));
+      return;
+    }
     final draft = state.draft;
-    if (index < 0 || index >= draft.length) return;
     if (draft.times[index] != null) {
       emit(
         LyricsSyncState(
           draft.moveTo(index + 1),
           selected: index,
           group: state.group,
+          expanded: ex,
         ),
       );
       return;
     }
     final first = draft.times.indexOf(null);
     if (index <= first || !canGroup) {
-      emit(LyricsSyncState(draft.moveTo(index), group: state.group));
+      emit(
+        LyricsSyncState(draft.moveTo(index), group: state.group, expanded: ex),
+      );
+      return;
+    }
+    // 건너뛰어 묶으면 칸 구조가 바뀌므로 펼친 영역이 있으면 먼저 접는다.
+    if (ex != null) {
+      select(_collapseNow()(index));
       return;
     }
     final end = draft.startOf(index) + draft.sizes[index] - 1;
@@ -129,28 +209,20 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
   void nudge(Duration delta) {
     final at = state.selected;
     if (at == null) return;
-    emit(
-      LyricsSyncState(
-        state.draft.nudge(at, delta),
-        selected: at,
-        group: state.group,
-      ),
-    );
+    _put(state.draft.nudge(at, delta), selected: at);
   }
 
   /// [index] 줄의 싱크만 남기고 뒤쪽은 등록을 풀어, 다음 줄부터 다시 찍게 한다.
   void rewindTo(int index) {
     final draft = state.draft.rewindTo(index);
     if (draft == state.draft) return;
-    emit(LyricsSyncState(draft, selected: index, group: state.group));
+    _put(draft, selected: index);
   }
 
   void undo() {
     if (!state.draft.canUndo) return;
     final draft = state.draft.undo();
-    emit(
-      LyricsSyncState(draft, selected: _lastStamped(draft), group: state.group),
-    );
+    _put(draft, selected: _lastStamped(draft));
   }
 
   /// 되돌린 뒤에 선택할 줄: 바로 앞에 찍은 줄.

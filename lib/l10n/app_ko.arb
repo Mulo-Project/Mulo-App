@@ -660,6 +660,7 @@
   "lyricsSyncLeaveStay": "계속 맞추기",
   "lyricsSyncGroupOk": "확인",
   "lyricsSyncDefaultLines": "기본 줄 수 변경",
+  "lyricsSyncExpandedHint": "줄별로 펼쳤어요 · 시간을 따로 정할 수 있고, 영역 밖을 누르면 시간이 같은 줄은 다시 합쳐져요",
   "lyricsSyncSkipTitle": "찍어 둔 싱크가 사라져요",
   "lyricsSyncSkipBody": "건너뛰면 사이에 이미 찍어 둔 줄들이 한 칸으로 묶이면서 그 싱크가 지워져요. 계속할까요?",
   "lyricsSyncSkipConfirm": "묶기",
