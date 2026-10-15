@@ -159,13 +159,12 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
     return false;
   }
 
-  /// [position]을 다음 줄에 찍는다. 빈 칸에만 찍히고, 찍은 줄이 선택돼 바로 다듬을 수 있다.
+  /// [position]을 다음 줄에 찍는다(이미 찍힌 칸이면 덮어쓰고, 뒤에서 더 이른 싱크는 그 시간으로 올린다).
+  /// 찍은 줄이 선택돼 바로 다듬을 수 있다.
   void stamp(Duration position) {
     var draft = state.draft;
     var at = draft.current;
     if (at >= draft.length) return;
-    // 이미 찍힌 칸은 덮어쓰지 않는다. 다시 찍으려면 먼저 '싱크 취소하기'로 그 뒤를 비운다.
-    if (draft.times[at] != null) return;
     // 랩처럼 소리가 겹치는 곳도 있어서, 같은 시간이어도 자동으로 묶지 않는다 (줄은 따로 남는다).
     // 첫 싱크를 가운데 줄에서 시작했다면, 맨 앞 줄부터 그 줄까지를 한 칸으로 묶어 같은 시간으로 찍는다.
     if (canGroup && draft.stamped == 0 && at > 0 && state.expanded == null) {
@@ -175,7 +174,7 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
     _put(draft.stamp(position), selected: at);
   }
 
-  /// 줄을 눌렀을 때: 찍은 줄은 선택(포커스)만 하고 싱크는 바꾸지 않는다.
+  /// 줄을 눌렀을 때: 찍은 줄은 포커스하고 그 다음 칸부터 다시 찍도록 옮긴다 (싱크 값은 바꾸지 않는다).
   /// 아직 안 찍은 줄이면 거기부터 찍도록 옮기기만 한다 (묶기는 꾹 눌러 끌어서 따로 한다).
   void select(int index) {
     if (index < 0 || index >= state.draft.length) return;
@@ -187,10 +186,10 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
     }
     final draft = state.draft;
     if (draft.times[index] != null) {
-      // 찍은 줄을 누르면 포커스만 옮긴다 (재생은 화면에서 그 싱크로 옮긴다). 다음에 찍을 칸은 그대로다.
+      // 찍은 줄을 누르면 포커스하고 다음 칸을 찍을 차례로 옮긴다 (재생은 화면에서 그 싱크로 옮긴다).
       emit(
         LyricsSyncState(
-          draft,
+          draft.moveTo(index + 1),
           selected: index,
           group: state.group,
           expanded: ex,

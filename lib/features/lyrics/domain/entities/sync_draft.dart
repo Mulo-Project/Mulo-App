@@ -109,12 +109,17 @@ class SyncDraft extends Equatable {
   }
 
   /// 지금 위치를 [current] 줄에 찍고 다음 줄로 넘어간다. 끝났으면 그대로.
+  /// 이미 찍힌 칸이면 덮어쓰고, 그 뒤에 찍혀 있던 싱크 중 새 시간보다 이른 것은 새 시간까지 올려서
+  /// 시간 순서가 뒤엉키지 않게 한다.
   SyncDraft stamp(Duration position) {
     if (current >= length) return this;
-    return _change(
-      times: [...times]..[current] = _clamp(position),
-      current: current + 1,
-    );
+    final at = _clamp(position);
+    final next = [...times]..[current] = at;
+    for (var i = current + 1; i < length; i++) {
+      final t = next[i];
+      if (t != null && t < at) next[i] = at;
+    }
+    return _change(times: next, current: current + 1);
   }
 
   /// [index] 줄의 시간을 [delta]만큼 옮긴다. 찍지 않은 줄이면 그대로. 앞뒤로 찍힌 이웃 싱크의 시간을 넘지 않는다 (이웃은 움직이지 않는다).

@@ -52,18 +52,25 @@ void main() {
     expect(cubit.state.draft.isComplete, isTrue);
   });
 
-  test('이미 찍힌 칸에는 지금을 눌러도 덮어쓰지 않고, 싱크 취소 뒤에야 다시 찍힌다', () {
-    final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다')!)
+  test('이미 찍힌 칸에 지금을 누르면 덮어쓰고, 뒤에 있던 더 이른 싱크는 그 시간으로 올라간다', () {
+    final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다\n라')!)
       ..stamp(const Duration(seconds: 1))
       ..stamp(const Duration(seconds: 2))
-      ..stamp(const Duration(seconds: 3));
+      ..stamp(const Duration(seconds: 3))
+      ..stamp(const Duration(seconds: 10));
     cubit.select(0);
-    cubit.stamp(const Duration(seconds: 9));
+    expect(cubit.state.draft.current, 1);
+    cubit.stamp(const Duration(seconds: 5));
+    expect(cubit.state.draft.times, [
+      const Duration(seconds: 1),
+      const Duration(seconds: 5),
+      const Duration(seconds: 5),
+      const Duration(seconds: 10),
+    ]);
+    // 되돌리기로 올라간 뒤 싱크까지 한꺼번에 복구된다
+    cubit.undo();
     expect(cubit.state.draft.times[1], const Duration(seconds: 2));
-    cubit.rewindTo(0);
-    cubit.stamp(const Duration(seconds: 9));
-    expect(cubit.state.draft.times[1], const Duration(seconds: 9));
-    expect(cubit.state.draft.times[2], isNull);
+    expect(cubit.state.draft.times[2], const Duration(seconds: 3));
   });
 
   test('같은 시간에 지금을 또 눌러도 자동으로 묶이지 않고 줄이 따로 남는다', () {
@@ -85,11 +92,10 @@ void main() {
       ..stamp(const Duration(seconds: 2))
       ..stamp(const Duration(seconds: 3));
     cubit.select(0);
-    // 찍은 줄을 눌러도 다음에 찍을 칸은 그대로다
     expect(cubit.state.selected, 0);
-    expect(cubit.state.draft.current, 3);
+    expect(cubit.state.draft.current, 1);
     cubit.select(4);
-    expect(cubit.state.draft.current, 3);
+    expect(cubit.state.draft.current, 1);
     expect(cubit.state.draft.texts, ['가', '나', '다', '라', '마']);
   });
 
@@ -378,17 +384,9 @@ void main() {
     );
     expect(player.state.isPlaying, isTrue);
 
-    // 이미 찍힌 칸에는 지금을 눌러도 덮어쓰지 않는다
+    // 이미 찍힌 칸에 지금을 누르면 덮어쓴다
     player.seekTo(const Duration(seconds: 12));
     await tester.pump();
-    await tester.tap(find.text('지금'), warnIfMissed: false);
-    await tester.pumpAndSettle();
-    expect(find.text('00:10.00'), findsOneWidget);
-    expect(find.text('00:12.00'), findsNothing);
-
-    // 싱크 취소하기로 뒤를 비운 뒤에 다시 찍는다
-    await tester.tap(find.text('싱크 취소하기'));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('지금'));
     await tester.pumpAndSettle();
     expect(find.text('00:12.00'), findsOneWidget);
