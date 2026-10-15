@@ -515,6 +515,15 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get playerSleepTimerUnitHour => '시간';
+
+  @override
+  String get playerSleepTimerUnitMinute => '분';
+
+  @override
+  String get playerSleepTimerStart => '시작';
+
+  @override
   String get playerSleepTimerCleared => '수면 타이머를 껐어요';
 
   @override

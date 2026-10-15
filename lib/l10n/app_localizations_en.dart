@@ -528,6 +528,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get playerSleepTimerUnitHour => 'h';
+
+  @override
+  String get playerSleepTimerUnitMinute => 'm';
+
+  @override
+  String get playerSleepTimerStart => 'Start';
+
+  @override
   String get playerSleepTimerCleared => 'Sleep timer is off';
 
   @override

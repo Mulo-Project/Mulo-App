@@ -771,7 +771,7 @@ class AddToPlaylistButton extends StatelessWidget {
   );
 }
 
-/// 수면 타이머: 15 · 30 · 45 · 60분 뒤에 재생을 멈춘다.
+/// 수면 타이머: 시계 휠 대화상자에서 정한 시간 뒤에 재생을 멈춘다.
 class SleepTimerButton extends StatelessWidget {
   const SleepTimerButton({super.key, required this.data});
 
@@ -786,24 +786,10 @@ class SleepTimerButton extends StatelessWidget {
       builder: (btn) => IconButton(
         tooltip: l10n.playerSleepTimer,
         onPressed: () async {
-          final picked = await showAppMenu<int>(
-            btn,
-            items: [
-              for (final m in const [15, 30, 45, 60])
-                AppMenuItem(
-                  value: m,
-                  icon: AppIcons.sleep,
-                  label: l10n.playerSleepTimerMinutes(m),
-                  selected: data.state.sleepMinutes == m,
-                ),
-              if (on)
-                AppMenuItem(
-                  value: 0,
-                  icon: AppIcons.timerOff,
-                  label: l10n.playerSleepTimerOff,
-                  dividerBefore: true,
-                ),
-            ],
+          final picked = await showDialog<int>(
+            context: btn,
+            useRootNavigator: true,
+            builder: (_) => _SleepTimerDialog(current: data.state.sleepMinutes),
           );
           if (picked == null || !btn.mounted) return;
           data.vm.setSleepTimer(picked == 0 ? null : picked);
@@ -823,6 +809,66 @@ class SleepTimerButton extends StatelessWidget {
           color: on ? p.accent : p.onSurfaceMuted,
         ),
       ),
+    );
+  }
+}
+
+/// 수면 타이머 시간 고르기: 시간 · 분 휠을 돌려 정한다. 시작하면 총 분, 끄기는 0으로 닫는다.
+class _SleepTimerDialog extends StatefulWidget {
+  const _SleepTimerDialog({required this.current});
+
+  final int? current;
+
+  @override
+  State<_SleepTimerDialog> createState() => _SleepTimerDialogState();
+}
+
+class _SleepTimerDialogState extends State<_SleepTimerDialog> {
+  late int _hours = (widget.current ?? 30) ~/ 60;
+  late int _minutes = (widget.current ?? 30) % 60;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final total = _hours * 60 + _minutes;
+    return AppDialog(
+      title: l10n.playerSleepTimer,
+      content: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          WheelPicker(
+            count: 13,
+            value: _hours,
+            unit: l10n.playerSleepTimerUnitHour,
+            onChanged: (v) => setState(() => _hours = v),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          WheelPicker(
+            count: 60,
+            value: _minutes,
+            unit: l10n.playerSleepTimerUnitMinute,
+            onChanged: (v) => setState(() => _minutes = v),
+          ),
+        ],
+      ),
+      actions: [
+        if (widget.current != null)
+          PillButton(
+            label: l10n.playerSleepTimerOff,
+            variant: PillVariant.tonal,
+            onPressed: () => Navigator.of(context).pop(0),
+          )
+        else
+          PillButton(
+            label: l10n.actionCancel,
+            variant: PillVariant.tonal,
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        PillButton(
+          label: l10n.playerSleepTimerStart,
+          onPressed: total == 0 ? null : () => Navigator.of(context).pop(total),
+        ),
+      ],
     );
   }
 }

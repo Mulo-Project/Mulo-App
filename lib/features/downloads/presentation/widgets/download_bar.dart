@@ -25,7 +25,7 @@ MediaHit mediaHitOfDownload(DownloadItem item) {
 }
 
 /// 모든 탭 아래쪽(미니 플레이어 위)에 붙는 받기 줄. 두 영역으로 나뉜다.
-/// - 위(작게): 전체 진행도 · 받은 곡 수 · 남은 곡 수 · 펼치기 · 전체 취소.
+/// - 위(작게): 받은 곡 수 · 남은 곡 수 · 전체 진행도 · 일시정지 · 전체 취소 (누르면 펼침).
 /// - 아래: 지금 받는 곡의 이미지 · 제목(길면 흐른다) · 아티스트 · 장르 · 진행도.
 /// 위 줄을 누르면 아래로 나머지 대기 곡이 펼쳐지고, 곡을 누르면 그 곡의 상세 화면이 열린다.
 /// 받는 곡이 없으면 아무것도 그리지 않는다. 유리는 이 띠 하나에만 쓰고, 곡 줄에는 쓰지 않는다.
@@ -41,9 +41,6 @@ class DownloadBar extends StatefulWidget {
 
 class _DownloadBarState extends State<DownloadBar> {
   var _expanded = false;
-
-  /// 지금 받는 곡 영역(이미지 · 제목 · 진행도)을 보일지. 접은 상태에서만 뜻이 있다.
-  var _showCurrent = true;
 
   /// 손잡이를 끌어 내리는 동안 띠가 손가락을 따라 내려간다 (놓으면 접히거나 제자리로 돌아간다).
   var _dragDy = 0.0;
@@ -80,10 +77,8 @@ class _DownloadBarState extends State<DownloadBar> {
         rim: false,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: p.accent.withValues(alpha: .08),
-            border: Border(
-              top: BorderSide(color: p.accent.withValues(alpha: .35)),
-            ),
+            color: p.accent.withValues(alpha: .06),
+            border: Border(top: BorderSide(color: p.glassBorder)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -114,7 +109,7 @@ class _DownloadBarState extends State<DownloadBar> {
                   _dragDy = 0;
                 }),
                 child: SizedBox(
-                  height: 24,
+                  height: 18,
                   width: double.infinity,
                   child: Center(
                     child: DecoratedBox(
@@ -127,7 +122,7 @@ class _DownloadBarState extends State<DownloadBar> {
                   ),
                 ),
               ),
-              // 위(작게): 전체 현황 · 전체 일시정지 · 전체 취소.
+              // 위(작게): 전체 현황 · 전체 일시정지 · 전체 취소. 현황을 누르면 목록이 펼쳐지고 접힌다.
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.md,
@@ -137,16 +132,47 @@ class _DownloadBarState extends State<DownloadBar> {
                 ),
                 child: Row(
                   children: [
-                    Text(
-                      '${l10n.downloadsOverall(queue.doneCount, queue.items.length)}'
-                      ' · ${l10n.downloadsRemaining(pending.length)}',
-                      style: muted,
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
                     Expanded(
-                      child: ProgressLine(
-                        value: queue.overallProgress,
-                        height: 2,
+                      child: InkWell(
+                        key: const ValueKey('download-bar-toggle'),
+                        borderRadius: BorderRadius.circular(AppRadii.sm),
+                        onTap: () => setState(() => _expanded = !_expanded),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: AppSpacing.xs,
+                          ),
+                          child: Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  '${l10n.downloadsOverall(queue.doneCount, queue.items.length)}'
+                                  ' · ${l10n.downloadsRemaining(pending.length)}',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: muted,
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.xs),
+                              AnimatedRotation(
+                                turns: _expanded ? .5 : 0,
+                                duration: AppMotion.fast,
+                                curve: AppMotion.standard,
+                                child: Icon(
+                                  AppIcons.expandLess,
+                                  size: AppSizes.iconSm,
+                                  color: p.onSurfaceMuted,
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              Expanded(
+                                child: ProgressLine(
+                                  value: queue.overallProgress,
+                                  height: 2,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.xs),
@@ -164,77 +190,28 @@ class _DownloadBarState extends State<DownloadBar> {
                   ],
                 ),
               ),
-              // 접었을 땐 지금 받는 곡, 펼치면 지금 곡까지 포함한 전체 목록.
-              if (_expanded)
-                ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: MediaQuery.sizeOf(context).height * .35,
-                  ),
-                  child: ListView(
-                    key: const ValueKey('download-bar-list'),
-                    shrinkWrap: true,
-                    padding: EdgeInsets.zero,
-                    children: [
-                      for (final item in pending) _DownloadRow(item: item),
-                    ],
-                  ),
-                )
-              else if (_showCurrent)
-                _DownloadRow(
-                  item: current,
-                  key: const ValueKey('download-current'),
-                ),
-              // 펼치기는 목록 바로 밑에. 접은 상태에선 받는 곡 정보를 숨길 수도 있다.
-              Row(
-                children: [
-                  Expanded(
-                    child: InkWell(
-                      key: const ValueKey('download-bar-toggle'),
-                      onTap: () => setState(() => _expanded = !_expanded),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: AppSpacing.xs,
+              // 접었을 땐 지금 받는 곡, 펼치면 전체 목록. 높이 변화는 부드럽게 이어진다.
+              AnimatedSize(
+                duration: AppMotion.medium,
+                curve: AppMotion.standard,
+                alignment: Alignment.topCenter,
+                child: _expanded
+                    ? ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxHeight: MediaQuery.sizeOf(context).height * .35,
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              _expanded
-                                  ? AppIcons.expandLess
-                                  : AppIcons.expandMore,
-                              size: AppSizes.iconSm,
-                              color: p.onSurfaceMuted,
-                            ),
-                            const SizedBox(width: AppSpacing.xs),
-                            Text(
-                              _expanded
-                                  ? l10n.downloadsCollapse
-                                  : l10n.downloadsExpand,
-                              style: muted,
-                            ),
-                          ],
+                        child: ListView.builder(
+                          key: const ValueKey('download-bar-list'),
+                          shrinkWrap: true,
+                          padding: EdgeInsets.zero,
+                          itemCount: pending.length,
+                          itemBuilder: (_, i) => _DownloadRow(item: pending[i]),
                         ),
+                      )
+                    : _DownloadRow(
+                        item: current,
+                        key: const ValueKey('download-current'),
                       ),
-                    ),
-                  ),
-                  if (!_expanded)
-                    InkWell(
-                      key: const ValueKey('download-current-toggle'),
-                      onTap: () => setState(() => _showCurrent = !_showCurrent),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.md,
-                          vertical: AppSpacing.xs,
-                        ),
-                        child: Text(
-                          _showCurrent
-                              ? l10n.downloadsHideCurrent
-                              : l10n.downloadsShowCurrent,
-                          style: muted,
-                        ),
-                      ),
-                    ),
-                ],
               ),
             ],
           ),
@@ -336,7 +313,7 @@ class _Thumb extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppRadii.sm),
       child: SizedBox.square(
-        dimension: 52,
+        dimension: 44,
         child: art != null
             ? Image(image: art, fit: BoxFit.cover)
             : DecoratedBox(
