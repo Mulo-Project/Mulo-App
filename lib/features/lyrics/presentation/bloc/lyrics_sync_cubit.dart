@@ -98,7 +98,7 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
     final n = r.draft.sizes[target];
     emit(
       LyricsSyncState(
-        r.draft.explode(target),
+        r.draft.explode(target).moveTo(target),
         selected: target,
         group: state.group,
         expanded: (target, n),
@@ -121,8 +121,8 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
     if (at >= draft.length || draft.sizes[at] <= state.group) return;
     emit(
       LyricsSyncState(
-        draft.splitBlock(at, group: state.group),
-        selected: draft.times[at] == null ? null : at,
+        draft.splitBlock(at, group: state.group).moveTo(at),
+        selected: at,
         group: state.group,
       ),
     );
@@ -145,7 +145,11 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
     final draft = state.draft;
     if (a < 0 || b >= draft.length || b <= a) return;
     emit(
-      LyricsSyncState(draft.mergeRange(a, b), selected: a, group: state.group),
+      LyricsSyncState(
+        draft.mergeRange(a, b).moveTo(a),
+        selected: a,
+        group: state.group,
+      ),
     );
   }
 
@@ -159,8 +163,8 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
     return false;
   }
 
-  /// [position]을 다음 줄에 찍는다(이미 찍힌 칸이면 덮어쓰고, 뒤에서 더 이른 싱크는 그 시간으로 올린다).
-  /// 찍은 줄이 선택돼 바로 다듬을 수 있다.
+  /// [position]을 포커스한 칸(찍을 차례인 칸)에 찍는다. 이미 찍힌 칸이면 덮어쓰고 이웃 싱크는 순서가 유지되게
+  /// 함께 맞춘다. 찍으면 포커스가 다음 칸으로 넘어간다.
   void stamp(Duration position) {
     var draft = state.draft;
     var at = draft.current;
@@ -171,7 +175,9 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
       draft = draft.mergeRange(0, at).moveTo(0);
       at = 0;
     }
-    _put(draft.stamp(position), selected: at);
+    final stamped = draft.stamp(position);
+    // 지금은 포커스한 칸만 바꾸고, 찍으면 포커스가 자동으로 다음 칸으로 넘어간다.
+    _put(stamped, selected: at + 1 < stamped.length ? at + 1 : at);
   }
 
   /// 줄을 눌렀을 때: 찍은 줄은 포커스하고 그 칸을 다시 찍을 차례로 옮긴다 (싱크 값은 바뀌지 않는다).
@@ -202,7 +208,12 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
     // 아직 하나도 안 찍었을 때만 원하는 줄에서 시작하도록 아무 칸이나 고를 수 있다.
     if (draft.stamped > 0 && index != draft.times.indexOf(null)) return;
     emit(
-      LyricsSyncState(draft.moveTo(index), group: state.group, expanded: ex),
+      LyricsSyncState(
+        draft.moveTo(index),
+        selected: index,
+        group: state.group,
+        expanded: ex,
+      ),
     );
   }
 
@@ -211,7 +222,7 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
     final draft = state.draft;
     final next = draft.unstampLast();
     if (next == draft) return;
-    _put(next, selected: _lastStamped(next));
+    _put(next, selected: next.current);
   }
 
   /// 선택한 줄의 시간을 [delta]만큼 옮긴다.
@@ -225,13 +236,18 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
   void rewindTo(int index) {
     final draft = state.draft.rewindTo(index);
     if (draft == state.draft) return;
-    _put(draft, selected: index);
+    _put(draft, selected: index + 1 < draft.length ? index + 1 : index);
   }
 
   void undo() {
     if (!state.draft.canUndo) return;
     final draft = state.draft.undo();
-    _put(draft, selected: _lastStamped(draft));
+    _put(
+      draft,
+      selected: draft.current < draft.length
+          ? draft.current
+          : _lastStamped(draft),
+    );
   }
 
   /// 되돌린 뒤에 선택할 줄: 바로 앞에 찍은 줄.

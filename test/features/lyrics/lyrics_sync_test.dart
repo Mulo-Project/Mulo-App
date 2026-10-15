@@ -66,8 +66,9 @@ void main() {
       const Duration(seconds: 3),
     ]);
     cubit.stamp(const Duration(seconds: 2, milliseconds: 500));
-    // 찍으면 자동으로 다음 칸이 찍을 차례가 된다
+    // 찍으면 자동으로 다음 칸이 찍을 차례가 되고 포커스도 거기로 넘어간다 (포커스 = 찍을 칸)
     expect(cubit.state.draft.current, 2);
+    expect(cubit.state.selected, 2);
     expect(cubit.state.draft.times, [
       const Duration(seconds: 1),
       const Duration(seconds: 2, milliseconds: 500),
@@ -397,7 +398,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('00:03.00'), findsOneWidget);
 
-    // 찍은 줄을 눌러 +0.5초 조정
+    // 찍은 줄을 눌러 +0.5초 조정 (찍으면 포커스가 다음 칸으로 가므로 먼저 그 줄을 누른다)
+    await tester.tap(find.text('00:03.00'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('+0.5s').first);
     await tester.pumpAndSettle();
     expect(find.text('00:03.50'), findsOneWidget);
@@ -406,6 +409,9 @@ void main() {
       const Duration(seconds: 3, milliseconds: 500),
     );
 
+    // 이어 찍을 빈 칸을 눌러 포커스한 뒤 찍는다
+    await tester.tap(find.text('--:--.--'));
+    await tester.pumpAndSettle();
     player.seekTo(const Duration(seconds: 10));
     await tester.pump();
     await tester.tap(find.text('지금'));
