@@ -2738,18 +2738,6 @@ abstract class AppLocalizations {
   /// **'싱크 저장'**
   String get lyricsSyncSave;
 
-  /// No description provided for @lyricsSyncReplay.
-  ///
-  /// In ko, this message translates to:
-  /// **'이 줄부터 다시 듣기'**
-  String get lyricsSyncReplay;
-
-  /// No description provided for @lyricsSyncReset.
-  ///
-  /// In ko, this message translates to:
-  /// **'이 싱크로'**
-  String get lyricsSyncReset;
-
   /// No description provided for @lyricsSyncGroup.
   ///
   /// In ko, this message translates to:
@@ -2786,17 +2774,23 @@ abstract class AppLocalizations {
   /// **'일시정지'**
   String get lyricsSyncPause;
 
-  /// No description provided for @lyricsSyncBack.
+  /// No description provided for @lyricsSyncBackBy.
   ///
   /// In ko, this message translates to:
-  /// **'5초 전'**
-  String get lyricsSyncBack;
+  /// **'{n}초 전으로 (길게 눌러 초 바꾸기)'**
+  String lyricsSyncBackBy(int n);
 
-  /// No description provided for @lyricsSyncBackTooltip.
+  /// No description provided for @lyricsSyncForwardBy.
   ///
   /// In ko, this message translates to:
-  /// **'5초 전으로 되돌려 듣기'**
-  String get lyricsSyncBackTooltip;
+  /// **'{n}초 뒤로 (길게 눌러 초 바꾸기)'**
+  String lyricsSyncForwardBy(int n);
+
+  /// No description provided for @lyricsSyncStepSeconds.
+  ///
+  /// In ko, this message translates to:
+  /// **'{n}초씩 이동'**
+  String lyricsSyncStepSeconds(int n);
 
   /// No description provided for @lyricsSyncSeek.
   ///

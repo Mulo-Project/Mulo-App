@@ -1439,12 +1439,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsSyncSave => '싱크 저장';
 
   @override
-  String get lyricsSyncReplay => '이 줄부터 다시 듣기';
-
-  @override
-  String get lyricsSyncReset => '이 싱크로';
-
-  @override
   String get lyricsSyncGroup => '한 번에 묶을 줄 수';
 
   @override
@@ -1465,10 +1459,19 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsSyncPause => '일시정지';
 
   @override
-  String get lyricsSyncBack => '5초 전';
+  String lyricsSyncBackBy(int n) {
+    return '$n초 전으로 (길게 눌러 초 바꾸기)';
+  }
 
   @override
-  String get lyricsSyncBackTooltip => '5초 전으로 되돌려 듣기';
+  String lyricsSyncForwardBy(int n) {
+    return '$n초 뒤로 (길게 눌러 초 바꾸기)';
+  }
+
+  @override
+  String lyricsSyncStepSeconds(int n) {
+    return '$n초씩 이동';
+  }
 
   @override
   String get lyricsSyncSeek => '재생 위치';

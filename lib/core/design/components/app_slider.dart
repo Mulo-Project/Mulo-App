@@ -15,6 +15,7 @@ class AppSlider extends StatelessWidget {
     this.vertical = false,
     this.centered = false,
     this.marks = const [],
+    this.thumbAlpha = 1,
     this.semanticLabel,
   });
 
@@ -32,6 +33,9 @@ class AppSlider extends StatelessWidget {
 
   /// 트랙 위에 작게 찍는 표시 위치 ([min]~[max] 값). 가로 슬라이더만.
   final List<double> marks;
+
+  /// 손잡이 불투명도 (0~1). 아래 표시가 비쳐 보이게 할 때 낮춘다.
+  final double thumbAlpha;
   final String? semanticLabel;
 
   static const double _track = 4;
@@ -140,13 +144,13 @@ class AppSlider extends StatelessWidget {
                           _fraction(m),
                           0,
                           OverflowBox(
-                            maxWidth: 2,
-                            maxHeight: _track + 8,
+                            maxWidth: 3,
+                            maxHeight: _track + 10,
                             child: Container(
-                              width: 2,
-                              height: _track + 8,
+                              width: 3,
+                              height: _track + 10,
                               decoration: ShapeDecoration(
-                                color: p.onSurface.withValues(alpha: .55),
+                                color: p.accent,
                                 shape: const StadiumBorder(),
                               ),
                             ),
@@ -163,8 +167,11 @@ class AppSlider extends StatelessWidget {
                           height: _knob,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: p.accent,
-                            border: Border.all(color: p.background, width: 2),
+                            color: p.accent.withValues(alpha: thumbAlpha),
+                            border: Border.all(
+                              color: p.background.withValues(alpha: thumbAlpha),
+                              width: 2,
+                            ),
                           ),
                         ),
                       ),

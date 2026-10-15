@@ -1470,12 +1470,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsSyncSave => 'Save sync';
 
   @override
-  String get lyricsSyncReplay => 'Replay from this line';
-
-  @override
-  String get lyricsSyncReset => 'Back to this sync';
-
-  @override
   String get lyricsSyncGroup => 'Lines per sync';
 
   @override
@@ -1496,10 +1490,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsSyncPause => 'Pause';
 
   @override
-  String get lyricsSyncBack => 'Back 5s';
+  String lyricsSyncBackBy(int n) {
+    return 'Back ${n}s (long-press to change)';
+  }
 
   @override
-  String get lyricsSyncBackTooltip => 'Go back 5 seconds';
+  String lyricsSyncForwardBy(int n) {
+    return 'Forward ${n}s (long-press to change)';
+  }
+
+  @override
+  String lyricsSyncStepSeconds(int n) {
+    return 'Skip ${n}s';
+  }
 
   @override
   String get lyricsSyncSeek => 'Playback position';

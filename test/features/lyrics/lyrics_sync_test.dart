@@ -157,9 +157,9 @@ void main() {
     player.togglePlay();
     player.seekTo(const Duration(seconds: 30));
     await tester.pump();
-    await tester.tap(find.byTooltip('5초 전으로 되돌려 듣기'));
+    await tester.tap(find.byTooltip('10초 전으로 (길게 눌러 초 바꾸기)'));
     await tester.pump();
-    expect(player.state.position, const Duration(seconds: 25));
+    expect(player.state.position, const Duration(seconds: 20));
 
     player.seekTo(const Duration(seconds: 3));
     await tester.pump();
@@ -177,6 +177,14 @@ void main() {
     await tester.tap(find.text('지금'));
     await tester.pumpAndSettle();
     expect(find.text('2/2줄'), findsOneWidget);
+
+    // 찍은 줄을 누르면 재생 위치도 그 싱크로 옮겨진다
+    await tester.tap(find.text('00:03.50'));
+    await tester.pumpAndSettle();
+    expect(
+      player.state.position,
+      const Duration(seconds: 3, milliseconds: 500),
+    );
 
     await tester.tap(find.byTooltip('싱크 저장'));
     await tester.pumpAndSettle();

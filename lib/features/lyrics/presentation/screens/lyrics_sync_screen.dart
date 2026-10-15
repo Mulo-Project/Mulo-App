@@ -39,7 +39,8 @@ class LyricsSyncScreen extends StatefulWidget {
 
 class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
   static const _lead = Duration(seconds: 2);
-  static const _backBy = Duration(seconds: 5);
+  static const _steps = [3, 5, 10, 15, 30];
+  var _step = 10;
   var _keys = <GlobalKey>[];
 
   @override
@@ -141,11 +142,29 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
     _replay(prev ?? Duration.zero);
   }
 
-  /// 지금 위치에서 [_backBy]만큼 되돌려 계속 듣는다 ('지금'을 놓쳤을 때).
-  void _backUp() {
+  /// 지금 위치에서 [_step]초 앞뒤로 옮겨 계속 듣는다 ('지금'을 놓쳤을 때).
+  void _skip(int sign) {
     final np = context.read<NowPlayingCubit>();
-    np.seekTo(np.state.position - _backBy);
+    np.seekTo(np.state.position + Duration(seconds: _step * sign));
     if (!np.state.isPlaying) np.togglePlay();
+  }
+
+  /// 앞뒤 버튼을 길게 눌렀을 때: 한 번에 옮길 초를 고른다.
+  Future<void> _pickStep(BuildContext buttonContext) async {
+    final l10n = context.l10n;
+    final pick = await showAppMenu<int>(
+      buttonContext,
+      items: [
+        for (final n in _steps)
+          AppMenuItem(
+            value: n,
+            icon: AppIcons.replay,
+            label: l10n.lyricsSyncStepSeconds(n),
+            selected: n == _step,
+          ),
+      ],
+    );
+    if (pick != null && mounted) setState(() => _step = pick);
   }
 
   /// [time]보다 조금 앞에서 다시 재생한다 (찍은 곳이 맞는지 앞 소리까지 듣도록).
@@ -269,20 +288,29 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
                                     editing: state.editing == i,
                                     canGroup: sync.canGroup,
                                     clock: _clock,
-                                    onTap: () => i == draft.current
-                                        ? _now()
-                                        : sync.select(i),
-                                    onReplay: () {
-                                      final time = draft.times[i]!;
-                                      sync.rewindTo(i);
-                                      _replay(time);
+                                    onTap: () {
+                                      if (i == draft.current) return _now();
+                                      sync.select(i);
+                                      // 찍어 둔 줄이면 재생도 그 싱크 위치로 옮긴다.
+                                      final time = draft.times[i];
+                                      if (time != null) {
+                                        context.read<NowPlayingCubit>().seekTo(
+                                          time,
+                                        );
+                                      }
                                     },
                                   ),
                               ],
                             ),
                           ),
                   ),
-                  _ControlBar(onNow: _now, onUndo: _undo, onBack: _backUp),
+                  _ControlBar(
+                    step: _step,
+                    onNow: _now,
+                    onUndo: _undo,
+                    onSkip: _skip,
+                    onPickStep: _pickStep,
+                  ),
                 ],
               ),
             ),
@@ -303,7 +331,6 @@ class _LineRow extends StatelessWidget {
     required this.canGroup,
     required this.clock,
     required this.onTap,
-    required this.onReplay,
   });
 
   final int index;
@@ -313,7 +340,6 @@ class _LineRow extends StatelessWidget {
   final bool canGroup;
   final String Function(Duration) clock;
   final VoidCallback onTap;
-  final VoidCallback onReplay;
 
   @override
   Widget build(BuildContext context) {
@@ -384,38 +410,29 @@ class _LineRow extends StatelessWidget {
                       ),
                   ],
                 ),
-                // 아래: 이 싱크로 · 옵션
-                Row(
-                  children: [
-                    PlainButton(
-                      icon: AppIcons.replay,
-                      label: l10n.lyricsSyncReset,
-                      tooltip: l10n.lyricsSyncReplay,
-                      onPressed: onReplay,
-                    ),
-                    const Spacer(),
-                    if (canGroup)
-                      Builder(
-                        builder: (buttonContext) => PlainButton(
-                          icon: AppIcons.more,
-                          tooltip: l10n.actionMore,
-                          onPressed: () async {
-                            final pick = await showAppMenu<bool>(
-                              buttonContext,
-                              items: [
-                                AppMenuItem(
-                                  value: true,
-                                  icon: AppIcons.dragHandle,
-                                  label: l10n.lyricsSyncGroupEdit,
-                                ),
-                              ],
-                            );
-                            if (pick == true) sync.startGroupEdit(index);
-                          },
-                        ),
+                if (canGroup)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Builder(
+                      builder: (buttonContext) => PlainButton(
+                        icon: AppIcons.more,
+                        tooltip: l10n.actionMore,
+                        onPressed: () async {
+                          final pick = await showAppMenu<bool>(
+                            buttonContext,
+                            items: [
+                              AppMenuItem(
+                                value: true,
+                                icon: AppIcons.dragHandle,
+                                label: l10n.lyricsSyncGroupEdit,
+                              ),
+                            ],
+                          );
+                          if (pick == true) sync.startGroupEdit(index);
+                        },
                       ),
-                  ],
-                ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -426,14 +443,18 @@ class _LineRow extends StatelessWidget {
 
 class _ControlBar extends StatelessWidget {
   const _ControlBar({
+    required this.step,
     required this.onNow,
     required this.onUndo,
-    required this.onBack,
+    required this.onSkip,
+    required this.onPickStep,
   });
 
+  final int step;
   final VoidCallback onNow;
   final VoidCallback onUndo;
-  final VoidCallback onBack;
+  final void Function(int sign) onSkip;
+  final void Function(BuildContext buttonContext) onPickStep;
 
   @override
   Widget build(BuildContext context) {
@@ -460,13 +481,36 @@ class _ControlBar extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          AppSlider(
-            semanticLabel: l10n.lyricsSyncSeek,
-            value: totalMs == 0
-                ? 0
-                : np.state.position.inMilliseconds / totalMs,
-            marks: marks,
-            onChanged: totalMs == 0 ? null : np.seekFraction,
+          Row(
+            children: [
+              Builder(
+                builder: (buttonContext) => CircleIconButton(
+                  icon: AppIcons.replay10,
+                  tooltip: l10n.lyricsSyncBackBy(step),
+                  onPressed: () => onSkip(-1),
+                  onLongPress: () => onPickStep(buttonContext),
+                ),
+              ),
+              Expanded(
+                child: AppSlider(
+                  semanticLabel: l10n.lyricsSyncSeek,
+                  value: totalMs == 0
+                      ? 0
+                      : np.state.position.inMilliseconds / totalMs,
+                  marks: marks,
+                  thumbAlpha: .5,
+                  onChanged: totalMs == 0 ? null : np.seekFraction,
+                ),
+              ),
+              Builder(
+                builder: (buttonContext) => CircleIconButton(
+                  icon: AppIcons.forward10,
+                  tooltip: l10n.lyricsSyncForwardBy(step),
+                  onPressed: () => onSkip(1),
+                  onLongPress: () => onPickStep(buttonContext),
+                ),
+              ),
+            ],
           ),
           const Align(alignment: Alignment.centerRight, child: _ClockText()),
           const SizedBox(height: AppSpacing.xs),
@@ -487,12 +531,6 @@ class _ControlBar extends StatelessWidget {
                 onPressed: np.togglePlay,
               ),
               const SizedBox(width: AppSpacing.sm),
-              PlainButton(
-                icon: AppIcons.replay,
-                label: l10n.lyricsSyncBack,
-                tooltip: l10n.lyricsSyncBackTooltip,
-                onPressed: onBack,
-              ),
               Expanded(
                 child: Align(
                   alignment: Alignment.centerRight,
