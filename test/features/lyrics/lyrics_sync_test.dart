@@ -198,6 +198,18 @@ void main() {
     await tester.pump();
     expect(player.state.isPlaying, isFalse);
 
+    // 멈춘 자리에서 앞으로는 못 가고, 뒤로 가면 다시 재생된다
+    await tester.tap(find.text('+0.5s').last);
+    await tester.pump();
+    expect(player.state.position, const Duration(seconds: 10));
+    await tester.tap(find.text('−0.5s').last);
+    await tester.pump();
+    expect(
+      player.state.position,
+      const Duration(seconds: 9, milliseconds: 500),
+    );
+    expect(player.state.isPlaying, isTrue);
+
     // 뒤쪽 줄을 골라 지금을 누르면 다음 줄의 싱크가 덮어써진다
     player.seekTo(const Duration(seconds: 12));
     await tester.pump();

@@ -164,11 +164,33 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
     _replay(prev ?? Duration.zero);
   }
 
-  /// 지금 위치에서 [_stepMs]밀리초 앞뒤로 옮겨 계속 듣는다 ('지금'을 놓쳤을 때).
+  /// 자동 멈춤이 켜져 있으면 다음에 찍을 줄의 기존 싱크 시간이 앞으로 갈 수 있는 끝이다.
+  Duration? get _limit {
+    if (!_autoPause) return null;
+    final draft = context.read<LyricsSyncCubit>().state.draft;
+    return draft.current < draft.length ? draft.times[draft.current] : null;
+  }
+
+  Duration _clampLimit(Duration target) {
+    final limit = _limit;
+    return limit != null && target > limit ? limit : target;
+  }
+
+  /// 지금 위치에서 [_stepMs]밀리초 앞뒤로 옮긴다 ('지금'을 놓쳤을 때).
+  /// 뒤로 가면 이어서 들려주고, 자동 멈춤 중에는 다음 싱크 시간 너머로 못 간다.
   void _skip(int sign) {
     final np = context.read<NowPlayingCubit>();
-    np.seekTo(np.state.position + Duration(milliseconds: _stepMs * sign));
-    if (!np.state.isPlaying) np.togglePlay();
+    final target = np.state.position + Duration(milliseconds: _stepMs * sign);
+    np.seekTo(_clampLimit(target));
+    if (sign < 0 && !np.state.isPlaying) np.togglePlay();
+  }
+
+  /// 슬라이더로 옮길 때도 같은 한계를 지킨다.
+  void _seekFraction(double fraction) {
+    final np = context.read<NowPlayingCubit>();
+    final total = np.state.track?.duration;
+    if (total == null) return;
+    np.seekTo(_clampLimit(total * fraction.clamp(0.0, 1.0)));
   }
 
   /// 앞뒤 버튼을 길게 눌렀을 때: 한 번에 옮길 초를 고른다.
@@ -336,6 +358,7 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
                     onNow: _now,
                     onUndo: _undo,
                     onSkip: _skip,
+                    onSeek: _seekFraction,
                     onPickStep: _pickStep,
                   ),
                 ],
@@ -501,6 +524,7 @@ class _ControlBar extends StatelessWidget {
     required this.onNow,
     required this.onUndo,
     required this.onSkip,
+    required this.onSeek,
     required this.onPickStep,
   });
 
@@ -510,6 +534,7 @@ class _ControlBar extends StatelessWidget {
   final VoidCallback onNow;
   final VoidCallback onUndo;
   final void Function(int sign) onSkip;
+  final ValueChanged<double> onSeek;
   final void Function(BuildContext buttonContext) onPickStep;
 
   @override
@@ -555,7 +580,7 @@ class _ControlBar extends StatelessWidget {
                       : np.state.position.inMilliseconds / totalMs,
                   marks: marks,
                   thumbAlpha: .5,
-                  onChanged: totalMs == 0 ? null : np.seekFraction,
+                  onChanged: totalMs == 0 ? null : onSeek,
                 ),
               ),
               Builder(
