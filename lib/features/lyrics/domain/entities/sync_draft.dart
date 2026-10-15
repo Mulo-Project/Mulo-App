@@ -109,11 +109,14 @@ class SyncDraft extends Equatable {
   }
 
   /// 지금 위치를 [current] 줄에 찍고 다음 줄로 넘어간다. 끝났으면 그대로.
-  /// 이미 찍힌 칸이면 덮어쓰고, 그 뒤에 찍혀 있던 싱크 중 새 시간보다 이른 것은 새 시간까지 올려서
+  /// 앞 칸의 시간보다 이르면 앞 칸의 시간으로 찍는다. 이미 찍힌 칸이면 덮어쓰고, 그 뒤에 찍혀 있던 싱크 중 새 시간보다 이른 것은 새 시간까지 올려서
   /// 시간 순서가 뒤엉키지 않게 한다.
   SyncDraft stamp(Duration position) {
     if (current >= length) return this;
-    final at = _clamp(position);
+    // 재생바를 앞쪽 싱크보다 더 뒤로 당겨 찍어도 시간 순서가 뒤집히지 않게, 앞 싱크 시간까지 채운다.
+    final before = times.take(current).whereType<Duration>().lastOrNull;
+    var at = _clamp(position);
+    if (before != null && at < before) at = before;
     final next = [...times]..[current] = at;
     for (var i = current + 1; i < length; i++) {
       final t = next[i];
