@@ -28,6 +28,9 @@ class _LyricsViewState extends State<LyricsView> {
   /// 재생 위치의 줄을 따라 목록이 움직이는가. 끄면 가사를 방해 없이 자유롭게 볼 수 있다.
   var _following = true;
 
+  /// 처음 현재 줄로 자리를 잡았는가. 잡기 전에는 가사를 투명하게 두어 위치가 튀어 보이지 않게 한다.
+  var _placed = false;
+
   @override
   void initState() {
     super.initState();
@@ -45,16 +48,34 @@ class _LyricsViewState extends State<LyricsView> {
   void _follow(int index) {
     if (index == _shown) return;
     _shown = index;
-    if (index < 0 || !_following) return;
+    if (index < 0 || !_following) {
+      // 따라갈 줄이 없으면 바로 보여 준다.
+      _settle();
+      return;
+    }
+    // 처음 열 때는 애니메이션 없이 현재 줄로 바로 가고, 자리를 잡은 뒤에야 보여 준다 (중앙에 잠깐 비쳤다가 튀지 않게).
+    final first = !_placed;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final ctx = index < _keys.length ? _keys[index].currentContext : null;
-      if (ctx == null || !ctx.mounted) return;
+      if (ctx == null || !ctx.mounted) {
+        _settle();
+        return;
+      }
       Scrollable.ensureVisible(
         ctx,
         alignment: .4,
-        duration: AppMotion.medium,
+        duration: first ? Duration.zero : AppMotion.medium,
         curve: AppMotion.standard,
       );
+      _settle();
+    });
+  }
+
+  /// 처음 자리를 잡았음을 알린다 (그 전에는 가사를 투명하게 둔다).
+  void _settle() {
+    if (_placed || !mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && !_placed) setState(() => _placed = true);
     });
   }
 
@@ -162,6 +183,7 @@ class _LyricsViewState extends State<LyricsView> {
       _keysFor = lyrics;
       _keys = List.generate(lyrics.lines.length, (_) => GlobalKey());
       _shown = -2;
+      _placed = false;
     }
     final position = context.select<NowPlayingCubit, Duration>(
       (c) => c.state.position,
@@ -170,56 +192,61 @@ class _LyricsViewState extends State<LyricsView> {
     _follow(current);
     final vm = context.read<NowPlayingCubit>();
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxl),
-      child: Column(
-        children: [
-          for (var i = 0; i < lyrics.lines.length; i++)
-            InkWell(
-              key: _keys[i],
-              borderRadius: BorderRadius.circular(AppRadii.sm),
-              onTap: () => vm.seekTo(lyrics.lines[i].time),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.sm,
-                  vertical: AppSpacing.xs,
-                ),
-                child: AnimatedDefaultTextStyle(
-                  duration: AppMotion.fast,
-                  textAlign: TextAlign.center,
-                  style: (i == current ? text.titleLarge : text.bodyLarge)!
-                      .copyWith(
-                        color: i == current ? p.accent : p.onSurfaceMuted,
+    return Opacity(
+      opacity: _placed ? 1 : 0,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxl),
+        child: Column(
+          children: [
+            for (var i = 0; i < lyrics.lines.length; i++)
+              InkWell(
+                key: _keys[i],
+                borderRadius: BorderRadius.circular(AppRadii.sm),
+                onTap: () => vm.seekTo(lyrics.lines[i].time),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                    vertical: AppSpacing.xs,
+                  ),
+                  child: AnimatedDefaultTextStyle(
+                    duration: AppMotion.fast,
+                    textAlign: TextAlign.center,
+                    style: (i == current ? text.titleLarge : text.bodyLarge)!
+                        .copyWith(
+                          color: i == current ? p.accent : p.onSurfaceMuted,
+                        ),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Text(
+                        lyrics.lines[i].text.isEmpty
+                            ? '♪'
+                            : lyrics.lines[i].text,
+                        textAlign: TextAlign.center,
                       ),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: Text(
-                      lyrics.lines[i].text.isEmpty ? '♪' : lyrics.lines[i].text,
-                      textAlign: TextAlign.center,
                     ),
                   ),
                 ),
               ),
-            ),
-          // 도중에 저장해 아직 싱크가 없는 뒷부분도 가사는 모두 보여 준다 (강조 · 이동은 싱크된 줄까지만).
-          for (final line in lyrics.pending)
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.sm,
-                vertical: AppSpacing.xs,
-              ),
-              child: SizedBox(
-                width: double.infinity,
-                child: Text(
-                  line,
-                  textAlign: TextAlign.center,
-                  style: text.bodyLarge?.copyWith(
-                    color: p.onSurfaceMuted.withValues(alpha: .6),
+            // 도중에 저장해 아직 싱크가 없는 뒷부분도 가사는 모두 보여 준다 (강조 · 이동은 싱크된 줄까지만).
+            for (final line in lyrics.pending)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.sm,
+                  vertical: AppSpacing.xs,
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Text(
+                    line,
+                    textAlign: TextAlign.center,
+                    style: text.bodyLarge?.copyWith(
+                      color: p.onSurfaceMuted.withValues(alpha: .6),
+                    ),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
