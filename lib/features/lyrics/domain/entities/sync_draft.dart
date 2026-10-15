@@ -10,7 +10,7 @@ class SyncDraft extends Equatable {
     : texts = _join(lines, sizes);
 
   /// [lyrics]의 빈 줄을 뺀 줄로 시작한다. 이미 싱크 가사면 그 시간을 이어받는다.
-  /// 일반 글이면 [group]줄씩 하나로 묶어 한 번에 시간을 찍는다 (묶인 줄은 공백으로 이어 붙인다).
+  /// 일반 글이면 [group]줄씩 하나로 묶어 한 번에 시간을 찍는다 (묶인 줄은 줄바꿈으로 이어 붙여 줄을 유지하고, 저장할 때 줄마다 같은 시간을 붙인다).
   factory SyncDraft.from(Lyrics lyrics, {int group = 1}) {
     if (lyrics.isSynced) {
       final lines = [
@@ -157,7 +157,7 @@ class SyncDraft extends Equatable {
   /// `[mm:ss.xx]가사` 줄로 합친 글. 모든 줄을 찍었을 때만 의미가 있다.
   String toLrc() => [
     for (var i = 0; i < length; i++)
-      if (times[i] != null) '${formatStamp(times[i]!)}${texts[i]}',
+      if (times[i] != null) _stamped(times[i]!, texts[i]),
   ].join('\n');
 
   /// 도중에 저장할 때의 LRC. 마지막으로 찍은 줄까지만 시간을 붙이고, 그 뒤 줄은 시간 없는 글로 남겨
@@ -173,7 +173,7 @@ class SyncDraft extends Equatable {
         else
           () {
             at = times[i] ?? at;
-            return '${formatStamp(at)}${texts[i]}';
+            return _stamped(at, texts[i]);
           }(),
     ].join('\n');
   }
@@ -188,11 +188,16 @@ class SyncDraft extends Equatable {
         '${s.toString().padLeft(2, '0')}.${f.toString().padLeft(2, '0')}]';
   }
 
+  /// 한 칸의 각 줄에 같은 시간을 붙인다.
+  static String _stamped(Duration at, String text) =>
+      [for (final line in text.split('\n')) '${formatStamp(at)}$line']
+          .join('\n');
+
   static List<String> _join(List<String> lines, List<int> sizes) {
     final out = <String>[];
     var at = 0;
     for (final size in sizes) {
-      out.add(lines.skip(at).take(size).join(' '));
+      out.add(lines.skip(at).take(size).join('\n'));
       at += size;
     }
     return out;

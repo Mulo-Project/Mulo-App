@@ -26,7 +26,7 @@ void main() {
     final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다\n라')!)
       ..stamp(const Duration(seconds: 1));
     cubit.select(3);
-    expect(cubit.state.draft.texts, ['가', '나 다 라']);
+    expect(cubit.state.draft.texts, ['가', '나\n다\n라']);
     expect(cubit.state.draft.current, 1);
     expect(cubit.isMerged(1), isTrue);
     cubit.split(1);
@@ -108,25 +108,25 @@ void main() {
       expect(Lyrics.parse('[00:01.00]가\n[00:02.50]나')!.isSynced, isTrue);
     });
 
-    test('줄을 묶으면 묶음 하나가 한 번에 찍히고 공백으로 이어진다', () {
+    test('줄을 묶으면 묶음 하나가 한 번에 찍히고 줄은 그대로 같은 시간이 붙는다', () {
       final d = SyncDraft.from(plain, group: 2);
-      expect(d.texts, ['첫 줄 둘째 줄', '셋째 줄']);
+      expect(d.texts, ['첫 줄\n둘째 줄', '셋째 줄']);
       final done = d
           .stamp(const Duration(seconds: 1))
           .stamp(const Duration(seconds: 5));
-      expect(done.toLrc(), '[00:01.00]첫 줄 둘째 줄\n[00:05.00]셋째 줄');
+      expect(done.toLrc(), '[00:01.00]첫 줄\n[00:01.00]둘째 줄\n[00:05.00]셋째 줄');
     });
 
     test('한 칸만 다시 묶으면 남는 줄은 기본 줄 수로 다시 나뉘고 시간은 지워진다', () {
       final lyrics = Lyrics.parse('가\n나\n다\n라\n마')!;
       final d = SyncDraft.from(lyrics).stamp(const Duration(seconds: 1));
       final three = d.regroup(0, 2);
-      expect(three.texts, ['가 나 다', '라', '마']);
+      expect(three.texts, ['가\n나\n다', '라', '마']);
       expect(three.stamped, 0);
       expect(three.current, 0);
       // 줄이면 남는 줄이 기본 줄 수 칸으로, 늘리면 삼킨 칸은 사라진다.
-      expect(three.regroup(0, 0, group: 2).texts, ['가', '나 다', '라', '마']);
-      expect(three.regroup(1, 4).texts, ['가 나 다', '라 마']);
+      expect(three.regroup(0, 0, group: 2).texts, ['가', '나\n다', '라', '마']);
+      expect(three.regroup(1, 4).texts, ['가\n나\n다', '라\n마']);
       expect(three.isCustom(1), isTrue);
       expect(SyncDraft.from(lyrics, group: 2).isCustom(2), isFalse);
     });
@@ -264,7 +264,7 @@ void main() {
     await tester.tap(find.text('확인'));
     await tester.pumpAndSettle();
     expect(find.text('0/2줄'), findsOneWidget);
-    expect(find.text('가 줄 나 줄'), findsOneWidget);
+    expect(find.text('가 줄\n나 줄'), findsOneWidget);
 
     // 찍은 시간이 있으면 바꾸기 전에 경고한다. 취소하면 그대로.
     await tester.tap(find.text('지금'));
@@ -296,7 +296,7 @@ void main() {
     await tester.tap(find.text('다 줄'));
     await tester.pumpAndSettle();
     expect(find.text('0/2줄'), findsOneWidget);
-    expect(find.text('가 줄 나 줄 다 줄'), findsOneWidget);
+    expect(find.text('가 줄\n나 줄\n다 줄'), findsOneWidget);
     expect(find.text('3줄 같은 시간으로 묶음'), findsOneWidget);
 
     await tester.tap(find.text('풀기'));
