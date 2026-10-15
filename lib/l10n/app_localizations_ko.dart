@@ -1459,18 +1459,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsSyncPause => '일시정지';
 
   @override
-  String lyricsSyncBackBy(int n) {
-    return '$n초 전으로 (길게 눌러 초 바꾸기)';
+  String lyricsSyncBackBy(double n) {
+    return '$n초 전으로 (길게 눌러 단위 바꾸기)';
   }
 
   @override
-  String lyricsSyncForwardBy(int n) {
-    return '$n초 뒤로 (길게 눌러 초 바꾸기)';
-  }
-
-  @override
-  String lyricsSyncStepSeconds(int n) {
-    return '$n초씩 이동';
+  String lyricsSyncForwardBy(double n) {
+    return '$n초 뒤로 (길게 눌러 단위 바꾸기)';
   }
 
   @override

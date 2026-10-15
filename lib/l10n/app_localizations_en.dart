@@ -1490,18 +1490,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsSyncPause => 'Pause';
 
   @override
-  String lyricsSyncBackBy(int n) {
+  String lyricsSyncBackBy(double n) {
     return 'Back ${n}s (long-press to change)';
   }
 
   @override
-  String lyricsSyncForwardBy(int n) {
+  String lyricsSyncForwardBy(double n) {
     return 'Forward ${n}s (long-press to change)';
-  }
-
-  @override
-  String lyricsSyncStepSeconds(int n) {
-    return 'Skip ${n}s';
   }
 
   @override

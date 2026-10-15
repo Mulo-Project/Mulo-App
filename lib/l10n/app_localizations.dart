@@ -2777,20 +2777,14 @@ abstract class AppLocalizations {
   /// No description provided for @lyricsSyncBackBy.
   ///
   /// In ko, this message translates to:
-  /// **'{n}초 전으로 (길게 눌러 초 바꾸기)'**
-  String lyricsSyncBackBy(int n);
+  /// **'{n}초 전으로 (길게 눌러 단위 바꾸기)'**
+  String lyricsSyncBackBy(double n);
 
   /// No description provided for @lyricsSyncForwardBy.
   ///
   /// In ko, this message translates to:
-  /// **'{n}초 뒤로 (길게 눌러 초 바꾸기)'**
-  String lyricsSyncForwardBy(int n);
-
-  /// No description provided for @lyricsSyncStepSeconds.
-  ///
-  /// In ko, this message translates to:
-  /// **'{n}초씩 이동'**
-  String lyricsSyncStepSeconds(int n);
+  /// **'{n}초 뒤로 (길게 눌러 단위 바꾸기)'**
+  String lyricsSyncForwardBy(double n);
 
   /// No description provided for @lyricsSyncSeek.
   ///

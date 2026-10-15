@@ -157,9 +157,9 @@ void main() {
     player.togglePlay();
     player.seekTo(const Duration(seconds: 30));
     await tester.pump();
-    await tester.tap(find.byTooltip('10초 전으로 (길게 눌러 초 바꾸기)'));
+    await tester.tap(find.byTooltip('0.5초 전으로 (길게 눌러 단위 바꾸기)'));
     await tester.pump();
-    expect(player.state.position, const Duration(seconds: 20));
+    expect(player.state.position, const Duration(milliseconds: 29500));
 
     player.seekTo(const Duration(seconds: 3));
     await tester.pump();
@@ -168,7 +168,7 @@ void main() {
     expect(find.text('00:03.00'), findsOneWidget);
 
     // 찍은 줄을 눌러 +0.5초 조정
-    await tester.tap(find.text('+0.5s'));
+    await tester.tap(find.text('+0.5s').first);
     await tester.pumpAndSettle();
     expect(find.text('00:03.50'), findsOneWidget);
 
@@ -186,9 +186,16 @@ void main() {
       const Duration(seconds: 3, milliseconds: 500),
     );
 
+    // 뒤쪽 줄을 골라 지금을 누르면 다음 줄의 싱크가 덮어써진다
+    player.seekTo(const Duration(seconds: 12));
+    await tester.pump();
+    await tester.tap(find.text('지금'));
+    await tester.pumpAndSettle();
+    expect(find.text('00:12.00'), findsOneWidget);
+
     await tester.tap(find.byTooltip('싱크 저장'));
     await tester.pumpAndSettle();
-    expect(lyrics.saved['t1'], '[00:03.50]가 줄\n[00:10.00]나 줄');
+    expect(lyrics.saved['t1'], '[00:03.50]가 줄\n[00:12.00]나 줄');
     expect(find.text('가사를 저장했어요'), findsOneWidget);
   });
 

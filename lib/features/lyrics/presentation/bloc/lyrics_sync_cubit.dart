@@ -92,12 +92,19 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
     );
   }
 
-  /// 줄을 눌렀을 때: 찍은 줄은 선택하고, 아직 안 찍은 줄은 거기부터 찍도록 옮긴다.
+  /// 줄을 눌렀을 때: 찍은 줄은 선택하고 다음 줄부터 다시 찍도록 옮긴다 (뒤쪽 싱크는 새로 찍으면 덮어쓴다).
+  /// 아직 안 찍은 줄은 거기부터 찍도록 옮긴다.
   void select(int index) {
     final draft = state.draft;
     if (index < 0 || index >= draft.length) return;
     if (draft.times[index] != null) {
-      emit(LyricsSyncState(draft, selected: index, group: state.group));
+      emit(
+        LyricsSyncState(
+          draft.moveTo(index + 1),
+          selected: index,
+          group: state.group,
+        ),
+      );
     } else {
       emit(LyricsSyncState(draft.moveTo(index), group: state.group));
     }

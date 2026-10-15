@@ -39,8 +39,8 @@ class LyricsSyncScreen extends StatefulWidget {
 
 class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
   static const _lead = Duration(seconds: 2);
-  static const _steps = [3, 5, 10, 15, 30];
-  var _step = 10;
+  static const _steps = [100, 500, 1000, 3000, 5000, 10000];
+  var _stepMs = 500;
   var _keys = <GlobalKey>[];
 
   @override
@@ -142,29 +142,28 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
     _replay(prev ?? Duration.zero);
   }
 
-  /// 지금 위치에서 [_step]초 앞뒤로 옮겨 계속 듣는다 ('지금'을 놓쳤을 때).
+  /// 지금 위치에서 [_stepMs]밀리초 앞뒤로 옮겨 계속 듣는다 ('지금'을 놓쳤을 때).
   void _skip(int sign) {
     final np = context.read<NowPlayingCubit>();
-    np.seekTo(np.state.position + Duration(seconds: _step * sign));
+    np.seekTo(np.state.position + Duration(milliseconds: _stepMs * sign));
     if (!np.state.isPlaying) np.togglePlay();
   }
 
   /// 앞뒤 버튼을 길게 눌렀을 때: 한 번에 옮길 초를 고른다.
   Future<void> _pickStep(BuildContext buttonContext) async {
-    final l10n = context.l10n;
     final pick = await showAppMenu<int>(
       buttonContext,
       items: [
         for (final n in _steps)
           AppMenuItem(
             value: n,
-            icon: AppIcons.replay,
-            label: l10n.lyricsSyncStepSeconds(n),
-            selected: n == _step,
+            icon: AppIcons.timer,
+            label: stepLabel(n),
+            selected: n == _stepMs,
           ),
       ],
     );
-    if (pick != null && mounted) setState(() => _step = pick);
+    if (pick != null && mounted) setState(() => _stepMs = pick);
   }
 
   /// [time]보다 조금 앞에서 다시 재생한다 (찍은 곳이 맞는지 앞 소리까지 듣도록).
@@ -173,6 +172,10 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
     np.seekTo(time > _lead ? time - _lead : Duration.zero);
     if (!np.state.isPlaying) np.togglePlay();
   }
+
+  /// 이동 단위 글자: 1초 미만은 0.1s처럼, 이상은 정수 초.
+  static String stepLabel(int ms) =>
+      ms < 1000 ? '${ms / 1000}s' : '${ms ~/ 1000}s';
 
   static String _clock(Duration d) {
     final s = SyncDraft.formatStamp(d);
@@ -305,7 +308,7 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
                           ),
                   ),
                   _ControlBar(
-                    step: _step,
+                    stepMs: _stepMs,
                     onNow: _now,
                     onUndo: _undo,
                     onSkip: _skip,
@@ -443,14 +446,14 @@ class _LineRow extends StatelessWidget {
 
 class _ControlBar extends StatelessWidget {
   const _ControlBar({
-    required this.step,
+    required this.stepMs,
     required this.onNow,
     required this.onUndo,
     required this.onSkip,
     required this.onPickStep,
   });
 
-  final int step;
+  final int stepMs;
   final VoidCallback onNow;
   final VoidCallback onUndo;
   final void Function(int sign) onSkip;
@@ -484,9 +487,9 @@ class _ControlBar extends StatelessWidget {
           Row(
             children: [
               Builder(
-                builder: (buttonContext) => CircleIconButton(
-                  icon: AppIcons.replay10,
-                  tooltip: l10n.lyricsSyncBackBy(step),
+                builder: (buttonContext) => PlainButton(
+                  label: '−${_LyricsSyncScreenState.stepLabel(stepMs)}',
+                  tooltip: l10n.lyricsSyncBackBy(stepMs / 1000),
                   onPressed: () => onSkip(-1),
                   onLongPress: () => onPickStep(buttonContext),
                 ),
@@ -503,9 +506,9 @@ class _ControlBar extends StatelessWidget {
                 ),
               ),
               Builder(
-                builder: (buttonContext) => CircleIconButton(
-                  icon: AppIcons.forward10,
-                  tooltip: l10n.lyricsSyncForwardBy(step),
+                builder: (buttonContext) => PlainButton(
+                  label: '+${_LyricsSyncScreenState.stepLabel(stepMs)}',
+                  tooltip: l10n.lyricsSyncForwardBy(stepMs / 1000),
                   onPressed: () => onSkip(1),
                   onLongPress: () => onPickStep(buttonContext),
                 ),
