@@ -1531,14 +1531,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsSyncResetConfirm => '바꾸기';
 
   @override
-  String get lyricsSyncGroupEdit => '줄 묶기';
+  String lyricsSyncMerged(int n) {
+    return '$n줄 같은 시간으로 묶음';
+  }
 
   @override
-  String get lyricsSyncGroupDone => '완료';
-
-  @override
-  String get lyricsSyncGroupPanelHint =>
-      '묶을 마지막 줄을 누르거나 끌어서 고르세요. 이 싱크의 시간은 다시 찍어야 해요.';
+  String get lyricsSyncUnmerge => '풀기';
 
   @override
   String get playerShowLyrics => '가사 보기';

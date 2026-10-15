@@ -2900,23 +2900,17 @@ abstract class AppLocalizations {
   /// **'바꾸기'**
   String get lyricsSyncResetConfirm;
 
-  /// No description provided for @lyricsSyncGroupEdit.
+  /// No description provided for @lyricsSyncMerged.
   ///
   /// In ko, this message translates to:
-  /// **'줄 묶기'**
-  String get lyricsSyncGroupEdit;
+  /// **'{n}줄 같은 시간으로 묶음'**
+  String lyricsSyncMerged(int n);
 
-  /// No description provided for @lyricsSyncGroupDone.
+  /// No description provided for @lyricsSyncUnmerge.
   ///
   /// In ko, this message translates to:
-  /// **'완료'**
-  String get lyricsSyncGroupDone;
-
-  /// No description provided for @lyricsSyncGroupPanelHint.
-  ///
-  /// In ko, this message translates to:
-  /// **'묶을 마지막 줄을 누르거나 끌어서 고르세요. 이 싱크의 시간은 다시 찍어야 해요.'**
-  String get lyricsSyncGroupPanelHint;
+  /// **'풀기'**
+  String get lyricsSyncUnmerge;
 
   /// No description provided for @playerShowLyrics.
   ///

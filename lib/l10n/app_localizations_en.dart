@@ -1564,14 +1564,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsSyncResetConfirm => 'Change';
 
   @override
-  String get lyricsSyncGroupEdit => 'Group lines';
+  String lyricsSyncMerged(int n) {
+    return '$n lines share one time';
+  }
 
   @override
-  String get lyricsSyncGroupDone => 'Done';
-
-  @override
-  String get lyricsSyncGroupPanelHint =>
-      'Tap or drag to pick the last line to group. This sync\'s time must be stamped again.';
+  String get lyricsSyncUnmerge => 'Split';
 
   @override
   String get playerShowLyrics => 'Show lyrics';

@@ -22,12 +22,16 @@ Track _t(String id, String title) => Track(
 );
 
 void main() {
-  test('안 찍은 뒤쪽 줄을 눌러도 싱크를 건너뛰지 않는다', () {
+  test('안 찍은 뒤쪽 줄을 누르면 건너뛴 줄들이 그 줄과 한 칸으로 묶인다', () {
     final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다\n라')!)
       ..stamp(const Duration(seconds: 1));
     cubit.select(3);
+    expect(cubit.state.draft.texts, ['가', '나 다 라']);
     expect(cubit.state.draft.current, 1);
-    expect(cubit.state.draft.times[2], isNull);
+    expect(cubit.isMerged(1), isTrue);
+    cubit.split(1);
+    expect(cubit.state.draft.texts, ['가', '나', '다', '라']);
+    expect(cubit.state.draft.current, 1);
   });
 
   group('SyncDraft', () {
@@ -283,28 +287,22 @@ void main() {
     expect(find.text('0/4줄'), findsOneWidget);
   });
 
-  testWidgets('싱크 설정: 찍은 싱크를 고르고 더 보기 메뉴로 줄을 직접 묶는다', (tester) async {
+  testWidgets('싱크 설정: 줄을 건너뛰면 한 칸으로 묶여 표시되고 풀 수 있다', (tester) async {
     await openSync(tester, '가 줄\n나 줄\n다 줄\n라 줄');
     await tester.tap(find.text('확인'));
     await tester.pumpAndSettle();
     expect(find.text('0/4줄'), findsOneWidget);
 
-    await tester.tap(find.text('지금'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('더 보기'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('줄 묶기'));
-    await tester.pumpAndSettle();
-
-    // 영역 안의 세 번째 줄을 누르면 앞의 세 줄이 한 싱크가 된다.
-    await tester.tap(find.text('다 줄').first);
+    await tester.tap(find.text('다 줄'));
     await tester.pumpAndSettle();
     expect(find.text('0/2줄'), findsOneWidget);
     expect(find.text('가 줄 나 줄 다 줄'), findsOneWidget);
+    expect(find.text('3줄 같은 시간으로 묶음'), findsOneWidget);
 
-    await tester.tap(find.text('완료'));
+    await tester.tap(find.text('풀기'));
     await tester.pumpAndSettle();
-    expect(find.text('완료'), findsNothing);
+    expect(find.text('0/4줄'), findsOneWidget);
+    expect(find.text('3줄 같은 시간으로 묶음'), findsNothing);
   });
 
   testWidgets('싱크 설정: 재생 시간이 슬라이더 아래, 지금 버튼 위에 보인다', (tester) async {

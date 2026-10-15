@@ -7,22 +7,16 @@ import '../../domain/entities/sync_draft.dart';
 export '../../domain/entities/sync_draft.dart';
 
 /// 싱크 맞추기 화면 상태. [selected]는 시간을 다듬고 있는 칸 (없으면 null),
-/// [group]은 기본으로 한 번에 시간을 찍는 줄 수, [editing]은 줄을 다시 묶고 있는 칸 (없으면 null).
+/// [group]은 기본으로 한 번에 시간을 찍는 줄 수.
 class LyricsSyncState extends Equatable {
-  const LyricsSyncState(
-    this.draft, {
-    this.selected,
-    this.group = 1,
-    this.editing,
-  });
+  const LyricsSyncState(this.draft, {this.selected, this.group = 1});
 
   final SyncDraft draft;
   final int? selected;
   final int group;
-  final int? editing;
 
   @override
-  List<Object?> get props => [draft, selected, group, editing];
+  List<Object?> get props => [draft, selected, group];
 }
 
 /// 줄마다 재생 위치를 찍고, 시간을 미세 조정하고, 되돌린다. 저장은 호출한 쪽이 한다.
@@ -37,46 +31,34 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
   /// 일반 글 가사만 줄을 묶을 수 있다. 싱크 가사는 이미 시간이 있다.
   bool get canGroup => !_lyrics.isSynced;
 
-  /// 기본 줄 수를 바꾸면 사라지는 작업(직접 묶음 · 찍은 시간)이 있는가.
+  /// 기본 줄 수를 바꾸면 사라지는 작업(건너뛰어 묶은 칸 · 찍은 시간)이 있는가.
   bool get loseOnSetGroup =>
       state.draft.stamped > 0 || state.draft.isCustom(state.group);
 
-  /// 기본 [group]줄씩 묶어 처음부터 다시 나눈다. 직접 묶은 줄과 찍은 시간은 지워진다.
+  /// 기본 [group]줄씩 묶어 처음부터 다시 나눈다. 묶은 칸과 찍은 시간은 지워진다.
   void setGroup(int group) {
     if (!canGroup || group == state.group) return;
     emit(LyricsSyncState(SyncDraft.from(_lyrics, group: group), group: group));
   }
 
-  /// [index] 칸의 줄 묶기를 시작한다.
-  void startGroupEdit(int index) {
-    if (!canGroup || index < 0 || index >= state.draft.length) return;
+  /// [index] 칸이 기본 줄 수보다 많이 묶여 있는가 (건너뛰어 같은 시간으로 묶인 칸).
+  bool isMerged(int index) =>
+      index >= 0 &&
+      index < state.draft.length &&
+      state.draft.sizes[index] > state.group;
+
+  /// 건너뛰어 묶인 [index] 칸을 기본 줄 수로 다시 나눈다. 이 칸의 시간은 지워진다.
+  void split(int index) {
+    if (!canGroup || !isMerged(index)) return;
+    final draft = state.draft;
+    final last = draft.startOf(index) + state.group - 1;
     emit(
       LyricsSyncState(
-        state.draft,
+        draft.regroup(index, last, group: state.group),
         selected: index,
         group: state.group,
-        editing: index,
       ),
     );
-  }
-
-  void endGroupEdit() {
-    emit(
-      LyricsSyncState(
-        state.draft,
-        selected: state.selected,
-        group: state.group,
-      ),
-    );
-  }
-
-  /// 줄 묶는 중인 칸을 원본 [endLine] 줄까지로 다시 묶는다.
-  void regroup(int endLine) {
-    final at = state.editing;
-    if (at == null) return;
-    final draft = state.draft.regroup(at, endLine, group: state.group);
-    if (draft == state.draft) return;
-    emit(LyricsSyncState(draft, selected: at, group: state.group, editing: at));
   }
 
   /// [position]을 다음 줄에 찍는다. 찍은 줄이 선택돼 바로 다듬을 수 있다.
@@ -93,7 +75,7 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
   }
 
   /// 줄을 눌렀을 때: 찍은 줄은 선택하고 다음 줄부터 다시 찍도록 옮긴다 (뒤쪽 싱크는 새로 찍으면 덮어쓴다).
-  /// 아직 안 찍은 줄은 가장 앞의 안 찍은 줄로 옮긴다 (건너뛰기 금지).
+  /// 아직 안 찍은 뒤쪽 줄이면 그 사이 줄을 건너뛰는 것이므로, 건너뛴 줄들을 그 줄과 한 칸(같은 시간)으로 묶는다.
   void select(int index) {
     final draft = state.draft;
     if (index < 0 || index >= draft.length) return;
@@ -105,15 +87,20 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
           group: state.group,
         ),
       );
-    } else {
-      // 싱크를 건너뛸 수 없다: 아직 안 찍은 줄은 가장 앞의 안 찍은 줄부터만 찍는다.
-      emit(
-        LyricsSyncState(
-          draft.moveTo(draft.times.indexOf(null)),
-          group: state.group,
-        ),
-      );
+      return;
     }
+    final first = draft.times.indexOf(null);
+    if (index <= first || !canGroup) {
+      emit(LyricsSyncState(draft.moveTo(index), group: state.group));
+      return;
+    }
+    final end = draft.startOf(index) + draft.sizes[index] - 1;
+    emit(
+      LyricsSyncState(
+        draft.regroup(first, end, group: state.group).moveTo(first),
+        group: state.group,
+      ),
+    );
   }
 
   /// 선택한 줄의 시간을 [delta]만큼 옮긴다.

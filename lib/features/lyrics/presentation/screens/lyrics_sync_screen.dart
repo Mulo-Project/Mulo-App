@@ -332,7 +332,6 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
                                     index: i,
                                     draft: draft,
                                     selected: state.selected == i,
-                                    editing: state.editing == i,
                                     canGroup: sync.canGroup,
                                     clock: _clock,
                                     onTap: () {
@@ -377,7 +376,6 @@ class _LineRow extends StatelessWidget {
     required this.index,
     required this.draft,
     required this.selected,
-    required this.editing,
     required this.canGroup,
     required this.clock,
     required this.onTap,
@@ -386,7 +384,6 @@ class _LineRow extends StatelessWidget {
   final int index;
   final SyncDraft draft;
   final bool selected;
-  final bool editing;
   final bool canGroup;
   final String Function(Duration) clock;
   final VoidCallback onTap;
@@ -456,9 +453,24 @@ class _LineRow extends StatelessWidget {
             ),
           ),
         ),
-        if (editing)
-          _GroupPanel(draft: draft, index: index)
-        else if (selected && time != null)
+        // 건너뛰어 같은 시간으로 묶인 칸은 따로 표시하고, 다시 나눌 수 있게 한다.
+        if (canGroup && sync.isMerged(index))
+          Padding(
+            padding: const EdgeInsets.only(left: 76 + AppSpacing.sm + 3),
+            child: Row(
+              children: [
+                Text(
+                  l10n.lyricsSyncMerged(draft.sizes[index]),
+                  style: text.labelSmall?.copyWith(color: p.accent),
+                ),
+                PlainButton(
+                  label: l10n.lyricsSyncUnmerge,
+                  onPressed: () => sync.split(index),
+                ),
+              ],
+            ),
+          ),
+        if (selected && time != null)
           Padding(
             padding: const EdgeInsets.only(
               left: AppSpacing.xs,
@@ -485,29 +497,6 @@ class _LineRow extends StatelessWidget {
                       ),
                   ],
                 ),
-                if (canGroup)
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: Builder(
-                      builder: (buttonContext) => PlainButton(
-                        icon: AppIcons.more,
-                        tooltip: l10n.actionMore,
-                        onPressed: () async {
-                          final pick = await showAppMenu<bool>(
-                            buttonContext,
-                            items: [
-                              AppMenuItem(
-                                value: true,
-                                icon: AppIcons.dragHandle,
-                                label: l10n.lyricsSyncGroupEdit,
-                              ),
-                            ],
-                          );
-                          if (pick == true) sync.startGroupEdit(index);
-                        },
-                      ),
-                    ),
-                  ),
               ],
             ),
           ),
@@ -657,90 +646,6 @@ class _ClockText extends StatelessWidget {
       style: Theme.of(context).textTheme.labelMedium?.copyWith(
         color: context.palette.onSurfaceMuted,
         fontFeatures: const [FontFeature.tabularFigures()],
-      ),
-    );
-  }
-}
-
-/// 한 칸에 묶을 줄을 고르는 영역. 묶을 마지막 줄을 누르거나 위아래로 끌어 고른다.
-class _GroupPanel extends StatelessWidget {
-  const _GroupPanel({required this.draft, required this.index});
-
-  final SyncDraft draft;
-  final int index;
-
-  static const _rowHeight = 36.0;
-  static const _extra = 6;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final p = context.palette;
-    final text = Theme.of(context).textTheme;
-    final sync = context.read<LyricsSyncCubit>();
-    final start = draft.startOf(index);
-    final end = start + draft.sizes[index];
-    final shown = (end + _extra).clamp(0, draft.lines.length);
-
-    void pick(double dy) {
-      final line = (start + dy ~/ _rowHeight).clamp(start, shown - 1);
-      sync.regroup(line);
-    }
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.xs,
-        0,
-        AppSpacing.xs,
-        AppSpacing.xs,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            l10n.lyricsSyncGroupPanelHint,
-            style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTapDown: (d) => pick(d.localPosition.dy),
-            onVerticalDragStart: (d) => pick(d.localPosition.dy),
-            onVerticalDragUpdate: (d) => pick(d.localPosition.dy),
-            child: Column(
-              children: [
-                for (var i = start; i < shown; i++)
-                  Container(
-                    height: _rowHeight,
-                    alignment: Alignment.centerLeft,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                    ),
-                    decoration: BoxDecoration(
-                      color: i < end ? p.accent.withValues(alpha: .18) : null,
-                      borderRadius: BorderRadius.circular(AppRadii.sm),
-                    ),
-                    child: Text(
-                      draft.lines[i],
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: text.bodyMedium?.copyWith(
-                        color: i < end ? p.onSurface : p.onSurfaceMuted,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: PlainButton(
-              label: l10n.lyricsSyncGroupDone,
-              accent: true,
-              onPressed: sync.endGroupEdit,
-            ),
-          ),
-        ],
       ),
     );
   }
