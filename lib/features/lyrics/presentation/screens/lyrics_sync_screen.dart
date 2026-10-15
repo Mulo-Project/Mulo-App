@@ -41,7 +41,7 @@ class LyricsSyncScreen extends StatefulWidget {
 
 class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
   static const _lead = Duration(seconds: 2);
-  static const _steps = [100, 500, 1000, 3000, 5000, 10000];
+  static const _steps = [10, 100, 500, 1000, 3000, 5000, 10000];
   var _stepMs = 500;
   var _autoPause = false;
   var _keys = <GlobalKey>[];
@@ -557,7 +557,7 @@ class _LineRow extends StatelessWidget {
                 // 위: 시간 맞추기 버튼
                 Wrap(
                   children: [
-                    for (final ms in const [-500, -100, 100, 500])
+                    for (final ms in const [-500, -100, -10, 10, 100, 500])
                       PlainButton(
                         label: '${ms > 0 ? '+' : '−'}${ms.abs() / 1000}s',
                         onPressed: () {

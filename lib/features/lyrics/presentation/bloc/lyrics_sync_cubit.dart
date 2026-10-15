@@ -130,33 +130,20 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
 
   /// [position]을 다음 줄에 찍는다. 찍은 줄이 선택돼 바로 다듬을 수 있다.
   void stamp(Duration position) {
-    var draft = state.draft;
-    var at = draft.current;
+    final draft = state.draft;
+    final at = draft.current;
     if (at >= draft.length) return;
-    // 아직 안 찍은 칸을 멈춘 채 또 눌러 직전 줄과 완전히 같은 시간이 되면 같은 칸으로 묶는다 (1/100초 단위).
-    // 이미 찍힌 칸을 다시 찍을 때(덮어쓰기)와 줄별로 펼친 영역 안에서는 묶지 않는다.
-    final prev = at > 0 ? draft.times[at - 1] : null;
-    if (canGroup &&
-        state.expanded == null &&
-        draft.times[at] == null &&
-        prev != null &&
-        (position - prev).inMilliseconds.abs() < 10) {
-      final end = draft.startOf(at) + draft.sizes[at] - 1;
-      draft = draft.regroup(at - 1, end, group: state.group);
-      at -= 1;
-      position = prev;
-    }
+    // 랩처럼 소리가 겹치는 곳도 있어서, 같은 시간이어도 자동으로 묶지 않는다 (줄은 따로 남는다).
     _put(draft.stamp(position), selected: at);
   }
 
-  /// [index] 칸을 눌러 건너뛰면 그 사이에 이미 찍어 둔 싱크가 묶음에 삼켜져 사라지는가.
+  /// [index] 칸을 눌러 건너뛰면 다음에 찍을 칸부터 그 칸 사이에 이미 찍어 둔 싱크가 묶음에 삼켜져 사라지는가.
   bool skipErasesStamped(int index) {
     final draft = state.draft;
     if (!canGroup || index < 0 || index >= draft.length) return false;
     if (draft.times[index] != null) return false;
-    final first = draft.times.indexOf(null);
-    if (index <= first) return false;
-    for (var i = first + 1; i < index; i++) {
+    if (index <= draft.current) return false;
+    for (var i = draft.current; i < index; i++) {
       if (draft.times[i] != null) return true;
     }
     return false;
@@ -184,7 +171,8 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
       );
       return;
     }
-    final first = draft.times.indexOf(null);
+    // 건너뛰기는 포커스한 곳(다음에 찍을 칸)부터 누른 줄까지다.
+    final first = draft.current;
     if (index <= first || !canGroup) {
       emit(
         LyricsSyncState(draft.moveTo(index), group: state.group, expanded: ex),

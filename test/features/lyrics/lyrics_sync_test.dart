@@ -34,29 +34,30 @@ void main() {
     expect(cubit.state.draft.current, 1);
   });
 
-  test('같은 시간에 지금을 또 누르면 직전 줄과 한 칸으로 묶인다', () {
+  test('같은 시간에 지금을 또 눌러도 자동으로 묶이지 않고 줄이 따로 남는다', () {
     final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다')!)
       ..stamp(const Duration(seconds: 2))
       ..stamp(const Duration(seconds: 2))
       ..stamp(const Duration(seconds: 5));
-    expect(cubit.state.draft.texts, ['가\n나', '다']);
+    expect(cubit.state.draft.texts, ['가', '나', '다']);
     expect(cubit.state.draft.times, [
+      const Duration(seconds: 2),
       const Duration(seconds: 2),
       const Duration(seconds: 5),
     ]);
-    expect(cubit.state.draft.isComplete, isTrue);
   });
 
-  test('이미 찍힌 칸을 같은 시간으로 다시 찍어도 묶이지 않는다', () {
-    final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다')!)
+  test('포커스한 곳 다음 칸부터 안 찍은 줄까지가 한 칸으로 묶인다', () {
+    final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다\n라\n마')!)
+      ..stamp(const Duration(seconds: 1))
       ..stamp(const Duration(seconds: 2))
-      ..stamp(const Duration(seconds: 4))
-      ..stamp(const Duration(seconds: 6));
+      ..stamp(const Duration(seconds: 3));
     cubit.select(0);
-    cubit.stamp(const Duration(seconds: 2));
-    cubit.stamp(const Duration(seconds: 2));
-    expect(cubit.state.draft.texts, ['가', '나', '다']);
-    expect(cubit.state.draft.times[1], const Duration(seconds: 2));
+    expect(cubit.state.draft.current, 1);
+    expect(cubit.skipErasesStamped(4), isTrue);
+    cubit.select(4);
+    expect(cubit.state.draft.texts, ['가', '나\n다\n라\n마']);
+    expect(cubit.state.draft.times, [const Duration(seconds: 1), null]);
   });
 
   test('건너뛰면 사이에 찍어 둔 싱크가 사라질 때만 알아챈다', () {
