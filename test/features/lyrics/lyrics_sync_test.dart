@@ -433,6 +433,16 @@ void main() {
     expect(find.text('3줄 같은 시간으로 묶음'), findsNothing);
   });
 
+  testWidgets('싱크 설정: 위로 끌어도 범위가 한 칸으로 묶인다', (tester) async {
+    await openSync(tester, '가 줄\n나 줄\n다 줄\n라 줄');
+    await tester.tap(find.text('확인'));
+    await tester.pumpAndSettle();
+
+    await dragMerge(tester, '다 줄', '가 줄');
+    expect(find.text('가 줄\n나 줄\n다 줄'), findsOneWidget);
+    expect(find.text('0/2줄'), findsOneWidget);
+  });
+
   testWidgets('싱크 설정: 묶인 칸을 꾹 누르면 줄별로 펼쳐지고 영역 밖을 누르면 접힌다', (tester) async {
     await openSync(tester, '가 줄\n나 줄\n다 줄\n라 줄');
     await tester.tap(find.text('확인'));

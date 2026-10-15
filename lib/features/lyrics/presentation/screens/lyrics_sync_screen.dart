@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -171,12 +172,12 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
     context.read<NowPlayingCubit>().seekTo(time);
   }
 
-  /// 끌고 있는 손가락 아래 칸을 찾아 묶을 범위의 끝으로 삼는다.
+  /// 끌고 있는 손가락 아래 칸을 찾아 묶을 범위의 끝으로 삼는다 (위로도 아래로도).
   void _dragMove(double dy, SyncDraft draft) {
     final from = _dragFrom;
     if (from == null) return;
-    var to = from;
-    for (var i = from; i < _keys.length && i < draft.length; i++) {
+    var to = 0;
+    for (var i = 0; i < _keys.length && i < draft.length; i++) {
       final box = _keys[i].currentContext?.findRenderObject();
       if (box is! RenderBox || !box.attached) continue;
       final top = box.localToGlobal(Offset.zero).dy;
@@ -193,14 +194,17 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
       _dragFrom = null;
       _dragTo = null;
     });
-    if (from == null || to == null || to <= from) return;
+    if (from == null || to == null || to == from) return;
+    // 위로 끌어도 된다: 범위는 위쪽 칸부터 아래쪽 칸까지이고 위쪽 칸의 시간을 쓴다.
+    final first = math.min(from, to);
+    final last = math.max(from, to);
     final sync = context.read<LyricsSyncCubit>();
-    if (sync.rangeErasesStamped(from, to) &&
+    if (sync.rangeErasesStamped(first, last) &&
         !await confirmLyricsSkipMerge(context)) {
       return;
     }
     if (!mounted) return;
-    sync.mergeRange(from, to);
+    sync.mergeRange(first, last);
   }
 
   /// 가사 칸 목록. 줄별로 펼친 영역이 있으면 그 칸들을 색 바탕 한 영역으로 묶어 보여 준다.
@@ -215,8 +219,8 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
       final dragRange =
           _dragFrom != null &&
           _dragTo != null &&
-          i >= _dragFrom! &&
-          i <= _dragTo!;
+          i >= math.min(_dragFrom!, _dragTo!) &&
+          i <= math.max(_dragFrom!, _dragTo!);
       final merged = draft.sizes[i] > 1;
       final line = _LineRow(
         key: _keys[i],
