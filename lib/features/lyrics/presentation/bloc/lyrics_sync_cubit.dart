@@ -153,10 +153,15 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
 
   /// [position]을 다음 줄에 찍는다. 찍은 줄이 선택돼 바로 다듬을 수 있다.
   void stamp(Duration position) {
-    final draft = state.draft;
-    final at = draft.current;
+    var draft = state.draft;
+    var at = draft.current;
     if (at >= draft.length) return;
     // 랩처럼 소리가 겹치는 곳도 있어서, 같은 시간이어도 자동으로 묶지 않는다 (줄은 따로 남는다).
+    // 첫 싱크를 가운데 줄에서 시작했다면, 맨 앞 줄부터 그 줄까지를 한 칸으로 묶어 같은 시간으로 찍는다.
+    if (canGroup && draft.stamped == 0 && at > 0 && state.expanded == null) {
+      draft = draft.mergeRange(0, at).moveTo(0);
+      at = 0;
+    }
     _put(draft.stamp(position), selected: at);
   }
 
@@ -182,6 +187,9 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
       );
       return;
     }
+    // 싱크가 하나라도 등록된 뒤에는 다음에 찍을 칸이 저절로 이어지므로, 안 찍은 칸으로 옮길 필요가 없다.
+    // 아직 하나도 안 찍었을 때만 원하는 줄에서 시작하도록 아무 칸이나 고를 수 있다.
+    if (draft.stamped > 0) return;
     emit(
       LyricsSyncState(draft.moveTo(index), group: state.group, expanded: ex),
     );

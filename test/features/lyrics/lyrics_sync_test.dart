@@ -48,7 +48,7 @@ void main() {
     ]);
   });
 
-  test('안 찍은 줄을 눌러도 묶지 않고 그 줄로 이동만 한다', () {
+  test('싱크를 하나라도 찍은 뒤에는 안 찍은 줄로 포커스를 옮기지 않는다', () {
     final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다\n라\n마')!)
       ..stamp(const Duration(seconds: 1))
       ..stamp(const Duration(seconds: 2))
@@ -56,8 +56,18 @@ void main() {
     cubit.select(0);
     expect(cubit.state.draft.current, 1);
     cubit.select(4);
-    expect(cubit.state.draft.current, 4);
+    expect(cubit.state.draft.current, 1);
     expect(cubit.state.draft.texts, ['가', '나', '다', '라', '마']);
+  });
+
+  test('아직 아무것도 안 찍었으면 아무 줄에서나 시작하고, 첫 싱크가 맨 앞 줄부터 그 줄까지를 묶는다', () {
+    final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다\n라')!);
+    cubit.select(2);
+    expect(cubit.state.draft.current, 2);
+    cubit.stamp(const Duration(seconds: 4));
+    expect(cubit.state.draft.texts, ['가\n나\n다', '라']);
+    expect(cubit.state.draft.times, [const Duration(seconds: 4), null]);
+    expect(cubit.state.draft.current, 1);
   });
 
   test('범위 안에 이미 찍어 둔 싱크가 있을 때만 사라진다고 알아챈다', () {
