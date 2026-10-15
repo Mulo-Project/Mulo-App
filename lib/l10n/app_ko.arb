@@ -667,6 +667,7 @@
   "lyricsSyncNextSlot": "이어 찍기",
   "lyricsSyncFollow": "따라가기",
   "lyricsSyncFollowHint": "켜면 목록이 포커스한 칸을 따라 움직이고, 끄면 가사를 자유롭게 볼 수 있어요",
+  "lyricsFollow": "싱크 추적",
   "lyricsSyncSkipTitle": "찍어 둔 싱크가 사라져요",
   "lyricsSyncSkipBody": "묶을 범위 안에 이미 찍어 둔 싱크가 있어요. 한 칸으로 묶으면 그 싱크는 지워져요. 계속할까요?",
   "lyricsSyncSkipConfirm": "묶기",

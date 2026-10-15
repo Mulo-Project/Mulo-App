@@ -69,24 +69,34 @@ class _LyricsViewState extends State<LyricsView> {
     return Column(
       children: [
         Expanded(child: _body(context)),
+        // 싱크 추적: 켜면 재생 위치의 줄을 따라 가사가 올라가고, 끄면 방해 없이 자유롭게 볼 수 있다.
+        // 싱크 설정 · 가사 편집 버튼과는 다른 줄에 둔다.
+        if (synced)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                PlainButton(
+                  icon: AppIcons.explore,
+                  label: l10n.lyricsFollow,
+                  tooltip: l10n.lyricsSyncFollowHint,
+                  accent: _following,
+                  onPressed: () => setState(() {
+                    _following = !_following;
+                    // 다시 켜면 지금 줄로 한 번 따라가도록 한다.
+                    if (_following) _shown = -2;
+                  }),
+                ),
+              ],
+            ),
+          ),
         if (hasLyrics)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                // 포커스: 켜면 재생 위치의 줄을 따라 가사가 올라가고, 끄면 자유롭게 볼 수 있다.
-                if (synced)
-                  PlainButton(
-                    icon: AppIcons.explore,
-                    tooltip: l10n.lyricsSyncFollowHint,
-                    accent: _following,
-                    onPressed: () => setState(() {
-                      _following = !_following;
-                      // 다시 켜면 지금 줄로 한 번 따라가도록 한다.
-                      if (_following) _shown = -2;
-                    }),
-                  ),
                 PlainButton(
                   label: l10n.lyricsSyncSetting,
                   icon: AppIcons.timer,

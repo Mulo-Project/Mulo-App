@@ -2930,6 +2930,12 @@ abstract class AppLocalizations {
   /// **'켜면 목록이 포커스한 칸을 따라 움직이고, 끄면 가사를 자유롭게 볼 수 있어요'**
   String get lyricsSyncFollowHint;
 
+  /// No description provided for @lyricsFollow.
+  ///
+  /// In ko, this message translates to:
+  /// **'싱크 추적'**
+  String get lyricsFollow;
+
   /// No description provided for @lyricsSyncSkipTitle.
   ///
   /// In ko, this message translates to:

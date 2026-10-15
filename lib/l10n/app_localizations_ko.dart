@@ -1547,6 +1547,9 @@ class AppLocalizationsKo extends AppLocalizations {
       '켜면 목록이 포커스한 칸을 따라 움직이고, 끄면 가사를 자유롭게 볼 수 있어요';
 
   @override
+  String get lyricsFollow => '싱크 추적';
+
+  @override
   String get lyricsSyncSkipTitle => '찍어 둔 싱크가 사라져요';
 
   @override

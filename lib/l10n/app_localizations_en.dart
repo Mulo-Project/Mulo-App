@@ -1581,6 +1581,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'On: the list follows the focused line. Off: browse the lyrics freely';
 
   @override
+  String get lyricsFollow => 'Follow lyrics';
+
+  @override
   String get lyricsSyncSkipTitle => 'Stamped syncs will be lost';
 
   @override

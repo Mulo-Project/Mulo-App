@@ -567,6 +567,7 @@
   "lyricsSyncNextSlot": "Next",
   "lyricsSyncFollow": "Follow",
   "lyricsSyncFollowHint": "On: the list follows the focused line. Off: browse the lyrics freely",
+  "lyricsFollow": "Follow lyrics",
   "lyricsSyncSkipTitle": "Stamped syncs will be lost",
   "lyricsSyncSkipBody": "The range contains syncs you already stamped. Merging it into one block removes them. Continue?",
   "lyricsSyncSkipConfirm": "Merge",
