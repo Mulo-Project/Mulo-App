@@ -459,7 +459,6 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
                         ),
                         PlainButton(
                           icon: AppIcons.explore,
-                          label: l10n.lyricsSyncFollow,
                           tooltip: l10n.lyricsSyncFollowHint,
                           accent: _follow,
                           onPressed: () {
