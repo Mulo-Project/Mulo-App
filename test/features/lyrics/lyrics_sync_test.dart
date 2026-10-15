@@ -111,6 +111,20 @@ void main() {
     expect(cubit.state.draft.texts, ['a', 'b\nc\nd']);
   });
 
+  test('찍힌 칸끼리도 다음 칸과 합칠 수 있고 앞 칸의 시간을 쓴다', () {
+    final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다')!)
+      ..stamp(const Duration(seconds: 1))
+      ..stamp(const Duration(seconds: 2))
+      ..stamp(const Duration(seconds: 3));
+    cubit.mergeNext(0);
+    expect(cubit.state.draft.texts, ['가\n나', '다']);
+    expect(cubit.state.draft.times, [
+      const Duration(seconds: 1),
+      const Duration(seconds: 3),
+    ]);
+    expect(cubit.state.draft.isComplete, isTrue);
+  });
+
   group('SyncDraft', () {
     final plain = Lyrics.parse('첫 줄\n\n둘째 줄\n셋째 줄')!;
 

@@ -159,6 +159,26 @@ class SyncDraft extends Equatable {
     );
   }
 
+  /// [index] 칸을 바로 다음 칸과 한 칸으로 합친다. 합친 칸은 [index] 칸의 시간을 그대로 쓰고
+  /// 다음 칸의 시간은 사라진다. 되돌리기 기록은 비운다.
+  SyncDraft mergeNext(int index) {
+    if (index < 0 || index + 1 >= length) return this;
+    final next = current <= index
+        ? current
+        : (current - 1 < index + 1 ? index + 1 : current - 1);
+    return SyncDraft._(
+      lines,
+      [
+        ...sizes.take(index),
+        sizes[index] + sizes[index + 1],
+        ...sizes.skip(index + 2),
+      ],
+      [...times.take(index + 1), ...times.skip(index + 2)],
+      next,
+      const [],
+    );
+  }
+
   /// [start]부터 [count]칸 안에서 이웃한 칸의 시간이 같으면 한 칸으로 다시 합친다.
   /// 돌려주는 [map]은 옛 칸 번호가 새 칸 번호로 어떻게 바뀌었는지다. 되돌리기 기록은 비운다.
   ({SyncDraft draft, List<int> map}) mergeEqual(int start, int count) {

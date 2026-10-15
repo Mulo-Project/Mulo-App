@@ -128,6 +128,18 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
     );
   }
 
+  /// 선택한 [index] 칸을 바로 다음 칸과 한 칸으로 합친다 (이 칸의 시간을 그대로 쓴다).
+  /// 이미 찍힌 칸끼리도 합칠 수 있다. 다음 칸의 싱크는 사라진다.
+  void mergeNext(int index) {
+    if (!canGroup) return;
+    final at = _collapseNow()(index);
+    final draft = state.draft;
+    if (at < 0 || at + 1 >= draft.length) return;
+    emit(
+      LyricsSyncState(draft.mergeNext(at), selected: at, group: state.group),
+    );
+  }
+
   /// [position]을 다음 줄에 찍는다. 찍은 줄이 선택돼 바로 다듬을 수 있다.
   void stamp(Duration position) {
     final draft = state.draft;

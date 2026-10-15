@@ -574,6 +574,15 @@ class _LineRow extends StatelessWidget {
                       ),
                   ],
                 ),
+                if (canGroup && index + 1 < draft.length)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: PlainButton(
+                      icon: AppIcons.dragHandle,
+                      label: l10n.lyricsSyncMergeNext,
+                      onPressed: () => sync.mergeNext(index),
+                    ),
+                  ),
               ],
             ),
           ),
