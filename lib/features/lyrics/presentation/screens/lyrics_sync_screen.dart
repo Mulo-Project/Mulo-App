@@ -451,7 +451,14 @@ class _LineRow extends StatelessWidget {
                     for (final ms in const [-500, -100, 100, 500])
                       PlainButton(
                         label: '${ms > 0 ? '+' : '−'}${ms.abs() / 1000}s',
-                        onPressed: () => sync.nudge(Duration(milliseconds: ms)),
+                        onPressed: () {
+                          sync.nudge(Duration(milliseconds: ms));
+                          // 조정한 시간으로 재생도 옮겨, 바로 들어 보며 맞춘다.
+                          final moved = sync.state.draft.times[index];
+                          if (moved != null) {
+                            context.read<NowPlayingCubit>().seekTo(moved);
+                          }
+                        },
                       ),
                   ],
                 ),

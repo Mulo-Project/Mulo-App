@@ -171,6 +171,10 @@ void main() {
     await tester.tap(find.text('+0.5s').first);
     await tester.pumpAndSettle();
     expect(find.text('00:03.50'), findsOneWidget);
+    expect(
+      player.state.position,
+      const Duration(seconds: 3, milliseconds: 500),
+    );
 
     player.seekTo(const Duration(seconds: 10));
     await tester.pump();
