@@ -417,13 +417,18 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
                         ),
                       CircleIconButton(
                         icon: AppIcons.check,
+                        // 다 찍었으면 강조해서 저장하고, 덜 찍었어도 누르면 찍은 곳까지 중간 저장한다.
                         tooltip: draft.isComplete
                             ? l10n.lyricsSyncSave
-                            : l10n.lyricsSyncNeedAll,
+                            : l10n.lyricsSyncSavePartial,
                         emphasized: draft.isComplete,
-                        onPressed: draft.isComplete
-                            ? () => Navigator.of(context).pop(draft.toLrc())
-                            : null,
+                        onPressed: draft.stamped == 0
+                            ? null
+                            : () => Navigator.of(context).pop(
+                                draft.isComplete
+                                    ? draft.toLrc()
+                                    : draft.toPartialLrc(),
+                              ),
                       ),
                     ],
                   ),

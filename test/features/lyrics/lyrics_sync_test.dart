@@ -445,7 +445,10 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> openSync(WidgetTester tester, String text) async {
+  Future<MemoryLyricsRepository> openSync(
+    WidgetTester tester,
+    String text,
+  ) async {
     tester.view.physicalSize = const Size(1170, 2532);
     tester.view.devicePixelRatio = 3;
     tester.platformDispatcher.localesTestValue = const [Locale('ko')];
@@ -464,6 +467,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('싱크 설정'));
     await tester.pumpAndSettle();
+    return lyrics;
   }
 
   testWidgets('싱크 설정: 처음 들어가면 기본 줄 수를 묻고, 위쪽 메뉴로 바꾸면 경고한다', (tester) async {
@@ -606,6 +610,24 @@ void main() {
     await tester.tap(find.byTooltip('싱크 한 칸 지우고 뒤로'));
     await tester.pumpAndSettle();
     expect(find.text('0/3줄'), findsOneWidget);
+  });
+
+  testWidgets('싱크 설정: 덜 찍어도 저장 버튼을 누르면 찍은 곳까지 중간 저장된다', (tester) async {
+    final lyrics = await openSync(tester, '가 줄\n나 줄\n다 줄');
+    await tester.tap(find.text('확인'));
+    await tester.pumpAndSettle();
+    // 하나도 안 찍었을 때는 저장 버튼이 눌리지 않는다 (아래에서 하나 찍은 뒤 누른다)
+    expect(find.byTooltip('중간 저장 (찍은 곳까지)'), findsOneWidget);
+
+    final player = tester.element(find.text('가 줄')).read<NowPlayingCubit>();
+    player.seekTo(const Duration(seconds: 2));
+    await tester.pump();
+    await tester.tap(find.text('지금'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('중간 저장 (찍은 곳까지)'));
+    await tester.pumpAndSettle();
+    expect(lyrics.saved['t1'], '[00:02.00]가 줄\n나 줄\n다 줄');
   });
 
   testWidgets('싱크 설정: 재생 시간이 슬라이더 아래, 지금 버튼 위에 보인다', (tester) async {

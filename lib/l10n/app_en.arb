@@ -531,6 +531,7 @@
   "lyricsSyncNow": "Now",
   "lyricsSyncUndo": "Undo",
   "lyricsSyncPrevious": "Remove last sync and go back",
+  "lyricsSyncSavePartial": "Save progress (up to the stamped lines)",
   "lyricsSyncSave": "Save sync",
   "lyricsSyncGroup": "Lines per sync",
   "lyricsSyncGroupLines": "{n}",

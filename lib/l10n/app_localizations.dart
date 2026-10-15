@@ -2738,6 +2738,12 @@ abstract class AppLocalizations {
   /// **'싱크 한 칸 지우고 뒤로'**
   String get lyricsSyncPrevious;
 
+  /// No description provided for @lyricsSyncSavePartial.
+  ///
+  /// In ko, this message translates to:
+  /// **'중간 저장 (찍은 곳까지)'**
+  String get lyricsSyncSavePartial;
+
   /// No description provided for @lyricsSyncSave.
   ///
   /// In ko, this message translates to:

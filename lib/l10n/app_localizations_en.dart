@@ -1470,6 +1470,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsSyncPrevious => 'Remove last sync and go back';
 
   @override
+  String get lyricsSyncSavePartial => 'Save progress (up to the stamped lines)';
+
+  @override
   String get lyricsSyncSave => 'Save sync';
 
   @override

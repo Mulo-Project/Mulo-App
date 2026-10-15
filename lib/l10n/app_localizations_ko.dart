@@ -1439,6 +1439,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsSyncPrevious => '싱크 한 칸 지우고 뒤로';
 
   @override
+  String get lyricsSyncSavePartial => '중간 저장 (찍은 곳까지)';
+
+  @override
   String get lyricsSyncSave => '싱크 저장';
 
   @override
