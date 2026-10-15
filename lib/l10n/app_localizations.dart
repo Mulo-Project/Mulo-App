@@ -2786,6 +2786,24 @@ abstract class AppLocalizations {
   /// **'일시정지'**
   String get lyricsSyncPause;
 
+  /// No description provided for @lyricsSyncBack.
+  ///
+  /// In ko, this message translates to:
+  /// **'5초 전'**
+  String get lyricsSyncBack;
+
+  /// No description provided for @lyricsSyncBackTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'5초 전으로 되돌려 듣기'**
+  String get lyricsSyncBackTooltip;
+
+  /// No description provided for @lyricsSyncSeek.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생 위치'**
+  String get lyricsSyncSeek;
+
   /// No description provided for @lyricsSyncProgress.
   ///
   /// In ko, this message translates to:

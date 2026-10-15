@@ -1496,6 +1496,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsSyncPause => 'Pause';
 
   @override
+  String get lyricsSyncBack => 'Back 5s';
+
+  @override
+  String get lyricsSyncBackTooltip => 'Go back 5 seconds';
+
+  @override
+  String get lyricsSyncSeek => 'Playback position';
+
+  @override
   String lyricsSyncProgress(int done, int total) {
     return '$done/$total lines';
   }

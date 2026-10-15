@@ -14,6 +14,7 @@ class AppSlider extends StatelessWidget {
     this.max = 1,
     this.vertical = false,
     this.centered = false,
+    this.marks = const [],
     this.semanticLabel,
   });
 
@@ -28,6 +29,9 @@ class AppSlider extends StatelessWidget {
 
   /// true면 가운데(0)에서부터 채운다 (±범위 슬라이더).
   final bool centered;
+
+  /// 트랙 위에 작게 찍는 표시 위치 ([min]~[max] 값). 가로 슬라이더만.
+  final List<double> marks;
   final String? semanticLabel;
 
   static const double _track = 4;
@@ -130,6 +134,24 @@ class AppSlider extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (!vertical)
+                      for (final m in marks)
+                        along(
+                          _fraction(m),
+                          0,
+                          OverflowBox(
+                            maxWidth: 2,
+                            maxHeight: _track + 8,
+                            child: Container(
+                              width: 2,
+                              height: _track + 8,
+                              decoration: ShapeDecoration(
+                                color: p.onSurface.withValues(alpha: .55),
+                                shape: const StadiumBorder(),
+                              ),
+                            ),
+                          ),
+                        ),
                     along(
                       f,
                       0,

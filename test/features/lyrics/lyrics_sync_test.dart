@@ -150,7 +150,16 @@ void main() {
 
     final player = tester.element(find.text('가 줄')).read<NowPlayingCubit>();
     expect(player.state.track?.id, 't1');
-    expect(player.state.isPlaying, isTrue);
+    // 들어오면 멈춘 채 처음(0초)에 서 있다
+    expect(player.state.isPlaying, isFalse);
+    expect(player.state.position, Duration.zero);
+
+    player.togglePlay();
+    player.seekTo(const Duration(seconds: 30));
+    await tester.pump();
+    await tester.tap(find.byTooltip('5초 전으로 되돌려 듣기'));
+    await tester.pump();
+    expect(player.state.position, const Duration(seconds: 25));
 
     player.seekTo(const Duration(seconds: 3));
     await tester.pump();
@@ -251,7 +260,7 @@ void main() {
     expect(find.text('완료'), findsNothing);
   });
 
-  testWidgets('싱크 설정: 상단에 줄 수와 함께 재생 시간이 보인다', (tester) async {
+  testWidgets('싱크 설정: 재생 시간이 슬라이더 아래, 지금 버튼 위에 보인다', (tester) async {
     await openSync(tester, '가 줄\n나 줄');
     await tester.tap(find.text('확인'));
     await tester.pumpAndSettle();
@@ -263,7 +272,7 @@ void main() {
     );
     expect(
       tester.getTopLeft(clock).dy,
-      lessThan(tester.getTopLeft(find.text('가 줄')).dy),
+      greaterThan(tester.getTopLeft(find.text('가 줄')).dy),
     );
   });
 }

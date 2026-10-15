@@ -39,6 +39,7 @@ class LyricsSyncScreen extends StatefulWidget {
 
 class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
   static const _lead = Duration(seconds: 2);
+  static const _backBy = Duration(seconds: 5);
   var _keys = <GlobalKey>[];
 
   @override
@@ -48,16 +49,17 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
       context.read<LyricsSyncCubit>().state.draft.length,
       (_) => GlobalKey(),
     );
-    // 이 곡을 재생 중이 아니면 이 곡을 처음부터 틀고, 같은 곡이면 이어서 듣는다.
+    // 들어오면 재생 중이던 소리는 멈추고, 이 곡을 0초에 세워 둔다 (재생은 직접 누른다).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _askDefaultGroup();
       final np = context.read<NowPlayingCubit>();
       if (np.state.track != widget.track) {
         np.playQueue([widget.track]);
-      } else if (!np.state.isPlaying) {
-        np.togglePlay();
+      } else {
+        np.seekTo(Duration.zero);
       }
+      if (np.state.isPlaying) np.togglePlay();
     });
   }
 
@@ -137,6 +139,13 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
     if (draft.current == before) return;
     final prev = draft.current > 0 ? draft.times[draft.current - 1] : null;
     _replay(prev ?? Duration.zero);
+  }
+
+  /// 지금 위치에서 [_backBy]만큼 되돌려 계속 듣는다 ('지금'을 놓쳤을 때).
+  void _backUp() {
+    final np = context.read<NowPlayingCubit>();
+    np.seekTo(np.state.position - _backBy);
+    if (!np.state.isPlaying) np.togglePlay();
   }
 
   /// [time]보다 조금 앞에서 다시 재생한다 (찍은 곳이 맞는지 앞 소리까지 듣도록).
@@ -230,13 +239,6 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
                       ],
                     ),
                   ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: _ClockText(),
-                    ),
-                  ),
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.lg,
@@ -280,7 +282,7 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
                             ),
                           ),
                   ),
-                  _ControlBar(onNow: _now, onUndo: _undo),
+                  _ControlBar(onNow: _now, onUndo: _undo, onBack: _backUp),
                 ],
               ),
             ),
@@ -423,10 +425,15 @@ class _LineRow extends StatelessWidget {
 }
 
 class _ControlBar extends StatelessWidget {
-  const _ControlBar({required this.onNow, required this.onUndo});
+  const _ControlBar({
+    required this.onNow,
+    required this.onUndo,
+    required this.onBack,
+  });
 
   final VoidCallback onNow;
   final VoidCallback onUndo;
+  final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context) {
@@ -434,6 +441,15 @@ class _ControlBar extends StatelessWidget {
     final np = context.watch<NowPlayingCubit>();
     final sync = context.watch<LyricsSyncCubit>();
     final draft = sync.state.draft;
+    final total = np.state.track?.duration ?? Duration.zero;
+    final totalMs = total.inMilliseconds;
+    // 찍어 둔 줄마다 슬라이더 위에 작은 표시를 남긴다.
+    final marks = totalMs == 0
+        ? const <double>[]
+        : [
+            for (final t in draft.times)
+              if (t != null) t.inMilliseconds / totalMs,
+          ];
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.md,
@@ -444,6 +460,16 @@ class _ControlBar extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          AppSlider(
+            semanticLabel: l10n.lyricsSyncSeek,
+            value: totalMs == 0
+                ? 0
+                : np.state.position.inMilliseconds / totalMs,
+            marks: marks,
+            onChanged: totalMs == 0 ? null : np.seekFraction,
+          ),
+          const Align(alignment: Alignment.centerRight, child: _ClockText()),
+          const SizedBox(height: AppSpacing.xs),
           Row(
             children: [
               CircleIconButton(
@@ -461,6 +487,12 @@ class _ControlBar extends StatelessWidget {
                 onPressed: np.togglePlay,
               ),
               const SizedBox(width: AppSpacing.sm),
+              PlainButton(
+                icon: AppIcons.replay,
+                label: l10n.lyricsSyncBack,
+                tooltip: l10n.lyricsSyncBackTooltip,
+                onPressed: onBack,
+              ),
               Expanded(
                 child: Align(
                   alignment: Alignment.centerRight,

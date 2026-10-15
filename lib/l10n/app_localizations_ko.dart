@@ -1465,6 +1465,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsSyncPause => '일시정지';
 
   @override
+  String get lyricsSyncBack => '5초 전';
+
+  @override
+  String get lyricsSyncBackTooltip => '5초 전으로 되돌려 듣기';
+
+  @override
+  String get lyricsSyncSeek => '재생 위치';
+
+  @override
   String lyricsSyncProgress(int done, int total) {
     return '$done/$total줄';
   }
