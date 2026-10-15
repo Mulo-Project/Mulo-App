@@ -44,6 +44,8 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
   static const _steps = [10, 100, 500, 1000, 3000, 5000, 10000, 30000, 60000];
   var _stepMs = 500;
   var _autoPause = false;
+  int? _dragFrom;
+  int? _dragTo;
   var _keys = <GlobalKey>[];
   StreamSubscription<NowPlayingState>? _positionWatch;
 
@@ -169,6 +171,38 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
     context.read<NowPlayingCubit>().seekTo(time);
   }
 
+  /// 끌고 있는 손가락 아래 칸을 찾아 묶을 범위의 끝으로 삼는다.
+  void _dragMove(double dy, SyncDraft draft) {
+    final from = _dragFrom;
+    if (from == null) return;
+    var to = from;
+    for (var i = from; i < _keys.length && i < draft.length; i++) {
+      final box = _keys[i].currentContext?.findRenderObject();
+      if (box is! RenderBox || !box.attached) continue;
+      final top = box.localToGlobal(Offset.zero).dy;
+      if (dy >= top) to = i;
+    }
+    if (to != _dragTo) setState(() => _dragTo = to);
+  }
+
+  /// 손을 떼면 고른 범위를 한 칸으로 묶는다 (이미 찍은 싱크가 지워지면 먼저 묻는다).
+  Future<void> _dragEnd() async {
+    final from = _dragFrom;
+    final to = _dragTo;
+    setState(() {
+      _dragFrom = null;
+      _dragTo = null;
+    });
+    if (from == null || to == null || to <= from) return;
+    final sync = context.read<LyricsSyncCubit>();
+    if (sync.rangeErasesStamped(from, to) &&
+        !await confirmLyricsSkipMerge(context)) {
+      return;
+    }
+    if (!mounted) return;
+    sync.mergeRange(from, to);
+  }
+
   /// 가사 칸 목록. 줄별로 펼친 영역이 있으면 그 칸들을 색 바탕 한 영역으로 묶어 보여 준다.
   List<Widget> _rows(BuildContext context, LyricsSyncState state) {
     final draft = state.draft;
@@ -177,32 +211,49 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
     final p = context.palette;
     final ex = state.expanded;
 
-    Widget row(int i) => _LineRow(
-      key: _keys[i],
-      index: i,
-      draft: draft,
-      selected: state.selected == i,
-      canGroup: sync.canGroup,
-      clock: _clock,
-      onLongPress: sync.canGroup && draft.sizes[i] > 1
-          ? () => sync.expand(i)
-          : null,
-      onTap: () async {
-        if (i == draft.current) return _now();
-        // 건너뛰면 사이에 찍어 둔 싱크가 사라지니 먼저 묻는다.
-        if (sync.skipErasesStamped(i) &&
-            !await confirmLyricsSkipMerge(context)) {
-          return;
-        }
-        if (!context.mounted) return;
-        sync.select(i);
-        // 찍어 둔 줄이면 재생도 그 싱크 위치로 옮긴다.
-        final time = draft.times[i];
-        if (time != null) {
-          context.read<NowPlayingCubit>().seekTo(time);
-        }
-      },
-    );
+    Widget row(int i) {
+      final dragRange =
+          _dragFrom != null &&
+          _dragTo != null &&
+          i >= _dragFrom! &&
+          i <= _dragTo!;
+      final merged = draft.sizes[i] > 1;
+      final line = _LineRow(
+        key: _keys[i],
+        index: i,
+        draft: draft,
+        selected: state.selected == i,
+        inRange: dragRange,
+        canGroup: sync.canGroup,
+        clock: _clock,
+        onLongPress: sync.canGroup && merged ? () => sync.expand(i) : null,
+        onTap: () {
+          if (i == draft.current) return _now();
+          sync.select(i);
+          // 찍어 둔 줄이면 재생도 그 싱크 위치로 옮긴다.
+          final time = draft.times[i];
+          if (time != null) {
+            context.read<NowPlayingCubit>().seekTo(time);
+          }
+        },
+      );
+      // 한 줄짜리 칸은 꾹 누른 채 아래로 끌어 묶을 범위를 고른다.
+      if (!sync.canGroup || merged) return line;
+      return GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onLongPressStart: (_) => setState(() {
+          _dragFrom = i;
+          _dragTo = i;
+        }),
+        onLongPressMoveUpdate: (d) => _dragMove(d.globalPosition.dy, draft),
+        onLongPressEnd: (_) => _dragEnd(),
+        onLongPressCancel: () => setState(() {
+          _dragFrom = null;
+          _dragTo = null;
+        }),
+        child: line,
+      );
+    }
 
     final out = <Widget>[];
     var i = 0;
@@ -450,6 +501,7 @@ class _LineRow extends StatelessWidget {
     required this.index,
     required this.draft,
     required this.selected,
+    this.inRange = false,
     required this.canGroup,
     required this.clock,
     required this.onTap,
@@ -459,6 +511,7 @@ class _LineRow extends StatelessWidget {
   final int index;
   final SyncDraft draft;
   final bool selected;
+  final bool inRange;
   final bool canGroup;
   final String Function(Duration) clock;
   final VoidCallback onTap;
@@ -574,7 +627,7 @@ class _LineRow extends StatelessWidget {
                       ),
                   ],
                 ),
-                // 뒤에 찍은 싱크가 더 있으면 이 싱크로 되돌리는 취소, 이 칸이 가장 뒤면 다음 줄과 묶기.
+                // 뒤에 찍은 싱크가 더 있으면 이 싱크로 되돌리는 취소.
                 if (draft.times.skip(index + 1).any((t) => t != null))
                   Align(
                     alignment: Alignment.centerRight,
@@ -583,15 +636,6 @@ class _LineRow extends StatelessWidget {
                       label: l10n.lyricsSyncCancelAfter,
                       tooltip: l10n.lyricsSyncCancelAfterHint,
                       onPressed: () => sync.rewindTo(index),
-                    ),
-                  )
-                else if (canGroup && index + 1 < draft.length)
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: PlainButton(
-                      icon: AppIcons.dragHandle,
-                      label: l10n.lyricsSyncMergeNext,
-                      onPressed: () => sync.mergeNext(index),
                     ),
                   ),
               ],
@@ -603,7 +647,9 @@ class _LineRow extends StatelessWidget {
     return AnimatedContainer(
       duration: AppMotion.fast,
       decoration: BoxDecoration(
-        color: selected ? p.accent.withValues(alpha: .16) : null,
+        color: selected || inRange
+            ? p.accent.withValues(alpha: inRange ? .22 : .16)
+            : null,
         borderRadius: BorderRadius.circular(AppRadii.sm),
       ),
       child: block,

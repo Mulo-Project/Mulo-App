@@ -159,21 +159,22 @@ class SyncDraft extends Equatable {
     );
   }
 
-  /// [index] 칸을 바로 다음 칸과 한 칸으로 합친다. 합친 칸은 [index] 칸의 시간을 그대로 쓰고
-  /// 다음 칸의 시간은 사라진다. 되돌리기 기록은 비운다.
-  SyncDraft mergeNext(int index) {
-    if (index < 0 || index + 1 >= length) return this;
-    final next = current <= index
-        ? current
-        : (current - 1 < index + 1 ? index + 1 : current - 1);
+  /// [from] 칸부터 [to] 칸까지를 한 칸으로 합친다. 합친 칸은 [from] 칸의 시간을 그대로 쓰고
+  /// 나머지 칸의 시간은 사라진다. 되돌리기 기록은 비운다.
+  SyncDraft mergeRange(int from, int to) {
+    if (from < 0 || to >= length || to <= from) return this;
+    final removed = to - from;
+    final next = current > to
+        ? current - removed
+        : (current > from ? from + 1 : current);
     return SyncDraft._(
       lines,
       [
-        ...sizes.take(index),
-        sizes[index] + sizes[index + 1],
-        ...sizes.skip(index + 2),
+        ...sizes.take(from),
+        sizes.skip(from).take(removed + 1).fold(0, (a, b) => a + b),
+        ...sizes.skip(to + 1),
       ],
-      [...times.take(index + 1), ...times.skip(index + 2)],
+      [...times.take(from + 1), ...times.skip(to + 1)],
       next,
       const [],
     );

@@ -1561,9 +1561,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Lines shown separately · set each time; tap outside to re-merge lines with the same time';
 
   @override
-  String get lyricsSyncMergeNext => 'Merge with next';
-
-  @override
   String get lyricsSyncCancelAfter => 'Cancel later syncs';
 
   @override
@@ -1575,7 +1572,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lyricsSyncSkipBody =>
-      'Skipping merges the lines in between into one block and removes the syncs already stamped there. Continue?';
+      'The range contains syncs you already stamped. Merging it into one block removes them. Continue?';
 
   @override
   String get lyricsSyncSkipConfirm => 'Merge';

@@ -1528,9 +1528,6 @@ class AppLocalizationsKo extends AppLocalizations {
       '줄별로 펼쳤어요 · 시간을 따로 정할 수 있고, 영역 밖을 누르면 시간이 같은 줄은 다시 합쳐져요';
 
   @override
-  String get lyricsSyncMergeNext => '다음 줄과 묶기';
-
-  @override
   String get lyricsSyncCancelAfter => '싱크 취소하기';
 
   @override
@@ -1541,7 +1538,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get lyricsSyncSkipBody =>
-      '건너뛰면 사이에 이미 찍어 둔 줄들이 한 칸으로 묶이면서 그 싱크가 지워져요. 계속할까요?';
+      '묶을 범위 안에 이미 찍어 둔 싱크가 있어요. 한 칸으로 묶으면 그 싱크는 지워져요. 계속할까요?';
 
   @override
   String get lyricsSyncSkipConfirm => '묶기';

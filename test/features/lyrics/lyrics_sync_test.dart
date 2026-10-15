@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -22,10 +23,10 @@ Track _t(String id, String title) => Track(
 );
 
 void main() {
-  test('안 찍은 뒤쪽 줄을 누르면 건너뛴 줄들이 그 줄과 한 칸으로 묶인다', () {
+  test('고른 범위를 한 칸으로 묶고 풀 수 있다', () {
     final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다\n라')!)
       ..stamp(const Duration(seconds: 1));
-    cubit.select(3);
+    cubit.mergeRange(1, 3);
     expect(cubit.state.draft.texts, ['가', '나\n다\n라']);
     expect(cubit.state.draft.current, 1);
     expect(cubit.isMerged(1), isTrue);
@@ -47,35 +48,31 @@ void main() {
     ]);
   });
 
-  test('포커스한 곳 다음 칸부터 안 찍은 줄까지가 한 칸으로 묶인다', () {
+  test('안 찍은 줄을 눌러도 묶지 않고 그 줄로 이동만 한다', () {
     final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다\n라\n마')!)
       ..stamp(const Duration(seconds: 1))
       ..stamp(const Duration(seconds: 2))
       ..stamp(const Duration(seconds: 3));
     cubit.select(0);
     expect(cubit.state.draft.current, 1);
-    expect(cubit.skipErasesStamped(4), isTrue);
     cubit.select(4);
-    expect(cubit.state.draft.texts, ['가', '나\n다\n라\n마']);
-    expect(cubit.state.draft.times, [const Duration(seconds: 1), null]);
+    expect(cubit.state.draft.current, 4);
+    expect(cubit.state.draft.texts, ['가', '나', '다', '라', '마']);
   });
 
-  test('건너뛰면 사이에 찍어 둔 싱크가 사라질 때만 알아챈다', () {
+  test('범위 안에 이미 찍어 둔 싱크가 있을 때만 사라진다고 알아챈다', () {
     final cubit = LyricsSyncCubit(Lyrics.parse('a\nb\nc\nd\ne')!)
       ..stamp(const Duration(seconds: 1))
-      ..select(2)
       ..stamp(const Duration(seconds: 2))
       ..stamp(const Duration(seconds: 3));
-    cubit.split(1);
-    // 칸: [a] [b] [c] [d] [e], 시간: 1초 - - 3초 -
-    expect(cubit.skipErasesStamped(4), isTrue);
-    expect(cubit.skipErasesStamped(2), isFalse);
+    expect(cubit.rangeErasesStamped(0, 2), isTrue);
+    expect(cubit.rangeErasesStamped(3, 4), isFalse);
   });
 
   test('묶인 칸을 펼쳐 한 줄의 시간을 바꾸면 그 줄만 따로 남고, 영역 밖을 누르면 같은 시간끼리 다시 합쳐진다', () {
     final cubit = LyricsSyncCubit(Lyrics.parse('a\nb\nc\nd')!)
       ..stamp(const Duration(seconds: 1))
-      ..select(3)
+      ..mergeRange(1, 3)
       ..stamp(const Duration(seconds: 5));
     // 칸: [a] [b c d]
     expect(cubit.state.draft.texts, ['a', 'b\nc\nd']);
@@ -103,7 +100,7 @@ void main() {
   test('펼친 줄의 시간이 그대로면 영역 밖을 누를 때 원래대로 합쳐진다', () {
     final cubit = LyricsSyncCubit(Lyrics.parse('a\nb\nc\nd')!)
       ..stamp(const Duration(seconds: 1))
-      ..select(3)
+      ..mergeRange(1, 3)
       ..stamp(const Duration(seconds: 5))
       ..expand(1)
       ..select(0);
@@ -111,12 +108,12 @@ void main() {
     expect(cubit.state.draft.texts, ['a', 'b\nc\nd']);
   });
 
-  test('찍힌 칸끼리도 다음 칸과 합칠 수 있고 앞 칸의 시간을 쓴다', () {
+  test('찍힌 칸끼리도 범위로 합칠 수 있고 앞 칸의 시간을 쓴다', () {
     final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다')!)
       ..stamp(const Duration(seconds: 1))
       ..stamp(const Duration(seconds: 2))
       ..stamp(const Duration(seconds: 3));
-    cubit.mergeNext(0);
+    cubit.mergeRange(0, 1);
     expect(cubit.state.draft.texts, ['가\n나', '다']);
     expect(cubit.state.draft.times, [
       const Duration(seconds: 1),
@@ -326,6 +323,15 @@ void main() {
     expect(find.text('가사를 저장했어요'), findsOneWidget);
   });
 
+  Future<void> dragMerge(WidgetTester tester, String from, String to) async {
+    final g = await tester.startGesture(tester.getCenter(find.text(from)));
+    await tester.pump(kLongPressTimeout + const Duration(milliseconds: 100));
+    await g.moveTo(tester.getCenter(find.text(to)));
+    await tester.pump();
+    await g.up();
+    await tester.pumpAndSettle();
+  }
+
   Future<void> openSync(WidgetTester tester, String text) async {
     tester.view.physicalSize = const Size(1170, 2532);
     tester.view.devicePixelRatio = 3;
@@ -378,14 +384,13 @@ void main() {
     expect(find.text('0/4줄'), findsOneWidget);
   });
 
-  testWidgets('싱크 설정: 줄을 건너뛰면 한 칸으로 묶여 표시되고 풀 수 있다', (tester) async {
+  testWidgets('싱크 설정: 꾹 눌러 끌면 범위가 한 칸으로 묶여 표시되고 풀 수 있다', (tester) async {
     await openSync(tester, '가 줄\n나 줄\n다 줄\n라 줄');
     await tester.tap(find.text('확인'));
     await tester.pumpAndSettle();
     expect(find.text('0/4줄'), findsOneWidget);
 
-    await tester.tap(find.text('다 줄'));
-    await tester.pumpAndSettle();
+    await dragMerge(tester, '가 줄', '다 줄');
     expect(find.text('0/2줄'), findsOneWidget);
     expect(find.text('가 줄\n나 줄\n다 줄'), findsOneWidget);
     expect(find.text('3줄 같은 시간으로 묶음'), findsOneWidget);
@@ -404,8 +409,7 @@ void main() {
     await openSync(tester, '가 줄\n나 줄\n다 줄\n라 줄');
     await tester.tap(find.text('확인'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('다 줄'));
-    await tester.pumpAndSettle();
+    await dragMerge(tester, '가 줄', '다 줄');
     await tester.tap(find.text('지금'));
     await tester.pumpAndSettle();
     expect(find.text('가 줄\n나 줄\n다 줄'), findsOneWidget);
@@ -423,7 +427,9 @@ void main() {
     expect(find.text('가 줄\n나 줄\n다 줄'), findsOneWidget);
   });
 
-  testWidgets('싱크 설정: 뒤에 싱크가 있으면 싱크 취소하기, 가장 뒤면 다음 줄과 묶기가 보인다', (tester) async {
+  testWidgets('싱크 설정: 뒤에 싱크가 있는 칸을 고르면 싱크 취소하기가 보이고 누르면 그 싱크로 초기화된다', (
+    tester,
+  ) async {
     await openSync(tester, '가 줄\n나 줄\n다 줄');
     await tester.tap(find.text('확인'));
     await tester.pumpAndSettle();
@@ -436,15 +442,13 @@ void main() {
     await tester.pump();
     await tester.tap(find.text('지금'));
     await tester.pumpAndSettle();
-    // 가장 뒤에 찍은 칸이 선택돼 있다
-    expect(find.text('다음 줄과 묶기'), findsOneWidget);
+    // 가장 뒤에 찍은 칸이 선택돼 있어 취소할 뒤 싱크가 없다
     expect(find.text('싱크 취소하기'), findsNothing);
 
     // 앞쪽 칸을 고르면 취소하기가 나오고, 누르면 그 싱크로 초기화된다
     await tester.tap(find.text('00:02.00'));
     await tester.pumpAndSettle();
     expect(find.text('싱크 취소하기'), findsOneWidget);
-    expect(find.text('다음 줄과 묶기'), findsNothing);
     await tester.tap(find.text('싱크 취소하기'));
     await tester.pumpAndSettle();
     expect(find.text('1/3줄'), findsOneWidget);

@@ -128,16 +128,27 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
     );
   }
 
-  /// 선택한 [index] 칸을 바로 다음 칸과 한 칸으로 합친다 (이 칸의 시간을 그대로 쓴다).
-  /// 이미 찍힌 칸끼리도 합칠 수 있다. 다음 칸의 싱크는 사라진다.
-  void mergeNext(int index) {
+  /// [from]~[to] 칸을 한 칸으로 묶는다 (끌어서 고른 범위). [from] 칸의 시간을 쓰고, 나머지 칸의
+  /// 싱크는 사라진다.
+  void mergeRange(int from, int to) {
     if (!canGroup) return;
-    final at = _collapseNow()(index);
+    final map = _collapseNow();
+    final a = map(from), b = map(to);
     final draft = state.draft;
-    if (at < 0 || at + 1 >= draft.length) return;
+    if (a < 0 || b >= draft.length || b <= a) return;
     emit(
-      LyricsSyncState(draft.mergeNext(at), selected: at, group: state.group),
+      LyricsSyncState(draft.mergeRange(a, b), selected: a, group: state.group),
     );
+  }
+
+  /// [from]~[to] 칸을 묶으면 [from] 다음 칸들의 이미 찍어 둔 싱크가 사라지는가.
+  bool rangeErasesStamped(int from, int to) {
+    final draft = state.draft;
+    if (from < 0 || to >= draft.length) return false;
+    for (var i = from + 1; i <= to; i++) {
+      if (draft.times[i] != null) return true;
+    }
+    return false;
   }
 
   /// [position]을 다음 줄에 찍는다. 찍은 줄이 선택돼 바로 다듬을 수 있다.
@@ -149,20 +160,8 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
     _put(draft.stamp(position), selected: at);
   }
 
-  /// [index] 칸을 눌러 건너뛰면 다음에 찍을 칸부터 그 칸 사이에 이미 찍어 둔 싱크가 묶음에 삼켜져 사라지는가.
-  bool skipErasesStamped(int index) {
-    final draft = state.draft;
-    if (!canGroup || index < 0 || index >= draft.length) return false;
-    if (draft.times[index] != null) return false;
-    if (index <= draft.current) return false;
-    for (var i = draft.current; i < index; i++) {
-      if (draft.times[i] != null) return true;
-    }
-    return false;
-  }
-
   /// 줄을 눌렀을 때: 찍은 줄은 선택하고 다음 줄부터 다시 찍도록 옮긴다 (뒤쪽 싱크는 새로 찍으면 덮어쓴다).
-  /// 아직 안 찍은 뒤쪽 줄이면 그 사이 줄을 건너뛰는 것이므로, 건너뛴 줄들을 그 줄과 한 칸(같은 시간)으로 묶는다.
+  /// 아직 안 찍은 줄이면 거기부터 찍도록 옮기기만 한다 (묶기는 꾹 눌러 끌어서 따로 한다).
   void select(int index) {
     if (index < 0 || index >= state.draft.length) return;
     final ex = state.expanded;
@@ -183,25 +182,8 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
       );
       return;
     }
-    // 건너뛰기는 포커스한 곳(다음에 찍을 칸)부터 누른 줄까지다.
-    final first = draft.current;
-    if (index <= first || !canGroup) {
-      emit(
-        LyricsSyncState(draft.moveTo(index), group: state.group, expanded: ex),
-      );
-      return;
-    }
-    // 건너뛰어 묶으면 칸 구조가 바뀌므로 펼친 영역이 있으면 먼저 접는다.
-    if (ex != null) {
-      select(_collapseNow()(index));
-      return;
-    }
-    final end = draft.startOf(index) + draft.sizes[index] - 1;
     emit(
-      LyricsSyncState(
-        draft.regroup(first, end, group: state.group).moveTo(first),
-        group: state.group,
-      ),
+      LyricsSyncState(draft.moveTo(index), group: state.group, expanded: ex),
     );
   }
 
