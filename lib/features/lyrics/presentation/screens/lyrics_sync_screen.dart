@@ -156,8 +156,14 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
   }
 
   void _now() {
-    final position = context.read<NowPlayingCubit>().state.position;
-    context.read<LyricsSyncCubit>().stamp(position);
+    final np = context.read<NowPlayingCubit>();
+    final sync = context.read<LyricsSyncCubit>();
+    final stamped = sync.state.draft.current;
+    sync.stamp(np.state.position);
+    // 찍은 뒤 포커스가 이미 싱크된 칸으로 넘어갔으면, 재생도 그 싱크 위치로 맞춘다 (빈 칸이면 그대로 이어서 재생).
+    final next = sync.state.selected;
+    final time = next == null ? null : sync.state.draft.times[next];
+    if (next != null && next != stamped && time != null) np.seekTo(time);
   }
 
   /// 뒤로: 가장 뒤에 찍은 싱크를 하나 지우고 그 줄로 돌아간다. 누를 때마다 한 칸씩 지운다.

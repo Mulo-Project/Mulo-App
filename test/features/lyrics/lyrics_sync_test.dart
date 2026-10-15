@@ -709,6 +709,39 @@ void main() {
     expect(offset(), greaterThan(before));
   });
 
+  testWidgets('싱크 설정: 지금으로 이미 싱크된 칸으로 넘어가면 재생도 그 싱크 위치로 맞춰진다', (tester) async {
+    await openSync(tester, '가 줄\n나 줄\n다 줄');
+    await tester.tap(find.text('확인'));
+    await tester.pumpAndSettle();
+    final player = tester.element(find.text('가 줄')).read<NowPlayingCubit>();
+    player.seekTo(const Duration(seconds: 2));
+    await tester.pump();
+    await tester.tap(find.text('지금'));
+    await tester.pumpAndSettle();
+    player.seekTo(const Duration(seconds: 8));
+    await tester.pump();
+    await tester.tap(find.text('지금'));
+    await tester.pumpAndSettle();
+
+    // 첫 칸을 눌러 다시 찍으면 포커스가 이미 싱크된 둘째 칸(8초)으로 넘어가고 재생도 거기로 간다
+    await tester.tap(find.text('00:02.00'));
+    await tester.pumpAndSettle();
+    player.seekTo(const Duration(seconds: 1));
+    await tester.pump();
+    await tester.tap(find.text('지금'));
+    await tester.pumpAndSettle();
+    expect(player.state.position, const Duration(seconds: 8));
+
+    // 다음이 빈 칸이면 재생 위치는 그대로다
+    await tester.tap(find.text('00:08.00'));
+    await tester.pumpAndSettle();
+    player.seekTo(const Duration(seconds: 9));
+    await tester.pump();
+    await tester.tap(find.text('지금'));
+    await tester.pumpAndSettle();
+    expect(player.state.position, const Duration(seconds: 9));
+  });
+
   testWidgets('싱크 설정: 재생 시간이 슬라이더 아래, 지금 버튼 위에 보인다', (tester) async {
     await openSync(tester, '가 줄\n나 줄');
     await tester.tap(find.text('확인'));
