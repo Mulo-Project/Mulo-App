@@ -232,7 +232,7 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
         clock: _clock,
         onLongPress: sync.canGroup && merged ? () => sync.expand(i) : null,
         onTap: () {
-          if (i == draft.current) return _now();
+          // 줄을 눌러서는 싱크를 찍지 않는다 (싱크 등록은 지금 버튼으로만).
           sync.select(i);
           // 찍어 둔 줄이면 재생도 그 싱크 위치로 옮긴다.
           final time = draft.times[i];
