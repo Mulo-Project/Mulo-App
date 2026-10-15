@@ -1,3 +1,4 @@
+import '../entities/background_status.dart';
 import '../entities/new_video_download_request.dart';
 import '../entities/subscribed_channel.dart';
 import '../entities/subscription_settings.dart';
@@ -48,6 +49,12 @@ abstract interface class BackgroundChecker {
 
   /// 떠 있는 새 영상 알림을 걷는다.
   Future<void> clearNotification();
+
+  /// 주기를 기다리지 않고 지금 한 번 확인한다 (끝나면 [status]의 마지막 확인 시각이 바뀐다).
+  Future<void> checkNow();
+
+  /// 예약 · 알림 막힘 · 마지막 확인 결과. 알 수 없으면 null.
+  Future<BackgroundStatus?> status();
 
   /// 샘플 내용의 새 영상 알림을 지금 띄운다 (알림 모양 확인용 임시 기능).
   Future<void> showTestNotification();

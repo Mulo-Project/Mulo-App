@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/core/di/injector.dart';
 import 'package:music_download_play_app/features/downloads/domain/repositories/download_queue_repository.dart';
+import 'package:music_download_play_app/features/subscriptions/domain/entities/background_status.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/entities/channel_details.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/entities/channel_hit.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/entities/new_video_download_request.dart';
@@ -159,6 +160,23 @@ void main() {
         isFalse,
       );
       expect(queue.requests, isEmpty);
+    });
+  });
+
+  group('백그라운드 확인 진단', () {
+    test('지금 확인은 한 번 돌리고 마지막 확인 결과를 읽어 온다', () async {
+      final fake = sl<BackgroundChecker>() as FakeBackgroundChecker;
+      fake.statusAfterCheck = BackgroundStatus(
+        scheduled: true,
+        lastRunAt: DateTime(2026, 1, 1),
+        channels: 2,
+        failedChannels: 1,
+      );
+      final cubit = sl<SubscriptionsCubit>();
+      await cubit.checkNow();
+      expect(fake.checkedNow, 1);
+      expect(cubit.state.checking, isFalse);
+      expect(cubit.state.status?.failedChannels, 1);
     });
   });
 

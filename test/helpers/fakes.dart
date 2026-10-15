@@ -65,6 +65,7 @@ import 'package:music_download_play_app/features/security/di.dart';
 import 'package:music_download_play_app/features/security/domain/entities/app_lock_settings.dart';
 import 'package:music_download_play_app/features/security/domain/repositories/app_lock_repository.dart';
 import 'package:music_download_play_app/features/subscriptions/di.dart';
+import 'package:music_download_play_app/features/subscriptions/domain/entities/background_status.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/entities/feed_video.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/entities/new_video_download_request.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/entities/subscribed_channel.dart';
@@ -1516,4 +1517,19 @@ class FakeBackgroundChecker implements BackgroundChecker {
 
   @override
   Future<void> showTestNotification() async => testShown++;
+
+  var checkedNow = 0;
+  BackgroundStatus? statusValue;
+
+  /// 지금 확인을 돌린 뒤 보이는 상태 (마지막 확인 시각이 바뀐 것처럼).
+  BackgroundStatus? statusAfterCheck;
+
+  @override
+  Future<void> checkNow() async {
+    checkedNow++;
+    statusValue = statusAfterCheck ?? statusValue;
+  }
+
+  @override
+  Future<BackgroundStatus?> status() async => statusValue;
 }

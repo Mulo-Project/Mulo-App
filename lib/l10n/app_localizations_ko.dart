@@ -1986,6 +1986,38 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsCheckWifiOnlyDesc => '데이터를 쓰지 않도록 와이파이에 연결됐을 때만 확인해요.';
 
   @override
+  String get settingsCheckNow => '지금 확인';
+
+  @override
+  String get settingsCheckNowChecking => '확인하는 중…';
+
+  @override
+  String get settingsCheckStatusNever => '아직 확인한 적이 없어요.';
+
+  @override
+  String settingsCheckStatusLast(String time) {
+    return '마지막 확인 $time';
+  }
+
+  @override
+  String settingsCheckStatusNotified(int count) {
+    return '새 영상 $count개를 알렸어요.';
+  }
+
+  @override
+  String settingsCheckStatusFailed(int count) {
+    return '채널 $count개를 읽지 못했어요.';
+  }
+
+  @override
+  String get settingsCheckStatusBlocked =>
+      '알림이 꺼져 있어 알리지 못했어요. 기기 설정에서 Mulo 알림(새 영상 포함)을 켜 주세요.';
+
+  @override
+  String get settingsCheckStatusNotScheduled =>
+      '주기 확인이 예약되지 않았어요. 위 스위치를 껐다 켜 보세요.';
+
+  @override
   String get notifChannelNewVideos => '새 영상';
 
   @override

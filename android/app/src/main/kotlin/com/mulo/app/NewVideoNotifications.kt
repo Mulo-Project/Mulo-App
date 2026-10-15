@@ -35,8 +35,17 @@ object NewVideoNotifications {
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
     private fun canNotify(context: Context): Boolean =
-        Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
-            context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) &&
+            manager(context).areNotificationsEnabled()
+
+    /** 알림이 막혀 있는지: 권한 · 앱 알림 설정이 꺼졌거나, 새 영상 알림 채널을 껐을 때. */
+    fun isBlocked(context: Context): Boolean {
+        if (!canNotify(context)) return true
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false
+        val ch = manager(context).getNotificationChannel(CHANNEL) ?: return false
+        return ch.importance == NotificationManager.IMPORTANCE_NONE
+    }
 
     private fun ensureChannel(context: Context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
@@ -53,14 +62,19 @@ object NewVideoNotifications {
 
     private fun notificationId(videoId: String) = VIDEO_ID_BASE + (videoId.hashCode() and 0xFFFFF)
 
-    /** 새 영상마다 알림을 띄운다 (많으면 최신 몇 개만). 둘 이상이면 묶음 알림도 띄운다. */
-    fun showVideos(context: Context, videos: List<NewVideo>) {
-        if (videos.isEmpty() || !canNotify(context)) return
+    /**
+     * 새 영상마다 알림을 띄운다 (많으면 최신 몇 개만). 둘 이상이면 묶음 알림도 띄운다.
+     * 알림이 막혀 있어 띄우지 못했으면 false (영상이 없으면 true).
+     */
+    fun showVideos(context: Context, videos: List<NewVideo>): Boolean {
+        if (videos.isEmpty()) return true
         ensureChannel(context)
+        if (isBlocked(context)) return false
         val nm = manager(context)
         val newest = videos.sortedByDescending { it.publishedMs }.take(MAX_VIDEO_NOTIFICATIONS)
         for (v in newest) nm.notify(notificationId(v.id), buildVideo(context, v))
         if (videos.size > 1) nm.notify(SUMMARY_ID, buildSummary(context, videos))
+        return true
     }
 
     private fun buildVideo(context: Context, v: NewVideo): Notification {
