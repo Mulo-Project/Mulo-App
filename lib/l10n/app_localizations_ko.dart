@@ -1531,6 +1531,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsSyncMergeNext => '다음 줄과 묶기';
 
   @override
+  String get lyricsSyncCancelAfter => '싱크 취소하기';
+
+  @override
+  String get lyricsSyncCancelAfterHint => '이 싱크 뒤에 찍은 싱크를 지우고 여기서부터 다시 찍어요';
+
+  @override
   String get lyricsSyncSkipTitle => '찍어 둔 싱크가 사라져요';
 
   @override

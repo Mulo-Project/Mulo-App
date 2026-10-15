@@ -1564,6 +1564,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsSyncMergeNext => 'Merge with next';
 
   @override
+  String get lyricsSyncCancelAfter => 'Cancel later syncs';
+
+  @override
+  String get lyricsSyncCancelAfterHint =>
+      'Clear the syncs stamped after this one and continue from here';
+
+  @override
   String get lyricsSyncSkipTitle => 'Stamped syncs will be lost';
 
   @override

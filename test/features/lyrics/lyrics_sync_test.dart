@@ -423,6 +423,34 @@ void main() {
     expect(find.text('가 줄\n나 줄\n다 줄'), findsOneWidget);
   });
 
+  testWidgets('싱크 설정: 뒤에 싱크가 있으면 싱크 취소하기, 가장 뒤면 다음 줄과 묶기가 보인다', (tester) async {
+    await openSync(tester, '가 줄\n나 줄\n다 줄');
+    await tester.tap(find.text('확인'));
+    await tester.pumpAndSettle();
+    final player = tester.element(find.text('가 줄')).read<NowPlayingCubit>();
+    player.seekTo(const Duration(seconds: 2));
+    await tester.pump();
+    await tester.tap(find.text('지금'));
+    await tester.pumpAndSettle();
+    player.seekTo(const Duration(seconds: 6));
+    await tester.pump();
+    await tester.tap(find.text('지금'));
+    await tester.pumpAndSettle();
+    // 가장 뒤에 찍은 칸이 선택돼 있다
+    expect(find.text('다음 줄과 묶기'), findsOneWidget);
+    expect(find.text('싱크 취소하기'), findsNothing);
+
+    // 앞쪽 칸을 고르면 취소하기가 나오고, 누르면 그 싱크로 초기화된다
+    await tester.tap(find.text('00:02.00'));
+    await tester.pumpAndSettle();
+    expect(find.text('싱크 취소하기'), findsOneWidget);
+    expect(find.text('다음 줄과 묶기'), findsNothing);
+    await tester.tap(find.text('싱크 취소하기'));
+    await tester.pumpAndSettle();
+    expect(find.text('1/3줄'), findsOneWidget);
+    expect(find.text('--:--.--'), findsNWidgets(2));
+  });
+
   testWidgets('싱크 설정: 이전 싱크로 버튼은 완료한 싱크를 한 칸씩 거슬러 포커스한다', (tester) async {
     await openSync(tester, '가 줄\n나 줄\n다 줄');
     await tester.tap(find.text('확인'));

@@ -574,7 +574,18 @@ class _LineRow extends StatelessWidget {
                       ),
                   ],
                 ),
-                if (canGroup && index + 1 < draft.length)
+                // 뒤에 찍은 싱크가 더 있으면 이 싱크로 되돌리는 취소, 이 칸이 가장 뒤면 다음 줄과 묶기.
+                if (draft.times.skip(index + 1).any((t) => t != null))
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: PlainButton(
+                      icon: AppIcons.undo,
+                      label: l10n.lyricsSyncCancelAfter,
+                      tooltip: l10n.lyricsSyncCancelAfterHint,
+                      onPressed: () => sync.rewindTo(index),
+                    ),
+                  )
+                else if (canGroup && index + 1 < draft.length)
                   Align(
                     alignment: Alignment.centerRight,
                     child: PlainButton(

@@ -2900,6 +2900,18 @@ abstract class AppLocalizations {
   /// **'다음 줄과 묶기'**
   String get lyricsSyncMergeNext;
 
+  /// No description provided for @lyricsSyncCancelAfter.
+  ///
+  /// In ko, this message translates to:
+  /// **'싱크 취소하기'**
+  String get lyricsSyncCancelAfter;
+
+  /// No description provided for @lyricsSyncCancelAfterHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 싱크 뒤에 찍은 싱크를 지우고 여기서부터 다시 찍어요'**
+  String get lyricsSyncCancelAfterHint;
+
   /// No description provided for @lyricsSyncSkipTitle.
   ///
   /// In ko, this message translates to:
