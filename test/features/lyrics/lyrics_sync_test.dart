@@ -47,6 +47,18 @@ void main() {
     expect(cubit.state.draft.isComplete, isTrue);
   });
 
+  test('이미 찍힌 칸을 같은 시간으로 다시 찍어도 묶이지 않는다', () {
+    final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다')!)
+      ..stamp(const Duration(seconds: 2))
+      ..stamp(const Duration(seconds: 4))
+      ..stamp(const Duration(seconds: 6));
+    cubit.select(0);
+    cubit.stamp(const Duration(seconds: 2));
+    cubit.stamp(const Duration(seconds: 2));
+    expect(cubit.state.draft.texts, ['가', '나', '다']);
+    expect(cubit.state.draft.times[1], const Duration(seconds: 2));
+  });
+
   group('SyncDraft', () {
     final plain = Lyrics.parse('첫 줄\n\n둘째 줄\n셋째 줄')!;
 

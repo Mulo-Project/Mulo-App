@@ -66,9 +66,11 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
     var draft = state.draft;
     var at = draft.current;
     if (at >= draft.length) return;
-    // 멈춘 채로 지금을 또 눌러 직전 줄과 완전히 같은 시간이 되면 같은 칸으로 묶는다 (1/100초 단위).
+    // 아직 안 찍은 칸을 멈춘 채 또 눌러 직전 줄과 완전히 같은 시간이 되면 같은 칸으로 묶는다 (1/100초 단위).
+    // 이미 찍힌 칸을 다시 찍을 때(덮어쓰기)는 묶지 않는다.
     final prev = at > 0 ? draft.times[at - 1] : null;
     if (canGroup &&
+        draft.times[at] == null &&
         prev != null &&
         (position - prev).inMilliseconds.abs() < 10) {
       final end = draft.startOf(at) + draft.sizes[at] - 1;
