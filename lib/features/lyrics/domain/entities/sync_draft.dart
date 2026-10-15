@@ -117,14 +117,36 @@ class SyncDraft extends Equatable {
     );
   }
 
-  /// [index] 줄의 시간을 [delta]만큼 옮긴다. 찍지 않은 줄이면 그대로.
+  /// [index] 줄의 시간을 [delta]만큼 옮긴다. 찍지 않은 줄이면 그대로. 앞뒤로 찍힌 이웃 싱크의 시간을 넘지 않고, 같은 시간인 이웃은 함께 움직인다.
   SyncDraft nudge(int index, Duration delta) {
     final t = index < 0 || index >= length ? null : times[index];
     if (t == null) return this;
-    return _change(
-      times: [...times]..[index] = _clamp(t + delta),
-      current: current,
-    );
+    var next = _clamp(t + delta);
+    final out = [...times];
+    if (delta >= Duration.zero) {
+      // 앞으로: 같은 시간인 뒤 칸들은 함께 밀고, 그 다음 싱크의 시간은 넘지 않는다.
+      var j = index + 1;
+      while (j < length && times[j] == t) {
+        j++;
+      }
+      final after = times.skip(j).whereType<Duration>().firstOrNull;
+      if (after != null && next > after) next = after;
+      for (var k = index; k < j; k++) {
+        out[k] = next;
+      }
+    } else {
+      // 뒤로: 같은 시간인 앞 칸들은 함께 당기고, 그 앞 싱크의 시간보다 앞서지 않는다.
+      var j = index - 1;
+      while (j >= 0 && times[j] == t) {
+        j--;
+      }
+      final before = times.take(j + 1).whereType<Duration>().lastOrNull;
+      if (before != null && next < before) next = before;
+      for (var k = j + 1; k <= index; k++) {
+        out[k] = next;
+      }
+    }
+    return _change(times: out, current: current);
   }
 
   /// 다음에 찍을 줄을 [index]로 옮긴다 (이미 찍은 시간은 그대로).

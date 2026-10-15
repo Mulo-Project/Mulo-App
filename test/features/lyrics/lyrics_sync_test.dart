@@ -117,11 +117,13 @@ void main() {
     cubit.nudge(const Duration(milliseconds: 500));
     expect(cubit.state.expanded, (1, 3));
     expect(cubit.state.draft.times[2], const Duration(milliseconds: 5500));
+    // 같은 시간이던 뒤 칸(d)은 함께 밀려 순서가 뒤집히지 않는다
+    expect(cubit.state.draft.times[3], const Duration(milliseconds: 5500));
 
-    // 영역 밖(첫 칸)을 누르면 접히고, 시간이 같던 줄(b)과 (d)는 이웃이 아니라 따로 남는다
+    // 영역 밖(첫 칸)을 누르면 접히고, 시간이 그대로인 b는 따로, 같은 시간인 c와 d는 다시 합쳐진다
     cubit.select(0);
     expect(cubit.state.expanded, isNull);
-    expect(cubit.state.draft.texts, ['a', 'b', 'c', 'd']);
+    expect(cubit.state.draft.texts, ['a', 'b', 'c\nd']);
   });
 
   test('펼친 줄의 시간이 그대로면 영역 밖을 누를 때 원래대로 합쳐진다', () {
@@ -182,6 +184,25 @@ void main() {
         const Duration(milliseconds: 300),
       );
       expect(d.nudge(2, const Duration(seconds: 1)), d);
+    });
+
+    test('시간 조정은 앞뒤 이웃 싱크의 시간을 넘지 않는다', () {
+      final d = SyncDraft.from(plain)
+          .stamp(const Duration(seconds: 2))
+          .stamp(const Duration(seconds: 4))
+          .stamp(const Duration(seconds: 6));
+      expect(
+        d.nudge(1, const Duration(seconds: 10)).times[1],
+        const Duration(seconds: 6),
+      );
+      expect(
+        d.nudge(1, const Duration(seconds: -10)).times[1],
+        const Duration(seconds: 2),
+      );
+      expect(
+        d.nudge(0, const Duration(seconds: 10)).times[0],
+        const Duration(seconds: 4),
+      );
     });
 
     test('되돌리기는 찍기와 조정을 차례로 취소한다', () {
