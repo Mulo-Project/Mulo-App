@@ -135,6 +135,7 @@ class _AppShellState extends State<AppShell> {
   @override
   void dispose() {
     _dockTimer?.cancel();
+    _measureTimer?.cancel();
     _floatPos.dispose();
     _floatMoving.dispose();
     super.dispose();
@@ -145,11 +146,23 @@ class _AppShellState extends State<AppShell> {
   final _barKey = GlobalKey();
   var _barHeight = 0.0;
 
+  Timer? _measureTimer;
+
+  /// 줄 높이가 움직이는 동안(펼침 · 접힘 애니메이션)에는 재지 않고, 멈춘 뒤 한 번만 반영한다.
+  /// 프레임마다 본문 여백을 바꾸면 본문 전체가 매번 다시 배치돼 버벅인다.
   bool _measureBar(SizeChangedLayoutNotification _) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    _measureTimer?.cancel();
+    void apply() {
       final h = (_barKey.currentContext?.size?.height) ?? 0.0;
       if (mounted && h != _barHeight) setState(() => _barHeight = h);
-    });
+    }
+
+    // 처음 나타날 때는 바로 반영하고, 그 뒤 움직이는 동안만 모았다가 반영한다.
+    if (_barHeight == 0) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => apply());
+    } else {
+      _measureTimer = Timer(const Duration(milliseconds: 80), apply);
+    }
     return true;
   }
 

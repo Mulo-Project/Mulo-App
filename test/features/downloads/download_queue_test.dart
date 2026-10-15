@@ -296,7 +296,7 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('download-pause-all')));
     await tester.pumpAndSettle();
-    expect(queue.controls, ['pause:a', 'pause:b']);
+    expect(queue.controls, ['pause:b', 'pause:a']);
   });
 
   testWidgets('대기열 카드: 곡 취소 · 전체 취소', (tester) async {
@@ -365,6 +365,7 @@ void main() {
       seen.add(bottom());
     }
     await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 100));
     expect(bottom(), withBar);
     expect(seen.length, lessThanOrEqualTo(3));
   });

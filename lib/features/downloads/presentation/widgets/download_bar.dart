@@ -67,10 +67,9 @@ class _DownloadBarState extends State<DownloadBar> {
       tween: Tween(end: _dragDy),
       duration: _dragging ? Duration.zero : AppMotion.fast,
       curve: AppMotion.standard,
-      builder: (context, dy, child) => Opacity(
-        opacity: (1 - dy / 240).clamp(.35, 1.0),
-        child: Transform.translate(offset: Offset(0, dy), child: child),
-      ),
+      // 흐림(유리) 위에 투명도를 얹으면 매 프레임 층을 다시 만들어 버벅이므로 이동만 쓴다.
+      builder: (context, dy, child) =>
+          Transform.translate(offset: Offset(0, dy), child: child),
       child: GlassSurface(
         key: const ValueKey('download-bar'),
         shape: const RoundedRectangleBorder(),
