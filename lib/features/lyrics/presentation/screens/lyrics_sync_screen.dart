@@ -776,7 +776,11 @@ class _ControlBar extends StatelessWidget {
                   child: PillButton(
                     label: l10n.lyricsSyncNow,
                     icon: AppIcons.touch,
-                    onPressed: draft.current >= draft.length ? null : onNow,
+                    onPressed:
+                        draft.current >= draft.length ||
+                            draft.times[draft.current] != null
+                        ? null
+                        : onNow,
                   ),
                 ),
               ),
