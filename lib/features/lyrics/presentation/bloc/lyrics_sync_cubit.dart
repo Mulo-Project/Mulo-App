@@ -174,7 +174,7 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
     _put(draft.stamp(position), selected: at);
   }
 
-  /// 줄을 눌렀을 때: 찍은 줄은 포커스하고 그 다음 칸을 찍을 차례로 옮긴다 (싱크 값은 바뀌지 않는다).
+  /// 줄을 눌렀을 때: 찍은 줄은 포커스하고 그 칸을 다시 찍을 차례로 옮긴다 (싱크 값은 바뀌지 않는다).
   /// 아직 안 찍은 줄이면 거기부터 찍도록 옮기기만 한다 (묶기는 꾹 눌러 끌어서 따로 한다).
   void select(int index) {
     if (index < 0 || index >= state.draft.length) return;
@@ -186,11 +186,11 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
     }
     final draft = state.draft;
     if (draft.times[index] != null) {
-      // 찍은 줄을 누르면 포커스하고, 다음에 찍을 칸을 그 바로 다음 칸으로 옮긴다 (싱크 값은 바뀌지 않는다.
+      // 찍은 줄을 누르면 포커스하고, 그 칸이 다시 찍을 차례가 된다 (싱크 값은 바뀌지 않는다.
       // 재생은 화면에서 그 싱크로 옮긴다). 값이 바뀌는 건 지금 버튼을 눌렀을 때뿐이다.
       emit(
         LyricsSyncState(
-          draft.moveTo(index + 1),
+          draft.moveTo(index),
           selected: index,
           group: state.group,
           expanded: ex,
@@ -198,9 +198,9 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
       );
       return;
     }
-    // 싱크가 하나라도 등록된 뒤에는 다음에 찍을 칸이 저절로 이어지므로, 안 찍은 칸으로 옮길 필요가 없다.
+    // 싱크가 하나라도 등록된 뒤에는 안 찍은 칸 중 맨 앞 칸(이어 찍을 자리)으로만 돌아갈 수 있다.
     // 아직 하나도 안 찍었을 때만 원하는 줄에서 시작하도록 아무 칸이나 고를 수 있다.
-    if (draft.stamped > 0) return;
+    if (draft.stamped > 0 && index != draft.times.indexOf(null)) return;
     emit(
       LyricsSyncState(draft.moveTo(index), group: state.group, expanded: ex),
     );
