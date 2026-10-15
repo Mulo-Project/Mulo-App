@@ -66,6 +66,8 @@ void main() {
       const Duration(seconds: 3),
     ]);
     cubit.stamp(const Duration(seconds: 2, milliseconds: 500));
+    // 찍으면 자동으로 다음 칸이 찍을 차례가 된다
+    expect(cubit.state.draft.current, 2);
     expect(cubit.state.draft.times, [
       const Duration(seconds: 1),
       const Duration(seconds: 2, milliseconds: 500),
