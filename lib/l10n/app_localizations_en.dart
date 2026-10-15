@@ -1571,6 +1571,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Clear the syncs stamped after this one and continue from here';
 
   @override
+  String get lyricsSyncNextSlot => 'Next';
+
+  @override
   String get lyricsSyncSkipTitle => 'Stamped syncs will be lost';
 
   @override

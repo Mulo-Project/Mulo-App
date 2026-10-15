@@ -427,7 +427,7 @@ void main() {
     );
 
     // 이어 찍을 빈 칸을 눌러 포커스한 뒤 찍는다
-    await tester.tap(find.text('--:--.--'));
+    await tester.tap(find.text('이어 찍기'));
     await tester.pumpAndSettle();
     player.seekTo(const Duration(seconds: 10));
     await tester.pump();
@@ -622,7 +622,8 @@ void main() {
     await tester.tap(find.text('이 싱크로 초기화'));
     await tester.pumpAndSettle();
     expect(find.text('1/3줄'), findsOneWidget);
-    expect(find.text('--:--.--'), findsNWidgets(2));
+    expect(find.text('이어 찍기'), findsOneWidget);
+    expect(find.text('--:--.--'), findsOneWidget);
   });
 
   testWidgets('싱크 설정: 뒤로 버튼은 가장 뒤에 찍은 싱크를 한 칸씩 지우고 그 앞에서 다시 들려준다', (

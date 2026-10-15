@@ -538,6 +538,8 @@ class _LineRow extends StatelessWidget {
         ? p.accent
         : (time == null ? p.onSurfaceMuted : p.onSurface);
     final sync = context.read<LyricsSyncCubit>();
+    // 이어서 새로 찍을 수 있는 맨 앞 빈 칸은 눌러서 돌아오기 쉽게 항상 표시한다.
+    final isFrontier = draft.stamped > 0 && index == draft.times.indexOf(null);
     // 포커스한 싱크 바로 다음 칸의 기존 싱크 시간을 재생이 이미 지나갔는가.
     final passed =
         afterFocus &&
@@ -570,10 +572,12 @@ class _LineRow extends StatelessWidget {
                 SizedBox(
                   width: 76,
                   child: Text(
-                    time == null ? '--:--.--' : clock(time),
+                    time != null
+                        ? clock(time)
+                        : (isFrontier ? l10n.lyricsSyncNextSlot : '--:--.--'),
                     style: text.labelMedium?.copyWith(
                       // 찍은 줄(완료)과 다음에 찍을 줄은 강조 색, 아직인 줄은 흐리게.
-                      color: time != null || isCurrent
+                      color: time != null || isCurrent || isFrontier
                           ? p.accent
                           : p.onSurfaceMuted,
                       decoration: passed ? TextDecoration.lineThrough : null,

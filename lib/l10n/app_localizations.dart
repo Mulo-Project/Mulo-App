@@ -2912,6 +2912,12 @@ abstract class AppLocalizations {
   /// **'이 싱크 뒤에 찍은 싱크를 지우고 여기서부터 다시 찍어요'**
   String get lyricsSyncCancelAfterHint;
 
+  /// No description provided for @lyricsSyncNextSlot.
+  ///
+  /// In ko, this message translates to:
+  /// **'이어 찍기'**
+  String get lyricsSyncNextSlot;
+
   /// No description provided for @lyricsSyncSkipTitle.
   ///
   /// In ko, this message translates to:

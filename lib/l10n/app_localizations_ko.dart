@@ -1537,6 +1537,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsSyncCancelAfterHint => '이 싱크 뒤에 찍은 싱크를 지우고 여기서부터 다시 찍어요';
 
   @override
+  String get lyricsSyncNextSlot => '이어 찍기';
+
+  @override
   String get lyricsSyncSkipTitle => '찍어 둔 싱크가 사라져요';
 
   @override
