@@ -2732,6 +2732,12 @@ abstract class AppLocalizations {
   /// **'되돌리기'**
   String get lyricsSyncUndo;
 
+  /// No description provided for @lyricsSyncPrevious.
+  ///
+  /// In ko, this message translates to:
+  /// **'이전 싱크로'**
+  String get lyricsSyncPrevious;
+
   /// No description provided for @lyricsSyncSave.
   ///
   /// In ko, this message translates to:

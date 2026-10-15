@@ -203,7 +203,7 @@ void main() {
     );
 
     // 자동 멈춤: 다음 줄의 기존 싱크(10초)에 닿으면 멈춘다
-    await tester.tap(find.text('자동 멈춤'));
+    await tester.tap(find.byTooltip('다음 줄에 이미 있는 싱크 시간에 닿으면 재생을 멈춰요'));
     await tester.pump();
     if (!player.state.isPlaying) player.togglePlay();
     player.seekTo(const Duration(seconds: 10));
@@ -299,10 +299,35 @@ void main() {
     expect(find.text('가 줄\n나 줄\n다 줄'), findsOneWidget);
     expect(find.text('3줄 같은 시간으로 묶음'), findsOneWidget);
 
+    await tester.tap(find.text('지금'));
+    await tester.pumpAndSettle();
+    expect(find.text('1/2줄'), findsOneWidget);
+
     await tester.tap(find.text('풀기'));
     await tester.pumpAndSettle();
     expect(find.text('0/4줄'), findsOneWidget);
     expect(find.text('3줄 같은 시간으로 묶음'), findsNothing);
+  });
+
+  testWidgets('싱크 설정: 이전 싱크로 버튼은 완료한 싱크를 한 칸씩 거슬러 포커스한다', (tester) async {
+    await openSync(tester, '가 줄\n나 줄\n다 줄');
+    await tester.tap(find.text('확인'));
+    await tester.pumpAndSettle();
+    final player = tester.element(find.text('가 줄')).read<NowPlayingCubit>();
+
+    player.seekTo(const Duration(seconds: 2));
+    await tester.pump();
+    await tester.tap(find.text('지금'));
+    await tester.pumpAndSettle();
+    player.seekTo(const Duration(seconds: 6));
+    await tester.pump();
+    await tester.tap(find.text('지금'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('이전 싱크로'));
+    await tester.pumpAndSettle();
+    expect(player.state.position, const Duration(seconds: 2));
+    expect(find.text('+0.1s'), findsWidgets);
   });
 
   testWidgets('싱크 설정: 재생 시간이 슬라이더 아래, 지금 버튼 위에 보인다', (tester) async {

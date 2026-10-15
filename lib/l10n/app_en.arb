@@ -530,6 +530,7 @@
   "lyricsSyncHint": "Tap 'Now' along with the song to stamp each line. Tap a stamped line to fine-tune its time.",
   "lyricsSyncNow": "Now",
   "lyricsSyncUndo": "Undo",
+  "lyricsSyncPrevious": "Previous sync",
   "lyricsSyncSave": "Save sync",
   "lyricsSyncGroup": "Lines per sync",
   "lyricsSyncGroupLines": "{n}",

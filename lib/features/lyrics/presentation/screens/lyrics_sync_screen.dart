@@ -153,6 +153,22 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
     context.read<LyricsSyncCubit>().stamp(position);
   }
 
+  /// 이전 싱크로: 지금까지 완료한 가장 마지막 싱크 칸에 포커스하고 재생도 그 시간으로 옮긴다.
+  /// 이미 포커스한 칸이 있으면 한 칸씩 더 앞으로 간다.
+  void _previous() {
+    final sync = context.read<LyricsSyncCubit>();
+    final draft = sync.state.draft;
+    final at = sync.state.selected;
+    var target = at != null && at < draft.current ? at - 1 : draft.current - 1;
+    while (target >= 0 && draft.times[target] == null) {
+      target--;
+    }
+    if (target < 0) return;
+    final time = draft.times[target]!;
+    sync.select(target);
+    context.read<NowPlayingCubit>().seekTo(time);
+  }
+
   /// 되돌리기: 찍은 줄이 풀리면 그 앞 줄부터 다시 들려줘 이어서 찍을 수 있게 한다.
   void _undo() {
     final sync = context.read<LyricsSyncCubit>();
@@ -356,6 +372,7 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
                     onAutoPause: () => setState(() => _autoPause = !_autoPause),
                     onNow: _now,
                     onUndo: _undo,
+                    onPrevious: _previous,
                     onSkip: _skip,
                     onSeek: _seekFraction,
                     onPickStep: _pickStep,
@@ -521,6 +538,7 @@ class _ControlBar extends StatelessWidget {
     required this.onAutoPause,
     required this.onNow,
     required this.onUndo,
+    required this.onPrevious,
     required this.onSkip,
     required this.onSeek,
     required this.onPickStep,
@@ -531,6 +549,7 @@ class _ControlBar extends StatelessWidget {
   final VoidCallback onAutoPause;
   final VoidCallback onNow;
   final VoidCallback onUndo;
+  final VoidCallback onPrevious;
   final void Function(int sign) onSkip;
   final ValueChanged<double> onSeek;
   final void Function(BuildContext buttonContext) onPickStep;
@@ -608,6 +627,12 @@ class _ControlBar extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.sm),
               CircleIconButton(
+                icon: AppIcons.skipPrevious,
+                tooltip: l10n.lyricsSyncPrevious,
+                onPressed: draft.stamped > 0 ? onPrevious : null,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              CircleIconButton(
                 icon: np.state.isPlaying ? AppIcons.pause : AppIcons.play,
                 tooltip: np.state.isPlaying
                     ? l10n.lyricsSyncPause
@@ -618,8 +643,7 @@ class _ControlBar extends StatelessWidget {
               const SizedBox(width: AppSpacing.sm),
               const SizedBox(width: AppSpacing.sm),
               PlainButton(
-                icon: AppIcons.pause,
-                label: l10n.lyricsSyncAutoPause,
+                icon: AppIcons.timer,
                 tooltip: l10n.lyricsSyncAutoPauseHint,
                 accent: autoPause,
                 onPressed: onAutoPause,
