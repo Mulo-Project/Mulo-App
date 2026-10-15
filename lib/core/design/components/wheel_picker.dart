@@ -4,23 +4,21 @@ import 'package:flutter/services.dart';
 import '../app_theme_tokens.dart';
 import '../tokens/app_dimens.dart';
 
-/// 휠 피커 한 칸: 0부터 [count]-1까지 숫자를 돌려서 고른다.
-/// [unit]은 숫자 옆에 붙는 단위 글자(시간 · 분 등)이다. 선택이 바뀔 때마다 가벼운 진동을 준다.
+/// 휠 피커 한 칸: 0부터 [count]-1까지 숫자를 끝없이 돌려서 고른다 (두 자리 `00` 모양).
+/// 단위 글자는 휠 밖에 고정해 두는 것이 보기 좋다. 선택이 바뀔 때마다 가벼운 진동을 준다.
 class WheelPicker extends StatefulWidget {
   const WheelPicker({
     super.key,
     required this.count,
     required this.value,
     required this.onChanged,
-    this.unit = '',
     this.itemExtent = 44,
-    this.width = 96,
+    this.width = 72,
   });
 
   final int count;
   final int value;
   final ValueChanged<int> onChanged;
-  final String unit;
   final double itemExtent;
   final double width;
 
@@ -64,22 +62,26 @@ class _WheelPickerState extends State<WheelPicker> {
             physics: const FixedExtentScrollPhysics(),
             onSelectedItemChanged: (i) {
               HapticFeedback.selectionClick();
-              widget.onChanged(i);
+              widget.onChanged(i % widget.count);
             },
-            childDelegate: ListWheelChildBuilderDelegate(
-              childCount: widget.count,
-              builder: (context, i) {
-                final selected = i == widget.value;
-                return Center(
-                  child: Text(
-                    '$i${widget.unit}',
-                    style: text.titleLarge?.copyWith(
-                      color: selected ? p.onSurface : p.onSurfaceMuted,
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+            childDelegate: ListWheelChildLoopingListDelegate(
+              children: [
+                for (var i = 0; i < widget.count; i++)
+                  Center(
+                    child: Text(
+                      i.toString().padLeft(2, '0'),
+                      style: text.headlineSmall?.copyWith(
+                        color: i == widget.value
+                            ? p.onSurface
+                            : p.onSurfaceMuted,
+                        fontWeight: i == widget.value
+                            ? FontWeight.w700
+                            : FontWeight.w400,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
                     ),
                   ),
-                );
-              },
+              ],
             ),
           ),
         ],

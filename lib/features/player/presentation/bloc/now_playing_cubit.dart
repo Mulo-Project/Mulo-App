@@ -24,6 +24,7 @@ class NowPlayingState extends Equatable {
     required this.shuffle,
     required this.repeat,
     this.sleepMinutes,
+    this.sleepEndsAt,
   });
 
   final List<Track> queue;
@@ -35,6 +36,9 @@ class NowPlayingState extends Equatable {
 
   /// 수면 타이머로 정한 분 (꺼져 있으면 null).
   final int? sleepMinutes;
+
+  /// 수면 타이머가 재생을 멈출 시각 (꺼져 있으면 null).
+  final DateTime? sleepEndsAt;
 
   Track? get track => queue.isEmpty ? null : queue[index];
 
@@ -51,6 +55,7 @@ class NowPlayingState extends Equatable {
     bool? shuffle,
     PlayerRepeatMode? repeat,
     Object? sleepMinutes = _keep,
+    Object? sleepEndsAt = _keep,
   }) => NowPlayingState(
     queue: queue ?? this.queue,
     index: index ?? this.index,
@@ -61,6 +66,9 @@ class NowPlayingState extends Equatable {
     sleepMinutes: identical(sleepMinutes, _keep)
         ? this.sleepMinutes
         : sleepMinutes as int?,
+    sleepEndsAt: identical(sleepEndsAt, _keep)
+        ? this.sleepEndsAt
+        : sleepEndsAt as DateTime?,
   );
 
   @override
@@ -72,6 +80,7 @@ class NowPlayingState extends Equatable {
     shuffle,
     repeat,
     sleepMinutes,
+    sleepEndsAt,
   ];
 }
 
@@ -380,10 +389,23 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     if (minutes != null) {
       _sleep = Timer(Duration(minutes: minutes), () {
         _sleep = null;
-        emit(state.copyWith(isPlaying: false, sleepMinutes: null));
+        emit(
+          state.copyWith(
+            isPlaying: false,
+            sleepMinutes: null,
+            sleepEndsAt: null,
+          ),
+        );
       });
     }
-    emit(state.copyWith(sleepMinutes: minutes));
+    emit(
+      state.copyWith(
+        sleepMinutes: minutes,
+        sleepEndsAt: minutes == null
+            ? null
+            : DateTime.now().add(Duration(minutes: minutes)),
+      ),
+    );
   }
 
   @override
