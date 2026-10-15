@@ -542,6 +542,8 @@
   "@lyricsSyncBackBy": {"placeholders": {"n": {"type": "double"}}},
   "lyricsSyncForwardBy": "Forward {n}s (long-press to change)",
   "@lyricsSyncForwardBy": {"placeholders": {"n": {"type": "double"}}},
+  "lyricsSyncAutoPause": "Auto pause",
+  "lyricsSyncAutoPauseHint": "Pause when playback reaches the next line's existing sync",
   "lyricsSyncSeek": "Playback position",
   "lyricsSyncProgress": "{done}/{total} lines",
   "@lyricsSyncProgress": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}},

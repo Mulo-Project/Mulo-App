@@ -1500,6 +1500,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get lyricsSyncAutoPause => 'Auto pause';
+
+  @override
+  String get lyricsSyncAutoPauseHint =>
+      'Pause when playback reaches the next line\'s existing sync';
+
+  @override
   String get lyricsSyncSeek => 'Playback position';
 
   @override

@@ -1469,6 +1469,12 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get lyricsSyncAutoPause => '자동 멈춤';
+
+  @override
+  String get lyricsSyncAutoPauseHint => '다음 줄에 이미 있는 싱크 시간에 닿으면 재생을 멈춰요';
+
+  @override
   String get lyricsSyncSeek => '재생 위치';
 
   @override

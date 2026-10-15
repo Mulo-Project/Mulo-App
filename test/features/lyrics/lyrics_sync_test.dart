@@ -186,6 +186,14 @@ void main() {
       const Duration(seconds: 3, milliseconds: 500),
     );
 
+    // 자동 멈춤: 다음 줄의 기존 싱크(10초)에 닿으면 멈춘다
+    await tester.tap(find.text('자동 멈춤'));
+    await tester.pump();
+    if (!player.state.isPlaying) player.togglePlay();
+    player.seekTo(const Duration(seconds: 10));
+    await tester.pump();
+    expect(player.state.isPlaying, isFalse);
+
     // 뒤쪽 줄을 골라 지금을 누르면 다음 줄의 싱크가 덮어써진다
     player.seekTo(const Duration(seconds: 12));
     await tester.pump();

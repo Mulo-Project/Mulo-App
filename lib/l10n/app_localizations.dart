@@ -2786,6 +2786,18 @@ abstract class AppLocalizations {
   /// **'{n}초 뒤로 (길게 눌러 단위 바꾸기)'**
   String lyricsSyncForwardBy(double n);
 
+  /// No description provided for @lyricsSyncAutoPause.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동 멈춤'**
+  String get lyricsSyncAutoPause;
+
+  /// No description provided for @lyricsSyncAutoPauseHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'다음 줄에 이미 있는 싱크 시간에 닿으면 재생을 멈춰요'**
+  String get lyricsSyncAutoPauseHint;
+
   /// No description provided for @lyricsSyncSeek.
   ///
   /// In ko, this message translates to:

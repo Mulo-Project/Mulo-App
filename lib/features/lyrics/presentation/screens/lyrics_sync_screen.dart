@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -41,11 +43,14 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
   static const _lead = Duration(seconds: 2);
   static const _steps = [100, 500, 1000, 3000, 5000, 10000];
   var _stepMs = 500;
+  var _autoPause = false;
   var _keys = <GlobalKey>[];
+  StreamSubscription<NowPlayingState>? _positionWatch;
 
   @override
   void initState() {
     super.initState();
+    _positionWatch = context.read<NowPlayingCubit>().stream.listen(_watchPass);
     _keys = List.generate(
       context.read<LyricsSyncCubit>().state.draft.length,
       (_) => GlobalKey(),
@@ -62,6 +67,23 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
       }
       if (np.state.isPlaying) np.togglePlay();
     });
+  }
+
+  @override
+  void dispose() {
+    _positionWatch?.cancel();
+    super.dispose();
+  }
+
+  /// 자동 멈춤: 다음에 찍을 줄에 이미 싱크가 있으면, 재생이 그 시간에 닿을 때 멈춘다.
+  void _watchPass(NowPlayingState s) {
+    if (!_autoPause || !mounted || !s.isPlaying) return;
+    final draft = context.read<LyricsSyncCubit>().state.draft;
+    final at = draft.current < draft.length ? draft.times[draft.current] : null;
+    if (at == null || s.position < at) return;
+    // 이미 지나 있던 곳에서 재생을 시작한 경우는 멈추지 않는다 (한 번 닿는 순간만).
+    if (s.position - at > const Duration(seconds: 1)) return;
+    context.read<NowPlayingCubit>().togglePlay();
   }
 
   /// 싱크가 아직 없는 일반 글이면 기본으로 한 번에 찍을 줄 수를 먼저 묻는다.
@@ -309,6 +331,8 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
                   ),
                   _ControlBar(
                     stepMs: _stepMs,
+                    autoPause: _autoPause,
+                    onAutoPause: () => setState(() => _autoPause = !_autoPause),
                     onNow: _now,
                     onUndo: _undo,
                     onSkip: _skip,
@@ -355,6 +379,11 @@ class _LineRow extends StatelessWidget {
         ? p.accent
         : (time == null ? p.onSurfaceMuted : p.onSurface);
     final sync = context.read<LyricsSyncCubit>();
+    // 다음에 찍을 줄의 기존 싱크 시간을 재생이 이미 지나갔는가.
+    final passed =
+        isCurrent &&
+        time != null &&
+        context.select<NowPlayingCubit, bool>((c) => c.state.position > time);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -387,6 +416,7 @@ class _LineRow extends StatelessWidget {
                       color: time != null || isCurrent
                           ? p.accent
                           : p.onSurfaceMuted,
+                      decoration: passed ? TextDecoration.lineThrough : null,
                       fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
@@ -459,6 +489,8 @@ class _LineRow extends StatelessWidget {
 class _ControlBar extends StatelessWidget {
   const _ControlBar({
     required this.stepMs,
+    required this.autoPause,
+    required this.onAutoPause,
     required this.onNow,
     required this.onUndo,
     required this.onSkip,
@@ -466,6 +498,8 @@ class _ControlBar extends StatelessWidget {
   });
 
   final int stepMs;
+  final bool autoPause;
+  final VoidCallback onAutoPause;
   final VoidCallback onNow;
   final VoidCallback onUndo;
   final void Function(int sign) onSkip;
@@ -546,6 +580,14 @@ class _ControlBar extends StatelessWidget {
                 onPressed: np.togglePlay,
               ),
               const SizedBox(width: AppSpacing.sm),
+              const SizedBox(width: AppSpacing.sm),
+              PlainButton(
+                icon: AppIcons.pause,
+                label: l10n.lyricsSyncAutoPause,
+                tooltip: l10n.lyricsSyncAutoPauseHint,
+                accent: autoPause,
+                onPressed: onAutoPause,
+              ),
               Expanded(
                 child: Align(
                   alignment: Alignment.centerRight,
