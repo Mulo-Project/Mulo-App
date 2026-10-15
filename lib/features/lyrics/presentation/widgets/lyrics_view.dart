@@ -25,6 +25,9 @@ class _LyricsViewState extends State<LyricsView> {
   Lyrics? _keysFor;
   int _shown = -2;
 
+  /// 재생 위치의 줄을 따라 목록이 움직이는가. 끄면 가사를 방해 없이 자유롭게 볼 수 있다.
+  var _following = true;
+
   @override
   void initState() {
     super.initState();
@@ -42,7 +45,7 @@ class _LyricsViewState extends State<LyricsView> {
   void _follow(int index) {
     if (index == _shown) return;
     _shown = index;
-    if (index < 0) return;
+    if (index < 0 || !_following) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final ctx = index < _keys.length ? _keys[index].currentContext : null;
       if (ctx == null || !ctx.mounted) return;
@@ -61,6 +64,8 @@ class _LyricsViewState extends State<LyricsView> {
     final hasLyrics =
         context.watch<LyricsCubit>().state.trackId == widget.track.id &&
         context.watch<LyricsCubit>().state.lyrics != null;
+    final synced =
+        hasLyrics && context.watch<LyricsCubit>().state.lyrics!.isSynced;
     return Column(
       children: [
         Expanded(child: _body(context)),
@@ -70,6 +75,18 @@ class _LyricsViewState extends State<LyricsView> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
+                // 포커스: 켜면 재생 위치의 줄을 따라 가사가 올라가고, 끄면 자유롭게 볼 수 있다.
+                if (synced)
+                  PlainButton(
+                    icon: AppIcons.explore,
+                    tooltip: l10n.lyricsSyncFollowHint,
+                    accent: _following,
+                    onPressed: () => setState(() {
+                      _following = !_following;
+                      // 다시 켜면 지금 줄로 한 번 따라가도록 한다.
+                      if (_following) _shown = -2;
+                    }),
+                  ),
                 PlainButton(
                   label: l10n.lyricsSyncSetting,
                   icon: AppIcons.timer,

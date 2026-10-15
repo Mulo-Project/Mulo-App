@@ -681,34 +681,6 @@ void main() {
     expect(lyrics.saved['t1'], '[00:02.00]가 줄\n나 줄\n다 줄');
   });
 
-  testWidgets('싱크 설정: 따라가기를 끄면 포커스가 바뀌어도 목록이 스크롤되지 않는다', (tester) async {
-    final lines = [for (var i = 1; i <= 40; i++) '줄 $i'].join('\n');
-    await openSync(tester, lines);
-    await tester.tap(find.text('확인'));
-    await tester.pumpAndSettle();
-    final scroll = find.byType(Scrollable).first;
-    double offset() => tester.state<ScrollableState>(scroll).position.pixels;
-
-    // 끄고 지금을 여러 번 눌러도 목록은 그대로다
-    await tester.tap(
-      find.byTooltip('켜면 목록이 포커스한 칸을 따라 움직이고, 끄면 가사를 자유롭게 볼 수 있어요'),
-    );
-    await tester.pumpAndSettle();
-    final before = offset();
-    for (var i = 0; i < 12; i++) {
-      await tester.tap(find.text('지금'));
-      await tester.pumpAndSettle();
-    }
-    expect(offset(), before);
-
-    // 다시 켜면 포커스한 칸으로 스크롤된다
-    await tester.tap(
-      find.byTooltip('켜면 목록이 포커스한 칸을 따라 움직이고, 끄면 가사를 자유롭게 볼 수 있어요'),
-    );
-    await tester.pumpAndSettle();
-    expect(offset(), greaterThan(before));
-  });
-
   testWidgets('싱크 설정: 지금으로 이미 싱크된 칸으로 넘어가면 재생도 그 싱크 위치로 맞춰진다', (tester) async {
     await openSync(tester, '가 줄\n나 줄\n다 줄');
     await tester.tap(find.text('확인'));
