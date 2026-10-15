@@ -175,9 +175,18 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
       draft = draft.mergeRange(0, at).moveTo(0);
       at = 0;
     }
-    final stamped = draft.stamp(position);
-    // 지금은 포커스한 칸만 바꾸고, 찍으면 포커스가 자동으로 다음 칸으로 넘어간다.
-    _put(stamped, selected: at + 1 < stamped.length ? at + 1 : at);
+    var stamped = draft.stamp(position);
+    // 앞쪽으로 당겨 찍어 그 앞의 싱크가 함께 내려왔다면, 바뀐 것 중 맨 앞 칸으로 포커스를 돌려 확인하게 한다.
+    var focus = at + 1 < stamped.length ? at + 1 : at;
+    for (var i = 0; i < at; i++) {
+      if (stamped.times[i] != draft.times[i]) {
+        stamped = stamped.moveTo(i);
+        focus = i;
+        break;
+      }
+    }
+    // 그렇지 않으면 찍은 뒤 포커스가 자동으로 다음 칸으로 넘어간다 (지금은 포커스한 칸만 바꾼다).
+    _put(stamped, selected: focus);
   }
 
   /// 줄을 눌렀을 때: 찍은 줄은 포커스하고 그 칸을 다시 찍을 차례로 옮긴다 (싱크 값은 바뀌지 않는다).

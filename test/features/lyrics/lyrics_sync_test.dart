@@ -76,6 +76,23 @@ void main() {
     ]);
   });
 
+  test('앞으로 당겨 찍어 앞의 싱크가 내려오면 바뀐 것 중 맨 앞 칸을 포커스한다', () {
+    final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다\n라')!)
+      ..stamp(const Duration(seconds: 5))
+      ..stamp(const Duration(seconds: 8))
+      ..stamp(const Duration(seconds: 12));
+    cubit.select(2);
+    cubit.stamp(const Duration(seconds: 3));
+    expect(cubit.state.draft.times, [
+      const Duration(seconds: 3),
+      const Duration(seconds: 3),
+      const Duration(seconds: 3),
+      null,
+    ]);
+    expect(cubit.state.selected, 0);
+    expect(cubit.state.draft.current, 0);
+  });
+
   test('지금으로 다시 찍을 때 뒤에 있던 더 이른 싱크는 새 시간으로 올라가고 되돌리기로 복구된다', () {
     final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다\n라')!)
       ..stamp(const Duration(seconds: 1))
