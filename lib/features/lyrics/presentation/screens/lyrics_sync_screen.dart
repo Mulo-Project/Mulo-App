@@ -41,7 +41,7 @@ class LyricsSyncScreen extends StatefulWidget {
 
 class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
   static const _lead = Duration(seconds: 2);
-  static const _steps = [10, 100, 500, 1000, 3000, 5000, 10000];
+  static const _steps = [10, 100, 500, 1000, 3000, 5000, 10000, 30000, 60000];
   var _stepMs = 500;
   var _autoPause = false;
   var _keys = <GlobalKey>[];
@@ -310,9 +310,12 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
     if (!np.state.isPlaying) np.togglePlay();
   }
 
-  /// 이동 단위 글자: 1초 미만은 0.1s처럼, 이상은 정수 초.
-  static String stepLabel(int ms) =>
-      ms < 1000 ? '${ms / 1000}s' : '${ms ~/ 1000}s';
+  /// 이동 단위 글자: 1초 미만은 0.1s처럼, 1분 단위는 1m, 나머지는 정수 초.
+  static String stepLabel(int ms) {
+    if (ms < 1000) return '${ms / 1000}s';
+    if (ms >= 60000 && ms % 60000 == 0) return '${ms ~/ 60000}m';
+    return '${ms ~/ 1000}s';
+  }
 
   static String _clock(Duration d) {
     final s = SyncDraft.formatStamp(d);
@@ -518,7 +521,7 @@ class _LineRow extends StatelessWidget {
                 Expanded(
                   child: AnimatedDefaultTextStyle(
                     duration: AppMotion.fast,
-                    style: (isCurrent ? text.titleMedium : text.bodyLarge)!
+                    style: (isCurrent ? text.bodyLarge : text.bodyMedium)!
                         .copyWith(color: color),
                     child: Text(draft.texts[index]),
                   ),
