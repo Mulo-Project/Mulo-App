@@ -552,6 +552,11 @@ class _ControlBar extends StatelessWidget {
             for (final t in draft.times)
               if (t != null) t.inMilliseconds / totalMs,
           ];
+    // 지금 포커스된 줄의 표시는 따로 강조한다.
+    final at = sync.state.selected;
+    final focus = totalMs == 0 || at == null || draft.times[at] == null
+        ? null
+        : draft.times[at]!.inMilliseconds / totalMs;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.md,
@@ -579,6 +584,7 @@ class _ControlBar extends StatelessWidget {
                       ? 0
                       : np.state.position.inMilliseconds / totalMs,
                   marks: marks,
+                  activeMark: focus,
                   thumbAlpha: .5,
                   onChanged: totalMs == 0 ? null : onSeek,
                 ),

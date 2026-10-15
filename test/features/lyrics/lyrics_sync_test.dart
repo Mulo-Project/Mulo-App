@@ -5,7 +5,7 @@ import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 import 'package:music_download_play_app/features/lyrics/domain/entities/lyrics.dart';
-import 'package:music_download_play_app/features/lyrics/domain/entities/sync_draft.dart';
+import 'package:music_download_play_app/features/lyrics/presentation/bloc/lyrics_sync_cubit.dart';
 import 'package:music_download_play_app/features/player/presentation/bloc/now_playing_cubit.dart';
 import 'package:music_download_play_app/features/player/presentation/screens/player_screen.dart';
 
@@ -22,6 +22,14 @@ Track _t(String id, String title) => Track(
 );
 
 void main() {
+  test('안 찍은 뒤쪽 줄을 눌러도 싱크를 건너뛰지 않는다', () {
+    final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다\n라')!)
+      ..stamp(const Duration(seconds: 1));
+    cubit.select(3);
+    expect(cubit.state.draft.current, 1);
+    expect(cubit.state.draft.times[2], isNull);
+  });
+
   group('SyncDraft', () {
     final plain = Lyrics.parse('첫 줄\n\n둘째 줄\n셋째 줄')!;
 

@@ -93,7 +93,7 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
   }
 
   /// 줄을 눌렀을 때: 찍은 줄은 선택하고 다음 줄부터 다시 찍도록 옮긴다 (뒤쪽 싱크는 새로 찍으면 덮어쓴다).
-  /// 아직 안 찍은 줄은 거기부터 찍도록 옮긴다.
+  /// 아직 안 찍은 줄은 가장 앞의 안 찍은 줄로 옮긴다 (건너뛰기 금지).
   void select(int index) {
     final draft = state.draft;
     if (index < 0 || index >= draft.length) return;
@@ -106,7 +106,13 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
         ),
       );
     } else {
-      emit(LyricsSyncState(draft.moveTo(index), group: state.group));
+      // 싱크를 건너뛸 수 없다: 아직 안 찍은 줄은 가장 앞의 안 찍은 줄부터만 찍는다.
+      emit(
+        LyricsSyncState(
+          draft.moveTo(draft.times.indexOf(null)),
+          group: state.group,
+        ),
+      );
     }
   }
 

@@ -15,6 +15,7 @@ class AppSlider extends StatelessWidget {
     this.vertical = false,
     this.centered = false,
     this.marks = const [],
+    this.activeMark,
     this.thumbAlpha = 1,
     this.semanticLabel,
   });
@@ -33,6 +34,9 @@ class AppSlider extends StatelessWidget {
 
   /// 트랙 위에 작게 찍는 표시 위치 ([min]~[max] 값). 가로 슬라이더만.
   final List<double> marks;
+
+  /// 표시 중 강조할 하나 (더 굵고 길게, 다른 색). 없으면 null.
+  final double? activeMark;
 
   /// 손잡이 불투명도 (0~1). 아래 표시가 비쳐 보이게 할 때 낮춘다.
   final double thumbAlpha;
@@ -144,18 +148,32 @@ class AppSlider extends StatelessWidget {
                           _fraction(m),
                           0,
                           OverflowBox(
-                            maxWidth: 3,
-                            maxHeight: _track + 10,
+                            maxWidth: 1.5,
+                            maxHeight: _track + 4,
                             child: Container(
-                              width: 3,
-                              height: _track + 10,
-                              decoration: ShapeDecoration(
-                                color: p.accent,
-                                shape: const StadiumBorder(),
-                              ),
+                              width: 1.5,
+                              height: _track + 4,
+                              color: p.accent,
                             ),
                           ),
                         ),
+                    if (!vertical && activeMark != null)
+                      along(
+                        _fraction(activeMark!),
+                        0,
+                        OverflowBox(
+                          maxWidth: 3,
+                          maxHeight: _knob + 6,
+                          child: Container(
+                            width: 3,
+                            height: _knob + 6,
+                            decoration: ShapeDecoration(
+                              color: p.onSurface,
+                              shape: const StadiumBorder(),
+                            ),
+                          ),
+                        ),
+                      ),
                     along(
                       f,
                       0,
