@@ -405,7 +405,7 @@ class _LineRow extends StatelessWidget {
         time != null &&
         context.select<NowPlayingCubit, bool>((c) => c.state.position > time);
 
-    return Column(
+    final block = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         InkWell(
@@ -501,6 +501,15 @@ class _LineRow extends StatelessWidget {
             ),
           ),
       ],
+    );
+    // 포커스된 싱크 칸(시간 조정 버튼까지)은 영역 전체에 색을 깐다.
+    return AnimatedContainer(
+      duration: AppMotion.fast,
+      decoration: BoxDecoration(
+        color: selected ? p.accent.withValues(alpha: .16) : null,
+        borderRadius: BorderRadius.circular(AppRadii.sm),
+      ),
+      child: block,
     );
   }
 }
