@@ -1540,6 +1540,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsSyncNextSlot => '이어 찍기';
 
   @override
+  String get lyricsSyncFollow => '따라가기';
+
+  @override
+  String get lyricsSyncFollowHint =>
+      '켜면 목록이 포커스한 칸을 따라 움직이고, 끄면 가사를 자유롭게 볼 수 있어요';
+
+  @override
   String get lyricsSyncSkipTitle => '찍어 둔 싱크가 사라져요';
 
   @override

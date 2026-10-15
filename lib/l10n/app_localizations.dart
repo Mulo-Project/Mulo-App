@@ -2918,6 +2918,18 @@ abstract class AppLocalizations {
   /// **'이어 찍기'**
   String get lyricsSyncNextSlot;
 
+  /// No description provided for @lyricsSyncFollow.
+  ///
+  /// In ko, this message translates to:
+  /// **'따라가기'**
+  String get lyricsSyncFollow;
+
+  /// No description provided for @lyricsSyncFollowHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'켜면 목록이 포커스한 칸을 따라 움직이고, 끄면 가사를 자유롭게 볼 수 있어요'**
+  String get lyricsSyncFollowHint;
+
   /// No description provided for @lyricsSyncSkipTitle.
   ///
   /// In ko, this message translates to:

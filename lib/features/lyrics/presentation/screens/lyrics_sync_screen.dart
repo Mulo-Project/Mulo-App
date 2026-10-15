@@ -45,6 +45,7 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
   static const _steps = [10, 100, 500, 1000, 3000, 5000, 10000, 30000, 60000];
   var _stepMs = 500;
   var _autoPause = false;
+  var _follow = true;
   int? _dragFrom;
   int? _dragTo;
   var _keys = <GlobalKey>[];
@@ -383,7 +384,10 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
     final p = context.palette;
     return BlocConsumer<LyricsSyncCubit, LyricsSyncState>(
       listenWhen: (a, b) => a.draft.current != b.draft.current,
-      listener: (_, s) => _scrollTo(s.draft.current),
+      // 포커스 따라가기가 켜져 있을 때만 목록을 포커스한 칸으로 스크롤한다 (꺼 두면 가사를 자유롭게 본다).
+      listener: (_, s) {
+        if (_follow) _scrollTo(s.draft.current);
+      },
       builder: (context, state) {
         final draft = state.draft;
         final sync = context.read<LyricsSyncCubit>();
@@ -452,6 +456,16 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
+                        ),
+                        PlainButton(
+                          icon: AppIcons.explore,
+                          label: l10n.lyricsSyncFollow,
+                          tooltip: l10n.lyricsSyncFollowHint,
+                          accent: _follow,
+                          onPressed: () {
+                            setState(() => _follow = !_follow);
+                            if (_follow) _scrollTo(draft.current);
+                          },
                         ),
                         Text(
                           l10n.lyricsSyncProgress(draft.stamped, draft.length),
