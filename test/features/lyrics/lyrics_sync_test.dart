@@ -52,18 +52,24 @@ void main() {
     expect(cubit.state.draft.isComplete, isTrue);
   });
 
-  test('찍은 줄을 눌러도 포커스만 옮기고 다음에 찍을 칸은 바뀌지 않는다', () {
+  test('찍은 줄을 누르면 값은 그대로이고 다음 칸이 찍을 차례가 되며, 지금을 눌러야 그 칸이 바뀐다', () {
     final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다')!)
       ..stamp(const Duration(seconds: 1))
-      ..stamp(const Duration(seconds: 2));
+      ..stamp(const Duration(seconds: 2))
+      ..stamp(const Duration(seconds: 3));
     cubit.select(0);
     expect(cubit.state.selected, 0);
-    expect(cubit.state.draft.current, 2);
-    cubit.stamp(const Duration(seconds: 9));
+    expect(cubit.state.draft.current, 1);
     expect(cubit.state.draft.times, [
       const Duration(seconds: 1),
       const Duration(seconds: 2),
-      const Duration(seconds: 9),
+      const Duration(seconds: 3),
+    ]);
+    cubit.stamp(const Duration(seconds: 2, milliseconds: 500));
+    expect(cubit.state.draft.times, [
+      const Duration(seconds: 1),
+      const Duration(seconds: 2, milliseconds: 500),
+      const Duration(seconds: 3),
     ]);
   });
 
@@ -130,9 +136,9 @@ void main() {
       ..stamp(const Duration(seconds: 3));
     cubit.select(0);
     expect(cubit.state.selected, 0);
-    expect(cubit.state.draft.current, 3);
+    expect(cubit.state.draft.current, 1);
     cubit.select(4);
-    expect(cubit.state.draft.current, 3);
+    expect(cubit.state.draft.current, 1);
     expect(cubit.state.draft.texts, ['가', '나', '다', '라', '마']);
   });
 
@@ -428,11 +434,9 @@ void main() {
     );
     expect(player.state.isPlaying, isTrue);
 
-    // 찍은 줄을 눌러도 다음에 찍을 칸은 그대로라 지금은 눌리지 않고, 이 싱크로 초기화로 뒤를 비운 뒤에 다시 찍는다
+    // 찍은 줄을 누르면 다음 칸이 찍을 차례가 되어, 지금을 누르면 그 칸이 새 시간으로 바뀐다
     player.seekTo(const Duration(seconds: 12));
     await tester.pump();
-    await tester.tap(find.text('이 싱크로 초기화'));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('지금'));
     await tester.pumpAndSettle();
     expect(find.text('00:12.00'), findsOneWidget);
