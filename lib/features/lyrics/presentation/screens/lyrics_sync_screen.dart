@@ -700,14 +700,6 @@ class _ControlBar extends StatelessWidget {
                 emphasized: true,
                 onPressed: np.togglePlay,
               ),
-              const SizedBox(width: AppSpacing.sm),
-              const SizedBox(width: AppSpacing.sm),
-              PlainButton(
-                icon: AppIcons.timer,
-                tooltip: l10n.lyricsSyncAutoPauseHint,
-                accent: autoPause,
-                onPressed: onAutoPause,
-              ),
               Expanded(
                 child: Align(
                   alignment: Alignment.centerRight,
@@ -719,6 +711,17 @@ class _ControlBar extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+          // 버튼 줄 아래 한 줄을 더 써서 자동 멈춤을 글자로 보여 준다 (버튼 크기는 그대로).
+          Align(
+            alignment: Alignment.centerLeft,
+            child: PlainButton(
+              icon: AppIcons.timer,
+              label: l10n.lyricsSyncAutoPause,
+              tooltip: l10n.lyricsSyncAutoPauseHint,
+              accent: autoPause,
+              onPressed: onAutoPause,
+            ),
           ),
         ],
       ),
