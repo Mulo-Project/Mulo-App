@@ -34,6 +34,19 @@ void main() {
     expect(cubit.state.draft.current, 1);
   });
 
+  test('같은 시간에 지금을 또 누르면 직전 줄과 한 칸으로 묶인다', () {
+    final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다')!)
+      ..stamp(const Duration(seconds: 2))
+      ..stamp(const Duration(seconds: 2))
+      ..stamp(const Duration(seconds: 5));
+    expect(cubit.state.draft.texts, ['가\n나', '다']);
+    expect(cubit.state.draft.times, [
+      const Duration(seconds: 2),
+      const Duration(seconds: 5),
+    ]);
+    expect(cubit.state.draft.isComplete, isTrue);
+  });
+
   group('SyncDraft', () {
     final plain = Lyrics.parse('첫 줄\n\n둘째 줄\n셋째 줄')!;
 

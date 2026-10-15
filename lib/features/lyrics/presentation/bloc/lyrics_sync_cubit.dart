@@ -63,14 +63,21 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
 
   /// [position]을 다음 줄에 찍는다. 찍은 줄이 선택돼 바로 다듬을 수 있다.
   void stamp(Duration position) {
-    final at = state.draft.current;
-    if (at >= state.draft.length) return;
+    var draft = state.draft;
+    var at = draft.current;
+    if (at >= draft.length) return;
+    // 멈춘 채로 지금을 또 눌러 직전 줄과 완전히 같은 시간이 되면 같은 칸으로 묶는다 (1/100초 단위).
+    final prev = at > 0 ? draft.times[at - 1] : null;
+    if (canGroup &&
+        prev != null &&
+        (position - prev).inMilliseconds.abs() < 10) {
+      final end = draft.startOf(at) + draft.sizes[at] - 1;
+      draft = draft.regroup(at - 1, end, group: state.group);
+      at -= 1;
+      position = prev;
+    }
     emit(
-      LyricsSyncState(
-        state.draft.stamp(position),
-        selected: at,
-        group: state.group,
-      ),
+      LyricsSyncState(draft.stamp(position), selected: at, group: state.group),
     );
   }
 
