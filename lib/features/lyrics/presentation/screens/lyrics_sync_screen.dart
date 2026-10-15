@@ -362,7 +362,16 @@ class _LineRow extends StatelessWidget {
         InkWell(
           borderRadius: BorderRadius.circular(AppRadii.sm),
           onTap: onTap,
-          child: Padding(
+          child: Container(
+            // 다음에 찍을 줄은 왼쪽에 강조 선을 둔다.
+            decoration: BoxDecoration(
+              border: Border(
+                left: BorderSide(
+                  color: isCurrent ? p.accent : p.accent.withValues(alpha: 0),
+                  width: 3,
+                ),
+              ),
+            ),
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.sm,
               vertical: AppSpacing.sm,
@@ -374,7 +383,10 @@ class _LineRow extends StatelessWidget {
                   child: Text(
                     time == null ? '--:--.--' : clock(time),
                     style: text.labelMedium?.copyWith(
-                      color: selected ? p.accent : p.onSurfaceMuted,
+                      // 찍은 줄(완료)과 다음에 찍을 줄은 강조 색, 아직인 줄은 흐리게.
+                      color: time != null || isCurrent
+                          ? p.accent
+                          : p.onSurfaceMuted,
                       fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
