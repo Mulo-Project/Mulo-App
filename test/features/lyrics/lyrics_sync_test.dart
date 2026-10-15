@@ -35,6 +35,23 @@ void main() {
     expect(cubit.state.draft.current, 1);
   });
 
+  test('찍힌 묶음을 풀면 나뉜 줄이 같은 시간을 가진 채 남고 뒤 싱크와 공백이 생기지 않는다', () {
+    final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다\n라')!)
+      ..mergeRange(0, 2)
+      ..stamp(const Duration(seconds: 2))
+      ..stamp(const Duration(seconds: 6));
+    expect(cubit.state.draft.texts, ['가\n나\n다', '라']);
+    cubit.split(0);
+    expect(cubit.state.draft.texts, ['가', '나', '다', '라']);
+    expect(cubit.state.draft.times, [
+      const Duration(seconds: 2),
+      const Duration(seconds: 2),
+      const Duration(seconds: 2),
+      const Duration(seconds: 6),
+    ]);
+    expect(cubit.state.draft.isComplete, isTrue);
+  });
+
   test('같은 시간에 지금을 또 눌러도 자동으로 묶이지 않고 줄이 따로 남는다', () {
     final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다')!)
       ..stamp(const Duration(seconds: 2))
@@ -409,9 +426,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('1/2줄'), findsOneWidget);
 
+    // 찍힌 칸을 풀면 나뉜 줄들이 같은 시간을 가진 채 남아 공백이 생기지 않는다
     await tester.tap(find.text('풀기'));
     await tester.pumpAndSettle();
-    expect(find.text('0/4줄'), findsOneWidget);
+    expect(find.text('3/4줄'), findsOneWidget);
     expect(find.text('3줄 같은 시간으로 묶음'), findsNothing);
   });
 

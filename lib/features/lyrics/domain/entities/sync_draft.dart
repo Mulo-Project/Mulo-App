@@ -141,6 +141,25 @@ class SyncDraft extends Equatable {
     );
   }
 
+  /// [index] 칸을 [group]줄씩 여러 칸으로 나눈다. 나눈 칸은 모두 이 칸의 시간을 그대로 가져서
+  /// (찍은 칸이면 모두 찍힌 채로) 사이에 빈 곳이 생기지 않는다. 되돌리기 기록은 비운다.
+  SyncDraft splitBlock(int index, {int group = 1}) {
+    if (index < 0 || index >= length || sizes[index] < 2) return this;
+    final parts = defaultSizes(sizes[index], group);
+    if (parts.length < 2) return this;
+    return SyncDraft._(
+      lines,
+      [...sizes.take(index), ...parts, ...sizes.skip(index + 1)],
+      [
+        ...times.take(index),
+        ...List<Duration?>.filled(parts.length, times[index]),
+        ...times.skip(index + 1),
+      ],
+      current > index ? current + parts.length - 1 : current,
+      const [],
+    );
+  }
+
   /// [index] 칸의 줄을 한 줄짜리 칸으로 나눈다. 나눠도 시간은 모두 이 칸의 시간 그대로다.
   /// 되돌리기 기록은 비운다.
   SyncDraft explode(int index) {

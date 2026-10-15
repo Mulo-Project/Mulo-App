@@ -112,17 +112,17 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
       index < state.draft.length &&
       state.draft.sizes[index] > state.group;
 
-  /// 건너뛰어 묶인 [index] 칸을 기본 줄 수로 다시 나눈다. 이 칸의 시간은 지워진다.
+  /// 묶인 [index] 칸을 기본 줄 수로 다시 나눈다. 나눈 칸은 이 칸의 시간을 그대로 가져서
+  /// (찍은 칸이면 모두 찍힌 채로) 공백이 생기지 않고, 이어서 줄마다 시간을 다듬으면 된다.
   void split(int index) {
     if (!canGroup || !isMerged(index)) return;
     final at = _collapseNow()(index);
     final draft = state.draft;
     if (at >= draft.length || draft.sizes[at] <= state.group) return;
-    final last = draft.startOf(at) + state.group - 1;
     emit(
       LyricsSyncState(
-        draft.regroup(at, last, group: state.group),
-        selected: at,
+        draft.splitBlock(at, group: state.group),
+        selected: draft.times[at] == null ? null : at,
         group: state.group,
       ),
     );
