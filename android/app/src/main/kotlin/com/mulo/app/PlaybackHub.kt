@@ -132,6 +132,7 @@ object PlaybackHub {
             .setWakeMode(C.WAKE_MODE_LOCAL)
             .build()
         exo.addListener(playerListener)
+        exo.setPlaybackSpeed(PlaybackStore.speed(context))
         EqualizerEngine.attach(exo.audioSessionId)
         // 앱 없이 프로세스가 새로 떠도 지금 출력 기기에 맞는 이퀄라이저 값을 적용한다.
         EqualizerProfiles.applyCurrent(context)
@@ -355,6 +356,13 @@ object PlaybackHub {
             AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).build(),
             !mix,
         )
+    }
+
+    /** 재생 속도 (0.5~2.0배, 음높이는 그대로). 알림 · 세션은 [exo] 상태를 비추므로 따로 맞출 게 없다. */
+    fun setSpeed(speed: Double) {
+        val value = speed.toFloat().coerceIn(0.5f, 2f)
+        PlaybackStore.saveSpeed(context, value)
+        exo.setPlaybackSpeed(value)
     }
 
     /** 대기열 곡별 커버 주소를 받는다. 지금 곡은 앱이 [setSession]으로 보내므로 건드리지 않는다. */

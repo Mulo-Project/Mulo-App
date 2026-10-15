@@ -9,7 +9,9 @@ import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../covers/presentation/widgets/decorate_sheet.dart';
 import '../../../lyrics/presentation/bloc/lyrics_cubit.dart';
+import '../../../player/domain/entities/playback_speed.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
+import '../../../player/presentation/bloc/playback_speed_cubit.dart';
 import '../../../player/presentation/widgets/player_style_sheet.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../../domain/entities/track.dart';
@@ -18,6 +20,7 @@ import '../bloc/library_cubit.dart';
 
 enum _TrackAction {
   playerStyle,
+  playbackSpeed,
   playNext,
   addToQueue,
   addToPlaylist,
@@ -64,7 +67,7 @@ class TrackMoreButton extends StatelessWidget {
 
 /// 곡 메뉴: 팝업 메뉴 (⋮ · 길게 누르기 · 데스크톱 오른쪽 클릭에서 같은 메뉴를 연다).
 /// [globalPosition]이 있으면 눌린 자리에, 없으면 [context] 위젯 옆에 띄운다.
-/// [inPlayer]면 맨 위에 "플레이어 테마"가 더해진다 (재생 화면의 더 보기).
+/// [inPlayer]면 맨 위에 "플레이어 테마" · "재생 속도"가 더해진다 (재생 화면의 더 보기).
 /// 항목을 고르면 메뉴를 닫고, 이어지는 대화상자 · 안내는 [context]에서 이어 간다.
 ///
 /// [playlistId]가 있으면(재생목록 안의 곡) 삭제가 "재생목록에서 빼기"와
@@ -88,6 +91,13 @@ Future<void> showTrackMenu(
           value: _TrackAction.playerStyle,
           icon: AppIcons.style,
           label: l10n.playerStyleTitle,
+        ),
+      if (inPlayer)
+        AppMenuItem(
+          value: _TrackAction.playbackSpeed,
+          icon: AppIcons.timer,
+          label:
+              '${l10n.playerSpeedTitle} · ${speedLabel(l10n, context.read<PlaybackSpeedCubit>().state)}',
         ),
       // 지금 재생 중인 곡의 메뉴(재생 화면)에서는 "다음 재생" · "대기열에 추가"를 뺀다.
       if (!inPlayer)
@@ -159,6 +169,8 @@ Future<void> showTrackMenu(
   switch (action) {
     case _TrackAction.playerStyle:
       await showPlayerStyleSheet(context);
+    case _TrackAction.playbackSpeed:
+      await _pickSpeed(context);
     case _TrackAction.playNext:
       context.read<NowPlayingCubit>().playNext(track);
       _snack(context, context.l10n.trackMenuPlayNextDone);
@@ -197,6 +209,31 @@ Future<void> showTrackMenu(
       }
   }
 }
+
+/// 재생 속도 고르기: 메뉴 목록에서 고르면 바로 소리에 반영된다.
+Future<void> _pickSpeed(BuildContext context) async {
+  final l10n = context.l10n;
+  final cubit = context.read<PlaybackSpeedCubit>();
+  final picked = await showAppMenu<double>(
+    context,
+    items: [
+      for (final s in PlaybackSpeed.options)
+        AppMenuItem(
+          value: s,
+          icon: AppIcons.timer,
+          label: speedLabel(l10n, s),
+          selected: cubit.state == s,
+        ),
+    ],
+  );
+  if (picked != null) await cubit.set(picked);
+}
+
+/// "1.5배속" · "보통".
+String speedLabel(AppLocalizations l10n, double speed) =>
+    speed == PlaybackSpeed.normal
+    ? l10n.playerSpeedNormal
+    : l10n.playerSpeedValue('$speed');
 
 void _snack(BuildContext context, String message) =>
     ScaffoldMessenger.of(context)

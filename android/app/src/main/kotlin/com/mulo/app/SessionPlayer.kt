@@ -5,6 +5,7 @@ import android.os.Looper
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.common.SimpleBasePlayer
 import androidx.media3.exoplayer.ExoPlayer
@@ -119,6 +120,8 @@ class SessionPlayer(
         }
         val positionMs = (if (preview) info.positionMs else exo.currentPosition).coerceAtLeast(0)
         val running = playWhenReady && playbackState == STATE_READY
+        // 미리 듣기는 Dart 플레이어가 1배속으로 낸다. 메인 재생만 배속을 알림 · 잠금화면 진행 막대에 맞춘다.
+        val speed = if (preview) 1f else exo.playbackParameters.speed
 
         val metadata = metadataOf(info)
         val current = MediaItemData.Builder("current")
@@ -151,10 +154,11 @@ class SessionPlayer(
             .setAvailableCommands(commands.build())
             .setPlayWhenReady(playWhenReady, Player.PLAY_WHEN_READY_CHANGE_REASON_USER_REQUEST)
             .setPlaybackState(playbackState)
+            .setPlaybackParameters(PlaybackParameters(speed))
             .setPlaylist(playlist)
             .setCurrentMediaItemIndex(if (hasPrevious) 1 else 0)
             .setContentPositionMs(
-                if (running) PositionSupplier.getExtrapolating(positionMs, 1f) else PositionSupplier.getConstant(positionMs),
+                if (running) PositionSupplier.getExtrapolating(positionMs, speed) else PositionSupplier.getConstant(positionMs),
             )
             .build()
     }

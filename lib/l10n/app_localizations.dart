@@ -1010,6 +1010,24 @@ abstract class AppLocalizations {
   /// **'플레이어 테마'**
   String get playerStyleTitle;
 
+  /// No description provided for @playerSpeedTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생 속도'**
+  String get playerSpeedTitle;
+
+  /// No description provided for @playerSpeedValue.
+  ///
+  /// In ko, this message translates to:
+  /// **'{speed}배속'**
+  String playerSpeedValue(String speed);
+
+  /// No description provided for @playerSpeedNormal.
+  ///
+  /// In ko, this message translates to:
+  /// **'보통'**
+  String get playerSpeedNormal;
+
   /// No description provided for @playerStyleSquare.
   ///
   /// In ko, this message translates to:

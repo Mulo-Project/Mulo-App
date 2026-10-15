@@ -46,6 +46,8 @@ object PlaybackStore {
     private const val RESUME_ON_CONNECT = "resumeOnConnect"
     private const val RESUME_WITHOUT_NOTIFICATION = "resumeWithoutNotification"
 
+    private const val SPEED = "playbackSpeed"
+
     private fun prefs(context: Context) = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
     /** 블루투스 버튼이 곡을 이어 재생해도 되는지. 프로세스가 아직 없을 때 리시버가 읽는다. */
@@ -127,6 +129,14 @@ object PlaybackStore {
         } catch (_: Exception) {
             null
         }
+    }
+
+    // ── 재생 속도 (앱 없이 프로세스가 새로 떠도 같은 속도로 이어 재생하려고 보관) ──
+
+    fun speed(context: Context) = prefs(context).getFloat(SPEED, 1f)
+
+    fun saveSpeed(context: Context, value: Float) {
+        prefs(context).edit().putFloat(SPEED, value).apply()
     }
 
     // ── 출력 기기 동작 설정 (앱 없이도 지켜야 해서 네이티브에도 보관) ──

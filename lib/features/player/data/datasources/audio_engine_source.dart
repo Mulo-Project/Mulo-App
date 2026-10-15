@@ -27,6 +27,9 @@ abstract interface class AudioEngineSource {
   Future<void> pause();
 
   Future<void> seek(Duration position);
+
+  /// 재생 속도 (음높이는 그대로). 곡을 바꿔도 유지된다.
+  Future<void> setSpeed(double speed);
 }
 
 /// just_audio 플레이어 하나를 감싼다.
@@ -63,6 +66,9 @@ class JustAudioEngineSource implements AudioEngineSource {
 
   @override
   Future<void> seek(Duration position) => _player.seek(position);
+
+  @override
+  Future<void> setSpeed(double speed) => _player.setSpeed(speed);
 
   Future<void> dispose() => _player.dispose();
 }

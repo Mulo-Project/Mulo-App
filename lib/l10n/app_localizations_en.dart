@@ -503,6 +503,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerStyleTitle => 'Player theme';
 
   @override
+  String get playerSpeedTitle => 'Playback speed';
+
+  @override
+  String playerSpeedValue(String speed) {
+    return '${speed}x';
+  }
+
+  @override
+  String get playerSpeedNormal => 'Normal';
+
+  @override
   String get playerStyleSquare => 'Square';
 
   @override

@@ -12,12 +12,15 @@ import 'data/repositories/platform_audio_output_repository.dart';
 import 'data/repositories/prefs_mix_with_others_repository.dart';
 import 'data/repositories/prefs_output_behavior_repository.dart';
 import 'data/repositories/prefs_player_style_repository.dart';
+import 'data/repositories/prefs_playback_speed_repository.dart';
 import 'domain/repositories/audio_output_repository.dart';
 import 'domain/repositories/audio_player_repository.dart';
 import 'domain/usecases/audio_playback_usecases.dart';
 import 'domain/repositories/mix_with_others_repository.dart';
 import 'domain/repositories/output_behavior_repository.dart';
 import 'domain/repositories/player_style_repository.dart';
+import 'domain/repositories/playback_speed_repository.dart';
+import 'domain/usecases/playback_speed_usecases.dart';
 import 'domain/usecases/get_audio_output.dart';
 import 'domain/usecases/mix_with_others_usecases.dart';
 import 'domain/usecases/output_behavior_usecases.dart';
@@ -27,6 +30,7 @@ import 'presentation/bloc/mix_with_others_cubit.dart';
 import 'presentation/bloc/output_behavior_cubit.dart';
 import 'presentation/bloc/now_playing_cubit.dart';
 import 'presentation/bloc/player_style_cubit.dart';
+import 'presentation/bloc/playback_speed_cubit.dart';
 
 void registerPlayer(GetIt sl) {
   sl
@@ -74,6 +78,14 @@ void registerPlayer(GetIt sl) {
     ..registerFactory(() => LoadMixWithOthers(sl()))
     ..registerFactory(() => SaveMixWithOthers(sl()))
     ..registerFactory(() => MixWithOthersCubit(loadMix: sl(), saveMix: sl()))
+    ..registerLazySingleton<PlaybackSpeedRepository>(
+      () => PrefsPlaybackSpeedRepository(sl(), sl()),
+    )
+    ..registerFactory(() => LoadPlaybackSpeed(sl()))
+    ..registerFactory(() => SavePlaybackSpeed(sl()))
+    ..registerFactory(
+      () => PlaybackSpeedCubit(loadSpeed: sl(), saveSpeed: sl()),
+    )
     ..registerLazySingleton<OutputBehaviorRepository>(
       () => PrefsOutputBehaviorRepository(sl()),
     )
