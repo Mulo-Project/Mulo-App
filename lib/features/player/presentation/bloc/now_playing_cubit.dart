@@ -577,11 +577,12 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     if (queue.isEmpty) return;
     // 첫 곡이 아니라 무작위 곡에서 시작한다 (아니면 늘 목록 맨 위 곡이 먼저 나온다).
     playQueue(queue, index: _random.nextInt(queue.length));
-    if (!state.shuffle) toggleShuffle();
+    // 막 시작한 재생이라 지금 곡을 맨 앞에 두어야 나머지 곡이 모두 이번 바퀴에 나온다.
+    if (!state.shuffle) toggleShuffle(currentFirst: true);
   }
 
-  /// 셔플을 켜면 지금 곡을 맨 앞에 두고 나머지를 섞고, 끄면 켜기 전 순서로 되돌린다.
-  void toggleShuffle() {
+  /// 셔플을 켜면 지금 곡을 포함해 대기열 전체를 섞고, 끄면 켜기 전 순서로 되돌린다.
+  void toggleShuffle({bool currentFirst = false}) {
     final current = state.track;
     if (current == null) {
       emit(state.copyWith(shuffle: !state.shuffle));
@@ -589,14 +590,15 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     }
     if (!state.shuffle) {
       _original = state.queue;
+      // 지금 곡도 섞인 목록 안의 제자리를 가진다 (재생은 끊기지 않고, 앞쪽 곡은 한 바퀴 돈 뒤에 나온다).
+      final queue = currentFirst
+          ? [current, ..._shuffled(state.queue.where((t) => t != current))]
+          : _shuffled(state.queue);
       emit(
         state.copyWith(
           shuffle: true,
-          queue: [
-            current,
-            ..._shuffled(state.queue.where((t) => t != current)),
-          ],
-          index: 0,
+          queue: queue,
+          index: queue.indexOf(current),
         ),
       );
       return;

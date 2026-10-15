@@ -71,9 +71,9 @@ void main() {
     final tracks = TestData.tracks.take(6).toList();
     setUp(() => cubit.playQueue(tracks));
 
-    test('켜면 지금 곡은 맨 앞, 나머지는 섞이고 끄면 원래 순서', () {
+    test('켜면 지금 곡을 포함해 전체가 섞여 지금 곡은 제자리를 갖고, 끄면 원래 순서', () {
       vm().toggleShuffle();
-      expect(state().queue.first, tracks.first);
+      expect(state().track, tracks.first);
       expect(state().queue.toSet(), tracks.toSet());
       vm().toggleShuffle();
       expect(state().queue, tracks);
@@ -85,7 +85,7 @@ void main() {
         ..cycleRepeat()
         ..toggleShuffle();
       final first = [...state().queue];
-      for (var i = 0; i < first.length; i++) {
+      for (var i = state().index; i < first.length; i++) {
         vm().next();
       }
       expect(state().index, 0);
