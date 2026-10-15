@@ -58,7 +58,7 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
       context.read<LyricsSyncCubit>().state.draft.length,
       (_) => GlobalKey(),
     );
-    // 들어오면 재생 중이던 소리는 멈추고, 이 곡을 0초에 세워 둔다 (재생은 직접 누른다).
+    // 들어오면 재생 중이던 소리는 멈추고, 이 곡을 0초(이어 찍는 가사면 마지막 싱크 위치)에 세워 둔다 (재생은 직접 누른다).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _askDefaultGroup();
@@ -69,6 +69,10 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
         np.seekTo(Duration.zero);
       }
       if (np.state.isPlaying) np.togglePlay();
+      // 도중에 저장한 가사를 다시 열었으면 마지막으로 찍은 싱크 위치에 재생을 맞춰 둔다.
+      final times = context.read<LyricsSyncCubit>().state.draft.times;
+      final last = times.lastIndexWhere((t) => t != null);
+      if (last >= 0) np.seekTo(times[last]!);
     });
   }
 

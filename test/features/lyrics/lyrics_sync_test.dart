@@ -619,6 +619,14 @@ void main() {
     expect(find.text('0/3줄'), findsOneWidget);
   });
 
+  testWidgets('싱크 설정: 중간 저장한 가사를 다시 열면 마지막 싱크 위치에 재생이 맞춰진다', (tester) async {
+    await openSync(tester, '[00:04.00]가 줄\n[00:09.00]나 줄\n다 줄');
+    await tester.pumpAndSettle();
+    final player = tester.element(find.text('가 줄')).read<NowPlayingCubit>();
+    expect(player.state.position, const Duration(seconds: 9));
+    expect(player.state.isPlaying, isFalse);
+  });
+
   testWidgets('싱크 설정: 덜 찍어도 저장 버튼을 누르면 찍은 곳까지 중간 저장된다', (tester) async {
     final lyrics = await openSync(tester, '가 줄\n나 줄\n다 줄');
     await tester.tap(find.text('확인'));
