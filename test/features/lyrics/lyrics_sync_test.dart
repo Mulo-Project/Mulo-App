@@ -421,10 +421,10 @@ void main() {
     );
     expect(player.state.isPlaying, isTrue);
 
-    // 찍은 줄을 눌러도 다음에 찍을 칸은 그대로라 지금은 눌리지 않고, 싱크 취소하기로 뒤를 비운 뒤에 다시 찍는다
+    // 찍은 줄을 눌러도 다음에 찍을 칸은 그대로라 지금은 눌리지 않고, 이 싱크로 초기화로 뒤를 비운 뒤에 다시 찍는다
     player.seekTo(const Duration(seconds: 12));
     await tester.pump();
-    await tester.tap(find.text('싱크 취소하기'));
+    await tester.tap(find.text('이 싱크로 초기화'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('지금'));
     await tester.pumpAndSettle();
@@ -551,7 +551,7 @@ void main() {
     expect(find.text('가 줄\n나 줄\n다 줄'), findsOneWidget);
   });
 
-  testWidgets('싱크 설정: 뒤에 싱크가 있는 칸을 고르면 싱크 취소하기가 보이고 누르면 그 싱크로 초기화된다', (
+  testWidgets('싱크 설정: 뒤에 싱크가 있는 칸을 고르면 이 싱크로 초기화가 보이고 누르면 그 싱크로 초기화된다', (
     tester,
   ) async {
     await openSync(tester, '가 줄\n나 줄\n다 줄');
@@ -567,13 +567,13 @@ void main() {
     await tester.tap(find.text('지금'));
     await tester.pumpAndSettle();
     // 가장 뒤에 찍은 칸이 선택돼 있어 취소할 뒤 싱크가 없다
-    expect(find.text('싱크 취소하기'), findsNothing);
+    expect(find.text('이 싱크로 초기화'), findsNothing);
 
     // 앞쪽 칸을 고르면 취소하기가 나오고, 누르면 그 싱크로 초기화된다
     await tester.tap(find.text('00:02.00'));
     await tester.pumpAndSettle();
-    expect(find.text('싱크 취소하기'), findsOneWidget);
-    await tester.tap(find.text('싱크 취소하기'));
+    expect(find.text('이 싱크로 초기화'), findsOneWidget);
+    await tester.tap(find.text('이 싱크로 초기화'));
     await tester.pumpAndSettle();
     expect(find.text('1/3줄'), findsOneWidget);
     expect(find.text('--:--.--'), findsNWidgets(2));

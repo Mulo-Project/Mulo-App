@@ -1561,7 +1561,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Lines shown separately · set each time; tap outside to re-merge lines with the same time';
 
   @override
-  String get lyricsSyncCancelAfter => 'Cancel later syncs';
+  String get lyricsSyncCancelAfter => 'Reset to this sync';
 
   @override
   String get lyricsSyncCancelAfterHint =>

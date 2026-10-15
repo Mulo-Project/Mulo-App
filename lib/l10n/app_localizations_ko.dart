@@ -1528,7 +1528,7 @@ class AppLocalizationsKo extends AppLocalizations {
       '줄별로 펼쳤어요 · 시간을 따로 정할 수 있고, 영역 밖을 누르면 시간이 같은 줄은 다시 합쳐져요';
 
   @override
-  String get lyricsSyncCancelAfter => '싱크 취소하기';
+  String get lyricsSyncCancelAfter => '이 싱크로 초기화';
 
   @override
   String get lyricsSyncCancelAfterHint => '이 싱크 뒤에 찍은 싱크를 지우고 여기서부터 다시 찍어요';

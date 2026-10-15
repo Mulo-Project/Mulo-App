@@ -2897,7 +2897,7 @@ abstract class AppLocalizations {
   /// No description provided for @lyricsSyncCancelAfter.
   ///
   /// In ko, this message translates to:
-  /// **'싱크 취소하기'**
+  /// **'이 싱크로 초기화'**
   String get lyricsSyncCancelAfter;
 
   /// No description provided for @lyricsSyncCancelAfterHint.

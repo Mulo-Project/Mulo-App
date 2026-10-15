@@ -561,7 +561,7 @@
   "lyricsSyncGroupOk": "OK",
   "lyricsSyncDefaultLines": "Change default lines",
   "lyricsSyncExpandedHint": "Lines shown separately · set each time; tap outside to re-merge lines with the same time",
-  "lyricsSyncCancelAfter": "Cancel later syncs",
+  "lyricsSyncCancelAfter": "Reset to this sync",
   "lyricsSyncCancelAfterHint": "Clear the syncs stamped after this one and continue from here",
   "lyricsSyncSkipTitle": "Stamped syncs will be lost",
   "lyricsSyncSkipBody": "The range contains syncs you already stamped. Merging it into one block removes them. Continue?",
