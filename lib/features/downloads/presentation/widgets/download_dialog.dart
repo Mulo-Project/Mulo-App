@@ -269,9 +269,26 @@ class _DownloadScreenState extends State<DownloadScreen> {
             key: const ValueKey('download-import-lyrics'),
             title: l10n.downloadImportLyrics,
             description: status,
-            trailing: AppSwitch(
-              value: on,
-              onChanged: none ? null : (v) => setState(() => _importLyrics = v),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (sub.status == SubtitleStatus.checking) ...[
+                  SizedBox.square(
+                    dimension: AppSizes.iconSm,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: p.accent,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                ],
+                AppSwitch(
+                  value: on,
+                  onChanged: none
+                      ? null
+                      : (v) => setState(() => _importLyrics = v),
+                ),
+              ],
             ),
             onTap: none
                 ? null
@@ -392,6 +409,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
                   ? l10n.downloadLyricsPreviewLoading
                   : l10n.downloadLyricsPreview,
               icon: AppIcons.lyrics,
+              busy: loading,
               compact: true,
               variant: PillVariant.tonal,
               onPressed: loading
