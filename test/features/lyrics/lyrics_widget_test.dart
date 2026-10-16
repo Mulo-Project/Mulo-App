@@ -3,6 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
+import 'package:music_download_play_app/core/di/injector.dart';
+import 'package:music_download_play_app/features/lyrics/domain/entities/lyrics_settings.dart';
+import 'package:music_download_play_app/features/lyrics/domain/repositories/lyrics_settings_repository.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 import 'package:music_download_play_app/features/player/presentation/bloc/now_playing_cubit.dart';
 import 'package:music_download_play_app/features/player/presentation/screens/player_screen.dart';
@@ -229,6 +232,35 @@ void main() {
         tester.getTopLeft(find.text('다 줄')).dy -
         tester.getTopLeft(find.text('나 줄')).dy;
     expect(gapIn, lessThan(gapOut));
+  });
+
+  testWidgets('가운데 한 줄 테마: 묶인 줄은 간격이 좁고 함께 가운데에 놓인다', (tester) async {
+    phone(tester);
+    await setUpTestDependencies(
+      lyrics: MemoryLyricsRepository(
+        sibling: {'t1': '[00:00.00]가 줄\n[00:00.00]나 줄\n[00:30.00]다 줄'},
+      ),
+    );
+    (sl<LyricsSettingsRepository>() as MemoryLyricsSettingsRepository)
+        .settings = const LyricsSettings(
+      latencyMs: 0,
+      theme: LyricsTheme.centered,
+    );
+    await tester.pumpWidget(const MusicApp(initialLocation: Routes.player));
+    await tester.pumpAndSettle();
+    final player = tester
+        .element(find.byType(PlayerScreen))
+        .read<NowPlayingCubit>();
+    player.playQueue([_t('t1', '첫 곡')]);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('가사 보기'));
+    await tester.pumpAndSettle();
+
+    final a = tester.getCenter(find.text('가 줄')).dy;
+    final b = tester.getCenter(find.text('나 줄')).dy;
+    final c = tester.getCenter(find.text('다 줄')).dy;
+    // 묶인 두 줄 사이가 묶이지 않은 줄까지보다 좁다.
+    expect(b - a, lessThan(c - b));
   });
 
   testWidgets('플레이어: 가사가 없으면 안내와 가사 편집 버튼', (tester) async {

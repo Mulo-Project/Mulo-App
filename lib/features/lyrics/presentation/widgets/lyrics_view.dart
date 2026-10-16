@@ -249,7 +249,20 @@ class _LyricsViewState extends State<LyricsView> {
       final (first, last) = lyrics.groupAt(i);
       final active = first == group.$1 && last == group.$2;
       if (first == last) {
-        out.add(_band(coverOn && active, line(i, active, false)));
+        // 홑줄도 지금 줄이면 묶음과 같은 옅은 바탕을 깐다.
+        final single = active
+            ? Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: p.accent.withValues(alpha: .1),
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
+                  ),
+                  child: line(i, true, false),
+                ),
+              )
+            : line(i, false, false);
+        out.add(_band(coverOn && active, single));
       } else {
         // 묶인 덩어리: 줄 간격을 좁히고, 지금 덩어리면 옅은 바탕을 깐다.
         final box = Padding(
@@ -375,54 +388,103 @@ class _LyricsViewState extends State<LyricsView> {
     );
   }
 
+  /// 가운데 한 줄 테마의 세로 위치: 줄마다 쌓이는 높이. 같은 시간으로 묶인 줄은 간격을 좁힌다.
+  static List<double> _stack(Lyrics lyrics, double slot, double tight) {
+    final v = <double>[];
+    for (var i = 0; i < lyrics.lines.length; i++) {
+      if (i == 0) {
+        v.add(0);
+      } else {
+        final same = lyrics.lines[i].time == lyrics.lines[i - 1].time;
+        v.add(v[i - 1] + (same ? tight : slot));
+      }
+    }
+    return v;
+  }
+
+  /// 줄 번호가 소수인 위치 [x]의 세로 위치 (줄 사이는 이어서 계산).
+  static double _stackAt(List<double> v, double x, double slot) {
+    if (v.isEmpty) return x * slot;
+    if (x <= 0) return v.first + x * slot;
+    if (x >= v.length - 1) return v.last + (x - (v.length - 1)) * slot;
+    final i = x.floor();
+    final f = x - i;
+    return v[i] * (1 - f) + v[i + 1] * f;
+  }
+
   /// 가운데 한 줄 테마: 현재 줄을 가운데에 크게 두고 앞뒤 몇 줄만 흐리게 보인다. 줄이 바뀌면 부드럽게 미끄러진다.
+  /// 같은 시간으로 묶인 줄은 간격을 좁혀 함께 가운데에 놓고, 지금 줄(덩어리) 뒤에는 옅은 바탕을 깐다.
   Widget _centered(Lyrics lyrics, (int, int) group, NowPlayingCubit vm) {
-    // 같은 시간으로 묶인 줄은 함께 가운데에 놓고 함께 강조한다.
-    final center = (group.$1 + group.$2) / 2;
-    final half = (group.$2 - group.$1) / 2;
     final p = context.palette;
     final text = Theme.of(context).textTheme;
     const slot = 64.0;
+    const tight = 38.0;
     const reach = 3;
+    final v = _stack(lyrics, slot, tight);
+    final center = (group.$1 + group.$2) / 2;
+    // 지금 덩어리의 세로 길이 (홑줄이면 0).
+    final span = group.$1 < 0 || group.$2 >= v.length
+        ? 0.0
+        : v[group.$2] - v[group.$1];
+    final coverOn = context.read<LyricsSettingsCubit>().state.coverBackground;
     return LayoutBuilder(
       builder: (context, box) => TweenAnimationBuilder<double>(
         tween: Tween(end: center),
         duration: AppMotion.medium,
         curve: AppMotion.standard,
         builder: (context, pos, _) {
-          final first = (pos - reach - half).floor().clamp(
-            0,
-            lyrics.lines.length,
-          );
-          final last = (pos + reach + half).ceil().clamp(
-            -1,
-            lyrics.lines.length - 1,
+          final at = _stackAt(v, pos, slot);
+          final mid = box.maxHeight / 2;
+          final shown = <int>[
+            for (var i = 0; i < lyrics.lines.length; i++)
+              if (((v[i] - at).abs() - span / 2) <= (reach + .5) * slot) i,
+          ];
+          final bandHeight = slot + span;
+          final band = Positioned(
+            left: AppSpacing.md,
+            right: AppSpacing.md,
+            top: mid - bandHeight / 2,
+            height: bandHeight,
+            child: _band(
+              coverOn,
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: p.accent.withValues(alpha: .1),
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
+                ),
+                child: const SizedBox.expand(),
+              ),
+            ),
           );
           return Stack(
             clipBehavior: Clip.hardEdge,
             children: [
-              if (context.read<LyricsSettingsCubit>().state.coverBackground)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  top: box.maxHeight / 2 - slot / 2,
-                  height: slot,
-                  child: _band(true, const SizedBox.expand()),
-                ),
-              for (var i = first; i <= last; i++)
-                Positioned(
-                  left: AppSpacing.md,
-                  right: AppSpacing.md,
-                  top: box.maxHeight / 2 - slot / 2 + (i - pos) * slot,
-                  height: slot,
-                  child: _centeredLine(
-                    lyrics.lines[i],
-                    ((i - pos).abs() - half).clamp(0.0, double.infinity),
-                    text,
-                    p,
-                    vm,
-                  ),
-                ),
+              if (group.$1 >= 0) band,
+              for (final i in shown)
+                () {
+                  final inGroup = i >= group.$1 && i <= group.$2;
+                  final grouped = lyrics.groupAt(i).$1 != lyrics.groupAt(i).$2;
+                  final h = grouped ? tight : slot;
+                  return Positioned(
+                    left: AppSpacing.md,
+                    right: AppSpacing.md,
+                    top: mid - h / 2 + (v[i] - at),
+                    height: h,
+                    child: _centeredLine(
+                      lyrics.lines[i],
+                      inGroup
+                          ? 0.0
+                          : (((v[i] - at).abs() - span / 2) / slot).clamp(
+                              0.0,
+                              double.infinity,
+                            ),
+                      text,
+                      p,
+                      vm,
+                      oneLine: grouped,
+                    ),
+                  );
+                }(),
             ],
           );
         },
@@ -436,8 +498,9 @@ class _LyricsViewState extends State<LyricsView> {
     double distance,
     TextTheme text,
     AppPalette p,
-    NowPlayingCubit vm,
-  ) {
+    NowPlayingCubit vm, {
+    bool oneLine = false,
+  }) {
     final near = (1 - distance).clamp(0.0, 1.0);
     final opacity = distance < 1
         ? 1 - distance * .55
@@ -453,7 +516,7 @@ class _LyricsViewState extends State<LyricsView> {
             child: Text(
               line.text.isEmpty ? '♪' : line.text,
               textAlign: TextAlign.center,
-              maxLines: 2,
+              maxLines: oneLine ? 1 : 2,
               overflow: TextOverflow.ellipsis,
               style: text.titleLarge!.copyWith(
                 color: Color.lerp(p.onSurfaceMuted, p.accent, near),
