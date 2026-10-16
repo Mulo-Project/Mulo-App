@@ -116,6 +116,36 @@ void main() {
       expect(calls, hasLength(1));
     });
 
+    test('유튜브가 번역해 둔 자동 자막 언어는 목록에서 뺀다', () async {
+      Map<String, dynamic> track(String lang, {bool translated = false}) => {
+        lang: [
+          {
+            'url':
+                'https://yt/api/timedtext?v=1${translated ? '&tlang=$lang' : ''}',
+          },
+        ],
+      };
+      final engine = LocalEngine(
+        run: (_, _) async => (
+          exitCode: 0,
+          stdout: jsonEncode({
+            'id': 'v',
+            'title': 'T',
+            'subtitles': <String, dynamic>{},
+            'automatic_captions': {
+              ...track('ja-orig'),
+              ...track('ko', translated: true),
+              ...track('mk', translated: true),
+              ...track('lua', translated: true),
+            },
+          }),
+          stderr: '',
+        ),
+      );
+      final hit = ((await engine.fetchInfo('https://x')) as VideoInfo).hit;
+      expect(hit.subtitleLangs, ['ja-orig']);
+    });
+
     test('곡 정보에 자막 언어가 실린다', () async {
       final engine = LocalEngine(
         run: (_, _) async => (

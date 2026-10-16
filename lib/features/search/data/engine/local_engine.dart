@@ -264,7 +264,7 @@ class LocalEngine implements DownloaderEngine {
     }
     final pick = pickSubtitleLanguage(
       manual: _keys(j['subtitles']),
-      automatic: _keys(j['automatic_captions']),
+      automatic: _originalAutoKeys(j['automatic_captions']),
       prefer: preferLanguages,
     );
     if (pick == null) return null;
@@ -312,6 +312,28 @@ class LocalEngine implements DownloaderEngine {
             if (k is String && k != 'live_chat') k,
         ]
       : const [];
+
+  /// `automatic_captions`에서 영상 원어 자동 자막만 (유튜브가 번역해 둔 수십 개 언어는 뺀다).
+  /// 번역본은 주소에 `tlang=`가 붙고, 원어는 `xx-orig` 키로 따로 온다. `-orig`가 있으면 그것만 쓴다.
+  static List<String> _originalAutoKeys(Object? raw) {
+    if (raw is! Map) return const [];
+    final keys = <String>[];
+    for (final e in raw.entries) {
+      final k = e.key;
+      if (k is! String || k == 'live_chat') continue;
+      final formats = e.value;
+      final translated =
+          formats is List &&
+          formats.isNotEmpty &&
+          formats.every((f) => f is Map && '${f['url']}'.contains('tlang='));
+      if (!translated) keys.add(k);
+    }
+    final orig = [
+      for (final k in keys)
+        if (k.endsWith('-orig')) k,
+    ];
+    return orig.isEmpty ? keys : orig;
+  }
 
   Future<String> _exec(List<String> args) async {
     final ({int exitCode, String stdout, String stderr}) r;
@@ -384,10 +406,10 @@ class LocalEngine implements DownloaderEngine {
       creators: parseStrings(j['creators']),
       subtitleLangs: {
         ..._keys(j['subtitles']),
-        ..._keys(j['automatic_captions']),
+        ..._originalAutoKeys(j['automatic_captions']),
       }.toList(),
       autoSubtitleLangs: [
-        for (final k in _keys(j['automatic_captions']))
+        for (final k in _originalAutoKeys(j['automatic_captions']))
           if (!_keys(j['subtitles']).contains(k)) k,
       ],
     );
