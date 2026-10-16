@@ -15,6 +15,7 @@ import 'package:music_download_play_app/features/downloads/domain/entities/downl
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 import 'package:music_download_play_app/features/search/domain/entities/audio_stream.dart';
 import 'package:music_download_play_app/features/search/domain/entities/engine_exception.dart';
+import 'package:music_download_play_app/features/search/domain/entities/subtitle_track.dart';
 
 import '../../helpers/fakes.dart';
 
@@ -154,20 +155,23 @@ void main() {
 
   tearDown(() => tmp.delete(recursive: true));
 
-  EngineDownloadQueueRepository build(_FakeDownloader dl) =>
-      EngineDownloadQueueRepository(
-        engine: engine,
-        downloader: dl,
-        store: store,
-        library: library,
-        playlists: playlists,
-        covers: covers,
-        colors: colors,
-        settings: settings,
-        transcoder: transcoder,
-        queueStore: queueStore,
-        tempDir: () async => tmp,
-      );
+  EngineDownloadQueueRepository build(
+    _FakeDownloader dl, {
+    MemoryLyricsRepository? lyrics,
+  }) => EngineDownloadQueueRepository(
+    engine: engine,
+    downloader: dl,
+    store: store,
+    library: library,
+    playlists: playlists,
+    covers: covers,
+    colors: colors,
+    settings: settings,
+    transcoder: transcoder,
+    queueStore: queueStore,
+    tempDir: () async => tmp,
+    lyrics: lyrics,
+  );
 
   Future<List<DownloadItem>> settled(
     EngineDownloadQueueRepository repo,
@@ -209,6 +213,61 @@ void main() {
     expect(playlists.members['pl1'], {track.id});
     await Future<void>.delayed(const Duration(milliseconds: 50));
     expect(tmp.listSync(), isEmpty, reason: '임시 파일은 지운다');
+  });
+
+  group('자막 가사로 가져오기', () {
+    const withLyrics = DownloadRequest(
+      title: 'Song',
+      url: 'https://youtu.be/abc',
+      importLyrics: true,
+    );
+    const track = SubtitleTrack(
+      language: 'ko',
+      cues: [
+        SubtitleCue(Duration(seconds: 1), '첫 줄'),
+        SubtitleCue(Duration(seconds: 65, milliseconds: 500), '둘째 줄'),
+      ],
+    );
+
+    test('켜 두면 받은 곡에 싱크 가사가 저장된다', () async {
+      engine.subtitles = track;
+      final lyrics = MemoryLyricsRepository();
+      final repo = build(_FakeDownloader(), lyrics: lyrics);
+      await repo.enqueue(withLyrics);
+      await settled(
+        repo,
+        (l) => l.isNotEmpty && l.single.status == DownloadStatus.done,
+      );
+      final saved = lyrics.saved.entries.single;
+      expect(saved.key, startsWith('download:'));
+      expect(saved.value, '[00:01.00]첫 줄\n[01:05.50]둘째 줄');
+      expect(engine.subtitleUrls, ['https://youtu.be/abc']);
+    });
+
+    test('끄면 자막을 읽지 않는다', () async {
+      engine.subtitles = track;
+      final lyrics = MemoryLyricsRepository();
+      final repo = build(_FakeDownloader(), lyrics: lyrics);
+      await repo.enqueue(request);
+      await settled(
+        repo,
+        (l) => l.isNotEmpty && l.single.status == DownloadStatus.done,
+      );
+      expect(engine.subtitleUrls, isEmpty);
+      expect(lyrics.saved, isEmpty);
+    });
+
+    test('자막이 없어도 받기는 성공이고 가사는 비어 있다', () async {
+      final lyrics = MemoryLyricsRepository();
+      final repo = build(_FakeDownloader(), lyrics: lyrics);
+      await repo.enqueue(withLyrics);
+      final items = await settled(
+        repo,
+        (l) => l.isNotEmpty && l.single.status == DownloadStatus.done,
+      );
+      expect(items.single.error, isEmpty);
+      expect(lyrics.saved, isEmpty);
+    });
   });
 
   test('주소가 막히면(403) 기억한 주소를 버리고 새로 읽어 한 번 더 받는다', () async {

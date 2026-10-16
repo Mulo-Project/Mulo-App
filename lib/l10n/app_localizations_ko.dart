@@ -1097,6 +1097,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadCoverDefault => '기본으로';
 
   @override
+  String get downloadImportLyrics => '자막을 가사로 가져오기';
+
+  @override
+  String get downloadImportLyricsMaybe => '자막이 있으면 가사로 가져오기';
+
+  @override
+  String get downloadImportLyricsHint => '받은 뒤 가사 보기의 싱크 설정에서 다듬을 수 있어요.';
+
+  @override
   String get downloadCancelTitle => '받기 취소';
 
   @override
@@ -1557,6 +1566,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get lyricsThemeCover => '커버 배경';
+
+  @override
+  String get lyricsThemeTitle => '가사 테마';
 
   @override
   String get lyricsLatencyTitle => '반응 시간 보정';

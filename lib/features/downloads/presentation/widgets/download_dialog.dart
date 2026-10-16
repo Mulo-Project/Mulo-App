@@ -10,6 +10,7 @@ import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/widgets/cover_picker.dart';
 import '../../domain/entities/download_options.dart';
 import '../../domain/entities/download_request.dart';
+import '../../domain/entities/download_source.dart';
 import '../bloc/download_queue_cubit.dart';
 import '../bloc/download_settings_cubit.dart';
 import 'playlist_picker_dialog.dart';
@@ -26,6 +27,7 @@ Future<bool> showDownloadDialog(
   Duration? duration,
   String? thumbnailUrl,
   required String url,
+  List<String>? subtitleLangs,
 }) async {
   final queue = context.read<DownloadQueueCubit>();
   // 이미 받았거나 받는 중인 곡은 팝업을 열지 않고 알린다.
@@ -67,6 +69,7 @@ Future<bool> showDownloadDialog(
         duration: duration,
         thumbnailUrl: thumbnailUrl,
         url: url,
+        subtitleLangs: subtitleLangs,
       ),
     ),
   );
@@ -82,8 +85,11 @@ class _DownloadSheet extends StatefulWidget {
     required this.url,
     this.duration,
     this.thumbnailUrl,
+    this.subtitleLangs,
   });
 
+  /// 영상에 달린 자막 언어. null이면 아직 모른다 (유튜브면 "있으면" 가져오기로 묻는다).
+  final List<String>? subtitleLangs;
   final String title;
   final String artist;
   final String genre;
@@ -110,6 +116,12 @@ class _DownloadSheetState extends State<_DownloadSheet> {
   Color? _picked;
   var _pickedSet = false;
   var _saveAsGenreDefault = false;
+  var _importLyrics = false;
+
+  // 유튜브 곡이고 자막이 있거나(알면) 아직 모를 때만 "가사로 가져오기"를 묻는다.
+  late final bool _canImportLyrics =
+      downloadSourceKey(widget.url).startsWith('youtube:') &&
+      (widget.subtitleLangs?.isNotEmpty ?? true);
 
   // 커버: 유튜브 썸네일(웹 이미지)이 기본. 바꾸면 고른 이미지와 확대 · 위치를 따른다.
   // 웹 이미지는 주소만 쓰고 내려받지 않는다.
@@ -198,6 +210,7 @@ class _DownloadSheetState extends State<_DownloadSheet> {
         thumbnailUrl: widget.thumbnailUrl,
         cover: _cover,
         url: widget.url,
+        importLyrics: _canImportLyrics && _importLyrics,
       ),
     );
     if (ok && mounted) Navigator.of(context).pop(true);
@@ -299,6 +312,21 @@ class _DownloadSheetState extends State<_DownloadSheet> {
                   ),
                 ],
               ),
+              if (_canImportLyrics) ...[
+                const SizedBox(height: AppSpacing.sm),
+                SettingRow(
+                  key: const ValueKey('download-import-lyrics'),
+                  title: widget.subtitleLangs == null
+                      ? l10n.downloadImportLyricsMaybe
+                      : l10n.downloadImportLyrics,
+                  description: l10n.downloadImportLyricsHint,
+                  trailing: AppSwitch(
+                    value: _importLyrics,
+                    onChanged: (v) => setState(() => _importLyrics = v),
+                  ),
+                  onTap: () => setState(() => _importLyrics = !_importLyrics),
+                ),
+              ],
               const SizedBox(height: AppSpacing.lg),
               Text(
                 l10n.downloadPlaylistsLabel.toUpperCase(),

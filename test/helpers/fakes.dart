@@ -60,6 +60,7 @@ import 'package:music_download_play_app/features/search/domain/entities/preview_
 import 'package:music_download_play_app/features/search/domain/entities/engine_exception.dart';
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
 import 'package:music_download_play_app/features/search/domain/entities/search_source.dart';
+import 'package:music_download_play_app/features/search/domain/entities/subtitle_track.dart';
 import 'package:music_download_play_app/features/search/domain/repositories/downloader_engine.dart';
 import 'package:music_download_play_app/features/search/domain/repositories/link_opener.dart';
 import 'package:music_download_play_app/features/search/domain/repositories/preview_player.dart';
@@ -405,6 +406,10 @@ class MemoryLyricsSettingsRepository implements LyricsSettingsRepository {
   @override
   Future<void> saveTheme(LyricsTheme theme) async =>
       settings = settings.copyWith(theme: theme);
+
+  @override
+  Future<void> saveCoverBackground(bool on) async =>
+      settings = settings.copyWith(coverBackground: on);
 }
 
 class MemoryPlayerStyleRepository implements PlayerStyleRepository {
@@ -1165,6 +1170,19 @@ class FakeDownloaderEngine implements DownloaderEngine {
     final found = infoByUrl[url] ?? info;
     if (found == null) throw const EngineException(EngineFailure.notFound);
     return found;
+  }
+
+  /// [fetchSubtitles]가 돌려줄 자막 (없으면 자막 없음)과 받은 주소들.
+  SubtitleTrack? subtitles;
+  final subtitleUrls = <String>[];
+
+  @override
+  Future<SubtitleTrack?> fetchSubtitles(
+    String url, {
+    List<String> preferLanguages = const ['ko', 'en'],
+  }) async {
+    subtitleUrls.add(url);
+    return subtitles;
   }
 
   @override

@@ -1122,6 +1122,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadCoverDefault => 'Use default';
 
   @override
+  String get downloadImportLyrics => 'Import subtitles as lyrics';
+
+  @override
+  String get downloadImportLyricsMaybe =>
+      'Import subtitles as lyrics if available';
+
+  @override
+  String get downloadImportLyricsHint =>
+      'After downloading, refine them in the lyrics sync screen.';
+
+  @override
   String get downloadCancelTitle => 'Cancel download';
 
   @override
@@ -1591,6 +1602,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lyricsThemeCover => 'Cover background';
+
+  @override
+  String get lyricsThemeTitle => 'Lyrics theme';
 
   @override
   String get lyricsLatencyTitle => 'Reaction time';

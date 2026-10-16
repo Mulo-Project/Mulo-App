@@ -5,6 +5,7 @@ import '../../domain/entities/audio_stream.dart';
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/search_source.dart';
+import '../../domain/entities/subtitle_track.dart';
 import '../../domain/repositories/downloader_engine.dart';
 import 'audio_format_policy.dart';
 import 'json_fields.dart';
@@ -36,13 +37,19 @@ Future<({int exitCode, String stdout, String stderr})> _defaultRun(
 /// 로컬 모드: 이 기기에서 yt-dlp를 직접 실행해 찾는다 (데스크톱).
 /// Android 로컬(full 빌드)은 아직 없다.
 class LocalEngine implements DownloaderEngine {
-  LocalEngine({Future<String> Function()? resolveExecutable, RunProcess? run})
-    : _resolve = resolveExecutable ?? (() async => 'yt-dlp'),
-      _run = run ?? _defaultRun;
+  LocalEngine({
+    Future<String> Function()? resolveExecutable,
+    RunProcess? run,
+    Future<Directory> Function()? makeTempDir,
+  }) : _resolve = resolveExecutable ?? (() async => 'yt-dlp'),
+       _run = run ?? _defaultRun,
+       _makeTempDir =
+           makeTempDir ?? (() => Directory.systemTemp.createTemp('mulo_sub_'));
 
   /// 실행할 yt-dlp 경로 (앱이 받은 것 또는 PATH의 `yt-dlp`).
   final Future<String> Function() _resolve;
   final RunProcess _run;
+  final Future<Directory> Function() _makeTempDir;
 
   /// yt-dlp를 실행할 수 있는지 (`--version`).
   Future<bool> isAvailable() async {
@@ -238,6 +245,74 @@ class LocalEngine implements DownloaderEngine {
     }
   }
 
+  @override
+  Future<SubtitleTrack?> fetchSubtitles(
+    String url, {
+    List<String> preferLanguages = const ['ko', 'en'],
+  }) async {
+    // 어떤 자막이 있는지 먼저 읽고, 고른 언어 한 벌만 받는다 (모든 언어를 받지 않으려고).
+    final out = await _exec([
+      '--dump-single-json',
+      '--no-playlist',
+      '--no-warnings',
+      '--skip-download',
+      url,
+    ]);
+    final j = _decode(out);
+    if (j == null) {
+      throw const EngineException(EngineFailure.failed, 'bad response');
+    }
+    final pick = pickSubtitleLanguage(
+      manual: _keys(j['subtitles']),
+      automatic: _keys(j['automatic_captions']),
+      prefer: preferLanguages,
+    );
+    if (pick == null) return null;
+
+    final dir = await _makeTempDir();
+    try {
+      await _exec([
+        '--skip-download',
+        '--no-playlist',
+        '--no-warnings',
+        pick.automatic ? '--write-auto-subs' : '--write-subs',
+        '--sub-langs',
+        pick.language,
+        '--sub-format',
+        'vtt',
+        '-o',
+        '${dir.path}${Platform.pathSeparator}sub',
+        url,
+      ]);
+      File? file;
+      await for (final e in dir.list()) {
+        if (e is File && e.path.endsWith('.vtt')) file = e;
+      }
+      if (file == null) return null;
+      final cues = parseVtt(await file.readAsString());
+      if (cues.isEmpty) return null;
+      return SubtitleTrack(
+        language: pick.language,
+        automatic: pick.automatic,
+        cues: cues,
+      );
+    } finally {
+      try {
+        await dir.delete(recursive: true);
+      } on Object {
+        // 임시 폴더라 못 지워도 괜찮다.
+      }
+    }
+  }
+
+  /// yt-dlp `subtitles` · `automatic_captions`의 언어 코드들 (라이브 채팅 제외).
+  static List<String> _keys(Object? raw) => raw is Map
+      ? [
+          for (final k in raw.keys)
+            if (k is String && k != 'live_chat') k,
+        ]
+      : const [];
+
   Future<String> _exec(List<String> args) async {
     final ({int exitCode, String stdout, String stderr}) r;
     try {
@@ -307,6 +382,37 @@ class LocalEngine implements DownloaderEngine {
       likeCount: parseCount(j['like_count']),
       subscriberCount: parseCount(j['channel_follower_count']),
       creators: parseStrings(j['creators']),
+      subtitleLangs: [
+        ..._keys(j['subtitles']),
+        ..._keys(j['automatic_captions']),
+      ],
     );
   }
+}
+
+/// 받을 자막 언어를 고른다. 사람이 단 자막이 우선이고, [prefer] 순서(`ko` → `ko-KR` 같은 하위 코드 포함),
+/// 없으면 첫 언어. 자동 자막은 원어(`-orig`)를 우선 쓴다. 쓸 자막이 없으면 null.
+({String language, bool automatic})? pickSubtitleLanguage({
+  required List<String> manual,
+  required List<String> automatic,
+  required List<String> prefer,
+}) {
+  String? choose(List<String> keys) {
+    if (keys.isEmpty) return null;
+    for (final p in prefer) {
+      for (final k in keys) {
+        if (k == p || k.startsWith('$p-')) return k;
+      }
+    }
+    return keys.first;
+  }
+
+  final m = choose(manual);
+  if (m != null) return (language: m, automatic: false);
+  final orig = [
+    for (final k in automatic)
+      if (k.endsWith('-orig')) k,
+  ];
+  final a = choose(orig.isEmpty ? automatic : orig);
+  return a == null ? null : (language: a, automatic: true);
 }

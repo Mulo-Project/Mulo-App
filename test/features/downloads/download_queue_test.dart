@@ -164,6 +164,7 @@ void main() {
     await tester.enterText(fields.at(3), '/music/Mulo/발라드');
 
     // 재생목록 선택 대화상자에서 기존 재생목록을 고르고, 새로 만든다 (만들면 자동 선택).
+    await tester.ensureVisible(find.text('선택 안 함'));
     await tester.tap(find.text('선택 안 함'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('운동'));
@@ -227,10 +228,35 @@ void main() {
     expect(colors.saved['genre:발라드'], red);
   });
 
+  testWidgets('받기 팝업: 유튜브 곡은 자막을 가사로 가져오기를 켜고 받을 수 있다', (tester) async {
+    final queue = MemoryDownloadQueue();
+    await setUpTestDependencies(downloads: queue);
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    tester.platformDispatcher.localesTestValue = const [Locale('ko')];
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+    addTearDown(sl.reset);
+    await tester.pumpWidget(const MusicApp(initialLocation: Routes.search));
+    await tester.pumpAndSettle();
+
+    await openDownloadDialog(tester);
+    final row = find.byKey(const ValueKey('download-import-lyrics'));
+    await tester.ensureVisible(row);
+    await tester.tap(row);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(inSheet(find.text('받기')));
+    await tester.tap(inSheet(find.text('받기')));
+    await tester.pumpAndSettle();
+
+    expect(queue.requests.single.importLyrics, isTrue);
+  });
+
   testWidgets('받기 팝업: 제목을 비우면 받기 버튼이 눌리지 않는다', (tester) async {
     final queue = await openWithPlaylists(tester, const []);
     await openDownloadDialog(tester);
     expect(find.text('선택 안 함'), findsOneWidget);
+    await tester.ensureVisible(find.text('선택 안 함'));
     await tester.tap(find.text('선택 안 함'));
     await tester.pumpAndSettle();
     expect(find.text('아직 재생목록이 없어요. 아래에서 새로 만들 수 있어요.'), findsOneWidget);

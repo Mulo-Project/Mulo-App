@@ -2,6 +2,7 @@ import '../../domain/entities/audio_stream.dart';
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/search_source.dart';
+import '../../domain/entities/subtitle_track.dart';
 import '../../domain/repositories/downloader_engine.dart';
 import 'local_engine.dart';
 import 'server_engine.dart';
@@ -64,4 +65,11 @@ class RoutingDownloaderEngine implements DownloaderEngine {
     String url, {
     bool refresh = false,
   }) async => (await _pick()).resolveAudioStream(url, refresh: refresh);
+
+  @override
+  Future<SubtitleTrack?> fetchSubtitles(
+    String url, {
+    List<String> preferLanguages = const ['ko', 'en'],
+  }) async =>
+      (await _pick()).fetchSubtitles(url, preferLanguages: preferLanguages);
 }

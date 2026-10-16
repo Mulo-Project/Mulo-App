@@ -4,6 +4,7 @@ import 'dart:io';
 import '../../../covers/domain/entities/cover_key.dart';
 import '../../../covers/domain/repositories/cover_repository.dart';
 import '../../../library/domain/entities/track.dart';
+import '../../../lyrics/domain/repositories/lyrics_repository.dart';
 import '../../../library/domain/repositories/library_repository.dart';
 import '../../../playlists/domain/repositories/playlist_repository.dart';
 import '../../../search/domain/entities/engine_exception.dart';
@@ -41,6 +42,7 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
     required this._queueStore,
     required this._tempDir,
     this._coverTags,
+    this._lyrics,
     DateTime Function()? now,
   }) : _now = now ?? DateTime.now;
 
@@ -54,6 +56,7 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
   final DownloadSettingsRepository _settings;
   final AudioTranscoder _transcoder;
   final CoverTagWriter? _coverTags;
+  final LyricsRepository? _lyrics;
   final DownloadQueueStore _queueStore;
   final Future<Directory> Function() _tempDir;
   final DateTime Function() _now;
@@ -513,6 +516,21 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
     _sources[downloadSourceKey(request.url)] = trackId;
     _keysChanged.add(null);
     await _queueStore.saveSources(_sources);
+    if (request.importLyrics) await _importLyrics(trackId, request.url);
+  }
+
+  /// 영상 자막을 곡의 싱크 가사(.lrc)로 저장한다. 자막이 없거나 읽지 못해도 받기는 성공으로 둔다
+  /// (가사 보기의 싱크 화면에서 직접 다듬을 수 있다).
+  Future<void> _importLyrics(String trackId, String url) async {
+    final repo = _lyrics;
+    if (repo == null) return;
+    try {
+      final track = await _engine.fetchSubtitles(url);
+      final lrc = track?.toLrc() ?? '';
+      if (lrc.isNotEmpty) await repo.save(trackId, lrc);
+    } on Object {
+      // 자막은 덤이라 실패해도 받은 곡은 그대로 둔다.
+    }
   }
 
   static String _fileName(DownloadRequest r) {

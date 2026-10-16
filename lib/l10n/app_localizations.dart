@@ -2096,6 +2096,24 @@ abstract class AppLocalizations {
   /// **'기본으로'**
   String get downloadCoverDefault;
 
+  /// No description provided for @downloadImportLyrics.
+  ///
+  /// In ko, this message translates to:
+  /// **'자막을 가사로 가져오기'**
+  String get downloadImportLyrics;
+
+  /// No description provided for @downloadImportLyricsMaybe.
+  ///
+  /// In ko, this message translates to:
+  /// **'자막이 있으면 가사로 가져오기'**
+  String get downloadImportLyricsMaybe;
+
+  /// No description provided for @downloadImportLyricsHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'받은 뒤 가사 보기의 싱크 설정에서 다듬을 수 있어요.'**
+  String get downloadImportLyricsHint;
+
   /// No description provided for @downloadCancelTitle.
   ///
   /// In ko, this message translates to:
@@ -2953,6 +2971,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'커버 배경'**
   String get lyricsThemeCover;
+
+  /// No description provided for @lyricsThemeTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사 테마'**
+  String get lyricsThemeTitle;
 
   /// No description provided for @lyricsLatencyTitle.
   ///

@@ -18,6 +18,7 @@ class DownloadRequest extends Equatable {
     this.thumbnailUrl,
     this.cover,
     this.url = '',
+    this.importLyrics = false,
   });
 
   final String title;
@@ -49,6 +50,9 @@ class DownloadRequest extends Equatable {
   /// 받을 곡의 원본 주소 (유튜브 등). 비어 있으면 받을 수 없다.
   final String url;
 
+  /// 받은 뒤 영상 자막을 가사로 가져온다 (자막이 없거나 못 읽으면 건너뛴다).
+  final bool importLyrics;
+
   /// 문자열 앞뒤 공백을 지운 사본.
   DownloadRequest normalized() => DownloadRequest(
     title: title.trim(),
@@ -63,6 +67,7 @@ class DownloadRequest extends Equatable {
     thumbnailUrl: thumbnailUrl,
     cover: cover,
     url: url.trim(),
+    importLyrics: importLyrics,
   );
 
   @override
@@ -79,5 +84,6 @@ class DownloadRequest extends Equatable {
     thumbnailUrl,
     cover,
     url,
+    importLyrics,
   ];
 }
