@@ -691,39 +691,6 @@ class SolidPlayButton extends StatelessWidget {
   }
 }
 
-/// 강조 색 빛나는 재생 버튼.
-class GlowPlayButton extends StatelessWidget {
-  const GlowPlayButton({super.key, required this.data, this.size = 84});
-
-  final PlayerLayoutData data;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final playing = data.state.isPlaying;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: context.palette.accent.withValues(alpha: .4),
-            blurRadius: size * .6,
-            spreadRadius: size * .06,
-          ),
-        ],
-      ),
-      child: CircleIconButton(
-        icon: playing ? AppIcons.pause : AppIcons.play,
-        tooltip: playing ? l10n.actionPause : l10n.actionPlay,
-        emphasized: true,
-        size: size,
-        onPressed: data.vm.togglePlay,
-      ),
-    );
-  }
-}
-
 /// 10초 뒤로 · 앞으로.
 class SeekStepButton extends StatelessWidget {
   const SeekStepButton({

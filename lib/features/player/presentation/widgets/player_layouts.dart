@@ -240,7 +240,7 @@ class ArcPlayer extends StatelessWidget {
                     lyrics: _lyrics(data),
                   ),
                 ),
-                _imageSeekControls(data, GlowPlayButton(data: data, size: 80)),
+                _imageSeekControls(data, SolidPlayButton(data: data, size: 80)),
               ],
             ),
           ),
