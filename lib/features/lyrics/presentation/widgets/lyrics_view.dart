@@ -161,7 +161,7 @@ class _LyricsViewState extends State<LyricsView> {
         fit: StackFit.expand,
         children: [
           if (image != null)
-            // 커버는 선명하게 두고, 글자 주위는 글자 모양 그대로 번지는 그림자(_halo)로 흐리게 덮는다.
+            // 커버는 거의 손대지 않고 선명하게 둔다. 현재 강조된 줄만 글자 모양대로 번지는 그림자(_halo)로 받친다.
             Image(image: ResizeImage(image, width: 480), fit: BoxFit.cover)
           else
             DecoratedBox(
@@ -184,7 +184,7 @@ class _LyricsViewState extends State<LyricsView> {
     );
   }
 
-  /// 커버 배경이 켜져 있으면 글자 주위에만 배경색 번짐을 한 겹 더 깔아 글자가 묻히지 않게 한다.
+  /// 커버 배경이 켜져 있으면 현재 강조된 줄 주위에만 배경색 번짐을 깔아 글자가 묻히지 않게 한다.
   List<Shadow>? _halo(AppPalette p) {
     if (!context.read<LyricsSettingsCubit>().state.coverBackground) return null;
     return [
@@ -279,7 +279,7 @@ class _LyricsViewState extends State<LyricsView> {
                     style: (i == current ? text.titleLarge : text.bodyLarge)!
                         .copyWith(
                           color: i == current ? p.accent : p.onSurfaceMuted,
-                          shadows: _halo(p),
+                          shadows: i == current ? _halo(p) : null,
                         ),
                     child: SizedBox(
                       width: double.infinity,
@@ -307,7 +307,6 @@ class _LyricsViewState extends State<LyricsView> {
                     textAlign: TextAlign.center,
                     style: text.bodyLarge?.copyWith(
                       color: p.onSurfaceMuted.withValues(alpha: .6),
-                      shadows: _halo(p),
                     ),
                   ),
                 ),
@@ -383,7 +382,7 @@ class _LyricsViewState extends State<LyricsView> {
               overflow: TextOverflow.ellipsis,
               style: text.titleLarge!.copyWith(
                 color: Color.lerp(p.onSurfaceMuted, p.accent, near),
-                shadows: _halo(p),
+                shadows: near > .5 ? _halo(p) : null,
               ),
             ),
           ),
