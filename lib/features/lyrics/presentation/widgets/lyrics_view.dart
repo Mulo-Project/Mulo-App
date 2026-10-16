@@ -68,7 +68,7 @@ class _LyricsViewState extends State<LyricsView> {
       }
       Scrollable.ensureVisible(
         ctx,
-        alignment: .4,
+        alignment: .5,
         duration: first ? Duration.zero : AppMotion.medium,
         curve: AppMotion.standard,
       );
@@ -263,14 +263,16 @@ class _LyricsViewState extends State<LyricsView> {
       (c) => c.state.position,
     );
     final current = lyrics.currentLine(position);
+    // 같은 시간으로 묶인 줄은 한 덩어리로 함께 강조하고, 덩어리 가운데 줄로 따라간다.
+    final group = lyrics.groupAt(current);
     final vm = context.read<NowPlayingCubit>();
     if (context.select<LyricsSettingsCubit, LyricsTheme>(
           (c) => c.state.theme,
         ) ==
         LyricsTheme.centered) {
-      return _centered(lyrics, current, vm);
+      return _centered(lyrics, group, vm);
     }
-    _follow(current);
+    _follow(current < 0 ? current : (group.$1 + group.$2) >> 1);
 
     return Opacity(
       opacity: _placed ? 1 : 0,
@@ -280,7 +282,7 @@ class _LyricsViewState extends State<LyricsView> {
           children: [
             for (var i = 0; i < lyrics.lines.length; i++)
               _band(
-                coverOn && i == current,
+                coverOn && i >= group.$1 && i <= group.$2,
                 InkWell(
                   key: _keys[i],
                   borderRadius: BorderRadius.circular(AppRadii.sm),
@@ -293,11 +295,18 @@ class _LyricsViewState extends State<LyricsView> {
                     child: AnimatedDefaultTextStyle(
                       duration: AppMotion.fast,
                       textAlign: TextAlign.center,
-                      style: (i == current ? text.titleLarge : text.bodyLarge)!
-                          .copyWith(
-                            color: i == current ? p.accent : p.onSurfaceMuted,
-                            shadows: i == current ? _halo(p) : null,
-                          ),
+                      style:
+                          (i >= group.$1 && i <= group.$2
+                                  ? text.titleLarge
+                                  : text.bodyLarge)!
+                              .copyWith(
+                                color: i >= group.$1 && i <= group.$2
+                                    ? p.accent
+                                    : p.onSurfaceMuted,
+                                shadows: i >= group.$1 && i <= group.$2
+                                    ? _halo(p)
+                                    : null,
+                              ),
                       child: SizedBox(
                         width: double.infinity,
                         child: Text(
@@ -336,19 +345,28 @@ class _LyricsViewState extends State<LyricsView> {
   }
 
   /// 가운데 한 줄 테마: 현재 줄을 가운데에 크게 두고 앞뒤 몇 줄만 흐리게 보인다. 줄이 바뀌면 부드럽게 미끄러진다.
-  Widget _centered(Lyrics lyrics, int current, NowPlayingCubit vm) {
+  Widget _centered(Lyrics lyrics, (int, int) group, NowPlayingCubit vm) {
+    // 같은 시간으로 묶인 줄은 함께 가운데에 놓고 함께 강조한다.
+    final center = (group.$1 + group.$2) / 2;
+    final half = (group.$2 - group.$1) / 2;
     final p = context.palette;
     final text = Theme.of(context).textTheme;
     const slot = 64.0;
     const reach = 3;
     return LayoutBuilder(
       builder: (context, box) => TweenAnimationBuilder<double>(
-        tween: Tween(end: current.toDouble()),
+        tween: Tween(end: center),
         duration: AppMotion.medium,
         curve: AppMotion.standard,
         builder: (context, pos, _) {
-          final first = (pos - reach).floor().clamp(0, lyrics.lines.length);
-          final last = (pos + reach).ceil().clamp(-1, lyrics.lines.length - 1);
+          final first = (pos - reach - half).floor().clamp(
+            0,
+            lyrics.lines.length,
+          );
+          final last = (pos + reach + half).ceil().clamp(
+            -1,
+            lyrics.lines.length - 1,
+          );
           return Stack(
             clipBehavior: Clip.hardEdge,
             children: [
@@ -368,7 +386,7 @@ class _LyricsViewState extends State<LyricsView> {
                   height: slot,
                   child: _centeredLine(
                     lyrics.lines[i],
-                    (i - pos).abs(),
+                    ((i - pos).abs() - half).clamp(0.0, double.infinity),
                     text,
                     p,
                     vm,
