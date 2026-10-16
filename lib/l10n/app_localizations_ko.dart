@@ -1121,6 +1121,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadSubtitleAutoHint => '한국어 → 영어 → 첫 번째 자막 순으로 골라요.';
 
   @override
+  String get downloadSubtitleColLanguage => '언어';
+
+  @override
+  String get downloadSubtitleColKind => '종류';
+
+  @override
+  String get downloadSubtitleKindAuto => '자동 생성';
+
+  @override
+  String get downloadSubtitleKindManual => '직접 단 자막';
+
+  @override
   String downloadSubtitleFound(int count) {
     return '자막 $count개를 찾았어요.';
   }

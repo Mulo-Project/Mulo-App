@@ -313,6 +313,7 @@ class _DetailViewState extends State<_DetailView> {
                         subtitleLangs: hit.subtitleLangs.isEmpty
                             ? null
                             : hit.subtitleLangs,
+                        autoSubtitleLangs: hit.autoSubtitleLangs,
                       ),
                     ),
                   ],

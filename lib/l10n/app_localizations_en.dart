@@ -1149,6 +1149,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Korean, then English, then the first one.';
 
   @override
+  String get downloadSubtitleColLanguage => 'Language';
+
+  @override
+  String get downloadSubtitleColKind => 'Type';
+
+  @override
+  String get downloadSubtitleKindAuto => 'Auto-generated';
+
+  @override
+  String get downloadSubtitleKindManual => 'Uploaded by creator';
+
+  @override
   String downloadSubtitleFound(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

@@ -20,6 +20,7 @@ class MediaHit extends Equatable {
     this.channelThumbnailUrl,
     this.creators = const [],
     this.subtitleLangs = const [],
+    this.autoSubtitleLangs = const [],
   });
 
   /// 사이트 안의 곡 id (유튜브면 videoId).
@@ -66,6 +67,9 @@ class MediaHit extends Equatable {
   /// 비어 있으면 자막이 없거나 아직 모른다.
   final List<String> subtitleLangs;
 
+  /// [subtitleLangs] 가운데 자동 생성 자막인 것.
+  final List<String> autoSubtitleLangs;
+
   /// 분류만 채운 사본.
   MediaHit withCategories(List<String> categories) =>
       _copy(categories: categories);
@@ -82,6 +86,9 @@ class MediaHit extends Equatable {
         : uploader,
     creators: full.creators,
     subtitleLangs: subtitleLangs.isEmpty ? full.subtitleLangs : subtitleLangs,
+    autoSubtitleLangs: subtitleLangs.isEmpty
+        ? full.autoSubtitleLangs
+        : autoSubtitleLangs,
     duration: duration ?? full.duration,
     thumbnailUrl: thumbnailUrl ?? full.thumbnailUrl,
     categories: categories.isEmpty ? full.categories : categories,
@@ -114,6 +121,7 @@ class MediaHit extends Equatable {
     String? channelThumbnailUrl,
     List<String>? creators,
     List<String>? subtitleLangs,
+    List<String>? autoSubtitleLangs,
   }) => MediaHit(
     id: id,
     title: title,
@@ -132,6 +140,7 @@ class MediaHit extends Equatable {
     channelThumbnailUrl: channelThumbnailUrl ?? this.channelThumbnailUrl,
     creators: creators ?? this.creators,
     subtitleLangs: subtitleLangs ?? this.subtitleLangs,
+    autoSubtitleLangs: autoSubtitleLangs ?? this.autoSubtitleLangs,
   );
 
   @override
@@ -153,6 +162,7 @@ class MediaHit extends Equatable {
     channelThumbnailUrl,
     creators,
     subtitleLangs,
+    autoSubtitleLangs,
   ];
 }
 

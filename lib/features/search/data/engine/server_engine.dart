@@ -191,6 +191,7 @@ class ServerEngine implements DownloaderEngine {
       channelThumbnailUrl: parseText(j['channelThumbnail']),
       creators: parseStrings(j['creators']),
       subtitleLangs: parseStrings(j['subtitleLangs']),
+      autoSubtitleLangs: parseStrings(j['autoSubtitleLangs']),
     );
   }
 

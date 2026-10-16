@@ -382,9 +382,13 @@ class LocalEngine implements DownloaderEngine {
       likeCount: parseCount(j['like_count']),
       subscriberCount: parseCount(j['channel_follower_count']),
       creators: parseStrings(j['creators']),
-      subtitleLangs: [
+      subtitleLangs: {
         ..._keys(j['subtitles']),
         ..._keys(j['automatic_captions']),
+      }.toList(),
+      autoSubtitleLangs: [
+        for (final k in _keys(j['automatic_captions']))
+          if (!_keys(j['subtitles']).contains(k)) k,
       ],
     );
   }

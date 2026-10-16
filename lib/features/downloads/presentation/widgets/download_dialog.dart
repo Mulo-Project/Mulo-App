@@ -31,6 +31,7 @@ Future<bool> showDownloadDialog(
   String? thumbnailUrl,
   required String url,
   List<String>? subtitleLangs,
+  List<String> autoSubtitleLangs = const [],
 }) async {
   final queue = context.read<DownloadQueueCubit>();
   // 이미 받았거나 받는 중인 곡은 팝업을 열지 않고 알린다.
@@ -63,9 +64,12 @@ Future<bool> showDownloadDialog(
           BlocProvider.value(value: colors),
           BlocProvider.value(value: covers),
           BlocProvider(
-            create: (_) =>
-                sl<SubtitleAvailabilityCubit>()
-                  ..load(url, known: subtitleLangs),
+            create: (_) => sl<SubtitleAvailabilityCubit>()
+              ..load(
+                url,
+                known: subtitleLangs,
+                knownAutomatic: autoSubtitleLangs,
+              ),
           ),
         ],
         child: DownloadScreen(
@@ -288,24 +292,31 @@ class _DownloadScreenState extends State<DownloadScreen> {
               children: [
                 _languageRow(
                   context,
-                  title: l10n.downloadSubtitleAuto,
-                  description: l10n.downloadSubtitleAutoHint,
+                  header: true,
+                  language: l10n.downloadSubtitleColLanguage,
+                  kind: l10n.downloadSubtitleColKind,
+                ),
+                _languageRow(
+                  context,
+                  language: l10n.downloadSubtitleAuto,
+                  kind: l10n.downloadSubtitleAutoHint,
                   selected: _lyricsLanguage == null,
                   onTap: () => setState(() => _lyricsLanguage = null),
                 ),
-                for (final lang in sub.languages) ...[
-                  Divider(height: 1, color: p.outline),
+                for (final lang in sub.languages)
                   _languageRow(
                     context,
-                    title: subtitleLanguageLabel(
+                    language: subtitleLanguageLabel(
                       lang,
                       korean:
                           Localizations.localeOf(context).languageCode == 'ko',
                     ),
+                    kind: sub.automatic.contains(lang)
+                        ? l10n.downloadSubtitleKindAuto
+                        : l10n.downloadSubtitleKindManual,
                     selected: _lyricsLanguage == lang,
                     onTap: () => setState(() => _lyricsLanguage = lang),
                   ),
-                ],
               ],
             ),
           ),
@@ -321,20 +332,52 @@ class _DownloadScreenState extends State<DownloadScreen> {
     );
   }
 
+  /// 자막 표의 한 줄: 언어 · 종류 · 고른 표시. [header]면 머리글.
   Widget _languageRow(
     BuildContext context, {
-    required String title,
-    String? description,
-    required bool selected,
-    required VoidCallback onTap,
-  }) => SettingRow(
-    title: title,
-    description: description,
-    onTap: onTap,
-    trailing: selected
-        ? Icon(AppIcons.check, color: context.palette.primary)
-        : null,
-  );
+    required String language,
+    required String kind,
+    bool header = false,
+    bool selected = false,
+    VoidCallback? onTap,
+  }) {
+    final p = context.palette;
+    final text = Theme.of(context).textTheme;
+    final style = header
+        ? text.labelSmall?.copyWith(color: p.onSurfaceMuted)
+        : text.bodyMedium;
+    final kindStyle = header
+        ? style
+        : text.bodySmall?.copyWith(color: p.onSurfaceMuted);
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          border: header ? null : Border(top: BorderSide(color: p.outline)),
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        child: Row(
+          children: [
+            Expanded(flex: 4, child: Text(language, style: style)),
+            Expanded(flex: 5, child: Text(kind, style: kindStyle)),
+            SizedBox(
+              width: AppSpacing.lg,
+              child: selected
+                  ? Icon(
+                      AppIcons.check,
+                      size: AppSizes.iconSm,
+                      color: p.primary,
+                    )
+                  : null,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _section(BuildContext context, String title, List<Widget> children) {
     final text = Theme.of(context).textTheme;

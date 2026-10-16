@@ -2144,6 +2144,30 @@ abstract class AppLocalizations {
   /// **'한국어 → 영어 → 첫 번째 자막 순으로 골라요.'**
   String get downloadSubtitleAutoHint;
 
+  /// No description provided for @downloadSubtitleColLanguage.
+  ///
+  /// In ko, this message translates to:
+  /// **'언어'**
+  String get downloadSubtitleColLanguage;
+
+  /// No description provided for @downloadSubtitleColKind.
+  ///
+  /// In ko, this message translates to:
+  /// **'종류'**
+  String get downloadSubtitleColKind;
+
+  /// No description provided for @downloadSubtitleKindAuto.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동 생성'**
+  String get downloadSubtitleKindAuto;
+
+  /// No description provided for @downloadSubtitleKindManual.
+  ///
+  /// In ko, this message translates to:
+  /// **'직접 단 자막'**
+  String get downloadSubtitleKindManual;
+
   /// No description provided for @downloadSubtitleFound.
   ///
   /// In ko, this message translates to:

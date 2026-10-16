@@ -131,6 +131,7 @@ void main() {
       );
       final hit = ((await engine.fetchInfo('https://x')) as VideoInfo).hit;
       expect(hit.subtitleLangs, ['ko', 'en-orig']);
+      expect(hit.autoSubtitleLangs, ['en-orig']);
     });
   });
 
