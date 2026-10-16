@@ -162,18 +162,30 @@ class _LyricsViewState extends State<LyricsView> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          if (image != null)
-            Opacity(
-              opacity: 1,
+          if (image != null) ...[
+            // 커버는 거의 선명하게 보여 주고, 글자가 놓이는 가운데 띠만 한 겹 더 흐리게 덮는다
+            // (이미지 두 장 · 필터 한 번. 줄마다 필터를 쓰지 않는다).
+            Image(image: ResizeImage(image, width: 480), fit: BoxFit.cover),
+            ShaderMask(
+              blendMode: BlendMode.dstIn,
+              shaderCallback: (rect) => LinearGradient(
+                colors: [
+                  p.background.withValues(alpha: 0),
+                  p.background,
+                  p.background,
+                  p.background.withValues(alpha: 0),
+                ],
+                stops: const [0, .2, .8, 1],
+              ).createShader(rect),
               child: ImageFiltered(
-                imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                imageFilter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
                 child: Image(
                   image: ResizeImage(image, width: 240),
                   fit: BoxFit.cover,
                 ),
               ),
-            )
-          else
+            ),
+          ] else
             DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -187,7 +199,7 @@ class _LyricsViewState extends State<LyricsView> {
               ),
             ),
           // 글자 대비를 위해 어둡게 덮는다.
-          ColoredBox(color: p.background.withValues(alpha: .15)),
+          ColoredBox(color: p.background.withValues(alpha: .1)),
           content,
         ],
       ),
