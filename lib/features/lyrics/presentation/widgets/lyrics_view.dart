@@ -1,11 +1,15 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../bloc/lyrics_cubit.dart';
+import '../bloc/lyrics_settings_cubit.dart';
 import 'lyrics_editor.dart';
 import 'lyrics_sync_start.dart';
 
@@ -87,12 +91,15 @@ class _LyricsViewState extends State<LyricsView> {
         context.watch<LyricsCubit>().state.lyrics != null;
     final synced =
         hasLyrics && context.watch<LyricsCubit>().state.lyrics!.isSynced;
+    final theme = context.select<LyricsSettingsCubit, LyricsTheme>(
+      (c) => c.state.theme,
+    );
     return Column(
       children: [
         Expanded(child: _body(context)),
         // 싱크 추적: 켜면 재생 위치의 줄을 따라 가사가 올라가고, 끄면 방해 없이 자유롭게 볼 수 있다.
         // 싱크 설정 · 가사 편집 버튼과는 다른 줄에 둔다.
-        if (synced)
+        if (synced && theme != LyricsTheme.centered)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
             child: Row(
@@ -118,6 +125,13 @@ class _LyricsViewState extends State<LyricsView> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
+                Builder(
+                  builder: (buttonContext) => PlainButton(
+                    label: _themeLabel(l10n, theme),
+                    icon: AppIcons.style,
+                    onPressed: () => _pickTheme(buttonContext, theme),
+                  ),
+                ),
                 PlainButton(
                   label: l10n.lyricsSyncSetting,
                   icon: AppIcons.timer,
@@ -135,7 +149,78 @@ class _LyricsViewState extends State<LyricsView> {
     );
   }
 
+  static String _themeLabel(AppLocalizations l10n, LyricsTheme theme) =>
+      switch (theme) {
+        LyricsTheme.list => l10n.lyricsThemeList,
+        LyricsTheme.centered => l10n.lyricsThemeCentered,
+        LyricsTheme.cover => l10n.lyricsThemeCover,
+      };
+
+  static IconData _themeIcon(LyricsTheme theme) => switch (theme) {
+    LyricsTheme.list => AppIcons.lineSpacing,
+    LyricsTheme.centered => AppIcons.lyrics,
+    LyricsTheme.cover => AppIcons.photoLibrary,
+  };
+
+  /// 가사 테마를 고른다. 고른 값은 저장되어 다음에도 유지된다.
+  Future<void> _pickTheme(BuildContext buttonContext, LyricsTheme now) async {
+    final l10n = context.l10n;
+    final cubit = context.read<LyricsSettingsCubit>();
+    final picked = await showAppMenu<LyricsTheme>(
+      buttonContext,
+      items: [
+        for (final t in LyricsTheme.values)
+          AppMenuItem(
+            value: t,
+            icon: _themeIcon(t),
+            label: _themeLabel(l10n, t),
+            selected: t == now,
+          ),
+      ],
+    );
+    if (picked == null || picked == now) return;
+    // 모양이 바뀌면 처음처럼 현재 줄에 자리를 다시 잡는다.
+    setState(() {
+      _shown = -2;
+      _placed = false;
+    });
+    cubit.setTheme(picked);
+  }
+
+  /// 커버 테마: 커버를 아주 옅게 흐려 목록 뒤에 깐다 (한 번만 흐리고, 줄마다 필터를 쓰지 않는다).
   Widget _body(BuildContext context) {
+    final content = _content(context);
+    final theme = context.select<LyricsSettingsCubit, LyricsTheme>(
+      (c) => c.state.theme,
+    );
+    final image = theme == LyricsTheme.cover
+        ? coverImageOf(context, CoverKey.track(widget.track.id))
+        : null;
+    if (image == null) return content;
+    final p = context.palette;
+    return ClipRect(
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Opacity(
+            opacity: .35,
+            child: ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+              child: Image(
+                image: ResizeImage(image, width: 240),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          // 글자 대비를 위해 어둡게 덮는다.
+          ColoredBox(color: p.background.withValues(alpha: .6)),
+          content,
+        ],
+      ),
+    );
+  }
+
+  Widget _content(BuildContext context) {
     final l10n = context.l10n;
     final p = context.palette;
     final text = Theme.of(context).textTheme;
@@ -189,8 +274,14 @@ class _LyricsViewState extends State<LyricsView> {
       (c) => c.state.position,
     );
     final current = lyrics.currentLine(position);
-    _follow(current);
     final vm = context.read<NowPlayingCubit>();
+    if (context.select<LyricsSettingsCubit, LyricsTheme>(
+          (c) => c.state.theme,
+        ) ==
+        LyricsTheme.centered) {
+      return _centered(lyrics, current, vm);
+    }
+    _follow(current);
 
     return Opacity(
       opacity: _placed ? 1 : 0,
@@ -246,6 +337,79 @@ class _LyricsViewState extends State<LyricsView> {
                 ),
               ),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// 가운데 한 줄 테마: 현재 줄을 가운데에 크게 두고 앞뒤 몇 줄만 흐리게 보인다. 줄이 바뀌면 부드럽게 미끄러진다.
+  Widget _centered(Lyrics lyrics, int current, NowPlayingCubit vm) {
+    final p = context.palette;
+    final text = Theme.of(context).textTheme;
+    const slot = 64.0;
+    const reach = 3;
+    return LayoutBuilder(
+      builder: (context, box) => TweenAnimationBuilder<double>(
+        tween: Tween(end: current.toDouble()),
+        duration: AppMotion.medium,
+        curve: AppMotion.standard,
+        builder: (context, pos, _) {
+          final first = (pos - reach).floor().clamp(0, lyrics.lines.length);
+          final last = (pos + reach).ceil().clamp(-1, lyrics.lines.length - 1);
+          return Stack(
+            clipBehavior: Clip.hardEdge,
+            children: [
+              for (var i = first; i <= last; i++)
+                Positioned(
+                  left: AppSpacing.md,
+                  right: AppSpacing.md,
+                  top: box.maxHeight / 2 - slot / 2 + (i - pos) * slot,
+                  height: slot,
+                  child: _centeredLine(
+                    lyrics.lines[i],
+                    (i - pos).abs(),
+                    text,
+                    p,
+                    vm,
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  /// [distance]는 현재 줄(0)에서 떨어진 줄 수 (움직이는 동안은 소수).
+  Widget _centeredLine(
+    LyricLine line,
+    double distance,
+    TextTheme text,
+    AppPalette p,
+    NowPlayingCubit vm,
+  ) {
+    final near = (1 - distance).clamp(0.0, 1.0);
+    final opacity = distance < 1
+        ? 1 - distance * .55
+        : (.45 - (distance - 1) * .17).clamp(0.0, .45);
+    return Opacity(
+      opacity: opacity,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadii.sm),
+        onTap: () => vm.seekTo(line.time),
+        child: Center(
+          child: Transform.scale(
+            scale: .78 + .22 * near,
+            child: Text(
+              line.text.isEmpty ? '♪' : line.text,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: text.titleLarge!.copyWith(
+                color: Color.lerp(p.onSurfaceMuted, p.accent, near),
+              ),
+            ),
+          ),
         ),
       ),
     );
