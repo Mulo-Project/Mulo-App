@@ -12,7 +12,6 @@ import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../bloc/lyrics_cubit.dart';
 import '../bloc/lyrics_settings_cubit.dart';
 import 'lyrics_editor.dart';
-import 'lyrics_theme_sheet.dart';
 import 'lyrics_sync_start.dart';
 
 /// 전체 화면 플레이어의 가사 보기. 싱크 가사는 재생 위치의 줄을 강조하고 따라 내려가며,
@@ -127,11 +126,6 @@ class _LyricsViewState extends State<LyricsView> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                PlainButton(
-                  label: l10n.lyricsThemeTitle,
-                  icon: AppIcons.style,
-                  onPressed: () => showLyricsThemeSheet(context),
-                ),
                 PlainButton(
                   label: l10n.lyricsSyncSetting,
                   icon: AppIcons.timer,
