@@ -285,11 +285,12 @@ class _LyricsLatencyScreenState extends State<LyricsLatencyScreen> {
                     const SizedBox(height: AppSpacing.sm),
                     Row(
                       children: [
-                        Text(
-                          l10n.lyricsSongTried(_clockOf(stamped)),
-                          style: text.titleSmall,
+                        Expanded(
+                          child: Text(
+                            l10n.lyricsSongTried(_clockOf(stamped)),
+                            style: text.titleSmall,
+                          ),
                         ),
-                        const Spacer(),
                         PlainButton(
                           label: l10n.lyricsSongListen,
                           icon: AppIcons.replay,
