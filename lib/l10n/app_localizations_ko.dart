@@ -1464,6 +1464,16 @@ class AppLocalizationsKo extends AppLocalizations {
       '가사를 붙여넣거나 입력하세요. [01:02.30]처럼 시간이 붙은 글이나 .lrc · .txt 파일을 불러오면 싱크 가사가 돼요. 비워서 저장하면 가사를 지워요.';
 
   @override
+  String get lyricsEditSyncedHint =>
+      '시간은 줄 번호에 맞춰 붙어 있어요. 줄을 끼우거나 지우면 시간은 그 자리에 남고 글만 밀려요. 시간을 바꾸려면 싱크 설정에서 해요.';
+
+  @override
+  String get lyricsAddLine => '줄 추가';
+
+  @override
+  String get lyricsDeleteLine => '줄 지우기';
+
+  @override
   String get lyricsLoadFile => '파일에서 불러오기';
 
   @override

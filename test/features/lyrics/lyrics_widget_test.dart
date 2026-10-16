@@ -52,19 +52,32 @@ void main() {
     await tester.tap(find.textContaining('파일에서 불러오기'));
     await tester.pumpAndSettle();
     expect(file.calls, 1);
-    expect(find.text('[00:01.00]불러온 가사'), findsOneWidget);
+    // 싱크 가사는 시간이 글과 따로 줄 옆에 보이고, 글에는 [] 표시가 섞이지 않는다.
+    expect(find.text('00:01.00'), findsOneWidget);
+    expect(find.text('불러온 가사'), findsOneWidget);
+    expect(find.text('[00:01.00]불러온 가사'), findsNothing);
 
     await tester.tap(find.text('저장'));
     await tester.pumpAndSettle();
     expect(lyrics.saved['t1'], '[00:01.00]불러온 가사');
     expect(find.text('가사를 저장했어요'), findsOneWidget);
 
+    // 글만 고치면 시간은 줄 번호에 맞춰 그대로 다시 붙는다.
+    await tester.pump(const Duration(seconds: 5));
+    await tester.tap(find.text('가사 편집'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.widgetWithText(TextField, '불러온 가사'), '고친 가사');
+    await tester.tap(find.text('저장'));
+    await tester.pumpAndSettle();
+    expect(lyrics.saved['t1'], '[00:01.00]고친 가사');
+
     // 다시 열면 저장된 글이 채워지고, 비워 저장하면 지운다.
     await tester.pump(const Duration(seconds: 5));
     await tester.tap(find.text('가사 편집'));
     await tester.pumpAndSettle();
-    expect(find.text('[00:01.00]불러온 가사'), findsOneWidget);
-    await tester.enterText(find.byType(EditableText), '');
+    expect(find.text('고친 가사'), findsOneWidget);
+    await tester.tap(find.byTooltip('줄 지우기'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('저장'));
     await tester.pumpAndSettle();
     expect(lyrics.saved, isEmpty);
@@ -146,13 +159,13 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('바꾸기'));
     await tester.pumpAndSettle();
-    expect(find.text('[00:01.00]불러온 가사'), findsOneWidget);
+    expect(find.text('불러온 가사'), findsOneWidget);
 
     await tester.tap(find.textContaining('파일에서 불러오기'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('취소').last);
     await tester.pumpAndSettle();
-    expect(find.text('[00:01.00]불러온 가사'), findsOneWidget);
+    expect(find.text('불러온 가사'), findsOneWidget);
   });
 
   testWidgets('플레이어: 가사 보기로 바꾸면 줄이 보이고, 줄을 누르면 그 위치로 간다', (tester) async {

@@ -1501,6 +1501,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Paste or type the lyrics. Text with times like [01:02.30], or an .lrc / .txt file with them, becomes synced lyrics. Save empty to remove them.';
 
   @override
+  String get lyricsEditSyncedHint =>
+      'Times follow the line number. If you insert or delete a line, the times stay in place and only the text shifts. Change times in the sync screen.';
+
+  @override
+  String get lyricsAddLine => 'Add line';
+
+  @override
+  String get lyricsDeleteLine => 'Delete line';
+
+  @override
   String get lyricsLoadFile => 'Load from file';
 
   @override

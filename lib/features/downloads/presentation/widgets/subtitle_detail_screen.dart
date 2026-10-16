@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../lyrics/presentation/widgets/lyric_line_row.dart';
 import '../../../search/domain/entities/subtitle_track.dart';
 import '../bloc/subtitle_preview_cubit.dart';
 
@@ -98,12 +99,6 @@ class _SubtitleDetailScreenState extends State<SubtitleDetailScreen> {
       for (final cue in track?.cues ?? const <SubtitleCue>[])
         TextEditingController(text: cue.text),
     ];
-  }
-
-  static String _clock(Duration d) {
-    final m = d.inMinutes.toString().padLeft(2, '0');
-    final s = (d.inSeconds % 60).toString().padLeft(2, '0');
-    return '$m:$s';
   }
 
   /// 글만 고친 자막. 고치지 않았으면 null. 글을 비운 줄은 빠진다.
@@ -225,11 +220,9 @@ class _SubtitleDetailScreenState extends State<SubtitleDetailScreen> {
                             padding: const EdgeInsets.only(
                               bottom: AppSpacing.sm,
                             ),
-                            child: AppTextField(
-                              label: _clock(track.cues[i].start),
+                            child: LyricLineRow(
+                              time: track.cues[i].start,
                               controller: _controllers[i],
-                              maxLines: 2,
-                              textInputAction: TextInputAction.newline,
                             ),
                           ),
                         ),
