@@ -1142,7 +1142,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadSubtitleLanguage => 'Subtitle language';
 
   @override
-  String get downloadSubtitleAuto => 'Auto';
+  String get downloadSubtitleAuto => 'Choose automatically';
+
+  @override
+  String get downloadSubtitleAutoHint =>
+      'Korean, then English, then the first one.';
 
   @override
   String downloadSubtitleFound(int count) {

@@ -276,30 +276,38 @@ class _DownloadScreenState extends State<DownloadScreen> {
           const SizedBox(height: AppSpacing.sm),
           Text(l10n.downloadSubtitleLanguage, style: text.labelSmall),
           const SizedBox(height: AppSpacing.xs),
-          Wrap(
-            spacing: AppSpacing.xs,
-            runSpacing: AppSpacing.xs,
-            children: [
-              PillButton(
-                label: l10n.downloadSubtitleAuto,
-                compact: true,
-                variant: PillVariant.tonal,
-                selected: _lyricsLanguage == null,
-                onPressed: () => setState(() => _lyricsLanguage = null),
+          DecoratedBox(
+            decoration: ShapeDecoration(
+              color: p.surfaceHigh,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadii.sm),
+                side: BorderSide(color: p.outline),
               ),
-              for (final lang in sub.languages)
-                PillButton(
-                  label: subtitleLanguageLabel(
-                    lang,
-                    korean:
-                        Localizations.localeOf(context).languageCode == 'ko',
-                  ),
-                  compact: true,
-                  variant: PillVariant.tonal,
-                  selected: _lyricsLanguage == lang,
-                  onPressed: () => setState(() => _lyricsLanguage = lang),
+            ),
+            child: Column(
+              children: [
+                _languageRow(
+                  context,
+                  title: l10n.downloadSubtitleAuto,
+                  description: l10n.downloadSubtitleAutoHint,
+                  selected: _lyricsLanguage == null,
+                  onTap: () => setState(() => _lyricsLanguage = null),
                 ),
-            ],
+                for (final lang in sub.languages) ...[
+                  Divider(height: 1, color: p.outline),
+                  _languageRow(
+                    context,
+                    title: subtitleLanguageLabel(
+                      lang,
+                      korean:
+                          Localizations.localeOf(context).languageCode == 'ko',
+                    ),
+                    selected: _lyricsLanguage == lang,
+                    onTap: () => setState(() => _lyricsLanguage = lang),
+                  ),
+                ],
+              ],
+            ),
           ),
         ],
         if (on) ...[
@@ -312,6 +320,21 @@ class _DownloadScreenState extends State<DownloadScreen> {
       ],
     );
   }
+
+  Widget _languageRow(
+    BuildContext context, {
+    required String title,
+    String? description,
+    required bool selected,
+    required VoidCallback onTap,
+  }) => SettingRow(
+    title: title,
+    description: description,
+    onTap: onTap,
+    trailing: selected
+        ? Icon(AppIcons.check, color: context.palette.primary)
+        : null,
+  );
 
   Widget _section(BuildContext context, String title, List<Widget> children) {
     final text = Theme.of(context).textTheme;
