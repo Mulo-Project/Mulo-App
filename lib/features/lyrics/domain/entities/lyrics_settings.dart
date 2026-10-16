@@ -7,9 +7,6 @@ enum LyricsTheme {
 
   /// 현재 줄이 가운데에 크게 고정되고 앞뒤 몇 줄만 흐리게 보인다.
   centered,
-
-  /// 목록 모양에 앨범 커버를 옅게 뒤에 깐다.
-  cover,
 }
 
 /// 가사 · 싱크 관련 사용자 설정.
@@ -17,6 +14,7 @@ class LyricsSettings extends Equatable {
   const LyricsSettings({
     this.latencyMs = defaultLatencyMs,
     this.theme = LyricsTheme.list,
+    this.coverBackground = false,
   });
 
   /// 지금을 누를 때 반응 시간만큼 앞당겨 찍는 기본값 (밀리초).
@@ -27,14 +25,21 @@ class LyricsSettings extends Equatable {
   final int latencyMs;
   final LyricsTheme theme;
 
+  /// 테마와 따로, 앨범 커버를 옅게 뒤에 까는가.
+  final bool coverBackground;
+
   Duration get latency => Duration(milliseconds: latencyMs);
 
-  LyricsSettings copyWith({int? latencyMs, LyricsTheme? theme}) =>
-      LyricsSettings(
-        latencyMs: (latencyMs ?? this.latencyMs).clamp(0, maxLatencyMs),
-        theme: theme ?? this.theme,
-      );
+  LyricsSettings copyWith({
+    int? latencyMs,
+    LyricsTheme? theme,
+    bool? coverBackground,
+  }) => LyricsSettings(
+    latencyMs: (latencyMs ?? this.latencyMs).clamp(0, maxLatencyMs),
+    theme: theme ?? this.theme,
+    coverBackground: coverBackground ?? this.coverBackground,
+  );
 
   @override
-  List<Object?> get props => [latencyMs, theme];
+  List<Object?> get props => [latencyMs, theme, coverBackground];
 }

@@ -7,6 +7,7 @@ import '../../domain/repositories/lyrics_settings_repository.dart';
 class PrefsLyricsSettingsRepository implements LyricsSettingsRepository {
   static const _latencyKey = 'lyrics.stampLatencyMs';
   static const _themeKey = 'lyrics.theme';
+  static const _coverKey = 'lyrics.coverBackground';
 
   @override
   Future<LyricsSettings> load() async {
@@ -17,6 +18,7 @@ class PrefsLyricsSettingsRepository implements LyricsSettingsRepository {
       theme:
           LyricsTheme.values.asNameMap()[prefs.getString(_themeKey)] ??
           LyricsTheme.list,
+      coverBackground: prefs.getBool(_coverKey) ?? false,
     );
   }
 
@@ -27,4 +29,8 @@ class PrefsLyricsSettingsRepository implements LyricsSettingsRepository {
   @override
   Future<void> saveTheme(LyricsTheme theme) async =>
       (await SharedPreferences.getInstance()).setString(_themeKey, theme.name);
+
+  @override
+  Future<void> saveCoverBackground(bool on) async =>
+      (await SharedPreferences.getInstance()).setBool(_coverKey, on);
 }

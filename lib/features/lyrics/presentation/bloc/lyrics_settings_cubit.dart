@@ -12,14 +12,17 @@ class LyricsSettingsCubit extends Cubit<LyricsSettings> {
     required LoadLyricsSettings loadSettings,
     required SaveStampLatency saveStampLatency,
     required SaveLyricsTheme saveLyricsTheme,
+    required SaveLyricsCoverBackground saveCoverBackground,
   }) : _load = loadSettings,
        _saveLatency = saveStampLatency,
        _saveTheme = saveLyricsTheme,
+       _saveCover = saveCoverBackground,
        super(const LyricsSettings());
 
   final LoadLyricsSettings _load;
   final SaveStampLatency _saveLatency;
   final SaveLyricsTheme _saveTheme;
+  final SaveLyricsCoverBackground _saveCover;
 
   Future<void> load() async {
     final settings = await _load(const NoParams());
@@ -38,5 +41,11 @@ class LyricsSettingsCubit extends Cubit<LyricsSettings> {
     if (theme == state.theme) return;
     emit(state.copyWith(theme: theme));
     await _saveTheme(theme);
+  }
+
+  Future<void> setCoverBackground(bool on) async {
+    if (on == state.coverBackground) return;
+    emit(state.copyWith(coverBackground: on));
+    await _saveCover(on);
   }
 }

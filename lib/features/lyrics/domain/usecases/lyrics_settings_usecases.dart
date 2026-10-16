@@ -29,3 +29,12 @@ class SaveLyricsTheme implements UseCase<void, LyricsTheme> {
   @override
   Future<void> call(LyricsTheme theme) => _repo.saveTheme(theme);
 }
+
+class SaveLyricsCoverBackground implements UseCase<void, bool> {
+  const SaveLyricsCoverBackground(this._repo);
+
+  final LyricsSettingsRepository _repo;
+
+  @override
+  Future<void> call(bool on) => _repo.saveCoverBackground(on);
+}

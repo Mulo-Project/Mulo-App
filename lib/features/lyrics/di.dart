@@ -31,11 +31,13 @@ void registerLyrics(GetIt sl) {
     ..registerFactory(() => LoadLyricsSettings(sl()))
     ..registerFactory(() => SaveStampLatency(sl()))
     ..registerFactory(() => SaveLyricsTheme(sl()))
+    ..registerFactory(() => SaveLyricsCoverBackground(sl()))
     ..registerFactory(
       () => LyricsSettingsCubit(
         loadSettings: sl(),
         saveStampLatency: sl(),
         saveLyricsTheme: sl(),
+        saveCoverBackground: sl(),
       ),
     );
 }
