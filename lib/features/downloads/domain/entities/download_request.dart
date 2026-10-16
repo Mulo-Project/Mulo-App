@@ -20,6 +20,7 @@ class DownloadRequest extends Equatable {
     this.url = '',
     this.importLyrics = false,
     this.lyricsLanguage,
+    this.lyricsSkipSounds = true,
   });
 
   final String title;
@@ -57,6 +58,9 @@ class DownloadRequest extends Equatable {
   /// 가져올 자막 언어 코드. null이면 한국어 → 영어 → 첫 언어 순으로 고른다.
   final String? lyricsLanguage;
 
+  /// 가져올 때 효과음 줄(`[음악]` 등)을 뺀다.
+  final bool lyricsSkipSounds;
+
   /// 문자열 앞뒤 공백을 지운 사본.
   DownloadRequest normalized() => DownloadRequest(
     title: title.trim(),
@@ -73,6 +77,7 @@ class DownloadRequest extends Equatable {
     url: url.trim(),
     importLyrics: importLyrics,
     lyricsLanguage: lyricsLanguage,
+    lyricsSkipSounds: lyricsSkipSounds,
   );
 
   @override
@@ -91,5 +96,6 @@ class DownloadRequest extends Equatable {
     url,
     importLyrics,
     lyricsLanguage,
+    lyricsSkipSounds,
   ];
 }

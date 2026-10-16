@@ -26,17 +26,22 @@ class SubtitlePreviewCubit extends Cubit<SubtitlePreview> {
   final FetchSubtitles _fetch;
 
   /// [language]가 null이면 받을 때와 같이 자동으로 고른다.
-  Future<void> load(String url, {String? language}) async {
+  Future<void> load(
+    String url, {
+    String? language,
+    bool skipSounds = true,
+  }) async {
     emit(const SubtitlePreview(SubtitlePreviewStatus.loading));
     try {
       final track = await _fetch(
         FetchSubtitlesParams(url, language == null ? null : [language]),
       );
       if (isClosed) return;
+      final shown = skipSounds ? track?.withoutSoundCues() : track;
       emit(
-        track == null
+        shown == null || shown.cues.isEmpty
             ? const SubtitlePreview(SubtitlePreviewStatus.failed)
-            : SubtitlePreview(SubtitlePreviewStatus.loaded, track),
+            : SubtitlePreview(SubtitlePreviewStatus.loaded, shown),
       );
     } on Object {
       if (!isClosed) {

@@ -121,6 +121,7 @@ Map<String, dynamic> encodeDownloadRequest(DownloadRequest r) => {
   'url': r.url,
   if (r.importLyrics) 'importLyrics': true,
   'lyricsLanguage': ?r.lyricsLanguage,
+  if (!r.lyricsSkipSounds) 'lyricsSkipSounds': false,
   if (r.cover case final art?)
     'cover': {
       'path': art.path,
@@ -166,5 +167,6 @@ DownloadRequest decodeDownloadRequest(Map<String, dynamic> m) {
     url: m['url'] as String? ?? '',
     importLyrics: m['importLyrics'] == true,
     lyricsLanguage: m['lyricsLanguage'] as String?,
+    lyricsSkipSounds: m['lyricsSkipSounds'] != false,
   );
 }

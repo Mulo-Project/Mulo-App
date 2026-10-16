@@ -26,6 +26,16 @@ class SubtitleTrack extends Equatable {
   final bool automatic;
   final List<SubtitleCue> cues;
 
+  /// 효과음 · 음악 표시 줄(`[음악]`, `(박수)`, `♪`)을 뺀 사본.
+  SubtitleTrack withoutSoundCues() => SubtitleTrack(
+    language: language,
+    automatic: automatic,
+    cues: [
+      for (final c in cues)
+        if (!_isSoundCue(c.text)) c,
+    ],
+  );
+
   /// 시간 순으로 `[mm:ss.xx]글` 한 줄씩 적은 .lrc 글. 빈 줄은 건너뛴다.
   String toLrc() {
     final b = StringBuffer();
@@ -85,3 +95,12 @@ String _clean(String line) => line
     .replaceAll('&lt;', '<')
     .replaceAll('&gt;', '>')
     .trim();
+
+final _soundOnly = RegExp(r'^[\s♪♫♬♩\-–]*$');
+final _soundTag = RegExp(r'^[\[\(（【][^\]\)）】]*[\]\)）】]$');
+
+/// 글 전체가 `[Music]` · `(박수)` · `♪` 같은 효과음 표시인 줄.
+bool _isSoundCue(String text) {
+  final t = text.trim();
+  return _soundOnly.hasMatch(t) || _soundTag.hasMatch(t);
+}

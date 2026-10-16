@@ -44,6 +44,19 @@ void main() {
       expect(track.toLrc(), '[00:01.23]A\n[02:00.00]B');
     });
 
+    test('효과음 줄([음악] · (박수) · ♪)만 빼고 가사는 남긴다', () {
+      const track = SubtitleTrack(
+        language: 'ko',
+        cues: [
+          SubtitleCue(Duration(seconds: 1), '[음악]'),
+          SubtitleCue(Duration(seconds: 2), '(박수)'),
+          SubtitleCue(Duration(seconds: 3), '♪'),
+          SubtitleCue(Duration(seconds: 4), '사랑해 [oh]'),
+        ],
+      );
+      expect(track.withoutSoundCues().cues.map((c) => c.text), ['사랑해 [oh]']);
+    });
+
     test('언어 고르기: 사람이 단 자막 > 자동, 선호 순서, 자동은 원어 우선', () {
       expect(
         pickSubtitleLanguage(

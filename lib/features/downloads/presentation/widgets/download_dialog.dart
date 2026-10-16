@@ -135,6 +135,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
 
   // 가져올 자막 언어. null이면 자동(한국어 → 영어 → 첫 언어).
   String? _lyricsLanguage;
+  var _skipSounds = true;
 
   // 가사 구역은 유튜브 곡만 둔다.
   late final bool _isYoutube = downloadSourceKey(widget.url)
@@ -236,6 +237,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
             _importLyrics &&
             subtitleStatus != SubtitleStatus.none,
         lyricsLanguage: _lyricsLanguage,
+        lyricsSkipSounds: _skipSounds,
       ),
     );
     if (ok && mounted) Navigator.of(context).pop(true);
@@ -303,6 +305,26 @@ class _DownloadScreenState extends State<DownloadScreen> {
         ],
         if (on) ...[
           const SizedBox(height: AppSpacing.sm),
+          DecoratedBox(
+            decoration: ShapeDecoration(
+              color: p.surfaceHigh,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppRadii.sm),
+                side: BorderSide(color: p.outline),
+              ),
+            ),
+            child: SettingRow(
+              key: const ValueKey('download-lyrics-skip-sounds'),
+              title: l10n.downloadLyricsSkipSounds,
+              description: l10n.downloadLyricsSkipSoundsHint,
+              trailing: AppSwitch(
+                value: _skipSounds,
+                onChanged: _setSkipSounds,
+              ),
+              onTap: () => _setSkipSounds(!_skipSounds),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
           _lyricsPreview(context),
           const SizedBox(height: AppSpacing.xs),
           Text(
@@ -316,6 +338,11 @@ class _DownloadScreenState extends State<DownloadScreen> {
 
   void _pickLanguage(String? lang) {
     setState(() => _lyricsLanguage = lang);
+    context.read<SubtitlePreviewCubit>().clear();
+  }
+
+  void _setSkipSounds(bool v) {
+    setState(() => _skipSounds = v);
     context.read<SubtitlePreviewCubit>().clear();
   }
 
@@ -417,6 +444,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
                   : () => context.read<SubtitlePreviewCubit>().load(
                       widget.url,
                       language: _lyricsLanguage,
+                      skipSounds: _skipSounds,
                     ),
             ),
             if (preview.status == SubtitlePreviewStatus.failed) ...[

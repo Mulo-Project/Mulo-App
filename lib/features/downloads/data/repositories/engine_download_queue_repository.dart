@@ -517,7 +517,12 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
     _keysChanged.add(null);
     await _queueStore.saveSources(_sources);
     if (request.importLyrics) {
-      await _importLyrics(trackId, request.url, request.lyricsLanguage);
+      await _importLyrics(
+        trackId,
+        request.url,
+        request.lyricsLanguage,
+        skipSounds: request.lyricsSkipSounds,
+      );
     }
   }
 
@@ -526,8 +531,9 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
   Future<void> _importLyrics(
     String trackId,
     String url,
-    String? language,
-  ) async {
+    String? language, {
+    required bool skipSounds,
+  }) async {
     final repo = _lyrics;
     if (repo == null) return;
     try {
@@ -535,7 +541,8 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
         url,
         preferLanguages: language == null ? const ['ko', 'en'] : [language],
       );
-      final lrc = track?.toLrc() ?? '';
+      final lrc =
+          (skipSounds ? track?.withoutSoundCues() : track)?.toLrc() ?? '';
       if (lrc.isNotEmpty) await repo.save(trackId, lrc);
     } on Object {
       // 자막은 덤이라 실패해도 받은 곡은 그대로 둔다.

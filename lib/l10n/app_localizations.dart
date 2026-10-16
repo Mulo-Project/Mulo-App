@@ -2162,6 +2162,18 @@ abstract class AppLocalizations {
   /// **'자막을 불러오지 못했어요.'**
   String get downloadLyricsPreviewFailed;
 
+  /// No description provided for @downloadLyricsSkipSounds.
+  ///
+  /// In ko, this message translates to:
+  /// **'효과음 줄 빼기'**
+  String get downloadLyricsSkipSounds;
+
+  /// No description provided for @downloadLyricsSkipSoundsHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'[음악] · (박수) · ♪ 같은 줄은 가사로 가져오지 않아요.'**
+  String get downloadLyricsSkipSoundsHint;
+
   /// No description provided for @downloadLyricsPreviewOf.
   ///
   /// In ko, this message translates to:

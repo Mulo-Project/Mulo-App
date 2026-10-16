@@ -259,6 +259,38 @@ void main() {
       expect(engine.subtitleUrls, ['https://youtu.be/abc']);
     });
 
+    test('효과음 줄 빼기는 기본으로 켜져 있고 끌 수 있다', () async {
+      final noisy = SubtitleTrack(
+        language: 'ko',
+        cues: [
+          SubtitleCue(Duration(seconds: 1), '[음악]'),
+          SubtitleCue(Duration(seconds: 2), '가사'),
+        ],
+      );
+      for (final skip in [true, false]) {
+        engine = FakeDownloaderEngine()..subtitles = noisy;
+        final lyrics = MemoryLyricsRepository();
+        final repo = build(_FakeDownloader(), lyrics: lyrics);
+        await repo.enqueue(
+          DownloadRequest(
+            title: 'Song$skip',
+            url: 'https://youtu.be/s$skip',
+            importLyrics: true,
+            lyricsSkipSounds: skip,
+          ),
+        );
+        await settled(
+          repo,
+          (l) =>
+              l.isNotEmpty && l.every((e) => e.status == DownloadStatus.done),
+        );
+        expect(
+          lyrics.saved.values.single,
+          skip ? '[00:02.00]가사' : '[00:01.00][음악]\n[00:02.00]가사',
+        );
+      }
+    });
+
     test('고른 언어를 엔진에 넘긴다', () async {
       final seen = <List<String>>[];
       engine = _LangEngine(seen)..subtitles = track;

@@ -1158,6 +1158,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadLyricsPreviewFailed => 'Couldn\'t load the subtitles.';
 
   @override
+  String get downloadLyricsSkipSounds => 'Skip sound-effect lines';
+
+  @override
+  String get downloadLyricsSkipSoundsHint =>
+      'Lines like [Music], (applause) or ♪ aren\'t imported.';
+
+  @override
   String downloadLyricsPreviewOf(String language, int count) {
     return 'First lines of $count in $language';
   }

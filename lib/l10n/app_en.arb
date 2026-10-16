@@ -432,6 +432,8 @@
   "downloadLyricsPreview": "Preview lyrics",
   "downloadLyricsPreviewLoading": "Loading…",
   "downloadLyricsPreviewFailed": "Couldn't load the subtitles.",
+  "downloadLyricsSkipSounds": "Skip sound-effect lines",
+  "downloadLyricsSkipSoundsHint": "Lines like [Music], (applause) or ♪ aren't imported.",
   "downloadLyricsPreviewOf": "First lines of {count} in {language}",
   "@downloadLyricsPreviewOf": {"placeholders": {"language": {"type": "String"}, "count": {"type": "int"}}},
   "downloadSubtitleColLanguage": "Language",

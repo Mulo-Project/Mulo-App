@@ -1130,6 +1130,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadLyricsPreviewFailed => '자막을 불러오지 못했어요.';
 
   @override
+  String get downloadLyricsSkipSounds => '효과음 줄 빼기';
+
+  @override
+  String get downloadLyricsSkipSoundsHint =>
+      '[음악] · (박수) · ♪ 같은 줄은 가사로 가져오지 않아요.';
+
+  @override
   String downloadLyricsPreviewOf(String language, int count) {
     return '$language 자막 $count줄 중 앞부분';
   }
