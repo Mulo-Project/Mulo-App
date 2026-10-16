@@ -31,67 +31,79 @@ class TimedLyricsField extends StatelessWidget {
     final timeStyle = style.copyWith(color: p.onSurfaceMuted);
     final scaler = MediaQuery.textScalerOf(context);
 
-    // 상자 · 테두리 없이 가사 보기처럼 조용하게 보인다.
-    return LayoutBuilder(
-      builder: (context, box) {
-        final gutter = times.isEmpty ? 0.0 : _gutter;
-        final textWidth = box.maxWidth - gutter - _pad;
-        return SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: AppSpacing.lg),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (times.isNotEmpty)
-                ListenableBuilder(
-                  listenable: controller,
-                  builder: (_, _) {
-                    final lines = controller.text.split('\n');
-                    return SizedBox(
-                      width: gutter,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          for (var i = 0; i < lines.length; i++)
-                            SizedBox(
-                              height: _lineHeight(
-                                lines[i],
-                                style,
-                                scaler,
-                                textWidth,
-                              ),
-                              child: Text(
-                                i < times.length
-                                    ? lyricTimeLabel(times[i])
-                                    : '',
-                                style: timeStyle,
-                                maxLines: 1,
-                              ),
-                            ),
-                        ],
+    // 테두리 없이 아주 옅은 바탕만 깔아 가사 보기처럼 조용하게, 그래도 입력칸임은 알아보게 한다.
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: p.surfaceHigh.withValues(alpha: .45),
+        borderRadius: BorderRadius.circular(AppRadii.sm),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: _pad,
+          vertical: AppSpacing.sm,
+        ),
+        child: LayoutBuilder(
+          builder: (context, box) {
+            final gutter = times.isEmpty ? 0.0 : _gutter;
+            final textWidth = box.maxWidth - gutter;
+            return SingleChildScrollView(
+              padding: EdgeInsets.zero,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (times.isNotEmpty)
+                    ListenableBuilder(
+                      listenable: controller,
+                      builder: (_, _) {
+                        final lines = controller.text.split('\n');
+                        return SizedBox(
+                          width: gutter,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              for (var i = 0; i < lines.length; i++)
+                                SizedBox(
+                                  height: _lineHeight(
+                                    lines[i],
+                                    style,
+                                    scaler,
+                                    textWidth,
+                                  ),
+                                  child: Text(
+                                    i < times.length
+                                        ? lyricTimeLabel(times[i])
+                                        : '',
+                                    style: timeStyle,
+                                    maxLines: 1,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  Expanded(
+                    child: TextField(
+                      controller: controller,
+                      style: style,
+                      minLines: 12,
+                      maxLines: null,
+                      keyboardType: TextInputType.multiline,
+                      decoration: InputDecoration(
+                        hintText: hint,
+                        hintStyle: style.copyWith(color: p.onSurfaceMuted),
+                        isCollapsed: true,
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
                       ),
-                    );
-                  },
-                ),
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  style: style,
-                  minLines: 12,
-                  maxLines: null,
-                  keyboardType: TextInputType.multiline,
-                  decoration: InputDecoration(
-                    hintText: hint,
-                    hintStyle: style.copyWith(color: p.onSurfaceMuted),
-                    isCollapsed: true,
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.zero,
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
-        );
-      },
+            );
+          },
+        ),
+      ),
     );
   }
 
