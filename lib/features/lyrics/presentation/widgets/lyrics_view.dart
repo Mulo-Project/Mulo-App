@@ -190,8 +190,8 @@ class _LyricsViewState extends State<LyricsView> {
   List<Shadow>? _halo(AppPalette p) {
     if (!context.read<LyricsSettingsCubit>().state.coverBackground) return null;
     return [
-      Shadow(color: p.background.withValues(alpha: .9), blurRadius: 22),
-      Shadow(color: p.background.withValues(alpha: .8), blurRadius: 10),
+      Shadow(color: p.background.withValues(alpha: .9), blurRadius: 12),
+      Shadow(color: p.background.withValues(alpha: .8), blurRadius: 6),
       Shadow(color: p.background.withValues(alpha: .6), blurRadius: 3),
     ];
   }
@@ -200,7 +200,7 @@ class _LyricsViewState extends State<LyricsView> {
   Widget _band(bool on, Widget child) => on
       ? ClipRect(
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
             child: child,
           ),
         )

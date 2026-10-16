@@ -105,25 +105,39 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
     if (group != null) sync.setGroup(group);
   }
 
-  /// 위쪽 메뉴: 기본 줄 수를 바꾼다. 직접 묶은 줄이 있으면 사라진다고 먼저 알린다.
-  Future<void> _changeDefaultGroup(BuildContext buttonContext) async {
+  /// 위쪽 메뉴: 기본 줄 수를 바꾸거나 반응 시간 보정 페이지를 연다.
+  /// 줄 수를 바꿀 때 직접 묶은 줄이 있으면 사라진다고 먼저 알린다.
+  Future<void> _openMenu(BuildContext buttonContext) async {
     final l10n = context.l10n;
     final sync = context.read<LyricsSyncCubit>();
-    final group = await showAppMenu<int>(
+    const latency = 0;
+    final picked = await showAppMenu<int>(
       buttonContext,
       items: [
-        for (final n in const [1, 2, 3, 4])
-          AppMenuItem(
-            value: n,
-            icon: AppIcons.lineSpacing,
-            label: l10n.lyricsSyncGroupLines(n),
-            selected: n == sync.state.group,
-          ),
+        if (sync.canGroup)
+          for (final n in const [1, 2, 3, 4])
+            AppMenuItem(
+              value: n,
+              icon: AppIcons.lineSpacing,
+              label: l10n.lyricsSyncGroupLines(n),
+              selected: n == sync.state.group,
+            ),
+        AppMenuItem(
+          value: latency,
+          icon: AppIcons.tune,
+          label: l10n.lyricsLatencyEntry,
+          dividerBefore: sync.canGroup,
+        ),
       ],
     );
-    if (group == null || group == sync.state.group || !mounted) return;
+    if (picked == null || !mounted) return;
+    if (picked == latency) {
+      await showLyricsLatency(context);
+      return;
+    }
+    if (picked == sync.state.group) return;
     if (sync.loseOnSetGroup && !await confirmLyricsGroupReset(context)) return;
-    sync.setGroup(group);
+    sync.setGroup(picked);
   }
 
   /// 나가기: 다 찍었으면 그대로 나가고, 덜 찍었으면 저장하고 나갈지 묻는다.
@@ -397,7 +411,6 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
       listener: (_, s) => _scrollTo(s.draft.current),
       builder: (context, state) {
         final draft = state.draft;
-        final sync = context.read<LyricsSyncCubit>();
         // 줄을 다시 묶어도 같은 칸은 같은 키를 쓴다 (끌고 있는 위젯이 다시 만들어지지 않게).
         while (_keys.length < draft.length) {
           _keys.add(GlobalKey());
@@ -422,18 +435,12 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
                       onPressed: _confirmLeave,
                     ),
                     actions: [
-                      if (sync.canGroup)
-                        Builder(
-                          builder: (buttonContext) => CircleIconButton(
-                            icon: AppIcons.more,
-                            tooltip: l10n.lyricsSyncDefaultLines,
-                            onPressed: () => _changeDefaultGroup(buttonContext),
-                          ),
+                      Builder(
+                        builder: (buttonContext) => CircleIconButton(
+                          icon: AppIcons.more,
+                          tooltip: l10n.lyricsSyncDefaultLines,
+                          onPressed: () => _openMenu(buttonContext),
                         ),
-                      CircleIconButton(
-                        icon: AppIcons.tune,
-                        tooltip: l10n.lyricsLatencyEntry,
-                        onPressed: () => showLyricsLatency(context),
                       ),
                       CircleIconButton(
                         icon: AppIcons.check,
