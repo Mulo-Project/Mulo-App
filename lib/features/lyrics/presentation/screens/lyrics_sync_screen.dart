@@ -253,9 +253,9 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
         selected: state.selected == i,
         inRange: dragRange,
         afterFocus: state.selected != null && i == state.selected! + 1,
-        canGroup: sync.canGroup,
+        canMerge: sync.canMerge,
         clock: _clock,
-        onLongPress: sync.canGroup && merged ? () => sync.expand(i) : null,
+        onLongPress: sync.canMerge && merged ? () => sync.expand(i) : null,
         onTap: () {
           // 줄을 눌러서는 싱크를 찍지 않는다 (싱크 등록은 지금 버튼으로만).
           sync.select(i);
@@ -267,7 +267,7 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
         },
       );
       // 한 줄짜리 칸은 꾹 누른 채 아래로 끌어 묶을 범위를 고른다.
-      if (!sync.canGroup || merged) return line;
+      if (!sync.canMerge || merged) return line;
       return GestureDetector(
         behavior: HitTestBehavior.translucent,
         onLongPressStart: (_) => setState(() {
@@ -534,7 +534,7 @@ class _LineRow extends StatelessWidget {
     required this.selected,
     this.inRange = false,
     this.afterFocus = false,
-    required this.canGroup,
+    required this.canMerge,
     required this.clock,
     required this.onTap,
     this.onLongPress,
@@ -545,7 +545,7 @@ class _LineRow extends StatelessWidget {
   final bool selected;
   final bool inRange;
   final bool afterFocus;
-  final bool canGroup;
+  final bool canMerge;
   final String Function(Duration) clock;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
@@ -621,7 +621,7 @@ class _LineRow extends StatelessWidget {
           ),
         ),
         // 건너뛰어 같은 시간으로 묶인 칸은 따로 표시하고, 다시 나눌 수 있게 한다.
-        if (canGroup && sync.isMerged(index))
+        if (canMerge && sync.isMerged(index))
           Padding(
             padding: const EdgeInsets.only(left: 76 + AppSpacing.sm + 3),
             child: Row(

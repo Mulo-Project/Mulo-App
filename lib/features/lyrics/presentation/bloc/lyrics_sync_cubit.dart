@@ -38,6 +38,10 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
   /// 일반 글 가사만 줄을 묶을 수 있다. 싱크 가사는 이미 시간이 있다.
   bool get canGroup => !_lyrics.isSynced;
 
+  /// 줄을 꾹 눌러 끌어 한 칸으로 묶고 풀 수 있는가. 싱크가 있는 가사도 된다
+  /// (묶으면 맨 앞 칸의 시간을 쓰고 나머지 칸의 시간은 사라진다).
+  bool get canMerge => true;
+
   /// 기본 줄 수를 바꾸면 사라지는 작업(건너뛰어 묶은 칸 · 찍은 시간)이 있는가.
   bool get loseOnSetGroup =>
       state.draft.stamped > 0 || state.draft.isCustom(state.group);
@@ -91,7 +95,7 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
   /// 묶인 [index] 칸을 줄별로 펼친다. 줄마다 시간을 따로 정할 수 있고, 영역 밖으로 포커스가 나가면
   /// 시간이 같은 줄은 다시 합쳐진다.
   void expand(int index) {
-    if (!canGroup || index < 0 || index >= state.draft.length) return;
+    if (!canMerge || index < 0 || index >= state.draft.length) return;
     final r = _collapsed();
     final target = r.map(index);
     if (target >= r.draft.length || r.draft.sizes[target] < 2) return;
@@ -115,7 +119,7 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
   /// 묶인 [index] 칸을 기본 줄 수로 다시 나눈다. 나눈 칸은 이 칸의 시간을 그대로 가져서
   /// (찍은 칸이면 모두 찍힌 채로) 공백이 생기지 않고, 이어서 줄마다 시간을 다듬으면 된다.
   void split(int index) {
-    if (!canGroup || !isMerged(index)) return;
+    if (!canMerge || !isMerged(index)) return;
     final at = _collapseNow()(index);
     final draft = state.draft;
     if (at >= draft.length || draft.sizes[at] <= state.group) return;
@@ -139,7 +143,7 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
   /// [from]~[to] 칸을 한 칸으로 묶는다 (끌어서 고른 범위). [from] 칸의 시간을 쓰고, 나머지 칸의
   /// 싱크는 사라진다.
   void mergeRange(int from, int to) {
-    if (!canGroup) return;
+    if (!canMerge) return;
     final map = _collapseNow();
     final a = map(from), b = map(to);
     final draft = state.draft;

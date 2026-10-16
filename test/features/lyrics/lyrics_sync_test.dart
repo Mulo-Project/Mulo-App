@@ -577,6 +577,32 @@ void main() {
     expect(find.text('3줄 같은 시간으로 묶음'), findsNothing);
   });
 
+  testWidgets('싱크 설정: 이미 싱크가 있는 가사도 꾹 눌러 끌어 묶고 풀 수 있다', (tester) async {
+    final lyrics = await openSync(
+      tester,
+      '[00:01.00]가 줄\n[00:02.00]나 줄\n[00:03.00]다 줄\n[00:04.00]라 줄',
+    );
+    expect(find.text('4/4줄'), findsOneWidget);
+
+    await dragMerge(tester, '가 줄', '다 줄');
+    // 이미 찍어 둔 싱크가 지워지니 먼저 묻는다.
+    expect(
+      find.text('묶을 범위 안에 이미 찍어 둔 싱크가 있어요. 한 칸으로 묶으면 그 싱크는 지워져요. 계속할까요?'),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('묶기'));
+    await tester.pumpAndSettle();
+    expect(find.text('가 줄\n나 줄\n다 줄'), findsOneWidget);
+    // 묶은 칸은 맨 앞 칸의 시간을 쓰고 나머지 시간은 사라진다.
+    expect(find.text('2/2줄'), findsOneWidget);
+    expect(find.text('3줄 같은 시간으로 묶음'), findsOneWidget);
+
+    await tester.tap(find.text('풀기'));
+    await tester.pumpAndSettle();
+    expect(find.text('4/4줄'), findsOneWidget);
+    expect(lyrics.saved, isEmpty);
+  });
+
   testWidgets('싱크 설정: 위로 끌어도 범위가 한 칸으로 묶인다', (tester) async {
     await openSync(tester, '가 줄\n나 줄\n다 줄\n라 줄');
     await tester.tap(find.text('확인'));
