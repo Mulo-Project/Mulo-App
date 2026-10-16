@@ -543,6 +543,18 @@ void main() {
     expect(find.text('0/4줄'), findsOneWidget);
   });
 
+  testWidgets('싱크 설정: 위쪽 메뉴에 기본 줄 수와 반응 시간 보정이 함께 있다', (tester) async {
+    await openSync(tester, '가 줄\n나 줄');
+    await tester.tap(find.text('확인'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('기본 줄 수 변경'));
+    await tester.pumpAndSettle();
+    expect(find.text('1줄'), findsWidgets);
+    await tester.tap(find.text('반응 시간 보정').last);
+    await tester.pumpAndSettle();
+    expect(find.text('박자 테스트'), findsOneWidget);
+  });
+
   testWidgets('싱크 설정: 꾹 눌러 끌면 범위가 한 칸으로 묶여 표시되고 풀 수 있다', (tester) async {
     await openSync(tester, '가 줄\n나 줄\n다 줄\n라 줄');
     await tester.tap(find.text('확인'));
