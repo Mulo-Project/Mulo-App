@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -194,7 +196,20 @@ class _LyricsViewState extends State<LyricsView> {
     ];
   }
 
+  /// 강조된 줄이 놓인 가로 띠만 뒤를 흐리게 한다 (필터는 이 띠 하나에만 건다).
+  Widget _band(bool on, Widget child) => on
+      ? ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: child,
+          ),
+        )
+      : child;
+
   Widget _content(BuildContext context) {
+    final coverOn = context.select<LyricsSettingsCubit, bool>(
+      (c) => c.state.coverBackground,
+    );
     final l10n = context.l10n;
     final p = context.palette;
     final text = Theme.of(context).textTheme;
@@ -264,30 +279,33 @@ class _LyricsViewState extends State<LyricsView> {
         child: Column(
           children: [
             for (var i = 0; i < lyrics.lines.length; i++)
-              InkWell(
-                key: _keys[i],
-                borderRadius: BorderRadius.circular(AppRadii.sm),
-                onTap: () => vm.seekTo(lyrics.lines[i].time),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm,
-                    vertical: AppSpacing.xs,
-                  ),
-                  child: AnimatedDefaultTextStyle(
-                    duration: AppMotion.fast,
-                    textAlign: TextAlign.center,
-                    style: (i == current ? text.titleLarge : text.bodyLarge)!
-                        .copyWith(
-                          color: i == current ? p.accent : p.onSurfaceMuted,
-                          shadows: i == current ? _halo(p) : null,
+              _band(
+                coverOn && i == current,
+                InkWell(
+                  key: _keys[i],
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
+                  onTap: () => vm.seekTo(lyrics.lines[i].time),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.xs,
+                    ),
+                    child: AnimatedDefaultTextStyle(
+                      duration: AppMotion.fast,
+                      textAlign: TextAlign.center,
+                      style: (i == current ? text.titleLarge : text.bodyLarge)!
+                          .copyWith(
+                            color: i == current ? p.accent : p.onSurfaceMuted,
+                            shadows: i == current ? _halo(p) : null,
+                          ),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: Text(
+                          lyrics.lines[i].text.isEmpty
+                              ? '♪'
+                              : lyrics.lines[i].text,
+                          textAlign: TextAlign.center,
                         ),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: Text(
-                        lyrics.lines[i].text.isEmpty
-                            ? '♪'
-                            : lyrics.lines[i].text,
-                        textAlign: TextAlign.center,
                       ),
                     ),
                   ),
@@ -334,6 +352,14 @@ class _LyricsViewState extends State<LyricsView> {
           return Stack(
             clipBehavior: Clip.hardEdge,
             children: [
+              if (context.read<LyricsSettingsCubit>().state.coverBackground)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  top: box.maxHeight / 2 - slot / 2,
+                  height: slot,
+                  child: _band(true, const SizedBox.expand()),
+                ),
               for (var i = first; i <= last; i++)
                 Positioned(
                   left: AppSpacing.md,
