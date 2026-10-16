@@ -198,6 +198,39 @@ void main() {
     expect(find.text('둘째 줄'), findsNothing);
   });
 
+  testWidgets('플레이어: 같은 시간으로 묶인 줄은 함께 강조되고 간격이 좁다', (tester) async {
+    phone(tester);
+    await setUpTestDependencies(
+      lyrics: MemoryLyricsRepository(
+        sibling: {'t1': '[00:00.00]가 줄\n[00:00.00]나 줄\n[00:30.00]다 줄'},
+      ),
+    );
+    await tester.pumpWidget(const MusicApp(initialLocation: Routes.player));
+    await tester.pumpAndSettle();
+    final player = tester
+        .element(find.byType(PlayerScreen))
+        .read<NowPlayingCubit>();
+    player.playQueue([_t('t1', '첫 곡')]);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('가사 보기'));
+    await tester.pumpAndSettle();
+
+    // 묶인 두 줄은 둘 다 현재 줄 글자 크기이고, 묶이지 않은 줄은 더 작다.
+    double size(String t) =>
+        tester.widget<Text>(find.text(t)).style?.fontSize ??
+        DefaultTextStyle.of(tester.element(find.text(t))).style.fontSize!;
+    expect(size('가 줄'), size('나 줄'));
+    expect(size('가 줄'), greaterThan(size('다 줄')));
+    // 묶인 줄 사이는 묶이지 않은 줄 사이보다 좁다.
+    final gapIn =
+        tester.getTopLeft(find.text('나 줄')).dy -
+        tester.getTopLeft(find.text('가 줄')).dy;
+    final gapOut =
+        tester.getTopLeft(find.text('다 줄')).dy -
+        tester.getTopLeft(find.text('나 줄')).dy;
+    expect(gapIn, lessThan(gapOut));
+  });
+
   testWidgets('플레이어: 가사가 없으면 안내와 가사 편집 버튼', (tester) async {
     phone(tester);
     await setUpTestDependencies();

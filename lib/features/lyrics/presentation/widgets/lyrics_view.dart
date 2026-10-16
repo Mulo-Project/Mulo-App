@@ -206,6 +206,76 @@ class _LyricsViewState extends State<LyricsView> {
         )
       : child;
 
+  /// 목록 테마의 줄들. 같은 시간으로 묶인 줄은 간격을 좁혀 한 덩어리로 놓고,
+  /// 지금 재생 중인 덩어리 뒤에는 옅은 강조 바탕을 깐다.
+  List<Widget> _listLines(
+    Lyrics lyrics,
+    (int, int) group,
+    bool coverOn,
+    NowPlayingCubit vm,
+    TextTheme text,
+    AppPalette p,
+  ) {
+    Widget line(int i, bool active, bool tight) => InkWell(
+      key: _keys[i],
+      borderRadius: BorderRadius.circular(AppRadii.sm),
+      onTap: () => vm.seekTo(lyrics.lines[i].time),
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: tight ? 1 : AppSpacing.xs,
+        ),
+        child: AnimatedDefaultTextStyle(
+          duration: AppMotion.fast,
+          textAlign: TextAlign.center,
+          style: (active ? text.titleLarge : text.bodyLarge)!.copyWith(
+            color: active ? p.accent : p.onSurfaceMuted,
+            shadows: active ? _halo(p) : null,
+          ),
+          child: SizedBox(
+            width: double.infinity,
+            child: Text(
+              lyrics.lines[i].text.isEmpty ? '♪' : lyrics.lines[i].text,
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    final out = <Widget>[];
+    var i = 0;
+    while (i < lyrics.lines.length) {
+      final (first, last) = lyrics.groupAt(i);
+      final active = first == group.$1 && last == group.$2;
+      if (first == last) {
+        out.add(_band(coverOn && active, line(i, active, false)));
+      } else {
+        // 묶인 덩어리: 줄 간격을 좁히고, 지금 덩어리면 옅은 바탕을 깐다.
+        final box = Padding(
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: active ? p.accent.withValues(alpha: .1) : null,
+              borderRadius: BorderRadius.circular(AppRadii.sm),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+              child: Column(
+                children: [
+                  for (var k = first; k <= last; k++) line(k, active, true),
+                ],
+              ),
+            ),
+          ),
+        );
+        out.add(_band(coverOn && active, box));
+      }
+      i = last + 1;
+    }
+    return out;
+  }
+
   Widget _content(BuildContext context) {
     final coverOn = context.select<LyricsSettingsCubit, bool>(
       (c) => c.state.coverBackground,
@@ -280,46 +350,7 @@ class _LyricsViewState extends State<LyricsView> {
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxl),
         child: Column(
           children: [
-            for (var i = 0; i < lyrics.lines.length; i++)
-              _band(
-                coverOn && i >= group.$1 && i <= group.$2,
-                InkWell(
-                  key: _keys[i],
-                  borderRadius: BorderRadius.circular(AppRadii.sm),
-                  onTap: () => vm.seekTo(lyrics.lines[i].time),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                      vertical: AppSpacing.xs,
-                    ),
-                    child: AnimatedDefaultTextStyle(
-                      duration: AppMotion.fast,
-                      textAlign: TextAlign.center,
-                      style:
-                          (i >= group.$1 && i <= group.$2
-                                  ? text.titleLarge
-                                  : text.bodyLarge)!
-                              .copyWith(
-                                color: i >= group.$1 && i <= group.$2
-                                    ? p.accent
-                                    : p.onSurfaceMuted,
-                                shadows: i >= group.$1 && i <= group.$2
-                                    ? _halo(p)
-                                    : null,
-                              ),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: Text(
-                          lyrics.lines[i].text.isEmpty
-                              ? '♪'
-                              : lyrics.lines[i].text,
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+            ..._listLines(lyrics, group, coverOn, vm, text, p),
             // 도중에 저장해 아직 싱크가 없는 뒷부분도 가사는 모두 보여 준다 (강조 · 이동은 싱크된 줄까지만).
             for (final line in lyrics.pending)
               Padding(
