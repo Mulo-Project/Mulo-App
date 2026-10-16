@@ -170,9 +170,9 @@ class _LyricsViewState extends State<LyricsView> {
         children: [
           if (image != null)
             Opacity(
-              opacity: .6,
+              opacity: 1,
               child: ImageFiltered(
-                imageFilter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: Image(
                   image: ResizeImage(image, width: 240),
                   fit: BoxFit.cover,
@@ -186,18 +186,27 @@ class _LyricsViewState extends State<LyricsView> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    glow[1].withValues(alpha: .5),
-                    glow[2].withValues(alpha: .25),
+                    glow[1].withValues(alpha: .7),
+                    glow[2].withValues(alpha: .4),
                   ],
                 ),
               ),
             ),
           // 글자 대비를 위해 어둡게 덮는다.
-          ColoredBox(color: p.background.withValues(alpha: .45)),
+          ColoredBox(color: p.background.withValues(alpha: .15)),
           content,
         ],
       ),
     );
+  }
+
+  /// 커버 배경이 켜져 있으면 글자 주위에만 배경색 번짐을 한 겹 더 깔아 글자가 묻히지 않게 한다.
+  List<Shadow>? _halo(AppPalette p) {
+    if (!context.read<LyricsSettingsCubit>().state.coverBackground) return null;
+    return [
+      Shadow(color: p.background.withValues(alpha: .85), blurRadius: 14),
+      Shadow(color: p.background.withValues(alpha: .7), blurRadius: 5),
+    ];
   }
 
   Widget _content(BuildContext context) {
@@ -238,7 +247,7 @@ class _LyricsViewState extends State<LyricsView> {
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
         child: Text(
           lyrics.plain,
-          style: text.bodyLarge?.copyWith(height: 1.7),
+          style: text.bodyLarge?.copyWith(height: 1.7, shadows: _halo(p)),
           textAlign: TextAlign.center,
         ),
       );
@@ -285,6 +294,7 @@ class _LyricsViewState extends State<LyricsView> {
                     style: (i == current ? text.titleLarge : text.bodyLarge)!
                         .copyWith(
                           color: i == current ? p.accent : p.onSurfaceMuted,
+                          shadows: _halo(p),
                         ),
                     child: SizedBox(
                       width: double.infinity,
@@ -312,6 +322,7 @@ class _LyricsViewState extends State<LyricsView> {
                     textAlign: TextAlign.center,
                     style: text.bodyLarge?.copyWith(
                       color: p.onSurfaceMuted.withValues(alpha: .6),
+                      shadows: _halo(p),
                     ),
                   ),
                 ),
@@ -387,6 +398,7 @@ class _LyricsViewState extends State<LyricsView> {
               overflow: TextOverflow.ellipsis,
               style: text.titleLarge!.copyWith(
                 color: Color.lerp(p.onSurfaceMuted, p.accent, near),
+                shadows: _halo(p),
               ),
             ),
           ),
