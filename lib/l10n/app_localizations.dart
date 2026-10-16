@@ -2972,11 +2972,17 @@ abstract class AppLocalizations {
   /// **'커버 배경'**
   String get lyricsThemeCover;
 
-  /// No description provided for @lyricsThemeTitle.
+  /// No description provided for @themeTabPlayer.
   ///
   /// In ko, this message translates to:
-  /// **'가사 테마'**
-  String get lyricsThemeTitle;
+  /// **'플레이어'**
+  String get themeTabPlayer;
+
+  /// No description provided for @themeTabLyrics.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사'**
+  String get themeTabLyrics;
 
   /// No description provided for @lyricsLatencyTitle.
   ///

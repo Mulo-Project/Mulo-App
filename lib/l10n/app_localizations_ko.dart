@@ -1568,7 +1568,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsThemeCover => '커버 배경';
 
   @override
-  String get lyricsThemeTitle => '가사 테마';
+  String get themeTabPlayer => '플레이어';
+
+  @override
+  String get themeTabLyrics => '가사';
 
   @override
   String get lyricsLatencyTitle => '반응 시간 보정';

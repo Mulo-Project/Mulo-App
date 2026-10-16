@@ -1604,7 +1604,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsThemeCover => 'Cover background';
 
   @override
-  String get lyricsThemeTitle => 'Lyrics theme';
+  String get themeTabPlayer => 'Player';
+
+  @override
+  String get themeTabLyrics => 'Lyrics';
 
   @override
   String get lyricsLatencyTitle => 'Reaction time';

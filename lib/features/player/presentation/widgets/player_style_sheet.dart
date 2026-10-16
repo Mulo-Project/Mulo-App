@@ -3,9 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../lyrics/presentation/widgets/lyrics_theme_sheet.dart';
 import '../bloc/player_style_cubit.dart';
 
-/// 재생 화면의 더 보기 메뉴에서 여는 "플레이어 테마" 시트.
+/// 재생 화면의 더 보기 메뉴에서 여는 "플레이어 테마" 시트. "플레이어" · "가사" 탭으로 가사 테마도 여기서 고른다.
 /// 고르면 바로 적용되고, 시트 뒤의 재생 화면이 그대로 미리 보기가 된다.
 ///
 /// 시트가 떠 있는 동안 높이를 [playerStyleSheetHeight]에 알려, 재생 화면이 그만큼
@@ -28,6 +29,8 @@ class _PlayerStyleSheet extends StatefulWidget {
 }
 
 class _PlayerStyleSheetState extends State<_PlayerStyleSheet> {
+  var _lyricsTab = false;
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -51,20 +54,32 @@ class _PlayerStyleSheetState extends State<_PlayerStyleSheet> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             AppSheetTitle(l10n.playerStyleTitle),
-            const SizedBox(height: AppSpacing.md),
-            Row(
-              children: [
-                for (final style in PlayerStyle.values)
-                  Expanded(
-                    child: _StyleOption(
-                      style: style,
-                      selected: style == current,
-                      onTap: () =>
-                          context.read<PlayerStyleCubit>().select(style),
-                    ),
-                  ),
-              ],
+            const SizedBox(height: AppSpacing.sm),
+            SegmentedPills<bool>(
+              values: const [false, true],
+              selected: _lyricsTab,
+              expand: true,
+              labelOf: (lyrics) =>
+                  lyrics ? l10n.themeTabLyrics : l10n.themeTabPlayer,
+              onChanged: (lyrics) => setState(() => _lyricsTab = lyrics),
             ),
+            const SizedBox(height: AppSpacing.md),
+            if (_lyricsTab)
+              const LyricsThemeOptions()
+            else
+              Row(
+                children: [
+                  for (final style in PlayerStyle.values)
+                    Expanded(
+                      child: _StyleOption(
+                        style: style,
+                        selected: style == current,
+                        onTap: () =>
+                            context.read<PlayerStyleCubit>().select(style),
+                      ),
+                    ),
+                ],
+              ),
           ],
         ),
       ),
