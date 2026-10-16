@@ -128,6 +128,21 @@ class _MemoryQueueStore implements DownloadQueueStore {
       sources = {...value};
 }
 
+class _LangEngine extends FakeDownloaderEngine {
+  _LangEngine(this.seen);
+
+  final List<List<String>> seen;
+
+  @override
+  Future<SubtitleTrack?> fetchSubtitles(
+    String url, {
+    List<String> preferLanguages = const ['ko', 'en'],
+  }) {
+    seen.add(preferLanguages);
+    return super.fetchSubtitles(url, preferLanguages: preferLanguages);
+  }
+}
+
 void main() {
   late Directory tmp;
   late FakeLibraryRepository library;
@@ -242,6 +257,27 @@ void main() {
       expect(saved.key, startsWith('download:'));
       expect(saved.value, '[00:01.00]첫 줄\n[01:05.50]둘째 줄');
       expect(engine.subtitleUrls, ['https://youtu.be/abc']);
+    });
+
+    test('고른 언어를 엔진에 넘긴다', () async {
+      final seen = <List<String>>[];
+      engine = _LangEngine(seen)..subtitles = track;
+      final repo = build(_FakeDownloader(), lyrics: MemoryLyricsRepository());
+      await repo.enqueue(
+        const DownloadRequest(
+          title: 'Song',
+          url: 'https://youtu.be/abc',
+          importLyrics: true,
+          lyricsLanguage: 'en',
+        ),
+      );
+      await settled(
+        repo,
+        (l) => l.isNotEmpty && l.single.status == DownloadStatus.done,
+      );
+      expect(seen, [
+        ['en'],
+      ]);
     });
 
     test('끄면 자막을 읽지 않는다', () async {

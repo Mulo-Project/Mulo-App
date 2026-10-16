@@ -14,6 +14,7 @@ import 'package:music_download_play_app/features/playlists/domain/entities/playl
 import 'package:music_download_play_app/features/downloads/domain/usecases/download_usecases.dart';
 import 'package:music_download_play_app/features/downloads/presentation/bloc/download_queue_cubit.dart';
 
+import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
 import 'package:music_download_play_app/features/search/presentation/screens/search_screen.dart';
 
 import '../../helpers/fakes.dart';
@@ -257,6 +258,74 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(queue.requests.single.importLyrics, isTrue);
+  });
+
+  Future<MemoryDownloadQueue> openLyricsPage(
+    WidgetTester tester,
+    FakeDownloaderEngine engine,
+  ) async {
+    final queue = MemoryDownloadQueue();
+    await setUpTestDependencies(downloads: queue, engine: engine);
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    tester.platformDispatcher.localesTestValue = const [Locale('ko')];
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+    addTearDown(sl.reset);
+    await tester.pumpWidget(const MusicApp(initialLocation: Routes.search));
+    await tester.pumpAndSettle();
+    await openDownloadDialog(tester);
+    await tester.scrollUntilVisible(
+      find.byKey(const ValueKey('download-import-lyrics')),
+      200,
+      scrollable: inSheet(find.byType(Scrollable)).first,
+    );
+    await tester.pumpAndSettle();
+    return queue;
+  }
+
+  testWidgets('받기 페이지: 자막이 없으면 알리고 가져오기를 켤 수 없다', (tester) async {
+    final queue = await openLyricsPage(
+      tester,
+      FakeDownloaderEngine(
+        info: const VideoInfo(
+          MediaHit(id: 'abc', title: 'Song', url: 'https://youtu.be/abc'),
+        ),
+      ),
+    );
+    expect(find.text('이 영상에는 자막이 없어요.'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('download-import-lyrics')));
+    await tester.pumpAndSettle();
+    await tester.tap(inSheet(find.text('받기')));
+    await tester.pumpAndSettle();
+    expect(queue.requests.single.importLyrics, isFalse);
+  });
+
+  testWidgets('받기 페이지: 자막 언어를 보여 주고 고른 언어로 가져온다', (tester) async {
+    final queue = await openLyricsPage(
+      tester,
+      FakeDownloaderEngine(
+        info: const VideoInfo(
+          MediaHit(
+            id: 'abc',
+            title: 'Song',
+            url: 'https://youtu.be/abc',
+            subtitleLangs: ['ko', 'en'],
+          ),
+        ),
+      ),
+    );
+    expect(find.text('자막 2개를 찾았어요.'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('download-import-lyrics')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('en'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('en'));
+    await tester.pumpAndSettle();
+    await tester.tap(inSheet(find.text('받기')));
+    await tester.pumpAndSettle();
+    expect(queue.requests.single.importLyrics, isTrue);
+    expect(queue.requests.single.lyricsLanguage, 'en');
   });
 
   testWidgets('받기 팝업: 제목을 비우면 받기 버튼이 눌리지 않는다', (tester) async {

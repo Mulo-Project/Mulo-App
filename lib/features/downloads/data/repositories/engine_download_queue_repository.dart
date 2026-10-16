@@ -516,16 +516,25 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
     _sources[downloadSourceKey(request.url)] = trackId;
     _keysChanged.add(null);
     await _queueStore.saveSources(_sources);
-    if (request.importLyrics) await _importLyrics(trackId, request.url);
+    if (request.importLyrics) {
+      await _importLyrics(trackId, request.url, request.lyricsLanguage);
+    }
   }
 
   /// 영상 자막을 곡의 싱크 가사(.lrc)로 저장한다. 자막이 없거나 읽지 못해도 받기는 성공으로 둔다
   /// (가사 보기의 싱크 화면에서 직접 다듬을 수 있다).
-  Future<void> _importLyrics(String trackId, String url) async {
+  Future<void> _importLyrics(
+    String trackId,
+    String url,
+    String? language,
+  ) async {
     final repo = _lyrics;
     if (repo == null) return;
     try {
-      final track = await _engine.fetchSubtitles(url);
+      final track = await _engine.fetchSubtitles(
+        url,
+        preferLanguages: language == null ? const ['ko', 'en'] : [language],
+      );
       final lrc = track?.toLrc() ?? '';
       if (lrc.isNotEmpty) await repo.save(trackId, lrc);
     } on Object {

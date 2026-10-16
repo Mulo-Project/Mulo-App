@@ -1125,12 +1125,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadImportLyrics => 'Import subtitles as lyrics';
 
   @override
-  String get downloadImportLyricsMaybe =>
-      'Import subtitles as lyrics if available';
-
-  @override
   String get downloadImportLyricsHint =>
       'After downloading, refine them in the lyrics sync screen.';
+
+  @override
+  String get downloadSubtitleChecking => 'Checking for subtitles.';
+
+  @override
+  String get downloadSubtitleNone => 'This video has no subtitles.';
+
+  @override
+  String get downloadSubtitleUnknown =>
+      'Couldn\'t check for subtitles. If on, we\'ll try again after downloading.';
+
+  @override
+  String get downloadSubtitleLanguage => 'Subtitle language';
+
+  @override
+  String get downloadSubtitleAuto => 'Auto';
+
+  @override
+  String downloadSubtitleFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count subtitle tracks found.',
+      one: '1 subtitle track found.',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get downloadSectionSave => 'Save to';

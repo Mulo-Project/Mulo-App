@@ -1100,10 +1100,27 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadImportLyrics => '자막을 가사로 가져오기';
 
   @override
-  String get downloadImportLyricsMaybe => '자막이 있으면 가사로 가져오기';
+  String get downloadImportLyricsHint => '받은 뒤 가사 보기의 싱크 설정에서 다듬을 수 있어요.';
 
   @override
-  String get downloadImportLyricsHint => '받은 뒤 가사 보기의 싱크 설정에서 다듬을 수 있어요.';
+  String get downloadSubtitleChecking => '자막이 있는지 확인하는 중이에요.';
+
+  @override
+  String get downloadSubtitleNone => '이 영상에는 자막이 없어요.';
+
+  @override
+  String get downloadSubtitleUnknown => '자막을 확인하지 못했어요. 켜 두면 받은 뒤 다시 찾아봐요.';
+
+  @override
+  String get downloadSubtitleLanguage => '자막 언어';
+
+  @override
+  String get downloadSubtitleAuto => '자동';
+
+  @override
+  String downloadSubtitleFound(int count) {
+    return '자막 $count개를 찾았어요.';
+  }
 
   @override
   String get downloadSectionSave => '저장';

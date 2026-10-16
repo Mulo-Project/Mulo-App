@@ -2102,17 +2102,47 @@ abstract class AppLocalizations {
   /// **'자막을 가사로 가져오기'**
   String get downloadImportLyrics;
 
-  /// No description provided for @downloadImportLyricsMaybe.
-  ///
-  /// In ko, this message translates to:
-  /// **'자막이 있으면 가사로 가져오기'**
-  String get downloadImportLyricsMaybe;
-
   /// No description provided for @downloadImportLyricsHint.
   ///
   /// In ko, this message translates to:
   /// **'받은 뒤 가사 보기의 싱크 설정에서 다듬을 수 있어요.'**
   String get downloadImportLyricsHint;
+
+  /// No description provided for @downloadSubtitleChecking.
+  ///
+  /// In ko, this message translates to:
+  /// **'자막이 있는지 확인하는 중이에요.'**
+  String get downloadSubtitleChecking;
+
+  /// No description provided for @downloadSubtitleNone.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 영상에는 자막이 없어요.'**
+  String get downloadSubtitleNone;
+
+  /// No description provided for @downloadSubtitleUnknown.
+  ///
+  /// In ko, this message translates to:
+  /// **'자막을 확인하지 못했어요. 켜 두면 받은 뒤 다시 찾아봐요.'**
+  String get downloadSubtitleUnknown;
+
+  /// No description provided for @downloadSubtitleLanguage.
+  ///
+  /// In ko, this message translates to:
+  /// **'자막 언어'**
+  String get downloadSubtitleLanguage;
+
+  /// No description provided for @downloadSubtitleAuto.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동'**
+  String get downloadSubtitleAuto;
+
+  /// No description provided for @downloadSubtitleFound.
+  ///
+  /// In ko, this message translates to:
+  /// **'자막 {count}개를 찾았어요.'**
+  String downloadSubtitleFound(int count);
 
   /// No description provided for @downloadSectionSave.
   ///

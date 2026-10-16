@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
+import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../library/presentation/bloc/library_cubit.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
@@ -13,6 +14,7 @@ import '../../domain/entities/download_request.dart';
 import '../../domain/entities/download_source.dart';
 import '../bloc/download_queue_cubit.dart';
 import '../bloc/download_settings_cubit.dart';
+import '../bloc/subtitle_availability_cubit.dart';
 import 'playlist_picker_dialog.dart';
 import 'save_folder_dialog.dart';
 
@@ -59,6 +61,11 @@ Future<bool> showDownloadDialog(
           BlocProvider.value(value: library),
           BlocProvider.value(value: colors),
           BlocProvider.value(value: covers),
+          BlocProvider(
+            create: (_) =>
+                sl<SubtitleAvailabilityCubit>()
+                  ..load(url, known: subtitleLangs),
+          ),
         ],
         child: DownloadScreen(
           title: title,
@@ -119,10 +126,12 @@ class _DownloadScreenState extends State<DownloadScreen> {
   var _saveAsGenreDefault = false;
   var _importLyrics = false;
 
-  // 유튜브 곡이고 자막이 있거나(알면) 아직 모를 때만 "가사로 가져오기"를 묻는다.
-  late final bool _canImportLyrics =
-      downloadSourceKey(widget.url).startsWith('youtube:') &&
-      (widget.subtitleLangs?.isNotEmpty ?? true);
+  // 가져올 자막 언어. null이면 자동(한국어 → 영어 → 첫 언어).
+  String? _lyricsLanguage;
+
+  // 가사 구역은 유튜브 곡만 둔다.
+  late final bool _isYoutube = downloadSourceKey(widget.url)
+      .startsWith('youtube:');
 
   // 커버: 유튜브 썸네일(웹 이미지)이 기본. 바꾸면 고른 이미지와 확대 · 위치를 따른다.
   // 웹 이미지는 주소만 쓰고 내려받지 않는다.
@@ -192,6 +201,10 @@ class _DownloadScreenState extends State<DownloadScreen> {
       return;
     }
     final color = _color;
+    final subtitleStatus = context
+        .read<SubtitleAvailabilityCubit>()
+        .state
+        .status;
     final colors = context.read<CoverColorCubit>();
     final genre = _genre.text.trim();
     // 이 장르의 기본 색으로 저장하면 다음에 같은 장르를 받을 때 미리 채워진다.
@@ -211,10 +224,88 @@ class _DownloadScreenState extends State<DownloadScreen> {
         thumbnailUrl: widget.thumbnailUrl,
         cover: _cover,
         url: widget.url,
-        importLyrics: _canImportLyrics && _importLyrics,
+        importLyrics:
+            _isYoutube &&
+            _importLyrics &&
+            subtitleStatus != SubtitleStatus.none,
+        lyricsLanguage: _lyricsLanguage,
       ),
     );
     if (ok && mounted) Navigator.of(context).pop(true);
+  }
+
+  /// 자막이 있는지(확인 중 · 있음 · 없음 · 모름) 보여 주고, 가져올지 · 어떤 언어로 가져올지 정한다.
+  Widget _lyricsSection(BuildContext context, SubtitleAvailability sub) {
+    final l10n = context.l10n;
+    final p = context.palette;
+    final text = Theme.of(context).textTheme;
+    final none = sub.status == SubtitleStatus.none;
+    final status = switch (sub.status) {
+      SubtitleStatus.checking => l10n.downloadSubtitleChecking,
+      SubtitleStatus.found => l10n.downloadSubtitleFound(sub.languages.length),
+      SubtitleStatus.none => l10n.downloadSubtitleNone,
+      SubtitleStatus.unknown => l10n.downloadSubtitleUnknown,
+    };
+    final on = _importLyrics && !none;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DecoratedBox(
+          decoration: ShapeDecoration(
+            color: p.surfaceHigh,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadii.sm),
+              side: BorderSide(color: p.outline),
+            ),
+          ),
+          child: SettingRow(
+            key: const ValueKey('download-import-lyrics'),
+            title: l10n.downloadImportLyrics,
+            description: status,
+            trailing: AppSwitch(
+              value: on,
+              onChanged: none ? null : (v) => setState(() => _importLyrics = v),
+            ),
+            onTap: none
+                ? null
+                : () => setState(() => _importLyrics = !_importLyrics),
+          ),
+        ),
+        if (on && sub.languages.length > 1) ...[
+          const SizedBox(height: AppSpacing.sm),
+          Text(l10n.downloadSubtitleLanguage, style: text.labelSmall),
+          const SizedBox(height: AppSpacing.xs),
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
+            children: [
+              PillButton(
+                label: l10n.downloadSubtitleAuto,
+                compact: true,
+                variant: PillVariant.tonal,
+                selected: _lyricsLanguage == null,
+                onPressed: () => setState(() => _lyricsLanguage = null),
+              ),
+              for (final lang in sub.languages)
+                PillButton(
+                  label: lang,
+                  compact: true,
+                  variant: PillVariant.tonal,
+                  selected: _lyricsLanguage == lang,
+                  onPressed: () => setState(() => _lyricsLanguage = lang),
+                ),
+            ],
+          ),
+        ],
+        if (on) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            l10n.downloadImportLyricsHint,
+            style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
+          ),
+        ],
+      ],
+    );
   }
 
   Widget _section(BuildContext context, String title, List<Widget> children) {
@@ -355,29 +446,13 @@ class _DownloadScreenState extends State<DownloadScreen> {
                       onTap: _pickPlaylists,
                     ),
                   ]),
-                  if (_canImportLyrics)
+                  if (_isYoutube)
                     _section(context, l10n.downloadSectionLyrics, [
-                      DecoratedBox(
-                        decoration: ShapeDecoration(
-                          color: p.surfaceHigh,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppRadii.sm),
-                            side: BorderSide(color: p.outline),
-                          ),
-                        ),
-                        child: SettingRow(
-                          key: const ValueKey('download-import-lyrics'),
-                          title: widget.subtitleLangs == null
-                              ? l10n.downloadImportLyricsMaybe
-                              : l10n.downloadImportLyrics,
-                          description: l10n.downloadImportLyricsHint,
-                          trailing: AppSwitch(
-                            value: _importLyrics,
-                            onChanged: (v) => setState(() => _importLyrics = v),
-                          ),
-                          onTap: () =>
-                              setState(() => _importLyrics = !_importLyrics),
-                        ),
+                      BlocBuilder<
+                        SubtitleAvailabilityCubit,
+                        SubtitleAvailability
+                      >(
+                        builder: (context, sub) => _lyricsSection(context, sub),
                       ),
                     ]),
                 ],
