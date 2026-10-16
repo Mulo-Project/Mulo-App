@@ -21,6 +21,9 @@ Future<void> showPlayerStyleSheet(BuildContext context) => showAppSheet<void>(
 /// 플레이어 테마 시트가 가리는 아래쪽 높이 (시트가 없으면 0).
 final playerStyleSheetHeight = ValueNotifier<double>(0);
 
+/// 재생 화면이 커버 대신 가사를 보여 주고 있는가. 테마 시트의 "가사" 탭이 켜면 화면도 가사로 바뀐다.
+final playerShowLyrics = ValueNotifier<bool>(false);
+
 class _PlayerStyleSheet extends StatefulWidget {
   const _PlayerStyleSheet();
 
@@ -29,12 +32,11 @@ class _PlayerStyleSheet extends StatefulWidget {
 }
 
 class _PlayerStyleSheetState extends State<_PlayerStyleSheet> {
-  var _lyricsTab = false;
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final current = context.watch<PlayerStyleCubit>().state;
+    final lyricsTab = playerShowLyrics.value;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final box = context.findRenderObject();
       if (mounted && box is RenderBox && box.hasSize) {
@@ -57,14 +59,15 @@ class _PlayerStyleSheetState extends State<_PlayerStyleSheet> {
             const SizedBox(height: AppSpacing.sm),
             SegmentedPills<bool>(
               values: const [false, true],
-              selected: _lyricsTab,
+              selected: lyricsTab,
               expand: true,
               labelOf: (lyrics) =>
                   lyrics ? l10n.themeTabLyrics : l10n.themeTabPlayer,
-              onChanged: (lyrics) => setState(() => _lyricsTab = lyrics),
+              onChanged: (lyrics) =>
+                  setState(() => playerShowLyrics.value = lyrics),
             ),
             const SizedBox(height: AppSpacing.md),
-            if (_lyricsTab)
+            if (lyricsTab)
               const LyricsThemeOptions()
             else
               Row(
