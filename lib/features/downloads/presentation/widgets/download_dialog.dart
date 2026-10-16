@@ -17,6 +17,7 @@ import '../bloc/download_settings_cubit.dart';
 import '../bloc/subtitle_availability_cubit.dart';
 import 'playlist_picker_dialog.dart';
 import 'save_folder_dialog.dart';
+import 'subtitle_language_label.dart';
 
 /// 받기 페이지: 제목 · 아티스트 · 장르를 고치고, 저장할 때 넣을 재생목록 · 자막 가사 가져오기를 정한다.
 /// "받기"를 누르면 대기열에 넣고 true를 돌려준다 (닫기만 하면 false).
@@ -288,7 +289,11 @@ class _DownloadScreenState extends State<DownloadScreen> {
               ),
               for (final lang in sub.languages)
                 PillButton(
-                  label: lang,
+                  label: subtitleLanguageLabel(
+                    lang,
+                    korean:
+                        Localizations.localeOf(context).languageCode == 'ko',
+                  ),
                   compact: true,
                   variant: PillVariant.tonal,
                   selected: _lyricsLanguage == lang,

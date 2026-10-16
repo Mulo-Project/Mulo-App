@@ -318,9 +318,9 @@ void main() {
     expect(find.text('자막 2개를 찾았어요.'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('download-import-lyrics')));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('en'));
+    await tester.ensureVisible(find.text('영어'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('en'));
+    await tester.tap(find.text('영어'));
     await tester.pumpAndSettle();
     await tester.tap(inSheet(find.text('받기')));
     await tester.pumpAndSettle();
