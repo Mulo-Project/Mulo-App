@@ -1,5 +1,3 @@
-import 'dart:ui' show ImageFilter;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -162,30 +160,10 @@ class _LyricsViewState extends State<LyricsView> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          if (image != null) ...[
-            // 커버는 거의 선명하게 보여 주고, 글자가 놓이는 가운데 띠만 한 겹 더 흐리게 덮는다
-            // (이미지 두 장 · 필터 한 번. 줄마다 필터를 쓰지 않는다).
-            Image(image: ResizeImage(image, width: 480), fit: BoxFit.cover),
-            ShaderMask(
-              blendMode: BlendMode.dstIn,
-              shaderCallback: (rect) => LinearGradient(
-                colors: [
-                  p.background.withValues(alpha: 0),
-                  p.background,
-                  p.background,
-                  p.background.withValues(alpha: 0),
-                ],
-                stops: const [0, .2, .8, 1],
-              ).createShader(rect),
-              child: ImageFiltered(
-                imageFilter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-                child: Image(
-                  image: ResizeImage(image, width: 240),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-          ] else
+          if (image != null)
+            // 커버는 선명하게 두고, 글자 주위는 글자 모양 그대로 번지는 그림자(_halo)로 흐리게 덮는다.
+            Image(image: ResizeImage(image, width: 480), fit: BoxFit.cover)
+          else
             DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -210,8 +188,9 @@ class _LyricsViewState extends State<LyricsView> {
   List<Shadow>? _halo(AppPalette p) {
     if (!context.read<LyricsSettingsCubit>().state.coverBackground) return null;
     return [
-      Shadow(color: p.background.withValues(alpha: .85), blurRadius: 14),
-      Shadow(color: p.background.withValues(alpha: .7), blurRadius: 5),
+      Shadow(color: p.background.withValues(alpha: .9), blurRadius: 22),
+      Shadow(color: p.background.withValues(alpha: .8), blurRadius: 10),
+      Shadow(color: p.background.withValues(alpha: .6), blurRadius: 3),
     ];
   }
 
