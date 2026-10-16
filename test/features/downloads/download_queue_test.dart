@@ -4,6 +4,7 @@ import 'package:music_download_play_app/core/design/icons/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:music_download_play_app/core/design/components/color_picker.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:music_download_play_app/features/downloads/presentation/widgets/download_dialog.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/di/injector.dart';
@@ -146,7 +147,7 @@ void main() {
   }
 
   Finder inSheet(Finder f) =>
-      find.descendant(of: find.byType(BottomSheet), matching: f);
+      find.descendant(of: find.byType(DownloadScreen), matching: f);
 
   testWidgets('받기 팝업: 정보 · 장르 · 재생목록을 정해 받는다', (tester) async {
     final queue = await openWithPlaylists(tester, const [
@@ -165,6 +166,7 @@ void main() {
 
     // 재생목록 선택 대화상자에서 기존 재생목록을 고르고, 새로 만든다 (만들면 자동 선택).
     await tester.ensureVisible(find.text('선택 안 함'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('선택 안 함'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('운동'));
@@ -242,7 +244,12 @@ void main() {
 
     await openDownloadDialog(tester);
     final row = find.byKey(const ValueKey('download-import-lyrics'));
-    await tester.ensureVisible(row);
+    await tester.scrollUntilVisible(
+      row,
+      200,
+      scrollable: inSheet(find.byType(Scrollable)).first,
+    );
+    await tester.pumpAndSettle();
     await tester.tap(row);
     await tester.pumpAndSettle();
     await tester.ensureVisible(inSheet(find.text('받기')));
@@ -255,16 +262,17 @@ void main() {
   testWidgets('받기 팝업: 제목을 비우면 받기 버튼이 눌리지 않는다', (tester) async {
     final queue = await openWithPlaylists(tester, const []);
     await openDownloadDialog(tester);
+    await tester.enterText(inSheet(find.byType(TextField)).first, '');
+    await tester.pumpAndSettle();
     expect(find.text('선택 안 함'), findsOneWidget);
     await tester.ensureVisible(find.text('선택 안 함'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('선택 안 함'));
     await tester.pumpAndSettle();
     expect(find.text('아직 재생목록이 없어요. 아래에서 새로 만들 수 있어요.'), findsOneWidget);
     await tester.tap(find.text('선택 완료'));
     await tester.pumpAndSettle();
 
-    await tester.enterText(inSheet(find.byType(TextField)).first, '');
-    await tester.pumpAndSettle();
     await tester.ensureVisible(inSheet(find.text('받기')));
     await tester.tap(inSheet(find.text('받기')));
     await tester.pumpAndSettle();

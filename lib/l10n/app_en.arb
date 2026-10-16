@@ -424,6 +424,8 @@
   "downloadImportLyrics": "Import subtitles as lyrics",
   "downloadImportLyricsMaybe": "Import subtitles as lyrics if available",
   "downloadImportLyricsHint": "After downloading, refine them in the lyrics sync screen.",
+  "downloadSectionSave": "Save to",
+  "downloadSectionLyrics": "Lyrics",
   "downloadCancelTitle": "Cancel download",
   "downloadCancelBody": "Cancel downloading \"{title}\"? What has been downloaded so far will be discarded.",
   "downloadCancelKeep": "Keep downloading",

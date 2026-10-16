@@ -1106,6 +1106,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadImportLyricsHint => '받은 뒤 가사 보기의 싱크 설정에서 다듬을 수 있어요.';
 
   @override
+  String get downloadSectionSave => '저장';
+
+  @override
+  String get downloadSectionLyrics => '가사';
+
+  @override
   String get downloadCancelTitle => '받기 취소';
 
   @override

@@ -2114,6 +2114,18 @@ abstract class AppLocalizations {
   /// **'받은 뒤 가사 보기의 싱크 설정에서 다듬을 수 있어요.'**
   String get downloadImportLyricsHint;
 
+  /// No description provided for @downloadSectionSave.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장'**
+  String get downloadSectionSave;
+
+  /// No description provided for @downloadSectionLyrics.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사'**
+  String get downloadSectionLyrics;
+
   /// No description provided for @downloadCancelTitle.
   ///
   /// In ko, this message translates to:

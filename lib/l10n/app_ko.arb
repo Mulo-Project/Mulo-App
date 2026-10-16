@@ -524,6 +524,8 @@
   "downloadImportLyrics": "자막을 가사로 가져오기",
   "downloadImportLyricsMaybe": "자막이 있으면 가사로 가져오기",
   "downloadImportLyricsHint": "받은 뒤 가사 보기의 싱크 설정에서 다듬을 수 있어요.",
+  "downloadSectionSave": "저장",
+  "downloadSectionLyrics": "가사",
   "downloadCancelTitle": "받기 취소",
   "downloadCancelBody": "\"{title}\" 받기를 취소할까요? 지금까지 받은 부분은 사라져요.",
   "downloadCancelKeep": "계속 받기",

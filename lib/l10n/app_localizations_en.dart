@@ -1133,6 +1133,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'After downloading, refine them in the lyrics sync screen.';
 
   @override
+  String get downloadSectionSave => 'Save to';
+
+  @override
+  String get downloadSectionLyrics => 'Lyrics';
+
+  @override
   String get downloadCancelTitle => 'Cancel download';
 
   @override

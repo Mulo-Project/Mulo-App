@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:music_download_play_app/features/downloads/presentation/widgets/download_dialog.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/di/injector.dart';
@@ -85,7 +86,7 @@ void main() {
     );
     await openDownloadDialog(tester);
 
-    final sheet = find.byType(BottomSheet);
+    final sheet = find.byType(DownloadScreen);
     Finder inSheet(Finder f) => find.descendant(of: sheet, matching: f);
     expect(inSheet(find.text('기존 장르에서 고르기')), findsOneWidget);
     // 장르 없는 곡은 제안하지 않는다.

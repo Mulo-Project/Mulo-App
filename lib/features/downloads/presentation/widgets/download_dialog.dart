@@ -16,7 +16,7 @@ import '../bloc/download_settings_cubit.dart';
 import 'playlist_picker_dialog.dart';
 import 'save_folder_dialog.dart';
 
-/// 받기 팝업: 제목 · 아티스트 · 장르를 고치고, 저장할 때 넣을 재생목록을 고른다.
+/// 받기 페이지: 제목 · 아티스트 · 장르를 고치고, 저장할 때 넣을 재생목록 · 자막 가사 가져오기를 정한다.
 /// "받기"를 누르면 대기열에 넣고 true를 돌려준다 (닫기만 하면 false).
 Future<bool> showDownloadDialog(
   BuildContext context, {
@@ -49,35 +49,36 @@ Future<bool> showDownloadDialog(
   final library = context.read<LibraryCubit>();
   final colors = context.read<CoverColorCubit>();
   final covers = context.read<CoverCubit>();
-  final started = await showAppSheet<bool>(
-    context,
-    isScrollControlled: true,
-    builder: (_) => MultiBlocProvider(
-      providers: [
-        BlocProvider.value(value: queue),
-        BlocProvider.value(value: playlists),
-        BlocProvider.value(value: settings),
-        BlocProvider.value(value: library),
-        BlocProvider.value(value: colors),
-        BlocProvider.value(value: covers),
-      ],
-      child: _DownloadSheet(
-        title: title,
-        artist: artist,
-        genre: genre,
-        quality: quality,
-        duration: duration,
-        thumbnailUrl: thumbnailUrl,
-        url: url,
-        subtitleLangs: subtitleLangs,
+  final started = await Navigator.of(context, rootNavigator: true).push<bool>(
+    MaterialPageRoute(
+      builder: (_) => MultiBlocProvider(
+        providers: [
+          BlocProvider.value(value: queue),
+          BlocProvider.value(value: playlists),
+          BlocProvider.value(value: settings),
+          BlocProvider.value(value: library),
+          BlocProvider.value(value: colors),
+          BlocProvider.value(value: covers),
+        ],
+        child: DownloadScreen(
+          title: title,
+          artist: artist,
+          genre: genre,
+          quality: quality,
+          duration: duration,
+          thumbnailUrl: thumbnailUrl,
+          url: url,
+          subtitleLangs: subtitleLangs,
+        ),
       ),
     ),
   );
   return started ?? false;
 }
 
-class _DownloadSheet extends StatefulWidget {
-  const _DownloadSheet({
+class DownloadScreen extends StatefulWidget {
+  const DownloadScreen({
+    super.key,
     required this.title,
     required this.artist,
     required this.genre,
@@ -99,10 +100,10 @@ class _DownloadSheet extends StatefulWidget {
   final String url;
 
   @override
-  State<_DownloadSheet> createState() => _DownloadSheetState();
+  State<DownloadScreen> createState() => _DownloadScreenState();
 }
 
-class _DownloadSheetState extends State<_DownloadSheet> {
+class _DownloadScreenState extends State<DownloadScreen> {
   late final _title = TextEditingController(text: widget.title);
   late final _artist = TextEditingController(text: widget.artist);
   late final _genre = TextEditingController(text: widget.genre);
@@ -216,131 +217,180 @@ class _DownloadSheetState extends State<_DownloadSheet> {
     if (ok && mounted) Navigator.of(context).pop(true);
   }
 
+  Widget _section(BuildContext context, String title, List<Widget> children) {
+    final text = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: text.titleMedium),
+          const SizedBox(height: AppSpacing.sm),
+          ...children,
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final p = context.palette;
     final text = Theme.of(context).textTheme;
 
-    return SafeArea(
-      child: SingleChildScrollView(
-        // 키보드가 올라오면 그만큼 띄운다.
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.viewInsetsOf(context).bottom,
-        ),
-        child: Padding(
-          padding: appSheetPadding,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(l10n.downloadDialogTitle, style: text.titleLarge),
-              const SizedBox(height: AppSpacing.md),
-              _CoverRow(
-                art: _cover,
-                label: l10n.downloadFieldCover,
-                changeLabel: l10n.downloadCoverChange,
-                resetLabel: l10n.downloadCoverDefault,
-                canReset: _cover != _defaultCover,
-                onChange: _changeCover,
-                onReset: _resetCover,
+    return Scaffold(
+      backgroundColor: p.background,
+      body: SafeArea(
+        child: Column(
+          children: [
+            AppTopBar(
+              title: l10n.downloadDialogTitle,
+              leading: CircleIconButton(
+                icon: AppIcons.back,
+                tooltip: l10n.actionCancel,
+                onPressed: () => Navigator.of(context).pop(false),
               ),
-              const SizedBox(height: AppSpacing.md),
-              AppTextField(label: l10n.downloadFieldTitle, controller: _title),
-              const SizedBox(height: AppSpacing.sm),
-              AppTextField(
-                label: l10n.downloadFieldArtist,
-                controller: _artist,
-                hint: l10n.unknownArtist,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              AppTextField(label: l10n.downloadFieldGenre, controller: _genre),
-              _GenreSuggestions(
-                controller: _genre,
-                label: l10n.downloadGenreExisting,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Text(l10n.decorateColor, style: text.labelLarge),
-              const SizedBox(height: AppSpacing.xs),
-              ListenableBuilder(
-                listenable: _genre,
-                builder: (_, _) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ColorPicker(
-                      selected: _color,
-                      autoLabel: l10n.playlistColorAuto,
-                      customLabel: l10n.colorCustom,
-                      optionLabel: l10n.colorOption,
-                      onChanged: (c) => setState(() {
-                        _picked = c;
-                        _pickedSet = true;
-                      }),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  0,
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                ),
+                children: [
+                  _CoverRow(
+                    art: _cover,
+                    label: l10n.downloadFieldCover,
+                    changeLabel: l10n.downloadCoverChange,
+                    resetLabel: l10n.downloadCoverDefault,
+                    canReset: _cover != _defaultCover,
+                    onChange: _changeCover,
+                    onReset: _resetCover,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  AppTextField(
+                    label: l10n.downloadFieldTitle,
+                    controller: _title,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  AppTextField(
+                    label: l10n.downloadFieldArtist,
+                    controller: _artist,
+                    hint: l10n.unknownArtist,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  AppTextField(
+                    label: l10n.downloadFieldGenre,
+                    controller: _genre,
+                  ),
+                  _GenreSuggestions(
+                    controller: _genre,
+                    label: l10n.downloadGenreExisting,
+                  ),
+                  _section(context, l10n.decorateColor, [
+                    ListenableBuilder(
+                      listenable: _genre,
+                      builder: (_, _) => Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ColorPicker(
+                            selected: _color,
+                            autoLabel: l10n.playlistColorAuto,
+                            customLabel: l10n.colorCustom,
+                            optionLabel: l10n.colorOption,
+                            onChanged: (c) => setState(() {
+                              _picked = c;
+                              _pickedSet = true;
+                            }),
+                          ),
+                          if (_genre.text.trim().isNotEmpty && _color != null)
+                            SettingRow(
+                              title: l10n.downloadColorSaveForGenre(
+                                _genre.text.trim(),
+                              ),
+                              trailing: AppSwitch(
+                                value: _saveAsGenreDefault,
+                                onChanged: (v) =>
+                                    setState(() => _saveAsGenreDefault = v),
+                              ),
+                              onTap: () => setState(
+                                () =>
+                                    _saveAsGenreDefault = !_saveAsGenreDefault,
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
-                    if (_genre.text.trim().isNotEmpty && _color != null)
-                      SettingRow(
-                        title: l10n.downloadColorSaveForGenre(
-                          _genre.text.trim(),
+                  ]),
+                  _section(context, l10n.downloadSectionSave, [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Expanded(
+                          child: AppTextField(
+                            label: l10n.downloadFieldSavePath,
+                            controller: _savePath,
+                          ),
                         ),
-                        trailing: AppSwitch(
-                          value: _saveAsGenreDefault,
-                          onChanged: (v) =>
-                              setState(() => _saveAsGenreDefault = v),
+                        const SizedBox(width: AppSpacing.xs),
+                        CircleIconButton(
+                          icon: AppIcons.folderOpen,
+                          tooltip: l10n.downloadPickFolder,
+                          onPressed: _pickFolder,
                         ),
-                        onTap: () => setState(
-                          () => _saveAsGenreDefault = !_saveAsGenreDefault,
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      l10n.downloadPlaylistsLabel.toUpperCase(),
+                      style: text.labelSmall,
+                    ),
+                    const SizedBox(height: AppSpacing.xxs),
+                    _PlaylistPickRow(
+                      summary: _selected.isEmpty
+                          ? l10n.downloadPlaylistsNone
+                          : l10n.downloadPlaylistsSelected(_selected.length),
+                      onTap: _pickPlaylists,
+                    ),
+                  ]),
+                  if (_canImportLyrics)
+                    _section(context, l10n.downloadSectionLyrics, [
+                      DecoratedBox(
+                        decoration: ShapeDecoration(
+                          color: p.surfaceHigh,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppRadii.sm),
+                            side: BorderSide(color: p.outline),
+                          ),
+                        ),
+                        child: SettingRow(
+                          key: const ValueKey('download-import-lyrics'),
+                          title: widget.subtitleLangs == null
+                              ? l10n.downloadImportLyricsMaybe
+                              : l10n.downloadImportLyrics,
+                          description: l10n.downloadImportLyricsHint,
+                          trailing: AppSwitch(
+                            value: _importLyrics,
+                            onChanged: (v) => setState(() => _importLyrics = v),
+                          ),
+                          onTap: () =>
+                              setState(() => _importLyrics = !_importLyrics),
                         ),
                       ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Expanded(
-                    child: AppTextField(
-                      label: l10n.downloadFieldSavePath,
-
-                      controller: _savePath,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  CircleIconButton(
-                    icon: AppIcons.folderOpen,
-                    tooltip: l10n.downloadPickFolder,
-                    onPressed: _pickFolder,
-                  ),
+                    ]),
                 ],
               ),
-              if (_canImportLyrics) ...[
-                const SizedBox(height: AppSpacing.sm),
-                SettingRow(
-                  key: const ValueKey('download-import-lyrics'),
-                  title: widget.subtitleLangs == null
-                      ? l10n.downloadImportLyricsMaybe
-                      : l10n.downloadImportLyrics,
-                  description: l10n.downloadImportLyricsHint,
-                  trailing: AppSwitch(
-                    value: _importLyrics,
-                    onChanged: (v) => setState(() => _importLyrics = v),
-                  ),
-                  onTap: () => setState(() => _importLyrics = !_importLyrics),
-                ),
-              ],
-              const SizedBox(height: AppSpacing.lg),
-              Text(
-                l10n.downloadPlaylistsLabel.toUpperCase(),
-                style: text.labelSmall,
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.sm,
+                AppSpacing.lg,
+                AppSpacing.md,
               ),
-              const SizedBox(height: AppSpacing.xxs),
-              _PlaylistPickRow(
-                summary: _selected.isEmpty
-                    ? l10n.downloadPlaylistsNone
-                    : l10n.downloadPlaylistsSelected(_selected.length),
-                onTap: _pickPlaylists,
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              Row(
+              child: Row(
                 children: [
                   Expanded(
                     child: PillButton(
@@ -363,15 +413,15 @@ class _DownloadSheetState extends State<_DownloadSheet> {
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-/// 팝업 맨 위의 커버: 작은 정사각형 + 바꾸기 · 기본으로. 상자 없이 한 줄로 둔다.
+/// 페이지 맨 위의 커버: 작은 정사각형 + 바꾸기 · 기본으로. 상자 없이 한 줄로 둔다.
 class _CoverRow extends StatelessWidget {
   const _CoverRow({
     required this.art,
@@ -440,7 +490,7 @@ class _CoverRow extends StatelessWidget {
   }
 }
 
-/// 팝업의 재생목록 줄: 고른 개수를 보여 주고, 누르면 고르는 대화상자를 연다.
+/// 재생목록 줄: 고른 개수를 보여 주고, 누르면 고르는 대화상자를 연다.
 class _PlaylistPickRow extends StatelessWidget {
   const _PlaylistPickRow({required this.summary, required this.onTap});
 

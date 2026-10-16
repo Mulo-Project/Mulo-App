@@ -7,7 +7,7 @@
 
 ## 한 일
 - 엔진에 `fetchSubtitles` 추가: 로컬(yt-dlp 자막 받기 + WebVTT 읽기), 서버(`/api/v1/subtitles` 제안 형식), 나머지 덮개는 안쪽 엔진에 넘김. 곡 정보에 `subtitleLangs`.
-- 받기 팝업에 `자막을 가사로 가져오기` 스위치, `DownloadRequest.importLyrics`(대기열 저장에도 포함).
+- 받기 정보를 바텀 시트에서 전체 화면 페이지로 바꾸고(구역: 곡 정보 · 꾸미기 · 저장 · 가사, 아래 고정 받기 줄), `자막을 가사로 가져오기` 스위치를 가사 구역에 둠, `DownloadRequest.importLyrics`(대기열 저장에도 포함).
 - 받기가 끝나면 대기열 저장소가 자막을 `.lrc`로 저장. 실패해도 받기는 성공. 결정은 D-109.
 
 ## 바꾼 설정
