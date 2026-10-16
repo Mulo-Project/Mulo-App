@@ -223,7 +223,7 @@ class _LyricsViewState extends State<LyricsView> {
       child: Padding(
         padding: EdgeInsets.symmetric(
           horizontal: AppSpacing.sm,
-          vertical: tight ? 1 : AppSpacing.xs,
+          vertical: tight ? 0 : AppSpacing.xs,
         ),
         child: AnimatedDefaultTextStyle(
           duration: AppMotion.fast,
@@ -418,7 +418,7 @@ class _LyricsViewState extends State<LyricsView> {
     final p = context.palette;
     final text = Theme.of(context).textTheme;
     const slot = 64.0;
-    const tight = 38.0;
+    const tight = 32.0;
     const reach = 3;
     final v = _stack(lyrics, slot, tight);
     final center = (group.$1 + group.$2) / 2;

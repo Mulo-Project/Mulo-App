@@ -17,12 +17,24 @@ class SyncDraft extends Equatable {
         for (final l in lyrics.lines)
           if (l.text.isNotEmpty) l,
       ];
+      // 시간이 완전히 같은 이웃 줄은 싱크 화면에서 묶었던 줄이므로 한 칸으로 다시 묶는다.
+      final sizes = <int>[];
+      final times = <Duration?>[];
+      for (final l in lines) {
+        if (times.isNotEmpty && times.last == l.time) {
+          sizes[sizes.length - 1]++;
+        } else {
+          sizes.add(1);
+          times.add(l.time);
+        }
+      }
+      final stampedCells = sizes.length;
       // 도중에 저장해 둔 가사는 아직 안 찍은 뒷줄이 따로 남아 있다.
       return SyncDraft._(
         [for (final l in lines) l.text, ...lyrics.pending],
-        List.filled(lines.length + lyrics.pending.length, 1),
-        [for (final l in lines) l.time, for (final _ in lyrics.pending) null],
-        lines.length,
+        [...sizes, for (final _ in lyrics.pending) 1],
+        [...times, for (final _ in lyrics.pending) null],
+        stampedCells,
         const [],
       );
     }

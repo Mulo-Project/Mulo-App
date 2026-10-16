@@ -577,6 +577,13 @@ void main() {
     expect(find.text('3줄 같은 시간으로 묶음'), findsNothing);
   });
 
+  testWidgets('싱크 설정: 시간이 완전히 같은 이웃 줄은 다시 열 때 묶인 칸으로 보인다', (tester) async {
+    await openSync(tester, '[00:01.00]가 줄\n[00:01.00]나 줄\n[00:03.00]다 줄');
+    expect(find.text('2/2줄'), findsOneWidget);
+    expect(find.text('가 줄\n나 줄'), findsOneWidget);
+    expect(find.text('2줄 같은 시간으로 묶음'), findsOneWidget);
+  });
+
   testWidgets('싱크 설정: 이미 싱크가 있는 가사도 꾹 눌러 끌어 묶고 풀 수 있다', (tester) async {
     final lyrics = await openSync(
       tester,
