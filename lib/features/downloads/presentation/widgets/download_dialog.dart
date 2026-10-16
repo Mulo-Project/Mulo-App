@@ -18,6 +18,7 @@ import '../bloc/subtitle_availability_cubit.dart';
 import '../bloc/subtitle_preview_cubit.dart';
 import 'playlist_picker_dialog.dart';
 import 'save_folder_dialog.dart';
+import 'subtitle_detail_screen.dart';
 import 'subtitle_language_label.dart';
 
 /// 받기 페이지: 제목 · 아티스트 · 장르를 고치고, 저장할 때 넣을 재생목록 · 자막 가사 가져오기를 정한다.
@@ -341,6 +342,20 @@ class _DownloadScreenState extends State<DownloadScreen> {
     context.read<SubtitlePreviewCubit>().clear();
   }
 
+  /// 자막 한 벌의 전체 가사 페이지를 열고, "이 자막 사용"이면 그 언어로 고른다.
+  Future<void> _openSubtitle(String lang, String name, String kind) async {
+    final use = await showSubtitleDetail(
+      context,
+      url: widget.url,
+      language: lang,
+      title: name,
+      kind: kind,
+      skipSounds: _skipSounds,
+      selected: _lyricsLanguage == lang,
+    );
+    if (use == true && mounted) _pickLanguage(lang);
+  }
+
   void _setSkipSounds(bool v) {
     setState(() => _skipSounds = v);
     context.read<SubtitlePreviewCubit>().clear();
@@ -397,7 +412,10 @@ class _DownloadScreenState extends State<DownloadScreen> {
                     language: r.name,
                     kind: r.kind,
                     selected: _lyricsLanguage == r.lang,
-                    onTap: () => _pickLanguage(r.lang),
+                    openable: r.lang != null,
+                    onTap: () => r.lang == null
+                        ? _pickLanguage(null)
+                        : _openSubtitle(r.lang!, r.name, r.kind),
                   ),
               ],
             ),
@@ -533,6 +551,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
     required String kind,
     bool header = false,
     bool selected = false,
+    bool openable = false,
     VoidCallback? onTap,
   }) {
     final p = context.palette;
@@ -564,6 +583,12 @@ class _DownloadScreenState extends State<DownloadScreen> {
                       AppIcons.check,
                       size: AppSizes.iconSm,
                       color: p.primary,
+                    )
+                  : openable
+                  ? Icon(
+                      AppIcons.chevronRight,
+                      size: AppSizes.iconSm,
+                      color: p.onSurfaceMuted,
                     )
                   : null,
             ),

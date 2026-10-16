@@ -323,6 +323,10 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('영어'));
     await tester.pumpAndSettle();
+    // 줄을 누르면 전체 가사 페이지가 열리고, 거기서 "이 자막 사용"으로 고른다.
+    expect(find.byKey(const ValueKey('subtitle-detail-use')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('subtitle-detail-use')));
+    await tester.pumpAndSettle();
     await tester.tap(inSheet(find.text('받기')));
     await tester.pumpAndSettle();
     expect(queue.requests.single.importLyrics, isTrue);

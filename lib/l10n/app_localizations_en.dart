@@ -1158,6 +1158,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadLyricsPreviewFailed => 'Couldn\'t load the subtitles.';
 
   @override
+  String get downloadLyricsRetry => 'Try again';
+
+  @override
+  String get downloadSubtitleUse => 'Use this subtitle';
+
+  @override
+  String get downloadSubtitleInUse => 'Currently selected';
+
+  @override
   String get downloadLyricsSkipSounds => 'Skip sound-effect lines';
 
   @override

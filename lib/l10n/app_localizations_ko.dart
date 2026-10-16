@@ -1130,6 +1130,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadLyricsPreviewFailed => '자막을 불러오지 못했어요.';
 
   @override
+  String get downloadLyricsRetry => '다시 불러오기';
+
+  @override
+  String get downloadSubtitleUse => '이 자막 사용';
+
+  @override
+  String get downloadSubtitleInUse => '사용 중인 자막';
+
+  @override
   String get downloadLyricsSkipSounds => '효과음 줄 빼기';
 
   @override

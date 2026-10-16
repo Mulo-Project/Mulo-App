@@ -2162,6 +2162,24 @@ abstract class AppLocalizations {
   /// **'자막을 불러오지 못했어요.'**
   String get downloadLyricsPreviewFailed;
 
+  /// No description provided for @downloadLyricsRetry.
+  ///
+  /// In ko, this message translates to:
+  /// **'다시 불러오기'**
+  String get downloadLyricsRetry;
+
+  /// No description provided for @downloadSubtitleUse.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 자막 사용'**
+  String get downloadSubtitleUse;
+
+  /// No description provided for @downloadSubtitleInUse.
+  ///
+  /// In ko, this message translates to:
+  /// **'사용 중인 자막'**
+  String get downloadSubtitleInUse;
+
   /// No description provided for @downloadLyricsSkipSounds.
   ///
   /// In ko, this message translates to:
