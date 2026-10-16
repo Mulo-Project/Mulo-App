@@ -2162,6 +2162,24 @@ abstract class AppLocalizations {
   /// **'자막을 불러오지 못했어요.'**
   String get downloadLyricsPreviewFailed;
 
+  /// No description provided for @downloadSubtitleEditHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'글은 고칠 수 있지만 시간은 바꿀 수 없어요. 싱크는 받은 뒤 재생 화면에서 맞춰요.'**
+  String get downloadSubtitleEditHint;
+
+  /// No description provided for @downloadSubtitleUseEdited.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 자막 사용'**
+  String get downloadSubtitleUseEdited;
+
+  /// No description provided for @downloadSubtitleEdited.
+  ///
+  /// In ko, this message translates to:
+  /// **'수정함'**
+  String get downloadSubtitleEdited;
+
   /// No description provided for @downloadLyricsRetry.
   ///
   /// In ko, this message translates to:

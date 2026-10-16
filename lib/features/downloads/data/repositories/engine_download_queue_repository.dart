@@ -522,6 +522,7 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
         request.url,
         request.lyricsLanguage,
         skipSounds: request.lyricsSkipSounds,
+        text: request.lyricsText,
       );
     }
   }
@@ -533,10 +534,16 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
     String url,
     String? language, {
     required bool skipSounds,
+    String? text,
   }) async {
     final repo = _lyrics;
     if (repo == null) return;
     try {
+      // 받기 전에 글을 고쳐 둔 가사는 그대로 저장한다.
+      if (text != null && text.trim().isNotEmpty) {
+        await repo.save(trackId, text);
+        return;
+      }
       final track = await _engine.fetchSubtitles(
         url,
         preferLanguages: language == null ? const ['ko', 'en'] : [language],

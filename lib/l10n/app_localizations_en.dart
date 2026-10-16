@@ -1158,6 +1158,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadLyricsPreviewFailed => 'Couldn\'t load the subtitles.';
 
   @override
+  String get downloadSubtitleEditHint =>
+      'You can edit the text, but not the timing. Sync it on the player after downloading.';
+
+  @override
+  String get downloadSubtitleUseEdited => 'Use this subtitle';
+
+  @override
+  String get downloadSubtitleEdited => 'edited';
+
+  @override
   String get downloadLyricsRetry => 'Try again';
 
   @override

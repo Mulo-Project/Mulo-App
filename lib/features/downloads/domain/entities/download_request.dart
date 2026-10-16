@@ -21,6 +21,7 @@ class DownloadRequest extends Equatable {
     this.importLyrics = false,
     this.lyricsLanguage,
     this.lyricsSkipSounds = true,
+    this.lyricsText,
   });
 
   final String title;
@@ -61,6 +62,9 @@ class DownloadRequest extends Equatable {
   /// 가져올 때 효과음 줄(`[음악]` 등)을 뺀다.
   final bool lyricsSkipSounds;
 
+  /// 받기 전에 글을 고친 가사(.lrc 글). 있으면 자막을 다시 읽지 않고 이것을 저장한다.
+  final String? lyricsText;
+
   /// 문자열 앞뒤 공백을 지운 사본.
   DownloadRequest normalized() => DownloadRequest(
     title: title.trim(),
@@ -78,6 +82,7 @@ class DownloadRequest extends Equatable {
     importLyrics: importLyrics,
     lyricsLanguage: lyricsLanguage,
     lyricsSkipSounds: lyricsSkipSounds,
+    lyricsText: lyricsText,
   );
 
   @override
@@ -97,5 +102,6 @@ class DownloadRequest extends Equatable {
     importLyrics,
     lyricsLanguage,
     lyricsSkipSounds,
+    lyricsText,
   ];
 }

@@ -1130,6 +1130,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadLyricsPreviewFailed => '자막을 불러오지 못했어요.';
 
   @override
+  String get downloadSubtitleEditHint =>
+      '글은 고칠 수 있지만 시간은 바꿀 수 없어요. 싱크는 받은 뒤 재생 화면에서 맞춰요.';
+
+  @override
+  String get downloadSubtitleUseEdited => '이 자막 사용';
+
+  @override
+  String get downloadSubtitleEdited => '수정함';
+
+  @override
   String get downloadLyricsRetry => '다시 불러오기';
 
   @override

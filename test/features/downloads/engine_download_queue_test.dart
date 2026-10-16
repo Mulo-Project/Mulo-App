@@ -291,6 +291,26 @@ void main() {
       }
     });
 
+    test('받기 전에 고친 가사 글은 자막을 다시 읽지 않고 그대로 저장한다', () async {
+      engine.subtitles = track;
+      final lyrics = MemoryLyricsRepository();
+      final repo = build(_FakeDownloader(), lyrics: lyrics);
+      await repo.enqueue(
+        const DownloadRequest(
+          title: 'Song',
+          url: 'https://youtu.be/abc',
+          importLyrics: true,
+          lyricsText: '[00:01.00]고친 줄',
+        ),
+      );
+      await settled(
+        repo,
+        (l) => l.isNotEmpty && l.single.status == DownloadStatus.done,
+      );
+      expect(lyrics.saved.values.single, '[00:01.00]고친 줄');
+      expect(engine.subtitleUrls, isEmpty);
+    });
+
     test('고른 언어를 엔진에 넘긴다', () async {
       final seen = <List<String>>[];
       engine = _LangEngine(seen)..subtitles = track;

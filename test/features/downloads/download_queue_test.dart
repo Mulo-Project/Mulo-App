@@ -375,6 +375,45 @@ void main() {
     expect(engine.subtitleUrls, ['https://youtu.be/abc']);
   });
 
+  testWidgets('받기 페이지: 상세에서 가사 글을 고치면 고친 글이 받기 요청에 실린다', (tester) async {
+    final engine =
+        FakeDownloaderEngine(
+            info: const VideoInfo(
+              MediaHit(
+                id: 'abc',
+                title: 'Song',
+                url: 'https://youtu.be/abc',
+                subtitleLangs: ['ko', 'en'],
+              ),
+            ),
+          )
+          ..subtitles = const SubtitleTrack(
+            language: 'en',
+            cues: [SubtitleCue(Duration(seconds: 1), 'helo world')],
+          );
+    final queue = await openLyricsPage(tester, engine);
+    await tester.tap(find.byKey(const ValueKey('download-import-lyrics')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('영어'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('영어'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextField, 'helo world'),
+      'hello world',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('subtitle-detail-use')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.textContaining('수정함'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('수정함'), findsOneWidget);
+    await tester.tap(inSheet(find.text('받기')));
+    await tester.pumpAndSettle();
+    expect(queue.requests.single.lyricsLanguage, 'en');
+    expect(queue.requests.single.lyricsText, '[00:01.00]hello world');
+  });
+
   testWidgets('받기 팝업: 제목을 비우면 받기 버튼이 눌리지 않는다', (tester) async {
     final queue = await openWithPlaylists(tester, const []);
     await openDownloadDialog(tester);

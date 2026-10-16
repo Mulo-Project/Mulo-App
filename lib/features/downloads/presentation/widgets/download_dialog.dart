@@ -5,6 +5,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../library/presentation/bloc/library_cubit.dart';
+import '../../../search/domain/entities/subtitle_track.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
@@ -138,6 +139,9 @@ class _DownloadScreenState extends State<DownloadScreen> {
   String? _lyricsLanguage;
   var _skipSounds = true;
 
+  // 상세 페이지에서 글을 고친 자막 (언어 코드별). 효과음 옵션이 바뀌면 비운다.
+  final _edited = <String, SubtitleTrack>{};
+
   // 가사 구역은 유튜브 곡만 둔다.
   late final bool _isYoutube = downloadSourceKey(widget.url)
       .startsWith('youtube:');
@@ -239,6 +243,9 @@ class _DownloadScreenState extends State<DownloadScreen> {
             subtitleStatus != SubtitleStatus.none,
         lyricsLanguage: _lyricsLanguage,
         lyricsSkipSounds: _skipSounds,
+        lyricsText: _lyricsLanguage == null
+            ? null
+            : _edited[_lyricsLanguage]?.toLrc(),
       ),
     );
     if (ok && mounted) Navigator.of(context).pop(true);
@@ -352,12 +359,21 @@ class _DownloadScreenState extends State<DownloadScreen> {
       kind: kind,
       skipSounds: _skipSounds,
       selected: _lyricsLanguage == lang,
+      edited: _edited[lang],
     );
-    if (use == true && mounted) _pickLanguage(lang);
+    if (use == null || !mounted) return;
+    setState(() {
+      final edited = use.edited;
+      if (edited != null) _edited[lang] = edited;
+    });
+    _pickLanguage(lang);
   }
 
   void _setSkipSounds(bool v) {
-    setState(() => _skipSounds = v);
+    setState(() {
+      _skipSounds = v;
+      _edited.clear();
+    });
     context.read<SubtitlePreviewCubit>().clear();
   }
 
@@ -410,7 +426,9 @@ class _DownloadScreenState extends State<DownloadScreen> {
                   _languageRow(
                     context,
                     language: r.name,
-                    kind: r.kind,
+                    kind: _edited.containsKey(r.lang)
+                        ? '${r.kind} · ${l10n.downloadSubtitleEdited}'
+                        : r.kind,
                     selected: _lyricsLanguage == r.lang,
                     openable: r.lang != null,
                     onTap: () => r.lang == null

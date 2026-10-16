@@ -50,6 +50,10 @@ class SubtitlePreviewCubit extends Cubit<SubtitlePreview> {
     }
   }
 
+  /// 이미 가지고 있는 자막을 그대로 보여 준다 (고쳐 둔 글을 다시 열 때).
+  void show(SubtitleTrack track) =>
+      emit(SubtitlePreview(SubtitlePreviewStatus.loaded, track));
+
   /// 고른 언어가 바뀌어 지금 미리보기가 맞지 않을 때 비운다.
   void clear() => emit(const SubtitlePreview(SubtitlePreviewStatus.idle));
 }
