@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -39,26 +42,54 @@ class LyricsSyncScreen extends StatefulWidget {
 
 class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
   static const _lead = Duration(seconds: 2);
+  static const _steps = [10, 100, 500, 1000, 3000, 5000, 10000, 30000, 60000];
+  var _stepMs = 500;
+  var _autoPause = false;
+  int? _dragFrom;
+  int? _dragTo;
   var _keys = <GlobalKey>[];
+  StreamSubscription<NowPlayingState>? _positionWatch;
 
   @override
   void initState() {
     super.initState();
+    _positionWatch = context.read<NowPlayingCubit>().stream.listen(_watchPass);
     _keys = List.generate(
       context.read<LyricsSyncCubit>().state.draft.length,
       (_) => GlobalKey(),
     );
-    // 이 곡을 재생 중이 아니면 이 곡을 처음부터 틀고, 같은 곡이면 이어서 듣는다.
+    // 들어오면 재생 중이던 소리는 멈추고, 이 곡을 0초(이어 찍는 가사면 마지막 싱크 위치)에 세워 둔다 (재생은 직접 누른다).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       _askDefaultGroup();
       final np = context.read<NowPlayingCubit>();
       if (np.state.track != widget.track) {
         np.playQueue([widget.track]);
-      } else if (!np.state.isPlaying) {
-        np.togglePlay();
+      } else {
+        np.seekTo(Duration.zero);
       }
+      if (np.state.isPlaying) np.togglePlay();
+      // 도중에 저장한 가사를 다시 열었으면 마지막으로 찍은 싱크 위치에 재생을 맞춰 둔다.
+      final times = context.read<LyricsSyncCubit>().state.draft.times;
+      final last = times.lastIndexWhere((t) => t != null);
+      if (last >= 0) np.seekTo(times[last]!);
     });
+  }
+
+  @override
+  void dispose() {
+    _positionWatch?.cancel();
+    super.dispose();
+  }
+
+  /// 자동 멈춤: 포커스한 싱크 바로 다음 칸에 이미 싱크가 있으면, 재생이 그 시간에 닿을 때 멈춘다.
+  void _watchPass(NowPlayingState s) {
+    if (!_autoPause || !mounted || !s.isPlaying) return;
+    final at = context.read<LyricsSyncCubit>().nextStampAfterFocus;
+    if (at == null || s.position < at) return;
+    // 이미 지나 있던 곳에서 재생을 시작한 경우는 멈추지 않는다 (한 번 닿는 순간만).
+    if (s.position - at > const Duration(seconds: 1)) return;
+    context.read<NowPlayingCubit>().togglePlay();
   }
 
   /// 싱크가 아직 없는 일반 글이면 기본으로 한 번에 찍을 줄 수를 먼저 묻는다.
@@ -124,8 +155,156 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
   }
 
   void _now() {
-    final position = context.read<NowPlayingCubit>().state.position;
-    context.read<LyricsSyncCubit>().stamp(position);
+    final np = context.read<NowPlayingCubit>();
+    final sync = context.read<LyricsSyncCubit>();
+    final stamped = sync.state.draft.current;
+    sync.stamp(np.state.position);
+    // 찍은 뒤 포커스가 이미 싱크된 칸으로 넘어갔으면, 재생도 그 싱크 위치로 맞춘다 (빈 칸이면 그대로 이어서 재생).
+    final next = sync.state.selected;
+    final time = next == null ? null : sync.state.draft.times[next];
+    if (next != null && next != stamped && time != null) np.seekTo(time);
+  }
+
+  /// 뒤로: 가장 뒤에 찍은 싱크를 하나 지우고 그 줄로 돌아간다. 누를 때마다 한 칸씩 지운다.
+  void _previous() {
+    final sync = context.read<LyricsSyncCubit>();
+    final draft = sync.state.draft;
+    final last = draft.times.lastIndexWhere((t) => t != null);
+    if (last < 0) return;
+    final time = draft.times[last]!;
+    sync.stepBack();
+    // 지운 싱크 조금 앞에서부터 다시 들려줘, 이어서 지금으로 다시 찍을 수 있게 한다.
+    _replay(time);
+  }
+
+  /// 끌고 있는 손가락 아래 칸을 찾아 묶을 범위의 끝으로 삼는다 (위로도 아래로도).
+  void _dragMove(double dy, SyncDraft draft) {
+    final from = _dragFrom;
+    if (from == null) return;
+    var to = 0;
+    for (var i = 0; i < _keys.length && i < draft.length; i++) {
+      final box = _keys[i].currentContext?.findRenderObject();
+      if (box is! RenderBox || !box.attached) continue;
+      final top = box.localToGlobal(Offset.zero).dy;
+      if (dy >= top) to = i;
+    }
+    if (to != _dragTo) setState(() => _dragTo = to);
+  }
+
+  /// 손을 떼면 고른 범위를 한 칸으로 묶는다 (이미 찍은 싱크가 지워지면 먼저 묻는다).
+  Future<void> _dragEnd() async {
+    final from = _dragFrom;
+    final to = _dragTo;
+    setState(() {
+      _dragFrom = null;
+      _dragTo = null;
+    });
+    if (from == null || to == null || to == from) return;
+    // 위로 끌어도 된다: 범위는 위쪽 칸부터 아래쪽 칸까지이고 위쪽 칸의 시간을 쓴다.
+    final first = math.min(from, to);
+    final last = math.max(from, to);
+    final sync = context.read<LyricsSyncCubit>();
+    if (sync.rangeErasesStamped(first, last) &&
+        !await confirmLyricsSkipMerge(context)) {
+      return;
+    }
+    if (!mounted) return;
+    sync.mergeRange(first, last);
+  }
+
+  /// 가사 칸 목록. 줄별로 펼친 영역이 있으면 그 칸들을 색 바탕 한 영역으로 묶어 보여 준다.
+  List<Widget> _rows(BuildContext context, LyricsSyncState state) {
+    final draft = state.draft;
+    final sync = context.read<LyricsSyncCubit>();
+    final l10n = context.l10n;
+    final p = context.palette;
+    final ex = state.expanded;
+
+    Widget row(int i) {
+      final dragRange =
+          _dragFrom != null &&
+          _dragTo != null &&
+          i >= math.min(_dragFrom!, _dragTo!) &&
+          i <= math.max(_dragFrom!, _dragTo!);
+      final merged = draft.sizes[i] > 1;
+      final line = _LineRow(
+        key: _keys[i],
+        index: i,
+        draft: draft,
+        selected: state.selected == i,
+        inRange: dragRange,
+        afterFocus: state.selected != null && i == state.selected! + 1,
+        canGroup: sync.canGroup,
+        clock: _clock,
+        onLongPress: sync.canGroup && merged ? () => sync.expand(i) : null,
+        onTap: () {
+          // 줄을 눌러서는 싱크를 찍지 않는다 (싱크 등록은 지금 버튼으로만).
+          sync.select(i);
+          // 찍어 둔 줄이면 재생도 그 싱크 위치로 옮긴다.
+          final time = draft.times[i];
+          if (time != null) {
+            context.read<NowPlayingCubit>().seekTo(time);
+          }
+        },
+      );
+      // 한 줄짜리 칸은 꾹 누른 채 아래로 끌어 묶을 범위를 고른다.
+      if (!sync.canGroup || merged) return line;
+      return GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onLongPressStart: (_) => setState(() {
+          _dragFrom = i;
+          _dragTo = i;
+        }),
+        onLongPressMoveUpdate: (d) => _dragMove(d.globalPosition.dy, draft),
+        onLongPressEnd: (_) => _dragEnd(),
+        onLongPressCancel: () => setState(() {
+          _dragFrom = null;
+          _dragTo = null;
+        }),
+        child: line,
+      );
+    }
+
+    final out = <Widget>[];
+    var i = 0;
+    while (i < draft.length) {
+      if (ex != null && i == ex.$1) {
+        final end = (ex.$1 + ex.$2).clamp(0, draft.length);
+        out.add(
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+            decoration: BoxDecoration(
+              color: p.accent.withValues(alpha: .08),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.sm,
+                    AppSpacing.xs,
+                    AppSpacing.sm,
+                    0,
+                  ),
+                  child: Text(
+                    l10n.lyricsSyncExpandedHint,
+                    style: Theme.of(context).textTheme.labelSmall
+                        ?.copyWith(color: p.accent),
+                  ),
+                ),
+                for (var j = i; j < end; j++) row(j),
+              ],
+            ),
+          ),
+        );
+        i = end;
+      } else {
+        out.add(row(i));
+        i++;
+      }
+    }
+    return out;
   }
 
   /// 되돌리기: 찍은 줄이 풀리면 그 앞 줄부터 다시 들려줘 이어서 찍을 수 있게 한다.
@@ -139,11 +318,63 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
     _replay(prev ?? Duration.zero);
   }
 
+  /// 자동 멈춤이 켜져 있으면 포커스한 싱크 다음 칸의 기존 싱크 시간이 앞으로 갈 수 있는 끝이다.
+  Duration? get _limit {
+    if (!_autoPause) return null;
+    return context.read<LyricsSyncCubit>().nextStampAfterFocus;
+  }
+
+  Duration _clampLimit(Duration target) {
+    final limit = _limit;
+    return limit != null && target > limit ? limit : target;
+  }
+
+  /// 지금 위치에서 [_stepMs]밀리초 앞뒤로 옮긴다 ('지금'을 놓쳤을 때).
+  /// 뒤로 가면 이어서 들려주고, 자동 멈춤 중에는 다음 싱크 시간 너머로 못 간다.
+  void _skip(int sign) {
+    final np = context.read<NowPlayingCubit>();
+    final target = np.state.position + Duration(milliseconds: _stepMs * sign);
+    np.seekTo(_clampLimit(target));
+    if (sign < 0 && !np.state.isPlaying) np.togglePlay();
+  }
+
+  /// 슬라이더로 옮길 때도 같은 한계를 지킨다.
+  void _seekFraction(double fraction) {
+    final np = context.read<NowPlayingCubit>();
+    final total = np.state.track?.duration;
+    if (total == null) return;
+    np.seekTo(_clampLimit(total * fraction.clamp(0.0, 1.0)));
+  }
+
+  /// 앞뒤 버튼을 길게 눌렀을 때: 한 번에 옮길 초를 고른다.
+  Future<void> _pickStep(BuildContext buttonContext) async {
+    final pick = await showAppMenu<int>(
+      buttonContext,
+      items: [
+        for (final n in _steps)
+          AppMenuItem(
+            value: n,
+            icon: AppIcons.timer,
+            label: stepLabel(n),
+            selected: n == _stepMs,
+          ),
+      ],
+    );
+    if (pick != null && mounted) setState(() => _stepMs = pick);
+  }
+
   /// [time]보다 조금 앞에서 다시 재생한다 (찍은 곳이 맞는지 앞 소리까지 듣도록).
   void _replay(Duration time) {
     final np = context.read<NowPlayingCubit>();
     np.seekTo(time > _lead ? time - _lead : Duration.zero);
     if (!np.state.isPlaying) np.togglePlay();
+  }
+
+  /// 이동 단위 글자: 1초 미만은 0.1s처럼, 1분 단위는 1m, 나머지는 정수 초.
+  static String stepLabel(int ms) {
+    if (ms < 1000) return '${ms / 1000}s';
+    if (ms >= 60000 && ms % 60000 == 0) return '${ms ~/ 60000}m';
+    return '${ms ~/ 1000}s';
   }
 
   static String _clock(Duration d) {
@@ -196,13 +427,18 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
                         ),
                       CircleIconButton(
                         icon: AppIcons.check,
+                        // 다 찍었으면 강조해서 저장하고, 덜 찍었어도 누르면 찍은 곳까지 중간 저장한다.
                         tooltip: draft.isComplete
                             ? l10n.lyricsSyncSave
-                            : l10n.lyricsSyncNeedAll,
+                            : l10n.lyricsSyncSavePartial,
                         emphasized: draft.isComplete,
-                        onPressed: draft.isComplete
-                            ? () => Navigator.of(context).pop(draft.toLrc())
-                            : null,
+                        onPressed: draft.stamped == 0
+                            ? null
+                            : () => Navigator.of(context).pop(
+                                draft.isComplete
+                                    ? draft.toLrc()
+                                    : draft.toPartialLrc(),
+                              ),
                       ),
                     ],
                   ),
@@ -230,13 +466,6 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
                       ],
                     ),
                   ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: _ClockText(),
-                    ),
-                  ),
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.lg,
@@ -256,31 +485,20 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
                         ? Center(child: Text(l10n.lyricsSyncEmpty))
                         : SingleChildScrollView(
                             padding: const EdgeInsets.all(AppSpacing.md),
-                            child: Column(
-                              children: [
-                                for (var i = 0; i < draft.length; i++)
-                                  _LineRow(
-                                    key: _keys[i],
-                                    index: i,
-                                    draft: draft,
-                                    selected: state.selected == i,
-                                    editing: state.editing == i,
-                                    canGroup: sync.canGroup,
-                                    clock: _clock,
-                                    onTap: () => i == draft.current
-                                        ? _now()
-                                        : sync.select(i),
-                                    onReplay: () {
-                                      final time = draft.times[i]!;
-                                      sync.rewindTo(i);
-                                      _replay(time);
-                                    },
-                                  ),
-                              ],
-                            ),
+                            child: Column(children: [..._rows(context, state)]),
                           ),
                   ),
-                  _ControlBar(onNow: _now, onUndo: _undo),
+                  _ControlBar(
+                    stepMs: _stepMs,
+                    autoPause: _autoPause,
+                    onAutoPause: () => setState(() => _autoPause = !_autoPause),
+                    onNow: _now,
+                    onUndo: _undo,
+                    onPrevious: _previous,
+                    onSkip: _skip,
+                    onSeek: _seekFraction,
+                    onPickStep: _pickStep,
+                  ),
                 ],
               ),
             ),
@@ -297,21 +515,23 @@ class _LineRow extends StatelessWidget {
     required this.index,
     required this.draft,
     required this.selected,
-    required this.editing,
+    this.inRange = false,
+    this.afterFocus = false,
     required this.canGroup,
     required this.clock,
     required this.onTap,
-    required this.onReplay,
+    this.onLongPress,
   });
 
   final int index;
   final SyncDraft draft;
   final bool selected;
-  final bool editing;
+  final bool inRange;
+  final bool afterFocus;
   final bool canGroup;
   final String Function(Duration) clock;
   final VoidCallback onTap;
-  final VoidCallback onReplay;
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -324,14 +544,31 @@ class _LineRow extends StatelessWidget {
         ? p.accent
         : (time == null ? p.onSurfaceMuted : p.onSurface);
     final sync = context.read<LyricsSyncCubit>();
+    // 이어서 새로 찍을 수 있는 맨 앞 빈 칸은 눌러서 돌아오기 쉽게 항상 표시한다.
+    final isFrontier = draft.stamped > 0 && index == draft.times.indexOf(null);
+    // 포커스한 싱크 바로 다음 칸의 기존 싱크 시간을 재생이 이미 지나갔는가.
+    final passed =
+        afterFocus &&
+        time != null &&
+        context.select<NowPlayingCubit, bool>((c) => c.state.position > time);
 
-    return Column(
+    final block = Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         InkWell(
           borderRadius: BorderRadius.circular(AppRadii.sm),
           onTap: onTap,
-          child: Padding(
+          onLongPress: onLongPress,
+          child: Container(
+            // 다음에 찍을 줄은 왼쪽에 강조 선을 둔다.
+            decoration: BoxDecoration(
+              border: Border(
+                left: BorderSide(
+                  color: isCurrent ? p.accent : p.accent.withValues(alpha: 0),
+                  width: 3,
+                ),
+              ),
+            ),
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.sm,
               vertical: AppSpacing.sm,
@@ -341,9 +578,15 @@ class _LineRow extends StatelessWidget {
                 SizedBox(
                   width: 76,
                   child: Text(
-                    time == null ? '--:--.--' : clock(time),
+                    time != null
+                        ? clock(time)
+                        : (isFrontier ? l10n.lyricsSyncNextSlot : '--:--.--'),
                     style: text.labelMedium?.copyWith(
-                      color: selected ? p.accent : p.onSurfaceMuted,
+                      // 찍은 줄(완료)과 다음에 찍을 줄은 강조 색, 아직인 줄은 흐리게.
+                      color: time != null || isCurrent || isFrontier
+                          ? p.accent
+                          : p.onSurfaceMuted,
+                      decoration: passed ? TextDecoration.lineThrough : null,
                       fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
@@ -351,7 +594,7 @@ class _LineRow extends StatelessWidget {
                 Expanded(
                   child: AnimatedDefaultTextStyle(
                     duration: AppMotion.fast,
-                    style: (isCurrent ? text.titleMedium : text.bodyLarge)!
+                    style: (isCurrent ? text.bodyLarge : text.bodyMedium)!
                         .copyWith(color: color),
                     child: Text(draft.texts[index]),
                   ),
@@ -360,9 +603,24 @@ class _LineRow extends StatelessWidget {
             ),
           ),
         ),
-        if (editing)
-          _GroupPanel(draft: draft, index: index)
-        else if (selected && time != null)
+        // 건너뛰어 같은 시간으로 묶인 칸은 따로 표시하고, 다시 나눌 수 있게 한다.
+        if (canGroup && sync.isMerged(index))
+          Padding(
+            padding: const EdgeInsets.only(left: 76 + AppSpacing.sm + 3),
+            child: Row(
+              children: [
+                Text(
+                  l10n.lyricsSyncMerged(draft.sizes[index]),
+                  style: text.labelSmall?.copyWith(color: p.accent),
+                ),
+                PlainButton(
+                  label: l10n.lyricsSyncUnmerge,
+                  onPressed: () => sync.split(index),
+                ),
+              ],
+            ),
+          ),
+        if (selected && time != null)
           Padding(
             padding: const EdgeInsets.only(
               left: AppSpacing.xs,
@@ -375,58 +633,83 @@ class _LineRow extends StatelessWidget {
                 // 위: 시간 맞추기 버튼
                 Wrap(
                   children: [
-                    for (final ms in const [-500, -100, 100, 500])
+                    for (final ms in const [-500, -100, -10, 10, 100, 500])
                       PlainButton(
                         label: '${ms > 0 ? '+' : '−'}${ms.abs() / 1000}s',
-                        onPressed: () => sync.nudge(Duration(milliseconds: ms)),
+                        onPressed: () {
+                          sync.nudge(Duration(milliseconds: ms));
+                          // 조정한 시간으로 재생도 옮겨, 바로 들어 보며 맞춘다.
+                          final moved = sync.state.draft.times[index];
+                          if (moved != null) {
+                            context.read<NowPlayingCubit>().seekTo(moved);
+                          }
+                        },
                       ),
                   ],
                 ),
-                // 아래: 이 싱크로 · 옵션
-                Row(
-                  children: [
-                    PlainButton(
-                      icon: AppIcons.replay,
-                      label: l10n.lyricsSyncReset,
-                      tooltip: l10n.lyricsSyncReplay,
-                      onPressed: onReplay,
+                // 뒤에 찍은 싱크가 더 있으면 이 싱크로 되돌리는 취소.
+                if (draft.times.skip(index + 1).any((t) => t != null))
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: PlainButton(
+                      icon: AppIcons.undo,
+                      label: l10n.lyricsSyncCancelAfter,
+                      tooltip: l10n.lyricsSyncCancelAfterHint,
+                      onPressed: () => sync.rewindTo(index),
                     ),
-                    const Spacer(),
-                    if (canGroup)
-                      Builder(
-                        builder: (buttonContext) => PlainButton(
-                          icon: AppIcons.more,
-                          tooltip: l10n.actionMore,
-                          onPressed: () async {
-                            final pick = await showAppMenu<bool>(
-                              buttonContext,
-                              items: [
-                                AppMenuItem(
-                                  value: true,
-                                  icon: AppIcons.dragHandle,
-                                  label: l10n.lyricsSyncGroupEdit,
-                                ),
-                              ],
-                            );
-                            if (pick == true) sync.startGroupEdit(index);
-                          },
-                        ),
-                      ),
-                  ],
-                ),
+                  ),
               ],
             ),
           ),
+      ],
+    );
+    // 포커스된 싱크 칸(시간 조정 버튼까지)은 영역 전체에 색을 깐다.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AnimatedContainer(
+          duration: AppMotion.fast,
+          decoration: BoxDecoration(
+            color: selected || inRange
+                ? p.accent.withValues(alpha: inRange ? .22 : .16)
+                : null,
+            borderRadius: BorderRadius.circular(AppRadii.sm),
+          ),
+          child: block,
+        ),
+        // 싱크 칸 사이를 구분하는 가는 선.
+        Container(
+          height: 1,
+          margin: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+          color: p.outline,
+        ),
       ],
     );
   }
 }
 
 class _ControlBar extends StatelessWidget {
-  const _ControlBar({required this.onNow, required this.onUndo});
+  const _ControlBar({
+    required this.stepMs,
+    required this.autoPause,
+    required this.onAutoPause,
+    required this.onNow,
+    required this.onUndo,
+    required this.onPrevious,
+    required this.onSkip,
+    required this.onSeek,
+    required this.onPickStep,
+  });
 
+  final int stepMs;
+  final bool autoPause;
+  final VoidCallback onAutoPause;
   final VoidCallback onNow;
   final VoidCallback onUndo;
+  final VoidCallback onPrevious;
+  final void Function(int sign) onSkip;
+  final ValueChanged<double> onSeek;
+  final void Function(BuildContext buttonContext) onPickStep;
 
   @override
   Widget build(BuildContext context) {
@@ -434,6 +717,20 @@ class _ControlBar extends StatelessWidget {
     final np = context.watch<NowPlayingCubit>();
     final sync = context.watch<LyricsSyncCubit>();
     final draft = sync.state.draft;
+    final total = np.state.track?.duration ?? Duration.zero;
+    final totalMs = total.inMilliseconds;
+    // 찍어 둔 줄마다 슬라이더 위에 작은 표시를 남긴다.
+    final marks = totalMs == 0
+        ? const <double>[]
+        : [
+            for (final t in draft.times)
+              if (t != null) t.inMilliseconds / totalMs,
+          ];
+    // 지금 포커스된 줄의 표시는 따로 강조한다.
+    final at = sync.state.selected;
+    final focus = totalMs == 0 || at == null || draft.times[at] == null
+        ? null
+        : draft.times[at]!.inMilliseconds / totalMs;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.md,
@@ -446,10 +743,50 @@ class _ControlBar extends StatelessWidget {
         children: [
           Row(
             children: [
+              Builder(
+                builder: (buttonContext) => PlainButton(
+                  label: '−${_LyricsSyncScreenState.stepLabel(stepMs)}',
+                  tooltip: l10n.lyricsSyncBackBy(stepMs / 1000),
+                  onPressed: () => onSkip(-1),
+                  onLongPress: () => onPickStep(buttonContext),
+                ),
+              ),
+              Expanded(
+                child: AppSlider(
+                  semanticLabel: l10n.lyricsSyncSeek,
+                  value: totalMs == 0
+                      ? 0
+                      : np.state.position.inMilliseconds / totalMs,
+                  marks: marks,
+                  activeMark: focus,
+                  thumbAlpha: .5,
+                  onChanged: totalMs == 0 ? null : onSeek,
+                ),
+              ),
+              Builder(
+                builder: (buttonContext) => PlainButton(
+                  label: '+${_LyricsSyncScreenState.stepLabel(stepMs)}',
+                  tooltip: l10n.lyricsSyncForwardBy(stepMs / 1000),
+                  onPressed: () => onSkip(1),
+                  onLongPress: () => onPickStep(buttonContext),
+                ),
+              ),
+            ],
+          ),
+          const Align(alignment: Alignment.centerRight, child: _ClockText()),
+          const SizedBox(height: AppSpacing.xs),
+          Row(
+            children: [
               CircleIconButton(
                 icon: AppIcons.undo,
                 tooltip: l10n.lyricsSyncUndo,
                 onPressed: draft.canUndo ? onUndo : null,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              CircleIconButton(
+                icon: AppIcons.skipPrevious,
+                tooltip: l10n.lyricsSyncPrevious,
+                onPressed: draft.stamped > 0 ? onPrevious : null,
               ),
               const SizedBox(width: AppSpacing.sm),
               CircleIconButton(
@@ -460,7 +797,6 @@ class _ControlBar extends StatelessWidget {
                 emphasized: true,
                 onPressed: np.togglePlay,
               ),
-              const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Align(
                   alignment: Alignment.centerRight,
@@ -472,6 +808,17 @@ class _ControlBar extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+          // 버튼 줄 아래 한 줄을 더 써서 자동 멈춤을 글자로 보여 준다 (버튼 크기는 그대로).
+          Align(
+            alignment: Alignment.centerLeft,
+            child: PlainButton(
+              icon: AppIcons.timer,
+              label: l10n.lyricsSyncAutoPause,
+              tooltip: l10n.lyricsSyncAutoPauseHint,
+              accent: autoPause,
+              onPressed: onAutoPause,
+            ),
           ),
         ],
       ),
@@ -492,90 +839,6 @@ class _ClockText extends StatelessWidget {
       style: Theme.of(context).textTheme.labelMedium?.copyWith(
         color: context.palette.onSurfaceMuted,
         fontFeatures: const [FontFeature.tabularFigures()],
-      ),
-    );
-  }
-}
-
-/// 한 칸에 묶을 줄을 고르는 영역. 묶을 마지막 줄을 누르거나 위아래로 끌어 고른다.
-class _GroupPanel extends StatelessWidget {
-  const _GroupPanel({required this.draft, required this.index});
-
-  final SyncDraft draft;
-  final int index;
-
-  static const _rowHeight = 36.0;
-  static const _extra = 6;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final p = context.palette;
-    final text = Theme.of(context).textTheme;
-    final sync = context.read<LyricsSyncCubit>();
-    final start = draft.startOf(index);
-    final end = start + draft.sizes[index];
-    final shown = (end + _extra).clamp(0, draft.lines.length);
-
-    void pick(double dy) {
-      final line = (start + dy ~/ _rowHeight).clamp(start, shown - 1);
-      sync.regroup(line);
-    }
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.xs,
-        0,
-        AppSpacing.xs,
-        AppSpacing.xs,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            l10n.lyricsSyncGroupPanelHint,
-            style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTapDown: (d) => pick(d.localPosition.dy),
-            onVerticalDragStart: (d) => pick(d.localPosition.dy),
-            onVerticalDragUpdate: (d) => pick(d.localPosition.dy),
-            child: Column(
-              children: [
-                for (var i = start; i < shown; i++)
-                  Container(
-                    height: _rowHeight,
-                    alignment: Alignment.centerLeft,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                    ),
-                    decoration: BoxDecoration(
-                      color: i < end ? p.accent.withValues(alpha: .18) : null,
-                      borderRadius: BorderRadius.circular(AppRadii.sm),
-                    ),
-                    child: Text(
-                      draft.lines[i],
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: text.bodyMedium?.copyWith(
-                        color: i < end ? p.onSurface : p.onSurfaceMuted,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: PlainButton(
-              label: l10n.lyricsSyncGroupDone,
-              accent: true,
-              onPressed: sync.endGroupEdit,
-            ),
-          ),
-        ],
       ),
     );
   }

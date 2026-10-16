@@ -1436,13 +1436,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsSyncUndo => '되돌리기';
 
   @override
+  String get lyricsSyncPrevious => '싱크 한 칸 지우고 뒤로';
+
+  @override
+  String get lyricsSyncSavePartial => '중간 저장 (찍은 곳까지)';
+
+  @override
   String get lyricsSyncSave => '싱크 저장';
-
-  @override
-  String get lyricsSyncReplay => '이 줄부터 다시 듣기';
-
-  @override
-  String get lyricsSyncReset => '이 싱크로';
 
   @override
   String get lyricsSyncGroup => '한 번에 묶을 줄 수';
@@ -1463,6 +1463,25 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get lyricsSyncPause => '일시정지';
+
+  @override
+  String lyricsSyncBackBy(double n) {
+    return '$n초 전으로 (길게 눌러 단위 바꾸기)';
+  }
+
+  @override
+  String lyricsSyncForwardBy(double n) {
+    return '$n초 뒤로 (길게 눌러 단위 바꾸기)';
+  }
+
+  @override
+  String get lyricsSyncAutoPause => '자동 멈춤';
+
+  @override
+  String get lyricsSyncAutoPauseHint => '다음 줄에 이미 있는 싱크 시간에 닿으면 재생을 멈춰요';
+
+  @override
+  String get lyricsSyncSeek => '재생 위치';
 
   @override
   String lyricsSyncProgress(int done, int total) {
@@ -1508,6 +1527,39 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsSyncDefaultLines => '기본 줄 수 변경';
 
   @override
+  String get lyricsSyncExpandedHint =>
+      '줄별로 펼쳤어요 · 시간을 따로 정할 수 있고, 영역 밖을 누르면 시간이 같은 줄은 다시 합쳐져요';
+
+  @override
+  String get lyricsSyncCancelAfter => '이 싱크로 초기화';
+
+  @override
+  String get lyricsSyncCancelAfterHint => '이 싱크 뒤에 찍은 싱크를 지우고 여기서부터 다시 찍어요';
+
+  @override
+  String get lyricsSyncNextSlot => '이어 찍기';
+
+  @override
+  String get lyricsSyncFollow => '따라가기';
+
+  @override
+  String get lyricsSyncFollowHint =>
+      '켜면 목록이 포커스한 칸을 따라 움직이고, 끄면 가사를 자유롭게 볼 수 있어요';
+
+  @override
+  String get lyricsFollow => '싱크 추적';
+
+  @override
+  String get lyricsSyncSkipTitle => '찍어 둔 싱크가 사라져요';
+
+  @override
+  String get lyricsSyncSkipBody =>
+      '묶을 범위 안에 이미 찍어 둔 싱크가 있어요. 한 칸으로 묶으면 그 싱크는 지워져요. 계속할까요?';
+
+  @override
+  String get lyricsSyncSkipConfirm => '묶기';
+
+  @override
   String get lyricsSyncResetTitle => '묶음이 사라져요';
 
   @override
@@ -1518,14 +1570,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsSyncResetConfirm => '바꾸기';
 
   @override
-  String get lyricsSyncGroupEdit => '줄 묶기';
+  String lyricsSyncMerged(int n) {
+    return '$n줄 같은 시간으로 묶음';
+  }
 
   @override
-  String get lyricsSyncGroupDone => '완료';
-
-  @override
-  String get lyricsSyncGroupPanelHint =>
-      '묶을 마지막 줄을 누르거나 끌어서 고르세요. 이 싱크의 시간은 다시 찍어야 해요.';
+  String get lyricsSyncUnmerge => '풀기';
 
   @override
   String get playerShowLyrics => '가사 보기';

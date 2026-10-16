@@ -1467,13 +1467,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsSyncUndo => 'Undo';
 
   @override
+  String get lyricsSyncPrevious => 'Remove last sync and go back';
+
+  @override
+  String get lyricsSyncSavePartial => 'Save progress (up to the stamped lines)';
+
+  @override
   String get lyricsSyncSave => 'Save sync';
-
-  @override
-  String get lyricsSyncReplay => 'Replay from this line';
-
-  @override
-  String get lyricsSyncReset => 'Back to this sync';
 
   @override
   String get lyricsSyncGroup => 'Lines per sync';
@@ -1494,6 +1494,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lyricsSyncPause => 'Pause';
+
+  @override
+  String lyricsSyncBackBy(double n) {
+    return 'Back ${n}s (long-press to change)';
+  }
+
+  @override
+  String lyricsSyncForwardBy(double n) {
+    return 'Forward ${n}s (long-press to change)';
+  }
+
+  @override
+  String get lyricsSyncAutoPause => 'Auto pause';
+
+  @override
+  String get lyricsSyncAutoPauseHint =>
+      'Pause when playback reaches the next line\'s existing sync';
+
+  @override
+  String get lyricsSyncSeek => 'Playback position';
 
   @override
   String lyricsSyncProgress(int done, int total) {
@@ -1540,6 +1560,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsSyncDefaultLines => 'Change default lines';
 
   @override
+  String get lyricsSyncExpandedHint =>
+      'Lines shown separately · set each time; tap outside to re-merge lines with the same time';
+
+  @override
+  String get lyricsSyncCancelAfter => 'Reset to this sync';
+
+  @override
+  String get lyricsSyncCancelAfterHint =>
+      'Clear the syncs stamped after this one and continue from here';
+
+  @override
+  String get lyricsSyncNextSlot => 'Next';
+
+  @override
+  String get lyricsSyncFollow => 'Follow';
+
+  @override
+  String get lyricsSyncFollowHint =>
+      'On: the list follows the focused line. Off: browse the lyrics freely';
+
+  @override
+  String get lyricsFollow => 'Follow lyrics';
+
+  @override
+  String get lyricsSyncSkipTitle => 'Stamped syncs will be lost';
+
+  @override
+  String get lyricsSyncSkipBody =>
+      'The range contains syncs you already stamped. Merging it into one block removes them. Continue?';
+
+  @override
+  String get lyricsSyncSkipConfirm => 'Merge';
+
+  @override
   String get lyricsSyncResetTitle => 'Groupings will be lost';
 
   @override
@@ -1550,14 +1604,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsSyncResetConfirm => 'Change';
 
   @override
-  String get lyricsSyncGroupEdit => 'Group lines';
+  String lyricsSyncMerged(int n) {
+    return '$n lines share one time';
+  }
 
   @override
-  String get lyricsSyncGroupDone => 'Done';
-
-  @override
-  String get lyricsSyncGroupPanelHint =>
-      'Tap or drag to pick the last line to group. This sync\'s time must be stamped again.';
+  String get lyricsSyncUnmerge => 'Split';
 
   @override
   String get playerShowLyrics => 'Show lyrics';

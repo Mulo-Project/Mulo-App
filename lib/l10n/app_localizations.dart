@@ -2732,23 +2732,23 @@ abstract class AppLocalizations {
   /// **'되돌리기'**
   String get lyricsSyncUndo;
 
+  /// No description provided for @lyricsSyncPrevious.
+  ///
+  /// In ko, this message translates to:
+  /// **'싱크 한 칸 지우고 뒤로'**
+  String get lyricsSyncPrevious;
+
+  /// No description provided for @lyricsSyncSavePartial.
+  ///
+  /// In ko, this message translates to:
+  /// **'중간 저장 (찍은 곳까지)'**
+  String get lyricsSyncSavePartial;
+
   /// No description provided for @lyricsSyncSave.
   ///
   /// In ko, this message translates to:
   /// **'싱크 저장'**
   String get lyricsSyncSave;
-
-  /// No description provided for @lyricsSyncReplay.
-  ///
-  /// In ko, this message translates to:
-  /// **'이 줄부터 다시 듣기'**
-  String get lyricsSyncReplay;
-
-  /// No description provided for @lyricsSyncReset.
-  ///
-  /// In ko, this message translates to:
-  /// **'이 싱크로'**
-  String get lyricsSyncReset;
 
   /// No description provided for @lyricsSyncGroup.
   ///
@@ -2785,6 +2785,36 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'일시정지'**
   String get lyricsSyncPause;
+
+  /// No description provided for @lyricsSyncBackBy.
+  ///
+  /// In ko, this message translates to:
+  /// **'{n}초 전으로 (길게 눌러 단위 바꾸기)'**
+  String lyricsSyncBackBy(double n);
+
+  /// No description provided for @lyricsSyncForwardBy.
+  ///
+  /// In ko, this message translates to:
+  /// **'{n}초 뒤로 (길게 눌러 단위 바꾸기)'**
+  String lyricsSyncForwardBy(double n);
+
+  /// No description provided for @lyricsSyncAutoPause.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동 멈춤'**
+  String get lyricsSyncAutoPause;
+
+  /// No description provided for @lyricsSyncAutoPauseHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'다음 줄에 이미 있는 싱크 시간에 닿으면 재생을 멈춰요'**
+  String get lyricsSyncAutoPauseHint;
+
+  /// No description provided for @lyricsSyncSeek.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생 위치'**
+  String get lyricsSyncSeek;
 
   /// No description provided for @lyricsSyncProgress.
   ///
@@ -2864,6 +2894,66 @@ abstract class AppLocalizations {
   /// **'기본 줄 수 변경'**
   String get lyricsSyncDefaultLines;
 
+  /// No description provided for @lyricsSyncExpandedHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'줄별로 펼쳤어요 · 시간을 따로 정할 수 있고, 영역 밖을 누르면 시간이 같은 줄은 다시 합쳐져요'**
+  String get lyricsSyncExpandedHint;
+
+  /// No description provided for @lyricsSyncCancelAfter.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 싱크로 초기화'**
+  String get lyricsSyncCancelAfter;
+
+  /// No description provided for @lyricsSyncCancelAfterHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 싱크 뒤에 찍은 싱크를 지우고 여기서부터 다시 찍어요'**
+  String get lyricsSyncCancelAfterHint;
+
+  /// No description provided for @lyricsSyncNextSlot.
+  ///
+  /// In ko, this message translates to:
+  /// **'이어 찍기'**
+  String get lyricsSyncNextSlot;
+
+  /// No description provided for @lyricsSyncFollow.
+  ///
+  /// In ko, this message translates to:
+  /// **'따라가기'**
+  String get lyricsSyncFollow;
+
+  /// No description provided for @lyricsSyncFollowHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'켜면 목록이 포커스한 칸을 따라 움직이고, 끄면 가사를 자유롭게 볼 수 있어요'**
+  String get lyricsSyncFollowHint;
+
+  /// No description provided for @lyricsFollow.
+  ///
+  /// In ko, this message translates to:
+  /// **'싱크 추적'**
+  String get lyricsFollow;
+
+  /// No description provided for @lyricsSyncSkipTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'찍어 둔 싱크가 사라져요'**
+  String get lyricsSyncSkipTitle;
+
+  /// No description provided for @lyricsSyncSkipBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'묶을 범위 안에 이미 찍어 둔 싱크가 있어요. 한 칸으로 묶으면 그 싱크는 지워져요. 계속할까요?'**
+  String get lyricsSyncSkipBody;
+
+  /// No description provided for @lyricsSyncSkipConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'묶기'**
+  String get lyricsSyncSkipConfirm;
+
   /// No description provided for @lyricsSyncResetTitle.
   ///
   /// In ko, this message translates to:
@@ -2882,23 +2972,17 @@ abstract class AppLocalizations {
   /// **'바꾸기'**
   String get lyricsSyncResetConfirm;
 
-  /// No description provided for @lyricsSyncGroupEdit.
+  /// No description provided for @lyricsSyncMerged.
   ///
   /// In ko, this message translates to:
-  /// **'줄 묶기'**
-  String get lyricsSyncGroupEdit;
+  /// **'{n}줄 같은 시간으로 묶음'**
+  String lyricsSyncMerged(int n);
 
-  /// No description provided for @lyricsSyncGroupDone.
+  /// No description provided for @lyricsSyncUnmerge.
   ///
   /// In ko, this message translates to:
-  /// **'완료'**
-  String get lyricsSyncGroupDone;
-
-  /// No description provided for @lyricsSyncGroupPanelHint.
-  ///
-  /// In ko, this message translates to:
-  /// **'묶을 마지막 줄을 누르거나 끌어서 고르세요. 이 싱크의 시간은 다시 찍어야 해요.'**
-  String get lyricsSyncGroupPanelHint;
+  /// **'풀기'**
+  String get lyricsSyncUnmerge;
 
   /// No description provided for @playerShowLyrics.
   ///
