@@ -9,8 +9,10 @@ import '../../../../core/l10n/l10n.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/lyrics.dart';
+import '../bloc/lyrics_settings_cubit.dart';
 import '../bloc/lyrics_sync_cubit.dart';
 import '../widgets/lyrics_dialogs.dart';
+import 'lyrics_latency_screen.dart';
 
 /// 가사 글 [text]를 곡에 맞춰 줄마다 시간을 찍는 화면을 연다.
 /// 저장하면 LRC 글을, 닫으면 null을 돌려준다. [text]가 비어 있으면 열지 않고 null.
@@ -158,7 +160,10 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
     final np = context.read<NowPlayingCubit>();
     final sync = context.read<LyricsSyncCubit>();
     final stamped = sync.state.draft.current;
-    sync.stamp(np.state.position);
+    // 소리를 듣고 누르는 반응 시간만큼 앞당겨 찍는다.
+    final latency = context.read<LyricsSettingsCubit>().state.latency;
+    final at = np.state.position - latency;
+    sync.stamp(at < Duration.zero ? Duration.zero : at);
     // 찍은 뒤 포커스가 이미 싱크된 칸으로 넘어갔으면, 재생도 그 싱크 위치로 맞춘다 (빈 칸이면 그대로 이어서 재생).
     final next = sync.state.selected;
     final time = next == null ? null : sync.state.draft.times[next];
@@ -425,6 +430,11 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
                             onPressed: () => _changeDefaultGroup(buttonContext),
                           ),
                         ),
+                      CircleIconButton(
+                        icon: AppIcons.tune,
+                        tooltip: l10n.lyricsLatencyEntry,
+                        onPressed: () => showLyricsLatency(context),
+                      ),
                       CircleIconButton(
                         icon: AppIcons.check,
                         // 다 찍었으면 강조해서 저장하고, 덜 찍었어도 누르면 찍은 곳까지 중간 저장한다.

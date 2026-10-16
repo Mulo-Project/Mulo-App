@@ -1584,6 +1584,84 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsFollow => 'Follow lyrics';
 
   @override
+  String get lyricsThemeList => 'List';
+
+  @override
+  String get lyricsThemeCentered => 'Centered line';
+
+  @override
+  String get lyricsThemeCover => 'Cover background';
+
+  @override
+  String get lyricsLatencyTitle => 'Reaction time';
+
+  @override
+  String get lyricsLatencyEntry => 'Reaction time';
+
+  @override
+  String get lyricsLatencyIntro =>
+      'When you press Now after hearing the sound, the stamp lands late by your reaction time. The value below is subtracted from the time you pressed.';
+
+  @override
+  String lyricsLatencySeconds(String s) {
+    return '${s}s';
+  }
+
+  @override
+  String get lyricsLatencyReset => 'Reset to 0.20s';
+
+  @override
+  String get lyricsBeatTitle => 'Beat test';
+
+  @override
+  String get lyricsBeatBody =>
+      'The circle flashes with a sound. Tap the circle on every beat. After 8 taps the average gives a recommended value.';
+
+  @override
+  String get lyricsBeatIdle => 'Press Start';
+
+  @override
+  String lyricsBeatProgress(int n, int total) {
+    return '$n/$total';
+  }
+
+  @override
+  String get lyricsBeatStart => 'Start';
+
+  @override
+  String get lyricsBeatStop => 'Stop';
+
+  @override
+  String lyricsBeatResult(String s) {
+    return 'Recommended ${s}s';
+  }
+
+  @override
+  String get lyricsBeatApply => 'Apply this value';
+
+  @override
+  String get lyricsBeatNote =>
+      'Screen and sound delay differ by device, so this is tuned for Android. Desktop may be less accurate.';
+
+  @override
+  String get lyricsSongCheckTitle => 'Check with a song';
+
+  @override
+  String get lyricsSongCheckBody =>
+      'While the song plays, press Try stamp the moment a sound starts. Listen again from the stamped position to check it.';
+
+  @override
+  String get lyricsSongTry => 'Try stamp';
+
+  @override
+  String lyricsSongTried(String clock) {
+    return 'Stamped at $clock';
+  }
+
+  @override
+  String get lyricsSongListen => 'Listen from stamp';
+
+  @override
   String get lyricsSyncSkipTitle => 'Stamped syncs will be lost';
 
   @override

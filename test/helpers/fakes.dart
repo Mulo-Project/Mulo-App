@@ -7,6 +7,8 @@ import 'package:music_download_play_app/features/account/domain/repositories/acc
 import 'package:music_download_play_app/features/covers/di.dart';
 import 'package:music_download_play_app/features/lyrics/di.dart';
 import 'package:music_download_play_app/features/lyrics/domain/entities/lyrics.dart';
+import 'package:music_download_play_app/features/lyrics/domain/entities/lyrics_settings.dart';
+import 'package:music_download_play_app/features/lyrics/domain/repositories/lyrics_settings_repository.dart';
 import 'package:music_download_play_app/features/lyrics/domain/repositories/lyrics_repository.dart';
 import 'package:music_download_play_app/features/covers/domain/entities/cover_art.dart';
 import 'package:music_download_play_app/features/covers/domain/repositories/cover_repository.dart';
@@ -386,6 +388,25 @@ class FakeBiometricAuthenticator implements BiometricAuthenticator {
 }
 
 /// 메모리 플레이어 모양 저장소.
+class MemoryLyricsSettingsRepository implements LyricsSettingsRepository {
+  MemoryLyricsSettingsRepository([
+    this.settings = const LyricsSettings(latencyMs: 0),
+  ]);
+
+  LyricsSettings settings;
+
+  @override
+  Future<LyricsSettings> load() async => settings;
+
+  @override
+  Future<void> saveLatency(int milliseconds) async =>
+      settings = settings.copyWith(latencyMs: milliseconds);
+
+  @override
+  Future<void> saveTheme(LyricsTheme theme) async =>
+      settings = settings.copyWith(theme: theme);
+}
+
 class MemoryPlayerStyleRepository implements PlayerStyleRepository {
   MemoryPlayerStyleRepository([this.style = PlayerStyle.initial]);
 
@@ -807,6 +828,9 @@ Future<void> setUpTestDependencies({
     )
     ..registerLazySingleton<PlayerStyleRepository>(
       () => MemoryPlayerStyleRepository(playerStyle),
+    )
+    ..registerLazySingleton<LyricsSettingsRepository>(
+      MemoryLyricsSettingsRepository.new,
     )
     ..registerLazySingleton<MixWithOthersRepository>(
       MemoryMixWithOthersRepository.new,

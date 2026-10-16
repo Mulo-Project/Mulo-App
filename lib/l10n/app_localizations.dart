@@ -2936,6 +2936,138 @@ abstract class AppLocalizations {
   /// **'싱크 추적'**
   String get lyricsFollow;
 
+  /// No description provided for @lyricsThemeList.
+  ///
+  /// In ko, this message translates to:
+  /// **'목록'**
+  String get lyricsThemeList;
+
+  /// No description provided for @lyricsThemeCentered.
+  ///
+  /// In ko, this message translates to:
+  /// **'가운데 한 줄'**
+  String get lyricsThemeCentered;
+
+  /// No description provided for @lyricsThemeCover.
+  ///
+  /// In ko, this message translates to:
+  /// **'커버 배경'**
+  String get lyricsThemeCover;
+
+  /// No description provided for @lyricsLatencyTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'반응 시간 보정'**
+  String get lyricsLatencyTitle;
+
+  /// No description provided for @lyricsLatencyEntry.
+  ///
+  /// In ko, this message translates to:
+  /// **'반응 시간 보정'**
+  String get lyricsLatencyEntry;
+
+  /// No description provided for @lyricsLatencyIntro.
+  ///
+  /// In ko, this message translates to:
+  /// **'소리를 듣고 지금을 누르면 반응 시간만큼 늦게 찍혀요. 누른 시간에서 아래 값만큼 앞당겨 찍어요.'**
+  String get lyricsLatencyIntro;
+
+  /// No description provided for @lyricsLatencySeconds.
+  ///
+  /// In ko, this message translates to:
+  /// **'{s}초'**
+  String lyricsLatencySeconds(String s);
+
+  /// No description provided for @lyricsLatencyReset.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본값 0.20초로'**
+  String get lyricsLatencyReset;
+
+  /// No description provided for @lyricsBeatTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'박자 테스트'**
+  String get lyricsBeatTitle;
+
+  /// No description provided for @lyricsBeatBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'소리와 함께 원이 깜빡여요. 깜빡일 때마다 가운데 원을 눌러 보세요. 8번 누르면 평균을 계산해 추천 값을 알려 줘요.'**
+  String get lyricsBeatBody;
+
+  /// No description provided for @lyricsBeatIdle.
+  ///
+  /// In ko, this message translates to:
+  /// **'시작을 누르세요'**
+  String get lyricsBeatIdle;
+
+  /// No description provided for @lyricsBeatProgress.
+  ///
+  /// In ko, this message translates to:
+  /// **'{n}/{total}번'**
+  String lyricsBeatProgress(int n, int total);
+
+  /// No description provided for @lyricsBeatStart.
+  ///
+  /// In ko, this message translates to:
+  /// **'시작'**
+  String get lyricsBeatStart;
+
+  /// No description provided for @lyricsBeatStop.
+  ///
+  /// In ko, this message translates to:
+  /// **'멈추기'**
+  String get lyricsBeatStop;
+
+  /// No description provided for @lyricsBeatResult.
+  ///
+  /// In ko, this message translates to:
+  /// **'추천 보정 {s}초'**
+  String lyricsBeatResult(String s);
+
+  /// No description provided for @lyricsBeatApply.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 값으로 적용'**
+  String get lyricsBeatApply;
+
+  /// No description provided for @lyricsBeatNote.
+  ///
+  /// In ko, this message translates to:
+  /// **'기기마다 화면과 소리 지연이 달라서 안드로이드 기준이에요. 데스크톱은 오차가 클 수 있어요.'**
+  String get lyricsBeatNote;
+
+  /// No description provided for @lyricsSongCheckTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡으로 확인'**
+  String get lyricsSongCheckTitle;
+
+  /// No description provided for @lyricsSongCheckBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡을 들으면서 소리가 시작되는 순간 찍어 보기를 눌러 보세요. 찍힌 위치부터 다시 들으면 맞게 찍혔는지 알 수 있어요.'**
+  String get lyricsSongCheckBody;
+
+  /// No description provided for @lyricsSongTry.
+  ///
+  /// In ko, this message translates to:
+  /// **'찍어 보기'**
+  String get lyricsSongTry;
+
+  /// No description provided for @lyricsSongTried.
+  ///
+  /// In ko, this message translates to:
+  /// **'찍힌 위치 {clock}'**
+  String lyricsSongTried(String clock);
+
+  /// No description provided for @lyricsSongListen.
+  ///
+  /// In ko, this message translates to:
+  /// **'찍힌 위치부터 듣기'**
+  String get lyricsSongListen;
+
   /// No description provided for @lyricsSyncSkipTitle.
   ///
   /// In ko, this message translates to:

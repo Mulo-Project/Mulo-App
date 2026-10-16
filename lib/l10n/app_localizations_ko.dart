@@ -1550,6 +1550,84 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsFollow => '싱크 추적';
 
   @override
+  String get lyricsThemeList => '목록';
+
+  @override
+  String get lyricsThemeCentered => '가운데 한 줄';
+
+  @override
+  String get lyricsThemeCover => '커버 배경';
+
+  @override
+  String get lyricsLatencyTitle => '반응 시간 보정';
+
+  @override
+  String get lyricsLatencyEntry => '반응 시간 보정';
+
+  @override
+  String get lyricsLatencyIntro =>
+      '소리를 듣고 지금을 누르면 반응 시간만큼 늦게 찍혀요. 누른 시간에서 아래 값만큼 앞당겨 찍어요.';
+
+  @override
+  String lyricsLatencySeconds(String s) {
+    return '$s초';
+  }
+
+  @override
+  String get lyricsLatencyReset => '기본값 0.20초로';
+
+  @override
+  String get lyricsBeatTitle => '박자 테스트';
+
+  @override
+  String get lyricsBeatBody =>
+      '소리와 함께 원이 깜빡여요. 깜빡일 때마다 가운데 원을 눌러 보세요. 8번 누르면 평균을 계산해 추천 값을 알려 줘요.';
+
+  @override
+  String get lyricsBeatIdle => '시작을 누르세요';
+
+  @override
+  String lyricsBeatProgress(int n, int total) {
+    return '$n/$total번';
+  }
+
+  @override
+  String get lyricsBeatStart => '시작';
+
+  @override
+  String get lyricsBeatStop => '멈추기';
+
+  @override
+  String lyricsBeatResult(String s) {
+    return '추천 보정 $s초';
+  }
+
+  @override
+  String get lyricsBeatApply => '이 값으로 적용';
+
+  @override
+  String get lyricsBeatNote =>
+      '기기마다 화면과 소리 지연이 달라서 안드로이드 기준이에요. 데스크톱은 오차가 클 수 있어요.';
+
+  @override
+  String get lyricsSongCheckTitle => '곡으로 확인';
+
+  @override
+  String get lyricsSongCheckBody =>
+      '곡을 들으면서 소리가 시작되는 순간 찍어 보기를 눌러 보세요. 찍힌 위치부터 다시 들으면 맞게 찍혔는지 알 수 있어요.';
+
+  @override
+  String get lyricsSongTry => '찍어 보기';
+
+  @override
+  String lyricsSongTried(String clock) {
+    return '찍힌 위치 $clock';
+  }
+
+  @override
+  String get lyricsSongListen => '찍힌 위치부터 듣기';
+
+  @override
   String get lyricsSyncSkipTitle => '찍어 둔 싱크가 사라져요';
 
   @override
