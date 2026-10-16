@@ -4,19 +4,20 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
-import '../../../lyrics/presentation/widgets/lyric_line_row.dart';
-import '../../../search/domain/entities/subtitle_track.dart';
+import '../../../lyrics/domain/entities/timed_lyrics_text.dart';
+import '../../../lyrics/presentation/widgets/timed_lyrics_field.dart';
 import '../bloc/subtitle_preview_cubit.dart';
 
 /// 상세 페이지에서 "이 자막 사용"을 눌러 돌아온 결과.
-/// [edited]는 글을 고친 경우의 자막이고, 고치지 않았으면 null이다.
+/// [edited]는 글을 고친 경우의 가사(.lrc 글)이고, 고치지 않았으면 null이다.
 class SubtitleChoice {
   const SubtitleChoice(this.edited);
 
-  final SubtitleTrack? edited;
+  final String? edited;
 }
 
 /// 자막 한 벌의 전체 가사를 받기 전에 훑어보고 글을 고치는 페이지를 연다.
+/// [edited]는 앞서 고쳐 둔 가사로, 있으면 다시 읽지 않고 그것을 이어서 고친다.
 /// "이 자막 사용"을 누르면 [SubtitleChoice], 그냥 닫으면 null을 돌려준다.
 Future<SubtitleChoice?> showSubtitleDetail(
   BuildContext context, {
@@ -26,16 +27,13 @@ Future<SubtitleChoice?> showSubtitleDetail(
   required String kind,
   required bool skipSounds,
   required bool selected,
-  SubtitleTrack? edited,
+  String? edited,
 }) => Navigator.of(context, rootNavigator: true).push<SubtitleChoice>(
   MaterialPageRoute(
     builder: (_) => BlocProvider(
       create: (_) {
         final cubit = sl<SubtitlePreviewCubit>();
-        // 이미 고쳐 둔 글이 있으면 다시 읽지 않고 그것을 보여 준다.
-        if (edited != null) {
-          cubit.show(edited);
-        } else {
+        if (edited == null) {
           cubit.load(url, language: language, skipSounds: skipSounds);
         }
         return cubit;
@@ -47,13 +45,14 @@ Future<SubtitleChoice?> showSubtitleDetail(
         kind: kind,
         skipSounds: skipSounds,
         selected: selected,
+        edited: edited,
       ),
     ),
   ),
 );
 
-/// 고른 언어의 자막 전체(시간 + 글). 받기 전에 어떤 가사가 들어올지 확인하고,
-/// 줄의 글을 고친다. 시간은 바꿀 수 없고 줄을 더하거나 지울 수도 없다 (싱크는 받은 뒤 재생 화면에서).
+/// 고른 언어의 자막 전체. 왼쪽에 시간, 오른쪽에 복사할 수 있는 글 한 덩어리로 보여 주고,
+/// 글을 고칠 수 있다. 시간은 바꿀 수 없다 (싱크는 받은 뒤 재생 화면에서).
 class SubtitleDetailScreen extends StatefulWidget {
   const SubtitleDetailScreen({
     super.key,
@@ -63,6 +62,7 @@ class SubtitleDetailScreen extends StatefulWidget {
     required this.kind,
     required this.skipSounds,
     required this.selected,
+    this.edited,
   });
 
   final String url;
@@ -71,54 +71,45 @@ class SubtitleDetailScreen extends StatefulWidget {
   final String kind;
   final bool skipSounds;
   final bool selected;
+  final String? edited;
 
   @override
   State<SubtitleDetailScreen> createState() => _SubtitleDetailScreenState();
 }
 
 class _SubtitleDetailScreenState extends State<SubtitleDetailScreen> {
-  List<TextEditingController> _controllers = const [];
-  SubtitleTrack? _source;
+  final _text = TextEditingController();
+  var _times = const <Duration>[];
+
+  /// 처음 보여 준 가사(.lrc 글). 고쳤는지 비교한다.
+  String? _base;
+
+  @override
+  void initState() {
+    super.initState();
+    final edited = widget.edited;
+    if (edited != null) _fill(edited);
+  }
 
   @override
   void dispose() {
-    for (final c in _controllers) {
-      c.dispose();
-    }
+    _text.dispose();
     super.dispose();
   }
 
-  /// 불러온 자막이 바뀌면 줄마다 입력칸을 새로 만든다.
-  void _sync(SubtitleTrack? track) {
-    if (identical(track, _source)) return;
-    for (final c in _controllers) {
-      c.dispose();
-    }
-    _source = track;
-    _controllers = [
-      for (final cue in track?.cues ?? const <SubtitleCue>[])
-        TextEditingController(text: cue.text),
-    ];
+  void _fill(String raw) {
+    final split = TimedLyricsText.parse(raw);
+    _base = raw;
+    _times = split.times;
+    _text.text = split.text;
   }
 
-  /// 글만 고친 자막. 고치지 않았으면 null. 글을 비운 줄은 빠진다.
-  SubtitleTrack? _editedTrack() {
-    final src = _source;
-    if (src == null) return null;
-    var changed = false;
-    final cues = <SubtitleCue>[];
-    for (var i = 0; i < src.cues.length; i++) {
-      final text = _controllers[i].text.trim();
-      if (text != src.cues[i].text.trim()) changed = true;
-      if (text.isNotEmpty) cues.add(SubtitleCue(src.cues[i].start, text));
-    }
-    return changed
-        ? SubtitleTrack(
-            language: src.language,
-            automatic: src.automatic,
-            cues: cues,
-          )
-        : null;
+  /// 고친 가사. 고치지 않았으면 null.
+  String? _editedRaw() {
+    final base = _base;
+    if (base == null) return null;
+    final composed = TimedLyricsText(_text.text, _times).compose(_text.text);
+    return composed == base.trimRight() ? null : composed;
   }
 
   @override
@@ -142,11 +133,16 @@ class _SubtitleDetailScreenState extends State<SubtitleDetailScreen> {
               ),
             ),
             Expanded(
-              child: BlocBuilder<SubtitlePreviewCubit, SubtitlePreview>(
-                builder: (context, preview) {
+              child: BlocConsumer<SubtitlePreviewCubit, SubtitlePreview>(
+                listener: (context, preview) {
                   final track = preview.track;
-                  _sync(track);
-                  if (preview.status == SubtitlePreviewStatus.failed) {
+                  if (track != null && _base == null) {
+                    setState(() => _fill(track.toLrc()));
+                  }
+                },
+                builder: (context, preview) {
+                  if (preview.status == SubtitlePreviewStatus.failed &&
+                      _base == null) {
                     return Center(
                       child: Padding(
                         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -176,7 +172,7 @@ class _SubtitleDetailScreenState extends State<SubtitleDetailScreen> {
                       ),
                     );
                   }
-                  if (track == null) {
+                  if (_base == null) {
                     return Center(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
@@ -193,41 +189,30 @@ class _SubtitleDetailScreenState extends State<SubtitleDetailScreen> {
                       ),
                     );
                   }
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppSpacing.lg,
-                          0,
-                          AppSpacing.lg,
-                          AppSpacing.xs,
-                        ),
-                        child: Text(
-                          l10n.downloadSubtitleEditHint,
-                          style: text.bodySmall?.copyWith(
-                            color: p.onSurfaceMuted,
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.lg,
-                          ),
-                          itemCount: track.cues.length,
-                          itemBuilder: (_, i) => Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: AppSpacing.sm,
-                            ),
-                            child: LyricLineRow(
-                              time: track.cues[i].start,
-                              controller: _controllers[i],
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                          child: Text(
+                            l10n.downloadSubtitleEditHint,
+                            style: text.bodySmall?.copyWith(
+                              color: p.onSurfaceMuted,
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                        Expanded(
+                          child: TimedLyricsField(
+                            controller: _text,
+                            times: _times,
+                          ),
+                        ),
+                      ],
+                    ),
                   );
                 },
               ),
@@ -243,12 +228,10 @@ class _SubtitleDetailScreenState extends State<SubtitleDetailScreen> {
                 width: double.infinity,
                 child: PillButton(
                   key: const ValueKey('subtitle-detail-use'),
-                  label: widget.selected
-                      ? l10n.downloadSubtitleUseEdited
-                      : l10n.downloadSubtitleUse,
+                  label: l10n.downloadSubtitleUse,
                   icon: AppIcons.check,
                   onPressed: () =>
-                      Navigator.of(context).pop(SubtitleChoice(_editedTrack())),
+                      Navigator.of(context).pop(SubtitleChoice(_editedRaw())),
                 ),
               ),
             ),

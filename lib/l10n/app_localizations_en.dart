@@ -1502,7 +1502,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lyricsEditSyncedHint =>
-      'Times follow the line number. If you insert or delete a line, the times stay in place and only the text shifts. Change times in the sync screen.';
+      'Times on the left follow the line number. If you insert or delete a line, the times stay in place and only the text shifts. Change times in the sync screen.';
 
   @override
   String get lyricsAddLine => 'Add line';

@@ -1465,7 +1465,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get lyricsEditSyncedHint =>
-      '시간은 줄 번호에 맞춰 붙어 있어요. 줄을 끼우거나 지우면 시간은 그 자리에 남고 글만 밀려요. 시간을 바꾸려면 싱크 설정에서 해요.';
+      '왼쪽 시간은 줄 번호에 맞춰 붙어 있어요. 줄을 끼우거나 지우면 시간은 그 자리에 남고 글만 밀려요. 시간은 싱크 설정에서 바꿔요.';
 
   @override
   String get lyricsAddLine => '줄 추가';

@@ -76,7 +76,7 @@ void main() {
     await tester.tap(find.text('가사 편집'));
     await tester.pumpAndSettle();
     expect(find.text('고친 가사'), findsOneWidget);
-    await tester.tap(find.byTooltip('줄 지우기'));
+    await tester.enterText(find.widgetWithText(TextField, '고친 가사'), '');
     await tester.pumpAndSettle();
     await tester.tap(find.text('저장'));
     await tester.pumpAndSettle();
@@ -153,7 +153,7 @@ void main() {
     expect(find.text('가사가 이미 있어요'), findsOneWidget);
     await tester.tap(find.text('뒤에 붙이기'));
     await tester.pumpAndSettle();
-    expect(find.text('기존 가사\n[00:01.00]불러온 가사'), findsOneWidget);
+    expect(find.text('기존 가사\n불러온 가사'), findsOneWidget);
 
     await tester.tap(find.textContaining('파일에서 불러오기'));
     await tester.pumpAndSettle();

@@ -5,7 +5,6 @@ import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../library/presentation/bloc/library_cubit.dart';
-import '../../../search/domain/entities/subtitle_track.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
@@ -140,7 +139,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
   var _skipSounds = true;
 
   // 상세 페이지에서 글을 고친 자막 (언어 코드별). 효과음 옵션이 바뀌면 비운다.
-  final _edited = <String, SubtitleTrack>{};
+  final _edited = <String, String>{};
 
   // 가사 구역은 유튜브 곡만 둔다.
   late final bool _isYoutube = downloadSourceKey(widget.url)
@@ -243,9 +242,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
             subtitleStatus != SubtitleStatus.none,
         lyricsLanguage: _lyricsLanguage,
         lyricsSkipSounds: _skipSounds,
-        lyricsText: _lyricsLanguage == null
-            ? null
-            : _edited[_lyricsLanguage]?.toLrc(),
+        lyricsText: _lyricsLanguage == null ? null : _edited[_lyricsLanguage],
       ),
     );
     if (ok && mounted) Navigator.of(context).pop(true);
