@@ -31,81 +31,67 @@ class TimedLyricsField extends StatelessWidget {
     final timeStyle = style.copyWith(color: p.onSurfaceMuted);
     final scaler = MediaQuery.textScalerOf(context);
 
-    return DecoratedBox(
-      decoration: ShapeDecoration(
-        color: p.surfaceHigh,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppRadii.sm),
-          side: BorderSide(color: p.outline),
-        ),
-      ),
-      child: LayoutBuilder(
-        builder: (context, box) {
-          final gutter = times.isEmpty ? 0.0 : _gutter;
-          final textWidth = box.maxWidth - gutter - _pad * 2;
-          return SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (times.isNotEmpty)
-                  ListenableBuilder(
-                    listenable: controller,
-                    builder: (_, _) {
-                      final lines = controller.text.split('\n');
-                      return SizedBox(
-                        width: gutter,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            for (var i = 0; i < lines.length; i++)
-                              SizedBox(
-                                height: _lineHeight(
-                                  lines[i],
-                                  style,
-                                  scaler,
-                                  textWidth,
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.only(left: _pad),
-                                  child: Text(
-                                    i < times.length
-                                        ? lyricTimeLabel(times[i])
-                                        : '',
-                                    style: timeStyle,
-                                    maxLines: 1,
-                                  ),
-                                ),
+    // 상자 · 테두리 없이 가사 보기처럼 조용하게 보인다.
+    return LayoutBuilder(
+      builder: (context, box) {
+        final gutter = times.isEmpty ? 0.0 : _gutter;
+        final textWidth = box.maxWidth - gutter - _pad;
+        return SingleChildScrollView(
+          padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (times.isNotEmpty)
+                ListenableBuilder(
+                  listenable: controller,
+                  builder: (_, _) {
+                    final lines = controller.text.split('\n');
+                    return SizedBox(
+                      width: gutter,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          for (var i = 0; i < lines.length; i++)
+                            SizedBox(
+                              height: _lineHeight(
+                                lines[i],
+                                style,
+                                scaler,
+                                textWidth,
                               ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                Expanded(
-                  child: TextField(
-                    controller: controller,
-                    style: style,
-                    minLines: 12,
-                    maxLines: null,
-                    keyboardType: TextInputType.multiline,
-                    decoration: InputDecoration(
-                      hintText: hint,
-                      hintStyle: style.copyWith(color: p.onSurfaceMuted),
-                      isCollapsed: true,
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.only(
-                        left: times.isEmpty ? _pad : 0,
-                        right: _pad,
+                              child: Text(
+                                i < times.length
+                                    ? lyricTimeLabel(times[i])
+                                    : '',
+                                style: timeStyle,
+                                maxLines: 1,
+                              ),
+                            ),
+                        ],
                       ),
-                    ),
+                    );
+                  },
+                ),
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  style: style,
+                  minLines: 12,
+                  maxLines: null,
+                  keyboardType: TextInputType.multiline,
+                  decoration: InputDecoration(
+                    hintText: hint,
+                    hintStyle: style.copyWith(color: p.onSurfaceMuted),
+                    isCollapsed: true,
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
                   ),
                 ),
-              ],
-            ),
-          );
-        },
-      ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
