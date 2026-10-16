@@ -1121,6 +1121,20 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadSubtitleAutoHint => '한국어 → 영어 → 첫 번째 자막 순으로 골라요.';
 
   @override
+  String get downloadLyricsPreview => '가사 미리보기';
+
+  @override
+  String get downloadLyricsPreviewLoading => '불러오는 중…';
+
+  @override
+  String get downloadLyricsPreviewFailed => '자막을 불러오지 못했어요.';
+
+  @override
+  String downloadLyricsPreviewOf(String language, int count) {
+    return '$language 자막 $count줄 중 앞부분';
+  }
+
+  @override
   String get downloadSubtitleColLanguage => '언어';
 
   @override

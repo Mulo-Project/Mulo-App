@@ -2144,6 +2144,30 @@ abstract class AppLocalizations {
   /// **'한국어 → 영어 → 첫 번째 자막 순으로 골라요.'**
   String get downloadSubtitleAutoHint;
 
+  /// No description provided for @downloadLyricsPreview.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사 미리보기'**
+  String get downloadLyricsPreview;
+
+  /// No description provided for @downloadLyricsPreviewLoading.
+  ///
+  /// In ko, this message translates to:
+  /// **'불러오는 중…'**
+  String get downloadLyricsPreviewLoading;
+
+  /// No description provided for @downloadLyricsPreviewFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'자막을 불러오지 못했어요.'**
+  String get downloadLyricsPreviewFailed;
+
+  /// No description provided for @downloadLyricsPreviewOf.
+  ///
+  /// In ko, this message translates to:
+  /// **'{language} 자막 {count}줄 중 앞부분'**
+  String downloadLyricsPreviewOf(String language, int count);
+
   /// No description provided for @downloadSubtitleColLanguage.
   ///
   /// In ko, this message translates to:

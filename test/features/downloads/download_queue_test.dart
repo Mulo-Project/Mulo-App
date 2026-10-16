@@ -15,6 +15,7 @@ import 'package:music_download_play_app/features/downloads/domain/usecases/downl
 import 'package:music_download_play_app/features/downloads/presentation/bloc/download_queue_cubit.dart';
 
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
+import 'package:music_download_play_app/features/search/domain/entities/subtitle_track.dart';
 import 'package:music_download_play_app/features/search/presentation/screens/search_screen.dart';
 
 import '../../helpers/fakes.dart';
@@ -326,6 +327,48 @@ void main() {
     await tester.pumpAndSettle();
     expect(queue.requests.single.importLyrics, isTrue);
     expect(queue.requests.single.lyricsLanguage, 'en');
+  });
+
+  testWidgets('받기 페이지: 가사 미리보기로 앞부분을 읽고, 언어가 많으면 5개씩 가로로 늘어난다', (tester) async {
+    final engine =
+        FakeDownloaderEngine(
+            info: const VideoInfo(
+              MediaHit(
+                id: 'abc',
+                title: 'Song',
+                url: 'https://youtu.be/abc',
+                subtitleLangs: ['ko', 'en', 'ja', 'fr', 'de', 'es'],
+              ),
+            ),
+          )
+          ..subtitles = const SubtitleTrack(
+            language: 'ko',
+            cues: [
+              SubtitleCue(Duration(seconds: 1), '첫 줄 가사'),
+              SubtitleCue(Duration(seconds: 70), '둘째 줄 가사'),
+            ],
+          );
+    await openLyricsPage(tester, engine);
+    await tester.tap(find.byKey(const ValueKey('download-import-lyrics')));
+    await tester.pumpAndSettle();
+
+    // 자동 줄 + 언어 6개 = 7줄 → 5줄 칸 + 2줄 칸, 가로로 민다.
+    expect(
+      find.descendant(
+        of: inSheet(find.byType(SingleChildScrollView)),
+        matching: find.text('언어'),
+      ),
+      findsNWidgets(2),
+    );
+
+    final preview = find.byKey(const ValueKey('download-lyrics-preview'));
+    await tester.ensureVisible(preview);
+    await tester.pumpAndSettle();
+    await tester.tap(preview);
+    await tester.pumpAndSettle();
+    expect(find.text('첫 줄 가사'), findsOneWidget);
+    expect(find.text('01:10'), findsOneWidget);
+    expect(engine.subtitleUrls, ['https://youtu.be/abc']);
   });
 
   testWidgets('받기 팝업: 제목을 비우면 받기 버튼이 눌리지 않는다', (tester) async {
