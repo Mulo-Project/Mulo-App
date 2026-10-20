@@ -8,6 +8,7 @@ import '../bloc/lyrics_cubit.dart';
 import '../screens/lyrics_web_screen.dart';
 import '../../domain/entities/timed_lyrics_text.dart';
 import 'lyrics_dialogs.dart';
+import 'timed_lyrics_controller.dart';
 import 'timed_lyrics_field.dart';
 
 /// 플레이어 가사 화면의 "가사 편집" 페이지: 직접 입력 · 붙여넣기 · 파일(.lrc · .txt) · 웹 검색(Android)에서 불러오기.
@@ -43,10 +44,11 @@ class _LyricsEditorScreen extends StatefulWidget {
 }
 
 class _LyricsEditorScreenState extends State<_LyricsEditorScreen> {
-  final _text = TextEditingController();
+  final _text = TimedLyricsController();
 
   // 싱크 가사는 시간을 글과 따로 두고 줄 번호로 짝짓는다 (줄을 끼우거나 지우면 시간은 그 자리에 남는다).
-  var _times = <Duration>[];
+  // 싱크 가사를 불러왔는가 (줄마다 시간 칸을 보인다).
+  var _synced = false;
 
   @override
   void initState() {
@@ -63,12 +65,12 @@ class _LyricsEditorScreenState extends State<_LyricsEditorScreen> {
   /// [raw]를 편집 칸에 채운다: 싱크 가사면 시간 표시를 빼 글만 넣고 시간은 따로 둔다.
   void _load(String raw) {
     final split = TimedLyricsText.parse(raw);
-    _times = split.times;
-    _text.text = split.text;
+    _synced = split.isSynced;
+    _text.load(split);
   }
 
   /// 저장할 글: 줄 번호에 맞는 시간을 `[mm:ss.xx]`로 다시 붙인다.
-  String _compose() => TimedLyricsText(_text.text, _times).compose(_text.text);
+  String _compose() => _text.compose();
 
   Future<void> _pickFile() async {
     final picked = await widget.cubit.pickFile();
@@ -136,7 +138,7 @@ class _LyricsEditorScreenState extends State<_LyricsEditorScreen> {
                 ),
               ),
             ),
-            if (_times.isNotEmpty)
+            if (_synced)
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.lg,
@@ -155,14 +157,14 @@ class _LyricsEditorScreenState extends State<_LyricsEditorScreen> {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.lg),
-                child: _times.isEmpty
+                child: !_synced
                     ? AppTextField(
                         label: l10n.lyricsEditLabel,
                         controller: _text,
                         hint: l10n.lyricsEditHint,
                         expands: true,
                       )
-                    : TimedLyricsField(controller: _text, times: _times),
+                    : TimedLyricsField(controller: _text),
               ),
             ),
             Padding(

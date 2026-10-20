@@ -5,6 +5,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../lyrics/domain/entities/timed_lyrics_text.dart';
+import '../../../lyrics/presentation/widgets/timed_lyrics_controller.dart';
 import '../../../lyrics/presentation/widgets/timed_lyrics_field.dart';
 import '../bloc/subtitle_preview_cubit.dart';
 
@@ -78,8 +79,7 @@ class SubtitleDetailScreen extends StatefulWidget {
 }
 
 class _SubtitleDetailScreenState extends State<SubtitleDetailScreen> {
-  final _text = TextEditingController();
-  var _times = const <Duration>[];
+  final _text = TimedLyricsController();
 
   /// 처음 보여 준 가사(.lrc 글). 고쳤는지 비교한다.
   String? _base;
@@ -100,15 +100,14 @@ class _SubtitleDetailScreenState extends State<SubtitleDetailScreen> {
   void _fill(String raw) {
     final split = TimedLyricsText.parse(raw);
     _base = raw;
-    _times = split.times;
-    _text.text = split.text;
+    _text.load(split);
   }
 
   /// 고친 가사. 고치지 않았으면 null.
   String? _editedRaw() {
     final base = _base;
     if (base == null) return null;
-    final composed = TimedLyricsText(_text.text, _times).compose(_text.text);
+    final composed = _text.compose();
     return composed == base.trimRight() ? null : composed;
   }
 
@@ -205,12 +204,7 @@ class _SubtitleDetailScreenState extends State<SubtitleDetailScreen> {
                             ),
                           ),
                         ),
-                        Expanded(
-                          child: TimedLyricsField(
-                            controller: _text,
-                            times: _times,
-                          ),
-                        ),
+                        Expanded(child: TimedLyricsField(controller: _text)),
                       ],
                     ),
                   );
