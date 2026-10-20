@@ -414,6 +414,29 @@ void main() {
     expect(queue.requests.single.lyricsText, '[00:01.00]hello world');
   });
 
+  testWidgets('받기 페이지: 자막 언어가 하나여도 표가 보이고, 줄을 누르면 가사 상세로 간다', (tester) async {
+    await openLyricsPage(
+      tester,
+      FakeDownloaderEngine(
+        info: const VideoInfo(
+          MediaHit(
+            id: 'abc',
+            title: 'Song',
+            url: 'https://youtu.be/abc',
+            subtitleLangs: ['ko'],
+          ),
+        ),
+      ),
+    );
+    await tester.tap(find.byKey(const ValueKey('download-import-lyrics')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('한국어'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('한국어'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('subtitle-detail-use')), findsOneWidget);
+  });
+
   testWidgets('받기 팝업: 제목을 비우면 받기 버튼이 눌리지 않는다', (tester) async {
     final queue = await openWithPlaylists(tester, const []);
     await openDownloadDialog(tester);

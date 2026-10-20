@@ -302,7 +302,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
                 : () => setState(() => _importLyrics = !_importLyrics),
           ),
         ),
-        if (on && sub.languages.length > 1) ...[
+        if (on && sub.languages.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.sm),
           Text(l10n.downloadSubtitleLanguage, style: text.labelSmall),
           const SizedBox(height: AppSpacing.xs),
