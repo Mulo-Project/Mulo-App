@@ -23,6 +23,15 @@ class TimedLyricsField extends StatelessWidget {
   static const _gutter = 68.0;
   static const _pad = AppSpacing.md;
 
+  /// [i]번 줄이 앞 줄과 시간이 같아 한 묶음인가 (싱크 화면에서 묶은 줄).
+  bool _grouped(int i) => i > 0 && i < times.length && times[i] == times[i - 1];
+
+  /// 시간 칸 글자: 묶음의 둘째 줄부터는 시간을 되풀이하지 않고 이어지는 선으로 보인다.
+  String _label(int i) {
+    if (i >= times.length) return '';
+    return _grouped(i) ? '│' : lyricTimeLabel(times[i]);
+  }
+
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
@@ -70,10 +79,14 @@ class TimedLyricsField extends StatelessWidget {
                                     textWidth,
                                   ),
                                   child: Text(
-                                    i < times.length
-                                        ? lyricTimeLabel(times[i])
-                                        : '',
-                                    style: timeStyle,
+                                    _label(i),
+                                    style: _grouped(i)
+                                        ? timeStyle.copyWith(
+                                            color: p.accent.withValues(
+                                              alpha: .7,
+                                            ),
+                                          )
+                                        : timeStyle,
                                     maxLines: 1,
                                   ),
                                 ),

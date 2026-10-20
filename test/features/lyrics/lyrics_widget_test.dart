@@ -144,6 +144,20 @@ void main() {
     expect(offset(), greaterThan(before));
   });
 
+  testWidgets('가사 편집 페이지: 시간이 같은 줄은 묶음으로 이어서 보인다', (tester) async {
+    phone(tester);
+    final lyrics = MemoryLyricsRepository(
+      sibling: {'t1': '[00:01.00]가\n[00:01.00]나\n[00:03.00]다'},
+    );
+    await setUpTestDependencies(lyrics: lyrics);
+    await openLyricsEditor(tester);
+
+    // 묶음은 첫 줄에만 시간이 있고 다음 줄은 이어지는 선으로 보인다.
+    expect(find.text('00:01.00'), findsOneWidget);
+    expect(find.text('│'), findsOneWidget);
+    expect(find.text('00:03.00'), findsOneWidget);
+  });
+
   testWidgets('가사 편집 페이지: 가사가 있을 때 가져오면 바꿀지 붙일지 묻는다', (tester) async {
     phone(tester);
     final lyrics = MemoryLyricsRepository(sibling: {'t1': '기존 가사'});
