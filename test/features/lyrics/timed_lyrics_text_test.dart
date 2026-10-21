@@ -1,3 +1,4 @@
+import 'package:flutter/painting.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/features/lyrics/domain/entities/timed_lyrics_text.dart';
 import 'package:music_download_play_app/features/lyrics/presentation/widgets/timed_lyrics_controller.dart';
@@ -123,6 +124,18 @@ void _controllerOps() {
       expect(c.times, [t1, t2, null, null]);
       expect(c.compose(), '[00:01.00]a\n[00:02.00]b\nc\nd');
       c.dispose();
+    });
+
+    test('setTime은 이웃 시간 사이로 맞추고, 같아지면 묶음 색이 생긴다', () {
+      final c = make()..groupPalette = const [Color(0xFF123456)];
+      expect(c.groupColor(1), isNull);
+      c.setTime(1, const Duration(seconds: 9));
+      expect(c.times[1], t3);
+      expect(c.groupColor(1), const Color(0xFF123456));
+      expect(c.groupColor(2), c.groupColor(1));
+      c.setTime(1, t1);
+      expect(c.times[1], t1);
+      expect(c.groupColor(1), c.groupColor(0));
     });
   });
 }

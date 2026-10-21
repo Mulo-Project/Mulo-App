@@ -1503,6 +1503,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsDeleteLine => 'Delete line';
 
   @override
+  String get lyricsTimePrev => 'Previous';
+
+  @override
+  String get lyricsTimeNow => 'Now';
+
+  @override
+  String get lyricsTimeNext => 'Next';
+
+  @override
+  String get lyricsTimeNone => 'None';
+
+  @override
+  String get lyricsTimeGroupedAbove =>
+      'Same time as the line above, so they are grouped';
+
+  @override
+  String get lyricsTimeGroupedBelow =>
+      'Same time as the line below, so they are grouped';
+
+  @override
   String get lyricsTimeSeparate => 'Split from the group here';
 
   @override

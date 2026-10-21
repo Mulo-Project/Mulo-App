@@ -1466,6 +1466,24 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsDeleteLine => '줄 지우기';
 
   @override
+  String get lyricsTimePrev => '이전';
+
+  @override
+  String get lyricsTimeNow => '현재';
+
+  @override
+  String get lyricsTimeNext => '다음';
+
+  @override
+  String get lyricsTimeNone => '없음';
+
+  @override
+  String get lyricsTimeGroupedAbove => '앞 줄과 같은 시간이라 묶여요';
+
+  @override
+  String get lyricsTimeGroupedBelow => '다음 줄과 같은 시간이라 묶여요';
+
+  @override
   String get lyricsTimeSeparate => '이 줄부터 묶음에서 떼기';
 
   @override

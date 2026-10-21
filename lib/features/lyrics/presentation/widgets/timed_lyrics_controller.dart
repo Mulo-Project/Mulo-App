@@ -13,6 +13,36 @@ class TimedLyricsController extends TextEditingController {
   List<Duration?> times = [];
   var _lines = <String>[''];
 
+  /// 묶음마다 돌려 쓰는 색 (화면이 정한다). 비어 있으면 글자색을 바꾸지 않는다.
+  List<Color> groupPalette = const [];
+
+  /// [i]번 줄이 두 줄 이상 묶음이면 그 묶음의 색, 아니면 null. 시간 칸과 글이 같은 색을 쓴다.
+  Color? groupColor(int i) {
+    if (groupPalette.isEmpty || i < 0 || i >= times.length) return null;
+    final t = times[i];
+    if (t == null) return null;
+    var start = i;
+    while (start > 0 && times[start - 1] == t) {
+      start--;
+    }
+    var end = i;
+    while (end + 1 < times.length && times[end + 1] == t) {
+      end++;
+    }
+    if (start == end) return null;
+    var n = 0;
+    var j = 0;
+    while (j < start) {
+      var k = j;
+      while (k + 1 < start && times[k + 1] == times[j] && times[j] != null) {
+        k++;
+      }
+      if (k > j) n++;
+      j = k + 1;
+    }
+    return groupPalette[n % groupPalette.length];
+  }
+
   bool get isSynced => times.any((t) => t != null);
 
   /// 나눈 가사로 글과 시간을 한꺼번에 채운다.
@@ -30,7 +60,13 @@ class TimedLyricsController extends TextEditingController {
   /// [i]번 줄의 시간을 [delta]만큼 옮긴다. 앞 줄과 다음 줄의 시간 사이를 넘지 않는다 (순서 유지).
   void adjust(int i, Duration delta) {
     if (i < 0 || i >= times.length || times[i] == null) return;
-    var next = times[i]! + delta;
+    setTime(i, times[i]! + delta);
+  }
+
+  /// [i]번 줄의 시간을 [to]로 바꾼다. 앞 줄과 다음 줄의 시간 사이로 맞춘다.
+  void setTime(int i, Duration to) {
+    if (i < 0 || i >= times.length || times[i] == null) return;
+    var next = to;
     if (next < Duration.zero) next = Duration.zero;
     final prev = i > 0 ? times[i - 1] : null;
     final after = i + 1 < times.length ? times[i + 1] : null;
@@ -88,6 +124,34 @@ class TimedLyricsController extends TextEditingController {
       times[j] = null;
     }
     notifyListeners();
+  }
+
+  @override
+  TextSpan buildTextSpan({
+    required BuildContext context,
+    TextStyle? style,
+    required bool withComposing,
+  }) {
+    final lines = text.split('\n');
+    final colors = [for (var i = 0; i < lines.length; i++) groupColor(i)];
+    if (colors.every((c) => c == null) ||
+        (withComposing && value.composing.isValid)) {
+      return super.buildTextSpan(
+        context: context,
+        style: style,
+        withComposing: withComposing,
+      );
+    }
+    return TextSpan(
+      style: style,
+      children: [
+        for (var i = 0; i < lines.length; i++)
+          TextSpan(
+            text: i == lines.length - 1 ? lines[i] : '${lines[i]}\n',
+            style: colors[i] == null ? null : TextStyle(color: colors[i]),
+          ),
+      ],
+    );
   }
 
   void _onChange() {

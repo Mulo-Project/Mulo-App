@@ -82,6 +82,13 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
   /// 시간 칸을 누르면 그 줄의 싱크를 다듬는 시트를 연다: 시간 조절 · 묶음에서 떼기 · 여기부터 지우기.
   Future<void> _lineActions(BuildContext context, int i, String line) {
     final l10n = context.l10n;
+    // 슬라이더 범위: 앞 줄 시간 ~ 다음 줄 시간 (다음이 없으면 지금부터 10초 뒤). 열 때 정해 끌어도 변하지 않는다.
+    final now = times[i]!;
+    final range = (
+      (i > 0 ? times[i - 1] : null) ?? Duration.zero,
+      (i + 1 < times.length ? times[i + 1] : null) ??
+          now + const Duration(seconds: 10),
+    );
     return showAppSheet<void>(
       context,
       builder: (sheet) => ListenableBuilder(
@@ -89,12 +96,40 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
         builder: (_, _) {
           final at = i < times.length ? times[i] : null;
           if (at == null) return const SizedBox.shrink();
-          Widget step(String label, int ms) => PillButton(
+          final prev = i > 0 ? times[i - 1] : null;
+          final next = i + 1 < times.length ? times[i + 1] : null;
+          final groupColor = controller.groupColor(i);
+          final tt = Theme.of(sheet).textTheme;
+          final muted = sheet.palette.onSurfaceMuted;
+          Widget stop(String title, Duration? t, TextStyle? style) => Expanded(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              // 이웃 시간을 누르면 그 시간에 딱 붙인다 (같아지면 묶인다).
+              onTap: t == null || style == null
+                  ? null
+                  : () => controller.setTime(i, t),
+              child: Column(
+                children: [
+                  Text(title, style: tt.labelSmall?.copyWith(color: muted)),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    t == null ? l10n.lyricsTimeNone : lyricTimeLabel(t),
+                    style: style ?? tt.bodyMedium?.copyWith(color: muted),
+                  ),
+                ],
+              ),
+            ),
+          );
+          final lower = range.$1, upper = range.$2;
+          final neighborStyle = tt.bodyMedium?.copyWith(color: muted);
+          Widget fine(String label, int ms) => PillButton(
             label: label,
             compact: true,
             variant: PillVariant.tonal,
             onPressed: () => controller.adjust(i, Duration(milliseconds: ms)),
           );
+          final groupedAbove = prev != null && prev == at;
+          final groupedBelow = next != null && next == at;
           return SafeArea(
             child: Padding(
               padding: appSheetPadding,
@@ -107,15 +142,65 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
                     subtitle: line.isEmpty ? '♪' : line,
                   ),
                   const SizedBox(height: AppSpacing.md),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      stop(
+                        l10n.lyricsTimePrev,
+                        prev,
+                        prev == null ? null : neighborStyle,
+                      ),
+                      stop(
+                        l10n.lyricsTimeNow,
+                        at,
+                        tt.titleMedium?.copyWith(
+                          color: groupColor ?? sheet.palette.accent,
+                        ),
+                      ),
+                      stop(
+                        l10n.lyricsTimeNext,
+                        next,
+                        next == null ? null : neighborStyle,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  AppSlider(
+                    value: at.inMilliseconds
+                        .clamp(lower.inMilliseconds, upper.inMilliseconds)
+                        .toDouble(),
+                    min: lower.inMilliseconds.toDouble(),
+                    max: upper.inMilliseconds.toDouble(),
+                    semanticLabel: l10n.lyricsTimeNow,
+                    onChanged: (v) {
+                      // 양 끝 가까이는 이웃 시간에 정확히 붙여 묶이기 쉽게 한다.
+                      final ms = v.round();
+                      if (ms - lower.inMilliseconds <= 15) {
+                        controller.setTime(i, lower);
+                      } else if (upper.inMilliseconds - ms <= 15) {
+                        controller.setTime(i, upper);
+                      } else {
+                        controller.setTime(
+                          i,
+                          Duration(milliseconds: ms ~/ 10 * 10),
+                        );
+                      }
+                    },
+                  ),
+                  if (groupedAbove || groupedBelow) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      groupedAbove
+                          ? l10n.lyricsTimeGroupedAbove
+                          : l10n.lyricsTimeGroupedBelow,
+                      style: tt.bodySmall?.copyWith(color: groupColor),
+                    ),
+                  ],
+                  const SizedBox(height: AppSpacing.sm),
                   Wrap(
                     spacing: AppSpacing.xs,
                     runSpacing: AppSpacing.xs,
-                    children: [
-                      step('−0.5s', -500),
-                      step('−0.1s', -100),
-                      step('+0.1s', 100),
-                      step('+0.5s', 500),
-                    ],
+                    children: [fine('−0.1s', -100), fine('+0.1s', 100)],
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   if (controller.isGroupedWithAbove(i))
@@ -153,6 +238,11 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
     final timeStyle = style.copyWith(color: p.onSurfaceMuted);
     final scaler = MediaQuery.textScalerOf(context);
     final hi = p.accent.withValues(alpha: .18);
+    final accentHsl = HSLColor.fromColor(p.accent);
+    controller.groupPalette = [
+      for (final shift in const [0.0, 150.0, 60.0, 210.0, 105.0, 270.0])
+        accentHsl.withHue((accentHsl.hue + shift) % 360).toColor(),
+    ];
 
     // 테두리 없이 아주 옅은 바탕만 깔아 가사 보기처럼 조용하게, 그래도 입력칸임은 알아보게 한다.
     return DecoratedBox(
@@ -232,13 +322,11 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
                                       ),
                                       child: Text(
                                         _label(i),
-                                        style: _grouped(i)
-                                            ? timeStyle.copyWith(
-                                                color: p.accent.withValues(
-                                                  alpha: .7,
-                                                ),
-                                              )
-                                            : timeStyle,
+                                        style: controller.groupColor(i) == null
+                                            ? timeStyle
+                                            : timeStyle.copyWith(
+                                                color: controller.groupColor(i),
+                                              ),
                                         maxLines: 1,
                                       ),
                                     ),
