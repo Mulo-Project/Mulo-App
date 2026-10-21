@@ -127,13 +127,29 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
           // 이웃과 시간이 같아 묶이면 그 이웃 시간도 현재 시간과 같은 색으로 보인다.
           TextStyle? neighborStyle(Duration? t) =>
               tt.bodyMedium?.copyWith(color: t == at ? accent : muted);
-          Widget unit(int ms) => PillButton(
-            label: ms >= 1000 ? '${ms ~/ 1000}s' : '${ms / 1000}s',
-            compact: true,
-            variant: stepMs.value == ms
-                ? PillVariant.accent
-                : PillVariant.tonal,
-            onPressed: () => stepMs.value = ms,
+          String unitLabel(int ms) =>
+              ms >= 1000 ? '${ms ~/ 1000}s' : '${ms / 1000}s';
+          // 단위 타일: 누르면 팝업 메뉴로 0.01 · 0.1 · 0.5 · 1초 중에 고른다.
+          Widget unit() => Builder(
+            builder: (tileContext) => PillButton(
+              label: '${unitLabel(stepMs.value)} ▾',
+              variant: PillVariant.accent,
+              onPressed: () async {
+                final picked = await showAppMenu<int>(
+                  tileContext,
+                  items: [
+                    for (final ms in _steps)
+                      AppMenuItem(
+                        value: ms,
+                        icon: AppIcons.tune,
+                        label: unitLabel(ms),
+                        selected: ms == stepMs.value,
+                      ),
+                  ],
+                );
+                if (picked != null) stepMs.value = picked;
+              },
+            ),
           );
           Widget move(String label, int sign) => Expanded(
             child: PillButton(
@@ -212,17 +228,12 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
                     ),
                   ],
                   const SizedBox(height: AppSpacing.sm),
-                  // 한 번에 옮길 단위를 고르는 타일
-                  Wrap(
-                    spacing: AppSpacing.xs,
-                    runSpacing: AppSpacing.xs,
-                    children: [for (final ms in _steps) unit(ms)],
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  // 고른 단위만큼 빼고 더하는 버튼 (타일과 따로)
+                  // 한 줄에: − 버튼, 단위 타일(팝업 메뉴), + 버튼
                   Row(
                     children: [
                       move('−', -1),
+                      const SizedBox(width: AppSpacing.sm),
+                      unit(),
                       const SizedBox(width: AppSpacing.sm),
                       move('+', 1),
                     ],
