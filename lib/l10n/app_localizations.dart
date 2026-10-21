@@ -2144,12 +2144,6 @@ abstract class AppLocalizations {
   /// **'한국어 → 영어 → 첫 번째 자막 순으로 골라요.'**
   String get downloadSubtitleAutoHint;
 
-  /// No description provided for @downloadLyricsPreview.
-  ///
-  /// In ko, this message translates to:
-  /// **'가사 미리보기'**
-  String get downloadLyricsPreview;
-
   /// No description provided for @downloadLyricsPreviewLoading.
   ///
   /// In ko, this message translates to:
@@ -2209,12 +2203,6 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'[음악] · (박수) · ♪ 같은 줄은 가사로 가져오지 않아요.'**
   String get downloadLyricsSkipSoundsHint;
-
-  /// No description provided for @downloadLyricsPreviewOf.
-  ///
-  /// In ko, this message translates to:
-  /// **'{language} 자막 {count}줄 중 앞부분'**
-  String downloadLyricsPreviewOf(String language, int count);
 
   /// No description provided for @downloadSubtitleColLanguage.
   ///

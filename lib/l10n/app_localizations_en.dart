@@ -1149,9 +1149,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Korean, then English, then the first one.';
 
   @override
-  String get downloadLyricsPreview => 'Preview lyrics';
-
-  @override
   String get downloadLyricsPreviewLoading => 'Loading…';
 
   @override
@@ -1182,11 +1179,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get downloadLyricsSkipSoundsHint =>
       'Lines like [Music], (applause) or ♪ aren\'t imported.';
-
-  @override
-  String downloadLyricsPreviewOf(String language, int count) {
-    return 'First lines of $count in $language';
-  }
 
   @override
   String get downloadSubtitleColLanguage => 'Language';

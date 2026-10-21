@@ -333,7 +333,9 @@ void main() {
     expect(queue.requests.single.lyricsLanguage, 'en');
   });
 
-  testWidgets('받기 페이지: 가사 미리보기로 앞부분을 읽고, 언어가 많으면 5개씩 가로로 늘어난다', (tester) async {
+  testWidgets('받기 페이지: 언어가 많으면 5개씩 가로로 늘어나고, 줄을 누르면 가사 상세에서 읽는다', (
+    tester,
+  ) async {
     final engine =
         FakeDownloaderEngine(
             info: const VideoInfo(
@@ -365,13 +367,14 @@ void main() {
       findsNWidgets(2),
     );
 
-    final preview = find.byKey(const ValueKey('download-lyrics-preview'));
-    await tester.ensureVisible(preview);
+    // 언어 줄을 누르면 상세 페이지에서 가사를 읽어 보여 준다 (별도 미리보기 버튼은 없다).
+    final ko = find.text('한국어');
+    await tester.ensureVisible(ko);
     await tester.pumpAndSettle();
-    await tester.tap(preview);
+    await tester.tap(ko);
     await tester.pumpAndSettle();
-    expect(find.text('첫 줄 가사'), findsOneWidget);
-    expect(find.text('01:10'), findsOneWidget);
+    expect(find.text('00:01.00'), findsOneWidget);
+    expect(find.textContaining('첫 줄 가사'), findsOneWidget);
     expect(engine.subtitleUrls, ['https://youtu.be/abc']);
   });
 

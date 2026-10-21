@@ -15,7 +15,6 @@ import '../../domain/entities/download_source.dart';
 import '../bloc/download_queue_cubit.dart';
 import '../bloc/download_settings_cubit.dart';
 import '../bloc/subtitle_availability_cubit.dart';
-import '../bloc/subtitle_preview_cubit.dart';
 import 'playlist_picker_dialog.dart';
 import 'save_folder_dialog.dart';
 import 'subtitle_detail_screen.dart';
@@ -65,7 +64,6 @@ Future<bool> showDownloadDialog(
           BlocProvider.value(value: library),
           BlocProvider.value(value: colors),
           BlocProvider.value(value: covers),
-          BlocProvider(create: (_) => sl<SubtitlePreviewCubit>()),
           BlocProvider(
             create: (_) => sl<SubtitleAvailabilityCubit>()
               ..load(
@@ -329,8 +327,6 @@ class _DownloadScreenState extends State<DownloadScreen> {
               onTap: () => _setSkipSounds(!_skipSounds),
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
-          _lyricsPreview(context),
           const SizedBox(height: AppSpacing.xs),
           Text(
             l10n.downloadImportLyricsHint,
@@ -343,7 +339,6 @@ class _DownloadScreenState extends State<DownloadScreen> {
 
   void _pickLanguage(String? lang) {
     setState(() => _lyricsLanguage = lang);
-    context.read<SubtitlePreviewCubit>().clear();
   }
 
   /// 자막 한 벌의 전체 가사 페이지를 열고, "이 자막 사용"이면 그 언어로 고른다.
@@ -371,7 +366,6 @@ class _DownloadScreenState extends State<DownloadScreen> {
       _skipSounds = v;
       _edited.clear();
     });
-    context.read<SubtitlePreviewCubit>().clear();
   }
 
   static const _rowsPerColumn = 5;
@@ -449,114 +443,6 @@ class _DownloadScreenState extends State<DownloadScreen> {
         ],
       ),
     );
-  }
-
-  /// 가져올 자막의 앞부분을 받기 전에 읽어 본다.
-  Widget _lyricsPreview(BuildContext context) {
-    final l10n = context.l10n;
-    final p = context.palette;
-    final text = Theme.of(context).textTheme;
-    return BlocBuilder<SubtitlePreviewCubit, SubtitlePreview>(
-      builder: (context, preview) {
-        final loading = preview.status == SubtitlePreviewStatus.loading;
-        final track = preview.track;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            PillButton(
-              key: const ValueKey('download-lyrics-preview'),
-              label: loading
-                  ? l10n.downloadLyricsPreviewLoading
-                  : l10n.downloadLyricsPreview,
-              icon: AppIcons.lyrics,
-              busy: loading,
-              compact: true,
-              variant: PillVariant.tonal,
-              onPressed: loading
-                  ? null
-                  : () => context.read<SubtitlePreviewCubit>().load(
-                      widget.url,
-                      language: _lyricsLanguage,
-                      skipSounds: _skipSounds,
-                    ),
-            ),
-            if (preview.status == SubtitlePreviewStatus.failed) ...[
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                l10n.downloadLyricsPreviewFailed,
-                style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
-              ),
-            ],
-            if (track != null) ...[
-              const SizedBox(height: AppSpacing.xs),
-              DecoratedBox(
-                decoration: ShapeDecoration(
-                  color: p.surfaceHigh,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadii.sm),
-                    side: BorderSide(color: p.outline),
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.downloadLyricsPreviewOf(
-                          subtitleLanguageLabel(
-                            track.language,
-                            korean:
-                                Localizations.localeOf(context).languageCode ==
-                                'ko',
-                          ),
-                          track.cues.length,
-                        ),
-                        style: text.labelSmall?.copyWith(
-                          color: p.onSurfaceMuted,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      for (final cue in track.cues.take(_previewLines))
-                        Padding(
-                          padding: const EdgeInsets.only(
-                            bottom: AppSpacing.xxs,
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox(
-                                width: 52,
-                                child: Text(
-                                  _clock(cue.start),
-                                  style: text.bodySmall?.copyWith(
-                                    color: p.onSurfaceMuted,
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: Text(cue.text, style: text.bodyMedium),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ],
-        );
-      },
-    );
-  }
-
-  static const _previewLines = 8;
-
-  static String _clock(Duration d) {
-    final m = d.inMinutes.toString().padLeft(2, '0');
-    final s = (d.inSeconds % 60).toString().padLeft(2, '0');
-    return '$m:$s';
   }
 
   /// 자막 표의 한 줄: 언어 · 종류 · 고른 표시. [header]면 머리글.
