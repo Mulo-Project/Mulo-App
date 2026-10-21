@@ -27,6 +27,65 @@ class TimedLyricsController extends TextEditingController {
   /// 저장할 글: 줄마다의 시간을 `[mm:ss.xx]`로 다시 붙인다.
   String compose() => TimedLyricsText(text, times).compose(text);
 
+  /// [i]번 줄의 시간을 [delta]만큼 옮긴다. 앞 줄과 다음 줄의 시간 사이를 넘지 않는다 (순서 유지).
+  void adjust(int i, Duration delta) {
+    if (i < 0 || i >= times.length || times[i] == null) return;
+    var next = times[i]! + delta;
+    if (next < Duration.zero) next = Duration.zero;
+    final prev = i > 0 ? times[i - 1] : null;
+    final after = i + 1 < times.length ? times[i + 1] : null;
+    if (prev != null && next < prev) next = prev;
+    if (after != null && next > after) next = after;
+    times[i] = next;
+    notifyListeners();
+  }
+
+  /// [i]번 줄을 위 줄과 같은 시간으로 묶는다.
+  void groupWithAbove(int i) {
+    if (i <= 0 || i >= times.length || times[i - 1] == null) return;
+    times[i] = times[i - 1];
+    notifyListeners();
+  }
+
+  /// [i]번 줄이 위 줄과 묶여 있는가.
+  bool isGroupedWithAbove(int i) =>
+      i > 0 && i < times.length && times[i] != null && times[i] == times[i - 1];
+
+  /// [i]번 줄부터 같은 묶음 끝까지를 위 줄들에서 떼어 낸다. 새 시간은 다음 다른 시간과의 가운데
+  /// (다음이 없으면 0.5초 뒤)라서, 이어서 [adjust]로 다듬으면 된다.
+  void separate(int i) {
+    if (!isGroupedWithAbove(i)) return;
+    final old = times[i]!;
+    var end = i;
+    while (end + 1 < times.length && times[end + 1] == old) {
+      end++;
+    }
+    Duration? later;
+    for (var j = end + 1; j < times.length; j++) {
+      if (times[j] != null && times[j] != old) {
+        later = times[j];
+        break;
+      }
+    }
+    final next = later == null
+        ? old + const Duration(milliseconds: 500)
+        : old + (later - old) ~/ 2;
+    for (var j = i; j <= end; j++) {
+      times[j] = next;
+    }
+    notifyListeners();
+  }
+
+  /// [i]번 줄부터 아래 모든 줄의 시간을 지운다 (뒤쪽은 시간 없는 글로 남아 나중에 이어서 찍는다).
+  /// 시간 없는 줄은 맨 뒤쪽에만 둘 수 있어서 중간만 지우지는 않는다.
+  void clearFrom(int i) {
+    if (i < 0 || i >= times.length) return;
+    for (var j = i; j < times.length; j++) {
+      times[j] = null;
+    }
+    notifyListeners();
+  }
+
   void _onChange() {
     final next = text.split('\n');
     if (next.length == _lines.length) {

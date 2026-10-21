@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/design/design.dart';
 import '../../domain/entities/timed_lyrics_text.dart';
+import '../../../../core/l10n/l10n.dart';
 import 'timed_lyrics_controller.dart';
 
 /// 가사 글 한 덩어리를 고치는 칸. 오른쪽은 이어서 복사 · 붙여넣기 할 수 있는 한 개의 입력칸이고,
@@ -35,6 +36,81 @@ class TimedLyricsField extends StatelessWidget {
   String _label(int i) {
     if (i >= times.length || times[i] == null) return '';
     return _grouped(i) ? '│' : lyricTimeLabel(times[i]!);
+  }
+
+  /// 시간 칸을 누르면 그 줄의 싱크를 다듬는 시트를 연다: 시간 조절 · 위 줄과 묶기 · 묶음에서 떼기 · 여기부터 지우기.
+  Future<void> _lineActions(BuildContext context, int i, String line) {
+    final l10n = context.l10n;
+    return showAppSheet<void>(
+      context,
+      builder: (sheet) => ListenableBuilder(
+        listenable: controller,
+        builder: (_, _) {
+          final at = i < times.length ? times[i] : null;
+          if (at == null) return const SizedBox.shrink();
+          Widget step(String label, int ms) => PillButton(
+            label: label,
+            compact: true,
+            variant: PillVariant.tonal,
+            onPressed: () => controller.adjust(i, Duration(milliseconds: ms)),
+          );
+          return SafeArea(
+            child: Padding(
+              padding: appSheetPadding,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AppSheetTitle(
+                    lyricTimeLabel(at),
+                    subtitle: line.isEmpty ? '♪' : line,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Wrap(
+                    spacing: AppSpacing.xs,
+                    runSpacing: AppSpacing.xs,
+                    children: [
+                      step('−0.5s', -500),
+                      step('−0.1s', -100),
+                      step('+0.1s', 100),
+                      step('+0.5s', 500),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  if (i > 0 && !controller.isGroupedWithAbove(i))
+                    MenuRow(
+                      icon: AppIcons.link,
+                      label: l10n.lyricsTimeGroupAbove,
+                      onTap: () {
+                        controller.groupWithAbove(i);
+                        Navigator.of(sheet).pop();
+                      },
+                    ),
+                  if (controller.isGroupedWithAbove(i))
+                    MenuRow(
+                      icon: AppIcons.restart,
+                      label: l10n.lyricsTimeSeparate,
+                      onTap: () {
+                        controller.separate(i);
+                        Navigator.of(sheet).pop();
+                      },
+                    ),
+                  MenuRow(
+                    icon: AppIcons.delete,
+                    label: l10n.lyricsTimeClearFrom,
+                    destructive: true,
+                    onTap: () {
+                      controller.clearFrom(i);
+                      Navigator.of(sheet).pop();
+                    },
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 
   @override
@@ -83,16 +159,23 @@ class TimedLyricsField extends StatelessWidget {
                                     scaler,
                                     textWidth,
                                   ),
-                                  child: Text(
-                                    _label(i),
-                                    style: _grouped(i)
-                                        ? timeStyle.copyWith(
-                                            color: p.accent.withValues(
-                                              alpha: .7,
-                                            ),
-                                          )
-                                        : timeStyle,
-                                    maxLines: 1,
+                                  child: GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: i < times.length && times[i] != null
+                                        ? () =>
+                                              _lineActions(context, i, lines[i])
+                                        : null,
+                                    child: Text(
+                                      _label(i),
+                                      style: _grouped(i)
+                                          ? timeStyle.copyWith(
+                                              color: p.accent.withValues(
+                                                alpha: .7,
+                                              ),
+                                            )
+                                          : timeStyle,
+                                      maxLines: 1,
+                                    ),
                                   ),
                                 ),
                             ],

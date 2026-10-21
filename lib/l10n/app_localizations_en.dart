@@ -1503,6 +1503,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsDeleteLine => 'Delete line';
 
   @override
+  String get lyricsTimeGroupAbove => 'Group with the line above';
+
+  @override
+  String get lyricsTimeSeparate => 'Split from the group here';
+
+  @override
+  String get lyricsTimeClearFrom => 'Clear sync from here';
+
+  @override
   String get lyricsLoadFile => 'Load from file';
 
   @override

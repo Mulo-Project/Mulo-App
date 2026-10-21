@@ -158,6 +158,33 @@ void main() {
     expect(find.text('00:03.00'), findsOneWidget);
   });
 
+  testWidgets('가사 편집 페이지: 시간 칸을 누르면 싱크를 묶거나 조절하거나 지울 수 있다', (tester) async {
+    phone(tester);
+    final lyrics = MemoryLyricsRepository(
+      sibling: {'t1': '[00:01.00]가\n[00:02.00]나\n[00:03.00]다'},
+    );
+    await setUpTestDependencies(lyrics: lyrics);
+    await openLyricsEditor(tester);
+
+    // 둘째 줄을 위 줄과 묶는다.
+    await tester.tap(find.text('00:02.00'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('위 줄과 묶기'));
+    await tester.pumpAndSettle();
+    expect(find.text('│'), findsOneWidget);
+
+    // 셋째 줄부터 싱크를 지운다.
+    await tester.tap(find.text('00:03.00'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('여기부터 싱크 지우기'));
+    await tester.pumpAndSettle();
+    expect(find.text('00:03.00'), findsNothing);
+
+    await tester.tap(find.text('저장'));
+    await tester.pumpAndSettle();
+    expect(lyrics.saved['t1'], '[00:01.00]가\n[00:01.00]나\n다');
+  });
+
   testWidgets('가사 편집 페이지: 가사가 있을 때 가져오면 바꿀지 붙일지 묻는다', (tester) async {
     phone(tester);
     final lyrics = MemoryLyricsRepository(sibling: {'t1': '기존 가사'});

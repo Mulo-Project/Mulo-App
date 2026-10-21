@@ -3,6 +3,7 @@ import 'package:music_download_play_app/features/lyrics/domain/entities/timed_ly
 import 'package:music_download_play_app/features/lyrics/presentation/widgets/timed_lyrics_controller.dart';
 
 void main() {
+  _controllerOps();
   const raw = '[00:01.00]one\n[00:02.50]two\nthree';
 
   test('싱크 가사를 시간과 글로 나눈다 (시간 없는 뒷줄은 null)', () {
@@ -77,5 +78,51 @@ void main() {
     c.text = 'one\n끼움\ntwo\nthree';
     expect(c.compose(), '[00:01.00]one\n[00:01.00]끼움\n[00:02.50]two\nthree');
     c.dispose();
+  });
+}
+
+void _controllerOps() {
+  const t1 = Duration(seconds: 1);
+  const t2 = Duration(seconds: 2);
+  const t3 = Duration(seconds: 3);
+
+  TimedLyricsController make() => TimedLyricsController()
+    ..load(
+      TimedLyricsText.parse(
+        '[00:01.00]a\n[00:02.00]b\n[00:03.00]c\n[00:03.00]d',
+      ),
+    );
+
+  group('줄 싱크 조절', () {
+    test('adjust는 이웃 줄의 시간을 넘지 않는다', () {
+      final c = make();
+      c.adjust(1, const Duration(milliseconds: 300));
+      expect(c.times[1], const Duration(milliseconds: 2300));
+      c.adjust(1, const Duration(seconds: 5));
+      expect(c.times[1], t3);
+      c.adjust(1, const Duration(seconds: -5));
+      expect(c.times[1], t1);
+      c.dispose();
+    });
+
+    test('위 줄과 묶기 · 묶음에서 떼기', () {
+      final c = make();
+      c.groupWithAbove(1);
+      expect(c.times, [t1, t1, t3, t3]);
+      expect(c.isGroupedWithAbove(1), isTrue);
+      c.separate(3);
+      // 같은 묶음의 끝까지(여기서는 3번 줄 하나)가 다음 시간이 없으니 0.5초 뒤로 떨어진다.
+      expect(c.times[3], const Duration(milliseconds: 3500));
+      expect(c.times[2], t3);
+      c.dispose();
+    });
+
+    test('여기부터 싱크 지우기는 아래 모든 줄의 시간을 지운다', () {
+      final c = make();
+      c.clearFrom(2);
+      expect(c.times, [t1, t2, null, null]);
+      expect(c.compose(), '[00:01.00]a\n[00:02.00]b\nc\nd');
+      c.dispose();
+    });
   });
 }
