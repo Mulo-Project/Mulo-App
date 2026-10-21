@@ -98,7 +98,6 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
           if (at == null) return const SizedBox.shrink();
           final prev = i > 0 ? times[i - 1] : null;
           final next = i + 1 < times.length ? times[i + 1] : null;
-          final groupColor = controller.groupColor(i);
           final tt = Theme.of(sheet).textTheme;
           final muted = sheet.palette.onSurfaceMuted;
           Widget stop(String title, Duration? t, TextStyle? style) => Expanded(
@@ -121,7 +120,10 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
             ),
           );
           final lower = range.$1, upper = range.$2;
-          final neighborStyle = tt.bodyMedium?.copyWith(color: muted);
+          final accent = sheet.palette.accent;
+          // 이웃과 시간이 같아 묶이면 그 이웃 시간도 현재 시간과 같은 색으로 보인다.
+          TextStyle? neighborStyle(Duration? t) =>
+              tt.bodyMedium?.copyWith(color: t == at ? accent : muted);
           Widget fine(String label, int ms) => PillButton(
             label: label,
             compact: true,
@@ -148,19 +150,17 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
                       stop(
                         l10n.lyricsTimePrev,
                         prev,
-                        prev == null ? null : neighborStyle,
+                        prev == null ? null : neighborStyle(prev),
                       ),
                       stop(
                         l10n.lyricsTimeNow,
                         at,
-                        tt.titleMedium?.copyWith(
-                          color: groupColor ?? sheet.palette.accent,
-                        ),
+                        tt.titleMedium?.copyWith(color: accent),
                       ),
                       stop(
                         l10n.lyricsTimeNext,
                         next,
-                        next == null ? null : neighborStyle,
+                        next == null ? null : neighborStyle(next),
                       ),
                     ],
                   ),
@@ -193,7 +193,7 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
                       groupedAbove
                           ? l10n.lyricsTimeGroupedAbove
                           : l10n.lyricsTimeGroupedBelow,
-                      style: tt.bodySmall?.copyWith(color: groupColor),
+                      style: tt.bodySmall?.copyWith(color: accent),
                     ),
                   ],
                   const SizedBox(height: AppSpacing.sm),
@@ -238,11 +238,7 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
     final timeStyle = style.copyWith(color: p.onSurfaceMuted);
     final scaler = MediaQuery.textScalerOf(context);
     final hi = p.accent.withValues(alpha: .18);
-    final accentHsl = HSLColor.fromColor(p.accent);
-    controller.groupPalette = [
-      for (final shift in const [0.0, 150.0, 60.0, 210.0, 105.0, 270.0])
-        accentHsl.withHue((accentHsl.hue + shift) % 360).toColor(),
-    ];
+    controller.groupPalette = [p.accent];
 
     // 테두리 없이 아주 옅은 바탕만 깔아 가사 보기처럼 조용하게, 그래도 입력칸임은 알아보게 한다.
     return DecoratedBox(
