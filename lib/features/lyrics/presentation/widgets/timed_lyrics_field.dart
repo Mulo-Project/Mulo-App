@@ -8,10 +8,18 @@ import 'timed_lyrics_controller.dart';
 /// 왼쪽에는 줄 번호에 맞는 싱크 시간을 줄마다 따로 보여 준다 (시간은 고칠 수 없다).
 /// 줄 간격을 넓혀 시간과 글이 한 줄씩 맞아 보이게 한다. 긴 줄이 접혀도 시간은 그 줄 맨 위에 선다.
 class TimedLyricsField extends StatelessWidget {
-  const TimedLyricsField({super.key, required this.controller, this.hint});
+  const TimedLyricsField({
+    super.key,
+    required this.controller,
+    this.showTimes = true,
+    this.hint,
+  });
 
   /// 글과 줄마다의 시간을 들고 있는 컨트롤러. 시간이 하나도 없으면 시간 칸 없이 글만 보인다.
   final TimedLyricsController controller;
+
+  /// 시간 칸을 보이는가. 싱크가 없는 일반 글 가사는 글만 보인다.
+  final bool showTimes;
   final String? hint;
 
   List<Duration?> get times => controller.times;
@@ -50,45 +58,48 @@ class TimedLyricsField extends StatelessWidget {
         ),
         child: LayoutBuilder(
           builder: (context, box) {
-            const gutter = _gutter;
+            final gutter = showTimes ? _gutter : 0.0;
             final textWidth = box.maxWidth - gutter;
             return SingleChildScrollView(
               padding: EdgeInsets.zero,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ListenableBuilder(
-                    listenable: controller,
-                    builder: (_, _) {
-                      final lines = controller.text.split('\n');
-                      return SizedBox(
-                        width: gutter,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            for (var i = 0; i < lines.length; i++)
-                              SizedBox(
-                                height: _lineHeight(
-                                  lines[i],
-                                  style,
-                                  scaler,
-                                  textWidth,
+                  if (showTimes)
+                    ListenableBuilder(
+                      listenable: controller,
+                      builder: (_, _) {
+                        final lines = controller.text.split('\n');
+                        return SizedBox(
+                          width: gutter,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              for (var i = 0; i < lines.length; i++)
+                                SizedBox(
+                                  height: _lineHeight(
+                                    lines[i],
+                                    style,
+                                    scaler,
+                                    textWidth,
+                                  ),
+                                  child: Text(
+                                    _label(i),
+                                    style: _grouped(i)
+                                        ? timeStyle.copyWith(
+                                            color: p.accent.withValues(
+                                              alpha: .7,
+                                            ),
+                                          )
+                                        : timeStyle,
+                                    maxLines: 1,
+                                  ),
                                 ),
-                                child: Text(
-                                  _label(i),
-                                  style: _grouped(i)
-                                      ? timeStyle.copyWith(
-                                          color: p.accent.withValues(alpha: .7),
-                                        )
-                                      : timeStyle,
-                                  maxLines: 1,
-                                ),
-                              ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                   Expanded(
                     child: TextField(
                       controller: controller,

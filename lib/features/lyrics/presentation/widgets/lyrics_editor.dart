@@ -157,14 +157,12 @@ class _LyricsEditorScreenState extends State<_LyricsEditorScreen> {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.lg),
-                child: !_synced
-                    ? AppTextField(
-                        label: l10n.lyricsEditLabel,
-                        controller: _text,
-                        hint: l10n.lyricsEditHint,
-                        expands: true,
-                      )
-                    : TimedLyricsField(controller: _text),
+                // 싱크가 있는 가사는 줄마다 시간 칸이 붙고, 일반 글은 글만 보인다 (받기 전 가사 상세와 같은 칸).
+                child: TimedLyricsField(
+                  controller: _text,
+                  showTimes: _synced,
+                  hint: l10n.lyricsEditHint,
+                ),
               ),
             ),
             Padding(
