@@ -166,10 +166,14 @@ void main() {
     await setUpTestDependencies(lyrics: lyrics);
     await openLyricsEditor(tester);
 
-    // 둘째 줄을 위 줄과 묶는다.
-    await tester.tap(find.text('00:02.00'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('위 줄과 묶기'));
+    // 첫째 줄의 시간 칸을 꾹 눌러 둘째 줄까지 끌어 묶는다.
+    final from = tester.getCenter(find.text('00:01.00'));
+    final to = tester.getCenter(find.text('00:02.00'));
+    final drag = await tester.startGesture(from);
+    await tester.pump(const Duration(milliseconds: 700));
+    await drag.moveTo(to);
+    await tester.pump();
+    await drag.up();
     await tester.pumpAndSettle();
     expect(find.text('│'), findsOneWidget);
 

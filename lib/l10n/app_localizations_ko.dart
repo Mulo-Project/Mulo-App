@@ -1466,12 +1466,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsDeleteLine => '줄 지우기';
 
   @override
-  String get lyricsTimeGroupAbove => '위 줄과 묶기';
-
-  @override
-  String get lyricsTimeGroupBelow => '아래 줄과 묶기';
-
-  @override
   String get lyricsTimeSeparate => '이 줄부터 묶음에서 떼기';
 
   @override

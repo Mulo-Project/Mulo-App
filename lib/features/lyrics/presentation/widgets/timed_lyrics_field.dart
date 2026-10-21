@@ -8,7 +8,7 @@ import 'timed_lyrics_controller.dart';
 /// 가사 글 한 덩어리를 고치는 칸. 오른쪽은 이어서 복사 · 붙여넣기 할 수 있는 한 개의 입력칸이고,
 /// 왼쪽에는 줄 번호에 맞는 싱크 시간을 줄마다 따로 보여 준다 (시간은 고칠 수 없다).
 /// 줄 간격을 넓혀 시간과 글이 한 줄씩 맞아 보이게 한다. 긴 줄이 접혀도 시간은 그 줄 맨 위에 선다.
-class TimedLyricsField extends StatelessWidget {
+class TimedLyricsField extends StatefulWidget {
   const TimedLyricsField({
     super.key,
     required this.controller,
@@ -23,7 +23,48 @@ class TimedLyricsField extends StatelessWidget {
   final bool showTimes;
   final String? hint;
 
+  @override
+  State<TimedLyricsField> createState() => _TimedLyricsFieldState();
+}
+
+class _TimedLyricsFieldState extends State<TimedLyricsField> {
+  TimedLyricsController get controller => widget.controller;
+  bool get showTimes => widget.showTimes;
+  String? get hint => widget.hint;
   List<Duration?> get times => controller.times;
+
+  /// 시간 칸을 꾹 눌러 끌어 묶을 범위 (기준 줄, 지금 손가락이 있는 줄).
+  int? _dragFrom;
+  int? _dragTo;
+  var _heights = <double>[];
+  final _gutterKey = GlobalKey();
+
+  int _rowAt(Offset global) {
+    final box = _gutterKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null || _heights.isEmpty) return _dragTo ?? 0;
+    final dy = box.globalToLocal(global).dy;
+    var top = 0.0;
+    for (var i = 0; i < _heights.length; i++) {
+      top += _heights[i];
+      if (dy < top) return i;
+    }
+    return _heights.length - 1;
+  }
+
+  bool _inDrag(int i) =>
+      _dragFrom != null &&
+      _dragTo != null &&
+      i >= (_dragFrom! < _dragTo! ? _dragFrom! : _dragTo!) &&
+      i <= (_dragFrom! > _dragTo! ? _dragFrom! : _dragTo!);
+
+  void _dragEnd() {
+    final a = _dragFrom, b = _dragTo;
+    setState(() {
+      _dragFrom = null;
+      _dragTo = null;
+    });
+    if (a != null && b != null) controller.groupRange(a, b);
+  }
 
   static const _gutter = 68.0;
   static const _pad = AppSpacing.md;
@@ -38,7 +79,7 @@ class TimedLyricsField extends StatelessWidget {
     return _grouped(i) ? '│' : lyricTimeLabel(times[i]!);
   }
 
-  /// 시간 칸을 누르면 그 줄의 싱크를 다듬는 시트를 연다: 시간 조절 · 위/아래 줄과 묶기 · 묶음에서 떼기 · 여기부터 지우기.
+  /// 시간 칸을 누르면 그 줄의 싱크를 다듬는 시트를 연다: 시간 조절 · 묶음에서 떼기 · 여기부터 지우기.
   Future<void> _lineActions(BuildContext context, int i, String line) {
     final l10n = context.l10n;
     return showAppSheet<void>(
@@ -77,24 +118,6 @@ class TimedLyricsField extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  if (i > 0 && !controller.isGroupedWithAbove(i))
-                    MenuRow(
-                      icon: AppIcons.link,
-                      label: l10n.lyricsTimeGroupAbove,
-                      onTap: () {
-                        controller.groupWithAbove(i);
-                        Navigator.of(sheet).pop();
-                      },
-                    ),
-                  if (controller.canGroupWithBelow(i))
-                    MenuRow(
-                      icon: AppIcons.link,
-                      label: l10n.lyricsTimeGroupBelow,
-                      onTap: () {
-                        controller.groupWithBelow(i);
-                        Navigator.of(sheet).pop();
-                      },
-                    ),
                   if (controller.isGroupedWithAbove(i))
                     MenuRow(
                       icon: AppIcons.restart,
@@ -129,6 +152,7 @@ class TimedLyricsField extends StatelessWidget {
     final style = base.copyWith(height: 2.0);
     final timeStyle = style.copyWith(color: p.onSurfaceMuted);
     final scaler = MediaQuery.textScalerOf(context);
+    final hi = p.accent.withValues(alpha: .18);
 
     // 테두리 없이 아주 옅은 바탕만 깔아 가사 보기처럼 조용하게, 그래도 입력칸임은 알아보게 한다.
     return DecoratedBox(
@@ -155,9 +179,14 @@ class TimedLyricsField extends StatelessWidget {
                       listenable: controller,
                       builder: (_, _) {
                         final lines = controller.text.split('\n');
+                        _heights = [
+                          for (final l in lines)
+                            _lineHeight(l, style, scaler, textWidth),
+                        ];
                         return SizedBox(
                           width: gutter,
                           child: Column(
+                            key: _gutterKey,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               for (var i = 0; i < lines.length; i++)
@@ -170,20 +199,48 @@ class TimedLyricsField extends StatelessWidget {
                                   ),
                                   child: GestureDetector(
                                     behavior: HitTestBehavior.opaque,
+                                    // 시간 칸을 꾹 눌러 끌면 그 줄을 기준으로 줄을 묶는다.
+                                    onLongPressStart:
+                                        i < times.length && times[i] != null
+                                        ? (_) => setState(() {
+                                            _dragFrom = i;
+                                            _dragTo = i;
+                                          })
+                                        : null,
+                                    onLongPressMoveUpdate: (d) {
+                                      if (_dragFrom == null) return;
+                                      final to = _rowAt(d.globalPosition);
+                                      if (to != _dragTo) {
+                                        setState(() => _dragTo = to);
+                                      }
+                                    },
+                                    onLongPressEnd: (_) => _dragEnd(),
+                                    onLongPressCancel: () => setState(() {
+                                      _dragFrom = null;
+                                      _dragTo = null;
+                                    }),
                                     onTap: i < times.length && times[i] != null
                                         ? () =>
                                               _lineActions(context, i, lines[i])
                                         : null,
-                                    child: Text(
-                                      _label(i),
-                                      style: _grouped(i)
-                                          ? timeStyle.copyWith(
-                                              color: p.accent.withValues(
-                                                alpha: .7,
-                                              ),
-                                            )
-                                          : timeStyle,
-                                      maxLines: 1,
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        color: _inDrag(i) ? hi : null,
+                                        borderRadius: BorderRadius.circular(
+                                          AppRadii.sm,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        _label(i),
+                                        style: _grouped(i)
+                                            ? timeStyle.copyWith(
+                                                color: p.accent.withValues(
+                                                  alpha: .7,
+                                                ),
+                                              )
+                                            : timeStyle,
+                                        maxLines: 1,
+                                      ),
                                     ),
                                   ),
                                 ),

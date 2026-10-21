@@ -105,26 +105,15 @@ void _controllerOps() {
       c.dispose();
     });
 
-    test('위 줄과 묶기 · 묶음에서 떼기', () {
+    test('범위 묶기 · 묶음에서 떼기', () {
       final c = make();
-      c.groupWithAbove(1);
+      c.groupRange(0, 1);
       expect(c.times, [t1, t1, t3, t3]);
       expect(c.isGroupedWithAbove(1), isTrue);
-      c.separate(3);
-      // 같은 묶음의 끝까지(여기서는 3번 줄 하나)가 다음 시간이 없으니 0.5초 뒤로 떨어진다.
-      expect(c.times[3], const Duration(milliseconds: 3500));
-      expect(c.times[2], t3);
-      c.dispose();
-    });
-
-    test('아래 줄과 묶기는 아래 묶음까지 함께 같은 시간으로 묶는다', () {
-      final c = make();
-      expect(c.canGroupWithBelow(0), isTrue);
-      c.groupWithBelow(0);
-      expect(c.times, [t1, t1, t3, t3]);
-      expect(c.canGroupWithBelow(0), isFalse);
-      c.groupWithBelow(1);
-      expect(c.times, [t1, t1, t1, t1]);
+      c.groupRange(2, 0);
+      expect(c.times, [t1, t1, t1, t3]);
+      c.separate(1);
+      expect(c.times, [t1, t2, t2, t3]);
       c.dispose();
     });
 

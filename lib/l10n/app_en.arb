@@ -540,8 +540,6 @@
   "lyricsEditSyncedHint": "Times on the left follow the line number. If you insert or delete a line, the times stay in place and only the text shifts. Change times in the sync screen.",
   "lyricsAddLine": "Add line",
   "lyricsDeleteLine": "Delete line",
-  "lyricsTimeGroupAbove": "Group with the line above",
-  "lyricsTimeGroupBelow": "Group with the line below",
   "lyricsTimeSeparate": "Split from the group here",
   "lyricsTimeClearFrom": "Clear sync from here",
   "lyricsLoadFile": "Load from file",

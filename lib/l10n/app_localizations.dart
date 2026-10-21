@@ -2786,18 +2786,6 @@ abstract class AppLocalizations {
   /// **'줄 지우기'**
   String get lyricsDeleteLine;
 
-  /// No description provided for @lyricsTimeGroupAbove.
-  ///
-  /// In ko, this message translates to:
-  /// **'위 줄과 묶기'**
-  String get lyricsTimeGroupAbove;
-
-  /// No description provided for @lyricsTimeGroupBelow.
-  ///
-  /// In ko, this message translates to:
-  /// **'아래 줄과 묶기'**
-  String get lyricsTimeGroupBelow;
-
   /// No description provided for @lyricsTimeSeparate.
   ///
   /// In ko, this message translates to:
