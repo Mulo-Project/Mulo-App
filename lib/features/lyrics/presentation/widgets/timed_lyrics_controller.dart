@@ -47,6 +47,24 @@ class TimedLyricsController extends TextEditingController {
     notifyListeners();
   }
 
+  /// [i]번 줄 아래 줄(이미 묶인 아래 줄들은 함께)을 [i]번 줄과 같은 시간으로 묶는다.
+  void groupWithBelow(int i) {
+    if (!canGroupWithBelow(i)) return;
+    final old = times[i + 1]!;
+    for (var j = i + 1; j < times.length && times[j] == old; j++) {
+      times[j] = times[i];
+    }
+    notifyListeners();
+  }
+
+  /// [i]번 줄을 아래 줄과 묶을 수 있는가 (아래 줄에 다른 시간이 있을 때).
+  bool canGroupWithBelow(int i) =>
+      i >= 0 &&
+      i + 1 < times.length &&
+      times[i] != null &&
+      times[i + 1] != null &&
+      times[i + 1] != times[i];
+
   /// [i]번 줄이 위 줄과 묶여 있는가.
   bool isGroupedWithAbove(int i) =>
       i > 0 && i < times.length && times[i] != null && times[i] == times[i - 1];

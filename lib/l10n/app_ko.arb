@@ -641,6 +641,7 @@
   "lyricsAddLine": "줄 추가",
   "lyricsDeleteLine": "줄 지우기",
   "lyricsTimeGroupAbove": "위 줄과 묶기",
+  "lyricsTimeGroupBelow": "아래 줄과 묶기",
   "lyricsTimeSeparate": "이 줄부터 묶음에서 떼기",
   "lyricsTimeClearFrom": "여기부터 싱크 지우기",
   "lyricsLoadFile": "파일에서 불러오기",

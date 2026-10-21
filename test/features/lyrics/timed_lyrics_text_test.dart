@@ -117,6 +117,17 @@ void _controllerOps() {
       c.dispose();
     });
 
+    test('아래 줄과 묶기는 아래 묶음까지 함께 같은 시간으로 묶는다', () {
+      final c = make();
+      expect(c.canGroupWithBelow(0), isTrue);
+      c.groupWithBelow(0);
+      expect(c.times, [t1, t1, t3, t3]);
+      expect(c.canGroupWithBelow(0), isFalse);
+      c.groupWithBelow(1);
+      expect(c.times, [t1, t1, t1, t1]);
+      c.dispose();
+    });
+
     test('여기부터 싱크 지우기는 아래 모든 줄의 시간을 지운다', () {
       final c = make();
       c.clearFrom(2);

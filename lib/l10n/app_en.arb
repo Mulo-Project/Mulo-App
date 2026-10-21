@@ -541,6 +541,7 @@
   "lyricsAddLine": "Add line",
   "lyricsDeleteLine": "Delete line",
   "lyricsTimeGroupAbove": "Group with the line above",
+  "lyricsTimeGroupBelow": "Group with the line below",
   "lyricsTimeSeparate": "Split from the group here",
   "lyricsTimeClearFrom": "Clear sync from here",
   "lyricsLoadFile": "Load from file",

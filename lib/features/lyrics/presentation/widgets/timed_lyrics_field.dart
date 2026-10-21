@@ -38,7 +38,7 @@ class TimedLyricsField extends StatelessWidget {
     return _grouped(i) ? '│' : lyricTimeLabel(times[i]!);
   }
 
-  /// 시간 칸을 누르면 그 줄의 싱크를 다듬는 시트를 연다: 시간 조절 · 위 줄과 묶기 · 묶음에서 떼기 · 여기부터 지우기.
+  /// 시간 칸을 누르면 그 줄의 싱크를 다듬는 시트를 연다: 시간 조절 · 위/아래 줄과 묶기 · 묶음에서 떼기 · 여기부터 지우기.
   Future<void> _lineActions(BuildContext context, int i, String line) {
     final l10n = context.l10n;
     return showAppSheet<void>(
@@ -83,6 +83,15 @@ class TimedLyricsField extends StatelessWidget {
                       label: l10n.lyricsTimeGroupAbove,
                       onTap: () {
                         controller.groupWithAbove(i);
+                        Navigator.of(sheet).pop();
+                      },
+                    ),
+                  if (controller.canGroupWithBelow(i))
+                    MenuRow(
+                      icon: AppIcons.link,
+                      label: l10n.lyricsTimeGroupBelow,
+                      onTap: () {
+                        controller.groupWithBelow(i);
                         Navigator.of(sheet).pop();
                       },
                     ),

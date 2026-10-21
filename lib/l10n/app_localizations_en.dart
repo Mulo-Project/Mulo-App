@@ -1506,6 +1506,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsTimeGroupAbove => 'Group with the line above';
 
   @override
+  String get lyricsTimeGroupBelow => 'Group with the line below';
+
+  @override
   String get lyricsTimeSeparate => 'Split from the group here';
 
   @override
