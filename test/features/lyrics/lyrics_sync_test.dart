@@ -148,6 +148,31 @@ void main() {
     ]);
   });
 
+  test('같은 시간 자동 묶기는 이웃 홑줄 한 칸만, 묶음은 다시 골라 찍어야 이어진다', () {
+    final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다\n라')!)
+      ..stamp(const Duration(seconds: 2))
+      ..stamp(const Duration(seconds: 2))
+      ..stamp(const Duration(seconds: 2));
+    // 묶음(가·나)을 홑줄 다가 삼키지 않는다.
+    expect(cubit.state.draft.texts, ['가\n나', '다', '라']);
+    // 묶음을 다시 골라 같은 시간을 찍으면 다음 홑줄로 이어진다.
+    cubit
+      ..select(0)
+      ..stamp(const Duration(seconds: 2));
+    expect(cubit.state.draft.texts, ['가\n나\n다', '라']);
+  });
+
+  test('뒤로(stepBack)가 묶음을 만나면 묶음을 풀고 맨 끝 줄만 비운다', () {
+    final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다')!)
+      ..stamp(const Duration(seconds: 2))
+      ..stamp(const Duration(seconds: 2));
+    expect(cubit.state.draft.texts, ['가\n나', '다']);
+    cubit.stepBack();
+    expect(cubit.state.draft.texts, ['가', '나', '다']);
+    expect(cubit.state.draft.times, [const Duration(seconds: 2), null, null]);
+    expect(cubit.state.draft.current, 1);
+  });
+
   test('싱크를 하나라도 찍은 뒤에는 안 찍은 줄 중 맨 앞 칸으로만 돌아갈 수 있다', () {
     final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다\n라\n마')!)
       ..stamp(const Duration(seconds: 1))

@@ -192,17 +192,21 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
       }
     }
     // 펼쳐서 줄별로 다듬는 중이거나 앞 싱크가 함께 내려온 경우가 아니면, 같은 시간의 이웃 칸을 묶는다.
+    // 한 번 찍을 때 앞 또는 뒤 한 칸(홑줄)만 묶는다. 이미 묶인 칸은 삼키지 않아 묶음이 제한 없이 뻗지 않고,
+    // 묶음을 더 키우려면 그 묶음을 다시 골라 찍는다.
     if (!redirected && state.expanded == null) {
       var idx = at;
       final t = stamped.times;
-      if (idx > 0 && t[idx] != null && t[idx] == t[idx - 1]) {
-        stamped = stamped.mergeRange(idx - 1, idx);
-        idx -= 1;
-      }
-      if (idx + 1 < stamped.length &&
-          stamped.times[idx] != null &&
-          stamped.times[idx] == stamped.times[idx + 1]) {
-        stamped = stamped.mergeRange(idx, idx + 1);
+      final s = stamped.sizes;
+      if (t[idx] != null) {
+        if (idx > 0 && t[idx] == t[idx - 1] && s[idx - 1] == 1) {
+          stamped = stamped.mergeRange(idx - 1, idx);
+          idx -= 1;
+        } else if (idx + 1 < stamped.length &&
+            t[idx] == t[idx + 1] &&
+            s[idx + 1] == 1) {
+          stamped = stamped.mergeRange(idx, idx + 1);
+        }
       }
       focus = idx + 1 < stamped.length ? idx + 1 : idx;
     }
@@ -250,6 +254,24 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
   /// 가장 뒤에 찍은 싱크를 하나 지우고 그 칸으로 돌아간다 (다시 찍으려는 뒤로 가기). 되돌리기로 복구된다.
   void stepBack() {
     final draft = state.draft;
+    // 묶인 칸이 마지막이면 수정 중이므로 묶음을 풀고(줄마다 그 시간 그대로) 맨 끝 줄만 비운다.
+    final last = draft.times.lastIndexWhere((t) => t != null);
+    if (last >= 0 && draft.sizes[last] > 1 && canMerge) {
+      final map = _collapseNow();
+      final at = map(last);
+      final d = state.draft;
+      final n = d.sizes[at];
+      final next = d.explode(at).unstampLast();
+      emit(
+        LyricsSyncState(
+          next,
+          selected: next.current,
+          group: state.group,
+          expanded: (at, n),
+        ),
+      );
+      return;
+    }
     final next = draft.unstampLast();
     if (next == draft) return;
     _put(next, selected: next.current);
