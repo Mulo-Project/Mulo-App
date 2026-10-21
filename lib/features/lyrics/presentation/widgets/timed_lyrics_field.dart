@@ -80,9 +80,12 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
   }
 
   /// 시간 칸을 누르면 그 줄의 싱크를 다듬는 시트를 연다: 시간 조절 · 묶음에서 떼기 · 여기부터 지우기.
+  static const _steps = [10, 100, 500, 1000];
+
   Future<void> _lineActions(BuildContext context, int i, String line) {
     final l10n = context.l10n;
     // 슬라이더 범위: 앞 줄 시간 ~ 다음 줄 시간 (다음이 없으면 지금부터 10초 뒤). 열 때 정해 끌어도 변하지 않는다.
+    final stepMs = ValueNotifier<int>(100);
     final now = times[i]!;
     final range = (
       (i > 0 ? times[i - 1] : null) ?? Duration.zero,
@@ -92,7 +95,7 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
     return showAppSheet<void>(
       context,
       builder: (sheet) => ListenableBuilder(
-        listenable: controller,
+        listenable: Listenable.merge([controller, stepMs]),
         builder: (_, _) {
           final at = i < times.length ? times[i] : null;
           if (at == null) return const SizedBox.shrink();
@@ -124,11 +127,23 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
           // 이웃과 시간이 같아 묶이면 그 이웃 시간도 현재 시간과 같은 색으로 보인다.
           TextStyle? neighborStyle(Duration? t) =>
               tt.bodyMedium?.copyWith(color: t == at ? accent : muted);
-          Widget fine(String label, int ms) => PillButton(
-            label: label,
+          Widget unit(int ms) => PillButton(
+            label: ms >= 1000 ? '${ms ~/ 1000}s' : '${ms / 1000}s',
             compact: true,
-            variant: PillVariant.tonal,
-            onPressed: () => controller.adjust(i, Duration(milliseconds: ms)),
+            variant: stepMs.value == ms
+                ? PillVariant.accent
+                : PillVariant.tonal,
+            onPressed: () => stepMs.value = ms,
+          );
+          Widget move(String label, int sign) => Expanded(
+            child: PillButton(
+              label: label,
+              variant: PillVariant.tonal,
+              onPressed: () => controller.adjust(
+                i,
+                Duration(milliseconds: sign * stepMs.value),
+              ),
+            ),
           );
           final groupedAbove = prev != null && prev == at;
           final groupedBelow = next != null && next == at;
@@ -197,10 +212,20 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
                     ),
                   ],
                   const SizedBox(height: AppSpacing.sm),
+                  // 한 번에 옮길 단위를 고르는 타일
                   Wrap(
                     spacing: AppSpacing.xs,
                     runSpacing: AppSpacing.xs,
-                    children: [fine('−0.1s', -100), fine('+0.1s', 100)],
+                    children: [for (final ms in _steps) unit(ms)],
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  // 고른 단위만큼 빼고 더하는 버튼 (타일과 따로)
+                  Row(
+                    children: [
+                      move('−', -1),
+                      const SizedBox(width: AppSpacing.sm),
+                      move('+', 1),
+                    ],
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   if (controller.isGroupedWithAbove(i))
