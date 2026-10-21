@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/design/design.dart';
 import '../../domain/entities/timed_lyrics_text.dart';
-import '../../../../core/l10n/l10n.dart';
+import 'lyric_time_sheet.dart';
 import 'timed_lyrics_controller.dart';
 
 /// 가사 글 한 덩어리를 고치는 칸. 오른쪽은 이어서 복사 · 붙여넣기 할 수 있는 한 개의 입력칸이고,
@@ -77,193 +77,6 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
   String _label(int i) {
     if (i >= times.length || times[i] == null) return '';
     return _grouped(i) ? '│' : lyricTimeLabel(times[i]!);
-  }
-
-  /// 시간 칸을 누르면 그 줄의 싱크를 다듬는 시트를 연다: 시간 조절 · 묶음에서 떼기 · 여기부터 지우기.
-  static const _steps = [10, 100, 500, 1000];
-
-  Future<void> _lineActions(BuildContext context, int i, String line) {
-    final l10n = context.l10n;
-    // 슬라이더 범위: 앞 줄 시간 ~ 다음 줄 시간 (다음이 없으면 지금부터 10초 뒤). 열 때 정해 끌어도 변하지 않는다.
-    final stepMs = ValueNotifier<int>(100);
-    final now = times[i]!;
-    final range = (
-      (i > 0 ? times[i - 1] : null) ?? Duration.zero,
-      (i + 1 < times.length ? times[i + 1] : null) ??
-          now + const Duration(seconds: 10),
-    );
-    return showAppSheet<void>(
-      context,
-      builder: (sheet) => ListenableBuilder(
-        listenable: Listenable.merge([controller, stepMs]),
-        builder: (_, _) {
-          final at = i < times.length ? times[i] : null;
-          if (at == null) return const SizedBox.shrink();
-          final prev = i > 0 ? times[i - 1] : null;
-          final next = i + 1 < times.length ? times[i + 1] : null;
-          final tt = Theme.of(sheet).textTheme;
-          final muted = sheet.palette.onSurfaceMuted;
-          Widget stop(String title, Duration? t, TextStyle? style) => Expanded(
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              // 이웃 시간을 누르면 그 시간에 딱 붙인다 (같아지면 묶인다).
-              onTap: t == null || style == null
-                  ? null
-                  : () => controller.setTime(i, t),
-              child: Column(
-                children: [
-                  Text(title, style: tt.labelSmall?.copyWith(color: muted)),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    t == null ? l10n.lyricsTimeNone : lyricTimeLabel(t),
-                    style: style ?? tt.bodyMedium?.copyWith(color: muted),
-                  ),
-                ],
-              ),
-            ),
-          );
-          final lower = range.$1, upper = range.$2;
-          final accent = sheet.palette.accent;
-          // 이웃과 시간이 같아 묶이면 그 이웃 시간도 현재 시간과 같은 색으로 보인다.
-          TextStyle? neighborStyle(Duration? t) =>
-              tt.bodyMedium?.copyWith(color: t == at ? accent : muted);
-          String unitLabel(int ms) =>
-              ms >= 1000 ? '${ms ~/ 1000}s' : '${ms / 1000}s';
-          // 단위 타일: 누르면 팝업 메뉴로 0.01 · 0.1 · 0.5 · 1초 중에 고른다.
-          Widget unit() => Builder(
-            builder: (tileContext) => PillButton(
-              label: '${unitLabel(stepMs.value)} ▾',
-              variant: PillVariant.accent,
-              onPressed: () async {
-                final picked = await showAppMenu<int>(
-                  tileContext,
-                  items: [
-                    for (final ms in _steps)
-                      AppMenuItem(
-                        value: ms,
-                        icon: AppIcons.tune,
-                        label: unitLabel(ms),
-                        selected: ms == stepMs.value,
-                      ),
-                  ],
-                );
-                if (picked != null) stepMs.value = picked;
-              },
-            ),
-          );
-          Widget move(String label, int sign) => Expanded(
-            child: PillButton(
-              label: label,
-              variant: PillVariant.tonal,
-              onPressed: () => controller.adjust(
-                i,
-                Duration(milliseconds: sign * stepMs.value),
-              ),
-            ),
-          );
-          final groupedAbove = prev != null && prev == at;
-          final groupedBelow = next != null && next == at;
-          return SafeArea(
-            child: Padding(
-              padding: appSheetPadding,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AppSheetTitle(
-                    lyricTimeLabel(at),
-                    subtitle: line.isEmpty ? '♪' : line,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      stop(
-                        l10n.lyricsTimePrev,
-                        prev,
-                        prev == null ? null : neighborStyle(prev),
-                      ),
-                      stop(
-                        l10n.lyricsTimeNow,
-                        at,
-                        tt.titleMedium?.copyWith(color: accent),
-                      ),
-                      stop(
-                        l10n.lyricsTimeNext,
-                        next,
-                        next == null ? null : neighborStyle(next),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  AppSlider(
-                    value: at.inMilliseconds
-                        .clamp(lower.inMilliseconds, upper.inMilliseconds)
-                        .toDouble(),
-                    min: lower.inMilliseconds.toDouble(),
-                    max: upper.inMilliseconds.toDouble(),
-                    semanticLabel: l10n.lyricsTimeNow,
-                    onChanged: (v) {
-                      // 양 끝 가까이는 이웃 시간에 정확히 붙여 묶이기 쉽게 한다.
-                      final ms = v.round();
-                      if (ms - lower.inMilliseconds <= 15) {
-                        controller.setTime(i, lower);
-                      } else if (upper.inMilliseconds - ms <= 15) {
-                        controller.setTime(i, upper);
-                      } else {
-                        controller.setTime(
-                          i,
-                          Duration(milliseconds: ms ~/ 10 * 10),
-                        );
-                      }
-                    },
-                  ),
-                  if (groupedAbove || groupedBelow) ...[
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      groupedAbove
-                          ? l10n.lyricsTimeGroupedAbove
-                          : l10n.lyricsTimeGroupedBelow,
-                      style: tt.bodySmall?.copyWith(color: accent),
-                    ),
-                  ],
-                  const SizedBox(height: AppSpacing.sm),
-                  // 한 줄에: − 버튼, 단위 타일(팝업 메뉴), + 버튼
-                  Row(
-                    children: [
-                      move('−', -1),
-                      const SizedBox(width: AppSpacing.sm),
-                      unit(),
-                      const SizedBox(width: AppSpacing.sm),
-                      move('+', 1),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  if (controller.isGroupedWithAbove(i))
-                    MenuRow(
-                      icon: AppIcons.restart,
-                      label: l10n.lyricsTimeSeparate,
-                      onTap: () {
-                        controller.separate(i);
-                        Navigator.of(sheet).pop();
-                      },
-                    ),
-                  MenuRow(
-                    icon: AppIcons.delete,
-                    label: l10n.lyricsTimeClearFrom,
-                    destructive: true,
-                    onTap: () {
-                      controller.clearFrom(i);
-                      Navigator.of(sheet).pop();
-                    },
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
   }
 
   @override
@@ -342,8 +155,12 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
                                       _dragTo = null;
                                     }),
                                     onTap: i < times.length && times[i] != null
-                                        ? () =>
-                                              _lineActions(context, i, lines[i])
+                                        ? () => showLyricTimeSheet(
+                                            context,
+                                            controller: controller,
+                                            index: i,
+                                            line: lines[i],
+                                          )
                                         : null,
                                     child: DecoratedBox(
                                       decoration: BoxDecoration(
