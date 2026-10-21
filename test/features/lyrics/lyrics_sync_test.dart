@@ -136,14 +136,13 @@ void main() {
     expect(cubit.state.draft.times[0], const Duration(seconds: 1));
   });
 
-  test('같은 시간에 지금을 또 눌러도 자동으로 묶이지 않고 줄이 따로 남는다', () {
+  test('같은 시간에 지금을 또 누르면 바로 한 묶음으로 합쳐진다', () {
     final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다')!)
       ..stamp(const Duration(seconds: 2))
       ..stamp(const Duration(seconds: 2))
       ..stamp(const Duration(seconds: 5));
-    expect(cubit.state.draft.texts, ['가', '나', '다']);
+    expect(cubit.state.draft.texts, ['가\n나', '다']);
     expect(cubit.state.draft.times, [
-      const Duration(seconds: 2),
       const Duration(seconds: 2),
       const Duration(seconds: 5),
     ]);

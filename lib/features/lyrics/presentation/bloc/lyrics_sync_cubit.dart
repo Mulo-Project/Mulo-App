@@ -173,7 +173,7 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
     var draft = state.draft;
     var at = draft.current;
     if (at >= draft.length) return;
-    // 랩처럼 소리가 겹치는 곳도 있어서, 같은 시간이어도 자동으로 묶지 않는다 (줄은 따로 남는다).
+    // 찍은 칸이 이웃 칸과 같은 시간이 되면 그 칸들을 바로 한 묶음으로 보인다 (저장하고 다시 열 때와 같게).
     // 첫 싱크를 가운데 줄에서 시작했다면, 맨 앞 줄부터 그 줄까지를 한 칸으로 묶어 같은 시간으로 찍는다.
     if (canGroup && draft.stamped == 0 && at > 0 && state.expanded == null) {
       draft = draft.mergeRange(0, at).moveTo(0);
@@ -182,12 +182,29 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
     var stamped = draft.stamp(position);
     // 앞쪽으로 당겨 찍어 그 앞의 싱크가 함께 내려왔다면, 바뀐 것 중 맨 앞 칸으로 포커스를 돌려 확인하게 한다.
     var focus = at + 1 < stamped.length ? at + 1 : at;
+    var redirected = false;
     for (var i = 0; i < at; i++) {
       if (stamped.times[i] != draft.times[i]) {
         stamped = stamped.moveTo(i);
         focus = i;
+        redirected = true;
         break;
       }
+    }
+    // 펼쳐서 줄별로 다듬는 중이거나 앞 싱크가 함께 내려온 경우가 아니면, 같은 시간의 이웃 칸을 묶는다.
+    if (!redirected && state.expanded == null) {
+      var idx = at;
+      final t = stamped.times;
+      if (idx > 0 && t[idx] != null && t[idx] == t[idx - 1]) {
+        stamped = stamped.mergeRange(idx - 1, idx);
+        idx -= 1;
+      }
+      if (idx + 1 < stamped.length &&
+          stamped.times[idx] != null &&
+          stamped.times[idx] == stamped.times[idx + 1]) {
+        stamped = stamped.mergeRange(idx, idx + 1);
+      }
+      focus = idx + 1 < stamped.length ? idx + 1 : idx;
     }
     // 그렇지 않으면 찍은 뒤 포커스가 자동으로 다음 칸으로 넘어간다 (지금은 포커스한 칸만 바꾼다).
     _put(stamped, selected: focus);
