@@ -9,7 +9,7 @@ import '../screens/lyrics_web_screen.dart';
 import '../../domain/entities/timed_lyrics_text.dart';
 import 'lyrics_dialogs.dart';
 import 'timed_lyrics_controller.dart';
-import 'timed_lyrics_field.dart';
+import 'lyrics_edit_scaffold.dart';
 
 /// 플레이어 가사 화면의 "가사 편집" 페이지: 직접 입력 · 붙여넣기 · 파일(.lrc · .txt) · 웹 검색(Android)에서 불러오기.
 /// 저장하면 곡의 가사로 저장하고(비우면 지움) 안내를 띄운다.
@@ -110,106 +110,28 @@ class _LyricsEditorScreenState extends State<_LyricsEditorScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
-    final p = context.palette;
-    return Scaffold(
-      backgroundColor: p.background,
-      resizeToAvoidBottomInset: true,
-      body: SafeArea(
-        child: Column(
-          children: [
-            AppTopBar(
-              title: l10n.lyricsEditTitle,
-              leading: CircleIconButton(
-                icon: AppIcons.close,
-                tooltip: l10n.actionCancel,
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  widget.track.title,
-                  style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ),
-            if (_synced)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  AppSpacing.sm,
-                  AppSpacing.lg,
-                  0,
-                ),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    l10n.lyricsEditSyncedHint,
-                    style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
-                  ),
-                ),
-              ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                // 싱크가 있는 가사는 줄마다 시간 칸이 붙고, 일반 글은 글만 보인다 (받기 전 가사 상세와 같은 칸).
-                child: TimedLyricsField(
-                  controller: _text,
-                  showTimes: _synced,
-                  hint: l10n.lyricsEditHint,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Row(
-                children: [
-                  PlainButton(
-                    label: l10n.lyricsLoadFile,
-                    icon: AppIcons.fileOpen,
-                    onPressed: _pickFile,
-                  ),
-                  if (lyricsWebSupported)
-                    PlainButton(
-                      label: l10n.lyricsWebSearch,
-                      icon: AppIcons.explore,
-                      onPressed: _searchWeb,
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: PillButton(
-                      label: l10n.actionCancel,
-                      variant: PillVariant.tonal,
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: PillButton(
-                      label: l10n.lyricsSave,
-                      icon: AppIcons.check,
-                      onPressed: () => Navigator.of(context).pop(_compose()),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-          ],
+    return LyricsEditScaffold(
+      title: l10n.lyricsEditTitle,
+      subtitle: widget.track.title,
+      controller: _text,
+      showTimes: _synced,
+      notice: _synced ? l10n.lyricsEditSyncedHint : null,
+      fieldHint: l10n.lyricsEditHint,
+      tools: [
+        PlainButton(
+          label: l10n.lyricsLoadFile,
+          icon: AppIcons.fileOpen,
+          onPressed: _pickFile,
         ),
-      ),
+        if (lyricsWebSupported)
+          PlainButton(
+            label: l10n.lyricsWebSearch,
+            icon: AppIcons.explore,
+            onPressed: _searchWeb,
+          ),
+      ],
+      primaryLabel: l10n.lyricsSave,
+      onPrimary: () => Navigator.of(context).pop(_compose()),
     );
   }
 }

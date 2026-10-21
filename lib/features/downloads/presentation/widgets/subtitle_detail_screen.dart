@@ -6,7 +6,7 @@ import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../lyrics/domain/entities/timed_lyrics_text.dart';
 import '../../../lyrics/presentation/widgets/timed_lyrics_controller.dart';
-import '../../../lyrics/presentation/widgets/timed_lyrics_field.dart';
+import '../../../lyrics/presentation/widgets/lyrics_edit_scaffold.dart';
 import '../bloc/subtitle_preview_cubit.dart';
 
 /// 상세 페이지에서 "이 자막 사용"을 눌러 돌아온 결과.
@@ -83,6 +83,7 @@ class _SubtitleDetailScreenState extends State<SubtitleDetailScreen> {
 
   /// 처음 보여 준 가사(.lrc 글). 고쳤는지 비교한다.
   String? _base;
+  var _synced = false;
 
   @override
   void initState() {
@@ -100,6 +101,7 @@ class _SubtitleDetailScreenState extends State<SubtitleDetailScreen> {
   void _fill(String raw) {
     final split = TimedLyricsText.parse(raw);
     _base = raw;
+    _synced = split.isSynced;
     _text.load(split);
   }
 
@@ -117,121 +119,70 @@ class _SubtitleDetailScreenState extends State<SubtitleDetailScreen> {
     final p = context.palette;
     final text = Theme.of(context).textTheme;
 
-    return Scaffold(
-      backgroundColor: p.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            AppTopBar(
-              title: widget.title,
-              subtitle: widget.kind,
-              leading: CircleIconButton(
-                icon: AppIcons.back,
-                tooltip: l10n.actionCancel,
-                onPressed: () => Navigator.of(context).pop(),
+    return BlocConsumer<SubtitlePreviewCubit, SubtitlePreview>(
+      listener: (context, preview) {
+        final track = preview.track;
+        if (track != null && _base == null) {
+          setState(() => _fill(track.toLrc()));
+        }
+      },
+      builder: (context, preview) {
+        Widget? body;
+        if (preview.status == SubtitlePreviewStatus.failed && _base == null) {
+          body = Center(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    l10n.downloadLyricsPreviewFailed,
+                    style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  PillButton(
+                    label: l10n.downloadLyricsRetry,
+                    compact: true,
+                    variant: PillVariant.tonal,
+                    onPressed: () => context.read<SubtitlePreviewCubit>().load(
+                      widget.url,
+                      language: widget.language,
+                      skipSounds: widget.skipSounds,
+                    ),
+                  ),
+                ],
               ),
             ),
-            Expanded(
-              child: BlocConsumer<SubtitlePreviewCubit, SubtitlePreview>(
-                listener: (context, preview) {
-                  final track = preview.track;
-                  if (track != null && _base == null) {
-                    setState(() => _fill(track.toLrc()));
-                  }
-                },
-                builder: (context, preview) {
-                  if (preview.status == SubtitlePreviewStatus.failed &&
-                      _base == null) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppSpacing.lg),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              l10n.downloadLyricsPreviewFailed,
-                              style: text.bodyMedium?.copyWith(
-                                color: p.onSurfaceMuted,
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-                            PillButton(
-                              label: l10n.downloadLyricsRetry,
-                              compact: true,
-                              variant: PillVariant.tonal,
-                              onPressed: () =>
-                                  context.read<SubtitlePreviewCubit>().load(
-                                    widget.url,
-                                    language: widget.language,
-                                    skipSounds: widget.skipSounds,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-                  if (_base == null) {
-                    return Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const CircularProgressIndicator(strokeWidth: 2),
-                          const SizedBox(height: AppSpacing.sm),
-                          Text(
-                            l10n.downloadLyricsPreviewLoading,
-                            style: text.bodyMedium?.copyWith(
-                              color: p.onSurfaceMuted,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.lg,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                          child: Text(
-                            l10n.downloadSubtitleEditHint,
-                            style: text.bodySmall?.copyWith(
-                              color: p.onSurfaceMuted,
-                            ),
-                          ),
-                        ),
-                        Expanded(child: TimedLyricsField(controller: _text)),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                AppSpacing.sm,
-                AppSpacing.lg,
-                AppSpacing.md,
-              ),
-              child: SizedBox(
-                width: double.infinity,
-                child: PillButton(
-                  key: const ValueKey('subtitle-detail-use'),
-                  label: l10n.downloadSubtitleUse,
-                  icon: AppIcons.check,
-                  onPressed: () =>
-                      Navigator.of(context).pop(SubtitleChoice(_editedRaw())),
+          );
+        } else if (_base == null) {
+          body = Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(strokeWidth: 2),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  l10n.downloadLyricsPreviewLoading,
+                  style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          );
+        }
+        return LyricsEditScaffold(
+          title: widget.title,
+          subtitle: widget.kind,
+          controller: _text,
+          showTimes: _synced,
+          notice: l10n.downloadSubtitleEditHint,
+          body: body,
+          primaryKey: const ValueKey('subtitle-detail-use'),
+          primaryLabel: l10n.downloadSubtitleUse,
+          onPrimary: () =>
+              Navigator.of(context).pop(SubtitleChoice(_editedRaw())),
+          leadingIcon: AppIcons.back,
+        );
+      },
     );
   }
 }
