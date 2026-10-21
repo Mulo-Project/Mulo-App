@@ -252,6 +252,8 @@ class _DownloadScreenState extends State<DownloadScreen> {
     final p = context.palette;
     final text = Theme.of(context).textTheme;
     final none = sub.status == SubtitleStatus.none;
+    // 자막 확인이 끝나기 전에는 켜고 끌 수 없다 (있는지 알고 나서 고른다).
+    final locked = none || sub.status == SubtitleStatus.checking;
     final status = switch (sub.status) {
       SubtitleStatus.checking => l10n.downloadSubtitleChecking,
       SubtitleStatus.found => l10n.downloadSubtitleFound(sub.languages.length),
@@ -289,13 +291,13 @@ class _DownloadScreenState extends State<DownloadScreen> {
                 ],
                 AppSwitch(
                   value: on,
-                  onChanged: none
+                  onChanged: locked
                       ? null
                       : (v) => setState(() => _importLyrics = v),
                 ),
               ],
             ),
-            onTap: none
+            onTap: locked
                 ? null
                 : () => setState(() => _importLyrics = !_importLyrics),
           ),
