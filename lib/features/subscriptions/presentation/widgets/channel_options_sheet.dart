@@ -44,7 +44,7 @@ Future<void> showChannelOptionsSheet(
               thumbnailUrl: thumb,
             ),
             const SizedBox(height: AppSpacing.lg),
-            Text(l10n.subscriptionsCategories, style: text.titleMedium),
+            SectionTitle(l10n.subscriptionsCategories, padded: false),
             const SizedBox(height: AppSpacing.xxs),
             Text(
               l10n.subscriptionsCategoriesDesc,

@@ -88,6 +88,7 @@ MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부�
 | `LoadingIndicator` · `LoadingState` | loading_indicator.dart | 앱 전체의 불러오는 중 표시(강조 색 동그라미) 하나. 영역은 가운데 `LoadingState`(+문구), 버튼 · 줄 안은 `LoadingIndicator.small`. 막대형 진행 표시는 쓰지 않는다 |
 | `AppBackButton` | back_button.dart | 위 막대 왼쪽 뒤로 가기 (기본은 화면 닫기) |
 | `AppDivider` | app_divider.dart | 얇은 구분선 한 줄(윤곽 색) |
+| `SectionTitle` | section_title.dart | 화면 · 시트 안 구역 제목(titleMedium). 화면은 좌우 여백 + 아래 틈, 시트는 `padded: false` |
 | `showAppMenu` · `AppMenuItem` | app_popup_menu.dart | 팝업 메뉴 (아이콘 + 글자, `destructive` 경고 색, `dividerBefore`, 색 견본용 `iconColor`, 고른 항목 `selected` 체크). 눌린 자리 또는 위젯 옆에 최상위 내비게이터로 연다 (곡 메뉴) |
 | `AppSwitch` | app_switch.dart | 토글 (켜짐 = 강조 색) |
 | `AppSlider` | app_slider.dart | 가는 막대 슬라이더 (가로 · 세로, 이퀄라이저) |

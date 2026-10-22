@@ -212,7 +212,6 @@ class _Body extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final state = context.watch<PlaylistImportCubit>().state;
-    final text = Theme.of(context).textTheme;
 
     Widget message(String title, String body, {Widget? action}) => Center(
       child: EmptyState(title: title, body: body, action: action),
@@ -241,14 +240,7 @@ class _Body extends StatelessWidget {
         return ListView(
           padding: const EdgeInsets.only(bottom: AppSpacing.md),
           children: [
-            if (state.mine)
-              Padding(
-                padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
-                child: Text(
-                  l10n.playlistImportMineTitle,
-                  style: text.titleMedium,
-                ),
-              ),
+            if (state.mine) SectionTitle(l10n.playlistImportMineTitle),
             for (final hit in state.results)
               _ResultRow(
                 hit: hit,

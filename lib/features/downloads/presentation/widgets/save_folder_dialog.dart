@@ -32,8 +32,6 @@ class _SaveFolderDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
-    final p = context.palette;
     final folders = context.watch<LoadedFoldersCubit>().state.folders;
     final cur = current.trim();
     // 지금 위치가 목록에 없으면(직접 고른 폴더) 맨 위에 따로 보인다.
@@ -56,10 +54,7 @@ class _SaveFolderDialog extends StatelessWidget {
           maxHeight: MediaQuery.sizeOf(context).height * .45,
         ),
         child: paths.isEmpty
-            ? Text(
-                l10n.saveFolderEmpty,
-                style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
-              )
+            ? EmptyState(title: l10n.saveFolderEmpty)
             : ListView(
                 shrinkWrap: true,
                 children: [

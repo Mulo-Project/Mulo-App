@@ -223,7 +223,6 @@ class _Results extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
     final isPlaylist = state.playlistTitle != null;
     final label = isPlaylist
         ? '${l10n.searchPlaylistLabel} · ${state.playlistTitle}'
@@ -234,10 +233,7 @@ class _Results extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
-          child: Text(label, style: text.titleMedium),
-        ),
+        SectionTitle(label),
         if (isPlaylist)
           Padding(
             padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),

@@ -499,7 +499,7 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
                   ),
                   Expanded(
                     child: draft.length == 0
-                        ? Center(child: Text(l10n.lyricsSyncEmpty))
+                        ? EmptyState(title: l10n.lyricsSyncEmpty)
                         : SingleChildScrollView(
                             padding: const EdgeInsets.all(AppSpacing.md),
                             child: Column(children: [..._rows(context, state)]),

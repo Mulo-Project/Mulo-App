@@ -322,24 +322,13 @@ class _LyricsViewState extends State<LyricsView> {
       return const SizedBox.shrink();
     }
     if (lyrics == null) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(l10n.lyricsEmpty, style: text.titleMedium),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              l10n.lyricsEmptyHint,
-              style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            PlainButton(
-              label: l10n.lyricsMenuEdit,
-              icon: AppIcons.edit,
-              onPressed: () => showLyricsEditor(context, widget.track),
-            ),
-          ],
+      return EmptyState(
+        title: l10n.lyricsEmpty,
+        body: l10n.lyricsEmptyHint,
+        action: PlainButton(
+          label: l10n.lyricsMenuEdit,
+          icon: AppIcons.edit,
+          onPressed: () => showLyricsEditor(context, widget.track),
         ),
       );
     }

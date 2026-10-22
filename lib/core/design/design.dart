@@ -30,6 +30,7 @@ export 'components/mini_player_bar.dart';
 export 'components/pin_pad.dart';
 export 'components/progress.dart';
 export 'components/section_card.dart';
+export 'components/section_title.dart';
 export 'components/segmented_pills.dart';
 export 'components/soundcloud_mark.dart';
 export 'components/stat_number.dart';
