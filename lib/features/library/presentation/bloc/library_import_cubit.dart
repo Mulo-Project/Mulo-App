@@ -30,12 +30,17 @@ class LibraryImportState extends Equatable {
 
 /// 기기 음악 불러오기 (#11). 곡 목록을 먼저 보여 준 뒤 뒤에서 파일 내장 커버를 채운다.
 class LibraryImportCubit extends Cubit<LibraryImportState> {
-  LibraryImportCubit(this._import, this._fillCovers, [this._embedTags])
-    : super(const LibraryImportState());
+  LibraryImportCubit(
+    this._import,
+    this._fillCovers, [
+    this._embedTags,
+    this._restoreTags,
+  ]) : super(const LibraryImportState());
 
   final ImportDeviceMusic _import;
   final FillEmbeddedCovers _fillCovers;
   final EmbedTagsIntoFiles? _embedTags;
+  final RestoreFromFileTags? _restoreTags;
   Timer? _embedTimer;
   bool _filling = false;
 
@@ -59,7 +64,29 @@ class LibraryImportCubit extends Cubit<LibraryImportState> {
       ),
     );
     // 새 곡이 없어도 이미 가져온 곡의 빈 커버를 채운다.
-    if (outcome is ImportAdded) await _fillEmbeddedCovers();
+    if (outcome is ImportAdded) {
+      await _restoreFromTags();
+      await _fillEmbeddedCovers();
+    }
+  }
+
+  /// 파일 태그를 읽어 곡 정보 · 커버 편집 상태를 DB에 되살린다 (파일이 원본). 곡 목록은 DB 스트림이 갱신한다.
+  Future<void> _restoreFromTags() async {
+    final restore = _restoreTags;
+    if (restore == null) return;
+    try {
+      final restored = await restore(const NoParams());
+      if (isClosed || restored == 0) return;
+      emit(
+        LibraryImportState(
+          outcome: state.outcome,
+          seq: state.seq,
+          coversSeq: state.coversSeq + 1,
+        ),
+      );
+    } on Exception {
+      // 못 읽어도 가져오기 결과에는 영향이 없다 (곡마다 기록해 다음에 이어서).
+    }
   }
 
   Future<void> _fillEmbeddedCovers() async {

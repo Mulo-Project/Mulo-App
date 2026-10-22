@@ -1,8 +1,10 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../covers/domain/entities/cover_art.dart';
+import '../../domain/entities/file_tags.dart';
 import '../../domain/entities/track.dart';
 import '../../domain/repositories/track_tag_repository.dart';
+import '../datasources/file_tag_source.dart';
 import '../datasources/track_tag_source.dart';
 
 class TrackTagRepositoryImpl implements TrackTagRepository {
@@ -23,18 +25,48 @@ class TrackTagRepositoryImpl implements TrackTagRepository {
       );
 }
 
-class PrefsTagMigrationStore implements TagMigrationStore {
-  static const _key = 'library.tagMigrationDone';
+class FileTagRepositoryImpl implements FileTagRepository {
+  const FileTagRepositoryImpl(this._source);
+
+  final FileTagSource _source;
 
   @override
-  Future<Set<String>> loadDone() async =>
+  Future<FileTags?> read(Track track) => _source.read(track.uri);
+}
+
+/// 곡 id 목록을 shared_preferences에 기록한다 (태그 이관 · 복원이 키만 다르다).
+class _PrefsIdSet {
+  const _PrefsIdSet(this._key);
+
+  final String _key;
+
+  Future<Set<String>> load() async =>
       ((await SharedPreferences.getInstance()).getStringList(_key) ?? const [])
           .toSet();
 
-  @override
-  Future<void> markDone(Iterable<String> trackIds) async {
+  Future<void> add(Iterable<String> ids) async {
     final prefs = await SharedPreferences.getInstance();
-    final all = {...?prefs.getStringList(_key), ...trackIds};
+    final all = {...?prefs.getStringList(_key), ...ids};
     await prefs.setStringList(_key, all.toList());
   }
+}
+
+class PrefsTagMigrationStore implements TagMigrationStore {
+  static const _ids = _PrefsIdSet('library.tagMigrationDone');
+
+  @override
+  Future<Set<String>> loadDone() => _ids.load();
+
+  @override
+  Future<void> markDone(Iterable<String> trackIds) => _ids.add(trackIds);
+}
+
+class PrefsTagRestoreStore implements TagRestoreStore {
+  static const _ids = _PrefsIdSet('library.tagRestoreDone');
+
+  @override
+  Future<Set<String>> loadDone() => _ids.load();
+
+  @override
+  Future<void> markDone(Iterable<String> trackIds) => _ids.add(trackIds);
 }

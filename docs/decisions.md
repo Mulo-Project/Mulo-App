@@ -776,3 +776,10 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 - (D-114 보강 2) 받을 때 가사는 **먼저 구해서**(고쳐 둔 글 또는 영상 자막 → 싱크 LRC) 파일 태그와 앱 가사에 같은 글을 쓴다 (`_lyricsFor`). 전에는 자막 가사가 곡 저장 뒤 앱 안에만 저장됐다. 앨범은 받을 때 읽지 않아 비어 있다 (영상 정보의 album 읽기는 따로).
 - (D-114 보강 3) 커버 편집 상태도 파일에 남긴다: 자른 커버 이미지는 그대로 두고 사용자 정의 태그 `COVER_SOURCE`(원본 웹 주소) · `COVER_TRANSFORM`(scale,dx,dy) · `COVER_COLOR`(ARGB 16진)를 ffmpeg로 같이 쓴다. 받을 때 · 기존 파일 이관 때 쓰고, 다른 플레이어는 이 칸을 무시한다. 앨범은 영상 정보의 `album`(yt-dlp)을 읽어 곡과 태그에 넣는다 (`MediaHit.album` → `DownloadRequest.album`). 아직 파일 태그를 읽어 DB를 다시 채우는 쪽은 없다.
 
+
+## D-119 · 2026-10-22 · 파일 태그를 읽어 앱 DB 되살리기 (파일이 원본, DB는 캐시)
+- D-114의 태그 쓰기와 대칭으로 **읽는 쪽**을 만든다 (full · Android · mp3 · opus/ogg만). `FileTagSource`가 파일 태그(제목 · 아티스트 · 앨범 · 장르, ID3 TXXX · Vorbis 코멘트의 `COVER_SOURCE` · `COVER_TRANSFORM` · `COVER_COLOR`)를 `FileTags`로 읽는다. `content://`는 쓰기와 같게 `mimeType`으로 형식을 보고 `copyToCache`로 복사해 읽은 뒤 바로 지운다. 읽기는 `audio_metadata_reader`의 `readAllMetadata`.
+- `RestoreFromFileTags`(유스케이스)가 **기기 곡**(앱 밖에서 옮겨 와 새로 찾은 파일, DB가 비었을 때)을 곡마다 한 번 읽어 DB에 채운다: 태그에 값이 있는 칸만 덮고, 커버는 `COVER_SOURCE`가 있으면 웹 커버 + 확대 · 위치 · 각도로, 색은 `COVER_COLOR`로 되살린다. 앱 안에 이미 있는 커버 · 색은 덮지 않는다. 받은 곡은 DB가 원본이라 읽지 않는다 (이관은 기존 `EmbedTagsIntoFiles`).
+- 불러오기(`LibraryImportCubit`)에서 내장 커버 채우기(`FillEmbeddedCovers`) **앞에** 실행한다. 태그에 이미지만 있는 커버는 그 뒤 기존 흐름이 채운다. 가사는 보여 줄 때 이미 태그를 읽으므로(`LyricsRepository.load`) 옮기지 않는다.
+- 읽은 곡은 `library.tagRestoreDone`에 기록한다. 태그가 없거나 지원하지 않는 형식은 끝낸 것으로, 파일을 못 읽은 곡(권한 · 복사 실패)은 기록하지 않아 다음에 다시 시도한다.
+- 주의: 처음 실행하면 이미 있던 기기 곡도 한 번 읽혀, 태그 쓰기에 실패해 DB에만 있던 편집은 파일 값으로 바뀐다 (파일이 원본). ffmpeg가 mp3 가사를 TXXX로 쓸 수 있어 가사는 건드리지 않는다. 실제 기기에서의 읽기는 이 PC에서 확인하지 못했다 (단위 테스트까지).

@@ -4,6 +4,7 @@ import 'package:get_it/get_it.dart';
 
 import 'data/datasources/device_music_data_sources.dart';
 import 'data/datasources/embedded_cover_source.dart';
+import 'data/datasources/file_tag_source.dart';
 import 'data/repositories/embedded_cover_repository_impl.dart';
 import 'data/repositories/device_music_repository_impl.dart';
 import 'data/repositories/drift_library_repository.dart';
@@ -42,6 +43,10 @@ void registerLibrary(GetIt sl) {
       () => TrackTagRepositoryImpl(TrackTagSource()),
     )
     ..registerLazySingleton<TagMigrationStore>(PrefsTagMigrationStore.new)
+    ..registerLazySingleton<FileTagRepository>(
+      () => FileTagRepositoryImpl(FileTagSource()),
+    )
+    ..registerLazySingleton<TagRestoreStore>(PrefsTagRestoreStore.new)
     ..registerLazySingleton<LibraryRepository>(
       () => DriftLibraryRepository(sl()),
     )
@@ -57,6 +62,7 @@ void registerLibrary(GetIt sl) {
     ..registerFactory(() => WatchLibraryTracks(sl()))
     ..registerFactory(() => UpdateTrackInfo(sl(), sl()))
     ..registerFactory(() => EmbedTagsIntoFiles(sl(), sl(), sl(), sl(), sl()))
+    ..registerFactory(() => RestoreFromFileTags(sl(), sl(), sl(), sl(), sl()))
     ..registerFactory(() => DeleteTrack(sl(), sl()))
     ..registerFactory(() => ImportDeviceMusic(sl(), sl(), sl()))
     ..registerFactory(() => LoadLoadedFolders(sl(), sl()))
@@ -65,5 +71,5 @@ void registerLibrary(GetIt sl) {
     ..registerFactory(() => LoadedFoldersCubit(sl(), sl(), sl(), sl()))
     ..registerFactory(() => LibraryCubit(sl(), sl(), sl()))
     ..registerFactory(() => FillEmbeddedCovers(sl(), sl(), sl()))
-    ..registerFactory(() => LibraryImportCubit(sl(), sl(), sl()));
+    ..registerFactory(() => LibraryImportCubit(sl(), sl(), sl(), sl()));
 }
