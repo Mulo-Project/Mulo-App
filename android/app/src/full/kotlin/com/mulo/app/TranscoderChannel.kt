@@ -61,7 +61,7 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
                     }
                     io.execute {
                         try {
-                            val ok = tag(input, meta, output, format)
+                            val ok = tag(input, meta, output, format, call.argument<String>("cover"))
                             main.post { result.success(ok) }
                         } catch (e: Exception) {
                             main.post { result.error("tag_failed", e.message, null) }
@@ -87,18 +87,23 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
      * 소리는 그대로(`-c copy`) 두고 ffmetadata 파일의 태그만 새로 써서 [output]에 만든다.
      * 전체 태그와 첫 오디오 스트림 태그 둘 다에 넣어, ogg 쓰기가 어느 쪽을 읽어도 같다.
      */
-    private fun tag(input: String, meta: String, output: String, format: String): Boolean {
+    private fun tag(input: String, meta: String, output: String, format: String, cover: String?): Boolean {
         ensureInit()
         val ffmpeg = File(context.applicationInfo.nativeLibraryDir, "libffmpeg.so")
         if (!ffmpeg.exists()) return false
         val libs = File(context.noBackupFilesDir, "youtubedl-android/packages/ffmpeg/usr/lib")
         val out = File(output)
         out.delete()
-        val builder = ProcessBuilder(
-            ffmpeg.absolutePath, "-nostdin", "-y", "-i", input, "-i", meta,
-            "-map", "0:a", "-map_metadata", "1", "-map_metadata:s:a:0", "1:g",
-            "-c", "copy", "-f", format, output,
-        )
+        val args = mutableListOf(ffmpeg.absolutePath, "-nostdin", "-y", "-i", input, "-i", meta)
+        if (cover != null) args += listOf("-i", cover)
+        args += listOf("-map", "0:a")
+        // mp3 커버는 그림 입력을 첨부 그림(attached_pic)으로 붙인다.
+        if (cover != null) args += listOf("-map", "2:v", "-disposition:v:0", "attached_pic")
+        args += listOf("-map_metadata", "1", "-map_metadata:s:a:0", "1:g", "-c", "copy")
+        // 다른 플레이어에서도 열리도록 ID3는 v2.3으로 쓴다.
+        if (format == "mp3") args += listOf("-id3v2_version", "3")
+        args += listOf("-f", format, output)
+        val builder = ProcessBuilder(args)
         builder.environment()["LD_LIBRARY_PATH"] =
             libs.absolutePath + (System.getenv("LD_LIBRARY_PATH")?.let { ":$it" } ?: "")
         builder.redirectErrorStream(true)

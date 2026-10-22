@@ -7,7 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'data/datasources/audio_file_downloader.dart';
 import 'data/datasources/audio_transcoder.dart';
 import 'data/datasources/cover_tag_writer.dart';
-import 'data/datasources/opus_tag_writer.dart';
+import 'data/datasources/ffmpeg_tag_writer.dart';
 import 'data/datasources/download_queue_store.dart';
 import 'data/datasources/downloaded_file_store.dart';
 import 'data/repositories/engine_download_queue_repository.dart';
@@ -41,7 +41,7 @@ void registerDownloads(GetIt sl) {
         colors: sl(),
         settings: sl(),
         transcoder: sl(),
-        coverTags: const CoverTagWriter(opus: OpusTagWriter()),
+        coverTags: const CoverTagWriter(ffmpeg: FfmpegTagWriter()),
         lyrics: sl(),
         queueStore: sl(),
         // 받다 만 파일은 앱을 껐다 켜도 남아야 해서 캐시가 아닌 앱 전용 폴더에 둔다.

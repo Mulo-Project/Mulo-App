@@ -1,11 +1,11 @@
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:music_download_play_app/features/downloads/data/datasources/opus_tag_writer.dart';
+import 'package:music_download_play_app/features/downloads/data/datasources/ffmpeg_tag_writer.dart';
 
 void main() {
   test('ffmetadata: 특수문자는 앞에 역슬래시를 붙인다', () {
-    final text = OpusTagWriter.ffmetadata({
+    final text = FfmpegTagWriter.ffmetadata({
       'TITLE': r'a=b;c#d\e',
       'LYRICS': '[00:01.00]첫 줄\n둘째 줄',
     });
@@ -16,7 +16,7 @@ void main() {
 
   test('그림 블록: FLAC 그림 형식(앞면 커버, PNG)', () {
     final png = Uint8List.fromList([1, 2, 3, 4]);
-    final b = OpusTagWriter.pictureBlock(png, 512, 512);
+    final b = FfmpegTagWriter.pictureBlock(png, 512, 512);
     final d = b.buffer.asByteData();
     expect(d.getUint32(0), 3);
     expect(d.getUint32(4), 'image/png'.length);

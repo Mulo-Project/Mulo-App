@@ -5,21 +5,22 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
-/// opus · ogg 파일의 태그(Vorbis 코멘트)를 ffmpeg로 쓴다.
+/// opus · ogg(Vorbis 코멘트)와 mp3(ID3v2.3) 파일의 태그를 ffmpeg로 쓴다.
 ///
-/// 태그 라이브러리(`audio_metadata_reader`)가 ogg 쓰기를 지원하지 않아서, full 빌드에 들어 있는
-/// ffmpeg(`music_app/transcoder`의 `tag`)로 소리는 그대로(`-c copy`) 두고 태그만 다시 감싼다.
+/// full 빌드에 들어 있는 ffmpeg(`music_app/transcoder`의 `tag`)로 소리는 그대로(`-c copy`) 두고 태그만 다시 감싼다.
+/// 이미 변환에 쓰는 ffmpeg라 새 의존이 없고, 한 번에 모든 태그를 쓴다. 다른 플레이어에서도 열리도록 ID3는 v2.3으로 쓴다.
 /// ffmpeg가 없는 lite · 데스크톱은 false (lite는 서버가 태그까지 넣어 준 파일을 저장한다).
-class OpusTagWriter {
-  const OpusTagWriter();
+class FfmpegTagWriter {
+  const FfmpegTagWriter();
 
   static const _channel = MethodChannel('music_app/transcoder');
 
-  static const extensions = {'opus', 'ogg'};
+  static const extensions = {'opus', 'ogg', 'mp3'};
 
   /// 쓸 값이 하나도 없으면 false. 이미 있던 태그는 새 값으로 바뀐다 (빈 값은 건드리지 않는다).
   Future<bool> write(
     File audio, {
+    required String extension,
     String? title,
     String? artist,
     String? album,
@@ -28,27 +29,34 @@ class OpusTagWriter {
     Uint8List? coverPng,
     int coverSide = 512,
   }) async {
+    final mp3 = extension.toLowerCase() == 'mp3';
     final entries = <String, String>{
       if (_has(title)) 'TITLE': title!,
       if (_has(artist)) 'ARTIST': artist!,
       if (_has(album)) 'ALBUM': album!,
       if (_has(genre)) 'GENRE': genre!,
       if (_has(lyrics)) 'LYRICS': lyrics!,
-      if (coverPng != null)
+      // mp3의 커버는 태그 값이 아니라 그림 파일로 따로 넘긴다.
+      if (coverPng != null && !mp3)
         'METADATA_BLOCK_PICTURE': base64.encode(
           pictureBlock(coverPng, coverSide, coverSide),
         ),
     };
-    if (entries.isEmpty) return false;
+    if (entries.isEmpty && (coverPng == null || !mp3)) return false;
     final meta = File('${audio.path}.ffmeta');
     final out = File('${audio.path}.tagged');
+    final art = File('${audio.path}.cover.png');
     try {
       await meta.writeAsString(ffmetadata(entries), flush: true);
+      if (mp3 && coverPng != null) {
+        await art.writeAsBytes(coverPng, flush: true);
+      }
       final ok = await _channel.invokeMethod<bool>('tag', {
         'input': audio.path,
         'meta': meta.path,
         'output': out.path,
-        'format': 'ogg',
+        'format': mp3 ? 'mp3' : 'ogg',
+        if (mp3 && coverPng != null) 'cover': art.path,
       });
       if (ok != true || !await out.exists() || await out.length() == 0) {
         return false;
@@ -62,7 +70,7 @@ class OpusTagWriter {
     } on FileSystemException {
       return false;
     } finally {
-      for (final f in [meta, out]) {
+      for (final f in [meta, out, art]) {
         try {
           if (f.existsSync()) f.deleteSync();
         } on FileSystemException {
