@@ -515,6 +515,15 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get playerSleepTimerUnitHour => '시간';
+
+  @override
+  String get playerSleepTimerUnitMinute => '분';
+
+  @override
+  String get playerSleepTimerStart => '시작';
+
+  @override
   String get playerSleepTimerCleared => '수면 타이머를 껐어요';
 
   @override
@@ -2090,6 +2099,11 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get notifPreviewLabel => '미리 듣기';
+
+  @override
+  String notifSleepAt(String time) {
+    return '$time에 수면 타이머';
+  }
 
   @override
   String get notifHiddenNote => '곡 정보 숨김';

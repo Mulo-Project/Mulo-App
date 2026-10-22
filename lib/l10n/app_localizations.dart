@@ -1052,6 +1052,24 @@ abstract class AppLocalizations {
   /// **'{minutes}분 뒤 재생을 멈춰요'**
   String playerSleepTimerSet(int minutes);
 
+  /// No description provided for @playerSleepTimerUnitHour.
+  ///
+  /// In ko, this message translates to:
+  /// **'시간'**
+  String get playerSleepTimerUnitHour;
+
+  /// No description provided for @playerSleepTimerUnitMinute.
+  ///
+  /// In ko, this message translates to:
+  /// **'분'**
+  String get playerSleepTimerUnitMinute;
+
+  /// No description provided for @playerSleepTimerStart.
+  ///
+  /// In ko, this message translates to:
+  /// **'시작'**
+  String get playerSleepTimerStart;
+
   /// No description provided for @playerSleepTimerCleared.
   ///
   /// In ko, this message translates to:
@@ -3943,6 +3961,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'미리 듣기'**
   String get notifPreviewLabel;
+
+  /// No description provided for @notifSleepAt.
+  ///
+  /// In ko, this message translates to:
+  /// **'{time}에 수면 타이머'**
+  String notifSleepAt(String time);
 
   /// No description provided for @notifHiddenNote.
   ///

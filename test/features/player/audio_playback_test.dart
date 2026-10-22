@@ -214,7 +214,7 @@ void main() {
 
   test('셔플 중 엔진이 한 바퀴를 돌아 처음으로 오면 순서를 새로 섞는다', () async {
     cubit.playQueue(tracks);
-    cubit.toggleShuffle();
+    cubit.toggleShuffle(currentFirst: true);
     await settle();
     final order = cubit.state.queue.map((t) => t.id).toList();
     engine.emitTrack(1);

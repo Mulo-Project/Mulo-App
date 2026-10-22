@@ -286,6 +286,25 @@ void main() {
     expect(session.updates.last!.shuffle, isTrue);
   });
 
+  test('수면 타이머가 켜져 있으면 끝나는 시각이 부제목에 붙고, 꺼지면 사라진다', () async {
+    Future<void> sync(DateTime? end) => cubit.syncPlayback(
+      track: track,
+      isPlaying: true,
+      position: Duration.zero,
+      hasPrevious: true,
+      hasNext: true,
+      artUri: null,
+      sleepEndsAt: end,
+      settings: on,
+      l10n: l10n,
+      now: DateTime(2026),
+    );
+    await sync(DateTime(2026, 1, 1, 3, 5));
+    expect(session.updates.last!.artist, '가수 · 03:05에 수면 타이머');
+    await sync(null);
+    expect(session.updates.last!.artist, '가수');
+  });
+
   test('곡 정보 숨기기를 켜면 제목 · 아티스트 · 커버를 보내지 않는다', () async {
     await play(on.copyWith(hideSongInfo: true));
     final info = session.updates.single!;

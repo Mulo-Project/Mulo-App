@@ -528,6 +528,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get playerSleepTimerUnitHour => 'h';
+
+  @override
+  String get playerSleepTimerUnitMinute => 'm';
+
+  @override
+  String get playerSleepTimerStart => 'Start';
+
+  @override
   String get playerSleepTimerCleared => 'Sleep timer is off';
 
   @override
@@ -2149,6 +2158,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifPreviewLabel => 'Preview';
+
+  @override
+  String notifSleepAt(String time) {
+    return 'Sleep timer at $time';
+  }
 
   @override
   String get notifHiddenNote => 'Song info hidden';

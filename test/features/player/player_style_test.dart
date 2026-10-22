@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:music_download_play_app/core/design/design.dart'
+    show WheelPicker;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -146,7 +148,9 @@ void main() {
 
     await tester.tap(find.byTooltip('수면 타이머'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('30분 뒤 멈춤'));
+    // 휠의 처음 값은 30분이다.
+    expect(find.byType(WheelPicker), findsNWidgets(2));
+    await tester.tap(find.text('시작'));
     await tester.pumpAndSettle();
     expect(find.text('30분 뒤 재생을 멈춰요'), findsOneWidget);
     // 하단 스낵바가 버튼을 가리지 않게 걷는다.
