@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -28,11 +30,13 @@ class LibraryImportState extends Equatable {
 
 /// 기기 음악 불러오기 (#11). 곡 목록을 먼저 보여 준 뒤 뒤에서 파일 내장 커버를 채운다.
 class LibraryImportCubit extends Cubit<LibraryImportState> {
-  LibraryImportCubit(this._import, this._fillCovers)
+  LibraryImportCubit(this._import, this._fillCovers, [this._embedTags])
     : super(const LibraryImportState());
 
   final ImportDeviceMusic _import;
   final FillEmbeddedCovers _fillCovers;
+  final EmbedTagsIntoFiles? _embedTags;
+  Timer? _embedTimer;
   bool _filling = false;
 
   Future<void> importDeviceMusic() async {
@@ -76,5 +80,24 @@ class LibraryImportCubit extends Cubit<LibraryImportState> {
     } finally {
       _filling = false;
     }
+  }
+
+  /// 받아 둔 곡의 파일 태그를 뒤에서 채운다 (앱 시작을 막지 않도록 잠시 뒤에, 곡마다 기록해 이어서).
+  void embedTagsInBackground({Duration delay = const Duration(seconds: 5)}) {
+    final embed = _embedTags;
+    if (embed == null || _embedTimer != null) return;
+    _embedTimer = Timer(delay, () async {
+      try {
+        await embed(const NoParams());
+      } on Exception {
+        // 이관은 덤이라 실패해도 다음 실행에 이어서 한다.
+      }
+    });
+  }
+
+  @override
+  Future<void> close() {
+    _embedTimer?.cancel();
+    return super.close();
   }
 }
