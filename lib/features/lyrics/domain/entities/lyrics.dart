@@ -110,6 +110,21 @@ class Lyrics extends Equatable {
     return found;
   }
 
+  /// [index] 줄과 시간이 같은 이웃 줄들의 범위 (첫 줄 번호, 끝 줄 번호). 싱크 화면에서 한 칸으로 묶은 줄은
+  /// 같은 시간으로 저장되므로 가사 보기에서 한 덩어리로 함께 강조한다. 범위 밖(-1 등)이면 그대로 돌려준다.
+  (int, int) groupAt(int index) {
+    if (index < 0 || index >= lines.length) return (index, index);
+    final time = lines[index].time;
+    var first = index, last = index;
+    while (first > 0 && lines[first - 1].time == time) {
+      first--;
+    }
+    while (last + 1 < lines.length && lines[last + 1].time == time) {
+      last++;
+    }
+    return (first, last);
+  }
+
   @override
   List<Object?> get props => [raw];
 }

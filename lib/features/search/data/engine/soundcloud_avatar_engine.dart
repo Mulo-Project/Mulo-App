@@ -6,6 +6,7 @@ import '../../domain/entities/audio_stream.dart';
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/search_source.dart';
+import '../../domain/entities/subtitle_track.dart';
 import '../../domain/repositories/downloader_engine.dart';
 
 /// 주소의 페이지 본문을 읽는다 (테스트에서 바꿔 끼운다). 못 읽으면 null.
@@ -103,6 +104,11 @@ class SoundcloudAvatarEngine implements DownloaderEngine {
   @override
   Future<AudioStream> resolveAudioStream(String url, {bool refresh = false}) =>
       _inner.resolveAudioStream(url, refresh: refresh);
+  @override
+  Future<SubtitleTrack?> fetchSubtitles(
+    String url, {
+    List<String> preferLanguages = const ['ko', 'en'],
+  }) => _inner.fetchSubtitles(url, preferLanguages: preferLanguages);
 }
 
 Future<String?> _fetchPage(Uri url) async {

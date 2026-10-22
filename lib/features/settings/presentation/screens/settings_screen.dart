@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../lyrics/presentation/bloc/lyrics_settings_cubit.dart';
+import '../../../lyrics/presentation/screens/lyrics_latency_screen.dart';
 import '../../../../app/router.dart';
 import '../../../../core/app_info.dart';
 import '../../../../core/config/app_config.dart';
@@ -311,6 +313,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       trailing: const _Chevron(),
                       onTap: () => context.push(Routes.equalizer),
                     ),
+                  SettingRow(
+                    title: l10n.lyricsLatencyTitle,
+                    description: l10n.lyricsLatencySeconds(
+                      (context.watch<LyricsSettingsCubit>().state.latencyMs /
+                              1000)
+                          .toStringAsFixed(2),
+                    ),
+                    trailing: const _Chevron(),
+                    onTap: () => showLyricsLatency(context),
+                  ),
                 ],
               ),
               const SizedBox(height: AppSpacing.lg),

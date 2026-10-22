@@ -310,6 +310,10 @@ class _DetailViewState extends State<_DetailView> {
                         duration: hit.duration,
                         thumbnailUrl: hit.thumbnailUrl,
                         url: hit.url,
+                        subtitleLangs: hit.subtitleLangs.isEmpty
+                            ? null
+                            : hit.subtitleLangs,
+                        autoSubtitleLangs: hit.autoSubtitleLangs,
                       ),
                     ),
                   ],

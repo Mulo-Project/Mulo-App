@@ -2096,6 +2096,156 @@ abstract class AppLocalizations {
   /// **'기본으로'**
   String get downloadCoverDefault;
 
+  /// No description provided for @downloadImportLyrics.
+  ///
+  /// In ko, this message translates to:
+  /// **'자막을 가사로 가져오기'**
+  String get downloadImportLyrics;
+
+  /// No description provided for @downloadImportLyricsHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'받은 뒤 가사 보기의 싱크 설정에서 다듬을 수 있어요.'**
+  String get downloadImportLyricsHint;
+
+  /// No description provided for @downloadSubtitleChecking.
+  ///
+  /// In ko, this message translates to:
+  /// **'자막이 있는지 확인하는 중이에요.'**
+  String get downloadSubtitleChecking;
+
+  /// No description provided for @downloadSubtitleNone.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 영상에는 자막이 없어요.'**
+  String get downloadSubtitleNone;
+
+  /// No description provided for @downloadSubtitleUnknown.
+  ///
+  /// In ko, this message translates to:
+  /// **'자막을 확인하지 못했어요. 켜 두면 받은 뒤 다시 찾아봐요.'**
+  String get downloadSubtitleUnknown;
+
+  /// No description provided for @downloadSubtitleLanguage.
+  ///
+  /// In ko, this message translates to:
+  /// **'자막 언어'**
+  String get downloadSubtitleLanguage;
+
+  /// No description provided for @downloadSubtitleAuto.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동으로 고르기'**
+  String get downloadSubtitleAuto;
+
+  /// No description provided for @downloadSubtitleAutoHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'한국어 → 영어 → 첫 번째 자막 순으로 골라요.'**
+  String get downloadSubtitleAutoHint;
+
+  /// No description provided for @downloadLyricsPreviewLoading.
+  ///
+  /// In ko, this message translates to:
+  /// **'불러오는 중…'**
+  String get downloadLyricsPreviewLoading;
+
+  /// No description provided for @downloadLyricsPreviewFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'자막을 불러오지 못했어요.'**
+  String get downloadLyricsPreviewFailed;
+
+  /// No description provided for @downloadSubtitleEditHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'글은 고칠 수 있지만 시간은 바꿀 수 없어요. 싱크는 받은 뒤 재생 화면에서 맞춰요.'**
+  String get downloadSubtitleEditHint;
+
+  /// No description provided for @downloadSubtitleUseEdited.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 자막 사용'**
+  String get downloadSubtitleUseEdited;
+
+  /// No description provided for @downloadSubtitleEdited.
+  ///
+  /// In ko, this message translates to:
+  /// **'수정함'**
+  String get downloadSubtitleEdited;
+
+  /// No description provided for @downloadLyricsRetry.
+  ///
+  /// In ko, this message translates to:
+  /// **'다시 불러오기'**
+  String get downloadLyricsRetry;
+
+  /// No description provided for @downloadSubtitleUse.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 자막 사용'**
+  String get downloadSubtitleUse;
+
+  /// No description provided for @downloadSubtitleInUse.
+  ///
+  /// In ko, this message translates to:
+  /// **'사용 중인 자막'**
+  String get downloadSubtitleInUse;
+
+  /// No description provided for @downloadLyricsSkipSounds.
+  ///
+  /// In ko, this message translates to:
+  /// **'효과음 줄 빼기'**
+  String get downloadLyricsSkipSounds;
+
+  /// No description provided for @downloadLyricsSkipSoundsHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'[음악] · (박수) · ♪ 같은 줄은 가사로 가져오지 않아요.'**
+  String get downloadLyricsSkipSoundsHint;
+
+  /// No description provided for @downloadSubtitleColLanguage.
+  ///
+  /// In ko, this message translates to:
+  /// **'언어'**
+  String get downloadSubtitleColLanguage;
+
+  /// No description provided for @downloadSubtitleColKind.
+  ///
+  /// In ko, this message translates to:
+  /// **'종류'**
+  String get downloadSubtitleColKind;
+
+  /// No description provided for @downloadSubtitleKindAuto.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동 생성'**
+  String get downloadSubtitleKindAuto;
+
+  /// No description provided for @downloadSubtitleKindManual.
+  ///
+  /// In ko, this message translates to:
+  /// **'직접 단 자막'**
+  String get downloadSubtitleKindManual;
+
+  /// No description provided for @downloadSubtitleFound.
+  ///
+  /// In ko, this message translates to:
+  /// **'자막 {count}개를 찾았어요.'**
+  String downloadSubtitleFound(int count);
+
+  /// No description provided for @downloadSectionSave.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장'**
+  String get downloadSectionSave;
+
+  /// No description provided for @downloadSectionLyrics.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사'**
+  String get downloadSectionLyrics;
+
   /// No description provided for @downloadCancelTitle.
   ///
   /// In ko, this message translates to:
@@ -2618,6 +2768,72 @@ abstract class AppLocalizations {
   /// **'가사를 붙여넣거나 입력하세요. [01:02.30]처럼 시간이 붙은 글이나 .lrc · .txt 파일을 불러오면 싱크 가사가 돼요. 비워서 저장하면 가사를 지워요.'**
   String get lyricsEditHint;
 
+  /// No description provided for @lyricsEditSyncedHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'왼쪽 시간은 줄 번호에 맞춰 붙어 있어요. 줄을 끼우거나 지우면 시간은 그 자리에 남고 글만 밀려요. 시간은 싱크 설정에서 바꿔요.'**
+  String get lyricsEditSyncedHint;
+
+  /// No description provided for @lyricsAddLine.
+  ///
+  /// In ko, this message translates to:
+  /// **'줄 추가'**
+  String get lyricsAddLine;
+
+  /// No description provided for @lyricsDeleteLine.
+  ///
+  /// In ko, this message translates to:
+  /// **'줄 지우기'**
+  String get lyricsDeleteLine;
+
+  /// No description provided for @lyricsTimePrev.
+  ///
+  /// In ko, this message translates to:
+  /// **'이전'**
+  String get lyricsTimePrev;
+
+  /// No description provided for @lyricsTimeNow.
+  ///
+  /// In ko, this message translates to:
+  /// **'현재'**
+  String get lyricsTimeNow;
+
+  /// No description provided for @lyricsTimeNext.
+  ///
+  /// In ko, this message translates to:
+  /// **'다음'**
+  String get lyricsTimeNext;
+
+  /// No description provided for @lyricsTimeNone.
+  ///
+  /// In ko, this message translates to:
+  /// **'없음'**
+  String get lyricsTimeNone;
+
+  /// No description provided for @lyricsTimeGroupedAbove.
+  ///
+  /// In ko, this message translates to:
+  /// **'앞 줄과 같은 시간이라 묶여요'**
+  String get lyricsTimeGroupedAbove;
+
+  /// No description provided for @lyricsTimeGroupedBelow.
+  ///
+  /// In ko, this message translates to:
+  /// **'다음 줄과 같은 시간이라 묶여요'**
+  String get lyricsTimeGroupedBelow;
+
+  /// No description provided for @lyricsTimeSeparate.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 줄부터 묶음에서 떼기'**
+  String get lyricsTimeSeparate;
+
+  /// No description provided for @lyricsTimeClearFrom.
+  ///
+  /// In ko, this message translates to:
+  /// **'여기부터 싱크 지우기'**
+  String get lyricsTimeClearFrom;
+
   /// No description provided for @lyricsLoadFile.
   ///
   /// In ko, this message translates to:
@@ -2935,6 +3151,150 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'싱크 추적'**
   String get lyricsFollow;
+
+  /// No description provided for @lyricsThemeList.
+  ///
+  /// In ko, this message translates to:
+  /// **'목록'**
+  String get lyricsThemeList;
+
+  /// No description provided for @lyricsThemeCentered.
+  ///
+  /// In ko, this message translates to:
+  /// **'가운데 한 줄'**
+  String get lyricsThemeCentered;
+
+  /// No description provided for @lyricsThemeCover.
+  ///
+  /// In ko, this message translates to:
+  /// **'커버 배경'**
+  String get lyricsThemeCover;
+
+  /// No description provided for @themeTabPlayer.
+  ///
+  /// In ko, this message translates to:
+  /// **'플레이어'**
+  String get themeTabPlayer;
+
+  /// No description provided for @themeTabLyrics.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사'**
+  String get themeTabLyrics;
+
+  /// No description provided for @lyricsLatencyTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'반응 시간 보정'**
+  String get lyricsLatencyTitle;
+
+  /// No description provided for @lyricsLatencyEntry.
+  ///
+  /// In ko, this message translates to:
+  /// **'반응 시간 보정'**
+  String get lyricsLatencyEntry;
+
+  /// No description provided for @lyricsLatencyIntro.
+  ///
+  /// In ko, this message translates to:
+  /// **'소리를 듣고 지금을 누르면 반응 시간만큼 늦게 찍혀요. 누른 시간에서 아래 값만큼 앞당겨 찍어요.'**
+  String get lyricsLatencyIntro;
+
+  /// No description provided for @lyricsLatencySeconds.
+  ///
+  /// In ko, this message translates to:
+  /// **'{s}초'**
+  String lyricsLatencySeconds(String s);
+
+  /// No description provided for @lyricsLatencyReset.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본값 0.20초로'**
+  String get lyricsLatencyReset;
+
+  /// No description provided for @lyricsBeatTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'박자 테스트'**
+  String get lyricsBeatTitle;
+
+  /// No description provided for @lyricsBeatBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'소리와 함께 원이 깜빡여요. 깜빡일 때마다 가운데 원을 눌러 보세요. 8번 누르면 평균을 계산해 추천 값을 알려 줘요.'**
+  String get lyricsBeatBody;
+
+  /// No description provided for @lyricsBeatIdle.
+  ///
+  /// In ko, this message translates to:
+  /// **'시작을 누르세요'**
+  String get lyricsBeatIdle;
+
+  /// No description provided for @lyricsBeatProgress.
+  ///
+  /// In ko, this message translates to:
+  /// **'{n}/{total}번'**
+  String lyricsBeatProgress(int n, int total);
+
+  /// No description provided for @lyricsBeatStart.
+  ///
+  /// In ko, this message translates to:
+  /// **'시작'**
+  String get lyricsBeatStart;
+
+  /// No description provided for @lyricsBeatStop.
+  ///
+  /// In ko, this message translates to:
+  /// **'멈추기'**
+  String get lyricsBeatStop;
+
+  /// No description provided for @lyricsBeatResult.
+  ///
+  /// In ko, this message translates to:
+  /// **'추천 보정 {s}초'**
+  String lyricsBeatResult(String s);
+
+  /// No description provided for @lyricsBeatApply.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 값으로 적용'**
+  String get lyricsBeatApply;
+
+  /// No description provided for @lyricsBeatNote.
+  ///
+  /// In ko, this message translates to:
+  /// **'기기마다 화면과 소리 지연이 달라서 안드로이드 기준이에요. 데스크톱은 오차가 클 수 있어요.'**
+  String get lyricsBeatNote;
+
+  /// No description provided for @lyricsSongCheckTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡으로 확인'**
+  String get lyricsSongCheckTitle;
+
+  /// No description provided for @lyricsSongCheckBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡을 들으면서 소리가 시작되는 순간 찍어 보기를 눌러 보세요. 찍힌 위치부터 다시 들으면 맞게 찍혔는지 알 수 있어요.'**
+  String get lyricsSongCheckBody;
+
+  /// No description provided for @lyricsSongTry.
+  ///
+  /// In ko, this message translates to:
+  /// **'찍어 보기'**
+  String get lyricsSongTry;
+
+  /// No description provided for @lyricsSongTried.
+  ///
+  /// In ko, this message translates to:
+  /// **'찍힌 위치 {clock}'**
+  String lyricsSongTried(String clock);
+
+  /// No description provided for @lyricsSongListen.
+  ///
+  /// In ko, this message translates to:
+  /// **'찍힌 위치부터 듣기'**
+  String get lyricsSongListen;
 
   /// No description provided for @lyricsSyncSkipTitle.
   ///

@@ -38,6 +38,10 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
   /// 일반 글 가사만 줄을 묶을 수 있다. 싱크 가사는 이미 시간이 있다.
   bool get canGroup => !_lyrics.isSynced;
 
+  /// 줄을 꾹 눌러 끌어 한 칸으로 묶고 풀 수 있는가. 싱크가 있는 가사도 된다
+  /// (묶으면 맨 앞 칸의 시간을 쓰고 나머지 칸의 시간은 사라진다).
+  bool get canMerge => true;
+
   /// 기본 줄 수를 바꾸면 사라지는 작업(건너뛰어 묶은 칸 · 찍은 시간)이 있는가.
   bool get loseOnSetGroup =>
       state.draft.stamped > 0 || state.draft.isCustom(state.group);
@@ -91,7 +95,7 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
   /// 묶인 [index] 칸을 줄별로 펼친다. 줄마다 시간을 따로 정할 수 있고, 영역 밖으로 포커스가 나가면
   /// 시간이 같은 줄은 다시 합쳐진다.
   void expand(int index) {
-    if (!canGroup || index < 0 || index >= state.draft.length) return;
+    if (!canMerge || index < 0 || index >= state.draft.length) return;
     final r = _collapsed();
     final target = r.map(index);
     if (target >= r.draft.length || r.draft.sizes[target] < 2) return;
@@ -115,7 +119,7 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
   /// 묶인 [index] 칸을 기본 줄 수로 다시 나눈다. 나눈 칸은 이 칸의 시간을 그대로 가져서
   /// (찍은 칸이면 모두 찍힌 채로) 공백이 생기지 않고, 이어서 줄마다 시간을 다듬으면 된다.
   void split(int index) {
-    if (!canGroup || !isMerged(index)) return;
+    if (!canMerge || !isMerged(index)) return;
     final at = _collapseNow()(index);
     final draft = state.draft;
     if (at >= draft.length || draft.sizes[at] <= state.group) return;
@@ -139,7 +143,7 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
   /// [from]~[to] 칸을 한 칸으로 묶는다 (끌어서 고른 범위). [from] 칸의 시간을 쓰고, 나머지 칸의
   /// 싱크는 사라진다.
   void mergeRange(int from, int to) {
-    if (!canGroup) return;
+    if (!canMerge) return;
     final map = _collapseNow();
     final a = map(from), b = map(to);
     final draft = state.draft;
@@ -169,7 +173,7 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
     var draft = state.draft;
     var at = draft.current;
     if (at >= draft.length) return;
-    // 랩처럼 소리가 겹치는 곳도 있어서, 같은 시간이어도 자동으로 묶지 않는다 (줄은 따로 남는다).
+    // 찍은 칸이 이웃 칸과 같은 시간이 되면 그 칸들을 바로 한 묶음으로 보인다 (저장하고 다시 열 때와 같게).
     // 첫 싱크를 가운데 줄에서 시작했다면, 맨 앞 줄부터 그 줄까지를 한 칸으로 묶어 같은 시간으로 찍는다.
     if (canGroup && draft.stamped == 0 && at > 0 && state.expanded == null) {
       draft = draft.mergeRange(0, at).moveTo(0);
@@ -178,12 +182,33 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
     var stamped = draft.stamp(position);
     // 앞쪽으로 당겨 찍어 그 앞의 싱크가 함께 내려왔다면, 바뀐 것 중 맨 앞 칸으로 포커스를 돌려 확인하게 한다.
     var focus = at + 1 < stamped.length ? at + 1 : at;
+    var redirected = false;
     for (var i = 0; i < at; i++) {
       if (stamped.times[i] != draft.times[i]) {
         stamped = stamped.moveTo(i);
         focus = i;
+        redirected = true;
         break;
       }
+    }
+    // 펼쳐서 줄별로 다듬는 중이거나 앞 싱크가 함께 내려온 경우가 아니면, 같은 시간의 이웃 칸을 묶는다.
+    // 한 번 찍을 때 앞 또는 뒤 한 칸(홑줄)만 묶는다. 이미 묶인 칸은 삼키지 않아 묶음이 제한 없이 뻗지 않고,
+    // 묶음을 더 키우려면 그 묶음을 다시 골라 찍는다.
+    if (!redirected && state.expanded == null) {
+      var idx = at;
+      final t = stamped.times;
+      final s = stamped.sizes;
+      if (t[idx] != null) {
+        if (idx > 0 && t[idx] == t[idx - 1] && s[idx - 1] == 1) {
+          stamped = stamped.mergeRange(idx - 1, idx);
+          idx -= 1;
+        } else if (idx + 1 < stamped.length &&
+            t[idx] == t[idx + 1] &&
+            s[idx + 1] == 1) {
+          stamped = stamped.mergeRange(idx, idx + 1);
+        }
+      }
+      focus = idx + 1 < stamped.length ? idx + 1 : idx;
     }
     // 그렇지 않으면 찍은 뒤 포커스가 자동으로 다음 칸으로 넘어간다 (지금은 포커스한 칸만 바꾼다).
     _put(stamped, selected: focus);
@@ -229,6 +254,24 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
   /// 가장 뒤에 찍은 싱크를 하나 지우고 그 칸으로 돌아간다 (다시 찍으려는 뒤로 가기). 되돌리기로 복구된다.
   void stepBack() {
     final draft = state.draft;
+    // 묶인 칸이 마지막이면 수정 중이므로 묶음을 풀고(줄마다 그 시간 그대로) 맨 끝 줄만 비운다.
+    final last = draft.times.lastIndexWhere((t) => t != null);
+    if (last >= 0 && draft.sizes[last] > 1 && canMerge) {
+      final map = _collapseNow();
+      final at = map(last);
+      final d = state.draft;
+      final n = d.sizes[at];
+      final next = d.explode(at).unstampLast();
+      emit(
+        LyricsSyncState(
+          next,
+          selected: next.current,
+          group: state.group,
+          expanded: (at, n),
+        ),
+      );
+      return;
+    }
     final next = draft.unstampLast();
     if (next == draft) return;
     _put(next, selected: next.current);

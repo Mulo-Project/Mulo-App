@@ -1,6 +1,7 @@
 import '../../../../core/usecase/usecase.dart';
 import '../entities/audio_stream.dart';
 import '../entities/media_info.dart';
+import '../entities/subtitle_track.dart';
 import '../entities/preview_progress.dart';
 import '../entities/search_source.dart';
 import '../repositories/downloader_engine.dart';
@@ -65,6 +66,27 @@ class FetchMediaInfo implements UseCase<MediaInfo, String> {
 
   @override
   Future<MediaInfo> call(String url) => _engine.fetchInfo(url.trim());
+}
+
+class FetchSubtitlesParams {
+  const FetchSubtitlesParams(this.url, [this.languages]);
+
+  final String url;
+
+  /// 우선할 언어 순서. null이면 엔진 기본(한국어 → 영어 → 첫 언어).
+  final List<String>? languages;
+}
+
+/// 곡의 자막 한 벌 불러오기 (받기 전 가사 미리보기). 자막이 없으면 null.
+class FetchSubtitles implements UseCase<SubtitleTrack?, FetchSubtitlesParams> {
+  const FetchSubtitles(this._engine);
+
+  final DownloaderEngine _engine;
+
+  @override
+  Future<SubtitleTrack?> call(FetchSubtitlesParams p) => p.languages == null
+      ? _engine.fetchSubtitles(p.url.trim())
+      : _engine.fetchSubtitles(p.url.trim(), preferLanguages: p.languages!);
 }
 
 /// 채널 이미지 · 구독자 수 불러오기 (상세 보기).

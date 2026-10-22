@@ -1,6 +1,7 @@
 import '../entities/audio_stream.dart';
 import '../entities/media_info.dart';
 import '../entities/search_source.dart';
+import '../entities/subtitle_track.dart';
 
 /// 음원 사이트에서 찾고 받는 엔진 (서버 모드 `ServerEngine` / 로컬 모드 `LocalEngine`).
 /// 지금은 검색 · 곡 정보만 있다. 받기는 다음 작업에서 더한다.
@@ -35,4 +36,11 @@ abstract interface class DownloaderEngine {
   ///
   /// [refresh]가 true면 기억해 둔 주소를 쓰지 않고 새로 읽는다 (받다가 403 등으로 막혔을 때 다시 읽기).
   Future<AudioStream> resolveAudioStream(String url, {bool refresh = false});
+
+  /// 곡의 자막 한 벌을 가져온다 (가사로 가져오기). 사람이 단 자막을 먼저 쓰고, 없으면 자동 자막,
+  /// 언어는 [preferLanguages] 순서를 따른다. 자막이 없으면 null.
+  Future<SubtitleTrack?> fetchSubtitles(
+    String url, {
+    List<String> preferLanguages = const ['ko', 'en'],
+  });
 }

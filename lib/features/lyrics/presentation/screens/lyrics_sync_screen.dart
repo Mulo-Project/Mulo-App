@@ -9,8 +9,10 @@ import '../../../../core/l10n/l10n.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/lyrics.dart';
+import '../bloc/lyrics_settings_cubit.dart';
 import '../bloc/lyrics_sync_cubit.dart';
 import '../widgets/lyrics_dialogs.dart';
+import 'lyrics_latency_screen.dart';
 
 /// 가사 글 [text]를 곡에 맞춰 줄마다 시간을 찍는 화면을 연다.
 /// 저장하면 LRC 글을, 닫으면 null을 돌려준다. [text]가 비어 있으면 열지 않고 null.
@@ -103,25 +105,39 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
     if (group != null) sync.setGroup(group);
   }
 
-  /// 위쪽 메뉴: 기본 줄 수를 바꾼다. 직접 묶은 줄이 있으면 사라진다고 먼저 알린다.
-  Future<void> _changeDefaultGroup(BuildContext buttonContext) async {
+  /// 위쪽 메뉴: 기본 줄 수를 바꾸거나 반응 시간 보정 페이지를 연다.
+  /// 줄 수를 바꿀 때 직접 묶은 줄이 있으면 사라진다고 먼저 알린다.
+  Future<void> _openMenu(BuildContext buttonContext) async {
     final l10n = context.l10n;
     final sync = context.read<LyricsSyncCubit>();
-    final group = await showAppMenu<int>(
+    const latency = 0;
+    final picked = await showAppMenu<int>(
       buttonContext,
       items: [
-        for (final n in const [1, 2, 3, 4])
-          AppMenuItem(
-            value: n,
-            icon: AppIcons.lineSpacing,
-            label: l10n.lyricsSyncGroupLines(n),
-            selected: n == sync.state.group,
-          ),
+        if (sync.canGroup)
+          for (final n in const [1, 2, 3, 4])
+            AppMenuItem(
+              value: n,
+              icon: AppIcons.lineSpacing,
+              label: l10n.lyricsSyncGroupLines(n),
+              selected: n == sync.state.group,
+            ),
+        AppMenuItem(
+          value: latency,
+          icon: AppIcons.tune,
+          label: l10n.lyricsLatencyEntry,
+          dividerBefore: sync.canGroup,
+        ),
       ],
     );
-    if (group == null || group == sync.state.group || !mounted) return;
+    if (picked == null || !mounted) return;
+    if (picked == latency) {
+      await showLyricsLatency(context);
+      return;
+    }
+    if (picked == sync.state.group) return;
     if (sync.loseOnSetGroup && !await confirmLyricsGroupReset(context)) return;
-    sync.setGroup(group);
+    sync.setGroup(picked);
   }
 
   /// 나가기: 다 찍었으면 그대로 나가고, 덜 찍었으면 저장하고 나갈지 묻는다.
@@ -158,7 +174,10 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
     final np = context.read<NowPlayingCubit>();
     final sync = context.read<LyricsSyncCubit>();
     final stamped = sync.state.draft.current;
-    sync.stamp(np.state.position);
+    // 소리를 듣고 누르는 반응 시간만큼 앞당겨 찍는다.
+    final latency = context.read<LyricsSettingsCubit>().state.latency;
+    final at = np.state.position - latency;
+    sync.stamp(at < Duration.zero ? Duration.zero : at);
     // 찍은 뒤 포커스가 이미 싱크된 칸으로 넘어갔으면, 재생도 그 싱크 위치로 맞춘다 (빈 칸이면 그대로 이어서 재생).
     final next = sync.state.selected;
     final time = next == null ? null : sync.state.draft.times[next];
@@ -234,9 +253,9 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
         selected: state.selected == i,
         inRange: dragRange,
         afterFocus: state.selected != null && i == state.selected! + 1,
-        canGroup: sync.canGroup,
+        canMerge: sync.canMerge,
         clock: _clock,
-        onLongPress: sync.canGroup && merged ? () => sync.expand(i) : null,
+        onLongPress: sync.canMerge && merged ? () => sync.expand(i) : null,
         onTap: () {
           // 줄을 눌러서는 싱크를 찍지 않는다 (싱크 등록은 지금 버튼으로만).
           sync.select(i);
@@ -248,7 +267,7 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
         },
       );
       // 한 줄짜리 칸은 꾹 누른 채 아래로 끌어 묶을 범위를 고른다.
-      if (!sync.canGroup || merged) return line;
+      if (!sync.canMerge || merged) return line;
       return GestureDetector(
         behavior: HitTestBehavior.translucent,
         onLongPressStart: (_) => setState(() {
@@ -392,7 +411,6 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
       listener: (_, s) => _scrollTo(s.draft.current),
       builder: (context, state) {
         final draft = state.draft;
-        final sync = context.read<LyricsSyncCubit>();
         // 줄을 다시 묶어도 같은 칸은 같은 키를 쓴다 (끌고 있는 위젯이 다시 만들어지지 않게).
         while (_keys.length < draft.length) {
           _keys.add(GlobalKey());
@@ -417,14 +435,13 @@ class _LyricsSyncScreenState extends State<LyricsSyncScreen> {
                       onPressed: _confirmLeave,
                     ),
                     actions: [
-                      if (sync.canGroup)
-                        Builder(
-                          builder: (buttonContext) => CircleIconButton(
-                            icon: AppIcons.more,
-                            tooltip: l10n.lyricsSyncDefaultLines,
-                            onPressed: () => _changeDefaultGroup(buttonContext),
-                          ),
+                      Builder(
+                        builder: (buttonContext) => CircleIconButton(
+                          icon: AppIcons.more,
+                          tooltip: l10n.lyricsSyncDefaultLines,
+                          onPressed: () => _openMenu(buttonContext),
                         ),
+                      ),
                       CircleIconButton(
                         icon: AppIcons.check,
                         // 다 찍었으면 강조해서 저장하고, 덜 찍었어도 누르면 찍은 곳까지 중간 저장한다.
@@ -517,7 +534,7 @@ class _LineRow extends StatelessWidget {
     required this.selected,
     this.inRange = false,
     this.afterFocus = false,
-    required this.canGroup,
+    required this.canMerge,
     required this.clock,
     required this.onTap,
     this.onLongPress,
@@ -528,7 +545,7 @@ class _LineRow extends StatelessWidget {
   final bool selected;
   final bool inRange;
   final bool afterFocus;
-  final bool canGroup;
+  final bool canMerge;
   final String Function(Duration) clock;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
@@ -604,7 +621,7 @@ class _LineRow extends StatelessWidget {
           ),
         ),
         // 건너뛰어 같은 시간으로 묶인 칸은 따로 표시하고, 다시 나눌 수 있게 한다.
-        if (canGroup && sync.isMerged(index))
+        if (canMerge && sync.isMerged(index))
           Padding(
             padding: const EdgeInsets.only(left: 76 + AppSpacing.sm + 3),
             child: Row(

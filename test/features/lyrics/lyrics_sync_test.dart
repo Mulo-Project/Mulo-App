@@ -136,17 +136,41 @@ void main() {
     expect(cubit.state.draft.times[0], const Duration(seconds: 1));
   });
 
-  test('같은 시간에 지금을 또 눌러도 자동으로 묶이지 않고 줄이 따로 남는다', () {
+  test('같은 시간에 지금을 또 누르면 바로 한 묶음으로 합쳐진다', () {
     final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다')!)
       ..stamp(const Duration(seconds: 2))
       ..stamp(const Duration(seconds: 2))
       ..stamp(const Duration(seconds: 5));
-    expect(cubit.state.draft.texts, ['가', '나', '다']);
+    expect(cubit.state.draft.texts, ['가\n나', '다']);
     expect(cubit.state.draft.times, [
-      const Duration(seconds: 2),
       const Duration(seconds: 2),
       const Duration(seconds: 5),
     ]);
+  });
+
+  test('같은 시간 자동 묶기는 이웃 홑줄 한 칸만, 묶음은 다시 골라 찍어야 이어진다', () {
+    final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다\n라')!)
+      ..stamp(const Duration(seconds: 2))
+      ..stamp(const Duration(seconds: 2))
+      ..stamp(const Duration(seconds: 2));
+    // 묶음(가·나)을 홑줄 다가 삼키지 않는다.
+    expect(cubit.state.draft.texts, ['가\n나', '다', '라']);
+    // 묶음을 다시 골라 같은 시간을 찍으면 다음 홑줄로 이어진다.
+    cubit
+      ..select(0)
+      ..stamp(const Duration(seconds: 2));
+    expect(cubit.state.draft.texts, ['가\n나\n다', '라']);
+  });
+
+  test('뒤로(stepBack)가 묶음을 만나면 묶음을 풀고 맨 끝 줄만 비운다', () {
+    final cubit = LyricsSyncCubit(Lyrics.parse('가\n나\n다')!)
+      ..stamp(const Duration(seconds: 2))
+      ..stamp(const Duration(seconds: 2));
+    expect(cubit.state.draft.texts, ['가\n나', '다']);
+    cubit.stepBack();
+    expect(cubit.state.draft.texts, ['가', '나', '다']);
+    expect(cubit.state.draft.times, [const Duration(seconds: 2), null, null]);
+    expect(cubit.state.draft.current, 1);
   });
 
   test('싱크를 하나라도 찍은 뒤에는 안 찍은 줄 중 맨 앞 칸으로만 돌아갈 수 있다', () {
@@ -543,6 +567,18 @@ void main() {
     expect(find.text('0/4줄'), findsOneWidget);
   });
 
+  testWidgets('싱크 설정: 위쪽 메뉴에 기본 줄 수와 반응 시간 보정이 함께 있다', (tester) async {
+    await openSync(tester, '가 줄\n나 줄');
+    await tester.tap(find.text('확인'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('기본 줄 수 변경'));
+    await tester.pumpAndSettle();
+    expect(find.text('1줄'), findsWidgets);
+    await tester.tap(find.text('반응 시간 보정').last);
+    await tester.pumpAndSettle();
+    expect(find.text('박자 테스트'), findsOneWidget);
+  });
+
   testWidgets('싱크 설정: 꾹 눌러 끌면 범위가 한 칸으로 묶여 표시되고 풀 수 있다', (tester) async {
     await openSync(tester, '가 줄\n나 줄\n다 줄\n라 줄');
     await tester.tap(find.text('확인'));
@@ -563,6 +599,39 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('3/4줄'), findsOneWidget);
     expect(find.text('3줄 같은 시간으로 묶음'), findsNothing);
+  });
+
+  testWidgets('싱크 설정: 시간이 완전히 같은 이웃 줄은 다시 열 때 묶인 칸으로 보인다', (tester) async {
+    await openSync(tester, '[00:01.00]가 줄\n[00:01.00]나 줄\n[00:03.00]다 줄');
+    expect(find.text('2/2줄'), findsOneWidget);
+    expect(find.text('가 줄\n나 줄'), findsOneWidget);
+    expect(find.text('2줄 같은 시간으로 묶음'), findsOneWidget);
+  });
+
+  testWidgets('싱크 설정: 이미 싱크가 있는 가사도 꾹 눌러 끌어 묶고 풀 수 있다', (tester) async {
+    final lyrics = await openSync(
+      tester,
+      '[00:01.00]가 줄\n[00:02.00]나 줄\n[00:03.00]다 줄\n[00:04.00]라 줄',
+    );
+    expect(find.text('4/4줄'), findsOneWidget);
+
+    await dragMerge(tester, '가 줄', '다 줄');
+    // 이미 찍어 둔 싱크가 지워지니 먼저 묻는다.
+    expect(
+      find.text('묶을 범위 안에 이미 찍어 둔 싱크가 있어요. 한 칸으로 묶으면 그 싱크는 지워져요. 계속할까요?'),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('묶기'));
+    await tester.pumpAndSettle();
+    expect(find.text('가 줄\n나 줄\n다 줄'), findsOneWidget);
+    // 묶은 칸은 맨 앞 칸의 시간을 쓰고 나머지 시간은 사라진다.
+    expect(find.text('2/2줄'), findsOneWidget);
+    expect(find.text('3줄 같은 시간으로 묶음'), findsOneWidget);
+
+    await tester.tap(find.text('풀기'));
+    await tester.pumpAndSettle();
+    expect(find.text('4/4줄'), findsOneWidget);
+    expect(lyrics.saved, isEmpty);
   });
 
   testWidgets('싱크 설정: 위로 끌어도 범위가 한 칸으로 묶인다', (tester) async {

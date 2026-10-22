@@ -6,6 +6,7 @@ import '../../domain/entities/audio_stream.dart';
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/search_source.dart';
+import '../../domain/entities/subtitle_track.dart';
 import '../../domain/repositories/downloader_engine.dart';
 import 'audio_format_policy.dart';
 
@@ -92,6 +93,12 @@ class YoutubeExplodeEngine implements DownloaderEngine {
       );
     }
   }
+
+  @override
+  Future<SubtitleTrack?> fetchSubtitles(
+    String url, {
+    List<String> preferLanguages = const ['ko', 'en'],
+  }) => _inner.fetchSubtitles(url, preferLanguages: preferLanguages);
 }
 
 /// 라이브러리의 재생목록 검색 (한 번에 20개라 필요한 만큼 다음 쪽을 넘겨 읽는다).
