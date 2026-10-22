@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import '../../domain/entities/audio_language.dart';
 import '../../domain/entities/audio_stream.dart';
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
@@ -131,7 +132,12 @@ class ServerEngine implements DownloaderEngine {
   Future<AudioStream> resolveAudioStream(
     String url, {
     bool refresh = false,
+    String? audioLanguage,
   }) async => throw const EngineException(EngineFailure.unavailable);
+
+  /// 서버 명세에 오디오 트랙 조회가 없어서 고를 수 있는 언어가 없다.
+  @override
+  Future<List<AudioLanguage>> fetchAudioLanguages(String url) async => const [];
 
   /// 서버 `GET /api/v1/subtitles?url=&lang=ko,en` — 서버 명세에 아직 없는 제안 형식이다:
   /// `{"lang": "ko", "auto": false, "cues": [{"startMs": 1200, "text": "..."}]}`.

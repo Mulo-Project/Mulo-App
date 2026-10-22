@@ -1952,6 +1952,18 @@ abstract class AppLocalizations {
   /// **'설명'**
   String get mediaDetailDescription;
 
+  /// No description provided for @mediaDetailSectionPreview.
+  ///
+  /// In ko, this message translates to:
+  /// **'미리 듣기'**
+  String get mediaDetailSectionPreview;
+
+  /// No description provided for @mediaDetailSectionInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'정보'**
+  String get mediaDetailSectionInfo;
+
   /// No description provided for @mediaDetailMore.
   ///
   /// In ko, this message translates to:
@@ -2233,6 +2245,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'자막 {count}개를 찾았어요.'**
   String downloadSubtitleFound(int count);
+
+  /// No description provided for @downloadSectionInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 정보'**
+  String get downloadSectionInfo;
 
   /// No description provided for @downloadSectionSave.
   ///
@@ -4741,6 +4759,30 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'저장'**
   String get equalizerSave;
+
+  /// No description provided for @audioLanguageTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'오디오 언어'**
+  String get audioLanguageTitle;
+
+  /// No description provided for @audioLanguageRow.
+  ///
+  /// In ko, this message translates to:
+  /// **'오디오 언어'**
+  String get audioLanguageRow;
+
+  /// No description provided for @audioLanguageOriginal.
+  ///
+  /// In ko, this message translates to:
+  /// **'원본'**
+  String get audioLanguageOriginal;
+
+  /// No description provided for @audioLanguageHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'고르면 바로 적용돼요. 미리 듣기와 받기에 같은 언어를 써요.'**
+  String get audioLanguageHint;
 
   /// No description provided for @downloadAgainTitle.
   ///

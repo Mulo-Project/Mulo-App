@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import '../../domain/entities/audio_language.dart';
 import '../../domain/entities/audio_stream.dart';
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
@@ -102,8 +103,19 @@ class SoundcloudAvatarEngine implements DownloaderEngine {
   Future<MediaInfo> fetchInfo(String url) => _inner.fetchInfo(url);
 
   @override
-  Future<AudioStream> resolveAudioStream(String url, {bool refresh = false}) =>
-      _inner.resolveAudioStream(url, refresh: refresh);
+  Future<AudioStream> resolveAudioStream(
+    String url, {
+    bool refresh = false,
+    String? audioLanguage,
+  }) => _inner.resolveAudioStream(
+    url,
+    refresh: refresh,
+    audioLanguage: audioLanguage,
+  );
+
+  @override
+  Future<List<AudioLanguage>> fetchAudioLanguages(String url) =>
+      _inner.fetchAudioLanguages(url);
   @override
   Future<SubtitleTrack?> fetchSubtitles(
     String url, {

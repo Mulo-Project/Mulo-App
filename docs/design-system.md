@@ -89,6 +89,7 @@ MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부�
 | `AppSlider` | app_slider.dart | 가는 막대 슬라이더 (가로 · 세로, 이퀄라이저) |
 | `PinPad` | pin_pad.dart | PIN 입력 판 (입력 자리 점 + 숫자 키패드, 0 왼쪽 칸에 생체 버튼). 입력값은 밖에서 들고 있음 |
 | `AppTextField` | app_text_field.dart | 라벨이 위에 붙은 둥근 입력칸 (폼). 글자는 세로 가운데. `maxLines`를 주면 여러 줄 |
+| `SectionBlock` | section_card.dart | 긴 화면의 구역: 위 옅은 구분선 + 작은 제목(카드 면 없음). 영상 상세 · 받기 페이지 |
 | `SectionCard` · `SettingRow` | section_card.dart | 설정 묶음(제목 + 구분선, 카드 면 없음) · 한 줄 |
 | `SegmentedPills` · `StatusPill` | segmented_pills.dart | 하나 고르기 알약 묶음 · 상태 알약 |
 | `AppDropdown` | app_dropdown.dart | 알약 드롭다운 (정렬 기준 고르기). 선택값 · 목록 · 문구는 밖에서 받음 |

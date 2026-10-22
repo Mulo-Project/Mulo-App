@@ -998,6 +998,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get mediaDetailDescription => '설명';
 
   @override
+  String get mediaDetailSectionPreview => '미리 듣기';
+
+  @override
+  String get mediaDetailSectionInfo => '정보';
+
+  @override
   String get mediaDetailMore => '더 보기';
 
   @override
@@ -1168,6 +1174,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String downloadSubtitleFound(int count) {
     return '자막 $count개를 찾았어요.';
   }
+
+  @override
+  String get downloadSectionInfo => '기본 정보';
 
   @override
   String get downloadSectionSave => '저장';
@@ -2528,6 +2537,18 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get equalizerSave => '저장';
+
+  @override
+  String get audioLanguageTitle => '오디오 언어';
+
+  @override
+  String get audioLanguageRow => '오디오 언어';
+
+  @override
+  String get audioLanguageOriginal => '원본';
+
+  @override
+  String get audioLanguageHint => '고르면 바로 적용돼요. 미리 듣기와 받기에 같은 언어를 써요.';
 
   @override
   String get downloadAgainTitle => '다시 받을까요?';

@@ -366,6 +366,7 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
         final stream = await _engine.resolveAudioStream(
           request.url,
           refresh: refresh,
+          audioLanguage: request.audioLanguage,
         );
         if (token.isCancelled) throw const DownloadAborted();
         return _downloader.download(

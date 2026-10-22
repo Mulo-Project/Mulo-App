@@ -12,6 +12,8 @@ import '../../../covers/presentation/widgets/cover_picker.dart';
 import '../../domain/entities/download_options.dart';
 import '../../domain/entities/download_request.dart';
 import '../../domain/entities/download_source.dart';
+import '../../../search/presentation/bloc/audio_language_cubit.dart';
+import '../../../search/presentation/widgets/audio_language_sheet.dart';
 import '../bloc/download_queue_cubit.dart';
 import '../bloc/download_settings_cubit.dart';
 import '../bloc/subtitle_availability_cubit.dart';
@@ -33,6 +35,7 @@ Future<bool> showDownloadDialog(
   required String url,
   List<String>? subtitleLangs,
   List<String> autoSubtitleLangs = const [],
+  String? audioLanguage,
 }) async {
   final queue = context.read<DownloadQueueCubit>();
   // 이미 받았거나 받는 중인 곡은 팝업을 열지 않고 알린다.
@@ -80,6 +83,15 @@ Future<bool> showDownloadDialog(
           BlocProvider.value(value: library),
           BlocProvider.value(value: colors),
           BlocProvider.value(value: covers),
+          BlocProvider(
+            create: (_) {
+              final cubit = sl<AudioLanguageCubit>();
+              if (downloadSourceKey(url).startsWith('youtube:')) {
+                cubit.load(url, selected: audioLanguage);
+              }
+              return cubit;
+            },
+          ),
           BlocProvider(
             create: (_) => sl<SubtitleAvailabilityCubit>()
               ..load(
@@ -232,6 +244,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
         .state
         .status;
     final colors = context.read<CoverColorCubit>();
+    final audioLanguage = context.read<AudioLanguageCubit>().state.selected;
     final genre = _genre.text.trim();
     // 이 장르의 기본 색으로 저장하면 다음에 같은 장르를 받을 때 미리 채워진다.
     if (_saveAsGenreDefault && genre.isNotEmpty && color != null) {
@@ -257,6 +270,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
         lyricsLanguage: _lyricsLanguage,
         lyricsSkipSounds: _skipSounds,
         lyricsText: _lyricsLanguage == null ? null : _edited[_lyricsLanguage],
+        audioLanguage: audioLanguage,
       ),
     );
     if (ok && mounted) Navigator.of(context).pop(true);
@@ -517,20 +531,8 @@ class _DownloadScreenState extends State<DownloadScreen> {
     );
   }
 
-  Widget _section(BuildContext context, String title, List<Widget> children) {
-    final text = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: text.titleMedium),
-          const SizedBox(height: AppSpacing.sm),
-          ...children,
-        ],
-      ),
-    );
-  }
+  Widget _section(BuildContext context, String title, List<Widget> children) =>
+      SectionBlock(title: title, children: children);
 
   @override
   Widget build(BuildContext context) {
@@ -560,34 +562,40 @@ class _DownloadScreenState extends State<DownloadScreen> {
                   AppSpacing.lg,
                 ),
                 children: [
-                  _CoverRow(
-                    art: _cover,
-                    label: l10n.downloadFieldCover,
-                    changeLabel: l10n.downloadCoverChange,
-                    resetLabel: l10n.downloadCoverDefault,
-                    canReset: _cover != _defaultCover,
-                    onChange: _changeCover,
-                    onReset: _resetCover,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  AppTextField(
-                    label: l10n.downloadFieldTitle,
-                    controller: _title,
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  AppTextField(
-                    label: l10n.downloadFieldArtist,
-                    controller: _artist,
-                    hint: l10n.unknownArtist,
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  AppTextField(
-                    label: l10n.downloadFieldGenre,
-                    controller: _genre,
-                  ),
-                  _GenreSuggestions(
-                    controller: _genre,
-                    label: l10n.downloadGenreExisting,
+                  SectionBlock(
+                    first: true,
+                    title: l10n.downloadSectionInfo,
+                    children: [
+                      _CoverRow(
+                        art: _cover,
+                        label: l10n.downloadFieldCover,
+                        changeLabel: l10n.downloadCoverChange,
+                        resetLabel: l10n.downloadCoverDefault,
+                        canReset: _cover != _defaultCover,
+                        onChange: _changeCover,
+                        onReset: _resetCover,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      AppTextField(
+                        label: l10n.downloadFieldTitle,
+                        controller: _title,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      AppTextField(
+                        label: l10n.downloadFieldArtist,
+                        controller: _artist,
+                        hint: l10n.unknownArtist,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      AppTextField(
+                        label: l10n.downloadFieldGenre,
+                        controller: _genre,
+                      ),
+                      _GenreSuggestions(
+                        controller: _genre,
+                        label: l10n.downloadGenreExisting,
+                      ),
+                    ],
                   ),
                   _section(context, l10n.decorateColor, [
                     ListenableBuilder(
@@ -642,6 +650,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
                         ),
                       ],
                     ),
+                    const AudioLanguageRow(),
                     const SizedBox(height: AppSpacing.md),
                     Text(
                       l10n.downloadPlaylistsLabel.toUpperCase(),

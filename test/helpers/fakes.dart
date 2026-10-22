@@ -55,6 +55,7 @@ import 'package:music_download_play_app/features/playlists/di.dart';
 import 'package:music_download_play_app/features/playlists/domain/entities/playlist.dart';
 import 'package:music_download_play_app/features/playlists/domain/repositories/playlist_repository.dart';
 import 'package:music_download_play_app/features/search/di.dart';
+import 'package:music_download_play_app/features/search/domain/entities/audio_language.dart';
 import 'package:music_download_play_app/features/search/domain/entities/audio_stream.dart';
 import 'package:music_download_play_app/features/search/domain/entities/preview_progress.dart';
 import 'package:music_download_play_app/features/search/domain/entities/engine_exception.dart';
@@ -1136,6 +1137,12 @@ class FakeDownloaderEngine implements DownloaderEngine {
   /// [resolveAudioStream]을 부를 때마다 새로 읽으라고 했는지.
   final refreshFlags = <bool>[];
 
+  /// [resolveAudioStream]에 넘어온 오디오 언어들.
+  final audioLanguageArgs = <String?>[];
+
+  /// [fetchAudioLanguages]가 돌려줄 오디오 언어 트랙들.
+  List<AudioLanguage> audioLanguages = const [];
+
   /// [resolveAudioStream]에 넘어온 곡 주소들.
   final streams = <String>[];
 
@@ -1201,12 +1208,18 @@ class FakeDownloaderEngine implements DownloaderEngine {
   }
 
   @override
+  Future<List<AudioLanguage>> fetchAudioLanguages(String url) async =>
+      audioLanguages;
+
+  @override
   Future<AudioStream> resolveAudioStream(
     String url, {
     bool refresh = false,
+    String? audioLanguage,
   }) async {
     streams.add(url);
     refreshFlags.add(refresh);
+    audioLanguageArgs.add(audioLanguage);
     await streamGate;
     final failure = streamFailure;
     if (failure != null) throw EngineException(failure);

@@ -1017,6 +1017,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mediaDetailDescription => 'Description';
 
   @override
+  String get mediaDetailSectionPreview => 'Preview';
+
+  @override
+  String get mediaDetailSectionInfo => 'Info';
+
+  @override
   String get mediaDetailMore => 'Show more';
 
   @override
@@ -1202,6 +1208,9 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get downloadSectionInfo => 'Details';
 
   @override
   String get downloadSectionSave => 'Save to';
@@ -2596,6 +2605,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get equalizerSave => 'Save';
+
+  @override
+  String get audioLanguageTitle => 'Audio language';
+
+  @override
+  String get audioLanguageRow => 'Audio language';
+
+  @override
+  String get audioLanguageOriginal => 'Original';
+
+  @override
+  String get audioLanguageHint =>
+      'Applies right away. Preview and download use the same language.';
 
   @override
   String get downloadAgainTitle => 'Download again?';
