@@ -22,10 +22,17 @@ class OpenLyricsOverlayPermission implements UseCase<void, NoParams> {
 }
 
 class ShowLyricsOverlayParams {
-  const ShowLyricsOverlayParams(this.trackId, this.lines);
+  const ShowLyricsOverlayParams(
+    this.trackId,
+    this.lines, {
+    required this.hideLabel,
+    required this.offLabel,
+  });
 
   final String trackId;
   final List<LyricLine> lines;
+  final String hideLabel;
+  final String offLabel;
 }
 
 class ShowLyricsOverlay implements UseCase<void, ShowLyricsOverlayParams> {
@@ -34,8 +41,12 @@ class ShowLyricsOverlay implements UseCase<void, ShowLyricsOverlayParams> {
   final LyricsOverlay _overlay;
 
   @override
-  Future<void> call(ShowLyricsOverlayParams p) =>
-      _overlay.show(p.trackId, p.lines);
+  Future<void> call(ShowLyricsOverlayParams p) => _overlay.show(
+    p.trackId,
+    p.lines,
+    hideLabel: p.hideLabel,
+    offLabel: p.offLabel,
+  );
 }
 
 class WatchLyricsOverlayClosed implements StreamUseCase<void, NoParams> {

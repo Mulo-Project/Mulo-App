@@ -32,7 +32,13 @@ class LyricsOverlayChannel(private val context: Context, messenger: BinaryMessen
                     if (id == null || times == null || texts == null || times.size != texts.size) {
                         result.error("bad_args", "trackId · times · texts required", null)
                     } else {
-                        LyricsOverlay.show(id, times.toLongArray(), texts)
+                        LyricsOverlay.show(
+                            id,
+                            times.toLongArray(),
+                            texts,
+                            map.get("hideLabel") as? String ?: "",
+                            map.get("offLabel") as? String ?: "",
+                        )
                         result.success(null)
                     }
                 }

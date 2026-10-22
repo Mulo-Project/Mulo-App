@@ -2104,6 +2104,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Control playback from the notification shade and lock screen.';
 
   @override
+  String get lyricsOverlayHideTrack => 'Hide for this song';
+
+  @override
+  String get lyricsOverlayTurnOff => 'Turn off';
+
+  @override
   String get lyricsOverlayOn => 'Turn on floating lyrics';
 
   @override

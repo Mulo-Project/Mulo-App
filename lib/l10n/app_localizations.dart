@@ -3854,6 +3854,18 @@ abstract class AppLocalizations {
   /// **'알림창 · 잠금화면에서 재생을 조작해요.'**
   String get settingsNotifyPlaybackDesc;
 
+  /// No description provided for @lyricsOverlayHideTrack.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 곡 동안 숨기기'**
+  String get lyricsOverlayHideTrack;
+
+  /// No description provided for @lyricsOverlayTurnOff.
+  ///
+  /// In ko, this message translates to:
+  /// **'끄기'**
+  String get lyricsOverlayTurnOff;
+
   /// No description provided for @lyricsOverlayOn.
   ///
   /// In ko, this message translates to:

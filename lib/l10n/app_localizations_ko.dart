@@ -2046,6 +2046,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsNotifyPlaybackDesc => '알림창 · 잠금화면에서 재생을 조작해요.';
 
   @override
+  String get lyricsOverlayHideTrack => '이 곡 동안 숨기기';
+
+  @override
+  String get lyricsOverlayTurnOff => '끄기';
+
+  @override
   String get lyricsOverlayOn => '떠 있는 가사 켜기';
 
   @override

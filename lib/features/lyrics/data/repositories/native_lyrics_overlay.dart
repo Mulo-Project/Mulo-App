@@ -29,12 +29,18 @@ class NativeLyricsOverlay implements LyricsOverlay {
       _channel.invokeMethod('openPermissionSettings');
 
   @override
-  Future<void> show(String trackId, List<LyricLine> lines) =>
-      _channel.invokeMethod('show', {
-        'trackId': trackId,
-        'times': [for (final l in lines) l.time.inMilliseconds],
-        'texts': [for (final l in lines) l.text],
-      });
+  Future<void> show(
+    String trackId,
+    List<LyricLine> lines, {
+    required String hideLabel,
+    required String offLabel,
+  }) => _channel.invokeMethod('show', {
+    'hideLabel': hideLabel,
+    'offLabel': offLabel,
+    'trackId': trackId,
+    'times': [for (final l in lines) l.time.inMilliseconds],
+    'texts': [for (final l in lines) l.text],
+  });
 
   @override
   Future<void> hide() => _channel.invokeMethod('hide');
@@ -52,7 +58,12 @@ class NoLyricsOverlay implements LyricsOverlay {
   Future<void> openPermissionSettings() async {}
 
   @override
-  Future<void> show(String trackId, List<LyricLine> lines) async {}
+  Future<void> show(
+    String trackId,
+    List<LyricLine> lines, {
+    required String hideLabel,
+    required String offLabel,
+  }) async {}
 
   @override
   Future<void> hide() async {}

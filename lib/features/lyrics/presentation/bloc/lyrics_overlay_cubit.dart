@@ -39,6 +39,8 @@ class LyricsOverlayCubit extends Cubit<void> {
     required bool enabled,
     required String? trackId,
     required Lyrics? lyrics,
+    String hideLabel = '',
+    String offLabel = '',
   }) async {
     final show =
         enabled && trackId != null && lyrics != null && lyrics.isSynced;
@@ -49,7 +51,14 @@ class LyricsOverlayCubit extends Cubit<void> {
       await _hide(const NoParams());
       return;
     }
-    await _show(ShowLyricsOverlayParams(trackId, _merged(lyrics.lines)));
+    await _show(
+      ShowLyricsOverlayParams(
+        trackId,
+        _merged(lyrics.lines),
+        hideLabel: hideLabel,
+        offLabel: offLabel,
+      ),
+    );
   }
 
   /// 같은 시간으로 묶인 줄(싱크 화면에서 한 칸으로 묶은 줄)은 한 줄로 합친다.

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/l10n/l10n.dart';
 import '../../../notifications/presentation/bloc/notification_settings_cubit.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../bloc/lyrics_cubit.dart';
@@ -58,7 +59,14 @@ class _LyricsOverlayBridgeState extends State<LyricsOverlayBridge> {
       return;
     }
     if (lyrics.loading) return;
-    overlay.sync(enabled: true, trackId: track.id, lyrics: lyrics.lyrics);
+    final l10n = context.l10n;
+    overlay.sync(
+      enabled: true,
+      trackId: track.id,
+      lyrics: lyrics.lyrics,
+      hideLabel: l10n.lyricsOverlayHideTrack,
+      offLabel: l10n.lyricsOverlayTurnOff,
+    );
   }
 
   @override

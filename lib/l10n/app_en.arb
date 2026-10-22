@@ -740,6 +740,8 @@
   "settingsNotifyDownloadResultDesc": "Tells you when a download finishes or fails.",
   "settingsNotifyPlayback": "Playback controls",
   "settingsNotifyPlaybackDesc": "Control playback from the notification shade and lock screen.",
+  "lyricsOverlayHideTrack": "Hide for this song",
+  "lyricsOverlayTurnOff": "Turn off",
   "lyricsOverlayOn": "Turn on floating lyrics",
   "lyricsOverlayOff": "Turn off floating lyrics",
   "lyricsOverlayNeedPermission": "Allow \"Display over other apps\" in settings, then turn it on again.",
