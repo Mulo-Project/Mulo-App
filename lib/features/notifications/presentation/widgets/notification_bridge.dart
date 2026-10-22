@@ -370,6 +370,7 @@ class _NotificationBridgeState extends State<NotificationBridge>
       favorite:
           track != null && context.read<PlaylistsCubit>().isFavorite(track.id),
       shuffle: now.shuffle,
+      sleepEndsAt: now.sleepEndsAt,
       artUri: _artUri(cover),
       settings: settings.settings,
       l10n: context.l10n,

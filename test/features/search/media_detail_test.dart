@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/design/design.dart';
+import 'package:music_download_play_app/features/downloads/domain/entities/download_source.dart';
+import 'package:music_download_play_app/features/downloads/domain/repositories/download_queue_repository.dart';
 import 'package:music_download_play_app/features/search/data/engine/local_engine.dart';
 import 'package:music_download_play_app/features/search/data/engine/server_engine.dart';
 import 'package:music_download_play_app/features/search/domain/entities/engine_exception.dart';
@@ -361,6 +363,7 @@ void main() {
     expect(isYoutubeUrl('https://music.youtube.com/watch?v=a'), isTrue);
     expect(isYoutubeUrl('https://soundcloud.com/a'), isFalse);
     expect(isYoutubeUrl('https://notyoutube.com/a'), isFalse);
+    expect(siteNameOf('https://www.soundcloud.com/a'), 'soundcloud.com');
   });
 
   group('상세 보기 화면', () {
@@ -375,6 +378,7 @@ void main() {
     Future<FakeLinkOpener> openDetail(
       WidgetTester tester, {
       bool opens = true,
+      DownloadQueueRepository? downloads,
     }) async {
       // 설명까지 한 화면에 보이도록 세로를 늘린다.
       tester.view.physicalSize = const Size(800, 1600);
@@ -387,7 +391,11 @@ void main() {
         ],
         info: VideoInfo(_fullHit),
       );
-      await setUpTestDependencies(engine: engine, linkOpener: opener);
+      await setUpTestDependencies(
+        engine: engine,
+        linkOpener: opener,
+        downloads: downloads,
+      );
       await openSearchResult(tester);
       await tester.tap(find.text('Song'));
       await tester.pumpAndSettle();
@@ -594,6 +602,29 @@ void main() {
       await openDetail(tester);
 
       await tester.tap(find.byKey(const ValueKey('detail-download')));
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(TextField, 'Song'), findsOneWidget);
+    });
+
+    testWidgets('이미 받은 곡은 막지 않고 다시 받을지 묻는다', (tester) async {
+      final queue = MemoryDownloadQueue()
+        ..downloadedKeys.add(downloadSourceKey(_fullHit.url));
+      await openDetail(tester, downloads: queue);
+
+      await tester.tap(find.byKey(const ValueKey('detail-download')));
+      await tester.pumpAndSettle();
+      expect(find.text('Download again?'), findsOneWidget);
+      expect(find.widgetWithText(TextField, 'Song'), findsNothing);
+
+      // 취소하면 받기 팝업 없이 닫힌다.
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(TextField, 'Song'), findsNothing);
+
+      // 다시 받기를 고르면 받기 팝업이 열린다.
+      await tester.tap(find.byKey(const ValueKey('detail-download')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Download again'));
       await tester.pumpAndSettle();
       expect(find.widgetWithText(TextField, 'Song'), findsOneWidget);
     });

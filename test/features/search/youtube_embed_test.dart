@@ -142,6 +142,8 @@ void main() {
       expect(find.byTooltip('Watch on YouTube'), findsNothing);
       await tester.tap(find.byTooltip('Listen on the original site').first);
       await tester.pumpAndSettle();
+      expect(find.text('soundcloud.com'), findsOneWidget);
+      expect(find.text('Open channel'), findsNothing);
       expect(opener.opened, [web.url]);
       expect(find.text('Listen on SoundCloud'), findsOneWidget);
     });

@@ -11,7 +11,9 @@ import '../features/account/presentation/bloc/account_cubit.dart';
 import '../features/covers/presentation/bloc/cover_color_cubit.dart';
 import '../features/covers/presentation/bloc/cover_cubit.dart';
 import '../features/lyrics/presentation/bloc/lyrics_cubit.dart';
+import '../features/lyrics/presentation/bloc/lyrics_overlay_cubit.dart';
 import '../features/lyrics/presentation/bloc/lyrics_settings_cubit.dart';
+import '../features/lyrics/presentation/widgets/lyrics_overlay_bridge.dart';
 import '../features/downloads/presentation/bloc/download_queue_cubit.dart';
 import '../features/downloads/presentation/widgets/download_completion_listener.dart';
 import '../features/downloads/presentation/bloc/download_preferences_cubit.dart';
@@ -28,6 +30,7 @@ import '../features/player/presentation/bloc/audio_output_cubit.dart';
 import '../features/player/presentation/bloc/now_playing_cubit.dart';
 import '../features/player/presentation/bloc/output_behavior_cubit.dart';
 import '../features/player/presentation/bloc/mix_with_others_cubit.dart';
+import '../features/player/presentation/bloc/playback_speed_cubit.dart';
 import '../features/player/presentation/bloc/player_style_cubit.dart';
 import '../features/playlists/presentation/bloc/playlists_cubit.dart';
 import '../features/search/presentation/bloc/preview_cubit.dart';
@@ -95,6 +98,7 @@ class _MusicAppState extends State<MusicApp> {
         BlocProvider(create: (_) => sl<CoverColorCubit>()..load()),
         BlocProvider(create: (_) => sl<LyricsCubit>()),
         BlocProvider(create: (_) => sl<LyricsSettingsCubit>()..load()),
+        BlocProvider(create: (_) => sl<LyricsOverlayCubit>()),
         BlocProvider(create: (_) => sl<LibraryCubit>()..start()),
         BlocProvider(
           create: (_) => sl<LibraryImportCubit>()..embedTagsInBackground(),
@@ -108,6 +112,11 @@ class _MusicAppState extends State<MusicApp> {
         BlocProvider(create: (_) => sl<PlayerStyleCubit>()..load()),
         BlocProvider(create: (_) => sl<MixWithOthersCubit>()..load()),
         BlocProvider(create: (_) => sl<OutputBehaviorCubit>()..load()),
+        // 시작할 때 저장된 재생 속도를 재생 엔진에 반영해야 하므로 바로 만든다.
+        BlocProvider(
+          lazy: false,
+          create: (_) => sl<PlaybackSpeedCubit>()..load(),
+        ),
         // 시작할 때 저장된 이퀄라이저 값을 재생 엔진에 반영해야 하므로 바로 만든다.
         BlocProvider(lazy: false, create: (_) => sl<EqualizerCubit>()..load()),
         BlocProvider(create: (_) => sl<EqualizerLibraryCubit>()..load()),
@@ -161,11 +170,13 @@ class _MusicAppState extends State<MusicApp> {
               child: NotificationBridge(
                 onOpenPlayer: _openPlayer,
                 onOpenDownload: _openDownload,
-                child: MoodThemeFollower(
-                  child: DownloadCompletionListener(
-                    child: NewVideosLauncher(
-                      onOpen: _openNewVideos,
-                      child: LockGate(child: child!),
+                child: LyricsOverlayBridge(
+                  child: MoodThemeFollower(
+                    child: DownloadCompletionListener(
+                      child: NewVideosLauncher(
+                        onOpen: _openNewVideos,
+                        child: LockGate(child: child!),
+                      ),
                     ),
                   ),
                 ),

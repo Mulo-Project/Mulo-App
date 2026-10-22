@@ -9,6 +9,7 @@ import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../covers/presentation/widgets/decorate_sheet.dart';
 import '../bloc/library_cubit.dart';
 import '../widgets/play_shuffle_row.dart';
+import '../widgets/lazy_track_list.dart';
 import '../widgets/track_list_tile.dart';
 
 /// 아티스트 화면: 아티스트의 곡 목록과 전체 재생.
@@ -34,11 +35,11 @@ class ArtistScreen extends StatelessWidget {
 
     return SafeArea(
       bottom: false,
-      child: ListView(
+      child: LazyTrackList(
         padding: EdgeInsets.only(
           bottom: AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
         ),
-        children: [
+        header: [
           AppTopBar(
             title: name,
             leading: CircleIconButton(
@@ -107,10 +108,11 @@ class ArtistScreen extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             PlayShuffleRow(tracks: tracks),
             const SizedBox(height: AppSpacing.sm),
-            for (final (i, t) in tracks.indexed)
-              TrackListTile(track: t, queue: tracks, index: i),
           ],
         ],
+        trackCount: tracks.length,
+        trackBuilder: (context, i) =>
+            TrackListTile(track: tracks[i], queue: tracks, index: i),
       ),
     );
   }

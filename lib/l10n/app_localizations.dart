@@ -1010,6 +1010,24 @@ abstract class AppLocalizations {
   /// **'플레이어 테마'**
   String get playerStyleTitle;
 
+  /// No description provided for @playerSpeedTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생 속도'**
+  String get playerSpeedTitle;
+
+  /// No description provided for @playerSpeedValue.
+  ///
+  /// In ko, this message translates to:
+  /// **'{speed}배속'**
+  String playerSpeedValue(String speed);
+
+  /// No description provided for @playerSpeedNormal.
+  ///
+  /// In ko, this message translates to:
+  /// **'보통'**
+  String get playerSpeedNormal;
+
   /// No description provided for @playerStyleSquare.
   ///
   /// In ko, this message translates to:
@@ -1051,6 +1069,24 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'{minutes}분 뒤 재생을 멈춰요'**
   String playerSleepTimerSet(int minutes);
+
+  /// No description provided for @playerSleepTimerUnitHour.
+  ///
+  /// In ko, this message translates to:
+  /// **'시간'**
+  String get playerSleepTimerUnitHour;
+
+  /// No description provided for @playerSleepTimerUnitMinute.
+  ///
+  /// In ko, this message translates to:
+  /// **'분'**
+  String get playerSleepTimerUnitMinute;
+
+  /// No description provided for @playerSleepTimerStart.
+  ///
+  /// In ko, this message translates to:
+  /// **'시작'**
+  String get playerSleepTimerStart;
 
   /// No description provided for @playerSleepTimerCleared.
   ///
@@ -1916,6 +1952,18 @@ abstract class AppLocalizations {
   /// **'채널'**
   String get mediaDetailChannel;
 
+  /// No description provided for @mediaDetailSite.
+  ///
+  /// In ko, this message translates to:
+  /// **'출처'**
+  String get mediaDetailSite;
+
+  /// No description provided for @mediaDetailUploader.
+  ///
+  /// In ko, this message translates to:
+  /// **'올린 사람'**
+  String get mediaDetailUploader;
+
   /// No description provided for @mediaDetailOpenChannel.
   ///
   /// In ko, this message translates to:
@@ -1951,6 +1999,18 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'설명'**
   String get mediaDetailDescription;
+
+  /// No description provided for @mediaDetailSectionPreview.
+  ///
+  /// In ko, this message translates to:
+  /// **'미리 듣기'**
+  String get mediaDetailSectionPreview;
+
+  /// No description provided for @mediaDetailSectionInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'정보'**
+  String get mediaDetailSectionInfo;
 
   /// No description provided for @mediaDetailMore.
   ///
@@ -2233,6 +2293,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'자막 {count}개를 찾았어요.'**
   String downloadSubtitleFound(int count);
+
+  /// No description provided for @downloadSectionInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 정보'**
+  String get downloadSectionInfo;
 
   /// No description provided for @downloadSectionSave.
   ///
@@ -3344,6 +3410,18 @@ abstract class AppLocalizations {
   /// **'풀기'**
   String get lyricsSyncUnmerge;
 
+  /// No description provided for @playerLyricsExpand.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사만 크게 보기'**
+  String get playerLyricsExpand;
+
+  /// No description provided for @playerLyricsCollapse.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사 닫기'**
+  String get playerLyricsCollapse;
+
   /// No description provided for @playerShowLyrics.
   ///
   /// In ko, this message translates to:
@@ -3794,6 +3872,18 @@ abstract class AppLocalizations {
   /// **'기기에 있는 음악을 불러오는 데 써요.'**
   String get permAudioDesc;
 
+  /// No description provided for @permOverlay.
+  ///
+  /// In ko, this message translates to:
+  /// **'다른 앱 위에 표시'**
+  String get permOverlay;
+
+  /// No description provided for @permOverlayDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'다른 앱을 쓰는 동안 화면 위에 가사를 띄우는 데 써요.'**
+  String get permOverlayDesc;
+
   /// No description provided for @permBlockedDesc.
   ///
   /// In ko, this message translates to:
@@ -3842,6 +3932,36 @@ abstract class AppLocalizations {
   /// **'알림창 · 잠금화면에서 재생을 조작해요.'**
   String get settingsNotifyPlaybackDesc;
 
+  /// No description provided for @lyricsOverlayMinimize.
+  ///
+  /// In ko, this message translates to:
+  /// **'숨기기'**
+  String get lyricsOverlayMinimize;
+
+  /// No description provided for @lyricsOverlayTurnOff.
+  ///
+  /// In ko, this message translates to:
+  /// **'끄기'**
+  String get lyricsOverlayTurnOff;
+
+  /// No description provided for @lyricsOverlayOn.
+  ///
+  /// In ko, this message translates to:
+  /// **'떠 있는 가사 켜기'**
+  String get lyricsOverlayOn;
+
+  /// No description provided for @lyricsOverlayOff.
+  ///
+  /// In ko, this message translates to:
+  /// **'떠 있는 가사 끄기'**
+  String get lyricsOverlayOff;
+
+  /// No description provided for @lyricsOverlayNeedPermission.
+  ///
+  /// In ko, this message translates to:
+  /// **'설정에서 \"다른 앱 위에 표시\"를 허용한 뒤 다시 켜 주세요.'**
+  String get lyricsOverlayNeedPermission;
+
   /// No description provided for @settingsNotifyPermission.
   ///
   /// In ko, this message translates to:
@@ -3871,6 +3991,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'미리 듣기'**
   String get notifPreviewLabel;
+
+  /// No description provided for @notifSleepAt.
+  ///
+  /// In ko, this message translates to:
+  /// **'{time}에 수면 타이머'**
+  String notifSleepAt(String time);
 
   /// No description provided for @notifHiddenNote.
   ///
@@ -4687,6 +4813,48 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'저장'**
   String get equalizerSave;
+
+  /// No description provided for @audioLanguageTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'오디오 언어'**
+  String get audioLanguageTitle;
+
+  /// No description provided for @audioLanguageRow.
+  ///
+  /// In ko, this message translates to:
+  /// **'오디오 언어'**
+  String get audioLanguageRow;
+
+  /// No description provided for @audioLanguageOriginal.
+  ///
+  /// In ko, this message translates to:
+  /// **'원본'**
+  String get audioLanguageOriginal;
+
+  /// No description provided for @audioLanguageHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'고르면 바로 적용돼요. 미리 듣기와 받기에 같은 언어를 써요.'**
+  String get audioLanguageHint;
+
+  /// No description provided for @downloadAgainTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'다시 받을까요?'**
+  String get downloadAgainTitle;
+
+  /// No description provided for @downloadAgainBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미 받은 곡이에요. 다시 받으면 같은 곡이 하나 더 생겨요.'**
+  String get downloadAgainBody;
+
+  /// No description provided for @downloadAgainConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'다시 받기'**
+  String get downloadAgainConfirm;
 }
 
 class _AppLocalizationsDelegate

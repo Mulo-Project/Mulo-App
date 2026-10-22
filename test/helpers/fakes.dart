@@ -48,6 +48,7 @@ import 'package:music_download_play_app/features/equalizer/di.dart';
 import 'package:music_download_play_app/features/equalizer/domain/entities/equalizer_settings.dart';
 import 'package:music_download_play_app/features/equalizer/domain/repositories/equalizer_repository.dart';
 import 'package:music_download_play_app/features/player/domain/repositories/mix_with_others_repository.dart';
+import 'package:music_download_play_app/features/player/domain/repositories/playback_speed_repository.dart';
 import 'package:music_download_play_app/features/player/domain/entities/output_behavior.dart';
 import 'package:music_download_play_app/features/player/domain/repositories/output_behavior_repository.dart';
 import 'package:music_download_play_app/features/player/domain/repositories/player_style_repository.dart';
@@ -55,6 +56,7 @@ import 'package:music_download_play_app/features/playlists/di.dart';
 import 'package:music_download_play_app/features/playlists/domain/entities/playlist.dart';
 import 'package:music_download_play_app/features/playlists/domain/repositories/playlist_repository.dart';
 import 'package:music_download_play_app/features/search/di.dart';
+import 'package:music_download_play_app/features/search/domain/entities/audio_language.dart';
 import 'package:music_download_play_app/features/search/domain/entities/audio_stream.dart';
 import 'package:music_download_play_app/features/search/domain/entities/preview_progress.dart';
 import 'package:music_download_play_app/features/search/domain/entities/engine_exception.dart';
@@ -410,6 +412,10 @@ class MemoryLyricsSettingsRepository implements LyricsSettingsRepository {
   @override
   Future<void> saveCoverBackground(bool on) async =>
       settings = settings.copyWith(coverBackground: on);
+
+  @override
+  Future<void> saveOverlay(bool on) async =>
+      settings = settings.copyWith(overlay: on);
 }
 
 class MemoryPlayerStyleRepository implements PlayerStyleRepository {
@@ -435,6 +441,19 @@ class MemoryMixWithOthersRepository implements MixWithOthersRepository {
 
   @override
   Future<void> apply(bool v) async {}
+}
+
+class MemoryPlaybackSpeedRepository implements PlaybackSpeedRepository {
+  double value = 1;
+
+  @override
+  Future<double> load() async => value;
+
+  @override
+  Future<void> save(double v) async => value = v;
+
+  @override
+  Future<void> apply(double v) async {}
 }
 
 class MemoryOutputBehaviorRepository implements OutputBehaviorRepository {
@@ -586,6 +605,9 @@ class MemoryDownloadQueue implements DownloadQueueRepository {
     _changes.add([...items]);
   }
 
+  /// 이미 받은 곡의 원본 주소 키 (`downloadSourceKey`).
+  final downloadedKeys = <String>{};
+
   /// 받기 요청 기록.
   final requests = <DownloadRequest>[];
 
@@ -597,7 +619,7 @@ class MemoryDownloadQueue implements DownloadQueueRepository {
       existing[url] ?? ExistingDownload.none;
 
   @override
-  Stream<Set<String>> watchDownloadedKeys() => Stream.value({});
+  Stream<Set<String>> watchDownloadedKeys() => Stream.value(downloadedKeys);
 
   @override
   Stream<List<DownloadItem>> watchQueue() async* {
@@ -839,6 +861,9 @@ Future<void> setUpTestDependencies({
     )
     ..registerLazySingleton<MixWithOthersRepository>(
       MemoryMixWithOthersRepository.new,
+    )
+    ..registerLazySingleton<PlaybackSpeedRepository>(
+      MemoryPlaybackSpeedRepository.new,
     )
     ..registerLazySingleton<OutputBehaviorRepository>(
       MemoryOutputBehaviorRepository.new,
@@ -1129,6 +1154,12 @@ class FakeDownloaderEngine implements DownloaderEngine {
   /// [resolveAudioStream]을 부를 때마다 새로 읽으라고 했는지.
   final refreshFlags = <bool>[];
 
+  /// [resolveAudioStream]에 넘어온 오디오 언어들.
+  final audioLanguageArgs = <String?>[];
+
+  /// [fetchAudioLanguages]가 돌려줄 오디오 언어 트랙들.
+  List<AudioLanguage> audioLanguages = const [];
+
   /// [resolveAudioStream]에 넘어온 곡 주소들.
   final streams = <String>[];
 
@@ -1194,12 +1225,18 @@ class FakeDownloaderEngine implements DownloaderEngine {
   }
 
   @override
+  Future<List<AudioLanguage>> fetchAudioLanguages(String url) async =>
+      audioLanguages;
+
+  @override
   Future<AudioStream> resolveAudioStream(
     String url, {
     bool refresh = false,
+    String? audioLanguage,
   }) async {
     streams.add(url);
     refreshFlags.add(refresh);
+    audioLanguageArgs.add(audioLanguage);
     await streamGate;
     final failure = streamFailure;
     if (failure != null) throw EngineException(failure);

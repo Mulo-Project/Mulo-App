@@ -50,10 +50,12 @@ class MainActivity : FlutterFragmentActivity() {
     override fun onResume() {
         super.onResume()
         resumed = true
+        LyricsOverlay.setAppVisible(true)
     }
 
     override fun onPause() {
         resumed = false
+        LyricsOverlay.setAppVisible(false)
         super.onPause()
     }
 

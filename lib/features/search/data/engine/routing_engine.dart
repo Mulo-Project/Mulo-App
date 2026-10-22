@@ -1,3 +1,4 @@
+import '../../domain/entities/audio_language.dart';
 import '../../domain/entities/audio_stream.dart';
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
@@ -64,7 +65,16 @@ class RoutingDownloaderEngine implements DownloaderEngine {
   Future<AudioStream> resolveAudioStream(
     String url, {
     bool refresh = false,
-  }) async => (await _pick()).resolveAudioStream(url, refresh: refresh);
+    String? audioLanguage,
+  }) async => (await _pick()).resolveAudioStream(
+    url,
+    refresh: refresh,
+    audioLanguage: audioLanguage,
+  );
+
+  @override
+  Future<List<AudioLanguage>> fetchAudioLanguages(String url) async =>
+      (await _pick()).fetchAudioLanguages(url);
 
   @override
   Future<SubtitleTrack?> fetchSubtitles(

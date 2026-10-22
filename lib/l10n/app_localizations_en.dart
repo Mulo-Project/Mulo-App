@@ -503,6 +503,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerStyleTitle => 'Player theme';
 
   @override
+  String get playerSpeedTitle => 'Playback speed';
+
+  @override
+  String playerSpeedValue(String speed) {
+    return '${speed}x';
+  }
+
+  @override
+  String get playerSpeedNormal => 'Normal';
+
+  @override
   String get playerStyleSquare => 'Square';
 
   @override
@@ -526,6 +537,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String playerSleepTimerSet(int minutes) {
     return 'Playback will stop in $minutes min';
   }
+
+  @override
+  String get playerSleepTimerUnitHour => 'h';
+
+  @override
+  String get playerSleepTimerUnitMinute => 'm';
+
+  @override
+  String get playerSleepTimerStart => 'Start';
 
   @override
   String get playerSleepTimerCleared => 'Sleep timer is off';
@@ -999,6 +1019,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mediaDetailChannel => 'Channel';
 
   @override
+  String get mediaDetailSite => 'Source';
+
+  @override
+  String get mediaDetailUploader => 'Uploaded by';
+
+  @override
   String get mediaDetailOpenChannel => 'View channel';
 
   @override
@@ -1015,6 +1041,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mediaDetailDescription => 'Description';
+
+  @override
+  String get mediaDetailSectionPreview => 'Preview';
+
+  @override
+  String get mediaDetailSectionInfo => 'Info';
 
   @override
   String get mediaDetailMore => 'Show more';
@@ -1202,6 +1234,9 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get downloadSectionInfo => 'Details';
 
   @override
   String get downloadSectionSave => 'Save to';
@@ -1820,6 +1855,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsSyncUnmerge => 'Split';
 
   @override
+  String get playerLyricsExpand => 'Lyrics only';
+
+  @override
+  String get playerLyricsCollapse => 'Close lyrics';
+
+  @override
   String get playerShowLyrics => 'Show lyrics';
 
   @override
@@ -2069,6 +2110,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permAudioDesc => 'Used to load music stored on this device.';
 
   @override
+  String get permOverlay => 'Display over other apps';
+
+  @override
+  String get permOverlayDesc =>
+      'Used to show lyrics over other apps while you use them.';
+
+  @override
   String get permBlockedDesc =>
       'Blocked. Tap to turn it on in system settings.';
 
@@ -2097,6 +2145,22 @@ class AppLocalizationsEn extends AppLocalizations {
       'Control playback from the notification shade and lock screen.';
 
   @override
+  String get lyricsOverlayMinimize => 'Hide';
+
+  @override
+  String get lyricsOverlayTurnOff => 'Turn off';
+
+  @override
+  String get lyricsOverlayOn => 'Turn on floating lyrics';
+
+  @override
+  String get lyricsOverlayOff => 'Turn off floating lyrics';
+
+  @override
+  String get lyricsOverlayNeedPermission =>
+      'Allow \"Display over other apps\" in settings, then turn it on again.';
+
+  @override
   String get settingsNotifyPermission => 'System notifications are off';
 
   @override
@@ -2111,6 +2175,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifPreviewLabel => 'Preview';
+
+  @override
+  String notifSleepAt(String time) {
+    return 'Sleep timer at $time';
+  }
 
   @override
   String get notifHiddenNote => 'Song info hidden';
@@ -2567,4 +2636,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get equalizerSave => 'Save';
+
+  @override
+  String get audioLanguageTitle => 'Audio language';
+
+  @override
+  String get audioLanguageRow => 'Audio language';
+
+  @override
+  String get audioLanguageOriginal => 'Original';
+
+  @override
+  String get audioLanguageHint =>
+      'Applies right away. Preview and download use the same language.';
+
+  @override
+  String get downloadAgainTitle => 'Download again?';
+
+  @override
+  String get downloadAgainBody =>
+      'This song is already downloaded. Downloading it again adds another copy.';
+
+  @override
+  String get downloadAgainConfirm => 'Download again';
 }

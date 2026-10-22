@@ -32,6 +32,7 @@ export 'components/soundcloud_mark.dart';
 export 'components/stat_number.dart';
 export 'components/theme_swatch.dart';
 export 'components/track_tile.dart';
+export 'components/wheel_picker.dart';
 export 'components/youtube_mark.dart';
 export 'contrast.dart';
 export 'glow_color.dart';

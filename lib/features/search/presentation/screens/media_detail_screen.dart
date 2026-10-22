@@ -13,8 +13,10 @@ import '../../../library/domain/entities/track.dart' show formatDuration;
 import '../../../subscriptions/presentation/widgets/subscribe_button.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/usecases/search_usecases.dart';
+import '../bloc/audio_language_cubit.dart';
 import '../bloc/media_detail_cubit.dart';
 import '../bloc/preview_cubit.dart';
+import '../widgets/audio_language_sheet.dart';
 import '../widgets/preview_control.dart';
 import '../widgets/video_category.dart';
 import '../widgets/youtube_embed.dart';
@@ -43,6 +45,12 @@ bool isYoutubeUrl(String url) {
       host.endsWith('.youtube.com');
 }
 
+/// 웹 항목에 보여 줄 사이트 이름: 주소의 도메인에서 앞의 `www.`를 뺀 것 (모르면 빈 문자열).
+String siteNameOf(String url) {
+  final host = Uri.tryParse(url)?.host.toLowerCase() ?? '';
+  return host.startsWith('www.') ? host.substring(4) : host;
+}
+
 class MediaDetailScreen extends StatelessWidget {
   const MediaDetailScreen({
     super.key,
@@ -60,13 +68,25 @@ class MediaDetailScreen extends StatelessWidget {
   final Widget Function(String videoId, VoidCallback onFailed)? playerBuilder;
 
   @override
-  Widget build(BuildContext context) => BlocProvider(
-    create: (_) => MediaDetailCubit(
-      hit,
-      sl<FetchMediaInfo>(),
-      sl<FetchChannelInfo>(),
-      sl<OpenLink>(),
-    )..load(),
+  Widget build(BuildContext context) => MultiBlocProvider(
+    providers: [
+      BlocProvider(
+        create: (_) => MediaDetailCubit(
+          hit,
+          sl<FetchMediaInfo>(),
+          sl<FetchChannelInfo>(),
+          sl<OpenLink>(),
+        )..load(),
+      ),
+      // 유튜브 곡만 오디오 언어가 여럿일 수 있다.
+      BlocProvider(
+        create: (_) {
+          final cubit = sl<AudioLanguageCubit>();
+          if (isYoutubeUrl(hit.url)) cubit.load(hit.url);
+          return cubit;
+        },
+      ),
+    ],
     child: _DetailView(
       inAppVideo: inAppVideo ?? inAppVideoSupported,
       playerBuilder: playerBuilder,
@@ -91,6 +111,14 @@ class _DetailViewState extends State<_DetailView> {
   void initState() {
     super.initState();
     _preview = context.read<PreviewCubit>();
+  }
+
+  /// 듣는 중에 오디오 언어를 바꾸면 고른 언어로 처음부터 다시 듣는다.
+  Future<void> _restartPreview(MediaHit hit, String language) async {
+    if (!_preview.state.isActive(hit.id)) return;
+    await _preview.stop();
+    if (!mounted) return;
+    await togglePreview(context, hit, audioLanguage: language);
   }
 
   /// 앱 안에서 영상을 틀고 있는지 / 틀어 보려다 막혀서 유튜브로만 열 수 있는지.
@@ -139,10 +167,12 @@ class _DetailViewState extends State<_DetailView> {
     final youtube = isYoutubeUrl(hit.url);
     // 유튜브가 아닌 곳(SoundCloud 등)은 영상이 아니라 음원이다: 커버 · 아티스트 · 재생수로 보여 준다.
     final audio = !youtube;
+    final site = youtube ? '' : siteNameOf(hit.url);
 
     final views = hit.viewCount;
     final uploaded = hit.uploadedAt;
     final rows = <(String, String)>[
+      if (!youtube && site.isNotEmpty) (l10n.mediaDetailSite, site),
       if (hit.duration != null)
         (l10n.mediaDetailDuration, formatDuration(hit.duration!)),
       if (views != null)
@@ -236,8 +266,18 @@ class _DetailViewState extends State<_DetailView> {
                         ),
                       ),
                     const SizedBox(height: AppSpacing.sm),
-                    Center(child: PreviewButton(hit: hit)),
-                    PreviewProgressBar(hitId: hit.id, showTime: true),
+                    SectionBlock(
+                      title: l10n.mediaDetailSectionPreview,
+                      children: [
+                        Center(child: PreviewButton(hit: hit)),
+                        PreviewProgressBar(hitId: hit.id, showTime: true),
+                        AudioLanguageRow(
+                          onChanged: (id) => _restartPreview(hit, id),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Divider(height: 1, color: p.outline),
                     const SizedBox(height: AppSpacing.md),
                     Text(hit.title, style: text.titleLarge),
                     if (hit.uploader.isNotEmpty) ...[
@@ -258,20 +298,21 @@ class _DetailViewState extends State<_DetailView> {
                             : () => _open(hit.channelUrl!),
                       ),
                     ],
-                    if (rows.isNotEmpty) ...[
-                      const SizedBox(height: AppSpacing.md),
-                      Divider(height: 1, color: p.outline),
-                      for (final (label, value) in rows) ...[
-                        _InfoRow(label: label, value: value),
-                        Divider(height: 1, color: p.outline),
-                      ],
-                    ],
-                    if (hit.description.isNotEmpty) ...[
-                      const SizedBox(height: AppSpacing.md),
-                      Text(l10n.mediaDetailDescription, style: text.titleSmall),
-                      const SizedBox(height: AppSpacing.xs),
-                      _Description(hit.description),
-                    ],
+                    if (rows.isNotEmpty)
+                      SectionBlock(
+                        title: l10n.mediaDetailSectionInfo,
+                        children: [
+                          for (var i = 0; i < rows.length; i++) ...[
+                            if (i > 0) Divider(height: 1, color: p.outline),
+                            _InfoRow(label: rows[i].$1, value: rows[i].$2),
+                          ],
+                        ],
+                      ),
+                    if (hit.description.isNotEmpty)
+                      SectionBlock(
+                        title: l10n.mediaDetailDescription,
+                        children: [_Description(hit.description)],
+                      ),
                     const SizedBox(height: AppSpacing.md),
                   ],
                 ),
@@ -314,6 +355,10 @@ class _DetailViewState extends State<_DetailView> {
                             ? null
                             : hit.subtitleLangs,
                         autoSubtitleLangs: hit.autoSubtitleLangs,
+                        audioLanguage: context
+                            .read<AudioLanguageCubit>()
+                            .state
+                            .selected,
                       ),
                     ),
                   ],

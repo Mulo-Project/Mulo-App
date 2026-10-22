@@ -490,6 +490,17 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playerStyleTitle => '플레이어 테마';
 
   @override
+  String get playerSpeedTitle => '재생 속도';
+
+  @override
+  String playerSpeedValue(String speed) {
+    return '$speed배속';
+  }
+
+  @override
+  String get playerSpeedNormal => '보통';
+
+  @override
   String get playerStyleSquare => '네모';
 
   @override
@@ -513,6 +524,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String playerSleepTimerSet(int minutes) {
     return '$minutes분 뒤 재생을 멈춰요';
   }
+
+  @override
+  String get playerSleepTimerUnitHour => '시간';
+
+  @override
+  String get playerSleepTimerUnitMinute => '분';
+
+  @override
+  String get playerSleepTimerStart => '시작';
 
   @override
   String get playerSleepTimerCleared => '수면 타이머를 껐어요';
@@ -980,6 +1000,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get mediaDetailChannel => '채널';
 
   @override
+  String get mediaDetailSite => '출처';
+
+  @override
+  String get mediaDetailUploader => '올린 사람';
+
+  @override
   String get mediaDetailOpenChannel => '채널 보기';
 
   @override
@@ -996,6 +1022,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get mediaDetailDescription => '설명';
+
+  @override
+  String get mediaDetailSectionPreview => '미리 듣기';
+
+  @override
+  String get mediaDetailSectionInfo => '정보';
 
   @override
   String get mediaDetailMore => '더 보기';
@@ -1168,6 +1200,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String downloadSubtitleFound(int count) {
     return '자막 $count개를 찾았어요.';
   }
+
+  @override
+  String get downloadSectionInfo => '기본 정보';
 
   @override
   String get downloadSectionSave => '저장';
@@ -1775,6 +1810,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsSyncUnmerge => '풀기';
 
   @override
+  String get playerLyricsExpand => '가사만 크게 보기';
+
+  @override
+  String get playerLyricsCollapse => '가사 닫기';
+
+  @override
   String get playerShowLyrics => '가사 보기';
 
   @override
@@ -2015,6 +2056,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get permAudioDesc => '기기에 있는 음악을 불러오는 데 써요.';
 
   @override
+  String get permOverlay => '다른 앱 위에 표시';
+
+  @override
+  String get permOverlayDesc => '다른 앱을 쓰는 동안 화면 위에 가사를 띄우는 데 써요.';
+
+  @override
   String get permBlockedDesc => '요청이 막혀 있어요. 눌러서 휴대폰 설정에서 켜 주세요.';
 
   @override
@@ -2040,6 +2087,22 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsNotifyPlaybackDesc => '알림창 · 잠금화면에서 재생을 조작해요.';
 
   @override
+  String get lyricsOverlayMinimize => '숨기기';
+
+  @override
+  String get lyricsOverlayTurnOff => '끄기';
+
+  @override
+  String get lyricsOverlayOn => '떠 있는 가사 켜기';
+
+  @override
+  String get lyricsOverlayOff => '떠 있는 가사 끄기';
+
+  @override
+  String get lyricsOverlayNeedPermission =>
+      '설정에서 \"다른 앱 위에 표시\"를 허용한 뒤 다시 켜 주세요.';
+
+  @override
   String get settingsNotifyPermission => '시스템 알림이 꺼져 있어요';
 
   @override
@@ -2053,6 +2116,11 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get notifPreviewLabel => '미리 듣기';
+
+  @override
+  String notifSleepAt(String time) {
+    return '$time에 수면 타이머';
+  }
 
   @override
   String get notifHiddenNote => '곡 정보 숨김';
@@ -2500,4 +2568,25 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get equalizerSave => '저장';
+
+  @override
+  String get audioLanguageTitle => '오디오 언어';
+
+  @override
+  String get audioLanguageRow => '오디오 언어';
+
+  @override
+  String get audioLanguageOriginal => '원본';
+
+  @override
+  String get audioLanguageHint => '고르면 바로 적용돼요. 미리 듣기와 받기에 같은 언어를 써요.';
+
+  @override
+  String get downloadAgainTitle => '다시 받을까요?';
+
+  @override
+  String get downloadAgainBody => '이미 받은 곡이에요. 다시 받으면 같은 곡이 하나 더 생겨요.';
+
+  @override
+  String get downloadAgainConfirm => '다시 받기';
 }

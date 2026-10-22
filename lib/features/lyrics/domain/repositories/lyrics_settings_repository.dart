@@ -6,4 +6,5 @@ abstract interface class LyricsSettingsRepository {
   Future<void> saveLatency(int milliseconds);
   Future<void> saveTheme(LyricsTheme theme);
   Future<void> saveCoverBackground(bool on);
+  Future<void> saveOverlay(bool on);
 }
