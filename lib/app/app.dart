@@ -11,6 +11,9 @@ import '../features/account/presentation/bloc/account_cubit.dart';
 import '../features/covers/presentation/bloc/cover_color_cubit.dart';
 import '../features/covers/presentation/bloc/cover_cubit.dart';
 import '../features/lyrics/presentation/bloc/lyrics_cubit.dart';
+import '../features/lyrics/presentation/bloc/lyrics_overlay_cubit.dart';
+import '../features/lyrics/presentation/bloc/lyrics_settings_cubit.dart';
+import '../features/lyrics/presentation/widgets/lyrics_overlay_bridge.dart';
 import '../features/downloads/presentation/bloc/download_queue_cubit.dart';
 import '../features/downloads/presentation/widgets/download_completion_listener.dart';
 import '../features/downloads/presentation/bloc/download_preferences_cubit.dart';
@@ -94,6 +97,8 @@ class _MusicAppState extends State<MusicApp> {
         BlocProvider(create: (_) => sl<CoverCubit>()..load()),
         BlocProvider(create: (_) => sl<CoverColorCubit>()..load()),
         BlocProvider(create: (_) => sl<LyricsCubit>()),
+        BlocProvider(create: (_) => sl<LyricsSettingsCubit>()..load()),
+        BlocProvider(create: (_) => sl<LyricsOverlayCubit>()),
         BlocProvider(create: (_) => sl<LibraryCubit>()..start()),
         BlocProvider(create: (_) => sl<LibraryImportCubit>()),
         BlocProvider(create: (_) => sl<NowPlayingCubit>()),
@@ -163,11 +168,13 @@ class _MusicAppState extends State<MusicApp> {
               child: NotificationBridge(
                 onOpenPlayer: _openPlayer,
                 onOpenDownload: _openDownload,
-                child: MoodThemeFollower(
-                  child: DownloadCompletionListener(
-                    child: NewVideosLauncher(
-                      onOpen: _openNewVideos,
-                      child: LockGate(child: child!),
+                child: LyricsOverlayBridge(
+                  child: MoodThemeFollower(
+                    child: DownloadCompletionListener(
+                      child: NewVideosLauncher(
+                        onOpen: _openNewVideos,
+                        child: LockGate(child: child!),
+                      ),
                     ),
                   ),
                 ),

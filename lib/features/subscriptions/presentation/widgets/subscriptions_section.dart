@@ -3,11 +3,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../app/router.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../domain/entities/background_status.dart';
 import '../../domain/entities/subscription_settings.dart';
 import '../bloc/subscriptions_cubit.dart';
 
@@ -21,7 +23,8 @@ class SubscriptionsSection extends StatefulWidget {
 }
 
 class _SubscriptionsSectionState extends State<SubscriptionsSection> {
-  late final SubscriptionsCubit _cubit = sl<SubscriptionsCubit>()..load();
+  late final SubscriptionsCubit _cubit = sl<SubscriptionsCubit>()
+    ..load().then((_) => _cubit.refreshStatus());
 
   @override
   Widget build(BuildContext context) {
@@ -80,10 +83,43 @@ class _SubscriptionsSectionState extends State<SubscriptionsSection> {
                   ),
                 ),
               ],
+              if (state.hasEnabled)
+                SettingRow(
+                  title: state.checking
+                      ? l10n.settingsCheckNowChecking
+                      : l10n.settingsCheckNow,
+                  description: _statusText(context, state.status),
+                  trailing: Icon(AppIcons.refresh, color: p.onSurfaceMuted),
+                  onTap: state.checking ? null : _cubit.checkNow,
+                ),
             ],
           ],
         );
       },
     );
+  }
+
+  /// 마지막 확인 결과를 한두 줄로: 안 오는 이유(알림 막힘 · 읽기 실패 · 예약 안 됨)가 먼저 보이게.
+  String _statusText(BuildContext context, BackgroundStatus? s) {
+    final l10n = context.l10n;
+    if (s == null || s.lastRunAt == null) {
+      return [
+        l10n.settingsCheckStatusNever,
+        if (s != null && s.notificationsBlocked)
+          l10n.settingsCheckStatusBlocked,
+      ].join('\n');
+    }
+    final time = DateFormat.MMMd(Localizations.localeOf(context).toString())
+        .add_Hm()
+        .format(s.lastRunAt!);
+    return [
+      l10n.settingsCheckStatusLast(time),
+      if (s.notified > 0) l10n.settingsCheckStatusNotified(s.notified),
+      if (s.failedChannels > 0)
+        l10n.settingsCheckStatusFailed(s.failedChannels),
+      if (s.notificationsBlocked || s.blocked) l10n.settingsCheckStatusBlocked,
+      if (_cubit.state.settings.background && !s.scheduled)
+        l10n.settingsCheckStatusNotScheduled,
+    ].join('\n');
   }
 }

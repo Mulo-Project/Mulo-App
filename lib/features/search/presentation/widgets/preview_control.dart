@@ -7,17 +7,22 @@ import '../../../library/domain/entities/track.dart' show formatDuration;
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
+import '../bloc/audio_language_cubit.dart';
 import '../bloc/preview_cubit.dart';
 
 /// [hit] 미리 듣기를 시작하거나(이미 듣는 중이면) 멈춘다.
 /// 소리가 나기 시작하면 메인 재생은 멈추고, 시작하지 못하면 안내를 띄운다.
-Future<void> togglePreview(BuildContext context, MediaHit hit) async {
+Future<void> togglePreview(
+  BuildContext context,
+  MediaHit hit, {
+  String? audioLanguage,
+}) async {
   final l10n = context.l10n;
   final messenger = ScaffoldMessenger.of(context);
   final preview = context.read<PreviewCubit>();
   final nowPlaying = context.read<NowPlayingCubit>();
 
-  final failure = await preview.toggle(hit);
+  final failure = await preview.toggle(hit, audioLanguage: audioLanguage);
   if (failure != null) {
     // 까닭을 알 수 있게 엔진이 알려 준 마지막 줄을 덧붙인다.
     final detail = preview.lastFailureDetail
@@ -83,7 +88,11 @@ class PreviewButton extends StatelessWidget {
       busy: status == PreviewStatus.loading,
       onPressed: paused
           ? () => context.read<PreviewCubit>().togglePause()
-          : () => togglePreview(context, hit),
+          : () => togglePreview(
+              context,
+              hit,
+              audioLanguage: context.read<AudioLanguageCubit>().state.selected,
+            ),
     );
   }
 }

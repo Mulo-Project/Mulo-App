@@ -229,6 +229,7 @@ class NotificationSyncCubit extends Cubit<void> {
     required String? artUri,
     bool favorite = false,
     bool shuffle = false,
+    DateTime? sleepEndsAt,
     int queueIndex = 0,
     int queueLength = 0,
     PreviewNotice? preview,
@@ -245,6 +246,15 @@ class NotificationSyncCubit extends Cubit<void> {
       return;
     }
     final hide = settings.hideSongInfo;
+    // 수면 타이머가 켜져 있으면 끝나는 시각을 부제목 끝에 붙인다 (시각은 고정이라 매초 갱신하지 않는다).
+    String withSleep(String artist) {
+      final end = sleepEndsAt;
+      if (end == null) return artist;
+      final hh = end.hour.toString().padLeft(2, '0');
+      final mm = end.minute.toString().padLeft(2, '0');
+      return '$artist · ${l10n.notifSleepAt('$hh:$mm')}';
+    }
+
     final next = preview != null
         ? MediaSessionInfo(
             title: hide ? l10n.notifHiddenTitle : preview.title,
@@ -265,14 +275,16 @@ class NotificationSyncCubit extends Cubit<void> {
         : MediaSessionInfo(
             title: hide ? l10n.notifHiddenTitle : track!.title,
             // 숨김 중에는 곡이 넘어가는 걸 알 수 있게 대기열 속 순번을 보여 준다.
-            artist: hide
-                ? (queueLength > 1
-                      ? l10n.notifHiddenNotePosition(
-                          '${queueIndex + 1}',
-                          '$queueLength',
-                        )
-                      : l10n.notifHiddenNote)
-                : (track!.artist.isEmpty ? l10n.unknownArtist : track.artist),
+            artist: withSleep(
+              hide
+                  ? (queueLength > 1
+                        ? l10n.notifHiddenNotePosition(
+                            '${queueIndex + 1}',
+                            '$queueLength',
+                          )
+                        : l10n.notifHiddenNote)
+                  : (track!.artist.isEmpty ? l10n.unknownArtist : track.artist),
+            ),
             album: hide ? '' : track!.album,
             artUri: hide ? null : artUri,
             duration: track!.duration,

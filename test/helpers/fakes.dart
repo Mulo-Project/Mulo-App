@@ -7,6 +7,8 @@ import 'package:music_download_play_app/features/account/domain/repositories/acc
 import 'package:music_download_play_app/features/covers/di.dart';
 import 'package:music_download_play_app/features/lyrics/di.dart';
 import 'package:music_download_play_app/features/lyrics/domain/entities/lyrics.dart';
+import 'package:music_download_play_app/features/lyrics/domain/entities/lyrics_settings.dart';
+import 'package:music_download_play_app/features/lyrics/domain/repositories/lyrics_settings_repository.dart';
 import 'package:music_download_play_app/features/lyrics/domain/repositories/lyrics_repository.dart';
 import 'package:music_download_play_app/features/covers/domain/entities/cover_art.dart';
 import 'package:music_download_play_app/features/covers/domain/repositories/cover_repository.dart';
@@ -54,11 +56,13 @@ import 'package:music_download_play_app/features/playlists/di.dart';
 import 'package:music_download_play_app/features/playlists/domain/entities/playlist.dart';
 import 'package:music_download_play_app/features/playlists/domain/repositories/playlist_repository.dart';
 import 'package:music_download_play_app/features/search/di.dart';
+import 'package:music_download_play_app/features/search/domain/entities/audio_language.dart';
 import 'package:music_download_play_app/features/search/domain/entities/audio_stream.dart';
 import 'package:music_download_play_app/features/search/domain/entities/preview_progress.dart';
 import 'package:music_download_play_app/features/search/domain/entities/engine_exception.dart';
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
 import 'package:music_download_play_app/features/search/domain/entities/search_source.dart';
+import 'package:music_download_play_app/features/search/domain/entities/subtitle_track.dart';
 import 'package:music_download_play_app/features/search/domain/repositories/downloader_engine.dart';
 import 'package:music_download_play_app/features/search/domain/repositories/link_opener.dart';
 import 'package:music_download_play_app/features/search/domain/repositories/preview_player.dart';
@@ -66,6 +70,7 @@ import 'package:music_download_play_app/features/security/di.dart';
 import 'package:music_download_play_app/features/security/domain/entities/app_lock_settings.dart';
 import 'package:music_download_play_app/features/security/domain/repositories/app_lock_repository.dart';
 import 'package:music_download_play_app/features/subscriptions/di.dart';
+import 'package:music_download_play_app/features/subscriptions/domain/entities/background_status.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/entities/feed_video.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/entities/new_video_download_request.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/entities/subscribed_channel.dart';
@@ -386,6 +391,33 @@ class FakeBiometricAuthenticator implements BiometricAuthenticator {
 }
 
 /// 메모리 플레이어 모양 저장소.
+class MemoryLyricsSettingsRepository implements LyricsSettingsRepository {
+  MemoryLyricsSettingsRepository([
+    this.settings = const LyricsSettings(latencyMs: 0),
+  ]);
+
+  LyricsSettings settings;
+
+  @override
+  Future<LyricsSettings> load() async => settings;
+
+  @override
+  Future<void> saveLatency(int milliseconds) async =>
+      settings = settings.copyWith(latencyMs: milliseconds);
+
+  @override
+  Future<void> saveTheme(LyricsTheme theme) async =>
+      settings = settings.copyWith(theme: theme);
+
+  @override
+  Future<void> saveCoverBackground(bool on) async =>
+      settings = settings.copyWith(coverBackground: on);
+
+  @override
+  Future<void> saveOverlay(bool on) async =>
+      settings = settings.copyWith(overlay: on);
+}
+
 class MemoryPlayerStyleRepository implements PlayerStyleRepository {
   MemoryPlayerStyleRepository([this.style = PlayerStyle.initial]);
 
@@ -573,6 +605,9 @@ class MemoryDownloadQueue implements DownloadQueueRepository {
     _changes.add([...items]);
   }
 
+  /// 이미 받은 곡의 원본 주소 키 (`downloadSourceKey`).
+  final downloadedKeys = <String>{};
+
   /// 받기 요청 기록.
   final requests = <DownloadRequest>[];
 
@@ -584,7 +619,7 @@ class MemoryDownloadQueue implements DownloadQueueRepository {
       existing[url] ?? ExistingDownload.none;
 
   @override
-  Stream<Set<String>> watchDownloadedKeys() => Stream.value({});
+  Stream<Set<String>> watchDownloadedKeys() => Stream.value(downloadedKeys);
 
   @override
   Stream<List<DownloadItem>> watchQueue() async* {
@@ -820,6 +855,9 @@ Future<void> setUpTestDependencies({
     )
     ..registerLazySingleton<PlayerStyleRepository>(
       () => MemoryPlayerStyleRepository(playerStyle),
+    )
+    ..registerLazySingleton<LyricsSettingsRepository>(
+      MemoryLyricsSettingsRepository.new,
     )
     ..registerLazySingleton<MixWithOthersRepository>(
       MemoryMixWithOthersRepository.new,
@@ -1116,6 +1154,12 @@ class FakeDownloaderEngine implements DownloaderEngine {
   /// [resolveAudioStream]을 부를 때마다 새로 읽으라고 했는지.
   final refreshFlags = <bool>[];
 
+  /// [resolveAudioStream]에 넘어온 오디오 언어들.
+  final audioLanguageArgs = <String?>[];
+
+  /// [fetchAudioLanguages]가 돌려줄 오디오 언어 트랙들.
+  List<AudioLanguage> audioLanguages = const [];
+
   /// [resolveAudioStream]에 넘어온 곡 주소들.
   final streams = <String>[];
 
@@ -1159,6 +1203,19 @@ class FakeDownloaderEngine implements DownloaderEngine {
     return found;
   }
 
+  /// [fetchSubtitles]가 돌려줄 자막 (없으면 자막 없음)과 받은 주소들.
+  SubtitleTrack? subtitles;
+  final subtitleUrls = <String>[];
+
+  @override
+  Future<SubtitleTrack?> fetchSubtitles(
+    String url, {
+    List<String> preferLanguages = const ['ko', 'en'],
+  }) async {
+    subtitleUrls.add(url);
+    return subtitles;
+  }
+
   @override
   Future<ChannelInfo> fetchChannel(String url) async {
     channels.add(url);
@@ -1168,12 +1225,18 @@ class FakeDownloaderEngine implements DownloaderEngine {
   }
 
   @override
+  Future<List<AudioLanguage>> fetchAudioLanguages(String url) async =>
+      audioLanguages;
+
+  @override
   Future<AudioStream> resolveAudioStream(
     String url, {
     bool refresh = false,
+    String? audioLanguage,
   }) async {
     streams.add(url);
     refreshFlags.add(refresh);
+    audioLanguageArgs.add(audioLanguage);
     await streamGate;
     final failure = streamFailure;
     if (failure != null) throw EngineException(failure);
@@ -1533,4 +1596,19 @@ class FakeBackgroundChecker implements BackgroundChecker {
 
   @override
   Future<void> showTestNotification() async => testShown++;
+
+  var checkedNow = 0;
+  BackgroundStatus? statusValue;
+
+  /// 지금 확인을 돌린 뒤 보이는 상태 (마지막 확인 시각이 바뀐 것처럼).
+  BackgroundStatus? statusAfterCheck;
+
+  @override
+  Future<void> checkNow() async {
+    checkedNow++;
+    statusValue = statusAfterCheck ?? statusValue;
+  }
+
+  @override
+  Future<BackgroundStatus?> status() async => statusValue;
 }

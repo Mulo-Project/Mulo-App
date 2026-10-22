@@ -149,10 +149,21 @@ class DownloadQueueCubit extends Cubit<DownloadQueueState> {
   Future<void> resume(String id) => _resume(id);
 
   /// 받는 중 · 대기 중인 곡을 모두 일시정지한다.
+  /// 받는 곡을 먼저 멈추면 다음 대기 곡이 바로 받기 시작하므로, 대기 곡을 먼저 멈추고 받는 곡을 마지막에 멈춘다.
   Future<void> pauseAll() async {
-    for (final i in state.items) {
-      if (i.status == DownloadStatus.downloading ||
-          i.status == DownloadStatus.queued) {
+    {
+      final live =
+          [
+            for (final i in state.items)
+              if (i.status == DownloadStatus.downloading ||
+                  i.status == DownloadStatus.queued)
+                i,
+          ]..sort(
+            (a, b) =>
+                (a.status == DownloadStatus.queued ? 0 : 1) -
+                (b.status == DownloadStatus.queued ? 0 : 1),
+          );
+      for (final i in live) {
         await _pause(i.id);
       }
     }

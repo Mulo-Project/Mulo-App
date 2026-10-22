@@ -94,11 +94,15 @@ class AppLockCubit extends Cubit<AppLockState> {
   /// 앱이 화면에서 사라진 시각 (돌아올 때 얼마나 비웠는지 본다).
   DateTime? _leftAt;
 
+  /// 저장된 생체 인증 사용 여부 (기기에서 쓸 수 없는 순간에도 설정은 잃지 않는다).
+  bool _savedBiometric = false;
+
   /// 앱 시작 때 한 번. 켜져 있으면 잠근 채로 시작한다.
   Future<void> load() async {
     final saved = await _load(const NoParams());
     final available = await _isBiometricAvailable(const NoParams());
     if (isClosed) return;
+    _savedBiometric = saved.biometricEnabled;
     emit(
       state.copyWith(
         loaded: true,
@@ -106,6 +110,20 @@ class AppLockCubit extends Cubit<AppLockState> {
         biometricEnabled: saved.biometricEnabled && available,
         biometricAvailable: available,
         locked: saved.enabled,
+      ),
+    );
+  }
+
+  /// 생체 인증을 쓸 수 있는지 다시 본다. 앱 시작 직후엔 화면이 엔진에 붙기 전이라 안드로이드가
+  /// "없음"으로 답할 수 있어서, 시작 때 한 번만 보면 지문이 꺼진 채로 굳는다. 앞으로 돌아올 때 · 잠금 화면에서 부른다.
+  Future<void> refreshBiometric() async {
+    if (!state.loaded) return;
+    final available = await _isBiometricAvailable(const NoParams());
+    if (isClosed) return;
+    emit(
+      state.copyWith(
+        biometricAvailable: available,
+        biometricEnabled: _savedBiometric && available,
       ),
     );
   }
@@ -170,6 +188,7 @@ class AppLockCubit extends Cubit<AppLockState> {
   /// 현재 PIN이 맞으면 잠금을 끈다. 맞으면 true.
   Future<bool> disableLock(String pin) async {
     if (!await _disable(pin)) return false;
+    _savedBiometric = false;
     emit(
       state.copyWith(
         enabled: false,
@@ -195,6 +214,7 @@ class AppLockCubit extends Cubit<AppLockState> {
   /// 본인 확인(PIN · 생체)을 마친 뒤 잠금을 끈다.
   Future<void> turnOffLock() async {
     await _turnOff(const NoParams());
+    _savedBiometric = false;
     emit(
       state.copyWith(
         enabled: false,
@@ -218,6 +238,7 @@ class AppLockCubit extends Cubit<AppLockState> {
       if (!await _authenticateBiometric(reason)) return false;
     }
     await _setBiometric(value);
+    _savedBiometric = value;
     emit(state.copyWith(biometricEnabled: value));
     return true;
   }

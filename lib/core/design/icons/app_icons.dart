@@ -112,6 +112,11 @@ abstract final class AppIcons {
     fontFamily: 'PhosphorFill',
     matchTextDirection: true,
   );
+  static const IconData remove = IconData(
+    0xe32a,
+    fontFamily: 'PhosphorRegular',
+    matchTextDirection: true,
+  );
   static const IconData add = IconData(
     0xe3d4,
     fontFamily: 'PhosphorRegular',

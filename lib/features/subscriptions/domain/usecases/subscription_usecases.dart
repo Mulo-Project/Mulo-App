@@ -1,4 +1,5 @@
 import '../../../../core/usecase/usecase.dart';
+import '../entities/background_status.dart';
 import '../entities/channel_details.dart';
 import '../entities/channel_hit.dart';
 import '../entities/channel_new_videos.dart';
@@ -211,6 +212,26 @@ class ClearNewVideosNotification implements UseCase<void, NoParams> {
 
   @override
   Future<void> call(NoParams params) => _checker.clearNotification();
+}
+
+/// 백그라운드 확인을 지금 한 번 돌린다.
+class CheckNewVideosNow implements UseCase<void, NoParams> {
+  const CheckNewVideosNow(this._checker);
+
+  final BackgroundChecker _checker;
+
+  @override
+  Future<void> call(NoParams params) => _checker.checkNow();
+}
+
+/// 백그라운드 확인 진단 정보 (마지막 확인 시각 · 알림 막힘 등).
+class GetBackgroundStatus implements UseCase<BackgroundStatus?, NoParams> {
+  const GetBackgroundStatus(this._checker);
+
+  final BackgroundChecker _checker;
+
+  @override
+  Future<BackgroundStatus?> call(NoParams params) => _checker.status();
 }
 
 /// 키워드로 채널 찾기.

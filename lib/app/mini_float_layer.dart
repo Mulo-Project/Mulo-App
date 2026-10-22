@@ -102,6 +102,11 @@ class MiniFloatLayer extends StatelessWidget {
               onPanEnd: onPanEnd,
               child: RepaintBoundary(
                 child: BlocBuilder<NowPlayingCubit, NowPlayingState>(
+                  // 위치는 250ms마다 바뀌지만 고리 진행도는 눈에 띄게 변할 때만 다시 그린다.
+                  buildWhen: (a, b) =>
+                      a.track != b.track ||
+                      a.isPlaying != b.isPlaying ||
+                      (a.progress - b.progress).abs() >= .004,
                   builder: (context, s) {
                     final track = s.track;
                     if (track == null) return const SizedBox.shrink();

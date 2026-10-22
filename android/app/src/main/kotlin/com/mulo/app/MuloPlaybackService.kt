@@ -50,8 +50,15 @@ class MuloPlaybackService : MediaSessionService() {
     }
 
     // 최근 작업에서 앱을 밀었을 때: 재생 중이면 계속하고, 멈춰 있으면 알림이 사라지므로 세션도 정리한다.
+    // 미리 듣기는 메인 플레이어가 아니라 Dart의 플레이어가 내므로, 미리 듣기가 소리를 내는 동안은 그대로 둔다.
     override fun onTaskRemoved(rootIntent: Intent?) {
-        if (!PlaybackHub.exo.playWhenReady) PlaybackHub.endSession()
+        if (PlaybackHub.isPreviewPlaying) {
+            // 알림(포그라운드)을 유지한다.
+        } else if (PlaybackHub.isPreviewing) {
+            PlaybackHub.setSession(null)
+        } else if (!PlaybackHub.exo.playWhenReady) {
+            PlaybackHub.endSession()
+        }
         super.onTaskRemoved(rootIntent)
     }
 

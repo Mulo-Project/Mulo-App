@@ -19,6 +19,8 @@ class MediaHit extends Equatable {
     this.subscriberCount,
     this.channelThumbnailUrl,
     this.creators = const [],
+    this.subtitleLangs = const [],
+    this.autoSubtitleLangs = const [],
   });
 
   /// 사이트 안의 곡 id (유튜브면 videoId).
@@ -61,6 +63,13 @@ class MediaHit extends Equatable {
   /// 공동 작업이 아니면 비어 있다. 곡 하나를 자세히 읽었을 때만 있다.
   final List<String> creators;
 
+  /// 영상에 달린 자막의 언어 코드 (사람이 단 것 + 자동 생성). 곡 하나를 자세히 읽었을 때만 있고,
+  /// 비어 있으면 자막이 없거나 아직 모른다.
+  final List<String> subtitleLangs;
+
+  /// [subtitleLangs] 가운데 자동 생성 자막인 것.
+  final List<String> autoSubtitleLangs;
+
   /// 분류만 채운 사본.
   MediaHit withCategories(List<String> categories) =>
       _copy(categories: categories);
@@ -76,13 +85,18 @@ class MediaHit extends Equatable {
         ? full.uploader
         : uploader,
     creators: full.creators,
+    subtitleLangs: subtitleLangs.isEmpty ? full.subtitleLangs : subtitleLangs,
+    autoSubtitleLangs: subtitleLangs.isEmpty
+        ? full.autoSubtitleLangs
+        : autoSubtitleLangs,
     duration: duration ?? full.duration,
     thumbnailUrl: thumbnailUrl ?? full.thumbnailUrl,
     categories: categories.isEmpty ? full.categories : categories,
     channelUrl: channelUrl ?? full.channelUrl,
     viewCount: viewCount ?? full.viewCount,
     uploadedAt: uploadedAt ?? full.uploadedAt,
-    description: description.isEmpty ? full.description : description,
+    // 검색 목록의 설명은 앞부분만 오는 일이 많아서, 자세히 읽은 전체 설명이 있으면 그것을 쓴다.
+    description: full.description.isEmpty ? description : full.description,
     likeCount: likeCount ?? full.likeCount,
     subscriberCount: subscriberCount ?? full.subscriberCount,
     channelThumbnailUrl: channelThumbnailUrl ?? full.channelThumbnailUrl,
@@ -107,6 +121,8 @@ class MediaHit extends Equatable {
     int? subscriberCount,
     String? channelThumbnailUrl,
     List<String>? creators,
+    List<String>? subtitleLangs,
+    List<String>? autoSubtitleLangs,
   }) => MediaHit(
     id: id,
     title: title,
@@ -124,6 +140,8 @@ class MediaHit extends Equatable {
     subscriberCount: subscriberCount ?? this.subscriberCount,
     channelThumbnailUrl: channelThumbnailUrl ?? this.channelThumbnailUrl,
     creators: creators ?? this.creators,
+    subtitleLangs: subtitleLangs ?? this.subtitleLangs,
+    autoSubtitleLangs: autoSubtitleLangs ?? this.autoSubtitleLangs,
   );
 
   @override
@@ -144,6 +162,8 @@ class MediaHit extends Equatable {
     subscriberCount,
     channelThumbnailUrl,
     creators,
+    subtitleLangs,
+    autoSubtitleLangs,
   ];
 }
 

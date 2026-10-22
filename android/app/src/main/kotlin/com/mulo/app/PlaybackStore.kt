@@ -77,6 +77,16 @@ object PlaybackStore {
         prefs(context).edit().putInt(INDEX, index).putLong(POSITION, positionMs).putString(REPEAT, repeat).apply()
     }
 
+    /**
+     * 재생이 멈춘 이유를 최근 20개까지 남긴다 (오래 두면 재생이 끊기는 문제를 추적하는 진단용).
+     * `adb shell run-as com.mulo.app cat shared_prefs/mulo_playback.xml`의 `stopLog`로 읽는다.
+     */
+    fun logStop(context: Context, text: String) {
+        val stamp = java.text.SimpleDateFormat("MM-dd HH:mm:ss", java.util.Locale.US).format(java.util.Date())
+        val lines = (prefs(context).getString("stopLog", "") ?: "").split("\n").filter { it.isNotBlank() }
+        prefs(context).edit().putString("stopLog", (lines + "$stamp $text").takeLast(20).joinToString("\n")).apply()
+    }
+
     fun saveSession(context: Context, map: Map<*, *>?) {
         val edit = prefs(context).edit()
         if (map == null) {

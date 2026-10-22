@@ -34,9 +34,19 @@ class DownloadForegroundService : Service() {
         return START_NOT_STICKY
     }
 
+    override fun onDestroy() {
+        wanted = false
+        super.onDestroy()
+    }
+
     companion object {
+        /** 서비스로 붙들기로 한 상태. 이 동안은 화면이 없어도 Flutter 엔진(받기를 하는 Dart)을 살려 둔다. */
+        @Volatile
+        var wanted = false
+
         /** 앞에 붙든다. 앱이 백그라운드라 시작할 수 없으면 false (일반 알림으로 보여 준다). */
         fun start(context: Context): Boolean = try {
+            wanted = true
             val intent = Intent(context, DownloadForegroundService::class.java)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(intent)
@@ -45,10 +55,13 @@ class DownloadForegroundService : Service() {
             }
             true
         } catch (e: Exception) {
+            wanted = false
             false
         }
 
         fun stop(context: Context) {
+            wanted = false
+            MuloEngine.releaseWhenIdle()
             context.stopService(Intent(context, DownloadForegroundService::class.java))
         }
     }

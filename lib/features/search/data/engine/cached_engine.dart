@@ -1,9 +1,11 @@
+import '../../domain/entities/audio_language.dart';
 import '../../domain/entities/audio_stream.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/search_source.dart';
+import '../../domain/entities/subtitle_track.dart';
 import '../../domain/repositories/downloader_engine.dart';
 
-/// 곡 · 채널 정보를 잠깐 기억해 같은 주소를 다시 읽지 않는 엔진 덮개.
+/// 곡 · 채널 정보 · 스트림 주소 · 자막을 잠깐 기억해 같은 주소를 다시 읽지 않는 엔진 덮개.
 /// 같은 곡을 다시 열어도 빠르다.
 /// 읽는 중인 요청도 함께 쓰므로 같은 주소를 동시에 두 번 부르지 않는다.
 /// 실패는 기억하지 않는다. 검색은 항상 새로 한다.
@@ -23,6 +25,8 @@ class CachedDownloaderEngine implements DownloaderEngine {
   final _infos = <String, _Entry<MediaInfo>>{};
   final _channels = <String, _Entry<ChannelInfo>>{};
   final _streams = <String, _Entry<AudioStream>>{};
+  final _subtitles = <String, _Entry<SubtitleTrack?>>{};
+  final _languages = <String, _Entry<List<AudioLanguage>>>{};
 
   @override
   Future<SearchPage> search(
@@ -55,14 +59,28 @@ class CachedDownloaderEngine implements DownloaderEngine {
       _cached(_channels, url, () => _inner.fetchChannel(url));
 
   @override
-  Future<AudioStream> resolveAudioStream(String url, {bool refresh = false}) {
-    if (refresh) _streams.remove(url);
+  Future<AudioStream> resolveAudioStream(
+    String url, {
+    bool refresh = false,
+    String? audioLanguage,
+  }) {
+    // 같은 곡이라도 오디오 언어가 다르면 다른 주소다.
+    final key = audioLanguage == null ? url : '$url|$audioLanguage';
+    if (refresh) _streams.remove(key);
     return _cached(
       _streams,
-      url,
-      () => _inner.resolveAudioStream(url, refresh: refresh),
+      key,
+      () => _inner.resolveAudioStream(
+        url,
+        refresh: refresh,
+        audioLanguage: audioLanguage,
+      ),
     );
   }
+
+  @override
+  Future<List<AudioLanguage>> fetchAudioLanguages(String url) =>
+      _cached(_languages, url, () => _inner.fetchAudioLanguages(url));
 
   Future<T> _cached<T>(
     Map<String, _Entry<T>> cache,
@@ -87,6 +105,17 @@ class CachedDownloaderEngine implements DownloaderEngine {
     }
     return value;
   }
+
+  @override
+  Future<SubtitleTrack?> fetchSubtitles(
+    String url, {
+    List<String> preferLanguages = const ['ko', 'en'],
+  }) => _cached(
+    _subtitles,
+    // 같은 곡이라도 우선하는 언어가 다르면 다른 자막이다.
+    '$url|${preferLanguages.join(',')}',
+    () => _inner.fetchSubtitles(url, preferLanguages: preferLanguages),
+  );
 }
 
 class _Entry<T> {

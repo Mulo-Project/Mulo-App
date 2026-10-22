@@ -303,6 +303,7 @@ class PlainButton extends StatelessWidget {
     this.icon,
     this.tooltip,
     this.onPressed,
+    this.onLongPress,
     this.accent = false,
   }) : assert(label != null || icon != null);
 
@@ -310,6 +311,9 @@ class PlainButton extends StatelessWidget {
   final IconData? icon;
   final String? tooltip;
   final VoidCallback? onPressed;
+
+  /// 길게 누르기. 주면 길게 눌러 툴팁을 띄우지 않는다.
+  final VoidCallback? onLongPress;
 
   /// 강조 색으로 그린다 (저장 같은 주 동작).
   final bool accent;
@@ -325,6 +329,7 @@ class PlainButton extends StatelessWidget {
         type: MaterialType.transparency,
         child: InkWell(
           onTap: onPressed,
+          onLongPress: onLongPress,
           borderRadius: BorderRadius.circular(AppRadii.sm),
           child: Padding(
             padding: const EdgeInsets.symmetric(
@@ -345,6 +350,12 @@ class PlainButton extends StatelessWidget {
         ),
       ),
     );
-    return tooltip == null ? button : Tooltip(message: tooltip!, child: button);
+    return tooltip == null
+        ? button
+        : Tooltip(
+            message: tooltip!,
+            triggerMode: onLongPress == null ? null : TooltipTriggerMode.manual,
+            child: button,
+          );
   }
 }

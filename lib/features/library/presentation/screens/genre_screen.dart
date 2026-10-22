@@ -6,6 +6,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../bloc/library_cubit.dart';
 import '../widgets/play_shuffle_row.dart';
+import '../widgets/lazy_track_list.dart';
 import '../widgets/track_list_tile.dart';
 
 /// 장르 화면: 장르에 속한 곡 목록과 재생 · 셔플.
@@ -30,11 +31,11 @@ class GenreScreen extends StatelessWidget {
 
     return SafeArea(
       bottom: false,
-      child: ListView(
+      child: LazyTrackList(
         padding: EdgeInsets.only(
           bottom: AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
         ),
-        children: [
+        header: [
           AppTopBar(
             title: name,
             leading: CircleIconButton(
@@ -88,10 +89,11 @@ class GenreScreen extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             PlayShuffleRow(tracks: tracks),
             const SizedBox(height: AppSpacing.sm),
-            for (final (i, t) in tracks.indexed)
-              TrackListTile(track: t, queue: tracks, index: i),
           ],
         ],
+        trackCount: tracks.length,
+        trackBuilder: (context, i) =>
+            TrackListTile(track: tracks[i], queue: tracks, index: i),
       ),
     );
   }

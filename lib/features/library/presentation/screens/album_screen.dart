@@ -10,6 +10,7 @@ import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../covers/presentation/widgets/decorate_sheet.dart';
 import '../bloc/library_cubit.dart';
 import '../widgets/play_shuffle_row.dart';
+import '../widgets/lazy_track_list.dart';
 import '../widgets/track_list_tile.dart';
 
 /// 앨범 화면: 앨범에 속한 곡 목록과 전체 재생.
@@ -34,11 +35,11 @@ class AlbumScreen extends StatelessWidget {
 
     return SafeArea(
       bottom: false,
-      child: ListView(
+      child: LazyTrackList(
         padding: EdgeInsets.only(
           bottom: AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
         ),
-        children: [
+        header: [
           AppTopBar(
             title: name,
             leading: CircleIconButton(
@@ -113,15 +114,15 @@ class AlbumScreen extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             PlayShuffleRow(tracks: tracks),
             const SizedBox(height: AppSpacing.sm),
-            for (final (i, t) in tracks.indexed)
-              TrackListTile(
-                track: t,
-                queue: tracks,
-                index: i,
-                showAlbum: false,
-              ),
           ],
         ],
+        trackCount: tracks.length,
+        trackBuilder: (context, i) => TrackListTile(
+          track: tracks[i],
+          queue: tracks,
+          index: i,
+          showAlbum: false,
+        ),
       ),
     );
   }

@@ -1,5 +1,6 @@
 package com.mulo.app
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import io.flutter.embedding.android.FlutterFragmentActivity
@@ -7,19 +8,11 @@ import io.flutter.embedding.engine.FlutterEngine
 
 // 생체 인증(local_auth)이 FragmentActivity를 요구한다. 재생 · 알림은 PlaybackHub(서비스)가 쥐고 PlaybackChannel로 이어진다.
 class MainActivity : FlutterFragmentActivity() {
-    private var playback: PlaybackChannel? = null
-    private var equalizer: EqualizerChannel? = null
-    private var mediaStore: MediaStoreChannel? = null
-    private var lyrics: LyricsChannel? = null
-    private var audioOutput: AudioOutputChannel? = null
-    private var ytDlp: YtDlpChannel? = null
-    private var transcoder: TranscoderChannel? = null
-    private var subscriptions: SubscriptionChannel? = null
-
     /** 화면에 떠 있는지. 새 인텐트가 들어올 때 앱이 뒤에 있었는지 알려고 쓴다. */
     private var resumed = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        MuloEngine.activity = this
         super.onCreate(savedInstanceState)
         handleIntent(intent)
     }
@@ -57,55 +50,37 @@ class MainActivity : FlutterFragmentActivity() {
     override fun onResume() {
         super.onResume()
         resumed = true
+        LyricsOverlay.setAppVisible(true)
     }
 
     override fun onPause() {
         resumed = false
+        LyricsOverlay.setAppVisible(false)
         super.onPause()
     }
 
-    override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
-        super.configureFlutterEngine(flutterEngine)
-        // 받기 알림은 화면이 아니라 엔진에 묶는다 (화면이 닫혀도 버튼이 Dart로 전달된다).
-        if (!flutterEngine.plugins.has(DownloadNotificationPlugin::class.java)) {
-            flutterEngine.plugins.add(DownloadNotificationPlugin())
-        }
-        mediaStore = MediaStoreChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger) { this }
-        lyrics = LyricsChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
-        audioOutput = AudioOutputChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
-        ytDlp = YtDlpChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
-        transcoder = TranscoderChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
-        playback = PlaybackChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
-        equalizer = EqualizerChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger)
-        subscriptions = SubscriptionChannel(applicationContext, flutterEngine.dartExecutor.binaryMessenger) {
-            moveTaskToBack(true)
-        }
+    // 엔진은 화면보다 오래 산다 ([MuloEngine]): 받기 · 미리 듣기가 최근 작업에서 밀어도 이어지게.
+    override fun provideFlutterEngine(context: Context): FlutterEngine = MuloEngine.obtain(context)
+
+    // 새 엔진을 만드는 Fragment는 화면과 함께 엔진을 destroy한다(provideFlutterEngine과 상관없이).
+    // 캐시된 엔진으로 붙여야 shouldDestroyEngineWithHost(false)가 먹는다.
+    override fun getCachedEngineId(): String {
+        MuloEngine.obtain(this)
+        return MuloEngine.CACHE_ID
+    }
+
+    override fun shouldDestroyEngineWithHost(): Boolean = false
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (MuloEngine.activity === this) MuloEngine.activity = null
+        MuloEngine.releaseWhenIdle()
     }
 
     @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (mediaStore?.onActivityResult(requestCode, resultCode) == true) return
+        if (MuloEngine.mediaStore?.onActivityResult(requestCode, resultCode) == true) return
         @Suppress("DEPRECATION")
         super.onActivityResult(requestCode, resultCode, data)
-    }
-
-    override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
-        mediaStore?.dispose()
-        mediaStore = null
-        lyrics?.dispose()
-        lyrics = null
-        audioOutput?.dispose()
-        audioOutput = null
-        ytDlp?.dispose()
-        ytDlp = null
-        transcoder?.dispose()
-        transcoder = null
-        playback?.dispose()
-        playback = null
-        equalizer?.dispose()
-        equalizer = null
-        subscriptions?.dispose()
-        subscriptions = null
-        super.cleanUpFlutterEngine(flutterEngine)
     }
 }

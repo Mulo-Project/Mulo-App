@@ -9,7 +9,7 @@ import '../../domain/entities/equalizer_settings.dart';
 import '../bloc/equalizer_cubit.dart';
 import '../bloc/equalizer_library_cubit.dart';
 
-/// 설정의 "기기별 이퀄라이저": 연결된 적 있는 블루투스 · 이어폰 기기마다 만들어 둔 프리셋을 지정한다.
+/// 설정의 "기기별 이퀄라이저": 연결된 적 있는 블루투스 · 이어폰 기기마다 (기기 스피커 제외) 만들어 둔 프리셋을 지정한다.
 /// 그 기기가 연결되면 지정한 프리셋이 자동으로 적용된다. 이퀄라이저를 쓸 수 없는 환경에서는 숨긴다.
 class DeviceEqualizerSection extends StatelessWidget {
   const DeviceEqualizerSection({super.key});
@@ -23,17 +23,22 @@ class DeviceEqualizerSection extends StatelessWidget {
     final lib = context.watch<EqualizerLibraryCubit>().state;
     final text = Theme.of(context).textTheme;
     final p = context.palette;
+    // 기기 스피커는 기본 이퀄라이저를 그대로 쓰므로 따로 지정하지 않는다.
+    final devices = [
+      for (final d in lib.devices)
+        if (d.kind != 'speaker') d,
+    ];
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.lg),
       child: SectionCard(
         title: l10n.equalizerDevicesTitle,
         children: [
-          if (lib.devices.isEmpty)
+          if (devices.isEmpty)
             Padding(
               padding: const EdgeInsets.all(AppSpacing.md),
               child: Text(l10n.equalizerDevicesEmpty, style: text.bodyMedium),
             ),
-          for (final device in lib.devices)
+          for (final device in devices)
             SettingRow(
               title: deviceLabel(l10n, device),
               description: device.current ? l10n.equalizerDeviceCurrent : null,
