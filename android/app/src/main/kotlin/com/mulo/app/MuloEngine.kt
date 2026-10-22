@@ -42,6 +42,7 @@ object MuloEngine {
         val messenger = created.dartExecutor.binaryMessenger
         val store = MediaStoreChannel(app, messenger) { activity }
         val lyrics = LyricsChannel(app, messenger)
+        val lyricsOverlay = LyricsOverlayChannel(app, messenger)
         val audioOutput = AudioOutputChannel(app, messenger)
         val ytDlp = YtDlpChannel(app, messenger)
         val transcoder = TranscoderChannel(app, messenger)
@@ -50,7 +51,7 @@ object MuloEngine {
         val subscriptions = SubscriptionChannel(app, messenger) { activity?.moveTaskToBack(true) }
         mediaStore = store
         channels = listOf(
-            store::dispose, lyrics::dispose, audioOutput::dispose, ytDlp::dispose,
+            store::dispose, lyrics::dispose, lyricsOverlay::dispose, audioOutput::dispose, ytDlp::dispose,
             transcoder::dispose, playback::dispose, equalizer::dispose, subscriptions::dispose,
         )
         engine = created

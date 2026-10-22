@@ -8,6 +8,7 @@ class PrefsLyricsSettingsRepository implements LyricsSettingsRepository {
   static const _latencyKey = 'lyrics.stampLatencyMs';
   static const _themeKey = 'lyrics.theme';
   static const _coverKey = 'lyrics.coverBackground';
+  static const _overlayKey = 'lyrics.overlay';
 
   @override
   Future<LyricsSettings> load() async {
@@ -19,6 +20,7 @@ class PrefsLyricsSettingsRepository implements LyricsSettingsRepository {
           LyricsTheme.values.asNameMap()[prefs.getString(_themeKey)] ??
           LyricsTheme.list,
       coverBackground: prefs.getBool(_coverKey) ?? false,
+      overlay: prefs.getBool(_overlayKey) ?? false,
     );
   }
 
@@ -33,4 +35,8 @@ class PrefsLyricsSettingsRepository implements LyricsSettingsRepository {
   @override
   Future<void> saveCoverBackground(bool on) async =>
       (await SharedPreferences.getInstance()).setBool(_coverKey, on);
+
+  @override
+  Future<void> saveOverlay(bool on) async =>
+      (await SharedPreferences.getInstance()).setBool(_overlayKey, on);
 }

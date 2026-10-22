@@ -3344,6 +3344,18 @@ abstract class AppLocalizations {
   /// **'풀기'**
   String get lyricsSyncUnmerge;
 
+  /// No description provided for @playerLyricsExpand.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사만 크게 보기'**
+  String get playerLyricsExpand;
+
+  /// No description provided for @playerLyricsCollapse.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사 닫기'**
+  String get playerLyricsCollapse;
+
   /// No description provided for @playerShowLyrics.
   ///
   /// In ko, this message translates to:
@@ -3794,6 +3806,18 @@ abstract class AppLocalizations {
   /// **'기기에 있는 음악을 불러오는 데 써요.'**
   String get permAudioDesc;
 
+  /// No description provided for @permOverlay.
+  ///
+  /// In ko, this message translates to:
+  /// **'다른 앱 위에 표시'**
+  String get permOverlay;
+
+  /// No description provided for @permOverlayDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'다른 앱을 쓰는 동안 화면 위에 가사를 띄우는 데 써요.'**
+  String get permOverlayDesc;
+
   /// No description provided for @permBlockedDesc.
   ///
   /// In ko, this message translates to:
@@ -3841,6 +3865,36 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'알림창 · 잠금화면에서 재생을 조작해요.'**
   String get settingsNotifyPlaybackDesc;
+
+  /// No description provided for @lyricsOverlayMinimize.
+  ///
+  /// In ko, this message translates to:
+  /// **'숨기기'**
+  String get lyricsOverlayMinimize;
+
+  /// No description provided for @lyricsOverlayTurnOff.
+  ///
+  /// In ko, this message translates to:
+  /// **'끄기'**
+  String get lyricsOverlayTurnOff;
+
+  /// No description provided for @lyricsOverlayOn.
+  ///
+  /// In ko, this message translates to:
+  /// **'떠 있는 가사 켜기'**
+  String get lyricsOverlayOn;
+
+  /// No description provided for @lyricsOverlayOff.
+  ///
+  /// In ko, this message translates to:
+  /// **'떠 있는 가사 끄기'**
+  String get lyricsOverlayOff;
+
+  /// No description provided for @lyricsOverlayNeedPermission.
+  ///
+  /// In ko, this message translates to:
+  /// **'설정에서 \"다른 앱 위에 표시\"를 허용한 뒤 다시 켜 주세요.'**
+  String get lyricsOverlayNeedPermission;
 
   /// No description provided for @settingsNotifyPermission.
   ///

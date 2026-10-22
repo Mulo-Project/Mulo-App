@@ -10,6 +10,7 @@ import '../../../library/domain/entities/track.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../bloc/lyrics_cubit.dart';
+import '../bloc/lyrics_overlay_cubit.dart';
 import '../bloc/lyrics_settings_cubit.dart';
 import 'lyrics_editor.dart';
 import 'lyrics_sync_start.dart';
@@ -17,9 +18,16 @@ import 'lyrics_sync_start.dart';
 /// 전체 화면 플레이어의 가사 보기. 싱크 가사는 재생 위치의 줄을 강조하고 따라 내려가며,
 /// 줄을 누르면 그 위치로 옮긴다. 일반 글 가사는 그대로 보여 준다.
 class LyricsView extends StatefulWidget {
-  const LyricsView({super.key, required this.track});
+  const LyricsView({
+    super.key,
+    required this.track,
+    this.followTop = AppSizes.circleButton * .8 + AppSpacing.xs,
+  });
 
   final Track track;
+
+  /// 싱크 추적 버튼의 위쪽 간격 (위에 다른 버튼이 있으면 그 아래로 비킨다).
+  final double followTop;
 
   @override
   State<LyricsView> createState() => _LyricsViewState();
@@ -36,10 +44,20 @@ class _LyricsViewState extends State<LyricsView> {
   /// 처음 현재 줄로 자리를 잡았는가. 잡기 전에는 가사를 투명하게 두어 위치가 튀어 보이지 않게 한다.
   var _placed = false;
 
+  late final LyricsOverlayCubit _overlay = context.read<LyricsOverlayCubit>();
+
   @override
   void initState() {
     super.initState();
     context.read<LyricsCubit>().show(widget.track);
+    // 이 가사 보기가 떠 있는 동안은 떠 있는 가사 창이 겹치지 않게 숨긴다.
+    _overlay.setLyricsViewShown(true);
+  }
+
+  @override
+  void dispose() {
+    _overlay.setLyricsViewShown(false);
+    super.dispose();
   }
 
   @override
@@ -95,31 +113,9 @@ class _LyricsViewState extends State<LyricsView> {
     final theme = context.select<LyricsSettingsCubit, LyricsTheme>(
       (c) => c.state.theme,
     );
-    return Column(
+    final column = Column(
       children: [
         Expanded(child: _body(context)),
-        // 싱크 추적: 켜면 재생 위치의 줄을 따라 가사가 올라가고, 끄면 방해 없이 자유롭게 볼 수 있다.
-        // 싱크 설정 · 가사 편집 버튼과는 다른 줄에 둔다.
-        if (synced && theme != LyricsTheme.centered)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                PlainButton(
-                  icon: AppIcons.explore,
-                  label: l10n.lyricsFollow,
-                  tooltip: l10n.lyricsSyncFollowHint,
-                  accent: _following,
-                  onPressed: () => setState(() {
-                    _following = !_following;
-                    // 다시 켜면 지금 줄로 한 번 따라가도록 한다.
-                    if (_following) _shown = -2;
-                  }),
-                ),
-              ],
-            ),
-          ),
         if (hasLyrics)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
@@ -139,6 +135,29 @@ class _LyricsViewState extends State<LyricsView> {
               ],
             ),
           ),
+      ],
+    );
+    // 싱크 추적: 켜면 재생 위치의 줄을 따라 가사가 올라가고, 끄면 방해 없이 자유롭게 볼 수 있다.
+    // 가사 위 오른쪽의 동그란 버튼 (켜면 강조색). 위에 "가사만 크게 보기" 버튼이 놓인다.
+    if (!synced || theme == LyricsTheme.centered) return column;
+    return Stack(
+      children: [
+        column,
+        Positioned(
+          top: widget.followTop,
+          right: 0,
+          child: CircleIconButton(
+            icon: AppIcons.explore,
+            tooltip: l10n.lyricsSyncFollowHint,
+            emphasized: _following,
+            size: AppSizes.circleButton * .8,
+            onPressed: () => setState(() {
+              _following = !_following;
+              // 다시 켜면 지금 줄로 한 번 따라가도록 한다.
+              if (_following) _shown = -2;
+            }),
+          ),
+        ),
       ],
     );
   }

@@ -15,6 +15,7 @@ class LyricsSettings extends Equatable {
     this.latencyMs = defaultLatencyMs,
     this.theme = LyricsTheme.list,
     this.coverBackground = false,
+    this.overlay = false,
   });
 
   /// 지금을 누를 때 반응 시간만큼 앞당겨 찍는 기본값 (밀리초).
@@ -28,18 +29,23 @@ class LyricsSettings extends Equatable {
   /// 테마와 따로, 앨범 커버를 옅게 뒤에 까는가.
   final bool coverBackground;
 
+  /// 앱을 벗어나도 다른 앱 위에 지금 줄을 띄운다 (Android, 싱크 가사가 있는 곡).
+  final bool overlay;
+
   Duration get latency => Duration(milliseconds: latencyMs);
 
   LyricsSettings copyWith({
     int? latencyMs,
     LyricsTheme? theme,
     bool? coverBackground,
+    bool? overlay,
   }) => LyricsSettings(
     latencyMs: (latencyMs ?? this.latencyMs).clamp(0, maxLatencyMs),
     theme: theme ?? this.theme,
     coverBackground: coverBackground ?? this.coverBackground,
+    overlay: overlay ?? this.overlay,
   );
 
   @override
-  List<Object?> get props => [latencyMs, theme, coverBackground];
+  List<Object?> get props => [latencyMs, theme, coverBackground, overlay];
 }

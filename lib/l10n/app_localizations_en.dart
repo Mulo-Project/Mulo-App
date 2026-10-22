@@ -1820,6 +1820,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsSyncUnmerge => 'Split';
 
   @override
+  String get playerLyricsExpand => 'Lyrics only';
+
+  @override
+  String get playerLyricsCollapse => 'Close lyrics';
+
+  @override
   String get playerShowLyrics => 'Show lyrics';
 
   @override
@@ -2069,6 +2075,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permAudioDesc => 'Used to load music stored on this device.';
 
   @override
+  String get permOverlay => 'Display over other apps';
+
+  @override
+  String get permOverlayDesc =>
+      'Used to show lyrics over other apps while you use them.';
+
+  @override
   String get permBlockedDesc =>
       'Blocked. Tap to turn it on in system settings.';
 
@@ -2095,6 +2108,22 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsNotifyPlaybackDesc =>
       'Control playback from the notification shade and lock screen.';
+
+  @override
+  String get lyricsOverlayMinimize => 'Hide';
+
+  @override
+  String get lyricsOverlayTurnOff => 'Turn off';
+
+  @override
+  String get lyricsOverlayOn => 'Turn on floating lyrics';
+
+  @override
+  String get lyricsOverlayOff => 'Turn off floating lyrics';
+
+  @override
+  String get lyricsOverlayNeedPermission =>
+      'Allow \"Display over other apps\" in settings, then turn it on again.';
 
   @override
   String get settingsNotifyPermission => 'System notifications are off';

@@ -1775,6 +1775,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsSyncUnmerge => '풀기';
 
   @override
+  String get playerLyricsExpand => '가사만 크게 보기';
+
+  @override
+  String get playerLyricsCollapse => '가사 닫기';
+
+  @override
   String get playerShowLyrics => '가사 보기';
 
   @override
@@ -2015,6 +2021,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get permAudioDesc => '기기에 있는 음악을 불러오는 데 써요.';
 
   @override
+  String get permOverlay => '다른 앱 위에 표시';
+
+  @override
+  String get permOverlayDesc => '다른 앱을 쓰는 동안 화면 위에 가사를 띄우는 데 써요.';
+
+  @override
   String get permBlockedDesc => '요청이 막혀 있어요. 눌러서 휴대폰 설정에서 켜 주세요.';
 
   @override
@@ -2038,6 +2050,22 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsNotifyPlaybackDesc => '알림창 · 잠금화면에서 재생을 조작해요.';
+
+  @override
+  String get lyricsOverlayMinimize => '숨기기';
+
+  @override
+  String get lyricsOverlayTurnOff => '끄기';
+
+  @override
+  String get lyricsOverlayOn => '떠 있는 가사 켜기';
+
+  @override
+  String get lyricsOverlayOff => '떠 있는 가사 끄기';
+
+  @override
+  String get lyricsOverlayNeedPermission =>
+      '설정에서 \"다른 앱 위에 표시\"를 허용한 뒤 다시 켜 주세요.';
 
   @override
   String get settingsNotifyPermission => '시스템 알림이 꺼져 있어요';
