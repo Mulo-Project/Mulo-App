@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -8,11 +10,33 @@ import '../bloc/lyrics_overlay_cubit.dart';
 import '../bloc/lyrics_settings_cubit.dart';
 
 /// 설정이 켜져 있으면 지금 곡의 싱크 가사를 떠 있는 가사 창에 올린다 (앱 셸 한 곳에서 감싼다).
-/// 곡 정보 숨기기가 켜져 있으면 올리지 않는다.
-class LyricsOverlayBridge extends StatelessWidget {
+/// 곡 정보 숨기기가 켜져 있으면 올리지 않는다. 창의 닫기(✕)를 누르면 설정을 끈다.
+class LyricsOverlayBridge extends StatefulWidget {
   const LyricsOverlayBridge({super.key, required this.child});
 
   final Widget child;
+
+  @override
+  State<LyricsOverlayBridge> createState() => _LyricsOverlayBridgeState();
+}
+
+class _LyricsOverlayBridgeState extends State<LyricsOverlayBridge> {
+  StreamSubscription<void>? _closed;
+
+  @override
+  void initState() {
+    super.initState();
+    final settings = context.read<LyricsSettingsCubit>();
+    _closed = context.read<LyricsOverlayCubit>().closed.listen(
+      (_) => settings.setOverlay(false),
+    );
+  }
+
+  @override
+  void dispose() {
+    _closed?.cancel();
+    super.dispose();
+  }
 
   void _sync(BuildContext context) {
     final enabled = context.read<LyricsSettingsCubit>().state.overlay;
@@ -58,6 +82,6 @@ class LyricsOverlayBridge extends StatelessWidget {
         listener: (context, _) => _sync(context),
       ),
     ],
-    child: child,
+    child: widget.child,
   );
 }

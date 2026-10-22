@@ -13,6 +13,7 @@ class LyricsOverlayChannel(private val context: Context, messenger: BinaryMessen
 
     init {
         LyricsOverlay.init(context)
+        LyricsOverlay.onClosed = { channel.invokeMethod("closed", null) }
         channel.setMethodCallHandler { call, result ->
             when (call.method) {
                 "canDraw" -> result.success(LyricsOverlay.canDraw())
@@ -46,6 +47,7 @@ class LyricsOverlayChannel(private val context: Context, messenger: BinaryMessen
 
     fun dispose() {
         channel.setMethodCallHandler(null)
+        LyricsOverlay.onClosed = null
     }
 
     companion object {

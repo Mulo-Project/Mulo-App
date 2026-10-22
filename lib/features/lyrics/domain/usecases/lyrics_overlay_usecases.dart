@@ -38,6 +38,15 @@ class ShowLyricsOverlay implements UseCase<void, ShowLyricsOverlayParams> {
       _overlay.show(p.trackId, p.lines);
 }
 
+class WatchLyricsOverlayClosed implements StreamUseCase<void, NoParams> {
+  const WatchLyricsOverlayClosed(this._overlay);
+
+  final LyricsOverlay _overlay;
+
+  @override
+  Stream<void> call(NoParams _) => _overlay.watchClosed();
+}
+
 class HideLyricsOverlay implements UseCase<void, NoParams> {
   const HideLyricsOverlay(this._overlay);
 

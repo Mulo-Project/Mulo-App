@@ -12,12 +12,17 @@ class LyricsOverlayCubit extends Cubit<void> {
     required this._openPermission,
     required this._show,
     required this._hide,
+    required this._watchClosed,
   }) : super(null);
 
   final CanDrawLyricsOverlay _canDraw;
   final OpenLyricsOverlayPermission _openPermission;
   final ShowLyricsOverlay _show;
   final HideLyricsOverlay _hide;
+  final WatchLyricsOverlayClosed _watchClosed;
+
+  /// 창의 닫기(✕)를 눌렀다 (설정을 끄라는 뜻).
+  Stream<void> get closed => _watchClosed(const NoParams());
 
   /// 권한이 있으면 true. 없으면 시스템 설정을 열고 false (돌아와서 다시 켜면 된다).
   Future<bool> ensurePermission() async {
@@ -53,7 +58,7 @@ class LyricsOverlayCubit extends Cubit<void> {
     for (final l in lines) {
       if (out.isNotEmpty && out.last.time == l.time) {
         final text = [out.last.text, l.text].where((t) => t.isNotEmpty);
-        out[out.length - 1] = LyricLine(l.time, text.join(' '));
+        out[out.length - 1] = LyricLine(l.time, text.join('\n'));
       } else {
         out.add(l);
       }

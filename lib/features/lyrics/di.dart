@@ -54,6 +54,7 @@ void registerLyrics(GetIt sl) {
     ..registerFactory(() => OpenLyricsOverlayPermission(sl()))
     ..registerFactory(() => ShowLyricsOverlay(sl()))
     ..registerFactory(() => HideLyricsOverlay(sl()))
+    ..registerFactory(() => WatchLyricsOverlayClosed(sl()))
     ..registerFactory(() => SaveLyricsOverlaySetting(sl()))
     ..registerFactory(
       () => LyricsOverlayCubit(
@@ -61,6 +62,7 @@ void registerLyrics(GetIt sl) {
         openPermission: sl(),
         show: sl(),
         hide: sl(),
+        watchClosed: sl(),
       ),
     );
 }
