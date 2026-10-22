@@ -515,20 +515,8 @@ class _DownloadScreenState extends State<DownloadScreen> {
     );
   }
 
-  Widget _section(BuildContext context, String title, List<Widget> children) {
-    final text = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: text.titleMedium),
-          const SizedBox(height: AppSpacing.sm),
-          ...children,
-        ],
-      ),
-    );
-  }
+  Widget _section(BuildContext context, String title, List<Widget> children) =>
+      SectionBlock(title: title, children: children);
 
   @override
   Widget build(BuildContext context) {
@@ -558,34 +546,40 @@ class _DownloadScreenState extends State<DownloadScreen> {
                   AppSpacing.lg,
                 ),
                 children: [
-                  _CoverRow(
-                    art: _cover,
-                    label: l10n.downloadFieldCover,
-                    changeLabel: l10n.downloadCoverChange,
-                    resetLabel: l10n.downloadCoverDefault,
-                    canReset: _cover != _defaultCover,
-                    onChange: _changeCover,
-                    onReset: _resetCover,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  AppTextField(
-                    label: l10n.downloadFieldTitle,
-                    controller: _title,
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  AppTextField(
-                    label: l10n.downloadFieldArtist,
-                    controller: _artist,
-                    hint: l10n.unknownArtist,
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  AppTextField(
-                    label: l10n.downloadFieldGenre,
-                    controller: _genre,
-                  ),
-                  _GenreSuggestions(
-                    controller: _genre,
-                    label: l10n.downloadGenreExisting,
+                  SectionBlock(
+                    first: true,
+                    title: l10n.downloadSectionInfo,
+                    children: [
+                      _CoverRow(
+                        art: _cover,
+                        label: l10n.downloadFieldCover,
+                        changeLabel: l10n.downloadCoverChange,
+                        resetLabel: l10n.downloadCoverDefault,
+                        canReset: _cover != _defaultCover,
+                        onChange: _changeCover,
+                        onReset: _resetCover,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      AppTextField(
+                        label: l10n.downloadFieldTitle,
+                        controller: _title,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      AppTextField(
+                        label: l10n.downloadFieldArtist,
+                        controller: _artist,
+                        hint: l10n.unknownArtist,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      AppTextField(
+                        label: l10n.downloadFieldGenre,
+                        controller: _genre,
+                      ),
+                      _GenreSuggestions(
+                        controller: _genre,
+                        label: l10n.downloadGenreExisting,
+                      ),
+                    ],
                   ),
                   _section(context, l10n.decorateColor, [
                     ListenableBuilder(

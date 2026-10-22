@@ -1017,6 +1017,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mediaDetailDescription => 'Description';
 
   @override
+  String get mediaDetailSectionPreview => 'Preview';
+
+  @override
+  String get mediaDetailSectionInfo => 'Info';
+
+  @override
   String get mediaDetailMore => 'Show more';
 
   @override
@@ -1202,6 +1208,9 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$_temp0';
   }
+
+  @override
+  String get downloadSectionInfo => 'Details';
 
   @override
   String get downloadSectionSave => 'Save to';
