@@ -12,7 +12,7 @@ class HomeDivider extends StatelessWidget {
       horizontal: AppSpacing.md,
       vertical: AppSpacing.lg,
     ),
-    child: Divider(height: 1, thickness: 1, color: context.palette.outline),
+    child: const AppDivider(),
   );
 }
 

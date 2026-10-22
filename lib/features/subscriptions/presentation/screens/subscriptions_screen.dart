@@ -39,11 +39,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
               children: [
                 AppTopBar(
                   title: l10n.subscriptionsTitle,
-                  leading: CircleIconButton(
-                    icon: AppIcons.back,
-                    tooltip: l10n.actionBack,
-                    onPressed: () => context.pop(),
-                  ),
+                  leading: const AppBackButton(),
                 ),
                 Padding(
                   padding: AppSpacing.screen.copyWith(

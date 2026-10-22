@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
@@ -63,11 +62,7 @@ class _ChannelSearchScreenState extends State<ChannelSearchScreen> {
             children: [
               AppTopBar(
                 title: l10n.channelSearchTitle,
-                leading: CircleIconButton(
-                  icon: AppIcons.back,
-                  tooltip: l10n.actionBack,
-                  onPressed: () => context.pop(),
-                ),
+                leading: const AppBackButton(),
               ),
               Padding(
                 padding: AppSpacing.screen,

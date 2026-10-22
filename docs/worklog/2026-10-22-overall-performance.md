@@ -11,6 +11,10 @@
 - 가사 전체화면이 재생 위치 틱마다 다시 그려지던 것을 곡 변경 때만 그리도록 `context.select`로 축소.
 - 이미 처리된 항목 확인: 곡 줄 구독 축소 · 리스트 위 BackdropFilter 제거(#110), 미니 플레이어 · 플로팅 버튼 buildWhen.
 
+- 공용 위젯 정리: `LoadingIndicator` · `LoadingState`(로딩 표시 통일, 막대형 제거), `EmptyState`에 종류 추가(빈 상태 · `.network` · `.signIn`), `AppBackButton`(뒤로 가기 11곳), `AppDivider`(구분선 8곳).
+- 적용 화면: 검색, 재생목록 불러오기(로그인 필요 · 네트워크 필요, "내 재생목록" 버튼 전체 너비), 구독, 채널 검색, 새 영상, 커버 고르기 · 편집 · 웹 검색, 가사 웹, 곡 자세히, 받기 가사 미리보기.
+- 참고한 웹 사례: Material v1 empty states, Emarsys · PatternFly 빈 상태 가이드 — 아이콘 + 한 줄 제목 + 한두 줄 설명 + 버튼 하나, 화면에 다 보일 때만 가운데, 사용자가 다음에 할 일을 알려 주기.
+
 ## 바꾼 설정
 없음.
 

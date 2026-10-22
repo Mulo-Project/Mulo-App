@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
@@ -36,14 +35,7 @@ class GenreScreen extends StatelessWidget {
           bottom: AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
         ),
         header: [
-          AppTopBar(
-            title: name,
-            leading: CircleIconButton(
-              icon: AppIcons.back,
-              tooltip: l10n.actionBack,
-              onPressed: () => context.pop(),
-            ),
-          ),
+          AppTopBar(title: name, leading: const AppBackButton()),
           if (tracks.isEmpty)
             Padding(
               padding: AppSpacing.screen,

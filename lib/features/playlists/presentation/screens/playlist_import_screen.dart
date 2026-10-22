@@ -134,11 +134,7 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
               children: [
                 AppTopBar(
                   title: l10n.playlistsImport,
-                  leading: CircleIconButton(
-                    icon: AppIcons.back,
-                    tooltip: l10n.actionBack,
-                    onPressed: () => context.pop(),
-                  ),
+                  leading: const AppBackButton(),
                 ),
                 Padding(
                   padding: AppSpacing.screen,

@@ -213,9 +213,7 @@ class _DetailViewState extends State<_DetailView> {
             children: [
               AppTopBar(
                 title: l10n.mediaDetailTitle,
-                leading: CircleIconButton(
-                  icon: AppIcons.back,
-                  tooltip: l10n.actionBack,
+                leading: AppBackButton(
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ),

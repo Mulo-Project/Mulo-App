@@ -150,7 +150,7 @@ class PlaylistCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
-              Divider(height: 1, thickness: 1, color: p.outline),
+              const AppDivider(),
               // 대표곡: 남는 높이를 차지하는 칸. 커버 · 제목 · 가수를 또렷하게.
               _Featured(playlist: playlist, expandable: browsing),
             ],

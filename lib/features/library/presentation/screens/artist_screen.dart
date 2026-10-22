@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
@@ -42,11 +41,7 @@ class ArtistScreen extends StatelessWidget {
         header: [
           AppTopBar(
             title: name,
-            leading: CircleIconButton(
-              icon: AppIcons.back,
-              tooltip: l10n.actionBack,
-              onPressed: () => context.pop(),
-            ),
+            leading: const AppBackButton(),
             actions: [
               CircleIconButton(
                 icon: AppIcons.sparkle,

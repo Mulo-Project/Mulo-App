@@ -405,7 +405,7 @@ class _LibraryHero extends StatelessWidget {
                 ],
               ),
         const SizedBox(height: AppSpacing.lg),
-        Divider(height: 1, thickness: 1, color: p.outline),
+        const AppDivider(),
       ],
     );
   }

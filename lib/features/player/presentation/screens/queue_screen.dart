@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
@@ -75,11 +74,7 @@ class QueueScreen extends StatelessWidget {
             children: [
               AppTopBar(
                 title: l10n.playerQueue,
-                leading: CircleIconButton(
-                  icon: AppIcons.back,
-                  tooltip: l10n.actionBack,
-                  onPressed: () => context.pop(),
-                ),
+                leading: const AppBackButton(),
               ),
               // 곡 수 · 섞기 · 비우기 줄은 목록이 스크롤돼도 고정한다.
               if (queue.isNotEmpty)

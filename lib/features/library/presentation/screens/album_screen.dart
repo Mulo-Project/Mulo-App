@@ -42,11 +42,7 @@ class AlbumScreen extends StatelessWidget {
         header: [
           AppTopBar(
             title: name,
-            leading: CircleIconButton(
-              icon: AppIcons.back,
-              tooltip: l10n.actionBack,
-              onPressed: () => context.pop(),
-            ),
+            leading: const AppBackButton(),
             actions: [
               if (tracks.isNotEmpty)
                 CircleIconButton(

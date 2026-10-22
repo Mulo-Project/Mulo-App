@@ -63,11 +63,7 @@ class _Body extends StatelessWidget {
         header: [
           AppTopBar(
             title: pl == null ? '' : playlistNameOf(l10n, pl),
-            leading: CircleIconButton(
-              icon: AppIcons.back,
-              tooltip: l10n.actionBack,
-              onPressed: () => context.pop(),
-            ),
+            leading: const AppBackButton(),
             actions: [
               if (pl != null)
                 Builder(
