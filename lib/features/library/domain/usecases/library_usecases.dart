@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import '../../../../core/usecase/usecase.dart';
 import '../../../covers/domain/entities/cover_art.dart';
 import '../../../covers/domain/entities/cover_key.dart';
@@ -88,32 +86,55 @@ class UpdateTrackInfoParams {
   final TrackInfo info;
 }
 
-/// 곡 정보 편집 (곡 타일 메뉴). 제목은 앞뒤 공백을 지우고, 비어 있으면 바꾸지 않는다 (false).
-class UpdateTrackInfo implements UseCase<bool, UpdateTrackInfoParams> {
+/// 곡 정보 편집 결과.
+enum UpdateInfoResult {
+  /// 저장했다.
+  saved,
+
+  /// 제목이 비었거나 없는 곡이라 바꾸지 않았다.
+  invalid,
+
+  /// 파일 태그에 쓰지 못해 DB도 바꾸지 않았다.
+  tagWriteFailed,
+}
+
+/// 곡 정보 편집 (곡 타일 메뉴). 제목은 앞뒤 공백을 지우고, 비어 있으면 바꾸지 않는다.
+///
+/// 파일이 정보의 원본이고 DB는 캐시이므로 파일 태그에 먼저 쓰고, 성공해야 DB를 고친다.
+/// 태그 쓰기가 실패하면 DB를 바꾸지 않는다 (DB에만 있는 편집이 이후 태그 복원 때 옛 값으로 되돌아가지 않게).
+/// 태그를 쓰지 않는 곡([TagWriteResult.unsupported])과, 기기 곡의 쓰기 권한 없음([TagWriteResult.denied])은
+/// 기존처럼 DB만 고친다.
+class UpdateTrackInfo
+    implements UseCase<UpdateInfoResult, UpdateTrackInfoParams> {
   const UpdateTrackInfo(this._repo, [this._tags]);
 
   final LibraryRepository _repo;
   final TrackTagRepository? _tags;
 
   @override
-  Future<bool> call(UpdateTrackInfoParams p) async {
+  Future<UpdateInfoResult> call(UpdateTrackInfoParams p) async {
     final info = p.info.trimmed();
-    if (info.title.isEmpty) return false;
-    if (!await _repo.updateInfo(p.trackId, info)) return false;
-    // 파일이 정보의 원본이므로 고친 값을 태그에도 쓴다 (뒤에서, 못 써도 DB 값은 그대로).
+    if (info.title.isEmpty) return UpdateInfoResult.invalid;
     final tags = _tags;
-    if (tags != null) unawaited(_writeTags(tags, p.trackId));
-    return true;
-  }
-
-  Future<void> _writeTags(TrackTagRepository tags, String trackId) async {
-    try {
+    if (tags != null) {
       final tracks = await _repo.watchTracks().first;
-      final track = tracks.where((t) => t.id == trackId).firstOrNull;
-      if (track != null) await tags.write(track);
-    } on Object {
-      // 태그는 덤이라 실패해도 편집 결과에는 영향이 없다.
+      final track = tracks.where((t) => t.id == p.trackId).firstOrNull;
+      if (track == null) return UpdateInfoResult.invalid;
+      TagWriteResult result;
+      try {
+        result = await tags.write(track.withInfo(info));
+      } on Object {
+        result = TagWriteResult.failed;
+      }
+      final blocks =
+          result == TagWriteResult.failed ||
+          (result == TagWriteResult.denied &&
+              track.source == TrackSource.download);
+      if (blocks) return UpdateInfoResult.tagWriteFailed;
     }
+    return await _repo.updateInfo(p.trackId, info)
+        ? UpdateInfoResult.saved
+        : UpdateInfoResult.invalid;
   }
 }
 
@@ -147,7 +168,8 @@ class EmbedTagsIntoFiles implements UseCase<int, NoParams> {
       if (done.contains(t.id)) continue;
       try {
         final key = CoverKey.track(t.id);
-        if (await _tags.write(t, cover: covers[key], color: colors[key])) {
+        if (await _tags.write(t, cover: covers[key], color: colors[key]) ==
+            TagWriteResult.written) {
           written++;
         }
       } on Exception {

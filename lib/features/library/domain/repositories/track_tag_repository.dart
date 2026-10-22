@@ -2,11 +2,27 @@ import '../../../covers/domain/entities/cover_art.dart';
 import '../entities/file_tags.dart';
 import '../entities/track.dart';
 
+/// 태그 쓰기 결과.
+enum TagWriteResult {
+  /// 파일 태그에 썼다.
+  written,
+
+  /// 이 곡은 태그를 쓰지 않는다 (ffmpeg가 없는 빌드 · mp3 · opus가 아닌 형식 · 주소 없음 · 파일 없음).
+  /// 앱 DB만 고치는 기존 경로를 따른다.
+  unsupported,
+
+  /// 쓰려 했지만 기기 파일에 쓸 권한이 없다.
+  denied,
+
+  /// 태그를 쓰려 했지만 실패했다 (변환 · 복사 · 덮어쓰기 오류).
+  failed,
+}
+
 /// 곡 파일의 태그에 정보를 쓴다 (파일이 곡 정보의 원본이 되도록).
 abstract interface class TrackTagRepository {
   /// [track]의 제목 · 아티스트 · 앨범 · 장르(와 [cover])를 파일 태그에 쓴다.
-  /// 쓸 수 없는 형식 · 권한 없음 · 파일 없음은 false (파일은 그대로 둔다).
-  Future<bool> write(Track track, {CoverArt? cover, int? color});
+  /// 실패해도 파일은 그대로 둔다.
+  Future<TagWriteResult> write(Track track, {CoverArt? cover, int? color});
 }
 
 /// 곡 파일의 태그를 읽는다 ([TrackTagRepository]의 반대 방향: 파일 → 앱 DB).

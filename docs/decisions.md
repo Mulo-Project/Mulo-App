@@ -783,3 +783,9 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 - 불러오기(`LibraryImportCubit`)에서 내장 커버 채우기(`FillEmbeddedCovers`) **앞에** 실행한다. 태그에 이미지만 있는 커버는 그 뒤 기존 흐름이 채운다. 가사는 보여 줄 때 이미 태그를 읽으므로(`LyricsRepository.load`) 옮기지 않는다.
 - 읽은 곡은 `library.tagRestoreDone`에 기록한다. 태그가 없거나 지원하지 않는 형식은 끝낸 것으로, 파일을 못 읽은 곡(권한 · 복사 실패)은 기록하지 않아 다음에 다시 시도한다.
 - 주의: 처음 실행하면 이미 있던 기기 곡도 한 번 읽혀, 태그 쓰기에 실패해 DB에만 있던 편집은 파일 값으로 바뀐다 (파일이 원본). ffmpeg가 mp3 가사를 TXXX로 쓸 수 있어 가사는 건드리지 않는다. 실제 기기에서의 읽기는 이 PC에서 확인하지 못했다 (단위 테스트까지).
+
+## D-120 · 2026-10-22 · 곡 정보 편집은 파일 태그에 먼저 쓰고, 성공하면 DB에 저장
+- D-119(파일이 원본, DB는 캐시)에 맞춰 `UpdateTrackInfo`의 순서를 바꾼다: 전에는 DB를 고친 뒤 뒤에서 태그를 썼다. 이제 **태그 쓰기 → 성공하면 DB**. 태그 쓰기가 실패하면 DB를 바꾸지 않고 "음악 파일에 곡 정보를 쓰지 못해 바꾸지 않았어요"를 알린다 (DB에만 있는 편집이 이후 태그 복원 때 옛 값으로 되돌아가는 것을 막는다). 앨범 이름 바꾸기도 같은 경로를 탄다.
+- `TrackTagSource.write`가 `TagWriteResult`를 돌려준다: `written` · `unsupported` · `denied` · `failed`. 실패로 막는 곡은 **ffmpeg로 mp3 · opus/ogg 태그를 쓰는 곡(full 빌드, `music_app/transcoder`의 `available`이 true)** 뿐이다.
+- 기존처럼 **DB만 저장**하는 곡(`unsupported`): ffmpeg가 없는 빌드(lite · 데스크톱, 단 mp3 · m4a는 라이브러리로 쓰고 안 되면 DB만), mp3 · opus/ogg가 아닌 형식(webm 등), 재생 주소가 없거나 파일이 없는 곡, `content://`의 형식을 알 수 없는 곡. `denied`(기기에서 `copyToCache` · `overwriteAudio`가 거절 = 쓸 권한 없음)는 **기기 곡이면 DB만**, 받은 곡이면 실패로 막는다.
+- 실제 기기에서 ffmpeg 태그 쓰기와 덮어쓰기는 이 PC에서 확인하지 못했다 (유스케이스 단위 테스트까지).

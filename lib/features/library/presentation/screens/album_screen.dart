@@ -146,7 +146,7 @@ class AlbumScreen extends StatelessWidget {
     final dest = CoverKey.album(newName);
     final image = covers.state[from];
     final color = colors.state[from];
-    await library.renameAlbum(album, newName);
+    final renamed = await library.renameAlbum(album, newName);
     // 합치는 경우(새 이름에 이미 설정이 있으면)에는 그쪽을 남긴다.
     if (image != null && !covers.state.containsKey(dest)) {
       await covers.setArt(dest, image);
@@ -156,7 +156,13 @@ class AlbumScreen extends StatelessWidget {
     }
     await covers.clear(from);
     await colors.clear(from);
-    messenger.showSnackBar(SnackBar(content: Text(l10n.albumRenameDone)));
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          renamed.failed > 0 ? l10n.trackEditTagFailed : l10n.albumRenameDone,
+        ),
+      ),
+    );
     router.pushReplacement(Routes.album(newName));
   }
 }

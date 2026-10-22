@@ -2816,6 +2816,12 @@ abstract class AppLocalizations {
   /// **'곡 정보를 고쳤어요'**
   String get trackEditSaved;
 
+  /// No description provided for @trackEditTagFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'음악 파일에 곡 정보를 쓰지 못해 바꾸지 않았어요. 잠시 뒤 다시 시도해 주세요.'**
+  String get trackEditTagFailed;
+
   /// No description provided for @trackDeleteTitle.
   ///
   /// In ko, this message translates to:

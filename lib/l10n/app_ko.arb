@@ -646,6 +646,7 @@
   "trackEditGenre": "장르",
   "trackEditSave": "저장",
   "trackEditSaved": "곡 정보를 고쳤어요",
+  "trackEditTagFailed": "음악 파일에 곡 정보를 쓰지 못해 바꾸지 않았어요. 잠시 뒤 다시 시도해 주세요.",
   "trackDeleteTitle": "곡 삭제",
   "trackDeleteBody": "\"{title}\"의 음악 파일을 기기에서 지울까요? 보관함과 재생목록에서도 빠지고, 되돌릴 수 없어요.",
   "trackDeleteConfirm": "삭제",

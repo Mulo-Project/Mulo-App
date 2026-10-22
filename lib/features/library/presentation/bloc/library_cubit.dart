@@ -51,18 +51,22 @@ class LibraryCubit extends Cubit<LibraryState> {
     );
   }
 
-  /// 곡 정보 편집. 제목이 비어 있으면 바꾸지 않고 false.
-  Future<bool> updateInfo(String trackId, TrackInfo info) =>
+  /// 곡 정보 편집 (파일 태그에 먼저 쓰고 DB에 저장). 제목이 비었거나 태그 쓰기가 실패하면 바꾸지 않는다.
+  Future<UpdateInfoResult> updateInfo(String trackId, TrackInfo info) =>
       _updateInfo(UpdateTrackInfoParams(trackId, info));
 
   /// 앨범 이름을 바꾼다: [from] 앨범의 모든 곡의 앨범을 [to]로 고친다.
-  /// 이미 있는 앨범 이름이면 그 앨범과 합쳐진다. 바뀐 곡 수를 돌려준다.
-  Future<int> renameAlbum(String from, String to) async {
+  /// 이미 있는 앨범 이름이면 그 앨범과 합쳐진다. 바뀐 곡 수와, 태그 쓰기 실패로 못 바꾼 곡 수를 돌려준다.
+  Future<({int changed, int failed})> renameAlbum(
+    String from,
+    String to,
+  ) async {
     final name = to.trim();
-    if (name == from) return 0;
+    if (name == from) return (changed: 0, failed: 0);
     var changed = 0;
+    var failed = 0;
     for (final t in state.tracks.where((t) => t.album == from).toList()) {
-      final ok = await updateInfo(
+      final result = await updateInfo(
         t.id,
         TrackInfo(
           title: t.title,
@@ -71,9 +75,10 @@ class LibraryCubit extends Cubit<LibraryState> {
           genre: t.genre,
         ),
       );
-      if (ok) changed++;
+      if (result == UpdateInfoResult.saved) changed++;
+      if (result == UpdateInfoResult.tagWriteFailed) failed++;
     }
-    return changed;
+    return (changed: changed, failed: failed);
   }
 
   /// 음악 파일과 보관함 기록을 지운다. 파일을 못 지우면 false (기록은 그대로).

@@ -20,6 +20,7 @@ import '../../../player/presentation/widgets/player_style_sheet.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../../domain/entities/track.dart';
 import '../../domain/entities/track_info.dart';
+import '../../domain/usecases/library_usecases.dart';
 import '../bloc/library_cubit.dart';
 
 enum _TrackAction {
@@ -280,7 +281,12 @@ Future<void> _editInfo(BuildContext context, Track track) async {
     builder: (_) => _TrackInfoDialog(track: track),
   );
   if (info == null) return;
-  if (!await library.updateInfo(track.id, info)) return;
+  final result = await library.updateInfo(track.id, info);
+  if (result == UpdateInfoResult.tagWriteFailed) {
+    if (context.mounted) _snack(context, l10n.trackEditTagFailed);
+    return;
+  }
+  if (result != UpdateInfoResult.saved) return;
   player.updateTrack(track.withInfo(info.trimmed()));
   if (context.mounted) _snack(context, l10n.trackEditSaved);
 }

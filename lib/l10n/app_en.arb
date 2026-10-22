@@ -546,6 +546,7 @@
   "trackEditGenre": "Genre",
   "trackEditSave": "Save",
   "trackEditSaved": "Song info updated",
+  "trackEditTagFailed": "Could not write the info to the music file, so nothing was changed. Try again later.",
   "trackDeleteTitle": "Delete song",
   "trackDeleteBody": "Delete the music file \"{title}\" from your device? It will also leave your library and playlists. This cannot be undone.",
   "trackDeleteConfirm": "Delete",

@@ -1516,6 +1516,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackEditSaved => 'Song info updated';
 
   @override
+  String get trackEditTagFailed =>
+      'Could not write the info to the music file, so nothing was changed. Try again later.';
+
+  @override
   String get trackDeleteTitle => 'Delete song';
 
   @override

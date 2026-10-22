@@ -17,6 +17,17 @@ class FfmpegTagWriter {
 
   static const extensions = {'opus', 'ogg', 'mp3'};
 
+  /// 이 빌드에 ffmpeg가 들어 있는지 (full 빌드 Android). lite · 데스크톱은 false.
+  Future<bool> available() async {
+    try {
+      return await _channel.invokeMethod<bool>('available') ?? false;
+    } on PlatformException {
+      return false;
+    } on MissingPluginException {
+      return false;
+    }
+  }
+
   /// 쓸 값이 하나도 없으면 false. 이미 있던 태그는 새 값으로 바뀐다 (빈 값은 건드리지 않는다).
   Future<bool> write(
     File audio, {

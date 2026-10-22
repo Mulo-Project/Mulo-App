@@ -1480,6 +1480,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get trackEditSaved => '곡 정보를 고쳤어요';
 
   @override
+  String get trackEditTagFailed =>
+      '음악 파일에 곡 정보를 쓰지 못해 바꾸지 않았어요. 잠시 뒤 다시 시도해 주세요.';
+
+  @override
   String get trackDeleteTitle => '곡 삭제';
 
   @override

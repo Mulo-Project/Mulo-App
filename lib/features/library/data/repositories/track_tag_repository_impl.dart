@@ -13,7 +13,7 @@ class TrackTagRepositoryImpl implements TrackTagRepository {
   final TrackTagSource _source;
 
   @override
-  Future<bool> write(Track track, {CoverArt? cover, int? color}) =>
+  Future<TagWriteResult> write(Track track, {CoverArt? cover, int? color}) =>
       _source.write(
         track.uri,
         title: track.title,

@@ -31,6 +31,7 @@ import 'package:music_download_play_app/features/library/domain/entities/import_
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track_info.dart';
 import 'package:music_download_play_app/features/library/domain/repositories/library_repository.dart';
+import 'package:music_download_play_app/features/library/domain/repositories/track_tag_repository.dart';
 import 'package:music_download_play_app/features/notifications/di.dart';
 import 'package:music_download_play_app/features/notifications/domain/entities/media_session_info.dart';
 import 'package:music_download_play_app/features/notifications/domain/entities/notification_settings.dart';
@@ -792,6 +793,20 @@ class MemoryPlaylistRepository implements PlaylistRepository {
 
 /// 앱 전체를 띄우는 테스트용 의존성 (DB · 파일 · 권한 없이).
 /// 각 기능의 실제 등록을 쓰고 리포지토리만 가짜로 바꾼다.
+/// 파일 태그 쓰기 가짜. 기본은 태그를 쓰지 않는 곡(DB만 고친다).
+class FakeTrackTagRepository implements TrackTagRepository {
+  FakeTrackTagRepository([this.result = TagWriteResult.unsupported]);
+
+  TagWriteResult result;
+
+  @override
+  Future<TagWriteResult> write(
+    Track track, {
+    CoverArt? cover,
+    int? color,
+  }) async => result;
+}
+
 Future<void> setUpTestDependencies({
   List<Track> tracks = const [],
   DeviceMusicRepository? device,
@@ -816,6 +831,7 @@ Future<void> setUpTestDependencies({
   BiometricAuthenticator? biometric,
   LoadedFolderRepository? folders,
   TrackFileRepository? trackFiles,
+  TrackTagRepository? trackTags,
   DateTime? joinedAt,
   SubscriptionRepository? subscriptions,
   ChannelFeed? channelFeed,
@@ -839,6 +855,9 @@ Future<void> setUpTestDependencies({
   registerSubscriptions(sl);
   sl.allowReassignment = true;
   sl
+    ..registerLazySingleton<TrackTagRepository>(
+      () => trackTags ?? FakeTrackTagRepository(),
+    )
     ..registerLazySingleton<SubscriptionRepository>(
       () => subscriptions ?? MemorySubscriptionRepository(),
     )
