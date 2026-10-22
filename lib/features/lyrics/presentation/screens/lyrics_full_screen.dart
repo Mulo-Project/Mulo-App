@@ -44,11 +44,11 @@ class LyricsFullScreen extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(
                       AppSpacing.lg,
-                      AppSpacing.xxl,
+                      AppSpacing.xxl + AppSpacing.md,
                       AppSpacing.lg,
                       0,
                     ),
-                    child: LyricsView(track: track),
+                    child: LyricsView(track: track, followTop: 0),
                   ),
                   Positioned(
                     top: AppSpacing.sm,
