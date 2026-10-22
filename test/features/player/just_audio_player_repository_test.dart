@@ -37,6 +37,8 @@ class _FakeEngine implements AudioEngineSource {
   @override
   Future<void> seek(Duration position) async =>
       calls.add('seek:${position.inMilliseconds}');
+  @override
+  Future<void> setSpeed(double speed) async => calls.add('speed:$speed');
 }
 
 PlaybackSnapshot _snapshot({

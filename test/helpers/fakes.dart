@@ -48,6 +48,7 @@ import 'package:music_download_play_app/features/equalizer/di.dart';
 import 'package:music_download_play_app/features/equalizer/domain/entities/equalizer_settings.dart';
 import 'package:music_download_play_app/features/equalizer/domain/repositories/equalizer_repository.dart';
 import 'package:music_download_play_app/features/player/domain/repositories/mix_with_others_repository.dart';
+import 'package:music_download_play_app/features/player/domain/repositories/playback_speed_repository.dart';
 import 'package:music_download_play_app/features/player/domain/entities/output_behavior.dart';
 import 'package:music_download_play_app/features/player/domain/repositories/output_behavior_repository.dart';
 import 'package:music_download_play_app/features/player/domain/repositories/player_style_repository.dart';
@@ -440,6 +441,19 @@ class MemoryMixWithOthersRepository implements MixWithOthersRepository {
 
   @override
   Future<void> apply(bool v) async {}
+}
+
+class MemoryPlaybackSpeedRepository implements PlaybackSpeedRepository {
+  double value = 1;
+
+  @override
+  Future<double> load() async => value;
+
+  @override
+  Future<void> save(double v) async => value = v;
+
+  @override
+  Future<void> apply(double v) async {}
 }
 
 class MemoryOutputBehaviorRepository implements OutputBehaviorRepository {
@@ -847,6 +861,9 @@ Future<void> setUpTestDependencies({
     )
     ..registerLazySingleton<MixWithOthersRepository>(
       MemoryMixWithOthersRepository.new,
+    )
+    ..registerLazySingleton<PlaybackSpeedRepository>(
+      MemoryPlaybackSpeedRepository.new,
     )
     ..registerLazySingleton<OutputBehaviorRepository>(
       MemoryOutputBehaviorRepository.new,

@@ -490,6 +490,17 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playerStyleTitle => '플레이어 테마';
 
   @override
+  String get playerSpeedTitle => '재생 속도';
+
+  @override
+  String playerSpeedValue(String speed) {
+    return '$speed배속';
+  }
+
+  @override
+  String get playerSpeedNormal => '보통';
+
+  @override
   String get playerStyleSquare => '네모';
 
   @override
