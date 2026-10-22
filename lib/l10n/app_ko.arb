@@ -840,7 +840,7 @@
   "settingsNotifyDownloadResultDesc": "받기가 끝나거나 실패하면 알려요.",
   "settingsNotifyPlayback": "재생 알림",
   "settingsNotifyPlaybackDesc": "알림창 · 잠금화면에서 재생을 조작해요.",
-  "lyricsOverlayHideTrack": "이 곡 동안 숨기기",
+  "lyricsOverlayMinimize": "숨기기",
   "lyricsOverlayTurnOff": "끄기",
   "lyricsOverlayOn": "떠 있는 가사 켜기",
   "lyricsOverlayOff": "떠 있는 가사 끄기",

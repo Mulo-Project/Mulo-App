@@ -22,9 +22,10 @@ import android.widget.TextView
  *
  * 가볍게 돌아가도록: 시간 붙은 가사를 한 번 받아 두고, 재생 위치는 이미 쥐고 있는 ExoPlayer에서 읽는다.
  * 다음 줄 시간에 맞춘 타이머 하나만 예약해 줄이 바뀔 때만 글자를 바꾼다 (주기적인 틱 없음).
- * 멈춤 · 앱이 보임 · 다른 곡 · 가사 없음 · 잠시 숨김이면 타이머를 걸지 않고 창을 뗀다.
+ * 멈춤 · 앱이 보임 · 다른 곡 · 가사 없음이면 타이머를 걸지 않고 창을 뗀다.
  *
- * 창을 탭하면 아래에 [이 곡 동안 숨기기] [끄기]가 나온다 (몇 초 뒤 저절로 사라진다). 끌면 위아래로 옮긴다.
+ * 창을 탭하면 아래에 [숨기기] [끄기]가 나온다 (몇 초 뒤 저절로 사라진다). 끌면 위아래로 옮긴다.
+ * 숨기기를 누르면 가사 창이 작은 ♪ 칩으로 줄어든다 (가사 갱신도 멈춘다). 칩을 탭하면 다시 펼쳐진다.
  */
 object LyricsOverlay {
     private const val PREFS = "lyrics_overlay"
@@ -40,8 +41,11 @@ object LyricsOverlay {
     private var texts = emptyList<String>()
     private var appVisible = false
 
-    /** 이 곡 동안 숨기기를 누른 곡의 id. 다른 곡이 되면 다시 뜬다. */
-    private var hiddenTrackId: String? = null
+    /** 숨기기를 눌러 작은 칩으로 줄어든 상태. 칩을 탭하면 펼친다. */
+    private var minimized = false
+    private var layout: WindowManager.LayoutParams? = null
+    private var chip: TextView? = null
+    private var column: LinearLayout? = null
     private var hideLabel = ""
     private var offLabel = ""
 
@@ -79,6 +83,7 @@ object LyricsOverlay {
     }
 
     fun hide() {
+        minimized = false
         trackId = ""
         times = LongArray(0)
         texts = emptyList()
@@ -101,11 +106,13 @@ object LyricsOverlay {
         main.removeCallbacks(tick)
         val exo = PlaybackHub.exo
         val mediaId = exo.currentMediaItem?.mediaId
-        if (hiddenTrackId != null && hiddenTrackId != mediaId) hiddenTrackId = null
-        val active = times.isNotEmpty() && !appVisible && canDraw() &&
-            mediaId == trackId && hiddenTrackId == null
+        val active = times.isNotEmpty() && !appVisible && canDraw() && mediaId == trackId
         if (!active) {
             detach()
+            return
+        }
+        if (minimized) {
+            showChip()
             return
         }
         val position = exo.currentPosition
@@ -169,7 +176,7 @@ object LyricsOverlay {
             }
             setOnClickListener { onClick() }
         }
-        val hideBtn = button { hideForTrack() }
+        val hideBtn = button { minimize() }
         val offBtn = button { turnOff() }
         val row = LinearLayout(context).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -179,20 +186,32 @@ object LyricsOverlay {
             addView(hideBtn, LinearLayout.LayoutParams(-2, -2).apply { marginEnd = px(8) })
             addView(offBtn, LinearLayout.LayoutParams(-2, -2))
         }
-        val column = LinearLayout(context).apply {
+        val body = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(px(16), px(12), px(16), px(12))
             addView(now, LinearLayout.LayoutParams(-1, -2))
             addView(next, LinearLayout.LayoutParams(-1, -2))
             addView(row, LinearLayout.LayoutParams(-1, -2))
         }
+        val note = TextView(context).apply {
+            text = "♪"
+            setTextColor(0xFFFFFFFF.toInt())
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
+            gravity = Gravity.CENTER
+            visibility = View.GONE
+            minWidth = px(44)
+            minHeight = px(44)
+        }
         val root = FrameLayout(context).apply {
             background = GradientDrawable().apply {
                 setColor(0xCC000000.toInt())
                 cornerRadius = 18 * density
             }
-            addView(column, FrameLayout.LayoutParams(-1, -2))
+            addView(body, FrameLayout.LayoutParams(-1, -2))
+            addView(note, FrameLayout.LayoutParams(-2, -2))
         }
+        column = body
+        chip = note
         current = now
         upcoming = next
         menu = row
@@ -216,12 +235,33 @@ object LyricsOverlay {
         }
     }
 
-    /** 지금 곡이 끝날 때까지 창을 숨긴다. 다른 곡이 되면 다시 뜬다. */
-    private fun hideForTrack() {
+    /** 숨기기: 가사 창을 작은 칩으로 줄인다. */
+    private fun minimize() {
         main.removeCallbacks(closeMenu)
         menu?.visibility = View.GONE
-        hiddenTrackId = trackId
+        minimized = true
         refresh()
+    }
+
+    private fun expand() {
+        minimized = false
+        shownKey = null
+        refresh()
+    }
+
+    /** 칩 모양: 가사 글은 감추고 작은 ♪만 오른쪽 끝에 둔다. */
+    private fun showChip() {
+        val root = ensureView()
+        attachIfNeeded(root)
+        column?.visibility = View.GONE
+        chip?.visibility = View.VISIBLE
+        layout?.let {
+            it.width = WindowManager.LayoutParams.WRAP_CONTENT
+            it.gravity = Gravity.TOP or Gravity.END
+            if (attached) (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager).updateViewLayout(root, it)
+        }
+        root.visibility = View.VISIBLE
+        shownKey = null
     }
 
     /** 끄기: 창을 내리고 설정도 끈다. 앱(Dart)이 꺼져 있어도 다음 실행에 켜져 있지 않도록 저장값도 바꾼다. */
@@ -252,17 +292,30 @@ object LyricsOverlay {
         }
     }
 
+    private fun attachIfNeeded(root: FrameLayout) {
+        if (attached) return
+        val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        val lp = params()
+        layout = lp
+        root.setOnTouchListener(dragListener(wm, lp))
+        try {
+            wm.addView(root, lp)
+            attached = true
+        } catch (_: Exception) {
+        }
+    }
+
     private fun showText(text: String, next: String) {
         val root = ensureView()
-        if (!attached) {
-            val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-            val lp = params()
-            root.setOnTouchListener(dragListener(wm, lp))
-            try {
-                wm.addView(root, lp)
-                attached = true
-            } catch (_: Exception) {
-                return
+        attachIfNeeded(root)
+        if (!attached) return
+        if (chip?.visibility == View.VISIBLE) {
+            chip?.visibility = View.GONE
+            column?.visibility = View.VISIBLE
+            layout?.let {
+                it.width = (context.resources.displayMetrics.widthPixels - dp(32f)).toInt()
+                it.gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
+                (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager).updateViewLayout(root, it)
             }
         }
         val key = "$text|$next"
@@ -322,6 +375,8 @@ object LyricsOverlay {
                 MotionEvent.ACTION_UP -> {
                     if (moved) {
                         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putInt(KEY_Y, lp.y).apply()
+                    } else if (minimized) {
+                        expand()
                     } else {
                         toggleMenu()
                     }

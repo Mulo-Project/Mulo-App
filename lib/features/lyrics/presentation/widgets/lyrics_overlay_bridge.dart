@@ -64,7 +64,7 @@ class _LyricsOverlayBridgeState extends State<LyricsOverlayBridge> {
       enabled: true,
       trackId: track.id,
       lyrics: lyrics.lyrics,
-      hideLabel: l10n.lyricsOverlayHideTrack,
+      hideLabel: l10n.lyricsOverlayMinimize,
       offLabel: l10n.lyricsOverlayTurnOff,
     );
   }
