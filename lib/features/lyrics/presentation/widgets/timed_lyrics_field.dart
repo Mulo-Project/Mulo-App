@@ -37,6 +37,7 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
   int? _dragFrom;
   int? _dragTo;
   var _heights = <double>[];
+  (String, double, TextScaler)? _measuredFor;
   final _gutterKey = GlobalKey();
 
   int _rowAt(Offset global) {
@@ -114,10 +115,16 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
                       listenable: controller,
                       builder: (_, _) {
                         final lines = controller.text.split('\n');
-                        _heights = [
-                          for (final l in lines)
-                            _lineHeight(l, style, scaler, textWidth),
-                        ];
+                        // 줄 높이는 글 · 폭 · 글자 배율이 바뀔 때만 다시 잰다 (시간만 끌 때는 그대로).
+                        final key = (controller.text, textWidth, scaler);
+                        if (_measuredFor != key) {
+                          _measuredFor = key;
+                          _heights = [
+                            for (final l in lines)
+                              _lineHeight(l, style, scaler, textWidth),
+                          ];
+                        }
+                        final colors = controller.groupColors();
                         return SizedBox(
                           width: gutter,
                           child: Column(
@@ -126,12 +133,7 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
                             children: [
                               for (var i = 0; i < lines.length; i++)
                                 SizedBox(
-                                  height: _lineHeight(
-                                    lines[i],
-                                    style,
-                                    scaler,
-                                    textWidth,
-                                  ),
+                                  height: _heights[i],
                                   child: GestureDetector(
                                     behavior: HitTestBehavior.opaque,
                                     // 시간 칸을 꾹 눌러 끌면 그 줄을 기준으로 줄을 묶는다.
@@ -171,10 +173,10 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
                                       ),
                                       child: Text(
                                         _label(i),
-                                        style: controller.groupColor(i) == null
+                                        style: colors[i] == null
                                             ? timeStyle
                                             : timeStyle.copyWith(
-                                                color: controller.groupColor(i),
+                                                color: colors[i],
                                               ),
                                         maxLines: 1,
                                       ),

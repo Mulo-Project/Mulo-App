@@ -16,31 +16,34 @@ class TimedLyricsController extends TextEditingController {
   /// 묶음마다 돌려 쓰는 색 (화면이 정한다). 비어 있으면 글자색을 바꾸지 않는다.
   List<Color> groupPalette = const [];
 
-  /// [i]번 줄이 두 줄 이상 묶음이면 그 묶음의 색, 아니면 null. 시간 칸과 글이 같은 색을 쓴다.
-  Color? groupColor(int i) {
-    if (groupPalette.isEmpty || i < 0 || i >= times.length) return null;
-    final t = times[i];
-    if (t == null) return null;
-    var start = i;
-    while (start > 0 && times[start - 1] == t) {
-      start--;
-    }
-    var end = i;
-    while (end + 1 < times.length && times[end + 1] == t) {
-      end++;
-    }
-    if (start == end) return null;
+  /// 줄마다의 묶음 색: 두 줄 이상 묶음이면 그 묶음의 색, 아니면 null. 시간 칸과 글이 같은 색을 쓴다.
+  /// 한 번 훑어 만든다 (시간을 끌 때마다 불리므로 줄마다 다시 훑지 않는다).
+  List<Color?> groupColors() {
+    final out = List<Color?>.filled(times.length, null);
+    if (groupPalette.isEmpty) return out;
     var n = 0;
     var j = 0;
-    while (j < start) {
+    while (j < times.length) {
       var k = j;
-      while (k + 1 < start && times[k + 1] == times[j] && times[j] != null) {
+      final t = times[j];
+      while (t != null && k + 1 < times.length && times[k + 1] == t) {
         k++;
       }
-      if (k > j) n++;
+      if (k > j) {
+        final color = groupPalette[n % groupPalette.length];
+        for (var m = j; m <= k; m++) {
+          out[m] = color;
+        }
+        n++;
+      }
       j = k + 1;
     }
-    return groupPalette[n % groupPalette.length];
+    return out;
+  }
+
+  Color? groupColor(int i) {
+    final all = groupColors();
+    return i >= 0 && i < all.length ? all[i] : null;
   }
 
   bool get isSynced => times.any((t) => t != null);
@@ -72,6 +75,7 @@ class TimedLyricsController extends TextEditingController {
     final after = i + 1 < times.length ? times[i + 1] : null;
     if (prev != null && next < prev) next = prev;
     if (after != null && next > after) next = after;
+    if (times[i] == next) return;
     times[i] = next;
     notifyListeners();
   }
@@ -133,7 +137,10 @@ class TimedLyricsController extends TextEditingController {
     required bool withComposing,
   }) {
     final lines = text.split('\n');
-    final colors = [for (var i = 0; i < lines.length; i++) groupColor(i)];
+    final all = groupColors();
+    final colors = [
+      for (var i = 0; i < lines.length; i++) i < all.length ? all[i] : null,
+    ];
     if (colors.every((c) => c == null) ||
         (withComposing && value.composing.isValid)) {
       return super.buildTextSpan(
