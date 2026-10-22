@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import '../../../../core/usecase/usecase.dart';
+import '../../../covers/domain/entities/cover_art.dart';
 import '../../../covers/domain/entities/cover_key.dart';
 import '../../../covers/domain/repositories/cover_repository.dart';
+import '../entities/file_tags.dart';
 import '../entities/import_result.dart';
 import '../entities/track.dart';
 import '../entities/track_info.dart';
@@ -154,6 +156,81 @@ class EmbedTagsIntoFiles implements UseCase<int, NoParams> {
       await _done.markDone([t.id]);
     }
     return written;
+  }
+}
+
+/// 파일 태그를 읽어 앱 DB를 다시 채운다 (파일이 원본, DB는 캐시). 앱 밖에서 옮겨 와 새로 찾은 기기 곡이나
+/// DB가 비었을 때 곡 정보가 돌아오게 한다: 제목 · 아티스트 · 앨범 · 장르, 그리고 커버 편집 상태
+/// (`COVER_SOURCE` · `COVER_TRANSFORM` · `COVER_COLOR`). 가사는 보여 줄 때 태그에서 바로 읽으므로 옮기지 않고,
+/// 태그에 이미지만 있는 커버는 [FillEmbeddedCovers]가 이어서 채운다.
+/// 곡마다 한 번만 하고(기록), 앱 안에서 이미 정한 커버 · 색은 덮지 않는다. 못 읽은 곡은 다음에 다시 시도한다.
+/// 복원한 곡 수를 돌려준다.
+class RestoreFromFileTags implements UseCase<int, NoParams> {
+  const RestoreFromFileTags(
+    this._library,
+    this._covers,
+    this._colors,
+    this._tags,
+    this._done,
+  );
+
+  final LibraryRepository _library;
+  final CoverRepository _covers;
+  final CoverColorRepository _colors;
+  final FileTagRepository _tags;
+  final TagRestoreStore _done;
+
+  @override
+  Future<int> call(NoParams _) async {
+    final tracks = await _library.watchTracks().first;
+    final done = await _done.loadDone();
+    final covers = await _covers.loadAll();
+    final colors = await _colors.loadAll();
+    var restored = 0;
+    for (final t in tracks) {
+      if (t.source != TrackSource.device || t.uri.isEmpty) continue;
+      if (done.contains(t.id)) continue;
+      try {
+        final tags = await _tags.read(t);
+        if (tags == null) continue;
+        if (!tags.isEmpty) {
+          await _apply(t, tags, covers, colors);
+          restored++;
+        }
+        await _done.markDone([t.id]);
+      } on Exception {
+        // 한 곡이 실패해도 나머지는 계속한다 (기록하지 않아 다음에 다시 시도).
+      }
+    }
+    return restored;
+  }
+
+  Future<void> _apply(
+    Track t,
+    FileTags tags,
+    Map<String, CoverArt> covers,
+    Map<String, int> colors,
+  ) async {
+    String pick(String fromFile, String current) =>
+        fromFile.trim().isEmpty ? current : fromFile.trim();
+    await _library.updateInfo(
+      t.id,
+      TrackInfo(
+        title: pick(tags.title, t.title),
+        artist: pick(tags.artist, t.artist),
+        album: pick(tags.album, t.album),
+        genre: pick(tags.genre, t.genre),
+      ),
+    );
+    final key = CoverKey.track(t.id);
+    final source = tags.coverSource;
+    if (source != null && !covers.containsKey(key)) {
+      await _covers.saveUrl(key, source, transform: tags.coverTransform);
+    }
+    final color = tags.coverColor;
+    if (color != null && !colors.containsKey(key)) {
+      await _colors.save(key, color);
+    }
   }
 }
 

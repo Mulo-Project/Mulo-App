@@ -126,6 +126,38 @@ class CoverTagWriter {
   }
 }
 
+/// [coverExtra]로 쓴 사용자 정의 태그를 되읽는다 (키는 대소문자 구분 없이). 없거나 깨진 칸은 null · 기본값.
+({String? source, CoverTransform transform, int? color}) parseCoverExtra(
+  Map<String, String> tags,
+) {
+  String? get(String key) {
+    for (final e in tags.entries) {
+      if (e.key.toUpperCase() == key && e.value.trim().isNotEmpty) {
+        return e.value.trim();
+      }
+    }
+    return null;
+  }
+
+  var transform = CoverTransform.identity;
+  final parts = get('COVER_TRANSFORM')?.split(',').map(double.tryParse);
+  if (parts != null && parts.length >= 3 && !parts.contains(null)) {
+    final v = parts.cast<double>().toList();
+    transform = CoverTransform(
+      scale: v[0],
+      dx: v[1],
+      dy: v[2],
+      rotation: v.length > 3 ? v[3] : 0,
+    ).clamped();
+  }
+  final hex = get('COVER_COLOR');
+  return (
+    source: get('COVER_SOURCE'),
+    transform: transform,
+    color: hex == null ? null : int.tryParse(hex, radix: 16),
+  );
+}
+
 /// 커버 편집 상태를 파일에 남기는 사용자 정의 태그: 원본 웹 주소 · 확대 · 위치 · 색.
 /// 앱이 파일만 읽어도 커버를 다시 잘라 보여 줄 수 있다. 값이 없으면 그 칸은 쓰지 않는다.
 Map<String, String> coverExtra(
