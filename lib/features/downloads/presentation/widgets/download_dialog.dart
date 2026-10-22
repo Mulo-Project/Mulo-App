@@ -151,6 +151,7 @@ class DownloadScreen extends StatefulWidget {
 class _DownloadScreenState extends State<DownloadScreen> {
   late final _title = TextEditingController(text: widget.title);
   late final _artist = TextEditingController(text: widget.artist);
+  late final _album = TextEditingController(text: widget.album);
   late final _genre = TextEditingController(text: widget.genre);
   // 기본 저장 위치로 채워 시작하고, 이 곡만 바꿀 수 있다 (기본값은 설정에서).
   late final _savePath = TextEditingController(
@@ -203,6 +204,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
   void dispose() {
     _title.dispose();
     _artist.dispose();
+    _album.dispose();
     _genre.dispose();
     _savePath.dispose();
     super.dispose();
@@ -258,7 +260,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
       DownloadRequest(
         title: _title.text,
         artist: _artist.text,
-        album: widget.album,
+        album: _album.text.trim(),
         genre: _genre.text,
         playlistIds: _selected,
         quality: widget.quality,
@@ -590,6 +592,12 @@ class _DownloadScreenState extends State<DownloadScreen> {
                         label: l10n.downloadFieldArtist,
                         controller: _artist,
                         hint: l10n.unknownArtist,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      AppTextField(
+                        label: l10n.downloadFieldAlbum,
+                        controller: _album,
+                        hint: l10n.unknownAlbum,
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       AppTextField(

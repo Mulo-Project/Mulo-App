@@ -2390,6 +2390,12 @@ abstract class AppLocalizations {
   /// **'아티스트'**
   String get downloadFieldArtist;
 
+  /// No description provided for @downloadFieldAlbum.
+  ///
+  /// In ko, this message translates to:
+  /// **'앨범'**
+  String get downloadFieldAlbum;
+
   /// No description provided for @downloadFieldGenre.
   ///
   /// In ko, this message translates to:

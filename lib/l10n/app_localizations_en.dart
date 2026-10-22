@@ -1292,6 +1292,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadFieldArtist => 'Artist';
 
   @override
+  String get downloadFieldAlbum => 'Album';
+
+  @override
   String get downloadFieldGenre => 'Genre';
 
   @override

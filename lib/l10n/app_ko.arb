@@ -575,6 +575,7 @@
   "@playlistDownloadsTitle": {"placeholders": {"count": {"type": "int"}}},
   "downloadFieldTitle": "제목",
   "downloadFieldArtist": "아티스트",
+  "downloadFieldAlbum": "앨범",
   "downloadFieldGenre": "장르",
   "downloadFieldSavePath": "저장 위치",
   "downloadGenreExisting": "기존 장르에서 고르기",

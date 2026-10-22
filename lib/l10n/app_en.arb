@@ -475,6 +475,7 @@
   "@playlistDownloadsTitle": {"placeholders": {"count": {"type": "int"}}},
   "downloadFieldTitle": "Title",
   "downloadFieldArtist": "Artist",
+  "downloadFieldAlbum": "Album",
   "downloadFieldGenre": "Genre",
   "downloadFieldSavePath": "Save location",
   "downloadGenreExisting": "Pick from existing genres",

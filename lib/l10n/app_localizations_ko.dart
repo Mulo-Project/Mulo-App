@@ -1258,6 +1258,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadFieldArtist => '아티스트';
 
   @override
+  String get downloadFieldAlbum => '앨범';
+
+  @override
   String get downloadFieldGenre => '장르';
 
   @override
