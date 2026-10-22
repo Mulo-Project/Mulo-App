@@ -161,10 +161,11 @@ void main() {
     final fields = inSheet(find.byType(TextField));
     await tester.enterText(fields.at(0), '내 제목');
     await tester.enterText(fields.at(1), '내 가수');
-    await tester.enterText(fields.at(2), '발라드');
+    await tester.enterText(fields.at(2), '내 앨범');
+    await tester.enterText(fields.at(3), '발라드');
     // 저장 위치는 기본 저장 위치로 채워져 있고, 이 곡만 고칠 수 있다.
     expect(find.text('/music/Mulo'), findsOneWidget);
-    await tester.enterText(fields.at(3), '/music/Mulo/발라드');
+    await tester.enterText(fields.at(4), '/music/Mulo/발라드');
 
     // 재생목록 선택 대화상자에서 기존 재생목록을 고르고, 새로 만든다 (만들면 자동 선택).
     await tester.ensureVisible(find.text('선택 안 함'));
@@ -195,6 +196,7 @@ void main() {
     expect(r.title, '내 제목');
     expect(r.artist, '내 가수');
     expect(r.genre, '발라드');
+    expect(r.album, '내 앨범');
     expect(r.savePath, '/music/Mulo/발라드');
     expect(r.playlistIds, {'pl1', 'pl2'});
     expect(find.text('받기 정보'), findsNothing);
@@ -215,7 +217,7 @@ void main() {
 
     await openDownloadDialog(tester);
     final fields = inSheet(find.byType(TextField));
-    await tester.enterText(fields.at(2), '발라드');
+    await tester.enterText(fields.at(3), '발라드');
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.bySemanticsLabel('색 3'));
     await tester.tap(find.bySemanticsLabel('색 3'));

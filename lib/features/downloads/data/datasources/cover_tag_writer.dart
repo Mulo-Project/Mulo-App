@@ -5,19 +5,24 @@ import 'dart:ui' as ui;
 import 'package:audio_metadata_reader/audio_metadata_reader.dart';
 
 import '../../../../core/cache/cached_web_image.dart';
+import '../../../../core/cover/cover_paint.dart';
 import '../../../covers/domain/entities/cover_art.dart';
+import 'ffmpeg_tag_writer.dart';
 
 /// 받은 음원 파일의 태그에 커버 이미지를 넣는다 (다른 음악 앱에서도 커버가 보이도록).
 ///
 /// 앱 안의 커버와 같게 고른 확대 · 위치대로 정사각형으로 잘라 [side]px PNG로 넣는다.
 /// 태그를 쓸 수 없는 형식(받은 그대로의 webm 등)이거나 이미지를 못 구하면 파일을 건드리지 않고 false.
 class CoverTagWriter {
-  const CoverTagWriter({this.side = 512});
+  const CoverTagWriter({this.side = 512, this.ffmpeg});
 
   final int side;
 
+  /// opus · ogg · mp3 태그를 쓰는 ffmpeg 쓰기. 없으면 그 형식은 건드리지 않는다.
+  final FfmpegTagWriter? ffmpeg;
+
   /// 태그에 커버를 쓸 수 있는 확장자. ffmpeg가 만든 mp3는 ID3 태그가 이미 있다.
-  /// (opus · ogg · webm은 태그 쓰기를 지원하지 않아 넣지 않는다.)
+  /// (opus · ogg는 [ffmpeg]가 쓴다. webm은 쓰지 않는다. mp3도 ffmpeg가 되면 ffmpeg로 쓴다.)
   static const extensions = {'mp3', 'm4a'};
 
   Future<bool> embed(
@@ -25,18 +30,61 @@ class CoverTagWriter {
     required String extension,
     CoverArt? cover,
     String? thumbnailUrl,
+    String? title,
+    String? artist,
+    String? album,
+    String? genre,
+    String? lyrics,
+    int? color,
   }) async {
-    if (!extensions.contains(extension.toLowerCase())) return false;
+    final ext = extension.toLowerCase();
+    final viaFfmpeg =
+        ffmpeg != null && FfmpegTagWriter.extensions.contains(ext);
+    if (!extensions.contains(ext) && !viaFfmpeg) return false;
     try {
+      // 커버를 못 구해도 글 정보(제목 · 아티스트 등)는 파일에 남긴다.
+      Uint8List? png;
       final source = await _sourceFile(cover, thumbnailUrl);
-      if (source == null) return false;
-      final png = await _squarePng(
-        await source.readAsBytes(),
-        cover?.transform ?? CoverTransform.identity,
-      );
-      if (png == null) return false;
+      if (source != null) {
+        png = await _squarePng(
+          await source.readAsBytes(),
+          cover?.transform ?? CoverTransform.identity,
+        );
+      }
+      String? text(String? v) => v == null || v.trim().isEmpty ? null : v;
+      if (png == null &&
+          text(title) == null &&
+          text(artist) == null &&
+          text(album) == null &&
+          text(genre) == null &&
+          text(lyrics) == null) {
+        return false;
+      }
+      if (viaFfmpeg) {
+        final done = await ffmpeg!.write(
+          audio,
+          extension: ext,
+          title: title,
+          artist: artist,
+          album: album,
+          genre: genre,
+          lyrics: lyrics,
+          coverPng: png,
+          coverSide: side,
+          extra: coverExtra(cover, thumbnailUrl, color),
+        );
+        // mp3는 ffmpeg가 안 되는 기기(lite 등)에서 라이브러리로 쓴다. opus · ogg는 쓸 방법이 이것뿐이다.
+        if (done || !extensions.contains(ext)) return done;
+      }
       updateMetadata(audio, (m) {
-        m.setPictures([Picture(png, 'image/png', PictureType.coverFront)]);
+        if (text(title) != null) m.setTitle(title);
+        if (text(artist) != null) m.setArtist(artist);
+        if (text(album) != null) m.setAlbum(album);
+        if (text(genre) != null) m.setGenres([genre!]);
+        if (text(lyrics) != null) m.setLyrics(lyrics);
+        if (png != null) {
+          m.setPictures([Picture(png, 'image/png', PictureType.coverFront)]);
+        }
       });
       return true;
     } on Object {
@@ -64,14 +112,8 @@ class CoverTagWriter {
     final image = (await codec.getNextFrame()).image;
     codec.dispose();
     try {
-      final r = t.visibleRect(image.width.toDouble(), image.height.toDouble());
       final recorder = ui.PictureRecorder();
-      ui.Canvas(recorder).drawImageRect(
-        image,
-        ui.Rect.fromLTWH(r.left, r.top, r.side, r.side),
-        ui.Rect.fromLTWH(0, 0, side.toDouble(), side.toDouble()),
-        ui.Paint()..filterQuality = ui.FilterQuality.medium,
-      );
+      paintCover(ui.Canvas(recorder), side.toDouble(), image, t);
       final picture = recorder.endRecording();
       final out = await picture.toImage(side, side);
       picture.dispose();
@@ -82,4 +124,21 @@ class CoverTagWriter {
       image.dispose();
     }
   }
+}
+
+/// 커버 편집 상태를 파일에 남기는 사용자 정의 태그: 원본 웹 주소 · 확대 · 위치 · 색.
+/// 앱이 파일만 읽어도 커버를 다시 잘라 보여 줄 수 있다. 값이 없으면 그 칸은 쓰지 않는다.
+Map<String, String> coverExtra(
+  CoverArt? cover,
+  String? thumbnailUrl,
+  int? color,
+) {
+  final url = cover?.url ?? (cover == null ? thumbnailUrl : null);
+  final t = cover?.transform ?? CoverTransform.identity;
+  return {
+    if (url != null && url.isNotEmpty) 'COVER_SOURCE': url,
+    if (!t.isIdentity)
+      'COVER_TRANSFORM': '${t.scale},${t.dx},${t.dy},${t.rotation}',
+    if (color != null) 'COVER_COLOR': color.toRadixString(16).padLeft(8, '0'),
+  };
 }

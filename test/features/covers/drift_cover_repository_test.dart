@@ -41,7 +41,7 @@ void main() {
   });
 
   test('웹 이미지는 파일을 만들지 않고 주소와 위치만 저장한다', () async {
-    const t = CoverTransform(scale: 2.5, dx: .2, dy: -.1);
+    const t = CoverTransform(scale: 2.5, dx: .2, dy: -.1, rotation: 30);
     final art = await store.saveUrl(
       'track:w',
       'https://x.test/a.jpg',

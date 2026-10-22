@@ -6,7 +6,6 @@ import 'package:webview_flutter/webview_flutter.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../bloc/cover_cubit.dart';
-import 'cover_editor_page.dart';
 
 /// 앱 안 브라우저(WebView)로 이미지를 고를 수 있는 플랫폼인가. 지금은 Android만
 /// (데스크톱은 검색어 · 주소 입력 화면을 쓴다).
@@ -74,7 +73,6 @@ class _CoverWebBrowserState extends State<CoverWebBrowser> {
   late final WebViewController _web;
   bool _loading = true;
   bool _canGoBack = false;
-  bool _editing = false;
 
   @override
   void initState() {
@@ -132,20 +130,12 @@ class _CoverWebBrowserState extends State<CoverWebBrowser> {
     _web.loadRequest(coverSearchUri(q));
   }
 
-  Future<void> _pick(String url) async {
-    if (_editing || !mounted) return;
+  /// 눌러 고른 이미지를 돌려주며 닫는다. 확대 · 위치는 부른 편집 화면에서 맞춘다.
+  void _pick(String url) {
+    if (!mounted) return;
     final uri = Uri.tryParse(url);
     if (uri == null || !uri.hasAuthority) return;
-    _editing = true;
-    final art = await showCoverEditor(context, CoverArt.web(url));
-    _editing = false;
-    // 상세 주소로 넘어가 있었다면 결과 목록으로 되돌려 다른 이미지를 고를 수 있게 한다.
-    final now = await _web.currentUrl();
-    if (art == null && now != null && originalImageUrlOf(now) != null) {
-      await _web.goBack();
-    }
-    // 뒤로 가면(null) 브라우저를 그대로 둔다. 적용했으면 맞춘 이미지를 돌려주며 닫는다.
-    if (art != null && mounted) Navigator.of(context).pop(art);
+    Navigator.of(context).pop(CoverArt.web(url));
   }
 
   @override

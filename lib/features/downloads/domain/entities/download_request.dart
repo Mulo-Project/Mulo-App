@@ -8,6 +8,7 @@ class DownloadRequest extends Equatable {
   const DownloadRequest({
     required this.title,
     this.artist = '',
+    this.album = '',
     this.genre = '',
     this.playlistIds = const {},
     this.quality,
@@ -29,6 +30,9 @@ class DownloadRequest extends Equatable {
 
   /// 모르면 빈 문자열.
   final String artist;
+
+  /// 앨범. 모르면 빈 문자열.
+  final String album;
   final String genre;
   final Set<String> playlistIds;
 
@@ -73,6 +77,7 @@ class DownloadRequest extends Equatable {
   DownloadRequest normalized() => DownloadRequest(
     title: title.trim(),
     artist: artist.trim(),
+    album: album.trim(),
     genre: genre.trim(),
     playlistIds: playlistIds,
     quality: quality,
@@ -94,6 +99,7 @@ class DownloadRequest extends Equatable {
   List<Object?> get props => [
     title,
     artist,
+    album,
     genre,
     playlistIds,
     quality,

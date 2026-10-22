@@ -681,7 +681,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get coverEditTitle => '이미지 위치';
 
   @override
-  String get coverEditHint => '끌어서 옮기고, 두 손가락이나 마우스 휠로 크기를 바꿔요';
+  String get coverEditHint =>
+      '테두리 안이 실제 커버예요. 어둡게 보이는 곳은 잘리고, 그림이 비는 곳은 검정이에요. 끌어서 옮기고 두 손가락으로 크기와 각도를 바꿔요';
 
   @override
   String get coverEditZoomIn => '확대';
@@ -694,6 +695,18 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get coverEditApply => '적용';
+
+  @override
+  String get coverEditEmpty => '위에서 이미지를 불러오세요';
+
+  @override
+  String get coverEditRotation => '회전';
+
+  @override
+  String get coverEditRotateLeft => '왼쪽 90°';
+
+  @override
+  String get coverEditRotateRight => '오른쪽 90°';
 
   @override
   String get coverEditLoadFailed => '이미지를 불러오지 못했어요';
@@ -1250,6 +1263,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get downloadFieldArtist => '아티스트';
+
+  @override
+  String get downloadFieldAlbum => '앨범';
 
   @override
   String get downloadFieldGenre => '장르';
