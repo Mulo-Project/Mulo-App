@@ -13,6 +13,7 @@ class LyricsOverlayCubit extends Cubit<void> {
     required this._show,
     required this._hide,
     required this._watchClosed,
+    required this._setViewShown,
   }) : super(null);
 
   final CanDrawLyricsOverlay _canDraw;
@@ -20,6 +21,10 @@ class LyricsOverlayCubit extends Cubit<void> {
   final ShowLyricsOverlay _show;
   final HideLyricsOverlay _hide;
   final WatchLyricsOverlayClosed _watchClosed;
+  final SetLyricsViewShown _setViewShown;
+
+  /// 앱 안 플레이어에서 가사를 보고 있는지 (보는 동안은 떠 있는 창을 숨긴다).
+  Future<void> setLyricsViewShown(bool shown) => _setViewShown(shown);
 
   /// 창의 닫기(✕)를 눌렀다 (설정을 끄라는 뜻).
   Stream<void> get closed => _watchClosed(const NoParams());

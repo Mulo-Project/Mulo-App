@@ -54,6 +54,7 @@ void registerLyrics(GetIt sl) {
     ..registerFactory(() => OpenLyricsOverlayPermission(sl()))
     ..registerFactory(() => ShowLyricsOverlay(sl()))
     ..registerFactory(() => HideLyricsOverlay(sl()))
+    ..registerFactory(() => SetLyricsViewShown(sl()))
     ..registerFactory(() => WatchLyricsOverlayClosed(sl()))
     ..registerFactory(() => SaveLyricsOverlaySetting(sl()))
     ..registerFactory(
@@ -63,6 +64,7 @@ void registerLyrics(GetIt sl) {
         show: sl(),
         hide: sl(),
         watchClosed: sl(),
+        setViewShown: sl(),
       ),
     );
 }

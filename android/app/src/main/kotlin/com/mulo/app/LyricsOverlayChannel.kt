@@ -43,6 +43,10 @@ class LyricsOverlayChannel(private val context: Context, messenger: BinaryMessen
                         result.success(null)
                     }
                 }
+                "setLyricsViewShown" -> {
+                    LyricsOverlay.setLyricsViewShown(call.arguments as? Boolean ?: false)
+                    result.success(null)
+                }
                 "hide" -> {
                     LyricsOverlay.hide()
                     result.success(null)

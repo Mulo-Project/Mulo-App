@@ -18,6 +18,9 @@ abstract interface class LyricsOverlay {
     required int accent,
   });
 
+  /// 앱 안 플레이어에서 가사를 보고 있는지 알린다 (보고 있는 동안은 창이 겹치지 않게 숨긴다).
+  Future<void> setLyricsViewShown(bool shown);
+
   /// 창의 닫기(✕)를 눌러 사용자가 껐다.
   Stream<void> watchClosed();
 

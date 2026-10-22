@@ -61,6 +61,15 @@ class WatchLyricsOverlayClosed implements StreamUseCase<void, NoParams> {
   Stream<void> call(NoParams _) => _overlay.watchClosed();
 }
 
+class SetLyricsViewShown implements UseCase<void, bool> {
+  const SetLyricsViewShown(this._overlay);
+
+  final LyricsOverlay _overlay;
+
+  @override
+  Future<void> call(bool shown) => _overlay.setLyricsViewShown(shown);
+}
+
 class HideLyricsOverlay implements UseCase<void, NoParams> {
   const HideLyricsOverlay(this._overlay);
 

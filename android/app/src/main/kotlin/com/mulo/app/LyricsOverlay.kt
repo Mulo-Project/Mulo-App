@@ -19,11 +19,11 @@ import android.widget.LinearLayout
 import android.widget.TextView
 
 /**
- * 다른 앱 위에 떠 있는 가사 창. 앱 화면이 보이는 동안에는 숨기고(앱 안에 가사 보기가 있다), 앱을 벗어나면 보인다.
+ * 다른 앱 위에 떠 있는 가사 창. 앱 안에서도 보이되, 플레이어에서 가사를 보고 있는 동안에는 숨긴다(같은 가사가 겹친다).
  *
  * 가볍게 돌아가도록: 시간 붙은 가사를 한 번 받아 두고, 재생 위치는 이미 쥐고 있는 ExoPlayer에서 읽는다.
  * 다음 줄 시간에 맞춘 타이머 하나만 예약해 줄이 바뀔 때만 글자를 바꾼다 (주기적인 틱 없음).
- * 멈춤 · 앱이 보임 · 다른 곡 · 가사 없음이면 타이머를 걸지 않고 창을 뗀다.
+ * 멈춤 · 가사 보기가 앱에 떠 있음 · 다른 곡 · 가사 없음이면 타이머를 걸지 않고 창을 뗀다.
  *
  * 창을 탭하면 아래에 [숨기기] [끄기]가 나온다 (몇 초 뒤 저절로 사라진다). 끌면 위아래로 옮긴다.
  * 숨기기를 누르면 가사 창이 작은 ♪ 칩으로 줄어든다 (가사 갱신도 멈춘다). 칩을 탭하면 다시 펼쳐진다.
@@ -41,6 +41,9 @@ object LyricsOverlay {
     private var times = LongArray(0)
     private var texts = emptyList<String>()
     private var appVisible = false
+
+    /** 앱 안 플레이어에서 가사를 보고 있는가 (Dart가 알려 준다). 앱이 보일 때만 창을 가린다. */
+    private var lyricsViewShown = false
 
     /** 숨기기를 눌러 작은 칩으로 줄어든 상태. 칩을 탭하면 펼친다. */
     private var minimized = false
@@ -103,6 +106,12 @@ object LyricsOverlay {
         if (initialized) refresh()
     }
 
+    fun setLyricsViewShown(shown: Boolean) {
+        if (lyricsViewShown == shown) return
+        lyricsViewShown = shown
+        if (initialized) refresh()
+    }
+
     /** 재생이 바뀌었을 때 (재생 · 일시정지 · 이동 · 곡 넘김). */
     fun onPlayerChanged() {
         if (initialized && times.isNotEmpty()) refresh()
@@ -112,7 +121,7 @@ object LyricsOverlay {
         main.removeCallbacks(tick)
         val exo = PlaybackHub.exo
         val mediaId = exo.currentMediaItem?.mediaId
-        val active = times.isNotEmpty() && !appVisible && canDraw() && mediaId == trackId
+        val active = times.isNotEmpty() && !(appVisible && lyricsViewShown) && canDraw() && mediaId == trackId
         if (!active) {
             detach()
             return

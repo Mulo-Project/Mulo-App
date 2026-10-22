@@ -45,6 +45,10 @@ class NativeLyricsOverlay implements LyricsOverlay {
   });
 
   @override
+  Future<void> setLyricsViewShown(bool shown) =>
+      _channel.invokeMethod('setLyricsViewShown', shown);
+
+  @override
   Future<void> hide() => _channel.invokeMethod('hide');
 }
 
@@ -67,6 +71,9 @@ class NoLyricsOverlay implements LyricsOverlay {
     required String offLabel,
     required int accent,
   }) async {}
+
+  @override
+  Future<void> setLyricsViewShown(bool shown) async {}
 
   @override
   Future<void> hide() async {}

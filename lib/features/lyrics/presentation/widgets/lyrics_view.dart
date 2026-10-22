@@ -10,6 +10,7 @@ import '../../../library/domain/entities/track.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../bloc/lyrics_cubit.dart';
+import '../bloc/lyrics_overlay_cubit.dart';
 import '../bloc/lyrics_settings_cubit.dart';
 import 'lyrics_editor.dart';
 import 'lyrics_sync_start.dart';
@@ -36,10 +37,20 @@ class _LyricsViewState extends State<LyricsView> {
   /// 처음 현재 줄로 자리를 잡았는가. 잡기 전에는 가사를 투명하게 두어 위치가 튀어 보이지 않게 한다.
   var _placed = false;
 
+  late final LyricsOverlayCubit _overlay = context.read<LyricsOverlayCubit>();
+
   @override
   void initState() {
     super.initState();
     context.read<LyricsCubit>().show(widget.track);
+    // 이 가사 보기가 떠 있는 동안은 떠 있는 가사 창이 겹치지 않게 숨긴다.
+    _overlay.setLyricsViewShown(true);
+  }
+
+  @override
+  void dispose() {
+    _overlay.setLyricsViewShown(false);
+    super.dispose();
   }
 
   @override
