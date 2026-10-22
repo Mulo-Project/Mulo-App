@@ -2097,13 +2097,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Control playback from the notification shade and lock screen.';
 
   @override
-  String get settingsLyricsOverlay => 'Floating lyrics';
-
-  @override
-  String get settingsLyricsOverlayDesc =>
-      'Shows the current line over other apps while you use them. Works for songs with synced lyrics, and you can drag it to move.';
-
-  @override
   String get lyricsOverlayOn => 'Turn on floating lyrics';
 
   @override
