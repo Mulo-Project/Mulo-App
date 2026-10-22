@@ -81,7 +81,7 @@ class _PlaylistPickerState extends State<_PlaylistPicker> {
             ),
           // 좋아요 말고 직접 만든 재생목록이 없을 때의 안내.
           if (playlists.every((pl) => pl.isFavorites))
-            EmptyState(title: l10n.downloadPlaylistsEmpty),
+            EmptyState(title: l10n.downloadPlaylistsEmpty, compact: true),
           const SizedBox(height: AppSpacing.xs),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,

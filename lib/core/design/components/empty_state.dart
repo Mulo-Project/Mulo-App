@@ -28,6 +28,7 @@ class EmptyState extends StatelessWidget {
     this.body,
     this.icon,
     this.action,
+    this.compact = false,
   }) : kind = EmptyKind.empty,
        onAction = null;
 
@@ -37,6 +38,7 @@ class EmptyState extends StatelessWidget {
       title = null,
       icon = null,
       action = null,
+      compact = false,
       onAction = onRetry;
 
   /// 로그인이 필요하다는 안내. [onSignIn]이 있으면 "로그인" 버튼이 붙는다.
@@ -45,6 +47,7 @@ class EmptyState extends StatelessWidget {
       title = null,
       icon = null,
       action = null,
+      compact = false,
       onAction = onSignIn;
 
   final EmptyKind kind;
@@ -54,6 +57,9 @@ class EmptyState extends StatelessWidget {
 
   /// 아래 버튼 (보통 [PillButton] · [PlainButton]).
   final Widget? action;
+
+  /// 목록 · 카드 안에 끼는 한 줄 안내: 위아래 여백을 줄이고 제목도 옅은 본문 글자로 그린다.
+  final bool compact;
 
   /// network · signIn 종류의 버튼이 누를 때 하는 일.
   final VoidCallback? onAction;
@@ -98,9 +104,9 @@ class EmptyState extends StatelessWidget {
     }
     return Center(
       child: Padding(
-        padding: const EdgeInsets.symmetric(
+        padding: EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
-          vertical: AppSpacing.xl,
+          vertical: compact ? AppSpacing.sm : AppSpacing.xl,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -111,7 +117,9 @@ class EmptyState extends StatelessWidget {
             ],
             Text(
               shownTitle,
-              style: text.titleMedium,
+              style: compact
+                  ? text.bodyMedium?.copyWith(color: p.onSurfaceMuted)
+                  : text.titleMedium,
               textAlign: TextAlign.center,
             ),
             if (shownBody != null) ...[
