@@ -222,8 +222,8 @@ object LyricsOverlay {
         }
         val note = LyricsGlyph(context).apply {
             visibility = View.GONE
-            minimumWidth = px(44)
-            minimumHeight = px(44)
+            minimumWidth = px(48)
+            minimumHeight = px(48)
         }
         val root = FrameLayout(context).apply {
             background = round(0xEB121214.toInt(), 22f, 0x1FFFFFFF)
@@ -458,9 +458,9 @@ class LyricsGlyph(context: Context) : View(context) {
     override fun onDraw(canvas: Canvas) {
         val w = width.toFloat()
         val h = height.toFloat()
-        val barHeight = h * 0.09f
-        val widths = floatArrayOf(0.44f, 0.30f, 0.38f)
-        val gap = h * 0.075f
+        val barHeight = h * 0.1f
+        val widths = floatArrayOf(0.56f, 0.38f, 0.48f)
+        val gap = h * 0.09f
         val total = barHeight * 3 + gap * 2
         var top = (h - total) / 2f
         for (fraction in widths) {
