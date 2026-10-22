@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/usecase/usecase.dart';
 import '../../domain/entities/lyrics_settings.dart';
+import '../../domain/usecases/lyrics_overlay_usecases.dart';
 import '../../domain/usecases/lyrics_settings_usecases.dart';
 
 export '../../domain/entities/lyrics_settings.dart';
@@ -13,6 +14,7 @@ class LyricsSettingsCubit extends Cubit<LyricsSettings> {
     required SaveStampLatency saveStampLatency,
     required SaveLyricsTheme saveLyricsTheme,
     required SaveLyricsCoverBackground saveCoverBackground,
+    required this._saveOverlay,
   }) : _load = loadSettings,
        _saveLatency = saveStampLatency,
        _saveTheme = saveLyricsTheme,
@@ -23,6 +25,7 @@ class LyricsSettingsCubit extends Cubit<LyricsSettings> {
   final SaveStampLatency _saveLatency;
   final SaveLyricsTheme _saveTheme;
   final SaveLyricsCoverBackground _saveCover;
+  final SaveLyricsOverlaySetting _saveOverlay;
 
   Future<void> load() async {
     final settings = await _load(const NoParams());
@@ -47,5 +50,12 @@ class LyricsSettingsCubit extends Cubit<LyricsSettings> {
     if (on == state.coverBackground) return;
     emit(state.copyWith(coverBackground: on));
     await _saveCover(on);
+  }
+
+  /// 떠 있는 가사 창을 켜고 끈다 (켜기 전 권한 확인은 부르는 쪽에서).
+  Future<void> setOverlay(bool on) async {
+    if (on == state.overlay) return;
+    emit(state.copyWith(overlay: on));
+    await _saveOverlay(on);
   }
 }

@@ -1,7 +1,11 @@
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../library/presentation/widgets/track_menu.dart'
+    show toggleLyricsOverlay;
 import '../../../lyrics/presentation/bloc/lyrics_settings_cubit.dart';
 import '../../../lyrics/presentation/screens/lyrics_latency_screen.dart';
 import '../../../../app/router.dart';
@@ -246,6 +250,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       onChanged: notifyCtrl.setPlayback,
                     ),
                   ),
+                  if (defaultTargetPlatform == TargetPlatform.android)
+                    SettingRow(
+                      title: l10n.settingsLyricsOverlay,
+                      description: l10n.settingsLyricsOverlayDesc,
+                      trailing: AppSwitch(
+                        value: context
+                            .watch<LyricsSettingsCubit>()
+                            .state
+                            .overlay,
+                        onChanged: (_) => toggleLyricsOverlay(context),
+                      ),
+                    ),
                 ],
               ),
               const SizedBox(height: AppSpacing.lg),

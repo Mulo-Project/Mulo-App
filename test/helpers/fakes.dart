@@ -410,6 +410,10 @@ class MemoryLyricsSettingsRepository implements LyricsSettingsRepository {
   @override
   Future<void> saveCoverBackground(bool on) async =>
       settings = settings.copyWith(coverBackground: on);
+
+  @override
+  Future<void> saveOverlay(bool on) async =>
+      settings = settings.copyWith(overlay: on);
 }
 
 class MemoryPlayerStyleRepository implements PlayerStyleRepository {

@@ -574,6 +574,7 @@ object PlaybackHub {
 
         override fun onEvents(player: Player, events: Player.Events) {
             sessionPlayer.refresh()
+            LyricsOverlay.onPlayerChanged()
         }
 
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {

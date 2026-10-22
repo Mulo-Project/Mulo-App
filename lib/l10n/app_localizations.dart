@@ -3842,6 +3842,36 @@ abstract class AppLocalizations {
   /// **'알림창 · 잠금화면에서 재생을 조작해요.'**
   String get settingsNotifyPlaybackDesc;
 
+  /// No description provided for @settingsLyricsOverlay.
+  ///
+  /// In ko, this message translates to:
+  /// **'떠 있는 가사'**
+  String get settingsLyricsOverlay;
+
+  /// No description provided for @settingsLyricsOverlayDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱을 벗어나 다른 앱을 쓰는 동안에도 화면 위에 지금 부르는 줄을 띄워요. 싱크 가사가 있는 곡에서 보이고, 끌어서 위치를 옮길 수 있어요.'**
+  String get settingsLyricsOverlayDesc;
+
+  /// No description provided for @lyricsOverlayOn.
+  ///
+  /// In ko, this message translates to:
+  /// **'떠 있는 가사 켜기'**
+  String get lyricsOverlayOn;
+
+  /// No description provided for @lyricsOverlayOff.
+  ///
+  /// In ko, this message translates to:
+  /// **'떠 있는 가사 끄기'**
+  String get lyricsOverlayOff;
+
+  /// No description provided for @lyricsOverlayNeedPermission.
+  ///
+  /// In ko, this message translates to:
+  /// **'설정에서 \"다른 앱 위에 표시\"를 허용한 뒤 다시 켜 주세요.'**
+  String get lyricsOverlayNeedPermission;
+
   /// No description provided for @settingsNotifyPermission.
   ///
   /// In ko, this message translates to:

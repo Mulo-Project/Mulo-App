@@ -2040,6 +2040,23 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsNotifyPlaybackDesc => '알림창 · 잠금화면에서 재생을 조작해요.';
 
   @override
+  String get settingsLyricsOverlay => '떠 있는 가사';
+
+  @override
+  String get settingsLyricsOverlayDesc =>
+      '앱을 벗어나 다른 앱을 쓰는 동안에도 화면 위에 지금 부르는 줄을 띄워요. 싱크 가사가 있는 곡에서 보이고, 끌어서 위치를 옮길 수 있어요.';
+
+  @override
+  String get lyricsOverlayOn => '떠 있는 가사 켜기';
+
+  @override
+  String get lyricsOverlayOff => '떠 있는 가사 끄기';
+
+  @override
+  String get lyricsOverlayNeedPermission =>
+      '설정에서 \"다른 앱 위에 표시\"를 허용한 뒤 다시 켜 주세요.';
+
+  @override
   String get settingsNotifyPermission => '시스템 알림이 꺼져 있어요';
 
   @override

@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +11,8 @@ import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../covers/presentation/widgets/decorate_sheet.dart';
 import '../../../lyrics/presentation/bloc/lyrics_cubit.dart';
+import '../../../lyrics/presentation/bloc/lyrics_overlay_cubit.dart';
+import '../../../lyrics/presentation/bloc/lyrics_settings_cubit.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../../player/presentation/widgets/player_style_sheet.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
@@ -18,6 +22,7 @@ import '../bloc/library_cubit.dart';
 
 enum _TrackAction {
   playerStyle,
+  lyricsOverlay,
   playNext,
   addToQueue,
   addToPlaylist,
@@ -89,6 +94,14 @@ Future<void> showTrackMenu(
           icon: AppIcons.style,
           label: l10n.playerStyleTitle,
         ),
+      if (inPlayer && defaultTargetPlatform == TargetPlatform.android)
+        AppMenuItem(
+          value: _TrackAction.lyricsOverlay,
+          icon: AppIcons.lyrics,
+          label: context.read<LyricsSettingsCubit>().state.overlay
+              ? l10n.lyricsOverlayOff
+              : l10n.lyricsOverlayOn,
+        ),
       // 지금 재생 중인 곡의 메뉴(재생 화면)에서는 "다음 재생" · "대기열에 추가"를 뺀다.
       if (!inPlayer)
         AppMenuItem(
@@ -159,6 +172,8 @@ Future<void> showTrackMenu(
   switch (action) {
     case _TrackAction.playerStyle:
       await showPlayerStyleSheet(context);
+    case _TrackAction.lyricsOverlay:
+      await toggleLyricsOverlay(context);
     case _TrackAction.playNext:
       context.read<NowPlayingCubit>().playNext(track);
       _snack(context, context.l10n.trackMenuPlayNextDone);
@@ -195,6 +210,22 @@ Future<void> showTrackMenu(
       if (context.mounted) {
         _snack(context, context.l10n.trackRemovedFromPlaylist);
       }
+  }
+}
+
+/// 떠 있는 가사 창을 켜고 끈다. 켜려는데 "다른 앱 위에 표시" 권한이 없으면 시스템 설정을 열고 안내한다.
+Future<void> toggleLyricsOverlay(BuildContext context) async {
+  final settings = context.read<LyricsSettingsCubit>();
+  final overlay = context.read<LyricsOverlayCubit>();
+  final l10n = context.l10n;
+  if (settings.state.overlay) {
+    await settings.setOverlay(false);
+    return;
+  }
+  if (await overlay.ensurePermission()) {
+    await settings.setOverlay(true);
+  } else if (context.mounted) {
+    _snack(context, l10n.lyricsOverlayNeedPermission);
   }
 }
 
