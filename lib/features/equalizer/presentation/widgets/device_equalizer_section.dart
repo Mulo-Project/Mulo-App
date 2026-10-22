@@ -33,11 +33,7 @@ class DeviceEqualizerSection extends StatelessWidget {
       child: SectionCard(
         title: l10n.equalizerDevicesTitle,
         children: [
-          if (devices.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Text(l10n.equalizerDevicesEmpty, style: text.bodyMedium),
-            ),
+          if (devices.isEmpty) EmptyState(title: l10n.equalizerDevicesEmpty),
           for (final device in devices)
             SettingRow(
               title: deviceLabel(l10n, device),

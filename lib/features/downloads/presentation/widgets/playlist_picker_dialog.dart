@@ -60,7 +60,6 @@ class _PlaylistPickerState extends State<_PlaylistPicker> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final p = context.palette;
-    final text = Theme.of(context).textTheme;
     final playlists = context.watch<PlaylistsCubit>().state;
 
     return AppDialog(
@@ -82,13 +81,7 @@ class _PlaylistPickerState extends State<_PlaylistPicker> {
             ),
           // 좋아요 말고 직접 만든 재생목록이 없을 때의 안내.
           if (playlists.every((pl) => pl.isFavorites))
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-              child: Text(
-                l10n.downloadPlaylistsEmpty,
-                style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
-              ),
-            ),
+            EmptyState(title: l10n.downloadPlaylistsEmpty),
           const SizedBox(height: AppSpacing.xs),
           Row(
             crossAxisAlignment: CrossAxisAlignment.end,
