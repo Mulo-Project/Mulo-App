@@ -383,6 +383,8 @@
   "mediaDetailGenre": "Genre",
   "mediaDetailFollowers": "{count} followers",
   "mediaDetailChannel": "Channel",
+  "mediaDetailSite": "Source",
+  "mediaDetailUploader": "Uploaded by",
   "mediaDetailOpenChannel": "View channel",
   "mediaDetailDuration": "Length",
   "mediaDetailViews": "Views",

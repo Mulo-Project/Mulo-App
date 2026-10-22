@@ -476,6 +476,8 @@
     }
   },
   "mediaDetailChannel": "채널",
+  "mediaDetailSite": "출처",
+  "mediaDetailUploader": "올린 사람",
   "mediaDetailOpenChannel": "채널 보기",
   "mediaDetailDuration": "길이",
   "mediaDetailViews": "조회수",

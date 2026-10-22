@@ -1952,6 +1952,18 @@ abstract class AppLocalizations {
   /// **'채널'**
   String get mediaDetailChannel;
 
+  /// No description provided for @mediaDetailSite.
+  ///
+  /// In ko, this message translates to:
+  /// **'출처'**
+  String get mediaDetailSite;
+
+  /// No description provided for @mediaDetailUploader.
+  ///
+  /// In ko, this message translates to:
+  /// **'올린 사람'**
+  String get mediaDetailUploader;
+
   /// No description provided for @mediaDetailOpenChannel.
   ///
   /// In ko, this message translates to:

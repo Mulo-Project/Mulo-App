@@ -363,6 +363,7 @@ void main() {
     expect(isYoutubeUrl('https://music.youtube.com/watch?v=a'), isTrue);
     expect(isYoutubeUrl('https://soundcloud.com/a'), isFalse);
     expect(isYoutubeUrl('https://notyoutube.com/a'), isFalse);
+    expect(siteNameOf('https://www.soundcloud.com/a'), 'soundcloud.com');
   });
 
   group('상세 보기 화면', () {

@@ -45,6 +45,12 @@ bool isYoutubeUrl(String url) {
       host.endsWith('.youtube.com');
 }
 
+/// 웹 항목에 보여 줄 사이트 이름: 주소의 도메인에서 앞의 `www.`를 뺀 것 (모르면 빈 문자열).
+String siteNameOf(String url) {
+  final host = Uri.tryParse(url)?.host.toLowerCase() ?? '';
+  return host.startsWith('www.') ? host.substring(4) : host;
+}
+
 class MediaDetailScreen extends StatelessWidget {
   const MediaDetailScreen({
     super.key,
@@ -161,10 +167,12 @@ class _DetailViewState extends State<_DetailView> {
     final youtube = isYoutubeUrl(hit.url);
     // 유튜브가 아닌 곳(SoundCloud 등)은 영상이 아니라 음원이다: 커버 · 아티스트 · 재생수로 보여 준다.
     final audio = !youtube;
+    final site = youtube ? '' : siteNameOf(hit.url);
 
     final views = hit.viewCount;
     final uploaded = hit.uploadedAt;
     final rows = <(String, String)>[
+      if (!youtube && site.isNotEmpty) (l10n.mediaDetailSite, site),
       if (hit.duration != null)
         (l10n.mediaDetailDuration, formatDuration(hit.duration!)),
       if (views != null)
