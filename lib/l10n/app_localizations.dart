@@ -3344,6 +3344,18 @@ abstract class AppLocalizations {
   /// **'풀기'**
   String get lyricsSyncUnmerge;
 
+  /// No description provided for @playerLyricsExpand.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사만 크게 보기'**
+  String get playerLyricsExpand;
+
+  /// No description provided for @playerLyricsCollapse.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사 닫기'**
+  String get playerLyricsCollapse;
+
   /// No description provided for @playerShowLyrics.
   ///
   /// In ko, this message translates to:

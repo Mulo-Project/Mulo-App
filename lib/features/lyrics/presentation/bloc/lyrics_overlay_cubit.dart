@@ -24,7 +24,13 @@ class LyricsOverlayCubit extends Cubit<void> {
   final SetLyricsViewShown _setViewShown;
 
   /// 앱 안 플레이어에서 가사를 보고 있는지 (보는 동안은 떠 있는 창을 숨긴다).
-  Future<void> setLyricsViewShown(bool shown) => _setViewShown(shown);
+  /// 가사 보기가 겹쳐 열릴 수 있어서(플레이어 + 가사만 보기) 개수를 세고, 하나라도 떠 있으면 true.
+  Future<void> setLyricsViewShown(bool shown) {
+    _views = (_views + (shown ? 1 : -1)).clamp(0, 99);
+    return _setViewShown(_views > 0);
+  }
+
+  var _views = 0;
 
   /// 창의 닫기(✕)를 눌렀다 (설정을 끄라는 뜻).
   Stream<void> get closed => _watchClosed(const NoParams());

@@ -15,6 +15,8 @@
 - 곡 정보 숨기기가 켜져 있으면 가사를 보내지 않는다.
 - Dart: `LyricsOverlay` 인터페이스 + 유스케이스, `LyricsOverlayCubit`, `LyricsOverlayBridge`(앱 셸), `LyricsSettings.overlay`.
 
+- 플레이어 가사 보기 오른쪽 위 "가사만 크게 보기" 버튼: 커버 · 조작 없이 가사와 닫기 버튼만 있는 전체 화면(`LyricsFullScreen`)을 연다. 재생은 그대로 이어진다.
+
 ## 바꾼 설정
 - AndroidManifest: `SYSTEM_ALERT_WINDOW` 권한 추가.
 - Kotlin: `LyricsOverlay.kt` · `LyricsOverlayChannel.kt` 추가, `MuloEngine` 채널 등록, `PlaybackHub` 플레이어 이벤트 · `MainActivity` 화면 보임 여부 연결.

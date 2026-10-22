@@ -742,6 +742,8 @@
   "lyricsSyncMerged": "{n}줄 같은 시간으로 묶음",
   "@lyricsSyncMerged": {"placeholders": {"n": {"type": "int"}}},
   "lyricsSyncUnmerge": "풀기",
+  "playerLyricsExpand": "가사만 크게 보기",
+  "playerLyricsCollapse": "가사 닫기",
   "playerShowLyrics": "가사 보기",
   "playerShowCover": "커버 보기",
   "lyricsEmpty": "가사가 없어요",

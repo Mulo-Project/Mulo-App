@@ -12,6 +12,7 @@ import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../library/presentation/widgets/track_menu.dart';
+import '../../../lyrics/presentation/screens/lyrics_full_screen.dart';
 import '../../../lyrics/presentation/widgets/lyrics_view.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../bloc/now_playing_cubit.dart';
@@ -281,7 +282,22 @@ class PlayerLyricsPane extends StatelessWidget {
   final Track track;
 
   @override
-  Widget build(BuildContext context) => LyricsView(track: track);
+  Widget build(BuildContext context) => Stack(
+    children: [
+      LyricsView(track: track),
+      // 가사만 크게 보기.
+      Positioned(
+        top: 0,
+        right: 0,
+        child: CircleIconButton(
+          icon: AppIcons.fullscreen,
+          tooltip: context.l10n.playerLyricsExpand,
+          size: AppSizes.circleButton * .8,
+          onPressed: () => LyricsFullScreen.open(context),
+        ),
+      ),
+    ],
+  );
 }
 
 /// 기본 원형 손잡이 + 아래로 이어지는 둥근 삼각형 + 현재 재생 시간 상자를 한 덩어리로 그린 손잡이.

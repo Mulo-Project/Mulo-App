@@ -1775,6 +1775,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsSyncUnmerge => '풀기';
 
   @override
+  String get playerLyricsExpand => '가사만 크게 보기';
+
+  @override
+  String get playerLyricsCollapse => '가사 닫기';
+
+  @override
   String get playerShowLyrics => '가사 보기';
 
   @override

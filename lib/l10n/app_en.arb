@@ -642,6 +642,8 @@
   "lyricsSyncMerged": "{n} lines share one time",
   "@lyricsSyncMerged": {"placeholders": {"n": {"type": "int"}}},
   "lyricsSyncUnmerge": "Split",
+  "playerLyricsExpand": "Lyrics only",
+  "playerLyricsCollapse": "Close lyrics",
   "playerShowLyrics": "Show lyrics",
   "playerShowCover": "Show cover",
   "lyricsEmpty": "No lyrics yet",

@@ -1820,6 +1820,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsSyncUnmerge => 'Split';
 
   @override
+  String get playerLyricsExpand => 'Lyrics only';
+
+  @override
+  String get playerLyricsCollapse => 'Close lyrics';
+
+  @override
   String get playerShowLyrics => 'Show lyrics';
 
   @override
