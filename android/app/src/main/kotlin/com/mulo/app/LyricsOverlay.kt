@@ -223,7 +223,10 @@ object LyricsOverlay {
         // 줄어든 모양: 앱 아이콘을 동그랗게 잘라 보인다.
         val note = ImageView(context).apply {
             visibility = View.GONE
-            scaleType = ImageView.ScaleType.CENTER_CROP
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            // 아이콘이 가장자리에 붙지 않게 안쪽 여백을 두고, 카드와 같은 어두운 바탕 위에 올린다.
+            setPadding(px(8), px(8), px(8), px(8))
+            background = round(0xEB121214.toInt(), 24f, 0x1FFFFFFF)
             setImageDrawable(context.packageManager.getApplicationIcon(context.packageName))
             outlineProvider = object : ViewOutlineProvider() {
                 override fun getOutline(view: View, outline: Outline) {
