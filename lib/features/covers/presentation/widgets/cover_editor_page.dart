@@ -7,41 +7,42 @@ import 'package:flutter/material.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../bloc/cover_cubit.dart';
+import 'cover_picker.dart';
 
 /// 커버로 쓸 이미지의 확대 · 위치를 맞추는 화면. 끌어서 옮기고, 두 손가락 · 마우스 휠 ·
-/// 막대로 크기를 바꾼다. "적용"을 누르면 맞춘 값을 담은 [art]를 돌려주고, 닫으면 null.
-Future<CoverArt?> showCoverEditor(BuildContext context, CoverArt art) =>
-    Navigator.of(context, rootNavigator: true).push<CoverArt>(
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (_) => CoverEditorPage(art: art),
-      ),
-    );
+/// 막대로 크기를 바꾼다. [art]가 null이면 빈 화면에서 시작해 안의 "이미지 불러오기"로 기기 사진이나
+/// 웹 이미지를 고른다. "적용"을 누르면 맞춘 값을 담은 커버를 돌려주고, 닫으면 null.
+///
+/// [initialQuery]는 웹 이미지 고르기에서 처음부터 검색해 둘 말.
+Future<CoverArt?> showCoverEditor(
+  BuildContext context,
+  CoverArt? art, {
+  String initialQuery = '',
+}) => Navigator.of(context, rootNavigator: true).push<CoverArt>(
+  MaterialPageRoute(
+    fullscreenDialog: true,
+    builder: (_) => CoverEditorPage(art: art, initialQuery: initialQuery),
+  ),
+);
 
 class CoverEditorPage extends StatefulWidget {
-  const CoverEditorPage({super.key, required this.art});
+  const CoverEditorPage({super.key, this.art, this.initialQuery = ''});
 
-  final CoverArt art;
+  final CoverArt? art;
+  final String initialQuery;
 
   @override
   State<CoverEditorPage> createState() => _CoverEditorPageState();
 }
 
 class _CoverEditorPageState extends State<CoverEditorPage> {
-  late final ImageStream _stream = sourceImageOfCoverArt(widget.art)
-      .resolve(ImageConfiguration.empty);
-  late final ImageStreamListener _listener = ImageStreamListener(
-    (info, _) {
-      if (mounted) setState(() => _image = info.image);
-    },
-    onError: (_, _) {
-      if (mounted) setState(() => _failed = true);
-    },
-  );
+  CoverArt? _art;
+  ImageStream? _stream;
+  ImageStreamListener? _listener;
 
   ui.Image? _image;
   bool _failed = false;
-  late CoverTransform _t = widget.art.transform;
+  CoverTransform _t = CoverTransform.identity;
 
   // 손가락 · 포인터를 대고 있는 동안의 기준값.
   CoverTransform _startT = CoverTransform.identity;
@@ -52,12 +53,49 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
   @override
   void initState() {
     super.initState();
-    _stream.addListener(_listener);
+    final art = widget.art;
+    if (art != null) _load(art);
+  }
+
+  /// [art]의 이미지를 새로 불러온다 (먼저 보던 이미지는 놓는다).
+  void _load(CoverArt art) {
+    _release();
+    _art = art;
+    _image = null;
+    _failed = false;
+    _t = art.transform;
+    final listener = ImageStreamListener(
+      (info, _) {
+        if (mounted) setState(() => _image = info.image);
+      },
+      onError: (_, _) {
+        if (mounted) setState(() => _failed = true);
+      },
+    );
+    final stream = sourceImageOfCoverArt(art).resolve(ImageConfiguration.empty);
+    stream.addListener(listener);
+    _stream = stream;
+    _listener = listener;
+  }
+
+  void _release() {
+    final listener = _listener;
+    if (listener != null) _stream?.removeListener(listener);
+    _stream = null;
+    _listener = null;
+  }
+
+  Future<void> _choose() async {
+    final picked = await chooseCoverImage(
+      context,
+      initialQuery: widget.initialQuery,
+    );
+    if (picked != null && mounted) setState(() => _load(picked));
   }
 
   @override
   void dispose() {
-    _stream.removeListener(_listener);
+    _release();
     super.dispose();
   }
 
@@ -88,6 +126,11 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
                 ),
                 actions: [
                   CircleIconButton(
+                    icon: AppIcons.photoLibrary,
+                    tooltip: l10n.coverEditChange,
+                    onPressed: _choose,
+                  ),
+                  CircleIconButton(
                     icon: AppIcons.restart,
                     tooltip: l10n.coverEditReset,
                     onPressed: ready
@@ -105,7 +148,17 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
                         final side = math.min(box.maxWidth, box.maxHeight);
                         return SizedBox.square(
                           dimension: side,
-                          child: _failed
+                          child: _art == null
+                              ? Center(
+                                  child: PillButton(
+                                    key: const ValueKey('cover-edit-load'),
+                                    label: l10n.coverEditLoad,
+                                    icon: AppIcons.photoLibrary,
+                                    variant: PillVariant.tonal,
+                                    onPressed: _choose,
+                                  ),
+                                )
+                              : _failed
                               ? Center(
                                   child: Text(
                                     l10n.coverEditLoadFailed,
@@ -185,8 +238,7 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
                     icon: AppIcons.check,
                     onPressed: ready
                         ? () =>
-                              Navigator.of(context)
-                                  .pop(widget.art.withTransform(_t))
+                              Navigator.of(context).pop(_art!.withTransform(_t))
                         : null,
                   ),
                 ),

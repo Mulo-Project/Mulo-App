@@ -9,11 +9,18 @@ import '../bloc/cover_web_cubit.dart';
 import 'cover_editor_page.dart';
 import 'cover_web_browser.dart';
 
-/// 커버 이미지를 새로 고른다: 기기 사진이나 웹 이미지를 고르고, 확대 · 위치를 맞춘 뒤
-/// 돌려준다. 어느 단계에서든 닫으면 null. 저장은 부른 쪽에서 [CoverCubit.setArt]로 한다.
+/// 커버 이미지를 새로 고른다: 편집 화면을 먼저 띄우고, 그 안에서 기기 사진이나 웹 이미지를 불러와
+/// 확대 · 위치를 맞춘 뒤 돌려준다. 닫으면 null. 저장은 부른 쪽에서 [CoverCubit.setArt]로 한다.
 ///
 /// [initialQuery]는 웹 이미지 고르기에서 처음부터 검색해 둘 말 (곡 · 재생목록 이름).
 Future<CoverArt?> pickCoverArt(
+  BuildContext context, {
+  String initialQuery = '',
+}) => showCoverEditor(context, null, initialQuery: initialQuery);
+
+/// 기기 사진이나 웹 이미지 한 장을 고른다 (편집 화면 안의 "이미지 불러오기"). 취소하면 null.
+/// 확대 · 위치는 맞추지 않은 채로 돌려준다.
+Future<CoverArt?> chooseCoverImage(
   BuildContext context, {
   String initialQuery = '',
 }) async {
@@ -24,13 +31,12 @@ Future<CoverArt?> pickCoverArt(
   );
   if (source == null || !context.mounted) return null;
 
-  final CoverArt? picked;
   switch (source) {
     case _Source.device:
       final path = await covers.pickFile();
-      picked = path == null ? null : CoverArt.file(path);
+      return path == null ? null : CoverArt.file(path);
     case _Source.web when coverWebBrowserSupported:
-      // 브라우저에서 이미지를 누르면 편집 화면으로 가고, 편집에서 뒤로 가면 브라우저로 돌아온다.
+      // 브라우저에서 이미지를 누르면 그 이미지를 돌려주며 닫힌다.
       return Navigator.of(context, rootNavigator: true).push<CoverArt>(
         MaterialPageRoute(
           fullscreenDialog: true,
@@ -47,10 +53,8 @@ Future<CoverArt?> pickCoverArt(
           ),
         ),
       );
-      picked = url == null ? null : CoverArt.web(url);
+      return url == null ? null : CoverArt.web(url);
   }
-  if (picked == null || !context.mounted) return null;
-  return showCoverEditor(context, picked);
 }
 
 enum _Source { device, web }

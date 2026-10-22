@@ -20,6 +20,8 @@ void main() {
     final context = tester.element(find.byType(Scaffold).first);
     pickCoverArt(context);
     await tester.pumpAndSettle();
+    await tester.tap(find.text('이미지 불러오기'));
+    await tester.pumpAndSettle();
 
     expect(find.text('기기에서 고르기'), findsOneWidget);
     expect(find.text('웹에서 가져오기'), findsOneWidget);

@@ -235,6 +235,8 @@
   "coverEditZoomOut": "Zoom out",
   "coverEditReset": "Reset",
   "coverEditApply": "Apply",
+  "coverEditLoad": "Load an image",
+  "coverEditChange": "Change image",
   "coverEditLoadFailed": "Couldn't load the image",
   "settingsAppearance": "Appearance",
   "appearanceDark": "Dark",

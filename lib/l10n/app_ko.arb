@@ -273,6 +273,8 @@
   "coverEditZoomOut": "축소",
   "coverEditReset": "원래대로",
   "coverEditApply": "적용",
+  "coverEditLoad": "이미지 불러오기",
+  "coverEditChange": "이미지 바꾸기",
   "coverEditLoadFailed": "이미지를 불러오지 못했어요",
   "settingsAppearance": "화면 모드",
   "appearanceDark": "다크",

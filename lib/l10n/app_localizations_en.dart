@@ -713,6 +713,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get coverEditApply => 'Apply';
 
   @override
+  String get coverEditLoad => 'Load an image';
+
+  @override
+  String get coverEditChange => 'Change image';
+
+  @override
   String get coverEditLoadFailed => 'Couldn\'t load the image';
 
   @override
