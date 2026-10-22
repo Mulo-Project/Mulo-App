@@ -1,10 +1,8 @@
 package com.mulo.app
 
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Paint
+import android.graphics.Outline
 import android.graphics.PixelFormat
-import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
@@ -16,8 +14,10 @@ import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
+import android.view.ViewOutlineProvider
 import android.view.WindowManager
 import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 
@@ -29,7 +29,7 @@ import android.widget.TextView
  * 멈춤 · 가사 보기가 앱에 떠 있음 · 다른 곡 · 가사 없음이면 타이머를 걸지 않고 창을 뗀다.
  *
  * 창을 탭하면 아래에 [숨기기] [끄기]가 나온다 (몇 초 뒤 저절로 사라진다). 끌면 위아래로 옮긴다.
- * 숨기기를 누르면 가사 창이 작은 ♪ 칩으로 줄어든다 (가사 갱신도 멈춘다). 칩을 탭하면 다시 펼쳐진다.
+ * 숨기기를 누르면 가사 창이 앱 아이콘 칩으로 줄어든다 (가사 갱신도 멈춘다). 칩을 탭하면 다시 펼쳐진다.
  */
 object LyricsOverlay {
     private const val PREFS = "lyrics_overlay"
@@ -51,7 +51,7 @@ object LyricsOverlay {
     /** 숨기기를 눌러 작은 칩으로 줄어든 상태. 칩을 탭하면 펼친다. */
     private var minimized = false
     private var layout: WindowManager.LayoutParams? = null
-    private var chip: LyricsGlyph? = null
+    private var chip: ImageView? = null
     private var column: LinearLayout? = null
     private var hideLabel = ""
     private var offLabel = ""
@@ -220,15 +220,22 @@ object LyricsOverlay {
             addView(next, LinearLayout.LayoutParams(-1, -2))
             addView(row, LinearLayout.LayoutParams(-2, -2))
         }
-        val note = LyricsGlyph(context).apply {
+        // 줄어든 모양: 앱 아이콘을 동그랗게 잘라 보인다.
+        val note = ImageView(context).apply {
             visibility = View.GONE
-            minimumWidth = px(48)
-            minimumHeight = px(48)
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            setImageDrawable(context.packageManager.getApplicationIcon(context.packageName))
+            outlineProvider = object : ViewOutlineProvider() {
+                override fun getOutline(view: View, outline: Outline) {
+                    outline.setOval(0, 0, view.width, view.height)
+                }
+            }
+            clipToOutline = true
         }
         val root = FrameLayout(context).apply {
             background = round(0xEB121214.toInt(), 22f, 0x1FFFFFFF)
             addView(body, FrameLayout.LayoutParams(-1, -2))
-            addView(note, FrameLayout.LayoutParams(-2, -2))
+            addView(note, FrameLayout.LayoutParams(px(48), px(48)))
         }
         column = body
         chip = note
@@ -246,13 +253,6 @@ object LyricsOverlay {
     private fun styleAccent() {
         val density = context.resources.displayMetrics.density
         val onAccent = if (isLight(accent)) 0xFF000000.toInt() else 0xFFFFFFFF.toInt()
-        chip?.apply {
-            glyphColor = onAccent
-            background = GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
-                setColor(accent)
-            }
-        }
         hideButton?.apply {
             setTextColor(0xFFFFFFFF.toInt())
             background = GradientDrawable().apply {
@@ -439,36 +439,6 @@ object LyricsOverlay {
                 }
                 else -> false
             }
-        }
-    }
-}
-
-/** 줄어든 가사 창의 아이콘: 길이가 다른 둥근 가로선 세 개 (가사 줄 모양). */
-class LyricsGlyph(context: Context) : View(context) {
-    var glyphColor: Int = 0xFFFFFFFF.toInt()
-        set(value) {
-            field = value
-            paint.color = value
-            invalidate()
-        }
-
-    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = glyphColor }
-    private val bar = RectF()
-
-    override fun onDraw(canvas: Canvas) {
-        val w = width.toFloat()
-        val h = height.toFloat()
-        val barHeight = h * 0.1f
-        val widths = floatArrayOf(0.56f, 0.38f, 0.48f)
-        val gap = h * 0.09f
-        val total = barHeight * 3 + gap * 2
-        var top = (h - total) / 2f
-        for (fraction in widths) {
-            val barWidth = w * fraction
-            val left = (w - barWidth) / 2f
-            bar.set(left, top, left + barWidth, top + barHeight)
-            canvas.drawRoundRect(bar, barHeight / 2f, barHeight / 2f, paint)
-            top += barHeight + gap
         }
     }
 }
