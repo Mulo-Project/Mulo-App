@@ -5,7 +5,7 @@ import 'package:get_it/get_it.dart';
 import '../../core/config/app_config.dart';
 import '../engine/data/android_yt_dlp.dart';
 import '../engine/data/yt_dlp_manager.dart';
-import 'data/datasources/just_audio_preview_player.dart';
+import 'data/datasources/native_preview_player.dart';
 import 'data/datasources/url_launcher_link_opener.dart';
 import 'data/engine/cached_engine.dart';
 import 'data/engine/explode_engine.dart';
@@ -51,7 +51,7 @@ void registerSearch(GetIt sl) {
     ..registerFactory(() => SearchPlaylists(sl()))
     ..registerFactory(() => FetchChannelInfo(sl()))
     ..registerFactory(() => OpenLink(sl()))
-    ..registerLazySingleton<PreviewPlayer>(JustAudioPreviewPlayer.new)
+    ..registerLazySingleton<PreviewPlayer>(NativePreviewPlayer.new)
     ..registerFactory(() => ResolveAudioStream(sl()))
     ..registerFactory(() => FetchAudioLanguages(sl()))
     ..registerFactory(() => AudioLanguageCubit(sl()))

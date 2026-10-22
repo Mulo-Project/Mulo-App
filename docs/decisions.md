@@ -747,3 +747,8 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 - 웹 커버 사본(`cover_cache`)은 시작할 때 64MB를 넘으면 오래된 것부터 지우고, 내장 커버 임시 폴더는 비운다 (`CacheCleaner`).
 - 곡이 많은 상세 화면(앨범 · 아티스트 · 장르 · 재생목록)은 `LazyTrackList`로 보이는 곡 줄만 만든다. 플로팅 재생 버튼은 위치 틱마다 다시 그리지 않고, 미니 플레이어 띠는 `RepaintBoundary`로 격리한다.
 - 알림 셔플 버튼은 앱(Dart)이 없을 때도 둔다 (D-106 보강 3을 대체). Dart가 붙어 있으면 `command shuffle`, 없으면 네이티브가 `extras`(`shuffle` · `original`)를 고쳐 직접 섞고 되돌린다. 없을 땐 좋아요 자리에 닫기(X)가 온다. 자세한 약속은 [native-playback.md](native-playback.md).
+
+## D-115 · 2026-10-22 · 미리 듣기 소리를 네이티브로, Android 밖 재생 코드 삭제
+- D-093의 경계(재생 엔진은 네이티브)에 맞춰 **미리 듣기 소리를 Kotlin `PreviewChannel`(ExoPlayer, `music_app/preview`)이 낸다**. Dart는 `NativePreviewPlayer`로 `play(url, headers)` · `seek` · `pause` · `resume` · `stop`을 보내고, `completed` · `progress` · `failure`를 받는다. 알림(`setSession`)은 그대로 Dart(`PreviewCubit`)가 띄운다.
+- 미리 듣기 플레이어는 메인 재생의 ExoPlayer와 따로 하나 두고, 재생마다 새로 만들어 주소에 맞는 헤더 · user-agent(`c=` 클라이언트별)를 건다. HLS · DASH 주소는 `media3-exoplayer-hls/dash`를 넣어 그대로 튼다. 앱 HTTP로 받아 넘기던 대체 경로(`_HttpRangeSource`)는 없앴다.
+- **Android 밖 OS용 재생 코드를 지웠다**: `JustAudioPlayerRepository` · `AudioEngineSource`(just_audio) · `JustAudioPreviewPlayer`, `initAudioBackend`, 의존 `just_audio` · `just_audio_media_kit` · `media_kit_libs_*`. 다른 OS는 따로 구현할 때 새로 만든다. 재생 속도(`PrefsPlaybackSpeedRepository`)도 네이티브 채널만 쓴다.

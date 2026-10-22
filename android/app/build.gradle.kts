@@ -68,6 +68,9 @@ dependencies {
     // 재생 엔진(ExoPlayer) · 미디어 세션 · 재생 알림 (PlaybackHub / MuloPlaybackService).
     implementation("androidx.media3:media3-exoplayer:1.7.1")
     implementation("androidx.media3:media3-session:1.7.1")
+    // 미리 듣기가 HLS · DASH 재생 목록 주소도 틀 수 있게 (just_audio가 해 주던 일을 PreviewChannel이 한다).
+    implementation("androidx.media3:media3-exoplayer-hls:1.7.1")
+    implementation("androidx.media3:media3-exoplayer-dash:1.7.1")
     // 구독 채널의 새 영상을 주기적으로 확인 (NewVideoWorker).
     implementation("androidx.work:work-runtime-ktx:2.10.1")
     "fullImplementation"("io.github.junkfood02.youtubedl-android:library:0.18.1")

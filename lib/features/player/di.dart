@@ -1,12 +1,7 @@
-import 'dart:io';
-
 import 'package:get_it/get_it.dart';
 
 import '../../core/platform/native_playback_channel.dart';
-
-import 'data/datasources/audio_engine_source.dart';
 import 'data/datasources/audio_output_source.dart';
-import 'data/repositories/just_audio_player_repository.dart';
 import 'data/repositories/native_audio_player_repository.dart';
 import 'data/repositories/platform_audio_output_repository.dart';
 import 'data/repositories/prefs_mix_with_others_repository.dart';
@@ -35,12 +30,9 @@ import 'presentation/bloc/playback_speed_cubit.dart';
 void registerPlayer(GetIt sl) {
   sl
     ..registerLazySingleton(NativePlaybackChannel.new)
-    ..registerLazySingleton<AudioEngineSource>(JustAudioEngineSource.new)
-    // Android는 네이티브 서비스(ExoPlayer)가 소리를 내고, 그 밖의 OS는 just_audio.
+    // 소리는 네이티브 서비스(ExoPlayer)가 낸다 (Android만 지원한다).
     ..registerLazySingleton<AudioPlayerRepository>(
-      () => Platform.isAndroid
-          ? NativeAudioPlayerRepository(sl())
-          : JustAudioPlayerRepository(sl()),
+      () => NativeAudioPlayerRepository(sl()),
     )
     ..registerFactory(
       () => AudioPlayback(
@@ -79,7 +71,7 @@ void registerPlayer(GetIt sl) {
     ..registerFactory(() => SaveMixWithOthers(sl()))
     ..registerFactory(() => MixWithOthersCubit(loadMix: sl(), saveMix: sl()))
     ..registerLazySingleton<PlaybackSpeedRepository>(
-      () => PrefsPlaybackSpeedRepository(sl(), sl()),
+      () => PrefsPlaybackSpeedRepository(sl()),
     )
     ..registerFactory(() => LoadPlaybackSpeed(sl()))
     ..registerFactory(() => SavePlaybackSpeed(sl()))
