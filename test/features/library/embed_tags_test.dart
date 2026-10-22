@@ -24,7 +24,7 @@ class _Tags implements TrackTagRepository {
   bool works = true;
 
   @override
-  Future<bool> write(Track track, {CoverArt? cover}) async {
+  Future<bool> write(Track track, {CoverArt? cover, int? color}) async {
     written.add(track.id);
     return works;
   }
@@ -53,6 +53,7 @@ void main() {
     final useCase = EmbedTagsIntoFiles(
       library,
       MemoryCoverRepository(),
+      MemoryCoverColorRepository(),
       tags,
       done,
     );
@@ -72,6 +73,7 @@ void main() {
     final useCase = EmbedTagsIntoFiles(
       FakeLibraryRepository([_track('d1', TrackSource.download)]),
       MemoryCoverRepository(),
+      MemoryCoverColorRepository(),
       tags,
       done,
     );

@@ -27,6 +27,7 @@ class TrackTagSource {
     required String album,
     required String genre,
     CoverArt? cover,
+    int? color,
   }) async {
     if (uri.isEmpty) return false;
     try {
@@ -37,6 +38,7 @@ class TrackTagSource {
           file,
           extension: _extensionOfPath(uri),
           cover: cover,
+          color: color,
           title: title,
           artist: artist,
           album: album,
@@ -54,6 +56,7 @@ class TrackTagSource {
           File(temp),
           extension: extension,
           cover: cover,
+          color: color,
           title: title,
           artist: artist,
           album: album,

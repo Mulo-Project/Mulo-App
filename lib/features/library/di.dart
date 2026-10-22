@@ -56,7 +56,7 @@ void registerLibrary(GetIt sl) {
     )
     ..registerFactory(() => WatchLibraryTracks(sl()))
     ..registerFactory(() => UpdateTrackInfo(sl(), sl()))
-    ..registerFactory(() => EmbedTagsIntoFiles(sl(), sl(), sl(), sl()))
+    ..registerFactory(() => EmbedTagsIntoFiles(sl(), sl(), sl(), sl(), sl()))
     ..registerFactory(() => DeleteTrack(sl(), sl()))
     ..registerFactory(() => ImportDeviceMusic(sl(), sl(), sl()))
     ..registerFactory(() => LoadLoadedFolders(sl(), sl()))

@@ -110,6 +110,7 @@ class PrefsDownloadQueueStore implements DownloadQueueStore {
 Map<String, dynamic> encodeDownloadRequest(DownloadRequest r) => {
   'title': r.title,
   'artist': r.artist,
+  if (r.album.isNotEmpty) 'album': r.album,
   'genre': r.genre,
   'playlistIds': r.playlistIds.toList(),
   'quality': r.quality?.name,
@@ -157,6 +158,7 @@ DownloadRequest decodeDownloadRequest(Map<String, dynamic> m) {
   return DownloadRequest(
     title: m['title'] as String? ?? '',
     artist: m['artist'] as String? ?? '',
+    album: m['album'] as String? ?? '',
     genre: m['genre'] as String? ?? '',
     playlistIds: {...?(m['playlistIds'] as List<dynamic>?)?.cast<String>()},
     quality: quality == null ? null : Quality.values.byName(quality),

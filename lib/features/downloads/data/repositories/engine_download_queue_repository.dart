@@ -426,8 +426,10 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
         thumbnailUrl: request.thumbnailUrl,
         title: request.title,
         artist: request.artist,
+        album: request.album,
         genre: request.genre,
         lyrics: lyrics,
+        color: request.color,
       );
       if (token.isCancelled) throw const DownloadAborted();
 
@@ -496,7 +498,7 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
         id: trackId,
         title: request.title,
         artist: request.artist,
-        album: '',
+        album: request.album,
         genre: request.genre,
         duration: request.duration ?? Duration.zero,
         addedAt: _now(),

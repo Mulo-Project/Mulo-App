@@ -452,6 +452,7 @@ class LocalEngine implements DownloaderEngine {
         for (final k in _originalAutoKeys(j['automatic_captions']))
           if (!_keys(j['subtitles']).contains(k)) k,
       ],
+      album: parseText(j['album']) ?? '',
     );
   }
 }

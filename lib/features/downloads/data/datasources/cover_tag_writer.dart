@@ -34,6 +34,7 @@ class CoverTagWriter {
     String? album,
     String? genre,
     String? lyrics,
+    int? color,
   }) async {
     final ext = extension.toLowerCase();
     final viaFfmpeg =
@@ -69,6 +70,7 @@ class CoverTagWriter {
           lyrics: lyrics,
           coverPng: png,
           coverSide: side,
+          extra: coverExtra(cover, thumbnailUrl, color),
         );
         // mp3는 ffmpeg가 안 되는 기기(lite 등)에서 라이브러리로 쓴다. opus · ogg는 쓸 방법이 이것뿐이다.
         if (done || !extensions.contains(ext)) return done;
@@ -127,4 +129,20 @@ class CoverTagWriter {
       image.dispose();
     }
   }
+}
+
+/// 커버 편집 상태를 파일에 남기는 사용자 정의 태그: 원본 웹 주소 · 확대 · 위치 · 색.
+/// 앱이 파일만 읽어도 커버를 다시 잘라 보여 줄 수 있다. 값이 없으면 그 칸은 쓰지 않는다.
+Map<String, String> coverExtra(
+  CoverArt? cover,
+  String? thumbnailUrl,
+  int? color,
+) {
+  final url = cover?.url ?? (cover == null ? thumbnailUrl : null);
+  final t = cover?.transform ?? CoverTransform.identity;
+  return {
+    if (url != null && url.isNotEmpty) 'COVER_SOURCE': url,
+    if (!t.isIdentity) 'COVER_TRANSFORM': '${t.scale},${t.dx},${t.dy}',
+    if (color != null) 'COVER_COLOR': color.toRadixString(16).padLeft(8, '0'),
+  };
 }

@@ -119,10 +119,17 @@ class UpdateTrackInfo implements UseCase<bool, UpdateTrackInfoParams> {
 /// 곡마다 끝낸 id를 기록해 중간에 꺼져도 이어서 하고, 쓸 수 없는 파일은 다시 시도하지 않는다.
 /// 이번에 태그를 쓴 곡 수를 돌려준다.
 class EmbedTagsIntoFiles implements UseCase<int, NoParams> {
-  const EmbedTagsIntoFiles(this._library, this._covers, this._tags, this._done);
+  const EmbedTagsIntoFiles(
+    this._library,
+    this._covers,
+    this._colors,
+    this._tags,
+    this._done,
+  );
 
   final LibraryRepository _library;
   final CoverRepository _covers;
+  final CoverColorRepository _colors;
   final TrackTagRepository _tags;
   final TagMigrationStore _done;
 
@@ -131,12 +138,14 @@ class EmbedTagsIntoFiles implements UseCase<int, NoParams> {
     final tracks = await _library.watchTracks().first;
     final done = await _done.loadDone();
     final covers = await _covers.loadAll();
+    final colors = await _colors.loadAll();
     var written = 0;
     for (final t in tracks) {
       if (t.source != TrackSource.download || t.uri.isEmpty) continue;
       if (done.contains(t.id)) continue;
       try {
-        if (await _tags.write(t, cover: covers[CoverKey.track(t.id)])) {
+        final key = CoverKey.track(t.id);
+        if (await _tags.write(t, cover: covers[key], color: colors[key])) {
           written++;
         }
       } on Exception {

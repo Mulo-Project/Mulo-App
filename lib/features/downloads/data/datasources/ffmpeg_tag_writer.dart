@@ -28,6 +28,7 @@ class FfmpegTagWriter {
     String? lyrics,
     Uint8List? coverPng,
     int coverSide = 512,
+    Map<String, String> extra = const {},
   }) async {
     final mp3 = extension.toLowerCase() == 'mp3';
     final entries = <String, String>{
@@ -36,6 +37,8 @@ class FfmpegTagWriter {
       if (_has(album)) 'ALBUM': album!,
       if (_has(genre)) 'GENRE': genre!,
       if (_has(lyrics)) 'LYRICS': lyrics!,
+      // 앱이 읽어 커버 편집 상태를 되살리는 사용자 정의 태그 (COVER_SOURCE 등). 다른 플레이어는 무시한다.
+      ...extra,
       // mp3의 커버는 태그 값이 아니라 그림 파일로 따로 넘긴다.
       if (coverPng != null && !mp3)
         'METADATA_BLOCK_PICTURE': base64.encode(

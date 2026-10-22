@@ -11,14 +11,16 @@ class TrackTagRepositoryImpl implements TrackTagRepository {
   final TrackTagSource _source;
 
   @override
-  Future<bool> write(Track track, {CoverArt? cover}) => _source.write(
-    track.uri,
-    title: track.title,
-    artist: track.artist,
-    album: track.album,
-    genre: track.genre,
-    cover: cover,
-  );
+  Future<bool> write(Track track, {CoverArt? cover, int? color}) =>
+      _source.write(
+        track.uri,
+        title: track.title,
+        artist: track.artist,
+        album: track.album,
+        genre: track.genre,
+        cover: cover,
+        color: color,
+      );
 }
 
 class PrefsTagMigrationStore implements TagMigrationStore {

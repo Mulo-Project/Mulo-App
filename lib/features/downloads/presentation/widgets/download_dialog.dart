@@ -28,6 +28,7 @@ Future<bool> showDownloadDialog(
   BuildContext context, {
   required String title,
   String artist = '',
+  String album = '',
   String genre = '',
   Quality? quality,
   Duration? duration,
@@ -104,6 +105,7 @@ Future<bool> showDownloadDialog(
         child: DownloadScreen(
           title: title,
           artist: artist,
+          album: album,
           genre: genre,
           quality: quality,
           duration: duration,
@@ -122,6 +124,7 @@ class DownloadScreen extends StatefulWidget {
     super.key,
     required this.title,
     required this.artist,
+    this.album = '',
     required this.genre,
     this.quality,
     required this.url,
@@ -134,6 +137,7 @@ class DownloadScreen extends StatefulWidget {
   final List<String>? subtitleLangs;
   final String title;
   final String artist;
+  final String album;
   final String genre;
   final Quality? quality;
   final Duration? duration;
@@ -254,6 +258,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
       DownloadRequest(
         title: _title.text,
         artist: _artist.text,
+        album: widget.album,
         genre: _genre.text,
         playlistIds: _selected,
         quality: widget.quality,
