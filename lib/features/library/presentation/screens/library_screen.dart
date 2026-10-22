@@ -76,16 +76,17 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final vm = context.read<NowPlayingCubit>();
     final playing = context.select((NowPlayingCubit c) => c.state.track);
 
-    // 곡 탭은 보이는 줄만 만든다 (곡이 수천 개여도 탭 전환이 느려지지 않게).
+    // 모든 탭은 보이는 줄만 만든다 (곡 · 앨범 · 아티스트가 수천 개여도 탭 전환이 느려지지 않게).
+    // 그룹 탭은 줄을 만드는 함수만 모아 두고, 아래 SliverList.builder가 필요할 때 부른다.
     final lazySongs = _tab == LibraryTab.songs;
     final items = switch (_tab) {
-      LibraryTab.songs => <Widget>[],
+      LibraryTab.songs => <Widget Function(BuildContext)>[],
       LibraryTab.artists => [
         for (final e in sortGroups(
           _groupBy(tracks, (t) => artistOf(l10n, t)),
           _sort,
         ).entries)
-          TrackTile(
+          (BuildContext context) => TrackTile(
             key: ValueKey(e.key),
             title: e.key,
             subtitle: l10n.songCount(e.value.length),
@@ -112,7 +113,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
           _groupBy(tracks, (t) => albumOf(l10n, t)),
           _sort,
         ).entries)
-          TrackTile(
+          (BuildContext context) => TrackTile(
             key: ValueKey(e.key),
             title: e.key,
             subtitle:
@@ -130,7 +131,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
       ],
       LibraryTab.genres => [
         for (final e in sortGroups(groupByGenre(tracks), _sort).entries)
-          TrackTile(
+          (BuildContext context) => TrackTile(
             key: ValueKey(e.key),
             title: genreOf(l10n, e.key),
             subtitle: l10n.songCount(e.value.length),
@@ -254,9 +255,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ),
-                    )
-                  else
-                    ...items,
+                    ),
                 ],
               ]),
             ),
@@ -265,6 +264,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 itemCount: tracks.length,
                 itemBuilder: (context, i) =>
                     _songTile(context, tracks[i], i, tracks),
+              )
+            else if (items.isNotEmpty)
+              SliverList.builder(
+                itemCount: items.length,
+                itemBuilder: (context, i) =>
+                    Builder(builder: (context) => items[i](context)),
               ),
             SliverToBoxAdapter(
               child: SizedBox(
