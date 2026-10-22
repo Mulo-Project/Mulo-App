@@ -178,11 +178,24 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
                           dimension: side,
                           child: _art == null
                               ? Center(
-                                  child: Text(
-                                    l10n.coverEditEmpty,
-                                    style: text.bodyMedium?.copyWith(
-                                      color: p.onSurfaceMuted,
-                                    ),
+                                  // 이미지가 없음을 아이콘으로 보여 준다.
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        AppIcons.imageBroken,
+                                        key: const ValueKey('cover-edit-empty'),
+                                        size: 72,
+                                        color: p.onSurfaceMuted,
+                                      ),
+                                      const SizedBox(height: AppSpacing.sm),
+                                      Text(
+                                        l10n.coverEditEmpty,
+                                        style: text.bodyMedium?.copyWith(
+                                          color: p.onSurfaceMuted,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 )
                               : _failed

@@ -28,6 +28,7 @@ void main() {
     expect(find.text('이미지 위치'), findsOneWidget);
     expect(find.text('기기에서 고르기'), findsOneWidget);
     expect(find.text('웹에서 가져오기'), findsOneWidget);
+    expect(find.byKey(const ValueKey('cover-edit-empty')), findsOneWidget);
     expect(find.text('위에서 이미지를 불러오세요'), findsOneWidget);
   });
 
