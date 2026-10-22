@@ -2,6 +2,7 @@ package com.mulo.app
 
 import android.content.Context
 import android.graphics.PixelFormat
+import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.Handler
@@ -48,6 +49,7 @@ object LyricsOverlay {
     private var column: LinearLayout? = null
     private var hideLabel = ""
     private var offLabel = ""
+    private var accent = 0xFFFFFFFF.toInt()
 
     /** 사용자가 창에서 끄기를 눌렀을 때 Dart에 알린다 (앱이 살아 있을 때만 설정). */
     var onClosed: (() -> Unit)? = null
@@ -73,12 +75,16 @@ object LyricsOverlay {
     fun canDraw(): Boolean = Settings.canDrawOverlays(context)
 
     /** [id] 곡의 시간 붙은 가사를 받아 둔다. */
-    fun show(id: String, newTimes: LongArray, newTexts: List<String>, hide: String, off: String) {
+    fun show(id: String, newTimes: LongArray, newTexts: List<String>, hide: String, off: String, accentColor: Int) {
         trackId = id
         times = newTimes
         texts = newTexts
         hideLabel = hide
         offLabel = off
+        if (accent != accentColor) {
+            accent = accentColor
+            styleAccent()
+        }
         refresh()
     }
 
@@ -152,28 +158,35 @@ object LyricsOverlay {
         view?.let { return it }
         val density = context.resources.displayMetrics.density
         fun px(v: Int) = (v * density).toInt()
+        fun round(color: Int, radiusDp: Float, strokeColor: Int? = null) = GradientDrawable().apply {
+            setColor(color)
+            cornerRadius = radiusDp * density
+            if (strokeColor != null) setStroke(maxOf(1, px(1)), strokeColor)
+        }
         val now = TextView(context).apply {
             setTextColor(0xFFFFFFFF.toInt())
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
+            typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
             gravity = Gravity.CENTER
             maxLines = 4
+            setLineSpacing(0f, 1.15f)
         }
         val next = TextView(context).apply {
-            setTextColor(0x80FFFFFF.toInt())
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
-            gravity = Gravity.CENTER
-            maxLines = 2
-            setPadding(0, px(6), 0, 0)
-        }
-        fun button(onClick: () -> Unit) = TextView(context).apply {
-            setTextColor(0xFFFFFFFF.toInt())
+            setTextColor(0x8CFFFFFF.toInt())
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
             gravity = Gravity.CENTER
-            setPadding(px(14), px(8), px(14), px(8))
-            background = GradientDrawable().apply {
-                setColor(0x33FFFFFF)
-                cornerRadius = 16 * density
-            }
+            maxLines = 2
+            setPadding(0, px(8), 0, 0)
+        }
+        // 끌 수 있음을 알리는 작은 손잡이.
+        val handle = View(context).apply {
+            background = round(0x38FFFFFF, 2f)
+        }
+        fun button(onClick: () -> Unit) = TextView(context).apply {
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+            typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+            gravity = Gravity.CENTER
+            setPadding(px(18), px(8), px(18), px(8))
             setOnClickListener { onClick() }
         }
         val hideBtn = button { minimize() }
@@ -182,20 +195,21 @@ object LyricsOverlay {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
             visibility = View.GONE
-            setPadding(0, px(10), 0, 0)
+            setPadding(0, px(12), 0, 0)
             addView(hideBtn, LinearLayout.LayoutParams(-2, -2).apply { marginEnd = px(8) })
             addView(offBtn, LinearLayout.LayoutParams(-2, -2))
         }
         val body = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(px(16), px(12), px(16), px(12))
+            gravity = Gravity.CENTER_HORIZONTAL
+            setPadding(px(20), px(8), px(20), px(14))
+            addView(handle, LinearLayout.LayoutParams(px(32), px(4)).apply { bottomMargin = px(8) })
             addView(now, LinearLayout.LayoutParams(-1, -2))
             addView(next, LinearLayout.LayoutParams(-1, -2))
-            addView(row, LinearLayout.LayoutParams(-1, -2))
+            addView(row, LinearLayout.LayoutParams(-2, -2))
         }
         val note = TextView(context).apply {
             text = "♪"
-            setTextColor(0xFFFFFFFF.toInt())
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
             gravity = Gravity.CENTER
             visibility = View.GONE
@@ -203,10 +217,7 @@ object LyricsOverlay {
             minHeight = px(44)
         }
         val root = FrameLayout(context).apply {
-            background = GradientDrawable().apply {
-                setColor(0xCC000000.toInt())
-                cornerRadius = 18 * density
-            }
+            background = round(0xEB121214.toInt(), 22f, 0x1FFFFFFF)
             addView(body, FrameLayout.LayoutParams(-1, -2))
             addView(note, FrameLayout.LayoutParams(-2, -2))
         }
@@ -218,7 +229,42 @@ object LyricsOverlay {
         hideButton = hideBtn
         offButton = offBtn
         view = root
+        styleAccent()
         return root
+    }
+
+    /** 앱 테마의 강조색을 칩과 버튼에 입힌다. */
+    private fun styleAccent() {
+        val density = context.resources.displayMetrics.density
+        val onAccent = if (isLight(accent)) 0xFF000000.toInt() else 0xFFFFFFFF.toInt()
+        chip?.apply {
+            setTextColor(onAccent)
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setColor(accent)
+            }
+        }
+        hideButton?.apply {
+            setTextColor(0xFFFFFFFF.toInt())
+            background = GradientDrawable().apply {
+                setColor(0x24FFFFFF)
+                cornerRadius = 18 * density
+            }
+        }
+        offButton?.apply {
+            setTextColor(onAccent)
+            background = GradientDrawable().apply {
+                setColor(accent)
+                cornerRadius = 18 * density
+            }
+        }
+    }
+
+    private fun isLight(color: Int): Boolean {
+        val r = (color shr 16) and 0xFF
+        val g = (color shr 8) and 0xFF
+        val b = color and 0xFF
+        return (0.299 * r + 0.587 * g + 0.114 * b) > 150
     }
 
     /** 창을 탭했다: 옵션을 보이거나 감춘다. 몇 초 뒤엔 저절로 감춘다. */

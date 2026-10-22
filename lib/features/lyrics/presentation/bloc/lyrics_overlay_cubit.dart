@@ -41,6 +41,7 @@ class LyricsOverlayCubit extends Cubit<void> {
     required Lyrics? lyrics,
     String hideLabel = '',
     String offLabel = '',
+    int accent = 0xFFFFFFFF,
   }) async {
     final show =
         enabled && trackId != null && lyrics != null && lyrics.isSynced;
@@ -57,6 +58,7 @@ class LyricsOverlayCubit extends Cubit<void> {
         _merged(lyrics.lines),
         hideLabel: hideLabel,
         offLabel: offLabel,
+        accent: accent,
       ),
     );
   }

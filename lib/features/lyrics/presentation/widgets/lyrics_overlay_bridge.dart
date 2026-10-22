@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../notifications/presentation/bloc/notification_settings_cubit.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
@@ -66,6 +67,7 @@ class _LyricsOverlayBridgeState extends State<LyricsOverlayBridge> {
       lyrics: lyrics.lyrics,
       hideLabel: l10n.lyricsOverlayMinimize,
       offLabel: l10n.lyricsOverlayTurnOff,
+      accent: context.palette.accent.toARGB32(),
     );
   }
 

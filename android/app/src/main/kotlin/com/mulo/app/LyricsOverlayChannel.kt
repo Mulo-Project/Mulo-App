@@ -38,6 +38,7 @@ class LyricsOverlayChannel(private val context: Context, messenger: BinaryMessen
                             texts,
                             map.get("hideLabel") as? String ?: "",
                             map.get("offLabel") as? String ?: "",
+                            (map.get("accent") as? Number)?.toInt() ?: 0xFFFFFFFF.toInt(),
                         )
                         result.success(null)
                     }

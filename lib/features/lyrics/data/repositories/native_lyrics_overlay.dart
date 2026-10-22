@@ -34,9 +34,11 @@ class NativeLyricsOverlay implements LyricsOverlay {
     List<LyricLine> lines, {
     required String hideLabel,
     required String offLabel,
+    required int accent,
   }) => _channel.invokeMethod('show', {
     'hideLabel': hideLabel,
     'offLabel': offLabel,
+    'accent': accent,
     'trackId': trackId,
     'times': [for (final l in lines) l.time.inMilliseconds],
     'texts': [for (final l in lines) l.text],
@@ -63,6 +65,7 @@ class NoLyricsOverlay implements LyricsOverlay {
     List<LyricLine> lines, {
     required String hideLabel,
     required String offLabel,
+    required int accent,
   }) async {}
 
   @override

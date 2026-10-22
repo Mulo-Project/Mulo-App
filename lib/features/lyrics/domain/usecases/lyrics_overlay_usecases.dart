@@ -27,12 +27,14 @@ class ShowLyricsOverlayParams {
     this.lines, {
     required this.hideLabel,
     required this.offLabel,
+    required this.accent,
   });
 
   final String trackId;
   final List<LyricLine> lines;
   final String hideLabel;
   final String offLabel;
+  final int accent;
 }
 
 class ShowLyricsOverlay implements UseCase<void, ShowLyricsOverlayParams> {
@@ -46,6 +48,7 @@ class ShowLyricsOverlay implements UseCase<void, ShowLyricsOverlayParams> {
     p.lines,
     hideLabel: p.hideLabel,
     offLabel: p.offLabel,
+    accent: p.accent,
   );
 }
 

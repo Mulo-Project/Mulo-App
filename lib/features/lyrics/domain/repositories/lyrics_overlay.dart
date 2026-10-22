@@ -9,12 +9,13 @@ abstract interface class LyricsOverlay {
   Future<void> openPermissionSettings();
 
   /// [trackId] 곡의 싱크 가사 [lines]를 창에 넘긴다. 창은 재생 위치에 맞춰 스스로 줄을 바꾼다.
-  /// [hideLabel] · [offLabel]은 창을 탭하면 나오는 버튼의 글자.
+  /// [hideLabel] · [offLabel]은 창을 탭하면 나오는 버튼의 글자, [accent]는 칩 · 버튼에 입힐 강조색(ARGB).
   Future<void> show(
     String trackId,
     List<LyricLine> lines, {
     required String hideLabel,
     required String offLabel,
+    required int accent,
   });
 
   /// 창의 닫기(✕)를 눌러 사용자가 껐다.
