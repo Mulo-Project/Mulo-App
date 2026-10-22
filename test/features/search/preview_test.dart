@@ -15,6 +15,7 @@ import 'package:music_download_play_app/features/search/data/engine/cached_engin
 import 'package:music_download_play_app/features/search/data/engine/explode_engine.dart';
 import 'package:music_download_play_app/features/search/data/engine/local_engine.dart';
 import 'package:music_download_play_app/features/search/data/engine/server_engine.dart';
+import 'package:music_download_play_app/features/search/domain/entities/audio_language.dart';
 import 'package:music_download_play_app/features/search/domain/entities/audio_stream.dart';
 import 'package:music_download_play_app/features/search/domain/entities/engine_exception.dart';
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
@@ -95,7 +96,7 @@ void main() {
         var fail = false;
         final engine = YoutubeExplodeEngine(
           inner,
-          reader: (id) async {
+          reader: (id, {language}) async {
             if (fail) throw const EngineException(EngineFailure.failed);
             return AudioStream(url: 'https://explode/$id');
           },
@@ -118,6 +119,106 @@ void main() {
         );
       },
     );
+
+    test('YoutubeExplodeEngine: 고른 오디오 언어를 읽는 쪽에 넘긴다', () async {
+      final inner = FakeDownloaderEngine();
+      final languages = <String?>[];
+      final engine = YoutubeExplodeEngine(
+        inner,
+        reader: (id, {language}) async {
+          languages.add(language);
+          return AudioStream(url: 'https://explode/$id');
+        },
+      );
+      const url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+      await engine.resolveAudioStream(url, audioLanguage: 'ko');
+      await engine.resolveAudioStream(url);
+      expect(languages, ['ko', null]);
+    });
+
+    test(
+      'YoutubeExplodeEngine: 오디오 언어 목록은 트랙이 둘 이상일 때만 쓰고 아니면 안쪽 엔진에 묻는다',
+      () async {
+        final inner = FakeDownloaderEngine()
+          ..audioLanguages = const [
+            AudioLanguage(id: 'en', name: 'English', isDefault: true),
+            AudioLanguage(id: 'ko', name: 'Korean'),
+          ];
+        var tracks = const <AudioLanguage>[
+          AudioLanguage(id: 'ja', name: 'Japanese', isDefault: true),
+          AudioLanguage(id: 'fr', name: 'French'),
+        ];
+        final engine = YoutubeExplodeEngine(
+          inner,
+          languageReader: (_) async => tracks,
+        );
+        const url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+        expect((await engine.fetchAudioLanguages(url)).map((e) => e.id), [
+          'ja',
+          'fr',
+        ]);
+        tracks = const [AudioLanguage(id: 'ja', name: 'Japanese')];
+        expect((await engine.fetchAudioLanguages(url)).map((e) => e.id), [
+          'en',
+          'ko',
+        ]);
+      },
+    );
+
+    test('LocalEngine: 오디오 언어 목록은 형식의 language에서 읽고 고른 언어로 받는다', () async {
+      final calls = <List<String>>[];
+      final engine = LocalEngine(
+        run: (_, args) async {
+          calls.add(args);
+          return (
+            exitCode: 0,
+            stdout: jsonEncode({
+              'url': 'https://rr.googlevideo.com/audio',
+              'formats': [
+                {'vcodec': 'avc1', 'language': 'en'},
+                {
+                  'vcodec': 'none',
+                  'language': 'en-US',
+                  'format_note': 'English (US) original (default), medium',
+                },
+                {
+                  'vcodec': 'none',
+                  'language': 'ko',
+                  'format_note': 'Korean, medium',
+                },
+                {
+                  'vcodec': 'none',
+                  'language': 'ko',
+                  'format_note': 'Korean, low',
+                },
+              ],
+            }),
+            stderr: '',
+          );
+        },
+      );
+      final found = await engine.fetchAudioLanguages('https://x/v');
+      expect(found, const [
+        AudioLanguage(id: 'en-US', name: 'English (US)', isDefault: true),
+        AudioLanguage(id: 'ko', name: 'Korean'),
+      ]);
+      await engine.resolveAudioStream('https://x/v', audioLanguage: 'ko');
+      expect(calls.last, contains(startsWith('bestaudio[language=ko]')));
+    });
+
+    test('CachedDownloaderEngine: 오디오 언어마다 따로 기억한다', () async {
+      final inner = FakeDownloaderEngine();
+      final engine = CachedDownloaderEngine(inner);
+      await engine.resolveAudioStream('https://x/v');
+      await engine.resolveAudioStream('https://x/v', audioLanguage: 'ko');
+      await engine.resolveAudioStream('https://x/v', audioLanguage: 'ko');
+      expect(inner.audioLanguageArgs, [null, 'ko']);
+    });
+
+    test('audioLanguageId: 트랙 번호를 떼고 언어 코드만 남긴다', () {
+      expect(audioLanguageId('en-US.4'), 'en-US');
+      expect(audioLanguageId('ko'), 'ko');
+    });
 
     test('LocalEngine: 주소가 없으면 실패다', () async {
       final engine = LocalEngine(

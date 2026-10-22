@@ -17,6 +17,7 @@ import 'domain/repositories/downloader_engine.dart';
 import 'domain/repositories/link_opener.dart';
 import 'domain/repositories/preview_player.dart';
 import 'domain/usecases/search_usecases.dart';
+import 'presentation/bloc/audio_language_cubit.dart';
 import 'presentation/bloc/preview_cubit.dart';
 import 'presentation/bloc/search_cubit.dart';
 
@@ -52,6 +53,8 @@ void registerSearch(GetIt sl) {
     ..registerFactory(() => OpenLink(sl()))
     ..registerLazySingleton<PreviewPlayer>(JustAudioPreviewPlayer.new)
     ..registerFactory(() => ResolveAudioStream(sl()))
+    ..registerFactory(() => FetchAudioLanguages(sl()))
+    ..registerFactory(() => AudioLanguageCubit(sl()))
     ..registerFactory(() => PlayPreview(sl()))
     ..registerFactory(() => SeekPreview(sl()))
     ..registerFactory(() => PausePreview(sl()))

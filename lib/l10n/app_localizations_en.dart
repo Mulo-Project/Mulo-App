@@ -2596,4 +2596,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get equalizerSave => 'Save';
+
+  @override
+  String get audioLanguageTitle => 'Audio language';
+
+  @override
+  String get audioLanguageRow => 'Audio language';
+
+  @override
+  String get audioLanguageOriginal => 'Original';
+
+  @override
+  String get audioLanguageHint =>
+      'Applies right away. Preview and download use the same language.';
 }

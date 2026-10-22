@@ -897,5 +897,9 @@
   "equalizerReverbMediumHall": "Medium hall",
   "equalizerReverbLargeHall": "Large hall",
   "equalizerReverbPlate": "Plate",
-  "equalizerSave": "Save"
+  "equalizerSave": "Save",
+  "audioLanguageTitle": "Audio language",
+  "audioLanguageRow": "Audio language",
+  "audioLanguageOriginal": "Original",
+  "audioLanguageHint": "Applies right away. Preview and download use the same language."
 }

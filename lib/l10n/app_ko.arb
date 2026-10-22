@@ -1010,5 +1010,9 @@
   "equalizerReverbMediumHall": "중간 홀",
   "equalizerReverbLargeHall": "큰 홀",
   "equalizerReverbPlate": "플레이트",
-  "equalizerSave": "저장"
+  "equalizerSave": "저장",
+  "audioLanguageTitle": "오디오 언어",
+  "audioLanguageRow": "오디오 언어",
+  "audioLanguageOriginal": "원본",
+  "audioLanguageHint": "고르면 바로 적용돼요. 미리 듣기와 받기에 같은 언어를 써요."
 }

@@ -1,3 +1,4 @@
+import '../../domain/entities/audio_language.dart';
 import '../../domain/entities/audio_stream.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/search_source.dart';
@@ -25,6 +26,7 @@ class CachedDownloaderEngine implements DownloaderEngine {
   final _channels = <String, _Entry<ChannelInfo>>{};
   final _streams = <String, _Entry<AudioStream>>{};
   final _subtitles = <String, _Entry<SubtitleTrack?>>{};
+  final _languages = <String, _Entry<List<AudioLanguage>>>{};
 
   @override
   Future<SearchPage> search(
@@ -57,14 +59,28 @@ class CachedDownloaderEngine implements DownloaderEngine {
       _cached(_channels, url, () => _inner.fetchChannel(url));
 
   @override
-  Future<AudioStream> resolveAudioStream(String url, {bool refresh = false}) {
-    if (refresh) _streams.remove(url);
+  Future<AudioStream> resolveAudioStream(
+    String url, {
+    bool refresh = false,
+    String? audioLanguage,
+  }) {
+    // 같은 곡이라도 오디오 언어가 다르면 다른 주소다.
+    final key = audioLanguage == null ? url : '$url|$audioLanguage';
+    if (refresh) _streams.remove(key);
     return _cached(
       _streams,
-      url,
-      () => _inner.resolveAudioStream(url, refresh: refresh),
+      key,
+      () => _inner.resolveAudioStream(
+        url,
+        refresh: refresh,
+        audioLanguage: audioLanguage,
+      ),
     );
   }
+
+  @override
+  Future<List<AudioLanguage>> fetchAudioLanguages(String url) =>
+      _cached(_languages, url, () => _inner.fetchAudioLanguages(url));
 
   Future<T> _cached<T>(
     Map<String, _Entry<T>> cache,
