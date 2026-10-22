@@ -100,7 +100,9 @@ class _MusicAppState extends State<MusicApp> {
         BlocProvider(create: (_) => sl<LyricsSettingsCubit>()..load()),
         BlocProvider(create: (_) => sl<LyricsOverlayCubit>()),
         BlocProvider(create: (_) => sl<LibraryCubit>()..start()),
-        BlocProvider(create: (_) => sl<LibraryImportCubit>()),
+        BlocProvider(
+          create: (_) => sl<LibraryImportCubit>()..embedTagsInBackground(),
+        ),
         BlocProvider(create: (_) => sl<NowPlayingCubit>()),
         BlocProvider(
           create: (_) => sl<AudioOutputCubit>()

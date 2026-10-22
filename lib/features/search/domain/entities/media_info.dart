@@ -21,6 +21,7 @@ class MediaHit extends Equatable {
     this.creators = const [],
     this.subtitleLangs = const [],
     this.autoSubtitleLangs = const [],
+    this.album = '',
   });
 
   /// 사이트 안의 곡 id (유튜브면 videoId).
@@ -70,6 +71,9 @@ class MediaHit extends Equatable {
   /// [subtitleLangs] 가운데 자동 생성 자막인 것.
   final List<String> autoSubtitleLangs;
 
+  /// 앨범 이름 (yt-dlp의 `album`, 유튜브 뮤직 곡 등). 모르면 빈 문자열. 곡 하나를 자세히 읽었을 때만 있다.
+  final String album;
+
   /// 분류만 채운 사본.
   MediaHit withCategories(List<String> categories) =>
       _copy(categories: categories);
@@ -89,6 +93,7 @@ class MediaHit extends Equatable {
     autoSubtitleLangs: subtitleLangs.isEmpty
         ? full.autoSubtitleLangs
         : autoSubtitleLangs,
+    album: album.isEmpty ? full.album : album,
     duration: duration ?? full.duration,
     thumbnailUrl: thumbnailUrl ?? full.thumbnailUrl,
     categories: categories.isEmpty ? full.categories : categories,
@@ -123,6 +128,7 @@ class MediaHit extends Equatable {
     List<String>? creators,
     List<String>? subtitleLangs,
     List<String>? autoSubtitleLangs,
+    String? album,
   }) => MediaHit(
     id: id,
     title: title,
@@ -142,6 +148,7 @@ class MediaHit extends Equatable {
     creators: creators ?? this.creators,
     subtitleLangs: subtitleLangs ?? this.subtitleLangs,
     autoSubtitleLangs: autoSubtitleLangs ?? this.autoSubtitleLangs,
+    album: album ?? this.album,
   );
 
   @override
@@ -164,6 +171,7 @@ class MediaHit extends Equatable {
     creators,
     subtitleLangs,
     autoSubtitleLangs,
+    album,
   ];
 }
 

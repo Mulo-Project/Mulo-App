@@ -414,12 +414,22 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
         if (result != null) audio = result;
       }
 
+      // 가사(고친 글 또는 영상 자막)를 먼저 구해 파일 태그와 앱 가사에 같은 글을 쓴다.
+      final lyrics = await _lyricsFor(request);
+      if (token.isCancelled) throw const DownloadAborted();
+
       // 고른 커버(없으면 썸네일)를 파일 태그에도 넣는다. 쓸 수 없는 형식이면 그대로 저장한다.
       await _coverTags?.embed(
         audio.file,
         extension: audio.extension,
         cover: request.cover,
         thumbnailUrl: request.thumbnailUrl,
+        title: request.title,
+        artist: request.artist,
+        album: request.album,
+        genre: request.genre,
+        lyrics: lyrics,
+        color: request.color,
       );
       if (token.isCancelled) throw const DownloadAborted();
 
@@ -435,7 +445,7 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
         title: request.title,
         artist: request.artist,
       );
-      await _register(id, request, saved);
+      await _register(id, request, saved, lyrics);
       _set(id, (e) => e.copyWith(status: DownloadStatus.done, progress: 1));
     } on DownloadAborted {
       // 취소(목록에서 이미 뺐다) 또는 일시정지(상태를 이미 바꿨다)다.
@@ -480,6 +490,7 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
     String id,
     DownloadRequest request,
     SavedAudio saved,
+    String? lyrics,
   ) async {
     final trackId = 'download:$id';
     await _library.addTracks([
@@ -487,7 +498,7 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
         id: trackId,
         title: request.title,
         artist: request.artist,
-        album: '',
+        album: request.album,
         genre: request.genre,
         duration: request.duration ?? Duration.zero,
         addedAt: _now(),
@@ -517,43 +528,36 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
     _sources[downloadSourceKey(request.url)] = trackId;
     _keysChanged.add(null);
     await _queueStore.saveSources(_sources);
-    if (request.importLyrics) {
-      await _importLyrics(
-        trackId,
-        request.url,
-        request.lyricsLanguage,
-        skipSounds: request.lyricsSkipSounds,
-        text: request.lyricsText,
-      );
+    if (lyrics != null) {
+      try {
+        await _lyrics?.save(trackId, lyrics);
+      } on Object {
+        // 가사는 덤이라 실패해도 받은 곡은 그대로 둔다.
+      }
     }
   }
 
-  /// 영상 자막을 곡의 싱크 가사(.lrc)로 저장한다. 자막이 없거나 읽지 못해도 받기는 성공으로 둔다
-  /// (가사 보기의 싱크 화면에서 직접 다듬을 수 있다).
-  Future<void> _importLyrics(
-    String trackId,
-    String url,
-    String? language, {
-    required bool skipSounds,
-    String? text,
-  }) async {
-    final repo = _lyrics;
-    if (repo == null) return;
+  /// 받은 곡에 넣을 가사 글. 받기 전에 고쳐 둔 글이 있으면 그대로, 아니면 영상 자막을 싱크 가사(.lrc)로 바꾼다.
+  /// 자막이 없거나 읽지 못해도 받기는 성공으로 둔다 (null). 파일 태그와 앱 가사가 같은 글을 쓰도록 먼저 구한다.
+  Future<String?> _lyricsFor(DownloadRequest request) async {
+    if (!request.importLyrics || _lyrics == null) return null;
+    final text = request.lyricsText;
+    if (text != null && text.trim().isNotEmpty) return text;
     try {
-      // 받기 전에 글을 고쳐 둔 가사는 그대로 저장한다.
-      if (text != null && text.trim().isNotEmpty) {
-        await repo.save(trackId, text);
-        return;
-      }
       final track = await _engine.fetchSubtitles(
-        url,
-        preferLanguages: language == null ? const ['ko', 'en'] : [language],
+        request.url,
+        preferLanguages: request.lyricsLanguage == null
+            ? const ['ko', 'en']
+            : [request.lyricsLanguage!],
       );
       final lrc =
-          (skipSounds ? track?.withoutSoundCues() : track)?.toLrc() ?? '';
-      if (lrc.isNotEmpty) await repo.save(trackId, lrc);
+          (request.lyricsSkipSounds ? track?.withoutSoundCues() : track)
+              ?.toLrc() ??
+          '';
+      return lrc.isEmpty ? null : lrc;
     } on Object {
       // 자막은 덤이라 실패해도 받은 곡은 그대로 둔다.
+      return null;
     }
   }
 

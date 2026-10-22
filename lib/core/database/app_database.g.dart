@@ -663,8 +663,28 @@ class $CoversTable extends Covers with TableInfo<$CoversTable, CoverRow> {
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _rotationMeta = const VerificationMeta(
+    'rotation',
+  );
   @override
-  List<GeneratedColumn> get $columns => [key, path, url, scale, dx, dy];
+  late final GeneratedColumn<double> rotation = GeneratedColumn<double>(
+    'rotation',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    key,
+    path,
+    url,
+    scale,
+    dx,
+    dy,
+    rotation,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -711,6 +731,12 @@ class $CoversTable extends Covers with TableInfo<$CoversTable, CoverRow> {
     if (data.containsKey('dy')) {
       context.handle(_dyMeta, dy.isAcceptableOrUnknown(data['dy']!, _dyMeta));
     }
+    if (data.containsKey('rotation')) {
+      context.handle(
+        _rotationMeta,
+        rotation.isAcceptableOrUnknown(data['rotation']!, _rotationMeta),
+      );
+    }
     return context;
   }
 
@@ -744,6 +770,10 @@ class $CoversTable extends Covers with TableInfo<$CoversTable, CoverRow> {
         DriftSqlType.double,
         data['${effectivePrefix}dy'],
       )!,
+      rotation: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}rotation'],
+      )!,
     );
   }
 
@@ -766,6 +796,9 @@ class CoverRow extends DataClass implements Insertable<CoverRow> {
   final double scale;
   final double dx;
   final double dy;
+
+  /// 시계 방향 회전 각도(도).
+  final double rotation;
   const CoverRow({
     required this.key,
     required this.path,
@@ -773,6 +806,7 @@ class CoverRow extends DataClass implements Insertable<CoverRow> {
     required this.scale,
     required this.dx,
     required this.dy,
+    required this.rotation,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -785,6 +819,7 @@ class CoverRow extends DataClass implements Insertable<CoverRow> {
     map['scale'] = Variable<double>(scale);
     map['dx'] = Variable<double>(dx);
     map['dy'] = Variable<double>(dy);
+    map['rotation'] = Variable<double>(rotation);
     return map;
   }
 
@@ -796,6 +831,7 @@ class CoverRow extends DataClass implements Insertable<CoverRow> {
       scale: Value(scale),
       dx: Value(dx),
       dy: Value(dy),
+      rotation: Value(rotation),
     );
   }
 
@@ -811,6 +847,7 @@ class CoverRow extends DataClass implements Insertable<CoverRow> {
       scale: serializer.fromJson<double>(json['scale']),
       dx: serializer.fromJson<double>(json['dx']),
       dy: serializer.fromJson<double>(json['dy']),
+      rotation: serializer.fromJson<double>(json['rotation']),
     );
   }
   @override
@@ -823,6 +860,7 @@ class CoverRow extends DataClass implements Insertable<CoverRow> {
       'scale': serializer.toJson<double>(scale),
       'dx': serializer.toJson<double>(dx),
       'dy': serializer.toJson<double>(dy),
+      'rotation': serializer.toJson<double>(rotation),
     };
   }
 
@@ -833,6 +871,7 @@ class CoverRow extends DataClass implements Insertable<CoverRow> {
     double? scale,
     double? dx,
     double? dy,
+    double? rotation,
   }) => CoverRow(
     key: key ?? this.key,
     path: path ?? this.path,
@@ -840,6 +879,7 @@ class CoverRow extends DataClass implements Insertable<CoverRow> {
     scale: scale ?? this.scale,
     dx: dx ?? this.dx,
     dy: dy ?? this.dy,
+    rotation: rotation ?? this.rotation,
   );
   CoverRow copyWithCompanion(CoversCompanion data) {
     return CoverRow(
@@ -849,6 +889,7 @@ class CoverRow extends DataClass implements Insertable<CoverRow> {
       scale: data.scale.present ? data.scale.value : this.scale,
       dx: data.dx.present ? data.dx.value : this.dx,
       dy: data.dy.present ? data.dy.value : this.dy,
+      rotation: data.rotation.present ? data.rotation.value : this.rotation,
     );
   }
 
@@ -860,13 +901,14 @@ class CoverRow extends DataClass implements Insertable<CoverRow> {
           ..write('url: $url, ')
           ..write('scale: $scale, ')
           ..write('dx: $dx, ')
-          ..write('dy: $dy')
+          ..write('dy: $dy, ')
+          ..write('rotation: $rotation')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(key, path, url, scale, dx, dy);
+  int get hashCode => Object.hash(key, path, url, scale, dx, dy, rotation);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -876,7 +918,8 @@ class CoverRow extends DataClass implements Insertable<CoverRow> {
           other.url == this.url &&
           other.scale == this.scale &&
           other.dx == this.dx &&
-          other.dy == this.dy);
+          other.dy == this.dy &&
+          other.rotation == this.rotation);
 }
 
 class CoversCompanion extends UpdateCompanion<CoverRow> {
@@ -886,6 +929,7 @@ class CoversCompanion extends UpdateCompanion<CoverRow> {
   final Value<double> scale;
   final Value<double> dx;
   final Value<double> dy;
+  final Value<double> rotation;
   final Value<int> rowid;
   const CoversCompanion({
     this.key = const Value.absent(),
@@ -894,6 +938,7 @@ class CoversCompanion extends UpdateCompanion<CoverRow> {
     this.scale = const Value.absent(),
     this.dx = const Value.absent(),
     this.dy = const Value.absent(),
+    this.rotation = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   CoversCompanion.insert({
@@ -903,6 +948,7 @@ class CoversCompanion extends UpdateCompanion<CoverRow> {
     this.scale = const Value.absent(),
     this.dx = const Value.absent(),
     this.dy = const Value.absent(),
+    this.rotation = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : key = Value(key),
        path = Value(path);
@@ -913,6 +959,7 @@ class CoversCompanion extends UpdateCompanion<CoverRow> {
     Expression<double>? scale,
     Expression<double>? dx,
     Expression<double>? dy,
+    Expression<double>? rotation,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -922,6 +969,7 @@ class CoversCompanion extends UpdateCompanion<CoverRow> {
       if (scale != null) 'scale': scale,
       if (dx != null) 'dx': dx,
       if (dy != null) 'dy': dy,
+      if (rotation != null) 'rotation': rotation,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -933,6 +981,7 @@ class CoversCompanion extends UpdateCompanion<CoverRow> {
     Value<double>? scale,
     Value<double>? dx,
     Value<double>? dy,
+    Value<double>? rotation,
     Value<int>? rowid,
   }) {
     return CoversCompanion(
@@ -942,6 +991,7 @@ class CoversCompanion extends UpdateCompanion<CoverRow> {
       scale: scale ?? this.scale,
       dx: dx ?? this.dx,
       dy: dy ?? this.dy,
+      rotation: rotation ?? this.rotation,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -967,6 +1017,9 @@ class CoversCompanion extends UpdateCompanion<CoverRow> {
     if (dy.present) {
       map['dy'] = Variable<double>(dy.value);
     }
+    if (rotation.present) {
+      map['rotation'] = Variable<double>(rotation.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -982,6 +1035,7 @@ class CoversCompanion extends UpdateCompanion<CoverRow> {
           ..write('scale: $scale, ')
           ..write('dx: $dx, ')
           ..write('dy: $dy, ')
+          ..write('rotation: $rotation, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2568,6 +2622,7 @@ typedef $$CoversTableCreateCompanionBuilder = CoversCompanion Function({
   Value<double> scale,
   Value<double> dx,
   Value<double> dy,
+  Value<double> rotation,
   Value<int> rowid,
 });
 typedef $$CoversTableUpdateCompanionBuilder = CoversCompanion Function({
@@ -2577,6 +2632,7 @@ typedef $$CoversTableUpdateCompanionBuilder = CoversCompanion Function({
   Value<double> scale,
   Value<double> dx,
   Value<double> dy,
+  Value<double> rotation,
   Value<int> rowid,
 });
 
@@ -2616,6 +2672,11 @@ class $$CoversTableFilterComposer
 
   ColumnFilters<double> get dy => $composableBuilder(
     column: $table.dy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get rotation => $composableBuilder(
+    column: $table.rotation,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -2658,6 +2719,11 @@ class $$CoversTableOrderingComposer
     column: $table.dy,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<double> get rotation => $composableBuilder(
+    column: $table.rotation,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$CoversTableAnnotationComposer
@@ -2686,6 +2752,9 @@ class $$CoversTableAnnotationComposer
 
   GeneratedColumn<double> get dy =>
       $composableBuilder(column: $table.dy, builder: (column) => column);
+
+  GeneratedColumn<double> get rotation =>
+      $composableBuilder(column: $table.rotation, builder: (column) => column);
 }
 
 class $$CoversTableTableManager
@@ -2722,6 +2791,7 @@ class $$CoversTableTableManager
                 Value<double> scale = const Value.absent(),
                 Value<double> dx = const Value.absent(),
                 Value<double> dy = const Value.absent(),
+                Value<double> rotation = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CoversCompanion(
                 key: key,
@@ -2730,6 +2800,7 @@ class $$CoversTableTableManager
                 scale: scale,
                 dx: dx,
                 dy: dy,
+                rotation: rotation,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -2740,6 +2811,7 @@ class $$CoversTableTableManager
                 Value<double> scale = const Value.absent(),
                 Value<double> dx = const Value.absent(),
                 Value<double> dy = const Value.absent(),
+                Value<double> rotation = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CoversCompanion.insert(
                 key: key,
@@ -2748,6 +2820,7 @@ class $$CoversTableTableManager
                 scale: scale,
                 dx: dx,
                 dy: dy,
+                rotation: rotation,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

@@ -4,7 +4,7 @@
 - 분류: 앱
 - 상태: 완료 (기기 확인 대기)
 - 브랜치 · 커밋: `feature/native-preview`
-- 상세 기능: 미리 듣기 (결정 D-115, D-093 후속)
+- 상세 기능: 미리 듣기 (결정 D-118, D-093 후속)
 
 ## 한 일
 - Kotlin `PreviewChannel` 추가(미리 듣기 전용 ExoPlayer, 진행 · 끝 · 실패를 Dart로 알림), `MuloEngine`에 등록.

@@ -110,6 +110,7 @@ class PrefsDownloadQueueStore implements DownloadQueueStore {
 Map<String, dynamic> encodeDownloadRequest(DownloadRequest r) => {
   'title': r.title,
   'artist': r.artist,
+  if (r.album.isNotEmpty) 'album': r.album,
   'genre': r.genre,
   'playlistIds': r.playlistIds.toList(),
   'quality': r.quality?.name,
@@ -131,6 +132,7 @@ Map<String, dynamic> encodeDownloadRequest(DownloadRequest r) => {
       'scale': art.transform.scale,
       'dx': art.transform.dx,
       'dy': art.transform.dy,
+      if (art.transform.rotation != 0) 'rotation': art.transform.rotation,
     },
 };
 
@@ -142,6 +144,7 @@ DownloadRequest decodeDownloadRequest(Map<String, dynamic> m) {
       scale: (cover['scale'] as num?)?.toDouble() ?? 1,
       dx: (cover['dx'] as num?)?.toDouble() ?? 0,
       dy: (cover['dy'] as num?)?.toDouble() ?? 0,
+      rotation: (cover['rotation'] as num?)?.toDouble() ?? 0,
     );
     final url = cover['url'] as String?;
     final path = cover['path'] as String?;
@@ -157,6 +160,7 @@ DownloadRequest decodeDownloadRequest(Map<String, dynamic> m) {
   return DownloadRequest(
     title: m['title'] as String? ?? '',
     artist: m['artist'] as String? ?? '',
+    album: m['album'] as String? ?? '',
     genre: m['genre'] as String? ?? '',
     playlistIds: {...?(m['playlistIds'] as List<dynamic>?)?.cast<String>()},
     quality: quality == null ? null : Quality.values.byName(quality),

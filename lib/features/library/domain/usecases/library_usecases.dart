@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../../../core/usecase/usecase.dart';
 import '../../../covers/domain/entities/cover_key.dart';
 import '../../../covers/domain/repositories/cover_repository.dart';
@@ -5,6 +7,7 @@ import '../entities/import_result.dart';
 import '../entities/track.dart';
 import '../entities/track_info.dart';
 import '../repositories/library_repository.dart';
+import '../repositories/track_tag_repository.dart';
 
 /// 보관함 곡 목록 (추가일 최신순, DB가 바뀌면 다시 흘려보냄).
 class WatchLibraryTracks implements StreamUseCase<List<Track>, NoParams> {
@@ -85,15 +88,72 @@ class UpdateTrackInfoParams {
 
 /// 곡 정보 편집 (곡 타일 메뉴). 제목은 앞뒤 공백을 지우고, 비어 있으면 바꾸지 않는다 (false).
 class UpdateTrackInfo implements UseCase<bool, UpdateTrackInfoParams> {
-  const UpdateTrackInfo(this._repo);
+  const UpdateTrackInfo(this._repo, [this._tags]);
 
   final LibraryRepository _repo;
+  final TrackTagRepository? _tags;
 
   @override
-  Future<bool> call(UpdateTrackInfoParams p) {
+  Future<bool> call(UpdateTrackInfoParams p) async {
     final info = p.info.trimmed();
-    if (info.title.isEmpty) return Future.value(false);
-    return _repo.updateInfo(p.trackId, info);
+    if (info.title.isEmpty) return false;
+    if (!await _repo.updateInfo(p.trackId, info)) return false;
+    // 파일이 정보의 원본이므로 고친 값을 태그에도 쓴다 (뒤에서, 못 써도 DB 값은 그대로).
+    final tags = _tags;
+    if (tags != null) unawaited(_writeTags(tags, p.trackId));
+    return true;
+  }
+
+  Future<void> _writeTags(TrackTagRepository tags, String trackId) async {
+    try {
+      final tracks = await _repo.watchTracks().first;
+      final track = tracks.where((t) => t.id == trackId).firstOrNull;
+      if (track != null) await tags.write(track);
+    } on Object {
+      // 태그는 덤이라 실패해도 편집 결과에는 영향이 없다.
+    }
+  }
+}
+
+/// 받아 둔 곡의 파일 태그에 정보를 한꺼번에 쓴다 (기존 파일 이관). 앱이 뜬 뒤 뒤에서 돈다.
+/// 곡마다 끝낸 id를 기록해 중간에 꺼져도 이어서 하고, 쓸 수 없는 파일은 다시 시도하지 않는다.
+/// 이번에 태그를 쓴 곡 수를 돌려준다.
+class EmbedTagsIntoFiles implements UseCase<int, NoParams> {
+  const EmbedTagsIntoFiles(
+    this._library,
+    this._covers,
+    this._colors,
+    this._tags,
+    this._done,
+  );
+
+  final LibraryRepository _library;
+  final CoverRepository _covers;
+  final CoverColorRepository _colors;
+  final TrackTagRepository _tags;
+  final TagMigrationStore _done;
+
+  @override
+  Future<int> call(NoParams _) async {
+    final tracks = await _library.watchTracks().first;
+    final done = await _done.loadDone();
+    final covers = await _covers.loadAll();
+    final colors = await _colors.loadAll();
+    var written = 0;
+    for (final t in tracks) {
+      if (t.source != TrackSource.download || t.uri.isEmpty) continue;
+      if (done.contains(t.id)) continue;
+      try {
+        final key = CoverKey.track(t.id);
+        if (await _tags.write(t, cover: covers[key], color: colors[key])) {
+          written++;
+        }
+      } on Exception {
+        // 한 곡이 실패해도 나머지는 계속한다.
+      }
+      await _done.markDone([t.id]);
+    }
+    return written;
   }
 }
 

@@ -147,6 +147,18 @@ abstract final class AppIcons {
     fontFamily: 'PhosphorRegular',
     matchTextDirection: true,
   );
+
+  /// 이미지가 없음을 나타내는 아이콘.
+  static const IconData imageBroken = IconData(
+    0xe7a8,
+    fontFamily: 'PhosphorRegular',
+    matchTextDirection: true,
+  );
+  static const IconData arrowUp = IconData(
+    0xe08e,
+    fontFamily: 'PhosphorRegular',
+    matchTextDirection: true,
+  );
   static const IconData photoLibrary = IconData(
     0xe2ca,
     fontFamily: 'PhosphorRegular',

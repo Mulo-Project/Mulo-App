@@ -29,7 +29,12 @@ class DriftCoverRepository implements CoverRepository {
 
   /// 파일이 사라진 기기 사진은 건너뛴다.
   static CoverArt? _toArt(CoverRow r) {
-    final t = CoverTransform(scale: r.scale, dx: r.dx, dy: r.dy);
+    final t = CoverTransform(
+      scale: r.scale,
+      dx: r.dx,
+      dy: r.dy,
+      rotation: r.rotation,
+    );
     final url = r.url;
     if (url != null) return CoverArt.web(url, transform: t);
     return File(r.path).existsSync()
@@ -78,6 +83,7 @@ class DriftCoverRepository implements CoverRepository {
           scale: Value(transform.scale),
           dx: Value(transform.dx),
           dy: Value(transform.dy),
+          rotation: Value(transform.rotation),
         ),
       );
 
@@ -103,6 +109,7 @@ class DriftCoverRepository implements CoverRepository {
           scale: Value(transform.scale),
           dx: Value(transform.dx),
           dy: Value(transform.dy),
+          rotation: Value(transform.rotation),
         ),
       );
 

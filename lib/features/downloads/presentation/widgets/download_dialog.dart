@@ -28,6 +28,7 @@ Future<bool> showDownloadDialog(
   BuildContext context, {
   required String title,
   String artist = '',
+  String album = '',
   String genre = '',
   Quality? quality,
   Duration? duration,
@@ -104,6 +105,7 @@ Future<bool> showDownloadDialog(
         child: DownloadScreen(
           title: title,
           artist: artist,
+          album: album,
           genre: genre,
           quality: quality,
           duration: duration,
@@ -122,6 +124,7 @@ class DownloadScreen extends StatefulWidget {
     super.key,
     required this.title,
     required this.artist,
+    this.album = '',
     required this.genre,
     this.quality,
     required this.url,
@@ -134,6 +137,7 @@ class DownloadScreen extends StatefulWidget {
   final List<String>? subtitleLangs;
   final String title;
   final String artist;
+  final String album;
   final String genre;
   final Quality? quality;
   final Duration? duration;
@@ -147,6 +151,7 @@ class DownloadScreen extends StatefulWidget {
 class _DownloadScreenState extends State<DownloadScreen> {
   late final _title = TextEditingController(text: widget.title);
   late final _artist = TextEditingController(text: widget.artist);
+  late final _album = TextEditingController(text: widget.album);
   late final _genre = TextEditingController(text: widget.genre);
   // 기본 저장 위치로 채워 시작하고, 이 곡만 바꿀 수 있다 (기본값은 설정에서).
   late final _savePath = TextEditingController(
@@ -178,7 +183,11 @@ class _DownloadScreenState extends State<DownloadScreen> {
       : CoverArt.web(widget.thumbnailUrl!);
 
   Future<void> _changeCover() async {
-    final picked = await pickCoverArt(context, initialQuery: _title.text);
+    final picked = await pickCoverArt(
+      context,
+      initialQuery: _title.text,
+      current: _cover,
+    );
     if (picked != null && mounted) setState(() => _cover = picked);
   }
 
@@ -199,6 +208,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
   void dispose() {
     _title.dispose();
     _artist.dispose();
+    _album.dispose();
     _genre.dispose();
     _savePath.dispose();
     super.dispose();
@@ -254,6 +264,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
       DownloadRequest(
         title: _title.text,
         artist: _artist.text,
+        album: _album.text.trim(),
         genre: _genre.text,
         playlistIds: _selected,
         quality: widget.quality,
@@ -585,6 +596,12 @@ class _DownloadScreenState extends State<DownloadScreen> {
                         label: l10n.downloadFieldArtist,
                         controller: _artist,
                         hint: l10n.unknownArtist,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      AppTextField(
+                        label: l10n.downloadFieldAlbum,
+                        controller: _album,
+                        hint: l10n.unknownAlbum,
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       AppTextField(

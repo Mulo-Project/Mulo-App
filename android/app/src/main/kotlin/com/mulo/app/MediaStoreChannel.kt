@@ -89,6 +89,20 @@ class MediaStoreChannel(
                         null
                     },
                 )
+                "overwriteAudio" -> io.execute {
+                    // 태그를 고친 임시 파일로 곡 파일을 덮어쓴다. 쓸 권한이 없으면 false (동의 창은 띄우지 않는다).
+                    val ok = try {
+                        val uri = Uri.parse(call.argument<String>("uri"))
+                        val src = File(call.argument<String>("path")!!)
+                        context.contentResolver.openOutputStream(uri, "wt")?.use { o ->
+                            src.inputStream().use { i -> i.copyTo(o) }
+                            true
+                        } ?: false
+                    } catch (e: Exception) {
+                        false
+                    }
+                    main.post { result.success(ok) }
+                }
                 "deleteAudio" -> deleteAudio(Uri.parse(call.argument<String>("uri")), result)
                 else -> result.notImplemented()
             }

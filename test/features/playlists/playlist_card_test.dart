@@ -38,7 +38,7 @@ Future<void> _waitImage(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
-/// 이미지 고르기 → 기기에서 → 위치 맞추는 화면에서 적용.
+/// 이미지 고르기 → 위치 맞추는 화면에서 이미지 불러오기 → 기기에서 → 적용.
 Future<void> _pickFromDeviceAndApply(WidgetTester tester) async {
   await tester.tap(find.text('기기에서 고르기'));
   // 읽는 동안 돌아가는 표시가 있어 pumpAndSettle은 끝나지 않는다.
