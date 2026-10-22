@@ -897,5 +897,8 @@
   "equalizerReverbMediumHall": "Medium hall",
   "equalizerReverbLargeHall": "Large hall",
   "equalizerReverbPlate": "Plate",
-  "equalizerSave": "Save"
+  "equalizerSave": "Save",
+  "downloadAgainTitle": "Download again?",
+  "downloadAgainBody": "This song is already downloaded. Downloading it again adds another copy.",
+  "downloadAgainConfirm": "Download again"
 }

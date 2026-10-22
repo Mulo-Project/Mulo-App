@@ -4741,6 +4741,24 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'저장'**
   String get equalizerSave;
+
+  /// No description provided for @downloadAgainTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'다시 받을까요?'**
+  String get downloadAgainTitle;
+
+  /// No description provided for @downloadAgainBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미 받은 곡이에요. 다시 받으면 같은 곡이 하나 더 생겨요.'**
+  String get downloadAgainBody;
+
+  /// No description provided for @downloadAgainConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'다시 받기'**
+  String get downloadAgainConfirm;
 }
 
 class _AppLocalizationsDelegate

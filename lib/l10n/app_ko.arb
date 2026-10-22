@@ -1010,5 +1010,8 @@
   "equalizerReverbMediumHall": "중간 홀",
   "equalizerReverbLargeHall": "큰 홀",
   "equalizerReverbPlate": "플레이트",
-  "equalizerSave": "저장"
+  "equalizerSave": "저장",
+  "downloadAgainTitle": "다시 받을까요?",
+  "downloadAgainBody": "이미 받은 곡이에요. 다시 받으면 같은 곡이 하나 더 생겨요.",
+  "downloadAgainConfirm": "다시 받기"
 }

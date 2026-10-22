@@ -36,18 +36,34 @@ Future<bool> showDownloadDialog(
 }) async {
   final queue = context.read<DownloadQueueCubit>();
   // 이미 받았거나 받는 중인 곡은 팝업을 열지 않고 알린다.
-  if (queue.isDownloaded(url) || queue.isInQueue(url)) {
-    final l10n = context.l10n;
+  if (queue.isInQueue(url)) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          queue.isDownloaded(url)
-              ? l10n.downloadAlreadyDownloaded
-              : l10n.downloadAlreadyInQueue,
-        ),
-      ),
+      SnackBar(content: Text(context.l10n.downloadAlreadyInQueue)),
     );
     return false;
+  }
+  // 이미 받은 곡은 막지 않고, 다시 받을지 먼저 묻는다.
+  if (queue.isDownloaded(url)) {
+    final again = await showDialog<bool>(
+      context: context,
+      useRootNavigator: true,
+      builder: (dialog) => AppDialog(
+        title: dialog.l10n.downloadAgainTitle,
+        body: dialog.l10n.downloadAgainBody,
+        actions: [
+          PillButton(
+            label: dialog.l10n.actionCancel,
+            variant: PillVariant.tonal,
+            onPressed: () => Navigator.of(dialog).pop(false),
+          ),
+          PillButton(
+            label: dialog.l10n.downloadAgainConfirm,
+            onPressed: () => Navigator.of(dialog).pop(true),
+          ),
+        ],
+      ),
+    );
+    if (again != true || !context.mounted) return false;
   }
   final playlists = context.read<PlaylistsCubit>();
   final settings = context.read<DownloadSettingsCubit>();
