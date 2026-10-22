@@ -1,7 +1,10 @@
 package com.mulo.app
 
 import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Paint
 import android.graphics.PixelFormat
+import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
@@ -48,7 +51,7 @@ object LyricsOverlay {
     /** 숨기기를 눌러 작은 칩으로 줄어든 상태. 칩을 탭하면 펼친다. */
     private var minimized = false
     private var layout: WindowManager.LayoutParams? = null
-    private var chip: TextView? = null
+    private var chip: LyricsGlyph? = null
     private var column: LinearLayout? = null
     private var hideLabel = ""
     private var offLabel = ""
@@ -217,13 +220,10 @@ object LyricsOverlay {
             addView(next, LinearLayout.LayoutParams(-1, -2))
             addView(row, LinearLayout.LayoutParams(-2, -2))
         }
-        val note = TextView(context).apply {
-            text = "♪"
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
-            gravity = Gravity.CENTER
+        val note = LyricsGlyph(context).apply {
             visibility = View.GONE
-            minWidth = px(44)
-            minHeight = px(44)
+            minimumWidth = px(44)
+            minimumHeight = px(44)
         }
         val root = FrameLayout(context).apply {
             background = round(0xEB121214.toInt(), 22f, 0x1FFFFFFF)
@@ -247,7 +247,7 @@ object LyricsOverlay {
         val density = context.resources.displayMetrics.density
         val onAccent = if (isLight(accent)) 0xFF000000.toInt() else 0xFFFFFFFF.toInt()
         chip?.apply {
-            setTextColor(onAccent)
+            glyphColor = onAccent
             background = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
                 setColor(accent)
@@ -439,6 +439,36 @@ object LyricsOverlay {
                 }
                 else -> false
             }
+        }
+    }
+}
+
+/** 줄어든 가사 창의 아이콘: 길이가 다른 둥근 가로선 세 개 (가사 줄 모양). */
+class LyricsGlyph(context: Context) : View(context) {
+    var glyphColor: Int = 0xFFFFFFFF.toInt()
+        set(value) {
+            field = value
+            paint.color = value
+            invalidate()
+        }
+
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = glyphColor }
+    private val bar = RectF()
+
+    override fun onDraw(canvas: Canvas) {
+        val w = width.toFloat()
+        val h = height.toFloat()
+        val barHeight = h * 0.09f
+        val widths = floatArrayOf(0.44f, 0.30f, 0.38f)
+        val gap = h * 0.075f
+        val total = barHeight * 3 + gap * 2
+        var top = (h - total) / 2f
+        for (fraction in widths) {
+            val barWidth = w * fraction
+            val left = (w - barWidth) / 2f
+            bar.set(left, top, left + barWidth, top + barHeight)
+            canvas.drawRoundRect(bar, barHeight / 2f, barHeight / 2f, paint)
+            top += barHeight + gap
         }
     }
 }
