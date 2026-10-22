@@ -16,6 +16,8 @@ import 'domain/repositories/download_settings_repository.dart';
 import 'domain/usecases/download_usecases.dart';
 import 'presentation/bloc/download_preferences_cubit.dart';
 import 'presentation/bloc/download_queue_cubit.dart';
+import 'presentation/bloc/subtitle_availability_cubit.dart';
+import 'presentation/bloc/subtitle_preview_cubit.dart';
 import 'presentation/bloc/download_settings_cubit.dart';
 
 /// 다운로드 대기열 의존성.
@@ -39,6 +41,7 @@ void registerDownloads(GetIt sl) {
         settings: sl(),
         transcoder: sl(),
         coverTags: const CoverTagWriter(),
+        lyrics: sl(),
         queueStore: sl(),
         // 받다 만 파일은 앱을 껐다 켜도 남아야 해서 캐시가 아닌 앱 전용 폴더에 둔다.
         tempDir: _partsDirectory,
@@ -47,6 +50,8 @@ void registerDownloads(GetIt sl) {
     ..registerLazySingleton<DownloadSettingsRepository>(
       PrefsDownloadSettingsRepository.new,
     )
+    ..registerFactory(() => SubtitleAvailabilityCubit(sl()))
+    ..registerFactory(() => SubtitlePreviewCubit(sl()))
     ..registerFactory(() => GetSelectableFormats(sl()))
     ..registerFactory(() => LoadSavePath(sl()))
     ..registerFactory(() => SaveSavePath(sl()))

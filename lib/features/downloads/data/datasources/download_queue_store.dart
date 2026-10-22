@@ -119,6 +119,11 @@ Map<String, dynamic> encodeDownloadRequest(DownloadRequest r) => {
   'color': r.color,
   'thumbnailUrl': r.thumbnailUrl,
   'url': r.url,
+  if (r.importLyrics) 'importLyrics': true,
+  'lyricsLanguage': ?r.lyricsLanguage,
+  if (!r.lyricsSkipSounds) 'lyricsSkipSounds': false,
+  'lyricsText': ?r.lyricsText,
+  'audioLanguage': ?r.audioLanguage,
   if (r.cover case final art?)
     'cover': {
       'path': art.path,
@@ -162,5 +167,10 @@ DownloadRequest decodeDownloadRequest(Map<String, dynamic> m) {
     thumbnailUrl: m['thumbnailUrl'] as String?,
     cover: art,
     url: m['url'] as String? ?? '',
+    importLyrics: m['importLyrics'] == true,
+    lyricsLanguage: m['lyricsLanguage'] as String?,
+    lyricsSkipSounds: m['lyricsSkipSounds'] != false,
+    lyricsText: m['lyricsText'] as String?,
+    audioLanguage: m['audioLanguage'] as String?,
   );
 }

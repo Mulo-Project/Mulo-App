@@ -1026,6 +1026,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mediaDetailDescription => 'Description';
 
   @override
+  String get mediaDetailSectionPreview => 'Preview';
+
+  @override
+  String get mediaDetailSectionInfo => 'Info';
+
+  @override
   String get mediaDetailMore => 'Show more';
 
   @override
@@ -1129,6 +1135,97 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get downloadCoverDefault => 'Use default';
+
+  @override
+  String get downloadImportLyrics => 'Import subtitles as lyrics';
+
+  @override
+  String get downloadImportLyricsHint =>
+      'After downloading, refine them in the lyrics sync screen.';
+
+  @override
+  String get downloadSubtitleChecking => 'Checking for subtitles.';
+
+  @override
+  String get downloadSubtitleNone => 'This video has no subtitles.';
+
+  @override
+  String get downloadSubtitleUnknown =>
+      'Couldn\'t check for subtitles. If on, we\'ll try again after downloading.';
+
+  @override
+  String get downloadSubtitleLanguage => 'Subtitle language';
+
+  @override
+  String get downloadSubtitleAuto => 'Choose automatically';
+
+  @override
+  String get downloadSubtitleAutoHint =>
+      'Korean, then English, then the first one.';
+
+  @override
+  String get downloadLyricsPreviewLoading => 'Loading…';
+
+  @override
+  String get downloadLyricsPreviewFailed => 'Couldn\'t load the subtitles.';
+
+  @override
+  String get downloadSubtitleEditHint =>
+      'You can edit the text, but not the timing. Sync it on the player after downloading.';
+
+  @override
+  String get downloadSubtitleUseEdited => 'Use this subtitle';
+
+  @override
+  String get downloadSubtitleEdited => 'edited';
+
+  @override
+  String get downloadLyricsRetry => 'Try again';
+
+  @override
+  String get downloadSubtitleUse => 'Use this subtitle';
+
+  @override
+  String get downloadSubtitleInUse => 'Currently selected';
+
+  @override
+  String get downloadLyricsSkipSounds => 'Skip sound-effect lines';
+
+  @override
+  String get downloadLyricsSkipSoundsHint =>
+      'Lines like [Music], (applause) or ♪ aren\'t imported.';
+
+  @override
+  String get downloadSubtitleColLanguage => 'Language';
+
+  @override
+  String get downloadSubtitleColKind => 'Type';
+
+  @override
+  String get downloadSubtitleKindAuto => 'Auto-generated';
+
+  @override
+  String get downloadSubtitleKindManual => 'Uploaded by creator';
+
+  @override
+  String downloadSubtitleFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count subtitle tracks found.',
+      one: '1 subtitle track found.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get downloadSectionInfo => 'Details';
+
+  @override
+  String get downloadSectionSave => 'Save to';
+
+  @override
+  String get downloadSectionLyrics => 'Lyrics';
 
   @override
   String get downloadCancelTitle => 'Cancel download';
@@ -1414,6 +1511,42 @@ class AppLocalizationsEn extends AppLocalizations {
       'Paste or type the lyrics. Text with times like [01:02.30], or an .lrc / .txt file with them, becomes synced lyrics. Save empty to remove them.';
 
   @override
+  String get lyricsEditSyncedHint =>
+      'Times on the left follow the line number. If you insert or delete a line, the times stay in place and only the text shifts. Change times in the sync screen.';
+
+  @override
+  String get lyricsAddLine => 'Add line';
+
+  @override
+  String get lyricsDeleteLine => 'Delete line';
+
+  @override
+  String get lyricsTimePrev => 'Previous';
+
+  @override
+  String get lyricsTimeNow => 'Now';
+
+  @override
+  String get lyricsTimeNext => 'Next';
+
+  @override
+  String get lyricsTimeNone => 'None';
+
+  @override
+  String get lyricsTimeGroupedAbove =>
+      'Same time as the line above, so they are grouped';
+
+  @override
+  String get lyricsTimeGroupedBelow =>
+      'Same time as the line below, so they are grouped';
+
+  @override
+  String get lyricsTimeSeparate => 'Split from the group here';
+
+  @override
+  String get lyricsTimeClearFrom => 'Clear sync from here';
+
+  @override
   String get lyricsLoadFile => 'Load from file';
 
   @override
@@ -1476,13 +1609,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsSyncUndo => 'Undo';
 
   @override
+  String get lyricsSyncPrevious => 'Remove last sync and go back';
+
+  @override
+  String get lyricsSyncSavePartial => 'Save progress (up to the stamped lines)';
+
+  @override
   String get lyricsSyncSave => 'Save sync';
-
-  @override
-  String get lyricsSyncReplay => 'Replay from this line';
-
-  @override
-  String get lyricsSyncReset => 'Back to this sync';
 
   @override
   String get lyricsSyncGroup => 'Lines per sync';
@@ -1503,6 +1636,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lyricsSyncPause => 'Pause';
+
+  @override
+  String lyricsSyncBackBy(double n) {
+    return 'Back ${n}s (long-press to change)';
+  }
+
+  @override
+  String lyricsSyncForwardBy(double n) {
+    return 'Forward ${n}s (long-press to change)';
+  }
+
+  @override
+  String get lyricsSyncAutoPause => 'Auto pause';
+
+  @override
+  String get lyricsSyncAutoPauseHint =>
+      'Pause when playback reaches the next line\'s existing sync';
+
+  @override
+  String get lyricsSyncSeek => 'Playback position';
 
   @override
   String lyricsSyncProgress(int done, int total) {
@@ -1549,6 +1702,124 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsSyncDefaultLines => 'Change default lines';
 
   @override
+  String get lyricsSyncExpandedHint =>
+      'Lines shown separately · set each time; tap outside to re-merge lines with the same time';
+
+  @override
+  String get lyricsSyncCancelAfter => 'Reset to this sync';
+
+  @override
+  String get lyricsSyncCancelAfterHint =>
+      'Clear the syncs stamped after this one and continue from here';
+
+  @override
+  String get lyricsSyncNextSlot => 'Next';
+
+  @override
+  String get lyricsSyncFollow => 'Follow';
+
+  @override
+  String get lyricsSyncFollowHint =>
+      'On: the list follows the focused line. Off: browse the lyrics freely';
+
+  @override
+  String get lyricsFollow => 'Follow lyrics';
+
+  @override
+  String get lyricsThemeList => 'List';
+
+  @override
+  String get lyricsThemeCentered => 'Centered line';
+
+  @override
+  String get lyricsThemeCover => 'Cover background';
+
+  @override
+  String get themeTabPlayer => 'Player';
+
+  @override
+  String get themeTabLyrics => 'Lyrics';
+
+  @override
+  String get lyricsLatencyTitle => 'Reaction time';
+
+  @override
+  String get lyricsLatencyEntry => 'Reaction time';
+
+  @override
+  String get lyricsLatencyIntro =>
+      'When you press Now after hearing the sound, the stamp lands late by your reaction time. The value below is subtracted from the time you pressed.';
+
+  @override
+  String lyricsLatencySeconds(String s) {
+    return '${s}s';
+  }
+
+  @override
+  String get lyricsLatencyReset => 'Reset to 0.20s';
+
+  @override
+  String get lyricsBeatTitle => 'Beat test';
+
+  @override
+  String get lyricsBeatBody =>
+      'The circle flashes with a sound. Tap the circle on every beat. After 8 taps the average gives a recommended value.';
+
+  @override
+  String get lyricsBeatIdle => 'Press Start';
+
+  @override
+  String lyricsBeatProgress(int n, int total) {
+    return '$n/$total';
+  }
+
+  @override
+  String get lyricsBeatStart => 'Start';
+
+  @override
+  String get lyricsBeatStop => 'Stop';
+
+  @override
+  String lyricsBeatResult(String s) {
+    return 'Recommended ${s}s';
+  }
+
+  @override
+  String get lyricsBeatApply => 'Apply this value';
+
+  @override
+  String get lyricsBeatNote =>
+      'Screen and sound delay differ by device, so this is tuned for Android. Desktop may be less accurate.';
+
+  @override
+  String get lyricsSongCheckTitle => 'Check with a song';
+
+  @override
+  String get lyricsSongCheckBody =>
+      'While the song plays, press Try stamp the moment a sound starts. Listen again from the stamped position to check it.';
+
+  @override
+  String get lyricsSongTry => 'Try stamp';
+
+  @override
+  String lyricsSongTried(String clock) {
+    return 'Stamped at $clock';
+  }
+
+  @override
+  String get lyricsSongListen => 'Listen from stamp';
+
+  @override
+  String get lyricsSyncSkipTitle => 'Stamped syncs will be lost';
+
+  @override
+  String get lyricsSyncSkipBody =>
+      'The range contains syncs you already stamped. Merging it into one block removes them. Continue?';
+
+  @override
+  String get lyricsSyncSkipConfirm => 'Merge';
+
+  @override
   String get lyricsSyncResetTitle => 'Groupings will be lost';
 
   @override
@@ -1559,14 +1830,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsSyncResetConfirm => 'Change';
 
   @override
-  String get lyricsSyncGroupEdit => 'Group lines';
+  String lyricsSyncMerged(int n) {
+    return '$n lines share one time';
+  }
 
   @override
-  String get lyricsSyncGroupDone => 'Done';
+  String get lyricsSyncUnmerge => 'Split';
 
   @override
-  String get lyricsSyncGroupPanelHint =>
-      'Tap or drag to pick the last line to group. This sync\'s time must be stamped again.';
+  String get playerLyricsExpand => 'Lyrics only';
+
+  @override
+  String get playerLyricsCollapse => 'Close lyrics';
 
   @override
   String get playerShowLyrics => 'Show lyrics';
@@ -1818,6 +2093,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permAudioDesc => 'Used to load music stored on this device.';
 
   @override
+  String get permOverlay => 'Display over other apps';
+
+  @override
+  String get permOverlayDesc =>
+      'Used to show lyrics over other apps while you use them.';
+
+  @override
   String get permBlockedDesc =>
       'Blocked. Tap to turn it on in system settings.';
 
@@ -1844,6 +2126,22 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsNotifyPlaybackDesc =>
       'Control playback from the notification shade and lock screen.';
+
+  @override
+  String get lyricsOverlayMinimize => 'Hide';
+
+  @override
+  String get lyricsOverlayTurnOff => 'Turn off';
+
+  @override
+  String get lyricsOverlayOn => 'Turn on floating lyrics';
+
+  @override
+  String get lyricsOverlayOff => 'Turn off floating lyrics';
+
+  @override
+  String get lyricsOverlayNeedPermission =>
+      'Allow \"Display over other apps\" in settings, then turn it on again.';
 
   @override
   String get settingsNotifyPermission => 'System notifications are off';
@@ -2321,4 +2619,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get equalizerSave => 'Save';
+
+  @override
+  String get audioLanguageTitle => 'Audio language';
+
+  @override
+  String get audioLanguageRow => 'Audio language';
+
+  @override
+  String get audioLanguageOriginal => 'Original';
+
+  @override
+  String get audioLanguageHint =>
+      'Applies right away. Preview and download use the same language.';
+
+  @override
+  String get downloadAgainTitle => 'Download again?';
+
+  @override
+  String get downloadAgainBody =>
+      'This song is already downloaded. Downloading it again adds another copy.';
+
+  @override
+  String get downloadAgainConfirm => 'Download again';
 }

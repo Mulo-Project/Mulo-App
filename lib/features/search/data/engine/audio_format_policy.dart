@@ -27,10 +27,22 @@ AudioFormat preferredAudioFormat() =>
 /// yt-dlp `-f` 값: 먼저 고를 형식, 없으면 바로 받는(HTTP) 오디오, 그것도 없으면 아무 오디오.
 /// SoundCloud처럼 가장 좋은 오디오가 HLS(m3u8 조각 목록)인 곳에서도 일반 파일 주소를 먼저 골라
 /// 플레이어가 곧바로 열 수 있게 한다.
-String ytDlpAudioSelector([AudioFormat? format]) =>
-    switch (format ?? preferredAudioFormat()) {
+///
+/// [language]를 주면 그 언어 트랙의 오디오만 고른다 (다국어 음원에서 고른 언어).
+String ytDlpAudioSelector([AudioFormat? format, String? language]) {
+  if (language != null) {
+    final l = '[language=$language]';
+    return switch (format ?? preferredAudioFormat()) {
       AudioFormat.webm =>
-        'bestaudio[ext=webm]/bestaudio[protocol^=http]/bestaudio/best',
+        'bestaudio$l[ext=webm]/bestaudio$l[protocol^=http]/bestaudio$l',
       AudioFormat.m4a =>
-        'bestaudio[ext=m4a]/bestaudio[protocol^=http]/bestaudio/best',
+        'bestaudio$l[ext=m4a]/bestaudio$l[protocol^=http]/bestaudio$l',
     };
+  }
+  return switch (format ?? preferredAudioFormat()) {
+    AudioFormat.webm =>
+      'bestaudio[ext=webm]/bestaudio[protocol^=http]/bestaudio/best',
+    AudioFormat.m4a =>
+      'bestaudio[ext=m4a]/bestaudio[protocol^=http]/bestaudio/best',
+  };
+}

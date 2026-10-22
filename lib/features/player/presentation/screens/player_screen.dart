@@ -21,7 +21,16 @@ class PlayerScreen extends StatefulWidget {
 
 class _PlayerScreenState extends State<PlayerScreen> {
   /// 커버 ↔ 가사 전환 (상세 기능: 가사).
-  var _showLyrics = false;
+  bool get _showLyrics => playerShowLyrics.value;
+
+  @override
+  void initState() {
+    super.initState();
+    playerShowLyrics.value = false;
+    playerShowLyrics.addListener(_onLyricsToggle);
+  }
+
+  void _onLyricsToggle() => setState(() {});
 
   Animation<double>? _covered;
 
@@ -37,6 +46,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   @override
   void dispose() {
+    playerShowLyrics.removeListener(_onLyricsToggle);
     _covered?.removeStatusListener(_onCoverStatus);
     super.dispose();
   }
@@ -75,7 +85,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   vm: context.read<NowPlayingCubit>(),
                   showLyrics: _showLyrics,
                   onToggleLyrics: () =>
-                      setState(() => _showLyrics = !_showLyrics),
+                      playerShowLyrics.value = !playerShowLyrics.value,
                 ),
               ),
             ),

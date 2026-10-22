@@ -13,6 +13,7 @@ import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../library/presentation/widgets/track_menu.dart';
+import '../../../lyrics/presentation/screens/lyrics_full_screen.dart';
 import '../../../lyrics/presentation/widgets/lyrics_view.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../bloc/now_playing_cubit.dart';
@@ -282,7 +283,22 @@ class PlayerLyricsPane extends StatelessWidget {
   final Track track;
 
   @override
-  Widget build(BuildContext context) => LyricsView(track: track);
+  Widget build(BuildContext context) => Stack(
+    children: [
+      LyricsView(track: track),
+      // 가사만 크게 보기.
+      Positioned(
+        top: 0,
+        right: 0,
+        child: CircleIconButton(
+          icon: AppIcons.fullscreen,
+          tooltip: context.l10n.playerLyricsExpand,
+          size: AppSizes.circleButton * .8,
+          onPressed: () => LyricsFullScreen.open(context),
+        ),
+      ),
+    ],
+  );
 }
 
 /// 기본 원형 손잡이 + 아래로 이어지는 둥근 삼각형 + 현재 재생 시간 상자를 한 덩어리로 그린 손잡이.
@@ -692,39 +708,6 @@ class SolidPlayButton extends StatelessWidget {
   }
 }
 
-/// 강조 색 빛나는 재생 버튼.
-class GlowPlayButton extends StatelessWidget {
-  const GlowPlayButton({super.key, required this.data, this.size = 84});
-
-  final PlayerLayoutData data;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final playing = data.state.isPlaying;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: context.palette.accent.withValues(alpha: .4),
-            blurRadius: size * .6,
-            spreadRadius: size * .06,
-          ),
-        ],
-      ),
-      child: CircleIconButton(
-        icon: playing ? AppIcons.pause : AppIcons.play,
-        tooltip: playing ? l10n.actionPause : l10n.actionPlay,
-        emphasized: true,
-        size: size,
-        onPressed: data.vm.togglePlay,
-      ),
-    );
-  }
-}
-
 /// 10초 뒤로 · 앞으로.
 class SeekStepButton extends StatelessWidget {
   const SeekStepButton({
@@ -996,7 +979,7 @@ class PlayerControls extends StatelessWidget {
             alignment: Alignment.centerLeft,
             child: PlayerTitleText(track: data.track),
           ),
-          const SizedBox(height: AppSpacing.hair),
+          const SizedBox(height: AppSpacing.xxs),
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -1023,7 +1006,8 @@ class PlayerControls extends StatelessWidget {
             ],
           ),
           if (seekBar) ...[
-            const SizedBox(height: AppSpacing.xs),
+            // 제목 묶음 → 진행 막대 → 재생 조작 → 보조 조작 순으로 틈을 한 단계씩 넓게 둔다.
+            const SizedBox(height: AppSpacing.md),
             PlayerSeekBar(
               progress: data.state.progress,
               onSeek: data.vm.seekFraction,
@@ -1033,7 +1017,7 @@ class PlayerControls extends StatelessWidget {
               total: data.track.duration,
             ),
           ],
-          const SizedBox(height: AppSpacing.xs),
+          const SizedBox(height: AppSpacing.sm),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -1044,15 +1028,24 @@ class PlayerControls extends StatelessWidget {
               SeekStepButton(data: data, forward: true),
             ],
           ),
-          const SizedBox(height: AppSpacing.xs),
-          Row(
-            children: [
-              ShuffleButton(data: data),
-              RepeatButton(data: data),
-              const Spacer(),
-              SleepTimerButton(data: data),
-              const EqualizerButton(),
-            ],
+          const SizedBox(height: AppSpacing.md),
+          // 보조 조작(셔플 · 반복 · 수면 · 이퀄라이저)은 재생 조작보다 작게 두어 대비를 준다.
+          IconButtonTheme(
+            data: IconButtonThemeData(
+              style: IconButton.styleFrom(
+                iconSize: 20,
+                visualDensity: VisualDensity.compact,
+              ),
+            ),
+            child: Row(
+              children: [
+                ShuffleButton(data: data),
+                RepeatButton(data: data),
+                const Spacer(),
+                SleepTimerButton(data: data),
+                const EqualizerButton(),
+              ],
+            ),
           ),
         ],
       ),

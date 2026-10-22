@@ -80,6 +80,18 @@ void main() {
       expect(l.currentLine(const Duration(seconds: 19)), 0);
       expect(l.currentLine(const Duration(seconds: 99)), 1);
     });
+
+    test('groupAt은 같은 시간으로 묶인 이웃 줄의 범위', () {
+      final l = Lyrics.parse(
+        '[00:10.00]가\n[00:10.00]나\n[00:10.00]다\n[00:20.00]라\n[00:30.00]마',
+      )!;
+      // 묶인 줄은 재생 위치가 닿으면 맨 끝 줄이 현재 줄이지만, 범위는 처음부터 끝까지다.
+      expect(l.currentLine(const Duration(seconds: 15)), 2);
+      expect(l.groupAt(2), (0, 2));
+      expect(l.groupAt(0), (0, 2));
+      expect(l.groupAt(3), (3, 3));
+      expect(l.groupAt(-1), (-1, -1));
+    });
   });
 
   group('DriftLyricsRepository', () {

@@ -6,7 +6,10 @@ import '../../../../core/l10n/l10n.dart';
 import '../../../library/domain/entities/track.dart';
 import '../bloc/lyrics_cubit.dart';
 import '../screens/lyrics_web_screen.dart';
+import '../../domain/entities/timed_lyrics_text.dart';
 import 'lyrics_dialogs.dart';
+import 'timed_lyrics_controller.dart';
+import 'lyrics_edit_scaffold.dart';
 
 /// 플레이어 가사 화면의 "가사 편집" 페이지: 직접 입력 · 붙여넣기 · 파일(.lrc · .txt) · 웹 검색(Android)에서 불러오기.
 /// 저장하면 곡의 가사로 저장하고(비우면 지움) 안내를 띄운다.
@@ -41,7 +44,11 @@ class _LyricsEditorScreen extends StatefulWidget {
 }
 
 class _LyricsEditorScreenState extends State<_LyricsEditorScreen> {
-  final _text = TextEditingController();
+  final _text = TimedLyricsController();
+
+  // 싱크 가사는 시간을 글과 따로 두고 줄 번호로 짝짓는다 (줄을 끼우거나 지우면 시간은 그 자리에 남는다).
+  // 싱크 가사를 불러왔는가 (줄마다 시간 칸을 보인다).
+  var _synced = false;
 
   @override
   void initState() {
@@ -52,8 +59,18 @@ class _LyricsEditorScreenState extends State<_LyricsEditorScreen> {
   Future<void> _loadCurrent() async {
     final current = await widget.cubit.currentText(widget.track);
     // 불러오는 사이에 사용자가 이미 쓰기 시작했으면 덮어쓰지 않는다.
-    if (mounted && _text.text.isEmpty) _text.text = current;
+    if (mounted && _text.text.isEmpty) setState(() => _load(current));
   }
+
+  /// [raw]를 편집 칸에 채운다: 싱크 가사면 시간 표시를 빼 글만 넣고 시간은 따로 둔다.
+  void _load(String raw) {
+    final split = TimedLyricsText.parse(raw);
+    _synced = split.isSynced;
+    _text.load(split);
+  }
+
+  /// 저장할 글: 줄 번호에 맞는 시간을 `[mm:ss.xx]`로 다시 붙인다.
+  String _compose() => _text.compose();
 
   Future<void> _pickFile() async {
     final picked = await widget.cubit.pickFile();
@@ -67,17 +84,21 @@ class _LyricsEditorScreenState extends State<_LyricsEditorScreen> {
 
   /// 가져온 글을 넣는다. 가사가 이미 있으면 바꿀지 뒤에 붙일지 먼저 묻는다.
   Future<void> _apply(String imported) async {
-    final current = _text.text;
-    if (current.trim().isEmpty) {
-      _text.text = imported;
+    if (_text.text.trim().isEmpty) {
+      setState(() => _load(imported));
       return;
     }
     final mode = await showLyricsImportMode(context);
     if (mode == null || !mounted) return;
-    _text.text = switch (mode) {
-      LyricsImportMode.replace => imported,
-      LyricsImportMode.append => '${current.trimRight()}\n$imported',
-    };
+    setState(() {
+      if (mode == LyricsImportMode.replace) {
+        _load(imported);
+      } else {
+        // 붙인 글은 시간 없는 줄로 뒤에 더한다.
+        final extra = TimedLyricsText.parse(imported).text;
+        _text.text = '${_text.text.trimRight()}\n$extra';
+      }
+    });
   }
 
   @override
@@ -89,90 +110,28 @@ class _LyricsEditorScreenState extends State<_LyricsEditorScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
-    final p = context.palette;
-    return Scaffold(
-      backgroundColor: p.background,
-      resizeToAvoidBottomInset: true,
-      body: SafeArea(
-        child: Column(
-          children: [
-            AppTopBar(
-              title: l10n.lyricsEditTitle,
-              leading: CircleIconButton(
-                icon: AppIcons.close,
-                tooltip: l10n.actionCancel,
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  widget.track.title,
-                  style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: AppTextField(
-                  label: l10n.lyricsEditLabel,
-                  controller: _text,
-                  hint: l10n.lyricsEditHint,
-                  expands: true,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Row(
-                children: [
-                  PlainButton(
-                    label: l10n.lyricsLoadFile,
-                    icon: AppIcons.fileOpen,
-                    onPressed: _pickFile,
-                  ),
-                  if (lyricsWebSupported)
-                    PlainButton(
-                      label: l10n.lyricsWebSearch,
-                      icon: AppIcons.explore,
-                      onPressed: _searchWeb,
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: PillButton(
-                      label: l10n.actionCancel,
-                      variant: PillVariant.tonal,
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: PillButton(
-                      label: l10n.lyricsSave,
-                      icon: AppIcons.check,
-                      onPressed: () => Navigator.of(context).pop(_text.text),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-          ],
+    return LyricsEditScaffold(
+      title: l10n.lyricsEditTitle,
+      subtitle: widget.track.title,
+      controller: _text,
+      showTimes: _synced,
+      notice: _synced ? l10n.lyricsEditSyncedHint : null,
+      fieldHint: l10n.lyricsEditHint,
+      tools: [
+        PlainButton(
+          label: l10n.lyricsLoadFile,
+          icon: AppIcons.fileOpen,
+          onPressed: _pickFile,
         ),
-      ),
+        if (lyricsWebSupported)
+          PlainButton(
+            label: l10n.lyricsWebSearch,
+            icon: AppIcons.explore,
+            onPressed: _searchWeb,
+          ),
+      ],
+      primaryLabel: l10n.lyricsSave,
+      onPrimary: () => Navigator.of(context).pop(_compose()),
     );
   }
 }

@@ -1007,6 +1007,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get mediaDetailDescription => '설명';
 
   @override
+  String get mediaDetailSectionPreview => '미리 듣기';
+
+  @override
+  String get mediaDetailSectionInfo => '정보';
+
+  @override
   String get mediaDetailMore => '더 보기';
 
   @override
@@ -1104,6 +1110,88 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get downloadCoverDefault => '기본으로';
+
+  @override
+  String get downloadImportLyrics => '자막을 가사로 가져오기';
+
+  @override
+  String get downloadImportLyricsHint => '받은 뒤 가사 보기의 싱크 설정에서 다듬을 수 있어요.';
+
+  @override
+  String get downloadSubtitleChecking => '자막이 있는지 확인하는 중이에요.';
+
+  @override
+  String get downloadSubtitleNone => '이 영상에는 자막이 없어요.';
+
+  @override
+  String get downloadSubtitleUnknown => '자막을 확인하지 못했어요. 켜 두면 받은 뒤 다시 찾아봐요.';
+
+  @override
+  String get downloadSubtitleLanguage => '자막 언어';
+
+  @override
+  String get downloadSubtitleAuto => '자동으로 고르기';
+
+  @override
+  String get downloadSubtitleAutoHint => '한국어 → 영어 → 첫 번째 자막 순으로 골라요.';
+
+  @override
+  String get downloadLyricsPreviewLoading => '불러오는 중…';
+
+  @override
+  String get downloadLyricsPreviewFailed => '자막을 불러오지 못했어요.';
+
+  @override
+  String get downloadSubtitleEditHint =>
+      '글은 고칠 수 있지만 시간은 바꿀 수 없어요. 싱크는 받은 뒤 재생 화면에서 맞춰요.';
+
+  @override
+  String get downloadSubtitleUseEdited => '이 자막 사용';
+
+  @override
+  String get downloadSubtitleEdited => '수정함';
+
+  @override
+  String get downloadLyricsRetry => '다시 불러오기';
+
+  @override
+  String get downloadSubtitleUse => '이 자막 사용';
+
+  @override
+  String get downloadSubtitleInUse => '사용 중인 자막';
+
+  @override
+  String get downloadLyricsSkipSounds => '효과음 줄 빼기';
+
+  @override
+  String get downloadLyricsSkipSoundsHint =>
+      '[음악] · (박수) · ♪ 같은 줄은 가사로 가져오지 않아요.';
+
+  @override
+  String get downloadSubtitleColLanguage => '언어';
+
+  @override
+  String get downloadSubtitleColKind => '종류';
+
+  @override
+  String get downloadSubtitleKindAuto => '자동 생성';
+
+  @override
+  String get downloadSubtitleKindManual => '직접 단 자막';
+
+  @override
+  String downloadSubtitleFound(int count) {
+    return '자막 $count개를 찾았어요.';
+  }
+
+  @override
+  String get downloadSectionInfo => '기본 정보';
+
+  @override
+  String get downloadSectionSave => '저장';
+
+  @override
+  String get downloadSectionLyrics => '가사';
 
   @override
   String get downloadCancelTitle => '받기 취소';
@@ -1386,6 +1474,40 @@ class AppLocalizationsKo extends AppLocalizations {
       '가사를 붙여넣거나 입력하세요. [01:02.30]처럼 시간이 붙은 글이나 .lrc · .txt 파일을 불러오면 싱크 가사가 돼요. 비워서 저장하면 가사를 지워요.';
 
   @override
+  String get lyricsEditSyncedHint =>
+      '왼쪽 시간은 줄 번호에 맞춰 붙어 있어요. 줄을 끼우거나 지우면 시간은 그 자리에 남고 글만 밀려요. 시간은 싱크 설정에서 바꿔요.';
+
+  @override
+  String get lyricsAddLine => '줄 추가';
+
+  @override
+  String get lyricsDeleteLine => '줄 지우기';
+
+  @override
+  String get lyricsTimePrev => '이전';
+
+  @override
+  String get lyricsTimeNow => '현재';
+
+  @override
+  String get lyricsTimeNext => '다음';
+
+  @override
+  String get lyricsTimeNone => '없음';
+
+  @override
+  String get lyricsTimeGroupedAbove => '앞 줄과 같은 시간이라 묶여요';
+
+  @override
+  String get lyricsTimeGroupedBelow => '다음 줄과 같은 시간이라 묶여요';
+
+  @override
+  String get lyricsTimeSeparate => '이 줄부터 묶음에서 떼기';
+
+  @override
+  String get lyricsTimeClearFrom => '여기부터 싱크 지우기';
+
+  @override
   String get lyricsLoadFile => '파일에서 불러오기';
 
   @override
@@ -1445,13 +1567,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsSyncUndo => '되돌리기';
 
   @override
+  String get lyricsSyncPrevious => '싱크 한 칸 지우고 뒤로';
+
+  @override
+  String get lyricsSyncSavePartial => '중간 저장 (찍은 곳까지)';
+
+  @override
   String get lyricsSyncSave => '싱크 저장';
-
-  @override
-  String get lyricsSyncReplay => '이 줄부터 다시 듣기';
-
-  @override
-  String get lyricsSyncReset => '이 싱크로';
 
   @override
   String get lyricsSyncGroup => '한 번에 묶을 줄 수';
@@ -1472,6 +1594,25 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get lyricsSyncPause => '일시정지';
+
+  @override
+  String lyricsSyncBackBy(double n) {
+    return '$n초 전으로 (길게 눌러 단위 바꾸기)';
+  }
+
+  @override
+  String lyricsSyncForwardBy(double n) {
+    return '$n초 뒤로 (길게 눌러 단위 바꾸기)';
+  }
+
+  @override
+  String get lyricsSyncAutoPause => '자동 멈춤';
+
+  @override
+  String get lyricsSyncAutoPauseHint => '다음 줄에 이미 있는 싱크 시간에 닿으면 재생을 멈춰요';
+
+  @override
+  String get lyricsSyncSeek => '재생 위치';
 
   @override
   String lyricsSyncProgress(int done, int total) {
@@ -1517,6 +1658,123 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsSyncDefaultLines => '기본 줄 수 변경';
 
   @override
+  String get lyricsSyncExpandedHint =>
+      '줄별로 펼쳤어요 · 시간을 따로 정할 수 있고, 영역 밖을 누르면 시간이 같은 줄은 다시 합쳐져요';
+
+  @override
+  String get lyricsSyncCancelAfter => '이 싱크로 초기화';
+
+  @override
+  String get lyricsSyncCancelAfterHint => '이 싱크 뒤에 찍은 싱크를 지우고 여기서부터 다시 찍어요';
+
+  @override
+  String get lyricsSyncNextSlot => '이어 찍기';
+
+  @override
+  String get lyricsSyncFollow => '따라가기';
+
+  @override
+  String get lyricsSyncFollowHint =>
+      '켜면 목록이 포커스한 칸을 따라 움직이고, 끄면 가사를 자유롭게 볼 수 있어요';
+
+  @override
+  String get lyricsFollow => '싱크 추적';
+
+  @override
+  String get lyricsThemeList => '목록';
+
+  @override
+  String get lyricsThemeCentered => '가운데 한 줄';
+
+  @override
+  String get lyricsThemeCover => '커버 배경';
+
+  @override
+  String get themeTabPlayer => '플레이어';
+
+  @override
+  String get themeTabLyrics => '가사';
+
+  @override
+  String get lyricsLatencyTitle => '반응 시간 보정';
+
+  @override
+  String get lyricsLatencyEntry => '반응 시간 보정';
+
+  @override
+  String get lyricsLatencyIntro =>
+      '소리를 듣고 지금을 누르면 반응 시간만큼 늦게 찍혀요. 누른 시간에서 아래 값만큼 앞당겨 찍어요.';
+
+  @override
+  String lyricsLatencySeconds(String s) {
+    return '$s초';
+  }
+
+  @override
+  String get lyricsLatencyReset => '기본값 0.20초로';
+
+  @override
+  String get lyricsBeatTitle => '박자 테스트';
+
+  @override
+  String get lyricsBeatBody =>
+      '소리와 함께 원이 깜빡여요. 깜빡일 때마다 가운데 원을 눌러 보세요. 8번 누르면 평균을 계산해 추천 값을 알려 줘요.';
+
+  @override
+  String get lyricsBeatIdle => '시작을 누르세요';
+
+  @override
+  String lyricsBeatProgress(int n, int total) {
+    return '$n/$total번';
+  }
+
+  @override
+  String get lyricsBeatStart => '시작';
+
+  @override
+  String get lyricsBeatStop => '멈추기';
+
+  @override
+  String lyricsBeatResult(String s) {
+    return '추천 보정 $s초';
+  }
+
+  @override
+  String get lyricsBeatApply => '이 값으로 적용';
+
+  @override
+  String get lyricsBeatNote =>
+      '기기마다 화면과 소리 지연이 달라서 안드로이드 기준이에요. 데스크톱은 오차가 클 수 있어요.';
+
+  @override
+  String get lyricsSongCheckTitle => '곡으로 확인';
+
+  @override
+  String get lyricsSongCheckBody =>
+      '곡을 들으면서 소리가 시작되는 순간 찍어 보기를 눌러 보세요. 찍힌 위치부터 다시 들으면 맞게 찍혔는지 알 수 있어요.';
+
+  @override
+  String get lyricsSongTry => '찍어 보기';
+
+  @override
+  String lyricsSongTried(String clock) {
+    return '찍힌 위치 $clock';
+  }
+
+  @override
+  String get lyricsSongListen => '찍힌 위치부터 듣기';
+
+  @override
+  String get lyricsSyncSkipTitle => '찍어 둔 싱크가 사라져요';
+
+  @override
+  String get lyricsSyncSkipBody =>
+      '묶을 범위 안에 이미 찍어 둔 싱크가 있어요. 한 칸으로 묶으면 그 싱크는 지워져요. 계속할까요?';
+
+  @override
+  String get lyricsSyncSkipConfirm => '묶기';
+
+  @override
   String get lyricsSyncResetTitle => '묶음이 사라져요';
 
   @override
@@ -1527,14 +1785,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsSyncResetConfirm => '바꾸기';
 
   @override
-  String get lyricsSyncGroupEdit => '줄 묶기';
+  String lyricsSyncMerged(int n) {
+    return '$n줄 같은 시간으로 묶음';
+  }
 
   @override
-  String get lyricsSyncGroupDone => '완료';
+  String get lyricsSyncUnmerge => '풀기';
 
   @override
-  String get lyricsSyncGroupPanelHint =>
-      '묶을 마지막 줄을 누르거나 끌어서 고르세요. 이 싱크의 시간은 다시 찍어야 해요.';
+  String get playerLyricsExpand => '가사만 크게 보기';
+
+  @override
+  String get playerLyricsCollapse => '가사 닫기';
 
   @override
   String get playerShowLyrics => '가사 보기';
@@ -1777,6 +2039,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get permAudioDesc => '기기에 있는 음악을 불러오는 데 써요.';
 
   @override
+  String get permOverlay => '다른 앱 위에 표시';
+
+  @override
+  String get permOverlayDesc => '다른 앱을 쓰는 동안 화면 위에 가사를 띄우는 데 써요.';
+
+  @override
   String get permBlockedDesc => '요청이 막혀 있어요. 눌러서 휴대폰 설정에서 켜 주세요.';
 
   @override
@@ -1800,6 +2068,22 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsNotifyPlaybackDesc => '알림창 · 잠금화면에서 재생을 조작해요.';
+
+  @override
+  String get lyricsOverlayMinimize => '숨기기';
+
+  @override
+  String get lyricsOverlayTurnOff => '끄기';
+
+  @override
+  String get lyricsOverlayOn => '떠 있는 가사 켜기';
+
+  @override
+  String get lyricsOverlayOff => '떠 있는 가사 끄기';
+
+  @override
+  String get lyricsOverlayNeedPermission =>
+      '설정에서 \"다른 앱 위에 표시\"를 허용한 뒤 다시 켜 주세요.';
 
   @override
   String get settingsNotifyPermission => '시스템 알림이 꺼져 있어요';
@@ -2267,4 +2551,25 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get equalizerSave => '저장';
+
+  @override
+  String get audioLanguageTitle => '오디오 언어';
+
+  @override
+  String get audioLanguageRow => '오디오 언어';
+
+  @override
+  String get audioLanguageOriginal => '원본';
+
+  @override
+  String get audioLanguageHint => '고르면 바로 적용돼요. 미리 듣기와 받기에 같은 언어를 써요.';
+
+  @override
+  String get downloadAgainTitle => '다시 받을까요?';
+
+  @override
+  String get downloadAgainBody => '이미 받은 곡이에요. 다시 받으면 같은 곡이 하나 더 생겨요.';
+
+  @override
+  String get downloadAgainConfirm => '다시 받기';
 }

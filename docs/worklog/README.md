@@ -37,6 +37,7 @@
 | 2026-10-01 | [앱 이름 Mulo · 패키지 com.mulo.app](2026-10-01-rename-mulo.md) | 완료 (PR 대기) |
 | 2026-10-01 | [재생목록 카드 · 요약 · 설정 메뉴](2026-10-01-playlist-card.md) | 완료 (PR 대기) |
 | 2026-10-01 | [설정 보안 섹션 · 앱 잠금](2026-10-01-settings-security.md) | 완료 (PR 대기) |
+| 2026-10-15 | [지문 인증 재확인 (시작 직후 굳음)](2026-10-15-biometric-recheck-on-resume.md) | 완료 (PR 대기) |
 | 2026-10-01 | [검색 · 다운로드 피드백 반영](2026-10-01-search-download-feedback.md) | 완료 (PR 대기) |
 | 2026-10-01 | [서버 주소 dart-define 전환](2026-10-01-server-url-dart-define.md) | 완료 (PR 대기) |
 | 2026-10-01 | [불러오는 폴더 목록 (바텀 시트)](2026-10-01-loaded-folders-sheet.md) | 완료 (PR 대기) |
@@ -101,3 +102,7 @@
 | 2026-10-12 | [블루투스 · 출력 기기 연동](2026-10-12-bluetooth-media-controls.md) | 진행 중 (기기 확인 대기) |
 | 2026-10-12 | [앱 전체 시각 다듬기](2026-10-12-visual-polish.md) | 완료 (PR 확인 대기) |
 | 2026-10-14 | [구독 새 영상 알림 점검 · 진단](2026-10-14-subscription-check-diagnostics.md) | 완료 (merge 대기) |
+| 2026-10-22 | [떠 있는 가사 (오버레이)](2026-10-22-lyrics-overlay.md) | 완료 (PR 대기) |
+| 2026-10-22 | [유튜브 오디오 언어 선택](2026-10-22-youtube-audio-language.md) | 완료 (PR 대기) |
+| 2026-10-22 | [영상 상세 · 받기 페이지 섹션 구분](2026-10-22-section-dividers.md) | 완료 (PR 대기) |
+| 2026-10-22 | [이미 받은 곡 다시 받기 확인](2026-10-22-redownload-confirm.md) | 완료 (PR 대기) |

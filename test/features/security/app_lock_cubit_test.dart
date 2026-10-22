@@ -163,4 +163,20 @@ void main() {
     expect(await c.setBiometricEnabled(true, reason: 'r'), isFalse);
     expect(c.state.biometricEnabled, isFalse);
   });
+
+  test('시작 때 생체 인증이 "없음"으로 답해도 다시 보면 저장된 설정이 살아난다', () async {
+    final repo = MemoryAppLockRepository(pin: '1234', biometric: true);
+    final bio = FakeBiometricAuthenticator(available: false);
+    final c = _cubit(repo, bio);
+    addTearDown(c.close);
+    await c.load();
+    expect(c.state.biometricAvailable, isFalse);
+    expect(c.state.biometricEnabled, isFalse);
+
+    bio.available = true;
+    await c.refreshBiometric();
+    expect(c.state.biometricAvailable, isTrue);
+    expect(c.state.biometricEnabled, isTrue);
+    expect(await c.unlockWithBiometric('r'), isTrue);
+  });
 }

@@ -23,7 +23,7 @@ full의 큰 몫: `libffmpeg.zip.so` 36MB, `libpython.zip.so` 14MB, `libflutter.s
 - 상세 화면(앨범 · 아티스트 · 장르 · 재생목록)을 `LazyTrackList`로 바꿔 보이는 곡 줄만 만든다.
 - 플로팅 재생 버튼은 진행도가 눈에 띄게 변할 때만 다시 그리고, 미니 플레이어 띠는 `RepaintBoundary`로 감쌌다.
 - `CacheCleaner`: 시작할 때 웹 커버 사본 64MB 초과분과 내장 커버 임시 파일을 정리한다.
-- 알림 셔플 버튼: 앱이 없을 때도 알림에 셔플을 둔다. 네이티브가 `extras`를 고쳐 켜고 끈다 (`PlaybackHub.toggleShuffle`). D-108.
+- 알림 셔플 버튼: 앱이 없을 때도 알림에 셔플을 둔다. 네이티브가 `extras`를 고쳐 켜고 끈다 (`PlaybackHub.toggleShuffle`). D-112, D-113.
 
 ## 바꾼 설정
 - 없음 (배포 시 `flutter build apk --release --flavor full --split-per-abi` 권장).
