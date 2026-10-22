@@ -41,30 +41,50 @@ class _HomeView extends StatelessWidget {
     final s = state.summary;
     final player = context.read<NowPlayingCubit>();
 
-    final body = <Widget>[
-      if (state.loaded && s.libraryEmpty)
-        Padding(
-          padding: AppSpacing.screen,
-          child: _EmptyState(
-            title: l10n.homeEmptyLibraryTitle,
-            body: l10n.homeEmptyLibraryBody,
-            action: l10n.homeGoLibrary,
-            onAction: () => context.go(libraryRoute),
-          ),
-        )
-      else ...[
-        RecentSection(summary: s, player: player),
-        const HomeDivider(),
-        HistorySection(summary: s, joinedAt: state.joinedAt),
-        const HomeDivider(),
-        TopPlayedSection(
-          summary: s,
-          player: player,
-          onMore: () => context.push(topTracksLocation),
+    final header = AppTopBar(
+      large: true,
+      title: l10n.navHome,
+      subtitle: l10n.homeSubtitle,
+    );
+
+    // 보관함이 비었으면 구역 대신 안내 하나만, 머리 아래 남은 자리 가운데에 둔다.
+    if (state.loaded && s.libraryEmpty) {
+      return SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            header,
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
+                ),
+                child: _EmptyState(
+                  title: l10n.homeEmptyLibraryTitle,
+                  body: l10n.homeEmptyLibraryBody,
+                  action: l10n.homeGoLibrary,
+                  onAction: () => context.go(libraryRoute),
+                ),
+              ),
+            ),
+          ],
         ),
-        const HomeDivider(),
-        RecommendSection(playlists: s.recommendedPlaylists, player: player),
-      ],
+      );
+    }
+
+    final body = <Widget>[
+      RecentSection(summary: s, player: player),
+      const HomeDivider(),
+      HistorySection(summary: s, joinedAt: state.joinedAt),
+      const HomeDivider(),
+      TopPlayedSection(
+        summary: s,
+        player: player,
+        onMore: () => context.push(topTracksLocation),
+      ),
+      const HomeDivider(),
+      RecommendSection(playlists: s.recommendedPlaylists, player: player),
     ];
 
     return SafeArea(
@@ -77,14 +97,7 @@ class _HomeView extends StatelessWidget {
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            AppTopBar(
-              large: true,
-              title: l10n.navHome,
-              subtitle: l10n.homeSubtitle,
-            ),
-            ...body,
-          ],
+          children: [header, ...body],
         ),
       ),
     );

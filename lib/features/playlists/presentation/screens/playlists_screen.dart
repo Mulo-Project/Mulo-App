@@ -56,14 +56,7 @@ class PlaylistsScreen extends StatelessWidget {
             ),
           // 좋아요 목록 말고 직접 만든 재생목록이 없을 때의 안내.
           if (lists.every((p) => p.isFavorites))
-            Padding(
-              padding: AppSpacing.screen.copyWith(top: AppSpacing.md),
-              child: Text(
-                l10n.playlistsEmpty,
-                style: Theme.of(context).textTheme.bodyMedium
-                    ?.copyWith(color: context.palette.onSurfaceMuted),
-              ),
-            ),
+            EmptyState(title: l10n.playlistsEmpty),
         ],
       ),
     );

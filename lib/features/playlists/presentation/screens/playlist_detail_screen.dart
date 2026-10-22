@@ -130,13 +130,7 @@ class _Body extends StatelessWidget {
             if (downloads.isNotEmpty)
               _Downloads(playlistId: playlistId, items: downloads),
             if (tracks != null && tracks.isEmpty && downloads.isEmpty)
-              Padding(
-                padding: AppSpacing.screen.copyWith(top: AppSpacing.md),
-                child: Text(
-                  l10n.playlistDetailEmpty,
-                  style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
-                ),
-              ),
+              EmptyState(title: l10n.playlistDetailEmpty),
           ],
         ],
         trackCount: tracks?.length ?? 0,

@@ -58,7 +58,6 @@ class QueueScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final p = context.palette;
-    final text = Theme.of(context).textTheme;
     // 재생 위치(초마다 바뀜)는 보지 않는다: 끄는 동안 목록이 다시 그려지면 끊긴다.
     final (queue, index, playing, shuffle) = context.select(
       (NowPlayingCubit c) =>
@@ -86,14 +85,7 @@ class QueueScreen extends StatelessWidget {
                 ),
               Expanded(
                 child: queue.isEmpty
-                    ? Center(
-                        child: Text(
-                          l10n.playerQueueEmpty,
-                          style: text.bodyMedium?.copyWith(
-                            color: p.onSurfaceMuted,
-                          ),
-                        ),
-                      )
+                    ? EmptyState(title: l10n.playerQueueEmpty)
                     : ReorderableListView.builder(
                         padding: EdgeInsets.only(
                           bottom:

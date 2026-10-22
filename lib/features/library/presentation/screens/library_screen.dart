@@ -179,15 +179,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     ),
                   ],
                 ),
-                if (all.isEmpty) ...[
-                  Padding(
-                    padding: AppSpacing.screen,
-                    child: _EmptyLibrary(
-                      importing: importing,
-                      onImport: _import,
-                    ),
-                  ),
-                ] else ...[
+                if (all.isNotEmpty) ...[
                   Padding(
                     padding: AppSpacing.screen,
                     child: _LibraryHero(
@@ -259,7 +251,16 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 ],
               ]),
             ),
-            if (lazySongs && all.isNotEmpty)
+            // 보관함이 비었으면 안내를 머리 아래 남은 자리 가운데에 둔다.
+            if (all.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Padding(
+                  padding: AppSpacing.screen,
+                  child: _EmptyLibrary(importing: importing, onImport: _import),
+                ),
+              )
+            else if (lazySongs)
               SliverList.builder(
                 itemCount: tracks.length,
                 itemBuilder: (context, i) =>
