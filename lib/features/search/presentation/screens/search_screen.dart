@@ -77,45 +77,68 @@ class _SearchScreenState extends State<SearchScreen> {
       value: _cubit,
       child: SafeArea(
         bottom: false,
-        child: ListView(
-          padding: EdgeInsets.only(
-            bottom: AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
-          ),
-          children: [
-            AppTopBar(
-              large: true,
-              title: l10n.navSearch,
-              subtitle: l10n.searchSubtitle,
-            ),
-            Padding(
-              padding: AppSpacing.screen,
-              child: AppSearchField(
-                controller: _controller,
-                hint: _source == SearchSource.youtube
-                    ? l10n.searchHint
-                    : l10n.searchHintSite(sourceLabel(context, _source)),
-                clearTooltip: l10n.actionClear,
-                onChanged: (q) {
-                  if (q.trim().isEmpty) _submit();
-                },
-                onSubmitted: (_) => _submit(),
-                leading: SearchSourceMenu(
-                  source: _source,
-                  onChanged: (s) {
-                    setState(() => _source = s);
-                    if (_controller.text.trim().isNotEmpty) _submit();
-                  },
+        // 안내(처음 · 오류 · 결과 없음)는 검색창 아래 남은 자리 가운데에, 결과는 위에서부터 이어 붙인다.
+        child: CustomScrollView(
+          slivers: [
+            SliverList(
+              delegate: SliverChildListDelegate([
+                AppTopBar(
+                  large: true,
+                  title: l10n.navSearch,
+                  subtitle: l10n.searchSubtitle,
                 ),
-                suffix: RowIconButton(
-                  icon: AppIcons.search,
-                  tooltip: l10n.searchSubmitTooltip,
-                  accent: true,
-                  onPressed: _submit,
+                Padding(
+                  padding: AppSpacing.screen,
+                  child: AppSearchField(
+                    controller: _controller,
+                    hint: _source == SearchSource.youtube
+                        ? l10n.searchHint
+                        : l10n.searchHintSite(sourceLabel(context, _source)),
+                    clearTooltip: l10n.actionClear,
+                    onChanged: (q) {
+                      if (q.trim().isEmpty) _submit();
+                    },
+                    onSubmitted: (_) => _submit(),
+                    leading: SearchSourceMenu(
+                      source: _source,
+                      onChanged: (s) {
+                        setState(() => _source = s);
+                        if (_controller.text.trim().isNotEmpty) _submit();
+                      },
+                    ),
+                    suffix: RowIconButton(
+                      icon: AppIcons.search,
+                      tooltip: l10n.searchSubmitTooltip,
+                      accent: true,
+                      onPressed: _submit,
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(height: AppSpacing.md),
+              ]),
             ),
-            const SizedBox(height: AppSpacing.md),
-            _Body(onRetry: _submit, onPaste: _pasteLink),
+            BlocBuilder<SearchCubit, SearchState>(
+              bloc: _cubit,
+              buildWhen: (a, b) =>
+                  (a.status == SearchStatus.loaded && a.items.isNotEmpty) !=
+                  (b.status == SearchStatus.loaded && b.items.isNotEmpty),
+              builder: (context, state) {
+                final body = Padding(
+                  padding: EdgeInsets.only(
+                    bottom:
+                        AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
+                  ),
+                  child: _Body(onRetry: _submit, onPaste: _pasteLink),
+                );
+                // 결과는 위에서부터 길게 이어 붙이고, 안내는 남은 자리 가운데에 둔다.
+                final isList =
+                    state.status == SearchStatus.loaded &&
+                    state.items.isNotEmpty;
+                return isList
+                    ? SliverToBoxAdapter(child: body)
+                    : SliverFillRemaining(hasScrollBody: false, child: body);
+              },
+            ),
           ],
         ),
       ),
