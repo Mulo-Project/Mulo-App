@@ -6,6 +6,11 @@
 - 위젯은 색 · 그라데이션을 **토큰에서만** 읽는다: `context.palette.accent`, `context.tokens.glow(GlowTone.primary)`.
   `Color(0x…)`, `Colors.xxx`를 화면 코드에 쓰지 않는다. (예외: 테마 소스 입력값)
 - 간격 · 반경 · 시간은 `AppSpacing` · `AppRadii` · `AppMotion` · `AppSizes`.
+- 반경은 작게: 기본 `AppRadii.sm`(12), 큰 카드 · 시트 · 대화상자도 16~20 (D-106).
+- 아이콘 크기는 `AppSizes` 단계만 쓴다: `iconXs` 16 (글자 옆 작은 표시) · `iconSm` 18 (체크 · 펼치기) · `iconMd` 20 (줄 · 메뉴 · 입력칸) · `icon` 22 (버튼 안 기본) · `iconLg` 24 · `iconEmpty` 40 (빈 화면).
+- 제목과 바로 아래 부제 사이는 `AppSpacing.hair`(2).
+- 바텀 시트는 모두 `showAppSheet`로 열고 안쪽 여백은 `appSheetPadding`(가로 16), 제목은 `AppSheetTitle`. 빈 화면 안내는 `EmptyState`.
+- 설명 문구(`...Desc`)와 안내 본문은 문장이면 마침표로 끝낸다. 제목 · 버튼 · 안내 메시지(스낵바)는 마침표 없이.
 - 글자는 `Theme.of(context).textTheme` (글꼴 Pretendard 400 · 500 · 600 · 700), 큰 숫자는 `StatNumber`.
 - **유리**(`GlassSurface` · `GlassCard`: 뒤를 흐리게 비추는 반투명 면 + 왼쪽 위 빛 테두리)는 일부에만 쓴다 (D-015):
   가로 전체 미니 플레이어(모서리 둥글지 않음) · 하단 탭, 원형 버튼 · 보조(tonal) 버튼, 보관함 요약 카드.
@@ -61,24 +66,30 @@ MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부�
 | `AppLineChart` | line_chart.dart | 꺾은선 그래프 (accent 선 · 점, outline 눈금, 최댓값 글자). 외부 차트 패키지 없음 |
 | `PillButton` | buttons.dart | 알약 버튼: accent · primary(단색 + 빛), tonal(유리), outline |
 | `CircleIconButton` | buttons.dart | 원형 유리 버튼, `emphasized` = 강조 색 + 빛 (재생); `onLongPress`로 길게 누르기 |
-| `RowIconButton` | buttons.dart | 목록 줄 오른쪽 작은 아이콘 버튼 (36px, 면 · 흐림 없음, `accent` = 강조 색, `busy` = 돌아가는 표시). 줄마다 `CircleIconButton`(유리)을 놓으면 스크롤이 끊긴다 |
+| `RowIconButton` | buttons.dart | 목록 줄 오른쪽 작은 아이콘 버튼 (36px, 면 · 흐림 없음, `accent` = 강조 색, `filled` = 강조 색으로 채운 동그라미(검색 실행 등), `busy` = 돌아가는 표시). 줄마다 `CircleIconButton`(유리)을 놓으면 스크롤이 끊긴다 |
 | `PlainButton` | buttons.dart | 면 없는 작은 글자 · 아이콘 버튼 (보조 동작 · 한 줄 여러 개) |
 | `MarqueeText` | marquee_text.dart | 한 줄 제목. 칸보다 길 때만 잠깐 멈췄다가 옆으로 흐르고(끝은 흐리게), 들어가면 일반 글자. `scroll: false`면 `…`로 줄임. 플레이어 · 미니 플레이어 · 재생 중인 곡 줄에 쓴다 (목록 전체가 움직이지 않게 나머지 줄은 `…`) |
 | `ProgressRing` · `ProgressLine` | progress.dart | 원형 · 막대 진행 표시 (강조 색 + 빛) |
 | `CountdownRing` | progress.dart | 버튼 안에 들어가는 작은 원형 진행 (가운데에 남은 초) |
 | `MiniPlayerBar` | mini_player_bar.dart | 유리 미니 플레이어 (가로 전체 · 모서리 직각 · 위쪽 선만, 재생 버튼만 원형, 다음 · 대기열은 배경 없는 작은 아이콘, 제목 아래에 작은 출력 기기 표시 `outputIcon`/`outputLabel`). `GlassSurface(rim: false)`로 가장자리 빛 테두리를 끈다 |
+| `FloatingPlayerButton` | floating_player_button.dart | 미니 플레이어를 길게 눌러 끌어낸 동그란 플로팅 버튼 (유리 원 + 커버 아트 + 진행 테두리). 가운데 = 재생 · 일시정지, 버튼에서 떨어져 비스듬히 뻗은 거품 점 = 미니 플레이어로 돌아가기 (화면 안쪽 · 벽에 닿으면 반대쪽 면으로 부드럽게 이동). 위치 · 끌기 · 가장자리 붙이기는 `app/mini_float_layer.dart` |
 | `AppTopBar` | app_top_bar.dart | 상단 바. `large` = 탭 첫 화면(부제 + 큰 제목), 기본 = 원형 버튼 사이 가운데 제목 |
 | `AppBottomNav` | app_bottom_nav.dart | 하단 탭 바 (선택 = 강조 색 + 점). `highlighted` 항목(홈, 가운데)은 강조 색 원 |
 | `AppSearchField` | app_search_field.dart | 알약 입력칸 (돋보기 · 지우기 · 오른쪽 버튼). 글자는 세로 가운데 |
 | `ArtworkBox` · `toneFor()` | artwork_box.dart | 커버 자리 (없으면 그라데이션), 키별 고정 톤. `width`를 주면 직사각형, `color`를 주면 사용자가 고른 색(`glowFromColor`)으로. 이미지는 칸 크기의 2배(화면 배율 포함) 안으로 줄여 디코딩한다 (`ResizeImage`) |
 | `YoutubeMark` | youtube_mark.dart | 유튜브 표시 (직접 그린 빨간 원 + 흰 링 + 흰 재생 삼각형, YouTube Music 모양, 테마와 무관) |
+| `SoundcloudMark` | soundcloud_mark.dart | 사운드클라우드 표시 (주황 둥근 사각형 + 검정 파형 막대 + 구름, 테마와 무관) |
 | `ColorPicker` | color_picker.dart | 커버 색 고르기 (자동 · 견본 12 · 색상 막대). 사용자가 고르는 색이라 견본은 테마 토큰이 아니라 고정 색 (토큰 규칙의 예외) |
 | `TrackTile` | track_tile.dart | 곡 한 줄 (커버 · 제목 · 부제 · 오른쪽 · 아래 줄). `onMenu(Offset)`: 길게 누르기 · 오른쪽 클릭 (눌린 좌표를 넘겨 팝업 메뉴를 그 자리에) |
-| `MenuRow` | menu_row.dart | 메뉴 시트의 한 줄 (아이콘 + 글자, 삭제는 `destructive` 경고 색) |
+| `MenuRow` | menu_row.dart | 메뉴 시트의 한 줄 (아이콘 + 글자, 삭제는 `destructive` 경고 색). 면 · 테두리 없이 줄만, 가로 여백 없이 시트 제목과 왼쪽 선을 맞춘다 |
+| `showAppSheet` · `AppSheetTitle` · `appSheetPadding` | app_sheet.dart | 공통 바텀 시트 (손잡이 · 윗모서리 `AppRadii.sheet` · 최상위 내비게이터), 시트 제목(titleLarge + 작은 부제), 안쪽 여백 |
+| `EmptyState` | empty_state.dart | 빈 화면 · 안내 묶음: (강조 색 아이콘 40) · 제목(titleMedium) · 옅은 설명 · (버튼), 가운데 정렬 |
 | `showAppMenu` · `AppMenuItem` | app_popup_menu.dart | 팝업 메뉴 (아이콘 + 글자, `destructive` 경고 색, `dividerBefore`, 색 견본용 `iconColor`, 고른 항목 `selected` 체크). 눌린 자리 또는 위젯 옆에 최상위 내비게이터로 연다 (곡 메뉴) |
 | `AppSwitch` | app_switch.dart | 토글 (켜짐 = 강조 색) |
+| `AppSlider` | app_slider.dart | 가는 막대 슬라이더 (가로 · 세로, 이퀄라이저) |
 | `PinPad` | pin_pad.dart | PIN 입력 판 (입력 자리 점 + 숫자 키패드, 0 왼쪽 칸에 생체 버튼). 입력값은 밖에서 들고 있음 |
 | `AppTextField` | app_text_field.dart | 라벨이 위에 붙은 둥근 입력칸 (폼). 글자는 세로 가운데. `maxLines`를 주면 여러 줄 |
+| `SectionBlock` | section_card.dart | 긴 화면의 구역: 위 옅은 구분선 + 작은 제목(카드 면 없음). 영상 상세 · 받기 페이지 |
 | `SectionCard` · `SettingRow` | section_card.dart | 설정 묶음(제목 + 구분선, 카드 면 없음) · 한 줄 |
 | `SegmentedPills` · `StatusPill` | segmented_pills.dart | 하나 고르기 알약 묶음 · 상태 알약 |
 | `AppDropdown` | app_dropdown.dart | 알약 드롭다운 (정렬 기준 고르기). 선택값 · 목록 · 문구는 밖에서 받음 |

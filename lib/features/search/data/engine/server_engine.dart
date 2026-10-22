@@ -2,10 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import '../../domain/entities/audio_language.dart';
 import '../../domain/entities/audio_stream.dart';
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/search_source.dart';
+import '../../domain/entities/subtitle_track.dart';
 import '../../domain/repositories/downloader_engine.dart';
 import 'json_fields.dart';
 
@@ -57,7 +59,7 @@ class ServerEngine implements DownloaderEngine {
       'q': query,
       'page': '$page',
       'size': '$size',
-      if (source == SearchSource.web) 'source': 'web',
+      if (source.serverQuery != null) 'source': source.serverQuery!,
       if (newest) 'sort': 'date',
     });
     final items = (json['items'] as List? ?? const [])
@@ -130,7 +132,48 @@ class ServerEngine implements DownloaderEngine {
   Future<AudioStream> resolveAudioStream(
     String url, {
     bool refresh = false,
+    String? audioLanguage,
   }) async => throw const EngineException(EngineFailure.unavailable);
+
+  /// 서버 명세에 오디오 트랙 조회가 없어서 고를 수 있는 언어가 없다.
+  @override
+  Future<List<AudioLanguage>> fetchAudioLanguages(String url) async => const [];
+
+  /// 서버 `GET /api/v1/subtitles?url=&lang=ko,en` — 서버 명세에 아직 없는 제안 형식이다:
+  /// `{"lang": "ko", "auto": false, "cues": [{"startMs": 1200, "text": "..."}]}`.
+  /// 자막이 없거나(404) 서버가 아직 몰라도 null을 돌려준다.
+  @override
+  Future<SubtitleTrack?> fetchSubtitles(
+    String url, {
+    List<String> preferLanguages = const ['ko', 'en'],
+  }) async {
+    final Map<String, dynamic> json;
+    try {
+      json = await _getJson('/subtitles', {
+        'url': url,
+        'lang': preferLanguages.join(','),
+      });
+    } on EngineException catch (e) {
+      if (e.failure == EngineFailure.notFound) return null;
+      rethrow;
+    }
+    final cues = <SubtitleCue>[
+      for (final c in (json['cues'] as List? ?? const []))
+        if (c is Map<String, dynamic> &&
+            c['startMs'] is num &&
+            parseText(c['text']) != null)
+          SubtitleCue(
+            Duration(milliseconds: (c['startMs'] as num).round()),
+            parseText(c['text'])!,
+          ),
+    ];
+    if (cues.isEmpty) return null;
+    return SubtitleTrack(
+      language: parseText(json['lang']) ?? '',
+      automatic: json['auto'] == true,
+      cues: cues,
+    );
+  }
 
   MediaHit _hit(Map<String, dynamic> j) {
     final id = j['videoId'] as String? ?? '';
@@ -153,6 +196,8 @@ class ServerEngine implements DownloaderEngine {
       subscriberCount: parseCount(j['subscriberCount']),
       channelThumbnailUrl: parseText(j['channelThumbnail']),
       creators: parseStrings(j['creators']),
+      subtitleLangs: parseStrings(j['subtitleLangs']),
+      autoSubtitleLangs: parseStrings(j['autoSubtitleLangs']),
     );
   }
 

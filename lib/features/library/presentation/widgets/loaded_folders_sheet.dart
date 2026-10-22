@@ -9,15 +9,9 @@ import '../bloc/loaded_folders_cubit.dart';
 /// 음악을 불러오는 폴더 목록: 확인 · 추가 · 삭제 (바텀 시트).
 Future<void> showLoadedFoldersSheet(BuildContext context) {
   final cubit = context.read<LoadedFoldersCubit>();
-  return showModalBottomSheet<void>(
-    context: context,
-    backgroundColor: context.palette.surface,
-    showDragHandle: true,
+  return showAppSheet<void>(
+    context,
     isScrollControlled: true,
-    useRootNavigator: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadii.card)),
-    ),
     builder: (_) =>
         BlocProvider.value(value: cubit, child: const LoadedFoldersSheet()),
   );
@@ -29,7 +23,6 @@ class LoadedFoldersSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
     final state = context.watch<LoadedFoldersCubit>().state;
     final cubit = context.read<LoadedFoldersCubit>();
 
@@ -39,23 +32,16 @@ class LoadedFoldersSheet extends StatelessWidget {
           maxHeight: MediaQuery.sizeOf(context).height * .8,
         ),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg,
-            0,
-            AppSpacing.lg,
-            AppSpacing.lg,
-          ),
+          padding: appSheetPadding,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(l10n.settingsLoadedFolders, style: text.titleLarge),
-              const SizedBox(height: AppSpacing.xxs),
-              Text(
-                state.busy
+              AppSheetTitle(
+                l10n.settingsLoadedFolders,
+                subtitle: state.busy
                     ? l10n.loadedFoldersScanning
                     : l10n.loadedFoldersHint,
-                style: text.bodySmall,
               ),
               const SizedBox(height: AppSpacing.md),
               Flexible(
@@ -114,7 +100,7 @@ class _FolderRow extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: AppSpacing.hair),
                 Text(
                   folder.isDefault
                       ? '${l10n.loadedFoldersDefault} · ${l10n.loadedFoldersTrackCount(folder.trackCount)}'
@@ -125,10 +111,9 @@ class _FolderRow extends StatelessWidget {
             ),
           ),
           if (!folder.isDefault)
-            CircleIconButton(
+            RowIconButton(
               icon: AppIcons.close,
               tooltip: l10n.loadedFoldersRemove,
-              size: 36,
               onPressed: onRemove,
             ),
         ],

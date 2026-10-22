@@ -18,8 +18,10 @@ class TrackTile extends StatefulWidget {
     this.trailing,
     this.footer,
     this.active = false,
+    this.number,
     this.onTap,
     this.onMenu,
+    this.horizontalPadding = AppSpacing.md,
   });
 
   final String title;
@@ -39,11 +41,17 @@ class TrackTile extends StatefulWidget {
 
   /// 지금 재생 중인 곡이면 제목을 강조 색으로.
   final bool active;
+
+  /// 목록에서 몇 번째 곡인지 (있으면 커버 앞에 작은 숫자로).
+  final int? number;
   final VoidCallback? onTap;
 
   /// 길게 누르기 · 데스크톱 오른쪽 클릭 (곡 메뉴 같은 보조 동작).
   /// 눌린 화면 좌표를 넘기므로 팝업 메뉴를 그 자리에 띄울 수 있다.
   final ValueChanged<Offset>? onMenu;
+
+  /// 줄 좌우 안쪽 여백. 바깥에 이미 여백 · 강조 면이 있으면 줄인다 (대기열).
+  final double horizontalPadding;
 
   @override
   State<TrackTile> createState() => _TrackTileState();
@@ -67,12 +75,22 @@ class _TrackTileState extends State<TrackTile> {
         onSecondaryTap: onMenu == null ? null : () => onMenu(_lastPointer),
         borderRadius: BorderRadius.circular(AppRadii.sm),
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
+          padding: EdgeInsets.symmetric(
+            horizontal: w.horizontalPadding,
             vertical: AppSpacing.xs,
           ),
           child: Row(
             children: [
+              if (w.number != null)
+                SizedBox(
+                  width: 24,
+                  child: Text(
+                    '${w.number}',
+                    style: text.labelMedium?.copyWith(
+                      color: w.active ? p.accent : p.onSurfaceMuted,
+                    ),
+                  ),
+                ),
               w.leading ??
                   ArtworkBox(image: w.artwork, tone: w.tone, color: w.color),
               const SizedBox(width: AppSpacing.sm),
@@ -88,7 +106,7 @@ class _TrackTileState extends State<TrackTile> {
                         color: w.active ? p.accent : p.onSurface,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppSpacing.hair),
                     Text(
                       w.subtitle,
                       maxLines: 1,

@@ -138,11 +138,14 @@ void main() {
       );
       await open(tester, hit: web);
       expect(find.byTooltip('Play in app'), findsNothing);
-      await tester.tap(find.byTooltip('Open original page').first);
+      // 음원이라 영상 문구가 아니라 "듣기" 문구가 나온다.
+      expect(find.byTooltip('Watch on YouTube'), findsNothing);
+      await tester.tap(find.byTooltip('Listen on the original site').first);
       await tester.pumpAndSettle();
       expect(find.text('soundcloud.com'), findsOneWidget);
       expect(find.text('Open channel'), findsNothing);
       expect(opener.opened, [web.url]);
+      expect(find.text('Listen on SoundCloud'), findsOneWidget);
     });
   });
 }

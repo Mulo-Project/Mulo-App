@@ -20,10 +20,11 @@ class SectionCard extends StatelessWidget {
       children: [
         if (title != null)
           Padding(
+            // 제목도 줄 글자와 같은 [AppSpacing.md]에서 시작해 왼쪽 선을 맞춘다.
             padding: const EdgeInsets.fromLTRB(
-              AppSpacing.xs,
+              AppSpacing.md,
               0,
-              AppSpacing.xs,
+              AppSpacing.md,
               AppSpacing.xs,
             ),
             child: Text(title!.toUpperCase(), style: text.labelSmall),
@@ -71,7 +72,7 @@ class SettingRow extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(AppRadii.lg),
+      borderRadius: BorderRadius.circular(AppRadii.sm),
       child: Padding(
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
@@ -88,7 +89,7 @@ class SettingRow extends StatelessWidget {
                     children: [
                       Text(title, style: text.titleSmall),
                       if (description != null) ...[
-                        const SizedBox(height: 2),
+                        const SizedBox(height: AppSpacing.hair),
                         Text(description!, style: text.bodySmall),
                       ],
                     ],
@@ -106,6 +107,48 @@ class SettingRow extends StatelessWidget {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// 긴 화면의 구역: 위에 옅은 구분선, 그 아래 작은 제목, 이어서 내용. 카드 면 없이 선과 여백으로만 나눈다.
+/// [first]면 맨 위 구역이라 구분선과 위 여백을 생략한다.
+class SectionBlock extends StatelessWidget {
+  const SectionBlock({
+    super.key,
+    this.title,
+    required this.children,
+    this.first = false,
+  });
+
+  final String? title;
+  final List<Widget> children;
+  final bool first;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final text = Theme.of(context).textTheme;
+
+    return Padding(
+      padding: EdgeInsets.only(top: first ? 0 : AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (!first) ...[
+            Divider(height: 1, thickness: 1, color: p.outline),
+            const SizedBox(height: AppSpacing.md),
+          ],
+          if (title != null) ...[
+            Text(
+              title!.toUpperCase(),
+              style: text.labelSmall?.copyWith(color: p.onSurfaceMuted),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+          ],
+          ...children,
+        ],
       ),
     );
   }

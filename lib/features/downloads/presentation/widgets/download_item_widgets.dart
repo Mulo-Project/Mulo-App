@@ -10,86 +10,6 @@ import '../../../library/domain/entities/track.dart' show formatDuration;
 import '../../domain/entities/download_item.dart';
 import '../bloc/download_queue_cubit.dart';
 
-/// 검색창 아래 다운로드 영역: 지금 받는 곡 하나와 전체 진행도, 전체 취소 버튼만 보여 준다.
-/// 곡별 진행은 그 곡이 담길 재생목록 상세에서 본다.
-class DownloadProgressCard extends StatelessWidget {
-  const DownloadProgressCard({
-    super.key,
-    required this.current,
-    required this.total,
-    required this.done,
-    required this.progress,
-  });
-
-  final DownloadItem current;
-
-  /// 대기열의 곡 수와 그중 끝난 곡 수.
-  final int total;
-  final int done;
-
-  /// 전체 진행도 (0 ~ 1).
-  final double progress;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final p = context.palette;
-    final text = Theme.of(context).textTheme;
-    final item = current;
-
-    return Material(
-      color: p.surface,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadii.sm),
-        side: BorderSide(color: p.outline),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          TrackTile(
-            title: item.title,
-            subtitle: downloadSubtitle(item),
-            tone: toneFor(item.id),
-            artwork: downloadThumbnail(item),
-            footer: Text(
-              downloadStatusText(l10n, item),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: text.labelSmall?.copyWith(
-                color: item.status == DownloadStatus.failed
-                    ? p.onSurfaceMuted
-                    : p.accent,
-              ),
-            ),
-            trailing: DownloadItemActions(item: item),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.md,
-              0,
-              AppSpacing.xs,
-              AppSpacing.xs,
-            ),
-            child: Row(
-              children: [
-                Expanded(child: ProgressLine(value: progress, height: 4)),
-                const SizedBox(width: AppSpacing.sm),
-                Text(
-                  l10n.downloadsOverall(done, total),
-                  style: text.labelMedium?.copyWith(color: p.onSurfaceMuted),
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                const CancelAllDownloadsButton(),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 /// 상태 글자: 받는 중 N% · 대기 · 일시정지 · 실패 (까닭).
 String downloadStatusText(AppLocalizations l10n, DownloadItem item) =>
     switch (item.status) {
@@ -123,10 +43,10 @@ class CancelAllDownloadsButton extends StatelessWidget {
   final String? playlistId;
 
   @override
-  Widget build(BuildContext context) => CircleIconButton(
-    icon: AppIcons.close,
+  Widget build(BuildContext context) => RowIconButton(
+    // 곡 하나 취소(X)와 달라 보이게 "모두 비우기" 모양.
+    icon: AppIcons.deleteAll,
     tooltip: context.l10n.downloadsCancelAll,
-    size: 32,
     onPressed: () => cancelAllDownloads(context, playlistId: playlistId),
   );
 }
@@ -155,7 +75,6 @@ Future<void> cancelAllDownloads(
         ),
         PillButton(
           label: context.l10n.downloadsCancelAll,
-          icon: AppIcons.close,
           onPressed: () => Navigator.of(dialog).pop(true),
         ),
       ],
@@ -176,12 +95,12 @@ class DownloadItemActions extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        CircleIconButton(
+        RowIconButton(
           icon: AppIcons.refresh,
           tooltip: context.l10n.actionRetry,
-          size: 32,
           onPressed: () => context.read<DownloadQueueCubit>().retry(item.id),
         ),
+        const SizedBox(width: AppSpacing.xs),
         _CancelButton(item: item),
       ],
     );
@@ -208,10 +127,9 @@ class _CancelButton extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => CircleIconButton(
+  Widget build(BuildContext context) => RowIconButton(
     icon: AppIcons.close,
     tooltip: context.l10n.actionCancel,
-    size: 32,
     onPressed: () => _cancel(context),
   );
 }
@@ -235,7 +153,6 @@ class _CancelDialog extends StatelessWidget {
         ),
         PillButton(
           label: l10n.downloadCancelConfirm,
-          icon: AppIcons.close,
           onPressed: () => Navigator.of(context).pop(true),
         ),
       ],

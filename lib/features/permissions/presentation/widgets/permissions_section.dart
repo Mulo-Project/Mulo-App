@@ -67,6 +67,7 @@ class _PermissionsSectionState extends State<PermissionsSection>
   String _title(AppLocalizations l10n, AppPermission p) => switch (p) {
     AppPermission.notifications => l10n.permNotifications,
     AppPermission.audio => l10n.permAudio,
+    AppPermission.overlay => l10n.permOverlay,
   };
 
   String _description(
@@ -78,6 +79,7 @@ class _PermissionsSectionState extends State<PermissionsSection>
     return switch (p) {
       AppPermission.notifications => l10n.permNotificationsDesc,
       AppPermission.audio => l10n.permAudioDesc,
+      AppPermission.overlay => l10n.permOverlayDesc,
     };
   }
 }

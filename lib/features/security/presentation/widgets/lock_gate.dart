@@ -10,10 +10,44 @@ import '../bloc/app_lock_cubit.dart';
 
 /// 앱 위에 덮는 잠금. 앱 잠금이 켜져 있으면 PIN(또는 생체 인증)을 풀 때까지
 /// 내용을 가린다. 설정을 불러오는 동안에도 가려서 잠깐 보이는 일이 없게 한다.
-class LockGate extends StatelessWidget {
+class LockGate extends StatefulWidget {
   const LockGate({super.key, required this.child});
 
   final Widget child;
+
+  @override
+  State<LockGate> createState() => _LockGateState();
+}
+
+class _LockGateState extends State<LockGate> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// 백그라운드에서 돌아올 때(알림을 눌러 들어온 경우 포함) 잠금을 다시 건다.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final cubit = context.read<AppLockCubit>();
+    switch (state) {
+      case AppLifecycleState.paused:
+      case AppLifecycleState.hidden:
+        cubit.appLeft();
+      case AppLifecycleState.resumed:
+        cubit.appReturned();
+        cubit.refreshBiometric();
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.detached:
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +58,7 @@ class LockGate extends StatelessWidget {
         return Stack(
           fit: StackFit.expand,
           children: [
-            child,
+            widget.child,
             if (covered)
               Positioned.fill(
                 child: s.loaded ? const LockScreen() : const _LockCover(),
@@ -75,7 +109,8 @@ class _LockScreenState extends State<LockScreen> {
   Future<void> _tryBiometric() async {
     if (!mounted) return;
     final cubit = context.read<AppLockCubit>();
-    if (!cubit.state.biometricEnabled) return;
+    await cubit.refreshBiometric();
+    if (!mounted || !cubit.state.biometricEnabled) return;
     await cubit.unlockWithBiometric(context.l10n.biometricReason);
   }
 

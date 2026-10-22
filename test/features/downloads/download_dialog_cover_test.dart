@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/di/injector.dart';
-import 'package:music_download_play_app/core/design/icons/app_icons.dart';
 import 'package:music_download_play_app/features/covers/domain/entities/cover_art.dart';
 import 'package:music_download_play_app/features/downloads/domain/entities/download_item.dart';
 
@@ -83,7 +82,7 @@ void main() {
       ],
     );
 
-    await tester.tap(find.byIcon(AppIcons.close).first);
+    await tester.tap(find.byTooltip('취소').first);
     await tester.pumpAndSettle();
     expect(find.text('받기 취소'), findsOneWidget);
     expect(queue.controls, isEmpty);
@@ -93,7 +92,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(queue.controls, isEmpty);
 
-    await tester.tap(find.byIcon(AppIcons.close).first);
+    await tester.tap(find.byTooltip('취소').first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('취소하기'));
     await tester.pumpAndSettle();

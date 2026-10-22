@@ -4,6 +4,7 @@ import 'dart:io';
 import '../../../covers/domain/entities/cover_key.dart';
 import '../../../covers/domain/repositories/cover_repository.dart';
 import '../../../library/domain/entities/track.dart';
+import '../../../lyrics/domain/repositories/lyrics_repository.dart';
 import '../../../library/domain/repositories/library_repository.dart';
 import '../../../playlists/domain/repositories/playlist_repository.dart';
 import '../../../search/domain/entities/engine_exception.dart';
@@ -15,6 +16,7 @@ import '../../domain/repositories/download_queue_repository.dart';
 import '../../domain/repositories/download_settings_repository.dart';
 import '../datasources/audio_file_downloader.dart';
 import '../datasources/audio_transcoder.dart';
+import '../datasources/cover_tag_writer.dart';
 import '../datasources/download_queue_store.dart';
 import '../datasources/downloaded_file_store.dart';
 
@@ -39,6 +41,8 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
     required this._transcoder,
     required this._queueStore,
     required this._tempDir,
+    this._coverTags,
+    this._lyrics,
     DateTime Function()? now,
   }) : _now = now ?? DateTime.now;
 
@@ -51,6 +55,8 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
   final CoverColorRepository _colors;
   final DownloadSettingsRepository _settings;
   final AudioTranscoder _transcoder;
+  final CoverTagWriter? _coverTags;
+  final LyricsRepository? _lyrics;
   final DownloadQueueStore _queueStore;
   final Future<Directory> Function() _tempDir;
   final DateTime Function() _now;
@@ -153,6 +159,40 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
       exists = (await _library.watchTracks().first).any((t) => t.id == trackId);
     }
     return ExistingDownload(trackId: exists ? trackId : null, inQueue: inQueue);
+  }
+
+  /// 받은 곡 키가 바뀌었음을 알린다 (곡을 만든 직후 · 원본 주소 기록 뒤).
+  final _keysChanged = StreamController<void>.broadcast();
+
+  @override
+  Stream<Set<String>> watchDownloadedKeys() {
+    late final StreamController<Set<String>> out;
+    StreamSubscription<Object?>? libSub;
+    StreamSubscription<void>? keySub;
+    var ids = <String>{};
+    void emit() {
+      if (out.isClosed) return;
+      out.add({
+        for (final e in _sources.entries)
+          if (ids.contains(e.value)) e.key,
+      });
+    }
+
+    out = StreamController<Set<String>>(
+      onListen: () async {
+        await _ensureLoaded();
+        libSub = _library.watchTracks().listen((tracks) {
+          ids = {for (final t in tracks) t.id};
+          emit();
+        });
+        keySub = _keysChanged.stream.listen((_) => emit());
+      },
+      onCancel: () async {
+        await libSub?.cancel();
+        await keySub?.cancel();
+      },
+    );
+    return out.stream;
   }
 
   @override
@@ -326,6 +366,7 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
         final stream = await _engine.resolveAudioStream(
           request.url,
           refresh: refresh,
+          audioLanguage: request.audioLanguage,
         );
         if (token.isCancelled) throw const DownloadAborted();
         return _downloader.download(
@@ -372,6 +413,15 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
         if (token.isCancelled) throw const DownloadAborted();
         if (result != null) audio = result;
       }
+
+      // 고른 커버(없으면 썸네일)를 파일 태그에도 넣는다. 쓸 수 없는 형식이면 그대로 저장한다.
+      await _coverTags?.embed(
+        audio.file,
+        extension: audio.extension,
+        cover: request.cover,
+        thumbnailUrl: request.thumbnailUrl,
+      );
+      if (token.isCancelled) throw const DownloadAborted();
 
       final folder = request.savePath.isNotEmpty
           ? request.savePath
@@ -465,7 +515,46 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
     if (color != null) await _colors.save(CoverKey.track(trackId), color);
     // 같은 원본 주소를 다시 받지 않도록 기억한다 (재생목록 가져오기가 건너뛴다).
     _sources[downloadSourceKey(request.url)] = trackId;
+    _keysChanged.add(null);
     await _queueStore.saveSources(_sources);
+    if (request.importLyrics) {
+      await _importLyrics(
+        trackId,
+        request.url,
+        request.lyricsLanguage,
+        skipSounds: request.lyricsSkipSounds,
+        text: request.lyricsText,
+      );
+    }
+  }
+
+  /// 영상 자막을 곡의 싱크 가사(.lrc)로 저장한다. 자막이 없거나 읽지 못해도 받기는 성공으로 둔다
+  /// (가사 보기의 싱크 화면에서 직접 다듬을 수 있다).
+  Future<void> _importLyrics(
+    String trackId,
+    String url,
+    String? language, {
+    required bool skipSounds,
+    String? text,
+  }) async {
+    final repo = _lyrics;
+    if (repo == null) return;
+    try {
+      // 받기 전에 글을 고쳐 둔 가사는 그대로 저장한다.
+      if (text != null && text.trim().isNotEmpty) {
+        await repo.save(trackId, text);
+        return;
+      }
+      final track = await _engine.fetchSubtitles(
+        url,
+        preferLanguages: language == null ? const ['ko', 'en'] : [language],
+      );
+      final lrc =
+          (skipSounds ? track?.withoutSoundCues() : track)?.toLrc() ?? '';
+      if (lrc.isNotEmpty) await repo.save(trackId, lrc);
+    } on Object {
+      // 자막은 덤이라 실패해도 받은 곡은 그대로 둔다.
+    }
   }
 
   static String _fileName(DownloadRequest r) {

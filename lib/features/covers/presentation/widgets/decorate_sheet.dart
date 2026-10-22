@@ -22,16 +22,9 @@ Future<void> showDecorateSheet(
 }) {
   final covers = context.read<CoverCubit>();
   final colors = context.read<CoverColorCubit>();
-  return showModalBottomSheet<void>(
-    context: context,
-    backgroundColor: context.palette.surface,
-    showDragHandle: true,
+  return showAppSheet<void>(
+    context,
     isScrollControlled: true,
-    // 탭 틀(미니 플레이어 · 탭 바) 위에 뜨도록 최상위 내비게이터에서 연다.
-    useRootNavigator: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadii.md)),
-    ),
     builder: (_) => MultiBlocProvider(
       providers: [
         BlocProvider.value(value: covers),
@@ -65,7 +58,7 @@ class _DecorateSheet extends StatelessWidget {
 
   /// 이미지를 고르고 확대 · 위치를 맞춘 뒤 저장한다.
   Future<void> _pick(BuildContext context, CoverCubit covers) async {
-    final picked = await pickCoverArt(context);
+    final picked = await pickCoverArt(context, initialQuery: title);
     if (picked != null) await covers.setArt(coverKey, picked);
   }
 
@@ -92,12 +85,7 @@ class _DecorateSheet extends StatelessWidget {
     return SafeArea(
       child: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.lg,
-            0,
-            AppSpacing.lg,
-            AppSpacing.lg,
-          ),
+          padding: appSheetPadding,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,

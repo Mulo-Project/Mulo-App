@@ -70,7 +70,7 @@ class PillButton extends StatelessWidget {
               _Spinner(size: 16, color: fg),
               const SizedBox(width: AppSpacing.xs),
             ] else if (icon != null) ...[
-              Icon(icon, size: 18, color: fg),
+              Icon(icon, size: AppSizes.iconSm, color: fg),
               const SizedBox(width: AppSpacing.xs),
             ],
             Flexible(
@@ -90,6 +90,7 @@ class PillButton extends StatelessWidget {
       PillVariant.tonal => GlassSurface(
         shape: const StadiumBorder(),
         onTap: onPressed,
+        blur: 0,
         child: content,
       ),
       PillVariant.outline => GlassSurface(
@@ -196,6 +197,7 @@ class CircleIconButton extends StatelessWidget {
         : GlassSurface(
             shape: const CircleBorder(),
             onTap: onPressed,
+            blur: 0,
             child: glyph,
           );
 
@@ -236,6 +238,7 @@ class RowIconButton extends StatelessWidget {
     required this.tooltip,
     this.onPressed,
     this.accent = false,
+    this.filled = false,
     this.busy = false,
     this.busyChild,
   });
@@ -246,6 +249,9 @@ class RowIconButton extends StatelessWidget {
 
   /// 강조 색으로 그린다 (켜진 상태 · 주 동작).
   final bool accent;
+
+  /// 강조 색으로 채운 동그라미 위에 그린다 (검색 실행 같은 주 버튼).
+  final bool filled;
 
   /// 일하는 중: 아이콘 대신 돌아가는 표시를 보인다 (누를 수는 있다).
   final bool busy;
@@ -263,8 +269,12 @@ class RowIconButton extends StatelessWidget {
         child: InkWell(
           onTap: onPressed,
           customBorder: const CircleBorder(),
-          child: SizedBox.square(
-            dimension: AppSizes.rowButton,
+          child: Ink(
+            width: AppSizes.rowButton,
+            height: AppSizes.rowButton,
+            decoration: filled
+                ? BoxDecoration(color: p.accent, shape: BoxShape.circle)
+                : null,
             child: busy
                 ? Center(
                     child: busyChild ?? _Spinner(size: 18, color: p.accent),
@@ -272,7 +282,11 @@ class RowIconButton extends StatelessWidget {
                 : Icon(
                     icon,
                     size: AppSizes.rowButton * .56,
-                    color: accent ? p.accent : p.onSurface,
+                    color: filled
+                        ? p.onAccent
+                        : accent
+                        ? p.accent
+                        : p.onSurface,
                   ),
           ),
         ),
@@ -289,6 +303,7 @@ class PlainButton extends StatelessWidget {
     this.icon,
     this.tooltip,
     this.onPressed,
+    this.onLongPress,
     this.accent = false,
   }) : assert(label != null || icon != null);
 
@@ -296,6 +311,9 @@ class PlainButton extends StatelessWidget {
   final IconData? icon;
   final String? tooltip;
   final VoidCallback? onPressed;
+
+  /// 길게 누르기. 주면 길게 눌러 툴팁을 띄우지 않는다.
+  final VoidCallback? onLongPress;
 
   /// 강조 색으로 그린다 (저장 같은 주 동작).
   final bool accent;
@@ -311,6 +329,7 @@ class PlainButton extends StatelessWidget {
         type: MaterialType.transparency,
         child: InkWell(
           onTap: onPressed,
+          onLongPress: onLongPress,
           borderRadius: BorderRadius.circular(AppRadii.sm),
           child: Padding(
             padding: const EdgeInsets.symmetric(
@@ -321,7 +340,7 @@ class PlainButton extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                if (icon != null) Icon(icon, size: 16, color: fg),
+                if (icon != null) Icon(icon, size: AppSizes.iconXs, color: fg),
                 if (icon != null && label != null)
                   const SizedBox(width: AppSpacing.xxs),
                 if (label != null) Flexible(child: Text(label!, style: style)),
@@ -331,6 +350,12 @@ class PlainButton extends StatelessWidget {
         ),
       ),
     );
-    return tooltip == null ? button : Tooltip(message: tooltip!, child: button);
+    return tooltip == null
+        ? button
+        : Tooltip(
+            message: tooltip!,
+            triggerMode: onLongPress == null ? null : TooltipTriggerMode.manual,
+            child: button,
+          );
   }
 }

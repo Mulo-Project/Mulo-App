@@ -30,6 +30,7 @@ class TrackListTile extends StatelessWidget {
     required this.index,
     this.playlistId,
     this.showAlbum = true,
+    this.showNumber = false,
   });
 
   final Track track;
@@ -40,11 +41,17 @@ class TrackListTile extends StatelessWidget {
   /// 부제에 앨범도 보여 줄지 (앨범 화면에서는 아티스트만).
   final bool showAlbum;
 
+  /// 커버 앞에 목록 속 순번을 보여 줄지 (재생목록 상세).
+  final bool showNumber;
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final vm = context.read<NowPlayingCubit>();
-    final current = context.select((NowPlayingCubit c) => c.state.track);
+    // 곡 전체가 아니라 "이 곡인지"만 고른다: 곡이 바뀔 때 두 줄만 다시 그려진다.
+    final isCurrent = context.select(
+      (NowPlayingCubit c) => c.state.track?.id == track.id,
+    );
     final t = track;
     return TrackTile(
       title: t.title,
@@ -53,7 +60,8 @@ class TrackListTile extends StatelessWidget {
           : artistOf(l10n, t),
       tone: toneFor(t.id),
       color: coverColorOf(context, CoverKey.track(t.id)),
-      active: t == current,
+      active: isCurrent,
+      number: showNumber ? index + 1 : null,
       artwork: coverImageOf(context, CoverKey.track(t.id)),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,

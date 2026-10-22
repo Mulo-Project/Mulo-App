@@ -50,6 +50,11 @@ void main() {
         FakeLibraryRepository(),
         MemoryLoadedFolders(),
       ),
+      FillEmbeddedCovers(
+        FakeLibraryRepository(),
+        MemoryCoverRepository(),
+        FakeEmbeddedCovers(),
+      ),
     );
     addTearDown(cubit.close);
     final states = <LibraryImportState>[];
@@ -61,6 +66,57 @@ void main() {
     expect(states.last.running, isFalse);
     expect(states.last.seq, 1);
     expect((states.last.outcome! as ImportAdded).count, 1);
+  });
+
+  group('FillEmbeddedCovers', () {
+    Track song(String id, {TrackSource source = TrackSource.device}) => Track(
+      id: id,
+      title: id,
+      artist: '',
+      album: '',
+      duration: Duration.zero,
+      uri: 'content://$id',
+      addedAt: DateTime(2026, 10, 1),
+      source: source,
+    );
+
+    test('커버가 없는 기기 곡에만 내장 커버를 붙이고 임시 파일을 치운다', () async {
+      final covers = MemoryCoverRepository();
+      await covers.saveUrl('track:device:b', 'https://example.com/b.jpg');
+      final embedded = FakeEmbeddedCovers({
+        'content://device:a': '/tmp/a.png',
+        'content://device:b': '/tmp/b.png',
+      });
+      final useCase = FillEmbeddedCovers(
+        FakeLibraryRepository([
+          song('device:a'),
+          song('device:b'),
+          song('device:c'),
+          song('download:d', source: TrackSource.download),
+        ]),
+        covers,
+        embedded,
+      );
+      expect(await useCase(const NoParams()), 1);
+      expect(covers.saved['track:device:a']!.path, '/tmp/a.png');
+      // 이미 커버가 있는 곡 · 받은 곡은 읽지도 않는다. 내장 커버가 없는 곡은 그대로.
+      expect(covers.saved['track:device:b']!.isWeb, isTrue);
+      expect(covers.saved.containsKey('track:device:c'), isFalse);
+      expect(embedded.extracted, ['content://device:a', 'content://device:c']);
+      expect(embedded.discarded, ['/tmp/a.png']);
+    });
+
+    test('두 번째 실행은 이미 채운 곡을 다시 읽지 않는다', () async {
+      final embedded = FakeEmbeddedCovers({'content://device:a': '/tmp/a.png'});
+      final useCase = FillEmbeddedCovers(
+        FakeLibraryRepository([song('device:a')]),
+        MemoryCoverRepository(),
+        embedded,
+      );
+      expect(await useCase(const NoParams()), 1);
+      expect(await useCase(const NoParams()), 0);
+      expect(embedded.extracted, ['content://device:a']);
+    });
   });
 
   test('폴더 스캔: 음악 확장자만, 하위 폴더 포함, 파일 이름이 제목', () async {

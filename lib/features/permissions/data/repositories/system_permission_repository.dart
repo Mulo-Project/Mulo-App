@@ -15,6 +15,7 @@ class SystemPermissionRepository implements PermissionRepository {
   List<Permission> _of(AppPermission p) => switch (p) {
     AppPermission.notifications => [Permission.notification],
     AppPermission.audio => [Permission.audio, Permission.storage],
+    AppPermission.overlay => [Permission.systemAlertWindow],
   };
 
   @override

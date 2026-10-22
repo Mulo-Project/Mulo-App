@@ -11,11 +11,13 @@ import 'data/engine/cached_engine.dart';
 import 'data/engine/explode_engine.dart';
 import 'data/engine/local_engine.dart';
 import 'data/engine/routing_engine.dart';
+import 'data/engine/soundcloud_avatar_engine.dart';
 import 'data/engine/server_engine.dart';
 import 'domain/repositories/downloader_engine.dart';
 import 'domain/repositories/link_opener.dart';
 import 'domain/repositories/preview_player.dart';
 import 'domain/usecases/search_usecases.dart';
+import 'presentation/bloc/audio_language_cubit.dart';
 import 'presentation/bloc/preview_cubit.dart';
 import 'presentation/bloc/search_cubit.dart';
 
@@ -24,18 +26,20 @@ void registerSearch(GetIt sl) {
   sl
     ..registerLazySingleton<DownloaderEngine>(
       () => CachedDownloaderEngine(
-        YoutubeExplodeEngine(
-          RoutingDownloaderEngine(
-            local: Platform.isAndroid
-                ? LocalEngine(run: sl<AndroidYtDlp>().run)
-                : Platform.isWindows || Platform.isLinux || Platform.isMacOS
-                ? LocalEngine(
-                    resolveExecutable: sl<YtDlpManager>().executablePath,
-                  )
-                : null,
-            server: AppConfig.hasApiBaseUrl
-                ? ServerEngine(baseUrl: AppConfig.apiBaseUrl)
-                : null,
+        SoundcloudAvatarEngine(
+          YoutubeExplodeEngine(
+            RoutingDownloaderEngine(
+              local: Platform.isAndroid
+                  ? LocalEngine(run: sl<AndroidYtDlp>().run)
+                  : Platform.isWindows || Platform.isLinux || Platform.isMacOS
+                  ? LocalEngine(
+                      resolveExecutable: sl<YtDlpManager>().executablePath,
+                    )
+                  : null,
+              server: AppConfig.hasApiBaseUrl
+                  ? ServerEngine(baseUrl: AppConfig.apiBaseUrl)
+                  : null,
+            ),
           ),
         ),
       ),
@@ -43,11 +47,14 @@ void registerSearch(GetIt sl) {
     ..registerLazySingleton<LinkOpener>(UrlLauncherLinkOpener.new)
     ..registerFactory(() => SearchTracks(sl()))
     ..registerFactory(() => FetchMediaInfo(sl()))
+    ..registerFactory(() => FetchSubtitles(sl()))
     ..registerFactory(() => SearchPlaylists(sl()))
     ..registerFactory(() => FetchChannelInfo(sl()))
     ..registerFactory(() => OpenLink(sl()))
     ..registerLazySingleton<PreviewPlayer>(JustAudioPreviewPlayer.new)
     ..registerFactory(() => ResolveAudioStream(sl()))
+    ..registerFactory(() => FetchAudioLanguages(sl()))
+    ..registerFactory(() => AudioLanguageCubit(sl()))
     ..registerFactory(() => PlayPreview(sl()))
     ..registerFactory(() => SeekPreview(sl()))
     ..registerFactory(() => PausePreview(sl()))

@@ -13,8 +13,11 @@ class MediaSessionInfo extends Equatable {
     this.hasPrevious = true,
     this.hasNext = true,
     this.favorite = false,
+    this.shuffle = false,
     this.preview = false,
     this.coverColors = const [],
+    this.trackId = '',
+    this.hidden = false,
   });
 
   final String title;
@@ -32,11 +35,20 @@ class MediaSessionInfo extends Equatable {
   /// 지금 곡이 좋아요(즐겨찾기)에 들어 있는지 (알림의 하트 모양).
   final bool favorite;
 
+  /// 셔플이 켜져 있는지 (알림의 셔플 버튼 모양).
+  final bool shuffle;
+
   /// 검색 결과 미리 듣기인지 (재생 알림을 잠시 빌려 쓴다. 이전 · 다음 · 좋아요는 없다).
   final bool preview;
 
   /// 커버가 없을 때 그릴 앱 기본 커버의 색(ARGB 정수 세 개, 테마색). 비어 있으면 커버를 두지 않는다.
   final List<int> coverColors;
+
+  /// 지금 곡의 id. 앱이 꺼진 사이 곡이 넘어가면 네이티브가 이 내용이 옛 곡의 것임을 알아본다.
+  final String trackId;
+
+  /// 곡 정보 숨기기 설정이 켜져 있는지 (앱이 꺼진 사이 넘어간 곡에도 지킨다).
+  final bool hidden;
 
   /// 커버 주소만 바꾼 사본.
   MediaSessionInfo withArtUri(String? uri) => MediaSessionInfo(
@@ -50,8 +62,11 @@ class MediaSessionInfo extends Equatable {
     hasPrevious: hasPrevious,
     hasNext: hasNext,
     favorite: favorite,
+    shuffle: shuffle,
     preview: preview,
     coverColors: coverColors,
+    trackId: trackId,
+    hidden: hidden,
   );
 
   @override
@@ -66,12 +81,24 @@ class MediaSessionInfo extends Equatable {
     hasPrevious,
     hasNext,
     favorite,
+    shuffle,
     preview,
     coverColors,
+    trackId,
+    hidden,
   ];
 }
 
-enum MediaCommandType { play, pause, next, previous, seek, stop, favorite }
+enum MediaCommandType {
+  play,
+  pause,
+  next,
+  previous,
+  seek,
+  stop,
+  favorite,
+  shuffle,
+}
 
 /// 재생 알림에 잠시 보여 줄 미리 듣기 (소리가 나는 동안만 만든다).
 class PreviewNotice extends Equatable {

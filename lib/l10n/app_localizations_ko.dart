@@ -34,6 +34,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get actionPause => '일시정지';
 
   @override
+  String get playerFloatExpand => '미니 플레이어로 돌아가기';
+
+  @override
   String get actionNext => '다음 곡';
 
   @override
@@ -88,7 +91,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get searchEmptyBody =>
-      'URL을 붙여넣거나 검색어를 입력하세요.\n유튜브 앱에서 공유를 누르면 바로 여기로 와요.';
+      '링크를 붙여 넣거나 검색어를 입력하세요.\n왼쪽 아이콘으로 찾을 사이트를 고를 수 있어요.';
 
   @override
   String get searchNotReadyTitle => '쓸 수 있는 엔진이 없어요';
@@ -162,6 +165,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadsPauseAll => '모두 일시정지';
 
   @override
+  String get downloadsResumeAll => '모두 이어 받기';
+
+  @override
+  String get downloadsHideCurrent => '받는 곡 정보 숨기기';
+
+  @override
+  String get downloadsShowCurrent => '받는 곡 정보 보이기';
+
+  @override
   String get downloadsClearDone => '완료 지우기';
 
   @override
@@ -217,6 +229,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get sortArtist => '아티스트순';
+
+  @override
+  String get sortCount => '곡 수순';
 
   @override
   String get libraryImport => '기기 음악 불러오기';
@@ -406,6 +421,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lockHint => 'PIN을 입력하세요.';
 
   @override
+  String get settingsBackgroundDownload => '백그라운드 받기';
+
+  @override
+  String get settingsBackgroundDownloadDesc =>
+      '앱이 뒤로 가거나 닫혀도 받기를 이어 가요. 켜 두면 받는 동안 알림이 항상 떠 있어요.';
+
+  @override
   String get settingsHideNotification => '알림에 곡 정보 숨기기';
 
   @override
@@ -414,6 +436,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsTheme => '테마';
+
+  @override
+  String get settingsThemeColorFollowing =>
+      '곡 분위기 따라가기가 켜져 있어 재생 중인 곡의 색을 따라가요.';
 
   @override
   String get settingsFollowMood => '곡 분위기 따라가기';
@@ -428,10 +454,51 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsThemePreview => '테마 미리보기';
 
   @override
-  String get settingsThemePreviewDesc => '고른 테마로 앱 화면들을 직접 둘러보고 적용해요';
+  String get settingsThemePreviewDesc => '고른 테마로 앱 화면들을 직접 둘러보고 적용해요.';
+
+  @override
+  String get settingsPlayback => '재생 설정';
+
+  @override
+  String get settingsMixWithOthers => '다른 앱과 함께 재생';
+
+  @override
+  String get settingsMixWithOthersDesc =>
+      '다른 앱에서 소리가 나도 멈추지 않고 같이 들려요. 소리가 겹쳐 시끄러울 수 있어요.';
+
+  @override
+  String get settingsPauseOnDisconnect => '기기가 끊기면 일시정지';
+
+  @override
+  String get settingsPauseOnDisconnectDesc => '이어폰을 빼거나 블루투스 연결이 끊기면 재생을 멈춰요.';
+
+  @override
+  String get settingsResumeOnConnect => '기기가 연결되면 이어 재생';
+
+  @override
+  String get settingsResumeOnConnectDesc =>
+      '끊겨서 멈춘 재생을 10분 안에 다시 연결하면 이어서 재생해요.';
+
+  @override
+  String get settingsResumeWithoutNotification => '알림이 없어도 블루투스로 재생';
+
+  @override
+  String get settingsResumeWithoutNotificationDesc =>
+      '알림을 지웠거나 재생이 끝난 뒤에도 블루투스 기기의 재생 버튼으로 마지막 곡을 이어서 재생해요.';
 
   @override
   String get playerStyleTitle => '플레이어 테마';
+
+  @override
+  String get playerSpeedTitle => '재생 속도';
+
+  @override
+  String playerSpeedValue(String speed) {
+    return '$speed배속';
+  }
+
+  @override
+  String get playerSpeedNormal => '보통';
 
   @override
   String get playerStyleSquare => '네모';
@@ -459,13 +526,19 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get playerSleepTimerUnitHour => '시간';
+
+  @override
+  String get playerSleepTimerUnitMinute => '분';
+
+  @override
+  String get playerSleepTimerStart => '시작';
+
+  @override
   String get playerSleepTimerCleared => '수면 타이머를 껐어요';
 
   @override
   String get playerEqualizer => '이퀄라이저';
-
-  @override
-  String get playerEqualizerSoon => '이퀄라이저는 준비 중이에요';
 
   @override
   String get playerLyrics => '가사';
@@ -513,7 +586,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get outputOther => '외부 출력';
 
   @override
-  String get queueShuffle => '다음 곡 섞기';
+  String get shuffleOn => '셔플 켜기';
+
+  @override
+  String get shuffleOff => '셔플 끄기';
 
   @override
   String get queueClear => '대기열 비우기';
@@ -582,6 +658,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get coverAdjust => '위치 조정';
+
+  @override
+  String get coverWebBrowserHelp => '마음에 드는 이미지를 누르면 바로 편집 화면으로 가요.';
 
   @override
   String get coverWebHint => '이미지 주소 또는 검색어';
@@ -842,16 +921,27 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get searchHintWeb => '웹 음원 검색어나 URL';
+  String searchHintSite(String site) {
+    return '$site URL이나 검색어';
+  }
+
+  @override
+  String get sourceSoundcloud => 'SoundCloud';
+
+  @override
+  String get searchSubmitTooltip => '검색';
+
+  @override
+  String get searchPasteLink => '링크 붙여넣기';
+
+  @override
+  String get searchPasteEmpty => '클립보드에 링크가 없어요';
 
   @override
   String get searchSourceTooltip => '검색 대상';
 
   @override
   String get sourceYoutube => '유튜브';
-
-  @override
-  String get sourceWeb => '웹';
 
   @override
   String get searchHitMenuDetail => '상세 보기';
@@ -887,6 +977,26 @@ class AppLocalizationsKo extends AppLocalizations {
   String get mediaDetailOpenOriginal => '원본 페이지 열기';
 
   @override
+  String get mediaDetailListenOriginal => '원본 사이트에서 듣기';
+
+  @override
+  String get mediaDetailListenSoundcloud => 'SoundCloud에서 듣기';
+
+  @override
+  String get mediaDetailOpenArtist => '아티스트 보기';
+
+  @override
+  String get mediaDetailPlays => '재생수';
+
+  @override
+  String get mediaDetailGenre => '장르';
+
+  @override
+  String mediaDetailFollowers(String count) {
+    return '팔로워 $count명';
+  }
+
+  @override
   String get mediaDetailChannel => '채널';
 
   @override
@@ -912,6 +1022,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get mediaDetailDescription => '설명';
+
+  @override
+  String get mediaDetailSectionPreview => '미리 듣기';
+
+  @override
+  String get mediaDetailSectionInfo => '정보';
 
   @override
   String get mediaDetailMore => '더 보기';
@@ -990,6 +1106,11 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String downloadsRemaining(int count) {
+    return '$count곡 남음';
+  }
+
+  @override
   String get downloadsExpand => '대기 목록 펼치기';
 
   @override
@@ -1006,6 +1127,88 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get downloadCoverDefault => '기본으로';
+
+  @override
+  String get downloadImportLyrics => '자막을 가사로 가져오기';
+
+  @override
+  String get downloadImportLyricsHint => '받은 뒤 가사 보기의 싱크 설정에서 다듬을 수 있어요.';
+
+  @override
+  String get downloadSubtitleChecking => '자막이 있는지 확인하는 중이에요.';
+
+  @override
+  String get downloadSubtitleNone => '이 영상에는 자막이 없어요.';
+
+  @override
+  String get downloadSubtitleUnknown => '자막을 확인하지 못했어요. 켜 두면 받은 뒤 다시 찾아봐요.';
+
+  @override
+  String get downloadSubtitleLanguage => '자막 언어';
+
+  @override
+  String get downloadSubtitleAuto => '자동으로 고르기';
+
+  @override
+  String get downloadSubtitleAutoHint => '한국어 → 영어 → 첫 번째 자막 순으로 골라요.';
+
+  @override
+  String get downloadLyricsPreviewLoading => '불러오는 중…';
+
+  @override
+  String get downloadLyricsPreviewFailed => '자막을 불러오지 못했어요.';
+
+  @override
+  String get downloadSubtitleEditHint =>
+      '글은 고칠 수 있지만 시간은 바꿀 수 없어요. 싱크는 받은 뒤 재생 화면에서 맞춰요.';
+
+  @override
+  String get downloadSubtitleUseEdited => '이 자막 사용';
+
+  @override
+  String get downloadSubtitleEdited => '수정함';
+
+  @override
+  String get downloadLyricsRetry => '다시 불러오기';
+
+  @override
+  String get downloadSubtitleUse => '이 자막 사용';
+
+  @override
+  String get downloadSubtitleInUse => '사용 중인 자막';
+
+  @override
+  String get downloadLyricsSkipSounds => '효과음 줄 빼기';
+
+  @override
+  String get downloadLyricsSkipSoundsHint =>
+      '[음악] · (박수) · ♪ 같은 줄은 가사로 가져오지 않아요.';
+
+  @override
+  String get downloadSubtitleColLanguage => '언어';
+
+  @override
+  String get downloadSubtitleColKind => '종류';
+
+  @override
+  String get downloadSubtitleKindAuto => '자동 생성';
+
+  @override
+  String get downloadSubtitleKindManual => '직접 단 자막';
+
+  @override
+  String downloadSubtitleFound(int count) {
+    return '자막 $count개를 찾았어요.';
+  }
+
+  @override
+  String get downloadSectionInfo => '기본 정보';
+
+  @override
+  String get downloadSectionSave => '저장';
+
+  @override
+  String get downloadSectionLyrics => '가사';
 
   @override
   String get downloadCancelTitle => '받기 취소';
@@ -1058,6 +1261,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadGenreExisting => '기존 장르에서 고르기';
 
   @override
+  String get saveFolderTitle => '저장 위치 고르기';
+
+  @override
+  String get saveFolderEmpty => '불러오는 폴더가 없어요. 직접 선택해 주세요.';
+
+  @override
+  String get saveFolderPickOther => '직접 선택';
+
+  @override
   String get downloadPickFolder => '폴더 고르기';
 
   @override
@@ -1074,6 +1286,21 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get downloadQueued => '대기열에 넣었어요';
+
+  @override
+  String get downloadAlreadyDownloaded => '이미 받은 곡이에요';
+
+  @override
+  String get downloadStateDownloading => '받는 중';
+
+  @override
+  String get downloadStateQueued => '대기 중';
+
+  @override
+  String get downloadStateDone => '받음';
+
+  @override
+  String get downloadAlreadyInQueue => '이미 받는 중이거나 대기 중인 곡이에요';
 
   @override
   String get homeTopGenre => '많이 들은 장르';
@@ -1184,6 +1411,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get trackMenuDelete => '삭제';
 
   @override
+  String get trackMenuRemoveFromQueue => '대기열에서 빼기';
+
+  @override
+  String get trackRemovedFromQueue => '대기열에서 뺐어요.';
+
+  @override
   String get trackMenuRemoveFromPlaylist => '재생목록에서 빼기';
 
   @override
@@ -1258,6 +1491,40 @@ class AppLocalizationsKo extends AppLocalizations {
       '가사를 붙여넣거나 입력하세요. [01:02.30]처럼 시간이 붙은 글이나 .lrc · .txt 파일을 불러오면 싱크 가사가 돼요. 비워서 저장하면 가사를 지워요.';
 
   @override
+  String get lyricsEditSyncedHint =>
+      '왼쪽 시간은 줄 번호에 맞춰 붙어 있어요. 줄을 끼우거나 지우면 시간은 그 자리에 남고 글만 밀려요. 시간은 싱크 설정에서 바꿔요.';
+
+  @override
+  String get lyricsAddLine => '줄 추가';
+
+  @override
+  String get lyricsDeleteLine => '줄 지우기';
+
+  @override
+  String get lyricsTimePrev => '이전';
+
+  @override
+  String get lyricsTimeNow => '현재';
+
+  @override
+  String get lyricsTimeNext => '다음';
+
+  @override
+  String get lyricsTimeNone => '없음';
+
+  @override
+  String get lyricsTimeGroupedAbove => '앞 줄과 같은 시간이라 묶여요';
+
+  @override
+  String get lyricsTimeGroupedBelow => '다음 줄과 같은 시간이라 묶여요';
+
+  @override
+  String get lyricsTimeSeparate => '이 줄부터 묶음에서 떼기';
+
+  @override
+  String get lyricsTimeClearFrom => '여기부터 싱크 지우기';
+
+  @override
   String get lyricsLoadFile => '파일에서 불러오기';
 
   @override
@@ -1317,13 +1584,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsSyncUndo => '되돌리기';
 
   @override
+  String get lyricsSyncPrevious => '싱크 한 칸 지우고 뒤로';
+
+  @override
+  String get lyricsSyncSavePartial => '중간 저장 (찍은 곳까지)';
+
+  @override
   String get lyricsSyncSave => '싱크 저장';
-
-  @override
-  String get lyricsSyncReplay => '이 줄부터 다시 듣기';
-
-  @override
-  String get lyricsSyncReset => '이 싱크로';
 
   @override
   String get lyricsSyncGroup => '한 번에 묶을 줄 수';
@@ -1344,6 +1611,25 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get lyricsSyncPause => '일시정지';
+
+  @override
+  String lyricsSyncBackBy(double n) {
+    return '$n초 전으로 (길게 눌러 단위 바꾸기)';
+  }
+
+  @override
+  String lyricsSyncForwardBy(double n) {
+    return '$n초 뒤로 (길게 눌러 단위 바꾸기)';
+  }
+
+  @override
+  String get lyricsSyncAutoPause => '자동 멈춤';
+
+  @override
+  String get lyricsSyncAutoPauseHint => '다음 줄에 이미 있는 싱크 시간에 닿으면 재생을 멈춰요';
+
+  @override
+  String get lyricsSyncSeek => '재생 위치';
 
   @override
   String lyricsSyncProgress(int done, int total) {
@@ -1389,6 +1675,123 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsSyncDefaultLines => '기본 줄 수 변경';
 
   @override
+  String get lyricsSyncExpandedHint =>
+      '줄별로 펼쳤어요 · 시간을 따로 정할 수 있고, 영역 밖을 누르면 시간이 같은 줄은 다시 합쳐져요';
+
+  @override
+  String get lyricsSyncCancelAfter => '이 싱크로 초기화';
+
+  @override
+  String get lyricsSyncCancelAfterHint => '이 싱크 뒤에 찍은 싱크를 지우고 여기서부터 다시 찍어요';
+
+  @override
+  String get lyricsSyncNextSlot => '이어 찍기';
+
+  @override
+  String get lyricsSyncFollow => '따라가기';
+
+  @override
+  String get lyricsSyncFollowHint =>
+      '켜면 목록이 포커스한 칸을 따라 움직이고, 끄면 가사를 자유롭게 볼 수 있어요';
+
+  @override
+  String get lyricsFollow => '싱크 추적';
+
+  @override
+  String get lyricsThemeList => '목록';
+
+  @override
+  String get lyricsThemeCentered => '가운데 한 줄';
+
+  @override
+  String get lyricsThemeCover => '커버 배경';
+
+  @override
+  String get themeTabPlayer => '플레이어';
+
+  @override
+  String get themeTabLyrics => '가사';
+
+  @override
+  String get lyricsLatencyTitle => '반응 시간 보정';
+
+  @override
+  String get lyricsLatencyEntry => '반응 시간 보정';
+
+  @override
+  String get lyricsLatencyIntro =>
+      '소리를 듣고 지금을 누르면 반응 시간만큼 늦게 찍혀요. 누른 시간에서 아래 값만큼 앞당겨 찍어요.';
+
+  @override
+  String lyricsLatencySeconds(String s) {
+    return '$s초';
+  }
+
+  @override
+  String get lyricsLatencyReset => '기본값 0.20초로';
+
+  @override
+  String get lyricsBeatTitle => '박자 테스트';
+
+  @override
+  String get lyricsBeatBody =>
+      '소리와 함께 원이 깜빡여요. 깜빡일 때마다 가운데 원을 눌러 보세요. 8번 누르면 평균을 계산해 추천 값을 알려 줘요.';
+
+  @override
+  String get lyricsBeatIdle => '시작을 누르세요';
+
+  @override
+  String lyricsBeatProgress(int n, int total) {
+    return '$n/$total번';
+  }
+
+  @override
+  String get lyricsBeatStart => '시작';
+
+  @override
+  String get lyricsBeatStop => '멈추기';
+
+  @override
+  String lyricsBeatResult(String s) {
+    return '추천 보정 $s초';
+  }
+
+  @override
+  String get lyricsBeatApply => '이 값으로 적용';
+
+  @override
+  String get lyricsBeatNote =>
+      '기기마다 화면과 소리 지연이 달라서 안드로이드 기준이에요. 데스크톱은 오차가 클 수 있어요.';
+
+  @override
+  String get lyricsSongCheckTitle => '곡으로 확인';
+
+  @override
+  String get lyricsSongCheckBody =>
+      '곡을 들으면서 소리가 시작되는 순간 찍어 보기를 눌러 보세요. 찍힌 위치부터 다시 들으면 맞게 찍혔는지 알 수 있어요.';
+
+  @override
+  String get lyricsSongTry => '찍어 보기';
+
+  @override
+  String lyricsSongTried(String clock) {
+    return '찍힌 위치 $clock';
+  }
+
+  @override
+  String get lyricsSongListen => '찍힌 위치부터 듣기';
+
+  @override
+  String get lyricsSyncSkipTitle => '찍어 둔 싱크가 사라져요';
+
+  @override
+  String get lyricsSyncSkipBody =>
+      '묶을 범위 안에 이미 찍어 둔 싱크가 있어요. 한 칸으로 묶으면 그 싱크는 지워져요. 계속할까요?';
+
+  @override
+  String get lyricsSyncSkipConfirm => '묶기';
+
+  @override
   String get lyricsSyncResetTitle => '묶음이 사라져요';
 
   @override
@@ -1399,14 +1802,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsSyncResetConfirm => '바꾸기';
 
   @override
-  String get lyricsSyncGroupEdit => '줄 묶기';
+  String lyricsSyncMerged(int n) {
+    return '$n줄 같은 시간으로 묶음';
+  }
 
   @override
-  String get lyricsSyncGroupDone => '완료';
+  String get lyricsSyncUnmerge => '풀기';
 
   @override
-  String get lyricsSyncGroupPanelHint =>
-      '묶을 마지막 줄을 누르거나 끌어서 고르세요. 이 싱크의 시간은 다시 찍어야 해요.';
+  String get playerLyricsExpand => '가사만 크게 보기';
+
+  @override
+  String get playerLyricsCollapse => '가사 닫기';
 
   @override
   String get playerShowLyrics => '가사 보기';
@@ -1573,7 +1980,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsGoogleAccount => '구글 계정';
 
   @override
-  String get settingsAccountSignedOutDesc => '로그인하면 내 유튜브 재생목록을 불러올 수 있어요';
+  String get settingsAccountSignedOutDesc => '로그인하면 내 유튜브 재생목록을 불러올 수 있어요.';
 
   @override
   String get settingsAccountSignIn => '로그인';
@@ -1649,6 +2056,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get permAudioDesc => '기기에 있는 음악을 불러오는 데 써요.';
 
   @override
+  String get permOverlay => '다른 앱 위에 표시';
+
+  @override
+  String get permOverlayDesc => '다른 앱을 쓰는 동안 화면 위에 가사를 띄우는 데 써요.';
+
+  @override
   String get permBlockedDesc => '요청이 막혀 있어요. 눌러서 휴대폰 설정에서 켜 주세요.';
 
   @override
@@ -1674,6 +2087,22 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsNotifyPlaybackDesc => '알림창 · 잠금화면에서 재생을 조작해요.';
 
   @override
+  String get lyricsOverlayMinimize => '숨기기';
+
+  @override
+  String get lyricsOverlayTurnOff => '끄기';
+
+  @override
+  String get lyricsOverlayOn => '떠 있는 가사 켜기';
+
+  @override
+  String get lyricsOverlayOff => '떠 있는 가사 끄기';
+
+  @override
+  String get lyricsOverlayNeedPermission =>
+      '설정에서 \"다른 앱 위에 표시\"를 허용한 뒤 다시 켜 주세요.';
+
+  @override
   String get settingsNotifyPermission => '시스템 알림이 꺼져 있어요';
 
   @override
@@ -1689,7 +2118,17 @@ class AppLocalizationsKo extends AppLocalizations {
   String get notifPreviewLabel => '미리 듣기';
 
   @override
+  String notifSleepAt(String time) {
+    return '$time에 수면 타이머';
+  }
+
+  @override
   String get notifHiddenNote => '곡 정보 숨김';
+
+  @override
+  String notifHiddenNotePosition(String n, String total) {
+    return '곡 정보 숨김 · $n/$total번째 곡';
+  }
 
   @override
   String get notifStop => '닫기';
@@ -1715,9 +2154,29 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String notifDownloadProgressMore(int percent, int count) {
-    return '받는 중 · $percent% · $count곡 대기';
+  String notifDownloadProgressNext(int percent, String next) {
+    return '받는 중 · $percent% · 다음 곡: $next';
   }
+
+  @override
+  String notifDownloadOverall(int done, int total, int percent) {
+    return '전체 $done/$total곡 · $percent%';
+  }
+
+  @override
+  String get notifDownloadPreview => '미리듣기';
+
+  @override
+  String get notifDownloadCancel => '취소';
+
+  @override
+  String get notifDownloadPausePreview => '일시정지';
+
+  @override
+  String get notifDownloadResumePreview => '이어 듣기';
+
+  @override
+  String get notifDownloadStopPreview => '중지';
 
   @override
   String get notifDownloadDoneTitle => '받기 완료';
@@ -1730,4 +2189,404 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get notifDownloadFailedHidden => '곡을 받지 못했어요';
+
+  @override
+  String get subscribeAction => '구독';
+
+  @override
+  String get subscribedAction => '구독 중';
+
+  @override
+  String get subscribeAdded => '구독했어요. 지금부터 올라오는 영상을 알려 드려요';
+
+  @override
+  String get subscribeFailed => '이 채널은 구독할 수 없어요';
+
+  @override
+  String get unsubscribed => '구독을 해제했어요';
+
+  @override
+  String get subscriptionsTitle => '구독 채널';
+
+  @override
+  String get subscriptionsSubtitle => '새 영상 골라 받기';
+
+  @override
+  String get subscriptionsEmptyTitle => '구독한 채널이 없어요';
+
+  @override
+  String get subscriptionsEmptyBody =>
+      '영상 상세에서 채널의 구독을 누르면 새 영상이 올라올 때 골라서 받을 수 있어요.';
+
+  @override
+  String get subscriptionsNewVideos => '새 영상 보기';
+
+  @override
+  String get subscriptionsUnsubscribe => '구독 해제';
+
+  @override
+  String subscriptionsCount(int count) {
+    return '$count개 채널';
+  }
+
+  @override
+  String get newVideosTitle => '새 영상';
+
+  @override
+  String get newVideosChecking => '새 영상을 확인하고 있어요';
+
+  @override
+  String get newVideosEmptyTitle => '새 영상이 없어요';
+
+  @override
+  String get newVideosEmptyBody => '구독한 채널에 새 영상이 올라오면 여기에서 골라 받을 수 있어요.';
+
+  @override
+  String newVideosStart(int count) {
+    return '$count곡 받기';
+  }
+
+  @override
+  String newVideosStarted(int count) {
+    return '$count곡을 받기 시작했어요';
+  }
+
+  @override
+  String get newVideosSkipped => '이미 받은 곡이라 새로 받을 곡이 없어요';
+
+  @override
+  String get newVideosSelectAll => '모두 선택';
+
+  @override
+  String get newVideosSelectNone => '선택 해제';
+
+  @override
+  String newVideosAnnounce(int count) {
+    return '구독 채널에 새 영상이 $count개 있어요';
+  }
+
+  @override
+  String get newVideosOpen => '보기';
+
+  @override
+  String get settingsSubscriptions => '구독';
+
+  @override
+  String get settingsSubscriptionChannels => '구독 채널';
+
+  @override
+  String get settingsCheckOnLaunch => '앱을 켤 때 새 영상 확인';
+
+  @override
+  String get settingsCheckOnLaunchDesc => '구독한 채널에 새 영상이 있으면 알려 주고 골라서 받게 해요.';
+
+  @override
+  String get settingsBackgroundCheck => '앱이 꺼져 있어도 확인';
+
+  @override
+  String get settingsBackgroundCheckDesc => '주기적으로 확인하고 새 영상이 있으면 알림으로 알려요.';
+
+  @override
+  String get settingsCheckInterval => '확인 주기';
+
+  @override
+  String settingsCheckIntervalHours(int count) {
+    return '$count시간';
+  }
+
+  @override
+  String get settingsCheckWifiOnly => '와이파이에서만 확인';
+
+  @override
+  String get settingsCheckWifiOnlyDesc => '데이터를 쓰지 않도록 와이파이에 연결됐을 때만 확인해요.';
+
+  @override
+  String get settingsCheckNow => '지금 확인';
+
+  @override
+  String get settingsCheckNowChecking => '확인하는 중…';
+
+  @override
+  String get settingsCheckStatusNever => '아직 확인한 적이 없어요.';
+
+  @override
+  String settingsCheckStatusLast(String time) {
+    return '마지막 확인 $time';
+  }
+
+  @override
+  String settingsCheckStatusNotified(int count) {
+    return '새 영상 $count개를 알렸어요.';
+  }
+
+  @override
+  String settingsCheckStatusFailed(int count) {
+    return '채널 $count개를 읽지 못했어요.';
+  }
+
+  @override
+  String get settingsCheckStatusBlocked =>
+      '알림이 꺼져 있어 알리지 못했어요. 기기 설정에서 Mulo 알림(새 영상 포함)을 켜 주세요.';
+
+  @override
+  String get settingsCheckStatusNotScheduled =>
+      '주기 확인이 예약되지 않았어요. 위 스위치를 껐다 켜 보세요.';
+
+  @override
+  String get notifChannelNewVideos => '새 영상';
+
+  @override
+  String get notifNewVideosTitle => '구독 채널에 새 영상이 올라왔어요';
+
+  @override
+  String notifNewVideosBody(String channels, String count) {
+    return '$channels · 새 영상 $count개';
+  }
+
+  @override
+  String get channelSearchTitle => '채널 검색';
+
+  @override
+  String get channelSearchHint => '채널 이름으로 찾기';
+
+  @override
+  String get channelSearchIdle => '구독할 채널 이름을 검색해 보세요';
+
+  @override
+  String get channelSearchLoading => '채널을 찾는 중이에요';
+
+  @override
+  String get channelSearchEmpty => '찾은 채널이 없어요';
+
+  @override
+  String get channelSearchFailed => '채널을 찾지 못했어요. 잠시 뒤 다시 시도해 주세요';
+
+  @override
+  String get subscriptionsTestTitle => '임시 · 모양 확인용';
+
+  @override
+  String get subscriptionsTestNotification => '새 영상 알림 띄우기';
+
+  @override
+  String get subscriptionsTestNewVideos => '새 영상 화면 미리 보기';
+
+  @override
+  String get categoryAll => '모든 분류';
+
+  @override
+  String get subscriptionsCategories => '알림 받을 분류';
+
+  @override
+  String get subscriptionsCategoriesDesc =>
+      '고른 분류의 새 영상만 알리고 보여 줘요. 고르지 않으면 모든 분류예요.';
+
+  @override
+  String channelInfoVideoCount(int count) {
+    return '영상 $count개';
+  }
+
+  @override
+  String get channelSaveFolder => '저장 위치';
+
+  @override
+  String get channelSaveFolderDefault => '기본 저장 위치';
+
+  @override
+  String get channelSaveFolderChange => '변경';
+
+  @override
+  String get channelSaveFolderReset => '기본으로';
+
+  @override
+  String get notifNewVideoDownloadNow => '바로 받기';
+
+  @override
+  String get equalizerTitle => '이퀄라이저';
+
+  @override
+  String get equalizerOn => '켜짐';
+
+  @override
+  String get equalizerOff => '꺼짐';
+
+  @override
+  String get equalizerUnsupported => '이 기기에서는 이퀄라이저를 쓸 수 없어요';
+
+  @override
+  String get equalizerEnable => '이퀄라이저 사용';
+
+  @override
+  String get equalizerEnableDesc => '켜면 아래 설정대로 소리를 다듬어요. 기본은 꺼짐이에요.';
+
+  @override
+  String get equalizerDeviceProfile => '이 기기 전용으로 저장';
+
+  @override
+  String equalizerDeviceProfileDesc(String device) {
+    return '$device에 연결되면 이 설정을 자동으로 적용해요.';
+  }
+
+  @override
+  String get equalizerMyPresets => '내 프리셋';
+
+  @override
+  String get equalizerMyPresetsHint => '길게 누르면 지워요';
+
+  @override
+  String get equalizerPresetSaveNew => '지금 값 저장';
+
+  @override
+  String get equalizerPresetNameTitle => '프리셋 이름';
+
+  @override
+  String get equalizerPresetNameHint => '예: 이어폰용, 차량용';
+
+  @override
+  String get equalizerPresetSave => '저장';
+
+  @override
+  String get equalizerPresetDeleteTitle => '프리셋 지우기';
+
+  @override
+  String equalizerPresetDeleteBody(String name) {
+    return '\"$name\" 프리셋을 지워요. 이 프리셋을 지정한 기기는 마지막 값을 그대로 써요';
+  }
+
+  @override
+  String get equalizerDevicesTitle => '기기별 이퀄라이저';
+
+  @override
+  String get equalizerDevicesEmpty => '아직 연결된 블루투스 · 이어폰 기기가 없어요';
+
+  @override
+  String get equalizerDeviceDefault => '기본 설정';
+
+  @override
+  String get equalizerDeviceCustom => '직접 설정';
+
+  @override
+  String get equalizerDeviceEdit => '이퀄라이저에서 직접 설정';
+
+  @override
+  String get equalizerEditingDevice => '이 기기에 쓸 값을 고치는 중이에요';
+
+  @override
+  String get equalizerDeviceCurrent => '지금 연결됨';
+
+  @override
+  String equalizerDevicePickTitle(String device) {
+    return '$device에 쓸 프리셋';
+  }
+
+  @override
+  String get equalizerDeviceNoPresets =>
+      '이퀄라이저 화면에서 \"지금 값 저장\"으로 프리셋을 먼저 만들어 주세요';
+
+  @override
+  String get equalizerPreset => '프리셋';
+
+  @override
+  String get equalizerBands => '대역별 조절';
+
+  @override
+  String get equalizerBassBoost => '저음 강화';
+
+  @override
+  String get equalizerBassBoostDesc => '낮은 소리를 더 묵직하게 해요.';
+
+  @override
+  String get equalizerReset => '처음으로';
+
+  @override
+  String get equalizerPresetFlat => '기본';
+
+  @override
+  String get equalizerPresetBass => '저음 강조';
+
+  @override
+  String get equalizerPresetTreble => '고음 강조';
+
+  @override
+  String get equalizerPresetVocal => '보컬';
+
+  @override
+  String get equalizerPresetRock => '록';
+
+  @override
+  String get equalizerPresetPop => '팝';
+
+  @override
+  String get equalizerPresetJazz => '재즈';
+
+  @override
+  String get equalizerPresetClassical => '클래식';
+
+  @override
+  String get equalizerPresetDance => '힙합 · EDM';
+
+  @override
+  String get equalizerPresetCustom => '직접 조절';
+
+  @override
+  String get equalizerVirtualizer => '입체 음향';
+
+  @override
+  String get equalizerVirtualizerDesc => '이어폰에서 소리가 더 넓게 퍼져 들려요.';
+
+  @override
+  String get equalizerReverb => '공간 울림';
+
+  @override
+  String get equalizerReverbDesc => '방이나 홀에서 듣는 것 같은 잔향을 더해요.';
+
+  @override
+  String get equalizerLimiter => '소리 찢어짐 방지';
+
+  @override
+  String get equalizerLimiterDesc => '소리를 많이 키워도 갈라지지 않게 눌러 줘요.';
+
+  @override
+  String get equalizerReverbNone => '없음';
+
+  @override
+  String get equalizerReverbSmallRoom => '작은 방';
+
+  @override
+  String get equalizerReverbMediumRoom => '중간 방';
+
+  @override
+  String get equalizerReverbLargeRoom => '큰 방';
+
+  @override
+  String get equalizerReverbMediumHall => '중간 홀';
+
+  @override
+  String get equalizerReverbLargeHall => '큰 홀';
+
+  @override
+  String get equalizerReverbPlate => '플레이트';
+
+  @override
+  String get equalizerSave => '저장';
+
+  @override
+  String get audioLanguageTitle => '오디오 언어';
+
+  @override
+  String get audioLanguageRow => '오디오 언어';
+
+  @override
+  String get audioLanguageOriginal => '원본';
+
+  @override
+  String get audioLanguageHint => '고르면 바로 적용돼요. 미리 듣기와 받기에 같은 언어를 써요.';
+
+  @override
+  String get downloadAgainTitle => '다시 받을까요?';
+
+  @override
+  String get downloadAgainBody => '이미 받은 곡이에요. 다시 받으면 같은 곡이 하나 더 생겨요.';
+
+  @override
+  String get downloadAgainConfirm => '다시 받기';
 }

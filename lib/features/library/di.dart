@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:get_it/get_it.dart';
 
 import 'data/datasources/device_music_data_sources.dart';
+import 'data/datasources/embedded_cover_source.dart';
+import 'data/repositories/embedded_cover_repository_impl.dart';
 import 'data/repositories/device_music_repository_impl.dart';
 import 'data/repositories/drift_library_repository.dart';
 import 'data/datasources/track_file_data_source.dart';
@@ -26,6 +28,13 @@ void registerLibrary(GetIt sl) {
     ..registerLazySingleton<DeviceMusicRepository>(
       () => DeviceMusicRepositoryImpl(sl()),
     )
+    ..registerLazySingleton<EmbeddedCoverRepository>(
+      () => EmbeddedCoverRepositoryImpl(
+        EmbeddedCoverSource(
+          Platform.isAndroid ? MediaStorePictureReader() : FilePictureReader(),
+        ),
+      ),
+    )
     ..registerLazySingleton<LibraryRepository>(
       () => DriftLibraryRepository(sl()),
     )
@@ -47,5 +56,6 @@ void registerLibrary(GetIt sl) {
     ..registerFactory(() => RemoveLoadedFolder(sl()))
     ..registerFactory(() => LoadedFoldersCubit(sl(), sl(), sl(), sl()))
     ..registerFactory(() => LibraryCubit(sl(), sl(), sl()))
-    ..registerFactory(() => LibraryImportCubit(sl()));
+    ..registerFactory(() => FillEmbeddedCovers(sl(), sl(), sl()))
+    ..registerFactory(() => LibraryImportCubit(sl(), sl()));
 }

@@ -2,15 +2,25 @@ import 'dart:io';
 
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
+import '../../domain/entities/audio_language.dart';
 import '../../domain/entities/audio_stream.dart';
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/search_source.dart';
+import '../../domain/entities/subtitle_track.dart';
 import '../../domain/repositories/downloader_engine.dart';
 import 'audio_format_policy.dart';
 
 /// 유튜브 곡의 오디오 스트림 주소를 읽는 함수. 못 읽으면 null.
-typedef AudioStreamReader = Future<AudioStream?> Function(String videoId);
+typedef AudioStreamReader = Future<AudioStream?> Function(
+  String videoId, {
+  String? language,
+});
+
+/// 유튜브 곡의 오디오 언어 트랙 목록을 읽는 함수.
+typedef AudioLanguageReader = Future<List<AudioLanguage>> Function(
+  String videoId,
+);
 
 /// 미리 듣기용 오디오 스트림 주소를 `youtube_explode_dart`로 먼저 읽는 엔진 덮개.
 ///
@@ -18,11 +28,16 @@ typedef AudioStreamReader = Future<AudioStream?> Function(String videoId);
 /// 유튜브 곡은 이 라이브러리가 먼저 읽고 못 읽으면 안쪽 엔진(yt-dlp · 서버)으로 넘긴다.
 /// 나머지(검색 · 곡 정보 · 채널)는 그대로 안쪽 엔진이 한다.
 class YoutubeExplodeEngine implements DownloaderEngine {
-  YoutubeExplodeEngine(this._inner, {AudioStreamReader? reader})
-    : _reader = reader ?? _readWithExplode;
+  YoutubeExplodeEngine(
+    this._inner, {
+    AudioStreamReader? reader,
+    AudioLanguageReader? languageReader,
+  }) : _reader = reader ?? _readWithExplode,
+       _languageReader = languageReader ?? _readLanguagesWithExplode;
 
   final DownloaderEngine _inner;
   final AudioStreamReader _reader;
+  final AudioLanguageReader _languageReader;
 
   @override
   Future<SearchPage> search(
@@ -69,12 +84,13 @@ class YoutubeExplodeEngine implements DownloaderEngine {
   Future<AudioStream> resolveAudioStream(
     String url, {
     bool refresh = false,
+    String? audioLanguage,
   }) async {
     final id = VideoId.parseVideoId(url);
     Object? explodeError;
     if (id != null) {
       try {
-        final stream = await _reader(id);
+        final stream = await _reader(id, language: audioLanguage);
         if (stream != null) return stream;
       } on Object catch (e) {
         // 이 라이브러리가 못 읽으면 안쪽 엔진으로 넘어간다.
@@ -82,7 +98,11 @@ class YoutubeExplodeEngine implements DownloaderEngine {
       }
     }
     try {
-      return await _inner.resolveAudioStream(url, refresh: refresh);
+      return await _inner.resolveAudioStream(
+        url,
+        refresh: refresh,
+        audioLanguage: audioLanguage,
+      );
     } on EngineException catch (e) {
       // 둘 다 못 읽었으면 두 까닭을 같이 알린다 (안내에 보여 원인을 알 수 있게).
       if (explodeError == null) rethrow;
@@ -92,6 +112,27 @@ class YoutubeExplodeEngine implements DownloaderEngine {
       );
     }
   }
+
+  /// 이 라이브러리가 먼저 읽고, 트랙이 없거나 못 읽으면 안쪽 엔진(yt-dlp)에 묻는다.
+  @override
+  Future<List<AudioLanguage>> fetchAudioLanguages(String url) async {
+    final id = VideoId.parseVideoId(url);
+    if (id != null) {
+      try {
+        final found = await _languageReader(id);
+        if (found.length > 1) return found;
+      } on Object {
+        // 못 읽으면 안쪽 엔진으로 넘어간다.
+      }
+    }
+    return _inner.fetchAudioLanguages(url);
+  }
+
+  @override
+  Future<SubtitleTrack?> fetchSubtitles(
+    String url, {
+    List<String> preferLanguages = const ['ko', 'en'],
+  }) => _inner.fetchSubtitles(url, preferLanguages: preferLanguages);
 }
 
 /// 라이브러리의 재생목록 검색 (한 번에 20개라 필요한 만큼 다음 쪽을 넘겨 읽는다).
@@ -151,7 +192,10 @@ String _oneLine(Object? o) => '$o'
 /// 클라이언트마다 주소의 허용 조건이 달라(예: PO 토큰 없는 안드로이드 주소는 앞 일부만 주고 403)
 /// 주소를 읽은 것만으로는 재생된다고 할 수 없다. 그래서 파일 중간 구간을 실제로 요청해 보고(probe)
 /// 206이 오는 클라이언트의 주소를 쓴다. 모두 실패하면 읽은 주소 중 첫째를 그대로 돌려준다.
-Future<AudioStream?> _readWithExplode(String videoId) async {
+Future<AudioStream?> _readWithExplode(
+  String videoId, {
+  String? language,
+}) async {
   final yt = YoutubeExplode();
   final errors = <String>[];
   AudioStream? firstReadable;
@@ -167,7 +211,16 @@ Future<AudioStream?> _readWithExplode(String videoId) async {
           videoId,
           ytClients: [client],
         );
-        ordered = _orderAudio(manifest.audioOnly.toList());
+        ordered = _orderAudio(
+          manifest.audioOnly
+              .where(
+                (s) =>
+                    language == null ||
+                    (s.audioTrack != null &&
+                        audioLanguageId(s.audioTrack!.id) == language),
+              )
+              .toList(),
+        );
       } on Object catch (e) {
         errors.add(_oneLine(e).split(' / ').first);
         continue;
@@ -186,6 +239,45 @@ Future<AudioStream?> _readWithExplode(String videoId) async {
     rethrow;
   } on Object catch (e) {
     throw EngineException(EngineFailure.failed, '$e');
+  } finally {
+    yt.close();
+  }
+}
+
+/// 클라이언트를 차례로 써 보며 오디오 언어 트랙이 둘 이상 담긴 것을 찾는다.
+Future<List<AudioLanguage>> _readLanguagesWithExplode(String videoId) async {
+  final yt = YoutubeExplode();
+  try {
+    for (final client in [
+      _visionOs,
+      YoutubeApiClient.androidVr,
+      YoutubeApiClient.androidSdkless,
+    ]) {
+      try {
+        final manifest = await yt.videos.streamsClient.getManifest(
+          videoId,
+          ytClients: [client],
+        );
+        final byId = <String, AudioLanguage>{};
+        for (final s in manifest.audioOnly) {
+          final track = s.audioTrack;
+          if (track == null) continue;
+          final id = audioLanguageId(track.id);
+          byId.putIfAbsent(
+            id,
+            () => AudioLanguage(
+              id: id,
+              name: track.displayName,
+              isDefault: track.audioIsDefault,
+            ),
+          );
+        }
+        if (byId.length > 1) return byId.values.toList();
+      } on Object {
+        continue;
+      }
+    }
+    return const [];
   } finally {
     yt.close();
   }

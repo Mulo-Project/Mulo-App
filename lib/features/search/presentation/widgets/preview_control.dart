@@ -7,18 +7,22 @@ import '../../../library/domain/entities/track.dart' show formatDuration;
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
+import '../bloc/audio_language_cubit.dart';
 import '../bloc/preview_cubit.dart';
-import '../screens/media_detail_screen.dart';
 
 /// [hit] 미리 듣기를 시작하거나(이미 듣는 중이면) 멈춘다.
 /// 소리가 나기 시작하면 메인 재생은 멈추고, 시작하지 못하면 안내를 띄운다.
-Future<void> togglePreview(BuildContext context, MediaHit hit) async {
+Future<void> togglePreview(
+  BuildContext context,
+  MediaHit hit, {
+  String? audioLanguage,
+}) async {
   final l10n = context.l10n;
   final messenger = ScaffoldMessenger.of(context);
   final preview = context.read<PreviewCubit>();
   final nowPlaying = context.read<NowPlayingCubit>();
 
-  final failure = await preview.toggle(hit);
+  final failure = await preview.toggle(hit, audioLanguage: audioLanguage);
   if (failure != null) {
     // 까닭을 알 수 있게 엔진이 알려 준 마지막 줄을 덧붙인다.
     final detail = preview.lastFailureDetail
@@ -64,20 +68,31 @@ class PreviewButton extends StatelessWidget {
       (PreviewCubit c) =>
           c.state.isActive(hit.id) ? c.state.status : PreviewStatus.idle,
     );
+    // 미니 플레이어에서 잠시 멈춰 둔 상태면 "이어 듣기"로 보이고, 누르면 이어서 듣는다.
+    final paused = context.select(
+      (PreviewCubit c) => c.state.isActive(hit.id) && c.state.paused,
+    );
     return PillButton(
       label: switch (status) {
         PreviewStatus.idle => l10n.searchPreview,
         PreviewStatus.loading => l10n.searchPreviewLoading,
-        PreviewStatus.playing => l10n.searchPreviewStop,
+        PreviewStatus.playing =>
+          paused ? l10n.searchPreviewResume : l10n.searchPreviewStop,
       },
       icon: switch (status) {
         PreviewStatus.idle => AppIcons.headphones,
         PreviewStatus.loading => AppIcons.hourglassTop,
-        PreviewStatus.playing => AppIcons.pause,
+        PreviewStatus.playing => paused ? AppIcons.play : AppIcons.pause,
       },
       variant: PillVariant.tonal,
       busy: status == PreviewStatus.loading,
-      onPressed: () => togglePreview(context, hit),
+      onPressed: paused
+          ? () => context.read<PreviewCubit>().togglePause()
+          : () => togglePreview(
+              context,
+              hit,
+              audioLanguage: context.read<AudioLanguageCubit>().state.selected,
+            ),
     );
   }
 }
@@ -153,112 +168,6 @@ class PreviewLoadingRing extends StatelessWidget {
     );
   }
 }
-
-/// 다른 화면에서도 보이는 미리 듣기 줄: 제목 · 진행 막대 · 시간 · 멈춤 버튼.
-/// 미리 듣기가 없으면 아무것도 그리지 않는다.
-class PreviewMiniBar extends StatelessWidget {
-  const PreviewMiniBar({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final state = context.watch<PreviewCubit>().state;
-    if (state.status == PreviewStatus.idle) return const SizedBox.shrink();
-    final l10n = context.l10n;
-    final p = context.palette;
-    final text = Theme.of(context).textTheme;
-    final loading = state.status == PreviewStatus.loading;
-    final progress = state.progress;
-    final hit = state.hit;
-    // 본문 · 미니 플레이어와 구분되도록 강조색을 투명하게 깐 둥근 띠로 그린다.
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.xs,
-      ),
-      child: DecoratedBox(
-        key: const ValueKey('preview-mini-bar'),
-        decoration: BoxDecoration(
-          color: p.accent.withValues(alpha: .14),
-          borderRadius: BorderRadius.circular(AppRadii.sm),
-          border: Border.all(color: p.accent.withValues(alpha: .32)),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.md,
-            AppSpacing.xxs,
-            AppSpacing.xxs,
-            AppSpacing.xxs,
-          ),
-          child: Row(
-            children: [
-              Icon(AppIcons.headphones, size: 18, color: p.accent),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 제목을 누르면 이 곡의 상세 화면(유튜브 정보)을 연다.
-                    GestureDetector(
-                      key: const ValueKey('preview-mini-open'),
-                      behavior: HitTestBehavior.opaque,
-                      onTap: hit == null
-                          ? null
-                          : () => showMediaDetail(context, hit),
-                      // 길면 미니 플레이어처럼 흘러간다.
-                      child: MarqueeText(state.title, style: text.bodySmall),
-                    ),
-                    const SizedBox(height: AppSpacing.xxs),
-                    // 재생 시간은 진행 막대 양 끝 위에 아주 작게.
-                    if (!loading)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            formatDuration(progress?.position ?? Duration.zero),
-                            style: _timeStyle(text, p),
-                          ),
-                          Text(
-                            progress?.duration == null
-                                ? '--:--'
-                                : formatDuration(progress!.duration!),
-                            style: _timeStyle(text, p),
-                          ),
-                        ],
-                      ),
-                    const SizedBox(height: AppSpacing.xxs),
-                    loading
-                        ? const ProgressLine(value: 0, height: 3)
-                        : PreviewSeekLine(fraction: state.fraction, height: 3),
-                  ],
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              if (loading) PreviewLoadingRing(state: state, size: 24),
-              if (!loading)
-                RowIconButton(
-                  key: const ValueKey('preview-mini-pause'),
-                  icon: state.paused ? AppIcons.play : AppIcons.pause,
-                  tooltip: state.paused
-                      ? l10n.searchPreviewResume
-                      : l10n.searchPreviewPause,
-                  onPressed: () => context.read<PreviewCubit>().togglePause(),
-                ),
-              RowIconButton(
-                icon: AppIcons.close,
-                tooltip: l10n.searchPreviewStop,
-                onPressed: () => context.read<PreviewCubit>().stop(),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-TextStyle? _timeStyle(TextTheme text, AppPalette p) => text.labelSmall
-    ?.copyWith(fontSize: 9, height: 1.1, color: p.onSurfaceMuted);
 
 /// 눌러서 · 끌어서 옮길 수 있는 미리 듣기 진행 막대.
 /// 끌고 있는 동안은 손가락 자리를 보여 주고, 손을 뗄 때 한 번만 실제로 옮긴다.

@@ -7,6 +7,8 @@ import 'package:music_download_play_app/features/account/domain/repositories/acc
 import 'package:music_download_play_app/features/covers/di.dart';
 import 'package:music_download_play_app/features/lyrics/di.dart';
 import 'package:music_download_play_app/features/lyrics/domain/entities/lyrics.dart';
+import 'package:music_download_play_app/features/lyrics/domain/entities/lyrics_settings.dart';
+import 'package:music_download_play_app/features/lyrics/domain/repositories/lyrics_settings_repository.dart';
 import 'package:music_download_play_app/features/lyrics/domain/repositories/lyrics_repository.dart';
 import 'package:music_download_play_app/features/covers/domain/entities/cover_art.dart';
 import 'package:music_download_play_app/features/covers/domain/repositories/cover_repository.dart';
@@ -40,23 +42,42 @@ import 'package:music_download_play_app/features/permissions/domain/entities/app
 import 'package:music_download_play_app/features/permissions/domain/repositories/permission_repository.dart';
 import 'package:music_download_play_app/features/player/di.dart';
 import 'package:music_download_play_app/features/player/domain/entities/player_style.dart';
+import 'package:music_download_play_app/features/player/domain/entities/playback_snapshot.dart';
 import 'package:music_download_play_app/features/player/domain/repositories/audio_player_repository.dart';
+import 'package:music_download_play_app/features/equalizer/di.dart';
+import 'package:music_download_play_app/features/equalizer/domain/entities/equalizer_settings.dart';
+import 'package:music_download_play_app/features/equalizer/domain/repositories/equalizer_repository.dart';
+import 'package:music_download_play_app/features/player/domain/repositories/mix_with_others_repository.dart';
+import 'package:music_download_play_app/features/player/domain/repositories/playback_speed_repository.dart';
+import 'package:music_download_play_app/features/player/domain/entities/output_behavior.dart';
+import 'package:music_download_play_app/features/player/domain/repositories/output_behavior_repository.dart';
 import 'package:music_download_play_app/features/player/domain/repositories/player_style_repository.dart';
 import 'package:music_download_play_app/features/playlists/di.dart';
 import 'package:music_download_play_app/features/playlists/domain/entities/playlist.dart';
 import 'package:music_download_play_app/features/playlists/domain/repositories/playlist_repository.dart';
 import 'package:music_download_play_app/features/search/di.dart';
+import 'package:music_download_play_app/features/search/domain/entities/audio_language.dart';
 import 'package:music_download_play_app/features/search/domain/entities/audio_stream.dart';
 import 'package:music_download_play_app/features/search/domain/entities/preview_progress.dart';
 import 'package:music_download_play_app/features/search/domain/entities/engine_exception.dart';
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
 import 'package:music_download_play_app/features/search/domain/entities/search_source.dart';
+import 'package:music_download_play_app/features/search/domain/entities/subtitle_track.dart';
 import 'package:music_download_play_app/features/search/domain/repositories/downloader_engine.dart';
 import 'package:music_download_play_app/features/search/domain/repositories/link_opener.dart';
 import 'package:music_download_play_app/features/search/domain/repositories/preview_player.dart';
 import 'package:music_download_play_app/features/security/di.dart';
 import 'package:music_download_play_app/features/security/domain/entities/app_lock_settings.dart';
 import 'package:music_download_play_app/features/security/domain/repositories/app_lock_repository.dart';
+import 'package:music_download_play_app/features/subscriptions/di.dart';
+import 'package:music_download_play_app/features/subscriptions/domain/entities/background_status.dart';
+import 'package:music_download_play_app/features/subscriptions/domain/entities/feed_video.dart';
+import 'package:music_download_play_app/features/subscriptions/domain/entities/new_video_download_request.dart';
+import 'package:music_download_play_app/features/subscriptions/domain/entities/subscribed_channel.dart';
+import 'package:music_download_play_app/features/subscriptions/domain/entities/subscription_settings.dart';
+import 'package:music_download_play_app/features/subscriptions/domain/repositories/background_checker.dart';
+import 'package:music_download_play_app/features/subscriptions/domain/repositories/channel_feed.dart';
+import 'package:music_download_play_app/features/subscriptions/domain/repositories/subscription_repository.dart';
 import 'package:music_download_play_app/features/theme/di.dart';
 import 'package:music_download_play_app/features/theme/domain/entities/theme_settings.dart';
 import 'package:music_download_play_app/features/theme/domain/repositories/theme_settings_repository.dart';
@@ -165,6 +186,24 @@ class FakeDeviceMusic implements DeviceMusicRepository {
     lastFolders = folders;
     return result;
   }
+}
+
+/// 곡 uri별로 미리 정한 내장 커버 경로를 돌려주는 가짜 (없으면 null).
+class FakeEmbeddedCovers implements EmbeddedCoverRepository {
+  FakeEmbeddedCovers([this.byUri = const {}]);
+
+  final Map<String, String> byUri;
+  final extracted = <String>[];
+  final discarded = <String>[];
+
+  @override
+  Future<String?> extract(Track track) async {
+    extracted.add(track.uri);
+    return byUri[track.uri];
+  }
+
+  @override
+  Future<void> discard(String path) async => discarded.add(path);
 }
 
 /// 파일 복사 없이 경로 · 주소만 기억하는 커버 저장소.
@@ -352,6 +391,33 @@ class FakeBiometricAuthenticator implements BiometricAuthenticator {
 }
 
 /// 메모리 플레이어 모양 저장소.
+class MemoryLyricsSettingsRepository implements LyricsSettingsRepository {
+  MemoryLyricsSettingsRepository([
+    this.settings = const LyricsSettings(latencyMs: 0),
+  ]);
+
+  LyricsSettings settings;
+
+  @override
+  Future<LyricsSettings> load() async => settings;
+
+  @override
+  Future<void> saveLatency(int milliseconds) async =>
+      settings = settings.copyWith(latencyMs: milliseconds);
+
+  @override
+  Future<void> saveTheme(LyricsTheme theme) async =>
+      settings = settings.copyWith(theme: theme);
+
+  @override
+  Future<void> saveCoverBackground(bool on) async =>
+      settings = settings.copyWith(coverBackground: on);
+
+  @override
+  Future<void> saveOverlay(bool on) async =>
+      settings = settings.copyWith(overlay: on);
+}
+
 class MemoryPlayerStyleRepository implements PlayerStyleRepository {
   MemoryPlayerStyleRepository([this.style = PlayerStyle.initial]);
 
@@ -364,6 +430,100 @@ class MemoryPlayerStyleRepository implements PlayerStyleRepository {
   Future<void> save(PlayerStyle value) async => style = value;
 }
 
+class MemoryMixWithOthersRepository implements MixWithOthersRepository {
+  bool value = false;
+
+  @override
+  Future<bool> load() async => value;
+
+  @override
+  Future<void> save(bool v) async => value = v;
+
+  @override
+  Future<void> apply(bool v) async {}
+}
+
+class MemoryPlaybackSpeedRepository implements PlaybackSpeedRepository {
+  double value = 1;
+
+  @override
+  Future<double> load() async => value;
+
+  @override
+  Future<void> save(double v) async => value = v;
+
+  @override
+  Future<void> apply(double v) async {}
+}
+
+class MemoryOutputBehaviorRepository implements OutputBehaviorRepository {
+  OutputBehavior value = const OutputBehavior();
+
+  @override
+  Future<OutputBehavior> load() async => value;
+
+  @override
+  Future<void> save(OutputBehavior v) async => value = v;
+
+  @override
+  Future<void> apply(OutputBehavior v) async {}
+}
+
+class MemoryEqualizerRepository implements EqualizerRepository {
+  MemoryEqualizerRepository({
+    this.info,
+    this.settings = const EqualizerSettings(),
+  });
+
+  final EqualizerInfo? info;
+  EqualizerSettings settings;
+  EqualizerSettings? applied;
+
+  @override
+  Future<EqualizerSetup> load() async =>
+      EqualizerSetup(info: info, settings: settings);
+
+  @override
+  Future<void> apply(EqualizerSettings s) async => applied = s;
+
+  @override
+  Future<void> save(EqualizerSettings s) async => settings = s;
+
+  @override
+  Future<void> setDeviceProfile(bool enabled, EqualizerSettings s) async {}
+
+  @override
+  Stream<void> watchDevice() => const Stream.empty();
+
+  @override
+  Future<EqualizerSetup> loadForDevice(String deviceKey) => load();
+
+  @override
+  Future<void> saveForDevice(String deviceKey, EqualizerSettings s) async =>
+      settings = s;
+
+  final List<EqualizerUserPreset> userPresets = [];
+
+  @override
+  Future<List<EqualizerUserPreset>> presets() async => [...userPresets];
+
+  @override
+  Future<void> savePreset(EqualizerUserPreset preset) async {
+    userPresets.removeWhere((p) => p.id == preset.id);
+    userPresets.add(preset);
+  }
+
+  @override
+  Future<void> deletePreset(String id) async =>
+      userPresets.removeWhere((p) => p.id == id);
+
+  @override
+  Future<List<EqualizerDevice>> devices() async => const [];
+
+  @override
+  Future<void> assignPreset(String deviceKey, String? presetId) async {}
+}
+
 class MemoryThemeSettingsRepository implements ThemeSettingsRepository {
   MemoryThemeSettingsRepository([this.settings = const ThemeSettings()]);
 
@@ -373,12 +533,25 @@ class MemoryThemeSettingsRepository implements ThemeSettingsRepository {
   Future<ThemeSettings> load() async => settings;
 
   @override
-  Future<void> savePreset(String presetId) async =>
-      settings = ThemeSettings(presetId: presetId, mode: settings.mode);
+  Future<void> savePreset(String presetId) async => settings = ThemeSettings(
+    presetId: presetId,
+    mode: settings.mode,
+    followMood: settings.followMood,
+  );
 
   @override
-  Future<void> saveMode(AppThemeMode mode) async =>
-      settings = ThemeSettings(presetId: settings.presetId, mode: mode);
+  Future<void> saveMode(AppThemeMode mode) async => settings = ThemeSettings(
+    presetId: settings.presetId,
+    mode: mode,
+    followMood: settings.followMood,
+  );
+
+  @override
+  Future<void> saveFollowMood(bool value) async => settings = ThemeSettings(
+    presetId: settings.presetId,
+    mode: settings.mode,
+    followMood: value,
+  );
 }
 
 /// 메모리 재생 기록.
@@ -432,6 +605,9 @@ class MemoryDownloadQueue implements DownloadQueueRepository {
     _changes.add([...items]);
   }
 
+  /// 이미 받은 곡의 원본 주소 키 (`downloadSourceKey`).
+  final downloadedKeys = <String>{};
+
   /// 받기 요청 기록.
   final requests = <DownloadRequest>[];
 
@@ -441,6 +617,9 @@ class MemoryDownloadQueue implements DownloadQueueRepository {
   @override
   Future<ExistingDownload> findExisting(String url) async =>
       existing[url] ?? ExistingDownload.none;
+
+  @override
+  Stream<Set<String>> watchDownloadedKeys() => Stream.value(downloadedKeys);
 
   @override
   Stream<List<DownloadItem>> watchQueue() async* {
@@ -638,6 +817,8 @@ Future<void> setUpTestDependencies({
   LoadedFolderRepository? folders,
   TrackFileRepository? trackFiles,
   DateTime? joinedAt,
+  SubscriptionRepository? subscriptions,
+  ChannelFeed? channelFeed,
 }) async {
   await sl.reset();
   registerTheme(sl);
@@ -647,6 +828,7 @@ Future<void> setUpTestDependencies({
   registerCovers(sl);
   registerLyrics(sl);
   registerPlayer(sl);
+  registerEqualizer(sl);
   registerHome(sl);
   registerPlaylists(sl);
   registerDownloads(sl);
@@ -654,8 +836,14 @@ Future<void> setUpTestDependencies({
   registerSearch(sl);
   registerNotifications(sl);
   registerPermissions(sl);
+  registerSubscriptions(sl);
   sl.allowReassignment = true;
   sl
+    ..registerLazySingleton<SubscriptionRepository>(
+      () => subscriptions ?? MemorySubscriptionRepository(),
+    )
+    ..registerLazySingleton<ChannelFeed>(() => channelFeed ?? FakeChannelFeed())
+    ..registerLazySingleton<BackgroundChecker>(FakeBackgroundChecker.new)
     ..registerLazySingleton<NotificationSettingsRepository>(
       MemoryNotificationSettings.new,
     )
@@ -668,6 +856,19 @@ Future<void> setUpTestDependencies({
     ..registerLazySingleton<PlayerStyleRepository>(
       () => MemoryPlayerStyleRepository(playerStyle),
     )
+    ..registerLazySingleton<LyricsSettingsRepository>(
+      MemoryLyricsSettingsRepository.new,
+    )
+    ..registerLazySingleton<MixWithOthersRepository>(
+      MemoryMixWithOthersRepository.new,
+    )
+    ..registerLazySingleton<PlaybackSpeedRepository>(
+      MemoryPlaybackSpeedRepository.new,
+    )
+    ..registerLazySingleton<OutputBehaviorRepository>(
+      MemoryOutputBehaviorRepository.new,
+    )
+    ..registerLazySingleton<EqualizerRepository>(MemoryEqualizerRepository.new)
     ..registerLazySingleton<ThemeSettingsRepository>(
       () => MemoryThemeSettingsRepository(theme),
     )
@@ -745,10 +946,19 @@ class MemoryJoinDate implements JoinDateRepository {
   Future<DateTime> joinedAt() async => date;
 }
 
-/// 재생 엔진 가짜: 불러온 곡 · 재생 상태를 기록하고, 위치 · 곡 끝은 테스트가 흘려보낸다.
+/// 재생 엔진 가짜: 받은 대기열 · 재생 상태를 기록하고, 위치 · 곡 넘김 · 끝은 테스트가 흘려보낸다.
 class FakeAudioPlayer implements AudioPlayerRepository {
   final _position = StreamController<Duration>.broadcast();
-  final _completed = StreamController<void>.broadcast();
+  final _track = StreamController<PlaybackTrackChange>.broadcast();
+  final _ended = StreamController<void>.broadcast();
+  final _playing = StreamController<bool>.broadcast();
+  final _openPlayer = StreamController<void>.broadcast();
+
+  /// 마지막으로 받은 대기열 스냅샷.
+  PlaybackSnapshot? snapshot;
+
+  /// 엔진이 지금 보고 있는 곡 번호.
+  var index = 0;
 
   /// 지금 불러온 곡 주소.
   String? loaded;
@@ -758,25 +968,77 @@ class FakeAudioPlayer implements AudioPlayerRepository {
   /// 불러오기를 실패시킬 주소.
   final failing = <String>{};
 
-  /// 엔진에 한 일의 기록 ('load:uri', 'play', 'pause', 'seek:1000').
+  /// 엔진에 한 일의 기록 ('queue:uri', 'skip:1', 'play', 'pause', 'seek:1000').
   final calls = <String>[];
+
+  /// [restore]가 돌려줄 대기열 (앱을 다시 켠 상황).
+  PlaybackSnapshot? restoreSnapshot;
+
+  /// [takeOpenPlayerRequest]가 돌려줄 값 (알림을 눌러 앱이 새로 켜진 상황).
+  var openPlayerRequested = false;
 
   void emitPosition(Duration p) => _position.add(p);
 
-  void complete() => _completed.add(null);
+  /// 엔진이 스스로 다음 곡으로 넘어갔다고 알린다 (곡 끝, 알림의 다음 버튼).
+  void emitTrack(int i) {
+    index = i;
+    final item = snapshot!.items[i];
+    loaded = item.uri;
+    _track.add(PlaybackTrackChange(i, item.id));
+  }
+
+  /// 반복 없이 대기열 끝까지 들었다고 알린다.
+  void end() {
+    playing = false;
+    _ended.add(null);
+  }
+
+  /// 알림을 눌렀다고 알린다 (앱이 켜져 있는 중).
+  void emitOpenPlayer() => _openPlayer.add(null);
+
+  /// 엔진이 스스로 재생 상태를 바꿨다고 알린다 (다른 앱에 오디오 포커스를 뺏김 등).
+  void emitPlaying(bool value) {
+    playing = value;
+    _playing.add(value);
+  }
+
+  @override
+  Stream<bool> watchPlaying() => _playing.stream;
 
   @override
   Stream<Duration> watchPosition() => _position.stream;
 
   @override
-  Stream<void> watchCompleted() => _completed.stream;
+  Stream<PlaybackTrackChange> watchTrackChange() => _track.stream;
 
   @override
-  Future<void> load(String uri) async {
-    calls.add('load:$uri');
-    if (failing.contains(uri)) throw StateError('cannot load');
-    loaded = uri;
-    playing = false;
+  Stream<void> watchEnded() => _ended.stream;
+
+  @override
+  Stream<void> watchOpenPlayer() => _openPlayer.stream;
+
+  @override
+  Future<void> setQueue(PlaybackSnapshot s) async {
+    final current = s.current;
+    calls.add('queue:${current?.uri}');
+    snapshot = s;
+    index = s.index;
+    if (current == null) {
+      loaded = null;
+      playing = false;
+      return;
+    }
+    if (failing.contains(current.uri)) throw StateError('cannot load');
+    loaded = current.uri;
+    playing = s.playing;
+    if (s.position != null) lastSeek = s.position;
+  }
+
+  @override
+  Future<void> skipTo(int i) async {
+    calls.add('skip:$i');
+    index = i;
+    loaded = snapshot!.items[i].uri;
   }
 
   @override
@@ -795,6 +1057,16 @@ class FakeAudioPlayer implements AudioPlayerRepository {
   Future<void> seek(Duration position) async {
     calls.add('seek:${position.inMilliseconds}');
     lastSeek = position;
+  }
+
+  @override
+  Future<PlaybackSnapshot?> restore() async => restoreSnapshot;
+
+  @override
+  Future<bool> takeOpenPlayerRequest() async {
+    final requested = openPlayerRequested;
+    openPlayerRequested = false;
+    return requested;
   }
 }
 
@@ -882,6 +1154,12 @@ class FakeDownloaderEngine implements DownloaderEngine {
   /// [resolveAudioStream]을 부를 때마다 새로 읽으라고 했는지.
   final refreshFlags = <bool>[];
 
+  /// [resolveAudioStream]에 넘어온 오디오 언어들.
+  final audioLanguageArgs = <String?>[];
+
+  /// [fetchAudioLanguages]가 돌려줄 오디오 언어 트랙들.
+  List<AudioLanguage> audioLanguages = const [];
+
   /// [resolveAudioStream]에 넘어온 곡 주소들.
   final streams = <String>[];
 
@@ -925,6 +1203,19 @@ class FakeDownloaderEngine implements DownloaderEngine {
     return found;
   }
 
+  /// [fetchSubtitles]가 돌려줄 자막 (없으면 자막 없음)과 받은 주소들.
+  SubtitleTrack? subtitles;
+  final subtitleUrls = <String>[];
+
+  @override
+  Future<SubtitleTrack?> fetchSubtitles(
+    String url, {
+    List<String> preferLanguages = const ['ko', 'en'],
+  }) async {
+    subtitleUrls.add(url);
+    return subtitles;
+  }
+
   @override
   Future<ChannelInfo> fetchChannel(String url) async {
     channels.add(url);
@@ -934,12 +1225,18 @@ class FakeDownloaderEngine implements DownloaderEngine {
   }
 
   @override
+  Future<List<AudioLanguage>> fetchAudioLanguages(String url) async =>
+      audioLanguages;
+
+  @override
   Future<AudioStream> resolveAudioStream(
     String url, {
     bool refresh = false,
+    String? audioLanguage,
   }) async {
     streams.add(url);
     refreshFlags.add(refresh);
+    audioLanguageArgs.add(audioLanguage);
     await streamGate;
     final failure = streamFailure;
     if (failure != null) throw EngineException(failure);
@@ -1085,12 +1382,64 @@ class MemoryNotificationSettings implements NotificationSettingsRepository {
 class FakeDownloadNotifier implements DownloadNotifier {
   final calls = <String>[];
 
+  /// 결과 알림에 담긴 곡 이미지 (알림 id → 주소).
+  final resultArt = <String, String?>{};
+
+  /// 마지막 진행 알림의 내용 (제목 · 본문 · 머리말 · 앞에 붙들기 · 미리 듣기 버튼).
+  final shown = <Map<String, Object?>>[];
+  final _actions = StreamController<DownloadNotificationAction>.broadcast();
+
+  void press(DownloadNotificationAction a) => _actions.add(a);
+
+  @override
+  Stream<DownloadNotificationAction> watchActions() => _actions.stream;
+
+  final _opens = StreamController<String>.broadcast();
+
+  /// 알림 본문을 눌러 앱이 이미 떠 있는 채로 열린 것처럼 한다.
+  void pressBody(String id) => _opens.add(id);
+
+  @override
+  Stream<String> watchOpenRequests() => _opens.stream;
+
+  /// 알림을 눌러 새로 켜진 것처럼 줄 id (한 번 받으면 비운다).
+  String? launchedWith;
+
+  @override
+  Future<String?> takeOpenRequest() async {
+    final id = launchedWith;
+    launchedWith = null;
+    return id;
+  }
+
   @override
   Future<void> showProgress({
     required String title,
     required String body,
     int? percent,
-  }) async => calls.add('progress:$title:$percent');
+    bool foreground = true,
+    String? subText,
+    String? previewLabel,
+    String? cancelLabel,
+    String? pauseLabel,
+    String? stopLabel,
+    String? openId,
+    String? artUri,
+  }) async {
+    shown.add({
+      'title': title,
+      'body': body,
+      'subText': subText,
+      'foreground': foreground,
+      'preview': previewLabel,
+      'cancel': cancelLabel,
+      'pause': pauseLabel,
+      'stop': stopLabel,
+      'openId': openId,
+      'artUri': artUri,
+    });
+    calls.add('progress:$title:$percent');
+  }
 
   @override
   Future<void> clearProgress() async => calls.add('clear');
@@ -1101,7 +1450,11 @@ class FakeDownloadNotifier implements DownloadNotifier {
     required String title,
     required String body,
     required bool failed,
-  }) async => calls.add('${failed ? 'failed' : 'done'}:$id');
+    String? artUri,
+  }) async {
+    resultArt[id] = artUri;
+    calls.add('${failed ? 'failed' : 'done'}:$id');
+  }
 
   @override
   Future<void> clearResults() async => calls.add('clearResults');
@@ -1119,6 +1472,12 @@ class FakeMediaSession implements MediaSession {
 
   @override
   Future<void> update(MediaSessionInfo? info) async => updates.add(info);
+
+  Map<String, String> queueArt = const {};
+
+  @override
+  Future<void> updateQueueArt(Map<String, String> artById) async =>
+      queueArt = artById;
 }
 
 class FakePermissionRepository implements PermissionRepository {
@@ -1140,4 +1499,116 @@ class FakePermissionRepository implements PermissionRepository {
 
   @override
   Future<void> openSystemSettings() async => openedSettings++;
+}
+
+/// 메모리 구독 저장소.
+class MemorySubscriptionRepository implements SubscriptionRepository {
+  MemorySubscriptionRepository({
+    List<SubscribedChannel> channels = const [],
+    this.settings = const SubscriptionSettings(),
+  }) : channels = [...channels];
+
+  List<SubscribedChannel> channels;
+  SubscriptionSettings settings;
+
+  @override
+  Future<List<SubscribedChannel>> loadChannels() async => [...channels];
+
+  @override
+  Future<void> saveChannels(List<SubscribedChannel> value) async =>
+      channels = [...value];
+
+  @override
+  Future<SubscriptionSettings> loadSettings() async => settings;
+
+  @override
+  Future<void> saveSettings(SubscriptionSettings value) async =>
+      settings = value;
+}
+
+/// 채널 id별로 정해 둔 피드를 돌려주는 가짜 채널 피드.
+class FakeChannelFeed implements ChannelFeed {
+  FakeChannelFeed({this.feeds = const {}, this.failing = const {}});
+
+  final Map<String, List<FeedVideo>> feeds;
+
+  /// 읽을 때 실패하는 채널 id.
+  final Set<String> failing;
+
+  @override
+  Future<String?> resolveChannelId(String channelUrl) async {
+    final m = RegExp(r'/channel/(UC[0-9A-Za-z_-]{22})').firstMatch(channelUrl);
+    return m?.group(1);
+  }
+
+  @override
+  Future<List<FeedVideo>> fetch(String channelId) async {
+    if (failing.contains(channelId)) throw StateError('feed failed');
+    return feeds[channelId] ?? const [];
+  }
+}
+
+/// 마지막으로 받은 동기화 내용을 기록하는 가짜 백그라운드 확인.
+class FakeBackgroundChecker implements BackgroundChecker {
+  List<SubscribedChannel>? lastChannels;
+  SubscriptionSettings? lastSettings;
+  var cleared = 0;
+  var openRequested = false;
+
+  @override
+  Future<void> sync(
+    List<SubscribedChannel> channels,
+    SubscriptionSettings settings,
+    BackgroundTexts texts,
+  ) async {
+    lastChannels = channels;
+    lastSettings = settings;
+  }
+
+  @override
+  Future<bool> takeOpenRequest() async {
+    final v = openRequested;
+    openRequested = false;
+    return v;
+  }
+
+  @override
+  Stream<void> watchOpenRequests() => const Stream.empty();
+
+  @override
+  Future<void> clearNotification() async => cleared++;
+
+  var testShown = 0;
+  var movedToBack = 0;
+  final downloadRequests = <NewVideoDownloadRequest>[];
+
+  @override
+  Future<List<NewVideoDownloadRequest>> takeDownloadRequests() async => [
+    ...downloadRequests,
+  ];
+
+  @override
+  Stream<NewVideoDownloadRequest> watchDownloadRequests() =>
+      const Stream.empty();
+
+  @override
+  Future<void> moveAppToBack() async => movedToBack++;
+
+  @override
+  Future<void> showTestNotification() async => testShown++;
+
+  var checkedNow = 0;
+  BackgroundStatus? statusValue;
+
+  /// 지금 확인을 돌린 뒤 보이는 상태 (마지막 확인 시각이 바뀐 것처럼).
+  BackgroundStatus? statusAfterCheck;
+
+  @override
+  Future<void> checkNow() async {
+    checkedNow++;
+    statusValue = statusAfterCheck ?? statusValue;
+  }
+
+  @override
+  Future<BackgroundStatus?> status() async => statusValue;
 }

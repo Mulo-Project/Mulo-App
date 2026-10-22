@@ -81,10 +81,132 @@ void main() {
     );
     await cubit.syncDownloads(
       [item('1', DownloadStatus.downloading, .2)],
-      on.copyWith(downloadProgress: false),
+      on.copyWith(downloadProgress: false, backgroundDownload: false),
       l10n,
     );
     expect(notifier.calls.last, 'clear');
+  });
+
+  test('진행 알림에 지금 곡 · 다음 곡 · 전체 진행률과 미리듣기 버튼을 담는다', () async {
+    // 끝난 곡도 이번 묶음에 세려면 받는 동안 한 번은 보여야 한다.
+    await cubit.syncDownloads(
+      [
+        item('1', DownloadStatus.downloading, .9),
+        item('2', DownloadStatus.queued),
+        item('3', DownloadStatus.queued),
+        item('4', DownloadStatus.queued),
+      ],
+      on,
+      l10n,
+    );
+    notifier.shown.clear();
+    notifier.calls.clear();
+    await cubit.syncDownloads(
+      [
+        item('1', DownloadStatus.done, 1),
+        item('2', DownloadStatus.downloading, .5),
+        item('3', DownloadStatus.queued),
+        item('4', DownloadStatus.queued),
+      ],
+      on,
+      l10n,
+    );
+    final shown = notifier.shown.single;
+    expect(shown['title'], '곡2');
+    expect(shown['body'], contains('다음 곡: 곡3'));
+    expect(shown['body'], startsWith('가수 · '));
+    expect(shown['cancel'], '취소');
+    expect(shown['subText'], '전체 1/4곡 · 38%');
+    expect(shown['preview'], '미리듣기');
+    expect(notifier.calls.last, 'progress:곡2:38');
+  });
+
+  test('곡 정보 숨기기를 켜면 제목 · 다음 곡 · 미리듣기를 알림에 담지 않는다', () async {
+    await cubit.syncDownloads(
+      [
+        item('1', DownloadStatus.downloading, .5),
+        item('2', DownloadStatus.queued),
+      ],
+      on.copyWith(hideSongInfo: true),
+      l10n,
+    );
+    final shown = notifier.shown.single;
+    expect(shown['title'], l10n.notifDownloadHiddenTitle);
+    expect(shown['body'], isNot(contains('곡2')));
+    expect(shown['preview'], isNull);
+  });
+
+  test('받는 곡의 이미지를 진행 · 완료 알림에 담고, 곡 정보 숨기기를 켜면 담지 않는다', () async {
+    const art = 'https://example.com/thumb.jpg';
+    DownloadItem withArt(DownloadStatus s) => DownloadItem(
+      id: '1',
+      title: '곡1',
+      artist: '가수',
+      status: s,
+      thumbnailUrl: art,
+    );
+    await cubit.syncDownloads([withArt(DownloadStatus.downloading)], on, l10n);
+    expect(notifier.shown.single['artUri'], art);
+    await cubit.syncDownloads([withArt(DownloadStatus.done)], on, l10n);
+    expect(notifier.resultArt['1'], art);
+
+    // 숨기기를 켜면 이미지도 담지 않는다.
+    await cubit.syncDownloads(
+      [withArt(DownloadStatus.downloading)],
+      on.copyWith(hideSongInfo: true),
+      l10n,
+    );
+    expect(notifier.shown.last['artUri'], isNull);
+  });
+
+  test('백그라운드 받기 설정이 앞에 붙들기를 정하고, 진행 알림이 꺼져도 붙든다', () async {
+    final downloading = [item('1', DownloadStatus.downloading, .2)];
+    await cubit.syncDownloads(downloading, on, l10n);
+    expect(notifier.shown.last['foreground'], isTrue);
+    await cubit.syncDownloads(
+      downloading,
+      on.copyWith(backgroundDownload: false),
+      l10n,
+    );
+    expect(notifier.shown.last['foreground'], isFalse);
+    // 진행 알림은 껐지만 백그라운드 받기는 켠 경우: 서비스에 필요한 알림만 남는다.
+    await cubit.syncDownloads(
+      [item('1', DownloadStatus.downloading, .3)],
+      on.copyWith(downloadProgress: false),
+      l10n,
+    );
+    expect(notifier.shown.last['foreground'], isTrue);
+    // 둘 다 끄면 알림도 서비스도 없다.
+    await cubit.syncDownloads(
+      [item('1', DownloadStatus.downloading, .4)],
+      on.copyWith(downloadProgress: false, backgroundDownload: false),
+      l10n,
+    );
+    expect(notifier.calls.last, 'clear');
+  });
+
+  test('받기를 시작하자마자(아직 대기 상태여도) 진행 알림을 바로 띄운다', () async {
+    await cubit.syncDownloads(
+      [item('1', DownloadStatus.queued), item('2', DownloadStatus.queued)],
+      on,
+      l10n,
+    );
+    expect(notifier.shown, hasLength(1));
+    expect(notifier.shown.single['title'], '곡1');
+    expect(notifier.shown.single['body'], contains('다음 곡: 곡2'));
+  });
+
+  test('지금 곡을 미리 듣는 중이면 미리듣기 버튼이 중지 버튼으로 바뀐다', () async {
+    final downloading = [item('1', DownloadStatus.downloading, .3)];
+    await cubit.syncDownloads(downloading, on, l10n);
+    expect(notifier.shown.last['preview'], '미리듣기');
+    expect(notifier.shown.last['stop'], isNull);
+    await cubit.syncDownloads(downloading, on, l10n, previewingId: '1');
+    expect(notifier.shown.last['preview'], isNull);
+    expect(notifier.shown.last['stop'], '중지');
+    // 다른 곡을 미리 듣는 중이면 이 곡의 버튼은 그대로.
+    await cubit.syncDownloads(downloading, on, l10n, previewingId: 'x');
+    expect(notifier.shown.last['preview'], '미리듣기');
   });
 
   final track = Track(
@@ -141,6 +263,46 @@ void main() {
     await sync(true);
     expect(session.updates, hasLength(2));
     expect(session.updates.last!.favorite, isTrue);
+  });
+
+  test('셔플을 켜고 끄면 알림을 다시 보낸다 (알림의 셔플 버튼 모양)', () async {
+    Future<void> sync(bool shuffle) => cubit.syncPlayback(
+      track: track,
+      isPlaying: true,
+      position: Duration.zero,
+      hasPrevious: true,
+      hasNext: true,
+      artUri: null,
+      shuffle: shuffle,
+      settings: on,
+      l10n: l10n,
+      now: DateTime(2026),
+    );
+    await sync(false);
+    await sync(false);
+    expect(session.updates, hasLength(1));
+    await sync(true);
+    expect(session.updates, hasLength(2));
+    expect(session.updates.last!.shuffle, isTrue);
+  });
+
+  test('수면 타이머가 켜져 있으면 끝나는 시각이 부제목에 붙고, 꺼지면 사라진다', () async {
+    Future<void> sync(DateTime? end) => cubit.syncPlayback(
+      track: track,
+      isPlaying: true,
+      position: Duration.zero,
+      hasPrevious: true,
+      hasNext: true,
+      artUri: null,
+      sleepEndsAt: end,
+      settings: on,
+      l10n: l10n,
+      now: DateTime(2026),
+    );
+    await sync(DateTime(2026, 1, 1, 3, 5));
+    expect(session.updates.last!.artist, '가수 · 03:05에 수면 타이머');
+    await sync(null);
+    expect(session.updates.last!.artist, '가수');
   });
 
   test('곡 정보 숨기기를 켜면 제목 · 아티스트 · 커버를 보내지 않는다', () async {

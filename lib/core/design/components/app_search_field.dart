@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../app_theme_tokens.dart';
 import '../tokens/app_dimens.dart';
 
-/// 알약 모양 입력칸. 왼쪽 돋보기, 입력이 있으면 오른쪽 지우기, 없으면 [trailing].
+/// 알약 모양 입력칸. 왼쪽 [leading](없으면 돋보기), 입력이 있으면 오른쪽 지우기, 없으면 [trailing].
 class AppSearchField extends StatefulWidget {
   const AppSearchField({
     super.key,
@@ -14,6 +14,7 @@ class AppSearchField extends StatefulWidget {
     this.controller,
     this.onChanged,
     this.onSubmitted,
+    this.leading,
     this.trailing,
     this.suffix,
     this.autofocus = false,
@@ -25,10 +26,13 @@ class AppSearchField extends StatefulWidget {
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
 
+  /// 왼쪽에 둘 위젯 (예: 검색 대상 고르기). 없으면 돋보기.
+  final Widget? leading;
+
   /// 입력이 비어 있을 때 오른쪽에 둘 위젯 (예: 붙여넣기 버튼).
   final Widget? trailing;
 
-  /// 입력 여부와 상관없이 맨 오른쪽에 항상 둘 위젯 (예: 검색 대상 메뉴).
+  /// 입력 여부와 상관없이 맨 오른쪽에 항상 둘 위젯 (예: 검색 실행 버튼).
   final Widget? suffix;
   final bool autofocus;
 
@@ -66,15 +70,20 @@ class _AppSearchFieldState extends State<AppSearchField> {
         color: p.surfaceHigh,
         shape: StadiumBorder(side: BorderSide(color: p.outline)),
       ),
-      padding: const EdgeInsets.only(
-        left: AppSpacing.md,
+      padding: EdgeInsets.only(
+        left: widget.leading == null ? AppSpacing.md : AppSpacing.xxs,
         right: AppSpacing.xxs,
       ),
       child: SizedBox(
         height: 52,
         child: Row(
           children: [
-            Icon(AppIcons.search, color: p.onSurfaceMuted, size: 20),
+            widget.leading ??
+                Icon(
+                  AppIcons.search,
+                  color: p.onSurfaceMuted,
+                  size: AppSizes.iconMd,
+                ),
             const SizedBox(width: AppSpacing.xs),
             Expanded(
               // 고정 높이 안에서 글자를 세로 가운데에 둔다.
@@ -103,7 +112,11 @@ class _AppSearchFieldState extends State<AppSearchField> {
                   _controller.clear();
                   widget.onChanged?.call('');
                 },
-                icon: Icon(AppIcons.close, color: p.onSurfaceMuted, size: 20),
+                icon: Icon(
+                  AppIcons.close,
+                  color: p.onSurfaceMuted,
+                  size: AppSizes.iconMd,
+                ),
               )
             else if (widget.trailing != null)
               widget.trailing!,

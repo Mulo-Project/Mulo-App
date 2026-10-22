@@ -4,8 +4,23 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../domain/entities/search_source.dart';
 
-/// 검색창 오른쪽 메뉴: 유튜브 / 웹 중 어디서 찾을지 고른다.
-/// 검색창에는 아이콘만, 눌러서 열리는 메뉴에는 아이콘 + 이름을 보여 준다.
+/// 검색 대상 사이트 이름 (화면 문구).
+String sourceLabel(BuildContext context, SearchSource s) {
+  final l10n = context.l10n;
+  return switch (s) {
+    SearchSource.youtube => l10n.sourceYoutube,
+    SearchSource.soundcloud => l10n.sourceSoundcloud,
+  };
+}
+
+/// 사이트 표시 (유튜브는 로고, 나머지는 브랜드 색 동그라미).
+Widget sourceMark(SearchSource s, double size) => switch (s) {
+  SearchSource.youtube => YoutubeMark(size: size),
+  SearchSource.soundcloud => SoundcloudMark(size: size),
+};
+
+/// 검색창 왼쪽 버튼: 어느 사이트에서 찾을지 고른다.
+/// 검색창에는 고른 사이트의 아이콘만, 눌러서 열리는 메뉴에는 아이콘 + 이름을 보여 준다.
 class SearchSourceMenu extends StatelessWidget {
   const SearchSourceMenu({
     super.key,
@@ -18,25 +33,9 @@ class SearchSourceMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
     final p = context.palette;
-    String label(SearchSource s) => switch (s) {
-      SearchSource.youtube => l10n.sourceYoutube,
-      SearchSource.web => l10n.sourceWeb,
-    };
-
-    // 웹 아이콘: 다크는 흰색, 라이트는 연한 회색.
-    final webColor = Theme.of(context).brightness == Brightness.dark
-        ? AppPalette.markWhite
-        : AppPalette.markLightGray;
-
-    Widget icon(SearchSource s, double size) => switch (s) {
-      SearchSource.youtube => YoutubeMark(size: size),
-      SearchSource.web => Icon(AppIcons.globe, size: size, color: webColor),
-    };
-
     return PopupMenuButton<SearchSource>(
-      tooltip: l10n.searchSourceTooltip,
+      tooltip: context.l10n.searchSourceTooltip,
       initialValue: source,
       onSelected: onChanged,
       color: p.surfaceHigh,
@@ -50,22 +49,17 @@ class SearchSourceMenu extends StatelessWidget {
             value: s,
             child: Row(
               children: [
-                icon(s, 22),
+                sourceMark(s, 22),
                 const SizedBox(width: AppSpacing.xs),
-                Text(label(s)),
+                Text(sourceLabel(context, s)),
               ],
             ),
           ),
       ],
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-        child: SizedBox(
-          height: 52,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [icon(source, 24)],
-          ),
-        ),
+      child: SizedBox(
+        width: 44,
+        height: 52,
+        child: Center(child: sourceMark(source, 24)),
       ),
     );
   }

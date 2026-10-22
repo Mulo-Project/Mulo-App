@@ -28,8 +28,28 @@ class LibraryScreen extends StatefulWidget {
 
 class _LibraryScreenState extends State<LibraryScreen> {
   LibraryTab _tab = LibraryTab.songs;
-  LibrarySort _sort = LibrarySort.added;
+
+  /// 탭마다 고른 정렬. 탭에 맞는 기준만 고를 수 있다 ([_sortOptions]).
+  final _sorts = <LibraryTab, LibrarySort>{};
   String _query = '';
+
+  static const _songSorts = [
+    LibrarySort.name,
+    LibrarySort.added,
+    LibrarySort.artist,
+  ];
+  static const _groupSorts = [
+    LibrarySort.name,
+    LibrarySort.count,
+    LibrarySort.added,
+  ];
+
+  List<LibrarySort> get _sortOptions =>
+      _tab == LibraryTab.songs ? _songSorts : _groupSorts;
+
+  LibrarySort get _sort =>
+      _sorts[_tab] ??
+      (_tab == LibraryTab.songs ? LibrarySort.added : LibrarySort.name);
 
   List<Track> _filtered(List<Track> all, AppLocalizations l10n) {
     final q = _query.trim().toLowerCase();
@@ -43,7 +63,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
               t.genre.toLowerCase().contains(q),
         )
         .toList();
-    return sortTracks(list, _sort);
+    return _tab == LibraryTab.songs ? sortTracks(list, _sort) : list;
   }
 
   @override
@@ -56,13 +76,15 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final vm = context.read<NowPlayingCubit>();
     final playing = context.select((NowPlayingCubit c) => c.state.track);
 
+    // 곡 탭은 보이는 줄만 만든다 (곡이 수천 개여도 탭 전환이 느려지지 않게).
+    final lazySongs = _tab == LibraryTab.songs;
     final items = switch (_tab) {
-      LibraryTab.songs => [
-        for (var i = 0; i < tracks.length; i++)
-          _songTile(context, tracks[i], i, tracks),
-      ],
+      LibraryTab.songs => <Widget>[],
       LibraryTab.artists => [
-        for (final e in _groupBy(tracks, (t) => artistOf(l10n, t)).entries)
+        for (final e in sortGroups(
+          _groupBy(tracks, (t) => artistOf(l10n, t)),
+          _sort,
+        ).entries)
           TrackTile(
             key: ValueKey(e.key),
             title: e.key,
@@ -86,7 +108,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
           ),
       ],
       LibraryTab.albums => [
-        for (final e in _groupBy(tracks, (t) => albumOf(l10n, t)).entries)
+        for (final e in sortGroups(
+          _groupBy(tracks, (t) => albumOf(l10n, t)),
+          _sort,
+        ).entries)
           TrackTile(
             key: ValueKey(e.key),
             title: e.key,
@@ -104,7 +129,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
           ),
       ],
       LibraryTab.genres => [
-        for (final e in groupByGenre(tracks).entries)
+        for (final e in sortGroups(groupByGenre(tracks), _sort).entries)
           TrackTile(
             key: ValueKey(e.key),
             title: genreOf(l10n, e.key),
@@ -121,106 +146,131 @@ class _LibraryScreenState extends State<LibraryScreen> {
       ],
     };
 
-    return BlocListener<LibraryImportCubit, LibraryImportState>(
-      listenWhen: (a, b) => a.seq != b.seq,
-      listener: _showOutcome,
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<LibraryImportCubit, LibraryImportState>(
+          listenWhen: (a, b) => a.seq != b.seq,
+          listener: _showOutcome,
+        ),
+        // 내장 커버는 DB에 직접 저장되므로 메모리의 커버 목록을 다시 읽는다.
+        BlocListener<LibraryImportCubit, LibraryImportState>(
+          listenWhen: (a, b) => a.coversSeq != b.coversSeq,
+          listener: (context, _) => context.read<CoverCubit>().load(),
+        ),
+      ],
       child: SafeArea(
         bottom: false,
-        child: ListView(
-          padding: EdgeInsets.only(
-            bottom: AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
-          ),
-          children: [
-            AppTopBar(
-              large: true,
-              title: l10n.navLibrary,
-              subtitle: l10n.librarySubtitle,
-              actions: [
-                CircleIconButton(
-                  icon: importing
-                      ? AppIcons.hourglassTop
-                      : AppIcons.folderUpload,
-                  tooltip: l10n.libraryImport,
-                  onPressed: importing ? null : _import,
+        child: CustomScrollView(
+          slivers: [
+            SliverList(
+              delegate: SliverChildListDelegate([
+                AppTopBar(
+                  large: true,
+                  title: l10n.navLibrary,
+                  subtitle: l10n.librarySubtitle,
+                  actions: [
+                    CircleIconButton(
+                      icon: importing
+                          ? AppIcons.hourglassTop
+                          : AppIcons.folderUpload,
+                      tooltip: l10n.libraryImport,
+                      onPressed: importing ? null : _import,
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            if (all.isEmpty) ...[
-              Padding(
-                padding: AppSpacing.screen,
-                child: _EmptyLibrary(importing: importing, onImport: _import),
-              ),
-            ] else ...[
-              Padding(
-                padding: AppSpacing.screen,
-                child: _LibraryHero(
-                  count: all.length,
-                  downloaded: all
-                      .where((t) => t.source == TrackSource.download)
-                      .length,
-                  playing: playing,
-                  onPlayAll: () => vm.playQueue(tracks),
-                  onShuffle: () => vm.playShuffled(tracks),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              Padding(
-                padding: AppSpacing.screen,
-                child: SegmentedPills<LibraryTab>(
-                  expand: true,
-                  values: LibraryTab.values,
-                  selected: _tab,
-                  labelOf: (t) => switch (t) {
-                    LibraryTab.songs => l10n.librarySongs,
-                    LibraryTab.artists => l10n.libraryArtists,
-                    LibraryTab.albums => l10n.libraryAlbums,
-                    LibraryTab.genres => l10n.libraryGenres,
-                  },
-                  onChanged: (t) => setState(() => _tab = t),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Padding(
-                padding: AppSpacing.screen,
-                child: AppSearchField(
-                  hint: l10n.librarySearchHint,
-                  clearTooltip: l10n.actionClear,
-                  onChanged: (q) => setState(() => _query = q),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Padding(
-                padding: AppSpacing.screen,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: AppDropdown<LibrarySort>(
-                    values: LibrarySort.values,
-                    selected: _sort,
-                    tooltip: l10n.sortLabel,
-                    icon: AppIcons.sort,
-                    labelOf: (s) => switch (s) {
-                      LibrarySort.name => l10n.sortName,
-                      LibrarySort.added => l10n.sortAdded,
-                      LibrarySort.artist => l10n.sortArtist,
-                    },
-                    onChanged: (s) => setState(() => _sort = s),
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              if (items.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(AppSpacing.xl),
-                  child: Center(
-                    child: Text(
-                      l10n.libraryNoMatch,
-                      style: Theme.of(context).textTheme.bodyMedium,
+                if (all.isEmpty) ...[
+                  Padding(
+                    padding: AppSpacing.screen,
+                    child: _EmptyLibrary(
+                      importing: importing,
+                      onImport: _import,
                     ),
                   ),
-                )
-              else
-                ...items,
-            ],
+                ] else ...[
+                  Padding(
+                    padding: AppSpacing.screen,
+                    child: _LibraryHero(
+                      count: all.length,
+                      downloaded: all
+                          .where((t) => t.source == TrackSource.download)
+                          .length,
+                      playing: playing,
+                      onPlayAll: () => vm.playQueue(tracks),
+                      onShuffle: () => vm.playShuffled(tracks),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  Padding(
+                    padding: AppSpacing.screen,
+                    child: SegmentedPills<LibraryTab>(
+                      expand: true,
+                      values: LibraryTab.values,
+                      selected: _tab,
+                      labelOf: (t) => switch (t) {
+                        LibraryTab.songs => l10n.librarySongs,
+                        LibraryTab.artists => l10n.libraryArtists,
+                        LibraryTab.albums => l10n.libraryAlbums,
+                        LibraryTab.genres => l10n.libraryGenres,
+                      },
+                      onChanged: (t) => setState(() => _tab = t),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Padding(
+                    padding: AppSpacing.screen,
+                    child: AppSearchField(
+                      hint: l10n.librarySearchHint,
+                      clearTooltip: l10n.actionClear,
+                      onChanged: (q) => setState(() => _query = q),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Padding(
+                    padding: AppSpacing.screen,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: AppDropdown<LibrarySort>(
+                        values: _sortOptions,
+                        selected: _sort,
+                        tooltip: l10n.sortLabel,
+                        icon: AppIcons.sort,
+                        labelOf: (s) => switch (s) {
+                          LibrarySort.name => l10n.sortName,
+                          LibrarySort.added => l10n.sortAdded,
+                          LibrarySort.artist => l10n.sortArtist,
+                          LibrarySort.count => l10n.sortCount,
+                        },
+                        onChanged: (s) => setState(() => _sorts[_tab] = s),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  if (items.isEmpty && !(lazySongs && tracks.isNotEmpty))
+                    Padding(
+                      padding: const EdgeInsets.all(AppSpacing.xl),
+                      child: Center(
+                        child: Text(
+                          l10n.libraryNoMatch,
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ),
+                    )
+                  else
+                    ...items,
+                ],
+              ]),
+            ),
+            if (lazySongs && all.isNotEmpty)
+              SliverList.builder(
+                itemCount: tracks.length,
+                itemBuilder: (context, i) =>
+                    _songTile(context, tracks[i], i, tracks),
+              ),
+            SliverToBoxAdapter(
+              child: SizedBox(
+                height: AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
+              ),
+            ),
           ],
         ),
       ),
@@ -374,27 +424,14 @@ class _EmptyLibrary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
-      child: Column(
-        children: [
-          Icon(AppIcons.library, size: 40, color: context.palette.accent),
-          const SizedBox(height: AppSpacing.md),
-          Text(l10n.libraryEmptyTitle, style: text.titleLarge),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            l10n.libraryEmptyBody,
-            style: text.bodyMedium,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          PillButton(
-            label: importing ? l10n.importing : l10n.libraryImport,
-            icon: AppIcons.folderUpload,
-            onPressed: importing ? null : onImport,
-          ),
-        ],
+    return EmptyState(
+      icon: AppIcons.library,
+      title: l10n.libraryEmptyTitle,
+      body: l10n.libraryEmptyBody,
+      action: PillButton(
+        label: importing ? l10n.importing : l10n.libraryImport,
+        icon: AppIcons.folderUpload,
+        onPressed: importing ? null : onImport,
       ),
     );
   }

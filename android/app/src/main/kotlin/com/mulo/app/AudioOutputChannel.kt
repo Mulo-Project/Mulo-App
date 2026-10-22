@@ -1,40 +1,37 @@
 package com.mulo.app
 
 import android.content.Context
+import android.media.AudioDeviceCallback
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
+import android.os.Handler
+import android.os.Looper
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
 
-/** 지금 소리가 나가는 출력 기기(블루투스 · 유선 · USB · 스피커)를 알려 준다. */
+/** 지금 소리가 나가는 출력 기기를 알려 주고, 기기가 바뀌면(연결 · 끊김) 앱(Dart)에 `changed`로 알린다. */
 class AudioOutputChannel(private val context: Context, messenger: BinaryMessenger) {
     private val channel = MethodChannel(messenger, NAME)
+    private val audio = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+
+    private val callback = object : AudioDeviceCallback() {
+        override fun onAudioDevicesAdded(addedDevices: Array<out AudioDeviceInfo>) = notifyChanged()
+        override fun onAudioDevicesRemoved(removedDevices: Array<out AudioDeviceInfo>) = notifyChanged()
+    }
 
     init {
         channel.setMethodCallHandler { call, result ->
-            if (call.method == "current") result.success(current()) else result.notImplemented()
+            if (call.method == "current") result.success(AudioOutputs.current(context)) else result.notImplemented()
         }
+        audio.registerAudioDeviceCallback(callback, Handler(Looper.getMainLooper()))
     }
 
-    private fun current(): Map<String, String> {
-        val audio = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        val devices = audio.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
-        // 우선순위: 블루투스 > 유선 > USB > 내장 스피커.
-        fun pick(vararg types: Int) = devices.firstOrNull { it.type in types }
-        val bt = pick(AudioDeviceInfo.TYPE_BLUETOOTH_A2DP, AudioDeviceInfo.TYPE_BLUETOOTH_SCO, AudioDeviceInfo.TYPE_BLE_HEADSET, AudioDeviceInfo.TYPE_BLE_SPEAKER)
-        val wired = pick(AudioDeviceInfo.TYPE_WIRED_HEADPHONES, AudioDeviceInfo.TYPE_WIRED_HEADSET)
-        val usb = pick(AudioDeviceInfo.TYPE_USB_DEVICE, AudioDeviceInfo.TYPE_USB_HEADSET)
-        val (type, info) = when {
-            bt != null -> "bluetooth" to bt
-            wired != null -> "wired" to wired
-            usb != null -> "usb" to usb
-            else -> "speaker" to pick(AudioDeviceInfo.TYPE_BUILTIN_SPEAKER)
-        }
-        val name = if (type == "speaker") "" else info?.productName?.toString() ?: ""
-        return mapOf("type" to type, "name" to name)
+    private fun notifyChanged() {
+        channel.invokeMethod("changed", AudioOutputs.current(context))
     }
 
     fun dispose() {
+        audio.unregisterAudioDeviceCallback(callback)
         channel.setMethodCallHandler(null)
     }
 

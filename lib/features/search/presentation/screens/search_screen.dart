@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -6,9 +7,10 @@ import '../../../../app/router.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../downloads/domain/entities/download_item.dart';
+import '../../../downloads/domain/entities/download_source.dart';
 import '../../../downloads/presentation/bloc/download_queue_cubit.dart';
 import '../../../downloads/presentation/widgets/download_dialog.dart';
-import '../../../downloads/presentation/widgets/download_progress_card.dart';
 import '../../../library/domain/entities/track.dart' show formatDuration;
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
@@ -53,6 +55,20 @@ class _SearchScreenState extends State<SearchScreen> {
 
   void _submit() => _cubit.submit(_controller.text, _source);
 
+  /// 클립보드의 링크를 입력칸에 넣고 바로 곡 정보를 불러온다.
+  Future<void> _pasteLink() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final empty = context.l10n.searchPasteEmpty;
+    final text = (await Clipboard.getData(Clipboard.kTextPlain))?.text?.trim();
+    if (!mounted) return;
+    if (text == null || !SearchCubit.isUrl(text)) {
+      messenger.showSnackBar(SnackBar(content: Text(empty)));
+      return;
+    }
+    _controller.text = text;
+    _submit();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -75,26 +91,31 @@ class _SearchScreenState extends State<SearchScreen> {
               padding: AppSpacing.screen,
               child: AppSearchField(
                 controller: _controller,
-                hint: _source == SearchSource.web
-                    ? l10n.searchHintWeb
-                    : l10n.searchHint,
+                hint: _source == SearchSource.youtube
+                    ? l10n.searchHint
+                    : l10n.searchHintSite(sourceLabel(context, _source)),
                 clearTooltip: l10n.actionClear,
                 onChanged: (q) {
                   if (q.trim().isEmpty) _submit();
                 },
                 onSubmitted: (_) => _submit(),
-                suffix: SearchSourceMenu(
+                leading: SearchSourceMenu(
                   source: _source,
                   onChanged: (s) {
                     setState(() => _source = s);
                     if (_controller.text.trim().isNotEmpty) _submit();
                   },
                 ),
+                suffix: RowIconButton(
+                  icon: AppIcons.search,
+                  tooltip: l10n.searchSubmitTooltip,
+                  accent: true,
+                  onPressed: _submit,
+                ),
               ),
             ),
-            const _DownloadCard(),
             const SizedBox(height: AppSpacing.md),
-            _Body(onRetry: _submit),
+            _Body(onRetry: _submit, onPaste: _pasteLink),
           ],
         ),
       ),
@@ -102,31 +123,11 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 }
 
-/// 검색창 아래, 받는 중인 곡이 있을 때만 보인다.
-class _DownloadCard extends StatelessWidget {
-  const _DownloadCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final queue = context.watch<DownloadQueueCubit>().state;
-    final current = queue.current;
-    if (current == null) return const SizedBox.shrink();
-    return Padding(
-      padding: AppSpacing.screen.copyWith(top: AppSpacing.sm),
-      child: DownloadProgressCard(
-        current: current,
-        total: queue.items.length,
-        done: queue.doneCount,
-        progress: queue.overallProgress,
-      ),
-    );
-  }
-}
-
 class _Body extends StatelessWidget {
-  const _Body({required this.onRetry});
+  const _Body({required this.onRetry, required this.onPaste});
 
   final VoidCallback onRetry;
+  final VoidCallback onPaste;
 
   @override
   Widget build(BuildContext context) {
@@ -139,6 +140,12 @@ class _Body extends StatelessWidget {
           icon: AppIcons.explore,
           title: l10n.searchEmptyTitle,
           body: l10n.searchEmptyBody,
+          action: PillButton(
+            label: l10n.searchPasteLink,
+            icon: AppIcons.paste,
+            variant: PillVariant.tonal,
+            onPressed: onPaste,
+          ),
         );
       case SearchStatus.loading:
         return const Padding(
@@ -268,7 +275,9 @@ class _SortMenu extends StatelessWidget {
       // 최신순은 검색을 날짜 순으로 다시 하는 것이라 키워드 검색일 때만 있다.
       values: [
         for (final s in SearchSort.values)
-          if (s != SearchSort.newest || state.keyword) s,
+          if (s != SearchSort.newest ||
+              (state.keyword && cubit.source.supportsNewest))
+            s,
       ],
       selected: state.sort,
       labelOf: (s) => switch (s) {
@@ -345,6 +354,34 @@ class _HitTile extends StatelessWidget {
       if (hit.downloaded) l10n.alreadyDownloaded,
     ].join(' · ');
     final thumb = hit.thumbnailUrl;
+    // 받기 버튼 아이콘은 이 곡의 받기 상태를 따른다 (받는 중 · 대기 · 받음).
+    final key = downloadSourceKey(hit.url);
+    final status = context.select<DownloadQueueCubit, DownloadStatus?>((c) {
+      DownloadStatus? found;
+      for (final e in c.state.items) {
+        if (downloadSourceKey(e.url) != key) continue;
+        if (e.status == DownloadStatus.downloading) return e.status;
+        if (e.isActive) found = e.status;
+      }
+      return found;
+    });
+    final (icon, tooltip) = switch (status) {
+      DownloadStatus.downloading => (
+        AppIcons.hourglassTop,
+        l10n.downloadStateDownloading,
+      ),
+      DownloadStatus.queued || DownloadStatus.paused => (
+        AppIcons.hourglassEmpty,
+        l10n.downloadStateQueued,
+      ),
+      _
+          when hit.downloaded ||
+              context.select<DownloadQueueCubit, bool>(
+                (c) => c.isDownloaded(hit.url),
+              ) =>
+        (AppIcons.checkCircle, l10n.downloadStateDone),
+      _ => (AppIcons.download, l10n.actionDownload),
+    };
 
     return TrackTile(
       title: hit.title,
@@ -357,8 +394,8 @@ class _HitTile extends StatelessWidget {
         children: [
           PreviewRowButton(hit: hit),
           RowIconButton(
-            icon: AppIcons.download,
-            tooltip: l10n.actionDownload,
+            icon: icon,
+            tooltip: tooltip,
             onPressed: () => _download(context),
           ),
         ],
@@ -430,37 +467,6 @@ class _Hint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    return Padding(
-      padding: AppSpacing.screen,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
-        child: Column(
-          children: [
-            GlassSurface(
-              shape: const CircleBorder(),
-              child: SizedBox.square(
-                dimension: 64,
-                child: Icon(icon, size: 30, color: context.palette.accent),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(title, style: text.titleLarge),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              body,
-              style: text.bodyMedium?.copyWith(
-                color: context.palette.onSurfaceMuted,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            if (action != null) ...[
-              const SizedBox(height: AppSpacing.lg),
-              action!,
-            ],
-          ],
-        ),
-      ),
-    );
+    return EmptyState(icon: icon, title: title, body: body, action: action);
   }
 }

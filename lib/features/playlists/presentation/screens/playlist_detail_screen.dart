@@ -9,9 +9,10 @@ import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../downloads/domain/entities/download_item.dart';
 import '../../../downloads/presentation/bloc/download_queue_cubit.dart';
-import '../../../downloads/presentation/widgets/download_progress_card.dart';
+import '../../../downloads/presentation/widgets/download_item_widgets.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../library/presentation/widgets/play_shuffle_row.dart';
+import '../../../library/presentation/widgets/lazy_track_list.dart';
 import '../../../library/presentation/widgets/track_list_tile.dart';
 import '../bloc/playlist_tracks_cubit.dart';
 import '../bloc/playlists_cubit.dart';
@@ -55,11 +56,11 @@ class _Body extends StatelessWidget {
 
     return SafeArea(
       bottom: false,
-      child: ListView(
+      child: LazyTrackList(
         padding: EdgeInsets.only(
           bottom: AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
         ),
-        children: [
+        header: [
           AppTopBar(
             title: pl == null ? '' : playlistNameOf(l10n, pl),
             leading: CircleIconButton(
@@ -139,17 +140,17 @@ class _Body extends StatelessWidget {
                   l10n.playlistDetailEmpty,
                   style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
                 ),
-              )
-            else
-              for (final (i, t) in (tracks ?? const <Track>[]).indexed)
-                TrackListTile(
-                  track: t,
-                  queue: tracks!,
-                  index: i,
-                  playlistId: playlistId,
-                ),
+              ),
           ],
         ],
+        trackCount: tracks?.length ?? 0,
+        trackBuilder: (context, i) => TrackListTile(
+          track: tracks![i],
+          queue: tracks,
+          index: i,
+          playlistId: playlistId,
+          showNumber: true,
+        ),
       ),
     );
   }

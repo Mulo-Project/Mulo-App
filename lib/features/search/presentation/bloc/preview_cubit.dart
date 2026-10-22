@@ -134,9 +134,9 @@ class PreviewCubit extends Cubit<PreviewState> {
   /// 시작 · 멈춤마다 올린다. 느리게 돌아온 이전 요청의 결과를 버리려고.
   var _generation = 0;
 
-  /// [hit]을 미리 듣는다. 이미 듣는 중이면 멈춘다.
+  /// [hit]을 미리 듣는다. 이미 듣는 중이면 멈춘다. [audioLanguage]는 고른 오디오 언어 (null이면 기본 음성).
   /// 시작하지 못했으면 까닭을, 잘 됐거나 중간에 취소됐으면 null을 돌려준다.
-  Future<EngineFailure?> toggle(MediaHit hit) async {
+  Future<EngineFailure?> toggle(MediaHit hit, {String? audioLanguage}) async {
     if (state.isActive(hit.id)) {
       await stop();
       return null;
@@ -156,13 +156,14 @@ class PreviewCubit extends Cubit<PreviewState> {
       ),
     );
     try {
-      final stream = await _resolve(hit.url).timeout(
-        _resolveTimeout,
-        onTimeout: () => throw const EngineException(
-          EngineFailure.failed,
-          'resolve timeout (60s): 주소를 읽지 못함',
-        ),
-      );
+      final stream = await _resolve(hit.url, audioLanguage: audioLanguage)
+          .timeout(
+            _resolveTimeout,
+            onTimeout: () => throw const EngineException(
+              EngineFailure.failed,
+              'resolve timeout (60s): 주소를 읽지 못함',
+            ),
+          );
       if (generation != _generation || isClosed) return null;
       await _play(stream).timeout(
         _playTimeout,

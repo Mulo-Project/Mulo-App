@@ -1,127 +1,115 @@
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'dart:async';
+
+import 'package:flutter/services.dart';
 
 import '../../../../core/design/tokens/app_palette.dart';
 import '../../domain/repositories/download_notifier.dart';
 import '../datasources/notification_texts.dart';
 
-/// Android 알림창에 받기 진행 · 결과를 띄운다 (flutter_local_notifications).
-/// 받는 중 알림은 포그라운드 서비스(dataSync)로 띄워 앱이 뒤로 가도 받기가 이어지게 한다.
+/// Android 알림창에 받기 진행 · 결과를 띄운다. 알림 · 포그라운드 서비스 · 버튼 수신은 네이티브(Kotlin,
+/// `music_app/download_notification`)가 맡고, 여기서는 내용을 넘기고 버튼 누름을 받는다.
+/// 버튼은 앱 화면을 열지 않고 살아 있는 엔진으로 바로 전달된다.
+/// 받는 중 알림은 [showProgress]의 `foreground`가 true일 때 포그라운드 서비스(dataSync)로 띄워
+/// 앱이 뒤로 가거나 닫혀도 받기가 이어지게 한다. 알림의 미리 듣기 버튼은 [watchActions]로 알린다.
 class LocalDownloadNotifier implements DownloadNotifier {
-  static const _icon = 'ic_stat_mulo';
-  static const _progressId = 2001;
-  static const _progressChannel = 'com.mulo.app.download_progress';
-  static const _doneChannel = 'com.mulo.app.download_done';
-  static const _failedChannel = 'com.mulo.app.download_failed';
-
-  final _plugin = FlutterLocalNotificationsPlugin();
-  Future<void>? _init;
-  var _foreground = false;
-  final _resultIds = <int>{};
-
-  AndroidFlutterLocalNotificationsPlugin? get _android => _plugin
-      .resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin
-      >();
-
-  Future<void> _ensureInit() => _init ??= _initialize();
-
-  Future<void> _initialize() async {
-    await _plugin.initialize(
-      const InitializationSettings(
-        android: AndroidInitializationSettings(_icon),
-      ),
-    );
-    final l10n = systemL10n();
-    final android = _android;
-    await android?.createNotificationChannel(
-      AndroidNotificationChannel(
-        _progressChannel,
-        l10n.notifChannelDownloadProgress,
-        importance: Importance.low,
-        playSound: false,
-        enableVibration: false,
-        showBadge: false,
-      ),
-    );
-    await android?.createNotificationChannel(
-      AndroidNotificationChannel(
-        _doneChannel,
-        l10n.notifChannelDownloadDone,
-        importance: Importance.low,
-        playSound: false,
-        enableVibration: false,
-      ),
-    );
-    await android?.createNotificationChannel(
-      AndroidNotificationChannel(
-        _failedChannel,
-        l10n.notifChannelDownloadFailed,
-        importance: Importance.defaultImportance,
-      ),
-    );
+  LocalDownloadNotifier({MethodChannel? channel})
+    : _channel =
+          channel ?? const MethodChannel('music_app/download_notification') {
+    _channel.setMethodCallHandler(_onCall);
   }
 
-  AndroidNotificationDetails _progressDetails(int? percent) =>
-      AndroidNotificationDetails(
-        _progressChannel,
-        systemL10n().notifChannelDownloadProgress,
-        icon: _icon,
-        color: AppPalette.violet,
-        importance: Importance.low,
-        priority: Priority.low,
-        category: AndroidNotificationCategory.progress,
-        ongoing: true,
-        onlyAlertOnce: true,
-        showProgress: true,
-        maxProgress: 100,
-        progress: percent ?? 0,
-        indeterminate: percent == null,
-        playSound: false,
-        enableVibration: false,
-        showWhen: false,
-        visibility: NotificationVisibility.private,
-      );
+  final MethodChannel _channel;
+  Future<void>? _init;
+  final _actions = StreamController<DownloadNotificationAction>.broadcast();
+  final _opens = StreamController<String>.broadcast();
+
+  @override
+  Stream<DownloadNotificationAction> watchActions() => _actions.stream;
+
+  @override
+  Stream<String> watchOpenRequests() => _opens.stream;
+
+  @override
+  Future<String?> takeOpenRequest() async {
+    try {
+      return await _channel.invokeMethod<String>('takeOpen');
+    } on PlatformException {
+      return null;
+    } on MissingPluginException {
+      return null;
+    }
+  }
+
+  Future<void> _onCall(MethodCall call) async {
+    if (call.method == 'open') {
+      final id = await takeOpenRequest();
+      if (id != null) _opens.add(id);
+      return;
+    }
+    if (call.method != 'action') return;
+    final action = switch (call.arguments) {
+      'preview' => DownloadNotificationAction.preview,
+      'pausePreview' => DownloadNotificationAction.pausePreview,
+      'stopPreview' => DownloadNotificationAction.stopPreview,
+      'cancel' => DownloadNotificationAction.cancel,
+      _ => null,
+    };
+    if (action != null) _actions.add(action);
+  }
+
+  Future<void> _ensureInit() => _init ??= () {
+    final l10n = systemL10n();
+    return _channel.invokeMethod<void>('init', {
+      'progressChannel': l10n.notifChannelDownloadProgress,
+      'doneChannel': l10n.notifChannelDownloadDone,
+      'failedChannel': l10n.notifChannelDownloadFailed,
+    });
+  }();
+
+  /// 채널 호출이 실패해도(네이티브가 아직 없는 빌드 등) 받기 흐름은 막지 않는다.
+  Future<void> _call(String method, [Map<String, Object?>? args]) async {
+    try {
+      await _ensureInit();
+      await _channel.invokeMethod<void>(method, args);
+    } on PlatformException {
+      // 알림은 부가 기능이다.
+    } on MissingPluginException {
+      // 알림은 부가 기능이다.
+    }
+  }
 
   @override
   Future<void> showProgress({
     required String title,
     required String body,
     int? percent,
-  }) async {
-    await _ensureInit();
-    final details = _progressDetails(percent);
-    if (_foreground) {
-      await _plugin.show(
-        _progressId,
-        title,
-        body,
-        NotificationDetails(android: details),
-      );
-      return;
-    }
-    final android = _android;
-    if (android == null) return;
-    await android.startForegroundService(
-      _progressId,
-      title,
-      body,
-      notificationDetails: details,
-      foregroundServiceTypes: {
-        AndroidServiceForegroundType.foregroundServiceTypeDataSync,
-      },
-    );
-    _foreground = true;
-  }
+    bool foreground = true,
+    String? subText,
+    String? previewLabel,
+    String? cancelLabel,
+    String? pauseLabel,
+    String? stopLabel,
+    String? openId,
+    String? artUri,
+  }) => _call('showProgress', {
+    'title': title,
+    'body': body,
+    'percent': percent,
+    'foreground': foreground,
+    'subText': subText,
+    'previewLabel': previewLabel,
+    'cancelLabel': cancelLabel,
+    'pauseLabel': pauseLabel,
+    'stopLabel': stopLabel,
+    'openId': openId,
+    'artUri': artUri,
+    'color': AppPalette.violet.toARGB32(),
+  });
 
   @override
   Future<void> clearProgress() async {
     if (_init == null) return;
-    await _ensureInit();
-    if (_foreground) {
-      _foreground = false;
-      await _android?.stopForegroundService();
-    }
-    await _plugin.cancel(_progressId);
+    await _call('clearProgress');
   }
 
   @override
@@ -130,40 +118,20 @@ class LocalDownloadNotifier implements DownloadNotifier {
     required String title,
     required String body,
     required bool failed,
-  }) async {
-    await _ensureInit();
-    final l10n = systemL10n();
-    final notificationId = 3000 + (id.hashCode & 0xFFFFF);
-    _resultIds.add(notificationId);
-    await _plugin.show(
-      notificationId,
-      title,
-      body,
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          failed ? _failedChannel : _doneChannel,
-          failed
-              ? l10n.notifChannelDownloadFailed
-              : l10n.notifChannelDownloadDone,
-          icon: _icon,
-          color: AppPalette.violet,
-          importance: failed ? Importance.defaultImportance : Importance.low,
-          priority: failed ? Priority.defaultPriority : Priority.low,
-          category: AndroidNotificationCategory.status,
-          autoCancel: true,
-          styleInformation: BigTextStyleInformation(body),
-          visibility: NotificationVisibility.private,
-        ),
-      ),
-    );
-  }
+    String? artUri,
+  }) => _call('showResult', {
+    'id': id,
+    'openId': id,
+    'title': title,
+    'body': body,
+    'failed': failed,
+    'artUri': artUri,
+    'color': AppPalette.violet.toARGB32(),
+  });
 
   @override
   Future<void> clearResults() async {
     if (_init == null) return;
-    for (final id in _resultIds) {
-      await _plugin.cancel(id);
-    }
-    _resultIds.clear();
+    await _call('clearResults');
   }
 }

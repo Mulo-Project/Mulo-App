@@ -24,28 +24,29 @@ class MenuRow extends StatelessWidget {
     final color = destructive
         ? Theme.of(context).colorScheme.error
         : p.onSurface;
+    // 면 · 테두리 없이 줄만 둔다 (카드 모양을 쓰지 않는다). 누르면 옅게 물든다.
     return Material(
-      color: p.surfaceHigh,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadii.md),
-        side: BorderSide(color: p.outline),
-      ),
-      clipBehavior: Clip.antiAlias,
+      type: MaterialType.transparency,
       child: InkWell(
         onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadii.sm),
         child: Padding(
+          // 가로 여백 없이 시트 제목과 왼쪽 선을 맞춘다.
           padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
+            vertical: AppSpacing.sm + AppSpacing.xxs,
           ),
           child: Row(
             children: [
-              Icon(icon, size: 20, color: color),
+              Icon(icon, size: AppSizes.iconMd, color: color),
               const SizedBox(width: AppSpacing.sm),
-              Text(
-                label,
-                style: Theme.of(context).textTheme.bodyLarge
-                    ?.copyWith(color: color),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyLarge
+                      ?.copyWith(color: color),
+                ),
               ),
             ],
           ),

@@ -51,11 +51,31 @@ class DownloadProgressNotice {
     required this.title,
     required this.body,
     this.percent,
+    this.foreground = true,
+    this.subText,
+    this.previewLabel,
+    this.cancelLabel,
+    this.pauseLabel,
+    this.stopLabel,
+    this.openId,
+    this.artUri,
   });
 
   final String title;
   final String body;
   final int? percent;
+  final bool foreground;
+  final String? subText;
+  final String? previewLabel;
+  final String? cancelLabel;
+  final String? pauseLabel;
+  final String? stopLabel;
+
+  /// 알림을 누르면 상세 화면을 열 받기 항목의 id.
+  final String? openId;
+
+  /// 알림의 큰 아이콘 자리에 보일 곡 이미지 (웹 주소 또는 파일 경로).
+  final String? artUri;
 }
 
 class ShowDownloadProgress implements UseCase<void, DownloadProgressNotice> {
@@ -67,6 +87,14 @@ class ShowDownloadProgress implements UseCase<void, DownloadProgressNotice> {
     title: params.title,
     body: params.body,
     percent: params.percent,
+    foreground: params.foreground,
+    subText: params.subText,
+    previewLabel: params.previewLabel,
+    cancelLabel: params.cancelLabel,
+    pauseLabel: params.pauseLabel,
+    stopLabel: params.stopLabel,
+    openId: params.openId,
+    artUri: params.artUri,
   );
 }
 
@@ -84,12 +112,16 @@ class DownloadResultNotice {
     required this.title,
     required this.body,
     required this.failed,
+    this.artUri,
   });
 
   final String id;
   final String title;
   final String body;
   final bool failed;
+
+  /// 알림의 큰 아이콘 자리에 보일 곡 이미지 (웹 주소 또는 파일 경로).
+  final String? artUri;
 }
 
 class ShowDownloadResult implements UseCase<void, DownloadResultNotice> {
@@ -102,6 +134,7 @@ class ShowDownloadResult implements UseCase<void, DownloadResultNotice> {
     title: params.title,
     body: params.body,
     failed: params.failed,
+    artUri: params.artUri,
   );
 }
 
@@ -111,6 +144,32 @@ class ClearDownloadResults implements UseCase<void, NoParams> {
 
   @override
   Future<void> call(NoParams params) => _notifier.clearResults();
+}
+
+class WatchDownloadActions
+    implements StreamUseCase<DownloadNotificationAction, NoParams> {
+  const WatchDownloadActions(this._notifier);
+  final DownloadNotifier _notifier;
+
+  @override
+  Stream<DownloadNotificationAction> call(NoParams params) =>
+      _notifier.watchActions();
+}
+
+class WatchDownloadOpens implements StreamUseCase<String, NoParams> {
+  const WatchDownloadOpens(this._notifier);
+  final DownloadNotifier _notifier;
+
+  @override
+  Stream<String> call(NoParams params) => _notifier.watchOpenRequests();
+}
+
+class TakeDownloadOpen implements UseCase<String?, NoParams> {
+  const TakeDownloadOpen(this._notifier);
+  final DownloadNotifier _notifier;
+
+  @override
+  Future<String?> call(NoParams params) => _notifier.takeOpenRequest();
 }
 
 class WatchMediaCommands implements StreamUseCase<MediaCommand, NoParams> {
@@ -129,6 +188,15 @@ class UpdateMediaSession implements UseCase<void, MediaSessionInfo?> {
   Future<void> call(MediaSessionInfo? params) => _session.update(params);
 }
 
+class UpdateMediaQueueArt implements UseCase<void, Map<String, String>> {
+  const UpdateMediaQueueArt(this._session);
+  final MediaSession _session;
+
+  @override
+  Future<void> call(Map<String, String> params) =>
+      _session.updateQueueArt(params);
+}
+
 /// 알림 유스케이스 묶음 (알림 동기화 Cubit이 한 번에 받는다).
 class NotificationActions {
   const NotificationActions({
@@ -137,7 +205,11 @@ class NotificationActions {
     required this.showResult,
     required this.clearResults,
     required this.watchCommands,
+    required this.watchDownloadActions,
+    required this.watchDownloadOpens,
+    required this.takeDownloadOpen,
     required this.updateSession,
+    required this.updateQueueArt,
     required this.isPermissionGranted,
     required this.requestPermission,
   });
@@ -147,7 +219,11 @@ class NotificationActions {
   final ShowDownloadResult showResult;
   final ClearDownloadResults clearResults;
   final WatchMediaCommands watchCommands;
+  final WatchDownloadActions watchDownloadActions;
+  final WatchDownloadOpens watchDownloadOpens;
+  final TakeDownloadOpen takeDownloadOpen;
   final UpdateMediaSession updateSession;
+  final UpdateMediaQueueArt updateQueueArt;
   final IsNotificationPermissionGranted isPermissionGranted;
   final RequestNotificationPermission requestPermission;
 }

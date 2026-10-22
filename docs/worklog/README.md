@@ -37,6 +37,7 @@
 | 2026-10-01 | [앱 이름 Mulo · 패키지 com.mulo.app](2026-10-01-rename-mulo.md) | 완료 (PR 대기) |
 | 2026-10-01 | [재생목록 카드 · 요약 · 설정 메뉴](2026-10-01-playlist-card.md) | 완료 (PR 대기) |
 | 2026-10-01 | [설정 보안 섹션 · 앱 잠금](2026-10-01-settings-security.md) | 완료 (PR 대기) |
+| 2026-10-15 | [지문 인증 재확인 (시작 직후 굳음)](2026-10-15-biometric-recheck-on-resume.md) | 완료 (PR 대기) |
 | 2026-10-01 | [검색 · 다운로드 피드백 반영](2026-10-01-search-download-feedback.md) | 완료 (PR 대기) |
 | 2026-10-01 | [서버 주소 dart-define 전환](2026-10-01-server-url-dart-define.md) | 완료 (PR 대기) |
 | 2026-10-01 | [불러오는 폴더 목록 (바텀 시트)](2026-10-01-loaded-folders-sheet.md) | 완료 (PR 대기) |
@@ -85,3 +86,23 @@
 | 2026-10-07 | [설정의 플레이어 테마 선택](2026-10-07-settings-player-theme.md) | 완료 (merge 대기) |
 | 2026-10-07 | [재생 알림 디자인 개선](2026-10-07-playback-notification-design.md) | 완료 (merge 대기) |
 | 2026-10-07 | [미리 듣기를 재생 알림에 합치기](2026-10-07-preview-in-media-notification.md) | 완료 (merge 대기) |
+| 2026-10-07 | [백그라운드 받기 설정과 받기 알림 개편](2026-10-07-background-download.md) | 완료 (PR 대기) |
+| 2026-10-07 | [받기 포그라운드 서비스 · 진행 알림 제거](2026-10-07-remove-download-service.md) | 진행 중 (확인 대기) |
+| 2026-10-08 | [하단 받기 진행 줄 · 미리 듣기 미니 플레이어 통합](2026-10-08-bottom-download-bar.md) | 진행 중 (PR 확인 대기) |
+| 2026-10-08 | [앱 성능 개선 (1차)](2026-10-08-app-performance.md) | 진행 중 |
+| 2026-10-08 | [Android 재생 · 알림 네이티브 이전](2026-10-08-native-media-playback.md) | 진행 중 (확인 대기) |
+| 2026-10-08 | [재생 대기열을 네이티브에 넘겨 앱이 꺼져도 다음 곡으로 이어가기](2026-10-08-queue-snapshot-playback.md) | 진행 중 (PR 확인 대기) |
+| 2026-10-11 | [받기 알림 · 포그라운드 서비스 복원 (네이티브)](2026-10-11-restore-download-notification.md) | 진행 중 (확인 대기) |
+| 2026-10-11 | [받기 줄 펴짐 렉 · 플로팅 버튼 목록 여백](2026-10-11-download-bar-lag.md) | 진행 중 (확인 대기) |
+| 2026-10-12 | [앱 다듬기 묶음](2026-10-12-app-polish-batch.md) | 진행 중 (기기 확인 대기) |
+| 2026-10-12 | [채널 구독 · 새 영상 골라 받기](2026-10-12-channel-subscriptions.md) | 진행 중 (PR 확인 대기) |
+| 2026-10-12 | [기기 음악 내장 커버 가져오기](2026-10-12-embedded-cover-import.md) | 진행 중 (PR 확인 대기) |
+| 2026-10-12 | [다른 앱과 함께 재생 설정](2026-10-12-play-with-other-apps.md) | 진행 중 (PR 확인 대기) |
+| 2026-10-12 | [미니 플레이어 플로팅 버튼](2026-10-12-mini-player-float.md) | 완료 (PR 대기) |
+| 2026-10-12 | [블루투스 · 출력 기기 연동](2026-10-12-bluetooth-media-controls.md) | 진행 중 (기기 확인 대기) |
+| 2026-10-12 | [앱 전체 시각 다듬기](2026-10-12-visual-polish.md) | 완료 (PR 확인 대기) |
+| 2026-10-14 | [구독 새 영상 알림 점검 · 진단](2026-10-14-subscription-check-diagnostics.md) | 완료 (merge 대기) |
+| 2026-10-22 | [떠 있는 가사 (오버레이)](2026-10-22-lyrics-overlay.md) | 완료 (PR 대기) |
+| 2026-10-22 | [유튜브 오디오 언어 선택](2026-10-22-youtube-audio-language.md) | 완료 (PR 대기) |
+| 2026-10-22 | [영상 상세 · 받기 페이지 섹션 구분](2026-10-22-section-dividers.md) | 완료 (PR 대기) |
+| 2026-10-22 | [이미 받은 곡 다시 받기 확인](2026-10-22-redownload-confirm.md) | 완료 (PR 대기) |

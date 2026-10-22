@@ -4,6 +4,7 @@ import '../../features/account/di.dart';
 import '../../features/covers/di.dart';
 import '../../features/downloads/di.dart';
 import '../../features/engine/di.dart';
+import '../../features/equalizer/di.dart';
 import '../../features/home/di.dart';
 import '../../features/library/di.dart';
 import '../../features/lyrics/di.dart';
@@ -13,6 +14,7 @@ import '../../features/player/di.dart';
 import '../../features/playlists/di.dart';
 import '../../features/search/di.dart';
 import '../../features/security/di.dart';
+import '../../features/subscriptions/di.dart';
 import '../../features/theme/di.dart';
 import '../database/app_database.dart';
 
@@ -32,6 +34,7 @@ void configureDependencies({AppDatabase? database}) {
   registerCovers(sl);
   registerLyrics(sl);
   registerPlayer(sl);
+  registerEqualizer(sl);
   registerHome(sl);
   registerPlaylists(sl);
   registerDownloads(sl);
@@ -39,4 +42,5 @@ void configureDependencies({AppDatabase? database}) {
   registerSearch(sl);
   registerNotifications(sl);
   registerPermissions(sl);
+  registerSubscriptions(sl);
 }

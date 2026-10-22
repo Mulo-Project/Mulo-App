@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 재생 알림 채널 이름 (기기 언어가 영어가 아니면 한국어) -->
+    <string name="notif_channel_playback">재생</string>
+</resources>

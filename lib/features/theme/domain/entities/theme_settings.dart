@@ -10,12 +10,19 @@ enum AppThemeMode {
 
 /// 저장된 테마 설정. 프리셋은 id 문자열로만 다룬다 (색은 presentation이 안다).
 class ThemeSettings extends Equatable {
-  const ThemeSettings({this.presetId, this.mode = AppThemeMode.initial});
+  const ThemeSettings({
+    this.presetId,
+    this.mode = AppThemeMode.initial,
+    this.followMood = false,
+  });
 
   /// 저장된 프리셋 id. 없으면 기본 프리셋.
   final String? presetId;
   final AppThemeMode mode;
 
+  /// 재생 중인 곡의 색을 따라 테마를 자동으로 바꿀지 (곡 분위기 따라가기).
+  final bool followMood;
+
   @override
-  List<Object?> get props => [presetId, mode];
+  List<Object?> get props => [presetId, mode, followMood];
 }

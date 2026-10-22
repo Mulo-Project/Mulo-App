@@ -11,10 +11,15 @@ import '../features/account/presentation/bloc/account_cubit.dart';
 import '../features/covers/presentation/bloc/cover_color_cubit.dart';
 import '../features/covers/presentation/bloc/cover_cubit.dart';
 import '../features/lyrics/presentation/bloc/lyrics_cubit.dart';
+import '../features/lyrics/presentation/bloc/lyrics_overlay_cubit.dart';
+import '../features/lyrics/presentation/bloc/lyrics_settings_cubit.dart';
+import '../features/lyrics/presentation/widgets/lyrics_overlay_bridge.dart';
 import '../features/downloads/presentation/bloc/download_queue_cubit.dart';
 import '../features/downloads/presentation/widgets/download_completion_listener.dart';
 import '../features/downloads/presentation/bloc/download_preferences_cubit.dart';
 import '../features/downloads/presentation/bloc/download_settings_cubit.dart';
+import '../features/equalizer/presentation/bloc/equalizer_cubit.dart';
+import '../features/equalizer/presentation/bloc/equalizer_library_cubit.dart';
 import '../features/home/presentation/bloc/play_recorder_cubit.dart';
 import '../features/library/presentation/bloc/library_cubit.dart';
 import '../features/library/presentation/bloc/library_import_cubit.dart';
@@ -23,12 +28,20 @@ import '../features/notifications/presentation/bloc/notification_sync_cubit.dart
 import '../features/notifications/presentation/widgets/notification_bridge.dart';
 import '../features/player/presentation/bloc/audio_output_cubit.dart';
 import '../features/player/presentation/bloc/now_playing_cubit.dart';
+import '../features/player/presentation/bloc/output_behavior_cubit.dart';
+import '../features/player/presentation/bloc/mix_with_others_cubit.dart';
+import '../features/player/presentation/bloc/playback_speed_cubit.dart';
 import '../features/player/presentation/bloc/player_style_cubit.dart';
 import '../features/playlists/presentation/bloc/playlists_cubit.dart';
 import '../features/search/presentation/bloc/preview_cubit.dart';
+import '../features/search/domain/entities/media_info.dart';
+import '../features/search/presentation/screens/media_detail_screen.dart';
 import '../features/security/presentation/bloc/app_lock_cubit.dart';
 import '../features/security/presentation/widgets/lock_gate.dart';
+import '../features/subscriptions/presentation/widgets/new_videos_launcher.dart';
+import '../features/subscriptions/presentation/widgets/new_videos_sheet.dart';
 import '../features/theme/presentation/bloc/theme_cubit.dart';
+import '../features/theme/presentation/widgets/mood_theme_follower.dart';
 import 'router.dart';
 
 /// 앱 루트. 앱 전체에서 쓰는 bloc은 MaterialApp 위에 두어
@@ -48,6 +61,26 @@ class _MusicAppState extends State<MusicApp> {
     initialLocation: widget.initialLocation,
   );
 
+  /// 재생 알림을 눌렀을 때: 현재 곡의 플레이어 화면을 연다 (이미 열려 있으면 그대로).
+  void _openPlayer() {
+    if (_router.routerDelegate.currentConfiguration.uri.path != Routes.player) {
+      _router.push(Routes.player);
+    }
+  }
+
+  /// 받기 알림을 눌렀을 때: 그 곡의 상세 화면을 맨 위에 연다.
+  void _openDownload(MediaHit hit) {
+    _router.routerDelegate.navigatorKey.currentState?.push<void>(
+      MaterialPageRoute(builder: (_) => MediaDetailScreen(hit: hit)),
+    );
+  }
+
+  /// 새 영상 안내 · 알림을 눌렀을 때: 구독 채널의 새 영상 목록을 바텀시트로 연다 (이미 열려 있으면 그대로).
+  void _openNewVideos() {
+    final context = _router.routerDelegate.navigatorKey.currentContext;
+    if (context != null) showNewVideosSheet(context);
+  }
+
   @override
   void dispose() {
     _router.dispose();
@@ -64,11 +97,27 @@ class _MusicAppState extends State<MusicApp> {
         BlocProvider(create: (_) => sl<CoverCubit>()..load()),
         BlocProvider(create: (_) => sl<CoverColorCubit>()..load()),
         BlocProvider(create: (_) => sl<LyricsCubit>()),
+        BlocProvider(create: (_) => sl<LyricsSettingsCubit>()..load()),
+        BlocProvider(create: (_) => sl<LyricsOverlayCubit>()),
         BlocProvider(create: (_) => sl<LibraryCubit>()..start()),
         BlocProvider(create: (_) => sl<LibraryImportCubit>()),
         BlocProvider(create: (_) => sl<NowPlayingCubit>()),
-        BlocProvider(create: (_) => sl<AudioOutputCubit>()..refresh()),
+        BlocProvider(
+          create: (_) => sl<AudioOutputCubit>()
+            ..refresh()
+            ..watch(),
+        ),
         BlocProvider(create: (_) => sl<PlayerStyleCubit>()..load()),
+        BlocProvider(create: (_) => sl<MixWithOthersCubit>()..load()),
+        BlocProvider(create: (_) => sl<OutputBehaviorCubit>()..load()),
+        // 시작할 때 저장된 재생 속도를 재생 엔진에 반영해야 하므로 바로 만든다.
+        BlocProvider(
+          lazy: false,
+          create: (_) => sl<PlaybackSpeedCubit>()..load(),
+        ),
+        // 시작할 때 저장된 이퀄라이저 값을 재생 엔진에 반영해야 하므로 바로 만든다.
+        BlocProvider(lazy: false, create: (_) => sl<EqualizerCubit>()..load()),
+        BlocProvider(create: (_) => sl<EqualizerLibraryCubit>()..load()),
         BlocProvider(create: (_) => sl<PlayRecorderCubit>()),
         BlocProvider(create: (_) => sl<PreviewCubit>()),
         BlocProvider(create: (_) => sl<DownloadQueueCubit>()..start()),
@@ -83,6 +132,10 @@ class _MusicAppState extends State<MusicApp> {
         BlocProvider(lazy: false, create: (_) => sl<PlaylistsCubit>()..start()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeState>(
+        // 화면에 보이는 색 · 모드가 바뀔 때만 앱 전체를 다시 만든다
+        // (프리셋 선택 기록 · 미리보기 표시만 바뀌는 상태는 거른다).
+        buildWhen: (a, b) =>
+            a.dark != b.dark || a.light != b.light || a.mode != b.mode,
         builder: (context, t) => MaterialApp.router(
           onGenerateTitle: (context) => context.l10n.appTitle,
           debugShowCheckedModeBanner: false,
@@ -113,8 +166,17 @@ class _MusicAppState extends State<MusicApp> {
                   ? SystemUiOverlayStyle.light
                   : SystemUiOverlayStyle.dark,
               child: NotificationBridge(
-                child: DownloadCompletionListener(
-                  child: LockGate(child: child!),
+                onOpenPlayer: _openPlayer,
+                onOpenDownload: _openDownload,
+                child: LyricsOverlayBridge(
+                  child: MoodThemeFollower(
+                    child: DownloadCompletionListener(
+                      child: NewVideosLauncher(
+                        onOpen: _openNewVideos,
+                        child: LockGate(child: child!),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             );

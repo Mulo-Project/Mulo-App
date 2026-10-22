@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_theme_tokens.dart';
+import 'tokens/app_dimens.dart';
 import 'tokens/app_palette.dart';
 import 'tokens/app_typography.dart';
 
@@ -39,8 +40,15 @@ ThemeData buildAppTheme(AppPalette p) {
       backgroundColor: p.onSurface,
       contentTextStyle: AppTypography.textTheme(p).bodyMedium
           ?.copyWith(color: p.background),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      insetPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.sheet),
+      ),
+      insetPadding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        0,
+        AppSpacing.md,
+        AppSpacing.sm,
+      ),
     ),
     extensions: [AppThemeTokens(palette: p)],
   );

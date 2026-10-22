@@ -5,10 +5,27 @@ import '../../domain/repositories/media_session.dart';
 /// 알림창이 없는 OS (Windows · Linux · macOS)용: 아무것도 띄우지 않는다.
 class NoDownloadNotifier implements DownloadNotifier {
   @override
+  Stream<DownloadNotificationAction> watchActions() => const Stream.empty();
+
+  @override
+  Stream<String> watchOpenRequests() => const Stream.empty();
+
+  @override
+  Future<String?> takeOpenRequest() async => null;
+
+  @override
   Future<void> showProgress({
     required String title,
     required String body,
     int? percent,
+    bool foreground = true,
+    String? subText,
+    String? previewLabel,
+    String? cancelLabel,
+    String? pauseLabel,
+    String? stopLabel,
+    String? openId,
+    String? artUri,
   }) async {}
 
   @override
@@ -20,6 +37,7 @@ class NoDownloadNotifier implements DownloadNotifier {
     required String title,
     required String body,
     required bool failed,
+    String? artUri,
   }) async {}
 
   @override
@@ -32,4 +50,7 @@ class NoMediaSession implements MediaSession {
 
   @override
   Future<void> update(MediaSessionInfo? info) async {}
+
+  @override
+  Future<void> updateQueueArt(Map<String, String> artById) async {}
 }

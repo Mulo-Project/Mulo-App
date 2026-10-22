@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:get_it/get_it.dart';
 
-import 'data/repositories/audio_service_media_session.dart';
+import 'data/repositories/native_media_session.dart';
 import 'data/repositories/local_download_notifier.dart';
 import 'data/repositories/no_notification_repositories.dart';
 import 'data/repositories/prefs_notification_settings_repository.dart';
@@ -23,7 +23,7 @@ void registerNotifications(GetIt sl) {
       () => Platform.isAndroid ? LocalDownloadNotifier() : NoDownloadNotifier(),
     )
     ..registerLazySingleton<MediaSession>(
-      () => Platform.isAndroid ? AudioServiceMediaSession() : NoMediaSession(),
+      () => Platform.isAndroid ? NativeMediaSession(sl()) : NoMediaSession(),
     )
     ..registerFactory(() => LoadNotificationSettings(sl()))
     ..registerFactory(() => SaveNotificationSettings(sl()))
@@ -37,7 +37,11 @@ void registerNotifications(GetIt sl) {
         showResult: ShowDownloadResult(sl()),
         clearResults: ClearDownloadResults(sl()),
         watchCommands: WatchMediaCommands(sl()),
+        watchDownloadActions: WatchDownloadActions(sl()),
+        watchDownloadOpens: WatchDownloadOpens(sl()),
+        takeDownloadOpen: TakeDownloadOpen(sl()),
         updateSession: UpdateMediaSession(sl()),
+        updateQueueArt: UpdateMediaQueueArt(sl()),
         isPermissionGranted: IsNotificationPermissionGranted(sl()),
         requestPermission: RequestNotificationPermission(sl()),
       ),

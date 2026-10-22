@@ -5,4 +5,5 @@ abstract interface class ThemeSettingsRepository {
   Future<ThemeSettings> load();
   Future<void> savePreset(String presetId);
   Future<void> saveMode(AppThemeMode mode);
+  Future<void> saveFollowMood(bool value);
 }

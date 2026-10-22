@@ -28,3 +28,12 @@ class SaveThemeMode implements UseCase<void, AppThemeMode> {
   @override
   Future<void> call(AppThemeMode mode) => _repo.saveMode(mode);
 }
+
+class SaveFollowMood implements UseCase<void, bool> {
+  const SaveFollowMood(this._repo);
+
+  final ThemeSettingsRepository _repo;
+
+  @override
+  Future<void> call(bool value) => _repo.saveFollowMood(value);
+}

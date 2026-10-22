@@ -10,10 +10,12 @@ import 'package:music_download_play_app/core/design/design.dart';
 import 'package:music_download_play_app/core/di/injector.dart';
 import 'package:music_download_play_app/features/notifications/domain/repositories/media_session.dart';
 import 'package:music_download_play_app/features/player/presentation/bloc/now_playing_cubit.dart';
+import 'package:music_download_play_app/features/search/presentation/widgets/preview_control.dart';
 import 'package:music_download_play_app/features/search/data/engine/cached_engine.dart';
 import 'package:music_download_play_app/features/search/data/engine/explode_engine.dart';
 import 'package:music_download_play_app/features/search/data/engine/local_engine.dart';
 import 'package:music_download_play_app/features/search/data/engine/server_engine.dart';
+import 'package:music_download_play_app/features/search/domain/entities/audio_language.dart';
 import 'package:music_download_play_app/features/search/domain/entities/audio_stream.dart';
 import 'package:music_download_play_app/features/search/domain/entities/engine_exception.dart';
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
@@ -94,7 +96,7 @@ void main() {
         var fail = false;
         final engine = YoutubeExplodeEngine(
           inner,
-          reader: (id) async {
+          reader: (id, {language}) async {
             if (fail) throw const EngineException(EngineFailure.failed);
             return AudioStream(url: 'https://explode/$id');
           },
@@ -117,6 +119,106 @@ void main() {
         );
       },
     );
+
+    test('YoutubeExplodeEngine: 고른 오디오 언어를 읽는 쪽에 넘긴다', () async {
+      final inner = FakeDownloaderEngine();
+      final languages = <String?>[];
+      final engine = YoutubeExplodeEngine(
+        inner,
+        reader: (id, {language}) async {
+          languages.add(language);
+          return AudioStream(url: 'https://explode/$id');
+        },
+      );
+      const url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+      await engine.resolveAudioStream(url, audioLanguage: 'ko');
+      await engine.resolveAudioStream(url);
+      expect(languages, ['ko', null]);
+    });
+
+    test(
+      'YoutubeExplodeEngine: 오디오 언어 목록은 트랙이 둘 이상일 때만 쓰고 아니면 안쪽 엔진에 묻는다',
+      () async {
+        final inner = FakeDownloaderEngine()
+          ..audioLanguages = const [
+            AudioLanguage(id: 'en', name: 'English', isDefault: true),
+            AudioLanguage(id: 'ko', name: 'Korean'),
+          ];
+        var tracks = const <AudioLanguage>[
+          AudioLanguage(id: 'ja', name: 'Japanese', isDefault: true),
+          AudioLanguage(id: 'fr', name: 'French'),
+        ];
+        final engine = YoutubeExplodeEngine(
+          inner,
+          languageReader: (_) async => tracks,
+        );
+        const url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+        expect((await engine.fetchAudioLanguages(url)).map((e) => e.id), [
+          'ja',
+          'fr',
+        ]);
+        tracks = const [AudioLanguage(id: 'ja', name: 'Japanese')];
+        expect((await engine.fetchAudioLanguages(url)).map((e) => e.id), [
+          'en',
+          'ko',
+        ]);
+      },
+    );
+
+    test('LocalEngine: 오디오 언어 목록은 형식의 language에서 읽고 고른 언어로 받는다', () async {
+      final calls = <List<String>>[];
+      final engine = LocalEngine(
+        run: (_, args) async {
+          calls.add(args);
+          return (
+            exitCode: 0,
+            stdout: jsonEncode({
+              'url': 'https://rr.googlevideo.com/audio',
+              'formats': [
+                {'vcodec': 'avc1', 'language': 'en'},
+                {
+                  'vcodec': 'none',
+                  'language': 'en-US',
+                  'format_note': 'English (US) original (default), medium',
+                },
+                {
+                  'vcodec': 'none',
+                  'language': 'ko',
+                  'format_note': 'Korean, medium',
+                },
+                {
+                  'vcodec': 'none',
+                  'language': 'ko',
+                  'format_note': 'Korean, low',
+                },
+              ],
+            }),
+            stderr: '',
+          );
+        },
+      );
+      final found = await engine.fetchAudioLanguages('https://x/v');
+      expect(found, const [
+        AudioLanguage(id: 'en-US', name: 'English (US)', isDefault: true),
+        AudioLanguage(id: 'ko', name: 'Korean'),
+      ]);
+      await engine.resolveAudioStream('https://x/v', audioLanguage: 'ko');
+      expect(calls.last, contains(startsWith('bestaudio[language=ko]')));
+    });
+
+    test('CachedDownloaderEngine: 오디오 언어마다 따로 기억한다', () async {
+      final inner = FakeDownloaderEngine();
+      final engine = CachedDownloaderEngine(inner);
+      await engine.resolveAudioStream('https://x/v');
+      await engine.resolveAudioStream('https://x/v', audioLanguage: 'ko');
+      await engine.resolveAudioStream('https://x/v', audioLanguage: 'ko');
+      expect(inner.audioLanguageArgs, [null, 'ko']);
+    });
+
+    test('audioLanguageId: 트랙 번호를 떼고 언어 코드만 남긴다', () {
+      expect(audioLanguageId('en-US.4'), 'en-US');
+      expect(audioLanguageId('ko'), 'ko');
+    });
 
     test('LocalEngine: 주소가 없으면 실패다', () async {
       final engine = LocalEngine(
@@ -380,7 +482,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('preview-row-button')));
       await tester.pumpAndSettle();
       expect(player.playing, isTrue);
-      expect(find.byKey(const ValueKey('preview-mini-bar')), findsOneWidget);
+      expect(find.byKey(const ValueKey('preview-mini-player')), findsOneWidget);
       // 재생 알림이 미리 듣는 곡으로 바뀐다.
       final session = sl<MediaSession>() as FakeMediaSession;
       expect(session.updates.last?.preview, isTrue);
@@ -389,7 +491,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(player.playing, isFalse);
       expect(find.byTooltip('Preview'), findsOneWidget);
-      expect(find.byKey(const ValueKey('preview-mini-bar')), findsNothing);
+      expect(find.byKey(const ValueKey('preview-mini-player')), findsNothing);
     });
 
     testWidgets('듣는 동안 줄과 상세 화면에 재생 진행도가 보인다', (tester) async {
@@ -413,30 +515,27 @@ void main() {
       expect(find.text('2:00'), findsWidgets);
     });
 
-    testWidgets('미리 듣기 줄의 막대를 누르면 그 자리로 옮기고, 제목을 누르면 상세가 열린다', (tester) async {
-      final player = await openSearch(tester);
+    testWidgets('미리 듣는 동안 미니 플레이어가 그 곡으로 바뀌고, 누르면 상세가 열린다', (tester) async {
+      await openSearch(tester);
       await tester.tap(find.byKey(const ValueKey('preview-row-button')));
       await tester.pumpAndSettle();
-      player.progress(const Duration(seconds: 30), const Duration(minutes: 2));
-      await tester.pump();
 
-      final bar = find.descendant(
-        of: find.byKey(const ValueKey('preview-mini-bar')),
-        matching: find.byKey(const ValueKey('preview-seek')),
+      final bar = find.byKey(const ValueKey('preview-mini-player'));
+      expect(bar, findsOneWidget);
+      // 넘길 곡이 없어서 이전 · 다음 버튼은 없다.
+      expect(find.byTooltip('Previous'), findsNothing);
+      expect(find.byTooltip('Next'), findsNothing);
+
+      await tester.tap(
+        find.descendant(of: bar, matching: find.byType(Text)).first,
       );
-      final r = tester.getRect(bar);
-      await tester.tapAt(Offset(r.left + r.width * .75, r.center.dy));
-      await tester.pump();
-      expect(player.seeks.single.inSeconds, closeTo(90, 2));
-
-      await tester.tap(find.byKey(const ValueKey('preview-mini-open')));
       await tester.pumpAndSettle();
       expect(find.byType(MediaDetailScreen), findsOneWidget);
     });
 
-    testWidgets('준비하는 동안 남은 시간 원이 보이고, 소리가 나면 사라진다', (tester) async {
+    testWidgets('준비하는 동안 미니 플레이어가 미리 듣는 곡으로 바뀌고, 끝나면 사라진다', (tester) async {
       await openSearch(tester);
-      expect(find.byKey(const ValueKey('preview-loading-ring')), findsNothing);
+      expect(find.byKey(const ValueKey('preview-mini-player')), findsNothing);
       final state = tester
           .element(find.byType(AppBottomNav))
           .read<PreviewCubit>();
@@ -450,15 +549,10 @@ void main() {
         ),
       );
       await tester.pump(const Duration(milliseconds: 50));
-      await tester.pump(const Duration(milliseconds: 50));
-      expect(
-        find.byKey(const ValueKey('preview-loading-ring')),
-        findsOneWidget,
-      );
-      expect(find.text('5'), findsOneWidget);
+      expect(find.byKey(const ValueKey('preview-mini-player')), findsOneWidget);
       state.emit(const PreviewState());
       await tester.pumpAndSettle();
-      expect(find.byKey(const ValueKey('preview-loading-ring')), findsNothing);
+      expect(find.byKey(const ValueKey('preview-mini-player')), findsNothing);
     });
 
     testWidgets('상세 화면 버튼으로 미리 듣고, 화면을 나가도 이어진다', (tester) async {
@@ -471,31 +565,37 @@ void main() {
       expect(player.playing, isTrue);
       expect(find.text('Stop preview'), findsOneWidget);
 
+      // 다른 곳에서 잠시 멈춰 두면 상세 화면 버튼도 "이어 듣기"로 바뀌고, 누르면 이어 듣는다.
+      await tester
+          .element(find.byType(PreviewButton))
+          .read<PreviewCubit>()
+          .togglePause();
+      await tester.pumpAndSettle();
+      expect(find.text('Resume preview'), findsOneWidget);
+      await tester.tap(find.text('Resume preview'));
+      await tester.pumpAndSettle();
+      expect(player.playing, isTrue);
+      expect(find.text('Stop preview'), findsOneWidget);
+
       await tester.tap(find.byTooltip('Back'));
       await tester.pumpAndSettle();
       expect(player.playing, isTrue);
-      expect(find.byKey(const ValueKey('preview-mini-bar')), findsOneWidget);
+      expect(find.byKey(const ValueKey('preview-mini-player')), findsOneWidget);
 
-      // 다른 화면의 미리 듣기 줄에서 잠시 멈췄다 이어 듣는다.
-      await tester.tap(find.byKey(const ValueKey('preview-mini-pause')));
+      // 미니 플레이어에서 잠시 멈췄다 이어 듣는다.
+      await tester.tap(find.byTooltip('Pause preview'));
       await tester.pumpAndSettle();
       expect(player.playing, isFalse);
-      expect(find.byKey(const ValueKey('preview-mini-bar')), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('preview-mini-pause')));
+      expect(find.byKey(const ValueKey('preview-mini-player')), findsOneWidget);
+      await tester.tap(find.byTooltip('Resume preview'));
       await tester.pumpAndSettle();
       expect(player.playing, isTrue);
 
       // 멈추기는 끝낸다.
-      await tester.tap(
-        find
-            .descendant(
-              of: find.byKey(const ValueKey('preview-mini-bar')),
-              matching: find.byType(RowIconButton),
-            )
-            .last,
-      );
+      await tester.tap(find.byTooltip('Stop preview').last);
       await tester.pumpAndSettle();
       expect(player.playing, isFalse);
+      expect(find.byKey(const ValueKey('preview-mini-player')), findsNothing);
     });
 
     testWidgets('다른 탭으로 가도 이어진다', (tester) async {
@@ -506,7 +606,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('nav-Home')));
       await tester.pumpAndSettle();
       expect(player.playing, isTrue);
-      expect(find.byKey(const ValueKey('preview-mini-bar')), findsOneWidget);
+      expect(find.byKey(const ValueKey('preview-mini-player')), findsOneWidget);
     });
 
     testWidgets('메인 재생과 섞이지 않는다: 미리 들으면 메인은 멈추고, 메인을 틀면 미리 듣기가 멈춘다', (

@@ -51,7 +51,11 @@ class AppDropdown<T> extends StatelessWidget {
                 SizedBox(
                   width: 24,
                   child: v == selected
-                      ? Icon(AppIcons.check, size: 18, color: p.accent)
+                      ? Icon(
+                          AppIcons.check,
+                          size: AppSizes.iconSm,
+                          color: p.accent,
+                        )
                       : null,
                 ),
                 Flexible(
@@ -79,11 +83,15 @@ class AppDropdown<T> extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              Icon(icon, size: 16, color: p.onSurfaceMuted),
+              Icon(icon, size: AppSizes.iconXs, color: p.onSurfaceMuted),
               const SizedBox(width: AppSpacing.xs),
             ],
             Text(labelOf(selected), style: text),
-            Icon(AppIcons.dropDown, size: 22, color: p.onSurfaceMuted),
+            Icon(
+              AppIcons.dropDown,
+              size: AppSizes.icon,
+              color: p.onSurfaceMuted,
+            ),
           ],
         ),
       ),

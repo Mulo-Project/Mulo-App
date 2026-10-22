@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:equatable/equatable.dart';
@@ -6,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/usecase/usecase.dart';
 import '../../../library/domain/entities/track.dart';
+import '../../domain/entities/playback_snapshot.dart';
 import '../../domain/entities/player_repeat_mode.dart';
 import '../../domain/usecases/audio_playback_usecases.dart';
 
@@ -22,6 +24,7 @@ class NowPlayingState extends Equatable {
     required this.shuffle,
     required this.repeat,
     this.sleepMinutes,
+    this.sleepEndsAt,
   });
 
   final List<Track> queue;
@@ -33,6 +36,9 @@ class NowPlayingState extends Equatable {
 
   /// 수면 타이머로 정한 분 (꺼져 있으면 null).
   final int? sleepMinutes;
+
+  /// 수면 타이머가 재생을 멈출 시각 (꺼져 있으면 null).
+  final DateTime? sleepEndsAt;
 
   Track? get track => queue.isEmpty ? null : queue[index];
 
@@ -49,6 +55,7 @@ class NowPlayingState extends Equatable {
     bool? shuffle,
     PlayerRepeatMode? repeat,
     Object? sleepMinutes = _keep,
+    Object? sleepEndsAt = _keep,
   }) => NowPlayingState(
     queue: queue ?? this.queue,
     index: index ?? this.index,
@@ -59,6 +66,9 @@ class NowPlayingState extends Equatable {
     sleepMinutes: identical(sleepMinutes, _keep)
         ? this.sleepMinutes
         : sleepMinutes as int?,
+    sleepEndsAt: identical(sleepEndsAt, _keep)
+        ? this.sleepEndsAt
+        : sleepEndsAt as DateTime?,
   );
 
   @override
@@ -70,12 +80,14 @@ class NowPlayingState extends Equatable {
     shuffle,
     repeat,
     sleepMinutes,
+    sleepEndsAt,
   ];
 }
 
 /// 재생 상태. 처음에는 대기열이 비어 있다(미니 플레이어 숨김).
-/// [audio]가 있으면 상태가 바뀔 때 재생 엔진(just_audio)도 같이 움직이고, 엔진의 재생 위치 ·
-/// 곡 끝 알림이 상태로 돌아온다. 없으면 화면 상태만 움직인다 (테스트).
+/// [audio]가 있으면 대기열이 바뀔 때마다 스냅샷(순서가 정해진 목록 · 현재 위치 · 반복)을 엔진에 보내고,
+/// 곡 넘김은 엔진이 한다. 엔진의 재생 위치 · 곡 넘김 · 끝 알림이 상태로 돌아온다.
+/// 없으면 화면 상태만 움직인다 (테스트).
 class NowPlayingCubit extends Cubit<NowPlayingState> {
   NowPlayingCubit({AudioPlayback? audio, Random? random})
     : _audio = audio,
@@ -93,7 +105,9 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     if (audio == null) return;
     _subs = [
       audio.watchPosition(const NoParams()).listen(_onEnginePosition),
-      audio.watchCompleted(const NoParams()).listen((_) => _onCompleted()),
+      audio.watchTrackChange(const NoParams()).listen(_onEngineTrack),
+      audio.watchEnded(const NoParams()).listen((_) => _onEnded()),
+      audio.watchPlaying(const NoParams()).listen(_onEnginePlaying),
     ];
   }
 
@@ -107,7 +121,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   /// 곡을 불러오는 중에는 엔진의 옛 재생 위치를 상태에 넣지 않는다.
   var _ready = false;
 
-  /// 엔진이 알려 준 위치를 상태에 넣는 중 (이때는 엔진을 다시 움직이지 않는다).
+  /// 엔진이 알려 준 것을 상태에 넣는 중 (이때는 엔진을 다시 움직이지 않는다).
   var _fromEngine = false;
 
   /// 시크바를 끄는 중: 위치는 화면 상태만 바꾸고, 엔진 이동은 손을 뗄 때 한 번만 한다.
@@ -116,11 +130,76 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   /// 셔플을 켜기 전 순서 (끄면 이 순서로 되돌린다).
   List<Track>? _original;
 
+  /// 아직 끝나지 않은 엔진 작업 수. 작업 중에 오는 재생 · 곡 넘김 신호는 우리가 시킨 것이라 상태에 넣지 않는다.
+  var _pending = 0;
+
+  /// 엔진이 지금 쥐고 있다고 보는 대기열 (목록 · 반복 · extras만 비교한다).
+  var _pushed = const PlaybackSnapshot(items: [], index: 0, playing: false);
+
+  /// 앱이 켜져 있는 중에 알림을 눌러 플레이어 화면을 열라는 요청.
+  Stream<void> get openPlayerRequests =>
+      _audio?.watchOpenPlayer(const NoParams()) ?? const Stream.empty();
+
+  /// 알림을 눌러 앱이 새로 켜졌는지 한 번 알려 주고 비운다.
+  Future<bool> takeOpenPlayerRequest() async =>
+      await _audio?.takeOpenPlayerRequest(const NoParams()) ?? false;
+
   void _run(Future<void> Function(AudioPlayback audio) job) {
     final audio = _audio;
     if (audio == null) return;
-    _tail = _tail.then((_) => job(audio)).catchError((Object _) {});
+    _pending++;
+    _tail = _tail
+        .then((_) => job(audio))
+        .catchError((Object _) {})
+        .whenComplete(() => _pending--);
   }
+
+  /// 엔진이 재생 · 정지를 알려 왔을 때: 다른 앱에 오디오 포커스를 뺏겨 멈췄거나(전화, 영상)
+  /// 돌려받아 다시 시작한 것을 재생 상태에 맞춘다. 우리가 시킨 작업 중의 신호는 무시한다.
+  void _onEnginePlaying(bool playing) {
+    if (isClosed ||
+        !_ready ||
+        _pending > 0 ||
+        _scrubbing ||
+        state.track == null ||
+        state.isPlaying == playing) {
+      return;
+    }
+    _fromEngine = true;
+    emit(state.copyWith(isPlaying: playing));
+    _fromEngine = false;
+  }
+
+  PlaybackSnapshot _snapshotOf(NowPlayingState s, {Duration? position}) =>
+      PlaybackSnapshot(
+        items: [
+          for (final t in s.queue)
+            PlaybackItem(
+              id: t.id,
+              uri: t.uri,
+              title: t.title,
+              artist: t.artist,
+              album: t.album,
+              duration: t.duration,
+            ),
+        ],
+        index: s.index,
+        playing: s.isPlaying,
+        repeat: s.repeat,
+        position: position,
+        extras: jsonEncode({
+          'shuffle': s.shuffle,
+          if (_original != null) 'original': [for (final t in _original!) t.id],
+        }),
+      );
+
+  /// 엔진에 보낸 것과 목록 · 반복 · extras가 같은지 (현재 곡 · 재생 · 위치는 따로 다룬다).
+  bool _sameQueue(PlaybackSnapshot a, PlaybackSnapshot b) =>
+      a.repeat == b.repeat &&
+      a.extras == b.extras &&
+      a.items.length == b.items.length &&
+      Iterable<int>.generate(a.items.length)
+          .every((i) => a.items[i] == b.items[i]);
 
   @override
   void onChange(Change<NowPlayingState> change) {
@@ -131,39 +210,72 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
 
     final track = to.track;
     if (track == null) {
-      if (from.track != null || from.isPlaying != to.isPlaying) {
+      if (_pushed.items.isNotEmpty || from.isPlaying) {
         _ready = false;
-        _run((a) => a.pause(const NoParams()));
+        _pushed = const PlaybackSnapshot(items: [], index: 0, playing: false);
+        final empty = _pushed;
+        _run((a) => a.setQueue(empty));
       }
       return;
     }
-    if (track.uri != from.track?.uri) {
+
+    final desired = _snapshotOf(to);
+    if (!_sameQueue(desired, _pushed)) {
+      // 같은 곡을 계속 듣는 중에 뒤의 목록만 바뀌면 재생 위치를 건드리지 않는다.
+      final keep = from.track == track && from.position == to.position;
+      if (!keep) _ready = false;
+      _pushed = desired;
+      final snapshot = _snapshotOf(to, position: keep ? null : to.position);
+      _run((a) => _push(a, snapshot));
+      return;
+    }
+    if (from.index != to.index || from.track != track) {
       _ready = false;
-      _run((a) => _loadCurrent(a, track.uri));
-    } else {
-      if (from.position != to.position) _run((a) => a.seek(to.position));
-      if (from.isPlaying != to.isPlaying) {
-        _run(
-          (a) => to.isPlaying
-              ? a.play(const NoParams())
-              : a.pause(const NoParams()),
-        );
-      }
+      final index = to.index;
+      final position = to.position;
+      _run((a) async {
+        if (state.index != index) return; // 그새 다른 곡으로 바뀜: 그 작업이 따로 있다.
+        final current = state.track;
+        try {
+          if (current == null || current.uri.isEmpty) {
+            throw StateError('empty uri');
+          }
+          await a.skipTo(index);
+          if (position > Duration.zero) await a.seek(position);
+        } on Object {
+          if (!isClosed && state.index == index) {
+            emit(state.copyWith(isPlaying: false, position: Duration.zero));
+          }
+          return;
+        }
+        if (state.index != index) return;
+        _ready = true;
+        await (state.isPlaying
+            ? a.play(const NoParams())
+            : a.pause(const NoParams()));
+      });
+      return;
+    }
+    if (from.position != to.position) _run((a) => a.seek(to.position));
+    if (from.isPlaying != to.isPlaying) {
+      _run(
+        (a) =>
+            to.isPlaying ? a.play(const NoParams()) : a.pause(const NoParams()),
+      );
     }
   }
 
-  /// [uri]를 불러와 지금 상태가 재생 중이면 재생한다. 못 불러오면 멈춘다.
-  Future<void> _loadCurrent(AudioPlayback a, String uri) async {
-    if (state.track?.uri != uri) return; // 그새 다른 곡으로 바뀜: 그 곡의 작업이 따로 있다.
+  /// [snapshot]을 엔진에 보낸다. 현재 곡을 못 불러오면 멈춘다.
+  Future<void> _push(AudioPlayback a, PlaybackSnapshot snapshot) async {
+    final current = snapshot.current;
+    if (current == null || state.track?.id != current.id) return; // 그새 바뀜
     try {
-      if (uri.isEmpty) throw StateError('empty uri');
-      await a.load(uri);
-      if (state.track?.uri != uri) return;
+      if (current.uri.isEmpty) throw StateError('empty uri');
+      await a.setQueue(snapshot);
+      if (state.track?.id != current.id) return;
       _ready = true;
-      if (state.position > Duration.zero) await a.seek(state.position);
-      if (state.isPlaying) await a.play(const NoParams());
     } on Object {
-      if (!isClosed && state.track?.uri == uri) {
+      if (!isClosed && state.track?.id == current.id) {
         emit(state.copyWith(isPlaying: false, position: Duration.zero));
       }
     }
@@ -176,30 +288,96 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     _fromEngine = false;
   }
 
-  /// 곡 끝: 한 곡 반복이면 처음부터 다시, 아니면 다음 곡 (마지막 곡이면 반복 설정에 따라).
-  void _onCompleted() {
-    if (state.track == null) return;
-    if (state.repeat == PlayerRepeatMode.one) {
-      _run((a) async {
-        await a.seek(Duration.zero);
-        await a.play(const NoParams());
-      });
+  /// 엔진이 스스로 곡을 넘겼다 (곡 끝, 알림 · 이어폰의 이전 · 다음).
+  void _onEngineTrack(PlaybackTrackChange change) {
+    if (isClosed || _pending > 0 || _scrubbing) return;
+    final queue = state.queue;
+    if (change.index < 0 ||
+        change.index >= queue.length ||
+        queue[change.index].id != change.id ||
+        change.index == state.index) {
       return;
     }
-    final last = state.index == state.queue.length - 1;
-    if (last && state.repeat == PlayerRepeatMode.off) {
-      emit(state.copyWith(isPlaying: false, position: Duration.zero));
-      return;
+    final wrapped =
+        state.index == queue.length - 1 &&
+        change.index == 0 &&
+        queue.length > 1;
+    final heard = state.track;
+    _ready = true;
+    _fromEngine = true;
+    emit(state.copyWith(index: change.index, position: Duration.zero));
+    _fromEngine = false;
+    if (wrapped && state.shuffle && heard != null) {
+      // 셔플 중 한 바퀴를 다 돌았으면 순서를 새로 섞는다 (방금 들은 곡이 바로 뒤에 오지 않게).
+      final current = state.track!;
+      final rest = _shuffled(
+        state.queue.where((t) => t != current),
+        avoidFirst: heard,
+      );
+      emit(state.copyWith(queue: [current, ...rest], index: 0));
     }
-    if (last && state.queue.length == 1) {
-      // 같은 곡 하나뿐인 전체 반복: 곡은 그대로라 불러오지 않고 처음부터 다시.
-      _run((a) async {
-        await a.seek(Duration.zero);
-        await a.play(const NoParams());
-      });
-      return;
+  }
+
+  /// 대기열 끝까지 들었다 (반복 없음): 엔진이 첫 곡으로 돌아가 멈춘 것과 같게 첫 곡에서 멈춘다.
+  void _onEnded() {
+    if (isClosed || state.track == null) return;
+    _fromEngine = true;
+    emit(state.copyWith(index: 0, isPlaying: false, position: Duration.zero));
+    _fromEngine = false;
+  }
+
+  /// 앱을 다시 켰을 때 엔진이 쥐고 있는 대기열을 상태로 되살린다 (이미 곡이 있으면 하지 않는다).
+  /// [find]는 id로 보관함의 곡을 찾는다. 보관함에서 사라진 곡은 건너뛴다.
+  Future<void> restore(Track? Function(String id) find) async {
+    final audio = _audio;
+    if (audio == null || state.queue.isNotEmpty) return;
+    final snapshot = await audio.restore(const NoParams());
+    if (snapshot == null || isClosed || state.queue.isNotEmpty) return;
+    final queue = <Track>[];
+    var index = 0;
+    for (var i = 0; i < snapshot.items.length; i++) {
+      final track = find(snapshot.items[i].id);
+      if (track == null) continue;
+      if (i <= snapshot.index) index = queue.length;
+      queue.add(track);
     }
-    next();
+    if (queue.isEmpty) return;
+    var shuffle = false;
+    List<Track>? original;
+    try {
+      final extras = jsonDecode(snapshot.extras);
+      if (extras is Map) {
+        shuffle = extras['shuffle'] == true;
+        final ids = extras['original'];
+        if (ids is List) {
+          original = [for (final id in ids) ?find('$id')];
+        }
+      }
+    } on Object {
+      // extras가 없거나 깨졌으면 셔플 정보 없이 복원한다.
+    }
+    _original = original;
+    final dropped = queue.length != snapshot.items.length;
+    final moved = dropped && snapshot.current?.id != queue[index].id;
+    _ready = true;
+    _fromEngine = true;
+    emit(
+      NowPlayingState(
+        queue: queue,
+        index: index,
+        isPlaying: snapshot.playing,
+        position: snapshot.position ?? Duration.zero,
+        shuffle: shuffle,
+        repeat: snapshot.repeat,
+      ),
+    );
+    _fromEngine = false;
+    _pushed = _snapshotOf(state);
+    // 보관함에서 사라진 곡이 있으면 엔진의 대기열도 맞춘다.
+    if (dropped) {
+      final snap = _snapshotOf(state, position: moved ? Duration.zero : null);
+      _run((a) => _push(a, snap));
+    }
   }
 
   Timer? _sleep;
@@ -211,10 +389,23 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     if (minutes != null) {
       _sleep = Timer(Duration(minutes: minutes), () {
         _sleep = null;
-        emit(state.copyWith(isPlaying: false, sleepMinutes: null));
+        emit(
+          state.copyWith(
+            isPlaying: false,
+            sleepMinutes: null,
+            sleepEndsAt: null,
+          ),
+        );
       });
     }
-    emit(state.copyWith(sleepMinutes: minutes));
+    emit(
+      state.copyWith(
+        sleepMinutes: minutes,
+        sleepEndsAt: minutes == null
+            ? null
+            : DateTime.now().add(Duration(minutes: minutes)),
+      ),
+    );
   }
 
   @override
@@ -313,10 +504,10 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     }
   }
 
+  /// 다음 곡. 마지막 곡이면 반복 설정과 상관없이 처음으로 돌아간다 (곡 끝에서 저절로 넘어갈 때만 반복을 따른다).
   void next() {
     if (state.queue.isEmpty) return;
     final last = state.index == state.queue.length - 1;
-    if (last && state.repeat == PlayerRepeatMode.off) return;
     if (last && state.shuffle && state.queue.length > 1) {
       // 셔플 중 한 바퀴를 다 돌았으면 순서를 새로 섞는다 (방금 들은 곡이 맨 앞에 오지 않게).
       emit(
@@ -384,12 +575,14 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   /// [queue]를 처음부터 재생하되 셔플을 켠다.
   void playShuffled(List<Track> queue) {
     if (queue.isEmpty) return;
-    playQueue(queue);
-    if (!state.shuffle) toggleShuffle();
+    // 첫 곡이 아니라 무작위 곡에서 시작한다 (아니면 늘 목록 맨 위 곡이 먼저 나온다).
+    playQueue(queue, index: _random.nextInt(queue.length));
+    // 막 시작한 재생이라 지금 곡을 맨 앞에 두어야 나머지 곡이 모두 이번 바퀴에 나온다.
+    if (!state.shuffle) toggleShuffle(currentFirst: true);
   }
 
-  /// 셔플을 켜면 지금 곡을 맨 앞에 두고 나머지를 섞고, 끄면 켜기 전 순서로 되돌린다.
-  void toggleShuffle() {
+  /// 셔플을 켜면 지금 곡을 포함해 대기열 전체를 섞고, 끄면 켜기 전 순서로 되돌린다.
+  void toggleShuffle({bool currentFirst = false}) {
     final current = state.track;
     if (current == null) {
       emit(state.copyWith(shuffle: !state.shuffle));
@@ -397,14 +590,15 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     }
     if (!state.shuffle) {
       _original = state.queue;
+      // 지금 곡도 섞인 목록 안의 제자리를 가진다 (재생은 끊기지 않고, 앞쪽 곡은 한 바퀴 돈 뒤에 나온다).
+      final queue = currentFirst
+          ? [current, ..._shuffled(state.queue.where((t) => t != current))]
+          : _shuffled(state.queue);
       emit(
         state.copyWith(
           shuffle: true,
-          queue: [
-            current,
-            ..._shuffled(state.queue.where((t) => t != current)),
-          ],
-          index: 0,
+          queue: queue,
+          index: queue.indexOf(current),
         ),
       );
       return;
@@ -451,16 +645,6 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     final queue = [...state.queue];
     queue.insert(to, queue.removeAt(from));
     emit(state.copyWith(queue: queue, index: queue.indexOf(current)));
-  }
-
-  /// 지금 곡 뒤의 곡들을 무작위로 섞는다 (이미 들은 곡과 지금 곡은 그대로).
-  void shuffleUpNext([Random? random]) {
-    final upNext = state.queue.skip(state.index + 1).toList();
-    if (upNext.length < 2) return;
-    upNext.shuffle(random ?? _random);
-    emit(
-      state.copyWith(queue: [...state.queue.take(state.index + 1), ...upNext]),
-    );
   }
 
   /// 대기열을 모두 비운다. 재생 중인 곡도 멈추고 지워진다 (미니 플레이어는 사라진다).

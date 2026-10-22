@@ -41,6 +41,10 @@ class AppPalette {
   /// 브랜드 색: 테마와 상관없이 항상 같다 (유튜브 아이콘).
   static const Color youtubeRed = Color(0xFFFF0000);
 
+  /// 검색 사이트 표시의 브랜드 색 (테마와 상관없이 같다).
+  static const Color soundcloudOrange = Color(0xFFFF5500);
+  static const Color soundcloudInk = Color(0xFF151515);
+
   /// 유튜브 재생 삼각형의 흰색 (순백이 아니라 살짝 눌린 흰색).
   static const Color youtubeMarkWhite = Color(0xFFF1F1F1);
 
@@ -51,8 +55,8 @@ class AppPalette {
   static const Color markLightGray = Color(0xFFB0B6C0);
 
   // 라이트 테마 수채화 팔레트 원색.
-  static const Color watercolorLavender = Color(0xFF9A8CF0);
-  static const Color watercolorCoral = Color(0xFFE8708F);
+  static const Color watercolorLavender = Color(0xFF7C6CEA);
+  static const Color watercolorCoral = Color(0xFFE5487A);
 
   /// 기본 테마: 검정 배경 · 바이올렛 · 라임.
   static const AppPalette defaultDark = AppPalette(
@@ -79,17 +83,19 @@ class AppPalette {
     glowTertiary: [Color(0xFFFF8A3D), Color(0xFFE5322D), Color(0xFF3A0B0B)],
   );
 
-  /// 라이트 테마 바탕 (옅은 크림빛 배경 · 흰 면). 색 · 글로우는 수채화처럼 연한 파스텔 계열.
+  /// 라이트 테마 바탕: 살짝 푸른 라벤더 회색 배경 위에 흰 면이 또렷이 뜬다.
+  /// 배경과 면의 밝기 차 · 진한 글자 · 짙은 구분선으로 면이 번져 보이지 않게 하고,
+  /// 색 · 글로우는 채도를 올린 수채화 파스텔로 둔다.
   static const AppPalette _lightBase = AppPalette(
-    background: Color(0xFFFBF8FF),
+    background: Color(0xFFF1EFF9),
     surface: white,
-    surfaceHigh: Color(0xFFF1ECFA),
-    onSurface: Color(0xFF1B1830),
-    onSurfaceMuted: Color(0x991B1830),
-    outline: Color(0x1A3A2E6B),
-    glassFill: Color(0x99FFFFFF),
-    glassBorder: Color(0x1F3A2E6B),
-    glassHighlight: Color(0xE6FFFFFF),
+    surfaceHigh: Color(0xFFE6E2F4),
+    onSurface: Color(0xFF16132B),
+    onSurfaceMuted: Color(0xB316132B),
+    outline: Color(0x293A2E6B),
+    glassFill: Color(0xCCFFFFFF),
+    glassBorder: Color(0x333A2E6B),
+    glassHighlight: Color(0xFFFFFFFF),
     onGlow: white,
     scrim: black,
     primary: watercolorLavender,
@@ -97,26 +103,26 @@ class AppPalette {
     accent: watercolorCoral,
     onAccent: white,
     // 분홍 → 라벤더 → 푸른 보라 (수채화 번짐)
-    glowPrimary: [Color(0xFFF7A8CB), watercolorLavender, Color(0xFF6A78D8)],
+    glowPrimary: [Color(0xFFF08AB6), watercolorLavender, Color(0xFF5560D2)],
     // 하늘 → 물빛 → 짙은 청회
-    glowSecondary: [Color(0xFF8ECFF5), Color(0xFF6C9BE0), Color(0xFF3F5CA8)],
+    glowSecondary: [Color(0xFF7CC4F2), Color(0xFF5E8FDB), Color(0xFF3A56A6)],
     // 살구 → 산호 → 짙은 장밋빛
-    glowTertiary: [Color(0xFFFFC08A), Color(0xFFF08A8A), Color(0xFFB04A6A)],
+    glowTertiary: [Color(0xFFFFB77A), Color(0xFFF0807F), Color(0xFFB04465)],
   );
 
   /// 기본 라이트 테마: 수채화 파스텔. 강조 색은 밝은 배경에서도 보이도록 대비 3:1을 지킨다.
   static final AppPalette defaultLight = _withAccent(
     _lightBase,
     watercolorCoral,
-    3,
+    accentContrastFor(Brightness.light),
   );
 
   /// 밝기별 기본 바탕.
   static AppPalette baseFor(Brightness b) =>
       b == Brightness.dark ? defaultDark : _lightBase;
 
-  /// 밝기별 강조 색 최소 대비. 다크 7:1, 라이트 3:1(밝은 배경에서 형광색은 대비가 낮아서).
-  static double accentContrastFor(Brightness b) => b == Brightness.dark ? 7 : 3;
+  /// 밝기별 강조 색 최소 대비. 다크 7:1, 라이트 2:1 (라이트에서 더 올리면 색이 어두워져 탁해진다).
+  static double accentContrastFor(Brightness b) => b == Brightness.dark ? 7 : 2;
 
   static AppPalette _withAccent(AppPalette base, Color accent, double min) {
     final a = ensureContrast(accent, base.background, min);
@@ -142,7 +148,9 @@ class AppPalette {
   }) {
     final bg = base.background;
     final safeAccent = ensureContrast(accent, bg, minAccentContrast);
-    final safePrimary = ensureContrast(primary, bg, 3);
+    // 라이트에서는 대비를 크게 요구하면 색이 탁하게 깎이므로 낮게 둔다 (주 색은 면 · 글로우에 쓴다).
+    final lightBg = bg.computeLuminance() > .5;
+    final safePrimary = ensureContrast(primary, bg, lightBg ? 1.5 : 3);
     final third = tertiary ?? _shiftHue(safePrimary, -60);
 
     return base.copyWith(
@@ -150,17 +158,33 @@ class AppPalette {
       onPrimary: bestOn(safePrimary),
       accent: safeAccent,
       onAccent: bestOn(safeAccent),
-      glowPrimary: [
-        _shiftHue(_lighten(safePrimary, .12), 30),
-        safePrimary,
-        _darken(safePrimary, .32),
-      ],
-      glowSecondary: [
-        _lighten(_shiftHue(safePrimary, 40), .02),
-        _darken(safePrimary, .28),
-        _darken(safePrimary, .42),
-      ],
-      glowTertiary: [_lighten(third, .08), third, _darken(third, .36)],
+      // 라이트에서는 어둡게 깎지 않고 색상만 옮겨 맑은 수채화 번짐으로 만든다
+      // (어둡게 깎으면 주황 · 노랑이 갈색으로 탁해진다).
+      glowPrimary: lightBg
+          ? [
+              _lighten(_shiftHue(safePrimary, 28), .16),
+              safePrimary,
+              _shiftHue(safePrimary, -28),
+            ]
+          : [
+              _shiftHue(_lighten(safePrimary, .12), 30),
+              safePrimary,
+              _darken(safePrimary, .32),
+            ],
+      glowSecondary: lightBg
+          ? [
+              _lighten(_shiftHue(safePrimary, 48), .14),
+              _shiftHue(safePrimary, 62),
+              _shiftHue(safePrimary, 78),
+            ]
+          : [
+              _lighten(_shiftHue(safePrimary, 40), .02),
+              _darken(safePrimary, .28),
+              _darken(safePrimary, .42),
+            ],
+      glowTertiary: lightBg
+          ? [_lighten(third, .16), third, _shiftHue(third, -26)]
+          : [_lighten(third, .08), third, _darken(third, .36)],
     );
   }
 

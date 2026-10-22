@@ -106,23 +106,14 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
-      child: Column(
-        children: [
-          Icon(AppIcons.equalizer, size: 40, color: context.palette.accent),
-          const SizedBox(height: AppSpacing.md),
-          Text(title, style: text.titleLarge, textAlign: TextAlign.center),
-          const SizedBox(height: AppSpacing.xs),
-          Text(body, style: text.bodyMedium, textAlign: TextAlign.center),
-          const SizedBox(height: AppSpacing.lg),
-          PillButton(
-            label: action,
-            icon: AppIcons.library,
-            onPressed: onAction,
-          ),
-        ],
+    return EmptyState(
+      icon: AppIcons.equalizer,
+      title: title,
+      body: body,
+      action: PillButton(
+        label: action,
+        icon: AppIcons.library,
+        onPressed: onAction,
       ),
     );
   }

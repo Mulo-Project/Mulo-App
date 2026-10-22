@@ -6,6 +6,12 @@ import 'package:flutter/widgets.dart';
 /// 재생 컨트롤 · 선택 상태처럼 면이 필요한 곳만 채움(Fill)을 쓴다.
 /// 아이콘 세트를 바꾸거나 직접 그린 아이콘으로 교체할 때는 이 파일(과 폰트)만 고친다.
 abstract final class AppIcons {
+  /// 바깥으로 펼쳐지는 두 화살표: 플로팅 버튼을 펼쳐 미니 플레이어로 되돌린다.
+  static const IconData expandOut = IconData(
+    0xe0a6,
+    fontFamily: 'PhosphorRegular',
+    matchTextDirection: true,
+  );
   static const IconData play = IconData(
     0xe3d0,
     fontFamily: 'PhosphorFill',
@@ -104,6 +110,11 @@ abstract final class AppIcons {
   static const IconData favorite = IconData(
     0xe2a8,
     fontFamily: 'PhosphorFill',
+    matchTextDirection: true,
+  );
+  static const IconData remove = IconData(
+    0xe32a,
+    fontFamily: 'PhosphorRegular',
     matchTextDirection: true,
   );
   static const IconData add = IconData(

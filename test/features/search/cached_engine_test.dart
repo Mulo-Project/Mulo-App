@@ -47,6 +47,20 @@ void main() {
       expect(inner.infos, ['u', 'other']);
     });
 
+    test('자막도 기억해 같은 곡 · 같은 언어는 다시 읽지 않는다', () async {
+      final inner = FakeDownloaderEngine();
+      final engine = CachedDownloaderEngine(inner);
+      await Future.wait([
+        engine.fetchSubtitles('u'),
+        engine.fetchSubtitles('u'),
+      ]);
+      await engine.fetchSubtitles('u');
+      expect(inner.subtitleUrls, ['u']);
+      // 우선 언어가 다르면 다른 자막이라 따로 읽는다.
+      await engine.fetchSubtitles('u', preferLanguages: const ['ja']);
+      expect(inner.subtitleUrls, ['u', 'u']);
+    });
+
     test('채널 정보도 기억한다', () async {
       final inner = FakeDownloaderEngine(
         channel: const ChannelInfo(subscriberCount: 3),

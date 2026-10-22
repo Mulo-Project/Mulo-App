@@ -7,19 +7,19 @@ import '../../../../core/l10n/l10n.dart';
 import '../bloc/cover_cubit.dart';
 import '../bloc/cover_web_cubit.dart';
 import 'cover_editor_page.dart';
+import 'cover_web_browser.dart';
 
 /// 커버 이미지를 새로 고른다: 기기 사진이나 웹 이미지를 고르고, 확대 · 위치를 맞춘 뒤
 /// 돌려준다. 어느 단계에서든 닫으면 null. 저장은 부른 쪽에서 [CoverCubit.setArt]로 한다.
-Future<CoverArt?> pickCoverArt(BuildContext context) async {
+///
+/// [initialQuery]는 웹 이미지 고르기에서 처음부터 검색해 둘 말 (곡 · 재생목록 이름).
+Future<CoverArt?> pickCoverArt(
+  BuildContext context, {
+  String initialQuery = '',
+}) async {
   final covers = context.read<CoverCubit>();
-  final source = await showModalBottomSheet<_Source>(
-    context: context,
-    backgroundColor: context.palette.surface,
-    showDragHandle: true,
-    useRootNavigator: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadii.md)),
-    ),
+  final source = await showAppSheet<_Source>(
+    context,
     builder: (_) => const _SourceSheet(),
   );
   if (source == null || !context.mounted) return null;
@@ -29,13 +29,21 @@ Future<CoverArt?> pickCoverArt(BuildContext context) async {
     case _Source.device:
       final path = await covers.pickFile();
       picked = path == null ? null : CoverArt.file(path);
+    case _Source.web when coverWebBrowserSupported:
+      // 브라우저에서 이미지를 누르면 편집 화면으로 가고, 편집에서 뒤로 가면 브라우저로 돌아온다.
+      return Navigator.of(context, rootNavigator: true).push<CoverArt>(
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (_) => CoverWebBrowser(initialQuery: initialQuery),
+        ),
+      );
     case _Source.web:
       final url = await Navigator.of(context, rootNavigator: true).push<String>(
         MaterialPageRoute(
           fullscreenDialog: true,
           builder: (_) => BlocProvider(
             create: (_) => sl<CoverWebCubit>(),
-            child: const _WebImagePage(),
+            child: _WebImagePage(initialQuery: initialQuery),
           ),
         ),
       );
@@ -53,20 +61,14 @@ class _SourceSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.lg,
-          0,
-          AppSpacing.lg,
-          AppSpacing.lg,
-        ),
+        padding: appSheetPadding,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(l10n.coverSourceTitle, style: text.titleMedium),
+            AppSheetTitle(l10n.coverSourceTitle),
             const SizedBox(height: AppSpacing.md),
             PillButton(
               label: l10n.coverSourceDevice,
@@ -90,14 +92,29 @@ class _SourceSheet extends StatelessWidget {
 /// 웹 이미지 고르기: 이미지 주소를 붙여 넣거나, 검색어로 찾은 결과에서 고른다.
 /// 고른 이미지의 주소를 돌려준다 (파일은 받지 않는다).
 class _WebImagePage extends StatefulWidget {
-  const _WebImagePage();
+  const _WebImagePage({this.initialQuery = ''});
+
+  final String initialQuery;
 
   @override
   State<_WebImagePage> createState() => _WebImagePageState();
 }
 
 class _WebImagePageState extends State<_WebImagePage> {
-  final _input = TextEditingController();
+  late final _input = TextEditingController(text: widget.initialQuery.trim());
+
+  @override
+  void initState() {
+    super.initState();
+    // 이름이 있으면 그 이름으로 찾은 결과를 먼저 보여 준다.
+    final q = widget.initialQuery.trim();
+    if (q.isNotEmpty && !isWebImageUrl(q)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) context.read<CoverWebCubit>().search(q);
+      });
+    }
+  }
+
   @override
   void dispose() {
     _input.dispose();

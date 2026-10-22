@@ -34,6 +34,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get actionPause => 'Pause';
 
   @override
+  String get playerFloatExpand => 'Back to mini player';
+
+  @override
   String get actionNext => 'Next';
 
   @override
@@ -88,7 +91,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchEmptyBody =>
-      'Paste a URL or type keywords.\nShare from the YouTube app to open it here.';
+      'Paste a link or type keywords.\nPick the site to search with the icon on the left.';
 
   @override
   String get searchNotReadyTitle => 'No engine available';
@@ -163,6 +166,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadsPauseAll => 'Pause all';
 
   @override
+  String get downloadsResumeAll => 'Resume all';
+
+  @override
+  String get downloadsHideCurrent => 'Hide current song';
+
+  @override
+  String get downloadsShowCurrent => 'Show current song';
+
+  @override
   String get downloadsClearDone => 'Clear finished';
 
   @override
@@ -218,6 +230,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sortArtist => 'Artist';
+
+  @override
+  String get sortCount => 'Song count';
 
   @override
   String get libraryImport => 'Import device music';
@@ -415,6 +430,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lockHint => 'Enter your PIN.';
 
   @override
+  String get settingsBackgroundDownload => 'Background downloads';
+
+  @override
+  String get settingsBackgroundDownloadDesc =>
+      'Keeps downloading when the app is in the background or closed. A notification stays up while downloading.';
+
+  @override
   String get settingsHideNotification => 'Hide song info in notification';
 
   @override
@@ -423,6 +445,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsTheme => 'Theme';
+
+  @override
+  String get settingsThemeColorFollowing =>
+      'Following the playing song\'s colors while Follow song mood is on.';
 
   @override
   String get settingsFollowMood => 'Follow song mood';
@@ -439,10 +465,53 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsThemePreviewDesc =>
-      'Browse the real screens with a theme, then apply it';
+      'Browse the real screens with a theme, then apply it.';
+
+  @override
+  String get settingsPlayback => 'Playback options';
+
+  @override
+  String get settingsMixWithOthers => 'Play with other apps';
+
+  @override
+  String get settingsMixWithOthersDesc =>
+      'Keep playing when another app makes sound. Audio may overlap and get loud.';
+
+  @override
+  String get settingsPauseOnDisconnect => 'Pause when device disconnects';
+
+  @override
+  String get settingsPauseOnDisconnectDesc =>
+      'Stop playback when earphones are unplugged or Bluetooth disconnects.';
+
+  @override
+  String get settingsResumeOnConnect => 'Resume when device connects';
+
+  @override
+  String get settingsResumeOnConnectDesc =>
+      'If playback stopped because of a disconnect, resume when a device reconnects within 10 minutes.';
+
+  @override
+  String get settingsResumeWithoutNotification =>
+      'Play from Bluetooth without a notification';
+
+  @override
+  String get settingsResumeWithoutNotificationDesc =>
+      'Even after you dismiss the notification or playback ends, the play button on a Bluetooth device resumes the last song.';
 
   @override
   String get playerStyleTitle => 'Player theme';
+
+  @override
+  String get playerSpeedTitle => 'Playback speed';
+
+  @override
+  String playerSpeedValue(String speed) {
+    return '${speed}x';
+  }
+
+  @override
+  String get playerSpeedNormal => 'Normal';
 
   @override
   String get playerStyleSquare => 'Square';
@@ -470,13 +539,19 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get playerSleepTimerUnitHour => 'h';
+
+  @override
+  String get playerSleepTimerUnitMinute => 'm';
+
+  @override
+  String get playerSleepTimerStart => 'Start';
+
+  @override
   String get playerSleepTimerCleared => 'Sleep timer is off';
 
   @override
   String get playerEqualizer => 'Equalizer';
-
-  @override
-  String get playerEqualizerSoon => 'Equalizer is coming soon';
 
   @override
   String get playerLyrics => 'Lyrics';
@@ -524,7 +599,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get outputOther => 'External output';
 
   @override
-  String get queueShuffle => 'Shuffle up next';
+  String get shuffleOn => 'Shuffle on';
+
+  @override
+  String get shuffleOff => 'Shuffle off';
 
   @override
   String get queueClear => 'Clear queue';
@@ -594,6 +672,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get coverAdjust => 'Adjust position';
+
+  @override
+  String get coverWebBrowserHelp =>
+      'Tap an image to go straight to the editor.';
 
   @override
   String get coverWebHint => 'Image URL or search words';
@@ -857,16 +939,27 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get searchHintWeb => 'Web audio search or URL';
+  String searchHintSite(String site) {
+    return '$site URL or keywords';
+  }
+
+  @override
+  String get sourceSoundcloud => 'SoundCloud';
+
+  @override
+  String get searchSubmitTooltip => 'Search';
+
+  @override
+  String get searchPasteLink => 'Paste link';
+
+  @override
+  String get searchPasteEmpty => 'No link on the clipboard';
 
   @override
   String get searchSourceTooltip => 'Search source';
 
   @override
   String get sourceYoutube => 'YouTube';
-
-  @override
-  String get sourceWeb => 'Web';
 
   @override
   String get searchHitMenuDetail => 'View details';
@@ -903,6 +996,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mediaDetailOpenOriginal => 'Open original page';
 
   @override
+  String get mediaDetailListenOriginal => 'Listen on the original site';
+
+  @override
+  String get mediaDetailListenSoundcloud => 'Listen on SoundCloud';
+
+  @override
+  String get mediaDetailOpenArtist => 'View artist';
+
+  @override
+  String get mediaDetailPlays => 'Plays';
+
+  @override
+  String get mediaDetailGenre => 'Genre';
+
+  @override
+  String mediaDetailFollowers(String count) {
+    return '$count followers';
+  }
+
+  @override
   String get mediaDetailChannel => 'Channel';
 
   @override
@@ -928,6 +1041,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mediaDetailDescription => 'Description';
+
+  @override
+  String get mediaDetailSectionPreview => 'Preview';
+
+  @override
+  String get mediaDetailSectionInfo => 'Info';
 
   @override
   String get mediaDetailMore => 'Show more';
@@ -1006,6 +1125,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String downloadsRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count left',
+      one: '1 left',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get downloadsExpand => 'Show queue';
 
   @override
@@ -1022,6 +1152,97 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get downloadCoverDefault => 'Use default';
+
+  @override
+  String get downloadImportLyrics => 'Import subtitles as lyrics';
+
+  @override
+  String get downloadImportLyricsHint =>
+      'After downloading, refine them in the lyrics sync screen.';
+
+  @override
+  String get downloadSubtitleChecking => 'Checking for subtitles.';
+
+  @override
+  String get downloadSubtitleNone => 'This video has no subtitles.';
+
+  @override
+  String get downloadSubtitleUnknown =>
+      'Couldn\'t check for subtitles. If on, we\'ll try again after downloading.';
+
+  @override
+  String get downloadSubtitleLanguage => 'Subtitle language';
+
+  @override
+  String get downloadSubtitleAuto => 'Choose automatically';
+
+  @override
+  String get downloadSubtitleAutoHint =>
+      'Korean, then English, then the first one.';
+
+  @override
+  String get downloadLyricsPreviewLoading => 'Loading…';
+
+  @override
+  String get downloadLyricsPreviewFailed => 'Couldn\'t load the subtitles.';
+
+  @override
+  String get downloadSubtitleEditHint =>
+      'You can edit the text, but not the timing. Sync it on the player after downloading.';
+
+  @override
+  String get downloadSubtitleUseEdited => 'Use this subtitle';
+
+  @override
+  String get downloadSubtitleEdited => 'edited';
+
+  @override
+  String get downloadLyricsRetry => 'Try again';
+
+  @override
+  String get downloadSubtitleUse => 'Use this subtitle';
+
+  @override
+  String get downloadSubtitleInUse => 'Currently selected';
+
+  @override
+  String get downloadLyricsSkipSounds => 'Skip sound-effect lines';
+
+  @override
+  String get downloadLyricsSkipSoundsHint =>
+      'Lines like [Music], (applause) or ♪ aren\'t imported.';
+
+  @override
+  String get downloadSubtitleColLanguage => 'Language';
+
+  @override
+  String get downloadSubtitleColKind => 'Type';
+
+  @override
+  String get downloadSubtitleKindAuto => 'Auto-generated';
+
+  @override
+  String get downloadSubtitleKindManual => 'Uploaded by creator';
+
+  @override
+  String downloadSubtitleFound(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count subtitle tracks found.',
+      one: '1 subtitle track found.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get downloadSectionInfo => 'Details';
+
+  @override
+  String get downloadSectionSave => 'Save to';
+
+  @override
+  String get downloadSectionLyrics => 'Lyrics';
 
   @override
   String get downloadCancelTitle => 'Cancel download';
@@ -1074,6 +1295,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadGenreExisting => 'Pick from existing genres';
 
   @override
+  String get saveFolderTitle => 'Choose save location';
+
+  @override
+  String get saveFolderEmpty => 'No loaded folders yet. Pick one yourself.';
+
+  @override
+  String get saveFolderPickOther => 'Pick another';
+
+  @override
   String get downloadPickFolder => 'Choose folder';
 
   @override
@@ -1090,6 +1320,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get downloadQueued => 'Added to the queue';
+
+  @override
+  String get downloadAlreadyDownloaded => 'This song is already downloaded';
+
+  @override
+  String get downloadStateDownloading => 'Downloading';
+
+  @override
+  String get downloadStateQueued => 'Queued';
+
+  @override
+  String get downloadStateDone => 'Downloaded';
+
+  @override
+  String get downloadAlreadyInQueue =>
+      'This song is already downloading or queued';
 
   @override
   String get homeTopGenre => 'Top genre';
@@ -1200,6 +1446,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackMenuDelete => 'Delete';
 
   @override
+  String get trackMenuRemoveFromQueue => 'Remove from queue';
+
+  @override
+  String get trackRemovedFromQueue => 'Removed from the queue.';
+
+  @override
   String get trackMenuRemoveFromPlaylist => 'Remove from playlist';
 
   @override
@@ -1276,6 +1528,42 @@ class AppLocalizationsEn extends AppLocalizations {
       'Paste or type the lyrics. Text with times like [01:02.30], or an .lrc / .txt file with them, becomes synced lyrics. Save empty to remove them.';
 
   @override
+  String get lyricsEditSyncedHint =>
+      'Times on the left follow the line number. If you insert or delete a line, the times stay in place and only the text shifts. Change times in the sync screen.';
+
+  @override
+  String get lyricsAddLine => 'Add line';
+
+  @override
+  String get lyricsDeleteLine => 'Delete line';
+
+  @override
+  String get lyricsTimePrev => 'Previous';
+
+  @override
+  String get lyricsTimeNow => 'Now';
+
+  @override
+  String get lyricsTimeNext => 'Next';
+
+  @override
+  String get lyricsTimeNone => 'None';
+
+  @override
+  String get lyricsTimeGroupedAbove =>
+      'Same time as the line above, so they are grouped';
+
+  @override
+  String get lyricsTimeGroupedBelow =>
+      'Same time as the line below, so they are grouped';
+
+  @override
+  String get lyricsTimeSeparate => 'Split from the group here';
+
+  @override
+  String get lyricsTimeClearFrom => 'Clear sync from here';
+
+  @override
   String get lyricsLoadFile => 'Load from file';
 
   @override
@@ -1338,13 +1626,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsSyncUndo => 'Undo';
 
   @override
+  String get lyricsSyncPrevious => 'Remove last sync and go back';
+
+  @override
+  String get lyricsSyncSavePartial => 'Save progress (up to the stamped lines)';
+
+  @override
   String get lyricsSyncSave => 'Save sync';
-
-  @override
-  String get lyricsSyncReplay => 'Replay from this line';
-
-  @override
-  String get lyricsSyncReset => 'Back to this sync';
 
   @override
   String get lyricsSyncGroup => 'Lines per sync';
@@ -1365,6 +1653,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lyricsSyncPause => 'Pause';
+
+  @override
+  String lyricsSyncBackBy(double n) {
+    return 'Back ${n}s (long-press to change)';
+  }
+
+  @override
+  String lyricsSyncForwardBy(double n) {
+    return 'Forward ${n}s (long-press to change)';
+  }
+
+  @override
+  String get lyricsSyncAutoPause => 'Auto pause';
+
+  @override
+  String get lyricsSyncAutoPauseHint =>
+      'Pause when playback reaches the next line\'s existing sync';
+
+  @override
+  String get lyricsSyncSeek => 'Playback position';
 
   @override
   String lyricsSyncProgress(int done, int total) {
@@ -1411,6 +1719,124 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsSyncDefaultLines => 'Change default lines';
 
   @override
+  String get lyricsSyncExpandedHint =>
+      'Lines shown separately · set each time; tap outside to re-merge lines with the same time';
+
+  @override
+  String get lyricsSyncCancelAfter => 'Reset to this sync';
+
+  @override
+  String get lyricsSyncCancelAfterHint =>
+      'Clear the syncs stamped after this one and continue from here';
+
+  @override
+  String get lyricsSyncNextSlot => 'Next';
+
+  @override
+  String get lyricsSyncFollow => 'Follow';
+
+  @override
+  String get lyricsSyncFollowHint =>
+      'On: the list follows the focused line. Off: browse the lyrics freely';
+
+  @override
+  String get lyricsFollow => 'Follow lyrics';
+
+  @override
+  String get lyricsThemeList => 'List';
+
+  @override
+  String get lyricsThemeCentered => 'Centered line';
+
+  @override
+  String get lyricsThemeCover => 'Cover background';
+
+  @override
+  String get themeTabPlayer => 'Player';
+
+  @override
+  String get themeTabLyrics => 'Lyrics';
+
+  @override
+  String get lyricsLatencyTitle => 'Reaction time';
+
+  @override
+  String get lyricsLatencyEntry => 'Reaction time';
+
+  @override
+  String get lyricsLatencyIntro =>
+      'When you press Now after hearing the sound, the stamp lands late by your reaction time. The value below is subtracted from the time you pressed.';
+
+  @override
+  String lyricsLatencySeconds(String s) {
+    return '${s}s';
+  }
+
+  @override
+  String get lyricsLatencyReset => 'Reset to 0.20s';
+
+  @override
+  String get lyricsBeatTitle => 'Beat test';
+
+  @override
+  String get lyricsBeatBody =>
+      'The circle flashes with a sound. Tap the circle on every beat. After 8 taps the average gives a recommended value.';
+
+  @override
+  String get lyricsBeatIdle => 'Press Start';
+
+  @override
+  String lyricsBeatProgress(int n, int total) {
+    return '$n/$total';
+  }
+
+  @override
+  String get lyricsBeatStart => 'Start';
+
+  @override
+  String get lyricsBeatStop => 'Stop';
+
+  @override
+  String lyricsBeatResult(String s) {
+    return 'Recommended ${s}s';
+  }
+
+  @override
+  String get lyricsBeatApply => 'Apply this value';
+
+  @override
+  String get lyricsBeatNote =>
+      'Screen and sound delay differ by device, so this is tuned for Android. Desktop may be less accurate.';
+
+  @override
+  String get lyricsSongCheckTitle => 'Check with a song';
+
+  @override
+  String get lyricsSongCheckBody =>
+      'While the song plays, press Try stamp the moment a sound starts. Listen again from the stamped position to check it.';
+
+  @override
+  String get lyricsSongTry => 'Try stamp';
+
+  @override
+  String lyricsSongTried(String clock) {
+    return 'Stamped at $clock';
+  }
+
+  @override
+  String get lyricsSongListen => 'Listen from stamp';
+
+  @override
+  String get lyricsSyncSkipTitle => 'Stamped syncs will be lost';
+
+  @override
+  String get lyricsSyncSkipBody =>
+      'The range contains syncs you already stamped. Merging it into one block removes them. Continue?';
+
+  @override
+  String get lyricsSyncSkipConfirm => 'Merge';
+
+  @override
   String get lyricsSyncResetTitle => 'Groupings will be lost';
 
   @override
@@ -1421,14 +1847,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsSyncResetConfirm => 'Change';
 
   @override
-  String get lyricsSyncGroupEdit => 'Group lines';
+  String lyricsSyncMerged(int n) {
+    return '$n lines share one time';
+  }
 
   @override
-  String get lyricsSyncGroupDone => 'Done';
+  String get lyricsSyncUnmerge => 'Split';
 
   @override
-  String get lyricsSyncGroupPanelHint =>
-      'Tap or drag to pick the last line to group. This sync\'s time must be stamped again.';
+  String get playerLyricsExpand => 'Lyrics only';
+
+  @override
+  String get playerLyricsCollapse => 'Close lyrics';
 
   @override
   String get playerShowLyrics => 'Show lyrics';
@@ -1600,7 +2030,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsAccountSignedOutDesc =>
-      'Sign in to load your YouTube playlists';
+      'Sign in to load your YouTube playlists.';
 
   @override
   String get settingsAccountSignIn => 'Sign in';
@@ -1680,6 +2110,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permAudioDesc => 'Used to load music stored on this device.';
 
   @override
+  String get permOverlay => 'Display over other apps';
+
+  @override
+  String get permOverlayDesc =>
+      'Used to show lyrics over other apps while you use them.';
+
+  @override
   String get permBlockedDesc =>
       'Blocked. Tap to turn it on in system settings.';
 
@@ -1708,6 +2145,22 @@ class AppLocalizationsEn extends AppLocalizations {
       'Control playback from the notification shade and lock screen.';
 
   @override
+  String get lyricsOverlayMinimize => 'Hide';
+
+  @override
+  String get lyricsOverlayTurnOff => 'Turn off';
+
+  @override
+  String get lyricsOverlayOn => 'Turn on floating lyrics';
+
+  @override
+  String get lyricsOverlayOff => 'Turn off floating lyrics';
+
+  @override
+  String get lyricsOverlayNeedPermission =>
+      'Allow \"Display over other apps\" in settings, then turn it on again.';
+
+  @override
   String get settingsNotifyPermission => 'System notifications are off';
 
   @override
@@ -1724,7 +2177,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifPreviewLabel => 'Preview';
 
   @override
+  String notifSleepAt(String time) {
+    return 'Sleep timer at $time';
+  }
+
+  @override
   String get notifHiddenNote => 'Song info hidden';
+
+  @override
+  String notifHiddenNotePosition(String n, String total) {
+    return 'Song info hidden · track $n of $total';
+  }
 
   @override
   String get notifStop => 'Close';
@@ -1750,9 +2213,29 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String notifDownloadProgressMore(int percent, int count) {
-    return 'Downloading · $percent% · $count waiting';
+  String notifDownloadProgressNext(int percent, String next) {
+    return 'Downloading · $percent% · Next: $next';
   }
+
+  @override
+  String notifDownloadOverall(int done, int total, int percent) {
+    return 'Overall $done/$total · $percent%';
+  }
+
+  @override
+  String get notifDownloadPreview => 'Preview';
+
+  @override
+  String get notifDownloadCancel => 'Cancel';
+
+  @override
+  String get notifDownloadPausePreview => 'Pause';
+
+  @override
+  String get notifDownloadResumePreview => 'Resume';
+
+  @override
+  String get notifDownloadStopPreview => 'Stop';
 
   @override
   String get notifDownloadDoneTitle => 'Download complete';
@@ -1765,4 +2248,415 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifDownloadFailedHidden => 'A song could not be downloaded';
+
+  @override
+  String get subscribeAction => 'Subscribe';
+
+  @override
+  String get subscribedAction => 'Subscribed';
+
+  @override
+  String get subscribeAdded =>
+      'Subscribed. You\'ll be told about videos posted from now on';
+
+  @override
+  String get subscribeFailed => 'This channel can\'t be subscribed to';
+
+  @override
+  String get unsubscribed => 'Unsubscribed';
+
+  @override
+  String get subscriptionsTitle => 'Subscriptions';
+
+  @override
+  String get subscriptionsSubtitle => 'Pick new videos to download';
+
+  @override
+  String get subscriptionsEmptyTitle => 'No subscribed channels';
+
+  @override
+  String get subscriptionsEmptyBody =>
+      'Tap Subscribe on a video\'s channel and you can pick new videos to download when they are posted.';
+
+  @override
+  String get subscriptionsNewVideos => 'See new videos';
+
+  @override
+  String get subscriptionsUnsubscribe => 'Unsubscribe';
+
+  @override
+  String subscriptionsCount(int count) {
+    return '$count channels';
+  }
+
+  @override
+  String get newVideosTitle => 'New videos';
+
+  @override
+  String get newVideosChecking => 'Checking for new videos';
+
+  @override
+  String get newVideosEmptyTitle => 'No new videos';
+
+  @override
+  String get newVideosEmptyBody =>
+      'When subscribed channels post new videos, you can pick them to download here.';
+
+  @override
+  String newVideosStart(int count) {
+    return 'Download $count';
+  }
+
+  @override
+  String newVideosStarted(int count) {
+    return 'Started downloading $count songs';
+  }
+
+  @override
+  String get newVideosSkipped => 'Those songs are already downloaded';
+
+  @override
+  String get newVideosSelectAll => 'Select all';
+
+  @override
+  String get newVideosSelectNone => 'Clear selection';
+
+  @override
+  String newVideosAnnounce(int count) {
+    return '$count new videos from your subscriptions';
+  }
+
+  @override
+  String get newVideosOpen => 'View';
+
+  @override
+  String get settingsSubscriptions => 'Subscriptions';
+
+  @override
+  String get settingsSubscriptionChannels => 'Subscribed channels';
+
+  @override
+  String get settingsCheckOnLaunch => 'Check for new videos on launch';
+
+  @override
+  String get settingsCheckOnLaunchDesc =>
+      'Tell me when subscribed channels have new videos and let me pick what to download.';
+
+  @override
+  String get settingsBackgroundCheck => 'Check even when the app is closed';
+
+  @override
+  String get settingsBackgroundCheckDesc =>
+      'Checks periodically and notifies you of new videos.';
+
+  @override
+  String get settingsCheckInterval => 'Check every';
+
+  @override
+  String settingsCheckIntervalHours(int count) {
+    return '${count}h';
+  }
+
+  @override
+  String get settingsCheckWifiOnly => 'Check on Wi-Fi only';
+
+  @override
+  String get settingsCheckWifiOnlyDesc =>
+      'Only checks while connected to Wi-Fi to save mobile data.';
+
+  @override
+  String get settingsCheckNow => 'Check now';
+
+  @override
+  String get settingsCheckNowChecking => 'Checking…';
+
+  @override
+  String get settingsCheckStatusNever => 'Not checked yet.';
+
+  @override
+  String settingsCheckStatusLast(String time) {
+    return 'Last checked $time';
+  }
+
+  @override
+  String settingsCheckStatusNotified(int count) {
+    return 'Notified $count new videos.';
+  }
+
+  @override
+  String settingsCheckStatusFailed(int count) {
+    return 'Could not read $count channels.';
+  }
+
+  @override
+  String get settingsCheckStatusBlocked =>
+      'Notifications are off, so new videos were not announced. Turn on Mulo notifications (including New videos) in device settings.';
+
+  @override
+  String get settingsCheckStatusNotScheduled =>
+      'Periodic checking is not scheduled. Try turning the switch above off and on.';
+
+  @override
+  String get notifChannelNewVideos => 'New videos';
+
+  @override
+  String get notifNewVideosTitle => 'New videos from your subscriptions';
+
+  @override
+  String notifNewVideosBody(String channels, String count) {
+    return '$channels · $count new videos';
+  }
+
+  @override
+  String get channelSearchTitle => 'Find channels';
+
+  @override
+  String get channelSearchHint => 'Search by channel name';
+
+  @override
+  String get channelSearchIdle => 'Search for a channel to subscribe to';
+
+  @override
+  String get channelSearchLoading => 'Searching for channels';
+
+  @override
+  String get channelSearchEmpty => 'No channels found';
+
+  @override
+  String get channelSearchFailed =>
+      'Couldn\'t search for channels. Please try again later';
+
+  @override
+  String get subscriptionsTestTitle => 'Temporary · preview only';
+
+  @override
+  String get subscriptionsTestNotification => 'Show new-video notification';
+
+  @override
+  String get subscriptionsTestNewVideos => 'Preview new videos screen';
+
+  @override
+  String get categoryAll => 'All categories';
+
+  @override
+  String get subscriptionsCategories => 'Categories to be notified about';
+
+  @override
+  String get subscriptionsCategoriesDesc =>
+      'Only new videos in the chosen categories are shown and notified. Pick none for all categories.';
+
+  @override
+  String channelInfoVideoCount(int count) {
+    return '$count videos';
+  }
+
+  @override
+  String get channelSaveFolder => 'Save folder';
+
+  @override
+  String get channelSaveFolderDefault => 'Default save folder';
+
+  @override
+  String get channelSaveFolderChange => 'Change';
+
+  @override
+  String get channelSaveFolderReset => 'Use default';
+
+  @override
+  String get notifNewVideoDownloadNow => 'Download now';
+
+  @override
+  String get equalizerTitle => 'Equalizer';
+
+  @override
+  String get equalizerOn => 'On';
+
+  @override
+  String get equalizerOff => 'Off';
+
+  @override
+  String get equalizerUnsupported =>
+      'The equalizer isn\'t available on this device';
+
+  @override
+  String get equalizerEnable => 'Use equalizer';
+
+  @override
+  String get equalizerEnableDesc =>
+      'Shapes the sound with the settings below. Off by default.';
+
+  @override
+  String get equalizerDeviceProfile => 'Save for this device only';
+
+  @override
+  String equalizerDeviceProfileDesc(String device) {
+    return 'Applies these settings automatically when $device is connected.';
+  }
+
+  @override
+  String get equalizerMyPresets => 'My presets';
+
+  @override
+  String get equalizerMyPresetsHint => 'Long-press to delete';
+
+  @override
+  String get equalizerPresetSaveNew => 'Save current';
+
+  @override
+  String get equalizerPresetNameTitle => 'Preset name';
+
+  @override
+  String get equalizerPresetNameHint => 'e.g. Earbuds, Car';
+
+  @override
+  String get equalizerPresetSave => 'Save';
+
+  @override
+  String get equalizerPresetDeleteTitle => 'Delete preset';
+
+  @override
+  String equalizerPresetDeleteBody(String name) {
+    return 'Delete \"$name\"? Devices using it keep their last values';
+  }
+
+  @override
+  String get equalizerDevicesTitle => 'Equalizer per device';
+
+  @override
+  String get equalizerDevicesEmpty =>
+      'No Bluetooth or earphone devices connected yet';
+
+  @override
+  String get equalizerDeviceDefault => 'Default settings';
+
+  @override
+  String get equalizerDeviceCustom => 'Custom';
+
+  @override
+  String get equalizerDeviceEdit => 'Edit in equalizer';
+
+  @override
+  String get equalizerEditingDevice => 'Editing the settings for this device';
+
+  @override
+  String get equalizerDeviceCurrent => 'Connected now';
+
+  @override
+  String equalizerDevicePickTitle(String device) {
+    return 'Preset for $device';
+  }
+
+  @override
+  String get equalizerDeviceNoPresets =>
+      'Create a preset first with \"Save current\" on the equalizer screen';
+
+  @override
+  String get equalizerPreset => 'Presets';
+
+  @override
+  String get equalizerBands => 'Bands';
+
+  @override
+  String get equalizerBassBoost => 'Bass boost';
+
+  @override
+  String get equalizerBassBoostDesc => 'Makes low sounds heavier.';
+
+  @override
+  String get equalizerReset => 'Reset';
+
+  @override
+  String get equalizerPresetFlat => 'Flat';
+
+  @override
+  String get equalizerPresetBass => 'Bass';
+
+  @override
+  String get equalizerPresetTreble => 'Treble';
+
+  @override
+  String get equalizerPresetVocal => 'Vocal';
+
+  @override
+  String get equalizerPresetRock => 'Rock';
+
+  @override
+  String get equalizerPresetPop => 'Pop';
+
+  @override
+  String get equalizerPresetJazz => 'Jazz';
+
+  @override
+  String get equalizerPresetClassical => 'Classical';
+
+  @override
+  String get equalizerPresetDance => 'Hip-hop / EDM';
+
+  @override
+  String get equalizerPresetCustom => 'Custom';
+
+  @override
+  String get equalizerVirtualizer => 'Spatial sound';
+
+  @override
+  String get equalizerVirtualizerDesc => 'Widens the sound on headphones.';
+
+  @override
+  String get equalizerReverb => 'Reverb';
+
+  @override
+  String get equalizerReverbDesc => 'Adds the echo of a room or hall.';
+
+  @override
+  String get equalizerLimiter => 'Prevent clipping';
+
+  @override
+  String get equalizerLimiterDesc => 'Keeps loud sound from distorting.';
+
+  @override
+  String get equalizerReverbNone => 'None';
+
+  @override
+  String get equalizerReverbSmallRoom => 'Small room';
+
+  @override
+  String get equalizerReverbMediumRoom => 'Medium room';
+
+  @override
+  String get equalizerReverbLargeRoom => 'Large room';
+
+  @override
+  String get equalizerReverbMediumHall => 'Medium hall';
+
+  @override
+  String get equalizerReverbLargeHall => 'Large hall';
+
+  @override
+  String get equalizerReverbPlate => 'Plate';
+
+  @override
+  String get equalizerSave => 'Save';
+
+  @override
+  String get audioLanguageTitle => 'Audio language';
+
+  @override
+  String get audioLanguageRow => 'Audio language';
+
+  @override
+  String get audioLanguageOriginal => 'Original';
+
+  @override
+  String get audioLanguageHint =>
+      'Applies right away. Preview and download use the same language.';
+
+  @override
+  String get downloadAgainTitle => 'Download again?';
+
+  @override
+  String get downloadAgainBody =>
+      'This song is already downloaded. Downloading it again adds another copy.';
+
+  @override
+  String get downloadAgainConfirm => 'Download again';
 }

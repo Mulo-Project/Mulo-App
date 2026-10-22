@@ -146,6 +146,12 @@ abstract class AppLocalizations {
   /// **'일시정지'**
   String get actionPause;
 
+  /// No description provided for @playerFloatExpand.
+  ///
+  /// In ko, this message translates to:
+  /// **'미니 플레이어로 돌아가기'**
+  String get playerFloatExpand;
+
   /// No description provided for @actionNext.
   ///
   /// In ko, this message translates to:
@@ -251,7 +257,7 @@ abstract class AppLocalizations {
   /// No description provided for @searchEmptyBody.
   ///
   /// In ko, this message translates to:
-  /// **'URL을 붙여넣거나 검색어를 입력하세요.\n유튜브 앱에서 공유를 누르면 바로 여기로 와요.'**
+  /// **'링크를 붙여 넣거나 검색어를 입력하세요.\n왼쪽 아이콘으로 찾을 사이트를 고를 수 있어요.'**
   String get searchEmptyBody;
 
   /// No description provided for @searchNotReadyTitle.
@@ -386,6 +392,24 @@ abstract class AppLocalizations {
   /// **'모두 일시정지'**
   String get downloadsPauseAll;
 
+  /// No description provided for @downloadsResumeAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'모두 이어 받기'**
+  String get downloadsResumeAll;
+
+  /// No description provided for @downloadsHideCurrent.
+  ///
+  /// In ko, this message translates to:
+  /// **'받는 곡 정보 숨기기'**
+  String get downloadsHideCurrent;
+
+  /// No description provided for @downloadsShowCurrent.
+  ///
+  /// In ko, this message translates to:
+  /// **'받는 곡 정보 보이기'**
+  String get downloadsShowCurrent;
+
   /// No description provided for @downloadsClearDone.
   ///
   /// In ko, this message translates to:
@@ -499,6 +523,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'아티스트순'**
   String get sortArtist;
+
+  /// No description provided for @sortCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 수순'**
+  String get sortCount;
 
   /// No description provided for @libraryImport.
   ///
@@ -854,6 +884,18 @@ abstract class AppLocalizations {
   /// **'PIN을 입력하세요.'**
   String get lockHint;
 
+  /// No description provided for @settingsBackgroundDownload.
+  ///
+  /// In ko, this message translates to:
+  /// **'백그라운드 받기'**
+  String get settingsBackgroundDownload;
+
+  /// No description provided for @settingsBackgroundDownloadDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱이 뒤로 가거나 닫혀도 받기를 이어 가요. 켜 두면 받는 동안 알림이 항상 떠 있어요.'**
+  String get settingsBackgroundDownloadDesc;
+
   /// No description provided for @settingsHideNotification.
   ///
   /// In ko, this message translates to:
@@ -871,6 +913,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'테마'**
   String get settingsTheme;
+
+  /// No description provided for @settingsThemeColorFollowing.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 분위기 따라가기가 켜져 있어 재생 중인 곡의 색을 따라가요.'**
+  String get settingsThemeColorFollowing;
 
   /// No description provided for @settingsFollowMood.
   ///
@@ -899,14 +947,86 @@ abstract class AppLocalizations {
   /// No description provided for @settingsThemePreviewDesc.
   ///
   /// In ko, this message translates to:
-  /// **'고른 테마로 앱 화면들을 직접 둘러보고 적용해요'**
+  /// **'고른 테마로 앱 화면들을 직접 둘러보고 적용해요.'**
   String get settingsThemePreviewDesc;
+
+  /// No description provided for @settingsPlayback.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생 설정'**
+  String get settingsPlayback;
+
+  /// No description provided for @settingsMixWithOthers.
+  ///
+  /// In ko, this message translates to:
+  /// **'다른 앱과 함께 재생'**
+  String get settingsMixWithOthers;
+
+  /// No description provided for @settingsMixWithOthersDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'다른 앱에서 소리가 나도 멈추지 않고 같이 들려요. 소리가 겹쳐 시끄러울 수 있어요.'**
+  String get settingsMixWithOthersDesc;
+
+  /// No description provided for @settingsPauseOnDisconnect.
+  ///
+  /// In ko, this message translates to:
+  /// **'기기가 끊기면 일시정지'**
+  String get settingsPauseOnDisconnect;
+
+  /// No description provided for @settingsPauseOnDisconnectDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'이어폰을 빼거나 블루투스 연결이 끊기면 재생을 멈춰요.'**
+  String get settingsPauseOnDisconnectDesc;
+
+  /// No description provided for @settingsResumeOnConnect.
+  ///
+  /// In ko, this message translates to:
+  /// **'기기가 연결되면 이어 재생'**
+  String get settingsResumeOnConnect;
+
+  /// No description provided for @settingsResumeOnConnectDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'끊겨서 멈춘 재생을 10분 안에 다시 연결하면 이어서 재생해요.'**
+  String get settingsResumeOnConnectDesc;
+
+  /// No description provided for @settingsResumeWithoutNotification.
+  ///
+  /// In ko, this message translates to:
+  /// **'알림이 없어도 블루투스로 재생'**
+  String get settingsResumeWithoutNotification;
+
+  /// No description provided for @settingsResumeWithoutNotificationDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'알림을 지웠거나 재생이 끝난 뒤에도 블루투스 기기의 재생 버튼으로 마지막 곡을 이어서 재생해요.'**
+  String get settingsResumeWithoutNotificationDesc;
 
   /// No description provided for @playerStyleTitle.
   ///
   /// In ko, this message translates to:
   /// **'플레이어 테마'**
   String get playerStyleTitle;
+
+  /// No description provided for @playerSpeedTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생 속도'**
+  String get playerSpeedTitle;
+
+  /// No description provided for @playerSpeedValue.
+  ///
+  /// In ko, this message translates to:
+  /// **'{speed}배속'**
+  String playerSpeedValue(String speed);
+
+  /// No description provided for @playerSpeedNormal.
+  ///
+  /// In ko, this message translates to:
+  /// **'보통'**
+  String get playerSpeedNormal;
 
   /// No description provided for @playerStyleSquare.
   ///
@@ -950,6 +1070,24 @@ abstract class AppLocalizations {
   /// **'{minutes}분 뒤 재생을 멈춰요'**
   String playerSleepTimerSet(int minutes);
 
+  /// No description provided for @playerSleepTimerUnitHour.
+  ///
+  /// In ko, this message translates to:
+  /// **'시간'**
+  String get playerSleepTimerUnitHour;
+
+  /// No description provided for @playerSleepTimerUnitMinute.
+  ///
+  /// In ko, this message translates to:
+  /// **'분'**
+  String get playerSleepTimerUnitMinute;
+
+  /// No description provided for @playerSleepTimerStart.
+  ///
+  /// In ko, this message translates to:
+  /// **'시작'**
+  String get playerSleepTimerStart;
+
   /// No description provided for @playerSleepTimerCleared.
   ///
   /// In ko, this message translates to:
@@ -961,12 +1099,6 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'이퀄라이저'**
   String get playerEqualizer;
-
-  /// No description provided for @playerEqualizerSoon.
-  ///
-  /// In ko, this message translates to:
-  /// **'이퀄라이저는 준비 중이에요'**
-  String get playerEqualizerSoon;
 
   /// No description provided for @playerLyrics.
   ///
@@ -1058,11 +1190,17 @@ abstract class AppLocalizations {
   /// **'외부 출력'**
   String get outputOther;
 
-  /// No description provided for @queueShuffle.
+  /// No description provided for @shuffleOn.
   ///
   /// In ko, this message translates to:
-  /// **'다음 곡 섞기'**
-  String get queueShuffle;
+  /// **'셔플 켜기'**
+  String get shuffleOn;
+
+  /// No description provided for @shuffleOff.
+  ///
+  /// In ko, this message translates to:
+  /// **'셔플 끄기'**
+  String get shuffleOff;
 
   /// No description provided for @queueClear.
   ///
@@ -1195,6 +1333,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'위치 조정'**
   String get coverAdjust;
+
+  /// No description provided for @coverWebBrowserHelp.
+  ///
+  /// In ko, this message translates to:
+  /// **'마음에 드는 이미지를 누르면 바로 편집 화면으로 가요.'**
+  String get coverWebBrowserHelp;
 
   /// No description provided for @coverWebHint.
   ///
@@ -1658,11 +1802,35 @@ abstract class AppLocalizations {
   /// **'{count}회'**
   String playCount(int count);
 
-  /// No description provided for @searchHintWeb.
+  /// No description provided for @searchHintSite.
   ///
   /// In ko, this message translates to:
-  /// **'웹 음원 검색어나 URL'**
-  String get searchHintWeb;
+  /// **'{site} URL이나 검색어'**
+  String searchHintSite(String site);
+
+  /// No description provided for @sourceSoundcloud.
+  ///
+  /// In ko, this message translates to:
+  /// **'SoundCloud'**
+  String get sourceSoundcloud;
+
+  /// No description provided for @searchSubmitTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'검색'**
+  String get searchSubmitTooltip;
+
+  /// No description provided for @searchPasteLink.
+  ///
+  /// In ko, this message translates to:
+  /// **'링크 붙여넣기'**
+  String get searchPasteLink;
+
+  /// No description provided for @searchPasteEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'클립보드에 링크가 없어요'**
+  String get searchPasteEmpty;
 
   /// No description provided for @searchSourceTooltip.
   ///
@@ -1675,12 +1843,6 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'유튜브'**
   String get sourceYoutube;
-
-  /// No description provided for @sourceWeb.
-  ///
-  /// In ko, this message translates to:
-  /// **'웹'**
-  String get sourceWeb;
 
   /// No description provided for @searchHitMenuDetail.
   ///
@@ -1748,6 +1910,42 @@ abstract class AppLocalizations {
   /// **'원본 페이지 열기'**
   String get mediaDetailOpenOriginal;
 
+  /// No description provided for @mediaDetailListenOriginal.
+  ///
+  /// In ko, this message translates to:
+  /// **'원본 사이트에서 듣기'**
+  String get mediaDetailListenOriginal;
+
+  /// No description provided for @mediaDetailListenSoundcloud.
+  ///
+  /// In ko, this message translates to:
+  /// **'SoundCloud에서 듣기'**
+  String get mediaDetailListenSoundcloud;
+
+  /// No description provided for @mediaDetailOpenArtist.
+  ///
+  /// In ko, this message translates to:
+  /// **'아티스트 보기'**
+  String get mediaDetailOpenArtist;
+
+  /// No description provided for @mediaDetailPlays.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생수'**
+  String get mediaDetailPlays;
+
+  /// No description provided for @mediaDetailGenre.
+  ///
+  /// In ko, this message translates to:
+  /// **'장르'**
+  String get mediaDetailGenre;
+
+  /// No description provided for @mediaDetailFollowers.
+  ///
+  /// In ko, this message translates to:
+  /// **'팔로워 {count}명'**
+  String mediaDetailFollowers(String count);
+
   /// No description provided for @mediaDetailChannel.
   ///
   /// In ko, this message translates to:
@@ -1801,6 +1999,18 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'설명'**
   String get mediaDetailDescription;
+
+  /// No description provided for @mediaDetailSectionPreview.
+  ///
+  /// In ko, this message translates to:
+  /// **'미리 듣기'**
+  String get mediaDetailSectionPreview;
+
+  /// No description provided for @mediaDetailSectionInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'정보'**
+  String get mediaDetailSectionInfo;
 
   /// No description provided for @mediaDetailMore.
   ///
@@ -1904,6 +2114,12 @@ abstract class AppLocalizations {
   /// **'{name, select, FilmAnimation{영화/애니메이션} Autos{자동차} Music{음악} Pets{동물} Sports{스포츠} Travel{여행} Gaming{게임} People{인물/블로그} Comedy{코미디} Entertainment{엔터테인먼트} News{뉴스/정치} Howto{노하우/스타일} Education{교육} Science{과학/기술} Nonprofits{비영리/사회운동} other{{name}}}'**
   String videoCategory(String name);
 
+  /// No description provided for @downloadsRemaining.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}곡 남음'**
+  String downloadsRemaining(int count);
+
   /// No description provided for @downloadsExpand.
   ///
   /// In ko, this message translates to:
@@ -1939,6 +2155,162 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'기본으로'**
   String get downloadCoverDefault;
+
+  /// No description provided for @downloadImportLyrics.
+  ///
+  /// In ko, this message translates to:
+  /// **'자막을 가사로 가져오기'**
+  String get downloadImportLyrics;
+
+  /// No description provided for @downloadImportLyricsHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'받은 뒤 가사 보기의 싱크 설정에서 다듬을 수 있어요.'**
+  String get downloadImportLyricsHint;
+
+  /// No description provided for @downloadSubtitleChecking.
+  ///
+  /// In ko, this message translates to:
+  /// **'자막이 있는지 확인하는 중이에요.'**
+  String get downloadSubtitleChecking;
+
+  /// No description provided for @downloadSubtitleNone.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 영상에는 자막이 없어요.'**
+  String get downloadSubtitleNone;
+
+  /// No description provided for @downloadSubtitleUnknown.
+  ///
+  /// In ko, this message translates to:
+  /// **'자막을 확인하지 못했어요. 켜 두면 받은 뒤 다시 찾아봐요.'**
+  String get downloadSubtitleUnknown;
+
+  /// No description provided for @downloadSubtitleLanguage.
+  ///
+  /// In ko, this message translates to:
+  /// **'자막 언어'**
+  String get downloadSubtitleLanguage;
+
+  /// No description provided for @downloadSubtitleAuto.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동으로 고르기'**
+  String get downloadSubtitleAuto;
+
+  /// No description provided for @downloadSubtitleAutoHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'한국어 → 영어 → 첫 번째 자막 순으로 골라요.'**
+  String get downloadSubtitleAutoHint;
+
+  /// No description provided for @downloadLyricsPreviewLoading.
+  ///
+  /// In ko, this message translates to:
+  /// **'불러오는 중…'**
+  String get downloadLyricsPreviewLoading;
+
+  /// No description provided for @downloadLyricsPreviewFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'자막을 불러오지 못했어요.'**
+  String get downloadLyricsPreviewFailed;
+
+  /// No description provided for @downloadSubtitleEditHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'글은 고칠 수 있지만 시간은 바꿀 수 없어요. 싱크는 받은 뒤 재생 화면에서 맞춰요.'**
+  String get downloadSubtitleEditHint;
+
+  /// No description provided for @downloadSubtitleUseEdited.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 자막 사용'**
+  String get downloadSubtitleUseEdited;
+
+  /// No description provided for @downloadSubtitleEdited.
+  ///
+  /// In ko, this message translates to:
+  /// **'수정함'**
+  String get downloadSubtitleEdited;
+
+  /// No description provided for @downloadLyricsRetry.
+  ///
+  /// In ko, this message translates to:
+  /// **'다시 불러오기'**
+  String get downloadLyricsRetry;
+
+  /// No description provided for @downloadSubtitleUse.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 자막 사용'**
+  String get downloadSubtitleUse;
+
+  /// No description provided for @downloadSubtitleInUse.
+  ///
+  /// In ko, this message translates to:
+  /// **'사용 중인 자막'**
+  String get downloadSubtitleInUse;
+
+  /// No description provided for @downloadLyricsSkipSounds.
+  ///
+  /// In ko, this message translates to:
+  /// **'효과음 줄 빼기'**
+  String get downloadLyricsSkipSounds;
+
+  /// No description provided for @downloadLyricsSkipSoundsHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'[음악] · (박수) · ♪ 같은 줄은 가사로 가져오지 않아요.'**
+  String get downloadLyricsSkipSoundsHint;
+
+  /// No description provided for @downloadSubtitleColLanguage.
+  ///
+  /// In ko, this message translates to:
+  /// **'언어'**
+  String get downloadSubtitleColLanguage;
+
+  /// No description provided for @downloadSubtitleColKind.
+  ///
+  /// In ko, this message translates to:
+  /// **'종류'**
+  String get downloadSubtitleColKind;
+
+  /// No description provided for @downloadSubtitleKindAuto.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동 생성'**
+  String get downloadSubtitleKindAuto;
+
+  /// No description provided for @downloadSubtitleKindManual.
+  ///
+  /// In ko, this message translates to:
+  /// **'직접 단 자막'**
+  String get downloadSubtitleKindManual;
+
+  /// No description provided for @downloadSubtitleFound.
+  ///
+  /// In ko, this message translates to:
+  /// **'자막 {count}개를 찾았어요.'**
+  String downloadSubtitleFound(int count);
+
+  /// No description provided for @downloadSectionInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 정보'**
+  String get downloadSectionInfo;
+
+  /// No description provided for @downloadSectionSave.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장'**
+  String get downloadSectionSave;
+
+  /// No description provided for @downloadSectionLyrics.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사'**
+  String get downloadSectionLyrics;
 
   /// No description provided for @downloadCancelTitle.
   ///
@@ -2024,6 +2396,24 @@ abstract class AppLocalizations {
   /// **'기존 장르에서 고르기'**
   String get downloadGenreExisting;
 
+  /// No description provided for @saveFolderTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 위치 고르기'**
+  String get saveFolderTitle;
+
+  /// No description provided for @saveFolderEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'불러오는 폴더가 없어요. 직접 선택해 주세요.'**
+  String get saveFolderEmpty;
+
+  /// No description provided for @saveFolderPickOther.
+  ///
+  /// In ko, this message translates to:
+  /// **'직접 선택'**
+  String get saveFolderPickOther;
+
   /// No description provided for @downloadPickFolder.
   ///
   /// In ko, this message translates to:
@@ -2059,6 +2449,36 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'대기열에 넣었어요'**
   String get downloadQueued;
+
+  /// No description provided for @downloadAlreadyDownloaded.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미 받은 곡이에요'**
+  String get downloadAlreadyDownloaded;
+
+  /// No description provided for @downloadStateDownloading.
+  ///
+  /// In ko, this message translates to:
+  /// **'받는 중'**
+  String get downloadStateDownloading;
+
+  /// No description provided for @downloadStateQueued.
+  ///
+  /// In ko, this message translates to:
+  /// **'대기 중'**
+  String get downloadStateQueued;
+
+  /// No description provided for @downloadStateDone.
+  ///
+  /// In ko, this message translates to:
+  /// **'받음'**
+  String get downloadStateDone;
+
+  /// No description provided for @downloadAlreadyInQueue.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미 받는 중이거나 대기 중인 곡이에요'**
+  String get downloadAlreadyInQueue;
 
   /// No description provided for @homeTopGenre.
   ///
@@ -2264,6 +2684,18 @@ abstract class AppLocalizations {
   /// **'삭제'**
   String get trackMenuDelete;
 
+  /// No description provided for @trackMenuRemoveFromQueue.
+  ///
+  /// In ko, this message translates to:
+  /// **'대기열에서 빼기'**
+  String get trackMenuRemoveFromQueue;
+
+  /// No description provided for @trackRemovedFromQueue.
+  ///
+  /// In ko, this message translates to:
+  /// **'대기열에서 뺐어요.'**
+  String get trackRemovedFromQueue;
+
   /// No description provided for @trackMenuRemoveFromPlaylist.
   ///
   /// In ko, this message translates to:
@@ -2402,6 +2834,72 @@ abstract class AppLocalizations {
   /// **'가사를 붙여넣거나 입력하세요. [01:02.30]처럼 시간이 붙은 글이나 .lrc · .txt 파일을 불러오면 싱크 가사가 돼요. 비워서 저장하면 가사를 지워요.'**
   String get lyricsEditHint;
 
+  /// No description provided for @lyricsEditSyncedHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'왼쪽 시간은 줄 번호에 맞춰 붙어 있어요. 줄을 끼우거나 지우면 시간은 그 자리에 남고 글만 밀려요. 시간은 싱크 설정에서 바꿔요.'**
+  String get lyricsEditSyncedHint;
+
+  /// No description provided for @lyricsAddLine.
+  ///
+  /// In ko, this message translates to:
+  /// **'줄 추가'**
+  String get lyricsAddLine;
+
+  /// No description provided for @lyricsDeleteLine.
+  ///
+  /// In ko, this message translates to:
+  /// **'줄 지우기'**
+  String get lyricsDeleteLine;
+
+  /// No description provided for @lyricsTimePrev.
+  ///
+  /// In ko, this message translates to:
+  /// **'이전'**
+  String get lyricsTimePrev;
+
+  /// No description provided for @lyricsTimeNow.
+  ///
+  /// In ko, this message translates to:
+  /// **'현재'**
+  String get lyricsTimeNow;
+
+  /// No description provided for @lyricsTimeNext.
+  ///
+  /// In ko, this message translates to:
+  /// **'다음'**
+  String get lyricsTimeNext;
+
+  /// No description provided for @lyricsTimeNone.
+  ///
+  /// In ko, this message translates to:
+  /// **'없음'**
+  String get lyricsTimeNone;
+
+  /// No description provided for @lyricsTimeGroupedAbove.
+  ///
+  /// In ko, this message translates to:
+  /// **'앞 줄과 같은 시간이라 묶여요'**
+  String get lyricsTimeGroupedAbove;
+
+  /// No description provided for @lyricsTimeGroupedBelow.
+  ///
+  /// In ko, this message translates to:
+  /// **'다음 줄과 같은 시간이라 묶여요'**
+  String get lyricsTimeGroupedBelow;
+
+  /// No description provided for @lyricsTimeSeparate.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 줄부터 묶음에서 떼기'**
+  String get lyricsTimeSeparate;
+
+  /// No description provided for @lyricsTimeClearFrom.
+  ///
+  /// In ko, this message translates to:
+  /// **'여기부터 싱크 지우기'**
+  String get lyricsTimeClearFrom;
+
   /// No description provided for @lyricsLoadFile.
   ///
   /// In ko, this message translates to:
@@ -2516,23 +3014,23 @@ abstract class AppLocalizations {
   /// **'되돌리기'**
   String get lyricsSyncUndo;
 
+  /// No description provided for @lyricsSyncPrevious.
+  ///
+  /// In ko, this message translates to:
+  /// **'싱크 한 칸 지우고 뒤로'**
+  String get lyricsSyncPrevious;
+
+  /// No description provided for @lyricsSyncSavePartial.
+  ///
+  /// In ko, this message translates to:
+  /// **'중간 저장 (찍은 곳까지)'**
+  String get lyricsSyncSavePartial;
+
   /// No description provided for @lyricsSyncSave.
   ///
   /// In ko, this message translates to:
   /// **'싱크 저장'**
   String get lyricsSyncSave;
-
-  /// No description provided for @lyricsSyncReplay.
-  ///
-  /// In ko, this message translates to:
-  /// **'이 줄부터 다시 듣기'**
-  String get lyricsSyncReplay;
-
-  /// No description provided for @lyricsSyncReset.
-  ///
-  /// In ko, this message translates to:
-  /// **'이 싱크로'**
-  String get lyricsSyncReset;
 
   /// No description provided for @lyricsSyncGroup.
   ///
@@ -2569,6 +3067,36 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'일시정지'**
   String get lyricsSyncPause;
+
+  /// No description provided for @lyricsSyncBackBy.
+  ///
+  /// In ko, this message translates to:
+  /// **'{n}초 전으로 (길게 눌러 단위 바꾸기)'**
+  String lyricsSyncBackBy(double n);
+
+  /// No description provided for @lyricsSyncForwardBy.
+  ///
+  /// In ko, this message translates to:
+  /// **'{n}초 뒤로 (길게 눌러 단위 바꾸기)'**
+  String lyricsSyncForwardBy(double n);
+
+  /// No description provided for @lyricsSyncAutoPause.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동 멈춤'**
+  String get lyricsSyncAutoPause;
+
+  /// No description provided for @lyricsSyncAutoPauseHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'다음 줄에 이미 있는 싱크 시간에 닿으면 재생을 멈춰요'**
+  String get lyricsSyncAutoPauseHint;
+
+  /// No description provided for @lyricsSyncSeek.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생 위치'**
+  String get lyricsSyncSeek;
 
   /// No description provided for @lyricsSyncProgress.
   ///
@@ -2648,6 +3176,210 @@ abstract class AppLocalizations {
   /// **'기본 줄 수 변경'**
   String get lyricsSyncDefaultLines;
 
+  /// No description provided for @lyricsSyncExpandedHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'줄별로 펼쳤어요 · 시간을 따로 정할 수 있고, 영역 밖을 누르면 시간이 같은 줄은 다시 합쳐져요'**
+  String get lyricsSyncExpandedHint;
+
+  /// No description provided for @lyricsSyncCancelAfter.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 싱크로 초기화'**
+  String get lyricsSyncCancelAfter;
+
+  /// No description provided for @lyricsSyncCancelAfterHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 싱크 뒤에 찍은 싱크를 지우고 여기서부터 다시 찍어요'**
+  String get lyricsSyncCancelAfterHint;
+
+  /// No description provided for @lyricsSyncNextSlot.
+  ///
+  /// In ko, this message translates to:
+  /// **'이어 찍기'**
+  String get lyricsSyncNextSlot;
+
+  /// No description provided for @lyricsSyncFollow.
+  ///
+  /// In ko, this message translates to:
+  /// **'따라가기'**
+  String get lyricsSyncFollow;
+
+  /// No description provided for @lyricsSyncFollowHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'켜면 목록이 포커스한 칸을 따라 움직이고, 끄면 가사를 자유롭게 볼 수 있어요'**
+  String get lyricsSyncFollowHint;
+
+  /// No description provided for @lyricsFollow.
+  ///
+  /// In ko, this message translates to:
+  /// **'싱크 추적'**
+  String get lyricsFollow;
+
+  /// No description provided for @lyricsThemeList.
+  ///
+  /// In ko, this message translates to:
+  /// **'목록'**
+  String get lyricsThemeList;
+
+  /// No description provided for @lyricsThemeCentered.
+  ///
+  /// In ko, this message translates to:
+  /// **'가운데 한 줄'**
+  String get lyricsThemeCentered;
+
+  /// No description provided for @lyricsThemeCover.
+  ///
+  /// In ko, this message translates to:
+  /// **'커버 배경'**
+  String get lyricsThemeCover;
+
+  /// No description provided for @themeTabPlayer.
+  ///
+  /// In ko, this message translates to:
+  /// **'플레이어'**
+  String get themeTabPlayer;
+
+  /// No description provided for @themeTabLyrics.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사'**
+  String get themeTabLyrics;
+
+  /// No description provided for @lyricsLatencyTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'반응 시간 보정'**
+  String get lyricsLatencyTitle;
+
+  /// No description provided for @lyricsLatencyEntry.
+  ///
+  /// In ko, this message translates to:
+  /// **'반응 시간 보정'**
+  String get lyricsLatencyEntry;
+
+  /// No description provided for @lyricsLatencyIntro.
+  ///
+  /// In ko, this message translates to:
+  /// **'소리를 듣고 지금을 누르면 반응 시간만큼 늦게 찍혀요. 누른 시간에서 아래 값만큼 앞당겨 찍어요.'**
+  String get lyricsLatencyIntro;
+
+  /// No description provided for @lyricsLatencySeconds.
+  ///
+  /// In ko, this message translates to:
+  /// **'{s}초'**
+  String lyricsLatencySeconds(String s);
+
+  /// No description provided for @lyricsLatencyReset.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본값 0.20초로'**
+  String get lyricsLatencyReset;
+
+  /// No description provided for @lyricsBeatTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'박자 테스트'**
+  String get lyricsBeatTitle;
+
+  /// No description provided for @lyricsBeatBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'소리와 함께 원이 깜빡여요. 깜빡일 때마다 가운데 원을 눌러 보세요. 8번 누르면 평균을 계산해 추천 값을 알려 줘요.'**
+  String get lyricsBeatBody;
+
+  /// No description provided for @lyricsBeatIdle.
+  ///
+  /// In ko, this message translates to:
+  /// **'시작을 누르세요'**
+  String get lyricsBeatIdle;
+
+  /// No description provided for @lyricsBeatProgress.
+  ///
+  /// In ko, this message translates to:
+  /// **'{n}/{total}번'**
+  String lyricsBeatProgress(int n, int total);
+
+  /// No description provided for @lyricsBeatStart.
+  ///
+  /// In ko, this message translates to:
+  /// **'시작'**
+  String get lyricsBeatStart;
+
+  /// No description provided for @lyricsBeatStop.
+  ///
+  /// In ko, this message translates to:
+  /// **'멈추기'**
+  String get lyricsBeatStop;
+
+  /// No description provided for @lyricsBeatResult.
+  ///
+  /// In ko, this message translates to:
+  /// **'추천 보정 {s}초'**
+  String lyricsBeatResult(String s);
+
+  /// No description provided for @lyricsBeatApply.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 값으로 적용'**
+  String get lyricsBeatApply;
+
+  /// No description provided for @lyricsBeatNote.
+  ///
+  /// In ko, this message translates to:
+  /// **'기기마다 화면과 소리 지연이 달라서 안드로이드 기준이에요. 데스크톱은 오차가 클 수 있어요.'**
+  String get lyricsBeatNote;
+
+  /// No description provided for @lyricsSongCheckTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡으로 확인'**
+  String get lyricsSongCheckTitle;
+
+  /// No description provided for @lyricsSongCheckBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡을 들으면서 소리가 시작되는 순간 찍어 보기를 눌러 보세요. 찍힌 위치부터 다시 들으면 맞게 찍혔는지 알 수 있어요.'**
+  String get lyricsSongCheckBody;
+
+  /// No description provided for @lyricsSongTry.
+  ///
+  /// In ko, this message translates to:
+  /// **'찍어 보기'**
+  String get lyricsSongTry;
+
+  /// No description provided for @lyricsSongTried.
+  ///
+  /// In ko, this message translates to:
+  /// **'찍힌 위치 {clock}'**
+  String lyricsSongTried(String clock);
+
+  /// No description provided for @lyricsSongListen.
+  ///
+  /// In ko, this message translates to:
+  /// **'찍힌 위치부터 듣기'**
+  String get lyricsSongListen;
+
+  /// No description provided for @lyricsSyncSkipTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'찍어 둔 싱크가 사라져요'**
+  String get lyricsSyncSkipTitle;
+
+  /// No description provided for @lyricsSyncSkipBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'묶을 범위 안에 이미 찍어 둔 싱크가 있어요. 한 칸으로 묶으면 그 싱크는 지워져요. 계속할까요?'**
+  String get lyricsSyncSkipBody;
+
+  /// No description provided for @lyricsSyncSkipConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'묶기'**
+  String get lyricsSyncSkipConfirm;
+
   /// No description provided for @lyricsSyncResetTitle.
   ///
   /// In ko, this message translates to:
@@ -2666,23 +3398,29 @@ abstract class AppLocalizations {
   /// **'바꾸기'**
   String get lyricsSyncResetConfirm;
 
-  /// No description provided for @lyricsSyncGroupEdit.
+  /// No description provided for @lyricsSyncMerged.
   ///
   /// In ko, this message translates to:
-  /// **'줄 묶기'**
-  String get lyricsSyncGroupEdit;
+  /// **'{n}줄 같은 시간으로 묶음'**
+  String lyricsSyncMerged(int n);
 
-  /// No description provided for @lyricsSyncGroupDone.
+  /// No description provided for @lyricsSyncUnmerge.
   ///
   /// In ko, this message translates to:
-  /// **'완료'**
-  String get lyricsSyncGroupDone;
+  /// **'풀기'**
+  String get lyricsSyncUnmerge;
 
-  /// No description provided for @lyricsSyncGroupPanelHint.
+  /// No description provided for @playerLyricsExpand.
   ///
   /// In ko, this message translates to:
-  /// **'묶을 마지막 줄을 누르거나 끌어서 고르세요. 이 싱크의 시간은 다시 찍어야 해요.'**
-  String get lyricsSyncGroupPanelHint;
+  /// **'가사만 크게 보기'**
+  String get playerLyricsExpand;
+
+  /// No description provided for @playerLyricsCollapse.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사 닫기'**
+  String get playerLyricsCollapse;
 
   /// No description provided for @playerShowLyrics.
   ///
@@ -2993,7 +3731,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsAccountSignedOutDesc.
   ///
   /// In ko, this message translates to:
-  /// **'로그인하면 내 유튜브 재생목록을 불러올 수 있어요'**
+  /// **'로그인하면 내 유튜브 재생목록을 불러올 수 있어요.'**
   String get settingsAccountSignedOutDesc;
 
   /// No description provided for @settingsAccountSignIn.
@@ -3134,6 +3872,18 @@ abstract class AppLocalizations {
   /// **'기기에 있는 음악을 불러오는 데 써요.'**
   String get permAudioDesc;
 
+  /// No description provided for @permOverlay.
+  ///
+  /// In ko, this message translates to:
+  /// **'다른 앱 위에 표시'**
+  String get permOverlay;
+
+  /// No description provided for @permOverlayDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'다른 앱을 쓰는 동안 화면 위에 가사를 띄우는 데 써요.'**
+  String get permOverlayDesc;
+
   /// No description provided for @permBlockedDesc.
   ///
   /// In ko, this message translates to:
@@ -3182,6 +3932,36 @@ abstract class AppLocalizations {
   /// **'알림창 · 잠금화면에서 재생을 조작해요.'**
   String get settingsNotifyPlaybackDesc;
 
+  /// No description provided for @lyricsOverlayMinimize.
+  ///
+  /// In ko, this message translates to:
+  /// **'숨기기'**
+  String get lyricsOverlayMinimize;
+
+  /// No description provided for @lyricsOverlayTurnOff.
+  ///
+  /// In ko, this message translates to:
+  /// **'끄기'**
+  String get lyricsOverlayTurnOff;
+
+  /// No description provided for @lyricsOverlayOn.
+  ///
+  /// In ko, this message translates to:
+  /// **'떠 있는 가사 켜기'**
+  String get lyricsOverlayOn;
+
+  /// No description provided for @lyricsOverlayOff.
+  ///
+  /// In ko, this message translates to:
+  /// **'떠 있는 가사 끄기'**
+  String get lyricsOverlayOff;
+
+  /// No description provided for @lyricsOverlayNeedPermission.
+  ///
+  /// In ko, this message translates to:
+  /// **'설정에서 \"다른 앱 위에 표시\"를 허용한 뒤 다시 켜 주세요.'**
+  String get lyricsOverlayNeedPermission;
+
   /// No description provided for @settingsNotifyPermission.
   ///
   /// In ko, this message translates to:
@@ -3212,11 +3992,23 @@ abstract class AppLocalizations {
   /// **'미리 듣기'**
   String get notifPreviewLabel;
 
+  /// No description provided for @notifSleepAt.
+  ///
+  /// In ko, this message translates to:
+  /// **'{time}에 수면 타이머'**
+  String notifSleepAt(String time);
+
   /// No description provided for @notifHiddenNote.
   ///
   /// In ko, this message translates to:
   /// **'곡 정보 숨김'**
   String get notifHiddenNote;
+
+  /// No description provided for @notifHiddenNotePosition.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 정보 숨김 · {n}/{total}번째 곡'**
+  String notifHiddenNotePosition(String n, String total);
 
   /// No description provided for @notifStop.
   ///
@@ -3260,11 +4052,47 @@ abstract class AppLocalizations {
   /// **'받는 중 · {percent}%'**
   String notifDownloadProgressBody(int percent);
 
-  /// No description provided for @notifDownloadProgressMore.
+  /// No description provided for @notifDownloadProgressNext.
   ///
   /// In ko, this message translates to:
-  /// **'받는 중 · {percent}% · {count}곡 대기'**
-  String notifDownloadProgressMore(int percent, int count);
+  /// **'받는 중 · {percent}% · 다음 곡: {next}'**
+  String notifDownloadProgressNext(int percent, String next);
+
+  /// No description provided for @notifDownloadOverall.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체 {done}/{total}곡 · {percent}%'**
+  String notifDownloadOverall(int done, int total, int percent);
+
+  /// No description provided for @notifDownloadPreview.
+  ///
+  /// In ko, this message translates to:
+  /// **'미리듣기'**
+  String get notifDownloadPreview;
+
+  /// No description provided for @notifDownloadCancel.
+  ///
+  /// In ko, this message translates to:
+  /// **'취소'**
+  String get notifDownloadCancel;
+
+  /// No description provided for @notifDownloadPausePreview.
+  ///
+  /// In ko, this message translates to:
+  /// **'일시정지'**
+  String get notifDownloadPausePreview;
+
+  /// No description provided for @notifDownloadResumePreview.
+  ///
+  /// In ko, this message translates to:
+  /// **'이어 듣기'**
+  String get notifDownloadResumePreview;
+
+  /// No description provided for @notifDownloadStopPreview.
+  ///
+  /// In ko, this message translates to:
+  /// **'중지'**
+  String get notifDownloadStopPreview;
 
   /// No description provided for @notifDownloadDoneTitle.
   ///
@@ -3289,6 +4117,744 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'곡을 받지 못했어요'**
   String get notifDownloadFailedHidden;
+
+  /// No description provided for @subscribeAction.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독'**
+  String get subscribeAction;
+
+  /// No description provided for @subscribedAction.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독 중'**
+  String get subscribedAction;
+
+  /// No description provided for @subscribeAdded.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독했어요. 지금부터 올라오는 영상을 알려 드려요'**
+  String get subscribeAdded;
+
+  /// No description provided for @subscribeFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 채널은 구독할 수 없어요'**
+  String get subscribeFailed;
+
+  /// No description provided for @unsubscribed.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독을 해제했어요'**
+  String get unsubscribed;
+
+  /// No description provided for @subscriptionsTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독 채널'**
+  String get subscriptionsTitle;
+
+  /// No description provided for @subscriptionsSubtitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 영상 골라 받기'**
+  String get subscriptionsSubtitle;
+
+  /// No description provided for @subscriptionsEmptyTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독한 채널이 없어요'**
+  String get subscriptionsEmptyTitle;
+
+  /// No description provided for @subscriptionsEmptyBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'영상 상세에서 채널의 구독을 누르면 새 영상이 올라올 때 골라서 받을 수 있어요.'**
+  String get subscriptionsEmptyBody;
+
+  /// No description provided for @subscriptionsNewVideos.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 영상 보기'**
+  String get subscriptionsNewVideos;
+
+  /// No description provided for @subscriptionsUnsubscribe.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독 해제'**
+  String get subscriptionsUnsubscribe;
+
+  /// No description provided for @subscriptionsCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}개 채널'**
+  String subscriptionsCount(int count);
+
+  /// No description provided for @newVideosTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 영상'**
+  String get newVideosTitle;
+
+  /// No description provided for @newVideosChecking.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 영상을 확인하고 있어요'**
+  String get newVideosChecking;
+
+  /// No description provided for @newVideosEmptyTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 영상이 없어요'**
+  String get newVideosEmptyTitle;
+
+  /// No description provided for @newVideosEmptyBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독한 채널에 새 영상이 올라오면 여기에서 골라 받을 수 있어요.'**
+  String get newVideosEmptyBody;
+
+  /// No description provided for @newVideosStart.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}곡 받기'**
+  String newVideosStart(int count);
+
+  /// No description provided for @newVideosStarted.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}곡을 받기 시작했어요'**
+  String newVideosStarted(int count);
+
+  /// No description provided for @newVideosSkipped.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미 받은 곡이라 새로 받을 곡이 없어요'**
+  String get newVideosSkipped;
+
+  /// No description provided for @newVideosSelectAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'모두 선택'**
+  String get newVideosSelectAll;
+
+  /// No description provided for @newVideosSelectNone.
+  ///
+  /// In ko, this message translates to:
+  /// **'선택 해제'**
+  String get newVideosSelectNone;
+
+  /// No description provided for @newVideosAnnounce.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독 채널에 새 영상이 {count}개 있어요'**
+  String newVideosAnnounce(int count);
+
+  /// No description provided for @newVideosOpen.
+  ///
+  /// In ko, this message translates to:
+  /// **'보기'**
+  String get newVideosOpen;
+
+  /// No description provided for @settingsSubscriptions.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독'**
+  String get settingsSubscriptions;
+
+  /// No description provided for @settingsSubscriptionChannels.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독 채널'**
+  String get settingsSubscriptionChannels;
+
+  /// No description provided for @settingsCheckOnLaunch.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱을 켤 때 새 영상 확인'**
+  String get settingsCheckOnLaunch;
+
+  /// No description provided for @settingsCheckOnLaunchDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독한 채널에 새 영상이 있으면 알려 주고 골라서 받게 해요.'**
+  String get settingsCheckOnLaunchDesc;
+
+  /// No description provided for @settingsBackgroundCheck.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱이 꺼져 있어도 확인'**
+  String get settingsBackgroundCheck;
+
+  /// No description provided for @settingsBackgroundCheckDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'주기적으로 확인하고 새 영상이 있으면 알림으로 알려요.'**
+  String get settingsBackgroundCheckDesc;
+
+  /// No description provided for @settingsCheckInterval.
+  ///
+  /// In ko, this message translates to:
+  /// **'확인 주기'**
+  String get settingsCheckInterval;
+
+  /// No description provided for @settingsCheckIntervalHours.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}시간'**
+  String settingsCheckIntervalHours(int count);
+
+  /// No description provided for @settingsCheckWifiOnly.
+  ///
+  /// In ko, this message translates to:
+  /// **'와이파이에서만 확인'**
+  String get settingsCheckWifiOnly;
+
+  /// No description provided for @settingsCheckWifiOnlyDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'데이터를 쓰지 않도록 와이파이에 연결됐을 때만 확인해요.'**
+  String get settingsCheckWifiOnlyDesc;
+
+  /// No description provided for @settingsCheckNow.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금 확인'**
+  String get settingsCheckNow;
+
+  /// No description provided for @settingsCheckNowChecking.
+  ///
+  /// In ko, this message translates to:
+  /// **'확인하는 중…'**
+  String get settingsCheckNowChecking;
+
+  /// No description provided for @settingsCheckStatusNever.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 확인한 적이 없어요.'**
+  String get settingsCheckStatusNever;
+
+  /// No description provided for @settingsCheckStatusLast.
+  ///
+  /// In ko, this message translates to:
+  /// **'마지막 확인 {time}'**
+  String settingsCheckStatusLast(String time);
+
+  /// No description provided for @settingsCheckStatusNotified.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 영상 {count}개를 알렸어요.'**
+  String settingsCheckStatusNotified(int count);
+
+  /// No description provided for @settingsCheckStatusFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'채널 {count}개를 읽지 못했어요.'**
+  String settingsCheckStatusFailed(int count);
+
+  /// No description provided for @settingsCheckStatusBlocked.
+  ///
+  /// In ko, this message translates to:
+  /// **'알림이 꺼져 있어 알리지 못했어요. 기기 설정에서 Mulo 알림(새 영상 포함)을 켜 주세요.'**
+  String get settingsCheckStatusBlocked;
+
+  /// No description provided for @settingsCheckStatusNotScheduled.
+  ///
+  /// In ko, this message translates to:
+  /// **'주기 확인이 예약되지 않았어요. 위 스위치를 껐다 켜 보세요.'**
+  String get settingsCheckStatusNotScheduled;
+
+  /// No description provided for @notifChannelNewVideos.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 영상'**
+  String get notifChannelNewVideos;
+
+  /// No description provided for @notifNewVideosTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독 채널에 새 영상이 올라왔어요'**
+  String get notifNewVideosTitle;
+
+  /// No description provided for @notifNewVideosBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'{channels} · 새 영상 {count}개'**
+  String notifNewVideosBody(String channels, String count);
+
+  /// No description provided for @channelSearchTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'채널 검색'**
+  String get channelSearchTitle;
+
+  /// No description provided for @channelSearchHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'채널 이름으로 찾기'**
+  String get channelSearchHint;
+
+  /// No description provided for @channelSearchIdle.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독할 채널 이름을 검색해 보세요'**
+  String get channelSearchIdle;
+
+  /// No description provided for @channelSearchLoading.
+  ///
+  /// In ko, this message translates to:
+  /// **'채널을 찾는 중이에요'**
+  String get channelSearchLoading;
+
+  /// No description provided for @channelSearchEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'찾은 채널이 없어요'**
+  String get channelSearchEmpty;
+
+  /// No description provided for @channelSearchFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'채널을 찾지 못했어요. 잠시 뒤 다시 시도해 주세요'**
+  String get channelSearchFailed;
+
+  /// No description provided for @subscriptionsTestTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'임시 · 모양 확인용'**
+  String get subscriptionsTestTitle;
+
+  /// No description provided for @subscriptionsTestNotification.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 영상 알림 띄우기'**
+  String get subscriptionsTestNotification;
+
+  /// No description provided for @subscriptionsTestNewVideos.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 영상 화면 미리 보기'**
+  String get subscriptionsTestNewVideos;
+
+  /// No description provided for @categoryAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'모든 분류'**
+  String get categoryAll;
+
+  /// No description provided for @subscriptionsCategories.
+  ///
+  /// In ko, this message translates to:
+  /// **'알림 받을 분류'**
+  String get subscriptionsCategories;
+
+  /// No description provided for @subscriptionsCategoriesDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'고른 분류의 새 영상만 알리고 보여 줘요. 고르지 않으면 모든 분류예요.'**
+  String get subscriptionsCategoriesDesc;
+
+  /// No description provided for @channelInfoVideoCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'영상 {count}개'**
+  String channelInfoVideoCount(int count);
+
+  /// No description provided for @channelSaveFolder.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 위치'**
+  String get channelSaveFolder;
+
+  /// No description provided for @channelSaveFolderDefault.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 저장 위치'**
+  String get channelSaveFolderDefault;
+
+  /// No description provided for @channelSaveFolderChange.
+  ///
+  /// In ko, this message translates to:
+  /// **'변경'**
+  String get channelSaveFolderChange;
+
+  /// No description provided for @channelSaveFolderReset.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본으로'**
+  String get channelSaveFolderReset;
+
+  /// No description provided for @notifNewVideoDownloadNow.
+  ///
+  /// In ko, this message translates to:
+  /// **'바로 받기'**
+  String get notifNewVideoDownloadNow;
+
+  /// No description provided for @equalizerTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'이퀄라이저'**
+  String get equalizerTitle;
+
+  /// No description provided for @equalizerOn.
+  ///
+  /// In ko, this message translates to:
+  /// **'켜짐'**
+  String get equalizerOn;
+
+  /// No description provided for @equalizerOff.
+  ///
+  /// In ko, this message translates to:
+  /// **'꺼짐'**
+  String get equalizerOff;
+
+  /// No description provided for @equalizerUnsupported.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 기기에서는 이퀄라이저를 쓸 수 없어요'**
+  String get equalizerUnsupported;
+
+  /// No description provided for @equalizerEnable.
+  ///
+  /// In ko, this message translates to:
+  /// **'이퀄라이저 사용'**
+  String get equalizerEnable;
+
+  /// No description provided for @equalizerEnableDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'켜면 아래 설정대로 소리를 다듬어요. 기본은 꺼짐이에요.'**
+  String get equalizerEnableDesc;
+
+  /// No description provided for @equalizerDeviceProfile.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 기기 전용으로 저장'**
+  String get equalizerDeviceProfile;
+
+  /// No description provided for @equalizerDeviceProfileDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'{device}에 연결되면 이 설정을 자동으로 적용해요.'**
+  String equalizerDeviceProfileDesc(String device);
+
+  /// No description provided for @equalizerMyPresets.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 프리셋'**
+  String get equalizerMyPresets;
+
+  /// No description provided for @equalizerMyPresetsHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'길게 누르면 지워요'**
+  String get equalizerMyPresetsHint;
+
+  /// No description provided for @equalizerPresetSaveNew.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금 값 저장'**
+  String get equalizerPresetSaveNew;
+
+  /// No description provided for @equalizerPresetNameTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'프리셋 이름'**
+  String get equalizerPresetNameTitle;
+
+  /// No description provided for @equalizerPresetNameHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'예: 이어폰용, 차량용'**
+  String get equalizerPresetNameHint;
+
+  /// No description provided for @equalizerPresetSave.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장'**
+  String get equalizerPresetSave;
+
+  /// No description provided for @equalizerPresetDeleteTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'프리셋 지우기'**
+  String get equalizerPresetDeleteTitle;
+
+  /// No description provided for @equalizerPresetDeleteBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'\"{name}\" 프리셋을 지워요. 이 프리셋을 지정한 기기는 마지막 값을 그대로 써요'**
+  String equalizerPresetDeleteBody(String name);
+
+  /// No description provided for @equalizerDevicesTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'기기별 이퀄라이저'**
+  String get equalizerDevicesTitle;
+
+  /// No description provided for @equalizerDevicesEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 연결된 블루투스 · 이어폰 기기가 없어요'**
+  String get equalizerDevicesEmpty;
+
+  /// No description provided for @equalizerDeviceDefault.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 설정'**
+  String get equalizerDeviceDefault;
+
+  /// No description provided for @equalizerDeviceCustom.
+  ///
+  /// In ko, this message translates to:
+  /// **'직접 설정'**
+  String get equalizerDeviceCustom;
+
+  /// No description provided for @equalizerDeviceEdit.
+  ///
+  /// In ko, this message translates to:
+  /// **'이퀄라이저에서 직접 설정'**
+  String get equalizerDeviceEdit;
+
+  /// No description provided for @equalizerEditingDevice.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 기기에 쓸 값을 고치는 중이에요'**
+  String get equalizerEditingDevice;
+
+  /// No description provided for @equalizerDeviceCurrent.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금 연결됨'**
+  String get equalizerDeviceCurrent;
+
+  /// No description provided for @equalizerDevicePickTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'{device}에 쓸 프리셋'**
+  String equalizerDevicePickTitle(String device);
+
+  /// No description provided for @equalizerDeviceNoPresets.
+  ///
+  /// In ko, this message translates to:
+  /// **'이퀄라이저 화면에서 \"지금 값 저장\"으로 프리셋을 먼저 만들어 주세요'**
+  String get equalizerDeviceNoPresets;
+
+  /// No description provided for @equalizerPreset.
+  ///
+  /// In ko, this message translates to:
+  /// **'프리셋'**
+  String get equalizerPreset;
+
+  /// No description provided for @equalizerBands.
+  ///
+  /// In ko, this message translates to:
+  /// **'대역별 조절'**
+  String get equalizerBands;
+
+  /// No description provided for @equalizerBassBoost.
+  ///
+  /// In ko, this message translates to:
+  /// **'저음 강화'**
+  String get equalizerBassBoost;
+
+  /// No description provided for @equalizerBassBoostDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'낮은 소리를 더 묵직하게 해요.'**
+  String get equalizerBassBoostDesc;
+
+  /// No description provided for @equalizerReset.
+  ///
+  /// In ko, this message translates to:
+  /// **'처음으로'**
+  String get equalizerReset;
+
+  /// No description provided for @equalizerPresetFlat.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본'**
+  String get equalizerPresetFlat;
+
+  /// No description provided for @equalizerPresetBass.
+  ///
+  /// In ko, this message translates to:
+  /// **'저음 강조'**
+  String get equalizerPresetBass;
+
+  /// No description provided for @equalizerPresetTreble.
+  ///
+  /// In ko, this message translates to:
+  /// **'고음 강조'**
+  String get equalizerPresetTreble;
+
+  /// No description provided for @equalizerPresetVocal.
+  ///
+  /// In ko, this message translates to:
+  /// **'보컬'**
+  String get equalizerPresetVocal;
+
+  /// No description provided for @equalizerPresetRock.
+  ///
+  /// In ko, this message translates to:
+  /// **'록'**
+  String get equalizerPresetRock;
+
+  /// No description provided for @equalizerPresetPop.
+  ///
+  /// In ko, this message translates to:
+  /// **'팝'**
+  String get equalizerPresetPop;
+
+  /// No description provided for @equalizerPresetJazz.
+  ///
+  /// In ko, this message translates to:
+  /// **'재즈'**
+  String get equalizerPresetJazz;
+
+  /// No description provided for @equalizerPresetClassical.
+  ///
+  /// In ko, this message translates to:
+  /// **'클래식'**
+  String get equalizerPresetClassical;
+
+  /// No description provided for @equalizerPresetDance.
+  ///
+  /// In ko, this message translates to:
+  /// **'힙합 · EDM'**
+  String get equalizerPresetDance;
+
+  /// No description provided for @equalizerPresetCustom.
+  ///
+  /// In ko, this message translates to:
+  /// **'직접 조절'**
+  String get equalizerPresetCustom;
+
+  /// No description provided for @equalizerVirtualizer.
+  ///
+  /// In ko, this message translates to:
+  /// **'입체 음향'**
+  String get equalizerVirtualizer;
+
+  /// No description provided for @equalizerVirtualizerDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'이어폰에서 소리가 더 넓게 퍼져 들려요.'**
+  String get equalizerVirtualizerDesc;
+
+  /// No description provided for @equalizerReverb.
+  ///
+  /// In ko, this message translates to:
+  /// **'공간 울림'**
+  String get equalizerReverb;
+
+  /// No description provided for @equalizerReverbDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'방이나 홀에서 듣는 것 같은 잔향을 더해요.'**
+  String get equalizerReverbDesc;
+
+  /// No description provided for @equalizerLimiter.
+  ///
+  /// In ko, this message translates to:
+  /// **'소리 찢어짐 방지'**
+  String get equalizerLimiter;
+
+  /// No description provided for @equalizerLimiterDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'소리를 많이 키워도 갈라지지 않게 눌러 줘요.'**
+  String get equalizerLimiterDesc;
+
+  /// No description provided for @equalizerReverbNone.
+  ///
+  /// In ko, this message translates to:
+  /// **'없음'**
+  String get equalizerReverbNone;
+
+  /// No description provided for @equalizerReverbSmallRoom.
+  ///
+  /// In ko, this message translates to:
+  /// **'작은 방'**
+  String get equalizerReverbSmallRoom;
+
+  /// No description provided for @equalizerReverbMediumRoom.
+  ///
+  /// In ko, this message translates to:
+  /// **'중간 방'**
+  String get equalizerReverbMediumRoom;
+
+  /// No description provided for @equalizerReverbLargeRoom.
+  ///
+  /// In ko, this message translates to:
+  /// **'큰 방'**
+  String get equalizerReverbLargeRoom;
+
+  /// No description provided for @equalizerReverbMediumHall.
+  ///
+  /// In ko, this message translates to:
+  /// **'중간 홀'**
+  String get equalizerReverbMediumHall;
+
+  /// No description provided for @equalizerReverbLargeHall.
+  ///
+  /// In ko, this message translates to:
+  /// **'큰 홀'**
+  String get equalizerReverbLargeHall;
+
+  /// No description provided for @equalizerReverbPlate.
+  ///
+  /// In ko, this message translates to:
+  /// **'플레이트'**
+  String get equalizerReverbPlate;
+
+  /// No description provided for @equalizerSave.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장'**
+  String get equalizerSave;
+
+  /// No description provided for @audioLanguageTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'오디오 언어'**
+  String get audioLanguageTitle;
+
+  /// No description provided for @audioLanguageRow.
+  ///
+  /// In ko, this message translates to:
+  /// **'오디오 언어'**
+  String get audioLanguageRow;
+
+  /// No description provided for @audioLanguageOriginal.
+  ///
+  /// In ko, this message translates to:
+  /// **'원본'**
+  String get audioLanguageOriginal;
+
+  /// No description provided for @audioLanguageHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'고르면 바로 적용돼요. 미리 듣기와 받기에 같은 언어를 써요.'**
+  String get audioLanguageHint;
+
+  /// No description provided for @downloadAgainTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'다시 받을까요?'**
+  String get downloadAgainTitle;
+
+  /// No description provided for @downloadAgainBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미 받은 곡이에요. 다시 받으면 같은 곡이 하나 더 생겨요.'**
+  String get downloadAgainBody;
+
+  /// No description provided for @downloadAgainConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'다시 받기'**
+  String get downloadAgainConfirm;
 }
 
 class _AppLocalizationsDelegate

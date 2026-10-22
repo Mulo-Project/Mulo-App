@@ -14,15 +14,9 @@ Future<String?> showNewPlaylistSheet(BuildContext context) {
   final playlists = context.read<PlaylistsCubit>();
   final covers = context.read<CoverCubit>();
   final colors = context.read<CoverColorCubit>();
-  return showModalBottomSheet<String>(
-    context: context,
-    backgroundColor: context.palette.surface,
-    showDragHandle: true,
+  return showAppSheet<String>(
+    context,
     isScrollControlled: true,
-    useRootNavigator: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadii.card)),
-    ),
     builder: (_) => MultiBlocProvider(
       providers: [
         BlocProvider.value(value: playlists),
@@ -57,7 +51,7 @@ class _NewPlaylistSheetState extends State<_NewPlaylistSheet> {
   }
 
   Future<void> _pickImage() async {
-    final art = await pickCoverArt(context);
+    final art = await pickCoverArt(context, initialQuery: _name.text);
     if (art != null && mounted) setState(() => _art = art);
   }
 
@@ -84,9 +78,9 @@ class _NewPlaylistSheetState extends State<_NewPlaylistSheet> {
     final art = _art;
     return Padding(
       padding: EdgeInsets.fromLTRB(
-        AppSpacing.lg,
+        AppSpacing.md,
         0,
-        AppSpacing.lg,
+        AppSpacing.md,
         AppSpacing.lg + MediaQuery.viewInsetsOf(context).bottom,
       ),
       child: SafeArea(
