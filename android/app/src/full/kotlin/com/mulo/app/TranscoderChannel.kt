@@ -50,6 +50,24 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
                         }
                     }
                 }
+                "tag" -> {
+                    val input = call.argument<String>("input")
+                    val meta = call.argument<String>("meta")
+                    val output = call.argument<String>("output")
+                    val format = call.argument<String>("format")
+                    if (input == null || meta == null || output == null || format == null) {
+                        result.error("bad_args", "input, meta, output, format required", null)
+                        return@setMethodCallHandler
+                    }
+                    io.execute {
+                        try {
+                            val ok = tag(input, meta, output, format)
+                            main.post { result.success(ok) }
+                        } catch (e: Exception) {
+                            main.post { result.error("tag_failed", e.message, null) }
+                        }
+                    }
+                }
                 else -> result.notImplemented()
             }
         }
@@ -62,6 +80,40 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
             // libffmpeg.zip.so를 앱 전용 폴더에 풀어 둔다 (처음 한 번, 버전이 바뀌면 다시).
             FFmpeg.getInstance().init(context)
             ready = true
+        }
+    }
+
+    /**
+     * 소리는 그대로(`-c copy`) 두고 ffmetadata 파일의 태그만 새로 써서 [output]에 만든다.
+     * 전체 태그와 첫 오디오 스트림 태그 둘 다에 넣어, ogg 쓰기가 어느 쪽을 읽어도 같다.
+     */
+    private fun tag(input: String, meta: String, output: String, format: String): Boolean {
+        ensureInit()
+        val ffmpeg = File(context.applicationInfo.nativeLibraryDir, "libffmpeg.so")
+        if (!ffmpeg.exists()) return false
+        val libs = File(context.noBackupFilesDir, "youtubedl-android/packages/ffmpeg/usr/lib")
+        val out = File(output)
+        out.delete()
+        val builder = ProcessBuilder(
+            ffmpeg.absolutePath, "-nostdin", "-y", "-i", input, "-i", meta,
+            "-map", "0:a", "-map_metadata", "1", "-map_metadata:s:a:0", "1:g",
+            "-c", "copy", "-f", format, output,
+        )
+        builder.environment()["LD_LIBRARY_PATH"] =
+            libs.absolutePath + (System.getenv("LD_LIBRARY_PATH")?.let { ":$it" } ?: "")
+        builder.redirectErrorStream(true)
+        val p = builder.start()
+        process = p
+        try {
+            p.inputStream.use { stream ->
+                val buffer = ByteArray(8192)
+                while (stream.read(buffer) >= 0) { /* 버린다 */ }
+            }
+            val code = p.waitFor()
+            if (code != 0) out.delete()
+            return code == 0
+        } finally {
+            process = null
         }
     }
 

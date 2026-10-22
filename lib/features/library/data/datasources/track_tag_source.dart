@@ -4,12 +4,13 @@ import 'package:flutter/services.dart';
 
 import '../../../covers/domain/entities/cover_art.dart';
 import '../../../downloads/data/datasources/cover_tag_writer.dart';
+import '../../../downloads/data/datasources/opus_tag_writer.dart';
 
 /// 곡 파일([uri])의 태그를 쓴다. Android `content://`는 캐시로 복사 → 태그 쓰기 → 같은 주소에 덮어쓰기
 /// (`music_app/lyrics`의 `copyToCache`, `music_app/media_store`의 `overwriteAudio`). 데스크톱은 파일을 바로 쓴다.
 class TrackTagSource {
   TrackTagSource({
-    this._writer = const CoverTagWriter(),
+    this._writer = const CoverTagWriter(opus: OpusTagWriter()),
     MethodChannel? mediaStore,
     MethodChannel? copy,
   }) : _media = mediaStore ?? const MethodChannel('music_app/media_store'),
@@ -84,6 +85,7 @@ class TrackTagSource {
   static String? _extensionOfMime(String? mime) => switch (mime) {
     'audio/mpeg' || 'audio/mp3' => 'mp3',
     'audio/mp4' || 'audio/x-m4a' || 'audio/m4a' || 'audio/aac' => 'm4a',
+    'audio/ogg' || 'audio/opus' => 'opus',
     _ => null,
   };
 }

@@ -754,3 +754,4 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 - 웹 커버 사본(`cover_cache`)은 시작할 때 64MB를 넘으면 오래된 것부터 지우고, 내장 커버 임시 폴더는 비운다 (`CacheCleaner`).
 - 곡이 많은 상세 화면(앨범 · 아티스트 · 장르 · 재생목록)은 `LazyTrackList`로 보이는 곡 줄만 만든다. 플로팅 재생 버튼은 위치 틱마다 다시 그리지 않고, 미니 플레이어 띠는 `RepaintBoundary`로 격리한다.
 - 알림 셔플 버튼은 앱(Dart)이 없을 때도 둔다 (D-106 보강 3을 대체). Dart가 붙어 있으면 `command shuffle`, 없으면 네이티브가 `extras`(`shuffle` · `original`)를 고쳐 직접 섞고 되돌린다. 없을 땐 좋아요 자리에 닫기(X)가 온다. 자세한 약속은 [native-playback.md](native-playback.md).
+- (D-114 이어서) **opus · ogg 태그는 ffmpeg로 쓴다** (`OpusTagWriter`, full 빌드 `music_app/transcoder`의 `tag`): 소리는 `-c copy`로 두고 ffmetadata 파일의 TITLE · ARTIST · ALBUM · GENRE · LYRICS · METADATA_BLOCK_PICTURE(커버)만 새로 쓴다. mp3 가사와 달리 opus는 가사(LYRICS)도 들어간다. lite는 ffmpeg가 없어 쓰지 않고, **서버가 태그까지 넣은 완성 파일을 주는 것으로 한다** (서버 저장소 몫). ffmpeg의 태그 쓰기는 이 PC에 ffmpeg가 없어 실제 기기에서 아직 확인하지 못했다.

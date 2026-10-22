@@ -20,4 +20,4 @@
 - 기기에서 `content://` 덮어쓰기는 아직 실제 Android 기기로 확인하지 못했다.
 
 ## 남은 일 · 질문
-- mp3 가사(USLT)는 라이브러리가 못 써서 제외. opus · ogg 태그(ffmpeg), 이관 진행률 표시.
+- mp3 가사(USLT)는 라이브러리가 못 써서 제외. opus · ogg는 full에서 ffmpeg로 쓴다 (OpusTagWriter). opus · ogg 태그(ffmpeg), 이관 진행률 표시.
