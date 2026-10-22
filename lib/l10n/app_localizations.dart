@@ -1952,6 +1952,18 @@ abstract class AppLocalizations {
   /// **'설명'**
   String get mediaDetailDescription;
 
+  /// No description provided for @mediaDetailSectionPreview.
+  ///
+  /// In ko, this message translates to:
+  /// **'미리 듣기'**
+  String get mediaDetailSectionPreview;
+
+  /// No description provided for @mediaDetailSectionInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'정보'**
+  String get mediaDetailSectionInfo;
+
   /// No description provided for @mediaDetailMore.
   ///
   /// In ko, this message translates to:
@@ -2233,6 +2245,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'자막 {count}개를 찾았어요.'**
   String downloadSubtitleFound(int count);
+
+  /// No description provided for @downloadSectionInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 정보'**
+  String get downloadSectionInfo;
 
   /// No description provided for @downloadSectionSave.
   ///

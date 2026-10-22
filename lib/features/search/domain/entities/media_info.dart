@@ -95,7 +95,8 @@ class MediaHit extends Equatable {
     channelUrl: channelUrl ?? full.channelUrl,
     viewCount: viewCount ?? full.viewCount,
     uploadedAt: uploadedAt ?? full.uploadedAt,
-    description: description.isEmpty ? full.description : description,
+    // 검색 목록의 설명은 앞부분만 오는 일이 많아서, 자세히 읽은 전체 설명이 있으면 그것을 쓴다.
+    description: full.description.isEmpty ? description : full.description,
     likeCount: likeCount ?? full.likeCount,
     subscriberCount: subscriberCount ?? full.subscriberCount,
     channelThumbnailUrl: channelThumbnailUrl ?? full.channelThumbnailUrl,

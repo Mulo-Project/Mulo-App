@@ -30,40 +30,52 @@ class AudioLanguageRow extends StatelessWidget {
     final l10n = context.l10n;
     final p = context.palette;
     final text = Theme.of(context).textTheme;
-    return Semantics(
-      button: true,
-      child: InkWell(
-        key: const ValueKey('audio-language-row'),
-        onTap: () => showAudioLanguageSheet(context, onChanged: onChanged),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-          child: Row(
-            children: [
-              Icon(
-                AppIcons.headphones,
-                size: AppSizes.iconMd,
-                color: p.onSurfaceMuted,
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Text(l10n.audioLanguageRow, style: text.bodyMedium),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Text(
-                  audioLanguageLabel(context, current),
-                  textAlign: TextAlign.end,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: text.bodyMedium?.copyWith(color: p.accent),
+    // 다른 줄과 확실히 갈리도록 위아래에 구분선과 넉넉한 간격을 둔다.
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Divider(height: 1, color: p.outline),
+          Semantics(
+            button: true,
+            child: InkWell(
+              key: const ValueKey('audio-language-row'),
+              onTap: () =>
+                  showAudioLanguageSheet(context, onChanged: onChanged),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                child: Row(
+                  children: [
+                    Icon(
+                      AppIcons.headphones,
+                      size: AppSizes.iconMd,
+                      color: p.onSurfaceMuted,
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Text(l10n.audioLanguageRow, style: text.bodyMedium),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        audioLanguageLabel(context, current),
+                        textAlign: TextAlign.end,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: text.bodyMedium?.copyWith(color: p.accent),
+                      ),
+                    ),
+                    Icon(
+                      AppIcons.chevronRight,
+                      size: AppSizes.iconMd,
+                      color: p.onSurfaceMuted,
+                    ),
+                  ],
                 ),
               ),
-              Icon(
-                AppIcons.chevronRight,
-                size: AppSizes.iconMd,
-                color: p.onSurfaceMuted,
-              ),
-            ],
+            ),
           ),
-        ),
+          Divider(height: 1, color: p.outline),
+        ],
       ),
     );
   }

@@ -258,11 +258,18 @@ class _DetailViewState extends State<_DetailView> {
                         ),
                       ),
                     const SizedBox(height: AppSpacing.sm),
-                    Center(child: PreviewButton(hit: hit)),
-                    PreviewProgressBar(hitId: hit.id, showTime: true),
-                    AudioLanguageRow(
-                      onChanged: (id) => _restartPreview(hit, id),
+                    SectionBlock(
+                      title: l10n.mediaDetailSectionPreview,
+                      children: [
+                        Center(child: PreviewButton(hit: hit)),
+                        PreviewProgressBar(hitId: hit.id, showTime: true),
+                        AudioLanguageRow(
+                          onChanged: (id) => _restartPreview(hit, id),
+                        ),
+                      ],
                     ),
+                    const SizedBox(height: AppSpacing.md),
+                    Divider(height: 1, color: p.outline),
                     const SizedBox(height: AppSpacing.md),
                     Text(hit.title, style: text.titleLarge),
                     if (hit.uploader.isNotEmpty) ...[
@@ -283,20 +290,21 @@ class _DetailViewState extends State<_DetailView> {
                             : () => _open(hit.channelUrl!),
                       ),
                     ],
-                    if (rows.isNotEmpty) ...[
-                      const SizedBox(height: AppSpacing.md),
-                      Divider(height: 1, color: p.outline),
-                      for (final (label, value) in rows) ...[
-                        _InfoRow(label: label, value: value),
-                        Divider(height: 1, color: p.outline),
-                      ],
-                    ],
-                    if (hit.description.isNotEmpty) ...[
-                      const SizedBox(height: AppSpacing.md),
-                      Text(l10n.mediaDetailDescription, style: text.titleSmall),
-                      const SizedBox(height: AppSpacing.xs),
-                      _Description(hit.description),
-                    ],
+                    if (rows.isNotEmpty)
+                      SectionBlock(
+                        title: l10n.mediaDetailSectionInfo,
+                        children: [
+                          for (var i = 0; i < rows.length; i++) ...[
+                            if (i > 0) Divider(height: 1, color: p.outline),
+                            _InfoRow(label: rows[i].$1, value: rows[i].$2),
+                          ],
+                        ],
+                      ),
+                    if (hit.description.isNotEmpty)
+                      SectionBlock(
+                        title: l10n.mediaDetailDescription,
+                        children: [_Description(hit.description)],
+                      ),
                     const SizedBox(height: AppSpacing.md),
                   ],
                 ),

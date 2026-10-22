@@ -998,6 +998,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get mediaDetailDescription => '설명';
 
   @override
+  String get mediaDetailSectionPreview => '미리 듣기';
+
+  @override
+  String get mediaDetailSectionInfo => '정보';
+
+  @override
   String get mediaDetailMore => '더 보기';
 
   @override
@@ -1168,6 +1174,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String downloadSubtitleFound(int count) {
     return '자막 $count개를 찾았어요.';
   }
+
+  @override
+  String get downloadSectionInfo => '기본 정보';
 
   @override
   String get downloadSectionSave => '저장';
