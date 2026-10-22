@@ -2618,4 +2618,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get audioLanguageHint =>
       'Applies right away. Preview and download use the same language.';
+
+  @override
+  String get downloadAgainTitle => 'Download again?';
+
+  @override
+  String get downloadAgainBody =>
+      'This song is already downloaded. Downloading it again adds another copy.';
+
+  @override
+  String get downloadAgainConfirm => 'Download again';
 }

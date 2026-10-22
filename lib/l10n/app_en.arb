@@ -904,5 +904,8 @@
   "audioLanguageTitle": "Audio language",
   "audioLanguageRow": "Audio language",
   "audioLanguageOriginal": "Original",
-  "audioLanguageHint": "Applies right away. Preview and download use the same language."
+  "audioLanguageHint": "Applies right away. Preview and download use the same language.",
+  "downloadAgainTitle": "Download again?",
+  "downloadAgainBody": "This song is already downloaded. Downloading it again adds another copy.",
+  "downloadAgainConfirm": "Download again"
 }

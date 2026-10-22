@@ -2549,4 +2549,13 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get audioLanguageHint => '고르면 바로 적용돼요. 미리 듣기와 받기에 같은 언어를 써요.';
+
+  @override
+  String get downloadAgainTitle => '다시 받을까요?';
+
+  @override
+  String get downloadAgainBody => '이미 받은 곡이에요. 다시 받으면 같은 곡이 하나 더 생겨요.';
+
+  @override
+  String get downloadAgainConfirm => '다시 받기';
 }
