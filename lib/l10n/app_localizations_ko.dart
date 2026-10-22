@@ -2528,4 +2528,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get equalizerSave => '저장';
+
+  @override
+  String get audioLanguageTitle => '오디오 언어';
+
+  @override
+  String get audioLanguageRow => '오디오 언어';
+
+  @override
+  String get audioLanguageOriginal => '원본';
+
+  @override
+  String get audioLanguageHint => '고르면 바로 적용돼요. 미리 듣기와 받기에 같은 언어를 써요.';
 }

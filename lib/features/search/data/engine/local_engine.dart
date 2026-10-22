@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import '../../domain/entities/audio_language.dart';
 import '../../domain/entities/audio_stream.dart';
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
@@ -198,12 +199,13 @@ class LocalEngine implements DownloaderEngine {
   Future<AudioStream> resolveAudioStream(
     String url, {
     bool refresh = false,
+    String? audioLanguage,
   }) async {
     // 오디오만 있는 형식 하나를 골라(macOS도 풀 수 있는 m4a 먼저) 주소만 읽는다.
     Future<AudioStream> read(List<String> extra) async {
       final out = await _exec([
         '-f',
-        ytDlpAudioSelector(),
+        ytDlpAudioSelector(null, audioLanguage),
         '--no-playlist',
         '--dump-single-json',
         '--no-warnings',
@@ -243,6 +245,44 @@ class LocalEngine implements DownloaderEngine {
         throw first;
       }
     }
+  }
+
+  /// 형식 목록의 `language` · `format_note`에서 오디오 트랙을 읽는다. 하나뿐이면 빈 목록.
+  @override
+  Future<List<AudioLanguage>> fetchAudioLanguages(String url) async {
+    final out = await _exec([
+      '--dump-single-json',
+      '--no-playlist',
+      '--no-warnings',
+      '--skip-download',
+      url,
+    ]);
+    final j = _decode(out);
+    final formats = j?['formats'];
+    if (formats is! List) return const [];
+    final byId = <String, AudioLanguage>{};
+    for (final f in formats) {
+      if (f is! Map || f['vcodec'] != 'none') continue;
+      final id = parseText(f['language']);
+      if (id == null || byId.containsKey(id)) continue;
+      final note = parseText(f['format_note']) ?? '';
+      byId[id] = AudioLanguage(
+        id: id,
+        name: _languageName(note) ?? id,
+        isDefault: note.contains('default') || note.contains('original'),
+      );
+    }
+    return byId.length < 2 ? const [] : byId.values.toList();
+  }
+
+  /// `English (US) original (default), medium` → `English (US)`.
+  static String? _languageName(String note) {
+    final head = note
+        .split(',')
+        .first
+        .replaceAll(RegExp(r'\((default)\)|original|descriptive'), '')
+        .trim();
+    return head.isEmpty ? null : head;
   }
 
   @override

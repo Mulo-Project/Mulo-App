@@ -13,8 +13,10 @@ import '../../../library/domain/entities/track.dart' show formatDuration;
 import '../../../subscriptions/presentation/widgets/subscribe_button.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/usecases/search_usecases.dart';
+import '../bloc/audio_language_cubit.dart';
 import '../bloc/media_detail_cubit.dart';
 import '../bloc/preview_cubit.dart';
+import '../widgets/audio_language_sheet.dart';
 import '../widgets/preview_control.dart';
 import '../widgets/video_category.dart';
 import '../widgets/youtube_embed.dart';
@@ -60,13 +62,25 @@ class MediaDetailScreen extends StatelessWidget {
   final Widget Function(String videoId, VoidCallback onFailed)? playerBuilder;
 
   @override
-  Widget build(BuildContext context) => BlocProvider(
-    create: (_) => MediaDetailCubit(
-      hit,
-      sl<FetchMediaInfo>(),
-      sl<FetchChannelInfo>(),
-      sl<OpenLink>(),
-    )..load(),
+  Widget build(BuildContext context) => MultiBlocProvider(
+    providers: [
+      BlocProvider(
+        create: (_) => MediaDetailCubit(
+          hit,
+          sl<FetchMediaInfo>(),
+          sl<FetchChannelInfo>(),
+          sl<OpenLink>(),
+        )..load(),
+      ),
+      // 유튜브 곡만 오디오 언어가 여럿일 수 있다.
+      BlocProvider(
+        create: (_) {
+          final cubit = sl<AudioLanguageCubit>();
+          if (isYoutubeUrl(hit.url)) cubit.load(hit.url);
+          return cubit;
+        },
+      ),
+    ],
     child: _DetailView(
       inAppVideo: inAppVideo ?? inAppVideoSupported,
       playerBuilder: playerBuilder,
@@ -91,6 +105,14 @@ class _DetailViewState extends State<_DetailView> {
   void initState() {
     super.initState();
     _preview = context.read<PreviewCubit>();
+  }
+
+  /// 듣는 중에 오디오 언어를 바꾸면 고른 언어로 처음부터 다시 듣는다.
+  Future<void> _restartPreview(MediaHit hit, String language) async {
+    if (!_preview.state.isActive(hit.id)) return;
+    await _preview.stop();
+    if (!mounted) return;
+    await togglePreview(context, hit, audioLanguage: language);
   }
 
   /// 앱 안에서 영상을 틀고 있는지 / 틀어 보려다 막혀서 유튜브로만 열 수 있는지.
@@ -238,6 +260,9 @@ class _DetailViewState extends State<_DetailView> {
                     const SizedBox(height: AppSpacing.sm),
                     Center(child: PreviewButton(hit: hit)),
                     PreviewProgressBar(hitId: hit.id, showTime: true),
+                    AudioLanguageRow(
+                      onChanged: (id) => _restartPreview(hit, id),
+                    ),
                     const SizedBox(height: AppSpacing.md),
                     Text(hit.title, style: text.titleLarge),
                     if (hit.uploader.isNotEmpty) ...[
@@ -314,6 +339,10 @@ class _DetailViewState extends State<_DetailView> {
                             ? null
                             : hit.subtitleLangs,
                         autoSubtitleLangs: hit.autoSubtitleLangs,
+                        audioLanguage: context
+                            .read<AudioLanguageCubit>()
+                            .state
+                            .selected,
                       ),
                     ),
                   ],

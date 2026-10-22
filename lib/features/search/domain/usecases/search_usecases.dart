@@ -1,5 +1,7 @@
 import '../../../../core/usecase/usecase.dart';
+import '../entities/audio_language.dart';
 import '../entities/audio_stream.dart';
+import '../entities/engine_exception.dart';
 import '../entities/media_info.dart';
 import '../entities/subtitle_track.dart';
 import '../entities/preview_progress.dart';
@@ -116,8 +118,24 @@ class ResolveAudioStream implements UseCase<AudioStream, String> {
   final DownloaderEngine _engine;
 
   @override
-  Future<AudioStream> call(String url) =>
-      _engine.resolveAudioStream(url.trim());
+  Future<AudioStream> call(String url, {String? audioLanguage}) =>
+      _engine.resolveAudioStream(url.trim(), audioLanguage: audioLanguage);
+}
+
+/// 곡에 들어 있는 오디오 언어 트랙 목록 (여러 개일 때만 고를 수 있다). 못 읽으면 빈 목록.
+class FetchAudioLanguages implements UseCase<List<AudioLanguage>, String> {
+  const FetchAudioLanguages(this._engine);
+
+  final DownloaderEngine _engine;
+
+  @override
+  Future<List<AudioLanguage>> call(String url) async {
+    try {
+      return await _engine.fetchAudioLanguages(url.trim());
+    } on EngineException {
+      return const [];
+    }
+  }
 }
 
 /// 미리 듣기 시작 (메인 재생과 따로 재생한다).
