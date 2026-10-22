@@ -85,9 +85,10 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
     _listener = null;
   }
 
-  Future<void> _choose() async {
+  Future<void> _choose(CoverPickSource source) async {
     final picked = await chooseCoverImage(
       context,
+      source,
       initialQuery: widget.initialQuery,
     );
     if (picked != null && mounted) setState(() => _load(picked));
@@ -126,11 +127,6 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
                 ),
                 actions: [
                   CircleIconButton(
-                    icon: AppIcons.photoLibrary,
-                    tooltip: l10n.coverEditChange,
-                    onPressed: _choose,
-                  ),
-                  CircleIconButton(
                     icon: AppIcons.restart,
                     tooltip: l10n.coverEditReset,
                     onPressed: ready
@@ -138,6 +134,38 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
                         : null,
                   ),
                 ],
+              ),
+              // 이미지 불러오기는 위쪽에 둔다 (기기 사진 | 웹 이미지).
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.xs,
+                  AppSpacing.md,
+                  AppSpacing.sm,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: PillButton(
+                        key: const ValueKey('cover-edit-device'),
+                        label: l10n.coverSourceDevice,
+                        icon: AppIcons.photoLibrary,
+                        variant: PillVariant.tonal,
+                        onPressed: () => _choose(CoverPickSource.device),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Expanded(
+                      child: PillButton(
+                        key: const ValueKey('cover-edit-web'),
+                        label: l10n.coverSourceWeb,
+                        icon: AppIcons.globe,
+                        variant: PillVariant.tonal,
+                        onPressed: () => _choose(CoverPickSource.web),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               Expanded(
                 child: Padding(
@@ -150,12 +178,11 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
                           dimension: side,
                           child: _art == null
                               ? Center(
-                                  child: PillButton(
-                                    key: const ValueKey('cover-edit-load'),
-                                    label: l10n.coverEditLoad,
-                                    icon: AppIcons.photoLibrary,
-                                    variant: PillVariant.tonal,
-                                    onPressed: _choose,
+                                  child: Text(
+                                    l10n.coverEditEmpty,
+                                    style: text.bodyMedium?.copyWith(
+                                      color: p.onSurfaceMuted,
+                                    ),
                                   ),
                                 )
                               : _failed

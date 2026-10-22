@@ -1406,17 +1406,11 @@ abstract class AppLocalizations {
   /// **'적용'**
   String get coverEditApply;
 
-  /// No description provided for @coverEditLoad.
+  /// No description provided for @coverEditEmpty.
   ///
   /// In ko, this message translates to:
-  /// **'이미지 불러오기'**
-  String get coverEditLoad;
-
-  /// No description provided for @coverEditChange.
-  ///
-  /// In ko, this message translates to:
-  /// **'이미지 바꾸기'**
-  String get coverEditChange;
+  /// **'위에서 이미지를 불러오세요'**
+  String get coverEditEmpty;
 
   /// No description provided for @coverEditLoadFailed.
   ///

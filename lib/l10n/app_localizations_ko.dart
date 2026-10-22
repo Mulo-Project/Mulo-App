@@ -696,10 +696,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get coverEditApply => '적용';
 
   @override
-  String get coverEditLoad => '이미지 불러오기';
-
-  @override
-  String get coverEditChange => '이미지 바꾸기';
+  String get coverEditEmpty => '위에서 이미지를 불러오세요';
 
   @override
   String get coverEditLoadFailed => '이미지를 불러오지 못했어요';

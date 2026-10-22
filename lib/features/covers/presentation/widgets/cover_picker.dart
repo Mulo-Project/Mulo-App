@@ -16,26 +16,25 @@ import 'cover_web_browser.dart';
 Future<CoverArt?> pickCoverArt(
   BuildContext context, {
   String initialQuery = '',
-}) => showCoverEditor(context, null, initialQuery: initialQuery);
+  CoverArt? current,
+}) => showCoverEditor(context, current, initialQuery: initialQuery);
 
-/// 기기 사진이나 웹 이미지 한 장을 고른다 (편집 화면 안의 "이미지 불러오기"). 취소하면 null.
+/// 이미지를 어디서 불러올지.
+enum CoverPickSource { device, web }
+
+/// 기기 사진이나 웹 이미지 한 장을 고른다 (편집 화면 위쪽의 불러오기 버튼). 취소하면 null.
 /// 확대 · 위치는 맞추지 않은 채로 돌려준다.
 Future<CoverArt?> chooseCoverImage(
-  BuildContext context, {
+  BuildContext context,
+  CoverPickSource source, {
   String initialQuery = '',
 }) async {
   final covers = context.read<CoverCubit>();
-  final source = await showAppSheet<_Source>(
-    context,
-    builder: (_) => const _SourceSheet(),
-  );
-  if (source == null || !context.mounted) return null;
-
   switch (source) {
-    case _Source.device:
+    case CoverPickSource.device:
       final path = await covers.pickFile();
       return path == null ? null : CoverArt.file(path);
-    case _Source.web when coverWebBrowserSupported:
+    case CoverPickSource.web when coverWebBrowserSupported:
       // 브라우저에서 이미지를 누르면 그 이미지를 돌려주며 닫힌다.
       return Navigator.of(context, rootNavigator: true).push<CoverArt>(
         MaterialPageRoute(
@@ -43,7 +42,7 @@ Future<CoverArt?> chooseCoverImage(
           builder: (_) => CoverWebBrowser(initialQuery: initialQuery),
         ),
       );
-    case _Source.web:
+    case CoverPickSource.web:
       final url = await Navigator.of(context, rootNavigator: true).push<String>(
         MaterialPageRoute(
           fullscreenDialog: true,
@@ -54,42 +53,6 @@ Future<CoverArt?> chooseCoverImage(
         ),
       );
       return url == null ? null : CoverArt.web(url);
-  }
-}
-
-enum _Source { device, web }
-
-class _SourceSheet extends StatelessWidget {
-  const _SourceSheet();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return SafeArea(
-      child: Padding(
-        padding: appSheetPadding,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            AppSheetTitle(l10n.coverSourceTitle),
-            const SizedBox(height: AppSpacing.md),
-            PillButton(
-              label: l10n.coverSourceDevice,
-              icon: AppIcons.photoLibrary,
-              onPressed: () => Navigator.of(context).pop(_Source.device),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            PillButton(
-              label: l10n.coverSourceWeb,
-              icon: AppIcons.globe,
-              variant: PillVariant.tonal,
-              onPressed: () => Navigator.of(context).pop(_Source.web),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
 

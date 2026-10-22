@@ -183,7 +183,11 @@ class _DownloadScreenState extends State<DownloadScreen> {
       : CoverArt.web(widget.thumbnailUrl!);
 
   Future<void> _changeCover() async {
-    final picked = await pickCoverArt(context, initialQuery: _title.text);
+    final picked = await pickCoverArt(
+      context,
+      initialQuery: _title.text,
+      current: _cover,
+    );
     if (picked != null && mounted) setState(() => _cover = picked);
   }
 
