@@ -68,4 +68,24 @@ void main() {
       expect(audio.readAsBytesSync(), before);
     });
   });
+
+  testWidgets('커버가 없어도 제목 · 아티스트 · 장르는 mp3 태그에 쓴다', (tester) async {
+    await tester.runAsync(() async {
+      final dir = await Directory.systemTemp.createTemp('cover_tag');
+      addTearDown(() => dir.delete(recursive: true));
+      final audio = File('${dir.path}/a.mp3')..writeAsBytesSync(_mp3());
+      final ok = await const CoverTagWriter().embed(
+        audio,
+        extension: 'mp3',
+        title: '제목',
+        artist: '가수',
+        genre: '팝',
+      );
+      expect(ok, isTrue);
+      final m = readMetadata(audio, getImage: false);
+      expect(m.title, '제목');
+      expect(m.artist, '가수');
+      expect(m.genres, ['팝']);
+    });
+  });
 }

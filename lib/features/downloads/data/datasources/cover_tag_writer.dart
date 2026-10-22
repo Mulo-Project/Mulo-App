@@ -25,18 +25,41 @@ class CoverTagWriter {
     required String extension,
     CoverArt? cover,
     String? thumbnailUrl,
+    String? title,
+    String? artist,
+    String? album,
+    String? genre,
+    String? lyrics,
   }) async {
     if (!extensions.contains(extension.toLowerCase())) return false;
     try {
+      // 커버를 못 구해도 글 정보(제목 · 아티스트 등)는 파일에 남긴다.
+      Uint8List? png;
       final source = await _sourceFile(cover, thumbnailUrl);
-      if (source == null) return false;
-      final png = await _squarePng(
-        await source.readAsBytes(),
-        cover?.transform ?? CoverTransform.identity,
-      );
-      if (png == null) return false;
+      if (source != null) {
+        png = await _squarePng(
+          await source.readAsBytes(),
+          cover?.transform ?? CoverTransform.identity,
+        );
+      }
+      String? text(String? v) => v == null || v.trim().isEmpty ? null : v;
+      if (png == null &&
+          text(title) == null &&
+          text(artist) == null &&
+          text(album) == null &&
+          text(genre) == null &&
+          text(lyrics) == null) {
+        return false;
+      }
       updateMetadata(audio, (m) {
-        m.setPictures([Picture(png, 'image/png', PictureType.coverFront)]);
+        if (text(title) != null) m.setTitle(title);
+        if (text(artist) != null) m.setArtist(artist);
+        if (text(album) != null) m.setAlbum(album);
+        if (text(genre) != null) m.setGenres([genre!]);
+        if (text(lyrics) != null) m.setLyrics(lyrics);
+        if (png != null) {
+          m.setPictures([Picture(png, 'image/png', PictureType.coverFront)]);
+        }
       });
       return true;
     } on Object {

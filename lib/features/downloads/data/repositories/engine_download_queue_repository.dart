@@ -419,6 +419,10 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
         extension: audio.extension,
         cover: request.cover,
         thumbnailUrl: request.thumbnailUrl,
+        title: request.title,
+        artist: request.artist,
+        genre: request.genre,
+        lyrics: request.lyricsText,
       );
       if (token.isCancelled) throw const DownloadAborted();
 
