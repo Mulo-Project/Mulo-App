@@ -1379,7 +1379,7 @@ abstract class AppLocalizations {
   /// No description provided for @coverEditHint.
   ///
   /// In ko, this message translates to:
-  /// **'끌어서 옮기고, 두 손가락으로 크기와 각도를, 마우스 휠로 크기를 바꿔요. 빈 곳은 검정으로 보여요'**
+  /// **'테두리 안이 실제 커버예요. 어둡게 보이는 곳은 잘리고, 그림이 비는 곳은 검정이에요. 끌어서 옮기고 두 손가락으로 크기와 각도를 바꿔요'**
   String get coverEditHint;
 
   /// No description provided for @coverEditZoomIn.

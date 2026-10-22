@@ -769,3 +769,4 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 - 계산은 `placement(aspect)`(중심 · 크기 · 각도) 한 곳, 그리기는 `lib/core/cover/cover_paint.dart`의 `paintCover` 한 곳: 목록 · 카드(`CoverImageProvider`), 편집 화면, 파일 태그 커버(`CoverTagWriter`)가 모두 같은 규칙을 쓴다. 전에 쓰던 `visibleRect`(보이는 정사각형 영역)는 없앴다.
 - 편집 화면: 확대 막대(0.2x~5x), 회전 막대(-180°~180°), "왼쪽 90° / 오른쪽 90°" 버튼, 두 손가락 회전. 
 - 저장: DB `covers.rotation`(스키마 10, 기본 0), 받기 대기열 JSON의 `rotation`, 파일 태그 `COVER_TRANSFORM`이 `scale,dx,dy,rotation`으로 늘었다 (옛 세 칸짜리 값은 회전 0으로 읽어야 한다).
+- (D-117 보강) 편집 화면은 가운데 정사각형 **자르기 칸**(미리보기의 72%)이 실제 커버이고, 칸 밖으로 나간 그림은 어둡게 보여 어디가 잘리는지 알 수 있다. 칸 테두리는 강조 색, 칸 안의 빈 곳은 검정.

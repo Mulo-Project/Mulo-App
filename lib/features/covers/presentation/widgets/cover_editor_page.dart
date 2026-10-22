@@ -178,6 +178,7 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
                     child: LayoutBuilder(
                       builder: (context, box) {
                         final side = math.min(box.maxWidth, box.maxHeight);
+                        final frameSide = side * _Viewport.cropFraction;
                         return SizedBox.square(
                           dimension: side,
                           child: _art == null
@@ -227,10 +228,12 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
                                       rotation: _startT.rotation + rotation,
                                       dx:
                                           _startT.dx +
-                                          (focal.dx - _startFocal.dx) / side,
+                                          (focal.dx - _startFocal.dx) /
+                                              frameSide,
                                       dy:
                                           _startT.dy +
-                                          (focal.dy - _startFocal.dy) / side,
+                                          (focal.dy - _startFocal.dy) /
+                                              frameSide,
                                     ),
                                   ),
                                   onWheel: (dy) =>
@@ -352,7 +355,8 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
   }
 }
 
-/// 정사각형 미리보기. 실제 커버와 같은 계산([CoverTransform.placement])으로 그린다.
+/// 편집 미리보기: 가운데 정사각형 **자르기 칸**([cropFraction])이 실제 커버이고, 칸 밖으로 나간 그림은
+/// 어둡게 보여 어디가 잘리는지 알 수 있다. 실제 커버와 같은 계산([paintCover])으로 칸 안을 그린다.
 class _Viewport extends StatelessWidget {
   const _Viewport({
     required this.image,
@@ -363,6 +367,9 @@ class _Viewport extends StatelessWidget {
     required this.onWheel,
   });
 
+  /// 미리보기 한 변 가운데 자르기 칸이 차지하는 비율.
+  static const cropFraction = 0.72;
+
   final ui.Image image;
   final CoverTransform transform;
   final double side;
@@ -372,6 +379,7 @@ class _Viewport extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Listener(
       onPointerSignal: (e) {
         if (e is PointerScrollEvent) onWheel(e.scrollDelta.dy);
@@ -384,7 +392,13 @@ class _Viewport extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppRadii.md),
           child: CustomPaint(
             size: Size.square(side),
-            painter: _CropPainter(image, transform),
+            painter: _CropPainter(
+              image,
+              transform,
+              background: p.surfaceHigh,
+              dim: p.background.withValues(alpha: .65),
+              border: p.accent,
+            ),
           ),
         ),
       ),
@@ -393,19 +407,64 @@ class _Viewport extends StatelessWidget {
 }
 
 class _CropPainter extends CustomPainter {
-  _CropPainter(this.image, this.transform);
+  _CropPainter(
+    this.image,
+    this.transform, {
+    required this.background,
+    required this.dim,
+    required this.border,
+  });
 
   final ui.Image image;
   final CoverTransform transform;
+  final Color background;
+  final Color dim;
+  final Color border;
 
   @override
   void paint(Canvas canvas, Size size) {
-    paintCover(canvas, size.width, image, transform);
+    final all = Offset.zero & size;
+    final side = size.width * _Viewport.cropFraction;
+    final frame = Rect.fromLTWH(
+      (size.width - side) / 2,
+      (size.height - side) / 2,
+      side,
+      side,
+    );
+    canvas
+      ..clipRect(all)
+      ..drawRect(all, Paint()..color = background)
+      // 칸 안 바탕은 실제 커버처럼 검정이다 (그림이 덮지 못한 곳).
+      ..drawRect(frame, Paint()..color = coverEmptyColor)
+      ..save()
+      ..translate(frame.left, frame.top);
+    paintCoverImage(canvas, side, image, transform);
+    canvas
+      ..restore()
+      // 칸 밖은 어둡게: 여기 보이는 그림은 잘려 나간다.
+      ..drawPath(
+        Path()
+          ..fillType = PathFillType.evenOdd
+          ..addRect(all)
+          ..addRect(frame),
+        Paint()..color = dim,
+      )
+      ..drawRect(
+        frame,
+        Paint()
+          ..color = border
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
   }
 
   @override
   bool shouldRepaint(_CropPainter old) =>
-      old.image != image || old.transform != transform;
+      old.image != image ||
+      old.transform != transform ||
+      old.background != background ||
+      old.dim != dim ||
+      old.border != border;
 }
 
 /// 값 막대: 왼쪽 끝 = [min], 오른쪽 끝 = [max]. 끌거나 눌러서 바꾼다 (확대 · 회전에 쓴다).

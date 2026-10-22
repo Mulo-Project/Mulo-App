@@ -698,7 +698,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get coverEditHint =>
-      'Drag to move; pinch to zoom and rotate, or use the mouse wheel to zoom. Empty areas show as black';
+      'Inside the frame is the real cover. Dimmed parts are cropped; empty parts are black. Drag to move, pinch to zoom and rotate';
 
   @override
   String get coverEditZoomIn => 'Zoom in';
