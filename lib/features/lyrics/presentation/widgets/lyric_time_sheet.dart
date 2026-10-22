@@ -5,7 +5,7 @@ import '../../../../core/l10n/l10n.dart';
 import '../../domain/entities/timed_lyrics_text.dart';
 import 'timed_lyrics_controller.dart';
 
-/// 가사 줄의 시간 칸을 누르면 뜨는 시트: 큰 시간 숫자 아래에 이전~다음 범위 슬라이더,
+/// 가사 줄의 시간 칸을 누르면 뜨는 시트 (바꾼 시간은 시트가 닫힐 때 한 번에 적용한다): 큰 시간 숫자 아래에 이전~다음 범위 슬라이더,
 /// 그 밑에 [−] 단위 [+] 한 줄, 맨 아래에 묶음에서 떼기 · 싱크 지우기.
 Future<void> showLyricTimeSheet(
   BuildContext context, {
@@ -22,21 +22,28 @@ Future<void> showLyricTimeSheet(
       ? controller.times[index + 1]
       : null;
   final upper = next ?? at + const Duration(seconds: 10);
+  // 시트 안에서는 이 값만 바뀐다. 가사 칸은 시트가 닫힐 때 한 번만 갱신한다 (끄는 동안 렉이 없게).
+  final draft = ValueNotifier<Duration>(at);
   return showAppSheet<void>(
     context,
     isScrollControlled: true,
     builder: (_) => _LyricTimeSheet(
+      draft: draft,
       controller: controller,
       index: index,
       line: line,
       lower: lower,
       upper: upper,
     ),
-  );
+  ).whenComplete(() {
+    controller.setTime(index, draft.value);
+    draft.dispose();
+  });
 }
 
 class _LyricTimeSheet extends StatefulWidget {
   const _LyricTimeSheet({
+    required this.draft,
     required this.controller,
     required this.index,
     required this.line,
@@ -44,6 +51,7 @@ class _LyricTimeSheet extends StatefulWidget {
     required this.upper,
   });
 
+  final ValueNotifier<Duration> draft;
   final TimedLyricsController controller;
   final int index;
   final String line;
@@ -63,16 +71,28 @@ class _LyricTimeSheetState extends State<_LyricTimeSheet> {
 
   String _unit(int ms) => ms >= 1000 ? '${ms ~/ 1000}s' : '${ms / 1000}s';
 
+  Duration? get _prev => i > 0 ? c.times[i - 1] : null;
+  Duration? get _next => i + 1 < c.times.length ? c.times[i + 1] : null;
+
+  /// 이웃 줄의 시간 사이로 맞춰 임시 값에 넣는다 (가사 칸은 시트가 닫힐 때 바뀐다).
+  void _set(Duration to) {
+    var d = to;
+    final lo = _prev ?? Duration.zero, hi = _next;
+    if (d < lo) d = lo;
+    if (hi != null && d > hi) d = hi;
+    widget.draft.value = d;
+  }
+
   void _setMs(double v) {
     final ms = v.round();
     final lo = widget.lower.inMilliseconds, hi = widget.upper.inMilliseconds;
     // 양 끝 가까이는 이웃 시간에 정확히 붙여 묶이기 쉽게 한다.
     if (ms - lo <= 15) {
-      c.setTime(i, widget.lower);
+      _set(widget.lower);
     } else if (hi - ms <= 15) {
-      c.setTime(i, widget.upper);
+      _set(widget.upper);
     } else {
-      c.setTime(i, Duration(milliseconds: ms ~/ 10 * 10));
+      _set(Duration(milliseconds: ms ~/ 10 * 10));
     }
   }
 
@@ -97,13 +117,11 @@ class _LyricTimeSheetState extends State<_LyricTimeSheet> {
     final l10n = context.l10n;
     final p = context.palette;
     final text = Theme.of(context).textTheme;
-    return ListenableBuilder(
-      listenable: c,
-      builder: (context, _) {
-        final at = i < c.times.length ? c.times[i] : null;
-        if (at == null) return const SizedBox.shrink();
-        final prev = i > 0 ? c.times[i - 1] : null;
-        final next = i + 1 < c.times.length ? c.times[i + 1] : null;
+    return ValueListenableBuilder<Duration>(
+      valueListenable: widget.draft,
+      builder: (context, at, _) {
+        final prev = _prev;
+        final next = _next;
         final groupedAbove = prev != null && prev == at;
         final groupedBelow = next != null && next == at;
 
@@ -112,7 +130,7 @@ class _LyricTimeSheetState extends State<_LyricTimeSheet> {
           final color = t != null && t == at ? p.accent : p.onSurfaceMuted;
           return GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: t == null ? null : () => c.setTime(i, t),
+            onTap: t == null ? null : () => _set(t),
             child: Column(
               crossAxisAlignment: end
                   ? CrossAxisAlignment.end
@@ -211,7 +229,7 @@ class _LyricTimeSheetState extends State<_LyricTimeSheet> {
                     CircleIconButton(
                       icon: AppIcons.remove,
                       tooltip: '−${_unit(_stepMs)}',
-                      onPressed: () => c.adjust(i, -step),
+                      onPressed: () => _set(at - step),
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
@@ -242,17 +260,18 @@ class _LyricTimeSheetState extends State<_LyricTimeSheet> {
                     CircleIconButton(
                       icon: AppIcons.add,
                       tooltip: '+${_unit(_stepMs)}',
-                      onPressed: () => c.adjust(i, step),
+                      onPressed: () => _set(at + step),
                     ),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.md),
-                if (c.isGroupedWithAbove(i))
+                if (groupedAbove && c.isGroupedWithAbove(i))
                   MenuRow(
                     icon: AppIcons.restart,
                     label: l10n.lyricsTimeSeparate,
                     onTap: () {
                       c.separate(i);
+                      widget.draft.value = c.times[i] ?? at;
                       Navigator.of(context).pop();
                     },
                   ),
