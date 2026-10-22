@@ -77,6 +77,7 @@ class DownloadRequest extends Equatable {
   DownloadRequest normalized() => DownloadRequest(
     title: title.trim(),
     artist: artist.trim(),
+    album: album.trim(),
     genre: genre.trim(),
     playlistIds: playlistIds,
     quality: quality,
