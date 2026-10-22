@@ -2058,6 +2058,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsOverlayTurnOff => '끄기';
 
   @override
+  String get lyricsOverlayTurnedOn => '떠 있는 가사를 켰어요. 가사 보기를 닫으면 화면 위에 보여요.';
+
+  @override
+  String get lyricsOverlayNoSync => '켰어요. 다만 이 곡에는 싱크 가사가 없어 보이지 않아요.';
+
+  @override
   String get lyricsOverlayOn => '떠 있는 가사 켜기';
 
   @override

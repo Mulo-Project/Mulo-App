@@ -844,6 +844,8 @@
   "settingsNotifyPlaybackDesc": "알림창 · 잠금화면에서 재생을 조작해요.",
   "lyricsOverlayMinimize": "숨기기",
   "lyricsOverlayTurnOff": "끄기",
+  "lyricsOverlayTurnedOn": "떠 있는 가사를 켰어요. 가사 보기를 닫으면 화면 위에 보여요.",
+  "lyricsOverlayNoSync": "켰어요. 다만 이 곡에는 싱크 가사가 없어 보이지 않아요.",
   "lyricsOverlayOn": "떠 있는 가사 켜기",
   "lyricsOverlayOff": "떠 있는 가사 끄기",
   "lyricsOverlayNeedPermission": "설정에서 \"다른 앱 위에 표시\"를 허용한 뒤 다시 켜 주세요.",

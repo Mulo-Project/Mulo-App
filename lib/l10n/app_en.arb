@@ -744,6 +744,8 @@
   "settingsNotifyPlaybackDesc": "Control playback from the notification shade and lock screen.",
   "lyricsOverlayMinimize": "Hide",
   "lyricsOverlayTurnOff": "Turn off",
+  "lyricsOverlayTurnedOn": "Floating lyrics are on. They show over the screen when the lyrics view is closed.",
+  "lyricsOverlayNoSync": "Turned on, but this song has no synced lyrics, so nothing will show.",
   "lyricsOverlayOn": "Turn on floating lyrics",
   "lyricsOverlayOff": "Turn off floating lyrics",
   "lyricsOverlayNeedPermission": "Allow \"Display over other apps\" in settings, then turn it on again.",

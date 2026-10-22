@@ -3878,6 +3878,18 @@ abstract class AppLocalizations {
   /// **'끄기'**
   String get lyricsOverlayTurnOff;
 
+  /// No description provided for @lyricsOverlayTurnedOn.
+  ///
+  /// In ko, this message translates to:
+  /// **'떠 있는 가사를 켰어요. 가사 보기를 닫으면 화면 위에 보여요.'**
+  String get lyricsOverlayTurnedOn;
+
+  /// No description provided for @lyricsOverlayNoSync.
+  ///
+  /// In ko, this message translates to:
+  /// **'켰어요. 다만 이 곡에는 싱크 가사가 없어 보이지 않아요.'**
+  String get lyricsOverlayNoSync;
+
   /// No description provided for @lyricsOverlayOn.
   ///
   /// In ko, this message translates to:

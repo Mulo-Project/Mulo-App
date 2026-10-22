@@ -222,11 +222,25 @@ Future<void> toggleLyricsOverlay(BuildContext context) async {
     await settings.setOverlay(false);
     return;
   }
-  if (await overlay.ensurePermission()) {
-    await settings.setOverlay(true);
-  } else if (context.mounted) {
-    _snack(context, l10n.lyricsOverlayNeedPermission);
+  if (!await overlay.ensurePermission()) {
+    if (context.mounted) _snack(context, l10n.lyricsOverlayNeedPermission);
+    return;
   }
+  await settings.setOverlay(true);
+  if (!context.mounted) return;
+  // 켠 뒤 바로 보이는 게 없으면 이유를 알려 준다: 싱크 가사가 없는 곡에서는 창이 뜨지 않는다.
+  final track = context.read<NowPlayingCubit>().state.track;
+  final lyricsCubit = context.read<LyricsCubit>();
+  if (track != null) {
+    await lyricsCubit.show(track);
+    if (!context.mounted) return;
+    final lyrics = lyricsCubit.state.lyrics;
+    if (lyrics == null || !lyrics.isSynced) {
+      _snack(context, l10n.lyricsOverlayNoSync);
+      return;
+    }
+  }
+  _snack(context, l10n.lyricsOverlayTurnedOn);
 }
 
 void _snack(BuildContext context, String message) =>

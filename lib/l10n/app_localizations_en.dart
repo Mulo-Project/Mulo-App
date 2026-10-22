@@ -2116,6 +2116,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsOverlayTurnOff => 'Turn off';
 
   @override
+  String get lyricsOverlayTurnedOn =>
+      'Floating lyrics are on. They show over the screen when the lyrics view is closed.';
+
+  @override
+  String get lyricsOverlayNoSync =>
+      'Turned on, but this song has no synced lyrics, so nothing will show.';
+
+  @override
   String get lyricsOverlayOn => 'Turn on floating lyrics';
 
   @override
