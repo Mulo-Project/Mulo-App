@@ -270,14 +270,44 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
                   AppSpacing.lg,
                   0,
                 ),
-                child: _RangeBar(
-                  value: _t.rotation,
-                  min: -180,
-                  max: 180,
-                  valueText: '${_t.rotation.round()}°',
-                  enabled: ready,
-                  label: l10n.coverEditRotation,
-                  onChanged: (v) => _rotateTo(v.roundToDouble()),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // 막대 가운데 위에 지금 각도를 돌아간 아이콘과 숫자로 보여 준다.
+                    Row(
+                      key: const ValueKey('cover-edit-angle'),
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Transform.rotate(
+                          angle: _t.rotation * math.pi / 180,
+                          child: Icon(
+                            AppIcons.arrowUp,
+                            size: 18,
+                            color: ready ? p.accent : p.onSurfaceMuted,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Text(
+                          '${_t.rotation.round()}°',
+                          style: text.labelLarge?.copyWith(
+                            color: ready ? p.accent : p.onSurfaceMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                    _RangeBar(
+                      value: _t.rotation,
+                      min: -180,
+                      max: 180,
+                      centerMark: true,
+                      valueText: '${_t.rotation.round()}°',
+                      enabled: ready,
+                      label: l10n.coverEditRotation,
+                      // 0° 가까이에서는 0°에 붙는다.
+                      onChanged: (v) =>
+                          _rotateTo(v.abs() < 4 ? 0 : v.roundToDouble()),
+                    ),
+                  ],
                 ),
               ),
               Padding(
@@ -470,6 +500,7 @@ class _CropPainter extends CustomPainter {
 /// 값 막대: 왼쪽 끝 = [min], 오른쪽 끝 = [max]. 끌거나 눌러서 바꾼다 (확대 · 회전에 쓴다).
 class _RangeBar extends StatelessWidget {
   const _RangeBar({
+    this.centerMark = false,
     required this.value,
     required this.min,
     required this.max,
@@ -486,6 +517,9 @@ class _RangeBar extends StatelessWidget {
   final bool enabled;
   final String label;
   final ValueChanged<double> onChanged;
+
+  /// 가운데(기준값)에 눈금을 그린다 (회전 0°).
+  final bool centerMark;
 
   static const _thumb = 20.0;
 
@@ -516,6 +550,15 @@ class _RangeBar extends StatelessWidget {
               child: Stack(
                 alignment: Alignment.centerLeft,
                 children: [
+                  if (centerMark)
+                    Positioned(
+                      left: box.maxWidth / 2 - 1,
+                      child: Container(
+                        width: 2,
+                        height: 14,
+                        color: p.onSurfaceMuted,
+                      ),
+                    ),
                   Container(
                     height: 4,
                     decoration: ShapeDecoration(

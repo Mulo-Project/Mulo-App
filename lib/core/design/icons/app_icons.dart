@@ -154,6 +154,11 @@ abstract final class AppIcons {
     fontFamily: 'PhosphorRegular',
     matchTextDirection: true,
   );
+  static const IconData arrowUp = IconData(
+    0xe08e,
+    fontFamily: 'PhosphorRegular',
+    matchTextDirection: true,
+  );
   static const IconData photoLibrary = IconData(
     0xe2ca,
     fontFamily: 'PhosphorRegular',
