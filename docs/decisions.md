@@ -754,10 +754,6 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 - 웹 커버 사본(`cover_cache`)은 시작할 때 64MB를 넘으면 오래된 것부터 지우고, 내장 커버 임시 폴더는 비운다 (`CacheCleaner`).
 - 곡이 많은 상세 화면(앨범 · 아티스트 · 장르 · 재생목록)은 `LazyTrackList`로 보이는 곡 줄만 만든다. 플로팅 재생 버튼은 위치 틱마다 다시 그리지 않고, 미니 플레이어 띠는 `RepaintBoundary`로 격리한다.
 - 알림 셔플 버튼은 앱(Dart)이 없을 때도 둔다 (D-106 보강 3을 대체). Dart가 붙어 있으면 `command shuffle`, 없으면 네이티브가 `extras`(`shuffle` · `original`)를 고쳐 직접 섞고 되돌린다. 없을 땐 좋아요 자리에 닫기(X)가 온다. 자세한 약속은 [native-playback.md](native-playback.md).
-- (D-114 이어서) **opus · ogg · mp3 태그는 ffmpeg로 쓴다 (mp3는 ffmpeg가 안 되면 라이브러리로)** (`OpusTagWriter`, full 빌드 `music_app/transcoder`의 `tag`): 소리는 `-c copy`로 두고 ffmetadata 파일의 TITLE · ARTIST · ALBUM · GENRE · LYRICS · METADATA_BLOCK_PICTURE(커버)만 새로 쓴다. mp3 가사와 달리 opus는 가사(LYRICS)도 들어간다. lite는 ffmpeg가 없어 쓰지 않고, **서버가 태그까지 넣은 완성 파일을 주는 것으로 한다** (서버 저장소 몫). ffmpeg의 태그 쓰기는 이 PC에 ffmpeg가 없어 실제 기기에서 아직 확인하지 못했다.
-- (D-114 보강) mp3도 full에서는 ffmpeg로 태그를 쓴다 (ID3v2.3, 커버는 attached_pic). Dart로 따로 쓰면 받는 중 포그라운드 서비스 밖에서 도는 일이 생기고, 이미 변환에 ffmpeg를 쓰기 때문. 주의: ffmpeg의 mp3 가사는 표준 USLT가 아니라 사용자 지정(TXXX) 프레임으로 들어갈 수 있어 플레이어에 따라 안 보일 수 있다 — 기기에서 확인 필요, 안 되면 USLT 직접 쓰기를 따로 한다.
-- (D-114 보강 2) 받을 때 가사는 **먼저 구해서**(고쳐 둔 글 또는 영상 자막 → 싱크 LRC) 파일 태그와 앱 가사에 같은 글을 쓴다 (`_lyricsFor`). 전에는 자막 가사가 곡 저장 뒤 앱 안에만 저장됐다. 앨범은 받을 때 읽지 않아 비어 있다 (영상 정보의 album 읽기는 따로).
-- (D-114 보강 3) 커버 편집 상태도 파일에 남긴다: 자른 커버 이미지는 그대로 두고 사용자 정의 태그 `COVER_SOURCE`(원본 웹 주소) · `COVER_TRANSFORM`(scale,dx,dy) · `COVER_COLOR`(ARGB 16진)를 ffmpeg로 같이 쓴다. 받을 때 · 기존 파일 이관 때 쓰고, 다른 플레이어는 이 칸을 무시한다. 앨범은 영상 정보의 `album`(yt-dlp)을 읽어 곡과 태그에 넣는다 (`MediaHit.album` → `DownloadRequest.album`). 아직 파일 태그를 읽어 DB를 다시 채우는 쪽은 없다.
 
 ## D-116 · 2026-10-22 · 커버 고르기는 편집 화면을 먼저 띄운다
 - (수정) 이미지를 어디서 불러올지는 바텀시트가 아니라 편집 화면 **위쪽 버튼 두 개**(기기에서 고르기 · 웹에서 가져오기)로 한다. 이미 붙은 이미지(받기 화면의 썸네일 등)를 편집하면 그 이미지를 불러온 채 열린다 (전에는 빈 화면으로 열렸다).
@@ -770,3 +766,13 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 - 편집 화면: 확대 막대(0.2x~5x), 회전 막대(-180°~180°), "왼쪽 90° / 오른쪽 90°" 버튼, 두 손가락 회전. 
 - 저장: DB `covers.rotation`(스키마 10, 기본 0), 받기 대기열 JSON의 `rotation`, 파일 태그 `COVER_TRANSFORM`이 `scale,dx,dy,rotation`으로 늘었다 (옛 세 칸짜리 값은 회전 0으로 읽어야 한다).
 - (D-117 보강) 편집 화면은 가운데 정사각형 **자르기 칸**(미리보기의 72%)이 실제 커버이고, 칸 밖으로 나간 그림은 어둡게 보여 어디가 잘리는지 알 수 있다. 칸 테두리는 강조 색, 칸 안의 빈 곳은 검정.
+
+## D-118 · 2026-10-22 · 미리 듣기 소리를 네이티브로, Android 밖 재생 코드 삭제
+- D-093의 경계(재생 엔진은 네이티브)에 맞춰 **미리 듣기 소리를 Kotlin `PreviewChannel`(ExoPlayer, `music_app/preview`)이 낸다**. Dart는 `NativePreviewPlayer`로 `play(url, headers)` · `seek` · `pause` · `resume` · `stop`을 보내고, `completed` · `progress` · `failure`를 받는다. 알림(`setSession`)은 그대로 Dart(`PreviewCubit`)가 띄운다.
+- 미리 듣기 플레이어는 메인 재생의 ExoPlayer와 따로 하나 두고, 재생마다 새로 만들어 주소에 맞는 헤더 · user-agent(`c=` 클라이언트별)를 건다. HLS · DASH 주소는 `media3-exoplayer-hls/dash`를 넣어 그대로 튼다. 앱 HTTP로 받아 넘기던 대체 경로(`_HttpRangeSource`)는 없앴다.
+- **Android 밖 OS용 재생 코드를 지웠다**: `JustAudioPlayerRepository` · `AudioEngineSource`(just_audio) · `JustAudioPreviewPlayer`, `initAudioBackend`, 의존 `just_audio` · `just_audio_media_kit` · `media_kit_libs_*`. 다른 OS는 따로 구현할 때 새로 만든다. 재생 속도(`PrefsPlaybackSpeedRepository`)도 네이티브 채널만 쓴다.
+- (D-114 이어서) **opus · ogg · mp3 태그는 ffmpeg로 쓴다 (mp3는 ffmpeg가 안 되면 라이브러리로)** (`OpusTagWriter`, full 빌드 `music_app/transcoder`의 `tag`): 소리는 `-c copy`로 두고 ffmetadata 파일의 TITLE · ARTIST · ALBUM · GENRE · LYRICS · METADATA_BLOCK_PICTURE(커버)만 새로 쓴다. mp3 가사와 달리 opus는 가사(LYRICS)도 들어간다. lite는 ffmpeg가 없어 쓰지 않고, **서버가 태그까지 넣은 완성 파일을 주는 것으로 한다** (서버 저장소 몫). ffmpeg의 태그 쓰기는 이 PC에 ffmpeg가 없어 실제 기기에서 아직 확인하지 못했다.
+- (D-114 보강) mp3도 full에서는 ffmpeg로 태그를 쓴다 (ID3v2.3, 커버는 attached_pic). Dart로 따로 쓰면 받는 중 포그라운드 서비스 밖에서 도는 일이 생기고, 이미 변환에 ffmpeg를 쓰기 때문. 주의: ffmpeg의 mp3 가사는 표준 USLT가 아니라 사용자 지정(TXXX) 프레임으로 들어갈 수 있어 플레이어에 따라 안 보일 수 있다 — 기기에서 확인 필요, 안 되면 USLT 직접 쓰기를 따로 한다.
+- (D-114 보강 2) 받을 때 가사는 **먼저 구해서**(고쳐 둔 글 또는 영상 자막 → 싱크 LRC) 파일 태그와 앱 가사에 같은 글을 쓴다 (`_lyricsFor`). 전에는 자막 가사가 곡 저장 뒤 앱 안에만 저장됐다. 앨범은 받을 때 읽지 않아 비어 있다 (영상 정보의 album 읽기는 따로).
+- (D-114 보강 3) 커버 편집 상태도 파일에 남긴다: 자른 커버 이미지는 그대로 두고 사용자 정의 태그 `COVER_SOURCE`(원본 웹 주소) · `COVER_TRANSFORM`(scale,dx,dy) · `COVER_COLOR`(ARGB 16진)를 ffmpeg로 같이 쓴다. 받을 때 · 기존 파일 이관 때 쓰고, 다른 플레이어는 이 칸을 무시한다. 앨범은 영상 정보의 `album`(yt-dlp)을 읽어 곡과 태그에 넣는다 (`MediaHit.album` → `DownloadRequest.album`). 아직 파일 태그를 읽어 DB를 다시 채우는 쪽은 없다.
+

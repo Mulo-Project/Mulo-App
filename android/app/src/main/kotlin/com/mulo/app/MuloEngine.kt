@@ -10,7 +10,7 @@ import io.flutter.embedding.engine.dart.DartExecutor
 import io.flutter.plugins.GeneratedPluginRegistrant
 
 /**
- * 앱의 Flutter 엔진을 화면(MainActivity)과 따로 쥔다. 받기와 미리 듣기는 Dart가 이 엔진 안에서 하므로,
+ * 앱의 Flutter 엔진을 화면(MainActivity)과 따로 쥔다. 받기는 Dart가 이 엔진 안에서 하고 미리 듣기 소리는 PreviewChannel이 내므로,
  * 최근 작업에서 화면을 밀어도 포그라운드 서비스(받기) · 미리 듣기 알림이 떠 있는 동안은 엔진을 살려 둔다.
  * 그런 일이 없고 화면도 없으면 엔진을 정리한다. 채널은 엔진과 같은 수명이고, 화면이 필요한 일은 [activity]로 한다.
  */
@@ -47,12 +47,13 @@ object MuloEngine {
         val ytDlp = YtDlpChannel(app, messenger)
         val transcoder = TranscoderChannel(app, messenger)
         val playback = PlaybackChannel(app, messenger)
+        val preview = PreviewChannel(app, messenger)
         val equalizer = EqualizerChannel(app, messenger)
         val subscriptions = SubscriptionChannel(app, messenger) { activity?.moveTaskToBack(true) }
         mediaStore = store
         channels = listOf(
             store::dispose, lyrics::dispose, lyricsOverlay::dispose, audioOutput::dispose, ytDlp::dispose,
-            transcoder::dispose, playback::dispose, equalizer::dispose, subscriptions::dispose,
+            transcoder::dispose, playback::dispose, preview::dispose, equalizer::dispose, subscriptions::dispose,
         )
         engine = created
         FlutterEngineCache.getInstance().put(CACHE_ID, created)
