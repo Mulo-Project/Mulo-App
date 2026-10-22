@@ -2015,6 +2015,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get permAudioDesc => '기기에 있는 음악을 불러오는 데 써요.';
 
   @override
+  String get permOverlay => '다른 앱 위에 표시';
+
+  @override
+  String get permOverlayDesc => '다른 앱을 쓰는 동안 화면 위에 가사를 띄우는 데 써요.';
+
+  @override
   String get permBlockedDesc => '요청이 막혀 있어요. 눌러서 휴대폰 설정에서 켜 주세요.';
 
   @override

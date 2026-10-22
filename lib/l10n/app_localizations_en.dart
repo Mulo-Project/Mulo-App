@@ -2069,6 +2069,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permAudioDesc => 'Used to load music stored on this device.';
 
   @override
+  String get permOverlay => 'Display over other apps';
+
+  @override
+  String get permOverlayDesc =>
+      'Used to show lyrics over other apps while you use them.';
+
+  @override
   String get permBlockedDesc =>
       'Blocked. Tap to turn it on in system settings.';
 

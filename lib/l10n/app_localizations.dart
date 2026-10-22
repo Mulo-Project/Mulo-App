@@ -3794,6 +3794,18 @@ abstract class AppLocalizations {
   /// **'기기에 있는 음악을 불러오는 데 써요.'**
   String get permAudioDesc;
 
+  /// No description provided for @permOverlay.
+  ///
+  /// In ko, this message translates to:
+  /// **'다른 앱 위에 표시'**
+  String get permOverlay;
+
+  /// No description provided for @permOverlayDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'다른 앱을 쓰는 동안 화면 위에 가사를 띄우는 데 써요.'**
+  String get permOverlayDesc;
+
   /// No description provided for @permBlockedDesc.
   ///
   /// In ko, this message translates to:

@@ -730,6 +730,8 @@
   "permNotificationsDesc": "Keeps downloads running in the background and shows playback controls.",
   "permAudio": "Music file access",
   "permAudioDesc": "Used to load music stored on this device.",
+  "permOverlay": "Display over other apps",
+  "permOverlayDesc": "Used to show lyrics over other apps while you use them.",
   "permBlockedDesc": "Blocked. Tap to turn it on in system settings.",
   "settingsNotifications": "Notifications",
   "settingsNotifyDownloadProgress": "Download progress",
