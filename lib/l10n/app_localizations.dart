@@ -290,6 +290,30 @@ abstract class AppLocalizations {
   /// **'서버에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.'**
   String get searchNetworkBody;
 
+  /// No description provided for @stateNetworkTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'네트워크 연결이 필요해요'**
+  String get stateNetworkTitle;
+
+  /// No description provided for @stateNetworkBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'연결을 확인한 뒤 다시 시도해 주세요.'**
+  String get stateNetworkBody;
+
+  /// No description provided for @stateSignInTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그인이 필요해요'**
+  String get stateSignInTitle;
+
+  /// No description provided for @stateSignInBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그인한 뒤에 쓸 수 있어요.'**
+  String get stateSignInBody;
+
   /// No description provided for @searchAuthBody.
   ///
   /// In ko, this message translates to:

@@ -110,6 +110,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get searchNetworkBody => '서버에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.';
 
   @override
+  String get stateNetworkTitle => '네트워크 연결이 필요해요';
+
+  @override
+  String get stateNetworkBody => '연결을 확인한 뒤 다시 시도해 주세요.';
+
+  @override
+  String get stateSignInTitle => '로그인이 필요해요';
+
+  @override
+  String get stateSignInBody => '로그인한 뒤에 쓸 수 있어요.';
+
+  @override
   String get searchAuthBody => '서버가 로그인을 요구해요.';
 
   @override

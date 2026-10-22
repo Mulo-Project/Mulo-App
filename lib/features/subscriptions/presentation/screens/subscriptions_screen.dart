@@ -75,7 +75,7 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                 Expanded(
                   child: state.channels.isEmpty
                       // 구독이 없으면 안내를 남은 자리 한가운데에 둔다.
-                      ? const Center(child: _Empty())
+                      ? const _Empty()
                       : ListView(
                           padding: const EdgeInsets.only(bottom: AppSpacing.lg),
                           children: [
@@ -106,25 +106,9 @@ class _Empty extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            l10n.subscriptionsEmptyTitle,
-            style: text.titleMedium,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            l10n.subscriptionsEmptyBody,
-            style: text.bodySmall,
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
+    return EmptyState(
+      title: l10n.subscriptionsEmptyTitle,
+      body: l10n.subscriptionsEmptyBody,
     );
   }
 }

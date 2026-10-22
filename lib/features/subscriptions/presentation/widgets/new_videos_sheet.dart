@@ -128,11 +128,10 @@ class _Body extends StatelessWidget {
 
     if (groups.isEmpty) {
       final busy = state.status == NewVideosStatus.checking || state.resolving;
-      return Center(
-        child: EmptyState(
-          title: busy ? l10n.newVideosChecking : l10n.newVideosEmptyTitle,
-          body: busy ? null : l10n.newVideosEmptyBody,
-        ),
+      if (busy) return LoadingState(label: l10n.newVideosChecking);
+      return EmptyState(
+        title: l10n.newVideosEmptyTitle,
+        body: l10n.newVideosEmptyBody,
       );
     }
     final locale = Localizations.localeOf(context).toString();

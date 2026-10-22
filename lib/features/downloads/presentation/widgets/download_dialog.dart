@@ -321,13 +321,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (sub.status == SubtitleStatus.checking) ...[
-                  SizedBox.square(
-                    dimension: AppSizes.iconSm,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: p.accent,
-                    ),
-                  ),
+                  const LoadingIndicator.small(),
                   const SizedBox(width: AppSpacing.sm),
                 ],
                 AppSwitch(

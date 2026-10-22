@@ -213,7 +213,7 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
                                   ),
                                 )
                               : !ready
-                              ? const Center(child: CircularProgressIndicator())
+                              ? const LoadingState()
                               : _Viewport(
                                   image: _image!,
                                   transform: _t,

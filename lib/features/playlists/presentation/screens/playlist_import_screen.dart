@@ -154,8 +154,9 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
                     top: AppSpacing.xs,
                     bottom: AppSpacing.xs,
                   ),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
+                  // 검색창과 같은 너비로 펼쳐 왼쪽에 쏠려 보이지 않게 한다.
+                  child: SizedBox(
+                    width: double.infinity,
                     child: PillButton(
                       label: l10n.playlistImportMine,
                       icon: AppIcons.playlistPlay,
@@ -228,7 +229,7 @@ class _Body extends StatelessWidget {
           l10n.playlistImportEmptyBody,
         );
       case PlaylistImportStatus.loading:
-        return const Center(child: CircularProgressIndicator());
+        return const LoadingState();
       case PlaylistImportStatus.results:
         if (state.results.isEmpty) {
           return state.mine
@@ -260,6 +261,18 @@ class _Body extends StatelessWidget {
           ],
         );
       case PlaylistImportStatus.failed:
+        if (state.mine && state.accountFailure == AccountFailure.network) {
+          return EmptyState.network(onRetry: onSignIn);
+        }
+        if (state.mine && state.accountFailure == AccountFailure.unauthorized) {
+          return EmptyState.signIn(
+            body: l10n.playlistImportLoginExpiredBody,
+            onSignIn: onSignIn,
+          );
+        }
+        if (!state.mine && state.failure == EngineFailure.network) {
+          return EmptyState.network(onRetry: onRetry);
+        }
         if (state.mine) {
           final expired = state.accountFailure == AccountFailure.unauthorized;
           final noChannel = state.accountFailure == AccountFailure.noChannel;

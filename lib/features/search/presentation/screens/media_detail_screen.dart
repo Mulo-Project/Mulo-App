@@ -219,12 +219,11 @@ class _DetailViewState extends State<_DetailView> {
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ),
-              SizedBox(
-                height: 2,
-                child: state.loading
-                    ? const LinearProgressIndicator(minHeight: 2)
-                    : null,
-              ),
+              if (state.loading)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                  child: LoadingIndicator.small(),
+                ),
               Expanded(
                 child: ListView(
                   padding: AppSpacing.screen.copyWith(top: AppSpacing.sm),

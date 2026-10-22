@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../app_theme_tokens.dart';
 import '../tokens/app_dimens.dart';
 import 'glass.dart';
+import 'loading_indicator.dart';
 
 enum PillVariant {
   /// 강조 색(라임) 채움 + 은은한 빛 — 화면의 주 동작.
@@ -67,7 +68,7 @@ class PillButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (busy) ...[
-              _Spinner(size: 16, color: fg),
+              LoadingIndicator(size: 16, color: fg),
               const SizedBox(width: AppSpacing.xs),
             ] else if (icon != null) ...[
               Icon(icon, size: AppSizes.iconSm, color: fg),
@@ -215,20 +216,6 @@ class CircleIconButton extends StatelessWidget {
   }
 }
 
-/// 작게 돌아가는 진행 표시 (버튼 안에서 "불러오는 중"을 보일 때).
-class _Spinner extends StatelessWidget {
-  const _Spinner({required this.size, required this.color});
-
-  final double size;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) => SizedBox.square(
-    dimension: size,
-    child: CircularProgressIndicator(strokeWidth: 2, color: color),
-  );
-}
-
 /// 목록 줄 오른쪽에 놓는 작은 아이콘 버튼. 유리 면 · 흐림 없이 아이콘만 있고 눌림 효과만 있다
 /// (줄마다 놓여도 스크롤이 가볍다). [accent]면 강조 색, [active]면 켜진 상태(예: 미리 듣는 중).
 class RowIconButton extends StatelessWidget {
@@ -276,9 +263,7 @@ class RowIconButton extends StatelessWidget {
                 ? BoxDecoration(color: p.accent, shape: BoxShape.circle)
                 : null,
             child: busy
-                ? Center(
-                    child: busyChild ?? _Spinner(size: 18, color: p.accent),
-                  )
+                ? Center(child: busyChild ?? const LoadingIndicator(size: 18))
                 : Icon(
                     icon,
                     size: AppSizes.rowButton * .56,

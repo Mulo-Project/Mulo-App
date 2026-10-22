@@ -111,6 +111,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not reach the server. Check your internet connection.';
 
   @override
+  String get stateNetworkTitle => 'Network connection needed';
+
+  @override
+  String get stateNetworkBody => 'Check your connection and try again.';
+
+  @override
+  String get stateSignInTitle => 'Sign-in needed';
+
+  @override
+  String get stateSignInBody => 'Sign in to use this.';
+
+  @override
   String get searchAuthBody => 'The server requires a sign-in.';
 
   @override

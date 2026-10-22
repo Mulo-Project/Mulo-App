@@ -152,13 +152,10 @@ class _WebImagePageState extends State<_WebImagePage> {
                 child: BlocBuilder<CoverWebCubit, CoverWebState>(
                   builder: (context, state) => switch (state.status) {
                     CoverWebStatus.idle => const SizedBox.shrink(),
-                    CoverWebStatus.loading => const Center(
-                      child: CircularProgressIndicator(),
-                    ),
-                    CoverWebStatus.failed => _Message(l10n.coverWebFailed),
-                    CoverWebStatus.loaded when state.images.isEmpty => _Message(
-                      l10n.coverWebEmpty,
-                    ),
+                    CoverWebStatus.loading => const LoadingState(),
+                    CoverWebStatus.failed => const EmptyState.network(),
+                    CoverWebStatus.loaded when state.images.isEmpty =>
+                      EmptyState(title: l10n.coverWebEmpty),
                     CoverWebStatus.loaded => GridView.builder(
                       padding: AppSpacing.screen.copyWith(
                         top: AppSpacing.md,
@@ -194,19 +191,4 @@ class _WebImagePageState extends State<_WebImagePage> {
       ),
     );
   }
-}
-
-class _Message extends StatelessWidget {
-  const _Message(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) => Center(
-    child: Text(
-      text,
-      style: Theme.of(context).textTheme.bodyMedium
-          ?.copyWith(color: context.palette.onSurfaceMuted),
-    ),
-  );
 }

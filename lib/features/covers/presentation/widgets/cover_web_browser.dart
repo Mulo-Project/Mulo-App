@@ -185,8 +185,14 @@ class _CoverWebBrowserState extends State<CoverWebBrowser> {
                   ),
                 ),
               ),
-              if (_loading) const LinearProgressIndicator(minHeight: 2),
-              Expanded(child: WebViewWidget(controller: _web)),
+              Expanded(
+                child: Stack(
+                  children: [
+                    WebViewWidget(controller: _web),
+                    if (_loading) const IgnorePointer(child: LoadingState()),
+                  ],
+                ),
+              ),
             ],
           ),
         ),

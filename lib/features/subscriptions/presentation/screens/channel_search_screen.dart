@@ -55,7 +55,6 @@ class _ChannelSearchScreenState extends State<ChannelSearchScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final p = context.palette;
-    final text = Theme.of(context).textTheme;
     return Scaffold(
       backgroundColor: p.background,
       body: AppBackground(
@@ -85,22 +84,13 @@ class _ChannelSearchScreenState extends State<ChannelSearchScreen> {
                 child: BlocBuilder<ChannelSearchCubit, ChannelSearchState>(
                   bloc: _cubit,
                   builder: (context, state) {
-                    Widget message(String title) => Center(
-                      child: Padding(
-                        padding: AppSpacing.screen,
-                        child: Text(
-                          title,
-                          style: text.bodyMedium,
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    );
+                    Widget message(String title) => EmptyState(title: title);
                     return switch (state.status) {
                       ChannelSearchStatus.idle => message(
                         l10n.channelSearchIdle,
                       ),
-                      ChannelSearchStatus.loading => message(
-                        l10n.channelSearchLoading,
+                      ChannelSearchStatus.loading => LoadingState(
+                        label: l10n.channelSearchLoading,
                       ),
                       ChannelSearchStatus.failed => message(
                         l10n.channelSearchFailed,

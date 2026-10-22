@@ -150,7 +150,7 @@ class _Body extends StatelessWidget {
       case SearchStatus.loading:
         return const Padding(
           padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
-          child: Center(child: CircularProgressIndicator()),
+          child: LoadingState(),
         );
       case SearchStatus.failed:
         final failure = state.failure;
@@ -160,6 +160,9 @@ class _Body extends StatelessWidget {
             title: l10n.searchNotReadyTitle,
             body: l10n.searchNotReadyBody,
           );
+        }
+        if (failure == EngineFailure.network) {
+          return EmptyState.network(onRetry: onRetry);
         }
         return _Hint(
           icon: AppIcons.hourglassEmpty,
@@ -326,7 +329,7 @@ class _LoadMoreTriggerState extends State<_LoadMoreTrigger> {
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
       child: Center(
         child: _loading || loadingMore
-            ? const CircularProgressIndicator()
+            ? const LoadingIndicator()
             : PillButton(
                 label: context.l10n.searchLoadMore,
                 variant: PillVariant.tonal,

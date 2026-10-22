@@ -143,8 +143,14 @@ class _LyricsWebScreenState extends State<LyricsWebScreen> {
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ),
-              if (_loading) const LinearProgressIndicator(minHeight: 2),
-              Expanded(child: WebViewWidget(controller: _controller)),
+              Expanded(
+                child: Stack(
+                  children: [
+                    WebViewWidget(controller: _controller),
+                    if (_loading) const IgnorePointer(child: LoadingState()),
+                  ],
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 child: Column(

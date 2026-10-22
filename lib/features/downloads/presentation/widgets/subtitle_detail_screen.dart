@@ -155,19 +155,7 @@ class _SubtitleDetailScreenState extends State<SubtitleDetailScreen> {
             ),
           );
         } else if (_base == null) {
-          body = Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircularProgressIndicator(strokeWidth: 2),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  l10n.downloadLyricsPreviewLoading,
-                  style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
-                ),
-              ],
-            ),
-          );
+          body = LoadingState(label: l10n.downloadLyricsPreviewLoading);
         }
         return LyricsEditScaffold(
           title: widget.title,
