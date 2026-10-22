@@ -43,6 +43,9 @@ class Covers extends Table {
   RealColumn get dx => real().withDefault(const Constant(0))();
   RealColumn get dy => real().withDefault(const Constant(0))();
 
+  /// 시계 방향 회전 각도(도).
+  RealColumn get rotation => real().withDefault(const Constant(0))();
+
   @override
   Set<Column> get primaryKey => {key};
 }
@@ -125,7 +128,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'music_app'));
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -149,6 +152,8 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(covers, covers.dx);
         await m.addColumn(covers, covers.dy);
       }
+      // 커버 회전 각도를 더한다.
+      if (from < 10) await m.addColumn(covers, covers.rotation);
     },
   );
 }

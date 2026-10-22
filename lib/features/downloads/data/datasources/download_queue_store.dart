@@ -132,6 +132,7 @@ Map<String, dynamic> encodeDownloadRequest(DownloadRequest r) => {
       'scale': art.transform.scale,
       'dx': art.transform.dx,
       'dy': art.transform.dy,
+      if (art.transform.rotation != 0) 'rotation': art.transform.rotation,
     },
 };
 
@@ -143,6 +144,7 @@ DownloadRequest decodeDownloadRequest(Map<String, dynamic> m) {
       scale: (cover['scale'] as num?)?.toDouble() ?? 1,
       dx: (cover['dx'] as num?)?.toDouble() ?? 0,
       dy: (cover['dy'] as num?)?.toDouble() ?? 0,
+      rotation: (cover['rotation'] as num?)?.toDouble() ?? 0,
     );
     final url = cover['url'] as String?;
     final path = cover['path'] as String?;

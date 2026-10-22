@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../../core/cover/cover_paint.dart';
 import '../bloc/cover_cubit.dart';
 import 'cover_picker.dart';
 
@@ -47,8 +48,6 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
   // 손가락 · 포인터를 대고 있는 동안의 기준값.
   CoverTransform _startT = CoverTransform.identity;
   Offset _startFocal = Offset.zero;
-
-  double get _aspect => _image == null ? 1 : _image!.width / _image!.height;
 
   @override
   void initState() {
@@ -100,10 +99,15 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
     super.dispose();
   }
 
-  void _set(CoverTransform t) => setState(() => _t = t.clamped(_aspect));
+  void _set(CoverTransform t) => setState(() => _t = t.clamped());
 
-  void _zoomTo(double scale) =>
-      _set(CoverTransform(scale: scale, dx: _t.dx, dy: _t.dy));
+  void _zoomTo(double scale) => _set(
+    CoverTransform(scale: scale, dx: _t.dx, dy: _t.dy, rotation: _t.rotation),
+  );
+
+  void _rotateTo(double degrees) => _set(
+    CoverTransform(scale: _t.scale, dx: _t.dx, dy: _t.dy, rotation: degrees),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -217,9 +221,10 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
                                     _startT = _t;
                                     _startFocal = focal;
                                   },
-                                  onUpdate: (focal, scale) => _set(
+                                  onUpdate: (focal, scale, rotation) => _set(
                                     CoverTransform(
                                       scale: _startT.scale * scale,
+                                      rotation: _startT.rotation + rotation,
                                       dx:
                                           _startT.dx +
                                           (focal.dx - _startFocal.dx) / side,
@@ -244,11 +249,67 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
                   AppSpacing.lg,
                   0,
                 ),
-                child: _ZoomBar(
+                child: _RangeBar(
                   value: _t.scale,
+                  min: CoverTransform.minScale,
+                  max: CoverTransform.maxScale,
+                  valueText: '${_t.scale.toStringAsFixed(1)}x',
                   enabled: ready,
                   label: '${l10n.coverEditZoomOut} / ${l10n.coverEditZoomIn}',
                   onChanged: _zoomTo,
+                ),
+              ),
+              // 회전: 90° 단위 버튼 둘과 미세 각도 막대.
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.xs,
+                  AppSpacing.lg,
+                  0,
+                ),
+                child: _RangeBar(
+                  value: _t.rotation,
+                  min: -180,
+                  max: 180,
+                  valueText: '${_t.rotation.round()}°',
+                  enabled: ready,
+                  label: l10n.coverEditRotation,
+                  onChanged: (v) => _rotateTo(v.roundToDouble()),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  0,
+                  AppSpacing.md,
+                  0,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: PillButton(
+                        key: const ValueKey('cover-edit-rotate-left'),
+                        label: l10n.coverEditRotateLeft,
+                        icon: AppIcons.restart,
+                        variant: PillVariant.tonal,
+                        onPressed: ready
+                            ? () => _rotateTo(_t.rotation - 90)
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Expanded(
+                      child: PillButton(
+                        key: const ValueKey('cover-edit-rotate-right'),
+                        label: l10n.coverEditRotateRight,
+                        icon: AppIcons.restart,
+                        variant: PillVariant.tonal,
+                        onPressed: ready
+                            ? () => _rotateTo(_t.rotation + 90)
+                            : null,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Padding(
@@ -291,7 +352,7 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
   }
 }
 
-/// 정사각형 미리보기. 실제 커버와 같은 계산([CoverTransform.visibleRect])으로 그린다.
+/// 정사각형 미리보기. 실제 커버와 같은 계산([CoverTransform.placement])으로 그린다.
 class _Viewport extends StatelessWidget {
   const _Viewport({
     required this.image,
@@ -306,7 +367,7 @@ class _Viewport extends StatelessWidget {
   final CoverTransform transform;
   final double side;
   final ValueChanged<Offset> onStart;
-  final void Function(Offset focal, double scale) onUpdate;
+  final void Function(Offset focal, double scale, double rotationDeg) onUpdate;
   final ValueChanged<double> onWheel;
 
   @override
@@ -317,7 +378,8 @@ class _Viewport extends StatelessWidget {
       },
       child: GestureDetector(
         onScaleStart: (d) => onStart(d.focalPoint),
-        onScaleUpdate: (d) => onUpdate(d.focalPoint, d.scale),
+        onScaleUpdate: (d) =>
+            onUpdate(d.focalPoint, d.scale, d.rotation * 180 / math.pi),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(AppRadii.md),
           child: CustomPaint(
@@ -338,16 +400,7 @@ class _CropPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final r = transform.visibleRect(
-      image.width.toDouble(),
-      image.height.toDouble(),
-    );
-    canvas.drawImageRect(
-      image,
-      Rect.fromLTWH(r.left, r.top, r.side, r.side),
-      Offset.zero & size,
-      Paint()..filterQuality = FilterQuality.medium,
-    );
+    paintCover(canvas, size.width, image, transform);
   }
 
   @override
@@ -355,40 +408,43 @@ class _CropPainter extends CustomPainter {
       old.image != image || old.transform != transform;
 }
 
-/// 확대 막대: 왼쪽 끝 = 원래 크기, 오른쪽 끝 = 최대. 끌거나 눌러서 바꾼다.
-class _ZoomBar extends StatelessWidget {
-  const _ZoomBar({
+/// 값 막대: 왼쪽 끝 = [min], 오른쪽 끝 = [max]. 끌거나 눌러서 바꾼다 (확대 · 회전에 쓴다).
+class _RangeBar extends StatelessWidget {
+  const _RangeBar({
     required this.value,
+    required this.min,
+    required this.max,
+    required this.valueText,
     required this.enabled,
     required this.label,
     required this.onChanged,
   });
 
   final double value;
+  final double min;
+  final double max;
+  final String valueText;
   final bool enabled;
   final String label;
   final ValueChanged<double> onChanged;
 
-  static const _span = CoverTransform.maxScale - CoverTransform.minScale;
   static const _thumb = 20.0;
 
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    final fraction = ((value - CoverTransform.minScale) / _span).clamp(
-      0.0,
-      1.0,
-    );
+    final span = max - min;
+    final fraction = ((value - min) / span).clamp(0.0, 1.0);
     return Semantics(
       slider: true,
       label: label,
-      value: '${value.toStringAsFixed(1)}x',
+      value: valueText,
       child: LayoutBuilder(
         builder: (context, box) {
           void update(double x) => onChanged(
-            CoverTransform.minScale +
+            min +
                 ((x - _thumb / 2) / (box.maxWidth - _thumb)).clamp(0.0, 1.0) *
-                    _span,
+                    span,
           );
           return GestureDetector(
             behavior: HitTestBehavior.opaque,

@@ -698,7 +698,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get coverEditHint =>
-      'Drag to move; pinch or use the mouse wheel to zoom';
+      'Drag to move; pinch to zoom and rotate, or use the mouse wheel to zoom. Empty areas show as black';
 
   @override
   String get coverEditZoomIn => 'Zoom in';
@@ -714,6 +714,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get coverEditEmpty => 'Load an image above';
+
+  @override
+  String get coverEditRotation => 'Rotation';
+
+  @override
+  String get coverEditRotateLeft => 'Left 90°';
+
+  @override
+  String get coverEditRotateRight => 'Right 90°';
 
   @override
   String get coverEditLoadFailed => 'Couldn\'t load the image';

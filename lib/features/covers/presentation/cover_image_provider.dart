@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart';
 
+import '../../../core/cover/cover_paint.dart';
 import '../domain/entities/cover_art.dart';
 
 /// [base] 이미지를 [transform]대로 확대 · 이동해 정사각형으로 잘라 낸 이미지.
@@ -33,18 +34,8 @@ class CoverImageProvider extends ImageProvider<CoverImageProvider> {
   Future<ui.Image> _crop() async {
     final source = await _resolve();
     try {
-      final r = transform.visibleRect(
-        source.width.toDouble(),
-        source.height.toDouble(),
-      );
       final recorder = ui.PictureRecorder();
-      final side = outputSide.toDouble();
-      ui.Canvas(recorder).drawImageRect(
-        source,
-        ui.Rect.fromLTWH(r.left, r.top, r.side, r.side),
-        ui.Rect.fromLTWH(0, 0, side, side),
-        ui.Paint()..filterQuality = ui.FilterQuality.medium,
-      );
+      paintCover(ui.Canvas(recorder), outputSide.toDouble(), source, transform);
       final picture = recorder.endRecording();
       final out = await picture.toImage(outputSide, outputSide);
       picture.dispose();

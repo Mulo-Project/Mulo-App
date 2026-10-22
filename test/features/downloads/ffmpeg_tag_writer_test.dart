@@ -44,7 +44,7 @@ void coverExtraTests() {
     );
     expect(extra, {
       'COVER_SOURCE': 'https://i.test/a.jpg',
-      'COVER_TRANSFORM': '2.0,0.1,-0.2',
+      'COVER_TRANSFORM': '2.0,0.1,-0.2,0.0',
       'COVER_COLOR': 'ff112233',
     });
     expect(coverExtra(null, null, null), isEmpty);

@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 import 'package:audio_metadata_reader/audio_metadata_reader.dart';
 
 import '../../../../core/cache/cached_web_image.dart';
+import '../../../../core/cover/cover_paint.dart';
 import '../../../covers/domain/entities/cover_art.dart';
 import 'ffmpeg_tag_writer.dart';
 
@@ -111,14 +112,8 @@ class CoverTagWriter {
     final image = (await codec.getNextFrame()).image;
     codec.dispose();
     try {
-      final r = t.visibleRect(image.width.toDouble(), image.height.toDouble());
       final recorder = ui.PictureRecorder();
-      ui.Canvas(recorder).drawImageRect(
-        image,
-        ui.Rect.fromLTWH(r.left, r.top, r.side, r.side),
-        ui.Rect.fromLTWH(0, 0, side.toDouble(), side.toDouble()),
-        ui.Paint()..filterQuality = ui.FilterQuality.medium,
-      );
+      paintCover(ui.Canvas(recorder), side.toDouble(), image, t);
       final picture = recorder.endRecording();
       final out = await picture.toImage(side, side);
       picture.dispose();
@@ -142,7 +137,8 @@ Map<String, String> coverExtra(
   final t = cover?.transform ?? CoverTransform.identity;
   return {
     if (url != null && url.isNotEmpty) 'COVER_SOURCE': url,
-    if (!t.isIdentity) 'COVER_TRANSFORM': '${t.scale},${t.dx},${t.dy}',
+    if (!t.isIdentity)
+      'COVER_TRANSFORM': '${t.scale},${t.dx},${t.dy},${t.rotation}',
     if (color != null) 'COVER_COLOR': color.toRadixString(16).padLeft(8, '0'),
   };
 }

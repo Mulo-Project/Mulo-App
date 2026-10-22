@@ -1379,7 +1379,7 @@ abstract class AppLocalizations {
   /// No description provided for @coverEditHint.
   ///
   /// In ko, this message translates to:
-  /// **'끌어서 옮기고, 두 손가락이나 마우스 휠로 크기를 바꿔요'**
+  /// **'끌어서 옮기고, 두 손가락으로 크기와 각도를, 마우스 휠로 크기를 바꿔요. 빈 곳은 검정으로 보여요'**
   String get coverEditHint;
 
   /// No description provided for @coverEditZoomIn.
@@ -1411,6 +1411,24 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'위에서 이미지를 불러오세요'**
   String get coverEditEmpty;
+
+  /// No description provided for @coverEditRotation.
+  ///
+  /// In ko, this message translates to:
+  /// **'회전'**
+  String get coverEditRotation;
+
+  /// No description provided for @coverEditRotateLeft.
+  ///
+  /// In ko, this message translates to:
+  /// **'왼쪽 90°'**
+  String get coverEditRotateLeft;
+
+  /// No description provided for @coverEditRotateRight.
+  ///
+  /// In ko, this message translates to:
+  /// **'오른쪽 90°'**
+  String get coverEditRotateRight;
 
   /// No description provided for @coverEditLoadFailed.
   ///

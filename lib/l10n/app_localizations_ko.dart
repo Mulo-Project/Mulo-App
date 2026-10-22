@@ -681,7 +681,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get coverEditTitle => '이미지 위치';
 
   @override
-  String get coverEditHint => '끌어서 옮기고, 두 손가락이나 마우스 휠로 크기를 바꿔요';
+  String get coverEditHint =>
+      '끌어서 옮기고, 두 손가락으로 크기와 각도를, 마우스 휠로 크기를 바꿔요. 빈 곳은 검정으로 보여요';
 
   @override
   String get coverEditZoomIn => '확대';
@@ -697,6 +698,15 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get coverEditEmpty => '위에서 이미지를 불러오세요';
+
+  @override
+  String get coverEditRotation => '회전';
+
+  @override
+  String get coverEditRotateLeft => '왼쪽 90°';
+
+  @override
+  String get coverEditRotateRight => '오른쪽 90°';
 
   @override
   String get coverEditLoadFailed => '이미지를 불러오지 못했어요';
