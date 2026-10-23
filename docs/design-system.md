@@ -90,6 +90,8 @@ MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부�
 | `AppDivider` | app_divider.dart | 얇은 구분선 한 줄(윤곽 색) |
 | `SectionTitle` | section_title.dart | 화면 · 시트 안 구역 제목(titleMedium). 화면은 좌우 여백 + 아래 틈, 시트는 `padded: false` |
 | `ExpandableText` | expandable_text.dart | 긴 설명 글: n줄(기본 4)까지 보이고 넘칠 때만 "더 보기 / 접기" (영상 · 채널 설명) |
+| `showConfirmDialog` | app_dialog.dart | 예 · 아니오 확인창 하나 (제목 · 설명 · 취소 | 확인). 지우기 · 되돌리기 앞은 모두 이것으로 — 화면마다 확인창을 따로 만들지 않는다 |
+| `CoverEntry` (covers) | cover_entry.dart | 이미지를 정하는 줄 (지금 이미지 + "이미지 고르기 / 바꾸기"). 곡 · 앨범 · 재생목록 · 받기가 모두 같은 이미지 페이지(`showCoverEditor`)를 연다: 고르기 · 위치 · 기본으로 되돌리기(확인 후)는 그 페이지 안에서, 이미지가 없으면 확대 · 회전 · 적용은 숨는다 |
 | `showAppMenu` · `AppMenuItem` | app_popup_menu.dart | 팝업 메뉴 (아이콘 + 글자, `destructive` 경고 색, `dividerBefore`, 색 견본용 `iconColor`, 고른 항목 `selected` 체크). 눌린 자리 또는 위젯 옆에 최상위 내비게이터로 연다 (곡 메뉴) |
 | `AppSwitch` | app_switch.dart | 토글 (켜짐 = 강조 색) |
 | `AppSlider` | app_slider.dart | 가는 막대 슬라이더 (가로 · 세로, 이퀄라이저) |

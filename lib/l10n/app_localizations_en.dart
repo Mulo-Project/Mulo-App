@@ -2003,6 +2003,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistPickAlready => 'Already added';
 
   @override
+  String get playlistAddTracks => 'Add songs';
+
+  @override
+  String get playlistAddTracksTitle => 'Add songs';
+
+  @override
+  String playlistAddTracksStart(int count) {
+    return 'Add $count';
+  }
+
+  @override
+  String get playlistAddTracksEmptyTitle => 'No songs to add';
+
+  @override
+  String get playlistAddTracksEmptyBody =>
+      'All songs in your library are already here, or nothing matches the search.';
+
+  @override
   String get playlistDetailEmpty =>
       'No songs yet. Use \"Add to playlist\" in a song\'s menu.';
 

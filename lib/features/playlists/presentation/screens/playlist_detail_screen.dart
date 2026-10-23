@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app/router.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
@@ -54,85 +55,125 @@ class _Body extends StatelessWidget {
     );
     final image = coverImageOf(context, CoverKey.playlist(playlistId));
 
+    final header = <Widget>[
+      AppTopBar(
+        title: pl == null ? '' : playlistNameOf(l10n, pl),
+        leading: const AppBackButton(),
+        actions: [
+          if (pl != null && !pl.isFavorites)
+            CircleIconButton(
+              icon: AppIcons.add,
+              tooltip: l10n.playlistAddTracks,
+              onPressed: () =>
+                  context.push(Routes.playlistAddTracks(playlistId)),
+            ),
+          if (pl != null)
+            Builder(
+              builder: (btn) => CircleIconButton(
+                icon: AppIcons.more,
+                tooltip: l10n.playlistMenuTooltip,
+                onPressed: () => showPlaylistMenu(
+                  btn,
+                  pl,
+                  onDeleted: () {
+                    if (context.mounted) context.pop();
+                  },
+                ),
+              ),
+            ),
+        ],
+      ),
+      if (pl == null)
+        Padding(
+          padding: AppSpacing.screen,
+          child: Text(
+            l10n.playlistNotFound,
+            style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
+          ),
+        )
+      else ...[
+        Padding(
+          padding: AppSpacing.screen,
+          child: AspectRatio(
+            aspectRatio: 2,
+            child: CoverCard(
+              image: image,
+              tone: playlistToneOf(pl),
+              color: coverColorOf(context, CoverKey.playlist(pl.id)),
+              shade: image != null,
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      playlistNameOf(l10n, pl),
+                      style: text.headlineSmall?.copyWith(color: p.onGlow),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      l10n.songCount(pl.trackCount),
+                      style: text.bodyMedium?.copyWith(color: p.onGlow),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        PlayShuffleRow(
+          tracks: tracks ?? const <Track>[],
+          playLabel: l10n.playlistMenuPlayAll,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        if (downloads.isNotEmpty)
+          _Downloads(playlistId: playlistId, items: downloads),
+      ],
+    ];
+
+    // 담긴 곡이 없으면 머리 아래 남은 자리 가운데에 안내와 "곡 추가" 버튼을 둔다.
+    if (pl != null && tracks != null && tracks.isEmpty && downloads.isEmpty) {
+      return SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ...header,
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
+                ),
+                child: EmptyState(
+                  icon: AppIcons.playlistPlay,
+                  title: l10n.playlistDetailEmpty,
+                  action: pl.isFavorites
+                      ? null
+                      : PillButton(
+                          label: l10n.playlistAddTracks,
+                          icon: AppIcons.add,
+                          onPressed: () => context.push(
+                            Routes.playlistAddTracks(playlistId),
+                          ),
+                        ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return SafeArea(
       bottom: false,
       child: LazyTrackList(
         padding: EdgeInsets.only(
           bottom: AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
         ),
-        header: [
-          AppTopBar(
-            title: pl == null ? '' : playlistNameOf(l10n, pl),
-            leading: const AppBackButton(),
-            actions: [
-              if (pl != null)
-                Builder(
-                  builder: (btn) => CircleIconButton(
-                    icon: AppIcons.more,
-                    tooltip: l10n.playlistMenuTooltip,
-                    onPressed: () => showPlaylistMenu(
-                      btn,
-                      pl,
-                      onDeleted: () {
-                        if (context.mounted) context.pop();
-                      },
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          if (pl == null)
-            Padding(
-              padding: AppSpacing.screen,
-              child: Text(
-                l10n.playlistNotFound,
-                style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
-              ),
-            )
-          else ...[
-            Padding(
-              padding: AppSpacing.screen,
-              child: AspectRatio(
-                aspectRatio: 2,
-                child: CoverCard(
-                  image: image,
-                  tone: playlistToneOf(pl),
-                  color: coverColorOf(context, CoverKey.playlist(pl.id)),
-                  shade: image != null,
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Text(
-                          playlistNameOf(l10n, pl),
-                          style: text.headlineSmall?.copyWith(color: p.onGlow),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          l10n.songCount(pl.trackCount),
-                          style: text.bodyMedium?.copyWith(color: p.onGlow),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            PlayShuffleRow(
-              tracks: tracks ?? const <Track>[],
-              playLabel: l10n.playlistMenuPlayAll,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            if (downloads.isNotEmpty)
-              _Downloads(playlistId: playlistId, items: downloads),
-            if (tracks != null && tracks.isEmpty && downloads.isEmpty)
-              EmptyState(title: l10n.playlistDetailEmpty),
-          ],
-        ],
+        header: header,
         trackCount: tracks?.length ?? 0,
         trackBuilder: (context, i) => TrackListTile(
           track: tracks![i],

@@ -322,6 +322,25 @@ void main() {
     expect(colors.saved, isEmpty);
   });
 
+  testWidgets('빈 재생목록 상세는 안내와 곡 추가 버튼이 있고, 보관함에서 곡을 골라 담는다', (tester) async {
+    await pumpPlaylists(tester);
+    await tester.tap(find.text('운동'));
+    await tester.pumpAndSettle();
+    expect(find.text('아직 담긴 곡이 없어요'), findsNothing);
+    expect(find.textContaining('아직 담긴 곡이 없어요'), findsOneWidget);
+    expect(find.byTooltip('곡 추가'), findsOneWidget); // 위 막대 버튼
+
+    await tester.tap(find.widgetWithText(PillButton, '곡 추가'));
+    await tester.pumpAndSettle();
+    expect(find.text('첫 곡'), findsOneWidget);
+    expect(find.text('둘째 곡'), findsOneWidget);
+    await tester.tap(find.text('첫 곡'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('1곡 추가'));
+    await tester.pumpAndSettle();
+    expect(repo.members['pl2'], {'t1'});
+  });
+
   testWidgets('카드를 누르면 재생목록 상세로 가서 담긴 곡이 보이고, 곡 메뉴는 빼기 · 파일 삭제', (
     tester,
   ) async {

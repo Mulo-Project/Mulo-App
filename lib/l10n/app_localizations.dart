@@ -3692,6 +3692,36 @@ abstract class AppLocalizations {
   /// **'이미 담겼어요'**
   String get playlistPickAlready;
 
+  /// No description provided for @playlistAddTracks.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 추가'**
+  String get playlistAddTracks;
+
+  /// No description provided for @playlistAddTracksTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 추가'**
+  String get playlistAddTracksTitle;
+
+  /// No description provided for @playlistAddTracksStart.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}곡 추가'**
+  String playlistAddTracksStart(int count);
+
+  /// No description provided for @playlistAddTracksEmptyTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'추가할 곡이 없어요'**
+  String get playlistAddTracksEmptyTitle;
+
+  /// No description provided for @playlistAddTracksEmptyBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'보관함의 곡이 모두 이 재생목록에 있거나 검색 결과가 없어요.'**
+  String get playlistAddTracksEmptyBody;
+
   /// No description provided for @playlistDetailEmpty.
   ///
   /// In ko, this message translates to:

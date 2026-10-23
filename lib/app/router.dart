@@ -12,6 +12,7 @@ import '../features/player/presentation/screens/player_screen.dart';
 import '../features/player/presentation/screens/queue_screen.dart';
 import '../features/playlists/presentation/screens/playlist_detail_screen.dart';
 import '../features/playlists/presentation/screens/playlist_import_screen.dart';
+import '../features/playlists/presentation/screens/playlist_add_tracks_screen.dart';
 import '../features/playlists/presentation/screens/playlist_pick_screen.dart';
 import '../features/playlists/presentation/screens/playlists_screen.dart';
 import '../features/search/presentation/screens/search_screen.dart';
@@ -45,6 +46,10 @@ abstract final class Routes {
 
   static String playlistDetail(String id) =>
       '/playlists/${Uri.encodeComponent(id)}';
+
+  /// 재생목록에 곡 추가 (보관함의 곡을 골라 담는다).
+  static String playlistAddTracks(String id) =>
+      '/playlists/${Uri.encodeComponent(id)}/add';
 
   /// [album]은 곡에 저장된 앨범 이름 (빈 문자열이면 알 수 없는 앨범).
   static String album(String album) =>
@@ -128,6 +133,16 @@ GoRouter createRouter({String initialLocation = Routes.home}) => GoRouter(
                 key: state.pageKey,
                 child: PlaylistImportScreen(
                   initialUrl: state.extra as String? ?? '',
+                ),
+              ),
+            ),
+            GoRoute(
+              path: ':id/add',
+              parentNavigatorKey: _rootKey,
+              pageBuilder: (context, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: PlaylistAddTracksScreen(
+                  playlistId: state.pathParameters['id']!,
                 ),
               ),
             ),

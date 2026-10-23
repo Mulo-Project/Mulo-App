@@ -1956,6 +1956,23 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playlistPickAlready => '이미 담겼어요';
 
   @override
+  String get playlistAddTracks => '곡 추가';
+
+  @override
+  String get playlistAddTracksTitle => '곡 추가';
+
+  @override
+  String playlistAddTracksStart(int count) {
+    return '$count곡 추가';
+  }
+
+  @override
+  String get playlistAddTracksEmptyTitle => '추가할 곡이 없어요';
+
+  @override
+  String get playlistAddTracksEmptyBody => '보관함의 곡이 모두 이 재생목록에 있거나 검색 결과가 없어요.';
+
+  @override
   String get playlistDetailEmpty => '아직 담긴 곡이 없어요. 곡 메뉴의 ‘재생목록에 추가’로 담아 보세요.';
 
   @override
