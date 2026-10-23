@@ -217,11 +217,8 @@ class _DetailViewState extends State<_DetailView> {
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ),
-              if (state.loading)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: AppSpacing.xs),
-                  child: LoadingIndicator.small(),
-                ),
+              // 받기 전 상세 화면은 목록 위에 얇은 막대로 읽는 중임을 알린다.
+              LoadingBar(loading: state.loading),
               Expanded(
                 child: ListView(
                   padding: AppSpacing.screen.copyWith(top: AppSpacing.sm),

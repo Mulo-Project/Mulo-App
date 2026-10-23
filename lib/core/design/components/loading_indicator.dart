@@ -51,3 +51,26 @@ class LoadingState extends StatelessWidget {
     ),
   );
 }
+
+/// 화면 위에 얇게 깔리는 가로 진행 막대 (2px). 화면 안내 · 목록 자리를 비우지 않고 "읽는 중"만 알릴 때
+/// 쓴다 (예: 받기 전 곡 자세히 화면). 자리를 차지하지 않도록 [loading]이 꺼져도 높이는 그대로 둔다.
+class LoadingBar extends StatelessWidget {
+  const LoadingBar({super.key, required this.loading});
+
+  final bool loading;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return SizedBox(
+      height: 2,
+      child: loading
+          ? LinearProgressIndicator(
+              minHeight: 2,
+              color: p.accent,
+              backgroundColor: p.outline,
+            )
+          : null,
+    );
+  }
+}
