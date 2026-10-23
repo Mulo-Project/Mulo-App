@@ -89,6 +89,10 @@ class Playlists extends Table {
   TextColumn get name => text()();
   DateTimeColumn get createdAt => dateTime()();
 
+  /// 재생목록 탭의 카드 순서 (작을수록 앞). 사용자가 순서를 바꾸면 1부터 매기고, 새로 만들면 맨 뒤로 간다.
+  /// 같으면 만든 순서.
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -128,7 +132,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'music_app'));
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -154,6 +158,8 @@ class AppDatabase extends _$AppDatabase {
       }
       // 커버 회전 각도를 더한다.
       if (from < 10) await m.addColumn(covers, covers.rotation);
+      // 재생목록 카드 순서를 더한다 (모두 0이면 만든 순서 그대로).
+      if (from < 11) await m.addColumn(playlists, playlists.sortOrder);
     },
   );
 }

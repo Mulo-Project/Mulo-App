@@ -789,6 +789,19 @@ class MemoryPlaylistRepository implements PlaylistRepository {
     members[playlistId]?.remove(trackId);
     _changes.add(null);
   }
+
+  @override
+  Future<void> reorder(List<String> playlistIds) async {
+    final byId = {for (final p in lists) p.id: p};
+    final next = [
+      for (final id in playlistIds) ?byId.remove(id),
+      ...byId.values,
+    ];
+    lists
+      ..clear()
+      ..addAll(next);
+    _changes.add(null);
+  }
 }
 
 /// 앱 전체를 띄우는 테스트용 의존성 (DB · 파일 · 권한 없이).

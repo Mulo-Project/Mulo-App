@@ -36,9 +36,13 @@ class DriftPlaylistRepository implements PlaylistRepository {
   }
 
   Future<List<Playlist>> _load() async {
-    final lists = await (_db.select(
-      _db.playlists,
-    )..orderBy([(t) => OrderingTerm.asc(t.createdAt)])).get();
+    // 사용자가 정한 순서, 같으면 만든 순서.
+    final lists =
+        await (_db.select(_db.playlists)..orderBy([
+              (t) => OrderingTerm.asc(t.sortOrder),
+              (t) => OrderingTerm.asc(t.createdAt),
+            ]))
+            .get();
 
     // 재생목록 id → 담긴 곡 id (담은 순서). 곡 수는 보관함에 없는 곡(지워진 곡)도
     // 담은 기록 그대로 센다.
@@ -142,11 +146,33 @@ class DriftPlaylistRepository implements PlaylistRepository {
   Future<Playlist> create(String name) async {
     final now = DateTime.now();
     final id = 'pl${now.microsecondsSinceEpoch}';
+    // 새 재생목록은 순서의 맨 뒤로 간다.
+    final maxOrder = _db.playlists.sortOrder.max();
+    final top = await (_db.selectOnly(
+      _db.playlists,
+    )..addColumns([maxOrder])).getSingle();
+    final next = (top.read(maxOrder) ?? 0) + 1;
     await _db
         .into(_db.playlists)
-        .insert(PlaylistsCompanion.insert(id: id, name: name, createdAt: now));
+        .insert(
+          PlaylistsCompanion.insert(
+            id: id,
+            name: name,
+            createdAt: now,
+            sortOrder: Value(next),
+          ),
+        );
     return Playlist(id: id, name: name);
   }
+
+  @override
+  Future<void> reorder(List<String> playlistIds) => _db.transaction(() async {
+    for (final (i, id) in playlistIds.indexed) {
+      await (_db.update(_db.playlists)..where((t) => t.id.equals(id))).write(
+        PlaylistsCompanion(sortOrder: Value(i + 1)),
+      );
+    }
+  });
 
   @override
   Future<void> rename(String playlistId, String name) =>

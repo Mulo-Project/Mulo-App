@@ -21,6 +21,7 @@ void registerPlaylists(GetIt sl) {
     ..registerFactory(() => AddTrackToPlaylists(sl()))
     ..registerFactory(() => AddTracksToPlaylist(sl()))
     ..registerFactory(() => RemoveTrackFromPlaylist(sl()))
+    ..registerFactory(() => ReorderPlaylists(sl()))
     ..registerFactory(
       () => PlaylistsCubit(
         watch: sl(),
@@ -31,6 +32,7 @@ void registerPlaylists(GetIt sl) {
         addTrack: sl(),
         addTracks: sl(),
         removeTrack: sl(),
+        reorder: sl(),
       ),
     )
     ..registerFactory(() => PlaylistTracksCubit(sl()))
