@@ -342,7 +342,7 @@ void main() {
     expect(repo.members['pl2'], {'t1'});
   });
 
-  testWidgets('곡 추가 화면: 아티스트로 거르면 그 아티스트의 곡만 보인다', (tester) async {
+  testWidgets('곡 추가 화면: 보관함과 같은 탭, 아티스트 줄을 누르면 그 곡이 모두 골라진다', (tester) async {
     Track by(String id, String title, String artist) => Track(
       id: id,
       title: title,
@@ -360,16 +360,23 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(PillButton, '곡 추가'));
     await tester.pumpAndSettle();
+    // 곡 탭: 곡 줄이 보이고, 탭 넷이 있다.
     expect(find.text('첫 곡'), findsOneWidget);
-    expect(find.text('둘째 곡'), findsOneWidget);
-    // 앨범은 하나뿐이라 앨범 필터는 없고, 아티스트 필터만 있다.
-    expect(find.text('모든 앨범'), findsNothing);
-    await tester.tap(find.text('모든 아티스트'));
+    expect(find.text('아티스트'), findsOneWidget);
+    expect(find.text('앨범'), findsOneWidget);
+    expect(find.text('장르'), findsOneWidget);
+
+    // 아티스트 탭: 묶음 줄을 누르면 그 아티스트의 곡이 모두 골라진다.
+    await tester.tap(find.text('아티스트'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('가수B').last);
-    await tester.pumpAndSettle();
+    expect(find.text('가수A'), findsOneWidget);
+    expect(find.text('가수B'), findsOneWidget);
     expect(find.text('첫 곡'), findsNothing);
-    expect(find.text('둘째 곡'), findsOneWidget);
+    await tester.tap(find.text('가수B'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('1곡 추가'));
+    await tester.pumpAndSettle();
+    expect(repo.members['pl2'], {'t2'});
   });
 
   testWidgets('카드를 누르면 재생목록 상세로 가서 담긴 곡이 보이고, 곡 메뉴는 빼기 · 파일 삭제', (
