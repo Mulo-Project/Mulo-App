@@ -6,7 +6,7 @@ import '../../../../core/l10n/l10n.dart';
 import '../bloc/cover_color_cubit.dart';
 import '../bloc/cover_cubit.dart';
 import 'cover_editor_page.dart';
-import 'cover_entry.dart';
+import 'cover_settings_section.dart';
 
 /// 꾸미기 시트: 곡 · 앨범 · 아티스트 · 재생목록의 이미지와 색을 한 곳에서 바꾼다.
 /// 이미지는 줄을 눌러 이미지 페이지([showCoverEditor])에서 고르고 · 맞추고 · 기본으로 되돌린다
@@ -96,30 +96,17 @@ class _DecorateSheet extends StatelessWidget {
             children: [
               AppSheetTitle(l10n.decorateTitle, subtitle: title),
               const SizedBox(height: AppSpacing.lg),
-              CoverEntry(
+              CoverSettingsSection(
                 image: image,
-                label: l10n.decorateImage,
-                tone: tone,
                 color: color,
+                tone: tone,
                 icon: icon,
-                onTap: () => _edit(context, covers, art),
+                showColor: allowColor,
+                onEditImage: () => _edit(context, covers, art),
+                onColorChanged: (c) => c == null
+                    ? colors.clear(coverKey)
+                    : colors.setColor(coverKey, c),
               ),
-              if (allowColor) ...[
-                const SizedBox(height: AppSpacing.lg),
-                const AppDivider(),
-                const SizedBox(height: AppSpacing.md),
-                SectionTitle(l10n.decorateColor, padded: false),
-                const SizedBox(height: AppSpacing.xs),
-                ColorPicker(
-                  selected: color,
-                  autoLabel: l10n.playlistColorAuto,
-                  customLabel: l10n.colorCustom,
-                  optionLabel: l10n.colorOption,
-                  onChanged: (c) => c == null
-                      ? colors.clear(coverKey)
-                      : colors.setColor(coverKey, c),
-                ),
-              ],
             ],
           ),
         ),

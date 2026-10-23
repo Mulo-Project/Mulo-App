@@ -6,7 +6,7 @@ import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../covers/presentation/widgets/cover_editor_page.dart';
-import '../../../covers/presentation/widgets/cover_entry.dart';
+import '../../../covers/presentation/widgets/cover_settings_section.dart';
 import '../bloc/playlists_cubit.dart';
 
 /// 새 재생목록: 이름 · (이미지가 없을 때의) 카드 색 · 이미지를 정해 만든다.
@@ -106,26 +106,15 @@ class _NewPlaylistSheetState extends State<_NewPlaylistSheet> {
                 onSubmitted: (_) => _create(),
               ),
               const SizedBox(height: AppSpacing.md),
-              CoverEntry(
+              // 꾸미기 시트와 같은 설정 구역. 색은 이미지가 없을 때만 카드에 보인다.
+              CoverSettingsSection(
                 image: art == null ? null : imageOfCoverArt(art),
-                label: l10n.decorateImage,
                 color: _color,
                 icon: AppIcons.playlistPlay,
-                onTap: _pickImage,
+                showColor: art == null,
+                onEditImage: _pickImage,
+                onColorChanged: (c) => setState(() => _color = c),
               ),
-              // 색은 이미지가 없을 때만 카드에 보인다.
-              if (art == null) ...[
-                const SizedBox(height: AppSpacing.md),
-                Text(l10n.playlistMenuColor, style: text.labelLarge),
-                const SizedBox(height: AppSpacing.xs),
-                ColorPicker(
-                  selected: _color,
-                  autoLabel: l10n.playlistColorAuto,
-                  customLabel: l10n.colorCustom,
-                  optionLabel: l10n.colorOption,
-                  onChanged: (c) => setState(() => _color = c),
-                ),
-              ],
               const SizedBox(height: AppSpacing.lg),
               PillButton(label: l10n.playlistCreate, onPressed: _create),
             ],

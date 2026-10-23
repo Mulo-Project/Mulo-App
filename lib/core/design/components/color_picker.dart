@@ -53,8 +53,8 @@ class ColorPicker extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Wrap(
-          spacing: AppSpacing.xs,
-          runSpacing: AppSpacing.xs,
+          spacing: AppSpacing.xs - 2,
+          runSpacing: AppSpacing.xs - 2,
           children: [
             _Dot(
               label: autoLabel,
@@ -75,14 +75,14 @@ class ColorPicker extends StatelessWidget {
               ),
           ],
         ),
-        const SizedBox(height: AppSpacing.md),
+        const SizedBox(height: AppSpacing.sm),
         Text(
           customLabel,
-          style: text.labelLarge?.copyWith(
+          style: text.labelMedium?.copyWith(
             color: custom ? p.accent : p.onSurfaceMuted,
           ),
         ),
-        const SizedBox(height: AppSpacing.xs),
+        const SizedBox(height: AppSpacing.xxs),
         _HueBar(selected: custom ? selected : null, onChanged: onChanged),
       ],
     );
@@ -118,14 +118,14 @@ class _Dot extends StatelessWidget {
           child: ExcludeSemantics(
             child: AnimatedContainer(
               duration: AppMotion.medium,
-              width: 40,
-              height: 40,
+              width: 28,
+              height: 28,
               decoration: BoxDecoration(
                 color: color,
-                borderRadius: BorderRadius.circular(AppRadii.sm),
+                borderRadius: BorderRadius.circular(AppRadii.sm - 4),
                 border: Border.all(
                   color: selected ? p.accent : p.outline,
-                  width: selected ? 3 : 1,
+                  width: selected ? 2 : 1,
                 ),
               ),
               child:
@@ -133,7 +133,7 @@ class _Dot extends StatelessWidget {
                   (selected
                       ? Icon(
                           AppIcons.check,
-                          size: AppSizes.iconMd,
+                          size: AppSizes.iconSm,
                           color: p.onGlow,
                         )
                       : null),
@@ -154,7 +154,7 @@ class _HueBar extends StatelessWidget {
 
   static const _saturation = .7;
   static const _lightness = .48;
-  static const _height = 36.0;
+  static const _height = 20.0;
 
   static final _hues = [
     for (var h = 0; h <= 360; h += 30)
