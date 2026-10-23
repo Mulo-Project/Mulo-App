@@ -277,28 +277,49 @@ class PlayerCover extends StatelessWidget {
 }
 
 /// 가사 보기: 커버 자리를 가사가 대신한다.
-class PlayerLyricsPane extends StatelessWidget {
+///
+/// 플레이어 화면은 재생 위치가 바뀔 때마다(0.25초) 통째로 다시 그려진다. 같은 곡 · 같은 언어면
+/// 가사 보기 위젯을 그대로 돌려줘서 그 틱마다 가사 전체를 다시 만들지 않는다
+/// (가사 보기는 지금 줄이 바뀔 때만 스스로 다시 그린다).
+class PlayerLyricsPane extends StatefulWidget {
   const PlayerLyricsPane({super.key, required this.track});
 
   final Track track;
 
   @override
-  Widget build(BuildContext context) => Stack(
-    children: [
-      LyricsView(track: track),
-      // 가사만 크게 보기.
-      Positioned(
-        top: 0,
-        right: 0,
-        child: CircleIconButton(
-          icon: AppIcons.fullscreen,
-          tooltip: context.l10n.playerLyricsExpand,
-          size: AppSizes.circleButton * .8,
-          onPressed: () => LyricsFullScreen.open(context),
-        ),
-      ),
-    ],
-  );
+  State<PlayerLyricsPane> createState() => _PlayerLyricsPaneState();
+}
+
+class _PlayerLyricsPaneState extends State<PlayerLyricsPane> {
+  Widget? _view;
+  Track? _viewTrack;
+  Locale? _viewLocale;
+
+  @override
+  Widget build(BuildContext context) {
+    final locale = Localizations.localeOf(context);
+    if (_view == null || _viewTrack != widget.track || _viewLocale != locale) {
+      _viewTrack = widget.track;
+      _viewLocale = locale;
+      _view = Stack(
+        children: [
+          LyricsView(track: widget.track),
+          // 가사만 크게 보기.
+          Positioned(
+            top: 0,
+            right: 0,
+            child: CircleIconButton(
+              icon: AppIcons.fullscreen,
+              tooltip: context.l10n.playerLyricsExpand,
+              size: AppSizes.circleButton * .8,
+              onPressed: () => LyricsFullScreen.open(this.context),
+            ),
+          ),
+        ],
+      );
+    }
+    return _view!;
+  }
 }
 
 /// 기본 원형 손잡이 + 아래로 이어지는 둥근 삼각형 + 현재 재생 시간 상자를 한 덩어리로 그린 손잡이.

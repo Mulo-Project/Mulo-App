@@ -350,10 +350,10 @@ class _LyricsViewState extends State<LyricsView> {
       _shown = -2;
       _placed = false;
     }
-    final position = context.select<NowPlayingCubit, Duration>(
-      (c) => c.state.position,
+    // 재생 위치(0.25초마다 바뀜) 대신 "지금 줄 번호"만 구독한다: 줄이 바뀔 때만 다시 그린다.
+    final current = context.select<NowPlayingCubit, int>(
+      (c) => lyrics.currentLine(c.state.position),
     );
-    final current = lyrics.currentLine(position);
     // 같은 시간으로 묶인 줄은 한 덩어리로 함께 강조하고, 덩어리 가운데 줄로 따라간다.
     final group = lyrics.groupAt(current);
     final vm = context.read<NowPlayingCubit>();
@@ -453,14 +453,17 @@ class _LyricsViewState extends State<LyricsView> {
             right: AppSpacing.md,
             top: mid - bandHeight / 2,
             height: bandHeight,
-            child: _band(
-              coverOn,
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  color: p.accent.withValues(alpha: .1),
-                  borderRadius: BorderRadius.circular(AppRadii.sm),
+            // 줄이 미끄러지는 동안 흐림 띠가 매 프레임 다시 그려지지 않게 따로 그린다.
+            child: RepaintBoundary(
+              child: _band(
+                coverOn,
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: p.accent.withValues(alpha: .1),
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
+                  ),
+                  child: const SizedBox.expand(),
                 ),
-                child: const SizedBox.expand(),
               ),
             ),
           );
