@@ -59,11 +59,6 @@ class RecentSection extends StatelessWidget {
                     formatListened(l10n, summary.todayListened),
                     l10n.homeToday,
                   ),
-                  Icon(
-                    AppIcons.headphones,
-                    size: AppSizes.iconLg,
-                    color: p.accent,
-                  ),
                 ],
               ),
             ),
