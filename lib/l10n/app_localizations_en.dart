@@ -2350,6 +2350,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'When subscribed channels post new videos, you can pick them to download here.';
 
   @override
+  String newVideosSummary(int channels, int videos) {
+    return '$channels channels · $videos videos';
+  }
+
+  @override
   String newVideosStart(int count) {
     return 'Download $count';
   }

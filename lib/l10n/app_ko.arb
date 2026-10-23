@@ -928,6 +928,8 @@
   "newVideosChecking": "새 영상을 확인하고 있어요",
   "newVideosEmptyTitle": "새 영상이 없어요",
   "newVideosEmptyBody": "구독한 채널에 새 영상이 올라오면 여기에서 골라 받을 수 있어요.",
+  "newVideosSummary": "채널 {channels}개 · 영상 {videos}개",
+  "@newVideosSummary": {"placeholders": {"channels": {"type": "int"}, "videos": {"type": "int"}}},
   "newVideosStart": "{count}곡 받기",
   "@newVideosStart": {"placeholders": {"count": {"type": "int"}}},
   "newVideosStarted": "{count}곡을 받기 시작했어요",

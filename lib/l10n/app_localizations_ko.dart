@@ -2290,6 +2290,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get newVideosEmptyBody => '구독한 채널에 새 영상이 올라오면 여기에서 골라 받을 수 있어요.';
 
   @override
+  String newVideosSummary(int channels, int videos) {
+    return '채널 $channels개 · 영상 $videos개';
+  }
+
+  @override
   String newVideosStart(int count) {
     return '$count곡 받기';
   }

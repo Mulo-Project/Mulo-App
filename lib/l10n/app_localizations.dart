@@ -4304,6 +4304,12 @@ abstract class AppLocalizations {
   /// **'구독한 채널에 새 영상이 올라오면 여기에서 골라 받을 수 있어요.'**
   String get newVideosEmptyBody;
 
+  /// No description provided for @newVideosSummary.
+  ///
+  /// In ko, this message translates to:
+  /// **'채널 {channels}개 · 영상 {videos}개'**
+  String newVideosSummary(int channels, int videos);
+
   /// No description provided for @newVideosStart.
   ///
   /// In ko, this message translates to:

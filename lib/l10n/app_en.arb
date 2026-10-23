@@ -821,6 +821,8 @@
   "newVideosChecking": "Checking for new videos",
   "newVideosEmptyTitle": "No new videos",
   "newVideosEmptyBody": "When subscribed channels post new videos, you can pick them to download here.",
+  "newVideosSummary": "{channels} channels · {videos} videos",
+  "@newVideosSummary": {"placeholders": {"channels": {"type": "int"}, "videos": {"type": "int"}}},
   "newVideosStart": "Download {count}",
   "newVideosStarted": "Started downloading {count} songs",
   "newVideosSkipped": "Those songs are already downloaded",
