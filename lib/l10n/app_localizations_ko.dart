@@ -1971,6 +1971,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get filterAllGenres => '모든 장르';
 
   @override
+  String get playlistReorder => '순서 바꾸기';
+
+  @override
+  String get playlistReorderTitle => '순서 바꾸기';
+
+  @override
+  String get playlistReorderHint =>
+      '길게 눌러 끌어서 재생목록 카드의 순서를 바꿔요. 좋아요 목록은 늘 맨 앞이에요.';
+
+  @override
   String get playlistAddTracks => '곡 추가';
 
   @override

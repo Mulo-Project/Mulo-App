@@ -321,6 +321,40 @@ void main() {
     expect(colors.saved, isEmpty);
   });
 
+  testWidgets('순서 바꾸기: 길게 눌러 끌면 카드 순서가 바뀌고 저장된다 (좋아요 목록은 맨 앞)', (tester) async {
+    await pumpPlaylists(tester);
+    // 카드 순서(두 열): [좋아요 | 출근길] 다음 줄에 [운동].
+    expect(
+      tester.getTopLeft(find.text('출근길')).dy,
+      lessThan(tester.getTopLeft(find.text('운동')).dy),
+    );
+    await tester.tap(find.byTooltip('순서 바꾸기'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('길게 눌러 끌어서 재생목록 카드의 순서를 바꿔요. 좋아요 목록은 늘 맨 앞이에요.'),
+      findsOneWidget,
+    );
+
+    final from = tester.getCenter(find.text('운동'));
+    final to = tester.getCenter(find.text('출근길'));
+    final gesture = await tester.startGesture(from);
+    await tester.pump(const Duration(milliseconds: 700));
+    await gesture.moveTo(to - const Offset(0, 70));
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump();
+    await gesture.up();
+    await tester.pumpAndSettle();
+
+    expect(repo.lists.map((p) => p.name), ['운동', '출근길']);
+    await tester.tap(find.byTooltip('뒤로'));
+    await tester.pumpAndSettle();
+    // 카드가 바뀐 순서로 놓인다: [좋아요 | 운동] 다음 줄에 [출근길].
+    expect(
+      tester.getTopLeft(find.text('운동')).dy,
+      lessThan(tester.getTopLeft(find.text('출근길')).dy),
+    );
+  });
+
   testWidgets('빈 재생목록 상세는 안내와 곡 추가 버튼이 있고, 보관함에서 곡을 골라 담는다', (tester) async {
     await pumpPlaylists(tester);
     await tester.tap(find.text('운동'));

@@ -29,6 +29,24 @@ void main() {
     expect(lists.every((p) => p.trackCount == 0), isTrue);
   });
 
+  test('순서를 바꾸면 그 순서로 나오고, 새로 만든 재생목록은 맨 뒤로 간다', () async {
+    final a = await repo.create('A');
+    await Future<void>.delayed(const Duration(milliseconds: 2));
+    final b = await repo.create('B');
+    await Future<void>.delayed(const Duration(milliseconds: 2));
+    final c = await repo.create('C');
+    expect((await userLists()).map((p) => p.name), ['A', 'B', 'C']);
+
+    await repo.reorder([c.id, a.id, b.id]);
+    expect((await userLists()).map((p) => p.name), ['C', 'A', 'B']);
+
+    await Future<void>.delayed(const Duration(milliseconds: 2));
+    await repo.create('D');
+    expect((await userLists()).map((p) => p.name), ['C', 'A', 'B', 'D']);
+    // 좋아요 목록은 늘 맨 앞.
+    expect((await repo.watchPlaylists().first).first.isFavorites, isTrue);
+  });
+
   test('곡을 여러 재생목록에 넣고, 같은 곡을 또 넣어도 한 번만 센다', () async {
     final a = await repo.create('A');
     await Future<void>.delayed(const Duration(milliseconds: 2));

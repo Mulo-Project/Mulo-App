@@ -31,6 +31,13 @@ class PlaylistsScreen extends StatelessWidget {
             title: l10n.navPlaylists,
             subtitle: l10n.playlistsSubtitle,
             actions: [
+              // 직접 만든 재생목록이 둘 이상일 때만 순서를 바꿀 수 있다.
+              if (lists.where((p) => !p.isFavorites).length > 1)
+                CircleIconButton(
+                  icon: AppIcons.sort,
+                  tooltip: l10n.playlistReorder,
+                  onPressed: () => context.push(Routes.playlistReorder),
+                ),
               CircleIconButton(
                 icon: AppIcons.add,
                 tooltip: l10n.playlistsNew,

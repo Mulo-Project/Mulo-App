@@ -3722,6 +3722,24 @@ abstract class AppLocalizations {
   /// **'모든 장르'**
   String get filterAllGenres;
 
+  /// No description provided for @playlistReorder.
+  ///
+  /// In ko, this message translates to:
+  /// **'순서 바꾸기'**
+  String get playlistReorder;
+
+  /// No description provided for @playlistReorderTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'순서 바꾸기'**
+  String get playlistReorderTitle;
+
+  /// No description provided for @playlistReorderHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'길게 눌러 끌어서 재생목록 카드의 순서를 바꿔요. 좋아요 목록은 늘 맨 앞이에요.'**
+  String get playlistReorderHint;
+
   /// No description provided for @playlistAddTracks.
   ///
   /// In ko, this message translates to:

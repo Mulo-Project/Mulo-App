@@ -127,3 +127,18 @@ class RemoveTrackFromPlaylist
   Future<void> call(RemoveTrackFromPlaylistParams p) =>
       _repo.removeTrack(p.trackId, p.playlistId);
 }
+
+/// 재생목록 카드 순서 바꾸기: 좋아요 목록과 중복 · 빈 id는 빼고 저장한다 (좋아요 목록은 늘 맨 앞).
+class ReorderPlaylists implements UseCase<void, List<String>> {
+  const ReorderPlaylists(this._repo);
+
+  final PlaylistRepository _repo;
+
+  @override
+  Future<void> call(List<String> playlistIds) => _repo.reorder([
+    ...{
+      for (final id in playlistIds)
+        if (id.isNotEmpty && id != Playlist.favoritesId) id,
+    },
+  ]);
+}

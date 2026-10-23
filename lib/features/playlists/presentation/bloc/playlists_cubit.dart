@@ -20,6 +20,7 @@ class PlaylistsCubit extends Cubit<List<Playlist>> {
     required this._addTrack,
     required this._addTracks,
     required this._removeTrack,
+    required this._reorder,
   }) : super(const []);
 
   final WatchPlaylists _watch;
@@ -30,6 +31,7 @@ class PlaylistsCubit extends Cubit<List<Playlist>> {
   final AddTrackToPlaylists _addTrack;
   final AddTracksToPlaylist _addTracks;
   final RemoveTrackFromPlaylist _removeTrack;
+  final ReorderPlaylists _reorder;
   StreamSubscription<List<Playlist>>? _sub;
 
   void start() {
@@ -61,6 +63,9 @@ class PlaylistsCubit extends Cubit<List<Playlist>> {
   /// 곡을 재생목록에서 뺀다 (보관함에는 남는다).
   Future<void> removeTrack(String trackId, String playlistId) =>
       _removeTrack(RemoveTrackFromPlaylistParams(trackId, playlistId));
+
+  /// 재생목록 카드 순서를 [ids] 순서로 정한다 (좋아요 목록은 늘 맨 앞).
+  Future<void> reorder(List<String> ids) => _reorder(ids);
 
   /// 좋아요한 곡인지.
   bool isFavorite(String trackId) =>

@@ -2018,6 +2018,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get filterAllGenres => 'All genres';
 
   @override
+  String get playlistReorder => 'Reorder';
+
+  @override
+  String get playlistReorderTitle => 'Reorder';
+
+  @override
+  String get playlistReorderHint =>
+      'Press and hold, then drag to reorder the playlist cards. Liked songs always stay first.';
+
+  @override
   String get playlistAddTracks => 'Add songs';
 
   @override
