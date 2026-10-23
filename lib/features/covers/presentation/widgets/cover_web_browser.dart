@@ -185,14 +185,9 @@ class _CoverWebBrowserState extends State<CoverWebBrowser> {
                   ),
                 ),
               ),
-              Expanded(
-                child: Stack(
-                  children: [
-                    WebViewWidget(controller: _web),
-                    if (_loading) const IgnorePointer(child: LoadingState()),
-                  ],
-                ),
-              ),
+              // 웹 페이지를 읽는 동안은 위에 얇은 막대로 알린다.
+              LoadingBar(loading: _loading),
+              Expanded(child: WebViewWidget(controller: _web)),
             ],
           ),
         ),
