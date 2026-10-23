@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-/// 한 줄 글자. 칸보다 길면 잠깐 멈췄다가 옆으로 흘러가고, 들어가면 그냥 [Text]다.
+/// 한 줄 글자. 칸보다 길면 멈춤 없이 옆으로 계속 이어져 흐르고(끝이 지나면 처음이 바로 이어 나온다),
+/// 들어가면 그냥 [Text]다.
 ///
 /// [scroll]이 false이거나 기기가 동작 줄이기를 켰으면 넘칠 때도 `…`로 줄인다 (목록처럼 한꺼번에 움직이면 산만한 곳).
 class MarqueeText extends StatefulWidget {
@@ -25,7 +26,7 @@ class _MarqueeTextState extends State<MarqueeText>
     with SingleTickerProviderStateMixin {
   static const _gap = 40.0;
   static const _pixelsPerSecond = 36.0;
-  static const _pause = Duration(milliseconds: 1600);
+  static const _fade = 16.0;
 
   late final AnimationController _controller = AnimationController(vsync: this);
   double _overflow = 0;
@@ -36,19 +37,19 @@ class _MarqueeTextState extends State<MarqueeText>
     super.dispose();
   }
 
-  void _run(double overflow) {
+  void _run(double overflow, double textWidth) {
     if (overflow == _overflow) return;
     _overflow = overflow;
     if (overflow <= 0) {
       _controller.reset();
       return;
     }
-    final travel = overflow + _gap;
-    final move = Duration(
-      milliseconds: (travel / _pixelsPerSecond * 1000).round(),
-    );
+    // 글자 한 번 + 틈만큼 가면 뒤따르는 같은 글자가 제자리에 와서 끊김 없이 이어진다.
+    final travel = textWidth + _gap;
     _controller
-      ..duration = _pause + move
+      ..duration = Duration(
+        milliseconds: (travel / _pixelsPerSecond * 1000).round(),
+      )
       ..repeat();
   }
 
@@ -79,24 +80,34 @@ class _MarqueeTextState extends State<MarqueeText>
         if (!constraints.hasBoundedWidth || overflow <= 0.5) {
           if (_overflow != 0) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) _run(0);
+              if (mounted) _run(0, 0);
             });
           }
           return plain;
         }
         if (_overflow != overflow) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) _run(overflow);
+            if (mounted) _run(overflow, textWidth);
           });
         }
-        final travel = overflow + _gap;
-        final moveShare =
-            (travel / _pixelsPerSecond * 1000) /
-            (_pause.inMilliseconds + travel / _pixelsPerSecond * 1000);
+        final travel = textWidth + _gap;
+        final edge = (_fade / constraints.maxWidth).clamp(0.0, .3);
+        final label = Text(
+          widget.text,
+          style: widget.style,
+          maxLines: 1,
+          softWrap: false,
+        );
         return ShaderMask(
-          shaderCallback: (rect) => const LinearGradient(
-            colors: [Colors.white, Colors.white, Colors.transparent],
-            stops: [0, .92, 1],
+          // 양쪽 끝을 살짝 흐리게 해서 글자가 들어오고 나가는 자리가 부드럽게 보인다.
+          shaderCallback: (rect) => LinearGradient(
+            colors: const [
+              Colors.transparent,
+              Colors.white,
+              Colors.white,
+              Colors.transparent,
+            ],
+            stops: [0, edge, 1 - edge, 1],
           ).createShader(rect),
           blendMode: BlendMode.dstIn,
           child: SizedBox(
@@ -105,11 +116,7 @@ class _MarqueeTextState extends State<MarqueeText>
               child: AnimatedBuilder(
                 animation: _controller,
                 builder: (context, child) {
-                  final t = _controller.value;
-                  final start = 1 - moveShare;
-                  final dx = t <= start
-                      ? 0.0
-                      : (t - start) / moveShare * travel;
+                  final dx = _controller.value * travel;
                   return OverflowBox(
                     alignment: AlignmentDirectional.centerStart,
                     minWidth: 0,
@@ -120,11 +127,13 @@ class _MarqueeTextState extends State<MarqueeText>
                     ),
                   );
                 },
-                child: Text(
-                  widget.text,
-                  style: widget.style,
-                  maxLines: 1,
-                  softWrap: false,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    label,
+                    const SizedBox(width: _gap),
+                    label,
+                  ],
                 ),
               ),
             ),
