@@ -48,10 +48,20 @@ class ExplodeChannelSearcher implements ChannelSearcher {
           subscribers ??= parseSubscriberCount(html);
         }
       }
+      // 검색 결과의 소개는 앞부분 한 토막이라 소개 페이지에서 전체를 읽는다 (못 읽어도 나머지는 보여 준다).
+      String? description;
+      try {
+        final about = await yt.channels.getAboutPage(channelId);
+        final text = about.description?.trim();
+        if (text != null && text.isNotEmpty) description = text;
+      } on Object {
+        // 소개는 덤이라 못 읽으면 검색 결과의 한 토막을 그대로 쓴다.
+      }
       return ChannelDetails(
         bannerUrl: banner,
         logoUrl: c.logoUrl.isEmpty ? null : c.logoUrl,
         subscriberCount: subscribers,
+        description: description,
       );
     } finally {
       yt.close();

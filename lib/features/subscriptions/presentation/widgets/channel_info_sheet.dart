@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
@@ -10,6 +9,7 @@ import '../../domain/usecases/subscription_usecases.dart';
 import '../bloc/channel_info_cubit.dart';
 import '../bloc/subscriptions_cubit.dart';
 import 'category_choices.dart';
+import 'channel_header.dart';
 import 'save_path_row.dart';
 
 /// 채널 검색 결과를 눌렀을 때 뜨는 간단한 채널 정보 시트: 이미지 · 이름 · 구독자 수 · 소개,
@@ -96,8 +96,6 @@ class _ChannelInfoSheetState extends State<_ChannelInfoSheet> {
     final text = Theme.of(context).textTheme;
     final p = context.palette;
     final hit = widget.hit;
-    final locale = Localizations.localeOf(context).toString();
-    final thumb = hit.thumbnailUrl;
     return SingleChildScrollView(
       padding: appSheetPadding,
       child: BlocBuilder<ChannelInfoCubit, ChannelInfoState>(
@@ -106,54 +104,16 @@ class _ChannelInfoSheetState extends State<_ChannelInfoSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (info.bannerUrl != null) ...[
-              ChannelBanner(url: info.bannerUrl!),
-              const SizedBox(height: AppSpacing.md),
-            ],
-            Row(
-              children: [
-                ArtworkBox(
-                  image: thumb == null ? null : NetworkImage(thumb),
-                  size: 64,
-                  radius: 32,
-                  tone: toneFor(hit.id),
-                  icon: AppIcons.person,
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(hit.name, style: text.titleMedium),
-                      const SizedBox(height: AppSpacing.hair),
-                      Text(
-                        [
-                          if (info.subscriberCount != null)
-                            l10n.mediaDetailSubscribers(
-                              NumberFormat.compact(locale: locale)
-                                  .format(info.subscriberCount),
-                            ),
-                          if (hit.videoCount != null && hit.videoCount! > 0)
-                            l10n.channelInfoVideoCount(hit.videoCount!),
-                        ].join(' · '),
-                        style: text.bodyMedium?.copyWith(
-                          color: p.onSurfaceMuted,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+            ChannelHeader(
+              id: hit.id,
+              name: hit.name,
+              thumbnailUrl: hit.thumbnailUrl,
+              bannerUrl: info.bannerUrl,
+              subscriberCount: info.subscriberCount,
+              videoCount: hit.videoCount,
+              // 소개는 읽어 온 전체를 먼저 쓰고, 아직이거나 못 읽었으면 검색 결과의 한 토막.
+              description: info.description ?? hit.description,
             ),
-            if (hit.description.isNotEmpty) ...[
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                hit.description,
-                style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
-                maxLines: 4,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
             const SizedBox(height: AppSpacing.lg),
             SectionTitle(l10n.subscriptionsCategories, padded: false),
             const SizedBox(height: AppSpacing.xxs),
@@ -206,29 +166,4 @@ class _ChannelInfoSheetState extends State<_ChannelInfoSheet> {
       ),
     );
   }
-}
-
-/// 채널 배너: 가로로 긴 이미지를 둥근 모서리로 보여 준다. 못 불러오면 자리를 비운다.
-class ChannelBanner extends StatelessWidget {
-  const ChannelBanner({super.key, required this.url});
-
-  final String url;
-
-  @override
-  Widget build(BuildContext context) => ClipRRect(
-    borderRadius: BorderRadius.circular(AppRadii.md),
-    child: AspectRatio(
-      aspectRatio: 16 / 5,
-      child: Image.network(
-        url,
-        fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => const SizedBox.shrink(),
-        frameBuilder: (context, child, frame, sync) => AnimatedOpacity(
-          opacity: frame == null && !sync ? 0 : 1,
-          duration: AppMotion.medium,
-          child: child,
-        ),
-      ),
-    ),
-  );
 }

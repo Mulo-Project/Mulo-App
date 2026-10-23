@@ -308,7 +308,14 @@ class _DetailViewState extends State<_DetailView> {
                     if (hit.description.isNotEmpty)
                       SectionBlock(
                         title: l10n.mediaDetailDescription,
-                        children: [_Description(hit.description)],
+                        children: [
+                          ExpandableText(
+                            hit.description,
+                            toggleKey: const ValueKey(
+                              'detail-description-toggle',
+                            ),
+                          ),
+                        ],
                       ),
                     const SizedBox(height: AppSpacing.md),
                   ],
@@ -523,78 +530,6 @@ class _ChannelRow extends StatelessWidget {
             onPressed: onOpen,
           ),
       ],
-    );
-  }
-}
-
-/// 영상 설명: 4줄까지 보이고, 그보다 길 때만 "더 보기"가 나온다.
-/// 설명 글이나 버튼을 누르면 펼치고 접는다.
-class _Description extends StatefulWidget {
-  const _Description(this.text);
-
-  final String text;
-
-  static const collapsedLines = 4;
-
-  @override
-  State<_Description> createState() => _DescriptionState();
-}
-
-class _DescriptionState extends State<_Description> {
-  bool _open = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final style = Theme.of(context).textTheme.bodyMedium
-        ?.copyWith(color: context.palette.onSurfaceMuted);
-
-    return LayoutBuilder(
-      builder: (context, box) {
-        final painter = TextPainter(
-          text: TextSpan(text: widget.text, style: style),
-          maxLines: _Description.collapsedLines,
-          textDirection: Directionality.of(context),
-          textScaler: MediaQuery.textScalerOf(context),
-        )..layout(maxWidth: box.maxWidth);
-        final overflows = painter.didExceedMaxLines;
-        painter.dispose();
-
-        final body = AnimatedSize(
-          duration: AppMotion.medium,
-          curve: AppMotion.standard,
-          alignment: Alignment.topLeft,
-          child: Text(
-            widget.text,
-            style: style,
-            maxLines: _open || !overflows ? null : _Description.collapsedLines,
-            overflow: _open || !overflows
-                ? TextOverflow.visible
-                : TextOverflow.ellipsis,
-          ),
-        );
-        if (!overflows) return body;
-
-        void toggle() => setState(() => _open = !_open);
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: toggle,
-              child: body,
-            ),
-            Center(
-              child: PlainButton(
-                key: const ValueKey('detail-description-toggle'),
-                label: _open ? l10n.mediaDetailLess : l10n.mediaDetailMore,
-                icon: _open ? AppIcons.chevronUp : AppIcons.chevronDown,
-                onPressed: toggle,
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 }

@@ -8,6 +8,7 @@ class ChannelInfoState extends Equatable {
     this.loading = true,
     this.subscriberCount,
     this.bannerUrl,
+    this.description,
     this.categories = const {},
     this.savePath = '',
   });
@@ -19,6 +20,9 @@ class ChannelInfoState extends Equatable {
   /// 채널 배너 이미지. 없으면 null.
   final String? bannerUrl;
 
+  /// 채널 소개 전체. 못 읽었으면 null (검색 결과의 한 토막을 쓴다).
+  final String? description;
+
   /// 알림 받을 분류 (비어 있으면 모든 분류).
   final Set<String> categories;
 
@@ -29,12 +33,14 @@ class ChannelInfoState extends Equatable {
     bool? loading,
     int? subscriberCount,
     String? bannerUrl,
+    String? description,
     Set<String>? categories,
     String? savePath,
   }) => ChannelInfoState(
     loading: loading ?? this.loading,
     subscriberCount: subscriberCount ?? this.subscriberCount,
     bannerUrl: bannerUrl ?? this.bannerUrl,
+    description: description ?? this.description,
     categories: categories ?? this.categories,
     savePath: savePath ?? this.savePath,
   );
@@ -44,6 +50,7 @@ class ChannelInfoState extends Equatable {
     loading,
     subscriberCount,
     bannerUrl,
+    description,
     categories,
     savePath,
   ];
@@ -70,6 +77,7 @@ class ChannelInfoCubit extends Cubit<ChannelInfoState> {
           loading: false,
           subscriberCount: info.subscriberCount,
           bannerUrl: info.bannerUrl,
+          description: info.description,
         ),
       );
     } on Object {

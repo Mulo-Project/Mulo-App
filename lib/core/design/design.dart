@@ -21,6 +21,7 @@ export 'components/buttons.dart';
 export 'components/color_picker.dart';
 export 'components/cover_card.dart';
 export 'components/empty_state.dart';
+export 'components/expandable_text.dart';
 export 'components/floating_player_button.dart';
 export 'components/glass.dart';
 export 'components/line_chart.dart';
