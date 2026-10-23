@@ -738,6 +738,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get coverEditReset => 'Reset';
 
   @override
+  String get coverEditResetPosition => 'Reset position';
+
+  @override
   String get coverEditResetTitle => 'Reset position and size?';
 
   @override

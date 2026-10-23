@@ -179,14 +179,6 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
                   tooltip: l10n.actionBack,
                   onPressed: () => Navigator.of(context).pop(),
                 ),
-                actions: [
-                  if (ready)
-                    CircleIconButton(
-                      icon: AppIcons.restart,
-                      tooltip: l10n.coverEditReset,
-                      onPressed: _resetTransform,
-                    ),
-                ],
               ),
               // 이미지 불러오기는 위쪽에 둔다 (기기 사진 | 웹 이미지).
               Padding(
@@ -220,13 +212,7 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
                   ],
                 ),
               ),
-              if (widget.canRevert)
-                PlainButton(
-                  key: const ValueKey('cover-edit-revert'),
-                  label: l10n.coverReset,
-                  icon: AppIcons.restart,
-                  onPressed: _revert,
-                ),
+
               Expanded(
                 child: Padding(
                   padding: AppSpacing.screen,
@@ -242,6 +228,7 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
                               ? EmptyState(
                                   key: const ValueKey('cover-edit-empty'),
                                   icon: AppIcons.imageBroken,
+                                  iconSize: 72,
                                   title: l10n.coverEditEmpty,
                                 )
                               : _failed
@@ -395,6 +382,40 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
                     l10n.coverEditHint,
                     textAlign: TextAlign.center,
                     style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
+                  ),
+                ),
+                // 되돌리기 둘(위치 · 기본 이미지)은 한 줄에 같은 모양 버튼으로 둔다 (둘 다 확인을 묻는다).
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md,
+                    0,
+                    AppSpacing.md,
+                    0,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: PillButton(
+                          key: const ValueKey('cover-edit-reset-position'),
+                          label: l10n.coverEditResetPosition,
+                          icon: AppIcons.restart,
+                          variant: PillVariant.tonal,
+                          onPressed: ready ? _resetTransform : null,
+                        ),
+                      ),
+                      if (widget.canRevert) ...[
+                        const SizedBox(width: AppSpacing.xs),
+                        Expanded(
+                          child: PillButton(
+                            key: const ValueKey('cover-edit-revert'),
+                            label: l10n.coverReset,
+                            icon: AppIcons.restart,
+                            variant: PillVariant.tonal,
+                            onPressed: _revert,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 Padding(

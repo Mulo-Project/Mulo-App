@@ -147,14 +147,14 @@ class _PlaylistAddTracksScreenState extends State<PlaylistAddTracksScreen> {
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.fromLTRB(
                     AppSpacing.md,
-                    AppSpacing.xs,
+                    AppSpacing.sm,
                     AppSpacing.md,
-                    0,
+                    AppSpacing.xs,
                   ),
                   child: Row(
                     children: [
                       for (var i = 0; i < filters.length; i++) ...[
-                        if (i > 0) const SizedBox(width: AppSpacing.xs),
+                        if (i > 0) const SizedBox(width: AppSpacing.sm),
                         filters[i],
                       ],
                     ],

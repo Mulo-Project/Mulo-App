@@ -1454,6 +1454,12 @@ abstract class AppLocalizations {
   /// **'원래대로'**
   String get coverEditReset;
 
+  /// No description provided for @coverEditResetPosition.
+  ///
+  /// In ko, this message translates to:
+  /// **'위치 되돌리기'**
+  String get coverEditResetPosition;
+
   /// No description provided for @coverEditResetTitle.
   ///
   /// In ko, this message translates to:

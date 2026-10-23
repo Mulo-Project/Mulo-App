@@ -281,6 +281,7 @@
   "coverEditZoomIn": "확대",
   "coverEditZoomOut": "축소",
   "coverEditReset": "원래대로",
+  "coverEditResetPosition": "위치 되돌리기",
   "coverEditResetTitle": "위치와 크기를 되돌릴까요?",
   "coverEditResetBody": "확대 · 위치 · 회전이 처음 상태로 돌아가요.",
   "coverEditResetConfirm": "되돌리기",

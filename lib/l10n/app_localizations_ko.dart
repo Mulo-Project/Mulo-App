@@ -722,6 +722,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get coverEditReset => '원래대로';
 
   @override
+  String get coverEditResetPosition => '위치 되돌리기';
+
+  @override
   String get coverEditResetTitle => '위치와 크기를 되돌릴까요?';
 
   @override

@@ -243,6 +243,7 @@
   "coverEditZoomIn": "Zoom in",
   "coverEditZoomOut": "Zoom out",
   "coverEditReset": "Reset",
+  "coverEditResetPosition": "Reset position",
   "coverEditResetTitle": "Reset position and size?",
   "coverEditResetBody": "Zoom, position and rotation go back to the start.",
   "coverEditResetConfirm": "Reset",
