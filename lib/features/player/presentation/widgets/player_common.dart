@@ -990,6 +990,22 @@ class PlayerControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 조작부가 화면 높이의 3분의 1을 넘지 않게 한다 (낮은 화면 · 큰 글자에서는 그만큼 줄여 그린다).
+    final cap = MediaQuery.sizeOf(context).height / 3;
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: cap),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.bottomCenter,
+        child: SizedBox(
+          width: MediaQuery.sizeOf(context).width,
+          child: _content(context),
+        ),
+      ),
+    );
+  }
+
+  Widget _content(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: Column(
@@ -1027,8 +1043,8 @@ class PlayerControls extends StatelessWidget {
             ],
           ),
           if (seekBar) ...[
-            // 제목 묶음 → 진행 막대 → 재생 조작 → 보조 조작 순으로 틈을 한 단계씩 넓게 둔다.
-            const SizedBox(height: AppSpacing.md),
+            // 제목 묶음 → 진행 막대 → 재생 조작 → 보조 조작 순으로 틈을 둔다.
+            const SizedBox(height: AppSpacing.sm),
             PlayerSeekBar(
               progress: data.state.progress,
               onSeek: data.vm.seekFraction,
@@ -1038,7 +1054,7 @@ class PlayerControls extends StatelessWidget {
               total: data.track.duration,
             ),
           ],
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.xs),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -1049,13 +1065,15 @@ class PlayerControls extends StatelessWidget {
               SeekStepButton(data: data, forward: true),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.xs),
           // 보조 조작(셔플 · 반복 · 수면 · 이퀄라이저)은 재생 조작보다 작게 두어 대비를 준다.
           IconButtonTheme(
             data: IconButtonThemeData(
               style: IconButton.styleFrom(
                 iconSize: 20,
                 visualDensity: VisualDensity.compact,
+                minimumSize: const Size(36, 36),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
             ),
             child: Row(

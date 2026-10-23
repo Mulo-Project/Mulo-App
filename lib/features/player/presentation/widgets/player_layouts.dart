@@ -80,7 +80,7 @@ class SquarePlayer extends StatelessWidget {
                 const SizedBox(height: AppSpacing.md),
                 PlayerControls(
                   data: data,
-                  play: SolidPlayButton(data: data, size: 80),
+                  play: SolidPlayButton(data: data, size: 72),
                 ),
                 const SizedBox(height: AppSpacing.xs),
               ],
@@ -149,7 +149,7 @@ class FullBleedPlayer extends StatelessWidget {
                   ),
                   PlayerControls(
                     data: data,
-                    play: SolidPlayButton(data: data, size: 80),
+                    play: SolidPlayButton(data: data, size: 72),
                   ),
                   const SizedBox(height: AppSpacing.xs),
                 ],
@@ -240,7 +240,7 @@ class ArcPlayer extends StatelessWidget {
                     lyrics: _lyrics(data),
                   ),
                 ),
-                _imageSeekControls(data, SolidPlayButton(data: data, size: 80)),
+                _imageSeekControls(data, SolidPlayButton(data: data, size: 72)),
               ],
             ),
           ),
