@@ -116,10 +116,10 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('카드는 대표곡 하나를 보여 주고, 좋아요 목록이 맨 앞에 있다', (tester) async {
+  testWidgets('카드는 이름과 곡 수만 보이고(대표곡은 상세에서), 좋아요 목록이 맨 앞에 있다', (tester) async {
     await pumpPlaylists(tester);
     expect(find.text('출근길'), findsOneWidget);
-    expect(find.text('첫 곡'), findsOneWidget);
+    expect(find.text('첫 곡'), findsNothing);
     expect(find.textContaining('둘째 곡'), findsNothing);
     expect(find.text('좋아요'), findsOneWidget);
     // 좋아요가 첫 카드.
@@ -239,22 +239,20 @@ void main() {
     expect(covers.saved, isEmpty);
   });
 
-  testWidgets('대표곡은 접으면 제목만, 펼치면 가수와 이미지가 나오고 누르면 재생한다', (tester) async {
+  testWidgets('대표곡은 상세 안에서 가수와 함께 보이고, 누르면 이 재생목록으로 재생한다', (tester) async {
     await pumpPlaylists(tester);
-    expect(find.text('첫 곡'), findsOneWidget);
-    expect(find.text('가수'), findsNothing);
-    expect(find.byTooltip('다음 곡'), findsNothing);
-    expect(find.byTooltip('대표곡 미리 듣기'), findsNothing);
-
-    await tester.tap(find.text('첫 곡'));
+    await tester.tap(find.text('출근길'));
     await tester.pumpAndSettle();
-    expect(find.text('가수'), findsOneWidget);
-    expect(find.byTooltip('대표곡 미리 듣기'), findsOneWidget);
+    expect(find.text('대표곡'), findsOneWidget);
+    // 대표곡 줄과 곡 목록에 모두 있다.
+    expect(find.text('첫 곡'), findsNWidgets(2));
+    expect(find.textContaining('가수 ·'), findsWidgets);
+    expect(find.byTooltip('다음 곡'), findsNothing);
 
     await tester.tap(find.byTooltip('대표곡 미리 듣기'));
     await tester.pumpAndSettle();
     expect(find.byTooltip('다음 곡'), findsOneWidget);
-    // 재생 중이면 카드의 버튼도 일시정지 아이콘으로 바뀐다 (미니 플레이어 것까지 둘).
+    // 재생 중이면 대표곡 줄의 버튼도 일시정지 아이콘으로 바뀐다 (미니 플레이어 것까지 둘).
     expect(find.byTooltip('대표곡 미리 듣기'), findsNothing);
     expect(find.byTooltip('일시정지'), findsNWidgets(2));
   });
@@ -388,7 +386,7 @@ void main() {
     await tester.pumpAndSettle();
     // 상세: 탭 목록이 아니라 별도 페이지.
     expect(find.text('운동'), findsNothing);
-    expect(find.text('첫 곡'), findsOneWidget);
+    expect(find.text('첫 곡'), findsNWidgets(2)); // 대표곡 줄 + 곡 목록
     expect(find.text('둘째 곡'), findsOneWidget);
     expect(find.text('전체 재생'), findsOneWidget);
 

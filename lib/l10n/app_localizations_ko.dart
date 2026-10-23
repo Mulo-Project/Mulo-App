@@ -1903,6 +1903,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playlistMenuTooltip => '재생목록 메뉴';
 
   @override
+  String get playlistFeaturedTitle => '대표곡';
+
+  @override
   String get playlistFeaturedPreview => '대표곡 미리 듣기';
 
   @override

@@ -684,6 +684,7 @@
   "lyricsEmptyHint": "Put a .lrc file with the same name next to the song, or add lyrics yourself.",
   "playlistFavorites": "Favorites",
   "playlistMenuTooltip": "Playlist menu",
+  "playlistFeaturedTitle": "Featured song",
   "playlistFeaturedPreview": "Preview featured song",
   "playlistMenuPlayAll": "Play all",
   "playlistMenuShuffle": "Shuffle play",

@@ -12,7 +12,6 @@ import '../../../downloads/presentation/widgets/download_item_widgets.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../bloc/playlists_cubit.dart';
 import 'playlist_menu.dart';
 
@@ -24,7 +23,8 @@ String playlistNameOf(AppLocalizations l10n, Playlist pl) =>
 GlowTone playlistToneOf(Playlist pl) =>
     pl.isFavorites ? GlowTone.secondary : toneFor(pl.id);
 
-/// 재생목록 카드: 얇은 테두리 안에 커버(이미지나 색) · 이름 · 곡 수 · 구분선 · 대표곡 타일 (접으면 제목만 작게, 펼치면 가수 · 이미지가 붙는다).
+/// 재생목록 카드: 얇은 테두리 안에 커버(이미지나 색) · 이름 · 곡 수. 대표곡은 카드가 아니라 재생목록 상세 안에서 보여 준다.
+/// 이 재생목록에 담을 곡을 받는 중이면 아래에 진행 줄이 붙는다.
 ///
 /// 기본(둘러보기)에서는 누르면 재생목록 상세로 가고, ⋮ · 길게 누르기 · 오른쪽 클릭은 팝업 메뉴를 연다.
 /// [selected]를 주면 담기 선택 모드: 메뉴 대신 체크 표시가 붙고 [onTap]으로 고른다.
@@ -150,9 +150,7 @@ class PlaylistCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
-              const AppDivider(),
-              // 대표곡: 남는 높이를 차지하는 칸. 커버 · 제목 · 가수를 또렷하게.
-              _Featured(playlist: playlist, expandable: browsing),
+              _DownloadingStrip(playlist: playlist),
             ],
           ),
         ),
@@ -214,177 +212,29 @@ class _SelectMark extends StatelessWidget {
   }
 }
 
-/// 앱을 켜 둔 동안 펼쳐 둔 카드 (재생목록 id). 화면을 오가도 펼친 채로 둔다.
-final _expandedIds = <String>{};
-
-/// 카드 아래 대표곡 타일. 접으면 제목만 작게, 누르면 영역이 커지며 가수와
-/// 작은 커버 이미지 · 장르 · 재생 버튼이 나온다. 재생 버튼을 누르면
-/// 그 곡을 (이 재생목록 대기열로) 바로 재생해 미리 들어 볼 수 있다.
-class _Featured extends StatefulWidget {
-  const _Featured({required this.playlist, required this.expandable});
+/// 이 재생목록에 담을 곡을 받는 중이면 카드 아래에 그 곡과 진행 막대를 보인다 (아니면 아무것도 없다).
+class _DownloadingStrip extends StatelessWidget {
+  const _DownloadingStrip({required this.playlist});
 
   final Playlist playlist;
 
-  /// 담기 선택 모드에서는 펼치지 않는다.
-  final bool expandable;
-
-  @override
-  State<_Featured> createState() => _FeaturedState();
-}
-
-class _FeaturedState extends State<_Featured> {
-  late bool _expanded =
-      widget.expandable && _expandedIds.contains(widget.playlist.id);
-
-  void _toggle() => setState(() {
-    _expanded = !_expanded;
-    _expanded
-        ? _expandedIds.add(widget.playlist.id)
-        : _expandedIds.remove(widget.playlist.id);
-  });
-
-  Future<void> _preview(PlaylistTrackPreview t) async {
-    final player = context.read<NowPlayingCubit>();
-    final tracks = await context.read<PlaylistsCubit>().tracksOf(
-      widget.playlist.id,
-    );
-    final i = tracks.indexWhere((e) => e.id == t.id);
-    if (i >= 0) player.playQueue(tracks, index: i);
-  }
-
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    final p = context.palette;
-    final l10n = context.l10n;
-    final t = widget.playlist.featured;
-    // 접은 줄은 작고 낮게, 카드마다 같은 높이로 맞춘다.
-    const rowHeight = 30.0;
-    // 이 재생목록에 담을 곡을 받는 중이면 대표곡 자리에 그 곡과 진행 막대를 보인다.
     final dl = context.select<DownloadQueueCubit, DownloadItem?>(
-      (c) => c.state.activeFor(widget.playlist.id),
+      (c) => c.state.activeFor(playlist.id),
     );
-    if (dl != null) return _DownloadingRow(item: dl, minHeight: rowHeight);
-    if (t == null) return const SizedBox(height: rowHeight);
-    final open = _expanded && widget.expandable;
-
-    return AnimatedSize(
-      duration: AppMotion.medium,
-      curve: AppMotion.standard,
-      alignment: Alignment.topCenter,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // 접으면 제목만 작게, 펼치면 제목이 커지고 아래에 가수가 붙는다.
-          InkWell(
-            onTap: widget.expandable ? _toggle : null,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: rowHeight),
-              child: Padding(
-                padding: EdgeInsets.only(
-                  left: AppSpacing.sm,
-                  right: AppSpacing.xxs,
-                  top: open ? AppSpacing.xs : 0,
-                  bottom: open ? AppSpacing.xxs : 0,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // 대표곡 제목 · 가수가 칸보다 길면 옆으로 흘러간다.
-                          MarqueeText(
-                            t.title,
-                            style: (open ? text.labelLarge : text.labelSmall)
-                                ?.copyWith(color: p.onSurface),
-                          ),
-                          if (open && t.artist.isNotEmpty)
-                            MarqueeText(
-                              t.artist,
-                              style: text.labelSmall?.copyWith(
-                                color: p.onSurfaceMuted,
-                              ),
-                            ),
-                          if (open)
-                            Text(
-                              t.genre.isEmpty ? l10n.unknownGenre : t.genre,
-                              style: text.labelSmall?.copyWith(
-                                color: p.onSurfaceMuted,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                        ],
-                      ),
-                    ),
-                    // 위 줄의 ⋮ 와 같은 칸(28)에 둬서 세로로 줄이 맞는다.
-                    if (widget.expandable)
-                      SizedBox.square(
-                        dimension: 28,
-                        child: Icon(
-                          open ? AppIcons.expandLess : AppIcons.expandMore,
-                          size: AppSizes.iconSm,
-                          color: p.onSurfaceMuted,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          // 펼치면 아래에 한 줄이 더 생긴다: 작은 이미지 · 장르 · 재생 버튼.
-          if (open)
-            Padding(
-              padding: const EdgeInsets.only(
-                left: AppSpacing.sm,
-                right: AppSpacing.xxs,
-                bottom: AppSpacing.xs,
-              ),
-              child: Row(
-                children: [
-                  ArtworkBox(
-                    image: coverImageOf(context, CoverKey.track(t.id)),
-                    size: 36,
-                    radius: 6,
-                    tone: toneFor(t.id),
-                    color: coverColorOf(context, CoverKey.track(t.id)),
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  const Spacer(),
-                  // 이 곡이 재생 중이면 일시정지 아이콘, 아니면 재생 아이콘.
-                  BlocBuilder<NowPlayingCubit, NowPlayingState>(
-                    buildWhen: (a, b) =>
-                        (a.track?.id == t.id) != (b.track?.id == t.id) ||
-                        a.isPlaying != b.isPlaying,
-                    builder: (context, s) {
-                      final current = s.track?.id == t.id;
-                      final playing = current && s.isPlaying;
-                      return IconButton(
-                        tooltip: playing
-                            ? l10n.actionPause
-                            : l10n.playlistFeaturedPreview,
-                        onPressed: current
-                            ? context.read<NowPlayingCubit>().togglePlay
-                            : () => _preview(t),
-                        icon: Icon(
-                          playing ? AppIcons.pauseCircle : AppIcons.playCircle,
-                          color: p.accent,
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
+    if (dl == null) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const AppDivider(),
+        _DownloadingRow(item: dl, minHeight: 30),
+      ],
     );
   }
 }
 
-/// 대표곡 자리에 보이는 받기 줄: 받는 곡 제목 · 진행 막대 · 상태(%).
+/// 받기 줄: 받는 곡 제목 · 진행 막대 · 상태(%).
 class _DownloadingRow extends StatelessWidget {
   const _DownloadingRow({required this.item, required this.minHeight});
 

@@ -12,6 +12,7 @@ import '../../../downloads/domain/entities/download_item.dart';
 import '../../../downloads/presentation/bloc/download_queue_cubit.dart';
 import '../../../downloads/presentation/widgets/download_item_widgets.dart';
 import '../../../library/domain/entities/track.dart';
+import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../../library/presentation/widgets/play_shuffle_row.dart';
 import '../../../library/presentation/widgets/lazy_track_list.dart';
 import '../../../library/presentation/widgets/track_list_tile.dart';
@@ -123,6 +124,11 @@ class _Body extends StatelessWidget {
             ),
           ),
         ),
+        // 대표곡: 카드가 아니라 상세 안에서 보여 준다 (누르면 이 재생목록으로 바로 들어 볼 수 있다).
+        if (pl.featured != null) ...[
+          const SizedBox(height: AppSpacing.sm),
+          _FeaturedRow(playlist: pl, featured: pl.featured!),
+        ],
         const SizedBox(height: AppSpacing.md),
         // 곡이 없으면 전체 재생 · 셔플 줄은 의미가 없어 숨긴다.
         if (tracks == null || tracks.isNotEmpty) ...[
@@ -191,6 +197,68 @@ class _Body extends StatelessWidget {
           showNumber: true,
         ),
       ),
+    );
+  }
+}
+
+/// 대표곡 한 줄: 작은 이미지 · 제목 · 가수 · 장르, 오른쪽에 미리 듣기(재생 중이면 일시정지) 버튼.
+/// 누르면 이 곡부터 이 재생목록 대기열로 재생한다.
+class _FeaturedRow extends StatelessWidget {
+  const _FeaturedRow({required this.playlist, required this.featured});
+
+  final Playlist playlist;
+  final PlaylistTrackPreview featured;
+
+  Future<void> _play(BuildContext context) async {
+    final player = context.read<NowPlayingCubit>();
+    final tracks = await context.read<PlaylistsCubit>().tracksOf(playlist.id);
+    final i = tracks.indexWhere((e) => e.id == featured.id);
+    if (i >= 0) player.playQueue(tracks, index: i);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final p = context.palette;
+    final t = featured;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionTitle(l10n.playlistFeaturedTitle),
+        TrackTile(
+          title: t.title,
+          subtitle: [
+            if (t.artist.isNotEmpty) t.artist,
+            t.genre.isEmpty ? l10n.unknownGenre : t.genre,
+          ].join(' · '),
+          tone: toneFor(t.id),
+          artwork: coverImageOf(context, CoverKey.track(t.id)),
+          color: coverColorOf(context, CoverKey.track(t.id)),
+          onTap: () => _play(context),
+          // 이 곡이 재생 중이면 일시정지 아이콘, 아니면 재생 아이콘.
+          trailing: BlocBuilder<NowPlayingCubit, NowPlayingState>(
+            buildWhen: (a, b) =>
+                (a.track?.id == t.id) != (b.track?.id == t.id) ||
+                a.isPlaying != b.isPlaying,
+            builder: (context, s) {
+              final current = s.track?.id == t.id;
+              final playing = current && s.isPlaying;
+              return IconButton(
+                tooltip: playing
+                    ? l10n.actionPause
+                    : l10n.playlistFeaturedPreview,
+                onPressed: current
+                    ? context.read<NowPlayingCubit>().togglePlay
+                    : () => _play(context),
+                icon: Icon(
+                  playing ? AppIcons.pauseCircle : AppIcons.playCircle,
+                  color: p.accent,
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

@@ -1950,6 +1950,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistMenuTooltip => 'Playlist menu';
 
   @override
+  String get playlistFeaturedTitle => 'Featured song';
+
+  @override
   String get playlistFeaturedPreview => 'Preview featured song';
 
   @override
