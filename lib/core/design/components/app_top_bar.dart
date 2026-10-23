@@ -54,6 +54,40 @@ class AppTopBar extends StatelessWidget {
       );
     }
 
+    // 버튼이 둘 이상이면 제목을 화면 가운데에 겹쳐 놓을 자리가 없어 깨지므로, 앞 버튼 · 제목 · 버튼들을 한 줄로 놓는다
+    // (제목은 남는 자리의 가운데). 버튼이 하나 이하일 때만 화면 가운데에 둔다.
+    if (actions.length > 1) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.xs,
+        ),
+        child: SizedBox(
+          height: AppSizes.circleButtonLarge,
+          child: Row(
+            children: [
+              leading ?? const SizedBox(width: AppSizes.circleButton),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.xs,
+                  ),
+                  child: Text(
+                    title,
+                    style: text.titleLarge,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+              ..._spaced(actions),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
