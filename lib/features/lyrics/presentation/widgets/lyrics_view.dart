@@ -1,5 +1,3 @@
-import 'dart:ui' show ImageFilter;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -215,15 +213,8 @@ class _LyricsViewState extends State<LyricsView> {
     ];
   }
 
-  /// 강조된 줄이 놓인 가로 띠만 뒤를 흐리게 한다 (필터는 이 띠 하나에만 건다).
-  Widget _band(bool on, Widget child) => on
-      ? ClipRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
-            child: child,
-          ),
-        )
-      : child;
+  /// 강조된 줄이 놓인 가로 띠. 뒤를 흐리는 필터는 쓰지 않는다 (가사가 움직이는 동안 매 프레임 흐리면 버벅인다).
+  Widget _band(bool on, Widget child) => child;
 
   /// 목록 테마의 줄들. 같은 시간으로 묶인 줄은 간격을 좁혀 한 덩어리로 놓고,
   /// 지금 재생 중인 덩어리 뒤에는 옅은 강조 바탕을 깐다.

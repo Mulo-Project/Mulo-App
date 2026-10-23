@@ -59,7 +59,7 @@ MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부�
 | 컴포넌트 | 파일 | 용도 |
 |---|---|---|
 | `AppBackground` | app_background.dart | 단색 배경 (앱 틀 · 플레이어) |
-| `GlassSurface` | glass.dart | 유리 면 기본형 (무색 또는 `tint` 색), 모양 · 탭 · 빛. `blur: 0`이면 흐림 층(BackdropFilter)을 만들지 않는다 — 목록 줄마다 놓는 것은 0으로 (스크롤 끊김) |
+| `GlassSurface` | glass.dart | 유리 면 기본형 (무색 또는 `tint` 색), 모양 · 탭 · 빛. `blur: 0`이면 흐림 층(BackdropFilter)을 만들지 않는다 — 목록 줄마다 놓는 것은 0으로 (스크롤 끊김). `solid: true`는 흐림 없이 배경색(94%)을 깔아 유리처럼 보이게 한다 — 스크롤 화면 위에 늘 떠 있거나 끌려 움직이는 면(미니 플레이어 · 받기 띠 · 플로팅 버튼)에 쓴다 (D-121: 성능이 유리 효과보다 먼저) |
 | `GlassCard` | glass.dart | 색 유리 강조 카드, `GlowTone` primary · secondary · tertiary |
 | `CoverCard` · `onGlow()` | cover_card.dart | 이미지 카드 (재생목록 · 플레이어 커버), 색 · 사진 위 글자색 |
 | `StatNumber` | stat_number.dart | 큰 숫자 (곡 수, 시간, 퍼센트), 고정폭 숫자 |

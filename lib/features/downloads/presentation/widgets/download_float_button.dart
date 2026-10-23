@@ -45,6 +45,7 @@ class DownloadFloatButton extends StatelessWidget {
               child: Tooltip(
                 message: l10n.downloadsExpand,
                 child: GlassSurface(
+                  solid: true,
                   shape: CircleBorder(
                     side: BorderSide(color: p.accent.withValues(alpha: .4)),
                   ),

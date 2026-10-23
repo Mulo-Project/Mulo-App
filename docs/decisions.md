@@ -789,3 +789,6 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 - `TrackTagSource.write`가 `TagWriteResult`를 돌려준다: `written` · `unsupported` · `denied` · `failed`. 실패로 막는 곡은 **ffmpeg로 mp3 · opus/ogg 태그를 쓰는 곡(full 빌드, `music_app/transcoder`의 `available`이 true)** 뿐이다.
 - 기존처럼 **DB만 저장**하는 곡(`unsupported`): ffmpeg가 없는 빌드(lite · 데스크톱, 단 mp3 · m4a는 라이브러리로 쓰고 안 되면 DB만), mp3 · opus/ogg가 아닌 형식(webm 등), 재생 주소가 없거나 파일이 없는 곡, `content://`의 형식을 알 수 없는 곡. `denied`(기기에서 `copyToCache` · `overwriteAudio`가 거절 = 쓸 권한 없음)는 **기기 곡이면 DB만**, 받은 곡이면 실패로 막는다.
 - 실제 기기에서 ffmpeg 태그 쓰기와 덮어쓰기는 이 PC에서 확인하지 못했다 (유스케이스 단위 테스트까지).
+
+## D-121 · 2026-10-23 · 움직이는 · 늘 떠 있는 면은 흐림 없이 그린다 (성능이 유리 효과보다 먼저)
+- 스크롤 화면 위에 늘 떠 있거나 끌려 움직이는 면(미니 플레이어, 받기 띠 · 플로팅 버튼, 플로팅 플레이어 버튼)은 뒤를 매 프레임 흐리면(BackdropFilter) 버벅였다(받기 띠를 내릴 때 렉). `GlassSurface(solid: true)`로 흐림 없이 배경색 94

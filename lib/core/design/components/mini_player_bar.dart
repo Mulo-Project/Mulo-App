@@ -76,6 +76,7 @@ class MiniPlayerBar extends StatelessWidget {
     return GlassSurface(
       shape: const RoundedRectangleBorder(),
       rim: false,
+      solid: true,
       onTap: onTap,
       child: DecoratedBox(
         decoration: BoxDecoration(

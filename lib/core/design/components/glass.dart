@@ -23,6 +23,7 @@ class GlassSurface extends StatelessWidget {
     this.onTap,
     this.blur = AppGlass.blur,
     this.rim = true,
+    this.solid = false,
   });
 
   final Widget child;
@@ -42,6 +43,10 @@ class GlassSurface extends StatelessWidget {
 
   /// 가장자리 빛 테두리를 그릴지. 가로 전체를 쓰는 띠(미니 플레이어)는 끄고 필요한 쪽 선만 직접 긋는다.
   final bool rim;
+
+  /// 흐림(BackdropFilter) 없이 배경색을 깔아 거의 불투명한 유리 모양으로 그린다. 스크롤하는 화면 위에
+  /// 늘 떠 있거나 끌려 움직이는 면(미니 플레이어 · 받기 띠 · 플로팅 버튼)은 뒤를 매 프레임 흐리면 버벅이므로 이것을 쓴다.
+  final bool solid;
 
   @override
   Widget build(BuildContext context) {
@@ -94,7 +99,15 @@ class GlassSurface extends StatelessWidget {
     Widget surface = ClipPath(
       clipper: ShapeBorderClipper(shape: shape),
       // blur가 0이면 흐릴 것이 없으니 BackdropFilter(= 뒤 화면을 따로 그리는 층)를 만들지 않는다.
-      child: blur > 0
+      child: solid
+          ? DecoratedBox(
+              decoration: ShapeDecoration(
+                color: p.background.withValues(alpha: .94),
+                shape: shape,
+              ),
+              child: body,
+            )
+          : blur > 0
           ? BackdropFilter(
               filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
               child: body,

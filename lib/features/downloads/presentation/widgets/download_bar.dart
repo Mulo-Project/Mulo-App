@@ -74,6 +74,7 @@ class _DownloadBarState extends State<DownloadBar> {
         key: const ValueKey('download-bar'),
         shape: const RoundedRectangleBorder(),
         rim: false,
+        solid: true,
         child: DecoratedBox(
           decoration: BoxDecoration(
             color: p.accent.withValues(alpha: .06),
