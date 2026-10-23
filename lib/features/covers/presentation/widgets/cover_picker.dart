@@ -17,7 +17,8 @@ Future<CoverArt?> pickCoverArt(
   BuildContext context, {
   String initialQuery = '',
   CoverArt? current,
-}) => showCoverEditor(context, current, initialQuery: initialQuery);
+}) async =>
+    (await showCoverEditor(context, current, initialQuery: initialQuery))?.art;
 
 /// 이미지를 어디서 불러올지.
 enum CoverPickSource { device, web }

@@ -8,7 +8,8 @@ import '../../../library/presentation/bloc/library_cubit.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
-import '../../../covers/presentation/widgets/cover_picker.dart';
+import '../../../covers/presentation/widgets/cover_editor_page.dart';
+import '../../../covers/presentation/widgets/cover_entry.dart';
 import '../../domain/entities/download_options.dart';
 import '../../domain/entities/download_request.dart';
 import '../../domain/entities/download_source.dart';
@@ -182,18 +183,20 @@ class _DownloadScreenState extends State<DownloadScreen> {
       ? null
       : CoverArt.web(widget.thumbnailUrl!);
 
+  /// 이미지 페이지(곡 · 앨범 · 재생목록과 같은 것)를 열어 지금 이미지를 불러온 채로 고친다.
+  /// "기본 이미지로"는 유튜브 썸네일로 돌아간다.
   Future<void> _changeCover() async {
-    final picked = await pickCoverArt(
+    final result = await showCoverEditor(
       context,
+      _cover,
       initialQuery: _title.text,
-      current: _cover,
+      canRevert: _cover != _defaultCover,
     );
-    if (picked != null && mounted) setState(() => _cover = picked);
+    if (result == null || !mounted) return;
+    setState(() => _cover = result.reverted ? _defaultCover : result.art);
   }
 
   late CoverArt? _cover = _defaultCover;
-
-  void _resetCover() => setState(() => _cover = _defaultCover);
 
   Color? _genreColor() {
     final genre = _genre.text.trim();
@@ -571,14 +574,10 @@ class _DownloadScreenState extends State<DownloadScreen> {
                     first: true,
                     title: l10n.downloadSectionInfo,
                     children: [
-                      _CoverRow(
-                        art: _cover,
+                      CoverEntry(
+                        image: _cover == null ? null : imageOfCoverArt(_cover!),
                         label: l10n.downloadFieldCover,
-                        changeLabel: l10n.downloadCoverChange,
-                        resetLabel: l10n.downloadCoverDefault,
-                        canReset: _cover != _defaultCover,
-                        onChange: _changeCover,
-                        onReset: _resetCover,
+                        onTap: _changeCover,
                       ),
                       const SizedBox(height: AppSpacing.md),
                       AppTextField(
@@ -721,75 +720,6 @@ class _DownloadScreenState extends State<DownloadScreen> {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// 페이지 맨 위의 커버: 작은 정사각형 + 바꾸기 · 기본으로. 상자 없이 한 줄로 둔다.
-class _CoverRow extends StatelessWidget {
-  const _CoverRow({
-    required this.art,
-    required this.label,
-    required this.changeLabel,
-    required this.resetLabel,
-    required this.canReset,
-    required this.onChange,
-    required this.onReset,
-  });
-
-  final CoverArt? art;
-  final String label;
-  final String changeLabel;
-  final String resetLabel;
-  final bool canReset;
-  final VoidCallback onChange;
-  final VoidCallback onReset;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    return Row(
-      children: [
-        GestureDetector(
-          onTap: onChange,
-          child: ArtworkBox(
-            image: art == null ? null : imageOfCoverArt(art!),
-            size: 72,
-            radius: AppRadii.sm,
-          ),
-        ),
-        const SizedBox(width: AppSpacing.md),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: text.labelLarge),
-              const SizedBox(height: AppSpacing.xs),
-              Wrap(
-                spacing: AppSpacing.xs,
-                runSpacing: AppSpacing.xs,
-                children: [
-                  PillButton(
-                    label: changeLabel,
-                    icon: AppIcons.photoLibrary,
-                    compact: true,
-                    variant: PillVariant.tonal,
-                    onPressed: onChange,
-                  ),
-                  if (canReset)
-                    PillButton(
-                      label: resetLabel,
-                      icon: AppIcons.restart,
-                      compact: true,
-                      variant: PillVariant.tonal,
-                      onPressed: onReset,
-                    ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

@@ -5,7 +5,8 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
-import '../../../covers/presentation/widgets/cover_picker.dart';
+import '../../../covers/presentation/widgets/cover_editor_page.dart';
+import '../../../covers/presentation/widgets/cover_entry.dart';
 import '../bloc/playlists_cubit.dart';
 
 /// 새 재생목록: 이름 · (이미지가 없을 때의) 카드 색 · 이미지를 정해 만든다.
@@ -50,9 +51,16 @@ class _NewPlaylistSheetState extends State<_NewPlaylistSheet> {
     super.dispose();
   }
 
+  /// 이미지 페이지(꾸미기 · 받기와 같은 것)를 열어 지금 이미지를 불러온 채로 고른다.
   Future<void> _pickImage() async {
-    final art = await pickCoverArt(context, initialQuery: _name.text);
-    if (art != null && mounted) setState(() => _art = art);
+    final result = await showCoverEditor(
+      context,
+      _art,
+      initialQuery: _name.text,
+      canRevert: _art != null,
+    );
+    if (result == null || !mounted) return;
+    setState(() => _art = result.reverted ? null : result.art);
   }
 
   Future<void> _create() async {
@@ -98,26 +106,12 @@ class _NewPlaylistSheetState extends State<_NewPlaylistSheet> {
                 onSubmitted: (_) => _create(),
               ),
               const SizedBox(height: AppSpacing.md),
-              Row(
-                children: [
-                  ArtworkBox(
-                    image: art == null ? null : imageOfCoverArt(art),
-                    size: 64,
-                    radius: AppRadii.sm,
-                    color: _color,
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: PillButton(
-                      label: art == null
-                          ? l10n.playlistNewImage
-                          : l10n.playlistNewImageChange,
-                      icon: AppIcons.photoLibrary,
-                      variant: PillVariant.tonal,
-                      onPressed: _pickImage,
-                    ),
-                  ),
-                ],
+              CoverEntry(
+                image: art == null ? null : imageOfCoverArt(art),
+                label: l10n.decorateImage,
+                color: _color,
+                icon: AppIcons.playlistPlay,
+                onTap: _pickImage,
               ),
               // 색은 이미지가 없을 때만 카드에 보인다.
               if (art == null) ...[

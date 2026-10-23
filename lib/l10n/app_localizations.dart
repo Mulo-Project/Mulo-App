@@ -1427,7 +1427,7 @@ abstract class AppLocalizations {
   /// No description provided for @coverEditTitle.
   ///
   /// In ko, this message translates to:
-  /// **'이미지 위치'**
+  /// **'이미지'**
   String get coverEditTitle;
 
   /// No description provided for @coverEditHint.
@@ -1453,6 +1453,42 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'원래대로'**
   String get coverEditReset;
+
+  /// No description provided for @coverEditResetTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'위치와 크기를 되돌릴까요?'**
+  String get coverEditResetTitle;
+
+  /// No description provided for @coverEditResetBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'확대 · 위치 · 회전이 처음 상태로 돌아가요.'**
+  String get coverEditResetBody;
+
+  /// No description provided for @coverEditResetConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'되돌리기'**
+  String get coverEditResetConfirm;
+
+  /// No description provided for @coverChange.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미지 바꾸기'**
+  String get coverChange;
+
+  /// No description provided for @coverRevertTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 이미지로 되돌릴까요?'**
+  String get coverRevertTitle;
+
+  /// No description provided for @coverRevertBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'고른 이미지를 지우고 기본 이미지로 돌아가요.'**
+  String get coverRevertBody;
 
   /// No description provided for @coverEditApply.
   ///

@@ -116,12 +116,15 @@ class _CancelButton extends StatelessWidget {
   Future<void> _cancel(BuildContext context) async {
     final queue = context.read<DownloadQueueCubit>();
     if (item.isActive) {
-      final ok = await showDialog<bool>(
-        context: context,
-        useRootNavigator: true,
-        builder: (_) => _CancelDialog(title: item.title),
+      final l10n = context.l10n;
+      final ok = await showConfirmDialog(
+        context,
+        title: l10n.downloadCancelTitle,
+        body: l10n.downloadCancelBody(item.title),
+        confirmLabel: l10n.downloadCancelConfirm,
+        cancelLabel: l10n.downloadCancelKeep,
       );
-      if (ok != true) return;
+      if (!ok) return;
     }
     await queue.cancel(item.id);
   }
@@ -132,30 +135,4 @@ class _CancelButton extends StatelessWidget {
     tooltip: context.l10n.actionCancel,
     onPressed: () => _cancel(context),
   );
-}
-
-class _CancelDialog extends StatelessWidget {
-  const _CancelDialog({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return AppDialog(
-      title: l10n.downloadCancelTitle,
-      body: l10n.downloadCancelBody(title),
-      actions: [
-        PillButton(
-          label: l10n.downloadCancelKeep,
-          variant: PillVariant.tonal,
-          onPressed: () => Navigator.of(context).pop(false),
-        ),
-        PillButton(
-          label: l10n.downloadCancelConfirm,
-          onPressed: () => Navigator.of(context).pop(true),
-        ),
-      ],
-    );
-  }
 }

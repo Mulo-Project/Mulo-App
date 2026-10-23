@@ -574,31 +574,6 @@ class _ServerSection extends StatelessWidget {
   }
 }
 
-/// 지우기 확인 대화상자.
-class _RemoveEngineDialog extends StatelessWidget {
-  const _RemoveEngineDialog();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return AppDialog(
-      title: l10n.settingsEngineRemoveTitle,
-      body: l10n.settingsEngineRemoveBody,
-      actions: [
-        PillButton(
-          label: l10n.actionCancel,
-          variant: PillVariant.tonal,
-          onPressed: () => Navigator.of(context).pop(false),
-        ),
-        PillButton(
-          label: l10n.settingsEngineRemove,
-          onPressed: () => Navigator.of(context).pop(true),
-        ),
-      ],
-    );
-  }
-}
-
 /// 다운로드 엔진(yt-dlp) 줄: 설치 여부 · 버전, 설치 · 업데이트 버튼 (데스크톱 · Android full).
 class _EngineRow extends StatelessWidget {
   const _EngineRow({required this.cubit});
@@ -606,12 +581,15 @@ class _EngineRow extends StatelessWidget {
   final EngineCubit cubit;
 
   Future<void> _confirmRemove(BuildContext context) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      useRootNavigator: true,
-      builder: (_) => const _RemoveEngineDialog(),
+    final l10n = context.l10n;
+    final ok = await showConfirmDialog(
+      context,
+      title: l10n.settingsEngineRemoveTitle,
+      body: l10n.settingsEngineRemoveBody,
+      confirmLabel: l10n.settingsEngineRemove,
+      cancelLabel: l10n.actionCancel,
     );
-    if (ok == true) await cubit.remove();
+    if (ok) await cubit.remove();
   }
 
   @override

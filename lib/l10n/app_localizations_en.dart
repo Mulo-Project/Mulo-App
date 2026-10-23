@@ -722,7 +722,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get coverWebFailed => 'Couldn\'t search. Try again in a moment';
 
   @override
-  String get coverEditTitle => 'Image position';
+  String get coverEditTitle => 'Image';
 
   @override
   String get coverEditHint =>
@@ -736,6 +736,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get coverEditReset => 'Reset';
+
+  @override
+  String get coverEditResetTitle => 'Reset position and size?';
+
+  @override
+  String get coverEditResetBody =>
+      'Zoom, position and rotation go back to the start.';
+
+  @override
+  String get coverEditResetConfirm => 'Reset';
+
+  @override
+  String get coverChange => 'Change image';
+
+  @override
+  String get coverRevertTitle => 'Go back to the default image?';
+
+  @override
+  String get coverRevertBody =>
+      'The image you picked is removed and the default image comes back.';
 
   @override
   String get coverEditApply => 'Apply';

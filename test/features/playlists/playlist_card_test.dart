@@ -17,7 +17,14 @@ import '../../helpers/fakes.dart';
 /// 1x1 PNG 파일 (꾸미기 화면이 실제로 읽을 수 있는 그림).
 String _pngFile() {
   final dir = Directory.systemTemp.createTempSync('cover_test');
-  addTearDown(() => dir.deleteSync(recursive: true));
+  addTearDown(() {
+    // Windows는 이미지를 읽은 파일이 아직 열려 있으면 지우지 못하므로 못 지워도 테스트는 통과시킨다.
+    try {
+      dir.deleteSync(recursive: true);
+    } on FileSystemException {
+      // 임시 폴더라 남아도 괜찮다.
+    }
+  });
   return (File('${dir.path}/pick.png')..writeAsBytesSync(
         base64Decode(
           'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
@@ -45,7 +52,7 @@ Future<void> _pickFromDeviceAndApply(WidgetTester tester) async {
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 500));
   await _waitImage(tester);
-  expect(find.text('이미지 위치'), findsOneWidget);
+  expect(find.text('적용'), findsOneWidget);
   await tester.tap(find.text('적용'));
   await tester.pumpAndSettle();
 }
@@ -181,6 +188,7 @@ void main() {
     await openMenu(tester);
     await tester.tap(find.text('꾸미기'));
     await tester.pumpAndSettle();
+    // 시트에는 이미지 줄 하나만 있고, 고르기 · 위치 · 되돌리기는 이미지 페이지 안에 있다.
     expect(find.text('이미지 고르기'), findsOneWidget);
     expect(find.text('기본 이미지로'), findsNothing);
     expect(find.text('위치 조정'), findsNothing);
@@ -188,11 +196,23 @@ void main() {
     await tester.pumpAndSettle();
     await _pickFromDeviceAndApply(tester);
     expect(covers.saved['playlist:pl1'], CoverArt.file(path));
-    expect(find.text('위치 조정'), findsOneWidget);
-
-    // 시트가 열린 채로 되돌릴 수 있고, 색 견본도 그대로 있다.
+    expect(find.text('이미지 바꾸기'), findsOneWidget);
     expect(find.bySemanticsLabel('색 1'), findsOneWidget);
+
+    // 줄을 다시 누르면 지금 이미지를 불러온 채 이미지 페이지가 열리고, 기본으로 되돌릴 때는 확인을 묻는다.
+    await tester.tap(find.text('이미지 바꾸기'));
+    await tester.pump();
+    await _waitImage(tester);
+    expect(find.text('기본 이미지로'), findsOneWidget);
     await tester.tap(find.text('기본 이미지로'));
+    await tester.pumpAndSettle();
+    expect(find.text('기본 이미지로 되돌릴까요?'), findsOneWidget);
+    await tester.tap(find.text('취소'));
+    await tester.pumpAndSettle();
+    expect(covers.saved, isNotEmpty);
+    await tester.tap(find.text('기본 이미지로'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('기본 이미지로').last);
     await tester.pumpAndSettle();
     expect(covers.saved, isEmpty);
   });
@@ -211,7 +231,7 @@ void main() {
     await tester.tap(find.text('이 주소의 이미지 쓰기'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
-    expect(find.text('이미지 위치'), findsOneWidget);
+    expect(find.text('웹에서 가져오기'), findsOneWidget);
     // 테스트 환경은 네트워크가 없어 읽기에 실패하고, 그러면 저장되지 않는다.
     await _waitImage(tester);
     expect(find.text('이미지를 불러오지 못했어요'), findsOneWidget);

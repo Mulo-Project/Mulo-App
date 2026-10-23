@@ -706,7 +706,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get coverWebFailed => '검색하지 못했어요. 잠시 뒤 다시 해 주세요';
 
   @override
-  String get coverEditTitle => '이미지 위치';
+  String get coverEditTitle => '이미지';
 
   @override
   String get coverEditHint =>
@@ -720,6 +720,24 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get coverEditReset => '원래대로';
+
+  @override
+  String get coverEditResetTitle => '위치와 크기를 되돌릴까요?';
+
+  @override
+  String get coverEditResetBody => '확대 · 위치 · 회전이 처음 상태로 돌아가요.';
+
+  @override
+  String get coverEditResetConfirm => '되돌리기';
+
+  @override
+  String get coverChange => '이미지 바꾸기';
+
+  @override
+  String get coverRevertTitle => '기본 이미지로 되돌릴까요?';
+
+  @override
+  String get coverRevertBody => '고른 이미지를 지우고 기본 이미지로 돌아가요.';
 
   @override
   String get coverEditApply => '적용';

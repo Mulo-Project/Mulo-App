@@ -11,39 +11,17 @@ import '../bloc/now_playing_cubit.dart';
 
 /// 비우기 확인창. 확인하면 재생도 멈추고 대기열을 모두 비운다.
 Future<void> _confirmClear(BuildContext context) async {
+  final l10n = context.l10n;
   final vm = context.read<NowPlayingCubit>();
-  final ok = await showDialog<bool>(
-    context: context,
-    useRootNavigator: true,
-    builder: (_) => const _ClearDialog(),
+  final ok = await showConfirmDialog(
+    context,
+    title: l10n.queueClearTitle,
+    body: l10n.queueClearBody,
+    confirmLabel: l10n.queueClearConfirm,
+    confirmIcon: AppIcons.delete,
+    cancelLabel: l10n.actionCancel,
   );
-  if (ok != true) return;
-  vm.clearQueue();
-}
-
-class _ClearDialog extends StatelessWidget {
-  const _ClearDialog();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return AppDialog(
-      title: l10n.queueClearTitle,
-      body: l10n.queueClearBody,
-      actions: [
-        PillButton(
-          label: l10n.actionCancel,
-          variant: PillVariant.tonal,
-          onPressed: () => Navigator.of(context).pop(false),
-        ),
-        PillButton(
-          label: l10n.queueClearConfirm,
-          icon: AppIcons.delete,
-          onPressed: () => Navigator.of(context).pop(true),
-        ),
-      ],
-    );
-  }
+  if (ok) vm.clearQueue();
 }
 
 /// 재생 대기열 화면: 곡 수 · 셔플 켜기/끄기 · 비우기(위에 고정), 지금 재생 중인 곡 강조,

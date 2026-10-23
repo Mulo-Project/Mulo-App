@@ -6,10 +6,11 @@ import '../../../../core/l10n/l10n.dart';
 import '../bloc/cover_color_cubit.dart';
 import '../bloc/cover_cubit.dart';
 import 'cover_editor_page.dart';
-import 'cover_picker.dart';
+import 'cover_entry.dart';
 
 /// 꾸미기 시트: 곡 · 앨범 · 아티스트 · 재생목록의 이미지와 색을 한 곳에서 바꾼다.
-/// 미리보기를 보면서 사진을 고르거나 색을 고르면 바로 저장된다.
+/// 이미지는 줄을 눌러 이미지 페이지([showCoverEditor])에서 고르고 · 맞추고 · 기본으로 되돌린다
+/// (시트에는 그 모든 버튼을 따로 두지 않는다). 색을 고르면 바로 저장된다.
 /// 이미지가 있으면 카드에는 이미지가 보이고, 색은 이미지를 지웠을 때 쓰인다.
 /// [allowColor]가 false면 색 고르기를 숨긴다 (좋아요 목록).
 Future<void> showDecorateSheet(
@@ -56,26 +57,29 @@ class _DecorateSheet extends StatelessWidget {
   final IconData icon;
   final bool allowColor;
 
-  /// 이미지를 고르고 확대 · 위치를 맞춘 뒤 저장한다.
-  Future<void> _pick(BuildContext context, CoverCubit covers) async {
-    final picked = await pickCoverArt(context, initialQuery: title);
-    if (picked != null) await covers.setArt(coverKey, picked);
-  }
-
-  /// 이미 붙인 이미지의 확대 · 위치만 다시 맞춘다.
-  Future<void> _adjust(
+  /// 이미지 페이지를 열어 (지금 이미지가 있으면 그것을 불러온 채로) 결과를 저장한다.
+  Future<void> _edit(
     BuildContext context,
     CoverCubit covers,
-    CoverArt art,
+    CoverArt? art,
   ) async {
-    final edited = await showCoverEditor(context, art);
-    if (edited != null) await covers.setTransform(coverKey, edited.transform);
+    final result = await showCoverEditor(
+      context,
+      art,
+      initialQuery: title,
+      canRevert: art != null,
+    );
+    if (result == null) return;
+    if (result.reverted) {
+      await covers.clear(coverKey);
+    } else if (result.art != null) {
+      await covers.setArt(coverKey, result.art!);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
     final image = coverImageOf(context, coverKey);
     final art = context.select<CoverCubit, CoverArt?>((c) => c.state[coverKey]);
     final color = coverColorOf(context, coverKey);
@@ -90,72 +94,21 @@ class _DecorateSheet extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                children: [
-                  ArtworkBox(
-                    image: image,
-                    size: 72,
-                    radius: AppRadii.sm,
-                    tone: tone,
-                    color: color,
-                    icon: icon,
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(l10n.decorateTitle, style: text.titleMedium),
-                        Text(
-                          title,
-                          style: text.bodySmall?.copyWith(
-                            color: context.palette.onSurfaceMuted,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+              AppSheetTitle(l10n.decorateTitle, subtitle: title),
               const SizedBox(height: AppSpacing.lg),
-              Text(l10n.decorateImage, style: text.labelLarge),
-              const SizedBox(height: AppSpacing.xs),
-              Row(
-                children: [
-                  Expanded(
-                    child: PillButton(
-                      label: l10n.coverPick,
-                      icon: AppIcons.photoLibrary,
-                      onPressed: () => _pick(context, covers),
-                    ),
-                  ),
-                  if (image != null) ...[
-                    const SizedBox(width: AppSpacing.xs),
-                    Expanded(
-                      child: PillButton(
-                        label: l10n.coverReset,
-                        icon: AppIcons.restart,
-                        variant: PillVariant.tonal,
-                        onPressed: () => covers.clear(coverKey),
-                      ),
-                    ),
-                  ],
-                ],
+              CoverEntry(
+                image: image,
+                label: l10n.decorateImage,
+                tone: tone,
+                color: color,
+                icon: icon,
+                onTap: () => _edit(context, covers, art),
               ),
-              if (art != null) ...[
-                const SizedBox(height: AppSpacing.xs),
-                PillButton(
-                  label: l10n.coverAdjust,
-                  icon: AppIcons.tune,
-                  variant: PillVariant.tonal,
-                  onPressed: () => _adjust(context, covers, art),
-                ),
-              ],
               if (allowColor) ...[
                 const SizedBox(height: AppSpacing.lg),
-                Text(l10n.decorateColor, style: text.labelLarge),
+                const AppDivider(),
+                const SizedBox(height: AppSpacing.md),
+                SectionTitle(l10n.decorateColor, padded: false),
                 const SizedBox(height: AppSpacing.xs),
                 ColorPicker(
                   selected: color,

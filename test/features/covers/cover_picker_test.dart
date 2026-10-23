@@ -25,11 +25,15 @@ void main() {
     pickCoverArt(context);
     await tester.pumpAndSettle();
 
-    expect(find.text('이미지 위치'), findsOneWidget);
+    expect(find.text('이미지'), findsOneWidget);
     expect(find.text('기기에서 고르기'), findsOneWidget);
     expect(find.text('웹에서 가져오기'), findsOneWidget);
     expect(find.byKey(const ValueKey('cover-edit-empty')), findsOneWidget);
     expect(find.text('위에서 이미지를 불러오세요'), findsOneWidget);
+    // 이미지가 없으면 확대 · 회전 · 적용은 보이지 않는다.
+    expect(find.text('적용'), findsNothing);
+    expect(find.text('왼쪽 90°'), findsNothing);
+    expect(find.byTooltip('원래대로'), findsNothing);
   });
 
   testWidgets('이미 있는 이미지를 편집하면 그 이미지를 불러온 채로 열린다', (tester) async {
@@ -38,7 +42,10 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
-    expect(find.text('이미지 위치'), findsOneWidget);
+    expect(find.text('이미지'), findsOneWidget);
     expect(find.text('위에서 이미지를 불러오세요'), findsNothing);
+    // 이미지가 있으면 적용 · 회전 · 원래대로가 보인다.
+    expect(find.text('적용'), findsOneWidget);
+    expect(find.text('왼쪽 90°'), findsOneWidget);
   });
 }
