@@ -268,7 +268,7 @@ void main() {
     await tester.tap(find.text('지우기'));
     await tester.pumpAndSettle();
     expect(find.text('출근길'), findsNothing);
-    expect(find.text('재생목록을 지웠어요'), findsOneWidget);
+    expect(find.text('재생목록을 지웠어요'), findsNothing); // 목록에서 사라지므로 안내는 없다
   });
 
   testWidgets('+ 버튼으로 이름 · 색을 골라 새 재생목록을 만든다', (tester) async {

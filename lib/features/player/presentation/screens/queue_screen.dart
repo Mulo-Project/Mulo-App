@@ -11,9 +11,7 @@ import '../bloc/now_playing_cubit.dart';
 
 /// 비우기 확인창. 확인하면 재생도 멈추고 대기열을 모두 비운다.
 Future<void> _confirmClear(BuildContext context) async {
-  final l10n = context.l10n;
   final vm = context.read<NowPlayingCubit>();
-  final messenger = ScaffoldMessenger.of(context);
   final ok = await showDialog<bool>(
     context: context,
     useRootNavigator: true,
@@ -21,7 +19,6 @@ Future<void> _confirmClear(BuildContext context) async {
   );
   if (ok != true) return;
   vm.clearQueue();
-  messenger.showSnackBar(SnackBar(content: Text(l10n.queueCleared)));
 }
 
 class _ClearDialog extends StatelessWidget {

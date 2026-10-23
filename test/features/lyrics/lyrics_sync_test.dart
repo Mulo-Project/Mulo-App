@@ -499,7 +499,7 @@ void main() {
     await tester.tap(find.byTooltip('싱크 저장'));
     await tester.pumpAndSettle();
     expect(lyrics.saved['t1'], '[00:03.50]가 줄\n[00:12.00]나 줄');
-    expect(find.text('가사를 저장했어요'), findsOneWidget);
+    expect(find.text('가사를 저장했어요'), findsNothing); // 화면이 닫히므로 안내는 없다
   });
 
   Future<void> dragMerge(WidgetTester tester, String from, String to) async {

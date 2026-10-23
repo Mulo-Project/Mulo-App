@@ -63,7 +63,7 @@ void main() {
     await tester.tap(find.text('저장'));
     await tester.pumpAndSettle();
     expect(lyrics.saved['t1'], '[00:01.00]불러온 가사');
-    expect(find.text('가사를 저장했어요'), findsOneWidget);
+    expect(find.text('가사를 저장했어요'), findsNothing); // 화면이 닫히므로 안내는 없다
 
     // 글만 고치면 시간은 줄 번호에 맞춰 그대로 다시 붙는다.
     await tester.pump(const Duration(seconds: 5));
@@ -84,7 +84,7 @@ void main() {
     await tester.tap(find.text('저장'));
     await tester.pumpAndSettle();
     expect(lyrics.saved, isEmpty);
-    expect(find.text('가사를 지웠어요'), findsOneWidget);
+    expect(find.text('가사를 지웠어요'), findsNothing);
   });
 
   testWidgets('플레이어: 중간 저장한 싱크 가사도 안 찍은 뒷부분까지 모두 보여 준다', (tester) async {

@@ -152,13 +152,10 @@ class AlbumScreen extends StatelessWidget {
     }
     await covers.clear(from);
     await colors.clear(from);
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text(
-          renamed.failed > 0 ? l10n.trackEditTagFailed : l10n.albumRenameDone,
-        ),
-      ),
-    );
+    // 제목이 바뀐 화면으로 가므로 성공 안내는 없고, 파일에 못 쓴 때만 알린다.
+    if (renamed.failed > 0) {
+      messenger.showSnackBar(SnackBar(content: Text(l10n.trackEditTagFailed)));
+    }
     router.pushReplacement(Routes.album(newName));
   }
 }

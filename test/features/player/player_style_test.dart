@@ -152,15 +152,12 @@ void main() {
     expect(find.byType(WheelPicker), findsNWidgets(2));
     await tester.tap(find.text('시작'));
     await tester.pumpAndSettle();
-    expect(find.text('30분 뒤 재생을 멈춰요'), findsOneWidget);
-    // 하단 스낵바가 버튼을 가리지 않게 걷는다.
-    await tester.pump(const Duration(seconds: 5));
-    await tester.pumpAndSettle();
+    expect(find.text('30분 뒤 재생을 멈춰요'), findsNothing); // 버튼 모양이 바뀌므로 안내는 없다
 
     await tester.tap(find.byTooltip('수면 타이머'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('타이머 끄기'));
     await tester.pumpAndSettle();
-    expect(find.text('수면 타이머를 껐어요'), findsOneWidget);
+    expect(find.text('수면 타이머를 껐어요'), findsNothing);
   });
 }

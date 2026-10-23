@@ -120,7 +120,7 @@ void main() {
     await tester.tap(find.text('좋아요'));
     await tester.pumpAndSettle();
     expect(playlists.members[Playlist.favoritesId], {'t2'});
-    expect(find.text('좋아요에 담았어요'), findsOneWidget);
+    expect(find.text('좋아요에 담았어요'), findsNothing); // 하트가 바뀌므로 안내는 없다
 
     await tester.tap(find.byTooltip('곡 메뉴').first);
     await tester.pumpAndSettle();

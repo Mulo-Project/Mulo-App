@@ -12,11 +12,9 @@ import 'timed_lyrics_controller.dart';
 import 'lyrics_edit_scaffold.dart';
 
 /// 플레이어 가사 화면의 "가사 편집" 페이지: 직접 입력 · 붙여넣기 · 파일(.lrc · .txt) · 웹 검색(Android)에서 불러오기.
-/// 저장하면 곡의 가사로 저장하고(비우면 지움) 안내를 띄운다.
+/// 저장하면 곡의 가사로 저장한다(비우면 지움). 화면이 닫히고 가사가 바뀌므로 따로 안내하지 않는다.
 Future<void> showLyricsEditor(BuildContext context, Track track) async {
-  final l10n = context.l10n;
   final cubit = context.read<LyricsCubit>();
-  final messenger = ScaffoldMessenger.of(context);
   final text = await Navigator.of(context, rootNavigator: true).push<String>(
     MaterialPageRoute(
       builder: (_) => _LyricsEditorScreen(track: track, cubit: cubit),
@@ -24,13 +22,6 @@ Future<void> showLyricsEditor(BuildContext context, Track track) async {
   );
   if (text == null) return;
   await cubit.save(track.id, text);
-  messenger.showSnackBar(
-    SnackBar(
-      content: Text(
-        text.trim().isEmpty ? l10n.lyricsCleared : l10n.lyricsSaved,
-      ),
-    ),
-  );
 }
 
 class _LyricsEditorScreen extends StatefulWidget {

@@ -799,17 +799,8 @@ class SleepTimerButton extends StatelessWidget {
             ),
           );
           if (picked == null || !btn.mounted) return;
+          // 타이머 버튼 모양이 바뀌므로 따로 안내하지 않는다.
           data.vm.setSleepTimer(picked == 0 ? null : picked);
-          ScaffoldMessenger.of(btn).hideCurrentSnackBar();
-          ScaffoldMessenger.of(btn).showSnackBar(
-            SnackBar(
-              content: Text(
-                picked == 0
-                    ? l10n.playerSleepTimerCleared
-                    : l10n.playerSleepTimerSet(picked),
-              ),
-            ),
-          );
         },
         icon: on
             ? Row(

@@ -111,11 +111,9 @@ Future<void> _delete(
   Playlist pl,
   VoidCallback? onDeleted,
 ) async {
-  final l10n = context.l10n;
   final cubit = context.read<PlaylistsCubit>();
   final covers = context.read<CoverCubit>();
   final colors = context.read<CoverColorCubit>();
-  final messenger = ScaffoldMessenger.of(context);
   final ok = await showDialog<bool>(
     context: context,
     useRootNavigator: true,
@@ -125,7 +123,6 @@ Future<void> _delete(
   await cubit.delete(pl.id);
   await covers.clear(CoverKey.playlist(pl.id));
   await colors.clear(CoverKey.playlist(pl.id));
-  messenger.showSnackBar(SnackBar(content: Text(l10n.playlistDeleted)));
   onDeleted?.call();
 }
 

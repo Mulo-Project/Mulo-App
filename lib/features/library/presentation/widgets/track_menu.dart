@@ -189,21 +189,14 @@ Future<void> showTrackMenu(
       await toggleLyricsOverlay(context);
     case _TrackAction.playNext:
       context.read<NowPlayingCubit>().playNext(track);
-      _snack(context, context.l10n.trackMenuPlayNextDone);
     case _TrackAction.addToQueue:
       context.read<NowPlayingCubit>().addToQueue(track);
-      _snack(context, context.l10n.trackMenuAddedToQueue);
     case _TrackAction.addToPlaylist:
       // 팝업 대신 재생목록 화면으로 가서 고른다.
       await context.push(Routes.playlistPick, extra: [track.id]);
     case _TrackAction.favorite:
-      final on = await context.read<PlaylistsCubit>().toggleFavorite(track.id);
-      if (context.mounted) {
-        _snack(
-          context,
-          on ? context.l10n.trackFavoriteOn : context.l10n.trackFavoriteOff,
-        );
-      }
+      // 하트 모양이 바뀌므로 따로 안내하지 않는다.
+      await context.read<PlaylistsCubit>().toggleFavorite(track.id);
     case _TrackAction.editInfo:
       await _editInfo(context, track);
     case _TrackAction.decorate:
@@ -217,12 +210,8 @@ Future<void> showTrackMenu(
       await _delete(context, track);
     case _TrackAction.removeFromQueue:
       context.read<NowPlayingCubit>().removeFromQueue(track);
-      _snack(context, context.l10n.trackRemovedFromQueue);
     case _TrackAction.removeFromPlaylist:
       await context.read<PlaylistsCubit>().removeTrack(track.id, playlistId!);
-      if (context.mounted) {
-        _snack(context, context.l10n.trackRemovedFromPlaylist);
-      }
   }
 }
 
@@ -288,7 +277,6 @@ Future<void> _editInfo(BuildContext context, Track track) async {
   }
   if (result != UpdateInfoResult.saved) return;
   player.updateTrack(track.withInfo(info.trimmed()));
-  if (context.mounted) _snack(context, l10n.trackEditSaved);
 }
 
 Future<void> _delete(BuildContext context, Track track) async {
@@ -313,7 +301,6 @@ Future<void> _delete(BuildContext context, Track track) async {
   await colors.clear(CoverKey.track(track.id));
   await lyrics.clear(track.id);
   player.removeFromQueue(track);
-  if (context.mounted) _snack(context, l10n.trackDeleted);
 }
 
 /// 제목 · 아티스트 · 앨범 · 장르 편집. 저장하면 [TrackInfo], 취소하면 null.

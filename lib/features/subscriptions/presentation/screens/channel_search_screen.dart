@@ -35,7 +35,6 @@ class _ChannelSearchScreenState extends State<ChannelSearchScreen> {
     final l10n = context.l10n;
     if (_subs.state.isSubscribedId(hit.id)) {
       await _subs.unsubscribe(hit.id);
-      messenger.showSnackBar(SnackBar(content: Text(l10n.unsubscribed)));
       return;
     }
     final result = await _subs.subscribe(SubscribeParams.fromHit(hit));
