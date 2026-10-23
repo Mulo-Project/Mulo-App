@@ -754,6 +754,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get coverChange => 'Change image';
 
   @override
+  String get coverRemove => 'Remove image';
+
+  @override
+  String get coverRemoveTitle => 'Remove the image?';
+
+  @override
+  String get coverRemoveBody =>
+      'The image you picked is removed. You can pick one again later.';
+
+  @override
   String get coverRevertTitle => 'Go back to the default image?';
 
   @override

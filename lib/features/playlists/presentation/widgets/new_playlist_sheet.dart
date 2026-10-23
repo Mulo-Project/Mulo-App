@@ -57,10 +57,12 @@ class _NewPlaylistSheetState extends State<_NewPlaylistSheet> {
       context,
       _art,
       initialQuery: _name.text,
-      canRevert: _art != null,
+      canRemove: _art != null,
     );
     if (result == null || !mounted) return;
-    setState(() => _art = result.reverted ? null : result.art);
+    setState(
+      () => _art = result.removed || result.reverted ? null : result.art,
+    );
   }
 
   Future<void> _create() async {

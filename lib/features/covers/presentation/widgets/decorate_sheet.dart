@@ -67,10 +67,10 @@ class _DecorateSheet extends StatelessWidget {
       context,
       art,
       initialQuery: title,
-      canRevert: art != null,
+      canRemove: art != null,
     );
     if (result == null) return;
-    if (result.reverted) {
+    if (result.removed || result.reverted) {
       await covers.clear(coverKey);
     } else if (result.art != null) {
       await covers.setArt(coverKey, result.art!);

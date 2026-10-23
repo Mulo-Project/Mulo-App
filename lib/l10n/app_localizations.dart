@@ -1484,6 +1484,24 @@ abstract class AppLocalizations {
   /// **'이미지 바꾸기'**
   String get coverChange;
 
+  /// No description provided for @coverRemove.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미지 지우기'**
+  String get coverRemove;
+
+  /// No description provided for @coverRemoveTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미지를 지울까요?'**
+  String get coverRemoveTitle;
+
+  /// No description provided for @coverRemoveBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'고른 이미지를 지워요. 나중에 다시 고를 수 있어요.'**
+  String get coverRemoveBody;
+
   /// No description provided for @coverRevertTitle.
   ///
   /// In ko, this message translates to:

@@ -183,7 +183,7 @@ void main() {
     expect(colors.saved.containsKey('playlist:pl1'), isFalse);
   });
 
-  testWidgets('꾸미기 시트에서 이미지를 고르고 기본 이미지로 되돌린다', (tester) async {
+  testWidgets('꾸미기 시트에서 이미지를 고르고 이미지 지우기로 지운다', (tester) async {
     final path = _pngFile();
     await pumpPlaylists(tester, image: FakeImageSource(path));
     await openMenu(tester);
@@ -204,16 +204,16 @@ void main() {
     await tester.tap(find.text('이미지 바꾸기'));
     await tester.pump();
     await _waitImage(tester);
-    expect(find.text('기본 이미지로'), findsOneWidget);
-    await tester.tap(find.text('기본 이미지로'));
+    expect(find.text('이미지 지우기'), findsOneWidget);
+    await tester.tap(find.text('이미지 지우기'));
     await tester.pumpAndSettle();
-    expect(find.text('기본 이미지로 되돌릴까요?'), findsOneWidget);
+    expect(find.text('이미지를 지울까요?'), findsOneWidget);
     await tester.tap(find.text('취소'));
     await tester.pumpAndSettle();
     expect(covers.saved, isNotEmpty);
-    await tester.tap(find.text('기본 이미지로'));
+    await tester.tap(find.text('이미지 지우기'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('기본 이미지로').last);
+    await tester.tap(find.text('이미지 지우기').last);
     await tester.pumpAndSettle();
     expect(covers.saved, isEmpty);
   });

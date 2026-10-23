@@ -737,6 +737,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get coverChange => '이미지 바꾸기';
 
   @override
+  String get coverRemove => '이미지 지우기';
+
+  @override
+  String get coverRemoveTitle => '이미지를 지울까요?';
+
+  @override
+  String get coverRemoveBody => '고른 이미지를 지워요. 나중에 다시 고를 수 있어요.';
+
+  @override
   String get coverRevertTitle => '기본 이미지로 되돌릴까요?';
 
   @override

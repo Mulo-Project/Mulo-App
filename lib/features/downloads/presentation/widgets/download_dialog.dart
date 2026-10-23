@@ -191,9 +191,16 @@ class _DownloadScreenState extends State<DownloadScreen> {
       _cover,
       initialQuery: _title.text,
       canRevert: _cover != _defaultCover,
+      canRemove: _cover != null,
     );
     if (result == null || !mounted) return;
-    setState(() => _cover = result.reverted ? _defaultCover : result.art);
+    setState(
+      () => _cover = result.removed
+          ? null
+          : result.reverted
+          ? _defaultCover
+          : result.art,
+    );
   }
 
   late CoverArt? _cover = _defaultCover;
@@ -274,7 +281,8 @@ class _DownloadScreenState extends State<DownloadScreen> {
         savePath: _savePath.text,
         duration: widget.duration,
         color: color?.toARGB32(),
-        thumbnailUrl: widget.thumbnailUrl,
+        // 이미지를 지웠으면 썸네일도 쓰지 않는다 (커버 없이 받는다).
+        thumbnailUrl: _cover == null ? null : widget.thumbnailUrl,
         cover: _cover,
         url: widget.url,
         importLyrics:

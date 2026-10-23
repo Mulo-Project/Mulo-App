@@ -10,27 +10,42 @@ import '../../../../core/cover/cover_paint.dart';
 import '../bloc/cover_cubit.dart';
 import 'cover_picker.dart';
 
-/// 이미지 페이지가 닫히며 돌려주는 결과: 맞춘 이미지([applied]) 또는 기본 이미지로 되돌리기([reverted]).
+/// 이미지 페이지가 닫히며 돌려주는 결과: 맞춘 이미지([applied]) · 기본 이미지로 되돌리기([reverted]) · 이미지 지우기([removed]).
 class CoverEditResult {
-  const CoverEditResult.applied(CoverArt this.art) : reverted = false;
-  const CoverEditResult.reverted() : art = null, reverted = true;
+  const CoverEditResult.applied(CoverArt this.art)
+    : reverted = false,
+      removed = false;
+  const CoverEditResult.reverted()
+    : art = null,
+      reverted = true,
+      removed = false;
+  const CoverEditResult.removed()
+    : art = null,
+      reverted = false,
+      removed = true;
 
   final CoverArt? art;
+
+  /// 기본 이미지로 되돌렸다 (받기는 유튜브 썸네일).
   final bool reverted;
+
+  /// 이미지를 지워 이미지 없이 둔다.
+  final bool removed;
 }
 
 /// 커버로 쓸 이미지를 고르고 확대 · 위치를 맞추는 화면 (곡 · 앨범 · 재생목록 · 받기가 모두 이 페이지 하나를 쓴다). 끌어서 옮기고, 두 손가락 · 마우스 휠 ·
 /// 막대로 크기를 바꾼다. [art]가 null이면 빈 화면에서 시작해 안의 "이미지 불러오기"로 기기 사진이나
 /// 웹 이미지를 고른다. "적용"을 누르면 맞춘 값을 담은 커버를 돌려주고, 닫으면 null.
 ///
-/// [initialQuery]는 웹 이미지 고르기에서 처음부터 검색해 둘 말. [canRevert]면 "기본 이미지로" 버튼이 보인다
-/// (눌러 확인하면 [CoverEditResult.reverted]로 닫힌다). 이미지가 없으면 불러오기 버튼과 안내만 보이고
+/// [initialQuery]는 웹 이미지 고르기에서 처음부터 검색해 둘 말. [canRevert]면 "기본 이미지로" 버튼이,
+/// [canRemove]면 "이미지 지우기" 버튼이 보인다 (눌러 확인하면 [CoverEditResult.reverted] · [CoverEditResult.removed]로 닫힌다). 이미지가 없으면 불러오기 버튼과 안내만 보이고
 /// 확대 · 회전 · 적용은 숨는다.
 Future<CoverEditResult?> showCoverEditor(
   BuildContext context,
   CoverArt? art, {
   String initialQuery = '',
   bool canRevert = false,
+  bool canRemove = false,
 }) => Navigator.of(context, rootNavigator: true).push<CoverEditResult>(
   MaterialPageRoute(
     fullscreenDialog: true,
@@ -38,6 +53,7 @@ Future<CoverEditResult?> showCoverEditor(
       art: art,
       initialQuery: initialQuery,
       canRevert: canRevert,
+      canRemove: canRemove,
     ),
   ),
 );
@@ -48,11 +64,13 @@ class CoverEditorPage extends StatefulWidget {
     this.art,
     this.initialQuery = '',
     this.canRevert = false,
+    this.canRemove = false,
   });
 
   final CoverArt? art;
   final String initialQuery;
   final bool canRevert;
+  final bool canRemove;
 
   @override
   State<CoverEditorPage> createState() => _CoverEditorPageState();
@@ -146,6 +164,21 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
     );
     if (ok && mounted) {
       Navigator.of(context).pop(const CoverEditResult.reverted());
+    }
+  }
+
+  /// 이미지를 지운다 (확인 후 닫는다). 이미지 없이 둔다.
+  Future<void> _remove() async {
+    final l10n = context.l10n;
+    final ok = await showConfirmDialog(
+      context,
+      title: l10n.coverRemoveTitle,
+      body: l10n.coverRemoveBody,
+      confirmLabel: l10n.coverRemove,
+      cancelLabel: l10n.actionCancel,
+    );
+    if (ok && mounted) {
+      Navigator.of(context).pop(const CoverEditResult.removed());
     }
   }
 
@@ -392,29 +425,37 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
                     AppSpacing.md,
                     0,
                   ),
-                  child: Row(
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: AppSpacing.xs,
+                    runSpacing: AppSpacing.xs,
                     children: [
-                      Expanded(
-                        child: PillButton(
-                          key: const ValueKey('cover-edit-reset-position'),
-                          label: l10n.coverEditResetPosition,
+                      PillButton(
+                        key: const ValueKey('cover-edit-reset-position'),
+                        label: l10n.coverEditResetPosition,
+                        icon: AppIcons.restart,
+                        variant: PillVariant.tonal,
+                        compact: true,
+                        onPressed: ready ? _resetTransform : null,
+                      ),
+                      if (widget.canRevert)
+                        PillButton(
+                          key: const ValueKey('cover-edit-revert'),
+                          label: l10n.coverReset,
                           icon: AppIcons.restart,
                           variant: PillVariant.tonal,
-                          onPressed: ready ? _resetTransform : null,
+                          compact: true,
+                          onPressed: _revert,
                         ),
-                      ),
-                      if (widget.canRevert) ...[
-                        const SizedBox(width: AppSpacing.xs),
-                        Expanded(
-                          child: PillButton(
-                            key: const ValueKey('cover-edit-revert'),
-                            label: l10n.coverReset,
-                            icon: AppIcons.restart,
-                            variant: PillVariant.tonal,
-                            onPressed: _revert,
-                          ),
+                      if (widget.canRemove)
+                        PillButton(
+                          key: const ValueKey('cover-edit-remove'),
+                          label: l10n.coverRemove,
+                          icon: AppIcons.delete,
+                          variant: PillVariant.tonal,
+                          compact: true,
+                          onPressed: _remove,
                         ),
-                      ],
                     ],
                   ),
                 ),
