@@ -96,7 +96,12 @@ class _SearchScreenState extends State<SearchScreen> {
                         : l10n.searchHintSite(sourceLabel(context, _source)),
                     clearTooltip: l10n.actionClear,
                     onChanged: (q) {
-                      if (q.trim().isEmpty) _submit();
+                      // 찾는 중에 글자를 고치거나 지우면 기다리지 않고 이전 결과로 돌아간다.
+                      if (_cubit.state.status == SearchStatus.loading) {
+                        _cubit.cancelLoading();
+                      } else if (q.trim().isEmpty) {
+                        _submit();
+                      }
                     },
                     onSubmitted: (_) => _submit(),
                     leading: SearchSourceMenu(

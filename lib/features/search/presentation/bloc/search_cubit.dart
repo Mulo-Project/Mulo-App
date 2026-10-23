@@ -140,8 +140,47 @@ class SearchCubit extends Cubit<SearchState> {
         uri.host.isNotEmpty;
   }
 
+  /// 새로 찾기 전의 화면 상태 (결과 · 오류 · 처음 화면)와 그때의 검색 조건.
+  /// 찾는 중에 입력을 고치면 [cancelLoading]이 이것으로 되돌린다.
+  ({
+    SearchState state,
+    String query,
+    SearchSource source,
+    int page,
+    bool newest,
+  })?
+  _before;
+
+  /// 찾는 중에 입력을 고치거나 지웠을 때: 기다리던 요청의 답을 버리고 찾기 전 화면(이전 결과)으로
+  /// 되돌린다. 로딩이 계속 떠 있지 않게 한다. 찾는 중이 아니면 아무것도 하지 않는다.
+  void cancelLoading() {
+    if (state.status != SearchStatus.loading) return;
+    _request++;
+    final before = _before;
+    _before = null;
+    if (before == null) {
+      _query = '';
+      emit(const SearchState());
+      return;
+    }
+    _query = before.query;
+    _source = before.source;
+    _page = before.page;
+    _newestFetched = before.newest;
+    emit(before.state);
+  }
+
   Future<void> submit(String text, SearchSource source) async {
     final query = text.trim();
+    if (state.status != SearchStatus.loading) {
+      _before = (
+        state: state,
+        query: _query,
+        source: _source,
+        page: _page,
+        newest: _newestFetched,
+      );
+    }
     final id = ++_request;
     _query = query;
     _source = source;

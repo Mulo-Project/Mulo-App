@@ -48,6 +48,34 @@ void main() {
       expect(engine.searches.last.$3, 1);
     });
 
+    test('찾는 중에 취소하면 이전 결과로 돌아가고, 늦게 온 답은 버린다', () async {
+      final engine = FakeDownloaderEngine(
+        pages: [
+          SearchPage(items: [_hit('a')], hasNext: false),
+          SearchPage(items: [_hit('z')], hasNext: false),
+        ],
+      );
+      final cubit = _cubit(engine);
+      await cubit.submit('첫', SearchSource.youtube);
+      expect(cubit.state.items.map((h) => h.id), ['a']);
+
+      final second = cubit.submit('둘', SearchSource.youtube);
+      expect(cubit.state.status, SearchStatus.loading);
+      cubit.cancelLoading();
+      expect(cubit.state.status, SearchStatus.loaded);
+      expect(cubit.state.items.map((h) => h.id), ['a']);
+      expect(cubit.query, '첫');
+      await second;
+      expect(cubit.state.items.map((h) => h.id), ['a']); // 늦게 온 답이 덮지 않는다
+
+      // 이전 결과가 없으면 처음 화면으로.
+      final fresh = _cubit(FakeDownloaderEngine());
+      final first = fresh.submit('q', SearchSource.youtube);
+      fresh.cancelLoading();
+      await first;
+      expect(fresh.state.status, SearchStatus.idle);
+    });
+
     test('이어 보기를 기다리는 사이 바꾼 정렬이 되돌아가지 않는다', () async {
       final engine = FakeDownloaderEngine(
         pages: [
