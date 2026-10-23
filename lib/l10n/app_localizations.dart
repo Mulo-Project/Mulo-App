@@ -530,6 +530,18 @@ abstract class AppLocalizations {
   /// **'정렬'**
   String get sortLabel;
 
+  /// No description provided for @sortAscending.
+  ///
+  /// In ko, this message translates to:
+  /// **'오름차순'**
+  String get sortAscending;
+
+  /// No description provided for @sortDescending.
+  ///
+  /// In ko, this message translates to:
+  /// **'내림차순'**
+  String get sortDescending;
+
   /// No description provided for @sortName.
   ///
   /// In ko, this message translates to:

@@ -235,6 +235,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sortLabel => 'Sort';
 
   @override
+  String get sortAscending => 'Ascending';
+
+  @override
+  String get sortDescending => 'Descending';
+
+  @override
   String get sortName => 'Name';
 
   @override

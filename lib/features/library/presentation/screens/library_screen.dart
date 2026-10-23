@@ -31,6 +31,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   /// 탭마다 고른 정렬. 탭에 맞는 기준만 고를 수 있다 ([_sortOptions]).
   final _sorts = <LibraryTab, LibrarySort>{};
+
+  /// 탭마다 고른 방향(true 오름차순). 비어 있으면 그 기준의 기본 방향 ([defaultAscending]).
+  final _ascending = <LibraryTab, bool>{};
   String _query = '';
 
   static const _songSorts = [
@@ -51,6 +54,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
       _sorts[_tab] ??
       (_tab == LibraryTab.songs ? LibrarySort.added : LibrarySort.name);
 
+  bool get _asc => _ascending[_tab] ?? defaultAscending(_sort);
+
   List<Track> _filtered(List<Track> all, AppLocalizations l10n) {
     final q = _query.trim().toLowerCase();
     final list = all
@@ -63,7 +68,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
               t.genre.toLowerCase().contains(q),
         )
         .toList();
-    return _tab == LibraryTab.songs ? sortTracks(list, _sort) : list;
+    return _tab == LibraryTab.songs
+        ? sortTracks(list, _sort, ascending: _asc)
+        : list;
   }
 
   @override
@@ -85,6 +92,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
         for (final e in sortGroups(
           _groupBy(tracks, (t) => artistOf(l10n, t)),
           _sort,
+          ascending: _asc,
         ).entries)
           (BuildContext context) => TrackTile(
             key: ValueKey(e.key),
@@ -112,6 +120,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
         for (final e in sortGroups(
           _groupBy(tracks, (t) => albumOf(l10n, t)),
           _sort,
+          ascending: _asc,
         ).entries)
           (BuildContext context) => TrackTile(
             key: ValueKey(e.key),
@@ -130,7 +139,11 @@ class _LibraryScreenState extends State<LibraryScreen> {
           ),
       ],
       LibraryTab.genres => [
-        for (final e in sortGroups(groupByGenre(tracks), _sort).entries)
+        for (final e in sortGroups(
+          groupByGenre(tracks),
+          _sort,
+          ascending: _asc,
+        ).entries)
           (BuildContext context) => TrackTile(
             key: ValueKey(e.key),
             title: genreOf(l10n, e.key),
@@ -222,18 +235,35 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     padding: AppSpacing.screen,
                     child: Align(
                       alignment: Alignment.centerLeft,
-                      child: AppDropdown<LibrarySort>(
-                        values: _sortOptions,
-                        selected: _sort,
-                        tooltip: l10n.sortLabel,
-                        icon: AppIcons.sort,
-                        labelOf: (s) => switch (s) {
-                          LibrarySort.name => l10n.sortName,
-                          LibrarySort.added => l10n.sortAdded,
-                          LibrarySort.artist => l10n.sortArtist,
-                          LibrarySort.count => l10n.sortCount,
-                        },
-                        onChanged: (s) => setState(() => _sorts[_tab] = s),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          AppDropdown<LibrarySort>(
+                            values: _sortOptions,
+                            selected: _sort,
+                            tooltip: l10n.sortLabel,
+                            icon: AppIcons.sort,
+                            labelOf: (s) => switch (s) {
+                              LibrarySort.name => l10n.sortName,
+                              LibrarySort.added => l10n.sortAdded,
+                              LibrarySort.artist => l10n.sortArtist,
+                              LibrarySort.count => l10n.sortCount,
+                            },
+                            // 기준을 바꾸면 그 기준의 기본 방향으로 돌아간다.
+                            onChanged: (s) => setState(() {
+                              _sorts[_tab] = s;
+                              _ascending.remove(_tab);
+                            }),
+                          ),
+                          RowIconButton(
+                            icon: _asc ? AppIcons.arrowUp : AppIcons.arrowDown,
+                            tooltip: _asc
+                                ? l10n.sortAscending
+                                : l10n.sortDescending,
+                            onPressed: () =>
+                                setState(() => _ascending[_tab] = !_asc),
+                          ),
+                        ],
                       ),
                     ),
                   ),

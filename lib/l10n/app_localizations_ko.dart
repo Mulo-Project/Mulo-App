@@ -234,6 +234,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get sortLabel => '정렬';
 
   @override
+  String get sortAscending => '오름차순';
+
+  @override
+  String get sortDescending => '내림차순';
+
+  @override
   String get sortName => '이름순';
 
   @override

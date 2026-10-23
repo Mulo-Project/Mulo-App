@@ -72,6 +72,8 @@
   "unknownGenre": "Unknown genre",
   "genreNotFound": "Genre not found",
   "sortLabel": "Sort",
+  "sortAscending": "Ascending",
+  "sortDescending": "Descending",
   "sortName": "Name",
   "sortAdded": "Recently added",
   "sortArtist": "Artist",
