@@ -13,7 +13,7 @@ class CoverCard extends StatelessWidget {
   const CoverCard({
     super.key,
     this.image,
-    this.tone = GlowTone.primary,
+    this.tone = GlowTone.neutral,
     this.color,
     this.radius = AppRadii.card,
     this.shade = false,

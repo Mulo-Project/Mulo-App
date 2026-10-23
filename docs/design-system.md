@@ -76,7 +76,7 @@ MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부�
 | `AppTopBar` | app_top_bar.dart | 상단 바. `large` = 탭 첫 화면(부제 + 큰 제목), 기본 = 원형 버튼 사이 가운데 제목 |
 | `AppBottomNav` | app_bottom_nav.dart | 하단 탭 바 (선택 = 강조 색 + 점). `highlighted` 항목(홈, 가운데)은 강조 색 원 |
 | `AppSearchField` | app_search_field.dart | 알약 입력칸 (돋보기 · 지우기 · 오른쪽 버튼). 글자는 세로 가운데 |
-| `ArtworkBox` · `toneFor()` | artwork_box.dart | 커버 자리 (없으면 그라데이션), 키별 고정 톤. `width`를 주면 직사각형, `color`를 주면 사용자가 고른 색(`glowFromColor`)으로. 이미지는 칸 크기의 2배(화면 배율 포함) 안으로 줄여 디코딩한다 (`ResizeImage`) |
+| `ArtworkBox` · `toneFor()` | artwork_box.dart | 커버 자리 (이미지 · 사용자 색이 없으면 무채색 `GlowTone.neutral` 그라데이션 + 아이콘; `toneFor()`는 이제 항상 무채색). `width`를 주면 직사각형, `color`를 주면 사용자가 고른 색(`glowFromColor`)으로. 이미지는 칸 크기의 2배(화면 배율 포함) 안으로 줄여 디코딩한다 (`ResizeImage`) |
 | `YoutubeMark` | youtube_mark.dart | 유튜브 표시 (직접 그린 빨간 원 + 흰 링 + 흰 재생 삼각형, YouTube Music 모양, 테마와 무관) |
 | `SoundcloudMark` | soundcloud_mark.dart | 사운드클라우드 표시 (주황 둥근 사각형 + 검정 파형 막대 + 구름, 테마와 무관) |
 | `ColorPicker` | color_picker.dart | 커버 색 고르기 (자동 · 견본 12 · 색상 막대). 사용자가 고르는 색이라 견본은 테마 토큰이 아니라 고정 색 (토큰 규칙의 예외) |

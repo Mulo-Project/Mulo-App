@@ -16,7 +16,7 @@ Future<void> showDecorateSheet(
   BuildContext context, {
   required String coverKey,
   required String title,
-  GlowTone tone = GlowTone.primary,
+  GlowTone tone = GlowTone.neutral,
   IconData icon = AppIcons.musicNote,
   bool allowColor = true,
 }) {

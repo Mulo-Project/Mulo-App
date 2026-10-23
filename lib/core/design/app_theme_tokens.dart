@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import 'tokens/app_dimens.dart';
 import 'tokens/app_palette.dart';
 
 /// 글로우 카드 등에서 고르는 그라데이션 톤. 실제 색은 팔레트가 정한다.
-enum GlowTone { primary, secondary, tertiary }
+/// [neutral]은 사용자가 색을 고르지 않은 기본 커버용 무채색 (테마 색과 상관없다).
+enum GlowTone { primary, secondary, tertiary, neutral }
 
 /// ThemeData에 붙는 앱 전용 토큰.
 ///
@@ -19,6 +21,7 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
     GlowTone.primary => palette.glowPrimary,
     GlowTone.secondary => palette.glowSecondary,
     GlowTone.tertiary => palette.glowTertiary,
+    GlowTone.neutral => AppGlass.neutral,
   };
 
   @override

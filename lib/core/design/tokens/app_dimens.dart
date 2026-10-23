@@ -71,6 +71,13 @@ abstract final class AppSizes {
 
 /// 유리 면 설정.
 abstract final class AppGlass {
+  /// 무채색 커버 그라데이션 (밝은 쪽 → 어두운 쪽). 위에 흰 글자 · 아이콘(onGlow)이 읽히도록 중간 이하의 회색.
+  static const List<Color> neutral = [
+    Color(0xFF5E5E66),
+    Color(0xFF47474E),
+    Color(0xFF323238),
+  ];
+
   /// 뒤 배경 흐림 정도.
   static const double blur = 24;
 

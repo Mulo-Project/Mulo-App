@@ -5,14 +5,12 @@ import 'package:flutter/material.dart';
 import '../app_theme_tokens.dart';
 import '../glow_color.dart';
 
-/// 목록에서 항목마다 커버 톤을 고정으로 다르게 고른다 (같은 키 = 같은 톤).
-GlowTone toneFor(String key) =>
-    GlowTone.values[key.codeUnits.fold(0, (a, b) => a + b) %
-        GlowTone.values.length];
+/// 이미지 · 색을 정하지 않은 기본 커버의 톤. 항목마다 색을 돌려 쓰지 않고 무채색으로 통일한다
+/// (색은 사용자가 고른 경우에만 입힌다). [key]는 예전 호출과의 호환을 위해 받는다.
+GlowTone toneFor(String key) => GlowTone.neutral;
 
 /// 커버 아트 자리. 이미지가 없으면 [tone] 글로우 그라데이션 + 음표.
 ///
-/// 목록에서 곡마다 다른 톤을 주려면 [GlowTone.values]를 곡 id로 고른다.
 class ArtworkBox extends StatelessWidget {
   const ArtworkBox({
     super.key,
@@ -20,7 +18,7 @@ class ArtworkBox extends StatelessWidget {
     this.size = 48,
     this.width,
     this.radius = 12,
-    this.tone = GlowTone.primary,
+    this.tone = GlowTone.neutral,
     this.color,
     this.icon = AppIcons.musicNote,
   });
