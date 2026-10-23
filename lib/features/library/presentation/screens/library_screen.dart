@@ -235,35 +235,28 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     padding: AppSpacing.screen,
                     child: Align(
                       alignment: Alignment.centerLeft,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          AppDropdown<LibrarySort>(
-                            values: _sortOptions,
-                            selected: _sort,
-                            tooltip: l10n.sortLabel,
-                            icon: AppIcons.sort,
-                            labelOf: (s) => switch (s) {
-                              LibrarySort.name => l10n.sortName,
-                              LibrarySort.added => l10n.sortAdded,
-                              LibrarySort.artist => l10n.sortArtist,
-                              LibrarySort.count => l10n.sortCount,
-                            },
-                            // 기준을 바꾸면 그 기준의 기본 방향으로 돌아간다.
-                            onChanged: (s) => setState(() {
-                              _sorts[_tab] = s;
-                              _ascending.remove(_tab);
-                            }),
-                          ),
-                          RowIconButton(
-                            icon: _asc ? AppIcons.arrowUp : AppIcons.arrowDown,
-                            tooltip: _asc
-                                ? l10n.sortAscending
-                                : l10n.sortDescending,
-                            onPressed: () =>
-                                setState(() => _ascending[_tab] = !_asc),
-                          ),
-                        ],
+                      child: AppDropdown<LibrarySort>(
+                        values: _sortOptions,
+                        selected: _sort,
+                        tooltip: l10n.sortLabel,
+                        icon: AppIcons.sort,
+                        labelOf: (s) => switch (s) {
+                          LibrarySort.name => l10n.sortName,
+                          LibrarySort.added => l10n.sortAdded,
+                          LibrarySort.artist => l10n.sortArtist,
+                          LibrarySort.count => l10n.sortCount,
+                        },
+                        // 기준을 바꾸면 그 기준의 기본 방향으로 돌아간다.
+                        onChanged: (s) => setState(() {
+                          _sorts[_tab] = s;
+                          _ascending.remove(_tab);
+                        }),
+                        ascending: _asc,
+                        directionTooltip: _asc
+                            ? l10n.sortAscending
+                            : l10n.sortDescending,
+                        onToggleDirection: () =>
+                            setState(() => _ascending[_tab] = !_asc),
                       ),
                     ),
                   ),
