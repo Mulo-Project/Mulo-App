@@ -1991,6 +1991,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playlistDetailEmpty => '아직 담긴 곡이 없어요';
 
   @override
+  String get playlistDetailEmptyFavorites => '아직 좋아요한 곡이 없어요';
+
+  @override
   String get playlistDetailEmptyBody =>
       '곡 메뉴의 ‘재생목록에 추가’ 또는 아래 ‘곡 추가’로 담아 보세요.';
 

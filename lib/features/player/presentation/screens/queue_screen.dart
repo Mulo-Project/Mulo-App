@@ -34,9 +34,14 @@ class QueueScreen extends StatelessWidget {
     final l10n = context.l10n;
     final p = context.palette;
     // 재생 위치(초마다 바뀜)는 보지 않는다: 끄는 동안 목록이 다시 그려지면 끊긴다.
-    final (queue, index, playing, shuffle) = context.select(
-      (NowPlayingCubit c) =>
-          (c.state.queue, c.state.index, c.state.isPlaying, c.state.shuffle),
+    final (queue, index, playing, shuffle, repeat) = context.select(
+      (NowPlayingCubit c) => (
+        c.state.queue,
+        c.state.index,
+        c.state.isPlaying,
+        c.state.shuffle,
+        c.state.repeat,
+      ),
     );
     final vm = context.read<NowPlayingCubit>();
 
@@ -56,6 +61,8 @@ class QueueScreen extends StatelessWidget {
                   count: queue.length,
                   shuffle: shuffle,
                   onShuffle: vm.toggleShuffle,
+                  repeat: repeat,
+                  onRepeat: vm.cycleRepeat,
                   onClear: () => _confirmClear(context),
                 ),
               Expanded(
@@ -101,12 +108,14 @@ class QueueScreen extends StatelessWidget {
   }
 }
 
-/// 맨 위 줄: 곡 수와 안내, 셔플 켜기/끄기(플레이어의 셔플과 같은 설정) · 대기열 비우기.
+/// 맨 위 줄: 곡 수와 안내, 셔플 켜기/끄기 · 반복(플레이어의 셔플 · 반복과 같은 설정) · 대기열 비우기.
 class _QueueHeader extends StatelessWidget {
   const _QueueHeader({
     required this.count,
     required this.shuffle,
     required this.onShuffle,
+    required this.repeat,
+    required this.onRepeat,
     required this.onClear,
   });
 
@@ -115,6 +124,10 @@ class _QueueHeader extends StatelessWidget {
   /// 셔플이 켜져 있는지 (켜져 있으면 강조 색).
   final bool shuffle;
   final VoidCallback onShuffle;
+
+  /// 반복 모드 (끔 → 전체 → 한 곡): 켜져 있으면 강조 색, 한 곡이면 "1" 표시 아이콘.
+  final PlayerRepeatMode repeat;
+  final VoidCallback onRepeat;
   final VoidCallback onClear;
 
   @override
@@ -143,6 +156,14 @@ class _QueueHeader extends StatelessWidget {
             tooltip: shuffle ? l10n.shuffleOff : l10n.shuffleOn,
             accent: shuffle,
             onPressed: onShuffle,
+          ),
+          RowIconButton(
+            icon: repeat == PlayerRepeatMode.one
+                ? AppIcons.repeatOne
+                : AppIcons.repeat,
+            tooltip: l10n.playerRepeat,
+            accent: repeat != PlayerRepeatMode.off,
+            onPressed: onRepeat,
           ),
           RowIconButton(
             icon: AppIcons.deleteAll,

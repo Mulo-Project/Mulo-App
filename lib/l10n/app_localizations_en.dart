@@ -2039,6 +2039,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistDetailEmpty => 'No songs yet';
 
   @override
+  String get playlistDetailEmptyFavorites => 'No liked songs yet';
+
+  @override
   String get playlistDetailEmptyBody =>
       'Use \"Add to playlist\" in a song\'s menu, or \"Add songs\" below.';
 

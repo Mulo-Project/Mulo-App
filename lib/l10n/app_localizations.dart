@@ -3758,6 +3758,12 @@ abstract class AppLocalizations {
   /// **'아직 담긴 곡이 없어요'**
   String get playlistDetailEmpty;
 
+  /// No description provided for @playlistDetailEmptyFavorites.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 좋아요한 곡이 없어요'**
+  String get playlistDetailEmptyFavorites;
+
   /// No description provided for @playlistDetailEmptyBody.
   ///
   /// In ko, this message translates to:
