@@ -7,9 +7,8 @@ import '../../../../core/l10n/l10n.dart';
 import '../../domain/entities/channel_details.dart';
 import '../../domain/usecases/subscription_usecases.dart';
 import '../bloc/subscriptions_cubit.dart';
-import 'category_choices.dart';
 import 'channel_header.dart';
-import 'save_path_row.dart';
+import 'channel_settings_sections.dart';
 
 /// 구독한 채널의 옵션 시트: 알림 받을 분류 · 저장 위치를 바꾸거나 구독을 해제한다.
 /// 고를 때마다 바로 저장한다.
@@ -29,7 +28,6 @@ Future<void> showChannelOptionsSheet(
           .firstOrNull;
       if (channel == null) return const SizedBox.shrink();
       final l10n = sheetContext.l10n;
-      final text = Theme.of(sheetContext).textTheme;
       final thumb = channel.thumbnailUrl;
       return SingleChildScrollView(
         padding: appSheetPadding,
@@ -42,30 +40,18 @@ Future<void> showChannelOptionsSheet(
               name: channel.name,
               thumbnailUrl: thumb,
             ),
-            const SizedBox(height: AppSpacing.lg),
-            SectionTitle(l10n.subscriptionsCategories, padded: false),
-            const SizedBox(height: AppSpacing.xxs),
-            Text(
-              l10n.subscriptionsCategoriesDesc,
-              style: text.bodyMedium?.copyWith(
-                color: sheetContext.palette.onSurfaceMuted,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            CategoryChoices(
-              selected: channel.categories,
-              onToggle: (name) => cubit.setCategories(
+            ChannelSettingsSections(
+              categories: channel.categories,
+              onToggleCategory: (name) => cubit.setCategories(
                 channel.id,
                 channel.categories.contains(name)
                     ? ({...channel.categories}..remove(name))
                     : {...channel.categories, name},
               ),
-              onClear: () => cubit.setCategories(channel.id, const {}),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            SavePathRow(
-              path: channel.savePath,
-              onChanged: (path) => cubit.setSavePath(channel.id, path),
+              onClearCategories: () =>
+                  cubit.setCategories(channel.id, const {}),
+              savePath: channel.savePath,
+              onSavePath: (path) => cubit.setSavePath(channel.id, path),
             ),
             const SizedBox(height: AppSpacing.lg),
             SizedBox(
@@ -106,6 +92,7 @@ class _ChannelHeader extends StatefulWidget {
 
 class _ChannelHeaderState extends State<_ChannelHeader> {
   ChannelDetails? _details;
+  var _loading = true;
 
   @override
   void initState() {
@@ -119,16 +106,28 @@ class _ChannelHeaderState extends State<_ChannelHeader> {
       if (mounted) setState(() => _details = d);
     } on Object {
       // 배너 · 구독자 수 · 소개는 덤이라 못 읽어도 시트는 그대로 쓴다.
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   @override
-  Widget build(BuildContext context) => ChannelHeader(
-    id: widget.channelId,
-    name: widget.name,
-    thumbnailUrl: widget.thumbnailUrl,
-    bannerUrl: _details?.bannerUrl,
-    subscriberCount: _details?.subscriberCount,
-    description: _details?.description ?? '',
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      // 읽는 동안 위에 얇은 막대로 알린다.
+      LoadingBar(loading: _loading),
+      const SizedBox(height: AppSpacing.sm),
+      ChannelHeader(
+        id: widget.channelId,
+        name: widget.name,
+        thumbnailUrl: widget.thumbnailUrl,
+        bannerUrl: _details?.bannerUrl,
+        subscriberCount: _details?.subscriberCount,
+        description: _details?.description ?? '',
+        // 이 시트는 구독한 채널의 옵션이라 늘 구독 중이다.
+        subscribed: true,
+      ),
+    ],
   );
 }

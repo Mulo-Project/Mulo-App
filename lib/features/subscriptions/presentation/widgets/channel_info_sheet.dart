@@ -8,9 +8,8 @@ import '../../domain/entities/channel_hit.dart';
 import '../../domain/usecases/subscription_usecases.dart';
 import '../bloc/channel_info_cubit.dart';
 import '../bloc/subscriptions_cubit.dart';
-import 'category_choices.dart';
 import 'channel_header.dart';
-import 'save_path_row.dart';
+import 'channel_settings_sections.dart';
 
 /// 채널 검색 결과를 눌렀을 때 뜨는 간단한 채널 정보 시트: 이미지 · 이름 · 구독자 수 · 소개,
 /// 알림 받을 분류 · 저장 위치 고르기, 구독 · 구독 해제.
@@ -92,8 +91,6 @@ class _ChannelInfoSheetState extends State<_ChannelInfoSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
-    final p = context.palette;
     final hit = widget.hit;
     return SingleChildScrollView(
       padding: appSheetPadding,
@@ -103,39 +100,35 @@ class _ChannelInfoSheetState extends State<_ChannelInfoSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ChannelHeader(
-              id: hit.id,
-              name: hit.name,
-              thumbnailUrl: hit.thumbnailUrl,
-              bannerUrl: info.bannerUrl,
-              subscriberCount: info.subscriberCount,
-              videoCount: hit.videoCount,
-              // 소개는 읽어 온 전체를 먼저 쓰고, 아직이거나 못 읽었으면 검색 결과의 한 토막.
-              description: info.description ?? hit.description,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            SectionTitle(l10n.subscriptionsCategories, padded: false),
-            const SizedBox(height: AppSpacing.xxs),
-            Text(
-              l10n.subscriptionsCategoriesDesc,
-              style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
-            ),
+            // 배너 · 구독자 수 · 소개를 읽는 동안 위에 얇은 막대로 알린다.
+            LoadingBar(loading: info.loading),
             const SizedBox(height: AppSpacing.sm),
-            CategoryChoices(
-              selected: info.categories,
-              onToggle: (name) {
+            BlocBuilder<SubscriptionsCubit, SubscriptionsState>(
+              bloc: _subs,
+              builder: (context, subs) => ChannelHeader(
+                id: hit.id,
+                name: hit.name,
+                thumbnailUrl: hit.thumbnailUrl,
+                bannerUrl: info.bannerUrl,
+                subscriberCount: info.subscriberCount,
+                videoCount: hit.videoCount,
+                // 소개는 읽어 온 전체를 먼저 쓰고, 아직이거나 못 읽었으면 검색 결과의 한 토막.
+                description: info.description ?? hit.description,
+                subscribed: subs.isSubscribedId(hit.id),
+              ),
+            ),
+            ChannelSettingsSections(
+              categories: info.categories,
+              onToggleCategory: (name) {
                 _info.toggleCategory(name);
                 _changed();
               },
-              onClear: () {
+              onClearCategories: () {
                 _info.clearCategories();
                 _changed();
               },
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            SavePathRow(
-              path: info.savePath,
-              onChanged: (path) {
+              savePath: info.savePath,
+              onSavePath: (path) {
                 _info.setSavePath(path);
                 _changed();
               },

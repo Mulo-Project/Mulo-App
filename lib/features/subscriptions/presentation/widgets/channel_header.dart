@@ -17,6 +17,7 @@ class ChannelHeader extends StatelessWidget {
     this.subscriberCount,
     this.videoCount,
     this.description = '',
+    this.subscribed = false,
   });
 
   final String id;
@@ -26,6 +27,9 @@ class ChannelHeader extends StatelessWidget {
   final int? subscriberCount;
   final int? videoCount;
   final String description;
+
+  /// 구독 중이면 이름 줄 오른쪽에 "구독 중" 표시를 붙인다.
+  final bool subscribed;
 
   @override
   Widget build(BuildContext context) {
@@ -61,11 +65,24 @@ class ChannelHeader extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    name,
-                    style: text.titleMedium,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          name,
+                          style: text.titleMedium,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (subscribed) ...[
+                        const SizedBox(width: AppSpacing.xs),
+                        StatusPill(
+                          label: l10n.subscribedAction,
+                          emphasized: true,
+                        ),
+                      ],
+                    ],
                   ),
                   if (meta.isNotEmpty) ...[
                     const SizedBox(height: AppSpacing.hair),

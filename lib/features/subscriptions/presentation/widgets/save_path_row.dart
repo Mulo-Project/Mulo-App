@@ -7,7 +7,7 @@ import '../../../../core/usecase/usecase.dart';
 import '../../../downloads/domain/usecases/download_usecases.dart';
 import '../../../downloads/presentation/widgets/save_folder_dialog.dart';
 
-/// 채널의 새 영상을 저장할 폴더: 폭을 가득 채운 한 줄(폴더 아이콘 · 제목 · 지금 위치).
+/// 채널의 새 영상을 저장할 폴더: 폭을 가득 채운 한 줄(폴더 아이콘 · 지금 위치). 제목은 바깥 구역 제목이 맡는다.
 /// 누르면 폴더를 고르고, 정해 둔 위치가 있으면 오른쪽 버튼으로 기본 저장 위치로 되돌린다.
 /// 폴더를 고르면 [onChanged]에 경로를, 되돌리면 빈 문자열을 넘긴다.
 class SavePathRow extends StatelessWidget {
@@ -53,18 +53,13 @@ class SavePathRow extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(l10n.channelSaveFolder, style: text.titleSmall),
-                    const SizedBox(height: AppSpacing.hair),
-                    Text(
-                      path.isEmpty ? l10n.channelSaveFolderDefault : path,
-                      style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                child: Text(
+                  path.isEmpty ? l10n.channelSaveFolderDefault : path,
+                  style: text.bodyMedium?.copyWith(
+                    color: path.isEmpty ? p.onSurfaceMuted : p.onSurface,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               const SizedBox(width: AppSpacing.xs),
