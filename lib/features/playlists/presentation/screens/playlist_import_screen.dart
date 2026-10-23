@@ -213,9 +213,13 @@ class _Body extends StatelessWidget {
     final l10n = context.l10n;
     final state = context.watch<PlaylistImportCubit>().state;
 
-    Widget message(String title, String body, {Widget? action}) => Center(
-      child: EmptyState(title: title, body: body, action: action),
-    );
+    // 모든 안내에 아이콘을 붙여 같은 모양으로 보인다.
+    Widget message(
+      String title,
+      String body, {
+      Widget? action,
+      IconData icon = AppIcons.playlistPlay,
+    }) => EmptyState(icon: icon, title: title, body: body, action: action);
 
     switch (state.status) {
       case PlaylistImportStatus.idle:
@@ -235,6 +239,7 @@ class _Body extends StatelessWidget {
               : message(
                   l10n.playlistImportNoResultsTitle,
                   l10n.playlistImportNoResultsBody,
+                  icon: AppIcons.search,
                 );
         }
         return ListView(
@@ -280,6 +285,7 @@ class _Body extends StatelessWidget {
             noChannel || state.accountDetail.isEmpty
                 ? body
                 : '$body\n(${state.accountDetail})',
+            icon: noChannel ? AppIcons.person : AppIcons.hourglassEmpty,
             action: noChannel
                 ? null
                 : PillButton(
@@ -295,6 +301,7 @@ class _Body extends StatelessWidget {
           return message(
             l10n.playlistImportNotPlaylistTitle,
             l10n.playlistImportNotPlaylistBody,
+            icon: AppIcons.link,
           );
         }
         return message(
@@ -306,6 +313,7 @@ class _Body extends StatelessWidget {
             EngineFailure.unavailable => l10n.searchNotReadyBody,
             _ => l10n.searchErrorBody,
           },
+          icon: AppIcons.hourglassEmpty,
           action: PillButton(
             label: l10n.actionRetry,
             icon: AppIcons.refresh,
@@ -340,14 +348,14 @@ class _Tracks extends StatelessWidget {
       padding: EdgeInsets.only(bottom: AppSpacing.md),
       children: [
         if (state.results.isNotEmpty)
+          // 알약 버튼 대신 글자 버튼: 목록 위에 가볍게 놓인 되돌아가기 링크.
           Padding(
-            padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
+            padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xxs),
             child: Align(
               alignment: Alignment.centerLeft,
-              child: PillButton(
+              child: PlainButton(
                 label: l10n.playlistImportBackToResults,
                 icon: AppIcons.back,
-                variant: PillVariant.tonal,
                 onPressed: cubit.backToResults,
               ),
             ),
@@ -389,16 +397,17 @@ class _Tracks extends StatelessWidget {
             top: AppSpacing.sm,
             bottom: AppSpacing.xs,
           ),
+          // 목록 바로 위 오른쪽에 글자 버튼으로 둔다 (곡 목록의 체크 표시와 같은 쪽).
           child: Align(
-            alignment: Alignment.centerLeft,
-            child: PillButton(
+            alignment: Alignment.centerRight,
+            child: PlainButton(
               label: state.allSelected
                   ? l10n.playlistImportClear
                   : l10n.playlistImportSelectAll,
               icon: state.allSelected
                   ? AppIcons.radioOff
                   : AppIcons.checkCircle,
-              variant: PillVariant.tonal,
+              accent: true,
               onPressed: cubit.toggleAll,
             ),
           ),
