@@ -354,6 +354,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsEngineNotInstalled => 'yt-dlp가 없어요. 설치하면 검색하고 받을 수 있어요.';
 
   @override
+  String get settingsEngineRemove => '삭제';
+
+  @override
+  String get settingsEngineRemoveTitle => '다운로드 엔진을 지울까요?';
+
+  @override
+  String get settingsEngineRemoveBody =>
+      '앱이 받아 둔 yt-dlp 파일을 지워요. 지우면 검색하고 받으려면 다시 설치해야 해요. 이 기기에 따로 설치된 yt-dlp는 지우지 않아요.';
+
+  @override
   String get settingsEngineInstalling => '내려받는 중…';
 
   @override

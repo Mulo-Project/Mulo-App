@@ -358,6 +358,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'yt-dlp is missing. Install it to search and download.';
 
   @override
+  String get settingsEngineRemove => 'Remove';
+
+  @override
+  String get settingsEngineRemoveTitle => 'Remove the download engine?';
+
+  @override
+  String get settingsEngineRemoveBody =>
+      'Deletes the yt-dlp file the app downloaded. You will need to install it again to search and download. A yt-dlp installed separately on this device is not removed.';
+
+  @override
   String get settingsEngineInstalling => 'Downloading…';
 
   @override

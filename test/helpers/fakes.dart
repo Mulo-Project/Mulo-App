@@ -1296,7 +1296,17 @@ class FakeEngineManager implements EngineManager {
     installed: installed,
     version: installed ? '2026.01.01' : null,
     managed: installed,
+    removable: installed && supported,
   );
+
+  int removes = 0;
+
+  @override
+  Future<EngineStatus> remove() async {
+    removes++;
+    installed = false;
+    return status();
+  }
 
   @override
   Future<EngineStatus> install() async {

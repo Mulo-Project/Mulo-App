@@ -45,6 +45,42 @@ void main() {
     expect(find.text('Update'), findsOneWidget);
   });
 
+  test('EngineCubit: 지울 수 있는 엔진을 지우면 설치 안 됨으로 바뀐다', () async {
+    final manager = FakeEngineManager(installed: true);
+    await setUpTestDependencies(engineManager: manager);
+    final cubit = sl<EngineCubit>();
+    await cubit.load();
+    expect(cubit.state.status!.removable, isTrue);
+    await cubit.remove();
+    expect(manager.removes, 1);
+    expect(cubit.state.status!.installed, isFalse);
+    expect(cubit.state.status!.removable, isFalse);
+    await cubit.remove(); // 지울 것이 없으면 아무것도 하지 않는다
+    expect(manager.removes, 1);
+  });
+
+  testWidgets('설정: 삭제를 누르고 확인하면 엔진이 지워진다', (tester) async {
+    final manager = FakeEngineManager(installed: true);
+    await setUpTestDependencies(engineManager: manager);
+    await tester.pumpWidget(const MusicApp(initialLocation: Routes.settings));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Remove'));
+    await tester.pumpAndSettle();
+    expect(find.text('Remove the download engine?'), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(manager.removes, 0);
+
+    await tester.tap(find.text('Remove'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Remove').last);
+    await tester.pumpAndSettle();
+    expect(manager.removes, 1);
+    expect(find.text('Install'), findsOneWidget);
+    expect(find.text('Remove'), findsNothing);
+  });
+
   testWidgets('설정: 설치할 수 없는 기기(Android)에서는 엔진 줄이 없다', (tester) async {
     await setUpTestDependencies(
       engineManager: FakeEngineManager(supported: false),

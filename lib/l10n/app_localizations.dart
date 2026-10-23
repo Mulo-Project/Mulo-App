@@ -758,6 +758,24 @@ abstract class AppLocalizations {
   /// **'yt-dlp가 없어요. 설치하면 검색하고 받을 수 있어요.'**
   String get settingsEngineNotInstalled;
 
+  /// No description provided for @settingsEngineRemove.
+  ///
+  /// In ko, this message translates to:
+  /// **'삭제'**
+  String get settingsEngineRemove;
+
+  /// No description provided for @settingsEngineRemoveTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'다운로드 엔진을 지울까요?'**
+  String get settingsEngineRemoveTitle;
+
+  /// No description provided for @settingsEngineRemoveBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱이 받아 둔 yt-dlp 파일을 지워요. 지우면 검색하고 받으려면 다시 설치해야 해요. 이 기기에 따로 설치된 yt-dlp는 지우지 않아요.'**
+  String get settingsEngineRemoveBody;
+
   /// No description provided for @settingsEngineInstalling.
   ///
   /// In ko, this message translates to:

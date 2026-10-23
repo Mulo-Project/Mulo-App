@@ -7,6 +7,7 @@ class EngineStatus extends Equatable {
     this.installed = false,
     this.version,
     this.managed = false,
+    this.removable = false,
   });
 
   /// 앱이 이 기기에 yt-dlp를 설치할 수 있는지 (데스크톱만).
@@ -19,6 +20,16 @@ class EngineStatus extends Equatable {
   /// 앱이 받아 둔 yt-dlp인지 (false면 PATH의 것).
   final bool managed;
 
+  /// 앱이 받아 둔 yt-dlp를 지울 수 있는지 (데스크톱에서 앱이 받은 파일이 있을 때만).
+  /// PATH의 yt-dlp나 Android의 내장 yt-dlp는 지우지 않는다.
+  final bool removable;
+
   @override
-  List<Object?> get props => [supported, installed, version, managed];
+  List<Object?> get props => [
+    supported,
+    installed,
+    version,
+    managed,
+    removable,
+  ];
 }

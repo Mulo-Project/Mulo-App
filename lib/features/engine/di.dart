@@ -16,5 +16,6 @@ void registerEngine(GetIt sl) {
     ..registerLazySingleton<EngineManager>(() => sl<YtDlpManager>())
     ..registerFactory(() => LoadEngineStatus(sl()))
     ..registerFactory(() => InstallEngine(sl()))
-    ..registerFactory(() => EngineCubit(sl(), sl()));
+    ..registerFactory(() => RemoveEngine(sl()))
+    ..registerFactory(() => EngineCubit(sl(), sl(), sl()));
 }

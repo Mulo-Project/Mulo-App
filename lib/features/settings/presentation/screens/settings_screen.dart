@@ -574,11 +574,45 @@ class _ServerSection extends StatelessWidget {
   }
 }
 
+/// 지우기 확인 대화상자.
+class _RemoveEngineDialog extends StatelessWidget {
+  const _RemoveEngineDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return AppDialog(
+      title: l10n.settingsEngineRemoveTitle,
+      body: l10n.settingsEngineRemoveBody,
+      actions: [
+        PillButton(
+          label: l10n.actionCancel,
+          variant: PillVariant.tonal,
+          onPressed: () => Navigator.of(context).pop(false),
+        ),
+        PillButton(
+          label: l10n.settingsEngineRemove,
+          onPressed: () => Navigator.of(context).pop(true),
+        ),
+      ],
+    );
+  }
+}
+
 /// 다운로드 엔진(yt-dlp) 줄: 설치 여부 · 버전, 설치 · 업데이트 버튼 (데스크톱 · Android full).
 class _EngineRow extends StatelessWidget {
   const _EngineRow({required this.cubit});
 
   final EngineCubit cubit;
+
+  Future<void> _confirmRemove(BuildContext context) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      useRootNavigator: true,
+      builder: (_) => const _RemoveEngineDialog(),
+    );
+    if (ok == true) await cubit.remove();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -598,12 +632,23 @@ class _EngineRow extends StatelessWidget {
         return SettingRow(
           title: l10n.settingsEngine,
           description: description,
-          trailing: PillButton(
-            compact: true,
-            label: status.installed
-                ? l10n.settingsEngineUpdate
-                : l10n.settingsEngineInstall,
-            onPressed: state.busy ? null : cubit.install,
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 앱이 받아 둔 엔진만 지울 수 있다 (PATH의 yt-dlp · Android 내장은 지우지 않는다).
+              if (status.removable)
+                PlainButton(
+                  label: l10n.settingsEngineRemove,
+                  onPressed: state.busy ? null : () => _confirmRemove(context),
+                ),
+              PillButton(
+                compact: true,
+                label: status.installed
+                    ? l10n.settingsEngineUpdate
+                    : l10n.settingsEngineInstall,
+                onPressed: state.busy ? null : cubit.install,
+              ),
+            ],
           ),
         );
       },
