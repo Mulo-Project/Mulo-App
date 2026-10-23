@@ -106,12 +106,11 @@ class _NewPlaylistSheetState extends State<_NewPlaylistSheet> {
                 onSubmitted: (_) => _create(),
               ),
               const SizedBox(height: AppSpacing.md),
-              // 꾸미기 시트와 같은 설정 구역. 색은 이미지가 없을 때만 카드에 보인다.
+              // 꾸미기 시트와 같은 설정 구역 (색은 이미지를 지웠을 때 쓰인다).
               CoverSettingsSection(
                 image: art == null ? null : imageOfCoverArt(art),
                 color: _color,
                 icon: AppIcons.playlistPlay,
-                showColor: art == null,
                 onEditImage: _pickImage,
                 onColorChanged: (c) => setState(() => _color = c),
               ),

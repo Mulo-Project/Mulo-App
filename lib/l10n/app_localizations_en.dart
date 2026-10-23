@@ -2003,6 +2003,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistPickAlready => 'Already added';
 
   @override
+  String get filterAllArtists => 'All artists';
+
+  @override
+  String get filterAllAlbums => 'All albums';
+
+  @override
+  String get filterAllGenres => 'All genres';
+
+  @override
   String get playlistAddTracks => 'Add songs';
 
   @override

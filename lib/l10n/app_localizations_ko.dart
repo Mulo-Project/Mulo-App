@@ -1956,6 +1956,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playlistPickAlready => '이미 담겼어요';
 
   @override
+  String get filterAllArtists => '모든 아티스트';
+
+  @override
+  String get filterAllAlbums => '모든 앨범';
+
+  @override
+  String get filterAllGenres => '모든 장르';
+
+  @override
   String get playlistAddTracks => '곡 추가';
 
   @override

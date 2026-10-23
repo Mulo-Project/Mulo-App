@@ -124,25 +124,29 @@ class _Body extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.md),
-        PlayShuffleRow(
-          tracks: tracks ?? const <Track>[],
-          playLabel: l10n.playlistMenuPlayAll,
-        ),
-        const SizedBox(height: AppSpacing.sm),
+        // 곡이 없으면 전체 재생 · 셔플 줄은 의미가 없어 숨긴다.
+        if (tracks == null || tracks.isNotEmpty) ...[
+          PlayShuffleRow(
+            tracks: tracks ?? const <Track>[],
+            playLabel: l10n.playlistMenuPlayAll,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+        ],
         if (downloads.isNotEmpty)
           _Downloads(playlistId: playlistId, items: downloads),
       ],
     ];
 
     // 담긴 곡이 없으면 머리 아래 남은 자리 가운데에 안내와 "곡 추가" 버튼을 둔다.
+    // 화면이 낮아 다 안 들어가면 그대로 스크롤된다 (넘쳐 깨지지 않게).
     if (pl != null && tracks != null && tracks.isEmpty && downloads.isEmpty) {
       return SafeArea(
         bottom: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ...header,
-            Expanded(
+        child: CustomScrollView(
+          slivers: [
+            SliverList(delegate: SliverChildListDelegate(header)),
+            SliverFillRemaining(
+              hasScrollBody: false,
               child: Padding(
                 padding: EdgeInsets.only(
                   bottom: AppSpacing.lg + MediaQuery.paddingOf(context).bottom,

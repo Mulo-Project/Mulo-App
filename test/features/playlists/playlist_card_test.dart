@@ -92,9 +92,10 @@ void main() {
     WidgetTester tester, {
     FakeImageSource? image,
     MemoryDownloadQueue? downloads,
+    List<Track>? tracks,
   }) async {
     await setUpTestDependencies(
-      tracks: [_t('t1', '첫 곡'), _t('t2', '둘째 곡')],
+      tracks: tracks ?? [_t('t1', '첫 곡'), _t('t2', '둘째 곡')],
       playlists: repo,
       covers: covers,
       coverColors: colors,
@@ -313,9 +314,9 @@ void main() {
     await tester.tap(find.text('이미지 고르기'));
     await tester.pumpAndSettle();
     await _pickFromDeviceAndApply(tester);
-    // 이미지를 고르면 색 고르기는 사라진다.
+    // 이미지를 골라도 색 고르기는 그대로 있다 (이미지를 지웠을 때 쓰인다).
     expect(find.text('이미지 바꾸기'), findsOneWidget);
-    expect(find.bySemanticsLabel('색 1'), findsNothing);
+    expect(find.bySemanticsLabel('색 1'), findsOneWidget);
     await tester.tap(find.text('만들기'));
     await tester.pumpAndSettle();
     expect(covers.saved['playlist:pl3'], CoverArt.file(path));
@@ -339,6 +340,36 @@ void main() {
     await tester.tap(find.text('1곡 추가'));
     await tester.pumpAndSettle();
     expect(repo.members['pl2'], {'t1'});
+  });
+
+  testWidgets('곡 추가 화면: 아티스트로 거르면 그 아티스트의 곡만 보인다', (tester) async {
+    Track by(String id, String title, String artist) => Track(
+      id: id,
+      title: title,
+      artist: artist,
+      album: '앨범',
+      duration: const Duration(minutes: 3),
+      uri: 'content://$id',
+      addedAt: DateTime(2026, 9, int.parse(id.substring(1))),
+    );
+    await pumpPlaylists(
+      tester,
+      tracks: [by('t1', '첫 곡', '가수A'), by('t2', '둘째 곡', '가수B')],
+    );
+    await tester.tap(find.text('운동'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(PillButton, '곡 추가'));
+    await tester.pumpAndSettle();
+    expect(find.text('첫 곡'), findsOneWidget);
+    expect(find.text('둘째 곡'), findsOneWidget);
+    // 앨범은 하나뿐이라 앨범 필터는 없고, 아티스트 필터만 있다.
+    expect(find.text('모든 앨범'), findsNothing);
+    await tester.tap(find.text('모든 아티스트'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('가수B').last);
+    await tester.pumpAndSettle();
+    expect(find.text('첫 곡'), findsNothing);
+    expect(find.text('둘째 곡'), findsOneWidget);
   });
 
   testWidgets('카드를 누르면 재생목록 상세로 가서 담긴 곡이 보이고, 곡 메뉴는 빼기 · 파일 삭제', (

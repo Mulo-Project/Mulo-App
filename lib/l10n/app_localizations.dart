@@ -3692,6 +3692,24 @@ abstract class AppLocalizations {
   /// **'이미 담겼어요'**
   String get playlistPickAlready;
 
+  /// No description provided for @filterAllArtists.
+  ///
+  /// In ko, this message translates to:
+  /// **'모든 아티스트'**
+  String get filterAllArtists;
+
+  /// No description provided for @filterAllAlbums.
+  ///
+  /// In ko, this message translates to:
+  /// **'모든 앨범'**
+  String get filterAllAlbums;
+
+  /// No description provided for @filterAllGenres.
+  ///
+  /// In ko, this message translates to:
+  /// **'모든 장르'**
+  String get filterAllGenres;
+
   /// No description provided for @playlistAddTracks.
   ///
   /// In ko, this message translates to:
