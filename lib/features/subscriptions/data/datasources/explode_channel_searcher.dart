@@ -40,22 +40,15 @@ class ExplodeChannelSearcher implements ChannelSearcher {
       final c = await yt.channels.get(channelId);
       var banner = c.bannerUrl.isEmpty ? null : c.bannerUrl;
       var subscribers = c.subscribersCount;
-      // 라이브러리가 유튜브의 새 채널 페이지 모양에서 배너 · 구독자 수를 못 읽는 일이 있어 직접 읽어 채운다.
-      if (banner == null || subscribers == null) {
-        final html = await _channelPage(channelId);
-        if (html != null) {
-          banner ??= parseBannerUrl(html);
-          subscribers ??= parseSubscriberCount(html);
-        }
-      }
-      // 검색 결과의 소개는 앞부분 한 토막이라 소개 페이지에서 전체를 읽는다 (못 읽어도 나머지는 보여 준다).
+      // 라이브러리가 유튜브의 새 채널 페이지 모양에서 배너 · 구독자 수를 못 읽는 일이 있고, 검색 결과의 소개는
+      // 앞부분 한 토막이라, 채널 페이지를 직접 읽어 배너 · 구독자 수 · 소개 전체를 채운다.
+      // (못 읽어도 나머지는 보여 주고, 소개는 검색 결과의 한 토막을 그대로 쓴다.)
       String? description;
-      try {
-        final about = await yt.channels.getAboutPage(channelId);
-        final text = about.description?.trim();
-        if (text != null && text.isNotEmpty) description = text;
-      } on Object {
-        // 소개는 덤이라 못 읽으면 검색 결과의 한 토막을 그대로 쓴다.
+      final html = await _channelPage(channelId);
+      if (html != null) {
+        banner ??= parseBannerUrl(html);
+        subscribers ??= parseSubscriberCount(html);
+        description = parseDescription(html);
       }
       return ChannelDetails(
         bannerUrl: banner,
@@ -105,6 +98,23 @@ class ExplodeChannelSearcher implements ChannelSearcher {
   /// 페이지 안의 데이터는 `\x22`처럼 이스케이프돼 있다. 이름이 나열만 된 앞쪽 글은 주소가 없어 건너뛴다.
   static final _banner = RegExp(
     r'imageBannerViewModel[^h]{0,120}(https:\\?/\\?/yt3\.googleusercontent\.com(?:[^"\\]|(?!\\x22)\\x[0-9a-fA-F]{2}|\\/)*)',
+  );
+
+  /// 채널 페이지의 `channelMetadataRenderer`에 들어 있는 채널 소개 전체 (없거나 비었으면 null).
+  /// 데이터는 JSON 글자라 줄바꿈 · 따옴표가 역슬래시 기호로 적혀 있어 풀어서 돌려준다.
+  static String? parseDescription(String html) {
+    final m = _description.firstMatch(html);
+    if (m == null) return null;
+    try {
+      final text = (jsonDecode('"${m.group(1)}"') as String).trim();
+      return text.isEmpty ? null : text;
+    } on FormatException {
+      return null;
+    }
+  }
+
+  static final _description = RegExp(
+    r'"channelMetadataRenderer":\{"title":"(?:[^"\\]|\\.)*","description":"((?:[^"\\]|\\.)*)"',
   );
 
   /// "1.91M subscribers" 같은 글에서 구독자 수를 읽는다 (없으면 null).

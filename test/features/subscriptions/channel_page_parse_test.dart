@@ -20,6 +20,23 @@ void main() {
     expect(ExplodeChannelSearcher.parseBannerUrl('<html></html>'), isNull);
   });
 
+  test('채널 소개 전체를 읽고, 줄바꿈 · 따옴표를 풀어 준다', () {
+    const html =
+        r'"channelMetadataRenderer":{"title":"Lofi \"Girl\"","description":'
+        r'"첫 줄\n둘째 줄 \"인용\" 🌇\n","rssUrl":"https://example.com"}';
+    expect(
+      ExplodeChannelSearcher.parseDescription(html),
+      '첫 줄\n둘째 줄 "인용" \u{1F307}',
+    );
+    expect(ExplodeChannelSearcher.parseDescription('<html></html>'), isNull);
+    expect(
+      ExplodeChannelSearcher.parseDescription(
+        r'"channelMetadataRenderer":{"title":"x","description":"   "}',
+      ),
+      isNull,
+    );
+  });
+
   test('구독자 수 글을 숫자로 읽는다', () {
     expect(ExplodeChannelSearcher.parseSubscriberCount(page), 1910000);
     expect(ExplodeChannelSearcher.parseSubscriberCount('532 subscribers'), 532);
