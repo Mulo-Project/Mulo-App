@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../../app/router.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
@@ -45,17 +43,6 @@ class ArtistScreen extends StatelessWidget {
             title: name,
             leading: const AppBackButton(),
             actions: [
-              // 이 묶음의 곡을 모두 재생목록에 담는다 (곡 메뉴의 "재생목록에 추가"와 같은 화면).
-              CircleIconButton(
-                icon: AppIcons.playlistAdd,
-                tooltip: l10n.trackMenuAddToPlaylist,
-                onPressed: tracks.isEmpty
-                    ? null
-                    : () => context.push(
-                        Routes.playlistPick,
-                        extra: [for (final t in tracks) t.id],
-                      ),
-              ),
               CircleIconButton(
                 icon: AppIcons.sparkle,
                 tooltip: l10n.decorateArtistTooltip,

@@ -47,13 +47,6 @@ void main() {
     expect(find.text('다른 곡'), findsNothing);
   });
 
-  testWidgets('위 막대의 재생목록에 추가는 그 아티스트의 곡을 모두 담을 재생목록 고르기로 간다', (tester) async {
-    await pump(tester, Routes.artist('A가수'));
-    await tester.tap(find.byTooltip('재생목록에 추가'));
-    await tester.pumpAndSettle();
-    expect(find.text('재생목록 선택'), findsOneWidget);
-  });
-
   testWidgets('꾸미기 시트에서 이미지와 색을 한 곳에서 고른다', (tester) async {
     await pump(tester, Routes.artist('A가수'));
     await tester.tap(find.byTooltip('아티스트 꾸미기'));

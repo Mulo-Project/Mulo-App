@@ -50,17 +50,6 @@ class AlbumScreen extends StatelessWidget {
                   tooltip: l10n.albumRenameTooltip,
                   onPressed: () => _rename(context),
                 ),
-              // 이 묶음의 곡을 모두 재생목록에 담는다 (곡 메뉴의 "재생목록에 추가"와 같은 화면).
-              CircleIconButton(
-                icon: AppIcons.playlistAdd,
-                tooltip: l10n.trackMenuAddToPlaylist,
-                onPressed: tracks.isEmpty
-                    ? null
-                    : () => context.push(
-                        Routes.playlistPick,
-                        extra: [for (final t in tracks) t.id],
-                      ),
-              ),
               CircleIconButton(
                 icon: AppIcons.sparkle,
                 tooltip: l10n.decorateAlbumTooltip,
