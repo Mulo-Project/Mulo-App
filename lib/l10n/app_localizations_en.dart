@@ -2033,8 +2033,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'All songs in your library are already here, or nothing matches the search.';
 
   @override
-  String get playlistDetailEmpty =>
-      'No songs yet. Use \"Add to playlist\" in a song\'s menu.';
+  String get playlistDetailEmpty => 'No songs yet';
+
+  @override
+  String get playlistDetailEmptyBody =>
+      'Use \"Add to playlist\" in a song\'s menu, or \"Add songs\" below.';
+
+  @override
+  String get playlistDetailEmptyFavoritesBody =>
+      'Songs you like from the song menu show up here.';
 
   @override
   String get playlistNotFound => 'Playlist not found';

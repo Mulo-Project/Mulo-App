@@ -153,7 +153,11 @@ class _Body extends StatelessWidget {
                 ),
                 child: EmptyState(
                   icon: AppIcons.playlistPlay,
+                  // 큰 제목 한 줄 + 아래 작은 설명 (직접 만든 목록은 곡 추가 버튼이 있다).
                   title: l10n.playlistDetailEmpty,
+                  body: pl.isFavorites
+                      ? l10n.playlistDetailEmptyFavoritesBody
+                      : l10n.playlistDetailEmptyBody,
                   action: pl.isFavorites
                       ? null
                       : PillButton(

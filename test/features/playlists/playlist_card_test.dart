@@ -327,8 +327,9 @@ void main() {
     await pumpPlaylists(tester);
     await tester.tap(find.text('운동'));
     await tester.pumpAndSettle();
-    expect(find.text('아직 담긴 곡이 없어요'), findsNothing);
-    expect(find.textContaining('아직 담긴 곡이 없어요'), findsOneWidget);
+    // 큰 제목 한 줄 + 아래 작은 설명.
+    expect(find.text('아직 담긴 곡이 없어요'), findsOneWidget);
+    expect(find.textContaining('아래 ‘곡 추가’'), findsOneWidget);
     expect(find.byTooltip('곡 추가'), findsOneWidget); // 위 막대 버튼
 
     await tester.tap(find.widgetWithText(PillButton, '곡 추가'));

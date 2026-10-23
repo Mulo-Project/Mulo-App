@@ -1985,7 +1985,14 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playlistAddTracksEmptyBody => '보관함의 곡이 모두 이 재생목록에 있거나 검색 결과가 없어요.';
 
   @override
-  String get playlistDetailEmpty => '아직 담긴 곡이 없어요. 곡 메뉴의 ‘재생목록에 추가’로 담아 보세요.';
+  String get playlistDetailEmpty => '아직 담긴 곡이 없어요';
+
+  @override
+  String get playlistDetailEmptyBody =>
+      '곡 메뉴의 ‘재생목록에 추가’ 또는 아래 ‘곡 추가’로 담아 보세요.';
+
+  @override
+  String get playlistDetailEmptyFavoritesBody => '곡 메뉴에서 좋아요를 누르면 여기에 담겨요.';
 
   @override
   String get playlistNotFound => '재생목록을 찾을 수 없어요';
