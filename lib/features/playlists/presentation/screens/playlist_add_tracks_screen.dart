@@ -203,7 +203,8 @@ class _PlaylistAddTracksScreenState extends State<PlaylistAddTracksScreen> {
                               name: e.key,
                               tracks: e.value,
                               picked: _picked,
-                              onTap: () => _toggleGroup(e.value),
+                              onToggleAll: () => _toggleGroup(e.value),
+                              onToggleTrack: _toggle,
                             ),
                         ],
                       ),
@@ -232,77 +233,124 @@ class _PlaylistAddTracksScreenState extends State<PlaylistAddTracksScreen> {
   }
 }
 
-/// 아티스트 · 앨범 · 장르 한 줄: 이름 · 곡 수, 오른쪽에 고른 상태(모두 / 일부 "고른 수/전체" / 없음).
-/// 누르면 그 묶음의 곡을 모두 고르거나 푼다.
-class _GroupRow extends StatelessWidget {
+/// 아티스트 · 앨범 · 장르 한 줄: 이름 · 곡 수, 오른쪽에 고른 상태(모두 / 일부 "고른 수/전체" / 없음)와 펼치기.
+/// 줄을 누르면 그 묶음의 곡이 아래에 펼쳐져 곡마다 골라 담을 수 있고, 오른쪽 체크를 누르면 묶음의 곡을
+/// 모두 고르거나 푼다.
+class _GroupRow extends StatefulWidget {
   const _GroupRow({
     required this.tab,
     required this.name,
     required this.tracks,
     required this.picked,
-    required this.onTap,
+    required this.onToggleAll,
+    required this.onToggleTrack,
   });
 
   final LibraryTab tab;
   final String name;
   final List<Track> tracks;
   final Set<String> picked;
-  final VoidCallback onTap;
+  final VoidCallback onToggleAll;
+  final ValueChanged<String> onToggleTrack;
+
+  @override
+  State<_GroupRow> createState() => _GroupRowState();
+}
+
+class _GroupRowState extends State<_GroupRow> {
+  bool _open = false;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final p = context.palette;
     final text = Theme.of(context).textTheme;
-    final first = tracks.first;
-    final label = switch (tab) {
+    final w = widget;
+    final first = w.tracks.first;
+    final label = switch (w.tab) {
       LibraryTab.artists => artistOf(l10n, first),
       LibraryTab.albums => albumOf(l10n, first),
-      _ => genreOf(l10n, name),
+      _ => genreOf(l10n, w.name),
     };
-    final chosen = tracks.where((t) => picked.contains(t.id)).length;
-    final all = chosen == tracks.length;
-    final key = switch (tab) {
+    final chosen = w.tracks.where((t) => w.picked.contains(t.id)).length;
+    final all = chosen == w.tracks.length;
+    final key = switch (w.tab) {
       LibraryTab.artists => CoverKey.artist(first.artist),
       LibraryTab.albums => CoverKey.album(first.album),
-      _ => CoverKey.genre(name),
+      _ => CoverKey.genre(w.name),
     };
-    return Builder(
-      builder: (context) => TrackTile(
-        title: label,
-        subtitle: l10n.songCount(tracks.length),
-        tone: toneFor(name),
-        leading: ArtworkBox(
-          image: tab == LibraryTab.genres ? null : coverImageOf(context, key),
-          tone: toneFor(name),
-          color: coverColorOf(context, key),
-          radius: tab == LibraryTab.artists ? 24 : 12,
-          icon: switch (tab) {
-            LibraryTab.artists => AppIcons.person,
-            LibraryTab.albums => AppIcons.album,
-            _ => AppIcons.category,
-          },
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // 일부만 골랐으면 "고른 수 / 전체"를 보여 준다.
-            if (chosen > 0 && !all)
-              Padding(
-                padding: const EdgeInsets.only(right: AppSpacing.xs),
-                child: Text(
-                  '$chosen/${tracks.length}',
-                  style: text.labelMedium?.copyWith(color: p.accent),
-                ),
-              ),
-            Icon(
-              all ? AppIcons.checkCircle : AppIcons.radioOff,
-              color: chosen > 0 ? p.accent : p.onSurfaceMuted,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Builder(
+          builder: (context) => TrackTile(
+            title: label,
+            subtitle: l10n.songCount(w.tracks.length),
+            tone: toneFor(w.name),
+            leading: ArtworkBox(
+              image: w.tab == LibraryTab.genres
+                  ? null
+                  : coverImageOf(context, key),
+              tone: toneFor(w.name),
+              color: coverColorOf(context, key),
+              radius: w.tab == LibraryTab.artists ? 24 : 12,
+              icon: switch (w.tab) {
+                LibraryTab.artists => AppIcons.person,
+                LibraryTab.albums => AppIcons.album,
+                _ => AppIcons.category,
+              },
             ),
-          ],
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 일부만 골랐으면 "고른 수 / 전체"를 보여 준다.
+                if (chosen > 0 && !all)
+                  Padding(
+                    padding: const EdgeInsets.only(right: AppSpacing.xxs),
+                    child: Text(
+                      '$chosen/${w.tracks.length}',
+                      style: text.labelMedium?.copyWith(color: p.accent),
+                    ),
+                  ),
+                RowIconButton(
+                  icon: all ? AppIcons.checkCircle : AppIcons.radioOff,
+                  tooltip: l10n.newVideosSelectAll,
+                  accent: chosen > 0,
+                  onPressed: w.onToggleAll,
+                ),
+                Icon(
+                  _open ? AppIcons.expandLess : AppIcons.expandMore,
+                  size: AppSizes.iconSm,
+                  color: p.onSurfaceMuted,
+                ),
+              ],
+            ),
+            onTap: () => setState(() => _open = !_open),
+          ),
         ),
-        onTap: onTap,
-      ),
+        // 펼치면 이 묶음의 곡이 한 단계 들여서 나온다.
+        if (_open)
+          for (final t in w.tracks)
+            Builder(
+              builder: (context) {
+                final on = w.picked.contains(t.id);
+                return Padding(
+                  padding: const EdgeInsets.only(left: AppSpacing.lg),
+                  child: TrackTile(
+                    title: t.title,
+                    subtitle: t.artist,
+                    tone: toneFor(t.id),
+                    artwork: coverImageOf(context, CoverKey.track(t.id)),
+                    trailing: Icon(
+                      on ? AppIcons.checkCircle : AppIcons.radioOff,
+                      color: on ? p.accent : p.onSurfaceMuted,
+                    ),
+                    onTap: () => w.onToggleTrack(t.id),
+                  ),
+                );
+              },
+            ),
+      ],
     );
   }
 }

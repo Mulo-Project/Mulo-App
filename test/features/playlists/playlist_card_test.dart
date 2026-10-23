@@ -371,11 +371,48 @@ void main() {
     expect(find.text('가수A'), findsOneWidget);
     expect(find.text('가수B'), findsOneWidget);
     expect(find.text('첫 곡'), findsNothing);
+    // 줄을 누르면 그 아티스트의 곡이 펼쳐지고, 곡마다 골라 담을 수 있다.
+    expect(find.text('둘째 곡'), findsNothing);
     await tester.tap(find.text('가수B'));
+    await tester.pumpAndSettle();
+    expect(find.text('둘째 곡'), findsOneWidget);
+    await tester.tap(find.text('둘째 곡'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('1곡 추가'));
     await tester.pumpAndSettle();
     expect(repo.members['pl2'], {'t2'});
+  });
+
+  testWidgets('곡 추가 화면: 묶음 오른쪽 체크로 그 묶음의 곡을 한꺼번에 고른다', (tester) async {
+    Track by(String id, String title, String artist) => Track(
+      id: id,
+      title: title,
+      artist: artist,
+      album: '앨범',
+      duration: const Duration(minutes: 3),
+      uri: 'content://$id',
+      addedAt: DateTime(2026, 9, int.parse(id.substring(1))),
+    );
+    await pumpPlaylists(
+      tester,
+      tracks: [
+        by('t1', '첫 곡', '가수A'),
+        by('t2', '둘째 곡', '가수B'),
+        by('t3', '셋째 곡', '가수B'),
+      ],
+    );
+    await tester.tap(find.text('운동'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(PillButton, '곡 추가'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('아티스트'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('모두 선택').last); // 가수B 묶음의 체크
+    await tester.pumpAndSettle();
+    expect(find.text('2곡 추가'), findsOneWidget);
+    await tester.tap(find.text('2곡 추가'));
+    await tester.pumpAndSettle();
+    expect(repo.members['pl2'], {'t2', 't3'});
   });
 
   testWidgets('카드를 누르면 재생목록 상세로 가서 담긴 곡이 보이고, 곡 메뉴는 빼기 · 파일 삭제', (
