@@ -323,14 +323,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        DecoratedBox(
-          decoration: ShapeDecoration(
-            color: p.surfaceHigh,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppRadii.sm),
-              side: BorderSide(color: p.outline),
-            ),
-          ),
+        OutlinedPanel(
           child: SettingRow(
             key: const ValueKey('download-import-lyrics'),
             title: l10n.downloadImportLyrics,
@@ -363,14 +356,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
         ],
         if (on) ...[
           const SizedBox(height: AppSpacing.sm),
-          DecoratedBox(
-            decoration: ShapeDecoration(
-              color: p.surfaceHigh,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadii.sm),
-                side: BorderSide(color: p.outline),
-              ),
-            ),
+          OutlinedPanel(
             child: SettingRow(
               key: const ValueKey('download-lyrics-skip-sounds'),
               title: l10n.downloadLyricsSkipSounds,
@@ -391,14 +377,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
         // 자막 표 아래: 영상 자막과 따로 가사를 직접 정한다 (파일 · 웹에서 불러오거나 직접 써서, 자막이 없어도 쓸 수 있다).
         // 위 "자막 가져오기" 줄과 같은 카드 모양의 줄이다.
         const SizedBox(height: AppSpacing.sm),
-        DecoratedBox(
-          decoration: ShapeDecoration(
-            color: p.surfaceHigh,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppRadii.sm),
-              side: BorderSide(color: p.outline),
-            ),
-          ),
+        OutlinedPanel(
           child: SettingRow(
             key: const ValueKey('download-lyrics-edit'),
             title: l10n.lyricsEditTitle,
@@ -506,9 +485,9 @@ class _DownloadScreenState extends State<DownloadScreen> {
   static const _rowsPerColumn = 5;
 
   /// 자막 표: 한 칸에 5줄씩 세로로 쌓고, 넘치면 오른쪽으로 칸을 늘려 가로로 민다.
+
   Widget _languageTable(BuildContext context, SubtitleAvailability sub) {
     final l10n = context.l10n;
-    final p = context.palette;
     final korean = Localizations.localeOf(context).languageCode == 'ko';
     final entries = <({String? lang, String name, String kind})>[
       (
@@ -532,14 +511,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
     Widget column(List<({String? lang, String name, String kind})> rows) =>
         SizedBox(
           width: columns.length == 1 ? null : 260,
-          child: DecoratedBox(
-            decoration: ShapeDecoration(
-              color: p.surfaceHigh,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadii.sm),
-                side: BorderSide(color: p.outline),
-              ),
-            ),
+          child: OutlinedPanel(
             child: Column(
               children: [
                 _languageRow(

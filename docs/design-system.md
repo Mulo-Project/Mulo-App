@@ -115,3 +115,6 @@ Material 버튼 · AppBar · ListTile · Switch · Chip · Slider는 화면에�
 - 글리프는 Phosphor(MIT)의 둥글고 부드러운 선 아이콘이다. 재생 · 일시정지 · 이전 · 다음 · 좋아요 등 면이 필요한 곳은 Fill 폰트를 쓴다. 폰트는 `assets/fonts/phosphor/`(라이선스 포함).
 - Phosphor 패키지(`phosphor_flutter`)는 현재 Flutter에서 컴파일되지 않아(`IconData`가 final) 폰트 파일만 가져오고 코드포인트는 `AppIcons`에 직접 적었다.
 - 세트를 바꾸거나 직접 그린 아이콘 폰트로 교체할 때는 `AppIcons`의 정의와 폰트만 고치면 된다.
+
+### OutlinedPanel
+윤곽선이 있는 옅은 면(연한 면 색 + 윤곽선 + 작은 반경). 설정 줄 · 표를 한 칸으로 감쌀 때 쓴다. 화면에서 같은 `DecoratedBox(ShapeDecoration…)`를 직접 만들지 않는다 (`lib/core/design/components/outlined_panel.dart`).

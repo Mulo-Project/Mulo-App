@@ -28,6 +28,7 @@ export 'components/line_chart.dart';
 export 'components/loading_indicator.dart';
 export 'components/menu_row.dart';
 export 'components/mini_player_bar.dart';
+export 'components/outlined_panel.dart';
 export 'components/pin_pad.dart';
 export 'components/progress.dart';
 export 'components/section_card.dart';
