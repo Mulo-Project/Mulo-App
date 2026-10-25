@@ -51,6 +51,7 @@ class LocalDownloadNotifier implements DownloadNotifier {
       'preview' => DownloadNotificationAction.preview,
       'pausePreview' => DownloadNotificationAction.pausePreview,
       'stopPreview' => DownloadNotificationAction.stopPreview,
+      'toggleHold' => DownloadNotificationAction.toggleHold,
       'cancel' => DownloadNotificationAction.cancel,
       _ => null,
     };
@@ -87,6 +88,7 @@ class LocalDownloadNotifier implements DownloadNotifier {
     String? subText,
     String? previewLabel,
     String? cancelLabel,
+    String? holdLabel,
     String? pauseLabel,
     String? stopLabel,
     String? openId,
@@ -99,6 +101,7 @@ class LocalDownloadNotifier implements DownloadNotifier {
     'subText': subText,
     'previewLabel': previewLabel,
     'cancelLabel': cancelLabel,
+    'holdLabel': holdLabel,
     'pauseLabel': pauseLabel,
     'stopLabel': stopLabel,
     'openId': openId,

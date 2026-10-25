@@ -935,6 +935,9 @@
   "notifDownloadOverall": "전체 {done}/{total}곡 · {percent}%",
   "notifDownloadPreview": "미리듣기",
   "notifDownloadCancel": "취소",
+  "notifDownloadPause": "일시정지",
+  "notifDownloadResume": "이어받기",
+  "notifDownloadPausedBody": "일시정지됨 · {percent}%",
   "notifDownloadPausePreview": "일시정지",
   "notifDownloadResumePreview": "이어 듣기",
   "notifDownloadStopPreview": "중지",
@@ -942,6 +945,7 @@
   "notifDownloadDoneHidden": "곡이 보관함에 추가됐어요",
   "notifDownloadFailedTitle": "받기 실패",
   "notifDownloadFailedHidden": "곡을 받지 못했어요",
+  "@notifDownloadPausedBody": {"placeholders": {"percent": {"type": "int"}}},
   "@notifDownloadProgressBody": {"placeholders": {"percent": {"type": "int"}}},
   "@notifDownloadProgressNext": {"placeholders": {"percent": {"type": "int"}, "next": {"type": "String"}}},
   "@notifDownloadOverall": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}, "percent": {"type": "int"}}}

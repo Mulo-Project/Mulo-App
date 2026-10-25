@@ -50,3 +50,9 @@
 - 앨범 · 아티스트 · 장르 화면을 `TrackGroupScreen`(+ `TrackGroupKind`) 하나로 묶음. 세 화면 파일은 이름만 넘기는 얇은 껍데기. 아티스트 · 장르에도 이름 바꾸기 추가, 곡이 4곡 이상이면 진행 대화상자(`showProgressWhile`, "N/M곡")로 일괄 수정 (`LibraryCubit.renameGroup`이 `renameAlbum`을 대체).
 - 앱 시작 "새 영상 N개 [보기]" 안내를 스낵바에서 화면 위에서 내려오는 안내 줄(`NewVideosBanner`)로 바꿈 (보기 · 닫기, 8초 뒤 사라짐). docs/snackbar.md의 B묶음에서 뺌.
 - 홈 접기 구역(최근 재생 · 많이 들은 곡)의 화살표를 아래 곡 줄 ⋮ 버튼과 같은 세로선에 맞춤. 홈 · 설정 · 받기 화면을 스크린샷으로 훑어 이 외에 눈에 띄는 어긋남은 없었음.
+
+## 받기 알림: 일시정지 중 동작 · 일시정지/이어받기 버튼
+- 원인: 알림 버튼이 "일시정지가 아닌 받는 곡"만 찾아서, 일시정지 중에는 취소 · 미리 듣기가 아무 일도 안 했다. 일시정지된 곡도 대상으로 (`notification_bridge.dart`).
+- 알림에 받기 일시정지 / 이어받기 버튼 추가 (`toggleHold`, Kotlin `ACTIONS`에 `TOGGLE_HOLD`). 남은 곡이 모두 일시정지면 알림이 "일시정지됨 · N%"와 이어받기 버튼으로 남는다. 알림 버튼은 3개까지라서 미리 듣는 중에는 이 버튼을 뺀다.
+- 문구 `notifDownloadPause` · `notifDownloadResume` · `notifDownloadPausedBody` (ko · en).
+- 테스트: `download_notification_actions_test.dart`, `notification_sync_test.dart`.

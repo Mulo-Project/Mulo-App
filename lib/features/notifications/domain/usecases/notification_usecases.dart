@@ -55,6 +55,7 @@ class DownloadProgressNotice {
     this.subText,
     this.previewLabel,
     this.cancelLabel,
+    this.holdLabel,
     this.pauseLabel,
     this.stopLabel,
     this.openId,
@@ -68,6 +69,9 @@ class DownloadProgressNotice {
   final String? subText;
   final String? previewLabel;
   final String? cancelLabel;
+
+  /// 받기 일시정지 · 이어받기 버튼의 글자.
+  final String? holdLabel;
   final String? pauseLabel;
   final String? stopLabel;
 
@@ -91,6 +95,7 @@ class ShowDownloadProgress implements UseCase<void, DownloadProgressNotice> {
     subText: params.subText,
     previewLabel: params.previewLabel,
     cancelLabel: params.cancelLabel,
+    holdLabel: params.holdLabel,
     pauseLabel: params.pauseLabel,
     stopLabel: params.stopLabel,
     openId: params.openId,

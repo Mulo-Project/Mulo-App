@@ -4364,6 +4364,24 @@ abstract class AppLocalizations {
   /// **'취소'**
   String get notifDownloadCancel;
 
+  /// No description provided for @notifDownloadPause.
+  ///
+  /// In ko, this message translates to:
+  /// **'일시정지'**
+  String get notifDownloadPause;
+
+  /// No description provided for @notifDownloadResume.
+  ///
+  /// In ko, this message translates to:
+  /// **'이어받기'**
+  String get notifDownloadResume;
+
+  /// No description provided for @notifDownloadPausedBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'일시정지됨 · {percent}%'**
+  String notifDownloadPausedBody(int percent);
+
   /// No description provided for @notifDownloadPausePreview.
   ///
   /// In ko, this message translates to:

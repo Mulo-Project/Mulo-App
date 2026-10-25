@@ -27,6 +27,7 @@ object DownloadNotifications {
         "preview" to "com.mulo.app.download.PREVIEW",
         "pausePreview" to "com.mulo.app.download.PAUSE_PREVIEW",
         "stopPreview" to "com.mulo.app.download.STOP_PREVIEW",
+        "toggleHold" to "com.mulo.app.download.TOGGLE_HOLD",
         "cancel" to "com.mulo.app.download.CANCEL",
     )
 
@@ -123,9 +124,11 @@ object DownloadNotifications {
         val stop = a["stopLabel"] as? String
         val preview = a["previewLabel"] as? String
         val cancel = a["cancelLabel"] as? String
+        val hold = a["holdLabel"] as? String
         if (pause != null) addAction(context, b, "pausePreview", pause)
         if (stop != null) addAction(context, b, "stopPreview", stop)
         if (preview != null && pause == null) addAction(context, b, "preview", preview)
+        if (hold != null) addAction(context, b, "toggleHold", hold)
         if (cancel != null) addAction(context, b, "cancel", cancel)
         return b.build()
     }

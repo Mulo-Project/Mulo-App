@@ -22,6 +22,7 @@ class NoDownloadNotifier implements DownloadNotifier {
     String? subText,
     String? previewLabel,
     String? cancelLabel,
+    String? holdLabel,
     String? pauseLabel,
     String? stopLabel,
     String? openId,

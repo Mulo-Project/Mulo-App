@@ -2323,6 +2323,17 @@ class AppLocalizationsKo extends AppLocalizations {
   String get notifDownloadCancel => '취소';
 
   @override
+  String get notifDownloadPause => '일시정지';
+
+  @override
+  String get notifDownloadResume => '이어받기';
+
+  @override
+  String notifDownloadPausedBody(int percent) {
+    return '일시정지됨 · $percent%';
+  }
+
+  @override
   String get notifDownloadPausePreview => '일시정지';
 
   @override

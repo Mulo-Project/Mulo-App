@@ -193,6 +193,15 @@ class _NotificationBridgeState extends State<NotificationBridge>
       context.read<DownloadQueueCubit>().cancel(current.id);
       return;
     }
+    if (action == DownloadNotificationAction.toggleHold) {
+      final queue = context.read<DownloadQueueCubit>();
+      if (current.status == DownloadStatus.paused) {
+        queue.resume(current.id);
+      } else {
+        queue.pause(current.id);
+      }
+      return;
+    }
     final preview = context.read<PreviewCubit>();
     if (action == DownloadNotificationAction.pausePreview) {
       if (preview.state.isActive(current.id)) preview.togglePause();

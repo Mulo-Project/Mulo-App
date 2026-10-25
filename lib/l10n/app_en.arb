@@ -829,6 +829,9 @@
   "notifDownloadOverall": "Overall {done}/{total} · {percent}%",
   "notifDownloadPreview": "Preview",
   "notifDownloadCancel": "Cancel",
+  "notifDownloadPause": "Pause",
+  "notifDownloadResume": "Resume download",
+  "notifDownloadPausedBody": "Paused · {percent}%",
   "notifDownloadPausePreview": "Pause",
   "notifDownloadResumePreview": "Resume",
   "notifDownloadStopPreview": "Stop",
@@ -836,6 +839,7 @@
   "notifDownloadDoneHidden": "A song was added to your library",
   "notifDownloadFailedTitle": "Download failed",
   "notifDownloadFailedHidden": "A song could not be downloaded",
+  "@notifDownloadPausedBody": {"placeholders": {"percent": {"type": "int"}}},
   "@notifDownloadProgressBody": {"placeholders": {"percent": {"type": "int"}}},
   "@notifDownloadProgressNext": {"placeholders": {"percent": {"type": "int"}, "next": {"type": "String"}}},
   "@notifDownloadOverall": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}, "percent": {"type": "int"}}}

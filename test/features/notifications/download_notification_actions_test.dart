@@ -81,4 +81,18 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     expect(preview.state.isActive('d1'), isTrue);
   });
+
+  testWidgets('알림의 일시정지 버튼은 받는 곡의 받기를 멈춘다', (tester) async {
+    final (queue, notifier) = await boot(tester);
+    notifier.press(DownloadNotificationAction.toggleHold);
+    await tester.pumpAndSettle();
+    expect(queue.controls, contains('pause:d1'));
+  });
+
+  testWidgets('알림의 이어받기 버튼은 일시정지된 곡을 이어 받는다', (tester) async {
+    final (queue, notifier) = await boot(tester, DownloadStatus.paused);
+    notifier.press(DownloadNotificationAction.toggleHold);
+    await tester.pumpAndSettle();
+    expect(queue.controls, contains('resume:d1'));
+  });
 }
