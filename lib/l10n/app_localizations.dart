@@ -3947,8 +3947,20 @@ abstract class AppLocalizations {
   /// No description provided for @playlistImportBackToResults.
   ///
   /// In ko, this message translates to:
-  /// **'검색 결과'**
+  /// **'검색 결과로'**
   String get playlistImportBackToResults;
+
+  /// No description provided for @playlistImportLoading.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 목록을 읽는 중이에요'**
+  String get playlistImportLoading;
+
+  /// No description provided for @playlistImportSelectedCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'{selected}/{total}곡 선택됨'**
+  String playlistImportSelectedCount(int selected, int total);
 
   /// No description provided for @playlistImportResultSubtitle.
   ///

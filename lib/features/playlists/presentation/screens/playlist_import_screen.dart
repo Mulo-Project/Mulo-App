@@ -124,51 +124,76 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
     final l10n = context.l10n;
     final p = context.palette;
 
-    return Scaffold(
-      backgroundColor: p.background,
-      body: AppBackground(
-        child: SafeArea(
-          child: BlocProvider.value(
-            value: _cubit,
-            child: Column(
-              children: [
-                AppTopBar(
-                  title: l10n.playlistsImport,
-                  leading: const AppBackButton(),
-                ),
-                Padding(
-                  padding: AppSpacing.screen,
-                  child: AppSearchField(
-                    controller: _controller,
-                    hint: l10n.playlistImportHint,
-                    clearTooltip: l10n.actionClear,
-                    onSubmitted: (_) => _load(),
+    return BlocProvider.value(
+      value: _cubit,
+      child: BlocBuilder<PlaylistImportCubit, PlaylistImportState>(
+        builder: (context, state) {
+          // 찾은 재생목록 하나를 열어 보는 중(읽는 중 · 곡 목록 · 실패)이면 뒤로 가기는 찾은 목록으로 돌아간다.
+          final viewing =
+              state.results.isNotEmpty &&
+              (state.status == PlaylistImportStatus.loading ||
+                  state.status == PlaylistImportStatus.loaded ||
+                  state.status == PlaylistImportStatus.failed);
+          return PopScope(
+            canPop: !viewing,
+            onPopInvokedWithResult: (didPop, _) {
+              if (!didPop && viewing) _cubit.backToResults();
+            },
+            child: Scaffold(
+              backgroundColor: p.background,
+              body: AppBackground(
+                child: SafeArea(
+                  child: Column(
+                    children: [
+                      AppTopBar(
+                        title: l10n.playlistsImport,
+                        leading: AppBackButton(
+                          onPressed: viewing ? _cubit.backToResults : null,
+                        ),
+                      ),
+                      // 재생목록 하나를 열어 보는 동안은 찾기 칸을 숨겨 곡 목록에 집중한다.
+                      if (!viewing) ...[
+                        Padding(
+                          padding: AppSpacing.screen,
+                          child: AppSearchField(
+                            controller: _controller,
+                            hint: l10n.playlistImportHint,
+                            clearTooltip: l10n.actionClear,
+                            onSubmitted: (_) => _load(),
+                          ),
+                        ),
+                        Padding(
+                          padding: AppSpacing.screen.copyWith(
+                            top: AppSpacing.xs,
+                            bottom: AppSpacing.xs,
+                          ),
+                          // 검색창과 같은 너비로 펼쳐 왼쪽에 쏠려 보이지 않게 한다.
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: PillButton(
+                              label: l10n.playlistImportMine,
+                              icon: AppIcons.playlistPlay,
+                              variant: PillVariant.tonal,
+                              onPressed: _openMine,
+                            ),
+                          ),
+                        ),
+                      ],
+                      Expanded(
+                        child: _Body(
+                          onRetry: _load,
+                          onSignIn: _openMine,
+                          onCancel: viewing ? _cubit.backToResults : null,
+                        ),
+                      ),
+                      _Footer(starting: _starting, onStart: _start),
+                    ],
                   ),
                 ),
-                Padding(
-                  padding: AppSpacing.screen.copyWith(
-                    top: AppSpacing.xs,
-                    bottom: AppSpacing.xs,
-                  ),
-                  // 검색창과 같은 너비로 펼쳐 왼쪽에 쏠려 보이지 않게 한다.
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: PillButton(
-                      label: l10n.playlistImportMine,
-                      icon: AppIcons.playlistPlay,
-                      variant: PillVariant.tonal,
-                      onPressed: _openMine,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: _Body(onRetry: _load, onSignIn: _openMine),
-                ),
-                _Footer(starting: _starting, onStart: _start),
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -201,9 +226,12 @@ class _SignInPromptDialog extends StatelessWidget {
 }
 
 class _Body extends StatelessWidget {
-  const _Body({required this.onRetry, required this.onSignIn});
+  const _Body({required this.onRetry, required this.onSignIn, this.onCancel});
 
   final VoidCallback onRetry;
+
+  /// 곡 목록을 읽는 중에 그만두고 찾은 목록으로 돌아가기 (열어 보는 중일 때만).
+  final VoidCallback? onCancel;
 
   /// 내 재생목록을 읽으려면 로그인해야 할 때 누르는 버튼의 동작.
   final VoidCallback onSignIn;
@@ -228,7 +256,29 @@ class _Body extends StatelessWidget {
           l10n.playlistImportEmptyBody,
         );
       case PlaylistImportStatus.loading:
-        return const LoadingState();
+        // 곡이 많은 재생목록은 오래 걸리므로, 잘못 열었으면 바로 돌아갈 수 있게 한다.
+        if (onCancel == null) return const LoadingState();
+        return Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const LoadingIndicator(),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                l10n.playlistImportLoading,
+                style: Theme.of(context).textTheme.bodyMedium
+                    ?.copyWith(color: context.palette.onSurfaceMuted),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              PillButton(
+                label: l10n.playlistImportBackToResults,
+                icon: AppIcons.back,
+                variant: PillVariant.tonal,
+                onPressed: onCancel,
+              ),
+            ],
+          ),
+        );
       case PlaylistImportStatus.results:
         if (state.results.isEmpty) {
           return state.mine
@@ -345,21 +395,8 @@ class _Tracks extends StatelessWidget {
     final cubit = context.read<PlaylistImportCubit>();
 
     return ListView(
-      padding: EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
       children: [
-        if (state.results.isNotEmpty)
-          // 알약 버튼 대신 글자 버튼: 목록 위에 가볍게 놓인 되돌아가기 링크.
-          Padding(
-            padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xxs),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: PlainButton(
-                label: l10n.playlistImportBackToResults,
-                icon: AppIcons.back,
-                onPressed: cubit.backToResults,
-              ),
-            ),
-          ),
         Padding(
           padding: AppSpacing.screen,
           child: Row(
@@ -368,7 +405,7 @@ class _Tracks extends StatelessWidget {
                 image: state.thumbnailUrl == null
                     ? null
                     : NetworkImage(state.thumbnailUrl!),
-                size: 56,
+                size: 72,
                 radius: AppRadii.sm,
               ),
               const SizedBox(width: AppSpacing.md),
@@ -382,6 +419,7 @@ class _Tracks extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    const SizedBox(height: AppSpacing.hair),
                     Text(
                       l10n.songCount(state.entries.length),
                       style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
@@ -392,24 +430,33 @@ class _Tracks extends StatelessWidget {
             ],
           ),
         ),
+        const SizedBox(height: AppSpacing.sm),
+        const AppDivider(),
+        // 고른 수는 왼쪽, 전체 선택 · 해제는 곡 목록의 체크 표시와 같은 오른쪽.
         Padding(
-          padding: AppSpacing.screen.copyWith(
-            top: AppSpacing.sm,
-            bottom: AppSpacing.xs,
-          ),
-          // 목록 바로 위 오른쪽에 글자 버튼으로 둔다 (곡 목록의 체크 표시와 같은 쪽).
-          child: Align(
-            alignment: Alignment.centerRight,
-            child: PlainButton(
-              label: state.allSelected
-                  ? l10n.playlistImportClear
-                  : l10n.playlistImportSelectAll,
-              icon: state.allSelected
-                  ? AppIcons.radioOff
-                  : AppIcons.checkCircle,
-              accent: true,
-              onPressed: cubit.toggleAll,
-            ),
+          padding: AppSpacing.screen.copyWith(top: AppSpacing.xxs, bottom: 0),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.playlistImportSelectedCount(
+                    state.selected.length,
+                    state.entries.length,
+                  ),
+                  style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
+                ),
+              ),
+              PlainButton(
+                label: state.allSelected
+                    ? l10n.playlistImportClear
+                    : l10n.playlistImportSelectAll,
+                icon: state.allSelected
+                    ? AppIcons.radioOff
+                    : AppIcons.checkCircle,
+                accent: true,
+                onPressed: cubit.toggleAll,
+              ),
+            ],
           ),
         ),
         for (final hit in state.entries)

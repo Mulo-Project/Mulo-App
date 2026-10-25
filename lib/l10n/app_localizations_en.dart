@@ -2143,7 +2143,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistImportNoResultsBody => 'Try a different search.';
 
   @override
-  String get playlistImportBackToResults => 'Search results';
+  String get playlistImportBackToResults => 'Back to results';
+
+  @override
+  String get playlistImportLoading => 'Reading the track list…';
+
+  @override
+  String playlistImportSelectedCount(int selected, int total) {
+    return '$selected/$total selected';
+  }
 
   @override
   String playlistImportResultSubtitle(String channel, int count) {

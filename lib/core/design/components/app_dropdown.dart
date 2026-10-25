@@ -52,10 +52,10 @@ class AppDropdown<T> extends StatelessWidget {
       children: [
         if (icon != null) ...[
           Icon(icon, size: AppSizes.iconXs, color: p.onSurfaceMuted),
-          const SizedBox(width: AppSpacing.xs),
+          const SizedBox(width: AppSpacing.xxs),
         ],
         Text(labelOf(selected), style: text),
-        Icon(AppIcons.dropDown, size: AppSizes.icon, color: p.onSurfaceMuted),
+        Icon(AppIcons.dropDown, size: AppSizes.iconSm, color: p.onSurfaceMuted),
       ],
     );
 
@@ -131,7 +131,7 @@ class AppDropdown<T> extends StatelessWidget {
                   height: 36,
                   child: Icon(
                     (ascending ?? true) ? AppIcons.arrowUp : AppIcons.arrowDown,
-                    size: AppSizes.icon,
+                    size: AppSizes.iconSm,
                     color: p.accent,
                   ),
                 ),
