@@ -9,7 +9,7 @@
 ## 한 일
 - 내 YouTube 구독 채널 목록을 읽어 고른 채널만 앱 구독 채널로 추가하는 화면 (`MySubscriptionsScreen`, 하단 막대 + 바텀 시트 + 확인창, 이미 구독한 채널은 표시 · 중복 없음).
 - 재생목록 가져오기에 "구독 채널의 재생목록" 옵션: 채널 고르기 시트 → 업로드 전체 + 그 채널의 재생목록 → 기존 곡 고르기.
-- 로그인 확인 흐름을 `ensureGoogleSignIn`으로 공용화. 설계는 D-124.
+- 로그인 확인 흐름을 `ensureGoogleSignIn`으로 공용화. 설계는 D-125.
 
 ## 바꾼 설정
 - 없음 (pubspec · Gradle · Manifest 그대로, 권한도 기존 `youtube.readonly`).
