@@ -201,8 +201,10 @@ class _SubtitleDetailScreenState extends State<SubtitleDetailScreen> {
           body: body,
           primaryKey: const ValueKey('subtitle-detail-use'),
           primaryLabel: l10n.downloadSubtitleUse,
-          onPrimary: () =>
-              Navigator.of(context).pop(SubtitleChoice(_editedRaw())),
+          // 자막(또는 불러온 글)이 아직 없으면 고를 수 없다 (불러오는 중 · 못 읽음).
+          onPrimary: _base == null
+              ? null
+              : () => Navigator.of(context).pop(SubtitleChoice(_editedRaw())),
           leadingIcon: AppIcons.back,
         );
       },

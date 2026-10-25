@@ -32,7 +32,9 @@ class LyricsEditScaffold extends StatelessWidget {
   /// 줄마다 싱크 시간 칸을 보이는가.
   final bool showTimes;
   final String primaryLabel;
-  final VoidCallback onPrimary;
+
+  /// 확인 버튼을 눌렀을 때. null이면 버튼을 막는다 (아직 불러오는 중일 때 등).
+  final VoidCallback? onPrimary;
   final Key? primaryKey;
 
   /// 입력 칸 위의 안내 글.

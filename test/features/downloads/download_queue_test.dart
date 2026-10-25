@@ -1,9 +1,7 @@
 import 'package:music_download_play_app/features/search/presentation/screens/media_detail_screen.dart';
-import 'package:music_download_play_app/core/design/components/app_dialog.dart';
-import 'package:music_download_play_app/core/design/icons/app_icons.dart';
 import 'package:flutter/material.dart';
-import 'package:music_download_play_app/core/design/components/color_picker.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:music_download_play_app/core/design/design.dart';
 import 'package:music_download_play_app/features/lyrics/domain/repositories/lyrics_repository.dart';
 import 'package:music_download_play_app/features/downloads/presentation/widgets/download_dialog.dart';
 import 'package:music_download_play_app/app/app.dart';
@@ -314,15 +312,19 @@ void main() {
     final queue = await openLyricsPage(
       tester,
       FakeDownloaderEngine(
-        info: const VideoInfo(
-          MediaHit(
-            id: 'abc',
-            title: 'Song',
-            url: 'https://youtu.be/abc',
-            subtitleLangs: ['ko', 'en'],
+          info: const VideoInfo(
+            MediaHit(
+              id: 'abc',
+              title: 'Song',
+              url: 'https://youtu.be/abc',
+              subtitleLangs: ['ko', 'en'],
+            ),
           ),
+        )
+        ..subtitles = const SubtitleTrack(
+          language: 'en',
+          cues: [SubtitleCue(Duration(seconds: 1), 'hello')],
         ),
-      ),
     );
     expect(find.text('자막 2개를 찾았어요.'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('download-import-lyrics')));
@@ -565,6 +567,41 @@ void main() {
     expect(request.importLyrics, isTrue);
     expect(request.lyricsLanguage, 'en');
     expect(request.lyricsText, isNull);
+  });
+
+  testWidgets('받기 페이지: 자막을 아직 못 읽었으면 "이 자막 사용"을 누를 수 없고, 읽으면 누를 수 있다', (
+    tester,
+  ) async {
+    // 자막이 없다고 답하면(읽지 못함) 상세 페이지에는 글이 없다.
+    final engine = FakeDownloaderEngine(
+      info: const VideoInfo(
+        MediaHit(
+          id: 'abc',
+          title: 'Song',
+          url: 'https://youtu.be/abc',
+          subtitleLangs: ['en'],
+        ),
+      ),
+    );
+    await openLyricsPage(
+      tester,
+      engine,
+      lyricsFile: FakeLyricsFileSource('[00:05.00]from file'),
+    );
+    await tester.tap(find.byKey(const ValueKey('download-import-lyrics')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('영어'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('영어'));
+    await tester.pumpAndSettle();
+
+    final use = find.byKey(const ValueKey('subtitle-detail-use'));
+    expect(tester.widget<PillButton>(use).onPressed, isNull);
+
+    // 파일에서 가사를 불러오면 글이 생겨 고를 수 있다.
+    await tester.tap(find.byKey(const ValueKey('subtitle-detail-import-file')));
+    await tester.pumpAndSettle();
+    expect(tester.widget<PillButton>(use).onPressed, isNotNull);
   });
 
   testWidgets('받기 페이지: 자막 언어가 하나여도 표가 보이고, 줄을 누르면 가사 상세로 간다', (tester) async {
