@@ -109,7 +109,9 @@ class _LyricsLatencyScreenState extends State<LyricsLatencyScreen> {
     final recommended = _running
         ? null
         : LatencyCalibration.recommend(_offsets);
-    final np = context.watch<NowPlayingCubit>();
+    // 재생 위치는 1초에 여러 번 바뀌므로 화면 전체가 따라 그려지지 않게 재생 중인지만 지켜본다.
+    final np = context.read<NowPlayingCubit>();
+    final playing = context.select((NowPlayingCubit c) => c.state.isPlaying);
     final stamped = _tried;
 
     // 구역 하나 = 유리 카드 한 장: 제목 · 설명 · 내용. 카드 사이 간격은 같다.
@@ -293,12 +295,10 @@ class _LyricsLatencyScreenState extends State<LyricsLatencyScreen> {
                           children: [
                             Expanded(
                               child: PillButton(
-                                label: np.state.isPlaying
+                                label: playing
                                     ? l10n.lyricsSyncPause
                                     : l10n.lyricsSyncPlay,
-                                icon: np.state.isPlaying
-                                    ? AppIcons.pause
-                                    : AppIcons.play,
+                                icon: playing ? AppIcons.pause : AppIcons.play,
                                 variant: PillVariant.tonal,
                                 onPressed: np.togglePlay,
                               ),

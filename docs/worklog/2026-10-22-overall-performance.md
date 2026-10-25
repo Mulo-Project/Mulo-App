@@ -105,3 +105,5 @@
 - 성능: 플레이어 화면이 재생 위치가 바뀔 때마다(1초에 여러 번) 화면 전체를 다시 만들던 것을 위치를 쓰는 곳만 다시 그리게 했다. `PlayerScreen`은 위치만 바뀐 상태 변화를 건너뛰고(`buildWhen`), 진행 막대 · 시간 · 모양이 변하는 진행 막대(`MorphSeek`)는 `PositionBuilder`가 따로 그린다. ±10초 버튼은 누른 순간의 위치를 읽는다. 속도는 측정하지 못했다(기기 프로파일 필요).
 - 구조: `player_common.dart`(1439줄)를 `player_seek.dart`(진행 막대 · 시간) · `player_sleep_timer.dart`(수면 타이머) · `player_morph_seek.dart`(모양이 변하는 진행 막대)로 나눴다. `player_common.dart`가 다시 내보내므로 가져오는 쪽은 그대로다. 동작은 바꾸지 않았다.
 - 공용 컴포넌트 `OutlinedPanel`(윤곽선 있는 옅은 면)을 만들어 받기 창에서 같은 모양을 직접 만들던 4곳을 바꿨다. 같은 모양이 남아 있는 다른 화면(구독 · 설정 일부)은 모양이 조금씩 달라 그대로 두었다.
+- 받기 창에서 가사 구역(자막 가져오기 · 언어 표 · 가사 설정 · 덮어쓰기 확인)을 `DownloadLyricsSection`(`download_lyrics_section.dart`)으로 나눴다. `download_dialog.dart`는 약 900 → 560줄. 고른 값은 구역의 상태가 들고 있고(`importLyrics` · `custom` · `language` · `skipSounds` · `lyricsText`), 받기를 누를 때 부모가 `GlobalKey`로 읽는다. 동작은 바꾸지 않았다.
+- 성능: 반응 시간 보정 페이지가 재생 위치가 바뀔 때마다 페이지 전체를 다시 그리던 것을 재생 중인지만 지켜보게 했다.
