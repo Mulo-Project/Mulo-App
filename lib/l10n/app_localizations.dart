@@ -2324,12 +2324,6 @@ abstract class AppLocalizations {
   /// **'기본으로'**
   String get downloadCoverDefault;
 
-  /// No description provided for @downloadLyricsCustom.
-  ///
-  /// In ko, this message translates to:
-  /// **'불러온 가사를 넣어요 · {lines}줄'**
-  String downloadLyricsCustom(int lines);
-
   /// No description provided for @downloadImportLyrics.
   ///
   /// In ko, this message translates to:

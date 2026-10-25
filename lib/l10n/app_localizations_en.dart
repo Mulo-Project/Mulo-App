@@ -1247,11 +1247,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadCoverDefault => 'Use default';
 
   @override
-  String downloadLyricsCustom(int lines) {
-    return 'Using loaded lyrics · $lines lines';
-  }
-
-  @override
   String get downloadImportLyrics => 'Import subtitles as lyrics';
 
   @override

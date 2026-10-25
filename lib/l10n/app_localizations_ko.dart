@@ -1219,11 +1219,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadCoverDefault => '기본으로';
 
   @override
-  String downloadLyricsCustom(int lines) {
-    return '불러온 가사를 넣어요 · $lines줄';
-  }
-
-  @override
   String get downloadImportLyrics => '자막을 가사로 가져오기';
 
   @override

@@ -263,42 +263,6 @@ void main() {
     expect(queue.requests.single.importLyrics, isTrue);
   });
 
-  testWidgets('받기 팝업: 파일에서 불러온 가사를 영상 자막 대신 넣어 받는다', (tester) async {
-    final queue = MemoryDownloadQueue();
-    await setUpTestDependencies(
-      downloads: queue,
-      lyricsFile: FakeLyricsFileSource('[00:01.00]안녕\n[00:02.00]잘가'),
-    );
-    tester.view.physicalSize = const Size(1170, 2532);
-    tester.view.devicePixelRatio = 3;
-    tester.platformDispatcher.localesTestValue = const [Locale('ko')];
-    addTearDown(tester.view.reset);
-    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
-    addTearDown(sl.reset);
-    await tester.pumpWidget(const MusicApp(initialLocation: Routes.search));
-    await tester.pumpAndSettle();
-
-    await openDownloadDialog(tester);
-    final button = find.byKey(const ValueKey('download-lyrics-file'));
-    await tester.scrollUntilVisible(
-      button,
-      200,
-      scrollable: inSheet(find.byType(Scrollable)).first,
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(button);
-    await tester.pumpAndSettle();
-    expect(find.textContaining('불러온 가사를 넣어요'), findsOneWidget);
-
-    await tester.ensureVisible(inSheet(find.text('받기')));
-    await tester.tap(inSheet(find.text('받기')));
-    await tester.pumpAndSettle();
-
-    final request = queue.requests.single;
-    expect(request.importLyrics, isTrue);
-    expect(request.lyricsText, '[00:01.00]안녕\n[00:02.00]잘가');
-  });
-
   Future<MemoryDownloadQueue> openLyricsPage(
     WidgetTester tester,
     FakeDownloaderEngine engine,
