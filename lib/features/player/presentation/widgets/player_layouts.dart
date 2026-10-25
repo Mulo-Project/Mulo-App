@@ -213,31 +213,33 @@ class ArcPlayer extends StatelessWidget {
               children: [
                 PlayerTopBar(track: data.track),
                 Expanded(
-                  child: MorphSeek(
-                    progress: data.state.progress,
-                    onSeek: data.vm.seekFraction,
-                    onSeekStart: data.vm.beginScrub,
-                    onSeekEnd: data.vm.endScrub,
-                    straight: data.showLyrics,
-                    pathOf: _path,
-                    track: p.onSurface.withValues(alpha: .2),
-                    fill: p.onSurface,
-                    position: data.state.position,
-                    total: data.track.duration,
-                    timeAt: (s, _) => Offset(
-                      s.width / 2,
-                      s.height / 2 + (_size(s) / 2 - _knob - 1),
-                    ),
-                    cover: (s, _) => Center(
-                      child: SizedBox.square(
-                        dimension: _size(s),
-                        child: Padding(
-                          padding: EdgeInsets.all(_size(s) * .09),
-                          child: PlayerCover(art: art, radius: _size(s)),
+                  child: PositionBuilder(
+                    builder: (context, state) => MorphSeek(
+                      progress: state.progress,
+                      onSeek: data.vm.seekFraction,
+                      onSeekStart: data.vm.beginScrub,
+                      onSeekEnd: data.vm.endScrub,
+                      straight: data.showLyrics,
+                      pathOf: _path,
+                      track: p.onSurface.withValues(alpha: .2),
+                      fill: p.onSurface,
+                      position: state.position,
+                      total: data.track.duration,
+                      timeAt: (s, _) => Offset(
+                        s.width / 2,
+                        s.height / 2 + (_size(s) / 2 - _knob - 1),
+                      ),
+                      cover: (s, _) => Center(
+                        child: SizedBox.square(
+                          dimension: _size(s),
+                          child: Padding(
+                            padding: EdgeInsets.all(_size(s) * .09),
+                            child: PlayerCover(art: art, radius: _size(s)),
+                          ),
                         ),
                       ),
+                      lyrics: _lyrics(data),
                     ),
-                    lyrics: _lyrics(data),
                   ),
                 ),
                 _imageSeekControls(data, SolidPlayButton(data: data, size: 72)),
