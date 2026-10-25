@@ -18,6 +18,12 @@ import '../../../search/presentation/widgets/audio_language_sheet.dart';
 import '../bloc/download_queue_cubit.dart';
 import '../bloc/download_settings_cubit.dart';
 import '../bloc/subtitle_availability_cubit.dart';
+import '../../../../core/usecase/usecase.dart';
+import '../../../library/domain/entities/track.dart';
+import '../../../lyrics/domain/entities/timed_lyrics_text.dart';
+import '../../../lyrics/domain/usecases/lyrics_usecases.dart';
+import '../../../lyrics/presentation/screens/lyrics_web_screen.dart';
+import '../../../lyrics/presentation/widgets/lyrics_dialogs.dart';
 import 'playlist_picker_sheet.dart';
 import 'save_folder_sheet.dart';
 import 'subtitle_detail_screen.dart';
@@ -170,6 +176,9 @@ class _DownloadScreenState extends State<DownloadScreen> {
   String? _lyricsLanguage;
   var _skipSounds = true;
 
+  // 파일이나 웹에서 직접 불러온 가사. 있으면 영상 자막 대신 이 글을 가사로 넣는다.
+  String? _custom;
+
   // 상세 페이지에서 글을 고친 자막 (언어 코드별). 효과음 옵션이 바뀌면 비운다.
   final _edited = <String, String>{};
 
@@ -287,11 +296,13 @@ class _DownloadScreenState extends State<DownloadScreen> {
         url: widget.url,
         importLyrics:
             _isYoutube &&
-            _importLyrics &&
-            subtitleStatus != SubtitleStatus.none,
+            ((_importLyrics && subtitleStatus != SubtitleStatus.none) ||
+                _custom != null),
         lyricsLanguage: _lyricsLanguage,
         lyricsSkipSounds: _skipSounds,
-        lyricsText: _lyricsLanguage == null ? null : _edited[_lyricsLanguage],
+        lyricsText:
+            _custom ??
+            (_lyricsLanguage == null ? null : _edited[_lyricsLanguage]),
         audioLanguage: audioLanguage,
       ),
     );
@@ -348,6 +359,47 @@ class _DownloadScreenState extends State<DownloadScreen> {
                 : () => setState(() => _importLyrics = !_importLyrics),
           ),
         ),
+        // 영상 자막 말고 파일이나 웹에서 가사를 불러올 수도 있다 (자막이 없어도).
+        const SizedBox(height: AppSpacing.xs),
+        Wrap(
+          spacing: AppSpacing.xs,
+          children: [
+            PlainButton(
+              key: const ValueKey('download-lyrics-file'),
+              label: l10n.lyricsLoadFile,
+              icon: AppIcons.fileOpen,
+              onPressed: _pickLyricsFile,
+            ),
+            if (lyricsWebSupported)
+              PlainButton(
+                key: const ValueKey('download-lyrics-web'),
+                label: l10n.lyricsWebSearch,
+                icon: AppIcons.explore,
+                onPressed: _searchLyricsWeb,
+              ),
+          ],
+        ),
+        if (_custom != null)
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.downloadLyricsCustom(
+                    _custom!
+                        .split('\n')
+                        .where((l) => l.trim().isNotEmpty)
+                        .length,
+                  ),
+                  style: text.bodySmall?.copyWith(color: p.accent),
+                ),
+              ),
+              PlainButton(
+                key: const ValueKey('download-lyrics-custom-clear'),
+                label: l10n.actionClear,
+                onPressed: () => setState(() => _custom = null),
+              ),
+            ],
+          ),
         if (on && sub.languages.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.sm),
           Text(l10n.downloadSubtitleLanguage, style: text.labelSmall),
@@ -383,6 +435,42 @@ class _DownloadScreenState extends State<DownloadScreen> {
         ],
       ],
     );
+  }
+
+  Future<void> _pickLyricsFile() async {
+    final picked = await sl<PickLyricsFile>()(const NoParams());
+    if (picked != null && mounted) await _applyCustom(picked);
+  }
+
+  Future<void> _searchLyricsWeb() async {
+    // 곡 이름으로 검색하므로 받기 창에 적힌 제목 · 아티스트로 임시 곡을 만든다.
+    final probe = Track(
+      id: 'download',
+      title: _title.text,
+      artist: _artist.text,
+      album: '',
+      duration: Duration.zero,
+      uri: '',
+      addedAt: DateTime.now(),
+    );
+    final picked = await showLyricsWeb(context, probe);
+    if (picked != null && mounted) await _applyCustom(picked);
+  }
+
+  /// 불러온 글을 넣는다. 이미 불러온 가사가 있으면 바꿀지 뒤에 붙일지 먼저 묻는다.
+  Future<void> _applyCustom(String imported) async {
+    final current = _custom;
+    if (current == null || current.trim().isEmpty) {
+      setState(() => _custom = imported);
+      return;
+    }
+    final mode = await showLyricsImportMode(context);
+    if (mode == null || !mounted) return;
+    setState(() {
+      _custom = mode == LyricsImportMode.replace
+          ? imported
+          : '${current.trimRight()}\n${TimedLyricsText.parse(imported).text}';
+    });
   }
 
   void _pickLanguage(String? lang) {
