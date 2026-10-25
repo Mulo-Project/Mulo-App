@@ -228,7 +228,7 @@ void main() {
 
     await tester.tap(find.textContaining('파일에서 불러오기'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('메모로 띄우기'));
+    await tester.tap(find.text('메모에 추가'));
     await tester.pumpAndSettle();
     final memoField = find.byKey(const ValueKey('lyrics-memo-field'));
     expect(memoField, findsOneWidget);
@@ -253,6 +253,47 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('lyrics-memo-insert')));
     await tester.pumpAndSettle();
     expect(editor.text, '첫째 줄\n끼울 줄 고침\n셋째 줄');
+  });
+
+  testWidgets('가사 편집 페이지: 메모는 불러오기와 따로 켜고, 작게 줄이거나 숨겨도 글이 남고, 불러온 글은 덧붙는다', (
+    tester,
+  ) async {
+    phone(tester);
+    final lyrics = MemoryLyricsRepository(sibling: {'t1': '첫째 줄'});
+    final file = FakeLyricsFileSource('[00:01.00]불러온 줄');
+    await setUpTestDependencies(lyrics: lyrics, lyricsFile: file);
+    await openLyricsEditor(tester);
+
+    final memoField = find.byKey(const ValueKey('lyrics-memo-field'));
+    expect(memoField, findsNothing);
+    // 불러오지 않아도 메모 버튼으로 켜고 직접 쓴다.
+    await tester.tap(find.byKey(const ValueKey('lyrics-memo-toggle')));
+    await tester.pumpAndSettle();
+    await tester.enterText(memoField, '내 메모');
+    await tester.pumpAndSettle();
+
+    // 아주 작게 줄이면 글 칸은 숨지만, 다시 펼치면 글이 그대로다.
+    await tester.tap(find.byKey(const ValueKey('lyrics-memo-small')));
+    await tester.pumpAndSettle();
+    expect(memoField, findsNothing);
+    await tester.tap(find.byKey(const ValueKey('lyrics-memo-expand')));
+    await tester.pumpAndSettle();
+    expect(tester.widget<TextField>(memoField).controller!.text, '내 메모');
+
+    // 숨겼다 다시 켜도 글이 남는다.
+    await tester.tap(find.byKey(const ValueKey('lyrics-memo-close')));
+    await tester.pumpAndSettle();
+    expect(memoField, findsNothing);
+    await tester.tap(find.byKey(const ValueKey('lyrics-memo-toggle')));
+    await tester.pumpAndSettle();
+    expect(tester.widget<TextField>(memoField).controller!.text, '내 메모');
+
+    // 불러온 글은 메모를 새로 만들지 않고 메모에 덧붙인다.
+    await tester.tap(find.textContaining('파일에서 불러오기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('메모에 추가'));
+    await tester.pumpAndSettle();
+    expect(tester.widget<TextField>(memoField).controller!.text, '내 메모\n불러온 줄');
   });
 
   testWidgets('플레이어: 가사 보기로 바꾸면 줄이 보이고, 줄을 누르면 그 위치로 간다', (tester) async {

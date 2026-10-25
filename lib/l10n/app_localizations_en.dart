@@ -1824,10 +1824,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsImportAppend => 'Append';
 
   @override
-  String get lyricsImportMemo => 'Show as note';
+  String get lyricsImportMemo => 'Add to note';
 
   @override
-  String get lyricsMemoTitle => 'Imported lyrics';
+  String get lyricsMemoTitle => 'Note';
+
+  @override
+  String get lyricsMemoOpen => 'Expand note';
+
+  @override
+  String get lyricsMemoSmall => 'Shrink note';
+
+  @override
+  String get lyricsMemoHide => 'Hide note';
 
   @override
   String get lyricsMemoHint =>

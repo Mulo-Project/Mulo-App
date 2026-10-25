@@ -11,15 +11,16 @@ import '../screens/lyrics_web_screen.dart';
 import 'lyrics_dialogs.dart';
 import 'timed_lyrics_controller.dart';
 
-/// 가사 편집 페이지 위쪽의 "파일에서 불러오기 · 웹에서 가져오기" 줄과, 불러온 가사를 띄워 두는 메모.
+/// 가사 편집 페이지 위쪽의 "파일에서 불러오기 · 웹에서 가져오기 · 메모" 줄과, 화면 위에 떠 있는 메모.
 /// 플레이어의 "가사 설정"과 받기 전 "가사 상세"가 함께 쓴다.
 ///
 /// 불러온 글이 들어오면: 지금 가사가 비어 있으면 그대로 넣고([onReplace]),
-/// 이미 있으면 바꾸기 · 뒤에 붙이기 · 메모로 띄우기 중에서 고른다.
+/// 이미 있으면 바꾸기 · 뒤에 붙이기 · 메모에 추가 중에서 고른다.
 ///
-/// 메모는 화면 위에 떠 있는 작은 카드다. 페이지 레이아웃 밖(오버레이)에 있어서 키보드가 올라와도 가사 입력칸을
-/// 누르지 않고, 머리를 끌어 위아래로 옮길 수 있다. 메모 글은 직접 고칠 수 있고, "끼우기"는 메모에서 고른 글
-/// (고른 게 없으면 커서가 있는 줄)을 가사의 지금 줄 아래에 끼워 넣는다.
+/// 메모는 불러오기와 상관없이 "메모" 버튼으로 따로 켜고 끄는 작은 카드다 (글은 페이지가 있는 동안 남는다).
+/// 페이지 레이아웃 밖(오버레이)에 있어서 키보드가 올라와도 가사 입력칸을 누르지 않고, 머리를 끌어 옮기며,
+/// 아주 작게 줄이거나 숨길 수 있다. 메모 글은 직접 쓰고 고칠 수 있고, 커서가 있는 줄은 색으로 보인다.
+/// "끼우기"는 메모에서 고른 글(고른 게 없으면 커서가 있는 줄)을 가사의 지금 줄 아래에 끼워 넣는다.
 class LyricsImportBar extends StatefulWidget {
   const LyricsImportBar({
     super.key,
@@ -44,18 +45,25 @@ class LyricsImportBar extends StatefulWidget {
   State<LyricsImportBar> createState() => _LyricsImportBarState();
 }
 
+/// 메모를 보이는 모양: 숨김 · 아주 작게 · 카드.
+enum _MemoShape { hidden, small, full }
+
 class _LyricsImportBarState extends State<LyricsImportBar> {
   static const _cardHeight = 210.0;
+  static const _smallHeight = 40.0;
 
-  final _memo = TextEditingController();
+  final _memo = _MemoController();
   OverlayEntry? _entry;
+  var _shape = _MemoShape.hidden;
 
-  /// 메모 카드의 위쪽 위치. null이면 처음 놓을 자리(화면 아래쪽)를 쓴다.
+  /// 메모의 위쪽 위치. null이면 처음 놓을 자리(화면 아래쪽)를 쓴다.
   double? _top;
 
   @override
   void dispose() {
-    _closeMemo();
+    _entry?.remove();
+    _entry?.dispose();
+    _entry = null;
     _memo.dispose();
     super.dispose();
   }
@@ -81,30 +89,33 @@ class _LyricsImportBarState extends State<LyricsImportBar> {
     switch (mode) {
       case LyricsImportMode.replace:
         widget.onReplace(imported);
-        _closeMemo();
       case LyricsImportMode.append:
         // 붙인 글은 시간 없는 줄로 뒤에 더한다.
         final extra = TimedLyricsText.parse(imported).text;
         c.text = '${c.text.trimRight()}\n$extra';
       case LyricsImportMode.memo:
-        _openMemo(TimedLyricsText.parse(imported).text);
+        // 불러온 글은 메모에 덧붙인다 (메모를 새로 만들지 않는다).
+        final extra = TimedLyricsText.parse(imported).text.trim();
+        final current = _memo.text.trimRight();
+        _memo.text = current.isEmpty ? extra : '$current\n$extra';
+        _setShape(_MemoShape.full);
     }
   }
 
-  void _openMemo(String text) {
-    _memo.text = text;
-    if (_entry != null) {
+  /// 메모 모양을 바꾼다. 숨기면 카드를 내리고(글은 남는다), 아니면 띄운다.
+  void _setShape(_MemoShape shape) {
+    _shape = shape;
+    if (shape == _MemoShape.hidden) {
+      _entry?.remove();
+      _entry?.dispose();
+      _entry = null;
+    } else if (_entry == null) {
+      _entry = OverlayEntry(builder: _memoCard);
+      Overlay.of(context, rootOverlay: true).insert(_entry!);
+    } else {
       _entry!.markNeedsBuild();
-      return;
     }
-    _entry = OverlayEntry(builder: _memoCard);
-    Overlay.of(context, rootOverlay: true).insert(_entry!);
-  }
-
-  void _closeMemo() {
-    _entry?.remove();
-    _entry?.dispose();
-    _entry = null;
+    if (mounted) setState(() {});
   }
 
   /// 메모에서 고른 글(고른 게 없으면 커서가 있는 줄)을 가사의 지금 줄 아래에 새 줄로 끼워 넣는다.
@@ -137,7 +148,7 @@ class _LyricsImportBarState extends State<LyricsImportBar> {
     );
   }
 
-  /// 화면 위에 떠 있는 메모 카드. 키보드로 줄어들지 않고, 키보드에 가려지면 그 위로 올라와 있는다.
+  /// 화면 위에 떠 있는 메모. 키보드로 줄어들지 않고, 키보드에 가려지면 그 위로 올라와 있는다.
   Widget _memoCard(BuildContext context) {
     final l10n = context.l10n;
     final p = context.palette;
@@ -145,16 +156,51 @@ class _LyricsImportBarState extends State<LyricsImportBar> {
     final size = MediaQuery.sizeOf(context);
     final keyboard = MediaQuery.viewInsetsOf(context).bottom;
     final safeBottom = MediaQuery.paddingOf(context).bottom;
-    final maxTop = (size.height - keyboard - safeBottom - _cardHeight - 8)
-        .clamp(0.0, size.height);
+    final small = _shape == _MemoShape.small;
+    final height = small ? _smallHeight : _cardHeight;
+    final maxTop = (size.height - keyboard - safeBottom - height - 8).clamp(
+      0.0,
+      size.height,
+    );
     // 처음에는 아래쪽(저장 버튼 위)에 놓고, 끌면 그 자리를 따른다. 키보드가 가리면 키보드 위로 올린다.
     final wanted = _top ?? (size.height - safeBottom - _cardHeight - 96);
     final top = wanted.clamp(0.0, maxTop);
+
+    // 머리: 끌어서 옮긴다. 카드에서는 제목 · 끼우기 · 작게 · 숨기기, 작은 모양에서는 제목 · 펼치기 · 숨기기.
+    Widget handle(List<Widget> actions) => GestureDetector(
+      key: ValueKey('${widget.keyPrefix}-memo-handle'),
+      behavior: HitTestBehavior.opaque,
+      onVerticalDragUpdate: (d) {
+        _top = (top + d.delta.dy).clamp(0.0, maxTop);
+        _entry?.markNeedsBuild();
+      },
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          AppSpacing.xxs,
+          AppSpacing.xxs,
+          0,
+        ),
+        child: Row(
+          children: [
+            Icon(
+              AppIcons.dragHandle,
+              size: AppSizes.iconSm,
+              color: p.onSurfaceMuted,
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Expanded(child: Text(l10n.lyricsMemoTitle, style: text.titleSmall)),
+            ...actions,
+          ],
+        ),
+      ),
+    );
+
     return Positioned(
       left: AppSpacing.md,
-      right: AppSpacing.md,
+      right: small ? size.width * .45 : AppSpacing.md,
       top: top,
-      height: _cardHeight,
+      height: height,
       child: Material(
         color: p.surfaceHigh,
         elevation: 0,
@@ -163,35 +209,27 @@ class _LyricsImportBarState extends State<LyricsImportBar> {
           side: BorderSide(color: p.accent.withValues(alpha: .5)),
         ),
         clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // 머리: 끌어서 옮긴다.
-            GestureDetector(
-              key: ValueKey('${widget.keyPrefix}-memo-handle'),
-              behavior: HitTestBehavior.opaque,
-              onVerticalDragUpdate: (d) {
-                _top = (top + d.delta.dy).clamp(0.0, maxTop);
-                _entry?.markNeedsBuild();
-              },
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  AppSpacing.xs,
-                  AppSpacing.xxs,
-                  0,
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      AppIcons.dragHandle,
-                      size: AppSizes.iconSm,
-                      color: p.onSurfaceMuted,
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    Expanded(
-                      child: Text(l10n.lyricsMemoTitle, style: text.titleSmall),
-                    ),
+        child: small
+            ? Center(
+                child: handle([
+                  RowIconButton(
+                    key: ValueKey('${widget.keyPrefix}-memo-expand'),
+                    icon: AppIcons.expandOut,
+                    tooltip: l10n.lyricsMemoOpen,
+                    onPressed: () => _setShape(_MemoShape.full),
+                  ),
+                  RowIconButton(
+                    key: ValueKey('${widget.keyPrefix}-memo-close'),
+                    icon: AppIcons.close,
+                    tooltip: l10n.lyricsMemoHide,
+                    onPressed: () => _setShape(_MemoShape.hidden),
+                  ),
+                ]),
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  handle([
                     PlainButton(
                       key: ValueKey('${widget.keyPrefix}-memo-insert'),
                       label: l10n.lyricsMemoInsert,
@@ -200,49 +238,54 @@ class _LyricsImportBarState extends State<LyricsImportBar> {
                       onPressed: _insertFromMemo,
                     ),
                     RowIconButton(
+                      key: ValueKey('${widget.keyPrefix}-memo-small'),
+                      icon: AppIcons.remove,
+                      tooltip: l10n.lyricsMemoSmall,
+                      onPressed: () => _setShape(_MemoShape.small),
+                    ),
+                    RowIconButton(
                       key: ValueKey('${widget.keyPrefix}-memo-close'),
                       icon: AppIcons.close,
-                      tooltip: l10n.actionClear,
-                      onPressed: _closeMemo,
+                      tooltip: l10n.lyricsMemoHide,
+                      onPressed: () => _setShape(_MemoShape.hidden),
                     ),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Text(
-                l10n.lyricsMemoHint,
-                style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
-              ),
-            ),
-            // 메모 글: 고치고 · 고르고 · 복사할 수 있다.
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  AppSpacing.xs,
-                  AppSpacing.md,
-                  AppSpacing.xs,
-                ),
-                child: TextField(
-                  key: ValueKey('${widget.keyPrefix}-memo-field'),
-                  controller: _memo,
-                  style: text.bodyMedium,
-                  maxLines: null,
-                  expands: true,
-                  textAlignVertical: TextAlignVertical.top,
-                  keyboardType: TextInputType.multiline,
-                  decoration: const InputDecoration(
-                    isCollapsed: true,
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.zero,
+                  ]),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                    ),
+                    child: Text(
+                      l10n.lyricsMemoHint,
+                      style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
+                    ),
                   ),
-                ),
+                  // 메모 글: 쓰고 · 고치고 · 고르고 · 복사할 수 있다. 커서가 있는 줄은 색으로 보인다.
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.md,
+                        AppSpacing.xs,
+                        AppSpacing.md,
+                        AppSpacing.xs,
+                      ),
+                      child: TextField(
+                        key: ValueKey('${widget.keyPrefix}-memo-field'),
+                        controller: _memo,
+                        style: text.bodyMedium,
+                        maxLines: null,
+                        expands: true,
+                        textAlignVertical: TextAlignVertical.top,
+                        keyboardType: TextInputType.multiline,
+                        decoration: const InputDecoration(
+                          isCollapsed: true,
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -275,9 +318,56 @@ class _LyricsImportBarState extends State<LyricsImportBar> {
                 icon: AppIcons.explore,
                 onPressed: _searchWeb,
               ),
+            // 불러오기와 상관없이 메모를 켜고 끈다 (켜져 있으면 강조).
+            PlainButton(
+              key: ValueKey('${widget.keyPrefix}-memo-toggle'),
+              label: l10n.lyricsMemoTitle,
+              icon: AppIcons.edit,
+              accent: _shape != _MemoShape.hidden,
+              onPressed: () => _setShape(
+                _shape == _MemoShape.hidden
+                    ? _MemoShape.full
+                    : _MemoShape.hidden,
+              ),
+            ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// 커서가 있는 줄을 색으로 칠해 보이는 메모 입력 컨트롤러.
+class _MemoController extends TextEditingController {
+  @override
+  TextSpan buildTextSpan({
+    required BuildContext context,
+    TextStyle? style,
+    required bool withComposing,
+  }) {
+    final sel = selection;
+    if (!sel.isValid || text.isEmpty) {
+      return super.buildTextSpan(
+        context: context,
+        style: style,
+        withComposing: withComposing,
+      );
+    }
+    final at = sel.baseOffset.clamp(0, text.length);
+    final start = at == 0 ? 0 : text.lastIndexOf('\n', at - 1) + 1;
+    final next = text.indexOf('\n', at);
+    final end = next < 0 ? text.length : next;
+    final tint = context.palette.accent.withValues(alpha: .22);
+    return TextSpan(
+      style: style,
+      children: [
+        TextSpan(text: text.substring(0, start)),
+        TextSpan(
+          text: text.substring(start, end),
+          style: TextStyle(backgroundColor: tint),
+        ),
+        TextSpan(text: text.substring(end)),
+      ],
     );
   }
 }

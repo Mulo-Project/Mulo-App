@@ -1777,10 +1777,19 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsImportAppend => '뒤에 붙이기';
 
   @override
-  String get lyricsImportMemo => '메모로 띄우기';
+  String get lyricsImportMemo => '메모에 추가';
 
   @override
-  String get lyricsMemoTitle => '불러온 가사';
+  String get lyricsMemoTitle => '메모';
+
+  @override
+  String get lyricsMemoOpen => '메모 펼치기';
+
+  @override
+  String get lyricsMemoSmall => '메모 작게';
+
+  @override
+  String get lyricsMemoHide => '메모 숨기기';
 
   @override
   String get lyricsMemoHint => '글을 고치거나 골라서 \"끼우기\"를 누르면 가사의 지금 줄 아래에 들어가요';

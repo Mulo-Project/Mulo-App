@@ -3365,14 +3365,32 @@ abstract class AppLocalizations {
   /// No description provided for @lyricsImportMemo.
   ///
   /// In ko, this message translates to:
-  /// **'메모로 띄우기'**
+  /// **'메모에 추가'**
   String get lyricsImportMemo;
 
   /// No description provided for @lyricsMemoTitle.
   ///
   /// In ko, this message translates to:
-  /// **'불러온 가사'**
+  /// **'메모'**
   String get lyricsMemoTitle;
+
+  /// No description provided for @lyricsMemoOpen.
+  ///
+  /// In ko, this message translates to:
+  /// **'메모 펼치기'**
+  String get lyricsMemoOpen;
+
+  /// No description provided for @lyricsMemoSmall.
+  ///
+  /// In ko, this message translates to:
+  /// **'메모 작게'**
+  String get lyricsMemoSmall;
+
+  /// No description provided for @lyricsMemoHide.
+  ///
+  /// In ko, this message translates to:
+  /// **'메모 숨기기'**
+  String get lyricsMemoHide;
 
   /// No description provided for @lyricsMemoHint.
   ///
