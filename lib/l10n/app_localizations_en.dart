@@ -2178,9 +2178,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistImportNoResultsBody => 'Try a different search.';
 
   @override
-  String get playlistImportBackToResults => 'Back to results';
-
-  @override
   String get playlistImportLoading => 'Reading the track list…';
 
   @override

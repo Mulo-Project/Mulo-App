@@ -4004,12 +4004,6 @@ abstract class AppLocalizations {
   /// **'다른 검색어로 찾아 보세요.'**
   String get playlistImportNoResultsBody;
 
-  /// No description provided for @playlistImportBackToResults.
-  ///
-  /// In ko, this message translates to:
-  /// **'검색 결과로'**
-  String get playlistImportBackToResults;
-
   /// No description provided for @playlistImportLoading.
   ///
   /// In ko, this message translates to:
