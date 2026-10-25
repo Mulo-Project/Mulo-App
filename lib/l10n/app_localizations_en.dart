@@ -2315,10 +2315,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsOverlayTurnOff => 'Turn off';
 
   @override
-  String get lyricsOverlayOn => 'Turn on floating lyrics';
+  String get lyricsOverlayOn => 'Turn on overlay lyrics';
 
   @override
-  String get lyricsOverlayOff => 'Turn off floating lyrics';
+  String get lyricsOverlayOff => 'Turn off overlay lyrics';
 
   @override
   String get lyricsOverlayNeedPermission =>

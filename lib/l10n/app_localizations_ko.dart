@@ -2254,10 +2254,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsOverlayTurnOff => '끄기';
 
   @override
-  String get lyricsOverlayOn => '떠 있는 가사 켜기';
+  String get lyricsOverlayOn => '오버레이 가사 켜기';
 
   @override
-  String get lyricsOverlayOff => '떠 있는 가사 끄기';
+  String get lyricsOverlayOff => '오버레이 가사 끄기';
 
   @override
   String get lyricsOverlayNeedPermission =>

@@ -4241,13 +4241,13 @@ abstract class AppLocalizations {
   /// No description provided for @lyricsOverlayOn.
   ///
   /// In ko, this message translates to:
-  /// **'떠 있는 가사 켜기'**
+  /// **'오버레이 가사 켜기'**
   String get lyricsOverlayOn;
 
   /// No description provided for @lyricsOverlayOff.
   ///
   /// In ko, this message translates to:
-  /// **'떠 있는 가사 끄기'**
+  /// **'오버레이 가사 끄기'**
   String get lyricsOverlayOff;
 
   /// No description provided for @lyricsOverlayNeedPermission.
