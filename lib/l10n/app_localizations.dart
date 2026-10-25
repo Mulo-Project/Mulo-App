@@ -710,6 +710,24 @@ abstract class AppLocalizations {
   /// **'폴더 빼기'**
   String get loadedFoldersRemove;
 
+  /// No description provided for @loadedFoldersRemoveTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'불러오는 폴더에서 뺄까요?'**
+  String get loadedFoldersRemoveTitle;
+
+  /// No description provided for @loadedFoldersRemoveBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'{path}\n이 폴더의 {count}곡이 보관함에서 사라져요. 음악 파일은 지워지지 않아요.'**
+  String loadedFoldersRemoveBody(String path, int count);
+
+  /// No description provided for @loadedFoldersRemoveBodyEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'{path}\n음악 파일은 지워지지 않아요.'**
+  String loadedFoldersRemoveBodyEmpty(String path);
+
   /// No description provided for @loadedFoldersScanning.
   ///
   /// In ko, this message translates to:

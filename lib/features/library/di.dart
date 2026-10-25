@@ -67,7 +67,7 @@ void registerLibrary(GetIt sl) {
     ..registerFactory(() => ImportDeviceMusic(sl(), sl(), sl()))
     ..registerFactory(() => LoadLoadedFolders(sl(), sl()))
     ..registerFactory(() => AddLoadedFolder(sl()))
-    ..registerFactory(() => RemoveLoadedFolder(sl()))
+    ..registerFactory(() => RemoveLoadedFolder(sl(), sl()))
     ..registerFactory(() => LoadedFoldersCubit(sl(), sl(), sl(), sl()))
     ..registerFactory(() => LibraryCubit(sl(), sl(), sl()))
     ..registerFactory(() => FillEmbeddedCovers(sl(), sl(), sl()))

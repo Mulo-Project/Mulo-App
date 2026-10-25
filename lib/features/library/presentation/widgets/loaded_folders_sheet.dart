@@ -17,6 +17,23 @@ Future<void> showLoadedFoldersSheet(BuildContext context) {
   );
 }
 
+/// 폴더를 뺄지 묻는다: 보관함에서 사라질 곡 수를 알리고, 파일은 지워지지 않는다고 알린다.
+Future<bool> confirmRemoveLoadedFolder(
+  BuildContext context,
+  LoadedFolder folder,
+) {
+  final l10n = context.l10n;
+  return showConfirmDialog(
+    context,
+    title: l10n.loadedFoldersRemoveTitle,
+    body: folder.trackCount == 0
+        ? l10n.loadedFoldersRemoveBodyEmpty(folder.path)
+        : l10n.loadedFoldersRemoveBody(folder.path, folder.trackCount),
+    confirmLabel: l10n.loadedFoldersRemove,
+    cancelLabel: l10n.actionCancel,
+  );
+}
+
 class LoadedFoldersSheet extends StatelessWidget {
   const LoadedFoldersSheet({super.key});
 
@@ -53,7 +70,14 @@ class LoadedFoldersSheet extends StatelessWidget {
                         folder: folder,
                         onRemove: state.busy
                             ? null
-                            : () => cubit.remove(folder.path),
+                            : () async {
+                                if (await confirmRemoveLoadedFolder(
+                                  context,
+                                  folder,
+                                )) {
+                                  await cubit.remove(folder.path);
+                                }
+                              },
                       ),
                   ],
                 ),

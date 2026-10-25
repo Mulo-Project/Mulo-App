@@ -331,6 +331,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loadedFoldersRemove => 'Remove folder';
 
   @override
+  String get loadedFoldersRemoveTitle => 'Remove this folder?';
+
+  @override
+  String loadedFoldersRemoveBody(String path, int count) {
+    return '$path\n$count songs from this folder will leave your library. The music files are not deleted.';
+  }
+
+  @override
+  String loadedFoldersRemoveBodyEmpty(String path) {
+    return '$path\nThe music files are not deleted.';
+  }
+
+  @override
   String get loadedFoldersScanning => 'Rescanning your library';
 
   @override

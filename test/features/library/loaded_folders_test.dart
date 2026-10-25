@@ -38,7 +38,7 @@ LoadedFoldersCubit _cubit(
 ) => LoadedFoldersCubit(
   LoadLoadedFolders(folders, library),
   AddLoadedFolder(folders),
-  RemoveLoadedFolder(folders),
+  RemoveLoadedFolder(folders, library),
   ImportDeviceMusic(device, library, folders),
 );
 
@@ -78,11 +78,26 @@ void main() {
 
   test('삭제: 기본 저장 위치는 지울 수 없다', () async {
     final folders = MemoryLoadedFolders(extra: ['/music/x']);
-    final remove = RemoveLoadedFolder(folders);
+    final remove = RemoveLoadedFolder(folders, FakeLibraryRepository());
     expect(await remove('/music/default'), isFalse);
     expect(await remove('/music/nope'), isFalse);
     expect(await remove('/music/x'), isTrue);
     expect(folders.extra, isEmpty);
+  });
+
+  test('삭제: 그 폴더에서 불러온 곡은 보관함에서 사라지고, 다른 폴더의 곡은 남는다', () async {
+    final folders = MemoryLoadedFolders(extra: ['/music/x', '/music/x/deep']);
+    final library = FakeLibraryRepository([
+      _t('keep', '/music/default'),
+      _t('x1', '/music/x'),
+      _t('x2', '/music/x/sub'),
+      _t('d1', '/music/x/deep'),
+    ]);
+    final remove = RemoveLoadedFolder(folders, library);
+    expect(await remove('/music/x'), isTrue);
+    final left = (await library.watchTracks().first).map((t) => t.id);
+    // 남은 폴더(/music/x/deep) 안의 곡은 그대로 둔다.
+    expect(left, unorderedEquals(['keep', 'd1']));
   });
 
   test('목록이 바뀌면 보관함을 다시 스캔하고 곡 수를 새로 센다', () async {

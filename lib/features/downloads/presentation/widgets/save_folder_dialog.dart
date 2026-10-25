@@ -6,6 +6,7 @@ import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../library/domain/entities/loaded_folder.dart';
 import '../../../library/presentation/bloc/loaded_folders_cubit.dart';
+import '../../../library/presentation/widgets/loaded_folders_sheet.dart';
 
 /// 저장 위치 고르기 대화상자: 불러오는 폴더 목록에서 고르거나, "직접 선택"으로 폴더 선택기를 연다.
 /// [current]는 지금 정해진 위치(목록에 없어도 맨 위에 보인다). 고른 폴더를 돌려주고, 닫으면 null.
@@ -32,7 +33,8 @@ class _SaveFolderDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final folders = context.watch<LoadedFoldersCubit>().state.folders;
+    final cubit = context.watch<LoadedFoldersCubit>();
+    final folders = cubit.state.folders;
     final cur = current.trim();
     // 지금 위치가 목록에 없으면(직접 고른 폴더) 맨 위에 따로 보인다.
     final listed = folders.any(
@@ -42,6 +44,7 @@ class _SaveFolderDialog extends StatelessWidget {
       if (cur.isNotEmpty && !listed) cur,
       for (final f in folders) f.path,
     ];
+    final listedPaths = {for (final f in folders) normalizeFolderPath(f.path)};
     final defaults = {
       for (final f in folders)
         if (f.isDefault) normalizeFolderPath(f.path),
@@ -65,6 +68,27 @@ class _SaveFolderDialog extends StatelessWidget {
                       selected:
                           normalizeFolderPath(path) == normalizeFolderPath(cur),
                       onTap: () => Navigator.of(context).pop(path),
+                      // 기본 위치 · 지금 위치 · 목록에 없는 위치는 뺄 수 없다.
+                      onRemove:
+                          cubit.state.busy ||
+                              defaults.contains(normalizeFolderPath(path)) ||
+                              normalizeFolderPath(path) ==
+                                  normalizeFolderPath(cur) ||
+                              !listedPaths.contains(normalizeFolderPath(path))
+                          ? null
+                          : () async {
+                              final folder = folders.firstWhere(
+                                (f) =>
+                                    normalizeFolderPath(f.path) ==
+                                    normalizeFolderPath(path),
+                              );
+                              if (await confirmRemoveLoadedFolder(
+                                context,
+                                folder,
+                              )) {
+                                await cubit.remove(folder.path);
+                              }
+                            },
                     ),
                 ],
               ),
@@ -95,6 +119,7 @@ class _FolderOption extends StatelessWidget {
     required this.selected,
     required this.isDefault,
     required this.onTap,
+    this.onRemove,
   });
 
   final String path;
@@ -103,6 +128,9 @@ class _FolderOption extends StatelessWidget {
   /// 앱 기본 저장 위치인지 (이름 옆에 작게 표시).
   final bool isDefault;
   final VoidCallback onTap;
+
+  /// 목록에서 빼기 (뺄 수 없는 위치면 null이라 버튼이 없다).
+  final VoidCallback? onRemove;
 
   @override
   Widget build(BuildContext context) {
@@ -150,6 +178,12 @@ class _FolderOption extends StatelessWidget {
             ),
             if (selected)
               Icon(AppIcons.check, size: AppSizes.iconSm, color: p.accent),
+            if (onRemove != null)
+              RowIconButton(
+                icon: AppIcons.close,
+                tooltip: context.l10n.loadedFoldersRemove,
+                onPressed: onRemove,
+              ),
           ],
         ),
       ),

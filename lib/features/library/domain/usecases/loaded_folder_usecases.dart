@@ -48,11 +48,13 @@ class AddLoadedFolder implements UseCase<AddFolderResult, NoParams> {
   }
 }
 
-/// 폴더를 목록에서 뺀다. 기본 저장 위치는 뺄 수 없다.
+/// 폴더를 목록에서 빼고, 그 폴더에서 불러온 곡을 보관함에서 지운다 (음악 파일은 그대로).
+/// 남은 폴더 안에도 있는 곡(하위 폴더로 겹칠 때)은 지우지 않는다. 기본 저장 위치는 뺄 수 없다.
 class RemoveLoadedFolder implements UseCase<bool, String> {
-  const RemoveLoadedFolder(this._folders);
+  const RemoveLoadedFolder(this._folders, this._library);
 
   final LoadedFolderRepository _folders;
+  final LibraryRepository _library;
 
   @override
   Future<bool> call(String path) async {
@@ -65,6 +67,14 @@ class RemoveLoadedFolder implements UseCase<bool, String> {
     ];
     if (kept.length == extra.length) return false;
     await _folders.saveExtra(kept);
+    final remaining = [_folders.defaultFolder, ...kept];
+    final tracks = await _library.watchTracks().first;
+    for (final t in tracks) {
+      if (isInsideFolder(t.folder, target) &&
+          !remaining.any((f) => isInsideFolder(t.folder, f))) {
+        await _library.delete(t.id);
+      }
+    }
     return true;
   }
 }

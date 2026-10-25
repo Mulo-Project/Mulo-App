@@ -56,3 +56,8 @@
 - 알림에 받기 일시정지 / 이어받기 버튼 추가 (`toggleHold`, Kotlin `ACTIONS`에 `TOGGLE_HOLD`). 남은 곡이 모두 일시정지면 알림이 "일시정지됨 · N%"와 이어받기 버튼으로 남는다. 알림 버튼은 3개까지라서 미리 듣는 중에는 이 버튼을 뺀다.
 - 문구 `notifDownloadPause` · `notifDownloadResume` · `notifDownloadPausedBody` (ko · en).
 - 테스트: `download_notification_actions_test.dart`, `notification_sync_test.dart`.
+
+## 불러오는 폴더 빼기
+- 빼기 전에 확인창(사라질 곡 수 · 파일은 안 지워짐)을 띄운다. 설정의 폴더 시트와 저장 위치 대화상자가 같은 확인창을 쓴다 (`confirmRemoveLoadedFolder`).
+- 저장 위치 대화상자에도 폴더 빼기(×) 추가. 기본 위치 · 지금 위치 · 목록에 없는 위치는 뺄 수 없다.
+- 폴더를 빼면 그 폴더에서 불러온 곡도 보관함에서 지운다 (`RemoveLoadedFolder`가 보관함 DB 행만 지움, 파일은 그대로). 남은 폴더 안에 겹치는 곡은 남긴다. 전에는 목록만 줄고 곡이 그대로 남았다.

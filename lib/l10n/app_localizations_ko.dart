@@ -328,6 +328,19 @@ class AppLocalizationsKo extends AppLocalizations {
   String get loadedFoldersRemove => '폴더 빼기';
 
   @override
+  String get loadedFoldersRemoveTitle => '불러오는 폴더에서 뺄까요?';
+
+  @override
+  String loadedFoldersRemoveBody(String path, int count) {
+    return '$path\n이 폴더의 $count곡이 보관함에서 사라져요. 음악 파일은 지워지지 않아요.';
+  }
+
+  @override
+  String loadedFoldersRemoveBodyEmpty(String path) {
+    return '$path\n음악 파일은 지워지지 않아요.';
+  }
+
+  @override
   String get loadedFoldersScanning => '보관함을 다시 찾는 중이에요';
 
   @override
