@@ -344,6 +344,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get loadedFoldersScanning => '폴더에서 곡을 찾는 중이에요';
 
   @override
+  String get loadedFoldersRemoving => '폴더를 빼고 보관함을 정리하는 중이에요';
+
+  @override
   String get loadedFoldersReading => '곡 정보를 읽는 중이에요';
 
   @override

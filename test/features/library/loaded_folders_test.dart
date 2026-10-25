@@ -196,16 +196,16 @@ void main() {
     expect(cubit.state.busy, isFalse);
     expect(cubit.state.folders.last.trackCount, 1);
 
+    // 빼기는 곡을 지울 뿐 다시 찾지 않는다.
     await cubit.remove('/music/new');
-    expect(device.calls, 2);
-    expect(device.lastFolders, ['/music/default']);
+    expect(device.calls, 1);
     expect(cubit.state.folders.length, 1);
 
     // 기본 위치 삭제 · 취소는 스캔하지 않는다.
     await cubit.remove('/music/default');
     folders.picked = null;
     await cubit.add();
-    expect(device.calls, 2);
+    expect(device.calls, 1);
   });
 
   test('데스크톱 스캔: 목록의 폴더만, 없는 폴더는 건너뛰고 중복 없음', () async {

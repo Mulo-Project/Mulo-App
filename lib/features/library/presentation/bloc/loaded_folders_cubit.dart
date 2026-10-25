@@ -7,8 +7,8 @@ import '../../domain/entities/loaded_folder.dart';
 import '../../domain/usecases/library_usecases.dart';
 import '../../domain/usecases/loaded_folder_usecases.dart';
 
-/// 폴더를 바꾼 뒤 보관함을 다시 채우는 단계.
-enum LoadStage { none, scanning, reading, covers }
+/// 폴더를 바꾼 뒤 보관함을 다시 채우는 단계 (빼는 중은 [removing]).
+enum LoadStage { none, scanning, reading, covers, removing }
 
 class LoadedFoldersState extends Equatable {
   const LoadedFoldersState({
@@ -85,10 +85,14 @@ class LoadedFoldersCubit extends Cubit<LoadedFoldersState> {
   /// 폴더를 빼고, 보관함에서 지운 곡의 id를 돌려준다 (재생 대기열에서도 빼도록).
   Future<Set<String>> remove(String path) async {
     if (state.busy) return const {};
+    _stage(LoadStage.removing);
     final removed = await _remove(path);
-    if (removed == null) return const {};
-    await _rescan();
-    return removed;
+    // 뺀 폴더의 곡은 이미 보관함에서 지웠고 남은 폴더는 그대로라 다시 찾지 않는다.
+    final folders = await _load(const NoParams());
+    if (!isClosed) {
+      emit(LoadedFoldersState(folders: folders, coversSeq: state.coversSeq));
+    }
+    return removed ?? const {};
   }
 
   void _stage(LoadStage stage, [int done = 0, int total = 0]) {

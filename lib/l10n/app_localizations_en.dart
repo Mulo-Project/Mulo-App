@@ -347,6 +347,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loadedFoldersScanning => 'Finding songs in the folder';
 
   @override
+  String get loadedFoldersRemoving =>
+      'Removing the folder and tidying your library';
+
+  @override
   String get loadedFoldersReading => 'Reading song info';
 
   @override

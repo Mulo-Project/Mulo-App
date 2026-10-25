@@ -734,6 +734,12 @@ abstract class AppLocalizations {
   /// **'폴더에서 곡을 찾는 중이에요'**
   String get loadedFoldersScanning;
 
+  /// No description provided for @loadedFoldersRemoving.
+  ///
+  /// In ko, this message translates to:
+  /// **'폴더를 빼고 보관함을 정리하는 중이에요'**
+  String get loadedFoldersRemoving;
+
   /// No description provided for @loadedFoldersReading.
   ///
   /// In ko, this message translates to:

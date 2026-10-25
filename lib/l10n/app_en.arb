@@ -114,6 +114,7 @@
   "@loadedFoldersRemoveBodyEmpty": {"placeholders": {"path": {"type": "String"}}},
   "loadedFoldersRemove": "Remove folder",
   "loadedFoldersScanning": "Finding songs in the folder",
+  "loadedFoldersRemoving": "Removing the folder and tidying your library",
   "loadedFoldersReading": "Reading song info",
   "loadedFoldersCovers": "Getting song images",
   "settingsQuality": "Default quality",

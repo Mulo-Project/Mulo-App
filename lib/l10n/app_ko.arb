@@ -135,6 +135,7 @@
   "loadedFoldersRemoveBodyEmpty": "{path}\n음악 파일은 지워지지 않아요.",
   "@loadedFoldersRemoveBodyEmpty": {"placeholders": {"path": {"type": "String"}}},
   "loadedFoldersScanning": "폴더에서 곡을 찾는 중이에요",
+  "loadedFoldersRemoving": "폴더를 빼고 보관함을 정리하는 중이에요",
   "loadedFoldersReading": "곡 정보를 읽는 중이에요",
   "loadedFoldersCovers": "곡 이미지를 가져오는 중이에요",
   "settingsQuality": "기본 음질",

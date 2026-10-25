@@ -122,6 +122,7 @@ class _Progress extends StatelessWidget {
     final label = switch (state.stage) {
       LoadStage.reading => l10n.loadedFoldersReading,
       LoadStage.covers => l10n.loadedFoldersCovers,
+      LoadStage.removing => l10n.loadedFoldersRemoving,
       _ => l10n.loadedFoldersScanning,
     };
     final counted = state.total > 0;
