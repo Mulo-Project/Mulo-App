@@ -111,8 +111,10 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
           builder: (context, box) {
             final gutter = showTimes ? _gutter : 0.0;
             final textWidth = box.maxWidth - gutter - _caretMargin;
+            // 페이지가 키보드로 줄지 않으므로, 키보드가 가리는 만큼 아래를 더 비워 마지막 줄도 올려 볼 수 있게 한다.
+            final keyboard = MediaQuery.viewInsetsOf(context).bottom;
             return SingleChildScrollView(
-              padding: EdgeInsets.zero,
+              padding: EdgeInsets.only(bottom: keyboard),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -199,6 +201,13 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
                       controller: controller,
                       style: style,
                       strutStyle: strut,
+                      // 커서가 키보드 위에 보이도록 스크롤한다.
+                      scrollPadding: EdgeInsets.only(
+                        left: 20,
+                        top: 20,
+                        right: 20,
+                        bottom: 20 + keyboard,
+                      ),
                       minLines: 12,
                       maxLines: null,
                       keyboardType: TextInputType.multiline,

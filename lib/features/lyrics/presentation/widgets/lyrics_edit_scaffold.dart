@@ -58,7 +58,9 @@ class LyricsEditScaffold extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     return Scaffold(
       backgroundColor: p.background,
-      resizeToAvoidBottomInset: true,
+      // 키보드가 올라와도 페이지 레이아웃을 줄이지 않는다 (떠 있는 메모 · 입력칸이 눌리지 않게).
+      // 가려지는 입력칸은 입력칸 쪽에서 키보드 높이만큼 더 스크롤해 커서를 보인다.
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Column(
           children: [

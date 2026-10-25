@@ -1783,7 +1783,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsMemoTitle => '불러온 가사';
 
   @override
-  String get lyricsMemoHint => '줄을 누르면 가사의 지금 줄 아래에 끼워 넣어요';
+  String get lyricsMemoHint => '글을 고치거나 골라서 \"끼우기\"를 누르면 가사의 지금 줄 아래에 들어가요';
+
+  @override
+  String get lyricsMemoInsert => '끼우기';
 
   @override
   String get lyricsSyncGroupSetupBody =>

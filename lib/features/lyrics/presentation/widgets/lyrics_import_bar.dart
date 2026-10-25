@@ -16,8 +16,10 @@ import 'timed_lyrics_controller.dart';
 ///
 /// 불러온 글이 들어오면: 지금 가사가 비어 있으면 그대로 넣고([onReplace]),
 /// 이미 있으면 바꾸기 · 뒤에 붙이기 · 메모로 띄우기 중에서 고른다.
-/// 메모는 불러온 가사를 줄마다 보여 주고, 줄을 누르면 [controller]의 지금 줄 아래에 그 줄을 끼워 넣는다
-/// (여러 줄을 골라 여기저기 이어 붙일 수 있다).
+///
+/// 메모는 화면 위에 떠 있는 작은 카드다. 페이지 레이아웃 밖(오버레이)에 있어서 키보드가 올라와도 가사 입력칸을
+/// 누르지 않고, 머리를 끌어 위아래로 옮길 수 있다. 메모 글은 직접 고칠 수 있고, "끼우기"는 메모에서 고른 글
+/// (고른 게 없으면 커서가 있는 줄)을 가사의 지금 줄 아래에 끼워 넣는다.
 class LyricsImportBar extends StatefulWidget {
   const LyricsImportBar({
     super.key,
@@ -43,8 +45,20 @@ class LyricsImportBar extends StatefulWidget {
 }
 
 class _LyricsImportBarState extends State<LyricsImportBar> {
-  /// 메모로 띄워 둔 불러온 가사의 줄들 (없으면 메모 칸이 없다).
-  List<String> _memo = const [];
+  static const _cardHeight = 210.0;
+
+  final _memo = TextEditingController();
+  OverlayEntry? _entry;
+
+  /// 메모 카드의 위쪽 위치. null이면 처음 놓을 자리(화면 아래쪽)를 쓴다.
+  double? _top;
+
+  @override
+  void dispose() {
+    _closeMemo();
+    _memo.dispose();
+    super.dispose();
+  }
 
   Future<void> _pickFile() async {
     final picked = await sl<PickLyricsFile>()(const NoParams());
@@ -67,23 +81,48 @@ class _LyricsImportBarState extends State<LyricsImportBar> {
     switch (mode) {
       case LyricsImportMode.replace:
         widget.onReplace(imported);
-        setState(() => _memo = const []);
+        _closeMemo();
       case LyricsImportMode.append:
         // 붙인 글은 시간 없는 줄로 뒤에 더한다.
         final extra = TimedLyricsText.parse(imported).text;
         c.text = '${c.text.trimRight()}\n$extra';
       case LyricsImportMode.memo:
-        setState(() => _memo = _linesOf(imported));
+        _openMemo(TimedLyricsText.parse(imported).text);
     }
   }
 
-  static List<String> _linesOf(String raw) => [
-    for (final l in TimedLyricsText.parse(raw).text.split('\n'))
-      if (l.trim().isNotEmpty) l.trim(),
-  ];
+  void _openMemo(String text) {
+    _memo.text = text;
+    if (_entry != null) {
+      _entry!.markNeedsBuild();
+      return;
+    }
+    _entry = OverlayEntry(builder: _memoCard);
+    Overlay.of(context, rootOverlay: true).insert(_entry!);
+  }
 
-  /// 메모의 [line]을 가사의 지금 줄(커서가 있는 줄) 아래에 새 줄로 끼워 넣는다. 시간은 그 자리에 남는다.
-  void _insert(String line) {
+  void _closeMemo() {
+    _entry?.remove();
+    _entry?.dispose();
+    _entry = null;
+  }
+
+  /// 메모에서 고른 글(고른 게 없으면 커서가 있는 줄)을 가사의 지금 줄 아래에 새 줄로 끼워 넣는다.
+  /// 시간은 그 자리에 남는다.
+  void _insertFromMemo() {
+    final m = _memo.text;
+    final sel = _memo.selection;
+    String piece;
+    if (sel.isValid && !sel.isCollapsed) {
+      piece = sel.textInside(m);
+    } else {
+      final at = sel.isValid ? sel.baseOffset.clamp(0, m.length) : 0;
+      final start = at == 0 ? 0 : m.lastIndexOf('\n', at - 1) + 1;
+      final end = m.indexOf('\n', at);
+      piece = m.substring(start, end < 0 ? m.length : end);
+    }
+    piece = piece.trim();
+    if (piece.isEmpty) return;
     final c = widget.controller;
     final text = c.text;
     final caret = c.selection.isValid
@@ -91,18 +130,126 @@ class _LyricsImportBarState extends State<LyricsImportBar> {
         : text.length;
     final lineEnd = text.indexOf('\n', caret);
     final at = lineEnd < 0 ? text.length : lineEnd;
-    final insert = '\n$line';
+    final insert = '\n$piece';
     c.value = TextEditingValue(
       text: text.replaceRange(at, at, insert),
       selection: TextSelection.collapsed(offset: at + insert.length),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
+  /// 화면 위에 떠 있는 메모 카드. 키보드로 줄어들지 않고, 키보드에 가려지면 그 위로 올라와 있는다.
+  Widget _memoCard(BuildContext context) {
     final l10n = context.l10n;
     final p = context.palette;
     final text = Theme.of(context).textTheme;
+    final size = MediaQuery.sizeOf(context);
+    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
+    final safeBottom = MediaQuery.paddingOf(context).bottom;
+    final maxTop = (size.height - keyboard - safeBottom - _cardHeight - 8)
+        .clamp(0.0, size.height);
+    // 처음에는 아래쪽(저장 버튼 위)에 놓고, 끌면 그 자리를 따른다. 키보드가 가리면 키보드 위로 올린다.
+    final wanted = _top ?? (size.height - safeBottom - _cardHeight - 96);
+    final top = wanted.clamp(0.0, maxTop);
+    return Positioned(
+      left: AppSpacing.md,
+      right: AppSpacing.md,
+      top: top,
+      height: _cardHeight,
+      child: Material(
+        color: p.surfaceHigh,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadii.md),
+          side: BorderSide(color: p.accent.withValues(alpha: .5)),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // 머리: 끌어서 옮긴다.
+            GestureDetector(
+              key: ValueKey('${widget.keyPrefix}-memo-handle'),
+              behavior: HitTestBehavior.opaque,
+              onVerticalDragUpdate: (d) {
+                _top = (top + d.delta.dy).clamp(0.0, maxTop);
+                _entry?.markNeedsBuild();
+              },
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.xs,
+                  AppSpacing.xxs,
+                  0,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      AppIcons.dragHandle,
+                      size: AppSizes.iconSm,
+                      color: p.onSurfaceMuted,
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Expanded(
+                      child: Text(l10n.lyricsMemoTitle, style: text.titleSmall),
+                    ),
+                    PlainButton(
+                      key: ValueKey('${widget.keyPrefix}-memo-insert'),
+                      label: l10n.lyricsMemoInsert,
+                      icon: AppIcons.add,
+                      accent: true,
+                      onPressed: _insertFromMemo,
+                    ),
+                    RowIconButton(
+                      key: ValueKey('${widget.keyPrefix}-memo-close'),
+                      icon: AppIcons.close,
+                      tooltip: l10n.actionClear,
+                      onPressed: _closeMemo,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: Text(
+                l10n.lyricsMemoHint,
+                style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
+              ),
+            ),
+            // 메모 글: 고치고 · 고르고 · 복사할 수 있다.
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.xs,
+                  AppSpacing.md,
+                  AppSpacing.xs,
+                ),
+                child: TextField(
+                  key: ValueKey('${widget.keyPrefix}-memo-field'),
+                  controller: _memo,
+                  style: text.bodyMedium,
+                  maxLines: null,
+                  expands: true,
+                  textAlignVertical: TextAlignVertical.top,
+                  keyboardType: TextInputType.multiline,
+                  decoration: const InputDecoration(
+                    isCollapsed: true,
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.md,
@@ -110,115 +257,26 @@ class _LyricsImportBarState extends State<LyricsImportBar> {
         AppSpacing.md,
         0,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Wrap(
-            spacing: AppSpacing.xs,
-            children: [
-              PlainButton(
-                key: ValueKey('${widget.keyPrefix}-import-file'),
-                label: l10n.lyricsLoadFile,
-                icon: AppIcons.fileOpen,
-                onPressed: _pickFile,
-              ),
-              if (lyricsWebSupported)
-                PlainButton(
-                  key: ValueKey('${widget.keyPrefix}-import-web'),
-                  label: l10n.lyricsWebSearch,
-                  icon: AppIcons.explore,
-                  onPressed: _searchWeb,
-                ),
-            ],
-          ),
-          if (_memo.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.xs),
-              child: DecoratedBox(
-                decoration: ShapeDecoration(
-                  color: p.surfaceHigh,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadii.sm),
-                    side: BorderSide(color: p.outline),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.md,
-                        AppSpacing.xs,
-                        AppSpacing.xxs,
-                        0,
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              l10n.lyricsMemoTitle,
-                              style: text.titleSmall,
-                            ),
-                          ),
-                          RowIconButton(
-                            key: ValueKey('${widget.keyPrefix}-memo-close'),
-                            icon: AppIcons.close,
-                            tooltip: l10n.actionClear,
-                            onPressed: () => setState(() => _memo = const []),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                      ),
-                      child: Text(
-                        l10n.lyricsMemoHint,
-                        style: text.bodySmall?.copyWith(
-                          color: p.onSurfaceMuted,
-                        ),
-                      ),
-                    ),
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxHeight: 168),
-                      child: ListView(
-                        shrinkWrap: true,
-                        padding: const EdgeInsets.symmetric(
-                          vertical: AppSpacing.xs,
-                        ),
-                        children: [
-                          for (final line in _memo)
-                            InkWell(
-                              onTap: () => _insert(line),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppSpacing.md,
-                                  vertical: AppSpacing.xs,
-                                ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(line, style: text.bodyMedium),
-                                    ),
-                                    const SizedBox(width: AppSpacing.xs),
-                                    Icon(
-                                      AppIcons.add,
-                                      size: AppSizes.iconSm,
-                                      color: p.accent,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Wrap(
+          spacing: AppSpacing.xs,
+          children: [
+            PlainButton(
+              key: ValueKey('${widget.keyPrefix}-import-file'),
+              label: l10n.lyricsLoadFile,
+              icon: AppIcons.fileOpen,
+              onPressed: _pickFile,
             ),
-        ],
+            if (lyricsWebSupported)
+              PlainButton(
+                key: ValueKey('${widget.keyPrefix}-import-web'),
+                label: l10n.lyricsWebSearch,
+                icon: AppIcons.explore,
+                onPressed: _searchWeb,
+              ),
+          ],
+        ),
       ),
     );
   }

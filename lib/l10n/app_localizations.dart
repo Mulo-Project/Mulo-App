@@ -3377,8 +3377,14 @@ abstract class AppLocalizations {
   /// No description provided for @lyricsMemoHint.
   ///
   /// In ko, this message translates to:
-  /// **'줄을 누르면 가사의 지금 줄 아래에 끼워 넣어요'**
+  /// **'글을 고치거나 골라서 \"끼우기\"를 누르면 가사의 지금 줄 아래에 들어가요'**
   String get lyricsMemoHint;
+
+  /// No description provided for @lyricsMemoInsert.
+  ///
+  /// In ko, this message translates to:
+  /// **'끼우기'**
+  String get lyricsMemoInsert;
 
   /// No description provided for @lyricsSyncGroupSetupBody.
   ///

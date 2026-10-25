@@ -1830,7 +1830,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsMemoTitle => 'Imported lyrics';
 
   @override
-  String get lyricsMemoHint => 'Tap a line to insert it below the current line';
+  String get lyricsMemoHint =>
+      'Edit or select text, then tap Insert to add it below the current line';
+
+  @override
+  String get lyricsMemoInsert => 'Insert';
 
   @override
   String get lyricsSyncGroupSetupBody =>

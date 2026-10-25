@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:music_download_play_app/features/lyrics/presentation/widgets/timed_lyrics_field.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/di/injector.dart';
@@ -216,7 +217,7 @@ void main() {
     expect(find.text('불러온 가사'), findsOneWidget);
   });
 
-  testWidgets('가사 편집 페이지: 불러온 가사를 메모로 띄우고 줄을 눌러 지금 줄 아래에 끼워 넣는다', (
+  testWidgets('가사 편집 페이지: 불러온 가사를 떠 있는 메모로 띄우고 골라서 지금 줄 아래에 끼워 넣는다', (
     tester,
   ) async {
     phone(tester);
@@ -229,15 +230,29 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('메모로 띄우기'));
     await tester.pumpAndSettle();
-    expect(find.text('불러온 가사'), findsOneWidget);
-    expect(find.text('끼울 줄'), findsOneWidget);
+    final memoField = find.byKey(const ValueKey('lyrics-memo-field'));
+    expect(memoField, findsOneWidget);
+    final memo = tester.widget<TextField>(memoField).controller!;
+    expect(memo.text, '끼울 줄\n다른 줄');
 
-    // 커서를 첫째 줄에 두고 메모의 줄을 누르면 첫째 줄 바로 아래에 들어간다.
-    final field = tester.widget<TextField>(find.byType(TextField));
-    field.controller!.selection = const TextSelection.collapsed(offset: 2);
-    await tester.tap(find.text('끼울 줄'));
+    // 메모 글을 고칠 수 있다.
+    await tester.enterText(memoField, '끼울 줄 고침\n다른 줄');
     await tester.pumpAndSettle();
-    expect(field.controller!.text, '첫째 줄\n끼울 줄\n셋째 줄');
+
+    // 가사의 커서를 첫째 줄에 두고 메모의 첫 줄을 골라 끼우면 첫째 줄 바로 아래에 들어간다.
+    final editor = tester
+        .widget<TextField>(
+          find.descendant(
+            of: find.byType(TimedLyricsField),
+            matching: find.byType(TextField),
+          ),
+        )
+        .controller!;
+    editor.selection = const TextSelection.collapsed(offset: 2);
+    memo.selection = const TextSelection(baseOffset: 0, extentOffset: 7);
+    await tester.tap(find.byKey(const ValueKey('lyrics-memo-insert')));
+    await tester.pumpAndSettle();
+    expect(editor.text, '첫째 줄\n끼울 줄 고침\n셋째 줄');
   });
 
   testWidgets('플레이어: 가사 보기로 바꾸면 줄이 보이고, 줄을 누르면 그 위치로 간다', (tester) async {
