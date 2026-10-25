@@ -34,6 +34,10 @@ class _Tags implements TrackTagRepository {
     lastTitle = track.title;
     return result;
   }
+
+  @override
+  Future<TagWriteResult> writeLyrics(Track track, String lyrics) async =>
+      result;
 }
 
 class _Done implements TagMigrationStore {

@@ -2,6 +2,11 @@ import 'dart:io';
 
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:music_download_play_app/features/library/domain/entities/track.dart';
+import 'package:music_download_play_app/features/lyrics/domain/usecases/lyrics_usecases.dart';
+
+import '../../helpers/fakes.dart';
+
 import 'package:music_download_play_app/core/database/app_database.dart';
 import 'package:music_download_play_app/features/lyrics/data/repositories/drift_lyrics_repository.dart';
 import 'package:music_download_play_app/features/lyrics/data/datasources/tag_lyrics_source.dart';
@@ -173,6 +178,33 @@ void main() {
       expect(await TagLyricsSource().read(f.path), isNull);
       expect(await TagLyricsSource().read('${dir.path}/없음.mp3'), isNull);
       expect(await TagLyricsSource().read(''), isNull);
+    });
+  });
+
+  group('SaveLyrics', () {
+    final track = Track(
+      id: 't1',
+      title: 'T',
+      artist: 'A',
+      album: '',
+      duration: Duration.zero,
+      uri: '/m/t1.mp3',
+      addedAt: DateTime(2026, 10, 1),
+    );
+
+    test('가사를 앱에 저장하고 음원 파일의 가사 태그에도 쓴다', () async {
+      final repo = MemoryLyricsRepository();
+      final tags = FakeTrackTagRepository();
+      await SaveLyrics(repo, tags)(SaveLyricsParams(track, '[00:01.00]hi'));
+      expect(repo.saved['t1'], '[00:01.00]hi');
+      expect(tags.lyricsWritten['t1'], '[00:01.00]hi');
+    });
+
+    test('가사를 비우면 파일 태그는 건드리지 않는다', () async {
+      final repo = MemoryLyricsRepository();
+      final tags = FakeTrackTagRepository();
+      await SaveLyrics(repo, tags)(SaveLyricsParams(track, '  '));
+      expect(tags.lyricsWritten, isEmpty);
     });
   });
 }

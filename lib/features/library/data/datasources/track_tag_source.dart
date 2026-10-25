@@ -33,6 +33,7 @@ class TrackTagSource {
     required String artist,
     required String album,
     required String genre,
+    String? lyrics,
     CoverArt? cover,
     int? color,
   }) async {
@@ -72,6 +73,7 @@ class TrackTagSource {
         artist: artist,
         album: album,
         genre: genre,
+        lyrics: lyrics,
       );
 
       if (!isContent) {

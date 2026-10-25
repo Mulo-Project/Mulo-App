@@ -21,7 +21,7 @@ Future<void> showLyricsEditor(BuildContext context, Track track) async {
     ),
   );
   if (text == null) return;
-  await cubit.save(track.id, text);
+  await cubit.save(track, text);
 }
 
 class _LyricsEditorScreen extends StatefulWidget {

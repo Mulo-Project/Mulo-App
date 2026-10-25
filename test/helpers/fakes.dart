@@ -837,6 +837,15 @@ class FakeTrackTagRepository implements TrackTagRepository {
     CoverArt? cover,
     int? color,
   }) async => result;
+
+  /// 가사 태그에 쓰라고 한 글 (곡 id → 글).
+  final lyricsWritten = <String, String>{};
+
+  @override
+  Future<TagWriteResult> writeLyrics(Track track, String lyrics) async {
+    lyricsWritten[track.id] = lyrics;
+    return result;
+  }
 }
 
 Future<void> setUpTestDependencies({

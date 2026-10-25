@@ -23,6 +23,19 @@ class TrackTagRepositoryImpl implements TrackTagRepository {
         cover: cover,
         color: color,
       );
+
+  @override
+  Future<TagWriteResult> writeLyrics(Track track, String lyrics) =>
+      lyrics.trim().isEmpty
+      ? Future.value(TagWriteResult.unsupported)
+      : _source.write(
+          track.uri,
+          title: '',
+          artist: '',
+          album: '',
+          genre: '',
+          lyrics: lyrics,
+        );
 }
 
 class FileTagRepositoryImpl implements FileTagRepository {

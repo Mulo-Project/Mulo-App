@@ -23,6 +23,10 @@ abstract interface class TrackTagRepository {
   /// [track]의 제목 · 아티스트 · 앨범 · 장르(와 [cover])를 파일 태그에 쓴다.
   /// 실패해도 파일은 그대로 둔다.
   Future<TagWriteResult> write(Track track, {CoverArt? cover, int? color});
+
+  /// [track] 파일의 가사 태그에 [lyrics] 글(싱크 가사면 `.lrc` 원문)을 쓴다. 다른 태그는 건드리지 않는다.
+  /// 비어 있으면 쓰지 않는다 (이미 파일에 있는 가사는 지워지지 않는다).
+  Future<TagWriteResult> writeLyrics(Track track, String lyrics);
 }
 
 /// 곡 파일의 태그를 읽는다 ([TrackTagRepository]의 반대 방향: 파일 → 앱 DB).
