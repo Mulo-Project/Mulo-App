@@ -21,6 +21,7 @@ import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 
 /**
@@ -31,8 +32,9 @@ import android.widget.TextView
  * 멈춤 · 가사 보기가 앱에 떠 있음 · 다른 곡 · 가사 없음이면 타이머를 걸지 않고 창을 뗀다.
  *
  * 창을 꾹 누르면 아래에 [숨기기] [끄기]가 나온다 (몇 초 뒤 저절로 사라진다). 끌면 위아래로 옮긴다.
- * 창 맨 아래 손잡이를 아래로 당기면 창이 화면의 [MAX_FRACTION]까지 늘어나, 현재 줄은 가운데에 두고
- * 위에는 지나간 줄, 아래에는 곧 나올 줄이 더 많이 보인다 (고른 높이는 기억한다).
+ * 창 맨 아래 손잡이를 아래로 당기면 창이 화면의 [MAX_FRACTION]까지 늘어나 가사 전체를 스크롤해 볼 수 있다:
+ * 현재 줄이 강조되어 가운데로 따라오고(곡 처음 · 끝은 위 · 아래에 붙는다), 손으로 넘기고 있는 동안
+ * 몇 초는 따라오지 않는다. 늘린 창은 위쪽 손잡이를 끌어 옮기고 (고른 높이는 기억한다).
  * 숨기기를 누르면 가사 창이 앱 아이콘 칩으로 줄어든다 (가사 갱신도 멈춘다). 칩은 화면 어디로든 끌어 옮길 수 있고,
  * 탭하면 다시 펼쳐진다.
  */
@@ -50,8 +52,8 @@ object LyricsOverlay {
     /** 늘어난 창의 가장 큰 높이 (화면 높이의 비율). */
     private const val MAX_FRACTION = 0.8f
 
-    /** 현재 줄 위 · 아래에 미리 만들어 두는 줄 칸 수 (창 높이만큼만 보이고 나머지는 잘린다). */
-    private const val MAX_SIDE = 12
+    /** 손으로 가사를 넘긴 뒤 이 시간 동안은 현재 줄을 따라가지 않는다. */
+    private const val FOLLOW_PAUSE_MS = 4000L
 
     private lateinit var context: Context
     private var initialized = false
@@ -88,17 +90,26 @@ object LyricsOverlay {
 
     private var view: FrameLayout? = null
     private var current: TextView? = null
-    private var prevBox: LinearLayout? = null
-    private var nextBox: LinearLayout? = null
+    private var upcoming: TextView? = null
+    private var scroll: ScrollView? = null
+    private var list: LinearLayout? = null
 
-    /** 현재 줄에 가까운 줄부터 차례로 (prev는 아래에서 위로, next는 위에서 아래로 놓인다). */
-    private val prevViews = ArrayList<TextView>()
-    private val nextViews = ArrayList<TextView>()
+    /** 늘린 창의 줄 칸: 곡마다 한 번 만들고, 줄이 바뀔 때는 강조만 옮긴다. [viewOf]는 줄 번호 → 칸 번호(빈 줄은 -1). */
+    private val lineViews = ArrayList<TextView>()
+    private var viewOf = IntArray(0)
+    private var builtTrack: String? = null
+    private var activeLine = -1
+
+    /** 마지막으로 가사를 손으로 넘긴 시각. */
+    private var lastScrollAt = 0L
+
+    /** 가사 창 전체를 끄는 손(맨 위 손잡이 · 빈 곳)과 같은 동작. */
+    private var dragHandler: View.OnTouchListener? = null
 
     /** 지금 창에 반영된 모양 (늘림 여부). 바뀔 때만 레이아웃을 다시 정한다. */
     private var appliedExpanded: Boolean? = null
 
-    /** 지금 위 · 아래 줄 칸에 준 세로 여백(px). 창을 더 늘릴수록 줄 사이가 넓어진다. */
+    /** 지금 줄 칸에 준 세로 여백(px). 창을 더 늘릴수록 줄 사이가 넓어진다. */
     private var appliedGap = -1
     private var menu: LinearLayout? = null
     private var hideButton: TextView? = null
@@ -143,6 +154,7 @@ object LyricsOverlay {
         trackId = id
         times = newTimes
         texts = newTexts
+        builtTrack = null
         emptyText = empty
         hideLabel = hide
         offLabel = off
@@ -159,6 +171,7 @@ object LyricsOverlay {
         trackId = ""
         times = LongArray(0)
         texts = emptyList()
+        builtTrack = null
         emptyText = ""
         refresh()
     }
@@ -204,7 +217,8 @@ object LyricsOverlay {
         val position = exo.currentPosition
         val index = currentIndex(position)
         val text = if (index >= 0) texts[index] else ""
-        if (text.isEmpty()) hideView() else showLines(index, text)
+        // 늘린 목록 모양에서는 간주(빈 줄)에도 창을 두어 넘겨 보던 가사가 사라지지 않게 한다.
+        if (text.isEmpty() && expandedHeight() == 0) hideView() else showLines(index, text)
         if (exo.isPlaying) {
             val nextIndex = index + 1
             if (nextIndex < times.size) {
@@ -215,32 +229,14 @@ object LyricsOverlay {
         }
     }
 
-    /** [index] 앞의 빈 줄 아닌 줄을 가까운 것부터 최대 [max]개. */
-    private fun linesBefore(index: Int, max: Int): List<String> {
-        val out = ArrayList<String>(max)
-        var i = index - 1
-        while (i >= 0 && out.size < max) {
-            if (texts[i].isNotEmpty()) out.add(texts[i])
-            i--
-        }
-        return out
-    }
-
-    /** [index] 뒤의 빈 줄 아닌 줄을 가까운 것부터 최대 [max]개. */
-    private fun linesAfter(index: Int, max: Int): List<String> {
-        val out = ArrayList<String>(max)
+    /** [index] 뒤의 첫 빈 줄 아닌 줄 (없으면 빈 글). */
+    private fun nextLineAfter(index: Int): String {
         var i = index + 1
-        while (i < texts.size && out.size < max) {
-            if (texts[i].isNotEmpty()) out.add(texts[i])
+        while (i < texts.size) {
+            if (texts[i].isNotEmpty()) return texts[i]
             i++
         }
-        return out
-    }
-
-    /** 현재 줄에서 멀수록 흐리게. */
-    private fun fadeColor(distance: Int): Int {
-        val alpha = (0xB0 - distance * 0x14).coerceAtLeast(0x30)
-        return (alpha shl 24) or 0x00FFFFFF
+        return ""
     }
 
     private fun maxExpandedPx(): Int =
@@ -284,39 +280,29 @@ object LyricsOverlay {
             maxLines = 4
             setLineSpacing(0f, 1.15f)
         }
-        fun sideLine() = TextView(context).apply {
+        val next = TextView(context).apply {
             setTextColor(0x8CFFFFFF.toInt())
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
             gravity = Gravity.CENTER
             maxLines = 2
             ellipsize = android.text.TextUtils.TruncateAt.END
-            setPadding(0, px(4), 0, px(4))
+            setPadding(0, px(8), 0, px(4))
             visibility = View.GONE
         }
-        // 현재 줄 위: 가까운 줄이 맨 아래에 오도록 아래쪽부터 쌓고, 넘치는 윗부분은 잘린다.
-        val before = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.BOTTOM
+        // 늘린 모양: 가사 전체를 넘겨 볼 수 있는 목록. 터치는 스크롤이 쓰므로 꾹 누르기만 따로 본다.
+        val rows = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
+        val scrollView = ScrollView(context).apply {
+            isVerticalScrollBarEnabled = false
+            overScrollMode = View.OVER_SCROLL_NEVER
             visibility = View.GONE
+            addView(rows, FrameLayout.LayoutParams(-1, -2))
+            setOnTouchListener(scrollTouchListener())
         }
-        // 현재 줄 아래: 가까운 줄이 맨 위에 오도록 위쪽부터 쌓고, 넘치는 아랫부분은 잘린다.
-        val after = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.TOP
-        }
-        prevViews.clear()
-        nextViews.clear()
-        repeat(MAX_SIDE) {
-            val up = sideLine()
-            prevViews.add(up)
-            before.addView(up, 0, LinearLayout.LayoutParams(-1, -2))
-            val down = sideLine()
-            nextViews.add(down)
-            after.addView(down, LinearLayout.LayoutParams(-1, -2))
-        }
-        // 끌 수 있음을 알리는 작은 손잡이.
-        val handle = View(context).apply {
-            background = round(0x38FFFFFF, 2f)
+        // 맨 위 손잡이: 창을 끌어 옮기는 곳 (늘린 모양에서는 가사 목록이 터치를 써서 여기로 옮긴다).
+        val handleBar = View(context).apply { background = round(0x38FFFFFF, 2f) }
+        val handle = FrameLayout(context).apply {
+            addView(handleBar, FrameLayout.LayoutParams(px(32), px(4), Gravity.CENTER))
+            setOnTouchListener { _, e -> view?.let { dragHandler?.onTouch(it, e) } ?: false }
         }
         fun button(onClick: () -> Unit) = TextView(context).apply {
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
@@ -338,11 +324,11 @@ object LyricsOverlay {
         val body = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
-            setPadding(px(20), px(8), px(20), 0)
-            addView(handle, LinearLayout.LayoutParams(px(32), px(4)).apply { bottomMargin = px(8) })
-            addView(before, LinearLayout.LayoutParams(-1, -2))
+            setPadding(px(20), 0, px(20), 0)
+            addView(handle, LinearLayout.LayoutParams(-1, px(22)))
+            addView(scrollView, LinearLayout.LayoutParams(-1, 0, 1f))
             addView(now, LinearLayout.LayoutParams(-1, -2))
-            addView(after, LinearLayout.LayoutParams(-1, -2))
+            addView(next, LinearLayout.LayoutParams(-1, -2))
             addView(row, LinearLayout.LayoutParams(-2, -2))
             addView(grip(), LinearLayout.LayoutParams(-1, px(26)))
         }
@@ -380,8 +366,9 @@ object LyricsOverlay {
         column = body
         chip = note
         current = now
-        prevBox = before
-        nextBox = after
+        upcoming = next
+        scroll = scrollView
+        list = rows
         menu = row
         hideButton = hideBtn
         offButton = offBtn
@@ -390,8 +377,43 @@ object LyricsOverlay {
         return root
     }
 
+    /** 늘린 목록의 터치: 스크롤은 그대로 두고(false), 꾹 누르면 메뉴를 열고, 넘긴 시각을 기억해 잠깐 따라가지 않는다. */
+    private fun scrollTouchListener(): View.OnTouchListener {
+        val slop = ViewConfiguration.get(context).scaledTouchSlop
+        var startY = 0f
+        var moved = false
+        return View.OnTouchListener { _, e ->
+            when (e.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    startY = e.rawY
+                    moved = false
+                    longPressed = false
+                    lastScrollAt = System.currentTimeMillis()
+                    main.postDelayed(longPress, ViewConfiguration.getLongPressTimeout().toLong())
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    if (!moved && Math.abs(e.rawY - startY) > slop) {
+                        moved = true
+                        main.removeCallbacks(longPress)
+                    }
+                    lastScrollAt = System.currentTimeMillis()
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    main.removeCallbacks(longPress)
+                    lastScrollAt = System.currentTimeMillis()
+                    if (!moved && !longPressed && e.actionMasked == MotionEvent.ACTION_UP &&
+                        menu?.visibility == View.VISIBLE
+                    ) {
+                        hideMenu()
+                    }
+                }
+            }
+            false
+        }
+    }
+
     /**
-     * 맨 아래 손잡이: 아래로 당기면 창이 늘어나(최대 [MAX_FRACTION]) 지나간 줄과 곧 나올 줄이 더 보인다.
+     * 맨 아래 손잡이: 아래로 당기면 창이 늘어나(최대 [MAX_FRACTION]) 가사를 더 많이 넘겨 볼 수 있다.
      * 위로 밀어 [COMPACT_LIMIT_DP]보다 낮아지면 원래 모양으로 돌아간다. 놓으면 높이를 기억하고,
      * 손잡이가 터치를 가져가므로 창은 끌리지 않는다.
      */
@@ -540,7 +562,9 @@ object LyricsOverlay {
         val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         val lp = params()
         layout = lp
-        root.setOnTouchListener(dragListener(wm, lp))
+        val drag = dragListener(wm, lp)
+        dragHandler = drag
+        root.setOnTouchListener(drag)
         try {
             wm.addView(root, lp)
             attached = true
@@ -564,29 +588,80 @@ object LyricsOverlay {
                 wm.updateViewLayout(root, it)
             }
         }
-        val height = expandedHeight()
+        // 가사가 있고 늘렸을 때만 목록 모양 (가사 없음 글은 늘리지 않은 모양으로 보인다).
+        val height = if (texts.isNotEmpty()) expandedHeight() else 0
         val expanded = height > 0
+        val modeChanged = appliedExpanded != expanded
         applyMode(root, wm, height)
         val key = "$trackId|$index|$expanded"
         if (shownKey != key) {
-            current?.text = text
             if (expanded) {
-                val before = linesBefore(index, MAX_SIDE)
-                fill(prevViews, before)
-                fill(nextViews, linesAfter(index, MAX_SIDE))
-                // 지나간 줄이 없으면(곡 처음) 윗칸을 접어 현재 줄이 맨 위에 붙게 한다.
-                prevBox?.visibility = if (before.isEmpty()) View.GONE else View.VISIBLE
+                buildLines()
+                setActive(index, smooth = !modeChanged)
             } else {
-                fill(prevViews, emptyList())
-                fill(nextViews, linesAfter(index, 1))
+                current?.text = text
+                upcoming?.apply {
+                    val line = nextLineAfter(index)
+                    this.text = line
+                    visibility = if (line.isEmpty()) View.GONE else View.VISIBLE
+                }
             }
             shownKey = key
         }
         root.visibility = View.VISIBLE
     }
 
+    /** 늘린 모양의 줄 칸을 곡마다 한 번 만든다 (빈 줄은 건너뛴다). */
+    private fun buildLines() {
+        if (builtTrack == trackId) return
+        val rows = list ?: return
+        rows.removeAllViews()
+        lineViews.clear()
+        viewOf = IntArray(texts.size) { -1 }
+        for ((i, t) in texts.withIndex()) {
+            if (t.isEmpty()) continue
+            val v = TextView(context).apply {
+                text = t
+                gravity = Gravity.CENTER
+                typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+                setLineSpacing(0f, 1.1f)
+                styleLine(this, false)
+            }
+            viewOf[i] = lineViews.size
+            lineViews.add(v)
+            rows.addView(v, LinearLayout.LayoutParams(-1, -2))
+        }
+        builtTrack = trackId
+        activeLine = -1
+        appliedGap = -1
+        applyGap(expandedHeight())
+    }
+
+    private fun styleLine(v: TextView, active: Boolean) {
+        v.setTextColor(if (active) 0xFFFFFFFF.toInt() else 0x8CFFFFFF.toInt())
+        v.setTextSize(TypedValue.COMPLEX_UNIT_SP, if (active) 18f else 14f)
+    }
+
+    /** 강조를 [index] 줄로 옮기고, 손으로 넘기는 중이 아니면 그 줄이 가운데에 오도록 목록을 따라가게 한다. */
+    private fun setActive(index: Int, smooth: Boolean) {
+        val old = activeLine
+        if (old >= 0 && old < viewOf.size && viewOf[old] >= 0) styleLine(lineViews[viewOf[old]], false)
+        activeLine = index
+        val slot = if (index >= 0 && index < viewOf.size) viewOf[index] else -1
+        if (slot < 0) return
+        styleLine(lineViews[slot], true)
+        val follow = !smooth || System.currentTimeMillis() - lastScrollAt >= FOLLOW_PAUSE_MS
+        if (!follow) return
+        val sv = scroll ?: return
+        sv.post {
+            val v = lineViews.getOrNull(slot) ?: return@post
+            val target = (v.top + v.height / 2 - sv.height / 2).coerceAtLeast(0)
+            if (smooth) sv.smoothScrollTo(0, target) else sv.scrollTo(0, target)
+        }
+    }
+
     /**
-     * 위 · 아래 줄 사이 간격: 늘리지 않으면 좁게(4dp), 창을 최대로 늘리면 넓게(16dp).
+     * 줄 사이 간격: 늘리지 않으면 좁게, 창을 최대로 늘리면 넓게(4dp → 16dp).
      * 손잡이를 당기는 만큼 줄 사이가 함께 벌어진다.
      */
     private fun applyGap(height: Int) {
@@ -597,26 +672,10 @@ object LyricsOverlay {
         val gap = ((4f + 12f * fraction) * density).toInt()
         if (gap == appliedGap) return
         appliedGap = gap
-        for (v in prevViews) v.setPadding(0, gap, 0, gap)
-        for (v in nextViews) v.setPadding(0, gap, 0, gap)
+        for (v in lineViews) v.setPadding(0, gap, 0, gap)
     }
 
-    private fun fill(views: List<TextView>, lines: List<String>) {
-        for ((k, v) in views.withIndex()) {
-            if (k < lines.size) {
-                v.text = lines[k]
-                v.setTextColor(fadeColor(k))
-                v.visibility = View.VISIBLE
-            } else {
-                v.visibility = View.GONE
-            }
-        }
-    }
-
-    /**
-     * 늘림 여부에 맞게 몸통 높이와 위 · 아래 줄 상자를 정한다. 늘린 모양은 몸통 높이를 고정하고
-     * 위 · 아래 상자가 남는 높이를 반반 나눠 현재 줄이 가운데에 오게 한다.
-     */
+    /** 늘림 여부에 맞게 몸통 높이와 가사 목록 · 현재 줄 · 다음 줄을 정한다. 늘린 모양은 몸통 높이를 고정하고 목록이 남는 높이를 쓴다. */
     private fun applyMode(root: FrameLayout, wm: WindowManager, height: Int) {
         val expanded = height > 0
         val body = column ?: return
@@ -625,12 +684,9 @@ object LyricsOverlay {
         if (appliedExpanded != expanded || lp.height != bodyHeight) {
             lp.height = bodyHeight
             body.layoutParams = lp
-            prevBox?.apply {
-                visibility = if (expanded) View.VISIBLE else View.GONE
-                layoutParams = LinearLayout.LayoutParams(-1, 0, 1f)
-            }
-            nextBox?.layoutParams =
-                if (expanded) LinearLayout.LayoutParams(-1, 0, 1f) else LinearLayout.LayoutParams(-1, -2)
+            scroll?.visibility = if (expanded) View.VISIBLE else View.GONE
+            current?.visibility = if (expanded) View.GONE else View.VISIBLE
+            upcoming?.visibility = View.GONE
             appliedExpanded = expanded
         }
         applyGap(height)
