@@ -13,6 +13,7 @@ import '../../domain/entities/library_sort.dart';
 import '../../domain/entities/track.dart';
 import '../bloc/library_cubit.dart';
 import '../bloc/library_import_cubit.dart';
+import '../widgets/library_selection.dart';
 import '../widgets/track_list_tile.dart';
 
 enum LibraryTab { songs, artists, albums, genres }
@@ -26,7 +27,8 @@ class LibraryScreen extends StatefulWidget {
   State<LibraryScreen> createState() => _LibraryScreenState();
 }
 
-class _LibraryScreenState extends State<LibraryScreen> {
+class _LibraryScreenState extends State<LibraryScreen>
+    with TrackPicker<LibraryScreen> {
   LibraryTab _tab = LibraryTab.songs;
 
   /// 탭마다 고른 정렬. 탭에 맞는 기준만 고를 수 있다 ([_sortOptions]).
@@ -124,8 +126,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
               radius: 24,
               icon: AppIcons.person,
             ),
-            trailing: const _Chevron(),
-            onTap: () => context.push(Routes.artist(e.value.first.artist)),
+            trailing: selecting
+                ? _PickMark(picked: groupPicked(e.value))
+                : const _Chevron(),
+            onTap: () => selecting
+                ? toggleGroup(e.value)
+                : context.push(Routes.artist(e.value.first.artist)),
+            onLongPress: () => toggleGroup(e.value),
           ),
       ],
       LibraryTab.albums => [
@@ -146,8 +153,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
               color: coverColorOf(context, CoverKey.album(e.value.first.album)),
               icon: AppIcons.album,
             ),
-            trailing: const _Chevron(),
-            onTap: () => context.push(Routes.album(e.value.first.album)),
+            trailing: selecting
+                ? _PickMark(picked: groupPicked(e.value))
+                : const _Chevron(),
+            onTap: () => selecting
+                ? toggleGroup(e.value)
+                : context.push(Routes.album(e.value.first.album)),
+            onLongPress: () => toggleGroup(e.value),
           ),
       ],
       LibraryTab.genres => [
@@ -166,8 +178,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
               color: coverColorOf(context, CoverKey.genre(e.key)),
               icon: AppIcons.category,
             ),
-            trailing: const _Chevron(),
-            onTap: () => context.push(Routes.genre(e.key)),
+            trailing: selecting
+                ? _PickMark(picked: groupPicked(e.value))
+                : const _Chevron(),
+            onTap: () => selecting
+                ? toggleGroup(e.value)
+                : context.push(Routes.genre(e.key)),
+            onLongPress: () => toggleGroup(e.value),
           ),
       ],
     };
@@ -186,131 +203,146 @@ class _LibraryScreenState extends State<LibraryScreen> {
       ],
       child: SafeArea(
         bottom: false,
-        child: CustomScrollView(
-          slivers: [
-            SliverList(
-              delegate: SliverChildListDelegate([
-                AppTopBar(
-                  large: true,
-                  title: l10n.navLibrary,
-                  subtitle: l10n.librarySubtitle,
-                  actions: [
-                    CircleIconButton(
-                      icon: importing
-                          ? AppIcons.hourglassTop
-                          : AppIcons.folderUpload,
-                      tooltip: l10n.libraryImport,
-                      onPressed: importing ? null : _import,
+        child: Stack(
+          children: [
+            CustomScrollView(
+              slivers: [
+                SliverList(
+                  delegate: SliverChildListDelegate([
+                    AppTopBar(
+                      large: true,
+                      title: l10n.navLibrary,
+                      subtitle: l10n.librarySubtitle,
+                      actions: [
+                        CircleIconButton(
+                          icon: importing
+                              ? AppIcons.hourglassTop
+                              : AppIcons.folderUpload,
+                          tooltip: l10n.libraryImport,
+                          onPressed: importing ? null : _import,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                if (all.isNotEmpty) ...[
-                  Padding(
-                    padding: AppSpacing.screen,
-                    child: _LibraryHero(
-                      count: all.length,
-                      downloaded: all
-                          .where((t) => t.source == TrackSource.download)
-                          .length,
-                      onPlayAll: () => vm.playQueue(tracks),
-                      onShuffle: () => vm.playShuffled(tracks),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  Padding(
-                    padding: AppSpacing.screen,
-                    child: SegmentedPills<LibraryTab>(
-                      expand: true,
-                      values: LibraryTab.values,
-                      selected: _tab,
-                      labelOf: (t) => switch (t) {
-                        LibraryTab.songs => l10n.librarySongs,
-                        LibraryTab.artists => l10n.libraryArtists,
-                        LibraryTab.albums => l10n.libraryAlbums,
-                        LibraryTab.genres => l10n.libraryGenres,
-                      },
-                      onChanged: (t) => setState(() => _tab = t),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Padding(
-                    padding: AppSpacing.screen,
-                    child: AppSearchField(
-                      hint: l10n.librarySearchHint,
-                      clearTooltip: l10n.actionClear,
-                      onChanged: (q) => setState(() => _query = q),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Padding(
-                    padding: AppSpacing.screen,
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: AppDropdown<LibrarySort>(
-                        values: _sortOptions,
-                        selected: _sort,
-                        tooltip: l10n.sortLabel,
-                        icon: AppIcons.sort,
-                        labelOf: (s) => switch (s) {
-                          LibrarySort.name => l10n.sortName,
-                          LibrarySort.added => l10n.sortAdded,
-                          LibrarySort.artist => l10n.sortArtist,
-                          LibrarySort.count => l10n.sortCount,
-                        },
-                        // 기준을 바꾸면 그 기준의 기본 방향으로 돌아간다.
-                        onChanged: (s) => setState(() {
-                          _sorts[_tab] = s;
-                          _ascending.remove(_tab);
-                        }),
-                        ascending: _asc,
-                        directionTooltip: _asc
-                            ? l10n.sortAscending
-                            : l10n.sortDescending,
-                        onToggleDirection: () =>
-                            setState(() => _ascending[_tab] = !_asc),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  if (items.isEmpty && !(lazySongs && tracks.isNotEmpty))
-                    Padding(
-                      padding: const EdgeInsets.all(AppSpacing.xl),
-                      child: Center(
-                        child: Text(
-                          l10n.libraryNoMatch,
-                          style: Theme.of(context).textTheme.bodyMedium,
+                    if (all.isNotEmpty) ...[
+                      Padding(
+                        padding: AppSpacing.screen,
+                        child: _LibraryHero(
+                          count: all.length,
+                          downloaded: all
+                              .where((t) => t.source == TrackSource.download)
+                              .length,
+                          onPlayAll: () => vm.playQueue(tracks),
+                          onShuffle: () => vm.playShuffled(tracks),
                         ),
                       ),
-                    ),
-                ],
-              ]),
-            ),
-            // 보관함이 비었으면 안내를 머리 아래 남은 자리 가운데에 둔다.
-            if (all.isEmpty)
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Padding(
-                  padding: AppSpacing.screen,
-                  child: _EmptyLibrary(importing: importing, onImport: _import),
+                      const SizedBox(height: AppSpacing.lg),
+                      Padding(
+                        padding: AppSpacing.screen,
+                        child: SegmentedPills<LibraryTab>(
+                          expand: true,
+                          values: LibraryTab.values,
+                          selected: _tab,
+                          labelOf: (t) => switch (t) {
+                            LibraryTab.songs => l10n.librarySongs,
+                            LibraryTab.artists => l10n.libraryArtists,
+                            LibraryTab.albums => l10n.libraryAlbums,
+                            LibraryTab.genres => l10n.libraryGenres,
+                          },
+                          onChanged: (t) => setState(() {
+                            _tab = t;
+                            picked.clear();
+                          }),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Padding(
+                        padding: AppSpacing.screen,
+                        child: AppSearchField(
+                          hint: l10n.librarySearchHint,
+                          clearTooltip: l10n.actionClear,
+                          onChanged: (q) => setState(() => _query = q),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Padding(
+                        padding: AppSpacing.screen,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: AppDropdown<LibrarySort>(
+                            values: _sortOptions,
+                            selected: _sort,
+                            tooltip: l10n.sortLabel,
+                            icon: AppIcons.sort,
+                            labelOf: (s) => switch (s) {
+                              LibrarySort.name => l10n.sortName,
+                              LibrarySort.added => l10n.sortAdded,
+                              LibrarySort.artist => l10n.sortArtist,
+                              LibrarySort.count => l10n.sortCount,
+                            },
+                            // 기준을 바꾸면 그 기준의 기본 방향으로 돌아간다.
+                            onChanged: (s) => setState(() {
+                              _sorts[_tab] = s;
+                              _ascending.remove(_tab);
+                            }),
+                            ascending: _asc,
+                            directionTooltip: _asc
+                                ? l10n.sortAscending
+                                : l10n.sortDescending,
+                            onToggleDirection: () =>
+                                setState(() => _ascending[_tab] = !_asc),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      if (items.isEmpty && !(lazySongs && tracks.isNotEmpty))
+                        Padding(
+                          padding: const EdgeInsets.all(AppSpacing.xl),
+                          child: Center(
+                            child: Text(
+                              l10n.libraryNoMatch,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ]),
                 ),
-              )
-            else if (lazySongs)
-              SliverList.builder(
-                itemCount: tracks.length,
-                itemBuilder: (context, i) =>
-                    _songTile(context, tracks[i], i, tracks),
-              )
-            else if (items.isNotEmpty)
-              SliverList.builder(
-                itemCount: items.length,
-                itemBuilder: (context, i) =>
-                    Builder(builder: (context) => items[i](context)),
-              ),
-            SliverToBoxAdapter(
-              child: SizedBox(
-                height: AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
-              ),
+                // 보관함이 비었으면 안내를 머리 아래 남은 자리 가운데에 둔다.
+                if (all.isEmpty)
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Padding(
+                      padding: AppSpacing.screen,
+                      child: _EmptyLibrary(
+                        importing: importing,
+                        onImport: _import,
+                      ),
+                    ),
+                  )
+                else if (lazySongs)
+                  SliverList.builder(
+                    itemCount: tracks.length,
+                    itemBuilder: (context, i) =>
+                        _songTile(context, tracks[i], i, tracks),
+                  )
+                else if (items.isNotEmpty)
+                  SliverList.builder(
+                    itemCount: items.length,
+                    itemBuilder: (context, i) =>
+                        Builder(builder: (context) => items[i](context)),
+                  ),
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                    height:
+                        AppSpacing.lg +
+                        MediaQuery.paddingOf(context).bottom +
+                        selectionBottomGap,
+                  ),
+                ),
+              ],
             ),
+            // 하나라도 고르면 하단에 선택 막대가 올라온다.
+            ?selectionBar(all, tracks),
           ],
         ),
       ),
@@ -318,7 +350,13 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   Widget _songTile(BuildContext context, Track t, int i, List<Track> queue) =>
-      TrackListTile(key: ValueKey(t.id), track: t, queue: queue, index: i);
+      TrackListTile(
+        key: ValueKey(t.id),
+        track: t,
+        queue: queue,
+        index: i,
+        selection: selectionFor(t),
+      );
 
   void _import() => context.read<LibraryImportCubit>().importDeviceMusic();
 
@@ -441,6 +479,22 @@ class _LibraryHero extends StatelessWidget {
         const SizedBox(height: AppSpacing.lg),
         const AppDivider(),
       ],
+    );
+  }
+}
+
+/// 선택 모드에서 묶음 줄 오른쪽에 보이는 체크 (곡 줄과 같은 모양).
+class _PickMark extends StatelessWidget {
+  const _PickMark({required this.picked});
+
+  final bool picked;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Icon(
+      picked ? AppIcons.checkCircle : AppIcons.radioOff,
+      color: picked ? p.accent : p.onSurfaceMuted,
     );
   }
 }

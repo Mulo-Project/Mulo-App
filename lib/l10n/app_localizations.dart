@@ -5281,6 +5281,114 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'다시 받기'**
   String get downloadAgainConfirm;
+
+  /// No description provided for @selectCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}곡 선택'**
+  String selectCount(int count);
+
+  /// No description provided for @selectClose.
+  ///
+  /// In ko, this message translates to:
+  /// **'선택 끝내기'**
+  String get selectClose;
+
+  /// No description provided for @selectAssignAlbum.
+  ///
+  /// In ko, this message translates to:
+  /// **'앨범 지정'**
+  String get selectAssignAlbum;
+
+  /// No description provided for @selectAssignArtist.
+  ///
+  /// In ko, this message translates to:
+  /// **'아티스트 지정'**
+  String get selectAssignArtist;
+
+  /// No description provided for @selectAssignGenre.
+  ///
+  /// In ko, this message translates to:
+  /// **'장르 지정'**
+  String get selectAssignGenre;
+
+  /// No description provided for @selectAssignAlbumTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'앨범 바꾸기'**
+  String get selectAssignAlbumTitle;
+
+  /// No description provided for @selectAssignArtistTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'아티스트 바꾸기'**
+  String get selectAssignArtistTitle;
+
+  /// No description provided for @selectAssignGenreTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'장르 바꾸기'**
+  String get selectAssignGenreTitle;
+
+  /// No description provided for @selectConfirmAlbum.
+  ///
+  /// In ko, this message translates to:
+  /// **'고른 {count}곡의 앨범을 바꿀까요?\n\n새 앨범: {value}\n\n이 곡들은 다른 앨범에서 빠지고, 음악 파일 정보도 함께 바뀌어요.'**
+  String selectConfirmAlbum(int count, String value);
+
+  /// No description provided for @selectConfirmArtist.
+  ///
+  /// In ko, this message translates to:
+  /// **'고른 {count}곡의 아티스트를 바꿀까요?\n\n새 아티스트: {value}\n\n이 곡들은 다른 아티스트에서 빠지고, 음악 파일 정보도 함께 바뀌어요.'**
+  String selectConfirmArtist(int count, String value);
+
+  /// No description provided for @selectConfirmGenre.
+  ///
+  /// In ko, this message translates to:
+  /// **'고른 {count}곡의 장르를 바꿀까요?\n\n새 장르: {value}\n\n이 곡들은 다른 장르에서 빠지고, 음악 파일 정보도 함께 바뀌어요.'**
+  String selectConfirmGenre(int count, String value);
+
+  /// No description provided for @selectConfirmApply.
+  ///
+  /// In ko, this message translates to:
+  /// **'바꾸기'**
+  String get selectConfirmApply;
+
+  /// No description provided for @selectAssignPartial.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}곡은 음악 파일에 정보를 쓰지 못해 바꾸지 않았어요.'**
+  String selectAssignPartial(int count);
+
+  /// No description provided for @selectActions.
+  ///
+  /// In ko, this message translates to:
+  /// **'작업'**
+  String get selectActions;
+
+  /// No description provided for @selectAssignHintAlbum.
+  ///
+  /// In ko, this message translates to:
+  /// **'고른 곡 모두에 넣을 앨범 이름을 적어요. 비워 두면 앨범 정보가 없는 곡이 돼요.'**
+  String get selectAssignHintAlbum;
+
+  /// No description provided for @selectAssignHintArtist.
+  ///
+  /// In ko, this message translates to:
+  /// **'고른 곡 모두에 넣을 아티스트 이름을 적어요. 비워 두면 아티스트 정보가 없는 곡이 돼요.'**
+  String get selectAssignHintArtist;
+
+  /// No description provided for @selectAssignHintGenre.
+  ///
+  /// In ko, this message translates to:
+  /// **'고른 곡 모두에 넣을 장르를 적어요. 비워 두면 장르 정보가 없는 곡이 돼요.'**
+  String get selectAssignHintGenre;
+
+  /// No description provided for @selectNext.
+  ///
+  /// In ko, this message translates to:
+  /// **'다음'**
+  String get selectNext;
 }
 
 class _AppLocalizationsDelegate

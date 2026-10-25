@@ -2900,4 +2900,71 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get downloadAgainConfirm => 'Download again';
+
+  @override
+  String selectCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get selectClose => 'Done selecting';
+
+  @override
+  String get selectAssignAlbum => 'Set album';
+
+  @override
+  String get selectAssignArtist => 'Set artist';
+
+  @override
+  String get selectAssignGenre => 'Set genre';
+
+  @override
+  String get selectAssignAlbumTitle => 'Change album';
+
+  @override
+  String get selectAssignArtistTitle => 'Change artist';
+
+  @override
+  String get selectAssignGenreTitle => 'Change genre';
+
+  @override
+  String selectConfirmAlbum(int count, String value) {
+    return 'Change the album of the $count selected songs?\n\nNew album: $value\n\nThey leave their other albums, and the music files\' info changes too.';
+  }
+
+  @override
+  String selectConfirmArtist(int count, String value) {
+    return 'Change the artist of the $count selected songs?\n\nNew artist: $value\n\nThey leave their other artists, and the music files\' info changes too.';
+  }
+
+  @override
+  String selectConfirmGenre(int count, String value) {
+    return 'Change the genre of the $count selected songs?\n\nNew genre: $value\n\nThey leave their other genres, and the music files\' info changes too.';
+  }
+
+  @override
+  String get selectConfirmApply => 'Apply';
+
+  @override
+  String selectAssignPartial(int count) {
+    return '$count songs could not be written to their music files and were left unchanged.';
+  }
+
+  @override
+  String get selectActions => 'Actions';
+
+  @override
+  String get selectAssignHintAlbum =>
+      'Enter the album for all selected songs. Leave it empty to clear the album.';
+
+  @override
+  String get selectAssignHintArtist =>
+      'Enter the artist for all selected songs. Leave it empty to clear the artist.';
+
+  @override
+  String get selectAssignHintGenre =>
+      'Enter the genre for all selected songs. Leave it empty to clear the genre.';
+
+  @override
+  String get selectNext => 'Next';
 }

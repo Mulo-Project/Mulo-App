@@ -7,6 +7,13 @@ enum TrackGroupKind {
   album,
   genre;
 
+  /// [t]의 이 묶음 값 (아티스트 · 앨범 · 장르 이름, 모르면 빈 문자열).
+  String valueOf(Track t) => switch (this) {
+    TrackGroupKind.artist => t.artist,
+    TrackGroupKind.album => t.album,
+    TrackGroupKind.genre => t.genre.trim(),
+  };
+
   /// [t]가 이 묶음 [name]에 속하는가. 이름이 빈 문자열이면 "모르는" 묶음이다.
   bool contains(Track t, String name) => switch (this) {
     TrackGroupKind.artist => t.artist == name,

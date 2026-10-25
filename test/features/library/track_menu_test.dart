@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
@@ -49,7 +48,7 @@ void main() {
 
   const items = ['다음에 재생', '대기열에 추가', '재생목록에 추가', '좋아요', '정보 편집', '꾸미기', '삭제'];
 
-  testWidgets('⋮ 버튼 · 길게 누르기 · 오른쪽 클릭이 같은 팝업 메뉴를 연다', (tester) async {
+  testWidgets('⋮ 버튼이 팝업 메뉴를 연다 (보관함 줄은 길게 누르면 선택 모드)', (tester) async {
     await pumpLibrary(tester);
 
     await tester.tap(find.byTooltip('곡 메뉴').first);
@@ -65,20 +64,6 @@ void main() {
     await tester.tapAt(const Offset(10, 10));
     await tester.pumpAndSettle();
     expect(find.text('정보 편집'), findsNothing);
-
-    await tester.longPress(find.text('첫 곡'));
-    await tester.pumpAndSettle();
-    expect(find.text('정보 편집'), findsOneWidget);
-    await tester.tapAt(const Offset(10, 10));
-    await tester.pumpAndSettle();
-
-    await tester.tap(
-      find.text('첫 곡'),
-      buttons: kSecondaryButton,
-      kind: PointerDeviceKind.mouse,
-    );
-    await tester.pumpAndSettle();
-    expect(find.text('정보 편집'), findsOneWidget);
   });
 
   testWidgets('재생목록에 추가: 재생목록 화면으로 가서 카드를 골라 완료한다', (tester) async {
