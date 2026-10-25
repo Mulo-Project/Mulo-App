@@ -93,11 +93,12 @@ class _NewVideosLauncherState extends State<NewVideosLauncher> {
         state.sample ||
         state.status != NewVideosStatus.done ||
         state.resolving ||
-        state.count == 0) {
+        state.unseenCount == 0) {
       return;
     }
     _announced = true;
-    setState(() => _bannerCount = state.count);
+    // 이미 안내했거나 본 영상은 목록에 남아 있어도 다시 알리지 않는다.
+    setState(() => _bannerCount = state.unseenCount);
     _bannerTimer?.cancel();
     _bannerTimer = Timer(const Duration(seconds: 8), _hideBanner);
   }
@@ -108,6 +109,8 @@ class _NewVideosLauncherState extends State<NewVideosLauncher> {
   }
 
   void _openFromBanner() {
+    // 안내를 한 번 했으니 보고 닫지 않아도 다음 실행에서는 다시 알리지 않는다.
+    unawaited(sl<NewVideosCubit>().acknowledge());
     _hideBanner();
     widget.onOpen();
   }

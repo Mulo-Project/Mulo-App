@@ -37,9 +37,13 @@ class NewVideosState extends Equatable {
     this.selected = const {},
     this.queued = 0,
     this.sample = false,
+    this.seen = const {},
   });
 
   final NewVideosStatus status;
+
+  /// 이미 안내했거나 새 영상 화면에서 본 영상 id. 목록에는 계속 있지만 앱을 켤 때 다시 알리지 않는다.
+  final Set<String> seen;
 
   /// 확인한 결과 (거르기 전).
   final List<ChannelNewVideos> checked;
@@ -90,6 +94,9 @@ class NewVideosState extends Equatable {
 
   bool get allSelected => count > 0 && visibleIds.every(selected.contains);
 
+  /// 아직 안내하지 않은 보이는 영상 수 (앱을 켤 때 안내 줄에 쓴다).
+  int get unseenCount => visibleIds.where((id) => !seen.contains(id)).length;
+
   NewVideosState copyWith({
     NewVideosStatus? status,
     List<ChannelNewVideos>? checked,
@@ -98,6 +105,7 @@ class NewVideosState extends Equatable {
     Set<String>? selected,
     int? queued,
     bool? sample,
+    Set<String>? seen,
   }) => NewVideosState(
     status: status ?? this.status,
     checked: checked ?? this.checked,
@@ -106,6 +114,7 @@ class NewVideosState extends Equatable {
     selected: selected ?? this.selected,
     queued: queued ?? this.queued,
     sample: sample ?? this.sample,
+    seen: seen ?? this.seen,
   );
 
   @override
@@ -117,6 +126,7 @@ class NewVideosState extends Equatable {
     selected,
     queued,
     sample,
+    seen,
   ];
 }
 
@@ -129,8 +139,10 @@ class NewVideosCubit extends Cubit<NewVideosState> {
     this._enqueue,
     this._findExisting,
     this._clear,
-    this._moveToBack,
-  ) : super(const NewVideosState());
+    this._moveToBack, [
+    this._loadSeen,
+    this._saveSeen,
+  ]) : super(const NewVideosState());
 
   final SubscriptionsCubit _subs;
   final CheckNewVideos _check;
@@ -139,6 +151,8 @@ class NewVideosCubit extends Cubit<NewVideosState> {
   final FindExistingDownload _findExisting;
   final ClearNewVideosNotification _clear;
   final MoveAppToBack _moveToBack;
+  final LoadSeenNewVideos? _loadSeen;
+  final SaveSeenNewVideos? _saveSeen;
 
   int _generation = 0;
 
@@ -169,6 +183,7 @@ class NewVideosCubit extends Cubit<NewVideosState> {
         ),
       );
     }
+    final seen = await _loadSeen?.call(const NoParams()) ?? const <String>{};
     if (gen != _generation || isClosed) return;
     emit(
       NewVideosState(
@@ -177,6 +192,7 @@ class NewVideosCubit extends Cubit<NewVideosState> {
           for (final r in results)
             if (r.videos.isNotEmpty || r.latestPublishedAt != null) r,
         ],
+        seen: seen,
       ),
     );
     unawaited(_resolveCategories(gen));
@@ -297,6 +313,20 @@ class NewVideosCubit extends Cubit<NewVideosState> {
     }
     if (request.background) await _moveToBack(const NoParams());
     return queued;
+  }
+
+  /// 지금 보이는 영상을 안내했거나 본 것으로 기록한다 (목록은 그대로 두고 앱을 켤 때 다시 알리지 않는다).
+  /// 새 영상 화면을 닫을 때 부른다. 기록은 오래된 것부터 버려 500개까지만 둔다.
+  Future<void> acknowledge() async {
+    if (state.sample || isClosed) return;
+    final ids = state.visibleIds;
+    if (ids.every(state.seen.contains)) return;
+    final next = {...state.seen, ...ids};
+    final kept = next.length > 500
+        ? next.skip(next.length - 500).toSet()
+        : next;
+    emit(state.copyWith(seen: kept));
+    await _saveSeen?.call(kept);
   }
 
   /// 화면 모양 확인용 임시 기능: 샘플 새 영상을 채워 넣는다 (실제 구독 · 받기와 무관).

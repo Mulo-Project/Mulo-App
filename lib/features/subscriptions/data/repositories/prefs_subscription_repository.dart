@@ -14,6 +14,7 @@ class PrefsSubscriptionRepository implements SubscriptionRepository {
   static const _backgroundKey = 'subscriptions.background';
   static const _intervalKey = 'subscriptions.intervalHours';
   static const _wifiKey = 'subscriptions.wifiOnly';
+  static const _seenKey = 'subscriptions.seenVideos';
 
   @override
   Future<List<SubscribedChannel>> loadChannels() async {
@@ -61,6 +62,19 @@ class PrefsSubscriptionRepository implements SubscriptionRepository {
     await prefs.setInt(_intervalKey, s.intervalHours);
     await prefs.setBool(_wifiKey, s.wifiOnly);
   }
+
+  @override
+  Future<Set<String>> loadSeenVideos() async =>
+      ((await SharedPreferences.getInstance()).getStringList(_seenKey) ??
+              const [])
+          .toSet();
+
+  @override
+  Future<void> saveSeenVideos(Set<String> ids) async =>
+      (await SharedPreferences.getInstance()).setStringList(
+        _seenKey,
+        ids.toList(),
+      );
 
   static Map<String, Object?> _toJson(SubscribedChannel c) => {
     'id': c.id,

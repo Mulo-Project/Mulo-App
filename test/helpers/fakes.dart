@@ -1596,6 +1596,14 @@ class MemorySubscriptionRepository implements SubscriptionRepository {
   @override
   Future<void> saveSettings(SubscriptionSettings value) async =>
       settings = value;
+
+  Set<String> seenVideos = {};
+
+  @override
+  Future<Set<String>> loadSeenVideos() async => {...seenVideos};
+
+  @override
+  Future<void> saveSeenVideos(Set<String> ids) async => seenVideos = {...ids};
 }
 
 /// 채널 id별로 정해 둔 피드를 돌려주는 가짜 채널 피드.

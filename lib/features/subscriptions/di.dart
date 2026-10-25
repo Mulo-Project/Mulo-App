@@ -65,8 +65,20 @@ void registerSubscriptions(GetIt sl) {
         sl(),
       ),
     )
+    ..registerFactory(() => LoadSeenNewVideos(sl()))
+    ..registerFactory(() => SaveSeenNewVideos(sl()))
     ..registerLazySingleton(
-      () => NewVideosCubit(sl(), sl(), sl(), sl(), sl(), sl(), sl()),
+      () => NewVideosCubit(
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+        sl<LoadSeenNewVideos>(),
+        sl<SaveSeenNewVideos>(),
+      ),
     );
 }
 

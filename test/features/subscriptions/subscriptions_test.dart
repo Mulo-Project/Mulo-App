@@ -279,6 +279,25 @@ void main() {
       ]);
     });
 
+    test('한 번 본 영상은 목록에는 남아도 앱을 켤 때 다시 안내하지 않는다', () async {
+      final cubit = await boot(
+        channels: [_channel()],
+        feeds: {_channelId: fresh},
+      );
+      await cubit.check();
+      expect(cubit.state.count, greaterThan(0));
+      expect(cubit.state.unseenCount, cubit.state.count);
+
+      await cubit.acknowledge();
+      expect(cubit.state.unseenCount, 0);
+      expect(cubit.state.count, greaterThan(0)); // 목록은 그대로
+
+      // 다시 확인해도(다음 실행) 같은 영상은 안내 대상이 아니다.
+      await cubit.check();
+      expect(cubit.state.count, greaterThan(0));
+      expect(cubit.state.unseenCount, 0);
+    });
+
     test('화면을 닫으면 확인한 채널의 기준 시각이 당겨져 다시 뜨지 않는다', () async {
       final cubit = await boot(
         channels: [_channel()],

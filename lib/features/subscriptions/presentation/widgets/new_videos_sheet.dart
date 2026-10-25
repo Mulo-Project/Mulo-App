@@ -25,6 +25,8 @@ Future<void> showNewVideosSheet(BuildContext context) async {
     );
   } finally {
     _open = false;
+    // 목록은 그대로 두고, 본 영상은 앱을 켤 때 다시 알리지 않게 기록한다.
+    await sl<NewVideosCubit>().acknowledge();
   }
 }
 

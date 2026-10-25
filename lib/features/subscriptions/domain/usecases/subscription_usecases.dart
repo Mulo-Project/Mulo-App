@@ -21,6 +21,26 @@ class LoadSubscribedChannels
   Future<List<SubscribedChannel>> call(NoParams params) => _repo.loadChannels();
 }
 
+/// 이미 안내했거나 본 새 영상 id를 읽는다.
+class LoadSeenNewVideos implements UseCase<Set<String>, NoParams> {
+  const LoadSeenNewVideos(this._repo);
+
+  final SubscriptionRepository _repo;
+
+  @override
+  Future<Set<String>> call(NoParams params) => _repo.loadSeenVideos();
+}
+
+/// 안내했거나 본 새 영상 id를 저장한다.
+class SaveSeenNewVideos implements UseCase<void, Set<String>> {
+  const SaveSeenNewVideos(this._repo);
+
+  final SubscriptionRepository _repo;
+
+  @override
+  Future<void> call(Set<String> ids) => _repo.saveSeenVideos(ids);
+}
+
 class SaveSubscribedChannels implements UseCase<void, List<SubscribedChannel>> {
   const SaveSubscribedChannels(this._repo);
 
