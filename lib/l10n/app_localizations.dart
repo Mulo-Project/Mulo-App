@@ -5365,6 +5365,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'{count}곡은 음악 파일에 정보를 쓰지 못해 바꾸지 않았어요.'**
   String selectAssignPartial(int count);
+
+  /// No description provided for @selectActions.
+  ///
+  /// In ko, this message translates to:
+  /// **'작업'**
+  String get selectActions;
 }
 
 class _AppLocalizationsDelegate

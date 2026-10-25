@@ -1016,5 +1016,6 @@
   "@selectConfirmGenre": {"placeholders": {"count": {"type": "int"}, "value": {"type": "String"}}},
   "selectConfirmApply": "Apply",
   "selectAssignPartial": "{count} songs could not be written to their music files and were left unchanged.",
-  "@selectAssignPartial": {"placeholders": {"count": {"type": "int"}}}
+  "@selectAssignPartial": {"placeholders": {"count": {"type": "int"}}},
+  "selectActions": "Actions"
 }

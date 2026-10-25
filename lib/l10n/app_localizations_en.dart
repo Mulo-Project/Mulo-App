@@ -2953,4 +2953,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String selectAssignPartial(int count) {
     return '$count songs could not be written to their music files and were left unchanged.';
   }
+
+  @override
+  String get selectActions => 'Actions';
 }

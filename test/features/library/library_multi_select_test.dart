@@ -67,6 +67,10 @@ void main() {
     await tester.tap(find.text('둘째 곡'));
     await tester.pumpAndSettle();
 
+    await tester.tap(find.text('작업'));
+    await tester.pumpAndSettle();
+    // 복수 작업 목록 바텀 시트.
+    expect(find.byType(BottomSheet), findsOneWidget);
     await tester.tap(find.text('장르 지정'));
     await tester.pumpAndSettle();
     await tester.enterText(_dialogField, '재즈');
@@ -89,6 +93,8 @@ void main() {
   testWidgets('확인창에서 취소하면 아무것도 바뀌지 않고 선택이 남는다', (tester) async {
     await pumpLibrary(tester);
     await tester.longPress(find.text('첫 곡'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('작업'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('앨범 지정'));
     await tester.pumpAndSettle();

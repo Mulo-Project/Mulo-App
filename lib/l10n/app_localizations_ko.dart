@@ -2876,4 +2876,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String selectAssignPartial(int count) {
     return '$count곡은 음악 파일에 정보를 쓰지 못해 바꾸지 않았어요.';
   }
+
+  @override
+  String get selectActions => '작업';
 }

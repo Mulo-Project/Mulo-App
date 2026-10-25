@@ -7,40 +7,54 @@ import '../../domain/entities/track_group.dart';
 import '../bloc/library_cubit.dart';
 import 'rename_progress.dart';
 
-/// 보관함 선택 모드의 위 막대와 일괄 작업 버튼 줄.
-/// 닫기 · 모두 선택 / 해제와, 고른 곡에 하는 일(재생목록에 추가 · 앨범 · 아티스트 · 장르 지정)을 보여 준다.
-class LibrarySelectionBar extends StatelessWidget {
-  const LibrarySelectionBar({
+/// 선택 모드에서 고를 수 있는 일괄 작업.
+enum SelectionAction { addToPlaylist, album, artist, genre }
+
+/// 보관함 선택 모드 하단 막대: 닫기 · 선택 수 · 모두 선택 / 해제 · "작업" 버튼.
+/// "작업"을 누르면 [showSelectionActionSheet]로 복수 작업 목록을 띄운다.
+class LibrarySelectionBottomBar extends StatelessWidget {
+  const LibrarySelectionBottomBar({
     super.key,
     required this.count,
     required this.allPicked,
     required this.onClose,
     required this.onToggleAll,
-    required this.onAddToPlaylist,
-    required this.onAssign,
+    required this.onActions,
   });
 
   final int count;
   final bool allPicked;
   final VoidCallback onClose;
   final VoidCallback onToggleAll;
-  final VoidCallback onAddToPlaylist;
-  final ValueChanged<TrackGroupKind> onAssign;
+  final VoidCallback onActions;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        AppTopBar(
-          title: l10n.selectCount(count),
-          leading: CircleIconButton(
-            icon: AppIcons.close,
-            tooltip: l10n.selectClose,
-            onPressed: onClose,
-          ),
-          actions: [
+    final text = Theme.of(context).textTheme;
+    return GlassSurface(
+      solid: true,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.xs,
+          vertical: AppSpacing.xs,
+        ),
+        child: Row(
+          children: [
+            CircleIconButton(
+              icon: AppIcons.close,
+              tooltip: l10n.selectClose,
+              onPressed: onClose,
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Expanded(
+              child: Text(
+                l10n.selectCount(count),
+                style: text.titleSmall,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
             CircleIconButton(
               icon: allPicked ? AppIcons.radioOff : AppIcons.checkCircle,
               tooltip: allPicked
@@ -48,48 +62,65 @@ class LibrarySelectionBar extends StatelessWidget {
                   : l10n.newVideosSelectAll,
               onPressed: onToggleAll,
             ),
+            const SizedBox(width: AppSpacing.xs),
+            PillButton(
+              label: l10n.selectActions,
+              icon: AppIcons.more,
+              compact: true,
+              onPressed: onActions,
+            ),
           ],
         ),
-        Padding(
-          padding: AppSpacing.screen,
-          child: Wrap(
-            spacing: AppSpacing.xs,
-            runSpacing: AppSpacing.xs,
+      ),
+    );
+  }
+}
+
+/// 고른 곡에 할 일 목록 바텀 시트. 항목을 누르면 시트를 닫고 그 작업을 돌려준다.
+Future<SelectionAction?> showSelectionActionSheet(
+  BuildContext context,
+  int count,
+) {
+  final l10n = context.l10n;
+  return showAppSheet<SelectionAction>(
+    context,
+    builder: (sheet) {
+      void pick(SelectionAction a) => Navigator.of(sheet).pop(a);
+      return SafeArea(
+        child: Padding(
+          padding: appSheetPadding,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              PillButton(
-                label: l10n.trackMenuAddToPlaylist,
+              AppSheetTitle(l10n.selectCount(count)),
+              const SizedBox(height: AppSpacing.xs),
+              MenuRow(
                 icon: AppIcons.playlistAdd,
-                compact: true,
-                onPressed: onAddToPlaylist,
+                label: l10n.trackMenuAddToPlaylist,
+                onTap: () => pick(SelectionAction.addToPlaylist),
               ),
-              PillButton(
-                label: l10n.selectAssignAlbum,
+              MenuRow(
                 icon: AppIcons.album,
-                compact: true,
-                variant: PillVariant.tonal,
-                onPressed: () => onAssign(TrackGroupKind.album),
+                label: l10n.selectAssignAlbum,
+                onTap: () => pick(SelectionAction.album),
               ),
-              PillButton(
-                label: l10n.selectAssignArtist,
+              MenuRow(
                 icon: AppIcons.person,
-                compact: true,
-                variant: PillVariant.tonal,
-                onPressed: () => onAssign(TrackGroupKind.artist),
+                label: l10n.selectAssignArtist,
+                onTap: () => pick(SelectionAction.artist),
               ),
-              PillButton(
-                label: l10n.selectAssignGenre,
+              MenuRow(
                 icon: AppIcons.category,
-                compact: true,
-                variant: PillVariant.tonal,
-                onPressed: () => onAssign(TrackGroupKind.genre),
+                label: l10n.selectAssignGenre,
+                onTap: () => pick(SelectionAction.genre),
               ),
             ],
           ),
         ),
-        const SizedBox(height: AppSpacing.sm),
-      ],
-    );
-  }
+      );
+    },
+  );
 }
 
 /// 고른 곡 [ids]에 앨범 · 아티스트 · 장르([kind])를 한 번에 지정한다.
