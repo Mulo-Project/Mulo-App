@@ -4,6 +4,7 @@ import 'package:music_download_play_app/core/design/icons/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:music_download_play_app/core/design/components/color_picker.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:music_download_play_app/features/lyrics/domain/repositories/lyrics_repository.dart';
 import 'package:music_download_play_app/features/downloads/presentation/widgets/download_dialog.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
@@ -265,10 +266,15 @@ void main() {
 
   Future<MemoryDownloadQueue> openLyricsPage(
     WidgetTester tester,
-    FakeDownloaderEngine engine,
-  ) async {
+    FakeDownloaderEngine engine, {
+    LyricsFileSource? lyricsFile,
+  }) async {
     final queue = MemoryDownloadQueue();
-    await setUpTestDependencies(downloads: queue, engine: engine);
+    await setUpTestDependencies(
+      downloads: queue,
+      engine: engine,
+      lyricsFile: lyricsFile,
+    );
     tester.view.physicalSize = const Size(1170, 2532);
     tester.view.devicePixelRatio = 3;
     tester.platformDispatcher.localesTestValue = const [Locale('ko')];
@@ -417,6 +423,49 @@ void main() {
     await tester.pumpAndSettle();
     expect(queue.requests.single.lyricsLanguage, 'en');
     expect(queue.requests.single.lyricsText, '[00:01.00]hello world');
+  });
+
+  testWidgets('받기 페이지: 상세에서 파일로 가사를 불러오면 그 글이 받기 요청에 실린다', (tester) async {
+    final engine =
+        FakeDownloaderEngine(
+            info: const VideoInfo(
+              MediaHit(
+                id: 'abc',
+                title: 'Song',
+                url: 'https://youtu.be/abc',
+                subtitleLangs: ['en'],
+              ),
+            ),
+          )
+          ..subtitles = const SubtitleTrack(
+            language: 'en',
+            cues: [SubtitleCue(Duration(seconds: 1), 'auto line')],
+          );
+    final queue = await openLyricsPage(
+      tester,
+      engine,
+      lyricsFile: FakeLyricsFileSource('[00:05.00]from file'),
+    );
+    await tester.tap(find.byKey(const ValueKey('download-import-lyrics')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('영어'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('영어'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('auto line'), findsOneWidget);
+
+    // 파일에서 불러오면 이미 있는 자막 글을 어떻게 할지 묻고, 바꾸면 그 글이 된다.
+    await tester.tap(find.byKey(const ValueKey('subtitle-detail-file')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('바꾸기'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('from file'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('subtitle-detail-use')));
+    await tester.pumpAndSettle();
+    await tester.tap(inSheet(find.text('받기')));
+    await tester.pumpAndSettle();
+    expect(queue.requests.single.lyricsText, '[00:05.00]from file');
   });
 
   testWidgets('받기 페이지: 자막 언어가 하나여도 표가 보이고, 줄을 누르면 가사 상세로 간다', (tester) async {

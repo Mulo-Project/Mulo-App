@@ -400,6 +400,8 @@ class _DownloadScreenState extends State<DownloadScreen> {
       skipSounds: _skipSounds,
       selected: _lyricsLanguage == lang,
       edited: _edited[lang],
+      songTitle: _title.text,
+      songArtist: _artist.text,
     );
     if (use == null || !mounted) return;
     setState(() {

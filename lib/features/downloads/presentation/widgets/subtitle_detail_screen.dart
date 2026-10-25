@@ -4,7 +4,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../../core/usecase/usecase.dart';
+import '../../../library/domain/entities/track.dart';
 import '../../../lyrics/domain/entities/timed_lyrics_text.dart';
+import '../../../lyrics/domain/usecases/lyrics_usecases.dart';
+import '../../../lyrics/presentation/screens/lyrics_web_screen.dart';
+import '../../../lyrics/presentation/widgets/lyrics_dialogs.dart';
 import '../../../lyrics/presentation/widgets/timed_lyrics_controller.dart';
 import '../../../lyrics/presentation/widgets/lyrics_edit_scaffold.dart';
 import '../bloc/subtitle_preview_cubit.dart';
@@ -29,6 +34,8 @@ Future<SubtitleChoice?> showSubtitleDetail(
   required bool skipSounds,
   required bool selected,
   String? edited,
+  String songTitle = '',
+  String songArtist = '',
 }) => Navigator.of(context, rootNavigator: true).push<SubtitleChoice>(
   MaterialPageRoute(
     builder: (_) => BlocProvider(
@@ -47,6 +54,8 @@ Future<SubtitleChoice?> showSubtitleDetail(
         skipSounds: skipSounds,
         selected: selected,
         edited: edited,
+        songTitle: songTitle,
+        songArtist: songArtist,
       ),
     ),
   ),
@@ -64,6 +73,8 @@ class SubtitleDetailScreen extends StatefulWidget {
     required this.skipSounds,
     required this.selected,
     this.edited,
+    this.songTitle = '',
+    this.songArtist = '',
   });
 
   final String url;
@@ -73,6 +84,10 @@ class SubtitleDetailScreen extends StatefulWidget {
   final bool skipSounds;
   final bool selected;
   final String? edited;
+
+  /// 받을 곡의 제목 · 아티스트 (웹에서 가사를 찾을 때 검색어).
+  final String songTitle;
+  final String songArtist;
 
   @override
   State<SubtitleDetailScreen> createState() => _SubtitleDetailScreenState();
@@ -103,6 +118,52 @@ class _SubtitleDetailScreenState extends State<SubtitleDetailScreen> {
     _base = raw;
     _synced = split.isSynced;
     _text.load(split);
+  }
+
+  Future<void> _pickFile() async {
+    final picked = await sl<PickLyricsFile>()(const NoParams());
+    if (picked != null && mounted) await _apply(picked);
+  }
+
+  Future<void> _searchWeb() async {
+    final probe = Track(
+      id: 'download',
+      title: widget.songTitle.isEmpty ? widget.title : widget.songTitle,
+      artist: widget.songArtist,
+      album: '',
+      duration: Duration.zero,
+      uri: '',
+      addedAt: DateTime.now(),
+    );
+    final picked = await showLyricsWeb(context, probe);
+    if (picked != null && mounted) await _apply(picked);
+  }
+
+  /// 불러온 글을 넣는다. 가사가 이미 있으면 바꿀지 뒤에 붙일지 먼저 묻는다.
+  /// 자막을 못 읽었어도(실패 · 없음) 불러온 글을 이 곡의 가사로 쓸 수 있다.
+  Future<void> _apply(String imported) async {
+    // 처음 보여 준 자막(비교 기준)은 그대로 둔다: 불러온 글이 "고친 가사"로 돌아가게.
+    // 자막을 못 읽었어도 고친 글로 돌려줄 수 있게 기준이 없으면 빈 글로 둔다.
+    final base = _base ?? '';
+    if (_text.text.trim().isEmpty) {
+      setState(() {
+        _fill(imported);
+        _base = base;
+      });
+      return;
+    }
+    final mode = await showLyricsImportMode(context);
+    if (mode == null || !mounted) return;
+    setState(() {
+      if (mode == LyricsImportMode.replace) {
+        _fill(imported);
+        _base = base;
+      } else {
+        // 붙인 글은 시간 없는 줄로 뒤에 더한다.
+        final extra = TimedLyricsText.parse(imported).text;
+        _text.text = '${_text.text.trimRight()}\n$extra';
+      }
+    });
   }
 
   /// 고친 가사. 고치지 않았으면 null.
@@ -163,6 +224,22 @@ class _SubtitleDetailScreenState extends State<SubtitleDetailScreen> {
           controller: _text,
           showTimes: _synced,
           notice: l10n.downloadSubtitleEditHint,
+          // 영상 자막 말고 파일이나 웹에서도 가사를 불러올 수 있다 (자막이 없거나 읽지 못했을 때도).
+          tools: [
+            PlainButton(
+              key: const ValueKey('subtitle-detail-file'),
+              label: l10n.lyricsLoadFile,
+              icon: AppIcons.fileOpen,
+              onPressed: _pickFile,
+            ),
+            if (lyricsWebSupported)
+              PlainButton(
+                key: const ValueKey('subtitle-detail-web'),
+                label: l10n.lyricsWebSearch,
+                icon: AppIcons.explore,
+                onPressed: _searchWeb,
+              ),
+          ],
           body: body,
           primaryKey: const ValueKey('subtitle-detail-use'),
           primaryLabel: l10n.downloadSubtitleUse,
