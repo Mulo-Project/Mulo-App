@@ -1783,12 +1783,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsMemoTitle => '메모';
 
   @override
-  String get lyricsMemoOpen => '메모 펼치기';
-
-  @override
-  String get lyricsMemoSmall => '메모 작게';
-
-  @override
   String get lyricsMemoHide => '메모 숨기기';
 
   @override

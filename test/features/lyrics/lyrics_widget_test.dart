@@ -255,7 +255,7 @@ void main() {
     expect(editor.text, '첫째 줄\n끼울 줄 고침\n셋째 줄');
   });
 
-  testWidgets('가사 편집 페이지: 메모는 불러오기와 따로 켜고, 작게 줄이거나 숨겨도 글이 남고, 불러온 글은 덧붙는다', (
+  testWidgets('가사 편집 페이지: 메모는 불러오기와 따로 켜고, 줄이고 키우고 숨겨도 글이 남고, 불러온 글은 덧붙는다', (
     tester,
   ) async {
     phone(tester);
@@ -272,13 +272,21 @@ void main() {
     await tester.enterText(memoField, '내 메모');
     await tester.pumpAndSettle();
 
-    // 아주 작게 줄이면 글 칸은 숨지만, 다시 펼치면 글이 그대로다.
-    await tester.tap(find.byKey(const ValueKey('lyrics-memo-small')));
+    // 아래 가장자리를 끌어 메모 영역을 줄였다 키울 수 있다.
+    final before = tester.getSize(memoField).height;
+    await tester.drag(
+      find.byKey(const ValueKey('lyrics-memo-resize')),
+      const Offset(0, -50),
+    );
     await tester.pumpAndSettle();
-    expect(memoField, findsNothing);
-    await tester.tap(find.byKey(const ValueKey('lyrics-memo-expand')));
+    final shrunk = tester.getSize(memoField).height;
+    expect(shrunk, lessThan(before));
+    await tester.drag(
+      find.byKey(const ValueKey('lyrics-memo-resize')),
+      const Offset(0, 50),
+    );
     await tester.pumpAndSettle();
-    expect(tester.widget<TextField>(memoField).controller!.text, '내 메모');
+    expect(tester.getSize(memoField).height, greaterThan(shrunk));
 
     // 숨겼다 다시 켜도 글이 남는다.
     await tester.tap(find.byKey(const ValueKey('lyrics-memo-close')));

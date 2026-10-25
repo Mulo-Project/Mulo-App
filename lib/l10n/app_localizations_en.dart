@@ -1830,12 +1830,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsMemoTitle => 'Note';
 
   @override
-  String get lyricsMemoOpen => 'Expand note';
-
-  @override
-  String get lyricsMemoSmall => 'Shrink note';
-
-  @override
   String get lyricsMemoHide => 'Hide note';
 
   @override

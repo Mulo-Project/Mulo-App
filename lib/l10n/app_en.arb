@@ -647,8 +647,6 @@
   "lyricsImportAppend": "Append",
   "lyricsImportMemo": "Add to note",
   "lyricsMemoTitle": "Note",
-  "lyricsMemoOpen": "Expand note",
-  "lyricsMemoSmall": "Shrink note",
   "lyricsMemoHide": "Hide note",
   "lyricsMemoHint": "Edit or select text, then tap Insert to add it below the current line",
   "lyricsMemoInsert": "Insert",
