@@ -59,6 +59,9 @@ object LyricsOverlay {
     private var trackId = ""
     private var times = LongArray(0)
     private var texts = emptyList<String>()
+
+    /** 싱크 가사가 없을 때 창에 대신 보일 글 (비어 있으면 가사가 없을 때 창을 내린다). */
+    private var emptyText = ""
     private var appVisible = false
 
     /** 앱 안 플레이어에서 가사를 보고 있는가 (Dart가 알려 준다). 앱이 보일 때만 창을 가린다. */
@@ -127,10 +130,19 @@ object LyricsOverlay {
     fun canDraw(): Boolean = Settings.canDrawOverlays(context)
 
     /** [id] 곡의 시간 붙은 가사를 받아 둔다. */
-    fun show(id: String, newTimes: LongArray, newTexts: List<String>, hide: String, off: String, accentColor: Int) {
+    fun show(
+        id: String,
+        newTimes: LongArray,
+        newTexts: List<String>,
+        hide: String,
+        off: String,
+        accentColor: Int,
+        empty: String = "",
+    ) {
         trackId = id
         times = newTimes
         texts = newTexts
+        emptyText = empty
         hideLabel = hide
         offLabel = off
         shownKey = null
@@ -146,6 +158,7 @@ object LyricsOverlay {
         trackId = ""
         times = LongArray(0)
         texts = emptyList()
+        emptyText = ""
         refresh()
     }
 
@@ -164,20 +177,27 @@ object LyricsOverlay {
 
     /** 재생이 바뀌었을 때 (재생 · 일시정지 · 이동 · 곡 넘김). */
     fun onPlayerChanged() {
-        if (initialized && times.isNotEmpty()) refresh()
+        if (initialized && (times.isNotEmpty() || emptyText.isNotEmpty())) refresh()
     }
 
     private fun refresh() {
         main.removeCallbacks(tick)
         val exo = PlaybackHub.exo
         val mediaId = exo.currentMediaItem?.mediaId
-        val active = times.isNotEmpty() && !(appVisible && lyricsViewShown) && canDraw() && mediaId == trackId
+        val hasLines = times.isNotEmpty()
+        val active = (hasLines || emptyText.isNotEmpty()) &&
+            !(appVisible && lyricsViewShown) && canDraw() && mediaId == trackId
         if (!active) {
             detach()
             return
         }
         if (minimized) {
             showChip()
+            return
+        }
+        if (!hasLines) {
+            // 싱크 가사가 없는 곡: 창은 두고 이유만 보여 준다 (갱신할 줄이 없어 타이머도 없다).
+            showLines(-1, emptyText)
             return
         }
         val position = exo.currentPosition

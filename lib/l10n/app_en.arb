@@ -815,6 +815,8 @@
   "lyricsOverlayTurnOff": "Turn off",
   "lyricsOverlayOn": "Turn on overlay lyrics",
   "lyricsOverlayOff": "Turn off overlay lyrics",
+  "lyricsOverlayNoLyrics": "No lyrics",
+  "lyricsOverlayNotSynced": "No synced lyrics",
   "lyricsOverlayNeedPermission": "Allow \"Display over other apps\" in settings, then turn it on again.",
   "settingsNotifyPermission": "System notifications are off",
   "settingsNotifyPermissionDesc": "Turn on Mulo notifications in your phone settings to see them.",

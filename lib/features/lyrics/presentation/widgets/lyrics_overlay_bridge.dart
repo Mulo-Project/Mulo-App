@@ -68,6 +68,10 @@ class _LyricsOverlayBridgeState extends State<LyricsOverlayBridge> {
       hideLabel: l10n.lyricsOverlayMinimize,
       offLabel: l10n.lyricsOverlayTurnOff,
       accent: context.palette.accent.toARGB32(),
+      // 싱크 가사가 없으면 창을 내리지 않고 이유만 보여 준다.
+      emptyLabel: lyrics.lyrics == null
+          ? l10n.lyricsOverlayNoLyrics
+          : l10n.lyricsOverlayNotSynced,
     );
   }
 

@@ -4268,6 +4268,18 @@ abstract class AppLocalizations {
   /// **'오버레이 가사 끄기'**
   String get lyricsOverlayOff;
 
+  /// No description provided for @lyricsOverlayNoLyrics.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사가 없어요'**
+  String get lyricsOverlayNoLyrics;
+
+  /// No description provided for @lyricsOverlayNotSynced.
+  ///
+  /// In ko, this message translates to:
+  /// **'싱크된 가사가 없어요'**
+  String get lyricsOverlayNotSynced;
+
   /// No description provided for @lyricsOverlayNeedPermission.
   ///
   /// In ko, this message translates to:

@@ -2331,6 +2331,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsOverlayOff => 'Turn off overlay lyrics';
 
   @override
+  String get lyricsOverlayNoLyrics => 'No lyrics';
+
+  @override
+  String get lyricsOverlayNotSynced => 'No synced lyrics';
+
+  @override
   String get lyricsOverlayNeedPermission =>
       'Allow \"Display over other apps\" in settings, then turn it on again.';
 

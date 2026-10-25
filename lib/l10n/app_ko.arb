@@ -915,6 +915,8 @@
   "lyricsOverlayTurnOff": "끄기",
   "lyricsOverlayOn": "오버레이 가사 켜기",
   "lyricsOverlayOff": "오버레이 가사 끄기",
+  "lyricsOverlayNoLyrics": "가사가 없어요",
+  "lyricsOverlayNotSynced": "싱크된 가사가 없어요",
   "lyricsOverlayNeedPermission": "설정에서 \"다른 앱 위에 표시\"를 허용한 뒤 다시 켜 주세요.",
   "settingsNotifyPermission": "시스템 알림이 꺼져 있어요",
   "settingsNotifyPermissionDesc": "휴대폰 설정에서 Mulo 알림을 켜야 알림이 보여요.",

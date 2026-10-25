@@ -2269,6 +2269,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsOverlayOff => '오버레이 가사 끄기';
 
   @override
+  String get lyricsOverlayNoLyrics => '가사가 없어요';
+
+  @override
+  String get lyricsOverlayNotSynced => '싱크된 가사가 없어요';
+
+  @override
   String get lyricsOverlayNeedPermission =>
       '설정에서 \"다른 앱 위에 표시\"를 허용한 뒤 다시 켜 주세요.';
 

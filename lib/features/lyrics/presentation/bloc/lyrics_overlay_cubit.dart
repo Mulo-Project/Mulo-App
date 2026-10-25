@@ -44,7 +44,8 @@ class LyricsOverlayCubit extends Cubit<void> {
 
   String? _sent;
 
-  /// [trackId]의 [lyrics]를 올린다. 꺼져 있거나 싱크 가사가 없으면 내린다.
+  /// [trackId]의 [lyrics]를 올린다. 꺼져 있으면 내린다. 싱크 가사가 없으면 창은 두고
+  /// [emptyLabel](예: "가사가 없어요")만 보여 준다 ([emptyLabel]이 비면 내린다).
   /// 같은 내용은 다시 보내지 않는다.
   Future<void> sync({
     required bool enabled,
@@ -53,23 +54,31 @@ class LyricsOverlayCubit extends Cubit<void> {
     String hideLabel = '',
     String offLabel = '',
     int accent = 0xFFFFFFFF,
+    String emptyLabel = '',
   }) async {
-    final show =
-        enabled && trackId != null && lyrics != null && lyrics.isSynced;
-    final key = show ? '$trackId|${lyrics.raw.hashCode}' : null;
+    final synced = lyrics != null && lyrics.isSynced;
+    final showLines = enabled && trackId != null && synced;
+    final showEmpty =
+        enabled && trackId != null && !synced && emptyLabel.isNotEmpty;
+    final key = showLines
+        ? '$trackId|${lyrics.raw.hashCode}'
+        : showEmpty
+        ? '$trackId|empty|$emptyLabel'
+        : null;
     if (key == _sent) return;
     _sent = key;
-    if (!show) {
+    if (key == null) {
       await _hide(const NoParams());
       return;
     }
     await _show(
       ShowLyricsOverlayParams(
-        trackId,
-        _merged(lyrics.lines),
+        trackId!,
+        showLines ? _merged(lyrics.lines) : const [],
         hideLabel: hideLabel,
         offLabel: offLabel,
         accent: accent,
+        emptyLabel: showLines ? '' : emptyLabel,
       ),
     );
   }
