@@ -2124,9 +2124,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playlistImportNoResultsBody => '다른 검색어로 찾아 보세요.';
 
   @override
-  String get playlistImportBackToResults => '검색 결과로';
-
-  @override
   String get playlistImportLoading => '곡 목록을 읽는 중이에요';
 
   @override

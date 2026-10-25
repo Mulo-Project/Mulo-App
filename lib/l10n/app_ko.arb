@@ -866,7 +866,6 @@
   "playlistImportEmptyBody": "이름으로 찾거나 주소를 붙여 넣으면, 곡 목록에서 받을 곡을 고를 수 있어요.",
   "playlistImportNoResultsTitle": "찾은 재생목록이 없어요",
   "playlistImportNoResultsBody": "다른 검색어로 찾아 보세요.",
-  "playlistImportBackToResults": "검색 결과로",
   "playlistImportLoading": "곡 목록을 읽는 중이에요",
   "playlistImportSelectedCount": "{selected}/{total}곡 선택됨",
   "@playlistImportSelectedCount": {"placeholders": {"selected": {"type": "int"}, "total": {"type": "int"}}},

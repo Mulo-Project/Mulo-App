@@ -179,11 +179,7 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
                         ),
                       ],
                       Expanded(
-                        child: _Body(
-                          onRetry: _load,
-                          onSignIn: () => _reopen(),
-                          onCancel: viewing ? _cubit.backToResults : null,
-                        ),
+                        child: _Body(onRetry: _load, onSignIn: () => _reopen()),
                       ),
                       _Footer(starting: _starting, onStart: _start),
                     ],
@@ -199,12 +195,9 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
 }
 
 class _Body extends StatelessWidget {
-  const _Body({required this.onRetry, required this.onSignIn, this.onCancel});
+  const _Body({required this.onRetry, required this.onSignIn});
 
   final VoidCallback onRetry;
-
-  /// 곡 목록을 읽는 중에 그만두고 찾은 목록으로 돌아가기 (열어 보는 중일 때만).
-  final VoidCallback? onCancel;
 
   /// 내 재생목록을 읽으려면 로그인해야 할 때 누르는 버튼의 동작.
   final VoidCallback onSignIn;
@@ -229,29 +222,7 @@ class _Body extends StatelessWidget {
           l10n.playlistImportEmptyBody,
         );
       case PlaylistImportStatus.loading:
-        // 곡이 많은 재생목록은 오래 걸리므로, 잘못 열었으면 바로 돌아갈 수 있게 한다.
-        if (onCancel == null) return const LoadingState();
-        return Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const LoadingIndicator(),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                l10n.playlistImportLoading,
-                style: Theme.of(context).textTheme.bodyMedium
-                    ?.copyWith(color: context.palette.onSurfaceMuted),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              PillButton(
-                label: l10n.playlistImportBackToResults,
-                icon: AppIcons.back,
-                variant: PillVariant.tonal,
-                onPressed: onCancel,
-              ),
-            ],
-          ),
-        );
+        return LoadingState(label: l10n.playlistImportLoading);
       case PlaylistImportStatus.results:
         if (state.results.isEmpty) {
           return state.mine
