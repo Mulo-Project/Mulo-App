@@ -4550,6 +4550,24 @@ abstract class AppLocalizations {
   /// **'이미 받은 곡이라 새로 받을 곡이 없어요'**
   String get newVideosSkipped;
 
+  /// No description provided for @newVideosClear.
+  ///
+  /// In ko, this message translates to:
+  /// **'비우기'**
+  String get newVideosClear;
+
+  /// No description provided for @newVideosClearTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 영상 목록을 비울까요?'**
+  String get newVideosClearTitle;
+
+  /// No description provided for @newVideosClearBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'받지 않은 영상도 목록에서 사라지고, 다시 뜨지 않아요. 이후에 올라오는 영상만 새 영상으로 보여요.'**
+  String get newVideosClearBody;
+
   /// No description provided for @newVideosSelectAll.
   ///
   /// In ko, this message translates to:

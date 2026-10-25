@@ -2496,6 +2496,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newVideosSkipped => 'Those songs are already downloaded';
 
   @override
+  String get newVideosClear => 'Clear';
+
+  @override
+  String get newVideosClearTitle => 'Clear the new videos list?';
+
+  @override
+  String get newVideosClearBody =>
+      'Videos you have not downloaded also leave the list and will not show up again. Only videos posted from now on appear as new.';
+
+  @override
   String get newVideosSelectAll => 'Select all';
 
   @override

@@ -11,23 +11,36 @@ import '../../../library/presentation/bloc/save_locations_cubit.dart';
 /// 목록은 불러오는 폴더와 따로 관리된다 (불러오는 폴더를 더하면 여기에도 더해지지만, 한쪽을 빼도 다른 쪽은 그대로).
 /// [current]는 지금 정해진 위치(목록에 없어도 맨 위에 보인다). 고른 폴더를 돌려주고, 닫으면 null.
 /// 직접 고른 폴더는 목록에 더한다. [pickOther]는 폴더 선택기 (취소하면 null).
+/// [removable]이면 폴더마다 목록에서 빼는 ×가 붙는다 (설정에서 목록을 관리할 때).
 Future<String?> showSaveFolderSheet(
   BuildContext context, {
   required String current,
   required Future<String?> Function() pickOther,
+  bool removable = false,
 }) => showAppSheet<String>(
   context,
   isScrollControlled: true,
   builder: (_) => BlocProvider(
     create: (_) => sl<SaveLocationsCubit>()..load(),
-    child: _SaveFolderSheet(current: current, pickOther: pickOther),
+    child: _SaveFolderSheet(
+      current: current,
+      pickOther: pickOther,
+      removable: removable,
+    ),
   ),
 );
 
 class _SaveFolderSheet extends StatelessWidget {
-  const _SaveFolderSheet({required this.current, required this.pickOther});
+  const _SaveFolderSheet({
+    required this.current,
+    required this.pickOther,
+    required this.removable,
+  });
 
   final String current;
+
+  /// 목록에서 폴더를 뺄 수 있는지 (설정에서만. 받기 · 채널에서는 고르기만 한다).
+  final bool removable;
   final Future<String?> Function() pickOther;
 
   @override
@@ -73,7 +86,9 @@ class _SaveFolderSheet extends StatelessWidget {
                               // 기본 위치 · 지금 위치 · 목록에 없는 위치는 뺄 수 없다.
                               // 여기서 빼도 불러오는 폴더와 보관함의 곡은 그대로다.
                               onRemove:
-                                  normalizeFolderPath(path) == defaultPath ||
+                                  !removable ||
+                                      normalizeFolderPath(path) ==
+                                          defaultPath ||
                                       normalizeFolderPath(path) == cur ||
                                       !locations.any(
                                         (p) =>

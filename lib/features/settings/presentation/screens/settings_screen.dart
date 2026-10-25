@@ -116,6 +116,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         context,
                         current: savePath,
                         pickOther: cubit.pickFolder,
+                        removable: true,
                       );
                       if (path != null) await cubit.setSavePath(path);
                     },

@@ -2432,6 +2432,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get newVideosSkipped => '이미 받은 곡이라 새로 받을 곡이 없어요';
 
   @override
+  String get newVideosClear => '비우기';
+
+  @override
+  String get newVideosClearTitle => '새 영상 목록을 비울까요?';
+
+  @override
+  String get newVideosClearBody =>
+      '받지 않은 영상도 목록에서 사라지고, 다시 뜨지 않아요. 이후에 올라오는 영상만 새 영상으로 보여요.';
+
+  @override
   String get newVideosSelectAll => '모두 선택';
 
   @override

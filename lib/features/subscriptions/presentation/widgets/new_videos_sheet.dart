@@ -11,12 +11,11 @@ import '../bloc/new_videos_cubit.dart';
 var _open = false;
 
 /// 구독 채널의 새 영상 목록을 바텀시트로 연다. 채널별로 묶어 평평하게 보여 주고, 골라서 한꺼번에 받는다.
-/// 시트를 닫으면 확인한 채널은 여기까지 본 것으로 표시한다 (받지 않은 영상은 다시 뜨지 않는다).
-/// 이미 열려 있으면 다시 열지 않는다.
+/// 시트를 닫아도 목록은 그대로이고, 위의 "비우기"를 눌러야 확인한 것으로 표시해 비운다
+/// (받지 않은 영상은 그 뒤로 다시 뜨지 않는다). 이미 열려 있으면 다시 열지 않는다.
 Future<void> showNewVideosSheet(BuildContext context) async {
   if (_open) return;
   _open = true;
-  final cubit = sl<NewVideosCubit>();
   try {
     await showAppSheet<void>(
       context,
@@ -26,7 +25,6 @@ Future<void> showNewVideosSheet(BuildContext context) async {
     );
   } finally {
     _open = false;
-    await cubit.markSeen();
   }
 }
 
@@ -106,7 +104,20 @@ class _Header extends StatelessWidget {
                   : null,
             ),
           ),
-          if (state.count > 0)
+          if (state.count > 0) ...[
+            PlainButton(
+              label: l10n.newVideosClear,
+              onPressed: () async {
+                final ok = await showConfirmDialog(
+                  context,
+                  title: l10n.newVideosClearTitle,
+                  body: l10n.newVideosClearBody,
+                  confirmLabel: l10n.newVideosClear,
+                  cancelLabel: l10n.actionCancel,
+                );
+                if (ok) await cubit.markSeen();
+              },
+            ),
             PlainButton(
               label: state.allSelected
                   ? l10n.newVideosSelectNone
@@ -114,6 +125,7 @@ class _Header extends StatelessWidget {
               accent: true,
               onPressed: cubit.toggleAll,
             ),
+          ],
         ],
       ),
     );
@@ -134,6 +146,7 @@ class _Body extends StatelessWidget {
       final busy = state.status == NewVideosStatus.checking || state.resolving;
       if (busy) return LoadingState(label: l10n.newVideosChecking);
       return EmptyState(
+        icon: AppIcons.checkCircle,
         title: l10n.newVideosEmptyTitle,
         body: l10n.newVideosEmptyBody,
       );
