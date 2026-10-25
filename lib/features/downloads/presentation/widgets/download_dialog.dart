@@ -344,11 +344,15 @@ class _DownloadScreenState extends State<DownloadScreen> {
                 ],
                 AppSwitch(
                   value: on,
-                  onChanged: locked ? null : _setImportLyrics,
+                  onChanged: locked
+                      ? null
+                      : (v) => setState(() => _importLyrics = v),
                 ),
               ],
             ),
-            onTap: locked ? null : () => _setImportLyrics(!_importLyrics),
+            onTap: locked
+                ? null
+                : () => setState(() => _importLyrics = !_importLyrics),
           ),
         ),
         if (on && sub.languages.isNotEmpty) ...[
@@ -420,13 +424,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
     );
   }
 
-  /// 자막 가져오기를 켜거나 끈다. 직접 정한 가사가 있는데 켜면 그 가사를 덮어써도 되는지 먼저 묻는다.
-  Future<void> _setImportLyrics(bool value) async {
-    if (value && !await _confirmOverwriteCustom()) return;
-    if (mounted) setState(() => _importLyrics = value);
-  }
-
-  /// 직접 정한 가사가 있으면 영상 자막이 덮어써도 되는지 묻는다. 없거나 동의하면 true (동의하면 직접 정한 가사를 지운다).
+  /// 직접 정한 가사가 있는데 "이 자막 사용"을 누르면 영상 자막이 덮어써도 되는지 묻는다. 없거나 동의하면 true (동의하면 직접 정한 가사를 지운다).
   Future<bool> _confirmOverwriteCustom() async {
     if (_custom == null) return true;
     final l10n = context.l10n;
@@ -440,11 +438,6 @@ class _DownloadScreenState extends State<DownloadScreen> {
     if (!ok || !mounted) return false;
     setState(() => _custom = null);
     return true;
-  }
-
-  /// 자막 표의 "자동" 줄: 직접 정한 가사가 있으면 덮어써도 되는지 묻고 고른다.
-  Future<void> _pickAutoLanguage() async {
-    if (await _confirmOverwriteCustom()) _pickLanguage(null);
   }
 
   /// 가사 설정 페이지를 열어 받을 곡의 가사를 직접 정한다. 비워서 저장하면 직접 정한 가사를 지운다.
@@ -560,7 +553,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
                     selected: _lyricsLanguage == r.lang,
                     openable: r.lang != null,
                     onTap: () => r.lang == null
-                        ? _pickAutoLanguage()
+                        ? _pickLanguage(null)
                         : _openSubtitle(r.lang!, r.name, r.kind),
                   ),
               ],
