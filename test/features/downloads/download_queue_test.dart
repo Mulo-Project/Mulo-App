@@ -500,6 +500,58 @@ void main() {
     expect(request.lyricsText, '[00:05.00]from file');
   });
 
+  testWidgets('받기 페이지: 직접 정한 가사가 있는데 자막 가져오기를 켜면 덮어써도 되는지 묻는다', (tester) async {
+    final engine = FakeDownloaderEngine(
+      info: const VideoInfo(
+        MediaHit(
+          id: 'abc',
+          title: 'Song',
+          url: 'https://youtu.be/abc',
+          subtitleLangs: ['en'],
+        ),
+      ),
+    );
+    final queue = await openLyricsPage(
+      tester,
+      engine,
+      lyricsFile: FakeLyricsFileSource('[00:05.00]from file'),
+    );
+    final edit = find.byKey(const ValueKey('download-lyrics-edit'));
+    await tester.ensureVisible(edit);
+    await tester.pumpAndSettle();
+    await tester.tap(edit);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('lyrics-import-file')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('저장'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('직접 정한 가사를 넣어요'), findsOneWidget);
+
+    // 취소하면 직접 정한 가사가 그대로고 자막 가져오기는 꺼져 있다.
+    final row = find.byKey(const ValueKey('download-import-lyrics'));
+    await tester.ensureVisible(row);
+    await tester.pumpAndSettle();
+    await tester.tap(row);
+    await tester.pumpAndSettle();
+    expect(find.text('직접 정한 가사가 있어요'), findsOneWidget);
+    await tester.tap(find.text('취소').last);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('직접 정한 가사를 넣어요'), findsOneWidget);
+
+    // 동의하면 직접 정한 가사가 지워지고 자막을 가져온다.
+    await tester.tap(row);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('자막으로 바꾸기'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('직접 정한 가사를 넣어요'), findsNothing);
+
+    await tester.tap(inSheet(find.text('받기')));
+    await tester.pumpAndSettle();
+    final request = queue.requests.single;
+    expect(request.importLyrics, isTrue);
+    expect(request.lyricsText, isNull);
+  });
+
   testWidgets('받기 페이지: 자막 언어가 하나여도 표가 보이고, 줄을 누르면 가사 상세로 간다', (tester) async {
     await openLyricsPage(
       tester,

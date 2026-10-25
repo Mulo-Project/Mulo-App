@@ -1219,6 +1219,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadCoverDefault => '기본으로';
 
   @override
+  String get downloadLyricsEditHint => '파일 · 웹에서 불러오거나 직접 써요. 자막이 없어도 돼요.';
+
+  @override
+  String get downloadLyricsOverwriteTitle => '직접 정한 가사가 있어요';
+
+  @override
+  String get downloadLyricsOverwriteBody => '영상 자막을 쓰면 직접 정한 가사는 지워져요. 계속할까요?';
+
+  @override
+  String get downloadLyricsOverwriteConfirm => '자막으로 바꾸기';
+
+  @override
   String downloadLyricsCustom(int lines) {
     return '직접 정한 가사를 넣어요 · $lines줄';
   }

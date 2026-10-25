@@ -2324,6 +2324,30 @@ abstract class AppLocalizations {
   /// **'기본으로'**
   String get downloadCoverDefault;
 
+  /// No description provided for @downloadLyricsEditHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'파일 · 웹에서 불러오거나 직접 써요. 자막이 없어도 돼요.'**
+  String get downloadLyricsEditHint;
+
+  /// No description provided for @downloadLyricsOverwriteTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'직접 정한 가사가 있어요'**
+  String get downloadLyricsOverwriteTitle;
+
+  /// No description provided for @downloadLyricsOverwriteBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'영상 자막을 쓰면 직접 정한 가사는 지워져요. 계속할까요?'**
+  String get downloadLyricsOverwriteBody;
+
+  /// No description provided for @downloadLyricsOverwriteConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'자막으로 바꾸기'**
+  String get downloadLyricsOverwriteConfirm;
+
   /// No description provided for @downloadLyricsCustom.
   ///
   /// In ko, this message translates to:

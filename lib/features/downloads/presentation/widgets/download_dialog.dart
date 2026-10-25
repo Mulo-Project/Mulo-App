@@ -344,15 +344,11 @@ class _DownloadScreenState extends State<DownloadScreen> {
                 ],
                 AppSwitch(
                   value: on,
-                  onChanged: locked
-                      ? null
-                      : (v) => setState(() => _importLyrics = v),
+                  onChanged: locked ? null : _setImportLyrics,
                 ),
               ],
             ),
-            onTap: locked
-                ? null
-                : () => setState(() => _importLyrics = !_importLyrics),
+            onTap: locked ? null : () => _setImportLyrics(!_importLyrics),
           ),
         ),
         if (on && sub.languages.isNotEmpty) ...[
@@ -388,41 +384,67 @@ class _DownloadScreenState extends State<DownloadScreen> {
             style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
           ),
         ],
-        // 자막 표 아래: 영상 자막과 따로 가사를 직접 정한다 (파일 · 웹에서 불러오기, 자막이 없어도 쓸 수 있다).
+        // 자막 표 아래: 영상 자막과 따로 가사를 직접 정한다 (파일 · 웹에서 불러오거나 직접 써서, 자막이 없어도 쓸 수 있다).
+        // 위 "자막 가져오기" 줄과 같은 카드 모양의 줄이다.
         const SizedBox(height: AppSpacing.sm),
-        Row(
-          children: [
-            PillButton(
-              key: const ValueKey('download-lyrics-edit'),
-              label: l10n.lyricsEditTitle,
-              icon: AppIcons.edit,
-              variant: PillVariant.tonal,
-              compact: true,
-              onPressed: _editLyrics,
+        DecoratedBox(
+          decoration: ShapeDecoration(
+            color: p.surfaceHigh,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadii.sm),
+              side: BorderSide(color: p.outline),
             ),
-            if (_custom != null) ...[
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Text(
-                  l10n.downloadLyricsCustom(
+          ),
+          child: SettingRow(
+            key: const ValueKey('download-lyrics-edit'),
+            title: l10n.lyricsEditTitle,
+            description: _custom == null
+                ? l10n.downloadLyricsEditHint
+                : l10n.downloadLyricsCustom(
                     _custom!
                         .split('\n')
                         .where((l) => l.trim().isNotEmpty)
                         .length,
                   ),
-                  style: text.bodySmall?.copyWith(color: p.accent),
-                ),
-              ),
-              PlainButton(
-                key: const ValueKey('download-lyrics-custom-clear'),
-                label: l10n.actionClear,
-                onPressed: () => setState(() => _custom = null),
-              ),
-            ],
-          ],
+            trailing: _custom == null
+                ? Icon(AppIcons.chevronRight, color: p.onSurfaceMuted)
+                : PlainButton(
+                    key: const ValueKey('download-lyrics-custom-clear'),
+                    label: l10n.actionClear,
+                    onPressed: () => setState(() => _custom = null),
+                  ),
+            onTap: _editLyrics,
+          ),
         ),
       ],
     );
+  }
+
+  /// 자막 가져오기를 켜거나 끈다. 직접 정한 가사가 있는데 켜면 그 가사를 덮어써도 되는지 먼저 묻는다.
+  Future<void> _setImportLyrics(bool value) async {
+    if (value && !await _confirmOverwriteCustom()) return;
+    if (mounted) setState(() => _importLyrics = value);
+  }
+
+  /// 직접 정한 가사가 있으면 영상 자막이 덮어써도 되는지 묻는다. 없거나 동의하면 true (동의하면 직접 정한 가사를 지운다).
+  Future<bool> _confirmOverwriteCustom() async {
+    if (_custom == null) return true;
+    final l10n = context.l10n;
+    final ok = await showConfirmDialog(
+      context,
+      title: l10n.downloadLyricsOverwriteTitle,
+      body: l10n.downloadLyricsOverwriteBody,
+      confirmLabel: l10n.downloadLyricsOverwriteConfirm,
+      cancelLabel: l10n.actionCancel,
+    );
+    if (!ok || !mounted) return false;
+    setState(() => _custom = null);
+    return true;
+  }
+
+  /// 자막 표의 "자동" 줄: 직접 정한 가사가 있으면 덮어써도 되는지 묻고 고른다.
+  Future<void> _pickAutoLanguage() async {
+    if (await _confirmOverwriteCustom()) _pickLanguage(null);
   }
 
   /// 가사 설정 페이지를 열어 받을 곡의 가사를 직접 정한다. 비워서 저장하면 직접 정한 가사를 지운다.
@@ -467,6 +489,8 @@ class _DownloadScreenState extends State<DownloadScreen> {
       songArtist: _artist.text,
     );
     if (use == null || !mounted) return;
+    // 이 자막을 쓰면 직접 정한 가사는 덮어써진다.
+    if (!await _confirmOverwriteCustom()) return;
     setState(() {
       final edited = use.edited;
       if (edited != null) _edited[lang] = edited;
@@ -536,7 +560,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
                     selected: _lyricsLanguage == r.lang,
                     openable: r.lang != null,
                     onTap: () => r.lang == null
-                        ? _pickLanguage(null)
+                        ? _pickAutoLanguage()
                         : _openSubtitle(r.lang!, r.name, r.kind),
                   ),
               ],

@@ -1247,6 +1247,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadCoverDefault => 'Use default';
 
   @override
+  String get downloadLyricsEditHint =>
+      'Load from a file or the web, or write it yourself. No subtitles needed.';
+
+  @override
+  String get downloadLyricsOverwriteTitle => 'You set your own lyrics';
+
+  @override
+  String get downloadLyricsOverwriteBody =>
+      'Using the video subtitles will remove the lyrics you set. Continue?';
+
+  @override
+  String get downloadLyricsOverwriteConfirm => 'Use subtitles';
+
+  @override
   String downloadLyricsCustom(int lines) {
     return 'Using your lyrics · $lines lines';
   }
