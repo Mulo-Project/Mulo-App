@@ -14,7 +14,6 @@ import '../features/playlists/presentation/screens/playlist_detail_screen.dart';
 import '../features/playlists/presentation/screens/playlist_import_screen.dart';
 import '../features/playlists/presentation/screens/playlist_add_tracks_screen.dart';
 import '../features/playlists/presentation/screens/playlist_pick_screen.dart';
-import '../features/playlists/presentation/screens/playlist_reorder_screen.dart';
 import '../features/playlists/presentation/screens/playlists_screen.dart';
 import '../features/search/presentation/screens/search_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
@@ -49,7 +48,6 @@ abstract final class Routes {
       '/playlists/${Uri.encodeComponent(id)}';
 
   /// 재생목록 카드 순서 바꾸기.
-  static const playlistReorder = '/playlists/reorder';
 
   /// 재생목록에 곡 추가 (보관함의 곡을 골라 담는다).
   static String playlistAddTracks(String id) =>
@@ -128,14 +126,6 @@ GoRouter createRouter({String initialLocation = Routes.home}) => GoRouter(
                 child: PlaylistPickScreen(
                   trackIds: {...?(state.extra as List<String>?)},
                 ),
-              ),
-            ),
-            GoRoute(
-              path: 'reorder',
-              parentNavigatorKey: _rootKey,
-              pageBuilder: (context, state) => NoTransitionPage(
-                key: state.pageKey,
-                child: const PlaylistReorderScreen(),
               ),
             ),
             GoRoute(

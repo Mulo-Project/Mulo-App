@@ -35,6 +35,7 @@ class PlaylistCard extends StatelessWidget {
     this.selected,
     this.already = false,
     this.onTap,
+    this.longPressMenu = true,
   });
 
   final Playlist playlist;
@@ -48,6 +49,9 @@ class PlaylistCard extends StatelessWidget {
   /// 기본은 상세로 이동.
   final VoidCallback? onTap;
 
+  /// 길게 눌러 메뉴를 열지 (끌어서 순서를 바꾸는 카드는 길게 누르기를 끌기에 쓰므로 끈다. ⋮ · 오른쪽 클릭은 그대로).
+  final bool longPressMenu;
+
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
@@ -59,6 +63,7 @@ class PlaylistCard extends StatelessWidget {
 
     return _PointerMenu(
       enabled: browsing,
+      longPress: longPressMenu,
       onMenu: (pos) => showPlaylistMenu(context, playlist, globalPosition: pos),
       child: Material(
         color: p.surface,
@@ -165,9 +170,11 @@ class _PointerMenu extends StatefulWidget {
     required this.enabled,
     required this.onMenu,
     required this.child,
+    this.longPress = true,
   });
 
   final bool enabled;
+  final bool longPress;
   final ValueChanged<Offset> onMenu;
   final Widget child;
 
@@ -185,7 +192,7 @@ class _PointerMenuState extends State<_PointerMenu> {
       onPointerDown: (e) => _last = e.position,
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
-        onLongPress: () => widget.onMenu(_last),
+        onLongPress: widget.longPress ? () => widget.onMenu(_last) : null,
         onSecondaryTap: () => widget.onMenu(_last),
         child: widget.child,
       ),

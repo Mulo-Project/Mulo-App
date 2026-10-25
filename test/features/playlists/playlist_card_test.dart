@@ -160,12 +160,12 @@ void main() {
     }
   });
 
-  testWidgets('길게 누르면 같은 메뉴가 열린다', (tester) async {
+  testWidgets('좋아요 카드는 길게 누르면 메뉴가 열린다 (끌 수 없는 카드)', (tester) async {
     await pumpPlaylists(tester);
-    await tester.longPress(find.text('출근길'));
+    await tester.longPress(find.text('좋아요'));
     await tester.pumpAndSettle();
     expect(find.text('꾸미기'), findsOneWidget);
-    expect(find.text('재생목록 삭제'), findsOneWidget);
+    expect(find.text('재생목록 삭제'), findsNothing);
   });
 
   testWidgets('꾸미기 시트에서 색 견본으로 고르고 자동으로 되돌린다', (tester) async {
@@ -321,20 +321,15 @@ void main() {
     expect(colors.saved, isEmpty);
   });
 
-  testWidgets('순서 바꾸기: 길게 눌러 끌면 카드 순서가 바뀌고 저장된다 (좋아요 목록은 맨 앞)', (tester) async {
+  testWidgets('카드 순서: 목록에서 길게 눌러 끌면 바뀌고 저장된다 (메뉴는 ⋮, 좋아요 목록은 맨 앞)', (
+    tester,
+  ) async {
     await pumpPlaylists(tester);
     // 카드 순서(두 열): [좋아요 | 출근길] 다음 줄에 [운동].
     expect(
       tester.getTopLeft(find.text('출근길')).dy,
       lessThan(tester.getTopLeft(find.text('운동')).dy),
     );
-    await tester.tap(find.byTooltip('순서 바꾸기'));
-    await tester.pumpAndSettle();
-    expect(
-      find.text('길게 눌러 끌어서 재생목록 카드의 순서를 바꿔요. 좋아요 목록은 늘 맨 앞이에요.'),
-      findsOneWidget,
-    );
-
     final from = tester.getCenter(find.text('운동'));
     final to = tester.getCenter(find.text('출근길'));
     final gesture = await tester.startGesture(from);
@@ -346,8 +341,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repo.lists.map((p) => p.name), ['운동', '출근길']);
-    await tester.tap(find.byTooltip('뒤로'));
-    await tester.pumpAndSettle();
     // 카드가 바뀐 순서로 놓인다: [좋아요 | 운동] 다음 줄에 [출근길].
     expect(
       tester.getTopLeft(find.text('운동')).dy,

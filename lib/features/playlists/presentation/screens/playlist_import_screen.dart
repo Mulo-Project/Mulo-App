@@ -446,14 +446,13 @@ class _Tracks extends StatelessWidget {
                   style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
                 ),
               ),
+              // 체크 표시가 지금 상태: 모두 골랐으면 켜진 체크, 아니면 빈 동그라미 (누르면 바뀐다).
               PlainButton(
-                label: state.allSelected
-                    ? l10n.playlistImportClear
-                    : l10n.playlistImportSelectAll,
+                label: l10n.playlistImportSelectAll,
                 icon: state.allSelected
-                    ? AppIcons.radioOff
-                    : AppIcons.checkCircle,
-                accent: true,
+                    ? AppIcons.checkCircle
+                    : AppIcons.radioOff,
+                accent: state.allSelected,
                 onPressed: cubit.toggleAll,
               ),
             ],
