@@ -56,7 +56,20 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   bool get _asc => _ascending[_tab] ?? defaultAscending(_sort);
 
+  // 거르기 · 정렬 결과 기억: 곡 목록 · 검색어 · 탭 · 정렬이 같으면 다시 계산하지 않는다.
+  List<Track>? _memoAll;
+  (String, LibraryTab, LibrarySort, bool)? _memoKey;
+  List<Track> _memoTracks = const [];
+
   List<Track> _filtered(List<Track> all, AppLocalizations l10n) {
+    final key = (_query, _tab, _sort, _asc);
+    if (identical(_memoAll, all) && _memoKey == key) return _memoTracks;
+    _memoAll = all;
+    _memoKey = key;
+    return _memoTracks = _filteredNow(all);
+  }
+
+  List<Track> _filteredNow(List<Track> all) {
     final q = _query.trim().toLowerCase();
     final list = all
         .where(
@@ -81,7 +94,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final importing = context.select((LibraryImportCubit c) => c.state.running);
     final tracks = _filtered(all, l10n);
     final vm = context.read<NowPlayingCubit>();
-    final playing = context.select((NowPlayingCubit c) => c.state.track);
 
     // 모든 탭은 보이는 줄만 만든다 (곡 · 앨범 · 아티스트가 수천 개여도 탭 전환이 느려지지 않게).
     // 그룹 탭은 줄을 만드는 함수만 모아 두고, 아래 SliverList.builder가 필요할 때 부른다.
@@ -200,7 +212,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       downloaded: all
                           .where((t) => t.source == TrackSource.download)
                           .length,
-                      playing: playing,
                       onPlayAll: () => vm.playQueue(tracks),
                       onShuffle: () => vm.playShuffled(tracks),
                     ),
@@ -345,7 +356,6 @@ class _LibraryHero extends StatelessWidget {
   const _LibraryHero({
     required this.count,
     required this.downloaded,
-    required this.playing,
     required this.onPlayAll,
     required this.onShuffle,
   });
@@ -353,8 +363,6 @@ class _LibraryHero extends StatelessWidget {
   final int count;
   final int downloaded;
 
-  /// 지금 재생 중인 곡 (없으면 null). 있으면 오른쪽에 그 곡의 이미지를 보여 준다.
-  final Track? playing;
   final VoidCallback onPlayAll;
   final VoidCallback onShuffle;
 
@@ -364,7 +372,9 @@ class _LibraryHero extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final p = context.palette;
 
-    final now = playing;
+    // 지금 재생 중인 곡 (없으면 null). 있으면 오른쪽에 그 곡의 이미지를 보여 준다.
+    // 여기서 지켜보므로 곡이 바뀌어도 이 머리만 다시 그려진다.
+    final now = context.select((NowPlayingCubit c) => c.state.track);
     final info = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

@@ -109,3 +109,4 @@
 - 성능: 반응 시간 보정 페이지가 재생 위치가 바뀔 때마다 페이지 전체를 다시 그리던 것을 재생 중인지만 지켜보게 했다.
 - 설정 화면(636줄, `build` 하나가 380줄)을 묶음별 위젯으로 나눴다: 다운로드 · 보안 · 알림 · 재생 · 테마 · 정보 · 계정 · 서버/엔진(`features/settings/presentation/widgets/settings_*_section.dart`). 화면은 87줄이고, 묶음마다 자기가 쓰는 값만 지켜보므로 한 설정이 바뀌어도 그 묶음만 다시 그려진다(전에는 화면 전체). 외부에서 쓰던 `DownloadMode` · `presetLabel`은 `settings_screen.dart`가 그대로 내보낸다. 동작은 바꾸지 않았다.
 - 가사 싱크 화면(862 → 521줄)에서 줄(`SyncLineRow`) · 조작 막대(`SyncControlBar`) · 시계(`SyncClockText`)를 `widgets/lyrics_sync_parts.dart`로 나눴다(이동 단위 글자 함수는 `syncStepLabel`). 동작은 바꾸지 않았다.
+- 보관함 화면: 곡이 바뀔 때마다 화면 전체가 다시 만들어지며 곡 목록을 다시 거르고 정렬하던 것을 줄였다. 재생 중인 곡은 위쪽 머리(`_LibraryHero`)가 직접 지켜보게 하고, 거르기 · 정렬 결과는 곡 목록 · 검색어 · 탭 · 정렬이 같으면 기억한 것을 쓴다(`_filtered`). 곡이 수천 개일 때 곡이 넘어갈 때마다 정렬이 도는 일이 없어진다. 속도는 측정하지 못했다.
