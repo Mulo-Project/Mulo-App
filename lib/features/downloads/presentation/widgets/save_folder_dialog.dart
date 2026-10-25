@@ -6,6 +6,7 @@ import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../library/domain/entities/loaded_folder.dart';
 import '../../../library/presentation/bloc/loaded_folders_cubit.dart';
+import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../../library/presentation/widgets/loaded_folders_sheet.dart';
 
 /// 저장 위치 고르기 대화상자: 불러오는 폴더 목록에서 고르거나, "직접 선택"으로 폴더 선택기를 연다.
@@ -34,6 +35,7 @@ class _SaveFolderDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final cubit = context.watch<LoadedFoldersCubit>();
+    final player = context.read<NowPlayingCubit>();
     final folders = cubit.state.folders;
     final cur = current.trim();
     // 지금 위치가 목록에 없으면(직접 고른 폴더) 맨 위에 따로 보인다.
@@ -86,7 +88,8 @@ class _SaveFolderDialog extends StatelessWidget {
                                 context,
                                 folder,
                               )) {
-                                await cubit.remove(folder.path);
+                                final removed = await cubit.remove(folder.path);
+                                player.removeFromQueueByIds(removed);
                               }
                             },
                     ),

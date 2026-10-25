@@ -479,6 +479,14 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     );
   }
 
+  /// 보관함에서 사라진 곡들([ids])을 대기열에서 뺀다 (재생 중인 곡이면 다음 곡으로 넘어간다).
+  void removeFromQueueByIds(Set<String> ids) {
+    if (ids.isEmpty) return;
+    for (final t in [...state.queue]) {
+      if (ids.contains(t.id)) removeFromQueue(t);
+    }
+  }
+
   /// 곡이 보관함에서 지워졌을 때 대기열에서도 뺀다.
   /// 재생 중인 곡을 빼면 다음 곡(없으면 마지막 곡)으로 넘어가 처음부터 재생한다.
   void removeFromQueue(Track track) {

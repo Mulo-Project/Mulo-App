@@ -79,9 +79,9 @@ void main() {
   test('삭제: 기본 저장 위치는 지울 수 없다', () async {
     final folders = MemoryLoadedFolders(extra: ['/music/x']);
     final remove = RemoveLoadedFolder(folders, FakeLibraryRepository());
-    expect(await remove('/music/default'), isFalse);
-    expect(await remove('/music/nope'), isFalse);
-    expect(await remove('/music/x'), isTrue);
+    expect(await remove('/music/default'), isNull);
+    expect(await remove('/music/nope'), isNull);
+    expect(await remove('/music/x'), isEmpty);
     expect(folders.extra, isEmpty);
   });
 
@@ -94,7 +94,7 @@ void main() {
       _t('d1', '/music/x/deep'),
     ]);
     final remove = RemoveLoadedFolder(folders, library);
-    expect(await remove('/music/x'), isTrue);
+    expect(await remove('/music/x'), {'x1', 'x2'});
     final left = (await library.watchTracks().first).map((t) => t.id);
     // 남은 폴더(/music/x/deep) 안의 곡은 그대로 둔다.
     expect(left, unorderedEquals(['keep', 'd1']));

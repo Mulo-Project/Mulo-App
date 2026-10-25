@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../domain/entities/loaded_folder.dart';
+import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../bloc/loaded_folders_cubit.dart';
 
 /// 음악을 불러오는 폴더 목록: 확인 · 추가 · 삭제 (바텀 시트).
@@ -42,6 +43,7 @@ class LoadedFoldersSheet extends StatelessWidget {
     final l10n = context.l10n;
     final state = context.watch<LoadedFoldersCubit>().state;
     final cubit = context.read<LoadedFoldersCubit>();
+    final player = context.read<NowPlayingCubit>();
 
     return SafeArea(
       child: ConstrainedBox(
@@ -75,7 +77,10 @@ class LoadedFoldersSheet extends StatelessWidget {
                                   context,
                                   folder,
                                 )) {
-                                  await cubit.remove(folder.path);
+                                  final removed = await cubit.remove(
+                                    folder.path,
+                                  );
+                                  player.removeFromQueueByIds(removed);
                                 }
                               },
                       ),

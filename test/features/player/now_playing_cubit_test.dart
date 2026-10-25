@@ -163,6 +163,13 @@ void main() {
       expect(state().position, Duration.zero);
     });
 
+    test('removeFromQueueByIds: 폴더에서 빠진 곡들을 한꺼번에 빼고, 재생 중이면 넘어간다', () {
+      final q = [...state().queue];
+      vm().removeFromQueueByIds({q[0].id, q[2].id});
+      expect(state().queue, [q[1]]);
+      expect(state().track, q[1]);
+    });
+
     test('removeFromQueue: 마지막 하나를 빼면 대기열이 비고 멈춘다', () {
       for (final t in [...state().queue]) {
         vm().removeFromQueue(t);

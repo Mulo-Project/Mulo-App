@@ -40,9 +40,13 @@ class LoadedFoldersCubit extends Cubit<LoadedFoldersState> {
     if (result == AddFolderResult.added) await _rescan();
   }
 
-  Future<void> remove(String path) async {
-    if (state.busy) return;
-    if (await _remove(path)) await _rescan();
+  /// 폴더를 빼고, 보관함에서 지운 곡의 id를 돌려준다 (재생 대기열에서도 빼도록).
+  Future<Set<String>> remove(String path) async {
+    if (state.busy) return const {};
+    final removed = await _remove(path);
+    if (removed == null) return const {};
+    await _rescan();
+    return removed;
   }
 
   Future<void> _rescan() async {
