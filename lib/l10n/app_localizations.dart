@@ -2426,11 +2426,11 @@ abstract class AppLocalizations {
   /// **'이 자막 사용'**
   String get downloadSubtitleUseEdited;
 
-  /// No description provided for @downloadSubtitleEdited.
+  /// No description provided for @downloadSubtitleApplied.
   ///
   /// In ko, this message translates to:
-  /// **'수정함'**
-  String get downloadSubtitleEdited;
+  /// **'가사에 적용'**
+  String get downloadSubtitleApplied;
 
   /// No description provided for @downloadLyricsRetry.
   ///

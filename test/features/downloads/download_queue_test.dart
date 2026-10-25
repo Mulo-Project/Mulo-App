@@ -418,9 +418,9 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('subtitle-detail-use')));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.textContaining('수정함'));
+    await tester.ensureVisible(find.textContaining('가사에 적용'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('수정함'), findsOneWidget);
+    expect(find.textContaining('가사에 적용'), findsOneWidget);
     await tester.tap(inSheet(find.text('받기')));
     await tester.pumpAndSettle();
     expect(queue.requests.single.lyricsLanguage, 'en');
@@ -550,7 +550,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('직접 정한 가사를 넣어요'), findsOneWidget);
 
-    // 동의하면 직접 정한 가사가 지워지고 그 자막을 쓴다.
+    // 동의하면 그 자막의 가사가 "가사 설정"의 가사로 적용된다.
     await tester.ensureVisible(find.text('영어'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('영어'));
@@ -559,14 +559,24 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('자막으로 바꾸기'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('직접 정한 가사를 넣어요'), findsNothing);
+    expect(find.textContaining('가사에 적용'), findsOneWidget);
+
+    // 가사 설정을 다시 열면 적용된 자막 가사가 들어 있다.
+    final edit2 = find.byKey(const ValueKey('download-lyrics-edit'));
+    await tester.ensureVisible(edit2);
+    await tester.pumpAndSettle();
+    await tester.tap(edit2);
+    await tester.pumpAndSettle();
+    expect(find.text('auto line'), findsOneWidget);
+    await tester.tap(find.text('취소').last);
+    await tester.pumpAndSettle();
 
     await tester.tap(inSheet(find.text('받기')));
     await tester.pumpAndSettle();
     final request = queue.requests.single;
     expect(request.importLyrics, isTrue);
     expect(request.lyricsLanguage, 'en');
-    expect(request.lyricsText, isNull);
+    expect(request.lyricsText, '[00:01.00]auto line');
   });
 
   testWidgets('받기 페이지: 자막을 아직 못 읽었으면 "이 자막 사용"을 누를 수 없고, 읽으면 누를 수 있다', (

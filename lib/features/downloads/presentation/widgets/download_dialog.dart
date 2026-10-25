@@ -415,7 +415,11 @@ class _DownloadScreenState extends State<DownloadScreen> {
                 : PlainButton(
                     key: const ValueKey('download-lyrics-custom-clear'),
                     label: l10n.actionClear,
-                    onPressed: () => setState(() => _custom = null),
+                    onPressed: () => setState(() {
+                      _custom = null;
+                      _edited.clear();
+                      _lyricsLanguage = null;
+                    }),
                   ),
             onTap: _editLyrics,
           ),
@@ -482,11 +486,12 @@ class _DownloadScreenState extends State<DownloadScreen> {
       songArtist: _artist.text,
     );
     if (use == null || !mounted) return;
-    // 이 자막을 쓰면 직접 정한 가사는 덮어써진다.
+    // 이 자막의 가사를 "가사 설정"의 가사로 적용한다 (이미 직접 정한 가사가 있으면 덮어써도 되는지 먼저 묻는다).
+    // 가사 설정 페이지를 다시 열면 이 가사가 들어 있어 이어서 고칠 수 있다.
     if (!await _confirmOverwriteCustom()) return;
     setState(() {
-      final edited = use.edited;
-      if (edited != null) _edited[lang] = edited;
+      _edited[lang] = use.text;
+      _custom = use.text.trim().isEmpty ? null : use.text;
     });
     _pickLanguage(lang);
   }
@@ -547,8 +552,11 @@ class _DownloadScreenState extends State<DownloadScreen> {
                   _languageRow(
                     context,
                     language: r.name,
-                    kind: _edited.containsKey(r.lang)
-                        ? '${r.kind} · ${l10n.downloadSubtitleEdited}'
+                    kind:
+                        r.lang != null &&
+                            _lyricsLanguage == r.lang &&
+                            _custom != null
+                        ? '${r.kind} · ${l10n.downloadSubtitleApplied}'
                         : r.kind,
                     selected: _lyricsLanguage == r.lang,
                     openable: r.lang != null,

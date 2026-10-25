@@ -1273,7 +1273,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadSubtitleUseEdited => '이 자막 사용';
 
   @override
-  String get downloadSubtitleEdited => '수정함';
+  String get downloadSubtitleApplied => '가사에 적용';
 
   @override
   String get downloadLyricsRetry => '다시 불러오기';

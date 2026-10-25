@@ -480,7 +480,7 @@
   "downloadLyricsPreviewFailed": "Couldn't load the subtitles.",
   "downloadSubtitleEditHint": "You can edit the text, but not the timing. Sync it on the player after downloading.",
   "downloadSubtitleUseEdited": "Use this subtitle",
-  "downloadSubtitleEdited": "edited",
+  "downloadSubtitleApplied": "applied",
   "downloadLyricsRetry": "Try again",
   "downloadSubtitleUse": "Use this subtitle",
   "downloadSubtitleInUse": "Currently selected",
