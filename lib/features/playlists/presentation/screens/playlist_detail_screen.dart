@@ -15,6 +15,7 @@ import '../../../library/domain/entities/track.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../../library/presentation/widgets/play_shuffle_row.dart';
 import '../../../library/presentation/widgets/lazy_track_list.dart';
+import '../../../library/presentation/widgets/library_selection.dart';
 import '../../../library/presentation/widgets/track_list_tile.dart';
 import '../bloc/playlist_tracks_cubit.dart';
 import '../bloc/playlists_cubit.dart';
@@ -37,10 +38,20 @@ class PlaylistDetailScreen extends StatelessWidget {
   }
 }
 
-class _Body extends StatelessWidget {
+class _Body extends StatefulWidget {
   const _Body({required this.playlistId});
 
   final String playlistId;
+
+  @override
+  State<_Body> createState() => _BodyState();
+}
+
+class _BodyState extends State<_Body> with TrackPicker<_Body> {
+  String get playlistId => widget.playlistId;
+
+  @override
+  String? get pickerPlaylistId => playlistId;
 
   @override
   Widget build(BuildContext context) {
@@ -187,19 +198,29 @@ class _Body extends StatelessWidget {
 
     return SafeArea(
       bottom: false,
-      child: LazyTrackList(
-        padding: EdgeInsets.only(
-          bottom: AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
-        ),
-        header: header,
-        trackCount: tracks?.length ?? 0,
-        trackBuilder: (context, i) => TrackListTile(
-          track: tracks![i],
-          queue: tracks,
-          index: i,
-          playlistId: playlistId,
-          showNumber: true,
-        ),
+      child: Stack(
+        children: [
+          LazyTrackList(
+            padding: EdgeInsets.only(
+              bottom:
+                  AppSpacing.lg +
+                  MediaQuery.paddingOf(context).bottom +
+                  selectionBottomGap,
+            ),
+            header: header,
+            trackCount: tracks?.length ?? 0,
+            trackBuilder: (context, i) => TrackListTile(
+              track: tracks![i],
+              queue: tracks,
+              index: i,
+              playlistId: playlistId,
+              showNumber: true,
+              selection: selectionFor(tracks[i]),
+            ),
+          ),
+          // 하나라도 고르면 하단에 선택 막대가 올라온다.
+          ?selectionBar(tracks ?? const <Track>[], tracks ?? const <Track>[]),
+        ],
       ),
     );
   }

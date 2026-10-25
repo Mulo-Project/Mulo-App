@@ -126,8 +126,13 @@ class _LibraryScreenState extends State<LibraryScreen>
               radius: 24,
               icon: AppIcons.person,
             ),
-            trailing: const _Chevron(),
-            onTap: () => context.push(Routes.artist(e.value.first.artist)),
+            trailing: selecting
+                ? _PickMark(picked: groupPicked(e.value))
+                : const _Chevron(),
+            onTap: () => selecting
+                ? toggleGroup(e.value)
+                : context.push(Routes.artist(e.value.first.artist)),
+            onLongPress: () => toggleGroup(e.value),
           ),
       ],
       LibraryTab.albums => [
@@ -148,8 +153,13 @@ class _LibraryScreenState extends State<LibraryScreen>
               color: coverColorOf(context, CoverKey.album(e.value.first.album)),
               icon: AppIcons.album,
             ),
-            trailing: const _Chevron(),
-            onTap: () => context.push(Routes.album(e.value.first.album)),
+            trailing: selecting
+                ? _PickMark(picked: groupPicked(e.value))
+                : const _Chevron(),
+            onTap: () => selecting
+                ? toggleGroup(e.value)
+                : context.push(Routes.album(e.value.first.album)),
+            onLongPress: () => toggleGroup(e.value),
           ),
       ],
       LibraryTab.genres => [
@@ -168,8 +178,13 @@ class _LibraryScreenState extends State<LibraryScreen>
               color: coverColorOf(context, CoverKey.genre(e.key)),
               icon: AppIcons.category,
             ),
-            trailing: const _Chevron(),
-            onTap: () => context.push(Routes.genre(e.key)),
+            trailing: selecting
+                ? _PickMark(picked: groupPicked(e.value))
+                : const _Chevron(),
+            onTap: () => selecting
+                ? toggleGroup(e.value)
+                : context.push(Routes.genre(e.key)),
+            onLongPress: () => toggleGroup(e.value),
           ),
       ],
     };
@@ -464,6 +479,22 @@ class _LibraryHero extends StatelessWidget {
         const SizedBox(height: AppSpacing.lg),
         const AppDivider(),
       ],
+    );
+  }
+}
+
+/// 선택 모드에서 묶음 줄 오른쪽에 보이는 체크 (곡 줄과 같은 모양).
+class _PickMark extends StatelessWidget {
+  const _PickMark({required this.picked});
+
+  final bool picked;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Icon(
+      picked ? AppIcons.checkCircle : AppIcons.radioOff,
+      color: picked ? p.accent : p.onSurfaceMuted,
     );
   }
 }

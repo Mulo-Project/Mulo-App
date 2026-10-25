@@ -4,6 +4,8 @@ import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/design/design.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
+import 'package:music_download_play_app/features/library/domain/entities/track_info.dart';
+import 'package:music_download_play_app/features/playlists/domain/entities/playlist.dart';
 
 import '../../helpers/fakes.dart';
 
@@ -165,5 +167,68 @@ void main() {
     await tester.tap(find.text('바꾸기'));
     await tester.pumpAndSettle();
     expect(find.text('3곡 선택'), findsNothing);
+  });
+
+  testWidgets('아티스트 탭에서 묶음을 길게 눌러 고르면 그 아티스트의 모든 곡이 고른 곡이 된다', (tester) async {
+    await setUpTestDependencies(
+      tracks: [
+        _t('t1', '첫 곡'),
+        _t('t2', '둘째 곡'),
+        _t('t3', '셋째 곡').withInfo(
+          const TrackInfo(title: '셋째 곡', artist: '다른 가수', album: '앨범'),
+        ),
+      ],
+    );
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    tester.platformDispatcher.localesTestValue = const [Locale('ko')];
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+    await tester.pumpWidget(const MusicApp(initialLocation: Routes.library));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('아티스트'));
+    await tester.pumpAndSettle();
+
+    await tester.longPress(find.text('가수'));
+    await tester.pumpAndSettle();
+    expect(find.text('2곡 선택'), findsOneWidget);
+    // 선택 모드에서는 묶음 줄을 눌러도 화면으로 가지 않고 푼다.
+    await tester.tap(find.text('다른 가수'));
+    await tester.pumpAndSettle();
+    expect(find.text('3곡 선택'), findsOneWidget);
+    await tester.tap(find.text('가수').first);
+    await tester.pumpAndSettle();
+    expect(find.text('1곡 선택'), findsOneWidget);
+  });
+
+  testWidgets('재생목록 상세에서도 곡을 골라 한꺼번에 빼거나 정보를 바꾼다', (tester) async {
+    final tracks = [_t('t1', '첫 곡'), _t('t2', '둘째 곡'), _t('t3', '셋째 곡')];
+    final playlists = MemoryPlaylistRepository(const [
+      Playlist(id: 'pl1', name: '출근길'),
+    ], tracks);
+    await playlists.addTrack('t1', ['pl1']);
+    await playlists.addTrack('t2', ['pl1']);
+    await setUpTestDependencies(tracks: tracks, playlists: playlists);
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    tester.platformDispatcher.localesTestValue = const [Locale('ko')];
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+    await tester.pumpWidget(
+      MusicApp(initialLocation: Routes.playlistDetail('pl1')),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.longPress(find.text('첫 곡').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('둘째 곡').last);
+    await tester.pumpAndSettle();
+    expect(find.text('2곡 선택'), findsOneWidget);
+    await tester.tap(find.text('작업'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('재생목록에서 빼기'));
+    await tester.pumpAndSettle();
+    expect(playlists.members['pl1'], isEmpty);
+    expect(find.text('2곡 선택'), findsNothing);
   });
 }

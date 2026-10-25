@@ -7,12 +7,20 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../domain/entities/track.dart';
 import '../../domain/entities/track_group.dart';
+import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import 'track_list_tile.dart' show TrackSelection;
 import '../bloc/library_cubit.dart';
 import 'rename_progress.dart';
 
 /// 선택 모드에서 고를 수 있는 일괄 작업.
-enum SelectionAction { selectAll, addToPlaylist, album, artist, genre }
+enum SelectionAction {
+  selectAll,
+  addToPlaylist,
+  removeFromPlaylist,
+  album,
+  artist,
+  genre,
+}
 
 /// 보관함 선택 모드 하단 막대: 닫기 · 선택 수 · "작업" 버튼.
 /// "작업"을 누르면 [showSelectionActionSheet]로 복수 작업 목록을 띄운다.
@@ -74,6 +82,7 @@ Future<SelectionAction?> showSelectionActionSheet(
   BuildContext context,
   int count, {
   required bool allPicked,
+  bool inPlaylist = false,
 }) {
   final l10n = context.l10n;
   return showAppSheet<SelectionAction>(
@@ -100,6 +109,12 @@ Future<SelectionAction?> showSelectionActionSheet(
                 label: l10n.trackMenuAddToPlaylist,
                 onTap: () => pick(SelectionAction.addToPlaylist),
               ),
+              if (inPlaylist)
+                MenuRow(
+                  icon: AppIcons.playlistRemove,
+                  label: l10n.trackMenuRemoveFromPlaylist,
+                  onTap: () => pick(SelectionAction.removeFromPlaylist),
+                ),
               MenuRow(
                 icon: AppIcons.album,
                 label: l10n.selectAssignAlbum,
@@ -311,6 +326,23 @@ mixin TrackPicker<T extends StatefulWidget> on State<T> {
     );
   }
 
+  /// 재생목록 안의 곡 목록이면 그 재생목록 id (작업 시트에 "재생목록에서 빼기"가 더해진다).
+  String? get pickerPlaylistId => null;
+
+  /// 묶음(아티스트 · 앨범 · 장르 줄) 하나의 곡을 모두 고르거나, 이미 모두 골랐으면 모두 푼다.
+  void toggleGroup(List<Track> tracks) => setState(() {
+    final ids = tracks.map((t) => t.id);
+    if (ids.every(picked.contains)) {
+      picked.removeAll(ids);
+    } else {
+      picked.addAll(ids);
+    }
+  });
+
+  /// 묶음의 곡이 모두 골라져 있는가.
+  bool groupPicked(List<Track> tracks) =>
+      tracks.every((t) => picked.contains(t.id));
+
   /// 목록 맨 아래에 비워 둘 높이 (선택 막대에 마지막 곡이 가리지 않게).
   /// 값 입력창에 처음 채워 둘 값: 고른 곡들의 [kind] 값이 모두 같으면 그 값, 다르면 빈 칸.
   String initialAssignValue(List<Track> all, TrackGroupKind kind) {
@@ -330,6 +362,7 @@ mixin TrackPicker<T extends StatefulWidget> on State<T> {
       context,
       ids.length,
       allPicked: allPicked(shown),
+      inPlaylist: pickerPlaylistId != null,
     );
     if (action == null || !mounted) return;
     switch (action) {
@@ -337,6 +370,12 @@ mixin TrackPicker<T extends StatefulWidget> on State<T> {
         setState(() => picked.addAll(shown.map((t) => t.id)));
       case SelectionAction.addToPlaylist:
         await context.push(Routes.playlistPick, extra: ids);
+      case SelectionAction.removeFromPlaylist:
+        final playlists = context.read<PlaylistsCubit>();
+        for (final id in ids) {
+          await playlists.removeTrack(id, pickerPlaylistId!);
+        }
+        if (mounted) clearPicked();
       case SelectionAction.album ||
           SelectionAction.artist ||
           SelectionAction.genre:
