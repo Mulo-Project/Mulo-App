@@ -19,6 +19,7 @@ import '../features/search/presentation/screens/search_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
 import '../features/equalizer/presentation/screens/equalizer_screen.dart';
 import '../features/subscriptions/presentation/screens/channel_search_screen.dart';
+import '../features/subscriptions/presentation/screens/my_subscriptions_screen.dart';
 import '../features/subscriptions/presentation/screens/subscriptions_screen.dart';
 import 'app_shell.dart';
 
@@ -34,6 +35,7 @@ abstract final class Routes {
   /// 구독 채널 목록 · 채널 검색 (설정 아래, 탭 틀 위로 덮어 연다).
   static const subscriptions = '/settings/subscriptions';
   static const channelSearch = '/settings/channel-search';
+  static const channelImport = '/settings/channel-import';
 
   /// 이퀄라이저 (설정 아래, 탭 틀 위로 덮어 연다).
   static const equalizer = '/settings/equalizer';
@@ -214,6 +216,14 @@ GoRouter createRouter({String initialLocation = Routes.home}) => GoRouter(
               pageBuilder: (context, state) => NoTransitionPage(
                 key: state.pageKey,
                 child: const ChannelSearchScreen(),
+              ),
+            ),
+            GoRoute(
+              path: 'channel-import',
+              parentNavigatorKey: _rootKey,
+              pageBuilder: (context, state) => NoTransitionPage(
+                key: state.pageKey,
+                child: const MySubscriptionsScreen(),
               ),
             ),
           ],

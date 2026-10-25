@@ -2967,4 +2967,65 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get selectNext => 'Next';
+
+  @override
+  String get playlistImportChannels => 'Playlists of subscribed channels';
+
+  @override
+  String get channelPickTitle => 'Pick a channel';
+
+  @override
+  String get channelPickEmpty =>
+      'You have not subscribed to any channel yet. You can import your YouTube subscriptions below.';
+
+  @override
+  String get channelPlaylistsUploads => 'All uploads';
+
+  @override
+  String get channelImportOpen => 'Pick channels from my YouTube subscriptions';
+
+  @override
+  String get channelImportTitle => 'My subscribed channels';
+
+  @override
+  String get channelImportHint =>
+      'Tap channels to pick them. Only the channels you pick are added, nothing is imported all at once.';
+
+  @override
+  String get channelImportAlready => 'Subscribed';
+
+  @override
+  String get channelImportEmptyTitle => 'No subscribed channels';
+
+  @override
+  String get channelImportEmptyBody =>
+      'This Google account has not subscribed to any channel on YouTube.';
+
+  @override
+  String get channelImportSignInBody =>
+      'Sign in with Google to load your YouTube subscriptions.';
+
+  @override
+  String channelImportSelectCount(int count) {
+    return '$count channels selected';
+  }
+
+  @override
+  String get channelImportSelectNew => 'Select all new channels';
+
+  @override
+  String get channelImportSubscribe => 'Subscribe to picked channels';
+
+  @override
+  String get channelImportConfirmTitle => 'Subscribe to channels';
+
+  @override
+  String channelImportConfirmBody(int count) {
+    return 'Subscribe to the $count picked channels? You will be told about videos posted from now on.';
+  }
+
+  @override
+  String channelImportDone(int count) {
+    return 'Subscribed to $count channels';
+  }
 }

@@ -14,5 +14,7 @@ void registerAccount(GetIt sl) {
     ..registerFactory(() => SignInAccount(sl()))
     ..registerFactory(() => SignOutAccount(sl()))
     ..registerFactory(() => FetchMyPlaylists(sl()))
+    ..registerFactory(() => FetchMySubscriptions(sl()))
+    ..registerFactory(() => FetchChannelPlaylists(sl()))
     ..registerFactory(() => AccountCubit(sl(), sl(), sl(), sl()));
 }

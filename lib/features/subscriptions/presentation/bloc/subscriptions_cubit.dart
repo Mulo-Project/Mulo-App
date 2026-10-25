@@ -126,6 +126,29 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
     return SubscribeResult.added;
   }
 
+  /// 고른 채널들을 한 번에 구독한다 (저장 · 백그라운드 반영은 한 번). 이미 구독 중이거나 만들 수 없는 채널은 건너뛰고,
+  /// 새로 구독한 수를 돌려준다.
+  Future<int> subscribeAll(List<SubscribeParams> all) async {
+    await load();
+    final added = <SubscribedChannel>[];
+    for (final params in all) {
+      final id = params.channelId;
+      if (id != null &&
+          (state.isSubscribedId(id) || added.any((c) => c.id == id))) {
+        continue;
+      }
+      final channel = await _create(params);
+      if (channel == null ||
+          state.isSubscribedId(channel.id) ||
+          added.any((c) => c.id == channel.id)) {
+        continue;
+      }
+      added.add(channel);
+    }
+    if (added.isNotEmpty) await _setChannels([...state.channels, ...added]);
+    return added.length;
+  }
+
   Future<void> unsubscribeByUrl(String channelUrl) => _setChannels([
     for (final c in state.channels)
       if (!(c.url == channelUrl || channelUrl.contains(c.id))) c,

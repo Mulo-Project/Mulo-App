@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/core/di/injector.dart';
 import 'package:music_download_play_app/features/downloads/domain/repositories/download_queue_repository.dart';
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
+import 'package:music_download_play_app/features/subscriptions/domain/entities/channel_hit.dart';
 import 'package:music_download_play_app/features/subscriptions/data/datasources/youtube_feed_client.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/entities/feed_video.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/entities/subscribed_channel.dart';
@@ -193,6 +194,24 @@ void main() {
       );
       await cubit.unsubscribeByUrl(params.channelUrl);
       expect(cubit.state.channels, isEmpty);
+    });
+
+    test('고른 채널들을 한 번에 구독하되 이미 구독한 채널은 더하지 않는다', () async {
+      final cubit = sl<SubscriptionsCubit>();
+      const one = ChannelHit(id: 'UCone', name: '하나');
+      const two = ChannelHit(id: 'UCtwo', name: '둘');
+      await cubit.subscribe(SubscribeParams.fromHit(one));
+      final added = await cubit.subscribeAll([
+        SubscribeParams.fromHit(one),
+        SubscribeParams.fromHit(two),
+        SubscribeParams.fromHit(two),
+      ]);
+      expect(added, 1);
+      expect(cubit.state.channels.map((c) => c.id), ['UCone', 'UCtwo']);
+      expect(
+        (sl<BackgroundChecker>() as FakeBackgroundChecker).lastChannels,
+        hasLength(2),
+      );
     });
 
     test('채널 id를 알 수 없는 주소는 구독에 실패한다', () async {
