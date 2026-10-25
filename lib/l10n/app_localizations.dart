@@ -731,8 +731,20 @@ abstract class AppLocalizations {
   /// No description provided for @loadedFoldersScanning.
   ///
   /// In ko, this message translates to:
-  /// **'보관함을 다시 찾는 중이에요'**
+  /// **'폴더에서 곡을 찾는 중이에요'**
   String get loadedFoldersScanning;
+
+  /// No description provided for @loadedFoldersReading.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 정보를 읽는 중이에요'**
+  String get loadedFoldersReading;
+
+  /// No description provided for @loadedFoldersCovers.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 이미지를 가져오는 중이에요'**
+  String get loadedFoldersCovers;
 
   /// No description provided for @settingsQuality.
   ///

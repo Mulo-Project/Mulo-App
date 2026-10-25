@@ -5,6 +5,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../domain/entities/loaded_folder.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
+import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../bloc/loaded_folders_cubit.dart';
 
 /// 음악을 불러오는 폴더 목록: 확인 · 추가 · 삭제 (바텀 시트).
@@ -13,8 +14,15 @@ Future<void> showLoadedFoldersSheet(BuildContext context) {
   return showAppSheet<void>(
     context,
     isScrollControlled: true,
-    builder: (_) =>
-        BlocProvider.value(value: cubit, child: const LoadedFoldersSheet()),
+    builder: (_) => BlocProvider.value(
+      value: cubit,
+      // 내장 커버는 DB에 직접 저장되므로 커버가 새로 붙으면 메모리의 커버 목록을 다시 읽는다.
+      child: BlocListener<LoadedFoldersCubit, LoadedFoldersState>(
+        listenWhen: (a, b) => a.coversSeq != b.coversSeq,
+        listener: (context, _) => context.read<CoverCubit>().load(),
+        child: const LoadedFoldersSheet(),
+      ),
+    ),
   );
 }
 
@@ -58,10 +66,10 @@ class LoadedFoldersSheet extends StatelessWidget {
             children: [
               AppSheetTitle(
                 l10n.settingsLoadedFolders,
-                subtitle: state.busy
-                    ? l10n.loadedFoldersScanning
-                    : l10n.loadedFoldersHint,
+                subtitle: state.busy ? null : l10n.loadedFoldersHint,
               ),
+              // 폴더를 바꾼 뒤 곡을 찾고 · 정보를 읽고 · 이미지를 가져오는 동안의 진행.
+              if (state.busy) _Progress(state: state),
               const SizedBox(height: AppSpacing.md),
               Flexible(
                 child: ListView(
@@ -96,6 +104,55 @@ class LoadedFoldersSheet extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// 폴더를 바꾼 뒤 보관함을 채우는 진행: 단계 이름 · 끝낸 수 / 전체, 그 아래 진행 막대.
+class _Progress extends StatelessWidget {
+  const _Progress({required this.state});
+
+  final LoadedFoldersState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final text = Theme.of(context).textTheme;
+    final label = switch (state.stage) {
+      LoadStage.reading => l10n.loadedFoldersReading,
+      LoadStage.covers => l10n.loadedFoldersCovers,
+      _ => l10n.loadedFoldersScanning,
+    };
+    final counted = state.total > 0;
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.sm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: text.bodyMedium?.copyWith(
+                    color: context.palette.onSurfaceMuted,
+                  ),
+                ),
+              ),
+              if (counted)
+                Text(
+                  l10n.renameProgressCount(state.done, state.total),
+                  style: text.bodySmall,
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          ProgressLine(
+            value: counted ? state.done / state.total : 0,
+            height: 6,
+          ),
+        ],
       ),
     );
   }

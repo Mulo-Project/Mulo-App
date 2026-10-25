@@ -151,6 +151,36 @@ void main() {
     expect(seen.last, unorderedEquals(['in', 'out', 'nofolder']));
   });
 
+  test('폴더를 더하면 새 곡의 내장 이미지도 가져오고 진행을 알린다', () async {
+    final folders = MemoryLoadedFolders()..picked = '/music/new';
+    final library = FakeLibraryRepository();
+    final covers = MemoryCoverRepository();
+    final device = FakeDeviceMusic(ScanFound([_t('n', '/music/new')]));
+    final cubit = LoadedFoldersCubit(
+      LoadLoadedFolders(folders, library),
+      AddLoadedFolder(folders),
+      RemoveLoadedFolder(folders, library),
+      ImportDeviceMusic(device, library, folders),
+      null,
+      FillEmbeddedCovers(
+        library,
+        covers,
+        FakeEmbeddedCovers({'/music/new/n.mp3': '/tmp/n.png'}),
+      ),
+    );
+    addTearDown(cubit.close);
+    final stages = <LoadStage>[];
+    final sub = cubit.stream.listen((s) => stages.add(s.stage));
+    addTearDown(sub.cancel);
+
+    await cubit.load();
+    await cubit.add();
+    expect(stages, containsAllInOrder([LoadStage.scanning, LoadStage.covers]));
+    expect(covers.saved.keys, ['track:n']);
+    expect(cubit.state.stage, LoadStage.none);
+    expect(cubit.state.coversSeq, 1);
+  });
+
   test('목록이 바뀌면 보관함을 다시 스캔하고 곡 수를 새로 센다', () async {
     final folders = MemoryLoadedFolders()..picked = '/music/new';
     final library = FakeLibraryRepository();

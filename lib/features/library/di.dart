@@ -69,7 +69,9 @@ void registerLibrary(GetIt sl) {
     ..registerFactory(() => LoadLoadedFolders(sl(), sl()))
     ..registerFactory(() => AddLoadedFolder(sl()))
     ..registerFactory(() => RemoveLoadedFolder(sl(), sl()))
-    ..registerFactory(() => LoadedFoldersCubit(sl(), sl(), sl(), sl()))
+    ..registerFactory(
+      () => LoadedFoldersCubit(sl(), sl(), sl(), sl(), sl(), sl()),
+    )
     ..registerFactory(() => LoadSaveLocations(sl()))
     ..registerFactory(() => AddSaveLocation(sl()))
     ..registerFactory(() => RemoveSaveLocation(sl()))

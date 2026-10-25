@@ -100,14 +100,23 @@ class FillEmbeddedCovers implements UseCase<int, NoParams> {
   final EmbeddedCoverRepository _embedded;
 
   @override
-  Future<int> call(NoParams _) async {
+  Future<int> call(NoParams _) => run();
+
+  /// [onProgress]로 (끝낸 곡 수, 채울 곡 수)를 알리며 채운다.
+  Future<int> run({void Function(int done, int total)? onProgress}) async {
     final tracks = await _library.watchTracks().first;
     final have = await _covers.loadAll();
+    final todo = [
+      for (final t in tracks)
+        if (t.source == TrackSource.device &&
+            t.uri.isNotEmpty &&
+            !have.containsKey(CoverKey.track(t.id)))
+          t,
+    ];
     var filled = 0;
-    for (final t in tracks) {
-      if (t.source != TrackSource.device || t.uri.isEmpty) continue;
+    onProgress?.call(0, todo.length);
+    for (final (i, t) in todo.indexed) {
       final key = CoverKey.track(t.id);
-      if (have.containsKey(key)) continue;
       String? temp;
       try {
         temp = await _embedded.extract(t);
@@ -118,6 +127,7 @@ class FillEmbeddedCovers implements UseCase<int, NoParams> {
         continue;
       } finally {
         if (temp != null) await _embedded.discard(temp);
+        onProgress?.call(i + 1, todo.length);
       }
     }
     return filled;
@@ -248,15 +258,24 @@ class RestoreFromFileTags implements UseCase<int, NoParams> {
   final TagRestoreStore _done;
 
   @override
-  Future<int> call(NoParams _) async {
+  Future<int> call(NoParams _) => run();
+
+  /// [onProgress]로 (끝낸 곡 수, 읽을 곡 수)를 알리며 되살린다.
+  Future<int> run({void Function(int done, int total)? onProgress}) async {
     final tracks = await _library.watchTracks().first;
     final done = await _done.loadDone();
     final covers = await _covers.loadAll();
     final colors = await _colors.loadAll();
+    final todo = [
+      for (final t in tracks)
+        if (t.source == TrackSource.device &&
+            t.uri.isNotEmpty &&
+            !done.contains(t.id))
+          t,
+    ];
     var restored = 0;
-    for (final t in tracks) {
-      if (t.source != TrackSource.device || t.uri.isEmpty) continue;
-      if (done.contains(t.id)) continue;
+    onProgress?.call(0, todo.length);
+    for (final (i, t) in todo.indexed) {
       try {
         final tags = await _tags.read(t);
         if (tags == null) continue;
@@ -268,6 +287,7 @@ class RestoreFromFileTags implements UseCase<int, NoParams> {
       } on Exception {
         // 한 곡이 실패해도 나머지는 계속한다 (기록하지 않아 다음에 다시 시도).
       }
+      onProgress?.call(i + 1, todo.length);
     }
     return restored;
   }

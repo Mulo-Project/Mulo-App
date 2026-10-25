@@ -341,7 +341,13 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get loadedFoldersScanning => '보관함을 다시 찾는 중이에요';
+  String get loadedFoldersScanning => '폴더에서 곡을 찾는 중이에요';
+
+  @override
+  String get loadedFoldersReading => '곡 정보를 읽는 중이에요';
+
+  @override
+  String get loadedFoldersCovers => '곡 이미지를 가져오는 중이에요';
 
   @override
   String get settingsQuality => '기본 음질';
