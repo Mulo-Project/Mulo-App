@@ -60,7 +60,7 @@ void registerLibrary(GetIt sl) {
     ..registerLazySingleton<LoadedFolderRepository>(
       PrefsLoadedFolderRepository.new,
     )
-    ..registerFactory(() => WatchLibraryTracks(sl()))
+    ..registerFactory(() => WatchLibraryTracks(sl(), sl()))
     ..registerFactory(() => UpdateTrackInfo(sl(), sl()))
     ..registerFactory(() => EmbedTagsIntoFiles(sl(), sl(), sl(), sl(), sl()))
     ..registerFactory(() => RestoreFromFileTags(sl(), sl(), sl(), sl(), sl()))

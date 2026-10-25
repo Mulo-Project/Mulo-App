@@ -1,22 +1,67 @@
+import 'dart:async';
+
 import '../../../../core/usecase/usecase.dart';
 import '../../../covers/domain/entities/cover_art.dart';
 import '../../../covers/domain/entities/cover_key.dart';
 import '../../../covers/domain/repositories/cover_repository.dart';
 import '../entities/file_tags.dart';
 import '../entities/import_result.dart';
+import '../entities/loaded_folder.dart';
 import '../entities/track.dart';
 import '../entities/track_info.dart';
 import '../repositories/library_repository.dart';
 import '../repositories/track_tag_repository.dart';
 
-/// 보관함 곡 목록 (추가일 최신순, DB가 바뀌면 다시 흘려보냄).
+/// 보관함 곡 목록 (추가일 최신순, DB나 불러오는 폴더가 바뀌면 다시 흘려보냄).
+/// 불러오는 폴더 밖에 저장된 곡(받을 때 저장 위치를 따로 정한 경우)은 보관함에 보이지 않는다.
 class WatchLibraryTracks implements StreamUseCase<List<Track>, NoParams> {
-  const WatchLibraryTracks(this._repo);
+  const WatchLibraryTracks(this._repo, this._folders);
 
   final LibraryRepository _repo;
+  final LoadedFolderRepository _folders;
 
   @override
-  Stream<List<Track>> call(NoParams _) => _repo.watchTracks();
+  Stream<List<Track>> call(NoParams _) {
+    late StreamController<List<Track>> out;
+    final subs = <StreamSubscription<Object?>>[];
+    List<Track>? latest;
+    List<String>? roots;
+
+    void emit() {
+      final tracks = latest;
+      final r = roots;
+      if (tracks == null || r == null || out.isClosed) return;
+      out.add([
+        for (final t in tracks)
+          if (isVisibleInLibrary(t, r)) t,
+      ]);
+    }
+
+    Future<void> reloadRoots() async {
+      roots = [_folders.defaultFolder, ...await _folders.loadExtra()];
+      emit();
+    }
+
+    out = StreamController<List<Track>>(
+      onListen: () {
+        reloadRoots();
+        subs
+          ..add(
+            _repo.watchTracks().listen((t) {
+              latest = t;
+              emit();
+            }, onError: out.addError),
+          )
+          ..add(_folders.watchChanges().listen((_) => reloadRoots()));
+      },
+      onCancel: () async {
+        for (final s in subs) {
+          await s.cancel();
+        }
+      },
+    );
+    return out.stream;
+  }
 }
 
 /// 불러오는 폴더 안의 음악을 찾아 보관함에 넣는다 (#11). 이미 있는 곡은 건너뛴다.

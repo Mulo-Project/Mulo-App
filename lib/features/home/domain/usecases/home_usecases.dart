@@ -2,7 +2,7 @@ import 'dart:async';
 
 import '../../../../core/usecase/usecase.dart';
 import '../../../library/domain/entities/track.dart';
-import '../../../library/domain/repositories/library_repository.dart';
+import '../../../library/domain/usecases/library_usecases.dart';
 import '../entities/home_summary.dart';
 import '../repositories/join_date_repository.dart';
 import '../repositories/play_history_repository.dart';
@@ -46,7 +46,7 @@ class WatchHomeSummary
     implements StreamUseCase<HomeSummary, HomeSummaryParams> {
   const WatchHomeSummary(this._library, this._history);
 
-  final LibraryRepository _library;
+  final WatchLibraryTracks _library;
   final PlayHistoryRepository _history;
 
   @override
@@ -71,7 +71,7 @@ class WatchHomeSummary
       onListen: () {
         subs
           ..add(
-            _library.watchTracks().listen((t) {
+            _library(const NoParams()).listen((t) {
               tracks = t;
               emit();
             }, onError: out.addError),

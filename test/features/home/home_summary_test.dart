@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:music_download_play_app/features/library/domain/usecases/library_usecases.dart';
 import 'package:music_download_play_app/features/home/domain/entities/home_summary.dart';
 import 'package:music_download_play_app/features/home/domain/usecases/home_usecases.dart';
 import 'package:music_download_play_app/features/home/presentation/bloc/home_bloc.dart';
@@ -154,7 +155,10 @@ void main() {
   test('HomeBloc: 요약과 가입일을 읽는다', () async {
     final bloc = HomeBloc(
       WatchHomeSummary(
-        FakeLibraryRepository(tracks),
+        WatchLibraryTracks(
+          FakeLibraryRepository(tracks),
+          MemoryLoadedFolders(),
+        ),
         MemoryPlayHistory([_p('a', DateTime.now())]),
       ),
       GetJoinDate(MemoryJoinDate(DateTime(2026, 7, 15))),

@@ -130,6 +130,27 @@ void main() {
     ]);
   });
 
+  test('보관함: 불러오는 폴더 밖에 저장된 곡은 보이지 않고, 폴더를 더하면 나타난다', () async {
+    final folders = MemoryLoadedFolders();
+    final library = FakeLibraryRepository([
+      _t('in', '/music/default'),
+      _t('out', '/elsewhere/dl'),
+      _t('nofolder', ''),
+    ]);
+    final watch = WatchLibraryTracks(library, folders);
+    final seen = <List<String>>[];
+    final sub = watch(const NoParams())
+        .listen((l) => seen.add([for (final t in l) t.id]));
+    addTearDown(sub.cancel);
+    await pumpEventQueue();
+    expect(seen.last, unorderedEquals(['in', 'nofolder']));
+
+    // 그 폴더를 불러오는 폴더로 더하면 보관함에 나타난다.
+    await folders.saveExtra(['/elsewhere/dl']);
+    await pumpEventQueue();
+    expect(seen.last, unorderedEquals(['in', 'out', 'nofolder']));
+  });
+
   test('목록이 바뀌면 보관함을 다시 스캔하고 곡 수를 새로 센다', () async {
     final folders = MemoryLoadedFolders()..picked = '/music/new';
     final library = FakeLibraryRepository();

@@ -159,6 +159,11 @@ class MemoryLoadedFolders implements LoadedFolderRepository {
   String? picked;
   List<String> extra;
 
+  final _changes = StreamController<void>.broadcast();
+
+  @override
+  Stream<void> watchChanges() => _changes.stream;
+
   /// 저장 위치 목록 (null이면 아직 따로 저장한 적 없음).
   List<String>? saveLocations;
 
@@ -169,7 +174,10 @@ class MemoryLoadedFolders implements LoadedFolderRepository {
   Future<List<String>> loadExtra() async => [...extra];
 
   @override
-  Future<void> saveExtra(List<String> folders) async => extra = [...folders];
+  Future<void> saveExtra(List<String> folders) async {
+    extra = [...folders];
+    _changes.add(null);
+  }
 
   @override
   Future<List<String>?> loadSaveLocations() async =>

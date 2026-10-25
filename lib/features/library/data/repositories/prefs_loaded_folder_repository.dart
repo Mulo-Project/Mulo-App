@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -9,6 +11,11 @@ class PrefsLoadedFolderRepository implements LoadedFolderRepository {
   static const _key = 'library.loadedFolders';
   static const _saveKey = 'library.saveLocations';
 
+  final _changes = StreamController<void>.broadcast();
+
+  @override
+  Stream<void> watchChanges() => _changes.stream;
+
   @override
   String get defaultFolder => defaultMusicFolder();
 
@@ -17,8 +24,10 @@ class PrefsLoadedFolderRepository implements LoadedFolderRepository {
       (await SharedPreferences.getInstance()).getStringList(_key) ?? const [];
 
   @override
-  Future<void> saveExtra(List<String> folders) async =>
-      (await SharedPreferences.getInstance()).setStringList(_key, folders);
+  Future<void> saveExtra(List<String> folders) async {
+    await (await SharedPreferences.getInstance()).setStringList(_key, folders);
+    _changes.add(null);
+  }
 
   @override
   Future<List<String>?> loadSaveLocations() async =>
