@@ -1,5 +1,6 @@
 package com.mulo.app
 
+import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Outline
 import android.graphics.PixelFormat
@@ -365,6 +366,17 @@ object LyricsOverlay {
             addView(body, FrameLayout.LayoutParams(-1, -2))
             addView(note, FrameLayout.LayoutParams(px(48), px(48)))
         }
+        // 글이 길어져 창이 커지면(줄바꿈 · 메뉴 · 늘림) 화면 아래로 넘쳐 가려지지 않게 그때그때 위로 올린다.
+        root.addOnLayoutChangeListener { v, _, top, _, bottom, _, oldTop, _, oldBottom ->
+            if (bottom - top == oldBottom - oldTop) return@addOnLayoutChangeListener
+            val lp = layout ?: return@addOnLayoutChangeListener
+            if (!attached || minimized) return@addOnLayoutChangeListener
+            val limit = (context.resources.displayMetrics.heightPixels - (bottom - top)).coerceAtLeast(0)
+            if (lp.y > limit) {
+                lp.y = limit
+                (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager).updateViewLayout(v, lp)
+            }
+        }
         column = body
         chip = note
         current = now
@@ -664,6 +676,31 @@ object LyricsOverlay {
         shownKey = null
     }
 
+    /** 칩을 놓으면 가까운 쪽 가장자리(왼쪽 · 오른쪽)로 짧게 미끄러져 붙는다. 움직이는 동안에만 프레임을 그리고 끝나면 아무것도 돌지 않는다. */
+    private fun snapChipToEdge(wm: WindowManager, v: View, lp: WindowManager.LayoutParams) {
+        val screen = context.resources.displayMetrics.widthPixels
+        val target = if (lp.x + v.width / 2 < screen / 2) 0 else (screen - v.width).coerceAtLeast(0)
+        if (target == lp.x) {
+            chipX = target
+            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putInt(KEY_CHIP_X, chipX).apply()
+            return
+        }
+        ValueAnimator.ofInt(lp.x, target).apply {
+            duration = 160
+            addUpdateListener {
+                lp.x = it.animatedValue as Int
+                if (attached) wm.updateViewLayout(v, lp)
+            }
+            addListener(object : android.animation.AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: android.animation.Animator) {
+                    chipX = target
+                    context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putInt(KEY_CHIP_X, chipX).apply()
+                }
+            })
+            start()
+        }
+    }
+
     /**
      * 가사 창은 끌면 위아래로, 칩은 어디로든 옮기고(놓은 자리를 기억),
      * 꾹 누르면 숨기기 · 끄기를 보인다. 거의 안 움직이고 놓으면 탭으로 보고, 칩이면 펼친다.
@@ -709,9 +746,9 @@ object LyricsOverlay {
                     val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
                     if (moved && !longPressed) {
                         if (minimized) {
-                            chipX = lp.x
                             chipY = lp.y
-                            prefs.putInt(KEY_CHIP_X, chipX).putInt(KEY_CHIP_Y, chipY)
+                            prefs.putInt(KEY_CHIP_Y, chipY)
+                            snapChipToEdge(wm, v, lp)
                         } else {
                             windowY = lp.y
                             prefs.putInt(KEY_Y, windowY)
