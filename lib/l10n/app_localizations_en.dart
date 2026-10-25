@@ -2900,4 +2900,57 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get downloadAgainConfirm => 'Download again';
+
+  @override
+  String selectCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get selectClose => 'Done selecting';
+
+  @override
+  String get selectAssignAlbum => 'Set album';
+
+  @override
+  String get selectAssignArtist => 'Set artist';
+
+  @override
+  String get selectAssignGenre => 'Set genre';
+
+  @override
+  String get selectAssignHint =>
+      'Enter one value to set on all the selected songs. Leave it empty for \"Unknown …\".';
+
+  @override
+  String get selectAssignAlbumTitle => 'Set album';
+
+  @override
+  String get selectAssignArtistTitle => 'Set artist';
+
+  @override
+  String get selectAssignGenreTitle => 'Set genre';
+
+  @override
+  String selectConfirmAlbum(int count, String value) {
+    return 'The album of the $count selected songs will become \"$value\". They leave their other album groups, and the tags in the music files are rewritten.';
+  }
+
+  @override
+  String selectConfirmArtist(int count, String value) {
+    return 'The artist of the $count selected songs will become \"$value\". They leave their other artist groups, and the tags in the music files are rewritten.';
+  }
+
+  @override
+  String selectConfirmGenre(int count, String value) {
+    return 'The genre of the $count selected songs will become \"$value\". They leave their other genre groups, and the tags in the music files are rewritten.';
+  }
+
+  @override
+  String get selectConfirmApply => 'Apply';
+
+  @override
+  String selectAssignPartial(int count) {
+    return '$count songs could not be written to their music files and were left unchanged.';
+  }
 }

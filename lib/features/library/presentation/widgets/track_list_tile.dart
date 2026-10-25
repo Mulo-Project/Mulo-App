@@ -19,6 +19,25 @@ String albumOf(AppLocalizations l10n, Track t) =>
 String genreOf(AppLocalizations l10n, String genre) =>
     genre.isEmpty ? l10n.unknownGenre : genre;
 
+/// 여러 곡 선택 상태 (보관함 곡 탭). 선택 모드가 아니면 길게 누르기로 모드에 들어가고,
+/// 선택 모드에서는 누르면 고르거나 풀며 오른쪽에 체크가 보인다. 팝업 메뉴는 ⋮로만 연다.
+class TrackSelection {
+  const TrackSelection({
+    required this.active,
+    required this.selected,
+    required this.onToggle,
+  });
+
+  /// 선택 모드인가.
+  final bool active;
+
+  /// 이 곡이 골라져 있는가.
+  final bool selected;
+
+  /// 고르거나 푼다 (선택 모드가 아니면 모드에 들어가며 이 곡을 고른다).
+  final VoidCallback onToggle;
+}
+
 /// 곡 목록의 한 줄 (보관함 · 재생목록 상세 · 앨범에서 같이 쓴다).
 /// 누르면 [queue]를 [index]부터 재생하고, ⋮ · 길게 누르기는 곡 메뉴를 연다.
 /// [playlistId]가 있으면 재생목록 안의 곡이라서 곡 메뉴의 삭제가 "빼기" · "파일 삭제"로 나뉜다.
@@ -31,6 +50,7 @@ class TrackListTile extends StatelessWidget {
     this.playlistId,
     this.showAlbum = true,
     this.showNumber = false,
+    this.selection,
   });
 
   final Track track;
@@ -44,6 +64,9 @@ class TrackListTile extends StatelessWidget {
   /// 커버 앞에 목록 속 순번을 보여 줄지 (재생목록 상세).
   final bool showNumber;
 
+  /// 있으면 여러 곡 선택을 지원한다 ([TrackSelection]).
+  final TrackSelection? selection;
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -53,6 +76,8 @@ class TrackListTile extends StatelessWidget {
       (NowPlayingCubit c) => c.state.track?.id == track.id,
     );
     final t = track;
+    final sel = selection;
+    final picking = sel != null && sel.active;
     return TrackTile(
       title: t.title,
       subtitle: showAlbum
@@ -63,23 +88,37 @@ class TrackListTile extends StatelessWidget {
       active: isCurrent,
       number: showNumber ? index + 1 : null,
       artwork: coverImageOf(context, CoverKey.track(t.id)),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            formatDuration(t.duration),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          TrackMoreButton(track: t, playlistId: playlistId),
-        ],
-      ),
-      onTap: () => vm.playQueue(queue, index: index),
-      onMenu: (pos) => showTrackMenu(
-        context,
-        t,
-        globalPosition: pos,
-        playlistId: playlistId,
-      ),
+      trailing: picking
+          ? Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+              child: Icon(
+                sel.selected ? AppIcons.checkCircle : AppIcons.radioOff,
+                color: sel.selected
+                    ? context.palette.accent
+                    : context.palette.onSurfaceMuted,
+              ),
+            )
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  formatDuration(t.duration),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                TrackMoreButton(track: t, playlistId: playlistId),
+              ],
+            ),
+      onTap: picking ? sel.onToggle : () => vm.playQueue(queue, index: index),
+      // 선택을 지원하는 목록에서는 길게 누르기가 선택 모드 진입이고, 메뉴는 ⋮로만 연다.
+      onLongPress: sel?.onToggle,
+      onMenu: sel != null
+          ? null
+          : (pos) => showTrackMenu(
+              context,
+              t,
+              globalPosition: pos,
+              playlistId: playlistId,
+            ),
     );
   }
 }

@@ -2823,4 +2823,57 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get downloadAgainConfirm => '다시 받기';
+
+  @override
+  String selectCount(int count) {
+    return '$count곡 선택';
+  }
+
+  @override
+  String get selectClose => '선택 끝내기';
+
+  @override
+  String get selectAssignAlbum => '앨범 지정';
+
+  @override
+  String get selectAssignArtist => '아티스트 지정';
+
+  @override
+  String get selectAssignGenre => '장르 지정';
+
+  @override
+  String get selectAssignHint =>
+      '고른 곡들에 한 번에 지정할 값을 적어요. 비워 두면 \"알 수 없는 …\"이 돼요.';
+
+  @override
+  String get selectAssignAlbumTitle => '앨범을 지정해요';
+
+  @override
+  String get selectAssignArtistTitle => '아티스트를 지정해요';
+
+  @override
+  String get selectAssignGenreTitle => '장르를 지정해요';
+
+  @override
+  String selectConfirmAlbum(int count, String value) {
+    return '고른 $count곡의 앨범이 \"$value\"(으)로 바뀌어요. 다른 앨범 묶음에서는 빠지고, 음악 파일의 태그도 다시 써요.';
+  }
+
+  @override
+  String selectConfirmArtist(int count, String value) {
+    return '고른 $count곡의 아티스트가 \"$value\"(으)로 바뀌어요. 다른 아티스트 묶음에서는 빠지고, 음악 파일의 태그도 다시 써요.';
+  }
+
+  @override
+  String selectConfirmGenre(int count, String value) {
+    return '고른 $count곡의 장르가 \"$value\"(으)로 바뀌어요. 다른 장르 묶음에서는 빠지고, 음악 파일의 태그도 다시 써요.';
+  }
+
+  @override
+  String get selectConfirmApply => '바꾸기';
+
+  @override
+  String selectAssignPartial(int count) {
+    return '$count곡은 음악 파일에 정보를 쓰지 못해 바꾸지 않았어요.';
+  }
 }

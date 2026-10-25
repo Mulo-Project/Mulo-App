@@ -13,6 +13,7 @@ import '../../domain/entities/library_sort.dart';
 import '../../domain/entities/track.dart';
 import '../bloc/library_cubit.dart';
 import '../bloc/library_import_cubit.dart';
+import '../widgets/library_selection.dart';
 import '../widgets/track_list_tile.dart';
 
 enum LibraryTab { songs, artists, albums, genres }
@@ -35,6 +36,21 @@ class _LibraryScreenState extends State<LibraryScreen> {
   /// 탭마다 고른 방향(true 오름차순). 비어 있으면 그 기준의 기본 방향 ([defaultAscending]).
   final _ascending = <LibraryTab, bool>{};
   String _query = '';
+
+  /// 곡 탭에서 길게 눌러 고른 곡 id. 비어 있지 않으면 선택 모드.
+  final _picked = <String>{};
+
+  void _toggle(String id) => setState(() {
+    _picked.contains(id) ? _picked.remove(id) : _picked.add(id);
+  });
+
+  void _clearPicked() => setState(_picked.clear);
+
+  /// 고른 곡 id (목록에서 사라진 곡은 뺀다).
+  List<String> _pickedIds(List<Track> all) => [
+    for (final t in all)
+      if (_picked.contains(t.id)) t.id,
+  ];
 
   static const _songSorts = [
     LibrarySort.name,
@@ -94,6 +110,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final importing = context.select((LibraryImportCubit c) => c.state.running);
     final tracks = _filtered(all, l10n);
     final vm = context.read<NowPlayingCubit>();
+    final selecting = _picked.isNotEmpty;
 
     // 모든 탭은 보이는 줄만 만든다 (곡 · 앨범 · 아티스트가 수천 개여도 탭 전환이 느려지지 않게).
     // 그룹 탭은 줄을 만드는 함수만 모아 두고, 아래 SliverList.builder가 필요할 때 부른다.
@@ -190,20 +207,46 @@ class _LibraryScreenState extends State<LibraryScreen> {
           slivers: [
             SliverList(
               delegate: SliverChildListDelegate([
-                AppTopBar(
-                  large: true,
-                  title: l10n.navLibrary,
-                  subtitle: l10n.librarySubtitle,
-                  actions: [
-                    CircleIconButton(
-                      icon: importing
-                          ? AppIcons.hourglassTop
-                          : AppIcons.folderUpload,
-                      tooltip: l10n.libraryImport,
-                      onPressed: importing ? null : _import,
+                if (selecting)
+                  LibrarySelectionBar(
+                    count: _picked.length,
+                    allPicked: tracks.every((t) => _picked.contains(t.id)),
+                    onClose: _clearPicked,
+                    onToggleAll: () => setState(() {
+                      if (tracks.every((t) => _picked.contains(t.id))) {
+                        _picked.removeAll(tracks.map((t) => t.id));
+                      } else {
+                        _picked.addAll(tracks.map((t) => t.id));
+                      }
+                    }),
+                    onAddToPlaylist: () => context.push(
+                      Routes.playlistPick,
+                      extra: _pickedIds(all),
                     ),
-                  ],
-                ),
+                    onAssign: (kind) async {
+                      final done = await assignToSelection(
+                        context,
+                        kind: kind,
+                        ids: _pickedIds(all).toSet(),
+                      );
+                      if (done && mounted) _clearPicked();
+                    },
+                  )
+                else
+                  AppTopBar(
+                    large: true,
+                    title: l10n.navLibrary,
+                    subtitle: l10n.librarySubtitle,
+                    actions: [
+                      CircleIconButton(
+                        icon: importing
+                            ? AppIcons.hourglassTop
+                            : AppIcons.folderUpload,
+                        tooltip: l10n.libraryImport,
+                        onPressed: importing ? null : _import,
+                      ),
+                    ],
+                  ),
                 if (all.isNotEmpty) ...[
                   Padding(
                     padding: AppSpacing.screen,
@@ -229,7 +272,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
                         LibraryTab.albums => l10n.libraryAlbums,
                         LibraryTab.genres => l10n.libraryGenres,
                       },
-                      onChanged: (t) => setState(() => _tab = t),
+                      onChanged: (t) => setState(() {
+                        _tab = t;
+                        _picked.clear();
+                      }),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
@@ -318,7 +364,17 @@ class _LibraryScreenState extends State<LibraryScreen> {
   }
 
   Widget _songTile(BuildContext context, Track t, int i, List<Track> queue) =>
-      TrackListTile(key: ValueKey(t.id), track: t, queue: queue, index: i);
+      TrackListTile(
+        key: ValueKey(t.id),
+        track: t,
+        queue: queue,
+        index: i,
+        selection: TrackSelection(
+          active: _picked.isNotEmpty,
+          selected: _picked.contains(t.id),
+          onToggle: () => _toggle(t.id),
+        ),
+      );
 
   void _import() => context.read<LibraryImportCubit>().importDeviceMusic();
 

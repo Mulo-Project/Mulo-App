@@ -21,6 +21,7 @@ class TrackTile extends StatefulWidget {
     this.number,
     this.onTap,
     this.onMenu,
+    this.onLongPress,
     this.horizontalPadding = AppSpacing.md,
   });
 
@@ -50,6 +51,9 @@ class TrackTile extends StatefulWidget {
   /// 눌린 화면 좌표를 넘기므로 팝업 메뉴를 그 자리에 띄울 수 있다.
   final ValueChanged<Offset>? onMenu;
 
+  /// 길게 누르기만 따로 받을 때 (여러 곡 선택 모드 진입). 있으면 길게 누르기는 [onMenu] 대신 이것을 부른다.
+  final VoidCallback? onLongPress;
+
   /// 줄 좌우 안쪽 여백. 바깥에 이미 여백 · 강조 면이 있으면 줄인다 (대기열).
   final double horizontalPadding;
 
@@ -71,7 +75,9 @@ class _TrackTileState extends State<TrackTile> {
       onPointerDown: (e) => _lastPointer = e.position,
       child: InkWell(
         onTap: w.onTap,
-        onLongPress: onMenu == null ? null : () => onMenu(_lastPointer),
+        onLongPress:
+            w.onLongPress ??
+            (onMenu == null ? null : () => onMenu(_lastPointer)),
         onSecondaryTap: onMenu == null ? null : () => onMenu(_lastPointer),
         borderRadius: BorderRadius.circular(AppRadii.sm),
         child: Padding(

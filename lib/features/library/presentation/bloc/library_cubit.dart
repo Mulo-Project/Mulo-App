@@ -67,7 +67,34 @@ class LibraryCubit extends Cubit<LibraryState> {
   }) async {
     final name = to.trim();
     if (name == from) return (changed: 0, failed: 0);
-    final tracks = state.tracks.where((t) => kind.contains(t, from)).toList();
+    return _renameAll(
+      state.tracks.where((t) => kind.contains(t, from)).toList(),
+      kind,
+      name,
+      onProgress,
+    );
+  }
+
+  /// 고른 곡들([ids])의 [kind] 정보(아티스트 · 앨범 · 장르)를 모두 [to]로 지정한다. 제목은 건드리지 않는다.
+  /// 곡마다 순서대로 (파일 태그 → 기록) 고치고, 한 곡이 끝날 때마다 [onProgress]로 (끝낸 수, 전체 수)를 알린다.
+  Future<({int changed, int failed})> assignGroup(
+    Set<String> ids,
+    TrackGroupKind kind,
+    String to, {
+    void Function(int done, int total)? onProgress,
+  }) => _renameAll(
+    state.tracks.where((t) => ids.contains(t.id)).toList(),
+    kind,
+    to.trim(),
+    onProgress,
+  );
+
+  Future<({int changed, int failed})> _renameAll(
+    List<Track> tracks,
+    TrackGroupKind kind,
+    String name,
+    void Function(int done, int total)? onProgress,
+  ) async {
     var changed = 0;
     var failed = 0;
     onProgress?.call(0, tracks.length);
