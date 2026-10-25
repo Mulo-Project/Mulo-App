@@ -107,3 +107,4 @@
 - 공용 컴포넌트 `OutlinedPanel`(윤곽선 있는 옅은 면)을 만들어 받기 창에서 같은 모양을 직접 만들던 4곳을 바꿨다. 같은 모양이 남아 있는 다른 화면(구독 · 설정 일부)은 모양이 조금씩 달라 그대로 두었다.
 - 받기 창에서 가사 구역(자막 가져오기 · 언어 표 · 가사 설정 · 덮어쓰기 확인)을 `DownloadLyricsSection`(`download_lyrics_section.dart`)으로 나눴다. `download_dialog.dart`는 약 900 → 560줄. 고른 값은 구역의 상태가 들고 있고(`importLyrics` · `custom` · `language` · `skipSounds` · `lyricsText`), 받기를 누를 때 부모가 `GlobalKey`로 읽는다. 동작은 바꾸지 않았다.
 - 성능: 반응 시간 보정 페이지가 재생 위치가 바뀔 때마다 페이지 전체를 다시 그리던 것을 재생 중인지만 지켜보게 했다.
+- 설정 화면(636줄, `build` 하나가 380줄)을 묶음별 위젯으로 나눴다: 다운로드 · 보안 · 알림 · 재생 · 테마 · 정보 · 계정 · 서버/엔진(`features/settings/presentation/widgets/settings_*_section.dart`). 화면은 87줄이고, 묶음마다 자기가 쓰는 값만 지켜보므로 한 설정이 바뀌어도 그 묶음만 다시 그려진다(전에는 화면 전체). 외부에서 쓰던 `DownloadMode` · `presetLabel`은 `settings_screen.dart`가 그대로 내보낸다. 동작은 바꾸지 않았다.
