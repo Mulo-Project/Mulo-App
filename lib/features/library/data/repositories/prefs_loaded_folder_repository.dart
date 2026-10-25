@@ -7,6 +7,7 @@ import '../../domain/repositories/library_repository.dart';
 /// 불러오는 폴더를 shared_preferences에 저장한다. 기본 저장 위치는 저장하지 않고 항상 더한다.
 class PrefsLoadedFolderRepository implements LoadedFolderRepository {
   static const _key = 'library.loadedFolders';
+  static const _saveKey = 'library.saveLocations';
 
   @override
   String get defaultFolder => defaultMusicFolder();
@@ -18,6 +19,14 @@ class PrefsLoadedFolderRepository implements LoadedFolderRepository {
   @override
   Future<void> saveExtra(List<String> folders) async =>
       (await SharedPreferences.getInstance()).setStringList(_key, folders);
+
+  @override
+  Future<List<String>?> loadSaveLocations() async =>
+      (await SharedPreferences.getInstance()).getStringList(_saveKey);
+
+  @override
+  Future<void> saveSaveLocations(List<String> folders) async =>
+      (await SharedPreferences.getInstance()).setStringList(_saveKey, folders);
 
   @override
   Future<String?> pickFolder() => FilePicker.getDirectoryPath();

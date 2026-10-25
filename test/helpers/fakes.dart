@@ -159,6 +159,9 @@ class MemoryLoadedFolders implements LoadedFolderRepository {
   String? picked;
   List<String> extra;
 
+  /// 저장 위치 목록 (null이면 아직 따로 저장한 적 없음).
+  List<String>? saveLocations;
+
   @override
   String get defaultFolder => '/music/default';
 
@@ -167,6 +170,14 @@ class MemoryLoadedFolders implements LoadedFolderRepository {
 
   @override
   Future<void> saveExtra(List<String> folders) async => extra = [...folders];
+
+  @override
+  Future<List<String>?> loadSaveLocations() async =>
+      saveLocations == null ? null : [...saveLocations!];
+
+  @override
+  Future<void> saveSaveLocations(List<String> folders) async =>
+      saveLocations = [...folders];
 
   @override
   Future<String?> pickFolder() async => picked;

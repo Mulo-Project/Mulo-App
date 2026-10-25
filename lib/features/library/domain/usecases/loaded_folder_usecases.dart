@@ -44,7 +44,71 @@ class AddLoadedFolder implements UseCase<AddFolderResult, NoParams> {
     final known = [_folders.defaultFolder, ...extra].map(normalizeFolderPath);
     if (known.contains(path)) return AddFolderResult.duplicate;
     await _folders.saveExtra([...extra, path]);
+    // 불러오는 폴더를 더하면 저장 위치 목록에도 더한다 (그 뒤로는 서로 따로 움직인다).
+    await _addSaveLocation(_folders, path);
     return AddFolderResult.added;
+  }
+}
+
+/// 저장 위치 목록 (기본 저장 위치 제외). 따로 저장한 적이 없으면 불러오는 폴더를 처음 목록으로 쓴다.
+Future<List<String>> _storedSaveLocations(
+  LoadedFolderRepository folders,
+) async => (await folders.loadSaveLocations()) ?? await folders.loadExtra();
+
+Future<void> _addSaveLocation(
+  LoadedFolderRepository folders,
+  String path,
+) async {
+  final target = normalizeFolderPath(path);
+  if (target.isEmpty || target == normalizeFolderPath(folders.defaultFolder)) {
+    return;
+  }
+  final list = await _storedSaveLocations(folders);
+  if (list.any((p) => normalizeFolderPath(p) == target)) {
+    await folders.saveSaveLocations(list);
+    return;
+  }
+  await folders.saveSaveLocations([...list, target]);
+}
+
+/// 저장 위치 목록: 기본 저장 위치가 맨 위. 불러오는 폴더와는 따로 관리된다.
+class LoadSaveLocations implements UseCase<List<String>, NoParams> {
+  const LoadSaveLocations(this._folders);
+
+  final LoadedFolderRepository _folders;
+
+  @override
+  Future<List<String>> call(NoParams _) async => [
+    _folders.defaultFolder,
+    ...await _storedSaveLocations(_folders),
+  ];
+}
+
+/// 저장 위치를 목록에 더한다 (이미 있거나 기본 저장 위치면 그대로).
+class AddSaveLocation implements UseCase<void, String> {
+  const AddSaveLocation(this._folders);
+
+  final LoadedFolderRepository _folders;
+
+  @override
+  Future<void> call(String path) => _addSaveLocation(_folders, path);
+}
+
+/// 저장 위치를 목록에서 뺀다. 불러오는 폴더 목록과 보관함의 곡은 그대로다. 기본 저장 위치는 뺄 수 없다.
+class RemoveSaveLocation implements UseCase<void, String> {
+  const RemoveSaveLocation(this._folders);
+
+  final LoadedFolderRepository _folders;
+
+  @override
+  Future<void> call(String path) async {
+    final target = normalizeFolderPath(path);
+    if (target == normalizeFolderPath(_folders.defaultFolder)) return;
+    final list = await _storedSaveLocations(_folders);
+    await _folders.saveSaveLocations([
+      for (final p in list)
+        if (normalizeFolderPath(p) != target) p,
+    ]);
   }
 }
 

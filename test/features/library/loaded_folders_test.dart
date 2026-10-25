@@ -100,6 +100,36 @@ void main() {
     expect(left, unorderedEquals(['keep', 'd1']));
   });
 
+  test('저장 위치: 불러오는 폴더를 더하면 따라 더해지고, 그 뒤로는 서로 따로 움직인다', () async {
+    final folders = MemoryLoadedFolders()..picked = '/music/new';
+    final library = FakeLibraryRepository([_t('n', '/music/new')]);
+    await AddLoadedFolder(folders)(const NoParams());
+    final load = LoadSaveLocations(folders);
+    expect(await load(const NoParams()), ['/music/default', '/music/new']);
+
+    // 저장 위치에서 빼도 불러오는 폴더와 곡은 그대로.
+    await RemoveSaveLocation(folders)('/music/new');
+    expect(await load(const NoParams()), ['/music/default']);
+    expect(folders.extra, ['/music/new']);
+    expect((await library.watchTracks().first).length, 1);
+
+    // 불러오는 폴더를 빼도 저장 위치는 그대로.
+    await AddSaveLocation(folders)('/music/other/');
+    await RemoveLoadedFolder(folders, library)('/music/new');
+    expect(await load(const NoParams()), ['/music/default', '/music/other']);
+    // 기본 저장 위치는 뺄 수 없다.
+    await RemoveSaveLocation(folders)('/music/default');
+    expect((await load(const NoParams())).first, '/music/default');
+  });
+
+  test('저장 위치: 따로 저장한 적이 없으면 불러오는 폴더로 시작한다', () async {
+    final folders = MemoryLoadedFolders(extra: ['/music/a']);
+    expect(await LoadSaveLocations(folders)(const NoParams()), [
+      '/music/default',
+      '/music/a',
+    ]);
+  });
+
   test('목록이 바뀌면 보관함을 다시 스캔하고 곡 수를 새로 센다', () async {
     final folders = MemoryLoadedFolders()..picked = '/music/new';
     final library = FakeLibraryRepository();

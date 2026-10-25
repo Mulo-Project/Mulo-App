@@ -5,13 +5,12 @@ import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../library/domain/entities/loaded_folder.dart';
-import '../../../library/presentation/bloc/loaded_folders_cubit.dart';
-import '../../../player/presentation/bloc/now_playing_cubit.dart';
-import '../../../library/presentation/widgets/loaded_folders_sheet.dart';
+import '../../../library/presentation/bloc/save_locations_cubit.dart';
 
-/// 저장 위치 고르기 바텀 시트: 불러오는 폴더 목록에서 고르거나, "직접 선택"으로 폴더 선택기를 연다.
+/// 저장 위치 고르기 바텀 시트: 저장 위치 목록에서 고르거나, "직접 선택"으로 폴더 선택기를 연다.
+/// 목록은 불러오는 폴더와 따로 관리된다 (불러오는 폴더를 더하면 여기에도 더해지지만, 한쪽을 빼도 다른 쪽은 그대로).
 /// [current]는 지금 정해진 위치(목록에 없어도 맨 위에 보인다). 고른 폴더를 돌려주고, 닫으면 null.
-/// [pickOther]는 폴더 선택기 (취소하면 null).
+/// 직접 고른 폴더는 목록에 더한다. [pickOther]는 폴더 선택기 (취소하면 null).
 Future<String?> showSaveFolderSheet(
   BuildContext context, {
   required String current,
@@ -20,7 +19,7 @@ Future<String?> showSaveFolderSheet(
   context,
   isScrollControlled: true,
   builder: (_) => BlocProvider(
-    create: (_) => sl<LoadedFoldersCubit>()..load(),
+    create: (_) => sl<SaveLocationsCubit>()..load(),
     child: _SaveFolderSheet(current: current, pickOther: pickOther),
   ),
 );
@@ -34,23 +33,16 @@ class _SaveFolderSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final cubit = context.watch<LoadedFoldersCubit>();
-    final player = context.read<NowPlayingCubit>();
-    final folders = cubit.state.folders;
-    final cur = current.trim();
-    // 지금 위치가 목록에 없으면(직접 고른 폴더) 맨 위에 따로 보인다.
-    final listed = folders.any(
-      (f) => normalizeFolderPath(f.path) == normalizeFolderPath(cur),
-    );
-    final paths = [
-      if (cur.isNotEmpty && !listed) cur,
-      for (final f in folders) f.path,
-    ];
-    final listedPaths = {for (final f in folders) normalizeFolderPath(f.path)};
-    final defaults = {
-      for (final f in folders)
-        if (f.isDefault) normalizeFolderPath(f.path),
-    };
+    final cubit = context.read<SaveLocationsCubit>();
+    final locations = context.watch<SaveLocationsCubit>().state;
+    final cur = normalizeFolderPath(current);
+    // 지금 위치가 목록에 없으면(예전에 뺀 폴더 등) 맨 위에 따로 보인다.
+    final listed = locations.any((p) => normalizeFolderPath(p) == cur);
+    final paths = [if (cur.isNotEmpty && !listed) current.trim(), ...locations];
+    // 목록의 첫 항목이 기본 저장 위치다.
+    final defaultPath = locations.isEmpty
+        ? ''
+        : normalizeFolderPath(locations.first);
 
     return SafeArea(
       child: ConstrainedBox(
@@ -74,41 +66,22 @@ class _SaveFolderSheet extends StatelessWidget {
                           for (final path in paths)
                             _FolderOption(
                               path: path,
-                              isDefault: defaults.contains(
-                                normalizeFolderPath(path),
-                              ),
-                              selected:
-                                  normalizeFolderPath(path) ==
-                                  normalizeFolderPath(cur),
+                              isDefault:
+                                  normalizeFolderPath(path) == defaultPath,
+                              selected: normalizeFolderPath(path) == cur,
                               onTap: () => Navigator.of(context).pop(path),
                               // 기본 위치 · 지금 위치 · 목록에 없는 위치는 뺄 수 없다.
+                              // 여기서 빼도 불러오는 폴더와 보관함의 곡은 그대로다.
                               onRemove:
-                                  cubit.state.busy ||
-                                      defaults.contains(
-                                        normalizeFolderPath(path),
-                                      ) ||
-                                      normalizeFolderPath(path) ==
-                                          normalizeFolderPath(cur) ||
-                                      !listedPaths.contains(
-                                        normalizeFolderPath(path),
+                                  normalizeFolderPath(path) == defaultPath ||
+                                      normalizeFolderPath(path) == cur ||
+                                      !locations.any(
+                                        (p) =>
+                                            normalizeFolderPath(p) ==
+                                            normalizeFolderPath(path),
                                       )
                                   ? null
-                                  : () async {
-                                      final folder = folders.firstWhere(
-                                        (f) =>
-                                            normalizeFolderPath(f.path) ==
-                                            normalizeFolderPath(path),
-                                      );
-                                      if (await confirmRemoveLoadedFolder(
-                                        context,
-                                        folder,
-                                      )) {
-                                        final removed = await cubit.remove(
-                                          folder.path,
-                                        );
-                                        player.removeFromQueueByIds(removed);
-                                      }
-                                    },
+                                  : () => cubit.remove(path),
                             ),
                         ],
                       ),
@@ -120,7 +93,9 @@ class _SaveFolderSheet extends StatelessWidget {
                 onPressed: () async {
                   final nav = Navigator.of(context);
                   final picked = await pickOther();
-                  if (picked != null) nav.pop(picked);
+                  if (picked == null) return;
+                  await cubit.add(picked);
+                  nav.pop(picked);
                 },
               ),
             ],
