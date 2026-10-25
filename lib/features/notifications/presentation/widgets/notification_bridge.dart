@@ -178,12 +178,16 @@ class _NotificationBridgeState extends State<NotificationBridge>
   /// 받기 알림의 버튼. 미리 듣기: 지금 받는 곡을 받지 않고 바로 듣는다 (받기는 그대로 이어진다).
   /// 이미 듣는 중이면 그대로 둔다. 취소: 지금 받는 곡을 대기열에서 뺀다.
   void _onDownloadAction(DownloadNotificationAction action) {
-    final current = context
+    // 알림이 보이는 곡: 받는 중 → 대기 → (모두 일시정지면) 일시정지된 곡.
+    final active = context
         .read<DownloadQueueCubit>()
         .state
         .items
-        .where((i) => i.isActive && i.status != DownloadStatus.paused)
-        .firstOrNull;
+        .where((i) => i.isActive)
+        .toList();
+    final current =
+        active.where((i) => i.status != DownloadStatus.paused).firstOrNull ??
+        active.firstOrNull;
     if (current == null) return;
     if (action == DownloadNotificationAction.cancel) {
       context.read<DownloadQueueCubit>().cancel(current.id);

@@ -13,15 +13,16 @@ import '../../helpers/fakes.dart';
 /// 받기 알림의 "취소" · "미리 듣기" 버튼이 앱까지 이어지는지 (알림 → 앱의 받기 대기열 · 미리 듣기).
 void main() {
   Future<(MemoryDownloadQueue, FakeDownloadNotifier)> boot(
-    WidgetTester tester,
-  ) async {
+    WidgetTester tester, [
+    DownloadStatus status = DownloadStatus.downloading,
+  ]) async {
     final queue = MemoryDownloadQueue([
-      const DownloadItem(
+      DownloadItem(
         id: 'd1',
         title: '받는 곡',
         artist: '가수',
         url: 'https://youtu.be/abc',
-        status: DownloadStatus.downloading,
+        status: status,
         progress: .3,
       ),
     ]);
@@ -61,5 +62,23 @@ void main() {
     notifier.press(DownloadNotificationAction.stopPreview);
     await tester.pump(const Duration(milliseconds: 100));
     expect(preview.state.isActive('d1'), isFalse);
+  });
+
+  testWidgets('받기가 일시정지 중이어도 알림의 취소 버튼이 동작한다', (tester) async {
+    final (queue, notifier) = await boot(tester, DownloadStatus.paused);
+    notifier.press(DownloadNotificationAction.cancel);
+    await tester.pumpAndSettle();
+    expect(queue.controls, contains('cancel:d1'));
+  });
+
+  testWidgets('받기가 일시정지 중이어도 알림의 미리 듣기 버튼이 동작한다', (tester) async {
+    final (_, notifier) = await boot(tester, DownloadStatus.paused);
+    final preview = BlocProvider.of<PreviewCubit>(
+      tester.element(find.byType(Scaffold).first),
+    );
+    notifier.press(DownloadNotificationAction.preview);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(preview.state.isActive('d1'), isTrue);
   });
 }
