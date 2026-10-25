@@ -350,16 +350,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
                 bottom: AppSpacing.sm + MediaQuery.paddingOf(context).bottom,
                 child: LibrarySelectionBottomBar(
                   count: _picked.length,
-                  allPicked: _allPicked(tracks),
                   onClose: _clearPicked,
-                  onToggleAll: () => setState(() {
-                    if (_allPicked(tracks)) {
-                      _picked.removeAll(tracks.map((t) => t.id));
-                    } else {
-                      _picked.addAll(tracks.map((t) => t.id));
-                    }
-                  }),
-                  onActions: () => _runActions(all),
+                  onActions: () => _runActions(all, tracks),
                 ),
               ),
           ],
@@ -372,11 +364,17 @@ class _LibraryScreenState extends State<LibraryScreen> {
       tracks.isNotEmpty && tracks.every((t) => _picked.contains(t.id));
 
   /// 복수 작업 시트를 띄우고 고른 작업을 한다.
-  Future<void> _runActions(List<Track> all) async {
+  Future<void> _runActions(List<Track> all, List<Track> shown) async {
     final ids = _pickedIds(all);
-    final action = await showSelectionActionSheet(context, ids.length);
+    final action = await showSelectionActionSheet(
+      context,
+      ids.length,
+      allPicked: _allPicked(shown),
+    );
     if (action == null || !mounted) return;
     switch (action) {
+      case SelectionAction.selectAll:
+        setState(() => _picked.addAll(shown.map((t) => t.id)));
       case SelectionAction.addToPlaylist:
         await context.push(Routes.playlistPick, extra: ids);
       case SelectionAction.album ||

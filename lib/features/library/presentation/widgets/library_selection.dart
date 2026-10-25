@@ -8,24 +8,20 @@ import '../bloc/library_cubit.dart';
 import 'rename_progress.dart';
 
 /// 선택 모드에서 고를 수 있는 일괄 작업.
-enum SelectionAction { addToPlaylist, album, artist, genre }
+enum SelectionAction { selectAll, addToPlaylist, album, artist, genre }
 
-/// 보관함 선택 모드 하단 막대: 닫기 · 선택 수 · 모두 선택 / 해제 · "작업" 버튼.
+/// 보관함 선택 모드 하단 막대: 닫기 · 선택 수 · "작업" 버튼.
 /// "작업"을 누르면 [showSelectionActionSheet]로 복수 작업 목록을 띄운다.
 class LibrarySelectionBottomBar extends StatelessWidget {
   const LibrarySelectionBottomBar({
     super.key,
     required this.count,
-    required this.allPicked,
     required this.onClose,
-    required this.onToggleAll,
     required this.onActions,
   });
 
   final int count;
-  final bool allPicked;
   final VoidCallback onClose;
-  final VoidCallback onToggleAll;
   final VoidCallback onActions;
 
   @override
@@ -55,13 +51,6 @@ class LibrarySelectionBottomBar extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            CircleIconButton(
-              icon: allPicked ? AppIcons.radioOff : AppIcons.checkCircle,
-              tooltip: allPicked
-                  ? l10n.newVideosSelectNone
-                  : l10n.newVideosSelectAll,
-              onPressed: onToggleAll,
-            ),
             const SizedBox(width: AppSpacing.xs),
             PillButton(
               label: l10n.selectActions,
@@ -79,8 +68,9 @@ class LibrarySelectionBottomBar extends StatelessWidget {
 /// 고른 곡에 할 일 목록 바텀 시트. 항목을 누르면 시트를 닫고 그 작업을 돌려준다.
 Future<SelectionAction?> showSelectionActionSheet(
   BuildContext context,
-  int count,
-) {
+  int count, {
+  required bool allPicked,
+}) {
   final l10n = context.l10n;
   return showAppSheet<SelectionAction>(
     context,
@@ -95,6 +85,12 @@ Future<SelectionAction?> showSelectionActionSheet(
             children: [
               AppSheetTitle(l10n.selectCount(count)),
               const SizedBox(height: AppSpacing.xs),
+              if (!allPicked)
+                MenuRow(
+                  icon: AppIcons.checkCircle,
+                  label: l10n.newVideosSelectAll,
+                  onTap: () => pick(SelectionAction.selectAll),
+                ),
               MenuRow(
                 icon: AppIcons.playlistAdd,
                 label: l10n.trackMenuAddToPlaylist,

@@ -50,7 +50,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('2곡 선택'), findsOneWidget);
 
-    await tester.tap(find.byTooltip('모두 선택'));
+    // 모두 선택은 "작업" 시트 안에 있다.
+    await tester.tap(find.text('작업'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('모두 선택'));
     await tester.pumpAndSettle();
     expect(find.text('3곡 선택'), findsOneWidget);
 

@@ -8,7 +8,7 @@
 
 ## 한 일
 - 보관함 곡 탭: 곡 줄 길게 누르기 → 선택 모드 (D-123). 팝업 메뉴는 줄의 ⋮로만 연다.
-- 선택 모드 하단 막대(`LibrarySelectionBottomBar`): 선택 수, 닫기, 모두 선택 · 해제, "작업" 버튼. 누르면 바텀 시트(`showSelectionActionSheet`)에 재생목록에 추가 · 앨범 · 아티스트 · 장르 지정이 나온다.
+- 선택 모드 하단 막대(`LibrarySelectionBottomBar`): 선택 수, 닫기, "작업" 버튼. 누르면 바텀 시트(`showSelectionActionSheet`)에 모두 선택, 재생목록에 추가 · 앨범 · 아티스트 · 장르 지정이 나온다.
 - 일괄 지정(`assignToSelection`): 값 입력 → "고른 N곡의 앨범이 A(으)로 바뀌어요" 확인 → 곡마다 태그 먼저 쓰고 DB (D-120, `LibraryCubit.assignGroup`).
 - `TrackTile`에 `onLongPress`, `TrackListTile`에 `selection`(`TrackSelection`)을 더해 다른 목록은 그대로 두었다.
 - ARB 문구(ko · en) 추가, `track_menu_test`의 길게 누르기 · 오른쪽 클릭 확인을 보관함 규칙에 맞게 고침.
