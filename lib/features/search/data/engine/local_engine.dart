@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -18,21 +19,27 @@ typedef RunProcess =
       List<String> args,
     );
 
+/// yt-dlp 한 번이 이 시간 안에 안 끝나면 멈춘 것으로 보고 프로세스를 끊는다 (검색 · 정보 읽기가 무한정 돌지 않게).
+const ytDlpTimeout = Duration(seconds: 60);
+
 Future<({int exitCode, String stdout, String stderr})> _defaultRun(
   String executable,
   List<String> args,
 ) async {
-  final r = await Process.run(
-    executable,
-    args,
-    stdoutEncoding: utf8,
-    stderrEncoding: utf8,
-  );
-  return (
-    exitCode: r.exitCode,
-    stdout: r.stdout as String,
-    stderr: r.stderr as String,
-  );
+  final process = await Process.start(executable, args);
+  final out = process.stdout
+      .transform(const Utf8Decoder(allowMalformed: true))
+      .join();
+  final err = process.stderr
+      .transform(const Utf8Decoder(allowMalformed: true))
+      .join();
+  try {
+    final code = await process.exitCode.timeout(ytDlpTimeout);
+    return (exitCode: code, stdout: await out, stderr: await err);
+  } on TimeoutException {
+    process.kill();
+    rethrow;
+  }
 }
 
 /// 로컬 모드: 이 기기에서 yt-dlp를 직접 실행해 찾는다 (데스크톱).
@@ -381,6 +388,8 @@ class LocalEngine implements DownloaderEngine {
       r = await _run(await _resolve(), args);
     } on ProcessException {
       throw const EngineException(EngineFailure.unavailable, 'yt-dlp');
+    } on TimeoutException {
+      throw const EngineException(EngineFailure.network, 'timeout');
     }
     if (r.exitCode != 0) {
       final err = r.stderr.trim();

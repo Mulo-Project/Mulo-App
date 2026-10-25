@@ -67,7 +67,12 @@ class YoutubeExplodeEngine implements DownloaderEngine {
     } on EngineException catch (e) {
       if (e.failure == EngineFailure.network) rethrow;
       try {
-        return await _playlistSearch(query, page, size);
+        // 이 라이브러리는 응답이 없으면 끝없이 기다리므로 시간을 둔다.
+        return await _playlistSearch(
+          query,
+          page,
+          size,
+        ).timeout(const Duration(seconds: 30));
       } on Object {
         throw e;
       }

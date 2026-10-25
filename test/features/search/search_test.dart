@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -421,6 +422,22 @@ void main() {
         newest: true,
       );
       expect(args!.last, 'scsearch1:노래'); // 날짜 순 검색이 없는 사이트는 그대로
+    });
+
+    test('yt-dlp가 시간 안에 끝나지 않으면 연결 실패로 알린다', () async {
+      final engine = LocalEngine(
+        run: (_, _) => throw TimeoutException('yt-dlp'),
+      );
+      await expectLater(
+        engine.search('노래'),
+        throwsA(
+          isA<EngineException>().having(
+            (e) => e.failure,
+            'failure',
+            EngineFailure.network,
+          ),
+        ),
+      );
     });
 
     test('재생목록 정보를 읽는다', () async {
