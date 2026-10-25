@@ -139,6 +139,7 @@ class _NewVideosLauncherState extends State<NewVideosLauncher> {
 /// 흐림 없는 단색 면이라 스크롤하는 화면 위에 떠 있어도 가볍다. 없으면 아무것도 그리지 않는다.
 class NewVideosBanner extends StatelessWidget {
   const NewVideosBanner({
+    super.key,
     required this.count,
     required this.onOpen,
     required this.onClose,
@@ -153,68 +154,66 @@ class NewVideosBanner extends StatelessWidget {
     final l10n = context.l10n;
     final p = context.palette;
     final top = MediaQuery.paddingOf(context).top;
-    final shown = count != null;
-    return IgnorePointer(
-      ignoring: !shown,
-      child: AnimatedSlide(
-        offset: shown ? Offset.zero : const Offset(0, -1.2),
-        duration: AppMotion.medium,
-        curve: AppMotion.standard,
-        child: AnimatedOpacity(
-          opacity: shown ? 1 : 0,
-          duration: AppMotion.fast,
+    // 없으면 아무것도 두지 않는다 (다른 화면의 아이콘 · 글자와 겹쳐 찾히지 않게). 나타날 때만 위에서 내려온다.
+    if (count == null) return const SizedBox.shrink();
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: -1.2, end: 0),
+      duration: AppMotion.medium,
+      curve: AppMotion.standard,
+      builder: (context, dy, child) => Opacity(
+        opacity: (1 + dy / 1.2).clamp(0.0, 1.0),
+        child: FractionalTranslation(translation: Offset(0, dy), child: child),
+      ),
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          top + AppSpacing.xs,
+          AppSpacing.md,
+          0,
+        ),
+        child: Material(
+          color: p.surfaceHigh,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadii.sm),
+            side: BorderSide(color: p.accent.withValues(alpha: .5)),
+          ),
           child: Padding(
-            padding: EdgeInsets.fromLTRB(
-              AppSpacing.md,
-              top + AppSpacing.xs,
-              AppSpacing.md,
-              0,
+            padding: const EdgeInsets.only(
+              left: AppSpacing.md,
+              top: AppSpacing.xxs,
+              bottom: AppSpacing.xxs,
+              right: AppSpacing.xxs,
             ),
-            child: Material(
-              color: p.surfaceHigh,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadii.sm),
-                side: BorderSide(color: p.accent.withValues(alpha: .5)),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.only(
-                  left: AppSpacing.md,
-                  top: AppSpacing.xxs,
-                  bottom: AppSpacing.xxs,
-                  right: AppSpacing.xxs,
+            child: Row(
+              children: [
+                Icon(AppIcons.download, size: AppSizes.iconMd, color: p.accent),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    l10n.newVideosAnnounce(count!),
+                    style: Theme.of(context).textTheme.bodyMedium,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    Icon(
-                      AppIcons.download,
-                      size: AppSizes.iconMd,
-                      color: p.accent,
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: Text(
-                        l10n.newVideosAnnounce(count ?? 0),
-                        style: Theme.of(context).textTheme.bodyMedium,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    PlainButton(
-                      key: const ValueKey('new-videos-banner-open'),
-                      label: l10n.newVideosOpen,
-                      accent: true,
-                      onPressed: onOpen,
-                    ),
-                    PlainButton(
-                      key: const ValueKey('new-videos-banner-close'),
-                      icon: AppIcons.close,
-                      tooltip: l10n.actionClear,
-                      onPressed: onClose,
-                    ),
-                  ],
+                PlainButton(
+                  key: const ValueKey('new-videos-banner-open'),
+                  label: l10n.newVideosOpen,
+                  accent: true,
+                  onPressed: onOpen,
                 ),
-              ),
+                // 이 줄은 화면 틀(Navigator) 위에 있어 Overlay가 없으므로 툴팁은 쓰지 않는다.
+                Semantics(
+                  button: true,
+                  label: l10n.actionClear,
+                  child: PlainButton(
+                    key: const ValueKey('new-videos-banner-close'),
+                    icon: AppIcons.close,
+                    onPressed: onClose,
+                  ),
+                ),
+              ],
             ),
           ),
         ),

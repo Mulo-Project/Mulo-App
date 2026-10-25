@@ -42,21 +42,10 @@ void main() {
     expect(closed, 1);
   });
 
-  testWidgets('새 영상이 없으면 안내 줄은 눌리지도 않는다 (화면 밖에 숨는다)', (tester) async {
+  testWidgets('새 영상이 없으면 안내 줄은 아무것도 그리지 않는다', (tester) async {
     await tester.pumpWidget(_host(count: null));
     await tester.pumpAndSettle();
-    expect(
-      tester
-          .widget<IgnorePointer>(
-            find
-                .ancestor(
-                  of: find.byType(AnimatedSlide),
-                  matching: find.byType(IgnorePointer),
-                )
-                .first,
-          )
-          .ignoring,
-      isTrue,
-    );
+    expect(find.byKey(const ValueKey('new-videos-banner-open')), findsNothing);
+    expect(find.byIcon(AppIcons.download), findsNothing);
   });
 }
