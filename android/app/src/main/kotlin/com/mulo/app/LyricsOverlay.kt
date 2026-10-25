@@ -30,7 +30,8 @@ import android.widget.TextView
  * 멈춤 · 가사 보기가 앱에 떠 있음 · 다른 곡 · 가사 없음이면 타이머를 걸지 않고 창을 뗀다.
  *
  * 창을 꾹 누르면 아래에 [숨기기] [끄기]가 나온다 (몇 초 뒤 저절로 사라진다). 끌면 위아래로 옮긴다.
- * 창 맨 아래 손잡이를 아래로 당기면 다음 줄이 더 많이(최대 [MAX_LINES]줄) 보인다 (고른 줄 수는 기억한다).
+ * 창 맨 아래 손잡이를 아래로 당기면 창이 화면의 [MAX_FRACTION]까지 늘어나, 현재 줄은 가운데에 두고
+ * 위에는 지나간 줄, 아래에는 곧 나올 줄이 더 많이 보인다 (고른 높이는 기억한다).
  * 숨기기를 누르면 가사 창이 앱 아이콘 칩으로 줄어든다 (가사 갱신도 멈춘다). 칩은 화면 어디로든 끌어 옮길 수 있고,
  * 탭하면 다시 펼쳐진다.
  */
@@ -39,11 +40,17 @@ object LyricsOverlay {
     private const val KEY_Y = "y"
     private const val KEY_CHIP_X = "chipX"
     private const val KEY_CHIP_Y = "chipY"
-    private const val KEY_LINES = "lines"
+    private const val KEY_EXPAND = "expandPx"
     private const val MENU_MS = 4000L
 
-    /** 다음 줄을 한 번에 보여 줄 수 있는 가장 많은 줄 수 (손잡이를 당겨 늘린다). */
-    private const val MAX_LINES = 8
+    /** 이보다 낮게 당기면 늘리지 않은 모양으로 본다 (dp). */
+    private const val COMPACT_LIMIT_DP = 150f
+
+    /** 늘어난 창의 가장 큰 높이 (화면 높이의 비율). */
+    private const val MAX_FRACTION = 0.8f
+
+    /** 현재 줄 위 · 아래에 미리 만들어 두는 줄 칸 수 (창 높이만큼만 보이고 나머지는 잘린다). */
+    private const val MAX_SIDE = 12
 
     private lateinit var context: Context
     private var initialized = false
@@ -57,11 +64,11 @@ object LyricsOverlay {
     /** 앱 안 플레이어에서 가사를 보고 있는가 (Dart가 알려 준다). 앱이 보일 때만 창을 가린다. */
     private var lyricsViewShown = false
 
-    /** 가사 창의 위 위치 · 칩의 위치(-1이면 오른쪽 끝) · 보여 줄 다음 줄 수. 끌어 옮기거나 당기면 기억한다. */
+    /** 가사 창의 위 위치 · 칩의 위치(-1이면 오른쪽 끝) · 늘린 창의 높이(0이면 늘리지 않음). 끌어 옮기거나 당기면 기억한다. */
     private var windowY = 0
     private var chipX = -1
     private var chipY = 0
-    private var upcomingCount = 1
+    private var expandedPx = 0
 
     /** 숨기기를 눌러 작은 칩으로 줄어든 상태. 칩을 탭하면 펼친다. */
     private var minimized = false
@@ -77,7 +84,15 @@ object LyricsOverlay {
 
     private var view: FrameLayout? = null
     private var current: TextView? = null
-    private var upcoming: TextView? = null
+    private var prevBox: LinearLayout? = null
+    private var nextBox: LinearLayout? = null
+
+    /** 현재 줄에 가까운 줄부터 차례로 (prev는 아래에서 위로, next는 위에서 아래로 놓인다). */
+    private val prevViews = ArrayList<TextView>()
+    private val nextViews = ArrayList<TextView>()
+
+    /** 지금 창에 반영된 모양 (늘림 여부). 바뀔 때만 레이아웃을 다시 정한다. */
+    private var appliedExpanded: Boolean? = null
     private var menu: LinearLayout? = null
     private var hideButton: TextView? = null
     private var offButton: TextView? = null
@@ -103,7 +118,7 @@ object LyricsOverlay {
         windowY = prefs.getInt(KEY_Y, dp(120f).toInt())
         chipX = prefs.getInt(KEY_CHIP_X, -1)
         chipY = prefs.getInt(KEY_CHIP_Y, windowY)
-        upcomingCount = prefs.getInt(KEY_LINES, 1).coerceIn(1, MAX_LINES)
+        expandedPx = prefs.getInt(KEY_EXPAND, 0).coerceAtLeast(0)
     }
 
     fun canDraw(): Boolean = Settings.canDrawOverlays(context)
@@ -115,6 +130,7 @@ object LyricsOverlay {
         texts = newTexts
         hideLabel = hide
         offLabel = off
+        shownKey = null
         if (accent != accentColor) {
             accent = accentColor
             styleAccent()
@@ -164,7 +180,7 @@ object LyricsOverlay {
         val position = exo.currentPosition
         val index = currentIndex(position)
         val text = if (index >= 0) texts[index] else ""
-        if (text.isEmpty()) hideView() else showText(text, upcomingAfter(index))
+        if (text.isEmpty()) hideView() else showLines(index, text)
         if (exo.isPlaying) {
             val nextIndex = index + 1
             if (nextIndex < times.size) {
@@ -175,22 +191,39 @@ object LyricsOverlay {
         }
     }
 
-    /** [index] 다음 줄부터 [upcomingCount]줄을 줄바꿈으로 이어 붙인다 (빈 줄은 건너뛴다). */
-    private fun upcomingAfter(index: Int): String {
-        val out = StringBuilder()
-        var taken = 0
+    /** [index] 앞의 빈 줄 아닌 줄을 가까운 것부터 최대 [max]개. */
+    private fun linesBefore(index: Int, max: Int): List<String> {
+        val out = ArrayList<String>(max)
+        var i = index - 1
+        while (i >= 0 && out.size < max) {
+            if (texts[i].isNotEmpty()) out.add(texts[i])
+            i--
+        }
+        return out
+    }
+
+    /** [index] 뒤의 빈 줄 아닌 줄을 가까운 것부터 최대 [max]개. */
+    private fun linesAfter(index: Int, max: Int): List<String> {
+        val out = ArrayList<String>(max)
         var i = index + 1
-        while (i < texts.size && taken < upcomingCount) {
-            val line = texts[i]
-            if (line.isNotEmpty()) {
-                if (taken > 0) out.append('\n')
-                out.append(line)
-                taken++
-            }
+        while (i < texts.size && out.size < max) {
+            if (texts[i].isNotEmpty()) out.add(texts[i])
             i++
         }
-        return out.toString()
+        return out
     }
+
+    /** 현재 줄에서 멀수록 흐리게. */
+    private fun fadeColor(distance: Int): Int {
+        val alpha = (0xB0 - distance * 0x14).coerceAtLeast(0x30)
+        return (alpha shl 24) or 0x00FFFFFF
+    }
+
+    private fun maxExpandedPx(): Int =
+        (context.resources.displayMetrics.heightPixels * MAX_FRACTION).toInt()
+
+    /** 늘린 창의 실제 높이 (화면이 바뀌었어도 최대를 넘지 않는다). 0이면 늘리지 않은 모양. */
+    private fun expandedHeight(): Int = if (expandedPx <= 0) 0 else minOf(expandedPx, maxExpandedPx())
 
     private fun currentIndex(position: Long): Int {
         var lo = 0
@@ -227,13 +260,35 @@ object LyricsOverlay {
             maxLines = 4
             setLineSpacing(0f, 1.15f)
         }
-        val next = TextView(context).apply {
+        fun sideLine() = TextView(context).apply {
             setTextColor(0x8CFFFFFF.toInt())
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
             gravity = Gravity.CENTER
-            maxLines = upcomingCount * 2
+            maxLines = 2
             ellipsize = android.text.TextUtils.TruncateAt.END
-            setPadding(0, px(8), 0, 0)
+            setPadding(0, px(4), 0, px(4))
+            visibility = View.GONE
+        }
+        // 현재 줄 위: 가까운 줄이 맨 아래에 오도록 아래쪽부터 쌓고, 넘치는 윗부분은 잘린다.
+        val before = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.BOTTOM
+            visibility = View.GONE
+        }
+        // 현재 줄 아래: 가까운 줄이 맨 위에 오도록 위쪽부터 쌓고, 넘치는 아랫부분은 잘린다.
+        val after = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.TOP
+        }
+        prevViews.clear()
+        nextViews.clear()
+        repeat(MAX_SIDE) {
+            val up = sideLine()
+            prevViews.add(up)
+            before.addView(up, 0, LinearLayout.LayoutParams(-1, -2))
+            val down = sideLine()
+            nextViews.add(down)
+            after.addView(down, LinearLayout.LayoutParams(-1, -2))
         }
         // 끌 수 있음을 알리는 작은 손잡이.
         val handle = View(context).apply {
@@ -261,10 +316,11 @@ object LyricsOverlay {
             gravity = Gravity.CENTER_HORIZONTAL
             setPadding(px(20), px(8), px(20), 0)
             addView(handle, LinearLayout.LayoutParams(px(32), px(4)).apply { bottomMargin = px(8) })
+            addView(before, LinearLayout.LayoutParams(-1, -2))
             addView(now, LinearLayout.LayoutParams(-1, -2))
-            addView(next, LinearLayout.LayoutParams(-1, -2))
+            addView(after, LinearLayout.LayoutParams(-1, -2))
             addView(row, LinearLayout.LayoutParams(-2, -2))
-            addView(grip(next), LinearLayout.LayoutParams(-1, px(26)))
+            addView(grip(), LinearLayout.LayoutParams(-1, px(26)))
         }
         // 줄어든 모양: 앱 아이콘을 동그랗게 잘라 보인다.
         val note = ImageView(context).apply {
@@ -289,7 +345,8 @@ object LyricsOverlay {
         column = body
         chip = note
         current = now
-        upcoming = next
+        prevBox = before
+        nextBox = after
         menu = row
         hideButton = hideBtn
         offButton = offBtn
@@ -299,19 +356,19 @@ object LyricsOverlay {
     }
 
     /**
-     * 맨 아래 손잡이: 아래로 당기면 다음 줄이 더 많이(위로 밀면 적게) 보인다.
-     * 줄 수는 당기는 거리에 맞춰 바뀌고, 놓으면 기억한다. 손잡이가 터치를 가져가므로 창은 끌리지 않는다.
+     * 맨 아래 손잡이: 아래로 당기면 창이 늘어나(최대 [MAX_FRACTION]) 지나간 줄과 곧 나올 줄이 더 보인다.
+     * 위로 밀어 [COMPACT_LIMIT_DP]보다 낮아지면 원래 모양으로 돌아간다. 놓으면 높이를 기억하고,
+     * 손잡이가 터치를 가져가므로 창은 끌리지 않는다.
      */
-    private fun grip(next: TextView): View {
+    private fun grip(): View {
         val density = context.resources.displayMetrics.density
-        val step = 26 * density
         val bar = View(context).apply {
             background = GradientDrawable().apply {
                 setColor(0x38FFFFFF)
                 cornerRadius = 2 * density
             }
         }
-        var startLines = 1
+        var startHeight = 0
         var startTouch = 0f
         return FrameLayout(context).apply {
             addView(bar, FrameLayout.LayoutParams((32 * density).toInt(), (4 * density).toInt(), Gravity.CENTER))
@@ -320,21 +377,21 @@ object LyricsOverlay {
                     MotionEvent.ACTION_DOWN -> {
                         v.parent?.requestDisallowInterceptTouchEvent(true)
                         main.removeCallbacks(longPress)
-                        startLines = upcomingCount
+                        startHeight = column?.height ?: 0
                         startTouch = e.rawY
                     }
                     MotionEvent.ACTION_MOVE -> {
-                        val lines = (startLines + ((e.rawY - startTouch) / step).toInt()).coerceIn(1, MAX_LINES)
-                        if (lines != upcomingCount) {
-                            upcomingCount = lines
-                            next.maxLines = lines * 2
+                        val h = (startHeight + (e.rawY - startTouch)).toInt().coerceIn(0, maxExpandedPx())
+                        val next = if (h < (COMPACT_LIMIT_DP * density).toInt()) 0 else h
+                        if (next != expandedPx) {
+                            expandedPx = next
                             shownKey = null
                             refresh()
                         }
                     }
                     MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL ->
                         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-                            .edit().putInt(KEY_LINES, upcomingCount).apply()
+                            .edit().putInt(KEY_EXPAND, expandedPx).putInt(KEY_Y, windowY).apply()
                 }
                 true
             }
@@ -456,10 +513,11 @@ object LyricsOverlay {
         }
     }
 
-    private fun showText(text: String, next: String) {
+    private fun showLines(index: Int, text: String) {
         val root = ensureView()
         attachIfNeeded(root)
         if (!attached) return
+        val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         if (chip?.visibility == View.VISIBLE) {
             chip?.visibility = View.GONE
             column?.visibility = View.VISIBLE
@@ -468,19 +526,70 @@ object LyricsOverlay {
                 it.gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
                 it.x = 0
                 it.y = windowY
-                (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager).updateViewLayout(root, it)
+                wm.updateViewLayout(root, it)
             }
         }
-        val key = "$text|$next"
+        val height = expandedHeight()
+        val expanded = height > 0
+        applyMode(root, wm, height)
+        val key = "$trackId|$index|$expanded"
         if (shownKey != key) {
             current?.text = text
-            upcoming?.apply {
-                this.text = next
-                visibility = if (next.isEmpty()) View.GONE else View.VISIBLE
+            if (expanded) {
+                fill(prevViews, linesBefore(index, MAX_SIDE))
+                fill(nextViews, linesAfter(index, MAX_SIDE))
+            } else {
+                fill(prevViews, emptyList())
+                fill(nextViews, linesAfter(index, 1))
             }
             shownKey = key
         }
         root.visibility = View.VISIBLE
+    }
+
+    private fun fill(views: List<TextView>, lines: List<String>) {
+        for ((k, v) in views.withIndex()) {
+            if (k < lines.size) {
+                v.text = lines[k]
+                v.setTextColor(fadeColor(k))
+                v.visibility = View.VISIBLE
+            } else {
+                v.visibility = View.GONE
+            }
+        }
+    }
+
+    /**
+     * 늘림 여부에 맞게 몸통 높이와 위 · 아래 줄 상자를 정한다. 늘린 모양은 몸통 높이를 고정하고
+     * 위 · 아래 상자가 남는 높이를 반반 나눠 현재 줄이 가운데에 오게 한다.
+     */
+    private fun applyMode(root: FrameLayout, wm: WindowManager, height: Int) {
+        val expanded = height > 0
+        val body = column ?: return
+        val lp = body.layoutParams
+        val bodyHeight = if (expanded) height else FrameLayout.LayoutParams.WRAP_CONTENT
+        if (appliedExpanded != expanded || lp.height != bodyHeight) {
+            lp.height = bodyHeight
+            body.layoutParams = lp
+            prevBox?.apply {
+                visibility = if (expanded) View.VISIBLE else View.GONE
+                layoutParams = LinearLayout.LayoutParams(-1, 0, 1f)
+            }
+            nextBox?.layoutParams =
+                if (expanded) LinearLayout.LayoutParams(-1, 0, 1f) else LinearLayout.LayoutParams(-1, -2)
+            appliedExpanded = expanded
+        }
+        // 늘린 창이 화면 아래로 넘치지 않게 위로 당겨 올린다.
+        layout?.let {
+            if (expanded && !minimized) {
+                val limit = (context.resources.displayMetrics.heightPixels - height).coerceAtLeast(0)
+                if (it.y > limit) {
+                    it.y = limit
+                    windowY = limit
+                    if (attached) wm.updateViewLayout(root, it)
+                }
+            }
+        }
     }
 
     /** 창은 두고 글만 감춘다 (간주 중 창을 떼었다 붙이지 않는다). */
