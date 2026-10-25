@@ -485,7 +485,6 @@ class _DownloadScreenState extends State<DownloadScreen> {
   static const _rowsPerColumn = 5;
 
   /// 자막 표: 한 칸에 5줄씩 세로로 쌓고, 넘치면 오른쪽으로 칸을 늘려 가로로 민다.
-
   Widget _languageTable(BuildContext context, SubtitleAvailability sub) {
     final l10n = context.l10n;
     final korean = Localizations.localeOf(context).languageCode == 'ko';
