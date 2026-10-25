@@ -571,8 +571,11 @@ object LyricsOverlay {
         if (shownKey != key) {
             current?.text = text
             if (expanded) {
-                fill(prevViews, linesBefore(index, MAX_SIDE))
+                val before = linesBefore(index, MAX_SIDE)
+                fill(prevViews, before)
                 fill(nextViews, linesAfter(index, MAX_SIDE))
+                // 지나간 줄이 없으면(곡 처음) 윗칸을 접어 현재 줄이 맨 위에 붙게 한다.
+                prevBox?.visibility = if (before.isEmpty()) View.GONE else View.VISIBLE
             } else {
                 fill(prevViews, emptyList())
                 fill(nextViews, linesAfter(index, 1))
