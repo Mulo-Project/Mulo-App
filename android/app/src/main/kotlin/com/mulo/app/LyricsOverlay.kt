@@ -93,6 +93,9 @@ object LyricsOverlay {
 
     /** 지금 창에 반영된 모양 (늘림 여부). 바뀔 때만 레이아웃을 다시 정한다. */
     private var appliedExpanded: Boolean? = null
+
+    /** 지금 위 · 아래 줄 칸에 준 세로 여백(px). 창을 더 늘릴수록 줄 사이가 넓어진다. */
+    private var appliedGap = -1
     private var menu: LinearLayout? = null
     private var hideButton: TextView? = null
     private var offButton: TextView? = null
@@ -547,6 +550,22 @@ object LyricsOverlay {
         root.visibility = View.VISIBLE
     }
 
+    /**
+     * 위 · 아래 줄 사이 간격: 늘리지 않으면 좁게(4dp), 창을 최대로 늘리면 넓게(16dp).
+     * 손잡이를 당기는 만큼 줄 사이가 함께 벌어진다.
+     */
+    private fun applyGap(height: Int) {
+        val density = context.resources.displayMetrics.density
+        val limit = (COMPACT_LIMIT_DP * density).toInt()
+        val room = (maxExpandedPx() - limit).coerceAtLeast(1)
+        val fraction = if (height <= 0) 0f else ((height - limit).toFloat() / room).coerceIn(0f, 1f)
+        val gap = ((4f + 12f * fraction) * density).toInt()
+        if (gap == appliedGap) return
+        appliedGap = gap
+        for (v in prevViews) v.setPadding(0, gap, 0, gap)
+        for (v in nextViews) v.setPadding(0, gap, 0, gap)
+    }
+
     private fun fill(views: List<TextView>, lines: List<String>) {
         for ((k, v) in views.withIndex()) {
             if (k < lines.size) {
@@ -579,6 +598,7 @@ object LyricsOverlay {
                 if (expanded) LinearLayout.LayoutParams(-1, 0, 1f) else LinearLayout.LayoutParams(-1, -2)
             appliedExpanded = expanded
         }
+        applyGap(height)
         // 늘린 창이 화면 아래로 넘치지 않게 위로 당겨 올린다.
         layout?.let {
             if (expanded && !minimized) {
