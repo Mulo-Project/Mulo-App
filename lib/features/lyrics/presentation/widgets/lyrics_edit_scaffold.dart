@@ -20,6 +20,7 @@ class LyricsEditScaffold extends StatelessWidget {
     this.notice,
     this.fieldHint,
     this.tools = const [],
+    this.top,
     this.body,
     this.leadingIcon = AppIcons.close,
   });
@@ -42,6 +43,9 @@ class LyricsEditScaffold extends StatelessWidget {
 
   /// 입력 칸 아래 도구 줄에 놓을 버튼들 (파일 불러오기 등).
   final List<Widget> tools;
+
+  /// 안내 글 아래, 입력 칸 위에 놓을 것 (불러오기 줄 · 불러온 가사 메모 등).
+  final Widget? top;
 
   /// 입력 칸 대신 보일 것 (불러오는 중 · 실패 안내). null이면 입력 칸.
   final Widget? body;
@@ -83,6 +87,7 @@ class LyricsEditScaffold extends StatelessWidget {
                   ),
                 ),
               ),
+            ?top,
             Expanded(
               child:
                   body ??

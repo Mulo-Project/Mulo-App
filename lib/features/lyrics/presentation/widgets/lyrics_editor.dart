@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../library/domain/entities/track.dart';
 import '../bloc/lyrics_cubit.dart';
-import '../screens/lyrics_web_screen.dart';
 import '../../domain/entities/timed_lyrics_text.dart';
-import 'lyrics_dialogs.dart';
+import 'lyrics_import_bar.dart';
 import 'timed_lyrics_controller.dart';
 import 'lyrics_edit_scaffold.dart';
 
@@ -63,35 +61,6 @@ class _LyricsEditorScreenState extends State<_LyricsEditorScreen> {
   /// 저장할 글: 줄 번호에 맞는 시간을 `[mm:ss.xx]`로 다시 붙인다.
   String _compose() => _text.compose();
 
-  Future<void> _pickFile() async {
-    final picked = await widget.cubit.pickFile();
-    if (picked != null && mounted) await _apply(picked);
-  }
-
-  Future<void> _searchWeb() async {
-    final picked = await showLyricsWeb(context, widget.track);
-    if (picked != null && mounted) await _apply(picked);
-  }
-
-  /// 가져온 글을 넣는다. 가사가 이미 있으면 바꿀지 뒤에 붙일지 먼저 묻는다.
-  Future<void> _apply(String imported) async {
-    if (_text.text.trim().isEmpty) {
-      setState(() => _load(imported));
-      return;
-    }
-    final mode = await showLyricsImportMode(context);
-    if (mode == null || !mounted) return;
-    setState(() {
-      if (mode == LyricsImportMode.replace) {
-        _load(imported);
-      } else {
-        // 붙인 글은 시간 없는 줄로 뒤에 더한다.
-        final extra = TimedLyricsText.parse(imported).text;
-        _text.text = '${_text.text.trimRight()}\n$extra';
-      }
-    });
-  }
-
   @override
   void dispose() {
     _text.dispose();
@@ -108,19 +77,12 @@ class _LyricsEditorScreenState extends State<_LyricsEditorScreen> {
       showTimes: _synced,
       notice: _synced ? l10n.lyricsEditSyncedHint : null,
       fieldHint: l10n.lyricsEditHint,
-      tools: [
-        PlainButton(
-          label: l10n.lyricsLoadFile,
-          icon: AppIcons.fileOpen,
-          onPressed: _pickFile,
-        ),
-        if (lyricsWebSupported)
-          PlainButton(
-            label: l10n.lyricsWebSearch,
-            icon: AppIcons.explore,
-            onPressed: _searchWeb,
-          ),
-      ],
+      // 파일 · 웹에서 불러오기와 불러온 가사 메모는 받기 전 가사 상세와 같은 줄을 쓴다.
+      top: LyricsImportBar(
+        controller: _text,
+        track: widget.track,
+        onReplace: (raw) => setState(() => _load(raw)),
+      ),
       primaryLabel: l10n.lyricsSave,
       onPrimary: () => Navigator.of(context).pop(_compose()),
     );

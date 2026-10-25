@@ -455,7 +455,7 @@ void main() {
     expect(find.textContaining('auto line'), findsOneWidget);
 
     // 파일에서 불러오면 이미 있는 자막 글을 어떻게 할지 묻고, 바꾸면 그 글이 된다.
-    await tester.tap(find.byKey(const ValueKey('subtitle-detail-file')));
+    await tester.tap(find.byKey(const ValueKey('subtitle-detail-import-file')));
     await tester.pumpAndSettle();
     await tester.tap(find.text('바꾸기'));
     await tester.pumpAndSettle();

@@ -216,6 +216,30 @@ void main() {
     expect(find.text('불러온 가사'), findsOneWidget);
   });
 
+  testWidgets('가사 편집 페이지: 불러온 가사를 메모로 띄우고 줄을 눌러 지금 줄 아래에 끼워 넣는다', (
+    tester,
+  ) async {
+    phone(tester);
+    final lyrics = MemoryLyricsRepository(sibling: {'t1': '첫째 줄\n셋째 줄'});
+    final file = FakeLyricsFileSource('[00:01.00]끼울 줄\n[00:02.00]다른 줄');
+    await setUpTestDependencies(lyrics: lyrics, lyricsFile: file);
+    await openLyricsEditor(tester);
+
+    await tester.tap(find.textContaining('파일에서 불러오기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('메모로 띄우기'));
+    await tester.pumpAndSettle();
+    expect(find.text('불러온 가사'), findsOneWidget);
+    expect(find.text('끼울 줄'), findsOneWidget);
+
+    // 커서를 첫째 줄에 두고 메모의 줄을 누르면 첫째 줄 바로 아래에 들어간다.
+    final field = tester.widget<TextField>(find.byType(TextField));
+    field.controller!.selection = const TextSelection.collapsed(offset: 2);
+    await tester.tap(find.text('끼울 줄'));
+    await tester.pumpAndSettle();
+    expect(field.controller!.text, '첫째 줄\n끼울 줄\n셋째 줄');
+  });
+
   testWidgets('플레이어: 가사 보기로 바꾸면 줄이 보이고, 줄을 누르면 그 위치로 간다', (tester) async {
     phone(tester);
     await setUpTestDependencies(

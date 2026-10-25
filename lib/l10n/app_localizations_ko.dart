@@ -1772,6 +1772,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsImportAppend => '뒤에 붙이기';
 
   @override
+  String get lyricsImportMemo => '메모로 띄우기';
+
+  @override
+  String get lyricsMemoTitle => '불러온 가사';
+
+  @override
+  String get lyricsMemoHint => '줄을 누르면 가사의 지금 줄 아래에 끼워 넣어요';
+
+  @override
   String get lyricsSyncGroupSetupBody =>
       '한 번에 시간을 찍을 줄 수를 골라 주세요. 나중에 위쪽 메뉴에서 바꿀 수 있어요.';
 

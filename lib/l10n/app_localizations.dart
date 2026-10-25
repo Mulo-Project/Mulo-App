@@ -3356,6 +3356,24 @@ abstract class AppLocalizations {
   /// **'뒤에 붙이기'**
   String get lyricsImportAppend;
 
+  /// No description provided for @lyricsImportMemo.
+  ///
+  /// In ko, this message translates to:
+  /// **'메모로 띄우기'**
+  String get lyricsImportMemo;
+
+  /// No description provided for @lyricsMemoTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'불러온 가사'**
+  String get lyricsMemoTitle;
+
+  /// No description provided for @lyricsMemoHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'줄을 누르면 가사의 지금 줄 아래에 끼워 넣어요'**
+  String get lyricsMemoHint;
+
   /// No description provided for @lyricsSyncGroupSetupBody.
   ///
   /// In ko, this message translates to:

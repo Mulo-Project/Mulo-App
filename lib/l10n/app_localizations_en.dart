@@ -1819,6 +1819,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsImportAppend => 'Append';
 
   @override
+  String get lyricsImportMemo => 'Show as note';
+
+  @override
+  String get lyricsMemoTitle => 'Imported lyrics';
+
+  @override
+  String get lyricsMemoHint => 'Tap a line to insert it below the current line';
+
+  @override
   String get lyricsSyncGroupSetupBody =>
       'Pick how many lines to stamp at once. You can change it later from the top menu.';
 

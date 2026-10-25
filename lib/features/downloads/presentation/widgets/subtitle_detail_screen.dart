@@ -4,12 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
-import '../../../../core/usecase/usecase.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../../lyrics/domain/entities/timed_lyrics_text.dart';
-import '../../../lyrics/domain/usecases/lyrics_usecases.dart';
-import '../../../lyrics/presentation/screens/lyrics_web_screen.dart';
-import '../../../lyrics/presentation/widgets/lyrics_dialogs.dart';
+import '../../../lyrics/presentation/widgets/lyrics_import_bar.dart';
 import '../../../lyrics/presentation/widgets/timed_lyrics_controller.dart';
 import '../../../lyrics/presentation/widgets/lyrics_edit_scaffold.dart';
 import '../bloc/subtitle_preview_cubit.dart';
@@ -120,51 +117,16 @@ class _SubtitleDetailScreenState extends State<SubtitleDetailScreen> {
     _text.load(split);
   }
 
-  Future<void> _pickFile() async {
-    final picked = await sl<PickLyricsFile>()(const NoParams());
-    if (picked != null && mounted) await _apply(picked);
-  }
-
-  Future<void> _searchWeb() async {
-    final probe = Track(
-      id: 'download',
-      title: widget.songTitle.isEmpty ? widget.title : widget.songTitle,
-      artist: widget.songArtist,
-      album: '',
-      duration: Duration.zero,
-      uri: '',
-      addedAt: DateTime.now(),
-    );
-    final picked = await showLyricsWeb(context, probe);
-    if (picked != null && mounted) await _apply(picked);
-  }
-
-  /// 불러온 글을 넣는다. 가사가 이미 있으면 바꿀지 뒤에 붙일지 먼저 묻는다.
-  /// 자막을 못 읽었어도(실패 · 없음) 불러온 글을 이 곡의 가사로 쓸 수 있다.
-  Future<void> _apply(String imported) async {
-    // 처음 보여 준 자막(비교 기준)은 그대로 둔다: 불러온 글이 "고친 가사"로 돌아가게.
-    // 자막을 못 읽었어도 고친 글로 돌려줄 수 있게 기준이 없으면 빈 글로 둔다.
-    final base = _base ?? '';
-    if (_text.text.trim().isEmpty) {
-      setState(() {
-        _fill(imported);
-        _base = base;
-      });
-      return;
-    }
-    final mode = await showLyricsImportMode(context);
-    if (mode == null || !mounted) return;
-    setState(() {
-      if (mode == LyricsImportMode.replace) {
-        _fill(imported);
-        _base = base;
-      } else {
-        // 붙인 글은 시간 없는 줄로 뒤에 더한다.
-        final extra = TimedLyricsText.parse(imported).text;
-        _text.text = '${_text.text.trimRight()}\n$extra';
-      }
-    });
-  }
+  /// 웹에서 가사를 찾을 때 검색어가 되는 곡 (받기 창에 적힌 제목 · 아티스트).
+  Track _probe() => Track(
+    id: 'download',
+    title: widget.songTitle.isEmpty ? widget.title : widget.songTitle,
+    artist: widget.songArtist,
+    album: '',
+    duration: Duration.zero,
+    uri: '',
+    addedAt: DateTime.now(),
+  );
 
   /// 고친 가사. 고치지 않았으면 null.
   String? _editedRaw() {
@@ -224,22 +186,18 @@ class _SubtitleDetailScreenState extends State<SubtitleDetailScreen> {
           controller: _text,
           showTimes: _synced,
           notice: l10n.downloadSubtitleEditHint,
-          // 영상 자막 말고 파일이나 웹에서도 가사를 불러올 수 있다 (자막이 없거나 읽지 못했을 때도).
-          tools: [
-            PlainButton(
-              key: const ValueKey('subtitle-detail-file'),
-              label: l10n.lyricsLoadFile,
-              icon: AppIcons.fileOpen,
-              onPressed: _pickFile,
-            ),
-            if (lyricsWebSupported)
-              PlainButton(
-                key: const ValueKey('subtitle-detail-web'),
-                label: l10n.lyricsWebSearch,
-                icon: AppIcons.explore,
-                onPressed: _searchWeb,
-              ),
-          ],
+          // 영상 자막 말고 파일이나 웹에서도 가사를 불러올 수 있다 (가사 설정과 같은 줄).
+          top: LyricsImportBar(
+            keyPrefix: 'subtitle-detail',
+            controller: _text,
+            track: _probe(),
+            onReplace: (raw) => setState(() {
+              // 처음 보여 준 자막(비교 기준)은 그대로 두어 불러온 글이 "고친 가사"로 돌아가게 한다.
+              final base = _base ?? '';
+              _fill(raw);
+              _base = base;
+            }),
+          ),
           body: body,
           primaryKey: const ValueKey('subtitle-detail-use'),
           primaryLabel: l10n.downloadSubtitleUse,

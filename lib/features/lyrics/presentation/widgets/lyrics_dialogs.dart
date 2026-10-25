@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 
-/// 가져온 가사를 이미 있는 가사에 어떻게 넣을지.
-enum LyricsImportMode { replace, append }
+/// 가져온 가사를 이미 있는 가사에 어떻게 넣을지. [memo]는 넣지 않고 메모로 띄워 두고 줄을 골라 끼워 넣는다.
+enum LyricsImportMode { replace, append, memo }
 
 /// 가사가 이미 있을 때 가져온 글을 바꿀지 뒤에 붙일지 묻는다. 취소하면 null.
 Future<LyricsImportMode?> showLyricsImportMode(BuildContext context) {
@@ -27,6 +27,12 @@ Future<LyricsImportMode?> showLyricsImportMode(BuildContext context) {
           variant: PillVariant.tonal,
           onPressed: () =>
               Navigator.of(dialogContext).pop(LyricsImportMode.append),
+        ),
+        PillButton(
+          label: l10n.lyricsImportMemo,
+          variant: PillVariant.tonal,
+          onPressed: () =>
+              Navigator.of(dialogContext).pop(LyricsImportMode.memo),
         ),
       ],
     ),
