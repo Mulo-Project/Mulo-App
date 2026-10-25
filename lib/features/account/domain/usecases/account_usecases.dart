@@ -1,5 +1,6 @@
 import '../../../../core/usecase/usecase.dart';
 import '../../../search/domain/entities/media_info.dart';
+import '../../../subscriptions/domain/entities/channel_hit.dart';
 import '../entities/google_account.dart';
 import '../repositories/account_repository.dart';
 
@@ -49,4 +50,25 @@ class FetchMyPlaylists implements UseCase<List<PlaylistHit>, NoParams> {
 
   @override
   Future<List<PlaylistHit>> call(NoParams params) => _repo.myPlaylists();
+}
+
+/// 내가 구독한 유튜브 채널 불러오기 (구독 채널 가져오기).
+class FetchMySubscriptions implements UseCase<List<ChannelHit>, NoParams> {
+  const FetchMySubscriptions(this._repo);
+
+  final AccountRepository _repo;
+
+  @override
+  Future<List<ChannelHit>> call(NoParams params) => _repo.mySubscriptions();
+}
+
+/// 채널 하나의 공개 재생목록 불러오기 (구독 채널의 재생목록 가져오기).
+class FetchChannelPlaylists implements UseCase<List<PlaylistHit>, String> {
+  const FetchChannelPlaylists(this._repo);
+
+  final AccountRepository _repo;
+
+  @override
+  Future<List<PlaylistHit>> call(String channelId) =>
+      _repo.channelPlaylists(channelId);
 }

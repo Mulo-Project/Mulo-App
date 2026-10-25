@@ -72,6 +72,7 @@ import 'package:music_download_play_app/features/security/domain/entities/app_lo
 import 'package:music_download_play_app/features/security/domain/repositories/app_lock_repository.dart';
 import 'package:music_download_play_app/features/subscriptions/di.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/entities/background_status.dart';
+import 'package:music_download_play_app/features/subscriptions/domain/entities/channel_hit.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/entities/feed_video.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/entities/new_video_download_request.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/entities/subscribed_channel.dart';
@@ -1138,12 +1139,16 @@ class FakeAccountRepository implements AccountRepository {
     this.playlists = const [],
     this.signInError,
     this.playlistsError,
+    this.subscriptions = const [],
+    this.channelPlaylistsById = const {},
   });
 
   @override
   final AccountSupport support;
   GoogleAccount? account;
   final List<PlaylistHit> playlists;
+  final List<ChannelHit> subscriptions;
+  final Map<String, List<PlaylistHit>> channelPlaylistsById;
   final AccountException? signInError;
   final AccountException? playlistsError;
   var signIns = 0;
@@ -1174,6 +1179,26 @@ class FakeAccountRepository implements AccountRepository {
       throw const AccountException(AccountFailure.unauthorized);
     }
     return playlists;
+  }
+
+  @override
+  Future<List<ChannelHit>> mySubscriptions() async {
+    final error = playlistsError;
+    if (error != null) throw error;
+    if (account == null) {
+      throw const AccountException(AccountFailure.unauthorized);
+    }
+    return subscriptions;
+  }
+
+  @override
+  Future<List<PlaylistHit>> channelPlaylists(String channelId) async {
+    final error = playlistsError;
+    if (error != null) throw error;
+    if (account == null) {
+      throw const AccountException(AccountFailure.unauthorized);
+    }
+    return channelPlaylistsById[channelId] ?? const [];
   }
 }
 

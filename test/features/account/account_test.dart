@@ -30,6 +30,7 @@ PlaylistImportCubit _importCubit(FakeAccountRepository repo) {
     CreatePlaylist(lists),
     FindExistingDownload(queue),
     AddTracksToPlaylist(lists),
+    FetchChannelPlaylists(repo),
   );
 }
 
@@ -128,6 +129,58 @@ void main() {
       await cubit.loadMine();
       expect(cubit.state.status, PlaylistImportStatus.failed);
       expect(cubit.state.accountFailure, AccountFailure.noChannel);
+    });
+  });
+
+  test('구독 항목에서 채널 id · 이름 · 소개 · 이미지를 읽는다', () {
+    final hit = parseSubscription({
+      'snippet': {
+        'title': '채널',
+        'description': '소개',
+        'resourceId': {'kind': 'youtube#channel', 'channelId': 'UC1'},
+        'thumbnails': {
+          'default': {'url': 'small'},
+          'medium': {'url': 'mid'},
+        },
+      },
+    });
+    expect(hit?.id, 'UC1');
+    expect(hit?.name, '채널');
+    expect(hit?.description, '소개');
+    expect(hit?.thumbnailUrl, 'mid');
+    expect(parseSubscription({'snippet': {}}), isNull);
+  });
+
+  group('구독 채널의 재생목록 가져오기', () {
+    const signedIn = GoogleAccount(id: 'u', email: 'a@b.c');
+
+    test('채널의 업로드 전체를 맨 위에 두고 그 채널의 재생목록을 이어 보여 준다', () async {
+      const list = PlaylistHit(id: 'PL1', title: '모음', url: 'u');
+      final cubit = _importCubit(
+        FakeAccountRepository(
+          account: signedIn,
+          channelPlaylistsById: {
+            'UCabc': [list],
+          },
+        ),
+      );
+      await cubit.loadChannel('UCabc', '채널', '업로드');
+      expect(cubit.state.status, PlaylistImportStatus.results);
+      expect(cubit.state.channel, '채널');
+      expect(cubit.state.results.first.id, 'UUabc');
+      expect(
+        cubit.state.results.first.url,
+        'https://www.youtube.com/playlist?list=UUabc',
+      );
+      expect(cubit.state.results.last, list);
+    });
+
+    test('로그인이 풀렸으면 로그인이 필요하다고 알린다', () async {
+      final cubit = _importCubit(FakeAccountRepository());
+      await cubit.loadChannel('UCabc', '채널', '업로드');
+      expect(cubit.state.status, PlaylistImportStatus.failed);
+      expect(cubit.state.accountFailure, AccountFailure.unauthorized);
+      expect(cubit.state.fromAccount, isTrue);
     });
   });
 }

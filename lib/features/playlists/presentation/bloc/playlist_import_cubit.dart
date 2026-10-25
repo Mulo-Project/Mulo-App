@@ -26,6 +26,7 @@ class PlaylistImportState extends Equatable {
     this.results = const [],
     this.query = '',
     this.mine = false,
+    this.channel = '',
     this.accountFailure,
     this.accountDetail = '',
   });
@@ -55,6 +56,12 @@ class PlaylistImportState extends Equatable {
   /// [results]가 로그인한 계정의 재생목록인지 (검색 결과가 아니라).
   final bool mine;
 
+  /// [results]가 이 채널의 재생목록이면 채널 이름 (아니면 빈 문자열).
+  final String channel;
+
+  /// 구글 계정으로 읽는 목록(내 재생목록 · 채널 재생목록)이었는지.
+  bool get fromAccount => mine || channel.isNotEmpty || accountFailure != null;
+
   /// 내 재생목록을 읽다 실패한 까닭 (로그인이 풀렸는지 등).
   final AccountFailure? accountFailure;
 
@@ -81,6 +88,7 @@ class PlaylistImportState extends Equatable {
     results: results,
     query: query,
     mine: mine,
+    channel: channel,
   );
 
   @override
@@ -95,6 +103,7 @@ class PlaylistImportState extends Equatable {
     results,
     query,
     mine,
+    channel,
     accountFailure,
     accountDetail,
   ];
@@ -132,6 +141,7 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
     this._create,
     this._findExisting,
     this._addTracks,
+    this._channelPlaylists,
   ) : super(const PlaylistImportState());
 
   final FetchMediaInfo _info;
@@ -141,6 +151,7 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
   final CreatePlaylist _create;
   final FindExistingDownload _findExisting;
   final AddTracksToPlaylist _addTracks;
+  final FetchChannelPlaylists _channelPlaylists;
 
   int _request = 0;
 
@@ -224,6 +235,61 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
     }
   }
 
+  /// 구독한 채널 [channelId]의 재생목록들을 목록으로 보여 준다 (구글 로그인이 돼 있어야 한다).
+  /// 맨 위에 그 채널의 업로드 전체([uploadsTitle])를 하나 더 둔다. 업로드 목록의 id는 채널 id의 `UC`를 `UU`로 바꾼 것이다.
+  Future<void> loadChannel(
+    String channelId,
+    String channelName,
+    String uploadsTitle,
+  ) async {
+    final id = ++_request;
+    emit(const PlaylistImportState(status: PlaylistImportStatus.loading));
+    try {
+      final items = await _channelPlaylists(channelId);
+      if (id != _request) return;
+      final uploadsId = channelId.startsWith('UC')
+          ? 'UU${channelId.substring(2)}'
+          : null;
+      emit(
+        PlaylistImportState(
+          status: PlaylistImportStatus.results,
+          results: [
+            if (uploadsId != null)
+              PlaylistHit(
+                id: uploadsId,
+                title: uploadsTitle,
+                url: 'https://www.youtube.com/playlist?list=$uploadsId',
+                channel: channelName,
+              ),
+            for (final h in items)
+              if (h.id != uploadsId) h,
+          ],
+          channel: channelName,
+        ),
+      );
+    } on AccountException catch (e) {
+      if (id != _request) return;
+      emit(
+        PlaylistImportState(
+          status: PlaylistImportStatus.failed,
+          accountFailure: e.failure,
+          accountDetail: e.message,
+          channel: channelName,
+        ),
+      );
+    } on Object catch (e) {
+      if (id != _request) return;
+      emit(
+        PlaylistImportState(
+          status: PlaylistImportStatus.failed,
+          accountFailure: AccountFailure.failed,
+          accountDetail: '$e',
+          channel: channelName,
+        ),
+      );
+    }
+  }
+
   /// 찾은 재생목록 하나를 골라 곡 목록을 읽는다.
   Future<void> open(PlaylistHit hit) => load(hit.url);
 
@@ -236,6 +302,7 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
         results: state.results,
         query: state.query,
         mine: state.mine,
+        channel: state.channel,
       ),
     );
   }
@@ -250,12 +317,14 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
     final keep = state.results;
     final keepQuery = state.query;
     final keepMine = state.mine;
+    final keepChannel = state.channel;
     emit(
       PlaylistImportState(
         status: PlaylistImportStatus.loading,
         results: keep,
         query: keepQuery,
         mine: keepMine,
+        channel: keepChannel,
       ),
     );
     try {
@@ -280,6 +349,7 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
               results: keep,
               query: keepQuery,
               mine: keepMine,
+              channel: keepChannel,
             ),
           );
         case VideoInfo():
@@ -290,6 +360,7 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
               results: keep,
               query: keepQuery,
               mine: keepMine,
+              channel: keepChannel,
             ),
           );
       }
@@ -302,6 +373,7 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
           results: keep,
           query: keepQuery,
           mine: keepMine,
+          channel: keepChannel,
         ),
       );
     }
