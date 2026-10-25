@@ -488,7 +488,7 @@ object LyricsOverlay {
     private fun params(): WindowManager.LayoutParams {
         val metrics = context.resources.displayMetrics
         return WindowManager.LayoutParams(
-            (metrics.widthPixels - dp(32f)).toInt(),
+            targetWidth(),
             WindowManager.LayoutParams.WRAP_CONTENT,
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
@@ -525,7 +525,7 @@ object LyricsOverlay {
             chip?.visibility = View.GONE
             column?.visibility = View.VISIBLE
             layout?.let {
-                it.width = (context.resources.displayMetrics.widthPixels - dp(32f)).toInt()
+                it.width = targetWidth()
                 it.gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
                 it.x = 0
                 it.y = windowY
@@ -599,17 +599,29 @@ object LyricsOverlay {
             appliedExpanded = expanded
         }
         applyGap(height)
-        // 늘린 창이 화면 아래로 넘치지 않게 위로 당겨 올린다.
+        // 화면이 돌아가 크기가 달라졌으면(가로 · 세로) 너비를 맞추고, 창이 화면 아래로 넘치지 않게 위로 올린다.
         layout?.let {
-            if (expanded && !minimized) {
-                val limit = (context.resources.displayMetrics.heightPixels - height).coerceAtLeast(0)
-                if (it.y > limit) {
-                    it.y = limit
-                    windowY = limit
-                    if (attached) wm.updateViewLayout(root, it)
-                }
+            if (minimized) return@let
+            var changed = false
+            val width = targetWidth()
+            if (it.width != width) {
+                it.width = width
+                changed = true
             }
+            val bodyHeight = if (expanded) height else (column?.height?.takeIf { h -> h > 0 } ?: dp(110f).toInt())
+            val limit = (context.resources.displayMetrics.heightPixels - bodyHeight).coerceAtLeast(0)
+            if (it.y > limit) {
+                it.y = limit
+                changed = true
+            }
+            if (changed && attached) wm.updateViewLayout(root, it)
         }
+    }
+
+    /** 가사 창의 너비: 화면에서 좌우 16dp씩 뺀 만큼, 가로 화면처럼 넓으면 560dp까지만 (가운데에 놓인다). */
+    private fun targetWidth(): Int {
+        val metrics = context.resources.displayMetrics
+        return minOf(metrics.widthPixels - dp(32f).toInt(), dp(560f).toInt()).coerceAtLeast(dp(200f).toInt())
     }
 
     /** 창은 두고 글만 감춘다 (간주 중 창을 떼었다 붙이지 않는다). */
