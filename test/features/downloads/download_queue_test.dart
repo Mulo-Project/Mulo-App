@@ -167,14 +167,14 @@ void main() {
     expect(find.text('/music/Mulo'), findsOneWidget);
     await tester.enterText(fields.at(4), '/music/Mulo/발라드');
 
-    // 재생목록 선택 대화상자에서 기존 재생목록을 고르고, 새로 만든다 (만들면 자동 선택).
+    // 재생목록 선택 시트에서 기존 재생목록을 고르고, 새로 만든다 (만들면 자동 선택).
     await tester.ensureVisible(find.text('선택 안 함'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('선택 안 함'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('운동'));
     await tester.pump();
-    final dialog = find.byType(AppDialog);
+    final dialog = find.byType(BottomSheet).last; // 재생목록 고르는 시트
     await tester.enterText(
       find.descendant(of: dialog, matching: find.byType(TextField)),
       '새 목록',

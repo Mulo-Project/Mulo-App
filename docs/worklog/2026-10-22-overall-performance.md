@@ -64,3 +64,4 @@
 - 폴더를 빼서 보관함에서 지워진 곡은 재생 대기열에서도 뺀다 (`NowPlayingCubit.removeFromQueueByIds`). 재생 중이던 곡이면 다음 곡으로 넘어간다. `RemoveLoadedFolder`는 지운 곡 id를 돌려준다.
 - 저장 위치 고르기를 대화상자에서 바텀 시트로 통일 (`save_folder_sheet.dart`, `showSaveFolderSheet`). 폴더 시트와 같은 모양이고, 닫을 때는 시트 밖을 누르거나 내린다 (취소 버튼 없음).
 - 저장 위치 목록을 불러오는 폴더와 따로 저장한다 (`library.saveLocations`, `SaveLocationsCubit`). 불러오는 폴더를 더하면 저장 위치에도 더해지지만, 그 뒤로는 한쪽을 빼도 다른 쪽은 그대로다. 저장 위치를 뺀다고 불러오는 폴더 · 곡이 지워지지 않고, 불러오는 폴더를 빼도 저장 위치는 남는다. 직접 고른 폴더는 저장 위치 목록에 더한다. 처음 쓸 때(저장한 적 없음)는 기존 불러오는 폴더 목록으로 시작한다. 저장 위치 시트의 × 에는 확인창이 없다.
+- 받을 때 재생목록 고르기도 대화상자에서 바텀 시트로 통일 (`playlist_picker_sheet.dart`, `showPlaylistPickerSheet`). 목록 · 새 재생목록 입력(키보드 위로 올라옴) · 선택 완료 버튼, 밖을 누르거나 내리면 변경 없이 닫힘.

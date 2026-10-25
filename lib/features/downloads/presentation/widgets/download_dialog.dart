@@ -18,7 +18,7 @@ import '../../../search/presentation/widgets/audio_language_sheet.dart';
 import '../bloc/download_queue_cubit.dart';
 import '../bloc/download_settings_cubit.dart';
 import '../bloc/subtitle_availability_cubit.dart';
-import 'playlist_picker_dialog.dart';
+import 'playlist_picker_sheet.dart';
 import 'save_folder_sheet.dart';
 import 'subtitle_detail_screen.dart';
 import 'subtitle_language_label.dart';
@@ -225,7 +225,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
   }
 
   Future<void> _pickPlaylists() async {
-    final picked = await showPlaylistPickerDialog(
+    final picked = await showPlaylistPickerSheet(
       context,
       playlists: context.read<PlaylistsCubit>(),
       selected: _selected,
