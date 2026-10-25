@@ -18,6 +18,8 @@ import '../../../search/presentation/widgets/audio_language_sheet.dart';
 import '../bloc/download_queue_cubit.dart';
 import '../bloc/download_settings_cubit.dart';
 import '../bloc/subtitle_availability_cubit.dart';
+import '../../../library/domain/entities/track.dart';
+import '../../../lyrics/presentation/widgets/lyrics_editor.dart';
 import 'playlist_picker_sheet.dart';
 import 'save_folder_sheet.dart';
 import 'subtitle_detail_screen.dart';
@@ -170,6 +172,9 @@ class _DownloadScreenState extends State<DownloadScreen> {
   String? _lyricsLanguage;
   var _skipSounds = true;
 
+  // 가사 설정 페이지에서 직접 정한 가사 (파일 · 웹에서 불러오거나 쓴 글). 있으면 영상 자막 대신 이 글을 넣는다.
+  String? _custom;
+
   // 상세 페이지에서 글을 고친 자막 (언어 코드별). 효과음 옵션이 바뀌면 비운다.
   final _edited = <String, String>{};
 
@@ -287,11 +292,13 @@ class _DownloadScreenState extends State<DownloadScreen> {
         url: widget.url,
         importLyrics:
             _isYoutube &&
-            _importLyrics &&
-            subtitleStatus != SubtitleStatus.none,
+            ((_importLyrics && subtitleStatus != SubtitleStatus.none) ||
+                _custom != null),
         lyricsLanguage: _lyricsLanguage,
         lyricsSkipSounds: _skipSounds,
-        lyricsText: _lyricsLanguage == null ? null : _edited[_lyricsLanguage],
+        lyricsText:
+            _custom ??
+            (_lyricsLanguage == null ? null : _edited[_lyricsLanguage]),
         audioLanguage: audioLanguage,
       ),
     );
@@ -381,8 +388,64 @@ class _DownloadScreenState extends State<DownloadScreen> {
             style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
           ),
         ],
+        // 자막 표 아래: 영상 자막과 따로 가사를 직접 정한다 (파일 · 웹에서 불러오기, 자막이 없어도 쓸 수 있다).
+        const SizedBox(height: AppSpacing.sm),
+        Row(
+          children: [
+            PillButton(
+              key: const ValueKey('download-lyrics-edit'),
+              label: l10n.lyricsEditTitle,
+              icon: AppIcons.edit,
+              variant: PillVariant.tonal,
+              compact: true,
+              onPressed: _editLyrics,
+            ),
+            if (_custom != null) ...[
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  l10n.downloadLyricsCustom(
+                    _custom!
+                        .split('\n')
+                        .where((l) => l.trim().isNotEmpty)
+                        .length,
+                  ),
+                  style: text.bodySmall?.copyWith(color: p.accent),
+                ),
+              ),
+              PlainButton(
+                key: const ValueKey('download-lyrics-custom-clear'),
+                label: l10n.actionClear,
+                onPressed: () => setState(() => _custom = null),
+              ),
+            ],
+          ],
+        ),
       ],
     );
+  }
+
+  /// 가사 설정 페이지를 열어 받을 곡의 가사를 직접 정한다. 비워서 저장하면 직접 정한 가사를 지운다.
+  Future<void> _editLyrics() async {
+    final probe = Track(
+      id: 'download',
+      title: _title.text,
+      artist: _artist.text,
+      album: '',
+      duration: Duration.zero,
+      uri: '',
+      addedAt: DateTime.now(),
+    );
+    final text = await Navigator.of(context, rootNavigator: true).push<String>(
+      MaterialPageRoute(
+        builder: (_) => LyricsEditorPage(
+          track: probe,
+          loadInitial: () async => _custom ?? '',
+        ),
+      ),
+    );
+    if (text == null || !mounted) return;
+    setState(() => _custom = text.trim().isEmpty ? null : text);
   }
 
   void _pickLanguage(String? lang) {

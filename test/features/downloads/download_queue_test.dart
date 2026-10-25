@@ -468,6 +468,38 @@ void main() {
     expect(queue.requests.single.lyricsText, '[00:05.00]from file');
   });
 
+  testWidgets('받기 페이지: 표 아래 가사 설정에서 가사를 직접 정하면 영상 자막 대신 받기 요청에 실린다', (
+    tester,
+  ) async {
+    final engine = FakeDownloaderEngine(
+      info: const VideoInfo(
+        MediaHit(id: 'abc', title: 'Song', url: 'https://youtu.be/abc'),
+      ),
+    );
+    final queue = await openLyricsPage(
+      tester,
+      engine,
+      lyricsFile: FakeLyricsFileSource('[00:05.00]from file'),
+    );
+    // 자막이 없는 영상이어도 가사 설정 버튼이 있다.
+    final edit = find.byKey(const ValueKey('download-lyrics-edit'));
+    await tester.ensureVisible(edit);
+    await tester.pumpAndSettle();
+    await tester.tap(edit);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('lyrics-import-file')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('저장'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('직접 정한 가사'), findsOneWidget);
+
+    await tester.tap(inSheet(find.text('받기')));
+    await tester.pumpAndSettle();
+    final request = queue.requests.single;
+    expect(request.importLyrics, isTrue);
+    expect(request.lyricsText, '[00:05.00]from file');
+  });
+
   testWidgets('받기 페이지: 자막 언어가 하나여도 표가 보이고, 줄을 누르면 가사 상세로 간다', (tester) async {
     await openLyricsPage(
       tester,

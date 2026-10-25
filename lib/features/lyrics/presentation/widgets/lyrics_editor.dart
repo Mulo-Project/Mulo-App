@@ -15,24 +15,34 @@ Future<void> showLyricsEditor(BuildContext context, Track track) async {
   final cubit = context.read<LyricsCubit>();
   final text = await Navigator.of(context, rootNavigator: true).push<String>(
     MaterialPageRoute(
-      builder: (_) => _LyricsEditorScreen(track: track, cubit: cubit),
+      builder: (_) => LyricsEditorPage(
+        track: track,
+        loadInitial: () => cubit.currentText(track),
+      ),
     ),
   );
   if (text == null) return;
   await cubit.save(track, text);
 }
 
-class _LyricsEditorScreen extends StatefulWidget {
-  const _LyricsEditorScreen({required this.track, required this.cubit});
+/// "가사 설정" 페이지. 플레이어의 가사 설정과 받기 창의 가사 설정이 함께 쓴다.
+/// [loadInitial]이 처음 보여 줄 글을 돌려주고, "저장"을 누르면 고친 글(싱크는 `[mm:ss.xx]` 포함)을 돌려준다.
+/// [track]은 제목 표시와 웹 검색어로 쓰는 곡이다.
+class LyricsEditorPage extends StatefulWidget {
+  const LyricsEditorPage({
+    super.key,
+    required this.track,
+    required this.loadInitial,
+  });
 
   final Track track;
-  final LyricsCubit cubit;
+  final Future<String> Function() loadInitial;
 
   @override
-  State<_LyricsEditorScreen> createState() => _LyricsEditorScreenState();
+  State<LyricsEditorPage> createState() => _LyricsEditorPageState();
 }
 
-class _LyricsEditorScreenState extends State<_LyricsEditorScreen> {
+class _LyricsEditorPageState extends State<LyricsEditorPage> {
   final _text = TimedLyricsController();
 
   // 싱크 가사는 시간을 글과 따로 두고 줄 번호로 짝짓는다 (줄을 끼우거나 지우면 시간은 그 자리에 남는다).
@@ -46,7 +56,7 @@ class _LyricsEditorScreenState extends State<_LyricsEditorScreen> {
   }
 
   Future<void> _loadCurrent() async {
-    final current = await widget.cubit.currentText(widget.track);
+    final current = await widget.loadInitial();
     // 불러오는 사이에 사용자가 이미 쓰기 시작했으면 덮어쓰지 않는다.
     if (mounted && _text.text.isEmpty) setState(() => _load(current));
   }

@@ -462,6 +462,8 @@
   "downloadFieldCover": "Cover",
   "downloadCoverChange": "Change",
   "downloadCoverDefault": "Use default",
+  "downloadLyricsCustom": "Using your lyrics · {lines} lines",
+  "@downloadLyricsCustom": {"placeholders": {"lines": {"type": "int"}}},
   "downloadImportLyrics": "Import subtitles as lyrics",
   "downloadImportLyricsHint": "After downloading, refine them in the lyrics sync screen.",
   "downloadSubtitleChecking": "Checking for subtitles.",

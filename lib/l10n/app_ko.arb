@@ -562,6 +562,8 @@
   "downloadFieldCover": "커버",
   "downloadCoverChange": "바꾸기",
   "downloadCoverDefault": "기본으로",
+  "downloadLyricsCustom": "직접 정한 가사를 넣어요 · {lines}줄",
+  "@downloadLyricsCustom": {"placeholders": {"lines": {"type": "int"}}},
   "downloadImportLyrics": "자막을 가사로 가져오기",
   "downloadImportLyricsHint": "받은 뒤 가사 보기의 싱크 설정에서 다듬을 수 있어요.",
   "downloadSubtitleChecking": "자막이 있는지 확인하는 중이에요.",
