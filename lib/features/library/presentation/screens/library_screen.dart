@@ -31,6 +31,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
 
   /// 탭마다 고른 정렬. 탭에 맞는 기준만 고를 수 있다 ([_sortOptions]).
   final _sorts = <LibraryTab, LibrarySort>{};
+
+  /// 탭마다 고른 방향(true 오름차순). 비어 있으면 그 기준의 기본 방향 ([defaultAscending]).
+  final _ascending = <LibraryTab, bool>{};
   String _query = '';
 
   static const _songSorts = [
@@ -51,7 +54,22 @@ class _LibraryScreenState extends State<LibraryScreen> {
       _sorts[_tab] ??
       (_tab == LibraryTab.songs ? LibrarySort.added : LibrarySort.name);
 
+  bool get _asc => _ascending[_tab] ?? defaultAscending(_sort);
+
+  // 거르기 · 정렬 결과 기억: 곡 목록 · 검색어 · 탭 · 정렬이 같으면 다시 계산하지 않는다.
+  List<Track>? _memoAll;
+  (String, LibraryTab, LibrarySort, bool)? _memoKey;
+  List<Track> _memoTracks = const [];
+
   List<Track> _filtered(List<Track> all, AppLocalizations l10n) {
+    final key = (_query, _tab, _sort, _asc);
+    if (identical(_memoAll, all) && _memoKey == key) return _memoTracks;
+    _memoAll = all;
+    _memoKey = key;
+    return _memoTracks = _filteredNow(all);
+  }
+
+  List<Track> _filteredNow(List<Track> all) {
     final q = _query.trim().toLowerCase();
     final list = all
         .where(
@@ -63,7 +81,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
               t.genre.toLowerCase().contains(q),
         )
         .toList();
-    return _tab == LibraryTab.songs ? sortTracks(list, _sort) : list;
+    return _tab == LibraryTab.songs
+        ? sortTracks(list, _sort, ascending: _asc)
+        : list;
   }
 
   @override
@@ -74,18 +94,19 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final importing = context.select((LibraryImportCubit c) => c.state.running);
     final tracks = _filtered(all, l10n);
     final vm = context.read<NowPlayingCubit>();
-    final playing = context.select((NowPlayingCubit c) => c.state.track);
 
-    // 곡 탭은 보이는 줄만 만든다 (곡이 수천 개여도 탭 전환이 느려지지 않게).
+    // 모든 탭은 보이는 줄만 만든다 (곡 · 앨범 · 아티스트가 수천 개여도 탭 전환이 느려지지 않게).
+    // 그룹 탭은 줄을 만드는 함수만 모아 두고, 아래 SliverList.builder가 필요할 때 부른다.
     final lazySongs = _tab == LibraryTab.songs;
     final items = switch (_tab) {
-      LibraryTab.songs => <Widget>[],
+      LibraryTab.songs => <Widget Function(BuildContext)>[],
       LibraryTab.artists => [
         for (final e in sortGroups(
           _groupBy(tracks, (t) => artistOf(l10n, t)),
           _sort,
+          ascending: _asc,
         ).entries)
-          TrackTile(
+          (BuildContext context) => TrackTile(
             key: ValueKey(e.key),
             title: e.key,
             subtitle: l10n.songCount(e.value.length),
@@ -111,8 +132,9 @@ class _LibraryScreenState extends State<LibraryScreen> {
         for (final e in sortGroups(
           _groupBy(tracks, (t) => albumOf(l10n, t)),
           _sort,
+          ascending: _asc,
         ).entries)
-          TrackTile(
+          (BuildContext context) => TrackTile(
             key: ValueKey(e.key),
             title: e.key,
             subtitle:
@@ -129,8 +151,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
           ),
       ],
       LibraryTab.genres => [
-        for (final e in sortGroups(groupByGenre(tracks), _sort).entries)
-          TrackTile(
+        for (final e in sortGroups(
+          groupByGenre(tracks),
+          _sort,
+          ascending: _asc,
+        ).entries)
+          (BuildContext context) => TrackTile(
             key: ValueKey(e.key),
             title: genreOf(l10n, e.key),
             subtitle: l10n.songCount(e.value.length),
@@ -178,15 +204,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     ),
                   ],
                 ),
-                if (all.isEmpty) ...[
-                  Padding(
-                    padding: AppSpacing.screen,
-                    child: _EmptyLibrary(
-                      importing: importing,
-                      onImport: _import,
-                    ),
-                  ),
-                ] else ...[
+                if (all.isNotEmpty) ...[
                   Padding(
                     padding: AppSpacing.screen,
                     child: _LibraryHero(
@@ -194,7 +212,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
                       downloaded: all
                           .where((t) => t.source == TrackSource.download)
                           .length,
-                      playing: playing,
                       onPlayAll: () => vm.playQueue(tracks),
                       onShuffle: () => vm.playShuffled(tracks),
                     ),
@@ -240,7 +257,17 @@ class _LibraryScreenState extends State<LibraryScreen> {
                           LibrarySort.artist => l10n.sortArtist,
                           LibrarySort.count => l10n.sortCount,
                         },
-                        onChanged: (s) => setState(() => _sorts[_tab] = s),
+                        // 기준을 바꾸면 그 기준의 기본 방향으로 돌아간다.
+                        onChanged: (s) => setState(() {
+                          _sorts[_tab] = s;
+                          _ascending.remove(_tab);
+                        }),
+                        ascending: _asc,
+                        directionTooltip: _asc
+                            ? l10n.sortAscending
+                            : l10n.sortDescending,
+                        onToggleDirection: () =>
+                            setState(() => _ascending[_tab] = !_asc),
                       ),
                     ),
                   ),
@@ -254,17 +281,30 @@ class _LibraryScreenState extends State<LibraryScreen> {
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
                       ),
-                    )
-                  else
-                    ...items,
+                    ),
                 ],
               ]),
             ),
-            if (lazySongs && all.isNotEmpty)
+            // 보관함이 비었으면 안내를 머리 아래 남은 자리 가운데에 둔다.
+            if (all.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Padding(
+                  padding: AppSpacing.screen,
+                  child: _EmptyLibrary(importing: importing, onImport: _import),
+                ),
+              )
+            else if (lazySongs)
               SliverList.builder(
                 itemCount: tracks.length,
                 itemBuilder: (context, i) =>
                     _songTile(context, tracks[i], i, tracks),
+              )
+            else if (items.isNotEmpty)
+              SliverList.builder(
+                itemCount: items.length,
+                itemBuilder: (context, i) =>
+                    Builder(builder: (context) => items[i](context)),
               ),
             SliverToBoxAdapter(
               child: SizedBox(
@@ -316,7 +356,6 @@ class _LibraryHero extends StatelessWidget {
   const _LibraryHero({
     required this.count,
     required this.downloaded,
-    required this.playing,
     required this.onPlayAll,
     required this.onShuffle,
   });
@@ -324,8 +363,6 @@ class _LibraryHero extends StatelessWidget {
   final int count;
   final int downloaded;
 
-  /// 지금 재생 중인 곡 (없으면 null). 있으면 오른쪽에 그 곡의 이미지를 보여 준다.
-  final Track? playing;
   final VoidCallback onPlayAll;
   final VoidCallback onShuffle;
 
@@ -335,7 +372,9 @@ class _LibraryHero extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final p = context.palette;
 
-    final now = playing;
+    // 지금 재생 중인 곡 (없으면 null). 있으면 오른쪽에 그 곡의 이미지를 보여 준다.
+    // 여기서 지켜보므로 곡이 바뀌어도 이 머리만 다시 그려진다.
+    final now = context.select((NowPlayingCubit c) => c.state.track);
     final info = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -400,7 +439,7 @@ class _LibraryHero extends StatelessWidget {
                 ],
               ),
         const SizedBox(height: AppSpacing.lg),
-        Divider(height: 1, thickness: 1, color: p.outline),
+        const AppDivider(),
       ],
     );
   }

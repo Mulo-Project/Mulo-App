@@ -89,6 +89,10 @@ class Playlists extends Table {
   TextColumn get name => text()();
   DateTimeColumn get createdAt => dateTime()();
 
+  /// 재생목록 탭의 카드 순서 (작을수록 앞). 사용자가 순서를 바꾸면 1부터 매기고, 새로 만들면 맨 뒤로 간다.
+  /// 같으면 만든 순서.
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -128,18 +132,42 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'music_app'));
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
+
+  /// [table]에 [column]이 아직 없을 때만 더한다. 빌드를 번갈아 설치하는 등으로
+  /// 열은 이미 있는데 버전만 낮아 업그레이드가 다시 도는 DB도 열리게 한다.
+  Future<void> _addColumnIfMissing(
+    Migrator m,
+    TableInfo<Table, dynamic> table,
+    GeneratedColumn column,
+  ) async {
+    final rows = await customSelect(
+      'PRAGMA table_info("${table.actualTableName}")',
+    ).get();
+    final exists = rows.any((r) => r.read<String>('name') == column.name);
+    if (!exists) await m.addColumn(table, column);
+  }
+
+  /// 이미 최신 버전인데 열이 빠진 DB를 열 때 고친다.
+  Future<void> _repairColumns(Migrator m) async {
+    await _addColumnIfMissing(m, covers, covers.url);
+    await _addColumnIfMissing(m, covers, covers.scale);
+    await _addColumnIfMissing(m, covers, covers.dx);
+    await _addColumnIfMissing(m, covers, covers.dy);
+    await _addColumnIfMissing(m, covers, covers.rotation);
+    await _addColumnIfMissing(m, playlists, playlists.sortOrder);
+  }
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onUpgrade: (m, from, to) async {
       if (from < 2) await m.createTable(plays);
       if (from < 3) {
-        await m.addColumn(tracks, tracks.genre);
+        await _addColumnIfMissing(m, tracks, tracks.genre);
         await m.createTable(playlists);
         await m.createTable(playlistTracks);
       }
-      if (from < 5) await m.addColumn(tracks, tracks.folder);
+      if (from < 5) await _addColumnIfMissing(m, tracks, tracks.folder);
       if (from < 6) await m.createTable(lyricsFiles);
       // 재생목록의 옛 `color_index` 열은 더 쓰지 않는다 (색은 cover_colors로).
       if (from < 7) await m.createTable(coverColors);
@@ -147,13 +175,22 @@ class AppDatabase extends _$AppDatabase {
       if (from < 8) await customStatement(backfillListenedSql);
       // 커버에 웹 이미지 주소와 확대 · 위치를 더한다.
       if (from < 9) {
-        await m.addColumn(covers, covers.url);
-        await m.addColumn(covers, covers.scale);
-        await m.addColumn(covers, covers.dx);
-        await m.addColumn(covers, covers.dy);
+        await _addColumnIfMissing(m, covers, covers.url);
+        await _addColumnIfMissing(m, covers, covers.scale);
+        await _addColumnIfMissing(m, covers, covers.dx);
+        await _addColumnIfMissing(m, covers, covers.dy);
       }
       // 커버 회전 각도를 더한다.
-      if (from < 10) await m.addColumn(covers, covers.rotation);
+      if (from < 10) await _addColumnIfMissing(m, covers, covers.rotation);
+      // 재생목록 카드 순서를 더한다 (모두 0이면 만든 순서 그대로).
+      if (from < 11) {
+        await _addColumnIfMissing(m, playlists, playlists.sortOrder);
+      }
+    },
+    beforeOpen: (details) async {
+      if (details.hadUpgrade || !details.wasCreated) {
+        await _repairColumns(createMigrator());
+      }
     },
   );
 }

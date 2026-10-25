@@ -8,7 +8,8 @@ import '../../../library/presentation/bloc/library_cubit.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
-import '../../../covers/presentation/widgets/cover_picker.dart';
+import '../../../covers/presentation/widgets/cover_editor_page.dart';
+import '../../../covers/presentation/widgets/cover_entry.dart';
 import '../../domain/entities/download_options.dart';
 import '../../domain/entities/download_request.dart';
 import '../../domain/entities/download_source.dart';
@@ -17,10 +18,9 @@ import '../../../search/presentation/widgets/audio_language_sheet.dart';
 import '../bloc/download_queue_cubit.dart';
 import '../bloc/download_settings_cubit.dart';
 import '../bloc/subtitle_availability_cubit.dart';
-import 'playlist_picker_dialog.dart';
-import 'save_folder_dialog.dart';
-import 'subtitle_detail_screen.dart';
-import 'subtitle_language_label.dart';
+import 'download_lyrics_section.dart';
+import 'playlist_picker_sheet.dart';
+import 'save_folder_sheet.dart';
 
 /// 받기 페이지: 제목 · 아티스트 · 장르를 고치고, 저장할 때 넣을 재생목록 · 자막 가사 가져오기를 정한다.
 /// "받기"를 누르면 대기열에 넣고 true를 돌려준다 (닫기만 하면 false).
@@ -163,16 +163,8 @@ class _DownloadScreenState extends State<DownloadScreen> {
   Color? _picked;
   var _pickedSet = false;
   var _saveAsGenreDefault = false;
-  var _importLyrics = false;
-
-  // 가져올 자막 언어. null이면 자동(한국어 → 영어 → 첫 언어).
-  String? _lyricsLanguage;
-  var _skipSounds = true;
-
-  // 상세 페이지에서 글을 고친 자막 (언어 코드별). 효과음 옵션이 바뀌면 비운다.
-  final _edited = <String, String>{};
-
-  // 가사 구역은 유튜브 곡만 둔다.
+  // 가사 구역(자막 · 가사 설정)은 유튜브 곡만 둔다. 고른 값은 구역이 들고 있다.
+  final _lyricsKey = GlobalKey<DownloadLyricsSectionState>();
   late final bool _isYoutube = downloadSourceKey(widget.url)
       .startsWith('youtube:');
 
@@ -182,18 +174,27 @@ class _DownloadScreenState extends State<DownloadScreen> {
       ? null
       : CoverArt.web(widget.thumbnailUrl!);
 
+  /// 이미지 페이지(곡 · 앨범 · 재생목록과 같은 것)를 열어 지금 이미지를 불러온 채로 고친다.
+  /// "기본 이미지로"는 유튜브 썸네일로 돌아간다.
   Future<void> _changeCover() async {
-    final picked = await pickCoverArt(
+    final result = await showCoverEditor(
       context,
+      _cover,
       initialQuery: _title.text,
-      current: _cover,
+      canRevert: _cover != _defaultCover,
+      canRemove: _cover != null,
     );
-    if (picked != null && mounted) setState(() => _cover = picked);
+    if (result == null || !mounted) return;
+    setState(
+      () => _cover = result.removed
+          ? null
+          : result.reverted
+          ? _defaultCover
+          : result.art,
+    );
   }
 
   late CoverArt? _cover = _defaultCover;
-
-  void _resetCover() => setState(() => _cover = _defaultCover);
 
   Color? _genreColor() {
     final genre = _genre.text.trim();
@@ -215,7 +216,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
   }
 
   Future<void> _pickPlaylists() async {
-    final picked = await showPlaylistPickerDialog(
+    final picked = await showPlaylistPickerSheet(
       context,
       playlists: context.read<PlaylistsCubit>(),
       selected: _selected,
@@ -230,7 +231,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
 
   Future<void> _pickFolder() async {
     final settings = context.read<DownloadSettingsCubit>();
-    final path = await showSaveFolderDialog(
+    final path = await showSaveFolderSheet(
       context,
       current: _savePath.text,
       pickOther: settings.pickFolder,
@@ -249,6 +250,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
       return;
     }
     final color = _color;
+    final lyrics = _lyricsKey.currentState;
     final subtitleStatus = context
         .read<SubtitleAvailabilityCubit>()
         .state
@@ -271,275 +273,22 @@ class _DownloadScreenState extends State<DownloadScreen> {
         savePath: _savePath.text,
         duration: widget.duration,
         color: color?.toARGB32(),
-        thumbnailUrl: widget.thumbnailUrl,
+        // 이미지를 지웠으면 썸네일도 쓰지 않는다 (커버 없이 받는다).
+        thumbnailUrl: _cover == null ? null : widget.thumbnailUrl,
         cover: _cover,
         url: widget.url,
         importLyrics:
             _isYoutube &&
-            _importLyrics &&
-            subtitleStatus != SubtitleStatus.none,
-        lyricsLanguage: _lyricsLanguage,
-        lyricsSkipSounds: _skipSounds,
-        lyricsText: _lyricsLanguage == null ? null : _edited[_lyricsLanguage],
+            lyrics != null &&
+            ((lyrics.importLyrics && subtitleStatus != SubtitleStatus.none) ||
+                lyrics.custom != null),
+        lyricsLanguage: lyrics?.language,
+        lyricsSkipSounds: lyrics?.skipSounds ?? true,
+        lyricsText: lyrics?.lyricsText,
         audioLanguage: audioLanguage,
       ),
     );
     if (ok && mounted) Navigator.of(context).pop(true);
-  }
-
-  /// 자막이 있는지(확인 중 · 있음 · 없음 · 모름) 보여 주고, 가져올지 · 어떤 언어로 가져올지 정한다.
-  Widget _lyricsSection(BuildContext context, SubtitleAvailability sub) {
-    final l10n = context.l10n;
-    final p = context.palette;
-    final text = Theme.of(context).textTheme;
-    final none = sub.status == SubtitleStatus.none;
-    // 자막 확인이 끝나기 전에는 켜고 끌 수 없다 (있는지 알고 나서 고른다).
-    final locked = none || sub.status == SubtitleStatus.checking;
-    final status = switch (sub.status) {
-      SubtitleStatus.checking => l10n.downloadSubtitleChecking,
-      SubtitleStatus.found => l10n.downloadSubtitleFound(sub.languages.length),
-      SubtitleStatus.none => l10n.downloadSubtitleNone,
-      SubtitleStatus.unknown => l10n.downloadSubtitleUnknown,
-    };
-    final on = _importLyrics && !none;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        DecoratedBox(
-          decoration: ShapeDecoration(
-            color: p.surfaceHigh,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppRadii.sm),
-              side: BorderSide(color: p.outline),
-            ),
-          ),
-          child: SettingRow(
-            key: const ValueKey('download-import-lyrics'),
-            title: l10n.downloadImportLyrics,
-            description: status,
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (sub.status == SubtitleStatus.checking) ...[
-                  SizedBox.square(
-                    dimension: AppSizes.iconSm,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: p.accent,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                ],
-                AppSwitch(
-                  value: on,
-                  onChanged: locked
-                      ? null
-                      : (v) => setState(() => _importLyrics = v),
-                ),
-              ],
-            ),
-            onTap: locked
-                ? null
-                : () => setState(() => _importLyrics = !_importLyrics),
-          ),
-        ),
-        if (on && sub.languages.isNotEmpty) ...[
-          const SizedBox(height: AppSpacing.sm),
-          Text(l10n.downloadSubtitleLanguage, style: text.labelSmall),
-          const SizedBox(height: AppSpacing.xs),
-          _languageTable(context, sub),
-        ],
-        if (on) ...[
-          const SizedBox(height: AppSpacing.sm),
-          DecoratedBox(
-            decoration: ShapeDecoration(
-              color: p.surfaceHigh,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadii.sm),
-                side: BorderSide(color: p.outline),
-              ),
-            ),
-            child: SettingRow(
-              key: const ValueKey('download-lyrics-skip-sounds'),
-              title: l10n.downloadLyricsSkipSounds,
-              description: l10n.downloadLyricsSkipSoundsHint,
-              trailing: AppSwitch(
-                value: _skipSounds,
-                onChanged: _setSkipSounds,
-              ),
-              onTap: () => _setSkipSounds(!_skipSounds),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            l10n.downloadImportLyricsHint,
-            style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
-          ),
-        ],
-      ],
-    );
-  }
-
-  void _pickLanguage(String? lang) {
-    setState(() => _lyricsLanguage = lang);
-  }
-
-  /// 자막 한 벌의 전체 가사 페이지를 열고, "이 자막 사용"이면 그 언어로 고른다.
-  Future<void> _openSubtitle(String lang, String name, String kind) async {
-    final use = await showSubtitleDetail(
-      context,
-      url: widget.url,
-      language: lang,
-      title: name,
-      kind: kind,
-      skipSounds: _skipSounds,
-      selected: _lyricsLanguage == lang,
-      edited: _edited[lang],
-    );
-    if (use == null || !mounted) return;
-    setState(() {
-      final edited = use.edited;
-      if (edited != null) _edited[lang] = edited;
-    });
-    _pickLanguage(lang);
-  }
-
-  void _setSkipSounds(bool v) {
-    setState(() {
-      _skipSounds = v;
-      _edited.clear();
-    });
-  }
-
-  static const _rowsPerColumn = 5;
-
-  /// 자막 표: 한 칸에 5줄씩 세로로 쌓고, 넘치면 오른쪽으로 칸을 늘려 가로로 민다.
-  Widget _languageTable(BuildContext context, SubtitleAvailability sub) {
-    final l10n = context.l10n;
-    final p = context.palette;
-    final korean = Localizations.localeOf(context).languageCode == 'ko';
-    final entries = <({String? lang, String name, String kind})>[
-      (
-        lang: null,
-        name: l10n.downloadSubtitleAuto,
-        kind: l10n.downloadSubtitleAutoHint,
-      ),
-      for (final lang in sub.languages)
-        (
-          lang: lang,
-          name: subtitleLanguageLabel(lang, korean: korean),
-          kind: sub.automatic.contains(lang)
-              ? l10n.downloadSubtitleKindAuto
-              : l10n.downloadSubtitleKindManual,
-        ),
-    ];
-    final columns = [
-      for (var i = 0; i < entries.length; i += _rowsPerColumn)
-        entries.sublist(i, (i + _rowsPerColumn).clamp(0, entries.length)),
-    ];
-    Widget column(List<({String? lang, String name, String kind})> rows) =>
-        SizedBox(
-          width: columns.length == 1 ? null : 260,
-          child: DecoratedBox(
-            decoration: ShapeDecoration(
-              color: p.surfaceHigh,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppRadii.sm),
-                side: BorderSide(color: p.outline),
-              ),
-            ),
-            child: Column(
-              children: [
-                _languageRow(
-                  context,
-                  header: true,
-                  language: l10n.downloadSubtitleColLanguage,
-                  kind: l10n.downloadSubtitleColKind,
-                ),
-                for (final r in rows)
-                  _languageRow(
-                    context,
-                    language: r.name,
-                    kind: _edited.containsKey(r.lang)
-                        ? '${r.kind} · ${l10n.downloadSubtitleEdited}'
-                        : r.kind,
-                    selected: _lyricsLanguage == r.lang,
-                    openable: r.lang != null,
-                    onTap: () => r.lang == null
-                        ? _pickLanguage(null)
-                        : _openSubtitle(r.lang!, r.name, r.kind),
-                  ),
-              ],
-            ),
-          ),
-        );
-    if (columns.length == 1) return column(columns.single);
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (var i = 0; i < columns.length; i++) ...[
-            if (i > 0) const SizedBox(width: AppSpacing.sm),
-            column(columns[i]),
-          ],
-        ],
-      ),
-    );
-  }
-
-  /// 자막 표의 한 줄: 언어 · 종류 · 고른 표시. [header]면 머리글.
-  Widget _languageRow(
-    BuildContext context, {
-    required String language,
-    required String kind,
-    bool header = false,
-    bool selected = false,
-    bool openable = false,
-    VoidCallback? onTap,
-  }) {
-    final p = context.palette;
-    final text = Theme.of(context).textTheme;
-    final style = header
-        ? text.labelSmall?.copyWith(color: p.onSurfaceMuted)
-        : text.bodyMedium;
-    final kindStyle = header
-        ? style
-        : text.bodySmall?.copyWith(color: p.onSurfaceMuted);
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          border: header ? null : Border(top: BorderSide(color: p.outline)),
-        ),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
-        ),
-        child: Row(
-          children: [
-            Expanded(flex: 4, child: Text(language, style: style)),
-            Expanded(flex: 5, child: Text(kind, style: kindStyle)),
-            SizedBox(
-              width: AppSpacing.lg,
-              child: selected
-                  ? Icon(
-                      AppIcons.check,
-                      size: AppSizes.iconSm,
-                      color: p.primary,
-                    )
-                  : openable
-                  ? Icon(
-                      AppIcons.chevronRight,
-                      size: AppSizes.iconSm,
-                      color: p.onSurfaceMuted,
-                    )
-                  : null,
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   Widget _section(BuildContext context, String title, List<Widget> children) =>
@@ -577,14 +326,10 @@ class _DownloadScreenState extends State<DownloadScreen> {
                     first: true,
                     title: l10n.downloadSectionInfo,
                     children: [
-                      _CoverRow(
-                        art: _cover,
+                      CoverEntry(
+                        image: _cover == null ? null : imageOfCoverArt(_cover!),
                         label: l10n.downloadFieldCover,
-                        changeLabel: l10n.downloadCoverChange,
-                        resetLabel: l10n.downloadCoverDefault,
-                        canReset: _cover != _defaultCover,
-                        onChange: _changeCover,
-                        onReset: _resetCover,
+                        onTap: _changeCover,
                       ),
                       const SizedBox(height: AppSpacing.md),
                       AppTextField(
@@ -683,11 +428,11 @@ class _DownloadScreenState extends State<DownloadScreen> {
                   ]),
                   if (_isYoutube)
                     _section(context, l10n.downloadSectionLyrics, [
-                      BlocBuilder<
-                        SubtitleAvailabilityCubit,
-                        SubtitleAvailability
-                      >(
-                        builder: (context, sub) => _lyricsSection(context, sub),
+                      DownloadLyricsSection(
+                        key: _lyricsKey,
+                        url: widget.url,
+                        songTitle: () => _title.text,
+                        songArtist: () => _artist.text,
                       ),
                     ]),
                 ],
@@ -727,75 +472,6 @@ class _DownloadScreenState extends State<DownloadScreen> {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// 페이지 맨 위의 커버: 작은 정사각형 + 바꾸기 · 기본으로. 상자 없이 한 줄로 둔다.
-class _CoverRow extends StatelessWidget {
-  const _CoverRow({
-    required this.art,
-    required this.label,
-    required this.changeLabel,
-    required this.resetLabel,
-    required this.canReset,
-    required this.onChange,
-    required this.onReset,
-  });
-
-  final CoverArt? art;
-  final String label;
-  final String changeLabel;
-  final String resetLabel;
-  final bool canReset;
-  final VoidCallback onChange;
-  final VoidCallback onReset;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    return Row(
-      children: [
-        GestureDetector(
-          onTap: onChange,
-          child: ArtworkBox(
-            image: art == null ? null : imageOfCoverArt(art!),
-            size: 72,
-            radius: AppRadii.sm,
-          ),
-        ),
-        const SizedBox(width: AppSpacing.md),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: text.labelLarge),
-              const SizedBox(height: AppSpacing.xs),
-              Wrap(
-                spacing: AppSpacing.xs,
-                runSpacing: AppSpacing.xs,
-                children: [
-                  PillButton(
-                    label: changeLabel,
-                    icon: AppIcons.photoLibrary,
-                    compact: true,
-                    variant: PillVariant.tonal,
-                    onPressed: onChange,
-                  ),
-                  if (canReset)
-                    PillButton(
-                      label: resetLabel,
-                      icon: AppIcons.restart,
-                      compact: true,
-                      variant: PillVariant.tonal,
-                      onPressed: onReset,
-                    ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

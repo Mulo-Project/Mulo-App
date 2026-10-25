@@ -28,6 +28,7 @@ class ShowLyricsOverlayParams {
     required this.hideLabel,
     required this.offLabel,
     required this.accent,
+    this.emptyLabel = '',
   });
 
   final String trackId;
@@ -35,6 +36,9 @@ class ShowLyricsOverlayParams {
   final String hideLabel;
   final String offLabel;
   final int accent;
+
+  /// 싱크 가사가 없을 때 창에 대신 보일 글.
+  final String emptyLabel;
 }
 
 class ShowLyricsOverlay implements UseCase<void, ShowLyricsOverlayParams> {
@@ -49,6 +53,7 @@ class ShowLyricsOverlay implements UseCase<void, ShowLyricsOverlayParams> {
     hideLabel: p.hideLabel,
     offLabel: p.offLabel,
     accent: p.accent,
+    emptyLabel: p.emptyLabel,
   );
 }
 

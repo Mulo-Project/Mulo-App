@@ -131,4 +131,17 @@ void main() {
     expect(tracks.map((t) => t.title), ['a', 'b song']);
     expect(tracks.every((t) => File(t.uri).existsSync()), isTrue);
   });
+
+  test('폴더 스캔: 추가일은 찾은 시각이 아니라 파일 날짜다', () async {
+    final dir = await Directory.systemTemp.createTemp('music_scan_date');
+    addTearDown(() => dir.delete(recursive: true));
+    final old = DateTime(2024, 3, 5, 10);
+    final file = await File('${dir.path}/old.mp3').create();
+    await file.setLastModified(old);
+
+    final tracks = await DirectoryMusicDataSource(
+      now: () => DateTime(2026, 10, 25),
+    ).scanDirectory(dir);
+    expect(tracks.single.addedAt, old);
+  });
 }

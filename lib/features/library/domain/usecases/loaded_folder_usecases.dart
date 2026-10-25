@@ -44,27 +44,104 @@ class AddLoadedFolder implements UseCase<AddFolderResult, NoParams> {
     final known = [_folders.defaultFolder, ...extra].map(normalizeFolderPath);
     if (known.contains(path)) return AddFolderResult.duplicate;
     await _folders.saveExtra([...extra, path]);
+    // 불러오는 폴더를 더하면 저장 위치 목록에도 더한다 (그 뒤로는 서로 따로 움직인다).
+    await _addSaveLocation(_folders, path);
     return AddFolderResult.added;
   }
 }
 
-/// 폴더를 목록에서 뺀다. 기본 저장 위치는 뺄 수 없다.
-class RemoveLoadedFolder implements UseCase<bool, String> {
-  const RemoveLoadedFolder(this._folders);
+/// 저장 위치 목록 (기본 저장 위치 제외). 따로 저장한 적이 없으면 불러오는 폴더를 처음 목록으로 쓴다.
+Future<List<String>> _storedSaveLocations(
+  LoadedFolderRepository folders,
+) async => (await folders.loadSaveLocations()) ?? await folders.loadExtra();
+
+Future<void> _addSaveLocation(
+  LoadedFolderRepository folders,
+  String path,
+) async {
+  final target = normalizeFolderPath(path);
+  if (target.isEmpty || target == normalizeFolderPath(folders.defaultFolder)) {
+    return;
+  }
+  final list = await _storedSaveLocations(folders);
+  if (list.any((p) => normalizeFolderPath(p) == target)) {
+    await folders.saveSaveLocations(list);
+    return;
+  }
+  await folders.saveSaveLocations([...list, target]);
+}
+
+/// 저장 위치 목록: 기본 저장 위치가 맨 위. 불러오는 폴더와는 따로 관리된다.
+class LoadSaveLocations implements UseCase<List<String>, NoParams> {
+  const LoadSaveLocations(this._folders);
 
   final LoadedFolderRepository _folders;
 
   @override
-  Future<bool> call(String path) async {
+  Future<List<String>> call(NoParams _) async => [
+    _folders.defaultFolder,
+    ...await _storedSaveLocations(_folders),
+  ];
+}
+
+/// 저장 위치를 목록에 더한다 (이미 있거나 기본 저장 위치면 그대로).
+class AddSaveLocation implements UseCase<void, String> {
+  const AddSaveLocation(this._folders);
+
+  final LoadedFolderRepository _folders;
+
+  @override
+  Future<void> call(String path) => _addSaveLocation(_folders, path);
+}
+
+/// 저장 위치를 목록에서 뺀다. 불러오는 폴더 목록과 보관함의 곡은 그대로다. 기본 저장 위치는 뺄 수 없다.
+class RemoveSaveLocation implements UseCase<void, String> {
+  const RemoveSaveLocation(this._folders);
+
+  final LoadedFolderRepository _folders;
+
+  @override
+  Future<void> call(String path) async {
     final target = normalizeFolderPath(path);
-    if (target == normalizeFolderPath(_folders.defaultFolder)) return false;
+    if (target == normalizeFolderPath(_folders.defaultFolder)) return;
+    final list = await _storedSaveLocations(_folders);
+    await _folders.saveSaveLocations([
+      for (final p in list)
+        if (normalizeFolderPath(p) != target) p,
+    ]);
+  }
+}
+
+/// 폴더를 목록에서 빼고, 그 폴더에서 불러온 곡을 보관함에서 지운다 (음악 파일은 그대로).
+/// 남은 폴더 안에도 있는 곡(하위 폴더로 겹칠 때)은 지우지 않는다. 기본 저장 위치는 뺄 수 없다.
+/// 돌려주는 값은 보관함에서 지운 곡의 id (폴더를 못 뺐으면 null).
+class RemoveLoadedFolder implements UseCase<Set<String>?, String> {
+  const RemoveLoadedFolder(this._folders, this._library);
+
+  final LoadedFolderRepository _folders;
+  final LibraryRepository _library;
+
+  @override
+  Future<Set<String>?> call(String path) async {
+    final target = normalizeFolderPath(path);
+    if (target == normalizeFolderPath(_folders.defaultFolder)) return null;
     final extra = await _folders.loadExtra();
     final kept = [
       for (final p in extra)
         if (normalizeFolderPath(p) != target) p,
     ];
-    if (kept.length == extra.length) return false;
+    if (kept.length == extra.length) return null;
     await _folders.saveExtra(kept);
-    return true;
+    final remaining = [_folders.defaultFolder, ...kept];
+    final tracks = await _library.watchTracks().first;
+    final removed = <String>{};
+    for (final t in tracks) {
+      if (isInsideFolder(t.folder, target) &&
+          !remaining.any((f) => isInsideFolder(t.folder, f))) {
+        await _library.delete(t.id);
+        removed.add(t.id);
+      }
+    }
+    return removed;
   }
 }

@@ -1,6 +1,5 @@
-import 'dart:async';
 import 'dart:math' as math;
-import 'dart:ui' show FontFeature, ImageFilter;
+import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -17,6 +16,12 @@ import '../../../lyrics/presentation/screens/lyrics_full_screen.dart';
 import '../../../lyrics/presentation/widgets/lyrics_view.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../bloc/now_playing_cubit.dart';
+import 'player_seek.dart';
+import 'player_sleep_timer.dart';
+
+export 'player_morph_seek.dart';
+export 'player_seek.dart';
+export 'player_sleep_timer.dart';
 
 /// 플레이어 화면 하나를 그리는 데 필요한 값. 모양마다 이 값으로 배치만 다르게 한다.
 class PlayerLayoutData {
@@ -33,6 +38,21 @@ class PlayerLayoutData {
   final NowPlayingCubit vm;
   final bool showLyrics;
   final VoidCallback onToggleLyrics;
+}
+
+/// 재생 위치(와 곡)가 바뀔 때만 다시 그리는 구역. 위치는 1초에 여러 번 바뀌므로 진행 막대 · 시간처럼
+/// 위치를 쓰는 곳만 이것으로 감싸고, 나머지 플레이어 화면은 위치가 바뀌어도 다시 그리지 않는다.
+class PositionBuilder extends StatelessWidget {
+  const PositionBuilder({super.key, required this.builder});
+
+  final Widget Function(BuildContext context, NowPlayingState state) builder;
+
+  @override
+  Widget build(BuildContext context) =>
+      BlocBuilder<NowPlayingCubit, NowPlayingState>(
+        buildWhen: (a, b) => a.position != b.position || a.track != b.track,
+        builder: builder,
+      );
 }
 
 /// 지금 곡의 커버 이미지 · 색. 배경 그라데이션도 여기서 뽑는다.
@@ -277,269 +297,48 @@ class PlayerCover extends StatelessWidget {
 }
 
 /// 가사 보기: 커버 자리를 가사가 대신한다.
-class PlayerLyricsPane extends StatelessWidget {
+///
+/// 플레이어 화면은 재생 위치가 바뀔 때마다(0.25초) 통째로 다시 그려진다. 같은 곡 · 같은 언어면
+/// 가사 보기 위젯을 그대로 돌려줘서 그 틱마다 가사 전체를 다시 만들지 않는다
+/// (가사 보기는 지금 줄이 바뀔 때만 스스로 다시 그린다).
+class PlayerLyricsPane extends StatefulWidget {
   const PlayerLyricsPane({super.key, required this.track});
 
   final Track track;
 
   @override
-  Widget build(BuildContext context) => Stack(
-    children: [
-      LyricsView(track: track),
-      // 가사만 크게 보기.
-      Positioned(
-        top: 0,
-        right: 0,
-        child: CircleIconButton(
-          icon: AppIcons.fullscreen,
-          tooltip: context.l10n.playerLyricsExpand,
-          size: AppSizes.circleButton * .8,
-          onPressed: () => LyricsFullScreen.open(context),
-        ),
-      ),
-    ],
-  );
+  State<PlayerLyricsPane> createState() => _PlayerLyricsPaneState();
 }
 
-/// 기본 원형 손잡이 + 아래로 이어지는 둥근 삼각형 + 현재 재생 시간 상자를 한 덩어리로 그린 손잡이.
-/// 총 재생 시간은 막대 위 오른쪽.
-class PlayerSeekBar extends StatelessWidget {
-  const PlayerSeekBar({
-    super.key,
-    required this.progress,
-    required this.onSeek,
-    this.onSeekStart,
-    this.onSeekEnd,
-    required this.position,
-    required this.total,
-  });
-
-  final double progress;
-  final ValueChanged<double> onSeek;
-
-  /// 끌기(또는 누르기) 시작 · 끝. 끝날 때 한 번만 실제로 옮기는 데 쓴다.
-  final VoidCallback? onSeekStart;
-  final VoidCallback? onSeekEnd;
-  final Duration position;
-  final Duration total;
-
-  static const _knob = 14.0;
+class _PlayerLyricsPaneState extends State<PlayerLyricsPane> {
+  Widget? _view;
+  Track? _viewTrack;
+  Locale? _viewLocale;
 
   @override
   Widget build(BuildContext context) {
-    final p = context.palette;
-    final style = Theme.of(context).textTheme.labelMedium
-        ?.copyWith(color: p.onSurface.withValues(alpha: .7));
-    return LayoutBuilder(
-      builder: (context, c) {
-        final room = c.maxWidth - TimeThumb.edge * 2 - _knob;
-        void seek(Offset local) => onSeek((local.dx - _knob / 2) / room);
-        final v = progress.clamp(0.0, 1.0);
-        final knobX = room * v + _knob / 2;
-        final thumbX = knobX - TimeThumb.width / 2;
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: TimeThumb.edge),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Align(
-                alignment: Alignment.centerRight,
-                child: Text(TimeText.clock(total), style: style),
-              ),
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTapDown: (d) {
-                  onSeekStart?.call();
-                  seek(d.localPosition);
-                },
-                onTapUp: (_) => onSeekEnd?.call(),
-                onTapCancel: () => onSeekEnd?.call(),
-                onHorizontalDragStart: (_) => onSeekStart?.call(),
-                onHorizontalDragUpdate: (d) => seek(d.localPosition),
-                onHorizontalDragEnd: (_) => onSeekEnd?.call(),
-                onHorizontalDragCancel: () => onSeekEnd?.call(),
-                child: SizedBox(
-                  height: 28,
-                  child: Stack(
-                    alignment: Alignment.centerLeft,
-                    clipBehavior: Clip.none,
-                    children: [
-                      Container(
-                        height: 4,
-                        decoration: ShapeDecoration(
-                          shape: const StadiumBorder(),
-                          color: p.onSurface.withValues(alpha: .2),
-                        ),
-                      ),
-                      Container(
-                        height: 4,
-                        width: knobX,
-                        decoration: ShapeDecoration(
-                          shape: const StadiumBorder(),
-                          color: p.onSurface,
-                        ),
-                      ),
-                      Positioned(
-                        left: thumbX,
-                        top: 14 - TimeThumb.knobR,
-                        child: TimeThumb(
-                          position: position,
-                          knobX: knobX - thumbX,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: TimeThumb.height - 21),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-/// 진행 막대 손잡이: 원형 손잡이 아래로 둥근 삼각형이 이어지고, 그 아래 현재 재생 시간 상자.
-/// 손잡이 원의 가운데가 가로 [knobX] (왼쪽 위 모서리 기준), 세로 [knobR]에 놓인다.
-class TimeThumb extends StatelessWidget {
-  const TimeThumb({super.key, required this.position, required this.knobX});
-
-  final Duration position;
-  final double knobX;
-
-  static const width = 52.0;
-  static const height = 40.0;
-  static const knobR = 7.0;
-
-  /// 손잡이가 막대 끝에 가도 상자가 밀리지 않도록 막대 양끝에 두는 여백.
-  static const edge = width / 2 - knobR;
-
-  @override
-  Widget build(BuildContext context) {
-    final p = context.palette;
-    return IgnorePointer(
-      child: SizedBox(
-        width: width,
-        height: height,
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: CustomPaint(
-                painter: _ThumbPainter(
-                  color: p.onSurface,
-                  shadow: p.scrim.withValues(alpha: .3),
-                  knobX: knobX,
-                ),
-              ),
-            ),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              height: 22,
-              child: Center(
-                child: Text(
-                  TimeText.clock(position),
-                  maxLines: 1,
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: p.background,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ThumbPainter extends CustomPainter {
-  _ThumbPainter({
-    required this.color,
-    required this.shadow,
-    required this.knobX,
-  });
-
-  final Color color;
-  final Color shadow;
-  final double knobX;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    const r = TimeThumb.knobR;
-    final x = knobX;
-    final l = (x - 7).clamp(2.0, size.width);
-    final rt = (x + 7).clamp(0.0, size.width - 2);
-    final body = RRect.fromLTRBR(
-      0,
-      size.height - 22,
-      size.width,
-      size.height,
-      const Radius.circular(11),
-    );
-    final base = Path()
-      ..addOval(Rect.fromCircle(center: Offset(x, r), radius: r))
-      ..addRRect(body);
-    final neck = Path()
-      ..moveTo(x, r + 2)
-      ..lineTo(rt, body.top + 1)
-      ..lineTo(l, body.top + 1)
-      ..close();
-    final all = Path.combine(PathOperation.union, base, neck);
-    canvas.drawPath(
-      all,
-      Paint()
-        ..color = shadow
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
-    );
-    canvas.drawPath(all, Paint()..color = color);
-    // 삼각형 모서리를 둥글게.
-    canvas.drawPath(
-      neck,
-      Paint()
-        ..color = color
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 4
-        ..strokeJoin = StrokeJoin.round,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_ThumbPainter old) =>
-      old.color != color || old.knobX != knobX || old.shadow != shadow;
-}
-
-/// "02:15 / 44:39" 글자.
-class TimeText extends StatelessWidget {
-  const TimeText({super.key, required this.data});
-
-  final PlayerLayoutData data;
-
-  static String clock(Duration d) {
-    final h = d.inHours;
-    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final sec = d.inSeconds.remainder(60).toString().padLeft(2, '0');
-    return h > 0 ? '$h:$m:$sec' : '$m:$sec';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final p = context.palette;
-    return Text.rich(
-      TextSpan(
+    final locale = Localizations.localeOf(context);
+    if (_view == null || _viewTrack != widget.track || _viewLocale != locale) {
+      _viewTrack = widget.track;
+      _viewLocale = locale;
+      _view = Stack(
         children: [
-          TextSpan(text: clock(data.state.position)),
-          TextSpan(
-            text: ' / ${clock(data.track.duration)}',
-            style: TextStyle(color: p.onSurface.withValues(alpha: .6)),
+          LyricsView(track: widget.track),
+          // 가사만 크게 보기.
+          Positioned(
+            top: 0,
+            right: 0,
+            child: CircleIconButton(
+              icon: AppIcons.fullscreen,
+              tooltip: context.l10n.playerLyricsExpand,
+              size: AppSizes.circleButton * .8,
+              onPressed: () => LyricsFullScreen.open(this.context),
+            ),
           ),
         ],
-      ),
-      style: Theme.of(context).textTheme.labelLarge,
-    );
+      );
+    }
+    return _view!;
   }
 }
 
@@ -730,9 +529,11 @@ class SeekStepButton extends StatelessWidget {
     return IconButton(
       iconSize: 28,
       tooltip: forward ? l10n.playerForward10 : l10n.playerRewind10,
-      onPressed: () => data.vm.seekTo(
-        forward ? data.state.position + step : data.state.position - step,
-      ),
+      // 누른 순간의 위치에서 옮긴다 (화면은 위치가 바뀌어도 다시 그리지 않으므로 지금 값을 읽는다).
+      onPressed: () {
+        final now = data.vm.state.position;
+        data.vm.seekTo(forward ? now + step : now - step);
+      },
       icon: Icon(
         forward ? AppIcons.forward10 : AppIcons.replay10,
         color: color ?? context.palette.onSurface.withValues(alpha: .85),
@@ -753,187 +554,6 @@ class AddToPlaylistButton extends StatelessWidget {
     onPressed: () => context.push(Routes.playlistPick, extra: [trackId]),
     icon: Icon(AppIcons.playlistAdd, color: context.palette.onSurfaceMuted),
   );
-}
-
-/// 수면 타이머: 시계 휠 대화상자에서 정한 시간 뒤에 재생을 멈춘다.
-class SleepTimerButton extends StatelessWidget {
-  const SleepTimerButton({super.key, required this.data});
-
-  final PlayerLayoutData data;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final p = context.palette;
-    final on = data.state.sleepMinutes != null;
-    return Builder(
-      builder: (btn) => IconButton(
-        tooltip: l10n.playerSleepTimer,
-        onPressed: () async {
-          final picked = await showDialog<int>(
-            context: btn,
-            useRootNavigator: true,
-            builder: (_) => _SleepTimerDialog(
-              current: _remainingMinutes(data.state.sleepEndsAt),
-            ),
-          );
-          if (picked == null || !btn.mounted) return;
-          data.vm.setSleepTimer(picked == 0 ? null : picked);
-          ScaffoldMessenger.of(btn).hideCurrentSnackBar();
-          ScaffoldMessenger.of(btn).showSnackBar(
-            SnackBar(
-              content: Text(
-                picked == 0
-                    ? l10n.playerSleepTimerCleared
-                    : l10n.playerSleepTimerSet(picked),
-              ),
-            ),
-          );
-        },
-        icon: on
-            ? Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(AppIcons.sleep, color: p.accent),
-                  const SizedBox(width: AppSpacing.xs),
-                  _SleepRemaining(endsAt: data.state.sleepEndsAt),
-                ],
-              )
-            : Icon(AppIcons.sleepOutline, color: p.onSurfaceMuted),
-      ),
-    );
-  }
-}
-
-/// 남은 시간을 올림한 분 (꺼져 있으면 null).
-int? _remainingMinutes(DateTime? endsAt) {
-  if (endsAt == null) return null;
-  final left = endsAt.difference(DateTime.now());
-  return left.isNegative ? null : (left.inSeconds / 60).ceil();
-}
-
-/// 수면 타이머가 켜져 있을 때 버튼 옆에 보이는 남은 시간 (`1:05:00` / `12:30`).
-class _SleepRemaining extends StatefulWidget {
-  const _SleepRemaining({required this.endsAt});
-
-  final DateTime? endsAt;
-
-  @override
-  State<_SleepRemaining> createState() => _SleepRemainingState();
-}
-
-class _SleepRemainingState extends State<_SleepRemaining> {
-  Timer? _tick;
-
-  @override
-  void initState() {
-    super.initState();
-    _tick = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    _tick?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final end = widget.endsAt;
-    if (end == null) return const SizedBox.shrink();
-    final left = end.difference(DateTime.now());
-    final s = left.isNegative ? 0 : left.inSeconds;
-    String two(int n) => n.toString().padLeft(2, '0');
-    final label = s >= 3600
-        ? '${s ~/ 3600}:${two(s % 3600 ~/ 60)}:${two(s % 60)}'
-        : '${two(s ~/ 60)}:${two(s % 60)}';
-    return Text(
-      label,
-      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-        color: context.palette.accent,
-        fontFeatures: const [FontFeature.tabularFigures()],
-      ),
-    );
-  }
-}
-
-/// 휠 옆에 고정된 단위 글자 (시간 · 분).
-class _WheelUnit extends StatelessWidget {
-  const _WheelUnit(this.label);
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(left: AppSpacing.xs),
-    child: Text(
-      label,
-      style: Theme.of(context).textTheme.titleMedium
-          ?.copyWith(color: context.palette.onSurfaceMuted),
-    ),
-  );
-}
-
-/// 수면 타이머 시간 고르기: 시간 · 분 휠을 돌려 정한다. 시작하면 총 분, 끄기는 0으로 닫는다.
-class _SleepTimerDialog extends StatefulWidget {
-  const _SleepTimerDialog({required this.current});
-
-  final int? current;
-
-  @override
-  State<_SleepTimerDialog> createState() => _SleepTimerDialogState();
-}
-
-class _SleepTimerDialogState extends State<_SleepTimerDialog> {
-  late int _hours = (widget.current ?? 30) ~/ 60;
-  late int _minutes = (widget.current ?? 30) % 60;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final total = _hours * 60 + _minutes;
-    return AppDialog(
-      title: l10n.playerSleepTimer,
-      content: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          WheelPicker(
-            count: 24,
-            value: _hours,
-            onChanged: (v) => setState(() => _hours = v),
-          ),
-          _WheelUnit(l10n.playerSleepTimerUnitHour),
-          const SizedBox(width: AppSpacing.md),
-          WheelPicker(
-            count: 60,
-            value: _minutes,
-            onChanged: (v) => setState(() => _minutes = v),
-          ),
-          _WheelUnit(l10n.playerSleepTimerUnitMinute),
-        ],
-      ),
-      actions: [
-        if (widget.current != null)
-          PillButton(
-            label: l10n.playerSleepTimerOff,
-            variant: PillVariant.tonal,
-            onPressed: () => Navigator.of(context).pop(0),
-          )
-        else
-          PillButton(
-            label: l10n.actionCancel,
-            variant: PillVariant.tonal,
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-        PillButton(
-          label: l10n.playerSleepTimerStart,
-          onPressed: total == 0 ? null : () => Navigator.of(context).pop(total),
-        ),
-      ],
-    );
-  }
 }
 
 /// 이퀄라이저 화면으로 간다 (플레이어 위로 덮어 열고, 뒤로 가면 플레이어로 돌아온다).
@@ -969,6 +589,22 @@ class PlayerControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 조작부가 화면 높이의 3분의 1을 넘지 않게 한다 (낮은 화면 · 큰 글자에서는 그만큼 줄여 그린다).
+    final cap = MediaQuery.sizeOf(context).height / 3;
+    return ConstrainedBox(
+      constraints: BoxConstraints(maxHeight: cap),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.bottomCenter,
+        child: SizedBox(
+          width: MediaQuery.sizeOf(context).width,
+          child: _content(context),
+        ),
+      ),
+    );
+  }
+
+  Widget _content(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: Column(
@@ -1006,18 +642,20 @@ class PlayerControls extends StatelessWidget {
             ],
           ),
           if (seekBar) ...[
-            // 제목 묶음 → 진행 막대 → 재생 조작 → 보조 조작 순으로 틈을 한 단계씩 넓게 둔다.
-            const SizedBox(height: AppSpacing.md),
-            PlayerSeekBar(
-              progress: data.state.progress,
-              onSeek: data.vm.seekFraction,
-              onSeekStart: data.vm.beginScrub,
-              onSeekEnd: data.vm.endScrub,
-              position: data.state.position,
-              total: data.track.duration,
+            // 제목 묶음 → 진행 막대 → 재생 조작 → 보조 조작 순으로 틈을 둔다.
+            const SizedBox(height: AppSpacing.sm),
+            PositionBuilder(
+              builder: (context, state) => PlayerSeekBar(
+                progress: state.progress,
+                onSeek: data.vm.seekFraction,
+                onSeekStart: data.vm.beginScrub,
+                onSeekEnd: data.vm.endScrub,
+                position: state.position,
+                total: data.track.duration,
+              ),
             ),
           ],
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.xs),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -1028,13 +666,15 @@ class PlayerControls extends StatelessWidget {
               SeekStepButton(data: data, forward: true),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.xs),
           // 보조 조작(셔플 · 반복 · 수면 · 이퀄라이저)은 재생 조작보다 작게 두어 대비를 준다.
           IconButtonTheme(
             data: IconButtonThemeData(
               style: IconButton.styleFrom(
                 iconSize: 20,
                 visualDensity: VisualDensity.compact,
+                minimumSize: const Size(36, 36),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
             ),
             child: Row(
@@ -1051,359 +691,4 @@ class PlayerControls extends StatelessWidget {
       ),
     );
   }
-}
-
-/// 모양 윤곽을 그리는 길. [extend]는 영역 위로 늘린 높이 (화면 맨 위까지 잇는 용도).
-typedef SeekPathBuilder = Path Function(Size size, double extend);
-
-/// 진행 막대가 모양(호 · 틀)을 따라 돌다가, 가사 보기에서는 곧은 막대로 부드럽게 펴진다.
-///
-/// [straight]가 켜지면 윤곽 위의 점들이 영역 아래쪽의 곧은 막대로 옮겨 가고, 커버는 흐려지고
-/// 가사가 나타난다. [reachTop]이면 영역 위로 화면 맨 위까지 늘려서 그린다.
-class MorphSeek extends StatefulWidget {
-  const MorphSeek({
-    super.key,
-    required this.progress,
-    required this.onSeek,
-    this.onSeekStart,
-    this.onSeekEnd,
-    required this.straight,
-    required this.pathOf,
-    required this.cover,
-    required this.lyrics,
-    required this.track,
-    required this.fill,
-    this.knobRing,
-    required this.position,
-    required this.total,
-    required this.timeAt,
-    this.reachTop = false,
-  });
-
-  final double progress;
-  final ValueChanged<double> onSeek;
-  final VoidCallback? onSeekStart;
-  final VoidCallback? onSeekEnd;
-  final bool straight;
-  final SeekPathBuilder pathOf;
-
-  /// 커버 모양 (늘린 영역 전체에 깔린다).
-  final Widget Function(Size size, double extend) cover;
-  final Widget lyrics;
-  final Color track;
-  final Color fill;
-  final Color? knobRing;
-  final bool reachTop;
-
-  /// 현재 · 전체 재생 시간.
-  final Duration position;
-  final Duration total;
-
-  /// 곡선 모양일 때 현재 · 전체 시간을 양옆에 놓을 가운데 위치 (모양 아래 뚫린 곳).
-  final Offset Function(Size size, double extend) timeAt;
-
-  /// 곧은 막대가 놓이는 아래 띠 높이.
-  static const band = 64.0;
-  static const _samples = 200;
-
-  /// [points] 중 [local]에서 가장 가까운 점의 위치(0 ~ 1)와 거리.
-  static (double, double) nearest(List<Offset> points, Offset local) {
-    var best = 0;
-    var bestDist = double.infinity;
-    for (var i = 0; i < points.length; i++) {
-      final d = (points[i] - local).distance;
-      if (d < bestDist) {
-        bestDist = d;
-        best = i;
-      }
-    }
-    return (best / (points.length - 1), bestDist);
-  }
-
-  @override
-  State<MorphSeek> createState() => _MorphSeekState();
-}
-
-class _MorphSeekState extends State<MorphSeek>
-    with SingleTickerProviderStateMixin {
-  late final _c = AnimationController(
-    vsync: this,
-    duration: AppMotion.slow,
-    value: widget.straight ? 1 : 0,
-  );
-  var _extend = 0.0;
-  var _dragging = false;
-  var _points = const <Offset>[];
-
-  @override
-  void didUpdateWidget(MorphSeek old) {
-    super.didUpdateWidget(old);
-    if (old.straight != widget.straight) {
-      widget.straight ? _c.forward() : _c.reverse();
-    }
-  }
-
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
-
-  void _measure() {
-    if (!widget.reachTop) return;
-    final box = context.findRenderObject();
-    if (box is! RenderBox || !box.hasSize) return;
-    final dy = box.localToGlobal(Offset.zero).dy.clamp(0.0, 400.0);
-    if ((dy - _extend).abs() > .5) setState(() => _extend = dy);
-  }
-
-  List<Offset> _pointsFor(Size size, double t) {
-    final metric = widget.pathOf(size, _extend).computeMetrics().first;
-    final y = size.height - MorphSeek.band + 24;
-    const inset = AppSpacing.lg + TimeThumb.edge + TimeThumb.knobR;
-    const n = MorphSeek._samples;
-    return [
-      for (var i = 0; i <= n; i++)
-        Offset.lerp(
-          metric.getTangentForOffset(metric.length * i / n)!.position,
-          Offset(inset + (size.width - inset * 2) * i / n, y),
-          t,
-        )!,
-    ];
-  }
-
-  bool _near(Offset local, double t) {
-    final (_, dist) = MorphSeek.nearest(_points, local);
-    return dist <= 44 - 16 * t;
-  }
-
-  void _endDrag() {
-    if (_dragging) widget.onSeekEnd?.call();
-    _dragging = false;
-  }
-
-  void _seek(Offset local) =>
-      widget.onSeek(MorphSeek.nearest(_points, local).$1);
-
-  /// 곡선일 때는 모양 아래 뚫린 곳 양옆에 현재(왼쪽) · 전체(오른쪽) 시간, 곧은 막대일 때는 막대 위 총 시간과
-  /// 손잡이 아래 삼각형 + 현재 시간.
-  List<Widget> _timeLabels(BuildContext context, Size size, double t) {
-    final p = context.palette;
-    final style = Theme.of(context).textTheme.labelMedium
-        ?.copyWith(color: p.onSurface.withValues(alpha: .7));
-    const w = 72.0;
-    final gap = widget.timeAt(size, _extend);
-    final v = widget.progress.clamp(0.0, 1.0);
-    final head = _points.isEmpty
-        ? Offset.zero
-        : _points[(v * (_points.length - 1)).round()];
-    final lineY = size.height - MorphSeek.band + 24;
-    final thumbX = head.dx - TimeThumb.width / 2;
-    return [
-      if (t < 1) ...[
-        Positioned(
-          left: gap.dx - 76 - w,
-          top: gap.dy - 10,
-          width: w,
-          child: IgnorePointer(
-            child: Opacity(
-              opacity: 1 - t,
-              child: Text(
-                TimeText.clock(widget.position),
-                textAlign: TextAlign.right,
-                style: Theme.of(context).textTheme.labelLarge,
-              ),
-            ),
-          ),
-        ),
-        Positioned(
-          left: gap.dx + 76,
-          top: gap.dy - 10,
-          width: w,
-          child: IgnorePointer(
-            child: Opacity(
-              opacity: 1 - t,
-              child: Text(
-                TimeText.clock(widget.total),
-                textAlign: TextAlign.left,
-                style: Theme.of(context).textTheme.labelLarge,
-              ),
-            ),
-          ),
-        ),
-      ],
-      if (t > 0) ...[
-        Positioned(
-          right: AppSpacing.lg,
-          top: lineY - 24,
-          child: Opacity(
-            opacity: t,
-            child: Text(TimeText.clock(widget.total), style: style),
-          ),
-        ),
-        Positioned(
-          left: thumbX,
-          top: lineY - TimeThumb.knobR,
-          child: Opacity(
-            opacity: t,
-            child: TimeThumb(
-              position: widget.position,
-              knobX: head.dx - thumbX,
-            ),
-          ),
-        ),
-      ],
-    ];
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _measure();
-    });
-    final p = context.palette;
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Positioned(
-          top: -_extend,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: LayoutBuilder(
-            builder: (context, c) {
-              final size = c.biggest;
-              return AnimatedBuilder(
-                animation: _c,
-                builder: (context, _) {
-                  final t = Curves.easeInOutCubic.transform(_c.value);
-                  _points = _pointsFor(size, t);
-                  return Listener(
-                    behavior: HitTestBehavior.translucent,
-                    onPointerDown: (e) {
-                      _dragging = _near(e.localPosition, t);
-                      if (_dragging) {
-                        widget.onSeekStart?.call();
-                        _seek(e.localPosition);
-                      }
-                    },
-                    onPointerMove: (e) {
-                      if (_dragging) _seek(e.localPosition);
-                    },
-                    onPointerUp: (_) => _endDrag(),
-                    onPointerCancel: (_) => _endDrag(),
-                    child: Stack(
-                      children: [
-                        if (t < 1)
-                          Positioned.fill(
-                            child: IgnorePointer(
-                              child: Opacity(
-                                opacity: 1 - t,
-                                child: widget.cover(size, _extend),
-                              ),
-                            ),
-                          ),
-                        if (t > 0)
-                          Positioned(
-                            top: _extend,
-                            left: 0,
-                            right: 0,
-                            bottom: MorphSeek.band,
-                            child: IgnorePointer(
-                              ignoring: t < 1,
-                              child: Opacity(opacity: t, child: widget.lyrics),
-                            ),
-                          ),
-                        Positioned.fill(
-                          child: IgnorePointer(
-                            child: CustomPaint(
-                              painter: _MorphPainter(
-                                points: _points,
-                                value: widget.progress,
-                                t: t,
-                                track: Color.lerp(
-                                  widget.track,
-                                  p.onSurface.withValues(alpha: .2),
-                                  t,
-                                )!,
-                                fill: Color.lerp(widget.fill, p.onSurface, t)!,
-                                knobRing: widget.knobRing,
-                                shadow: p.scrim.withValues(alpha: .4),
-                              ),
-                            ),
-                          ),
-                        ),
-                        ..._timeLabels(context, size, t),
-                      ],
-                    ),
-                  );
-                },
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _MorphPainter extends CustomPainter {
-  _MorphPainter({
-    required this.points,
-    required this.value,
-    required this.t,
-    required this.track,
-    required this.fill,
-    required this.knobRing,
-    required this.shadow,
-  });
-
-  final List<Offset> points;
-  final double value;
-  final double t;
-  final Color track;
-  final Color fill;
-  final Color? knobRing;
-  final Color shadow;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (points.length < 2) return;
-    final line = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 4
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-    canvas.drawPath(Path()..addPolygon(points, false), line..color = track);
-    final v = value.clamp(0.0, 1.0) * (points.length - 1);
-    final whole = v.floor();
-    final head = whole >= points.length - 1
-        ? points.last
-        : Offset.lerp(points[whole], points[whole + 1], v - whole)!;
-    if (v > 0) {
-      canvas.drawPath(
-        Path()..addPolygon([...points.take(whole + 1), head], false),
-        line..color = fill,
-      );
-    }
-    final r = 8 - t;
-    final ring = knobRing;
-    if (ring != null) canvas.drawCircle(head, r + 3, Paint()..color = ring);
-    canvas.drawCircle(
-      head,
-      r,
-      Paint()
-        ..color = shadow
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
-    );
-    canvas.drawCircle(head, r, Paint()..color = fill);
-  }
-
-  @override
-  bool shouldRepaint(_MorphPainter old) =>
-      old.points != points ||
-      old.value != value ||
-      old.t != t ||
-      old.track != track ||
-      old.fill != fill;
 }

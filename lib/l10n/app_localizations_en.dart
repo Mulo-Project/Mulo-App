@@ -111,6 +111,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not reach the server. Check your internet connection.';
 
   @override
+  String get stateNetworkTitle => 'Network connection needed';
+
+  @override
+  String get stateNetworkBody => 'Check your connection and try again.';
+
+  @override
+  String get stateSignInTitle => 'Sign-in needed';
+
+  @override
+  String get stateSignInBody => 'Sign in to use this.';
+
+  @override
   String get searchAuthBody => 'The server requires a sign-in.';
 
   @override
@@ -223,6 +235,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sortLabel => 'Sort';
 
   @override
+  String get sortAscending => 'Ascending';
+
+  @override
+  String get sortDescending => 'Descending';
+
+  @override
   String get sortName => 'Name';
 
   @override
@@ -313,7 +331,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loadedFoldersRemove => 'Remove folder';
 
   @override
-  String get loadedFoldersScanning => 'Rescanning your library';
+  String get loadedFoldersRemoveTitle => 'Remove this folder?';
+
+  @override
+  String loadedFoldersRemoveBody(String path, int count) {
+    return '$path\n$count songs from this folder will leave your library. The music files are not deleted.';
+  }
+
+  @override
+  String loadedFoldersRemoveBodyEmpty(String path) {
+    return '$path\nThe music files are not deleted.';
+  }
+
+  @override
+  String get loadedFoldersScanning => 'Finding songs in the folder';
+
+  @override
+  String get loadedFoldersRemoving =>
+      'Removing the folder and tidying your library';
+
+  @override
+  String get loadedFoldersReading => 'Reading song info';
+
+  @override
+  String get loadedFoldersCovers => 'Getting song images';
 
   @override
   String get settingsQuality => 'Default quality';
@@ -338,6 +379,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsEngineNotInstalled =>
       'yt-dlp is missing. Install it to search and download.';
+
+  @override
+  String get settingsEngineRemove => 'Remove';
+
+  @override
+  String get settingsEngineRemoveTitle => 'Remove the download engine?';
+
+  @override
+  String get settingsEngineRemoveBody =>
+      'Deletes the yt-dlp file the app downloaded. You will need to install it again to search and download. A yt-dlp installed separately on this device is not removed.';
 
   @override
   String get settingsEngineInstalling => 'Downloading…';
@@ -694,7 +745,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get coverWebFailed => 'Couldn\'t search. Try again in a moment';
 
   @override
-  String get coverEditTitle => 'Image position';
+  String get coverEditTitle => 'Image';
 
   @override
   String get coverEditHint =>
@@ -708,6 +759,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get coverEditReset => 'Reset';
+
+  @override
+  String get coverEditResetPosition => 'Reset position';
+
+  @override
+  String get coverEditResetTitle => 'Reset position and size?';
+
+  @override
+  String get coverEditResetBody =>
+      'Zoom, position and rotation go back to the start.';
+
+  @override
+  String get coverEditResetConfirm => 'Reset';
+
+  @override
+  String get coverChange => 'Change image';
+
+  @override
+  String get coverRemove => 'Remove image';
+
+  @override
+  String get coverRemoveTitle => 'Remove the image?';
+
+  @override
+  String get coverRemoveBody =>
+      'The image you picked is removed. You can pick one again later.';
+
+  @override
+  String get coverRevertTitle => 'Go back to the default image?';
+
+  @override
+  String get coverRevertBody =>
+      'The image you picked is removed and the default image comes back.';
 
   @override
   String get coverEditApply => 'Apply';
@@ -1105,10 +1189,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchSortNewest => 'Newest';
 
   @override
-  String get searchSortShortest => 'Shortest';
-
-  @override
-  String get searchSortLongest => 'Longest';
+  String get searchSortDuration => 'Length';
 
   @override
   String get searchSortTitle => 'Title';
@@ -1166,6 +1247,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadCoverDefault => 'Use default';
 
   @override
+  String get downloadLyricsEditHint =>
+      'Load from a file or the web, or write it yourself. No subtitles needed.';
+
+  @override
+  String get downloadLyricsOverwriteTitle => 'You set your own lyrics';
+
+  @override
+  String get downloadLyricsOverwriteBody =>
+      'Using the video subtitles will remove the lyrics you set. Continue?';
+
+  @override
+  String get downloadLyricsOverwriteConfirm => 'Use subtitles';
+
+  @override
+  String downloadLyricsCustom(int lines) {
+    return 'Using your lyrics · $lines lines';
+  }
+
+  @override
   String get downloadImportLyrics => 'Import subtitles as lyrics';
 
   @override
@@ -1206,7 +1306,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadSubtitleUseEdited => 'Use this subtitle';
 
   @override
-  String get downloadSubtitleEdited => 'edited';
+  String get downloadSubtitleApplied => 'applied';
 
   @override
   String get downloadLyricsRetry => 'Try again';
@@ -1404,6 +1504,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get albumRenameDone => 'Album renamed';
 
   @override
+  String get artistRenameTooltip => 'Rename artist';
+
+  @override
+  String get artistRenameTitle => 'Rename artist';
+
+  @override
+  String get artistRenameHint => 'Artist name';
+
+  @override
+  String get genreRenameTooltip => 'Rename genre';
+
+  @override
+  String get genreRenameTitle => 'Rename genre';
+
+  @override
+  String get genreRenameHint => 'Genre name';
+
+  @override
+  String get renameProgressTitle => 'Updating songs';
+
+  @override
+  String renameProgressCount(int done, int total) {
+    return '$done/$total';
+  }
+
+  @override
   String get artistNotFound => 'Artist not found';
 
   @override
@@ -1514,6 +1640,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trackEditSaved => 'Song info updated';
+
+  @override
+  String get trackEditTagFailed =>
+      'Could not write the info to the music file, so nothing was changed. Try again later.';
 
   @override
   String get trackDeleteTitle => 'Delete song';
@@ -1708,6 +1838,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsImportAppend => 'Append';
 
   @override
+  String get lyricsImportMemo => 'Add to note';
+
+  @override
+  String get lyricsMemoTitle => 'Note';
+
+  @override
+  String get lyricsMemoHide => 'Hide note';
+
+  @override
+  String get lyricsMemoHint =>
+      'Edit or select text, then tap Insert to add it below the current line';
+
+  @override
+  String get lyricsMemoInsert => 'Insert';
+
+  @override
   String get lyricsSyncGroupSetupBody =>
       'Pick how many lines to stamp at once. You can change it later from the top menu.';
 
@@ -1895,6 +2041,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistMenuTooltip => 'Playlist menu';
 
   @override
+  String get playlistFeaturedTitle => 'Featured song';
+
+  @override
   String get playlistFeaturedPreview => 'Preview featured song';
 
   @override
@@ -1951,8 +2100,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistPickAlready => 'Already added';
 
   @override
-  String get playlistDetailEmpty =>
-      'No songs yet. Use \"Add to playlist\" in a song\'s menu.';
+  String get filterAllArtists => 'All artists';
+
+  @override
+  String get filterAllAlbums => 'All albums';
+
+  @override
+  String get filterAllGenres => 'All genres';
+
+  @override
+  String get playlistAddTracks => 'Add songs';
+
+  @override
+  String get playlistAddTracksTitle => 'Add songs';
+
+  @override
+  String playlistAddTracksStart(int count) {
+    return 'Add $count';
+  }
+
+  @override
+  String get playlistAddTracksEmptyTitle => 'No songs to add';
+
+  @override
+  String get playlistAddTracksEmptyBody =>
+      'All songs in your library are already here, or nothing matches the search.';
+
+  @override
+  String get playlistDetailEmpty => 'No songs yet';
+
+  @override
+  String get playlistDetailEmptyFavorites => 'No liked songs yet';
+
+  @override
+  String get playlistDetailEmptyBody =>
+      'Use \"Add to playlist\" in a song\'s menu, or \"Add songs\" below.';
+
+  @override
+  String get playlistDetailEmptyFavoritesBody =>
+      'Songs you like from the song menu show up here.';
 
   @override
   String get playlistNotFound => 'Playlist not found';
@@ -1992,7 +2178,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistImportNoResultsBody => 'Try a different search.';
 
   @override
-  String get playlistImportBackToResults => 'Search results';
+  String get playlistImportBackToResults => 'Back to results';
+
+  @override
+  String get playlistImportLoading => 'Reading the track list…';
+
+  @override
+  String playlistImportSelectedCount(int selected, int total) {
+    return '$selected/$total selected';
+  }
 
   @override
   String playlistImportResultSubtitle(String channel, int count) {
@@ -2166,10 +2360,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsOverlayTurnOff => 'Turn off';
 
   @override
-  String get lyricsOverlayOn => 'Turn on floating lyrics';
+  String get lyricsOverlayOn => 'Turn on overlay lyrics';
 
   @override
-  String get lyricsOverlayOff => 'Turn off floating lyrics';
+  String get lyricsOverlayOff => 'Turn off overlay lyrics';
+
+  @override
+  String get lyricsOverlayNoLyrics => 'No lyrics';
+
+  @override
+  String get lyricsOverlayNotSynced => 'No synced lyrics';
 
   @override
   String get lyricsOverlayNeedPermission =>
@@ -2242,6 +2442,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifDownloadCancel => 'Cancel';
+
+  @override
+  String get notifDownloadPause => 'Pause';
+
+  @override
+  String get notifDownloadResume => 'Resume download';
+
+  @override
+  String notifDownloadPausedBody(int percent) {
+    return 'Paused · $percent%';
+  }
 
   @override
   String get notifDownloadPausePreview => 'Pause';
@@ -2318,6 +2529,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'When subscribed channels post new videos, you can pick them to download here.';
 
   @override
+  String newVideosSummary(int channels, int videos) {
+    return '$channels channels · $videos videos';
+  }
+
+  @override
   String newVideosStart(int count) {
     return 'Download $count';
   }
@@ -2329,6 +2545,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get newVideosSkipped => 'Those songs are already downloaded';
+
+  @override
+  String get newVideosClear => 'Clear';
+
+  @override
+  String get newVideosClearTitle => 'Clear the new videos list?';
+
+  @override
+  String get newVideosClearBody =>
+      'Videos you have not downloaded also leave the list and will not show up again. Only videos posted from now on appear as new.';
 
   @override
   String get newVideosSelectAll => 'Select all';

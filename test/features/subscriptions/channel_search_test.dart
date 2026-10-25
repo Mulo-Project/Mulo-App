@@ -10,6 +10,7 @@ import 'package:music_download_play_app/features/downloads/domain/entities/downl
 import 'package:music_download_play_app/features/subscriptions/domain/repositories/background_checker.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/repositories/channel_searcher.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/usecases/subscription_usecases.dart';
+import 'package:music_download_play_app/features/subscriptions/presentation/bloc/channel_info_cubit.dart';
 import 'package:music_download_play_app/features/subscriptions/presentation/bloc/channel_search_cubit.dart';
 import 'package:music_download_play_app/features/subscriptions/presentation/bloc/new_videos_cubit.dart';
 import 'package:music_download_play_app/features/subscriptions/presentation/bloc/subscriptions_cubit.dart';
@@ -24,7 +25,10 @@ class _FakeSearcher implements ChannelSearcher {
 
   @override
   Future<ChannelDetails> details(String channelId) async =>
-      const ChannelDetails(bannerUrl: 'https://example.com/banner.jpg');
+      const ChannelDetails(
+        bannerUrl: 'https://example.com/banner.jpg',
+        description: '채널 소개 전체 글',
+      );
 
   @override
   Future<List<ChannelHit>> search(String query) async {
@@ -74,6 +78,14 @@ void main() {
       await subs.unsubscribe(hit.id);
       expect(subs.state.isSubscribedId(hit.id), isFalse);
     });
+  });
+
+  test('채널 정보 시트는 소개 전체를 읽어 온다 (검색 결과는 한 토막)', () async {
+    final cubit = ChannelInfoCubit(FetchChannelDetails(_FakeSearcher()));
+    addTearDown(cubit.close);
+    await cubit.load('UCaaaaaaaaaaaaaaaaaaaaaa');
+    expect(cubit.state.description, '채널 소개 전체 글');
+    expect(cubit.state.bannerUrl, 'https://example.com/banner.jpg');
   });
 
   group('분류 조건', () {

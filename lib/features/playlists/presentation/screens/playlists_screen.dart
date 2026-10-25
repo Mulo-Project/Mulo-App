@@ -10,7 +10,7 @@ import '../widgets/new_playlist_sheet.dart';
 import '../widgets/playlist_grid.dart';
 
 /// 재생목록 (상세 기능: 재생목록 관리 #20, 유튜브 재생목록 가져오기 #22).
-/// 좋아요 목록이 맨 앞에 항상 있다. 카드를 누르면 재생목록 상세로 간다.
+/// 좋아요 목록이 맨 앞에 항상 있다. 카드를 누르면 재생목록 상세로 가고, 길게 눌러 끌면 순서가 바뀐다.
 class PlaylistsScreen extends StatelessWidget {
   const PlaylistsScreen({super.key});
 
@@ -52,18 +52,15 @@ class PlaylistsScreen extends StatelessWidget {
           if (lists.isNotEmpty)
             Padding(
               padding: AppSpacing.screen,
-              child: PlaylistGrid(lists: lists),
+              // 카드를 길게 눌러 끌면 순서가 바뀐다 (메뉴는 카드의 ⋮).
+              child: PlaylistGrid(
+                lists: lists,
+                onReorder: context.read<PlaylistsCubit>().reorder,
+              ),
             ),
           // 좋아요 목록 말고 직접 만든 재생목록이 없을 때의 안내.
           if (lists.every((p) => p.isFavorites))
-            Padding(
-              padding: AppSpacing.screen.copyWith(top: AppSpacing.md),
-              child: Text(
-                l10n.playlistsEmpty,
-                style: Theme.of(context).textTheme.bodyMedium
-                    ?.copyWith(color: context.palette.onSurfaceMuted),
-              ),
-            ),
+            EmptyState(title: l10n.playlistsEmpty),
         ],
       ),
     );

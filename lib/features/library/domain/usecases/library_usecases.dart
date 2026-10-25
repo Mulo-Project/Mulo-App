@@ -6,19 +6,62 @@ import '../../../covers/domain/entities/cover_key.dart';
 import '../../../covers/domain/repositories/cover_repository.dart';
 import '../entities/file_tags.dart';
 import '../entities/import_result.dart';
+import '../entities/loaded_folder.dart';
 import '../entities/track.dart';
 import '../entities/track_info.dart';
 import '../repositories/library_repository.dart';
 import '../repositories/track_tag_repository.dart';
 
-/// 보관함 곡 목록 (추가일 최신순, DB가 바뀌면 다시 흘려보냄).
+/// 보관함 곡 목록 (추가일 최신순, DB나 불러오는 폴더가 바뀌면 다시 흘려보냄).
+/// 불러오는 폴더 밖에 저장된 곡(받을 때 저장 위치를 따로 정한 경우)은 보관함에 보이지 않는다.
 class WatchLibraryTracks implements StreamUseCase<List<Track>, NoParams> {
-  const WatchLibraryTracks(this._repo);
+  const WatchLibraryTracks(this._repo, this._folders);
 
   final LibraryRepository _repo;
+  final LoadedFolderRepository _folders;
 
   @override
-  Stream<List<Track>> call(NoParams _) => _repo.watchTracks();
+  Stream<List<Track>> call(NoParams _) {
+    late StreamController<List<Track>> out;
+    final subs = <StreamSubscription<Object?>>[];
+    List<Track>? latest;
+    List<String>? roots;
+
+    void emit() {
+      final tracks = latest;
+      final r = roots;
+      if (tracks == null || r == null || out.isClosed) return;
+      out.add([
+        for (final t in tracks)
+          if (isVisibleInLibrary(t, r)) t,
+      ]);
+    }
+
+    Future<void> reloadRoots() async {
+      roots = [_folders.defaultFolder, ...await _folders.loadExtra()];
+      emit();
+    }
+
+    out = StreamController<List<Track>>(
+      onListen: () {
+        reloadRoots();
+        subs
+          ..add(
+            _repo.watchTracks().listen((t) {
+              latest = t;
+              emit();
+            }, onError: out.addError),
+          )
+          ..add(_folders.watchChanges().listen((_) => reloadRoots()));
+      },
+      onCancel: () async {
+        for (final s in subs) {
+          await s.cancel();
+        }
+      },
+    );
+    return out.stream;
+  }
 }
 
 /// 불러오는 폴더 안의 음악을 찾아 보관함에 넣는다 (#11). 이미 있는 곡은 건너뛴다.
@@ -57,14 +100,23 @@ class FillEmbeddedCovers implements UseCase<int, NoParams> {
   final EmbeddedCoverRepository _embedded;
 
   @override
-  Future<int> call(NoParams _) async {
+  Future<int> call(NoParams _) => run();
+
+  /// [onProgress]로 (끝낸 곡 수, 채울 곡 수)를 알리며 채운다.
+  Future<int> run({void Function(int done, int total)? onProgress}) async {
     final tracks = await _library.watchTracks().first;
     final have = await _covers.loadAll();
+    final todo = [
+      for (final t in tracks)
+        if (t.source == TrackSource.device &&
+            t.uri.isNotEmpty &&
+            !have.containsKey(CoverKey.track(t.id)))
+          t,
+    ];
     var filled = 0;
-    for (final t in tracks) {
-      if (t.source != TrackSource.device || t.uri.isEmpty) continue;
+    onProgress?.call(0, todo.length);
+    for (final (i, t) in todo.indexed) {
       final key = CoverKey.track(t.id);
-      if (have.containsKey(key)) continue;
       String? temp;
       try {
         temp = await _embedded.extract(t);
@@ -75,6 +127,7 @@ class FillEmbeddedCovers implements UseCase<int, NoParams> {
         continue;
       } finally {
         if (temp != null) await _embedded.discard(temp);
+        onProgress?.call(i + 1, todo.length);
       }
     }
     return filled;
@@ -88,32 +141,55 @@ class UpdateTrackInfoParams {
   final TrackInfo info;
 }
 
-/// 곡 정보 편집 (곡 타일 메뉴). 제목은 앞뒤 공백을 지우고, 비어 있으면 바꾸지 않는다 (false).
-class UpdateTrackInfo implements UseCase<bool, UpdateTrackInfoParams> {
+/// 곡 정보 편집 결과.
+enum UpdateInfoResult {
+  /// 저장했다.
+  saved,
+
+  /// 제목이 비었거나 없는 곡이라 바꾸지 않았다.
+  invalid,
+
+  /// 파일 태그에 쓰지 못해 DB도 바꾸지 않았다.
+  tagWriteFailed,
+}
+
+/// 곡 정보 편집 (곡 타일 메뉴). 제목은 앞뒤 공백을 지우고, 비어 있으면 바꾸지 않는다.
+///
+/// 파일이 정보의 원본이고 DB는 캐시이므로 파일 태그에 먼저 쓰고, 성공해야 DB를 고친다.
+/// 태그 쓰기가 실패하면 DB를 바꾸지 않는다 (DB에만 있는 편집이 이후 태그 복원 때 옛 값으로 되돌아가지 않게).
+/// 태그를 쓰지 않는 곡([TagWriteResult.unsupported])과, 기기 곡의 쓰기 권한 없음([TagWriteResult.denied])은
+/// 기존처럼 DB만 고친다.
+class UpdateTrackInfo
+    implements UseCase<UpdateInfoResult, UpdateTrackInfoParams> {
   const UpdateTrackInfo(this._repo, [this._tags]);
 
   final LibraryRepository _repo;
   final TrackTagRepository? _tags;
 
   @override
-  Future<bool> call(UpdateTrackInfoParams p) async {
+  Future<UpdateInfoResult> call(UpdateTrackInfoParams p) async {
     final info = p.info.trimmed();
-    if (info.title.isEmpty) return false;
-    if (!await _repo.updateInfo(p.trackId, info)) return false;
-    // 파일이 정보의 원본이므로 고친 값을 태그에도 쓴다 (뒤에서, 못 써도 DB 값은 그대로).
+    if (info.title.isEmpty) return UpdateInfoResult.invalid;
     final tags = _tags;
-    if (tags != null) unawaited(_writeTags(tags, p.trackId));
-    return true;
-  }
-
-  Future<void> _writeTags(TrackTagRepository tags, String trackId) async {
-    try {
+    if (tags != null) {
       final tracks = await _repo.watchTracks().first;
-      final track = tracks.where((t) => t.id == trackId).firstOrNull;
-      if (track != null) await tags.write(track);
-    } on Object {
-      // 태그는 덤이라 실패해도 편집 결과에는 영향이 없다.
+      final track = tracks.where((t) => t.id == p.trackId).firstOrNull;
+      if (track == null) return UpdateInfoResult.invalid;
+      TagWriteResult result;
+      try {
+        result = await tags.write(track.withInfo(info));
+      } on Object {
+        result = TagWriteResult.failed;
+      }
+      final blocks =
+          result == TagWriteResult.failed ||
+          (result == TagWriteResult.denied &&
+              track.source == TrackSource.download);
+      if (blocks) return UpdateInfoResult.tagWriteFailed;
     }
+    return await _repo.updateInfo(p.trackId, info)
+        ? UpdateInfoResult.saved
+        : UpdateInfoResult.invalid;
   }
 }
 
@@ -147,7 +223,8 @@ class EmbedTagsIntoFiles implements UseCase<int, NoParams> {
       if (done.contains(t.id)) continue;
       try {
         final key = CoverKey.track(t.id);
-        if (await _tags.write(t, cover: covers[key], color: colors[key])) {
+        if (await _tags.write(t, cover: covers[key], color: colors[key]) ==
+            TagWriteResult.written) {
           written++;
         }
       } on Exception {
@@ -181,15 +258,24 @@ class RestoreFromFileTags implements UseCase<int, NoParams> {
   final TagRestoreStore _done;
 
   @override
-  Future<int> call(NoParams _) async {
+  Future<int> call(NoParams _) => run();
+
+  /// [onProgress]로 (끝낸 곡 수, 읽을 곡 수)를 알리며 되살린다.
+  Future<int> run({void Function(int done, int total)? onProgress}) async {
     final tracks = await _library.watchTracks().first;
     final done = await _done.loadDone();
     final covers = await _covers.loadAll();
     final colors = await _colors.loadAll();
+    final todo = [
+      for (final t in tracks)
+        if (t.source == TrackSource.device &&
+            t.uri.isNotEmpty &&
+            !done.contains(t.id))
+          t,
+    ];
     var restored = 0;
-    for (final t in tracks) {
-      if (t.source != TrackSource.device || t.uri.isEmpty) continue;
-      if (done.contains(t.id)) continue;
+    onProgress?.call(0, todo.length);
+    for (final (i, t) in todo.indexed) {
       try {
         final tags = await _tags.read(t);
         if (tags == null) continue;
@@ -201,6 +287,7 @@ class RestoreFromFileTags implements UseCase<int, NoParams> {
       } on Exception {
         // 한 곡이 실패해도 나머지는 계속한다 (기록하지 않아 다음에 다시 시도).
       }
+      onProgress?.call(i + 1, todo.length);
     }
     return restored;
   }

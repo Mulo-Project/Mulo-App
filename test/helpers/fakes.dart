@@ -31,6 +31,7 @@ import 'package:music_download_play_app/features/library/domain/entities/import_
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track_info.dart';
 import 'package:music_download_play_app/features/library/domain/repositories/library_repository.dart';
+import 'package:music_download_play_app/features/library/domain/repositories/track_tag_repository.dart';
 import 'package:music_download_play_app/features/notifications/di.dart';
 import 'package:music_download_play_app/features/notifications/domain/entities/media_session_info.dart';
 import 'package:music_download_play_app/features/notifications/domain/entities/notification_settings.dart';
@@ -158,6 +159,14 @@ class MemoryLoadedFolders implements LoadedFolderRepository {
   String? picked;
   List<String> extra;
 
+  final _changes = StreamController<void>.broadcast();
+
+  @override
+  Stream<void> watchChanges() => _changes.stream;
+
+  /// 저장 위치 목록 (null이면 아직 따로 저장한 적 없음).
+  List<String>? saveLocations;
+
   @override
   String get defaultFolder => '/music/default';
 
@@ -165,7 +174,18 @@ class MemoryLoadedFolders implements LoadedFolderRepository {
   Future<List<String>> loadExtra() async => [...extra];
 
   @override
-  Future<void> saveExtra(List<String> folders) async => extra = [...folders];
+  Future<void> saveExtra(List<String> folders) async {
+    extra = [...folders];
+    _changes.add(null);
+  }
+
+  @override
+  Future<List<String>?> loadSaveLocations() async =>
+      saveLocations == null ? null : [...saveLocations!];
+
+  @override
+  Future<void> saveSaveLocations(List<String> folders) async =>
+      saveLocations = [...folders];
 
   @override
   Future<String?> pickFolder() async => picked;
@@ -788,10 +808,46 @@ class MemoryPlaylistRepository implements PlaylistRepository {
     members[playlistId]?.remove(trackId);
     _changes.add(null);
   }
+
+  @override
+  Future<void> reorder(List<String> playlistIds) async {
+    final byId = {for (final p in lists) p.id: p};
+    final next = [
+      for (final id in playlistIds) ?byId.remove(id),
+      ...byId.values,
+    ];
+    lists
+      ..clear()
+      ..addAll(next);
+    _changes.add(null);
+  }
 }
 
 /// 앱 전체를 띄우는 테스트용 의존성 (DB · 파일 · 권한 없이).
 /// 각 기능의 실제 등록을 쓰고 리포지토리만 가짜로 바꾼다.
+/// 파일 태그 쓰기 가짜. 기본은 태그를 쓰지 않는 곡(DB만 고친다).
+class FakeTrackTagRepository implements TrackTagRepository {
+  FakeTrackTagRepository([this.result = TagWriteResult.unsupported]);
+
+  TagWriteResult result;
+
+  @override
+  Future<TagWriteResult> write(
+    Track track, {
+    CoverArt? cover,
+    int? color,
+  }) async => result;
+
+  /// 가사 태그에 쓰라고 한 글 (곡 id → 글).
+  final lyricsWritten = <String, String>{};
+
+  @override
+  Future<TagWriteResult> writeLyrics(Track track, String lyrics) async {
+    lyricsWritten[track.id] = lyrics;
+    return result;
+  }
+}
+
 Future<void> setUpTestDependencies({
   List<Track> tracks = const [],
   DeviceMusicRepository? device,
@@ -816,6 +872,7 @@ Future<void> setUpTestDependencies({
   BiometricAuthenticator? biometric,
   LoadedFolderRepository? folders,
   TrackFileRepository? trackFiles,
+  TrackTagRepository? trackTags,
   DateTime? joinedAt,
   SubscriptionRepository? subscriptions,
   ChannelFeed? channelFeed,
@@ -839,6 +896,9 @@ Future<void> setUpTestDependencies({
   registerSubscriptions(sl);
   sl.allowReassignment = true;
   sl
+    ..registerLazySingleton<TrackTagRepository>(
+      () => trackTags ?? FakeTrackTagRepository(),
+    )
     ..registerLazySingleton<SubscriptionRepository>(
       () => subscriptions ?? MemorySubscriptionRepository(),
     )
@@ -1277,7 +1337,17 @@ class FakeEngineManager implements EngineManager {
     installed: installed,
     version: installed ? '2026.01.01' : null,
     managed: installed,
+    removable: installed && supported,
   );
+
+  int removes = 0;
+
+  @override
+  Future<EngineStatus> remove() async {
+    removes++;
+    installed = false;
+    return status();
+  }
 
   @override
   Future<EngineStatus> install() async {
@@ -1421,6 +1491,7 @@ class FakeDownloadNotifier implements DownloadNotifier {
     String? subText,
     String? previewLabel,
     String? cancelLabel,
+    String? holdLabel,
     String? pauseLabel,
     String? stopLabel,
     String? openId,
@@ -1433,6 +1504,7 @@ class FakeDownloadNotifier implements DownloadNotifier {
       'foreground': foreground,
       'preview': previewLabel,
       'cancel': cancelLabel,
+      'hold': holdLabel,
       'pause': pauseLabel,
       'stop': stopLabel,
       'openId': openId,
@@ -1524,6 +1596,14 @@ class MemorySubscriptionRepository implements SubscriptionRepository {
   @override
   Future<void> saveSettings(SubscriptionSettings value) async =>
       settings = value;
+
+  Set<String> seenVideos = {};
+
+  @override
+  Future<Set<String>> loadSeenVideos() async => {...seenVideos};
+
+  @override
+  Future<void> saveSeenVideos(Set<String> ids) async => seenVideos = {...ids};
 }
 
 /// 채널 id별로 정해 둔 피드를 돌려주는 가짜 채널 피드.

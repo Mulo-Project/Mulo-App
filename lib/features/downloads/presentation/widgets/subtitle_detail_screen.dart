@@ -4,22 +4,25 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../library/domain/entities/track.dart';
 import '../../../lyrics/domain/entities/timed_lyrics_text.dart';
+import '../../../lyrics/presentation/widgets/lyrics_import_bar.dart';
 import '../../../lyrics/presentation/widgets/timed_lyrics_controller.dart';
 import '../../../lyrics/presentation/widgets/lyrics_edit_scaffold.dart';
 import '../bloc/subtitle_preview_cubit.dart';
 
 /// 상세 페이지에서 "이 자막 사용"을 눌러 돌아온 결과.
-/// [edited]는 글을 고친 경우의 가사(.lrc 글)이고, 고치지 않았으면 null이다.
+/// [text]는 그 자막의 가사(.lrc 글)로, 페이지에서 글을 고쳤다면 고친 글이다.
+/// 받기 창이 이 글을 "가사 설정"의 가사로 적용한다.
 class SubtitleChoice {
-  const SubtitleChoice(this.edited);
+  const SubtitleChoice(this.text);
 
-  final String? edited;
+  final String text;
 }
 
 /// 자막 한 벌의 전체 가사를 받기 전에 훑어보고 글을 고치는 페이지를 연다.
 /// [edited]는 앞서 고쳐 둔 가사로, 있으면 다시 읽지 않고 그것을 이어서 고친다.
-/// "이 자막 사용"을 누르면 [SubtitleChoice], 그냥 닫으면 null을 돌려준다.
+/// "이 자막 사용"을 누르면 [SubtitleChoice](가사 글), 그냥 닫으면 null을 돌려준다.
 Future<SubtitleChoice?> showSubtitleDetail(
   BuildContext context, {
   required String url,
@@ -29,6 +32,8 @@ Future<SubtitleChoice?> showSubtitleDetail(
   required bool skipSounds,
   required bool selected,
   String? edited,
+  String songTitle = '',
+  String songArtist = '',
 }) => Navigator.of(context, rootNavigator: true).push<SubtitleChoice>(
   MaterialPageRoute(
     builder: (_) => BlocProvider(
@@ -47,6 +52,8 @@ Future<SubtitleChoice?> showSubtitleDetail(
         skipSounds: skipSounds,
         selected: selected,
         edited: edited,
+        songTitle: songTitle,
+        songArtist: songArtist,
       ),
     ),
   ),
@@ -64,6 +71,8 @@ class SubtitleDetailScreen extends StatefulWidget {
     required this.skipSounds,
     required this.selected,
     this.edited,
+    this.songTitle = '',
+    this.songArtist = '',
   });
 
   final String url;
@@ -73,6 +82,10 @@ class SubtitleDetailScreen extends StatefulWidget {
   final bool skipSounds;
   final bool selected;
   final String? edited;
+
+  /// 받을 곡의 제목 · 아티스트 (웹에서 가사를 찾을 때 검색어).
+  final String songTitle;
+  final String songArtist;
 
   @override
   State<SubtitleDetailScreen> createState() => _SubtitleDetailScreenState();
@@ -105,13 +118,16 @@ class _SubtitleDetailScreenState extends State<SubtitleDetailScreen> {
     _text.load(split);
   }
 
-  /// 고친 가사. 고치지 않았으면 null.
-  String? _editedRaw() {
-    final base = _base;
-    if (base == null) return null;
-    final composed = _text.compose();
-    return composed == base.trimRight() ? null : composed;
-  }
+  /// 웹에서 가사를 찾을 때 검색어가 되는 곡 (받기 창에 적힌 제목 · 아티스트).
+  Track _probe() => Track(
+    id: 'download',
+    title: widget.songTitle.isEmpty ? widget.title : widget.songTitle,
+    artist: widget.songArtist,
+    album: '',
+    duration: Duration.zero,
+    uri: '',
+    addedAt: DateTime.now(),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -155,19 +171,7 @@ class _SubtitleDetailScreenState extends State<SubtitleDetailScreen> {
             ),
           );
         } else if (_base == null) {
-          body = Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const CircularProgressIndicator(strokeWidth: 2),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  l10n.downloadLyricsPreviewLoading,
-                  style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
-                ),
-              ],
-            ),
-          );
+          body = LoadingState(label: l10n.downloadLyricsPreviewLoading);
         }
         return LyricsEditScaffold(
           title: widget.title,
@@ -175,11 +179,26 @@ class _SubtitleDetailScreenState extends State<SubtitleDetailScreen> {
           controller: _text,
           showTimes: _synced,
           notice: l10n.downloadSubtitleEditHint,
+          // 영상 자막 말고 파일이나 웹에서도 가사를 불러올 수 있다 (가사 설정과 같은 줄).
+          top: LyricsImportBar(
+            keyPrefix: 'subtitle-detail',
+            controller: _text,
+            track: _probe(),
+            onReplace: (raw) => setState(() {
+              // 처음 보여 준 자막(비교 기준)은 그대로 두어 불러온 글이 "고친 가사"로 돌아가게 한다.
+              final base = _base ?? '';
+              _fill(raw);
+              _base = base;
+            }),
+          ),
           body: body,
           primaryKey: const ValueKey('subtitle-detail-use'),
           primaryLabel: l10n.downloadSubtitleUse,
-          onPrimary: () =>
-              Navigator.of(context).pop(SubtitleChoice(_editedRaw())),
+          // 자막(또는 불러온 글)이 아직 없으면 고를 수 없다 (불러오는 중 · 못 읽음).
+          onPrimary: _base == null
+              ? null
+              : () =>
+                    Navigator.of(context).pop(SubtitleChoice(_text.compose())),
           leadingIcon: AppIcons.back,
         );
       },

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app/router.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
@@ -11,6 +12,7 @@ import '../../../downloads/domain/entities/download_item.dart';
 import '../../../downloads/presentation/bloc/download_queue_cubit.dart';
 import '../../../downloads/presentation/widgets/download_item_widgets.dart';
 import '../../../library/domain/entities/track.dart';
+import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../../library/presentation/widgets/play_shuffle_row.dart';
 import '../../../library/presentation/widgets/lazy_track_list.dart';
 import '../../../library/presentation/widgets/track_list_tile.dart';
@@ -54,95 +56,142 @@ class _Body extends StatelessWidget {
     );
     final image = coverImageOf(context, CoverKey.playlist(playlistId));
 
+    final header = <Widget>[
+      AppTopBar(
+        title: pl == null ? '' : playlistNameOf(l10n, pl),
+        leading: const AppBackButton(),
+        actions: [
+          if (pl != null && !pl.isFavorites)
+            CircleIconButton(
+              icon: AppIcons.add,
+              tooltip: l10n.playlistAddTracks,
+              onPressed: () =>
+                  context.push(Routes.playlistAddTracks(playlistId)),
+            ),
+          if (pl != null)
+            Builder(
+              builder: (btn) => CircleIconButton(
+                icon: AppIcons.more,
+                tooltip: l10n.playlistMenuTooltip,
+                onPressed: () => showPlaylistMenu(
+                  btn,
+                  pl,
+                  onDeleted: () {
+                    if (context.mounted) context.pop();
+                  },
+                ),
+              ),
+            ),
+        ],
+      ),
+      if (pl == null)
+        Padding(
+          padding: AppSpacing.screen,
+          child: Text(
+            l10n.playlistNotFound,
+            style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
+          ),
+        )
+      else ...[
+        Padding(
+          padding: AppSpacing.screen,
+          child: AspectRatio(
+            aspectRatio: 2,
+            child: CoverCard(
+              image: image,
+              tone: playlistToneOf(pl),
+              color: coverColorOf(context, CoverKey.playlist(pl.id)),
+              shade: image != null,
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      playlistNameOf(l10n, pl),
+                      style: text.headlineSmall?.copyWith(color: p.onGlow),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      l10n.songCount(pl.trackCount),
+                      style: text.bodyMedium?.copyWith(color: p.onGlow),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        // 대표곡: 카드가 아니라 상세 안에서 보여 준다 (누르면 이 재생목록으로 바로 들어 볼 수 있다).
+        if (pl.featured != null) ...[
+          const SizedBox(height: AppSpacing.sm),
+          _FeaturedRow(playlist: pl, featured: pl.featured!),
+        ],
+        const SizedBox(height: AppSpacing.md),
+        // 곡이 없으면 전체 재생 · 셔플 줄은 의미가 없어 숨긴다.
+        if (tracks == null || tracks.isNotEmpty) ...[
+          PlayShuffleRow(
+            tracks: tracks ?? const <Track>[],
+            playLabel: l10n.playlistMenuPlayAll,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+        ],
+        if (downloads.isNotEmpty)
+          _Downloads(playlistId: playlistId, items: downloads),
+      ],
+    ];
+
+    // 담긴 곡이 없으면 머리 아래 남은 자리 가운데에 안내와 "곡 추가" 버튼을 둔다.
+    // 화면이 낮아 다 안 들어가면 그대로 스크롤된다 (넘쳐 깨지지 않게).
+    if (pl != null && tracks != null && tracks.isEmpty && downloads.isEmpty) {
+      return SafeArea(
+        bottom: false,
+        child: CustomScrollView(
+          slivers: [
+            SliverList(delegate: SliverChildListDelegate(header)),
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
+                ),
+                child: EmptyState(
+                  // 좋아요 목록은 하트 아이콘과 다른 문구, 직접 만든 목록은 곡 추가 버튼이 있다.
+                  icon: pl.isFavorites
+                      ? AppIcons.favorite
+                      : AppIcons.playlistPlay,
+                  title: pl.isFavorites
+                      ? l10n.playlistDetailEmptyFavorites
+                      : l10n.playlistDetailEmpty,
+                  body: pl.isFavorites
+                      ? l10n.playlistDetailEmptyFavoritesBody
+                      : l10n.playlistDetailEmptyBody,
+                  action: pl.isFavorites
+                      ? null
+                      : PillButton(
+                          label: l10n.playlistAddTracks,
+                          icon: AppIcons.add,
+                          onPressed: () => context.push(
+                            Routes.playlistAddTracks(playlistId),
+                          ),
+                        ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return SafeArea(
       bottom: false,
       child: LazyTrackList(
         padding: EdgeInsets.only(
           bottom: AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
         ),
-        header: [
-          AppTopBar(
-            title: pl == null ? '' : playlistNameOf(l10n, pl),
-            leading: CircleIconButton(
-              icon: AppIcons.back,
-              tooltip: l10n.actionBack,
-              onPressed: () => context.pop(),
-            ),
-            actions: [
-              if (pl != null)
-                Builder(
-                  builder: (btn) => CircleIconButton(
-                    icon: AppIcons.more,
-                    tooltip: l10n.playlistMenuTooltip,
-                    onPressed: () => showPlaylistMenu(
-                      btn,
-                      pl,
-                      onDeleted: () {
-                        if (context.mounted) context.pop();
-                      },
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          if (pl == null)
-            Padding(
-              padding: AppSpacing.screen,
-              child: Text(
-                l10n.playlistNotFound,
-                style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
-              ),
-            )
-          else ...[
-            Padding(
-              padding: AppSpacing.screen,
-              child: AspectRatio(
-                aspectRatio: 2,
-                child: CoverCard(
-                  image: image,
-                  tone: playlistToneOf(pl),
-                  color: coverColorOf(context, CoverKey.playlist(pl.id)),
-                  shade: image != null,
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.md),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Text(
-                          playlistNameOf(l10n, pl),
-                          style: text.headlineSmall?.copyWith(color: p.onGlow),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          l10n.songCount(pl.trackCount),
-                          style: text.bodyMedium?.copyWith(color: p.onGlow),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            PlayShuffleRow(
-              tracks: tracks ?? const <Track>[],
-              playLabel: l10n.playlistMenuPlayAll,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            if (downloads.isNotEmpty)
-              _Downloads(playlistId: playlistId, items: downloads),
-            if (tracks != null && tracks.isEmpty && downloads.isEmpty)
-              Padding(
-                padding: AppSpacing.screen.copyWith(top: AppSpacing.md),
-                child: Text(
-                  l10n.playlistDetailEmpty,
-                  style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
-                ),
-              ),
-          ],
-        ],
+        header: header,
         trackCount: tracks?.length ?? 0,
         trackBuilder: (context, i) => TrackListTile(
           track: tracks![i],
@@ -152,6 +201,68 @@ class _Body extends StatelessWidget {
           showNumber: true,
         ),
       ),
+    );
+  }
+}
+
+/// 대표곡 한 줄: 작은 이미지 · 제목 · 가수 · 장르, 오른쪽에 미리 듣기(재생 중이면 일시정지) 버튼.
+/// 누르면 이 곡부터 이 재생목록 대기열로 재생한다.
+class _FeaturedRow extends StatelessWidget {
+  const _FeaturedRow({required this.playlist, required this.featured});
+
+  final Playlist playlist;
+  final PlaylistTrackPreview featured;
+
+  Future<void> _play(BuildContext context) async {
+    final player = context.read<NowPlayingCubit>();
+    final tracks = await context.read<PlaylistsCubit>().tracksOf(playlist.id);
+    final i = tracks.indexWhere((e) => e.id == featured.id);
+    if (i >= 0) player.playQueue(tracks, index: i);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final p = context.palette;
+    final t = featured;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionTitle(l10n.playlistFeaturedTitle),
+        TrackTile(
+          title: t.title,
+          subtitle: [
+            if (t.artist.isNotEmpty) t.artist,
+            t.genre.isEmpty ? l10n.unknownGenre : t.genre,
+          ].join(' · '),
+          tone: toneFor(t.id),
+          artwork: coverImageOf(context, CoverKey.track(t.id)),
+          color: coverColorOf(context, CoverKey.track(t.id)),
+          onTap: () => _play(context),
+          // 이 곡이 재생 중이면 일시정지 아이콘, 아니면 재생 아이콘.
+          trailing: BlocBuilder<NowPlayingCubit, NowPlayingState>(
+            buildWhen: (a, b) =>
+                (a.track?.id == t.id) != (b.track?.id == t.id) ||
+                a.isPlaying != b.isPlaying,
+            builder: (context, s) {
+              final current = s.track?.id == t.id;
+              final playing = current && s.isPlaying;
+              return IconButton(
+                tooltip: playing
+                    ? l10n.actionPause
+                    : l10n.playlistFeaturedPreview,
+                onPressed: current
+                    ? context.read<NowPlayingCubit>().togglePlay
+                    : () => _play(context),
+                icon: Icon(
+                  playing ? AppIcons.pauseCircle : AppIcons.playCircle,
+                  color: p.accent,
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

@@ -111,21 +111,22 @@ Future<void> _delete(
   Playlist pl,
   VoidCallback? onDeleted,
 ) async {
-  final l10n = context.l10n;
   final cubit = context.read<PlaylistsCubit>();
   final covers = context.read<CoverCubit>();
   final colors = context.read<CoverColorCubit>();
-  final messenger = ScaffoldMessenger.of(context);
-  final ok = await showDialog<bool>(
-    context: context,
-    useRootNavigator: true,
-    builder: (_) => _DeleteDialog(name: pl.name),
+  final l10n = context.l10n;
+  final ok = await showConfirmDialog(
+    context,
+    title: l10n.playlistDeleteTitle,
+    body: l10n.playlistDeleteBody(pl.name),
+    confirmLabel: l10n.playlistDeleteConfirm,
+    confirmIcon: AppIcons.delete,
+    cancelLabel: l10n.actionCancel,
   );
-  if (ok != true) return;
+  if (!ok) return;
   await cubit.delete(pl.id);
   await covers.clear(CoverKey.playlist(pl.id));
   await colors.clear(CoverKey.playlist(pl.id));
-  messenger.showSnackBar(SnackBar(content: Text(l10n.playlistDeleted)));
   onDeleted?.call();
 }
 
@@ -171,33 +172,6 @@ class _RenameDialogState extends State<_RenameDialog> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         PillButton(label: l10n.playlistRenameSave, onPressed: _save),
-      ],
-    );
-  }
-}
-
-class _DeleteDialog extends StatelessWidget {
-  const _DeleteDialog({required this.name});
-
-  final String name;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return AppDialog(
-      title: l10n.playlistDeleteTitle,
-      body: l10n.playlistDeleteBody(name),
-      actions: [
-        PillButton(
-          label: l10n.actionCancel,
-          variant: PillVariant.tonal,
-          onPressed: () => Navigator.of(context).pop(false),
-        ),
-        PillButton(
-          label: l10n.playlistDeleteConfirm,
-          icon: AppIcons.delete,
-          onPressed: () => Navigator.of(context).pop(true),
-        ),
       ],
     );
   }

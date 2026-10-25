@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -46,6 +47,34 @@ void main() {
       expect(cubit.state.items.map((h) => h.id), ['a', 'b', 'c']); // 중복 b 제외
       expect(cubit.state.hasNext, isFalse);
       expect(engine.searches.last.$3, 1);
+    });
+
+    test('찾는 중에 취소하면 이전 결과로 돌아가고, 늦게 온 답은 버린다', () async {
+      final engine = FakeDownloaderEngine(
+        pages: [
+          SearchPage(items: [_hit('a')], hasNext: false),
+          SearchPage(items: [_hit('z')], hasNext: false),
+        ],
+      );
+      final cubit = _cubit(engine);
+      await cubit.submit('첫', SearchSource.youtube);
+      expect(cubit.state.items.map((h) => h.id), ['a']);
+
+      final second = cubit.submit('둘', SearchSource.youtube);
+      expect(cubit.state.status, SearchStatus.loading);
+      cubit.cancelLoading();
+      expect(cubit.state.status, SearchStatus.loaded);
+      expect(cubit.state.items.map((h) => h.id), ['a']);
+      expect(cubit.query, '첫');
+      await second;
+      expect(cubit.state.items.map((h) => h.id), ['a']); // 늦게 온 답이 덮지 않는다
+
+      // 이전 결과가 없으면 처음 화면으로.
+      final fresh = _cubit(FakeDownloaderEngine());
+      final first = fresh.submit('q', SearchSource.youtube);
+      fresh.cancelLoading();
+      await first;
+      expect(fresh.state.status, SearchStatus.idle);
     });
 
     test('이어 보기를 기다리는 사이 바꾼 정렬이 되돌아가지 않는다', () async {
@@ -102,7 +131,7 @@ void main() {
       await cubit.loadMore(); // 다음 쪽도 날짜 순으로
       expect(engine.newestFlags.last, isTrue);
 
-      await cubit.selectSort(SearchSort.shortest); // 받아 온 안에서만: 다시 찾지 않음
+      await cubit.selectSort(SearchSort.duration); // 받아 온 안에서만: 다시 찾지 않음
       expect(engine.newestFlags.length, 3);
 
       await cubit.selectSort(SearchSort.relevance); // 최신순에서 벗어남
@@ -171,12 +200,17 @@ void main() {
       List<String> ids() => cubit.state.visibleItems.map((h) => h.id).toList();
 
       expect(ids(), ['a', 'b', 'c']); // 관련도순 = 찾은 순서
-      cubit.selectSort(SearchSort.shortest);
-      expect(ids(), ['c', 'a', 'b']);
-      cubit.selectSort(SearchSort.longest);
-      expect(ids(), ['a', 'c', 'b']);
-      cubit.selectSort(SearchSort.title);
+      cubit.selectSort(SearchSort.duration);
+      expect(ids(), ['c', 'a', 'b']); // 기본: 짧은 순
+      cubit.toggleDirection();
+      expect(ids(), ['a', 'c', 'b']); // 긴 순
+      cubit.selectSort(SearchSort.title); // 기준을 바꾸면 기본 방향
       expect(ids(), ['b', 'a', 'c']);
+      cubit.toggleDirection();
+      expect(ids(), ['c', 'a', 'b']);
+      cubit.selectSort(SearchSort.relevance);
+      cubit.toggleDirection(); // 관련도순은 방향이 없다
+      expect(ids(), ['a', 'b', 'c']);
     });
 
     test('곡 하나 주소는 이미 분류가 있어 다시 읽지 않는다', () async {
@@ -388,6 +422,22 @@ void main() {
         newest: true,
       );
       expect(args!.last, 'scsearch1:노래'); // 날짜 순 검색이 없는 사이트는 그대로
+    });
+
+    test('yt-dlp가 시간 안에 끝나지 않으면 연결 실패로 알린다', () async {
+      final engine = LocalEngine(
+        run: (_, _) => throw TimeoutException('yt-dlp'),
+      );
+      await expectLater(
+        engine.search('노래'),
+        throwsA(
+          isA<EngineException>().having(
+            (e) => e.failure,
+            'failure',
+            EngineFailure.network,
+          ),
+        ),
+      );
     });
 
     test('재생목록 정보를 읽는다', () async {

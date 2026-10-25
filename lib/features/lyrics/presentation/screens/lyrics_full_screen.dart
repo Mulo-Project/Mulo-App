@@ -26,7 +26,7 @@ class LyricsFullScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final track = context.watch<NowPlayingCubit>().state.track;
+    final track = context.select((NowPlayingCubit c) => c.state.track);
     if (track == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (context.mounted && Navigator.of(context).canPop()) {

@@ -69,7 +69,6 @@ class CoverWebBrowser extends StatefulWidget {
 }
 
 class _CoverWebBrowserState extends State<CoverWebBrowser> {
-  late final _input = TextEditingController(text: widget.initialQuery.trim());
   late final WebViewController _web;
   bool _loading = true;
   bool _canGoBack = false;
@@ -114,20 +113,11 @@ class _CoverWebBrowserState extends State<CoverWebBrowser> {
           },
         ),
       );
-    final q = _input.text.trim();
-    if (q.isNotEmpty) _web.loadRequest(coverSearchUri(q));
-  }
-
-  @override
-  void dispose() {
-    _input.dispose();
-    super.dispose();
-  }
-
-  void _search(String value) {
-    final q = value.trim();
-    if (q.isEmpty) return;
-    _web.loadRequest(coverSearchUri(q));
+    // 웹 페이지가 자기 검색창을 주므로 앱은 따로 검색칸을 두지 않고, 처음 검색어로만 연다.
+    final q = widget.initialQuery.trim();
+    _web.loadRequest(
+      q.isNotEmpty ? coverSearchUri(q) : Uri.https('www.bing.com', '/images'),
+    );
   }
 
   /// 눌러 고른 이미지를 돌려주며 닫는다. 확대 · 위치는 부른 편집 화면에서 맞춘다.
@@ -163,15 +153,6 @@ class _CoverWebBrowserState extends State<CoverWebBrowser> {
                 ),
               ),
               Padding(
-                padding: AppSpacing.screen.copyWith(top: AppSpacing.xs),
-                child: AppSearchField(
-                  hint: l10n.coverWebHint,
-                  clearTooltip: l10n.actionClear,
-                  controller: _input,
-                  onSubmitted: _search,
-                ),
-              ),
-              Padding(
                 padding: AppSpacing.screen.copyWith(
                   top: AppSpacing.xs,
                   bottom: AppSpacing.xs,
@@ -185,7 +166,8 @@ class _CoverWebBrowserState extends State<CoverWebBrowser> {
                   ),
                 ),
               ),
-              if (_loading) const LinearProgressIndicator(minHeight: 2),
+              // 웹 페이지를 읽는 동안은 위에 얇은 막대로 알린다.
+              LoadingBar(loading: _loading),
               Expanded(child: WebViewWidget(controller: _web)),
             ],
           ),

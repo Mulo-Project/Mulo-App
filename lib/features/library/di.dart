@@ -20,6 +20,7 @@ import 'domain/usecases/loaded_folder_usecases.dart';
 import 'presentation/bloc/library_cubit.dart';
 import 'presentation/bloc/library_import_cubit.dart';
 import 'presentation/bloc/loaded_folders_cubit.dart';
+import 'presentation/bloc/save_locations_cubit.dart';
 
 /// 보관함 기능 의존성. 테스트는 리포지토리만 바꿔 끼운다.
 void registerLibrary(GetIt sl) {
@@ -59,7 +60,7 @@ void registerLibrary(GetIt sl) {
     ..registerLazySingleton<LoadedFolderRepository>(
       PrefsLoadedFolderRepository.new,
     )
-    ..registerFactory(() => WatchLibraryTracks(sl()))
+    ..registerFactory(() => WatchLibraryTracks(sl(), sl()))
     ..registerFactory(() => UpdateTrackInfo(sl(), sl()))
     ..registerFactory(() => EmbedTagsIntoFiles(sl(), sl(), sl(), sl(), sl()))
     ..registerFactory(() => RestoreFromFileTags(sl(), sl(), sl(), sl(), sl()))
@@ -67,8 +68,14 @@ void registerLibrary(GetIt sl) {
     ..registerFactory(() => ImportDeviceMusic(sl(), sl(), sl()))
     ..registerFactory(() => LoadLoadedFolders(sl(), sl()))
     ..registerFactory(() => AddLoadedFolder(sl()))
-    ..registerFactory(() => RemoveLoadedFolder(sl()))
-    ..registerFactory(() => LoadedFoldersCubit(sl(), sl(), sl(), sl()))
+    ..registerFactory(() => RemoveLoadedFolder(sl(), sl()))
+    ..registerFactory(
+      () => LoadedFoldersCubit(sl(), sl(), sl(), sl(), sl(), sl()),
+    )
+    ..registerFactory(() => LoadSaveLocations(sl()))
+    ..registerFactory(() => AddSaveLocation(sl()))
+    ..registerFactory(() => RemoveSaveLocation(sl()))
+    ..registerFactory(() => SaveLocationsCubit(sl(), sl(), sl()))
     ..registerFactory(() => LibraryCubit(sl(), sl(), sl()))
     ..registerFactory(() => FillEmbeddedCovers(sl(), sl(), sl()))
     ..registerFactory(() => LibraryImportCubit(sl(), sl(), sl(), sl()));

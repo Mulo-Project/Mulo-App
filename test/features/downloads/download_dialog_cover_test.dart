@@ -44,6 +44,29 @@ void main() {
     expect(queue.requests.single.thumbnailUrl, _url);
   });
 
+  testWidgets('받기 팝업: 이미지 페이지에서 이미지를 지우면 썸네일도 쓰지 않고 커버 없이 받는다', (tester) async {
+    final queue = await open(tester);
+    await openDownloadDialog(tester, thumbnailUrl: _url);
+    await tester.tap(find.text('이미지 바꾸기'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    // 기본(썸네일) 그대로면 "기본 이미지로"는 없고 "이미지 지우기"만 있다.
+    expect(find.text('기본 이미지로'), findsNothing);
+    // 테스트에는 네트워크가 없어 이미지를 읽는 표시가 계속 돌므로 pumpAndSettle 대신 시간만 흘린다.
+    await tester.tap(find.text('이미지 지우기'));
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.tap(find.text('이미지 지우기').last);
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pumpAndSettle();
+    expect(find.text('이미지 고르기'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('받기').last);
+    await tester.tap(find.text('받기').last);
+    await tester.pumpAndSettle();
+    expect(queue.requests.single.cover, isNull);
+    expect(queue.requests.single.thumbnailUrl, isNull);
+  });
+
   testWidgets('받기 팝업: 썸네일이 없으면 커버 없이 받는다', (tester) async {
     final queue = await open(tester);
     await openDownloadDialog(tester);

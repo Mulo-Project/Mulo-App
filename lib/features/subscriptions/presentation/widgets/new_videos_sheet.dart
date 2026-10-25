@@ -11,12 +11,11 @@ import '../bloc/new_videos_cubit.dart';
 var _open = false;
 
 /// 구독 채널의 새 영상 목록을 바텀시트로 연다. 채널별로 묶어 평평하게 보여 주고, 골라서 한꺼번에 받는다.
-/// 시트를 닫으면 확인한 채널은 여기까지 본 것으로 표시한다 (받지 않은 영상은 다시 뜨지 않는다).
-/// 이미 열려 있으면 다시 열지 않는다.
+/// 시트를 닫아도 목록은 그대로이고, 위의 "비우기"를 눌러야 확인한 것으로 표시해 비운다
+/// (받지 않은 영상은 그 뒤로 다시 뜨지 않는다). 이미 열려 있으면 다시 열지 않는다.
 Future<void> showNewVideosSheet(BuildContext context) async {
   if (_open) return;
   _open = true;
-  final cubit = sl<NewVideosCubit>();
   try {
     await showAppSheet<void>(
       context,
@@ -26,7 +25,8 @@ Future<void> showNewVideosSheet(BuildContext context) async {
     );
   } finally {
     _open = false;
-    await cubit.markSeen();
+    // 목록은 그대로 두고, 본 영상은 앱을 켤 때 다시 알리지 않게 기록한다.
+    await sl<NewVideosCubit>().acknowledge();
   }
 }
 
@@ -86,29 +86,48 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final state = context.watch<NewVideosCubit>().state;
+    final cubit = context.read<NewVideosCubit>();
+    // 제목 아래에 "채널 N개 · 영상 M개"로 한눈에 얼마나 있는지 보여 주고, 모두 선택은 같은 줄 오른쪽에 둔다.
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.md,
         0,
-        AppSpacing.xxs,
         AppSpacing.xs,
+        AppSpacing.sm,
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Expanded(
-            child: Text(
+            child: AppSheetTitle(
               l10n.newVideosTitle,
-              style: Theme.of(context).textTheme.titleLarge,
+              subtitle: state.count > 0
+                  ? l10n.newVideosSummary(state.groups.length, state.count)
+                  : null,
             ),
           ),
-          if (state.count > 0)
+          if (state.count > 0) ...[
+            PlainButton(
+              label: l10n.newVideosClear,
+              onPressed: () async {
+                final ok = await showConfirmDialog(
+                  context,
+                  title: l10n.newVideosClearTitle,
+                  body: l10n.newVideosClearBody,
+                  confirmLabel: l10n.newVideosClear,
+                  cancelLabel: l10n.actionCancel,
+                );
+                if (ok) await cubit.markSeen();
+              },
+            ),
             PlainButton(
               label: state.allSelected
                   ? l10n.newVideosSelectNone
                   : l10n.newVideosSelectAll,
               accent: true,
-              onPressed: context.read<NewVideosCubit>().toggleAll,
+              onPressed: cubit.toggleAll,
             ),
+          ],
         ],
       ),
     );
@@ -121,62 +140,39 @@ class _Body extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
     final state = context.watch<NewVideosCubit>().state;
     final cubit = context.read<NewVideosCubit>();
     final groups = state.groups;
 
     if (groups.isEmpty) {
       final busy = state.status == NewVideosStatus.checking || state.resolving;
-      return Center(
-        child: EmptyState(
-          title: busy ? l10n.newVideosChecking : l10n.newVideosEmptyTitle,
-          body: busy ? null : l10n.newVideosEmptyBody,
-        ),
+      if (busy) return LoadingState(label: l10n.newVideosChecking);
+      return EmptyState(
+        icon: AppIcons.checkCircle,
+        title: l10n.newVideosEmptyTitle,
+        body: l10n.newVideosEmptyBody,
       );
     }
     final locale = Localizations.localeOf(context).toString();
     return ListView(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
       children: [
-        for (final g in groups) ...[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.md,
-              AppSpacing.sm,
-              AppSpacing.xxs,
-              0,
+        for (var i = 0; i < groups.length; i++) ...[
+          // 채널 묶음 사이는 가는 선으로 나눈다.
+          if (i > 0)
+            const Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.xs,
+              ),
+              child: AppDivider(),
             ),
-            child: Row(
-              children: [
-                ArtworkBox(
-                  image: g.channel.thumbnailUrl == null
-                      ? null
-                      : NetworkImage(g.channel.thumbnailUrl!),
-                  size: 32,
-                  radius: 16,
-                  tone: toneFor(g.channel.id),
-                  icon: AppIcons.person,
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Text(
-                    g.channel.name,
-                    style: text.titleSmall,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                PlainButton(
-                  label: g.videos.every((v) => state.selected.contains(v.id))
-                      ? l10n.newVideosSelectNone
-                      : l10n.newVideosSelectAll,
-                  onPressed: () => cubit.toggleChannel(g.channel.id),
-                ),
-              ],
-            ),
+          _ChannelHeader(
+            group: groups[i],
+            selected: state.selected,
+            cubit: cubit,
           ),
-          for (final v in g.videos)
+          for (final v in groups[i].videos)
             _Row(
               video: v,
               selected: state.selected.contains(v.id),
@@ -185,6 +181,61 @@ class _Body extends StatelessWidget {
             ),
         ],
       ],
+    );
+  }
+}
+
+/// 채널 묶음 머리: 작은 이미지 · 이름 · 영상 수, 오른쪽에 그 채널만 선택 · 해제.
+class _ChannelHeader extends StatelessWidget {
+  const _ChannelHeader({
+    required this.group,
+    required this.selected,
+    required this.cubit,
+  });
+
+  final NewVideosGroup group;
+  final Set<String> selected;
+  final NewVideosCubit cubit;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final text = Theme.of(context).textTheme;
+    final channel = group.channel;
+    final all = group.videos.every((v) => selected.contains(v.id));
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.xs,
+        AppSpacing.xs,
+        0,
+      ),
+      child: Row(
+        children: [
+          ArtworkBox(
+            image: channel.thumbnailUrl == null
+                ? null
+                : NetworkImage(channel.thumbnailUrl!),
+            size: 28,
+            radius: 14,
+            tone: toneFor(channel.id),
+            icon: AppIcons.person,
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              channel.name,
+              style: text.titleSmall,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          PlainButton(
+            label: all ? l10n.newVideosSelectNone : l10n.newVideosSelectAll,
+            onPressed: () => cubit.toggleChannel(channel.id),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -208,11 +259,19 @@ class _Row extends StatelessWidget {
     final thumb = video.thumbnailUrl;
     return TrackTile(
       title: video.title,
-      subtitle: DateFormat.yMMMd(locale)
+      // 오늘 · 올해 영상이 대부분이라 연도 없이 짧게.
+      subtitle: DateFormat.MMMd(locale)
           .add_Hm()
           .format(video.publishedAt.toLocal()),
-      tone: toneFor(video.id),
-      artwork: thumb == null ? null : NetworkImage(thumb),
+      // 영상은 가로로 긴 16:9 썸네일로 보여 곡 줄(정사각)과 구분한다.
+      leading: ArtworkBox(
+        image: thumb == null ? null : NetworkImage(thumb),
+        width: 80,
+        size: 45,
+        radius: AppRadii.sm,
+        tone: toneFor(video.id),
+        icon: AppIcons.download,
+      ),
       trailing: Icon(
         selected ? AppIcons.checkCircle : AppIcons.radioOff,
         color: selected ? p.accent : p.onSurfaceMuted,

@@ -109,205 +109,248 @@ class _LyricsLatencyScreenState extends State<LyricsLatencyScreen> {
     final recommended = _running
         ? null
         : LatencyCalibration.recommend(_offsets);
-    final np = context.watch<NowPlayingCubit>();
+    // 재생 위치는 1초에 여러 번 바뀌므로 화면 전체가 따라 그려지지 않게 재생 중인지만 지켜본다.
+    final np = context.read<NowPlayingCubit>();
+    final playing = context.select((NowPlayingCubit c) => c.state.isPlaying);
     final stamped = _tried;
 
-    Widget section(String title, String body) => Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.lg, bottom: AppSpacing.xs),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: text.titleMedium),
-          const SizedBox(height: AppSpacing.xxs),
-          Text(body, style: text.bodySmall?.copyWith(color: p.onSurfaceMuted)),
-        ],
+    // 구역 하나 = 유리 카드 한 장: 제목 · 설명 · 내용. 카드 사이 간격은 같다.
+    Widget card({
+      String? title,
+      String? body,
+      required List<Widget> children,
+    }) => Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: GlassCard(
+        tone: GlowTone.neutral,
+        glow: false,
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (title != null) Text(title, style: text.titleMedium),
+            if (body != null) ...[
+              const SizedBox(height: AppSpacing.xxs),
+              Text(
+                body,
+                style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
+              ),
+            ],
+            if (title != null || body != null)
+              const SizedBox(height: AppSpacing.md),
+            ...children,
+          ],
+        ),
       ),
     );
 
     return Scaffold(
       backgroundColor: p.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            AppTopBar(
-              title: l10n.lyricsLatencyTitle,
-              leading: CircleIconButton(
-                icon: AppIcons.back,
-                tooltip: l10n.actionCancel,
-                onPressed: () => Navigator.of(context).pop(),
+      body: AppBackground(
+        child: SafeArea(
+          child: Column(
+            children: [
+              AppTopBar(
+                title: l10n.lyricsLatencyTitle,
+                leading: const AppBackButton(),
               ),
-            ),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                children: [
-                  Text(
-                    l10n.lyricsLatencyIntro,
-                    style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
+              Expanded(
+                child: ListView(
+                  padding: AppSpacing.screen.copyWith(
+                    bottom:
+                        AppSpacing.xl + MediaQuery.paddingOf(context).bottom,
                   ),
-                  const SizedBox(height: AppSpacing.md),
-                  Center(
-                    child: StatNumber(
-                      l10n.lyricsLatencySeconds(_seconds(latency)),
-                      size: 40,
-                      color: p.accent,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Row(
-                    children: [
-                      PlainButton(
-                        label: '−0.01',
-                        onPressed: () => settings.setLatency(latency - 10),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        bottom: AppSpacing.md,
+                        top: AppSpacing.xxs,
                       ),
-                      Expanded(
-                        child: AppSlider(
-                          semanticLabel: l10n.lyricsLatencyTitle,
-                          value: latency.toDouble(),
-                          max: LyricsSettings.maxLatencyMs.toDouble(),
-                          onChanged: (v) =>
-                              settings.setLatency((v / 10).round() * 10),
-                        ),
-                      ),
-                      PlainButton(
-                        label: '+0.01',
-                        onPressed: () => settings.setLatency(latency + 10),
-                      ),
-                    ],
-                  ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: PlainButton(
-                      label: l10n.lyricsLatencyReset,
-                      onPressed: () =>
-                          settings.setLatency(LyricsSettings.defaultLatencyMs),
-                    ),
-                  ),
-                  Container(height: 1, color: p.outline),
-                  section(l10n.lyricsBeatTitle, l10n.lyricsBeatBody),
-                  Center(
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTapDown: (_) => _tap(),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 80),
-                        width: 140,
-                        height: 140,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: _flash
-                              ? p.accent
-                              : p.accent.withValues(alpha: .18),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          _running
-                              ? l10n.lyricsBeatProgress(_offsets.length, _taps)
-                              : l10n.lyricsBeatIdle,
-                          style: text.titleMedium?.copyWith(
-                            color: _flash ? p.background : p.onSurface,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      PillButton(
-                        label: _running
-                            ? l10n.lyricsBeatStop
-                            : l10n.lyricsBeatStart,
-                        icon: _running ? AppIcons.pause : AppIcons.play,
-                        onPressed: _running ? _stop : _start,
-                      ),
-                    ],
-                  ),
-                  if (recommended != null) ...[
-                    const SizedBox(height: AppSpacing.sm),
-                    Center(
                       child: Text(
-                        l10n.lyricsBeatResult(_seconds(recommended)),
-                        style: text.titleSmall?.copyWith(color: p.accent),
+                        l10n.lyricsLatencyIntro,
+                        style: text.bodyMedium?.copyWith(
+                          color: p.onSurfaceMuted,
+                        ),
                       ),
                     ),
-                    Align(
-                      alignment: Alignment.center,
-                      child: PlainButton(
-                        label: l10n.lyricsBeatApply,
-                        accent: true,
-                        onPressed: () => settings.setLatency(recommended),
-                      ),
-                    ),
-                  ],
-                  Padding(
-                    padding: const EdgeInsets.only(top: AppSpacing.xs),
-                    child: Text(
-                      l10n.lyricsBeatNote,
-                      style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  Container(height: 1, color: p.outline),
-                  section(l10n.lyricsSongCheckTitle, l10n.lyricsSongCheckBody),
-                  Wrap(
-                    spacing: AppSpacing.xs,
-                    runSpacing: AppSpacing.xs,
-                    children: [
-                      PillButton(
-                        label: np.state.isPlaying
-                            ? l10n.lyricsSyncPause
-                            : l10n.lyricsSyncPlay,
-                        icon: np.state.isPlaying
-                            ? AppIcons.pause
-                            : AppIcons.play,
-                        variant: PillVariant.tonal,
-                        onPressed: np.togglePlay,
-                      ),
-                      PillButton(
-                        label: l10n.lyricsSongTry,
-                        icon: AppIcons.touch,
-                        onPressed: () {
-                          final at =
-                              np.state.position -
-                              Duration(milliseconds: latency);
-                          setState(
-                            () => _tried = at < Duration.zero
-                                ? Duration.zero
-                                : at,
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  if (stamped != null) ...[
-                    const SizedBox(height: AppSpacing.sm),
-                    Row(
+                    // 지금 값: 큰 숫자 · 미세 조정 슬라이더 · 기본값.
+                    card(
                       children: [
-                        Expanded(
-                          child: Text(
-                            l10n.lyricsSongTried(_clockOf(stamped)),
-                            style: text.titleSmall,
+                        Center(
+                          child: StatNumber(
+                            l10n.lyricsLatencySeconds(_seconds(latency)),
+                            size: 40,
+                            color: p.accent,
                           ),
                         ),
-                        PlainButton(
-                          label: l10n.lyricsSongListen,
-                          icon: AppIcons.replay,
-                          accent: true,
-                          onPressed: () {
-                            np.seekTo(stamped);
-                            if (!np.state.isPlaying) np.togglePlay();
-                          },
+                        const SizedBox(height: AppSpacing.sm),
+                        Row(
+                          children: [
+                            PlainButton(
+                              label: '−0.01',
+                              onPressed: () =>
+                                  settings.setLatency(latency - 10),
+                            ),
+                            Expanded(
+                              child: AppSlider(
+                                semanticLabel: l10n.lyricsLatencyTitle,
+                                value: latency.toDouble(),
+                                max: LyricsSettings.maxLatencyMs.toDouble(),
+                                onChanged: (v) =>
+                                    settings.setLatency((v / 10).round() * 10),
+                              ),
+                            ),
+                            PlainButton(
+                              label: '+0.01',
+                              onPressed: () =>
+                                  settings.setLatency(latency + 10),
+                            ),
+                          ],
+                        ),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: PlainButton(
+                            label: l10n.lyricsLatencyReset,
+                            onPressed: () => settings.setLatency(
+                              LyricsSettings.defaultLatencyMs,
+                            ),
+                          ),
                         ),
                       ],
                     ),
+                    card(
+                      title: l10n.lyricsBeatTitle,
+                      body: l10n.lyricsBeatBody,
+                      children: [
+                        Center(
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTapDown: (_) => _tap(),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 80),
+                              width: 140,
+                              height: 140,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: _flash
+                                    ? p.accent
+                                    : p.accent.withValues(alpha: .18),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                _running
+                                    ? l10n.lyricsBeatProgress(
+                                        _offsets.length,
+                                        _taps,
+                                      )
+                                    : l10n.lyricsBeatIdle,
+                                style: text.titleMedium?.copyWith(
+                                  color: _flash ? p.background : p.onSurface,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        Center(
+                          child: PillButton(
+                            label: _running
+                                ? l10n.lyricsBeatStop
+                                : l10n.lyricsBeatStart,
+                            icon: _running ? AppIcons.pause : AppIcons.play,
+                            onPressed: _running ? _stop : _start,
+                          ),
+                        ),
+                        if (recommended != null) ...[
+                          const SizedBox(height: AppSpacing.md),
+                          Center(
+                            child: Text(
+                              l10n.lyricsBeatResult(_seconds(recommended)),
+                              style: text.titleSmall?.copyWith(color: p.accent),
+                            ),
+                          ),
+                          Center(
+                            child: PlainButton(
+                              label: l10n.lyricsBeatApply,
+                              accent: true,
+                              onPressed: () => settings.setLatency(recommended),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          l10n.lyricsBeatNote,
+                          style: text.bodySmall?.copyWith(
+                            color: p.onSurfaceMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                    card(
+                      title: l10n.lyricsSongCheckTitle,
+                      body: l10n.lyricsSongCheckBody,
+                      children: [
+                        // 두 버튼을 같은 너비로 나란히.
+                        Row(
+                          children: [
+                            Expanded(
+                              child: PillButton(
+                                label: playing
+                                    ? l10n.lyricsSyncPause
+                                    : l10n.lyricsSyncPlay,
+                                icon: playing ? AppIcons.pause : AppIcons.play,
+                                variant: PillVariant.tonal,
+                                onPressed: np.togglePlay,
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            Expanded(
+                              child: PillButton(
+                                label: l10n.lyricsSongTry,
+                                icon: AppIcons.touch,
+                                onPressed: () {
+                                  final at =
+                                      np.state.position -
+                                      Duration(milliseconds: latency);
+                                  setState(
+                                    () => _tried = at < Duration.zero
+                                        ? Duration.zero
+                                        : at,
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (stamped != null) ...[
+                          const SizedBox(height: AppSpacing.sm),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  l10n.lyricsSongTried(_clockOf(stamped)),
+                                  style: text.titleSmall,
+                                ),
+                              ),
+                              PlainButton(
+                                label: l10n.lyricsSongListen,
+                                icon: AppIcons.replay,
+                                accent: true,
+                                onPressed: () {
+                                  np.seekTo(stamped);
+                                  if (!np.state.isPlaying) np.togglePlay();
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
                   ],
-                  const SizedBox(height: AppSpacing.xl),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -196,6 +196,20 @@ void main() {
     expect(notifier.shown.single['body'], contains('다음 곡: 곡2'));
   });
 
+  test('받는 중에는 일시정지, 모두 일시정지되면 일시정지됨 · 이어받기 버튼을 알림에 담는다', () async {
+    await cubit.syncDownloads(
+      [item('1', DownloadStatus.downloading, .3)],
+      on,
+      l10n,
+    );
+    expect(notifier.shown.last['hold'], '일시정지');
+
+    await cubit.syncDownloads([item('1', DownloadStatus.paused, .3)], on, l10n);
+    expect(notifier.shown.last['body'], contains('일시정지됨 · 30%'));
+    expect(notifier.shown.last['hold'], '이어받기');
+    expect(notifier.shown.last['openId'], '1');
+  });
+
   test('지금 곡을 미리 듣는 중이면 미리듣기 버튼이 중지 버튼으로 바뀐다', () async {
     final downloading = [item('1', DownloadStatus.downloading, .3)];
     await cubit.syncDownloads(downloading, on, l10n);

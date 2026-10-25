@@ -110,6 +110,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get searchNetworkBody => '서버에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.';
 
   @override
+  String get stateNetworkTitle => '네트워크 연결이 필요해요';
+
+  @override
+  String get stateNetworkBody => '연결을 확인한 뒤 다시 시도해 주세요.';
+
+  @override
+  String get stateSignInTitle => '로그인이 필요해요';
+
+  @override
+  String get stateSignInBody => '로그인한 뒤에 쓸 수 있어요.';
+
+  @override
   String get searchAuthBody => '서버가 로그인을 요구해요.';
 
   @override
@@ -222,6 +234,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get sortLabel => '정렬';
 
   @override
+  String get sortAscending => '오름차순';
+
+  @override
+  String get sortDescending => '내림차순';
+
+  @override
   String get sortName => '이름순';
 
   @override
@@ -310,7 +328,29 @@ class AppLocalizationsKo extends AppLocalizations {
   String get loadedFoldersRemove => '폴더 빼기';
 
   @override
-  String get loadedFoldersScanning => '보관함을 다시 찾는 중이에요';
+  String get loadedFoldersRemoveTitle => '불러오는 폴더에서 뺄까요?';
+
+  @override
+  String loadedFoldersRemoveBody(String path, int count) {
+    return '$path\n이 폴더의 $count곡이 보관함에서 사라져요. 음악 파일은 지워지지 않아요.';
+  }
+
+  @override
+  String loadedFoldersRemoveBodyEmpty(String path) {
+    return '$path\n음악 파일은 지워지지 않아요.';
+  }
+
+  @override
+  String get loadedFoldersScanning => '폴더에서 곡을 찾는 중이에요';
+
+  @override
+  String get loadedFoldersRemoving => '폴더를 빼고 보관함을 정리하는 중이에요';
+
+  @override
+  String get loadedFoldersReading => '곡 정보를 읽는 중이에요';
+
+  @override
+  String get loadedFoldersCovers => '곡 이미지를 가져오는 중이에요';
 
   @override
   String get settingsQuality => '기본 음질';
@@ -334,6 +374,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsEngineNotInstalled => 'yt-dlp가 없어요. 설치하면 검색하고 받을 수 있어요.';
+
+  @override
+  String get settingsEngineRemove => '삭제';
+
+  @override
+  String get settingsEngineRemoveTitle => '다운로드 엔진을 지울까요?';
+
+  @override
+  String get settingsEngineRemoveBody =>
+      '앱이 받아 둔 yt-dlp 파일을 지워요. 지우면 검색하고 받으려면 다시 설치해야 해요. 이 기기에 따로 설치된 yt-dlp는 지우지 않아요.';
 
   @override
   String get settingsEngineInstalling => '내려받는 중…';
@@ -678,7 +728,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get coverWebFailed => '검색하지 못했어요. 잠시 뒤 다시 해 주세요';
 
   @override
-  String get coverEditTitle => '이미지 위치';
+  String get coverEditTitle => '이미지';
 
   @override
   String get coverEditHint =>
@@ -692,6 +742,36 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get coverEditReset => '원래대로';
+
+  @override
+  String get coverEditResetPosition => '위치 되돌리기';
+
+  @override
+  String get coverEditResetTitle => '위치와 크기를 되돌릴까요?';
+
+  @override
+  String get coverEditResetBody => '확대 · 위치 · 회전이 처음 상태로 돌아가요.';
+
+  @override
+  String get coverEditResetConfirm => '되돌리기';
+
+  @override
+  String get coverChange => '이미지 바꾸기';
+
+  @override
+  String get coverRemove => '이미지 지우기';
+
+  @override
+  String get coverRemoveTitle => '이미지를 지울까요?';
+
+  @override
+  String get coverRemoveBody => '고른 이미지를 지워요. 나중에 다시 고를 수 있어요.';
+
+  @override
+  String get coverRevertTitle => '기본 이미지로 되돌릴까요?';
+
+  @override
+  String get coverRevertBody => '고른 이미지를 지우고 기본 이미지로 돌아가요.';
 
   @override
   String get coverEditApply => '적용';
@@ -1087,10 +1167,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get searchSortNewest => '최신순';
 
   @override
-  String get searchSortShortest => '짧은 순';
-
-  @override
-  String get searchSortLongest => '긴 순';
+  String get searchSortDuration => '길이순';
 
   @override
   String get searchSortTitle => '제목순';
@@ -1142,6 +1219,23 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadCoverDefault => '기본으로';
 
   @override
+  String get downloadLyricsEditHint => '파일 · 웹에서 불러오거나 직접 써요. 자막이 없어도 돼요.';
+
+  @override
+  String get downloadLyricsOverwriteTitle => '직접 정한 가사가 있어요';
+
+  @override
+  String get downloadLyricsOverwriteBody => '영상 자막을 쓰면 직접 정한 가사는 지워져요. 계속할까요?';
+
+  @override
+  String get downloadLyricsOverwriteConfirm => '자막으로 바꾸기';
+
+  @override
+  String downloadLyricsCustom(int lines) {
+    return '직접 정한 가사를 넣어요 · $lines줄';
+  }
+
+  @override
   String get downloadImportLyrics => '자막을 가사로 가져오기';
 
   @override
@@ -1179,7 +1273,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadSubtitleUseEdited => '이 자막 사용';
 
   @override
-  String get downloadSubtitleEdited => '수정함';
+  String get downloadSubtitleApplied => '가사에 적용';
 
   @override
   String get downloadLyricsRetry => '다시 불러오기';
@@ -1370,6 +1464,32 @@ class AppLocalizationsKo extends AppLocalizations {
   String get albumRenameDone => '앨범 이름을 바꿨어요';
 
   @override
+  String get artistRenameTooltip => '아티스트 이름 바꾸기';
+
+  @override
+  String get artistRenameTitle => '아티스트 이름 바꾸기';
+
+  @override
+  String get artistRenameHint => '아티스트 이름';
+
+  @override
+  String get genreRenameTooltip => '장르 이름 바꾸기';
+
+  @override
+  String get genreRenameTitle => '장르 이름 바꾸기';
+
+  @override
+  String get genreRenameHint => '장르 이름';
+
+  @override
+  String get renameProgressTitle => '곡 정보를 고치는 중이에요';
+
+  @override
+  String renameProgressCount(int done, int total) {
+    return '$done/$total곡';
+  }
+
+  @override
   String get artistNotFound => '아티스트를 찾을 수 없어요';
 
   @override
@@ -1478,6 +1598,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get trackEditSaved => '곡 정보를 고쳤어요';
+
+  @override
+  String get trackEditTagFailed =>
+      '음악 파일에 곡 정보를 쓰지 못해 바꾸지 않았어요. 잠시 뒤 다시 시도해 주세요.';
 
   @override
   String get trackDeleteTitle => '곡 삭제';
@@ -1665,6 +1789,21 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsImportAppend => '뒤에 붙이기';
 
   @override
+  String get lyricsImportMemo => '메모에 추가';
+
+  @override
+  String get lyricsMemoTitle => '메모';
+
+  @override
+  String get lyricsMemoHide => '메모 숨기기';
+
+  @override
+  String get lyricsMemoHint => '글을 고치거나 골라서 \"끼우기\"를 누르면 가사의 지금 줄 아래에 들어가요';
+
+  @override
+  String get lyricsMemoInsert => '끼우기';
+
+  @override
   String get lyricsSyncGroupSetupBody =>
       '한 번에 시간을 찍을 줄 수를 골라 주세요. 나중에 위쪽 메뉴에서 바꿀 수 있어요.';
 
@@ -1850,6 +1989,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playlistMenuTooltip => '재생목록 메뉴';
 
   @override
+  String get playlistFeaturedTitle => '대표곡';
+
+  @override
   String get playlistFeaturedPreview => '대표곡 미리 듣기';
 
   @override
@@ -1906,7 +2048,43 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playlistPickAlready => '이미 담겼어요';
 
   @override
-  String get playlistDetailEmpty => '아직 담긴 곡이 없어요. 곡 메뉴의 ‘재생목록에 추가’로 담아 보세요.';
+  String get filterAllArtists => '모든 아티스트';
+
+  @override
+  String get filterAllAlbums => '모든 앨범';
+
+  @override
+  String get filterAllGenres => '모든 장르';
+
+  @override
+  String get playlistAddTracks => '곡 추가';
+
+  @override
+  String get playlistAddTracksTitle => '곡 추가';
+
+  @override
+  String playlistAddTracksStart(int count) {
+    return '$count곡 추가';
+  }
+
+  @override
+  String get playlistAddTracksEmptyTitle => '추가할 곡이 없어요';
+
+  @override
+  String get playlistAddTracksEmptyBody => '보관함의 곡이 모두 이 재생목록에 있거나 검색 결과가 없어요.';
+
+  @override
+  String get playlistDetailEmpty => '아직 담긴 곡이 없어요';
+
+  @override
+  String get playlistDetailEmptyFavorites => '아직 좋아요한 곡이 없어요';
+
+  @override
+  String get playlistDetailEmptyBody =>
+      '곡 메뉴의 ‘재생목록에 추가’ 또는 아래 ‘곡 추가’로 담아 보세요.';
+
+  @override
+  String get playlistDetailEmptyFavoritesBody => '곡 메뉴에서 좋아요를 누르면 여기에 담겨요.';
 
   @override
   String get playlistNotFound => '재생목록을 찾을 수 없어요';
@@ -1946,7 +2124,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playlistImportNoResultsBody => '다른 검색어로 찾아 보세요.';
 
   @override
-  String get playlistImportBackToResults => '검색 결과';
+  String get playlistImportBackToResults => '검색 결과로';
+
+  @override
+  String get playlistImportLoading => '곡 목록을 읽는 중이에요';
+
+  @override
+  String playlistImportSelectedCount(int selected, int total) {
+    return '$selected/$total곡 선택됨';
+  }
 
   @override
   String playlistImportResultSubtitle(String channel, int count) {
@@ -2109,10 +2295,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsOverlayTurnOff => '끄기';
 
   @override
-  String get lyricsOverlayOn => '떠 있는 가사 켜기';
+  String get lyricsOverlayOn => '오버레이 가사 켜기';
 
   @override
-  String get lyricsOverlayOff => '떠 있는 가사 끄기';
+  String get lyricsOverlayOff => '오버레이 가사 끄기';
+
+  @override
+  String get lyricsOverlayNoLyrics => '가사가 없어요';
+
+  @override
+  String get lyricsOverlayNotSynced => '싱크된 가사가 없어요';
 
   @override
   String get lyricsOverlayNeedPermission =>
@@ -2184,6 +2376,17 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get notifDownloadCancel => '취소';
+
+  @override
+  String get notifDownloadPause => '일시정지';
+
+  @override
+  String get notifDownloadResume => '이어받기';
+
+  @override
+  String notifDownloadPausedBody(int percent) {
+    return '일시정지됨 · $percent%';
+  }
 
   @override
   String get notifDownloadPausePreview => '일시정지';
@@ -2258,6 +2461,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get newVideosEmptyBody => '구독한 채널에 새 영상이 올라오면 여기에서 골라 받을 수 있어요.';
 
   @override
+  String newVideosSummary(int channels, int videos) {
+    return '채널 $channels개 · 영상 $videos개';
+  }
+
+  @override
   String newVideosStart(int count) {
     return '$count곡 받기';
   }
@@ -2269,6 +2477,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get newVideosSkipped => '이미 받은 곡이라 새로 받을 곡이 없어요';
+
+  @override
+  String get newVideosClear => '비우기';
+
+  @override
+  String get newVideosClearTitle => '새 영상 목록을 비울까요?';
+
+  @override
+  String get newVideosClearBody =>
+      '받지 않은 영상도 목록에서 사라지고, 다시 뜨지 않아요. 이후에 올라오는 영상만 새 영상으로 보여요.';
 
   @override
   String get newVideosSelectAll => '모두 선택';

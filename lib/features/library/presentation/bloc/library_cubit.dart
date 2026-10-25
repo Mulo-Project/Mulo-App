@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/usecase/usecase.dart';
 import '../../domain/entities/track.dart';
+import '../../domain/entities/track_group.dart';
 import '../../domain/entities/track_info.dart';
 import '../../domain/usecases/library_usecases.dart';
 
@@ -51,29 +52,32 @@ class LibraryCubit extends Cubit<LibraryState> {
     );
   }
 
-  /// 곡 정보 편집. 제목이 비어 있으면 바꾸지 않고 false.
-  Future<bool> updateInfo(String trackId, TrackInfo info) =>
+  /// 곡 정보 편집 (파일 태그에 먼저 쓰고 DB에 저장). 제목이 비었거나 태그 쓰기가 실패하면 바꾸지 않는다.
+  Future<UpdateInfoResult> updateInfo(String trackId, TrackInfo info) =>
       _updateInfo(UpdateTrackInfoParams(trackId, info));
 
-  /// 앨범 이름을 바꾼다: [from] 앨범의 모든 곡의 앨범을 [to]로 고친다.
-  /// 이미 있는 앨범 이름이면 그 앨범과 합쳐진다. 바뀐 곡 수를 돌려준다.
-  Future<int> renameAlbum(String from, String to) async {
+  /// 아티스트 · 앨범 · 장르의 이름을 바꾼다: [kind] 묶음 [from]에 속한 모든 곡의 그 정보를 [to]로 고친다.
+  /// 이미 있는 이름이면 그 묶음과 합쳐진다. 곡마다 순서대로 (파일 태그 → 기록) 고치므로 한 곡이 끝날 때마다
+  /// [onProgress]로 (끝낸 수, 전체 수)를 알린다. 바뀐 곡 수와, 태그 쓰기 실패로 못 바꾼 곡 수를 돌려준다.
+  Future<({int changed, int failed})> renameGroup(
+    TrackGroupKind kind,
+    String from,
+    String to, {
+    void Function(int done, int total)? onProgress,
+  }) async {
     final name = to.trim();
-    if (name == from) return 0;
+    if (name == from) return (changed: 0, failed: 0);
+    final tracks = state.tracks.where((t) => kind.contains(t, from)).toList();
     var changed = 0;
-    for (final t in state.tracks.where((t) => t.album == from).toList()) {
-      final ok = await updateInfo(
-        t.id,
-        TrackInfo(
-          title: t.title,
-          artist: t.artist,
-          album: name,
-          genre: t.genre,
-        ),
-      );
-      if (ok) changed++;
+    var failed = 0;
+    onProgress?.call(0, tracks.length);
+    for (final (i, t) in tracks.indexed) {
+      final result = await updateInfo(t.id, kind.rename(t, name));
+      if (result == UpdateInfoResult.saved) changed++;
+      if (result == UpdateInfoResult.tagWriteFailed) failed++;
+      onProgress?.call(i + 1, tracks.length);
     }
-    return changed;
+    return (changed: changed, failed: failed);
   }
 
   /// 음악 파일과 보관함 기록을 지운다. 파일을 못 지우면 false (기록은 그대로).

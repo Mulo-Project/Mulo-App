@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:music_download_play_app/features/lyrics/presentation/widgets/timed_lyrics_field.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/di/injector.dart';
@@ -63,7 +64,7 @@ void main() {
     await tester.tap(find.text('저장'));
     await tester.pumpAndSettle();
     expect(lyrics.saved['t1'], '[00:01.00]불러온 가사');
-    expect(find.text('가사를 저장했어요'), findsOneWidget);
+    expect(find.text('가사를 저장했어요'), findsNothing); // 화면이 닫히므로 안내는 없다
 
     // 글만 고치면 시간은 줄 번호에 맞춰 그대로 다시 붙는다.
     await tester.pump(const Duration(seconds: 5));
@@ -84,7 +85,7 @@ void main() {
     await tester.tap(find.text('저장'));
     await tester.pumpAndSettle();
     expect(lyrics.saved, isEmpty);
-    expect(find.text('가사를 지웠어요'), findsOneWidget);
+    expect(find.text('가사를 지웠어요'), findsNothing);
   });
 
   testWidgets('플레이어: 중간 저장한 싱크 가사도 안 찍은 뒷부분까지 모두 보여 준다', (tester) async {
@@ -214,6 +215,93 @@ void main() {
     await tester.tap(find.text('취소').last);
     await tester.pumpAndSettle();
     expect(find.text('불러온 가사'), findsOneWidget);
+  });
+
+  testWidgets('가사 편집 페이지: 불러온 가사를 떠 있는 메모로 띄우고 골라서 지금 줄 아래에 끼워 넣는다', (
+    tester,
+  ) async {
+    phone(tester);
+    final lyrics = MemoryLyricsRepository(sibling: {'t1': '첫째 줄\n셋째 줄'});
+    final file = FakeLyricsFileSource('[00:01.00]끼울 줄\n[00:02.00]다른 줄');
+    await setUpTestDependencies(lyrics: lyrics, lyricsFile: file);
+    await openLyricsEditor(tester);
+
+    await tester.tap(find.textContaining('파일에서 불러오기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('메모에 추가'));
+    await tester.pumpAndSettle();
+    final memoField = find.byKey(const ValueKey('lyrics-memo-field'));
+    expect(memoField, findsOneWidget);
+    final memo = tester.widget<TextField>(memoField).controller!;
+    expect(memo.text, '끼울 줄\n다른 줄');
+
+    // 메모 글을 고칠 수 있다.
+    await tester.enterText(memoField, '끼울 줄 고침\n다른 줄');
+    await tester.pumpAndSettle();
+
+    // 가사의 커서를 첫째 줄에 두고 메모의 첫 줄을 골라 끼우면 첫째 줄 바로 아래에 들어간다.
+    final editor = tester
+        .widget<TextField>(
+          find.descendant(
+            of: find.byType(TimedLyricsField),
+            matching: find.byType(TextField),
+          ),
+        )
+        .controller!;
+    editor.selection = const TextSelection.collapsed(offset: 2);
+    memo.selection = const TextSelection(baseOffset: 0, extentOffset: 7);
+    await tester.tap(find.byKey(const ValueKey('lyrics-memo-insert')));
+    await tester.pumpAndSettle();
+    expect(editor.text, '첫째 줄\n끼울 줄 고침\n셋째 줄');
+  });
+
+  testWidgets('가사 편집 페이지: 메모는 불러오기와 따로 켜고, 줄이고 키우고 숨겨도 글이 남고, 불러온 글은 덧붙는다', (
+    tester,
+  ) async {
+    phone(tester);
+    final lyrics = MemoryLyricsRepository(sibling: {'t1': '첫째 줄'});
+    final file = FakeLyricsFileSource('[00:01.00]불러온 줄');
+    await setUpTestDependencies(lyrics: lyrics, lyricsFile: file);
+    await openLyricsEditor(tester);
+
+    final memoField = find.byKey(const ValueKey('lyrics-memo-field'));
+    expect(memoField, findsNothing);
+    // 불러오지 않아도 메모 버튼으로 켜고 직접 쓴다.
+    await tester.tap(find.byKey(const ValueKey('lyrics-memo-toggle')));
+    await tester.pumpAndSettle();
+    await tester.enterText(memoField, '내 메모');
+    await tester.pumpAndSettle();
+
+    // 아래 가장자리를 끌어 메모 영역을 줄였다 키울 수 있다.
+    final before = tester.getSize(memoField).height;
+    await tester.drag(
+      find.byKey(const ValueKey('lyrics-memo-resize')),
+      const Offset(0, -50),
+    );
+    await tester.pumpAndSettle();
+    final shrunk = tester.getSize(memoField).height;
+    expect(shrunk, lessThan(before));
+    await tester.drag(
+      find.byKey(const ValueKey('lyrics-memo-resize')),
+      const Offset(0, 50),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.getSize(memoField).height, greaterThan(shrunk));
+
+    // 숨겼다 다시 켜도 글이 남는다.
+    await tester.tap(find.byKey(const ValueKey('lyrics-memo-close')));
+    await tester.pumpAndSettle();
+    expect(memoField, findsNothing);
+    await tester.tap(find.byKey(const ValueKey('lyrics-memo-toggle')));
+    await tester.pumpAndSettle();
+    expect(tester.widget<TextField>(memoField).controller!.text, '내 메모');
+
+    // 불러온 글은 메모를 새로 만들지 않고 메모에 덧붙인다.
+    await tester.tap(find.textContaining('파일에서 불러오기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('메모에 추가'));
+    await tester.pumpAndSettle();
+    expect(tester.widget<TextField>(memoField).controller!.text, '내 메모\n불러온 줄');
   });
 
   testWidgets('플레이어: 가사 보기로 바꾸면 줄이 보이고, 줄을 누르면 그 위치로 간다', (tester) async {

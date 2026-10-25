@@ -77,45 +77,73 @@ class _SearchScreenState extends State<SearchScreen> {
       value: _cubit,
       child: SafeArea(
         bottom: false,
-        child: ListView(
-          padding: EdgeInsets.only(
-            bottom: AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
-          ),
-          children: [
-            AppTopBar(
-              large: true,
-              title: l10n.navSearch,
-              subtitle: l10n.searchSubtitle,
-            ),
-            Padding(
-              padding: AppSpacing.screen,
-              child: AppSearchField(
-                controller: _controller,
-                hint: _source == SearchSource.youtube
-                    ? l10n.searchHint
-                    : l10n.searchHintSite(sourceLabel(context, _source)),
-                clearTooltip: l10n.actionClear,
-                onChanged: (q) {
-                  if (q.trim().isEmpty) _submit();
-                },
-                onSubmitted: (_) => _submit(),
-                leading: SearchSourceMenu(
-                  source: _source,
-                  onChanged: (s) {
-                    setState(() => _source = s);
-                    if (_controller.text.trim().isNotEmpty) _submit();
-                  },
+        // 안내(처음 · 오류 · 결과 없음)는 검색창 아래 남은 자리 가운데에, 결과는 위에서부터 이어 붙인다.
+        child: CustomScrollView(
+          slivers: [
+            SliverList(
+              delegate: SliverChildListDelegate([
+                AppTopBar(
+                  large: true,
+                  title: l10n.navSearch,
+                  subtitle: l10n.searchSubtitle,
                 ),
-                suffix: RowIconButton(
-                  icon: AppIcons.search,
-                  tooltip: l10n.searchSubmitTooltip,
-                  accent: true,
-                  onPressed: _submit,
+                Padding(
+                  padding: AppSpacing.screen,
+                  child: AppSearchField(
+                    controller: _controller,
+                    hint: _source == SearchSource.youtube
+                        ? l10n.searchHint
+                        : l10n.searchHintSite(sourceLabel(context, _source)),
+                    clearTooltip: l10n.actionClear,
+                    onChanged: (q) {
+                      // 찾는 중에 글자를 고치거나 지우면 기다리지 않고 이전 결과로 돌아간다.
+                      if (_cubit.state.status == SearchStatus.loading) {
+                        _cubit.cancelLoading();
+                      } else if (q.trim().isEmpty) {
+                        _submit();
+                      }
+                    },
+                    onSubmitted: (_) => _submit(),
+                    leading: SearchSourceMenu(
+                      source: _source,
+                      onChanged: (s) {
+                        setState(() => _source = s);
+                        if (_controller.text.trim().isNotEmpty) _submit();
+                      },
+                    ),
+                    suffix: RowIconButton(
+                      icon: AppIcons.search,
+                      tooltip: l10n.searchSubmitTooltip,
+                      accent: true,
+                      onPressed: _submit,
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(height: AppSpacing.md),
+              ]),
             ),
-            const SizedBox(height: AppSpacing.md),
-            _Body(onRetry: _submit, onPaste: _pasteLink),
+            BlocBuilder<SearchCubit, SearchState>(
+              bloc: _cubit,
+              buildWhen: (a, b) =>
+                  (a.status == SearchStatus.loaded && a.items.isNotEmpty) !=
+                  (b.status == SearchStatus.loaded && b.items.isNotEmpty),
+              builder: (context, state) {
+                final body = Padding(
+                  padding: EdgeInsets.only(
+                    bottom:
+                        AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
+                  ),
+                  child: _Body(onRetry: _submit, onPaste: _pasteLink),
+                );
+                // 결과는 위에서부터 길게 이어 붙이고, 안내는 남은 자리 가운데에 둔다.
+                final isList =
+                    state.status == SearchStatus.loaded &&
+                    state.items.isNotEmpty;
+                return isList
+                    ? SliverToBoxAdapter(child: body)
+                    : SliverFillRemaining(hasScrollBody: false, child: body);
+              },
+            ),
           ],
         ),
       ),
@@ -150,7 +178,7 @@ class _Body extends StatelessWidget {
       case SearchStatus.loading:
         return const Padding(
           padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
-          child: Center(child: CircularProgressIndicator()),
+          child: LoadingState(),
         );
       case SearchStatus.failed:
         final failure = state.failure;
@@ -160,6 +188,9 @@ class _Body extends StatelessWidget {
             title: l10n.searchNotReadyTitle,
             body: l10n.searchNotReadyBody,
           );
+        }
+        if (failure == EngineFailure.network) {
+          return EmptyState.network(onRetry: onRetry);
         }
         return _Hint(
           icon: AppIcons.hourglassEmpty,
@@ -197,7 +228,6 @@ class _Results extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
     final isPlaylist = state.playlistTitle != null;
     final label = isPlaylist
         ? '${l10n.searchPlaylistLabel} · ${state.playlistTitle}'
@@ -208,10 +238,7 @@ class _Results extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
-          child: Text(label, style: text.titleMedium),
-        ),
+        SectionTitle(label),
         if (isPlaylist)
           Padding(
             padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
@@ -284,12 +311,17 @@ class _SortMenu extends StatelessWidget {
         SearchSort.relevance => l10n.searchSortRelevance,
         SearchSort.popular => l10n.searchSortPopular,
         SearchSort.newest => l10n.searchSortNewest,
-        SearchSort.shortest => l10n.searchSortShortest,
-        SearchSort.longest => l10n.searchSortLongest,
+        SearchSort.duration => l10n.searchSortDuration,
         SearchSort.title => l10n.searchSortTitle,
       },
       tooltip: l10n.searchSortTooltip,
       onChanged: cubit.selectSort,
+      // 관련도 · 최신순은 찾는 쪽이 정한 순서라 방향을 바꾸지 않는다.
+      ascending: state.sort.hasDirection ? state.isAscending : null,
+      directionTooltip: state.isAscending
+          ? l10n.sortAscending
+          : l10n.sortDescending,
+      onToggleDirection: state.sort.hasDirection ? cubit.toggleDirection : null,
     );
   }
 }
@@ -326,7 +358,7 @@ class _LoadMoreTriggerState extends State<_LoadMoreTrigger> {
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
       child: Center(
         child: _loading || loadingMore
-            ? const CircularProgressIndicator()
+            ? const LoadingIndicator()
             : PillButton(
                 label: context.l10n.searchLoadMore,
                 variant: PillVariant.tonal,

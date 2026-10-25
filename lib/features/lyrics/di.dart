@@ -25,7 +25,7 @@ void registerLyrics(GetIt sl) {
     ..registerLazySingleton<EmbeddedLyricsSource>(TagLyricsSource.new)
     ..registerLazySingleton<LyricsFileSource>(FilePickerLyricsSource.new)
     ..registerFactory(() => LoadLyrics(sl()))
-    ..registerFactory(() => SaveLyrics(sl()))
+    ..registerFactory(() => SaveLyrics(sl(), sl()))
     ..registerFactory(() => ClearLyrics(sl()))
     ..registerFactory(() => PickLyricsFile(sl()))
     ..registerFactory(

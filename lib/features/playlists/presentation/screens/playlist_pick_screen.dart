@@ -63,11 +63,7 @@ class _PlaylistPickScreenState extends State<PlaylistPickScreen> {
             children: [
               AppTopBar(
                 title: l10n.playlistPickTitle,
-                leading: CircleIconButton(
-                  icon: AppIcons.back,
-                  tooltip: l10n.actionBack,
-                  onPressed: () => context.pop(),
-                ),
+                leading: const AppBackButton(),
                 actions: [
                   CircleIconButton(
                     icon: AppIcons.add,

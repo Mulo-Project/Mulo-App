@@ -25,6 +25,27 @@ void main() {
     _t('3', 'c', artist: 'A', genre: '', day: 2),
   ];
 
+  test('방향을 바꾸면 곡 순서가 뒤집힌다', () {
+    List<String> ids(LibrarySort s, bool asc) =>
+        sortTracks(tracks, s, ascending: asc).map((t) => t.id).toList();
+    expect(ids(LibrarySort.name, false), ['3', '1', '2']);
+    expect(ids(LibrarySort.added, true), ['1', '3', '2']);
+    expect(ids(LibrarySort.artist, false), ['1', '2', '3']);
+  });
+
+  test('묶음도 방향을 따르고 장르를 모르는 묶음은 늘 맨 뒤', () {
+    final groups = groupByGenre(tracks);
+    expect(sortGroups(groups, LibrarySort.name).keys.toList(), [
+      'pop',
+      'Rock',
+      '',
+    ]);
+    expect(
+      sortGroups(groups, LibrarySort.name, ascending: false).keys.toList(),
+      ['Rock', 'pop', ''],
+    );
+  });
+
   test('이름순 · 추가일 최신순 · 아티스트순', () {
     expect(sortTracks(tracks, LibrarySort.name).map((t) => t.id), [
       '2',

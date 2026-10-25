@@ -21,14 +21,28 @@ class EngineState extends Equatable {
 
 /// 설정의 엔진 줄: 상태 확인과 설치 · 업데이트.
 class EngineCubit extends Cubit<EngineState> {
-  EngineCubit(this._load, this._install) : super(const EngineState());
+  EngineCubit(this._load, this._install, this._remove)
+    : super(const EngineState());
 
   final LoadEngineStatus _load;
   final InstallEngine _install;
+  final RemoveEngine _remove;
 
   Future<void> load() async {
     final status = await _load(const NoParams());
     if (!isClosed) emit(EngineState(status: status));
+  }
+
+  /// 앱이 받아 둔 엔진을 지운다 (지울 수 없는 상태면 아무것도 하지 않는다).
+  Future<void> remove() async {
+    if (state.busy || state.status?.removable != true) return;
+    emit(EngineState(status: state.status, busy: true));
+    try {
+      final status = await _remove(const NoParams());
+      if (!isClosed) emit(EngineState(status: status));
+    } on Object {
+      if (!isClosed) emit(EngineState(status: state.status, failed: true));
+    }
   }
 
   Future<void> install() async {

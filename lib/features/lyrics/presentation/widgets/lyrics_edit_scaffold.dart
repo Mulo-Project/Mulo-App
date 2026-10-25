@@ -20,6 +20,7 @@ class LyricsEditScaffold extends StatelessWidget {
     this.notice,
     this.fieldHint,
     this.tools = const [],
+    this.top,
     this.body,
     this.leadingIcon = AppIcons.close,
   });
@@ -31,7 +32,9 @@ class LyricsEditScaffold extends StatelessWidget {
   /// 줄마다 싱크 시간 칸을 보이는가.
   final bool showTimes;
   final String primaryLabel;
-  final VoidCallback onPrimary;
+
+  /// 확인 버튼을 눌렀을 때. null이면 버튼을 막는다 (아직 불러오는 중일 때 등).
+  final VoidCallback? onPrimary;
   final Key? primaryKey;
 
   /// 입력 칸 위의 안내 글.
@@ -42,6 +45,9 @@ class LyricsEditScaffold extends StatelessWidget {
 
   /// 입력 칸 아래 도구 줄에 놓을 버튼들 (파일 불러오기 등).
   final List<Widget> tools;
+
+  /// 안내 글 아래, 입력 칸 위에 놓을 것 (불러오기 줄 · 불러온 가사 메모 등).
+  final Widget? top;
 
   /// 입력 칸 대신 보일 것 (불러오는 중 · 실패 안내). null이면 입력 칸.
   final Widget? body;
@@ -54,7 +60,9 @@ class LyricsEditScaffold extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     return Scaffold(
       backgroundColor: p.background,
-      resizeToAvoidBottomInset: true,
+      // 키보드가 올라와도 페이지 레이아웃을 줄이지 않는다 (떠 있는 메모 · 입력칸이 눌리지 않게).
+      // 가려지는 입력칸은 입력칸 쪽에서 키보드 높이만큼 더 스크롤해 커서를 보인다.
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Column(
           children: [
@@ -83,6 +91,7 @@ class LyricsEditScaffold extends StatelessWidget {
                   ),
                 ),
               ),
+            ?top,
             Expanded(
               child:
                   body ??

@@ -35,7 +35,9 @@ class NativeLyricsOverlay implements LyricsOverlay {
     required String hideLabel,
     required String offLabel,
     required int accent,
+    String emptyLabel = '',
   }) => _channel.invokeMethod('show', {
+    'emptyLabel': emptyLabel,
     'hideLabel': hideLabel,
     'offLabel': offLabel,
     'accent': accent,
@@ -70,6 +72,7 @@ class NoLyricsOverlay implements LyricsOverlay {
     required String hideLabel,
     required String offLabel,
     required int accent,
+    String emptyLabel = '',
   }) async {}
 
   @override

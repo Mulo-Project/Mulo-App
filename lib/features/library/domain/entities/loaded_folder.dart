@@ -15,6 +15,11 @@ class LoadedFolder {
   final bool isDefault;
 }
 
+/// 보관함에 보일 곡인지: 불러오는 폴더([roots]) 안에 있어야 한다.
+/// 폴더를 모르는 곡(빈 값)은 판단할 수 없어 보인다.
+bool isVisibleInLibrary(Track track, Iterable<String> roots) =>
+    track.folder.isEmpty || roots.any((r) => isInsideFolder(track.folder, r));
+
 /// 폴더 경로 맞추기: 끝의 구분자를 없애고 `\`는 `/`로 바꾼다.
 String normalizeFolderPath(String path) {
   final p = path.trim().replaceAll(r'\', '/');

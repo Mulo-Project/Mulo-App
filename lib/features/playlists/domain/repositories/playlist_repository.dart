@@ -3,8 +3,11 @@ import '../entities/playlist.dart';
 
 /// 재생목록 저장소.
 abstract interface class PlaylistRepository {
-  /// 좋아요 목록이 맨 앞, 나머지는 만든 순서. 바뀔 때마다 다시 흘려보낸다.
+  /// 좋아요 목록이 맨 앞, 나머지는 사용자가 정한 순서(정하지 않았으면 만든 순서). 바뀔 때마다 다시 흘려보낸다.
   Stream<List<Playlist>> watchPlaylists();
+
+  /// 좋아요 목록을 뺀 재생목록의 순서를 [playlistIds] 순서로 정한다 (좋아요 목록은 늘 맨 앞).
+  Future<void> reorder(List<String> playlistIds);
 
   /// 재생목록에 담긴 곡 (담은 순서). 바뀔 때마다 다시 흘려보낸다.
   Stream<List<Track>> watchTracks(String playlistId);

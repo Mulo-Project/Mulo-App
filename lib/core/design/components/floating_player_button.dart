@@ -69,6 +69,7 @@ class FloatingPlayerButton extends StatelessWidget {
             child: Tooltip(
               message: isPlaying ? pauseLabel : playLabel,
               child: GlassSurface(
+                solid: true,
                 shape: CircleBorder(
                   side: BorderSide(color: p.accent.withValues(alpha: .4)),
                 ),

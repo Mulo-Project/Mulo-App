@@ -65,8 +65,19 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final state = context.watch<NowPlayingCubit>().state;
     final style = context.watch<PlayerStyleCubit>().state;
+    // 재생 위치만 바뀔 때는 다시 그리지 않는다 (진행 막대 · 시간은 PositionBuilder가 따로 그린다).
+    return BlocBuilder<NowPlayingCubit, NowPlayingState>(
+      buildWhen: (a, b) => a.copyWith(position: b.position) != b,
+      builder: (context, state) => _screen(context, state, style),
+    );
+  }
+
+  Widget _screen(
+    BuildContext context,
+    NowPlayingState state,
+    PlayerStyle style,
+  ) {
     final track = state.track;
     if (track == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _closeIfEmpty());

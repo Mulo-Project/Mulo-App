@@ -67,6 +67,10 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
     if (a != null && b != null) controller.groupRange(a, b);
   }
 
+  /// 입력칸은 글자를 줄 끝에서 커서 자리(간격 1 + 커서 폭 2)만큼 먼저 접는다. 시간 칸이 줄 높이를 잴 때도
+  /// 같은 폭으로 접어야 줄 수가 같아 시간이 어긋나지 않는다.
+  static const _caretMargin = 3.0;
+
   static const _gutter = 68.0;
   static const _pad = AppSpacing.md;
 
@@ -85,6 +89,8 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
     final p = context.palette;
     final base = Theme.of(context).textTheme.bodyMedium!;
     final style = base.copyWith(height: 2.0);
+    // 줄 높이를 글꼴(한글 · 이모지 대체 글꼴 등)과 상관없이 늘 같게 고정해 시간 칸과 글이 어긋나지 않게 한다.
+    final strut = StrutStyle.fromTextStyle(style, forceStrutHeight: true);
     final timeStyle = style.copyWith(color: p.onSurfaceMuted);
     final scaler = MediaQuery.textScalerOf(context);
     final hi = p.accent.withValues(alpha: .18);
@@ -104,9 +110,11 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
         child: LayoutBuilder(
           builder: (context, box) {
             final gutter = showTimes ? _gutter : 0.0;
-            final textWidth = box.maxWidth - gutter;
+            final textWidth = box.maxWidth - gutter - _caretMargin;
+            // 페이지가 키보드로 줄지 않으므로, 키보드가 가리는 만큼 아래를 더 비워 마지막 줄도 올려 볼 수 있게 한다.
+            final keyboard = MediaQuery.viewInsetsOf(context).bottom;
             return SingleChildScrollView(
-              padding: EdgeInsets.zero,
+              padding: EdgeInsets.only(bottom: keyboard),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -121,7 +129,7 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
                           _measuredFor = key;
                           _heights = [
                             for (final l in lines)
-                              _lineHeight(l, style, scaler, textWidth),
+                              _lineHeight(l, style, strut, scaler, textWidth),
                           ];
                         }
                         final colors = controller.groupColors();
@@ -192,6 +200,14 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
                     child: TextField(
                       controller: controller,
                       style: style,
+                      strutStyle: strut,
+                      // 커서가 키보드 위에 보이도록 스크롤한다.
+                      scrollPadding: EdgeInsets.only(
+                        left: 20,
+                        top: 20,
+                        right: 20,
+                        bottom: 20 + keyboard,
+                      ),
                       minLines: 12,
                       maxLines: null,
                       keyboardType: TextInputType.multiline,
@@ -217,6 +233,7 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
   static double _lineHeight(
     String line,
     TextStyle style,
+    StrutStyle strut,
     TextScaler scaler,
     double width,
   ) {
@@ -224,6 +241,7 @@ class _TimedLyricsFieldState extends State<TimedLyricsField> {
       text: TextSpan(text: line.isEmpty ? ' ' : line, style: style),
       textDirection: TextDirection.ltr,
       textScaler: scaler,
+      strutStyle: strut,
     )..layout(maxWidth: width <= 0 ? 1 : width);
     final h = painter.height;
     painter.dispose();

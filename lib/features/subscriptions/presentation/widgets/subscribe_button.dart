@@ -45,9 +45,6 @@ class SubscribeButton extends StatelessWidget {
                   final messenger = ScaffoldMessenger.of(context);
                   if (subscribed) {
                     await cubit.unsubscribeByUrl(url);
-                    messenger.showSnackBar(
-                      SnackBar(content: Text(l10n.unsubscribed)),
-                    );
                     return;
                   }
                   final result = await cubit.subscribe(

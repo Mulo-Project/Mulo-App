@@ -12,7 +12,7 @@ class HomeDivider extends StatelessWidget {
       horizontal: AppSpacing.md,
       vertical: AppSpacing.lg,
     ),
-    child: Divider(height: 1, thickness: 1, color: context.palette.outline),
+    child: const AppDivider(),
   );
 }
 
@@ -160,10 +160,19 @@ class _HomeCollapsibleState extends State<HomeCollapsible> {
                           ?.copyWith(color: p.onSurfaceMuted),
                     ),
                   ),
-                  AnimatedRotation(
-                    turns: _open ? .5 : 0,
-                    duration: AppMotion.medium,
-                    child: Icon(AppIcons.chevronDown, color: p.onSurfaceMuted),
+                  // 아래 곡 줄 오른쪽의 ⋮ 버튼(폭 48)과 아이콘이 같은 세로선에 오도록 같은 폭 안에 가운데 둔다.
+                  SizedBox(
+                    width: 48,
+                    child: Center(
+                      child: AnimatedRotation(
+                        turns: _open ? .5 : 0,
+                        duration: AppMotion.medium,
+                        child: Icon(
+                          AppIcons.chevronDown,
+                          color: p.onSurfaceMuted,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),

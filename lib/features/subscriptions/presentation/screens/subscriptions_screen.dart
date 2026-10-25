@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -39,43 +40,41 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
               children: [
                 AppTopBar(
                   title: l10n.subscriptionsTitle,
-                  leading: CircleIconButton(
-                    icon: AppIcons.back,
-                    tooltip: l10n.actionBack,
-                    onPressed: () => context.pop(),
-                  ),
+                  leading: const AppBackButton(),
                 ),
+                // 두 버튼을 같은 너비로 나란히 (한쪽으로 쏠리지 않게). 구독이 없으면 검색 하나만 전체 너비.
                 Padding(
                   padding: AppSpacing.screen.copyWith(
                     top: AppSpacing.xs,
                     bottom: AppSpacing.sm,
                   ),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Wrap(
-                      spacing: AppSpacing.xs,
-                      runSpacing: AppSpacing.xs,
-                      children: [
-                        PillButton(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: PillButton(
                           label: l10n.channelSearchTitle,
                           icon: AppIcons.search,
                           onPressed: () => context.push(Routes.channelSearch),
                         ),
-                        if (state.channels.isNotEmpty)
-                          PillButton(
+                      ),
+                      if (state.channels.isNotEmpty) ...[
+                        const SizedBox(width: AppSpacing.xs),
+                        Expanded(
+                          child: PillButton(
                             label: l10n.subscriptionsNewVideos,
                             icon: AppIcons.download,
                             variant: PillVariant.tonal,
                             onPressed: () => showNewVideosSheet(context),
                           ),
+                        ),
                       ],
-                    ),
+                    ],
                   ),
                 ),
                 Expanded(
                   child: state.channels.isEmpty
                       // 구독이 없으면 안내를 남은 자리 한가운데에 둔다.
-                      ? const Center(child: _Empty())
+                      ? const _Empty()
                       : ListView(
                           padding: const EdgeInsets.only(bottom: AppSpacing.lg),
                           children: [
@@ -84,13 +83,15 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                           ],
                         ),
                 ),
-                _TestButtons(
-                  onNotification: _cubit.showTestNotification,
-                  onNewVideos: () {
-                    sl<NewVideosCubit>().showSample();
-                    showNewVideosSheet(context);
-                  },
-                ),
+                // 임시 확인 버튼은 개발 중(디버그 빌드)에만 보인다.
+                if (kDebugMode)
+                  _TestButtons(
+                    onNotification: _cubit.showTestNotification,
+                    onNewVideos: () {
+                      sl<NewVideosCubit>().showSample();
+                      showNewVideosSheet(context);
+                    },
+                  ),
               ],
             ),
           ),
@@ -106,25 +107,9 @@ class _Empty extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            l10n.subscriptionsEmptyTitle,
-            style: text.titleMedium,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            l10n.subscriptionsEmptyBody,
-            style: text.bodySmall,
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
+    return EmptyState(
+      title: l10n.subscriptionsEmptyTitle,
+      body: l10n.subscriptionsEmptyBody,
     );
   }
 }

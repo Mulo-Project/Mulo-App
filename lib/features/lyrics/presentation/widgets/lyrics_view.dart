@@ -1,5 +1,3 @@
-import 'dart:ui' show ImageFilter;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -215,15 +213,8 @@ class _LyricsViewState extends State<LyricsView> {
     ];
   }
 
-  /// 강조된 줄이 놓인 가로 띠만 뒤를 흐리게 한다 (필터는 이 띠 하나에만 건다).
-  Widget _band(bool on, Widget child) => on
-      ? ClipRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 4, sigmaY: 4),
-            child: child,
-          ),
-        )
-      : child;
+  /// 강조된 줄이 놓인 가로 띠. 뒤를 흐리는 필터는 쓰지 않는다 (가사가 움직이는 동안 매 프레임 흐리면 버벅인다).
+  Widget _band(bool on, Widget child) => child;
 
   /// 목록 테마의 줄들. 같은 시간으로 묶인 줄은 간격을 좁혀 한 덩어리로 놓고,
   /// 지금 재생 중인 덩어리 뒤에는 옅은 강조 바탕을 깐다.
@@ -322,24 +313,13 @@ class _LyricsViewState extends State<LyricsView> {
       return const SizedBox.shrink();
     }
     if (lyrics == null) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(l10n.lyricsEmpty, style: text.titleMedium),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              l10n.lyricsEmptyHint,
-              style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            PlainButton(
-              label: l10n.lyricsMenuEdit,
-              icon: AppIcons.edit,
-              onPressed: () => showLyricsEditor(context, widget.track),
-            ),
-          ],
+      return EmptyState(
+        title: l10n.lyricsEmpty,
+        body: l10n.lyricsEmptyHint,
+        action: PlainButton(
+          label: l10n.lyricsMenuEdit,
+          icon: AppIcons.edit,
+          onPressed: () => showLyricsEditor(context, widget.track),
         ),
       );
     }
@@ -361,10 +341,10 @@ class _LyricsViewState extends State<LyricsView> {
       _shown = -2;
       _placed = false;
     }
-    final position = context.select<NowPlayingCubit, Duration>(
-      (c) => c.state.position,
+    // 재생 위치(0.25초마다 바뀜) 대신 "지금 줄 번호"만 구독한다: 줄이 바뀔 때만 다시 그린다.
+    final current = context.select<NowPlayingCubit, int>(
+      (c) => lyrics.currentLine(c.state.position),
     );
-    final current = lyrics.currentLine(position);
     // 같은 시간으로 묶인 줄은 한 덩어리로 함께 강조하고, 덩어리 가운데 줄로 따라간다.
     final group = lyrics.groupAt(current);
     final vm = context.read<NowPlayingCubit>();
@@ -464,14 +444,17 @@ class _LyricsViewState extends State<LyricsView> {
             right: AppSpacing.md,
             top: mid - bandHeight / 2,
             height: bandHeight,
-            child: _band(
-              coverOn,
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  color: p.accent.withValues(alpha: .1),
-                  borderRadius: BorderRadius.circular(AppRadii.sm),
+            // 줄이 미끄러지는 동안 흐림 띠가 매 프레임 다시 그려지지 않게 따로 그린다.
+            child: RepaintBoundary(
+              child: _band(
+                coverOn,
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: p.accent.withValues(alpha: .1),
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
+                  ),
+                  child: const SizedBox.expand(),
                 ),
-                child: const SizedBox.expand(),
               ),
             ),
           );

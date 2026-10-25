@@ -40,10 +40,14 @@ class MediaStoreMusicDataSource implements DeviceMusicDataSource {
             duration: Duration(milliseconds: (r['durationMs'] as int?) ?? 0),
             uri: r['uri']! as String,
             folder: normalizeFolderPath((r['folder'] as String?) ?? ''),
-            addedAt: now,
+            // 파일이 기기에 들어온 날짜. 모르면 찾은 시각.
+            addedAt: _fileDate(r['addedAtMs'], now),
           ),
     ]);
   }
+
+  static DateTime _fileDate(Object? ms, DateTime fallback) =>
+      ms is int && ms > 0 ? DateTime.fromMillisecondsSinceEpoch(ms) : fallback;
 
   static bool _inAny(List<String> folders, String? folder) =>
       folder != null && folders.any((f) => isInsideFolder(folder, f));
@@ -99,6 +103,12 @@ class DirectoryMusicDataSource implements DeviceMusicDataSource {
       final dot = name.lastIndexOf('.');
       if (dot <= 0) continue;
       if (!extensions.contains(name.substring(dot).toLowerCase())) continue;
+      DateTime? modified;
+      try {
+        modified = await e.lastModified();
+      } on FileSystemException {
+        modified = null;
+      }
       tracks.add(
         Track(
           id: 'file:${e.absolute.path}',
@@ -108,7 +118,8 @@ class DirectoryMusicDataSource implements DeviceMusicDataSource {
           duration: Duration.zero,
           uri: e.absolute.path,
           folder: normalizeFolderPath(e.parent.absolute.path),
-          addedAt: now,
+          // 파일을 마지막으로 고친 날짜(받은 파일이면 받은 날짜). 못 읽으면 찾은 시각.
+          addedAt: modified ?? now,
         ),
       );
     }

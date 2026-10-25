@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
@@ -14,40 +13,15 @@ import '../bloc/now_playing_cubit.dart';
 Future<void> _confirmClear(BuildContext context) async {
   final l10n = context.l10n;
   final vm = context.read<NowPlayingCubit>();
-  final messenger = ScaffoldMessenger.of(context);
-  final ok = await showDialog<bool>(
-    context: context,
-    useRootNavigator: true,
-    builder: (_) => const _ClearDialog(),
+  final ok = await showConfirmDialog(
+    context,
+    title: l10n.queueClearTitle,
+    body: l10n.queueClearBody,
+    confirmLabel: l10n.queueClearConfirm,
+    confirmIcon: AppIcons.delete,
+    cancelLabel: l10n.actionCancel,
   );
-  if (ok != true) return;
-  vm.clearQueue();
-  messenger.showSnackBar(SnackBar(content: Text(l10n.queueCleared)));
-}
-
-class _ClearDialog extends StatelessWidget {
-  const _ClearDialog();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return AppDialog(
-      title: l10n.queueClearTitle,
-      body: l10n.queueClearBody,
-      actions: [
-        PillButton(
-          label: l10n.actionCancel,
-          variant: PillVariant.tonal,
-          onPressed: () => Navigator.of(context).pop(false),
-        ),
-        PillButton(
-          label: l10n.queueClearConfirm,
-          icon: AppIcons.delete,
-          onPressed: () => Navigator.of(context).pop(true),
-        ),
-      ],
-    );
-  }
+  if (ok) vm.clearQueue();
 }
 
 /// 재생 대기열 화면: 곡 수 · 셔플 켜기/끄기 · 비우기(위에 고정), 지금 재생 중인 곡 강조,
@@ -59,11 +33,15 @@ class QueueScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final p = context.palette;
-    final text = Theme.of(context).textTheme;
     // 재생 위치(초마다 바뀜)는 보지 않는다: 끄는 동안 목록이 다시 그려지면 끊긴다.
-    final (queue, index, playing, shuffle) = context.select(
-      (NowPlayingCubit c) =>
-          (c.state.queue, c.state.index, c.state.isPlaying, c.state.shuffle),
+    final (queue, index, playing, shuffle, repeat) = context.select(
+      (NowPlayingCubit c) => (
+        c.state.queue,
+        c.state.index,
+        c.state.isPlaying,
+        c.state.shuffle,
+        c.state.repeat,
+      ),
     );
     final vm = context.read<NowPlayingCubit>();
 
@@ -75,11 +53,7 @@ class QueueScreen extends StatelessWidget {
             children: [
               AppTopBar(
                 title: l10n.playerQueue,
-                leading: CircleIconButton(
-                  icon: AppIcons.back,
-                  tooltip: l10n.actionBack,
-                  onPressed: () => context.pop(),
-                ),
+                leading: const AppBackButton(),
               ),
               // 곡 수 · 섞기 · 비우기 줄은 목록이 스크롤돼도 고정한다.
               if (queue.isNotEmpty)
@@ -87,18 +61,13 @@ class QueueScreen extends StatelessWidget {
                   count: queue.length,
                   shuffle: shuffle,
                   onShuffle: vm.toggleShuffle,
+                  repeat: repeat,
+                  onRepeat: vm.cycleRepeat,
                   onClear: () => _confirmClear(context),
                 ),
               Expanded(
                 child: queue.isEmpty
-                    ? Center(
-                        child: Text(
-                          l10n.playerQueueEmpty,
-                          style: text.bodyMedium?.copyWith(
-                            color: p.onSurfaceMuted,
-                          ),
-                        ),
-                      )
+                    ? EmptyState(title: l10n.playerQueueEmpty)
                     : ReorderableListView.builder(
                         padding: EdgeInsets.only(
                           bottom:
@@ -139,12 +108,14 @@ class QueueScreen extends StatelessWidget {
   }
 }
 
-/// 맨 위 줄: 곡 수와 안내, 셔플 켜기/끄기(플레이어의 셔플과 같은 설정) · 대기열 비우기.
+/// 맨 위 줄: 곡 수와 안내, 셔플 켜기/끄기 · 반복(플레이어의 셔플 · 반복과 같은 설정) · 대기열 비우기.
 class _QueueHeader extends StatelessWidget {
   const _QueueHeader({
     required this.count,
     required this.shuffle,
     required this.onShuffle,
+    required this.repeat,
+    required this.onRepeat,
     required this.onClear,
   });
 
@@ -153,6 +124,10 @@ class _QueueHeader extends StatelessWidget {
   /// 셔플이 켜져 있는지 (켜져 있으면 강조 색).
   final bool shuffle;
   final VoidCallback onShuffle;
+
+  /// 반복 모드 (끔 → 전체 → 한 곡): 켜져 있으면 강조 색, 한 곡이면 "1" 표시 아이콘.
+  final PlayerRepeatMode repeat;
+  final VoidCallback onRepeat;
   final VoidCallback onClear;
 
   @override
@@ -181,6 +156,14 @@ class _QueueHeader extends StatelessWidget {
             tooltip: shuffle ? l10n.shuffleOff : l10n.shuffleOn,
             accent: shuffle,
             onPressed: onShuffle,
+          ),
+          RowIconButton(
+            icon: repeat == PlayerRepeatMode.one
+                ? AppIcons.repeatOne
+                : AppIcons.repeat,
+            tooltip: l10n.playerRepeat,
+            accent: repeat != PlayerRepeatMode.off,
+            onPressed: onRepeat,
           ),
           RowIconButton(
             icon: AppIcons.deleteAll,

@@ -24,6 +24,14 @@ class DriftLibraryRepository implements LibraryRepository {
       b.insertAll(_db.tracks, [
         for (final t in tracks) _toRow(t),
       ], mode: InsertMode.insertOrIgnore);
+      // 기기에서 불러온 곡은 다시 찾을 때마다 파일 날짜로 추가일을 맞춘다 (전에는 찾은 시각이 들어가 같은 날짜가 됐다).
+      for (final t in tracks.where((t) => t.source == TrackSource.device)) {
+        b.update(
+          _db.tracks,
+          TracksCompanion(addedAt: Value(t.addedAt)),
+          where: (r) => r.uri.equals(t.uri) & r.source.equals('device'),
+        );
+      }
       // 폴더 칸이 생기기 전에 넣은 곡은 다시 찾을 때 폴더를 채운다.
       for (final t in tracks.where((t) => t.folder.isNotEmpty)) {
         b.update(

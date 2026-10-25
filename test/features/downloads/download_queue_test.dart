@@ -1,9 +1,8 @@
 import 'package:music_download_play_app/features/search/presentation/screens/media_detail_screen.dart';
-import 'package:music_download_play_app/core/design/components/app_dialog.dart';
-import 'package:music_download_play_app/core/design/icons/app_icons.dart';
 import 'package:flutter/material.dart';
-import 'package:music_download_play_app/core/design/components/color_picker.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:music_download_play_app/core/design/design.dart';
+import 'package:music_download_play_app/features/lyrics/domain/repositories/lyrics_repository.dart';
 import 'package:music_download_play_app/features/downloads/presentation/widgets/download_dialog.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
@@ -167,14 +166,14 @@ void main() {
     expect(find.text('/music/Mulo'), findsOneWidget);
     await tester.enterText(fields.at(4), '/music/Mulo/발라드');
 
-    // 재생목록 선택 대화상자에서 기존 재생목록을 고르고, 새로 만든다 (만들면 자동 선택).
+    // 재생목록 선택 시트에서 기존 재생목록을 고르고, 새로 만든다 (만들면 자동 선택).
     await tester.ensureVisible(find.text('선택 안 함'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('선택 안 함'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('운동'));
     await tester.pump();
-    final dialog = find.byType(AppDialog);
+    final dialog = find.byType(BottomSheet).last; // 재생목록 고르는 시트
     await tester.enterText(
       find.descendant(of: dialog, matching: find.byType(TextField)),
       '새 목록',
@@ -265,10 +264,15 @@ void main() {
 
   Future<MemoryDownloadQueue> openLyricsPage(
     WidgetTester tester,
-    FakeDownloaderEngine engine,
-  ) async {
+    FakeDownloaderEngine engine, {
+    LyricsFileSource? lyricsFile,
+  }) async {
     final queue = MemoryDownloadQueue();
-    await setUpTestDependencies(downloads: queue, engine: engine);
+    await setUpTestDependencies(
+      downloads: queue,
+      engine: engine,
+      lyricsFile: lyricsFile,
+    );
     tester.view.physicalSize = const Size(1170, 2532);
     tester.view.devicePixelRatio = 3;
     tester.platformDispatcher.localesTestValue = const [Locale('ko')];
@@ -308,15 +312,19 @@ void main() {
     final queue = await openLyricsPage(
       tester,
       FakeDownloaderEngine(
-        info: const VideoInfo(
-          MediaHit(
-            id: 'abc',
-            title: 'Song',
-            url: 'https://youtu.be/abc',
-            subtitleLangs: ['ko', 'en'],
+          info: const VideoInfo(
+            MediaHit(
+              id: 'abc',
+              title: 'Song',
+              url: 'https://youtu.be/abc',
+              subtitleLangs: ['ko', 'en'],
+            ),
           ),
+        )
+        ..subtitles = const SubtitleTrack(
+          language: 'en',
+          cues: [SubtitleCue(Duration(seconds: 1), 'hello')],
         ),
-      ),
     );
     expect(find.text('자막 2개를 찾았어요.'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('download-import-lyrics')));
@@ -410,13 +418,200 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('subtitle-detail-use')));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.textContaining('수정함'));
+    await tester.ensureVisible(find.textContaining('가사에 적용'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('수정함'), findsOneWidget);
+    expect(find.textContaining('가사에 적용'), findsOneWidget);
     await tester.tap(inSheet(find.text('받기')));
     await tester.pumpAndSettle();
     expect(queue.requests.single.lyricsLanguage, 'en');
     expect(queue.requests.single.lyricsText, '[00:01.00]hello world');
+  });
+
+  testWidgets('받기 페이지: 상세에서 파일로 가사를 불러오면 그 글이 받기 요청에 실린다', (tester) async {
+    final engine =
+        FakeDownloaderEngine(
+            info: const VideoInfo(
+              MediaHit(
+                id: 'abc',
+                title: 'Song',
+                url: 'https://youtu.be/abc',
+                subtitleLangs: ['en'],
+              ),
+            ),
+          )
+          ..subtitles = const SubtitleTrack(
+            language: 'en',
+            cues: [SubtitleCue(Duration(seconds: 1), 'auto line')],
+          );
+    final queue = await openLyricsPage(
+      tester,
+      engine,
+      lyricsFile: FakeLyricsFileSource('[00:05.00]from file'),
+    );
+    await tester.tap(find.byKey(const ValueKey('download-import-lyrics')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('영어'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('영어'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('auto line'), findsOneWidget);
+
+    // 파일에서 불러오면 이미 있는 자막 글을 어떻게 할지 묻고, 바꾸면 그 글이 된다.
+    await tester.tap(find.byKey(const ValueKey('subtitle-detail-import-file')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('바꾸기'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('from file'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('subtitle-detail-use')));
+    await tester.pumpAndSettle();
+    await tester.tap(inSheet(find.text('받기')));
+    await tester.pumpAndSettle();
+    expect(queue.requests.single.lyricsText, '[00:05.00]from file');
+  });
+
+  testWidgets('받기 페이지: 표 아래 가사 설정에서 가사를 직접 정하면 영상 자막 대신 받기 요청에 실린다', (
+    tester,
+  ) async {
+    final engine = FakeDownloaderEngine(
+      info: const VideoInfo(
+        MediaHit(id: 'abc', title: 'Song', url: 'https://youtu.be/abc'),
+      ),
+    );
+    final queue = await openLyricsPage(
+      tester,
+      engine,
+      lyricsFile: FakeLyricsFileSource('[00:05.00]from file'),
+    );
+    // 자막이 없는 영상이어도 가사 설정 버튼이 있다.
+    final edit = find.byKey(const ValueKey('download-lyrics-edit'));
+    await tester.ensureVisible(edit);
+    await tester.pumpAndSettle();
+    await tester.tap(edit);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('lyrics-import-file')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('저장'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('직접 정한 가사'), findsOneWidget);
+
+    await tester.tap(inSheet(find.text('받기')));
+    await tester.pumpAndSettle();
+    final request = queue.requests.single;
+    expect(request.importLyrics, isTrue);
+    expect(request.lyricsText, '[00:05.00]from file');
+  });
+
+  testWidgets('받기 페이지: 직접 정한 가사가 있는데 "이 자막 사용"을 누르면 덮어써도 되는지 묻는다', (
+    tester,
+  ) async {
+    final engine =
+        FakeDownloaderEngine(
+            info: const VideoInfo(
+              MediaHit(
+                id: 'abc',
+                title: 'Song',
+                url: 'https://youtu.be/abc',
+                subtitleLangs: ['en'],
+              ),
+            ),
+          )
+          ..subtitles = const SubtitleTrack(
+            language: 'en',
+            cues: [SubtitleCue(Duration(seconds: 1), 'auto line')],
+          );
+    final queue = await openLyricsPage(
+      tester,
+      engine,
+      lyricsFile: FakeLyricsFileSource('[00:05.00]from file'),
+    );
+    final edit = find.byKey(const ValueKey('download-lyrics-edit'));
+    await tester.ensureVisible(edit);
+    await tester.pumpAndSettle();
+    await tester.tap(edit);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('lyrics-import-file')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('저장'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('직접 정한 가사를 넣어요'), findsOneWidget);
+
+    // 자막 가져오기를 켜고 영어 자막 상세에서 "이 자막 사용"을 누른다. 취소하면 직접 정한 가사가 그대로다.
+    await tester.tap(find.byKey(const ValueKey('download-import-lyrics')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('영어'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('영어'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('subtitle-detail-use')));
+    await tester.pumpAndSettle();
+    expect(find.text('직접 정한 가사가 있어요'), findsOneWidget);
+    await tester.tap(find.text('취소').last);
+    await tester.pumpAndSettle();
+    expect(find.textContaining('직접 정한 가사를 넣어요'), findsOneWidget);
+
+    // 동의하면 그 자막의 가사가 "가사 설정"의 가사로 적용된다.
+    await tester.ensureVisible(find.text('영어'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('영어'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('subtitle-detail-use')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('자막으로 바꾸기'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('가사에 적용'), findsOneWidget);
+
+    // 가사 설정을 다시 열면 적용된 자막 가사가 들어 있다.
+    final edit2 = find.byKey(const ValueKey('download-lyrics-edit'));
+    await tester.ensureVisible(edit2);
+    await tester.pumpAndSettle();
+    await tester.tap(edit2);
+    await tester.pumpAndSettle();
+    expect(find.text('auto line'), findsOneWidget);
+    await tester.tap(find.text('취소').last);
+    await tester.pumpAndSettle();
+
+    await tester.tap(inSheet(find.text('받기')));
+    await tester.pumpAndSettle();
+    final request = queue.requests.single;
+    expect(request.importLyrics, isTrue);
+    expect(request.lyricsLanguage, 'en');
+    expect(request.lyricsText, '[00:01.00]auto line');
+  });
+
+  testWidgets('받기 페이지: 자막을 아직 못 읽었으면 "이 자막 사용"을 누를 수 없고, 읽으면 누를 수 있다', (
+    tester,
+  ) async {
+    // 자막이 없다고 답하면(읽지 못함) 상세 페이지에는 글이 없다.
+    final engine = FakeDownloaderEngine(
+      info: const VideoInfo(
+        MediaHit(
+          id: 'abc',
+          title: 'Song',
+          url: 'https://youtu.be/abc',
+          subtitleLangs: ['en'],
+        ),
+      ),
+    );
+    await openLyricsPage(
+      tester,
+      engine,
+      lyricsFile: FakeLyricsFileSource('[00:05.00]from file'),
+    );
+    await tester.tap(find.byKey(const ValueKey('download-import-lyrics')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('영어'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('영어'));
+    await tester.pumpAndSettle();
+
+    final use = find.byKey(const ValueKey('subtitle-detail-use'));
+    expect(tester.widget<PillButton>(use).onPressed, isNull);
+
+    // 파일에서 가사를 불러오면 글이 생겨 고를 수 있다.
+    await tester.tap(find.byKey(const ValueKey('subtitle-detail-import-file')));
+    await tester.pumpAndSettle();
+    expect(tester.widget<PillButton>(use).onPressed, isNotNull);
   });
 
   testWidgets('받기 페이지: 자막 언어가 하나여도 표가 보이고, 줄을 누르면 가사 상세로 간다', (tester) async {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../app_theme_tokens.dart';
 import '../tokens/app_dimens.dart';
+import 'app_divider.dart';
 
 /// 제목이 붙은 목록 묶음 (설정 목록 등). 카드 면 없이 자식 사이에 옅은 구분선만 둔다.
 class SectionCard extends StatelessWidget {
@@ -137,7 +138,7 @@ class SectionBlock extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!first) ...[
-            Divider(height: 1, thickness: 1, color: p.outline),
+            const AppDivider(),
             const SizedBox(height: AppSpacing.md),
           ],
           if (title != null) ...[

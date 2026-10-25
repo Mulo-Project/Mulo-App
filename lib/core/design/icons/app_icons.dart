@@ -154,6 +154,11 @@ abstract final class AppIcons {
     fontFamily: 'PhosphorRegular',
     matchTextDirection: true,
   );
+  static const IconData arrowDown = IconData(
+    0xe03e,
+    fontFamily: 'PhosphorRegular',
+    matchTextDirection: true,
+  );
   static const IconData arrowUp = IconData(
     0xe08e,
     fontFamily: 'PhosphorRegular',
@@ -306,6 +311,13 @@ abstract final class AppIcons {
   );
   static const IconData lyrics = IconData(
     0xe75c,
+    fontFamily: 'PhosphorRegular',
+    matchTextDirection: true,
+  );
+
+  /// 네트워크 연결이 끊겼을 때 (와이파이에 빗금).
+  static const IconData wifiOff = IconData(
+    0xe4f2,
     fontFamily: 'PhosphorRegular',
     matchTextDirection: true,
   );

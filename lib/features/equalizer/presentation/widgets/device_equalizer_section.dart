@@ -34,10 +34,7 @@ class DeviceEqualizerSection extends StatelessWidget {
         title: l10n.equalizerDevicesTitle,
         children: [
           if (devices.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Text(l10n.equalizerDevicesEmpty, style: text.bodyMedium),
-            ),
+            EmptyState(title: l10n.equalizerDevicesEmpty, compact: true),
           for (final device in devices)
             SettingRow(
               title: deviceLabel(l10n, device),

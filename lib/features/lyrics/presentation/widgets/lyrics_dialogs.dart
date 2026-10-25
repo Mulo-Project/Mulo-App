@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 
-/// 가져온 가사를 이미 있는 가사에 어떻게 넣을지.
-enum LyricsImportMode { replace, append }
+/// 가져온 가사를 이미 있는 가사에 어떻게 넣을지. [memo]는 넣지 않고 메모로 띄워 두고 줄을 골라 끼워 넣는다.
+enum LyricsImportMode { replace, append, memo }
 
 /// 가사가 이미 있을 때 가져온 글을 바꿀지 뒤에 붙일지 묻는다. 취소하면 null.
 Future<LyricsImportMode?> showLyricsImportMode(BuildContext context) {
@@ -28,6 +28,12 @@ Future<LyricsImportMode?> showLyricsImportMode(BuildContext context) {
           onPressed: () =>
               Navigator.of(dialogContext).pop(LyricsImportMode.append),
         ),
+        PillButton(
+          label: l10n.lyricsImportMemo,
+          variant: PillVariant.tonal,
+          onPressed: () =>
+              Navigator.of(dialogContext).pop(LyricsImportMode.memo),
+        ),
       ],
     ),
   );
@@ -36,51 +42,25 @@ Future<LyricsImportMode?> showLyricsImportMode(BuildContext context) {
 /// 기본 줄 수를 바꾸면 직접 묶은 줄이 사라진다는 경고. 계속하면 true.
 Future<bool> confirmLyricsGroupReset(BuildContext context) async {
   final l10n = context.l10n;
-  final ok = await showDialog<bool>(
-    context: context,
-    useRootNavigator: true,
-    builder: (dialogContext) => AppDialog(
-      title: l10n.lyricsSyncResetTitle,
-      body: l10n.lyricsSyncResetBody,
-      actions: [
-        PillButton(
-          label: l10n.actionCancel,
-          variant: PillVariant.tonal,
-          onPressed: () => Navigator.of(dialogContext).pop(false),
-        ),
-        PillButton(
-          label: l10n.lyricsSyncResetConfirm,
-          onPressed: () => Navigator.of(dialogContext).pop(true),
-        ),
-      ],
-    ),
+  return showConfirmDialog(
+    context,
+    title: l10n.lyricsSyncResetTitle,
+    body: l10n.lyricsSyncResetBody,
+    confirmLabel: l10n.lyricsSyncResetConfirm,
+    cancelLabel: l10n.actionCancel,
   );
-  return ok == true;
 }
 
 /// 건너뛰어 묶으면 사이에 찍어 둔 싱크가 사라진다는 경고. 계속하면 true.
 Future<bool> confirmLyricsSkipMerge(BuildContext context) async {
   final l10n = context.l10n;
-  final ok = await showDialog<bool>(
-    context: context,
-    useRootNavigator: true,
-    builder: (dialogContext) => AppDialog(
-      title: l10n.lyricsSyncSkipTitle,
-      body: l10n.lyricsSyncSkipBody,
-      actions: [
-        PillButton(
-          label: l10n.actionCancel,
-          variant: PillVariant.tonal,
-          onPressed: () => Navigator.of(dialogContext).pop(false),
-        ),
-        PillButton(
-          label: l10n.lyricsSyncSkipConfirm,
-          onPressed: () => Navigator.of(dialogContext).pop(true),
-        ),
-      ],
-    ),
+  return showConfirmDialog(
+    context,
+    title: l10n.lyricsSyncSkipTitle,
+    body: l10n.lyricsSyncSkipBody,
+    confirmLabel: l10n.lyricsSyncSkipConfirm,
+    cancelLabel: l10n.actionCancel,
   );
-  return ok == true;
 }
 
 /// 싱크를 처음 맞출 때 기본으로 한 번에 찍을 줄 수를 고른다. 밖을 누르면 null.

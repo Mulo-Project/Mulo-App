@@ -49,6 +49,15 @@ abstract interface class LoadedFolderRepository {
 
   Future<void> saveExtra(List<String> folders);
 
+  /// 불러오는 폴더 목록이 바뀔 때마다 (보관함에 보일 곡을 다시 거르도록).
+  Stream<void> watchChanges();
+
+  /// 저장 위치 목록 (기본 저장 위치 제외). 불러오는 폴더와는 따로 저장한다.
+  /// 한 번도 저장한 적이 없으면 null (그때는 불러오는 폴더를 처음 목록으로 쓴다).
+  Future<List<String>?> loadSaveLocations();
+
+  Future<void> saveSaveLocations(List<String> folders);
+
   /// 폴더 고르기. 취소하면 null.
   Future<String?> pickFolder();
 }

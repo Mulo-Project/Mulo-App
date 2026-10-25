@@ -63,6 +63,30 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  testWidgets('대기열 위 줄에 반복 버튼이 있고 누를 때마다 끔 → 전체 → 한 곡으로 돈다', (tester) async {
+    await openQueue(tester);
+    await tester.tap(find.byTooltip('재생 대기열'));
+    await tester.pumpAndSettle();
+    IconData iconOf() => tester
+        .widget<Icon>(
+          find.descendant(
+            of: find.byTooltip('반복'),
+            matching: find.byType(Icon),
+          ),
+        )
+        .icon!;
+    expect(iconOf(), AppIcons.repeat);
+    await tester.tap(find.byTooltip('반복'));
+    await tester.pumpAndSettle();
+    expect(iconOf(), AppIcons.repeat); // 전체 반복 (강조 색)
+    await tester.tap(find.byTooltip('반복'));
+    await tester.pumpAndSettle();
+    expect(iconOf(), AppIcons.repeatOne);
+    await tester.tap(find.byTooltip('반복'));
+    await tester.pumpAndSettle();
+    expect(iconOf(), AppIcons.repeat); // 다시 끔
+  });
+
   testWidgets('미니 플레이어의 대기열 버튼이 대기열 화면을 바로 연다', (tester) async {
     await openQueue(tester);
     await tester.tap(find.byTooltip('재생 대기열'));

@@ -17,7 +17,14 @@ import '../../helpers/fakes.dart';
 /// 1x1 PNG 파일 (꾸미기 화면이 실제로 읽을 수 있는 그림).
 String _pngFile() {
   final dir = Directory.systemTemp.createTempSync('cover_test');
-  addTearDown(() => dir.deleteSync(recursive: true));
+  addTearDown(() {
+    // Windows는 이미지를 읽은 파일이 아직 열려 있으면 지우지 못하므로 못 지워도 테스트는 통과시킨다.
+    try {
+      dir.deleteSync(recursive: true);
+    } on FileSystemException {
+      // 임시 폴더라 남아도 괜찮다.
+    }
+  });
   return (File('${dir.path}/pick.png')..writeAsBytesSync(
         base64Decode(
           'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
@@ -45,7 +52,7 @@ Future<void> _pickFromDeviceAndApply(WidgetTester tester) async {
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 500));
   await _waitImage(tester);
-  expect(find.text('이미지 위치'), findsOneWidget);
+  expect(find.text('적용'), findsOneWidget);
   await tester.tap(find.text('적용'));
   await tester.pumpAndSettle();
 }
@@ -85,9 +92,10 @@ void main() {
     WidgetTester tester, {
     FakeImageSource? image,
     MemoryDownloadQueue? downloads,
+    List<Track>? tracks,
   }) async {
     await setUpTestDependencies(
-      tracks: [_t('t1', '첫 곡'), _t('t2', '둘째 곡')],
+      tracks: tracks ?? [_t('t1', '첫 곡'), _t('t2', '둘째 곡')],
       playlists: repo,
       covers: covers,
       coverColors: colors,
@@ -108,10 +116,10 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('카드는 대표곡 하나를 보여 주고, 좋아요 목록이 맨 앞에 있다', (tester) async {
+  testWidgets('카드는 이름과 곡 수만 보이고(대표곡은 상세에서), 좋아요 목록이 맨 앞에 있다', (tester) async {
     await pumpPlaylists(tester);
     expect(find.text('출근길'), findsOneWidget);
-    expect(find.text('첫 곡'), findsOneWidget);
+    expect(find.text('첫 곡'), findsNothing);
     expect(find.textContaining('둘째 곡'), findsNothing);
     expect(find.text('좋아요'), findsOneWidget);
     // 좋아요가 첫 카드.
@@ -152,12 +160,12 @@ void main() {
     }
   });
 
-  testWidgets('길게 누르면 같은 메뉴가 열린다', (tester) async {
+  testWidgets('좋아요 카드는 길게 누르면 메뉴가 열린다 (끌 수 없는 카드)', (tester) async {
     await pumpPlaylists(tester);
-    await tester.longPress(find.text('출근길'));
+    await tester.longPress(find.text('좋아요'));
     await tester.pumpAndSettle();
     expect(find.text('꾸미기'), findsOneWidget);
-    expect(find.text('재생목록 삭제'), findsOneWidget);
+    expect(find.text('재생목록 삭제'), findsNothing);
   });
 
   testWidgets('꾸미기 시트에서 색 견본으로 고르고 자동으로 되돌린다', (tester) async {
@@ -175,12 +183,13 @@ void main() {
     expect(colors.saved.containsKey('playlist:pl1'), isFalse);
   });
 
-  testWidgets('꾸미기 시트에서 이미지를 고르고 기본 이미지로 되돌린다', (tester) async {
+  testWidgets('꾸미기 시트에서 이미지를 고르고 이미지 지우기로 지운다', (tester) async {
     final path = _pngFile();
     await pumpPlaylists(tester, image: FakeImageSource(path));
     await openMenu(tester);
     await tester.tap(find.text('꾸미기'));
     await tester.pumpAndSettle();
+    // 시트에는 이미지 줄 하나만 있고, 고르기 · 위치 · 되돌리기는 이미지 페이지 안에 있다.
     expect(find.text('이미지 고르기'), findsOneWidget);
     expect(find.text('기본 이미지로'), findsNothing);
     expect(find.text('위치 조정'), findsNothing);
@@ -188,11 +197,23 @@ void main() {
     await tester.pumpAndSettle();
     await _pickFromDeviceAndApply(tester);
     expect(covers.saved['playlist:pl1'], CoverArt.file(path));
-    expect(find.text('위치 조정'), findsOneWidget);
-
-    // 시트가 열린 채로 되돌릴 수 있고, 색 견본도 그대로 있다.
+    expect(find.text('이미지 바꾸기'), findsOneWidget);
     expect(find.bySemanticsLabel('색 1'), findsOneWidget);
-    await tester.tap(find.text('기본 이미지로'));
+
+    // 줄을 다시 누르면 지금 이미지를 불러온 채 이미지 페이지가 열리고, 기본으로 되돌릴 때는 확인을 묻는다.
+    await tester.tap(find.text('이미지 바꾸기'));
+    await tester.pump();
+    await _waitImage(tester);
+    expect(find.text('이미지 지우기'), findsOneWidget);
+    await tester.tap(find.text('이미지 지우기'));
+    await tester.pumpAndSettle();
+    expect(find.text('이미지를 지울까요?'), findsOneWidget);
+    await tester.tap(find.text('취소'));
+    await tester.pumpAndSettle();
+    expect(covers.saved, isNotEmpty);
+    await tester.tap(find.text('이미지 지우기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('이미지 지우기').last);
     await tester.pumpAndSettle();
     expect(covers.saved, isEmpty);
   });
@@ -211,29 +232,27 @@ void main() {
     await tester.tap(find.text('이 주소의 이미지 쓰기'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
-    expect(find.text('이미지 위치'), findsOneWidget);
+    expect(find.text('웹에서 가져오기'), findsOneWidget);
     // 테스트 환경은 네트워크가 없어 읽기에 실패하고, 그러면 저장되지 않는다.
     await _waitImage(tester);
     expect(find.text('이미지를 불러오지 못했어요'), findsOneWidget);
     expect(covers.saved, isEmpty);
   });
 
-  testWidgets('대표곡은 접으면 제목만, 펼치면 가수와 이미지가 나오고 누르면 재생한다', (tester) async {
+  testWidgets('대표곡은 상세 안에서 가수와 함께 보이고, 누르면 이 재생목록으로 재생한다', (tester) async {
     await pumpPlaylists(tester);
-    expect(find.text('첫 곡'), findsOneWidget);
-    expect(find.text('가수'), findsNothing);
-    expect(find.byTooltip('다음 곡'), findsNothing);
-    expect(find.byTooltip('대표곡 미리 듣기'), findsNothing);
-
-    await tester.tap(find.text('첫 곡'));
+    await tester.tap(find.text('출근길'));
     await tester.pumpAndSettle();
-    expect(find.text('가수'), findsOneWidget);
-    expect(find.byTooltip('대표곡 미리 듣기'), findsOneWidget);
+    expect(find.text('대표곡'), findsOneWidget);
+    // 대표곡 줄과 곡 목록에 모두 있다.
+    expect(find.text('첫 곡'), findsNWidgets(2));
+    expect(find.textContaining('가수 ·'), findsWidgets);
+    expect(find.byTooltip('다음 곡'), findsNothing);
 
     await tester.tap(find.byTooltip('대표곡 미리 듣기'));
     await tester.pumpAndSettle();
     expect(find.byTooltip('다음 곡'), findsOneWidget);
-    // 재생 중이면 카드의 버튼도 일시정지 아이콘으로 바뀐다 (미니 플레이어 것까지 둘).
+    // 재생 중이면 대표곡 줄의 버튼도 일시정지 아이콘으로 바뀐다 (미니 플레이어 것까지 둘).
     expect(find.byTooltip('대표곡 미리 듣기'), findsNothing);
     expect(find.byTooltip('일시정지'), findsNWidgets(2));
   });
@@ -268,7 +287,7 @@ void main() {
     await tester.tap(find.text('지우기'));
     await tester.pumpAndSettle();
     expect(find.text('출근길'), findsNothing);
-    expect(find.text('재생목록을 지웠어요'), findsOneWidget);
+    expect(find.text('재생목록을 지웠어요'), findsNothing); // 목록에서 사라지므로 안내는 없다
   });
 
   testWidgets('+ 버튼으로 이름 · 색을 골라 새 재생목록을 만든다', (tester) async {
@@ -293,13 +312,134 @@ void main() {
     await tester.tap(find.text('이미지 고르기'));
     await tester.pumpAndSettle();
     await _pickFromDeviceAndApply(tester);
-    // 이미지를 고르면 색 고르기는 사라진다.
+    // 이미지를 골라도 색 고르기는 그대로 있다 (이미지를 지웠을 때 쓰인다).
     expect(find.text('이미지 바꾸기'), findsOneWidget);
-    expect(find.bySemanticsLabel('색 1'), findsNothing);
+    expect(find.bySemanticsLabel('색 1'), findsOneWidget);
     await tester.tap(find.text('만들기'));
     await tester.pumpAndSettle();
     expect(covers.saved['playlist:pl3'], CoverArt.file(path));
     expect(colors.saved, isEmpty);
+  });
+
+  testWidgets('카드 순서: 목록에서 길게 눌러 끌면 바뀌고 저장된다 (메뉴는 ⋮, 좋아요 목록은 맨 앞)', (
+    tester,
+  ) async {
+    await pumpPlaylists(tester);
+    // 카드 순서(두 열): [좋아요 | 출근길] 다음 줄에 [운동].
+    expect(
+      tester.getTopLeft(find.text('출근길')).dy,
+      lessThan(tester.getTopLeft(find.text('운동')).dy),
+    );
+    final from = tester.getCenter(find.text('운동'));
+    final to = tester.getCenter(find.text('출근길'));
+    final gesture = await tester.startGesture(from);
+    await tester.pump(const Duration(milliseconds: 700));
+    await gesture.moveTo(to - const Offset(0, 70));
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump();
+    await gesture.up();
+    await tester.pumpAndSettle();
+
+    expect(repo.lists.map((p) => p.name), ['운동', '출근길']);
+    // 카드가 바뀐 순서로 놓인다: [좋아요 | 운동] 다음 줄에 [출근길].
+    expect(
+      tester.getTopLeft(find.text('운동')).dy,
+      lessThan(tester.getTopLeft(find.text('출근길')).dy),
+    );
+  });
+
+  testWidgets('빈 재생목록 상세는 안내와 곡 추가 버튼이 있고, 보관함에서 곡을 골라 담는다', (tester) async {
+    await pumpPlaylists(tester);
+    await tester.tap(find.text('운동'));
+    await tester.pumpAndSettle();
+    // 큰 제목 한 줄 + 아래 작은 설명.
+    expect(find.text('아직 담긴 곡이 없어요'), findsOneWidget);
+    expect(find.textContaining('아래 ‘곡 추가’'), findsOneWidget);
+    expect(find.byTooltip('곡 추가'), findsOneWidget); // 위 막대 버튼
+
+    await tester.tap(find.widgetWithText(PillButton, '곡 추가'));
+    await tester.pumpAndSettle();
+    expect(find.text('첫 곡'), findsOneWidget);
+    expect(find.text('둘째 곡'), findsOneWidget);
+    await tester.tap(find.text('첫 곡'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('1곡 추가'));
+    await tester.pumpAndSettle();
+    expect(repo.members['pl2'], {'t1'});
+  });
+
+  testWidgets('곡 추가 화면: 보관함과 같은 탭, 아티스트 줄을 누르면 그 곡이 모두 골라진다', (tester) async {
+    Track by(String id, String title, String artist) => Track(
+      id: id,
+      title: title,
+      artist: artist,
+      album: '앨범',
+      duration: const Duration(minutes: 3),
+      uri: 'content://$id',
+      addedAt: DateTime(2026, 9, int.parse(id.substring(1))),
+    );
+    await pumpPlaylists(
+      tester,
+      tracks: [by('t1', '첫 곡', '가수A'), by('t2', '둘째 곡', '가수B')],
+    );
+    await tester.tap(find.text('운동'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(PillButton, '곡 추가'));
+    await tester.pumpAndSettle();
+    // 곡 탭: 곡 줄이 보이고, 탭 넷이 있다.
+    expect(find.text('첫 곡'), findsOneWidget);
+    expect(find.text('아티스트'), findsOneWidget);
+    expect(find.text('앨범'), findsOneWidget);
+    expect(find.text('장르'), findsOneWidget);
+
+    // 아티스트 탭: 묶음 줄을 누르면 그 아티스트의 곡이 모두 골라진다.
+    await tester.tap(find.text('아티스트'));
+    await tester.pumpAndSettle();
+    expect(find.text('가수A'), findsOneWidget);
+    expect(find.text('가수B'), findsOneWidget);
+    expect(find.text('첫 곡'), findsNothing);
+    // 줄을 누르면 그 아티스트의 곡이 펼쳐지고, 곡마다 골라 담을 수 있다.
+    expect(find.text('둘째 곡'), findsNothing);
+    await tester.tap(find.text('가수B'));
+    await tester.pumpAndSettle();
+    expect(find.text('둘째 곡'), findsOneWidget);
+    await tester.tap(find.text('둘째 곡'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('1곡 추가'));
+    await tester.pumpAndSettle();
+    expect(repo.members['pl2'], {'t2'});
+  });
+
+  testWidgets('곡 추가 화면: 묶음 오른쪽 체크로 그 묶음의 곡을 한꺼번에 고른다', (tester) async {
+    Track by(String id, String title, String artist) => Track(
+      id: id,
+      title: title,
+      artist: artist,
+      album: '앨범',
+      duration: const Duration(minutes: 3),
+      uri: 'content://$id',
+      addedAt: DateTime(2026, 9, int.parse(id.substring(1))),
+    );
+    await pumpPlaylists(
+      tester,
+      tracks: [
+        by('t1', '첫 곡', '가수A'),
+        by('t2', '둘째 곡', '가수B'),
+        by('t3', '셋째 곡', '가수B'),
+      ],
+    );
+    await tester.tap(find.text('운동'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(PillButton, '곡 추가'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('아티스트'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('모두 선택').last); // 가수B 묶음의 체크
+    await tester.pumpAndSettle();
+    expect(find.text('2곡 추가'), findsOneWidget);
+    await tester.tap(find.text('2곡 추가'));
+    await tester.pumpAndSettle();
+    expect(repo.members['pl2'], {'t2', 't3'});
   });
 
   testWidgets('카드를 누르면 재생목록 상세로 가서 담긴 곡이 보이고, 곡 메뉴는 빼기 · 파일 삭제', (
@@ -310,7 +450,7 @@ void main() {
     await tester.pumpAndSettle();
     // 상세: 탭 목록이 아니라 별도 페이지.
     expect(find.text('운동'), findsNothing);
-    expect(find.text('첫 곡'), findsOneWidget);
+    expect(find.text('첫 곡'), findsNWidgets(2)); // 대표곡 줄 + 곡 목록
     expect(find.text('둘째 곡'), findsOneWidget);
     expect(find.text('전체 재생'), findsOneWidget);
 

@@ -5,11 +5,13 @@ import 'package:flutter/material.dart';
 import '../app_theme_tokens.dart';
 import '../tokens/app_dimens.dart';
 
-/// 커버 색 고르기: 자동 · 기본 색 견본 · 색상 막대로 직접 고르기.
+/// 커버 색 고르기: 자동 · 기본 색 견본 한 줄(옆으로 밀기) · "색상 직접 고르기"(펼치면 색상 막대).
 ///
+/// 화면에서 많은 자리를 차지하지 않게 견본은 한 줄로, 색상 막대는 접어 둔다
+/// (직접 고른 색이 이미 있으면 펼친 채로 시작한다).
 /// 테마와 상관없이 고른 색 그대로 쓰므로 견본은 테마 토큰이 아니라 고정 색이다.
 /// [selected]가 null이면 자동. 고르면 [onChanged]로 색, 자동을 누르면 null이 온다.
-class ColorPicker extends StatelessWidget {
+class ColorPicker extends StatefulWidget {
   const ColorPicker({
     super.key,
     required this.selected,
@@ -44,46 +46,80 @@ class ColorPicker extends StatelessWidget {
   ];
 
   @override
+  State<ColorPicker> createState() => _ColorPickerState();
+}
+
+class _ColorPickerState extends State<ColorPicker> {
+  late bool _open =
+      widget.selected != null && !ColorPicker.presets.contains(widget.selected);
+
+  @override
   Widget build(BuildContext context) {
     final p = context.palette;
     final text = Theme.of(context).textTheme;
-    final custom = selected != null && !presets.contains(selected);
+    final selected = widget.selected;
+    final custom = selected != null && !ColorPicker.presets.contains(selected);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Wrap(
-          spacing: AppSpacing.xs,
-          runSpacing: AppSpacing.xs,
-          children: [
-            _Dot(
-              label: autoLabel,
-              selected: selected == null,
-              onTap: () => onChanged(null),
-              child: Icon(
-                AppIcons.refresh,
-                size: AppSizes.iconSm,
-                color: p.onSurface,
-              ),
-            ),
-            for (final (i, c) in presets.indexed)
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
               _Dot(
-                label: optionLabel?.call(i + 1) ?? '${i + 1}',
-                color: c,
-                selected: selected == c,
-                onTap: () => onChanged(c),
+                label: widget.autoLabel,
+                selected: selected == null,
+                onTap: () => widget.onChanged(null),
+                child: Icon(
+                  AppIcons.refresh,
+                  size: AppSizes.iconSm,
+                  color: p.onSurface,
+                ),
               ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Text(
-          customLabel,
-          style: text.labelLarge?.copyWith(
-            color: custom ? p.accent : p.onSurfaceMuted,
+              for (final (i, c) in ColorPicker.presets.indexed) ...[
+                const SizedBox(width: AppSpacing.xs - 2),
+                _Dot(
+                  label: widget.optionLabel?.call(i + 1) ?? '${i + 1}',
+                  color: c,
+                  selected: selected == c,
+                  onTap: () => widget.onChanged(c),
+                ),
+              ],
+            ],
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
-        _HueBar(selected: custom ? selected : null, onChanged: onChanged),
+        InkWell(
+          onTap: () => setState(() => _open = !_open),
+          borderRadius: BorderRadius.circular(AppRadii.sm),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxs),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  widget.customLabel,
+                  style: text.labelMedium?.copyWith(
+                    color: custom ? p.accent : p.onSurfaceMuted,
+                  ),
+                ),
+                Icon(
+                  _open ? AppIcons.chevronUp : AppIcons.chevronDown,
+                  size: AppSizes.iconSm,
+                  color: p.onSurfaceMuted,
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (_open) ...[
+          const SizedBox(height: AppSpacing.xxs),
+          _HueBar(
+            selected: custom ? selected : null,
+            onChanged: widget.onChanged,
+          ),
+        ],
       ],
     );
   }
@@ -118,14 +154,14 @@ class _Dot extends StatelessWidget {
           child: ExcludeSemantics(
             child: AnimatedContainer(
               duration: AppMotion.medium,
-              width: 40,
-              height: 40,
+              width: 28,
+              height: 28,
               decoration: BoxDecoration(
                 color: color,
-                borderRadius: BorderRadius.circular(AppRadii.sm),
+                borderRadius: BorderRadius.circular(AppRadii.sm - 4),
                 border: Border.all(
                   color: selected ? p.accent : p.outline,
-                  width: selected ? 3 : 1,
+                  width: selected ? 2 : 1,
                 ),
               ),
               child:
@@ -133,7 +169,7 @@ class _Dot extends StatelessWidget {
                   (selected
                       ? Icon(
                           AppIcons.check,
-                          size: AppSizes.iconMd,
+                          size: AppSizes.iconSm,
                           color: p.onGlow,
                         )
                       : null),
@@ -154,7 +190,7 @@ class _HueBar extends StatelessWidget {
 
   static const _saturation = .7;
   static const _lightness = .48;
-  static const _height = 36.0;
+  static const _height = 20.0;
 
   static final _hues = [
     for (var h = 0; h <= 360; h += 30)

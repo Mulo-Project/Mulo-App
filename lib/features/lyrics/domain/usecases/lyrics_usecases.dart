@@ -1,4 +1,6 @@
 import '../../../../core/usecase/usecase.dart';
+import '../../../library/domain/entities/track.dart';
+import '../../../library/domain/repositories/track_tag_repository.dart';
 import '../entities/lyrics.dart';
 import '../repositories/lyrics_repository.dart';
 
@@ -19,19 +21,33 @@ class LoadLyrics implements UseCase<Lyrics?, LoadLyricsParams> {
 }
 
 class SaveLyricsParams {
-  const SaveLyricsParams(this.trackId, this.text);
+  const SaveLyricsParams(this.track, this.text);
 
-  final String trackId;
+  final Track track;
   final String text;
 }
 
+/// 곡의 가사를 앱에 저장하고, 음원 파일의 가사 태그에도 같이 써 넣는다 (받을 때 가사를 넣는 것과 같게).
+/// 파일에 못 써도(권한 · 형식 · 파일 없음) 앱에 저장한 가사는 그대로 쓰인다.
+/// 가사를 비워 지울 때는 앱 저장본만 지우고 파일 태그는 그대로 둔다.
 class SaveLyrics implements UseCase<Lyrics?, SaveLyricsParams> {
-  const SaveLyrics(this._repo);
+  const SaveLyrics(this._repo, this._tags);
 
   final LyricsRepository _repo;
+  final TrackTagRepository _tags;
 
   @override
-  Future<Lyrics?> call(SaveLyricsParams p) => _repo.save(p.trackId, p.text);
+  Future<Lyrics?> call(SaveLyricsParams p) async {
+    final saved = await _repo.save(p.track.id, p.text);
+    if (saved != null) {
+      try {
+        await _tags.writeLyrics(p.track, saved.raw);
+      } on Object {
+        // 파일 태그는 덤이라 실패해도 저장한 가사는 그대로 둔다.
+      }
+    }
+    return saved;
+  }
 }
 
 class ClearLyrics implements UseCase<void, String> {

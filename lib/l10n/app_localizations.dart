@@ -290,6 +290,30 @@ abstract class AppLocalizations {
   /// **'서버에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.'**
   String get searchNetworkBody;
 
+  /// No description provided for @stateNetworkTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'네트워크 연결이 필요해요'**
+  String get stateNetworkTitle;
+
+  /// No description provided for @stateNetworkBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'연결을 확인한 뒤 다시 시도해 주세요.'**
+  String get stateNetworkBody;
+
+  /// No description provided for @stateSignInTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그인이 필요해요'**
+  String get stateSignInTitle;
+
+  /// No description provided for @stateSignInBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그인한 뒤에 쓸 수 있어요.'**
+  String get stateSignInBody;
+
   /// No description provided for @searchAuthBody.
   ///
   /// In ko, this message translates to:
@@ -506,6 +530,18 @@ abstract class AppLocalizations {
   /// **'정렬'**
   String get sortLabel;
 
+  /// No description provided for @sortAscending.
+  ///
+  /// In ko, this message translates to:
+  /// **'오름차순'**
+  String get sortAscending;
+
+  /// No description provided for @sortDescending.
+  ///
+  /// In ko, this message translates to:
+  /// **'내림차순'**
+  String get sortDescending;
+
   /// No description provided for @sortName.
   ///
   /// In ko, this message translates to:
@@ -674,11 +710,47 @@ abstract class AppLocalizations {
   /// **'폴더 빼기'**
   String get loadedFoldersRemove;
 
+  /// No description provided for @loadedFoldersRemoveTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'불러오는 폴더에서 뺄까요?'**
+  String get loadedFoldersRemoveTitle;
+
+  /// No description provided for @loadedFoldersRemoveBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'{path}\n이 폴더의 {count}곡이 보관함에서 사라져요. 음악 파일은 지워지지 않아요.'**
+  String loadedFoldersRemoveBody(String path, int count);
+
+  /// No description provided for @loadedFoldersRemoveBodyEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'{path}\n음악 파일은 지워지지 않아요.'**
+  String loadedFoldersRemoveBodyEmpty(String path);
+
   /// No description provided for @loadedFoldersScanning.
   ///
   /// In ko, this message translates to:
-  /// **'보관함을 다시 찾는 중이에요'**
+  /// **'폴더에서 곡을 찾는 중이에요'**
   String get loadedFoldersScanning;
+
+  /// No description provided for @loadedFoldersRemoving.
+  ///
+  /// In ko, this message translates to:
+  /// **'폴더를 빼고 보관함을 정리하는 중이에요'**
+  String get loadedFoldersRemoving;
+
+  /// No description provided for @loadedFoldersReading.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 정보를 읽는 중이에요'**
+  String get loadedFoldersReading;
+
+  /// No description provided for @loadedFoldersCovers.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 이미지를 가져오는 중이에요'**
+  String get loadedFoldersCovers;
 
   /// No description provided for @settingsQuality.
   ///
@@ -721,6 +793,24 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'yt-dlp가 없어요. 설치하면 검색하고 받을 수 있어요.'**
   String get settingsEngineNotInstalled;
+
+  /// No description provided for @settingsEngineRemove.
+  ///
+  /// In ko, this message translates to:
+  /// **'삭제'**
+  String get settingsEngineRemove;
+
+  /// No description provided for @settingsEngineRemoveTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'다운로드 엔진을 지울까요?'**
+  String get settingsEngineRemoveTitle;
+
+  /// No description provided for @settingsEngineRemoveBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱이 받아 둔 yt-dlp 파일을 지워요. 지우면 검색하고 받으려면 다시 설치해야 해요. 이 기기에 따로 설치된 yt-dlp는 지우지 않아요.'**
+  String get settingsEngineRemoveBody;
 
   /// No description provided for @settingsEngineInstalling.
   ///
@@ -1373,7 +1463,7 @@ abstract class AppLocalizations {
   /// No description provided for @coverEditTitle.
   ///
   /// In ko, this message translates to:
-  /// **'이미지 위치'**
+  /// **'이미지'**
   String get coverEditTitle;
 
   /// No description provided for @coverEditHint.
@@ -1399,6 +1489,66 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'원래대로'**
   String get coverEditReset;
+
+  /// No description provided for @coverEditResetPosition.
+  ///
+  /// In ko, this message translates to:
+  /// **'위치 되돌리기'**
+  String get coverEditResetPosition;
+
+  /// No description provided for @coverEditResetTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'위치와 크기를 되돌릴까요?'**
+  String get coverEditResetTitle;
+
+  /// No description provided for @coverEditResetBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'확대 · 위치 · 회전이 처음 상태로 돌아가요.'**
+  String get coverEditResetBody;
+
+  /// No description provided for @coverEditResetConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'되돌리기'**
+  String get coverEditResetConfirm;
+
+  /// No description provided for @coverChange.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미지 바꾸기'**
+  String get coverChange;
+
+  /// No description provided for @coverRemove.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미지 지우기'**
+  String get coverRemove;
+
+  /// No description provided for @coverRemoveTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미지를 지울까요?'**
+  String get coverRemoveTitle;
+
+  /// No description provided for @coverRemoveBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'고른 이미지를 지워요. 나중에 다시 고를 수 있어요.'**
+  String get coverRemoveBody;
+
+  /// No description provided for @coverRevertTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'기본 이미지로 되돌릴까요?'**
+  String get coverRevertTitle;
+
+  /// No description provided for @coverRevertBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'고른 이미지를 지우고 기본 이미지로 돌아가요.'**
+  String get coverRevertBody;
 
   /// No description provided for @coverEditApply.
   ///
@@ -2114,17 +2264,11 @@ abstract class AppLocalizations {
   /// **'최신순'**
   String get searchSortNewest;
 
-  /// No description provided for @searchSortShortest.
+  /// No description provided for @searchSortDuration.
   ///
   /// In ko, this message translates to:
-  /// **'짧은 순'**
-  String get searchSortShortest;
-
-  /// No description provided for @searchSortLongest.
-  ///
-  /// In ko, this message translates to:
-  /// **'긴 순'**
-  String get searchSortLongest;
+  /// **'길이순'**
+  String get searchSortDuration;
 
   /// No description provided for @searchSortTitle.
   ///
@@ -2179,6 +2323,36 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'기본으로'**
   String get downloadCoverDefault;
+
+  /// No description provided for @downloadLyricsEditHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'파일 · 웹에서 불러오거나 직접 써요. 자막이 없어도 돼요.'**
+  String get downloadLyricsEditHint;
+
+  /// No description provided for @downloadLyricsOverwriteTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'직접 정한 가사가 있어요'**
+  String get downloadLyricsOverwriteTitle;
+
+  /// No description provided for @downloadLyricsOverwriteBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'영상 자막을 쓰면 직접 정한 가사는 지워져요. 계속할까요?'**
+  String get downloadLyricsOverwriteBody;
+
+  /// No description provided for @downloadLyricsOverwriteConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'자막으로 바꾸기'**
+  String get downloadLyricsOverwriteConfirm;
+
+  /// No description provided for @downloadLyricsCustom.
+  ///
+  /// In ko, this message translates to:
+  /// **'직접 정한 가사를 넣어요 · {lines}줄'**
+  String downloadLyricsCustom(int lines);
 
   /// No description provided for @downloadImportLyrics.
   ///
@@ -2252,11 +2426,11 @@ abstract class AppLocalizations {
   /// **'이 자막 사용'**
   String get downloadSubtitleUseEdited;
 
-  /// No description provided for @downloadSubtitleEdited.
+  /// No description provided for @downloadSubtitleApplied.
   ///
   /// In ko, this message translates to:
-  /// **'수정함'**
-  String get downloadSubtitleEdited;
+  /// **'가사에 적용'**
+  String get downloadSubtitleApplied;
 
   /// No description provided for @downloadLyricsRetry.
   ///
@@ -2612,6 +2786,54 @@ abstract class AppLocalizations {
   /// **'앨범 이름을 바꿨어요'**
   String get albumRenameDone;
 
+  /// No description provided for @artistRenameTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'아티스트 이름 바꾸기'**
+  String get artistRenameTooltip;
+
+  /// No description provided for @artistRenameTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'아티스트 이름 바꾸기'**
+  String get artistRenameTitle;
+
+  /// No description provided for @artistRenameHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'아티스트 이름'**
+  String get artistRenameHint;
+
+  /// No description provided for @genreRenameTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'장르 이름 바꾸기'**
+  String get genreRenameTooltip;
+
+  /// No description provided for @genreRenameTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'장르 이름 바꾸기'**
+  String get genreRenameTitle;
+
+  /// No description provided for @genreRenameHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'장르 이름'**
+  String get genreRenameHint;
+
+  /// No description provided for @renameProgressTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 정보를 고치는 중이에요'**
+  String get renameProgressTitle;
+
+  /// No description provided for @renameProgressCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'{done}/{total}곡'**
+  String renameProgressCount(int done, int total);
+
   /// No description provided for @artistNotFound.
   ///
   /// In ko, this message translates to:
@@ -2815,6 +3037,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'곡 정보를 고쳤어요'**
   String get trackEditSaved;
+
+  /// No description provided for @trackEditTagFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'음악 파일에 곡 정보를 쓰지 못해 바꾸지 않았어요. 잠시 뒤 다시 시도해 주세요.'**
+  String get trackEditTagFailed;
 
   /// No description provided for @trackDeleteTitle.
   ///
@@ -3158,6 +3386,36 @@ abstract class AppLocalizations {
   /// **'뒤에 붙이기'**
   String get lyricsImportAppend;
 
+  /// No description provided for @lyricsImportMemo.
+  ///
+  /// In ko, this message translates to:
+  /// **'메모에 추가'**
+  String get lyricsImportMemo;
+
+  /// No description provided for @lyricsMemoTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'메모'**
+  String get lyricsMemoTitle;
+
+  /// No description provided for @lyricsMemoHide.
+  ///
+  /// In ko, this message translates to:
+  /// **'메모 숨기기'**
+  String get lyricsMemoHide;
+
+  /// No description provided for @lyricsMemoHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'글을 고치거나 골라서 \"끼우기\"를 누르면 가사의 지금 줄 아래에 들어가요'**
+  String get lyricsMemoHint;
+
+  /// No description provided for @lyricsMemoInsert.
+  ///
+  /// In ko, this message translates to:
+  /// **'끼우기'**
+  String get lyricsMemoInsert;
+
   /// No description provided for @lyricsSyncGroupSetupBody.
   ///
   /// In ko, this message translates to:
@@ -3488,6 +3746,12 @@ abstract class AppLocalizations {
   /// **'재생목록 메뉴'**
   String get playlistMenuTooltip;
 
+  /// No description provided for @playlistFeaturedTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'대표곡'**
+  String get playlistFeaturedTitle;
+
   /// No description provided for @playlistFeaturedPreview.
   ///
   /// In ko, this message translates to:
@@ -3596,11 +3860,77 @@ abstract class AppLocalizations {
   /// **'이미 담겼어요'**
   String get playlistPickAlready;
 
+  /// No description provided for @filterAllArtists.
+  ///
+  /// In ko, this message translates to:
+  /// **'모든 아티스트'**
+  String get filterAllArtists;
+
+  /// No description provided for @filterAllAlbums.
+  ///
+  /// In ko, this message translates to:
+  /// **'모든 앨범'**
+  String get filterAllAlbums;
+
+  /// No description provided for @filterAllGenres.
+  ///
+  /// In ko, this message translates to:
+  /// **'모든 장르'**
+  String get filterAllGenres;
+
+  /// No description provided for @playlistAddTracks.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 추가'**
+  String get playlistAddTracks;
+
+  /// No description provided for @playlistAddTracksTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 추가'**
+  String get playlistAddTracksTitle;
+
+  /// No description provided for @playlistAddTracksStart.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}곡 추가'**
+  String playlistAddTracksStart(int count);
+
+  /// No description provided for @playlistAddTracksEmptyTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'추가할 곡이 없어요'**
+  String get playlistAddTracksEmptyTitle;
+
+  /// No description provided for @playlistAddTracksEmptyBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'보관함의 곡이 모두 이 재생목록에 있거나 검색 결과가 없어요.'**
+  String get playlistAddTracksEmptyBody;
+
   /// No description provided for @playlistDetailEmpty.
   ///
   /// In ko, this message translates to:
-  /// **'아직 담긴 곡이 없어요. 곡 메뉴의 ‘재생목록에 추가’로 담아 보세요.'**
+  /// **'아직 담긴 곡이 없어요'**
   String get playlistDetailEmpty;
+
+  /// No description provided for @playlistDetailEmptyFavorites.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 좋아요한 곡이 없어요'**
+  String get playlistDetailEmptyFavorites;
+
+  /// No description provided for @playlistDetailEmptyBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 메뉴의 ‘재생목록에 추가’ 또는 아래 ‘곡 추가’로 담아 보세요.'**
+  String get playlistDetailEmptyBody;
+
+  /// No description provided for @playlistDetailEmptyFavoritesBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 메뉴에서 좋아요를 누르면 여기에 담겨요.'**
+  String get playlistDetailEmptyFavoritesBody;
 
   /// No description provided for @playlistNotFound.
   ///
@@ -3677,8 +4007,20 @@ abstract class AppLocalizations {
   /// No description provided for @playlistImportBackToResults.
   ///
   /// In ko, this message translates to:
-  /// **'검색 결과'**
+  /// **'검색 결과로'**
   String get playlistImportBackToResults;
+
+  /// No description provided for @playlistImportLoading.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 목록을 읽는 중이에요'**
+  String get playlistImportLoading;
+
+  /// No description provided for @playlistImportSelectedCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'{selected}/{total}곡 선택됨'**
+  String playlistImportSelectedCount(int selected, int total);
 
   /// No description provided for @playlistImportResultSubtitle.
   ///
@@ -3977,14 +4319,26 @@ abstract class AppLocalizations {
   /// No description provided for @lyricsOverlayOn.
   ///
   /// In ko, this message translates to:
-  /// **'떠 있는 가사 켜기'**
+  /// **'오버레이 가사 켜기'**
   String get lyricsOverlayOn;
 
   /// No description provided for @lyricsOverlayOff.
   ///
   /// In ko, this message translates to:
-  /// **'떠 있는 가사 끄기'**
+  /// **'오버레이 가사 끄기'**
   String get lyricsOverlayOff;
+
+  /// No description provided for @lyricsOverlayNoLyrics.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사가 없어요'**
+  String get lyricsOverlayNoLyrics;
+
+  /// No description provided for @lyricsOverlayNotSynced.
+  ///
+  /// In ko, this message translates to:
+  /// **'싱크된 가사가 없어요'**
+  String get lyricsOverlayNotSynced;
 
   /// No description provided for @lyricsOverlayNeedPermission.
   ///
@@ -4105,6 +4459,24 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'취소'**
   String get notifDownloadCancel;
+
+  /// No description provided for @notifDownloadPause.
+  ///
+  /// In ko, this message translates to:
+  /// **'일시정지'**
+  String get notifDownloadPause;
+
+  /// No description provided for @notifDownloadResume.
+  ///
+  /// In ko, this message translates to:
+  /// **'이어받기'**
+  String get notifDownloadResume;
+
+  /// No description provided for @notifDownloadPausedBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'일시정지됨 · {percent}%'**
+  String notifDownloadPausedBody(int percent);
 
   /// No description provided for @notifDownloadPausePreview.
   ///
@@ -4244,6 +4616,12 @@ abstract class AppLocalizations {
   /// **'구독한 채널에 새 영상이 올라오면 여기에서 골라 받을 수 있어요.'**
   String get newVideosEmptyBody;
 
+  /// No description provided for @newVideosSummary.
+  ///
+  /// In ko, this message translates to:
+  /// **'채널 {channels}개 · 영상 {videos}개'**
+  String newVideosSummary(int channels, int videos);
+
   /// No description provided for @newVideosStart.
   ///
   /// In ko, this message translates to:
@@ -4261,6 +4639,24 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'이미 받은 곡이라 새로 받을 곡이 없어요'**
   String get newVideosSkipped;
+
+  /// No description provided for @newVideosClear.
+  ///
+  /// In ko, this message translates to:
+  /// **'비우기'**
+  String get newVideosClear;
+
+  /// No description provided for @newVideosClearTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 영상 목록을 비울까요?'**
+  String get newVideosClearTitle;
+
+  /// No description provided for @newVideosClearBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'받지 않은 영상도 목록에서 사라지고, 다시 뜨지 않아요. 이후에 올라오는 영상만 새 영상으로 보여요.'**
+  String get newVideosClearBody;
 
   /// No description provided for @newVideosSelectAll.
   ///

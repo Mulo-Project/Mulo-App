@@ -119,3 +119,36 @@ class AppDialog extends StatelessWidget {
     );
   }
 }
+
+/// 예 · 아니오 확인창: 제목 · 설명 · (취소 | 확인). 확인하면 true, 취소하거나 밖을 누르면 false.
+/// 지우기 · 되돌리기처럼 되돌리기 어려운 동작 앞에서 쓴다 (화면마다 같은 모양이 되도록 직접 만들지 않는다).
+Future<bool> showConfirmDialog(
+  BuildContext context, {
+  required String title,
+  required String confirmLabel,
+  required String cancelLabel,
+  String? body,
+  IconData? confirmIcon,
+}) async {
+  final ok = await showDialog<bool>(
+    context: context,
+    useRootNavigator: true,
+    builder: (dialogContext) => AppDialog(
+      title: title,
+      body: body,
+      actions: [
+        PillButton(
+          label: cancelLabel,
+          variant: PillVariant.tonal,
+          onPressed: () => Navigator.of(dialogContext).pop(false),
+        ),
+        PillButton(
+          label: confirmLabel,
+          icon: confirmIcon,
+          onPressed: () => Navigator.of(dialogContext).pop(true),
+        ),
+      ],
+    ),
+  );
+  return ok == true;
+}

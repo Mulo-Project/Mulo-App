@@ -125,6 +125,11 @@ class NotificationSyncCubit extends Cubit<void> {
     current ??= _progressShown
         ? null
         : items.where((i) => i.status == DownloadStatus.queued).firstOrNull;
+    // 남은 곡이 모두 일시정지면 알림은 그 곡을 "일시정지됨"으로 보여 주고 이어받기를 단다.
+    final allPaused =
+        active.isNotEmpty &&
+        active.every((i) => i.status == DownloadStatus.paused);
+    if (current == null && allPaused) current = active.first;
     // 한 묶음 = 대기열이 비었다가 다시 채워지기 전까지. 전체 진행률은 이 묶음 기준.
     if (active.isEmpty) {
       _batch.clear();
@@ -162,7 +167,10 @@ class NotificationSyncCubit extends Cubit<void> {
 
     final percent = (current.progress * 100).round().clamp(0, 100);
     final title = hide ? l10n.notifDownloadHiddenTitle : current.title;
-    final progressLine = nextItem != null && !hide
+    final paused = current.status == DownloadStatus.paused;
+    final progressLine = paused
+        ? l10n.notifDownloadPausedBody(percent)
+        : nextItem != null && !hide
         ? l10n.notifDownloadProgressNext(percent, nextItem.title)
         : l10n.notifDownloadProgressBody(percent);
     final body = hide || current.artist.isEmpty
@@ -178,9 +186,15 @@ class NotificationSyncCubit extends Cubit<void> {
     final preview = hide || previewing ? null : l10n.notifDownloadPreview;
     final stop = previewing ? l10n.notifDownloadStopPreview : null;
     final cancel = l10n.notifDownloadCancel;
+    // 알림 버튼은 셋까지라서, 미리 듣는 중(일시정지 · 중지 · 취소)에는 받기 일시정지 버튼을 뺀다.
+    final hold = previewing
+        ? null
+        : paused
+        ? l10n.notifDownloadResume
+        : l10n.notifDownloadPause;
     final art = hide ? null : current.thumbnailUrl;
     final key =
-        '$title|$body|$subText|$overallPercent|$keepAlive|$preview|$stop|${current.id}|$art';
+        '$title|$body|$subText|$overallPercent|$keepAlive|$preview|$stop|$hold|${current.id}|$art';
     if (_progressShown && key == _lastProgress) return;
     await _ensurePermission();
     _progressShown = true;
@@ -194,6 +208,7 @@ class NotificationSyncCubit extends Cubit<void> {
         subText: subText,
         previewLabel: preview,
         cancelLabel: cancel,
+        holdLabel: hold,
         stopLabel: stop,
         openId: current.id,
         artUri: art,

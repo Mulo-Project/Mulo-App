@@ -69,12 +69,26 @@ class YtDlpManager implements EngineManager {
           installed: true,
           version: (r.stdout as String).trim(),
           managed: managed,
+          removable: managed,
         );
       }
     } on ProcessException {
       // 실행할 수 없으면 설치 안 됨.
     }
-    return const EngineStatus();
+    // 받은 파일이 있어도 실행되지 않으면 지울 수 있게 둔다 (깨진 파일 정리).
+    return EngineStatus(removable: managed);
+  }
+
+  @override
+  Future<EngineStatus> remove() async {
+    // 앱이 받은 파일만 지운다. PATH의 yt-dlp · Android 내장 엔진은 건드리지 않는다.
+    if (_desktop) {
+      final target = await _managedFile();
+      for (final f in [target, File('${target.path}.download')]) {
+        if (f.existsSync()) await f.delete();
+      }
+    }
+    return status();
   }
 
   @override

@@ -229,6 +229,7 @@ class MediaStoreChannel(
             MediaStore.Audio.Media.ALBUM,
             MediaStore.Audio.Media.DURATION,
             MediaStore.Audio.Media.DATA,
+            MediaStore.Audio.Media.DATE_ADDED,
         )
         val rows = mutableListOf<Map<String, Any?>>()
         context.contentResolver.query(
@@ -244,6 +245,7 @@ class MediaStoreChannel(
             val album = c.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
             val duration = c.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
             val data = c.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
+            val dateAdded = c.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_ADDED)
             while (c.moveToNext()) {
                 val mediaId = c.getLong(id)
                 rows += mapOf(
@@ -255,6 +257,8 @@ class MediaStoreChannel(
                     "uri" to ContentUris.withAppendedId(collection, mediaId).toString(),
                     // 불러오는 폴더로 거르고 폴더별 곡 수를 세는 데 쓴다.
                     "folder" to c.getString(data)?.let { File(it).parent },
+                    // 파일이 기기에 들어온 시각(밀리초). 추가일순 정렬에 쓴다.
+                    "addedAtMs" to c.getLong(dateAdded) * 1000,
                 )
             }
         }

@@ -9,6 +9,9 @@ enum DownloadNotificationAction {
   /// 미리 듣기를 멈춘다.
   stopPreview,
 
+  /// 지금 받는 곡의 받기를 일시정지하거나 이어 받는다.
+  toggleHold,
+
   /// 지금 받는 곡의 받기를 취소한다.
   cancel,
 }
@@ -38,6 +41,7 @@ abstract interface class DownloadNotifier {
     String? subText,
     String? previewLabel,
     String? cancelLabel,
+    String? holdLabel,
     String? pauseLabel,
     String? stopLabel,
     String? openId,

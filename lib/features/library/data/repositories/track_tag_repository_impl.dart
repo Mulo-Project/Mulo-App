@@ -13,7 +13,7 @@ class TrackTagRepositoryImpl implements TrackTagRepository {
   final TrackTagSource _source;
 
   @override
-  Future<bool> write(Track track, {CoverArt? cover, int? color}) =>
+  Future<TagWriteResult> write(Track track, {CoverArt? cover, int? color}) =>
       _source.write(
         track.uri,
         title: track.title,
@@ -23,6 +23,19 @@ class TrackTagRepositoryImpl implements TrackTagRepository {
         cover: cover,
         color: color,
       );
+
+  @override
+  Future<TagWriteResult> writeLyrics(Track track, String lyrics) =>
+      lyrics.trim().isEmpty
+      ? Future.value(TagWriteResult.unsupported)
+      : _source.write(
+          track.uri,
+          title: '',
+          artist: '',
+          album: '',
+          genre: '',
+          lyrics: lyrics,
+        );
 }
 
 class FileTagRepositoryImpl implements FileTagRepository {

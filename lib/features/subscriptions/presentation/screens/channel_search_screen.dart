@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
@@ -36,7 +35,6 @@ class _ChannelSearchScreenState extends State<ChannelSearchScreen> {
     final l10n = context.l10n;
     if (_subs.state.isSubscribedId(hit.id)) {
       await _subs.unsubscribe(hit.id);
-      messenger.showSnackBar(SnackBar(content: Text(l10n.unsubscribed)));
       return;
     }
     final result = await _subs.subscribe(SubscribeParams.fromHit(hit));
@@ -55,7 +53,6 @@ class _ChannelSearchScreenState extends State<ChannelSearchScreen> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final p = context.palette;
-    final text = Theme.of(context).textTheme;
     return Scaffold(
       backgroundColor: p.background,
       body: AppBackground(
@@ -64,11 +61,7 @@ class _ChannelSearchScreenState extends State<ChannelSearchScreen> {
             children: [
               AppTopBar(
                 title: l10n.channelSearchTitle,
-                leading: CircleIconButton(
-                  icon: AppIcons.back,
-                  tooltip: l10n.actionBack,
-                  onPressed: () => context.pop(),
-                ),
+                leading: const AppBackButton(),
               ),
               Padding(
                 padding: AppSpacing.screen,
@@ -85,22 +78,13 @@ class _ChannelSearchScreenState extends State<ChannelSearchScreen> {
                 child: BlocBuilder<ChannelSearchCubit, ChannelSearchState>(
                   bloc: _cubit,
                   builder: (context, state) {
-                    Widget message(String title) => Center(
-                      child: Padding(
-                        padding: AppSpacing.screen,
-                        child: Text(
-                          title,
-                          style: text.bodyMedium,
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    );
+                    Widget message(String title) => EmptyState(title: title);
                     return switch (state.status) {
                       ChannelSearchStatus.idle => message(
                         l10n.channelSearchIdle,
                       ),
-                      ChannelSearchStatus.loading => message(
-                        l10n.channelSearchLoading,
+                      ChannelSearchStatus.loading => LoadingState(
+                        label: l10n.channelSearchLoading,
                       ),
                       ChannelSearchStatus.failed => message(
                         l10n.channelSearchFailed,

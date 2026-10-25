@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
@@ -57,7 +56,7 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
               Widget gap([double h = AppSpacing.lg]) => SizedBox(height: h);
               Widget divider() => Padding(
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-                child: Divider(height: 1, thickness: 1, color: p.outline),
+                child: const AppDivider(),
               );
               Widget padded(Widget child) =>
                   Padding(padding: AppSpacing.screen, child: child);
@@ -66,11 +65,7 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
                 children: [
                   AppTopBar(
                     title: l10n.equalizerTitle,
-                    leading: CircleIconButton(
-                      icon: AppIcons.back,
-                      tooltip: l10n.actionBack,
-                      onPressed: () => context.pop(),
-                    ),
+                    leading: const AppBackButton(),
                   ),
                   Expanded(
                     child: info == null
