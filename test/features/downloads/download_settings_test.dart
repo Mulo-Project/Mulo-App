@@ -62,17 +62,18 @@ void main() {
     expect(find.text('/music/내폴더'), findsOneWidget);
   });
 
-  testWidgets('저장 위치 대화상자: 지금 위치를 고르면 그대로, 선택기를 취소해도 그대로다', (tester) async {
+  testWidgets('저장 위치 시트: 선택기를 취소하거나 시트를 닫아도 그대로다', (tester) async {
     final settings = MemoryDownloadSettings(path: '/music/Mulo');
     await pump(tester, Routes.settings, settings: settings, height: 7000);
     await tester.tap(find.text('저장 위치'));
     await tester.pumpAndSettle();
-    // 선택기를 취소하면 대화상자는 그대로 남는다.
+    // 선택기를 취소하면 시트는 그대로 남는다.
     await tester.tap(find.text('직접 선택'));
     await tester.pumpAndSettle();
     expect(find.text('저장 위치 고르기'), findsOneWidget);
     expect(settings.path, '/music/Mulo');
-    await tester.tap(find.text('취소'));
+    // 시트 밖을 눌러 닫는다.
+    await tester.tapAt(const Offset(10, 10));
     await tester.pumpAndSettle();
     expect(find.text('저장 위치 고르기'), findsNothing);
     expect(settings.path, '/music/Mulo');

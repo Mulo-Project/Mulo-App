@@ -5,7 +5,7 @@ import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../../downloads/domain/usecases/download_usecases.dart';
-import '../../../downloads/presentation/widgets/save_folder_dialog.dart';
+import '../../../downloads/presentation/widgets/save_folder_sheet.dart';
 
 /// 채널의 새 영상을 저장할 폴더: 폭을 가득 채운 한 줄(폴더 아이콘 · 지금 위치). 제목은 바깥 구역 제목이 맡는다.
 /// 누르면 폴더를 고르고, 정해 둔 위치가 있으면 오른쪽 버튼으로 기본 저장 위치로 되돌린다.
@@ -17,7 +17,7 @@ class SavePathRow extends StatelessWidget {
   final ValueChanged<String> onChanged;
 
   Future<void> _pick(BuildContext context) async {
-    final picked = await showSaveFolderDialog(
+    final picked = await showSaveFolderSheet(
       context,
       current: path,
       pickOther: () => sl<PickSaveFolder>()(const NoParams()),

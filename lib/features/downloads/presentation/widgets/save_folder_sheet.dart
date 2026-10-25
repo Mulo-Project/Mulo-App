@@ -9,24 +9,24 @@ import '../../../library/presentation/bloc/loaded_folders_cubit.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../../library/presentation/widgets/loaded_folders_sheet.dart';
 
-/// 저장 위치 고르기 대화상자: 불러오는 폴더 목록에서 고르거나, "직접 선택"으로 폴더 선택기를 연다.
+/// 저장 위치 고르기 바텀 시트: 불러오는 폴더 목록에서 고르거나, "직접 선택"으로 폴더 선택기를 연다.
 /// [current]는 지금 정해진 위치(목록에 없어도 맨 위에 보인다). 고른 폴더를 돌려주고, 닫으면 null.
 /// [pickOther]는 폴더 선택기 (취소하면 null).
-Future<String?> showSaveFolderDialog(
+Future<String?> showSaveFolderSheet(
   BuildContext context, {
   required String current,
   required Future<String?> Function() pickOther,
-}) => showDialog<String>(
-  context: context,
-  useRootNavigator: true,
+}) => showAppSheet<String>(
+  context,
+  isScrollControlled: true,
   builder: (_) => BlocProvider(
     create: (_) => sl<LoadedFoldersCubit>()..load(),
-    child: _SaveFolderDialog(current: current, pickOther: pickOther),
+    child: _SaveFolderSheet(current: current, pickOther: pickOther),
   ),
 );
 
-class _SaveFolderDialog extends StatelessWidget {
-  const _SaveFolderDialog({required this.current, required this.pickOther});
+class _SaveFolderSheet extends StatelessWidget {
+  const _SaveFolderSheet({required this.current, required this.pickOther});
 
   final String current;
   final Future<String?> Function() pickOther;
@@ -52,66 +52,81 @@ class _SaveFolderDialog extends StatelessWidget {
         if (f.isDefault) normalizeFolderPath(f.path),
     };
 
-    return AppDialog(
-      title: l10n.saveFolderTitle,
-      content: ConstrainedBox(
+    return SafeArea(
+      child: ConstrainedBox(
         constraints: BoxConstraints(
-          maxHeight: MediaQuery.sizeOf(context).height * .45,
+          maxHeight: MediaQuery.sizeOf(context).height * .8,
         ),
-        child: paths.isEmpty
-            ? EmptyState(title: l10n.saveFolderEmpty)
-            : ListView(
-                shrinkWrap: true,
-                children: [
-                  for (final path in paths)
-                    _FolderOption(
-                      path: path,
-                      isDefault: defaults.contains(normalizeFolderPath(path)),
-                      selected:
-                          normalizeFolderPath(path) == normalizeFolderPath(cur),
-                      onTap: () => Navigator.of(context).pop(path),
-                      // 기본 위치 · 지금 위치 · 목록에 없는 위치는 뺄 수 없다.
-                      onRemove:
-                          cubit.state.busy ||
-                              defaults.contains(normalizeFolderPath(path)) ||
-                              normalizeFolderPath(path) ==
-                                  normalizeFolderPath(cur) ||
-                              !listedPaths.contains(normalizeFolderPath(path))
-                          ? null
-                          : () async {
-                              final folder = folders.firstWhere(
-                                (f) =>
-                                    normalizeFolderPath(f.path) ==
-                                    normalizeFolderPath(path),
-                              );
-                              if (await confirmRemoveLoadedFolder(
-                                context,
-                                folder,
-                              )) {
-                                final removed = await cubit.remove(folder.path);
-                                player.removeFromQueueByIds(removed);
-                              }
-                            },
-                    ),
-                ],
+        child: Padding(
+          padding: appSheetPadding,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AppSheetTitle(l10n.saveFolderTitle),
+              const SizedBox(height: AppSpacing.md),
+              Flexible(
+                child: paths.isEmpty
+                    ? EmptyState(title: l10n.saveFolderEmpty)
+                    : ListView(
+                        shrinkWrap: true,
+                        children: [
+                          for (final path in paths)
+                            _FolderOption(
+                              path: path,
+                              isDefault: defaults.contains(
+                                normalizeFolderPath(path),
+                              ),
+                              selected:
+                                  normalizeFolderPath(path) ==
+                                  normalizeFolderPath(cur),
+                              onTap: () => Navigator.of(context).pop(path),
+                              // 기본 위치 · 지금 위치 · 목록에 없는 위치는 뺄 수 없다.
+                              onRemove:
+                                  cubit.state.busy ||
+                                      defaults.contains(
+                                        normalizeFolderPath(path),
+                                      ) ||
+                                      normalizeFolderPath(path) ==
+                                          normalizeFolderPath(cur) ||
+                                      !listedPaths.contains(
+                                        normalizeFolderPath(path),
+                                      )
+                                  ? null
+                                  : () async {
+                                      final folder = folders.firstWhere(
+                                        (f) =>
+                                            normalizeFolderPath(f.path) ==
+                                            normalizeFolderPath(path),
+                                      );
+                                      if (await confirmRemoveLoadedFolder(
+                                        context,
+                                        folder,
+                                      )) {
+                                        final removed = await cubit.remove(
+                                          folder.path,
+                                        );
+                                        player.removeFromQueueByIds(removed);
+                                      }
+                                    },
+                            ),
+                        ],
+                      ),
               ),
+              const SizedBox(height: AppSpacing.md),
+              PillButton(
+                label: l10n.saveFolderPickOther,
+                icon: AppIcons.folder,
+                onPressed: () async {
+                  final nav = Navigator.of(context);
+                  final picked = await pickOther();
+                  if (picked != null) nav.pop(picked);
+                },
+              ),
+            ],
+          ),
+        ),
       ),
-      actions: [
-        PillButton(
-          label: l10n.actionCancel,
-          variant: PillVariant.tonal,
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        PillButton(
-          label: l10n.saveFolderPickOther,
-          icon: AppIcons.folder,
-          onPressed: () async {
-            final nav = Navigator.of(context);
-            final picked = await pickOther();
-            if (picked != null) nav.pop(picked);
-          },
-        ),
-      ],
     );
   }
 }

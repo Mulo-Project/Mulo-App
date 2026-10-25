@@ -19,7 +19,7 @@ import '../bloc/download_queue_cubit.dart';
 import '../bloc/download_settings_cubit.dart';
 import '../bloc/subtitle_availability_cubit.dart';
 import 'playlist_picker_dialog.dart';
-import 'save_folder_dialog.dart';
+import 'save_folder_sheet.dart';
 import 'subtitle_detail_screen.dart';
 import 'subtitle_language_label.dart';
 
@@ -240,7 +240,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
 
   Future<void> _pickFolder() async {
     final settings = context.read<DownloadSettingsCubit>();
-    final path = await showSaveFolderDialog(
+    final path = await showSaveFolderSheet(
       context,
       current: _savePath.text,
       pickOther: settings.pickFolder,
