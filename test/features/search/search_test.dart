@@ -130,7 +130,7 @@ void main() {
       await cubit.loadMore(); // 다음 쪽도 날짜 순으로
       expect(engine.newestFlags.last, isTrue);
 
-      await cubit.selectSort(SearchSort.shortest); // 받아 온 안에서만: 다시 찾지 않음
+      await cubit.selectSort(SearchSort.duration); // 받아 온 안에서만: 다시 찾지 않음
       expect(engine.newestFlags.length, 3);
 
       await cubit.selectSort(SearchSort.relevance); // 최신순에서 벗어남
@@ -199,12 +199,17 @@ void main() {
       List<String> ids() => cubit.state.visibleItems.map((h) => h.id).toList();
 
       expect(ids(), ['a', 'b', 'c']); // 관련도순 = 찾은 순서
-      cubit.selectSort(SearchSort.shortest);
-      expect(ids(), ['c', 'a', 'b']);
-      cubit.selectSort(SearchSort.longest);
-      expect(ids(), ['a', 'c', 'b']);
-      cubit.selectSort(SearchSort.title);
+      cubit.selectSort(SearchSort.duration);
+      expect(ids(), ['c', 'a', 'b']); // 기본: 짧은 순
+      cubit.toggleDirection();
+      expect(ids(), ['a', 'c', 'b']); // 긴 순
+      cubit.selectSort(SearchSort.title); // 기준을 바꾸면 기본 방향
       expect(ids(), ['b', 'a', 'c']);
+      cubit.toggleDirection();
+      expect(ids(), ['c', 'a', 'b']);
+      cubit.selectSort(SearchSort.relevance);
+      cubit.toggleDirection(); // 관련도순은 방향이 없다
+      expect(ids(), ['a', 'b', 'c']);
     });
 
     test('곡 하나 주소는 이미 분류가 있어 다시 읽지 않는다', () async {

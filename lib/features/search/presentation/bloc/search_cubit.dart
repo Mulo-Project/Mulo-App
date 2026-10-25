@@ -19,6 +19,7 @@ class SearchState extends Equatable {
     this.failure,
     this.keyword = false,
     this.sort = SearchSort.relevance,
+    this.ascending,
   });
 
   final SearchStatus status;
@@ -39,11 +40,17 @@ class SearchState extends Equatable {
   /// 고른 정렬 순서.
   final SearchSort sort;
 
+  /// 고른 방향 (true 오름차순). null이면 [sort]의 기본 방향.
+  final bool? ascending;
+
+  bool get isAscending => ascending ?? sort.defaultAscending;
+
   /// 정렬을 적용한 목록. 최신순은 엔진이 날짜 순으로 찾아 준 그대로다.
   List<MediaHit> get visibleItems {
     final shown = [...items];
     // 길이를 모르는 곡은 어느 쪽 정렬이든 맨 뒤로 보낸다.
-    int byDuration(MediaHit a, MediaHit b, int sign) {
+    final sign = isAscending ? 1 : -1;
+    int byDuration(MediaHit a, MediaHit b) {
       final x = a.duration, y = b.duration;
       if (x == null || y == null) {
         return x == null && y == null ? 0 : (x == null ? 1 : -1);
@@ -57,7 +64,7 @@ class SearchState extends Equatable {
       if (x == null || y == null) {
         return x == null && y == null ? 0 : (x == null ? 1 : -1);
       }
-      return y.compareTo(x);
+      return sign * x.compareTo(y);
     }
 
     switch (sort) {
@@ -65,13 +72,12 @@ class SearchState extends Equatable {
         break;
       case SearchSort.popular:
         shown.sort(byViews);
-      case SearchSort.shortest:
-        shown.sort((a, b) => byDuration(a, b, 1));
-      case SearchSort.longest:
-        shown.sort((a, b) => byDuration(a, b, -1));
+      case SearchSort.duration:
+        shown.sort(byDuration);
       case SearchSort.title:
         shown.sort(
-          (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()),
+          (a, b) =>
+              sign * a.title.toLowerCase().compareTo(b.title.toLowerCase()),
         );
     }
     return shown;
@@ -82,6 +88,8 @@ class SearchState extends Equatable {
     bool? hasNext,
     bool? loadingMore,
     SearchSort? sort,
+    bool? ascending,
+    bool resetAscending = false,
   }) => SearchState(
     status: status,
     items: items ?? this.items,
@@ -91,6 +99,7 @@ class SearchState extends Equatable {
     failure: failure,
     keyword: keyword,
     sort: sort ?? this.sort,
+    ascending: resetAscending ? null : (ascending ?? this.ascending),
   );
 
   @override
@@ -103,6 +112,7 @@ class SearchState extends Equatable {
     failure,
     keyword,
     sort,
+    ascending,
   ];
 }
 
@@ -261,6 +271,13 @@ class SearchCubit extends Cubit<SearchState> {
     }
   }
 
+  /// 오름 · 내림차순을 바꾼다 (방향이 있는 정렬일 때만).
+  void toggleDirection() {
+    final s = state;
+    if (!s.sort.hasDirection) return;
+    emit(s.copyWith(ascending: !s.isAscending));
+  }
+
   /// 정렬 순서를 고른다. 최신순을 고르거나, 최신순으로 찾은 결과에서 관련도순으로
   /// 돌아올 때는 찾는 순서가 달라지므로 첫 쪽부터 다시 찾는다.
   /// 그 밖에는 받아 온 결과 안에서만 바꾼다.
@@ -273,7 +290,8 @@ class SearchCubit extends Cubit<SearchState> {
         ((sort == SearchSort.newest && !_newestFetched) ||
             (sort == SearchSort.relevance && _newestFetched));
     if (!reload) {
-      emit(s.copyWith(sort: sort));
+      // 기준을 바꾸면 그 기준의 기본 방향으로 돌아간다.
+      emit(s.copyWith(sort: sort, resetAscending: true));
       return;
     }
     final id = ++_request;

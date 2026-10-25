@@ -311,12 +311,17 @@ class _SortMenu extends StatelessWidget {
         SearchSort.relevance => l10n.searchSortRelevance,
         SearchSort.popular => l10n.searchSortPopular,
         SearchSort.newest => l10n.searchSortNewest,
-        SearchSort.shortest => l10n.searchSortShortest,
-        SearchSort.longest => l10n.searchSortLongest,
+        SearchSort.duration => l10n.searchSortDuration,
         SearchSort.title => l10n.searchSortTitle,
       },
       tooltip: l10n.searchSortTooltip,
       onChanged: cubit.selectSort,
+      // 관련도 · 최신순은 찾는 쪽이 정한 순서라 방향을 바꾸지 않는다.
+      ascending: state.sort.hasDirection ? state.isAscending : null,
+      directionTooltip: state.isAscending
+          ? l10n.sortAscending
+          : l10n.sortDescending,
+      onToggleDirection: state.sort.hasDirection ? cubit.toggleDirection : null,
     );
   }
 }

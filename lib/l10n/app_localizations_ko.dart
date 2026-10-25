@@ -1158,10 +1158,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get searchSortNewest => '최신순';
 
   @override
-  String get searchSortShortest => '짧은 순';
-
-  @override
-  String get searchSortLongest => '긴 순';
+  String get searchSortDuration => '길이순';
 
   @override
   String get searchSortTitle => '제목순';

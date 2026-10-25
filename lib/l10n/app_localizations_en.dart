@@ -1179,10 +1179,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchSortNewest => 'Newest';
 
   @override
-  String get searchSortShortest => 'Shortest';
-
-  @override
-  String get searchSortLongest => 'Longest';
+  String get searchSortDuration => 'Length';
 
   @override
   String get searchSortTitle => 'Title';

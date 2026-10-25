@@ -2246,17 +2246,11 @@ abstract class AppLocalizations {
   /// **'최신순'**
   String get searchSortNewest;
 
-  /// No description provided for @searchSortShortest.
+  /// No description provided for @searchSortDuration.
   ///
   /// In ko, this message translates to:
-  /// **'짧은 순'**
-  String get searchSortShortest;
-
-  /// No description provided for @searchSortLongest.
-  ///
-  /// In ko, this message translates to:
-  /// **'긴 순'**
-  String get searchSortLongest;
+  /// **'길이순'**
+  String get searchSortDuration;
 
   /// No description provided for @searchSortTitle.
   ///
