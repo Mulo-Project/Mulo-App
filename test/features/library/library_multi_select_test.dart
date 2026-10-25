@@ -114,7 +114,11 @@ void main() {
 
   testWidgets('앨범 화면에서도 길게 눌러 고르고 장르를 한꺼번에 지정한다', (tester) async {
     await setUpTestDependencies(
-      tracks: [_t('t1', '첫 곡'), _t('t2', '둘째 곡'), _t('t3', '셋째 곡')],
+      tracks: [
+        _t('t1', '첫 곡'),
+        _t('t2', '둘째 곡'),
+        _t('t3', '셋째 곡', genre: '팝'),
+      ],
     );
     tester.view.physicalSize = const Size(1170, 2532);
     tester.view.devicePixelRatio = 3;
@@ -135,13 +139,20 @@ void main() {
     expect(find.text('3곡 선택'), findsOneWidget);
     await tester.tap(find.text('작업'));
     await tester.pumpAndSettle();
-    // 앨범 화면에서 앨범 지정이면 이 앨범 이름이 미리 채워져 있다.
+    // 고른 곡들의 값이 모두 같으면 입력창에 미리 채워진다 (앨범 · 아티스트는 같고 장르는 달라 빈 칸).
     await tester.tap(find.text('앨범 지정'));
     await tester.pumpAndSettle();
     expect(tester.widget<EditableText>(_dialogField).controller.text, '앨범');
     await tester.tap(find.text('취소'));
     await tester.pumpAndSettle();
-    // 다른 종류(장르)는 비어 있다.
+    await tester.tap(find.text('작업'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('아티스트 지정'));
+    await tester.pumpAndSettle();
+    expect(tester.widget<EditableText>(_dialogField).controller.text, '가수');
+    await tester.tap(find.text('취소'));
+    await tester.pumpAndSettle();
+    // 값이 곡마다 다른 종류(장르)는 비어 있다.
     await tester.tap(find.text('작업'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('장르 지정'));

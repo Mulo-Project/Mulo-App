@@ -312,8 +312,14 @@ mixin TrackPicker<T extends StatefulWidget> on State<T> {
   }
 
   /// 목록 맨 아래에 비워 둘 높이 (선택 막대에 마지막 곡이 가리지 않게).
-  /// 값 입력창에 처음 채워 둘 값. 앨범 화면에서 앨범 지정이면 그 앨범 이름처럼, 화면이 정한다.
-  String initialAssignValue(TrackGroupKind kind) => '';
+  /// 값 입력창에 처음 채워 둘 값: 고른 곡들의 [kind] 값이 모두 같으면 그 값, 다르면 빈 칸.
+  String initialAssignValue(List<Track> all, TrackGroupKind kind) {
+    final values = {
+      for (final t in all)
+        if (picked.contains(t.id)) kind.valueOf(t),
+    };
+    return values.length == 1 ? values.first : '';
+  }
 
   double get selectionBottomGap => selecting ? 72 : 0;
 
@@ -343,7 +349,7 @@ mixin TrackPicker<T extends StatefulWidget> on State<T> {
           context,
           kind: kind,
           ids: ids.toSet(),
-          initial: initialAssignValue(kind),
+          initial: initialAssignValue(all, kind),
         );
         if (done && mounted) clearPicked();
     }
