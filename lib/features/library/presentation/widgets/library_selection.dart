@@ -130,6 +130,7 @@ Future<bool> assignToSelection(
   BuildContext context, {
   required TrackGroupKind kind,
   required Set<String> ids,
+  String initial = '',
 }) async {
   final l10n = context.l10n;
   final library = context.read<LibraryCubit>();
@@ -137,7 +138,7 @@ Future<bool> assignToSelection(
   final value = await showDialog<String>(
     context: context,
     useRootNavigator: true,
-    builder: (_) => _AssignDialog(kind: kind),
+    builder: (_) => _AssignDialog(kind: kind, initial: initial),
   );
   if (value == null || !context.mounted) return false;
   final name = value.trim();
@@ -203,16 +204,19 @@ String _confirmOf(
 
 /// 지정할 값 입력. 누르면 값, 취소하면 null. 비워 두면 "알 수 없는 …"이 된다.
 class _AssignDialog extends StatefulWidget {
-  const _AssignDialog({required this.kind});
+  const _AssignDialog({required this.kind, required this.initial});
 
   final TrackGroupKind kind;
+
+  /// 처음 채워 둘 값 (앨범 화면에서 앨범 지정이면 그 앨범 이름).
+  final String initial;
 
   @override
   State<_AssignDialog> createState() => _AssignDialogState();
 }
 
 class _AssignDialogState extends State<_AssignDialog> {
-  final _value = TextEditingController();
+  late final _value = TextEditingController(text: widget.initial);
 
   @override
   void dispose() {
@@ -236,10 +240,11 @@ class _AssignDialogState extends State<_AssignDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            l10n.selectAssignHint,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
+          Text(switch (widget.kind) {
+            TrackGroupKind.artist => l10n.selectAssignHintArtist,
+            TrackGroupKind.album => l10n.selectAssignHintAlbum,
+            TrackGroupKind.genre => l10n.selectAssignHintGenre,
+          }, style: Theme.of(context).textTheme.bodySmall),
           const SizedBox(height: AppSpacing.sm),
           AppTextField(
             label: label,
@@ -255,7 +260,7 @@ class _AssignDialogState extends State<_AssignDialog> {
           variant: PillVariant.tonal,
           onPressed: () => Navigator.of(context).pop(),
         ),
-        PillButton(label: l10n.selectConfirmApply, onPressed: _next),
+        PillButton(label: l10n.selectNext, onPressed: _next),
       ],
     );
   }
@@ -307,6 +312,9 @@ mixin TrackPicker<T extends StatefulWidget> on State<T> {
   }
 
   /// 목록 맨 아래에 비워 둘 높이 (선택 막대에 마지막 곡이 가리지 않게).
+  /// 값 입력창에 처음 채워 둘 값. 앨범 화면에서 앨범 지정이면 그 앨범 이름처럼, 화면이 정한다.
+  String initialAssignValue(TrackGroupKind kind) => '';
+
   double get selectionBottomGap => selecting ? 72 : 0;
 
   /// 복수 작업 시트를 띄우고 고른 작업을 한다.
@@ -335,6 +343,7 @@ mixin TrackPicker<T extends StatefulWidget> on State<T> {
           context,
           kind: kind,
           ids: ids.toSet(),
+          initial: initialAssignValue(kind),
         );
         if (done && mounted) clearPicked();
     }

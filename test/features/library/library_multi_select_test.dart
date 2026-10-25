@@ -77,10 +77,10 @@ void main() {
     await tester.tap(find.text('장르 지정'));
     await tester.pumpAndSettle();
     await tester.enterText(_dialogField, '재즈');
-    await tester.tap(find.text('바꾸기'));
+    await tester.tap(find.text('다음'));
     await tester.pumpAndSettle();
     // 적용 전 확인창.
-    expect(find.textContaining('고른 2곡의 장르가 "재즈"'), findsOneWidget);
+    expect(find.textContaining('고른 2곡의 장르를 바꿀까요?'), findsOneWidget);
     await tester.tap(find.text('바꾸기'));
     await tester.pumpAndSettle();
 
@@ -102,7 +102,7 @@ void main() {
     await tester.tap(find.text('앨범 지정'));
     await tester.pumpAndSettle();
     await tester.enterText(_dialogField, '새 앨범');
-    await tester.tap(find.text('바꾸기'));
+    await tester.tap(find.text('다음'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('취소'));
     await tester.pumpAndSettle();
@@ -135,12 +135,22 @@ void main() {
     expect(find.text('3곡 선택'), findsOneWidget);
     await tester.tap(find.text('작업'));
     await tester.pumpAndSettle();
+    // 앨범 화면에서 앨범 지정이면 이 앨범 이름이 미리 채워져 있다.
+    await tester.tap(find.text('앨범 지정'));
+    await tester.pumpAndSettle();
+    expect(tester.widget<EditableText>(_dialogField).controller.text, '앨범');
+    await tester.tap(find.text('취소'));
+    await tester.pumpAndSettle();
+    // 다른 종류(장르)는 비어 있다.
+    await tester.tap(find.text('작업'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('장르 지정'));
     await tester.pumpAndSettle();
+    expect(tester.widget<EditableText>(_dialogField).controller.text, '');
     await tester.enterText(_dialogField, '재즈');
-    await tester.tap(find.text('바꾸기'));
+    await tester.tap(find.text('다음'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('고른 3곡의 장르가 "재즈"'), findsOneWidget);
+    expect(find.textContaining('고른 3곡의 장르를 바꿀까요?'), findsOneWidget);
     await tester.tap(find.text('바꾸기'));
     await tester.pumpAndSettle();
     expect(find.text('3곡 선택'), findsNothing);

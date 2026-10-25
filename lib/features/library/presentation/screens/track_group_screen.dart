@@ -36,6 +36,10 @@ class _TrackGroupScreenState extends State<TrackGroupScreen>
   TrackGroupKind get kind => widget.kind;
   String get name => widget.name;
 
+  /// 이 묶음과 같은 종류를 지정할 때는 이 묶음 이름을 미리 채워 둔다.
+  @override
+  String initialAssignValue(TrackGroupKind k) => k == kind ? name : '';
+
   String _title(AppLocalizations l10n) => switch (kind) {
     TrackGroupKind.artist => name.isEmpty ? l10n.unknownArtist : name,
     TrackGroupKind.album => name.isEmpty ? l10n.unknownAlbum : name,

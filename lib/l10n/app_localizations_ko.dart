@@ -2842,31 +2842,27 @@ class AppLocalizationsKo extends AppLocalizations {
   String get selectAssignGenre => '장르 지정';
 
   @override
-  String get selectAssignHint =>
-      '고른 곡들에 한 번에 지정할 값을 적어요. 비워 두면 \"알 수 없는 …\"이 돼요.';
+  String get selectAssignAlbumTitle => '앨범 바꾸기';
 
   @override
-  String get selectAssignAlbumTitle => '앨범을 지정해요';
+  String get selectAssignArtistTitle => '아티스트 바꾸기';
 
   @override
-  String get selectAssignArtistTitle => '아티스트를 지정해요';
-
-  @override
-  String get selectAssignGenreTitle => '장르를 지정해요';
+  String get selectAssignGenreTitle => '장르 바꾸기';
 
   @override
   String selectConfirmAlbum(int count, String value) {
-    return '고른 $count곡의 앨범이 \"$value\"(으)로 바뀌어요. 다른 앨범 묶음에서는 빠지고, 음악 파일의 태그도 다시 써요.';
+    return '고른 $count곡의 앨범을 바꿀까요?\n\n새 앨범: $value\n\n이 곡들은 다른 앨범에서 빠지고, 음악 파일 정보도 함께 바뀌어요.';
   }
 
   @override
   String selectConfirmArtist(int count, String value) {
-    return '고른 $count곡의 아티스트가 \"$value\"(으)로 바뀌어요. 다른 아티스트 묶음에서는 빠지고, 음악 파일의 태그도 다시 써요.';
+    return '고른 $count곡의 아티스트를 바꿀까요?\n\n새 아티스트: $value\n\n이 곡들은 다른 아티스트에서 빠지고, 음악 파일 정보도 함께 바뀌어요.';
   }
 
   @override
   String selectConfirmGenre(int count, String value) {
-    return '고른 $count곡의 장르가 \"$value\"(으)로 바뀌어요. 다른 장르 묶음에서는 빠지고, 음악 파일의 태그도 다시 써요.';
+    return '고른 $count곡의 장르를 바꿀까요?\n\n새 장르: $value\n\n이 곡들은 다른 장르에서 빠지고, 음악 파일 정보도 함께 바뀌어요.';
   }
 
   @override
@@ -2879,4 +2875,19 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get selectActions => '작업';
+
+  @override
+  String get selectAssignHintAlbum =>
+      '고른 곡 모두에 넣을 앨범 이름을 적어요. 비워 두면 앨범 정보가 없는 곡이 돼요.';
+
+  @override
+  String get selectAssignHintArtist =>
+      '고른 곡 모두에 넣을 아티스트 이름을 적어요. 비워 두면 아티스트 정보가 없는 곡이 돼요.';
+
+  @override
+  String get selectAssignHintGenre =>
+      '고른 곡 모두에 넣을 장르를 적어요. 비워 두면 장르 정보가 없는 곡이 돼요.';
+
+  @override
+  String get selectNext => '다음';
 }

@@ -5312,46 +5312,40 @@ abstract class AppLocalizations {
   /// **'장르 지정'**
   String get selectAssignGenre;
 
-  /// No description provided for @selectAssignHint.
-  ///
-  /// In ko, this message translates to:
-  /// **'고른 곡들에 한 번에 지정할 값을 적어요. 비워 두면 \"알 수 없는 …\"이 돼요.'**
-  String get selectAssignHint;
-
   /// No description provided for @selectAssignAlbumTitle.
   ///
   /// In ko, this message translates to:
-  /// **'앨범을 지정해요'**
+  /// **'앨범 바꾸기'**
   String get selectAssignAlbumTitle;
 
   /// No description provided for @selectAssignArtistTitle.
   ///
   /// In ko, this message translates to:
-  /// **'아티스트를 지정해요'**
+  /// **'아티스트 바꾸기'**
   String get selectAssignArtistTitle;
 
   /// No description provided for @selectAssignGenreTitle.
   ///
   /// In ko, this message translates to:
-  /// **'장르를 지정해요'**
+  /// **'장르 바꾸기'**
   String get selectAssignGenreTitle;
 
   /// No description provided for @selectConfirmAlbum.
   ///
   /// In ko, this message translates to:
-  /// **'고른 {count}곡의 앨범이 \"{value}\"(으)로 바뀌어요. 다른 앨범 묶음에서는 빠지고, 음악 파일의 태그도 다시 써요.'**
+  /// **'고른 {count}곡의 앨범을 바꿀까요?\n\n새 앨범: {value}\n\n이 곡들은 다른 앨범에서 빠지고, 음악 파일 정보도 함께 바뀌어요.'**
   String selectConfirmAlbum(int count, String value);
 
   /// No description provided for @selectConfirmArtist.
   ///
   /// In ko, this message translates to:
-  /// **'고른 {count}곡의 아티스트가 \"{value}\"(으)로 바뀌어요. 다른 아티스트 묶음에서는 빠지고, 음악 파일의 태그도 다시 써요.'**
+  /// **'고른 {count}곡의 아티스트를 바꿀까요?\n\n새 아티스트: {value}\n\n이 곡들은 다른 아티스트에서 빠지고, 음악 파일 정보도 함께 바뀌어요.'**
   String selectConfirmArtist(int count, String value);
 
   /// No description provided for @selectConfirmGenre.
   ///
   /// In ko, this message translates to:
-  /// **'고른 {count}곡의 장르가 \"{value}\"(으)로 바뀌어요. 다른 장르 묶음에서는 빠지고, 음악 파일의 태그도 다시 써요.'**
+  /// **'고른 {count}곡의 장르를 바꿀까요?\n\n새 장르: {value}\n\n이 곡들은 다른 장르에서 빠지고, 음악 파일 정보도 함께 바뀌어요.'**
   String selectConfirmGenre(int count, String value);
 
   /// No description provided for @selectConfirmApply.
@@ -5371,6 +5365,30 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'작업'**
   String get selectActions;
+
+  /// No description provided for @selectAssignHintAlbum.
+  ///
+  /// In ko, this message translates to:
+  /// **'고른 곡 모두에 넣을 앨범 이름을 적어요. 비워 두면 앨범 정보가 없는 곡이 돼요.'**
+  String get selectAssignHintAlbum;
+
+  /// No description provided for @selectAssignHintArtist.
+  ///
+  /// In ko, this message translates to:
+  /// **'고른 곡 모두에 넣을 아티스트 이름을 적어요. 비워 두면 아티스트 정보가 없는 곡이 돼요.'**
+  String get selectAssignHintArtist;
+
+  /// No description provided for @selectAssignHintGenre.
+  ///
+  /// In ko, this message translates to:
+  /// **'고른 곡 모두에 넣을 장르를 적어요. 비워 두면 장르 정보가 없는 곡이 돼요.'**
+  String get selectAssignHintGenre;
+
+  /// No description provided for @selectNext.
+  ///
+  /// In ko, this message translates to:
+  /// **'다음'**
+  String get selectNext;
 }
 
 class _AppLocalizationsDelegate

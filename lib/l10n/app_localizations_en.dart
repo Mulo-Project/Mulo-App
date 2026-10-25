@@ -2919,31 +2919,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectAssignGenre => 'Set genre';
 
   @override
-  String get selectAssignHint =>
-      'Enter one value to set on all the selected songs. Leave it empty for \"Unknown …\".';
+  String get selectAssignAlbumTitle => 'Change album';
 
   @override
-  String get selectAssignAlbumTitle => 'Set album';
+  String get selectAssignArtistTitle => 'Change artist';
 
   @override
-  String get selectAssignArtistTitle => 'Set artist';
-
-  @override
-  String get selectAssignGenreTitle => 'Set genre';
+  String get selectAssignGenreTitle => 'Change genre';
 
   @override
   String selectConfirmAlbum(int count, String value) {
-    return 'The album of the $count selected songs will become \"$value\". They leave their other album groups, and the tags in the music files are rewritten.';
+    return 'Change the album of the $count selected songs?\n\nNew album: $value\n\nThey leave their other albums, and the music files\' info changes too.';
   }
 
   @override
   String selectConfirmArtist(int count, String value) {
-    return 'The artist of the $count selected songs will become \"$value\". They leave their other artist groups, and the tags in the music files are rewritten.';
+    return 'Change the artist of the $count selected songs?\n\nNew artist: $value\n\nThey leave their other artists, and the music files\' info changes too.';
   }
 
   @override
   String selectConfirmGenre(int count, String value) {
-    return 'The genre of the $count selected songs will become \"$value\". They leave their other genre groups, and the tags in the music files are rewritten.';
+    return 'Change the genre of the $count selected songs?\n\nNew genre: $value\n\nThey leave their other genres, and the music files\' info changes too.';
   }
 
   @override
@@ -2956,4 +2952,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get selectActions => 'Actions';
+
+  @override
+  String get selectAssignHintAlbum =>
+      'Enter the album for all selected songs. Leave it empty to clear the album.';
+
+  @override
+  String get selectAssignHintArtist =>
+      'Enter the artist for all selected songs. Leave it empty to clear the artist.';
+
+  @override
+  String get selectAssignHintGenre =>
+      'Enter the genre for all selected songs. Leave it empty to clear the genre.';
+
+  @override
+  String get selectNext => 'Next';
 }
