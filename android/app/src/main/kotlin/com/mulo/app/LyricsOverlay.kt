@@ -388,6 +388,7 @@ object LyricsOverlay {
                     startY = e.rawY
                     moved = false
                     longPressed = false
+                    followAnimator?.cancel()
                     lastScrollAt = System.currentTimeMillis()
                     main.postDelayed(longPress, ViewConfiguration.getLongPressTimeout().toLong())
                 }
@@ -637,10 +638,14 @@ object LyricsOverlay {
         applyGap(expandedHeight())
     }
 
+    /** 현재 줄은 흰색 굵은 글씨, 나머지는 흐린 보통 글씨. 크기는 같게 두어 줄이 바뀌어도 목록 높이가 변하지 않는다(따라가기가 바로 정확히 맞는다). */
     private fun styleLine(v: TextView, active: Boolean) {
         v.setTextColor(if (active) 0xFFFFFFFF.toInt() else 0x8CFFFFFF.toInt())
-        v.setTextSize(TypedValue.COMPLEX_UNIT_SP, if (active) 18f else 14f)
+        v.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+        v.typeface = if (active) Typeface.DEFAULT_BOLD else Typeface.create("sans-serif-medium", Typeface.NORMAL)
     }
+
+    private var followAnimator: ValueAnimator? = null
 
     /** 강조를 [index] 줄로 옮기고, 손으로 넘기는 중이 아니면 그 줄이 가운데에 오도록 목록을 따라가게 한다. */
     private fun setActive(index: Int, smooth: Boolean) {
@@ -653,10 +658,32 @@ object LyricsOverlay {
         val follow = !smooth || System.currentTimeMillis() - lastScrollAt >= FOLLOW_PAUSE_MS
         if (!follow) return
         val sv = scroll ?: return
-        sv.post {
-            val v = lineViews.getOrNull(slot) ?: return@post
-            val target = (v.top + v.height / 2 - sv.height / 2).coerceAtLeast(0)
-            if (smooth) sv.smoothScrollTo(0, target) else sv.scrollTo(0, target)
+        followTo(sv, slot, smooth)
+    }
+
+    /**
+     * [slot] 줄을 목록 가운데로 옮긴다. 줄 크기가 안 변하므로 위치를 바로 계산해 짧게(약 150ms) 미끄러뜨린다
+     * (기본 부드러운 스크롤보다 빠르다). 아직 배치 전이면 한 프레임 뒤에 다시 한다.
+     */
+    private fun followTo(sv: ScrollView, slot: Int, smooth: Boolean) {
+        val v = lineViews.getOrNull(slot) ?: return
+        val rows = list
+        if (v.height == 0 || sv.height == 0 || rows == null) {
+            sv.post { followTo(sv, slot, smooth) }
+            return
+        }
+        val maxScroll = (rows.height - sv.height).coerceAtLeast(0)
+        val target = (v.top + v.height / 2 - sv.height / 2).coerceIn(0, maxScroll)
+        followAnimator?.cancel()
+        if (!smooth || Math.abs(target - sv.scrollY) < 2) {
+            sv.scrollTo(0, target)
+            return
+        }
+        followAnimator = ValueAnimator.ofInt(sv.scrollY, target).apply {
+            duration = 150
+            interpolator = android.view.animation.DecelerateInterpolator()
+            addUpdateListener { sv.scrollTo(0, it.animatedValue as Int) }
+            start()
         }
     }
 
