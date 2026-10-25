@@ -11,6 +11,7 @@ import '../../../covers/presentation/widgets/decorate_sheet.dart';
 import '../../domain/entities/track_group.dart';
 import '../bloc/library_cubit.dart';
 import '../widgets/lazy_track_list.dart';
+import '../widgets/library_selection.dart';
 import '../widgets/play_shuffle_row.dart';
 import '../widgets/rename_progress.dart';
 import '../widgets/track_list_tile.dart';
@@ -20,11 +21,20 @@ export '../../domain/entities/track_group.dart';
 /// 아티스트 · 앨범 · 장르 화면: 그 묶음의 곡 목록과 전체 재생 · 셔플, 위 막대에 이름 바꾸기 · 꾸미기.
 /// 세 화면은 모양이 같고 이름 · 아이콘 · 문구만 다르다 ([TrackGroupKind]).
 /// [name]은 곡에 저장된 값 그대로이고, 빈 문자열이면 "알 수 없는 …"이다.
-class TrackGroupScreen extends StatelessWidget {
+class TrackGroupScreen extends StatefulWidget {
   const TrackGroupScreen({super.key, required this.kind, required this.name});
 
   final TrackGroupKind kind;
   final String name;
+
+  @override
+  State<TrackGroupScreen> createState() => _TrackGroupScreenState();
+}
+
+class _TrackGroupScreenState extends State<TrackGroupScreen>
+    with TrackPicker<TrackGroupScreen> {
+  TrackGroupKind get kind => widget.kind;
+  String get name => widget.name;
 
   String _title(AppLocalizations l10n) => switch (kind) {
     TrackGroupKind.artist => name.isEmpty ? l10n.unknownArtist : name,
@@ -79,95 +89,105 @@ class TrackGroupScreen extends StatelessWidget {
 
     return SafeArea(
       bottom: false,
-      child: LazyTrackList(
-        padding: EdgeInsets.only(
-          bottom: AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
-        ),
-        header: [
-          AppTopBar(
-            title: title,
-            leading: const AppBackButton(),
-            actions: [
-              if (tracks.isNotEmpty)
-                CircleIconButton(
-                  icon: AppIcons.edit,
-                  tooltip: _renameTooltip(l10n),
-                  onPressed: () => _rename(context, tracks.length),
-                ),
-              // 장르는 이미지 · 색을 따로 꾸미지 않는다.
-              if (kind != TrackGroupKind.genre)
-                CircleIconButton(
-                  icon: AppIcons.sparkle,
-                  tooltip: kind == TrackGroupKind.artist
-                      ? l10n.decorateArtistTooltip
-                      : l10n.decorateAlbumTooltip,
-                  onPressed: () => showDecorateSheet(
-                    context,
-                    coverKey: key,
-                    title: title,
-                    tone: toneFor(title),
-                    icon: _icon,
-                  ),
-                ),
-            ],
-          ),
-          if (tracks.isEmpty)
-            Padding(
-              padding: AppSpacing.screen,
-              child: Text(
-                _notFound(l10n),
-                style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
-              ),
-            )
-          else ...[
-            Padding(
-              padding: AppSpacing.screen,
-              child: Row(
-                children: [
-                  ArtworkBox(
-                    size: 96,
-                    radius: radius,
-                    image: coverImageOf(context, key),
-                    tone: toneFor(title),
-                    color: coverColorOf(context, key),
-                    icon: _icon,
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: text.titleLarge,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          subtitle,
-                          style: text.bodyMedium?.copyWith(
-                            color: p.onSurfaceMuted,
-                          ),
-                        ),
-                      ],
+      child: Stack(
+        children: [
+          LazyTrackList(
+            padding: EdgeInsets.only(
+              bottom:
+                  AppSpacing.lg +
+                  MediaQuery.paddingOf(context).bottom +
+                  selectionBottomGap,
+            ),
+            header: [
+              AppTopBar(
+                title: title,
+                leading: const AppBackButton(),
+                actions: [
+                  if (tracks.isNotEmpty)
+                    CircleIconButton(
+                      icon: AppIcons.edit,
+                      tooltip: _renameTooltip(l10n),
+                      onPressed: () => _rename(context, tracks.length),
                     ),
-                  ),
+                  // 장르는 이미지 · 색을 따로 꾸미지 않는다.
+                  if (kind != TrackGroupKind.genre)
+                    CircleIconButton(
+                      icon: AppIcons.sparkle,
+                      tooltip: kind == TrackGroupKind.artist
+                          ? l10n.decorateArtistTooltip
+                          : l10n.decorateAlbumTooltip,
+                      onPressed: () => showDecorateSheet(
+                        context,
+                        coverKey: key,
+                        title: title,
+                        tone: toneFor(title),
+                        icon: _icon,
+                      ),
+                    ),
                 ],
               ),
+              if (tracks.isEmpty)
+                Padding(
+                  padding: AppSpacing.screen,
+                  child: Text(
+                    _notFound(l10n),
+                    style: text.bodyMedium?.copyWith(color: p.onSurfaceMuted),
+                  ),
+                )
+              else ...[
+                Padding(
+                  padding: AppSpacing.screen,
+                  child: Row(
+                    children: [
+                      ArtworkBox(
+                        size: 96,
+                        radius: radius,
+                        image: coverImageOf(context, key),
+                        tone: toneFor(title),
+                        color: coverColorOf(context, key),
+                        icon: _icon,
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: text.titleLarge,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              subtitle,
+                              style: text.bodyMedium?.copyWith(
+                                color: p.onSurfaceMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                PlayShuffleRow(tracks: tracks),
+                const SizedBox(height: AppSpacing.sm),
+              ],
+            ],
+            trackCount: tracks.length,
+            trackBuilder: (context, i) => TrackListTile(
+              track: tracks[i],
+              queue: tracks,
+              index: i,
+              // 앨범 화면에서는 줄마다 앨범 이름을 다시 쓰지 않는다.
+              showAlbum: kind != TrackGroupKind.album,
+              selection: selectionFor(tracks[i]),
             ),
-            const SizedBox(height: AppSpacing.md),
-            PlayShuffleRow(tracks: tracks),
-            const SizedBox(height: AppSpacing.sm),
-          ],
+          ),
+          // 하나라도 고르면 하단에 선택 막대가 올라온다.
+          ?selectionBar(all, tracks),
         ],
-        trackCount: tracks.length,
-        trackBuilder: (context, i) => TrackListTile(
-          track: tracks[i],
-          queue: tracks,
-          index: i,
-          // 앨범 화면에서는 줄마다 앨범 이름을 다시 쓰지 않는다.
-          showAlbum: kind != TrackGroupKind.album,
-        ),
       ),
     );
   }

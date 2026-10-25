@@ -111,4 +111,38 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('새 앨범'), findsNothing);
   });
+
+  testWidgets('앨범 화면에서도 길게 눌러 고르고 장르를 한꺼번에 지정한다', (tester) async {
+    await setUpTestDependencies(
+      tracks: [_t('t1', '첫 곡'), _t('t2', '둘째 곡'), _t('t3', '셋째 곡')],
+    );
+    tester.view.physicalSize = const Size(1170, 2532);
+    tester.view.devicePixelRatio = 3;
+    tester.platformDispatcher.localesTestValue = const [Locale('ko')];
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearLocalesTestValue);
+    await tester.pumpWidget(MusicApp(initialLocation: Routes.album('앨범')));
+    await tester.pumpAndSettle();
+
+    await tester.longPress(find.text('첫 곡'));
+    await tester.pumpAndSettle();
+    expect(find.text('정보 편집'), findsNothing);
+    expect(find.text('1곡 선택'), findsOneWidget);
+    await tester.tap(find.text('작업'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('모두 선택'));
+    await tester.pumpAndSettle();
+    expect(find.text('3곡 선택'), findsOneWidget);
+    await tester.tap(find.text('작업'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('장르 지정'));
+    await tester.pumpAndSettle();
+    await tester.enterText(_dialogField, '재즈');
+    await tester.tap(find.text('바꾸기'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('고른 3곡의 장르가 "재즈"'), findsOneWidget);
+    await tester.tap(find.text('바꾸기'));
+    await tester.pumpAndSettle();
+    expect(find.text('3곡 선택'), findsNothing);
+  });
 }

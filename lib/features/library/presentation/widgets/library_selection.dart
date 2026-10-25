@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/router.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../domain/entities/track.dart';
 import '../../domain/entities/track_group.dart';
+import 'track_list_tile.dart' show TrackSelection;
 import '../bloc/library_cubit.dart';
 import 'rename_progress.dart';
 
@@ -254,5 +258,85 @@ class _AssignDialogState extends State<_AssignDialog> {
         PillButton(label: l10n.selectConfirmApply, onPressed: _next),
       ],
     );
+  }
+}
+
+/// 곡 목록 화면의 여러 곡 선택 상태 · 동작 (보관함 곡 탭, 앨범 · 아티스트 · 장르 화면이 같이 쓴다).
+/// 길게 눌러 하나라도 고르면 선택 모드이고, [selectionBar]가 하단 막대를 만든다.
+mixin TrackPicker<T extends StatefulWidget> on State<T> {
+  /// 고른 곡 id. 비어 있지 않으면 선택 모드.
+  final picked = <String>{};
+
+  bool get selecting => picked.isNotEmpty;
+
+  void togglePick(String id) => setState(() {
+    picked.contains(id) ? picked.remove(id) : picked.add(id);
+  });
+
+  void clearPicked() => setState(picked.clear);
+
+  /// 고른 곡 id (목록에서 사라진 곡은 뺀다).
+  List<String> pickedIds(List<Track> all) => [
+    for (final t in all)
+      if (picked.contains(t.id)) t.id,
+  ];
+
+  bool allPicked(List<Track> shown) =>
+      shown.isNotEmpty && shown.every((t) => picked.contains(t.id));
+
+  /// 곡 줄에 넘길 선택 상태.
+  TrackSelection selectionFor(Track t) => TrackSelection(
+    active: selecting,
+    selected: picked.contains(t.id),
+    onToggle: () => togglePick(t.id),
+  );
+
+  /// 하단 선택 막대 (선택 모드가 아니면 null). 탭 틀 · 시스템 바 위에 뜨도록 아래 여백을 더한다.
+  Widget? selectionBar(List<Track> all, List<Track> shown) {
+    if (!selecting) return null;
+    return Positioned(
+      left: AppSpacing.md,
+      right: AppSpacing.md,
+      bottom: AppSpacing.sm + MediaQuery.paddingOf(context).bottom,
+      child: LibrarySelectionBottomBar(
+        count: picked.length,
+        onClose: clearPicked,
+        onActions: () => _runActions(all, shown),
+      ),
+    );
+  }
+
+  /// 목록 맨 아래에 비워 둘 높이 (선택 막대에 마지막 곡이 가리지 않게).
+  double get selectionBottomGap => selecting ? 72 : 0;
+
+  /// 복수 작업 시트를 띄우고 고른 작업을 한다.
+  Future<void> _runActions(List<Track> all, List<Track> shown) async {
+    final ids = pickedIds(all);
+    final action = await showSelectionActionSheet(
+      context,
+      ids.length,
+      allPicked: allPicked(shown),
+    );
+    if (action == null || !mounted) return;
+    switch (action) {
+      case SelectionAction.selectAll:
+        setState(() => picked.addAll(shown.map((t) => t.id)));
+      case SelectionAction.addToPlaylist:
+        await context.push(Routes.playlistPick, extra: ids);
+      case SelectionAction.album ||
+          SelectionAction.artist ||
+          SelectionAction.genre:
+        final kind = switch (action) {
+          SelectionAction.album => TrackGroupKind.album,
+          SelectionAction.artist => TrackGroupKind.artist,
+          _ => TrackGroupKind.genre,
+        };
+        final done = await assignToSelection(
+          context,
+          kind: kind,
+          ids: ids.toSet(),
+        );
+        if (done && mounted) clearPicked();
+    }
   }
 }

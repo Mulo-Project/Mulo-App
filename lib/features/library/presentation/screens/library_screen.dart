@@ -13,7 +13,6 @@ import '../../domain/entities/library_sort.dart';
 import '../../domain/entities/track.dart';
 import '../bloc/library_cubit.dart';
 import '../bloc/library_import_cubit.dart';
-import '../../domain/entities/track_group.dart';
 import '../widgets/library_selection.dart';
 import '../widgets/track_list_tile.dart';
 
@@ -28,7 +27,8 @@ class LibraryScreen extends StatefulWidget {
   State<LibraryScreen> createState() => _LibraryScreenState();
 }
 
-class _LibraryScreenState extends State<LibraryScreen> {
+class _LibraryScreenState extends State<LibraryScreen>
+    with TrackPicker<LibraryScreen> {
   LibraryTab _tab = LibraryTab.songs;
 
   /// 탭마다 고른 정렬. 탭에 맞는 기준만 고를 수 있다 ([_sortOptions]).
@@ -37,21 +37,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
   /// 탭마다 고른 방향(true 오름차순). 비어 있으면 그 기준의 기본 방향 ([defaultAscending]).
   final _ascending = <LibraryTab, bool>{};
   String _query = '';
-
-  /// 곡 탭에서 길게 눌러 고른 곡 id. 비어 있지 않으면 선택 모드.
-  final _picked = <String>{};
-
-  void _toggle(String id) => setState(() {
-    _picked.contains(id) ? _picked.remove(id) : _picked.add(id);
-  });
-
-  void _clearPicked() => setState(_picked.clear);
-
-  /// 고른 곡 id (목록에서 사라진 곡은 뺀다).
-  List<String> _pickedIds(List<Track> all) => [
-    for (final t in all)
-      if (_picked.contains(t.id)) t.id,
-  ];
 
   static const _songSorts = [
     LibrarySort.name,
@@ -111,7 +96,6 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final importing = context.select((LibraryImportCubit c) => c.state.running);
     final tracks = _filtered(all, l10n);
     final vm = context.read<NowPlayingCubit>();
-    final selecting = _picked.isNotEmpty;
 
     // 모든 탭은 보이는 줄만 만든다 (곡 · 앨범 · 아티스트가 수천 개여도 탭 전환이 느려지지 않게).
     // 그룹 탭은 줄을 만드는 함수만 모아 두고, 아래 SliverList.builder가 필요할 때 부른다.
@@ -251,7 +235,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
                           },
                           onChanged: (t) => setState(() {
                             _tab = t;
-                            _picked.clear();
+                            picked.clear();
                           }),
                         ),
                       ),
@@ -337,61 +321,17 @@ class _LibraryScreenState extends State<LibraryScreen> {
                     height:
                         AppSpacing.lg +
                         MediaQuery.paddingOf(context).bottom +
-                        (selecting ? 72 : 0),
+                        selectionBottomGap,
                   ),
                 ),
               ],
             ),
             // 하나라도 고르면 하단에 선택 막대가 올라온다.
-            if (selecting)
-              Positioned(
-                left: AppSpacing.md,
-                right: AppSpacing.md,
-                bottom: AppSpacing.sm + MediaQuery.paddingOf(context).bottom,
-                child: LibrarySelectionBottomBar(
-                  count: _picked.length,
-                  onClose: _clearPicked,
-                  onActions: () => _runActions(all, tracks),
-                ),
-              ),
+            ?selectionBar(all, tracks),
           ],
         ),
       ),
     );
-  }
-
-  bool _allPicked(List<Track> tracks) =>
-      tracks.isNotEmpty && tracks.every((t) => _picked.contains(t.id));
-
-  /// 복수 작업 시트를 띄우고 고른 작업을 한다.
-  Future<void> _runActions(List<Track> all, List<Track> shown) async {
-    final ids = _pickedIds(all);
-    final action = await showSelectionActionSheet(
-      context,
-      ids.length,
-      allPicked: _allPicked(shown),
-    );
-    if (action == null || !mounted) return;
-    switch (action) {
-      case SelectionAction.selectAll:
-        setState(() => _picked.addAll(shown.map((t) => t.id)));
-      case SelectionAction.addToPlaylist:
-        await context.push(Routes.playlistPick, extra: ids);
-      case SelectionAction.album ||
-          SelectionAction.artist ||
-          SelectionAction.genre:
-        final kind = switch (action) {
-          SelectionAction.album => TrackGroupKind.album,
-          SelectionAction.artist => TrackGroupKind.artist,
-          _ => TrackGroupKind.genre,
-        };
-        final done = await assignToSelection(
-          context,
-          kind: kind,
-          ids: ids.toSet(),
-        );
-        if (done && mounted) _clearPicked();
-    }
   }
 
   Widget _songTile(BuildContext context, Track t, int i, List<Track> queue) =>
@@ -400,11 +340,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
         track: t,
         queue: queue,
         index: i,
-        selection: TrackSelection(
-          active: _picked.isNotEmpty,
-          selected: _picked.contains(t.id),
-          onToggle: () => _toggle(t.id),
-        ),
+        selection: selectionFor(t),
       );
 
   void _import() => context.read<LibraryImportCubit>().importDeviceMusic();
