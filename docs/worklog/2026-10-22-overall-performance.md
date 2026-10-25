@@ -47,3 +47,4 @@
 
 ## 남은 일 · 질문
 - 시작 시 cubit 19개 생성(앱 전체 MultiBlocProvider)은 실기기 측정 후 판단.
+- 앨범 · 아티스트 · 장르 화면을 `TrackGroupScreen`(+ `TrackGroupKind`) 하나로 묶음. 세 화면 파일은 이름만 넘기는 얇은 껍데기. 아티스트 · 장르에도 이름 바꾸기 추가, 곡이 4곡 이상이면 진행 대화상자(`showProgressWhile`, "N/M곡")로 일괄 수정 (`LibraryCubit.renameGroup`이 `renameAlbum`을 대체).

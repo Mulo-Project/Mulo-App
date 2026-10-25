@@ -1428,6 +1428,32 @@ class AppLocalizationsKo extends AppLocalizations {
   String get albumRenameDone => '앨범 이름을 바꿨어요';
 
   @override
+  String get artistRenameTooltip => '아티스트 이름 바꾸기';
+
+  @override
+  String get artistRenameTitle => '아티스트 이름 바꾸기';
+
+  @override
+  String get artistRenameHint => '아티스트 이름';
+
+  @override
+  String get genreRenameTooltip => '장르 이름 바꾸기';
+
+  @override
+  String get genreRenameTitle => '장르 이름 바꾸기';
+
+  @override
+  String get genreRenameHint => '장르 이름';
+
+  @override
+  String get renameProgressTitle => '곡 정보를 고치는 중이에요';
+
+  @override
+  String renameProgressCount(int done, int total) {
+    return '$done/$total곡';
+  }
+
+  @override
   String get artistNotFound => '아티스트를 찾을 수 없어요';
 
   @override

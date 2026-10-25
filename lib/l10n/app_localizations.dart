@@ -2726,6 +2726,54 @@ abstract class AppLocalizations {
   /// **'앨범 이름을 바꿨어요'**
   String get albumRenameDone;
 
+  /// No description provided for @artistRenameTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'아티스트 이름 바꾸기'**
+  String get artistRenameTooltip;
+
+  /// No description provided for @artistRenameTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'아티스트 이름 바꾸기'**
+  String get artistRenameTitle;
+
+  /// No description provided for @artistRenameHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'아티스트 이름'**
+  String get artistRenameHint;
+
+  /// No description provided for @genreRenameTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'장르 이름 바꾸기'**
+  String get genreRenameTooltip;
+
+  /// No description provided for @genreRenameTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'장르 이름 바꾸기'**
+  String get genreRenameTitle;
+
+  /// No description provided for @genreRenameHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'장르 이름'**
+  String get genreRenameHint;
+
+  /// No description provided for @renameProgressTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 정보를 고치는 중이에요'**
+  String get renameProgressTitle;
+
+  /// No description provided for @renameProgressCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'{done}/{total}곡'**
+  String renameProgressCount(int done, int total);
+
   /// No description provided for @artistNotFound.
   ///
   /// In ko, this message translates to:

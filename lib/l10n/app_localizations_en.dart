@@ -1465,6 +1465,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get albumRenameDone => 'Album renamed';
 
   @override
+  String get artistRenameTooltip => 'Rename artist';
+
+  @override
+  String get artistRenameTitle => 'Rename artist';
+
+  @override
+  String get artistRenameHint => 'Artist name';
+
+  @override
+  String get genreRenameTooltip => 'Rename genre';
+
+  @override
+  String get genreRenameTitle => 'Rename genre';
+
+  @override
+  String get genreRenameHint => 'Genre name';
+
+  @override
+  String get renameProgressTitle => 'Updating songs';
+
+  @override
+  String renameProgressCount(int done, int total) {
+    return '$done/$total';
+  }
+
+  @override
   String get artistNotFound => 'Artist not found';
 
   @override
