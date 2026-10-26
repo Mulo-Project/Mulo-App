@@ -112,3 +112,4 @@
 | 2026-10-26 | [내 YouTube 구독 채널 가져오기 · 구독 채널의 재생목록](2026-10-26-import-youtube-subscriptions.md) | 진행 중 (PR 대기) |
 | 2026-10-26 | [앱을 껐다 켜도 미리 듣기 미니 플레이어 복원](2026-10-26-preview-restore-mini-player.md) | 진행 중 (PR 대기) |
 | 2026-10-26 | [Android 구글 로그인 유지](2026-10-26-android-keep-google-login.md) | 완료 (PR 대기) |
+| 2026-10-26 | [불안정한 테스트 안정화](2026-10-26-flaky-tests.md) | 진행 중 (PR 대기) |
