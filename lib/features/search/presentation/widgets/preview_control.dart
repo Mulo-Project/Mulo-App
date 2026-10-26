@@ -32,6 +32,7 @@ Future<void> togglePreview(
     final message = switch (failure) {
       EngineFailure.unavailable => l10n.searchPreviewUnavailable,
       EngineFailure.network => l10n.searchNetworkBody,
+      EngineFailure.timeout => l10n.stateTimeoutBody,
       EngineFailure.notFound => l10n.searchNotFoundBody,
       _ => l10n.searchPreviewFailed,
     };

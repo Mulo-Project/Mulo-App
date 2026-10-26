@@ -14,6 +14,9 @@ enum EmptyKind {
   /// 네트워크 연결이 있어야 보이는 화면인데 끊겼다.
   network,
 
+  /// 연결은 됐는데 응답이 너무 오래 걸려 멈췄다 (끊긴 [network]와 구분).
+  timeout,
+
   /// 로그인해야 보이는 화면인데 로그인하지 않았다.
   signIn,
 }
@@ -36,6 +39,16 @@ class EmptyState extends StatelessWidget {
   /// 네트워크 연결이 필요하다는 안내. [onRetry]가 있으면 "다시 시도" 버튼이 붙는다.
   const EmptyState.network({super.key, this.body, VoidCallback? onRetry})
     : kind = EmptyKind.network,
+      title = null,
+      icon = null,
+      action = null,
+      compact = false,
+      iconSize = null,
+      onAction = onRetry;
+
+  /// 응답이 너무 오래 걸려 시간 초과로 멈췄다는 안내. [onRetry]가 있으면 "다시 시도" 버튼이 붙는다.
+  const EmptyState.timeout({super.key, this.body, VoidCallback? onRetry})
+    : kind = EmptyKind.timeout,
       title = null,
       icon = null,
       action = null,
@@ -67,7 +80,7 @@ class EmptyState extends StatelessWidget {
   /// 목록 · 카드 안에 끼는 한 줄 안내: 위아래 여백을 줄이고 제목도 옅은 본문 글자로 그린다.
   final bool compact;
 
-  /// network · signIn 종류의 버튼이 누를 때 하는 일.
+  /// network · timeout · signIn 종류의 버튼이 누를 때 하는 일.
   final VoidCallback? onAction;
 
   @override
@@ -89,6 +102,17 @@ class EmptyState extends StatelessWidget {
         shownIcon = AppIcons.wifiOff;
         shownTitle = l10n.stateNetworkTitle;
         shownBody = body ?? l10n.stateNetworkBody;
+        shownAction = onAction == null
+            ? null
+            : PillButton(
+                label: l10n.actionRetry,
+                icon: AppIcons.refresh,
+                onPressed: onAction,
+              );
+      case EmptyKind.timeout:
+        shownIcon = AppIcons.hourglassEmpty;
+        shownTitle = l10n.stateTimeoutTitle;
+        shownBody = body ?? l10n.stateTimeoutBody;
         shownAction = onAction == null
             ? null
             : PillButton(

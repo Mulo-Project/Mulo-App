@@ -389,7 +389,7 @@ class LocalEngine implements DownloaderEngine {
     } on ProcessException {
       throw const EngineException(EngineFailure.unavailable, 'yt-dlp');
     } on TimeoutException {
-      throw const EngineException(EngineFailure.network, 'timeout');
+      throw const EngineException(EngineFailure.timeout, 'timeout');
     }
     if (r.exitCode != 0) {
       final err = r.stderr.trim();

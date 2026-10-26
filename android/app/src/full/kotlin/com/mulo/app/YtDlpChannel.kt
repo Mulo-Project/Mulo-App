@@ -35,7 +35,14 @@ class YtDlpChannel(private val context: Context, messenger: BinaryMessenger) {
                         result.error("bad_args", "url required", null)
                         return@setMethodCallHandler
                     }
-                    run(result) { execute(url, options) }
+                    val id = call.argument<String>("id")
+                    run(result) { execute(url, options, id) }
+                }
+                // 시간 초과로 Dart가 포기한 실행을 끊는다 (실행 줄이 막혀 다음 요청이 밀리지 않게 io 밖에서).
+                "cancel" -> {
+                    val id = call.argument<String>("id")
+                    val ok = id != null && YoutubeDL.getInstance().destroyProcessById(id)
+                    result.success(ok)
                 }
                 "update" -> run(result) {
                     YoutubeDL.updateYoutubeDL(context, YoutubeDL.UpdateChannel.STABLE)
@@ -55,7 +62,7 @@ class YtDlpChannel(private val context: Context, messenger: BinaryMessenger) {
         }
     }
 
-    private fun execute(url: String, options: List<String>): Map<String, Any?> {
+    private fun execute(url: String, options: List<String>, id: String?): Map<String, Any?> {
         val request = YoutubeDLRequest(url)
         // "-f 값"처럼 값이 붙는 옵션은 짝으로 넘긴다. 하나씩 따로 넣으면 라이브러리가
         // 옵션을 키로 모아 순서가 뒤섞여 yt-dlp가 값을 주소로 읽을 수 있다.
@@ -72,7 +79,7 @@ class YtDlpChannel(private val context: Context, messenger: BinaryMessenger) {
             }
         }
         return try {
-            val r = YoutubeDL.getInstance().execute(request)
+            val r = YoutubeDL.getInstance().execute(request, id)
             mapOf("exitCode" to r.exitCode, "stdout" to r.out, "stderr" to r.err)
         } catch (e: YoutubeDLException) {
             // yt-dlp가 0이 아닌 코드로 끝난 경우: 메시지에 stderr가 들어 있다.

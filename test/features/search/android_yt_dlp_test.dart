@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -30,6 +31,7 @@ void main() {
     expect(seen!.arguments, {
       'url': 'ytsearch5:노래',
       'options': ['--flat-playlist', '--dump-json'],
+      'id': seen!.arguments['id'],
     });
     expect(r.stdout, 'out');
   });
@@ -50,5 +52,25 @@ void main() {
       throwsA(isA<ProcessException>()),
     );
     expect(await LocalEngine(run: android.run).isAvailable(), isFalse);
+  });
+
+  testWidgets('run: 응답이 없으면 시간 초과를 던지고 네이티브 실행을 끊는다', (tester) async {
+    final calls = <String>[];
+    mock((call) {
+      calls.add(call.method);
+      return call.method == 'run'
+          ? Completer<Object?>().future
+          : Future.value(true);
+    });
+    Object? error;
+    AndroidYtDlp(channel: channel)
+        .run('yt-dlp', ['ytsearch1:x'])
+        .catchError((Object e) {
+          error = e;
+          return (exitCode: 0, stdout: '', stderr: '');
+        });
+    await tester.pump(ytDlpTimeout + const Duration(seconds: 1));
+    expect(error, isA<TimeoutException>());
+    expect(calls, ['run', 'cancel']);
   });
 }
