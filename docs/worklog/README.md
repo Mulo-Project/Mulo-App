@@ -117,3 +117,4 @@
 | 2026-10-26 | [불안정한 테스트 안정화](2026-10-26-flaky-tests.md) | 진행 중 (PR 대기) |
 | 2026-10-26 | [구독 화면 임시 확인 영역 삭제](2026-10-26-remove-subscription-test-area.md) | 완료 |
 | 2026-10-26 | [구독 채널 가져오기 500개 제한 해제](2026-10-26-subscription-import-pagination.md) | 완료 |
+| 2026-10-26 | [Android yt-dlp 번들 버전으로 되돌리기](2026-10-26-ytdlp-revert-bundled.md) | 진행 중 (PR 대기) |

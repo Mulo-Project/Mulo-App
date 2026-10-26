@@ -10,4 +10,8 @@ abstract interface class EngineManager {
 
   /// 앱이 받아 둔 yt-dlp를 지운다 (받은 것이 없으면 아무것도 하지 않는다). 지운 뒤 상태를 돌려준다.
   Future<EngineStatus> remove();
+
+  /// 업데이트로 받은 yt-dlp를 지우고 앱에 들어 있는 버전으로 되돌린다 (Android full).
+  /// 되돌릴 수 없는 기기면 [UnsupportedError], 실패하면 그 밖의 예외를 던진다.
+  Future<EngineStatus> revertToBundled();
 }

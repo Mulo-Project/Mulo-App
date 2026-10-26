@@ -19,6 +19,22 @@ void main() {
         .setMockMethodCallHandler(channel, null),
   );
 
+  test('revert: 네이티브에 revert를 부르고, 실패하면 예외를 던진다', () async {
+    final calls = <String>[];
+    mock((call) async {
+      calls.add(call.method);
+      return null;
+    });
+    await AndroidYtDlp(channel: channel).revert();
+    expect(calls, ['revert']);
+
+    mock((call) async => throw PlatformException(code: 'ytdlp_failed'));
+    expect(
+      AndroidYtDlp(channel: channel).revert(),
+      throwsA(isA<PlatformException>()),
+    );
+  });
+
   test('run: 마지막 인자는 url, 나머지는 옵션으로 보낸다', () async {
     MethodCall? seen;
     mock((call) async {
