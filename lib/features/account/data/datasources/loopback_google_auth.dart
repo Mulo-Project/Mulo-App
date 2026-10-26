@@ -323,7 +323,7 @@ class LoopbackGoogleAuth implements GoogleAuthSource {
     } on SocketException catch (e) {
       throw AccountException(AccountFailure.network, e.message);
     } on TimeoutException {
-      throw const AccountException(AccountFailure.network, 'timeout');
+      throw const AccountException(AccountFailure.timeout, 'timeout');
     } on HttpException catch (e) {
       throw AccountException(AccountFailure.network, e.message);
     }

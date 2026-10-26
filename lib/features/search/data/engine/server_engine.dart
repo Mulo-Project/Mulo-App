@@ -216,7 +216,7 @@ class ServerEngine implements DownloaderEngine {
     } on SocketException catch (e) {
       throw EngineException(EngineFailure.network, e.message);
     } on TimeoutException {
-      throw const EngineException(EngineFailure.network, 'timeout');
+      throw const EngineException(EngineFailure.timeout, 'timeout');
     } on HttpException catch (e) {
       throw EngineException(EngineFailure.network, e.message);
     }

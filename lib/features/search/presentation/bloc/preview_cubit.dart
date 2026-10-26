@@ -160,7 +160,7 @@ class PreviewCubit extends Cubit<PreviewState> {
           .timeout(
             _resolveTimeout,
             onTimeout: () => throw const EngineException(
-              EngineFailure.failed,
+              EngineFailure.timeout,
               'resolve timeout (60s): 주소를 읽지 못함',
             ),
           );
@@ -168,7 +168,7 @@ class PreviewCubit extends Cubit<PreviewState> {
       await _play(stream).timeout(
         _playTimeout,
         onTimeout: () => throw EngineException(
-          EngineFailure.failed,
+          EngineFailure.timeout,
           'play timeout (30s): ${Uri.tryParse(stream.url)?.host} ${stream.url.contains('.m3u8') ? 'm3u8' : ''}',
         ),
       );

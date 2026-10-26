@@ -84,7 +84,7 @@ MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부�
 | `MenuRow` | menu_row.dart | 메뉴 시트의 한 줄 (아이콘 + 글자, 삭제는 `destructive` 경고 색). 면 · 테두리 없이 줄만, 가로 여백 없이 시트 제목과 왼쪽 선을 맞춘다 |
 | `showAppSheet` · `AppSheetTitle` · `appSheetPadding` | app_sheet.dart | 공통 바텀 시트 (손잡이 · 윗모서리 `AppRadii.sheet` · 최상위 내비게이터), 시트 제목(titleLarge + 작은 부제), 안쪽 여백 |
 | `EmptyState` | empty_state.dart | 빈 화면 · 안내 묶음: (강조 색 아이콘 40) · 제목(titleMedium) · 옅은 설명 · (버튼), 가운데 정렬. 인자는 모두 선택이라 제목만 주면 한 줄, 목록 · 카드 안이면 `compact: true` |
-| `EmptyState.network` · `EmptyState.signIn` | empty_state.dart | 같은 모양의 "네트워크 연결이 필요해요"(와이파이 빗금 아이콘 + 다시 시도) · "로그인이 필요해요"(자물쇠 아이콘 + 로그인) 안내. 문구는 ARB `stateNetwork*` · `stateSignIn*` |
+| `EmptyState.network` · `EmptyState.timeout` · `EmptyState.signIn` | empty_state.dart | 같은 모양의 "네트워크 연결이 필요해요"(와이파이 빗금 아이콘 + 다시 시도) · "응답이 너무 오래 걸려요"(모래시계 아이콘 + 다시 시도, 시간 초과) · "로그인이 필요해요"(자물쇠 아이콘 + 로그인) 안내. 문구는 ARB `stateNetwork*` · `stateTimeout*` · `stateSignIn*` |
 | `LoadingIndicator` · `LoadingState` | loading_indicator.dart | 앱 전체의 불러오는 중 표시(강조 색 동그라미) 하나. 영역은 가운데 `LoadingState`(+문구), 버튼 · 줄 안은 `LoadingIndicator.small`. 화면 위에 얇게 깔아 자리를 비우지 않는 곳(곡 자세히 · 웹 페이지 화면)은 `LoadingBar`(2px 막대) |
 | `AppBackButton` | back_button.dart | 위 막대 왼쪽 뒤로 가기 (기본은 화면 닫기) |
 | `AppDivider` | app_divider.dart | 얇은 구분선 한 줄(윤곽 색) |

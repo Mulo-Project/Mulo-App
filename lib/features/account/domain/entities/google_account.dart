@@ -37,6 +37,9 @@ enum AccountFailure {
   cancelled,
   network,
 
+  /// 정해 둔 시간 안에 응답이 오지 않았다.
+  timeout,
+
   /// 로그인이 풀렸거나 유튜브 읽기 권한이 없다.
   unauthorized,
 

@@ -574,6 +574,7 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
   static String _engineMessage(EngineException e) => switch (e.failure) {
     EngineFailure.unavailable => '받을 수 있는 엔진이 없어요',
     EngineFailure.network => '네트워크에 닿지 못했어요',
+    EngineFailure.timeout => '응답이 너무 오래 걸려요',
     EngineFailure.unauthorized => '서버가 로그인을 요구해요',
     EngineFailure.notFound => '찾을 수 없는 주소예요',
     EngineFailure.failed => e.message.isEmpty ? '주소를 읽지 못했어요' : e.message,

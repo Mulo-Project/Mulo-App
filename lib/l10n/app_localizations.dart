@@ -302,6 +302,18 @@ abstract class AppLocalizations {
   /// **'연결을 확인한 뒤 다시 시도해 주세요.'**
   String get stateNetworkBody;
 
+  /// No description provided for @stateTimeoutTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'응답이 너무 오래 걸려요'**
+  String get stateTimeoutTitle;
+
+  /// No description provided for @stateTimeoutBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'잠시 후 다시 시도해 주세요.'**
+  String get stateTimeoutBody;
+
   /// No description provided for @stateSignInTitle.
   ///
   /// In ko, this message translates to:
@@ -4004,12 +4016,6 @@ abstract class AppLocalizations {
   /// **'다른 검색어로 찾아 보세요.'**
   String get playlistImportNoResultsBody;
 
-  /// No description provided for @playlistImportBackToResults.
-  ///
-  /// In ko, this message translates to:
-  /// **'검색 결과로'**
-  String get playlistImportBackToResults;
-
   /// No description provided for @playlistImportLoading.
   ///
   /// In ko, this message translates to:
@@ -5389,6 +5395,108 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'다음'**
   String get selectNext;
+
+  /// No description provided for @playlistImportChannels.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독 채널의 재생목록'**
+  String get playlistImportChannels;
+
+  /// No description provided for @channelPickTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'채널 고르기'**
+  String get channelPickTitle;
+
+  /// No description provided for @channelPickEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'아직 구독한 채널이 없어요. 아래에서 내 YouTube 구독 채널을 가져올 수 있어요.'**
+  String get channelPickEmpty;
+
+  /// No description provided for @channelPlaylistsUploads.
+  ///
+  /// In ko, this message translates to:
+  /// **'업로드한 영상 전체'**
+  String get channelPlaylistsUploads;
+
+  /// No description provided for @channelImportOpen.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 YouTube 구독에서 채널 고르기'**
+  String get channelImportOpen;
+
+  /// No description provided for @channelImportTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 구독 채널'**
+  String get channelImportTitle;
+
+  /// No description provided for @channelImportHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독할 채널을 눌러 골라요. 한꺼번에 가져오지 않고 고른 채널만 추가해요.'**
+  String get channelImportHint;
+
+  /// No description provided for @channelImportAlready.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독 중'**
+  String get channelImportAlready;
+
+  /// No description provided for @channelImportEmptyTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독한 채널이 없어요'**
+  String get channelImportEmptyTitle;
+
+  /// No description provided for @channelImportEmptyBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 구글 계정으로 YouTube에서 구독한 채널이 없어요.'**
+  String get channelImportEmptyBody;
+
+  /// No description provided for @channelImportSignInBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 YouTube 구독 채널을 불러오려면 구글 로그인이 필요해요.'**
+  String get channelImportSignInBody;
+
+  /// No description provided for @channelImportSelectCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}개 채널 선택'**
+  String channelImportSelectCount(int count);
+
+  /// No description provided for @channelImportSelectNew.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 채널 모두 선택'**
+  String get channelImportSelectNew;
+
+  /// No description provided for @channelImportSubscribe.
+  ///
+  /// In ko, this message translates to:
+  /// **'고른 채널 구독하기'**
+  String get channelImportSubscribe;
+
+  /// No description provided for @channelImportConfirmTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'채널 구독'**
+  String get channelImportConfirmTitle;
+
+  /// No description provided for @channelImportConfirmBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'고른 {count}개 채널을 구독할까요? 지금부터 올라오는 영상을 알려 드려요.'**
+  String channelImportConfirmBody(int count);
+
+  /// No description provided for @channelImportDone.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}개 채널을 구독했어요'**
+  String channelImportDone(int count);
 }
 
 class _AppLocalizationsDelegate

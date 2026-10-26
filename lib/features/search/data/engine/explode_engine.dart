@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
@@ -65,7 +66,10 @@ class YoutubeExplodeEngine implements DownloaderEngine {
     try {
       return await _inner.searchPlaylists(query, page: page, size: size);
     } on EngineException catch (e) {
-      if (e.failure == EngineFailure.network) rethrow;
+      if (e.failure == EngineFailure.network ||
+          e.failure == EngineFailure.timeout) {
+        rethrow;
+      }
       try {
         // 이 라이브러리는 응답이 없으면 끝없이 기다리므로 시간을 둔다.
         return await _playlistSearch(
@@ -73,6 +77,8 @@ class YoutubeExplodeEngine implements DownloaderEngine {
           page,
           size,
         ).timeout(const Duration(seconds: 30));
+      } on TimeoutException {
+        throw const EngineException(EngineFailure.timeout, 'timeout');
       } on Object {
         throw e;
       }

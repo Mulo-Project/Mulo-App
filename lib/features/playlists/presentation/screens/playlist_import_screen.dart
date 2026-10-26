@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/config/app_config.dart';
 import '../../../../core/design/design.dart';
 import '../../../../app/router.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../account/domain/entities/google_account.dart';
-import '../../../account/presentation/bloc/account_cubit.dart';
+import '../../../account/presentation/widgets/sign_in_flow.dart';
+import '../widgets/channel_pick_sheet.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../library/domain/entities/track.dart' show formatDuration;
 import '../../../search/domain/entities/engine_exception.dart';
@@ -47,44 +47,28 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
 
   void _load() => _cubit.submit(_controller.text);
 
+  /// 마지막으로 연 구글 계정 목록을 다시 연다 (로그인이 풀렸을 때의 "로그인" · "다시 시도" 버튼).
+  Future<void> Function() _reopen = () async {};
+
   /// 내 재생목록: 로그인돼 있지 않으면 먼저 로그인한 뒤 불러온다.
   Future<void> _openMine() async {
-    final account = context.read<AccountCubit>();
-    final messenger = ScaffoldMessenger.of(context);
-    final l10n = context.l10n;
-    final support = account.state.support;
-    if (support != AccountSupport.available) {
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            support == AccountSupport.notConfigured
-                ? l10n.settingsAccountNotConfigured(
-                    AppConfig.googleRequiredKeys,
-                  )
-                : l10n.settingsAccountUnsupported,
-          ),
-        ),
-      );
-      return;
-    }
-    if (!account.state.signedIn) {
-      final allow = await showDialog<bool>(
-        context: context,
-        useRootNavigator: true,
-        builder: (_) => const _SignInPromptDialog(),
-      );
-      if (allow != true) return;
-      if (await account.signIn() == null) {
-        if (account.state.failure != null) {
-          messenger.showSnackBar(
-            SnackBar(content: Text(l10n.settingsAccountFailed)),
-          );
-        }
-        return;
-      }
-    }
-    if (!mounted) return;
+    _reopen = _openMine;
+    if (!await ensureGoogleSignIn(context) || !mounted) return;
     await _cubit.loadMine();
+  }
+
+  /// 구독 채널의 재생목록: 채널을 고르면 그 채널의 업로드 전체와 재생목록을 보여 준다.
+  Future<void> _openChannels() async {
+    final channel = await showChannelPickSheet(context);
+    if (channel == null || !mounted) return;
+    final uploads = context.l10n.channelPlaylistsUploads;
+    Future<void> open() async {
+      _reopen = open;
+      if (!await ensureGoogleSignIn(context) || !mounted) return;
+      await _cubit.loadChannel(channel.id, channel.name, uploads);
+    }
+
+    await open();
   }
 
   Future<void> _start() async {
@@ -178,13 +162,24 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
                             ),
                           ),
                         ),
+                        Padding(
+                          padding: AppSpacing.screen.copyWith(
+                            top: 0,
+                            bottom: AppSpacing.xs,
+                          ),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: PillButton(
+                              label: l10n.playlistImportChannels,
+                              icon: AppIcons.person,
+                              variant: PillVariant.tonal,
+                              onPressed: _openChannels,
+                            ),
+                          ),
+                        ),
                       ],
                       Expanded(
-                        child: _Body(
-                          onRetry: _load,
-                          onSignIn: _openMine,
-                          onCancel: viewing ? _cubit.backToResults : null,
-                        ),
+                        child: _Body(onRetry: _load, onSignIn: () => _reopen()),
                       ),
                       _Footer(starting: _starting, onStart: _start),
                     ],
@@ -199,39 +194,10 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
   }
 }
 
-/// 로그인하지 않고 "내 재생목록"을 눌렀을 때: 구글 로그인을 할지 묻는다.
-class _SignInPromptDialog extends StatelessWidget {
-  const _SignInPromptDialog();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return AppDialog(
-      title: l10n.playlistImportSignInPromptTitle,
-      body: l10n.playlistImportSignInPromptBody,
-      actions: [
-        PillButton(
-          label: l10n.actionCancel,
-          variant: PillVariant.tonal,
-          onPressed: () => Navigator.of(context).pop(false),
-        ),
-        PillButton(
-          label: l10n.playlistImportSignInAllow,
-          icon: AppIcons.person,
-          onPressed: () => Navigator.of(context).pop(true),
-        ),
-      ],
-    );
-  }
-}
-
 class _Body extends StatelessWidget {
-  const _Body({required this.onRetry, required this.onSignIn, this.onCancel});
+  const _Body({required this.onRetry, required this.onSignIn});
 
   final VoidCallback onRetry;
-
-  /// 곡 목록을 읽는 중에 그만두고 찾은 목록으로 돌아가기 (열어 보는 중일 때만).
-  final VoidCallback? onCancel;
 
   /// 내 재생목록을 읽으려면 로그인해야 할 때 누르는 버튼의 동작.
   final VoidCallback onSignIn;
@@ -256,29 +222,7 @@ class _Body extends StatelessWidget {
           l10n.playlistImportEmptyBody,
         );
       case PlaylistImportStatus.loading:
-        // 곡이 많은 재생목록은 오래 걸리므로, 잘못 열었으면 바로 돌아갈 수 있게 한다.
-        if (onCancel == null) return const LoadingState();
-        return Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const LoadingIndicator(),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                l10n.playlistImportLoading,
-                style: Theme.of(context).textTheme.bodyMedium
-                    ?.copyWith(color: context.palette.onSurfaceMuted),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              PillButton(
-                label: l10n.playlistImportBackToResults,
-                icon: AppIcons.back,
-                variant: PillVariant.tonal,
-                onPressed: onCancel,
-              ),
-            ],
-          ),
-        );
+        return LoadingState(label: l10n.playlistImportLoading);
       case PlaylistImportStatus.results:
         if (state.results.isEmpty) {
           return state.mine
@@ -296,6 +240,7 @@ class _Body extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: AppSpacing.md),
           children: [
             if (state.mine) SectionTitle(l10n.playlistImportMineTitle),
+            if (state.channel.isNotEmpty) SectionTitle(state.channel),
             for (final hit in state.results)
               _ResultRow(
                 hit: hit,
@@ -304,19 +249,28 @@ class _Body extends StatelessWidget {
           ],
         );
       case PlaylistImportStatus.failed:
-        if (state.mine && state.accountFailure == AccountFailure.network) {
+        if (state.fromAccount &&
+            state.accountFailure == AccountFailure.network) {
           return EmptyState.network(onRetry: onSignIn);
         }
-        if (state.mine && state.accountFailure == AccountFailure.unauthorized) {
+        if (state.fromAccount &&
+            state.accountFailure == AccountFailure.unauthorized) {
           return EmptyState.signIn(
             body: l10n.playlistImportLoginExpiredBody,
             onSignIn: onSignIn,
           );
         }
-        if (!state.mine && state.failure == EngineFailure.network) {
+        if (!state.fromAccount && state.failure == EngineFailure.network) {
           return EmptyState.network(onRetry: onRetry);
         }
-        if (state.mine) {
+        if (state.fromAccount &&
+            state.accountFailure == AccountFailure.timeout) {
+          return EmptyState.timeout(onRetry: onSignIn);
+        }
+        if (!state.fromAccount && state.failure == EngineFailure.timeout) {
+          return EmptyState.timeout(onRetry: onRetry);
+        }
+        if (state.fromAccount) {
           final expired = state.accountFailure == AccountFailure.unauthorized;
           final noChannel = state.accountFailure == AccountFailure.noChannel;
           final body = switch (state.accountFailure) {

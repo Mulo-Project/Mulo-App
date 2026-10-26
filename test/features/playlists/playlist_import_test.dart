@@ -41,6 +41,7 @@ _setUp(MediaInfo info) {
       CreatePlaylist(lists),
       FindExistingDownload(queue),
       AddTracksToPlaylist(lists),
+      FetchChannelPlaylists(FakeAccountRepository()),
     ),
     queue: queue,
     lists: lists,
@@ -155,6 +156,7 @@ void _searchTests() {
       CreatePlaylist(lists),
       FindExistingDownload(queue),
       AddTracksToPlaylist(lists),
+      FetchChannelPlaylists(FakeAccountRepository()),
     );
 
     await cubit.submit('운동');
@@ -185,6 +187,7 @@ void _searchTests() {
       CreatePlaylist(MemoryPlaylistRepository()),
       FindExistingDownload(q),
       AddTracksToPlaylist(MemoryPlaylistRepository()),
+      FetchChannelPlaylists(FakeAccountRepository()),
     );
     await cubit.submit(_url);
     expect(engine.playlistSearches, isEmpty);

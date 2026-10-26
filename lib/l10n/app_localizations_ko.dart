@@ -116,6 +116,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get stateNetworkBody => '연결을 확인한 뒤 다시 시도해 주세요.';
 
   @override
+  String get stateTimeoutTitle => '응답이 너무 오래 걸려요';
+
+  @override
+  String get stateTimeoutBody => '잠시 후 다시 시도해 주세요.';
+
+  @override
   String get stateSignInTitle => '로그인이 필요해요';
 
   @override
@@ -2124,9 +2130,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playlistImportNoResultsBody => '다른 검색어로 찾아 보세요.';
 
   @override
-  String get playlistImportBackToResults => '검색 결과로';
-
-  @override
   String get playlistImportLoading => '곡 목록을 읽는 중이에요';
 
   @override
@@ -2890,4 +2893,62 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get selectNext => '다음';
+
+  @override
+  String get playlistImportChannels => '구독 채널의 재생목록';
+
+  @override
+  String get channelPickTitle => '채널 고르기';
+
+  @override
+  String get channelPickEmpty =>
+      '아직 구독한 채널이 없어요. 아래에서 내 YouTube 구독 채널을 가져올 수 있어요.';
+
+  @override
+  String get channelPlaylistsUploads => '업로드한 영상 전체';
+
+  @override
+  String get channelImportOpen => '내 YouTube 구독에서 채널 고르기';
+
+  @override
+  String get channelImportTitle => '내 구독 채널';
+
+  @override
+  String get channelImportHint => '구독할 채널을 눌러 골라요. 한꺼번에 가져오지 않고 고른 채널만 추가해요.';
+
+  @override
+  String get channelImportAlready => '구독 중';
+
+  @override
+  String get channelImportEmptyTitle => '구독한 채널이 없어요';
+
+  @override
+  String get channelImportEmptyBody => '이 구글 계정으로 YouTube에서 구독한 채널이 없어요.';
+
+  @override
+  String get channelImportSignInBody => '내 YouTube 구독 채널을 불러오려면 구글 로그인이 필요해요.';
+
+  @override
+  String channelImportSelectCount(int count) {
+    return '$count개 채널 선택';
+  }
+
+  @override
+  String get channelImportSelectNew => '새 채널 모두 선택';
+
+  @override
+  String get channelImportSubscribe => '고른 채널 구독하기';
+
+  @override
+  String get channelImportConfirmTitle => '채널 구독';
+
+  @override
+  String channelImportConfirmBody(int count) {
+    return '고른 $count개 채널을 구독할까요? 지금부터 올라오는 영상을 알려 드려요.';
+  }
+
+  @override
+  String channelImportDone(int count) {
+    return '$count개 채널을 구독했어요';
+  }
 }

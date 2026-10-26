@@ -71,6 +71,18 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                     ],
                   ),
                 ),
+                Padding(
+                  padding: AppSpacing.screen.copyWith(bottom: AppSpacing.sm),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: PillButton(
+                      label: l10n.channelImportOpen,
+                      icon: AppIcons.person,
+                      variant: PillVariant.tonal,
+                      onPressed: () => context.push(Routes.channelImport),
+                    ),
+                  ),
+                ),
                 Expanded(
                   child: state.channels.isEmpty
                       // 구독이 없으면 안내를 남은 자리 한가운데에 둔다.

@@ -30,9 +30,13 @@ class LibrarySelectionBottomBar extends StatelessWidget {
     required this.count,
     required this.onClose,
     required this.onActions,
+    this.countLabel,
   });
 
   final int count;
+
+  /// 선택 수 글(비우면 "N곡 선택"). 곡이 아닌 것을 고르는 화면이 바꾼다.
+  final String? countLabel;
   final VoidCallback onClose;
   final VoidCallback onActions;
 
@@ -57,7 +61,7 @@ class LibrarySelectionBottomBar extends StatelessWidget {
             const SizedBox(width: AppSpacing.xs),
             Expanded(
               child: Text(
-                l10n.selectCount(count),
+                countLabel ?? l10n.selectCount(count),
                 style: text.titleSmall,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

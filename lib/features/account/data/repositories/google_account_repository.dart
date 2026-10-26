@@ -4,6 +4,7 @@ import 'dart:io';
 
 import '../../../../core/config/app_config.dart';
 import '../../../search/domain/entities/media_info.dart';
+import '../../../subscriptions/domain/entities/channel_hit.dart';
 import '../../domain/entities/google_account.dart';
 import '../datasources/google_auth_source.dart';
 import '../datasources/google_sign_in_auth_source.dart';
@@ -43,6 +44,9 @@ class GoogleAccountRepository implements AccountRepository {
   /// 한 번에 50개씩, 많아도 이만큼 쪽까지만 읽는다.
   static const _maxPages = 6;
 
+  /// 구독 채널은 재생목록보다 많을 수 있어 더 읽는다 (최대 500개).
+  static const _maxSubscriptionPages = 10;
+
   final GoogleAuthSource? _auth;
   final AccountHttpGet _get;
 
@@ -80,14 +84,45 @@ class GoogleAccountRepository implements AccountRepository {
 
   @override
   Future<List<PlaylistHit>> myPlaylists() async {
+    final items = await _listAll('/youtube/v3/playlists', {
+      'part': 'snippet,contentDetails',
+      'mine': 'true',
+    }, _maxPages);
+    return [for (final item in items) ?parsePlaylist(item)];
+  }
+
+  @override
+  Future<List<ChannelHit>> mySubscriptions() async {
+    final items = await _listAll('/youtube/v3/subscriptions', {
+      'part': 'snippet',
+      'mine': 'true',
+      'order': 'alphabetical',
+    }, _maxSubscriptionPages);
+    return [for (final item in items) ?parseSubscription(item)];
+  }
+
+  @override
+  Future<List<PlaylistHit>> channelPlaylists(String channelId) async {
+    final items = await _listAll('/youtube/v3/playlists', {
+      'part': 'snippet,contentDetails',
+      'channelId': channelId,
+    }, _maxPages);
+    return [for (final item in items) ?parsePlaylist(item)];
+  }
+
+  /// 목록 API를 쪽 단위로 끝까지(최대 [maxPages]쪽) 읽어 항목들을 모은다.
+  Future<List<Map<String, dynamic>>> _listAll(
+    String path,
+    Map<String, String> query,
+    int maxPages,
+  ) async {
     final token = await _source.accessToken();
-    final out = <PlaylistHit>[];
+    final out = <Map<String, dynamic>>[];
     String? pageToken;
-    for (var i = 0; i < _maxPages; i++) {
-      final json = await _getJson(token, pageToken);
+    for (var i = 0; i < maxPages; i++) {
+      final json = await _getJson(token, path, query, pageToken);
       for (final item in (json['items'] as List? ?? const [])) {
-        final hit = item is Map<String, dynamic> ? parsePlaylist(item) : null;
-        if (hit != null) out.add(hit);
+        if (item is Map<String, dynamic>) out.add(item);
       }
       pageToken = json['nextPageToken'] as String?;
       if (pageToken == null) break;
@@ -95,10 +130,14 @@ class GoogleAccountRepository implements AccountRepository {
     return out;
   }
 
-  Future<Map<String, dynamic>> _getJson(String token, String? pageToken) async {
-    final uri = Uri.https('www.googleapis.com', '/youtube/v3/playlists', {
-      'part': 'snippet,contentDetails',
-      'mine': 'true',
+  Future<Map<String, dynamic>> _getJson(
+    String token,
+    String path,
+    Map<String, String> query,
+    String? pageToken,
+  ) async {
+    final uri = Uri.https('www.googleapis.com', path, {
+      ...query,
       'maxResults': '50',
       'pageToken': ?pageToken,
     });
@@ -111,7 +150,7 @@ class GoogleAccountRepository implements AccountRepository {
     } on SocketException catch (e) {
       throw AccountException(AccountFailure.network, e.message);
     } on TimeoutException {
-      throw const AccountException(AccountFailure.network, 'timeout');
+      throw const AccountException(AccountFailure.timeout, 'timeout');
     } on HttpException catch (e) {
       throw AccountException(AccountFailure.network, e.message);
     }
@@ -187,5 +226,31 @@ PlaylistHit? parsePlaylist(Map<String, dynamic> item) {
     channel: s['channelTitle'] as String? ?? '',
     thumbnailUrl: thumb,
     trackCount: count is num ? count.round() : null,
+  );
+}
+
+/// YouTube Data API `subscriptions` 항목 하나를 채널 결과로 (채널 id가 없으면 null).
+ChannelHit? parseSubscription(Map<String, dynamic> item) {
+  final snippet = item['snippet'];
+  final s = snippet is Map ? snippet : const {};
+  final resource = s['resourceId'];
+  final id = resource is Map ? resource['channelId'] : null;
+  if (id is! String || id.isEmpty) return null;
+  final thumbs = s['thumbnails'];
+  String? thumb;
+  if (thumbs is Map) {
+    for (final key in const ['medium', 'default', 'high']) {
+      final t = thumbs[key];
+      if (t is Map && t['url'] is String) {
+        thumb = t['url'] as String;
+        break;
+      }
+    }
+  }
+  return ChannelHit(
+    id: id,
+    name: s['title'] as String? ?? '',
+    description: s['description'] as String? ?? '',
+    thumbnailUrl: thumb,
   );
 }
