@@ -19,6 +19,7 @@ import 'package:music_download_play_app/features/search/domain/entities/audio_la
 import 'package:music_download_play_app/features/search/domain/entities/audio_stream.dart';
 import 'package:music_download_play_app/features/search/domain/entities/engine_exception.dart';
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
+import 'package:music_download_play_app/features/search/domain/entities/preview_snapshot.dart';
 import 'package:music_download_play_app/features/search/domain/usecases/search_usecases.dart';
 import 'package:music_download_play_app/features/search/presentation/bloc/preview_cubit.dart';
 import 'package:music_download_play_app/features/search/presentation/screens/media_detail_screen.dart';
@@ -33,6 +34,8 @@ PreviewCubit _cubit(FakeDownloaderEngine e, FakePreviewPlayer p) =>
     PreviewCubit(
       ResolveAudioStream(e),
       PlayPreview(p),
+      RememberPreview(p),
+      CurrentPreview(p),
       SeekPreview(p),
       PausePreview(p),
       ResumePreview(p),
@@ -264,6 +267,58 @@ void main() {
   });
 
   group('PreviewCubit', () {
+    test('듣기를 시작하면 플레이어에 곡을 적어 둔다', () async {
+      final player = FakePreviewPlayer();
+      final cubit = _cubit(FakeDownloaderEngine(info: VideoInfo(_a)), player);
+      await cubit.toggle(_a);
+      await Future<void>.delayed(Duration.zero);
+      expect(player.remembered, [_a]);
+      await cubit.close();
+    });
+
+    test('앱이 켜질 때 플레이어가 소리를 내고 있으면 미니 플레이어 상태를 되살린다', () async {
+      final player = FakePreviewPlayer()
+        ..snapshot = const PreviewSnapshot(
+          hit: _a,
+          position: Duration(seconds: 20),
+          duration: Duration(minutes: 2),
+          paused: true,
+        );
+      final cubit = _cubit(FakeDownloaderEngine(info: VideoInfo(_a)), player);
+      await Future<void>.delayed(Duration.zero);
+      expect(cubit.state.status, PreviewStatus.playing);
+      expect(cubit.state.hitId, 'a');
+      expect(cubit.state.title, 'Song A');
+      expect(cubit.state.paused, isTrue);
+      expect(cubit.state.fraction, closeTo(1 / 6, .001));
+      await cubit.close();
+    });
+
+    test('syncWithPlayer: 화면은 듣는 중인데 플레이어가 멈춰 있으면 화면도 멈춘다', () async {
+      final player = FakePreviewPlayer();
+      final cubit = _cubit(FakeDownloaderEngine(info: VideoInfo(_a)), player);
+      await cubit.toggle(_a);
+      expect(cubit.state.status, PreviewStatus.playing);
+      await cubit.syncWithPlayer();
+      expect(cubit.state.status, PreviewStatus.idle);
+      await cubit.close();
+    });
+
+    test('syncWithPlayer: 알림에서 멈춘 상태가 화면에도 맞춰진다', () async {
+      final player = FakePreviewPlayer();
+      final cubit = _cubit(FakeDownloaderEngine(info: VideoInfo(_a)), player);
+      await cubit.toggle(_a);
+      player.snapshot = const PreviewSnapshot(
+        hit: _a,
+        position: Duration(seconds: 5),
+        paused: true,
+      );
+      await cubit.syncWithPlayer();
+      expect(cubit.state.status, PreviewStatus.playing);
+      expect(cubit.state.paused, isTrue);
+      await cubit.close();
+    });
+
     test('재생 중에 실패하면 멈추고 까닭을 알린다', () async {
       final player = FakePreviewPlayer();
       final cubit = _cubit(FakeDownloaderEngine(info: VideoInfo(_a)), player);

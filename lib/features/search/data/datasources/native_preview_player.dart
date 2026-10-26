@@ -4,7 +4,9 @@ import 'package:flutter/services.dart';
 
 import '../../domain/entities/audio_stream.dart';
 import '../../domain/entities/engine_exception.dart';
+import '../../domain/entities/media_info.dart';
 import '../../domain/entities/preview_progress.dart';
+import '../../domain/entities/preview_snapshot.dart';
 import '../../domain/repositories/preview_player.dart';
 
 /// 미리 듣기 소리를 Android 네이티브(`PreviewChannel`, ExoPlayer)가 낸다 (D-093의 경계: 재생 엔진은 네이티브).
@@ -56,6 +58,37 @@ class NativePreviewPlayer implements PreviewPlayer {
       }
     }
     throw first!;
+  }
+
+  @override
+  Future<void> remember(MediaHit hit) =>
+      _channel.invokeMethod<void>('remember', {
+        'id': hit.id,
+        'title': hit.title,
+        'url': hit.url,
+        'uploader': hit.uploader,
+        'thumbnail': hit.thumbnailUrl,
+      });
+
+  @override
+  Future<PreviewSnapshot?> current() async {
+    final m = await _channel.invokeMapMethod<String, Object?>('current');
+    if (m == null) return null;
+    final duration = m['durationMs'] as num?;
+    return PreviewSnapshot(
+      hit: MediaHit(
+        id: m['id'] as String? ?? '',
+        title: m['title'] as String? ?? '',
+        url: m['url'] as String? ?? '',
+        uploader: m['uploader'] as String? ?? '',
+        thumbnailUrl: m['thumbnail'] as String?,
+      ),
+      position: Duration(milliseconds: (m['positionMs'] as num).toInt()),
+      duration: duration == null
+          ? null
+          : Duration(milliseconds: duration.toInt()),
+      paused: m['paused'] as bool? ?? false,
+    );
   }
 
   @override

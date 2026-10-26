@@ -56,6 +56,8 @@ void registerSearch(GetIt sl) {
     ..registerFactory(() => FetchAudioLanguages(sl()))
     ..registerFactory(() => AudioLanguageCubit(sl()))
     ..registerFactory(() => PlayPreview(sl()))
+    ..registerFactory(() => RememberPreview(sl()))
+    ..registerFactory(() => CurrentPreview(sl()))
     ..registerFactory(() => SeekPreview(sl()))
     ..registerFactory(() => PausePreview(sl()))
     ..registerFactory(() => ResumePreview(sl()))
@@ -64,7 +66,19 @@ void registerSearch(GetIt sl) {
     ..registerFactory(() => WatchPreviewProgress(sl()))
     ..registerFactory(() => WatchPreviewFailures(sl()))
     ..registerFactory(
-      () => PreviewCubit(sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl()),
+      () => PreviewCubit(
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+      ),
     )
     ..registerFactory(() => SearchCubit(sl(), sl()));
 }

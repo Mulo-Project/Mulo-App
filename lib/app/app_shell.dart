@@ -507,7 +507,9 @@ class _PreviewMiniPlayer extends StatelessWidget {
       queueLabel: l10n.searchPreviewStop,
       showSkip: false,
       queueIcon: AppIcons.close,
-      onTap: hit == null ? null : () => showMediaDetail(context, hit),
+      onTap: hit == null || hit.url.isEmpty
+          ? null
+          : () => showMediaDetail(context, hit),
       onPlayPause: loading ? null : cubit.togglePause,
       onQueue: cubit.stop,
     );
