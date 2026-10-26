@@ -139,16 +139,10 @@ void main() {
     expect(downloadSourceKey('not a url'), 'not a url');
   });
 
-  test('변환 방법: mp3는 항상, opus는 최고가 아닐 때만 바꾼다', () {
-    expect(TranscodePlan.of(AudioFormat.mp3, Quality.best)?.bitrateKbps, 192);
-    expect(TranscodePlan.of(AudioFormat.mp3, Quality.normal)?.bitrateKbps, 128);
-    expect(TranscodePlan.of(AudioFormat.mp3, Quality.saver)?.bitrateKbps, 96);
-    expect(TranscodePlan.of(AudioFormat.opus, Quality.best), isNull);
-    expect(
-      TranscodePlan.of(AudioFormat.opus, Quality.normal)?.codec,
-      'libopus',
-    );
-    expect(TranscodePlan.of(AudioFormat.m4a, Quality.saver), isNull);
+  test('변환 방법: mp3만 192kbps로 바꾸고 opus · m4a는 원본 그대로', () {
+    expect(TranscodePlan.of(AudioFormat.mp3)?.bitrateKbps, 192);
+    expect(TranscodePlan.of(AudioFormat.opus), isNull);
+    expect(TranscodePlan.of(AudioFormat.m4a), isNull);
   });
 
   test('저장한 대기열 항목은 JSON을 거쳐도 그대로다', () {
@@ -157,7 +151,6 @@ void main() {
       artist: '가수',
       genre: '팝',
       playlistIds: {'a', 'b'},
-      quality: Quality.saver,
       format: AudioFormat.mp3,
       savePath: '/music/x',
       duration: Duration(seconds: 200),
@@ -170,6 +163,14 @@ void main() {
       url: 'https://youtu.be/abc',
     );
     expect(decodeDownloadRequest(encodeDownloadRequest(request)), request);
+    // 예전에 저장된 대기열의 quality 값은 무시하고 읽는다.
+    expect(
+      decodeDownloadRequest({
+        ...encodeDownloadRequest(request),
+        'quality': 'saver',
+      }),
+      request,
+    );
     expect(
       decodeDownloadRequest(
         encodeDownloadRequest(

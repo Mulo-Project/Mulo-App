@@ -113,7 +113,6 @@ Map<String, dynamic> encodeDownloadRequest(DownloadRequest r) => {
   if (r.album.isNotEmpty) 'album': r.album,
   'genre': r.genre,
   'playlistIds': r.playlistIds.toList(),
-  'quality': r.quality?.name,
   'format': r.format?.name,
   'savePath': r.savePath,
   'durationMs': r.duration?.inMilliseconds,
@@ -154,7 +153,6 @@ DownloadRequest decodeDownloadRequest(Map<String, dynamic> m) {
       art = CoverArt.file(path, transform: t);
     }
   }
-  final quality = m['quality'] as String?;
   final format = m['format'] as String?;
   final durationMs = m['durationMs'] as int?;
   return DownloadRequest(
@@ -163,7 +161,6 @@ DownloadRequest decodeDownloadRequest(Map<String, dynamic> m) {
     album: m['album'] as String? ?? '',
     genre: m['genre'] as String? ?? '',
     playlistIds: {...?(m['playlistIds'] as List<dynamic>?)?.cast<String>()},
-    quality: quality == null ? null : Quality.values.byName(quality),
     format: format == null ? null : AudioFormat.values.byName(format),
     savePath: m['savePath'] as String? ?? '',
     duration: durationMs == null ? null : Duration(milliseconds: durationMs),

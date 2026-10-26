@@ -278,14 +278,7 @@ class MemoryDownloadSettings implements DownloadSettingsRepository {
   @override
   Future<void> saveSavePath(String value) async => path = value;
 
-  Quality quality = Quality.best;
   AudioFormat format = AudioFormat.opus;
-
-  @override
-  Future<Quality> loadQuality() async => quality;
-
-  @override
-  Future<void> saveQuality(Quality value) async => quality = value;
 
   @override
   Future<AudioFormat> loadFormat() async => format;

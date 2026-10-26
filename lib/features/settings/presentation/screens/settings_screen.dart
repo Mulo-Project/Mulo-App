@@ -20,7 +20,7 @@ import '../widgets/settings_theme_section.dart';
 export '../widgets/settings_common.dart' show presetLabel;
 export '../widgets/settings_engine_sections.dart' show DownloadMode;
 
-/// 설정 (상세 기능: 서버 연결·모드 선택 #31, 저장 위치 #23, 기본 음질·포맷 #24,
+/// 설정 (상세 기능: 서버 연결·모드 선택 #31, 저장 위치 #23, 기본 포맷 #24,
 /// 다운로드 엔진 업데이트 #25, 알림 곡 정보 숨기기 #32 + 테마 D-005).
 /// 테마 색(프리셋, 저장됨) · 앱 잠금(PIN · 생체 인증) · 알림 설정만 실제로 동작하고 나머지는 자리 표시.
 class SettingsScreen extends StatefulWidget {
