@@ -161,16 +161,6 @@ void main() {
           const ExistingDownload(inQueue: true);
       final cubit = sl<NewVideosCubit>();
       expect(await cubit.handleDownloadRequest(request), isFalse);
-      expect(
-        await cubit.handleDownloadRequest(
-          const NewVideoDownloadRequest(
-            videoId: 'sample-1',
-            title: 's',
-            channelId: 'sample-a',
-          ),
-        ),
-        isFalse,
-      );
       expect(queue.requests, isEmpty);
     });
   });
@@ -189,25 +179,6 @@ void main() {
       expect(fake.checkedNow, 1);
       expect(cubit.state.checking, isFalse);
       expect(cubit.state.status?.failedChannels, 1);
-    });
-  });
-
-  group('임시 확인 기능', () {
-    test('알림 확인 버튼은 샘플 알림을 한 번 띄운다', () async {
-      await sl<SubscriptionsCubit>().showTestNotification();
-      expect((sl<BackgroundChecker>() as FakeBackgroundChecker).testShown, 1);
-    });
-
-    test('샘플 새 영상은 목록에 보이지만 받기 대기열에는 들어가지 않는다', () async {
-      final cubit = sl<NewVideosCubit>();
-      cubit.showSample();
-      expect(cubit.state.count, 5);
-      cubit.toggleAll();
-      expect(await cubit.startSelected(), 0);
-      final queue = await sl<DownloadQueueRepository>().watchQueue().first;
-      expect(queue, isEmpty);
-      await cubit.markSeen();
-      expect(cubit.state.count, 0);
     });
   });
 }

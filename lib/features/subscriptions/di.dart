@@ -51,7 +51,6 @@ void registerSubscriptions(GetIt sl) {
     ..registerFactory(() => ChannelSearchCubit(sl()))
     ..registerFactory(() => ChannelInfoCubit(sl()))
     ..registerFactory(() => MySubscriptionsCubit(sl()))
-    ..registerFactory(() => ShowTestNewVideosNotification(sl()))
     ..registerLazySingleton(
       () => SubscriptionsCubit(
         sl(),
@@ -62,7 +61,6 @@ void registerSubscriptions(GetIt sl) {
         sl(),
         sl(),
         _backgroundTexts,
-        sl(),
         sl(),
         sl(),
       ),

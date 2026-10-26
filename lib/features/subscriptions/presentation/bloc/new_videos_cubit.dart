@@ -36,7 +36,6 @@ class NewVideosState extends Equatable {
     this.resolved = const {},
     this.selected = const {},
     this.queued = 0,
-    this.sample = false,
     this.seen = const {},
   });
 
@@ -57,9 +56,6 @@ class NewVideosState extends Equatable {
 
   /// 마지막으로 받기 대기열에 넣은 곡 수.
   final int queued;
-
-  /// 화면 모양 확인용 샘플 데이터인지 (받기는 하지 않는다).
-  final bool sample;
 
   /// 분류를 거르는 채널의 영상은 분류를 확인하기 전에는 보이지 않는다.
   bool _visible(SubscribedChannel c, FeedVideo v) =>
@@ -104,7 +100,6 @@ class NewVideosState extends Equatable {
     Set<String>? resolved,
     Set<String>? selected,
     int? queued,
-    bool? sample,
     Set<String>? seen,
   }) => NewVideosState(
     status: status ?? this.status,
@@ -113,7 +108,6 @@ class NewVideosState extends Equatable {
     resolved: resolved ?? this.resolved,
     selected: selected ?? this.selected,
     queued: queued ?? this.queued,
-    sample: sample ?? this.sample,
     seen: seen ?? this.seen,
   );
 
@@ -125,7 +119,6 @@ class NewVideosState extends Equatable {
     resolved,
     selected,
     queued,
-    sample,
     seen,
   ];
 }
@@ -262,10 +255,6 @@ class NewVideosCubit extends Cubit<NewVideosState> {
   /// 고른 영상을 받기 대기열에 넣는다 (이미 받았거나 받는 중인 곡은 건너뛴다). 넣은 곡 수를 돌려준다.
   Future<int> startSelected() async {
     var queued = 0;
-    if (state.sample) {
-      emit(state.copyWith(selected: {}, queued: 0));
-      return 0;
-    }
     for (final g in state.groups) {
       for (final v in g.videos) {
         if (!state.selected.contains(v.id)) continue;
@@ -292,7 +281,6 @@ class NewVideosCubit extends Cubit<NewVideosState> {
   /// 앱이 화면에 없는 상태에서 켜진 것이면 받기를 시작한 뒤 앱을 다시 뒤로 보낸다.
   /// 대기열에 넣었으면 true.
   Future<bool> handleDownloadRequest(NewVideoDownloadRequest request) async {
-    if (request.isSample) return false;
     await _subs.load();
     final channel = _subs.state.channels
         .where((c) => c.id == request.channelId)
@@ -318,7 +306,7 @@ class NewVideosCubit extends Cubit<NewVideosState> {
   /// 지금 보이는 영상을 안내했거나 본 것으로 기록한다 (목록은 그대로 두고 앱을 켤 때 다시 알리지 않는다).
   /// 새 영상 화면을 닫을 때 부른다. 기록은 오래된 것부터 버려 500개까지만 둔다.
   Future<void> acknowledge() async {
-    if (state.sample || isClosed) return;
+    if (isClosed) return;
     final ids = state.visibleIds;
     if (ids.every(state.seen.contains)) return;
     final next = {...state.seen, ...ids};
@@ -329,43 +317,8 @@ class NewVideosCubit extends Cubit<NewVideosState> {
     await _saveSeen?.call(kept);
   }
 
-  /// 화면 모양 확인용 임시 기능: 샘플 새 영상을 채워 넣는다 (실제 구독 · 받기와 무관).
-  void showSample() {
-    ++_generation;
-    final base = DateTime.now().toUtc();
-    const names = ['샘플 채널 A', '샘플 채널 B'];
-    emit(
-      NewVideosState(
-        status: NewVideosStatus.done,
-        sample: true,
-        checked: [
-          for (var c = 0; c < names.length; c++)
-            ChannelNewVideos(
-              channel: SubscribedChannel(
-                id: 'sample-$c',
-                name: names[c],
-                baselineAt: base,
-              ),
-              videos: [
-                for (var v = 0; v < 3 - c; v++)
-                  FeedVideo(
-                    id: 'sample-$c-$v',
-                    title: '${names[c]}의 새 영상 ${v + 1}',
-                    publishedAt: base.subtract(Duration(hours: 5 * v + c)),
-                  ),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
-
   /// 화면을 닫을 때: 확인한 채널은 여기까지 봤다고 표시하고 목록을 비운다 (다음에 다시 뜨지 않는다).
   Future<void> markSeen() async {
-    if (state.sample) {
-      emit(const NewVideosState(status: NewVideosStatus.done));
-      return;
-    }
     final seen = {
       for (final r in state.checked)
         if (r.latestPublishedAt != null) r.channel.id: r.latestPublishedAt!,
