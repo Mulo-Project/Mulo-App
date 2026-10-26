@@ -168,7 +168,18 @@ void main() {
     settings = MemoryDownloadSettings(path: '/music/Mulo');
   });
 
-  tearDown(() => tmp.delete(recursive: true));
+  // 저장소가 끝난 뒤에도 임시 파일을 백그라운드로 지우고 있을 수 있어,
+  // 폴더를 지우는 동안 파일이 먼저 사라지면 PathNotFoundException이 난다.
+  tearDown(() async {
+    for (var i = 0; i < 5; i++) {
+      try {
+        if (tmp.existsSync()) await tmp.delete(recursive: true);
+        return;
+      } on FileSystemException {
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+      }
+    }
+  });
 
   EngineDownloadQueueRepository build(
     _FakeDownloader dl, {
@@ -187,6 +198,15 @@ void main() {
     tempDir: () async => tmp,
     lyrics: lyrics,
   );
+
+  /// 고정 시간만 기다리면 느린 PC에서 아직 끝나지 않은 채 확인하게 되므로,
+  /// [ok]가 될 때까지 짧게 끊어 다시 확인한다 (최대 10초). 끝내 안 되면 뒤따르는 expect가 실패한다.
+  Future<void> until(bool Function() ok) async {
+    final end = DateTime.now().add(const Duration(seconds: 10));
+    while (!ok() && DateTime.now().isBefore(end)) {
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+    }
+  }
 
   Future<List<DownloadItem>> settled(
     EngineDownloadQueueRepository repo,
@@ -226,7 +246,7 @@ void main() {
     expect(covers.saved[CoverKey.track(track.id)]?.url, 'https://i.test/a.jpg');
     expect(colors.saved[CoverKey.track(track.id)], 0xFF112233);
     expect(playlists.members['pl1'], {track.id});
-    await Future<void>.delayed(const Duration(milliseconds: 50));
+    await until(() => tmp.listSync().isEmpty);
     expect(tmp.listSync(), isEmpty, reason: '임시 파일은 지운다');
   });
 
@@ -446,8 +466,14 @@ void main() {
     await dl.entered.future;
     await repo.pause(id);
     dl.gate!.complete();
-    await Future<void>.delayed(const Duration(milliseconds: 50));
-    expect(File('${tmp.path}/$id.part').lengthSync(), 2, reason: '받은 만큼 남김');
+    final part = File('${tmp.path}/$id.part');
+    await until(
+      () =>
+          part.existsSync() &&
+          part.lengthSync() == 2 &&
+          queueStore.queue.single.partMime != null,
+    );
+    expect(part.lengthSync(), 2, reason: '받은 만큼 남김');
     expect(queueStore.queue.single.partMime, 'audio/webm');
 
     dl.gate = null;
@@ -458,7 +484,7 @@ void main() {
     );
     expect(dl.resumes, [(length: 2, mime: 'audio/webm')]);
     expect(await library.watchTracks().first, hasLength(1));
-    await Future<void>.delayed(const Duration(milliseconds: 50));
+    await until(() => tmp.listSync().isEmpty);
     expect(tmp.listSync(), isEmpty, reason: '다 받으면 임시 파일을 지운다');
   });
 
@@ -607,12 +633,12 @@ void main() {
       repo,
       (l) => l.isNotEmpty && l.single.status == DownloadStatus.done,
     );
-    await Future<void>.delayed(const Duration(milliseconds: 50));
+    await until(() => seen.isNotEmpty && seen.last.length == 1);
     expect(seen.last, {'youtube:abc'});
 
     final id = (await library.watchTracks().first).single.id;
     await library.delete(id);
-    await Future<void>.delayed(const Duration(milliseconds: 50));
+    await until(() => seen.last.isEmpty);
     expect(seen.last, isEmpty);
     expect(items.single.status, DownloadStatus.done);
     await sub.cancel();

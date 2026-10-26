@@ -161,8 +161,10 @@ class LoopbackGoogleAuth implements GoogleAuthSource {
         },
       );
       final code = _waitForCode(server, state);
+      // 브라우저를 여는 동안 거절 응답이 먼저 오면 아래 await 전에 오류가 나서
+      // 처리되지 않은 오류로 번지므로, 미리 처리된 것으로 표시한다 (await는 그대로 오류를 받는다).
+      code.ignore();
       if (!await _open(authUri)) {
-        code.ignore();
         throw const AccountException(AccountFailure.failed, 'browser');
       }
       await _tokenGrant({
