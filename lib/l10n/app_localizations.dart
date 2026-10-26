@@ -806,6 +806,42 @@ abstract class AppLocalizations {
   /// **'내려받는 중…'**
   String get settingsEngineInstalling;
 
+  /// No description provided for @settingsEngineReverting.
+  ///
+  /// In ko, this message translates to:
+  /// **'되돌리는 중…'**
+  String get settingsEngineReverting;
+
+  /// No description provided for @settingsEngineRevert.
+  ///
+  /// In ko, this message translates to:
+  /// **'되돌리기'**
+  String get settingsEngineRevert;
+
+  /// No description provided for @settingsEngineRevertTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱에 들어 있는 버전으로 되돌릴까요?'**
+  String get settingsEngineRevertTitle;
+
+  /// No description provided for @settingsEngineRevertBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'업데이트로 받은 yt-dlp를 지우고 앱에 처음 들어 있던 버전으로 돌아가요. 업데이트한 뒤에 검색이나 받기가 잘 안 될 때 써 보세요. 나중에 다시 업데이트할 수 있어요.'**
+  String get settingsEngineRevertBody;
+
+  /// No description provided for @settingsEngineRevertFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'되돌리지 못했어요. 잠시 후 다시 시도해 주세요.'**
+  String get settingsEngineRevertFailed;
+
+  /// No description provided for @settingsEngineBundled.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱에 들어 있는 yt-dlp'**
+  String get settingsEngineBundled;
+
   /// No description provided for @settingsEngineFailed.
   ///
   /// In ko, this message translates to:
@@ -4831,24 +4867,6 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'채널을 찾지 못했어요. 잠시 뒤 다시 시도해 주세요'**
   String get channelSearchFailed;
-
-  /// No description provided for @subscriptionsTestTitle.
-  ///
-  /// In ko, this message translates to:
-  /// **'임시 · 모양 확인용'**
-  String get subscriptionsTestTitle;
-
-  /// No description provided for @subscriptionsTestNotification.
-  ///
-  /// In ko, this message translates to:
-  /// **'새 영상 알림 띄우기'**
-  String get subscriptionsTestNotification;
-
-  /// No description provided for @subscriptionsTestNewVideos.
-  ///
-  /// In ko, this message translates to:
-  /// **'새 영상 화면 미리 보기'**
-  String get subscriptionsTestNewVideos;
 
   /// No description provided for @categoryAll.
   ///

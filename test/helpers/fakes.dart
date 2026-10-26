@@ -1346,12 +1346,19 @@ class FakeEngineManager implements EngineManager {
     this.supported = true,
     this.installed = false,
     this.failInstall = false,
+    this.updated = false,
+    this.failRevert = false,
   });
 
   final bool supported;
   bool installed;
   final bool failInstall;
+
+  /// 업데이트한 yt-dlp가 있는지 (있으면 번들 버전으로 되돌릴 수 있다).
+  bool updated;
+  final bool failRevert;
   int installs = 0;
+  int reverts = 0;
 
   @override
   Future<EngineStatus> status() async => EngineStatus(
@@ -1360,7 +1367,16 @@ class FakeEngineManager implements EngineManager {
     version: installed ? '2026.01.01' : null,
     managed: installed,
     removable: installed && supported,
+    revertible: updated,
   );
+
+  @override
+  Future<EngineStatus> revertToBundled() async {
+    reverts++;
+    if (failRevert) throw Exception('fail');
+    updated = false;
+    return status();
+  }
 
   int removes = 0;
 
@@ -1692,7 +1708,6 @@ class FakeBackgroundChecker implements BackgroundChecker {
   @override
   Future<void> clearNotification() async => cleared++;
 
-  var testShown = 0;
   var movedToBack = 0;
   final downloadRequests = <NewVideoDownloadRequest>[];
 
@@ -1707,9 +1722,6 @@ class FakeBackgroundChecker implements BackgroundChecker {
 
   @override
   Future<void> moveAppToBack() async => movedToBack++;
-
-  @override
-  Future<void> showTestNotification() async => testShown++;
 
   var checkedNow = 0;
   BackgroundStatus? statusValue;

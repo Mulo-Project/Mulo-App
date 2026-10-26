@@ -115,4 +115,5 @@
 | 2026-10-26 | [재생 대기열 · 홈 목록 다중 선택](2026-10-26-queue-home-multi-select.md) | 진행 중 (PR 대기) |
 | 2026-10-26 | [음질 선택 제거 (항상 최고 음질)](2026-10-26-remove-quality-option.md) | 진행 중 (PR 대기) |
 | 2026-10-26 | [불안정한 테스트 안정화](2026-10-26-flaky-tests.md) | 진행 중 (PR 대기) |
+| 2026-10-26 | [구독 화면 임시 확인 영역 삭제](2026-10-26-remove-subscription-test-area.md) | 완료 |
 | 2026-10-26 | [구독 채널 가져오기 500개 제한 해제](2026-10-26-subscription-import-pagination.md) | 완료 |

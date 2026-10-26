@@ -20,9 +20,6 @@ class NewVideoDownloadRequest extends Equatable {
   /// 앱이 화면에 없는 상태에서 알림 버튼으로 켜졌는지 (받기를 시작한 뒤 앱을 다시 뒤로 보낸다).
   final bool background;
 
-  /// 화면 모양 확인용 샘플 알림이 보낸 요청인지 (실제로 받지 않는다).
-  bool get isSample => videoId.startsWith('sample-');
-
   String get url => 'https://www.youtube.com/watch?v=$videoId';
 
   @override

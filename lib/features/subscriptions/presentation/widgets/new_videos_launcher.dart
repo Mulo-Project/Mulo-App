@@ -88,9 +88,7 @@ class _NewVideosLauncherState extends State<NewVideosLauncher> {
   }
 
   void _announce(BuildContext context, NewVideosState state) {
-    // 샘플(모양 확인용)은 안내하지 않는다.
     if (_announced ||
-        state.sample ||
         state.status != NewVideosStatus.done ||
         state.resolving ||
         state.unseenCount == 0) {
