@@ -3,15 +3,21 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../../../../core/config/app_config.dart';
 import '../../domain/entities/google_account.dart';
 import 'google_auth_source.dart';
+import 'loopback_google_auth.dart' show AuthStore, SecureAuthStore;
 
 /// Android: `google_sign_in`(Credential Manager)로 로그인한다.
 class GoogleSignInAuthSource implements GoogleAuthSource {
-  GoogleSignInAuthSource({GoogleSignIn? signIn})
-    : _google = signIn ?? GoogleSignIn.instance;
+  GoogleSignInAuthSource({GoogleSignIn? signIn, AuthStore? store})
+    : _google = signIn ?? GoogleSignIn.instance,
+      _store = store ?? const SecureAuthStore();
 
   static const _scopes = [youtubeReadonlyScope];
 
+  /// 이 앱에서 로그인에 성공했고 아직 로그아웃하지 않았다는 표시 (D-081).
+  static const _signedInKey = 'account.google.signedIn';
+
   final GoogleSignIn _google;
+  final AuthStore _store;
   Future<void>? _init;
   GoogleSignInAccount? _account;
 
@@ -28,9 +34,23 @@ class GoogleSignInAuthSource implements GoogleAuthSource {
 
   @override
   Future<GoogleAccount?> restore() async {
-    // 앱을 켤 때 `attemptLightweightAuthentication`을 부르면 구글 로그인 창이 저절로 뜰 수
-    // 있어서 부르지 않는다. 로그인은 사용자가 관련 버튼을 눌렀을 때만 띄운다 (D-079).
-    return null;
+    // 이 앱으로 로그인한 표시가 있을 때만 조용히 되살린다. 표시 없이 부르면 구글이
+    // 기기의 계정 고르기 창을 저절로 띄울 수 있다 (D-079, D-081).
+    try {
+      if (await _store.read(_signedInKey) == null) return null;
+      await _ready();
+      final a = await _google.attemptLightweightAuthentication();
+      if (a == null) {
+        // 되살릴 수 없으면 표시를 지워 다음 실행부터는 시도하지 않는다.
+        await _store.delete(_signedInKey);
+        return null;
+      }
+      _account = a;
+      return _map(a);
+    } on Object {
+      // 네트워크 등 일시적 실패: 로그아웃 상태로 시작하되 표시는 남겨 다음에 다시 시도한다.
+      return null;
+    }
   }
 
   @override
@@ -39,6 +59,7 @@ class GoogleSignInAuthSource implements GoogleAuthSource {
     try {
       final a = await _google.authenticate(scopeHint: _scopes);
       _account = a;
+      await _markSignedIn();
       return _map(a);
     } on GoogleSignInException catch (e) {
       throw AccountException(switch (e.code) {
@@ -53,8 +74,25 @@ class GoogleSignInAuthSource implements GoogleAuthSource {
   @override
   Future<void> signOut() async {
     _account = null;
+    await _forget();
     await _ready();
     await _google.signOut();
+  }
+
+  Future<void> _markSignedIn() async {
+    try {
+      await _store.write(_signedInKey, '1');
+    } on Object {
+      // 저장하지 못하면 이번 실행에서만 로그인 상태다.
+    }
+  }
+
+  Future<void> _forget() async {
+    try {
+      await _store.delete(_signedInKey);
+    } on Object {
+      // 지우지 못해도 로그아웃은 계속한다.
+    }
   }
 
   /// 이미 허락했으면 조용히, 아니면 허락 창을 띄운다.
