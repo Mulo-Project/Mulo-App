@@ -391,10 +391,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsEngineReverting => 'Reverting…';
 
   @override
-  String get settingsEngineRevert => 'Revert';
-
-  @override
-  String get settingsEngineRevertTitle => 'Go back to the built-in version?';
+  String get settingsEngineRevertTitle => 'Remove the updated yt-dlp?';
 
   @override
   String get settingsEngineRevertBody =>
@@ -402,7 +399,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsEngineRevertFailed =>
-      'Could not revert. Please try again in a moment.';
+      'Could not remove it. Please try again in a moment.';
 
   @override
   String get settingsEngineBundled => 'Built-in yt-dlp';

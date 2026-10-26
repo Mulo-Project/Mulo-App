@@ -31,13 +31,3 @@ class RemoveEngine implements UseCase<EngineStatus, NoParams> {
   @override
   Future<EngineStatus> call(NoParams params) => _manager.remove();
 }
-
-/// 업데이트한 엔진(yt-dlp)을 앱에 들어 있는 버전으로 되돌리기.
-class RevertEngine implements UseCase<EngineStatus, NoParams> {
-  const RevertEngine(this._manager);
-
-  final EngineManager _manager;
-
-  @override
-  Future<EngineStatus> call(NoParams params) => _manager.revertToBundled();
-}

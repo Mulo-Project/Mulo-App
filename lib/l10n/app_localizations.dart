@@ -812,16 +812,10 @@ abstract class AppLocalizations {
   /// **'되돌리는 중…'**
   String get settingsEngineReverting;
 
-  /// No description provided for @settingsEngineRevert.
-  ///
-  /// In ko, this message translates to:
-  /// **'되돌리기'**
-  String get settingsEngineRevert;
-
   /// No description provided for @settingsEngineRevertTitle.
   ///
   /// In ko, this message translates to:
-  /// **'앱에 들어 있는 버전으로 되돌릴까요?'**
+  /// **'업데이트한 yt-dlp를 지울까요?'**
   String get settingsEngineRevertTitle;
 
   /// No description provided for @settingsEngineRevertBody.
@@ -833,7 +827,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsEngineRevertFailed.
   ///
   /// In ko, this message translates to:
-  /// **'되돌리지 못했어요. 잠시 후 다시 시도해 주세요.'**
+  /// **'지우지 못했어요. 잠시 후 다시 시도해 주세요.'**
   String get settingsEngineRevertFailed;
 
   /// No description provided for @settingsEngineBundled.
