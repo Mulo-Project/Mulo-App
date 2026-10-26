@@ -1310,6 +1310,12 @@ abstract class AppLocalizations {
   /// **'대기열 비우기'**
   String get queueClear;
 
+  /// No description provided for @queueSelect.
+  ///
+  /// In ko, this message translates to:
+  /// **'여러 곡 선택'**
+  String get queueSelect;
+
   /// No description provided for @queueCleared.
   ///
   /// In ko, this message translates to:

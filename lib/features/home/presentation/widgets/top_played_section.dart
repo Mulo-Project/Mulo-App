@@ -5,6 +5,8 @@ import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../library/domain/entities/track.dart';
+import '../../../library/presentation/widgets/track_list_tile.dart'
+    show TrackSelection, selectionMark;
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/home_summary.dart';
 import 'home_parts.dart';
@@ -34,11 +36,15 @@ class TopPlayedSection extends StatefulWidget {
     required this.summary,
     required this.player,
     required this.onMore,
+    this.selectionFor,
   });
 
   final HomeSummary summary;
   final NowPlayingCubit player;
   final VoidCallback onMore;
+
+  /// 있으면 목록에서 여러 곡을 고를 수 있다 (길게 눌러 선택 모드).
+  final TrackSelection Function(Track)? selectionFor;
 
   @override
   State<TopPlayedSection> createState() => _TopPlayedSectionState();
@@ -156,50 +162,62 @@ class _TopPlayedSectionState extends State<TopPlayedSection> {
             child: Column(
               children: [
                 for (var i = 0; i < listed.length; i++)
-                  TrackTile(
-                    title: listed[i].title,
-                    subtitle: listed[i].artist.isEmpty
-                        ? l10n.unknownArtist
-                        : listed[i].artist,
-                    tone: toneFor(listed[i].id),
-                    color: coverColorOf(context, CoverKey.track(listed[i].id)),
-                    leading: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          width: 28,
-                          child: StatNumber(
-                            '${i + 1}',
-                            size: 18,
-                            color: _kind == _Kind.tracks && i == picked
-                                ? context.palette.accent
-                                : null,
-                          ),
-                        ),
-                        ArtworkBox(
-                          image: coverImageOf(
-                            context,
-                            CoverKey.track(listed[i].id),
-                          ),
-                          tone: toneFor(listed[i].id),
-                          color: coverColorOf(
-                            context,
-                            CoverKey.track(listed[i].id),
-                          ),
-                        ),
-                      ],
-                    ),
-                    trailing: Text(
-                      l10n.playCount(counts[listed[i].id] ?? 0),
-                      style: text.bodySmall,
-                    ),
-                    onTap: () => player.playQueue(listed, index: i),
-                  ),
+                  _listTile(context, l10n, listed, counts, i, picked),
               ],
             ),
           ),
         ],
       ],
+    );
+  }
+
+  Widget _listTile(
+    BuildContext context,
+    AppLocalizations l10n,
+    List<Track> listed,
+    Map<String, int> counts,
+    int i,
+    int picked,
+  ) {
+    final text = Theme.of(context).textTheme;
+    final player = widget.player;
+    final sel = widget.selectionFor?.call(listed[i]);
+    final picking = sel != null && sel.active;
+    return TrackTile(
+      title: listed[i].title,
+      subtitle: listed[i].artist.isEmpty
+          ? l10n.unknownArtist
+          : listed[i].artist,
+      tone: toneFor(listed[i].id),
+      color: coverColorOf(context, CoverKey.track(listed[i].id)),
+      leading: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 28,
+            child: StatNumber(
+              '${i + 1}',
+              size: 18,
+              color: _kind == _Kind.tracks && i == picked
+                  ? context.palette.accent
+                  : null,
+            ),
+          ),
+          ArtworkBox(
+            image: coverImageOf(context, CoverKey.track(listed[i].id)),
+            tone: toneFor(listed[i].id),
+            color: coverColorOf(context, CoverKey.track(listed[i].id)),
+          ),
+        ],
+      ),
+      trailing: picking
+          ? selectionMark(context, sel)
+          : Text(
+              l10n.playCount(counts[listed[i].id] ?? 0),
+              style: text.bodySmall,
+            ),
+      onTap: picking ? sel.onToggle : () => player.playQueue(listed, index: i),
+      onLongPress: sel?.onToggle,
     );
   }
 }

@@ -165,4 +165,30 @@ void main() {
     expect(find.byIcon(AppIcons.favorite), findsOneWidget);
     expect(find.byTooltip('좋아요 취소'), findsOneWidget);
   });
+
+  testWidgets('대기열: 선택 모드에서 곡을 골라 대기열에서 빼면 재생 중인 곡은 그대로', (tester) async {
+    await openQueue(tester);
+    await tester.tap(find.byTooltip('재생 대기열'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('여러 곡 선택'));
+    await tester.pumpAndSettle();
+    expect(find.text('0곡 선택'), findsOneWidget);
+
+    // 선택 모드에서는 누르면 재생하지 않고 고른다.
+    await tester.tap(find.text('둘째 곡'));
+    await tester.pumpAndSettle();
+    expect(find.text('1곡 선택'), findsOneWidget);
+
+    await tester.tap(find.text('작업'));
+    await tester.pumpAndSettle();
+    expect(find.text('재생목록에 추가'), findsOneWidget);
+    await tester.tap(find.text('대기열에서 빼기'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('2곡'), findsOneWidget);
+    expect(find.text('둘째 곡'), findsNothing);
+    expect(find.text('첫 곡'), findsOneWidget);
+    expect(find.text('1곡 선택'), findsNothing);
+  });
 }
