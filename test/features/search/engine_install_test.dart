@@ -81,21 +81,20 @@ void main() {
     expect(find.text('Remove'), findsNothing);
   });
 
-  test('EngineCubit: 업데이트한 엔진만 번들 버전으로 되돌린다', () async {
+  test('EngineCubit: 업데이트한 엔진을 지우면 번들 버전으로 돌아간다', () async {
     final manager = FakeEngineManager(installed: true, updated: true);
     await setUpTestDependencies(engineManager: manager);
     final cubit = sl<EngineCubit>();
     await cubit.load();
     expect(cubit.state.status!.revertible, isTrue);
-    await cubit.revert();
-    expect(manager.reverts, 1);
+    await cubit.remove();
+    expect(manager.removes, 1);
     expect(cubit.state.status!.revertible, isFalse);
+    expect(cubit.state.status!.installed, isTrue);
     expect(cubit.state.failed, isFalse);
-    await cubit.revert();
-    expect(manager.reverts, 1);
   });
 
-  test('EngineCubit: 되돌리기에 실패하면 failed + reverting', () async {
+  test('EngineCubit: 번들로 되돌리기에 실패하면 failed + reverting', () async {
     await setUpTestDependencies(
       engineManager: FakeEngineManager(
         installed: true,
@@ -105,40 +104,41 @@ void main() {
     );
     final cubit = sl<EngineCubit>();
     await cubit.load();
-    await cubit.revert();
+    await cubit.remove();
     expect(cubit.state.failed, isTrue);
     expect(cubit.state.reverting, isTrue);
     expect(cubit.state.status!.revertible, isTrue);
   });
 
-  testWidgets('설정: 업데이트한 엔진은 확인 뒤 번들 버전으로 되돌린다', (tester) async {
+  testWidgets('설정: 업데이트한 엔진은 삭제를 확인하면 번들 버전으로 돌아간다', (tester) async {
     final manager = FakeEngineManager(installed: true, updated: true);
     await setUpTestDependencies(engineManager: manager);
     await tester.pumpWidget(const MusicApp(initialLocation: Routes.settings));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Revert'));
+    await tester.tap(find.text('Remove'));
     await tester.pumpAndSettle();
-    expect(find.text('Go back to the built-in version?'), findsOneWidget);
+    expect(find.text('Remove the updated yt-dlp?'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
-    expect(manager.reverts, 0);
+    expect(manager.removes, 0);
 
-    await tester.tap(find.text('Revert'));
+    await tester.tap(find.text('Remove'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Revert').last);
+    await tester.tap(find.text('Remove').last);
     await tester.pumpAndSettle();
-    expect(manager.reverts, 1);
-    expect(find.text('Revert'), findsNothing);
+    expect(manager.removes, 1);
+    expect(find.text('Remove'), findsNothing);
+    expect(find.text('Built-in yt-dlp'), findsOneWidget);
   });
 
-  testWidgets('설정: 업데이트하지 않았으면 되돌리기가 없다', (tester) async {
+  testWidgets('설정: 번들 yt-dlp만 쓰는 중이면 삭제 버튼이 없다', (tester) async {
     await setUpTestDependencies(
-      engineManager: FakeEngineManager(installed: true),
+      engineManager: FakeEngineManager(installed: true, bundledOnly: true),
     );
     await tester.pumpWidget(const MusicApp(initialLocation: Routes.settings));
     await tester.pumpAndSettle();
-    expect(find.text('Revert'), findsNothing);
+    expect(find.text('Remove'), findsNothing);
   });
 
   testWidgets('설정: 설치할 수 없는 기기(Android)에서는 엔진 줄이 없다', (tester) async {

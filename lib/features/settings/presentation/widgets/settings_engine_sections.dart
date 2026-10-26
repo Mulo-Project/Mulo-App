@@ -64,26 +64,20 @@ class SettingsEngineRow extends StatelessWidget {
 
   Future<void> _confirmRemove(BuildContext context) async {
     final l10n = context.l10n;
+    // 업데이트한 yt-dlp를 지우면 앱에 들어 있던 버전으로 돌아간다 (Android full).
+    final revert = cubit.state.status?.revertible == true;
     final ok = await showConfirmDialog(
       context,
-      title: l10n.settingsEngineRemoveTitle,
-      body: l10n.settingsEngineRemoveBody,
+      title: revert
+          ? l10n.settingsEngineRevertTitle
+          : l10n.settingsEngineRemoveTitle,
+      body: revert
+          ? l10n.settingsEngineRevertBody
+          : l10n.settingsEngineRemoveBody,
       confirmLabel: l10n.settingsEngineRemove,
       cancelLabel: l10n.actionCancel,
     );
     if (ok) await cubit.remove();
-  }
-
-  Future<void> _confirmRevert(BuildContext context) async {
-    final l10n = context.l10n;
-    final ok = await showConfirmDialog(
-      context,
-      title: l10n.settingsEngineRevertTitle,
-      body: l10n.settingsEngineRevertBody,
-      confirmLabel: l10n.settingsEngineRevert,
-      cancelLabel: l10n.actionCancel,
-    );
-    if (ok) await cubit.revert();
   }
 
   @override
@@ -113,17 +107,11 @@ class SettingsEngineRow extends StatelessWidget {
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // 앱이 받아 둔 엔진만 지울 수 있다 (PATH의 yt-dlp · Android 내장은 지우지 않는다).
+              // 앱이 받아 둔 엔진만 지울 수 있다 (PATH의 yt-dlp · APK 내장은 지우지 않는다).
               if (status.removable)
                 PlainButton(
                   label: l10n.settingsEngineRemove,
                   onPressed: state.busy ? null : () => _confirmRemove(context),
-                ),
-              // 업데이트한 yt-dlp만 앱에 들어 있던 버전으로 되돌릴 수 있다 (Android full).
-              if (status.revertible)
-                PlainButton(
-                  label: l10n.settingsEngineRevert,
-                  onPressed: state.busy ? null : () => _confirmRevert(context),
                 ),
               PillButton(
                 compact: true,

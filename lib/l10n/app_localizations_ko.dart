@@ -386,17 +386,14 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsEngineReverting => '되돌리는 중…';
 
   @override
-  String get settingsEngineRevert => '되돌리기';
-
-  @override
-  String get settingsEngineRevertTitle => '앱에 들어 있는 버전으로 되돌릴까요?';
+  String get settingsEngineRevertTitle => '업데이트한 yt-dlp를 지울까요?';
 
   @override
   String get settingsEngineRevertBody =>
       '업데이트로 받은 yt-dlp를 지우고 앱에 처음 들어 있던 버전으로 돌아가요. 업데이트한 뒤에 검색이나 받기가 잘 안 될 때 써 보세요. 나중에 다시 업데이트할 수 있어요.';
 
   @override
-  String get settingsEngineRevertFailed => '되돌리지 못했어요. 잠시 후 다시 시도해 주세요.';
+  String get settingsEngineRevertFailed => '지우지 못했어요. 잠시 후 다시 시도해 주세요.';
 
   @override
   String get settingsEngineBundled => '앱에 들어 있는 yt-dlp';

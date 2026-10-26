@@ -843,8 +843,8 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 - 다운로드 큐 테스트: 정리 단계의 파일 삭제가 `tearDown`의 폴더 삭제와 겹치지 않게 재시도하고, 고정 50ms 대기를 조건(`until`)을 기다리는 방식으로 바꿨다. "곡마다 정한 형식 · 음질…" 테스트는 이 `tearDown` 겹침으로 실패했다.
 - 테마 프리셋(widget_test)은 부하를 걸어 반복해도 재현하지 못해 바꾸지 않았다.
 
-## D-132 · 2026-10-26 · Android full: 업데이트한 yt-dlp를 앱에 들어 있는 버전으로 되돌린다
-- 설정 > 다운로드 엔진 줄에서 yt-dlp를 업데이트한 뒤 검색 · 받기가 깨지면, "되돌리기"로 APK에 들어 있던 yt-dlp로 돌아간다. 업데이트한 적이 없으면 버튼이 없다 (`EngineStatus.revertible`). 확인창(삭제와 같은 `showConfirmDialog`)을 거친다.
+## D-132 · 2026-10-26 · Android full: 업데이트한 yt-dlp를 지우면 앱에 들어 있는 버전으로 돌아간다
+- 설정 > 다운로드 엔진 줄에서 yt-dlp를 업데이트한 뒤 검색 · 받기가 깨지면, 기존 "삭제" 버튼으로 업데이트한 yt-dlp를 지워 APK에 들어 있던 yt-dlp로 돌아간다 (별도 "되돌리기" 버튼은 두지 않는다). 업데이트한 적이 없으면 지울 것이 없어 버튼이 없다 (`EngineStatus.removable`, 지우면 번들로 돌아가는 경우 `revertible`도 true). 확인창(`showConfirmDialog`)은 이때 "업데이트한 yt-dlp를 지울까요?"로 안내한다.
 - youtubedl-android는 업데이트하면 `<noBackupFilesDir>/youtubedl-android/yt-dlp/yt-dlp`를 덮어쓰고 SharedPreferences `youtubedl-android`에 `dlpVersion` · `dlpVersionName`을 남긴다. `revert`(네이티브 `music_app/ytdlp`)는 그 폴더와 두 값을 지우고 라이브러리의 `init_ytdlp`로 APK의 번들 파일을 다시 푼다. 라이브러리 초기화를 다시 하지 않아서 앱을 다시 켜지 않아도 바로 적용된다. 실행 줄(단일 스레드)에서 돌아 실행 중인 yt-dlp와 겹치지 않는다.
 - 상태 표시: Android는 번들 yt-dlp가 늘 쓸 수 있으므로 `installed`를 항상 true로 두고, 업데이트 전(또는 되돌린 뒤)에는 `version`이 없다. 이때 줄 설명은 "앱에 들어 있는 yt-dlp". 전에는 업데이트 전에 "yt-dlp가 없어요"로 보이고 다운로드 모드가 서버로 보였다 (로컬 엔진은 실제로는 동작).
 - 데스크톱 · lite에는 없다 (데스크톱은 이미 "삭제"로 앱이 받은 파일을 지우고 PATH의 것으로 돌아간다).

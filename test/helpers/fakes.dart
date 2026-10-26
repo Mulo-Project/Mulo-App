@@ -1348,6 +1348,7 @@ class FakeEngineManager implements EngineManager {
     this.failInstall = false,
     this.updated = false,
     this.failRevert = false,
+    this.bundledOnly = false,
   });
 
   final bool supported;
@@ -1357,33 +1358,34 @@ class FakeEngineManager implements EngineManager {
   /// 업데이트한 yt-dlp가 있는지 (있으면 번들 버전으로 되돌릴 수 있다).
   bool updated;
   final bool failRevert;
+
+  /// 번들 yt-dlp만 쓰는 중 (Android): 지울 것이 없다. 업데이트한 것을 지우면 이 상태가 된다.
+  bool bundledOnly;
   int installs = 0;
-  int reverts = 0;
 
   @override
   Future<EngineStatus> status() async => EngineStatus(
     supported: supported,
     installed: installed,
-    version: installed ? '2026.01.01' : null,
+    version: installed && !bundledOnly ? '2026.01.01' : null,
     managed: installed,
-    removable: installed && supported,
+    removable: installed && supported && !bundledOnly,
     revertible: updated,
   );
-
-  @override
-  Future<EngineStatus> revertToBundled() async {
-    reverts++;
-    if (failRevert) throw Exception('fail');
-    updated = false;
-    return status();
-  }
 
   int removes = 0;
 
   @override
   Future<EngineStatus> remove() async {
     removes++;
-    installed = false;
+    if (failRevert) throw Exception('fail');
+    // 업데이트한 yt-dlp를 지우면 번들 버전으로 돌아가 계속 쓸 수 있다 (Android).
+    if (updated) {
+      updated = false;
+      bundledOnly = true;
+    } else {
+      installed = false;
+    }
     return status();
   }
 

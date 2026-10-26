@@ -20,7 +20,7 @@ class EngineState extends Equatable {
   final bool busy;
   final bool failed;
 
-  /// 진행 중이거나 실패한 작업이 "번들 버전으로 되돌리기"인지 (아니면 설치 · 업데이트).
+  /// 진행 중이거나 실패한 삭제가 "업데이트한 yt-dlp를 지워 번들 버전으로 되돌리기"인지.
   final bool reverting;
 
   @override
@@ -29,13 +29,12 @@ class EngineState extends Equatable {
 
 /// 설정의 엔진 줄: 상태 확인과 설치 · 업데이트.
 class EngineCubit extends Cubit<EngineState> {
-  EngineCubit(this._load, this._install, this._remove, this._revert)
+  EngineCubit(this._load, this._install, this._remove)
     : super(const EngineState());
 
   final LoadEngineStatus _load;
   final InstallEngine _install;
   final RemoveEngine _remove;
-  final RevertEngine _revert;
 
   Future<void> load() async {
     final status = await _load(const NoParams());
@@ -45,25 +44,16 @@ class EngineCubit extends Cubit<EngineState> {
   /// 앱이 받아 둔 엔진을 지운다 (지울 수 없는 상태면 아무것도 하지 않는다).
   Future<void> remove() async {
     if (state.busy || state.status?.removable != true) return;
-    emit(EngineState(status: state.status, busy: true));
+    final reverting = state.status?.revertible == true;
+    emit(EngineState(status: state.status, busy: true, reverting: reverting));
     try {
       final status = await _remove(const NoParams());
       if (!isClosed) emit(EngineState(status: status));
     } on Object {
-      if (!isClosed) emit(EngineState(status: state.status, failed: true));
-    }
-  }
-
-  /// 업데이트한 엔진을 앱에 들어 있는 버전으로 되돌린다 (되돌릴 수 없는 상태면 아무것도 하지 않는다).
-  Future<void> revert() async {
-    if (state.busy || state.status?.revertible != true) return;
-    emit(EngineState(status: state.status, busy: true, reverting: true));
-    try {
-      final status = await _revert(const NoParams());
-      if (!isClosed) emit(EngineState(status: status));
-    } on Object {
       if (!isClosed) {
-        emit(EngineState(status: state.status, failed: true, reverting: true));
+        emit(
+          EngineState(status: state.status, failed: true, reverting: reverting),
+        );
       }
     }
   }
