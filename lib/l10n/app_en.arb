@@ -1027,6 +1027,8 @@
   "channelImportTitle": "My subscribed channels",
   "channelImportHint": "Tap channels to pick them. Only the channels you pick are added, nothing is imported all at once.",
   "channelImportAlready": "Subscribed",
+  "channelImportLoading": "Loading subscriptions… {count} so far",
+  "@channelImportLoading": {"placeholders": {"count": {"type": "int"}}},
   "channelImportEmptyTitle": "No subscribed channels",
   "channelImportEmptyBody": "This Google account has not subscribed to any channel on YouTube.",
   "channelImportSignInBody": "Sign in with Google to load your YouTube subscriptions.",

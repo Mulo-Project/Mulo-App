@@ -53,13 +53,22 @@ class FetchMyPlaylists implements UseCase<List<PlaylistHit>, NoParams> {
 }
 
 /// 내가 구독한 유튜브 채널 불러오기 (구독 채널 가져오기).
-class FetchMySubscriptions implements UseCase<List<ChannelHit>, NoParams> {
+class FetchMySubscriptions
+    implements UseCase<List<ChannelHit>, MySubscriptionsParams> {
   const FetchMySubscriptions(this._repo);
 
   final AccountRepository _repo;
 
   @override
-  Future<List<ChannelHit>> call(NoParams params) => _repo.mySubscriptions();
+  Future<List<ChannelHit>> call(MySubscriptionsParams params) =>
+      _repo.mySubscriptions(onProgress: params.onProgress);
+}
+
+class MySubscriptionsParams {
+  const MySubscriptionsParams({this.onProgress});
+
+  /// 쪽마다 지금까지 읽은 채널 수.
+  final void Function(int loaded)? onProgress;
 }
 
 /// 채널 하나의 공개 재생목록 불러오기 (구독 채널의 재생목록 가져오기).

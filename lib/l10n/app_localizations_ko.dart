@@ -2911,6 +2911,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get channelImportAlready => '구독 중';
 
   @override
+  String channelImportLoading(int count) {
+    return '구독 채널 $count개 불러오는 중…';
+  }
+
+  @override
   String get channelImportEmptyTitle => '구독한 채널이 없어요';
 
   @override
