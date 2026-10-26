@@ -9,7 +9,7 @@
 ## 한 일
 - 설정 › 재생에 "저장한 가사를 파일에 쓰기" 줄 추가 (`SettingsLyricsFileRow`): 대상 곡 수 확인 대화상자 → 진행 대화상자 → 결과 대화상자(쓴 · 같아서 건너뛴 · 쓸 수 없어 건너뛴 · 실패한 곡 수). 앱에 저장한 가사가 없으면 안내만 한다.
 - `LyricsRepository`에 `savedTrackIds()` · `loadSaved()` 추가 (앱에 직접 저장한 가사만, 옆 `.lrc` · 태그 가사 제외).
-- 유스케이스 `CountSavedLyricsTracks` · `WriteSavedLyricsToFiles`, `LyricsFileWriteCubit`. 파일 태그에 같은 가사가 있으면 건너뛰고, 다르면 기존 `TrackTagRepository.writeLyrics`로 쓴다. 앱 가사는 읽기만 한다 (D-128).
+- 유스케이스 `CountSavedLyricsTracks` · `WriteSavedLyricsToFiles`, `LyricsFileWriteCubit`. 파일 태그에 같은 가사가 있으면 건너뛰고, 다르면 기존 `TrackTagRepository.writeLyrics`로 쓴다. 앱 가사는 읽기만 한다 (D-129).
 - `showProgressWhile`에 제목 · 진행 문구 바꾸기(`title` · `count`) 추가. ARB `lyricsToFile*`(ko · en).
 - `test/widget_test.dart`의 설정 화면 높이를 8000 → 9000으로 늘렸다 (설정이 길어져 테마 줄이 하단 막대에 가려짐).
 
