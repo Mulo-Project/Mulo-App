@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
+
+import '../../search/data/engine/local_engine.dart' show ytDlpTimeout;
 
 /// Android 로컬 엔진: 네이티브(`music_app/ytdlp`)가 APK에 들어 있는 yt-dlp를 실행한다.
 /// lite 빌드에는 실제 구현이 없어 [isAvailable]이 false다.
@@ -54,20 +57,34 @@ class AndroidYtDlp {
       return (exitCode: 0, stdout: v, stderr: '');
     }
     if (args.isEmpty) throw ProcessException(executable, args);
+    final id = 'run${_seq++}';
     try {
-      final r = await _channel.invokeMapMethod<String, Object?>('run', {
-        'url': args.last,
-        'options': args.sublist(0, args.length - 1),
-      });
+      final r = await _channel
+          .invokeMapMethod<String, Object?>('run', {
+            'url': args.last,
+            'options': args.sublist(0, args.length - 1),
+            'id': id,
+          })
+          .timeout(ytDlpTimeout);
       return (
         exitCode: (r?['exitCode'] as num?)?.toInt() ?? 1,
         stdout: r?['stdout'] as String? ?? '',
         stderr: r?['stderr'] as String? ?? '',
       );
+    } on TimeoutException {
+      // 멈춘 yt-dlp가 실행 줄을 계속 막지 않게 끊고, 위(LocalEngine)가 시간 초과로 알린다.
+      unawaited(
+        _channel
+            .invokeMethod<bool>('cancel', {'id': id})
+            .catchError((_) => null),
+      );
+      rethrow;
     } on MissingPluginException {
       throw ProcessException(executable, args);
     } on PlatformException catch (e) {
       return (exitCode: 1, stdout: '', stderr: e.message ?? '');
     }
   }
+
+  int _seq = 0;
 }
