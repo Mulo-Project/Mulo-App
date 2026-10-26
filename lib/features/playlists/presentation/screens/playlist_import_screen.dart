@@ -263,6 +263,13 @@ class _Body extends StatelessWidget {
         if (!state.fromAccount && state.failure == EngineFailure.network) {
           return EmptyState.network(onRetry: onRetry);
         }
+        if (state.fromAccount &&
+            state.accountFailure == AccountFailure.timeout) {
+          return EmptyState.timeout(onRetry: onSignIn);
+        }
+        if (!state.fromAccount && state.failure == EngineFailure.timeout) {
+          return EmptyState.timeout(onRetry: onRetry);
+        }
         if (state.fromAccount) {
           final expired = state.accountFailure == AccountFailure.unauthorized;
           final noChannel = state.accountFailure == AccountFailure.noChannel;

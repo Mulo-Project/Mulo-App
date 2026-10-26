@@ -6,6 +6,9 @@ enum EngineFailure {
   /// 서버에 닿지 못했다.
   network,
 
+  /// 연결은 됐지만 정해 둔 시간 안에 응답이 오지 않았다 (연결이 끊긴 [network]와 구분한다).
+  timeout,
+
   /// 서버가 로그인(토큰)을 요구한다.
   unauthorized,
 

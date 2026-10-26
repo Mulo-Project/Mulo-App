@@ -34,6 +34,8 @@
   "searchNetworkBody": "Could not reach the server. Check your internet connection.",
   "stateNetworkTitle": "Network connection needed",
   "stateNetworkBody": "Check your connection and try again.",
+  "stateTimeoutTitle": "It is taking too long to respond",
+  "stateTimeoutBody": "Please try again in a moment.",
   "stateSignInTitle": "Sign-in needed",
   "stateSignInBody": "Sign in to use this.",
   "searchAuthBody": "The server requires a sign-in.",

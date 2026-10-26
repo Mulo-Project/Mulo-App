@@ -117,6 +117,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stateNetworkBody => 'Check your connection and try again.';
 
   @override
+  String get stateTimeoutTitle => 'It is taking too long to respond';
+
+  @override
+  String get stateTimeoutBody => 'Please try again in a moment.';
+
+  @override
   String get stateSignInTitle => 'Sign-in needed';
 
   @override

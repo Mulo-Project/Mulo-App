@@ -207,6 +207,7 @@ class _MySubscriptionsScreenState extends State<MySubscriptionsScreen> {
             onSignIn: _open,
           ),
           AccountFailure.network => EmptyState.network(onRetry: _open),
+          AccountFailure.timeout => EmptyState.timeout(onRetry: _open),
           AccountFailure.noChannel => EmptyState(
             icon: AppIcons.person,
             title: l10n.playlistImportNoChannelTitle,

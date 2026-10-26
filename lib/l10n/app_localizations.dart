@@ -302,6 +302,18 @@ abstract class AppLocalizations {
   /// **'연결을 확인한 뒤 다시 시도해 주세요.'**
   String get stateNetworkBody;
 
+  /// No description provided for @stateTimeoutTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'응답이 너무 오래 걸려요'**
+  String get stateTimeoutTitle;
+
+  /// No description provided for @stateTimeoutBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'잠시 후 다시 시도해 주세요.'**
+  String get stateTimeoutBody;
+
   /// No description provided for @stateSignInTitle.
   ///
   /// In ko, this message translates to:

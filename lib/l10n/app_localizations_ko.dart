@@ -116,6 +116,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get stateNetworkBody => '연결을 확인한 뒤 다시 시도해 주세요.';
 
   @override
+  String get stateTimeoutTitle => '응답이 너무 오래 걸려요';
+
+  @override
+  String get stateTimeoutBody => '잠시 후 다시 시도해 주세요.';
+
+  @override
   String get stateSignInTitle => '로그인이 필요해요';
 
   @override

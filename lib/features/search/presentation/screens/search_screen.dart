@@ -192,6 +192,9 @@ class _Body extends StatelessWidget {
         if (failure == EngineFailure.network) {
           return EmptyState.network(onRetry: onRetry);
         }
+        if (failure == EngineFailure.timeout) {
+          return EmptyState.timeout(onRetry: onRetry);
+        }
         return _Hint(
           icon: AppIcons.hourglassEmpty,
           title: l10n.searchErrorTitle,
