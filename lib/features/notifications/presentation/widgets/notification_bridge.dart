@@ -150,6 +150,8 @@ class _NotificationBridgeState extends State<NotificationBridge>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       context.read<NotificationSettingsCubit>().refreshPermission();
+      // 화면이 없던 사이 알림에서 미리 듣기를 멈추거나 이어 들었을 수 있다.
+      context.read<PreviewCubit>().syncWithPlayer();
     }
   }
 

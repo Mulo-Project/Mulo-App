@@ -21,6 +21,8 @@ import io.flutter.plugin.common.MethodChannel
  * 하나를 두고, 대기열 · 미니 플레이어에 끼어들지 않는다. 알림은 Dart가 `setSession`으로 계속 띄운다.
  *
  * Dart → 네이티브: `play`(url, headers) · `seek` · `pause` · `resume` · `stop`.
+ * 앱이 꺼졌다 켜져도 Dart가 상태를 되살릴 수 있게 `remember`(듣는 곡 정보)로 곡을 적어 두고, `current`로 읽는다.
+ * `current`는 소리를 내는 플레이어가 없으면 null을 돌려주고, 알림에 남은 미리 듣기도 함께 치운다.
  * 네이티브 → Dart: `completed` · `progress`(position, duration, ms) · `failure`(까닭).
  * `play`는 소리를 낼 준비가 되면 성공으로 돌려주고, 열지 못하면 `failed` 오류로 돌려준다.
  */
@@ -35,6 +37,9 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) {
 
     /** 재생을 시작한 뒤에 난 오류만 `failure`로 알린다 (준비 중 오류는 `play` 결과로 간다). */
     private var started = false
+
+    /** 지금 듣는 곡 정보 (id · title · url · uploader · thumbnail). Dart가 `remember`로 적어 둔다. */
+    private var meta: Map<String, Any?>? = null
 
     private val ticker = object : Runnable {
         override fun run() {
@@ -91,6 +96,12 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) {
                 "pause" -> { player?.pause(); result.success(null) }
                 "resume" -> { player?.play(); result.success(null) }
                 "stop" -> { stop(); result.success(null) }
+                "remember" -> {
+                    @Suppress("UNCHECKED_CAST")
+                    meta = call.arguments as? Map<String, Any?>
+                    result.success(null)
+                }
+                "current" -> result.success(current())
                 else -> result.notImplemented()
             }
         }
@@ -129,6 +140,23 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) {
         p.prepare()
     }
 
+    /** 소리를 내고 있는(또는 잠시 멈춘) 미리 듣기. 없으면 null이고, 알림에 남은 미리 듣기는 치운다. */
+    private fun current(): Map<String, Any?>? {
+        val p = player
+        if (p == null) {
+            // 소리는 없는데 미리 듣기 알림만 남았으면 눌러도 동작하지 않으므로 치운다.
+            if (PlaybackHub.isPreviewing) PlaybackHub.setSession(null)
+            return null
+        }
+        // 아직 불러오는 중이면 Dart가 시작한 `play`가 끝나면서 상태를 알리므로 읽을 것이 없다.
+        if (!started) return null
+        return (meta ?: emptyMap()) + mapOf(
+            "positionMs" to p.currentPosition,
+            "durationMs" to if (p.duration == C.TIME_UNSET) null else p.duration,
+            "paused" to !p.playWhenReady,
+        )
+    }
+
     private fun stop() {
         pending?.success(null)
         pending = null
@@ -141,6 +169,7 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) {
         player?.release()
         player = null
         started = false
+        meta = null
     }
 
     /** 주소를 만든 클라이언트(`c=`)와 같은 user-agent. 모르는 클라이언트면 null (기본값). */

@@ -1,5 +1,7 @@
 import '../entities/audio_stream.dart';
+import '../entities/media_info.dart';
 import '../entities/preview_progress.dart';
+import '../entities/preview_snapshot.dart';
 
 /// 미리 듣기 전용 플레이어. 메인 재생(대기열 · 미니 플레이어)과는 따로 움직이며 한 번에 한 곡만 낸다.
 ///
@@ -19,6 +21,12 @@ abstract interface class PreviewPlayer {
 
   /// 재생을 멈추고 놓는다.
   Future<void> stop();
+
+  /// 지금 재생 중인 미리 듣기가 어느 곡인지 플레이어에 적어 둔다 (앱이 꺼졌다 켜져도 되살리려고).
+  Future<void> remember(MediaHit hit);
+
+  /// 플레이어가 지금 내고 있는 미리 듣기. 소리를 내는 게 없으면 null.
+  Future<PreviewSnapshot?> current();
 
   /// 끝까지 재생했을 때마다 한 번씩.
   Stream<void> watchCompleted();

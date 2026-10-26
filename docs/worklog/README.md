@@ -110,6 +110,7 @@
 | 2026-10-22 | [미리 듣기 소리를 네이티브로](2026-10-22-native-preview.md) | 완료 (기기 확인 대기) |
 | 2026-10-26 | [보관함 다중 선택 · 일괄 지정](2026-10-26-library-multi-select.md) | 진행 중 (PR 대기) |
 | 2026-10-26 | [내 YouTube 구독 채널 가져오기 · 구독 채널의 재생목록](2026-10-26-import-youtube-subscriptions.md) | 진행 중 (PR 대기) |
+| 2026-10-26 | [앱을 껐다 켜도 미리 듣기 미니 플레이어 복원](2026-10-26-preview-restore-mini-player.md) | 진행 중 (PR 대기) |
 | 2026-10-26 | [Android 구글 로그인 유지](2026-10-26-android-keep-google-login.md) | 완료 (PR 대기) |
 | 2026-10-26 | [재생 대기열 · 홈 목록 다중 선택](2026-10-26-queue-home-multi-select.md) | 진행 중 (PR 대기) |
 | 2026-10-26 | [저장한 가사를 파일에 쓰기 (일괄)](2026-10-26-lyrics-bulk-write-to-file.md) | 진행 중 (PR 대기) |

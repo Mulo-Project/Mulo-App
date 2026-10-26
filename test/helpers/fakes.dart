@@ -60,6 +60,7 @@ import 'package:music_download_play_app/features/search/di.dart';
 import 'package:music_download_play_app/features/search/domain/entities/audio_language.dart';
 import 'package:music_download_play_app/features/search/domain/entities/audio_stream.dart';
 import 'package:music_download_play_app/features/search/domain/entities/preview_progress.dart';
+import 'package:music_download_play_app/features/search/domain/entities/preview_snapshot.dart';
 import 'package:music_download_play_app/features/search/domain/entities/engine_exception.dart';
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
 import 'package:music_download_play_app/features/search/domain/entities/search_source.dart';
@@ -1421,6 +1422,18 @@ class FakePreviewPlayer implements PreviewPlayer {
     played.add(stream.url);
     playing = true;
   }
+
+  /// 플레이어에 적어 둔 곡 (재생 시작 뒤에 Cubit이 남긴다).
+  final remembered = <MediaHit>[];
+
+  /// [current]가 돌려줄 값. 앱이 꺼졌다 켜진 뒤 플레이어에 남은 소리를 흉내 낸다.
+  PreviewSnapshot? snapshot;
+
+  @override
+  Future<void> remember(MediaHit hit) async => remembered.add(hit);
+
+  @override
+  Future<PreviewSnapshot?> current() async => snapshot;
 
   /// 옮긴 위치 순서.
   final seeks = <Duration>[];
