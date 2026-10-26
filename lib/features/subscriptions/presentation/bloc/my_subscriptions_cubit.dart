@@ -1,7 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/usecase/usecase.dart';
 import '../../../account/domain/entities/google_account.dart';
 import '../../../account/domain/usecases/account_usecases.dart';
 import '../../domain/entities/channel_hit.dart';
@@ -13,6 +12,7 @@ class MySubscriptionsState extends Equatable {
     this.status = MySubscriptionsStatus.idle,
     this.channels = const [],
     this.picked = const {},
+    this.loaded = 0,
     this.failure,
     this.detail = '',
   });
@@ -25,6 +25,9 @@ class MySubscriptionsState extends Equatable {
   /// 고른 채널 id.
   final Set<String> picked;
 
+  /// 불러오는 중에 지금까지 읽은 채널 수.
+  final int loaded;
+
   final AccountFailure? failure;
 
   /// 실패의 자세한 까닭 (진단용).
@@ -34,12 +37,20 @@ class MySubscriptionsState extends Equatable {
     status: status,
     channels: channels,
     picked: picked ?? this.picked,
+    loaded: loaded,
     failure: failure,
     detail: detail,
   );
 
   @override
-  List<Object?> get props => [status, channels, picked, failure, detail];
+  List<Object?> get props => [
+    status,
+    channels,
+    picked,
+    loaded,
+    failure,
+    detail,
+  ];
 }
 
 /// 내 YouTube 구독 채널을 불러와 그중 고른 것만 앱의 구독 채널로 추가하는 화면의 상태.
@@ -55,7 +66,19 @@ class MySubscriptionsCubit extends Cubit<MySubscriptionsState> {
     final id = ++_request;
     emit(const MySubscriptionsState(status: MySubscriptionsStatus.loading));
     try {
-      final items = await _fetch(const NoParams());
+      final items = await _fetch(
+        MySubscriptionsParams(
+          onProgress: (loaded) {
+            if (id != _request || isClosed) return;
+            emit(
+              MySubscriptionsState(
+                status: MySubscriptionsStatus.loading,
+                loaded: loaded,
+              ),
+            );
+          },
+        ),
+      );
       if (id != _request || isClosed) return;
       emit(
         MySubscriptionsState(

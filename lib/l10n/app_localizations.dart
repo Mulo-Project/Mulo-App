@@ -5426,6 +5426,12 @@ abstract class AppLocalizations {
   /// **'구독 중'**
   String get channelImportAlready;
 
+  /// No description provided for @channelImportLoading.
+  ///
+  /// In ko, this message translates to:
+  /// **'구독 채널 {count}개 불러오는 중…'**
+  String channelImportLoading(int count);
+
   /// No description provided for @channelImportEmptyTitle.
   ///
   /// In ko, this message translates to:

@@ -199,7 +199,11 @@ class _MySubscriptionsScreenState extends State<MySubscriptionsScreen> {
     switch (state.status) {
       case MySubscriptionsStatus.idle:
       case MySubscriptionsStatus.loading:
-        return const LoadingState();
+        return LoadingState(
+          label: state.loaded == 0
+              ? null
+              : l10n.channelImportLoading(state.loaded),
+        );
       case MySubscriptionsStatus.failed:
         return switch (state.failure) {
           AccountFailure.unauthorized => EmptyState.signIn(
@@ -234,27 +238,32 @@ class _MySubscriptionsScreenState extends State<MySubscriptionsScreen> {
             body: l10n.channelImportEmptyBody,
           );
         }
-        return ListView(
+        // 구독이 수백~수천 개일 수 있어 보이는 행만 만든다.
+        return ListView.builder(
           padding: EdgeInsets.only(
             bottom: AppSpacing.lg + (state.picked.isEmpty ? 0 : 72),
           ),
-          children: [
-            Padding(
-              padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
-              child: Text(
-                l10n.channelImportHint,
-                style: Theme.of(context).textTheme.bodySmall
-                    ?.copyWith(color: context.palette.onSurfaceMuted),
-              ),
-            ),
-            for (final c in state.channels)
-              _Row(
-                hit: c,
-                subscribed: subs.isSubscribedId(c.id),
-                picked: state.picked.contains(c.id),
-                onTap: () => _cubit.toggle(c.id),
-              ),
-          ],
+          itemCount: state.channels.length + 1,
+          itemBuilder: (context, i) {
+            if (i == 0) {
+              return Padding(
+                padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
+                child: Text(
+                  l10n.channelImportHint,
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: context.palette.onSurfaceMuted),
+                ),
+              );
+            }
+            final c = state.channels[i - 1];
+            return _Row(
+              key: ValueKey(c.id),
+              hit: c,
+              subscribed: subs.isSubscribedId(c.id),
+              picked: state.picked.contains(c.id),
+              onTap: () => _cubit.toggle(c.id),
+            );
+          },
         );
     }
   }
@@ -262,6 +271,7 @@ class _MySubscriptionsScreenState extends State<MySubscriptionsScreen> {
 
 class _Row extends StatelessWidget {
   const _Row({
+    super.key,
     required this.hit,
     required this.subscribed,
     required this.picked,
