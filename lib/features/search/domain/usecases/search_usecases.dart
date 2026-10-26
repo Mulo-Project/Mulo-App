@@ -5,6 +5,7 @@ import '../entities/engine_exception.dart';
 import '../entities/media_info.dart';
 import '../entities/subtitle_track.dart';
 import '../entities/preview_progress.dart';
+import '../entities/preview_snapshot.dart';
 import '../entities/search_source.dart';
 import '../repositories/downloader_engine.dart';
 import '../repositories/link_opener.dart';
@@ -146,6 +147,26 @@ class PlayPreview implements UseCase<void, AudioStream> {
 
   @override
   Future<void> call(AudioStream stream) => _player.play(stream);
+}
+
+/// 재생 중인 미리 듣기가 어느 곡인지 플레이어에 적어 두기.
+class RememberPreview implements UseCase<void, MediaHit> {
+  const RememberPreview(this._player);
+
+  final PreviewPlayer _player;
+
+  @override
+  Future<void> call(MediaHit hit) => _player.remember(hit);
+}
+
+/// 플레이어가 지금 내고 있는 미리 듣기 읽기 (없으면 null).
+class CurrentPreview implements UseCase<PreviewSnapshot?, NoParams> {
+  const CurrentPreview(this._player);
+
+  final PreviewPlayer _player;
+
+  @override
+  Future<PreviewSnapshot?> call(NoParams params) => _player.current();
 }
 
 /// 미리 듣기 재생 위치 옮기기.

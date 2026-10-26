@@ -7,6 +7,7 @@ import '../../../../core/usecase/usecase.dart';
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/preview_progress.dart';
+import '../../domain/entities/preview_snapshot.dart';
 import '../../domain/usecases/search_usecases.dart';
 
 enum PreviewStatus { idle, loading, playing }
@@ -78,6 +79,8 @@ class PreviewCubit extends Cubit<PreviewState> {
   PreviewCubit(
     this._resolve,
     this._play,
+    this._remember,
+    this._current,
     this._seek,
     this._pause,
     this._resume,
@@ -86,6 +89,7 @@ class PreviewCubit extends Cubit<PreviewState> {
     WatchPreviewProgress watchProgress,
     WatchPreviewFailures watchFailures,
   ) : super(const PreviewState()) {
+    unawaited(syncWithPlayer());
     _completed = watchCompleted(const NoParams()).listen((_) => stop());
     _progress = watchProgress(const NoParams()).listen(_onProgress);
     _failures = watchFailures(const NoParams()).listen(_onFailure);
@@ -93,6 +97,8 @@ class PreviewCubit extends Cubit<PreviewState> {
 
   final ResolveAudioStream _resolve;
   final PlayPreview _play;
+  final RememberPreview _remember;
+  final CurrentPreview _current;
   final SeekPreview _seek;
   final PausePreview _pause;
   final ResumePreview _resume;
@@ -193,6 +199,8 @@ class PreviewCubit extends Cubit<PreviewState> {
           title: hit.title,
         ),
       );
+      // 앱이 꺼졌다 켜져도 어느 곡인지 알 수 있게 플레이어에 적어 둔다 (실패해도 듣는 데는 지장 없다).
+      unawaited(_remember(hit).catchError((Object _) {}));
       return null;
     } on EngineException catch (e) {
       if (generation != _generation || isClosed) return null;
@@ -206,6 +214,56 @@ class PreviewCubit extends Cubit<PreviewState> {
       lastFailureDetail = '$e';
       return EngineFailure.failed;
     }
+  }
+
+  /// 화면 상태를 플레이어의 실제 상태에 맞춘다. 앱이 켜질 때와 앞으로 돌아올 때 부른다:
+  /// 알림에 떠 있는 미리 듣기가 화면에는 없으면 미니 플레이어로 되살리고,
+  /// 화면은 듣는 중인데 플레이어가 멈춰 있으면 화면도 멈춘 상태로 돌린다.
+  /// 불러오는 중이면 건드리지 않는다.
+  Future<void> syncWithPlayer() async {
+    if (isClosed || state.status == PreviewStatus.loading) return;
+    final generation = _generation;
+    final PreviewSnapshot? snap;
+    try {
+      snap = await _current(const NoParams());
+    } catch (_) {
+      return; // 읽지 못하면 지금 상태를 그대로 둔다.
+    }
+    // 읽는 사이 듣기를 시작 · 멈췄다면 그쪽이 더 새 상태다.
+    if (isClosed || generation != _generation) return;
+    if (state.status == PreviewStatus.loading) return;
+    if (snap == null) {
+      if (state.status == PreviewStatus.playing) emit(const PreviewState());
+      return;
+    }
+    if (state.status == PreviewStatus.playing && state.hitId == snap.hit.id) {
+      if (state.paused != snap.paused) {
+        emit(
+          PreviewState(
+            hitId: state.hitId,
+            hit: state.hit,
+            status: state.status,
+            progress: state.progress,
+            title: state.title,
+            paused: snap.paused,
+          ),
+        );
+      }
+      return;
+    }
+    emit(
+      PreviewState(
+        hitId: snap.hit.id,
+        hit: snap.hit,
+        status: PreviewStatus.playing,
+        title: snap.hit.title,
+        progress: PreviewProgress(
+          position: snap.position,
+          duration: snap.duration,
+        ),
+        paused: snap.paused,
+      ),
+    );
   }
 
   /// 재생 위치를 전체 길이의 [fraction](0 ~ 1) 자리로 옮긴다.
