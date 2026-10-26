@@ -260,6 +260,32 @@ void main() {
     expect(find.text('1회'), findsWidgets);
   });
 
+  testWidgets('홈: 최근 들은 곡을 길게 눌러 고르면 재생목록 추가만 있는 작업 시트가 뜬다', (tester) async {
+    final history = MemoryPlayHistory();
+    await _pumpApp(
+      tester,
+      setUp: () =>
+          setUpTestDependencies(tracks: TestData.tracks, history: history),
+    );
+    final first = TestData.tracks.reduce(
+      (a, b) => a.addedAt.isAfter(b.addedAt) ? a : b,
+    );
+    await tester.tap(find.text(first.title).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('nav-홈')));
+    await tester.pumpAndSettle();
+
+    await tester.longPress(find.text(first.title).first);
+    await tester.pumpAndSettle();
+    expect(find.text('1곡 선택'), findsOneWidget);
+
+    await tester.tap(find.text('작업'));
+    await tester.pumpAndSettle();
+    expect(find.text('재생목록에 추가'), findsOneWidget);
+    expect(find.text('앨범 지정'), findsNothing);
+    expect(find.text('대기열에서 빼기'), findsNothing);
+  });
+
   testWidgets('홈: 보관함이 비었으면 보관함으로 안내', (tester) async {
     await _pumpApp(
       tester,

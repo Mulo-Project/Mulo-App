@@ -534,17 +534,15 @@ void main() {
     expect(after.single.status, DownloadStatus.paused);
   });
 
-  test('mp3로 정하면 받은 뒤 mp3로 바꿔 저장한다 (음질은 비트레이트)', () async {
-    settings
-      ..format = AudioFormat.mp3
-      ..quality = Quality.normal;
+  test('mp3로 정하면 받은 뒤 mp3로 바꿔 저장한다 (항상 최고 음질 192kbps)', () async {
+    settings.format = AudioFormat.mp3;
     final repo = build(_FakeDownloader());
     await repo.enqueue(request);
     await settled(
       repo,
       (l) => l.isNotEmpty && l.single.status == DownloadStatus.done,
     );
-    expect(transcoder.plans.single.bitrateKbps, 128);
+    expect(transcoder.plans.single.bitrateKbps, 192);
     expect(store.saved.single.ext, 'mp3');
     expect(
       (await library.watchTracks().first).single.uri,
@@ -552,26 +550,23 @@ void main() {
     );
   });
 
-  test('곡마다 정한 형식 · 음질이 설정의 기본보다 먼저다', () async {
-    settings
-      ..format = AudioFormat.mp3
-      ..quality = Quality.best;
+  test('곡마다 정한 형식이 설정의 기본보다 먼저다', () async {
+    settings.format = AudioFormat.mp3;
     final repo = build(_FakeDownloader());
     await repo.enqueue(
       const DownloadRequest(
         title: 'Two',
         url: 'https://youtu.be/def',
         format: AudioFormat.opus,
-        quality: Quality.saver,
       ),
     );
     await settled(
       repo,
       (l) => l.isNotEmpty && l.single.status == DownloadStatus.done,
     );
-    expect(transcoder.plans.single.codec, 'libopus');
-    expect(transcoder.plans.single.bitrateKbps, 64);
-    expect(store.saved.single.ext, 'opus');
+    // opus는 받은 원본 그대로 저장한다 (다시 인코딩하지 않는다).
+    expect(transcoder.plans, isEmpty);
+    expect(store.saved.single.ext, 'weba');
   });
 
   test('변환기가 없으면 받은 원본 그대로 저장한다', () async {

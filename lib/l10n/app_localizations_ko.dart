@@ -163,15 +163,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get alreadyDownloaded => '이미 받은 곡';
 
   @override
-  String get qualityBest => '최고';
-
-  @override
-  String get qualityNormal => '보통';
-
-  @override
-  String get qualitySaver => '절약';
-
-  @override
   String get downloadsActive => '진행 중';
 
   @override
@@ -357,9 +348,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get loadedFoldersCovers => '곡 이미지를 가져오는 중이에요';
-
-  @override
-  String get settingsQuality => '기본 음질';
 
   @override
   String get settingsFormat => '기본 포맷';
@@ -649,6 +637,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get queueClear => '대기열 비우기';
+
+  @override
+  String get queueSelect => '여러 곡 선택';
 
   @override
   String get queueCleared => '대기열을 비웠어요';

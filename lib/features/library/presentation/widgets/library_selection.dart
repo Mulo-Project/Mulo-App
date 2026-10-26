@@ -7,6 +7,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../domain/entities/track.dart';
 import '../../domain/entities/track_group.dart';
+import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import 'track_list_tile.dart' show TrackSelection;
 import '../bloc/library_cubit.dart';
@@ -17,6 +18,7 @@ enum SelectionAction {
   selectAll,
   addToPlaylist,
   removeFromPlaylist,
+  removeFromQueue,
   album,
   artist,
   genre,
@@ -87,6 +89,9 @@ Future<SelectionAction?> showSelectionActionSheet(
   int count, {
   required bool allPicked,
   bool inPlaylist = false,
+  bool inQueue = false,
+  bool canSelectAll = true,
+  bool editable = true,
 }) {
   final l10n = context.l10n;
   return showAppSheet<SelectionAction>(
@@ -102,7 +107,7 @@ Future<SelectionAction?> showSelectionActionSheet(
             children: [
               AppSheetTitle(l10n.selectCount(count)),
               const SizedBox(height: AppSpacing.xs),
-              if (!allPicked)
+              if (canSelectAll && !allPicked)
                 MenuRow(
                   icon: AppIcons.checkCircle,
                   label: l10n.newVideosSelectAll,
@@ -119,21 +124,29 @@ Future<SelectionAction?> showSelectionActionSheet(
                   label: l10n.trackMenuRemoveFromPlaylist,
                   onTap: () => pick(SelectionAction.removeFromPlaylist),
                 ),
-              MenuRow(
-                icon: AppIcons.album,
-                label: l10n.selectAssignAlbum,
-                onTap: () => pick(SelectionAction.album),
-              ),
-              MenuRow(
-                icon: AppIcons.person,
-                label: l10n.selectAssignArtist,
-                onTap: () => pick(SelectionAction.artist),
-              ),
-              MenuRow(
-                icon: AppIcons.category,
-                label: l10n.selectAssignGenre,
-                onTap: () => pick(SelectionAction.genre),
-              ),
+              if (inQueue)
+                MenuRow(
+                  icon: AppIcons.playlistRemove,
+                  label: l10n.trackMenuRemoveFromQueue,
+                  onTap: () => pick(SelectionAction.removeFromQueue),
+                ),
+              if (editable) ...[
+                MenuRow(
+                  icon: AppIcons.album,
+                  label: l10n.selectAssignAlbum,
+                  onTap: () => pick(SelectionAction.album),
+                ),
+                MenuRow(
+                  icon: AppIcons.person,
+                  label: l10n.selectAssignArtist,
+                  onTap: () => pick(SelectionAction.artist),
+                ),
+                MenuRow(
+                  icon: AppIcons.category,
+                  label: l10n.selectAssignGenre,
+                  onTap: () => pick(SelectionAction.genre),
+                ),
+              ],
             ],
           ),
         ),
@@ -333,6 +346,15 @@ mixin TrackPicker<T extends StatefulWidget> on State<T> {
   /// 재생목록 안의 곡 목록이면 그 재생목록 id (작업 시트에 "재생목록에서 빼기"가 더해진다).
   String? get pickerPlaylistId => null;
 
+  /// 재생 대기열 화면이면 true (작업 시트에 "대기열에서 빼기"가 더해진다).
+  bool get pickerInQueue => false;
+
+  /// 작업 시트에 "전체 선택"을 둘지 (여러 구역이 한 화면에 있는 홈은 끈다).
+  bool get pickerCanSelectAll => true;
+
+  /// 작업 시트에 앨범 · 아티스트 · 장르 지정을 둘지 (읽기 전용 목록은 끈다).
+  bool get pickerEditable => true;
+
   /// 묶음(아티스트 · 앨범 · 장르 줄) 하나의 곡을 모두 고르거나, 이미 모두 골랐으면 모두 푼다.
   void toggleGroup(List<Track> tracks) => setState(() {
     final ids = tracks.map((t) => t.id);
@@ -367,8 +389,12 @@ mixin TrackPicker<T extends StatefulWidget> on State<T> {
       ids.length,
       allPicked: allPicked(shown),
       inPlaylist: pickerPlaylistId != null,
+      inQueue: pickerInQueue,
+      canSelectAll: pickerCanSelectAll,
+      editable: pickerEditable,
     );
     if (action == null || !mounted) return;
+    if (action != SelectionAction.selectAll && ids.isEmpty) return;
     switch (action) {
       case SelectionAction.selectAll:
         setState(() => picked.addAll(shown.map((t) => t.id)));
@@ -380,6 +406,9 @@ mixin TrackPicker<T extends StatefulWidget> on State<T> {
           await playlists.removeTrack(id, pickerPlaylistId!);
         }
         if (mounted) clearPicked();
+      case SelectionAction.removeFromQueue:
+        context.read<NowPlayingCubit>().removeFromQueueByIds(ids.toSet());
+        clearPicked();
       case SelectionAction.album ||
           SelectionAction.artist ||
           SelectionAction.genre:

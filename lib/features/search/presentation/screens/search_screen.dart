@@ -23,7 +23,7 @@ import '../widgets/preview_control.dart';
 import '../widgets/search_source_menu.dart';
 
 /// 검색 · URL 입력 (상세 기능: URL로 곡 정보 불러오기 #1, 키워드 검색 #2,
-/// 재생목록 URL 불러오기 #3, 공유 메뉴로 받기 #4, 음질 선택 #6, 중복 다운로드 방지 #9).
+/// 재생목록 URL 불러오기 #3, 공유 메뉴로 받기 #4, 중복 다운로드 방지 #9).
 /// 입력하고 확인을 누르면 찾는다. 곡을 누르면 받기 팝업이 열린다.
 /// 지금은 대기열에만 넣고 실제 받기는 다음 작업에서 이어진다.
 class SearchScreen extends StatefulWidget {

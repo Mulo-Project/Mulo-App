@@ -10,7 +10,6 @@ import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/widgets/cover_editor_page.dart';
 import '../../../covers/presentation/widgets/cover_entry.dart';
-import '../../domain/entities/download_options.dart';
 import '../../domain/entities/download_request.dart';
 import '../../domain/entities/download_source.dart';
 import '../../../search/presentation/bloc/audio_language_cubit.dart';
@@ -30,7 +29,6 @@ Future<bool> showDownloadDialog(
   String artist = '',
   String album = '',
   String genre = '',
-  Quality? quality,
   Duration? duration,
   String? thumbnailUrl,
   required String url,
@@ -107,7 +105,6 @@ Future<bool> showDownloadDialog(
           artist: artist,
           album: album,
           genre: genre,
-          quality: quality,
           duration: duration,
           thumbnailUrl: thumbnailUrl,
           url: url,
@@ -126,7 +123,6 @@ class DownloadScreen extends StatefulWidget {
     required this.artist,
     this.album = '',
     required this.genre,
-    this.quality,
     required this.url,
     this.duration,
     this.thumbnailUrl,
@@ -139,7 +135,6 @@ class DownloadScreen extends StatefulWidget {
   final String artist;
   final String album;
   final String genre;
-  final Quality? quality;
   final Duration? duration;
   final String? thumbnailUrl;
   final String url;
@@ -269,7 +264,6 @@ class _DownloadScreenState extends State<DownloadScreen> {
         album: _album.text.trim(),
         genre: _genre.text,
         playlistIds: _selected,
-        quality: widget.quality,
         savePath: _savePath.text,
         duration: widget.duration,
         color: color?.toARGB32(),
