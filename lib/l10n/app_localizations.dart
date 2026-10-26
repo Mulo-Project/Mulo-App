@@ -1310,6 +1310,12 @@ abstract class AppLocalizations {
   /// **'대기열 비우기'**
   String get queueClear;
 
+  /// No description provided for @queueSelect.
+  ///
+  /// In ko, this message translates to:
+  /// **'여러 곡 선택'**
+  String get queueSelect;
+
   /// No description provided for @queueCleared.
   ///
   /// In ko, this message translates to:
@@ -3571,6 +3577,84 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'{s}초'**
   String lyricsLatencySeconds(String s);
+
+  /// No description provided for @lyricsToFileTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장한 가사를 파일에 쓰기'**
+  String get lyricsToFileTitle;
+
+  /// No description provided for @lyricsToFileDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱에만 저장해 둔 가사를 음악 파일의 가사 태그로 옮겨요.'**
+  String get lyricsToFileDesc;
+
+  /// No description provided for @lyricsToFileNone.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱에 저장한 가사가 없어요'**
+  String get lyricsToFileNone;
+
+  /// No description provided for @lyricsToFileConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱에 저장한 가사 {count}곡을 음악 파일의 가사 태그에 써요. 파일에 같은 가사가 이미 있는 곡은 건너뛰고, 앱 안 가사는 그대로 둬요.'**
+  String lyricsToFileConfirm(int count);
+
+  /// No description provided for @lyricsToFileApply.
+  ///
+  /// In ko, this message translates to:
+  /// **'쓰기'**
+  String get lyricsToFileApply;
+
+  /// No description provided for @lyricsToFileProgressTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사를 파일에 쓰는 중이에요'**
+  String get lyricsToFileProgressTitle;
+
+  /// No description provided for @lyricsToFileDoneTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사 쓰기를 마쳤어요'**
+  String get lyricsToFileDoneTitle;
+
+  /// No description provided for @lyricsToFileOk.
+  ///
+  /// In ko, this message translates to:
+  /// **'확인'**
+  String get lyricsToFileOk;
+
+  /// No description provided for @lyricsToFileWritten.
+  ///
+  /// In ko, this message translates to:
+  /// **'{n}곡을 파일에 썼어요'**
+  String lyricsToFileWritten(int n);
+
+  /// No description provided for @lyricsToFileAlready.
+  ///
+  /// In ko, this message translates to:
+  /// **'{n}곡은 파일에 같은 가사가 있어 건너뛰었어요'**
+  String lyricsToFileAlready(int n);
+
+  /// No description provided for @lyricsToFileSkipped.
+  ///
+  /// In ko, this message translates to:
+  /// **'{n}곡은 파일 형식이나 환경 때문에 쓸 수 없어 건너뛰었어요'**
+  String lyricsToFileSkipped(int n);
+
+  /// No description provided for @lyricsToFileFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'{n}곡은 파일에 쓰지 못했어요. 앱 안 가사는 그대로예요'**
+  String lyricsToFileFailed(int n);
+
+  /// No description provided for @lyricsToFileUnsupported.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 기기와 빌드에서는 가사를 음악 파일에 쓸 수 없어요 (lite 빌드 · 데스크톱 등). 앱 안 가사는 그대로예요.'**
+  String get lyricsToFileUnsupported;
 
   /// No description provided for @lyricsLatencyReset.
   ///

@@ -324,6 +324,15 @@ class MemoryLyricsRepository implements LyricsRepository {
   }
 
   @override
+  Future<Set<String>> savedTrackIds() async => saved.keys.toSet();
+
+  @override
+  Future<Lyrics?> loadSaved(String trackId) async {
+    final text = saved[trackId];
+    return text == null ? null : Lyrics.parse(text);
+  }
+
+  @override
   Future<Lyrics?> save(String trackId, String text) async {
     final lyrics = Lyrics.parse(text);
     if (lyrics == null) {

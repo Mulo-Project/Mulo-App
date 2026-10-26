@@ -9,6 +9,8 @@ import '../../../../core/l10n/l10n.dart';
 Future<T> showProgressWhile<T>(
   BuildContext context, {
   required Future<T> Function(void Function(int done, int total) report) task,
+  String Function(AppLocalizations l10n)? title,
+  String Function(AppLocalizations l10n, int done, int total)? count,
 }) async {
   final progress = ValueNotifier<(int, int)>((0, 0));
   final navigator = Navigator.of(context, rootNavigator: true);
@@ -24,7 +26,7 @@ Future<T> showProgressWhile<T>(
         builder: (context, p, _) {
           final l10n = context.l10n;
           return AppDialog(
-            title: l10n.renameProgressTitle,
+            title: title?.call(l10n) ?? l10n.renameProgressTitle,
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -32,7 +34,8 @@ Future<T> showProgressWhile<T>(
                 ProgressLine(value: p.$2 == 0 ? 0 : p.$1 / p.$2, height: 6),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  l10n.renameProgressCount(p.$1, p.$2),
+                  count?.call(l10n, p.$1, p.$2) ??
+                      l10n.renameProgressCount(p.$1, p.$2),
                   style: Theme.of(context).textTheme.bodySmall,
                   textAlign: TextAlign.center,
                 ),

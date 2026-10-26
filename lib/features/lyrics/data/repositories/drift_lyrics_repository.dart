@@ -37,6 +37,20 @@ class DriftLyricsRepository implements LyricsRepository {
   }
 
   @override
+  Future<Set<String>> savedTrackIds() async =>
+      (await _db.select(_db.lyricsFiles).get())
+          .map((row) => row.trackId)
+          .toSet();
+
+  @override
+  Future<Lyrics?> loadSaved(String trackId) async {
+    final path = await _pathOf(trackId);
+    if (path == null) return null;
+    final text = await _readQuietly(path);
+    return text == null ? null : Lyrics.parse(text);
+  }
+
+  @override
   Future<Lyrics?> save(String trackId, String text) async {
     final lyrics = Lyrics.parse(text);
     if (lyrics == null) {

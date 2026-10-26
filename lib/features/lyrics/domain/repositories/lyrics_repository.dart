@@ -6,6 +6,12 @@ abstract interface class LyricsRepository {
   /// 모두 없으면 null. [trackUri]는 재생 주소 (파일 경로가 아니면 옆 파일은 찾지 않는다).
   Future<Lyrics?> load(String trackId, String trackUri);
 
+  /// 앱에 직접 저장한 가사가 있는 곡 id들 (음원 옆 `.lrc` · 파일 태그 가사는 포함하지 않는다).
+  Future<Set<String>> savedTrackIds();
+
+  /// 앱에 직접 저장한 가사만 읽는다. 없거나 파일을 못 읽으면 null.
+  Future<Lyrics?> loadSaved(String trackId);
+
   /// [text]를 곡의 가사로 저장한다. 내용이 비면 가사를 지우고 null.
   Future<Lyrics?> save(String trackId, String text);
 

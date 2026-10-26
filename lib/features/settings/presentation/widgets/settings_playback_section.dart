@@ -12,6 +12,7 @@ import '../../../player/presentation/bloc/mix_with_others_cubit.dart';
 import '../../../player/presentation/bloc/output_behavior_cubit.dart';
 
 import 'settings_common.dart';
+import 'settings_lyrics_file_row.dart';
 
 /// 재생 묶음: 다른 앱과 같이 재생 · 출력 기기 동작 · 이퀄라이저 · 반응 시간 보정.
 class SettingsPlaybackSection extends StatelessWidget {
@@ -88,6 +89,7 @@ class SettingsPlaybackSection extends StatelessWidget {
           trailing: const SettingsChevron(),
           onTap: () => showLyricsLatency(context),
         ),
+        const SettingsLyricsFileRow(),
       ],
     );
   }

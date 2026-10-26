@@ -665,6 +665,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get queueClear => 'Clear queue';
 
   @override
+  String get queueSelect => 'Select songs';
+
+  @override
   String get queueCleared => 'Queue cleared';
 
   @override
@@ -1938,6 +1941,57 @@ class AppLocalizationsEn extends AppLocalizations {
   String lyricsLatencySeconds(String s) {
     return '${s}s';
   }
+
+  @override
+  String get lyricsToFileTitle => 'Write saved lyrics to files';
+
+  @override
+  String get lyricsToFileDesc =>
+      'Copy lyrics saved only in the app into each music file\'s lyrics tag.';
+
+  @override
+  String get lyricsToFileNone => 'No lyrics are saved in the app';
+
+  @override
+  String lyricsToFileConfirm(int count) {
+    return 'Write the lyrics saved for $count songs into their music files\' lyrics tags. Songs whose file already has the same lyrics are skipped, and lyrics inside the app stay as they are.';
+  }
+
+  @override
+  String get lyricsToFileApply => 'Write';
+
+  @override
+  String get lyricsToFileProgressTitle => 'Writing lyrics to files';
+
+  @override
+  String get lyricsToFileDoneTitle => 'Finished writing lyrics';
+
+  @override
+  String get lyricsToFileOk => 'OK';
+
+  @override
+  String lyricsToFileWritten(int n) {
+    return 'Wrote $n songs to their files';
+  }
+
+  @override
+  String lyricsToFileAlready(int n) {
+    return 'Skipped $n songs whose file already has the same lyrics';
+  }
+
+  @override
+  String lyricsToFileSkipped(int n) {
+    return 'Skipped $n songs that can\'t be written because of their format or this device';
+  }
+
+  @override
+  String lyricsToFileFailed(int n) {
+    return 'Couldn\'t write $n songs. Lyrics inside the app are unchanged';
+  }
+
+  @override
+  String get lyricsToFileUnsupported =>
+      'This device and build can\'t write lyrics into music files (lite build, desktop, etc.). Lyrics inside the app are unchanged.';
 
   @override
   String get lyricsLatencyReset => 'Reset to 0.20s';

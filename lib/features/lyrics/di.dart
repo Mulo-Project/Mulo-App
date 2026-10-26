@@ -14,6 +14,7 @@ import 'domain/usecases/lyrics_overlay_usecases.dart';
 import 'domain/usecases/lyrics_settings_usecases.dart';
 import 'domain/usecases/lyrics_usecases.dart';
 import 'presentation/bloc/lyrics_cubit.dart';
+import 'presentation/bloc/lyrics_file_write_cubit.dart';
 import 'presentation/bloc/lyrics_overlay_cubit.dart';
 import 'presentation/bloc/lyrics_settings_cubit.dart';
 
@@ -27,10 +28,13 @@ void registerLyrics(GetIt sl) {
     ..registerFactory(() => LoadLyrics(sl()))
     ..registerFactory(() => SaveLyrics(sl(), sl()))
     ..registerFactory(() => ClearLyrics(sl()))
+    ..registerFactory(() => CountSavedLyricsTracks(sl(), sl()))
+    ..registerFactory(() => WriteSavedLyricsToFiles(sl(), sl(), sl(), sl()))
     ..registerFactory(() => PickLyricsFile(sl()))
     ..registerFactory(
       () => LyricsCubit(load: sl(), save: sl(), clear: sl(), pickFile: sl()),
     )
+    ..registerFactory(() => LyricsFileWriteCubit(count: sl(), write: sl()))
     ..registerLazySingleton<LyricsSettingsRepository>(
       PrefsLyricsSettingsRepository.new,
     )

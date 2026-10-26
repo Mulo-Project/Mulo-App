@@ -651,6 +651,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get queueClear => '대기열 비우기';
 
   @override
+  String get queueSelect => '여러 곡 선택';
+
+  @override
   String get queueCleared => '대기열을 비웠어요';
 
   @override
@@ -1887,6 +1890,56 @@ class AppLocalizationsKo extends AppLocalizations {
   String lyricsLatencySeconds(String s) {
     return '$s초';
   }
+
+  @override
+  String get lyricsToFileTitle => '저장한 가사를 파일에 쓰기';
+
+  @override
+  String get lyricsToFileDesc => '앱에만 저장해 둔 가사를 음악 파일의 가사 태그로 옮겨요.';
+
+  @override
+  String get lyricsToFileNone => '앱에 저장한 가사가 없어요';
+
+  @override
+  String lyricsToFileConfirm(int count) {
+    return '앱에 저장한 가사 $count곡을 음악 파일의 가사 태그에 써요. 파일에 같은 가사가 이미 있는 곡은 건너뛰고, 앱 안 가사는 그대로 둬요.';
+  }
+
+  @override
+  String get lyricsToFileApply => '쓰기';
+
+  @override
+  String get lyricsToFileProgressTitle => '가사를 파일에 쓰는 중이에요';
+
+  @override
+  String get lyricsToFileDoneTitle => '가사 쓰기를 마쳤어요';
+
+  @override
+  String get lyricsToFileOk => '확인';
+
+  @override
+  String lyricsToFileWritten(int n) {
+    return '$n곡을 파일에 썼어요';
+  }
+
+  @override
+  String lyricsToFileAlready(int n) {
+    return '$n곡은 파일에 같은 가사가 있어 건너뛰었어요';
+  }
+
+  @override
+  String lyricsToFileSkipped(int n) {
+    return '$n곡은 파일 형식이나 환경 때문에 쓸 수 없어 건너뛰었어요';
+  }
+
+  @override
+  String lyricsToFileFailed(int n) {
+    return '$n곡은 파일에 쓰지 못했어요. 앱 안 가사는 그대로예요';
+  }
+
+  @override
+  String get lyricsToFileUnsupported =>
+      '이 기기와 빌드에서는 가사를 음악 파일에 쓸 수 없어요 (lite 빌드 · 데스크톱 등). 앱 안 가사는 그대로예요.';
 
   @override
   String get lyricsLatencyReset => '기본값 0.20초로';
