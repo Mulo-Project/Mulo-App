@@ -51,18 +51,6 @@ class SubscriptionChannel(
                         moveToBack()
                         result.success(null)
                     }
-                    "showTest" -> {
-                        // 알림 모양 확인용 임시 기능: 샘플 영상 알림을 지금 띄운다.
-                        val now = System.currentTimeMillis()
-                        NewVideoNotifications.showVideos(
-                            context,
-                            listOf(
-                                NewVideo("sample-1", "Sample video title 1", "sample-a", "Sample channel A", null, now),
-                                NewVideo("sample-2", "Sample video title 2 (a longer title to check how it wraps)", "sample-b", "Sample channel B", null, now - 60_000),
-                            ),
-                        )
-                        result.success(null)
-                    }
                     "checkNow" -> {
                         checkNow(context)
                         result.success(null)

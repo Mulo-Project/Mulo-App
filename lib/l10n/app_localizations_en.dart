@@ -2682,15 +2682,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Couldn\'t search for channels. Please try again later';
 
   @override
-  String get subscriptionsTestTitle => 'Temporary · preview only';
-
-  @override
-  String get subscriptionsTestNotification => 'Show new-video notification';
-
-  @override
-  String get subscriptionsTestNewVideos => 'Preview new videos screen';
-
-  @override
   String get categoryAll => 'All categories';
 
   @override

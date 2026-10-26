@@ -1708,7 +1708,6 @@ class FakeBackgroundChecker implements BackgroundChecker {
   @override
   Future<void> clearNotification() async => cleared++;
 
-  var testShown = 0;
   var movedToBack = 0;
   final downloadRequests = <NewVideoDownloadRequest>[];
 
@@ -1723,9 +1722,6 @@ class FakeBackgroundChecker implements BackgroundChecker {
 
   @override
   Future<void> moveAppToBack() async => movedToBack++;
-
-  @override
-  Future<void> showTestNotification() async => testShown++;
 
   var checkedNow = 0;
   BackgroundStatus? statusValue;

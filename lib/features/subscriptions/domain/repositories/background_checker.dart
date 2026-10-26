@@ -55,7 +55,4 @@ abstract interface class BackgroundChecker {
 
   /// 예약 · 알림 막힘 · 마지막 확인 결과. 알 수 없으면 null.
   Future<BackgroundStatus?> status();
-
-  /// 샘플 내용의 새 영상 알림을 지금 띄운다 (알림 모양 확인용 임시 기능).
-  Future<void> showTestNotification();
 }

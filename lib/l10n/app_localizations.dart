@@ -4868,24 +4868,6 @@ abstract class AppLocalizations {
   /// **'채널을 찾지 못했어요. 잠시 뒤 다시 시도해 주세요'**
   String get channelSearchFailed;
 
-  /// No description provided for @subscriptionsTestTitle.
-  ///
-  /// In ko, this message translates to:
-  /// **'임시 · 모양 확인용'**
-  String get subscriptionsTestTitle;
-
-  /// No description provided for @subscriptionsTestNotification.
-  ///
-  /// In ko, this message translates to:
-  /// **'새 영상 알림 띄우기'**
-  String get subscriptionsTestNotification;
-
-  /// No description provided for @subscriptionsTestNewVideos.
-  ///
-  /// In ko, this message translates to:
-  /// **'새 영상 화면 미리 보기'**
-  String get subscriptionsTestNewVideos;
-
   /// No description provided for @categoryAll.
   ///
   /// In ko, this message translates to:

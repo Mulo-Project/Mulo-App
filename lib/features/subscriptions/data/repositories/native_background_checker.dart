@@ -104,9 +104,6 @@ class NativeBackgroundChecker implements BackgroundChecker {
   Future<void> clearNotification() => _call<void>('clearNotification');
 
   @override
-  Future<void> showTestNotification() => _call<void>('showTest');
-
-  @override
   Future<void> checkNow() => _call<void>('checkNow');
 
   @override
@@ -158,9 +155,6 @@ class NoBackgroundChecker implements BackgroundChecker {
 
   @override
   Future<void> clearNotification() async {}
-
-  @override
-  Future<void> showTestNotification() async {}
 
   @override
   Future<void> checkNow() async {}

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -8,7 +7,6 @@ import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../domain/entities/subscribed_channel.dart';
-import '../bloc/new_videos_cubit.dart';
 import '../bloc/subscriptions_cubit.dart';
 import '../widgets/category_choices.dart';
 import '../widgets/channel_options_sheet.dart';
@@ -95,15 +93,6 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                           ],
                         ),
                 ),
-                // 임시 확인 버튼은 개발 중(디버그 빌드)에만 보인다.
-                if (kDebugMode)
-                  _TestButtons(
-                    onNotification: _cubit.showTestNotification,
-                    onNewVideos: () {
-                      sl<NewVideosCubit>().showSample();
-                      showNewVideosSheet(context);
-                    },
-                  ),
               ],
             ),
           ),
@@ -161,57 +150,6 @@ class _ChannelRow extends StatelessWidget {
           onChanged: (v) => cubit.setEnabled(channel.id, v),
         ),
         onTap: () => showChannelOptionsSheet(context, cubit, channel.id),
-      ),
-    );
-  }
-}
-
-/// 임시: 알림과 새 영상 목록이 어떻게 보이는지 확인하는 버튼 (확인이 끝나면 지운다).
-class _TestButtons extends StatelessWidget {
-  const _TestButtons({required this.onNotification, required this.onNewVideos});
-
-  final VoidCallback onNotification;
-  final VoidCallback onNewVideos;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final p = context.palette;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        AppSpacing.sm,
-        AppSpacing.md,
-        AppSpacing.md,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Divider(height: 1, color: p.outline),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            l10n.subscriptionsTestTitle,
-            style: Theme.of(context).textTheme.labelSmall,
-          ),
-          // 글자 왼쪽 끝을 위 글과 맞추려고 버튼 안쪽 여백만큼 당긴다.
-          Transform.translate(
-            offset: const Offset(-AppSpacing.sm, 0),
-            child: Wrap(
-              children: [
-                PlainButton(
-                  label: l10n.subscriptionsTestNotification,
-                  icon: AppIcons.sparkle,
-                  onPressed: onNotification,
-                ),
-                PlainButton(
-                  label: l10n.subscriptionsTestNewVideos,
-                  icon: AppIcons.sparkle,
-                  onPressed: onNewVideos,
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

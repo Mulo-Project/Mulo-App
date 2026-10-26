@@ -2609,15 +2609,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get channelSearchFailed => '채널을 찾지 못했어요. 잠시 뒤 다시 시도해 주세요';
 
   @override
-  String get subscriptionsTestTitle => '임시 · 모양 확인용';
-
-  @override
-  String get subscriptionsTestNotification => '새 영상 알림 띄우기';
-
-  @override
-  String get subscriptionsTestNewVideos => '새 영상 화면 미리 보기';
-
-  @override
   String get categoryAll => '모든 분류';
 
   @override

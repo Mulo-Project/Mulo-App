@@ -264,16 +264,6 @@ class SearchChannels implements UseCase<List<ChannelHit>, String> {
   Future<List<ChannelHit>> call(String query) => _searcher.search(query.trim());
 }
 
-/// 새 영상 알림을 지금 한 번 띄운다 (알림 모양 확인용 임시 기능).
-class ShowTestNewVideosNotification implements UseCase<void, NoParams> {
-  const ShowTestNewVideosNotification(this._checker);
-
-  final BackgroundChecker _checker;
-
-  @override
-  Future<void> call(NoParams params) => _checker.showTestNotification();
-}
-
 /// 알림의 "바로 받기"로 들어온 받기 요청을 가져온다.
 class TakeNewVideoDownloads
     implements UseCase<List<NewVideoDownloadRequest>, NoParams> {

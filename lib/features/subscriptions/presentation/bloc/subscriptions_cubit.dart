@@ -73,7 +73,6 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
     this._sync,
     this._requestPermission,
     this._texts,
-    this._showTest,
     this._checkNow,
     this._getStatus,
   ) : super(const SubscriptionsState());
@@ -86,7 +85,6 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
   final SyncBackgroundCheck _sync;
   final RequestNotificationPermission _requestPermission;
   final BackgroundTexts Function() _texts;
-  final ShowTestNewVideosNotification _showTest;
   final CheckNewVideosNow _checkNow;
   final GetBackgroundStatus _getStatus;
 
@@ -235,12 +233,5 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
     }
     await refreshStatus();
     if (!isClosed) emit(state.copyWith(checking: false));
-  }
-
-  /// 알림 모양 확인용 임시 기능: 알림 권한을 요청하고 샘플 새 영상 알림을 띄운다.
-  Future<void> showTestNotification() async {
-    await load();
-    await _requestPermission(const NoParams());
-    await _showTest(const NoParams());
   }
 }
