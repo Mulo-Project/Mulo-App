@@ -639,6 +639,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get queueClear => '대기열 비우기';
 
   @override
+  String get queueSelect => '여러 곡 선택';
+
+  @override
   String get queueCleared => '대기열을 비웠어요';
 
   @override

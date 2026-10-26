@@ -38,6 +38,17 @@ class TrackSelection {
   final VoidCallback onToggle;
 }
 
+/// 선택 모드에서 곡 줄 오른쪽에 보이는 체크 표시.
+Widget selectionMark(BuildContext context, TrackSelection sel) => Padding(
+  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+  child: Icon(
+    sel.selected ? AppIcons.checkCircle : AppIcons.radioOff,
+    color: sel.selected
+        ? context.palette.accent
+        : context.palette.onSurfaceMuted,
+  ),
+);
+
 /// 곡 목록의 한 줄 (보관함 · 재생목록 상세 · 앨범에서 같이 쓴다).
 /// 누르면 [queue]를 [index]부터 재생하고, ⋮ · 길게 누르기는 곡 메뉴를 연다.
 /// [playlistId]가 있으면 재생목록 안의 곡이라서 곡 메뉴의 삭제가 "빼기" · "파일 삭제"로 나뉜다.
@@ -89,15 +100,7 @@ class TrackListTile extends StatelessWidget {
       number: showNumber ? index + 1 : null,
       artwork: coverImageOf(context, CoverKey.track(t.id)),
       trailing: picking
-          ? Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-              child: Icon(
-                sel.selected ? AppIcons.checkCircle : AppIcons.radioOff,
-                color: sel.selected
-                    ? context.palette.accent
-                    : context.palette.onSurfaceMuted,
-              ),
-            )
+          ? selectionMark(context, sel)
           : Row(
               mainAxisSize: MainAxisSize.min,
               children: [
