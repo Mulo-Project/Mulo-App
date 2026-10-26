@@ -24,8 +24,7 @@ import '../datasources/downloaded_file_store.dart';
 /// 엔진으로 오디오 스트림 주소를 읽고 → 구간 요청으로 임시 파일에 받고 → 음악 폴더에 저장한 뒤
 /// 보관함에 곡을 만들고 커버 · 색 · 재생목록을 붙인다.
 ///
-/// - 저장 형식은 기본적으로 스트림 원본이고(Android는 webm/opus), 설정의 형식 · 음질이 mp3이거나 낮은 음질의
-///   opus면 받은 뒤 [AudioTranscoder]로 바꾼다. 변환기가 없거나 실패하면 원본을 그대로 저장한다.
+/// - 저장 형식은 기본적으로 스트림 원본이고(Android는 webm/opus), 설정의 형식이 mp3면 받은 뒤 [AudioTranscoder]로 바꾼다. 변환기가 없거나 실패하면 원본을 그대로 저장한다.
 /// - 일시정지 · 실패해도 받은 만큼은 임시 폴더에 남기고, 다시 받을 때 HTTP 구간 요청으로 이어 받는다.
 /// - 대기열은 [DownloadQueueStore]에 저장되어 앱을 다시 켜도 이어서 받는다 (받는 중이던 곡은 대기로 돌아온다).
 class EngineDownloadQueueRepository implements DownloadQueueRepository {
@@ -356,7 +355,6 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
     File? temp;
     File? converted;
     try {
-      final quality = request.quality ?? await _settings.loadQuality();
       final format = request.format ?? await _settings.loadFormat();
       final dir = await _tempDir();
       await dir.create(recursive: true);
@@ -405,8 +403,8 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
       }
       if (token.isCancelled) throw const DownloadAborted();
 
-      // 설정의 형식 · 음질대로 바꾼다. 변환기가 없거나 실패하면 받은 그대로 저장한다.
-      final plan = TranscodePlan.of(format, quality);
+      // 설정의 형식대로 바꾼다. 변환기가 없거나 실패하면 받은 그대로 저장한다.
+      final plan = TranscodePlan.of(format);
       if (plan != null) {
         converted = File('${dir.path}${Platform.pathSeparator}$id.conv');
         final result = await _transcoder.convert(audio, plan, converted);

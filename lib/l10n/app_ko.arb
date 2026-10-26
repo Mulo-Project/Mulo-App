@@ -63,9 +63,6 @@
     }
   },
   "alreadyDownloaded": "이미 받은 곡",
-  "qualityBest": "최고",
-  "qualityNormal": "보통",
-  "qualitySaver": "절약",
   "downloadsActive": "진행 중",
   "downloadsWaiting": "대기 {count}",
   "@downloadsWaiting": {
@@ -140,7 +137,6 @@
   "loadedFoldersRemoving": "폴더를 빼고 보관함을 정리하는 중이에요",
   "loadedFoldersReading": "곡 정보를 읽는 중이에요",
   "loadedFoldersCovers": "곡 이미지를 가져오는 중이에요",
-  "settingsQuality": "기본 음질",
   "settingsFormat": "기본 포맷",
   "settingsEngine": "다운로드 엔진",
   "settingsEngineVersion": "현재 {current} · 최신 {latest}",

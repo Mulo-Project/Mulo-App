@@ -150,7 +150,7 @@ class PickSaveFolder implements UseCase<String?, NoParams> {
   Future<String?> call(NoParams _) => _repo.pickFolder();
 }
 
-/// 기본 음질 · 저장 형식 읽기.
+/// 기본 저장 형식 읽기.
 class LoadDownloadPreferences
     implements UseCase<DownloadPreferences, NoParams> {
   const LoadDownloadPreferences(this._repo);
@@ -158,20 +158,8 @@ class LoadDownloadPreferences
   final DownloadSettingsRepository _repo;
 
   @override
-  Future<DownloadPreferences> call(NoParams _) async => DownloadPreferences(
-    quality: await _repo.loadQuality(),
-    format: await _repo.loadFormat(),
-  );
-}
-
-/// 기본 음질 정하기.
-class SaveDownloadQuality implements UseCase<void, Quality> {
-  const SaveDownloadQuality(this._repo);
-
-  final DownloadSettingsRepository _repo;
-
-  @override
-  Future<void> call(Quality quality) => _repo.saveQuality(quality);
+  Future<DownloadPreferences> call(NoParams _) async =>
+      DownloadPreferences(format: await _repo.loadFormat());
 }
 
 /// 기본 저장 형식 정하기.

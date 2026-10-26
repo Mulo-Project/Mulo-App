@@ -16,7 +16,7 @@ import '../../../library/presentation/widgets/loaded_folders_tile.dart';
 import 'settings_common.dart';
 import 'settings_engine_sections.dart';
 
-/// 다운로드 묶음: 저장 위치 · 불러오는 폴더 · 엔진 · 기본 음질 · 포맷.
+/// 다운로드 묶음: 저장 위치 · 불러오는 폴더 · 엔진 · 포맷.
 class SettingsDownloadSection extends StatefulWidget {
   const SettingsDownloadSection({super.key, required this.engine});
 
@@ -65,20 +65,6 @@ class _SettingsDownloadSectionState extends State<SettingsDownloadSection> {
         ),
         const LoadedFoldersTile(),
         SettingsEngineRow(cubit: widget.engine),
-        SettingRow(
-          title: l10n.settingsQuality,
-          below: SegmentedPills<Quality>(
-            expand: true,
-            values: Quality.values,
-            selected: prefs.quality,
-            labelOf: (q) => switch (q) {
-              Quality.best => l10n.qualityBest,
-              Quality.normal => l10n.qualityNormal,
-              Quality.saver => l10n.qualitySaver,
-            },
-            onChanged: context.read<DownloadPreferencesCubit>().setQuality,
-          ),
-        ),
         if (_formats.isNotEmpty)
           SettingRow(
             title: l10n.settingsFormat,

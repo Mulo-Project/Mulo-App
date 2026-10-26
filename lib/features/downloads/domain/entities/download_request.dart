@@ -11,7 +11,6 @@ class DownloadRequest extends Equatable {
     this.album = '',
     this.genre = '',
     this.playlistIds = const {},
-    this.quality,
     this.format,
     this.savePath = '',
     this.duration,
@@ -36,8 +35,7 @@ class DownloadRequest extends Equatable {
   final String genre;
   final Set<String> playlistIds;
 
-  /// 이 곡의 음질 · 저장 형식. null이면 받을 때 설정의 기본 음질 · 포맷을 읽어 쓴다.
-  final Quality? quality;
+  /// 이 곡의 저장 형식. null이면 받을 때 설정의 기본 포맷을 읽어 쓴다.
   final AudioFormat? format;
 
   /// 받은 곡을 저장할 폴더. 비어 있으면 기본 저장 위치.
@@ -80,7 +78,6 @@ class DownloadRequest extends Equatable {
     album: album.trim(),
     genre: genre.trim(),
     playlistIds: playlistIds,
-    quality: quality,
     format: format,
     savePath: savePath.trim(),
     duration: duration,
@@ -102,7 +99,6 @@ class DownloadRequest extends Equatable {
     album,
     genre,
     playlistIds,
-    quality,
     format,
     savePath,
     duration,

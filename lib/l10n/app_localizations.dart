@@ -392,24 +392,6 @@ abstract class AppLocalizations {
   /// **'이미 받은 곡'**
   String get alreadyDownloaded;
 
-  /// No description provided for @qualityBest.
-  ///
-  /// In ko, this message translates to:
-  /// **'최고'**
-  String get qualityBest;
-
-  /// No description provided for @qualityNormal.
-  ///
-  /// In ko, this message translates to:
-  /// **'보통'**
-  String get qualityNormal;
-
-  /// No description provided for @qualitySaver.
-  ///
-  /// In ko, this message translates to:
-  /// **'절약'**
-  String get qualitySaver;
-
   /// No description provided for @downloadsActive.
   ///
   /// In ko, this message translates to:
@@ -763,12 +745,6 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'곡 이미지를 가져오는 중이에요'**
   String get loadedFoldersCovers;
-
-  /// No description provided for @settingsQuality.
-  ///
-  /// In ko, this message translates to:
-  /// **'기본 음질'**
-  String get settingsQuality;
 
   /// No description provided for @settingsFormat.
   ///

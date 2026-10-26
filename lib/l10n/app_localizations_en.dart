@@ -164,15 +164,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get alreadyDownloaded => 'Already saved';
 
   @override
-  String get qualityBest => 'Best';
-
-  @override
-  String get qualityNormal => 'Normal';
-
-  @override
-  String get qualitySaver => 'Saver';
-
-  @override
   String get downloadsActive => 'Active';
 
   @override
@@ -361,9 +352,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loadedFoldersCovers => 'Getting song images';
-
-  @override
-  String get settingsQuality => 'Default quality';
 
   @override
   String get settingsFormat => 'Default format';
