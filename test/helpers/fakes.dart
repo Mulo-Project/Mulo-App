@@ -1176,12 +1176,15 @@ class FakeAccountRepository implements AccountRepository {
   }
 
   @override
-  Future<List<ChannelHit>> mySubscriptions() async {
+  Future<List<ChannelHit>> mySubscriptions({
+    void Function(int loaded)? onProgress,
+  }) async {
     final error = playlistsError;
     if (error != null) throw error;
     if (account == null) {
       throw const AccountException(AccountFailure.unauthorized);
     }
+    onProgress?.call(subscriptions.length);
     return subscriptions;
   }
 

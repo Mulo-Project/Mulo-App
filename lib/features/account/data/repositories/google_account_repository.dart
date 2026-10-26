@@ -44,8 +44,8 @@ class GoogleAccountRepository implements AccountRepository {
   /// 한 번에 50개씩, 많아도 이만큼 쪽까지만 읽는다.
   static const _maxPages = 6;
 
-  /// 구독 채널은 재생목록보다 많을 수 있어 더 읽는다 (최대 500개).
-  static const _maxSubscriptionPages = 10;
+  /// 구독 채널은 끝까지(nextPageToken이 없을 때까지) 읽는다. 비정상 응답으로 끝나지 않는 일만 막는 안전 상한.
+  static const _maxSubscriptionPages = 400;
 
   final GoogleAuthSource? _auth;
   final AccountHttpGet _get;
@@ -92,12 +92,15 @@ class GoogleAccountRepository implements AccountRepository {
   }
 
   @override
-  Future<List<ChannelHit>> mySubscriptions() async {
-    final items = await _listAll('/youtube/v3/subscriptions', {
-      'part': 'snippet',
-      'mine': 'true',
-      'order': 'alphabetical',
-    }, _maxSubscriptionPages);
+  Future<List<ChannelHit>> mySubscriptions({
+    void Function(int loaded)? onProgress,
+  }) async {
+    final items = await _listAll(
+      '/youtube/v3/subscriptions',
+      {'part': 'snippet', 'mine': 'true', 'order': 'alphabetical'},
+      _maxSubscriptionPages,
+      onProgress: onProgress,
+    );
     return [for (final item in items) ?parseSubscription(item)];
   }
 
@@ -114,8 +117,9 @@ class GoogleAccountRepository implements AccountRepository {
   Future<List<Map<String, dynamic>>> _listAll(
     String path,
     Map<String, String> query,
-    int maxPages,
-  ) async {
+    int maxPages, {
+    void Function(int loaded)? onProgress,
+  }) async {
     final token = await _source.accessToken();
     final out = <Map<String, dynamic>>[];
     String? pageToken;
@@ -124,8 +128,10 @@ class GoogleAccountRepository implements AccountRepository {
       for (final item in (json['items'] as List? ?? const [])) {
         if (item is Map<String, dynamic>) out.add(item);
       }
-      pageToken = json['nextPageToken'] as String?;
-      if (pageToken == null) break;
+      onProgress?.call(out.length);
+      final next = json['nextPageToken'] as String?;
+      if (next == null || next == pageToken) break;
+      pageToken = next;
     }
     return out;
   }

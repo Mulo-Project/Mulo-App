@@ -1143,6 +1143,8 @@
   "channelImportTitle": "내 구독 채널",
   "channelImportHint": "구독할 채널을 눌러 골라요. 한꺼번에 가져오지 않고 고른 채널만 추가해요.",
   "channelImportAlready": "구독 중",
+  "channelImportLoading": "구독 채널 {count}개 불러오는 중…",
+  "@channelImportLoading": {"placeholders": {"count": {"type": "int"}}},
   "channelImportEmptyTitle": "구독한 채널이 없어요",
   "channelImportEmptyBody": "이 구글 계정으로 YouTube에서 구독한 채널이 없어요.",
   "channelImportSignInBody": "내 YouTube 구독 채널을 불러오려면 구글 로그인이 필요해요.",

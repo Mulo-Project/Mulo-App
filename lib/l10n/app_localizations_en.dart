@@ -3000,6 +3000,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get channelImportAlready => 'Subscribed';
 
   @override
+  String channelImportLoading(int count) {
+    return 'Loading subscriptions… $count so far';
+  }
+
+  @override
   String get channelImportEmptyTitle => 'No subscribed channels';
 
   @override
