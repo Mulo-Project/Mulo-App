@@ -74,6 +74,18 @@ class SettingsEngineRow extends StatelessWidget {
     if (ok) await cubit.remove();
   }
 
+  Future<void> _confirmRevert(BuildContext context) async {
+    final l10n = context.l10n;
+    final ok = await showConfirmDialog(
+      context,
+      title: l10n.settingsEngineRevertTitle,
+      body: l10n.settingsEngineRevertBody,
+      confirmLabel: l10n.settingsEngineRevert,
+      cancelLabel: l10n.actionCancel,
+    );
+    if (ok) await cubit.revert();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -83,11 +95,17 @@ class SettingsEngineRow extends StatelessWidget {
         final status = state.status;
         if (status == null || !status.supported) return const SizedBox.shrink();
         final description = state.busy
-            ? l10n.settingsEngineInstalling
+            ? (state.reverting
+                  ? l10n.settingsEngineReverting
+                  : l10n.settingsEngineInstalling)
             : state.failed
-            ? l10n.settingsEngineFailed
+            ? (state.reverting
+                  ? l10n.settingsEngineRevertFailed
+                  : l10n.settingsEngineFailed)
             : status.installed
-            ? l10n.settingsEngineInstalled(status.version ?? '')
+            ? (status.version == null
+                  ? l10n.settingsEngineBundled
+                  : l10n.settingsEngineInstalled(status.version!))
             : l10n.settingsEngineNotInstalled;
         return SettingRow(
           title: l10n.settingsEngine,
@@ -100,6 +118,12 @@ class SettingsEngineRow extends StatelessWidget {
                 PlainButton(
                   label: l10n.settingsEngineRemove,
                   onPressed: state.busy ? null : () => _confirmRemove(context),
+                ),
+              // 업데이트한 yt-dlp만 앱에 들어 있던 버전으로 되돌릴 수 있다 (Android full).
+              if (status.revertible)
+                PlainButton(
+                  label: l10n.settingsEngineRevert,
+                  onPressed: state.busy ? null : () => _confirmRevert(context),
                 ),
               PillButton(
                 compact: true,

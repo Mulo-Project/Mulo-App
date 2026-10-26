@@ -44,6 +44,9 @@ class AndroidYtDlp {
     return r?['version'] as String?;
   }
 
+  /// 업데이트로 받은 yt-dlp를 지우고 APK에 들어 있는 버전으로 되돌린다. 실패하면 예외.
+  Future<void> revert() => _channel.invokeMethod<void>('revert');
+
   /// 데스크톱 `Process.run`과 같은 모양으로 실행한다 (`LocalEngine`이 같이 쓴다).
   /// 마지막 인자는 주소(또는 `ytsearch…:검색어`), 앞은 옵션이다.
   /// 실행할 수 없는 빌드면 [ProcessException]을 던진다.

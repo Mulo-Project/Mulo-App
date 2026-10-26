@@ -17,5 +17,6 @@ void registerEngine(GetIt sl) {
     ..registerFactory(() => LoadEngineStatus(sl()))
     ..registerFactory(() => InstallEngine(sl()))
     ..registerFactory(() => RemoveEngine(sl()))
-    ..registerFactory(() => EngineCubit(sl(), sl(), sl()));
+    ..registerFactory(() => RevertEngine(sl()))
+    ..registerFactory(() => EngineCubit(sl(), sl(), sl(), sl()));
 }

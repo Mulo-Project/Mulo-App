@@ -388,6 +388,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsEngineInstalling => 'Downloading…';
 
   @override
+  String get settingsEngineReverting => 'Reverting…';
+
+  @override
+  String get settingsEngineRevert => 'Revert';
+
+  @override
+  String get settingsEngineRevertTitle => 'Go back to the built-in version?';
+
+  @override
+  String get settingsEngineRevertBody =>
+      'Deletes the yt-dlp you updated and returns to the version that came with the app. Use this if search or downloads stopped working after an update. You can update again later.';
+
+  @override
+  String get settingsEngineRevertFailed =>
+      'Could not revert. Please try again in a moment.';
+
+  @override
+  String get settingsEngineBundled => 'Built-in yt-dlp';
+
+  @override
   String get settingsEngineFailed =>
       'Could not install. Check your internet connection.';
 

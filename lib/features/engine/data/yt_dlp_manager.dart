@@ -10,6 +10,7 @@ import '../domain/repositories/engine_manager.dart';
 /// 데스크톱에서 yt-dlp 공식 릴리스를 앱 전용 폴더(`<앱 데이터>/engine`)에 받아 둔다.
 /// 앱이 받은 파일이 없으면 PATH의 `yt-dlp`를 쓴다.
 /// Android(full 빌드)는 APK 안의 yt-dlp를 쓰고, "설치"는 그 yt-dlp를 최신으로 올린다.
+/// 올린 뒤 문제가 생기면 [revertToBundled]로 APK에 들어 있던 버전으로 되돌린다.
 class YtDlpManager implements EngineManager {
   YtDlpManager({this.releaseBase = _release, AndroidYtDlp? android})
     : _android = android ?? AndroidYtDlp();
@@ -52,11 +53,13 @@ class YtDlpManager implements EngineManager {
       if (!await _android.isAvailable()) {
         return const EngineStatus(supported: false);
       }
+      // 버전은 업데이트한 뒤에만 있다. 없으면 APK에 들어 있는 yt-dlp를 쓰는 중이다 (항상 쓸 수 있다).
       final version = await _android.version();
       return EngineStatus(
-        installed: version != null,
+        installed: true,
         version: version,
         managed: true,
+        revertible: version != null,
       );
     }
     if (!_desktop) return const EngineStatus(supported: false);
@@ -88,6 +91,15 @@ class YtDlpManager implements EngineManager {
         if (f.existsSync()) await f.delete();
       }
     }
+    return status();
+  }
+
+  @override
+  Future<EngineStatus> revertToBundled() async {
+    if (!Platform.isAndroid || !await _android.isAvailable()) {
+      throw UnsupportedError('revert is Android full only');
+    }
+    await _android.revert();
     return status();
   }
 

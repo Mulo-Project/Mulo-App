@@ -6,6 +6,7 @@ import android.os.Looper
 import com.yausername.youtubedl_android.YoutubeDL
 import com.yausername.youtubedl_android.YoutubeDLException
 import com.yausername.youtubedl_android.YoutubeDLRequest
+import java.io.File
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
 import java.util.concurrent.Executors
@@ -48,9 +49,30 @@ class YtDlpChannel(private val context: Context, messenger: BinaryMessenger) {
                     YoutubeDL.updateYoutubeDL(context, YoutubeDL.UpdateChannel.STABLE)
                     mapOf("version" to YoutubeDL.version(context))
                 }
+                // 업데이트로 받은 yt-dlp를 지우고 APK에 들어 있는 버전으로 되돌린다.
+                "revert" -> run(result) {
+                    revertToBundled()
+                    mapOf("version" to YoutubeDL.version(context))
+                }
                 else -> result.notImplemented()
             }
         }
+    }
+
+    /**
+     * 업데이트가 받아 둔 yt-dlp(`<noBackup>/youtubedl-android/yt-dlp`)와 저장된 버전을 지우고
+     * APK의 번들 yt-dlp를 다시 푼다. 실행 줄(io)에서만 불러서 실행 중인 yt-dlp와 겹치지 않는다.
+     */
+    private fun revertToBundled() {
+        val dir = File(File(context.noBackupFilesDir, "youtubedl-android"), "yt-dlp")
+        if (dir.exists() && !dir.deleteRecursively()) {
+            throw IllegalStateException("could not remove the updated yt-dlp")
+        }
+        context.getSharedPreferences("youtubedl-android", Context.MODE_PRIVATE).edit()
+            .remove("dlpVersion")
+            .remove("dlpVersionName")
+            .commit()
+        YoutubeDL.getInstance().init_ytdlp(context, dir)
     }
 
     private fun ensureInit() {

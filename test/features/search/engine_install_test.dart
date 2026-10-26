@@ -81,6 +81,66 @@ void main() {
     expect(find.text('Remove'), findsNothing);
   });
 
+  test('EngineCubit: 업데이트한 엔진만 번들 버전으로 되돌린다', () async {
+    final manager = FakeEngineManager(installed: true, updated: true);
+    await setUpTestDependencies(engineManager: manager);
+    final cubit = sl<EngineCubit>();
+    await cubit.load();
+    expect(cubit.state.status!.revertible, isTrue);
+    await cubit.revert();
+    expect(manager.reverts, 1);
+    expect(cubit.state.status!.revertible, isFalse);
+    expect(cubit.state.failed, isFalse);
+    await cubit.revert();
+    expect(manager.reverts, 1);
+  });
+
+  test('EngineCubit: 되돌리기에 실패하면 failed + reverting', () async {
+    await setUpTestDependencies(
+      engineManager: FakeEngineManager(
+        installed: true,
+        updated: true,
+        failRevert: true,
+      ),
+    );
+    final cubit = sl<EngineCubit>();
+    await cubit.load();
+    await cubit.revert();
+    expect(cubit.state.failed, isTrue);
+    expect(cubit.state.reverting, isTrue);
+    expect(cubit.state.status!.revertible, isTrue);
+  });
+
+  testWidgets('설정: 업데이트한 엔진은 확인 뒤 번들 버전으로 되돌린다', (tester) async {
+    final manager = FakeEngineManager(installed: true, updated: true);
+    await setUpTestDependencies(engineManager: manager);
+    await tester.pumpWidget(const MusicApp(initialLocation: Routes.settings));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Revert'));
+    await tester.pumpAndSettle();
+    expect(find.text('Go back to the built-in version?'), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(manager.reverts, 0);
+
+    await tester.tap(find.text('Revert'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Revert').last);
+    await tester.pumpAndSettle();
+    expect(manager.reverts, 1);
+    expect(find.text('Revert'), findsNothing);
+  });
+
+  testWidgets('설정: 업데이트하지 않았으면 되돌리기가 없다', (tester) async {
+    await setUpTestDependencies(
+      engineManager: FakeEngineManager(installed: true),
+    );
+    await tester.pumpWidget(const MusicApp(initialLocation: Routes.settings));
+    await tester.pumpAndSettle();
+    expect(find.text('Revert'), findsNothing);
+  });
+
   testWidgets('설정: 설치할 수 없는 기기(Android)에서는 엔진 줄이 없다', (tester) async {
     await setUpTestDependencies(
       engineManager: FakeEngineManager(supported: false),
