@@ -6,11 +6,14 @@ import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../library/domain/entities/track.dart';
+import '../../../library/presentation/widgets/library_selection.dart';
+import '../../../library/presentation/widgets/track_list_tile.dart'
+    show TrackSelection, selectionMark;
 import '../../../library/presentation/widgets/track_menu.dart';
 import '../bloc/now_playing_cubit.dart';
 
 /// 비우기 확인창. 확인하면 재생도 멈추고 대기열을 모두 비운다.
-Future<void> _confirmClear(BuildContext context) async {
+Future<bool> _confirmClear(BuildContext context) async {
   final l10n = context.l10n;
   final vm = context.read<NowPlayingCubit>();
   final ok = await showConfirmDialog(
@@ -22,12 +25,36 @@ Future<void> _confirmClear(BuildContext context) async {
     cancelLabel: l10n.actionCancel,
   );
   if (ok) vm.clearQueue();
+  return ok;
 }
 
 /// 재생 대기열 화면: 곡 수 · 셔플 켜기/끄기 · 비우기(위에 고정), 지금 재생 중인 곡 강조,
 /// 곡을 누르면 그 곡부터 재생, ⋮는 곡 메뉴(보관함과 같은 메뉴), 길게 눌러 끌면 순서가 바뀐다.
-class QueueScreen extends StatelessWidget {
+/// 줄 길게 누르기는 끌기에 쓰이므로, 여러 곡 선택은 맨 위 "선택" 버튼으로 모드에 들어간다.
+/// 선택 모드에서는 순서 바꾸기를 잠그고, 누르면 고르거나 푼다.
+class QueueScreen extends StatefulWidget {
   const QueueScreen({super.key});
+
+  @override
+  State<QueueScreen> createState() => _QueueScreenState();
+}
+
+class _QueueScreenState extends State<QueueScreen>
+    with TrackPicker<QueueScreen> {
+  /// "선택" 버튼으로 들어온 선택 모드 (아직 아무 곡도 안 골랐어도 모드는 켜져 있다).
+  bool _mode = false;
+
+  @override
+  bool get selecting => _mode || picked.isNotEmpty;
+
+  @override
+  bool get pickerInQueue => true;
+
+  @override
+  void clearPicked() {
+    _mode = false;
+    super.clearPicked();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,41 +90,54 @@ class QueueScreen extends StatelessWidget {
                   onShuffle: vm.toggleShuffle,
                   repeat: repeat,
                   onRepeat: vm.cycleRepeat,
-                  onClear: () => _confirmClear(context),
+                  onClear: () async {
+                    if (await _confirmClear(context) && mounted) clearPicked();
+                  },
+                  onSelect: selecting
+                      ? null
+                      : () => setState(() => _mode = true),
                 ),
               Expanded(
                 child: queue.isEmpty
                     ? EmptyState(title: l10n.playerQueueEmpty)
-                    : ReorderableListView.builder(
-                        padding: EdgeInsets.only(
-                          bottom:
-                              AppSpacing.lg +
-                              MediaQuery.paddingOf(context).bottom,
-                        ),
-                        // 길게 눌러야 끌린다 (기본 손잡이는 쓰지 않는다).
-                        buildDefaultDragHandles: false,
-                        proxyDecorator: (child, _, _) => Material(
-                          color: p.surfaceHigh,
-                          borderRadius: BorderRadius.circular(AppRadii.sm),
-                          elevation: 0,
-                          child: child,
-                        ),
-                        itemCount: queue.length,
-                        onReorderItem: vm.moveInQueue,
-                        itemBuilder: (context, i) {
-                          final t = queue[i];
-                          return ReorderableDelayedDragStartListener(
-                            key: ValueKey(t.id),
-                            index: i,
-                            child: _QueueTile(
-                              track: t,
-                              number: i + 1,
-                              active: i == index,
-                              playing: playing,
-                              onTap: () => vm.jumpTo(i),
+                    : Stack(
+                        children: [
+                          ReorderableListView.builder(
+                            padding: EdgeInsets.only(
+                              bottom:
+                                  AppSpacing.lg +
+                                  MediaQuery.paddingOf(context).bottom +
+                                  selectionBottomGap,
                             ),
-                          );
-                        },
+                            // 길게 눌러야 끌린다 (기본 손잡이는 쓰지 않는다).
+                            buildDefaultDragHandles: false,
+                            proxyDecorator: (child, _, _) => Material(
+                              color: p.surfaceHigh,
+                              borderRadius: BorderRadius.circular(AppRadii.sm),
+                              elevation: 0,
+                              child: child,
+                            ),
+                            itemCount: queue.length,
+                            onReorderItem: vm.moveInQueue,
+                            itemBuilder: (context, i) {
+                              final t = queue[i];
+                              return ReorderableDelayedDragStartListener(
+                                key: ValueKey(t.id),
+                                index: i,
+                                enabled: !selecting,
+                                child: _QueueTile(
+                                  track: t,
+                                  number: i + 1,
+                                  active: i == index,
+                                  playing: playing,
+                                  selection: selecting ? selectionFor(t) : null,
+                                  onTap: () => vm.jumpTo(i),
+                                ),
+                              );
+                            },
+                          ),
+                          ?selectionBar(queue, queue),
+                        ],
                       ),
               ),
             ],
@@ -117,6 +157,7 @@ class _QueueHeader extends StatelessWidget {
     required this.repeat,
     required this.onRepeat,
     required this.onClear,
+    required this.onSelect,
   });
 
   final int count;
@@ -129,6 +170,9 @@ class _QueueHeader extends StatelessWidget {
   final PlayerRepeatMode repeat;
   final VoidCallback onRepeat;
   final VoidCallback onClear;
+
+  /// 여러 곡 선택 모드로 들어간다 (선택 모드 중에는 null).
+  final VoidCallback? onSelect;
 
   @override
   Widget build(BuildContext context) {
@@ -166,6 +210,11 @@ class _QueueHeader extends StatelessWidget {
             onPressed: onRepeat,
           ),
           RowIconButton(
+            icon: AppIcons.checkCircle,
+            tooltip: l10n.queueSelect,
+            onPressed: onSelect,
+          ),
+          RowIconButton(
             icon: AppIcons.deleteAll,
             tooltip: l10n.queueClear,
             onPressed: onClear,
@@ -184,6 +233,7 @@ class _QueueTile extends StatelessWidget {
     required this.active,
     required this.playing,
     required this.onTap,
+    this.selection,
   });
 
   final Track track;
@@ -191,6 +241,9 @@ class _QueueTile extends StatelessWidget {
   final bool active;
   final bool playing;
   final VoidCallback onTap;
+
+  /// 선택 모드일 때만 있다: 누르면 고르거나 풀고, 오른쪽에 체크가 보인다.
+  final TrackSelection? selection;
 
   @override
   Widget build(BuildContext context) {
@@ -217,23 +270,25 @@ class _QueueTile extends StatelessWidget {
           active: active,
           number: number,
           horizontalPadding: AppSpacing.xs,
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (active)
-                Padding(
-                  padding: const EdgeInsets.only(right: AppSpacing.xs),
-                  child: Icon(
-                    playing ? AppIcons.equalizer : AppIcons.pause,
-                    size: AppSizes.iconSm,
-                    color: p.accent,
-                  ),
+          trailing: selection != null
+              ? selectionMark(context, selection!)
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (active)
+                      Padding(
+                        padding: const EdgeInsets.only(right: AppSpacing.xs),
+                        child: Icon(
+                          playing ? AppIcons.equalizer : AppIcons.pause,
+                          size: AppSizes.iconSm,
+                          color: p.accent,
+                        ),
+                      ),
+                    Text(formatDuration(track.duration), style: text.bodySmall),
+                    TrackMoreButton(track: track, inQueue: true),
+                  ],
                 ),
-              Text(formatDuration(track.duration), style: text.bodySmall),
-              TrackMoreButton(track: track, inQueue: true),
-            ],
-          ),
-          onTap: onTap,
+          onTap: selection?.onToggle ?? onTap,
         ),
       ),
     );

@@ -665,6 +665,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get queueClear => 'Clear queue';
 
   @override
+  String get queueSelect => 'Select songs';
+
+  @override
   String get queueCleared => 'Queue cleared';
 
   @override

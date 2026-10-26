@@ -220,6 +220,7 @@
   "shuffleOn": "Shuffle on",
   "shuffleOff": "Shuffle off",
   "queueClear": "Clear queue",
+  "queueSelect": "Select songs",
   "queueCleared": "Queue cleared",
   "queueClearTitle": "Clear the queue?",
   "queueClearBody": "The current song stops and every song leaves the queue. Your library is not affected.",
