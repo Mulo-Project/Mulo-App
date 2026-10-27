@@ -23,7 +23,7 @@ class PrefsOutputBehaviorRepository implements OutputBehaviorRepository {
     return OutputBehavior(
       pauseOnDisconnect: prefs.getBool(_pauseKey) ?? true,
       resumeOnConnect: prefs.getBool(_resumeKey) ?? false,
-      resumeWithoutNotification: prefs.getBool(_noNotifKey) ?? false,
+      resumeWithoutNotification: prefs.getBool(_noNotifKey) ?? true,
     );
   }
 

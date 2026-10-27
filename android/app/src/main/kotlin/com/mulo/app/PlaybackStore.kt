@@ -156,7 +156,7 @@ object PlaybackStore {
     fun resumeOnConnect(context: Context) = prefs(context).getBoolean(RESUME_ON_CONNECT, false)
 
     /** 알림을 지운 뒤나 재생이 끝난 뒤에도 블루투스 버튼으로 이어 재생할지 (기본 꺼짐). */
-    fun resumeWithoutNotification(context: Context) = prefs(context).getBoolean(RESUME_WITHOUT_NOTIFICATION, false)
+    fun resumeWithoutNotification(context: Context) = prefs(context).getBoolean(RESUME_WITHOUT_NOTIFICATION, true)
 
     fun setResumeWithoutNotification(context: Context, value: Boolean) {
         prefs(context).edit().putBoolean(RESUME_WITHOUT_NOTIFICATION, value).apply()
