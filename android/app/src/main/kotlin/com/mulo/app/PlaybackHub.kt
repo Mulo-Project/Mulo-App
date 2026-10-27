@@ -753,14 +753,30 @@ object PlaybackHub {
         }
     }
 
-    /** 정리된 세션을 미디어 버튼이 되살린다 (알림을 지운 뒤에도 이어 재생하는 설정일 때). */
-    fun reviveForButton() {
-        if (!dismissed || !initialized) return
-        revive()
-        if (sessionPlayer.info != null) {
+    /**
+     * 미디어 버튼이 서비스를 깨웠다: 세션 · 알림 내용 · 알림을 재생할 수 있게 갖춘다.
+     * 알림을 지운 뒤에도 이어 재생하는 설정이면 정리된 세션을 되살리고, 앱이 알림을 꺼 둔(`setSession(null)`) 상태여도
+     * 서비스가 포그라운드로 떴으니 대기열의 곡 정보로 알림을 올린다. 무시해야 하면 false.
+     */
+    fun prepareForButton(): Boolean {
+        if (!initialized) return false
+        val plan = MediaButtonPolicy.plan(
+            gated = isGated,
+            dismissed = dismissed,
+            hasQueue = exo.mediaItemCount > 0,
+            hasInfo = sessionPlayer.info != null,
+        ) ?: return false
+        if (plan.revive) revive()
+        if (session == null) buildSession()
+        if (plan.fillInfoFromQueue) {
+            sessionPlayer.info = SessionInfo(emptyMap<String, Any?>())
+            refreshLayout()
+        }
+        if (plan.showNotification) {
             isNotificationVisible = true
             service?.showSession()
         }
+        return true
     }
 
     fun setResumeWithoutNotification(value: Boolean) {
