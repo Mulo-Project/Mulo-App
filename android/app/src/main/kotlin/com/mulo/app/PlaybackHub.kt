@@ -517,13 +517,16 @@ object PlaybackHub {
             .setDisplayName(if (shuffled) info.shuffleOffLabel else info.shuffleOnLabel)
             .setSessionCommand(shuffleCommand)
             .build()
-        // 좋아요는 앱(Dart)이 아는 현재 곡일 때만 둔다. 아니면 셔플 · 닫기(X).
-        if (!current || !dartReady) return ImmutableList.of(shuffle, close)
+        // 좋아요는 앱(Dart)이 아는 현재 곡일 때만 누를 수 있다. 아니어도 칸은 비활성으로 남겨,
+        // 앱이 있든 없든 셔플이 늘 같은 자리에 오게 하고 닫기(X)는 그 뒤에 덧붙인다.
+        val favoriteAvailable = current && dartReady
         val favorite = CommandButton.Builder(CommandButton.ICON_UNDEFINED)
             .setCustomIconResId(if (info.favorite) R.drawable.ic_notif_favorite else R.drawable.ic_notif_favorite_outline)
             .setDisplayName(if (info.favorite) info.unfavoriteLabel else info.favoriteLabel)
             .setSessionCommand(favoriteCommand)
+            .setEnabled(favoriteAvailable)
             .build()
+        if (!favoriteAvailable) return ImmutableList.of(favorite, shuffle, close)
         // 재생 중인 알림은 일시정지한 뒤 밀어서 지울 수 있다.
         return ImmutableList.of(favorite, shuffle)
     }
