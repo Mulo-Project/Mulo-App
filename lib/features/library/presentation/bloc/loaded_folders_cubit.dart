@@ -70,23 +70,51 @@ class LoadedFoldersCubit extends Cubit<LoadedFoldersState> {
   final ImportDeviceMusic _import;
   final RestoreFromFileTags? _restoreTags;
   final FillEmbeddedCovers? _fillCovers;
+  bool _cancelled = false;
 
   Future<void> load() async {
     final folders = await _load(const NoParams());
     if (!isClosed) emit(state.copyWith(folders: folders));
   }
 
-  Future<void> add() async {
-    if (state.busy) return;
+  /// 폴더를 골라 더하고 곡을 불러온다. 끝까지 불러왔으면 true (취소해서 폴더 등록을 되돌렸으면 false).
+  Future<bool> add() async {
+    if (state.busy) return false;
     final result = await _add(const NoParams());
-    if (result == AddFolderResult.added) await _rescan();
+    if (result != AddFolderResult.added) return false;
+    final known = {for (final f in state.folders) f.path};
+    final folders = await _load(const NoParams());
+    final added = [
+      for (final f in folders)
+        if (!known.contains(f.path)) f.path,
+    ];
+    await _rescan(
+      onCancelled: added.isEmpty
+          ? null
+          : () async {
+              // 취소하면 방금 등록한 폴더를 목록에서 빼고, 거기서 불러온 곡도 보관함에서 지운다.
+              _stage(LoadStage.removing);
+              await _remove(added.first);
+            },
+    );
+    return !_cancelled;
   }
+
+  /// 폴더를 더하는 중이면 등록을 취소한다 (폴더와 불러온 곡을 되돌린다). 빼는 중이면 지우기를 멈추고 되돌린다.
+  void cancel() => _cancelled = true;
 
   /// 폴더를 빼고, 보관함에서 지운 곡의 id를 돌려준다 (재생 대기열에서도 빼도록).
   Future<Set<String>> remove(String path) async {
     if (state.busy) return const {};
+    _cancelled = false;
     _stage(LoadStage.removing);
-    final removed = await _remove(path);
+    final removed = await _remove(path, cancelled: () => _cancelled);
+    // 중간에 취소하면 폴더는 목록에 남고, 이미 지운 곡은 다시 불러온다.
+    if (_cancelled && removed != null && removed.isNotEmpty) {
+      _cancelled = false;
+      await _rescan();
+      return removed;
+    }
     // 뺀 폴더의 곡은 이미 보관함에서 지웠고 남은 폴더는 그대로라 다시 찾지 않는다.
     final folders = await _load(const NoParams());
     if (!isClosed) {
@@ -101,12 +129,13 @@ class LoadedFoldersCubit extends Cubit<LoadedFoldersState> {
     }
   }
 
-  Future<void> _rescan() async {
+  Future<void> _rescan({Future<void> Function()? onCancelled}) async {
+    _cancelled = false;
     _stage(LoadStage.scanning);
     await load();
     final outcome = await _import(const NoParams());
     var changed = false;
-    if (outcome is ImportAdded) {
+    if (outcome is ImportAdded && !_cancelled) {
       final restore = _restoreTags;
       if (restore != null) {
         _stage(LoadStage.reading);
@@ -114,6 +143,7 @@ class LoadedFoldersCubit extends Cubit<LoadedFoldersState> {
           changed |=
               await restore.run(
                 onProgress: (d, t) => _stage(LoadStage.reading, d, t),
+                cancelled: () => _cancelled,
               ) >
               0;
         } on Exception {
@@ -121,12 +151,13 @@ class LoadedFoldersCubit extends Cubit<LoadedFoldersState> {
         }
       }
       final fill = _fillCovers;
-      if (fill != null) {
+      if (fill != null && !_cancelled) {
         _stage(LoadStage.covers);
         try {
           changed |=
               await fill.run(
                 onProgress: (d, t) => _stage(LoadStage.covers, d, t),
+                cancelled: () => _cancelled,
               ) >
               0;
         } on Exception {
@@ -135,6 +166,7 @@ class LoadedFoldersCubit extends Cubit<LoadedFoldersState> {
       }
     }
     if (isClosed) return;
+    if (_cancelled && onCancelled != null) await onCancelled();
     final folders = await _load(const NoParams());
     if (isClosed) return;
     emit(
