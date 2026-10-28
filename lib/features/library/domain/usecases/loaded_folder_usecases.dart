@@ -115,6 +115,7 @@ class RemoveSaveLocation implements UseCase<void, String> {
 /// 폴더를 목록에서 빼고, 그 폴더에서 불러온 곡을 보관함에서 지운다 (음악 파일은 그대로).
 /// 남은 폴더 안에도 있는 곡(하위 폴더로 겹칠 때)은 지우지 않는다. 기본 저장 위치는 뺄 수 없다.
 /// 돌려주는 값은 보관함에서 지운 곡의 id (폴더를 못 뺐으면 null).
+/// [cancelled]가 true가 되면 지우기를 멈추고 폴더를 목록에 되돌린다 (이미 지운 곡은 id로 돌려준다).
 class RemoveLoadedFolder implements UseCase<Set<String>?, String> {
   const RemoveLoadedFolder(this._folders, this._library);
 
@@ -122,7 +123,7 @@ class RemoveLoadedFolder implements UseCase<Set<String>?, String> {
   final LibraryRepository _library;
 
   @override
-  Future<Set<String>?> call(String path) async {
+  Future<Set<String>?> call(String path, {bool Function()? cancelled}) async {
     final target = normalizeFolderPath(path);
     if (target == normalizeFolderPath(_folders.defaultFolder)) return null;
     final extra = await _folders.loadExtra();
@@ -136,6 +137,10 @@ class RemoveLoadedFolder implements UseCase<Set<String>?, String> {
     final tracks = await _library.watchTracks().first;
     final removed = <String>{};
     for (final t in tracks) {
+      if (cancelled?.call() ?? false) {
+        await _folders.saveExtra(extra);
+        return removed;
+      }
       if (isInsideFolder(t.folder, target) &&
           !remaining.any((f) => isInsideFolder(t.folder, f))) {
         await _library.delete(t.id);

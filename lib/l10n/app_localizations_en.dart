@@ -354,6 +354,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loadedFoldersCovers => 'Getting song images';
 
   @override
+  String loadedFoldersPlaylistTitle(int count) {
+    return 'Add the $count loaded songs to playlists?';
+  }
+
+  @override
+  String get loadedFoldersPlaylistSkip => 'Skip';
+
+  @override
+  String get loadedFoldersPlaylistAdd => 'Add';
+
+  @override
+  String loadedFoldersAddedToPlaylists(int songs, int count) {
+    return 'Added $songs songs to $count playlists';
+  }
+
+  @override
   String get settingsFormat => 'Default format';
 
   @override

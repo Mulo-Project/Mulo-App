@@ -350,6 +350,22 @@ class AppLocalizationsKo extends AppLocalizations {
   String get loadedFoldersCovers => '곡 이미지를 가져오는 중이에요';
 
   @override
+  String loadedFoldersPlaylistTitle(int count) {
+    return '불러온 $count곡을 재생목록에 담을까요?';
+  }
+
+  @override
+  String get loadedFoldersPlaylistSkip => '안 담기';
+
+  @override
+  String get loadedFoldersPlaylistAdd => '담기';
+
+  @override
+  String loadedFoldersAddedToPlaylists(int songs, int count) {
+    return '$songs곡을 $count개 재생목록에 담았어요';
+  }
+
+  @override
   String get settingsFormat => '기본 포맷';
 
   @override
