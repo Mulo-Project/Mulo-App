@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
+
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -353,15 +354,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loadedFoldersCovers => 'Getting song images';
 
   @override
-  String get loadedFoldersToPlaylist => 'Add loaded songs to playlists';
+  String get loadedFoldersCancel => 'Stop loading';
 
   @override
-  String get loadedFoldersToPlaylistOff => 'Off';
-
-  @override
-  String loadedFoldersToPlaylistCount(int count) {
-    return '$count playlists';
+  String loadedFoldersPlaylistTitle(int count) {
+    return 'Add the $count loaded songs to playlists?';
   }
+
+  @override
+  String get loadedFoldersPlaylistSkip => 'Skip';
+
+  @override
+  String get loadedFoldersPlaylistAdd => 'Add';
 
   @override
   String loadedFoldersAddedToPlaylists(int songs, int count) {

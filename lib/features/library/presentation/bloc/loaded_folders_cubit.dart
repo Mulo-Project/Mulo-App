@@ -70,17 +70,24 @@ class LoadedFoldersCubit extends Cubit<LoadedFoldersState> {
   final ImportDeviceMusic _import;
   final RestoreFromFileTags? _restoreTags;
   final FillEmbeddedCovers? _fillCovers;
+  bool _cancelled = false;
 
   Future<void> load() async {
     final folders = await _load(const NoParams());
     if (!isClosed) emit(state.copyWith(folders: folders));
   }
 
-  Future<void> add() async {
-    if (state.busy) return;
+  /// 폴더를 골라 더하고 곡을 불러온다. 폴더를 더했으면 true (불러오기를 중간에 멈춰도 true).
+  Future<bool> add() async {
+    if (state.busy) return false;
     final result = await _add(const NoParams());
-    if (result == AddFolderResult.added) await _rescan();
+    if (result != AddFolderResult.added) return false;
+    await _rescan();
+    return true;
   }
+
+  /// 불러오는 중이면 멈춘다. 이미 읽은 곡은 그대로 남고, 못 읽은 곡의 정보 · 이미지는 다음 불러오기 때 이어서 채운다.
+  void cancel() => _cancelled = true;
 
   /// 폴더를 빼고, 보관함에서 지운 곡의 id를 돌려준다 (재생 대기열에서도 빼도록).
   Future<Set<String>> remove(String path) async {
@@ -102,11 +109,12 @@ class LoadedFoldersCubit extends Cubit<LoadedFoldersState> {
   }
 
   Future<void> _rescan() async {
+    _cancelled = false;
     _stage(LoadStage.scanning);
     await load();
     final outcome = await _import(const NoParams());
     var changed = false;
-    if (outcome is ImportAdded) {
+    if (outcome is ImportAdded && !_cancelled) {
       final restore = _restoreTags;
       if (restore != null) {
         _stage(LoadStage.reading);
@@ -114,6 +122,7 @@ class LoadedFoldersCubit extends Cubit<LoadedFoldersState> {
           changed |=
               await restore.run(
                 onProgress: (d, t) => _stage(LoadStage.reading, d, t),
+                cancelled: () => _cancelled,
               ) >
               0;
         } on Exception {
@@ -121,12 +130,13 @@ class LoadedFoldersCubit extends Cubit<LoadedFoldersState> {
         }
       }
       final fill = _fillCovers;
-      if (fill != null) {
+      if (fill != null && !_cancelled) {
         _stage(LoadStage.covers);
         try {
           changed |=
               await fill.run(
                 onProgress: (d, t) => _stage(LoadStage.covers, d, t),
+                cancelled: () => _cancelled,
               ) >
               0;
         } on Exception {

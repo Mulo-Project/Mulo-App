@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../domain/entities/loaded_folder.dart';
-import '../../../downloads/presentation/widgets/playlist_picker_sheet.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../../../playlists/presentation/widgets/playlist_card.dart';
 import '../bloc/library_cubit.dart';
@@ -50,42 +49,25 @@ Future<bool> confirmRemoveLoadedFolder(
   );
 }
 
-class LoadedFoldersSheet extends StatefulWidget {
+class LoadedFoldersSheet extends StatelessWidget {
   const LoadedFoldersSheet({super.key});
 
-  @override
-  State<LoadedFoldersSheet> createState() => _LoadedFoldersSheetState();
-}
-
-class _LoadedFoldersSheetState extends State<LoadedFoldersSheet> {
-  /// 폴더를 추가할 때 새로 불러온 곡을 함께 담을 재생목록. 비어 있으면 담지 않는다.
-  Set<String> _targets = {};
-
-  Future<void> _pickTargets() async {
-    final picked = await showPlaylistPickerSheet(
-      context,
-      playlists: context.read<PlaylistsCubit>(),
-      selected: _targets,
-    );
-    if (picked != null && mounted) setState(() => _targets = picked);
-  }
-
-  /// 폴더를 고르고 불러온 뒤, 새로 들어온 곡 전부를 고른 재생목록에 한 번에 담는다.
-  Future<void> _add() async {
-    final l10n = context.l10n;
+  /// 폴더를 고르고 불러온다. 다 끝난 뒤 새로 들어온 곡이 있으면 재생목록에 담을지 작은 팝업으로 묻는다.
+  Future<void> _add(BuildContext context) async {
     final cubit = context.read<LoadedFoldersCubit>();
     final library = context.read<LibraryCubit>();
     final playlists = context.read<PlaylistsCubit>();
     final messenger = ScaffoldMessenger.of(context);
-    final targets = {..._targets};
+    final l10n = context.l10n;
     final before = {for (final t in library.state.tracks) t.id};
-    await cubit.add();
-    if (targets.isEmpty) return;
+    if (!await cubit.add()) return;
     final added = {
       for (final t in library.state.tracks)
         if (!before.contains(t.id)) t.id,
     };
-    if (added.isEmpty) return;
+    if (added.isEmpty || !context.mounted) return;
+    final targets = await _askPlaylists(context, added.length);
+    if (targets == null || targets.isEmpty) return;
     for (final id in targets) {
       await playlists.addTracks(added, id);
     }
@@ -98,19 +80,24 @@ class _LoadedFoldersSheetState extends State<LoadedFoldersSheet> {
     );
   }
 
+  Future<Set<String>?> _askPlaylists(BuildContext context, int count) =>
+      showDialog<Set<String>>(
+        context: context,
+        useRootNavigator: true,
+        builder: (_) => BlocProvider.value(
+          value: context.read<PlaylistsCubit>(),
+          child: _PlaylistDialog(count: count),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final state = context.watch<LoadedFoldersCubit>().state;
     final cubit = context.read<LoadedFoldersCubit>();
     final player = context.read<NowPlayingCubit>();
-    final playlists = context.watch<PlaylistsCubit>().state;
-    final names = [
-      for (final pl in playlists)
-        if (_targets.contains(pl.id)) playlistNameOf(l10n, pl),
-    ];
 
-    // 폴더를 바꾸는 동안에는 뒤로가기 · 바깥 터치로 닫히지 않는다 (끝나면 다시 닫을 수 있다).
+    // 폴더를 바꾸는 동안에는 뒤로가기 · 바깥 터치로 닫히지 않는다 (멈추기를 누르거나 끝나면 닫을 수 있다).
     return PopScope(
       canPop: !state.busy,
       child: SafeArea(
@@ -156,30 +143,89 @@ class _LoadedFoldersSheetState extends State<LoadedFoldersSheet> {
                     ],
                   ),
                 ),
-                SettingRow(
-                  title: l10n.loadedFoldersToPlaylist,
-                  description: switch (names.length) {
-                    0 => l10n.loadedFoldersToPlaylistOff,
-                    1 => names.first,
-                    _ => l10n.loadedFoldersToPlaylistCount(names.length),
-                  },
-                  onTap: state.busy ? null : _pickTargets,
-                  trailing: Icon(
-                    AppIcons.chevronRight,
-                    color: context.palette.onSurfaceMuted,
+                const SizedBox(height: AppSpacing.md),
+                if (state.busy && state.stage != LoadStage.removing)
+                  PillButton(
+                    label: l10n.loadedFoldersCancel,
+                    variant: PillVariant.tonal,
+                    onPressed: cubit.cancel,
+                  )
+                else
+                  PillButton(
+                    label: l10n.loadedFoldersAdd,
+                    icon: AppIcons.newFolder,
+                    onPressed: state.busy ? null : () => _add(context),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                PillButton(
-                  label: l10n.loadedFoldersAdd,
-                  icon: AppIcons.newFolder,
-                  onPressed: state.busy ? null : _add,
-                ),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// 불러오기가 끝난 뒤 새로 들어온 곡을 담을 재생목록을 고르는 작은 팝업.
+class _PlaylistDialog extends StatefulWidget {
+  const _PlaylistDialog({required this.count});
+
+  final int count;
+
+  @override
+  State<_PlaylistDialog> createState() => _PlaylistDialogState();
+}
+
+class _PlaylistDialogState extends State<_PlaylistDialog> {
+  final _selected = <String>{};
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final p = context.palette;
+    final playlists = context.watch<PlaylistsCubit>().state;
+    return AppDialog(
+      title: l10n.loadedFoldersPlaylistTitle(widget.count),
+      content: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * .4,
+        ),
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            for (final pl in playlists)
+              SettingRow(
+                title: playlistNameOf(l10n, pl),
+                description: l10n.songCount(pl.trackCount),
+                onTap: () => setState(() {
+                  _selected.contains(pl.id)
+                      ? _selected.remove(pl.id)
+                      : _selected.add(pl.id);
+                }),
+                trailing: Icon(
+                  _selected.contains(pl.id)
+                      ? AppIcons.checkCircle
+                      : AppIcons.radioOff,
+                  color: _selected.contains(pl.id)
+                      ? p.accent
+                      : p.onSurfaceMuted,
+                ),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        PillButton(
+          label: l10n.loadedFoldersPlaylistSkip,
+          variant: PillVariant.tonal,
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        PillButton(
+          label: l10n.loadedFoldersPlaylistAdd,
+          onPressed: _selected.isEmpty
+              ? null
+              : () => Navigator.of(context).pop(_selected),
+        ),
+      ],
     );
   }
 }

@@ -746,23 +746,29 @@ abstract class AppLocalizations {
   /// **'곡 이미지를 가져오는 중이에요'**
   String get loadedFoldersCovers;
 
-  /// No description provided for @loadedFoldersToPlaylist.
+  /// No description provided for @loadedFoldersCancel.
   ///
   /// In ko, this message translates to:
-  /// **'불러온 곡을 재생목록에 담기'**
-  String get loadedFoldersToPlaylist;
+  /// **'불러오기 멈추기'**
+  String get loadedFoldersCancel;
 
-  /// No description provided for @loadedFoldersToPlaylistOff.
+  /// No description provided for @loadedFoldersPlaylistTitle.
   ///
   /// In ko, this message translates to:
-  /// **'담지 않음'**
-  String get loadedFoldersToPlaylistOff;
+  /// **'불러온 {count}곡을 재생목록에 담을까요?'**
+  String loadedFoldersPlaylistTitle(int count);
 
-  /// No description provided for @loadedFoldersToPlaylistCount.
+  /// No description provided for @loadedFoldersPlaylistSkip.
   ///
   /// In ko, this message translates to:
-  /// **'{count}개 재생목록'**
-  String loadedFoldersToPlaylistCount(int count);
+  /// **'안 담기'**
+  String get loadedFoldersPlaylistSkip;
+
+  /// No description provided for @loadedFoldersPlaylistAdd.
+  ///
+  /// In ko, this message translates to:
+  /// **'담기'**
+  String get loadedFoldersPlaylistAdd;
 
   /// No description provided for @loadedFoldersAddedToPlaylists.
   ///
