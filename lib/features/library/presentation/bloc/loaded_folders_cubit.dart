@@ -77,16 +77,30 @@ class LoadedFoldersCubit extends Cubit<LoadedFoldersState> {
     if (!isClosed) emit(state.copyWith(folders: folders));
   }
 
-  /// 폴더를 골라 더하고 곡을 불러온다. 폴더를 더했으면 true (불러오기를 중간에 멈춰도 true).
+  /// 폴더를 골라 더하고 곡을 불러온다. 끝까지 불러왔으면 true (취소해서 폴더 등록을 되돌렸으면 false).
   Future<bool> add() async {
     if (state.busy) return false;
     final result = await _add(const NoParams());
     if (result != AddFolderResult.added) return false;
-    await _rescan();
-    return true;
+    final known = {for (final f in state.folders) f.path};
+    final folders = await _load(const NoParams());
+    final added = [
+      for (final f in folders)
+        if (!known.contains(f.path)) f.path,
+    ];
+    await _rescan(
+      onCancelled: added.isEmpty
+          ? null
+          : () async {
+              // 취소하면 방금 등록한 폴더를 목록에서 빼고, 거기서 불러온 곡도 보관함에서 지운다.
+              _stage(LoadStage.removing);
+              await _remove(added.first);
+            },
+    );
+    return !_cancelled;
   }
 
-  /// 불러오거나 빼는 중이면 멈춘다. 불러올 때 이미 읽은 곡은 그대로 남고, 못 읽은 곡의 정보 · 이미지는 다음 불러오기 때 이어서 채운다.
+  /// 폴더를 더하는 중이면 등록을 취소한다 (폴더와 불러온 곡을 되돌린다). 빼는 중이면 지우기를 멈추고 되돌린다.
   void cancel() => _cancelled = true;
 
   /// 폴더를 빼고, 보관함에서 지운 곡의 id를 돌려준다 (재생 대기열에서도 빼도록).
@@ -115,7 +129,7 @@ class LoadedFoldersCubit extends Cubit<LoadedFoldersState> {
     }
   }
 
-  Future<void> _rescan() async {
+  Future<void> _rescan({Future<void> Function()? onCancelled}) async {
     _cancelled = false;
     _stage(LoadStage.scanning);
     await load();
@@ -152,6 +166,7 @@ class LoadedFoldersCubit extends Cubit<LoadedFoldersState> {
       }
     }
     if (isClosed) return;
+    if (_cancelled && onCancelled != null) await onCancelled();
     final folders = await _load(const NoParams());
     if (isClosed) return;
     emit(
