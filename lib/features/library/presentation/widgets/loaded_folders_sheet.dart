@@ -144,7 +144,7 @@ class LoadedFoldersSheet extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                if (state.busy && state.stage != LoadStage.removing)
+                if (state.busy)
                   PillButton(
                     label: l10n.actionCancel,
                     variant: PillVariant.tonal,

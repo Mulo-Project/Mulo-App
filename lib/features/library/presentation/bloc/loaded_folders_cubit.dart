@@ -86,14 +86,21 @@ class LoadedFoldersCubit extends Cubit<LoadedFoldersState> {
     return true;
   }
 
-  /// 불러오는 중이면 멈춘다. 이미 읽은 곡은 그대로 남고, 못 읽은 곡의 정보 · 이미지는 다음 불러오기 때 이어서 채운다.
+  /// 불러오거나 빼는 중이면 멈춘다. 불러올 때 이미 읽은 곡은 그대로 남고, 못 읽은 곡의 정보 · 이미지는 다음 불러오기 때 이어서 채운다.
   void cancel() => _cancelled = true;
 
   /// 폴더를 빼고, 보관함에서 지운 곡의 id를 돌려준다 (재생 대기열에서도 빼도록).
   Future<Set<String>> remove(String path) async {
     if (state.busy) return const {};
+    _cancelled = false;
     _stage(LoadStage.removing);
-    final removed = await _remove(path);
+    final removed = await _remove(path, cancelled: () => _cancelled);
+    // 중간에 취소하면 폴더는 목록에 남고, 이미 지운 곡은 다시 불러온다.
+    if (_cancelled && removed != null && removed.isNotEmpty) {
+      _cancelled = false;
+      await _rescan();
+      return removed;
+    }
     // 뺀 폴더의 곡은 이미 보관함에서 지웠고 남은 폴더는 그대로라 다시 찾지 않는다.
     final folders = await _load(const NoParams());
     if (!isClosed) {
