@@ -16,6 +16,8 @@ class PlayerSeekBar extends StatelessWidget {
     this.onSeekEnd,
     required this.position,
     required this.total,
+    this.loopStart,
+    this.loopEnd,
   });
 
   final double progress;
@@ -26,6 +28,10 @@ class PlayerSeekBar extends StatelessWidget {
   final VoidCallback? onSeekEnd;
   final Duration position;
   final Duration total;
+
+  /// 구간 반복의 시작 · 끝. 막대에 그 구간을 강조해 보여 준다 (끝이 없으면 시작 표시만).
+  final Duration? loopStart;
+  final Duration? loopEnd;
 
   static const _knob = 14.0;
 
@@ -40,6 +46,12 @@ class PlayerSeekBar extends StatelessWidget {
         void seek(Offset local) => onSeek((local.dx - _knob / 2) / room);
         final v = progress.clamp(0.0, 1.0);
         final knobX = room * v + _knob / 2;
+        final ms = total.inMilliseconds;
+        double? at(Duration? d) => d == null || ms == 0
+            ? null
+            : room * (d.inMilliseconds / ms) + _knob / 2;
+        final loopA = at(loopStart);
+        final loopB = at(loopEnd);
         final thumbX = knobX - TimeThumb.width / 2;
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: TimeThumb.edge),
@@ -83,6 +95,21 @@ class PlayerSeekBar extends StatelessWidget {
                           color: p.onSurface,
                         ),
                       ),
+                      if (loopA != null)
+                        Positioned(
+                          left: loopA,
+                          width: ((loopB ?? loopA) - loopA).clamp(
+                            3.0,
+                            c.maxWidth,
+                          ),
+                          child: Container(
+                            height: 8,
+                            decoration: ShapeDecoration(
+                              shape: const StadiumBorder(),
+                              color: p.accent.withValues(alpha: .85),
+                            ),
+                          ),
+                        ),
                       Positioned(
                         left: thumbX,
                         top: 14 - TimeThumb.knobR,

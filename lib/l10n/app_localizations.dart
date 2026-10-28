@@ -1376,6 +1376,30 @@ abstract class AppLocalizations {
   /// **'길게 눌러 끌면 순서가 바뀌어요'**
   String get queueReorderHint;
 
+  /// No description provided for @playerLoop.
+  ///
+  /// In ko, this message translates to:
+  /// **'구간 반복'**
+  String get playerLoop;
+
+  /// No description provided for @playerLoopSetStart.
+  ///
+  /// In ko, this message translates to:
+  /// **'구간 반복: 시작 지점을 정해요'**
+  String get playerLoopSetStart;
+
+  /// No description provided for @playerLoopSetEnd.
+  ///
+  /// In ko, this message translates to:
+  /// **'구간 반복: 끝 지점을 정해요'**
+  String get playerLoopSetEnd;
+
+  /// No description provided for @playerLoopClear.
+  ///
+  /// In ko, this message translates to:
+  /// **'구간 반복 끄기'**
+  String get playerLoopClear;
+
   /// No description provided for @playerRepeat.
   ///
   /// In ko, this message translates to:

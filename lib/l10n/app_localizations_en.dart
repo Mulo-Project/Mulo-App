@@ -705,6 +705,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get queueReorderHint => 'Press and hold, then drag to reorder';
 
   @override
+  String get playerLoop => 'A-B repeat';
+
+  @override
+  String get playerLoopSetStart => 'A-B repeat: set the start point';
+
+  @override
+  String get playerLoopSetEnd => 'A-B repeat: set the end point';
+
+  @override
+  String get playerLoopClear => 'Turn off A-B repeat';
+
+  @override
   String get playerRepeat => 'Repeat';
 
   @override

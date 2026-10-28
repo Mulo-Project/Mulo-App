@@ -75,6 +75,10 @@ class NativeAudioPlayerRepository implements AudioPlayerRepository {
   Future<void> seek(Duration position) => _channel.seek(position);
 
   @override
+  Future<void> setLoop(Duration? start, Duration? end) =>
+      _channel.setLoop(start, end);
+
+  @override
   Future<PlaybackSnapshot?> restore() async {
     final map = await _channel.getState();
     final raw = map?['items'];
