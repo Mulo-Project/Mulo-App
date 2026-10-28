@@ -83,6 +83,18 @@ class SeekAudio implements UseCase<void, Duration> {
   Future<void> call(Duration position) => _repo.seek(position);
 }
 
+/// 구간 반복: 시작 · 끝 (둘 다 null이면 해제).
+typedef AudioLoopRange = ({Duration? start, Duration? end});
+
+class SetAudioLoop implements UseCase<void, AudioLoopRange> {
+  const SetAudioLoop(this._repo);
+  final AudioPlayerRepository _repo;
+
+  @override
+  Future<void> call(AudioLoopRange range) =>
+      _repo.setLoop(range.start, range.end);
+}
+
 class RestoreAudioQueue implements UseCase<PlaybackSnapshot?, NoParams> {
   const RestoreAudioQueue(this._repo);
   final AudioPlayerRepository _repo;
@@ -112,6 +124,7 @@ class AudioPlayback {
     required this.play,
     required this.pause,
     required this.seek,
+    required this.setLoop,
     required this.restore,
     required this.takeOpenPlayerRequest,
   });
@@ -126,6 +139,7 @@ class AudioPlayback {
   final PlayAudio play;
   final PauseAudio pause;
   final SeekAudio seek;
+  final SetAudioLoop setLoop;
   final RestoreAudioQueue restore;
   final TakeOpenPlayerRequest takeOpenPlayerRequest;
 }

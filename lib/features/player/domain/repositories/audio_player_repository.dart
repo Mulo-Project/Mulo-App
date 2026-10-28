@@ -32,6 +32,10 @@ abstract interface class AudioPlayerRepository {
 
   Future<void> seek(Duration position);
 
+  /// 현재 곡의 [start]~[end] 구간만 반복한다. 둘 다 null이면 해제.
+  /// 곡이 바뀌면 엔진이 스스로 해제한다.
+  Future<void> setLoop(Duration? start, Duration? end);
+
   /// 엔진이 지금 쥐고 있는 대기열 (앱을 다시 켰을 때 복원용). 없으면 null.
   Future<PlaybackSnapshot?> restore();
 

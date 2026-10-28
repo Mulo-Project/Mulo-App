@@ -1090,6 +1090,15 @@ class FakeAudioPlayer implements AudioPlayerRepository {
   }
 
   @override
+  Future<void> setLoop(Duration? start, Duration? end) async {
+    calls.add(
+      start == null || end == null
+          ? 'loop:off'
+          : 'loop:${start.inMilliseconds}-${end.inMilliseconds}',
+    );
+  }
+
+  @override
   Future<void> skipTo(int i) async {
     calls.add('skip:$i');
     index = i;

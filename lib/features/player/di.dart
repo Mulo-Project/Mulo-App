@@ -46,6 +46,7 @@ void registerPlayer(GetIt sl) {
         play: PlayAudio(sl()),
         pause: PauseAudio(sl()),
         seek: SeekAudio(sl()),
+        setLoop: SetAudioLoop(sl()),
         restore: RestoreAudioQueue(sl()),
         takeOpenPlayerRequest: TakeOpenPlayerRequest(sl()),
       ),

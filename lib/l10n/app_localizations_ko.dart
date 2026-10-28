@@ -673,6 +673,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get queueReorderHint => '길게 눌러 끌면 순서가 바뀌어요';
 
   @override
+  String get playerLoop => '구간 반복';
+
+  @override
+  String get playerLoopSetStart => '구간 반복: 시작 지점을 정해요';
+
+  @override
+  String get playerLoopSetEnd => '구간 반복: 끝 지점을 정해요';
+
+  @override
+  String get playerLoopClear => '구간 반복 끄기';
+
+  @override
   String get playerRepeat => '반복';
 
   @override

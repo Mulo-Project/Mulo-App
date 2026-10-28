@@ -621,13 +621,46 @@ object PlaybackHub {
         emit(mapOf("type" to "command", "name" to name, "positionMs" to positionMs))
     }
 
+    /** 구간 반복(A-B): 현재 곡의 [loopStartMs, loopEndMs]. 둘 다 -1이면 꺼짐. 곡이 바뀌면 풀린다. */
+    private var loopStartMs = -1L
+    private var loopEndMs = -1L
+    private var lastPositionEmitAt = 0L
+
+    /** 현재 곡의 [startMs]~[endMs] 구간만 반복한다. 둘 중 하나라도 null이거나 구간이 비정상이면 해제. */
+    fun setLoop(startMs: Long?, endMs: Long?) {
+        if (startMs == null || endMs == null || startMs < 0 || endMs <= startMs) {
+            loopStartMs = -1L
+            loopEndMs = -1L
+        } else {
+            loopStartMs = startMs
+            loopEndMs = endMs
+            // 끝 지점을 이미 지났으면 바로 시작 지점으로.
+            if (exo.mediaItemCount > 0 && exo.currentPosition >= endMs) exo.seekTo(startMs)
+        }
+        // 구간 반복은 촘촘히 재야 하므로 재생 중이면 타이머를 새 주기로 다시 건다.
+        if (exo.isPlaying) {
+            main.removeCallbacks(ticker)
+            main.post(ticker)
+        }
+    }
+
+    private fun loopActive() = loopStartMs >= 0
+
     private val ticker = object : Runnable {
         override fun run() {
             if (!exo.isPlaying) return
-            emit(mapOf("type" to "position", "ms" to exo.currentPosition))
-            // 위치는 5초마다 저장한다 (프로세스가 죽어도 거의 그 자리에서 이어진다).
-            if (++tickCount % 20 == 0) persistPosition()
-            main.postDelayed(this, 250)
+            val now = SystemClock.elapsedRealtime()
+            // 끝 지점에 닿았으면 시작 지점으로 되돌린다 (되돌림은 onPositionDiscontinuity가 앱에 알린다).
+            val wrapped = loopActive() && exo.currentPosition >= loopEndMs
+            if (wrapped) exo.seekTo(loopStartMs)
+            // 앱에 보내는 위치는 구간 반복 중에도 250ms 간격을 지킨다.
+            if (!wrapped && now - lastPositionEmitAt >= 250) {
+                lastPositionEmitAt = now
+                emit(mapOf("type" to "position", "ms" to exo.currentPosition))
+                // 위치는 5초마다 저장한다 (프로세스가 죽어도 거의 그 자리에서 이어진다).
+                if (++tickCount % 20 == 0) persistPosition()
+            }
+            main.postDelayed(this, if (loopActive()) 40L else 250L)
         }
     }
 
@@ -644,6 +677,8 @@ object PlaybackHub {
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             val previousId = lastMediaId
             lastMediaId = mediaItem?.mediaId
+            // 다른 곡으로 넘어가면 구간 반복은 풀린다 (앱도 곡이 바뀌면 스스로 푼다).
+            if (previousId != lastMediaId) setLoop(null, null)
             if (reason != Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) reshuffleAfterLap(previousId)
             persistPosition()
             // 현재 곡이 바뀌었으니 좋아요 버튼 모양을 다시 맞춘다 (앱이 모르는 곡이면 숨긴다).
@@ -689,6 +724,7 @@ object PlaybackHub {
             // 반복 없이 대기열 끝까지 들었다 (슬라이더를 끝까지 끈 경우 포함): 첫 곡으로 돌아가 멈춰 두고
             // 앱에 알리고 세션을 정리한다. 다시 재생하면 첫 곡부터 나온다.
             if (playbackState == Player.STATE_ENDED) {
+                setLoop(null, null)
                 exo.playWhenReady = false
                 exo.seekTo(0, 0L)
                 emit(mapOf("type" to "ended"))

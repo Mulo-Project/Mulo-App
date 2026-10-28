@@ -45,6 +45,12 @@ class NativePlaybackChannel {
   Future<void> seek(Duration position) =>
       _method.invokeMethod('seek', position.inMilliseconds);
 
+  /// 현재 곡의 [start]~[end] 구간만 반복한다 (둘 다 null이면 해제). 곡이 바뀌면 네이티브가 해제한다.
+  Future<void> setLoop(Duration? start, Duration? end) => _method.invokeMethod(
+    'setLoop',
+    {'startMs': start?.inMilliseconds, 'endMs': end?.inMilliseconds},
+  );
+
   /// 대기열 곡별 커버 주소 (곡 id → 주소). 지금 곡이 아닌 곡의 알림 커버로 쓴다.
   Future<void> setQueueArt(Map<String, String> artById) =>
       _method.invokeMethod('setQueueArt', artById);

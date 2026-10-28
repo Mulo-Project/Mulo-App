@@ -50,7 +50,11 @@ class PositionBuilder extends StatelessWidget {
   @override
   Widget build(BuildContext context) =>
       BlocBuilder<NowPlayingCubit, NowPlayingState>(
-        buildWhen: (a, b) => a.position != b.position || a.track != b.track,
+        buildWhen: (a, b) =>
+            a.position != b.position ||
+            a.track != b.track ||
+            a.loopStart != b.loopStart ||
+            a.loopEnd != b.loopEnd,
         builder: builder,
       );
 }
@@ -443,6 +447,40 @@ class RepeatButton extends StatelessWidget {
   }
 }
 
+/// 구간(A-B) 반복: 누를 때마다 지금 위치를 시작 → 끝으로 정하고(그 뒤로 구간만 반복), 한 번 더 누르면 해제.
+/// 시작만 정했을 때는 "A 01:05", 구간이 걸리면 "A-B 01:05-02:10"을 옆에 보여 준다.
+class LoopRangeButton extends StatelessWidget {
+  const LoopRangeButton({super.key, required this.data});
+
+  final PlayerLayoutData data;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final l10n = context.l10n;
+    final s = data.state;
+    final active = s.loopStart != null;
+    final style = Theme.of(context).textTheme.labelSmall?.copyWith(
+      color: active ? p.accent : p.onSurfaceMuted,
+      fontWeight: FontWeight.w700,
+    );
+    final label = s.looping
+        ? 'A-B ${TimeText.clock(s.loopStart!)}-${TimeText.clock(s.loopEnd!)}'
+        : active
+        ? 'A ${TimeText.clock(s.loopStart!)}'
+        : 'A-B';
+    return IconButton(
+      tooltip: s.looping
+          ? l10n.playerLoopClear
+          : active
+          ? l10n.playerLoopSetEnd
+          : l10n.playerLoopSetStart,
+      onPressed: data.vm.cycleLoop,
+      icon: Text(label, style: style, maxLines: 1),
+    );
+  }
+}
+
 /// 이전 · 다음 (맨 아이콘).
 class SkipButton extends StatelessWidget {
   const SkipButton({
@@ -652,6 +690,8 @@ class PlayerControls extends StatelessWidget {
                 onSeekEnd: data.vm.endScrub,
                 position: state.position,
                 total: data.track.duration,
+                loopStart: state.loopStart,
+                loopEnd: state.loopEnd,
               ),
             ),
           ],
@@ -681,6 +721,7 @@ class PlayerControls extends StatelessWidget {
               children: [
                 ShuffleButton(data: data),
                 RepeatButton(data: data),
+                LoopRangeButton(data: data),
                 const Spacer(),
                 SleepTimerButton(data: data),
                 const EqualizerButton(),

@@ -31,6 +31,7 @@ void main() {
       play: PlayAudio(engine),
       pause: PauseAudio(engine),
       seek: SeekAudio(engine),
+      setLoop: SetAudioLoop(engine),
       restore: RestoreAudioQueue(engine),
       takeOpenPlayerRequest: TakeOpenPlayerRequest(engine),
     ),
@@ -41,6 +42,46 @@ void main() {
     cubit = makeCubit();
   });
   tearDown(() => cubit.close());
+
+  test('구간 반복: 시작 → 끝을 정하면 엔진에 구간이 가고, 다시 누르면 해제된다', () async {
+    cubit.playQueue(tracks);
+    await settle();
+    engine.emitPosition(const Duration(seconds: 5));
+    await settle();
+    cubit.cycleLoop();
+    expect(cubit.state.loopStart, const Duration(seconds: 5));
+    expect(cubit.state.looping, isFalse);
+    // 끝이 시작 뒤 1초 안이면 무시한다.
+    cubit.cycleLoop();
+    expect(cubit.state.loopEnd, isNull);
+    engine.emitPosition(const Duration(seconds: 12));
+    await settle();
+    cubit.cycleLoop();
+    await settle();
+    expect(cubit.state.looping, isTrue);
+    expect(engine.calls.last, 'loop:5000-12000');
+    cubit.cycleLoop();
+    await settle();
+    expect(cubit.state.loopStart, isNull);
+    expect(engine.calls.last, 'loop:off');
+  });
+
+  test('구간 반복은 곡이 바뀌면 풀린다', () async {
+    cubit.playQueue(tracks);
+    await settle();
+    engine.emitPosition(const Duration(seconds: 2));
+    await settle();
+    cubit.cycleLoop();
+    engine.emitPosition(const Duration(seconds: 8));
+    await settle();
+    cubit.cycleLoop();
+    await settle();
+    expect(cubit.state.looping, isTrue);
+    engine.emitTrack(1);
+    await settle();
+    expect(cubit.state.loopStart, isNull);
+    expect(cubit.state.loopEnd, isNull);
+  });
 
   test('곡을 고르면 대기열 전체를 엔진에 보내 재생한다', () async {
     cubit.playQueue(tracks);
