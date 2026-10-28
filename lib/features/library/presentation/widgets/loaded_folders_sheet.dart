@@ -4,6 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../domain/entities/loaded_folder.dart';
+import '../../../downloads/presentation/widgets/playlist_picker_sheet.dart';
+import '../../../playlists/presentation/bloc/playlists_cubit.dart';
+import '../../../playlists/presentation/widgets/playlist_card.dart';
+import '../bloc/library_cubit.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../bloc/loaded_folders_cubit.dart';
@@ -14,6 +18,9 @@ Future<void> showLoadedFoldersSheet(BuildContext context) {
   return showAppSheet<void>(
     context,
     isScrollControlled: true,
+    // 진행 중에는 내려서 닫을 수 없게 한다 (끌어내리기는 PopScope를 거치지 않아 끈다).
+    enableDrag: false,
+    showDragHandle: false,
     builder: (_) => BlocProvider.value(
       value: cubit,
       // 내장 커버는 DB에 직접 저장되므로 커버가 새로 붙으면 메모리의 커버 목록을 다시 읽는다.
@@ -43,8 +50,53 @@ Future<bool> confirmRemoveLoadedFolder(
   );
 }
 
-class LoadedFoldersSheet extends StatelessWidget {
+class LoadedFoldersSheet extends StatefulWidget {
   const LoadedFoldersSheet({super.key});
+
+  @override
+  State<LoadedFoldersSheet> createState() => _LoadedFoldersSheetState();
+}
+
+class _LoadedFoldersSheetState extends State<LoadedFoldersSheet> {
+  /// 폴더를 추가할 때 새로 불러온 곡을 함께 담을 재생목록. 비어 있으면 담지 않는다.
+  Set<String> _targets = {};
+
+  Future<void> _pickTargets() async {
+    final picked = await showPlaylistPickerSheet(
+      context,
+      playlists: context.read<PlaylistsCubit>(),
+      selected: _targets,
+    );
+    if (picked != null && mounted) setState(() => _targets = picked);
+  }
+
+  /// 폴더를 고르고 불러온 뒤, 새로 들어온 곡 전부를 고른 재생목록에 한 번에 담는다.
+  Future<void> _add() async {
+    final l10n = context.l10n;
+    final cubit = context.read<LoadedFoldersCubit>();
+    final library = context.read<LibraryCubit>();
+    final playlists = context.read<PlaylistsCubit>();
+    final messenger = ScaffoldMessenger.of(context);
+    final targets = {..._targets};
+    final before = {for (final t in library.state.tracks) t.id};
+    await cubit.add();
+    if (targets.isEmpty) return;
+    final added = {
+      for (final t in library.state.tracks)
+        if (!before.contains(t.id)) t.id,
+    };
+    if (added.isEmpty) return;
+    for (final id in targets) {
+      await playlists.addTracks(added, id);
+    }
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          l10n.loadedFoldersAddedToPlaylists(added.length, targets.length),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,56 +104,79 @@ class LoadedFoldersSheet extends StatelessWidget {
     final state = context.watch<LoadedFoldersCubit>().state;
     final cubit = context.read<LoadedFoldersCubit>();
     final player = context.read<NowPlayingCubit>();
+    final playlists = context.watch<PlaylistsCubit>().state;
+    final names = [
+      for (final pl in playlists)
+        if (_targets.contains(pl.id)) playlistNameOf(l10n, pl),
+    ];
 
-    return SafeArea(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.sizeOf(context).height * .8,
-        ),
-        child: Padding(
-          padding: appSheetPadding,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AppSheetTitle(
-                l10n.settingsLoadedFolders,
-                subtitle: state.busy ? null : l10n.loadedFoldersHint,
-              ),
-              // 폴더를 바꾼 뒤 곡을 찾고 · 정보를 읽고 · 이미지를 가져오는 동안의 진행.
-              if (state.busy) _Progress(state: state),
-              const SizedBox(height: AppSpacing.md),
-              Flexible(
-                child: ListView(
-                  shrinkWrap: true,
-                  children: [
-                    for (final folder in state.folders)
-                      _FolderRow(
-                        folder: folder,
-                        onRemove: state.busy
-                            ? null
-                            : () async {
-                                if (await confirmRemoveLoadedFolder(
-                                  context,
-                                  folder,
-                                )) {
-                                  final removed = await cubit.remove(
-                                    folder.path,
-                                  );
-                                  player.removeFromQueueByIds(removed);
-                                }
-                              },
-                      ),
-                  ],
+    // 폴더를 바꾸는 동안에는 뒤로가기 · 바깥 터치로 닫히지 않는다 (끝나면 다시 닫을 수 있다).
+    return PopScope(
+      canPop: !state.busy,
+      child: SafeArea(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(context).height * .8,
+          ),
+          child: Padding(
+            padding: appSheetPadding,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: AppSpacing.md),
+                AppSheetTitle(
+                  l10n.settingsLoadedFolders,
+                  subtitle: state.busy ? null : l10n.loadedFoldersHint,
                 ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              PillButton(
-                label: l10n.loadedFoldersAdd,
-                icon: AppIcons.newFolder,
-                onPressed: state.busy ? null : cubit.add,
-              ),
-            ],
+                // 폴더를 바꾼 뒤 곡을 찾고 · 정보를 읽고 · 이미지를 가져오는 동안의 진행.
+                if (state.busy) _Progress(state: state),
+                const SizedBox(height: AppSpacing.md),
+                Flexible(
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: [
+                      for (final folder in state.folders)
+                        _FolderRow(
+                          folder: folder,
+                          onRemove: state.busy
+                              ? null
+                              : () async {
+                                  if (await confirmRemoveLoadedFolder(
+                                    context,
+                                    folder,
+                                  )) {
+                                    final removed = await cubit.remove(
+                                      folder.path,
+                                    );
+                                    player.removeFromQueueByIds(removed);
+                                  }
+                                },
+                        ),
+                    ],
+                  ),
+                ),
+                SettingRow(
+                  title: l10n.loadedFoldersToPlaylist,
+                  description: switch (names.length) {
+                    0 => l10n.loadedFoldersToPlaylistOff,
+                    1 => names.first,
+                    _ => l10n.loadedFoldersToPlaylistCount(names.length),
+                  },
+                  onTap: state.busy ? null : _pickTargets,
+                  trailing: Icon(
+                    AppIcons.chevronRight,
+                    color: context.palette.onSurfaceMuted,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                PillButton(
+                  label: l10n.loadedFoldersAdd,
+                  icon: AppIcons.newFolder,
+                  onPressed: state.busy ? null : _add,
+                ),
+              ],
+            ),
           ),
         ),
       ),

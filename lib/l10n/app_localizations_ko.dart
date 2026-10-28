@@ -1,6 +1,5 @@
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -348,6 +347,22 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get loadedFoldersCovers => '곡 이미지를 가져오는 중이에요';
+
+  @override
+  String get loadedFoldersToPlaylist => '불러온 곡을 재생목록에 담기';
+
+  @override
+  String get loadedFoldersToPlaylistOff => '담지 않음';
+
+  @override
+  String loadedFoldersToPlaylistCount(int count) {
+    return '$count개 재생목록';
+  }
+
+  @override
+  String loadedFoldersAddedToPlaylists(int songs, int count) {
+    return '$songs곡을 $count개 재생목록에 담았어요';
+  }
 
   @override
   String get settingsFormat => '기본 포맷';
