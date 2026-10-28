@@ -116,7 +116,6 @@
   "loadedFoldersRemoving": "Removing the folder and tidying your library",
   "loadedFoldersReading": "Reading song info",
   "loadedFoldersCovers": "Getting song images",
-  "loadedFoldersCancel": "Stop loading",
   "loadedFoldersPlaylistTitle": "Add the {count} loaded songs to playlists?",
   "@loadedFoldersPlaylistTitle": {"placeholders": {"count": {"type": "int"}}},
   "loadedFoldersPlaylistSkip": "Skip",

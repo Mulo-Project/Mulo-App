@@ -137,7 +137,6 @@
   "loadedFoldersRemoving": "폴더를 빼고 보관함을 정리하는 중이에요",
   "loadedFoldersReading": "곡 정보를 읽는 중이에요",
   "loadedFoldersCovers": "곡 이미지를 가져오는 중이에요",
-  "loadedFoldersCancel": "불러오기 멈추기",
   "loadedFoldersPlaylistTitle": "불러온 {count}곡을 재생목록에 담을까요?",
   "@loadedFoldersPlaylistTitle": {"placeholders": {"count": {"type": "int"}}},
   "loadedFoldersPlaylistSkip": "안 담기",

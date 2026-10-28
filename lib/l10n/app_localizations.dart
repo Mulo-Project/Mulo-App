@@ -746,12 +746,6 @@ abstract class AppLocalizations {
   /// **'곡 이미지를 가져오는 중이에요'**
   String get loadedFoldersCovers;
 
-  /// No description provided for @loadedFoldersCancel.
-  ///
-  /// In ko, this message translates to:
-  /// **'불러오기 멈추기'**
-  String get loadedFoldersCancel;
-
   /// No description provided for @loadedFoldersPlaylistTitle.
   ///
   /// In ko, this message translates to:

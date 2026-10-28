@@ -354,9 +354,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loadedFoldersCovers => 'Getting song images';
 
   @override
-  String get loadedFoldersCancel => 'Stop loading';
-
-  @override
   String loadedFoldersPlaylistTitle(int count) {
     return 'Add the $count loaded songs to playlists?';
   }
