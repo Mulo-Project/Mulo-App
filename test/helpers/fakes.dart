@@ -133,6 +133,12 @@ class FakeLibraryRepository implements LibraryRepository {
   }
 
   @override
+  Future<void> hide(String trackId) async {
+    _tracks.removeWhere((t) => t.id == trackId);
+    _changes.add(_sorted);
+  }
+
+  @override
   Future<void> delete(String trackId) async {
     _tracks.removeWhere((t) => t.id == trackId);
     _changes.add(_sorted);

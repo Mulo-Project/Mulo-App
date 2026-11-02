@@ -13,6 +13,10 @@ abstract interface class LibraryRepository {
   /// 곡의 제목 · 아티스트 · 앨범 · 장르를 바꾼다. 곡이 없으면 false.
   Future<bool> updateInfo(String trackId, TrackInfo info);
 
+  /// 곡을 보관함에서 숨긴다 (불러오는 폴더를 뺄 때). 재생 기록 · 재생목록 · 커버는 남기고,
+  /// 같은 곡을 다시 [addTracks]로 찾으면 숨김이 풀린다.
+  Future<void> hide(String trackId);
+
   /// 곡을 보관함에서 지운다. 재생목록 · 재생 기록 · 커버 기록도 함께 지운다 (음악 파일은 [TrackFileRepository]).
   Future<void> delete(String trackId);
 }

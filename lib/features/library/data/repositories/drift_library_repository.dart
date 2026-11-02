@@ -12,7 +12,9 @@ class DriftLibraryRepository implements LibraryRepository {
 
   @override
   Stream<List<Track>> watchTracks() =>
-      (_db.select(_db.tracks)..orderBy([(t) => OrderingTerm.desc(t.addedAt)]))
+      (_db.select(_db.tracks)
+            ..where((t) => t.hidden.equals(false))
+            ..orderBy([(t) => OrderingTerm.desc(t.addedAt)]))
           .watch()
           .map((rows) => rows.map(_toTrack).toList());
 
@@ -24,6 +26,14 @@ class DriftLibraryRepository implements LibraryRepository {
       b.insertAll(_db.tracks, [
         for (final t in tracks) _toRow(t),
       ], mode: InsertMode.insertOrIgnore);
+      // 폴더를 빼서 숨겨 둔 곡은 다시 찾으면 숨김만 푼다 (기록은 그대로).
+      for (final t in tracks) {
+        b.update(
+          _db.tracks,
+          const TracksCompanion(hidden: Value(false)),
+          where: (r) => r.uri.equals(t.uri) & r.hidden.equals(true),
+        );
+      }
       // 기기에서 불러온 곡은 다시 찾을 때마다 파일 날짜로 추가일을 맞춘다 (전에는 찾은 시각이 들어가 같은 날짜가 됐다).
       for (final t in tracks.where((t) => t.source == TrackSource.device)) {
         b.update(
@@ -61,6 +71,12 @@ class DriftLibraryRepository implements LibraryRepository {
   }
 
   @override
+  Future<void> hide(String trackId) =>
+      (_db.update(_db.tracks)..where((t) => t.id.equals(trackId))).write(
+        const TracksCompanion(hidden: Value(true)),
+      );
+
+  @override
   Future<void> delete(String trackId) => _db.transaction(() async {
     await (_db.delete(_db.tracks)..where((t) => t.id.equals(trackId))).go();
     await (_db.delete(
@@ -74,9 +90,11 @@ class DriftLibraryRepository implements LibraryRepository {
 
   Future<int> _count() async {
     final count = _db.tracks.id.count();
-    final row = await (_db.selectOnly(
-      _db.tracks,
-    )..addColumns([count])).getSingle();
+    final row =
+        await (_db.selectOnly(_db.tracks)
+              ..addColumns([count])
+              ..where(_db.tracks.hidden.equals(false)))
+            .getSingle();
     return row.read(count) ?? 0;
   }
 
