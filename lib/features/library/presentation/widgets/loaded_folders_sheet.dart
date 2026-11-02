@@ -293,7 +293,11 @@ class _FolderRow extends StatelessWidget {
     final p = context.palette;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+      // 저장 위치 시트와 같은 여백 · 오른쪽 끝 칸으로 아이콘 자리를 맞춘다.
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: AppSpacing.sm,
+      ),
       child: Row(
         children: [
           Icon(AppIcons.folder, color: p.onSurfaceMuted),
@@ -318,12 +322,17 @@ class _FolderRow extends StatelessWidget {
               ],
             ),
           ),
-          if (!folder.isDefault)
-            RowIconButton(
-              icon: AppIcons.close,
-              tooltip: l10n.loadedFoldersRemove,
-              onPressed: onRemove,
-            ),
+          SizedBox(
+            width: AppSizes.rowButton,
+            height: AppSizes.rowButton,
+            child: folder.isDefault
+                ? null
+                : RowIconButton(
+                    icon: AppIcons.close,
+                    tooltip: l10n.loadedFoldersRemove,
+                    onPressed: onRemove,
+                  ),
+          ),
         ],
       ),
     );
