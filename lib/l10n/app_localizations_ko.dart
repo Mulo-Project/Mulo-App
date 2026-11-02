@@ -632,6 +632,33 @@ class AppLocalizationsKo extends AppLocalizations {
   String get themePreviewApply => '적용';
 
   @override
+  String get settingsData => '데이터';
+
+  @override
+  String get settingsPurgeHidden => '숨긴 곡 기록 정리';
+
+  @override
+  String settingsPurgeHiddenDesc(int count) {
+    return '폴더를 빼서 숨겨 둔 $count곡의 기록이 남아 있어요';
+  }
+
+  @override
+  String get settingsPurgeHiddenNone => '정리할 기록이 없어요';
+
+  @override
+  String get settingsPurgeHiddenTitle => '숨긴 곡 기록을 지울까요?';
+
+  @override
+  String settingsPurgeHiddenBody(int count) {
+    return '숨겨 둔 $count곡의 재생 횟수, 좋아요, 재생목록 소속, 커버와 가사 연결이 지워져요. 음악 파일은 지워지지 않아요.';
+  }
+
+  @override
+  String settingsPurgeHiddenDone(int count) {
+    return '$count곡의 기록을 지웠어요';
+  }
+
+  @override
   String get settingsAbout => '정보';
 
   @override

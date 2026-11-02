@@ -59,8 +59,9 @@ class DriftPlaylistRepository implements PlaylistRepository {
 
     // 곡 id → 곡, 곡 id → 들은 횟수.
     final trackRows = {
-      for (final t in await (_db.select(_db.tracks)
-            ..where((t) => t.hidden.equals(false))).get())
+      for (final t in await (_db.select(
+        _db.tracks,
+      )..where((t) => t.hidden.equals(false))).get())
         t.id: t,
     };
     final plays = <String, int>{};

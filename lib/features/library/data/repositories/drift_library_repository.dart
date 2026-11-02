@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:drift/drift.dart';
 
 import '../../../../core/database/app_database.dart';
@@ -75,6 +77,62 @@ class DriftLibraryRepository implements LibraryRepository {
       (_db.update(_db.tracks)..where((t) => t.id.equals(trackId))).write(
         const TracksCompanion(hidden: Value(true)),
       );
+
+  @override
+  Future<int> hiddenCount() async {
+    final count = _db.tracks.id.count();
+    final row =
+        await (_db.selectOnly(_db.tracks)
+              ..addColumns([count])
+              ..where(_db.tracks.hidden.equals(true)))
+            .getSingle();
+    return row.read(count) ?? 0;
+  }
+
+  @override
+  Future<int> purgeHidden() async {
+    final files = <String>[];
+    final purged = await _db.transaction(() async {
+      final ids = [
+        for (final t in await (_db.select(
+          _db.tracks,
+        )..where((t) => t.hidden.equals(true))).get())
+          t.id,
+      ];
+      if (ids.isEmpty) return 0;
+      final keys = [for (final id in ids) 'track:$id'];
+      for (final c in await (_db.select(
+        _db.covers,
+      )..where((c) => c.key.isIn(keys))).get()) {
+        if (c.path.isNotEmpty) files.add(c.path);
+      }
+      for (final l in await (_db.select(
+        _db.lyricsFiles,
+      )..where((l) => l.trackId.isIn(ids))).get()) {
+        files.add(l.path);
+      }
+      await (_db.delete(_db.covers)..where((c) => c.key.isIn(keys))).go();
+      await (_db.delete(_db.coverColors)..where((c) => c.key.isIn(keys))).go();
+      await (_db.delete(
+        _db.lyricsFiles,
+      )..where((l) => l.trackId.isIn(ids))).go();
+      await (_db.delete(
+        _db.playlistTracks,
+      )..where((p) => p.trackId.isIn(ids))).go();
+      await (_db.delete(_db.plays)..where((p) => p.trackId.isIn(ids))).go();
+      await (_db.delete(_db.tracks)..where((t) => t.id.isIn(ids))).go();
+      return ids.length;
+    });
+    for (final path in files) {
+      try {
+        final f = File(path);
+        if (await f.exists()) await f.delete();
+      } on FileSystemException {
+        // 못 지워도 기록은 이미 지웠다.
+      }
+    }
+    return purged;
+  }
 
   @override
   Future<void> delete(String trackId) => _db.transaction(() async {

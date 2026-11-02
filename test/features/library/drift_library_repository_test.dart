@@ -100,4 +100,20 @@ void main() {
     expect((await repo.watchTracks().first).map((t) => t.id), ['b', 'a']);
     expect(await db.select(db.plays).get(), hasLength(1));
   });
+
+  test('purgeHidden은 숨긴 곡의 기록만 모두 지우고 보이는 곡은 건드리지 않는다', () async {
+    await repo.addTracks([_t('a', 'u1', 1), _t('b', 'u2', 2)]);
+    for (final id in ['a', 'b']) {
+      await db
+          .into(db.plays)
+          .insert(PlaysCompanion.insert(trackId: id, playedAt: DateTime(2026)));
+    }
+    await repo.hide('a');
+    expect(await repo.hiddenCount(), 1);
+    expect(await repo.purgeHidden(), 1);
+    expect(await repo.hiddenCount(), 0);
+    expect((await db.select(db.plays).get()).map((p) => p.trackId), ['b']);
+    expect((await repo.watchTracks().first).map((t) => t.id), ['b']);
+    expect(await repo.purgeHidden(), 0);
+  });
 }

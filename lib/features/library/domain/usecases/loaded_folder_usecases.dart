@@ -112,6 +112,26 @@ class RemoveSaveLocation implements UseCase<void, String> {
   }
 }
 
+/// 숨긴 곡(폴더를 빼서 기록만 남은 곡)의 수.
+class CountHiddenTracks implements UseCase<int, NoParams> {
+  const CountHiddenTracks(this._library);
+
+  final LibraryRepository _library;
+
+  @override
+  Future<int> call(NoParams _) => _library.hiddenCount();
+}
+
+/// 숨긴 곡의 남은 기록을 모두 지운다. 지운 곡 수를 돌려준다.
+class PurgeHiddenTracks implements UseCase<int, NoParams> {
+  const PurgeHiddenTracks(this._library);
+
+  final LibraryRepository _library;
+
+  @override
+  Future<int> call(NoParams _) => _library.purgeHidden();
+}
+
 /// 폴더를 목록에서 빼고, 그 폴더에서 불러온 곡을 보관함에서 숨긴다 (음악 파일은 그대로).
 /// 곡 행과 재생 기록 · 좋아요 · 재생목록 · 커버는 남기고, 다시 불러오면 숨김만 풀린다.
 /// 남은 폴더 안에도 있는 곡(하위 폴더로 겹칠 때)은 숨기지 않는다. 기본 저장 위치는 뺄 수 없다.
