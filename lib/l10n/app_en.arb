@@ -224,6 +224,8 @@
   "@settingsPurgeHiddenBody": {"placeholders": {"count": {"type": "int"}}},
   "settingsPurgeHiddenDone": "Cleared records of {count} songs",
   "@settingsPurgeHiddenDone": {"placeholders": {"count": {"type": "int"}}},
+  "hiddenRecordsHint": "Songs hidden after their folder was removed. Clearing the records can't be undone.",
+  "hiddenRecordsPurge": "Clear records",
   "settingsAbout": "About",
   "settingsVersion": "Version",
   "comingSoon": "Coming soon",

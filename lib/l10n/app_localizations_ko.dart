@@ -659,6 +659,12 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get hiddenRecordsHint => '폴더를 빼서 숨겨 둔 곡이에요. 기록을 지우면 되돌릴 수 없어요.';
+
+  @override
+  String get hiddenRecordsPurge => '기록 지우기';
+
+  @override
   String get settingsAbout => '정보';
 
   @override

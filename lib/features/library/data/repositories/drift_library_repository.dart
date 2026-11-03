@@ -90,6 +90,16 @@ class DriftLibraryRepository implements LibraryRepository {
   }
 
   @override
+  Future<List<Track>> hiddenTracks() async => [
+    for (final r
+        in await (_db.select(_db.tracks)
+              ..where((t) => t.hidden.equals(true))
+              ..orderBy([(t) => OrderingTerm.asc(t.title)]))
+            .get())
+      _toTrack(r),
+  ];
+
+  @override
   Future<int> purgeHidden() async {
     final files = <String>[];
     final purged = await _db.transaction(() async {

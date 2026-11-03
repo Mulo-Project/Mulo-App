@@ -1,5 +1,6 @@
 import '../../../../core/usecase/usecase.dart';
 import '../entities/loaded_folder.dart';
+import '../entities/track.dart';
 import '../repositories/library_repository.dart';
 
 /// 불러오는 폴더 목록과 폴더별 곡 수 (기본 저장 위치가 맨 위).
@@ -120,6 +121,16 @@ class CountHiddenTracks implements UseCase<int, NoParams> {
 
   @override
   Future<int> call(NoParams _) => _library.hiddenCount();
+}
+
+/// 숨긴 곡 목록 (지우기 전에 확인용).
+class ListHiddenTracks implements UseCase<List<Track>, NoParams> {
+  const ListHiddenTracks(this._library);
+
+  final LibraryRepository _library;
+
+  @override
+  Future<List<Track>> call(NoParams _) => _library.hiddenTracks();
 }
 
 /// 숨긴 곡의 남은 기록을 모두 지운다. 지운 곡 수를 돌려준다.
