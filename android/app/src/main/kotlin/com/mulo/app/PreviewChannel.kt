@@ -26,8 +26,7 @@ import io.flutter.plugin.common.MethodChannel
  * 네이티브 → Dart: `completed` · `progress`(position, duration, ms) · `failure`(까닭).
  * `play`는 소리를 낼 준비가 되면 성공으로 돌려주고, 열지 못하면 `failed` 오류로 돌려준다.
  */
-class PreviewChannel(private val context: Context, messenger: BinaryMessenger) {
-    private val channel = MethodChannel(messenger, NAME)
+class PreviewChannel(private val context: Context, messenger: BinaryMessenger) : NativeChannel(messenger, NAME) {
     private val main = Handler(Looper.getMainLooper())
 
     private var player: ExoPlayer? = null
@@ -180,9 +179,9 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) {
         else -> null
     }
 
-    fun dispose() {
+    override fun dispose() {
         stop()
-        channel.setMethodCallHandler(null)
+        super.dispose()
     }
 
     companion object {

@@ -16,8 +16,7 @@ import java.util.concurrent.Executors
  * Android 10+는 내려받은 실행 파일을 돌릴 수 없어서 라이브러리 방식을 쓴다.
  * lite 빌드는 같은 이름의 빈 구현이 들어가 `available`이 false다.
  */
-class YtDlpChannel(private val context: Context, messenger: BinaryMessenger) {
-    private val channel = MethodChannel(messenger, NAME)
+class YtDlpChannel(private val context: Context, messenger: BinaryMessenger) : NativeChannel(messenger, NAME) {
     private val io = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
 
@@ -121,8 +120,8 @@ class YtDlpChannel(private val context: Context, messenger: BinaryMessenger) {
         }
     }
 
-    fun dispose() {
-        channel.setMethodCallHandler(null)
+    override fun dispose() {
+        super.dispose()
         io.shutdown()
     }
 

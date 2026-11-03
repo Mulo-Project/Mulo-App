@@ -5,7 +5,6 @@ import android.os.Handler
 import android.os.Looper
 import com.yausername.ffmpeg.FFmpeg
 import io.flutter.plugin.common.BinaryMessenger
-import io.flutter.plugin.common.MethodChannel
 import java.io.File
 import java.util.concurrent.Executors
 
@@ -15,8 +14,7 @@ import java.util.concurrent.Executors
  * `nativeLibraryDir/libffmpeg.so`를 실행 파일로, 풀어 둔 공유 라이브러리를 `LD_LIBRARY_PATH`로 쓴다.
  * lite 빌드는 같은 이름의 빈 구현이 들어가 `available`이 false다.
  */
-class TranscoderChannel(private val context: Context, messenger: BinaryMessenger) {
-    private val channel = MethodChannel(messenger, NAME)
+class TranscoderChannel(private val context: Context, messenger: BinaryMessenger) : NativeChannel(messenger, NAME) {
     private val io = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
 
@@ -155,9 +153,9 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
         }
     }
 
-    fun dispose() {
+    override fun dispose() {
         process?.destroy()
-        channel.setMethodCallHandler(null)
+        super.dispose()
         io.shutdownNow()
     }
 

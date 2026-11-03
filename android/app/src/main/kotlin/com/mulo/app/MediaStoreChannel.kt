@@ -27,8 +27,7 @@ class MediaStoreChannel(
     private val context: Context,
     messenger: BinaryMessenger,
     private val activity: () -> Activity?,
-) {
-    private val channel = MethodChannel(messenger, NAME)
+) : NativeChannel(messenger, NAME) {
     private val io = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
 
@@ -265,8 +264,8 @@ class MediaStoreChannel(
         return rows
     }
 
-    fun dispose() {
-        channel.setMethodCallHandler(null)
+    override fun dispose() {
+        super.dispose()
         io.shutdown()
     }
 

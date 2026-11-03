@@ -871,3 +871,6 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 ## D-137 · 2026-11-03 · 받기 서비스는 Android 15의 dataSync 시간 제한에 맞춰 스스로 멈추고, 죽은 받기 알림은 치운다
 - Android 15부터 `dataSync` 포그라운드 서비스는 24시간에 합쳐 약 6시간까지만 돈다. 한도에 닿으면 시스템이 `onTimeout`을 부르고 곧 멈추지 않으면 앱이 강제 종료된다. `DownloadForegroundService.onTimeout`이 알림을 일반 알림으로 떼어 내고 서비스를 멈춘다 (`stopLog`에 기록). 재생 서비스(`mediaPlayback`)는 이 제한이 없다.
 - 받기 알림 버튼을 받아 줄 Dart 엔진이 없으면(프로세스가 죽었다 되살아난 경우) 버튼이 먹지 않는 낡은 알림이므로 `DownloadActionReceiver`가 알림을 치운다. 이전에는 아무 반응 없이 버려졌다.
+
+## D-138 · 2026-11-03 · 네이티브 채널 클래스는 `NativeChannel`을 상속한다
+- 채널 클래스 10개(`music_app/<이름>`)가 각자 `MethodChannel`을 만들고 `dispose`에서 처리기를 떼던 같은 코드를 `NativeChannel.kt`로 모았다. 새 채널은 `NativeChannel(messenger, NAME)`을 상속하고, 정리할 것이 더 있으면 `dispose`를 덮어써 `super.dispose()`를 부른다. 채널 이름과 약속(메서드 · 인자)은 바뀐 것이 없다.
