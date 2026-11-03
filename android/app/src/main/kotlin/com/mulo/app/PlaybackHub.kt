@@ -22,17 +22,13 @@ import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.audio.AudioSink
 import androidx.media3.exoplayer.audio.DefaultAudioSink
-import androidx.media3.session.CommandButton
 import androidx.media3.session.MediaSession
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
-import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
-import org.json.JSONArray
-import org.json.JSONObject
 
 /**
  * 재생의 주인: 소리를 내는 ExoPlayer, 미디어 세션, 알림 서비스 연결을 프로세스에 하나씩 쥔다.
@@ -43,13 +39,7 @@ import org.json.JSONObject
  */
 object PlaybackHub {
     private const val RESUME_WINDOW_MS = 10 * 60 * 1000L
-    private const val ACTION_FAVORITE = "com.mulo.app.FAVORITE"
-    private const val ACTION_CLOSE = "com.mulo.app.CLOSE"
-    private const val ACTION_SHUFFLE = "com.mulo.app.SHUFFLE"
     const val ACTION_OPEN_PLAYER = "com.mulo.app.OPEN_PLAYER"
-    private val favoriteCommand = SessionCommand(ACTION_FAVORITE, Bundle.EMPTY)
-    private val closeCommand = SessionCommand(ACTION_CLOSE, Bundle.EMPTY)
-    private val shuffleCommand = SessionCommand(ACTION_SHUFFLE, Bundle.EMPTY)
 
     private lateinit var context: Context
     private val main = Handler(Looper.getMainLooper())
@@ -179,7 +169,7 @@ object PlaybackHub {
     private fun restore(stored: StoredPlayback) {
         extras = stored.extras
         artById = stored.items.mapNotNull { i -> i.art?.let { i.id to it } }.toMap()
-        exo.repeatMode = repeatModeOf(stored.repeat)
+        exo.repeatMode = QueueMapping.repeatModeOf(stored.repeat)
         exo.setMediaItems(
             stored.items.map { i ->
                 val metadata = MediaMetadata.Builder()
@@ -228,7 +218,7 @@ object PlaybackHub {
 
     private fun persistPosition() {
         if (!initialized || exo.mediaItemCount == 0) return
-        PlaybackStore.savePosition(context, exo.currentMediaItemIndex, exo.currentPosition, repeatNameOf(exo.repeatMode))
+        PlaybackStore.savePosition(context, exo.currentMediaItemIndex, exo.currentPosition, QueueMapping.repeatNameOf(exo.repeatMode))
     }
 
     /** 이어 재생해도 되는 상태인지 저장한다: 알림을 지우지 않았고 대기열이 있을 때. */
@@ -237,33 +227,6 @@ object PlaybackHub {
     }
 
     // ── Dart → 네이티브 ──
-
-    private fun repeatModeOf(name: String?) = when (name) {
-        "all" -> Player.REPEAT_MODE_ALL
-        "one" -> Player.REPEAT_MODE_ONE
-        else -> Player.REPEAT_MODE_OFF
-    }
-
-    private fun repeatNameOf(mode: Int) = when (mode) {
-        Player.REPEAT_MODE_ALL -> "all"
-        Player.REPEAT_MODE_ONE -> "one"
-        else -> "off"
-    }
-
-    private fun mediaItemOf(map: Map<*, *>): MediaItem {
-        val metadata = MediaMetadata.Builder()
-            .setTitle(map["title"] as? String)
-            .setArtist((map["artist"] as? String)?.ifEmpty { null })
-            .setAlbumTitle((map["album"] as? String)?.ifEmpty { null })
-            .setDurationMs((map["durationMs"] as? Number)?.toLong()?.takeIf { it > 0 })
-            .setArtworkUri((map["id"] as? String)?.let { artById[it] }?.let { Uri.parse(it) })
-            .build()
-        return MediaItem.Builder()
-            .setMediaId(map["id"] as? String ?: "")
-            .setUri(map["uri"] as? String ?: "")
-            .setMediaMetadata(metadata)
-            .build()
-    }
 
     /**
      * 대기열 스냅샷을 통째로 바꾼다. 현재 곡이 같으면 재생을 끊지 않고 앞뒤 목록만 맞춘다.
@@ -276,7 +239,7 @@ object PlaybackHub {
         val wasShuffled = shuffleOn
         extras = map["extras"] as? String ?: ""
         if (wasShuffled != shuffleOn) main.post { refreshLayout() }
-        exo.repeatMode = repeatModeOf(map["repeat"] as? String)
+        exo.repeatMode = QueueMapping.repeatModeOf(map["repeat"] as? String)
         pendingLoad?.error("interrupted", "다른 대기열을 불러와 중단됨", null)
         pendingLoad = null
 
@@ -289,7 +252,7 @@ object PlaybackHub {
         }
         revive()
         val index = ((map["index"] as? Number)?.toInt() ?: 0).coerceIn(0, items.size - 1)
-        val mediaItems = items.map { mediaItemOf(it) }
+        val mediaItems = items.map { QueueMapping.mediaItemOf(it, artById) }
         val keepCurrent = exo.mediaItemCount > 0 &&
             exo.playbackState != Player.STATE_ENDED &&
             exo.currentMediaItem?.mediaId == mediaItems[index].mediaId
@@ -401,7 +364,7 @@ object PlaybackHub {
             "items" to items,
             "index" to exo.currentMediaItemIndex,
             "playing" to (exo.playWhenReady && exo.playbackState != Player.STATE_ENDED),
-            "repeat" to repeatNameOf(exo.repeatMode),
+            "repeat" to QueueMapping.repeatNameOf(exo.repeatMode),
             "positionMs" to exo.currentPosition,
             "extras" to extras,
         )
@@ -467,7 +430,7 @@ object PlaybackHub {
     /** 알림 버튼 모양을 다시 맞춘다 (좋아요 · 셔플은 앱이 있든 없든 같은 자리에 둔다). */
     private fun refreshLayout() {
         val info = sessionPlayer.info ?: return
-        session?.setCustomLayout(customLayout(info))
+        session?.setCustomLayout(PlaybackButtons.layout(info, shuffleOn, favoriteOn(info)))
     }
 
     /** 좋아요를 Dart가 처리할 수 있는지: Dart가 붙어 있고, 앱이 보낸 내용이 지금 재생 중인 곡의 것일 때. */
@@ -521,31 +484,6 @@ object PlaybackHub {
         }
     }
 
-    private fun customLayout(info: SessionInfo): ImmutableList<CommandButton> {
-        val close = CommandButton.Builder(CommandButton.ICON_UNDEFINED)
-            .setCustomIconResId(R.drawable.ic_notif_close)
-            .setDisplayName(info.closeLabel)
-            .setSessionCommand(closeCommand)
-            .build()
-        if (info.preview) return ImmutableList.of(close)
-        // 셔플 순서는 extras가 쥐고 있어 앱이 없어도 네이티브가 켜고 끌 수 있다: 아이콘도 extras를 따른다.
-        val shuffled = shuffleOn
-        val shuffle = CommandButton.Builder(CommandButton.ICON_UNDEFINED)
-            .setCustomIconResId(if (shuffled) R.drawable.ic_notif_shuffle_on else R.drawable.ic_notif_shuffle_off)
-            .setDisplayName(if (shuffled) info.shuffleOffLabel else info.shuffleOnLabel)
-            .setSessionCommand(shuffleCommand)
-            .build()
-        // 좋아요도 앱이 없으면 네이티브가 DB를 직접 바꾼다 ([FavoriteStore]): 셔플과 같이 늘 같은 자리에 둔다.
-        // 재생 중인 알림은 일시정지한 뒤 밀어서 지울 수 있다.
-        val on = favoriteOn(info)
-        val favorite = CommandButton.Builder(CommandButton.ICON_UNDEFINED)
-            .setCustomIconResId(if (on) R.drawable.ic_notif_favorite else R.drawable.ic_notif_favorite_outline)
-            .setDisplayName(if (on) info.unfavoriteLabel else info.favoriteLabel)
-            .setSessionCommand(favoriteCommand)
-            .build()
-        return ImmutableList.of(favorite, shuffle)
-    }
-
     // ── 네이티브 → Dart ──
 
     fun setSink(newSink: EventChannel.EventSink?) {
@@ -560,11 +498,7 @@ object PlaybackHub {
 
     /** 앱이 저장해 둔 대기열 정보에 셔플이 켜져 있는지. */
     private val shuffleOn: Boolean
-        get() = try {
-            extras.isNotEmpty() && JSONObject(extras).optBoolean("shuffle", false)
-        } catch (_: Exception) {
-            false
-        }
+        get() = QueueShuffle.isOn(extras)
 
     /**
      * 셔플 중 대기열을 한 바퀴 다 돌아 첫 곡으로 넘어왔으면 나머지 곡을 새로 섞는다 (같은 순서로 다시 돌지 않게).
@@ -576,8 +510,7 @@ object PlaybackHub {
         val count = exo.mediaItemCount
         if (sink != null || previousId == null || count < 3 || !shuffleOn) return
         if (exo.currentMediaItemIndex != 0 || exo.getMediaItemAt(count - 1).mediaId != previousId) return
-        val rest = (1 until count).map { exo.getMediaItemAt(it) }.shuffled().toMutableList()
-        if (rest.first().mediaId == previousId) rest.add(rest.removeAt(0))
+        val rest = QueueShuffle.reshuffledRest((0 until count).map { exo.getMediaItemAt(it) }, previousId)
         exo.removeMediaItems(1, count)
         exo.addMediaItems(rest)
         persistQueue()
@@ -598,38 +531,14 @@ object PlaybackHub {
         if (count == 0) return
         val current = exo.currentMediaItemIndex
         val all = (0 until count).map { exo.getMediaItemAt(it) }
-        val json = try {
-            if (extras.isNotEmpty()) JSONObject(extras) else JSONObject()
-        } catch (_: Exception) {
-            JSONObject()
-        }
-        val currentItem = all[current]
-        val others = all.filterIndexed { i, _ -> i != current }
-        val before: List<MediaItem>
-        val after: List<MediaItem>
-        if (!shuffleOn) {
-            val rest = others.shuffled()
-            before = emptyList()
-            after = rest
-            json.put("shuffle", true)
-            json.put("original", JSONArray(all.map { it.mediaId }))
-        } else {
-            val original = json.optJSONArray("original")
-            val ids = (0 until (original?.length() ?: 0)).map { original!!.getString(it) }
-            val byId = all.groupBy { it.mediaId }
-            val ordered = ids.mapNotNull { byId[it]?.firstOrNull() }.distinct() +
-                all.filter { it.mediaId !in ids }
-            val at = ordered.indexOf(currentItem).takeIf { it >= 0 } ?: 0
-            before = ordered.subList(0, at)
-            after = ordered.subList(at + 1, ordered.size)
-            json.put("shuffle", false)
-            json.remove("original")
-        }
+        val shuffled = QueueShuffle.toggle(all, current, extras)
+        val before = shuffled.before
+        val after = shuffled.after
         if (current < count - 1) exo.removeMediaItems(current + 1, count)
         if (current > 0) exo.removeMediaItems(0, current)
         if (before.isNotEmpty()) exo.addMediaItems(0, before)
         if (after.isNotEmpty()) exo.addMediaItems(after)
-        extras = json.toString()
+        extras = shuffled.extras
         persistQueue()
         sessionPlayer.refresh()
         refreshLayout()
@@ -849,9 +758,9 @@ object PlaybackHub {
     private val sessionCallback = object : MediaSession.Callback {
         override fun onConnect(session: MediaSession, controller: MediaSession.ControllerInfo): MediaSession.ConnectionResult {
             val commands = MediaSession.ConnectionResult.DEFAULT_SESSION_COMMANDS.buildUpon()
-                .add(favoriteCommand)
-                .add(closeCommand)
-                .add(shuffleCommand)
+                .add(PlaybackButtons.favorite)
+                .add(PlaybackButtons.close)
+                .add(PlaybackButtons.shuffle)
                 .build()
             return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
                 .setAvailableSessionCommands(commands)
@@ -872,10 +781,10 @@ object PlaybackHub {
             args: Bundle,
         ): ListenableFuture<SessionResult> {
             when (customCommand.customAction) {
-                ACTION_FAVORITE -> toggleFavorite()
-                ACTION_SHUFFLE -> toggleShuffle()
+                PlaybackButtons.ACTION_FAVORITE -> toggleFavorite()
+                PlaybackButtons.ACTION_SHUFFLE -> toggleShuffle()
                 // 닫기(X): 재생을 멈추고 알림을 치운다 (미리 듣기면 Dart가 미리 듣기를 끝낸다).
-                ACTION_CLOSE -> {
+                PlaybackButtons.ACTION_CLOSE -> {
                     if (sessionPlayer.info?.preview != true) endSessionSoon()
                     emitCommand("stop", null)
                 }
