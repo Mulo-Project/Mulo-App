@@ -464,12 +464,30 @@ object PlaybackHub {
         service?.showSession()
     }
 
-    /** 알림 버튼 모양을 다시 맞춘다 (좋아요 모양은 Dart가 아는 현재 곡일 때만 보인다). */
+    /** 알림 버튼 모양을 다시 맞춘다 (좋아요 · 셔플은 앱이 있든 없든 같은 자리에 둔다). */
     private fun refreshLayout() {
         val info = sessionPlayer.info ?: return
-        // 좋아요는 Dart가 처리하므로 Dart가 붙어 있을 때만 둔다. 앱을 밀어 화면이 사라진 뒤
-        // (포그라운드 서비스만 남아 재생 중)에는 좋아요 대신 닫기를 두고, 셔플은 네이티브가 처리한다.
-        session?.setCustomLayout(customLayout(info, sessionPlayer.infoMatchesCurrent() && !restoredFromStore, sink != null))
+        session?.setCustomLayout(customLayout(info))
+    }
+
+    /** 좋아요를 Dart가 처리할 수 있는지: Dart가 붙어 있고, 앱이 보낸 내용이 지금 재생 중인 곡의 것일 때. */
+    private fun dartHandlesFavorite() = sink != null && !restoredFromStore && sessionPlayer.infoMatchesCurrent()
+
+    /** 알림의 좋아요 모양. Dart가 못 맡으면 DB를 직접 읽고, 읽지 못하면 앱이 마지막으로 보낸 값을 쓴다. */
+    private fun favoriteOn(info: SessionInfo): Boolean {
+        if (dartHandlesFavorite()) return info.favorite
+        val id = exo.currentMediaItem?.mediaId ?: return info.favorite
+        return FavoriteStore.isFavorite(context, id) ?: info.favorite
+    }
+
+    /** 좋아요 버튼: Dart가 있으면 Dart에 맡기고(화면의 목록이 바로 바뀌게), 없으면 DB를 직접 바꾼다. */
+    private fun toggleFavorite() {
+        if (dartHandlesFavorite()) {
+            emitCommand("favorite", null)
+            return
+        }
+        val id = exo.currentMediaItem?.mediaId ?: return
+        if (FavoriteStore.toggle(context, id) != null) refreshLayout()
     }
 
     /**
@@ -503,7 +521,7 @@ object PlaybackHub {
         }
     }
 
-    private fun customLayout(info: SessionInfo, current: Boolean, dartReady: Boolean): ImmutableList<CommandButton> {
+    private fun customLayout(info: SessionInfo): ImmutableList<CommandButton> {
         val close = CommandButton.Builder(CommandButton.ICON_UNDEFINED)
             .setCustomIconResId(R.drawable.ic_notif_close)
             .setDisplayName(info.closeLabel)
@@ -517,17 +535,14 @@ object PlaybackHub {
             .setDisplayName(if (shuffled) info.shuffleOffLabel else info.shuffleOnLabel)
             .setSessionCommand(shuffleCommand)
             .build()
-        // 좋아요는 앱(Dart)이 아는 현재 곡일 때만 누를 수 있다. 아니어도 칸은 비활성으로 남겨,
-        // 앱이 있든 없든 셔플이 늘 같은 자리에 오게 하고 닫기(X)는 그 뒤에 덧붙인다.
-        val favoriteAvailable = current && dartReady
-        val favorite = CommandButton.Builder(CommandButton.ICON_UNDEFINED)
-            .setCustomIconResId(if (info.favorite) R.drawable.ic_notif_favorite else R.drawable.ic_notif_favorite_outline)
-            .setDisplayName(if (info.favorite) info.unfavoriteLabel else info.favoriteLabel)
-            .setSessionCommand(favoriteCommand)
-            .setEnabled(favoriteAvailable)
-            .build()
-        if (!favoriteAvailable) return ImmutableList.of(favorite, shuffle, close)
+        // 좋아요도 앱이 없으면 네이티브가 DB를 직접 바꾼다 ([FavoriteStore]): 셔플과 같이 늘 같은 자리에 둔다.
         // 재생 중인 알림은 일시정지한 뒤 밀어서 지울 수 있다.
+        val on = favoriteOn(info)
+        val favorite = CommandButton.Builder(CommandButton.ICON_UNDEFINED)
+            .setCustomIconResId(if (on) R.drawable.ic_notif_favorite else R.drawable.ic_notif_favorite_outline)
+            .setDisplayName(if (on) info.unfavoriteLabel else info.favoriteLabel)
+            .setSessionCommand(favoriteCommand)
+            .build()
         return ImmutableList.of(favorite, shuffle)
     }
 
@@ -857,7 +872,7 @@ object PlaybackHub {
             args: Bundle,
         ): ListenableFuture<SessionResult> {
             when (customCommand.customAction) {
-                ACTION_FAVORITE -> emitCommand("favorite", null)
+                ACTION_FAVORITE -> toggleFavorite()
                 ACTION_SHUFFLE -> toggleShuffle()
                 // 닫기(X): 재생을 멈추고 알림을 치운다 (미리 듣기면 Dart가 미리 듣기를 끝낸다).
                 ACTION_CLOSE -> {
