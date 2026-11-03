@@ -220,7 +220,7 @@
   "@settingsPurgeHiddenDesc": {"placeholders": {"count": {"type": "int"}}},
   "settingsPurgeHiddenNone": "Nothing to clear",
   "settingsPurgeHiddenTitle": "Clear hidden song records?",
-  "settingsPurgeHiddenBody": "Play counts, likes, playlist entries, covers and lyrics links of {count} hidden songs will be deleted. The music files are not deleted.",
+  "settingsPurgeHiddenBody": "Play counts, likes, playlist entries, covers and the lyrics copies saved in the app for {count} hidden songs will be deleted. The music files and their tags (including lyrics) are not touched.",
   "@settingsPurgeHiddenBody": {"placeholders": {"count": {"type": "int"}}},
   "settingsPurgeHiddenDone": "Cleared records of {count} songs",
   "@settingsPurgeHiddenDone": {"placeholders": {"count": {"type": "int"}}},

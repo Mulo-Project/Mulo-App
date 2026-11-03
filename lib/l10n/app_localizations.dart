@@ -1295,7 +1295,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsPurgeHiddenBody.
   ///
   /// In ko, this message translates to:
-  /// **'숨겨 둔 {count}곡의 재생 횟수, 좋아요, 재생목록 소속, 커버와 가사 연결이 지워져요. 음악 파일은 지워지지 않아요.'**
+  /// **'숨겨 둔 {count}곡의 재생 횟수, 좋아요, 재생목록 소속, 커버, 앱에 저장한 가사 사본이 지워져요. 음악 파일과 파일 안의 태그(가사 포함)는 그대로예요.'**
   String settingsPurgeHiddenBody(int count);
 
   /// No description provided for @settingsPurgeHiddenDone.

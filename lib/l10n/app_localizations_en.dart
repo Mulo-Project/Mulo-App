@@ -665,7 +665,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String settingsPurgeHiddenBody(int count) {
-    return 'Play counts, likes, playlist entries, covers and lyrics links of $count hidden songs will be deleted. The music files are not deleted.';
+    return 'Play counts, likes, playlist entries, covers and the lyrics copies saved in the app for $count hidden songs will be deleted. The music files and their tags (including lyrics) are not touched.';
   }
 
   @override
