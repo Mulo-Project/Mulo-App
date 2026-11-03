@@ -71,9 +71,8 @@ void registerLibrary(GetIt sl) {
     ..registerFactory(() => AddLoadedFolder(sl()))
     ..registerFactory(() => RemoveLoadedFolder(sl(), sl()))
     ..registerFactory(() => CountHiddenTracks(sl()))
-    ..registerFactory(() => ListHiddenTracks(sl()))
     ..registerFactory(() => PurgeHiddenTracks(sl()))
-    ..registerFactory(() => HiddenRecordsCubit(sl(), sl(), sl()))
+    ..registerFactory(() => HiddenRecordsCubit(sl(), sl()))
     ..registerFactory(
       () => LoadedFoldersCubit(sl(), sl(), sl(), sl(), sl(), sl()),
     )

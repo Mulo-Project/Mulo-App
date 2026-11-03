@@ -255,8 +255,6 @@
   "@settingsPurgeHiddenBody": {"placeholders": {"count": {"type": "int"}}},
   "settingsPurgeHiddenDone": "{count}곡의 기록을 지웠어요",
   "@settingsPurgeHiddenDone": {"placeholders": {"count": {"type": "int"}}},
-  "hiddenRecordsHint": "폴더를 빼서 숨겨 둔 곡이에요. 기록을 지우면 되돌릴 수 없어요.",
-  "hiddenRecordsPurge": "기록 지우기",
   "settingsAbout": "정보",
   "settingsVersion": "버전",
   "comingSoon": "준비 중",

@@ -20,9 +20,6 @@ abstract interface class LibraryRepository {
   /// 숨긴 곡(폴더를 빼서 남겨 둔 곡)의 수.
   Future<int> hiddenCount();
 
-  /// 숨긴 곡 목록 (지우기 전에 어떤 곡의 기록이 남았는지 보는 용도). 제목 순.
-  Future<List<Track>> hiddenTracks();
-
   /// 숨긴 곡의 행과 재생 기록 · 재생목록 소속 · 커버 · 커버 색 · 가사 연결을 지운다
   /// (앱 폴더에 복사한 커버 · 가사 파일도). 지운 곡 수를 돌려준다.
   Future<int> purgeHidden();

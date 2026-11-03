@@ -674,13 +674,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get hiddenRecordsHint =>
-      'Songs hidden after their folder was removed. Clearing the records can\'t be undone.';
-
-  @override
-  String get hiddenRecordsPurge => 'Clear records';
-
-  @override
   String get settingsAbout => 'About';
 
   @override

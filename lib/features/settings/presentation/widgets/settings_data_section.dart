@@ -6,7 +6,6 @@ import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../library/presentation/bloc/hidden_records_cubit.dart';
 import '../../../library/presentation/bloc/library_cubit.dart';
-import 'hidden_records_sheet.dart';
 import 'settings_common.dart';
 
 /// 데이터 묶음: 폴더를 빼서 숨겨 둔 곡의 기록 정리.
@@ -26,11 +25,6 @@ class SettingsDataSection extends StatelessWidget {
       );
       return;
     }
-    if (!context.mounted) return;
-    // 지우기 전에 어떤 곡의 기록이 남았는지 보여 준다. "기록 지우기"를 눌러야 확인 창으로 간다.
-    final tracks = await cubit.tracks();
-    if (!context.mounted) return;
-    if (!await showHiddenRecordsSheet(context, tracks)) return;
     if (!context.mounted) return;
     final ok = await showConfirmDialog(
       context,

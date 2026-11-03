@@ -892,7 +892,3 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 ## D-142 · 2026-11-03 · 채널의 "백그라운드에서 돌리고 메인에서 결과 돌려주기"는 `runAsync` 하나로
 - `NativeChannel.runAsync(executor, result, errorCode) { … }`: 일을 지정한 실행기에서 돌리고, 성공하면 값을, 예외가 나면 `errorCode` 오류를 메인 스레드에서 돌려준다. 가사 복사, 곡 저장, yt-dlp, 변환 · 태그에서 같은 try/catch/main.post 블록을 이것으로 바꿨다. 오류 코드와 메시지는 그대로다.
 - 예외별로 오류 코드가 갈리거나(`queryAudio`의 권한 오류) 오류를 삼켜 기본값을 돌려주는 것(`embeddedPicture` · `overwriteAudio` · `status`)은 모양이 달라 그대로 둔다.
-
-## D-143 · 2026-11-03 · 숨긴 곡 기록 정리 전에 목록을 보여 준다
-- 설정 > 데이터의 "숨긴 곡 기록 정리"를 누르면 바로 확인 창이 아니라 숨긴 곡 목록(제목 · 아티스트 · 폴더) 시트가 먼저 뜬다. 시트의 "기록 지우기"를 눌러야 기존 확인 창을 거쳐 지운다. 닫으면 아무것도 지우지 않는다.
-- `LibraryRepository.hiddenTracks()` · `ListHiddenTracks`를 더했고, 지우는 범위와 동작은 그대로다 (D-136 전의 `purgeHidden`).
