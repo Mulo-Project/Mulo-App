@@ -41,6 +41,44 @@ class MediaStoreChannel(
 
     private var pendingDelete: PendingDelete? = null
 
+    /** 쓰기 동의 창 결과를 기다리는 요청 (동시에 하나만). */
+    private class PendingWrite(val uri: Uri, val src: File, val result: MethodChannel.Result)
+
+    private var pendingWrite: PendingWrite? = null
+
+    private fun overwrite(uri: Uri, src: File): Boolean =
+        context.contentResolver.openOutputStream(uri, "wt")?.use { o ->
+            src.inputStream().use { i -> i.copyTo(o) }
+            true
+        } ?: false
+
+    /** 앱이 만든 파일이 아니라 쓸 수 없을 때(다시 설치 뒤 등) 시스템 동의 창을 띄운다. 못 띄우면 false. */
+    private fun requestWrite(uri: Uri, src: File, e: SecurityException, result: MethodChannel.Result) {
+        if (pendingWrite != null) {
+            result.success(false)
+            return
+        }
+        val sender = when {
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.R ->
+                MediaStore.createWriteRequest(context.contentResolver, listOf(uri)).intentSender
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && e is RecoverableSecurityException ->
+                e.userAction.actionIntent.intentSender
+            else -> null
+        }
+        val host = activity()
+        if (sender == null || host == null) {
+            result.success(false)
+            return
+        }
+        pendingWrite = PendingWrite(uri, src, result)
+        try {
+            host.startIntentSenderForResult(sender, REQUEST_WRITE, null, 0, 0, 0)
+        } catch (ex: Exception) {
+            pendingWrite = null
+            result.success(false)
+        }
+    }
+
     init {
         channel.setMethodCallHandler { call, result ->
             when (call.method) {
@@ -83,19 +121,30 @@ class MediaStoreChannel(
                         null
                     },
                 )
-                "overwriteAudio" -> io.execute {
-                    // 태그를 고친 임시 파일로 곡 파일을 덮어쓴다. 쓸 권한이 없으면 false (동의 창은 띄우지 않는다).
-                    val ok = try {
-                        val uri = Uri.parse(call.argument<String>("uri"))
-                        val src = File(call.argument<String>("path")!!)
-                        context.contentResolver.openOutputStream(uri, "wt")?.use { o ->
-                            src.inputStream().use { i -> i.copyTo(o) }
-                            true
-                        } ?: false
-                    } catch (e: Exception) {
-                        false
+                "overwriteAudio" -> {
+                    // 태그를 고친 임시 파일로 곡 파일을 덮어쓴다. 쓸 권한이 없으면 false.
+                    // ask가 true면 (사용자가 직접 한 저장) 시스템 동의 창을 띄우고 허용 뒤 다시 쓴다.
+                    val uri = Uri.parse(call.argument<String>("uri"))
+                    val src = File(call.argument<String>("path")!!)
+                    val ask = call.argument<Boolean>("ask") ?: false
+                    io.execute {
+                        var denied: SecurityException? = null
+                        val ok = try {
+                            overwrite(uri, src)
+                        } catch (e: SecurityException) {
+                            denied = e
+                            false
+                        } catch (e: Exception) {
+                            false
+                        }
+                        main.post {
+                            if (!ok && denied != null && ask) {
+                                requestWrite(uri, src, denied, result)
+                            } else {
+                                result.success(ok)
+                            }
+                        }
                     }
-                    main.post { result.success(ok) }
                 }
                 "deleteAudio" -> deleteAudio(Uri.parse(call.argument<String>("uri")), result)
                 else -> result.notImplemented()
@@ -196,6 +245,24 @@ class MediaStoreChannel(
 
     /** MainActivity.onActivityResult에서 부른다. 이 채널의 요청이면 true. */
     fun onActivityResult(requestCode: Int, resultCode: Int): Boolean {
+        if (requestCode == REQUEST_WRITE) {
+            val pending = pendingWrite ?: return true
+            pendingWrite = null
+            if (resultCode != Activity.RESULT_OK) {
+                pending.result.success(false)
+            } else {
+                // 허용했다: 이제 쓸 수 있으니 다시 쓴다.
+                io.execute {
+                    val ok = try {
+                        overwrite(pending.uri, pending.src)
+                    } catch (e: Exception) {
+                        false
+                    }
+                    main.post { pending.result.success(ok) }
+                }
+            }
+            return true
+        }
         if (requestCode != REQUEST_DELETE) return false
         val pending = pendingDelete ?: return true
         pendingDelete = null
@@ -267,5 +334,6 @@ class MediaStoreChannel(
     companion object {
         const val NAME = "music_app/media_store"
         private const val REQUEST_DELETE = 4101
+        private const val REQUEST_WRITE = 4102
     }
 }

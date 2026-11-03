@@ -909,3 +909,7 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 ## D-146 · 2026-11-03 · ffmpeg 실행 시 C++ 런타임 폴더를 라이브러리 경로에 넣는다
 - 기기에서 가사 태그 쓰기가 `ffmpeg exit 1: CANNOT LINK EXECUTABLE ... library "libc++_shared.so" not found`로 실패했다 (D-145의 스낵바로 확인). `TranscoderChannel`이 `LD_LIBRARY_PATH`에 풀어 둔 ffmpeg 폴더만 넣고 `libc++_shared.so`가 있는 앱 네이티브 라이브러리 폴더 · 파이썬 패키지 폴더는 빼서였다. 받은 오디오 변환(`convert`)도 같은 경로를 써서 영향이 있었을 수 있다.
 - `libraryPath()` 하나로 ffmpeg · 파이썬 `usr/lib`와 `nativeLibraryDir`를 함께 넣는다. 기기에서 확인 전이다.
+
+## D-147 · 2026-11-03 · 가사 저장은 파일에 쓸 권한이 없으면 동의 창을 띄운다
+- 앱을 다시 설치하면 이전 설치가 만든 곡 파일은 쓸 수 없어(`overwriteAudio`가 false → `denied`) 가사가 파일에 못 들어갔다. D-114의 "동의 창 없이 건너뛴다"는 일괄 이관 · 정보 수정에는 그대로 두고, **사용자가 직접 저장하는 가사**만 `ask`로 시스템 쓰기 동의 창(Android 11+ `createWriteRequest`, 10은 `RecoverableSecurityException`)을 띄운 뒤 허용하면 다시 쓴다. 거절하면 `denied`로 알린다.
+- 곡마다 동의가 한 번씩 필요하다 (Android 정책). 기기에서 확인 전이다.

@@ -39,6 +39,8 @@ class TrackTagRepositoryImpl implements TrackTagRepository {
           album: '',
           genre: '',
           lyrics: lyrics,
+          // 가사는 사용자가 직접 저장하므로 쓸 권한이 없으면 동의를 구한다.
+          interactive: true,
         );
 }
 

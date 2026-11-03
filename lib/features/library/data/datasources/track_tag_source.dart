@@ -37,6 +37,7 @@ class TrackTagSource {
     String? lyrics,
     CoverArt? cover,
     int? color,
+    bool interactive = false,
   }) async {
     debugPrint('MuloTag write start uri=${uri.isEmpty ? "(empty)" : uri}');
     if (uri.isEmpty) return TagWriteResult.unsupported;
@@ -95,6 +96,8 @@ class TrackTagSource {
             await _media.invokeMethod<bool>('overwriteAudio', {
               'uri': uri,
               'path': temp,
+              // 사용자가 직접 한 저장이면 쓸 권한이 없을 때 시스템 동의 창을 띄운다.
+              'ask': interactive,
             }) ??
             false;
         debugPrint('MuloTag overwrite=$ok');
