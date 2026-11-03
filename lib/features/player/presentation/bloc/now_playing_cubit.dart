@@ -423,8 +423,9 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     );
   }
 
-  /// 구간 반복 지정을 한 단계 진행한다: 없음 → 지금 위치를 시작으로 → 지금 위치를 끝으로(반복 시작) → 해제.
-  /// 끝이 시작 뒤 1초 안이면 무시한다.
+  /// 구간 반복 지정을 한 단계 진행한다: 없음 → 첫 지점 → 두 번째 지점(반복 시작) → 해제.
+  /// 두 번째 지점이 첫 지점보다 앞이어도 된다. 더 앞쪽이 시작, 뒤쪽이 끝이 된다.
+  /// 두 지점이 1초 안이면 무시한다.
   void cycleLoop() {
     final track = state.track;
     if (track == null) return;
@@ -433,9 +434,14 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     } else if (state.loopStart == null) {
       emit(state.copyWith(loopStart: state.position, loopEnd: null));
     } else {
-      final end = state.position;
-      if (end - state.loopStart! < const Duration(seconds: 1)) return;
-      emit(state.copyWith(loopEnd: end));
+      final first = state.loopStart!;
+      final second = state.position;
+      if ((second - first).abs() < const Duration(seconds: 1)) return;
+      emit(
+        second > first
+            ? state.copyWith(loopEnd: second)
+            : state.copyWith(loopStart: second, loopEnd: first),
+      );
     }
   }
 
