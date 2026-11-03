@@ -2,11 +2,9 @@ package com.mulo.app
 
 import android.content.Context
 import io.flutter.plugin.common.BinaryMessenger
-import io.flutter.plugin.common.MethodChannel
 
 /** 이퀄라이저 통로. 약속은 docs/equalizer.md. 효과는 재생 엔진([PlaybackHub])의 오디오 세션에 붙는다. */
-class EqualizerChannel(private val context: Context, messenger: BinaryMessenger) {
-    private val channel = MethodChannel(messenger, NAME)
+class EqualizerChannel(private val context: Context, messenger: BinaryMessenger) : NativeChannel(messenger, NAME) {
 
     init {
         PlaybackHub.init(context.applicationContext)
@@ -51,9 +49,9 @@ class EqualizerChannel(private val context: Context, messenger: BinaryMessenger)
         }
     }
 
-    fun dispose() {
+    override fun dispose() {
         EqualizerProfiles.onDeviceChanged = null
-        channel.setMethodCallHandler(null)
+        super.dispose()
     }
 
     companion object {

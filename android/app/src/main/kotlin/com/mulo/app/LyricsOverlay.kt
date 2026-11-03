@@ -128,15 +128,17 @@ object LyricsOverlay {
         showMenu()
     }
 
+    private fun prefs() = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+
     fun init(appContext: Context) {
         if (initialized) return
         initialized = true
         context = appContext.applicationContext
-        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        windowY = prefs.getInt(KEY_Y, dp(120f).toInt())
-        chipX = prefs.getInt(KEY_CHIP_X, -1)
-        chipY = prefs.getInt(KEY_CHIP_Y, windowY)
-        expandedPx = prefs.getInt(KEY_EXPAND, 0).coerceAtLeast(0)
+        val saved = prefs()
+        windowY = saved.getInt(KEY_Y, dp(120f).toInt())
+        chipX = saved.getInt(KEY_CHIP_X, -1)
+        chipY = saved.getInt(KEY_CHIP_Y, windowY)
+        expandedPx = saved.getInt(KEY_EXPAND, 0).coerceAtLeast(0)
     }
 
     fun canDraw(): Boolean = Settings.canDrawOverlays(context)
@@ -215,7 +217,7 @@ object LyricsOverlay {
             return
         }
         val position = exo.currentPosition
-        val index = currentIndex(position)
+        val index = LyricsTimeline.indexAt(times, position)
         val text = if (index >= 0) texts[index] else ""
         // 늘린 목록 모양에서는 간주(빈 줄)에도 창을 두어 넘겨 보던 가사가 사라지지 않게 한다.
         if (text.isEmpty() && expandedHeight() == 0) hideView() else showLines(index, text)
@@ -229,37 +231,11 @@ object LyricsOverlay {
         }
     }
 
-    /** [index] 뒤의 첫 빈 줄 아닌 줄 (없으면 빈 글). */
-    private fun nextLineAfter(index: Int): String {
-        var i = index + 1
-        while (i < texts.size) {
-            if (texts[i].isNotEmpty()) return texts[i]
-            i++
-        }
-        return ""
-    }
-
     private fun maxExpandedPx(): Int =
         (context.resources.displayMetrics.heightPixels * MAX_FRACTION).toInt()
 
     /** 늘린 창의 실제 높이 (화면이 바뀌었어도 최대를 넘지 않는다). 0이면 늘리지 않은 모양. */
     private fun expandedHeight(): Int = if (expandedPx <= 0) 0 else minOf(expandedPx, maxExpandedPx())
-
-    private fun currentIndex(position: Long): Int {
-        var lo = 0
-        var hi = times.size - 1
-        var found = -1
-        while (lo <= hi) {
-            val mid = (lo + hi) ushr 1
-            if (times[mid] <= position) {
-                found = mid
-                lo = mid + 1
-            } else {
-                hi = mid - 1
-            }
-        }
-        return found
-    }
 
     private fun dp(v: Float) = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, v, context.resources.displayMetrics)
 
@@ -448,7 +424,7 @@ object LyricsOverlay {
                         }
                     }
                     MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL ->
-                        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                        prefs()
                             .edit().putInt(KEY_EXPAND, expandedPx).putInt(KEY_Y, windowY).apply()
                 }
                 true
@@ -459,7 +435,7 @@ object LyricsOverlay {
     /** 앱 테마의 강조색을 칩과 버튼에 입힌다. */
     private fun styleAccent() {
         val density = context.resources.displayMetrics.density
-        val onAccent = if (isLight(accent)) 0xFF000000.toInt() else 0xFFFFFFFF.toInt()
+        val onAccent = if (LyricsTimeline.isLight(accent)) 0xFF000000.toInt() else 0xFFFFFFFF.toInt()
         hideButton?.apply {
             setTextColor(0xFFFFFFFF.toInt())
             background = GradientDrawable().apply {
@@ -474,13 +450,6 @@ object LyricsOverlay {
                 cornerRadius = 18 * density
             }
         }
-    }
-
-    private fun isLight(color: Int): Boolean {
-        val r = (color shr 16) and 0xFF
-        val g = (color shr 8) and 0xFF
-        val b = color and 0xFF
-        return (0.299 * r + 0.587 * g + 0.114 * b) > 150
     }
 
     /** 창을 꾹 눌렀다: 숨기기 · 끄기를 보인다. 몇 초 뒤엔 저절로 감춘다. */
@@ -602,7 +571,7 @@ object LyricsOverlay {
             } else {
                 current?.text = text
                 upcoming?.apply {
-                    val line = nextLineAfter(index)
+                    val line = LyricsTimeline.nextLineAfter(texts, index)
                     this.text = line
                     visibility = if (line.isEmpty()) View.GONE else View.VISIBLE
                 }
@@ -768,7 +737,7 @@ object LyricsOverlay {
         val target = if (lp.x + v.width / 2 < screen / 2) 0 else (screen - v.width).coerceAtLeast(0)
         if (target == lp.x) {
             chipX = target
-            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putInt(KEY_CHIP_X, chipX).apply()
+            prefs().edit().putInt(KEY_CHIP_X, chipX).apply()
             return
         }
         ValueAnimator.ofInt(lp.x, target).apply {
@@ -780,7 +749,7 @@ object LyricsOverlay {
             addListener(object : android.animation.AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: android.animation.Animator) {
                     chipX = target
-                    context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putInt(KEY_CHIP_X, chipX).apply()
+                    prefs().edit().putInt(KEY_CHIP_X, chipX).apply()
                 }
             })
             start()
@@ -829,7 +798,7 @@ object LyricsOverlay {
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     main.removeCallbacks(longPress)
-                    val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+                    val prefs = prefs().edit()
                     if (moved && !longPressed) {
                         if (minimized) {
                             chipY = lp.y

@@ -7,11 +7,9 @@ import android.media.AudioManager
 import android.os.Handler
 import android.os.Looper
 import io.flutter.plugin.common.BinaryMessenger
-import io.flutter.plugin.common.MethodChannel
 
 /** 지금 소리가 나가는 출력 기기를 알려 주고, 기기가 바뀌면(연결 · 끊김) 앱(Dart)에 `changed`로 알린다. */
-class AudioOutputChannel(private val context: Context, messenger: BinaryMessenger) {
-    private val channel = MethodChannel(messenger, NAME)
+class AudioOutputChannel(private val context: Context, messenger: BinaryMessenger) : NativeChannel(messenger, NAME) {
     private val audio = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
     private val callback = object : AudioDeviceCallback() {
@@ -30,9 +28,9 @@ class AudioOutputChannel(private val context: Context, messenger: BinaryMessenge
         channel.invokeMethod("changed", AudioOutputs.current(context))
     }
 
-    fun dispose() {
+    override fun dispose() {
         audio.unregisterAudioDeviceCallback(callback)
-        channel.setMethodCallHandler(null)
+        super.dispose()
     }
 
     companion object {

@@ -5,7 +5,6 @@ import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import io.flutter.plugin.common.BinaryMessenger
-import io.flutter.plugin.common.MethodChannel
 import java.io.File
 import java.util.concurrent.Executors
 
@@ -13,8 +12,7 @@ import java.util.concurrent.Executors
  * 가사: 음원 태그 속 가사를 읽으려면 파일 경로가 필요한데 MediaStore 곡은 content:// 주소뿐이라,
  * 곡을 캐시 폴더로 복사해 경로를 돌려준다. 읽은 뒤 Flutter가 바로 지운다.
  */
-class LyricsChannel(private val context: Context, messenger: BinaryMessenger) {
-    private val channel = MethodChannel(messenger, NAME)
+class LyricsChannel(private val context: Context, messenger: BinaryMessenger) : NativeChannel(messenger, NAME) {
     private val io = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
 
@@ -49,8 +47,8 @@ class LyricsChannel(private val context: Context, messenger: BinaryMessenger) {
         return out.absolutePath
     }
 
-    fun dispose() {
-        channel.setMethodCallHandler(null)
+    override fun dispose() {
+        super.dispose()
         io.shutdown()
     }
 

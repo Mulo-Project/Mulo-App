@@ -23,8 +23,7 @@ class SubscriptionChannel(
     private val context: Context,
     messenger: BinaryMessenger,
     private val moveToBack: () -> Unit,
-) {
-    private val channel = MethodChannel(messenger, NAME)
+) : NativeChannel(messenger, NAME) {
 
     init {
         active = channel
@@ -75,8 +74,8 @@ class SubscriptionChannel(
         }
     }
 
-    fun dispose() {
-        channel.setMethodCallHandler(null)
+    override fun dispose() {
+        super.dispose()
         if (active === channel) active = null
     }
 

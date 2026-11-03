@@ -5,11 +5,9 @@ import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
 import io.flutter.plugin.common.BinaryMessenger
-import io.flutter.plugin.common.MethodChannel
 
 /** 떠 있는 가사 창 ([LyricsOverlay]): 권한 확인 · 가사 보내기 · 지우기. */
-class LyricsOverlayChannel(private val context: Context, messenger: BinaryMessenger) {
-    private val channel = MethodChannel(messenger, NAME)
+class LyricsOverlayChannel(private val context: Context, messenger: BinaryMessenger) : NativeChannel(messenger, NAME) {
 
     init {
         LyricsOverlay.init(context)
@@ -57,8 +55,8 @@ class LyricsOverlayChannel(private val context: Context, messenger: BinaryMessen
         }
     }
 
-    fun dispose() {
-        channel.setMethodCallHandler(null)
+    override fun dispose() {
+        super.dispose()
         LyricsOverlay.onClosed = null
     }
 
