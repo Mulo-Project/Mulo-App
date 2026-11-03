@@ -38,6 +38,7 @@ class TrackTagSource {
     CoverArt? cover,
     int? color,
   }) async {
+    debugPrint('MuloTag write start uri=${uri.isEmpty ? "(empty)" : uri}');
     if (uri.isEmpty) return TagWriteResult.unsupported;
     var viaFfmpeg = false;
     try {
@@ -47,6 +48,7 @@ class TrackTagSource {
         final ext = _extensionOfMime(
           await _media.invokeMethod<String>('mimeType', {'uri': uri}),
         );
+        debugPrint('MuloTag mime ext=$ext');
         if (ext == null) return TagWriteResult.unsupported;
         extension = ext;
       } else {
@@ -104,7 +106,8 @@ class TrackTagSource {
           // 이미 없으면 그만.
         }
       }
-    } on Object {
+    } on Object catch (e) {
+      debugPrint('MuloTag write error: $e');
       return viaFfmpeg ? TagWriteResult.failed : TagWriteResult.unsupported;
     }
   }
