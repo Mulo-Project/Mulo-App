@@ -80,7 +80,7 @@ object PlaybackHub {
     val isGated get() = dismissed && !resumeWithoutNotification
 
     /** 알림을 지운 뒤에도 버튼으로 이어 재생하는 설정. */
-    private var resumeWithoutNotification = false
+    private var resumeWithoutNotification = true
 
     /** 저장해 둔 대기열로 되살린 상태: 앱(Dart)이 아직 알림 내용을 보내기 전이라 좋아요 버튼은 숨긴다. */
     private var restoredFromStore = false

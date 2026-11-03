@@ -5,7 +5,7 @@ class OutputBehavior extends Equatable {
   const OutputBehavior({
     this.pauseOnDisconnect = true,
     this.resumeOnConnect = false,
-    this.resumeWithoutNotification = false,
+    this.resumeWithoutNotification = true,
   });
 
   /// 이어폰이 빠지거나 블루투스 연결이 끊기면 재생을 멈춘다.
