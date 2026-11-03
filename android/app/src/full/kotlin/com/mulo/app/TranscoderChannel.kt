@@ -54,6 +54,22 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
         }
     }
 
+    /**
+     * ffmpeg가 찾을 공유 라이브러리 폴더들. 풀어 둔 ffmpeg · 파이썬 패키지의 `usr/lib`에 더해,
+     * C++ 런타임(`libc++_shared.so`)이 들어 있는 앱의 네이티브 라이브러리 폴더도 넣는다
+     * (없으면 "library libc++_shared.so not found"로 실행이 안 된다).
+     */
+    private fun libraryPath(): String {
+        val packages = File(context.noBackupFilesDir, "youtubedl-android/packages")
+        val dirs = listOf(
+            File(packages, "ffmpeg/usr/lib").absolutePath,
+            File(packages, "python/usr/lib").absolutePath,
+            context.applicationInfo.nativeLibraryDir,
+        )
+        val existing = System.getenv("LD_LIBRARY_PATH")
+        return (dirs + listOfNotNull(existing)).joinToString(":")
+    }
+
     private fun ensureInit() {
         if (ready) return
         synchronized(this) {
@@ -72,7 +88,6 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
         ensureInit()
         val ffmpeg = File(context.applicationInfo.nativeLibraryDir, "libffmpeg.so")
         if (!ffmpeg.exists()) return false
-        val libs = File(context.noBackupFilesDir, "youtubedl-android/packages/ffmpeg/usr/lib")
         val out = File(output)
         out.delete()
         val args = mutableListOf(ffmpeg.absolutePath, "-nostdin", "-y", "-i", input, "-i", meta)
@@ -85,8 +100,7 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
         if (format == "mp3") args += listOf("-id3v2_version", "3")
         args += listOf("-f", format, output)
         val builder = ProcessBuilder(args)
-        builder.environment()["LD_LIBRARY_PATH"] =
-            libs.absolutePath + (System.getenv("LD_LIBRARY_PATH")?.let { ":$it" } ?: "")
+        builder.environment()["LD_LIBRARY_PATH"] = libraryPath()
         builder.redirectErrorStream(true)
         val p = builder.start()
         process = p
@@ -118,7 +132,6 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
         ensureInit()
         val ffmpeg = File(context.applicationInfo.nativeLibraryDir, "libffmpeg.so")
         if (!ffmpeg.exists()) return false
-        val libs = File(context.noBackupFilesDir, "youtubedl-android/packages/ffmpeg/usr/lib")
         val out = File(output)
         out.delete()
         val builder = ProcessBuilder(
@@ -127,8 +140,7 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
             "-c:a", codec, "-b:a", "${bitrate}k",
             "-f", format, output,
         )
-        builder.environment()["LD_LIBRARY_PATH"] =
-            libs.absolutePath + (System.getenv("LD_LIBRARY_PATH")?.let { ":$it" } ?: "")
+        builder.environment()["LD_LIBRARY_PATH"] = libraryPath()
         builder.redirectErrorStream(true)
         val p = builder.start()
         process = p

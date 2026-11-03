@@ -905,3 +905,7 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 ## D-145 · 2026-11-03 · 가사를 파일 태그에 쓰지 못하면 알려 준다
 - `SaveLyrics`가 앱 안 저장 결과와 파일 태그 쓰기 결과(`TagWriteResult`)를 함께 돌려주고(`SavedLyrics`), 가사 편집 · 싱크 저장 뒤 태그에 쓰지 못했으면 스낵바로 이유(`failed` · `denied` · `unsupported`)와 "앱 데이터를 지우면 가사가 사라져요"를 알린다. 전에는 조용히 넘어가 파일에 안 들어간 걸 알 수 없었다.
 - 진단용 `MuloTag` 로그도 함께 있다 (쓰기 시작 · 결과, 읽기 결과).
+
+## D-146 · 2026-11-03 · ffmpeg 실행 시 C++ 런타임 폴더를 라이브러리 경로에 넣는다
+- 기기에서 가사 태그 쓰기가 `ffmpeg exit 1: CANNOT LINK EXECUTABLE ... library "libc++_shared.so" not found`로 실패했다 (D-145의 스낵바로 확인). `TranscoderChannel`이 `LD_LIBRARY_PATH`에 풀어 둔 ffmpeg 폴더만 넣고 `libc++_shared.so`가 있는 앱 네이티브 라이브러리 폴더 · 파이썬 패키지 폴더는 빼서였다. 받은 오디오 변환(`convert`)도 같은 경로를 써서 영향이 있었을 수 있다.
+- `libraryPath()` 하나로 ffmpeg · 파이썬 `usr/lib`와 `nativeLibraryDir`를 함께 넣는다. 기기에서 확인 전이다.
