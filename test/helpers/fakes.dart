@@ -133,6 +133,18 @@ class FakeLibraryRepository implements LibraryRepository {
   }
 
   @override
+  Future<int> hiddenCount() async => 0;
+
+  @override
+  Future<int> purgeHidden() async => 0;
+
+  @override
+  Future<void> hide(String trackId) async {
+    _tracks.removeWhere((t) => t.id == trackId);
+    _changes.add(_sorted);
+  }
+
+  @override
   Future<void> delete(String trackId) async {
     _tracks.removeWhere((t) => t.id == trackId);
     _changes.add(_sorted);
@@ -1087,6 +1099,15 @@ class FakeAudioPlayer implements AudioPlayerRepository {
     loaded = current.uri;
     playing = s.playing;
     if (s.position != null) lastSeek = s.position;
+  }
+
+  @override
+  Future<void> setLoop(Duration? start, Duration? end) async {
+    calls.add(
+      start == null || end == null
+          ? 'loop:off'
+          : 'loop:${start.inMilliseconds}-${end.inMilliseconds}',
+    );
   }
 
   @override

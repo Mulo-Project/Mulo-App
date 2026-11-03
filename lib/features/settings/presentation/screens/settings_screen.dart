@@ -10,6 +10,7 @@ import '../../../subscriptions/presentation/widgets/subscriptions_section.dart';
 
 import '../widgets/settings_about_section.dart';
 import '../widgets/settings_account_section.dart';
+import '../widgets/settings_data_section.dart';
 import '../widgets/settings_download_section.dart';
 import '../widgets/settings_engine_sections.dart';
 import '../widgets/settings_notification_section.dart';
@@ -76,6 +77,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               gap,
               const PermissionsSection(),
               const SettingsThemeSection(),
+              gap,
+              const SettingsDataSection(),
               gap,
               const SettingsAboutSection(),
             ],

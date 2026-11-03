@@ -25,6 +25,8 @@ class NowPlayingState extends Equatable {
     required this.repeat,
     this.sleepMinutes,
     this.sleepEndsAt,
+    this.loopStart,
+    this.loopEnd,
   });
 
   final List<Track> queue;
@@ -39,6 +41,13 @@ class NowPlayingState extends Equatable {
 
   /// 수면 타이머가 재생을 멈출 시각 (꺼져 있으면 null).
   final DateTime? sleepEndsAt;
+
+  /// 구간 반복의 시작 · 끝 (현재 곡 안). 시작만 있으면 끝을 정하는 중이고, 둘 다 있으면 그 구간만 반복한다.
+  final Duration? loopStart;
+  final Duration? loopEnd;
+
+  /// 구간 반복이 걸려 있는지 (시작과 끝이 모두 정해짐).
+  bool get looping => loopStart != null && loopEnd != null;
 
   Track? get track => queue.isEmpty ? null : queue[index];
 
@@ -56,6 +65,8 @@ class NowPlayingState extends Equatable {
     PlayerRepeatMode? repeat,
     Object? sleepMinutes = _keep,
     Object? sleepEndsAt = _keep,
+    Object? loopStart = _keep,
+    Object? loopEnd = _keep,
   }) => NowPlayingState(
     queue: queue ?? this.queue,
     index: index ?? this.index,
@@ -69,6 +80,10 @@ class NowPlayingState extends Equatable {
     sleepEndsAt: identical(sleepEndsAt, _keep)
         ? this.sleepEndsAt
         : sleepEndsAt as DateTime?,
+    loopStart: identical(loopStart, _keep)
+        ? this.loopStart
+        : loopStart as Duration?,
+    loopEnd: identical(loopEnd, _keep) ? this.loopEnd : loopEnd as Duration?,
   );
 
   @override
@@ -81,6 +96,8 @@ class NowPlayingState extends Equatable {
     repeat,
     sleepMinutes,
     sleepEndsAt,
+    loopStart,
+    loopEnd,
   ];
 }
 
@@ -206,6 +223,13 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     super.onChange(change);
     final from = change.currentState;
     final to = change.nextState;
+    if (_audio != null &&
+        to.track != null &&
+        (from.loopStart != to.loopStart || from.loopEnd != to.loopEnd)) {
+      final start = to.looping ? to.loopStart : null;
+      final end = to.looping ? to.loopEnd : null;
+      _run((a) => a.setLoop((start: start, end: end)));
+    }
     if (_audio == null || _fromEngine || _scrubbing) return;
 
     final track = to.track;
@@ -322,7 +346,15 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   void _onEnded() {
     if (isClosed || state.track == null) return;
     _fromEngine = true;
-    emit(state.copyWith(index: 0, isPlaying: false, position: Duration.zero));
+    emit(
+      state.copyWith(
+        index: 0,
+        isPlaying: false,
+        position: Duration.zero,
+        loopStart: null,
+        loopEnd: null,
+      ),
+    );
     _fromEngine = false;
   }
 
@@ -378,6 +410,39 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
       final snap = _snapshotOf(state, position: moved ? Duration.zero : null);
       _run((a) => _push(a, snap));
     }
+  }
+
+  /// 곡이 바뀌면 구간 반복은 풀린다 (엔진도 곡이 바뀌면 스스로 푼다).
+  @override
+  void emit(NowPlayingState state) {
+    final switched = state.track?.id != this.state.track?.id;
+    super.emit(
+      switched && (state.loopStart != null || state.loopEnd != null)
+          ? state.copyWith(loopStart: null, loopEnd: null)
+          : state,
+    );
+  }
+
+  /// 구간 반복 지정을 한 단계 진행한다: 없음 → 지금 위치를 시작으로 → 지금 위치를 끝으로(반복 시작) → 해제.
+  /// 끝이 시작 뒤 1초 안이면 무시한다.
+  void cycleLoop() {
+    final track = state.track;
+    if (track == null) return;
+    if (state.looping) {
+      emit(state.copyWith(loopStart: null, loopEnd: null));
+    } else if (state.loopStart == null) {
+      emit(state.copyWith(loopStart: state.position, loopEnd: null));
+    } else {
+      final end = state.position;
+      if (end - state.loopStart! < const Duration(seconds: 1)) return;
+      emit(state.copyWith(loopEnd: end));
+    }
+  }
+
+  /// 구간 반복 지정을 지운다.
+  void clearLoop() {
+    if (state.loopStart == null && state.loopEnd == null) return;
+    emit(state.copyWith(loopStart: null, loopEnd: null));
   }
 
   Timer? _sleep;

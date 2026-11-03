@@ -118,3 +118,5 @@
 | 2026-10-26 | [구독 화면 임시 확인 영역 삭제](2026-10-26-remove-subscription-test-area.md) | 완료 |
 | 2026-10-26 | [구독 채널 가져오기 500개 제한 해제](2026-10-26-subscription-import-pagination.md) | 완료 |
 | 2026-10-26 | [Android yt-dlp 업데이트 지우기 (번들 버전으로 복귀)](2026-10-26-ytdlp-revert-bundled.md) | 진행 중 (PR 대기) |
+| 2026-10-28 | [구간(A-B) 반복 재생](2026-10-28-player-ab-repeat.md) | 완료 (PR 대기) |
+| 2026-10-28 | [불러오는 폴더 시트 잠금 · 재생목록 담기](2026-10-28-import-sheet-lock-playlist.md) | 완료 (PR 대기) |

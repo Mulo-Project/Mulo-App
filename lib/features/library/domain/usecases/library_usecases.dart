@@ -103,7 +103,10 @@ class FillEmbeddedCovers implements UseCase<int, NoParams> {
   Future<int> call(NoParams _) => run();
 
   /// [onProgress]로 (끝낸 곡 수, 채울 곡 수)를 알리며 채운다.
-  Future<int> run({void Function(int done, int total)? onProgress}) async {
+  Future<int> run({
+    void Function(int done, int total)? onProgress,
+    bool Function()? cancelled,
+  }) async {
     final tracks = await _library.watchTracks().first;
     final have = await _covers.loadAll();
     final todo = [
@@ -116,6 +119,7 @@ class FillEmbeddedCovers implements UseCase<int, NoParams> {
     var filled = 0;
     onProgress?.call(0, todo.length);
     for (final (i, t) in todo.indexed) {
+      if (cancelled?.call() ?? false) break;
       final key = CoverKey.track(t.id);
       String? temp;
       try {
@@ -261,7 +265,10 @@ class RestoreFromFileTags implements UseCase<int, NoParams> {
   Future<int> call(NoParams _) => run();
 
   /// [onProgress]로 (끝낸 곡 수, 읽을 곡 수)를 알리며 되살린다.
-  Future<int> run({void Function(int done, int total)? onProgress}) async {
+  Future<int> run({
+    void Function(int done, int total)? onProgress,
+    bool Function()? cancelled,
+  }) async {
     final tracks = await _library.watchTracks().first;
     final done = await _done.loadDone();
     final covers = await _covers.loadAll();
@@ -276,6 +283,7 @@ class RestoreFromFileTags implements UseCase<int, NoParams> {
     var restored = 0;
     onProgress?.call(0, todo.length);
     for (final (i, t) in todo.indexed) {
+      if (cancelled?.call() ?? false) break;
       try {
         final tags = await _tags.read(t);
         if (tags == null) continue;

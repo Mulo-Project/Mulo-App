@@ -354,6 +354,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loadedFoldersCovers => 'Getting song images';
 
   @override
+  String loadedFoldersPlaylistTitle(int count) {
+    return 'Add the $count loaded songs to playlists?';
+  }
+
+  @override
+  String get loadedFoldersPlaylistSkip => 'Skip';
+
+  @override
+  String get loadedFoldersPlaylistAdd => 'Add';
+
+  @override
+  String loadedFoldersAddedToPlaylists(int songs, int count) {
+    return 'Added $songs songs to $count playlists';
+  }
+
+  @override
   String get settingsFormat => 'Default format';
 
   @override
@@ -631,6 +647,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themePreviewApply => 'Apply';
 
   @override
+  String get settingsData => 'Data';
+
+  @override
+  String get settingsPurgeHidden => 'Clear hidden song records';
+
+  @override
+  String settingsPurgeHiddenDesc(int count) {
+    return 'Records of $count hidden songs from removed folders are kept';
+  }
+
+  @override
+  String get settingsPurgeHiddenNone => 'Nothing to clear';
+
+  @override
+  String get settingsPurgeHiddenTitle => 'Clear hidden song records?';
+
+  @override
+  String settingsPurgeHiddenBody(int count) {
+    return 'Play counts, likes, playlist entries, covers and the lyrics copies saved in the app for $count hidden songs will be deleted. The music files and their tags (including lyrics) are not touched.';
+  }
+
+  @override
+  String settingsPurgeHiddenDone(int count) {
+    return 'Cleared records of $count songs';
+  }
+
+  @override
   String get settingsAbout => 'About';
 
   @override
@@ -687,6 +730,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get queueReorderHint => 'Press and hold, then drag to reorder';
+
+  @override
+  String get playerLoop => 'A-B repeat';
+
+  @override
+  String get playerLoopSetStart => 'A-B repeat: set the start point';
+
+  @override
+  String get playerLoopSetEnd => 'A-B repeat: set the end point';
+
+  @override
+  String get playerLoopClear => 'Turn off A-B repeat';
 
   @override
   String get playerRepeat => 'Repeat';

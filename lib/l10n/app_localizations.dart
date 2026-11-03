@@ -746,6 +746,30 @@ abstract class AppLocalizations {
   /// **'곡 이미지를 가져오는 중이에요'**
   String get loadedFoldersCovers;
 
+  /// No description provided for @loadedFoldersPlaylistTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'불러온 {count}곡을 재생목록에 담을까요?'**
+  String loadedFoldersPlaylistTitle(int count);
+
+  /// No description provided for @loadedFoldersPlaylistSkip.
+  ///
+  /// In ko, this message translates to:
+  /// **'안 담기'**
+  String get loadedFoldersPlaylistSkip;
+
+  /// No description provided for @loadedFoldersPlaylistAdd.
+  ///
+  /// In ko, this message translates to:
+  /// **'담기'**
+  String get loadedFoldersPlaylistAdd;
+
+  /// No description provided for @loadedFoldersAddedToPlaylists.
+  ///
+  /// In ko, this message translates to:
+  /// **'{songs}곡을 {count}개 재생목록에 담았어요'**
+  String loadedFoldersAddedToPlaylists(int songs, int count);
+
   /// No description provided for @settingsFormat.
   ///
   /// In ko, this message translates to:
@@ -1238,6 +1262,48 @@ abstract class AppLocalizations {
   /// **'적용'**
   String get themePreviewApply;
 
+  /// No description provided for @settingsData.
+  ///
+  /// In ko, this message translates to:
+  /// **'데이터'**
+  String get settingsData;
+
+  /// No description provided for @settingsPurgeHidden.
+  ///
+  /// In ko, this message translates to:
+  /// **'숨긴 곡 기록 정리'**
+  String get settingsPurgeHidden;
+
+  /// No description provided for @settingsPurgeHiddenDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'폴더를 빼서 숨겨 둔 {count}곡의 기록이 남아 있어요'**
+  String settingsPurgeHiddenDesc(int count);
+
+  /// No description provided for @settingsPurgeHiddenNone.
+  ///
+  /// In ko, this message translates to:
+  /// **'정리할 기록이 없어요'**
+  String get settingsPurgeHiddenNone;
+
+  /// No description provided for @settingsPurgeHiddenTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'숨긴 곡 기록을 지울까요?'**
+  String get settingsPurgeHiddenTitle;
+
+  /// No description provided for @settingsPurgeHiddenBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'숨겨 둔 {count}곡의 재생 횟수, 좋아요, 재생목록 소속, 커버, 앱에 저장한 가사 사본이 지워져요. 음악 파일과 파일 안의 태그(가사 포함)는 그대로예요.'**
+  String settingsPurgeHiddenBody(int count);
+
+  /// No description provided for @settingsPurgeHiddenDone.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}곡의 기록을 지웠어요'**
+  String settingsPurgeHiddenDone(int count);
+
   /// No description provided for @settingsAbout.
   ///
   /// In ko, this message translates to:
@@ -1351,6 +1417,30 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'길게 눌러 끌면 순서가 바뀌어요'**
   String get queueReorderHint;
+
+  /// No description provided for @playerLoop.
+  ///
+  /// In ko, this message translates to:
+  /// **'구간 반복'**
+  String get playerLoop;
+
+  /// No description provided for @playerLoopSetStart.
+  ///
+  /// In ko, this message translates to:
+  /// **'구간 반복: 시작 지점을 정해요'**
+  String get playerLoopSetStart;
+
+  /// No description provided for @playerLoopSetEnd.
+  ///
+  /// In ko, this message translates to:
+  /// **'구간 반복: 끝 지점을 정해요'**
+  String get playerLoopSetEnd;
+
+  /// No description provided for @playerLoopClear.
+  ///
+  /// In ko, this message translates to:
+  /// **'구간 반복 끄기'**
+  String get playerLoopClear;
 
   /// No description provided for @playerRepeat.
   ///

@@ -30,6 +30,11 @@ class PlaybackChannel(context: Context, messenger: BinaryMessenger) {
                 }
                 "setMixWithOthers" -> { PlaybackHub.setMixWithOthers(call.arguments as? Boolean ?: false); result.success(null) }
                 "setSpeed" -> { PlaybackHub.setSpeed((call.arguments as? Number)?.toDouble() ?: 1.0); result.success(null) }
+                "setLoop" -> {
+                    val args = call.arguments as Map<*, *>
+                    PlaybackHub.setLoop((args["startMs"] as? Number)?.toLong(), (args["endMs"] as? Number)?.toLong())
+                    result.success(null)
+                }
                 "setSession" -> { PlaybackHub.setSession(call.arguments as? Map<*, *>); result.success(null) }
                 else -> result.notImplemented()
             }

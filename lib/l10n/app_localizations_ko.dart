@@ -350,6 +350,22 @@ class AppLocalizationsKo extends AppLocalizations {
   String get loadedFoldersCovers => '곡 이미지를 가져오는 중이에요';
 
   @override
+  String loadedFoldersPlaylistTitle(int count) {
+    return '불러온 $count곡을 재생목록에 담을까요?';
+  }
+
+  @override
+  String get loadedFoldersPlaylistSkip => '안 담기';
+
+  @override
+  String get loadedFoldersPlaylistAdd => '담기';
+
+  @override
+  String loadedFoldersAddedToPlaylists(int songs, int count) {
+    return '$songs곡을 $count개 재생목록에 담았어요';
+  }
+
+  @override
   String get settingsFormat => '기본 포맷';
 
   @override
@@ -616,6 +632,33 @@ class AppLocalizationsKo extends AppLocalizations {
   String get themePreviewApply => '적용';
 
   @override
+  String get settingsData => '데이터';
+
+  @override
+  String get settingsPurgeHidden => '숨긴 곡 기록 정리';
+
+  @override
+  String settingsPurgeHiddenDesc(int count) {
+    return '폴더를 빼서 숨겨 둔 $count곡의 기록이 남아 있어요';
+  }
+
+  @override
+  String get settingsPurgeHiddenNone => '정리할 기록이 없어요';
+
+  @override
+  String get settingsPurgeHiddenTitle => '숨긴 곡 기록을 지울까요?';
+
+  @override
+  String settingsPurgeHiddenBody(int count) {
+    return '숨겨 둔 $count곡의 재생 횟수, 좋아요, 재생목록 소속, 커버, 앱에 저장한 가사 사본이 지워져요. 음악 파일과 파일 안의 태그(가사 포함)는 그대로예요.';
+  }
+
+  @override
+  String settingsPurgeHiddenDone(int count) {
+    return '$count곡의 기록을 지웠어요';
+  }
+
+  @override
   String get settingsAbout => '정보';
 
   @override
@@ -671,6 +714,18 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get queueReorderHint => '길게 눌러 끌면 순서가 바뀌어요';
+
+  @override
+  String get playerLoop => '구간 반복';
+
+  @override
+  String get playerLoopSetStart => '구간 반복: 시작 지점을 정해요';
+
+  @override
+  String get playerLoopSetEnd => '구간 반복: 끝 지점을 정해요';
+
+  @override
+  String get playerLoopClear => '구간 반복 끄기';
 
   @override
   String get playerRepeat => '반복';

@@ -20,6 +20,7 @@ Dart 쪽 도메인 인터페이스: `AudioPlayerRepository`(엔진 · 대기열)
 | `getState` | – | 지금 쥐고 있는 스냅샷 (+ `playing` · `positionMs`). 곡이 없으면 null. 앱을 다시 켰을 때 복원용 |
 | `takeOpenPlayerRequest` | – | 알림을 눌러 앱이 **새로 켜졌는지** 한 번 알려 주고 비운다 |
 | `setMixWithOthers` | bool | true면 오디오 포커스를 쓰지 않아 다른 앱 소리와 겹쳐 재생 (기본 false: 뺏기면 멈춤) |
+| `setLoop` | `{startMs, endMs}` (둘 다 null이면 해제) | 현재 곡의 구간(A-B) 반복. 앱은 지정만 하고 판정은 `PlaybackHub`의 타이머가 한다: 재생 중 40ms마다 위치가 `endMs`에 닿았는지 보고 `startMs`로 `seekTo`한다 (되돌림은 기존 `position` 이벤트로 앱에 전해짐). 곡이 바뀌거나 대기열 끝에 닿으면 네이티브가 스스로 해제하고, 앱도 곡이 바뀌면 상태를 지운다 |
 | `setSpeed` | double (0.5~2.0) | 재생 속도(음높이 유지). `ExoPlayer.setPlaybackSpeed`로 걸고 네이티브에도 저장해 앱 없이 프로세스가 새로 떠도 유지한다. 알림 · 잠금화면 진행 막대는 `SessionPlayer`가 이 배속으로 흘린다 (미리 듣기는 항상 1배) |
 | `setOutputBehavior` | 맵 `pauseOnDisconnect` `resumeOnConnect` | 이어폰 분리 · 블루투스 끊김 때 일시정지할지(기본 true, `ACTION_AUDIO_BECOMING_NOISY`), 기기가 다시 연결되면 그 때문에 멈춘 재생을 이어갈지(기본 false, 끊긴 뒤 10분 안). 네이티브에도 저장해 앱이 꺼져도 지킨다 |
 | `setSession` | 아래 맵 또는 null | null이면 알림을 치운다 (재생은 그대로) |
