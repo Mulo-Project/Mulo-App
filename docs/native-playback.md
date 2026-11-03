@@ -31,7 +31,7 @@ Dart 쪽 도메인 인터페이스: `AudioPlayerRepository`(엔진 · 대기열)
 
 `setSession` 맵: `trackId title artist album artUri durationMs positionMs playing favorite preview favoriteLabel unfavoriteLabel closeLabel hideSongInfo hiddenTitle hiddenNote unknownArtist`.
 `trackId`가 지금 재생 곡의 id와 같을 때만 이 맵의 내용(커버 · 좋아요 포함)을 알림에 쓴다. 앱이 꺼진 사이 곡이 넘어가면 맵은 옛 곡의 것이므로
-네이티브가 대기열에 실린 곡 정보(`title artist album`)로 알림을 그리고(`hideSongInfo`면 숨김 글자), 좋아요 버튼은 숨긴다.
+네이티브가 대기열에 실린 곡 정보(`title artist album`)로 알림을 그린다(`hideSongInfo`면 숨김 글자). 좋아요 모양은 DB에서 직접 읽는다(아래 `알림 좋아요 버튼`).
 `preview: true`면 소리는 Dart 쪽 미리 듣기 플레이어가 내므로 네이티브는 `playing` · `positionMs`를 그대로 보여 주고 조작은 모두 `command`로 돌려보낸다.
 메인(`preview: false`)은 엔진 상태가 진실이라 `playing` · `positionMs`는 쓰지 않는다.
 
@@ -50,8 +50,9 @@ Dart 쪽 도메인 인터페이스: `AudioPlayerRepository`(엔진 · 대기열)
 - **세션 정리 정책**: 닫기(X) · 알림 밀어서 지우기 · 정지 · 반복 없이 끝까지 재생 · 최근 작업에서 밀었는데 멈춰 있던 경우에는 알림을 치우고 미디어 세션을 release하며 이어 재생 불가(`resumable=false`)로 표시한다. 이 상태의 블루투스 / 이어폰 버튼은 무시한다. 대기열은 남아 앱에서 보이고, 앱에서 다시 재생하면 세션이 새로 만들어진다. 일시정지로 알림이 살아 있을 때(`resumable=true`)는 버튼으로 이어 재생하며, 프로세스가 죽었어도 저장된 대기열로 이어 재생한다.
 - 앱을 끄거나(최근 작업에서 밀기) 화면이 사라져도 **재생은 계속**되고 다음 곡으로 이어진다.
 - 앱이 다시 켜지면 Dart가 `getState`로 대기열 · 현재 곡 · 위치 · 반복 · `extras`를 읽어 상태를 복원한다 (보관함에서 사라진 곡은 건너뛰고 네이티브 대기열도 맞춘다). 이때는 네이티브를 다시 움직이지 않는다.
-- 재생 · 일시정지 · 이동 · 이전 · 다음은 Dart 없이도 네이티브가 직접 처리한다 (화면이 사라져도 알림 버튼이 먹는다). 이전은 3초 넘게 들었으면 처음으로, 아니면 이전 곡(첫 곡이면 마지막 곡), 다음은 마지막 곡이면 전체 반복일 때만 처음으로. 좋아요는 Dart에 `command`로 넘긴다.
-- **알림 셔플 버튼**: 알림에는 늘 셔플이 있다(미리 듣기 제외). 아이콘은 `extras.shuffle`을 따른다. Dart가 붙어 있으면 `command shuffle`로 넘기고(순서는 Dart가 쥔다), 앱을 밀어 서비스만 남았으면 네이티브가 직접 켜고 끈다: 켜면 듣던 곡을 맨 앞에 두고 나머지를 섞으며 섞기 전 순서를 `extras.original`에 적고, 끄면 `original` 순서로 되돌린다 (듣던 곡은 끊기지 않는다). 바뀐 `extras`는 저장돼 앱이 다시 켜지면 `getState`로 이어 받는다. Dart가 없을 땐 좋아요 자리에 닫기(X)가 온다.
+- 재생 · 일시정지 · 이동 · 이전 · 다음은 Dart 없이도 네이티브가 직접 처리한다 (화면이 사라져도 알림 버튼이 먹는다). 이전은 3초 넘게 들었으면 처음으로, 아니면 이전 곡(첫 곡이면 마지막 곡), 다음은 마지막 곡이면 전체 반복일 때만 처음으로. 좋아요는 Dart가 붙어 있으면 `command`로 넘기고, 없으면 네이티브가 DB를 직접 바꾼다.
+- **알림 셔플 버튼**: 알림에는 늘 셔플이 있다(미리 듣기 제외). 아이콘은 `extras.shuffle`을 따른다. Dart가 붙어 있으면 `command shuffle`로 넘기고(순서는 Dart가 쥔다), 앱을 밀어 서비스만 남았으면 네이티브가 직접 켜고 끈다: 켜면 듣던 곡을 맨 앞에 두고 나머지를 섞으며 섞기 전 순서를 `extras.original`에 적고, 끄면 `original` 순서로 되돌린다 (듣던 곡은 끊기지 않는다). 바뀐 `extras`는 저장돼 앱이 다시 켜지면 `getState`로 이어 받는다. 알림 버튼은 Dart 유무와 관계없이 늘 `[좋아요, 셔플]`이다(미리 듣기는 닫기만).
+- **알림 좋아요 버튼**: 좋아요는 앱 DB `playlist_tracks`의 `playlist_id='favorites'` 줄이다. Dart가 붙어 있고 앱이 보낸 곡이 지금 곡이면 `command favorite`으로 넘긴다(화면의 drift 실시간 목록이 바로 바뀌도록). 아니면 `FavoriteStore`가 같은 줄을 `app_flutter/music_app.sqlite`에 직접 넣거나 지우고, 아이콘도 곡이 바뀔 때마다 DB에서 읽는다. DB 파일이 없으면 아무것도 하지 않는다(D-136).
 - Dart 쪽 셔플 한 바퀴: 셔플 중 `track` 이벤트가 마지막 → 처음으로 감기면 Dart가 새 순서로 스냅샷을 다시 보낸다 (듣던 곡은 그대로). 앱이 꺼진 사이는 같은 순서로 반복한다.
 - 알림을 눌러 앱이 **새로 켜졌을 때**는 복원 · 이동이 끝날 때까지 앱 쪽이 덮개(음표 아이콘)로 첫 화면을 가려서, 홈 → 플레이어로 차례로 넘어가는 것이 보이지 않게 한다.
 - 알림을 누르면 PendingIntent(`com.mulo.app.OPEN_PLAYER`)로 앱을 연다. 앱이 떠 있으면 `openPlayer` 이벤트, 새로 켜졌으면 `takeOpenPlayerRequest`가 true를 준다. Dart는 대기열 복원을 끝낸 뒤 플레이어 화면(`/player`)을 연다.
