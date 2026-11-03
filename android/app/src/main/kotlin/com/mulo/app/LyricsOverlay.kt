@@ -3,6 +3,7 @@ package com.mulo.app
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.PixelFormat
+import android.util.Log
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
@@ -37,6 +38,7 @@ import android.widget.TextView
  * 탭하면 다시 펼쳐진다.
  */
 object LyricsOverlay {
+    private const val TAG = "MuloLyrics"
     private const val PREFS = "lyrics_overlay"
     private const val KEY_Y = "y"
     private const val KEY_CHIP_X = "chipX"
@@ -202,6 +204,12 @@ object LyricsOverlay {
         val active = (hasLines || emptyText.isNotEmpty()) &&
             !(appVisible && lyricsViewShown) && canDraw() && mediaId == trackId
         if (!active) {
+            // 진단: 왜 안 떴는지 (adb logcat -s MuloLyrics).
+            Log.d(
+                TAG,
+                "inactive lines=${times.size} empty=${emptyText.isNotEmpty()} appVisible=$appVisible " +
+                    "lyricsViewShown=$lyricsViewShown canDraw=${canDraw()} mediaId=$mediaId trackId=$trackId",
+            )
             detach()
             return
         }
@@ -458,7 +466,8 @@ object LyricsOverlay {
         try {
             wm.addView(root, lp)
             attached = true
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Log.w(TAG, "addView failed", e)
         }
     }
 

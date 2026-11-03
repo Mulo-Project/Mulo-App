@@ -24,6 +24,7 @@ class LyricsOverlayChannel(private val context: Context, messenger: BinaryMessen
                 }
                 "show" -> {
                     val map = call.arguments as? Map<*, *>
+                    android.util.Log.d("MuloLyrics", "show trackId=${map?.get("trackId")} lines=${(map?.get("times") as? List<*>)?.size}")
                     val id = map?.get("trackId") as? String
                     val times = (map?.get("times") as? List<*>)?.map { (it as Number).toLong() }
                     val texts = (map?.get("texts") as? List<*>)?.map { it as? String ?: "" }
