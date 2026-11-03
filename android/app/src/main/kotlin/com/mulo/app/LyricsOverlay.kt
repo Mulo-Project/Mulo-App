@@ -154,7 +154,8 @@ object LyricsOverlay {
         empty: String = "",
     ) {
         trackId = id
-        times = newTimes
+        // 줄과 안내 글이 함께 오면 싱크 없는 일반 글 가사: 줄은 늘렸을 때 보는 목록에만 쓰고 따라가지 않는다.
+        times = if (empty.isNotEmpty()) LongArray(0) else newTimes
         texts = newTexts
         builtTrack = null
         emptyText = empty

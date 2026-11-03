@@ -72,6 +72,15 @@ void main() {
     );
     expect(o.shown.length, 2);
 
+    // 싱크는 없고 글 가사만 있다: 줄을 시간 없이 올린다 (늘려서 볼 수 있게).
+    await cubit.sync(
+      enabled: true,
+      trackId: 't3',
+      lyrics: Lyrics.parse('첫 줄\n둘째 줄'),
+      emptyLabel: '싱크된 가사가 없어요',
+    );
+    expect(o.shown.last, (id: 't3', lines: 2, empty: '싱크된 가사가 없어요'));
+
     // 꺼지면 내린다.
     await cubit.sync(enabled: false, trackId: null, lyrics: null);
     expect(o.hides, 1);
