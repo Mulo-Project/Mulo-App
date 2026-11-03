@@ -7,7 +7,6 @@ import android.app.PendingIntent
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.graphics.drawable.Icon
 import android.os.Build
 
 /** 받기 알림(진행 · 결과)을 만든다. 글자 · 색은 Dart가 넘긴 값을 그대로 쓴다. */
@@ -37,8 +36,7 @@ object DownloadNotifications {
 
     private val resultIds = mutableSetOf<Int>()
 
-    private fun manager(context: Context) =
-        context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    private fun manager(context: Context) = NotificationSupport.manager(context)
 
     fun createChannels(context: Context, a: Map<String, Any?>) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
@@ -57,13 +55,9 @@ object DownloadNotifications {
         channel(FAILED_CHANNEL, a["failedChannel"] as? String, NotificationManager.IMPORTANCE_DEFAULT, true)
     }
 
-    @Suppress("DEPRECATION")
-    private fun builder(context: Context, channel: String): Notification.Builder =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) Notification.Builder(context, channel)
-        else Notification.Builder(context)
+    private fun builder(context: Context, channel: String) = NotificationSupport.builder(context, channel)
 
-    private fun smallIcon(context: Context) =
-        context.resources.getIdentifier("ic_stat_mulo", "drawable", context.packageName)
+    private fun smallIcon(context: Context) = NotificationSupport.smallIcon(context)
 
     /** 알림을 누르면 앱을 연다. [openId]가 있으면 그 받기 항목의 상세 화면으로 간다. */
     private fun launchIntent(context: Context, openId: String?): PendingIntent? {
@@ -74,7 +68,7 @@ object DownloadNotifications {
         }
         // 항목마다 요청 코드를 달리해야 알림마다 자기 항목을 가리킨다.
         val code = if (openId.isNullOrEmpty()) 0 else 1 + (openId.hashCode() and 0xFFFFF)
-        return PendingIntent.getActivity(context, code, launch, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        return PendingIntent.getActivity(context, code, launch, NotificationSupport.PENDING_FLAGS)
     }
 
     private fun actionIntent(context: Context, key: String): PendingIntent {
@@ -84,19 +78,12 @@ object DownloadNotifications {
             context,
             ACTIONS.keys.indexOf(key),
             intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            NotificationSupport.PENDING_FLAGS,
         )
     }
 
-    @Suppress("DEPRECATION")
-    private fun addAction(context: Context, b: Notification.Builder, key: String, label: String) {
-        val pi = actionIntent(context, key)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            b.addAction(Notification.Action.Builder(null as Icon?, label, pi).build())
-        } else {
-            b.addAction(0, label, pi)
-        }
-    }
+    private fun addAction(context: Context, b: Notification.Builder, key: String, label: String) =
+        NotificationSupport.addAction(b, label, actionIntent(context, key))
 
     fun buildProgress(context: Context, a: Map<String, Any?>): Notification {
         val body = a["body"] as? String

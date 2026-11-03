@@ -128,15 +128,17 @@ object LyricsOverlay {
         showMenu()
     }
 
+    private fun prefs() = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+
     fun init(appContext: Context) {
         if (initialized) return
         initialized = true
         context = appContext.applicationContext
-        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        windowY = prefs.getInt(KEY_Y, dp(120f).toInt())
-        chipX = prefs.getInt(KEY_CHIP_X, -1)
-        chipY = prefs.getInt(KEY_CHIP_Y, windowY)
-        expandedPx = prefs.getInt(KEY_EXPAND, 0).coerceAtLeast(0)
+        val saved = prefs()
+        windowY = saved.getInt(KEY_Y, dp(120f).toInt())
+        chipX = saved.getInt(KEY_CHIP_X, -1)
+        chipY = saved.getInt(KEY_CHIP_Y, windowY)
+        expandedPx = saved.getInt(KEY_EXPAND, 0).coerceAtLeast(0)
     }
 
     fun canDraw(): Boolean = Settings.canDrawOverlays(context)
@@ -448,7 +450,7 @@ object LyricsOverlay {
                         }
                     }
                     MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL ->
-                        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                        prefs()
                             .edit().putInt(KEY_EXPAND, expandedPx).putInt(KEY_Y, windowY).apply()
                 }
                 true
@@ -768,7 +770,7 @@ object LyricsOverlay {
         val target = if (lp.x + v.width / 2 < screen / 2) 0 else (screen - v.width).coerceAtLeast(0)
         if (target == lp.x) {
             chipX = target
-            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putInt(KEY_CHIP_X, chipX).apply()
+            prefs().edit().putInt(KEY_CHIP_X, chipX).apply()
             return
         }
         ValueAnimator.ofInt(lp.x, target).apply {
@@ -780,7 +782,7 @@ object LyricsOverlay {
             addListener(object : android.animation.AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: android.animation.Animator) {
                     chipX = target
-                    context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putInt(KEY_CHIP_X, chipX).apply()
+                    prefs().edit().putInt(KEY_CHIP_X, chipX).apply()
                 }
             })
             start()
@@ -829,7 +831,7 @@ object LyricsOverlay {
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     main.removeCallbacks(longPress)
-                    val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+                    val prefs = prefs().edit()
                     if (moved && !longPressed) {
                         if (minimized) {
                             chipY = lp.y

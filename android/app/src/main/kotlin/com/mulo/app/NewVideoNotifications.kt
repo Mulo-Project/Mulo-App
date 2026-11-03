@@ -9,7 +9,6 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.drawable.Icon
 import android.os.Build
 
 /**
@@ -31,8 +30,7 @@ object NewVideoNotifications {
     /** 한 번에 띄울 영상 알림 수 (그 밖의 영상은 묶음 알림의 개수에만 센다). */
     private const val MAX_VIDEO_NOTIFICATIONS = 8
 
-    private fun manager(context: Context) =
-        context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    private fun manager(context: Context) = NotificationSupport.manager(context)
 
     private fun canNotify(context: Context): Boolean =
         (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
@@ -55,10 +53,7 @@ object NewVideoNotifications {
         )
     }
 
-    @Suppress("DEPRECATION")
-    private fun builder(context: Context): Notification.Builder =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) Notification.Builder(context, CHANNEL)
-        else Notification.Builder(context)
+    private fun builder(context: Context) = NotificationSupport.builder(context, CHANNEL)
 
     private fun notificationId(videoId: String) = VIDEO_ID_BASE + (videoId.hashCode() and 0xFFFFF)
 
@@ -115,17 +110,10 @@ object NewVideoNotifications {
         return b.build()
     }
 
-    @Suppress("DEPRECATION")
-    private fun addAction(b: Notification.Builder, label: String, pi: PendingIntent) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            b.addAction(Notification.Action.Builder(null as Icon?, label, pi).build())
-        } else {
-            b.addAction(0, label, pi)
-        }
-    }
+    private fun addAction(b: Notification.Builder, label: String, pi: PendingIntent) =
+        NotificationSupport.addAction(b, label, pi)
 
-    private fun smallIcon(context: Context) =
-        context.resources.getIdentifier("ic_stat_mulo", "drawable", context.packageName)
+    private fun smallIcon(context: Context) = NotificationSupport.smallIcon(context)
 
     /** 알림 본문 누름: 앱을 열고 새 영상 목록으로 보낸다 (MainActivity가 [ACTION_OPEN]을 받는다). */
     private fun openIntent(context: Context): PendingIntent? {
@@ -135,7 +123,7 @@ object NewVideoNotifications {
             context,
             SUMMARY_ID,
             launch,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            NotificationSupport.PENDING_FLAGS,
         )
     }
 
@@ -153,7 +141,7 @@ object NewVideoNotifications {
             context,
             id,
             launch,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            NotificationSupport.PENDING_FLAGS,
         )
     }
 
@@ -166,7 +154,7 @@ object NewVideoNotifications {
             context,
             id xor 0x40000000,
             intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            NotificationSupport.PENDING_FLAGS,
         )
     }
 

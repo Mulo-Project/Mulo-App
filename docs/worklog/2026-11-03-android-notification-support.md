@@ -1,0 +1,22 @@
+# Android 네이티브 알림 도우미 공통화 (리팩터링 1단계)
+
+- 날짜: 2026-11-03
+- 분류: 앱 (Android 네이티브)
+- 상태: 완료 (PR 대기)
+- 브랜치 · 커밋: `refactor/android-notification-support`
+- 상세 기능: 공통 작업 (코드 정리, 동작 변경 없음)
+
+## 한 일
+- `DownloadNotifications`와 `NewVideoNotifications`에 똑같이 있던 `manager` · `builder` · `smallIcon` · `addAction` 과 인텐트 플래그를 `NotificationSupport.kt` 한 곳으로 모음. 각 파일은 짧은 위임 함수만 남김.
+- `LyricsOverlay`에서 같은 `getSharedPreferences(PREFS, ...)` 호출 5곳을 `prefs()` 하나로 줄임.
+- 알림 내용 · 채널 · 요청 코드 · 플래그 값은 그대로다.
+
+## 바꾼 설정
+- 없음 (패키지 · Manifest 변경 없음).
+
+## 확인
+- 클라우드 환경이라 Android SDK가 없어 `flutter analyze` · 빌드는 돌리지 못했다. 코드를 줄 단위로 대조해 시그니처 · import만 확인.
+- **실기기 확인 필요**: 받기 진행 알림(버튼 · 진행률), 받기 완료 알림, 구독 새 영상 알림(바로 받기 · 취소), 가사 오버레이 위치 저장.
+
+## 남은 일 · 질문
+- 다음 단계 후보: `MediaStoreChannel` · `PreviewChannel` 등 채널 클래스의 공통 틀 정리, `LyricsOverlay.kt`(850줄) · `PlaybackHub.kt`(870줄) 분리. 실기기 확인이 가능할 때 진행.
