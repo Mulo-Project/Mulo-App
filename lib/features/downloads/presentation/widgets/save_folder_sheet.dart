@@ -184,14 +184,26 @@ class _FolderOption extends StatelessWidget {
                 ],
               ),
             ),
-            if (selected)
-              Icon(AppIcons.check, size: AppSizes.iconSm, color: p.accent),
-            if (onRemove != null)
-              RowIconButton(
-                icon: AppIcons.close,
-                tooltip: context.l10n.loadedFoldersRemove,
-                onPressed: onRemove,
-              ),
+            // 오른쪽 끝 칸은 고정 크기: 체크(선택됨)와 ×(빼기)가 같은 자리 · 같은 크기에 놓인다.
+            SizedBox(
+              width: AppSizes.rowButton,
+              height: AppSizes.rowButton,
+              child: selected
+                  ? Center(
+                      child: Icon(
+                        AppIcons.check,
+                        size: AppSizes.rowButton * .56,
+                        color: p.accent,
+                      ),
+                    )
+                  : onRemove != null
+                  ? RowIconButton(
+                      icon: AppIcons.close,
+                      tooltip: context.l10n.loadedFoldersRemove,
+                      onPressed: onRemove,
+                    )
+                  : null,
+            ),
           ],
         ),
       ),
