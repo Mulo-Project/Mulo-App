@@ -647,6 +647,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get themePreviewApply => 'Apply';
 
   @override
+  String get settingsData => 'Data';
+
+  @override
+  String get settingsPurgeHidden => 'Clear hidden song records';
+
+  @override
+  String settingsPurgeHiddenDesc(int count) {
+    return 'Records of $count hidden songs from removed folders are kept';
+  }
+
+  @override
+  String get settingsPurgeHiddenNone => 'Nothing to clear';
+
+  @override
+  String get settingsPurgeHiddenTitle => 'Clear hidden song records?';
+
+  @override
+  String settingsPurgeHiddenBody(int count) {
+    return 'Play counts, likes, playlist entries, covers and the lyrics copies saved in the app for $count hidden songs will be deleted. The music files and their tags (including lyrics) are not touched.';
+  }
+
+  @override
+  String settingsPurgeHiddenDone(int count) {
+    return 'Cleared records of $count songs';
+  }
+
+  @override
   String get settingsAbout => 'About';
 
   @override

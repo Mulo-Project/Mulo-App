@@ -17,6 +17,7 @@ import 'domain/repositories/track_tag_repository.dart';
 import 'domain/repositories/library_repository.dart';
 import 'domain/usecases/library_usecases.dart';
 import 'domain/usecases/loaded_folder_usecases.dart';
+import 'presentation/bloc/hidden_records_cubit.dart';
 import 'presentation/bloc/library_cubit.dart';
 import 'presentation/bloc/library_import_cubit.dart';
 import 'presentation/bloc/loaded_folders_cubit.dart';
@@ -69,6 +70,9 @@ void registerLibrary(GetIt sl) {
     ..registerFactory(() => LoadLoadedFolders(sl(), sl()))
     ..registerFactory(() => AddLoadedFolder(sl()))
     ..registerFactory(() => RemoveLoadedFolder(sl(), sl()))
+    ..registerFactory(() => CountHiddenTracks(sl()))
+    ..registerFactory(() => PurgeHiddenTracks(sl()))
+    ..registerFactory(() => HiddenRecordsCubit(sl(), sl()))
     ..registerFactory(
       () => LoadedFoldersCubit(sl(), sl(), sl(), sl(), sl(), sl()),
     )

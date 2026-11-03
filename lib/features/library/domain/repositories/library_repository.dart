@@ -13,6 +13,17 @@ abstract interface class LibraryRepository {
   /// 곡의 제목 · 아티스트 · 앨범 · 장르를 바꾼다. 곡이 없으면 false.
   Future<bool> updateInfo(String trackId, TrackInfo info);
 
+  /// 곡을 보관함에서 숨긴다 (불러오는 폴더를 뺄 때). 재생 기록 · 재생목록 · 커버는 남기고,
+  /// 같은 곡을 다시 [addTracks]로 찾으면 숨김이 풀린다.
+  Future<void> hide(String trackId);
+
+  /// 숨긴 곡(폴더를 빼서 남겨 둔 곡)의 수.
+  Future<int> hiddenCount();
+
+  /// 숨긴 곡의 행과 재생 기록 · 재생목록 소속 · 커버 · 커버 색 · 가사 연결을 지운다
+  /// (앱 폴더에 복사한 커버 · 가사 파일도). 지운 곡 수를 돌려준다.
+  Future<int> purgeHidden();
+
   /// 곡을 보관함에서 지운다. 재생목록 · 재생 기록 · 커버 기록도 함께 지운다 (음악 파일은 [TrackFileRepository]).
   Future<void> delete(String trackId);
 }

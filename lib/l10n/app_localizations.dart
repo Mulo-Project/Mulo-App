@@ -1262,6 +1262,48 @@ abstract class AppLocalizations {
   /// **'적용'**
   String get themePreviewApply;
 
+  /// No description provided for @settingsData.
+  ///
+  /// In ko, this message translates to:
+  /// **'데이터'**
+  String get settingsData;
+
+  /// No description provided for @settingsPurgeHidden.
+  ///
+  /// In ko, this message translates to:
+  /// **'숨긴 곡 기록 정리'**
+  String get settingsPurgeHidden;
+
+  /// No description provided for @settingsPurgeHiddenDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'폴더를 빼서 숨겨 둔 {count}곡의 기록이 남아 있어요'**
+  String settingsPurgeHiddenDesc(int count);
+
+  /// No description provided for @settingsPurgeHiddenNone.
+  ///
+  /// In ko, this message translates to:
+  /// **'정리할 기록이 없어요'**
+  String get settingsPurgeHiddenNone;
+
+  /// No description provided for @settingsPurgeHiddenTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'숨긴 곡 기록을 지울까요?'**
+  String get settingsPurgeHiddenTitle;
+
+  /// No description provided for @settingsPurgeHiddenBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'숨겨 둔 {count}곡의 재생 횟수, 좋아요, 재생목록 소속, 커버, 앱에 저장한 가사 사본이 지워져요. 음악 파일과 파일 안의 태그(가사 포함)는 그대로예요.'**
+  String settingsPurgeHiddenBody(int count);
+
+  /// No description provided for @settingsPurgeHiddenDone.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}곡의 기록을 지웠어요'**
+  String settingsPurgeHiddenDone(int count);
+
   /// No description provided for @settingsAbout.
   ///
   /// In ko, this message translates to:

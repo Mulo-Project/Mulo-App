@@ -86,4 +86,34 @@ void main() {
     expect(await db.select(db.plays).get(), isEmpty);
     expect(await db.select(db.covers).get(), isEmpty);
   });
+
+  test('hide는 보관함에서만 숨기고 기록은 남기며, 다시 찾으면 숨김만 푼다', () async {
+    await repo.addTracks([_t('a', 'u1', 1), _t('b', 'u2', 2)]);
+    await db
+        .into(db.plays)
+        .insert(PlaysCompanion.insert(trackId: 'a', playedAt: DateTime(2026)));
+    await repo.hide('a');
+    expect((await repo.watchTracks().first).map((t) => t.id), ['b']);
+    expect(await db.select(db.plays).get(), hasLength(1));
+    // 다시 찾으면 새로 추가된 것으로 세고, 같은 id의 기록이 그대로 붙는다.
+    expect(await repo.addTracks([_t('a', 'u1', 1)]), 1);
+    expect((await repo.watchTracks().first).map((t) => t.id), ['b', 'a']);
+    expect(await db.select(db.plays).get(), hasLength(1));
+  });
+
+  test('purgeHidden은 숨긴 곡의 기록만 모두 지우고 보이는 곡은 건드리지 않는다', () async {
+    await repo.addTracks([_t('a', 'u1', 1), _t('b', 'u2', 2)]);
+    for (final id in ['a', 'b']) {
+      await db
+          .into(db.plays)
+          .insert(PlaysCompanion.insert(trackId: id, playedAt: DateTime(2026)));
+    }
+    await repo.hide('a');
+    expect(await repo.hiddenCount(), 1);
+    expect(await repo.purgeHidden(), 1);
+    expect(await repo.hiddenCount(), 0);
+    expect((await db.select(db.plays).get()).map((p) => p.trackId), ['b']);
+    expect((await repo.watchTracks().first).map((t) => t.id), ['b']);
+    expect(await repo.purgeHidden(), 0);
+  });
 }

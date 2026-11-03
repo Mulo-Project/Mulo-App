@@ -23,6 +23,10 @@ class Tracks extends Table {
   TextColumn get source => text()();
   DateTimeColumn get addedAt => dateTime()();
 
+  /// 불러오는 폴더를 빼서 숨긴 곡. 행과 재생 기록 · 좋아요 · 재생목록 · 커버는 남기고,
+  /// 다시 불러오면 숨김만 푼다. 보관함에는 보이지 않는다.
+  BoolColumn get hidden => boolean().withDefault(const Constant(false))();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -132,7 +136,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'music_app'));
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   /// [table]에 [column]이 아직 없을 때만 더한다. 빌드를 번갈아 설치하는 등으로
   /// 열은 이미 있는데 버전만 낮아 업그레이드가 다시 도는 DB도 열리게 한다.
@@ -156,6 +160,7 @@ class AppDatabase extends _$AppDatabase {
     await _addColumnIfMissing(m, covers, covers.dy);
     await _addColumnIfMissing(m, covers, covers.rotation);
     await _addColumnIfMissing(m, playlists, playlists.sortOrder);
+    await _addColumnIfMissing(m, tracks, tracks.hidden);
   }
 
   @override
@@ -186,6 +191,8 @@ class AppDatabase extends _$AppDatabase {
       if (from < 11) {
         await _addColumnIfMissing(m, playlists, playlists.sortOrder);
       }
+      // 폴더를 빼도 곡 기록을 남기도록 숨김 칸을 더한다.
+      if (from < 12) await _addColumnIfMissing(m, tracks, tracks.hidden);
     },
     beforeOpen: (details) async {
       if (details.hadUpgrade || !details.wasCreated) {
