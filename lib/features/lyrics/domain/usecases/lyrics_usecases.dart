@@ -30,23 +30,30 @@ class SaveLyricsParams {
 /// 곡의 가사를 앱에 저장하고, 음원 파일의 가사 태그에도 같이 써 넣는다 (받을 때 가사를 넣는 것과 같게).
 /// 파일에 못 써도(권한 · 형식 · 파일 없음) 앱에 저장한 가사는 그대로 쓰인다.
 /// 가사를 비워 지울 때는 앱 저장본만 지우고 파일 태그는 그대로 둔다.
-class SaveLyrics implements UseCase<Lyrics?, SaveLyricsParams> {
+/// 가사 저장 결과: 앱에 저장한 가사와, 음원 파일 가사 태그에 쓴 결과 (태그를 쓰려 하지 않았으면 null).
+class SavedLyrics {
+  const SavedLyrics(this.lyrics, this.tag);
+
+  final Lyrics? lyrics;
+  final TagWriteResult? tag;
+}
+
+class SaveLyrics implements UseCase<SavedLyrics, SaveLyricsParams> {
   const SaveLyrics(this._repo, this._tags);
 
   final LyricsRepository _repo;
   final TrackTagRepository _tags;
 
   @override
-  Future<Lyrics?> call(SaveLyricsParams p) async {
+  Future<SavedLyrics> call(SaveLyricsParams p) async {
     final saved = await _repo.save(p.track.id, p.text);
-    if (saved != null) {
-      try {
-        await _tags.writeLyrics(p.track, saved.raw);
-      } on Object {
-        // 파일 태그는 덤이라 실패해도 저장한 가사는 그대로 둔다.
-      }
+    if (saved == null) return const SavedLyrics(null, null);
+    try {
+      return SavedLyrics(saved, await _tags.writeLyrics(p.track, saved.raw));
+    } on Object {
+      // 파일 태그는 덤이라 실패해도 저장한 가사는 그대로 둔다.
+      return SavedLyrics(saved, TagWriteResult.failed);
     }
-    return saved;
   }
 }
 

@@ -6,6 +6,7 @@ import '../../../library/domain/entities/track.dart';
 import '../bloc/lyrics_cubit.dart';
 import '../../domain/entities/timed_lyrics_text.dart';
 import 'lyrics_import_bar.dart';
+import 'lyrics_tag_notice.dart';
 import 'timed_lyrics_controller.dart';
 import 'lyrics_edit_scaffold.dart';
 
@@ -22,7 +23,8 @@ Future<void> showLyricsEditor(BuildContext context, Track track) async {
     ),
   );
   if (text == null) return;
-  await cubit.save(track, text);
+  final tag = await cubit.save(track, text);
+  if (context.mounted) showLyricsTagNotice(context, tag);
 }
 
 /// "가사 설정" 페이지. 플레이어의 가사 설정과 받기 창의 가사 설정이 함께 쓴다.

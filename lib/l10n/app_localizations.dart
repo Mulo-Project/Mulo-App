@@ -3428,6 +3428,12 @@ abstract class AppLocalizations {
   /// **'싱크를 맞출 가사가 없어요. 먼저 가사를 입력해 주세요.'**
   String get lyricsSyncEmpty;
 
+  /// No description provided for @lyricsTagNotSaved.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사를 음원 파일에는 쓰지 못했어요 ({reason}). 앱 데이터를 지우면 가사가 사라져요.'**
+  String lyricsTagNotSaved(String reason);
+
   /// No description provided for @lyricsSyncPlay.
   ///
   /// In ko, this message translates to:

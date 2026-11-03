@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'lyrics_tag_notice.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/l10n/l10n.dart';
@@ -19,5 +20,6 @@ Future<void> startLyricsSync(BuildContext context, Track track) async {
   }
   final synced = await showLyricsSync(context, track, current);
   if (synced == null) return;
-  await cubit.save(track, synced);
+  final tag = await cubit.save(track, synced);
+  if (context.mounted) showLyricsTagNotice(context, tag);
 }
