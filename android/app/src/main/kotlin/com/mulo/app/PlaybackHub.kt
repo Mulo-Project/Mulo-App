@@ -38,7 +38,6 @@ import io.flutter.plugin.common.MethodChannel
  * 앱(Dart)에는 [PlaybackChannel]로 명령을 받고 이벤트를 돌려준다. 모든 호출은 메인 스레드.
  */
 object PlaybackHub {
-    private const val RESUME_WINDOW_MS = 10 * 60 * 1000L
     const val ACTION_OPEN_PLAYER = "com.mulo.app.OPEN_PLAYER"
 
     private lateinit var context: Context
@@ -75,9 +74,8 @@ object PlaybackHub {
     /** 저장해 둔 대기열로 되살린 상태: 앱(Dart)이 아직 알림 내용을 보내기 전이라 좋아요 버튼은 숨긴다. */
     private var restoredFromStore = false
 
-    /** 이어폰 분리 · 블루투스 끊김으로 멈춘 시각 (SystemClock). 0이면 그렇게 멈춘 게 아니다. */
-    private var pausedByNoisyAt = 0L
-    private var resumeOnConnect = false
+    /** 이어폰 분리 · 블루투스 끊김으로 멈춘 기록과 다시 연결될 때 이어 재생할지 ([NoisyResume]). */
+    private val noisyResume = NoisyResume()
     private var tickCount = 0
 
     private var sink: EventChannel.EventSink? = null
@@ -129,7 +127,7 @@ object PlaybackHub {
         EqualizerProfiles.applyCurrent(context)
 
         sessionPlayer = SessionPlayer(exo) { name, positionMs -> emitCommand(name, positionMs) }
-        resumeOnConnect = PlaybackStore.resumeOnConnect(context)
+        noisyResume.enabled = PlaybackStore.resumeOnConnect(context)
         resumeWithoutNotification = PlaybackStore.resumeWithoutNotification(context)
         (context.getSystemService(Context.AUDIO_SERVICE) as AudioManager)
             .registerAudioDeviceCallback(deviceCallback, main)
@@ -281,7 +279,7 @@ object PlaybackHub {
 
     /** 앱에서 다시 재생을 시작한다: 정리해 둔 세션을 되살리고 이어폰 분리로 멈춘 기록을 비운다. */
     private fun revive() {
-        pausedByNoisyAt = 0L
+        noisyResume.clear()
         previewRevived = false
         if (!dismissed && session != null) return
         dismissed = false
@@ -307,7 +305,7 @@ object PlaybackHub {
     }
 
     fun pause() {
-        pausedByNoisyAt = 0L
+        noisyResume.clear()
         exo.playWhenReady = false
     }
 
@@ -461,7 +459,7 @@ object PlaybackHub {
     fun endSession() {
         if (!initialized) return
         exo.pause()
-        pausedByNoisyAt = 0L
+        noisyResume.clear()
         dismissed = true
         isNotificationVisible = false
         service?.hideSession()
@@ -548,22 +546,15 @@ object PlaybackHub {
         emit(mapOf("type" to "command", "name" to name, "positionMs" to positionMs))
     }
 
-    /** 구간 반복(A-B): 현재 곡의 [loopStartMs, loopEndMs]. 둘 다 -1이면 꺼짐. 곡이 바뀌면 풀린다. */
-    private var loopStartMs = -1L
-    private var loopEndMs = -1L
+    /** 구간 반복(A-B)의 상태 ([AbLoop]). 곡이 바뀌면 풀린다. */
+    private val loop = AbLoop()
     private var lastPositionEmitAt = 0L
 
     /** 현재 곡의 [startMs]~[endMs] 구간만 반복한다. 둘 중 하나라도 null이거나 구간이 비정상이면 해제. */
     fun setLoop(startMs: Long?, endMs: Long?) {
-        if (startMs == null || endMs == null || startMs < 0 || endMs <= startMs) {
-            loopStartMs = -1L
-            loopEndMs = -1L
-        } else {
-            loopStartMs = startMs
-            loopEndMs = endMs
-            // 끝 지점을 이미 지났으면 바로 시작 지점으로.
-            if (exo.mediaItemCount > 0 && exo.currentPosition >= endMs) exo.seekTo(startMs)
-        }
+        loop.set(startMs, endMs)
+        // 끝 지점을 이미 지났으면 바로 시작 지점으로.
+        if (exo.mediaItemCount > 0) loop.wrapTarget(exo.currentPosition)?.let { exo.seekTo(it) }
         // 구간 반복은 촘촘히 재야 하므로 재생 중이면 타이머를 새 주기로 다시 건다.
         if (exo.isPlaying) {
             main.removeCallbacks(ticker)
@@ -571,15 +562,14 @@ object PlaybackHub {
         }
     }
 
-    private fun loopActive() = loopStartMs >= 0
-
     private val ticker = object : Runnable {
         override fun run() {
             if (!exo.isPlaying) return
             val now = SystemClock.elapsedRealtime()
             // 끝 지점에 닿았으면 시작 지점으로 되돌린다 (되돌림은 onPositionDiscontinuity가 앱에 알린다).
-            val wrapped = loopActive() && exo.currentPosition >= loopEndMs
-            if (wrapped) exo.seekTo(loopStartMs)
+            val wrapTo = loop.wrapTarget(exo.currentPosition)
+            val wrapped = wrapTo != null
+            if (wrapTo != null) exo.seekTo(wrapTo)
             // 앱에 보내는 위치는 구간 반복 중에도 250ms 간격을 지킨다.
             if (!wrapped && now - lastPositionEmitAt >= 250) {
                 lastPositionEmitAt = now
@@ -587,7 +577,7 @@ object PlaybackHub {
                 // 위치는 5초마다 저장한다 (프로세스가 죽어도 거의 그 자리에서 이어진다).
                 if (++tickCount % 20 == 0) persistPosition()
             }
-            main.postDelayed(this, if (loopActive()) 40L else 250L)
+            main.postDelayed(this, if (loop.active) 40L else 250L)
         }
     }
 
@@ -629,10 +619,10 @@ object PlaybackHub {
             }
             if (reason == Player.PLAY_WHEN_READY_CHANGE_REASON_END_OF_MEDIA_ITEM) return
             // 이어폰 분리 · 블루투스 끊김으로 멈췄는지 기억해 둔다 (다시 연결되면 이어 재생하는 설정용).
-            pausedByNoisyAt = if (!playWhenReady && reason == Player.PLAY_WHEN_READY_CHANGE_REASON_AUDIO_BECOMING_NOISY) {
-                SystemClock.elapsedRealtime()
+            if (!playWhenReady && reason == Player.PLAY_WHEN_READY_CHANGE_REASON_AUDIO_BECOMING_NOISY) {
+                noisyResume.markPaused()
             } else {
-                0L
+                noisyResume.clear()
             }
             persistPosition()
             emit(mapOf("type" to "playing", "value" to playWhenReady))
@@ -705,14 +695,7 @@ object PlaybackHub {
             EqualizerProfiles.remember(context, addedDevices)
             // 기기가 바뀌었으니 그 기기 전용 이퀄라이저 값을 적용한다.
             EqualizerProfiles.onOutputChanged(context)
-            if (!resumeOnConnect || pausedByNoisyAt == 0L || dismissed || exo.mediaItemCount == 0) return
-            if (addedDevices.none { AudioOutputs.isHeadset(it) }) return
-            // 오래 전에 멈춘 재생이 갑자기 켜지지 않게 10분 안에 다시 연결됐을 때만.
-            if (SystemClock.elapsedRealtime() - pausedByNoisyAt > RESUME_WINDOW_MS) {
-                pausedByNoisyAt = 0L
-                return
-            }
-            play()
+            if (noisyResume.shouldResume(dismissed, exo.mediaItemCount > 0, addedDevices.any { AudioOutputs.isHeadset(it) })) play()
         }
     }
 
@@ -751,7 +734,7 @@ object PlaybackHub {
     /** 출력 기기 동작 설정 (앱이 꺼져도 지켜야 해서 네이티브에도 저장한다). */
     fun setOutputBehavior(pauseOnDisconnect: Boolean, resumeOnConnect: Boolean) {
         PlaybackStore.saveOutputBehavior(context, pauseOnDisconnect, resumeOnConnect)
-        this.resumeOnConnect = resumeOnConnect
+        noisyResume.enabled = resumeOnConnect
         exo.setHandleAudioBecomingNoisy(pauseOnDisconnect)
     }
 
