@@ -14,7 +14,6 @@ import android.os.SystemClock
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
-import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.audio.AudioProcessor
@@ -168,20 +167,7 @@ object PlaybackHub {
         extras = stored.extras
         artById = stored.items.mapNotNull { i -> i.art?.let { i.id to it } }.toMap()
         exo.repeatMode = QueueMapping.repeatModeOf(stored.repeat)
-        exo.setMediaItems(
-            stored.items.map { i ->
-                val metadata = MediaMetadata.Builder()
-                    .setTitle(i.title)
-                    .setArtist(i.artist.ifEmpty { null })
-                    .setAlbumTitle(i.album.ifEmpty { null })
-                    .setDurationMs(i.durationMs.takeIf { it > 0 })
-                    .setArtworkUri(i.art?.let { Uri.parse(it) })
-                    .build()
-                MediaItem.Builder().setMediaId(i.id).setUri(i.uri).setMediaMetadata(metadata).build()
-            },
-            stored.index,
-            stored.positionMs,
-        )
+        exo.setMediaItems(stored.items.map { QueueMapping.mediaItemOf(it) }, stored.index, stored.positionMs)
         exo.playWhenReady = false
         val saved = SessionInfo(stored.session ?: emptyMap<String, Any?>())
         // 저장된 알림 내용은 미리 듣기가 아닌 메인 재생의 것만 쓴다.
@@ -197,18 +183,7 @@ object PlaybackHub {
             PlaybackStore.clear(context)
             return
         }
-        val items = (0 until exo.mediaItemCount).map { i ->
-            val item = exo.getMediaItemAt(i)
-            StoredItem(
-                id = item.mediaId,
-                uri = item.localConfiguration?.uri?.toString() ?: "",
-                title = item.mediaMetadata.title?.toString() ?: "",
-                artist = item.mediaMetadata.artist?.toString() ?: "",
-                album = item.mediaMetadata.albumTitle?.toString() ?: "",
-                durationMs = item.mediaMetadata.durationMs ?: 0L,
-                art = item.mediaMetadata.artworkUri?.toString(),
-            )
-        }
+        val items = (0 until exo.mediaItemCount).map { QueueMapping.storedItemOf(exo.getMediaItemAt(it)) }
         PlaybackStore.saveQueue(context, items, extras)
         persistPosition()
         syncResumable()

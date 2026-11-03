@@ -883,4 +883,5 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 ## D-140 · 2026-11-03 · `PlaybackHub`에서 구간 반복 상태 · 이어폰 재연결 판단을 따로 뺀다
 - `AbLoop`: 구간(A-B) 반복의 시작 · 끝과 "되감을 위치" 계산. 타이머와 seek는 `PlaybackHub`에 그대로 있다 (D-134).
 - `NoisyResume`: 이어폰 분리로 멈춘 기록과 "다시 연결됐을 때 이어 재생해도 되는지"(10분 안, 설정 켬, 알림을 지우지 않음) 판단. 실제 재생은 `PlaybackHub`가 한다.
-- 동작은 그대로다. 아직 안 뺀 것: 저장 · 복원(`persistQueue` · `restore`)은 `exo` · 세션 상태와 얽혀 있고, `LyricsOverlay`의 뷰 만들기 · 드래그도 필드가 많아 그대로 둔다.
+- 저장 · 복원의 곡 변환(`MediaItem` ↔ `StoredItem`)은 `QueueMapping`으로 옮겼다.
+- 동작은 그대로다. 아직 안 뺀 것: 저장 · 복원의 흐름(`persistQueue` · `restore`)은 `exo` · 세션 상태와 얽혀 있고, `LyricsOverlay`의 뷰 만들기 · 드래그도 필드가 많아 그대로 둔다.
