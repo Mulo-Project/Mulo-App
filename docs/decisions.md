@@ -885,3 +885,6 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 - `NoisyResume`: 이어폰 분리로 멈춘 기록과 "다시 연결됐을 때 이어 재생해도 되는지"(10분 안, 설정 켬, 알림을 지우지 않음) 판단. 실제 재생은 `PlaybackHub`가 한다.
 - 저장 · 복원의 곡 변환(`MediaItem` ↔ `StoredItem`)은 `QueueMapping`으로 옮겼다.
 - 동작은 그대로다. 아직 안 뺀 것: 저장 · 복원의 흐름(`persistQueue` · `restore`)은 `exo` · 세션 상태와 얽혀 있고, `LyricsOverlay`의 뷰 만들기 · 드래그도 필드가 많아 그대로 둔다.
+
+## D-141 · 2026-11-03 · 가사 창의 뷰 트리 만들기를 `LyricsOverlayViews`로 뺀다
+- `LyricsOverlay.ensureView`가 뷰 만들기와 상태 연결을 함께 하던 것을, 뷰 트리만 `LyricsOverlayViews.build`가 만들고(`LyricsOverlayViewSet`으로 돌려줌) 터치 · 숨기기 · 끄기는 콜백으로 받게 했다. 상태 필드 연결과 창 위치 보정은 `LyricsOverlay`에 남는다. 모양 · 동작은 그대로다.
