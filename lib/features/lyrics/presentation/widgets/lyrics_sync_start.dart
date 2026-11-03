@@ -20,6 +20,6 @@ Future<void> startLyricsSync(BuildContext context, Track track) async {
   }
   final synced = await showLyricsSync(context, track, current);
   if (synced == null) return;
-  final tag = await cubit.save(track, synced);
-  if (context.mounted) showLyricsTagNotice(context, tag);
+  final saved = await cubit.save(track, synced);
+  if (context.mounted) showLyricsTagNotice(context, saved);
 }

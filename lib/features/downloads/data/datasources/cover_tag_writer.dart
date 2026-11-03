@@ -90,7 +90,8 @@ class CoverTagWriter {
         }
       });
       return true;
-    } on Object {
+    } on Object catch (e) {
+      FfmpegTagWriter.lastError = '${FfmpegTagWriter.lastError ?? ''} lib: $e'.trim();
       // 못 써도 받은 곡은 그대로 저장한다 (앱 안 커버는 DB에 따로 있다).
       return false;
     }

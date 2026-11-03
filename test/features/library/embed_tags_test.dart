@@ -20,6 +20,9 @@ Track _track(String id, TrackSource source) => Track(
 );
 
 class _Tags implements TrackTagRepository {
+  @override
+  String? get lastFailure => null;
+
   final written = <String>[];
   String? lastTitle;
   TagWriteResult result = TagWriteResult.written;

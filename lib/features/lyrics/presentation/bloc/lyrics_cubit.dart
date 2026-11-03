@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/usecase/usecase.dart';
 import '../../../library/domain/entities/track.dart';
-import '../../../library/domain/repositories/track_tag_repository.dart';
 import '../../domain/entities/lyrics.dart';
 import '../../domain/usecases/lyrics_usecases.dart';
 
@@ -52,13 +51,13 @@ class LyricsCubit extends Cubit<LyricsState> {
   Future<String?> pickFile() => _pickFile(const NoParams());
 
   /// [text]를 [track] 곡의 가사로 저장한다 (비면 지움). 음원 파일의 가사 태그에도 쓴다.
-  /// 음원 파일 태그에 쓴 결과를 돌려준다 (태그를 쓰려 하지 않았으면 null).
-  Future<TagWriteResult?> save(Track track, String text) async {
+  /// 저장 결과를 돌려준다. [SavedLyrics.tag]는 음원 파일 태그에 쓴 결과 (쓰려 하지 않았으면 null).
+  Future<SavedLyrics> save(Track track, String text) async {
     final saved = await _save(SaveLyricsParams(track, text));
     if (!isClosed && state.trackId == track.id) {
       emit(LyricsState(trackId: track.id, lyrics: saved.lyrics));
     }
-    return saved.tag;
+    return saved;
   }
 
   Future<void> clear(String trackId) async {

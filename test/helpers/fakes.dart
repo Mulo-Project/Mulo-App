@@ -845,6 +845,9 @@ class FakeTrackTagRepository implements TrackTagRepository {
     int? color,
   }) async => result;
 
+  @override
+  String? get lastFailure => null;
+
   /// 가사 태그에 쓰라고 한 글 (곡 id → 글).
   final lyricsWritten = <String, String>{};
 

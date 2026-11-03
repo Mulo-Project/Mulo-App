@@ -91,13 +91,23 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
         val p = builder.start()
         process = p
         try {
+            // 출력은 비우되 실패 원인을 알리려 마지막 부분만 남긴다.
+            val tail = StringBuilder()
             p.inputStream.use { stream ->
                 val buffer = ByteArray(8192)
-                while (stream.read(buffer) >= 0) { /* 버린다 */ }
+                while (true) {
+                    val n = stream.read(buffer)
+                    if (n < 0) break
+                    tail.append(String(buffer, 0, n, Charsets.UTF_8))
+                    if (tail.length > 1200) tail.delete(0, tail.length - 800)
+                }
             }
             val code = p.waitFor()
-            if (code != 0) out.delete()
-            return code == 0
+            if (code != 0) {
+                out.delete()
+                throw IllegalStateException("ffmpeg exit $code: ${tail.toString().trim().takeLast(400)}")
+            }
+            return true
         } finally {
             process = null
         }

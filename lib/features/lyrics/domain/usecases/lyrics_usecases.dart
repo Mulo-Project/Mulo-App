@@ -32,10 +32,13 @@ class SaveLyricsParams {
 /// 가사를 비워 지울 때는 앱 저장본만 지우고 파일 태그는 그대로 둔다.
 /// 가사 저장 결과: 앱에 저장한 가사와, 음원 파일 가사 태그에 쓴 결과 (태그를 쓰려 하지 않았으면 null).
 class SavedLyrics {
-  const SavedLyrics(this.lyrics, this.tag);
+  const SavedLyrics(this.lyrics, this.tag, [this.detail]);
 
   final Lyrics? lyrics;
   final TagWriteResult? tag;
+
+  /// 태그 쓰기가 실패했을 때의 이유 (진단용).
+  final String? detail;
 }
 
 class SaveLyrics implements UseCase<SavedLyrics, SaveLyricsParams> {
@@ -49,7 +52,12 @@ class SaveLyrics implements UseCase<SavedLyrics, SaveLyricsParams> {
     final saved = await _repo.save(p.track.id, p.text);
     if (saved == null) return const SavedLyrics(null, null);
     try {
-      return SavedLyrics(saved, await _tags.writeLyrics(p.track, saved.raw));
+      final tag = await _tags.writeLyrics(p.track, saved.raw);
+      return SavedLyrics(
+        saved,
+        tag,
+        tag == TagWriteResult.written ? null : _tags.lastFailure,
+      );
     } on Object {
       // 파일 태그는 덤이라 실패해도 저장한 가사는 그대로 둔다.
       return SavedLyrics(saved, TagWriteResult.failed);
