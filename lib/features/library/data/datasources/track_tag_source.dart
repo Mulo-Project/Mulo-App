@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/services.dart';
 
 import '../../../covers/domain/entities/cover_art.dart';
@@ -76,19 +77,25 @@ class TrackTagSource {
         lyrics: lyrics,
       );
 
+      debugPrint(
+        'MuloTag write ext=$extension ffmpeg=$viaFfmpeg lyrics=${lyrics?.length} cover=${cover != null}',
+      );
       if (!isContent) {
         return await embed(File(uri)) ? TagWriteResult.written : fail;
       }
       final temp = await _copy.invokeMethod<String>('copyToCache', uri);
       if (temp == null) return denied;
       try {
-        if (!await embed(File(temp))) return fail;
+        final embedded = await embed(File(temp));
+        debugPrint('MuloTag embed=$embedded');
+        if (!embedded) return fail;
         final ok =
             await _media.invokeMethod<bool>('overwriteAudio', {
               'uri': uri,
               'path': temp,
             }) ??
             false;
+        debugPrint('MuloTag overwrite=$ok');
         return ok ? TagWriteResult.written : denied;
       } finally {
         try {

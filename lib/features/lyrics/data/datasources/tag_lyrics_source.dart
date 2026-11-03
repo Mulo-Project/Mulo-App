@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:audio_metadata_reader/audio_metadata_reader.dart';
 import 'package:flutter/services.dart';
 
@@ -34,10 +35,16 @@ class TagLyricsSource implements EmbeddedLyricsSource {
       final file = File(path);
       if (!file.existsSync()) return null;
       final text = readMetadata(file).lyrics?.trim();
-      if (text != null && text.isNotEmpty) return text;
+      if (text != null && text.isNotEmpty) {
+        debugPrint('MuloTag lyrics read: standard (${text.length})');
+        return text;
+      }
       // 표준 가사 칸에 없으면 ffmpeg가 사용자 정의 칸(TXXX)에 쓴 mp3 가사를 찾는다.
-      return _txxxLyrics(file);
-    } on Exception {
+      final txxx = _txxxLyrics(file);
+      debugPrint('MuloTag lyrics read: standard empty, txxx=${txxx?.length}');
+      return txxx;
+    } on Exception catch (e) {
+      debugPrint('MuloTag lyrics read failed: $e');
       // 지원하지 않는 형식 · 깨진 태그 · 복사 실패 모두 "가사 없음"으로 본다.
       return null;
     } finally {

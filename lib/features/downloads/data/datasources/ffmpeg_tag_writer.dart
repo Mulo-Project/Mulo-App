@@ -72,6 +72,7 @@ class FfmpegTagWriter {
         'format': mp3 ? 'mp3' : 'ogg',
         if (mp3 && coverPng != null) 'cover': art.path,
       });
+      debugPrint('MuloTag ffmpeg tag ok=$ok');
       if (ok != true || !await out.exists() || await out.length() == 0) {
         return false;
       }
