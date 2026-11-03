@@ -20,3 +20,9 @@
 
 ## 남은 일 · 질문
 - 다음 단계 후보: `MediaStoreChannel` · `PreviewChannel` 등 채널 클래스의 공통 틀 정리, `LyricsOverlay.kt`(850줄) · `PlaybackHub.kt`(870줄) 분리. 실기기 확인이 가능할 때 진행.
+
+## 추가 (같은 브랜치, 2026-11-03)
+- 알림 좋아요를 앱 없이도 네이티브에서 처리 → `2026-11-03-notification-favorite-native.md` 참고 (D-136).
+- `DownloadForegroundService.onTimeout`: Android 15 dataSync 시간 제한 대응. 알림 떼어 내고 서비스 정지, `stopLog` 기록.
+- `DownloadActionReceiver`: 받아 줄 엔진이 없으면 낡은 받기 알림을 치운다 (`DownloadNotificationPlugin.dispatch`가 처리 여부를 돌려줌). D-137.
+- 실기기 확인: 받기를 6시간 넘게 돌렸을 때 크래시 없이 알림만 남는지(재현이 어려워 코드 대조만 함), 앱을 강제 종료한 뒤 남은 받기 알림 버튼을 눌렀을 때 알림이 사라지는지.

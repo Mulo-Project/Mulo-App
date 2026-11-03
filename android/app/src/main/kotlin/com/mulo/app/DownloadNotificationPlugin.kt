@@ -80,9 +80,11 @@ class DownloadNotificationPlugin : FlutterPlugin, MethodChannel.MethodCallHandle
             main.post { active?.invokeMethod("open", null) }
         }
 
-        /** 알림 버튼 누름을 Dart로 보낸다. 엔진이 없으면(앱 프로세스가 없었던 경우) 할 일이 없다. */
-        fun dispatch(action: String) {
+        /** 알림 버튼 누름을 Dart로 보낸다. 받아 줄 엔진이 없으면 false (호출한 쪽이 낡은 알림을 치운다). */
+        fun dispatch(action: String): Boolean {
+            if (active == null) return false
             main.post { active?.invokeMethod("action", action) }
+            return true
         }
     }
 }

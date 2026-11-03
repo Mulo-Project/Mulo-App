@@ -34,6 +34,18 @@ class DownloadForegroundService : Service() {
         return START_NOT_STICKY
     }
 
+    /**
+     * Android 15+: dataSync 포그라운드 서비스는 24시간에 합쳐 약 6시간까지만 돈다. 한도에 닿으면 시스템이 이 함수를 부르고,
+     * 곧바로 멈추지 않으면 앱이 강제 종료된다. 알림은 일반 알림으로 남기고(떼어 내기) 서비스를 멈춘다.
+     * 앱이 다시 앞에 오면 다음 진행 알림이 서비스를 새로 시작한다.
+     */
+    override fun onTimeout(startId: Int, fgsType: Int) {
+        PlaybackStore.logStop(applicationContext, "download: dataSync timeout")
+        wanted = false
+        stopForeground(STOP_FOREGROUND_DETACH)
+        stopSelf(startId)
+    }
+
     override fun onDestroy() {
         wanted = false
         super.onDestroy()
