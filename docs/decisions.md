@@ -888,3 +888,7 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 
 ## D-141 · 2026-11-03 · 가사 창의 뷰 트리 만들기를 `LyricsOverlayViews`로 뺀다
 - `LyricsOverlay.ensureView`가 뷰 만들기와 상태 연결을 함께 하던 것을, 뷰 트리만 `LyricsOverlayViews.build`가 만들고(`LyricsOverlayViewSet`으로 돌려줌) 터치 · 숨기기 · 끄기는 콜백으로 받게 했다. 상태 필드 연결과 창 위치 보정은 `LyricsOverlay`에 남는다. 모양 · 동작은 그대로다.
+
+## D-142 · 2026-11-03 · 채널의 "백그라운드에서 돌리고 메인에서 결과 돌려주기"는 `runAsync` 하나로
+- `NativeChannel.runAsync(executor, result, errorCode) { … }`: 일을 지정한 실행기에서 돌리고, 성공하면 값을, 예외가 나면 `errorCode` 오류를 메인 스레드에서 돌려준다. 가사 복사, 곡 저장, yt-dlp, 변환 · 태그에서 같은 try/catch/main.post 블록을 이것으로 바꿨다. 오류 코드와 메시지는 그대로다.
+- 예외별로 오류 코드가 갈리거나(`queryAudio`의 권한 오류) 오류를 삼켜 기본값을 돌려주는 것(`embeddedPicture` · `overwriteAudio` · `status`)은 모양이 달라 그대로 둔다.

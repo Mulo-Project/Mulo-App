@@ -54,20 +54,15 @@ class MediaStoreChannel(
                         main.post { result.error("query_failed", e.message, null) }
                     }
                 }
-                "saveAudio" -> io.execute {
-                    try {
-                        val uri = saveAudio(
-                            path = call.argument<String>("path")!!,
-                            displayName = call.argument<String>("displayName")!!,
-                            mime = call.argument<String>("mime")!!,
-                            relativePath = call.argument<String>("relativePath")!!,
-                            title = call.argument<String>("title") ?: "",
-                            artist = call.argument<String>("artist") ?: "",
-                        )
-                        main.post { result.success(uri) }
-                    } catch (e: Exception) {
-                        main.post { result.error("save_failed", e.message, null) }
-                    }
+                "saveAudio" -> runAsync(io, result, "save_failed") {
+                    saveAudio(
+                        path = call.argument<String>("path")!!,
+                        displayName = call.argument<String>("displayName")!!,
+                        mime = call.argument<String>("mime")!!,
+                        relativePath = call.argument<String>("relativePath")!!,
+                        title = call.argument<String>("title") ?: "",
+                        artist = call.argument<String>("artist") ?: "",
+                    )
                 }
                 "embeddedPicture" -> {
                     val uri = Uri.parse(call.argument<String>("uri"))

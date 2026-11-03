@@ -2,8 +2,6 @@ package com.mulo.app
 
 import android.content.Context
 import android.net.Uri
-import android.os.Handler
-import android.os.Looper
 import io.flutter.plugin.common.BinaryMessenger
 import java.io.File
 import java.util.concurrent.Executors
@@ -14,7 +12,6 @@ import java.util.concurrent.Executors
  */
 class LyricsChannel(private val context: Context, messenger: BinaryMessenger) : NativeChannel(messenger, NAME) {
     private val io = Executors.newSingleThreadExecutor()
-    private val main = Handler(Looper.getMainLooper())
 
     init {
         channel.setMethodCallHandler { call, result ->
@@ -25,14 +22,7 @@ class LyricsChannel(private val context: Context, messenger: BinaryMessenger) : 
                         result.error("bad_args", "uri required", null)
                         return@setMethodCallHandler
                     }
-                    io.execute {
-                        try {
-                            val path = copyToCache(Uri.parse(uri))
-                            main.post { result.success(path) }
-                        } catch (e: Exception) {
-                            main.post { result.error("copy_failed", e.message, null) }
-                        }
-                    }
+                    runAsync(io, result, "copy_failed") { copyToCache(Uri.parse(uri)) }
                 }
                 else -> result.notImplemented()
             }

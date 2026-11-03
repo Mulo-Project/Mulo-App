@@ -1,8 +1,6 @@
 package com.mulo.app
 
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
 import com.yausername.ffmpeg.FFmpeg
 import io.flutter.plugin.common.BinaryMessenger
 import java.io.File
@@ -16,7 +14,6 @@ import java.util.concurrent.Executors
  */
 class TranscoderChannel(private val context: Context, messenger: BinaryMessenger) : NativeChannel(messenger, NAME) {
     private val io = Executors.newSingleThreadExecutor()
-    private val main = Handler(Looper.getMainLooper())
 
     @Volatile private var process: Process? = null
     @Volatile private var ready = false
@@ -39,14 +36,7 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
                         result.error("bad_args", "input, output, codec, bitrate, format required", null)
                         return@setMethodCallHandler
                     }
-                    io.execute {
-                        try {
-                            val ok = convert(input, output, codec, bitrate, format)
-                            main.post { result.success(ok) }
-                        } catch (e: Exception) {
-                            main.post { result.error("convert_failed", e.message, null) }
-                        }
-                    }
+                    runAsync(io, result, "convert_failed") { convert(input, output, codec, bitrate, format) }
                 }
                 "tag" -> {
                     val input = call.argument<String>("input")
@@ -57,14 +47,7 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
                         result.error("bad_args", "input, meta, output, format required", null)
                         return@setMethodCallHandler
                     }
-                    io.execute {
-                        try {
-                            val ok = tag(input, meta, output, format, call.argument<String>("cover"))
-                            main.post { result.success(ok) }
-                        } catch (e: Exception) {
-                            main.post { result.error("tag_failed", e.message, null) }
-                        }
-                    }
+                    runAsync(io, result, "tag_failed") { tag(input, meta, output, format, call.argument<String>("cover")) }
                 }
                 else -> result.notImplemented()
             }
