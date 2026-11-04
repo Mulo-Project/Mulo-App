@@ -23,8 +23,8 @@ Future<void> showLyricsEditor(BuildContext context, Track track) async {
     ),
   );
   if (text == null) return;
-  final saved = await cubit.save(track, text);
-  if (context.mounted) showLyricsTagNotice(context, saved);
+  final outcome = await cubit.save(track, text);
+  if (context.mounted) showLyricsTagNotice(context, outcome);
 }
 
 /// "가사 설정" 페이지. 플레이어의 가사 설정과 받기 창의 가사 설정이 함께 쓴다.

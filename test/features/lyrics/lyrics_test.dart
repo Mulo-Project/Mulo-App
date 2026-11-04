@@ -196,7 +196,11 @@ void main() {
     test('가사를 앱에 저장하고 음원 파일의 가사 태그에도 쓴다', () async {
       final repo = MemoryLyricsRepository();
       final tags = FakeTrackTagRepository();
-      await SaveLyrics(repo, tags)(SaveLyricsParams(track, '[00:01.00]hi'));
+      final saved = await SaveLyrics(
+        repo,
+        tags,
+      )(SaveLyricsParams(track, '[00:01.00]hi'));
+      await saved.tag;
       expect(repo.saved['t1'], '[00:01.00]hi');
       expect(tags.lyricsWritten['t1'], '[00:01.00]hi');
     });
@@ -209,7 +213,7 @@ void main() {
         tags,
       )(SaveLyricsParams(track, '[00:01.00]hi'));
       expect(saved.lyrics, isNotNull);
-      expect(saved.tag, TagWriteResult.denied);
+      expect((await saved.tag)?.result, TagWriteResult.denied);
     });
 
     test('가사를 비우면 파일 태그는 건드리지 않는다', () async {

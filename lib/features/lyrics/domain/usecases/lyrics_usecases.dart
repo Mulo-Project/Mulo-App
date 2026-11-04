@@ -30,15 +30,21 @@ class SaveLyricsParams {
 /// 곡의 가사를 앱에 저장하고, 음원 파일의 가사 태그에도 같이 써 넣는다 (받을 때 가사를 넣는 것과 같게).
 /// 파일에 못 써도(권한 · 형식 · 파일 없음) 앱에 저장한 가사는 그대로 쓰인다.
 /// 가사를 비워 지울 때는 앱 저장본만 지우고 파일 태그는 그대로 둔다.
-/// 가사 저장 결과: 앱에 저장한 가사와, 음원 파일 가사 태그에 쓴 결과 (태그를 쓰려 하지 않았으면 null).
+/// 음원 파일 가사 태그에 쓴 결과와, 실패했을 때의 이유(진단용).
+class LyricsTagOutcome {
+  const LyricsTagOutcome(this.result, [this.detail]);
+
+  final TagWriteResult result;
+  final String? detail;
+}
+
+/// 가사 저장 결과. [lyrics]는 앱에 저장한 가사(바로 화면에 쓴다)이고, [tag]는 음원 파일 태그 쓰기가
+/// 끝나면 결과를 주는 작업이다 (파일 복사 · ffmpeg · 덮어쓰기라 오래 걸려 기다리지 않는다. 쓰려 하지 않았으면 null).
 class SavedLyrics {
-  const SavedLyrics(this.lyrics, this.tag, [this.detail]);
+  const SavedLyrics(this.lyrics, this.tag);
 
   final Lyrics? lyrics;
-  final TagWriteResult? tag;
-
-  /// 태그 쓰기가 실패했을 때의 이유 (진단용).
-  final String? detail;
+  final Future<LyricsTagOutcome>? tag;
 }
 
 class SaveLyrics implements UseCase<SavedLyrics, SaveLyricsParams> {
@@ -51,16 +57,19 @@ class SaveLyrics implements UseCase<SavedLyrics, SaveLyricsParams> {
   Future<SavedLyrics> call(SaveLyricsParams p) async {
     final saved = await _repo.save(p.track.id, p.text);
     if (saved == null) return const SavedLyrics(null, null);
+    return SavedLyrics(saved, _writeTag(p.track, saved.raw));
+  }
+
+  Future<LyricsTagOutcome> _writeTag(Track track, String raw) async {
     try {
-      final tag = await _tags.writeLyrics(p.track, saved.raw);
-      return SavedLyrics(
-        saved,
-        tag,
-        tag == TagWriteResult.written ? null : _tags.lastFailure,
+      final result = await _tags.writeLyrics(track, raw);
+      return LyricsTagOutcome(
+        result,
+        result == TagWriteResult.written ? null : _tags.lastFailure,
       );
     } on Object {
       // 파일 태그는 덤이라 실패해도 저장한 가사는 그대로 둔다.
-      return SavedLyrics(saved, TagWriteResult.failed);
+      return const LyricsTagOutcome(TagWriteResult.failed);
     }
   }
 }

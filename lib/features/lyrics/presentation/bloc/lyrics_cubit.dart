@@ -51,13 +51,14 @@ class LyricsCubit extends Cubit<LyricsState> {
   Future<String?> pickFile() => _pickFile(const NoParams());
 
   /// [text]를 [track] 곡의 가사로 저장한다 (비면 지움). 음원 파일의 가사 태그에도 쓴다.
-  /// 저장 결과를 돌려준다. [SavedLyrics.tag]는 음원 파일 태그에 쓴 결과 (쓰려 하지 않았으면 null).
-  Future<SavedLyrics> save(Track track, String text) async {
+  /// 앱에 저장하면 **바로** 화면에 반영하고, 그 뒤 음원 파일 태그 쓰기가 끝나면 결과를 돌려준다
+  /// (쓰려 하지 않았으면 null). 파일 쓰기는 오래 걸려 화면 반영을 막지 않는다.
+  Future<LyricsTagOutcome?> save(Track track, String text) async {
     final saved = await _save(SaveLyricsParams(track, text));
     if (!isClosed && state.trackId == track.id) {
       emit(LyricsState(trackId: track.id, lyrics: saved.lyrics));
     }
-    return saved;
+    return saved.tag;
   }
 
   Future<void> clear(String trackId) async {
