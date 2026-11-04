@@ -1117,6 +1117,60 @@ class FakeAudioPlayer implements AudioPlayerRepository {
     ...items.where((i) => i != items[at]).toList().reversed,
   ];
 
+  /// 엔진의 지금 대기열 모습 (명령이 끝나면 앱에 돌려준다).
+  PlaybackQueueChange? _state() {
+    final s = snapshot;
+    if (s == null) return null;
+    return PlaybackQueueChange(
+      ids: [for (final i in s.items) i.id],
+      index: index,
+      shuffle: shuffleOriginal != null,
+      repeat: repeat,
+    );
+  }
+
+  @override
+  Future<PlaybackQueueChange?> playNext(PlaybackItem item) async {
+    await _playNext(item);
+    return _state();
+  }
+
+  @override
+  Future<PlaybackQueueChange?> addToQueue(PlaybackItem item) async {
+    await _addToQueue(item);
+    return _state();
+  }
+
+  @override
+  Future<PlaybackQueueChange?> removeFromQueue(String id) async {
+    await _removeFromQueue(id);
+    return _state();
+  }
+
+  @override
+  Future<PlaybackQueueChange?> moveInQueue(int from, int to) async {
+    await _moveInQueue(from, to);
+    return _state();
+  }
+
+  @override
+  Future<PlaybackQueueChange?> setShuffle(bool on) async {
+    await _setShuffle(on);
+    return _state();
+  }
+
+  @override
+  Future<PlaybackQueueChange?> setRepeat(PlayerRepeatMode mode) async {
+    await _setRepeat(mode);
+    return _state();
+  }
+
+  @override
+  Future<PlaybackQueueChange?> setQueue(PlaybackSnapshot s) async {
+    await _setQueue(s);
+    return _state();
+  }
+
   /// 편집 뒤 스냅샷을 새 목록으로 바꾸고 엔진의 현재 곡 번호를 맞춘다 (네이티브 편집을 흉내 낸다).
   void _edited(List<PlaybackItem> items, PlaybackItem? current) {
     final s = snapshot!;
@@ -1130,8 +1184,7 @@ class FakeAudioPlayer implements AudioPlayerRepository {
     _emitQueue();
   }
 
-  @override
-  Future<void> playNext(PlaybackItem item) async {
+  Future<void> _playNext(PlaybackItem item) async {
     calls.add('next:${item.id}');
     final s = snapshot;
     if (s == null || s.items.isEmpty) return;
@@ -1142,8 +1195,7 @@ class FakeAudioPlayer implements AudioPlayerRepository {
     _edited([...rest.take(at), item, ...rest.skip(at)], current);
   }
 
-  @override
-  Future<void> addToQueue(PlaybackItem item) async {
+  Future<void> _addToQueue(PlaybackItem item) async {
     calls.add('add:${item.id}');
     final s = snapshot;
     if (s == null || s.items.isEmpty || s.items.any((i) => i.id == item.id)) {
@@ -1152,8 +1204,7 @@ class FakeAudioPlayer implements AudioPlayerRepository {
     _edited([...s.items, item], s.items[index]);
   }
 
-  @override
-  Future<void> removeFromQueue(String id) async {
+  Future<void> _removeFromQueue(String id) async {
     calls.add('remove:$id');
     final s = snapshot;
     if (s == null) return;
@@ -1175,8 +1226,7 @@ class FakeAudioPlayer implements AudioPlayerRepository {
     }
   }
 
-  @override
-  Future<void> moveInQueue(int from, int to) async {
+  Future<void> _moveInQueue(int from, int to) async {
     calls.add('move:$from-$to');
     final s = snapshot;
     if (s == null) return;
@@ -1185,8 +1235,7 @@ class FakeAudioPlayer implements AudioPlayerRepository {
     _edited(items, s.items[index]);
   }
 
-  @override
-  Future<void> setShuffle(bool on) async {
+  Future<void> _setShuffle(bool on) async {
     calls.add('shuffle:$on');
     final s = snapshot;
     if (s == null || s.items.isEmpty) return;
@@ -1217,8 +1266,7 @@ class FakeAudioPlayer implements AudioPlayerRepository {
     _emitQueue();
   }
 
-  @override
-  Future<void> setRepeat(PlayerRepeatMode mode) async {
+  Future<void> _setRepeat(PlayerRepeatMode mode) async {
     calls.add('repeat:${mode.name}');
     repeat = mode;
     if (snapshot != null) _emitQueue();
@@ -1227,8 +1275,7 @@ class FakeAudioPlayer implements AudioPlayerRepository {
   @override
   Stream<void> watchOpenPlayer() => _openPlayer.stream;
 
-  @override
-  Future<void> setQueue(PlaybackSnapshot s) async {
+  Future<void> _setQueue(PlaybackSnapshot s) async {
     final current = s.current;
     calls.add('queue:${current?.uri}');
     snapshot = s;

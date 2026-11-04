@@ -28,17 +28,9 @@ class NativeAudioPlayerRepository implements AudioPlayerRepository {
   @override
   Stream<PlaybackQueueChange> watchQueue() => _channel.events
       .where((e) => e['type'] == 'queue')
-      .map(
-        (e) => PlaybackQueueChange(
-          ids: [for (final id in (e['ids'] as List? ?? const [])) '$id'],
-          index: (e['index'] as num?)?.toInt() ?? 0,
-          shuffle: e['shuffle'] == true,
-          repeat: PlayerRepeatMode.values.firstWhere(
-            (m) => m.name == e['repeat'],
-            orElse: () => PlayerRepeatMode.off,
-          ),
-        ),
-      );
+      .map(_queueOf)
+      .where((c) => c != null)
+      .cast<PlaybackQueueChange>();
 
   @override
   Stream<void> watchEnded() =>
@@ -66,22 +58,40 @@ class NativeAudioPlayerRepository implements AudioPlayerRepository {
     'durationMs': i.duration.inMilliseconds,
   };
 
-  @override
-  Future<void> playNext(PlaybackItem item) =>
-      _channel.playNext(_itemMap(item));
+  /// 네이티브가 돌려준 대기열 모습 (`ids` `index` `shuffle` `repeat`)을 읽는다. 없으면 null.
+  static PlaybackQueueChange? _queueOf(Map<Object?, Object?>? map) {
+    final ids = map?['ids'];
+    if (map == null || ids is! List) return null;
+    return PlaybackQueueChange(
+      ids: [for (final id in ids) '$id'],
+      index: (map['index'] as num?)?.toInt() ?? 0,
+      shuffle: map['shuffle'] == true,
+      repeat: PlayerRepeatMode.values.firstWhere(
+        (m) => m.name == map['repeat'],
+        orElse: () => PlayerRepeatMode.off,
+      ),
+    );
+  }
 
   @override
-  Future<void> addToQueue(PlaybackItem item) =>
-      _channel.addToQueue(_itemMap(item));
+  Future<PlaybackQueueChange?> playNext(PlaybackItem item) async =>
+      _queueOf(await _channel.playNext(_itemMap(item)));
 
   @override
-  Future<void> removeFromQueue(String id) => _channel.removeFromQueue(id);
+  Future<PlaybackQueueChange?> addToQueue(PlaybackItem item) async =>
+      _queueOf(await _channel.addToQueue(_itemMap(item)));
 
   @override
-  Future<void> moveInQueue(int from, int to) => _channel.moveInQueue(from, to);
+  Future<PlaybackQueueChange?> removeFromQueue(String id) async =>
+      _queueOf(await _channel.removeFromQueue(id));
 
   @override
-  Future<void> setQueue(PlaybackSnapshot snapshot) => _channel.setQueue({
+  Future<PlaybackQueueChange?> moveInQueue(int from, int to) async =>
+      _queueOf(await _channel.moveInQueue(from, to));
+
+  @override
+  Future<PlaybackQueueChange?> setQueue(PlaybackSnapshot snapshot) async =>
+      _queueOf(await _channel.setQueue({
     'items': [for (final i in snapshot.items) _itemMap(i)],
     'index': snapshot.index,
     'playing': snapshot.playing,
@@ -90,14 +100,15 @@ class NativeAudioPlayerRepository implements AudioPlayerRepository {
     // 비어 있으면 보내지 않는다: 셔플 상태는 네이티브가 쥐고 있는 것을 그대로 둔다.
     if (snapshot.extras.isNotEmpty) 'extras': snapshot.extras,
     if (snapshot.shuffleNew) 'shuffleNew': true,
-  });
+  }));
 
   @override
-  Future<void> setShuffle(bool on) => _channel.setShuffle(on);
+  Future<PlaybackQueueChange?> setShuffle(bool on) async =>
+      _queueOf(await _channel.setShuffle(on));
 
   @override
-  Future<void> setRepeat(PlayerRepeatMode mode) =>
-      _channel.setRepeat(mode.name);
+  Future<PlaybackQueueChange?> setRepeat(PlayerRepeatMode mode) async =>
+      _queueOf(await _channel.setRepeat(mode.name));
 
   @override
   Future<void> skipTo(int index) => _channel.skipTo(index);

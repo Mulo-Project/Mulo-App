@@ -24,29 +24,33 @@ abstract interface class AudioPlayerRepository {
   /// 앱이 켜져 있는 중에 알림을 눌러 플레이어 화면을 열라는 요청.
   Stream<void> watchOpenPlayer();
 
+  // 대기열을 바꾸는 명령([setQueue] · [playNext] · [addToQueue] · [removeFromQueue] · [moveInQueue] ·
+  // [setShuffle] · [setRepeat])은 끝나면 엔진의 대기열 모습을 돌려준다. 앱은 그것을 그대로 비춘다.
+  // 알 수 없으면 null.
+
   /// 대기열을 통째로 바꾼다. 현재 곡이 같으면 재생을 끊지 않는다.
   /// 현재 곡을 못 불러오면 던진다.
-  Future<void> setQueue(PlaybackSnapshot snapshot);
+  Future<PlaybackQueueChange?> setQueue(PlaybackSnapshot snapshot);
 
   /// 지금 곡 바로 뒤에 끼운다. 이미 대기열에 있는 곡이면 그 자리를 옮긴다 (지금 곡이면 그대로).
-  Future<void> playNext(PlaybackItem item);
+  Future<PlaybackQueueChange?> playNext(PlaybackItem item);
 
   /// 대기열 맨 뒤에 붙인다. 이미 있는 곡이면 건너뛴다.
-  Future<void> addToQueue(PlaybackItem item);
+  Future<PlaybackQueueChange?> addToQueue(PlaybackItem item);
 
   /// 곡 하나를 뺀다. 지금 곡이면 다음 곡(마지막이었으면 새 마지막 곡)으로 처음부터 넘어가고 재생 상태는 그대로다.
   /// 마지막 한 곡이면 대기열이 비고 멈춘다.
-  Future<void> removeFromQueue(String id);
+  Future<PlaybackQueueChange?> removeFromQueue(String id);
 
   /// [from]번 곡을 [to] 자리로 옮긴다 ([to]는 옮긴 뒤의 자리). 듣던 곡은 그대로 이어서 재생한다.
-  Future<void> moveInQueue(int from, int to);
+  Future<PlaybackQueueChange?> moveInQueue(int from, int to);
 
   /// 셔플을 켜고 끈다. 엔진이 지금 곡을 맨 앞에 두고 나머지를 섞어 [watchQueue]로 알린다.
   /// 끄면 섞기 전 순서로 되돌린다. 듣던 곡은 끊기지 않는다.
-  Future<void> setShuffle(bool on);
+  Future<PlaybackQueueChange?> setShuffle(bool on);
 
   /// 반복 모드를 바꾼다.
-  Future<void> setRepeat(PlayerRepeatMode mode);
+  Future<PlaybackQueueChange?> setRepeat(PlayerRepeatMode mode);
 
   /// 대기열은 그대로 두고 [index]번 곡으로 처음부터 옮긴다.
   Future<void> skipTo(int index);

@@ -228,7 +228,7 @@ object PlaybackHub {
             exo.stop()
             exo.clearMediaItems()
             persistQueue()
-            result.success(null)
+            result.success(queueState())
             return
         }
         revive()
@@ -258,7 +258,7 @@ object PlaybackHub {
             sessionPlayer.refresh()
             persistQueue()
             if (shuffleNew) emitQueue()
-            result.success(null)
+            result.success(queueState())
         } else {
             pendingLoad = result
             exo.setMediaItems(mediaItems, index, positionMs ?: 0L)
@@ -349,17 +349,19 @@ object PlaybackHub {
     /** 지금 대기열의 곡 id 순서 · 현재 위치 · 셔플 · 반복을 앱에 알린다 (앱은 이것을 비추기만 한다). */
     private fun emitQueue() {
         if (!initialized) return
-        val ids = (0 until exo.mediaItemCount).map { exo.getMediaItemAt(it).mediaId }
-        emit(
-            mapOf(
-                "type" to "queue",
-                "ids" to ids,
-                "index" to exo.currentMediaItemIndex,
-                "shuffle" to shuffleOn,
-                "repeat" to QueueMapping.repeatNameOf(exo.repeatMode),
-            ),
-        )
+        emit(queueState() + ("type" to "queue"))
     }
+
+    /**
+     * 대기열의 지금 모습 (곡 id 순서 · 현재 위치 · 셔플 · 반복). 대기열을 바꾸는 명령은 이것을 결과로 돌려주고,
+     * 앱은 그대로 비춘다. 네이티브가 스스로 바꿨을 때(재셔플 · 알림 버튼)는 `queue` 이벤트로 같은 내용을 보낸다.
+     */
+    fun queueState(): Map<String, Any?> = mapOf(
+        "ids" to (0 until exo.mediaItemCount).map { exo.getMediaItemAt(it).mediaId },
+        "index" to exo.currentMediaItemIndex,
+        "shuffle" to shuffleOn,
+        "repeat" to QueueMapping.repeatNameOf(exo.repeatMode),
+    )
 
     /** 앱에서 다시 재생을 시작한다: 정리해 둔 세션을 되살리고 이어폰 분리로 멈춘 기록을 비운다. */
     private fun revive() {
@@ -725,7 +727,7 @@ object PlaybackHub {
 
         override fun onPlaybackStateChanged(playbackState: Int) {
             if (playbackState == Player.STATE_READY) {
-                pendingLoad?.success(null)
+                pendingLoad?.success(queueState())
                 pendingLoad = null
             }
             // 반복 없이 대기열 끝까지 들었다 (슬라이더를 끝까지 끈 경우 포함): 첫 곡으로 돌아가 멈춰 두고

@@ -52,64 +52,64 @@ class WatchAudioQueue implements StreamUseCase<PlaybackQueueChange, NoParams> {
   Stream<PlaybackQueueChange> call(NoParams params) => _repo.watchQueue();
 }
 
-class PlayAudioNext implements UseCase<void, PlaybackItem> {
+class PlayAudioNext implements UseCase<PlaybackQueueChange?, PlaybackItem> {
   const PlayAudioNext(this._repo);
   final AudioPlayerRepository _repo;
 
   @override
-  Future<void> call(PlaybackItem item) => _repo.playNext(item);
+  Future<PlaybackQueueChange?> call(PlaybackItem item) => _repo.playNext(item);
 }
 
-class AddAudioToQueue implements UseCase<void, PlaybackItem> {
+class AddAudioToQueue implements UseCase<PlaybackQueueChange?, PlaybackItem> {
   const AddAudioToQueue(this._repo);
   final AudioPlayerRepository _repo;
 
   @override
-  Future<void> call(PlaybackItem item) => _repo.addToQueue(item);
+  Future<PlaybackQueueChange?> call(PlaybackItem item) => _repo.addToQueue(item);
 }
 
-class RemoveAudioFromQueue implements UseCase<void, String> {
+class RemoveAudioFromQueue implements UseCase<PlaybackQueueChange?, String> {
   const RemoveAudioFromQueue(this._repo);
   final AudioPlayerRepository _repo;
 
   @override
-  Future<void> call(String id) => _repo.removeFromQueue(id);
+  Future<PlaybackQueueChange?> call(String id) => _repo.removeFromQueue(id);
 }
 
 /// 대기열 순서 옮기기: [from]번 곡을 [to] 자리로.
 typedef AudioQueueMove = ({int from, int to});
 
-class MoveAudioInQueue implements UseCase<void, AudioQueueMove> {
+class MoveAudioInQueue implements UseCase<PlaybackQueueChange?, AudioQueueMove> {
   const MoveAudioInQueue(this._repo);
   final AudioPlayerRepository _repo;
 
   @override
-  Future<void> call(AudioQueueMove move) =>
+  Future<PlaybackQueueChange?> call(AudioQueueMove move) =>
       _repo.moveInQueue(move.from, move.to);
 }
 
-class SetAudioShuffle implements UseCase<void, bool> {
+class SetAudioShuffle implements UseCase<PlaybackQueueChange?, bool> {
   const SetAudioShuffle(this._repo);
   final AudioPlayerRepository _repo;
 
   @override
-  Future<void> call(bool on) => _repo.setShuffle(on);
+  Future<PlaybackQueueChange?> call(bool on) => _repo.setShuffle(on);
 }
 
-class SetAudioRepeat implements UseCase<void, PlayerRepeatMode> {
+class SetAudioRepeat implements UseCase<PlaybackQueueChange?, PlayerRepeatMode> {
   const SetAudioRepeat(this._repo);
   final AudioPlayerRepository _repo;
 
   @override
-  Future<void> call(PlayerRepeatMode mode) => _repo.setRepeat(mode);
+  Future<PlaybackQueueChange?> call(PlayerRepeatMode mode) => _repo.setRepeat(mode);
 }
 
-class SetAudioQueue implements UseCase<void, PlaybackSnapshot> {
+class SetAudioQueue implements UseCase<PlaybackQueueChange?, PlaybackSnapshot> {
   const SetAudioQueue(this._repo);
   final AudioPlayerRepository _repo;
 
   @override
-  Future<void> call(PlaybackSnapshot snapshot) => _repo.setQueue(snapshot);
+  Future<PlaybackQueueChange?> call(PlaybackSnapshot snapshot) => _repo.setQueue(snapshot);
 }
 
 class SkipAudioTo implements UseCase<void, int> {

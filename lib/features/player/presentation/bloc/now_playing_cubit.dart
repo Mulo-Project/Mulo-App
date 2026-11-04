@@ -103,10 +103,10 @@ class NowPlayingState extends Equatable {
 }
 
 /// 재생 상태. 처음에는 대기열이 비어 있다(미니 플레이어 숨김).
-/// [audio]가 있으면 엔진이 셔플 · 반복 · 곡 넘김의 원본을 쥔다: 앱은 `setShuffle` · `setRepeat` 명령을 보내고
-/// 엔진이 알려 주는 대기열 순서(`watchQueue`) · 재생 위치 · 곡 넘김 · 끝을 비춘다.
-/// 대기열 편집(다음에 재생 · 이동 · 삭제 · 추가)은 아직 앱이 계산해 스냅샷으로 보낸다.
-/// [audio]가 없으면 화면 상태만 움직이고 셔플은 앱이 직접 섞는다 (테스트).
+/// [audio]가 있으면 엔진이 대기열 순서 · 셔플 · 반복 · 곡 넘김의 원본을 쥔다: 앱은 명령(`setShuffle` · `setRepeat` ·
+/// `playNext` · `addToQueue` · `removeFromQueue` · `moveInQueue`)을 보내고, 명령 결과와 `watchQueue` 이벤트로 온
+/// 대기열 모습 · 재생 위치 · 곡 넘김 · 끝을 비추기만 한다 (편집 결과를 앱이 먼저 계산하지 않는다).
+/// [audio]가 없으면 화면 상태만 움직이고 편집 · 셔플은 앱이 직접 계산한다 (테스트).
 class NowPlayingCubit extends Cubit<NowPlayingState> {
   NowPlayingCubit({AudioPlayback? audio, Random? random})
     : _audio = audio,
@@ -150,6 +150,9 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   /// 셔플을 켜기 전 순서 (끄면 이 순서로 되돌린다). 엔진이 없을 때만 쓴다 — 엔진이 있으면 엔진이 쥔다.
   List<Track>? _original;
 
+  /// 엔진에 보낸 곡 (아직 화면 대기열에 없는 것 포함). 엔진이 돌려준 곡 id를 곡으로 바꾸는 데 쓴다.
+  final _tracks = <String, Track>{};
+
   /// 다음에 엔진에 보내는 대기열을 셔플로 시작하게 한다 (섞는 일은 엔진이 한다).
   var _shuffleNew = false;
 
@@ -173,7 +176,9 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     _pending++;
     _tail = _tail
         .then((_) => job(audio))
-        .catchError((Object _) {})
+        .catchError((Object e) {
+          debugPrint('MuloPlayback engine job failed: $e');
+        })
         .whenComplete(() => _pending--);
   }
 
@@ -225,28 +230,35 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     _pushed = _snapshotOf(state);
   }
 
-  /// 엔진이 대기열 순서 · 셔플 · 반복을 바꿨다 (셔플 켜기와 끄기, 한 바퀴 뒤 재셔플, 알림 셔플 버튼).
-  /// 앱의 대기열을 엔진의 순서에 맞춘다. 곡 구성이 다르면(그새 앱이 대기열을 고침) 순서는 건드리지 않는다.
+  /// 엔진이 스스로 대기열 순서 · 셔플 · 반복을 바꿨다 (한 바퀴 뒤 재셔플, 알림 셔플 버튼).
+  /// 우리가 보낸 명령이 도는 중이면 그 결과가 더 나중 상태이므로 무시한다.
   void _onEngineQueue(PlaybackQueueChange change) {
-    if (isClosed || state.queue.isEmpty) return;
-    final mine = [for (final t in state.queue) t.id]..sort();
-    final theirs = [...change.ids]..sort();
-    var same = mine.length == theirs.length;
-    for (var i = 0; same && i < mine.length; i++) {
-      same = mine[i] == theirs[i];
+    if (_pending > 0) return;
+    _applyQueue(change);
+  }
+
+  /// 엔진이 알려 준 대기열 모습(명령 결과 · 이벤트)을 그대로 상태에 비춘다. 엔진을 다시 움직이지 않는다.
+  /// 모르는 곡 id가 있으면 건드리지 않는다. 대기열이 비면 앱이 직접 비우므로 여기서는 두지 않는다.
+  void _applyQueue(PlaybackQueueChange change) {
+    if (isClosed || change.ids.isEmpty) return;
+    final byId = {..._tracks, for (final t in state.queue) t.id: t};
+    final queue = <Track>[];
+    for (final id in change.ids) {
+      final track = byId[id];
+      if (track == null) {
+        debugPrint('MuloPlayback queue ignored: unknown track $id');
+        return;
+      }
+      queue.add(track);
     }
-    var queue = state.queue;
-    var index = state.index;
-    if (same) {
-      final byId = {for (final t in state.queue) t.id: t};
-      queue = [for (final id in change.ids) byId[id]!];
-      // 우리가 곡을 옮기는 중이면 화면의 현재 곡을 따라간다 (옮기기가 끝나면 엔진이 그 곡으로 온다).
-      final shown = state.track;
-      index = _pending > 0 && shown != null && queue.contains(shown)
-          ? queue.indexOf(shown)
-          : change.index.clamp(0, queue.length - 1);
-    } else {
-      debugPrint('MuloPlayback queue event ignored: ids differ');
+    _tracks
+      ..clear()
+      ..addEntries([for (final t in queue) MapEntry(t.id, t)]);
+    final shown = state.track;
+    var index = change.index.clamp(0, queue.length - 1);
+    // 뒤에 이어질 명령이 있으면 화면의 현재 곡을 따라간다 (그 명령이 끝나면 엔진이 그 곡으로 온다).
+    if (_pending > 1 && shown != null && queue.contains(shown)) {
+      index = queue.indexOf(shown);
     }
     _emitFromEngine(
       state.copyWith(
@@ -254,8 +266,18 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
         index: index,
         shuffle: change.shuffle,
         repeat: change.repeat,
+        // 지금 곡이 바뀌었으면(듣던 곡을 뺌) 처음부터.
+        position: shown?.id == queue[index].id ? null : Duration.zero,
       ),
     );
+  }
+
+  /// 대기열을 바꾸는 명령을 엔진에 보내고, 돌려받은 대기열 모습을 상태에 비춘다.
+  void _command(Future<PlaybackQueueChange?> Function(AudioPlayback a) send) {
+    _run((a) async {
+      final result = await send(a);
+      if (result != null) _applyQueue(result);
+    });
   }
 
   /// 엔진에 보낸 것과 목록 · 반복 · extras가 같은지 (현재 곡 · 재생 · 위치는 따로 다룬다).
@@ -350,9 +372,10 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     if (current == null || state.track?.id != current.id) return; // 그새 바뀜
     try {
       if (current.uri.isEmpty) throw StateError('empty uri');
-      await a.setQueue(snapshot);
+      final result = await a.setQueue(snapshot);
       if (state.track?.id != current.id) return;
       _ready = true;
+      if (result != null) _applyQueue(result);
     } on Object catch (e) {
       debugPrint('MuloPlayback setQueue failed: $e (track=${current.id})');
       if (!isClosed && state.track?.id == current.id) {
@@ -565,21 +588,6 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     duration: t.duration,
   );
 
-  /// 대기열 편집: 화면은 바로 [next]로 바꾸고(엔진을 다시 움직이지 않고 보낸 것으로 친다),
-  /// 엔진에는 편집 명령만 보낸다. 엔진이 같은 편집을 하고 `queue` 이벤트로 순서를 확인해 준다.
-  /// 엔진이 없거나 대기열이 비면 평소처럼 상태만 바꾼다 (비면 엔진에 빈 대기열이 간다).
-  void _edit(
-    NowPlayingState next,
-    Future<void> Function(AudioPlayback a) command,
-  ) {
-    if (_audio == null || next.queue.isEmpty) {
-      emit(next);
-      return;
-    }
-    _emitFromEngine(next);
-    _run(command);
-  }
-
   /// [queue]의 [at]번 곡부터 재생을 시작한다. [shuffle]이면 엔진이 그 곡을 맨 앞에 두고 나머지를 섞는다.
   void _startQueue(List<Track> queue, int at, {required bool shuffle}) {
     _shuffleNew = shuffle;
@@ -601,13 +609,17 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     if (state.track == track) return;
     final current = state.track!;
     final rest = [...state.queue]..remove(track);
+    if (_audio != null) {
+      _tracks[track.id] = track;
+      _command((a) => a.playNext(_itemOf(track)));
+      return;
+    }
     final at = rest.indexOf(current) + 1;
-    _edit(
+    emit(
       state.copyWith(
         queue: [...rest.take(at), track, ...rest.skip(at)],
         index: at - 1,
       ),
-      (a) => a.playNext(_itemOf(track)),
     );
   }
 
@@ -616,10 +628,12 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   void addToQueue(Track track) {
     if (state.queue.isEmpty) return playQueue([track]);
     if (state.queue.contains(track)) return;
-    _edit(
-      state.copyWith(queue: [...state.queue, track]),
-      (a) => a.addToQueue(_itemOf(track)),
-    );
+    if (_audio != null) {
+      _tracks[track.id] = track;
+      _command((a) => a.addToQueue(_itemOf(track)));
+      return;
+    }
+    emit(state.copyWith(queue: [...state.queue, track]));
   }
 
   /// 곡 정보가 바뀌었을 때 대기열의 같은 곡을 새 정보로 바꾼다.
@@ -650,16 +664,21 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
       emit(state.copyWith(queue: queue, index: 0, isPlaying: false));
       return;
     }
-    final next = i < state.index
-        ? state.copyWith(queue: queue, index: state.index - 1)
-        : i > state.index
-        ? state.copyWith(queue: queue)
-        : state.copyWith(
-            queue: queue,
-            index: state.index.clamp(0, queue.length - 1),
-            position: Duration.zero,
-          );
-    _edit(next, (a) => a.removeFromQueue(track.id));
+    if (_audio != null) {
+      _command((a) => a.removeFromQueue(track.id));
+      return;
+    }
+    emit(
+      i < state.index
+          ? state.copyWith(queue: queue, index: state.index - 1)
+          : i > state.index
+          ? state.copyWith(queue: queue)
+          : state.copyWith(
+              queue: queue,
+              index: state.index.clamp(0, queue.length - 1),
+              position: Duration.zero,
+            ),
+    );
   }
 
   /// 다음 곡. 마지막 곡이면 반복 설정과 상관없이 처음으로 돌아간다 (곡 끝에서 저절로 넘어갈 때만 반복을 따른다).
@@ -755,7 +774,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     if (_audio != null) {
       // 섞기와 되돌리기는 엔진이 한다. 새 순서는 `queue` 이벤트로 돌아온다.
       final on = !state.shuffle;
-      _run((a) => a.setShuffle(on));
+      _command((a) => a.setShuffle(on));
       return;
     }
     if (!state.shuffle) {
@@ -805,7 +824,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     if (_audio != null && state.track != null) {
       // 반복은 엔진이 쥔다: 화면은 바로 바꾸고 엔진에 명령만 보낸다 (엔진이 `queue` 이벤트로 확인해 준다).
       _emitFromEngine(state.copyWith(repeat: next));
-      _run((a) => a.setRepeat(next));
+      _command((a) => a.setRepeat(next));
       return;
     }
     emit(state.copyWith(repeat: next));
@@ -819,10 +838,11 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     final current = state.track!;
     final queue = [...state.queue];
     queue.insert(to, queue.removeAt(from));
-    _edit(
-      state.copyWith(queue: queue, index: queue.indexOf(current)),
-      (a) => a.moveInQueue((from: from, to: to)),
-    );
+    if (_audio != null) {
+      _command((a) => a.moveInQueue((from: from, to: to)));
+      return;
+    }
+    emit(state.copyWith(queue: queue, index: queue.indexOf(current)));
   }
 
   /// 대기열을 모두 비운다. 재생 중인 곡도 멈추고 지워진다 (미니 플레이어는 사라진다).
