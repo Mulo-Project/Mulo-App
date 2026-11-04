@@ -35,6 +35,7 @@ object MuloEngine {
     fun obtain(context: Context): FlutterEngine {
         engine?.let { return it }
         val app = context.applicationContext
+        MuloLog.init(app)
         val created = FlutterEngine(app)
         GeneratedPluginRegistrant.registerWith(created)
         // 받기 알림은 화면이 아니라 엔진에 묶는다 (화면이 닫혀도 버튼이 Dart로 전달된다).

@@ -26,6 +26,9 @@ void main() {
       watchEnded: WatchAudioEnded(engine),
       watchPlaying: WatchAudioPlaying(engine),
       watchOpenPlayer: WatchOpenPlayer(engine),
+      watchQueue: WatchAudioQueue(engine),
+      setShuffle: SetAudioShuffle(engine),
+      setRepeat: SetAudioRepeat(engine),
       setQueue: SetAudioQueue(engine),
       skipTo: SkipAudioTo(engine),
       play: PlayAudio(engine),
@@ -223,14 +226,17 @@ void main() {
     expect(cubit.state.position, Duration.zero);
   });
 
-  test('반복 모드는 대기열과 함께 엔진에 전해진다', () async {
+  test('반복 모드는 엔진에 명령으로 보내고 듣던 곡은 건드리지 않는다', () async {
     cubit.playQueue(tracks);
     await settle();
+    final before = engine.calls.where((c) => c.startsWith('queue')).length;
     cubit.cycleRepeat();
     await settle();
-    expect(engine.snapshot!.repeat, PlayerRepeatMode.all);
-    // 듣던 곡은 그대로: 위치를 건드리지 않는다.
-    expect(engine.snapshot!.position, isNull);
+    expect(cubit.state.repeat, PlayerRepeatMode.all);
+    expect(engine.calls, contains('repeat:all'));
+    expect(engine.repeat, PlayerRepeatMode.all);
+    // 대기열을 다시 보내지 않는다.
+    expect(engine.calls.where((c) => c.startsWith('queue')).length, before);
   });
 
   test('다음에 재생은 듣던 곡의 위치를 건드리지 않고 목록만 보낸다', () async {
@@ -260,34 +266,74 @@ void main() {
     expect(engine.snapshot!.position, isNull);
   });
 
-  test('셔플 여부와 원래 순서는 extras로 엔진에 맡긴다', () async {
+  test('셔플은 엔진에 명령으로 맡기고, 엔진이 알려 준 순서를 비춘다', () async {
     cubit.playQueue(tracks);
+    await settle();
     cubit.toggleShuffle();
     await settle();
-    final extras = jsonDecode(engine.snapshot!.extras) as Map;
-    expect(extras['shuffle'], isTrue);
-    expect(extras['original'], tracks.map((t) => t.id));
+    expect(engine.calls, contains('shuffle:true'));
+    expect(cubit.state.shuffle, isTrue);
+    // 가짜 엔진은 지금 곡을 맨 앞에 두고 나머지를 뒤집는다.
+    expect(cubit.state.queue.map((t) => t.id), [
+      tracks[0].id,
+      tracks[2].id,
+      tracks[1].id,
+    ]);
+    expect(cubit.state.track, tracks[0]);
+    cubit.toggleShuffle();
+    await settle();
+    expect(engine.calls, contains('shuffle:false'));
+    expect(cubit.state.shuffle, isFalse);
+    expect(cubit.state.queue, tracks);
   });
 
-  test('셔플 중 엔진이 한 바퀴를 돌아 처음으로 오면 순서를 새로 섞는다', () async {
-    cubit.playQueue(tracks);
-    cubit.toggleShuffle(currentFirst: true);
+  test('셔플로 새 대기열을 시작하면 엔진이 섞고 앱은 그 순서를 비춘다', () async {
+    cubit.playShuffled(tracks);
     await settle();
-    final order = cubit.state.queue.map((t) => t.id).toList();
-    engine.emitTrack(1);
-    await settle();
-    engine.emitTrack(2);
-    await settle();
-    engine.emitTrack(0);
-    await settle();
+    expect(engine.snapshot!.index, 0);
+    expect(cubit.state.shuffle, isTrue);
     expect(cubit.state.index, 0);
-    // 지금 곡은 그대로 맨 앞이고, 엔진에도 새 순서가 전해졌다.
-    expect(cubit.state.track!.id, order.first);
-    expect(engine.snapshot!.current!.id, order.first);
     expect(
-      engine.snapshot!.items.map((i) => i.id),
       cubit.state.queue.map((t) => t.id),
+      engine.snapshot!.items.map((i) => i.id),
     );
+  });
+
+  test('엔진이 스스로 순서를 바꾸면(한 바퀴 뒤 재셔플) 앱은 대기열을 다시 보내지 않고 따라간다', () async {
+    cubit.playQueue(tracks);
+    await settle();
+    final calls = [...engine.calls];
+    engine.emitQueueChange(
+      PlaybackQueueChange(
+        ids: [tracks[0].id, tracks[2].id, tracks[1].id],
+        index: 0,
+        shuffle: true,
+        repeat: PlayerRepeatMode.off,
+      ),
+    );
+    await settle();
+    expect(cubit.state.queue.map((t) => t.id), [
+      tracks[0].id,
+      tracks[2].id,
+      tracks[1].id,
+    ]);
+    expect(cubit.state.shuffle, isTrue);
+    expect(engine.calls, calls);
+  });
+
+  test('곡 구성이 다른 순서 이벤트는 대기열을 건드리지 않는다', () async {
+    cubit.playQueue(tracks);
+    await settle();
+    engine.emitQueueChange(
+      PlaybackQueueChange(
+        ids: [tracks[0].id],
+        index: 0,
+        shuffle: false,
+        repeat: PlayerRepeatMode.off,
+      ),
+    );
+    await settle();
+    expect(cubit.state.queue, tracks);
   });
 
   test('곡을 못 불러오면 재생을 멈춘다', () async {
@@ -355,18 +401,15 @@ void main() {
       expect(engine.calls, isEmpty);
     });
 
-    test('셔플과 원래 순서도 되살려 셔플을 끄면 원래 순서로 돌아간다', () async {
-      final original = tracks.reversed.toList();
+    test('셔플 여부도 되살리고 끄는 것은 엔진에 맡긴다', () async {
       engine.restoreSnapshot = fromEngine(
-        extras: jsonEncode({
-          'shuffle': true,
-          'original': [for (final t in original) t.id],
-        }),
+        extras: jsonEncode({'shuffle': true}),
       );
       await cubit.restore((id) => tracks.where((t) => t.id == id).firstOrNull);
       expect(cubit.state.shuffle, isTrue);
       cubit.toggleShuffle();
-      expect(cubit.state.queue, original);
+      await settle();
+      expect(engine.calls, contains('shuffle:false'));
     });
 
     test('보관함에서 사라진 곡은 건너뛰고 엔진의 대기열도 맞춘다', () async {

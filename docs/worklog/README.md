@@ -120,3 +120,4 @@
 | 2026-10-26 | [Android yt-dlp 업데이트 지우기 (번들 버전으로 복귀)](2026-10-26-ytdlp-revert-bundled.md) | 진행 중 (PR 대기) |
 | 2026-10-28 | [구간(A-B) 반복 재생](2026-10-28-player-ab-repeat.md) | 완료 (PR 대기) |
 | 2026-10-28 | [불러오는 폴더 시트 잠금 · 재생목록 담기](2026-10-28-import-sheet-lock-playlist.md) | 완료 (PR 대기) |
+| 2026-11-04 | [셔플 · 반복을 네이티브가 쥐기 (일원화 1단계)](2026-11-04-native-owns-shuffle-repeat.md) | 진행 중 (확인 대기) |

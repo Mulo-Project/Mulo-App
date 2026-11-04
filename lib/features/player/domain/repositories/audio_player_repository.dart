@@ -1,4 +1,5 @@
 import '../entities/playback_snapshot.dart';
+import '../entities/player_repeat_mode.dart';
 
 /// 오디오 재생 엔진. 앱이 보내 준 대기열 스냅샷을 순서대로 재생하고 곡 넘김은 엔진이 한다.
 abstract interface class AudioPlayerRepository {
@@ -8,6 +9,10 @@ abstract interface class AudioPlayerRepository {
   /// 엔진이 스스로 다른 곡으로 넘어갔을 때 (곡 끝, 알림 · 이어폰의 이전 · 다음).
   /// 앱이 시킨 이동([setQueue] · [skipTo])에는 보내지 않는다.
   Stream<PlaybackTrackChange> watchTrackChange();
+
+  /// 엔진이 대기열의 순서 · 셔플 · 반복을 바꿨을 때 (셔플 켜기와 끄기, 한 바퀴 뒤 재셔플, 알림 셔플 버튼).
+  /// 대기열 순서의 원본은 엔진이고 앱은 이 이벤트를 비춘다.
+  Stream<PlaybackQueueChange> watchQueue();
 
   /// 반복 없이 대기열 끝까지 재생했을 때.
   Stream<void> watchEnded();
@@ -22,6 +27,13 @@ abstract interface class AudioPlayerRepository {
   /// 대기열을 통째로 바꾼다. 현재 곡이 같으면 재생을 끊지 않는다.
   /// 현재 곡을 못 불러오면 던진다.
   Future<void> setQueue(PlaybackSnapshot snapshot);
+
+  /// 셔플을 켜고 끈다. 엔진이 지금 곡을 맨 앞에 두고 나머지를 섞어 [watchQueue]로 알린다.
+  /// 끄면 섞기 전 순서로 되돌린다. 듣던 곡은 끊기지 않는다.
+  Future<void> setShuffle(bool on);
+
+  /// 반복 모드를 바꾼다.
+  Future<void> setRepeat(PlayerRepeatMode mode);
 
   /// 대기열은 그대로 두고 [index]번 곡으로 처음부터 옮긴다.
   Future<void> skipTo(int index);

@@ -26,7 +26,22 @@ class NativeAudioPlayerRepository implements AudioPlayerRepository {
       );
 
   @override
-  Stream<void> watchEnded() =>
+  Stream<PlaybackQueueChange> watchQueue() => _channel.events
+      .where((e) => e['type'] == 'queue')
+      .map(
+        (e) => PlaybackQueueChange(
+          ids: [for (final id in (e['ids'] as List? ?? const [])) '$id'],
+          index: (e['index'] as num?)?.toInt() ?? 0,
+          shuffle: e['shuffle'] == true,
+          repeat: PlayerRepeatMode.values.firstWhere(
+            (m) => m.name == e['repeat'],
+            orElse: () => PlayerRepeatMode.off,
+          ),
+        ),
+      );
+
+  @override
+  Stream<void> watchEnded() =
       _channel.events.where((e) => e['type'] == 'ended');
 
   @override
@@ -59,8 +74,17 @@ class NativeAudioPlayerRepository implements AudioPlayerRepository {
     'playing': snapshot.playing,
     'repeat': snapshot.repeat.name,
     'positionMs': snapshot.position?.inMilliseconds,
-    'extras': snapshot.extras,
+    // 비어 있으면 보내지 않는다: 셔플 상태는 네이티브가 쥐고 있는 것을 그대로 둔다.
+    if (snapshot.extras.isNotEmpty) 'extras': snapshot.extras,
+    if (snapshot.shuffleNew) 'shuffleNew': true,
   });
+
+  @override
+  Future<void> setShuffle(bool on) => _channel.setShuffle(on);
+
+  @override
+  Future<void> setRepeat(PlayerRepeatMode mode) =>
+      _channel.setRepeat(mode.name);
 
   @override
   Future<void> skipTo(int index) => _channel.skipTo(index);

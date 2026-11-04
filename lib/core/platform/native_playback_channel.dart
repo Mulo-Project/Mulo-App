@@ -27,6 +27,12 @@ class NativePlaybackChannel {
   Future<void> setQueue(Map<String, Object?> snapshot) =>
       _method.invokeMethod('setQueue', snapshot);
 
+  /// 셔플을 켜고 끈다. 섞는 일은 네이티브가 하고 새 순서는 `queue` 이벤트로 온다.
+  Future<void> setShuffle(bool on) => _method.invokeMethod('setShuffle', on);
+
+  /// 반복 모드(`off` `all` `one`)를 바꾼다.
+  Future<void> setRepeat(String mode) => _method.invokeMethod('setRepeat', mode);
+
   /// 대기열은 그대로 두고 [index]번 곡으로 처음부터 옮긴다.
   Future<void> skipTo(int index) => _method.invokeMethod('skipTo', index);
 
