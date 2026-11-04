@@ -28,6 +28,7 @@ import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
+import java.util.concurrent.Executors
 
 /**
  * 재생의 주인: 소리를 내는 ExoPlayer, 미디어 세션, 알림 서비스 연결을 프로세스에 하나씩 쥔다.
@@ -519,14 +520,37 @@ object PlaybackHub {
         session?.setCustomLayout(PlaybackButtons.layout(info, shuffleOn, favoriteOn(info)))
     }
 
+    /** 좋아요 DB를 읽는 전용 스레드: 곡을 옮기는 순간 메인 스레드가 SQLite를 열며 막히지 않게 한다. */
+    private val favoriteIo = Executors.newSingleThreadExecutor()
+
+    /** 마지막으로 DB에서 읽은 좋아요 값 (곡 id → 값). 읽는 동안 먼저 보여 줄 값이다. */
+    private val favoriteCache = HashMap<String, Boolean>()
+
     /** 좋아요를 Dart가 처리할 수 있는지: Dart가 붙어 있고, 앱이 보낸 내용이 지금 재생 중인 곡의 것일 때. */
     private fun dartHandlesFavorite() = sink != null && !restoredFromStore && sessionPlayer.infoMatchesCurrent()
 
-    /** 알림의 좋아요 모양. Dart가 못 맡으면 DB를 직접 읽고, 읽지 못하면 앱이 마지막으로 보낸 값을 쓴다. */
+    /**
+     * 알림의 좋아요 모양. Dart가 못 맡으면 DB를 읽는다. DB는 백그라운드에서 읽고, 그 사이에는
+     * 지난번에 읽은 값(없으면 앱이 보낸 값이 이 곡의 것일 때만 그 값, 아니면 꺼짐)을 보여 준다.
+     */
     private fun favoriteOn(info: SessionInfo): Boolean {
         if (dartHandlesFavorite()) return info.favorite
         val id = exo.currentMediaItem?.mediaId ?: return info.favorite
-        return FavoriteStore.isFavorite(context, id) ?: info.favorite
+        loadFavoriteAsync(id)
+        return favoriteCache[id] ?: (info.trackId == id && info.favorite)
+    }
+
+    private fun loadFavoriteAsync(id: String) {
+        favoriteIo.execute {
+            val value = FavoriteStore.isFavorite(context, id) ?: return@execute
+            main.post {
+                if (favoriteCache.put(id, value) == value) return@post
+                // 읽는 사이 곡이 바뀌었으면 건너뛴다 (그 곡의 읽기가 따로 있다).
+                if (exo.currentMediaItem?.mediaId == id && !dartHandlesFavorite()) {
+                    sessionPlayer.info?.let { session?.setCustomLayout(PlaybackButtons.layout(it, shuffleOn, value)) }
+                }
+            }
+        }
     }
 
     /** 좋아요 버튼: Dart가 있으면 Dart에 맡기고(화면의 목록이 바로 바뀌게), 없으면 DB를 직접 바꾼다. */
@@ -536,7 +560,13 @@ object PlaybackHub {
             return
         }
         val id = exo.currentMediaItem?.mediaId ?: return
-        if (FavoriteStore.toggle(context, id) != null) refreshLayout()
+        favoriteIo.execute {
+            val now = FavoriteStore.toggle(context, id) ?: return@execute
+            main.post {
+                favoriteCache[id] = now
+                refreshLayout()
+            }
+        }
     }
 
     /**
