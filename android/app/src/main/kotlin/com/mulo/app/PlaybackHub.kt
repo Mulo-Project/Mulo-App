@@ -236,7 +236,7 @@ object PlaybackHub {
         var mediaItems = items.map { QueueMapping.mediaItemOf(it, artById) }
         if (shuffleNew) {
             // 새 대기열을 셔플로 시작: 고른 곡을 맨 앞에 두고 나머지를 섞으며 원래 순서를 extras에 적는다.
-            val shuffled = QueueShuffle.toggle(mediaItems, index, "")
+            val shuffled = QueueShuffle.toggle(mediaItems, index, "", currentFirst = true)
             mediaItems = shuffled.before + mediaItems[index] + shuffled.after
             index = shuffled.before.size
             extras = shuffled.extras
