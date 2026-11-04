@@ -4,41 +4,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../library/domain/entities/hidden_track.dart';
 import '../../../library/presentation/bloc/hidden_records_cubit.dart';
 import '../../../library/presentation/bloc/library_cubit.dart';
+import '../../../library/presentation/widgets/hidden_records_sheet.dart';
 import 'settings_common.dart';
 
-/// 데이터 묶음: 폴더를 빼서 숨겨 둔 곡의 기록 정리.
+/// 데이터 묶음: 폴더를 빼서 숨겨 둔 곡의 기록 정리 (눌러서 목록 시트를 연다).
 class SettingsDataSection extends StatelessWidget {
   const SettingsDataSection({super.key});
-
-  Future<void> _purge(BuildContext context) async {
-    final l10n = context.l10n;
-    final cubit = context.read<HiddenRecordsCubit>();
-    final messenger = ScaffoldMessenger.of(context);
-    // 설정 탭이 살아 있는 동안 폴더를 뺐을 수 있으니 누를 때 다시 센다.
-    await cubit.load();
-    final count = cubit.state;
-    if (count == 0) {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l10n.settingsPurgeHiddenNone)),
-      );
-      return;
-    }
-    if (!context.mounted) return;
-    final ok = await showConfirmDialog(
-      context,
-      title: l10n.settingsPurgeHiddenTitle,
-      body: l10n.settingsPurgeHiddenBody(count),
-      confirmLabel: l10n.settingsPurgeHidden,
-      cancelLabel: l10n.actionCancel,
-    );
-    if (!ok) return;
-    final n = await cubit.purge();
-    messenger.showSnackBar(
-      SnackBar(content: Text(l10n.settingsPurgeHiddenDone(n))),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,17 +23,17 @@ class SettingsDataSection extends StatelessWidget {
       child: BlocListener<LibraryCubit, LibraryState>(
         listenWhen: (a, b) => a.revision != b.revision,
         listener: (context, _) => context.read<HiddenRecordsCubit>().load(),
-        child: BlocBuilder<HiddenRecordsCubit, int>(
-          builder: (context, count) => SectionCard(
+        child: BlocBuilder<HiddenRecordsCubit, List<HiddenTrack>>(
+          builder: (context, hidden) => SectionCard(
             title: l10n.settingsData,
             children: [
               SettingRow(
                 title: l10n.settingsPurgeHidden,
-                description: count == 0
+                description: hidden.isEmpty
                     ? l10n.settingsPurgeHiddenNone
-                    : l10n.settingsPurgeHiddenDesc(count),
+                    : l10n.settingsPurgeHiddenDesc(hidden.length),
                 trailing: const SettingsChevron(),
-                onTap: () => _purge(context),
+                onTap: () => showHiddenRecordsSheet(context),
               ),
             ],
           ),

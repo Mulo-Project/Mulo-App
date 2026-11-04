@@ -1,5 +1,6 @@
 import '../../../../core/usecase/usecase.dart';
 import '../entities/loaded_folder.dart';
+import '../entities/hidden_track.dart';
 import '../repositories/library_repository.dart';
 
 /// 불러오는 폴더 목록과 폴더별 곡 수 (기본 저장 위치가 맨 위).
@@ -112,24 +113,24 @@ class RemoveSaveLocation implements UseCase<void, String> {
   }
 }
 
-/// 숨긴 곡(폴더를 빼서 기록만 남은 곡)의 수.
-class CountHiddenTracks implements UseCase<int, NoParams> {
-  const CountHiddenTracks(this._library);
+/// 숨긴 곡(폴더를 빼서 기록만 남은 곡) 목록.
+class ListHiddenTracks implements UseCase<List<HiddenTrack>, NoParams> {
+  const ListHiddenTracks(this._library);
 
   final LibraryRepository _library;
 
   @override
-  Future<int> call(NoParams _) => _library.hiddenCount();
+  Future<List<HiddenTrack>> call(NoParams _) => _library.hiddenTracks();
 }
 
-/// 숨긴 곡의 남은 기록을 모두 지운다. 지운 곡 수를 돌려준다.
-class PurgeHiddenTracks implements UseCase<int, NoParams> {
+/// 숨긴 곡의 남은 기록을 지운다. 곡 id를 주면 그 곡들만, null이면 모두. 지운 곡 수를 돌려준다.
+class PurgeHiddenTracks implements UseCase<int, Set<String>?> {
   const PurgeHiddenTracks(this._library);
 
   final LibraryRepository _library;
 
   @override
-  Future<int> call(NoParams _) => _library.purgeHidden();
+  Future<int> call(Set<String>? ids) => _library.purgeHidden(ids: ids);
 }
 
 /// 폴더를 목록에서 빼고, 그 폴더에서 불러온 곡을 보관함에서 숨긴다 (음악 파일은 그대로).

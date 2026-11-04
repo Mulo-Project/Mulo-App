@@ -116,4 +116,34 @@ void main() {
     expect((await repo.watchTracks().first).map((t) => t.id), ['b']);
     expect(await repo.purgeHidden(), 0);
   });
+
+  test('hiddenTracks는 숨긴 곡만 돌려주고 purgeHidden(ids)는 고른 숨긴 곡만 지운다', () async {
+    await repo.addTracks([
+      _t('a', 'u1', 1),
+      _t('b', 'u2', 2),
+      _t('c', 'u3', 3),
+    ]);
+    for (final id in ['a', 'b', 'c']) {
+      await db
+          .into(db.plays)
+          .insert(PlaysCompanion.insert(trackId: id, playedAt: DateTime(2026)));
+    }
+    await repo.hide('a');
+    await repo.hide('b');
+    final hidden = await repo.hiddenTracks();
+    expect(hidden.map((t) => t.track.id).toSet(), {'a', 'b'});
+    expect(hidden.first.playCount, 1);
+    expect(hidden.first.lastPlayedAt, DateTime(2026));
+    expect(hidden.first.hasCover, isFalse);
+    // 보이는 곡(c)은 ids에 있어도 건드리지 않고, 빈 집합은 아무것도 지우지 않는다.
+    expect(await repo.purgeHidden(ids: {}), 0);
+    expect(await repo.purgeHidden(ids: {'a', 'c'}), 1);
+    expect((await repo.hiddenTracks()).map((t) => t.track.id), ['b']);
+    expect(
+      (await db.select(db.plays).get()).map((p) => p.trackId).toSet(),
+      {'b', 'c'},
+    );
+    expect(await repo.purgeHidden(), 1);
+    expect(await repo.hiddenTracks(), isEmpty);
+  });
 }

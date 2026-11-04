@@ -669,6 +669,40 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String hiddenRecordsHint(int count) {
+    return '폴더를 빼서 숨겨 둔 $count곡이에요. 기록을 지울 곡을 골라요.';
+  }
+
+  @override
+  String get hiddenRecordsPurgeAll => '모두 지우기';
+
+  @override
+  String hiddenRecordsPurgeOneTitle(String title) {
+    return '\"$title\" 기록을 지울까요?';
+  }
+
+  @override
+  String hiddenRecordsPlays(int count) {
+    return '$count회 재생';
+  }
+
+  @override
+  String hiddenRecordsLastPlayed(String date) {
+    return '마지막 $date';
+  }
+
+  @override
+  String hiddenRecordsPlaylists(int count) {
+    return '재생목록 $count개';
+  }
+
+  @override
+  String get hiddenRecordsCover => '커버';
+
+  @override
+  String get hiddenRecordsLyrics => '가사 사본';
+
+  @override
   String get settingsAbout => '정보';
 
   @override
