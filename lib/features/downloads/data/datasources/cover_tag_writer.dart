@@ -37,7 +37,9 @@ class CoverTagWriter {
     String? lyrics,
     int? color,
   }) async {
-    final ext = extension.toLowerCase();
+    // 유튜브 원본 오디오는 webm(Opus)이다: ffmpeg가 ogg(.opus)로 감싸 태그를 쓰고, 저장도 .opus로 한다.
+    final raw = extension.toLowerCase();
+    final ext = raw == 'webm' || raw == 'weba' ? 'opus' : raw;
     final viaFfmpeg =
         ffmpeg != null && FfmpegTagWriter.extensions.contains(ext);
     if (!extensions.contains(ext) && !viaFfmpeg) return false;

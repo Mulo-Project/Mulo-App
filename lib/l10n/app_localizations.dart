@@ -260,6 +260,24 @@ abstract class AppLocalizations {
   /// **'링크를 붙여 넣거나 검색어를 입력하세요.\n왼쪽 아이콘으로 찾을 사이트를 고를 수 있어요.'**
   String get searchEmptyBody;
 
+  /// No description provided for @searchEngineNeededTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'다운로드 엔진이 필요해요'**
+  String get searchEngineNeededTitle;
+
+  /// No description provided for @searchEngineNeededBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'yt-dlp가 설치되어 있지 않아 검색할 수 없어요.\n설치하면 바로 검색하고 받을 수 있어요.'**
+  String get searchEngineNeededBody;
+
+  /// No description provided for @searchEngineInstallFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'설치하지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.'**
+  String get searchEngineInstallFailed;
+
   /// No description provided for @searchNotReadyTitle.
   ///
   /// In ko, this message translates to:

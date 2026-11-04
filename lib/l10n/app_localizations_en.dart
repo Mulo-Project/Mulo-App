@@ -94,6 +94,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Paste a link or type keywords.\nPick the site to search with the icon on the left.';
 
   @override
+  String get searchEngineNeededTitle => 'Download engine required';
+
+  @override
+  String get searchEngineNeededBody =>
+      'yt-dlp isn\'t installed, so search isn\'t available.\nInstall it to search and download right away.';
+
+  @override
+  String get searchEngineInstallFailed =>
+      'Couldn\'t install it. Check your connection and try again.';
+
+  @override
   String get searchNotReadyTitle => 'No engine available';
 
   @override
