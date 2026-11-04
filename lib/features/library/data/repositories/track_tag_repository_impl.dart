@@ -39,9 +39,12 @@ class TrackTagRepositoryImpl implements TrackTagRepository {
           album: '',
           genre: '',
           lyrics: lyrics,
-          // 가사는 사용자가 직접 저장하므로 쓸 권한이 없으면 동의를 구한다.
-          interactive: true,
+          // 쓰기 동의는 가사 편집 화면에 들어갈 때 이미 구했다 ([ensureWriteAccess]).
         );
+
+  @override
+  Future<bool> ensureWriteAccess(Track track) =>
+      _source.ensureWriteAccess(track.uri);
 }
 
 class FileTagRepositoryImpl implements FileTagRepository {

@@ -25,12 +25,14 @@ class LyricsCubit extends Cubit<LyricsState> {
   LyricsCubit({
     required this._load,
     required this._save,
+    required this._ensureAccess,
     required this._clear,
     required this._pickFile,
   }) : super(const LyricsState());
 
   final LoadLyrics _load;
   final SaveLyrics _save;
+  final EnsureLyricsFileAccess _ensureAccess;
   final ClearLyrics _clear;
   final PickLyricsFile _pickFile;
 
@@ -46,6 +48,9 @@ class LyricsCubit extends Cubit<LyricsState> {
   /// 저장된 가사(없으면 음원 옆 `.lrc`)의 원문. 편집 화면의 처음 글.
   Future<String> currentText(Track track) async =>
       (await _load(LoadLyricsParams(track.id, track.uri)))?.raw ?? '';
+
+  /// 가사 편집 화면에 들어갈 때 곡 파일에 쓸 동의를 먼저 구한다 (필요한 곡만 시스템 창이 뜬다).
+  Future<bool> askFileAccess(Track track) => _ensureAccess(track);
 
   /// 가사 파일을 골라 글을 읽어 온다. 취소하면 null.
   Future<String?> pickFile() => _pickFile(const NoParams());

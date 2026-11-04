@@ -18,6 +18,8 @@ Future<void> startLyricsSync(BuildContext context, Track track) async {
     messenger.showSnackBar(SnackBar(content: Text(l10n.lyricsSyncEmpty)));
     return;
   }
+  await cubit.askFileAccess(track);
+  if (!context.mounted) return;
   final synced = await showLyricsSync(context, track, current);
   if (synced == null) return;
   final outcome = await cubit.save(track, synced);

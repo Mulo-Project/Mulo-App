@@ -74,6 +74,16 @@ class SaveLyrics implements UseCase<SavedLyrics, SaveLyricsParams> {
   }
 }
 
+/// 가사 편집 화면에 들어갈 때 곡 파일에 쓸 동의를 먼저 구한다. 거절해도 앱에는 저장된다.
+class EnsureLyricsFileAccess implements UseCase<bool, Track> {
+  const EnsureLyricsFileAccess(this._tags);
+
+  final TrackTagRepository _tags;
+
+  @override
+  Future<bool> call(Track track) => _tags.ensureWriteAccess(track);
+}
+
 class ClearLyrics implements UseCase<void, String> {
   const ClearLyrics(this._repo);
 

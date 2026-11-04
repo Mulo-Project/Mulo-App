@@ -86,17 +86,6 @@ class TrackTagSource {
       if (!isContent) {
         return await embed(File(uri)) ? TagWriteResult.written : fail;
       }
-      // 사용자가 직접 한 저장이면 파일을 고치기 전에 먼저 쓰기 동의를 받는다 (다 만든 뒤에 묻지 않는다).
-      if (interactive && viaFfmpeg) {
-        final canWrite =
-            await _media.invokeMethod<bool>('ensureWrite', {
-              'uri': uri,
-              'ask': true,
-            }) ??
-            false;
-        debugPrint('MuloTag ensureWrite=$canWrite');
-        if (!canWrite) return denied;
-      }
       final temp = await _copy.invokeMethod<String>('copyToCache', uri);
       if (temp == null) return denied;
       try {
@@ -123,6 +112,33 @@ class TrackTagSource {
     } on Object catch (e) {
       debugPrint('MuloTag write error: $e');
       return viaFfmpeg ? TagWriteResult.failed : TagWriteResult.unsupported;
+    }
+  }
+
+  /// 곡 파일에 쓸 수 있는지 확인하고, 못 쓰면 시스템 동의 창을 띄운다 (가사 편집 화면에 들어갈 때).
+  /// 파일을 쓰지 않는 곡(content:// 아님 · ffmpeg 없음 · 다른 형식)은 물을 것이 없어 true.
+  Future<bool> ensureWriteAccess(String uri) async {
+    try {
+      if (!uri.startsWith('content://')) return true;
+      final ext = _extensionOfMime(
+        await _media.invokeMethod<String>('mimeType', {'uri': uri}),
+      );
+      final viaFfmpeg =
+          ext != null &&
+          FfmpegTagWriter.extensions.contains(ext) &&
+          (_ffmpegAvailable ??= await _ffmpeg.available());
+      if (!viaFfmpeg) return true;
+      final ok =
+          await _media.invokeMethod<bool>('ensureWrite', {
+            'uri': uri,
+            'ask': true,
+          }) ??
+          false;
+      debugPrint('MuloTag ensureWrite=$ok');
+      return ok;
+    } on Object catch (e) {
+      debugPrint('MuloTag ensureWrite error: $e');
+      return true;
     }
   }
 

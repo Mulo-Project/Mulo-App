@@ -23,6 +23,9 @@ class _Tags implements TrackTagRepository {
   @override
   String? get lastFailure => null;
 
+  @override
+  Future<bool> ensureWriteAccess(Track track) async => true;
+
   final written = <String>[];
   String? lastTitle;
   TagWriteResult result = TagWriteResult.written;

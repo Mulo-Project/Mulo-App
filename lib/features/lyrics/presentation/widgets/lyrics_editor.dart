@@ -14,6 +14,8 @@ import 'lyrics_edit_scaffold.dart';
 /// 저장하면 곡의 가사로 저장한다(비우면 지움). 화면이 닫히고 가사가 바뀌므로 따로 안내하지 않는다.
 Future<void> showLyricsEditor(BuildContext context, Track track) async {
   final cubit = context.read<LyricsCubit>();
+  await cubit.askFileAccess(track);
+  if (!context.mounted) return;
   final text = await Navigator.of(context, rootNavigator: true).push<String>(
     MaterialPageRoute(
       builder: (_) => LyricsEditorPage(
