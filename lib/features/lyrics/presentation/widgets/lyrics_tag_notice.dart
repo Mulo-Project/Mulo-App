@@ -9,7 +9,12 @@ import '../../domain/usecases/lyrics_usecases.dart';
 /// 자세한 이유는 debug 빌드에서만 문구에 붙이고 로그(`MuloTag`)에도 남긴다.
 /// 쓰려 하지 않았거나(null) 썼으면 아무것도 보이지 않는다.
 void showLyricsTagNotice(BuildContext context, LyricsTagOutcome? outcome) {
-  if (outcome == null || outcome.result == TagWriteResult.written) return;
+  // 파일에 쓰지 않는 곡(unsupported)과 쓴 곡은 알릴 것이 없다. 쓰려다 못 쓴 곡(denied · failed)만 알린다.
+  if (outcome == null ||
+      outcome.result == TagWriteResult.written ||
+      outcome.result == TagWriteResult.unsupported) {
+    return;
+  }
   final detail = outcome.detail;
   final reason = detail == null || detail.isEmpty
       ? outcome.result.name

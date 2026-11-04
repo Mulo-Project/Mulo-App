@@ -991,7 +991,7 @@ Future<void> setUpTestDependencies({
       () => downloadSettings ?? MemoryDownloadSettings(),
     )
     ..registerLazySingleton<EngineManager>(
-      () => engineManager ?? FakeEngineManager(),
+      () => engineManager ?? FakeEngineManager(installed: true),
     )
     ..registerLazySingleton<DownloaderEngine>(
       () => engine ?? FakeDownloaderEngine(),
