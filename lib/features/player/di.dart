@@ -4,6 +4,7 @@ import '../../core/platform/native_playback_channel.dart';
 import 'data/datasources/audio_output_source.dart';
 import 'data/repositories/native_audio_player_repository.dart';
 import 'data/repositories/platform_audio_output_repository.dart';
+import 'data/repositories/native_stop_log_repository.dart';
 import 'data/repositories/prefs_mix_with_others_repository.dart';
 import 'data/repositories/prefs_output_behavior_repository.dart';
 import 'data/repositories/prefs_player_style_repository.dart';
@@ -14,6 +15,9 @@ import 'domain/usecases/audio_playback_usecases.dart';
 import 'domain/repositories/mix_with_others_repository.dart';
 import 'domain/repositories/output_behavior_repository.dart';
 import 'domain/repositories/player_style_repository.dart';
+import 'domain/repositories/stop_log_repository.dart';
+import 'domain/usecases/stop_log_usecases.dart';
+import 'presentation/bloc/stop_log_cubit.dart';
 import 'domain/repositories/playback_speed_repository.dart';
 import 'domain/usecases/playback_speed_usecases.dart';
 import 'domain/usecases/get_audio_output.dart';
@@ -59,6 +63,12 @@ void registerPlayer(GetIt sl) {
       ),
     )
     ..registerFactory(() => NowPlayingCubit(audio: sl()))
+    ..registerLazySingleton<StopLogRepository>(
+      () => NativeStopLogRepository(sl()),
+    )
+    ..registerFactory(
+      () => StopLogCubit(getLog: GetStopLog(sl()), clearLog: ClearStopLog(sl())),
+    )
     ..registerLazySingleton(AudioOutputSource.new)
     ..registerLazySingleton<AudioOutputRepository>(
       () => PlatformAudioOutputRepository(sl()),

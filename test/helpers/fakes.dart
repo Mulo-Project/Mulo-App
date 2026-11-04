@@ -54,6 +54,7 @@ import 'package:music_download_play_app/features/player/domain/repositories/play
 import 'package:music_download_play_app/features/player/domain/entities/output_behavior.dart';
 import 'package:music_download_play_app/features/player/domain/repositories/output_behavior_repository.dart';
 import 'package:music_download_play_app/features/player/domain/repositories/player_style_repository.dart';
+import 'package:music_download_play_app/features/player/domain/repositories/stop_log_repository.dart';
 import 'package:music_download_play_app/features/playlists/di.dart';
 import 'package:music_download_play_app/features/playlists/domain/entities/playlist.dart';
 import 'package:music_download_play_app/features/playlists/domain/repositories/playlist_repository.dart';
@@ -482,6 +483,16 @@ class MemoryPlaybackSpeedRepository implements PlaybackSpeedRepository {
 
   @override
   Future<void> apply(double v) async {}
+}
+
+class MemoryStopLogRepository implements StopLogRepository {
+  List<String> lines = [];
+
+  @override
+  Future<List<String>> read() async => List.of(lines);
+
+  @override
+  Future<void> clear() async => lines = [];
 }
 
 class MemoryOutputBehaviorRepository implements OutputBehaviorRepository {
@@ -939,6 +950,7 @@ Future<void> setUpTestDependencies({
     ..registerLazySingleton<PlaybackSpeedRepository>(
       MemoryPlaybackSpeedRepository.new,
     )
+    ..registerLazySingleton<StopLogRepository>(MemoryStopLogRepository.new)
     ..registerLazySingleton<OutputBehaviorRepository>(
       MemoryOutputBehaviorRepository.new,
     )

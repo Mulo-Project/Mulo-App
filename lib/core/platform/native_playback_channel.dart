@@ -98,6 +98,12 @@ class NativePlaybackChannel {
     'resumeWithoutNotification': resumeWithoutNotification,
   });
 
+  /// 재생이 멈춘 이유 기록 (오래된 것부터, 최대 20줄). 진단용.
+  Future<List<String>> stopLog() async =>
+      (await _method.invokeListMethod<String>('stopLog')) ?? const [];
+
+  Future<void> clearStopLog() => _method.invokeMethod('clearStopLog');
+
   /// 알림 · 잠금화면에 보여 줄 내용. null이면 알림을 치운다 (재생은 그대로).
   Future<void> setSession(Map<String, Object?>? session) =>
       _method.invokeMethod('setSession', session);
