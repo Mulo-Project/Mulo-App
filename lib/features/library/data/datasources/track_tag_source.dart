@@ -86,6 +86,17 @@ class TrackTagSource {
       if (!isContent) {
         return await embed(File(uri)) ? TagWriteResult.written : fail;
       }
+      // 사용자가 직접 한 저장이면 파일을 고치기 전에 먼저 쓰기 동의를 받는다 (다 만든 뒤에 묻지 않는다).
+      if (interactive && viaFfmpeg) {
+        final canWrite =
+            await _media.invokeMethod<bool>('ensureWrite', {
+              'uri': uri,
+              'ask': true,
+            }) ??
+            false;
+        debugPrint('MuloTag ensureWrite=$canWrite');
+        if (!canWrite) return denied;
+      }
       final temp = await _copy.invokeMethod<String>('copyToCache', uri);
       if (temp == null) return denied;
       try {

@@ -42,7 +42,7 @@ class MediaStoreChannel(
     private var pendingDelete: PendingDelete? = null
 
     /** 쓰기 동의 창 결과를 기다리는 요청 (동시에 하나만). */
-    private class PendingWrite(val uri: Uri, val src: File, val result: MethodChannel.Result)
+    private class PendingWrite(val uri: Uri, val src: File?, val result: MethodChannel.Result)
 
     private var pendingWrite: PendingWrite? = null
 
@@ -53,7 +53,7 @@ class MediaStoreChannel(
         } ?: false
 
     /** 앱이 만든 파일이 아니라 쓸 수 없을 때(다시 설치 뒤 등) 시스템 동의 창을 띄운다. 못 띄우면 false. */
-    private fun requestWrite(uri: Uri, src: File, e: SecurityException, result: MethodChannel.Result) {
+    private fun requestWrite(uri: Uri, src: File?, e: SecurityException, result: MethodChannel.Result) {
         if (pendingWrite != null) {
             result.success(false)
             return
@@ -121,6 +121,30 @@ class MediaStoreChannel(
                         null
                     },
                 )
+                "ensureWrite" -> {
+                    // 곡 파일에 쓸 수 있는지 먼저 확인한다 (내용은 건드리지 않는다).
+                    // 쓸 수 없고 ask가 true면 수정 전에 시스템 동의 창을 띄운다.
+                    val uri = Uri.parse(call.argument<String>("uri"))
+                    val ask = call.argument<Boolean>("ask") ?: false
+                    io.execute {
+                        var denied: SecurityException? = null
+                        val ok = try {
+                            context.contentResolver.openFileDescriptor(uri, "rw")?.use { true } ?: false
+                        } catch (e: SecurityException) {
+                            denied = e
+                            false
+                        } catch (e: Exception) {
+                            false
+                        }
+                        main.post {
+                            if (!ok && denied != null && ask) {
+                                requestWrite(uri, null, denied, result)
+                            } else {
+                                result.success(ok)
+                            }
+                        }
+                    }
+                }
                 "overwriteAudio" -> {
                     // 태그를 고친 임시 파일로 곡 파일을 덮어쓴다. 쓸 권한이 없으면 false.
                     // ask가 true면 (사용자가 직접 한 저장) 시스템 동의 창을 띄우고 허용 뒤 다시 쓴다.
@@ -250,6 +274,9 @@ class MediaStoreChannel(
             pendingWrite = null
             if (resultCode != Activity.RESULT_OK) {
                 pending.result.success(false)
+            } else if (pending.src == null) {
+                // 쓰기 확인만 구한 요청: 허용했으면 끝.
+                pending.result.success(true)
             } else {
                 // 허용했다: 이제 쓸 수 있으니 다시 쓴다.
                 io.execute {

@@ -219,8 +219,8 @@ object LyricsOverlay {
             return
         }
         if (!hasLines) {
-            // 싱크 가사가 없는 곡: 창은 두고 이유만 보여 준다 (갱신할 줄이 없어 타이머도 없다).
-            showLines(-1, emptyText)
+            // 싱크 없는 곡: 글 가사가 있으면 그 첫 줄을 보여 주고(늘리면 전체), 없으면 안내 글만 (타이머 없음).
+            showLines(-1, texts.firstOrNull { it.isNotBlank() } ?: emptyText)
             return
         }
         val position = exo.currentPosition
