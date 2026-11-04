@@ -1,4 +1,3 @@
-import 'dart:collection';
 
 import '../../domain/entities/lyrics.dart';
 import '../../domain/repositories/lyrics_repository.dart';
@@ -27,7 +26,7 @@ class CachedLyricsRepository implements LyricsRepository {
   final int maxChars;
 
   /// 삽입 순서 = 오래 안 쓴 순서. 읽을 때마다 맨 뒤로 옮긴다.
-  final _entries = LinkedHashMap<String, _Entry>();
+  final _entries = <String, _Entry>{};
   final _inFlight = <String, Future<Lyrics?>>{};
   // 불러오는 도중 save · remove 가 끼면 늦게 온 옛 결과를 캐시에 넣지 않기 위한 표시.
   final _version = <String, int>{};
