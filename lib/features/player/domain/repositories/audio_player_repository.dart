@@ -28,6 +28,19 @@ abstract interface class AudioPlayerRepository {
   /// 현재 곡을 못 불러오면 던진다.
   Future<void> setQueue(PlaybackSnapshot snapshot);
 
+  /// 지금 곡 바로 뒤에 끼운다. 이미 대기열에 있는 곡이면 그 자리를 옮긴다 (지금 곡이면 그대로).
+  Future<void> playNext(PlaybackItem item);
+
+  /// 대기열 맨 뒤에 붙인다. 이미 있는 곡이면 건너뛴다.
+  Future<void> addToQueue(PlaybackItem item);
+
+  /// 곡 하나를 뺀다. 지금 곡이면 다음 곡(마지막이었으면 새 마지막 곡)으로 처음부터 넘어가고 재생 상태는 그대로다.
+  /// 마지막 한 곡이면 대기열이 비고 멈춘다.
+  Future<void> removeFromQueue(String id);
+
+  /// [from]번 곡을 [to] 자리로 옮긴다 ([to]는 옮긴 뒤의 자리). 듣던 곡은 그대로 이어서 재생한다.
+  Future<void> moveInQueue(int from, int to);
+
   /// 셔플을 켜고 끈다. 엔진이 지금 곡을 맨 앞에 두고 나머지를 섞어 [watchQueue]로 알린다.
   /// 끄면 섞기 전 순서로 되돌린다. 듣던 곡은 끊기지 않는다.
   Future<void> setShuffle(bool on);

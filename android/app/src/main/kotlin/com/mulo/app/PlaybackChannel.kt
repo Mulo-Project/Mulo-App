@@ -31,6 +31,14 @@ class PlaybackChannel(context: Context, messenger: BinaryMessenger) {
         when (call.method) {
             "setQueue" -> PlaybackHub.setQueue(call.arguments as Map<*, *>, result)
             "setQueueArt" -> { PlaybackHub.setQueueArt(call.arguments as Map<*, *>); result.success(null) }
+            "playNext" -> { PlaybackHub.playNext(call.arguments as Map<*, *>); result.success(null) }
+            "addToQueue" -> { PlaybackHub.addToQueue(call.arguments as Map<*, *>); result.success(null) }
+            "removeFromQueue" -> { PlaybackHub.removeFromQueue(call.arguments as String); result.success(null) }
+            "moveInQueue" -> {
+                val args = call.arguments as Map<*, *>
+                PlaybackHub.moveInQueue((args["from"] as Number).toInt(), (args["to"] as Number).toInt())
+                result.success(null)
+            }
             "setShuffle" -> { PlaybackHub.setShuffle(call.arguments as? Boolean ?: false); result.success(null) }
             "setRepeat" -> { PlaybackHub.setRepeat(call.arguments as? String); result.success(null) }
             "skipTo" -> { PlaybackHub.skipTo((call.arguments as Number).toInt()); result.success(null) }

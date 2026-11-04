@@ -556,6 +556,30 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     );
   }
 
+  PlaybackItem _itemOf(Track t) => PlaybackItem(
+    id: t.id,
+    uri: t.uri,
+    title: t.title,
+    artist: t.artist,
+    album: t.album,
+    duration: t.duration,
+  );
+
+  /// 대기열 편집: 화면은 바로 [next]로 바꾸고(엔진을 다시 움직이지 않고 보낸 것으로 친다),
+  /// 엔진에는 편집 명령만 보낸다. 엔진이 같은 편집을 하고 `queue` 이벤트로 순서를 확인해 준다.
+  /// 엔진이 없거나 대기열이 비면 평소처럼 상태만 바꾼다 (비면 엔진에 빈 대기열이 간다).
+  void _edit(
+    NowPlayingState next,
+    Future<void> Function(AudioPlayback a) command,
+  ) {
+    if (_audio == null || next.queue.isEmpty) {
+      emit(next);
+      return;
+    }
+    _emitFromEngine(next);
+    _run(command);
+  }
+
   /// [queue]의 [at]번 곡부터 재생을 시작한다. [shuffle]이면 엔진이 그 곡을 맨 앞에 두고 나머지를 섞는다.
   void _startQueue(List<Track> queue, int at, {required bool shuffle}) {
     _shuffleNew = shuffle;
@@ -578,11 +602,12 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     final current = state.track!;
     final rest = [...state.queue]..remove(track);
     final at = rest.indexOf(current) + 1;
-    emit(
+    _edit(
       state.copyWith(
         queue: [...rest.take(at), track, ...rest.skip(at)],
         index: at - 1,
       ),
+      (a) => a.playNext(_itemOf(track)),
     );
   }
 
@@ -591,7 +616,10 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   void addToQueue(Track track) {
     if (state.queue.isEmpty) return playQueue([track]);
     if (state.queue.contains(track)) return;
-    emit(state.copyWith(queue: [...state.queue, track]));
+    _edit(
+      state.copyWith(queue: [...state.queue, track]),
+      (a) => a.addToQueue(_itemOf(track)),
+    );
   }
 
   /// 곡 정보가 바뀌었을 때 대기열의 같은 곡을 새 정보로 바꾼다.
@@ -622,19 +650,16 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
       emit(state.copyWith(queue: queue, index: 0, isPlaying: false));
       return;
     }
-    if (i < state.index) {
-      emit(state.copyWith(queue: queue, index: state.index - 1));
-    } else if (i > state.index) {
-      emit(state.copyWith(queue: queue));
-    } else {
-      emit(
-        state.copyWith(
-          queue: queue,
-          index: state.index.clamp(0, queue.length - 1),
-          position: Duration.zero,
-        ),
-      );
-    }
+    final next = i < state.index
+        ? state.copyWith(queue: queue, index: state.index - 1)
+        : i > state.index
+        ? state.copyWith(queue: queue)
+        : state.copyWith(
+            queue: queue,
+            index: state.index.clamp(0, queue.length - 1),
+            position: Duration.zero,
+          );
+    _edit(next, (a) => a.removeFromQueue(track.id));
   }
 
   /// 다음 곡. 마지막 곡이면 반복 설정과 상관없이 처음으로 돌아간다 (곡 끝에서 저절로 넘어갈 때만 반복을 따른다).
@@ -794,7 +819,10 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     final current = state.track!;
     final queue = [...state.queue];
     queue.insert(to, queue.removeAt(from));
-    emit(state.copyWith(queue: queue, index: queue.indexOf(current)));
+    _edit(
+      state.copyWith(queue: queue, index: queue.indexOf(current)),
+      (a) => a.moveInQueue((from: from, to: to)),
+    );
   }
 
   /// 대기열을 모두 비운다. 재생 중인 곡도 멈추고 지워진다 (미니 플레이어는 사라진다).

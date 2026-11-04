@@ -27,6 +27,22 @@ class NativePlaybackChannel {
   Future<void> setQueue(Map<String, Object?> snapshot) =>
       _method.invokeMethod('setQueue', snapshot);
 
+  /// 지금 곡 바로 뒤에 끼운다 (이미 있으면 그 자리를 옮긴다). [item]은 `setQueue` 곡 맵과 같은 모양.
+  Future<void> playNext(Map<String, Object?> item) =>
+      _method.invokeMethod('playNext', item);
+
+  /// 대기열 맨 뒤에 붙인다 (이미 있으면 건너뛴다).
+  Future<void> addToQueue(Map<String, Object?> item) =>
+      _method.invokeMethod('addToQueue', item);
+
+  /// 곡 하나를 뺀다. 지금 곡이면 다음 곡(마지막이었으면 새 마지막 곡)으로 처음부터 넘어간다.
+  Future<void> removeFromQueue(String id) =>
+      _method.invokeMethod('removeFromQueue', id);
+
+  /// [from]번 곡을 [to] 자리로 옮긴다 ([to]는 옮긴 뒤의 자리).
+  Future<void> moveInQueue(int from, int to) =>
+      _method.invokeMethod('moveInQueue', {'from': from, 'to': to});
+
   /// 셔플을 켜고 끈다. 섞는 일은 네이티브가 하고 새 순서는 `queue` 이벤트로 온다.
   Future<void> setShuffle(bool on) => _method.invokeMethod('setShuffle', on);
 

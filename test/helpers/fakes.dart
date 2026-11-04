@@ -1117,6 +1117,74 @@ class FakeAudioPlayer implements AudioPlayerRepository {
     ...items.where((i) => i != items[at]).toList().reversed,
   ];
 
+  /// 편집 뒤 스냅샷을 새 목록으로 바꾸고 엔진의 현재 곡 번호를 맞춘다 (네이티브 편집을 흉내 낸다).
+  void _edited(List<PlaybackItem> items, PlaybackItem? current) {
+    final s = snapshot!;
+    snapshot = PlaybackSnapshot(
+      items: items,
+      index: current == null ? 0 : items.indexOf(current),
+      playing: s.playing,
+      repeat: repeat,
+    );
+    index = snapshot!.index;
+    _emitQueue();
+  }
+
+  @override
+  Future<void> playNext(PlaybackItem item) async {
+    calls.add('next:${item.id}');
+    final s = snapshot;
+    if (s == null || s.items.isEmpty) return;
+    final current = s.items[index];
+    if (item.id == current.id) return;
+    final rest = [...s.items]..removeWhere((i) => i.id == item.id);
+    final at = rest.indexOf(current) + 1;
+    _edited([...rest.take(at), item, ...rest.skip(at)], current);
+  }
+
+  @override
+  Future<void> addToQueue(PlaybackItem item) async {
+    calls.add('add:${item.id}');
+    final s = snapshot;
+    if (s == null || s.items.isEmpty || s.items.any((i) => i.id == item.id)) {
+      return;
+    }
+    _edited([...s.items, item], s.items[index]);
+  }
+
+  @override
+  Future<void> removeFromQueue(String id) async {
+    calls.add('remove:$id');
+    final s = snapshot;
+    if (s == null) return;
+    final at = s.items.indexWhere((i) => i.id == id);
+    if (at < 0) return;
+    final items = [...s.items]..removeAt(at);
+    if (items.isEmpty) {
+      snapshot = PlaybackSnapshot(items: items, index: 0, playing: false);
+      loaded = null;
+      playing = false;
+      return;
+    }
+    if (at == index) {
+      final next = items[at.clamp(0, items.length - 1)];
+      loaded = next.uri;
+      _edited(items, next);
+    } else {
+      _edited(items, s.items[index]);
+    }
+  }
+
+  @override
+  Future<void> moveInQueue(int from, int to) async {
+    calls.add('move:$from-$to');
+    final s = snapshot;
+    if (s == null) return;
+    final items = [...s.items];
+    items.insert(to, items.removeAt(from));
+    _edited(items, s.items[index]);
+  }
+
   @override
   Future<void> setShuffle(bool on) async {
     calls.add('shuffle:$on');

@@ -30,10 +30,11 @@ internal object QueueShuffle {
     }
 
     /**
-     * 셔플을 켜면 지금 곡을 맨 앞에 두고 나머지를 섞으며 원래 순서를 `original`에 적는다.
+     * 셔플을 켜면 대기열 전체를 섞고(지금 곡도 섞인 목록 안의 제자리를 가진다) 원래 순서를 `original`에 적는다.
+     * [currentFirst]면 지금 곡을 맨 앞에 두고 나머지만 섞는다 (새 대기열을 셔플로 시작할 때).
      * 끄면 `original` 순서로 되돌린다. [current]는 지금 곡의 위치.
      */
-    fun toggle(all: List<MediaItem>, current: Int, extras: String): Result {
+    fun toggle(all: List<MediaItem>, current: Int, extras: String, currentFirst: Boolean = false): Result {
         val json = try {
             if (extras.isNotEmpty()) JSONObject(extras) else JSONObject()
         } catch (_: Exception) {
@@ -44,8 +45,16 @@ internal object QueueShuffle {
         val before: List<MediaItem>
         val after: List<MediaItem>
         if (!isOn(extras)) {
-            before = emptyList()
-            after = others.shuffled()
+            if (currentFirst) {
+                before = emptyList()
+                after = others.shuffled()
+            } else {
+                // 듣던 곡이 목록 안 어디든 올 수 있다. 앞쪽에 놓인 곡은 한 바퀴 돈 뒤에 나온다.
+                val mixed = all.shuffled()
+                val at = mixed.indexOf(currentItem).coerceAtLeast(0)
+                before = mixed.subList(0, at)
+                after = mixed.subList(at + 1, mixed.size)
+            }
             json.put("shuffle", true)
             json.put("original", JSONArray(all.map { it.mediaId }))
         } else {
