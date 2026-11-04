@@ -52,6 +52,42 @@ class WatchAudioQueue implements StreamUseCase<PlaybackQueueChange, NoParams> {
   Stream<PlaybackQueueChange> call(NoParams params) => _repo.watchQueue();
 }
 
+class PlayAudioNext implements UseCase<void, PlaybackItem> {
+  const PlayAudioNext(this._repo);
+  final AudioPlayerRepository _repo;
+
+  @override
+  Future<void> call(PlaybackItem item) => _repo.playNext(item);
+}
+
+class AddAudioToQueue implements UseCase<void, PlaybackItem> {
+  const AddAudioToQueue(this._repo);
+  final AudioPlayerRepository _repo;
+
+  @override
+  Future<void> call(PlaybackItem item) => _repo.addToQueue(item);
+}
+
+class RemoveAudioFromQueue implements UseCase<void, String> {
+  const RemoveAudioFromQueue(this._repo);
+  final AudioPlayerRepository _repo;
+
+  @override
+  Future<void> call(String id) => _repo.removeFromQueue(id);
+}
+
+/// 대기열 순서 옮기기: [from]번 곡을 [to] 자리로.
+typedef AudioQueueMove = ({int from, int to});
+
+class MoveAudioInQueue implements UseCase<void, AudioQueueMove> {
+  const MoveAudioInQueue(this._repo);
+  final AudioPlayerRepository _repo;
+
+  @override
+  Future<void> call(AudioQueueMove move) =>
+      _repo.moveInQueue(move.from, move.to);
+}
+
 class SetAudioShuffle implements UseCase<void, bool> {
   const SetAudioShuffle(this._repo);
   final AudioPlayerRepository _repo;
@@ -145,6 +181,10 @@ class AudioPlayback {
     required this.watchPlaying,
     required this.watchOpenPlayer,
     required this.watchQueue,
+    required this.playNext,
+    required this.addToQueue,
+    required this.removeFromQueue,
+    required this.moveInQueue,
     required this.setShuffle,
     required this.setRepeat,
     required this.setQueue,
@@ -163,6 +203,10 @@ class AudioPlayback {
   final WatchAudioPlaying watchPlaying;
   final WatchOpenPlayer watchOpenPlayer;
   final WatchAudioQueue watchQueue;
+  final PlayAudioNext playNext;
+  final AddAudioToQueue addToQueue;
+  final RemoveAudioFromQueue removeFromQueue;
+  final MoveAudioInQueue moveInQueue;
   final SetAudioShuffle setShuffle;
   final SetAudioRepeat setRepeat;
   final SetAudioQueue setQueue;

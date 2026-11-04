@@ -936,3 +936,8 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 - 2단계(편집 명령 `playNext` `remove` `move` …)와 3단계(Cubit 읽기 전용)는 1단계를 기기에서 확인한 뒤 한다. 대기열 편집은 아직 Dart가 계산해 스냅샷으로 보낸다.
 - 디버그 로그: `MuloLog`(debug 빌드에서만, 태그 `MuloNative` `MuloPlayback`). `NativeChannel.runAsync` 실패, `PlaybackChannel` 호출 예외, ExoPlayer 오류, 셔플 · 대기열 명령이 남고, Dart 쪽은 `MuloPlayback` `debugPrint`. 기기에서 확인 전이다.
 
+## D-153 · 2026-11-04 · 대기열 편집을 네이티브 명령으로 (재생 상태 일원화 2단계)
+- 다음에 재생 · 맨 뒤에 붙이기 · 빼기 · 순서 옮기기는 이제 `playNext` `addToQueue` `removeFromQueue` `moveInQueue` 명령으로 네이티브(`PlaybackHub`)가 실행한다. 대기열을 통째로 보내던 `setQueue` 푸시는 새 대기열을 시작할 때, 곡 정보가 바뀔 때, 보관함에서 사라진 곡을 정리할 때만 쓴다.
+- 앱(`NowPlayingCubit`)은 같은 편집을 화면에 먼저 반영하고(`_edit`, 엔진을 다시 움직이지 않음) 명령만 보낸다. 네이티브가 `queue` 이벤트로 순서를 확인하고, 곡 구성이 같은데 순서가 다르면 앱이 네이티브 순서를 따른다. 편집 규칙을 앱이 아직 한 번 더 계산하는 것은 3단계(앱을 읽기 전용으로)에서 없앤다.
+- 지금 곡이 마지막인데 빼면 ExoPlayer가 재생을 끝내 버리므로 먼저 이전 곡으로 옮긴 뒤 뺀다. 기기에서 확인 전이다.
+

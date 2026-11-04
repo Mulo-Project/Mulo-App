@@ -27,6 +27,10 @@ void main() {
       watchPlaying: WatchAudioPlaying(engine),
       watchOpenPlayer: WatchOpenPlayer(engine),
       watchQueue: WatchAudioQueue(engine),
+      playNext: PlayAudioNext(engine),
+      addToQueue: AddAudioToQueue(engine),
+      removeFromQueue: RemoveAudioFromQueue(engine),
+      moveInQueue: MoveAudioInQueue(engine),
       setShuffle: SetAudioShuffle(engine),
       setRepeat: SetAudioRepeat(engine),
       setQueue: SetAudioQueue(engine),
@@ -239,13 +243,17 @@ void main() {
     expect(engine.calls.where((c) => c.startsWith('queue')).length, before);
   });
 
-  test('다음에 재생은 듣던 곡의 위치를 건드리지 않고 목록만 보낸다', () async {
+  test('다음에 재생은 엔진에 편집 명령만 보내고 듣던 곡의 위치를 건드리지 않는다', () async {
     cubit.playQueue(tracks.take(2).toList());
     await settle();
     engine.emitPosition(const Duration(seconds: 12));
     await settle();
+    final queueCalls = engine.calls.where((c) => c.startsWith('queue')).length;
     cubit.playNext(tracks[2]);
     await settle();
+    expect(engine.calls, contains('next:${tracks[2].id}'));
+    // 대기열을 통째로 다시 보내지 않는다.
+    expect(engine.calls.where((c) => c.startsWith('queue')).length, queueCalls);
     expect(engine.snapshot!.items.map((i) => i.id), [
       tracks[0].id,
       tracks[2].id,
@@ -253,17 +261,48 @@ void main() {
     ]);
     expect(engine.snapshot!.index, 0);
     expect(engine.snapshot!.position, isNull);
+    expect(cubit.state.queue.map((t) => t.id), [
+      tracks[0].id,
+      tracks[2].id,
+      tracks[1].id,
+    ]);
     expect(cubit.state.position, const Duration(seconds: 12));
   });
 
-  test('순서를 옮겨도 듣던 곡은 그대로이고 위치만 새 번호로 보낸다', () async {
+  test('맨 뒤에 붙이기도 편집 명령으로 보낸다', () async {
+    cubit.playQueue(tracks.take(2).toList());
+    await settle();
+    cubit.addToQueue(tracks[2]);
+    await settle();
+    expect(engine.calls, contains('add:${tracks[2].id}'));
+    expect(engine.snapshot!.items.last.id, tracks[2].id);
+    expect(cubit.state.queue.last, tracks[2]);
+    expect(cubit.state.index, 0);
+  });
+
+  test('듣던 곡을 빼면 다음 곡으로 넘어가고 엔진에는 빼기 명령만 간다', () async {
+    cubit.playQueue(tracks);
+    await settle();
+    cubit.removeFromQueue(tracks[0]);
+    await settle();
+    expect(engine.calls, contains('remove:${tracks[0].id}'));
+    expect(cubit.state.queue, tracks.skip(1));
+    expect(cubit.state.track, tracks[1]);
+    expect(cubit.state.index, 0);
+    expect(engine.snapshot!.current!.id, tracks[1].id);
+    expect(cubit.state.isPlaying, isTrue);
+  });
+
+  test('순서를 옮겨도 듣던 곡은 그대로이고 엔진에는 옮기기 명령만 간다', () async {
     cubit.playQueue(tracks);
     await settle();
     cubit.moveInQueue(0, 2);
     await settle();
+    expect(engine.calls, contains('move:0-2'));
     expect(engine.snapshot!.index, 2);
     expect(engine.snapshot!.current!.id, tracks[0].id);
     expect(engine.snapshot!.position, isNull);
+    expect(cubit.state.index, 2);
   });
 
   test('셔플은 엔진에 명령으로 맡기고, 엔진이 알려 준 순서를 비춘다', () async {

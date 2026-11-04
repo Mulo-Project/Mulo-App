@@ -267,6 +267,68 @@ object PlaybackHub {
         }
     }
 
+    // ── 대기열 편집 (규칙은 앱의 NowPlayingCubit과 같다) ──
+
+    /** 지금 곡 바로 뒤에 끼운다. 이미 대기열에 있는 곡이면 그 자리를 옮긴다 (지금 곡이면 그대로). */
+    fun playNext(map: Map<*, *>) {
+        val item = QueueMapping.mediaItemOf(map, artById)
+        MuloLog.d(MuloLog.PLAYBACK, "playNext id=${item.mediaId}")
+        if (exo.mediaItemCount == 0 || exo.currentMediaItem?.mediaId == item.mediaId) return
+        indexOfId(item.mediaId).takeIf { it >= 0 }?.let { exo.removeMediaItem(it) }
+        exo.addMediaItem(exo.currentMediaItemIndex + 1, item)
+        queueEdited()
+    }
+
+    /** 대기열 맨 뒤에 붙인다. 이미 있는 곡이면 건너뛴다. */
+    fun addToQueue(map: Map<*, *>) {
+        val item = QueueMapping.mediaItemOf(map, artById)
+        MuloLog.d(MuloLog.PLAYBACK, "addToQueue id=${item.mediaId}")
+        if (exo.mediaItemCount == 0 || indexOfId(item.mediaId) >= 0) return
+        exo.addMediaItem(item)
+        queueEdited()
+    }
+
+    /**
+     * 곡 하나를 뺀다. 지금 곡을 빼면 다음 곡(마지막 곡이었으면 새 마지막 곡)으로 처음부터 넘어가고 재생 상태는 그대로다.
+     * 대기열이 비면 멈추고 비운다.
+     */
+    fun removeFromQueue(id: String) {
+        MuloLog.d(MuloLog.PLAYBACK, "removeFromQueue id=$id")
+        val i = indexOfId(id)
+        if (i < 0) return
+        if (exo.mediaItemCount == 1) {
+            extras = ""
+            exo.stop()
+            exo.clearMediaItems()
+            persistQueue()
+            emitQueue()
+            return
+        }
+        // 마지막 곡을 지금 듣는 중이면 먼저 이전 곡으로 옮긴다 (그냥 빼면 ExoPlayer가 재생을 끝내 버린다).
+        if (i == exo.currentMediaItemIndex && i == exo.mediaItemCount - 1) exo.seekTo(i - 1, 0L)
+        exo.removeMediaItem(i)
+        queueEdited()
+    }
+
+    /** [from]번 곡을 [to] 자리로 옮긴다 ([to]는 옮긴 뒤의 자리). 듣던 곡은 그대로 이어서 재생한다. */
+    fun moveInQueue(from: Int, to: Int) {
+        MuloLog.d(MuloLog.PLAYBACK, "moveInQueue $from -> $to")
+        val n = exo.mediaItemCount
+        if (from < 0 || from >= n || to < 0 || to >= n || from == to) return
+        exo.moveMediaItem(from, to)
+        queueEdited()
+    }
+
+    private fun indexOfId(id: String): Int =
+        (0 until exo.mediaItemCount).firstOrNull { exo.getMediaItemAt(it).mediaId == id } ?: -1
+
+    /** 편집이 끝났다: 저장하고 알림 · 세션을 맞추고 앱에 새 순서를 알린다. */
+    private fun queueEdited() {
+        persistQueue()
+        sessionPlayer.refresh()
+        emitQueue()
+    }
+
     /** 셔플을 [on]으로 맞춘다 (알림 버튼 · 앱 화면이 같은 경로). 바뀐 순서는 `queue` 이벤트로 앱에 알린다. */
     fun setShuffle(on: Boolean) {
         MuloLog.d(MuloLog.PLAYBACK, "setShuffle on=$on (was $shuffleOn)")

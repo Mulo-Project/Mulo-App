@@ -57,19 +57,32 @@ class NativeAudioPlayerRepository implements AudioPlayerRepository {
       ? uri
       : Uri.file(uri, windows: Platform.isWindows).toString();
 
+  static Map<String, Object?> _itemMap(PlaybackItem i) => {
+    'id': i.id,
+    'uri': _uri(i.uri),
+    'title': i.title,
+    'artist': i.artist,
+    'album': i.album,
+    'durationMs': i.duration.inMilliseconds,
+  };
+
+  @override
+  Future<void> playNext(PlaybackItem item) =>
+      _channel.playNext(_itemMap(item));
+
+  @override
+  Future<void> addToQueue(PlaybackItem item) =>
+      _channel.addToQueue(_itemMap(item));
+
+  @override
+  Future<void> removeFromQueue(String id) => _channel.removeFromQueue(id);
+
+  @override
+  Future<void> moveInQueue(int from, int to) => _channel.moveInQueue(from, to);
+
   @override
   Future<void> setQueue(PlaybackSnapshot snapshot) => _channel.setQueue({
-    'items': [
-      for (final i in snapshot.items)
-        {
-          'id': i.id,
-          'uri': _uri(i.uri),
-          'title': i.title,
-          'artist': i.artist,
-          'album': i.album,
-          'durationMs': i.duration.inMilliseconds,
-        },
-    ],
+    'items': [for (final i in snapshot.items) _itemMap(i)],
     'index': snapshot.index,
     'playing': snapshot.playing,
     'repeat': snapshot.repeat.name,
