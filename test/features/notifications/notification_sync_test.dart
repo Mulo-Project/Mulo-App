@@ -215,9 +215,13 @@ void main() {
     await cubit.syncDownloads(downloading, on, l10n);
     expect(notifier.shown.last['preview'], '미리듣기');
     expect(notifier.shown.last['stop'], isNull);
+    expect(notifier.shown.last['cancel'], isNotNull);
     await cubit.syncDownloads(downloading, on, l10n, previewingId: '1');
     expect(notifier.shown.last['preview'], isNull);
     expect(notifier.shown.last['stop'], '중지');
+    // 미리 듣는 중에는 중지만 보인다 (받기 취소 · 일시정지는 뺀다).
+    expect(notifier.shown.last['cancel'], isNull);
+    expect(notifier.shown.last['hold'], isNull);
     // 다른 곡을 미리 듣는 중이면 이 곡의 버튼은 그대로.
     await cubit.syncDownloads(downloading, on, l10n, previewingId: 'x');
     expect(notifier.shown.last['preview'], '미리듣기');

@@ -185,8 +185,8 @@ class NotificationSyncCubit extends Cubit<void> {
     final previewing = !hide && previewingId == current.id;
     final preview = hide || previewing ? null : l10n.notifDownloadPreview;
     final stop = previewing ? l10n.notifDownloadStopPreview : null;
-    final cancel = l10n.notifDownloadCancel;
-    // 알림 버튼은 셋까지라서, 미리 듣는 중(일시정지 · 중지 · 취소)에는 받기 일시정지 버튼을 뺀다.
+    // 미리 듣는 중에는 "미리듣기 중지"만 보인다 (받기 취소와 헷갈리지 않게 취소 · 받기 일시정지는 뺀다).
+    final cancel = previewing ? null : l10n.notifDownloadCancel;
     final hold = previewing
         ? null
         : paused
