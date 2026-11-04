@@ -44,6 +44,7 @@ import 'package:music_download_play_app/features/permissions/domain/repositories
 import 'package:music_download_play_app/features/player/di.dart';
 import 'package:music_download_play_app/features/player/domain/entities/player_style.dart';
 import 'package:music_download_play_app/features/player/domain/entities/playback_snapshot.dart';
+import 'package:music_download_play_app/features/player/domain/entities/player_repeat_mode.dart';
 import 'package:music_download_play_app/features/player/domain/repositories/audio_player_repository.dart';
 import 'package:music_download_play_app/features/equalizer/di.dart';
 import 'package:music_download_play_app/features/equalizer/domain/entities/equalizer_settings.dart';
@@ -1026,6 +1027,11 @@ class FakeAudioPlayer implements AudioPlayerRepository {
   final _ended = StreamController<void>.broadcast();
   final _playing = StreamController<bool>.broadcast();
   final _openPlayer = StreamController<void>.broadcast();
+  final _queue = StreamController<PlaybackQueueChange>.broadcast();
+
+  /// 네이티브처럼 셔플 전 순서를 쥔다 (셔플이 꺼져 있으면 null).
+  List<PlaybackItem>? shuffleOriginal;
+  var repeat = PlayerRepeatMode.off;
 
   /// 마지막으로 받은 대기열 스냅샷.
   PlaybackSnapshot? snapshot;
@@ -1088,6 +1094,69 @@ class FakeAudioPlayer implements AudioPlayerRepository {
   Stream<void> watchEnded() => _ended.stream;
 
   @override
+  Stream<PlaybackQueueChange> watchQueue() => _queue.stream;
+
+  /// 엔진이 스스로 대기열 순서를 바꿨다고 알린다 (한 바퀴 뒤 재셔플, 알림 셔플 버튼).
+  void emitQueueChange(PlaybackQueueChange change) => _queue.add(change);
+
+  void _emitQueue() {
+    final s = snapshot!;
+    _queue.add(
+      PlaybackQueueChange(
+        ids: [for (final i in s.items) i.id],
+        index: index,
+        shuffle: shuffleOriginal != null,
+        repeat: repeat,
+      ),
+    );
+  }
+
+  /// 네이티브의 셔플을 흉내 낸다: 지금 곡을 맨 앞에 두고 나머지는 뒤집는다 (섞는 대신 정해진 순서).
+  List<PlaybackItem> _shuffleItems(List<PlaybackItem> items, int at) => [
+    items[at],
+    ...items.where((i) => i != items[at]).toList().reversed,
+  ];
+
+  @override
+  Future<void> setShuffle(bool on) async {
+    calls.add('shuffle:$on');
+    final s = snapshot;
+    if (s == null || s.items.isEmpty) return;
+    if (on && shuffleOriginal == null) {
+      shuffleOriginal = s.items;
+      snapshot = PlaybackSnapshot(
+        items: _shuffleItems(s.items, index),
+        index: 0,
+        playing: s.playing,
+        repeat: repeat,
+      );
+      index = 0;
+    } else if (!on && shuffleOriginal != null) {
+      final original = shuffleOriginal!;
+      final current = s.items[index];
+      shuffleOriginal = null;
+      snapshot = PlaybackSnapshot(
+        items: [
+          ...original.where(s.items.contains),
+          ...s.items.where((i) => !original.contains(i)),
+        ],
+        index: 0,
+        playing: s.playing,
+        repeat: repeat,
+      );
+      index = snapshot!.items.indexOf(current);
+    }
+    _emitQueue();
+  }
+
+  @override
+  Future<void> setRepeat(PlayerRepeatMode mode) async {
+    calls.add('repeat:${mode.name}');
+    repeat = mode;
+    if (snapshot != null) _emitQueue();
+  }
+
+  @override
   Stream<void> watchOpenPlayer() => _openPlayer.stream;
 
   @override
@@ -1096,10 +1165,25 @@ class FakeAudioPlayer implements AudioPlayerRepository {
     calls.add('queue:${current?.uri}');
     snapshot = s;
     index = s.index;
+    repeat = s.repeat;
     if (current == null) {
       loaded = null;
       playing = false;
+      shuffleOriginal = null;
       return;
+    }
+    if (s.shuffleNew) {
+      // 새 대기열을 셔플로 시작: 고른 곡을 맨 앞에 두고 나머지를 섞는다.
+      shuffleOriginal = s.items;
+      snapshot = PlaybackSnapshot(
+        items: _shuffleItems(s.items, s.index),
+        index: 0,
+        playing: s.playing,
+        repeat: s.repeat,
+        position: s.position,
+      );
+      index = 0;
+      _emitQueue();
     }
     if (failing.contains(current.uri)) throw StateError('cannot load');
     loaded = current.uri;

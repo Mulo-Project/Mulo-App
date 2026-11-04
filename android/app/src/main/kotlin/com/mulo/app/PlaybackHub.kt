@@ -97,6 +97,7 @@ object PlaybackHub {
         if (initialized) return
         initialized = true
         context = appContext.applicationContext
+        MuloLog.init(context)
 
         // 공간 울림은 오디오 출력 앞단의 프로세서로 처리한다 (기기 효과보다 확실히 들린다).
         val renderers = object : DefaultRenderersFactory(context) {
@@ -210,13 +211,17 @@ object PlaybackHub {
         val playing = map["playing"] as? Boolean ?: false
         val positionMs = (map["positionMs"] as? Number)?.toLong()
         val wasShuffled = shuffleOn
-        extras = map["extras"] as? String ?: ""
-        if (wasShuffled != shuffleOn) main.post { refreshLayout() }
+        // 셔플 여부 · 섞기 전 순서는 네이티브가 쥔다: 앱이 extras를 보내지 않으면 지금 것을 그대로 둔다.
+        (map["extras"] as? String)?.let { extras = it }
+        val shuffleNew = map["shuffleNew"] == true
+        MuloLog.d(MuloLog.PLAYBACK, "setQueue items=${items.size} index=${map["index"]} shuffleNew=$shuffleNew playing=$playing")
         exo.repeatMode = QueueMapping.repeatModeOf(map["repeat"] as? String)
         pendingLoad?.error("interrupted", "다른 대기열을 불러와 중단됨", null)
         pendingLoad = null
 
         if (items.isEmpty()) {
+            extras = ""
+            if (wasShuffled) main.post { refreshLayout() }
             exo.stop()
             exo.clearMediaItems()
             persistQueue()
@@ -224,8 +229,16 @@ object PlaybackHub {
             return
         }
         revive()
-        val index = ((map["index"] as? Number)?.toInt() ?: 0).coerceIn(0, items.size - 1)
-        val mediaItems = items.map { QueueMapping.mediaItemOf(it, artById) }
+        var index = ((map["index"] as? Number)?.toInt() ?: 0).coerceIn(0, items.size - 1)
+        var mediaItems = items.map { QueueMapping.mediaItemOf(it, artById) }
+        if (shuffleNew) {
+            // 새 대기열을 셔플로 시작: 고른 곡을 맨 앞에 두고 나머지를 섞으며 원래 순서를 extras에 적는다.
+            val shuffled = QueueShuffle.toggle(mediaItems, index, "")
+            mediaItems = shuffled.before + mediaItems[index] + shuffled.after
+            index = shuffled.before.size
+            extras = shuffled.extras
+        }
+        if (wasShuffled != shuffleOn) main.post { refreshLayout() }
         val keepCurrent = exo.mediaItemCount > 0 &&
             exo.playbackState != Player.STATE_ENDED &&
             exo.currentMediaItem?.mediaId == mediaItems[index].mediaId
@@ -241,6 +254,7 @@ object PlaybackHub {
             exo.playWhenReady = playing
             sessionPlayer.refresh()
             persistQueue()
+            if (shuffleNew) emitQueue()
             result.success(null)
         } else {
             pendingLoad = result
@@ -249,7 +263,37 @@ object PlaybackHub {
             exo.prepare()
             sessionPlayer.refresh()
             persistQueue()
+            if (shuffleNew) emitQueue()
         }
+    }
+
+    /** 셔플을 [on]으로 맞춘다 (알림 버튼 · 앱 화면이 같은 경로). 바뀐 순서는 `queue` 이벤트로 앱에 알린다. */
+    fun setShuffle(on: Boolean) {
+        MuloLog.d(MuloLog.PLAYBACK, "setShuffle on=$on (was $shuffleOn)")
+        if (shuffleOn != on) toggleShuffle() else emitQueue()
+    }
+
+    /** 반복 모드(`off` `all` `one`)를 바꾼다. */
+    fun setRepeat(name: String?) {
+        MuloLog.d(MuloLog.PLAYBACK, "setRepeat $name")
+        exo.repeatMode = QueueMapping.repeatModeOf(name)
+        persistPosition()
+        emitQueue()
+    }
+
+    /** 지금 대기열의 곡 id 순서 · 현재 위치 · 셔플 · 반복을 앱에 알린다 (앱은 이것을 비추기만 한다). */
+    private fun emitQueue() {
+        if (!initialized) return
+        val ids = (0 until exo.mediaItemCount).map { exo.getMediaItemAt(it).mediaId }
+        emit(
+            mapOf(
+                "type" to "queue",
+                "ids" to ids,
+                "index" to exo.currentMediaItemIndex,
+                "shuffle" to shuffleOn,
+                "repeat" to QueueMapping.repeatNameOf(exo.repeatMode),
+            ),
+        )
     }
 
     /** 앱에서 다시 재생을 시작한다: 정리해 둔 세션을 되살리고 이어폰 분리로 멈춘 기록을 비운다. */
@@ -475,31 +519,27 @@ object PlaybackHub {
 
     /**
      * 셔플 중 대기열을 한 바퀴 다 돌아 첫 곡으로 넘어왔으면 나머지 곡을 새로 섞는다 (같은 순서로 다시 돌지 않게).
-     * 앱(Dart)이 붙어 있으면 앱이 같은 일을 하므로, 앱을 밀어 서비스만 남았을 때만 여기서 한다.
+     * 앱이 붙어 있든 아니든 네이티브가 한다 (순서는 네이티브가 쥐고, 앱에는 `queue` 이벤트로 알린다).
      * 지금 곡(첫 곡)은 끊기지 않게 그대로 두고, 방금 들은 곡이 바로 다음에 오지 않게 한다.
      * 섞기 전 순서(extras의 original)는 그대로라 앱을 다시 열어 셔플을 끄면 원래 순서로 돌아간다.
      */
     private fun reshuffleAfterLap(previousId: String?) {
         val count = exo.mediaItemCount
-        if (sink != null || previousId == null || count < 3 || !shuffleOn) return
+        if (previousId == null || count < 3 || !shuffleOn) return
         if (exo.currentMediaItemIndex != 0 || exo.getMediaItemAt(count - 1).mediaId != previousId) return
         val rest = QueueShuffle.reshuffledRest((0 until count).map { exo.getMediaItemAt(it) }, previousId)
         exo.removeMediaItems(1, count)
         exo.addMediaItems(rest)
         persistQueue()
+        emitQueue()
     }
 
     /**
-     * 알림의 셔플 버튼. 앱(Dart)이 붙어 있으면 Dart에 넘기고(순서는 Dart가 쥔다),
-     * 앱을 밀어 서비스만 남았으면 여기서 직접 켜고 끈다.
+     * 셔플 켜기와 끄기 (알림 버튼 · 앱 화면 모두 여기로 온다).
      * 켜면 지금 곡을 맨 앞에 두고 나머지를 섞으며 원래 순서를 extras의 original에 적어 둔다.
      * 끄면 original 순서로 되돌린다. 듣던 곡은 끊기지 않는다. 앱을 다시 열면 `getState`의 extras로 이어 받는다.
      */
     private fun toggleShuffle() {
-        if (sink != null) {
-            emitCommand("shuffle", null)
-            return
-        }
         val count = exo.mediaItemCount
         if (count == 0) return
         val current = exo.currentMediaItemIndex
@@ -515,6 +555,7 @@ object PlaybackHub {
         persistQueue()
         sessionPlayer.refresh()
         refreshLayout()
+        emitQueue()
     }
 
     private fun emitCommand(name: String, positionMs: Long?) {
@@ -642,6 +683,7 @@ object PlaybackHub {
 
         override fun onPlayerError(error: PlaybackException) {
             PlaybackStore.logStop(context, "error: ${error.errorCodeName} ${error.message}")
+            MuloLog.e(MuloLog.PLAYBACK, "player error ${error.errorCodeName}: ${error.message} item=${exo.currentMediaItem?.mediaId}", error)
             val load = pendingLoad
             if (load != null) {
                 load.error("load_failed", error.message, null)

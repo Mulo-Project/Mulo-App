@@ -1,5 +1,6 @@
 import '../../../../core/usecase/usecase.dart';
 import '../entities/playback_snapshot.dart';
+import '../entities/player_repeat_mode.dart';
 import '../repositories/audio_player_repository.dart';
 
 class WatchAudioPosition implements StreamUseCase<Duration, NoParams> {
@@ -41,6 +42,30 @@ class WatchOpenPlayer implements StreamUseCase<void, NoParams> {
 
   @override
   Stream<void> call(NoParams params) => _repo.watchOpenPlayer();
+}
+
+class WatchAudioQueue implements StreamUseCase<PlaybackQueueChange, NoParams> {
+  const WatchAudioQueue(this._repo);
+  final AudioPlayerRepository _repo;
+
+  @override
+  Stream<PlaybackQueueChange> call(NoParams params) => _repo.watchQueue();
+}
+
+class SetAudioShuffle implements UseCase<void, bool> {
+  const SetAudioShuffle(this._repo);
+  final AudioPlayerRepository _repo;
+
+  @override
+  Future<void> call(bool on) => _repo.setShuffle(on);
+}
+
+class SetAudioRepeat implements UseCase<void, PlayerRepeatMode> {
+  const SetAudioRepeat(this._repo);
+  final AudioPlayerRepository _repo;
+
+  @override
+  Future<void> call(PlayerRepeatMode mode) => _repo.setRepeat(mode);
 }
 
 class SetAudioQueue implements UseCase<void, PlaybackSnapshot> {
@@ -119,6 +144,9 @@ class AudioPlayback {
     required this.watchEnded,
     required this.watchPlaying,
     required this.watchOpenPlayer,
+    required this.watchQueue,
+    required this.setShuffle,
+    required this.setRepeat,
     required this.setQueue,
     required this.skipTo,
     required this.play,
@@ -134,6 +162,9 @@ class AudioPlayback {
   final WatchAudioEnded watchEnded;
   final WatchAudioPlaying watchPlaying;
   final WatchOpenPlayer watchOpenPlayer;
+  final WatchAudioQueue watchQueue;
+  final SetAudioShuffle setShuffle;
+  final SetAudioRepeat setRepeat;
   final SetAudioQueue setQueue;
   final SkipAudioTo skipTo;
   final PlayAudio play;
