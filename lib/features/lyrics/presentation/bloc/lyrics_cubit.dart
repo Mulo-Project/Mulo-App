@@ -25,12 +25,14 @@ class LyricsCubit extends Cubit<LyricsState> {
   LyricsCubit({
     required this._load,
     required this._save,
+    required this._ensureAccess,
     required this._clear,
     required this._pickFile,
   }) : super(const LyricsState());
 
   final LoadLyrics _load;
   final SaveLyrics _save;
+  final EnsureLyricsFileAccess _ensureAccess;
   final ClearLyrics _clear;
   final PickLyricsFile _pickFile;
 
@@ -47,15 +49,21 @@ class LyricsCubit extends Cubit<LyricsState> {
   Future<String> currentText(Track track) async =>
       (await _load(LoadLyricsParams(track.id, track.uri)))?.raw ?? '';
 
+  /// 가사 편집 화면에 들어갈 때 곡 파일에 쓸 동의를 먼저 구한다 (필요한 곡만 시스템 창이 뜬다).
+  Future<bool> askFileAccess(Track track) => _ensureAccess(track);
+
   /// 가사 파일을 골라 글을 읽어 온다. 취소하면 null.
   Future<String?> pickFile() => _pickFile(const NoParams());
 
   /// [text]를 [track] 곡의 가사로 저장한다 (비면 지움). 음원 파일의 가사 태그에도 쓴다.
-  Future<void> save(Track track, String text) async {
-    final lyrics = await _save(SaveLyricsParams(track, text));
+  /// 앱에 저장하면 **바로** 화면에 반영하고, 그 뒤 음원 파일 태그 쓰기가 끝나면 결과를 돌려준다
+  /// (쓰려 하지 않았으면 null). 파일 쓰기는 오래 걸려 화면 반영을 막지 않는다.
+  Future<LyricsTagOutcome?> save(Track track, String text) async {
+    final saved = await _save(SaveLyricsParams(track, text));
     if (!isClosed && state.trackId == track.id) {
-      emit(LyricsState(trackId: track.id, lyrics: lyrics));
+      emit(LyricsState(trackId: track.id, lyrics: saved.lyrics));
     }
+    return saved.tag;
   }
 
   Future<void> clear(String trackId) async {

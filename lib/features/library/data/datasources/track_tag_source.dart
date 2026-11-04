@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/services.dart';
 
 import '../../../covers/domain/entities/cover_art.dart';
@@ -36,7 +37,9 @@ class TrackTagSource {
     String? lyrics,
     CoverArt? cover,
     int? color,
+    bool interactive = false,
   }) async {
+    debugPrint('MuloTag write start uri=${uri.isEmpty ? "(empty)" : uri}');
     if (uri.isEmpty) return TagWriteResult.unsupported;
     var viaFfmpeg = false;
     try {
@@ -46,6 +49,7 @@ class TrackTagSource {
         final ext = _extensionOfMime(
           await _media.invokeMethod<String>('mimeType', {'uri': uri}),
         );
+        debugPrint('MuloTag mime ext=$ext');
         if (ext == null) return TagWriteResult.unsupported;
         extension = ext;
       } else {
@@ -76,19 +80,27 @@ class TrackTagSource {
         lyrics: lyrics,
       );
 
+      debugPrint(
+        'MuloTag write ext=$extension ffmpeg=$viaFfmpeg lyrics=${lyrics?.length} cover=${cover != null}',
+      );
       if (!isContent) {
         return await embed(File(uri)) ? TagWriteResult.written : fail;
       }
       final temp = await _copy.invokeMethod<String>('copyToCache', uri);
       if (temp == null) return denied;
       try {
-        if (!await embed(File(temp))) return fail;
+        final embedded = await embed(File(temp));
+        debugPrint('MuloTag embed=$embedded');
+        if (!embedded) return fail;
         final ok =
             await _media.invokeMethod<bool>('overwriteAudio', {
               'uri': uri,
               'path': temp,
+              // 사용자가 직접 한 저장이면 쓸 권한이 없을 때 시스템 동의 창을 띄운다.
+              'ask': interactive,
             }) ??
             false;
+        debugPrint('MuloTag overwrite=$ok');
         return ok ? TagWriteResult.written : denied;
       } finally {
         try {
@@ -97,8 +109,36 @@ class TrackTagSource {
           // 이미 없으면 그만.
         }
       }
-    } on Object {
+    } on Object catch (e) {
+      debugPrint('MuloTag write error: $e');
       return viaFfmpeg ? TagWriteResult.failed : TagWriteResult.unsupported;
+    }
+  }
+
+  /// 곡 파일에 쓸 수 있는지 확인하고, 못 쓰면 시스템 동의 창을 띄운다 (가사 편집 화면에 들어갈 때).
+  /// 파일을 쓰지 않는 곡(content:// 아님 · ffmpeg 없음 · 다른 형식)은 물을 것이 없어 true.
+  Future<bool> ensureWriteAccess(String uri) async {
+    try {
+      if (!uri.startsWith('content://')) return true;
+      final ext = _extensionOfMime(
+        await _media.invokeMethod<String>('mimeType', {'uri': uri}),
+      );
+      final viaFfmpeg =
+          ext != null &&
+          FfmpegTagWriter.extensions.contains(ext) &&
+          (_ffmpegAvailable ??= await _ffmpeg.available());
+      if (!viaFfmpeg) return true;
+      final ok =
+          await _media.invokeMethod<bool>('ensureWrite', {
+            'uri': uri,
+            'ask': true,
+          }) ??
+          false;
+      debugPrint('MuloTag ensureWrite=$ok');
+      return ok;
+    } on Object catch (e) {
+      debugPrint('MuloTag ensureWrite error: $e');
+      return true;
     }
   }
 

@@ -66,6 +66,22 @@ void main() {
     expect(engine.calls.last, 'loop:off');
   });
 
+  test('구간 반복: 두 번째 지점이 앞이면 앞쪽이 시작이 된다', () async {
+    cubit.playQueue(tracks);
+    await settle();
+    engine.emitPosition(const Duration(seconds: 20));
+    await settle();
+    cubit.cycleLoop();
+    engine.emitPosition(const Duration(seconds: 7));
+    await settle();
+    cubit.cycleLoop();
+    await settle();
+    expect(cubit.state.looping, isTrue);
+    expect(cubit.state.loopStart, const Duration(seconds: 7));
+    expect(cubit.state.loopEnd, const Duration(seconds: 20));
+    expect(engine.calls.last, 'loop:7000-20000');
+  });
+
   test('구간 반복은 곡이 바뀌면 풀린다', () async {
     cubit.playQueue(tracks);
     await settle();

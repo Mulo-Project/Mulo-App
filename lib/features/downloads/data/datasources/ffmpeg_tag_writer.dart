@@ -17,6 +17,9 @@ class FfmpegTagWriter {
 
   static const extensions = {'opus', 'ogg', 'mp3'};
 
+  /// 마지막 태그 쓰기가 실패한 이유 (진단용). 성공하거나 새로 시작하면 비운다.
+  static String? lastError;
+
   /// 이 빌드에 ffmpeg가 들어 있는지 (full 빌드 Android). lite · 데스크톱은 false.
   Future<bool> available() async {
     try {
@@ -56,6 +59,7 @@ class FfmpegTagWriter {
           pictureBlock(coverPng, coverSide, coverSide),
         ),
     };
+    lastError = null;
     if (entries.isEmpty && (coverPng == null || !mp3)) return false;
     final meta = File('${audio.path}.ffmeta');
     final out = File('${audio.path}.tagged');
@@ -72,16 +76,21 @@ class FfmpegTagWriter {
         'format': mp3 ? 'mp3' : 'ogg',
         if (mp3 && coverPng != null) 'cover': art.path,
       });
+      debugPrint('MuloTag ffmpeg tag ok=$ok');
       if (ok != true || !await out.exists() || await out.length() == 0) {
+        lastError ??= 'ffmpeg ok=$ok';
         return false;
       }
       await out.rename(audio.path);
       return true;
-    } on PlatformException {
+    } on PlatformException catch (e) {
+      lastError = e.message ?? e.code;
       return false;
     } on MissingPluginException {
+      lastError = 'no ffmpeg plugin';
       return false;
-    } on FileSystemException {
+    } on FileSystemException catch (e) {
+      lastError = 'file: ${e.message}';
       return false;
     } finally {
       for (final f in [meta, out, art]) {

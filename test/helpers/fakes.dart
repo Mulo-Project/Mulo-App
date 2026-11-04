@@ -845,6 +845,12 @@ class FakeTrackTagRepository implements TrackTagRepository {
     int? color,
   }) async => result;
 
+  @override
+  String? get lastFailure => null;
+
+  @override
+  Future<bool> ensureWriteAccess(Track track) async => true;
+
   /// 가사 태그에 쓰라고 한 글 (곡 id → 글).
   final lyricsWritten = <String, String>{};
 
@@ -985,7 +991,7 @@ Future<void> setUpTestDependencies({
       () => downloadSettings ?? MemoryDownloadSettings(),
     )
     ..registerLazySingleton<EngineManager>(
-      () => engineManager ?? FakeEngineManager(),
+      () => engineManager ?? FakeEngineManager(installed: true),
     )
     ..registerLazySingleton<DownloaderEngine>(
       () => engine ?? FakeDownloaderEngine(),

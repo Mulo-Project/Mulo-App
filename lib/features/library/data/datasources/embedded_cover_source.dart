@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'dart:ui' as ui;
 
 import 'package:audio_metadata_reader/audio_metadata_reader.dart';
@@ -69,6 +70,7 @@ class EmbeddedCoverSource {
   Future<String?> extract(String uri) async {
     try {
       final raw = await _reader.read(uri);
+      debugPrint('MuloTag cover read: ${raw?.length}');
       if (raw == null || raw.isEmpty) return null;
       final png = await _shrink(raw);
       if (png == null) return null;
@@ -81,7 +83,8 @@ class EmbeddedCoverSource {
       );
       await file.writeAsBytes(png, flush: true);
       return file.path;
-    } on Object {
+    } on Object catch (e) {
+      debugPrint('MuloTag cover read failed: $e');
       // 지원하지 않는 형식 · 깨진 태그 · 읽기 실패는 모두 "내장 커버 없음".
       return null;
     }

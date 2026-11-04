@@ -49,6 +49,7 @@ class _LyricsOverlayBridgeState extends State<LyricsOverlayBridge> {
         .hideSongInfo;
     final track = context.read<NowPlayingCubit>().state.track;
     final overlay = context.read<LyricsOverlayCubit>();
+    debugPrint('MuloLyrics sync enabled=$enabled hide=$hide track=${track?.id}');
     if (!enabled || hide || track == null) {
       overlay.sync(enabled: false, trackId: null, lyrics: null);
       return;

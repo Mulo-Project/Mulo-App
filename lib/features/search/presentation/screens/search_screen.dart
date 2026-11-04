@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router.dart';
+import '../../../../core/config/app_config.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
@@ -11,6 +12,7 @@ import '../../../downloads/domain/entities/download_item.dart';
 import '../../../downloads/domain/entities/download_source.dart';
 import '../../../downloads/presentation/bloc/download_queue_cubit.dart';
 import '../../../downloads/presentation/widgets/download_dialog.dart';
+import '../../../engine/presentation/bloc/engine_cubit.dart';
 import '../../../library/domain/entities/track.dart' show formatDuration;
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
@@ -38,6 +40,7 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   late final _controller = TextEditingController(text: widget.initialQuery);
   late final SearchCubit _cubit = sl<SearchCubit>();
+  late final EngineCubit _engine = sl<EngineCubit>()..load();
   SearchSource _source = SearchSource.youtube;
 
   @override
@@ -50,10 +53,23 @@ class _SearchScreenState extends State<SearchScreen> {
   void dispose() {
     _controller.dispose();
     _cubit.close();
+    _engine.close();
     super.dispose();
   }
 
-  void _submit() => _cubit.submit(_controller.text, _source);
+  /// 이 기기에 쓸 수 있는 엔진(yt-dlp)이 없고 서버도 없어서, 설치하기 전에는 찾을 수 없다.
+  static bool _needsEngine(EngineState s) {
+    final status = s.status;
+    return status != null &&
+        status.supported &&
+        !status.installed &&
+        !AppConfig.hasApiBaseUrl;
+  }
+
+  void _submit() {
+    if (_needsEngine(_engine.state)) return;
+    _cubit.submit(_controller.text, _source);
+  }
 
   /// 클립보드의 링크를 입력칸에 넣고 바로 곡 정보를 불러온다.
   Future<void> _pasteLink() async {
@@ -122,26 +138,42 @@ class _SearchScreenState extends State<SearchScreen> {
                 const SizedBox(height: AppSpacing.md),
               ]),
             ),
-            BlocBuilder<SearchCubit, SearchState>(
-              bloc: _cubit,
-              buildWhen: (a, b) =>
-                  (a.status == SearchStatus.loaded && a.items.isNotEmpty) !=
-                  (b.status == SearchStatus.loaded && b.items.isNotEmpty),
-              builder: (context, state) {
-                final body = Padding(
-                  padding: EdgeInsets.only(
-                    bottom:
-                        AppSpacing.lg + MediaQuery.paddingOf(context).bottom,
-                  ),
-                  child: _Body(onRetry: _submit, onPaste: _pasteLink),
+            BlocBuilder<EngineCubit, EngineState>(
+              bloc: _engine,
+              builder: (context, engine) {
+                // 엔진이 없으면 찾기 전에 바로 설치하라고 안내한다.
+                if (_needsEngine(engine)) {
+                  return SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: _EngineNeeded(cubit: _engine, state: engine),
+                  );
+                }
+                return BlocBuilder<SearchCubit, SearchState>(
+                  bloc: _cubit,
+                  buildWhen: (a, b) =>
+                      (a.status == SearchStatus.loaded && a.items.isNotEmpty) !=
+                      (b.status == SearchStatus.loaded && b.items.isNotEmpty),
+                  builder: (context, state) {
+                    final body = Padding(
+                      padding: EdgeInsets.only(
+                        bottom:
+                            AppSpacing.lg +
+                            MediaQuery.paddingOf(context).bottom,
+                      ),
+                      child: _Body(onRetry: _submit, onPaste: _pasteLink),
+                    );
+                    // 결과는 위에서부터 길게 이어 붙이고, 안내는 남은 자리 가운데에 둔다.
+                    final isList =
+                        state.status == SearchStatus.loaded &&
+                        state.items.isNotEmpty;
+                    return isList
+                        ? SliverToBoxAdapter(child: body)
+                        : SliverFillRemaining(
+                            hasScrollBody: false,
+                            child: body,
+                          );
+                  },
                 );
-                // 결과는 위에서부터 길게 이어 붙이고, 안내는 남은 자리 가운데에 둔다.
-                final isList =
-                    state.status == SearchStatus.loaded &&
-                    state.items.isNotEmpty;
-                return isList
-                    ? SliverToBoxAdapter(child: body)
-                    : SliverFillRemaining(hasScrollBody: false, child: body);
               },
             ),
           ],
@@ -484,6 +516,33 @@ class _HitTile extends StatelessWidget {
       case _HitAction.download:
         _download(context);
     }
+  }
+}
+
+/// 다운로드 엔진(yt-dlp)이 없을 때 검색 자리에 보이는 안내: 바로 설치할 수 있다.
+class _EngineNeeded extends StatelessWidget {
+  const _EngineNeeded({required this.cubit, required this.state});
+
+  final EngineCubit cubit;
+  final EngineState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return EmptyState(
+      icon: AppIcons.download,
+      title: l10n.searchEngineNeededTitle,
+      body: state.failed
+          ? l10n.searchEngineInstallFailed
+          : l10n.searchEngineNeededBody,
+      action: PillButton(
+        label: state.busy
+            ? l10n.settingsEngineInstalling
+            : l10n.settingsEngineInstall,
+        icon: AppIcons.download,
+        onPressed: state.busy ? null : cubit.install,
+      ),
+    );
   }
 }
 

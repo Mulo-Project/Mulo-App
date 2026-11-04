@@ -1,8 +1,6 @@
 package com.mulo.app
 
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
 import com.yausername.ffmpeg.FFmpeg
 import io.flutter.plugin.common.BinaryMessenger
 import java.io.File
@@ -16,7 +14,6 @@ import java.util.concurrent.Executors
  */
 class TranscoderChannel(private val context: Context, messenger: BinaryMessenger) : NativeChannel(messenger, NAME) {
     private val io = Executors.newSingleThreadExecutor()
-    private val main = Handler(Looper.getMainLooper())
 
     @Volatile private var process: Process? = null
     @Volatile private var ready = false
@@ -39,14 +36,7 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
                         result.error("bad_args", "input, output, codec, bitrate, format required", null)
                         return@setMethodCallHandler
                     }
-                    io.execute {
-                        try {
-                            val ok = convert(input, output, codec, bitrate, format)
-                            main.post { result.success(ok) }
-                        } catch (e: Exception) {
-                            main.post { result.error("convert_failed", e.message, null) }
-                        }
-                    }
+                    runAsync(io, result, "convert_failed") { convert(input, output, codec, bitrate, format) }
                 }
                 "tag" -> {
                     val input = call.argument<String>("input")
@@ -57,18 +47,27 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
                         result.error("bad_args", "input, meta, output, format required", null)
                         return@setMethodCallHandler
                     }
-                    io.execute {
-                        try {
-                            val ok = tag(input, meta, output, format, call.argument<String>("cover"))
-                            main.post { result.success(ok) }
-                        } catch (e: Exception) {
-                            main.post { result.error("tag_failed", e.message, null) }
-                        }
-                    }
+                    runAsync(io, result, "tag_failed") { tag(input, meta, output, format, call.argument<String>("cover")) }
                 }
                 else -> result.notImplemented()
             }
         }
+    }
+
+    /**
+     * ffmpeg가 찾을 공유 라이브러리 폴더들. 풀어 둔 ffmpeg · 파이썬 패키지의 `usr/lib`에 더해,
+     * C++ 런타임(`libc++_shared.so`)이 들어 있는 앱의 네이티브 라이브러리 폴더도 넣는다
+     * (없으면 "library libc++_shared.so not found"로 실행이 안 된다).
+     */
+    private fun libraryPath(): String {
+        val packages = File(context.noBackupFilesDir, "youtubedl-android/packages")
+        val dirs = listOf(
+            File(packages, "ffmpeg/usr/lib").absolutePath,
+            File(packages, "python/usr/lib").absolutePath,
+            context.applicationInfo.nativeLibraryDir,
+        )
+        val existing = System.getenv("LD_LIBRARY_PATH")
+        return (dirs + listOfNotNull(existing)).joinToString(":")
     }
 
     private fun ensureInit() {
@@ -89,7 +88,6 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
         ensureInit()
         val ffmpeg = File(context.applicationInfo.nativeLibraryDir, "libffmpeg.so")
         if (!ffmpeg.exists()) return false
-        val libs = File(context.noBackupFilesDir, "youtubedl-android/packages/ffmpeg/usr/lib")
         val out = File(output)
         out.delete()
         val args = mutableListOf(ffmpeg.absolutePath, "-nostdin", "-y", "-i", input, "-i", meta)
@@ -102,19 +100,28 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
         if (format == "mp3") args += listOf("-id3v2_version", "3")
         args += listOf("-f", format, output)
         val builder = ProcessBuilder(args)
-        builder.environment()["LD_LIBRARY_PATH"] =
-            libs.absolutePath + (System.getenv("LD_LIBRARY_PATH")?.let { ":$it" } ?: "")
+        builder.environment()["LD_LIBRARY_PATH"] = libraryPath()
         builder.redirectErrorStream(true)
         val p = builder.start()
         process = p
         try {
+            // 출력은 비우되 실패 원인을 알리려 마지막 부분만 남긴다.
+            val tail = StringBuilder()
             p.inputStream.use { stream ->
                 val buffer = ByteArray(8192)
-                while (stream.read(buffer) >= 0) { /* 버린다 */ }
+                while (true) {
+                    val n = stream.read(buffer)
+                    if (n < 0) break
+                    tail.append(String(buffer, 0, n, Charsets.UTF_8))
+                    if (tail.length > 1200) tail.delete(0, tail.length - 800)
+                }
             }
             val code = p.waitFor()
-            if (code != 0) out.delete()
-            return code == 0
+            if (code != 0) {
+                out.delete()
+                throw IllegalStateException("ffmpeg exit $code: ${tail.toString().trim().takeLast(400)}")
+            }
+            return true
         } finally {
             process = null
         }
@@ -125,7 +132,6 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
         ensureInit()
         val ffmpeg = File(context.applicationInfo.nativeLibraryDir, "libffmpeg.so")
         if (!ffmpeg.exists()) return false
-        val libs = File(context.noBackupFilesDir, "youtubedl-android/packages/ffmpeg/usr/lib")
         val out = File(output)
         out.delete()
         val builder = ProcessBuilder(
@@ -134,8 +140,7 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
             "-c:a", codec, "-b:a", "${bitrate}k",
             "-f", format, output,
         )
-        builder.environment()["LD_LIBRARY_PATH"] =
-            libs.absolutePath + (System.getenv("LD_LIBRARY_PATH")?.let { ":$it" } ?: "")
+        builder.environment()["LD_LIBRARY_PATH"] = libraryPath()
         builder.redirectErrorStream(true)
         val p = builder.start()
         process = p

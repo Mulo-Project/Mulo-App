@@ -26,10 +26,17 @@ void registerLyrics(GetIt sl) {
     ..registerLazySingleton<LyricsFileSource>(FilePickerLyricsSource.new)
     ..registerFactory(() => LoadLyrics(sl()))
     ..registerFactory(() => SaveLyrics(sl(), sl()))
+    ..registerFactory(() => EnsureLyricsFileAccess(sl()))
     ..registerFactory(() => ClearLyrics(sl()))
     ..registerFactory(() => PickLyricsFile(sl()))
     ..registerFactory(
-      () => LyricsCubit(load: sl(), save: sl(), clear: sl(), pickFile: sl()),
+      () => LyricsCubit(
+        load: sl(),
+        save: sl(),
+        ensureAccess: sl(),
+        clear: sl(),
+        pickFile: sl(),
+      ),
     )
     ..registerLazySingleton<LyricsSettingsRepository>(
       PrefsLyricsSettingsRepository.new,

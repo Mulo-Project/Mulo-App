@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart'
-    show TargetPlatform, defaultTargetPlatform;
+    show TargetPlatform, debugPrint, defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -245,11 +245,14 @@ Future<void> toggleLyricsOverlay(BuildContext context) async {
   final settings = context.read<LyricsSettingsCubit>();
   final overlay = context.read<LyricsOverlayCubit>();
   final l10n = context.l10n;
+  debugPrint('MuloLyrics toggle overlay=${settings.state.overlay}');
   if (settings.state.overlay) {
     await settings.setOverlay(false);
     return;
   }
-  if (await overlay.ensurePermission()) {
+  final granted = await overlay.ensurePermission();
+  debugPrint('MuloLyrics permission=$granted');
+  if (granted) {
     await settings.setOverlay(true);
   } else if (context.mounted) {
     _snack(context, l10n.lyricsOverlayNeedPermission);

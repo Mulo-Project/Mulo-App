@@ -4,6 +4,7 @@ import '../../../covers/domain/entities/cover_art.dart';
 import '../../domain/entities/file_tags.dart';
 import '../../domain/entities/track.dart';
 import '../../domain/repositories/track_tag_repository.dart';
+import '../../../downloads/data/datasources/ffmpeg_tag_writer.dart';
 import '../datasources/file_tag_source.dart';
 import '../datasources/track_tag_source.dart';
 
@@ -25,6 +26,9 @@ class TrackTagRepositoryImpl implements TrackTagRepository {
       );
 
   @override
+  String? get lastFailure => FfmpegTagWriter.lastError;
+
+  @override
   Future<TagWriteResult> writeLyrics(Track track, String lyrics) =>
       lyrics.trim().isEmpty
       ? Future.value(TagWriteResult.unsupported)
@@ -35,7 +39,12 @@ class TrackTagRepositoryImpl implements TrackTagRepository {
           album: '',
           genre: '',
           lyrics: lyrics,
+          // 쓰기 동의는 가사 편집 화면에 들어갈 때 이미 구했다 ([ensureWriteAccess]).
         );
+
+  @override
+  Future<bool> ensureWriteAccess(Track track) =>
+      _source.ensureWriteAccess(track.uri);
 }
 
 class FileTagRepositoryImpl implements FileTagRepository {

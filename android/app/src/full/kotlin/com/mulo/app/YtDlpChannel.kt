@@ -1,8 +1,6 @@
 package com.mulo.app
 
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
 import com.yausername.youtubedl_android.YoutubeDL
 import com.yausername.youtubedl_android.YoutubeDLException
 import com.yausername.youtubedl_android.YoutubeDLRequest
@@ -18,7 +16,6 @@ import java.util.concurrent.Executors
  */
 class YtDlpChannel(private val context: Context, messenger: BinaryMessenger) : NativeChannel(messenger, NAME) {
     private val io = Executors.newSingleThreadExecutor()
-    private val main = Handler(Looper.getMainLooper())
 
     // 초기화(파이썬 풀기)는 처음 한 번만 걸린다.
     @Volatile private var ready = false
@@ -108,17 +105,11 @@ class YtDlpChannel(private val context: Context, messenger: BinaryMessenger) : N
         }
     }
 
-    private fun run(result: MethodChannel.Result, block: () -> Map<String, Any?>) {
-        io.execute {
-            try {
-                ensureInit()
-                val value = block()
-                main.post { result.success(value) }
-            } catch (e: Exception) {
-                main.post { result.error("ytdlp_failed", e.message, null) }
-            }
+    private fun run(result: MethodChannel.Result, block: () -> Map<String, Any?>) =
+        runAsync(io, result, "ytdlp_failed") {
+            ensureInit()
+            block()
         }
-    }
 
     override fun dispose() {
         super.dispose()

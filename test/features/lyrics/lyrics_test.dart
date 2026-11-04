@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
+import 'package:music_download_play_app/features/library/domain/repositories/track_tag_repository.dart';
 import 'package:music_download_play_app/features/lyrics/domain/usecases/lyrics_usecases.dart';
 
 import '../../helpers/fakes.dart';
@@ -195,9 +196,24 @@ void main() {
     test('가사를 앱에 저장하고 음원 파일의 가사 태그에도 쓴다', () async {
       final repo = MemoryLyricsRepository();
       final tags = FakeTrackTagRepository();
-      await SaveLyrics(repo, tags)(SaveLyricsParams(track, '[00:01.00]hi'));
+      final saved = await SaveLyrics(
+        repo,
+        tags,
+      )(SaveLyricsParams(track, '[00:01.00]hi'));
+      await saved.tag;
       expect(repo.saved['t1'], '[00:01.00]hi');
       expect(tags.lyricsWritten['t1'], '[00:01.00]hi');
+    });
+
+    test('파일 태그 쓰기 결과를 돌려준다', () async {
+      final repo = MemoryLyricsRepository();
+      final tags = FakeTrackTagRepository()..result = TagWriteResult.denied;
+      final saved = await SaveLyrics(
+        repo,
+        tags,
+      )(SaveLyricsParams(track, '[00:01.00]hi'));
+      expect(saved.lyrics, isNotNull);
+      expect((await saved.tag)?.result, TagWriteResult.denied);
     });
 
     test('가사를 비우면 파일 태그는 건드리지 않는다', () async {

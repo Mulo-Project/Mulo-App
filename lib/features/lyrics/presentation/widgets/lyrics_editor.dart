@@ -6,6 +6,7 @@ import '../../../library/domain/entities/track.dart';
 import '../bloc/lyrics_cubit.dart';
 import '../../domain/entities/timed_lyrics_text.dart';
 import 'lyrics_import_bar.dart';
+import 'lyrics_tag_notice.dart';
 import 'timed_lyrics_controller.dart';
 import 'lyrics_edit_scaffold.dart';
 
@@ -13,6 +14,8 @@ import 'lyrics_edit_scaffold.dart';
 /// 저장하면 곡의 가사로 저장한다(비우면 지움). 화면이 닫히고 가사가 바뀌므로 따로 안내하지 않는다.
 Future<void> showLyricsEditor(BuildContext context, Track track) async {
   final cubit = context.read<LyricsCubit>();
+  await cubit.askFileAccess(track);
+  if (!context.mounted) return;
   final text = await Navigator.of(context, rootNavigator: true).push<String>(
     MaterialPageRoute(
       builder: (_) => LyricsEditorPage(
@@ -22,7 +25,8 @@ Future<void> showLyricsEditor(BuildContext context, Track track) async {
     ),
   );
   if (text == null) return;
-  await cubit.save(track, text);
+  final outcome = await cubit.save(track, text);
+  if (context.mounted) showLyricsTagNotice(context, outcome);
 }
 
 /// "가사 설정" 페이지. 플레이어의 가사 설정과 받기 창의 가사 설정이 함께 쓴다.

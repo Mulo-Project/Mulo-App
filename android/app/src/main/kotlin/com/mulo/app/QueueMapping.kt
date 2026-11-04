@@ -34,4 +34,27 @@ internal object QueueMapping {
             .setMediaMetadata(metadata)
             .build()
     }
+
+    /** 저장해 둔 곡([StoredItem])을 [MediaItem]으로 되살린다. */
+    fun mediaItemOf(i: StoredItem): MediaItem {
+        val metadata = MediaMetadata.Builder()
+            .setTitle(i.title)
+            .setArtist(i.artist.ifEmpty { null })
+            .setAlbumTitle(i.album.ifEmpty { null })
+            .setDurationMs(i.durationMs.takeIf { it > 0 })
+            .setArtworkUri(i.art?.let { Uri.parse(it) })
+            .build()
+        return MediaItem.Builder().setMediaId(i.id).setUri(i.uri).setMediaMetadata(metadata).build()
+    }
+
+    /** [MediaItem]을 저장할 [StoredItem]으로. */
+    fun storedItemOf(item: MediaItem) = StoredItem(
+        id = item.mediaId,
+        uri = item.localConfiguration?.uri?.toString() ?: "",
+        title = item.mediaMetadata.title?.toString() ?: "",
+        artist = item.mediaMetadata.artist?.toString() ?: "",
+        album = item.mediaMetadata.albumTitle?.toString() ?: "",
+        durationMs = item.mediaMetadata.durationMs ?: 0L,
+        art = item.mediaMetadata.artworkUri?.toString(),
+    )
 }

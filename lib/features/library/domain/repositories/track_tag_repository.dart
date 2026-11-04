@@ -27,6 +27,13 @@ abstract interface class TrackTagRepository {
   /// [track] 파일의 가사 태그에 [lyrics] 글(싱크 가사면 `.lrc` 원문)을 쓴다. 다른 태그는 건드리지 않는다.
   /// 비어 있으면 쓰지 않는다 (이미 파일에 있는 가사는 지워지지 않는다).
   Future<TagWriteResult> writeLyrics(Track track, String lyrics);
+
+  /// [track] 파일에 쓸 수 있는지 확인하고, 못 쓰면 시스템 동의를 구한다 (가사 편집 화면에 들어갈 때).
+  /// 쓰지 않는 곡이거나 쓸 수 있으면 true, 거절하면 false.
+  Future<bool> ensureWriteAccess(Track track);
+
+  /// 마지막 쓰기가 실패한 이유 (진단용 짧은 글). 없으면 null.
+  String? get lastFailure;
 }
 
 /// 곡 파일의 태그를 읽는다 ([TrackTagRepository]의 반대 방향: 파일 → 앱 DB).
