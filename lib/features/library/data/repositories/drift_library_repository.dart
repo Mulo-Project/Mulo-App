@@ -90,38 +90,24 @@ class DriftLibraryRepository implements LibraryRepository {
   }
 
   @override
-  Future<int> purgeHidden() async {
+  Future<List<Track>> hiddenTracks() async {
+    final rows =
+        await (_db.select(_db.tracks)
+              ..where((t) => t.hidden.equals(true))
+              ..orderBy([(t) => OrderingTerm.asc(t.title)]))
+            .get();
+    return rows.map(_toTrack).toList();
+  }
+
+  @override
+  Future<int> purgeHidden({Set<String>? ids}) async {
+    if (ids != null && ids.isEmpty) return 0;
     final files = <String>[];
     final purged = await _db.transaction(() async {
-      final ids = [
-        for (final t in await (_db.select(
-          _db.tracks,
-        )..where((t) => t.hidden.equals(true))).get())
-          t.id,
-      ];
-      if (ids.isEmpty) return 0;
-      final keys = [for (final id in ids) 'track:$id'];
-      for (final c in await (_db.select(
-        _db.covers,
-      )..where((c) => c.key.isIn(keys))).get()) {
-        if (c.path.isNotEmpty) files.add(c.path);
-      }
-      for (final l in await (_db.select(
-        _db.lyricsFiles,
-      )..where((l) => l.trackId.isIn(ids))).get()) {
-        files.add(l.path);
-      }
-      await (_db.delete(_db.covers)..where((c) => c.key.isIn(keys))).go();
-      await (_db.delete(_db.coverColors)..where((c) => c.key.isIn(keys))).go();
-      await (_db.delete(
-        _db.lyricsFiles,
-      )..where((l) => l.trackId.isIn(ids))).go();
-      await (_db.delete(
-        _db.playlistTracks,
-      )..where((p) => p.trackId.isIn(ids))).go();
-      await (_db.delete(_db.plays)..where((p) => p.trackId.isIn(ids))).go();
-      await (_db.delete(_db.tracks)..where((t) => t.id.isIn(ids))).go();
-      return ids.length;
+      final query = _db.select(_db.tracks)
+        ..where((t) => t.hidden.equals(true));
+      if (ids != null) query.where((t) => t.id.isIn(ids));
+      return _purgeRows([for (final t in await query.get()) t.id], files);
     });
     for (final path in files) {
       try {
@@ -132,6 +118,32 @@ class DriftLibraryRepository implements LibraryRepository {
       }
     }
     return purged;
+  }
+
+  Future<int> _purgeRows(List<String> ids, List<String> files) async {
+    if (ids.isEmpty) return 0;
+    final keys = [for (final id in ids) 'track:$id'];
+    for (final c in await (_db.select(
+      _db.covers,
+    )..where((c) => c.key.isIn(keys))).get()) {
+      if (c.path.isNotEmpty) files.add(c.path);
+    }
+    for (final l in await (_db.select(
+      _db.lyricsFiles,
+    )..where((l) => l.trackId.isIn(ids))).get()) {
+      files.add(l.path);
+    }
+    await (_db.delete(_db.covers)..where((c) => c.key.isIn(keys))).go();
+    await (_db.delete(_db.coverColors)..where((c) => c.key.isIn(keys))).go();
+    await (_db.delete(
+      _db.lyricsFiles,
+    )..where((l) => l.trackId.isIn(ids))).go();
+    await (_db.delete(
+      _db.playlistTracks,
+    )..where((p) => p.trackId.isIn(ids))).go();
+    await (_db.delete(_db.plays)..where((p) => p.trackId.isIn(ids))).go();
+    await (_db.delete(_db.tracks)..where((t) => t.id.isIn(ids))).go();
+    return ids.length;
   }
 
   @override

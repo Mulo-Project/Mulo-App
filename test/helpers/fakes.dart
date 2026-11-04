@@ -137,7 +137,10 @@ class FakeLibraryRepository implements LibraryRepository {
   Future<int> hiddenCount() async => 0;
 
   @override
-  Future<int> purgeHidden() async => 0;
+  Future<List<Track>> hiddenTracks() async => const [];
+
+  @override
+  Future<int> purgeHidden({Set<String>? ids}) async => 0;
 
   @override
   Future<void> hide(String trackId) async {

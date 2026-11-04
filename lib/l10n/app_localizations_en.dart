@@ -685,6 +685,19 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String hiddenRecordsHint(int count) {
+    return '$count hidden songs from removed folders. Pick the ones to clear.';
+  }
+
+  @override
+  String get hiddenRecordsPurgeAll => 'Clear all';
+
+  @override
+  String hiddenRecordsPurgeOneTitle(String title) {
+    return 'Clear the record of \"$title\"?';
+  }
+
+  @override
   String get settingsAbout => 'About';
 
   @override

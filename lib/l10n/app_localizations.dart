@@ -1322,6 +1322,24 @@ abstract class AppLocalizations {
   /// **'{count}곡의 기록을 지웠어요'**
   String settingsPurgeHiddenDone(int count);
 
+  /// No description provided for @hiddenRecordsHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'폴더를 빼서 숨겨 둔 {count}곡이에요. 기록을 지울 곡을 골라요.'**
+  String hiddenRecordsHint(int count);
+
+  /// No description provided for @hiddenRecordsPurgeAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'모두 지우기'**
+  String get hiddenRecordsPurgeAll;
+
+  /// No description provided for @hiddenRecordsPurgeOneTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'"{title}" 기록을 지울까요?'**
+  String hiddenRecordsPurgeOneTitle(String title);
+
   /// No description provided for @settingsAbout.
   ///
   /// In ko, this message translates to:
