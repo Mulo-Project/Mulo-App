@@ -709,6 +709,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsVersion => '버전';
 
   @override
+  String get settingsStopLog => '재생 중단 기록';
+
+  @override
+  String get settingsStopLogDesc => '재생이 멈춘 이유를 최근 20개까지 보여 줘요';
+
+  @override
+  String get stopLogEmpty => '기록이 없어요';
+
+  @override
+  String get stopLogClear => '기록 지우기';
+
+  @override
   String get comingSoon => '준비 중';
 
   @override

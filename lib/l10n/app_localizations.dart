@@ -1382,6 +1382,30 @@ abstract class AppLocalizations {
   /// **'버전'**
   String get settingsVersion;
 
+  /// No description provided for @settingsStopLog.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생 중단 기록'**
+  String get settingsStopLog;
+
+  /// No description provided for @settingsStopLogDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생이 멈춘 이유를 최근 20개까지 보여 줘요'**
+  String get settingsStopLogDesc;
+
+  /// No description provided for @stopLogEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'기록이 없어요'**
+  String get stopLogEmpty;
+
+  /// No description provided for @stopLogClear.
+  ///
+  /// In ko, this message translates to:
+  /// **'기록 지우기'**
+  String get stopLogClear;
+
   /// No description provided for @comingSoon.
   ///
   /// In ko, this message translates to:

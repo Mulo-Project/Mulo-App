@@ -87,6 +87,14 @@ object PlaybackStore {
         prefs(context).edit().putString("stopLog", (lines + "$stamp $text").takeLast(20).joinToString("\n")).apply()
     }
 
+    /** [logStop]이 남긴 기록을 오래된 것부터 읽는다 (설정의 재생 중단 기록 화면). */
+    fun readStopLog(context: Context): List<String> =
+        (prefs(context).getString("stopLog", "") ?: "").split("\n").filter { it.isNotBlank() }
+
+    fun clearStopLog(context: Context) {
+        prefs(context).edit().remove("stopLog").apply()
+    }
+
     fun saveSession(context: Context, map: Map<*, *>?) {
         val edit = prefs(context).edit()
         if (map == null) {

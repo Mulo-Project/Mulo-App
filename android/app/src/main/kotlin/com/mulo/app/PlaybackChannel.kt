@@ -7,7 +7,7 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 
 /** 앱(Dart)과 [PlaybackHub]를 잇는 통로. 약속은 docs/native-playback.md. */
-class PlaybackChannel(context: Context, messenger: BinaryMessenger) {
+class PlaybackChannel(private val context: Context, messenger: BinaryMessenger) {
     private val methods = MethodChannel(messenger, "music_app/playback")
     private val events = EventChannel(messenger, "music_app/playback/events")
 
@@ -61,6 +61,8 @@ class PlaybackChannel(context: Context, messenger: BinaryMessenger) {
                 result.success(null)
             }
             "setSession" -> { PlaybackHub.setSession(call.arguments as? Map<*, *>); result.success(null) }
+            "stopLog" -> result.success(PlaybackStore.readStopLog(context))
+            "clearStopLog" -> { PlaybackStore.clearStopLog(context); result.success(null) }
             else -> result.notImplemented()
         }
     }

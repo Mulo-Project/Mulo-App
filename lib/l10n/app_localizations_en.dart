@@ -725,6 +725,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsVersion => 'Version';
 
   @override
+  String get settingsStopLog => 'Playback stop log';
+
+  @override
+  String get settingsStopLogDesc => 'Shows the last 20 reasons playback stopped';
+
+  @override
+  String get stopLogEmpty => 'No records';
+
+  @override
+  String get stopLogClear => 'Clear log';
+
+  @override
   String get comingSoon => 'Coming soon';
 
   @override
