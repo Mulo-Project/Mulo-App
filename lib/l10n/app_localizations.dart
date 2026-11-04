@@ -3449,8 +3449,8 @@ abstract class AppLocalizations {
   /// No description provided for @lyricsTagNotSaved.
   ///
   /// In ko, this message translates to:
-  /// **'가사를 음원 파일에는 쓰지 못했어요 ({reason}). 앱 데이터를 지우면 가사가 사라져요.'**
-  String lyricsTagNotSaved(String reason);
+  /// **'파일 저장에 실패했어요. 앱 데이터를 지우면 가사가 사라져요.'**
+  String get lyricsTagNotSaved;
 
   /// No description provided for @lyricsSyncPlay.
   ///

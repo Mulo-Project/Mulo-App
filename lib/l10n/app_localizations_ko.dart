@@ -1825,9 +1825,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsSyncEmpty => '싱크를 맞출 가사가 없어요. 먼저 가사를 입력해 주세요.';
 
   @override
-  String lyricsTagNotSaved(String reason) {
-    return '가사를 음원 파일에는 쓰지 못했어요 ($reason). 앱 데이터를 지우면 가사가 사라져요.';
-  }
+  String get lyricsTagNotSaved => '파일 저장에 실패했어요. 앱 데이터를 지우면 가사가 사라져요.';
 
   @override
   String get lyricsSyncPlay => '재생';

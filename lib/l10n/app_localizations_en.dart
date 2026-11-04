@@ -1874,9 +1874,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsSyncEmpty => 'No lyrics to sync. Add lyrics first.';
 
   @override
-  String lyricsTagNotSaved(String reason) {
-    return 'Couldn\'t write the lyrics into the audio file ($reason). Clearing app data will lose them.';
-  }
+  String get lyricsTagNotSaved =>
+      'Couldn\'t save to the file. Clearing app data will lose the lyrics.';
 
   @override
   String get lyricsSyncPlay => 'Play';
