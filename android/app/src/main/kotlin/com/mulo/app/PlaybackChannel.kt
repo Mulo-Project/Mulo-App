@@ -31,16 +31,16 @@ class PlaybackChannel(context: Context, messenger: BinaryMessenger) {
         when (call.method) {
             "setQueue" -> PlaybackHub.setQueue(call.arguments as Map<*, *>, result)
             "setQueueArt" -> { PlaybackHub.setQueueArt(call.arguments as Map<*, *>); result.success(null) }
-            "playNext" -> { PlaybackHub.playNext(call.arguments as Map<*, *>); result.success(null) }
-            "addToQueue" -> { PlaybackHub.addToQueue(call.arguments as Map<*, *>); result.success(null) }
-            "removeFromQueue" -> { PlaybackHub.removeFromQueue(call.arguments as String); result.success(null) }
+            "playNext" -> { PlaybackHub.playNext(call.arguments as Map<*, *>); result.success(PlaybackHub.queueState()) }
+            "addToQueue" -> { PlaybackHub.addToQueue(call.arguments as Map<*, *>); result.success(PlaybackHub.queueState()) }
+            "removeFromQueue" -> { PlaybackHub.removeFromQueue(call.arguments as String); result.success(PlaybackHub.queueState()) }
             "moveInQueue" -> {
                 val args = call.arguments as Map<*, *>
                 PlaybackHub.moveInQueue((args["from"] as Number).toInt(), (args["to"] as Number).toInt())
-                result.success(null)
+                result.success(PlaybackHub.queueState())
             }
-            "setShuffle" -> { PlaybackHub.setShuffle(call.arguments as? Boolean ?: false); result.success(null) }
-            "setRepeat" -> { PlaybackHub.setRepeat(call.arguments as? String); result.success(null) }
+            "setShuffle" -> { PlaybackHub.setShuffle(call.arguments as? Boolean ?: false); result.success(PlaybackHub.queueState()) }
+            "setRepeat" -> { PlaybackHub.setRepeat(call.arguments as? String); result.success(PlaybackHub.queueState()) }
             "skipTo" -> { PlaybackHub.skipTo((call.arguments as Number).toInt()); result.success(null) }
             "getState" -> result.success(PlaybackHub.getState())
             "takeOpenPlayerRequest" -> result.success(PlaybackHub.takeOpenPlayerRequest())

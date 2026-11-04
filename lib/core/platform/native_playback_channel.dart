@@ -24,30 +24,32 @@ class NativePlaybackChannel {
 
   /// 대기열 스냅샷을 통째로 바꾼다. 현재 곡이 재생할 준비가 되면 끝난다. 못 열면 던진다.
   /// 현재 곡이 그대로면 재생을 끊지 않는다 (`positionMs`가 없으면 위치도 그대로).
-  Future<void> setQueue(Map<String, Object?> snapshot) =>
-      _method.invokeMethod('setQueue', snapshot);
+  Future<Map<Object?, Object?>?> setQueue(Map<String, Object?> snapshot) =>
+      _method.invokeMapMethod<Object?, Object?>('setQueue', snapshot);
 
   /// 지금 곡 바로 뒤에 끼운다 (이미 있으면 그 자리를 옮긴다). [item]은 `setQueue` 곡 맵과 같은 모양.
-  Future<void> playNext(Map<String, Object?> item) =>
-      _method.invokeMethod('playNext', item);
+  Future<Map<Object?, Object?>?> playNext(Map<String, Object?> item) =>
+      _method.invokeMapMethod<Object?, Object?>('playNext', item);
 
   /// 대기열 맨 뒤에 붙인다 (이미 있으면 건너뛴다).
-  Future<void> addToQueue(Map<String, Object?> item) =>
-      _method.invokeMethod('addToQueue', item);
+  Future<Map<Object?, Object?>?> addToQueue(Map<String, Object?> item) =>
+      _method.invokeMapMethod<Object?, Object?>('addToQueue', item);
 
   /// 곡 하나를 뺀다. 지금 곡이면 다음 곡(마지막이었으면 새 마지막 곡)으로 처음부터 넘어간다.
-  Future<void> removeFromQueue(String id) =>
-      _method.invokeMethod('removeFromQueue', id);
+  Future<Map<Object?, Object?>?> removeFromQueue(String id) =>
+      _method.invokeMapMethod<Object?, Object?>('removeFromQueue', id);
 
   /// [from]번 곡을 [to] 자리로 옮긴다 ([to]는 옮긴 뒤의 자리).
-  Future<void> moveInQueue(int from, int to) =>
-      _method.invokeMethod('moveInQueue', {'from': from, 'to': to});
+  Future<Map<Object?, Object?>?> moveInQueue(int from, int to) => _method
+      .invokeMapMethod<Object?, Object?>('moveInQueue', {'from': from, 'to': to});
 
   /// 셔플을 켜고 끈다. 섞는 일은 네이티브가 하고 새 순서는 `queue` 이벤트로 온다.
-  Future<void> setShuffle(bool on) => _method.invokeMethod('setShuffle', on);
+  Future<Map<Object?, Object?>?> setShuffle(bool on) =>
+      _method.invokeMapMethod<Object?, Object?>('setShuffle', on);
 
   /// 반복 모드(`off` `all` `one`)를 바꾼다.
-  Future<void> setRepeat(String mode) => _method.invokeMethod('setRepeat', mode);
+  Future<Map<Object?, Object?>?> setRepeat(String mode) =>
+      _method.invokeMapMethod<Object?, Object?>('setRepeat', mode);
 
   /// 대기열은 그대로 두고 [index]번 곡으로 처음부터 옮긴다.
   Future<void> skipTo(int index) => _method.invokeMethod('skipTo', index);

@@ -1,7 +1,7 @@
 # 네이티브 재생 약속 (플랫폼 중립)
 
 OS에 묶인 것(재생 엔진 · 미디어 세션 · 알림 · 포그라운드 서비스)과 **곡 넘김**은 네이티브가 쥔다 (D-093 · D-094).
-보관함 · 재생목록의 규칙은 Dart가 쥔다. 대기열 **편집**(`playNext` `addToQueue` `removeFromQueue` `moveInQueue`)은 명령으로 네이티브가 실행하고 앱은 같은 편집을 화면에 먼저 비춘다 (D-153).
+보관함 · 재생목록의 규칙은 Dart가 쥔다. 대기열 **편집**(`playNext` `addToQueue` `removeFromQueue` `moveInQueue`)과 셔플 · 반복은 명령으로 네이티브가 실행하고, 앱은 명령 **결과**(`ids` `index` `shuffle` `repeat`)를 그대로 비춘다 (D-153 · D-154).
 **셔플 · 반복은 네이티브가 쥔다**: Dart는 `setShuffle` · `setRepeat` 명령만 보내고, 네이티브가 알려 주는 `queue` 이벤트의 순서를 비춘다.
 Dart가 정한 순서의 목록을 **스냅샷**으로 보내면 네이티브가 그 순서대로 재생하고 곡을 넘긴다.
 Android는 Kotlin(Media3), Windows는 나중에 C++로 **같은 약속**을 구현한다. 그 밖의 OS는 지금 just_audio 위에서

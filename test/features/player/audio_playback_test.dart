@@ -360,12 +360,12 @@ void main() {
     expect(engine.calls, calls);
   });
 
-  test('곡 구성이 다른 순서 이벤트는 대기열을 건드리지 않는다', () async {
+  test('모르는 곡이 든 대기열 이벤트는 건드리지 않는다', () async {
     cubit.playQueue(tracks);
     await settle();
     engine.emitQueueChange(
-      PlaybackQueueChange(
-        ids: [tracks[0].id],
+      const PlaybackQueueChange(
+        ids: ['unknown', 'x'],
         index: 0,
         shuffle: false,
         repeat: PlayerRepeatMode.off,
@@ -373,6 +373,20 @@ void main() {
     );
     await settle();
     expect(cubit.state.queue, tracks);
+  });
+
+  test('명령 결과가 대기열을 정한다: 엔진이 돌려준 순서를 그대로 비춘다', () async {
+    cubit.playQueue(tracks);
+    await settle();
+    cubit.moveInQueue(0, 2);
+    await settle();
+    expect(cubit.state.queue.map((t) => t.id), [
+      tracks[1].id,
+      tracks[2].id,
+      tracks[0].id,
+    ]);
+    expect(cubit.state.index, 2);
+    expect(cubit.state.track, tracks[0]);
   });
 
   test('곡을 못 불러오면 재생을 멈춘다', () async {
