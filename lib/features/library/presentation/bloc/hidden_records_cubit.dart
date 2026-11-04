@@ -1,11 +1,11 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/usecase/usecase.dart';
-import '../../domain/entities/track.dart';
+import '../../domain/entities/hidden_track.dart';
 import '../../domain/usecases/loaded_folder_usecases.dart';
 
 /// 폴더를 빼서 숨겨 둔 곡 (상태)과 그 기록 정리.
-class HiddenRecordsCubit extends Cubit<List<Track>> {
+class HiddenRecordsCubit extends Cubit<List<HiddenTrack>> {
   HiddenRecordsCubit(this._list, this._purge) : super(const []);
 
   final ListHiddenTracks _list;

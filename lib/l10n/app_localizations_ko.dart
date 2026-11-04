@@ -682,6 +682,27 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String hiddenRecordsPlays(int count) {
+    return '$count회 재생';
+  }
+
+  @override
+  String hiddenRecordsLastPlayed(String date) {
+    return '마지막 $date';
+  }
+
+  @override
+  String hiddenRecordsPlaylists(int count) {
+    return '재생목록 $count개';
+  }
+
+  @override
+  String get hiddenRecordsCover => '커버';
+
+  @override
+  String get hiddenRecordsLyrics => '가사 사본';
+
+  @override
   String get settingsAbout => '정보';
 
   @override

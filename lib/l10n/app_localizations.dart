@@ -1340,6 +1340,36 @@ abstract class AppLocalizations {
   /// **'"{title}" 기록을 지울까요?'**
   String hiddenRecordsPurgeOneTitle(String title);
 
+  /// No description provided for @hiddenRecordsPlays.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}회 재생'**
+  String hiddenRecordsPlays(int count);
+
+  /// No description provided for @hiddenRecordsLastPlayed.
+  ///
+  /// In ko, this message translates to:
+  /// **'마지막 {date}'**
+  String hiddenRecordsLastPlayed(String date);
+
+  /// No description provided for @hiddenRecordsPlaylists.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생목록 {count}개'**
+  String hiddenRecordsPlaylists(int count);
+
+  /// No description provided for @hiddenRecordsCover.
+  ///
+  /// In ko, this message translates to:
+  /// **'커버'**
+  String get hiddenRecordsCover;
+
+  /// No description provided for @hiddenRecordsLyrics.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사 사본'**
+  String get hiddenRecordsLyrics;
+
   /// No description provided for @settingsAbout.
   ///
   /// In ko, this message translates to:

@@ -698,6 +698,27 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String hiddenRecordsPlays(int count) {
+    return '$count plays';
+  }
+
+  @override
+  String hiddenRecordsLastPlayed(String date) {
+    return 'last $date';
+  }
+
+  @override
+  String hiddenRecordsPlaylists(int count) {
+    return 'in $count playlists';
+  }
+
+  @override
+  String get hiddenRecordsCover => 'cover';
+
+  @override
+  String get hiddenRecordsLyrics => 'lyrics copy';
+
+  @override
   String get settingsAbout => 'About';
 
   @override

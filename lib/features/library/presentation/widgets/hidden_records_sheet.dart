@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
-import '../../domain/entities/track.dart';
+import '../../domain/entities/hidden_track.dart';
 import '../bloc/hidden_records_cubit.dart';
 
 /// 숨긴 곡 기록 목록: 곡마다 지우기 · 모두 지우기 (바텀 시트).
@@ -24,7 +24,7 @@ class HiddenRecordsSheet extends StatelessWidget {
 
   Future<void> _purge(
     BuildContext context, {
-    Track? only,
+    HiddenTrack? only,
     required int count,
   }) async {
     final l10n = context.l10n;
@@ -34,7 +34,7 @@ class HiddenRecordsSheet extends StatelessWidget {
       context,
       title: only == null
           ? l10n.settingsPurgeHiddenTitle
-          : l10n.hiddenRecordsPurgeOneTitle(only.title),
+          : l10n.hiddenRecordsPurgeOneTitle(only.track.title),
       body: only == null
           ? l10n.settingsPurgeHiddenBody(count)
           : l10n.settingsPurgeHiddenBody(1),
@@ -44,7 +44,7 @@ class HiddenRecordsSheet extends StatelessWidget {
     if (!ok) return;
     final n = only == null
         ? await cubit.purge()
-        : await cubit.purgeOne(only.id);
+        : await cubit.purgeOne(only.track.id);
     messenger.showSnackBar(
       SnackBar(content: Text(l10n.settingsPurgeHiddenDone(n))),
     );
@@ -118,8 +118,25 @@ class HiddenRecordsSheet extends StatelessWidget {
 class _HiddenRow extends StatelessWidget {
   const _HiddenRow({required this.track, required this.onPurge});
 
-  final Track track;
+  final HiddenTrack track;
   final VoidCallback onPurge;
+
+  /// 지우면 사라지는 기록 한 줄 요약: 재생 횟수 · 마지막 재생 · 재생목록 · 커버 · 가사.
+  String _summary(AppLocalizations l10n) {
+    final last = track.lastPlayedAt;
+    final parts = <String>[
+      l10n.hiddenRecordsPlays(track.playCount),
+      if (last != null)
+        l10n.hiddenRecordsLastPlayed(
+          '${last.year}.${last.month.toString().padLeft(2, '0')}.${last.day.toString().padLeft(2, '0')}',
+        ),
+      if (track.playlistCount > 0)
+        l10n.hiddenRecordsPlaylists(track.playlistCount),
+      if (track.hasCover) l10n.hiddenRecordsCover,
+      if (track.hasLyrics) l10n.hiddenRecordsLyrics,
+    ];
+    return parts.join(' · ');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -136,16 +153,25 @@ class _HiddenRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  track.title,
+                  track.track.title,
                   style: text.titleSmall,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: AppSpacing.hair),
                 Text(
-                  track.artist,
+                  track.track.artist,
                   style: text.bodySmall,
                   maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: AppSpacing.hair),
+                Text(
+                  _summary(context.l10n),
+                  style: text.bodySmall?.copyWith(
+                    color: context.palette.onSurfaceMuted,
+                  ),
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],

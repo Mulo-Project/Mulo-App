@@ -1,3 +1,4 @@
+import '../entities/hidden_track.dart';
 import '../entities/import_result.dart';
 import '../entities/track.dart';
 import '../entities/track_info.dart';
@@ -20,8 +21,8 @@ abstract interface class LibraryRepository {
   /// 숨긴 곡(폴더를 빼서 남겨 둔 곡)의 수.
   Future<int> hiddenCount();
 
-  /// 숨긴 곡 목록 (제목순).
-  Future<List<Track>> hiddenTracks();
+  /// 숨긴 곡과 곡마다 남은 기록 (재생 횟수 · 마지막 재생 · 재생목록 수 · 커버 · 가사). 제목순.
+  Future<List<HiddenTrack>> hiddenTracks();
 
   /// 숨긴 곡의 행과 재생 기록 · 재생목록 소속 · 커버 · 커버 색 · 가사 연결을 지운다
   /// (앱 폴더에 복사한 커버 · 가사 파일도). [ids]를 주면 그 중 숨긴 곡만, 없으면 모두.

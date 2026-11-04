@@ -12,6 +12,7 @@
 - 유스케이스 `CountHiddenTracks` → `ListHiddenTracks`, `PurgeHiddenTracks`는 곡 id 집합(null이면 모두).
 - `HiddenRecordsCubit` 상태가 숨긴 곡 목록이 됨 (개수는 길이).
 - 바텀 시트 `hidden_records_sheet.dart`: 곡 · 아티스트 줄 + 지우기(X), 아래 '모두 지우기'. 지우기 전 확인창.
+- 목록 줄마다 남은 기록 한 줄 요약(재생 횟수 · 마지막 재생 · 재생목록 수 · 커버 · 가사 사본)을 함께 불러와 보여 줌 (`HiddenTrack` 엔티티).
 - 문구(ARB 2종)와 생성된 l10n 코드 추가.
 
 ## 확인 (PC에서 필요)

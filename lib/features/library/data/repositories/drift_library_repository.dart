@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:drift/drift.dart';
 
 import '../../../../core/database/app_database.dart';
+import '../../domain/entities/hidden_track.dart';
 import '../../domain/entities/track.dart';
 import '../../domain/entities/track_info.dart';
 import '../../domain/repositories/library_repository.dart';
@@ -90,13 +91,55 @@ class DriftLibraryRepository implements LibraryRepository {
   }
 
   @override
-  Future<List<Track>> hiddenTracks() async {
+  Future<List<HiddenTrack>> hiddenTracks() async {
     final rows =
         await (_db.select(_db.tracks)
               ..where((t) => t.hidden.equals(true))
               ..orderBy([(t) => OrderingTerm.asc(t.title)]))
             .get();
-    return rows.map(_toTrack).toList();
+    if (rows.isEmpty) return const [];
+    final ids = [for (final r in rows) r.id];
+    final keys = [for (final id in ids) 'track:$id'];
+
+    final plays = <String, (int, DateTime)>{};
+    for (final p in await (_db.select(
+      _db.plays,
+    )..where((p) => p.trackId.isIn(ids))).get()) {
+      final old = plays[p.trackId];
+      plays[p.trackId] = (
+        (old?.$1 ?? 0) + 1,
+        old == null || p.playedAt.isAfter(old.$2) ? p.playedAt : old.$2,
+      );
+    }
+    final inPlaylists = <String, int>{};
+    for (final p in await (_db.select(
+      _db.playlistTracks,
+    )..where((p) => p.trackId.isIn(ids))).get()) {
+      inPlaylists[p.trackId] = (inPlaylists[p.trackId] ?? 0) + 1;
+    }
+    final covers = {
+      for (final c in await (_db.select(
+        _db.covers,
+      )..where((c) => c.key.isIn(keys))).get())
+        c.key,
+    };
+    final lyrics = {
+      for (final l in await (_db.select(
+        _db.lyricsFiles,
+      )..where((l) => l.trackId.isIn(ids))).get())
+        l.trackId,
+    };
+    return [
+      for (final r in rows)
+        HiddenTrack(
+          track: _toTrack(r),
+          playCount: plays[r.id]?.$1 ?? 0,
+          lastPlayedAt: plays[r.id]?.$2,
+          playlistCount: inPlaylists[r.id] ?? 0,
+          hasCover: covers.contains('track:${r.id}'),
+          hasLyrics: lyrics.contains(r.id),
+        ),
+    ];
   }
 
   @override

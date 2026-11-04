@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
-import '../../../library/domain/entities/track.dart';
+import '../../../library/domain/entities/hidden_track.dart';
 import '../../../library/presentation/bloc/hidden_records_cubit.dart';
 import '../../../library/presentation/bloc/library_cubit.dart';
 import '../../../library/presentation/widgets/hidden_records_sheet.dart';
@@ -23,7 +23,7 @@ class SettingsDataSection extends StatelessWidget {
       child: BlocListener<LibraryCubit, LibraryState>(
         listenWhen: (a, b) => a.revision != b.revision,
         listener: (context, _) => context.read<HiddenRecordsCubit>().load(),
-        child: BlocBuilder<HiddenRecordsCubit, List<Track>>(
+        child: BlocBuilder<HiddenRecordsCubit, List<HiddenTrack>>(
           builder: (context, hidden) => SectionCard(
             title: l10n.settingsData,
             children: [

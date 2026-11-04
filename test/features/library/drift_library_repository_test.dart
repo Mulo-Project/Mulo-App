@@ -130,11 +130,15 @@ void main() {
     }
     await repo.hide('a');
     await repo.hide('b');
-    expect((await repo.hiddenTracks()).map((t) => t.id).toSet(), {'a', 'b'});
+    final hidden = await repo.hiddenTracks();
+    expect(hidden.map((t) => t.track.id).toSet(), {'a', 'b'});
+    expect(hidden.first.playCount, 1);
+    expect(hidden.first.lastPlayedAt, DateTime(2026));
+    expect(hidden.first.hasCover, isFalse);
     // 보이는 곡(c)은 ids에 있어도 건드리지 않고, 빈 집합은 아무것도 지우지 않는다.
     expect(await repo.purgeHidden(ids: {}), 0);
     expect(await repo.purgeHidden(ids: {'a', 'c'}), 1);
-    expect((await repo.hiddenTracks()).map((t) => t.id), ['b']);
+    expect((await repo.hiddenTracks()).map((t) => t.track.id), ['b']);
     expect(
       (await db.select(db.plays).get()).map((p) => p.trackId).toSet(),
       {'b', 'c'},
