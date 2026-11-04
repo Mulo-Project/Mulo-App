@@ -4,6 +4,7 @@ import 'package:get_it/get_it.dart';
 
 import 'data/datasources/file_picker_lyrics_source.dart';
 import 'data/datasources/tag_lyrics_source.dart';
+import 'data/repositories/cached_lyrics_repository.dart';
 import 'data/repositories/native_lyrics_overlay.dart';
 import 'data/repositories/prefs_lyrics_settings_repository.dart';
 import 'data/repositories/drift_lyrics_repository.dart';
@@ -20,7 +21,7 @@ import 'presentation/bloc/lyrics_settings_cubit.dart';
 void registerLyrics(GetIt sl) {
   sl
     ..registerLazySingleton<LyricsRepository>(
-      () => DriftLyricsRepository(sl(), sl()),
+      () => CachedLyricsRepository(DriftLyricsRepository(sl(), sl())),
     )
     ..registerLazySingleton<EmbeddedLyricsSource>(TagLyricsSource.new)
     ..registerLazySingleton<LyricsFileSource>(FilePickerLyricsSource.new)
