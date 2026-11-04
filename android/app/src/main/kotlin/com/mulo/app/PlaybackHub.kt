@@ -77,6 +77,9 @@ object PlaybackHub {
     private val noisyResume = NoisyResume()
     private var tickCount = 0
 
+    /** 곡 이동을 시작한 시각 (소리가 나기까지 걸린 시간을 debug 로그로 남기려고). */
+    private var moveStartedAt = 0L
+
     private var sink: EventChannel.EventSink? = null
     private var pendingLoad: MethodChannel.Result? = null
     private var initialized = false
@@ -371,6 +374,8 @@ object PlaybackHub {
     /** 대기열은 그대로 두고 [index]번 곡으로 처음부터 옮긴다. */
     fun skipTo(index: Int) {
         if (index < 0 || index >= exo.mediaItemCount) return
+        moveStartedAt = SystemClock.elapsedRealtime()
+        MuloLog.d(MuloLog.PLAYBACK, "skipTo index=$index state=${exo.playbackState}")
         revive()
         exo.seekTo(index, 0L)
         if (exo.playbackState == Player.STATE_IDLE) exo.prepare()
@@ -587,8 +592,11 @@ object PlaybackHub {
      */
     private fun reshuffleAfterLap(previousId: String?) {
         val count = exo.mediaItemCount
+        val wrapped = previousId != null && count > 0 && exo.currentMediaItemIndex == 0 &&
+            exo.getMediaItemAt(count - 1).mediaId == previousId
+        if (wrapped) MuloLog.d(MuloLog.PLAYBACK, "lap wrapped count=$count shuffleOn=$shuffleOn repeat=${exo.repeatMode}")
         if (previousId == null || count < 3 || !shuffleOn) return
-        if (exo.currentMediaItemIndex != 0 || exo.getMediaItemAt(count - 1).mediaId != previousId) return
+        if (!wrapped) return
         val rest = QueueShuffle.reshuffledRest((0 until count).map { exo.getMediaItemAt(it) }, previousId)
         exo.removeMediaItems(1, count)
         exo.addMediaItems(rest)
@@ -707,6 +715,10 @@ object PlaybackHub {
         }
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
+            if (isPlaying && moveStartedAt > 0) {
+                MuloLog.d(MuloLog.PLAYBACK, "소리까지 ${SystemClock.elapsedRealtime() - moveStartedAt}ms")
+                moveStartedAt = 0
+            }
             main.removeCallbacks(ticker)
             if (isPlaying) main.post(ticker) else persistPosition()
         }
