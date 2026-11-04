@@ -41,7 +41,7 @@ class NativeAudioPlayerRepository implements AudioPlayerRepository {
       );
 
   @override
-  Stream<void> watchEnded() =
+  Stream<void> watchEnded() =>
       _channel.events.where((e) => e['type'] == 'ended');
 
   @override
