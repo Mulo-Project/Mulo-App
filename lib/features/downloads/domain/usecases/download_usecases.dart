@@ -126,6 +126,26 @@ class LoadSavePath implements UseCase<String, NoParams> {
   Future<String> call(NoParams _) => _repo.loadSavePath();
 }
 
+/// 고정한 저장 위치 읽기 (고정하지 않았으면 빈 문자열).
+class LoadFixedSavePath implements UseCase<String, NoParams> {
+  const LoadFixedSavePath(this._repo);
+
+  final DownloadSettingsRepository _repo;
+
+  @override
+  Future<String> call(NoParams _) => _repo.loadFixedSavePath();
+}
+
+/// 저장 위치 고정 풀기.
+class ClearSavePath implements UseCase<void, NoParams> {
+  const ClearSavePath(this._repo);
+
+  final DownloadSettingsRepository _repo;
+
+  @override
+  Future<void> call(NoParams _) => _repo.clearSavePath();
+}
+
 /// 기본 저장 위치 정하기. 앞뒤 공백을 지우고, 비어 있으면 바꾸지 않는다.
 class SaveSavePath implements UseCase<void, String> {
   const SaveSavePath(this._repo);

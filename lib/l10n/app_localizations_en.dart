@@ -310,7 +310,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSavePath => 'Save location';
 
   @override
-  String get settingsSavePathDesc => 'App default folder';
+  String get settingsSavePathDesc => 'Not fixed · last used folder';
 
   @override
   String get settingsLoadedFolders => 'Music folders';
@@ -1525,6 +1525,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get saveFolderTitle => 'Choose save location';
+
+  @override
+  String get saveFolderFixedHint => 'Downloads always go to the checked folder. Uncheck all to use the last folder.';
 
   @override
   String get saveFolderEmpty => 'No loaded folders yet. Pick one yourself.';

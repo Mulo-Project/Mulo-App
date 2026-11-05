@@ -289,11 +289,25 @@ class MemoryDownloadSettings implements DownloadSettingsRepository {
   /// 설정에서 고를 수 있는 저장 형식 (기본은 전부).
   List<AudioFormat> formats = AudioFormat.values;
 
-  @override
-  Future<String> loadSavePath() async => path;
+  /// 고정한 위치 (빈 문자열이면 고정 안 함).
+  String fixed = '';
+  String last = '';
 
   @override
-  Future<void> saveSavePath(String value) async => path = value;
+  Future<String> loadSavePath() async =>
+      fixed.isNotEmpty ? fixed : (last.isNotEmpty ? last : path);
+
+  @override
+  Future<String> loadFixedSavePath() async => fixed;
+
+  @override
+  Future<void> saveSavePath(String value) async => fixed = value;
+
+  @override
+  Future<void> clearSavePath() async => fixed = '';
+
+  @override
+  Future<void> saveLastSavePath(String value) async => last = value;
 
   AudioFormat format = AudioFormat.opus;
 

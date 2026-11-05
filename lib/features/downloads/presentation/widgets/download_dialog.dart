@@ -148,7 +148,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
   late final _artist = TextEditingController(text: widget.artist);
   late final _album = TextEditingController(text: widget.album);
   late final _genre = TextEditingController(text: widget.genre);
-  // 기본 저장 위치로 채워 시작하고, 이 곡만 바꿀 수 있다 (기본값은 설정에서).
+  // 고정한 폴더(없으면 마지막에 받은 폴더)로 채워 시작하고, 이 곡만 바꿀 수 있다 (고정은 설정에서).
   late final _savePath = TextEditingController(
     text: context.read<DownloadSettingsCubit>().state,
   );
@@ -199,6 +199,19 @@ class _DownloadScreenState extends State<DownloadScreen> {
   }
 
   Color? get _color => _pickedSet ? _picked : _genreColor();
+
+  @override
+  void initState() {
+    super.initState();
+    // 고정한 폴더가 없으면 마지막에 받은 폴더(없으면 앱 기본 폴더)로 채운다.
+    if (_savePath.text.isEmpty) {
+      context.read<DownloadSettingsCubit>().effectivePath().then((path) {
+        if (mounted && _savePath.text.isEmpty) {
+          setState(() => _savePath.text = path);
+        }
+      });
+    }
+  }
 
   @override
   void dispose() {

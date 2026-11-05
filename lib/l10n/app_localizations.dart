@@ -677,7 +677,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsSavePathDesc.
   ///
   /// In ko, this message translates to:
-  /// **'앱 기본 폴더'**
+  /// **'고정 안 함 · 마지막에 받은 폴더'**
   String get settingsSavePathDesc;
 
   /// No description provided for @settingsLoadedFolders.
@@ -2785,6 +2785,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'저장 위치 고르기'**
   String get saveFolderTitle;
+
+  /// No description provided for @saveFolderFixedHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'체크한 폴더로 항상 받아요. 모두 풀면 마지막에 받은 폴더에 받아요.'**
+  String get saveFolderFixedHint;
 
   /// No description provided for @saveFolderEmpty.
   ///

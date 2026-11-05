@@ -117,7 +117,7 @@
   "settingsModeLiteNote": "lite 빌드는 서버 모드만 쓸 수 있어요.",
   "settingsDownload": "다운로드",
   "settingsSavePath": "저장 위치",
-  "settingsSavePathDesc": "앱 기본 폴더",
+  "settingsSavePathDesc": "고정 안 함 · 마지막에 받은 폴더",
   "settingsLoadedFolders": "불러오는 폴더",
   "settingsLoadedFoldersCount": "{count}개 폴더",
   "@settingsLoadedFoldersCount": {
@@ -654,6 +654,7 @@
   "downloadFieldSavePath": "저장 위치",
   "downloadGenreExisting": "기존 장르에서 고르기",
   "saveFolderTitle": "저장 위치 고르기",
+  "saveFolderFixedHint": "체크한 폴더로 항상 받아요. 모두 풀면 마지막에 받은 폴더에 받아요.",
   "saveFolderEmpty": "불러오는 폴더가 없어요. 직접 선택해 주세요.",
   "saveFolderPickOther": "직접 선택",
   "downloadPickFolder": "폴더 고르기",

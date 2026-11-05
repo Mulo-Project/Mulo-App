@@ -96,7 +96,7 @@
   "settingsModeLiteNote": "The lite build supports server mode only.",
   "settingsDownload": "Downloads",
   "settingsSavePath": "Save location",
-  "settingsSavePathDesc": "App default folder",
+  "settingsSavePathDesc": "Not fixed · last used folder",
   "settingsLoadedFolders": "Music folders",
   "settingsLoadedFoldersCount": "{count} folders",
   "@settingsLoadedFoldersCount": {
@@ -554,6 +554,7 @@
   "downloadFieldSavePath": "Save location",
   "downloadGenreExisting": "Pick from existing genres",
   "saveFolderTitle": "Choose save location",
+  "saveFolderFixedHint": "Downloads always go to the checked folder. Uncheck all to use the last folder.",
   "saveFolderEmpty": "No loaded folders yet. Pick one yourself.",
   "saveFolderPickOther": "Pick another",
   "downloadPickFolder": "Choose folder",

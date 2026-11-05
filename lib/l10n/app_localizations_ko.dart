@@ -307,7 +307,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsSavePath => '저장 위치';
 
   @override
-  String get settingsSavePathDesc => '앱 기본 폴더';
+  String get settingsSavePathDesc => '고정 안 함 · 마지막에 받은 폴더';
 
   @override
   String get settingsLoadedFolders => '불러오는 폴더';
@@ -1484,6 +1484,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get saveFolderTitle => '저장 위치 고르기';
+
+  @override
+  String get saveFolderFixedHint => '체크한 폴더로 항상 받아요. 모두 풀면 마지막에 받은 폴더에 받아요.';
 
   @override
   String get saveFolderEmpty => '불러오는 폴더가 없어요. 직접 선택해 주세요.';
