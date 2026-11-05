@@ -268,46 +268,35 @@ class _Results extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionTitle(label),
-        if (isPlaylist)
+        // 재생목록 동작 버튼과 정렬은 한 줄에 같은 모양으로 놓는다.
+        if (isPlaylist || state.keyword || state.items.length > 1)
           Padding(
             padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: PillButton(
-                label: l10n.searchPlaylistPick,
-                icon: AppIcons.download,
-                variant: PillVariant.tonal,
-                compact: true,
-                onPressed: () => context.push(
-                  Routes.playlistImport,
-                  extra: context.read<SearchCubit>().query,
-                ),
-              ),
-            ),
-          ),
-        if (state.keyword)
-          Padding(
-            padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: PillButton(
-                label: l10n.searchPlaylistFind,
-                icon: AppIcons.search,
-                variant: PillVariant.tonal,
-                compact: true,
-                onPressed: () => context.push(
-                  Routes.playlistImport,
-                  extra: context.read<SearchCubit>().query,
-                ),
-              ),
-            ),
-          ),
-        if (state.items.length > 1)
-          Padding(
-            padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
-            child: const Align(
-              alignment: Alignment.centerLeft,
-              child: _SortMenu(),
+            child: Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xs,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                if (isPlaylist)
+                  AppFilterButton(
+                    label: l10n.searchPlaylistPick,
+                    icon: AppIcons.download,
+                    onPressed: () => context.push(
+                      Routes.playlistImport,
+                      extra: context.read<SearchCubit>().query,
+                    ),
+                  ),
+                if (state.keyword)
+                  AppFilterButton(
+                    label: l10n.searchPlaylistFind,
+                    icon: AppIcons.search,
+                    onPressed: () => context.push(
+                      Routes.playlistImport,
+                      extra: context.read<SearchCubit>().query,
+                    ),
+                  ),
+                if (state.items.length > 1) const _SortMenu(),
+              ],
             ),
           ),
         for (final hit in state.visibleItems) _HitTile(hit: hit),

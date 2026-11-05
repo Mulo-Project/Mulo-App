@@ -101,6 +101,7 @@ MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부�
 | `SectionCard` · `SettingRow` | section_card.dart | 설정 묶음(제목 + 구분선, 카드 면 없음) · 한 줄 |
 | `SegmentedPills` · `StatusPill` | segmented_pills.dart | 하나 고르기 알약 묶음 · 상태 알약 |
 | `AppDropdown` | app_dropdown.dart | 알약 드롭다운 (정렬 기준 고르기). 선택값 · 목록 · 문구는 밖에서 받음 |
+| `AppFilterButton` | app_filter_button.dart | 정렬 줄에 `AppDropdown`과 나란히 놓는 알약 버튼 (같은 높이 44 · 같은 면). 보관함 · 검색 정렬은 둘 다 `AppDropdown` |
 | `ThemeSwatch` | theme_swatch.dart | 테마 프리셋 미리보기 동그라미 (다른 팔레트를 그리는 유일한 컴포넌트) |
 
 Material 버튼 · AppBar · ListTile · Switch · Chip · Slider는 화면에서 직접 쓰지 않는다 (위 컴포넌트로 대체).
