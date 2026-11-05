@@ -10,7 +10,7 @@ class HomeDivider extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.symmetric(
       horizontal: AppSpacing.md,
-      vertical: AppSpacing.lg,
+      vertical: AppSpacing.md,
     ),
     child: const AppDivider(),
   );
@@ -39,16 +39,6 @@ class HomeSectionTitle extends StatelessWidget {
         ),
         child: Row(
           children: [
-            // 제목 앞 강조 색 막대.
-            Container(
-              width: 4,
-              height: 20,
-              margin: const EdgeInsets.only(right: AppSpacing.xs),
-              decoration: BoxDecoration(
-                color: p.accent,
-                borderRadius: BorderRadius.circular(AppRadii.pill),
-              ),
-            ),
             Flexible(
               child: Text(
                 title,

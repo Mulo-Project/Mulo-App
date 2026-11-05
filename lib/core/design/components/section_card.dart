@@ -30,7 +30,9 @@ class SectionCard extends StatelessWidget {
             ),
             child: Text(
               title!,
-              style: text.titleSmall?.copyWith(color: context.palette.accent),
+              style: text.titleSmall?.copyWith(
+                color: context.palette.onSurfaceMuted,
+              ),
             ),
           ),
         Column(
@@ -147,7 +149,7 @@ class SectionBlock extends StatelessWidget {
           if (title != null) ...[
             Text(
               title!,
-              style: text.titleSmall?.copyWith(color: p.accent),
+              style: text.titleSmall?.copyWith(color: p.onSurfaceMuted),
             ),
             const SizedBox(height: AppSpacing.sm),
           ],

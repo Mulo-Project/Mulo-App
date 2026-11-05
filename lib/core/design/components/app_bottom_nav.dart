@@ -139,7 +139,7 @@ class _NavButton extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(AppRadii.pill),
                   color: selected
-                      ? p.accent.withValues(alpha: .18)
+                      ? p.accent.withValues(alpha: .12)
                       : p.accent.withValues(alpha: 0),
                 ),
                 child: Icon(

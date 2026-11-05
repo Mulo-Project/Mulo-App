@@ -109,7 +109,6 @@ class PillButton extends StatelessWidget {
       ),
       PillVariant.accent || PillVariant.primary => _SolidPill(
         color: v == PillVariant.accent ? p.accent : p.primary,
-        glow: enabled,
         onTap: onPressed,
         child: content,
       ),
@@ -123,14 +122,10 @@ class _SolidPill extends StatelessWidget {
   const _SolidPill({
     required this.color,
     required this.child,
-    this.glow = true,
     this.onTap,
   });
 
   final Color color;
-
-  /// 빛(그림자). 비활성일 때는 끈다.
-  final bool glow;
   final VoidCallback? onTap;
   final Widget child;
 
@@ -141,15 +136,8 @@ class _SolidPill extends StatelessWidget {
     decoration: ShapeDecoration(
       color: color,
       shape: const StadiumBorder(),
-      shadows: glow
-          ? [
-              BoxShadow(
-                color: color.withValues(alpha: .35),
-                blurRadius: 18,
-                offset: const Offset(0, 6),
-              ),
-            ]
-          : const [],
+      // 빛(그림자) 없이 평평한 면. 은은하게 보이게 한다.
+      shadows: const [],
     ),
     child: Material(
       type: MaterialType.transparency,
@@ -197,15 +185,6 @@ class CircleIconButton extends StatelessWidget {
 
     final button = emphasized
         ? DecoratedBox(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: p.accent.withValues(alpha: .45),
-                  blurRadius: size * .45,
-                ),
-              ],
-            ),
             child: Material(
               color: p.accent,
               shape: const CircleBorder(),
