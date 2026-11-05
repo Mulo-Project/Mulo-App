@@ -3296,6 +3296,30 @@ abstract class AppLocalizations {
   /// **'폴더'**
   String get trackInfoFolder;
 
+  /// No description provided for @trackInfoFileSize.
+  ///
+  /// In ko, this message translates to:
+  /// **'파일 크기'**
+  String get trackInfoFileSize;
+
+  /// No description provided for @trackInfoFormat.
+  ///
+  /// In ko, this message translates to:
+  /// **'형식'**
+  String get trackInfoFormat;
+
+  /// No description provided for @trackInfoBitrate.
+  ///
+  /// In ko, this message translates to:
+  /// **'비트레이트'**
+  String get trackInfoBitrate;
+
+  /// No description provided for @trackInfoSampleRate.
+  ///
+  /// In ko, this message translates to:
+  /// **'샘플레이트'**
+  String get trackInfoSampleRate;
+
   /// No description provided for @trackInfoUrl.
   ///
   /// In ko, this message translates to:

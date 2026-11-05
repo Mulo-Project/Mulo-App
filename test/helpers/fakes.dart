@@ -30,6 +30,7 @@ import 'package:music_download_play_app/features/library/di.dart';
 import 'package:music_download_play_app/features/library/domain/entities/hidden_track.dart';
 import 'package:music_download_play_app/features/library/domain/entities/import_result.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
+import 'package:music_download_play_app/features/library/domain/entities/track_file_info.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track_info.dart';
 import 'package:music_download_play_app/features/library/domain/repositories/library_repository.dart';
 import 'package:music_download_play_app/features/library/domain/repositories/track_tag_repository.dart';
@@ -168,6 +169,9 @@ class FakeTrackFiles implements TrackFileRepository {
     if (succeeds) deleted.add(track.id);
     return succeeds;
   }
+
+  @override
+  Future<TrackFileInfo?> fileInfo(Track track) async => null;
 }
 
 /// 메모리 불러오는 폴더 목록 (고르기는 [picked]를 그대로 돌려준다).

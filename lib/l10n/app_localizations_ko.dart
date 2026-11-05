@@ -1751,6 +1751,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get trackInfoFolder => '폴더';
 
   @override
+  String get trackInfoFileSize => '파일 크기';
+
+  @override
+  String get trackInfoFormat => '형식';
+
+  @override
+  String get trackInfoBitrate => '비트레이트';
+
+  @override
+  String get trackInfoSampleRate => '샘플레이트';
+
+  @override
   String get trackInfoUrl => '원본 주소';
 
   @override

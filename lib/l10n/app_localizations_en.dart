@@ -1795,6 +1795,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackInfoFolder => 'Folder';
 
   @override
+  String get trackInfoFileSize => 'File size';
+
+  @override
+  String get trackInfoFormat => 'Format';
+
+  @override
+  String get trackInfoBitrate => 'Bitrate';
+
+  @override
+  String get trackInfoSampleRate => 'Sample rate';
+
+  @override
   String get trackInfoUrl => 'Source link';
 
   @override

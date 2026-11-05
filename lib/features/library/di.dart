@@ -66,6 +66,7 @@ void registerLibrary(GetIt sl) {
     ..registerFactory(() => EmbedTagsIntoFiles(sl(), sl(), sl(), sl(), sl()))
     ..registerFactory(() => RestoreFromFileTags(sl(), sl(), sl(), sl(), sl()))
     ..registerFactory(() => DeleteTrack(sl(), sl()))
+    ..registerFactory(() => GetTrackFileInfo(sl()))
     ..registerFactory(() => ImportDeviceMusic(sl(), sl(), sl()))
     ..registerFactory(() => LoadLoadedFolders(sl(), sl()))
     ..registerFactory(() => AddLoadedFolder(sl()))

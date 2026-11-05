@@ -13,6 +13,7 @@ import '../../../covers/presentation/widgets/cover_entry.dart';
 import '../../../downloads/domain/usecases/download_usecases.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/track.dart';
+import '../../domain/entities/track_file_info.dart';
 import '../../domain/entities/track_info.dart';
 import '../../domain/usecases/library_usecases.dart';
 import '../bloc/library_cubit.dart';
@@ -36,6 +37,9 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
   /// 앱에서 받은 곡의 원본 주소 (기록이 없으면 null).
   String? _url;
 
+  /// 음악 파일 정보 (크기 · 형식 · 비트레이트 · 샘플레이트). 읽기 전이거나 못 읽으면 null.
+  TrackFileInfo? _file;
+
   late final _title = TextEditingController();
   late final _artist = TextEditingController();
   late final _album = TextEditingController();
@@ -56,7 +60,27 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
     sl<GetTrackSourceUrl>()(widget.track.id).then((url) {
       if (mounted) setState(() => _url = url);
     });
+    sl<GetTrackFileInfo>()(widget.track).then((info) {
+      if (mounted) setState(() => _file = info);
+    });
   }
+
+  static String _size(int bytes) {
+    const mb = 1024 * 1024;
+    return bytes >= mb
+        ? '${(bytes / mb).toStringAsFixed(1)} MB'
+        : '${(bytes / 1024).toStringAsFixed(0)} KB';
+  }
+
+  static String? _format(String? mime) => switch (mime) {
+    'audio/mpeg' => 'MP3',
+    'audio/ogg' || 'application/ogg' || 'audio/opus' => 'Opus / Ogg',
+    'audio/mp4' || 'audio/aac' || 'audio/x-m4a' => 'AAC / M4A',
+    'audio/flac' || 'audio/x-flac' => 'FLAC',
+    'audio/x-wav' || 'audio/wav' => 'WAV',
+    null || '' => null,
+    final m => m.replaceFirst('audio/', '').toUpperCase(),
+  };
 
   /// 커버 이미지를 이미지 페이지에서 고르고 · 맞추고 · 지운다.
   Future<void> _editImage(CoverArt? art) async {
@@ -203,6 +227,28 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
       if (_url != null) ...[
         const AppDivider(),
         row(l10n.trackInfoUrl, _url!, onTap: () => _copyUrl(_url!)),
+      ],
+      if (_file?.sizeBytes != null) ...[
+        const AppDivider(),
+        row(l10n.trackInfoFileSize, _size(_file!.sizeBytes!)),
+      ],
+      if (_format(_file?.mime) != null) ...[
+        const AppDivider(),
+        row(l10n.trackInfoFormat, _format(_file!.mime)!),
+      ],
+      if (_file?.bitrate != null) ...[
+        const AppDivider(),
+        row(
+          l10n.trackInfoBitrate,
+          '${(_file!.bitrate! / 1000).round()} kbps',
+        ),
+      ],
+      if (_file?.sampleRate != null) ...[
+        const AppDivider(),
+        row(
+          l10n.trackInfoSampleRate,
+          '${(_file!.sampleRate! / 1000).toStringAsFixed(_file!.sampleRate! % 1000 == 0 ? 0 : 1)} kHz',
+        ),
       ],
       if (t.folder.isNotEmpty) ...[
         const AppDivider(),

@@ -8,6 +8,7 @@ import '../entities/file_tags.dart';
 import '../entities/import_result.dart';
 import '../entities/loaded_folder.dart';
 import '../entities/track.dart';
+import '../entities/track_file_info.dart';
 import '../entities/track_info.dart';
 import '../repositories/library_repository.dart';
 import '../repositories/track_tag_repository.dart';
@@ -343,4 +344,14 @@ class DeleteTrack implements UseCase<bool, Track> {
     await _library.delete(track.id);
     return true;
   }
+}
+
+/// 곡의 음악 파일 정보 (크기 · 형식 · 비트레이트 · 샘플레이트). 읽을 수 없으면 null.
+class GetTrackFileInfo implements UseCase<TrackFileInfo?, Track> {
+  const GetTrackFileInfo(this._files);
+
+  final TrackFileRepository _files;
+
+  @override
+  Future<TrackFileInfo?> call(Track track) => _files.fileInfo(track);
 }
