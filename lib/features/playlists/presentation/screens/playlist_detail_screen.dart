@@ -141,7 +141,13 @@ class _BodyState extends State<_Body> with TrackPicker<_Body> {
             tracks: tracks ?? const <Track>[],
             playLabel: l10n.playlistMenuPlayAll,
           ),
-          const SizedBox(height: AppSpacing.sm),
+          // 위 소개 영역과 곡 목록을 가는 선과 넉넉한 간격으로 나눈다.
+          const SizedBox(height: AppSpacing.md),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            child: AppDivider(),
+          ),
+          const SizedBox(height: AppSpacing.xs),
         ],
         if (downloads.isNotEmpty)
           _Downloads(playlistId: playlistId, items: downloads),

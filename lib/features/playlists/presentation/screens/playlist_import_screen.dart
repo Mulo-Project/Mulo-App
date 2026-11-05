@@ -416,11 +416,14 @@ class _Tracks extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: AppSpacing.sm),
-        const AppDivider(),
+        const SizedBox(height: AppSpacing.md),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          child: AppDivider(),
+        ),
         // 고른 수는 왼쪽, 전체 선택 · 해제는 곡 목록의 체크 표시와 같은 오른쪽.
         Padding(
-          padding: AppSpacing.screen.copyWith(top: AppSpacing.xxs, bottom: 0),
+          padding: AppSpacing.screen.copyWith(top: AppSpacing.sm, bottom: 0),
           child: Row(
             children: [
               Expanded(
