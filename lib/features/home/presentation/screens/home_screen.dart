@@ -159,6 +159,7 @@ class _EmptyState extends StatelessWidget {
       action: PillButton(
         label: action,
         icon: AppIcons.library,
+        compact: true,
         onPressed: onAction,
       ),
     );

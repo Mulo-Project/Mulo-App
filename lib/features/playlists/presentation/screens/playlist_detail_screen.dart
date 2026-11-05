@@ -188,6 +188,7 @@ class _BodyState extends State<_Body> with TrackPicker<_Body> {
                       : PillButton(
                           label: l10n.playlistAddTracks,
                           icon: AppIcons.add,
+                          compact: true,
                           onPressed: () => context.push(
                             Routes.playlistAddTracks(playlistId),
                           ),

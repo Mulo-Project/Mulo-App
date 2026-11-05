@@ -226,6 +226,7 @@ class _MySubscriptionsScreenState extends State<MySubscriptionsScreen> {
             action: PillButton(
               label: l10n.actionRetry,
               icon: AppIcons.refresh,
+              compact: true,
               onPressed: _open,
             ),
           ),

@@ -537,6 +537,7 @@ class _EngineNeeded extends StatelessWidget {
             ? l10n.settingsEngineInstalling
             : l10n.settingsEngineInstall,
         icon: AppIcons.download,
+        compact: true,
         onPressed: state.busy ? null : cubit.install,
       ),
     );

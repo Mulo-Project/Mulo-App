@@ -2202,7 +2202,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get playlistDetailEmptyBody =>
-      '곡 메뉴의 ‘재생목록에 추가’ 또는 아래 ‘곡 추가’로 담아 보세요.';
+      '아래 ‘곡 추가’로 담아 보세요.';
 
   @override
   String get playlistDetailEmptyFavoritesBody => '곡 메뉴에서 좋아요를 누르면 여기에 담겨요.';

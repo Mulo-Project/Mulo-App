@@ -2258,7 +2258,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playlistDetailEmptyBody =>
-      'Use \"Add to playlist\" in a song\'s menu, or \"Add songs\" below.';
+      'Add songs with the button below.';
 
   @override
   String get playlistDetailEmptyFavoritesBody =>

@@ -525,6 +525,7 @@ class _EmptyLibrary extends StatelessWidget {
       action: PillButton(
         label: importing ? l10n.importing : l10n.libraryImport,
         icon: AppIcons.folderUpload,
+        compact: true,
         onPressed: importing ? null : onImport,
       ),
     );
