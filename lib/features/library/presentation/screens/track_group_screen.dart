@@ -18,7 +18,10 @@ import '../widgets/track_list_tile.dart';
 
 export '../../domain/entities/track_group.dart';
 
-/// 아티스트 · 앨범 · 장르 화면: 그 묶음의 곡 목록과 전체 재생 · 셔플, 위 막대에 이름 바꾸기 · 꾸미기.
+/// 상세 화면 ⋮ 메뉴의 동작.
+enum _GroupAction { rename, decorate }
+
+/// 아티스트 · 앨범 · 장르 화면: 그 묶음의 곡 목록과 전체 재생 · 셔플, 위 막대 ⋮ 메뉴에 이름 바꾸기 · 꾸미기.
 /// 세 화면은 모양이 같고 이름 · 아이콘 · 문구만 다르다 ([TrackGroupKind]).
 /// [name]은 곡에 저장된 값 그대로이고, 빈 문자열이면 "알 수 없는 …"이다.
 class TrackGroupScreen extends StatefulWidget {
@@ -103,25 +106,47 @@ class _TrackGroupScreenState extends State<TrackGroupScreen>
                 title: title,
                 leading: const AppBackButton(),
                 actions: [
-                  if (tracks.isNotEmpty)
-                    CircleIconButton(
-                      icon: AppIcons.edit,
-                      tooltip: _renameTooltip(l10n),
-                      onPressed: () => _rename(context, tracks.length),
-                    ),
+                  // 이름 바꾸기 · 꾸미기는 버튼 하나(⋮)의 팝업 메뉴로 모은다 (제목 자리 확보).
                   // 장르는 이미지 · 색을 따로 꾸미지 않는다.
-                  if (kind != TrackGroupKind.genre)
-                    CircleIconButton(
-                      icon: AppIcons.sparkle,
-                      tooltip: kind == TrackGroupKind.artist
-                          ? l10n.decorateArtistTooltip
-                          : l10n.decorateAlbumTooltip,
-                      onPressed: () => showDecorateSheet(
-                        context,
-                        coverKey: key,
-                        title: title,
-                        tone: toneFor(title),
-                        icon: _icon,
+                  if (tracks.isNotEmpty || kind != TrackGroupKind.genre)
+                    Builder(
+                      builder: (menuContext) => CircleIconButton(
+                        icon: AppIcons.more,
+                        tooltip: l10n.actionMore,
+                        onPressed: () async {
+                          final action = await showAppMenu<_GroupAction>(
+                            menuContext,
+                            items: [
+                              if (tracks.isNotEmpty)
+                                AppMenuItem(
+                                  value: _GroupAction.rename,
+                                  icon: AppIcons.edit,
+                                  label: _renameTooltip(l10n),
+                                ),
+                              if (kind != TrackGroupKind.genre)
+                                AppMenuItem(
+                                  value: _GroupAction.decorate,
+                                  icon: AppIcons.sparkle,
+                                  label: kind == TrackGroupKind.artist
+                                      ? l10n.decorateArtistTooltip
+                                      : l10n.decorateAlbumTooltip,
+                                ),
+                            ],
+                          );
+                          if (!context.mounted || action == null) return;
+                          switch (action) {
+                            case _GroupAction.rename:
+                              _rename(context, tracks.length);
+                            case _GroupAction.decorate:
+                              showDecorateSheet(
+                                context,
+                                coverKey: key,
+                                title: title,
+                                tone: toneFor(title),
+                                icon: _icon,
+                              );
+                          }
+                        },
                       ),
                     ),
                 ],
