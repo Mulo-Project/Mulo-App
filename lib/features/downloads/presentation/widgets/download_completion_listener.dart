@@ -45,7 +45,10 @@ class _DownloadCompletionListenerState
       if (messenger == null) return;
       final text = n.ok
           ? '[tag] ${n.extension} OK · ${n.title}'
-          : '${context.l10n.downloadTagFailed(n.title)}\n[${n.extension}] ${n.detail}';
+          : kDebugMode
+          // 이유(원문)는 디버그 빌드에서만 덧붙인다.
+          ? '${context.l10n.downloadTagFailed(n.title)}\n[${n.extension}] ${n.detail}'
+          : context.l10n.downloadTagFailed(n.title);
       messenger
         ..hideCurrentSnackBar()
         ..showSnackBar(

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -93,7 +94,9 @@ class _SearchScreenState extends State<SearchScreen> {
       // 임시 진단: 검색이 실패하면 엔진이 알려 준 원문을 스낵바로 보인다 (원인을 찾으면 지운다).
       child: BlocListener<SearchCubit, SearchState>(
         listenWhen: (a, b) =>
-            a.status != b.status && b.status == SearchStatus.failed,
+            kDebugMode &&
+            a.status != b.status &&
+            b.status == SearchStatus.failed,
         listener: (context, state) {
           final text = '[${state.failure?.name}] ${state.detail}';
           ScaffoldMessenger.of(context)
