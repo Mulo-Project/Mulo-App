@@ -63,6 +63,16 @@ class PlaylistsScreen extends StatelessWidget {
                 onReorder: context.read<PlaylistsCubit>().reorder,
               ),
             ),
+          // 직접 만든 재생목록이 둘 이상이면 순서 바꾸는 법을 한 줄로 알려 준다.
+          if (lists.where((p) => !p.isFavorites).length > 1)
+            Padding(
+              padding: AppSpacing.screen.copyWith(top: AppSpacing.sm),
+              child: Text(
+                l10n.playlistsReorderHint,
+                style: Theme.of(context).textTheme.bodySmall,
+                textAlign: TextAlign.center,
+              ),
+            ),
           // 좋아요 목록 말고 직접 만든 재생목록이 없을 때의 안내.
           if (lists.every((p) => p.isFavorites))
             EmptyState(title: l10n.playlistsEmpty),

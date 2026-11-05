@@ -1531,6 +1531,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playlistsEmpty => '아직 재생목록이 없어요. 위의 +로 만들어 보세요.';
 
   @override
+  String get playlistsReorderHint => '길게 눌러 끌면 순서를 바꿀 수 있어요.';
+
+  @override
   String get playlistNewTitle => '새 재생목록';
 
   @override

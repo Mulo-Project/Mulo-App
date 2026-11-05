@@ -569,6 +569,7 @@
   "downloadQueued": "Added to the queue",
   "homeTopGenre": "Top genre",
   "playlistsEmpty": "No playlists yet. Tap + above to make one.",
+  "playlistsReorderHint": "Press and hold a playlist, then drag to reorder.",
   "playlistNewTitle": "New playlist",
   "playlistNewHint": "Playlist name",
   "playlistCreate": "Create",

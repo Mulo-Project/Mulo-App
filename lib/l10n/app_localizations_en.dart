@@ -1573,6 +1573,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistsEmpty => 'No playlists yet. Tap + above to make one.';
 
   @override
+  String get playlistsReorderHint => 'Press and hold a playlist, then drag to reorder.';
+
+  @override
   String get playlistNewTitle => 'New playlist';
 
   @override
