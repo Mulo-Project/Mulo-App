@@ -332,6 +332,7 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      const SizedBox(height: AppSpacing.xs),
                       // 막대 가운데 위에 지금 각도를 돌아간 아이콘과 숫자로 보여 준다.
                       Row(
                         key: const ValueKey('cover-edit-angle'),
@@ -369,45 +370,55 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
                     ],
                   ),
                 ),
+                // 보조 동작(회전 · 위치 · 이미지 되돌리기 · 지우기)은 글자 버튼 한 줄로 낮춰,
+                // 주 동작인 "적용"만 도드라지게 한다.
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
                     AppSpacing.md,
-                    0,
+                    AppSpacing.xs,
                     AppSpacing.md,
                     0,
                   ),
-                  child: Row(
+                  child: Wrap(
+                    alignment: WrapAlignment.center,
                     children: [
-                      Expanded(
-                        child: PillButton(
-                          key: const ValueKey('cover-edit-rotate-left'),
-                          label: l10n.coverEditRotateLeft,
-                          icon: AppIcons.restart,
-                          variant: PillVariant.tonal,
-                          onPressed: ready
-                              ? () => _rotateTo(_t.rotation - 90)
-                              : null,
-                        ),
+                      PlainButton(
+                        key: const ValueKey('cover-edit-rotate-left'),
+                        label: l10n.coverEditRotateLeft,
+                        icon: AppIcons.restart,
+                        onPressed: ready ? () => _rotateTo(_t.rotation - 90) : null,
                       ),
-                      const SizedBox(width: AppSpacing.xs),
-                      Expanded(
-                        child: PillButton(
-                          key: const ValueKey('cover-edit-rotate-right'),
-                          label: l10n.coverEditRotateRight,
-                          icon: AppIcons.restart,
-                          variant: PillVariant.tonal,
-                          onPressed: ready
-                              ? () => _rotateTo(_t.rotation + 90)
-                              : null,
-                        ),
+                      PlainButton(
+                        key: const ValueKey('cover-edit-rotate-right'),
+                        label: l10n.coverEditRotateRight,
+                        icon: AppIcons.restart,
+                        onPressed: ready ? () => _rotateTo(_t.rotation + 90) : null,
                       ),
+                      PlainButton(
+                        key: const ValueKey('cover-edit-reset-position'),
+                        label: l10n.coverEditResetPosition,
+                        onPressed: ready ? _resetTransform : null,
+                      ),
+                      if (widget.canRevert)
+                        PlainButton(
+                          key: const ValueKey('cover-edit-revert'),
+                          label: l10n.coverReset,
+                          onPressed: _revert,
+                        ),
+                      if (widget.canRemove)
+                        PlainButton(
+                          key: const ValueKey('cover-edit-remove'),
+                          label: l10n.coverRemove,
+                          icon: AppIcons.delete,
+                          onPressed: _remove,
+                        ),
                     ],
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
                     AppSpacing.lg,
-                    AppSpacing.sm,
+                    AppSpacing.xs,
                     AppSpacing.lg,
                     AppSpacing.xs,
                   ),
@@ -415,48 +426,6 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
                     l10n.coverEditHint,
                     textAlign: TextAlign.center,
                     style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
-                  ),
-                ),
-                // 되돌리기 둘(위치 · 기본 이미지)은 한 줄에 같은 모양 버튼으로 둔다 (둘 다 확인을 묻는다).
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.md,
-                    0,
-                    AppSpacing.md,
-                    0,
-                  ),
-                  child: Wrap(
-                    alignment: WrapAlignment.center,
-                    spacing: AppSpacing.xs,
-                    runSpacing: AppSpacing.xs,
-                    children: [
-                      PillButton(
-                        key: const ValueKey('cover-edit-reset-position'),
-                        label: l10n.coverEditResetPosition,
-                        icon: AppIcons.restart,
-                        variant: PillVariant.tonal,
-                        compact: true,
-                        onPressed: ready ? _resetTransform : null,
-                      ),
-                      if (widget.canRevert)
-                        PillButton(
-                          key: const ValueKey('cover-edit-revert'),
-                          label: l10n.coverReset,
-                          icon: AppIcons.restart,
-                          variant: PillVariant.tonal,
-                          compact: true,
-                          onPressed: _revert,
-                        ),
-                      if (widget.canRemove)
-                        PillButton(
-                          key: const ValueKey('cover-edit-remove'),
-                          label: l10n.coverRemove,
-                          icon: AppIcons.delete,
-                          variant: PillVariant.tonal,
-                          compact: true,
-                          onPressed: _remove,
-                        ),
-                    ],
                   ),
                 ),
                 Padding(
