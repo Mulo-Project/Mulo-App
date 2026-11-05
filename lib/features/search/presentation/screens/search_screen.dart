@@ -102,9 +102,14 @@ class _SearchScreenState extends State<SearchScreen> {
                   title: l10n.navSearch,
                   subtitle: l10n.searchSubtitle,
                 ),
-                Padding(
-                  padding: AppSpacing.screen,
-                  child: AppSearchField(
+              ]),
+            ),
+            // 검색창은 스크롤해도 위에 붙어 있다.
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _PinnedSearchBar(
+                color: context.palette.background,
+                child: AppSearchField(
                     controller: _controller,
                     hint: _source == SearchSource.youtube
                         ? l10n.searchHint
@@ -129,8 +134,6 @@ class _SearchScreenState extends State<SearchScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.md),
-              ]),
             ),
             BlocBuilder<EngineCubit, EngineState>(
               bloc: _engine,
@@ -148,24 +151,30 @@ class _SearchScreenState extends State<SearchScreen> {
                       (a.status == SearchStatus.loaded && a.items.isNotEmpty) !=
                       (b.status == SearchStatus.loaded && b.items.isNotEmpty),
                   builder: (context, state) {
-                    final body = Padding(
-                      padding: EdgeInsets.only(
-                        bottom:
-                            AppSpacing.lg +
-                            MediaQuery.paddingOf(context).bottom,
-                      ),
-                      child: _Body(onRetry: _submit, onPaste: _pasteLink),
-                    );
-                    // 결과는 위에서부터 길게 이어 붙이고, 안내는 남은 자리 가운데에 둔다.
+                    final bottom =
+                        AppSpacing.lg + MediaQuery.paddingOf(context).bottom;
+                    // 결과는 위에서부터 지연 목록으로 이어 붙이고, 안내는 남은 자리 가운데에 둔다.
                     final isList =
                         state.status == SearchStatus.loaded &&
                         state.items.isNotEmpty;
-                    return isList
-                        ? SliverToBoxAdapter(child: body)
-                        : SliverFillRemaining(
-                            hasScrollBody: false,
-                            child: body,
-                          );
+                    if (isList) {
+                      return SliverMainAxisGroup(
+                        slivers: [
+                          SliverToBoxAdapter(
+                            child: const _Results(),
+                          ),
+                          const _ResultsList(),
+                          SliverToBoxAdapter(child: SizedBox(height: bottom)),
+                        ],
+                      );
+                    }
+                    return SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Padding(
+                        padding: EdgeInsets.only(bottom: bottom),
+                        child: _Body(onRetry: _submit, onPaste: _pasteLink),
+                      ),
+                    );
                   },
                 );
               },
@@ -244,19 +253,18 @@ class _Body extends StatelessWidget {
             body: l10n.searchNoResultsBody,
           );
         }
-        return _Results(state: state);
+        return const _Results();
     }
   }
 }
 
 class _Results extends StatelessWidget {
-  const _Results({required this.state});
-
-  final SearchState state;
+  const _Results();
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final state = context.watch<SearchCubit>().state;
     final isPlaylist = state.playlistTitle != null;
     final label = isPlaylist
         ? '${l10n.searchPlaylistLabel} · ${state.playlistTitle}'
@@ -299,12 +307,28 @@ class _Results extends StatelessWidget {
               ],
             ),
           ),
-        for (final hit in state.visibleItems) _HitTile(hit: hit),
-        if (state.hasNext)
-          // 끝까지 내려와 이 줄이 화면에 들어오면 다음 결과를 불러온다.
-          // 곡이 늘 때마다 새로 만들어서(key) 다음 쪽도 같은 방식으로 이어진다.
-          _LoadMoreTrigger(key: ValueKey(state.items.length)),
       ],
+    );
+  }
+}
+
+/// 결과 줄들: 화면에 보이는 줄만 만드는 지연 목록 (곡이 많아도 스크롤이 가볍다).
+/// 마지막 줄은 다음 쪽을 불러오는 [_LoadMoreTrigger]다.
+class _ResultsList extends StatelessWidget {
+  const _ResultsList();
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<SearchCubit>().state;
+    final items = state.visibleItems;
+    return SliverList.builder(
+      itemCount: items.length + (state.hasNext ? 1 : 0),
+      itemBuilder: (context, i) {
+        if (i < items.length) return _HitTile(key: ValueKey(items[i].id), hit: items[i]);
+        // 끝까지 내려와 이 줄이 화면에 들어오면 다음 결과를 불러온다.
+        // 곡이 늘 때마다 새로 만들어서(key) 다음 쪽도 같은 방식으로 이어진다.
+        return _LoadMoreTrigger(key: ValueKey(state.items.length));
+      },
     );
   }
 }
@@ -392,7 +416,7 @@ class _LoadMoreTriggerState extends State<_LoadMoreTrigger> {
 enum _HitAction { detail, preview, download }
 
 class _HitTile extends StatelessWidget {
-  const _HitTile({required this.hit});
+  const _HitTile({super.key, required this.hit});
 
   final MediaHit hit;
 
@@ -549,4 +573,39 @@ class _Hint extends StatelessWidget {
   Widget build(BuildContext context) {
     return EmptyState(icon: icon, title: title, body: body, action: action);
   }
+}
+
+/// 스크롤해도 위에 붙어 있는 검색창 줄 (배경색 위에 놓고, 위아래 여백까지 높이를 고정한다).
+class _PinnedSearchBar extends SliverPersistentHeaderDelegate {
+  const _PinnedSearchBar({required this.child, required this.color});
+
+  final Widget child;
+  final Color color;
+
+  static const double _extent = 52 + AppSpacing.xs + AppSpacing.sm;
+
+  @override
+  double get minExtent => _extent;
+
+  @override
+  double get maxExtent => _extent;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) => ColoredBox(
+    color: color,
+    child: Padding(
+      padding: AppSpacing.screen.copyWith(
+        top: AppSpacing.xs,
+        bottom: AppSpacing.sm,
+      ),
+      child: child,
+    ),
+  );
+
+  @override
+  bool shouldRebuild(covariant _PinnedSearchBar old) => true;
 }
