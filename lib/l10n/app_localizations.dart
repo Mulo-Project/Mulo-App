@@ -3137,7 +3137,7 @@ abstract class AppLocalizations {
   /// No description provided for @trackMenuEditInfo.
   ///
   /// In ko, this message translates to:
-  /// **'정보 편집'**
+  /// **'상세 정보'**
   String get trackMenuEditInfo;
 
   /// No description provided for @trackMenuDelete.
@@ -3247,6 +3247,54 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'곡 정보를 고쳤어요'**
   String get trackEditSaved;
+
+  /// No description provided for @trackInfoTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'곡 상세 정보'**
+  String get trackInfoTitle;
+
+  /// No description provided for @trackInfoUnknown.
+  ///
+  /// In ko, this message translates to:
+  /// **'알 수 없음'**
+  String get trackInfoUnknown;
+
+  /// No description provided for @trackInfoDuration.
+  ///
+  /// In ko, this message translates to:
+  /// **'길이'**
+  String get trackInfoDuration;
+
+  /// No description provided for @trackInfoAdded.
+  ///
+  /// In ko, this message translates to:
+  /// **'추가한 날'**
+  String get trackInfoAdded;
+
+  /// No description provided for @trackInfoSource.
+  ///
+  /// In ko, this message translates to:
+  /// **'출처'**
+  String get trackInfoSource;
+
+  /// No description provided for @trackInfoSourceDevice.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 기기'**
+  String get trackInfoSourceDevice;
+
+  /// No description provided for @trackInfoSourceDownload.
+  ///
+  /// In ko, this message translates to:
+  /// **'받은 곡'**
+  String get trackInfoSourceDownload;
+
+  /// No description provided for @trackInfoFolder.
+  ///
+  /// In ko, this message translates to:
+  /// **'폴더'**
+  String get trackInfoFolder;
 
   /// No description provided for @trackEditTagFailed.
   ///

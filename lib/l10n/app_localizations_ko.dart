@@ -1668,7 +1668,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get trackMenuAddToPlaylist => '재생목록에 추가';
 
   @override
-  String get trackMenuEditInfo => '정보 편집';
+  String get trackMenuEditInfo => '상세 정보';
 
   @override
   String get trackMenuDelete => '삭제';
@@ -1725,6 +1725,30 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get trackEditSaved => '곡 정보를 고쳤어요';
+
+  @override
+  String get trackInfoTitle => '곡 상세 정보';
+
+  @override
+  String get trackInfoUnknown => '알 수 없음';
+
+  @override
+  String get trackInfoDuration => '길이';
+
+  @override
+  String get trackInfoAdded => '추가한 날';
+
+  @override
+  String get trackInfoSource => '출처';
+
+  @override
+  String get trackInfoSourceDevice => '내 기기';
+
+  @override
+  String get trackInfoSourceDownload => '받은 곡';
+
+  @override
+  String get trackInfoFolder => '폴더';
 
   @override
   String get trackEditTagFailed =>

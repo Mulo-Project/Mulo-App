@@ -1710,7 +1710,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackMenuAddToPlaylist => 'Add to playlist';
 
   @override
-  String get trackMenuEditInfo => 'Edit info';
+  String get trackMenuEditInfo => 'Details';
 
   @override
   String get trackMenuDelete => 'Delete';
@@ -1769,6 +1769,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trackEditSaved => 'Song info updated';
+
+  @override
+  String get trackInfoTitle => 'Song details';
+
+  @override
+  String get trackInfoUnknown => 'Unknown';
+
+  @override
+  String get trackInfoDuration => 'Length';
+
+  @override
+  String get trackInfoAdded => 'Added';
+
+  @override
+  String get trackInfoSource => 'Source';
+
+  @override
+  String get trackInfoSourceDevice => 'This device';
+
+  @override
+  String get trackInfoSourceDownload => 'Downloaded';
+
+  @override
+  String get trackInfoFolder => 'Folder';
 
   @override
   String get trackEditTagFailed =>

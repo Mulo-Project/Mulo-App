@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
+import 'package:music_download_play_app/core/design/design.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 import 'package:music_download_play_app/features/library/presentation/screens/library_screen.dart';
 import 'package:music_download_play_app/features/library/presentation/widgets/track_menu.dart';
@@ -46,7 +47,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  const items = ['다음에 재생', '대기열에 추가', '재생목록에 추가', '좋아요', '정보 편집', '꾸미기', '삭제'];
+  const items = ['다음에 재생', '대기열에 추가', '재생목록에 추가', '좋아요', '상세 정보', '꾸미기', '삭제'];
 
   testWidgets('⋮ 버튼이 팝업 메뉴를 연다 (보관함 줄은 길게 누르면 선택 모드)', (tester) async {
     await pumpLibrary(tester);
@@ -63,7 +64,7 @@ void main() {
     expect(find.text('재생목록에서 빼기'), findsNothing);
     await tester.tapAt(const Offset(10, 10));
     await tester.pumpAndSettle();
-    expect(find.text('정보 편집'), findsNothing);
+    expect(find.text('상세 정보'), findsNothing);
   });
 
   testWidgets('재생목록에 추가: 재생목록 화면으로 가서 카드를 골라 완료한다', (tester) async {
@@ -114,31 +115,35 @@ void main() {
     expect(playlists.members[Playlist.favoritesId], isEmpty);
   });
 
-  testWidgets('정보 편집: 저장하면 목록에 바로 반영되고, 제목이 비면 저장되지 않는다', (tester) async {
+  testWidgets('상세 정보: 같은 화면에서 고치고 저장하면 목록에 반영되며, 제목이 비면 저장되지 않는다', (tester) async {
     await pumpLibrary(tester);
     await tester.tap(find.byTooltip('곡 메뉴').first);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('정보 편집'));
+    await tester.tap(find.text('상세 정보'));
+    await tester.pumpAndSettle();
+    // 먼저 정보를 보여 주고, 연필을 누르면 고치는 모드가 된다.
+    expect(find.text('곡 상세 정보'), findsOneWidget);
+    expect(find.text('길이'), findsOneWidget);
+    await tester.tap(find.byTooltip('곡 정보 편집'));
     await tester.pumpAndSettle();
 
-    final title = find
-        .descendant(
-          of: find.byType(Dialog),
-          matching: find.byType(EditableText),
-        )
-        .first;
+    final title = find.byType(EditableText).first;
     await tester.enterText(title, '');
     await tester.tap(find.text('저장'));
     await tester.pumpAndSettle();
-    expect(find.text('곡 정보 편집'), findsOneWidget);
+    expect(find.text('저장'), findsOneWidget);
 
     await tester.enterText(title, '고친 제목');
     await tester.tap(find.text('저장'));
     await tester.pumpAndSettle();
-    expect(find.text('곡 정보 편집'), findsNothing);
+    expect(find.text('저장'), findsNothing);
     expect(find.text('고친 제목'), findsOneWidget);
-    expect(find.text('둘째 곡'), findsNothing);
-    expect(find.text('첫 곡'), findsOneWidget);
+
+    await tester.tap(find.byType(AppBackButton));
+    await tester.pumpAndSettle();
+    expect(find.text('고친 제목'), findsOneWidget);
+    expect(find.text('둘째 곡'), findsOneWidget);
+    expect(find.text('첫 곡'), findsNothing);
   });
 
   testWidgets('삭제: 확인하면 음악 파일과 보관함 기록이 지워지고, 취소하면 그대로', (tester) async {
