@@ -1751,6 +1751,21 @@ class AppLocalizationsKo extends AppLocalizations {
   String get trackInfoFolder => '폴더';
 
   @override
+  String get collectionMenuInfo => '정보';
+
+  @override
+  String get playlistInfoTitle => '재생목록 정보';
+
+  @override
+  String get albumInfoTitle => '앨범 정보';
+
+  @override
+  String get artistInfoTitle => '아티스트 정보';
+
+  @override
+  String get genreInfoTitle => '장르 정보';
+
+  @override
   String get trackInfoFileSize => '파일 크기';
 
   @override

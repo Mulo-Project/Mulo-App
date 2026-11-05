@@ -9,7 +9,7 @@ import '../../../covers/domain/entities/cover_key.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../covers/presentation/widgets/cover_editor_page.dart';
-import '../../../covers/presentation/widgets/cover_entry.dart';
+import '../../../covers/presentation/widgets/cover_hero.dart';
 import '../../../downloads/domain/usecases/download_usecases.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/track.dart';
@@ -182,15 +182,14 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
     );
 
     final children = <Widget>[
-      // 커버 이미지 줄: 눌러서 이미지 페이지에서 고르고 맞추고 지운다.
-      CoverEntry(
+      // 큰 커버: 눌러서 이미지 페이지에서 고르고 맞추고 지운다.
+      CoverHero(
         image: coverImageOf(context, key),
-        label: l10n.decorateImage,
-        tone: toneFor(t.id),
         color: coverColorOf(context, key),
+        tone: toneFor(t.id),
         onTap: () => _editImage(art),
       ),
-      const SizedBox(height: AppSpacing.md),
+      const SizedBox(height: AppSpacing.lg),
       if (_editing) ...[
         AppTextField(label: l10n.trackEditName, controller: _title),
         const SizedBox(height: AppSpacing.sm),

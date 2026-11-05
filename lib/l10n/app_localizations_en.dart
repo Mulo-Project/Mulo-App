@@ -1795,6 +1795,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackInfoFolder => 'Folder';
 
   @override
+  String get collectionMenuInfo => 'Info';
+
+  @override
+  String get playlistInfoTitle => 'Playlist info';
+
+  @override
+  String get albumInfoTitle => 'Album info';
+
+  @override
+  String get artistInfoTitle => 'Artist info';
+
+  @override
+  String get genreInfoTitle => 'Genre info';
+
+  @override
   String get trackInfoFileSize => 'File size';
 
   @override

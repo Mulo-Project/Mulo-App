@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
+import 'package:music_download_play_app/features/covers/presentation/widgets/cover_hero.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 
 import '../../helpers/fakes.dart';
@@ -47,15 +48,13 @@ void main() {
     expect(find.text('다른 곡'), findsNothing);
   });
 
-  testWidgets('꾸미기 시트에서 이미지와 색을 한 곳에서 고른다', (tester) async {
+  testWidgets('정보 화면에서 큰 이미지와 색을 한 곳에서 고른다', (tester) async {
     await pump(tester, Routes.artist('A가수'));
-    await tester.tap(find.byTooltip('더 보기'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('아티스트 꾸미기'));
+    await tester.tap(find.byTooltip('정보'));
     await tester.pumpAndSettle();
 
-    expect(find.text('꾸미기'), findsOneWidget);
-    expect(find.text('이미지 고르기'), findsOneWidget);
+    expect(find.text('아티스트 정보'), findsOneWidget);
+    expect(find.byType(CoverHero), findsOneWidget);
     expect(find.text('색'), findsOneWidget);
   });
 

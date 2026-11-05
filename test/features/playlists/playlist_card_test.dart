@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:music_download_play_app/features/covers/presentation/widgets/cover_hero.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/design/design.dart';
@@ -155,7 +156,7 @@ void main() {
     await pumpPlaylists(tester);
     await openMenu(tester);
     expect(find.byType(BottomSheet), findsNothing);
-    for (final label in ['전체 재생', '꾸미기', '이름 바꾸기', '재생목록 삭제']) {
+    for (final label in ['전체 재생', '정보', '재생목록 삭제']) {
       expect(find.text(label), findsOneWidget, reason: label);
     }
   });
@@ -164,14 +165,14 @@ void main() {
     await pumpPlaylists(tester);
     await tester.longPress(find.text('좋아요'));
     await tester.pumpAndSettle();
-    expect(find.text('꾸미기'), findsOneWidget);
+    expect(find.text('정보'), findsOneWidget);
     expect(find.text('재생목록 삭제'), findsNothing);
   });
 
-  testWidgets('꾸미기 시트에서 색 견본으로 고르고 자동으로 되돌린다', (tester) async {
+  testWidgets('정보 화면에서 색 견본으로 고르고 자동으로 되돌린다', (tester) async {
     await pumpPlaylists(tester);
     await openMenu(tester);
-    await tester.tap(find.text('꾸미기'));
+    await tester.tap(find.text('정보'));
     await tester.pumpAndSettle();
     expect(find.text('색'), findsOneWidget);
     await tester.tap(find.bySemanticsLabel('색 7'));
@@ -183,25 +184,23 @@ void main() {
     expect(colors.saved.containsKey('playlist:pl1'), isFalse);
   });
 
-  testWidgets('꾸미기 시트에서 이미지를 고르고 이미지 지우기로 지운다', (tester) async {
+  testWidgets('정보 화면에서 이미지를 고르고 이미지 지우기로 지운다', (tester) async {
     final path = _pngFile();
     await pumpPlaylists(tester, image: FakeImageSource(path));
     await openMenu(tester);
-    await tester.tap(find.text('꾸미기'));
+    await tester.tap(find.text('정보'));
     await tester.pumpAndSettle();
-    // 시트에는 이미지 줄 하나만 있고, 고르기 · 위치 · 되돌리기는 이미지 페이지 안에 있다.
-    expect(find.text('이미지 고르기'), findsOneWidget);
+    // 정보 화면에는 큰 이미지 하나만 있고, 고르기 · 위치 · 되돌리기는 이미지 페이지 안에 있다.
     expect(find.text('기본 이미지로'), findsNothing);
     expect(find.text('위치 조정'), findsNothing);
-    await tester.tap(find.text('이미지 고르기'));
+    await tester.tap(find.byType(CoverHero));
     await tester.pumpAndSettle();
     await _pickFromDeviceAndApply(tester);
     expect(covers.saved['playlist:pl1'], CoverArt.file(path));
-    expect(find.text('이미지 바꾸기'), findsOneWidget);
     expect(find.bySemanticsLabel('색 1'), findsOneWidget);
 
     // 줄을 다시 누르면 지금 이미지를 불러온 채 이미지 페이지가 열리고, 기본으로 되돌릴 때는 확인을 묻는다.
-    await tester.tap(find.text('이미지 바꾸기'));
+    await tester.tap(find.byType(CoverHero));
     await tester.pump();
     await _waitImage(tester);
     expect(find.text('이미지 지우기'), findsOneWidget);
@@ -221,9 +220,9 @@ void main() {
   testWidgets('웹 이미지를 고르면 위치 맞추는 화면으로 간다 (읽지 못하면 적용할 수 없다)', (tester) async {
     await pumpPlaylists(tester);
     await openMenu(tester);
-    await tester.tap(find.text('꾸미기'));
+    await tester.tap(find.text('정보'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('이미지 고르기'));
+    await tester.tap(find.byType(CoverHero));
     await tester.pumpAndSettle();
     await tester.tap(find.text('웹에서 가져오기'));
     await tester.pumpAndSettle();
@@ -261,15 +260,16 @@ void main() {
     await pumpPlaylists(tester);
     await openMenu(tester, card: 0);
     expect(find.text('전체 재생'), findsOneWidget);
-    expect(find.text('꾸미기'), findsOneWidget);
-    expect(find.text('이름 바꾸기'), findsNothing);
+    expect(find.text('정보'), findsOneWidget);
     expect(find.text('재생목록 삭제'), findsNothing);
   });
 
   testWidgets('이름 바꾸기', (tester) async {
     await pumpPlaylists(tester);
     await openMenu(tester);
-    await tester.tap(find.text('이름 바꾸기'));
+    await tester.tap(find.text('정보'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('재생목록 이름'));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(EditableText), '퇴근길');
     await tester.tap(find.text('저장'));
@@ -317,7 +317,6 @@ void main() {
     await tester.pumpAndSettle();
     await _pickFromDeviceAndApply(tester);
     // 이미지를 골라도 색 고르기는 그대로 있다 (이미지를 지웠을 때 쓰인다).
-    expect(find.text('이미지 바꾸기'), findsOneWidget);
     expect(find.bySemanticsLabel('색 1'), findsOneWidget);
     await tester.tap(find.text('만들기'));
     await tester.pumpAndSettle();

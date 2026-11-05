@@ -3296,6 +3296,36 @@ abstract class AppLocalizations {
   /// **'폴더'**
   String get trackInfoFolder;
 
+  /// No description provided for @collectionMenuInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'정보'**
+  String get collectionMenuInfo;
+
+  /// No description provided for @playlistInfoTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생목록 정보'**
+  String get playlistInfoTitle;
+
+  /// No description provided for @albumInfoTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'앨범 정보'**
+  String get albumInfoTitle;
+
+  /// No description provided for @artistInfoTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'아티스트 정보'**
+  String get artistInfoTitle;
+
+  /// No description provided for @genreInfoTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'장르 정보'**
+  String get genreInfoTitle;
+
   /// No description provided for @trackInfoFileSize.
   ///
   /// In ko, this message translates to:
