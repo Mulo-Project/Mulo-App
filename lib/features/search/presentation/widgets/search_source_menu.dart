@@ -19,7 +19,7 @@ Widget sourceMark(SearchSource s, double size) => switch (s) {
   SearchSource.soundcloud => SoundcloudMark(size: size),
 };
 
-/// 검색창 왼쪽 버튼: 어느 사이트에서 찾을지 고른다.
+/// 검색창 오른쪽 버튼: 어느 사이트에서 찾을지 고른다.
 /// 검색창에는 고른 사이트의 아이콘만, 눌러서 열리는 메뉴에는 아이콘 + 이름을 보여 준다.
 class SearchSourceMenu extends StatelessWidget {
   const SearchSourceMenu({

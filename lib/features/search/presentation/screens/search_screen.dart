@@ -120,18 +120,13 @@ class _SearchScreenState extends State<SearchScreen> {
                       }
                     },
                     onSubmitted: (_) => _submit(),
-                    leading: SearchSourceMenu(
+                    // 돋보기는 왼쪽, 검색 대상 고르기는 오른쪽. 검색은 키보드의 검색 키로 한다.
+                    suffix: SearchSourceMenu(
                       source: _source,
                       onChanged: (s) {
                         setState(() => _source = s);
                         if (_controller.text.trim().isNotEmpty) _submit();
                       },
-                    ),
-                    suffix: RowIconButton(
-                      icon: AppIcons.search,
-                      tooltip: l10n.searchSubmitTooltip,
-                      accent: true,
-                      onPressed: _submit,
                     ),
                   ),
                 ),
