@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'dart:ui' as ui;
@@ -69,8 +70,43 @@ class FilePictureReader implements EmbeddedPictureReader {
     final file = File(uri);
     if (!file.existsSync()) return null;
     final pictures = readMetadata(file, getImage: true).pictures;
-    return pictures.isEmpty ? null : pictures.first.bytes;
+    if (pictures.isNotEmpty) return pictures.first.bytes;
+    // opus · ogg: 라이브러리가 그림 칸으로 안 주면, 코멘트의 METADATA_BLOCK_PICTURE를 직접 푼다.
+    try {
+      final raw = readAllMetadata(file, getImage: true);
+      if (raw is VorbisMetadata) {
+        if (raw.pictures.isNotEmpty) return raw.pictures.first.bytes;
+        return pictureFromVorbisComments(raw.unknowns);
+      }
+    } on Object {
+      // 못 읽으면 커버 없음.
+    }
+    return null;
   }
+}
+
+/// Vorbis 코멘트의 `METADATA_BLOCK_PICTURE`(base64로 감싼 FLAC 그림 블록)에서 그림 바이트를 꺼낸다. 없거나 깨졌으면 null.
+Uint8List? pictureFromVorbisComments(Map<String, String> comments) {
+  for (final e in comments.entries) {
+    if (e.key.toUpperCase() != 'METADATA_BLOCK_PICTURE') continue;
+    try {
+      final bytes = base64.decode(e.value.trim());
+      final data = ByteData.sublistView(bytes);
+      var at = 4; // 그림 종류
+      final mimeLen = data.getUint32(at);
+      at += 4 + mimeLen;
+      final descLen = data.getUint32(at);
+      at += 4 + descLen;
+      at += 16; // 가로 · 세로 · 색 깊이 · 색 수
+      final size = data.getUint32(at);
+      at += 4;
+      if (size == 0 || at + size > bytes.length) return null;
+      return Uint8List.sublistView(bytes, at, at + size);
+    } on Object {
+      return null;
+    }
+  }
+  return null;
 }
 
 /// 내장 커버를 긴 변 [maxSide]px 이하로 줄인 PNG 임시 파일(앱 캐시 폴더)로 만든다.
