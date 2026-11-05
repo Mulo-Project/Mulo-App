@@ -1751,6 +1751,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get trackInfoFolder => '폴더';
 
   @override
+  String get trackInfoUrl => '원본 주소';
+
+  @override
+  String get trackInfoUrlCopied => '주소를 복사했어요';
+
+  @override
   String get trackEditTagFailed =>
       '음악 파일에 곡 정보를 쓰지 못해 바꾸지 않았어요. 잠시 뒤 다시 시도해 주세요.';
 

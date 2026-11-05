@@ -665,6 +665,9 @@ class MemoryDownloadQueue implements DownloadQueueRepository {
       existing[url] ?? ExistingDownload.none;
 
   @override
+  Future<String?> sourceUrlOf(String trackId) async => null;
+
+  @override
   Stream<Set<String>> watchDownloadedKeys() => Stream.value(downloadedKeys);
 
   @override

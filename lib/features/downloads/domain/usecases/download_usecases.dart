@@ -55,6 +55,16 @@ class WatchDownloadedKeys implements StreamUseCase<Set<String>, NoParams> {
   Stream<Set<String>> call(NoParams params) => _repo.watchDownloadedKeys();
 }
 
+/// 받은 곡의 원본 주소 (곡 상세 정보에 보여 준다). 기록이 없으면 null.
+class GetTrackSourceUrl implements UseCase<String?, String> {
+  const GetTrackSourceUrl(this._repo);
+
+  final DownloadQueueRepository _repo;
+
+  @override
+  Future<String?> call(String trackId) => _repo.sourceUrlOf(trackId);
+}
+
 /// 일시정지 (상세 기능: 다운로드 대기열 #7).
 class PauseDownload implements UseCase<void, String> {
   const PauseDownload(this._repo);

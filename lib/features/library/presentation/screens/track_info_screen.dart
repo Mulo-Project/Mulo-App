@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
+import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../covers/domain/entities/cover_key.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
+import '../../../covers/presentation/widgets/cover_editor_page.dart';
+import '../../../covers/presentation/widgets/cover_entry.dart';
+import '../../../downloads/domain/usecases/download_usecases.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/track.dart';
 import '../../domain/entities/track_info.dart';
@@ -28,6 +33,9 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
   var _editing = false;
   var _saving = false;
 
+  /// 앱에서 받은 곡의 원본 주소 (기록이 없으면 null).
+  String? _url;
+
   late final _title = TextEditingController();
   late final _artist = TextEditingController();
   late final _album = TextEditingController();
@@ -40,6 +48,39 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
     _album.dispose();
     _genre.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    sl<GetTrackSourceUrl>()(widget.track.id).then((url) {
+      if (mounted) setState(() => _url = url);
+    });
+  }
+
+  /// 커버 이미지를 이미지 페이지에서 고르고 · 맞추고 · 지운다.
+  Future<void> _editImage(CoverArt? art) async {
+    final covers = context.read<CoverCubit>();
+    final key = CoverKey.track(_track.id);
+    final result = await showCoverEditor(
+      context,
+      art,
+      initialQuery: _track.title,
+      canRemove: art != null,
+    );
+    if (result == null) return;
+    if (result.removed || result.reverted) {
+      await covers.clear(key);
+    } else if (result.art != null) {
+      await covers.setArt(key, result.art!);
+    }
+  }
+
+  Future<void> _copyUrl(String url) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final msg = context.l10n.trackInfoUrlCopied;
+    await Clipboard.setData(ClipboardData(text: url));
+    messenger.showSnackBar(SnackBar(content: Text(msg)));
   }
 
   void _startEdit() {
@@ -93,7 +134,12 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
     final key = CoverKey.track(t.id);
     String orDash(String v, String unknown) => v.isEmpty ? unknown : v;
 
-    Widget row(String label, String value) => Padding(
+    final art = context.select<CoverCubit, CoverArt?>((c) => c.state[key]);
+    final colors = context.read<CoverColorCubit>();
+
+    Widget row(String label, String value, {VoidCallback? onTap}) => InkWell(
+      onTap: onTap,
+      child: Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -108,17 +154,17 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
           Expanded(child: Text(value, style: text.bodyMedium)),
         ],
       ),
+    ),
     );
 
     final children = <Widget>[
-      Center(
-        child: ArtworkBox(
-          image: coverImageOf(context, key),
-          size: 160,
-          radius: AppRadii.md,
-          tone: toneFor(t.id),
-          color: coverColorOf(context, key),
-        ),
+      // 커버 이미지 줄: 눌러서 이미지 페이지에서 고르고 맞추고 지운다.
+      CoverEntry(
+        image: coverImageOf(context, key),
+        label: l10n.decorateImage,
+        tone: toneFor(t.id),
+        color: coverColorOf(context, key),
+        onTap: () => _editImage(art),
       ),
       const SizedBox(height: AppSpacing.md),
       if (_editing) ...[
@@ -154,10 +200,28 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
             ? l10n.trackInfoSourceDownload
             : l10n.trackInfoSourceDevice,
       ),
+      if (_url != null) ...[
+        const AppDivider(),
+        row(l10n.trackInfoUrl, _url!, onTap: () => _copyUrl(_url!)),
+      ],
       if (t.folder.isNotEmpty) ...[
         const AppDivider(),
         row(l10n.trackInfoFolder, t.folder),
       ],
+      const SizedBox(height: AppSpacing.md),
+      const AppDivider(),
+      const SizedBox(height: AppSpacing.md),
+      // 이미지가 없을 때 쓰이는 커버 색.
+      SectionTitle(l10n.decorateColor, padded: false),
+      const SizedBox(height: AppSpacing.xs),
+      ColorPicker(
+        selected: coverColorOf(context, key),
+        autoLabel: l10n.playlistColorAuto,
+        customLabel: l10n.colorCustom,
+        optionLabel: l10n.colorOption,
+        onChanged: (c) =>
+            c == null ? colors.clear(key) : colors.setColor(key, c),
+      ),
     ];
 
     return Scaffold(

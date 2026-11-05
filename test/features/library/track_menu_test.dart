@@ -47,7 +47,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  const items = ['다음에 재생', '대기열에 추가', '재생목록에 추가', '좋아요', '상세 정보', '꾸미기', '삭제'];
+  const items = ['다음에 재생', '대기열에 추가', '재생목록에 추가', '좋아요', '상세 정보', '삭제'];
 
   testWidgets('⋮ 버튼이 팝업 메뉴를 연다 (보관함 줄은 길게 누르면 선택 모드)', (tester) async {
     await pumpLibrary(tester);

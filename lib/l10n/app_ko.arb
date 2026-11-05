@@ -740,6 +740,8 @@
   "trackInfoSourceDevice": "내 기기",
   "trackInfoSourceDownload": "받은 곡",
   "trackInfoFolder": "폴더",
+  "trackInfoUrl": "원본 주소",
+  "trackInfoUrlCopied": "주소를 복사했어요",
   "trackEditTagFailed": "음악 파일에 곡 정보를 쓰지 못해 바꾸지 않았어요. 잠시 뒤 다시 시도해 주세요.",
   "trackDeleteTitle": "곡 삭제",
   "trackDeleteBody": "\"{title}\"의 음악 파일을 기기에서 지울까요? 보관함과 재생목록에서도 빠지고, 되돌릴 수 없어요.",

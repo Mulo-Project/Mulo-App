@@ -67,6 +67,7 @@ void registerDownloads(GetIt sl) {
     ..registerFactory(() => EnqueueDownload(sl()))
     ..registerFactory(() => FindExistingDownload(sl()))
     ..registerFactory(() => WatchDownloadedKeys(sl()))
+    ..registerFactory(() => GetTrackSourceUrl(sl()))
     ..registerFactory(() => PauseDownload(sl()))
     ..registerFactory(() => ResumeDownload(sl()))
     ..registerFactory(() => RetryDownload(sl()))

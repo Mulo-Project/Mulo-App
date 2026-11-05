@@ -1795,6 +1795,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackInfoFolder => 'Folder';
 
   @override
+  String get trackInfoUrl => 'Source link';
+
+  @override
+  String get trackInfoUrlCopied => 'Link copied';
+
+  @override
   String get trackEditTagFailed =>
       'Could not write the info to the music file, so nothing was changed. Try again later.';
 

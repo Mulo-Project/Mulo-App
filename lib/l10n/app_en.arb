@@ -640,6 +640,8 @@
   "trackInfoSourceDevice": "This device",
   "trackInfoSourceDownload": "Downloaded",
   "trackInfoFolder": "Folder",
+  "trackInfoUrl": "Source link",
+  "trackInfoUrlCopied": "Link copied",
   "trackEditTagFailed": "Could not write the info to the music file, so nothing was changed. Try again later.",
   "trackDeleteTitle": "Delete song",
   "trackDeleteBody": "Delete the music file \"{title}\" from your device? It will also leave your library and playlists. This cannot be undone.",

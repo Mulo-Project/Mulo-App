@@ -160,6 +160,19 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
     return ExistingDownload(trackId: exists ? trackId : null, inQueue: inQueue);
   }
 
+  @override
+  Future<String?> sourceUrlOf(String trackId) async {
+    await _ensureLoaded();
+    for (final e in _sources.entries) {
+      if (e.value != trackId) continue;
+      const prefix = 'youtube:';
+      return e.key.startsWith(prefix)
+          ? 'https://www.youtube.com/watch?v=${e.key.substring(prefix.length)}'
+          : e.key;
+    }
+    return null;
+  }
+
   /// 받은 곡 키가 바뀌었음을 알린다 (곡을 만든 직후 · 원본 주소 기록 뒤).
   final _keysChanged = StreamController<void>.broadcast();
 

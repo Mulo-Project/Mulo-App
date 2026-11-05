@@ -3296,6 +3296,18 @@ abstract class AppLocalizations {
   /// **'폴더'**
   String get trackInfoFolder;
 
+  /// No description provided for @trackInfoUrl.
+  ///
+  /// In ko, this message translates to:
+  /// **'원본 주소'**
+  String get trackInfoUrl;
+
+  /// No description provided for @trackInfoUrlCopied.
+  ///
+  /// In ko, this message translates to:
+  /// **'주소를 복사했어요'**
+  String get trackInfoUrlCopied;
+
   /// No description provided for @trackEditTagFailed.
   ///
   /// In ko, this message translates to:
