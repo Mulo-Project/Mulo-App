@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import '../../../../core/diagnostics/diag_notice.dart';
 import '../../../../core/usecase/usecase.dart';
@@ -119,6 +120,17 @@ class FillEmbeddedCovers implements UseCase<int, NoParams> {
     ];
     var filled = 0;
     final lines = <String>[];
+    // 이미 커버 정보가 있어 채우지 않는 곡도 어떤 커버인지 적는다 (웹 주소 커버는 못 불러오면 빈 칸으로 보인다).
+    for (final t in tracks) {
+      final c = have[CoverKey.track(t.id)];
+      if (c == null || t.uri.isEmpty) continue;
+      final name = t.title.length > 14 ? t.title.substring(0, 14) : t.title;
+      final url = c.url;
+      final path = c.path;
+      lines.add(
+        '- $name: ${path != null && path.isNotEmpty ? 'file ${File(path).existsSync() ? 'ok' : 'MISSING'}' : 'url ${url == null ? 'none' : (url.length > 40 ? url.substring(0, 40) : url)}'}',
+      );
+    }
     _embedded.takeSummary();
     onProgress?.call(0, todo.length);
     for (final (i, t) in todo.indexed) {
