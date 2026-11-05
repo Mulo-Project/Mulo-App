@@ -86,7 +86,7 @@ class CoverTagWriter {
         );
         // mp3는 ffmpeg가 안 되는 기기(lite 등)에서 라이브러리로 쓴다. opus · ogg는 쓸 방법이 이것뿐이다.
         if (done && ext == 'mp3' && text(lyrics) != null) {
-          _ensureStandardLyrics(audio, lyrics!);
+          _ensureStandardLyrics(audio, lyrics!, png);
         }
         if (done || !extensions.contains(ext)) return done;
       }
@@ -111,20 +111,32 @@ class CoverTagWriter {
   /// ffmpeg가 쓴 mp3 가사는 표준 가사 칸(USLT)이 아니라 사용자 정의 칸(TXXX)에 들어갈 수 있다.
   /// 앱과 다른 플레이어가 읽는 표준 칸에 가사가 없으면 라이브러리로 한 번 더 써 준다.
   /// 복사본에 써서 가사 · 제목 · 커버 수가 그대로일 때만 원본을 바꾼다 (아니면 원본은 그대로).
-  static void _ensureStandardLyrics(File audio, String lyrics) {
+  static void _ensureStandardLyrics(
+    File audio,
+    String lyrics,
+    Uint8List? png,
+  ) {
     final copy = File('${audio.path}.uslt');
     try {
       final want = lyrics.trim();
       final before = readMetadata(audio, getImage: true);
       if (before.lyrics?.trim() == want) return;
       audio.copySync(copy.path);
-      updateMetadata(copy, (m) => m.setLyrics(lyrics));
+      updateMetadata(copy, (m) {
+        m.setLyrics(lyrics);
+        // 라이브러리가 ffmpeg가 쓴 그림 칸을 못 읽어 지워 버려도 커버가 남도록 같은 그림을 다시 넣는다.
+        if (png != null) {
+          m.setPictures([Picture(png, 'image/png', PictureType.coverFront)]);
+        }
+      });
       final after = readMetadata(copy, getImage: true);
       final same =
           after.lyrics?.trim() == want &&
           after.title == before.title &&
           after.artist == before.artist &&
-          after.pictures.length == before.pictures.length;
+          (png != null
+              ? after.pictures.isNotEmpty
+              : after.pictures.length == before.pictures.length);
       if (same) copy.renameSync(audio.path);
     } on Object {
       // 못 해도 ffmpeg가 쓴 원본은 그대로 둔다.
