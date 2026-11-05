@@ -94,14 +94,22 @@ class PillButton extends StatelessWidget {
         blur: 0,
         child: content,
       ),
-      PillVariant.outline => GlassSurface(
-        shape: const StadiumBorder(),
-        onTap: onPressed,
-        blur: 0,
-        child: content,
+      PillVariant.outline => Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: onPressed,
+          customBorder: const StadiumBorder(),
+          child: DecoratedBox(
+            decoration: ShapeDecoration(
+              shape: StadiumBorder(side: BorderSide(color: p.outline)),
+            ),
+            child: content,
+          ),
+        ),
       ),
       PillVariant.accent || PillVariant.primary => _SolidPill(
         color: v == PillVariant.accent ? p.accent : p.primary,
+        glow: enabled,
         onTap: onPressed,
         child: content,
       ),
@@ -112,9 +120,17 @@ class PillButton extends StatelessWidget {
 }
 
 class _SolidPill extends StatelessWidget {
-  const _SolidPill({required this.color, required this.child, this.onTap});
+  const _SolidPill({
+    required this.color,
+    required this.child,
+    this.glow = true,
+    this.onTap,
+  });
 
   final Color color;
+
+  /// 빛(그림자). 비활성일 때는 끈다.
+  final bool glow;
   final VoidCallback? onTap;
   final Widget child;
 
@@ -125,13 +141,15 @@ class _SolidPill extends StatelessWidget {
     decoration: ShapeDecoration(
       color: color,
       shape: const StadiumBorder(),
-      shadows: [
-        BoxShadow(
-          color: color.withValues(alpha: .35),
-          blurRadius: 18,
-          offset: const Offset(0, 6),
-        ),
-      ],
+      shadows: glow
+          ? [
+              BoxShadow(
+                color: color.withValues(alpha: .35),
+                blurRadius: 18,
+                offset: const Offset(0, 6),
+              ),
+            ]
+          : const [],
     ),
     child: Material(
       type: MaterialType.transparency,

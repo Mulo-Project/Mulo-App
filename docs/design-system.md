@@ -64,7 +64,7 @@ MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부�
 | `CoverCard` · `onGlow()` | cover_card.dart | 이미지 카드 (재생목록 · 플레이어 커버), 색 · 사진 위 글자색 |
 | `StatNumber` | stat_number.dart | 큰 숫자 (곡 수, 시간, 퍼센트), 고정폭 숫자 |
 | `AppLineChart` | line_chart.dart | 꺾은선 그래프 (accent 선 · 점, outline 눈금, 최댓값 글자). 외부 차트 패키지 없음 |
-| `PillButton` | buttons.dart | 알약 버튼: accent · primary(단색 + 빛), tonal(유리), outline |
+| `PillButton` | buttons.dart | 알약 버튼: accent · primary(단색 + 빛, 비활성이면 빛 끔), tonal(유리), outline(투명 + `outline` 테두리) |
 | `CircleIconButton` | buttons.dart | 원형 유리 버튼, `emphasized` = 강조 색 + 빛 (재생); `onLongPress`로 길게 누르기 |
 | `RowIconButton` | buttons.dart | 목록 줄 오른쪽 작은 아이콘 버튼 (36px, 면 · 흐림 없음, `accent` = 강조 색, `filled` = 강조 색으로 채운 동그라미(검색 실행 등), `busy` = 돌아가는 표시). 줄마다 `CircleIconButton`(유리)을 놓으면 스크롤이 끊긴다 |
 | `PlainButton` | buttons.dart | 면 없는 작은 글자 · 아이콘 버튼 (보조 동작 · 한 줄 여러 개) |
