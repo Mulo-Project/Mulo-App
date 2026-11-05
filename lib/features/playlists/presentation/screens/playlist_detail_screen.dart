@@ -107,7 +107,7 @@ class _BodyState extends State<_Body> with TrackPicker<_Body> {
         Padding(
           padding: AppSpacing.screen,
           child: AspectRatio(
-            aspectRatio: 2,
+            aspectRatio: 2.4, // 헤더를 낮춰 곡 목록이 먼저 보이게
             child: CoverCard(
               image: image,
               tone: playlistToneOf(pl),
