@@ -184,13 +184,11 @@ class CircleIconButton extends StatelessWidget {
     );
 
     final button = emphasized
-        ? DecoratedBox(
-            child: Material(
-              color: p.accent,
-              shape: const CircleBorder(),
-              clipBehavior: Clip.antiAlias,
-              child: InkWell(onTap: onPressed, child: glyph),
-            ),
+        ? Material(
+            color: p.accent,
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(onTap: onPressed, child: glyph),
           )
         : GlassSurface(
             shape: const CircleBorder(),
