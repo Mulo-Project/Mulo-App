@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/router.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
@@ -10,9 +12,9 @@ import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../bloc/playlists_cubit.dart';
 import 'playlist_card.dart';
 
-enum _Action { playAll, shuffle, decorate, rename, delete }
+enum _Action { playAll, shuffle, addTracks, decorate, rename, delete }
 
-/// 재생목록 팝업 메뉴: 전체 재생 · 셔플 재생 · 꾸미기(이미지 · 색 시트) · 이름 바꾸기 · 삭제.
+/// 재생목록 팝업 메뉴: 전체 재생 · 셔플 재생 · 곡 추가 · 꾸미기(이미지 · 색 시트) · 이름 바꾸기 · 삭제.
 /// 카드의 ⋮, 길게 누르기, 오른쪽 클릭, 상세 화면의 ⋮에서 같은 메뉴를 연다.
 /// [globalPosition]이 있으면 눌린 자리에, 없으면 [context] 위젯 옆에 띄운다.
 /// 좋아요 목록은 이름 · 삭제 항목이 없고, 꾸미기에서 색을 고를 수 없다.
@@ -37,6 +39,12 @@ Future<void> showPlaylistMenu(
         icon: AppIcons.shuffle,
         label: l10n.playlistMenuShuffle,
       ),
+      if (!pl.isFavorites)
+        AppMenuItem(
+          value: _Action.addTracks,
+          icon: AppIcons.add,
+          label: l10n.playlistAddTracks,
+        ),
       AppMenuItem(
         value: _Action.decorate,
         icon: AppIcons.sparkle,
@@ -64,6 +72,8 @@ Future<void> showPlaylistMenu(
       await _playAll(context, pl);
     case _Action.shuffle:
       await _playAll(context, pl, shuffle: true);
+    case _Action.addTracks:
+      await context.push(Routes.playlistAddTracks(pl.id));
     case _Action.decorate:
       await showDecorateSheet(
         context,

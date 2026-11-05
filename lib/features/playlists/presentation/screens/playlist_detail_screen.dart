@@ -140,16 +140,6 @@ class _BodyState extends State<_Body> with TrackPicker<_Body> {
           PlayShuffleRow(
             tracks: tracks ?? const <Track>[],
             playLabel: l10n.playlistMenuPlayAll,
-            extra: pl.isFavorites
-                ? null
-                : PillButton(
-                    label: l10n.playlistAddTracks,
-                    icon: AppIcons.add,
-                    variant: PillVariant.tonal,
-                    snug: true,
-                    onPressed: () =>
-                        context.push(Routes.playlistAddTracks(playlistId)),
-                  ),
           ),
           const SizedBox(height: AppSpacing.sm),
         ],
