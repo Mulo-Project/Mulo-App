@@ -255,42 +255,43 @@ class _LibraryScreenState extends State<LibraryScreen>
                         ),
                       ),
                       const SizedBox(height: AppSpacing.sm),
+                      // 검색칸과 정렬을 한 줄에 둔다 (곡이 첫 화면에 더 많이 보이게).
                       Padding(
                         padding: AppSpacing.screen,
-                        child: AppSearchField(
-                          hint: l10n.librarySearchHint,
-                          clearTooltip: l10n.actionClear,
-                          onChanged: (q) => setState(() => _query = q),
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Padding(
-                        padding: AppSpacing.screen,
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: AppDropdown<LibrarySort>(
-                            values: _sortOptions,
-                            selected: _sort,
-                            tooltip: l10n.sortLabel,
-                            icon: AppIcons.sort,
-                            labelOf: (s) => switch (s) {
-                              LibrarySort.name => l10n.sortName,
-                              LibrarySort.added => l10n.sortAdded,
-                              LibrarySort.artist => l10n.sortArtist,
-                              LibrarySort.count => l10n.sortCount,
-                            },
-                            // 기준을 바꾸면 그 기준의 기본 방향으로 돌아간다.
-                            onChanged: (s) => setState(() {
-                              _sorts[_tab] = s;
-                              _ascending.remove(_tab);
-                            }),
-                            ascending: _asc,
-                            directionTooltip: _asc
-                                ? l10n.sortAscending
-                                : l10n.sortDescending,
-                            onToggleDirection: () =>
-                                setState(() => _ascending[_tab] = !_asc),
-                          ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: AppSearchField(
+                                hint: l10n.librarySearchHint,
+                                clearTooltip: l10n.actionClear,
+                                onChanged: (q) => setState(() => _query = q),
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            AppDropdown<LibrarySort>(
+                              values: _sortOptions,
+                              selected: _sort,
+                              tooltip: l10n.sortLabel,
+                              icon: AppIcons.sort,
+                              labelOf: (s) => switch (s) {
+                                LibrarySort.name => l10n.sortName,
+                                LibrarySort.added => l10n.sortAdded,
+                                LibrarySort.artist => l10n.sortArtist,
+                                LibrarySort.count => l10n.sortCount,
+                              },
+                              // 기준을 바꾸면 그 기준의 기본 방향으로 돌아간다.
+                              onChanged: (s) => setState(() {
+                                _sorts[_tab] = s;
+                                _ascending.remove(_tab);
+                              }),
+                              ascending: _asc,
+                              directionTooltip: _asc
+                                  ? l10n.sortAscending
+                                  : l10n.sortDescending,
+                              onToggleDirection: () =>
+                                  setState(() => _ascending[_tab] = !_asc),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xs),
