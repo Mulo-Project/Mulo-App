@@ -212,6 +212,15 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
                   tooltip: l10n.actionBack,
                   onPressed: () => Navigator.of(context).pop(),
                 ),
+                actions: [
+                  if (widget.canRemove && _art != null)
+                    CircleIconButton(
+                      key: const ValueKey('cover-edit-remove'),
+                      icon: AppIcons.delete,
+                      tooltip: l10n.coverRemove,
+                      onPressed: _remove,
+                    ),
+                ],
               ),
               // 이미지 불러오기는 위쪽에 둔다 (기기 사진 | 웹 이미지).
               Padding(
@@ -367,6 +376,28 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
                         onChanged: (v) =>
                             _rotateTo(v.abs() < 4 ? 0 : v.roundToDouble()),
                       ),
+                      // 막대 아래 양 끝에 90° 돌리기.
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          PlainButton(
+                            key: const ValueKey('cover-edit-rotate-left'),
+                            label: l10n.coverEditRotateLeft,
+                            icon: AppIcons.restart,
+                            onPressed: ready
+                                ? () => _rotateTo(_t.rotation - 90)
+                                : null,
+                          ),
+                          PlainButton(
+                            key: const ValueKey('cover-edit-rotate-right'),
+                            label: l10n.coverEditRotateRight,
+                            icon: AppIcons.restart,
+                            onPressed: ready
+                                ? () => _rotateTo(_t.rotation + 90)
+                                : null,
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -383,18 +414,6 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
                     alignment: WrapAlignment.center,
                     children: [
                       PlainButton(
-                        key: const ValueKey('cover-edit-rotate-left'),
-                        label: l10n.coverEditRotateLeft,
-                        icon: AppIcons.restart,
-                        onPressed: ready ? () => _rotateTo(_t.rotation - 90) : null,
-                      ),
-                      PlainButton(
-                        key: const ValueKey('cover-edit-rotate-right'),
-                        label: l10n.coverEditRotateRight,
-                        icon: AppIcons.restart,
-                        onPressed: ready ? () => _rotateTo(_t.rotation + 90) : null,
-                      ),
-                      PlainButton(
                         key: const ValueKey('cover-edit-reset-position'),
                         label: l10n.coverEditResetPosition,
                         onPressed: ready ? _resetTransform : null,
@@ -405,27 +424,7 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
                           label: l10n.coverReset,
                           onPressed: _revert,
                         ),
-                      if (widget.canRemove)
-                        PlainButton(
-                          key: const ValueKey('cover-edit-remove'),
-                          label: l10n.coverRemove,
-                          icon: AppIcons.delete,
-                          onPressed: _remove,
-                        ),
                     ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.lg,
-                    AppSpacing.xs,
-                    AppSpacing.lg,
-                    AppSpacing.xs,
-                  ),
-                  child: Text(
-                    l10n.coverEditHint,
-                    textAlign: TextAlign.center,
-                    style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
                   ),
                 ),
                 Padding(
