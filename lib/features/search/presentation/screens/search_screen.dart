@@ -53,7 +53,6 @@ class _SearchScreenState extends State<SearchScreen> {
   void dispose() {
     _controller.dispose();
     _cubit.close();
-    _engine.close();
     super.dispose();
   }
 
