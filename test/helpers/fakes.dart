@@ -27,6 +27,7 @@ import 'package:music_download_play_app/features/home/domain/entities/home_summa
 import 'package:music_download_play_app/features/home/domain/repositories/join_date_repository.dart';
 import 'package:music_download_play_app/features/home/domain/repositories/play_history_repository.dart';
 import 'package:music_download_play_app/features/library/di.dart';
+import 'package:music_download_play_app/features/library/domain/entities/hidden_track.dart';
 import 'package:music_download_play_app/features/library/domain/entities/import_result.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track_info.dart';
