@@ -563,6 +563,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsMixWithOthers => 'Play with other apps';
 
   @override
+  String get settingsSleepTimerOff => 'Off';
+
+  @override
+  String get settingsLyricsOverlay => 'Floating lyrics';
+
+  @override
+  String get settingsLyricsOverlayDesc => 'Show lyrics over other apps. Stays on after you restart the app.';
+
+  @override
   String get settingsMixWithOthersDesc =>
       'Keep playing when another app makes sound. Audio may overlap and get loud.';
 

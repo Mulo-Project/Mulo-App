@@ -1112,6 +1112,24 @@ abstract class AppLocalizations {
   /// **'다른 앱과 함께 재생'**
   String get settingsMixWithOthers;
 
+  /// No description provided for @settingsSleepTimerOff.
+  ///
+  /// In ko, this message translates to:
+  /// **'꺼짐'**
+  String get settingsSleepTimerOff;
+
+  /// No description provided for @settingsLyricsOverlay.
+  ///
+  /// In ko, this message translates to:
+  /// **'오버레이 가사'**
+  String get settingsLyricsOverlay;
+
+  /// No description provided for @settingsLyricsOverlayDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'다른 앱 위에 가사를 띄워요. 한 번 켜 두면 앱을 다시 켜도 유지돼요.'**
+  String get settingsLyricsOverlayDesc;
+
   /// No description provided for @settingsMixWithOthersDesc.
   ///
   /// In ko, this message translates to:

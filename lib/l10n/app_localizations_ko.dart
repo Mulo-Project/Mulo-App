@@ -549,6 +549,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsMixWithOthers => '다른 앱과 함께 재생';
 
   @override
+  String get settingsSleepTimerOff => '꺼짐';
+
+  @override
+  String get settingsLyricsOverlay => '오버레이 가사';
+
+  @override
+  String get settingsLyricsOverlayDesc => '다른 앱 위에 가사를 띄워요. 한 번 켜 두면 앱을 다시 켜도 유지돼요.';
+
+  @override
   String get settingsMixWithOthersDesc =>
       '다른 앱 소리와 함께 재생해요. 소리가 겹칠 수 있어요.';
 

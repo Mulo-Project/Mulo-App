@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../bloc/now_playing_cubit.dart';
 import 'player_common.dart';
 
 // 수면 타이머 버튼 · 시간 고르는 대화상자 (player_common에서 나눔).
@@ -22,18 +23,7 @@ class SleepTimerButton extends StatelessWidget {
     return Builder(
       builder: (btn) => IconButton(
         tooltip: l10n.playerSleepTimer,
-        onPressed: () async {
-          final picked = await showDialog<int>(
-            context: btn,
-            useRootNavigator: true,
-            builder: (_) => _SleepTimerDialog(
-              current: _remainingMinutes(data.state.sleepEndsAt),
-            ),
-          );
-          if (picked == null || !btn.mounted) return;
-          // 타이머 버튼 모양이 바뀌므로 따로 안내하지 않는다.
-          data.vm.setSleepTimer(picked == 0 ? null : picked);
-        },
+        onPressed: () => showSleepTimerPicker(btn, data.vm),
         icon: on
             ? Row(
                 mainAxisSize: MainAxisSize.min,
@@ -47,6 +37,21 @@ class SleepTimerButton extends StatelessWidget {
       ),
     );
   }
+}
+
+/// 수면 타이머 시간 고르기: 대화상자에서 정한 시간 뒤에 재생을 멈춘다 (0이면 끈다).
+/// 플레이어 화면과 설정 화면에서 같이 쓴다.
+Future<void> showSleepTimerPicker(BuildContext context, NowPlayingCubit vm) async {
+  final picked = await showDialog<int>(
+    context: context,
+    useRootNavigator: true,
+    builder: (_) => _SleepTimerDialog(
+      current: _remainingMinutes(vm.state.sleepEndsAt),
+    ),
+  );
+  if (picked == null || !context.mounted) return;
+  // 타이머 상태가 화면에 보이므로 따로 안내하지 않는다.
+  vm.setSleepTimer(picked == 0 ? null : picked);
 }
 
 /// 남은 시간을 올림한 분 (꺼져 있으면 null).

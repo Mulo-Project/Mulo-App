@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 import 'package:go_router/go_router.dart';
 
 import '../../../lyrics/presentation/bloc/lyrics_settings_cubit.dart';
@@ -10,6 +11,11 @@ import '../../../../core/l10n/l10n.dart';
 import '../../../equalizer/presentation/bloc/equalizer_cubit.dart';
 import '../../../player/presentation/bloc/mix_with_others_cubit.dart';
 import '../../../player/presentation/bloc/output_behavior_cubit.dart';
+
+import '../../../library/presentation/widgets/track_menu.dart'
+    show toggleLyricsOverlay;
+import '../../../player/presentation/bloc/now_playing_cubit.dart';
+import '../../../player/presentation/widgets/player_sleep_timer.dart';
 
 import 'settings_common.dart';
 
@@ -79,6 +85,26 @@ class SettingsPlaybackSection extends StatelessWidget {
             trailing: const SettingsChevron(),
             onTap: () => context.push(Routes.equalizer),
           ),
+        // 수면 타이머: 플레이어 화면과 같은 시간 고르기 대화상자를 연다.
+        SettingRow(
+          title: l10n.playerSleepTimer,
+          description: _sleepDescription(context),
+          trailing: const SettingsChevron(),
+          onTap: () => showSleepTimerPicker(
+            context,
+            context.read<NowPlayingCubit>(),
+          ),
+        ),
+        // 떠 있는 가사 창은 Android만. 한 번 켜 두면 설정이 저장되어 앱을 다시 켜도 곡을 재생하면 뜬다.
+        if (defaultTargetPlatform == TargetPlatform.android)
+          SettingRow(
+            title: l10n.settingsLyricsOverlay,
+            description: l10n.settingsLyricsOverlayDesc,
+            trailing: AppSwitch(
+              value: context.watch<LyricsSettingsCubit>().state.overlay,
+              onChanged: (_) => toggleLyricsOverlay(context),
+            ),
+          ),
         SettingRow(
           title: l10n.lyricsLatencyTitle,
           description: l10n.lyricsLatencySeconds(
@@ -90,5 +116,15 @@ class SettingsPlaybackSection extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  /// 수면 타이머 줄 설명: 켜져 있으면 남은 분, 아니면 "꺼짐".
+  String _sleepDescription(BuildContext context) {
+    final l10n = context.l10n;
+    final endsAt = context.select((NowPlayingCubit c) => c.state.sleepEndsAt);
+    if (endsAt == null) return l10n.settingsSleepTimerOff;
+    final left = endsAt.difference(DateTime.now());
+    if (left.isNegative) return l10n.settingsSleepTimerOff;
+    return l10n.playerSleepTimerMinutes((left.inSeconds / 60).ceil());
   }
 }
