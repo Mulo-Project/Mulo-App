@@ -98,7 +98,13 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
         if (cover != null) args += listOf("-i", cover)
         args += listOf("-map", "0:a")
         // mp3 커버는 그림 입력을 첨부 그림(attached_pic)으로 붙인다.
-        if (cover != null) args += listOf("-map", "2:v", "-disposition:v:0", "attached_pic")
+        // 그림 종류를 "앞면 커버"로 적어 다른 플레이어도 커버로 읽게 한다 (안 적으면 "기타" 그림이 된다).
+        if (cover != null) {
+            args += listOf(
+                "-map", "2:v", "-disposition:v:0", "attached_pic",
+                "-metadata:s:v", "title=Album cover", "-metadata:s:v", "comment=Cover (front)",
+            )
+        }
         args += listOf("-map_metadata", "1", "-map_metadata:s:a:0", "1:g", "-c", "copy")
         // 다른 플레이어에서도 열리도록 ID3는 v2.3으로 쓴다.
         if (format == "mp3") args += listOf("-id3v2_version", "3")
