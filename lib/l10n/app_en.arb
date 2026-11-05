@@ -655,7 +655,7 @@
   "lyricsLoadFile": "Load from file",
   "lyricsWebSearch": "Import from the web",
   "lyricsWebTitle": "Search lyrics",
-  "lyricsWebHint": "Long-press and drag to select text, then tap Add. Add as many times as you like, then tap Import.",
+  "lyricsWebHint": "Select lyrics and tap Add, then Import when done",
   "lyricsWebImport": "Import",
   "lyricsWebNothingSelected": "Nothing is selected. Select the lyrics first.",
   "lyricsWebAdd": "Add",

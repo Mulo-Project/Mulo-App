@@ -755,7 +755,7 @@
   "lyricsLoadFile": "파일에서 불러오기",
   "lyricsWebSearch": "웹에서 가져오기",
   "lyricsWebTitle": "가사 검색",
-  "lyricsWebHint": "가사를 길게 눌러 끌어서 고른 뒤 '담기'를 누르세요. 여러 번 담은 뒤 '가져오기'로 한꺼번에 넣어요.",
+  "lyricsWebHint": "가사를 끌어서 골라 '담기', 다 모았으면 '가져오기'",
   "lyricsWebImport": "가져오기",
   "lyricsWebNothingSelected": "고른 글이 없어요. 가사를 끌어서 먼저 골라 주세요.",
   "lyricsWebAdd": "담기",

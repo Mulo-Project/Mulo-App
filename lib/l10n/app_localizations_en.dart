@@ -1847,8 +1847,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsWebTitle => 'Search lyrics';
 
   @override
-  String get lyricsWebHint =>
-      'Long-press and drag to select text, then tap Add. Add as many times as you like, then tap Import.';
+  String get lyricsWebHint => 'Select lyrics and tap Add, then Import when done';
 
   @override
   String get lyricsWebImport => 'Import';

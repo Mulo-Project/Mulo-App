@@ -1801,8 +1801,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsWebTitle => '가사 검색';
 
   @override
-  String get lyricsWebHint =>
-      '가사를 길게 눌러 끌어서 고른 뒤 \'담기\'를 누르세요. 여러 번 담은 뒤 \'가져오기\'로 한꺼번에 넣어요.';
+  String get lyricsWebHint => '가사를 끌어서 골라 \'담기\', 다 모았으면 \'가져오기\'';
 
   @override
   String get lyricsWebImport => '가져오기';
