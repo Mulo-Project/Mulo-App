@@ -90,7 +90,7 @@ class ImportDeviceMusic implements UseCase<ImportOutcome, NoParams> {
   }
 }
 
-/// 커버가 없는 기기 곡에 파일 내장 커버를 붙인다. 새로 붙인 수를 돌려준다.
+/// 커버가 없는 곡(기기에서 불러온 곡 · 앱에서 받은 곡)에 파일 내장 커버를 붙인다. 새로 붙인 수를 돌려준다.
 /// 직접 고른 커버 · 웹 썸네일처럼 이미 커버가 있는 곡은 건드리지 않는다 (파일이 사라진 커버는 빈 것으로 본다).
 /// 한 곡이 실패해도 나머지는 계속한다.
 class FillEmbeddedCovers implements UseCase<int, NoParams> {
@@ -112,8 +112,7 @@ class FillEmbeddedCovers implements UseCase<int, NoParams> {
     final have = await _covers.loadAll();
     final todo = [
       for (final t in tracks)
-        if (t.source == TrackSource.device &&
-            t.uri.isNotEmpty &&
+        if (t.uri.isNotEmpty &&
             !have.containsKey(CoverKey.track(t.id)))
           t,
     ];
