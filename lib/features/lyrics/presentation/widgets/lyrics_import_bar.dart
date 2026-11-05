@@ -159,22 +159,24 @@ class _LyricsImportBarState extends State<LyricsImportBar> {
     final size = MediaQuery.sizeOf(context);
     final keyboard = MediaQuery.viewInsetsOf(context).bottom;
     final safeBottom = MediaQuery.paddingOf(context).bottom;
+    // 위로는 상태바 아래까지만 올린다 (시스템 UI에 가려 다시 끌어내리지 못하는 일을 막는다).
+    final safeTop = MediaQuery.paddingOf(context).top + AppSpacing.xs;
     final maxHeight = size.height * .6;
     final height = _height.clamp(_minHeight, maxHeight);
     final maxTop = (size.height - keyboard - safeBottom - height - 8).clamp(
-      0.0,
+      safeTop,
       size.height,
     );
     // 처음에는 아래쪽(저장 버튼 위)에 놓고, 끌면 그 자리를 따른다. 키보드가 가리면 키보드 위로 올린다.
     final wanted = _top ?? (size.height - safeBottom - height - 96);
-    final top = wanted.clamp(0.0, maxTop);
+    final top = wanted.clamp(safeTop, maxTop);
 
     // 머리: 끌어서 옮긴다. 제목 · 끼우기 · 숨기기.
     Widget handle(List<Widget> actions) => GestureDetector(
       key: ValueKey('${widget.keyPrefix}-memo-handle'),
       behavior: HitTestBehavior.opaque,
       onVerticalDragUpdate: (d) {
-        _top = (top + d.delta.dy).clamp(0.0, maxTop);
+        _top = (top + d.delta.dy).clamp(safeTop, maxTop);
         _entry?.markNeedsBuild();
       },
       child: Padding(
