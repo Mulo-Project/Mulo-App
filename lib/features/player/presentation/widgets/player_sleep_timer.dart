@@ -61,11 +61,32 @@ int? _remainingMinutes(DateTime? endsAt) {
   return left.isNegative ? null : (left.inSeconds / 60).ceil();
 }
 
-/// 수면 타이머가 켜져 있을 때 버튼 옆에 보이는 남은 시간 (`1:05:00` / `12:30`).
-class _SleepRemaining extends StatefulWidget {
-  const _SleepRemaining({required this.endsAt});
+/// 미니 플레이어처럼 좁은 곳에 붙이는 작은 표시: 달 아이콘 + 남은 시간.
+class SleepRemainingBadge extends StatelessWidget {
+  const SleepRemainingBadge({super.key, required this.endsAt});
 
   final DateTime? endsAt;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(AppIcons.sleep, size: AppSizes.iconXs, color: p.accent),
+        const SizedBox(width: AppSpacing.xxs),
+        _SleepRemaining(endsAt: endsAt, small: true),
+      ],
+    );
+  }
+}
+
+/// 수면 타이머가 켜져 있을 때 버튼 옆에 보이는 남은 시간 (`1:05:00` / `12:30`).
+class _SleepRemaining extends StatefulWidget {
+  const _SleepRemaining({required this.endsAt, this.small = false});
+
+  final DateTime? endsAt;
+  final bool small;
 
   @override
   State<_SleepRemaining> createState() => _SleepRemainingState();
@@ -100,7 +121,10 @@ class _SleepRemainingState extends State<_SleepRemaining> {
         : '${two(s ~/ 60)}:${two(s % 60)}';
     return Text(
       label,
-      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+      style: (widget.small
+              ? Theme.of(context).textTheme.labelSmall
+              : Theme.of(context).textTheme.labelMedium)
+          ?.copyWith(
         color: context.palette.accent,
         fontFeatures: const [FontFeature.tabularFigures()],
       ),

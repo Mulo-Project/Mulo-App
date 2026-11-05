@@ -13,6 +13,7 @@ import '../features/library/domain/entities/track.dart'
 import '../features/home/presentation/bloc/play_recorder_cubit.dart';
 import '../features/player/presentation/bloc/audio_output_cubit.dart';
 import '../features/player/presentation/bloc/now_playing_cubit.dart';
+import '../features/player/presentation/widgets/player_sleep_timer.dart';
 import '../features/search/presentation/bloc/preview_cubit.dart';
 import '../core/cache/cached_web_image.dart';
 import '../features/downloads/presentation/bloc/download_queue_cubit.dart';
@@ -463,6 +464,10 @@ class _ShellMiniPlayer extends StatelessWidget {
         positionText: formatDuration(state.position),
         durationText: formatDuration(track.duration),
         queueLabel: l10n.playerQueue,
+        // 수면 타이머가 켜져 있으면 남은 시간을 작게 보인다.
+        note: state.sleepEndsAt == null
+            ? null
+            : SleepRemainingBadge(endsAt: state.sleepEndsAt),
         onTap: () => context.push(Routes.player),
         onPlayPause: vm.togglePlay,
         onPrevious: vm.previous,
