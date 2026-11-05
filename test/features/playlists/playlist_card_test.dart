@@ -355,7 +355,7 @@ void main() {
     // 큰 제목 한 줄 + 아래 작은 설명.
     expect(find.text('아직 담긴 곡이 없어요'), findsOneWidget);
     expect(find.textContaining('아래 ‘곡 추가’'), findsOneWidget);
-    expect(find.byTooltip('곡 추가'), findsOneWidget); // 위 막대 버튼
+    expect(find.byTooltip('곡 추가'), findsNothing); // 위 막대에서는 뺐다 (커버 아래 · 빈 안내의 버튼으로)
 
     await tester.tap(find.widgetWithText(PillButton, '곡 추가'));
     await tester.pumpAndSettle();

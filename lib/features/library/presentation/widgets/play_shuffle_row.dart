@@ -9,12 +9,20 @@ import '../../domain/entities/track.dart';
 /// 앨범 · 아티스트 · 장르 · 재생목록 상세에서 쓰는 재생 + 셔플 버튼 한 줄.
 /// [tracks]가 비어 있으면 둘 다 눌리지 않는다.
 class PlayShuffleRow extends StatelessWidget {
-  const PlayShuffleRow({super.key, required this.tracks, this.playLabel});
+  const PlayShuffleRow({
+    super.key,
+    required this.tracks,
+    this.playLabel,
+    this.extra,
+  });
 
   final List<Track> tracks;
 
   /// 재생 버튼 글자 (기본은 "재생").
   final String? playLabel;
+
+  /// 셔플 옆에 더 놓을 버튼 (재생목록 상세의 "곡 추가" 등).
+  final Widget? extra;
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +46,7 @@ class PlayShuffleRow extends StatelessWidget {
             variant: PillVariant.tonal,
             onPressed: empty ? null : () => now.playShuffled(tracks),
           ),
+          ?extra,
         ],
       ),
     );

@@ -72,13 +72,7 @@ class _BodyState extends State<_Body> with TrackPicker<_Body> {
         title: pl == null ? '' : playlistNameOf(l10n, pl),
         leading: const AppBackButton(),
         actions: [
-          if (pl != null && !pl.isFavorites)
-            CircleIconButton(
-              icon: AppIcons.add,
-              tooltip: l10n.playlistAddTracks,
-              onPressed: () =>
-                  context.push(Routes.playlistAddTracks(playlistId)),
-            ),
+          // "곡 추가"는 위 막대에서 커버 아래 버튼 줄로 옮겼다 (제목 자리 확보).
           if (pl != null)
             Builder(
               builder: (btn) => CircleIconButton(
@@ -146,6 +140,15 @@ class _BodyState extends State<_Body> with TrackPicker<_Body> {
           PlayShuffleRow(
             tracks: tracks ?? const <Track>[],
             playLabel: l10n.playlistMenuPlayAll,
+            extra: pl.isFavorites
+                ? null
+                : PillButton(
+                    label: l10n.playlistAddTracks,
+                    icon: AppIcons.add,
+                    variant: PillVariant.tonal,
+                    onPressed: () =>
+                        context.push(Routes.playlistAddTracks(playlistId)),
+                  ),
           ),
           const SizedBox(height: AppSpacing.sm),
         ],
