@@ -1786,7 +1786,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackInfoSource => 'Source';
 
   @override
-  String get trackInfoSourceDevice => 'This device';
+  String get trackInfoSourceDevice => 'External';
 
   @override
   String get trackInfoSourceDownload => 'Downloaded';

@@ -637,7 +637,7 @@
   "trackInfoDuration": "Length",
   "trackInfoAdded": "Added",
   "trackInfoSource": "Source",
-  "trackInfoSourceDevice": "This device",
+  "trackInfoSourceDevice": "External",
   "trackInfoSourceDownload": "Downloaded",
   "trackInfoFolder": "Folder",
   "trackInfoUrl": "Source link",

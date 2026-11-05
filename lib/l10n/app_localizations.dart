@@ -3281,7 +3281,7 @@ abstract class AppLocalizations {
   /// No description provided for @trackInfoSourceDevice.
   ///
   /// In ko, this message translates to:
-  /// **'내 기기'**
+  /// **'외부'**
   String get trackInfoSourceDevice;
 
   /// No description provided for @trackInfoSourceDownload.

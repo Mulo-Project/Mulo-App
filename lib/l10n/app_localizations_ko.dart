@@ -1742,7 +1742,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get trackInfoSource => '출처';
 
   @override
-  String get trackInfoSourceDevice => '내 기기';
+  String get trackInfoSourceDevice => '외부';
 
   @override
   String get trackInfoSourceDownload => '받은 곡';
