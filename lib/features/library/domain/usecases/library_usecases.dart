@@ -118,6 +118,8 @@ class FillEmbeddedCovers implements UseCase<int, NoParams> {
           t,
     ];
     var filled = 0;
+    final lines = <String>[];
+    _embedded.takeSummary();
     onProgress?.call(0, todo.length);
     for (final (i, t) in todo.indexed) {
       if (cancelled?.call() ?? false) break;
@@ -125,6 +127,9 @@ class FillEmbeddedCovers implements UseCase<int, NoParams> {
       String? temp;
       try {
         temp = await _embedded.extract(t);
+        final why = _embedded.takeSummary();
+        final name = t.title.length > 14 ? t.title.substring(0, 14) : t.title;
+        lines.add('${temp == null ? 'X' : 'O'} $name: $why');
         if (temp == null) continue;
         await _covers.save(key, temp);
         filled++;
@@ -138,7 +143,7 @@ class FillEmbeddedCovers implements UseCase<int, NoParams> {
     // 임시 진단: 디버그 빌드가 커버를 채운 결과를 snackbar로 보여 준다.
     if (todo.isNotEmpty) {
       DiagNotice.post(
-        '[cover fill] ${todo.length}곡 중 $filled곡 채움 · ${_embedded.takeSummary()}',
+        '[cover fill] ${todo.length}곡 중 $filled곡 채움\n${lines.join('\n')}',
       );
     }
     return filled;
