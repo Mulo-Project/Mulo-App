@@ -90,7 +90,24 @@ class _SearchScreenState extends State<SearchScreen> {
 
     return BlocProvider.value(
       value: _cubit,
-      child: SafeArea(
+      // 임시 진단: 검색이 실패하면 엔진이 알려 준 원문을 스낵바로 보인다 (원인을 찾으면 지운다).
+      child: BlocListener<SearchCubit, SearchState>(
+        listenWhen: (a, b) =>
+            a.status != b.status && b.status == SearchStatus.failed,
+        listener: (context, state) {
+          final text = '[${state.failure?.name}] ${state.detail}';
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                duration: const Duration(seconds: 20),
+                content: Text(
+                  text.length > 600 ? text.substring(0, 600) : text,
+                ),
+              ),
+            );
+        },
+        child: SafeArea(
         bottom: false,
         // 안내(처음 · 오류 · 결과 없음)는 검색창 아래 남은 자리 가운데에, 결과는 위에서부터 이어 붙인다.
         child: CustomScrollView(
@@ -181,6 +198,7 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }
