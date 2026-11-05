@@ -80,10 +80,15 @@ class _TrackTileState extends State<TrackTile> {
             (onMenu == null ? null : () => onMenu(_lastPointer)),
         onSecondaryTap: onMenu == null ? null : () => onMenu(_lastPointer),
         borderRadius: BorderRadius.circular(AppRadii.sm),
-        child: Padding(
+        // 지금 재생 중인 줄은 강조 색 옅은 면으로 한눈에 보이게 한다.
+        child: Ink(
+          decoration: BoxDecoration(
+            color: w.active ? p.accent.withValues(alpha: .10) : null,
+            borderRadius: BorderRadius.circular(AppRadii.sm),
+          ),
           padding: EdgeInsets.symmetric(
             horizontal: w.horizontalPadding,
-            vertical: AppSpacing.xs,
+            vertical: AppSpacing.sm - 2,
           ),
           child: Row(
             children: [
@@ -98,7 +103,12 @@ class _TrackTileState extends State<TrackTile> {
                   ),
                 ),
               w.leading ??
-                  ArtworkBox(image: w.artwork, tone: w.tone, color: w.color),
+                  ArtworkBox(
+                    image: w.artwork,
+                    tone: w.tone,
+                    color: w.color,
+                    size: 52,
+                  ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Column(
@@ -109,10 +119,11 @@ class _TrackTileState extends State<TrackTile> {
                       w.title,
                       scroll: w.active,
                       style: text.titleSmall?.copyWith(
+                        fontSize: 15,
                         color: w.active ? p.accent : p.onSurface,
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.hair),
+                    const SizedBox(height: AppSpacing.xxs),
                     Text(
                       w.subtitle,
                       maxLines: 1,

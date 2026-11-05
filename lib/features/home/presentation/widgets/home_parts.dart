@@ -26,7 +26,7 @@ class HomeSectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    final style = Theme.of(context).textTheme.titleLarge
+    final style = Theme.of(context).textTheme.headlineSmall
         ?.copyWith(fontWeight: FontWeight.w700);
     return InkWell(
       onTap: onTap,
@@ -39,6 +39,16 @@ class HomeSectionTitle extends StatelessWidget {
         ),
         child: Row(
           children: [
+            // 제목 앞 강조 색 막대.
+            Container(
+              width: 4,
+              height: 20,
+              margin: const EdgeInsets.only(right: AppSpacing.xs),
+              decoration: BoxDecoration(
+                color: p.accent,
+                borderRadius: BorderRadius.circular(AppRadii.pill),
+              ),
+            ),
             Flexible(
               child: Text(
                 title,

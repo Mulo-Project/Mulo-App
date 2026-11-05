@@ -44,7 +44,7 @@ class AppTopBar extends StatelessWidget {
                   if (subtitle != null)
                     Text(subtitle!.toUpperCase(), style: text.labelSmall),
                   const SizedBox(height: AppSpacing.xxs),
-                  Text(title, style: text.headlineLarge),
+                  Text(title, style: text.displaySmall),
                 ],
               ),
             ),

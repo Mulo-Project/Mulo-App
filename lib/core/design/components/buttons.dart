@@ -55,7 +55,7 @@ class PillButton extends StatelessWidget {
     };
     final enabled = onPressed != null;
     final text = Theme.of(context).textTheme.labelLarge!.copyWith(color: fg);
-    final height = compact ? 36.0 : AppSizes.pillHeight;
+    final height = compact ? 40.0 : AppSizes.pillHeight;
 
     final content = SizedBox(
       height: height,

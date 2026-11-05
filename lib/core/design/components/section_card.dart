@@ -24,11 +24,14 @@ class SectionCard extends StatelessWidget {
             // 제목도 줄 글자와 같은 [AppSpacing.md]에서 시작해 왼쪽 선을 맞춘다.
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.md,
-              0,
-              AppSpacing.md,
               AppSpacing.xs,
+              AppSpacing.md,
+              AppSpacing.sm,
             ),
-            child: Text(title!.toUpperCase(), style: text.labelSmall),
+            child: Text(
+              title!,
+              style: text.titleSmall?.copyWith(color: context.palette.accent),
+            ),
           ),
         Column(
           children: [
@@ -143,8 +146,8 @@ class SectionBlock extends StatelessWidget {
           ],
           if (title != null) ...[
             Text(
-              title!.toUpperCase(),
-              style: text.labelSmall?.copyWith(color: p.onSurfaceMuted),
+              title!,
+              style: text.titleSmall?.copyWith(color: p.accent),
             ),
             const SizedBox(height: AppSpacing.sm),
           ],

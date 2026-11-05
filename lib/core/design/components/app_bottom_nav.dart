@@ -100,8 +100,8 @@ class _NavButton extends StatelessWidget {
             child: Center(
               child: AnimatedContainer(
                 duration: AppMotion.fast,
-                width: 52,
-                height: 52,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: selected ? p.accent : p.accent.withValues(alpha: .18),
@@ -130,10 +130,23 @@ class _NavButton extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                selected ? item.selectedIcon : item.icon,
-                color: color,
-                size: AppSizes.icon,
+              // 선택된 탭은 아이콘 뒤에 강조 색 알약이 깔린다.
+              AnimatedContainer(
+                duration: AppMotion.fast,
+                width: 56,
+                height: 30,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppRadii.pill),
+                  color: selected
+                      ? p.accent.withValues(alpha: .18)
+                      : p.accent.withValues(alpha: 0),
+                ),
+                child: Icon(
+                  selected ? item.selectedIcon : item.icon,
+                  color: color,
+                  size: AppSizes.icon,
+                ),
               ),
               const SizedBox(height: AppSpacing.hair),
               Text(
@@ -141,17 +154,7 @@ class _NavButton extends StatelessWidget {
                 style: labelStyle.copyWith(
                   color: color,
                   letterSpacing: 0,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 3),
-              AnimatedContainer(
-                duration: AppMotion.fast,
-                width: 4,
-                height: 4,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: selected ? p.accent : p.accent.withValues(alpha: 0),
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 ),
               ),
             ],
