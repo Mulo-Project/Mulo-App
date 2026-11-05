@@ -92,6 +92,16 @@ class MediaStoreChannel(
                         main.post { result.error("query_failed", e.message, null) }
                     }
                 }
+                "queryVideo" -> io.execute {
+                    try {
+                        val rows = queryVideo()
+                        main.post { result.success(rows) }
+                    } catch (e: SecurityException) {
+                        main.post { result.error("permission", e.message, null) }
+                    } catch (e: Exception) {
+                        main.post { result.error("query_failed", e.message, null) }
+                    }
+                }
                 "saveAudio" -> runAsync(io, result, "save_failed") {
                     saveAudio(
                         path = call.argument<String>("path")!!,
@@ -346,6 +356,50 @@ class MediaStoreChannel(
                     // 불러오는 폴더로 거르고 폴더별 곡 수를 세는 데 쓴다.
                     "folder" to c.getString(data)?.let { File(it).parent },
                     // 파일이 기기에 들어온 시각(밀리초). 추가일순 정렬에 쓴다.
+                    "addedAtMs" to c.getLong(dateAdded) * 1000,
+                )
+            }
+        }
+        return rows
+    }
+
+    /** 기기의 영상 파일. 보관함에서는 소리는 네이티브가, 화면은 Dart가 같은 파일로 보여 준다. */
+    private fun queryVideo(): List<Map<String, Any?>> {
+        val collection = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+        val projection = arrayOf(
+            MediaStore.Video.Media._ID,
+            MediaStore.Video.Media.TITLE,
+            MediaStore.Video.Media.ARTIST,
+            MediaStore.Video.Media.ALBUM,
+            MediaStore.Video.Media.DURATION,
+            MediaStore.Video.Media.DATA,
+            MediaStore.Video.Media.DATE_ADDED,
+        )
+        val rows = mutableListOf<Map<String, Any?>>()
+        context.contentResolver.query(
+            collection,
+            projection,
+            null,
+            null,
+            "${MediaStore.Video.Media.TITLE} ASC",
+        )?.use { c ->
+            val id = c.getColumnIndexOrThrow(MediaStore.Video.Media._ID)
+            val title = c.getColumnIndexOrThrow(MediaStore.Video.Media.TITLE)
+            val artist = c.getColumnIndexOrThrow(MediaStore.Video.Media.ARTIST)
+            val album = c.getColumnIndexOrThrow(MediaStore.Video.Media.ALBUM)
+            val duration = c.getColumnIndexOrThrow(MediaStore.Video.Media.DURATION)
+            val data = c.getColumnIndexOrThrow(MediaStore.Video.Media.DATA)
+            val dateAdded = c.getColumnIndexOrThrow(MediaStore.Video.Media.DATE_ADDED)
+            while (c.moveToNext()) {
+                val mediaId = c.getLong(id)
+                rows += mapOf(
+                    "id" to mediaId,
+                    "title" to c.getString(title),
+                    "artist" to c.getString(artist),
+                    "album" to c.getString(album),
+                    "durationMs" to c.getLong(duration),
+                    "uri" to ContentUris.withAppendedId(collection, mediaId).toString(),
+                    "folder" to c.getString(data)?.let { File(it).parent },
                     "addedAtMs" to c.getLong(dateAdded) * 1000,
                 )
             }

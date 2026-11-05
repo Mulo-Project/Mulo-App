@@ -4,6 +4,7 @@ import '../entities/audio_stream.dart';
 import '../entities/engine_exception.dart';
 import '../entities/media_info.dart';
 import '../entities/subtitle_track.dart';
+import '../entities/video_stream.dart';
 import '../entities/preview_progress.dart';
 import '../entities/preview_snapshot.dart';
 import '../entities/search_source.dart';
@@ -121,6 +122,17 @@ class ResolveAudioStream implements UseCase<AudioStream, String> {
   @override
   Future<AudioStream> call(String url, {String? audioLanguage}) =>
       _engine.resolveAudioStream(url.trim(), audioLanguage: audioLanguage);
+}
+
+/// 곡 주소로 소리 없는 낮은 화질 영상 스트림 주소 알아내기 (영상 표시).
+class ResolveVideoStream implements UseCase<VideoStream, String> {
+  const ResolveVideoStream(this._engine);
+
+  final DownloaderEngine _engine;
+
+  @override
+  Future<VideoStream> call(String url) =>
+      _engine.resolveVideoStream(url.trim());
 }
 
 /// 곡에 들어 있는 오디오 언어 트랙 목록 (여러 개일 때만 고를 수 있다). 못 읽으면 빈 목록.

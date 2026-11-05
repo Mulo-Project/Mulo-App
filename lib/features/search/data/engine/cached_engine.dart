@@ -3,6 +3,7 @@ import '../../domain/entities/audio_stream.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/search_source.dart';
 import '../../domain/entities/subtitle_track.dart';
+import '../../domain/entities/video_stream.dart';
 import '../../domain/repositories/downloader_engine.dart';
 
 /// 곡 · 채널 정보 · 스트림 주소 · 자막을 잠깐 기억해 같은 주소를 다시 읽지 않는 엔진 덮개.
@@ -77,6 +78,10 @@ class CachedDownloaderEngine implements DownloaderEngine {
       ),
     );
   }
+
+  @override
+  Future<VideoStream> resolveVideoStream(String url) =>
+      _inner.resolveVideoStream(url);
 
   @override
   Future<List<AudioLanguage>> fetchAudioLanguages(String url) =>

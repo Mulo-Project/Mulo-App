@@ -3,6 +3,7 @@ import '../entities/audio_stream.dart';
 import '../entities/media_info.dart';
 import '../entities/search_source.dart';
 import '../entities/subtitle_track.dart';
+import '../entities/video_stream.dart';
 
 /// 음원 사이트에서 찾고 받는 엔진 (서버 모드 `ServerEngine` / 로컬 모드 `LocalEngine`).
 /// 지금은 검색 · 곡 정보만 있다. 받기는 다음 작업에서 더한다.
@@ -42,6 +43,10 @@ abstract interface class DownloaderEngine {
     bool refresh = false,
     String? audioLanguage,
   });
+
+  /// 소리 없는 낮은 화질의 영상 스트림 주소를 알아낸다 (영상 표시용, 소리는 따로 낸다).
+  /// 쓸 수 없는 엔진은 [EngineException] (`unavailable`)을 던진다.
+  Future<VideoStream> resolveVideoStream(String url);
 
   /// 곡에 들어 있는 오디오 언어 트랙들. 트랙이 하나뿐이거나 읽을 수 없으면 빈 목록
   /// (쓸 수 없는 엔진도 빈 목록).

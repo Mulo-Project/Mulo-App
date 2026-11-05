@@ -19,6 +19,7 @@ import 'domain/repositories/preview_player.dart';
 import 'domain/usecases/search_usecases.dart';
 import 'presentation/bloc/audio_language_cubit.dart';
 import 'presentation/bloc/preview_cubit.dart';
+import 'presentation/bloc/preview_video_cubit.dart';
 import 'presentation/bloc/search_cubit.dart';
 
 /// 검색 · 곡 정보 의존성. 로컬 yt-dlp(데스크톱 · Android full)를 먼저 시도하고, 없으면 서버.
@@ -53,6 +54,8 @@ void registerSearch(GetIt sl) {
     ..registerFactory(() => OpenLink(sl()))
     ..registerLazySingleton<PreviewPlayer>(NativePreviewPlayer.new)
     ..registerFactory(() => ResolveAudioStream(sl()))
+    ..registerFactory(() => ResolveVideoStream(sl()))
+    ..registerFactory(() => PreviewVideoCubit(sl()))
     ..registerFactory(() => FetchAudioLanguages(sl()))
     ..registerFactory(() => AudioLanguageCubit(sl()))
     ..registerFactory(() => PlayPreview(sl()))

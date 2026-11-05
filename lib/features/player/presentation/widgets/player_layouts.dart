@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../../core/design/design.dart';
+import 'muted_video.dart';
 import 'player_common.dart';
 
 /// 플레이어 모양 3가지 (카드 · 상자 없이 배경 위에 바로 놓는다).
@@ -70,7 +71,7 @@ class SquarePlayer extends StatelessWidget {
                                 ),
                                 child: Hero(
                                   tag: 'now-playing',
-                                  child: PlayerCover(art: art),
+                                  child: PlayerCover(art: art, video: data.track.isVideo ? const NowPlayingVideo() : null),
                                 ),
                               ),
                             ),
@@ -115,7 +116,7 @@ class FullBleedPlayer extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  PlayerCover(art: art, radius: 0),
+                  PlayerCover(art: art, radius: 0, video: data.track.isVideo ? const NowPlayingVideo() : null),
                   // 위: 상단 버튼이 읽히게 살짝 어둡게, 아래: 배경으로 부드럽게.
                   DecoratedBox(
                     decoration: BoxDecoration(
@@ -234,7 +235,11 @@ class ArcPlayer extends StatelessWidget {
                           dimension: _size(s),
                           child: Padding(
                             padding: EdgeInsets.all(_size(s) * .09),
-                            child: PlayerCover(art: art, radius: _size(s)),
+                            child: PlayerCover(
+                              art: art,
+                              radius: _size(s),
+                              video: data.track.isVideo ? const NowPlayingVideo() : null,
+                            ),
                           ),
                         ),
                       ),

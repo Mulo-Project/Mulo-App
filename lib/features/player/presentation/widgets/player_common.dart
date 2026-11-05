@@ -16,6 +16,7 @@ import '../../../lyrics/presentation/screens/lyrics_full_screen.dart';
 import '../../../lyrics/presentation/widgets/lyrics_view.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../bloc/now_playing_cubit.dart';
+import 'muted_video.dart';
 import 'player_seek.dart';
 import 'player_sleep_timer.dart';
 
@@ -269,9 +270,13 @@ class PlayerCover extends StatelessWidget {
     required this.art,
     this.radius = AppRadii.lg,
     this.icon = true,
+    this.video,
   });
 
   final PlayerArt art;
+
+  /// 영상 곡이면 커버 위에 얹는 영상 화면.
+  final Widget? video;
   final double radius;
 
   /// 이미지가 없을 때 가운데 음표를 그릴지.
@@ -280,7 +285,7 @@ class PlayerCover extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    return CoverCard(
+    final cover = CoverCard(
       radius: radius,
       image: art.image,
       tone: art.tone,
@@ -296,6 +301,15 @@ class PlayerCover extends StatelessWidget {
                 ),
               ),
             ),
+    );
+    final v = video;
+    if (v == null) return cover;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        cover,
+        ClipRRect(borderRadius: BorderRadius.circular(radius), child: v),
+      ],
     );
   }
 }

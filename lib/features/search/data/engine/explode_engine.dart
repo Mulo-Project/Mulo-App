@@ -9,6 +9,7 @@ import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/search_source.dart';
 import '../../domain/entities/subtitle_track.dart';
+import '../../domain/entities/video_stream.dart';
 import '../../domain/repositories/downloader_engine.dart';
 import 'audio_format_policy.dart';
 
@@ -90,6 +91,10 @@ class YoutubeExplodeEngine implements DownloaderEngine {
 
   @override
   Future<ChannelInfo> fetchChannel(String url) => _inner.fetchChannel(url);
+
+  @override
+  Future<VideoStream> resolveVideoStream(String url) =>
+      _inner.resolveVideoStream(url);
 
   @override
   Future<AudioStream> resolveAudioStream(

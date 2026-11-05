@@ -60,6 +60,7 @@ import 'package:music_download_play_app/features/playlists/domain/repositories/p
 import 'package:music_download_play_app/features/search/di.dart';
 import 'package:music_download_play_app/features/search/domain/entities/audio_language.dart';
 import 'package:music_download_play_app/features/search/domain/entities/audio_stream.dart';
+import 'package:music_download_play_app/features/search/domain/entities/video_stream.dart';
 import 'package:music_download_play_app/features/search/domain/entities/preview_progress.dart';
 import 'package:music_download_play_app/features/search/domain/entities/preview_snapshot.dart';
 import 'package:music_download_play_app/features/search/domain/entities/engine_exception.dart';
@@ -1534,6 +1535,10 @@ class FakeDownloaderEngine implements DownloaderEngine {
     if (found == null) throw const EngineException(EngineFailure.unavailable);
     return found;
   }
+
+  @override
+  Future<VideoStream> resolveVideoStream(String url) async =>
+      VideoStream(url: 'https://video.test/$url');
 
   @override
   Future<List<AudioLanguage>> fetchAudioLanguages(String url) async =>

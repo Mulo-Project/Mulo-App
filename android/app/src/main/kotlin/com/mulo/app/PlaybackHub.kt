@@ -124,6 +124,10 @@ object PlaybackHub {
             .setHandleAudioBecomingNoisy(PlaybackStore.pauseOnDisconnect(context))
             .setWakeMode(C.WAKE_MODE_LOCAL)
             .build()
+        // 영상 파일이어도 네이티브는 소리만 낸다 (화면은 Dart가 같은 파일로 소리 없이 보여 준다).
+        exo.trackSelectionParameters = exo.trackSelectionParameters.buildUpon()
+            .setTrackTypeDisabled(C.TRACK_TYPE_VIDEO, true)
+            .build()
         exo.addListener(playerListener)
         exo.setPlaybackSpeed(PlaybackStore.speed(context))
         EqualizerEngine.attach(exo.audioSessionId)

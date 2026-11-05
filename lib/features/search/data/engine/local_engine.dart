@@ -8,6 +8,7 @@ import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/search_source.dart';
 import '../../domain/entities/subtitle_track.dart';
+import '../../domain/entities/video_stream.dart';
 import '../../domain/repositories/downloader_engine.dart';
 import 'audio_format_policy.dart';
 import 'json_fields.dart';
@@ -243,6 +244,52 @@ class LocalEngine implements DownloaderEngine {
       if (first.failure != EngineFailure.failed) rethrow;
       // 기본 클라이언트로는 오디오 형식을 못 읽는 경우가 있다 (JS 실행기가 없는 환경 등).
       // 그런 환경에서도 주소를 주는 클라이언트로 한 번 더 시도하고, 그래도 안 되면 첫 오류를 알린다.
+      try {
+        return await read(const [
+          '--extractor-args',
+          'youtube:player_client=android_vr',
+        ]);
+      } on EngineException {
+        throw first;
+      }
+    }
+  }
+
+  /// 소리 없는 낮은 화질(360p 이하) 영상 하나의 주소만 읽는다. 미니 플레이어 · 플레이어에서 화면으로만 쓴다.
+  @override
+  Future<VideoStream> resolveVideoStream(String url) async {
+    Future<VideoStream> read(List<String> extra) async {
+      final out = await _exec([
+        '-f',
+        'bv[height<=360][vcodec^=avc1]/bv[height<=360]/bv[height<=480]/bv',
+        '--no-playlist',
+        '--dump-single-json',
+        '--no-warnings',
+        ...extra,
+        url,
+      ]);
+      final j = _decode(out);
+      final streamUrl = parseText(j?['url']);
+      if (j == null || streamUrl == null) {
+        throw const EngineException(EngineFailure.failed, 'bad response');
+      }
+      final headers = j['http_headers'];
+      return VideoStream(
+        url: streamUrl,
+        headers: headers is Map
+            ? {
+                for (final e in headers.entries)
+                  if (e.key is String && e.value is String)
+                    e.key as String: e.value as String,
+              }
+            : const {},
+      );
+    }
+
+    try {
+      return await read(const []);
+    } on EngineException catch (first) {
+      if (first.failure != EngineFailure.failed) rethrow;
       try {
         return await read(const [
           '--extractor-args',
