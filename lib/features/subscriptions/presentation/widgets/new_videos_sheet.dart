@@ -93,7 +93,7 @@ class _Header extends StatelessWidget {
         AppSpacing.md,
         0,
         AppSpacing.xs,
-        AppSpacing.sm,
+        AppSpacing.md,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -155,7 +155,7 @@ class _Body extends StatelessWidget {
     }
     final locale = Localizations.localeOf(context).toString();
     return ListView(
-      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
       children: [
         for (var i = 0; i < groups.length; i++) ...[
           // 채널 묶음 사이는 가는 선으로 나눈다.
@@ -163,7 +163,7 @@ class _Body extends StatelessWidget {
             const Padding(
               padding: EdgeInsets.symmetric(
                 horizontal: AppSpacing.md,
-                vertical: AppSpacing.xs,
+                vertical: AppSpacing.md,
               ),
               child: AppDivider(),
             ),
@@ -173,11 +173,14 @@ class _Body extends StatelessWidget {
             cubit: cubit,
           ),
           for (final v in groups[i].videos)
-            _Row(
-              video: v,
-              selected: state.selected.contains(v.id),
-              locale: locale,
-              onTap: () => cubit.toggle(v.id),
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.xs),
+              child: _Row(
+                video: v,
+                selected: state.selected.contains(v.id),
+                locale: locale,
+                onTap: () => cubit.toggle(v.id),
+              ),
             ),
         ],
       ],
@@ -206,9 +209,9 @@ class _ChannelHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.md,
+        AppSpacing.sm,
         AppSpacing.xs,
         AppSpacing.xs,
-        0,
       ),
       child: Row(
         children: [
@@ -216,8 +219,8 @@ class _ChannelHeader extends StatelessWidget {
             image: channel.thumbnailUrl == null
                 ? null
                 : NetworkImage(channel.thumbnailUrl!),
-            size: 28,
-            radius: 14,
+            size: 40,
+            radius: 20,
             tone: toneFor(channel.id),
             icon: AppIcons.person,
           ),
@@ -225,7 +228,7 @@ class _ChannelHeader extends StatelessWidget {
           Expanded(
             child: Text(
               channel.name,
-              style: text.titleSmall,
+              style: text.titleMedium,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
