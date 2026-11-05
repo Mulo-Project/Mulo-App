@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../../../../core/diagnostics/diag_notice.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../../covers/domain/entities/cover_art.dart';
 import '../../../covers/domain/entities/cover_key.dart';
@@ -296,6 +297,11 @@ class RestoreFromFileTags implements UseCase<int, NoParams> {
         // 한 곡이 실패해도 나머지는 계속한다 (기록하지 않아 다음에 다시 시도).
       }
       onProgress?.call(i + 1, todo.length);
+    }
+    // 임시 진단: 읽은 결과를 디버그 빌드가 snackbar로 보여 준다.
+    final summary = _tags.takeSummary();
+    if (todo.isNotEmpty) {
+      DiagNotice.post('[tag read] ${todo.length}곡 · 반영 $restored · $summary');
     }
     return restored;
   }
