@@ -798,7 +798,7 @@
   "lyricsImportMemo": "메모에 추가",
   "lyricsMemoTitle": "메모",
   "lyricsMemoHide": "메모 숨기기",
-  "lyricsMemoHint": "글을 고치거나 골라서 \"끼우기\"를 누르면 가사의 지금 줄 아래에 들어가요",
+  "lyricsMemoHint": "골라서 \"끼우기\"를 누르면 지금 줄 아래에 들어가요",
   "lyricsMemoInsert": "끼우기",
   "lyricsSyncGroupSetupBody": "한 번에 시간을 찍을 줄 수를 골라 주세요. 나중에 위쪽 메뉴에서 바꿀 수 있어요.",
   "lyricsSyncLeaveTitle": "싱크가 저장되지 않아요",

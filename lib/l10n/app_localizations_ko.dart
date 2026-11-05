@@ -1927,7 +1927,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsMemoHide => '메모 숨기기';
 
   @override
-  String get lyricsMemoHint => '글을 고치거나 골라서 \"끼우기\"를 누르면 가사의 지금 줄 아래에 들어가요';
+  String get lyricsMemoHint => '골라서 \"끼우기\"를 누르면 지금 줄 아래에 들어가요';
 
   @override
   String get lyricsMemoInsert => '끼우기';

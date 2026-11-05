@@ -1980,7 +1980,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lyricsMemoHint =>
-      'Edit or select text, then tap Insert to add it below the current line';
+      'Select text and tap Insert to add it below the current line';
 
   @override
   String get lyricsMemoInsert => 'Insert';

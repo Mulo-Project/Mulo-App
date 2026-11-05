@@ -209,7 +209,7 @@ class _LyricsImportBarState extends State<LyricsImportBar> {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadii.md),
-          side: BorderSide(color: p.accent.withValues(alpha: .5)),
+          side: BorderSide(color: p.outline),
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(

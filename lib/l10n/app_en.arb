@@ -698,7 +698,7 @@
   "lyricsImportMemo": "Add to note",
   "lyricsMemoTitle": "Note",
   "lyricsMemoHide": "Hide note",
-  "lyricsMemoHint": "Edit or select text, then tap Insert to add it below the current line",
+  "lyricsMemoHint": "Select text and tap Insert to add it below the current line",
   "lyricsMemoInsert": "Insert",
   "lyricsSyncGroupSetupBody": "Pick how many lines to stamp at once. You can change it later from the top menu.",
   "lyricsSyncLeaveTitle": "Sync is not saved",
