@@ -9,6 +9,9 @@ import '../bloc/playlists_cubit.dart';
 import '../widgets/new_playlist_sheet.dart';
 import '../widgets/playlist_grid.dart';
 
+/// 위 막대 ＋ 메뉴의 동작.
+enum _AddAction { create, fromYoutube }
+
 /// 재생목록 (상세 기능: 재생목록 관리 #20, 유튜브 재생목록 가져오기 #22).
 /// 좋아요 목록이 맨 앞에 항상 있다. 카드를 누르면 재생목록 상세로 가고, 길게 눌러 끌면 순서가 바뀐다.
 class PlaylistsScreen extends StatelessWidget {
@@ -31,27 +34,39 @@ class PlaylistsScreen extends StatelessWidget {
             title: l10n.navPlaylists,
             subtitle: l10n.playlistsSubtitle,
             actions: [
-              CircleIconButton(
-                icon: AppIcons.add,
-                tooltip: l10n.playlistsNew,
-                emphasized: true,
-                onPressed: () => showNewPlaylistSheet(context),
+              // ＋ 하나에 "새 재생목록"과 "유튜브에서 가져오기"를 메뉴로 모은다.
+              Builder(
+                builder: (menuContext) => CircleIconButton(
+                  icon: AppIcons.add,
+                  tooltip: l10n.playlistsNew,
+                  emphasized: true,
+                  onPressed: () async {
+                    final action = await showAppMenu<_AddAction>(
+                      menuContext,
+                      items: [
+                        AppMenuItem(
+                          value: _AddAction.create,
+                          icon: AppIcons.add,
+                          label: l10n.playlistsNew,
+                        ),
+                        AppMenuItem(
+                          value: _AddAction.fromYoutube,
+                          icon: AppIcons.link,
+                          label: l10n.playlistsImport,
+                        ),
+                      ],
+                    );
+                    if (!context.mounted || action == null) return;
+                    switch (action) {
+                      case _AddAction.create:
+                        showNewPlaylistSheet(context);
+                      case _AddAction.fromYoutube:
+                        context.push(Routes.playlistImport);
+                    }
+                  },
+                ),
               ),
             ],
-          ),
-          Padding(
-            padding: AppSpacing.screen,
-            // 가져오기는 보조 동작이라 가로를 채우지 않고 작게 왼쪽에 둔다 (목록이 먼저 보이게).
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: PillButton(
-                label: l10n.playlistsImport,
-                icon: AppIcons.link,
-                variant: PillVariant.tonal,
-                compact: true,
-                onPressed: () => context.push(Routes.playlistImport),
-              ),
-            ),
           ),
           const SizedBox(height: AppSpacing.md),
           if (lists.isNotEmpty)

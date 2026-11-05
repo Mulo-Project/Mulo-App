@@ -294,6 +294,8 @@ void main() {
     await pumpPlaylists(tester);
     await tester.tap(find.byTooltip('새 재생목록'));
     await tester.pumpAndSettle();
+    await tester.tap(find.text('새 재생목록')); // ＋ 메뉴의 첫 항목
+    await tester.pumpAndSettle();
     await tester.enterText(find.byType(EditableText), '새 목록');
     await tester.tap(find.bySemanticsLabel('색 10'));
     await tester.pump();
@@ -307,6 +309,8 @@ void main() {
     final path = _pngFile();
     await pumpPlaylists(tester, image: FakeImageSource(path));
     await tester.tap(find.byTooltip('새 재생목록'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('새 재생목록')); // ＋ 메뉴의 첫 항목
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(EditableText), '새 목록');
     await tester.tap(find.text('이미지 고르기'));
