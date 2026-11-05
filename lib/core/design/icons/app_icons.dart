@@ -219,6 +219,16 @@ abstract final class AppIcons {
     fontFamily: 'PhosphorLight',
     matchTextDirection: true,
   );
+  static const IconData settings = IconData(
+    0xe270,
+    fontFamily: 'PhosphorFill',
+    matchTextDirection: true,
+  );
+  static const IconData settingsOutline = IconData(
+    0xe270,
+    fontFamily: 'PhosphorLight',
+    matchTextDirection: true,
+  );
   static const IconData tune = IconData(
     0xe434,
     fontFamily: 'PhosphorLight',

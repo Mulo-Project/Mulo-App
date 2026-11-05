@@ -86,6 +86,16 @@ class _NavButton extends StatelessWidget {
     final p = context.palette;
     final color = selected ? p.accent : p.onSurfaceMuted;
 
+    // 라벨은 선택한 탭에만 보인다 (안 고른 탭은 아이콘만).
+    final label = Text(
+      item.label,
+      style: labelStyle.copyWith(
+        color: color,
+        letterSpacing: 0,
+        fontWeight: FontWeight.w700,
+      ),
+    );
+
     if (item.highlighted) {
       return Semantics(
         selected: selected,
@@ -95,21 +105,30 @@ class _NavButton extends StatelessWidget {
           onTap: onTap,
           radius: 36,
           child: ExcludeSemantics(
-            child: Center(
-              child: AnimatedContainer(
-                duration: AppMotion.fast,
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: selected ? p.accent : p.accent.withValues(alpha: .14),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AnimatedContainer(
+                  duration: AppMotion.fast,
+                  width: selected ? 40 : 44,
+                  height: selected ? 40 : 44,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: selected
+                        ? p.accent
+                        : p.accent.withValues(alpha: .14),
+                  ),
+                  child: Icon(
+                    selected ? item.selectedIcon : item.icon,
+                    color: selected ? p.onAccent : p.accent,
+                    size: AppSizes.icon,
+                  ),
                 ),
-                child: Icon(
-                  selected ? item.selectedIcon : item.icon,
-                  color: selected ? p.onAccent : p.accent,
-                  size: AppSizes.icon,
-                ),
-              ),
+                if (selected) ...[
+                  const SizedBox(height: AppSpacing.hair),
+                  label,
+                ],
+              ],
             ),
           ),
         ),
@@ -127,7 +146,7 @@ class _NavButton extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // 선택된 탭은 아이콘 뒤에 강조 색 알약이 깔린다.
+              // 선택된 탭은 아이콘 뒤에 옅은 알약이 깔리고 아래에 이름이 보인다.
               AnimatedContainer(
                 duration: AppMotion.fast,
                 width: 52,
@@ -145,15 +164,10 @@ class _NavButton extends StatelessWidget {
                   size: AppSizes.icon,
                 ),
               ),
-              const SizedBox(height: AppSpacing.hair),
-              Text(
-                item.label,
-                style: labelStyle.copyWith(
-                  color: color,
-                  letterSpacing: 0,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                ),
-              ),
+              if (selected) ...[
+                const SizedBox(height: AppSpacing.hair),
+                label,
+              ],
             ],
           ),
         ),

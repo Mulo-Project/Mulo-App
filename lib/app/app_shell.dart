@@ -366,8 +366,8 @@ class _AppShellState extends State<AppShell> {
                           label: l10n.navSearch,
                         ),
                         AppNavItem(
-                          icon: AppIcons.tuneOutline,
-                          selectedIcon: AppIcons.tune,
+                          icon: AppIcons.settingsOutline,
+                          selectedIcon: AppIcons.settings,
                           label: l10n.navSettings,
                         ),
                       ],

@@ -74,7 +74,7 @@ MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부�
 | `MiniPlayerBar` | mini_player_bar.dart | 유리 미니 플레이어 (가로 전체 · 모서리 직각 · 위쪽 선만, 재생 버튼만 원형, 다음 · 대기열은 배경 없는 작은 아이콘, 제목 아래에 작은 출력 기기 표시 `outputIcon`/`outputLabel`). `GlassSurface(rim: false)`로 가장자리 빛 테두리를 끈다 |
 | `FloatingPlayerButton` | floating_player_button.dart | 미니 플레이어를 길게 눌러 끌어낸 동그란 플로팅 버튼 (유리 원 + 커버 아트 + 진행 테두리). 가운데 = 재생 · 일시정지, 버튼에서 떨어져 비스듬히 뻗은 거품 점 = 미니 플레이어로 돌아가기 (화면 안쪽 · 벽에 닿으면 반대쪽 면으로 부드럽게 이동). 위치 · 끌기 · 가장자리 붙이기는 `app/mini_float_layer.dart` |
 | `AppTopBar` | app_top_bar.dart | 상단 바. `large` = 탭 첫 화면(부제 + 큰 제목), 기본 = 원형 버튼 사이 가운데 제목 |
-| `AppBottomNav` | app_bottom_nav.dart | 하단 탭 바 (윗선 없음, 선택 = 강조 색 아이콘 + 옅은 알약). `highlighted` 항목(홈, 가운데)은 테두리 없는 강조 색 원 |
+| `AppBottomNav` | app_bottom_nav.dart | 하단 탭 바 (윗선 없음, 선택한 탭만 옅은 알약 + 이름). `highlighted` 항목(홈, 가운데)은 테두리 없는 강조 색 원 |
 | `AppSearchField` | app_search_field.dart | 알약 입력칸(테두리 없는 옅은 면, 높이 44) (돋보기 · 지우기 · 오른쪽 버튼). 글자는 세로 가운데 |
 | `ArtworkBox` · `toneFor()` | artwork_box.dart | 커버 자리 (이미지 · 사용자 색이 없으면 무채색 `GlowTone.neutral` 그라데이션 + 아이콘; `toneFor()`는 이제 항상 무채색). `width`를 주면 직사각형, `color`를 주면 사용자가 고른 색(`glowFromColor`)으로. 이미지는 칸 크기의 2배(화면 배율 포함) 안으로 줄여 디코딩한다 (`ResizeImage`) |
 | `YoutubeMark` | youtube_mark.dart | 유튜브 표시 (직접 그린 빨간 원 + 흰 링 + 흰 재생 삼각형, YouTube Music 모양, 테마와 무관) |
