@@ -839,7 +839,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsEngineRemoveBody.
   ///
   /// In ko, this message translates to:
-  /// **'앱이 받아 둔 yt-dlp 파일을 지워요. 지우면 검색하고 받으려면 다시 설치해야 해요. 이 기기에 따로 설치된 yt-dlp는 지우지 않아요.'**
+  /// **'앱이 받아 둔 yt-dlp를 지워요. 검색과 받기를 하려면 다시 설치해야 해요. 기기에 따로 설치된 건 지우지 않아요.'**
   String get settingsEngineRemoveBody;
 
   /// No description provided for @settingsEngineInstalling.
@@ -863,7 +863,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsEngineRevertBody.
   ///
   /// In ko, this message translates to:
-  /// **'업데이트로 받은 yt-dlp를 지우고 앱에 처음 들어 있던 버전으로 돌아가요. 업데이트한 뒤에 검색이나 받기가 잘 안 될 때 써 보세요. 나중에 다시 업데이트할 수 있어요.'**
+  /// **'업데이트로 받은 yt-dlp를 지우고 처음 버전으로 돌아가요. 업데이트 뒤 검색이나 받기가 안 될 때 써 보세요.'**
   String get settingsEngineRevertBody;
 
   /// No description provided for @settingsEngineRevertFailed.
@@ -1043,7 +1043,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsBackgroundDownloadDesc.
   ///
   /// In ko, this message translates to:
-  /// **'앱이 뒤로 가거나 닫혀도 받기를 이어 가요. 켜 두면 받는 동안 알림이 항상 떠 있어요.'**
+  /// **'앱이 뒤로 가거나 닫혀도 받기를 이어 가요. 켜 두면 받는 동안 알림이 계속 떠 있어요.'**
   String get settingsBackgroundDownloadDesc;
 
   /// No description provided for @settingsHideNotification.
@@ -1115,7 +1115,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsMixWithOthersDesc.
   ///
   /// In ko, this message translates to:
-  /// **'다른 앱에서 소리가 나도 멈추지 않고 같이 들려요. 소리가 겹쳐 시끄러울 수 있어요.'**
+  /// **'다른 앱 소리와 함께 재생해요. 소리가 겹칠 수 있어요.'**
   String get settingsMixWithOthersDesc;
 
   /// No description provided for @settingsPauseOnDisconnect.
@@ -1151,7 +1151,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsResumeWithoutNotificationDesc.
   ///
   /// In ko, this message translates to:
-  /// **'알림을 지웠거나 재생이 끝난 뒤에도 블루투스 기기의 재생 버튼으로 마지막 곡을 이어서 재생해요.'**
+  /// **'알림을 지웠거나 재생이 끝난 뒤에도 블루투스 재생 버튼으로 마지막 곡을 이어 재생해요.'**
   String get settingsResumeWithoutNotificationDesc;
 
   /// No description provided for @playerStyleTitle.
@@ -1313,7 +1313,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsPurgeHiddenBody.
   ///
   /// In ko, this message translates to:
-  /// **'숨겨 둔 {count}곡의 재생 횟수, 좋아요, 재생목록 소속, 커버, 앱에 저장한 가사 사본이 지워져요. 음악 파일과 파일 안의 태그(가사 포함)는 그대로예요.'**
+  /// **'숨겨 둔 {count}곡의 재생 횟수, 좋아요, 재생목록, 커버, 가사 사본이 지워져요. 음악 파일과 태그는 그대로예요.'**
   String settingsPurgeHiddenBody(int count);
 
   /// No description provided for @settingsPurgeHiddenDone.
@@ -1649,7 +1649,7 @@ abstract class AppLocalizations {
   /// No description provided for @coverEditHint.
   ///
   /// In ko, this message translates to:
-  /// **'테두리 안이 실제 커버예요. 어둡게 보이는 곳은 잘리고, 그림이 비는 곳은 검정이에요. 끌어서 옮기고 두 손가락으로 크기와 각도를 바꿔요'**
+  /// **'테두리 안이 실제 커버예요. 어두운 곳은 잘리고 빈 곳은 검정이에요. 끌어서 옮기고 두 손가락으로 크기와 각도를 바꿔요'**
   String get coverEditHint;
 
   /// No description provided for @coverEditZoomIn.
@@ -3275,13 +3275,13 @@ abstract class AppLocalizations {
   /// No description provided for @lyricsEditHint.
   ///
   /// In ko, this message translates to:
-  /// **'가사를 붙여넣거나 입력하세요. [01:02.30]처럼 시간이 붙은 글이나 .lrc · .txt 파일을 불러오면 싱크 가사가 돼요. 비워서 저장하면 가사를 지워요.'**
+  /// **'가사를 붙여넣거나 입력하세요. [01:02.30]처럼 시간이 붙은 글이나 .lrc · .txt 파일을 불러오면 싱크 가사가 돼요. 비우고 저장하면 지워져요.'**
   String get lyricsEditHint;
 
   /// No description provided for @lyricsEditSyncedHint.
   ///
   /// In ko, this message translates to:
-  /// **'왼쪽 시간은 줄 번호에 맞춰 붙어 있어요. 줄을 끼우거나 지우면 시간은 그 자리에 남고 글만 밀려요. 시간은 싱크 설정에서 바꿔요.'**
+  /// **'왼쪽 시간은 줄 번호에 붙어 있어요. 줄을 끼우거나 지우면 시간은 그대로 남고 글만 밀려요. 시간은 싱크 설정에서 바꿔요.'**
   String get lyricsEditSyncedHint;
 
   /// No description provided for @lyricsAddLine.
@@ -3623,7 +3623,7 @@ abstract class AppLocalizations {
   /// No description provided for @lyricsSyncLeaveBody.
   ///
   /// In ko, this message translates to:
-  /// **'아직 모든 줄에 시간을 찍지 않았어요. 지금 나가면 찍은 시간이 사라져요. 지금까지 찍은 싱크를 저장하고 나갈까요?'**
+  /// **'아직 모든 줄에 시간을 찍지 않았어요. 지금 나가면 찍은 시간이 사라져요. 저장하고 나갈까요?'**
   String get lyricsSyncLeaveBody;
 
   /// No description provided for @lyricsSyncLeaveSave.
@@ -3743,7 +3743,7 @@ abstract class AppLocalizations {
   /// No description provided for @lyricsLatencyIntro.
   ///
   /// In ko, this message translates to:
-  /// **'소리를 듣고 지금을 누르면 반응 시간만큼 늦게 찍혀요. 누른 시간에서 아래 값만큼 앞당겨 찍어요.'**
+  /// **'소리를 듣고 지금을 누르면 반응 시간만큼 늦게 찍혀요. 아래 값만큼 앞당겨 찍어요.'**
   String get lyricsLatencyIntro;
 
   /// No description provided for @lyricsLatencySeconds.
@@ -3767,7 +3767,7 @@ abstract class AppLocalizations {
   /// No description provided for @lyricsBeatBody.
   ///
   /// In ko, this message translates to:
-  /// **'소리와 함께 원이 깜빡여요. 깜빡일 때마다 가운데 원을 눌러 보세요. 8번 누르면 평균을 계산해 추천 값을 알려 줘요.'**
+  /// **'소리와 함께 원이 깜빡여요. 깜빡일 때마다 가운데 원을 누르세요. 8번 누르면 평균으로 추천 값을 알려 줘요.'**
   String get lyricsBeatBody;
 
   /// No description provided for @lyricsBeatIdle.
@@ -3821,7 +3821,7 @@ abstract class AppLocalizations {
   /// No description provided for @lyricsSongCheckBody.
   ///
   /// In ko, this message translates to:
-  /// **'곡을 들으면서 소리가 시작되는 순간 찍어 보기를 눌러 보세요. 찍힌 위치부터 다시 들으면 맞게 찍혔는지 알 수 있어요.'**
+  /// **'곡을 들으며 소리가 시작되는 순간 찍어 보기를 눌러 보세요. 찍힌 위치부터 다시 들어 맞는지 확인해요.'**
   String get lyricsSongCheckBody;
 
   /// No description provided for @lyricsSongTry.
@@ -3869,7 +3869,7 @@ abstract class AppLocalizations {
   /// No description provided for @lyricsSyncResetBody.
   ///
   /// In ko, this message translates to:
-  /// **'기본 줄 수를 바꾸면 직접 묶은 줄과 찍은 시간이 모두 사라지고, 고른 줄 수로 다시 나뉘어요. 계속할까요?'**
+  /// **'기본 줄 수를 바꾸면 직접 묶은 줄과 찍은 시간이 모두 사라져요. 계속할까요?'**
   String get lyricsSyncResetBody;
 
   /// No description provided for @lyricsSyncResetConfirm.
@@ -4463,7 +4463,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsNotifyDownloadProgressDesc.
   ///
   /// In ko, this message translates to:
-  /// **'받는 동안 진행 상황을 알림창에 보여요. 앱이 뒤로 가도 받기가 이어져요.'**
+  /// **'받는 동안 진행 상황을 알림창에 보여요.'**
   String get settingsNotifyDownloadProgressDesc;
 
   /// No description provided for @settingsNotifyDownloadResult.
@@ -4757,7 +4757,7 @@ abstract class AppLocalizations {
   /// No description provided for @subscriptionsEmptyBody.
   ///
   /// In ko, this message translates to:
-  /// **'영상 상세에서 채널의 구독을 누르면 새 영상이 올라올 때 골라서 받을 수 있어요.'**
+  /// **'영상 상세에서 채널을 구독하면 새 영상이 올라올 때 골라서 받을 수 있어요.'**
   String get subscriptionsEmptyBody;
 
   /// No description provided for @subscriptionsNewVideos.
@@ -4841,7 +4841,7 @@ abstract class AppLocalizations {
   /// No description provided for @newVideosClearBody.
   ///
   /// In ko, this message translates to:
-  /// **'받지 않은 영상도 목록에서 사라지고, 다시 뜨지 않아요. 이후에 올라오는 영상만 새 영상으로 보여요.'**
+  /// **'받지 않은 영상도 목록에서 사라지고 다시 뜨지 않아요. 이후 올라오는 영상만 새 영상으로 보여요.'**
   String get newVideosClearBody;
 
   /// No description provided for @newVideosSelectAll.
@@ -5597,7 +5597,7 @@ abstract class AppLocalizations {
   /// No description provided for @channelImportHint.
   ///
   /// In ko, this message translates to:
-  /// **'구독할 채널을 눌러 골라요. 한꺼번에 가져오지 않고 고른 채널만 추가해요.'**
+  /// **'구독할 채널을 눌러 골라요. 고른 채널만 추가돼요.'**
   String get channelImportHint;
 
   /// No description provided for @channelImportAlready.

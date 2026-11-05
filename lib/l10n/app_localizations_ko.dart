@@ -403,7 +403,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsEngineRemoveBody =>
-      '앱이 받아 둔 yt-dlp 파일을 지워요. 지우면 검색하고 받으려면 다시 설치해야 해요. 이 기기에 따로 설치된 yt-dlp는 지우지 않아요.';
+      '앱이 받아 둔 yt-dlp를 지워요. 검색과 받기를 하려면 다시 설치해야 해요. 기기에 따로 설치된 건 지우지 않아요.';
 
   @override
   String get settingsEngineInstalling => '내려받는 중…';
@@ -416,7 +416,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsEngineRevertBody =>
-      '업데이트로 받은 yt-dlp를 지우고 앱에 처음 들어 있던 버전으로 돌아가요. 업데이트한 뒤에 검색이나 받기가 잘 안 될 때 써 보세요. 나중에 다시 업데이트할 수 있어요.';
+      '업데이트로 받은 yt-dlp를 지우고 처음 버전으로 돌아가요. 업데이트 뒤 검색이나 받기가 안 될 때 써 보세요.';
 
   @override
   String get settingsEngineRevertFailed => '지우지 못했어요. 잠시 후 다시 시도해 주세요.';
@@ -511,7 +511,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsBackgroundDownloadDesc =>
-      '앱이 뒤로 가거나 닫혀도 받기를 이어 가요. 켜 두면 받는 동안 알림이 항상 떠 있어요.';
+      '앱이 뒤로 가거나 닫혀도 받기를 이어 가요. 켜 두면 받는 동안 알림이 계속 떠 있어요.';
 
   @override
   String get settingsHideNotification => '알림에 곡 정보 숨기기';
@@ -550,7 +550,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsMixWithOthersDesc =>
-      '다른 앱에서 소리가 나도 멈추지 않고 같이 들려요. 소리가 겹쳐 시끄러울 수 있어요.';
+      '다른 앱 소리와 함께 재생해요. 소리가 겹칠 수 있어요.';
 
   @override
   String get settingsPauseOnDisconnect => '기기가 끊기면 일시정지';
@@ -570,7 +570,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsResumeWithoutNotificationDesc =>
-      '알림을 지웠거나 재생이 끝난 뒤에도 블루투스 기기의 재생 버튼으로 마지막 곡을 이어서 재생해요.';
+      '알림을 지웠거나 재생이 끝난 뒤에도 블루투스 재생 버튼으로 마지막 곡을 이어 재생해요.';
 
   @override
   String get playerStyleTitle => '플레이어 테마';
@@ -660,7 +660,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String settingsPurgeHiddenBody(int count) {
-    return '숨겨 둔 $count곡의 재생 횟수, 좋아요, 재생목록 소속, 커버, 앱에 저장한 가사 사본이 지워져요. 음악 파일과 파일 안의 태그(가사 포함)는 그대로예요.';
+    return '숨겨 둔 $count곡의 재생 횟수, 좋아요, 재생목록, 커버, 가사 사본이 지워져요. 음악 파일과 태그는 그대로예요.';
   }
 
   @override
@@ -844,7 +844,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get coverEditHint =>
-      '테두리 안이 실제 커버예요. 어둡게 보이는 곳은 잘리고, 그림이 비는 곳은 검정이에요. 끌어서 옮기고 두 손가락으로 크기와 각도를 바꿔요';
+      '테두리 안이 실제 커버예요. 어두운 곳은 잘리고 빈 곳은 검정이에요. 끌어서 옮기고 두 손가락으로 크기와 각도를 바꿔요';
 
   @override
   String get coverEditZoomIn => '확대';
@@ -1743,11 +1743,11 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get lyricsEditHint =>
-      '가사를 붙여넣거나 입력하세요. [01:02.30]처럼 시간이 붙은 글이나 .lrc · .txt 파일을 불러오면 싱크 가사가 돼요. 비워서 저장하면 가사를 지워요.';
+      '가사를 붙여넣거나 입력하세요. [01:02.30]처럼 시간이 붙은 글이나 .lrc · .txt 파일을 불러오면 싱크 가사가 돼요. 비우고 저장하면 지워져요.';
 
   @override
   String get lyricsEditSyncedHint =>
-      '왼쪽 시간은 줄 번호에 맞춰 붙어 있어요. 줄을 끼우거나 지우면 시간은 그 자리에 남고 글만 밀려요. 시간은 싱크 설정에서 바꿔요.';
+      '왼쪽 시간은 줄 번호에 붙어 있어요. 줄을 끼우거나 지우면 시간은 그대로 남고 글만 밀려요. 시간은 싱크 설정에서 바꿔요.';
 
   @override
   String get lyricsAddLine => '줄 추가';
@@ -1930,7 +1930,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get lyricsSyncLeaveBody =>
-      '아직 모든 줄에 시간을 찍지 않았어요. 지금 나가면 찍은 시간이 사라져요. 지금까지 찍은 싱크를 저장하고 나갈까요?';
+      '아직 모든 줄에 시간을 찍지 않았어요. 지금 나가면 찍은 시간이 사라져요. 저장하고 나갈까요?';
 
   @override
   String get lyricsSyncLeaveSave => '저장 후 나가기';
@@ -1993,7 +1993,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get lyricsLatencyIntro =>
-      '소리를 듣고 지금을 누르면 반응 시간만큼 늦게 찍혀요. 누른 시간에서 아래 값만큼 앞당겨 찍어요.';
+      '소리를 듣고 지금을 누르면 반응 시간만큼 늦게 찍혀요. 아래 값만큼 앞당겨 찍어요.';
 
   @override
   String lyricsLatencySeconds(String s) {
@@ -2008,7 +2008,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get lyricsBeatBody =>
-      '소리와 함께 원이 깜빡여요. 깜빡일 때마다 가운데 원을 눌러 보세요. 8번 누르면 평균을 계산해 추천 값을 알려 줘요.';
+      '소리와 함께 원이 깜빡여요. 깜빡일 때마다 가운데 원을 누르세요. 8번 누르면 평균으로 추천 값을 알려 줘요.';
 
   @override
   String get lyricsBeatIdle => '시작을 누르세요';
@@ -2041,7 +2041,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get lyricsSongCheckBody =>
-      '곡을 들으면서 소리가 시작되는 순간 찍어 보기를 눌러 보세요. 찍힌 위치부터 다시 들으면 맞게 찍혔는지 알 수 있어요.';
+      '곡을 들으며 소리가 시작되는 순간 찍어 보기를 눌러 보세요. 찍힌 위치부터 다시 들어 맞는지 확인해요.';
 
   @override
   String get lyricsSongTry => '찍어 보기';
@@ -2069,7 +2069,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get lyricsSyncResetBody =>
-      '기본 줄 수를 바꾸면 직접 묶은 줄과 찍은 시간이 모두 사라지고, 고른 줄 수로 다시 나뉘어요. 계속할까요?';
+      '기본 줄 수를 바꾸면 직접 묶은 줄과 찍은 시간이 모두 사라져요. 계속할까요?';
 
   @override
   String get lyricsSyncResetConfirm => '바꾸기';
@@ -2352,7 +2352,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get playlistImportNoChannelBody =>
-      '이 구글 계정에는 유튜브 채널이 없어서 내 재생목록을 불러올 수 없어요. 유튜브에서 채널을 만들거나, 재생목록 링크를 위 입력창에 붙여 넣어 가져와 보세요. (비공개 재생목록은 \"일부 공개\"로 바꿔야 해요)';
+      '이 구글 계정에는 유튜브 채널이 없어서 내 재생목록을 불러올 수 없어요. 재생목록 링크를 위 입력창에 붙여 넣어 보세요. 비공개 목록은 일부 공개로 바꿔야 해요.';
 
   @override
   String get searchPlaylistFind => '재생목록으로 찾기';
@@ -2389,7 +2389,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsNotifyDownloadProgressDesc =>
-      '받는 동안 진행 상황을 알림창에 보여요. 앱이 뒤로 가도 받기가 이어져요.';
+      '받는 동안 진행 상황을 알림창에 보여요.';
 
   @override
   String get settingsNotifyDownloadResult => '받기 결과 알림';
@@ -2550,7 +2550,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get subscriptionsEmptyBody =>
-      '영상 상세에서 채널의 구독을 누르면 새 영상이 올라올 때 골라서 받을 수 있어요.';
+      '영상 상세에서 채널을 구독하면 새 영상이 올라올 때 골라서 받을 수 있어요.';
 
   @override
   String get subscriptionsNewVideos => '새 영상 보기';
@@ -2601,7 +2601,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get newVideosClearBody =>
-      '받지 않은 영상도 목록에서 사라지고, 다시 뜨지 않아요. 이후에 올라오는 영상만 새 영상으로 보여요.';
+      '받지 않은 영상도 목록에서 사라지고 다시 뜨지 않아요. 이후 올라오는 영상만 새 영상으로 보여요.';
 
   @override
   String get newVideosSelectAll => '모두 선택';
@@ -3017,7 +3017,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get channelImportTitle => '내 구독 채널';
 
   @override
-  String get channelImportHint => '구독할 채널을 눌러 골라요. 한꺼번에 가져오지 않고 고른 채널만 추가해요.';
+  String get channelImportHint => '구독할 채널을 눌러 골라요. 고른 채널만 추가돼요.';
 
   @override
   String get channelImportAlready => '구독 중';
