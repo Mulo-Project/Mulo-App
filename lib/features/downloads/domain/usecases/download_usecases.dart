@@ -4,6 +4,7 @@ import '../entities/download_options.dart';
 import '../entities/download_preferences.dart';
 import '../entities/download_request.dart';
 import '../entities/download_source.dart';
+import '../entities/tag_notice.dart';
 import '../repositories/download_queue_repository.dart';
 import '../repositories/download_settings_repository.dart';
 
@@ -63,6 +64,16 @@ class GetTrackSourceUrl implements UseCase<String?, String> {
 
   @override
   Future<String?> call(String trackId) => _repo.sourceUrlOf(trackId);
+}
+
+/// 받은 곡의 태그 쓰기 결과 구독.
+class WatchTagNotices implements StreamUseCase<TagNotice, NoParams> {
+  const WatchTagNotices(this._repo);
+
+  final DownloadQueueRepository _repo;
+
+  @override
+  Stream<TagNotice> call(NoParams params) => _repo.watchTagNotices();
 }
 
 /// 일시정지 (상세 기능: 다운로드 대기열 #7).

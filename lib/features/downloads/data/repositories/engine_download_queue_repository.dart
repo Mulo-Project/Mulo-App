@@ -12,11 +12,13 @@ import '../../../search/domain/repositories/downloader_engine.dart';
 import '../../domain/entities/download_item.dart';
 import '../../domain/entities/download_request.dart';
 import '../../domain/entities/download_source.dart';
+import '../../domain/entities/tag_notice.dart';
 import '../../domain/repositories/download_queue_repository.dart';
 import '../../domain/repositories/download_settings_repository.dart';
 import '../datasources/audio_file_downloader.dart';
 import '../datasources/audio_transcoder.dart';
 import '../datasources/cover_tag_writer.dart';
+import '../datasources/ffmpeg_tag_writer.dart';
 import '../datasources/download_queue_store.dart';
 import '../datasources/downloaded_file_store.dart';
 
@@ -172,6 +174,11 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
     }
     return null;
   }
+
+  final _tagNotices = StreamController<TagNotice>.broadcast();
+
+  @override
+  Stream<TagNotice> watchTagNotices() => _tagNotices.stream;
 
   /// 받은 곡 키가 바뀌었음을 알린다 (곡을 만든 직후 · 원본 주소 기록 뒤).
   final _keysChanged = StreamController<void>.broadcast();
@@ -430,7 +437,7 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
       if (token.isCancelled) throw const DownloadAborted();
 
       // 고른 커버(없으면 썸네일)를 파일 태그에도 넣는다. 쓸 수 없는 형식이면 그대로 저장한다.
-      await _coverTags?.embed(
+      final tagged = await _coverTags?.embed(
         audio.file,
         extension: audio.extension,
         cover: request.cover,
@@ -442,6 +449,19 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
         lyrics: lyrics,
         color: request.color,
       );
+      // 태그를 못 썼으면 화면이 알린다 (임시: 쓴 결과도 진단용으로 함께 보낸다).
+      if (_coverTags != null && tagged != null) {
+        _tagNotices.add(
+          TagNotice(
+            title: request.title,
+            extension: audio.extension,
+            ok: tagged,
+            detail: tagged
+                ? ''
+                : (FfmpegTagWriter.lastError ?? 'unsupported or nothing to write'),
+          ),
+        );
+      }
       if (token.isCancelled) throw const DownloadAborted();
 
       final folder = request.savePath.isNotEmpty

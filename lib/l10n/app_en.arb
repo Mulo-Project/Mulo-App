@@ -639,6 +639,8 @@
   "trackInfoSource": "Source",
   "trackInfoSourceDevice": "External",
   "trackInfoSourceDownload": "Downloaded",
+  "downloadTagFailed": "Could not save tags: {title}",
+  "@downloadTagFailed": {"placeholders": {"title": {"type": "String"}}},
   "trackInfoFolder": "Folder",
   "collectionMenuInfo": "Info",
   "playlistInfoTitle": "Playlist info",

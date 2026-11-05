@@ -29,6 +29,7 @@ import 'package:music_download_play_app/features/home/domain/repositories/play_h
 import 'package:music_download_play_app/features/library/di.dart';
 import 'package:music_download_play_app/features/library/domain/entities/hidden_track.dart';
 import 'package:music_download_play_app/features/library/domain/entities/import_result.dart';
+import 'package:music_download_play_app/features/downloads/domain/entities/tag_notice.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track_file_info.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track_info.dart';
@@ -670,6 +671,9 @@ class MemoryDownloadQueue implements DownloadQueueRepository {
 
   @override
   Future<String?> sourceUrlOf(String trackId) async => null;
+
+  @override
+  Stream<TagNotice> watchTagNotices() => const Stream.empty();
 
   @override
   Stream<Set<String>> watchDownloadedKeys() => Stream.value(downloadedKeys);

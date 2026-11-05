@@ -3296,6 +3296,12 @@ abstract class AppLocalizations {
   /// **'폴더'**
   String get trackInfoFolder;
 
+  /// No description provided for @downloadTagFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'태그를 저장하지 못했어요: {title}'**
+  String downloadTagFailed(String title);
+
   /// No description provided for @collectionMenuInfo.
   ///
   /// In ko, this message translates to:

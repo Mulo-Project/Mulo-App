@@ -739,6 +739,8 @@
   "trackInfoSource": "출처",
   "trackInfoSourceDevice": "외부",
   "trackInfoSourceDownload": "받은 곡",
+  "downloadTagFailed": "태그를 저장하지 못했어요: {title}",
+  "@downloadTagFailed": {"placeholders": {"title": {"type": "String"}}},
   "trackInfoFolder": "폴더",
   "collectionMenuInfo": "정보",
   "playlistInfoTitle": "재생목록 정보",

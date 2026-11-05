@@ -1795,6 +1795,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackInfoFolder => 'Folder';
 
   @override
+  String downloadTagFailed(String title) {
+    return 'Could not save tags: $title';
+  }
+
+  @override
   String get collectionMenuInfo => 'Info';
 
   @override

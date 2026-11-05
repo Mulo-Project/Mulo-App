@@ -1751,6 +1751,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get trackInfoFolder => '폴더';
 
   @override
+  String downloadTagFailed(String title) {
+    return '태그를 저장하지 못했어요: $title';
+  }
+
+  @override
   String get collectionMenuInfo => '정보';
 
   @override
