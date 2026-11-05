@@ -35,11 +35,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late final EngineCubit _engine = sl<EngineCubit>()..load();
 
   @override
-  void dispose() {
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     const gap = SizedBox(height: AppSpacing.lg);
