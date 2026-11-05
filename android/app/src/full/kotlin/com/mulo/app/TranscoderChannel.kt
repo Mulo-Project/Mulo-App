@@ -2,6 +2,7 @@ package com.mulo.app
 
 import android.content.Context
 import com.yausername.ffmpeg.FFmpeg
+import com.yausername.youtubedl_android.YoutubeDL
 import io.flutter.plugin.common.BinaryMessenger
 import java.io.File
 import java.util.concurrent.Executors
@@ -74,6 +75,9 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
         if (ready) return
         synchronized(this) {
             if (ready) return
+            // ffmpeg가 찾는 C++ 런타임(libc++_shared.so)은 파이썬 패키지 폴더에 들어 있다.
+            // yt-dlp를 한 번도 안 돌린 실행(앱 데이터를 지운 뒤 가사 저장 등)에서도 있도록 파이썬부터 푼다.
+            YoutubeDL.getInstance().init(context)
             // libffmpeg.zip.so를 앱 전용 폴더에 풀어 둔다 (처음 한 번, 버전이 바뀌면 다시).
             FFmpeg.getInstance().init(context)
             ready = true
