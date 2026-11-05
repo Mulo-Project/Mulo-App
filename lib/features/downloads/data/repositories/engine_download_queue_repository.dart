@@ -465,7 +465,7 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
             extension: audio.extension,
             ok: tagged,
             detail: tagged
-                ? ''
+                ? CoverTagWriter.lastCoverNote
                 : (FfmpegTagWriter.lastError ?? 'unsupported or nothing to write'),
           ),
         );

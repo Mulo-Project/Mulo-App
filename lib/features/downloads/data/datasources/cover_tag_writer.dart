@@ -21,6 +21,9 @@ class CoverTagWriter {
   /// opus · ogg · mp3 태그를 쓰는 ffmpeg 쓰기. 없으면 그 형식은 건드리지 않는다.
   final FfmpegTagWriter? ffmpeg;
 
+  /// 마지막 embed에서 커버가 어떻게 됐는지 (진단용): 이미지를 못 구함 · 그림 만들기 실패 · 넣음.
+  static String lastCoverNote = '';
+
   /// 태그에 커버를 쓸 수 있는 확장자. ffmpeg가 만든 mp3는 ID3 태그가 이미 있다.
   /// (opus · ogg는 [ffmpeg]가 쓴다. webm은 쓰지 않는다. mp3도 ffmpeg가 되면 ffmpeg로 쓴다.)
   static const extensions = {'mp3', 'm4a'};
@@ -38,6 +41,7 @@ class CoverTagWriter {
     int? color,
   }) async {
     // 유튜브 원본 오디오는 webm(Opus)이다: ffmpeg가 ogg(.opus)로 감싸 태그를 쓰고, 저장도 .opus로 한다.
+    lastCoverNote = '';
     final raw = extension.toLowerCase();
     final ext = raw == 'webm' || raw == 'weba' ? 'opus' : raw;
     final viaFfmpeg =
@@ -53,6 +57,11 @@ class CoverTagWriter {
           cover?.transform ?? CoverTransform.identity,
         );
       }
+      lastCoverNote = source == null
+          ? 'cover: no image (path=${cover?.path != null}, url=${(cover?.url ?? thumbnailUrl) != null})'
+          : png == null
+          ? 'cover: png failed'
+          : 'cover: png ${png.length}B';
       String? text(String? v) => v == null || v.trim().isEmpty ? null : v;
       if (png == null &&
           text(title) == null &&
