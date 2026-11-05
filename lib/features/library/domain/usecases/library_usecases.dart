@@ -135,6 +135,10 @@ class FillEmbeddedCovers implements UseCase<int, NoParams> {
         onProgress?.call(i + 1, todo.length);
       }
     }
+    // 임시 진단: 디버그 빌드가 커버를 채운 결과를 snackbar로 보여 준다.
+    if (todo.isNotEmpty) {
+      DiagNotice.post('[cover fill] ${todo.length}곡 중 $filled곡 커버 채움');
+    }
     return filled;
   }
 }
