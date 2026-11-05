@@ -143,6 +143,8 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
                             controller: _controller,
                             hint: l10n.playlistImportHint,
                             clearTooltip: l10n.actionClear,
+                            // 이 화면은 검색이 주 동작이라 아래 큰 버튼들보다 커 보이게 한다.
+                            height: 56,
                             onSubmitted: (_) => _load(),
                           ),
                         ),
