@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer' as developer;
 import 'dart:io';
 
 import '../../domain/entities/audio_language.dart';
@@ -83,6 +84,7 @@ class LocalEngine implements DownloaderEngine {
     final prefix = newest && source.supportsNewest
         ? '${source.searchKey}date'
         : source.searchKey;
+    developer.log('$prefix$want:$query (newest=$newest)', name: 'MuloSearch');
     final out = await _exec([
       '--flat-playlist',
       '--dump-json',
@@ -393,6 +395,7 @@ class LocalEngine implements DownloaderEngine {
     }
     if (r.exitCode != 0) {
       final err = r.stderr.trim();
+      developer.log('실패(${r.exitCode}): $err', name: 'MuloSearch');
       final failure = err.contains('Unsupported URL')
           ? EngineFailure.notFound
           : err.contains('Unable to download') || err.contains('getaddrinfo')
