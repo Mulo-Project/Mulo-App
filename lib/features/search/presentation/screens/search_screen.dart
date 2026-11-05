@@ -283,6 +283,7 @@ class _Results extends StatelessWidget {
                 label: l10n.searchPlaylistPick,
                 icon: AppIcons.download,
                 variant: PillVariant.tonal,
+                compact: true,
                 onPressed: () => context.push(
                   Routes.playlistImport,
                   extra: context.read<SearchCubit>().query,
@@ -299,6 +300,7 @@ class _Results extends StatelessWidget {
                 label: l10n.searchPlaylistFind,
                 icon: AppIcons.search,
                 variant: PillVariant.tonal,
+                compact: true,
                 onPressed: () => context.push(
                   Routes.playlistImport,
                   extra: context.read<SearchCubit>().query,

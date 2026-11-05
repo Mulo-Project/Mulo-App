@@ -41,11 +41,16 @@ class PlaylistsScreen extends StatelessWidget {
           ),
           Padding(
             padding: AppSpacing.screen,
-            child: PillButton(
-              label: l10n.playlistsImport,
-              icon: AppIcons.link,
-              variant: PillVariant.tonal,
-              onPressed: () => context.push(Routes.playlistImport),
+            // 가져오기는 보조 동작이라 가로를 채우지 않고 작게 왼쪽에 둔다 (목록이 먼저 보이게).
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: PillButton(
+                label: l10n.playlistsImport,
+                icon: AppIcons.link,
+                variant: PillVariant.tonal,
+                compact: true,
+                onPressed: () => context.push(Routes.playlistImport),
+              ),
             ),
           ),
           const SizedBox(height: AppSpacing.md),
