@@ -38,7 +38,10 @@ Future<void> _open(
 }
 
 Future<void> _rename(WidgetTester tester, String tooltip, String to) async {
-  await tester.tap(find.byTooltip(tooltip));
+  // 이름 바꾸기는 ⋮(더 보기) 메뉴 안에 있다.
+  await tester.tap(find.byTooltip('더 보기'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text(tooltip));
   await tester.pumpAndSettle();
   await tester.enterText(find.byType(EditableText), to);
   await tester.tap(find.text('바꾸기'));

@@ -49,7 +49,9 @@ void main() {
 
   testWidgets('꾸미기 시트에서 이미지와 색을 한 곳에서 고른다', (tester) async {
     await pump(tester, Routes.artist('A가수'));
-    await tester.tap(find.byTooltip('아티스트 꾸미기'));
+    await tester.tap(find.byTooltip('더 보기'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('아티스트 꾸미기'));
     await tester.pumpAndSettle();
 
     expect(find.text('꾸미기'), findsOneWidget);
