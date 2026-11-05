@@ -4,9 +4,8 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../search/presentation/widgets/video_category.dart';
 
-/// 유튜브 영상 분류를 여러 개 고르는 표: 첫 줄 "모든 분류"(선택을 비운다)가 한 줄을 다 쓰고,
-/// 아래는 두 칸씩. 고른 칸은 강조 색 글자 + 체크. 칸 사이는 가는 선으로 나눈다
-/// ([selected]가 비어 있으면 모든 분류).
+/// 유튜브 영상 분류를 여러 개 고르는 칩 묶음: 세 줄로 놓고 옆으로 밀어 본다 (세로 자리를 적게 쓴다).
+/// 첫 칩 "모든 분류"는 선택을 비운다 ([selected]가 비어 있으면 모든 분류). 고른 칩은 강조 색 + 체크.
 class CategoryChoices extends StatelessWidget {
   const CategoryChoices({
     super.key,
@@ -15,6 +14,8 @@ class CategoryChoices extends StatelessWidget {
     required this.onClear,
   });
 
+  static const _lines = 3;
+
   final Set<String> selected;
   final ValueChanged<String> onToggle;
   final VoidCallback onClear;
@@ -22,89 +23,51 @@ class CategoryChoices extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final p = context.palette;
     final names = youtubeCategoryNames;
-    final rows = <Widget>[
-      _Cell(label: l10n.categoryAll, on: selected.isEmpty, onTap: onClear),
-      for (var i = 0; i < names.length; i += 2)
-        IntrinsicHeight(
-          child: Row(
-            children: [
-              Expanded(
-                child: _Cell(
-                  label: categoryLabel(l10n, names[i]),
-                  on: selected.contains(names[i]),
-                  onTap: () => onToggle(names[i]),
-                ),
-              ),
-              VerticalDivider(width: 1, thickness: 1, color: p.outline),
-              Expanded(
-                child: i + 1 < names.length
-                    ? _Cell(
-                        label: categoryLabel(l10n, names[i + 1]),
-                        on: selected.contains(names[i + 1]),
-                        onTap: () => onToggle(names[i + 1]),
-                      )
-                    : const SizedBox.shrink(),
-              ),
-            ],
-          ),
+    // 칩을 세 줄에 번갈아 놓는다 (첫 칩은 "모든 분류").
+    final chips = <Widget>[
+      _chip(l10n.categoryAll, selected.isEmpty, onClear),
+      for (final name in names)
+        _chip(
+          categoryLabel(l10n, name),
+          selected.contains(name),
+          () => onToggle(name),
         ),
     ];
-    return Material(
-      color: p.surfaceHigh,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadii.md),
-        side: BorderSide(color: p.outline),
-      ),
-      clipBehavior: Clip.antiAlias,
+    final lines = [
+      for (var line = 0; line < _lines; line++)
+        [for (var i = line; i < chips.length; i += _lines) chips[i]],
+    ];
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      // 화면 가장자리까지 밀려 나가도록 시트 여백만큼 바깥으로 낸다.
+      clipBehavior: Clip.none,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (var i = 0; i < rows.length; i++) ...[
-            if (i > 0) const AppDivider(),
-            rows[i],
+          for (var l = 0; l < lines.length; l++) ...[
+            if (l > 0) const SizedBox(height: AppSpacing.xs),
+            Row(
+              children: [
+                for (var k = 0; k < lines[l].length; k++) ...[
+                  if (k > 0) const SizedBox(width: AppSpacing.xs),
+                  lines[l][k],
+                ],
+              ],
+            ),
           ],
         ],
       ),
     );
   }
-}
 
-class _Cell extends StatelessWidget {
-  const _Cell({required this.label, required this.on, required this.onTap});
-
-  final String label;
-  final bool on;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final p = context.palette;
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm + 2,
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodyMedium
-                    ?.copyWith(color: on ? p.accent : p.onSurface),
-              ),
-            ),
-            if (on)
-              Icon(AppIcons.check, size: AppSizes.iconSm, color: p.accent),
-          ],
-        ),
-      ),
-    );
-  }
+  Widget _chip(String label, bool on, VoidCallback onTap) => PillButton(
+    label: label,
+    icon: on ? AppIcons.check : null,
+    compact: true,
+    variant: on ? PillVariant.accent : PillVariant.tonal,
+    onPressed: onTap,
+  );
 }
 
 /// 고른 분류를 한 줄 글로 (없으면 "모든 분류").

@@ -29,32 +29,41 @@ Future<void> showChannelOptionsSheet(
       if (channel == null) return const SizedBox.shrink();
       final l10n = sheetContext.l10n;
       final thumb = channel.thumbnailUrl;
-      return SingleChildScrollView(
-        padding: appSheetPadding,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _ChannelHeader(
-              channelId: channel.id,
-              name: channel.name,
-              thumbnailUrl: thumb,
-            ),
-            ChannelSettingsSections(
-              categories: channel.categories,
-              onToggleCategory: (name) => cubit.setCategories(
-                channel.id,
-                channel.categories.contains(name)
-                    ? ({...channel.categories}..remove(name))
-                    : {...channel.categories, name},
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+            child: SingleChildScrollView(
+              padding: appSheetPadding.copyWith(bottom: AppSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _ChannelHeader(
+                    channelId: channel.id,
+                    name: channel.name,
+                    thumbnailUrl: thumb,
+                  ),
+                  ChannelSettingsSections(
+                    categories: channel.categories,
+                    onToggleCategory: (name) => cubit.setCategories(
+                      channel.id,
+                      channel.categories.contains(name)
+                          ? ({...channel.categories}..remove(name))
+                          : {...channel.categories, name},
+                    ),
+                    onClearCategories: () =>
+                        cubit.setCategories(channel.id, const {}),
+                    savePath: channel.savePath,
+                    onSavePath: (path) => cubit.setSavePath(channel.id, path),
+                  ),
+                ],
               ),
-              onClearCategories: () =>
-                  cubit.setCategories(channel.id, const {}),
-              savePath: channel.savePath,
-              onSavePath: (path) => cubit.setSavePath(channel.id, path),
             ),
-            const SizedBox(height: AppSpacing.lg),
-            SizedBox(
+          ),
+          // 구독 해제는 스크롤과 상관없이 아래에 고정한다.
+          Padding(
+            padding: appSheetPadding.copyWith(top: AppSpacing.xs),
+            child: SizedBox(
               width: double.infinity,
               child: PillButton(
                 label: l10n.subscriptionsUnsubscribe,
@@ -66,8 +75,8 @@ Future<void> showChannelOptionsSheet(
                 },
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       );
     },
   ),
