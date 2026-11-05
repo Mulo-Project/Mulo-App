@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'android_yt_dlp.dart';
 
@@ -32,29 +31,6 @@ class YtDlpManager implements EngineManager {
       ? 'yt-dlp_macos'
       : 'yt-dlp_linux';
 
-  /// Android: 내장 yt-dlp는 파일을 지울 수 없어서, "삭제"하면 쓰지 않도록 꺼 둔다 ("설치"가 다시 켠다).
-  static const _disabledKey = 'engine_disabled';
-
-  Future<bool> _isDisabled() async {
-    try {
-      return (await SharedPreferences.getInstance()).getBool(_disabledKey) ??
-          false;
-    } on Object {
-      return false;
-    }
-  }
-
-  Future<void> _setDisabled(bool value) async {
-    try {
-      await (await SharedPreferences.getInstance()).setBool(
-        _disabledKey,
-        value,
-      );
-    } on Object {
-      // 저장하지 못하면 그대로 켜 둔다.
-    }
-  }
-
   Future<File> _managedFile() async {
     final dir = await getApplicationSupportDirectory();
     final name = Platform.isWindows ? 'yt-dlp.exe' : 'yt-dlp';
@@ -77,18 +53,13 @@ class YtDlpManager implements EngineManager {
       if (!await _android.isAvailable()) {
         return const EngineStatus(supported: false);
       }
-      if (await _isDisabled()) {
-        // 지워서 꺼 둔 상태: 설치하기 전에는 검색 · 받기를 막는다.
-        return const EngineStatus(managed: true);
-      }
       // 버전은 업데이트한 뒤에만 있다. 없으면 APK에 들어 있는 yt-dlp를 쓰는 중이다 (항상 쓸 수 있다).
       final version = await _android.version();
       return EngineStatus(
         installed: true,
         version: version,
         managed: true,
-        // 업데이트한 적이 있으면 지우기 = 내장 버전으로 되돌리기, 없으면 지우기 = 끄기.
-        removable: true,
+        removable: version != null,
         revertible: version != null,
       );
     }
@@ -116,15 +87,8 @@ class YtDlpManager implements EngineManager {
   Future<EngineStatus> remove() async {
     // 앱이 받은 파일만 지운다. PATH의 yt-dlp · Android 내장 엔진은 건드리지 않는다.
     if (Platform.isAndroid) {
-      if (await _android.isAvailable()) {
-        if (await _android.version() != null) {
-          // 업데이트로 받은 yt-dlp를 지우면 APK에 들어 있던 버전으로 돌아간다.
-          await _android.revert();
-        } else {
-          // 내장 yt-dlp는 지울 수 없으니 끈다.
-          await _setDisabled(true);
-        }
-      }
+      // 업데이트로 받은 yt-dlp를 지우면 APK에 들어 있던 버전으로 돌아간다.
+      if (await _android.isAvailable()) await _android.revert();
     } else if (_desktop) {
       final target = await _managedFile();
       for (final f in [target, File('${target.path}.download')]) {
@@ -137,7 +101,6 @@ class YtDlpManager implements EngineManager {
   @override
   Future<EngineStatus> install() async {
     if (Platform.isAndroid) {
-      await _setDisabled(false);
       await _android.update();
       return status();
     }
