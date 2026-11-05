@@ -47,9 +47,11 @@ class SearchSourceMenu extends StatelessWidget {
         for (final s in SearchSource.values)
           PopupMenuItem(
             value: s,
+            height: 40,
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             child: Row(
               children: [
-                sourceMark(s, 22),
+                sourceMark(s, 20),
                 const SizedBox(width: AppSpacing.xs),
                 Text(sourceLabel(context, s)),
               ],
@@ -58,12 +60,13 @@ class SearchSourceMenu extends StatelessWidget {
       ],
       // 아이콘 옆 작은 ▾로 눌러서 바꿀 수 있다는 것을 보여 준다.
       child: SizedBox(
-        width: 60,
+        width: 64,
         height: 44,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             sourceMark(source, 24),
+            const SizedBox(width: AppSpacing.xs),
             Icon(
               AppIcons.dropDown,
               size: AppSizes.iconSm,

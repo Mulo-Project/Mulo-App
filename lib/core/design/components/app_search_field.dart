@@ -18,6 +18,7 @@ class AppSearchField extends StatefulWidget {
     this.trailing,
     this.suffix,
     this.autofocus = false,
+    this.height = 52,
   });
 
   final String hint;
@@ -35,6 +36,9 @@ class AppSearchField extends StatefulWidget {
   /// 입력 여부와 상관없이 맨 오른쪽에 항상 둘 위젯 (예: 검색 실행 버튼).
   final Widget? suffix;
   final bool autofocus;
+
+  /// 칸 높이. 단독 검색 화면은 기본(52), 정렬 같은 다른 부품과 한 줄에 놓으면 그 높이(44)에 맞춘다.
+  final double height;
 
   @override
   State<AppSearchField> createState() => _AppSearchFieldState();
@@ -76,7 +80,7 @@ class _AppSearchFieldState extends State<AppSearchField> {
         right: AppSpacing.xxs,
       ),
       child: SizedBox(
-        height: 44,
+        height: widget.height,
         child: Row(
           children: [
             widget.leading ??

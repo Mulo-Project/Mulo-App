@@ -55,6 +55,7 @@ class AppDropdown<T> extends StatelessWidget {
           const SizedBox(width: AppSpacing.xxs),
         ],
         Text(labelOf(selected), style: text),
+        const SizedBox(width: AppSpacing.xs),
         Icon(AppIcons.dropDown, size: AppSizes.iconSm, color: p.onSurfaceMuted),
       ],
     );
@@ -65,17 +66,19 @@ class AppDropdown<T> extends StatelessWidget {
       onSelected: onChanged,
       color: p.surfaceHigh,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadii.md),
+        borderRadius: BorderRadius.circular(AppRadii.sm),
         side: BorderSide(color: p.outline),
       ),
       itemBuilder: (_) => [
         for (final v in values)
           PopupMenuItem<T>(
             value: v,
+            height: 40,
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             child: Row(
               children: [
                 SizedBox(
-                  width: 24,
+                  width: 20,
                   child: v == selected
                       ? Icon(
                           AppIcons.check,
@@ -100,7 +103,7 @@ class AppDropdown<T> extends StatelessWidget {
         alignment: Alignment.center,
         padding: EdgeInsets.only(
           left: AppSpacing.md,
-          right: toggle == null ? AppSpacing.xs : 0,
+          right: toggle == null ? AppSpacing.sm : AppSpacing.xs,
         ),
         child: label,
       ),

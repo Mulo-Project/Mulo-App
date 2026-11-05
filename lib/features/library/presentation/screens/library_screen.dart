@@ -264,6 +264,7 @@ class _LibraryScreenState extends State<LibraryScreen>
                               child: AppSearchField(
                                 hint: l10n.librarySearchHint,
                                 clearTooltip: l10n.actionClear,
+                                height: 44,
                                 onChanged: (q) => setState(() => _query = q),
                               ),
                             ),
@@ -272,7 +273,6 @@ class _LibraryScreenState extends State<LibraryScreen>
                               values: _sortOptions,
                               selected: _sort,
                               tooltip: l10n.sortLabel,
-                              icon: AppIcons.sort,
                               labelOf: (s) => switch (s) {
                                 LibrarySort.name => l10n.sortName,
                                 LibrarySort.added => l10n.sortAdded,
