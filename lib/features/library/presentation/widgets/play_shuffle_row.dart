@@ -32,14 +32,14 @@ class PlayShuffleRow extends StatelessWidget {
     final play = PillButton(
       label: playLabel ?? l10n.actionPlay,
       icon: AppIcons.play,
-      compact: extra != null,
+      snug: extra != null,
       onPressed: empty ? null : () => now.playQueue(tracks),
     );
     final shuffle = PillButton(
       label: l10n.actionShuffle,
       icon: AppIcons.shuffle,
       variant: PillVariant.tonal,
-      compact: extra != null,
+      snug: extra != null,
       onPressed: empty ? null : () => now.playShuffled(tracks),
     );
     return Padding(

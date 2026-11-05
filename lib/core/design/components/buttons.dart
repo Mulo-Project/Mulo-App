@@ -29,6 +29,7 @@ class PillButton extends StatelessWidget {
     this.variant = PillVariant.accent,
     this.selected = false,
     this.compact = false,
+    this.snug = false,
     this.busy = false,
   });
 
@@ -40,6 +41,9 @@ class PillButton extends StatelessWidget {
   /// 토글 · 필터로 쓸 때 선택 상태. true면 accent 모양으로 그린다.
   final bool selected;
   final bool compact;
+
+  /// 높이는 그대로 두고 좌우 여백만 줄인다 (한 줄에 버튼이 셋 들어갈 때).
+  final bool snug;
 
   /// 일하는 중: 아이콘 자리에 돌아가는 표시를 보인다 (누를 수는 있다).
   final bool busy;
@@ -61,7 +65,7 @@ class PillButton extends StatelessWidget {
       height: height,
       child: Padding(
         padding: EdgeInsets.symmetric(
-          horizontal: compact ? AppSpacing.md : AppSpacing.lg,
+          horizontal: compact || snug ? AppSpacing.md : AppSpacing.lg,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
