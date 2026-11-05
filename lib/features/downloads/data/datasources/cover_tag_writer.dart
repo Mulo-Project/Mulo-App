@@ -188,9 +188,10 @@ class CoverTagWriter {
 ) {
   String? get(String key) {
     for (final e in tags.entries) {
-      if (e.key.toUpperCase() == key && e.value.trim().isNotEmpty) {
-        return e.value.trim();
-      }
+      if (e.key.toUpperCase() != key) continue;
+      // ID3 사용자 정의 칸은 값 앞에 눈에 안 보이는 글자(BOM · 제어 문자)가 붙어 올 수 있다.
+      final v = e.value.replaceAll(RegExp(r'^[\u0000-\u0020\uFEFF\uFFFE]+|[\u0000-\u0020\uFEFF\uFFFE]+$'), '');
+      if (v.isNotEmpty) return v;
     }
     return null;
   }

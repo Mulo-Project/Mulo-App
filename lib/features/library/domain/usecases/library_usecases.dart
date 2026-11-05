@@ -105,6 +105,15 @@ class FillEmbeddedCovers implements UseCase<int, NoParams> {
   @override
   Future<int> call(NoParams _) => run();
 
+  /// 커버가 없거나, 웹 주소가 깨져(앞에 안 보이는 글자 등) 못 불러오는 곡은 파일 안 그림으로 채운다.
+  static bool _needsCover(CoverArt? c) {
+    if (c == null) return true;
+    final path = c.path;
+    if (path != null && path.isNotEmpty) return false;
+    final url = c.url;
+    return url != null && !url.startsWith('http');
+  }
+
   /// [onProgress]로 (끝낸 곡 수, 채울 곡 수)를 알리며 채운다.
   Future<int> run({
     void Function(int done, int total)? onProgress,
@@ -114,8 +123,7 @@ class FillEmbeddedCovers implements UseCase<int, NoParams> {
     final have = await _covers.loadAll();
     final todo = [
       for (final t in tracks)
-        if (t.uri.isNotEmpty &&
-            !have.containsKey(CoverKey.track(t.id)))
+        if (t.uri.isNotEmpty && _needsCover(have[CoverKey.track(t.id)]))
           t,
     ];
     var filled = 0;
