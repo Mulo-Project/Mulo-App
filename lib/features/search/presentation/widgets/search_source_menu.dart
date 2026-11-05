@@ -59,7 +59,7 @@ class SearchSourceMenu extends StatelessWidget {
       // 아이콘 옆 작은 ▾로 눌러서 바꿀 수 있다는 것을 보여 준다.
       child: SizedBox(
         width: 60,
-        height: 52,
+        height: 44,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

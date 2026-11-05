@@ -66,16 +66,17 @@ class _AppSearchFieldState extends State<AppSearchField> {
     final hasText = _controller.text.isNotEmpty;
 
     return Container(
+      // 테두리 없이 옅은 면 하나로 단순하게.
       decoration: ShapeDecoration(
         color: p.surfaceHigh,
-        shape: StadiumBorder(side: BorderSide(color: p.outline)),
+        shape: const StadiumBorder(),
       ),
       padding: EdgeInsets.only(
         left: widget.leading == null ? AppSpacing.md : AppSpacing.xxs,
         right: AppSpacing.xxs,
       ),
       child: SizedBox(
-        height: 52,
+        height: 44,
         child: Row(
           children: [
             widget.leading ??
@@ -93,12 +94,12 @@ class _AppSearchFieldState extends State<AppSearchField> {
                   autofocus: widget.autofocus,
                   onChanged: widget.onChanged,
                   onSubmitted: widget.onSubmitted,
-                  style: text.bodyLarge,
+                  style: text.bodyMedium,
                   cursorColor: p.accent,
                   textInputAction: TextInputAction.search,
                   decoration: InputDecoration.collapsed(
                     hintText: widget.hint,
-                    hintStyle: text.bodyLarge?.copyWith(
+                    hintStyle: text.bodyMedium?.copyWith(
                       color: p.onSurfaceMuted,
                     ),
                   ),

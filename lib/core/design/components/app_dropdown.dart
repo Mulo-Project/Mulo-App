@@ -96,7 +96,7 @@ class AppDropdown<T> extends StatelessWidget {
           ),
       ],
       child: Container(
-        height: 36,
+        height: 44,
         alignment: Alignment.center,
         padding: EdgeInsets.only(
           left: AppSpacing.md,
@@ -106,33 +106,30 @@ class AppDropdown<T> extends StatelessWidget {
       ),
     );
 
+    // 테두리 없이 옅은 면 하나로 단순하게 (검색칸과 같은 높이 · 같은 면).
     return Container(
-      height: 36,
+      height: 44,
       decoration: ShapeDecoration(
         color: p.surfaceHigh,
-        shape: StadiumBorder(side: BorderSide(color: p.outline)),
+        shape: const StadiumBorder(),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           menu,
           if (toggle != null) ...[
-            SizedBox(
-              height: 16,
-              child: VerticalDivider(width: 1, color: p.outline),
-            ),
             Tooltip(
               message: directionTooltip ?? '',
               child: InkWell(
                 onTap: toggle,
                 customBorder: const StadiumBorder(),
                 child: SizedBox(
-                  width: 36,
-                  height: 36,
+                  width: 40,
+                  height: 44,
                   child: Icon(
                     (ascending ?? true) ? AppIcons.arrowUp : AppIcons.arrowDown,
                     size: AppSizes.iconSm,
-                    color: p.accent,
+                    color: p.onSurfaceMuted,
                   ),
                 ),
               ),
