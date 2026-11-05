@@ -210,6 +210,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusQueued => 'Queued';
 
   @override
+  String get statusProcessing => 'Processing';
+
+  @override
   String get statusDone => 'Done';
 
   @override

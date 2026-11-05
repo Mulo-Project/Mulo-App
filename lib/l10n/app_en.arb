@@ -63,6 +63,7 @@
   "statusFailed": "Failed",
   "statusPaused": "Paused",
   "statusQueued": "Queued",
+  "statusProcessing": "Processing",
   "statusDone": "Done",
   "downloadsEmpty": "Nothing downloading.",
   "librarySubtitle": "My music",

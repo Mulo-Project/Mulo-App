@@ -422,6 +422,14 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
         audio = await fetch(refresh: true);
       }
       if (token.isCancelled) throw const DownloadAborted();
+      // 내려받기는 끝났다: 이제 변환 · 태그 쓰기 · 저장이라 "처리 중"으로 보인다.
+      _set(
+        id,
+        (e) => e.status == DownloadStatus.downloading
+            ? e.copyWith(progress: 1, processing: true)
+            : e,
+        persist: false,
+      );
 
       // 설정의 형식대로 바꾼다. 변환기가 없거나 실패하면 받은 그대로 저장한다.
       final plan = TranscodePlan.of(format);

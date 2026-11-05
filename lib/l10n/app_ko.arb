@@ -84,6 +84,7 @@
   "statusFailed": "실패",
   "statusPaused": "일시정지",
   "statusQueued": "대기",
+  "statusProcessing": "처리 중",
   "statusDone": "완료",
   "downloadsEmpty": "받는 중인 곡이 없어요.",
   "librarySubtitle": "내 음악",

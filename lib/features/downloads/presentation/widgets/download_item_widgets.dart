@@ -10,7 +10,7 @@ import '../../../library/domain/entities/track.dart' show formatDuration;
 import '../../domain/entities/download_item.dart';
 import '../bloc/download_queue_cubit.dart';
 
-/// 상태 글자: 받는 중 N% · 대기 · 일시정지 · 실패 (까닭).
+/// 상태 글자: 받는 중 N% · 처리 중(변환 · 태그 · 저장) · 대기 · 일시정지 · 실패 (까닭).
 String downloadStatusText(AppLocalizations l10n, DownloadItem item) =>
     switch (item.status) {
       DownloadStatus.failed =>
@@ -19,6 +19,7 @@ String downloadStatusText(AppLocalizations l10n, DownloadItem item) =>
             : '${l10n.statusFailed} · ${item.error}',
       DownloadStatus.paused => l10n.statusPaused,
       DownloadStatus.queued => l10n.statusQueued,
+      _ when item.processing => l10n.statusProcessing,
       _ => '${l10n.statusDownloading} ${(item.progress * 100).round()}%',
     };
 

@@ -208,6 +208,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get statusQueued => '대기';
 
   @override
+  String get statusProcessing => '처리 중';
+
+  @override
   String get statusDone => '완료';
 
   @override
