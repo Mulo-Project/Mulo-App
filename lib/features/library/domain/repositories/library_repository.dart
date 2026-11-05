@@ -57,6 +57,9 @@ abstract interface class EmbeddedCoverRepository {
   Future<String?> extract(Track track);
 
   Future<void> discard(String path);
+
+  /// 임시 진단: 지금까지 읽은 결과를 종류별로 센 한 줄 (꺼내면 비운다). 없으면 빈 문자열.
+  String takeSummary();
 }
 
 /// 음악을 불러오는 폴더 목록 (상세 기능: 불러오는 폴더 목록).

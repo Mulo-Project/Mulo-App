@@ -248,6 +248,9 @@ class FakeEmbeddedCovers implements EmbeddedCoverRepository {
 
   @override
   Future<void> discard(String path) async => discarded.add(path);
+
+  @override
+  String takeSummary() => '';
 }
 
 /// 파일 복사 없이 경로 · 주소만 기억하는 커버 저장소.

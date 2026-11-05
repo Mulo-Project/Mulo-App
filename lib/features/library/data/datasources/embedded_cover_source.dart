@@ -6,6 +6,11 @@ import 'package:audio_metadata_reader/audio_metadata_reader.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
+/// 임시 진단: 커버를 읽은 결과를 종류별로 센다.
+final _notes = <String, int>{};
+
+void _note(String key) => _notes[key] = (_notes[key] ?? 0) + 1;
+
 /// 음악 파일에서 내장 커버 이미지의 원본 바이트를 꺼낸다. 없으면 null.
 abstract interface class EmbeddedPictureReader {
   Future<Uint8List?> read(String uri);
@@ -29,13 +34,24 @@ class MediaStorePictureReader implements EmbeddedPictureReader {
     final bytes = await _channel.invokeMethod<Uint8List>('embeddedPicture', {
       'uri': uri,
     });
-    if (bytes != null && bytes.isNotEmpty) return bytes;
+    if (bytes != null && bytes.isNotEmpty) {
+      _note('retriever ok');
+      return bytes;
+    }
     final mime = await _channel.invokeMethod<String>('mimeType', {'uri': uri});
-    if (mime == null || !_tagOnly.hasMatch(mime)) return null;
+    if (mime == null || !_tagOnly.hasMatch(mime)) {
+      _note('no cover (mime:$mime)');
+      return null;
+    }
     final temp = await _copy.invokeMethod<String>('copyToCache', uri);
-    if (temp == null) return null;
+    if (temp == null) {
+      _note('copy failed (mime:$mime)');
+      return null;
+    }
     try {
-      return await FilePictureReader().read(temp);
+      final read = await FilePictureReader().read(temp);
+      _note(read == null ? 'tag has no picture (mime:$mime)' : 'tag picture ok (mime:$mime)');
+      return read;
     } finally {
       try {
         File(temp).deleteSync();
@@ -67,6 +83,13 @@ class EmbeddedCoverSource {
 
   static const _folder = 'embedded_cover_tmp';
 
+  /// 임시 진단: "retriever ok 3 · tag has no picture (mime:audio/ogg) 2" 같은 한 줄 (꺼내면 비운다).
+  static String takeSummary() {
+    final text = _notes.entries.map((e) => '${e.key} ${e.value}').join(' · ');
+    _notes.clear();
+    return text;
+  }
+
   Future<String?> extract(String uri) async {
     try {
       final raw = await _reader.read(uri);
@@ -85,6 +108,7 @@ class EmbeddedCoverSource {
       return file.path;
     } on Object catch (e) {
       debugPrint('MuloTag cover read failed: $e');
+      _note('error ${e.runtimeType}');
       // 지원하지 않는 형식 · 깨진 태그 · 읽기 실패는 모두 "내장 커버 없음".
       return null;
     }
