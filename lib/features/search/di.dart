@@ -81,6 +81,7 @@ void registerSearch(GetIt sl) {
         sl(),
         sl(),
         sl(),
+        resolveVideo: sl(),
       ),
     )
     ..registerFactory(() => SearchCubit(sl(), sl()));
