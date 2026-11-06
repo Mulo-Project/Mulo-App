@@ -5,6 +5,7 @@ import android.app.RecoverableSecurityException
 import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
+import android.graphics.Bitmap
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaMetadataRetriever
@@ -14,6 +15,7 @@ import android.os.Environment
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
+import java.io.ByteArrayOutputStream
 import java.io.File
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
@@ -283,10 +285,32 @@ class MediaStoreChannel(
         val retriever = MediaMetadataRetriever()
         try {
             retriever.setDataSource(context, uri)
-            return retriever.embeddedPicture
+            retriever.embeddedPicture?.let { return it }
+            // 영상 파일은 내장 커버가 없으니 앞쪽 한 장면을 커버로 쓴다.
+            if (context.contentResolver.getType(uri)?.startsWith("video/") == true) return videoFrame(retriever)
+            return null
         } finally {
             retriever.release()
         }
+    }
+
+    /** 영상 길이의 10%(최대 10초) 지점 장면을 긴 변 512px 이하 JPEG로. 못 읽으면 null. */
+    private fun videoFrame(retriever: MediaMetadataRetriever): ByteArray? {
+        val durationMs = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull() ?: 0L
+        val atUs = minOf(durationMs / 10, 10_000L) * 1000
+        val frame = retriever.getFrameAtTime(atUs, MediaMetadataRetriever.OPTION_CLOSEST_SYNC) ?: return null
+        val longSide = maxOf(frame.width, frame.height)
+        val scaled = if (longSide > 512) {
+            val ratio = 512f / longSide
+            Bitmap.createScaledBitmap(frame, (frame.width * ratio).toInt().coerceAtLeast(1), (frame.height * ratio).toInt().coerceAtLeast(1), true)
+        } else {
+            frame
+        }
+        val out = ByteArrayOutputStream()
+        scaled.compress(Bitmap.CompressFormat.JPEG, 85, out)
+        if (scaled !== frame) scaled.recycle()
+        frame.recycle()
+        return out.toByteArray()
     }
 
     private fun deleteAudio(uri: Uri, result: MethodChannel.Result) {
