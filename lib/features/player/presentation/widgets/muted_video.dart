@@ -18,7 +18,6 @@ class MutedVideo extends StatefulWidget {
     required this.position,
     required this.playing,
     this.headers = const {},
-    this.onStarted,
     this.maxDrift = const Duration(milliseconds: 600),
   });
 
@@ -28,10 +27,6 @@ class MutedVideo extends StatefulWidget {
   final Duration position;
   final bool playing;
   final Duration maxDrift;
-
-  /// 영상이 실제로 움직이기 시작했을 때 (열지 못했거나 [_startLimit]이 지나도) 한 번 알린다.
-  /// 소리를 잠시 멈춰 둔 쪽이 이어서 내는 데 쓴다.
-  final VoidCallback? onStarted;
 
   @override
   State<MutedVideo> createState() => _MutedVideoState();
@@ -47,34 +42,6 @@ class _MutedVideoState extends State<MutedVideo> {
   /// 위치를 맞출 때 다시 찾는 데 걸리는 시간만큼 앞서 가서 소리와 맞춘다.
   static const _seekLead = Duration(milliseconds: 300);
   static const _resyncGap = Duration(seconds: 2);
-  static const _startLimit = Duration(seconds: 6);
-
-  /// 영상이 실제로 움직이기 시작하면 [MutedVideo.onStarted]를 한 번 부른다.
-  void _notifyWhenMoving(VideoPlayerController c) {
-    final callback = widget.onStarted;
-    if (callback == null) return;
-    if (!widget.playing) return callback();
-    final start = c.value.position;
-    var done = false;
-    late final VoidCallback check;
-    void fire() {
-      if (done) return;
-      done = true;
-      c.removeListener(check);
-      callback();
-    }
-
-    check = () {
-      final v = c.value;
-      if (v.isPlaying &&
-          !v.isBuffering &&
-          v.position > start + const Duration(milliseconds: 100)) {
-        fire();
-      }
-    };
-    c.addListener(check);
-    Timer(_startLimit, fire);
-  }
 
   @override
   void initState() {
@@ -127,13 +94,11 @@ class _MutedVideoState extends State<MutedVideo> {
       await controller.seekTo(widget.position + _seekLead);
       if (widget.playing) await controller.play();
       _lastSync = DateTime.now();
-      _notifyWhenMoving(controller);
       if (mounted && _controller == controller) setState(() => _ready = true);
       debugPrint('[video] 재생 시작: ${controller.value.size}');
     } catch (e) {
       // 영상을 못 열면 화면만 비운다 (소리 재생에는 영향이 없다). 까닭은 로그로 남긴다.
       debugPrint('[video] 영상을 못 엶 (${widget.source.split('?').first}): $e');
-      widget.onStarted?.call();
       if (mounted && _controller == controller) setState(() => _ready = false);
     }
   }

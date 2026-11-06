@@ -137,45 +137,6 @@ class PreviewCubit extends Cubit<PreviewState> {
   /// 마지막으로 시작하지 못했을 때의 자세한 까닭 (안내에 덧붙여 보여 준다).
   String lastFailureDetail = '';
 
-  /// 영상이 준비될 때까지 소리를 멈춰 둔 상태인지, 그 상태를 푸는 시한, 이미 한 번 쓴 곡 (곡마다 한 번만).
-  bool _held = false;
-  Timer? _holdTimer;
-  String? _gateHitId;
-  static const _holdLimit = Duration(seconds: 10);
-
-  /// 곡을 막 시작했을 때(앞 2초 안) 영상이 준비될 때까지 소리를 잠시 멈춘다 (소리가 영상보다 먼저 나오지 않게).
-  /// 곡마다 한 번만 하고, 영상이 준비되거나 읽지 못하거나 시한이 지나면 [releaseVideoHold]로 이어진다.
-  Future<void> holdForVideo() async {
-    final id = state.hitId;
-    if (isClosed || id == null) return;
-    if (state.status != PreviewStatus.playing || state.paused) return;
-    if (_gateHitId == id) return;
-    _gateHitId = id;
-    final at = state.progress?.position ?? Duration.zero;
-    if (at > const Duration(seconds: 2)) return;
-    _held = true;
-    _holdTimer?.cancel();
-    _holdTimer = Timer(_holdLimit, releaseVideoHold);
-    await _pause(const NoParams());
-  }
-
-  /// [holdForVideo]로 멈춘 소리를 이어서 낸다 (그 사이 사용자가 직접 멈췄으면 그대로 둔다).
-  Future<void> releaseVideoHold() async {
-    _holdTimer?.cancel();
-    if (!_held) return;
-    _held = false;
-    if (isClosed || state.status != PreviewStatus.playing || state.paused) {
-      return;
-    }
-    await _resume(const NoParams());
-  }
-
-  void _clearHold() {
-    _holdTimer?.cancel();
-    _held = false;
-    _gateHitId = null;
-  }
-
   /// 시작 · 멈춤마다 올린다. 느리게 돌아온 이전 요청의 결과를 버리려고.
   var _generation = 0;
 
@@ -187,7 +148,6 @@ class PreviewCubit extends Cubit<PreviewState> {
       return null;
     }
     final generation = ++_generation;
-    _clearHold();
     // 앞에 듣던 곡은 새 곡 주소를 알아내는 동안에도 바로 멈춘다.
     if (state.status != PreviewStatus.idle) unawaited(_stop(const NoParams()));
     final startedAt = DateTime.now();
@@ -349,7 +309,6 @@ class PreviewCubit extends Cubit<PreviewState> {
   /// 미리 듣기를 멈춘다 (듣고 있지 않으면 아무 일도 없다).
   Future<void> stop() async {
     _generation++;
-    _clearHold();
     if (state.status == PreviewStatus.idle) return;
     if (!isClosed) emit(const PreviewState());
     await _stop(const NoParams());
@@ -357,7 +316,6 @@ class PreviewCubit extends Cubit<PreviewState> {
 
   @override
   Future<void> close() async {
-    _holdTimer?.cancel();
     await _completed.cancel();
     await _progress.cancel();
     await _failures.cancel();
