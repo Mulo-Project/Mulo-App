@@ -336,16 +336,21 @@ class _DetailViewState extends State<_DetailView> {
                             ? l10n.mediaDetailListenSoundcloud
                             : l10n.mediaDetailListenOriginal,
                         icon: AppIcons.play,
+                        // 이 앱의 주 동작은 받기라서 원본 열기는 보조(tonal)로 둔다.
+                        variant: PillVariant.tonal,
                         onPressed: () => _open(hit.url),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
-                    PillButton(
+                    Expanded(
+                      child: PillButton(
                       key: const ValueKey('detail-download'),
                       label: l10n.actionDownload,
                       icon: AppIcons.download,
-                      variant: PillVariant.tonal,
-                      onPressed: () => showDownloadDialog(
+                      // 실시간 스트리밍은 끝이 없어 받을 수 없다 (버튼을 비활성으로).
+                      onPressed: hit.isLive
+                          ? null
+                          : () => showDownloadDialog(
                         context,
                         title: hit.title,
                         artist: hit.uploader,
@@ -362,6 +367,7 @@ class _DetailViewState extends State<_DetailView> {
                             .state
                             .selected,
                       ),
+                    ),
                     ),
                   ],
                 ),

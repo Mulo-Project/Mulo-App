@@ -8,6 +8,7 @@ export 'components/app_bottom_nav.dart';
 export 'components/app_divider.dart';
 export 'components/app_dialog.dart';
 export 'components/app_dropdown.dart';
+export 'components/app_filter_button.dart';
 export 'components/app_popup_menu.dart';
 export 'components/app_search_field.dart';
 export 'components/app_sheet.dart';

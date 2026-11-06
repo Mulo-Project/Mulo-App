@@ -10,7 +10,6 @@ import '../domain/repositories/engine_manager.dart';
 /// 데스크톱에서 yt-dlp 공식 릴리스를 앱 전용 폴더(`<앱 데이터>/engine`)에 받아 둔다.
 /// 앱이 받은 파일이 없으면 PATH의 `yt-dlp`를 쓴다.
 /// Android(full 빌드)는 APK 안의 yt-dlp를 쓰고, "설치"는 그 yt-dlp를 최신으로 올린다.
-/// 올린 뒤 문제가 생기면 "삭제"(remove)가 업데이트한 것을 지워 APK에 들어 있던 버전으로 되돌린다.
 class YtDlpManager implements EngineManager {
   YtDlpManager({this.releaseBase = _release, AndroidYtDlp? android})
     : _android = android ?? AndroidYtDlp();
@@ -59,8 +58,6 @@ class YtDlpManager implements EngineManager {
         installed: true,
         version: version,
         managed: true,
-        removable: version != null,
-        revertible: version != null,
       );
     }
     if (!_desktop) return const EngineStatus(supported: false);
@@ -73,29 +70,12 @@ class YtDlpManager implements EngineManager {
           installed: true,
           version: (r.stdout as String).trim(),
           managed: managed,
-          removable: managed,
         );
       }
     } on ProcessException {
       // 실행할 수 없으면 설치 안 됨.
     }
-    // 받은 파일이 있어도 실행되지 않으면 지울 수 있게 둔다 (깨진 파일 정리).
-    return EngineStatus(removable: managed);
-  }
-
-  @override
-  Future<EngineStatus> remove() async {
-    // 앱이 받은 파일만 지운다. PATH의 yt-dlp · Android 내장 엔진은 건드리지 않는다.
-    if (Platform.isAndroid) {
-      // 업데이트로 받은 yt-dlp를 지우면 APK에 들어 있던 버전으로 돌아간다.
-      if (await _android.isAvailable()) await _android.revert();
-    } else if (_desktop) {
-      final target = await _managedFile();
-      for (final f in [target, File('${target.path}.download')]) {
-        if (f.existsSync()) await f.delete();
-      }
-    }
-    return status();
+    return const EngineStatus();
   }
 
   @override

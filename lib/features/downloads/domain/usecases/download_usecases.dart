@@ -4,6 +4,7 @@ import '../entities/download_options.dart';
 import '../entities/download_preferences.dart';
 import '../entities/download_request.dart';
 import '../entities/download_source.dart';
+import '../entities/tag_notice.dart';
 import '../repositories/download_queue_repository.dart';
 import '../repositories/download_settings_repository.dart';
 
@@ -53,6 +54,26 @@ class WatchDownloadedKeys implements StreamUseCase<Set<String>, NoParams> {
 
   @override
   Stream<Set<String>> call(NoParams params) => _repo.watchDownloadedKeys();
+}
+
+/// 받은 곡의 원본 주소 (곡 상세 정보에 보여 준다). 기록이 없으면 null.
+class GetTrackSourceUrl implements UseCase<String?, String> {
+  const GetTrackSourceUrl(this._repo);
+
+  final DownloadQueueRepository _repo;
+
+  @override
+  Future<String?> call(String trackId) => _repo.sourceUrlOf(trackId);
+}
+
+/// 받은 곡의 태그 쓰기 결과 구독.
+class WatchTagNotices implements StreamUseCase<TagNotice, NoParams> {
+  const WatchTagNotices(this._repo);
+
+  final DownloadQueueRepository _repo;
+
+  @override
+  Stream<TagNotice> call(NoParams params) => _repo.watchTagNotices();
 }
 
 /// 일시정지 (상세 기능: 다운로드 대기열 #7).
@@ -124,6 +145,26 @@ class LoadSavePath implements UseCase<String, NoParams> {
 
   @override
   Future<String> call(NoParams _) => _repo.loadSavePath();
+}
+
+/// 고정한 저장 위치 읽기 (고정하지 않았으면 빈 문자열).
+class LoadFixedSavePath implements UseCase<String, NoParams> {
+  const LoadFixedSavePath(this._repo);
+
+  final DownloadSettingsRepository _repo;
+
+  @override
+  Future<String> call(NoParams _) => _repo.loadFixedSavePath();
+}
+
+/// 저장 위치 고정 풀기.
+class ClearSavePath implements UseCase<void, NoParams> {
+  const ClearSavePath(this._repo);
+
+  final DownloadSettingsRepository _repo;
+
+  @override
+  Future<void> call(NoParams _) => _repo.clearSavePath();
 }
 
 /// 기본 저장 위치 정하기. 앞뒤 공백을 지우고, 비어 있으면 바꾸지 않는다.

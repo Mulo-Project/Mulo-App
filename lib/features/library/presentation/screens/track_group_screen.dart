@@ -7,18 +7,18 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
-import '../../../covers/presentation/widgets/decorate_sheet.dart';
 import '../../domain/entities/track_group.dart';
 import '../bloc/library_cubit.dart';
 import '../widgets/lazy_track_list.dart';
 import '../widgets/library_selection.dart';
 import '../widgets/play_shuffle_row.dart';
 import '../widgets/rename_progress.dart';
+import 'collection_info_screen.dart';
 import '../widgets/track_list_tile.dart';
 
 export '../../domain/entities/track_group.dart';
 
-/// 아티스트 · 앨범 · 장르 화면: 그 묶음의 곡 목록과 전체 재생 · 셔플, 위 막대에 이름 바꾸기 · 꾸미기.
+/// 아티스트 · 앨범 · 장르 화면: 그 묶음의 곡 목록과 전체 재생 · 셔플, 위 막대 ⋮ 메뉴의 "정보"(큰 이미지 · 이름 바꾸기 · 색).
 /// 세 화면은 모양이 같고 이름 · 아이콘 · 문구만 다르다 ([TrackGroupKind]).
 /// [name]은 곡에 저장된 값 그대로이고, 빈 문자열이면 "알 수 없는 …"이다.
 class TrackGroupScreen extends StatefulWidget {
@@ -103,25 +103,18 @@ class _TrackGroupScreenState extends State<TrackGroupScreen>
                 title: title,
                 leading: const AppBackButton(),
                 actions: [
+                  // 이미지 · 색 · 이름 바꾸기는 "정보" 화면 하나에서 한다.
                   if (tracks.isNotEmpty)
                     CircleIconButton(
-                      icon: AppIcons.edit,
-                      tooltip: _renameTooltip(l10n),
-                      onPressed: () => _rename(context, tracks.length),
-                    ),
-                  // 장르는 이미지 · 색을 따로 꾸미지 않는다.
-                  if (kind != TrackGroupKind.genre)
-                    CircleIconButton(
-                      icon: AppIcons.sparkle,
-                      tooltip: kind == TrackGroupKind.artist
-                          ? l10n.decorateArtistTooltip
-                          : l10n.decorateAlbumTooltip,
-                      onPressed: () => showDecorateSheet(
+                      icon: AppIcons.info,
+                      tooltip: l10n.collectionMenuInfo,
+                      onPressed: () => _openInfo(
                         context,
-                        coverKey: key,
                         title: title,
-                        tone: toneFor(title),
-                        icon: _icon,
+                        key: key,
+                        subtitle: subtitle,
+                        count: tracks.length,
+                        circle: kind == TrackGroupKind.artist,
                       ),
                     ),
                 ],
@@ -172,7 +165,13 @@ class _TrackGroupScreenState extends State<TrackGroupScreen>
                 ),
                 const SizedBox(height: AppSpacing.md),
                 PlayShuffleRow(tracks: tracks),
-                const SizedBox(height: AppSpacing.sm),
+                // 위 소개 영역과 곡 목록을 가는 선과 넉넉한 간격으로 나눈다.
+                const SizedBox(height: AppSpacing.md),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                  child: AppDivider(),
+                ),
+                const SizedBox(height: AppSpacing.xs),
               ],
             ],
             trackCount: tracks.length,
@@ -198,21 +197,47 @@ class _TrackGroupScreenState extends State<TrackGroupScreen>
     TrackGroupKind.genre => l10n.genreRenameTooltip,
   };
 
+  /// 정보 화면을 열고, 이름을 바꿨으면 이어서 이름 바꾸기를 한다.
+  Future<void> _openInfo(
+    BuildContext context, {
+    required String title,
+    required String key,
+    required String subtitle,
+    required int count,
+    required bool circle,
+  }) async {
+    final l10n = context.l10n;
+    final to = await showCollectionInfo(
+      context,
+      screenTitle: switch (kind) {
+        TrackGroupKind.artist => l10n.artistInfoTitle,
+        TrackGroupKind.album => l10n.albumInfoTitle,
+        TrackGroupKind.genre => l10n.genreInfoTitle,
+      },
+      title: title,
+      subtitle: subtitle,
+      nameLabel: _renameTooltip(l10n),
+      coverKey: key,
+      tone: toneFor(title),
+      icon: _icon,
+      circle: circle,
+      allowEmptyName: true,
+      initialName: name,
+    );
+    if (to == null || !context.mounted) return;
+    await _rename(context, to, count);
+  }
+
   /// 이름 바꾸기: 묶음의 모든 곡의 그 정보를 고치고, 붙여 둔 이미지 · 색을 새 이름으로 옮긴다.
   /// 곡이 여러 곡이면 진행 대화상자를 보이고, 파일 태그에 못 쓴 곡이 있으면 안내한다.
-  Future<void> _rename(BuildContext context, int count) async {
+  Future<void> _rename(BuildContext context, String to, int count) async {
     final l10n = context.l10n;
     final library = context.read<LibraryCubit>();
     final covers = context.read<CoverCubit>();
     final colors = context.read<CoverColorCubit>();
     final router = GoRouter.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    final to = await showDialog<String>(
-      context: context,
-      useRootNavigator: true,
-      builder: (_) => _RenameDialog(kind: kind, initial: name),
-    );
-    if (to == null || to.trim() == name || !context.mounted) return;
+    if (to.trim() == name) return;
     final newName = to.trim();
     final from = _coverKey(name);
     final dest = _coverKey(newName);
@@ -240,55 +265,5 @@ class _TrackGroupScreenState extends State<TrackGroupScreen>
       messenger.showSnackBar(SnackBar(content: Text(l10n.trackEditTagFailed)));
     }
     router.pushReplacement(_route(newName));
-  }
-}
-
-/// 새 이름 입력. 저장하면 이름, 취소하면 null. 빈 이름은 "알 수 없는 …"이 된다.
-class _RenameDialog extends StatefulWidget {
-  const _RenameDialog({required this.kind, required this.initial});
-
-  final TrackGroupKind kind;
-  final String initial;
-
-  @override
-  State<_RenameDialog> createState() => _RenameDialogState();
-}
-
-class _RenameDialogState extends State<_RenameDialog> {
-  late final _name = TextEditingController(text: widget.initial);
-
-  @override
-  void dispose() {
-    _name.dispose();
-    super.dispose();
-  }
-
-  void _save() => Navigator.of(context).pop(_name.text);
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final (title, hint) = switch (widget.kind) {
-      TrackGroupKind.artist => (l10n.artistRenameTitle, l10n.artistRenameHint),
-      TrackGroupKind.album => (l10n.albumRenameTitle, l10n.albumRenameHint),
-      TrackGroupKind.genre => (l10n.genreRenameTitle, l10n.genreRenameHint),
-    };
-    return AppDialog(
-      title: title,
-      content: AppTextField(
-        label: hint,
-        controller: _name,
-        textInputAction: TextInputAction.done,
-        onSubmitted: (_) => _save(),
-      ),
-      actions: [
-        PillButton(
-          label: l10n.actionCancel,
-          variant: PillVariant.tonal,
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        PillButton(label: l10n.albumRenameSave, onPressed: _save),
-      ],
-    );
   }
 }

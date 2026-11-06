@@ -19,6 +19,18 @@ class FileTagSource {
 
   static const _extensions = {'mp3', 'opus', 'ogg'};
 
+  /// 임시 진단: 이번에 읽은 곡들의 결과를 종류별로 센다 ([takeSummary]로 꺼내며 비운다).
+  static final _outcomes = <String, int>{};
+
+  static void _count(String key) => _outcomes[key] = (_outcomes[key] ?? 0) + 1;
+
+  /// "mp3 ok 3 · audio/ogg unsupported 1" 같은 한 줄. 읽은 게 없으면 빈 문자열.
+  static String takeSummary() {
+    final text = _outcomes.entries.map((e) => '${e.key} ${e.value}').join(' · ');
+    _outcomes.clear();
+    return text;
+  }
+
   /// 지원하지 않는 형식 · 태그 없음은 [FileTags.none], 파일을 못 읽으면 null.
   Future<FileTags?> read(String uri) async {
     if (uri.isEmpty) return null;
@@ -29,9 +41,15 @@ class FileTagSource {
         final mime = await _media.invokeMethod<String>('mimeType', {
           'uri': uri,
         });
-        if (!_supportedMime(mime)) return FileTags.none;
+        if (!_supportedMime(mime)) {
+          _count('mime:$mime unsupported');
+          return FileTags.none;
+        }
         temp = await _copy.invokeMethod<String>('copyToCache', uri);
-        if (temp == null) return null;
+        if (temp == null) {
+          _count('copy failed');
+          return null;
+        }
         path = temp;
       } else {
         path = uri;
@@ -41,11 +59,15 @@ class FileTagSource {
       }
       final file = File(path);
       if (!file.existsSync()) return null;
-      return parse(readAllMetadata(file, getImage: false));
-    } on MetadataParserException {
+      final tags = parse(readAllMetadata(file, getImage: false));
+      _count(tags.isEmpty ? 'tag empty' : 'ok');
+      return tags;
+    } on MetadataParserException catch (e) {
       // 깨졌거나 태그가 없는 파일은 다시 읽어도 같다.
+      _count('parse error ${e.runtimeType}');
       return FileTags.none;
-    } on Object {
+    } on Object catch (e) {
+      _count('read error ${e.runtimeType}');
       return null;
     } finally {
       if (temp != null) {
@@ -58,11 +80,9 @@ class FileTagSource {
     }
   }
 
+  /// mp3(`audio/mpeg`)와 ogg · opus 계열(`audio/ogg` · `application/ogg` · `audio/opus` 등)이면 읽는다.
   static bool _supportedMime(String? mime) =>
-      mime == 'audio/mpeg' ||
-      mime == 'audio/mp3' ||
-      mime == 'audio/ogg' ||
-      mime == 'audio/opus';
+      mime != null && RegExp(r'mpeg|mp3|ogg|opus').hasMatch(mime.toLowerCase());
 
   /// 읽은 태그를 앱 값으로. 앱이 쓴 사용자 정의 칸(`COVER_*`)은 ID3의 TXXX · Vorbis 코멘트에서 읽는다.
   static FileTags parse(Object tag) {

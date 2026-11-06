@@ -52,7 +52,7 @@ void main() {
 
     // 다운로드는 탭이 아니라 검색 탭에 합쳐졌다 (검색창 아래 카드).
     expect(find.text('다운로드'), findsNothing);
-    await tester.tap(find.text('검색').last);
+    await tester.tap(find.byKey(const ValueKey('nav-검색')));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('youtube-mark')), findsOneWidget);
   });

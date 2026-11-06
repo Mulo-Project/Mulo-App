@@ -18,6 +18,7 @@ class AppSearchField extends StatefulWidget {
     this.trailing,
     this.suffix,
     this.autofocus = false,
+    this.height = 52,
   });
 
   final String hint;
@@ -35,6 +36,9 @@ class AppSearchField extends StatefulWidget {
   /// 입력 여부와 상관없이 맨 오른쪽에 항상 둘 위젯 (예: 검색 실행 버튼).
   final Widget? suffix;
   final bool autofocus;
+
+  /// 칸 높이. 단독 검색 화면은 기본(52), 정렬 같은 다른 부품과 한 줄에 놓으면 그 높이(44)에 맞춘다.
+  final double height;
 
   @override
   State<AppSearchField> createState() => _AppSearchFieldState();
@@ -66,16 +70,17 @@ class _AppSearchFieldState extends State<AppSearchField> {
     final hasText = _controller.text.isNotEmpty;
 
     return Container(
+      // 테두리 없이 옅은 면 하나로 단순하게.
       decoration: ShapeDecoration(
         color: p.surfaceHigh,
-        shape: StadiumBorder(side: BorderSide(color: p.outline)),
+        shape: const StadiumBorder(),
       ),
       padding: EdgeInsets.only(
         left: widget.leading == null ? AppSpacing.md : AppSpacing.xxs,
         right: AppSpacing.xxs,
       ),
       child: SizedBox(
-        height: 52,
+        height: widget.height,
         child: Row(
           children: [
             widget.leading ??
@@ -93,12 +98,12 @@ class _AppSearchFieldState extends State<AppSearchField> {
                   autofocus: widget.autofocus,
                   onChanged: widget.onChanged,
                   onSubmitted: widget.onSubmitted,
-                  style: text.bodyLarge,
+                  style: text.bodyMedium,
                   cursorColor: p.accent,
                   textInputAction: TextInputAction.search,
                   decoration: InputDecoration.collapsed(
                     hintText: widget.hint,
-                    hintStyle: text.bodyLarge?.copyWith(
+                    hintStyle: text.bodyMedium?.copyWith(
                       color: p.onSurfaceMuted,
                     ),
                   ),

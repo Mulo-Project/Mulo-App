@@ -33,6 +33,7 @@ class MiniPlayerBar extends StatelessWidget {
     this.onQueue,
     this.showSkip = true,
     this.queueIcon = AppIcons.queue,
+    this.note,
   });
 
   final String title;
@@ -66,6 +67,9 @@ class MiniPlayerBar extends StatelessWidget {
 
   /// 맨 오른쪽 작은 아이콘 ([queueLabel]이 그 설명). 기본은 재생목록.
   final IconData queueIcon;
+
+  /// 시간 줄 오른쪽에 작게 붙일 표시 (예: 수면 타이머 남은 시간). 없으면 비운다.
+  final Widget? note;
 
   @override
   Widget build(BuildContext context) {
@@ -151,6 +155,10 @@ class MiniPlayerBar extends StatelessWidget {
                   Expanded(child: ProgressLine(value: progress, height: 3)),
                   const SizedBox(width: AppSpacing.xs),
                   _TimeText(durationText),
+                  if (note != null) ...[
+                    const SizedBox(width: AppSpacing.sm),
+                    note!,
+                  ],
                   const SizedBox(width: AppSpacing.xs),
                   Tooltip(
                     message: queueLabel,

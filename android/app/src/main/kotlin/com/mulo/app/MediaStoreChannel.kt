@@ -5,6 +5,8 @@ import android.app.RecoverableSecurityException
 import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
+import android.media.MediaExtractor
+import android.media.MediaFormat
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
@@ -79,6 +81,38 @@ class MediaStoreChannel(
         }
     }
 
+    /** 곡 파일의 크기(byte) · 형식(mime) · 비트레이트(bps) · 샘플레이트(Hz). 알 수 없는 값은 키를 뺀다. */
+    private fun fileInfo(uri: Uri): Map<String, Any> {
+        val out = mutableMapOf<String, Any>()
+        context.contentResolver.openFileDescriptor(uri, "r")?.use { out["size"] = it.statSize }
+        context.contentResolver.getType(uri)?.let { out["mime"] = it }
+        val retriever = MediaMetadataRetriever()
+        try {
+            retriever.setDataSource(context, uri)
+            retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE)
+                ?.toIntOrNull()?.let { out["bitrate"] = it }
+        } catch (e: Exception) {
+            // 읽지 못하면 비트레이트는 비운다.
+        } finally {
+            retriever.release()
+        }
+        val extractor = MediaExtractor()
+        try {
+            extractor.setDataSource(context, uri, null)
+            if (extractor.trackCount > 0) {
+                val format = extractor.getTrackFormat(0)
+                if (format.containsKey(MediaFormat.KEY_SAMPLE_RATE)) {
+                    out["sampleRate"] = format.getInteger(MediaFormat.KEY_SAMPLE_RATE)
+                }
+            }
+        } catch (e: Exception) {
+            // 읽지 못하면 샘플레이트는 비운다.
+        } finally {
+            extractor.release()
+        }
+        return out
+    }
+
     init {
         channel.setMethodCallHandler { call, result ->
             when (call.method) {
@@ -112,6 +146,18 @@ class MediaStoreChannel(
                             null
                         }
                         main.post { result.success(bytes) }
+                    }
+                }
+                "fileInfo" -> {
+                    val uri = Uri.parse(call.argument<String>("uri"))
+                    io.execute {
+                        // 크기 · 형식 · 비트레이트 · 샘플레이트. 못 읽는 값은 빼고 돌려준다.
+                        val info = try {
+                            fileInfo(uri)
+                        } catch (e: Exception) {
+                            emptyMap()
+                        }
+                        main.post { result.success(info) }
                     }
                 }
                 "mimeType" -> result.success(

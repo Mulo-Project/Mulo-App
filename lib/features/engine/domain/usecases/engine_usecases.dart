@@ -21,13 +21,3 @@ class InstallEngine implements UseCase<EngineStatus, NoParams> {
   @override
   Future<EngineStatus> call(NoParams params) => _manager.install();
 }
-
-/// 앱이 받아 둔 엔진(yt-dlp) 지우기.
-class RemoveEngine implements UseCase<EngineStatus, NoParams> {
-  const RemoveEngine(this._manager);
-
-  final EngineManager _manager;
-
-  @override
-  Future<EngineStatus> call(NoParams params) => _manager.remove();
-}

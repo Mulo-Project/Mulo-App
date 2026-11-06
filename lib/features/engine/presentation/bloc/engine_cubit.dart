@@ -10,7 +10,6 @@ class EngineState extends Equatable {
     this.status,
     this.busy = false,
     this.failed = false,
-    this.reverting = false,
   });
 
   /// 아직 확인 전이면 null.
@@ -20,42 +19,21 @@ class EngineState extends Equatable {
   final bool busy;
   final bool failed;
 
-  /// 진행 중이거나 실패한 삭제가 "업데이트한 yt-dlp를 지워 번들 버전으로 되돌리기"인지.
-  final bool reverting;
-
   @override
-  List<Object?> get props => [status, busy, failed, reverting];
+  List<Object?> get props => [status, busy, failed];
 }
 
 /// 설정의 엔진 줄: 상태 확인과 설치 · 업데이트.
 class EngineCubit extends Cubit<EngineState> {
-  EngineCubit(this._load, this._install, this._remove)
+  EngineCubit(this._load, this._install)
     : super(const EngineState());
 
   final LoadEngineStatus _load;
   final InstallEngine _install;
-  final RemoveEngine _remove;
 
   Future<void> load() async {
     final status = await _load(const NoParams());
     if (!isClosed) emit(EngineState(status: status));
-  }
-
-  /// 앱이 받아 둔 엔진을 지운다 (지울 수 없는 상태면 아무것도 하지 않는다).
-  Future<void> remove() async {
-    if (state.busy || state.status?.removable != true) return;
-    final reverting = state.status?.revertible == true;
-    emit(EngineState(status: state.status, busy: true, reverting: reverting));
-    try {
-      final status = await _remove(const NoParams());
-      if (!isClosed) emit(EngineState(status: status));
-    } on Object {
-      if (!isClosed) {
-        emit(
-          EngineState(status: state.status, failed: true, reverting: reverting),
-        );
-      }
-    }
   }
 
   Future<void> install() async {

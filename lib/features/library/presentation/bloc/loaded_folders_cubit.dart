@@ -135,9 +135,9 @@ class LoadedFoldersCubit extends Cubit<LoadedFoldersState> {
     await load();
     final outcome = await _import(const NoParams());
     var changed = false;
-    if (outcome is ImportAdded && !_cancelled) {
+    if (!_cancelled) {
       final restore = _restoreTags;
-      if (restore != null) {
+      if (restore != null && outcome is ImportAdded) {
         _stage(LoadStage.reading);
         try {
           changed |=

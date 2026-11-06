@@ -34,6 +34,9 @@ class _Reader implements FileTagRepository {
     reads.add(track.id);
     return byUri[track.uri];
   }
+
+  @override
+  String takeSummary() => '';
 }
 
 class _Done implements TagRestoreStore {

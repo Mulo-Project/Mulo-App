@@ -17,6 +17,7 @@ class SearchState extends Equatable {
     this.loadingMore = false,
     this.playlistTitle,
     this.failure,
+    this.detail = '',
     this.keyword = false,
     this.sort = SearchSort.relevance,
     this.ascending,
@@ -32,6 +33,9 @@ class SearchState extends Equatable {
   /// URL이 재생목록일 때 그 이름. 아니면 null.
   final String? playlistTitle;
   final EngineFailure? failure;
+
+  /// 임시 진단용: 실패했을 때 엔진이 알려 준 원문 (화면에 스낵바로 보인다).
+  final String detail;
 
   /// 키워드 검색 결과인지 (URL로 불러온 곡 · 재생목록이 아니라). 최신순은 검색을
   /// 다시 해야 해서 키워드 검색일 때만 쓸 수 있다.
@@ -97,6 +101,7 @@ class SearchState extends Equatable {
     loadingMore: loadingMore ?? this.loadingMore,
     playlistTitle: playlistTitle,
     failure: failure,
+    detail: detail,
     keyword: keyword,
     sort: sort ?? this.sort,
     ascending: resetAscending ? null : (ascending ?? this.ascending),
@@ -110,6 +115,7 @@ class SearchState extends Equatable {
     loadingMore,
     playlistTitle,
     failure,
+    detail,
     keyword,
     sort,
     ascending,
@@ -221,7 +227,13 @@ class SearchCubit extends Cubit<SearchState> {
       }
     } on EngineException catch (e) {
       if (id != _request) return;
-      emit(SearchState(status: SearchStatus.failed, failure: e.failure));
+      emit(
+        SearchState(
+          status: SearchStatus.failed,
+          failure: e.failure,
+          detail: e.message,
+        ),
+      );
     }
   }
 
@@ -301,7 +313,13 @@ class SearchCubit extends Cubit<SearchState> {
       await _searchKeyword(id, sort);
     } on EngineException catch (e) {
       if (id != _request) return;
-      emit(SearchState(status: SearchStatus.failed, failure: e.failure));
+      emit(
+        SearchState(
+          status: SearchStatus.failed,
+          failure: e.failure,
+          detail: e.message,
+        ),
+      );
     }
   }
 }

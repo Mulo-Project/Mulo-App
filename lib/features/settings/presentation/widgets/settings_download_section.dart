@@ -54,13 +54,15 @@ class _SettingsDownloadSectionState extends State<SettingsDownloadSection> {
           trailing: const SettingsChevron(),
           onTap: () async {
             final cubit = context.read<DownloadSettingsCubit>();
-            final path = await showSaveFolderSheet(
+            // 체크한 폴더 = 항상 받는 기본 위치. 체크를 풀면 마지막에 받은 폴더가 기준.
+            await showSaveFolderSheet(
               context,
               current: savePath,
               pickOther: cubit.pickFolder,
               removable: true,
+              onFixedChanged: (path) =>
+                  path == null ? cubit.clearSavePath() : cubit.setSavePath(path),
             );
-            if (path != null) await cubit.setSavePath(path);
           },
         ),
         const LoadedFoldersTile(),

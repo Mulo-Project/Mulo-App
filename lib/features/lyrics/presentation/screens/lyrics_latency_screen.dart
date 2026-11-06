@@ -114,20 +114,23 @@ class _LyricsLatencyScreenState extends State<LyricsLatencyScreen> {
     final playing = context.select((NowPlayingCubit c) => c.state.isPlaying);
     final stamped = _tried;
 
-    // 구역 하나 = 유리 카드 한 장: 제목 · 설명 · 내용. 카드 사이 간격은 같다.
+    // 구역 하나 = 제목 · 설명 · 내용. 카드 없이 구분선과 여백으로만 나눈다.
+    var sections = 0;
     Widget card({
       String? title,
       String? body,
       required List<Widget> children,
-    }) => Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: GlassCard(
-        tone: GlowTone.neutral,
-        glow: false,
-        padding: const EdgeInsets.all(AppSpacing.md),
+    }) {
+      final first = sections++ == 0;
+      return Padding(
+        padding: const EdgeInsets.only(bottom: AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            if (!first) ...[
+              const AppDivider(),
+              const SizedBox(height: AppSpacing.md),
+            ],
             if (title != null) Text(title, style: text.titleMedium),
             if (body != null) ...[
               const SizedBox(height: AppSpacing.xxs),
@@ -141,8 +144,8 @@ class _LyricsLatencyScreenState extends State<LyricsLatencyScreen> {
             ...children,
           ],
         ),
-      ),
-    );
+      );
+    }
 
     return Scaffold(
       backgroundColor: p.background,

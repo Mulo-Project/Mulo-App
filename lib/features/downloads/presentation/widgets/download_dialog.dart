@@ -10,10 +10,14 @@ import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/widgets/cover_editor_page.dart';
 import '../../../covers/presentation/widgets/cover_entry.dart';
+import '../../domain/entities/download_options.dart';
 import '../../domain/entities/download_request.dart';
 import '../../domain/entities/download_source.dart';
 import '../../../search/presentation/bloc/audio_language_cubit.dart';
 import '../../../search/presentation/widgets/audio_language_sheet.dart';
+import '../../domain/usecases/download_usecases.dart';
+import '../../../../core/usecase/usecase.dart';
+import '../bloc/download_preferences_cubit.dart';
 import '../bloc/download_queue_cubit.dart';
 import '../bloc/download_settings_cubit.dart';
 import '../bloc/subtitle_availability_cubit.dart';
@@ -148,11 +152,15 @@ class _DownloadScreenState extends State<DownloadScreen> {
   late final _artist = TextEditingController(text: widget.artist);
   late final _album = TextEditingController(text: widget.album);
   late final _genre = TextEditingController(text: widget.genre);
-  // 기본 저장 위치로 채워 시작하고, 이 곡만 바꿀 수 있다 (기본값은 설정에서).
+  // 고정한 폴더(없으면 마지막에 받은 폴더)로 채워 시작하고, 이 곡만 바꿀 수 있다 (고정은 설정에서).
   late final _savePath = TextEditingController(
     text: context.read<DownloadSettingsCubit>().state,
   );
   final Set<String> _selected = {};
+
+  // 저장 형식: 설정의 기본 형식으로 시작하고, 이 곡만 바꿀 수 있다 (기본값은 설정에서).
+  List<AudioFormat> _formats = const [];
+  AudioFormat? _format;
 
   // 직접 고른 색. 안 골랐으면 장르의 기본 색을 따라간다 (없으면 자동).
   Color? _picked;
@@ -199,6 +207,29 @@ class _DownloadScreenState extends State<DownloadScreen> {
   }
 
   Color? get _color => _pickedSet ? _picked : _genreColor();
+
+  @override
+  void initState() {
+    super.initState();
+    _format = context.read<DownloadPreferencesCubit>().state.format;
+    sl<GetSelectableFormats>()(const NoParams()).then((formats) {
+      if (!mounted) return;
+      setState(() {
+        _formats = formats;
+        if (!formats.contains(_format) && formats.isNotEmpty) {
+          _format = formats.first;
+        }
+      });
+    });
+    // 고정한 폴더가 없으면 마지막에 받은 폴더(없으면 앱 기본 폴더)로 채운다.
+    if (_savePath.text.isEmpty) {
+      context.read<DownloadSettingsCubit>().effectivePath().then((path) {
+        if (mounted && _savePath.text.isEmpty) {
+          setState(() => _savePath.text = path);
+        }
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -271,6 +302,10 @@ class _DownloadScreenState extends State<DownloadScreen> {
         thumbnailUrl: _cover == null ? null : widget.thumbnailUrl,
         cover: _cover,
         url: widget.url,
+        // 설정의 기본 형식과 같으면 비워 두어, 나중에 기본 형식을 바꿔도 따라가게 한다.
+        format: _format == context.read<DownloadPreferencesCubit>().state.format
+            ? null
+            : _format,
         importLyrics:
             _isYoutube &&
             lyrics != null &&
@@ -406,6 +441,21 @@ class _DownloadScreenState extends State<DownloadScreen> {
                         ),
                       ],
                     ),
+                    if (_formats.length > 1 && _format != null) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      Text(
+                        l10n.settingsFormat.toUpperCase(),
+                        style: text.labelSmall,
+                      ),
+                      const SizedBox(height: AppSpacing.xxs),
+                      SegmentedPills<AudioFormat>(
+                        expand: true,
+                        values: _formats,
+                        selected: _format!,
+                        labelOf: (f) => f.name,
+                        onChanged: (f) => setState(() => _format = f),
+                      ),
+                    ],
                     const AudioLanguageRow(),
                     const SizedBox(height: AppSpacing.md),
                     Text(

@@ -565,7 +565,7 @@ class SeekStepButton extends StatelessWidget {
     final l10n = context.l10n;
     const step = Duration(seconds: 10);
     return IconButton(
-      iconSize: 28,
+      iconSize: 24,
       tooltip: forward ? l10n.playerForward10 : l10n.playerRewind10,
       // 누른 순간의 위치에서 옮긴다 (화면은 위치가 바뀌어도 다시 그리지 않으므로 지금 값을 읽는다).
       onPressed: () {
@@ -574,7 +574,7 @@ class SeekStepButton extends StatelessWidget {
       },
       icon: Icon(
         forward ? AppIcons.forward10 : AppIcons.replay10,
-        color: color ?? context.palette.onSurface.withValues(alpha: .85),
+        color: color ?? context.palette.onSurfaceMuted,
       ),
     );
   }
@@ -663,7 +663,7 @@ class PlayerControls extends StatelessWidget {
               IconButtonTheme(
                 data: IconButtonThemeData(
                   style: IconButton.styleFrom(
-                    iconSize: 22,
+                    iconSize: 20,
                     padding: const EdgeInsets.all(AppSpacing.xs),
                     visualDensity: VisualDensity.compact,
                   ),
@@ -695,7 +695,7 @@ class PlayerControls extends StatelessWidget {
               ),
             ),
           ],
-          const SizedBox(height: AppSpacing.xs),
+          const SizedBox(height: AppSpacing.sm),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -706,12 +706,12 @@ class PlayerControls extends StatelessWidget {
               SeekStepButton(data: data, forward: true),
             ],
           ),
-          const SizedBox(height: AppSpacing.xs),
+          const SizedBox(height: AppSpacing.sm),
           // 보조 조작(셔플 · 반복 · 수면 · 이퀄라이저)은 재생 조작보다 작게 두어 대비를 준다.
           IconButtonTheme(
             data: IconButtonThemeData(
               style: IconButton.styleFrom(
-                iconSize: 20,
+                iconSize: 18,
                 visualDensity: VisualDensity.compact,
                 minimumSize: const Size(36, 36),
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,

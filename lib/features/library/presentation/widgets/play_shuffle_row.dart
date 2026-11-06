@@ -9,7 +9,11 @@ import '../../domain/entities/track.dart';
 /// 앨범 · 아티스트 · 장르 · 재생목록 상세에서 쓰는 재생 + 셔플 버튼 한 줄.
 /// [tracks]가 비어 있으면 둘 다 눌리지 않는다.
 class PlayShuffleRow extends StatelessWidget {
-  const PlayShuffleRow({super.key, required this.tracks, this.playLabel});
+  const PlayShuffleRow({
+    super.key,
+    required this.tracks,
+    this.playLabel,
+  });
 
   final List<Track> tracks;
 
@@ -23,6 +27,7 @@ class PlayShuffleRow extends StatelessWidget {
     final empty = tracks.isEmpty;
     return Padding(
       padding: AppSpacing.screen,
+      // 보관함 맨 위의 재생 · 셔플 버튼과 같은 크기(compact).
       child: Wrap(
         spacing: AppSpacing.xs,
         runSpacing: AppSpacing.xs,
@@ -30,12 +35,14 @@ class PlayShuffleRow extends StatelessWidget {
           PillButton(
             label: playLabel ?? l10n.actionPlay,
             icon: AppIcons.play,
+            compact: true,
             onPressed: empty ? null : () => now.playQueue(tracks),
           ),
           PillButton(
             label: l10n.actionShuffle,
             icon: AppIcons.shuffle,
             variant: PillVariant.tonal,
+            compact: true,
             onPressed: empty ? null : () => now.playShuffled(tracks),
           ),
         ],

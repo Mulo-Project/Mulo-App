@@ -72,7 +72,7 @@ class AppDialog extends StatelessWidget {
           children: [
             Row(
               children: [
-                Expanded(child: Text(title, style: text.titleLarge)),
+                Expanded(child: Text(title, style: text.headlineSmall)),
                 if (closeTooltip != null)
                   PlainButton(
                     icon: AppIcons.close,

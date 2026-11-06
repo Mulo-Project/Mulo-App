@@ -53,7 +53,7 @@ class AppSheetTitle extends StatelessWidget {
       children: [
         Text(
           title,
-          style: text.titleLarge,
+          style: text.headlineSmall,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),

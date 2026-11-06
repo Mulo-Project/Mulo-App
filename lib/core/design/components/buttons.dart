@@ -55,7 +55,7 @@ class PillButton extends StatelessWidget {
     };
     final enabled = onPressed != null;
     final text = Theme.of(context).textTheme.labelLarge!.copyWith(color: fg);
-    final height = compact ? 36.0 : AppSizes.pillHeight;
+    final height = compact ? 40.0 : AppSizes.pillHeight;
 
     final content = SizedBox(
       height: height,
@@ -94,11 +94,18 @@ class PillButton extends StatelessWidget {
         blur: 0,
         child: content,
       ),
-      PillVariant.outline => GlassSurface(
-        shape: const StadiumBorder(),
-        onTap: onPressed,
-        blur: 0,
-        child: content,
+      PillVariant.outline => Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          onTap: onPressed,
+          customBorder: const StadiumBorder(),
+          child: DecoratedBox(
+            decoration: ShapeDecoration(
+              shape: StadiumBorder(side: BorderSide(color: p.outline)),
+            ),
+            child: content,
+          ),
+        ),
       ),
       PillVariant.accent || PillVariant.primary => _SolidPill(
         color: v == PillVariant.accent ? p.accent : p.primary,
@@ -112,7 +119,11 @@ class PillButton extends StatelessWidget {
 }
 
 class _SolidPill extends StatelessWidget {
-  const _SolidPill({required this.color, required this.child, this.onTap});
+  const _SolidPill({
+    required this.color,
+    required this.child,
+    this.onTap,
+  });
 
   final Color color;
   final VoidCallback? onTap;
@@ -125,13 +136,8 @@ class _SolidPill extends StatelessWidget {
     decoration: ShapeDecoration(
       color: color,
       shape: const StadiumBorder(),
-      shadows: [
-        BoxShadow(
-          color: color.withValues(alpha: .35),
-          blurRadius: 18,
-          offset: const Offset(0, 6),
-        ),
-      ],
+      // 빛(그림자) 없이 평평한 면. 은은하게 보이게 한다.
+      shadows: const [],
     ),
     child: Material(
       type: MaterialType.transparency,
@@ -178,22 +184,11 @@ class CircleIconButton extends StatelessWidget {
     );
 
     final button = emphasized
-        ? DecoratedBox(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: p.accent.withValues(alpha: .45),
-                  blurRadius: size * .45,
-                ),
-              ],
-            ),
-            child: Material(
-              color: p.accent,
-              shape: const CircleBorder(),
-              clipBehavior: Clip.antiAlias,
-              child: InkWell(onTap: onPressed, child: glyph),
-            ),
+        ? Material(
+            color: p.accent,
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(onTap: onPressed, child: glyph),
           )
         : GlassSurface(
             shape: const CircleBorder(),

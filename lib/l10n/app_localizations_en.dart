@@ -155,6 +155,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchLoadMore => 'Load more';
 
   @override
+  String get searchLive => 'Live';
+
+  @override
+  String get searchLiveNoDownload => "Live streams can't be downloaded";
+
+  @override
   String get searchResultsTitle => 'Results';
 
   @override
@@ -208,6 +214,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get statusQueued => 'Queued';
+
+  @override
+  String get statusProcessing => 'Processing';
 
   @override
   String get statusDone => 'Done';
@@ -310,7 +319,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSavePath => 'Save location';
 
   @override
-  String get settingsSavePathDesc => 'App default folder';
+  String get settingsSavePathDesc => 'Not fixed · last used folder';
 
   @override
   String get settingsLoadedFolders => 'Music folders';
@@ -561,6 +570,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsMixWithOthers => 'Play with other apps';
+
+  @override
+  String get settingsSleepTimerOff => 'Off';
+
+  @override
+  String get settingsLyricsOverlay => 'Floating lyrics';
+
+  @override
+  String get settingsLyricsOverlayDesc => 'Show lyrics over other apps. Stays on after you restart the app.';
 
   @override
   String get settingsMixWithOthersDesc =>
@@ -1527,6 +1545,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get saveFolderTitle => 'Choose save location';
 
   @override
+  String get saveFolderFixedHint => 'Downloads always go to the checked folder. Uncheck all to use the last folder.';
+
+  @override
   String get saveFolderEmpty => 'No loaded folders yet. Pick one yourself.';
 
   @override
@@ -1571,6 +1592,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playlistsEmpty => 'No playlists yet. Tap + above to make one.';
+
+  @override
+  String get playlistsReorderHint => 'Press and hold a playlist, then drag to reorder.';
 
   @override
   String get playlistNewTitle => 'New playlist';
@@ -1695,7 +1719,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackMenuAddToPlaylist => 'Add to playlist';
 
   @override
-  String get trackMenuEditInfo => 'Edit info';
+  String get trackMenuEditInfo => 'Details';
 
   @override
   String get trackMenuDelete => 'Delete';
@@ -1754,6 +1778,68 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trackEditSaved => 'Song info updated';
+
+  @override
+  String get trackInfoTitle => 'Song details';
+
+  @override
+  String get trackInfoUnknown => 'Unknown';
+
+  @override
+  String get trackInfoDuration => 'Length';
+
+  @override
+  String get trackInfoAdded => 'Added';
+
+  @override
+  String get trackInfoSource => 'Source';
+
+  @override
+  String get trackInfoSourceDevice => 'External';
+
+  @override
+  String get trackInfoSourceDownload => 'Downloaded';
+
+  @override
+  String get trackInfoFolder => 'Folder';
+
+  @override
+  String downloadTagFailed(String title) {
+    return 'Could not save tags: $title';
+  }
+
+  @override
+  String get collectionMenuInfo => 'Info';
+
+  @override
+  String get playlistInfoTitle => 'Playlist info';
+
+  @override
+  String get albumInfoTitle => 'Album info';
+
+  @override
+  String get artistInfoTitle => 'Artist info';
+
+  @override
+  String get genreInfoTitle => 'Genre info';
+
+  @override
+  String get trackInfoFileSize => 'File size';
+
+  @override
+  String get trackInfoFormat => 'Format';
+
+  @override
+  String get trackInfoBitrate => 'Bitrate';
+
+  @override
+  String get trackInfoSampleRate => 'Sample rate';
+
+  @override
+  String get trackInfoUrl => 'Source link';
+
+  @override
+  String get trackInfoUrlCopied => 'Link copied';
 
   @override
   String get trackEditTagFailed =>
@@ -1832,8 +1918,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsWebTitle => 'Search lyrics';
 
   @override
-  String get lyricsWebHint =>
-      'Long-press and drag to select text, then tap Add. Add as many times as you like, then tap Import.';
+  String get lyricsWebHint => 'Select lyrics and tap Add, then Import when done';
 
   @override
   String get lyricsWebImport => 'Import';
@@ -1966,7 +2051,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lyricsMemoHint =>
-      'Edit or select text, then tap Insert to add it below the current line';
+      'Select text and tap Insert to add it below the current line';
 
   @override
   String get lyricsMemoInsert => 'Insert';
@@ -2252,7 +2337,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playlistDetailEmptyBody =>
-      'Use \"Add to playlist\" in a song\'s menu, or \"Add songs\" below.';
+      'Add songs with the button below.';
 
   @override
   String get playlistDetailEmptyFavoritesBody =>

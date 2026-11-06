@@ -92,48 +92,59 @@ class _ChannelInfoSheetState extends State<_ChannelInfoSheet> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final hit = widget.hit;
-    return SingleChildScrollView(
-      padding: appSheetPadding,
-      child: BlocBuilder<ChannelInfoCubit, ChannelInfoState>(
-        bloc: _info,
-        builder: (context, info) => Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 배너 · 구독자 수 · 소개를 읽는 동안 위에 얇은 막대로 알린다.
-            LoadingBar(loading: info.loading),
-            const SizedBox(height: AppSpacing.sm),
-            BlocBuilder<SubscriptionsCubit, SubscriptionsState>(
-              bloc: _subs,
-              builder: (context, subs) => ChannelHeader(
-                id: hit.id,
-                name: hit.name,
-                thumbnailUrl: hit.thumbnailUrl,
-                bannerUrl: info.bannerUrl,
-                subscriberCount: info.subscriberCount,
-                videoCount: hit.videoCount,
-                // 소개는 읽어 온 전체를 먼저 쓰고, 아직이거나 못 읽었으면 검색 결과의 한 토막.
-                description: info.description ?? hit.description,
-                subscribed: subs.isSubscribedId(hit.id),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Flexible(
+          child: SingleChildScrollView(
+            padding: appSheetPadding.copyWith(bottom: AppSpacing.md),
+            child: BlocBuilder<ChannelInfoCubit, ChannelInfoState>(
+              bloc: _info,
+              builder: (context, info) => Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 배너 · 구독자 수 · 소개를 읽는 동안 위에 얇은 막대로 알린다.
+                  LoadingBar(loading: info.loading),
+                  const SizedBox(height: AppSpacing.sm),
+                  BlocBuilder<SubscriptionsCubit, SubscriptionsState>(
+                    bloc: _subs,
+                    builder: (context, subs) => ChannelHeader(
+                      id: hit.id,
+                      name: hit.name,
+                      thumbnailUrl: hit.thumbnailUrl,
+                      bannerUrl: info.bannerUrl,
+                      subscriberCount: info.subscriberCount,
+                      videoCount: hit.videoCount,
+                      // 소개는 읽어 온 전체를 먼저 쓰고, 아직이거나 못 읽었으면 검색 결과의 한 토막.
+                      description: info.description ?? hit.description,
+                      subscribed: subs.isSubscribedId(hit.id),
+                    ),
+                  ),
+                  ChannelSettingsSections(
+                    categories: info.categories,
+                    onToggleCategory: (name) {
+                      _info.toggleCategory(name);
+                      _changed();
+                    },
+                    onClearCategories: () {
+                      _info.clearCategories();
+                      _changed();
+                    },
+                    savePath: info.savePath,
+                    onSavePath: (path) {
+                      _info.setSavePath(path);
+                      _changed();
+                    },
+                  ),
+                ],
               ),
             ),
-            ChannelSettingsSections(
-              categories: info.categories,
-              onToggleCategory: (name) {
-                _info.toggleCategory(name);
-                _changed();
-              },
-              onClearCategories: () {
-                _info.clearCategories();
-                _changed();
-              },
-              savePath: info.savePath,
-              onSavePath: (path) {
-                _info.setSavePath(path);
-                _changed();
-              },
-            ),
-            const SizedBox(height: AppSpacing.lg),
+          ),
+        ),
+        // 구독 · 구독 해제 버튼은 스크롤과 상관없이 아래에 고정한다.
+        Padding(
+          padding: appSheetPadding.copyWith(top: AppSpacing.xs),
+          child:
             BlocBuilder<SubscriptionsCubit, SubscriptionsState>(
               bloc: _subs,
               builder: (context, subs) {
@@ -153,9 +164,8 @@ class _ChannelInfoSheetState extends State<_ChannelInfoSheet> {
                 );
               },
             ),
-          ],
         ),
-      ),
+      ],
     );
   }
 }

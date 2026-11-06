@@ -63,11 +63,9 @@ class LibraryImportCubit extends Cubit<LibraryImportState> {
         coversSeq: state.coversSeq,
       ),
     );
-    // 새 곡이 없어도 이미 가져온 곡의 빈 커버를 채운다.
-    if (outcome is ImportAdded) {
-      await _restoreFromTags();
-      await _fillEmbeddedCovers();
-    }
+    // 새 곡이 없어도 이미 가져온 곡의 빈 커버를 채운다 (지난번에 못 채운 곡도 다시 시도한다).
+    if (outcome is ImportAdded) await _restoreFromTags();
+    await _fillEmbeddedCovers();
   }
 
   /// 파일 태그를 읽어 곡 정보 · 커버 편집 상태를 DB에 되살린다 (파일이 원본). 곡 목록은 DB 스트림이 갱신한다.

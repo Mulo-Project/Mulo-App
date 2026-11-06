@@ -72,13 +72,7 @@ class _BodyState extends State<_Body> with TrackPicker<_Body> {
         title: pl == null ? '' : playlistNameOf(l10n, pl),
         leading: const AppBackButton(),
         actions: [
-          if (pl != null && !pl.isFavorites)
-            CircleIconButton(
-              icon: AppIcons.add,
-              tooltip: l10n.playlistAddTracks,
-              onPressed: () =>
-                  context.push(Routes.playlistAddTracks(playlistId)),
-            ),
+          // "곡 추가"는 위 막대에서 커버 아래 버튼 줄로 옮겼다 (제목 자리 확보).
           if (pl != null)
             Builder(
               builder: (btn) => CircleIconButton(
@@ -107,7 +101,7 @@ class _BodyState extends State<_Body> with TrackPicker<_Body> {
         Padding(
           padding: AppSpacing.screen,
           child: AspectRatio(
-            aspectRatio: 2,
+            aspectRatio: 2.4, // 헤더를 낮춰 곡 목록이 먼저 보이게
             child: CoverCard(
               image: image,
               tone: playlistToneOf(pl),
@@ -147,7 +141,13 @@ class _BodyState extends State<_Body> with TrackPicker<_Body> {
             tracks: tracks ?? const <Track>[],
             playLabel: l10n.playlistMenuPlayAll,
           ),
-          const SizedBox(height: AppSpacing.sm),
+          // 위 소개 영역과 곡 목록을 가는 선과 넉넉한 간격으로 나눈다.
+          const SizedBox(height: AppSpacing.md),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            child: AppDivider(),
+          ),
+          const SizedBox(height: AppSpacing.xs),
         ],
         if (downloads.isNotEmpty)
           _Downloads(playlistId: playlistId, items: downloads),
@@ -184,6 +184,7 @@ class _BodyState extends State<_Body> with TrackPicker<_Body> {
                       : PillButton(
                           label: l10n.playlistAddTracks,
                           icon: AppIcons.add,
+                          compact: true,
                           onPressed: () => context.push(
                             Routes.playlistAddTracks(playlistId),
                           ),

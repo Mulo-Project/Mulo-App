@@ -145,6 +145,21 @@ class _LyricsWebScreenState extends State<LyricsWebScreen> {
               ),
               // 웹 페이지를 읽는 동안은 위에 얇은 막대로 알린다.
               LoadingBar(loading: _loading),
+              // 사용법은 위에 한 줄로 둔다 (아래는 모은 글과 버튼만).
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.xs,
+                  AppSpacing.lg,
+                  AppSpacing.xs,
+                ),
+                child: Text(
+                  l10n.lyricsWebHint,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: context.palette.onSurfaceMuted,
+                  ),
+                ),
+              ),
               Expanded(child: WebViewWidget(controller: _controller)),
               Padding(
                 padding: const EdgeInsets.all(AppSpacing.md),
@@ -163,6 +178,11 @@ class _LyricsWebScreenState extends State<LyricsWebScreen> {
                               style: Theme.of(context).textTheme.titleSmall,
                             ),
                           ),
+                          if (_scratchOpen)
+                            PlainButton(
+                              label: l10n.lyricsWebClear,
+                              onPressed: () => _scratch.clear(),
+                            ),
                           Icon(
                             _scratchOpen
                                 ? AppIcons.chevronDown
@@ -191,7 +211,7 @@ class _LyricsWebScreenState extends State<LyricsWebScreen> {
                               width: 40,
                               height: 4,
                               decoration: BoxDecoration(
-                                color: context.palette.onSurfaceMuted,
+                                color: context.palette.onSurfaceMuted.withValues(alpha: .5),
                                 borderRadius: BorderRadius.circular(2),
                               ),
                             ),
@@ -207,22 +227,7 @@ class _LyricsWebScreenState extends State<LyricsWebScreen> {
                           expands: true,
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.xs),
-                      PillButton(
-                        label: l10n.lyricsWebClear,
-                        icon: AppIcons.delete,
-                        variant: PillVariant.tonal,
-                        compact: true,
-                        onPressed: () => _scratch.clear(),
-                      ),
                     ],
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      l10n.lyricsWebHint,
-                      style: Theme.of(context).textTheme.bodySmall
-                          ?.copyWith(color: context.palette.onSurfaceMuted),
-                      textAlign: TextAlign.center,
-                    ),
                     const SizedBox(height: AppSpacing.xs),
                     Row(
                       children: [

@@ -62,24 +62,6 @@ class SettingsEngineRow extends StatelessWidget {
 
   final EngineCubit cubit;
 
-  Future<void> _confirmRemove(BuildContext context) async {
-    final l10n = context.l10n;
-    // 업데이트한 yt-dlp를 지우면 앱에 들어 있던 버전으로 돌아간다 (Android full).
-    final revert = cubit.state.status?.revertible == true;
-    final ok = await showConfirmDialog(
-      context,
-      title: revert
-          ? l10n.settingsEngineRevertTitle
-          : l10n.settingsEngineRemoveTitle,
-      body: revert
-          ? l10n.settingsEngineRevertBody
-          : l10n.settingsEngineRemoveBody,
-      confirmLabel: l10n.settingsEngineRemove,
-      cancelLabel: l10n.actionCancel,
-    );
-    if (ok) await cubit.remove();
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -89,13 +71,9 @@ class SettingsEngineRow extends StatelessWidget {
         final status = state.status;
         if (status == null || !status.supported) return const SizedBox.shrink();
         final description = state.busy
-            ? (state.reverting
-                  ? l10n.settingsEngineReverting
-                  : l10n.settingsEngineInstalling)
+            ? l10n.settingsEngineInstalling
             : state.failed
-            ? (state.reverting
-                  ? l10n.settingsEngineRevertFailed
-                  : l10n.settingsEngineFailed)
+            ? l10n.settingsEngineFailed
             : status.installed
             ? (status.version == null
                   ? l10n.settingsEngineBundled
@@ -107,12 +85,6 @@ class SettingsEngineRow extends StatelessWidget {
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // 앱이 받아 둔 엔진만 지울 수 있다 (PATH의 yt-dlp · APK 내장은 지우지 않는다).
-              if (status.removable)
-                PlainButton(
-                  label: l10n.settingsEngineRemove,
-                  onPressed: state.busy ? null : () => _confirmRemove(context),
-                ),
               PillButton(
                 compact: true,
                 label: status.installed

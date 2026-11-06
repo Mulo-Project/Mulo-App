@@ -1,6 +1,7 @@
 import '../entities/hidden_track.dart';
 import '../entities/import_result.dart';
 import '../entities/track.dart';
+import '../entities/track_file_info.dart';
 import '../entities/track_info.dart';
 
 /// 보관함 저장소.
@@ -38,6 +39,9 @@ abstract interface class TrackFileRepository {
   /// 음악 파일을 지운다. 이미 없으면 지운 것으로 본다.
   /// 못 지우면(권한 거절 · 사용자가 취소 등) false.
   Future<bool> deleteFile(Track track);
+
+  /// 음악 파일의 크기 · 형식 · 비트레이트 · 샘플레이트. 읽을 수 없으면 null.
+  Future<TrackFileInfo?> fileInfo(Track track);
 }
 
 /// 기기의 음악 파일 찾기 (상세 기능: 기기 음악 불러오기 #11).
@@ -53,6 +57,9 @@ abstract interface class EmbeddedCoverRepository {
   Future<String?> extract(Track track);
 
   Future<void> discard(String path);
+
+  /// 임시 진단: 지금까지 읽은 결과를 종류별로 센 한 줄 (꺼내면 비운다). 없으면 빈 문자열.
+  String takeSummary();
 }
 
 /// 음악을 불러오는 폴더 목록 (상세 기능: 불러오는 폴더 목록).

@@ -212,6 +212,15 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
                   tooltip: l10n.actionBack,
                   onPressed: () => Navigator.of(context).pop(),
                 ),
+                actions: [
+                  if (widget.canRemove && _art != null)
+                    CircleIconButton(
+                      key: const ValueKey('cover-edit-remove'),
+                      icon: AppIcons.delete,
+                      tooltip: l10n.coverRemove,
+                      onPressed: _remove,
+                    ),
+                ],
               ),
               // 이미지 불러오기는 위쪽에 둔다 (기기 사진 | 웹 이미지).
               Padding(
@@ -332,6 +341,7 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      const SizedBox(height: AppSpacing.xs),
                       // 막대 가운데 위에 지금 각도를 돌아간 아이콘과 숫자로 보여 준다.
                       Row(
                         key: const ValueKey('cover-edit-angle'),
@@ -366,95 +376,53 @@ class _CoverEditorPageState extends State<CoverEditorPage> {
                         onChanged: (v) =>
                             _rotateTo(v.abs() < 4 ? 0 : v.roundToDouble()),
                       ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.md,
-                    0,
-                    AppSpacing.md,
-                    0,
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: PillButton(
-                          key: const ValueKey('cover-edit-rotate-left'),
-                          label: l10n.coverEditRotateLeft,
-                          icon: AppIcons.restart,
-                          variant: PillVariant.tonal,
-                          onPressed: ready
-                              ? () => _rotateTo(_t.rotation - 90)
-                              : null,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      Expanded(
-                        child: PillButton(
-                          key: const ValueKey('cover-edit-rotate-right'),
-                          label: l10n.coverEditRotateRight,
-                          icon: AppIcons.restart,
-                          variant: PillVariant.tonal,
-                          onPressed: ready
-                              ? () => _rotateTo(_t.rotation + 90)
-                              : null,
-                        ),
+                      // 막대 아래 양 끝에 90° 돌리기.
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          PlainButton(
+                            key: const ValueKey('cover-edit-rotate-left'),
+                            label: l10n.coverEditRotateLeft,
+                            icon: AppIcons.restart,
+                            onPressed: ready
+                                ? () => _rotateTo(_t.rotation - 90)
+                                : null,
+                          ),
+                          PlainButton(
+                            key: const ValueKey('cover-edit-rotate-right'),
+                            label: l10n.coverEditRotateRight,
+                            icon: AppIcons.restart,
+                            onPressed: ready
+                                ? () => _rotateTo(_t.rotation + 90)
+                                : null,
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
+                // 보조 동작(회전 · 위치 · 이미지 되돌리기 · 지우기)은 글자 버튼 한 줄로 낮춰,
+                // 주 동작인 "적용"만 도드라지게 한다.
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.lg,
-                    AppSpacing.sm,
-                    AppSpacing.lg,
+                    AppSpacing.md,
                     AppSpacing.xs,
-                  ),
-                  child: Text(
-                    l10n.coverEditHint,
-                    textAlign: TextAlign.center,
-                    style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
-                  ),
-                ),
-                // 되돌리기 둘(위치 · 기본 이미지)은 한 줄에 같은 모양 버튼으로 둔다 (둘 다 확인을 묻는다).
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.md,
-                    0,
                     AppSpacing.md,
                     0,
                   ),
                   child: Wrap(
                     alignment: WrapAlignment.center,
-                    spacing: AppSpacing.xs,
-                    runSpacing: AppSpacing.xs,
                     children: [
-                      PillButton(
+                      PlainButton(
                         key: const ValueKey('cover-edit-reset-position'),
                         label: l10n.coverEditResetPosition,
-                        icon: AppIcons.restart,
-                        variant: PillVariant.tonal,
-                        compact: true,
                         onPressed: ready ? _resetTransform : null,
                       ),
                       if (widget.canRevert)
-                        PillButton(
+                        PlainButton(
                           key: const ValueKey('cover-edit-revert'),
                           label: l10n.coverReset,
-                          icon: AppIcons.restart,
-                          variant: PillVariant.tonal,
-                          compact: true,
                           onPressed: _revert,
-                        ),
-                      if (widget.canRemove)
-                        PillButton(
-                          key: const ValueKey('cover-edit-remove'),
-                          label: l10n.coverRemove,
-                          icon: AppIcons.delete,
-                          variant: PillVariant.tonal,
-                          compact: true,
-                          onPressed: _remove,
                         ),
                     ],
                   ),

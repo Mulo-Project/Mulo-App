@@ -22,6 +22,7 @@ class MediaHit extends Equatable {
     this.subtitleLangs = const [],
     this.autoSubtitleLangs = const [],
     this.album = '',
+    this.isLive = false,
   });
 
   /// 사이트 안의 곡 id (유튜브면 videoId).
@@ -39,6 +40,9 @@ class MediaHit extends Equatable {
   /// 유튜브가 영상에 붙인 분류 (yt-dlp의 `categories`, 예: `Music`).
   /// 곡 하나를 자세히 읽었을 때만 있다. 검색 목록 항목은 비어 있다가 뒤에서 채워진다.
   final List<String> categories;
+
+  /// 진행 중이거나 예정인 실시간 스트리밍 (받을 수 없다).
+  final bool isLive;
 
   /// 이미 받은 곡인지 (서버가 알려 준 경우).
   final bool downloaded;
@@ -105,6 +109,7 @@ class MediaHit extends Equatable {
     likeCount: likeCount ?? full.likeCount,
     subscriberCount: subscriberCount ?? full.subscriberCount,
     channelThumbnailUrl: channelThumbnailUrl ?? full.channelThumbnailUrl,
+    isLive: isLive || full.isLive,
   );
 
   /// 채널 정보를 채운 사본.
@@ -129,6 +134,7 @@ class MediaHit extends Equatable {
     List<String>? subtitleLangs,
     List<String>? autoSubtitleLangs,
     String? album,
+    bool? isLive,
   }) => MediaHit(
     id: id,
     title: title,
@@ -149,6 +155,7 @@ class MediaHit extends Equatable {
     subtitleLangs: subtitleLangs ?? this.subtitleLangs,
     autoSubtitleLangs: autoSubtitleLangs ?? this.autoSubtitleLangs,
     album: album ?? this.album,
+    isLive: isLive ?? this.isLive,
   );
 
   @override
@@ -172,6 +179,7 @@ class MediaHit extends Equatable {
     subtitleLangs,
     autoSubtitleLangs,
     album,
+    isLive,
   ];
 }
 

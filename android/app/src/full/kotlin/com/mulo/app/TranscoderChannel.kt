@@ -2,6 +2,7 @@ package com.mulo.app
 
 import android.content.Context
 import com.yausername.ffmpeg.FFmpeg
+import com.yausername.youtubedl_android.YoutubeDL
 import io.flutter.plugin.common.BinaryMessenger
 import java.io.File
 import java.util.concurrent.Executors
@@ -74,6 +75,9 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
         if (ready) return
         synchronized(this) {
             if (ready) return
+            // ffmpeg가 찾는 C++ 런타임(libc++_shared.so)은 파이썬 패키지 폴더에 들어 있다.
+            // yt-dlp를 한 번도 안 돌린 실행(앱 데이터를 지운 뒤 가사 저장 등)에서도 있도록 파이썬부터 푼다.
+            YoutubeDL.getInstance().init(context)
             // libffmpeg.zip.so를 앱 전용 폴더에 풀어 둔다 (처음 한 번, 버전이 바뀌면 다시).
             FFmpeg.getInstance().init(context)
             ready = true
@@ -94,7 +98,13 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
         if (cover != null) args += listOf("-i", cover)
         args += listOf("-map", "0:a")
         // mp3 커버는 그림 입력을 첨부 그림(attached_pic)으로 붙인다.
-        if (cover != null) args += listOf("-map", "2:v", "-disposition:v:0", "attached_pic")
+        // 그림 종류를 "앞면 커버"로 적어 다른 플레이어도 커버로 읽게 한다 (안 적으면 "기타" 그림이 된다).
+        if (cover != null) {
+            args += listOf(
+                "-map", "2:v", "-disposition:v:0", "attached_pic",
+                "-metadata:s:v", "title=Album cover", "-metadata:s:v", "comment=Cover (front)",
+            )
+        }
         args += listOf("-map_metadata", "1", "-map_metadata:s:a:0", "1:g", "-c", "copy")
         // 다른 플레이어에서도 열리도록 ID3는 v2.3으로 쓴다.
         if (format == "mp3") args += listOf("-id3v2_version", "3")

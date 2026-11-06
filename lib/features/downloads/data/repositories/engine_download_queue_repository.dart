@@ -12,11 +12,13 @@ import '../../../search/domain/repositories/downloader_engine.dart';
 import '../../domain/entities/download_item.dart';
 import '../../domain/entities/download_request.dart';
 import '../../domain/entities/download_source.dart';
+import '../../domain/entities/tag_notice.dart';
 import '../../domain/repositories/download_queue_repository.dart';
 import '../../domain/repositories/download_settings_repository.dart';
 import '../datasources/audio_file_downloader.dart';
 import '../datasources/audio_transcoder.dart';
 import '../datasources/cover_tag_writer.dart';
+import '../datasources/ffmpeg_tag_writer.dart';
 import '../datasources/download_queue_store.dart';
 import '../datasources/downloaded_file_store.dart';
 
@@ -159,6 +161,24 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
     }
     return ExistingDownload(trackId: exists ? trackId : null, inQueue: inQueue);
   }
+
+  @override
+  Future<String?> sourceUrlOf(String trackId) async {
+    await _ensureLoaded();
+    for (final e in _sources.entries) {
+      if (e.value != trackId) continue;
+      const prefix = 'youtube:';
+      return e.key.startsWith(prefix)
+          ? 'https://www.youtube.com/watch?v=${e.key.substring(prefix.length)}'
+          : e.key;
+    }
+    return null;
+  }
+
+  final _tagNotices = StreamController<TagNotice>.broadcast();
+
+  @override
+  Stream<TagNotice> watchTagNotices() => _tagNotices.stream;
 
   /// 받은 곡 키가 바뀌었음을 알린다 (곡을 만든 직후 · 원본 주소 기록 뒤).
   final _keysChanged = StreamController<void>.broadcast();
@@ -402,6 +422,14 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
         audio = await fetch(refresh: true);
       }
       if (token.isCancelled) throw const DownloadAborted();
+      // 내려받기는 끝났다: 이제 변환 · 태그 쓰기 · 저장이라 "처리 중"으로 보인다.
+      _set(
+        id,
+        (e) => e.status == DownloadStatus.downloading
+            ? e.copyWith(progress: 1, processing: true)
+            : e,
+        persist: false,
+      );
 
       // 설정의 형식대로 바꾼다. 변환기가 없거나 실패하면 받은 그대로 저장한다.
       final plan = TranscodePlan.of(format);
@@ -417,7 +445,7 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
       if (token.isCancelled) throw const DownloadAborted();
 
       // 고른 커버(없으면 썸네일)를 파일 태그에도 넣는다. 쓸 수 없는 형식이면 그대로 저장한다.
-      await _coverTags?.embed(
+      final tagged = await _coverTags?.embed(
         audio.file,
         extension: audio.extension,
         cover: request.cover,
@@ -429,6 +457,19 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
         lyrics: lyrics,
         color: request.color,
       );
+      // 태그를 못 썼으면 화면이 알린다 (임시: 쓴 결과도 진단용으로 함께 보낸다).
+      if (_coverTags != null && tagged != null) {
+        _tagNotices.add(
+          TagNotice(
+            title: request.title,
+            extension: audio.extension,
+            ok: tagged,
+            detail: tagged
+                ? CoverTagWriter.lastCoverNote
+                : (FfmpegTagWriter.lastError ?? 'unsupported or nothing to write'),
+          ),
+        );
+      }
       if (token.isCancelled) throw const DownloadAborted();
 
       final folder = request.savePath.isNotEmpty
@@ -444,6 +485,8 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
         artist: request.artist,
       );
       await _register(id, request, saved, lyrics);
+      // 고정한 폴더가 없을 때의 기준: 마지막에 받은 폴더.
+      await _settings.saveLastSavePath(folder);
       _set(id, (e) => e.copyWith(status: DownloadStatus.done, progress: 1));
     } on DownloadAborted {
       // 취소(목록에서 이미 뺐다) 또는 일시정지(상태를 이미 바꿨다)다.
