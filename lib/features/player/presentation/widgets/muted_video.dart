@@ -10,7 +10,7 @@ import '../../../../core/design/design.dart';
 import '../bloc/now_playing_cubit.dart';
 
 /// 소리 없는 영상 화면. 소리는 네이티브 플레이어가 내므로 이 화면은 주어진 위치 · 재생 상태를
-/// 따라가기만 한다 (오디오 포커스도 가져가지 않는다). 위치가 [maxDrift] 넘게 어긋나면 다시 맞춘다.
+/// 따라가기만 한다 (오디오 포커스도 가져가지 않는다). 어긋나면 재생 속도로 따라잡는다.
 /// 앱 화면이 사라지면 영상도 함께 사라지고 소리만 이어진다.
 class MutedVideo extends StatefulWidget {
   const MutedVideo({
@@ -19,7 +19,6 @@ class MutedVideo extends StatefulWidget {
     required this.position,
     required this.playing,
     this.headers = const {},
-    this.maxDrift = const Duration(milliseconds: 1500),
   });
 
   /// `content://…` · `file` 경로 · `http(s)://…` 주소.
@@ -27,7 +26,6 @@ class MutedVideo extends StatefulWidget {
   final Map<String, String> headers;
   final Duration position;
   final bool playing;
-  final Duration maxDrift;
 
   @override
   State<MutedVideo> createState() => _MutedVideoState();
@@ -48,7 +46,7 @@ class _MutedVideoState extends State<MutedVideo> {
 
   /// 위치를 맞출 때 다시 찾는 데 걸리는 시간만큼 앞서 가서 소리와 맞춘다.
   static const _seekLead = Duration(milliseconds: 300);
-  static const _resyncGap = Duration(seconds: 5);
+  static const _resyncGap = Duration(seconds: 3);
 
   /// 처음 열 때는 소리보다 이만큼 앞 지점에서 미리 받아 두었다가, 소리가 거기 닿는 순간 튼다.
   static const _startAhead = Duration(milliseconds: 1500);
@@ -110,6 +108,7 @@ class _MutedVideoState extends State<MutedVideo> {
       _controller = controller;
       _ready = false;
       _shown = false;
+      _speed = 1;
     });
     unawaited(old?.dispose());
     try {
@@ -182,6 +181,22 @@ class _MutedVideoState extends State<MutedVideo> {
     Timer(_movingWait, reveal);
   }
 
+  /// 어긋남을 되감지 않고 재생 속도로 따라잡는다 (되감으면 그때마다 끊겨 보인다).
+  /// 이 안쪽은 그대로 두고, 넘으면 영상을 조금 빠르게 · 느리게 튼다.
+  static const _deadBand = Duration(milliseconds: 250);
+  static const _catchUp = 1.06;
+  static const _slowDown = 0.94;
+
+  /// 이만큼 넘게 어긋나면(사용자가 위치를 크게 옮긴 경우 등) 한 번 되감는다.
+  static const _hardSeekGap = Duration(milliseconds: 2500);
+  var _speed = 1.0;
+
+  void _setSpeed(VideoPlayerController c, double speed) {
+    if (_speed == speed) return;
+    _speed = speed;
+    unawaited(c.setPlaybackSpeed(speed));
+  }
+
   void _follow() {
     final c = _controller;
     if (c == null || !_ready) return;
@@ -191,13 +206,23 @@ class _MutedVideoState extends State<MutedVideo> {
     } else if (!widget.playing && value.isPlaying) {
       unawaited(c.pause());
     }
-    // 버퍼링 중에는 되감지 않는다 (되감으면 또 버퍼링해서 영영 못 맞춘다).
+    // 버퍼링 중에는 건드리지 않는다.
     if (value.isBuffering) return;
-    final drift = (value.position - widget.position).abs();
+    // 양수면 영상이 소리보다 앞서 있다.
+    final drift = value.position - _audioNow();
     final now = DateTime.now();
-    if (drift > widget.maxDrift && now.difference(_lastSync) > _resyncGap) {
-      _lastSync = now;
-      unawaited(c.seekTo(widget.position + _seekLead));
+    if (drift.abs() > _hardSeekGap) {
+      if (now.difference(_lastSync) > _resyncGap) {
+        _lastSync = now;
+        _setSpeed(c, 1);
+        unawaited(c.seekTo(_audioNow() + _seekLead));
+      }
+    } else if (drift > _deadBand) {
+      _setSpeed(c, _slowDown);
+    } else if (drift < -_deadBand) {
+      _setSpeed(c, _catchUp);
+    } else {
+      _setSpeed(c, 1);
     }
   }
 
