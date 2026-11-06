@@ -36,6 +36,13 @@ class _MutedVideoState extends State<MutedVideo> {
   VideoPlayerController? _controller;
   var _ready = false;
 
+  /// 마지막으로 위치를 맞춘 시각. 버퍼링 중에 계속 되감지 않게 간격을 둔다.
+  DateTime _lastSync = DateTime.fromMillisecondsSinceEpoch(0);
+
+  /// 위치를 맞출 때 다시 찾는 데 걸리는 시간만큼 앞서 가서 소리와 맞춘다.
+  static const _seekLead = Duration(milliseconds: 300);
+  static const _resyncGap = Duration(seconds: 2);
+
   @override
   void initState() {
     super.initState();
@@ -84,8 +91,9 @@ class _MutedVideoState extends State<MutedVideo> {
       if (!mounted || _controller != controller) return;
       await controller.setVolume(0);
       await controller.setLooping(false);
-      await controller.seekTo(widget.position);
+      await controller.seekTo(widget.position + _seekLead);
       if (widget.playing) await controller.play();
+      _lastSync = DateTime.now();
       if (mounted && _controller == controller) setState(() => _ready = true);
       debugPrint('[video] 재생 시작: ${controller.value.size}');
     } catch (e) {
@@ -104,8 +112,14 @@ class _MutedVideoState extends State<MutedVideo> {
     } else if (!widget.playing && value.isPlaying) {
       unawaited(c.pause());
     }
+    // 버퍼링 중에는 되감지 않는다 (되감으면 또 버퍼링해서 영영 못 맞춘다).
+    if (value.isBuffering) return;
     final drift = (value.position - widget.position).abs();
-    if (drift > widget.maxDrift) unawaited(c.seekTo(widget.position));
+    final now = DateTime.now();
+    if (drift > widget.maxDrift && now.difference(_lastSync) > _resyncGap) {
+      _lastSync = now;
+      unawaited(c.seekTo(widget.position + _seekLead));
+    }
   }
 
   @override
