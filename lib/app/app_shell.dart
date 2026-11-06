@@ -13,7 +13,7 @@ import '../features/library/domain/entities/track.dart'
 import '../features/home/presentation/bloc/play_recorder_cubit.dart';
 import '../features/player/presentation/bloc/audio_output_cubit.dart';
 import '../features/player/presentation/bloc/now_playing_cubit.dart';
-import '../features/player/presentation/widgets/muted_video.dart';
+import '../features/player/presentation/widgets/native_video.dart';
 import '../features/player/presentation/widgets/player_sleep_timer.dart';
 import '../features/search/presentation/bloc/preview_cubit.dart';
 import '../core/cache/cached_web_image.dart';
@@ -457,7 +457,7 @@ class _ShellMiniPlayer extends StatelessWidget {
         title: track.title,
         artist: track.artist,
         artwork: coverImageOf(context, CoverKey.track(track.id)),
-        video: track.isVideo ? const NowPlayingVideo() : null,
+        video: track.isVideo ? const NativeVideo() : null,
         progress: state.progress,
         isPlaying: state.isPlaying,
         playLabel: l10n.actionPlay,

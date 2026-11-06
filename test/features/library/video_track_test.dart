@@ -31,10 +31,16 @@ void main() {
     });
   });
 
-  test('PreviewVideoCubit: 영상 주소를 읽어 알린다', () async {
-    final cubit = PreviewVideoCubit(ResolveVideoStream(FakeDownloaderEngine()));
+  test('PreviewVideoCubit: 영상 주소를 읽어 네이티브에 틀라고 한다', () async {
+    final player = FakePreviewPlayer();
+    final cubit = PreviewVideoCubit(
+      ResolveVideoStream(FakeDownloaderEngine()),
+      PlayPreviewVideo(player),
+    );
+    expect(cubit.state.started, isFalse);
     await cubit.load('https://example.com/a');
-    expect(cubit.state.url, 'https://video.test/https://example.com/a');
+    expect(cubit.state.started, isTrue);
+    expect(player.playedVideos, ['https://video.test/https://example.com/a']);
     await cubit.close();
   });
 }

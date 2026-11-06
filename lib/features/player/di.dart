@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 
 import '../../core/platform/native_playback_channel.dart';
 import 'data/datasources/audio_output_source.dart';
+import 'data/datasources/native_video_surface.dart';
 import 'data/repositories/native_audio_player_repository.dart';
 import 'data/repositories/platform_audio_output_repository.dart';
 import 'data/repositories/prefs_mix_with_others_repository.dart';
@@ -15,6 +16,8 @@ import 'domain/repositories/mix_with_others_repository.dart';
 import 'domain/repositories/output_behavior_repository.dart';
 import 'domain/repositories/player_style_repository.dart';
 import 'domain/repositories/playback_speed_repository.dart';
+import 'domain/repositories/video_surface.dart';
+import 'domain/usecases/video_surface_usecases.dart';
 import 'domain/usecases/playback_speed_usecases.dart';
 import 'domain/usecases/get_audio_output.dart';
 import 'domain/usecases/mix_with_others_usecases.dart';
@@ -26,10 +29,17 @@ import 'presentation/bloc/output_behavior_cubit.dart';
 import 'presentation/bloc/now_playing_cubit.dart';
 import 'presentation/bloc/player_style_cubit.dart';
 import 'presentation/bloc/playback_speed_cubit.dart';
+import 'presentation/bloc/video_surface_cubit.dart';
 
 void registerPlayer(GetIt sl) {
   sl
     ..registerLazySingleton(NativePlaybackChannel.new)
+    // 영상 화면: 소리와 같은 시계로 네이티브가 틀고, 앱은 그 화면(텍스처)만 그린다.
+    ..registerLazySingleton<VideoSurface>(NativeVideoSurface.new)
+    ..registerFactory(() => AttachVideoSurface(sl()))
+    ..registerFactory(() => DetachVideoSurface(sl()))
+    ..registerFactory(() => WatchVideoSurface(sl()))
+    ..registerFactory(() => VideoSurfaceCubit(sl(), sl(), sl()))
     // 소리는 네이티브 서비스(ExoPlayer)가 낸다 (Android만 지원한다).
     ..registerLazySingleton<AudioPlayerRepository>(
       () => NativeAudioPlayerRepository(sl()),

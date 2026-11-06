@@ -1673,6 +1673,13 @@ class FakePreviewPlayer implements PreviewPlayer {
   /// [current]가 돌려줄 값. 앱이 꺼졌다 켜진 뒤 플레이어에 남은 소리를 흉내 낸다.
   PreviewSnapshot? snapshot;
 
+  /// 영상을 틀라고 한 주소 순서.
+  final playedVideos = <String>[];
+
+  @override
+  Future<void> playVideo(VideoStream stream) async =>
+      playedVideos.add(stream.url);
+
   @override
   Future<void> remember(MediaHit hit) async => remembered.add(hit);
 

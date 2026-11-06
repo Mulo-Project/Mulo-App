@@ -161,6 +161,16 @@ class PlayPreview implements UseCase<void, AudioStream> {
   Future<void> call(AudioStream stream) => _player.play(stream);
 }
 
+/// 미리 듣는 곡의 영상을 소리와 같은 시계로 틀기 (네이티브가 화면까지 맡는다).
+class PlayPreviewVideo implements UseCase<void, VideoStream> {
+  const PlayPreviewVideo(this._player);
+
+  final PreviewPlayer _player;
+
+  @override
+  Future<void> call(VideoStream stream) => _player.playVideo(stream);
+}
+
 /// 재생 중인 미리 듣기가 어느 곡인지 플레이어에 적어 두기.
 class RememberPreview implements UseCase<void, MediaHit> {
   const RememberPreview(this._player);
