@@ -42,7 +42,7 @@ object VideoSurfaceHub {
     fun attach(registry: TextureRegistry): Map<String, Any?> {
         val p = producer ?: registry.createSurfaceProducer().also {
             it.setCallback(object : TextureRegistry.SurfaceProducer.Callback {
-                override fun onSurfaceAvailable() = apply()
+                override fun onSurfaceAvailable() = refresh()
                 override fun onSurfaceCleanup() {
                     bound?.clearVideoSurface()
                 }
@@ -50,24 +50,24 @@ object VideoSurfaceHub {
             producer = it
         }
         attached = true
-        apply()
+        refresh()
         return mapOf("id" to p.id(), "ready" to firstFrame, "width" to width, "height" to height)
     }
 
     /** 화면이 더는 영상을 보지 않는다: 영상 해독을 끈다 (소리는 그대로). */
     fun detach() {
         attached = false
-        apply()
+        refresh()
     }
 
     fun setMain(player: ExoPlayer?) {
         mainPlayer = player
-        apply()
+        refresh()
     }
 
     fun setPreviewVideo(player: ExoPlayer?) {
         previewVideo = player
-        apply()
+        refresh()
     }
 
     fun shutdown() {
@@ -91,7 +91,7 @@ object VideoSurfaceHub {
             .build()
     }
 
-    private fun apply() {
+    private fun refresh() {
         val target = if (attached) (previewVideo ?: mainPlayer) else null
         if (bound !== target) {
             bound?.let {

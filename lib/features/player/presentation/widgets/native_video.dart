@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -21,7 +23,7 @@ class _NativeVideoState extends State<NativeVideo> {
   void initState() {
     super.initState();
     _surface = context.read<VideoSurfaceCubit>();
-    _surface.acquire();
+    unawaited(_surface.acquire());
   }
 
   @override
