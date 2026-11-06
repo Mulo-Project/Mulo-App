@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:video_player/video_player.dart';
@@ -86,8 +87,10 @@ class _MutedVideoState extends State<MutedVideo> {
       await controller.seekTo(widget.position);
       if (widget.playing) await controller.play();
       if (mounted && _controller == controller) setState(() => _ready = true);
-    } catch (_) {
-      // 영상을 못 열면 화면만 비운다 (소리 재생에는 영향이 없다).
+      debugPrint('[video] 재생 시작: ${controller.value.size}');
+    } catch (e) {
+      // 영상을 못 열면 화면만 비운다 (소리 재생에는 영향이 없다). 까닭은 로그로 남긴다.
+      debugPrint('[video] 영상을 못 엶 (${widget.source.split('?').first}): $e');
       if (mounted && _controller == controller) setState(() => _ready = false);
     }
   }

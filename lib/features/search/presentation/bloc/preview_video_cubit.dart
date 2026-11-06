@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/usecases/search_usecases.dart';
@@ -29,9 +30,11 @@ class PreviewVideoCubit extends Cubit<PreviewVideoState> {
     try {
       final stream = await _resolve(pageUrl);
       if (generation != _generation || isClosed) return;
+      debugPrint('[video] 영상 주소 읽음: ${Uri.tryParse(stream.url)?.host}');
       emit(PreviewVideoState(url: stream.url, headers: stream.headers));
-    } catch (_) {
-      // 영상은 덤이다: 못 읽으면 커버를 그대로 둔다.
+    } catch (e) {
+      // 영상은 덤이다: 못 읽으면 커버를 그대로 두고, 까닭만 로그로 남긴다.
+      debugPrint('[video] 영상 주소를 못 읽음 ($pageUrl): $e');
     }
   }
 }
