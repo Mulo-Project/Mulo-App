@@ -26,6 +26,7 @@ class CachedDownloaderEngine implements DownloaderEngine {
   final _infos = <String, _Entry<MediaInfo>>{};
   final _channels = <String, _Entry<ChannelInfo>>{};
   final _streams = <String, _Entry<AudioStream>>{};
+  final _videoStreams = <String, _Entry<VideoStream>>{};
   final _subtitles = <String, _Entry<SubtitleTrack?>>{};
   final _languages = <String, _Entry<List<AudioLanguage>>>{};
 
@@ -81,7 +82,7 @@ class CachedDownloaderEngine implements DownloaderEngine {
 
   @override
   Future<VideoStream> resolveVideoStream(String url) =>
-      _inner.resolveVideoStream(url);
+      _cached(_videoStreams, url, () => _inner.resolveVideoStream(url));
 
   @override
   Future<List<AudioLanguage>> fetchAudioLanguages(String url) =>

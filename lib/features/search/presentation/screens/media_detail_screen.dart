@@ -18,6 +18,7 @@ import '../bloc/media_detail_cubit.dart';
 import '../bloc/preview_cubit.dart';
 import '../widgets/audio_language_sheet.dart';
 import '../widgets/preview_control.dart';
+import '../widgets/preview_video.dart';
 import '../widgets/video_category.dart';
 import '../widgets/youtube_embed.dart';
 
@@ -404,6 +405,15 @@ class _Thumbnail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final thumb = hit.thumbnailUrl;
+    // 이 곡을 미리 듣는 중이면 이미지 자리에 소리 없는 영상을 보여 준다 (영상이 아닌 음원은 제외).
+    final previewing =
+        !audio &&
+        hit.url.isNotEmpty &&
+        context.select(
+          (PreviewCubit c) =>
+              c.state.isActive(hit.id) &&
+              c.state.status == PreviewStatus.playing,
+        );
     return LayoutBuilder(
       builder: (context, box) {
         // 넓은 화면(데스크톱)에서 너무 커지지 않게 높이를 제한하고 가운데에 둔다.
@@ -421,17 +431,27 @@ class _Thumbnail extends StatelessWidget {
                 radius: AppRadii.md,
                 tone: toneFor(hit.id),
               ),
-              CircleIconButton(
-                icon: AppIcons.play,
-                tooltip: inApp
-                    ? context.l10n.mediaDetailPlayInApp
-                    : audio
-                    ? context.l10n.mediaDetailListenOriginal
-                    : context.l10n.mediaDetailWatchYoutube,
-                emphasized: true,
-                size: AppSizes.circleButtonLarge,
-                onPressed: onPlay,
-              ),
+              if (previewing)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadii.md),
+                  child: SizedBox(
+                    width: width,
+                    height: width * 9 / 16,
+                    child: PreviewVideo(pageUrl: hit.url),
+                  ),
+                )
+              else
+                CircleIconButton(
+                  icon: AppIcons.play,
+                  tooltip: inApp
+                      ? context.l10n.mediaDetailPlayInApp
+                      : audio
+                      ? context.l10n.mediaDetailListenOriginal
+                      : context.l10n.mediaDetailWatchYoutube,
+                  emphasized: true,
+                  size: AppSizes.circleButtonLarge,
+                  onPressed: onPlay,
+                ),
             ],
           ),
         );

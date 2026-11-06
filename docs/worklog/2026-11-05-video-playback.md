@@ -9,6 +9,7 @@
 - 폴더 불러오기: `MediaStoreChannel.queryVideo`(MediaStore.Video), Dart는 영상 권한(`READ_MEDIA_VIDEO`, Android 13+)을 따로 물어 거절돼도 음악 불러오기는 그대로 된다. 영상 곡 id는 `device-video:<id>`, `Track.isVideo`는 id 앞머리(또는 파일 확장자)로 가른다 (DB 스키마 변경 없음).
 - 보관함 영상 곡: 미니 플레이어(`MiniPlayerBar.video`, 가로 78×44)와 플레이어 화면 커버(`PlayerCover.video`)가 커버 대신 영상을 보여 준다. 영상이 열리기 전에는 커버가 보인다.
 - 영상 썸네일: 영상 파일은 내장 커버가 없으니 `embeddedPicture`가 영상 길이 10%(최대 10초) 지점 장면을 JPEG(긴 변 512px)로 돌려준다. 기존 `FillEmbeddedCovers`가 불러오기 때 이 장면을 곡 커버로 붙이므로 곡 목록 아이템에도 같은 커버가 나온다.
+- 영상 상세 화면: 이 곡을 미리 듣는 동안 썸네일 자리(재생 버튼 대신)에 소리 없는 영상을 보여 주고, 화면을 나가면 미니 플레이어의 영상으로 이어진다. 영상 주소는 `CachedDownloaderEngine`에서 캐시해 두 화면이 다시 읽지 않는다.
 - YouTube 미리 듣기: `DownloaderEngine.resolveVideoStream`(yt-dlp, 소리 없는 360p 이하 영상 하나) → `PreviewVideoCubit` → 미리 듣기 미니 플레이어에 영상 표시. 못 읽으면 커버를 그대로 둔다.
 - 패키지 추가: `video_player` (pubspec). `flutter pub get` 필요.
 
