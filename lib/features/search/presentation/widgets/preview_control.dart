@@ -11,11 +11,14 @@ import '../bloc/audio_language_cubit.dart';
 import '../bloc/preview_cubit.dart';
 
 /// [hit] 미리 듣기를 시작하거나(이미 듣는 중이면) 멈춘다.
-/// 소리가 나기 시작하면 메인 재생은 멈추고, 시작하지 못하면 안내를 띄운다.
-Future<void> togglePreview(
+/// 소리가 나기 시작하면 메인 재생은 멈추고, 시작하지 못하면 안내를 띄운다
+/// ([announceFailure]가 false면 안내 없이 false만 돌려준다).
+/// 시작하지 못했으면 false, 잘 됐거나 멈췄으면 true.
+Future<bool> togglePreview(
   BuildContext context,
   MediaHit hit, {
   String? audioLanguage,
+  bool announceFailure = true,
 }) async {
   final l10n = context.l10n;
   final messenger = ScaffoldMessenger.of(context);
@@ -24,6 +27,7 @@ Future<void> togglePreview(
 
   final failure = await preview.toggle(hit, audioLanguage: audioLanguage);
   if (failure != null) {
+    if (!announceFailure) return false;
     // 까닭을 알 수 있게 엔진이 알려 준 마지막 줄을 덧붙인다.
     final detail = preview.lastFailureDetail
         .split('\n')
@@ -45,7 +49,7 @@ Future<void> togglePreview(
         ),
       ),
     );
-    return;
+    return false;
   }
   // 두 소리가 겹치지 않게 메인 재생은 미리 듣기가 시작될 때 멈춘다.
   final state = preview.state;
@@ -54,6 +58,7 @@ Future<void> togglePreview(
       nowPlaying.state.isPlaying) {
     nowPlaying.togglePlay();
   }
+  return true;
 }
 
 /// 상세 화면의 미리 듣기 버튼. 준비 중이거나 듣는 중이면 누를 때 멈춘다.

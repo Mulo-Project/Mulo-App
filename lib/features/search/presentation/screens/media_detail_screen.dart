@@ -143,8 +143,19 @@ class _DetailViewState extends State<_DetailView> {
       isYoutubeUrl(hit.url) &&
       isYoutubeVideoId(hit.id);
 
-  /// 썸네일의 재생 버튼: 앱 안에서 틀 수 있으면 그 자리에서, 아니면 유튜브로 연다.
-  void _play(MediaHit hit) {
+  /// 썸네일의 재생 버튼: 앱 안에서 틀 수 있는 유튜브 영상은 미리 듣기(소리 + 영상)로 그 자리에서 튼다.
+  /// 그 화면을 나가면 미니 플레이어가 영상을 이어서 보여 준다.
+  /// 미리 듣기를 시작하지 못하면 앱 안 플레이어(웹뷰)로, 그것도 안 되면 유튜브로 연다.
+  Future<void> _play(MediaHit hit) async {
+    if (widget.inAppVideo && isYoutubeUrl(hit.url)) {
+      final started = await togglePreview(
+        context,
+        hit,
+        audioLanguage: context.read<AudioLanguageCubit>().state.selected,
+        announceFailure: false,
+      );
+      if (started || !mounted) return;
+    }
     if (!_canEmbed(hit)) return unawaited(_open(hit.url));
     // 앱 안 영상과 미리 듣기 소리가 겹치지 않게 미리 듣기는 멈춘다.
     _preview.stop();
@@ -236,7 +247,7 @@ class _DetailViewState extends State<_DetailView> {
                         hit: hit,
                         inApp: _canEmbed(hit),
                         audio: audio,
-                        onPlay: () => _play(hit),
+                        onPlay: () => unawaited(_play(hit)),
                       ),
                     if (_embedBlocked)
                       Padding(
@@ -434,10 +445,14 @@ class _Thumbnail extends StatelessWidget {
               if (previewing)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(AppRadii.md),
-                  child: SizedBox(
-                    width: width,
-                    height: width * 9 / 16,
-                    child: PreviewVideo(pageUrl: hit.url),
+                  // 영상을 누르면 잠시 멈추거나 이어서 튼다.
+                  child: GestureDetector(
+                    onTap: () => context.read<PreviewCubit>().togglePause(),
+                    child: SizedBox(
+                      width: width,
+                      height: width * 9 / 16,
+                      child: PreviewVideo(pageUrl: hit.url),
+                    ),
                   ),
                 )
               else
