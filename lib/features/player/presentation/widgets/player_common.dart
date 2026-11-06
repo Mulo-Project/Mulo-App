@@ -16,7 +16,6 @@ import '../../../lyrics/presentation/screens/lyrics_full_screen.dart';
 import '../../../lyrics/presentation/widgets/lyrics_view.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../bloc/now_playing_cubit.dart';
-import 'muted_video.dart';
 import 'player_seek.dart';
 import 'player_sleep_timer.dart';
 

@@ -53,7 +53,7 @@ class _MutedVideoState extends State<MutedVideo> {
 
   VideoPlayerController _create() {
     final s = widget.source;
-    const options = VideoPlayerOptions(mixWithOthers: true);
+    final options = VideoPlayerOptions(mixWithOthers: true);
     if (s.startsWith('content://')) {
       return VideoPlayerController.contentUri(
         Uri.parse(s),
