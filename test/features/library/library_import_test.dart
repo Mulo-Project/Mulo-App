@@ -80,12 +80,13 @@ void main() {
       source: source,
     );
 
-    test('커버가 없는 기기 곡에만 내장 커버를 붙이고 임시 파일을 치운다', () async {
+    test('커버가 없는 곡(받은 곡 포함)에 내장 커버를 붙이고 임시 파일을 치운다', () async {
       final covers = MemoryCoverRepository();
       await covers.saveUrl('track:device:b', 'https://example.com/b.jpg');
       final embedded = FakeEmbeddedCovers({
         'content://device:a': '/tmp/a.png',
         'content://device:b': '/tmp/b.png',
+        'content://download:d': '/tmp/d.png',
       });
       final useCase = FillEmbeddedCovers(
         FakeLibraryRepository([
@@ -97,13 +98,18 @@ void main() {
         covers,
         embedded,
       );
-      expect(await useCase(const NoParams()), 1);
+      expect(await useCase(const NoParams()), 2);
       expect(covers.saved['track:device:a']!.path, '/tmp/a.png');
-      // 이미 커버가 있는 곡 · 받은 곡은 읽지도 않는다. 내장 커버가 없는 곡은 그대로.
+      expect(covers.saved['track:download:d']!.path, '/tmp/d.png');
+      // 이미 커버가 있는 곡은 읽지도 않는다. 내장 커버가 없는 곡은 그대로.
       expect(covers.saved['track:device:b']!.isWeb, isTrue);
       expect(covers.saved.containsKey('track:device:c'), isFalse);
-      expect(embedded.extracted, ['content://device:a', 'content://device:c']);
-      expect(embedded.discarded, ['/tmp/a.png']);
+      expect(embedded.extracted, [
+        'content://device:a',
+        'content://device:c',
+        'content://download:d',
+      ]);
+      expect(embedded.discarded, ['/tmp/a.png', '/tmp/d.png']);
     });
 
     test('두 번째 실행은 이미 채운 곡을 다시 읽지 않는다', () async {

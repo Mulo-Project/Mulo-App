@@ -54,6 +54,9 @@ class FileTagRepositoryImpl implements FileTagRepository {
 
   @override
   Future<FileTags?> read(Track track) => _source.read(track.uri);
+
+  @override
+  String takeSummary() => FileTagSource.takeSummary();
 }
 
 /// 곡 id 목록을 shared_preferences에 기록한다 (태그 이관 · 복원이 키만 다르다).
@@ -84,7 +87,7 @@ class PrefsTagMigrationStore implements TagMigrationStore {
 }
 
 class PrefsTagRestoreStore implements TagRestoreStore {
-  static const _ids = _PrefsIdSet('library.tagRestoreDone');
+  static const _ids = _PrefsIdSet('library.tagRestoreDone2');
 
   @override
   Future<Set<String>> loadDone() => _ids.load();

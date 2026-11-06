@@ -10,7 +10,7 @@ class HomeDivider extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.symmetric(
       horizontal: AppSpacing.md,
-      vertical: AppSpacing.lg,
+      vertical: AppSpacing.md,
     ),
     child: const AppDivider(),
   );
@@ -26,7 +26,7 @@ class HomeSectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    final style = Theme.of(context).textTheme.titleLarge
+    final style = Theme.of(context).textTheme.headlineSmall
         ?.copyWith(fontWeight: FontWeight.w700);
     return InkWell(
       onTap: onTap,

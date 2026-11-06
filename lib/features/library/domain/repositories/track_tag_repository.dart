@@ -41,6 +41,9 @@ abstract interface class FileTagRepository {
   /// [track] 파일의 태그. 지원하지 않는 형식이거나 태그가 없으면 [FileTags.none],
   /// 파일을 못 읽었으면(권한 · 복사 실패 등) null (나중에 다시 시도한다).
   Future<FileTags?> read(Track track);
+
+  /// 임시 진단: 지금까지 읽은 결과를 종류별로 센 한 줄 (꺼내면 비운다). 없으면 빈 문자열.
+  String takeSummary();
 }
 
 /// 이미 태그를 읽어 DB를 채운 곡 id 기록 (곡마다 한 번만, 이어서 하려고).

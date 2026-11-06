@@ -103,6 +103,33 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
     );
   }
 
+  Widget _shortcuts(AppLocalizations l10n) => Padding(
+    padding: AppSpacing.screen.copyWith(top: AppSpacing.xs),
+    child: Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: PillButton(
+            label: l10n.playlistImportMine,
+            icon: AppIcons.playlistPlay,
+            variant: PillVariant.tonal,
+            onPressed: _openMine,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        SizedBox(
+          width: double.infinity,
+          child: PillButton(
+            label: l10n.playlistImportChannels,
+            icon: AppIcons.person,
+            variant: PillVariant.tonal,
+            onPressed: _openChannels,
+          ),
+        ),
+      ],
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -143,43 +170,19 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
                             controller: _controller,
                             hint: l10n.playlistImportHint,
                             clearTooltip: l10n.actionClear,
+                            // 이 화면은 검색이 주 동작이라 아래 큰 버튼들보다 커 보이게 한다.
+                            height: 56,
                             onSubmitted: (_) => _load(),
-                          ),
-                        ),
-                        Padding(
-                          padding: AppSpacing.screen.copyWith(
-                            top: AppSpacing.xs,
-                            bottom: AppSpacing.xs,
-                          ),
-                          // 검색창과 같은 너비로 펼쳐 왼쪽에 쏠려 보이지 않게 한다.
-                          child: SizedBox(
-                            width: double.infinity,
-                            child: PillButton(
-                              label: l10n.playlistImportMine,
-                              icon: AppIcons.playlistPlay,
-                              variant: PillVariant.tonal,
-                              onPressed: _openMine,
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: AppSpacing.screen.copyWith(
-                            top: 0,
-                            bottom: AppSpacing.xs,
-                          ),
-                          child: SizedBox(
-                            width: double.infinity,
-                            child: PillButton(
-                              label: l10n.playlistImportChannels,
-                              icon: AppIcons.person,
-                              variant: PillVariant.tonal,
-                              onPressed: _openChannels,
-                            ),
                           ),
                         ),
                       ],
                       Expanded(
-                        child: _Body(onRetry: _load, onSignIn: () => _reopen()),
+                        child: _Body(
+                          onRetry: _load,
+                          onSignIn: () => _reopen(),
+                          // 내 재생목록 · 채널 버튼은 검색창과 달리 목록과 함께 스크롤된다.
+                          shortcuts: viewing ? null : _shortcuts(l10n),
+                        ),
                       ),
                       _Footer(starting: _starting, onStart: _start),
                     ],
@@ -195,17 +198,45 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
 }
 
 class _Body extends StatelessWidget {
-  const _Body({required this.onRetry, required this.onSignIn});
+  const _Body({
+    required this.onRetry,
+    required this.onSignIn,
+    this.shortcuts,
+  });
 
   final VoidCallback onRetry;
+
+  /// 목록 위에 함께 스크롤되는 버튼들 (없으면 곡 목록을 열어 보는 중).
+  final Widget? shortcuts;
 
   /// 내 재생목록을 읽으려면 로그인해야 할 때 누르는 버튼의 동작.
   final VoidCallback onSignIn;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
     final state = context.watch<PlaylistImportCubit>().state;
+    final content = _content(context, state);
+    final lead = shortcuts;
+    // 안내 화면은 버튼 아래 남은 자리 가운데에 놓고, 같이 스크롤한다 (결과 목록은 목록 맨 위에 붙인다).
+    final listing =
+        state.status == PlaylistImportStatus.results &&
+        state.results.isNotEmpty;
+    final withLead =
+        lead != null &&
+        (state.status == PlaylistImportStatus.idle ||
+            state.status == PlaylistImportStatus.results ||
+            state.status == PlaylistImportStatus.failed);
+    if (!withLead || listing) return content;
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(child: lead),
+        SliverFillRemaining(hasScrollBody: false, child: content),
+      ],
+    );
+  }
+
+  Widget _content(BuildContext context, PlaylistImportState state) {
+    final l10n = context.l10n;
 
     // 모든 안내에 아이콘을 붙여 같은 모양으로 보인다.
     Widget message(
@@ -239,6 +270,7 @@ class _Body extends StatelessWidget {
         return ListView(
           padding: const EdgeInsets.only(bottom: AppSpacing.md),
           children: [
+            ?shortcuts,
             if (state.mine) SectionTitle(l10n.playlistImportMineTitle),
             if (state.channel.isNotEmpty) SectionTitle(state.channel),
             for (final hit in state.results)
@@ -384,11 +416,14 @@ class _Tracks extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: AppSpacing.sm),
-        const AppDivider(),
+        const SizedBox(height: AppSpacing.md),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          child: AppDivider(),
+        ),
         // 고른 수는 왼쪽, 전체 선택 · 해제는 곡 목록의 체크 표시와 같은 오른쪽.
         Padding(
-          padding: AppSpacing.screen.copyWith(top: AppSpacing.xxs, bottom: 0),
+          padding: AppSpacing.screen.copyWith(top: AppSpacing.sm, bottom: 0),
           child: Row(
             children: [
               Expanded(

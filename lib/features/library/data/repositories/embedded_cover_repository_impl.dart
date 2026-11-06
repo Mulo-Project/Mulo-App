@@ -12,4 +12,7 @@ class EmbeddedCoverRepositoryImpl implements EmbeddedCoverRepository {
 
   @override
   Future<void> discard(String path) => _source.discard(path);
+
+  @override
+  String takeSummary() => EmbeddedCoverSource.takeSummary();
 }

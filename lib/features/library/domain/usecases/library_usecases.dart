@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 
+import '../../../../core/diagnostics/diag_notice.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../../covers/domain/entities/cover_art.dart';
 import '../../../covers/domain/entities/cover_key.dart';
@@ -8,6 +10,7 @@ import '../entities/file_tags.dart';
 import '../entities/import_result.dart';
 import '../entities/loaded_folder.dart';
 import '../entities/track.dart';
+import '../entities/track_file_info.dart';
 import '../entities/track_info.dart';
 import '../repositories/library_repository.dart';
 import '../repositories/track_tag_repository.dart';
@@ -89,7 +92,7 @@ class ImportDeviceMusic implements UseCase<ImportOutcome, NoParams> {
   }
 }
 
-/// 커버가 없는 기기 곡에 파일 내장 커버를 붙인다. 새로 붙인 수를 돌려준다.
+/// 커버가 없는 곡(기기에서 불러온 곡 · 앱에서 받은 곡)에 파일 내장 커버를 붙인다. 새로 붙인 수를 돌려준다.
 /// 직접 고른 커버 · 웹 썸네일처럼 이미 커버가 있는 곡은 건드리지 않는다 (파일이 사라진 커버는 빈 것으로 본다).
 /// 한 곡이 실패해도 나머지는 계속한다.
 class FillEmbeddedCovers implements UseCase<int, NoParams> {
@@ -102,6 +105,15 @@ class FillEmbeddedCovers implements UseCase<int, NoParams> {
   @override
   Future<int> call(NoParams _) => run();
 
+  /// 커버가 없거나, 웹 주소가 깨져(앞에 안 보이는 글자 등) 못 불러오는 곡은 파일 안 그림으로 채운다.
+  static bool _needsCover(CoverArt? c) {
+    if (c == null) return true;
+    final path = c.path;
+    if (path != null && path.isNotEmpty) return false;
+    final url = c.url;
+    return url != null && !url.startsWith('http');
+  }
+
   /// [onProgress]로 (끝낸 곡 수, 채울 곡 수)를 알리며 채운다.
   Future<int> run({
     void Function(int done, int total)? onProgress,
@@ -111,12 +123,23 @@ class FillEmbeddedCovers implements UseCase<int, NoParams> {
     final have = await _covers.loadAll();
     final todo = [
       for (final t in tracks)
-        if (t.source == TrackSource.device &&
-            t.uri.isNotEmpty &&
-            !have.containsKey(CoverKey.track(t.id)))
+        if (t.uri.isNotEmpty && _needsCover(have[CoverKey.track(t.id)]))
           t,
     ];
     var filled = 0;
+    final lines = <String>[];
+    // 이미 커버 정보가 있어 채우지 않는 곡도 어떤 커버인지 적는다 (웹 주소 커버는 못 불러오면 빈 칸으로 보인다).
+    for (final t in tracks) {
+      final c = have[CoverKey.track(t.id)];
+      if (c == null || t.uri.isEmpty) continue;
+      final name = t.title.length > 14 ? t.title.substring(0, 14) : t.title;
+      final url = c.url;
+      final path = c.path;
+      lines.add(
+        '- $name: ${path != null && path.isNotEmpty ? 'file ${File(path).existsSync() ? 'ok' : 'MISSING'}' : 'url ${url == null ? 'none' : (url.length > 40 ? url.substring(0, 40) : url)}'}',
+      );
+    }
+    _embedded.takeSummary();
     onProgress?.call(0, todo.length);
     for (final (i, t) in todo.indexed) {
       if (cancelled?.call() ?? false) break;
@@ -124,6 +147,9 @@ class FillEmbeddedCovers implements UseCase<int, NoParams> {
       String? temp;
       try {
         temp = await _embedded.extract(t);
+        final why = _embedded.takeSummary();
+        final name = t.title.length > 14 ? t.title.substring(0, 14) : t.title;
+        lines.add('${temp == null ? 'X' : 'O'} $name: $why');
         if (temp == null) continue;
         await _covers.save(key, temp);
         filled++;
@@ -133,6 +159,12 @@ class FillEmbeddedCovers implements UseCase<int, NoParams> {
         if (temp != null) await _embedded.discard(temp);
         onProgress?.call(i + 1, todo.length);
       }
+    }
+    // 임시 진단: 디버그 빌드가 커버를 채운 결과를 snackbar로 보여 준다.
+    if (todo.isNotEmpty) {
+      DiagNotice.post(
+        '[cover fill] ${todo.length}곡 중 $filled곡 채움\n${lines.join('\n')}',
+      );
     }
     return filled;
   }
@@ -297,6 +329,11 @@ class RestoreFromFileTags implements UseCase<int, NoParams> {
       }
       onProgress?.call(i + 1, todo.length);
     }
+    // 임시 진단: 읽은 결과를 디버그 빌드가 snackbar로 보여 준다.
+    final summary = _tags.takeSummary();
+    if (todo.isNotEmpty) {
+      DiagNotice.post('[tag read] ${todo.length}곡 · 반영 $restored · $summary');
+    }
     return restored;
   }
 
@@ -343,4 +380,14 @@ class DeleteTrack implements UseCase<bool, Track> {
     await _library.delete(track.id);
     return true;
   }
+}
+
+/// 곡의 음악 파일 정보 (크기 · 형식 · 비트레이트 · 샘플레이트). 읽을 수 없으면 null.
+class GetTrackFileInfo implements UseCase<TrackFileInfo?, Track> {
+  const GetTrackFileInfo(this._files);
+
+  final TrackFileRepository _files;
+
+  @override
+  Future<TrackFileInfo?> call(Track track) => _files.fileInfo(track);
 }

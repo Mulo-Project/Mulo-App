@@ -72,11 +72,13 @@ Future<T?> showAppMenu<T>(
         if (item.dividerBefore) const PopupMenuDivider(),
         PopupMenuItem<T>(
           value: item.value,
+          height: 44,
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           child: Row(
             children: [
               Icon(
                 item.icon,
-                size: AppSizes.iconMd,
+                size: AppSizes.iconSm,
                 color:
                     item.iconColor ?? (item.destructive ? error : p.onSurface),
               ),
@@ -84,7 +86,7 @@ Future<T?> showAppMenu<T>(
               Flexible(
                 child: Text(
                   item.label,
-                  style: text.bodyLarge?.copyWith(
+                  style: text.bodyMedium?.copyWith(
                     color: item.destructive ? error : p.onSurface,
                   ),
                 ),

@@ -55,6 +55,7 @@ class AppDropdown<T> extends StatelessWidget {
           const SizedBox(width: AppSpacing.xxs),
         ],
         Text(labelOf(selected), style: text),
+        const SizedBox(width: AppSpacing.xs),
         Icon(AppIcons.dropDown, size: AppSizes.iconSm, color: p.onSurfaceMuted),
       ],
     );
@@ -65,17 +66,19 @@ class AppDropdown<T> extends StatelessWidget {
       onSelected: onChanged,
       color: p.surfaceHigh,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadii.md),
+        borderRadius: BorderRadius.circular(AppRadii.sm),
         side: BorderSide(color: p.outline),
       ),
       itemBuilder: (_) => [
         for (final v in values)
           PopupMenuItem<T>(
             value: v,
+            height: 40,
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             child: Row(
               children: [
                 SizedBox(
-                  width: 24,
+                  width: 20,
                   child: v == selected
                       ? Icon(
                           AppIcons.check,
@@ -96,43 +99,40 @@ class AppDropdown<T> extends StatelessWidget {
           ),
       ],
       child: Container(
-        height: 36,
+        height: 44,
         alignment: Alignment.center,
         padding: EdgeInsets.only(
           left: AppSpacing.md,
-          right: toggle == null ? AppSpacing.xs : 0,
+          right: toggle == null ? AppSpacing.sm : AppSpacing.xs,
         ),
         child: label,
       ),
     );
 
+    // 테두리 없이 옅은 면 하나로 단순하게 (검색칸과 같은 높이 · 같은 면).
     return Container(
-      height: 36,
+      height: 44,
       decoration: ShapeDecoration(
         color: p.surfaceHigh,
-        shape: StadiumBorder(side: BorderSide(color: p.outline)),
+        shape: const StadiumBorder(),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           menu,
           if (toggle != null) ...[
-            SizedBox(
-              height: 16,
-              child: VerticalDivider(width: 1, color: p.outline),
-            ),
             Tooltip(
               message: directionTooltip ?? '',
               child: InkWell(
                 onTap: toggle,
                 customBorder: const StadiumBorder(),
                 child: SizedBox(
-                  width: 36,
-                  height: 36,
+                  width: 40,
+                  height: 44,
                   child: Icon(
                     (ascending ?? true) ? AppIcons.arrowUp : AppIcons.arrowDown,
                     size: AppSizes.iconSm,
-                    color: p.accent,
+                    color: p.onSurfaceMuted,
                   ),
                 ),
               ),

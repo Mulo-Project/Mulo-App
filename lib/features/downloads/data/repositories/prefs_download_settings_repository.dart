@@ -15,14 +15,32 @@ class PrefsDownloadSettingsRepository implements DownloadSettingsRepository {
   @override
   List<AudioFormat> selectableFormats() => selectableSaveFormats();
 
+  static const _lastKey = 'download.lastSavePath';
+
   @override
-  Future<String> loadSavePath() async =>
-      (await SharedPreferences.getInstance()).getString(_key) ??
-      defaultMusicFolder();
+  Future<String> loadSavePath() async {
+    final prefs = await SharedPreferences.getInstance();
+    final fixed = prefs.getString(_key) ?? '';
+    if (fixed.isNotEmpty) return fixed;
+    final last = prefs.getString(_lastKey) ?? '';
+    return last.isNotEmpty ? last : defaultMusicFolder();
+  }
+
+  @override
+  Future<String> loadFixedSavePath() async =>
+      (await SharedPreferences.getInstance()).getString(_key) ?? '';
 
   @override
   Future<void> saveSavePath(String path) async =>
       (await SharedPreferences.getInstance()).setString(_key, path);
+
+  @override
+  Future<void> clearSavePath() async =>
+      (await SharedPreferences.getInstance()).remove(_key);
+
+  @override
+  Future<void> saveLastSavePath(String path) async =>
+      (await SharedPreferences.getInstance()).setString(_lastKey, path);
 
   @override
   Future<AudioFormat> loadFormat() async {

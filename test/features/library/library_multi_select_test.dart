@@ -44,7 +44,7 @@ void main() {
     await tester.longPress(find.text('첫 곡'));
     await tester.pumpAndSettle();
     // 팝업 메뉴가 아니라 선택 모드다.
-    expect(find.text('정보 편집'), findsNothing);
+    expect(find.text('상세 정보'), findsNothing);
     expect(find.text('1곡 선택'), findsOneWidget);
     expect(find.byTooltip('곡 메뉴'), findsNothing);
 
@@ -132,7 +132,7 @@ void main() {
 
     await tester.longPress(find.text('첫 곡'));
     await tester.pumpAndSettle();
-    expect(find.text('정보 편집'), findsNothing);
+    expect(find.text('상세 정보'), findsNothing);
     expect(find.text('1곡 선택'), findsOneWidget);
     await tester.tap(find.text('작업'));
     await tester.pumpAndSettle();

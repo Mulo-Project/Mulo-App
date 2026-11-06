@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer' as developer;
 import 'dart:io';
 
 import '../../domain/entities/audio_language.dart';
@@ -84,6 +85,7 @@ class LocalEngine implements DownloaderEngine {
     final prefix = newest && source.supportsNewest
         ? '${source.searchKey}date'
         : source.searchKey;
+    developer.log('$prefix$want:$query (newest=$newest)', name: 'MuloSearch');
     final out = await _exec([
       '--flat-playlist',
       '--dump-json',
@@ -440,6 +442,7 @@ class LocalEngine implements DownloaderEngine {
     }
     if (r.exitCode != 0) {
       final err = r.stderr.trim();
+      developer.log('실패(${r.exitCode}): $err', name: 'MuloSearch');
       final failure = err.contains('Unsupported URL')
           ? EngineFailure.notFound
           : err.contains('Unable to download') || err.contains('getaddrinfo')
@@ -448,6 +451,14 @@ class LocalEngine implements DownloaderEngine {
       throw EngineException(failure, err);
     }
     return r.stdout;
+  }
+
+  /// 진행 중이거나 예정인 실시간 스트리밍인지.
+  static bool _isLive(Map<String, dynamic> j) {
+    final status = j['live_status'];
+    return j['is_live'] == true ||
+        status == 'is_live' ||
+        status == 'is_upcoming';
   }
 
   Map<String, dynamic>? _decode(String s) {
@@ -509,6 +520,7 @@ class LocalEngine implements DownloaderEngine {
           if (!_keys(j['subtitles']).contains(k)) k,
       ],
       album: parseText(j['album']) ?? '',
+      isLive: _isLive(j),
     );
   }
 }

@@ -7,7 +7,9 @@ import '../features/home/presentation/screens/top_tracks_screen.dart';
 import '../features/library/presentation/screens/album_screen.dart';
 import '../features/library/presentation/screens/artist_screen.dart';
 import '../features/library/presentation/screens/genre_screen.dart';
+import '../features/library/domain/entities/track.dart';
 import '../features/library/presentation/screens/library_screen.dart';
+import '../features/library/presentation/screens/track_info_screen.dart';
 import '../features/player/presentation/screens/player_screen.dart';
 import '../features/player/presentation/screens/queue_screen.dart';
 import '../features/playlists/presentation/screens/playlist_detail_screen.dart';
@@ -31,6 +33,9 @@ abstract final class Routes {
   static const settings = '/settings';
   static const player = '/player';
   static const queue = '/queue';
+
+  /// 곡 상세 정보 · 편집 ([Track]을 `extra`로 넘긴다).
+  static const trackInfo = '/track-info';
 
   /// 구독 채널 목록 · 채널 검색 (설정 아래, 탭 틀 위로 덮어 연다).
   static const subscriptions = '/settings/subscriptions';
@@ -229,6 +234,13 @@ GoRouter createRouter({String initialLocation = Routes.home}) => GoRouter(
           ],
         ),
       ],
+    ),
+    GoRoute(
+      path: Routes.trackInfo,
+      parentNavigatorKey: _rootKey,
+      pageBuilder: (context, state) => MaterialPage(
+        child: TrackInfoScreen(track: state.extra! as Track),
+      ),
     ),
     GoRoute(
       path: Routes.queue,

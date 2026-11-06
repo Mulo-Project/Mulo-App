@@ -101,9 +101,9 @@ flutter:
           weight: 600
         - asset: assets/fonts/pretendard/Pretendard-Bold.otf
           weight: 700
-    - family: PhosphorRegular
+    - family: PhosphorLight
       fonts:
-        - asset: assets/fonts/phosphor/Phosphor.ttf
+        - asset: assets/fonts/phosphor/Phosphor-Light.ttf
     - family: PhosphorFill
       fonts:
         - asset: assets/fonts/phosphor/Phosphor-Fill.ttf

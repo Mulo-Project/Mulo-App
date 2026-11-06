@@ -902,7 +902,7 @@ void main() {
     expect(find.byIcon(AppIcons.chevronDown), findsNothing);
   });
 
-  testWidgets('검색 대상 메뉴: 유튜브 → SoundCloud, 오른쪽 버튼으로 검색', (tester) async {
+  testWidgets('검색 대상 메뉴: 유튜브 → SoundCloud, 오른쪽에서 고른다', (tester) async {
     await open(tester, const []);
     // 검색창에는 아이콘만, 눌러서 연 메뉴에는 아이콘 + 이름.
     expect(find.text('유튜브'), findsNothing);
@@ -914,7 +914,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('youtube-mark')), findsNothing);
     expect(find.text('SoundCloud URL이나 검색어'), findsOneWidget);
-    // 오른쪽 검색 버튼
-    expect(find.byTooltip('검색'), findsOneWidget);
+    // 검색 버튼은 따로 없다 (키보드 검색 키로 검색한다).
+    expect(find.byTooltip('검색'), findsNothing);
   });
 }

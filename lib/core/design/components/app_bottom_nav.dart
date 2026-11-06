@@ -19,8 +19,8 @@ class AppNavItem {
   final bool highlighted;
 }
 
-/// 화면 아래에 붙은 단색 탭 바. 선택된 탭은 강조 색 아이콘 + 아래 작은 점.
-/// [AppNavItem.highlighted] 탭은 강조 색 원으로 눈에 띄게 그린다.
+/// 화면 아래에 붙은 단색 탭 바(윗선 없음). 선택된 탭은 강조 색 아이콘 + 옅은 알약.
+/// [AppNavItem.highlighted] 탭은 테두리 없는 강조 색 원으로 그린다.
 class AppBottomNav extends StatelessWidget {
   const AppBottomNav({
     super.key,
@@ -41,10 +41,8 @@ class AppBottomNav extends StatelessWidget {
 
     // 화면 아래에 붙은 단색 바 (유리 없음, D-020).
     return DecoratedBox(
-      decoration: BoxDecoration(
-        color: p.surface,
-        border: Border(top: BorderSide(color: p.outline)),
-      ),
+      // 윗선 없이 면 색 차이로만 구분한다.
+      decoration: BoxDecoration(color: p.surface),
       child: SafeArea(
         top: false,
         child: SizedBox(
@@ -88,6 +86,16 @@ class _NavButton extends StatelessWidget {
     final p = context.palette;
     final color = selected ? p.accent : p.onSurfaceMuted;
 
+    // 라벨은 선택한 탭에만 보인다 (안 고른 탭은 아이콘만).
+    final label = Text(
+      item.label,
+      style: labelStyle.copyWith(
+        color: color,
+        letterSpacing: 0,
+        fontWeight: FontWeight.w700,
+      ),
+    );
+
     if (item.highlighted) {
       return Semantics(
         selected: selected,
@@ -97,22 +105,30 @@ class _NavButton extends StatelessWidget {
           onTap: onTap,
           radius: 36,
           child: ExcludeSemantics(
-            child: Center(
-              child: AnimatedContainer(
-                duration: AppMotion.fast,
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: selected ? p.accent : p.accent.withValues(alpha: .18),
-                  border: Border.all(color: p.accent, width: 1.5),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AnimatedContainer(
+                  duration: AppMotion.fast,
+                  width: selected ? 40 : 44,
+                  height: selected ? 40 : 44,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: selected
+                        ? p.accent
+                        : p.accent.withValues(alpha: .14),
+                  ),
+                  child: Icon(
+                    selected ? item.selectedIcon : item.icon,
+                    color: selected ? p.onAccent : p.accent,
+                    size: AppSizes.icon,
+                  ),
                 ),
-                child: Icon(
-                  selected ? item.selectedIcon : item.icon,
-                  color: selected ? p.onAccent : p.accent,
-                  size: AppSizes.icon + 2,
-                ),
-              ),
+                if (selected) ...[
+                  const SizedBox(height: AppSpacing.hair),
+                  label,
+                ],
+              ],
             ),
           ),
         ),
@@ -130,30 +146,28 @@ class _NavButton extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                selected ? item.selectedIcon : item.icon,
-                color: color,
-                size: AppSizes.icon,
-              ),
-              const SizedBox(height: AppSpacing.hair),
-              Text(
-                item.label,
-                style: labelStyle.copyWith(
-                  color: color,
-                  letterSpacing: 0,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 3),
+              // 선택된 탭은 아이콘 뒤에 옅은 알약이 깔리고 아래에 이름이 보인다.
               AnimatedContainer(
                 duration: AppMotion.fast,
-                width: 4,
-                height: 4,
+                width: 52,
+                height: 28,
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: selected ? p.accent : p.accent.withValues(alpha: 0),
+                  borderRadius: BorderRadius.circular(AppRadii.pill),
+                  color: selected
+                      ? p.accent.withValues(alpha: .14)
+                      : p.accent.withValues(alpha: 0),
+                ),
+                child: Icon(
+                  selected ? item.selectedIcon : item.icon,
+                  color: color,
+                  size: AppSizes.icon,
                 ),
               ),
+              if (selected) ...[
+                const SizedBox(height: AppSpacing.hair),
+                label,
+              ],
             ],
           ),
         ),

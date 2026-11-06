@@ -16,6 +16,6 @@ void registerEngine(GetIt sl) {
     ..registerLazySingleton<EngineManager>(() => sl<YtDlpManager>())
     ..registerFactory(() => LoadEngineStatus(sl()))
     ..registerFactory(() => InstallEngine(sl()))
-    ..registerFactory(() => RemoveEngine(sl()))
-    ..registerFactory(() => EngineCubit(sl(), sl(), sl()));
+    // 설정과 검색 탭이 같은 상태를 보도록 하나만 둔다 (엔진을 지우면 검색 화면도 바로 바뀐다).
+    ..registerLazySingleton(() => EngineCubit(sl(), sl()));
 }

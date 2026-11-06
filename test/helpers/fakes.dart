@@ -27,8 +27,11 @@ import 'package:music_download_play_app/features/home/domain/entities/home_summa
 import 'package:music_download_play_app/features/home/domain/repositories/join_date_repository.dart';
 import 'package:music_download_play_app/features/home/domain/repositories/play_history_repository.dart';
 import 'package:music_download_play_app/features/library/di.dart';
+import 'package:music_download_play_app/features/library/domain/entities/hidden_track.dart';
 import 'package:music_download_play_app/features/library/domain/entities/import_result.dart';
+import 'package:music_download_play_app/features/downloads/domain/entities/tag_notice.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
+import 'package:music_download_play_app/features/library/domain/entities/track_file_info.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track_info.dart';
 import 'package:music_download_play_app/features/library/domain/repositories/library_repository.dart';
 import 'package:music_download_play_app/features/library/domain/repositories/track_tag_repository.dart';
@@ -168,6 +171,9 @@ class FakeTrackFiles implements TrackFileRepository {
     if (succeeds) deleted.add(track.id);
     return succeeds;
   }
+
+  @override
+  Future<TrackFileInfo?> fileInfo(Track track) async => null;
 }
 
 /// 메모리 불러오는 폴더 목록 (고르기는 [picked]를 그대로 돌려준다).
@@ -243,6 +249,9 @@ class FakeEmbeddedCovers implements EmbeddedCoverRepository {
 
   @override
   Future<void> discard(String path) async => discarded.add(path);
+
+  @override
+  String takeSummary() => '';
 }
 
 /// 파일 복사 없이 경로 · 주소만 기억하는 커버 저장소.
@@ -289,11 +298,25 @@ class MemoryDownloadSettings implements DownloadSettingsRepository {
   /// 설정에서 고를 수 있는 저장 형식 (기본은 전부).
   List<AudioFormat> formats = AudioFormat.values;
 
-  @override
-  Future<String> loadSavePath() async => path;
+  /// 고정한 위치 (빈 문자열이면 고정 안 함).
+  String fixed = '';
+  String last = '';
 
   @override
-  Future<void> saveSavePath(String value) async => path = value;
+  Future<String> loadSavePath() async =>
+      fixed.isNotEmpty ? fixed : (last.isNotEmpty ? last : path);
+
+  @override
+  Future<String> loadFixedSavePath() async => fixed;
+
+  @override
+  Future<void> saveSavePath(String value) async => fixed = value;
+
+  @override
+  Future<void> clearSavePath() async => fixed = '';
+
+  @override
+  Future<void> saveLastSavePath(String value) async => last = value;
 
   AudioFormat format = AudioFormat.opus;
 
@@ -649,6 +672,12 @@ class MemoryDownloadQueue implements DownloadQueueRepository {
   @override
   Future<ExistingDownload> findExisting(String url) async =>
       existing[url] ?? ExistingDownload.none;
+
+  @override
+  Future<String?> sourceUrlOf(String trackId) async => null;
+
+  @override
+  Stream<TagNotice> watchTagNotices() => const Stream.empty();
 
   @override
   Stream<Set<String>> watchDownloadedKeys() => Stream.value(downloadedKeys);
@@ -1580,8 +1609,6 @@ class FakeEngineManager implements EngineManager {
     this.supported = true,
     this.installed = false,
     this.failInstall = false,
-    this.updated = false,
-    this.failRevert = false,
     this.bundledOnly = false,
   });
 
@@ -1589,11 +1616,7 @@ class FakeEngineManager implements EngineManager {
   bool installed;
   final bool failInstall;
 
-  /// 업데이트한 yt-dlp가 있는지 (있으면 번들 버전으로 되돌릴 수 있다).
-  bool updated;
-  final bool failRevert;
-
-  /// 번들 yt-dlp만 쓰는 중 (Android): 지울 것이 없다. 업데이트한 것을 지우면 이 상태가 된다.
+  /// 번들 yt-dlp만 쓰는 중 (Android).
   bool bundledOnly;
   int installs = 0;
 
@@ -1603,25 +1626,7 @@ class FakeEngineManager implements EngineManager {
     installed: installed,
     version: installed && !bundledOnly ? '2026.01.01' : null,
     managed: installed,
-    removable: installed && supported && !bundledOnly,
-    revertible: updated,
   );
-
-  int removes = 0;
-
-  @override
-  Future<EngineStatus> remove() async {
-    removes++;
-    if (failRevert) throw Exception('fail');
-    // 업데이트한 yt-dlp를 지우면 번들 버전으로 돌아가 계속 쓸 수 있다 (Android).
-    if (updated) {
-      updated = false;
-      bundledOnly = true;
-    } else {
-      installed = false;
-    }
-    return status();
-  }
 
   @override
   Future<EngineStatus> install() async {

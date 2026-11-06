@@ -1,6 +1,7 @@
 import '../entities/download_item.dart';
 import '../entities/download_request.dart';
 import '../entities/download_source.dart';
+import '../entities/tag_notice.dart';
 
 /// 다운로드 대기열 저장소.
 abstract interface class DownloadQueueRepository {
@@ -12,6 +13,12 @@ abstract interface class DownloadQueueRepository {
 
   /// 이미 받아 보관함에 있는 곡들의 원본 주소 키 ([downloadSourceKey]). 곡을 받거나 지울 때마다 다시 흘려보낸다.
   Stream<Set<String>> watchDownloadedKeys();
+
+  /// 앱에서 받은 곡 [trackId]의 원본 주소. 기록이 없으면(기기에서 불러온 곡 등) null.
+  Future<String?> sourceUrlOf(String trackId);
+
+  /// 받은 곡의 파일 태그를 쓴 결과 (실패하면 화면이 알린다).
+  Stream<TagNotice> watchTagNotices();
 
   /// 받기를 대기열에 넣는다.
   Future<void> enqueue(DownloadRequest request);

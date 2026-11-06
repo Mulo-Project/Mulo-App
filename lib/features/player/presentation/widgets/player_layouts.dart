@@ -71,7 +71,12 @@ class SquarePlayer extends StatelessWidget {
                                 ),
                                 child: Hero(
                                   tag: 'now-playing',
-                                  child: PlayerCover(art: art, video: data.track.isVideo ? const NowPlayingVideo() : null),
+                                  child: PlayerCover(
+                                    art: art,
+                                    video: data.track.isVideo
+                                        ? const NowPlayingVideo()
+                                        : null,
+                                  ),
                                 ),
                               ),
                             ),
@@ -116,7 +121,13 @@ class FullBleedPlayer extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  PlayerCover(art: art, radius: 0, video: data.track.isVideo ? const NowPlayingVideo() : null),
+                  PlayerCover(
+                    art: art,
+                    radius: 0,
+                    video: data.track.isVideo
+                        ? const NowPlayingVideo()
+                        : null,
+                  ),
                   // 위: 상단 버튼이 읽히게 살짝 어둡게, 아래: 배경으로 부드럽게.
                   DecoratedBox(
                     decoration: BoxDecoration(

@@ -107,6 +107,7 @@ class EmptyState extends StatelessWidget {
             : PillButton(
                 label: l10n.actionRetry,
                 icon: AppIcons.refresh,
+                compact: true,
                 onPressed: onAction,
               );
       case EmptyKind.timeout:
@@ -118,6 +119,7 @@ class EmptyState extends StatelessWidget {
             : PillButton(
                 label: l10n.actionRetry,
                 icon: AppIcons.refresh,
+                compact: true,
                 onPressed: onAction,
               );
       case EmptyKind.signIn:
@@ -129,6 +131,7 @@ class EmptyState extends StatelessWidget {
             : PillButton(
                 label: l10n.settingsAccountSignIn,
                 icon: AppIcons.person,
+                compact: true,
                 onPressed: onAction,
               );
     }
@@ -144,10 +147,10 @@ class EmptyState extends StatelessWidget {
             if (shownIcon != null) ...[
               Icon(
                 shownIcon,
-                size: iconSize ?? AppSizes.iconEmpty,
+                size: iconSize ?? (compact ? AppSizes.iconLg : AppSizes.iconEmpty),
                 color: p.accent,
               ),
-              const SizedBox(height: AppSpacing.md),
+              SizedBox(height: compact ? AppSpacing.xs : AppSpacing.md),
             ],
             Text(
               shownTitle,
@@ -165,7 +168,7 @@ class EmptyState extends StatelessWidget {
               ),
             ],
             if (shownAction != null) ...[
-              const SizedBox(height: AppSpacing.lg),
+              SizedBox(height: compact ? AppSpacing.sm : AppSpacing.md),
               shownAction,
             ],
           ],

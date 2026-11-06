@@ -153,6 +153,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get searchLoadMore => '더 보기';
 
   @override
+  String get searchLive => '라이브';
+
+  @override
+  String get searchLiveNoDownload => '라이브는 받을 수 없어요';
+
+  @override
   String get searchResultsTitle => '검색 결과';
 
   @override
@@ -206,6 +212,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get statusQueued => '대기';
+
+  @override
+  String get statusProcessing => '처리 중';
 
   @override
   String get statusDone => '완료';
@@ -307,7 +316,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsSavePath => '저장 위치';
 
   @override
-  String get settingsSavePathDesc => '앱 기본 폴더';
+  String get settingsSavePathDesc => '고정 안 함 · 마지막에 받은 폴더';
 
   @override
   String get settingsLoadedFolders => '불러오는 폴더';
@@ -403,7 +412,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsEngineRemoveBody =>
-      '앱이 받아 둔 yt-dlp 파일을 지워요. 지우면 검색하고 받으려면 다시 설치해야 해요. 이 기기에 따로 설치된 yt-dlp는 지우지 않아요.';
+      '앱이 받아 둔 yt-dlp를 지워요. 검색과 받기를 하려면 다시 설치해야 해요. 기기에 따로 설치된 건 지우지 않아요.';
 
   @override
   String get settingsEngineInstalling => '내려받는 중…';
@@ -416,7 +425,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsEngineRevertBody =>
-      '업데이트로 받은 yt-dlp를 지우고 앱에 처음 들어 있던 버전으로 돌아가요. 업데이트한 뒤에 검색이나 받기가 잘 안 될 때 써 보세요. 나중에 다시 업데이트할 수 있어요.';
+      '업데이트로 받은 yt-dlp를 지우고 처음 버전으로 돌아가요. 업데이트 뒤 검색이나 받기가 안 될 때 써 보세요.';
 
   @override
   String get settingsEngineRevertFailed => '지우지 못했어요. 잠시 후 다시 시도해 주세요.';
@@ -511,7 +520,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsBackgroundDownloadDesc =>
-      '앱이 뒤로 가거나 닫혀도 받기를 이어 가요. 켜 두면 받는 동안 알림이 항상 떠 있어요.';
+      '앱이 뒤로 가거나 닫혀도 받기를 이어 가요. 켜 두면 받는 동안 알림이 계속 떠 있어요.';
 
   @override
   String get settingsHideNotification => '알림에 곡 정보 숨기기';
@@ -549,8 +558,17 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsMixWithOthers => '다른 앱과 함께 재생';
 
   @override
+  String get settingsSleepTimerOff => '꺼짐';
+
+  @override
+  String get settingsLyricsOverlay => '오버레이 가사';
+
+  @override
+  String get settingsLyricsOverlayDesc => '다른 앱 위에 가사를 띄워요. 한 번 켜 두면 앱을 다시 켜도 유지돼요.';
+
+  @override
   String get settingsMixWithOthersDesc =>
-      '다른 앱에서 소리가 나도 멈추지 않고 같이 들려요. 소리가 겹쳐 시끄러울 수 있어요.';
+      '다른 앱 소리와 함께 재생해요. 소리가 겹칠 수 있어요.';
 
   @override
   String get settingsPauseOnDisconnect => '기기가 끊기면 일시정지';
@@ -570,7 +588,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsResumeWithoutNotificationDesc =>
-      '알림을 지웠거나 재생이 끝난 뒤에도 블루투스 기기의 재생 버튼으로 마지막 곡을 이어서 재생해요.';
+      '알림을 지웠거나 재생이 끝난 뒤에도 블루투스 재생 버튼으로 마지막 곡을 이어 재생해요.';
 
   @override
   String get playerStyleTitle => '플레이어 테마';
@@ -660,7 +678,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String settingsPurgeHiddenBody(int count) {
-    return '숨겨 둔 $count곡의 재생 횟수, 좋아요, 재생목록 소속, 커버, 앱에 저장한 가사 사본이 지워져요. 음악 파일과 파일 안의 태그(가사 포함)는 그대로예요.';
+    return '숨겨 둔 $count곡의 재생 횟수, 좋아요, 재생목록, 커버, 가사 사본이 지워져요. 음악 파일과 태그는 그대로예요.';
   }
 
   @override
@@ -844,7 +862,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get coverEditHint =>
-      '테두리 안이 실제 커버예요. 어둡게 보이는 곳은 잘리고, 그림이 비는 곳은 검정이에요. 끌어서 옮기고 두 손가락으로 크기와 각도를 바꿔요';
+      '테두리 안이 실제 커버예요. 어두운 곳은 잘리고 빈 곳은 검정이에요. 끌어서 옮기고 두 손가락으로 크기와 각도를 바꿔요';
 
   @override
   String get coverEditZoomIn => '확대';
@@ -1486,6 +1504,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get saveFolderTitle => '저장 위치 고르기';
 
   @override
+  String get saveFolderFixedHint => '체크한 폴더로 항상 받아요. 모두 풀면 마지막에 받은 폴더에 받아요.';
+
+  @override
   String get saveFolderEmpty => '불러오는 폴더가 없어요. 직접 선택해 주세요.';
 
   @override
@@ -1529,6 +1550,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get playlistsEmpty => '아직 재생목록이 없어요. 위의 +로 만들어 보세요.';
+
+  @override
+  String get playlistsReorderHint => '길게 눌러 끌면 순서를 바꿀 수 있어요.';
 
   @override
   String get playlistNewTitle => '새 재생목록';
@@ -1653,7 +1677,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get trackMenuAddToPlaylist => '재생목록에 추가';
 
   @override
-  String get trackMenuEditInfo => '정보 편집';
+  String get trackMenuEditInfo => '상세 정보';
 
   @override
   String get trackMenuDelete => '삭제';
@@ -1712,6 +1736,68 @@ class AppLocalizationsKo extends AppLocalizations {
   String get trackEditSaved => '곡 정보를 고쳤어요';
 
   @override
+  String get trackInfoTitle => '곡 상세 정보';
+
+  @override
+  String get trackInfoUnknown => '알 수 없음';
+
+  @override
+  String get trackInfoDuration => '길이';
+
+  @override
+  String get trackInfoAdded => '추가한 날';
+
+  @override
+  String get trackInfoSource => '출처';
+
+  @override
+  String get trackInfoSourceDevice => '외부';
+
+  @override
+  String get trackInfoSourceDownload => '받은 곡';
+
+  @override
+  String get trackInfoFolder => '폴더';
+
+  @override
+  String downloadTagFailed(String title) {
+    return '태그를 저장하지 못했어요: $title';
+  }
+
+  @override
+  String get collectionMenuInfo => '정보';
+
+  @override
+  String get playlistInfoTitle => '재생목록 정보';
+
+  @override
+  String get albumInfoTitle => '앨범 정보';
+
+  @override
+  String get artistInfoTitle => '아티스트 정보';
+
+  @override
+  String get genreInfoTitle => '장르 정보';
+
+  @override
+  String get trackInfoFileSize => '파일 크기';
+
+  @override
+  String get trackInfoFormat => '형식';
+
+  @override
+  String get trackInfoBitrate => '비트레이트';
+
+  @override
+  String get trackInfoSampleRate => '샘플레이트';
+
+  @override
+  String get trackInfoUrl => '원본 주소';
+
+  @override
+  String get trackInfoUrlCopied => '주소를 복사했어요';
+
+  @override
   String get trackEditTagFailed =>
       '음악 파일에 곡 정보를 쓰지 못해 바꾸지 않았어요. 잠시 뒤 다시 시도해 주세요.';
 
@@ -1740,11 +1826,11 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get lyricsEditHint =>
-      '가사를 붙여넣거나 입력하세요. [01:02.30]처럼 시간이 붙은 글이나 .lrc · .txt 파일을 불러오면 싱크 가사가 돼요. 비워서 저장하면 가사를 지워요.';
+      '가사를 붙여넣거나 입력하세요. [01:02.30]처럼 시간이 붙은 글이나 .lrc · .txt 파일을 불러오면 싱크 가사가 돼요. 비우고 저장하면 지워져요.';
 
   @override
   String get lyricsEditSyncedHint =>
-      '왼쪽 시간은 줄 번호에 맞춰 붙어 있어요. 줄을 끼우거나 지우면 시간은 그 자리에 남고 글만 밀려요. 시간은 싱크 설정에서 바꿔요.';
+      '왼쪽 시간은 줄 번호에 붙어 있어요. 줄을 끼우거나 지우면 시간은 그대로 남고 글만 밀려요. 시간은 싱크 설정에서 바꿔요.';
 
   @override
   String get lyricsAddLine => '줄 추가';
@@ -1786,8 +1872,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsWebTitle => '가사 검색';
 
   @override
-  String get lyricsWebHint =>
-      '가사를 길게 눌러 끌어서 고른 뒤 \'담기\'를 누르세요. 여러 번 담은 뒤 \'가져오기\'로 한꺼번에 넣어요.';
+  String get lyricsWebHint => '가사를 끌어서 골라 \'담기\', 다 모았으면 \'가져오기\'';
 
   @override
   String get lyricsWebImport => '가져오기';
@@ -1913,7 +1998,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lyricsMemoHide => '메모 숨기기';
 
   @override
-  String get lyricsMemoHint => '글을 고치거나 골라서 \"끼우기\"를 누르면 가사의 지금 줄 아래에 들어가요';
+  String get lyricsMemoHint => '골라서 \"끼우기\"를 누르면 지금 줄 아래에 들어가요';
 
   @override
   String get lyricsMemoInsert => '끼우기';
@@ -1927,7 +2012,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get lyricsSyncLeaveBody =>
-      '아직 모든 줄에 시간을 찍지 않았어요. 지금 나가면 찍은 시간이 사라져요. 지금까지 찍은 싱크를 저장하고 나갈까요?';
+      '아직 모든 줄에 시간을 찍지 않았어요. 지금 나가면 찍은 시간이 사라져요. 저장하고 나갈까요?';
 
   @override
   String get lyricsSyncLeaveSave => '저장 후 나가기';
@@ -1990,7 +2075,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get lyricsLatencyIntro =>
-      '소리를 듣고 지금을 누르면 반응 시간만큼 늦게 찍혀요. 누른 시간에서 아래 값만큼 앞당겨 찍어요.';
+      '소리를 듣고 지금을 누르면 반응 시간만큼 늦게 찍혀요. 아래 값만큼 앞당겨 찍어요.';
 
   @override
   String lyricsLatencySeconds(String s) {
@@ -2005,7 +2090,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get lyricsBeatBody =>
-      '소리와 함께 원이 깜빡여요. 깜빡일 때마다 가운데 원을 눌러 보세요. 8번 누르면 평균을 계산해 추천 값을 알려 줘요.';
+      '소리와 함께 원이 깜빡여요. 깜빡일 때마다 가운데 원을 누르세요. 8번 누르면 평균으로 추천 값을 알려 줘요.';
 
   @override
   String get lyricsBeatIdle => '시작을 누르세요';
@@ -2038,7 +2123,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get lyricsSongCheckBody =>
-      '곡을 들으면서 소리가 시작되는 순간 찍어 보기를 눌러 보세요. 찍힌 위치부터 다시 들으면 맞게 찍혔는지 알 수 있어요.';
+      '곡을 들으며 소리가 시작되는 순간 찍어 보기를 눌러 보세요. 찍힌 위치부터 다시 들어 맞는지 확인해요.';
 
   @override
   String get lyricsSongTry => '찍어 보기';
@@ -2066,7 +2151,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get lyricsSyncResetBody =>
-      '기본 줄 수를 바꾸면 직접 묶은 줄과 찍은 시간이 모두 사라지고, 고른 줄 수로 다시 나뉘어요. 계속할까요?';
+      '기본 줄 수를 바꾸면 직접 묶은 줄과 찍은 시간이 모두 사라져요. 계속할까요?';
 
   @override
   String get lyricsSyncResetConfirm => '바꾸기';
@@ -2196,7 +2281,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get playlistDetailEmptyBody =>
-      '곡 메뉴의 ‘재생목록에 추가’ 또는 아래 ‘곡 추가’로 담아 보세요.';
+      '아래 ‘곡 추가’로 담아 보세요.';
 
   @override
   String get playlistDetailEmptyFavoritesBody => '곡 메뉴에서 좋아요를 누르면 여기에 담겨요.';
@@ -2349,7 +2434,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get playlistImportNoChannelBody =>
-      '이 구글 계정에는 유튜브 채널이 없어서 내 재생목록을 불러올 수 없어요. 유튜브에서 채널을 만들거나, 재생목록 링크를 위 입력창에 붙여 넣어 가져와 보세요. (비공개 재생목록은 \"일부 공개\"로 바꿔야 해요)';
+      '이 구글 계정에는 유튜브 채널이 없어서 내 재생목록을 불러올 수 없어요. 재생목록 링크를 위 입력창에 붙여 넣어 보세요. 비공개 목록은 일부 공개로 바꿔야 해요.';
 
   @override
   String get searchPlaylistFind => '재생목록으로 찾기';
@@ -2386,7 +2471,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsNotifyDownloadProgressDesc =>
-      '받는 동안 진행 상황을 알림창에 보여요. 앱이 뒤로 가도 받기가 이어져요.';
+      '받는 동안 진행 상황을 알림창에 보여요.';
 
   @override
   String get settingsNotifyDownloadResult => '받기 결과 알림';
@@ -2547,7 +2632,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get subscriptionsEmptyBody =>
-      '영상 상세에서 채널의 구독을 누르면 새 영상이 올라올 때 골라서 받을 수 있어요.';
+      '영상 상세에서 채널을 구독하면 새 영상이 올라올 때 골라서 받을 수 있어요.';
 
   @override
   String get subscriptionsNewVideos => '새 영상 보기';
@@ -2598,7 +2683,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get newVideosClearBody =>
-      '받지 않은 영상도 목록에서 사라지고, 다시 뜨지 않아요. 이후에 올라오는 영상만 새 영상으로 보여요.';
+      '받지 않은 영상도 목록에서 사라지고 다시 뜨지 않아요. 이후 올라오는 영상만 새 영상으로 보여요.';
 
   @override
   String get newVideosSelectAll => '모두 선택';
@@ -3014,7 +3099,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get channelImportTitle => '내 구독 채널';
 
   @override
-  String get channelImportHint => '구독할 채널을 눌러 골라요. 한꺼번에 가져오지 않고 고른 채널만 추가해요.';
+  String get channelImportHint => '구독할 채널을 눌러 골라요. 고른 채널만 추가돼요.';
 
   @override
   String get channelImportAlready => '구독 중';

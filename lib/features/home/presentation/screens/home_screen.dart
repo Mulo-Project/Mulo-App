@@ -97,9 +97,10 @@ class _HomeViewState extends State<_HomeView> with TrackPicker<_HomeView> {
     }
 
     final body = <Widget>[
+      // 다시 듣기 · 새로 듣기를 위에, 통계(많이 들은 곡 · 청취 기록)를 아래에 둔다.
       RecentSection(summary: s, player: player, selectionFor: selectionFor),
       const HomeDivider(),
-      HistorySection(summary: s, joinedAt: state.joinedAt),
+      RecommendSection(playlists: s.recommendedPlaylists, player: player),
       const HomeDivider(),
       TopPlayedSection(
         summary: s,
@@ -108,7 +109,7 @@ class _HomeViewState extends State<_HomeView> with TrackPicker<_HomeView> {
         selectionFor: selectionFor,
       ),
       const HomeDivider(),
-      RecommendSection(playlists: s.recommendedPlaylists, player: player),
+      HistorySection(summary: s, joinedAt: state.joinedAt),
     ];
 
     return SafeArea(
@@ -158,6 +159,7 @@ class _EmptyState extends StatelessWidget {
       action: PillButton(
         label: action,
         icon: AppIcons.library,
+        compact: true,
         onPressed: onAction,
       ),
     );

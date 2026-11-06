@@ -12,11 +12,16 @@ import '../../../library/presentation/bloc/save_locations_cubit.dart';
 /// [current]는 지금 정해진 위치(목록에 없어도 맨 위에 보인다). 고른 폴더를 돌려주고, 닫으면 null.
 /// 직접 고른 폴더는 목록에 더한다. [pickOther]는 폴더 선택기 (취소하면 null).
 /// [removable]이면 폴더마다 목록에서 빼는 ×가 붙는다 (설정에서 목록을 관리할 때).
+///
+/// [onFixedChanged]를 주면 "고정" 모드다 (설정): 체크한 폴더가 받을 때 항상 쓰는 기본 위치이고,
+/// 누를 때마다 체크가 켜지고 꺼지며 시트는 닫히지 않는다. 체크를 모두 풀면(null) 마지막에 받은 폴더가 기준이다.
+/// 이때 [current]는 고정한 폴더(없으면 빈 문자열)이다.
 Future<String?> showSaveFolderSheet(
   BuildContext context, {
   required String current,
   required Future<String?> Function() pickOther,
   bool removable = false,
+  Future<void> Function(String? path)? onFixedChanged,
 }) => showAppSheet<String>(
   context,
   isScrollControlled: true,
@@ -26,34 +31,60 @@ Future<String?> showSaveFolderSheet(
       current: current,
       pickOther: pickOther,
       removable: removable,
+      onFixedChanged: onFixedChanged,
     ),
   ),
 );
 
-class _SaveFolderSheet extends StatelessWidget {
+class _SaveFolderSheet extends StatefulWidget {
   const _SaveFolderSheet({
     required this.current,
     required this.pickOther,
     required this.removable,
+    this.onFixedChanged,
   });
 
   final String current;
+
+  /// 고정 모드의 변경 알림 (고정하면 경로, 풀면 null). 주면 고정 모드다.
+  final Future<void> Function(String? path)? onFixedChanged;
 
   /// 목록에서 폴더를 뺄 수 있는지 (설정에서만. 받기 · 채널에서는 고르기만 한다).
   final bool removable;
   final Future<String?> Function() pickOther;
 
   @override
+  State<_SaveFolderSheet> createState() => _SaveFolderSheetState();
+}
+
+class _SaveFolderSheetState extends State<_SaveFolderSheet> {
+  /// 고정 모드에서 지금 체크된 폴더 (빈 문자열이면 체크 없음). 시트가 열려 있는 동안 여기서 바로 바뀐다.
+  late String _fixed = widget.current;
+
+  bool get _fixedMode => widget.onFixedChanged != null;
+
+  Future<void> _toggle(String path) async {
+    final same = normalizeFolderPath(path) == normalizeFolderPath(_fixed);
+    setState(() => _fixed = same ? '' : path);
+    await widget.onFixedChanged!(same ? null : path);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final cubit = context.read<SaveLocationsCubit>();
     final locations = context.watch<SaveLocationsCubit>().state;
+    final current = _fixedMode ? _fixed : widget.current;
+    final removable = widget.removable;
+    final pickOther = widget.pickOther;
     final cur = normalizeFolderPath(current);
     // 지금 위치가 목록에 없으면(예전에 뺀 폴더 등) 맨 위에 따로 보인다.
     final listed = locations.any((p) => normalizeFolderPath(p) == cur);
     final paths = [if (cur.isNotEmpty && !listed) current.trim(), ...locations];
-    // 목록의 첫 항목이 기본 저장 위치다.
-    final defaultPath = locations.isEmpty
+    // 고정 모드에서는 체크한 폴더가, 아니면 목록의 첫 항목이 기본 저장 위치다.
+    final defaultPath = _fixedMode
+        ? cur
+        : locations.isEmpty
         ? ''
         : normalizeFolderPath(locations.first);
 
@@ -68,7 +99,10 @@ class _SaveFolderSheet extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              AppSheetTitle(l10n.saveFolderTitle),
+              AppSheetTitle(
+                l10n.saveFolderTitle,
+                subtitle: _fixedMode ? l10n.saveFolderFixedHint : null,
+              ),
               const SizedBox(height: AppSpacing.md),
               Flexible(
                 child: paths.isEmpty
@@ -82,7 +116,9 @@ class _SaveFolderSheet extends StatelessWidget {
                               isDefault:
                                   normalizeFolderPath(path) == defaultPath,
                               selected: normalizeFolderPath(path) == cur,
-                              onTap: () => Navigator.of(context).pop(path),
+                              onTap: _fixedMode
+                                  ? () => _toggle(path)
+                                  : () => Navigator.of(context).pop(path),
                               // 기본 위치 · 지금 위치 · 목록에 없는 위치는 뺄 수 없다.
                               // 여기서 빼도 불러오는 폴더와 보관함의 곡은 그대로다.
                               onRemove:
@@ -110,6 +146,13 @@ class _SaveFolderSheet extends StatelessWidget {
                   final picked = await pickOther();
                   if (picked == null) return;
                   await cubit.add(picked);
+                  if (_fixedMode) {
+                    // 새로 고른 폴더를 고정하고 시트는 열어 둔다.
+                    if (!mounted) return;
+                    setState(() => _fixed = picked);
+                    await widget.onFixedChanged!(picked);
+                    return;
+                  }
                   nav.pop(picked);
                 },
               ),

@@ -40,7 +40,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('설정의 저장 위치: 대화상자에서 "직접 선택"으로 폴더 선택기를 열면 기본 저장 위치가 된다', (
+  testWidgets('설정의 저장 위치: "직접 선택"으로 고른 폴더가 고정되고 시트는 닫히지 않는다', (
     tester,
   ) async {
     final settings = MemoryDownloadSettings(
@@ -48,18 +48,20 @@ void main() {
       picked: '/music/내폴더',
     );
     await pump(tester, Routes.settings, settings: settings, height: 7000);
-    expect(find.text('/music/Mulo'), findsOneWidget);
+    // 고정한 폴더가 없으면 마지막에 받은 폴더가 기준이라는 안내가 보인다.
+    expect(find.text('고정 안 함 · 마지막에 받은 폴더'), findsOneWidget);
 
     await tester.tap(find.text('저장 위치'));
     await tester.pumpAndSettle();
-    // 바로 선택기가 뜨지 않고 목록 대화상자가 먼저 뜬다.
+    // 바로 선택기가 뜨지 않고 목록 시트가 먼저 뜬다.
     expect(find.text('저장 위치 고르기'), findsOneWidget);
-    expect(settings.path, '/music/Mulo');
+    expect(settings.fixed, isEmpty);
 
     await tester.tap(find.text('직접 선택'));
     await tester.pumpAndSettle();
-    expect(settings.path, '/music/내폴더');
-    expect(find.text('/music/내폴더'), findsOneWidget);
+    expect(settings.fixed, '/music/내폴더');
+    // 시트는 그대로 열려 있다.
+    expect(find.text('저장 위치 고르기'), findsOneWidget);
   });
 
   testWidgets('저장 위치 시트: 선택기를 취소하거나 시트를 닫아도 그대로다', (tester) async {

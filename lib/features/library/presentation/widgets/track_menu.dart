@@ -9,7 +9,6 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
-import '../../../covers/presentation/widgets/decorate_sheet.dart';
 import '../../../lyrics/presentation/bloc/lyrics_cubit.dart';
 import '../../../player/domain/entities/playback_speed.dart';
 import '../../../lyrics/presentation/bloc/lyrics_overlay_cubit.dart';
@@ -19,7 +18,6 @@ import '../../../player/presentation/bloc/playback_speed_cubit.dart';
 import '../../../player/presentation/widgets/player_style_sheet.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../../domain/entities/track.dart';
-import '../../domain/entities/track_info.dart';
 import '../../domain/usecases/library_usecases.dart';
 import '../bloc/library_cubit.dart';
 
@@ -32,7 +30,6 @@ enum _TrackAction {
   addToPlaylist,
   favorite,
   editInfo,
-  decorate,
   delete,
   removeFromPlaylist,
   removeFromQueue,
@@ -142,11 +139,6 @@ Future<void> showTrackMenu(
         icon: AppIcons.edit,
         label: l10n.trackMenuEditInfo,
       ),
-      AppMenuItem(
-        value: _TrackAction.decorate,
-        icon: AppIcons.sparkle,
-        label: l10n.trackMenuDecorate,
-      ),
       if (playlistId == null && !inQueue)
         AppMenuItem(
           value: _TrackAction.delete,
@@ -198,14 +190,7 @@ Future<void> showTrackMenu(
       // 하트 모양이 바뀌므로 따로 안내하지 않는다.
       await context.read<PlaylistsCubit>().toggleFavorite(track.id);
     case _TrackAction.editInfo:
-      await _editInfo(context, track);
-    case _TrackAction.decorate:
-      await showDecorateSheet(
-        context,
-        coverKey: CoverKey.track(track.id),
-        title: track.title,
-        tone: toneFor(track.id),
-      );
+      await context.push(Routes.trackInfo, extra: track);
     case _TrackAction.delete || _TrackAction.deleteFile:
       await _delete(context, track);
     case _TrackAction.removeFromQueue:
@@ -263,25 +248,6 @@ void _snack(BuildContext context, String message) =>
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(message)));
 
-Future<void> _editInfo(BuildContext context, Track track) async {
-  final l10n = context.l10n;
-  final library = context.read<LibraryCubit>();
-  final player = context.read<NowPlayingCubit>();
-  final info = await showDialog<TrackInfo>(
-    context: context,
-    useRootNavigator: true,
-    builder: (_) => _TrackInfoDialog(track: track),
-  );
-  if (info == null) return;
-  final result = await library.updateInfo(track.id, info);
-  if (result == UpdateInfoResult.tagWriteFailed) {
-    if (context.mounted) _snack(context, l10n.trackEditTagFailed);
-    return;
-  }
-  if (result != UpdateInfoResult.saved) return;
-  player.updateTrack(track.withInfo(info.trimmed()));
-}
-
 Future<void> _delete(BuildContext context, Track track) async {
   final l10n = context.l10n;
   final library = context.read<LibraryCubit>();
@@ -304,77 +270,6 @@ Future<void> _delete(BuildContext context, Track track) async {
   await colors.clear(CoverKey.track(track.id));
   await lyrics.clear(track.id);
   player.removeFromQueue(track);
-}
-
-/// 제목 · 아티스트 · 앨범 · 장르 편집. 저장하면 [TrackInfo], 취소하면 null.
-class _TrackInfoDialog extends StatefulWidget {
-  const _TrackInfoDialog({required this.track});
-
-  final Track track;
-
-  @override
-  State<_TrackInfoDialog> createState() => _TrackInfoDialogState();
-}
-
-class _TrackInfoDialogState extends State<_TrackInfoDialog> {
-  late final _title = TextEditingController(text: widget.track.title);
-  late final _artist = TextEditingController(text: widget.track.artist);
-  late final _album = TextEditingController(text: widget.track.album);
-  late final _genre = TextEditingController(text: widget.track.genre);
-
-  @override
-  void dispose() {
-    _title.dispose();
-    _artist.dispose();
-    _album.dispose();
-    _genre.dispose();
-    super.dispose();
-  }
-
-  void _save() {
-    if (_title.text.trim().isEmpty) return;
-    Navigator.of(context).pop(
-      TrackInfo(
-        title: _title.text,
-        artist: _artist.text,
-        album: _album.text,
-        genre: _genre.text,
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return AppDialog(
-      title: l10n.trackEditTitle,
-      content: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          AppTextField(label: l10n.trackEditName, controller: _title),
-          const SizedBox(height: AppSpacing.sm),
-          AppTextField(label: l10n.trackEditArtist, controller: _artist),
-          const SizedBox(height: AppSpacing.sm),
-          AppTextField(label: l10n.trackEditAlbum, controller: _album),
-          const SizedBox(height: AppSpacing.sm),
-          AppTextField(
-            label: l10n.trackEditGenre,
-            controller: _genre,
-            textInputAction: TextInputAction.done,
-            onSubmitted: (_) => _save(),
-          ),
-        ],
-      ),
-      actions: [
-        PillButton(
-          label: l10n.actionCancel,
-          variant: PillVariant.tonal,
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        PillButton(label: l10n.trackEditSave, onPressed: _save),
-      ],
-    );
-  }
 }
 
 class _DeleteDialog extends StatelessWidget {

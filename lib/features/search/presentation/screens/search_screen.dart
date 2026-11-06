@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -53,7 +54,6 @@ class _SearchScreenState extends State<SearchScreen> {
   void dispose() {
     _controller.dispose();
     _cubit.close();
-    _engine.close();
     super.dispose();
   }
 
@@ -91,7 +91,26 @@ class _SearchScreenState extends State<SearchScreen> {
 
     return BlocProvider.value(
       value: _cubit,
-      child: SafeArea(
+      // 임시 진단: 검색이 실패하면 엔진이 알려 준 원문을 스낵바로 보인다 (원인을 찾으면 지운다).
+      child: BlocListener<SearchCubit, SearchState>(
+        listenWhen: (a, b) =>
+            kDebugMode &&
+            a.status != b.status &&
+            b.status == SearchStatus.failed,
+        listener: (context, state) {
+          final text = '[${state.failure?.name}] ${state.detail}';
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                duration: const Duration(seconds: 20),
+                content: Text(
+                  text.length > 600 ? text.substring(0, 600) : text,
+                ),
+              ),
+            );
+        },
+        child: SafeArea(
         bottom: false,
         // 안내(처음 · 오류 · 결과 없음)는 검색창 아래 남은 자리 가운데에, 결과는 위에서부터 이어 붙인다.
         child: CustomScrollView(
@@ -103,9 +122,14 @@ class _SearchScreenState extends State<SearchScreen> {
                   title: l10n.navSearch,
                   subtitle: l10n.searchSubtitle,
                 ),
-                Padding(
-                  padding: AppSpacing.screen,
-                  child: AppSearchField(
+              ]),
+            ),
+            // 검색창은 스크롤해도 위에 붙어 있다.
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _PinnedSearchBar(
+                color: context.palette.background,
+                child: AppSearchField(
                     controller: _controller,
                     hint: _source == SearchSource.youtube
                         ? l10n.searchHint
@@ -120,23 +144,16 @@ class _SearchScreenState extends State<SearchScreen> {
                       }
                     },
                     onSubmitted: (_) => _submit(),
-                    leading: SearchSourceMenu(
+                    // 돋보기는 왼쪽, 검색 대상 고르기는 오른쪽. 검색은 키보드의 검색 키로 한다.
+                    suffix: SearchSourceMenu(
                       source: _source,
                       onChanged: (s) {
                         setState(() => _source = s);
                         if (_controller.text.trim().isNotEmpty) _submit();
                       },
                     ),
-                    suffix: RowIconButton(
-                      icon: AppIcons.search,
-                      tooltip: l10n.searchSubmitTooltip,
-                      accent: true,
-                      onPressed: _submit,
-                    ),
                   ),
                 ),
-                const SizedBox(height: AppSpacing.md),
-              ]),
             ),
             BlocBuilder<EngineCubit, EngineState>(
               bloc: _engine,
@@ -154,30 +171,37 @@ class _SearchScreenState extends State<SearchScreen> {
                       (a.status == SearchStatus.loaded && a.items.isNotEmpty) !=
                       (b.status == SearchStatus.loaded && b.items.isNotEmpty),
                   builder: (context, state) {
-                    final body = Padding(
-                      padding: EdgeInsets.only(
-                        bottom:
-                            AppSpacing.lg +
-                            MediaQuery.paddingOf(context).bottom,
-                      ),
-                      child: _Body(onRetry: _submit, onPaste: _pasteLink),
-                    );
-                    // 결과는 위에서부터 길게 이어 붙이고, 안내는 남은 자리 가운데에 둔다.
+                    final bottom =
+                        AppSpacing.lg + MediaQuery.paddingOf(context).bottom;
+                    // 결과는 위에서부터 지연 목록으로 이어 붙이고, 안내는 남은 자리 가운데에 둔다.
                     final isList =
                         state.status == SearchStatus.loaded &&
                         state.items.isNotEmpty;
-                    return isList
-                        ? SliverToBoxAdapter(child: body)
-                        : SliverFillRemaining(
-                            hasScrollBody: false,
-                            child: body,
-                          );
+                    if (isList) {
+                      return SliverMainAxisGroup(
+                        slivers: [
+                          SliverToBoxAdapter(
+                            child: const _Results(),
+                          ),
+                          const _ResultsList(),
+                          SliverToBoxAdapter(child: SizedBox(height: bottom)),
+                        ],
+                      );
+                    }
+                    return SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Padding(
+                        padding: EdgeInsets.only(bottom: bottom),
+                        child: _Body(onRetry: _submit, onPaste: _pasteLink),
+                      ),
+                    );
                   },
                 );
               },
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -250,19 +274,18 @@ class _Body extends StatelessWidget {
             body: l10n.searchNoResultsBody,
           );
         }
-        return _Results(state: state);
+        return const _Results();
     }
   }
 }
 
 class _Results extends StatelessWidget {
-  const _Results({required this.state});
-
-  final SearchState state;
+  const _Results();
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    final state = context.watch<SearchCubit>().state;
     final isPlaylist = state.playlistTitle != null;
     final label = isPlaylist
         ? '${l10n.searchPlaylistLabel} · ${state.playlistTitle}'
@@ -274,52 +297,59 @@ class _Results extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionTitle(label),
-        if (isPlaylist)
+        // 재생목록 동작 버튼과 정렬은 한 줄에 같은 모양으로 놓는다.
+        if (isPlaylist || state.keyword || state.items.length > 1)
           Padding(
             padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: PillButton(
-                label: l10n.searchPlaylistPick,
-                icon: AppIcons.download,
-                variant: PillVariant.tonal,
-                onPressed: () => context.push(
-                  Routes.playlistImport,
-                  extra: context.read<SearchCubit>().query,
-                ),
-              ),
+            child: Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xs,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                if (isPlaylist)
+                  AppFilterButton(
+                    label: l10n.searchPlaylistPick,
+                    icon: AppIcons.download,
+                    onPressed: () => context.push(
+                      Routes.playlistImport,
+                      extra: context.read<SearchCubit>().query,
+                    ),
+                  ),
+                if (state.keyword)
+                  AppFilterButton(
+                    label: l10n.searchPlaylistFind,
+                    icon: AppIcons.search,
+                    onPressed: () => context.push(
+                      Routes.playlistImport,
+                      extra: context.read<SearchCubit>().query,
+                    ),
+                  ),
+                if (state.items.length > 1) const _SortMenu(),
+              ],
             ),
           ),
-        if (state.keyword)
-          Padding(
-            padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: PillButton(
-                label: l10n.searchPlaylistFind,
-                icon: AppIcons.search,
-                variant: PillVariant.tonal,
-                onPressed: () => context.push(
-                  Routes.playlistImport,
-                  extra: context.read<SearchCubit>().query,
-                ),
-              ),
-            ),
-          ),
-        if (state.items.length > 1)
-          Padding(
-            padding: AppSpacing.screen.copyWith(bottom: AppSpacing.xs),
-            child: const Align(
-              alignment: Alignment.centerLeft,
-              child: _SortMenu(),
-            ),
-          ),
-        for (final hit in state.visibleItems) _HitTile(hit: hit),
-        if (state.hasNext)
-          // 끝까지 내려와 이 줄이 화면에 들어오면 다음 결과를 불러온다.
-          // 곡이 늘 때마다 새로 만들어서(key) 다음 쪽도 같은 방식으로 이어진다.
-          _LoadMoreTrigger(key: ValueKey(state.items.length)),
       ],
+    );
+  }
+}
+
+/// 결과 줄들: 화면에 보이는 줄만 만드는 지연 목록 (곡이 많아도 스크롤이 가볍다).
+/// 마지막 줄은 다음 쪽을 불러오는 [_LoadMoreTrigger]다.
+class _ResultsList extends StatelessWidget {
+  const _ResultsList();
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.watch<SearchCubit>().state;
+    final items = state.visibleItems;
+    return SliverList.builder(
+      itemCount: items.length + (state.hasNext ? 1 : 0),
+      itemBuilder: (context, i) {
+        if (i < items.length) return _HitTile(key: ValueKey(items[i].id), hit: items[i]);
+        // 끝까지 내려와 이 줄이 화면에 들어오면 다음 결과를 불러온다.
+        // 곡이 늘 때마다 새로 만들어서(key) 다음 쪽도 같은 방식으로 이어진다.
+        return _LoadMoreTrigger(key: ValueKey(state.items.length));
+      },
     );
   }
 }
@@ -407,7 +437,7 @@ class _LoadMoreTriggerState extends State<_LoadMoreTrigger> {
 enum _HitAction { detail, preview, download }
 
 class _HitTile extends StatelessWidget {
-  const _HitTile({required this.hit});
+  const _HitTile({super.key, required this.hit});
 
   final MediaHit hit;
 
@@ -415,6 +445,7 @@ class _HitTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final subtitle = [
+      if (hit.isLive) l10n.searchLive,
       if (hit.uploader.isNotEmpty) hit.uploader,
       // 채널 이름 옆에 전체 길이도 보인다.
       if (hit.duration != null) formatDuration(hit.duration!),
@@ -473,14 +504,25 @@ class _HitTile extends StatelessWidget {
     );
   }
 
-  void _download(BuildContext context) => showDownloadDialog(
-    context,
-    title: hit.title,
-    artist: hit.uploader,
-    duration: hit.duration,
-    thumbnailUrl: hit.thumbnailUrl,
-    url: hit.url,
-  );
+  void _download(BuildContext context) {
+    // 실시간 스트리밍은 끝이 없어 받을 수 없다.
+    if (hit.isLive) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text(context.l10n.searchLiveNoDownload)),
+        );
+      return;
+    }
+    showDownloadDialog(
+      context,
+      title: hit.title,
+      artist: hit.uploader,
+      duration: hit.duration,
+      thumbnailUrl: hit.thumbnailUrl,
+      url: hit.url,
+    );
+  }
 
   /// 곡 옵션 메뉴: 길게 누르기 · 데스크톱 오른쪽 클릭.
   Future<void> _menu(BuildContext context, Offset position) async {
@@ -540,6 +582,7 @@ class _EngineNeeded extends StatelessWidget {
             ? l10n.settingsEngineInstalling
             : l10n.settingsEngineInstall,
         icon: AppIcons.download,
+        compact: true,
         onPressed: state.busy ? null : cubit.install,
       ),
     );
@@ -563,4 +606,39 @@ class _Hint extends StatelessWidget {
   Widget build(BuildContext context) {
     return EmptyState(icon: icon, title: title, body: body, action: action);
   }
+}
+
+/// 스크롤해도 위에 붙어 있는 검색창 줄 (배경색 위에 놓고, 위아래 여백까지 높이를 고정한다).
+class _PinnedSearchBar extends SliverPersistentHeaderDelegate {
+  const _PinnedSearchBar({required this.child, required this.color});
+
+  final Widget child;
+  final Color color;
+
+  static const double _extent = 52 + AppSpacing.xs + AppSpacing.sm;
+
+  @override
+  double get minExtent => _extent;
+
+  @override
+  double get maxExtent => _extent;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) => ColoredBox(
+    color: color,
+    child: Padding(
+      padding: AppSpacing.screen.copyWith(
+        top: AppSpacing.xs,
+        bottom: AppSpacing.sm,
+      ),
+      child: child,
+    ),
+  );
+
+  @override
+  bool shouldRebuild(covariant _PinnedSearchBar old) => true;
 }

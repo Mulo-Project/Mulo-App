@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../bloc/now_playing_cubit.dart';
 import 'player_common.dart';
 
 // 수면 타이머 버튼 · 시간 고르는 대화상자 (player_common에서 나눔).
@@ -22,18 +23,7 @@ class SleepTimerButton extends StatelessWidget {
     return Builder(
       builder: (btn) => IconButton(
         tooltip: l10n.playerSleepTimer,
-        onPressed: () async {
-          final picked = await showDialog<int>(
-            context: btn,
-            useRootNavigator: true,
-            builder: (_) => _SleepTimerDialog(
-              current: _remainingMinutes(data.state.sleepEndsAt),
-            ),
-          );
-          if (picked == null || !btn.mounted) return;
-          // 타이머 버튼 모양이 바뀌므로 따로 안내하지 않는다.
-          data.vm.setSleepTimer(picked == 0 ? null : picked);
-        },
+        onPressed: () => showSleepTimerPicker(btn, data.vm),
         icon: on
             ? Row(
                 mainAxisSize: MainAxisSize.min,
@@ -49,6 +39,21 @@ class SleepTimerButton extends StatelessWidget {
   }
 }
 
+/// 수면 타이머 시간 고르기: 대화상자에서 정한 시간 뒤에 재생을 멈춘다 (0이면 끈다).
+/// 플레이어 화면과 설정 화면에서 같이 쓴다.
+Future<void> showSleepTimerPicker(BuildContext context, NowPlayingCubit vm) async {
+  final picked = await showDialog<int>(
+    context: context,
+    useRootNavigator: true,
+    builder: (_) => _SleepTimerDialog(
+      current: _remainingMinutes(vm.state.sleepEndsAt),
+    ),
+  );
+  if (picked == null || !context.mounted) return;
+  // 타이머 상태가 화면에 보이므로 따로 안내하지 않는다.
+  vm.setSleepTimer(picked == 0 ? null : picked);
+}
+
 /// 남은 시간을 올림한 분 (꺼져 있으면 null).
 int? _remainingMinutes(DateTime? endsAt) {
   if (endsAt == null) return null;
@@ -56,11 +61,32 @@ int? _remainingMinutes(DateTime? endsAt) {
   return left.isNegative ? null : (left.inSeconds / 60).ceil();
 }
 
-/// 수면 타이머가 켜져 있을 때 버튼 옆에 보이는 남은 시간 (`1:05:00` / `12:30`).
-class _SleepRemaining extends StatefulWidget {
-  const _SleepRemaining({required this.endsAt});
+/// 미니 플레이어처럼 좁은 곳에 붙이는 작은 표시: 달 아이콘 + 남은 시간.
+class SleepRemainingBadge extends StatelessWidget {
+  const SleepRemainingBadge({super.key, required this.endsAt});
 
   final DateTime? endsAt;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(AppIcons.sleep, size: AppSizes.iconXs, color: p.accent),
+        const SizedBox(width: AppSpacing.xxs),
+        _SleepRemaining(endsAt: endsAt, small: true),
+      ],
+    );
+  }
+}
+
+/// 수면 타이머가 켜져 있을 때 버튼 옆에 보이는 남은 시간 (`1:05:00` / `12:30`).
+class _SleepRemaining extends StatefulWidget {
+  const _SleepRemaining({required this.endsAt, this.small = false});
+
+  final DateTime? endsAt;
+  final bool small;
 
   @override
   State<_SleepRemaining> createState() => _SleepRemainingState();
@@ -95,7 +121,10 @@ class _SleepRemainingState extends State<_SleepRemaining> {
         : '${two(s ~/ 60)}:${two(s % 60)}';
     return Text(
       label,
-      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+      style: (widget.small
+              ? Theme.of(context).textTheme.labelSmall
+              : Theme.of(context).textTheme.labelMedium)
+          ?.copyWith(
         color: context.palette.accent,
         fontFeatures: const [FontFeature.tabularFigures()],
       ),
