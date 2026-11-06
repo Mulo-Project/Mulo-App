@@ -374,6 +374,18 @@ abstract class AppLocalizations {
   /// **'더 보기'**
   String get searchLoadMore;
 
+  /// No description provided for @searchLive.
+  ///
+  /// In ko, this message translates to:
+  /// **'라이브'**
+  String get searchLive;
+
+  /// No description provided for @searchLiveNoDownload.
+  ///
+  /// In ko, this message translates to:
+  /// **'라이브는 받을 수 없어요'**
+  String get searchLiveNoDownload;
+
   /// No description provided for @searchResultsTitle.
   ///
   /// In ko, this message translates to:

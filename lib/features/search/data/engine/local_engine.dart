@@ -91,21 +91,15 @@ class LocalEngine implements DownloaderEngine {
       '--no-warnings',
       '$prefix$want:$query',
     ]);
-    // 실시간 스트리밍(진행 중 · 예정)은 받을 수 없어 목록에서 뺀다. 쪽 계산이 어긋나지 않게 자른 뒤에 뺀다.
-    final all = <(MediaHit, bool)>[];
+    final all = <MediaHit>[];
     for (final line in const LineSplitter().convert(out)) {
       if (line.trim().isEmpty) continue;
       final j = _decode(line);
-      if (j != null) all.add((_hit(j), _isLive(j)));
+      if (j != null) all.add(_hit(j));
     }
     final start = page * size;
     return SearchPage(
-      items: start >= all.length
-          ? const []
-          : [
-              for (final (hit, live) in all.sublist(start))
-                if (!live) hit,
-            ],
+      items: start >= all.length ? const [] : all.sublist(start),
       hasNext: all.length >= want,
     );
   }
@@ -479,6 +473,7 @@ class LocalEngine implements DownloaderEngine {
           if (!_keys(j['subtitles']).contains(k)) k,
       ],
       album: parseText(j['album']) ?? '',
+      isLive: _isLive(j),
     );
   }
 }

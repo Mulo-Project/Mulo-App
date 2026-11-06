@@ -347,7 +347,10 @@ class _DetailViewState extends State<_DetailView> {
                       key: const ValueKey('detail-download'),
                       label: l10n.actionDownload,
                       icon: AppIcons.download,
-                      onPressed: () => showDownloadDialog(
+                      // 실시간 스트리밍은 끝이 없어 받을 수 없다 (버튼을 비활성으로).
+                      onPressed: hit.isLive
+                          ? null
+                          : () => showDownloadDialog(
                         context,
                         title: hit.title,
                         artist: hit.uploader,

@@ -53,6 +53,8 @@
   "searchNoResultsTitle": "결과가 없어요",
   "searchNoResultsBody": "다른 검색어로 찾아보세요.",
   "searchLoadMore": "더 보기",
+  "searchLive": "라이브",
+  "searchLiveNoDownload": "라이브는 받을 수 없어요",
   "searchResultsTitle": "검색 결과",
   "searchUrlCardLabel": "URL에서 찾은 곡",
   "searchPlaylistLabel": "재생목록",

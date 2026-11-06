@@ -153,6 +153,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get searchLoadMore => '더 보기';
 
   @override
+  String get searchLive => '라이브';
+
+  @override
+  String get searchLiveNoDownload => '라이브는 받을 수 없어요';
+
+  @override
   String get searchResultsTitle => '검색 결과';
 
   @override

@@ -46,6 +46,8 @@
   "searchNoResultsTitle": "No results",
   "searchNoResultsBody": "Try a different search.",
   "searchLoadMore": "Load more",
+  "searchLive": "Live",
+  "searchLiveNoDownload": "Live streams can't be downloaded",
   "searchResultsTitle": "Results",
   "searchUrlCardLabel": "Found from URL",
   "searchPlaylistLabel": "Playlist",

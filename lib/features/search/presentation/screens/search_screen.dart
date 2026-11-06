@@ -445,6 +445,7 @@ class _HitTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final subtitle = [
+      if (hit.isLive) l10n.searchLive,
       if (hit.uploader.isNotEmpty) hit.uploader,
       // 채널 이름 옆에 전체 길이도 보인다.
       if (hit.duration != null) formatDuration(hit.duration!),
@@ -503,14 +504,25 @@ class _HitTile extends StatelessWidget {
     );
   }
 
-  void _download(BuildContext context) => showDownloadDialog(
-    context,
-    title: hit.title,
-    artist: hit.uploader,
-    duration: hit.duration,
-    thumbnailUrl: hit.thumbnailUrl,
-    url: hit.url,
-  );
+  void _download(BuildContext context) {
+    // 실시간 스트리밍은 끝이 없어 받을 수 없다.
+    if (hit.isLive) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text(context.l10n.searchLiveNoDownload)),
+        );
+      return;
+    }
+    showDownloadDialog(
+      context,
+      title: hit.title,
+      artist: hit.uploader,
+      duration: hit.duration,
+      thumbnailUrl: hit.thumbnailUrl,
+      url: hit.url,
+    );
+  }
 
   /// 곡 옵션 메뉴: 길게 누르기 · 데스크톱 오른쪽 클릭.
   Future<void> _menu(BuildContext context, Offset position) async {

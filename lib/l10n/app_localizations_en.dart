@@ -155,6 +155,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchLoadMore => 'Load more';
 
   @override
+  String get searchLive => 'Live';
+
+  @override
+  String get searchLiveNoDownload => "Live streams can't be downloaded";
+
+  @override
   String get searchResultsTitle => 'Results';
 
   @override
