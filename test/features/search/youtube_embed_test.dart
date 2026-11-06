@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/core/di/injector.dart';
 import 'package:music_download_play_app/features/search/presentation/bloc/preview_cubit.dart';
+import 'package:music_download_play_app/features/search/domain/entities/engine_exception.dart';
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
 import 'package:music_download_play_app/features/search/presentation/screens/media_detail_screen.dart';
 import 'package:music_download_play_app/features/search/presentation/widgets/youtube_embed.dart';
@@ -56,7 +57,11 @@ void main() {
       addTearDown(tester.view.reset);
       opener = FakeLinkOpener();
       await setUpTestDependencies(
-        engine: FakeDownloaderEngine(info: VideoInfo(hit)),
+        // 미리 듣기를 못 시작하는 환경: 앱 안 플레이어(웹뷰)로 넘어간다.
+        engine: FakeDownloaderEngine(
+          info: VideoInfo(hit),
+          streamFailure: EngineFailure.unavailable,
+        ),
         linkOpener: opener,
       );
       await tester.pumpWidget(

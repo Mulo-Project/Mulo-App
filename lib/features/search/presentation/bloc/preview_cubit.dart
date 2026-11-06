@@ -87,8 +87,10 @@ class PreviewCubit extends Cubit<PreviewState> {
     this._stop,
     WatchPreviewCompleted watchCompleted,
     WatchPreviewProgress watchProgress,
-    WatchPreviewFailures watchFailures,
-  ) : super(const PreviewState()) {
+    WatchPreviewFailures watchFailures, {
+    ResolveVideoStream? resolveVideo,
+  }) : _resolveVideo = resolveVideo,
+       super(const PreviewState()) {
     unawaited(syncWithPlayer());
     _completed = watchCompleted(const NoParams()).listen((_) => stop());
     _progress = watchProgress(const NoParams()).listen(_onProgress);
@@ -96,6 +98,9 @@ class PreviewCubit extends Cubit<PreviewState> {
   }
 
   final ResolveAudioStream _resolve;
+
+  /// 영상 주소를 미리 읽어 두는 데 쓴다 (없으면 미리 읽지 않는다).
+  final ResolveVideoStream? _resolveVideo;
   final PlayPreview _play;
   final RememberPreview _remember;
   final CurrentPreview _current;
@@ -161,6 +166,7 @@ class PreviewCubit extends Cubit<PreviewState> {
         expectedLoad: _loadEstimate,
       ),
     );
+    _prefetchVideo(hit);
     try {
       final stream = await _resolve(hit.url, audioLanguage: audioLanguage)
           .timeout(
@@ -214,6 +220,16 @@ class PreviewCubit extends Cubit<PreviewState> {
       lastFailureDetail = '$e';
       return EngineFailure.failed;
     }
+  }
+
+  /// 소리 주소를 읽는 동안 영상 주소도 함께 읽어 둔다. 영상 화면이 열릴 때 바로 쓰게 되어
+  /// 소리와 영상이 처음부터 덜 어긋난다. 결과는 엔진이 기억하고, 실패는 영상 쪽에서 다시 다룬다.
+  void _prefetchVideo(MediaHit hit) {
+    final resolve = _resolveVideo;
+    final host = Uri.tryParse(hit.url)?.host ?? '';
+    final youtube = host.contains('youtube.com') || host == 'youtu.be';
+    if (resolve == null || !youtube) return;
+    unawaited(resolve(hit.url).then<void>((_) {}, onError: (Object _) {}));
   }
 
   /// 화면 상태를 플레이어의 실제 상태에 맞춘다. 앱이 켜질 때와 앞으로 돌아올 때 부른다:

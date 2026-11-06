@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
@@ -39,6 +40,34 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
 
     /** 지금 듣는 곡 정보 (id · title · url · uploader · thumbnail). Dart가 `remember`로 적어 둔다. */
     private var meta: Map<String, Any?>? = null
+
+    /**
+     * 같은 곡의 영상 전용 플레이어 (소리 없음). 소리를 내는 [player]의 시계에 맞춰 돌고,
+     * 화면은 [VideoSurfaceHub]의 텍스처로 나간다. 영상은 덤이라 실패해도 소리에는 영향이 없다.
+     */
+    private var videoPlayer: ExoPlayer? = null
+    private var videoUrl: String? = null
+
+    /** 처음에는 소리보다 [START_AHEAD_MS] 앞 지점에서 멈춘 채 받아 두었다가, 소리가 거기 닿는 순간 튼다. */
+    private var videoStartPending = false
+    private var videoSpeed = 1f
+    private var lastHardSeek = 0L
+
+    private val videoSync = object : Runnable {
+        override fun run() {
+            val v = videoPlayer ?: return
+            val a = player ?: return
+            syncVideo(v, a)
+            main.postDelayed(this, SYNC_INTERVAL_MS)
+        }
+    }
+
+    private val videoListener = object : Player.Listener {
+        override fun onPlayerError(error: PlaybackException) {
+            MuloLog.e(MuloLog.NATIVE, "미리 듣기 영상 오류: ${error.errorCodeName}", error)
+            releaseVideo()
+        }
+    }
 
     private val ticker = object : Runnable {
         override fun run() {
@@ -91,7 +120,21 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
                     }
                     play(url, call.argument<Map<String, String>>("headers") ?: emptyMap(), result)
                 }
-                "seek" -> { player?.seekTo((call.arguments as Number).toLong()); result.success(null) }
+                "playVideo" -> {
+                    val url = call.argument<String>("url")
+                    if (url == null) {
+                        result.error("bad_args", "url required", null)
+                        return@setMethodCallHandler
+                    }
+                    playVideo(url, call.argument<Map<String, String>>("headers") ?: emptyMap())
+                    result.success(null)
+                }
+                "seek" -> {
+                    val ms = (call.arguments as Number).toLong()
+                    player?.seekTo(ms)
+                    videoPlayer?.seekTo(ms + SEEK_LEAD_MS)
+                    result.success(null)
+                }
                 "pause" -> { player?.pause(); result.success(null) }
                 "resume" -> { player?.play(); result.success(null) }
                 "stop" -> { stop(); result.success(null) }
@@ -139,6 +182,93 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
         p.prepare()
     }
 
+    private fun playVideo(url: String, headers: Map<String, String>) {
+        val audio = player ?: return
+        if (videoUrl == url && videoPlayer != null) return
+        releaseVideo()
+        val http = DefaultHttpDataSource.Factory()
+            .setAllowCrossProtocolRedirects(true)
+            .setDefaultRequestProperties(headers)
+        agentFor(url)?.let { http.setUserAgent(it) }
+        val v = ExoPlayer.Builder(context)
+            .setMediaSourceFactory(DefaultMediaSourceFactory(context).setDataSourceFactory(http))
+            // 소리는 다른 플레이어가 낸다: 오디오 포커스도 가져가지 않는다.
+            .setAudioAttributes(AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).build(), false)
+            .build()
+        v.volume = 0f
+        v.trackSelectionParameters = v.trackSelectionParameters.buildUpon()
+            .setTrackTypeDisabled(C.TRACK_TYPE_AUDIO, true)
+            .build()
+        v.addListener(videoListener)
+        v.setMediaItem(MediaItem.fromUri(Uri.parse(url)))
+        v.playWhenReady = false
+        v.seekTo(audio.currentPosition + START_AHEAD_MS)
+        v.prepare()
+        videoPlayer = v
+        videoUrl = url
+        videoStartPending = true
+        videoSpeed = 1f
+        VideoSurfaceHub.setPreviewVideo(v)
+        main.post(videoSync)
+    }
+
+    /** 소리의 시계에 영상을 맞춘다. 되감지 않고 재생 속도를 아주 조금 바꿔 따라잡는다 (되감으면 끊겨 보인다). */
+    private fun syncVideo(v: ExoPlayer, a: ExoPlayer) {
+        if (videoStartPending) {
+            if (!a.playWhenReady) {
+                // 소리가 멈춰 있으면 그 자리의 첫 화면만 보여 준다.
+                v.seekTo(a.currentPosition)
+                v.playWhenReady = false
+                videoStartPending = false
+                return
+            }
+            if (v.playbackState != Player.STATE_READY) return
+            val ahead = v.currentPosition - a.currentPosition
+            if (ahead > START_TOLERANCE_MS) return // 소리가 아직 거기 닿지 않았다
+            // 이미 지났으면 지금 소리 자리로 옮겨 튼다.
+            if (ahead < -START_MISSED_MS) v.seekTo(a.currentPosition + SEEK_LEAD_MS)
+            v.playWhenReady = true
+            videoStartPending = false
+            return
+        }
+        if (v.playWhenReady != a.playWhenReady) v.playWhenReady = a.playWhenReady
+        if (v.playbackState == Player.STATE_BUFFERING || a.playbackState == Player.STATE_BUFFERING) return
+        // 양수면 영상이 소리보다 앞서 있다.
+        val drift = v.currentPosition - a.currentPosition
+        val now = SystemClock.elapsedRealtime()
+        if (kotlin.math.abs(drift) > HARD_SEEK_MS) {
+            if (now - lastHardSeek > HARD_SEEK_GAP_MS) {
+                lastHardSeek = now
+                setVideoSpeed(v, 1f)
+                v.seekTo(a.currentPosition + SEEK_LEAD_MS)
+            }
+            return
+        }
+        val abs = kotlin.math.abs(drift)
+        if (videoSpeed != 1f) {
+            // 거의 맞았거나 반대로 넘어갔으면 원래 속도로.
+            if (abs < SETTLE_MS || (drift > 0) == (videoSpeed > 1f)) setVideoSpeed(v, 1f)
+        } else if (abs > ENGAGE_MS) {
+            setVideoSpeed(v, if (drift > 0) SLOW_DOWN else CATCH_UP)
+        }
+    }
+
+    private fun setVideoSpeed(v: ExoPlayer, speed: Float) {
+        if (videoSpeed == speed) return
+        videoSpeed = speed
+        v.setPlaybackSpeed(speed)
+    }
+
+    private fun releaseVideo() {
+        main.removeCallbacks(videoSync)
+        VideoSurfaceHub.setPreviewVideo(null)
+        videoPlayer?.removeListener(videoListener)
+        videoPlayer?.release()
+        videoPlayer = null
+        videoUrl = null
+        videoStartPending = false
+    }
+
     /** 소리를 내고 있는(또는 잠시 멈춘) 미리 듣기. 없으면 null이고, 알림에 남은 미리 듣기는 치운다. */
     private fun current(): Map<String, Any?>? {
         val p = player
@@ -163,6 +293,7 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
     }
 
     private fun release() {
+        releaseVideo()
         main.removeCallbacks(ticker)
         player?.removeListener(listener)
         player?.release()
@@ -186,5 +317,18 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
 
     companion object {
         const val NAME = "music_app/preview"
+
+        /** 영상 맞추기: 시작할 때 소리보다 앞 지점에서 기다리는 길이, 따라잡기 속도, 되감기 기준 (ms). */
+        private const val START_AHEAD_MS = 1500L
+        private const val START_TOLERANCE_MS = 30L
+        private const val START_MISSED_MS = 300L
+        private const val SEEK_LEAD_MS = 300L
+        private const val SYNC_INTERVAL_MS = 40L
+        private const val ENGAGE_MS = 200L
+        private const val SETTLE_MS = 60L
+        private const val HARD_SEEK_MS = 2500L
+        private const val HARD_SEEK_GAP_MS = 3000L
+        private const val CATCH_UP = 1.06f
+        private const val SLOW_DOWN = 0.94f
     }
 }

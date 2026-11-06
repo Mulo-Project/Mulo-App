@@ -28,21 +28,37 @@ class MediaStoreMusicDataSource implements DeviceMusicDataSource {
     final rows =
         await _channel.invokeListMethod<Map<Object?, Object?>>('queryAudio') ??
         const [];
+    // 영상은 권한이 없거나 못 읽어도 음악 불러오기는 그대로 간다.
+    var videos = const <Map<Object?, Object?>>[];
+    if (await _requestVideoPermission()) {
+      try {
+        videos =
+            await _channel.invokeListMethod<Map<Object?, Object?>>(
+              'queryVideo',
+            ) ??
+            const [];
+      } on PlatformException {
+        videos = const [];
+      }
+    }
     final now = _now();
+    Track toTrack(Map<Object?, Object?> r, String prefix) => Track(
+      id: '$prefix${r['id']}',
+      title: (r['title'] as String?) ?? '',
+      artist: _clean(r['artist'] as String?),
+      album: _clean(r['album'] as String?),
+      duration: Duration(milliseconds: (r['durationMs'] as int?) ?? 0),
+      uri: r['uri']! as String,
+      folder: normalizeFolderPath((r['folder'] as String?) ?? ''),
+      // 파일이 기기에 들어온 날짜. 모르면 찾은 시각.
+      addedAt: _fileDate(r['addedAtMs'], now),
+    );
     return ScanFound([
       for (final r in rows)
+        if (_inAny(folders, r['folder'] as String?)) toTrack(r, 'device:'),
+      for (final r in videos)
         if (_inAny(folders, r['folder'] as String?))
-          Track(
-            id: 'device:${r['id']}',
-            title: (r['title'] as String?) ?? '',
-            artist: _clean(r['artist'] as String?),
-            album: _clean(r['album'] as String?),
-            duration: Duration(milliseconds: (r['durationMs'] as int?) ?? 0),
-            uri: r['uri']! as String,
-            folder: normalizeFolderPath((r['folder'] as String?) ?? ''),
-            // 파일이 기기에 들어온 날짜. 모르면 찾은 시각.
-            addedAt: _fileDate(r['addedAtMs'], now),
-          ),
+          toTrack(r, Track.videoIdPrefix),
     ]);
   }
 
@@ -56,6 +72,12 @@ class MediaStoreMusicDataSource implements DeviceMusicDataSource {
     // audio(13+)와 storage(12 이하) 중 기기에 맞는 쪽만 실제로 뜬다.
     final statuses = await [Permission.audio, Permission.storage].request();
     return statuses.values.any((s) => s.isGranted || s.isLimited);
+  }
+
+  Future<bool> _requestVideoPermission() async {
+    // 영상 권한은 Android 13+만 따로 있다. 12 이하는 위의 storage 권한이 영상도 덮는다.
+    final status = await Permission.videos.request();
+    return status.isGranted || status.isLimited;
   }
 
   /// MediaStore는 모를 때 `<unknown>`을 준다.

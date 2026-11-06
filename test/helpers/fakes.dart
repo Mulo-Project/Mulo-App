@@ -63,6 +63,7 @@ import 'package:music_download_play_app/features/playlists/domain/repositories/p
 import 'package:music_download_play_app/features/search/di.dart';
 import 'package:music_download_play_app/features/search/domain/entities/audio_language.dart';
 import 'package:music_download_play_app/features/search/domain/entities/audio_stream.dart';
+import 'package:music_download_play_app/features/search/domain/entities/video_stream.dart';
 import 'package:music_download_play_app/features/search/domain/entities/preview_progress.dart';
 import 'package:music_download_play_app/features/search/domain/entities/preview_snapshot.dart';
 import 'package:music_download_play_app/features/search/domain/entities/engine_exception.dart';
@@ -1565,6 +1566,10 @@ class FakeDownloaderEngine implements DownloaderEngine {
   }
 
   @override
+  Future<VideoStream> resolveVideoStream(String url) async =>
+      VideoStream(url: 'https://video.test/$url');
+
+  @override
   Future<List<AudioLanguage>> fetchAudioLanguages(String url) async =>
       audioLanguages;
 
@@ -1667,6 +1672,13 @@ class FakePreviewPlayer implements PreviewPlayer {
 
   /// [current]가 돌려줄 값. 앱이 꺼졌다 켜진 뒤 플레이어에 남은 소리를 흉내 낸다.
   PreviewSnapshot? snapshot;
+
+  /// 영상을 틀라고 한 주소 순서.
+  final playedVideos = <String>[];
+
+  @override
+  Future<void> playVideo(VideoStream stream) async =>
+      playedVideos.add(stream.url);
 
   @override
   Future<void> remember(MediaHit hit) async => remembered.add(hit);

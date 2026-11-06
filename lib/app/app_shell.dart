@@ -13,6 +13,7 @@ import '../features/library/domain/entities/track.dart'
 import '../features/home/presentation/bloc/play_recorder_cubit.dart';
 import '../features/player/presentation/bloc/audio_output_cubit.dart';
 import '../features/player/presentation/bloc/now_playing_cubit.dart';
+import '../features/player/presentation/widgets/native_video.dart';
 import '../features/player/presentation/widgets/player_sleep_timer.dart';
 import '../features/search/presentation/bloc/preview_cubit.dart';
 import '../core/cache/cached_web_image.dart';
@@ -20,6 +21,7 @@ import '../features/downloads/presentation/bloc/download_queue_cubit.dart';
 import '../features/downloads/presentation/widgets/download_bar.dart';
 import '../features/downloads/presentation/widgets/download_float_button.dart';
 import '../features/search/presentation/screens/media_detail_screen.dart';
+import '../features/search/presentation/widgets/preview_video.dart';
 import '../features/theme/presentation/bloc/theme_cubit.dart';
 import 'mini_float_layer.dart';
 import 'router.dart';
@@ -455,6 +457,7 @@ class _ShellMiniPlayer extends StatelessWidget {
         title: track.title,
         artist: track.artist,
         artwork: coverImageOf(context, CoverKey.track(track.id)),
+        video: track.isVideo ? const NativeVideo() : null,
         progress: state.progress,
         isPlaying: state.isPlaying,
         playLabel: l10n.actionPlay,
@@ -501,6 +504,9 @@ class _PreviewMiniPlayer extends StatelessWidget {
               if (hit?.uploader case final u? when u.isNotEmpty) u,
             ].join(' · '),
       artwork: thumb == null ? null : CachedWebImage(thumb),
+      video: hit == null || hit.url.isEmpty || loading
+          ? null
+          : PreviewVideo(pageUrl: hit.url),
       progress: preview.fraction,
       isPlaying: !preview.paused,
       playLabel: l10n.searchPreviewResume,

@@ -1,8 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
+import 'package:music_download_play_app/core/design/design.dart';
 import 'package:music_download_play_app/core/di/injector.dart';
 import 'package:music_download_play_app/features/engine/presentation/bloc/engine_cubit.dart';
+import 'package:music_download_play_app/features/settings/presentation/widgets/settings_engine_sections.dart';
 
 import '../../helpers/fakes.dart';
 

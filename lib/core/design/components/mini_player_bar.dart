@@ -26,6 +26,7 @@ class MiniPlayerBar extends StatelessWidget {
     required this.durationText,
     required this.queueLabel,
     this.artwork,
+    this.video,
     this.onTap,
     this.onPlayPause,
     this.onPrevious,
@@ -54,6 +55,9 @@ class MiniPlayerBar extends StatelessWidget {
 
   /// 커버 아트. 없으면 주 색 그라데이션 자리 표시.
   final ImageProvider? artwork;
+
+  /// 영상 곡이면 커버 대신 보여 줄 영상 화면 (소리 없는 화면, 안 열리는 동안은 커버가 보인다).
+  final Widget? video;
   final VoidCallback? onTap;
   final VoidCallback? onPlayPause;
   final VoidCallback? onPrevious;
@@ -98,7 +102,7 @@ class MiniPlayerBar extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  _Artwork(artwork: artwork),
+                  _Artwork(artwork: artwork, video: video),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Column(
@@ -183,18 +187,29 @@ class MiniPlayerBar extends StatelessWidget {
 }
 
 class _Artwork extends StatelessWidget {
-  const _Artwork({this.artwork});
+  const _Artwork({this.artwork, this.video});
 
   final ImageProvider? artwork;
+  final Widget? video;
 
   @override
   Widget build(BuildContext context) {
     final glow = context.tokens.glow(GlowTone.primary);
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppRadii.sm),
-      child: SizedBox.square(
-        dimension: 44,
-        child: artwork != null
+      child: SizedBox(
+        // 영상은 가로로 넓게(16:9) 보여 준다.
+        width: video != null ? 78 : 44,
+        height: 44,
+        child: video != null
+            ? Stack(
+                fit: StackFit.expand,
+                children: [
+                  if (artwork != null) Image(image: artwork!, fit: BoxFit.cover),
+                  video!,
+                ],
+              )
+            : artwork != null
             ? Image(image: artwork!, fit: BoxFit.cover)
             : DecoratedBox(
                 decoration: BoxDecoration(
