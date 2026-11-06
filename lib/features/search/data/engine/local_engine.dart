@@ -91,15 +91,21 @@ class LocalEngine implements DownloaderEngine {
       '--no-warnings',
       '$prefix$want:$query',
     ]);
-    final all = <MediaHit>[];
+    // 실시간 스트리밍(진행 중 · 예정)은 받을 수 없어 목록에서 뺀다. 쪽 계산이 어긋나지 않게 자른 뒤에 뺀다.
+    final all = <(MediaHit, bool)>[];
     for (final line in const LineSplitter().convert(out)) {
       if (line.trim().isEmpty) continue;
       final j = _decode(line);
-      if (j != null) all.add(_hit(j));
+      if (j != null) all.add((_hit(j), _isLive(j)));
     }
     final start = page * size;
     return SearchPage(
-      items: start >= all.length ? const [] : all.sublist(start),
+      items: start >= all.length
+          ? const []
+          : [
+              for (final (hit, live) in all.sublist(start))
+                if (!live) hit,
+            ],
       hasNext: all.length >= want,
     );
   }
@@ -404,6 +410,14 @@ class LocalEngine implements DownloaderEngine {
       throw EngineException(failure, err);
     }
     return r.stdout;
+  }
+
+  /// 진행 중이거나 예정인 실시간 스트리밍인지.
+  static bool _isLive(Map<String, dynamic> j) {
+    final status = j['live_status'];
+    return j['is_live'] == true ||
+        status == 'is_live' ||
+        status == 'is_upcoming';
   }
 
   Map<String, dynamic>? _decode(String s) {
