@@ -18,7 +18,7 @@ class MutedVideo extends StatefulWidget {
     required this.position,
     required this.playing,
     this.headers = const {},
-    this.maxDrift = const Duration(milliseconds: 600),
+    this.maxDrift = const Duration(milliseconds: 1500),
   });
 
   /// `content://…` · `file` 경로 · `http(s)://…` 주소.
@@ -41,7 +41,7 @@ class _MutedVideoState extends State<MutedVideo> {
 
   /// 위치를 맞출 때 다시 찾는 데 걸리는 시간만큼 앞서 가서 소리와 맞춘다.
   static const _seekLead = Duration(milliseconds: 300);
-  static const _resyncGap = Duration(seconds: 2);
+  static const _resyncGap = Duration(seconds: 5);
 
   @override
   void initState() {

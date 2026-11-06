@@ -445,14 +445,10 @@ class _Thumbnail extends StatelessWidget {
               if (previewing)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(AppRadii.md),
-                  // 영상을 누르면 잠시 멈추거나 이어서 튼다.
-                  child: GestureDetector(
-                    onTap: () => context.read<PreviewCubit>().togglePause(),
-                    child: SizedBox(
-                      width: width,
-                      height: width * 9 / 16,
-                      child: PreviewVideo(pageUrl: hit.url),
-                    ),
+                  child: SizedBox(
+                    width: width,
+                    height: width * 9 / 16,
+                    child: _PreviewVideoBox(hit: hit),
                   ),
                 )
               else
@@ -471,6 +467,72 @@ class _Thumbnail extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// 미리 듣는 영상. 누르면 재생 · 일시정지 아이콘 버튼이 잠시 떠서 누를 수 있고,
+/// 멈춰 있는 동안에는 계속 보인다.
+class _PreviewVideoBox extends StatefulWidget {
+  const _PreviewVideoBox({required this.hit});
+
+  final MediaHit hit;
+
+  @override
+  State<_PreviewVideoBox> createState() => _PreviewVideoBoxState();
+}
+
+class _PreviewVideoBoxState extends State<_PreviewVideoBox> {
+  static const _hideAfter = Duration(seconds: 2);
+  var _touched = false;
+  Timer? _timer;
+
+  void _reveal() {
+    setState(() => _touched = true);
+    _timer?.cancel();
+    _timer = Timer(_hideAfter, () {
+      if (mounted) setState(() => _touched = false);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final paused = context.select((PreviewCubit c) => c.state.paused);
+    final show = paused || _touched;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        PreviewVideo(pageUrl: widget.hit.url),
+        GestureDetector(behavior: HitTestBehavior.translucent, onTap: _reveal),
+        Center(
+          child: IgnorePointer(
+            ignoring: !show,
+            child: AnimatedOpacity(
+              opacity: show ? 1 : 0,
+              duration: AppMotion.fast,
+              child: CircleIconButton(
+                icon: paused ? AppIcons.play : AppIcons.pause,
+                tooltip: paused
+                    ? l10n.searchPreviewResume
+                    : l10n.searchPreviewPause,
+                emphasized: true,
+                size: AppSizes.circleButtonLarge,
+                onPressed: () {
+                  context.read<PreviewCubit>().togglePause();
+                  if (!paused) _reveal();
+                },
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
