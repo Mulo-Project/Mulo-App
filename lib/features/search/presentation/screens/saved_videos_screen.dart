@@ -165,6 +165,7 @@ class _SavedTile extends StatelessWidget {
                 size: AppSizes.rowButton,
                 onPressed: () => togglePreview(context, hit),
               ),
+            if (!isVideo) const SizedBox(width: AppSpacing.sm),
             CircleIconButton(
               icon: AppIcons.delete,
               tooltip: l10n.savedVideosRemove,
