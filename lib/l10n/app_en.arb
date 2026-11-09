@@ -49,6 +49,7 @@
   "searchLive": "Live",
   "searchLiveNoDownload": "Live streams can't be downloaded",
   "searchLiveNoPreview": "Live streams can't be previewed",
+  "searchPreviewUnplayable": "This video can't be played right now",
   "searchResultsTitle": "Results",
   "searchUrlCardLabel": "Found from URL",
   "searchPlaylistLabel": "Playlist",

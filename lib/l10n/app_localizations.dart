@@ -392,6 +392,12 @@ abstract class AppLocalizations {
   /// **'라이브는 미리 들을 수 없어요'**
   String get searchLiveNoPreview;
 
+  /// No description provided for @searchPreviewUnplayable.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금은 들을 수 없는 영상이에요'**
+  String get searchPreviewUnplayable;
+
   /// No description provided for @searchResultsTitle.
   ///
   /// In ko, this message translates to:

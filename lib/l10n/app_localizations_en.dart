@@ -164,6 +164,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchLiveNoPreview => "Live streams can't be previewed";
 
   @override
+  String get searchPreviewUnplayable => "This video can't be played right now";
+
+  @override
   String get searchResultsTitle => 'Results';
 
   @override

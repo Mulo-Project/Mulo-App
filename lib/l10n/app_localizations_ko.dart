@@ -162,6 +162,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get searchLiveNoPreview => '라이브는 미리 들을 수 없어요';
 
   @override
+  String get searchPreviewUnplayable => '지금은 들을 수 없는 영상이에요';
+
+  @override
   String get searchResultsTitle => '검색 결과';
 
   @override

@@ -43,7 +43,10 @@ Future<bool> togglePreview(
         .split('\n')
         .map((l) => l.trim())
         .lastWhere((l) => l.isNotEmpty, orElse: () => '');
+    final unplayable =
+        detail.contains('Offline') || detail.contains('unplayable');
     final message = switch (failure) {
+      _ when unplayable => l10n.searchPreviewUnplayable,
       EngineFailure.unavailable => l10n.searchPreviewUnavailable,
       EngineFailure.network => l10n.searchNetworkBody,
       EngineFailure.timeout => l10n.stateTimeoutBody,
@@ -53,7 +56,7 @@ Future<bool> togglePreview(
     messenger.showSnackBar(
       SnackBar(
         content: Text(
-          detail.isEmpty || failure == EngineFailure.unavailable
+          detail.isEmpty || unplayable || failure == EngineFailure.unavailable
               ? message
               : '$message\n${detail.length > 400 ? detail.substring(0, 400) : detail}',
         ),
