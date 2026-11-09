@@ -110,13 +110,16 @@ class YoutubeExplodeEngine implements DownloaderEngine {
     // 소리가 든 형식을 못 읽으면 안쪽 엔진(yt-dlp)에 묻는다.
     final id = VideoId.parseVideoId(url);
     if (id != null) {
+      final clock = Stopwatch()..start();
       try {
         final v = await _videoReader(
           id,
           maxHeight,
         ).timeout(const Duration(seconds: 15));
+        _log('explode 영상 ${v == null ? '없음' : '읽음'} ${clock.elapsedMilliseconds}ms');
         if (v != null) return v;
-      } on Object {
+      } on Object catch (e) {
+        _log('explode 영상 실패 ${clock.elapsedMilliseconds}ms: ${_oneLine(e)}');
         // 못 읽으면 안쪽 엔진으로 넘어간다.
       }
     }
@@ -224,6 +227,15 @@ Future<PlaylistSearchPage> _playlistSearch(
   }
 }
 
+/// 디버그 빌드에서 adb logcat(`flutter` 태그)으로 보인다.
+void _log(String message) {
+  assert(() {
+    // ignore: avoid_print
+    print('[MuloSearch] $message');
+    return true;
+  }());
+}
+
 String _oneLine(Object? o) => '$o'
     .split('\n')
     .map((l) => l.trim())
@@ -309,9 +321,15 @@ Future<VideoStream?> _readMuxedWithExplode(String videoId, int maxHeight) async 
       } on Object {
         continue;
       }
-      if (muxed.isEmpty) continue;
+      if (muxed.isEmpty) {
+        _log('explode 영상: ${client == _visionOs ? 'visionOS' : 'androidVr'}에 합쳐진 형식 없음');
+        continue;
+      }
       final best = muxed.first;
-      if (!await _canReadMiddle(best)) continue;
+      if (!await _canReadMiddle(best)) {
+        _log('explode 영상: ${best.url.queryParameters['c']} 구간 403');
+        continue;
+      }
       return VideoStream(
         url: best.url.toString(),
         headers: _toStream(best).headers,
