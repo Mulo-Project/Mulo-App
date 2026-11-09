@@ -32,6 +32,10 @@ class NativeVideoSurface implements VideoSurface {
         if (args is Map) {
           _events.add(VideoSurfaceEvent(ready: args['value'] as bool));
         }
+      case 'pip':
+        if (args is Map) {
+          _events.add(VideoSurfaceEvent(pip: args['value'] as bool));
+        }
     }
   }
 

@@ -13,6 +13,7 @@ class VideoSurfaceState extends Equatable {
     this.ready = false,
     this.width = 0,
     this.height = 0,
+    this.pip = false,
   });
 
   /// 영상 화면(텍스처). 아직 받지 못했거나 지원하지 않으면 null.
@@ -23,20 +24,25 @@ class VideoSurfaceState extends Equatable {
   final int width;
   final int height;
 
+  /// 작은 창(PiP)에 떠 있다: 앱은 영상만 꽉 채워 보여 준다.
+  final bool pip;
+
   VideoSurfaceState copyWith({
     int? textureId,
     bool? ready,
     int? width,
     int? height,
+    bool? pip,
   }) => VideoSurfaceState(
     textureId: textureId ?? this.textureId,
     ready: ready ?? this.ready,
     width: width ?? this.width,
     height: height ?? this.height,
+    pip: pip ?? this.pip,
   );
 
   @override
-  List<Object?> get props => [textureId, ready, width, height];
+  List<Object?> get props => [textureId, ready, width, height, pip];
 }
 
 /// 네이티브 영상 화면을 앱 전체가 하나로 나눠 쓴다. 영상 위젯이 보이는 동안만 네이티브에 붙어 있고
@@ -58,7 +64,14 @@ class VideoSurfaceCubit extends Cubit<VideoSurfaceState> {
 
   void _onEvent(VideoSurfaceEvent e) {
     if (isClosed) return;
-    emit(state.copyWith(ready: e.ready, width: e.width, height: e.height));
+    emit(
+      state.copyWith(
+        ready: e.ready,
+        width: e.width,
+        height: e.height,
+        pip: e.pip,
+      ),
+    );
   }
 
   /// 영상 위젯이 보이기 시작했다.
@@ -85,6 +98,7 @@ class VideoSurfaceCubit extends Cubit<VideoSurfaceState> {
         ready: info.ready,
         width: info.width,
         height: info.height,
+        pip: state.pip,
       ),
     );
   }

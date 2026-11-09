@@ -1,8 +1,18 @@
 package com.mulo.app
 
+import android.app.PendingIntent
+import android.app.PictureInPictureParams
+import android.app.RemoteAction
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.content.res.Configuration
+import android.graphics.drawable.Icon
+import android.os.Build
 import android.os.Bundle
+import android.util.Rational
+import androidx.core.content.ContextCompat
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 
@@ -55,8 +65,86 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun onPause() {
         resumed = false
-        LyricsOverlay.setAppVisible(false)
+        // 작은 창(PiP)은 앱이 보이는 것으로 친다 (가사 창이 영상 위에 겹치지 않게).
+        LyricsOverlay.setAppVisible(inPip())
         super.onPause()
+    }
+
+    override fun onStop() {
+        if (!resumed) LyricsOverlay.setAppVisible(false)
+        super.onStop()
+    }
+
+    // 영상이 나오는 중에 홈으로 나가면 영상을 작은 창(PiP)으로 띄운다 (Android 8+).
+    override fun onUserLeaveHint() {
+        super.onUserLeaveHint()
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || inPip()) return
+        val size = VideoSurfaceHub.pipSize() ?: return
+        try {
+            enterPictureInPictureMode(pipParams(size.first, size.second, VideoSurfaceHub.isPlaying()))
+        } catch (e: IllegalStateException) {
+            MuloLog.e(MuloLog.NATIVE, "PiP 진입 실패: ${e.message}", e)
+        }
+    }
+
+    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+        if (isInPictureInPictureMode) {
+            ContextCompat.registerReceiver(this, pipReceiver, IntentFilter(ACTION_PIP_TOGGLE), ContextCompat.RECEIVER_NOT_EXPORTED)
+            pipReceiverRegistered = true
+            LyricsOverlay.setAppVisible(true)
+        } else {
+            unregisterPipReceiver()
+            LyricsOverlay.setAppVisible(resumed)
+        }
+        VideoSurfaceHub.emit?.invoke("pip", mapOf("value" to isInPictureInPictureMode))
+    }
+
+    private fun inPip(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && isInPictureInPictureMode
+
+    private var pipReceiverRegistered = false
+
+    /** 작은 창의 재생 · 일시정지 버튼. */
+    private val pipReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val play = !VideoSurfaceHub.isPlaying()
+            VideoSurfaceHub.setPlaying(play)
+            val size = VideoSurfaceHub.videoSize() ?: return
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                setPictureInPictureParams(pipParams(size.first, size.second, play))
+            }
+        }
+    }
+
+    private fun unregisterPipReceiver() {
+        if (!pipReceiverRegistered) return
+        pipReceiverRegistered = false
+        unregisterReceiver(pipReceiver)
+    }
+
+    @androidx.annotation.RequiresApi(Build.VERSION_CODES.O)
+    private fun pipParams(width: Int, height: Int, playing: Boolean): PictureInPictureParams {
+        // 가로세로 비율은 시스템 허용 범위(약 2.39:1 ~ 1:2.39) 안으로.
+        val ratio = (width.toDouble() / height).coerceIn(1.0 / 2.39, 2.39)
+        val label = if (playing) "일시정지" else "재생"
+        val action = RemoteAction(
+            Icon.createWithResource(
+                this,
+                if (playing) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play,
+            ),
+            label,
+            label,
+            PendingIntent.getBroadcast(
+                this,
+                0,
+                Intent(ACTION_PIP_TOGGLE).setPackage(packageName),
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+            ),
+        )
+        return PictureInPictureParams.Builder()
+            .setAspectRatio(Rational((ratio * 10000).toInt(), 10000))
+            .setActions(listOf(action))
+            .build()
     }
 
     // 엔진은 화면보다 오래 산다 ([MuloEngine]): 받기 · 미리 듣기가 최근 작업에서 밀어도 이어지게.
@@ -72,6 +160,7 @@ class MainActivity : FlutterFragmentActivity() {
     override fun shouldDestroyEngineWithHost(): Boolean = false
 
     override fun onDestroy() {
+        unregisterPipReceiver()
         super.onDestroy()
         if (MuloEngine.activity === this) MuloEngine.activity = null
         MuloEngine.releaseWhenIdle()
@@ -82,5 +171,9 @@ class MainActivity : FlutterFragmentActivity() {
         if (MuloEngine.mediaStore?.onActivityResult(requestCode, resultCode) == true) return
         @Suppress("DEPRECATION")
         super.onActivityResult(requestCode, resultCode, data)
+    }
+
+    companion object {
+        private const val ACTION_PIP_TOGGLE = "com.mulo.app.PIP_TOGGLE"
     }
 }
