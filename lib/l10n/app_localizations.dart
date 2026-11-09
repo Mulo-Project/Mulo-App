@@ -1160,11 +1160,23 @@ abstract class AppLocalizations {
   /// **'360p · 기본'**
   String get videoQualityStandard;
 
+  /// No description provided for @videoQualityMedium.
+  ///
+  /// In ko, this message translates to:
+  /// **'480p'**
+  String get videoQualityMedium;
+
   /// No description provided for @videoQualityHigh.
   ///
   /// In ko, this message translates to:
   /// **'720p'**
   String get videoQualityHigh;
+
+  /// No description provided for @videoQualityFull.
+  ///
+  /// In ko, this message translates to:
+  /// **'1080p'**
+  String get videoQualityFull;
 
   /// No description provided for @settingsSleepTimerOff.
   ///

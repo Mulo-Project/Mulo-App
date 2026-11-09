@@ -11,7 +11,9 @@ String videoQualityLabel(BuildContext context, VideoQuality quality) {
   final l10n = context.l10n;
   return switch (quality) {
     VideoQuality.standard => l10n.videoQualityStandard,
+    VideoQuality.medium => l10n.videoQualityMedium,
     VideoQuality.high => l10n.videoQualityHigh,
+    VideoQuality.full => l10n.videoQualityFull,
   };
 }
 

@@ -587,7 +587,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoQualityStandard => '360p · Default';
 
   @override
+  String get videoQualityMedium => '480p';
+
+  @override
   String get videoQualityHigh => '720p';
+
+  @override
+  String get videoQualityFull => '1080p';
 
   @override
   String get settingsSleepTimerOff => 'Off';
