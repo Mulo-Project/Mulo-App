@@ -88,9 +88,8 @@ class PreviewCubit extends Cubit<PreviewState> {
     WatchPreviewCompleted watchCompleted,
     WatchPreviewProgress watchProgress,
     WatchPreviewFailures watchFailures, {
-    ResolveVideoStream? resolveVideo,
-  }) : _resolveVideo = resolveVideo,
-       super(const PreviewState()) {
+    this.resolveVideo,
+  }) : super(const PreviewState()) {
     unawaited(syncWithPlayer());
     _completed = watchCompleted(const NoParams()).listen((_) => stop());
     _progress = watchProgress(const NoParams()).listen(_onProgress);
@@ -100,7 +99,7 @@ class PreviewCubit extends Cubit<PreviewState> {
   final ResolveAudioStream _resolve;
 
   /// 영상 주소를 미리 읽어 두는 데 쓴다 (없으면 미리 읽지 않는다).
-  final ResolveVideoStream? _resolveVideo;
+  final ResolveVideoStream? resolveVideo;
   final PlayPreview _play;
   final RememberPreview _remember;
   final CurrentPreview _current;
@@ -225,7 +224,7 @@ class PreviewCubit extends Cubit<PreviewState> {
   /// 소리 주소를 읽는 동안 영상 주소도 함께 읽어 둔다. 영상 화면이 열릴 때 바로 쓰게 되어
   /// 소리와 영상이 처음부터 덜 어긋난다. 결과는 엔진이 기억하고, 실패는 영상 쪽에서 다시 다룬다.
   void _prefetchVideo(MediaHit hit) {
-    final resolve = _resolveVideo;
+    final resolve = resolveVideo;
     if (resolve == null || !_isYoutube(hit.url)) return;
     unawaited(resolve(hit.url).then<void>((_) {}, onError: (Object _) {}));
   }
