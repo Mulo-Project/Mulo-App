@@ -96,9 +96,9 @@ class _PreviewVideoControlsState extends State<PreviewVideoControls> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      CircleIconButton(
+                      _SkipButton(
                         key: const ValueKey('video-back-10'),
-                        icon: AppIcons.replay10,
+                        forward: false,
                         tooltip: l10n.videoBack10,
                         onPressed: () => _skip(-_step),
                       ),
@@ -116,15 +116,30 @@ class _PreviewVideoControlsState extends State<PreviewVideoControls> {
                         },
                       ),
                       const SizedBox(width: AppSpacing.md),
-                      CircleIconButton(
+                      _SkipButton(
                         key: const ValueKey('video-forward-10'),
-                        icon: AppIcons.forward10,
+                        forward: true,
                         tooltip: l10n.videoForward10,
                         onPressed: () => _skip(_step),
                       ),
                     ],
                   ),
                 ),
+                // 전체 화면의 닫기 버튼도 컨트롤과 같이 눌렀을 때만 보인다.
+                if (widget.fullscreen)
+                  SafeArea(
+                    child: Align(
+                      alignment: Alignment.topLeft,
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSpacing.sm),
+                        child: CircleIconButton(
+                          icon: AppIcons.close,
+                          tooltip: l10n.videoFullscreenExit,
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                      ),
+                    ),
+                  ),
                 Positioned(
                   left: AppSpacing.sm,
                   right: AppSpacing.xs,
@@ -155,6 +170,53 @@ class _PreviewVideoControlsState extends State<PreviewVideoControls> {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// 10초 이동 버튼: 돌아가는 화살표 안에 숫자 10을 그려, 몇 초씩 움직이는지 한눈에 보이게 한다.
+/// (앞으로는 같은 화살표를 좌우로 뒤집는다.)
+class _SkipButton extends StatelessWidget {
+  const _SkipButton({
+    super.key,
+    required this.forward,
+    required this.tooltip,
+    required this.onPressed,
+  });
+
+  final bool forward;
+  final String tooltip;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Tooltip(
+      message: tooltip,
+      child: InkResponse(
+        onTap: onPressed,
+        radius: AppSizes.circleButton / 2,
+        child: SizedBox.square(
+          dimension: AppSizes.circleButton,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Transform.flip(
+                flipX: forward,
+                child: Icon(AppIcons.replay, size: 40, color: p.onSurface),
+              ),
+              Text(
+                '10',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: p.onSurface,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

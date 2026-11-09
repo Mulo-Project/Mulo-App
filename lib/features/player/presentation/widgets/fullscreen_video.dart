@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -31,33 +33,73 @@ Future<void> showFullscreenVideo(
   }
 }
 
-class _FullscreenVideoPage extends StatelessWidget {
+class _FullscreenVideoPage extends StatefulWidget {
   const _FullscreenVideoPage({this.controls});
 
   final WidgetBuilder? controls;
 
   @override
+  State<_FullscreenVideoPage> createState() => _FullscreenVideoPageState();
+}
+
+class _FullscreenVideoPageState extends State<_FullscreenVideoPage> {
+  var _closeShown = false;
+  Timer? _timer;
+
+  // 컨트롤이 없는 전체 화면은 화면을 누를 때만 닫기 버튼이 잠깐 뜬다.
+  void _toggleClose() {
+    _timer?.cancel();
+    setState(() => _closeShown = !_closeShown);
+    if (_closeShown) {
+      _timer = Timer(const Duration(seconds: 3), () {
+        if (mounted) setState(() => _closeShown = false);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final controls = widget.controls;
     return Scaffold(
       backgroundColor: const Color(0xFF000000),
       body: Stack(
         fit: StackFit.expand,
         children: [
           const NativeVideo(fit: BoxFit.contain),
-          if (controls != null) controls!(context),
-          SafeArea(
-            child: Align(
-              alignment: Alignment.topLeft,
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.sm),
-                child: CircleIconButton(
-                  icon: AppIcons.close,
-                  tooltip: context.l10n.videoFullscreenExit,
-                  onPressed: () => Navigator.of(context).pop(),
+          if (controls != null)
+            controls(context)
+          else ...[
+            GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: _toggleClose,
+            ),
+            SafeArea(
+              child: Align(
+                alignment: Alignment.topLeft,
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  child: IgnorePointer(
+                    ignoring: !_closeShown,
+                    child: AnimatedOpacity(
+                      opacity: _closeShown ? 1 : 0,
+                      duration: AppMotion.fast,
+                      child: CircleIconButton(
+                        icon: AppIcons.close,
+                        tooltip: context.l10n.videoFullscreenExit,
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );
