@@ -447,8 +447,6 @@ class _HitTile extends StatelessWidget {
     final subtitle = [
       if (hit.isLive) l10n.searchLive,
       if (hit.uploader.isNotEmpty) hit.uploader,
-      // 채널 이름 옆에 전체 길이도 보인다.
-      if (hit.duration != null) formatDuration(hit.duration!),
       if (hit.downloaded) l10n.alreadyDownloaded,
     ].join(' · ');
     final thumb = hit.thumbnailUrl;
@@ -484,6 +482,8 @@ class _HitTile extends StatelessWidget {
     return TrackTile(
       title: hit.title,
       subtitle: subtitle,
+      // 채널 이름이 길어도 잘리지 않게 전체 길이는 그 밑 줄에 따로 보인다.
+      detail: hit.duration == null ? null : formatDuration(hit.duration!),
       tone: toneFor(hit.id),
       artwork: thumb == null ? null : NetworkImage(thumb),
       // 줄마다 유리(흐림 층)를 두면 목록 스크롤이 끊겨서 면 없는 작은 버튼을 쓴다.

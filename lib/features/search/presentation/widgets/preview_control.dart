@@ -25,6 +25,16 @@ Future<bool> togglePreview(
   final preview = context.read<PreviewCubit>();
   final nowPlaying = context.read<NowPlayingCubit>();
 
+  // 라이브는 끝이 없거나 아직 시작 전이라 주소가 없다. 이미 듣는 중이면 멈추기만 한다.
+  if (hit.isLive && !preview.state.isActive(hit.id)) {
+    if (announceFailure) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(l10n.searchLiveNoPreview)));
+    }
+    return false;
+  }
+
   final failure = await preview.toggle(hit, audioLanguage: audioLanguage);
   if (failure != null) {
     if (!announceFailure) return false;
@@ -33,7 +43,10 @@ Future<bool> togglePreview(
         .split('\n')
         .map((l) => l.trim())
         .lastWhere((l) => l.isNotEmpty, orElse: () => '');
+    final unplayable =
+        detail.contains('Offline') || detail.contains('unplayable');
     final message = switch (failure) {
+      _ when unplayable => l10n.searchPreviewUnplayable,
       EngineFailure.unavailable => l10n.searchPreviewUnavailable,
       EngineFailure.network => l10n.searchNetworkBody,
       EngineFailure.timeout => l10n.stateTimeoutBody,
@@ -43,7 +56,7 @@ Future<bool> togglePreview(
     messenger.showSnackBar(
       SnackBar(
         content: Text(
-          detail.isEmpty || failure == EngineFailure.unavailable
+          detail.isEmpty || unplayable || failure == EngineFailure.unavailable
               ? message
               : '$message\n${detail.length > 400 ? detail.substring(0, 400) : detail}',
         ),
@@ -78,27 +91,57 @@ class PreviewButton extends StatelessWidget {
     final paused = context.select(
       (PreviewCubit c) => c.state.isActive(hit.id) && c.state.paused,
     );
+    final cubit = context.read<PreviewCubit>();
+    void stop() => togglePreview(
+      context,
+      hit,
+      audioLanguage: context.read<AudioLanguageCubit>().state.selected,
+    );
+    // 듣는 중에는 일시정지/이어 듣기와 멈추기를 따로 둔다 (한 버튼이 둘을 오가면 헷갈린다).
+    if (status == PreviewStatus.playing) {
+      // 한 줄에 나란히 둔다 (좁으면 글자가 줄어든다).
+      return Row(
+        children: [
+          Expanded(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: PillButton(
+                key: const ValueKey('preview-pause-button'),
+                label: paused
+                    ? l10n.searchPreviewResume
+                    : l10n.searchPreviewPause,
+                icon: paused ? AppIcons.play : AppIcons.pause,
+                variant: PillVariant.tonal,
+                onPressed: cubit.togglePause,
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: PillButton(
+                key: const ValueKey('preview-stop-button'),
+                label: l10n.searchPreviewStop,
+                icon: AppIcons.close,
+                variant: PillVariant.tonal,
+                onPressed: stop,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
     return PillButton(
-      label: switch (status) {
-        PreviewStatus.idle => l10n.searchPreview,
-        PreviewStatus.loading => l10n.searchPreviewLoading,
-        PreviewStatus.playing =>
-          paused ? l10n.searchPreviewResume : l10n.searchPreviewStop,
-      },
-      icon: switch (status) {
-        PreviewStatus.idle => AppIcons.headphones,
-        PreviewStatus.loading => AppIcons.hourglassTop,
-        PreviewStatus.playing => paused ? AppIcons.play : AppIcons.pause,
-      },
+      label: status == PreviewStatus.loading
+          ? l10n.searchPreviewLoading
+          : l10n.searchPreview,
+      icon: status == PreviewStatus.loading
+          ? AppIcons.hourglassTop
+          : AppIcons.headphones,
       variant: PillVariant.tonal,
       busy: status == PreviewStatus.loading,
-      onPressed: paused
-          ? () => context.read<PreviewCubit>().togglePause()
-          : () => togglePreview(
-              context,
-              hit,
-              audioLanguage: context.read<AudioLanguageCubit>().state.selected,
-            ),
+      onPressed: stop,
     );
   }
 }
@@ -137,8 +180,7 @@ class PreviewRowButton extends StatelessWidget {
   }
 }
 
-/// 소리가 나기까지 남은 시간을 보여 주는 작은 원: 호가 차오르고 가운데에 남은 초가 있다.
-/// 어림한 시간이 지나도 시작하지 않으면 마지막 1초에서 기다린다.
+/// 소리가 나기까지 남은 시간을 보여 주는 작은 원: 호가 차오르고 가운데에 남은 초가 있고, 예상을 넘기면 넘긴 초가 +로 올라간다.
 class PreviewLoadingRing extends StatelessWidget {
   const PreviewLoadingRing({super.key, required this.state, this.size = 28});
 
@@ -153,7 +195,11 @@ class PreviewLoadingRing extends StatelessWidget {
       return SizedBox.square(dimension: size);
     }
     final elapsed = DateTime.now().difference(started);
-    final begin = (elapsed.inMilliseconds / total.inMilliseconds).clamp(
+    // 짐작한 시간([total])에 90%쯤 차고, 그 뒤에도 멈추지 않고 점점 느려지며 계속 차오른다
+    // (가득 찼는데 안 나거나 끝에서 딱 멈춘 것처럼 보이지 않게). 소리가 나면 끝난다.
+    const horizon = Duration(minutes: 2);
+    final k = total.inMilliseconds / 9;
+    final begin = (elapsed.inMilliseconds / horizon.inMilliseconds).clamp(
       0.0,
       1.0,
     );
@@ -161,14 +207,20 @@ class PreviewLoadingRing extends StatelessWidget {
     return TweenAnimationBuilder<double>(
       key: ValueKey(started),
       tween: Tween(begin: begin, end: 1),
-      duration: total * (1 - begin),
-      builder: (context, v, _) {
-        final left = (total.inSeconds * (1 - v)).ceil().clamp(1, 99);
+      duration: horizon * (1 - begin),
+      builder: (context, x, _) {
+        final t = x * horizon.inMilliseconds;
+        final v = t / (t + k);
+        // 예상 시간까지는 남은 초를 세고, 넘기면 넘긴 초를 +로 센다 (1에서 멈춰 보이지 않게).
+        final over = t - total.inMilliseconds;
+        final label = over <= 0
+            ? '${((-over) / 1000).ceil().clamp(1, 99)}'
+            : '+${(over / 1000).floor().clamp(0, 99)}';
         return CountdownRing(
           key: const ValueKey('preview-loading-ring'),
           value: v,
           size: size,
-          child: Text('$left', style: text?.copyWith(fontSize: 10)),
+          child: Text(label, style: text?.copyWith(fontSize: 10)),
         );
       },
     );

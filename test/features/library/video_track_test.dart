@@ -1,4 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
+import 'package:music_download_play_app/features/search/domain/entities/video_quality.dart';
+import 'package:music_download_play_app/features/search/presentation/bloc/preview_cubit.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 import 'package:music_download_play_app/features/search/domain/usecases/search_usecases.dart';
 import 'package:music_download_play_app/features/search/presentation/bloc/preview_video_cubit.dart';
@@ -42,5 +45,48 @@ void main() {
     expect(cubit.state.started, isTrue);
     expect(player.playedVideos, ['https://video.test/https://example.com/a']);
     await cubit.close();
+  });
+
+  test('PreviewCubit: 유튜브는 소리가 섞인 영상 주소 하나로 소리와 영상을 튼다', () async {
+    const hit = MediaHit(
+      id: 'y',
+      title: 'Y',
+      url: 'https://www.youtube.com/watch?v=abc',
+    );
+    for (final muxed in [true, false]) {
+      final engine = FakeDownloaderEngine(muxedVideo: muxed);
+      final p = FakePreviewPlayer();
+      final cubit = PreviewCubit(
+        ResolveAudioStream(engine),
+        PlayPreview(p),
+        RememberPreview(p),
+        CurrentPreview(p),
+        SeekPreview(p),
+        PausePreview(p),
+        ResumePreview(p),
+        StopPreview(p),
+        WatchPreviewCompleted(p),
+        WatchPreviewProgress(p),
+        WatchPreviewFailures(p),
+        resolveVideo: ResolveVideoStream(engine),
+      );
+      await cubit.toggle(hit);
+      // 소리가 섞인 형식이면 그 주소로, 아니면 소리 주소를 따로 읽어서 튼다.
+      expect(
+        p.played.single.startsWith('https://video.test/'),
+        muxed,
+      );
+      await cubit.close();
+    }
+  });
+
+  test('ResolveVideoStream: 설정한 화질 상한으로 읽는다', () async {
+    final engine = FakeDownloaderEngine();
+    final quality = MemoryVideoQualityRepository();
+    final resolve = ResolveVideoStream(engine, quality);
+    await resolve('https://example.com/a');
+    quality.value = VideoQuality.high;
+    await resolve('https://example.com/a');
+    expect(engine.videoHeights, [360, 720]);
   });
 }

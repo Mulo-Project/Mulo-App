@@ -105,10 +105,12 @@ object VideoSurfaceHub {
             target?.addListener(playerListener)
             emit?.invoke("ready", mapOf("value" to false))
         }
-        mainPlayer?.let { setVideoDisabled(it, target !== it) }
-        previewVideo?.let { setVideoDisabled(it, target !== it) }
+        // 표면이 유효할 때만 영상 해독을 켠다 (표면 없이 켜면 해독기 초기화가 실패해 소리까지 멈춘다).
         val surface = producer?.surface
-        if (target != null && surface != null && surface.isValid) {
+        val ready = surface != null && surface.isValid
+        mainPlayer?.let { setVideoDisabled(it, target !== it || !ready) }
+        previewVideo?.let { setVideoDisabled(it, target !== it || !ready) }
+        if (target != null && surface != null && ready) {
             target.setVideoSurface(surface)
             sizeChanged(target.videoSize)
         }

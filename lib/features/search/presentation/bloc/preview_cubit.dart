@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/usecase/usecase.dart';
+import '../../domain/entities/audio_stream.dart';
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/preview_progress.dart';
@@ -167,7 +168,7 @@ class PreviewCubit extends Cubit<PreviewState> {
     );
     _prefetchVideo(hit);
     try {
-      final stream = await _resolve(hit.url, audioLanguage: audioLanguage)
+      final stream = await _streamFor(hit, audioLanguage)
           .timeout(
             _resolveTimeout,
             onTimeout: () => throw const EngineException(
@@ -234,8 +235,23 @@ class PreviewCubit extends Cubit<PreviewState> {
   /// (누를 때 다시 읽는다).
   void prefetch(MediaHit hit) {
     if (!_isYoutube(hit.url)) return;
-    unawaited(_resolve(hit.url).then<void>((_) {}, onError: (Object _) {}));
+    // 소리와 영상이 함께 든 주소 하나만 읽는다 (yt-dlp를 겹쳐 돌리면 서로 느려진다).
     _prefetchVideo(hit);
+  }
+
+  /// 틀 주소. 유튜브는 소리가 같이 든 영상 형식이 있으면 그 주소 하나로 소리와 영상을 함께 튼다
+  /// (오디오 언어를 고른 곡이나 그런 형식이 없는 곡은 소리 주소를 따로 읽는다).
+  Future<AudioStream> _streamFor(MediaHit hit, String? audioLanguage) async {
+    final video = resolveVideo;
+    if (video != null && audioLanguage == null && _isYoutube(hit.url)) {
+      try {
+        final v = await video(hit.url);
+        if (v.muxed) return AudioStream(url: v.url, headers: v.headers);
+      } on Object {
+        // 영상 쪽이 안 되면 소리 주소로 간다.
+      }
+    }
+    return _resolve(hit.url, audioLanguage: audioLanguage);
   }
 
   static bool _isYoutube(String url) {
