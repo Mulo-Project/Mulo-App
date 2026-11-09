@@ -49,6 +49,4 @@ abstract interface class PreviewPlayer {
   /// 임시 저장소를 모두 비운다 (재생 중이던 미리 듣기는 멈춘다).
   Future<void> clearCache();
 
-  /// 임시 저장소 용량 한도를 바꾼다 ([bytes]가 0이면 끈다). 재생 중이던 미리 듣기는 멈춘다.
-  Future<void> setCacheLimit(int bytes);
 }

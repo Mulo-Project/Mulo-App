@@ -72,8 +72,7 @@ void registerSearch(GetIt sl) {
     ..registerFactory(() => WatchPreviewFailures(sl()))
     ..registerFactory(() => GetStreamCacheInfo(sl()))
     ..registerFactory(() => ClearStreamCache(sl()))
-    ..registerFactory(() => SetStreamCacheLimit(sl()))
-    ..registerFactory(() => StreamCacheCubit(sl(), sl(), sl()))
+    ..registerFactory(() => StreamCacheCubit(sl(), sl()))
     ..registerFactory(
       () => PreviewCubit(
         sl(),

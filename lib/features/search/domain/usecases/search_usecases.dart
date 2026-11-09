@@ -281,13 +281,3 @@ class ClearStreamCache implements UseCase<void, NoParams> {
   @override
   Future<void> call(NoParams params) => _player.clearCache();
 }
-
-/// 스트리밍 임시 저장소 용량 한도 바꾸기 (바이트, 0이면 끔).
-class SetStreamCacheLimit implements UseCase<void, int> {
-  const SetStreamCacheLimit(this._player);
-
-  final PreviewPlayer _player;
-
-  @override
-  Future<void> call(int bytes) => _player.setCacheLimit(bytes);
-}

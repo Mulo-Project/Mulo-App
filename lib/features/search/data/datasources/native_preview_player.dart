@@ -81,10 +81,6 @@ class NativePreviewPlayer implements PreviewPlayer {
   Future<void> clearCache() => _channel.invokeMethod<void>('clearCache');
 
   @override
-  Future<void> setCacheLimit(int bytes) =>
-      _channel.invokeMethod<void>('setCacheLimit', bytes);
-
-  @override
   Future<void> remember(MediaHit hit) =>
       _channel.invokeMethod<void>('remember', {
         'id': hit.id,

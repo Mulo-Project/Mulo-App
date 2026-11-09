@@ -2,13 +2,13 @@
 
 ## 방식
 - 받지 않고 듣는 YouTube 미리 듣기(소리 · 영상)를 네이티브 Media3 `SimpleCache`(앱 캐시 폴더 `stream_cache/`)에 쌓는다. 다시 들으면 쌓인 부분은 네트워크 없이 읽는다.
-- 보관함 곡이 아니고 파일로도 보이지 않는다. 용량 한도를 넘으면 가장 오래 안 쓴 것부터 지운다 (LRU). 기본 500 MB, 설정에서 끔 · 200 MB · 500 MB · 1 GB · 2 GB.
+- 보관함 곡이 아니고 파일로도 보이지 않는다. 용량 한도를 넘으면 가장 오래 안 쓴 것부터 지운다 (LRU). 한도는 500 MB 고정 (설정에서 고르지 않는다).
 - 스트림 주소는 틀 때마다 서명이 바뀌므로 캐시 키는 주소 대신 `id` + `itag`(영상 id + 형식). 모르는 주소는 쿼리를 뺀 주소.
 - 캐시를 못 열어도 재생은 그대로 된다 (원래 주소로 재생).
 
 ## 변경
-- 네이티브: `StreamCache`(열기 · 감싸기 · 용량 · 비우기 · 한도), `PreviewChannel`의 소리 · 영상 플레이어가 캐시로 감싼 데이터 소스를 쓴다. 채널 메서드 `cacheInfo` · `clearCache` · `setCacheLimit` (비우기 · 한도 변경은 미리 듣기를 멈춘 뒤 한다).
-- Dart: `StreamCacheInfo` · `GetStreamCacheInfo` · `ClearStreamCache` · `SetStreamCacheLimit` · `StreamCacheCubit`, 설정 > 데이터의 "스트리밍 임시 저장" 줄과 시트. l10n 문구는 생성 파일까지 손으로 맞췄다 (`flutter gen-l10n`으로 다시 만들어도 같아야 한다).
+- 네이티브: `StreamCache`(열기 · 감싸기 · 용량 · 비우기 · 한도), `PreviewChannel`의 소리 · 영상 플레이어가 캐시로 감싼 데이터 소스를 쓴다. 채널 메서드 `cacheInfo` · `clearCache` (비우기는 미리 듣기를 멈춘 뒤 한다).
+- Dart: `StreamCacheInfo` · `GetStreamCacheInfo` · `ClearStreamCache` · `StreamCacheCubit`, 설정 > 데이터의 "스트리밍 임시 저장" 줄 (사용량 표시, 누르면 비움). l10n 문구는 생성 파일까지 손으로 맞췄다 (`flutter gen-l10n`으로 다시 만들어도 같아야 한다).
 - 패키지 · Manifest 변경 없음 (Media3는 이미 쓰는 의존성의 일부).
 
 ## 미리 듣기 시작 빠르게: 소리 + 영상 주소를 yt-dlp 한 번으로
@@ -23,4 +23,4 @@
 ## 확인 필요
 - 기기: 미리 듣기 시작까지 걸리는 시간 (yt-dlp 한 번 실행되는지 로그).
 - PC: `dart format`, `flutter analyze`, `flutter test`, Android 빌드 (이 환경에서는 컴파일하지 못했다).
-- 기기: 같은 곡을 두 번 미리 듣기 → 두 번째 데이터 사용 · 시작 속도, 설정에서 사용량 표시 · 한도 변경 · 비우기, 한도 초과 시 오래된 것 삭제.
+- 기기: 같은 곡을 두 번 미리 듣기 → 두 번째 데이터 사용 · 시작 속도, 설정에서 사용량 표시 · 비우기, 한도 초과 시 오래된 것 삭제.

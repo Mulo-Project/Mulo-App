@@ -153,11 +153,6 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
                     StreamCache.clear(context)
                     result.success(null)
                 }
-                "setCacheLimit" -> {
-                    stop()
-                    StreamCache.setLimitBytes(context, (call.arguments as Number).toLong())
-                    result.success(null)
-                }
                 else -> result.notImplemented()
             }
         }

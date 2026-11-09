@@ -1683,9 +1683,6 @@ class FakePreviewPlayer implements PreviewPlayer {
     cacheUsed = 0;
   }
 
-  @override
-  Future<void> setCacheLimit(int bytes) async => cacheLimit = bytes;
-
   /// 플레이어에 적어 둔 곡 (재생 시작 뒤에 Cubit이 남긴다).
   final remembered = <MediaHit>[];
 

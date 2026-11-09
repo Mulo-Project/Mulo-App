@@ -671,12 +671,6 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get settingsStreamCacheOff => '꺼짐';
-
-  @override
-  String get settingsStreamCacheHint => '받지 않고 들은 곡을 임시로 쌓아 두었다가, 다시 들을 때 데이터를 아껴요. 보관함에는 나타나지 않아요.';
-
-  @override
   String get settingsStreamCacheClear => '지금 비우기';
 
   @override

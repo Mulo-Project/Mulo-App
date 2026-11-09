@@ -8,10 +8,9 @@ import '../../../library/domain/entities/hidden_track.dart';
 import '../../../library/presentation/bloc/hidden_records_cubit.dart';
 import '../../../library/presentation/bloc/library_cubit.dart';
 import '../../../library/presentation/widgets/hidden_records_sheet.dart';
-import '../../../search/domain/entities/stream_cache_info.dart';
 import '../../../search/presentation/bloc/stream_cache_cubit.dart';
 import 'settings_common.dart';
-import 'stream_cache_sheet.dart';
+import 'stream_cache_row.dart';
 
 /// 데이터 묶음: 폴더를 빼서 숨겨 둔 곡의 기록 정리, 스트리밍 임시 저장소 (눌러서 시트를 연다).
 class SettingsDataSection extends StatelessWidget {
@@ -41,14 +40,7 @@ class SettingsDataSection extends StatelessWidget {
                 trailing: const SettingsChevron(),
                 onTap: () => showHiddenRecordsSheet(context),
               ),
-              BlocBuilder<StreamCacheCubit, StreamCacheInfo>(
-                builder: (context, cache) => SettingRow(
-                  title: l10n.settingsStreamCache,
-                  description: streamCacheSummary(context, cache),
-                  trailing: const SettingsChevron(),
-                  onTap: () => showStreamCacheSheet(context),
-                ),
-              ),
+              const StreamCacheRow(),
             ],
           ),
         ),

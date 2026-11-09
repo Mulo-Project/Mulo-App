@@ -14,38 +14,28 @@ import java.io.File
  * 스트리밍(받지 않고 바로 듣기) 소리 · 영상의 임시 저장소. 들은 부분을 앱 캐시 폴더에 쌓아 두었다가
  * 같은 곡을 다시 들으면 네트워크 없이 거기서 읽는다. 보관함 곡이 아니고 파일로 보이지도 않는다.
  *
- * 용량 한도를 넘으면 가장 오래 안 쓴 것부터 지운다 (LRU). 한도 0은 끔.
+ * 용량 한도를 넘으면 가장 오래 안 쓴 것부터 지운다 (LRU). 한도는 500 MB 고정.
  * 스트림 주소는 틀 때마다 서명이 바뀌어서, 주소 대신 영상 id + 형식(itag)을 키로 쓴다.
  */
 @UnstableApi
 object StreamCache {
-    private const val PREFS = "stream_cache"
-    private const val KEY_LIMIT = "limit_bytes"
-    private const val DEFAULT_LIMIT = 500L * 1024 * 1024
+    /** 용량 한도: 고정 500 MB. */
+    private const val LIMIT_BYTES = 500L * 1024 * 1024
     private const val DIR = "stream_cache"
 
     private var cache: SimpleCache? = null
     private var dbProvider: StandaloneDatabaseProvider? = null
 
-    fun limitBytes(context: Context): Long =
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getLong(KEY_LIMIT, DEFAULT_LIMIT)
-
-    /** 한도를 바꾼다. 쓰던 캐시는 닫고 다음에 새 한도로 연다 (플레이어가 쓰는 중이면 먼저 멈춰야 한다). */
-    @Synchronized
-    fun setLimitBytes(context: Context, bytes: Long) {
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putLong(KEY_LIMIT, bytes).apply()
-        close()
-    }
+    @Suppress("UNUSED_PARAMETER")
+    fun limitBytes(context: Context): Long = LIMIT_BYTES
 
     @Synchronized
     private fun open(context: Context): SimpleCache? {
-        val limit = limitBytes(context)
-        if (limit <= 0L) return null
         cache?.let { return it }
         return try {
             val app = context.applicationContext
             val db = dbProvider ?: StandaloneDatabaseProvider(app).also { dbProvider = it }
-            SimpleCache(File(app.cacheDir, DIR), LeastRecentlyUsedCacheEvictor(limit), db).also { cache = it }
+            SimpleCache(File(app.cacheDir, DIR), LeastRecentlyUsedCacheEvictor(LIMIT_BYTES), db).also { cache = it }
         } catch (e: Exception) {
             // 캐시를 못 열어도 재생은 되어야 한다.
             MuloLog.e(MuloLog.NATIVE, "스트리밍 캐시 열기 실패", e)
@@ -59,7 +49,7 @@ object StreamCache {
         cache = null
     }
 
-    /** [upstream]을 캐시로 감싼다. 캐시가 꺼져 있거나 못 열면 [upstream] 그대로. */
+    /** [upstream]을 캐시로 감싼다. 캐시를 못 열면 [upstream] 그대로. */
     fun wrap(context: Context, upstream: DataSource.Factory): DataSource.Factory {
         val c = open(context) ?: return upstream
         return CacheDataSource.Factory()
