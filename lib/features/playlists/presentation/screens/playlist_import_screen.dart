@@ -498,10 +498,8 @@ class _Row extends StatelessWidget {
     final thumb = hit.thumbnailUrl;
     return TrackTile(
       title: hit.title,
-      subtitle: [
-        if (hit.uploader.isNotEmpty) hit.uploader,
-        if (hit.duration != null) formatDuration(hit.duration!),
-      ].join(' · '),
+      subtitle: hit.uploader,
+      detail: hit.duration == null ? null : formatDuration(hit.duration!),
       tone: toneFor(hit.id),
       artwork: thumb == null ? null : NetworkImage(thumb),
       trailing: Icon(
