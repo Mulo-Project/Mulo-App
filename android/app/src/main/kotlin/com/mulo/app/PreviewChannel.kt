@@ -209,6 +209,8 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
         videoStartPending = true
         videoSpeed = 1f
         VideoSurfaceHub.setPreviewVideo(v)
+        VideoSurfaceHub.previewIsPlaying = { player?.isPlaying == true }
+        VideoSurfaceHub.previewSetPlaying = { play -> if (play) player?.play() else player?.pause() }
         main.post(videoSync)
     }
 
@@ -262,6 +264,8 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
     private fun releaseVideo() {
         main.removeCallbacks(videoSync)
         VideoSurfaceHub.setPreviewVideo(null)
+        VideoSurfaceHub.previewIsPlaying = null
+        VideoSurfaceHub.previewSetPlaying = null
         videoPlayer?.removeListener(videoListener)
         videoPlayer?.release()
         videoPlayer = null

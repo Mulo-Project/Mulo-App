@@ -28,6 +28,7 @@ import '../features/notifications/presentation/bloc/notification_sync_cubit.dart
 import '../features/notifications/presentation/widgets/notification_bridge.dart';
 import '../features/player/presentation/bloc/audio_output_cubit.dart';
 import '../features/player/presentation/bloc/video_surface_cubit.dart';
+import '../features/player/presentation/widgets/native_video.dart';
 import '../features/player/presentation/bloc/now_playing_cubit.dart';
 import '../features/player/presentation/bloc/output_behavior_cubit.dart';
 import '../features/player/presentation/bloc/mix_with_others_cubit.dart';
@@ -177,7 +178,7 @@ class _MusicAppState extends State<MusicApp> {
                     child: DownloadCompletionListener(
                       child: NewVideosLauncher(
                         onOpen: _openNewVideos,
-                        child: LockGate(child: child!),
+                        child: _PipSwitcher(child: LockGate(child: child!)),
                       ),
                     ),
                   ),
@@ -187,6 +188,31 @@ class _MusicAppState extends State<MusicApp> {
           },
         ),
       ),
+    );
+  }
+}
+
+/// 작은 창(PiP)에 들어가면 앱 화면 대신 영상만 꽉 채워 보여 준다.
+/// 앱 화면은 지우지 않고 숨겨 두어서(상태 유지) 돌아오면 그대로 이어진다.
+class _PipSwitcher extends StatelessWidget {
+  const _PipSwitcher({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocSelector<VideoSurfaceCubit, VideoSurfaceState, bool>(
+      selector: (s) => s.pip,
+      builder: (context, pip) {
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            Offstage(offstage: pip, child: child),
+            if (pip)
+              const ColoredBox(color: Color(0xFF000000), child: NativeVideo()),
+          ],
+        );
+      },
     );
   }
 }

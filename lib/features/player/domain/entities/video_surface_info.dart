@@ -24,12 +24,15 @@ class VideoSurfaceInfo extends Equatable {
 
 /// 영상 화면의 바뀐 부분. 바뀌지 않은 값은 null.
 class VideoSurfaceEvent extends Equatable {
-  const VideoSurfaceEvent({this.ready, this.width, this.height});
+  const VideoSurfaceEvent({this.ready, this.width, this.height, this.pip});
 
   final bool? ready;
   final int? width;
   final int? height;
 
+  /// 작은 창(PiP)에 들어갔는지 (Android).
+  final bool? pip;
+
   @override
-  List<Object?> get props => [ready, width, height];
+  List<Object?> get props => [ready, width, height, pip];
 }

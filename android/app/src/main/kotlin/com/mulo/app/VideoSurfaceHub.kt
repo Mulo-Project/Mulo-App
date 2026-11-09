@@ -26,7 +26,11 @@ object VideoSurfaceHub {
     private var width = 0
     private var height = 0
 
-    /** Dart로 알린다 (`size` · `ready`). 채널이 붙으면 채운다. */
+    /** 미리 듣기의 소리 플레이어는 [PreviewChannel]이 쥔다: PiP 버튼이 재생 상태를 읽고 바꾸는 통로. */
+    var previewIsPlaying: (() -> Boolean)? = null
+    var previewSetPlaying: ((Boolean) -> Unit)? = null
+
+    /** Dart로 알린다 (`size` · `ready` · `pip`). 채널이 붙으면 채운다. */
     var emit: ((String, Map<String, Any?>) -> Unit)? = null
 
     private val playerListener = object : Player.Listener {
@@ -59,6 +63,25 @@ object VideoSurfaceHub {
         attached = false
         refresh()
     }
+
+    /** 소리가 나는 중인지 (영상이 보이는 곡 기준). */
+    fun isPlaying(): Boolean =
+        if (previewVideo != null) previewIsPlaying?.invoke() == true else mainPlayer?.isPlaying == true
+
+    fun setPlaying(play: Boolean) {
+        if (previewVideo != null) previewSetPlaying?.invoke(play)
+        else if (play) PlaybackHub.play() else PlaybackHub.pause()
+    }
+
+    /**
+     * 작은 창(PiP)으로 보낼 만한 영상이 있으면 영상 크기(width, height), 없으면 null.
+     * 영상이 화면에 붙어 첫 화면이 그려졌고 소리가 나는 중일 때만.
+     */
+    fun pipSize(): Pair<Int, Int>? =
+        if (attached && firstFrame && width > 0 && height > 0 && isPlaying()) width to height else null
+
+    /** 지금 영상 크기. 아직 모르면 null. */
+    fun videoSize(): Pair<Int, Int>? = if (width > 0 && height > 0) width to height else null
 
     fun setMain(player: ExoPlayer?) {
         mainPlayer = player
