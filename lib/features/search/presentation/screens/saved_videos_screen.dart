@@ -58,15 +58,15 @@ class SavedVideosScreen extends StatelessWidget {
                               MediaQuery.paddingOf(context).bottom,
                         ),
                         children: [
-                          // 영상(유튜브, 화질을 고른 것)과 음원을 나누고, 구역마다 1번부터 센다.
+                          // 음원(낮은 줄)을 위에, 영상(큰 타일)을 아래에 둔다. 구역마다 1번부터 센다.
                           for (final section in [
-                            (
-                              l10n.savedVideosSectionVideo,
-                              [for (final v in videos) if (v.quality != null) v],
-                            ),
                             (
                               l10n.savedVideosSectionAudio,
                               [for (final v in videos) if (v.quality == null) v],
+                            ),
+                            (
+                              l10n.savedVideosSectionVideo,
+                              [for (final v in videos) if (v.quality != null) v],
                             ),
                           ])
                             if (section.$2.isNotEmpty) ...[

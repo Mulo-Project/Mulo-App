@@ -105,7 +105,7 @@ class _PreviewVideoControlsState extends State<PreviewVideoControls> {
                         tooltip: l10n.videoBack10,
                         onPressed: () => _skip(-_step),
                       ),
-                      const SizedBox(width: AppSpacing.md),
+                      const SizedBox(width: AppSpacing.lg),
                       CircleIconButton(
                         icon: paused ? AppIcons.play : AppIcons.pause,
                         tooltip: paused
@@ -118,7 +118,7 @@ class _PreviewVideoControlsState extends State<PreviewVideoControls> {
                           if (!paused) _reveal();
                         },
                       ),
-                      const SizedBox(width: AppSpacing.md),
+                      const SizedBox(width: AppSpacing.lg),
                       _SkipButton(
                         key: const ValueKey('video-forward-10'),
                         forward: true,
@@ -133,7 +133,7 @@ class _PreviewVideoControlsState extends State<PreviewVideoControls> {
                   child: Align(
                     alignment: Alignment.topRight,
                     child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.sm),
+                      padding: const EdgeInsets.all(AppSpacing.md),
                       child: CircleIconButton(
                         key: const ValueKey('video-options'),
                         icon: AppIcons.more,
@@ -152,7 +152,7 @@ class _PreviewVideoControlsState extends State<PreviewVideoControls> {
                     child: Align(
                       alignment: Alignment.topLeft,
                       child: Padding(
-                        padding: const EdgeInsets.all(AppSpacing.sm),
+                        padding: const EdgeInsets.all(AppSpacing.md),
                         child: CircleIconButton(
                           icon: AppIcons.close,
                           tooltip: l10n.videoFullscreenExit,
@@ -162,9 +162,9 @@ class _PreviewVideoControlsState extends State<PreviewVideoControls> {
                     ),
                   ),
                 Positioned(
-                  left: AppSpacing.sm,
-                  right: AppSpacing.xs,
-                  bottom: 0,
+                  left: AppSpacing.md,
+                  right: AppSpacing.sm,
+                  bottom: AppSpacing.xs,
                   child: Row(
                     children: [
                       Text(
@@ -178,11 +178,13 @@ class _PreviewVideoControlsState extends State<PreviewVideoControls> {
                         duration == null ? '' : formatDuration(duration),
                         style: text,
                       ),
-                      if (!widget.fullscreen)
+                      if (!widget.fullscreen) ...[
+                        const SizedBox(width: AppSpacing.sm),
                         FullscreenVideoButton(
                           controls: (_) =>
                               const PreviewVideoControls(fullscreen: true),
                         ),
+                      ],
                     ],
                   ),
                 ),
@@ -217,14 +219,19 @@ class _SkipButton extends StatelessWidget {
       child: InkResponse(
         onTap: onPressed,
         radius: AppSizes.circleButton / 2,
-        child: SizedBox.square(
-          dimension: AppSizes.circleButton,
+        child: Ink(
+          width: AppSizes.circleButton,
+          height: AppSizes.circleButton,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: p.scrim.withValues(alpha: .45),
+          ),
           child: Stack(
             alignment: Alignment.center,
             children: [
               Transform.flip(
                 flipX: forward,
-                child: Icon(AppIcons.replay, size: 40, color: p.onSurface),
+                child: Icon(AppIcons.replay, size: 32, color: p.onSurface),
               ),
               Text(
                 '10',
@@ -248,6 +255,9 @@ Future<void> showVideoOptions(BuildContext context) {
   final settingsQuality = context.read<VideoQualityCubit>().state;
   return showAppSheet<void>(
     context,
+    // 가로 전체 화면처럼 낮은 화면에서도 넘치지 않게 스크롤된다.
+    isScrollControlled: true,
+    useSafeArea: true,
     builder: (sheetContext) => _VideoOptionsSheet(
       preview: preview,
       settingsQuality: settingsQuality,
@@ -270,7 +280,7 @@ class _VideoOptionsSheet extends StatelessWidget {
     final p = context.palette;
     final text = Theme.of(context).textTheme;
     return SafeArea(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: appSheetPadding,
         child: Column(
           mainAxisSize: MainAxisSize.min,

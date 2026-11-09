@@ -26,6 +26,8 @@ Future<VideoQuality?> pickSaveQuality(
 }) {
   return showAppSheet<VideoQuality>(
     context,
+    isScrollControlled: true,
+    useSafeArea: true,
     builder: (_) => _SaveQualitySheet(initial: initial ?? VideoQuality.standard),
   );
 }
@@ -48,7 +50,7 @@ class _SaveQualitySheetState extends State<_SaveQualitySheet> {
     final p = context.palette;
     final text = Theme.of(context).textTheme;
     return SafeArea(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: appSheetPadding,
         child: Column(
           mainAxisSize: MainAxisSize.min,
