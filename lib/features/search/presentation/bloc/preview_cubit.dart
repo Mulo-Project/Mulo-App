@@ -226,10 +226,22 @@ class PreviewCubit extends Cubit<PreviewState> {
   /// 소리와 영상이 처음부터 덜 어긋난다. 결과는 엔진이 기억하고, 실패는 영상 쪽에서 다시 다룬다.
   void _prefetchVideo(MediaHit hit) {
     final resolve = _resolveVideo;
-    final host = Uri.tryParse(hit.url)?.host ?? '';
-    final youtube = host.contains('youtube.com') || host == 'youtu.be';
-    if (resolve == null || !youtube) return;
+    if (resolve == null || !_isYoutube(hit.url)) return;
     unawaited(resolve(hit.url).then<void>((_) {}, onError: (Object _) {}));
+  }
+
+  /// 상세 화면이 열릴 때 소리·영상 주소를 미리 읽어 둔다.
+  /// 미리 듣기를 누르면 엔진이 기억한 주소를 바로 써서 시작이 빨라진다. 실패는 무시한다
+  /// (누를 때 다시 읽는다).
+  void prefetch(MediaHit hit) {
+    if (!_isYoutube(hit.url)) return;
+    unawaited(_resolve(hit.url).then<void>((_) {}, onError: (Object _) {}));
+    _prefetchVideo(hit);
+  }
+
+  static bool _isYoutube(String url) {
+    final host = Uri.tryParse(url)?.host ?? '';
+    return host.contains('youtube.com') || host == 'youtu.be';
   }
 
   /// 화면 상태를 플레이어의 실제 상태에 맞춘다. 앱이 켜질 때와 앞으로 돌아올 때 부른다:
