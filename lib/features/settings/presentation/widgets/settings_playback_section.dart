@@ -16,8 +16,6 @@ import '../../../library/presentation/widgets/track_menu.dart'
     show toggleLyricsOverlay;
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../../player/presentation/widgets/player_sleep_timer.dart';
-import '../../../search/presentation/bloc/video_quality_cubit.dart';
-import '../../../search/presentation/widgets/video_quality_sheet.dart';
 
 import 'settings_common.dart';
 
@@ -87,15 +85,6 @@ class SettingsPlaybackSection extends StatelessWidget {
             trailing: const SettingsChevron(),
             onTap: () => context.push(Routes.equalizer),
           ),
-        SettingRow(
-          title: l10n.videoQualityTitle,
-          description: videoQualityLabel(
-            context,
-            context.watch<VideoQualityCubit>().state,
-          ),
-          trailing: const SettingsChevron(),
-          onTap: () => showVideoQualitySheet(context),
-        ),
         // 수면 타이머: 플레이어 화면과 같은 시간 고르기 대화상자를 연다.
         SettingRow(
           title: l10n.playerSleepTimer,
