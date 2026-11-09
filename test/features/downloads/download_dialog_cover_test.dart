@@ -50,10 +50,10 @@ void main() {
     await tester.tap(find.text('이미지 바꾸기'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
-    // 기본(썸네일) 그대로면 "기본 이미지로"는 없고 "이미지 지우기"만 있다.
+    // 기본(썸네일) 그대로면 "기본 이미지로"는 없고 지우기(휴지통)만 있다.
     expect(find.text('기본 이미지로'), findsNothing);
     // 테스트에는 네트워크가 없어 이미지를 읽는 표시가 계속 돌므로 pumpAndSettle 대신 시간만 흘린다.
-    await tester.tap(find.text('이미지 지우기'));
+    await tester.tap(find.byKey(const ValueKey('cover-edit-remove')));
     await tester.pump(const Duration(milliseconds: 500));
     await tester.tap(find.text('이미지 지우기').last);
     await tester.pump(const Duration(milliseconds: 500));
