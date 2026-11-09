@@ -183,20 +183,23 @@ class PreviewLoadingRing extends StatelessWidget {
       return SizedBox.square(dimension: size);
     }
     final elapsed = DateTime.now().difference(started);
-    // 짐작한 시간이 지나도 소리가 안 났으면 가득 차지 않고 끝 가까이에서 기다린다 (가득 찼는데 안 나는 것처럼 보이지 않게).
-    const cap = 0.92;
-    final progress = (elapsed.inMilliseconds / total.inMilliseconds).clamp(
+    // 짐작한 시간([total])에 90%쯤 차고, 그 뒤에도 멈추지 않고 점점 느려지며 계속 차오른다
+    // (가득 찼는데 안 나거나 끝에서 딱 멈춘 것처럼 보이지 않게). 소리가 나면 끝난다.
+    const horizon = Duration(minutes: 2);
+    final k = total.inMilliseconds / 9;
+    final begin = (elapsed.inMilliseconds / horizon.inMilliseconds).clamp(
       0.0,
       1.0,
     );
-    final begin = progress * cap;
     final text = Theme.of(context).textTheme.labelSmall;
     return TweenAnimationBuilder<double>(
       key: ValueKey(started),
-      tween: Tween(begin: begin, end: cap),
-      duration: total * (1 - progress),
-      builder: (context, v, _) {
-        final left = (total.inSeconds * (1 - v / cap)).ceil().clamp(1, 99);
+      tween: Tween(begin: begin, end: 1),
+      duration: horizon * (1 - begin),
+      builder: (context, x, _) {
+        final t = x * horizon.inMilliseconds;
+        final v = t / (t + k);
+        final left = ((total.inMilliseconds - t) / 1000).ceil().clamp(1, 99);
         return CountdownRing(
           key: const ValueKey('preview-loading-ring'),
           value: v,

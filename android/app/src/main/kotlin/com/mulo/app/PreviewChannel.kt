@@ -116,6 +116,7 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
         }
 
         override fun onPlayerError(error: PlaybackException) {
+            MuloLog.e(MuloLog.NATIVE, "미리 듣기 소리 오류: ${error.errorCodeName}", error)
             val message = "${error.errorCodeName}: ${error.message ?: ""}"
             val waiting = pending
             if (waiting != null) {
