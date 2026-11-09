@@ -49,21 +49,31 @@ class SaveVideo implements UseCase<List<SavedVideo>, SaveVideoParams> {
     final quality = params.quality;
     final list = await _repo.load();
     if (list.any((v) => v.id == hit.id)) return list;
-    // 미리 듣기가 트는 것과 같은 주소를 받는다: 소리가 든 영상 형식, 없으면 소리 주소.
-    VideoStream? target;
+    // 미리 듣기가 트는 것과 같은 주소를 받는다. 유튜브는 고른 화질의 영상 주소:
+    // 소리가 든 형식이면 그것 하나, 영상 전용이면 소리 주소도 함께 (플레이어가 따로 틀어 맞춘다).
+    // 소리만 저장하는 곡(quality 없음)이나 영상이 안 읽히는 곡은 소리 주소 하나.
+    final targets = <VideoStream>[];
     if (quality != null) {
       try {
         final v = await _resolveVideo(hit.url, quality: quality);
-        if (v.muxed) target = v;
+        targets.add(v);
+        if (v.muxed) return _finish(list, hit, quality, targets);
       } on Object {
-        // 영상 쪽이 안 되면 소리 주소로 간다.
+        targets.clear();
       }
     }
-    if (target == null) {
-      final a = await _resolveAudio(hit.url);
-      target = VideoStream(url: a.url, headers: a.headers);
-    }
-    final streamId = await _player.saveStream(hit.id, target);
+    final a = await _resolveAudio(hit.url);
+    targets.add(VideoStream(url: a.url, headers: a.headers));
+    return _finish(list, hit, quality, targets);
+  }
+
+  Future<List<SavedVideo>> _finish(
+    List<SavedVideo> list,
+    MediaHit hit,
+    VideoQuality? quality,
+    List<VideoStream> targets,
+  ) async {
+    final streamId = await _player.saveStream(hit.id, targets);
     final next = [...list, SavedVideo(hit: hit, streamId: streamId, quality: quality)];
     await _repo.save(next);
     await _player.setSavedStreams([

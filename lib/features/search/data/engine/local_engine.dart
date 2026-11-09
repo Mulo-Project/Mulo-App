@@ -277,9 +277,13 @@ class LocalEngine implements DownloaderEngine {
 
   // 소리가 같이 든 형식([height] 이하)을 먼저 찾는다: 주소 하나로 소리와 영상을 한 플레이어가 틀어 싱크가 필요 없다.
   // 없으면 영상만 있는 형식으로 간다.
-  static String _videoSelector(int height) =>
-      'b[height<=$height][vcodec^=avc1]/b[height<=$height]/'
-      'bv[height<=$height][vcodec^=avc1]/bv[height<=$height]/bv[height<=480]/bv';
+  // 360p를 넘는 화질은 유튜브가 소리 든 형식을 주지 않아서(있어도 360p) 영상 전용 형식을 먼저 찾는다
+  // (소리 든 형식을 먼저 두면 480p 이상을 골라도 360p가 나온다).
+  static String _videoSelector(int height) => height > 360
+      ? 'bv[height<=$height][vcodec^=avc1]/bv[height<=$height]/'
+            'b[height<=$height]/bv[height<=480]/bv'
+      : 'b[height<=$height][vcodec^=avc1]/b[height<=$height]/'
+            'bv[height<=$height][vcodec^=avc1]/bv[height<=$height]/bv[height<=480]/bv';
 
   /// 디버그 빌드에서 adb logcat(`flutter` 태그)으로도 보이게 찍는다.
   static void _timing(String message) {

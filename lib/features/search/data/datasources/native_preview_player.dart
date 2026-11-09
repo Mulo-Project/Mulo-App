@@ -89,11 +89,12 @@ class NativePreviewPlayer implements PreviewPlayer {
       _channel.invokeMethod<void>('setSaved', {'ids': streamIds});
 
   @override
-  Future<String?> saveStream(String id, VideoStream stream) =>
+  Future<String?> saveStream(String id, List<VideoStream> streams) =>
       _channel.invokeMethod<String>('saveStream', {
         'id': id,
-        'url': stream.url,
-        'headers': stream.headers,
+        'streams': [
+          for (final s in streams) {'url': s.url, 'headers': s.headers},
+        ],
       });
 
   @override

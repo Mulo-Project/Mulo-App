@@ -35,7 +35,7 @@ object StreamCache {
     /** 보관한 영상 id. 이 영상의 데이터는 임시 저장소(LRU)가 아니라 보관 저장소에 쌓여 지워지지 않는다. */
     @Volatile
     private var savedIds: Set<String> = emptySet()
-    private val fills = HashMap<String, CacheWriter>()
+    private val fills = HashMap<String, Fill>()
     private var dbProvider: StandaloneDatabaseProvider? = null
 
     @Suppress("UNUSED_PARAMETER")
@@ -127,32 +127,48 @@ object StreamCache {
         savedIds = savedIds + streamId
     }
 
+    /** 받는 중인 보관 한 건. 지우면 [cancelled]를 세우고 지금 받는 것도 멈춘다. */
+    private class Fill {
+        @Volatile var cancelled = false
+        @Volatile var writer: CacheWriter? = null
+    }
+
     /**
-     * [url]의 영상을 통째로 보관 저장소에 받아 둔다 (끝나면 [done]에 성공 여부). 이미 있는 부분은 건너뛴다.
-     * 같은 영상 id를 이미 받는 중이면 아무 일도 없다.
+     * [targets](주소 · 헤더, 영상 전용 + 소리 전용처럼 여럿일 수 있다)를 차례로 통째로 보관 저장소에 받아 둔다.
+     * 끝나면 [done]에 성공 여부. 이미 있는 부분은 건너뛴다. 같은 영상 id를 이미 받는 중이면 아무 일도 없다.
      */
-    fun fillSaved(context: Context, id: String, url: String, headers: Map<String, String>, done: (Boolean) -> Unit) {
+    fun fillSaved(
+        context: Context,
+        id: String,
+        targets: List<Pair<String, Map<String, String>>>,
+        done: (Boolean) -> Unit,
+    ) {
         val c = openSaved(context) ?: return done(false)
-        val key = "$id|$url"
+        val fill = Fill()
         synchronized(this) {
-            if (fills.containsKey(key)) return
+            if (fills.containsKey(id)) return
+            fills[id] = fill
         }
-        val http = androidx.media3.datasource.DefaultHttpDataSource.Factory()
-            .setAllowCrossProtocolRedirects(true)
-            .setDefaultRequestProperties(headers)
-        val source = cacheFactory(c, http).createDataSource()
-        val uri = Uri.parse(url)
-        val writer = CacheWriter(source, DataSpec(uri), null, null)
-        synchronized(this) { fills[key] = writer }
         Thread({
-            val ok = try {
-                writer.cache()
-                true
+            var ok = true
+            try {
+                for ((url, headers) in targets) {
+                    if (fill.cancelled) {
+                        ok = false
+                        break
+                    }
+                    val http = androidx.media3.datasource.DefaultHttpDataSource.Factory()
+                        .setAllowCrossProtocolRedirects(true)
+                        .setDefaultRequestProperties(headers)
+                    val writer = CacheWriter(cacheFactory(c, http).createDataSource(), DataSpec(Uri.parse(url)), null, null)
+                    fill.writer = writer
+                    writer.cache()
+                }
             } catch (e: Exception) {
                 MuloLog.e(MuloLog.NATIVE, "영상 보관 받기 실패", e)
-                false
+                ok = false
             } finally {
-                synchronized(this) { fills.remove(key) }
+                synchronized(this) { fills.remove(id) }
             }
             done(ok)
         }, "mulo-save-stream").start()
@@ -161,15 +177,16 @@ object StreamCache {
     /** 보관 저장소에서 스트림 id([streamId]) 영상의 데이터를 지우고 받던 것도 멈춘다. [id]는 영상 id. */
     @Synchronized
     fun removeSaved(context: Context, id: String, streamId: String?) {
-        fills.filterKeys { it.startsWith("$id|") }.forEach { (k, w) ->
-            w.cancel()
-            fills.remove(k)
+        fills.remove(id)?.let {
+            it.cancelled = true
+            it.writer?.cancel()
         }
         if (streamId == null) return
-        savedIds = savedIds - streamId
+        val ids = streamId.split(",")
+        savedIds = savedIds - ids.toSet()
         val c = openSaved(context) ?: return
         for (key in c.keys.toList()) {
-            if (key.startsWith("yt:$streamId:")) c.removeResource(key)
+            if (ids.any { key.startsWith("yt:$it:") }) c.removeResource(key)
         }
     }
 

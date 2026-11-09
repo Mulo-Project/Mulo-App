@@ -1709,7 +1709,7 @@ class FakePreviewPlayer implements PreviewPlayer {
   }
 
   @override
-  Future<String?> saveStream(String id, VideoStream stream) async {
+  Future<String?> saveStream(String id, List<VideoStream> streams) async {
     final streamId = 'stream-$id';
     savedStreams.add(streamId);
     return streamId;

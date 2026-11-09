@@ -186,22 +186,28 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
                     mapOf("usedBytes" to StreamCache.usedBytes(context), "limitBytes" to StreamCache.limitBytes(context)),
                 )
                 "setSaved" -> {
-                    StreamCache.setSavedIds(call.argument<List<String>>("ids") ?: emptyList())
+                    StreamCache.setSavedIds((call.argument<List<String>>("ids") ?: emptyList()).flatMap { it.split(",") })
                     result.success(null)
                 }
                 "saveStream" -> {
                     val id = call.argument<String>("id")
-                    val url = call.argument<String>("url")
-                    if (id == null || url == null) {
-                        result.error("bad_args", "id, url required", null)
+                    val streams = call.argument<List<Map<String, Any?>>>("streams")
+                    val targets = streams?.mapNotNull { m ->
+                        val url = m["url"] as? String ?: return@mapNotNull null
+                        @Suppress("UNCHECKED_CAST")
+                        url to ((m["headers"] as? Map<String, String>) ?: emptyMap())
+                    }
+                    if (id == null || targets.isNullOrEmpty()) {
+                        result.error("bad_args", "id, streams required", null)
                         return@setMethodCallHandler
                     }
-                    val headers = call.argument<Map<String, String>>("headers") ?: emptyMap()
                     // 스트림 주소의 id(영상 id와 다르다)를 돌려준다: 이 값으로 보관 여부를 가르고 지운다.
-                    val streamId = Uri.parse(url).getQueryParameter("id")
-                    if (streamId != null) StreamCache.addSavedId(streamId)
+                    // 영상 전용 + 소리 전용이면 주소마다 id가 다를 수 있어 쉼표로 이어 돌려준다.
+                    val ids = targets.mapNotNull { Uri.parse(it.first).getQueryParameter("id") }.distinct()
+                    ids.forEach { StreamCache.addSavedId(it) }
+                    val streamId = if (ids.isEmpty()) null else ids.joinToString(",")
                     // 받는 일은 따로 돌고, 끝나면 Dart에 알린다.
-                    StreamCache.fillSaved(context, id, url, headers) { ok ->
+                    StreamCache.fillSaved(context, id, targets) { ok ->
                         main.post { channel.invokeMethod("saved", mapOf("id" to id, "ok" to ok)) }
                     }
                     result.success(streamId)
