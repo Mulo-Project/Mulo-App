@@ -8,6 +8,7 @@ import '../engine/data/yt_dlp_manager.dart';
 import 'data/datasources/native_preview_player.dart';
 import 'data/datasources/url_launcher_link_opener.dart';
 import 'data/engine/cached_engine.dart';
+import 'data/repositories/prefs_video_quality_repository.dart';
 import 'data/engine/explode_engine.dart';
 import 'data/engine/local_engine.dart';
 import 'data/engine/routing_engine.dart';
@@ -16,11 +17,13 @@ import 'data/engine/server_engine.dart';
 import 'domain/repositories/downloader_engine.dart';
 import 'domain/repositories/link_opener.dart';
 import 'domain/repositories/preview_player.dart';
+import 'domain/repositories/video_quality_repository.dart';
 import 'domain/usecases/search_usecases.dart';
 import 'presentation/bloc/audio_language_cubit.dart';
 import 'presentation/bloc/preview_cubit.dart';
 import 'presentation/bloc/preview_video_cubit.dart';
 import 'presentation/bloc/search_cubit.dart';
+import 'presentation/bloc/video_quality_cubit.dart';
 
 /// 검색 · 곡 정보 의존성. 로컬 yt-dlp(데스크톱 · Android full)를 먼저 시도하고, 없으면 서버.
 void registerSearch(GetIt sl) {
@@ -54,7 +57,13 @@ void registerSearch(GetIt sl) {
     ..registerFactory(() => OpenLink(sl()))
     ..registerLazySingleton<PreviewPlayer>(NativePreviewPlayer.new)
     ..registerFactory(() => ResolveAudioStream(sl()))
-    ..registerFactory(() => ResolveVideoStream(sl()))
+    ..registerLazySingleton<VideoQualityRepository>(
+      PrefsVideoQualityRepository.new,
+    )
+    ..registerFactory(() => LoadVideoQuality(sl()))
+    ..registerFactory(() => SaveVideoQuality(sl()))
+    ..registerFactory(() => VideoQualityCubit(sl(), sl()))
+    ..registerFactory(() => ResolveVideoStream(sl(), sl()))
     ..registerFactory(() => PlayPreviewVideo(sl()))
     ..registerFactory(() => PreviewVideoCubit(sl(), sl()))
     ..registerFactory(() => FetchAudioLanguages(sl()))

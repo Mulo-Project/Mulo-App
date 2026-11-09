@@ -35,6 +35,7 @@ import '../features/player/presentation/bloc/playback_speed_cubit.dart';
 import '../features/player/presentation/bloc/player_style_cubit.dart';
 import '../features/playlists/presentation/bloc/playlists_cubit.dart';
 import '../features/search/presentation/bloc/preview_cubit.dart';
+import '../features/search/presentation/bloc/video_quality_cubit.dart';
 import '../features/search/domain/entities/media_info.dart';
 import '../features/search/presentation/screens/media_detail_screen.dart';
 import '../features/security/presentation/bloc/app_lock_cubit.dart';
@@ -112,6 +113,7 @@ class _MusicAppState extends State<MusicApp> {
         ),
         BlocProvider(create: (_) => sl<PlayerStyleCubit>()..load()),
         BlocProvider(create: (_) => sl<MixWithOthersCubit>()..load()),
+        BlocProvider(create: (_) => sl<VideoQualityCubit>()..load()),
         BlocProvider(create: (_) => sl<OutputBehaviorCubit>()..load()),
         // 시작할 때 저장된 재생 속도를 재생 엔진에 반영해야 하므로 바로 만든다.
         BlocProvider(

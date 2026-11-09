@@ -1130,6 +1130,30 @@ abstract class AppLocalizations {
   /// **'다른 앱과 함께 재생'**
   String get settingsMixWithOthers;
 
+  /// No description provided for @videoQualityTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'영상 화질'**
+  String get videoQualityTitle;
+
+  /// No description provided for @videoQualityHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'미리 듣기 영상에 쓰여요. 높이면 선명하지만 데이터를 더 써요.'**
+  String get videoQualityHint;
+
+  /// No description provided for @videoQualityStandard.
+  ///
+  /// In ko, this message translates to:
+  /// **'360p · 기본'**
+  String get videoQualityStandard;
+
+  /// No description provided for @videoQualityHigh.
+  ///
+  /// In ko, this message translates to:
+  /// **'720p'**
+  String get videoQualityHigh;
+
   /// No description provided for @settingsSleepTimerOff.
   ///
   /// In ko, this message translates to:

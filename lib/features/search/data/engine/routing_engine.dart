@@ -63,8 +63,10 @@ class RoutingDownloaderEngine implements DownloaderEngine {
       (await _pick()).fetchChannel(url);
 
   @override
-  Future<VideoStream> resolveVideoStream(String url) async =>
-      (await _pick()).resolveVideoStream(url);
+  Future<VideoStream> resolveVideoStream(
+    String url, {
+    int maxHeight = 360,
+  }) async => (await _pick()).resolveVideoStream(url, maxHeight: maxHeight);
 
   @override
   Future<AudioStream> resolveAudioStream(
