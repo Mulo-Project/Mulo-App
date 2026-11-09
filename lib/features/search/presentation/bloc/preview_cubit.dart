@@ -282,7 +282,8 @@ class PreviewCubit extends Cubit<PreviewState> {
   void prefetch(MediaHit hit) {
     if (!_isYoutube(hit.url)) return;
     // 소리와 영상이 함께 든 주소 하나만 읽는다 (yt-dlp를 겹쳐 돌리면 서로 느려진다).
-    _prefetchVideo(hit);
+    // 자동(점진)이면 시작할 화질(360p)로 읽어 둬야 누를 때 그 주소를 바로 쓴다.
+    _prefetchVideo(hit, autoQuality.value ? VideoQuality.standard : null);
   }
 
   /// 틀 주소. 유튜브는 소리가 같이 든 영상 형식이 있으면 그 주소 하나로 소리와 영상을 함께 튼다
