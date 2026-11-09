@@ -211,10 +211,6 @@ class LocalEngine implements DownloaderEngine {
     bool refresh = false,
     String? audioLanguage,
   }) async {
-    if (audioLanguage == null && !refresh) {
-      final pair = await _pair(url);
-      if (pair?.audio != null) return pair!.audio!;
-    }
     return _readAudio(url, audioLanguage);
   }
 
@@ -277,35 +273,11 @@ class LocalEngine implements DownloaderEngine {
   /// 소리 없는 낮은 화질(360p 이하) 영상 하나의 주소만 읽는다. 미니 플레이어 · 플레이어에서 화면으로만 쓴다.
   @override
   Future<VideoStream> resolveVideoStream(String url) async {
-    final pair = await _pair(url);
-    if (pair?.video != null) return pair!.video!;
     return _readVideo(url);
   }
 
   static const _videoSelector =
       'bv[height<=360][vcodec^=avc1]/bv[height<=360]/bv[height<=480]/bv';
-
-  /// 소리와 영상 주소를 yt-dlp 한 번으로 함께 읽는다 (분석이 시간 대부분이라 따로 읽으면 두 배로 걸린다).
-  /// 같은 곡을 소리 · 영상이 잇따라 물으면 같은 결과를 나눠 쓴다. 한 번에 못 읽으면 null이라
-  /// 호출한 쪽이 예전처럼 하나씩 읽는다.
-  final _pairs =
-      <String, Future<({AudioStream? audio, VideoStream? video})?>>{};
-
-  Future<({AudioStream? audio, VideoStream? video})?> _pair(String url) {
-    final host = Uri.tryParse(url)?.host ?? '';
-    if (!host.contains('youtube.com') && host != 'youtu.be') {
-      return Future.value();
-    }
-    return _pairs.putIfAbsent(url, () {
-      unawaited(
-        Future<void>.delayed(
-          const Duration(seconds: 30),
-          () => _pairs.remove(url),
-        ),
-      );
-      return _readPair(url);
-    });
-  }
 
   /// 디버그 빌드에서 adb logcat(`flutter` 태그)으로도 보이게 찍는다.
   static void _timing(String message) {
@@ -315,54 +287,6 @@ class LocalEngine implements DownloaderEngine {
       return true;
     }());
     developer.log(message, name: 'MuloSearch');
-  }
-
-  Future<({AudioStream? audio, VideoStream? video})?> _readPair(
-    String url,
-  ) async {
-    final clock = Stopwatch()..start();
-    try {
-      final out = await _exec([
-        '-f',
-        '${ytDlpAudioSelector(null, null)},$_videoSelector',
-        '--no-playlist',
-        '--dump-single-json',
-        '--no-warnings',
-        url,
-      ]);
-      final j = _decode(out);
-      final picked = j?['requested_downloads'];
-      if (picked is! List) return null;
-      AudioStream? audio;
-      VideoStream? video;
-      for (final f in picked) {
-        if (f is! Map) continue;
-        final streamUrl = parseText(f['url']);
-        if (streamUrl == null) continue;
-        final headers = f['http_headers'];
-        final map = headers is Map
-            ? {
-                for (final e in headers.entries)
-                  if (e.key is String && e.value is String)
-                    e.key as String: e.value as String,
-              }
-            : const <String, String>{};
-        if (f['vcodec'] == 'none') {
-          audio ??= AudioStream(url: streamUrl, headers: map);
-        } else if (f['acodec'] == 'none') {
-          video ??= VideoStream(url: streamUrl, headers: map);
-        }
-      }
-      _timing(
-        '한 번에 읽기 ${clock.elapsedMilliseconds}ms '
-        '(소리 ${audio != null} · 영상 ${video != null})',
-      );
-      if (audio == null || video == null) return null;
-      return (audio: audio, video: video);
-    } on Object catch (e) {
-      _timing('한 번에 읽기 실패 ${clock.elapsedMilliseconds}ms: $e');
-      return null;
-    }
   }
 
   Future<VideoStream> _readVideo(String url) async {
