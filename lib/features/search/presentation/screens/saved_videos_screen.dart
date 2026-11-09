@@ -184,8 +184,8 @@ class _SavedTile extends StatelessWidget {
     final p = context.palette;
     final hit = video.hit;
     final isVideo = video.quality != null;
-    final sub = [
-      if (hit.uploader.isNotEmpty) hit.uploader,
+    // 채널은 한 줄, 화질 · 받는 중 같은 부가 정보는 그 아래 한 줄 (한 줄에 몰면 뒤가 잘린다).
+    final extra = [
       if (isVideo) videoQualityLabel(context, video.quality!),
       if (!video.ready) l10n.savedVideosDownloading,
     ].join(' · ');
@@ -215,12 +215,19 @@ class _SavedTile extends StatelessWidget {
                     style: (isVideo ? text.bodyLarge : text.bodyMedium)
                         ?.copyWith(color: active ? p.accent : null),
                   ),
-                  if (sub.isNotEmpty)
+                  if (hit.uploader.isNotEmpty)
                     Text(
-                      sub,
+                      hit.uploader,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: text.bodySmall,
+                    ),
+                  if (extra.isNotEmpty)
+                    Text(
+                      extra,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
                     ),
                 ],
               ),
