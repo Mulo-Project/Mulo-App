@@ -474,8 +474,17 @@ class LocalEngine implements DownloaderEngine {
 
   Future<String> _exec(List<String> args) async {
     final ({int exitCode, String stdout, String stderr}) r;
+    final clock = Stopwatch()..start();
+    // 어떤 호출이 얼마나 걸리는지 보려고 형식 선택과 클라이언트만 요약해 적는다.
+    final fIndex = args.indexOf('-f');
+    final label = [
+      if (fIndex >= 0 && fIndex + 1 < args.length) '-f ${args[fIndex + 1]}',
+      if (args.contains('--extractor-args')) 'android_vr',
+      if (args.contains('--skip-download')) 'info',
+    ].join(' ');
     try {
       r = await _run(await _resolve(), args);
+      _timing('yt-dlp ${clock.elapsedMilliseconds}ms 종료 ${r.exitCode} [$label]');
     } on ProcessException {
       throw const EngineException(EngineFailure.unavailable, 'yt-dlp');
     } on TimeoutException {
@@ -483,7 +492,7 @@ class LocalEngine implements DownloaderEngine {
     }
     if (r.exitCode != 0) {
       final err = r.stderr.trim();
-      developer.log('실패(${r.exitCode}): $err', name: 'MuloSearch');
+      _timing('실패(${r.exitCode}): $err');
       final failure = err.contains('Unsupported URL')
           ? EngineFailure.notFound
           : err.contains('Unable to download') || err.contains('getaddrinfo')
