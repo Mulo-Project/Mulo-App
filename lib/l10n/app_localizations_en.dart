@@ -706,6 +706,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsData => 'Data';
 
   @override
+  String get settingsStreamCache => 'Streaming cache';
+
+  @override
+  String settingsStreamCacheDesc(String used, String limit) {
+    return '$used used · limit $limit';
+  }
+
+  @override
+  String get settingsStreamCacheClear => 'Clear now';
+
+  @override
+  String get settingsStreamCacheCleared => 'Streaming cache cleared';
+
+  @override
   String get settingsPurgeHidden => 'Clear hidden song records';
 
   @override

@@ -68,6 +68,7 @@ import 'package:music_download_play_app/features/search/domain/entities/video_st
 import 'package:music_download_play_app/features/search/domain/repositories/video_quality_repository.dart';
 import 'package:music_download_play_app/features/search/domain/entities/preview_progress.dart';
 import 'package:music_download_play_app/features/search/domain/entities/preview_snapshot.dart';
+import 'package:music_download_play_app/features/search/domain/entities/stream_cache_info.dart';
 import 'package:music_download_play_app/features/search/domain/entities/engine_exception.dart';
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
 import 'package:music_download_play_app/features/search/domain/entities/search_source.dart';
@@ -1689,6 +1690,21 @@ class FakePreviewPlayer implements PreviewPlayer {
     if (f != null) throw EngineException(f);
     played.add(stream.url);
     playing = true;
+  }
+
+  /// 임시 저장소 가짜 상태.
+  var cacheLimit = 500 * 1024 * 1024;
+  var cacheUsed = 0;
+  int cacheClears = 0;
+
+  @override
+  Future<StreamCacheInfo> cacheInfo() async =>
+      StreamCacheInfo(usedBytes: cacheUsed, limitBytes: cacheLimit);
+
+  @override
+  Future<void> clearCache() async {
+    cacheClears++;
+    cacheUsed = 0;
   }
 
   /// 플레이어에 적어 둔 곡 (재생 시작 뒤에 Cubit이 남긴다).

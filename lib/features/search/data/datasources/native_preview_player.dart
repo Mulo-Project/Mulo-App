@@ -7,6 +7,7 @@ import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/preview_progress.dart';
 import '../../domain/entities/preview_snapshot.dart';
+import '../../domain/entities/stream_cache_info.dart';
 import '../../domain/entities/video_stream.dart';
 import '../../domain/repositories/preview_player.dart';
 
@@ -66,6 +67,18 @@ class NativePreviewPlayer implements PreviewPlayer {
     'playVideo',
     {'url': stream.url, 'headers': stream.headers},
   );
+
+  @override
+  Future<StreamCacheInfo> cacheInfo() async {
+    final m = await _channel.invokeMapMethod<String, dynamic>('cacheInfo');
+    return StreamCacheInfo(
+      usedBytes: (m?['usedBytes'] as num?)?.toInt() ?? 0,
+      limitBytes: (m?['limitBytes'] as num?)?.toInt() ?? 0,
+    );
+  }
+
+  @override
+  Future<void> clearCache() => _channel.invokeMethod<void>('clearCache');
 
   @override
   Future<void> remember(MediaHit hit) =>

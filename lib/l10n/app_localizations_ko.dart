@@ -690,6 +690,20 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsData => '데이터';
 
   @override
+  String get settingsStreamCache => '스트리밍 임시 저장';
+
+  @override
+  String settingsStreamCacheDesc(String used, String limit) {
+    return '$used 사용 중 · 한도 $limit';
+  }
+
+  @override
+  String get settingsStreamCacheClear => '지금 비우기';
+
+  @override
+  String get settingsStreamCacheCleared => '임시 저장소를 비웠어요';
+
+  @override
   String get settingsPurgeHidden => '숨긴 곡 기록 정리';
 
   @override
