@@ -624,6 +624,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(player.playing, isTrue);
       expect(find.text('Stop preview'), findsOneWidget);
+      // 일시정지와 멈추기는 따로 있다.
+      expect(find.byKey(const ValueKey('preview-pause-button')), findsOneWidget);
+      expect(find.byKey(const ValueKey('preview-stop-button')), findsOneWidget);
 
       // 다른 곳에서 잠시 멈춰 두면 상세 화면 버튼도 "이어 듣기"로 바뀌고, 누르면 이어 듣는다.
       await tester

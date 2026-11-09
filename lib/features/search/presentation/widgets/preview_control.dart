@@ -78,27 +78,46 @@ class PreviewButton extends StatelessWidget {
     final paused = context.select(
       (PreviewCubit c) => c.state.isActive(hit.id) && c.state.paused,
     );
+    final cubit = context.read<PreviewCubit>();
+    void stop() => togglePreview(
+      context,
+      hit,
+      audioLanguage: context.read<AudioLanguageCubit>().state.selected,
+    );
+    // 듣는 중에는 일시정지/이어 듣기와 멈추기를 따로 둔다 (한 버튼이 둘을 오가면 헷갈린다).
+    if (status == PreviewStatus.playing) {
+      return Wrap(
+        alignment: WrapAlignment.center,
+        spacing: AppSpacing.sm,
+        runSpacing: AppSpacing.sm,
+        children: [
+          PillButton(
+            key: const ValueKey('preview-pause-button'),
+            label: paused ? l10n.searchPreviewResume : l10n.searchPreviewPause,
+            icon: paused ? AppIcons.play : AppIcons.pause,
+            variant: PillVariant.tonal,
+            onPressed: cubit.togglePause,
+          ),
+          PillButton(
+            key: const ValueKey('preview-stop-button'),
+            label: l10n.searchPreviewStop,
+            icon: AppIcons.close,
+            variant: PillVariant.tonal,
+            onPressed: stop,
+          ),
+        ],
+      );
+    }
     return PillButton(
-      label: switch (status) {
-        PreviewStatus.idle => l10n.searchPreview,
-        PreviewStatus.loading => l10n.searchPreviewLoading,
-        PreviewStatus.playing =>
-          paused ? l10n.searchPreviewResume : l10n.searchPreviewStop,
-      },
-      icon: switch (status) {
-        PreviewStatus.idle => AppIcons.headphones,
-        PreviewStatus.loading => AppIcons.hourglassTop,
-        PreviewStatus.playing => paused ? AppIcons.play : AppIcons.pause,
-      },
+      label: status == PreviewStatus.loading
+          ? l10n.searchPreviewLoading
+          : l10n.searchPreview,
+      icon: status == PreviewStatus.loading
+          ? AppIcons.hourglassTop
+          : AppIcons.headphones,
       variant: PillVariant.tonal,
       busy: status == PreviewStatus.loading,
-      onPressed: paused
-          ? () => context.read<PreviewCubit>().togglePause()
-          : () => togglePreview(
-              context,
-              hit,
-              audioLanguage: context.read<AudioLanguageCubit>().state.selected,
-            ),
+      onPressed: stop,
     );
   }
 }
