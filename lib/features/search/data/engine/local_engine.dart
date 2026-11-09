@@ -205,89 +205,12 @@ class LocalEngine implements DownloaderEngine {
     );
   }
 
-  /// 같은 곡의 소리 · 영상 주소를 yt-dlp 한 번으로 읽는 중인 요청 (소리와 영상이 거의 동시에 불려도 한 번만 돈다).
-  final _pairs = <String, Future<({AudioStream? audio, VideoStream? video})?>>{};
-
-  Map<String, String> _headersOf(Object? headers) => headers is Map
-      ? {
-          for (final e in headers.entries)
-            if (e.key is String && e.value is String)
-              e.key as String: e.value as String,
-        }
-      : const {};
-
-  /// 소리 형식과 낮은 화질 영상 형식을 `-f 소리,영상` 한 번으로 읽는다 (yt-dlp 실행 · 유튜브 조회가 한 번).
-  /// 못 읽으면 null이고, 부르는 쪽이 기존처럼 따로 읽는다. 같은 곡을 다시 시도하지 않는다.
-  Future<({AudioStream? audio, VideoStream? video})?> _readPair(
-    String url,
-    String? audioLanguage,
-  ) {
-    final key = '$url|${audioLanguage ?? ''}';
-    if (_pairFailed.contains(key)) return Future.value(null);
-    return _pairs[key] ??= _execPair(url, audioLanguage).whenComplete(() {
-      _pairs.remove(key);
-    });
-  }
-
-  final _pairFailed = <String>{};
-
-  Future<({AudioStream? audio, VideoStream? video})?> _execPair(
-    String url,
-    String? audioLanguage,
-  ) async {
-    final key = '$url|${audioLanguage ?? ''}';
-    try {
-      final out = await _exec([
-        '-f',
-        '${ytDlpAudioSelector(null, audioLanguage)},$_videoSelector',
-        '--no-playlist',
-        '--dump-single-json',
-        '--no-warnings',
-        url,
-      ]);
-      final j = _decode(out);
-      final downloads = j?['requested_downloads'];
-      AudioStream? audio;
-      VideoStream? video;
-      if (downloads is List) {
-        for (final d in downloads) {
-          if (d is! Map) continue;
-          final streamUrl = parseText(d['url']);
-          if (streamUrl == null) continue;
-          final headers = _headersOf(d['http_headers']);
-          final hasVideo = d['vcodec'] != null && d['vcodec'] != 'none';
-          if (hasVideo && d['acodec'] != null && d['acodec'] != 'none') {
-            continue; // 소리와 영상이 섞인 형식은 어느 쪽에도 쓰지 않는다.
-          }
-          if (hasVideo) {
-            video ??= VideoStream(url: streamUrl, headers: headers);
-          } else {
-            audio ??= AudioStream(url: streamUrl, headers: headers);
-          }
-        }
-      }
-      if (audio == null && video == null) {
-        _pairFailed.add(key);
-        return null;
-      }
-      return (audio: audio, video: video);
-    } on EngineException {
-      _pairFailed.add(key);
-      return null;
-    }
-  }
-
-  static const _videoSelector =
-      'bv[height<=360][vcodec^=avc1]/bv[height<=360]/bv[height<=480]/bv';
-
   @override
   Future<AudioStream> resolveAudioStream(
     String url, {
     bool refresh = false,
     String? audioLanguage,
   }) async {
-    final pair = await _readPair(url, audioLanguage);
-    if (pair?.audio != null) return pair!.audio!;
     // 오디오만 있는 형식 하나를 골라(macOS도 풀 수 있는 m4a 먼저) 주소만 읽는다.
     Future<AudioStream> read(List<String> extra) async {
       final out = await _exec([
@@ -337,12 +260,10 @@ class LocalEngine implements DownloaderEngine {
   /// 소리 없는 낮은 화질(360p 이하) 영상 하나의 주소만 읽는다. 미니 플레이어 · 플레이어에서 화면으로만 쓴다.
   @override
   Future<VideoStream> resolveVideoStream(String url) async {
-    final pair = await _readPair(url, null);
-    if (pair?.video != null) return pair!.video!;
     Future<VideoStream> read(List<String> extra) async {
       final out = await _exec([
         '-f',
-        _videoSelector,
+        'bv[height<=360][vcodec^=avc1]/bv[height<=360]/bv[height<=480]/bv',
         '--no-playlist',
         '--dump-single-json',
         '--no-warnings',
