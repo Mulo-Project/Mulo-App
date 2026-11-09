@@ -615,7 +615,7 @@ class LocalEngine implements DownloaderEngine {
 /// yt-dlp 실행 수를 제한한다: 전체 [maxTotal]개, 급하지 않은 것은 [maxLow]개까지만.
 /// 급한 요청이 있으면 급하지 않은 요청보다 먼저 자리를 얻는다.
 class _ExecGate {
-  _ExecGate({this.maxTotal = 2, this.maxLow = 1});
+  _ExecGate({this.maxTotal = 3, this.maxLow = 1});
 
   final int maxTotal;
   final int maxLow;
