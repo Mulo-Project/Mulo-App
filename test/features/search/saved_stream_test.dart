@@ -99,5 +99,24 @@ void main() {
       expect(video.url, 'saved://video');
       expect(audio.url, 'saved://audio');
     });
+
+    test('링크를 못 풀면(오프라인) 받다 만 곡도 받은 데이터만큼 튼다', () async {
+      final engine = FakeDownloaderEngine(
+        error: const EngineException(EngineFailure.network),
+      );
+      final repo = _Repo([
+        const SavedVideo(
+          hit: _hit,
+          sources: [VideoStream(url: 'saved://part', muxed: true)],
+        ),
+      ]);
+      final audio = await ResolveAudioStream(engine, repo)(_hit.url);
+      expect(audio.url, 'saved://part');
+      // 저장하지 않은 곡은 그대로 실패한다.
+      await expectLater(
+        ResolveAudioStream(engine, _Repo([]))(_hit.url),
+        throwsA(isA<EngineException>()),
+      );
+    });
   });
 }

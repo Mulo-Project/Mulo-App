@@ -136,16 +136,33 @@ class ResolveAudioStream implements UseCase<AudioStream, String> {
         return AudioStream(url: audio.url, headers: audio.headers);
       }
     }
-    return _engine.resolveAudioStream(page, audioLanguage: audioLanguage);
+    try {
+      return await _engine.resolveAudioStream(page, audioLanguage: audioLanguage);
+    } on Object {
+      // 링크를 못 풀었다 (오프라인 등): 받다 만 곡이라도 지금까지 받은 데이터만큼은 튼다.
+      final audio = audioLanguage == null
+          ? (await _savedReady(_saved, page, requireReady: false))?.audioSource
+          : null;
+      if (audio == null) rethrow;
+      return AudioStream(url: audio.url, headers: audio.headers);
+    }
   }
 }
 
 /// [page] 주소의 곡을 저장해 두었고 받기가 끝났으면 그 곡 (주소 정보가 없는 옛 저장분은 null).
-Future<SavedVideo?> _savedReady(SavedVideoRepository? repo, String page) async {
+Future<SavedVideo?> _savedReady(
+  SavedVideoRepository? repo,
+  String page, {
+  bool requireReady = true,
+}) async {
   if (repo == null) return null;
   try {
     for (final v in await repo.load()) {
-      if (v.ready && v.sources.isNotEmpty && v.hit.url == page) return v;
+      if ((v.ready || !requireReady) &&
+          v.sources.isNotEmpty &&
+          v.hit.url == page) {
+        return v;
+      }
     }
   } on Object {
     // 읽지 못하면 저장하지 않은 곡처럼 링크를 푼다.
@@ -179,7 +196,19 @@ class ResolveVideoStream implements UseCase<VideoStream, String> {
       }
     }
     final q = quality ?? await _quality?.load() ?? VideoQuality.standard;
-    return _engine.resolveVideoStream(url.trim(), maxHeight: q.maxHeight);
+    try {
+      return await _engine.resolveVideoStream(url.trim(), maxHeight: q.maxHeight);
+    } on Object {
+      // 링크를 못 풀었다 (오프라인 등): 받다 만 영상이라도 받은 데이터만큼은 튼다.
+      final partial = await _savedReady(
+        _saved,
+        url.trim(),
+        requireReady: false,
+      );
+      final video = partial?.videoSource;
+      if (video == null || quality != partial?.quality) rethrow;
+      return video;
+    }
   }
 }
 
