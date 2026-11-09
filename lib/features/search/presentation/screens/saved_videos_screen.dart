@@ -38,7 +38,6 @@ class _SavedVideosScreenState extends State<SavedVideosScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final text = Theme.of(context).textTheme;
     final p = context.palette;
     final videos = context.watch<SavedVideosCubit>().state;
     final preview = context.watch<PreviewCubit>().state;
@@ -63,16 +62,7 @@ class _SavedVideosScreenState extends State<SavedVideosScreen> {
               ),
               Expanded(
                 child: videos.isEmpty
-                    ? Padding(
-                        padding: AppSpacing.screen,
-                        child: Align(
-                          alignment: Alignment.topLeft,
-                          child: Text(
-                            l10n.savedVideosEmpty,
-                            style: text.bodySmall,
-                          ),
-                        ),
-                      )
+                    ? EmptyState(title: l10n.savedVideosEmpty)
                     : ListView(
                         padding: EdgeInsets.only(
                           bottom:
