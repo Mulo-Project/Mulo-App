@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart' show ValueNotifier;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/usecase/usecase.dart';
@@ -93,9 +94,27 @@ class PreviewCubit extends Cubit<PreviewState> {
     this.resolveVideo,
   }) : super(const PreviewState()) {
     unawaited(syncWithPlayer());
-    _completed = watchCompleted(const NoParams()).listen((_) => stop());
+    _completed = watchCompleted(const NoParams()).listen((_) => _onCompleted());
     _progress = watchProgress(const NoParams()).listen(_onProgress);
     _failures = watchFailures(const NoParams()).listen(_onFailure);
+  }
+
+  /// 반복 재생: 켜면 끝까지 들었을 때 멈추지 않고 처음부터 다시 튼다 (한 곡 반복).
+  final repeat = ValueNotifier<bool>(false);
+
+  /// 영상 화질을 이 곡에서만 바꾼 값 (영상 컨트롤의 옵션). null이면 저장한 화질 · 설정 화질을 따른다.
+  /// 새 곡을 틀 때 되돌린다.
+  final qualityOverride = ValueNotifier<VideoQuality?>(null);
+
+  void _onCompleted() {
+    if (isClosed) return;
+    if (repeat.value && state.status == PreviewStatus.playing) {
+      unawaited(
+        _seek(Duration.zero).then((_) => _resume(const NoParams()), onError: (Object _) {}),
+      );
+      return;
+    }
+    stop();
   }
 
   final ResolveAudioStream _resolve;
@@ -158,6 +177,7 @@ class PreviewCubit extends Cubit<PreviewState> {
       return null;
     }
     final generation = ++_generation;
+    qualityOverride.value = videoQuality;
     // 앞에 듣던 곡은 새 곡 주소를 알아내는 동안에도 바로 멈춘다.
     if (state.status != PreviewStatus.idle) unawaited(_stop(const NoParams()));
     final startedAt = DateTime.now();
@@ -381,6 +401,8 @@ class PreviewCubit extends Cubit<PreviewState> {
     await _completed.cancel();
     await _progress.cancel();
     await _failures.cancel();
+    repeat.dispose();
+    qualityOverride.dispose();
     await _stop(const NoParams());
     return super.close();
   }

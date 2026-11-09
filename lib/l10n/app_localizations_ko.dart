@@ -766,6 +766,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get savedVideosSectionAudio => '음원';
 
   @override
+  String get videoOptions => '옵션';
+
+  @override
+  String get videoOptionsTitle => '영상 옵션';
+
+  @override
+  String get videoRepeat => '반복 재생';
+
+  @override
   String get settingsPurgeHidden => '숨긴 곡 기록 정리';
 
   @override

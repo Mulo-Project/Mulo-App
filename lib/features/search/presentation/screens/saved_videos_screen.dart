@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../domain/entities/saved_video.dart';
+import '../../domain/entities/video_quality.dart';
 import '../bloc/preview_cubit.dart';
 import '../bloc/saved_videos_cubit.dart';
 import '../widgets/preview_control.dart';
@@ -228,7 +229,13 @@ class _VideoArea extends StatelessWidget {
                   tone: toneFor(hit.id),
                 ),
                 if (playing) ...[
-                  PreviewVideo(pageUrl: hit.url, quality: video.quality),
+                  ValueListenableBuilder<VideoQuality?>(
+                    valueListenable: context.read<PreviewCubit>().qualityOverride,
+                    builder: (context, override, _) => PreviewVideo(
+                      pageUrl: hit.url,
+                      quality: override ?? video.quality,
+                    ),
+                  ),
                   const PreviewVideoControls(),
                 ] else if (loading)
                   Center(

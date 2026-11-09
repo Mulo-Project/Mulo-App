@@ -782,6 +782,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get savedVideosSectionAudio => 'Audio';
 
   @override
+  String get videoOptions => 'Options';
+
+  @override
+  String get videoOptionsTitle => 'Video options';
+
+  @override
+  String get videoRepeat => 'Repeat';
+
+  @override
   String get settingsPurgeHidden => 'Clear hidden song records';
 
   @override

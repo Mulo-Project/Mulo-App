@@ -1520,6 +1520,24 @@ abstract class AppLocalizations {
   /// **'음원'**
   String get savedVideosSectionAudio;
 
+  /// No description provided for @videoOptions.
+  ///
+  /// In ko, this message translates to:
+  /// **'옵션'**
+  String get videoOptions;
+
+  /// No description provided for @videoOptionsTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'영상 옵션'**
+  String get videoOptionsTitle;
+
+  /// No description provided for @videoRepeat.
+  ///
+  /// In ko, this message translates to:
+  /// **'반복 재생'**
+  String get videoRepeat;
+
   /// No description provided for @settingsPurgeHidden.
   ///
   /// In ko, this message translates to:

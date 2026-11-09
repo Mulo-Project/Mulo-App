@@ -8,7 +8,10 @@ import '../../../../core/l10n/l10n.dart';
 import '../../../library/domain/entities/track.dart' show formatDuration;
 import '../../../player/presentation/widgets/fullscreen_video.dart';
 import '../bloc/preview_cubit.dart';
+import '../../domain/entities/video_quality.dart';
+import '../bloc/video_quality_cubit.dart';
 import 'preview_control.dart';
+import 'video_quality_sheet.dart';
 
 /// 미리 듣는 영상 위에 얹는 재생 컨트롤 (유튜브처럼): 화면을 한 번 누르면 컨트롤이 뜨고 몇 초 뒤 사라진다.
 /// 가운데 10초 뒤로 · 재생/일시정지 · 10초 앞으로, 아래에 진행 막대 · 시간 · 전체 화면.
@@ -125,6 +128,24 @@ class _PreviewVideoControlsState extends State<PreviewVideoControls> {
                     ],
                   ),
                 ),
+                // 옵션(반복 재생 · 화질) 버튼: 오른쪽 위.
+                SafeArea(
+                  child: Align(
+                    alignment: Alignment.topRight,
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.sm),
+                      child: CircleIconButton(
+                        key: const ValueKey('video-options'),
+                        icon: AppIcons.more,
+                        tooltip: l10n.videoOptions,
+                        onPressed: () {
+                          _reveal();
+                          showVideoOptions(context);
+                        },
+                      ),
+                    ),
+                  ),
+                ),
                 // 전체 화면의 닫기 버튼도 컨트롤과 같이 눌렀을 때만 보인다.
                 if (widget.fullscreen)
                   SafeArea(
@@ -215,6 +236,112 @@ class _SkipButton extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 영상 옵션 시트: 반복 재생 켜기 · 끄기, 화질 바꾸기 (고르면 바로 적용하고 닫는다).
+Future<void> showVideoOptions(BuildContext context) {
+  final preview = context.read<PreviewCubit>();
+  final settingsQuality = context.read<VideoQualityCubit>().state;
+  return showAppSheet<void>(
+    context,
+    builder: (sheetContext) => _VideoOptionsSheet(
+      preview: preview,
+      settingsQuality: settingsQuality,
+    ),
+  );
+}
+
+class _VideoOptionsSheet extends StatelessWidget {
+  const _VideoOptionsSheet({
+    required this.preview,
+    required this.settingsQuality,
+  });
+
+  final PreviewCubit preview;
+  final VideoQuality settingsQuality;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final p = context.palette;
+    final text = Theme.of(context).textTheme;
+    return SafeArea(
+      child: Padding(
+        padding: appSheetPadding,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AppSheetTitle(l10n.videoOptionsTitle),
+            const SizedBox(height: AppSpacing.sm),
+            ValueListenableBuilder<bool>(
+              valueListenable: preview.repeat,
+              builder: (context, on, _) => InkWell(
+                key: const ValueKey('video-option-repeat'),
+                onTap: () => preview.repeat.value = !on,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: AppSpacing.sm + AppSpacing.xxs,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(l10n.videoRepeat, style: text.bodyLarge),
+                      ),
+                      AppSwitch(
+                        value: on,
+                        onChanged: (v) => preview.repeat.value = v,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(l10n.videoQualityTitle, style: text.titleSmall),
+            ValueListenableBuilder<VideoQuality?>(
+              valueListenable: preview.qualityOverride,
+              builder: (context, override, _) {
+                final current = override ?? settingsQuality;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (final quality in VideoQuality.values)
+                      InkWell(
+                        key: ValueKey('video-option-quality-${quality.name}'),
+                        onTap: () {
+                          preview.qualityOverride.value = quality;
+                          Navigator.of(context).pop();
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: AppSpacing.sm + AppSpacing.xxs,
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  videoQualityLabel(context, quality),
+                                  style: text.bodyLarge?.copyWith(
+                                    color: quality == current
+                                        ? p.accent
+                                        : p.onSurface,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ],
         ),
       ),
     );

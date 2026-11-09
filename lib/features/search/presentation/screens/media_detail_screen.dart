@@ -538,9 +538,13 @@ class _PreviewVideoBox extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        PreviewVideo(
-          pageUrl: hit.url,
-          quality: context.read<SavedVideosCubit>().qualityOf(hit.id),
+        // 옵션에서 화질을 바꾸면 그 화질로 영상만 다시 읽어 바꿔 끼운다 (소리는 이어진다).
+        ValueListenableBuilder<VideoQuality?>(
+          valueListenable: context.read<PreviewCubit>().qualityOverride,
+          builder: (context, override, _) => PreviewVideo(
+            pageUrl: hit.url,
+            quality: override ?? context.read<SavedVideosCubit>().qualityOf(hit.id),
+          ),
         ),
         const PreviewVideoControls(),
       ],
