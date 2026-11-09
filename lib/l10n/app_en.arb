@@ -262,6 +262,8 @@
   "videoOptionsTitle": "Video options",
   "videoRepeat": "Repeat",
   "videoQualityAuto": "Auto (start low, then up)",
+  "settingsStreamCacheLimitHint": "Oldest items are removed when full. Saved tracks are not counted. ({used} used)",
+  "@settingsStreamCacheLimitHint": {"placeholders": {"used": {"type": "String"}}},
   "settingsStreamCacheCleared": "Streaming cache cleared",
   "settingsPurgeHidden": "Clear hidden song records",
   "settingsPurgeHiddenDesc": "Records of {count} hidden songs from removed folders are kept",

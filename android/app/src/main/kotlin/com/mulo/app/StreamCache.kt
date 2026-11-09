@@ -18,13 +18,16 @@ import java.io.File
  * 스트리밍(받지 않고 바로 듣기) 소리 · 영상의 임시 저장소. 들은 부분을 앱 캐시 폴더에 쌓아 두었다가
  * 같은 곡을 다시 들으면 네트워크 없이 거기서 읽는다. 보관함 곡이 아니고 파일로 보이지도 않는다.
  *
- * 용량 한도를 넘으면 가장 오래 안 쓴 것부터 지운다 (LRU). 한도는 500 MB 고정.
+ * 용량 한도를 넘으면 가장 오래 안 쓴 것부터 지운다 (LRU). 한도는 설정에서 고른다 (기본 1 GB).
  * 스트림 주소는 틀 때마다 서명이 바뀌어서, 주소 대신 영상 id + 형식(itag)을 키로 쓴다.
  */
 @UnstableApi
 object StreamCache {
-    /** 용량 한도: 고정 500 MB. */
-    private const val LIMIT_BYTES = 500L * 1024 * 1024
+    /** 임시 저장소 용량 한도 기본값 1 GB (설정에서 바꾼다). */
+    private const val DEFAULT_LIMIT_BYTES = 1024L * 1024 * 1024
+    private const val PREFS = "mulo_stream_cache"
+    private const val KEY_LIMIT = "limit"
+
     private const val DIR = "stream_cache"
 
     private const val SAVED_DIR = "saved_streams"
@@ -38,8 +41,17 @@ object StreamCache {
     private val fills = HashMap<String, Fill>()
     private var dbProvider: StandaloneDatabaseProvider? = null
 
-    @Suppress("UNUSED_PARAMETER")
-    fun limitBytes(context: Context): Long = LIMIT_BYTES
+    fun limitBytes(context: Context): Long =
+        context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getLong(KEY_LIMIT, DEFAULT_LIMIT_BYTES)
+
+    /** 한도를 바꾼다. 쌓인 것은 그대로 두고, 저장소를 닫아 다음에 새 한도로 열게 한다 (줄이면 쓰면서 오래된 것부터 정리된다). */
+    @Synchronized
+    fun setLimit(context: Context, bytes: Long) {
+        context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .edit().putLong(KEY_LIMIT, bytes).apply()
+        close()
+    }
 
     @Synchronized
     private fun open(context: Context): SimpleCache? {
@@ -47,7 +59,7 @@ object StreamCache {
         return try {
             val app = context.applicationContext
             val db = dbProvider ?: StandaloneDatabaseProvider(app).also { dbProvider = it }
-            SimpleCache(File(app.cacheDir, DIR), LeastRecentlyUsedCacheEvictor(LIMIT_BYTES), db).also { cache = it }
+            SimpleCache(File(app.cacheDir, DIR), LeastRecentlyUsedCacheEvictor(limitBytes(app)), db).also { cache = it }
         } catch (e: Exception) {
             // 캐시를 못 열어도 재생은 되어야 한다.
             MuloLog.e(MuloLog.NATIVE, "스트리밍 캐시 열기 실패", e)

@@ -216,6 +216,12 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
                     StreamCache.removeSaved(context, call.argument<String>("id") ?: "", call.argument<String>("streamId"))
                     result.success(null)
                 }
+                "setCacheLimit" -> {
+                    // 열려 있는 저장소를 닫아야 해서 듣던 미리 듣기는 멈춘다.
+                    stop()
+                    StreamCache.setLimit(context, (call.arguments as Number).toLong())
+                    result.success(null)
+                }
                 "clearCache" -> {
                     stop()
                     StreamCache.clear(context)

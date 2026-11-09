@@ -60,10 +60,10 @@ class _SaveQualitySheetState extends State<_SaveQualitySheet> {
             ),
             const SizedBox(height: AppSpacing.sm),
             // 화질은 가로로 스크롤되는 선택 버튼 줄이다.
-            QualityChips(
+            ChoiceChips(
               items: [
                 for (final quality in VideoQuality.values)
-                  QualityChip(
+                  ChoiceChipItem(
                     key: ValueKey('save-quality-${quality.name}'),
                     label: videoQualityLabel(context, quality),
                     selected: quality == _selected,
@@ -154,9 +154,9 @@ class _VideoQualitySheet extends StatelessWidget {
   }
 }
 
-/// [QualityChips]의 선택 버튼 하나.
-class QualityChip {
-  const QualityChip({
+/// [ChoiceChips]의 선택 버튼 하나.
+class ChoiceChipItem {
+  const ChoiceChipItem({
     this.key,
     required this.label,
     required this.selected,
@@ -169,11 +169,11 @@ class QualityChip {
   final VoidCallback onTap;
 }
 
-/// 화질을 고르는 선택 버튼 줄: 가로로 스크롤된다.
-class QualityChips extends StatelessWidget {
-  const QualityChips({super.key, required this.items});
+/// 하나를 고르는 선택 버튼 줄 (화질 · 용량 등): 가로로 스크롤된다.
+class ChoiceChips extends StatelessWidget {
+  const ChoiceChips({super.key, required this.items});
 
-  final List<QualityChip> items;
+  final List<ChoiceChipItem> items;
 
   @override
   Widget build(BuildContext context) {

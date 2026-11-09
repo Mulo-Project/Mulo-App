@@ -1728,6 +1728,11 @@ class FakePreviewPlayer implements PreviewPlayer {
       StreamCacheInfo(usedBytes: cacheUsed, limitBytes: cacheLimit);
 
   @override
+  Future<void> setCacheLimit(int bytes) async {
+    cacheLimit = bytes;
+  }
+
+  @override
   Future<void> clearCache() async {
     cacheClears++;
     cacheUsed = 0;

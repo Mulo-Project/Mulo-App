@@ -46,6 +46,9 @@ abstract interface class PreviewPlayer {
   /// 들은 스트리밍을 임시로 쌓아 두는 저장소의 사용량과 한도.
   Future<StreamCacheInfo> cacheInfo();
 
+  /// 임시 저장소 용량 한도를 바꾼다 (재생 중이던 미리 듣기는 멈춘다).
+  Future<void> setCacheLimit(int bytes);
+
   /// 임시 저장소를 모두 비운다 (재생 중이던 미리 듣기는 멈춘다).
   Future<void> clearCache();
 

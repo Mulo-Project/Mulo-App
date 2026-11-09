@@ -778,6 +778,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get videoQualityAuto => '자동 (낮게 시작해 올림)';
 
   @override
+  String settingsStreamCacheLimitHint(String used) {
+    return '넘으면 오래된 것부터 지워요. 저장한 음원은 포함되지 않아요. ($used 사용 중)';
+  }
+
+  @override
   String get settingsPurgeHidden => '숨긴 곡 기록 정리';
 
   @override

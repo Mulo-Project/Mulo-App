@@ -1544,6 +1544,12 @@ abstract class AppLocalizations {
   /// **'자동 (낮게 시작해 올림)'**
   String get videoQualityAuto;
 
+  /// No description provided for @settingsStreamCacheLimitHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'넘으면 오래된 것부터 지워요. 저장한 음원은 포함되지 않아요. ({used} 사용 중)'**
+  String settingsStreamCacheLimitHint(String used);
+
   /// No description provided for @settingsPurgeHidden.
   ///
   /// In ko, this message translates to:

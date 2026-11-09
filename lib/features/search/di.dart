@@ -88,7 +88,8 @@ void registerSearch(GetIt sl) {
     ..registerFactory(() => WatchPreviewFailures(sl()))
     ..registerFactory(() => GetStreamCacheInfo(sl()))
     ..registerFactory(() => ClearStreamCache(sl()))
-    ..registerFactory(() => StreamCacheCubit(sl(), sl()))
+    ..registerFactory(() => SetStreamCacheLimit(sl()))
+    ..registerFactory(() => StreamCacheCubit(sl(), sl(), sl()))
     ..registerLazySingleton<SavedVideoRepository>(
       PrefsSavedVideoRepository.new,
     )

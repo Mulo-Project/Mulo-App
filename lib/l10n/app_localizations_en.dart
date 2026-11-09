@@ -794,6 +794,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoQualityAuto => 'Auto (start low, then up)';
 
   @override
+  String settingsStreamCacheLimitHint(String used) {
+    return 'Oldest items are removed when full. Saved tracks are not counted. ($used used)';
+  }
+
+  @override
   String get settingsPurgeHidden => 'Clear hidden song records';
 
   @override

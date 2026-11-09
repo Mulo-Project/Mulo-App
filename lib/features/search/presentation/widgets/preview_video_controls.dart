@@ -308,10 +308,10 @@ class _VideoOptionsSheet extends StatelessWidget {
                     valueListenable: preview.qualityOverride,
                     builder: (context, override, _) {
                       final current = override ?? settingsQuality;
-                      return QualityChips(
+                      return ChoiceChips(
                         items: [
                           // 자동: 360p로 빠르게 시작해 몇 초 뒤 높은 화질로 올린다 (다음 곡부터).
-                          QualityChip(
+                          ChoiceChipItem(
                             key: const ValueKey('video-option-quality-auto'),
                             label: l10n.videoQualityAuto,
                             selected: auto,
@@ -321,7 +321,7 @@ class _VideoOptionsSheet extends StatelessWidget {
                             },
                           ),
                           for (final quality in VideoQuality.values)
-                            QualityChip(
+                            ChoiceChipItem(
                               key: ValueKey(
                                 'video-option-quality-${quality.name}',
                               ),
