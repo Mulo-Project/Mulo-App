@@ -35,6 +35,7 @@ import '../features/player/presentation/bloc/playback_speed_cubit.dart';
 import '../features/player/presentation/bloc/player_style_cubit.dart';
 import '../features/playlists/presentation/bloc/playlists_cubit.dart';
 import '../features/search/presentation/bloc/preview_cubit.dart';
+import '../features/search/presentation/bloc/video_quality_cubit.dart';
 import '../features/search/domain/entities/media_info.dart';
 import '../features/search/presentation/screens/media_detail_screen.dart';
 import '../features/security/presentation/bloc/app_lock_cubit.dart';
@@ -62,8 +63,21 @@ class _MusicAppState extends State<MusicApp> {
     initialLocation: widget.initialLocation,
   );
 
-  /// 재생 알림을 눌렀을 때: 현재 곡의 플레이어 화면을 연다 (이미 열려 있으면 그대로).
-  void _openPlayer() {
+  /// 재생 알림을 눌렀을 때: 미리 듣기 알림이면 그 영상의 상세 화면을, 아니면 현재 곡의 플레이어 화면을 연다
+  /// (플레이어가 이미 열려 있으면 그대로).
+  Future<void> _openPlayer() async {
+    final context = _router.routerDelegate.navigatorKey.currentContext;
+    if (context == null) return;
+    final preview = context.read<PreviewCubit>();
+    final nowPlaying = context.read<NowPlayingCubit>();
+    // 앱이 막 켜졌다면 알림에 떠 있던 미리 듣기를 아직 못 읽었을 수 있어 먼저 맞춘다.
+    await preview.syncWithPlayer();
+    final hit = preview.state.hit;
+    if (hit != null && preview.state.status != PreviewStatus.idle) {
+      _openDownload(hit);
+      return;
+    }
+    if (nowPlaying.state.track == null) return;
     if (_router.routerDelegate.currentConfiguration.uri.path != Routes.player) {
       _router.push(Routes.player);
     }
@@ -71,8 +85,21 @@ class _MusicAppState extends State<MusicApp> {
 
   /// 받기 알림을 눌렀을 때: 그 곡의 상세 화면을 맨 위에 연다.
   void _openDownload(MediaHit hit) {
-    _router.routerDelegate.navigatorKey.currentState?.push<void>(
-      MaterialPageRoute(builder: (_) => MediaDetailScreen(hit: hit)),
+    final navigator = _router.routerDelegate.navigatorKey.currentState;
+    if (navigator == null) return;
+    // 그 영상의 상세 화면이 이미 맨 위에 있으면 또 열지 않는다 (아무것도 닫지 않고 맨 위 경로만 읽는다).
+    Route<dynamic>? top;
+    navigator.popUntil((route) {
+      top = route;
+      return true;
+    });
+    final name = mediaDetailRouteName(hit.id);
+    if (top?.settings.name == name) return;
+    navigator.push<void>(
+      MaterialPageRoute(
+        settings: RouteSettings(name: name),
+        builder: (_) => MediaDetailScreen(hit: hit),
+      ),
     );
   }
 
@@ -112,6 +139,7 @@ class _MusicAppState extends State<MusicApp> {
         ),
         BlocProvider(create: (_) => sl<PlayerStyleCubit>()..load()),
         BlocProvider(create: (_) => sl<MixWithOthersCubit>()..load()),
+        BlocProvider(create: (_) => sl<VideoQualityCubit>()..load()),
         BlocProvider(create: (_) => sl<OutputBehaviorCubit>()..load()),
         // 시작할 때 저장된 재생 속도를 재생 엔진에 반영해야 하므로 바로 만든다.
         BlocProvider(

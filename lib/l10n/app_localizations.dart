@@ -386,6 +386,18 @@ abstract class AppLocalizations {
   /// **'라이브는 받을 수 없어요'**
   String get searchLiveNoDownload;
 
+  /// No description provided for @searchLiveNoPreview.
+  ///
+  /// In ko, this message translates to:
+  /// **'라이브는 미리 들을 수 없어요'**
+  String get searchLiveNoPreview;
+
+  /// No description provided for @searchPreviewUnplayable.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금은 들을 수 없는 영상이에요'**
+  String get searchPreviewUnplayable;
+
   /// No description provided for @searchResultsTitle.
   ///
   /// In ko, this message translates to:
@@ -1129,6 +1141,48 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'다른 앱과 함께 재생'**
   String get settingsMixWithOthers;
+
+  /// No description provided for @videoQualityTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'영상 화질'**
+  String get videoQualityTitle;
+
+  /// No description provided for @videoQualityHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'미리 듣기 영상에 쓰여요. 높이면 선명하지만 데이터를 더 써요.'**
+  String get videoQualityHint;
+
+  /// No description provided for @videoQualityLow.
+  ///
+  /// In ko, this message translates to:
+  /// **'144p'**
+  String get videoQualityLow;
+
+  /// No description provided for @videoQualityStandard.
+  ///
+  /// In ko, this message translates to:
+  /// **'360p · 기본'**
+  String get videoQualityStandard;
+
+  /// No description provided for @videoQualityMedium.
+  ///
+  /// In ko, this message translates to:
+  /// **'480p'**
+  String get videoQualityMedium;
+
+  /// No description provided for @videoQualityHigh.
+  ///
+  /// In ko, this message translates to:
+  /// **'720p'**
+  String get videoQualityHigh;
+
+  /// No description provided for @videoQualityFull.
+  ///
+  /// In ko, this message translates to:
+  /// **'1080p'**
+  String get videoQualityFull;
 
   /// No description provided for @settingsSleepTimerOff.
   ///

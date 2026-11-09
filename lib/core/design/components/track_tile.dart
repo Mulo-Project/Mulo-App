@@ -16,6 +16,7 @@ class TrackTile extends StatefulWidget {
     this.artwork,
     this.leading,
     this.trailing,
+    this.detail,
     this.footer,
     this.active = false,
     this.number,
@@ -36,6 +37,9 @@ class TrackTile extends StatefulWidget {
   /// 커버 대신 둘 위젯 (예: 선택 체크).
   final Widget? leading;
   final Widget? trailing;
+
+  /// 부제 밑에 따로 보이는 한 줄 (예: 영상 길이). 부제가 길어도 밀리지 않는다.
+  final String? detail;
 
   /// 제목 아래 추가 줄 (예: 다운로드 진행 막대).
   final Widget? footer;
@@ -130,6 +134,13 @@ class _TrackTileState extends State<TrackTile> {
                       overflow: TextOverflow.ellipsis,
                       style: text.bodySmall,
                     ),
+                    if (w.detail != null && w.detail!.isNotEmpty)
+                      Text(
+                        w.detail!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: text.bodySmall,
+                      ),
                     if (w.footer != null) ...[
                       const SizedBox(height: AppSpacing.xs),
                       w.footer!,

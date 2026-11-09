@@ -19,6 +19,12 @@ typedef AudioStreamReader = Future<AudioStream?> Function(
   String? language,
 });
 
+/// 유튜브 영상의 소리가 든 영상 스트림 주소를 읽는 함수. 못 읽으면 null.
+typedef MuxedVideoReader = Future<VideoStream?> Function(
+  String videoId,
+  int maxHeight,
+);
+
 /// 유튜브 곡의 오디오 언어 트랙 목록을 읽는 함수.
 typedef AudioLanguageReader = Future<List<AudioLanguage>> Function(
   String videoId,
@@ -34,12 +40,15 @@ class YoutubeExplodeEngine implements DownloaderEngine {
     this._inner, {
     AudioStreamReader? reader,
     AudioLanguageReader? languageReader,
+    MuxedVideoReader? videoReader,
   }) : _reader = reader ?? _readWithExplode,
+       _videoReader = videoReader ?? _readMuxedWithExplode,
        _languageReader = languageReader ?? _readLanguagesWithExplode;
 
   final DownloaderEngine _inner;
   final AudioStreamReader _reader;
   final AudioLanguageReader _languageReader;
+  final MuxedVideoReader _videoReader;
 
   @override
   Future<SearchPage> search(
@@ -93,8 +102,29 @@ class YoutubeExplodeEngine implements DownloaderEngine {
   Future<ChannelInfo> fetchChannel(String url) => _inner.fetchChannel(url);
 
   @override
-  Future<VideoStream> resolveVideoStream(String url) =>
-      _inner.resolveVideoStream(url);
+  Future<VideoStream> resolveVideoStream(
+    String url, {
+    int maxHeight = 360,
+  }) async {
+    // 순수 Dart 라이브러리가 JS 풀이 없이 몇 초 안에 읽는다 (yt-dlp 기본 방식은 폰에서 20초쯤).
+    // 소리가 든 형식을 못 읽으면 안쪽 엔진(yt-dlp)에 묻는다.
+    final id = VideoId.parseVideoId(url);
+    if (id != null) {
+      final clock = Stopwatch()..start();
+      try {
+        final v = await _videoReader(
+          id,
+          maxHeight,
+        ).timeout(const Duration(seconds: 15));
+        _log('explode 영상 ${v == null ? '없음' : '읽음'} ${clock.elapsedMilliseconds}ms');
+        if (v != null) return v;
+      } on Object catch (e) {
+        _log('explode 영상 실패 ${clock.elapsedMilliseconds}ms: ${_oneLine(e)}');
+        // 못 읽으면 안쪽 엔진으로 넘어간다.
+      }
+    }
+    return _inner.resolveVideoStream(url, maxHeight: maxHeight);
+  }
 
   @override
   Future<AudioStream> resolveAudioStream(
@@ -197,6 +227,15 @@ Future<PlaylistSearchPage> _playlistSearch(
   }
 }
 
+/// 디버그 빌드에서 adb logcat(`flutter` 태그)으로 보인다.
+void _log(String message) {
+  assert(() {
+    // ignore: avoid_print
+    print('[MuloSearch] $message');
+    return true;
+  }());
+}
+
 String _oneLine(Object? o) => '$o'
     .split('\n')
     .map((l) => l.trim())
@@ -255,6 +294,65 @@ Future<AudioStream?> _readWithExplode(
     rethrow;
   } on Object catch (e) {
     throw EngineException(EngineFailure.failed, '$e');
+  } finally {
+    yt.close();
+  }
+}
+
+/// 영상 주소 하나. visionOS 클라이언트가 소리가 든 형식을 주면 그것(한 플레이어로 틀 수 있다),
+/// 아니면 [maxHeight] 이하 mp4 영상 전용 형식 가운데 가장 큰 것. 못 읽는 주소(구간 403)는 거르고, 없으면 null.
+Future<VideoStream?> _readMuxedWithExplode(String videoId, int maxHeight) async {
+  final yt = YoutubeExplode();
+  try {
+    final StreamManifest manifest;
+    try {
+      manifest = await yt.videos.streamsClient.getManifest(
+        videoId,
+        ytClients: [_visionOs],
+      );
+    } on Object catch (e) {
+      _log('explode 영상: visionOS 읽기 실패 ${_oneLine(e)}');
+      return null;
+    }
+    final muxed = manifest.muxed
+        .where((s) => s.videoResolution.height <= maxHeight)
+        .toList()
+      ..sort(
+        (a, b) => b.videoResolution.height.compareTo(a.videoResolution.height),
+      );
+    final StreamInfo? best;
+    var isMuxed = false;
+    if (muxed.isNotEmpty) {
+      best = muxed.first;
+      isMuxed = true;
+    } else {
+      final only = manifest.videoOnly
+          .where(
+            (s) =>
+                s.container == StreamContainer.mp4 &&
+                s.videoResolution.height <= maxHeight,
+          )
+          .toList()
+        ..sort(
+          (a, b) =>
+              b.videoResolution.height.compareTo(a.videoResolution.height),
+        );
+      best = only.isEmpty ? null : only.first;
+    }
+    if (best == null) {
+      _log('explode 영상: visionOS에 쓸 영상 형식 없음');
+      return null;
+    }
+    if (!await _canReadMiddle(best)) {
+      _log('explode 영상: ${best.url.queryParameters['c']} 구간 403');
+      return null;
+    }
+    _log('explode 영상 형식 ${best.tag} muxed=$isMuxed');
+    return VideoStream(
+      url: best.url.toString(),
+      headers: _toStream(best).headers,
+      muxed: isMuxed,
+    );
   } finally {
     yt.close();
   }
@@ -327,7 +425,7 @@ AudioStream _toStream(StreamInfo s, [List<AudioStream> rest = const []]) =>
     );
 
 /// 파일 가운데 1KB를 실제로 요청해 206이 오는지 본다 (못 받는 주소를 미리 걸러내려고).
-Future<bool> _canReadMiddle(AudioOnlyStreamInfo s) async {
+Future<bool> _canReadMiddle(StreamInfo s) async {
   final client = HttpClient()..connectionTimeout = const Duration(seconds: 6);
   try {
     final total = s.size.totalBytes;

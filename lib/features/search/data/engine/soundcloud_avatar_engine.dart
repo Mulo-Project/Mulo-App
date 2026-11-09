@@ -115,8 +115,8 @@ class SoundcloudAvatarEngine implements DownloaderEngine {
   );
 
   @override
-  Future<VideoStream> resolveVideoStream(String url) =>
-      _inner.resolveVideoStream(url);
+  Future<VideoStream> resolveVideoStream(String url, {int maxHeight = 360}) =>
+      _inner.resolveVideoStream(url, maxHeight: maxHeight);
 
   @override
   Future<List<AudioLanguage>> fetchAudioLanguages(String url) =>

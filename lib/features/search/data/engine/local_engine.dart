@@ -211,14 +211,19 @@ class LocalEngine implements DownloaderEngine {
     bool refresh = false,
     String? audioLanguage,
   }) async {
-    if (audioLanguage == null && !refresh) {
-      final pair = await _pair(url);
-      if (pair?.audio != null) return pair!.audio!;
-    }
     return _readAudio(url, audioLanguage);
   }
 
   Future<AudioStream> _readAudio(String url, String? audioLanguage) async {
+    final clock = Stopwatch()..start();
+    try {
+      return await _readAudioInner(url, audioLanguage);
+    } finally {
+      _timing('소리만 읽기 ${clock.elapsedMilliseconds}ms');
+    }
+  }
+
+  Future<AudioStream> _readAudioInner(String url, String? audioLanguage) async {
     // 오디오만 있는 형식 하나를 골라(macOS도 풀 수 있는 m4a 먼저) 주소만 읽는다.
     Future<AudioStream> read(List<String> extra) async {
       final out = await _exec([
@@ -229,7 +234,7 @@ class LocalEngine implements DownloaderEngine {
         '--no-warnings',
         ...extra,
         url,
-      ]);
+      ], priority: 0);
       final j = _decode(out);
       final streamUrl = parseText(j?['url']);
       if (j == null || streamUrl == null) {
@@ -267,98 +272,58 @@ class LocalEngine implements DownloaderEngine {
 
   /// 소리 없는 낮은 화질(360p 이하) 영상 하나의 주소만 읽는다. 미니 플레이어 · 플레이어에서 화면으로만 쓴다.
   @override
-  Future<VideoStream> resolveVideoStream(String url) async {
-    final pair = await _pair(url);
-    if (pair?.video != null) return pair!.video!;
-    return _readVideo(url);
+  Future<VideoStream> resolveVideoStream(String url, {int maxHeight = 360}) =>
+      _readVideo(url, maxHeight);
+
+  // 소리가 같이 든 형식([height] 이하)을 먼저 찾는다: 주소 하나로 소리와 영상을 한 플레이어가 틀어 싱크가 필요 없다.
+  // 없으면 영상만 있는 형식으로 간다.
+  static String _videoSelector(int height) =>
+      'b[height<=$height][vcodec^=avc1]/b[height<=$height]/'
+      'bv[height<=$height][vcodec^=avc1]/bv[height<=$height]/bv[height<=480]/bv';
+
+  /// 디버그 빌드에서 adb logcat(`flutter` 태그)으로도 보이게 찍는다.
+  static void _timing(String message) {
+    assert(() {
+      // ignore: avoid_print
+      print('[MuloSearch] $message');
+      return true;
+    }());
+    developer.log(message, name: 'MuloSearch');
   }
 
-  static const _videoSelector =
-      'bv[height<=360][vcodec^=avc1]/bv[height<=360]/bv[height<=480]/bv';
-
-  /// 소리와 영상 주소를 yt-dlp 한 번으로 함께 읽는다 (분석이 시간 대부분이라 따로 읽으면 두 배로 걸린다).
-  /// 같은 곡을 소리 · 영상이 잇따라 물으면 같은 결과를 나눠 쓴다. 한 번에 못 읽으면 null이라
-  /// 호출한 쪽이 예전처럼 하나씩 읽는다.
-  final _pairs =
-      <String, Future<({AudioStream? audio, VideoStream? video})?>>{};
-
-  Future<({AudioStream? audio, VideoStream? video})?> _pair(String url) {
-    final host = Uri.tryParse(url)?.host ?? '';
-    if (!host.contains('youtube.com') && host != 'youtu.be') {
-      return Future.value();
-    }
-    return _pairs.putIfAbsent(url, () {
-      unawaited(
-        Future<void>.delayed(
-          const Duration(seconds: 30),
-          () => _pairs.remove(url),
-        ),
-      );
-      return _readPair(url);
-    });
-  }
-
-  Future<({AudioStream? audio, VideoStream? video})?> _readPair(
-    String url,
-  ) async {
+  Future<VideoStream> _readVideo(String url, int height) async {
+    final clock = Stopwatch()..start();
     try {
-      final out = await _exec([
-        '-f',
-        '${ytDlpAudioSelector(null, null)},$_videoSelector',
-        '--no-playlist',
-        '--dump-single-json',
-        '--no-warnings',
-        url,
-      ]);
-      final j = _decode(out);
-      final picked = j?['requested_downloads'];
-      if (picked is! List) return null;
-      AudioStream? audio;
-      VideoStream? video;
-      for (final f in picked) {
-        if (f is! Map) continue;
-        final streamUrl = parseText(f['url']);
-        if (streamUrl == null) continue;
-        final headers = f['http_headers'];
-        final map = headers is Map
-            ? {
-                for (final e in headers.entries)
-                  if (e.key is String && e.value is String)
-                    e.key as String: e.value as String,
-              }
-            : const <String, String>{};
-        if (f['vcodec'] == 'none') {
-          audio ??= AudioStream(url: streamUrl, headers: map);
-        } else if (f['acodec'] == 'none') {
-          video ??= VideoStream(url: streamUrl, headers: map);
-        }
-      }
-      if (audio == null || video == null) return null;
-      return (audio: audio, video: video);
-    } on Object {
-      return null;
+      return await _readVideoInner(url, height);
+    } finally {
+      _timing('영상만 읽기 ${clock.elapsedMilliseconds}ms');
     }
   }
 
-  Future<VideoStream> _readVideo(String url) async {
-    Future<VideoStream> read(List<String> extra) async {
+  Future<VideoStream> _readVideoInner(String url, int height) async {
+    Future<VideoStream> read(List<String> extra, {String? selector}) async {
       final out = await _exec([
         '-f',
-        _videoSelector,
+        selector ?? _videoSelector(height),
         '--no-playlist',
         '--dump-single-json',
         '--no-warnings',
         ...extra,
         url,
-      ]);
+      ], priority: 1, latestOnly: 'video');
       final j = _decode(out);
       final streamUrl = parseText(j?['url']);
       if (j == null || streamUrl == null) {
         throw const EngineException(EngineFailure.failed, 'bad response');
       }
+      _timing(
+        '영상 형식 ${j['format_id']} ${j['ext']} ${j['protocol']} '
+        '${j['height']}p v=${j['vcodec']} a=${j['acodec']}',
+      );
       final headers = j['http_headers'];
       return VideoStream(
         url: streamUrl,
+        muxed: j['vcodec'] != 'none' && j['acodec'] != 'none',
         headers: headers is Map
             ? {
                 for (final e in headers.entries)
@@ -372,7 +337,9 @@ class LocalEngine implements DownloaderEngine {
     try {
       return await read(const []);
     } on EngineException catch (first) {
-      if (first.failure != EngineFailure.failed) rethrow;
+      if (first.failure != EngineFailure.failed || first.message == 'superseded') {
+        rethrow;
+      }
       try {
         return await read(const [
           '--extractor-args',
@@ -512,10 +479,30 @@ class LocalEngine implements DownloaderEngine {
     return orig.isEmpty ? keys : orig;
   }
 
-  Future<String> _exec(List<String> args) async {
+  /// yt-dlp가 겹쳐 돌면 휴대폰에서 서로 느려진다 (혼자 4초인 것이 둘이 겹치면 16초 넘게 걸렸다).
+  /// 그래서 한 번에 하나씩만 돌리고, 기다리는 것은 [priority]가 작은 것부터 돈다:
+  /// 0 소리 주소(소리가 먼저 나게) → 1 영상 주소 → 2 곡 정보 · 소리 언어 목록 같은 나머지.
+  static final _gate = _ExecGate();
+
+  Future<String> _exec(
+    List<String> args, {
+    int priority = 2,
+    String? latestOnly,
+  }) => _gate.run(priority, () => _execNow(args), latestOnly: latestOnly);
+
+  Future<String> _execNow(List<String> args) async {
     final ({int exitCode, String stdout, String stderr}) r;
+    final clock = Stopwatch()..start();
+    // 어떤 호출이 얼마나 걸리는지 보려고 형식 선택과 클라이언트만 요약해 적는다.
+    final fIndex = args.indexOf('-f');
+    final label = [
+      if (fIndex >= 0 && fIndex + 1 < args.length) '-f ${args[fIndex + 1]}',
+      if (args.contains('--extractor-args')) 'android_vr',
+      if (args.contains('--skip-download')) 'info',
+    ].join(' ');
     try {
       r = await _run(await _resolve(), args);
+      _timing('yt-dlp ${clock.elapsedMilliseconds}ms 종료 ${r.exitCode} [$label]');
     } on ProcessException {
       throw const EngineException(EngineFailure.unavailable, 'yt-dlp');
     } on TimeoutException {
@@ -523,7 +510,7 @@ class LocalEngine implements DownloaderEngine {
     }
     if (r.exitCode != 0) {
       final err = r.stderr.trim();
-      developer.log('실패(${r.exitCode}): $err', name: 'MuloSearch');
+      _timing('실패(${r.exitCode}): $err');
       final failure = err.contains('Unsupported URL')
           ? EngineFailure.notFound
           : err.contains('Unable to download') || err.contains('getaddrinfo')
@@ -601,7 +588,8 @@ class LocalEngine implements DownloaderEngine {
           if (!_keys(j['subtitles']).contains(k)) k,
       ],
       album: parseText(j['album']) ?? '',
-      isLive: _isLive(j),
+      // 검색 목록의 라이브 · 예정 방송은 길이가 없다 (유튜브 일반 영상은 길이가 있다).
+      isLive: _isLive(j) || (seconds == null && id.length == 11),
     );
   }
 }
@@ -631,4 +619,52 @@ class LocalEngine implements DownloaderEngine {
   ];
   final a = choose(orig.isEmpty ? automatic : orig);
   return a == null ? null : (language: a, automatic: true);
+}
+
+/// yt-dlp 호출을 한 번에 하나씩, 우선순위(작을수록 먼저)와 들어온 순서대로 돌린다.
+class _ExecGate {
+  bool _running = false;
+  final _waiting =
+      <({int priority, Completer<void> waiter, String? group})>[];
+
+  /// [latestOnly]가 같은 대기 중인 일은 가장 나중에 온 것만 남긴다
+  /// (예전 상세 화면을 위한 읽기가 줄을 서서 지금 필요한 읽기를 늦추지 않게).
+  Future<T> run<T>(
+    int priority,
+    Future<T> Function() task, {
+    String? latestOnly,
+  }) async {
+    if (_running) {
+      if (latestOnly != null) {
+        for (final w in _waiting.where((w) => w.group == latestOnly).toList()) {
+          _waiting.remove(w);
+          w.waiter.completeError(
+            const EngineException(EngineFailure.failed, 'superseded'),
+          );
+        }
+      }
+      final waiter = Completer<void>();
+      _waiting.add((priority: priority, waiter: waiter, group: latestOnly));
+      await waiter.future;
+    } else {
+      _running = true;
+    }
+    try {
+      return await task();
+    } finally {
+      _next();
+    }
+  }
+
+  void _next() {
+    if (_waiting.isEmpty) {
+      _running = false;
+      return;
+    }
+    var best = 0;
+    for (var i = 1; i < _waiting.length; i++) {
+      if (_waiting[i].priority < _waiting[best].priority) best = i;
+    }
+    _waiting.removeAt(best).waiter.complete();
+  }
 }

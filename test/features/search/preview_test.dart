@@ -20,6 +20,7 @@ import 'package:music_download_play_app/features/search/domain/entities/audio_st
 import 'package:music_download_play_app/features/search/domain/entities/engine_exception.dart';
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
 import 'package:music_download_play_app/features/search/domain/entities/preview_snapshot.dart';
+import 'package:music_download_play_app/features/search/domain/entities/video_stream.dart';
 import 'package:music_download_play_app/features/search/domain/usecases/search_usecases.dart';
 import 'package:music_download_play_app/features/search/presentation/bloc/preview_cubit.dart';
 import 'package:music_download_play_app/features/search/presentation/screens/media_detail_screen.dart';
@@ -119,6 +120,28 @@ void main() {
         expect(
           (await engine.resolveAudioStream('https://soundcloud.com/a/b')).url,
           'https://stream.test/https://soundcloud.com/a/b',
+        );
+      },
+    );
+
+    test(
+      'YoutubeExplodeEngine: 소리가 든 영상 주소는 라이브러리가 먼저 읽고, 못 읽으면 안쪽 엔진으로 넘긴다',
+      () async {
+        final inner = FakeDownloaderEngine();
+        VideoStream? found = const VideoStream(
+          url: 'https://explode/video',
+          muxed: true,
+        );
+        final engine = YoutubeExplodeEngine(
+          inner,
+          videoReader: (id, maxHeight) async => found,
+        );
+        const url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+        expect((await engine.resolveVideoStream(url)).url, 'https://explode/video');
+        found = null;
+        expect(
+          (await engine.resolveVideoStream(url)).url,
+          isNot('https://explode/video'),
         );
       },
     );
@@ -624,6 +647,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(player.playing, isTrue);
       expect(find.text('Stop preview'), findsOneWidget);
+      // 일시정지와 멈추기는 따로 있다.
+      expect(find.byKey(const ValueKey('preview-pause-button')), findsOneWidget);
+      expect(find.byKey(const ValueKey('preview-stop-button')), findsOneWidget);
 
       // 다른 곳에서 잠시 멈춰 두면 상세 화면 버튼도 "이어 듣기"로 바뀌고, 누르면 이어 듣는다.
       await tester

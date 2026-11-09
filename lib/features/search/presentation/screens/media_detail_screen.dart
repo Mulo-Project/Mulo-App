@@ -22,6 +22,9 @@ import '../widgets/preview_video.dart';
 import '../widgets/video_category.dart';
 import '../widgets/youtube_embed.dart';
 
+/// 상세 화면의 경로 이름. 같은 영상의 상세 화면이 이미 맨 위에 있는지 알아볼 때 쓴다.
+String mediaDetailRouteName(String hitId) => 'media-detail:$hitId';
+
 /// 검색 결과 하나의 상세 보기: 큰 썸네일, 채널, 길이 · 조회수 · 올린 날 · 분류 · 설명.
 /// 영상 보기와 채널 보기는 기기의 유튜브 앱(없으면 브라우저)으로 연다.
 /// 탭 틀 위로 덮어 열린다 ([showMediaDetail]).
@@ -29,7 +32,12 @@ Future<void> showMediaDetail(BuildContext context, MediaHit hit) {
   return Navigator.of(
     context,
     rootNavigator: true,
-  ).push<void>(MaterialPageRoute(builder: (_) => MediaDetailScreen(hit: hit)));
+  ).push<void>(
+    MaterialPageRoute(
+      settings: RouteSettings(name: mediaDetailRouteName(hit.id)),
+      builder: (_) => MediaDetailScreen(hit: hit),
+    ),
+  );
 }
 
 /// SoundCloud 주소인가 (음원 사이트라 영상이 아니라 커버 · 아티스트 모양으로 보여 주려고).
@@ -454,7 +462,8 @@ class _Thumbnail extends StatelessWidget {
                     child: _PreviewVideoBox(hit: hit),
                   ),
                 )
-              else
+              else if (!audio)
+                // 음원(사운드클라우드 등)은 커버를 가리지 않는다 (원본 열기는 아래 버튼이 한다).
                 CircleIconButton(
                   icon: AppIcons.play,
                   tooltip: inApp

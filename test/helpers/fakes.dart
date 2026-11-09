@@ -63,7 +63,9 @@ import 'package:music_download_play_app/features/playlists/domain/repositories/p
 import 'package:music_download_play_app/features/search/di.dart';
 import 'package:music_download_play_app/features/search/domain/entities/audio_language.dart';
 import 'package:music_download_play_app/features/search/domain/entities/audio_stream.dart';
+import 'package:music_download_play_app/features/search/domain/entities/video_quality.dart';
 import 'package:music_download_play_app/features/search/domain/entities/video_stream.dart';
+import 'package:music_download_play_app/features/search/domain/repositories/video_quality_repository.dart';
 import 'package:music_download_play_app/features/search/domain/entities/preview_progress.dart';
 import 'package:music_download_play_app/features/search/domain/entities/preview_snapshot.dart';
 import 'package:music_download_play_app/features/search/domain/entities/stream_cache_info.dart';
@@ -484,6 +486,16 @@ class MemoryPlayerStyleRepository implements PlayerStyleRepository {
 
   @override
   Future<void> save(PlayerStyle value) async => style = value;
+}
+
+class MemoryVideoQualityRepository implements VideoQualityRepository {
+  VideoQuality value = VideoQuality.standard;
+
+  @override
+  Future<VideoQuality> load() async => value;
+
+  @override
+  Future<void> save(VideoQuality v) async => value = v;
 }
 
 class MemoryMixWithOthersRepository implements MixWithOthersRepository {
@@ -969,6 +981,9 @@ Future<void> setUpTestDependencies({
     )
     ..registerLazySingleton<MixWithOthersRepository>(
       MemoryMixWithOthersRepository.new,
+    )
+    ..registerLazySingleton<VideoQualityRepository>(
+      MemoryVideoQualityRepository.new,
     )
     ..registerLazySingleton<PlaybackSpeedRepository>(
       MemoryPlaybackSpeedRepository.new,
@@ -1469,8 +1484,15 @@ class FakeDownloaderEngine implements DownloaderEngine {
     this.error,
     this.streamFailure,
     this.streamGate,
+    this.muxedVideo = false,
     this.playlistPage = const PlaylistSearchPage(items: [], hasNext: false),
   });
+
+  /// [resolveVideoStream]이 소리가 섞인 형식을 돌려주는지.
+  final bool muxedVideo;
+
+  /// [resolveVideoStream]이 받은 화질 상한들.
+  final videoHeights = <int>[];
 
   /// [searchPlaylists]가 돌려줄 결과와 받은 검색어들.
   final PlaylistSearchPage playlistPage;
@@ -1567,8 +1589,10 @@ class FakeDownloaderEngine implements DownloaderEngine {
   }
 
   @override
-  Future<VideoStream> resolveVideoStream(String url) async =>
-      VideoStream(url: 'https://video.test/$url');
+  Future<VideoStream> resolveVideoStream(String url, {int maxHeight = 360}) async {
+    videoHeights.add(maxHeight);
+    return VideoStream(url: 'https://video.test/$url', muxed: muxedVideo);
+  }
 
   @override
   Future<List<AudioLanguage>> fetchAudioLanguages(String url) async =>

@@ -161,6 +161,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchLiveNoDownload => "Live streams can't be downloaded";
 
   @override
+  String get searchLiveNoPreview => "Live streams can't be previewed";
+
+  @override
+  String get searchPreviewUnplayable => "This video can't be played right now";
+
+  @override
   String get searchResultsTitle => 'Results';
 
   @override
@@ -570,6 +576,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsMixWithOthers => 'Play with other apps';
+
+  @override
+  String get videoQualityTitle => 'Video quality';
+
+  @override
+  String get videoQualityHint => 'Used for the preview video. Higher is sharper but uses more data.';
+
+  @override
+  String get videoQualityLow => '144p';
+
+  @override
+  String get videoQualityStandard => '360p · Default';
+
+  @override
+  String get videoQualityMedium => '480p';
+
+  @override
+  String get videoQualityHigh => '720p';
+
+  @override
+  String get videoQualityFull => '1080p';
 
   @override
   String get settingsSleepTimerOff => 'Off';
