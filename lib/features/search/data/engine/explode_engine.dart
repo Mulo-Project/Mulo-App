@@ -19,6 +19,12 @@ typedef AudioStreamReader = Future<AudioStream?> Function(
   String? language,
 });
 
+/// 유튜브 영상의 소리가 든 영상 스트림 주소를 읽는 함수. 못 읽으면 null.
+typedef MuxedVideoReader = Future<VideoStream?> Function(
+  String videoId,
+  int maxHeight,
+);
+
 /// 유튜브 곡의 오디오 언어 트랙 목록을 읽는 함수.
 typedef AudioLanguageReader = Future<List<AudioLanguage>> Function(
   String videoId,
@@ -34,12 +40,15 @@ class YoutubeExplodeEngine implements DownloaderEngine {
     this._inner, {
     AudioStreamReader? reader,
     AudioLanguageReader? languageReader,
+    MuxedVideoReader? videoReader,
   }) : _reader = reader ?? _readWithExplode,
+       _videoReader = videoReader ?? _readMuxedWithExplode,
        _languageReader = languageReader ?? _readLanguagesWithExplode;
 
   final DownloaderEngine _inner;
   final AudioStreamReader _reader;
   final AudioLanguageReader _languageReader;
+  final MuxedVideoReader _videoReader;
 
   @override
   Future<SearchPage> search(
@@ -93,8 +102,26 @@ class YoutubeExplodeEngine implements DownloaderEngine {
   Future<ChannelInfo> fetchChannel(String url) => _inner.fetchChannel(url);
 
   @override
-  Future<VideoStream> resolveVideoStream(String url, {int maxHeight = 360}) =>
-      _inner.resolveVideoStream(url, maxHeight: maxHeight);
+  Future<VideoStream> resolveVideoStream(
+    String url, {
+    int maxHeight = 360,
+  }) async {
+    // 순수 Dart 라이브러리가 JS 풀이 없이 몇 초 안에 읽는다 (yt-dlp 기본 방식은 폰에서 20초쯤).
+    // 소리가 든 형식을 못 읽으면 안쪽 엔진(yt-dlp)에 묻는다.
+    final id = VideoId.parseVideoId(url);
+    if (id != null) {
+      try {
+        final v = await _videoReader(
+          id,
+          maxHeight,
+        ).timeout(const Duration(seconds: 15));
+        if (v != null) return v;
+      } on Object {
+        // 못 읽으면 안쪽 엔진으로 넘어간다.
+      }
+    }
+    return _inner.resolveVideoStream(url, maxHeight: maxHeight);
+  }
 
   @override
   Future<AudioStream> resolveAudioStream(
@@ -260,6 +287,43 @@ Future<AudioStream?> _readWithExplode(
   }
 }
 
+/// 소리가 든 영상 형식(보통 360p · 720p mp4) 가운데 [maxHeight] 이하에서 가장 큰 것의 주소.
+/// 못 읽는 주소(구간 403)는 거르고, 없으면 null.
+Future<VideoStream?> _readMuxedWithExplode(String videoId, int maxHeight) async {
+  final yt = YoutubeExplode();
+  try {
+    for (final client in [_visionOs, YoutubeApiClient.androidVr]) {
+      final List<MuxedStreamInfo> muxed;
+      try {
+        final manifest = await yt.videos.streamsClient.getManifest(
+          videoId,
+          ytClients: [client],
+        );
+        muxed = manifest.muxed
+            .where((s) => s.videoResolution.height <= maxHeight)
+            .toList()
+          ..sort(
+            (a, b) =>
+                b.videoResolution.height.compareTo(a.videoResolution.height),
+          );
+      } on Object {
+        continue;
+      }
+      if (muxed.isEmpty) continue;
+      final best = muxed.first;
+      if (!await _canReadMiddle(best)) continue;
+      return VideoStream(
+        url: best.url.toString(),
+        headers: _toStream(best).headers,
+        muxed: true,
+      );
+    }
+    return null;
+  } finally {
+    yt.close();
+  }
+}
+
 /// 클라이언트를 차례로 써 보며 오디오 언어 트랙이 둘 이상 담긴 것을 찾는다.
 Future<List<AudioLanguage>> _readLanguagesWithExplode(String videoId) async {
   final yt = YoutubeExplode();
@@ -327,7 +391,7 @@ AudioStream _toStream(StreamInfo s, [List<AudioStream> rest = const []]) =>
     );
 
 /// 파일 가운데 1KB를 실제로 요청해 206이 오는지 본다 (못 받는 주소를 미리 걸러내려고).
-Future<bool> _canReadMiddle(AudioOnlyStreamInfo s) async {
+Future<bool> _canReadMiddle(StreamInfo s) async {
   final client = HttpClient()..connectionTimeout = const Duration(seconds: 6);
   try {
     final total = s.size.totalBytes;
