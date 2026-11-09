@@ -301,10 +301,10 @@ class LocalEngine implements DownloaderEngine {
   }
 
   Future<VideoStream> _readVideoInner(String url, int height) async {
-    Future<VideoStream> read(List<String> extra) async {
+    Future<VideoStream> read(List<String> extra, {String? selector}) async {
       final out = await _exec([
         '-f',
-        _videoSelector(height),
+        selector ?? _videoSelector(height),
         '--no-playlist',
         '--dump-single-json',
         '--no-warnings',
@@ -334,6 +334,16 @@ class LocalEngine implements DownloaderEngine {
       );
     }
 
+    // 기본 클라이언트는 주소마다 서명 풀이(JS)를 해서 폰에서 20초쯤 걸린다 (소리 읽기에 쓰는 android_vr은 풀이가 없다).
+    // 소리가 든 형식이 있으면 android_vr로 빨리 읽고, 없거나 실패하면 기본 방식으로 간다.
+    try {
+      return await read(
+        const ['--extractor-args', 'youtube:player_client=android_vr'],
+        selector: 'b[height<=$height][vcodec^=avc1]/b[height<=$height]',
+      );
+    } on EngineException catch (e) {
+      if (e.message == 'superseded') rethrow;
+    }
     try {
       return await read(const []);
     } on EngineException catch (first) {
