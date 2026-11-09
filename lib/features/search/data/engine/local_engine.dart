@@ -219,6 +219,15 @@ class LocalEngine implements DownloaderEngine {
   }
 
   Future<AudioStream> _readAudio(String url, String? audioLanguage) async {
+    final clock = Stopwatch()..start();
+    try {
+      return await _readAudioInner(url, audioLanguage);
+    } finally {
+      _timing('소리만 읽기 ${clock.elapsedMilliseconds}ms');
+    }
+  }
+
+  Future<AudioStream> _readAudioInner(String url, String? audioLanguage) async {
     // 오디오만 있는 형식 하나를 골라(macOS도 풀 수 있는 m4a 먼저) 주소만 읽는다.
     Future<AudioStream> read(List<String> extra) async {
       final out = await _exec([
@@ -298,6 +307,16 @@ class LocalEngine implements DownloaderEngine {
     });
   }
 
+  /// 디버그 빌드에서 adb logcat(`flutter` 태그)으로도 보이게 찍는다.
+  static void _timing(String message) {
+    assert(() {
+      // ignore: avoid_print
+      print('[MuloSearch] $message');
+      return true;
+    }());
+    developer.log(message, name: 'MuloSearch');
+  }
+
   Future<({AudioStream? audio, VideoStream? video})?> _readPair(
     String url,
   ) async {
@@ -334,23 +353,28 @@ class LocalEngine implements DownloaderEngine {
           video ??= VideoStream(url: streamUrl, headers: map);
         }
       }
-      developer.log(
+      _timing(
         '한 번에 읽기 ${clock.elapsedMilliseconds}ms '
         '(소리 ${audio != null} · 영상 ${video != null})',
-        name: 'MuloSearch',
       );
       if (audio == null || video == null) return null;
       return (audio: audio, video: video);
     } on Object catch (e) {
-      developer.log(
-        '한 번에 읽기 실패 ${clock.elapsedMilliseconds}ms: $e',
-        name: 'MuloSearch',
-      );
+      _timing('한 번에 읽기 실패 ${clock.elapsedMilliseconds}ms: $e');
       return null;
     }
   }
 
   Future<VideoStream> _readVideo(String url) async {
+    final clock = Stopwatch()..start();
+    try {
+      return await _readVideoInner(url);
+    } finally {
+      _timing('영상만 읽기 ${clock.elapsedMilliseconds}ms');
+    }
+  }
+
+  Future<VideoStream> _readVideoInner(String url) async {
     Future<VideoStream> read(List<String> extra) async {
       final out = await _exec([
         '-f',
