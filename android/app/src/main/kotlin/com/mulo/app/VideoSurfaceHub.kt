@@ -80,6 +80,11 @@ object VideoSurfaceHub {
     fun pipSize(): Pair<Int, Int>? =
         if (attached && firstFrame && width > 0 && height > 0 && isPlaying()) width to height else null
 
+    /** PiP에 안 들어가는 까닭을 로그로 남기려고: 진입 조건 각각의 지금 값. */
+    fun pipDebug(): String =
+        "attached=$attached firstFrame=$firstFrame size=${width}x$height playing=${isPlaying()} " +
+            "preview=${previewVideo != null} main=${mainPlayer != null}"
+
     /** 지금 영상 크기. 아직 모르면 null. */
     fun videoSize(): Pair<Int, Int>? = if (width > 0 && height > 0) width to height else null
 

@@ -18,13 +18,13 @@ import java.io.File
  * 스트리밍(받지 않고 바로 듣기) 소리 · 영상의 임시 저장소. 들은 부분을 앱 캐시 폴더에 쌓아 두었다가
  * 같은 곡을 다시 들으면 네트워크 없이 거기서 읽는다. 보관함 곡이 아니고 파일로 보이지도 않는다.
  *
- * 용량 한도를 넘으면 가장 오래 안 쓴 것부터 지운다 (LRU). 한도는 설정에서 고른다 (기본 1 GB).
+ * 용량 한도를 넘으면 가장 오래 안 쓴 것부터 지운다 (LRU). 한도는 설정에서 고른다 (기본 500 MB).
  * 스트림 주소는 틀 때마다 서명이 바뀌어서, 주소 대신 영상 id + 형식(itag)을 키로 쓴다.
  */
 @UnstableApi
 object StreamCache {
-    /** 임시 저장소 용량 한도 기본값 1 GB (설정에서 바꾼다). */
-    private const val DEFAULT_LIMIT_BYTES = 1024L * 1024 * 1024
+    /** 임시 저장소 용량 한도 기본값 500 MB (설정에서 바꾼다). */
+    private const val DEFAULT_LIMIT_BYTES = 500L * 1024 * 1024
     private const val PREFS = "mulo_stream_cache"
     private const val KEY_LIMIT = "limit"
 

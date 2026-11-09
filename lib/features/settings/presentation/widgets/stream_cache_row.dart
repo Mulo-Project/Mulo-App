@@ -16,7 +16,6 @@ const streamCacheLimits = [
   500 * _mb,
   1024 * _mb,
   2048 * _mb,
-  4096 * _mb,
 ];
 
 /// 바이트를 "120 MB" · "1.5 GB"처럼 짧게.

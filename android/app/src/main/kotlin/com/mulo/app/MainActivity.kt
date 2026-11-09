@@ -79,11 +79,16 @@ class MainActivity : FlutterFragmentActivity() {
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || inPip()) return
-        val size = VideoSurfaceHub.pipSize() ?: return
+        val size = VideoSurfaceHub.pipSize()
+        if (size == null) {
+            // 영상이 화면에 붙어 첫 화면이 그려졌고 소리가 나는 중이어야 한다: 어느 조건이 빠졌는지 남긴다.
+            MuloLog.d(MuloLog.NATIVE, "PiP 안 감: ${VideoSurfaceHub.pipDebug()}")
+            return
+        }
         try {
             enterPictureInPictureMode(pipParams(size.first, size.second, VideoSurfaceHub.isPlaying()))
         } catch (e: RuntimeException) {
-            MuloLog.e(MuloLog.NATIVE, "PiP 진입 실패: ${e.message}", e)
+            MuloLog.e(MuloLog.NATIVE, "PiP 진입 실패 (${VideoSurfaceHub.pipDebug()}): ${e.message}", e)
         }
     }
 
