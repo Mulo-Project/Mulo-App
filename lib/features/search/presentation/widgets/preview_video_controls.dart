@@ -264,7 +264,6 @@ class _VideoOptionsSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final p = context.palette;
     final text = Theme.of(context).textTheme;
     return SafeArea(
       child: SingleChildScrollView(
@@ -300,72 +299,44 @@ class _VideoOptionsSheet extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(l10n.videoQualityTitle, style: text.titleSmall),
+            const SizedBox(height: AppSpacing.sm),
+            // 화질은 가로로 스크롤되는 선택 버튼 줄이다 (시트가 길어지지 않는다).
             ValueListenableBuilder<bool>(
               valueListenable: preview.autoQuality,
-              builder: (context, auto, _) => ValueListenableBuilder<VideoQuality?>(
-              valueListenable: preview.qualityOverride,
-              builder: (context, override, _) {
-                final current = override ?? settingsQuality;
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // 자동(점진): 360p로 빠르게 시작해 몇 초 뒤 높은 화질로 올린다 (다음 곡부터).
-                    InkWell(
-                      key: const ValueKey('video-option-quality-auto'),
-                      onTap: () {
-                        preview.autoQuality.value = true;
-                        Navigator.of(context).pop();
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: AppSpacing.sm + AppSpacing.xxs,
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                l10n.videoQualityAuto,
-                                style: text.bodyLarge?.copyWith(
-                                  color: auto ? p.accent : p.onSurface,
-                                ),
+              builder: (context, auto, _) =>
+                  ValueListenableBuilder<VideoQuality?>(
+                    valueListenable: preview.qualityOverride,
+                    builder: (context, override, _) {
+                      final current = override ?? settingsQuality;
+                      return QualityChips(
+                        items: [
+                          // 자동: 360p로 빠르게 시작해 몇 초 뒤 높은 화질로 올린다 (다음 곡부터).
+                          QualityChip(
+                            key: const ValueKey('video-option-quality-auto'),
+                            label: l10n.videoQualityAuto,
+                            selected: auto,
+                            onTap: () {
+                              preview.autoQuality.value = true;
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                          for (final quality in VideoQuality.values)
+                            QualityChip(
+                              key: ValueKey(
+                                'video-option-quality-${quality.name}',
                               ),
+                              label: videoQualityLabel(context, quality),
+                              selected: !auto && quality == current,
+                              onTap: () {
+                                preview.autoQuality.value = false;
+                                preview.qualityOverride.value = quality;
+                                Navigator.of(context).pop();
+                              },
                             ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    for (final quality in VideoQuality.values)
-                      InkWell(
-                        key: ValueKey('video-option-quality-${quality.name}'),
-                        onTap: () {
-                          preview.autoQuality.value = false;
-                          preview.qualityOverride.value = quality;
-                          Navigator.of(context).pop();
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: AppSpacing.sm + AppSpacing.xxs,
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  videoQualityLabel(context, quality),
-                                  style: text.bodyLarge?.copyWith(
-                                    color: !auto && quality == current
-                                        ? p.accent
-                                        : p.onSurface,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                  ],
-                );
-              },
-            ),
+                        ],
+                      );
+                    },
+                  ),
             ),
           ],
         ),

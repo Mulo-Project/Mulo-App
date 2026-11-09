@@ -47,8 +47,6 @@ class _SaveQualitySheetState extends State<_SaveQualitySheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final p = context.palette;
-    final text = Theme.of(context).textTheme;
     return SafeArea(
       child: SingleChildScrollView(
         padding: appSheetPadding,
@@ -61,30 +59,18 @@ class _SaveQualitySheetState extends State<_SaveQualitySheet> {
               subtitle: l10n.savedVideosQualityHint,
             ),
             const SizedBox(height: AppSpacing.sm),
-            for (final quality in VideoQuality.values)
-              InkWell(
-                key: ValueKey('save-quality-${quality.name}'),
-                onTap: () => setState(() => _selected = quality),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: AppSpacing.sm + AppSpacing.xxs,
+            // 화질은 가로로 스크롤되는 선택 버튼 줄이다.
+            QualityChips(
+              items: [
+                for (final quality in VideoQuality.values)
+                  QualityChip(
+                    key: ValueKey('save-quality-${quality.name}'),
+                    label: videoQualityLabel(context, quality),
+                    selected: quality == _selected,
+                    onTap: () => setState(() => _selected = quality),
                   ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          videoQualityLabel(context, quality),
-                          style: text.bodyLarge?.copyWith(
-                            color: quality == _selected
-                                ? p.accent
-                                : p.onSurface,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              ],
+            ),
             const SizedBox(height: AppSpacing.md),
             SizedBox(
               width: double.infinity,
@@ -163,6 +149,50 @@ class _VideoQualitySheet extends StatelessWidget {
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// [QualityChips]의 선택 버튼 하나.
+class QualityChip {
+  const QualityChip({
+    this.key,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final Key? key;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+}
+
+/// 화질을 고르는 선택 버튼 줄: 가로로 스크롤된다.
+class QualityChips extends StatelessWidget {
+  const QualityChips({super.key, required this.items});
+
+  final List<QualityChip> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (var i = 0; i < items.length; i++) ...[
+            if (i > 0) const SizedBox(width: AppSpacing.sm),
+            PillButton(
+              key: items[i].key,
+              label: items[i].label,
+              compact: true,
+              variant: PillVariant.tonal,
+              selected: items[i].selected,
+              onPressed: items[i].onTap,
+            ),
+          ],
+        ],
       ),
     );
   }
