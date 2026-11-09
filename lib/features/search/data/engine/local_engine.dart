@@ -234,7 +234,7 @@ class LocalEngine implements DownloaderEngine {
         '--no-warnings',
         ...extra,
         url,
-      ], urgent: true);
+      ]);
       final j = _decode(out);
       final streamUrl = parseText(j?['url']);
       if (j == null || streamUrl == null) {
@@ -311,7 +311,7 @@ class LocalEngine implements DownloaderEngine {
         '--no-warnings',
         ...extra,
         url,
-      ], urgent: true);
+      ]);
       final j = _decode(out);
       final streamUrl = parseText(j?['url']);
       if (j == null || streamUrl == null) {
@@ -475,14 +475,7 @@ class LocalEngine implements DownloaderEngine {
     return orig.isEmpty ? keys : orig;
   }
 
-  /// yt-dlp를 동시에 여럿 돌리면 휴대폰에서 서로 느려져 (영상 주소 4초 → 20초) 한 번에 도는 수를 제한한다.
-  /// 미리 듣기에 바로 필요한 소리 · 영상 주소 읽기([urgent])가 먼저 돈다.
-  static final _gate = _ExecGate();
-
-  Future<String> _exec(List<String> args, {bool urgent = false}) =>
-      _gate.run(urgent, () => _execNow(args));
-
-  Future<String> _execNow(List<String> args) async {
+  Future<String> _exec(List<String> args) async {
     final ({int exitCode, String stdout, String stderr}) r;
     final clock = Stopwatch()..start();
     // 어떤 호출이 얼마나 걸리는지 보려고 형식 선택과 클라이언트만 요약해 적는다.
@@ -610,65 +603,4 @@ class LocalEngine implements DownloaderEngine {
   ];
   final a = choose(orig.isEmpty ? automatic : orig);
   return a == null ? null : (language: a, automatic: true);
-}
-
-/// yt-dlp 실행 수를 제한한다: 전체 [maxTotal]개, 급하지 않은 것은 [maxLow]개까지만.
-/// 급한 요청이 있으면 급하지 않은 요청보다 먼저 자리를 얻는다.
-class _ExecGate {
-  _ExecGate({this.maxTotal = 3, this.maxLow = 1});
-
-  final int maxTotal;
-  final int maxLow;
-  int _running = 0;
-  int _runningLow = 0;
-  final _urgent = <Completer<void>>[];
-  final _low = <Completer<void>>[];
-
-  Future<T> run<T>(bool urgent, Future<T> Function() task) async {
-    await _acquire(urgent);
-    try {
-      return await task();
-    } finally {
-      _running--;
-      if (!urgent) _runningLow--;
-      _drain();
-    }
-  }
-
-  Future<void> _acquire(bool urgent) {
-    final canStart =
-        _running < maxTotal && (urgent || _runningLow < maxLow);
-    if (canStart && _queue(urgent).isEmpty) {
-      _start(urgent);
-      return Future.value();
-    }
-    final waiter = Completer<void>();
-    _queue(urgent).add(waiter);
-    return waiter.future;
-  }
-
-  List<Completer<void>> _queue(bool urgent) => urgent ? _urgent : _low;
-
-  void _start(bool urgent) {
-    _running++;
-    if (!urgent) _runningLow++;
-  }
-
-  void _drain() {
-    while (_running < maxTotal) {
-      final Completer<void> next;
-      final bool urgent;
-      if (_urgent.isNotEmpty) {
-        next = _urgent.removeAt(0);
-        urgent = true;
-      } else if (_low.isNotEmpty && _runningLow < maxLow) {
-        next = _low.removeAt(0);
-        urgent = false;
-      } else {
-        return;
-      }
-      _start(urgent);
-      next.complete();
-    }
-  }
 }
