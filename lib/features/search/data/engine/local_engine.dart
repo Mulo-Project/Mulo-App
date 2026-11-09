@@ -276,11 +276,8 @@ class LocalEngine implements DownloaderEngine {
     return _readVideo(url);
   }
 
-  // 영상만 있는 형식을 먼저 찾고, 없으면 소리가 섞인 형식도 쓴다 (소리는 플레이어가 꺼 둔다).
-  // android_vr 클라이언트가 영상만 있는 형식을 안 줘서 4초 만에 실패하는 기기가 있었다.
   static const _videoSelector =
-      'bv[height<=360][vcodec^=avc1]/bv[height<=360]/bv[height<=480]/bv'
-      '/b[height<=360]/b[height<=480]/b';
+      'bv[height<=360][vcodec^=avc1]/bv[height<=360]/bv[height<=480]/bv';
 
   /// 디버그 빌드에서 adb logcat(`flutter` 태그)으로도 보이게 찍는다.
   static void _timing(String message) {
