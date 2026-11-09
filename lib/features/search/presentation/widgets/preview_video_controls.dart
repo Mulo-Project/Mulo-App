@@ -240,6 +240,42 @@ class _SkipButton extends StatelessWidget {
 Future<void> showVideoOptions(BuildContext context) {
   final preview = context.read<PreviewCubit>();
   final settingsQuality = context.read<VideoQualityCubit>().state;
+  // 가로(전체 화면)에서는 아래 시트가 영상을 가리고 옆으로만 넓어지므로, 오른쪽 패널로 연다.
+  if (MediaQuery.orientationOf(context) == Orientation.landscape) {
+    final palette = context.palette;
+    return showGeneralDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      barrierColor: palette.scrim.withValues(alpha: .4),
+      transitionDuration: AppMotion.medium,
+      pageBuilder: (dialogContext, _, _) => Align(
+        alignment: Alignment.centerRight,
+        child: SizedBox(
+          width: 320,
+          height: double.infinity,
+          child: Material(
+            color: palette.surface,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.md),
+                child: _VideoOptionsSheet(
+                  preview: preview,
+                  settingsQuality: settingsQuality,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+      transitionBuilder: (_, animation, _, child) => SlideTransition(
+        position: Tween(begin: const Offset(1, 0), end: Offset.zero).animate(
+          CurvedAnimation(parent: animation, curve: AppMotion.standard),
+        ),
+        child: child,
+      ),
+    );
+  }
   return showAppSheet<void>(
     context,
     // 가로 전체 화면처럼 낮은 화면에서도 넘치지 않게 스크롤된다.
