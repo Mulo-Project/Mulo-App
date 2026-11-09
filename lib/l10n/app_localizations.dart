@@ -1481,7 +1481,7 @@ abstract class AppLocalizations {
   /// No description provided for @videoFullscreenExit.
   ///
   /// In ko, this message translates to:
-  /// **'닫기'**
+  /// **'축소'**
   String get videoFullscreenExit;
 
   /// No description provided for @newVideosDetail.

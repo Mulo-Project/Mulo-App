@@ -146,21 +146,6 @@ class _PreviewVideoControlsState extends State<PreviewVideoControls> {
                     ),
                   ),
                 ),
-                // 전체 화면의 닫기 버튼도 컨트롤과 같이 눌렀을 때만 보인다.
-                if (widget.fullscreen)
-                  SafeArea(
-                    child: Align(
-                      alignment: Alignment.topLeft,
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        child: CircleIconButton(
-                          icon: AppIcons.close,
-                          tooltip: l10n.videoFullscreenExit,
-                          onPressed: () => Navigator.of(context).pop(),
-                        ),
-                      ),
-                    ),
-                  ),
                 Positioned(
                   left: AppSpacing.md,
                   right: AppSpacing.sm,
@@ -178,13 +163,15 @@ class _PreviewVideoControlsState extends State<PreviewVideoControls> {
                         duration == null ? '' : formatDuration(duration),
                         style: text,
                       ),
-                      if (!widget.fullscreen) ...[
-                        const SizedBox(width: AppSpacing.sm),
+                      const SizedBox(width: AppSpacing.sm),
+                      // 확대 버튼 자리: 전체 화면에서는 축소(닫기) 버튼이 된다.
+                      if (widget.fullscreen)
+                        const FullscreenVideoButton(exit: true)
+                      else
                         FullscreenVideoButton(
                           controls: (_) =>
                               const PreviewVideoControls(fullscreen: true),
                         ),
-                      ],
                     ],
                   ),
                 ),

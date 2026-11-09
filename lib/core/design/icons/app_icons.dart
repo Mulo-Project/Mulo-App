@@ -381,6 +381,12 @@ abstract final class AppIcons {
     fontFamily: 'PhosphorLight',
     matchTextDirection: true,
   );
+  /// 전체 화면 닫기(축소): 안쪽을 향한 네 모서리 화살표.
+  static const IconData fullscreenExit = IconData(
+    0xe09a,
+    fontFamily: 'PhosphorLight',
+    matchTextDirection: true,
+  );
   static const IconData fullscreen = IconData(
     0xe0a2,
     fontFamily: 'PhosphorLight',

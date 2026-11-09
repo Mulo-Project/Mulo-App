@@ -761,7 +761,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoFullscreen => 'Fullscreen';
 
   @override
-  String get videoFullscreenExit => 'Close';
+  String get videoFullscreenExit => 'Exit fullscreen';
 
   @override
   String get newVideosDetail => 'Details';

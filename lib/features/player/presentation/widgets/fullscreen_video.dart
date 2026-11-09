@@ -46,7 +46,7 @@ class _FullscreenVideoPageState extends State<_FullscreenVideoPage> {
   var _closeShown = false;
   Timer? _timer;
 
-  // 컨트롤이 없는 전체 화면은 화면을 누를 때만 닫기 버튼이 잠깐 뜬다.
+  // 컨트롤이 없는 전체 화면은 화면을 누를 때만 축소 버튼이 잠깐 뜬다.
   void _toggleClose() {
     _timer?.cancel();
     setState(() => _closeShown = !_closeShown);
@@ -81,19 +81,15 @@ class _FullscreenVideoPageState extends State<_FullscreenVideoPage> {
             ),
             SafeArea(
               child: Align(
-                alignment: Alignment.topLeft,
+                alignment: Alignment.bottomRight,
                 child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  padding: const EdgeInsets.all(AppSpacing.md),
                   child: IgnorePointer(
                     ignoring: !_closeShown,
                     child: AnimatedOpacity(
                       opacity: _closeShown ? 1 : 0,
                       duration: AppMotion.fast,
-                      child: CircleIconButton(
-                        icon: AppIcons.close,
-                        tooltip: context.l10n.videoFullscreenExit,
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
+                      child: const FullscreenVideoButton(exit: true),
                     ),
                   ),
                 ),
@@ -106,9 +102,11 @@ class _FullscreenVideoPageState extends State<_FullscreenVideoPage> {
   }
 }
 
-/// 영상 오른쪽 아래의 작은 전체 화면 버튼.
+/// 영상 오른쪽 아래의 작은 전체 화면 버튼. [exit]이면 전체 화면 안에서 쓰는 축소(닫기) 버튼이다.
 class FullscreenVideoButton extends StatelessWidget {
-  const FullscreenVideoButton({super.key, this.controls});
+  const FullscreenVideoButton({super.key, this.controls, this.exit = false});
+
+  final bool exit;
 
   /// 전체 화면에서 영상 위에 얹을 컨트롤 (없으면 닫기 버튼만).
   final WidgetBuilder? controls;
@@ -116,11 +114,15 @@ class FullscreenVideoButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CircleIconButton(
-      key: const ValueKey('video-fullscreen'),
-      icon: AppIcons.fullscreen,
-      tooltip: context.l10n.videoFullscreen,
+      key: ValueKey(exit ? 'video-fullscreen-exit' : 'video-fullscreen'),
+      icon: exit ? AppIcons.fullscreenExit : AppIcons.fullscreen,
+      tooltip: exit
+          ? context.l10n.videoFullscreenExit
+          : context.l10n.videoFullscreen,
       size: AppSizes.rowButton,
-      onPressed: () => showFullscreenVideo(context, controls: controls),
+      onPressed: exit
+          ? () => Navigator.of(context).pop()
+          : () => showFullscreenVideo(context, controls: controls),
     );
   }
 }

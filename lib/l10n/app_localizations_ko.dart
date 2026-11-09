@@ -745,7 +745,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get videoFullscreen => '전체 화면';
 
   @override
-  String get videoFullscreenExit => '닫기';
+  String get videoFullscreenExit => '축소';
 
   @override
   String get newVideosDetail => '상세 보기';
