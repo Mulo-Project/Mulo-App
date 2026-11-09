@@ -23,7 +23,7 @@ import '../widgets/video_quality_sheet.dart';
 import '../widgets/audio_language_sheet.dart';
 import '../widgets/preview_control.dart';
 import '../widgets/preview_video.dart';
-import '../../../player/presentation/widgets/fullscreen_video.dart';
+import '../widgets/preview_video_controls.dart';
 import '../widgets/video_category.dart';
 import '../widgets/youtube_embed.dart';
 
@@ -527,82 +527,22 @@ class _Thumbnail extends StatelessWidget {
   }
 }
 
-/// 미리 듣는 영상. 누르면 재생 · 일시정지 아이콘 버튼이 잠시 떠서 누를 수 있고,
-/// 멈춰 있는 동안에는 계속 보인다.
-class _PreviewVideoBox extends StatefulWidget {
+/// 미리 듣는 영상 + 재생 컨트롤 (한 번 누르면 컨트롤, 두 번 누르면 10초 이동, 탐색 바, 전체 화면).
+class _PreviewVideoBox extends StatelessWidget {
   const _PreviewVideoBox({required this.hit});
 
   final MediaHit hit;
 
   @override
-  State<_PreviewVideoBox> createState() => _PreviewVideoBoxState();
-}
-
-class _PreviewVideoBoxState extends State<_PreviewVideoBox> {
-  static const _hideAfter = Duration(seconds: 2);
-  var _touched = false;
-  Timer? _timer;
-
-  void _reveal() {
-    setState(() => _touched = true);
-    _timer?.cancel();
-    _timer = Timer(_hideAfter, () {
-      if (mounted) setState(() => _touched = false);
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final paused = context.select((PreviewCubit c) => c.state.paused);
-    final show = paused || _touched;
     return Stack(
       fit: StackFit.expand,
       children: [
         PreviewVideo(
-          pageUrl: widget.hit.url,
-          quality: context.read<SavedVideosCubit>().qualityOf(widget.hit.id),
+          pageUrl: hit.url,
+          quality: context.read<SavedVideosCubit>().qualityOf(hit.id),
         ),
-        GestureDetector(behavior: HitTestBehavior.translucent, onTap: _reveal),
-        Positioned(
-          right: AppSpacing.xs,
-          bottom: AppSpacing.xs,
-          child: IgnorePointer(
-            ignoring: !show,
-            child: AnimatedOpacity(
-              opacity: show ? 1 : 0,
-              duration: AppMotion.fast,
-              child: const FullscreenVideoButton(),
-            ),
-          ),
-        ),
-        Center(
-          child: IgnorePointer(
-            ignoring: !show,
-            child: AnimatedOpacity(
-              opacity: show ? 1 : 0,
-              duration: AppMotion.fast,
-              child: CircleIconButton(
-                icon: paused ? AppIcons.play : AppIcons.pause,
-                tooltip: paused
-                    ? l10n.searchPreviewResume
-                    : l10n.searchPreviewPause,
-                emphasized: true,
-                size: AppSizes.circleButtonLarge,
-                onPressed: () {
-                  context.read<PreviewCubit>().togglePause();
-                  if (!paused) _reveal();
-                },
-              ),
-            ),
-          ),
-        ),
+        const PreviewVideoControls(),
       ],
     );
   }

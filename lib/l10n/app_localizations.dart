@@ -1496,6 +1496,18 @@ abstract class AppLocalizations {
   /// **'담기'**
   String get savedVideosConfirm;
 
+  /// No description provided for @videoBack10.
+  ///
+  /// In ko, this message translates to:
+  /// **'10초 뒤로'**
+  String get videoBack10;
+
+  /// No description provided for @videoForward10.
+  ///
+  /// In ko, this message translates to:
+  /// **'10초 앞으로'**
+  String get videoForward10;
+
   /// No description provided for @settingsPurgeHidden.
   ///
   /// In ko, this message translates to:

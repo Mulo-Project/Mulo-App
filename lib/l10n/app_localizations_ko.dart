@@ -754,6 +754,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get savedVideosConfirm => '담기';
 
   @override
+  String get videoBack10 => '10초 뒤로';
+
+  @override
+  String get videoForward10 => '10초 앞으로';
+
+  @override
   String get settingsPurgeHidden => '숨긴 곡 기록 정리';
 
   @override

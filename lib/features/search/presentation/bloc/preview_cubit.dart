@@ -341,6 +341,16 @@ class PreviewCubit extends Cubit<PreviewState> {
     await _seek(target);
   }
 
+  /// 지금 자리에서 [delta]만큼 앞(+) · 뒤(-)로 옮긴다 (처음 ~ 끝 사이로 맞춘다). 길이를 모르면 아무 일도 없다.
+  Future<void> seekBy(Duration delta) async {
+    final p = state.progress;
+    final d = p?.duration;
+    if (isClosed || state.status != PreviewStatus.playing) return;
+    if (p == null || d == null || d == Duration.zero) return;
+    final ms = (p.position + delta).inMilliseconds.clamp(0, d.inMilliseconds);
+    await seekTo(ms / d.inMilliseconds);
+  }
+
   /// 듣는 중이면 잠시 멈추고, 잠시 멈춘 상태면 이어서 듣는다.
   Future<void> togglePause() async {
     if (isClosed || state.status != PreviewStatus.playing) return;

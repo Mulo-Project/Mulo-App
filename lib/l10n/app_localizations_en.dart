@@ -770,6 +770,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get savedVideosConfirm => 'Add';
 
   @override
+  String get videoBack10 => 'Back 10s';
+
+  @override
+  String get videoForward10 => 'Forward 10s';
+
+  @override
   String get settingsPurgeHidden => 'Clear hidden song records';
 
   @override
