@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/core/di/injector.dart';
+import 'package:music_download_play_app/features/player/presentation/bloc/now_playing_cubit.dart';
 import 'package:music_download_play_app/features/search/presentation/bloc/preview_cubit.dart';
 import 'package:music_download_play_app/features/search/domain/entities/engine_exception.dart';
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
@@ -68,8 +69,11 @@ void main() {
         MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
-          home: BlocProvider(
-            create: (_) => sl<PreviewCubit>(),
+          home: MultiBlocProvider(
+            providers: [
+              BlocProvider(create: (_) => sl<PreviewCubit>()),
+              BlocProvider(create: (_) => sl<NowPlayingCubit>()),
+            ],
             child: MediaDetailScreen(
               hit: hit,
               inAppVideo: inApp,
