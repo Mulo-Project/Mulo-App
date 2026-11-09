@@ -93,8 +93,8 @@ class YoutubeExplodeEngine implements DownloaderEngine {
   Future<ChannelInfo> fetchChannel(String url) => _inner.fetchChannel(url);
 
   @override
-  Future<VideoStream> resolveVideoStream(String url, {int maxHeight = 360}) =>
-      _inner.resolveVideoStream(url, maxHeight: maxHeight);
+  Future<VideoStream> resolveVideoStream(String url) =>
+      _inner.resolveVideoStream(url);
 
   @override
   Future<AudioStream> resolveAudioStream(

@@ -4,7 +4,6 @@ import '../entities/audio_stream.dart';
 import '../entities/engine_exception.dart';
 import '../entities/media_info.dart';
 import '../entities/subtitle_track.dart';
-import '../entities/video_quality.dart';
 import '../entities/video_stream.dart';
 import '../entities/preview_progress.dart';
 import '../entities/preview_snapshot.dart';
@@ -12,7 +11,6 @@ import '../entities/search_source.dart';
 import '../repositories/downloader_engine.dart';
 import '../repositories/link_opener.dart';
 import '../repositories/preview_player.dart';
-import '../repositories/video_quality_repository.dart';
 
 class SearchParams {
   const SearchParams(
@@ -128,37 +126,13 @@ class ResolveAudioStream implements UseCase<AudioStream, String> {
 
 /// 곡 주소로 소리 없는 낮은 화질 영상 스트림 주소 알아내기 (영상 표시).
 class ResolveVideoStream implements UseCase<VideoStream, String> {
-  const ResolveVideoStream(this._engine, [this._quality]);
+  const ResolveVideoStream(this._engine);
 
   final DownloaderEngine _engine;
 
-  /// 설정한 화질 (없으면 기본 화질).
-  final VideoQualityRepository? _quality;
-
   @override
-  Future<VideoStream> call(String url) async {
-    final quality = await _quality?.load() ?? VideoQuality.standard;
-    return _engine.resolveVideoStream(url.trim(), maxHeight: quality.maxHeight);
-  }
-}
-
-/// 미리 듣기 영상 화질 설정 읽기 · 저장.
-class LoadVideoQuality implements UseCase<VideoQuality, NoParams> {
-  const LoadVideoQuality(this._repo);
-
-  final VideoQualityRepository _repo;
-
-  @override
-  Future<VideoQuality> call(NoParams _) => _repo.load();
-}
-
-class SaveVideoQuality implements UseCase<void, VideoQuality> {
-  const SaveVideoQuality(this._repo);
-
-  final VideoQualityRepository _repo;
-
-  @override
-  Future<void> call(VideoQuality value) => _repo.save(value);
+  Future<VideoStream> call(String url) =>
+      _engine.resolveVideoStream(url.trim());
 }
 
 /// 곡에 들어 있는 오디오 언어 트랙 목록 (여러 개일 때만 고를 수 있다). 못 읽으면 빈 목록.

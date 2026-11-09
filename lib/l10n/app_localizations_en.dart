@@ -572,18 +572,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsMixWithOthers => 'Play with other apps';
 
   @override
-  String get videoQualityTitle => 'Video quality';
-
-  @override
-  String get videoQualityHint => 'Used for the preview video. Higher is sharper but uses more data.';
-
-  @override
-  String get videoQualityStandard => '360p · Default';
-
-  @override
-  String get videoQualityHigh => '720p';
-
-  @override
   String get settingsSleepTimerOff => 'Off';
 
   @override

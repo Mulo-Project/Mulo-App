@@ -46,8 +46,7 @@ abstract interface class DownloaderEngine {
 
   /// 소리 없는 낮은 화질의 영상 스트림 주소를 알아낸다 (영상 표시용, 소리는 따로 낸다).
   /// 쓸 수 없는 엔진은 [EngineException] (`unavailable`)을 던진다.
-  /// [maxHeight]는 화질 상한(세로 픽셀). 소리가 섞인 형식이 있으면 그것을 쓴다.
-  Future<VideoStream> resolveVideoStream(String url, {int maxHeight = 360});
+  Future<VideoStream> resolveVideoStream(String url);
 
   /// 곡에 들어 있는 오디오 언어 트랙들. 트랙이 하나뿐이거나 읽을 수 없으면 빈 목록
   /// (쓸 수 없는 엔진도 빈 목록).

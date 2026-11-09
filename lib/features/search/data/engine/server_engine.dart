@@ -137,7 +137,7 @@ class ServerEngine implements DownloaderEngine {
   }) async => throw const EngineException(EngineFailure.unavailable);
 
   @override
-  Future<VideoStream> resolveVideoStream(String url, {int maxHeight = 360}) async =>
+  Future<VideoStream> resolveVideoStream(String url) async =>
       throw const EngineException(EngineFailure.unavailable);
 
   /// 서버 명세에 오디오 트랙 조회가 없어서 고를 수 있는 언어가 없다.

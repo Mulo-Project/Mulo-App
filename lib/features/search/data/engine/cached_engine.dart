@@ -81,12 +81,8 @@ class CachedDownloaderEngine implements DownloaderEngine {
   }
 
   @override
-  Future<VideoStream> resolveVideoStream(String url, {int maxHeight = 360}) =>
-      _cached(
-        _videoStreams,
-        '$url|$maxHeight',
-        () => _inner.resolveVideoStream(url, maxHeight: maxHeight),
-      );
+  Future<VideoStream> resolveVideoStream(String url) =>
+      _cached(_videoStreams, url, () => _inner.resolveVideoStream(url));
 
   @override
   Future<List<AudioLanguage>> fetchAudioLanguages(String url) =>

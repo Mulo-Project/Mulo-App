@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
-import 'package:music_download_play_app/features/search/domain/entities/video_quality.dart';
 import 'package:music_download_play_app/features/search/presentation/bloc/preview_cubit.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 import 'package:music_download_play_app/features/search/domain/usecases/search_usecases.dart';
@@ -78,15 +77,5 @@ void main() {
       );
       await cubit.close();
     }
-  });
-
-  test('ResolveVideoStream: 설정한 화질 상한으로 읽는다', () async {
-    final engine = FakeDownloaderEngine();
-    final quality = MemoryVideoQualityRepository();
-    final resolve = ResolveVideoStream(engine, quality);
-    await resolve('https://example.com/a');
-    quality.value = VideoQuality.high;
-    await resolve('https://example.com/a');
-    expect(engine.videoHeights, [360, 720]);
   });
 }

@@ -558,18 +558,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsMixWithOthers => '다른 앱과 함께 재생';
 
   @override
-  String get videoQualityTitle => '영상 화질';
-
-  @override
-  String get videoQualityHint => '미리 듣기 영상에 쓰여요. 높이면 선명하지만 데이터를 더 써요.';
-
-  @override
-  String get videoQualityStandard => '360p · 기본';
-
-  @override
-  String get videoQualityHigh => '720p';
-
-  @override
   String get settingsSleepTimerOff => '꺼짐';
 
   @override
