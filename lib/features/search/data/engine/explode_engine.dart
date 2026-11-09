@@ -299,44 +299,60 @@ Future<AudioStream?> _readWithExplode(
   }
 }
 
-/// 소리가 든 영상 형식(보통 360p · 720p mp4) 가운데 [maxHeight] 이하에서 가장 큰 것의 주소.
-/// 못 읽는 주소(구간 403)는 거르고, 없으면 null.
+/// 영상 주소 하나. visionOS 클라이언트가 소리가 든 형식을 주면 그것(한 플레이어로 틀 수 있다),
+/// 아니면 [maxHeight] 이하 mp4 영상 전용 형식 가운데 가장 큰 것. 못 읽는 주소(구간 403)는 거르고, 없으면 null.
 Future<VideoStream?> _readMuxedWithExplode(String videoId, int maxHeight) async {
   final yt = YoutubeExplode();
   try {
-    for (final client in [_visionOs, YoutubeApiClient.androidVr]) {
-      final List<MuxedStreamInfo> muxed;
-      try {
-        final manifest = await yt.videos.streamsClient.getManifest(
-          videoId,
-          ytClients: [client],
-        );
-        muxed = manifest.muxed
-            .where((s) => s.videoResolution.height <= maxHeight)
-            .toList()
-          ..sort(
-            (a, b) =>
-                b.videoResolution.height.compareTo(a.videoResolution.height),
-          );
-      } on Object {
-        continue;
-      }
-      if (muxed.isEmpty) {
-        _log('explode 영상: ${client == _visionOs ? 'visionOS' : 'androidVr'}에 합쳐진 형식 없음');
-        continue;
-      }
-      final best = muxed.first;
-      if (!await _canReadMiddle(best)) {
-        _log('explode 영상: ${best.url.queryParameters['c']} 구간 403');
-        continue;
-      }
-      return VideoStream(
-        url: best.url.toString(),
-        headers: _toStream(best).headers,
-        muxed: true,
+    final StreamManifest manifest;
+    try {
+      manifest = await yt.videos.streamsClient.getManifest(
+        videoId,
+        ytClients: [_visionOs],
       );
+    } on Object catch (e) {
+      _log('explode 영상: visionOS 읽기 실패 ${_oneLine(e)}');
+      return null;
     }
-    return null;
+    final muxed = manifest.muxed
+        .where((s) => s.videoResolution.height <= maxHeight)
+        .toList()
+      ..sort(
+        (a, b) => b.videoResolution.height.compareTo(a.videoResolution.height),
+      );
+    final StreamInfo? best;
+    var isMuxed = false;
+    if (muxed.isNotEmpty) {
+      best = muxed.first;
+      isMuxed = true;
+    } else {
+      final only = manifest.videoOnly
+          .where(
+            (s) =>
+                s.container == StreamContainer.mp4 &&
+                s.videoResolution.height <= maxHeight,
+          )
+          .toList()
+        ..sort(
+          (a, b) =>
+              b.videoResolution.height.compareTo(a.videoResolution.height),
+        );
+      best = only.isEmpty ? null : only.first;
+    }
+    if (best == null) {
+      _log('explode 영상: visionOS에 쓸 영상 형식 없음');
+      return null;
+    }
+    if (!await _canReadMiddle(best)) {
+      _log('explode 영상: ${best.url.queryParameters['c']} 구간 403');
+      return null;
+    }
+    _log('explode 영상 형식 ${best.tag} muxed=$isMuxed');
+    return VideoStream(
+      url: best.url.toString(),
+      headers: _toStream(best).headers,
+      muxed: isMuxed,
+    );
   } finally {
     yt.close();
   }
