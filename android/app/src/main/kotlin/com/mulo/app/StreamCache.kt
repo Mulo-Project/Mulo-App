@@ -113,7 +113,9 @@ object StreamCache {
 
         override fun open(dataSpec: DataSpec): Long {
             val id = dataSpec.uri.getQueryParameter("id")
-            val target = if (id != null && id in savedIds) saved else temp
+            // 유튜브는 주소의 id로, id가 없는 곳(사운드클라우드 등)은 캐시 키로 보관 여부를 가른다.
+            val inSaved = (id != null && id in savedIds) || keyOf(dataSpec.uri) in savedIds
+            val target = if (inSaved) saved else temp
             active = target
             return target.open(dataSpec)
         }
@@ -200,7 +202,7 @@ object StreamCache {
         savedIds = savedIds - ids.toSet()
         val c = openSaved(context) ?: return
         for (key in c.keys.toList()) {
-            if (ids.any { key.startsWith("yt:$it:") }) c.removeResource(key)
+            if (ids.any { key.startsWith("yt:$it:") || key == it }) c.removeResource(key)
         }
     }
 

@@ -203,7 +203,11 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
                     }
                     // 스트림 주소의 id(영상 id와 다르다)를 돌려준다: 이 값으로 보관 여부를 가르고 지운다.
                     // 영상 전용 + 소리 전용이면 주소마다 id가 다를 수 있어 쉼표로 이어 돌려준다.
-                    val ids = targets.mapNotNull { Uri.parse(it.first).getQueryParameter("id") }.distinct()
+                    // 주소에 id가 없는 곳(사운드클라우드 등)은 캐시 키를 id 대신 쓴다 (보관 여부 · 지우기가 같은 키로 맞는다).
+                    val ids = targets.map { t ->
+                        val u = Uri.parse(t.first)
+                        u.getQueryParameter("id") ?: StreamCache.keyOf(u)
+                    }.distinct()
                     ids.forEach { StreamCache.addSavedId(it) }
                     val streamId = if (ids.isEmpty()) null else ids.joinToString(",")
                     // 받는 일은 따로 돌고, 끝나면 Dart에 알린다.
