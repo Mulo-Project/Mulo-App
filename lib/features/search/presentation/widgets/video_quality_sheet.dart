@@ -15,26 +15,20 @@ String videoQualityLabel(BuildContext context, VideoQuality quality) {
   };
 }
 
-/// "영상 화질" 시트: 고르면 바로 저장되고, [onChanged]가 있으면 (듣는 중인 영상을 새 화질로 다시 틀 때) 불린다.
-/// 이 화질은 다음 미리 듣기에도 쓰인다. 영상 화면에 붙어 쓰는 공통 시트라 다른 영상(저장해 둔 영상 등)에도 쓸 수 있다.
-Future<void> showVideoQualitySheet(
-  BuildContext context, {
-  ValueChanged<VideoQuality>? onChanged,
-}) {
+/// "영상 화질" 시트: 고르면 바로 저장되고 다음 미리 듣기부터 적용된다.
+Future<void> showVideoQualitySheet(BuildContext context) {
   final cubit = context.read<VideoQualityCubit>();
   return showAppSheet<void>(
     context,
     builder: (_) => BlocProvider.value(
       value: cubit,
-      child: _VideoQualitySheet(onChanged: onChanged),
+      child: const _VideoQualitySheet(),
     ),
   );
 }
 
 class _VideoQualitySheet extends StatelessWidget {
-  const _VideoQualitySheet({this.onChanged});
-
-  final ValueChanged<VideoQuality>? onChanged;
+  const _VideoQualitySheet();
 
   @override
   Widget build(BuildContext context) {
@@ -57,12 +51,9 @@ class _VideoQualitySheet extends StatelessWidget {
             for (final quality in VideoQuality.values)
               InkWell(
                 key: ValueKey('video-quality-${quality.name}'),
-                onTap: () async {
-                  final navigator = Navigator.of(context);
-                  final changed = quality != current;
-                  await context.read<VideoQualityCubit>().set(quality);
-                  navigator.pop();
-                  if (changed) onChanged?.call(quality);
+                onTap: () {
+                  context.read<VideoQualityCubit>().set(quality);
+                  Navigator.of(context).pop();
                 },
                 child: Padding(
                   padding: const EdgeInsets.symmetric(

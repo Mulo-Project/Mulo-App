@@ -16,13 +16,10 @@ import '../../domain/usecases/search_usecases.dart';
 import '../bloc/audio_language_cubit.dart';
 import '../bloc/media_detail_cubit.dart';
 import '../bloc/preview_cubit.dart';
-import '../bloc/video_quality_cubit.dart';
-import '../../domain/entities/video_quality.dart';
 import '../widgets/audio_language_sheet.dart';
 import '../widgets/preview_control.dart';
 import '../widgets/preview_video.dart';
 import '../widgets/video_category.dart';
-import '../widgets/video_quality_sheet.dart';
 import '../widgets/youtube_embed.dart';
 
 /// 검색 결과 하나의 상세 보기: 큰 썸네일, 채널, 길이 · 조회수 · 올린 날 · 분류 · 설명.
@@ -126,22 +123,6 @@ class _DetailViewState extends State<_DetailView> {
     await _preview.stop();
     if (!mounted) return;
     await togglePreview(context, hit, audioLanguage: language);
-  }
-
-  /// 듣는 중에 영상 화질을 바꾸면 새 화질 주소로 다시 틀고 듣던 자리로 돌아간다
-  /// (소리가 섞인 형식은 화질마다 다른 주소라 이어서 바꿀 수 없다).
-  Future<void> _changeQuality(MediaHit hit) async {
-    if (!_preview.state.isActive(hit.id)) return;
-    final position = _preview.state.progress?.position;
-    final language = context.read<AudioLanguageCubit>().state.selected;
-    await _preview.stop();
-    if (!mounted) return;
-    final started = await togglePreview(
-      context,
-      hit,
-      audioLanguage: language,
-    );
-    if (started && position != null) await _preview.seekToPosition(position);
   }
 
   /// 앱 안에서 영상을 틀고 있는지 / 틀어 보려다 막혀서 유튜브로만 열 수 있는지.
@@ -302,13 +283,6 @@ class _DetailViewState extends State<_DetailView> {
                         AudioLanguageRow(
                           onChanged: (id) => _restartPreview(hit, id),
                         ),
-                        if (isYoutubeUrl(hit.url) &&
-                            context.select(
-                              (PreviewCubit c) => c.state.isActive(hit.id),
-                            ))
-                          _VideoQualityRow(
-                            onChanged: (q) => _changeQuality(hit),
-                          ),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.md),
@@ -659,51 +633,6 @@ class _ChannelRow extends StatelessWidget {
             onPressed: onOpen,
           ),
       ],
-    );
-  }
-}
-
-/// 미리 듣는 영상의 화질 줄. 누르면 화질 시트가 뜬다.
-class _VideoQualityRow extends StatelessWidget {
-  const _VideoQualityRow({required this.onChanged});
-
-  final ValueChanged<VideoQuality> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final p = context.palette;
-    final text = Theme.of(context).textTheme;
-    final current = context.watch<VideoQualityCubit>().state;
-    return Semantics(
-      button: true,
-      child: InkWell(
-        key: const ValueKey('video-quality-row'),
-        onTap: () => showVideoQualitySheet(context, onChanged: onChanged),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-          child: Row(
-            children: [
-              Text(l10n.videoQualityTitle, style: text.bodyMedium),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Text(
-                  videoQualityLabel(context, current),
-                  textAlign: TextAlign.end,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: text.bodyMedium?.copyWith(color: p.accent),
-                ),
-              ),
-              Icon(
-                AppIcons.chevronRight,
-                size: AppSizes.iconMd,
-                color: p.onSurfaceMuted,
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

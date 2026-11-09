@@ -311,12 +311,6 @@ class PreviewCubit extends Cubit<PreviewState> {
 
   /// 재생 위치를 전체 길이의 [fraction](0 ~ 1) 자리로 옮긴다.
   /// 길이를 아직 모르면 아무 일도 없다.
-  /// 재생 위치를 [position]으로 옮긴다 (듣는 중일 때만). 화질을 바꿔 다시 틀 때 듣던 자리로 돌아가는 데 쓴다.
-  Future<void> seekToPosition(Duration position) async {
-    if (isClosed || state.status != PreviewStatus.playing) return;
-    await _seek(position);
-  }
-
   Future<void> seekTo(double fraction) async {
     final p = state.progress;
     final d = p?.duration;
