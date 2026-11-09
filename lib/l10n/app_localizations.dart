@@ -1508,6 +1508,18 @@ abstract class AppLocalizations {
   /// **'10초 앞으로'**
   String get videoForward10;
 
+  /// No description provided for @savedVideosSectionVideo.
+  ///
+  /// In ko, this message translates to:
+  /// **'영상'**
+  String get savedVideosSectionVideo;
+
+  /// No description provided for @savedVideosSectionAudio.
+  ///
+  /// In ko, this message translates to:
+  /// **'음원'**
+  String get savedVideosSectionAudio;
+
   /// No description provided for @settingsPurgeHidden.
   ///
   /// In ko, this message translates to:

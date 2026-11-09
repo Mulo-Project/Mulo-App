@@ -48,17 +48,39 @@ class SavedVideosScreen extends StatelessWidget {
                           ),
                         ),
                       )
-                    : ListView.builder(
+                    : ListView(
                         padding: EdgeInsets.only(
                           bottom:
                               AppSpacing.lg +
                               MediaQuery.paddingOf(context).bottom,
                         ),
-                        itemCount: videos.length,
-                        itemBuilder: (context, i) => _SavedTile(
-                          video: videos[i],
-                          active: preview.isActive(videos[i].id),
-                        ),
+                        children: [
+                          // 영상(유튜브, 화질을 고른 것)과 음원을 나누고, 구역마다 1번부터 센다.
+                          for (final section in [
+                            (
+                              l10n.savedVideosSectionVideo,
+                              [for (final v in videos) if (v.quality != null) v],
+                            ),
+                            (
+                              l10n.savedVideosSectionAudio,
+                              [for (final v in videos) if (v.quality == null) v],
+                            ),
+                          ])
+                            if (section.$2.isNotEmpty) ...[
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  top: AppSpacing.sm,
+                                ),
+                                child: SectionTitle(section.$1),
+                              ),
+                              for (var i = 0; i < section.$2.length; i++)
+                                _SavedTile(
+                                  number: i + 1,
+                                  video: section.$2[i],
+                                  active: preview.isActive(section.$2[i].id),
+                                ),
+                            ],
+                        ],
                       ),
               ),
             ],
@@ -70,8 +92,14 @@ class SavedVideosScreen extends StatelessWidget {
 }
 
 class _SavedTile extends StatelessWidget {
-  const _SavedTile({required this.video, required this.active});
+  const _SavedTile({
+    required this.number,
+    required this.video,
+    required this.active,
+  });
 
+  /// 구역 안의 번호 (1부터).
+  final int number;
   final SavedVideo video;
   final bool active;
 
@@ -97,6 +125,27 @@ class _SavedTile extends StatelessWidget {
         ),
         child: Row(
           children: [
+            SizedBox(
+              width: 28,
+              child: Text(
+                '$number',
+                style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
+              ),
+            ),
+            // 영상은 가로로 긴 16:9 썸네일을 같이 보여 준다 (음원은 글자만).
+            if (video.quality != null) ...[
+              ArtworkBox(
+                image: hit.thumbnailUrl == null
+                    ? null
+                    : NetworkImage(hit.thumbnailUrl!),
+                width: 80,
+                size: 45,
+                radius: AppRadii.sm,
+                tone: toneFor(hit.id),
+                icon: AppIcons.play,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+            ],
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

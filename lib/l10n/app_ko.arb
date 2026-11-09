@@ -287,6 +287,8 @@
   "savedVideosConfirm": "담기",
   "videoBack10": "10초 뒤로",
   "videoForward10": "10초 앞으로",
+  "savedVideosSectionVideo": "영상",
+  "savedVideosSectionAudio": "음원",
   "settingsStreamCacheCleared": "임시 저장소를 비웠어요",
   "settingsPurgeHidden": "숨긴 곡 기록 정리",
   "settingsPurgeHiddenDesc": "폴더를 빼서 숨겨 둔 {count}곡의 기록이 남아 있어요",

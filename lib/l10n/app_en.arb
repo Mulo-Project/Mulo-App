@@ -256,6 +256,8 @@
   "savedVideosConfirm": "Add",
   "videoBack10": "Back 10s",
   "videoForward10": "Forward 10s",
+  "savedVideosSectionVideo": "Videos",
+  "savedVideosSectionAudio": "Audio",
   "settingsStreamCacheCleared": "Streaming cache cleared",
   "settingsPurgeHidden": "Clear hidden song records",
   "settingsPurgeHiddenDesc": "Records of {count} hidden songs from removed folders are kept",
