@@ -301,6 +301,7 @@ class LocalEngine implements DownloaderEngine {
   Future<({AudioStream? audio, VideoStream? video})?> _readPair(
     String url,
   ) async {
+    final clock = Stopwatch()..start();
     try {
       final out = await _exec([
         '-f',
@@ -333,9 +334,18 @@ class LocalEngine implements DownloaderEngine {
           video ??= VideoStream(url: streamUrl, headers: map);
         }
       }
+      developer.log(
+        '한 번에 읽기 ${clock.elapsedMilliseconds}ms '
+        '(소리 ${audio != null} · 영상 ${video != null})',
+        name: 'MuloSearch',
+      );
       if (audio == null || video == null) return null;
       return (audio: audio, video: video);
-    } on Object {
+    } on Object catch (e) {
+      developer.log(
+        '한 번에 읽기 실패 ${clock.elapsedMilliseconds}ms: $e',
+        name: 'MuloSearch',
+      );
       return null;
     }
   }

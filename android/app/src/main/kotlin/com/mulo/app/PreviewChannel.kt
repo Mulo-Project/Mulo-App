@@ -62,7 +62,19 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
         }
     }
 
+    private var videoPreparedAt = 0L
+
     private val videoListener = object : Player.Listener {
+        override fun onPlaybackStateChanged(state: Int) {
+            val took = android.os.SystemClock.elapsedRealtime() - videoPreparedAt
+            MuloLog.d(MuloLog.PLAYBACK, "미리 듣기 영상 상태 $state (준비 시작 후 ${took}ms)")
+        }
+
+        override fun onRenderedFirstFrame() {
+            val took = android.os.SystemClock.elapsedRealtime() - videoPreparedAt
+            MuloLog.d(MuloLog.PLAYBACK, "미리 듣기 영상 첫 화면 (준비 시작 후 ${took}ms)")
+        }
+
         override fun onPlayerError(error: PlaybackException) {
             MuloLog.e(MuloLog.NATIVE, "미리 듣기 영상 오류: ${error.errorCodeName}", error)
             releaseVideo()
@@ -203,6 +215,7 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
         v.setMediaItem(MediaItem.fromUri(Uri.parse(url)))
         v.playWhenReady = false
         v.seekTo(audio.currentPosition + START_AHEAD_MS)
+        videoPreparedAt = android.os.SystemClock.elapsedRealtime()
         v.prepare()
         videoPlayer = v
         videoUrl = url
