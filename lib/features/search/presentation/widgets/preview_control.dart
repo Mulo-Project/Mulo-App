@@ -22,6 +22,15 @@ Future<bool> togglePreview(
 }) async {
   final l10n = context.l10n;
   final messenger = ScaffoldMessenger.of(context);
+  // 라이브는 미리 듣지 않고 라이브 표시만 한다.
+  if (hit.isLive) {
+    if (announceFailure) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(l10n.searchLiveNoPreview)));
+    }
+    return false;
+  }
   final preview = context.read<PreviewCubit>();
   final nowPlaying = context.read<NowPlayingCubit>();
 
@@ -33,7 +42,9 @@ Future<bool> togglePreview(
         .split('\n')
         .map((l) => l.trim())
         .lastWhere((l) => l.isNotEmpty, orElse: () => '');
+    final offline = preview.lastFailureDetail.contains('Offline');
     final message = switch (failure) {
+      _ when offline => l10n.searchLiveOffline,
       EngineFailure.unavailable => l10n.searchPreviewUnavailable,
       EngineFailure.network => l10n.searchNetworkBody,
       EngineFailure.timeout => l10n.stateTimeoutBody,
@@ -43,7 +54,7 @@ Future<bool> togglePreview(
     messenger.showSnackBar(
       SnackBar(
         content: Text(
-          detail.isEmpty || failure == EngineFailure.unavailable
+          detail.isEmpty || offline || failure == EngineFailure.unavailable
               ? message
               : '$message\n${detail.length > 400 ? detail.substring(0, 400) : detail}',
         ),
@@ -92,7 +103,10 @@ class PreviewButton extends StatelessWidget {
       },
       variant: PillVariant.tonal,
       busy: status == PreviewStatus.loading,
-      onPressed: paused
+      // 라이브는 미리 듣지 않는다 (버튼을 비활성으로).
+      onPressed: hit.isLive
+          ? null
+          : paused
           ? () => context.read<PreviewCubit>().togglePause()
           : () => togglePreview(
               context,

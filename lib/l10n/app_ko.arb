@@ -55,6 +55,8 @@
   "searchLoadMore": "더 보기",
   "searchLive": "라이브",
   "searchLiveNoDownload": "라이브는 받을 수 없어요",
+  "searchLiveNoPreview": "라이브는 미리 들을 수 없어요",
+  "searchLiveOffline": "지금은 방송하지 않는 라이브예요",
   "searchResultsTitle": "검색 결과",
   "searchUrlCardLabel": "URL에서 찾은 곡",
   "searchPlaylistLabel": "재생목록",

@@ -96,7 +96,9 @@ class LocalEngine implements DownloaderEngine {
     for (final line in const LineSplitter().convert(out)) {
       if (line.trim().isEmpty) continue;
       final j = _decode(line);
-      if (j != null) all.add(_hit(j));
+      if (j != null) {
+        all.add(_hit(j, noDurationIsLive: source == SearchSource.youtube));
+      }
     }
     final start = page * size;
     return SearchPage(
@@ -570,7 +572,8 @@ class LocalEngine implements DownloaderEngine {
     return thumb;
   }
 
-  MediaHit _hit(Map<String, dynamic> j) {
+  /// [noDurationIsLive]: 유튜브 검색(flat)에서 길이가 없으면 방송 중이 아닌 24시간 라이브(지금은 오프라인)로 본다.
+  MediaHit _hit(Map<String, dynamic> j, {bool noDurationIsLive = false}) {
     final id = j['id'] as String? ?? '';
     final seconds = j['duration'];
     final thumb = _thumbnailOf(j);
@@ -601,7 +604,13 @@ class LocalEngine implements DownloaderEngine {
           if (!_keys(j['subtitles']).contains(k)) k,
       ],
       album: parseText(j['album']) ?? '',
-      isLive: _isLive(j),
+      isLive:
+          _isLive(j) ||
+          (noDurationIsLive &&
+              seconds == null &&
+              j['live_status'] != 'was_live' &&
+              j['live_status'] != 'not_live' &&
+              j['live_status'] != 'post_live'),
     );
   }
 }

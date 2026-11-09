@@ -386,6 +386,18 @@ abstract class AppLocalizations {
   /// **'라이브는 받을 수 없어요'**
   String get searchLiveNoDownload;
 
+  /// No description provided for @searchLiveNoPreview.
+  ///
+  /// In ko, this message translates to:
+  /// **'라이브는 미리 들을 수 없어요'**
+  String get searchLiveNoPreview;
+
+  /// No description provided for @searchLiveOffline.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금은 방송하지 않는 라이브예요'**
+  String get searchLiveOffline;
+
   /// No description provided for @searchResultsTitle.
   ///
   /// In ko, this message translates to:

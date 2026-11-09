@@ -490,7 +490,7 @@ class _HitTile extends StatelessWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          PreviewRowButton(hit: hit),
+          if (!hit.isLive) PreviewRowButton(hit: hit),
           RowIconButton(
             icon: icon,
             tooltip: tooltip,

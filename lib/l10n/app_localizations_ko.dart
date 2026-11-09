@@ -159,6 +159,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get searchLiveNoDownload => '라이브는 받을 수 없어요';
 
   @override
+  String get searchLiveNoPreview => '라이브는 미리 들을 수 없어요';
+
+  @override
+  String get searchLiveOffline => '지금은 방송하지 않는 라이브예요';
+
+  @override
   String get searchResultsTitle => '검색 결과';
 
   @override
