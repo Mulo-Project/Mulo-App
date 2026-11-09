@@ -438,11 +438,12 @@ class _SaveButton extends StatelessWidget {
         if (saved) return unawaited(context.push(savedVideosLocation));
         VideoQuality? quality;
         if (isYoutubeUrl(hit.url)) {
-          quality = await pickSaveQuality(
+          final pick = await pickSaveQuality(
             context,
             initial: context.read<VideoQualityCubit>().state,
           );
-          if (quality == null) return;
+          if (pick == null) return;
+          quality = pick.quality;
         }
         if (!await cubit.add(hit, quality: quality)) {
           messenger.showSnackBar(SnackBar(content: Text(failed)));

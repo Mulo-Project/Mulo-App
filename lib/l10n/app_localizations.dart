@@ -1454,6 +1454,12 @@ abstract class AppLocalizations {
   /// **'전체 삭제'**
   String get savedVideosClearAll;
 
+  /// No description provided for @savedVideosAudioOnly.
+  ///
+  /// In ko, this message translates to:
+  /// **'소리만'**
+  String get savedVideosAudioOnly;
+
   /// No description provided for @savedVideosClearAllTitle.
   ///
   /// In ko, this message translates to:

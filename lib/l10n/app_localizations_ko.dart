@@ -731,6 +731,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get savedVideosClearAll => '전체 삭제';
 
   @override
+  String get savedVideosAudioOnly => '소리만';
+
+  @override
   String get savedVideosClearAllTitle => '저장한 음원을 모두 삭제할까요?';
 
   @override

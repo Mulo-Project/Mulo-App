@@ -245,6 +245,7 @@
   "savedVideosFailed": "Couldn't save",
   "savedVideosDownloading": "Saving",
   "savedVideosRemove": "Remove",
+  "savedVideosAudioOnly": "Audio only",
   "savedVideosClearAll": "Delete all",
   "savedVideosClearAllTitle": "Delete all saved audio?",
   "savedVideosClearAllBody": "Everything you saved will be removed",

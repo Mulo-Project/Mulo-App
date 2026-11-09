@@ -20,11 +20,11 @@ String videoQualityLabel(BuildContext context, VideoQuality quality) {
 
 /// 저장할 영상 화질을 고르는 시트. 항목은 고르기만 하고, 아래 `담기`를 눌러야 그 화질을 돌려준다.
 /// 그냥 닫으면 null (저장하지 않는다).
-Future<VideoQuality?> pickSaveQuality(
+Future<({VideoQuality? quality})?> pickSaveQuality(
   BuildContext context, {
   VideoQuality? initial,
 }) {
-  return showAppSheet<VideoQuality>(
+  return showAppSheet<({VideoQuality? quality})>(
     context,
     isScrollControlled: true,
     useSafeArea: true,
@@ -42,7 +42,8 @@ class _SaveQualitySheet extends StatefulWidget {
 }
 
 class _SaveQualitySheetState extends State<_SaveQualitySheet> {
-  late VideoQuality _selected = widget.initial;
+  /// null이면 '소리만' 저장한다.
+  late VideoQuality? _selected = widget.initial;
 
   @override
   Widget build(BuildContext context) {
@@ -62,6 +63,13 @@ class _SaveQualitySheetState extends State<_SaveQualitySheet> {
             // 화질은 가로로 스크롤되는 선택 버튼 줄이다.
             ChoiceChips(
               items: [
+                // 소리만: 영상은 받지 않아 용량이 훨씬 작다.
+                ChoiceChipItem(
+                  key: const ValueKey('save-quality-audio'),
+                  label: l10n.savedVideosAudioOnly,
+                  selected: _selected == null,
+                  onTap: () => setState(() => _selected = null),
+                ),
                 for (final quality in VideoQuality.values)
                   ChoiceChipItem(
                     key: ValueKey('save-quality-${quality.name}'),
@@ -77,7 +85,7 @@ class _SaveQualitySheetState extends State<_SaveQualitySheet> {
               child: PillButton(
                 key: const ValueKey('save-quality-confirm'),
                 label: l10n.savedVideosConfirm,
-                onPressed: () => Navigator.of(context).pop(_selected),
+                onPressed: () => Navigator.of(context).pop((quality: _selected)),
               ),
             ),
           ],
