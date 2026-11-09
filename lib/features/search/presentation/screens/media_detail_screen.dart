@@ -15,6 +15,7 @@ import '../../domain/entities/media_info.dart';
 import '../../domain/usecases/search_usecases.dart';
 import '../bloc/audio_language_cubit.dart';
 import '../bloc/media_detail_cubit.dart';
+import '../bloc/media_hit_memo.dart';
 import '../bloc/preview_cubit.dart';
 import '../bloc/saved_videos_cubit.dart';
 import '../bloc/video_quality_cubit.dart';
@@ -90,6 +91,7 @@ class MediaDetailScreen extends StatelessWidget {
           sl<FetchMediaInfo>(),
           sl<FetchChannelInfo>(),
           sl<OpenLink>(),
+          memo: sl<MediaHitMemo>(),
         )..load(),
       ),
       // 유튜브 곡만 오디오 언어가 여럿일 수 있다.

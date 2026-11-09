@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/usecases/search_usecases.dart';
+import 'media_hit_memo.dart';
 
 class MediaDetailState extends Equatable {
   const MediaDetailState({required this.hit, this.loading = false});
@@ -25,8 +26,18 @@ class MediaDetailCubit extends Cubit<MediaDetailState> {
     MediaHit hit,
     this._fetch,
     this._fetchChannel,
-    this._openLink,
-  ) : super(MediaDetailState(hit: hit));
+    this._openLink, {
+    MediaHitMemo? memo,
+  }) : _memo = memo,
+       _known = memo?.get(hit.url),
+       super(MediaDetailState(hit: memo?.get(hit.url) ?? hit));
+
+  /// 자세히 읽은 곡 정보를 기억해 두는 곳 (없으면 매번 읽는다).
+  final MediaHitMemo? _memo;
+
+  /// 이 곡을 전에 자세히 읽어 기억해 둔 게 있다 (그러면 다시 읽지 않는다).
+  final MediaHit? _known;
+  var _infoLoaded = false;
 
   final FetchMediaInfo _fetch;
   final FetchChannelInfo _fetchChannel;
@@ -35,11 +46,15 @@ class MediaDetailCubit extends Cubit<MediaDetailState> {
   /// 곡 정보와 채널 정보를 따로 동시에 읽고, 읽히는 대로 화면에 채운다.
   /// 채널 주소를 이미 알면(검색 목록에 있다) 곡 정보를 기다리지 않고 바로 읽는다.
   Future<void> load() async {
+    // 전에 읽은 것이 있으면 처음부터 채워 보여 주고, 다시 읽지 않는다.
+    if (_known != null) return;
     emit(MediaDetailState(hit: state.hit, loading: true));
     final early = _needsChannel(state.hit) ? _loadChannel() : null;
     await _loadInfo();
     // 곡 정보에서 비로소 채널 주소를 알게 된 경우.
     await (early ?? (_needsChannel(state.hit) ? _loadChannel() : null));
+    // 곡 정보를 잘 읽었으면 다음에 다시 열 때를 위해 기억한다.
+    if (_infoLoaded && !isClosed) _memo?.put(state.hit.url, state.hit);
   }
 
   /// 채널 주소는 아는데 이미지 · 구독자 수가 비어 있는지.
@@ -51,6 +66,7 @@ class MediaDetailCubit extends Cubit<MediaDetailState> {
     try {
       final info = await _fetch(state.hit.url);
       if (isClosed) return;
+      _infoLoaded = info is VideoInfo;
       emit(
         MediaDetailState(
           hit: switch (info) {

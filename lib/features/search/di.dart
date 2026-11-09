@@ -23,6 +23,7 @@ import 'presentation/bloc/audio_language_cubit.dart';
 import 'presentation/bloc/preview_cubit.dart';
 import 'presentation/bloc/preview_video_cubit.dart';
 import 'presentation/bloc/search_cubit.dart';
+import 'presentation/bloc/media_hit_memo.dart';
 import 'presentation/bloc/saved_videos_cubit.dart';
 import 'presentation/bloc/stream_cache_cubit.dart';
 import 'data/repositories/prefs_saved_video_repository.dart';
@@ -35,6 +36,7 @@ void registerSearch(GetIt sl) {
   sl
     ..registerLazySingleton<DownloaderEngine>(
       () => CachedDownloaderEngine(
+        infoTtl: const Duration(hours: 6),
         SoundcloudAvatarEngine(
           YoutubeExplodeEngine(
             RoutingDownloaderEngine(
@@ -61,6 +63,7 @@ void registerSearch(GetIt sl) {
     ..registerFactory(() => FetchChannelInfo(sl()))
     ..registerFactory(() => OpenLink(sl()))
     ..registerLazySingleton<PreviewPlayer>(NativePreviewPlayer.new)
+    ..registerLazySingleton(MediaHitMemo.new)
     ..registerFactory(() => ResolveAudioStream(sl()))
     ..registerLazySingleton<VideoQualityRepository>(
       PrefsVideoQualityRepository.new,

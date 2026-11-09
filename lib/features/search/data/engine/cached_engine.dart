@@ -14,11 +14,14 @@ class CachedDownloaderEngine implements DownloaderEngine {
   CachedDownloaderEngine(
     this._inner, {
     this.ttl = const Duration(minutes: 15),
+    Duration? infoTtl,
     this.maxEntries = 300,
     DateTime Function()? now,
   }) : _now = now ?? DateTime.now;
 
   final DownloaderEngine _inner;
+  /// 곡 · 채널 정보 · 오디오 언어를 기억하는 시간 (스트림 주소는 곧 만료돼서 [ttl]로 짧게). 없으면 [ttl].
+  final Duration? infoTtl;
   final Duration ttl;
   final int maxEntries;
   final DateTime Function() _now;
@@ -54,11 +57,11 @@ class CachedDownloaderEngine implements DownloaderEngine {
 
   @override
   Future<MediaInfo> fetchInfo(String url) =>
-      _cached(_infos, url, () => _inner.fetchInfo(url));
+      _cached(_infos, url, () => _inner.fetchInfo(url), infoTtl);
 
   @override
   Future<ChannelInfo> fetchChannel(String url) =>
-      _cached(_channels, url, () => _inner.fetchChannel(url));
+      _cached(_channels, url, () => _inner.fetchChannel(url), infoTtl);
 
   @override
   Future<AudioStream> resolveAudioStream(
@@ -90,15 +93,18 @@ class CachedDownloaderEngine implements DownloaderEngine {
 
   @override
   Future<List<AudioLanguage>> fetchAudioLanguages(String url) =>
-      _cached(_languages, url, () => _inner.fetchAudioLanguages(url));
+      _cached(_languages, url, () => _inner.fetchAudioLanguages(url), infoTtl);
 
   Future<T> _cached<T>(
     Map<String, _Entry<T>> cache,
     String key,
-    Future<T> Function() load,
-  ) {
+    Future<T> Function() load, [
+    Duration? keepFor,
+  ]) {
     final hit = cache[key];
-    if (hit != null && _now().difference(hit.at) < ttl) return hit.value;
+    if (hit != null && _now().difference(hit.at) < (keepFor ?? ttl)) {
+      return hit.value;
+    }
 
     final value = load();
     cache[key] = _Entry(value, _now());
