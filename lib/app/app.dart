@@ -85,8 +85,21 @@ class _MusicAppState extends State<MusicApp> {
 
   /// 받기 알림을 눌렀을 때: 그 곡의 상세 화면을 맨 위에 연다.
   void _openDownload(MediaHit hit) {
-    _router.routerDelegate.navigatorKey.currentState?.push<void>(
-      MaterialPageRoute(builder: (_) => MediaDetailScreen(hit: hit)),
+    final navigator = _router.routerDelegate.navigatorKey.currentState;
+    if (navigator == null) return;
+    // 그 영상의 상세 화면이 이미 맨 위에 있으면 또 열지 않는다 (아무것도 닫지 않고 맨 위 경로만 읽는다).
+    Route<dynamic>? top;
+    navigator.popUntil((route) {
+      top = route;
+      return true;
+    });
+    final name = mediaDetailRouteName(hit.id);
+    if (top?.settings.name == name) return;
+    navigator.push<void>(
+      MaterialPageRoute(
+        settings: RouteSettings(name: name),
+        builder: (_) => MediaDetailScreen(hit: hit),
+      ),
     );
   }
 
