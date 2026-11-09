@@ -276,7 +276,10 @@ class LocalEngine implements DownloaderEngine {
     return _readVideo(url);
   }
 
+  // 소리가 같이 든 형식(360p 안쪽)을 먼저 찾는다: 주소 하나로 소리와 영상을 한 플레이어가 틀어 싱크가 필요 없다.
+  // 없으면 영상만 있는 형식으로 간다.
   static const _videoSelector =
+      'b[height<=360][vcodec^=avc1]/b[height<=360]/'
       'bv[height<=360][vcodec^=avc1]/bv[height<=360]/bv[height<=480]/bv';
 
   /// 디버그 빌드에서 adb logcat(`flutter` 태그)으로도 보이게 찍는다.
@@ -321,6 +324,7 @@ class LocalEngine implements DownloaderEngine {
       final headers = j['http_headers'];
       return VideoStream(
         url: streamUrl,
+        muxed: j['vcodec'] != 'none' && j['acodec'] != 'none',
         headers: headers is Map
             ? {
                 for (final e in headers.entries)

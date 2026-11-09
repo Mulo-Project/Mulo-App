@@ -1468,8 +1468,12 @@ class FakeDownloaderEngine implements DownloaderEngine {
     this.error,
     this.streamFailure,
     this.streamGate,
+    this.muxedVideo = false,
     this.playlistPage = const PlaylistSearchPage(items: [], hasNext: false),
   });
+
+  /// [resolveVideoStream]이 소리가 섞인 형식을 돌려주는지.
+  final bool muxedVideo;
 
   /// [searchPlaylists]가 돌려줄 결과와 받은 검색어들.
   final PlaylistSearchPage playlistPage;
@@ -1567,7 +1571,7 @@ class FakeDownloaderEngine implements DownloaderEngine {
 
   @override
   Future<VideoStream> resolveVideoStream(String url) async =>
-      VideoStream(url: 'https://video.test/$url');
+      VideoStream(url: 'https://video.test/$url', muxed: muxedVideo);
 
   @override
   Future<List<AudioLanguage>> fetchAudioLanguages(String url) async =>

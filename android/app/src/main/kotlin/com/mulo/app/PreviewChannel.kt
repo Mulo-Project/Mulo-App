@@ -48,6 +48,12 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
     private var videoPlayer: ExoPlayer? = null
     private var videoUrl: String? = null
 
+    /** 지금 소리 플레이어가 틀고 있는 주소. 영상 주소가 이것과 같으면 소리가 섞인 형식이라 영상도 이 플레이어가 튼다. */
+    private var playUrl: String? = null
+
+    /** 소리 플레이어 자신이 영상 화면을 내고 있다 (소리가 섞인 형식, 싱크가 필요 없다). */
+    private var muxedVideo = false
+
     /** 처음에는 소리보다 [START_AHEAD_MS] 앞 지점에서 멈춘 채 받아 두었다가, 소리가 거기 닿는 순간 튼다. */
     private var videoStartPending = false
     private var videoSpeed = 1f
@@ -177,6 +183,10 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
             )
             .setWakeMode(C.WAKE_MODE_NETWORK)
             .build()
+        // 영상 해독은 화면(Dart)이 붙었을 때만 [VideoSurfaceHub]가 켠다. 소리만 쓰는 곡은 꺼 둔다.
+        created.trackSelectionParameters = created.trackSelectionParameters.buildUpon()
+            .setTrackTypeDisabled(C.TRACK_TYPE_VIDEO, true)
+            .build()
         created.addListener(listener)
         main.post(ticker)
         player = created
@@ -189,6 +199,7 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
         pending = result
         started = false
         val p = ensure(headers, url)
+        playUrl = url
         p.setMediaItem(MediaItem.fromUri(Uri.parse(url)))
         p.playWhenReady = true
         p.prepare()
@@ -196,6 +207,15 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
 
     private fun playVideo(url: String, headers: Map<String, String>) {
         val audio = player ?: return
+        if (url == playUrl) {
+            // 소리가 섞인 형식: 같은 플레이어가 소리와 영상을 한 시계로 튼다 (영상 전용 플레이어 · 맞추기 없음).
+            if (!muxedVideo) {
+                releaseVideo()
+                muxedVideo = true
+                VideoSurfaceHub.setPreviewVideo(audio)
+            }
+            return
+        }
         if (videoUrl == url && videoPlayer != null) return
         releaseVideo()
         val http = DefaultHttpDataSource.Factory()
@@ -280,6 +300,7 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
         videoPlayer = null
         videoUrl = null
         videoStartPending = false
+        muxedVideo = false
     }
 
     /** 소리를 내고 있는(또는 잠시 멈춘) 미리 듣기. 없으면 null이고, 알림에 남은 미리 듣기는 치운다. */
@@ -311,6 +332,7 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
         player?.removeListener(listener)
         player?.release()
         player = null
+        playUrl = null
         started = false
         meta = null
     }
