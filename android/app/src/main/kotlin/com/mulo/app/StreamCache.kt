@@ -183,7 +183,7 @@ object StreamCache {
             } finally {
                 synchronized(this) { fills.remove(id) }
             }
-            MuloLog.d("보관 받기 끝: ok=$ok ${System.currentTimeMillis() - startedAt}ms (주소 ${targets.size}개)")
+            MuloLog.d(MuloLog.NATIVE, "보관 받기 끝: ok=$ok ${System.currentTimeMillis() - startedAt}ms (주소 ${targets.size}개)")
             done(ok)
         }, "mulo-save-stream").start()
     }
