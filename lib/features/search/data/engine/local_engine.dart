@@ -314,6 +314,10 @@ class LocalEngine implements DownloaderEngine {
       if (j == null || streamUrl == null) {
         throw const EngineException(EngineFailure.failed, 'bad response');
       }
+      _timing(
+        '영상 형식 ${j['format_id']} ${j['ext']} ${j['protocol']} '
+        '${j['height']}p v=${j['vcodec']} a=${j['acodec']}',
+      );
       final headers = j['http_headers'];
       return VideoStream(
         url: streamUrl,
