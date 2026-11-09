@@ -81,9 +81,12 @@ class MediaDetailScreen extends StatelessWidget {
       ),
       // 유튜브 곡만 오디오 언어가 여럿일 수 있다.
       BlocProvider(
-        create: (_) {
+        create: (context) {
           final cubit = sl<AudioLanguageCubit>();
-          if (isYoutubeUrl(hit.url)) cubit.load(hit.url);
+          if (isYoutubeUrl(hit.url)) {
+            cubit.load(hit.url);
+            context.read<PreviewCubit>().prefetch(hit);
+          }
           return cubit;
         },
       ),

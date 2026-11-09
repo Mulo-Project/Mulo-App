@@ -615,7 +615,12 @@ void main() {
       await tester.tap(find.text('Song').first);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Preview'));
+      await tester.tap(
+        find.descendant(
+          of: find.byType(PreviewButton),
+          matching: find.text('Preview'),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(player.playing, isTrue);
       expect(find.text('Stop preview'), findsOneWidget);

@@ -203,14 +203,15 @@ void main() {
     await tester.tap(find.byType(CoverHero));
     await tester.pump();
     await _waitImage(tester);
-    expect(find.text('이미지 지우기'), findsOneWidget);
-    await tester.tap(find.text('이미지 지우기'));
+    const removeButton = ValueKey('cover-edit-remove');
+    expect(find.byKey(removeButton), findsOneWidget);
+    await tester.tap(find.byKey(removeButton));
     await tester.pumpAndSettle();
     expect(find.text('이미지를 지울까요?'), findsOneWidget);
     await tester.tap(find.text('취소'));
     await tester.pumpAndSettle();
     expect(covers.saved, isNotEmpty);
-    await tester.tap(find.text('이미지 지우기'));
+    await tester.tap(find.byKey(removeButton));
     await tester.pumpAndSettle();
     await tester.tap(find.text('이미지 지우기').last);
     await tester.pumpAndSettle();

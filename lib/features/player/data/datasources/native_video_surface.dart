@@ -6,7 +6,7 @@ import '../../domain/entities/video_surface_info.dart';
 import '../../domain/repositories/video_surface.dart';
 
 /// 영상 화면을 Android 네이티브(`VideoChannel`)에서 텍스처로 받는다.
-/// 네이티브 → Dart: `size`(width, height) · `ready`(value) · `pip`(value, 작은 창 여부).
+/// 네이티브 → Dart: `size`(width, height) · `ready`(value).
 class NativeVideoSurface implements VideoSurface {
   NativeVideoSurface({MethodChannel? channel})
     : _channel = channel ?? const MethodChannel('music_app/video') {

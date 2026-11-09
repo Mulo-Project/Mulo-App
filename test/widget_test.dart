@@ -99,7 +99,7 @@ void main() {
   });
 
   testWidgets('설정에서 테마 프리셋을 고르면 팔레트가 바뀐다', (tester) async {
-    await _pumpApp(tester, at: Routes.settings, height: 8000);
+    await _pumpApp(tester, at: Routes.settings, height: 16000);
     expect(_palette(tester).accent, AppPalette.lime);
 
     await tester.tap(find.text('코랄'));
