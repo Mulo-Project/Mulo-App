@@ -426,10 +426,18 @@ class _SaveButton extends StatelessWidget {
     final l10n = context.l10n;
     final cubit = context.watch<SavedVideosCubit>();
     final saved = cubit.contains(hit.id);
+    // 목록에는 바로 들어가지만 데이터를 다 받기 전에는 "받는 중"으로 보여, 끝나기 전에 오프라인으로 틀지 않게 한다.
+    final downloading =
+        saved && cubit.state.any((v) => v.id == hit.id && !v.ready);
     return PillButton(
       key: const ValueKey('detail-save'),
-      label: saved ? l10n.savedVideosAdded : l10n.savedVideosAdd,
-      variant: saved ? PillVariant.accent : PillVariant.tonal,
+      label: downloading
+          ? l10n.savedVideosDownloading
+          : saved
+          ? l10n.savedVideosAdded
+          : l10n.savedVideosAdd,
+      variant: saved && !downloading ? PillVariant.accent : PillVariant.tonal,
+      busy: downloading,
       compact: true,
       onPressed: () async {
         final messenger = ScaffoldMessenger.of(context);
