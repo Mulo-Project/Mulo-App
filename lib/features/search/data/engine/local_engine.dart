@@ -327,17 +327,15 @@ class LocalEngine implements DownloaderEngine {
       );
     }
 
-    // 기본 클라이언트로는 영상 형식을 못 읽고 한참 뒤에 실패하는 기기가 있어 (기기 로그에서 17초),
-    // 영상은 처음부터 android_vr 클라이언트로 읽고, 안 되면 기본 클라이언트로 한 번 더 읽는다.
     try {
-      return await read(const [
-        '--extractor-args',
-        'youtube:player_client=android_vr',
-      ]);
+      return await read(const []);
     } on EngineException catch (first) {
       if (first.failure != EngineFailure.failed) rethrow;
       try {
-        return await read(const []);
+        return await read(const [
+          '--extractor-args',
+          'youtube:player_client=android_vr',
+        ]);
       } on EngineException {
         throw first;
       }
