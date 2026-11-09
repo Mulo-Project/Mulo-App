@@ -462,7 +462,8 @@ class _Thumbnail extends StatelessWidget {
                     child: _PreviewVideoBox(hit: hit),
                   ),
                 )
-              else
+              else if (!audio)
+                // 음원(사운드클라우드 등)은 커버를 가리지 않는다 (원본 열기는 아래 버튼이 한다).
                 CircleIconButton(
                   icon: AppIcons.play,
                   tooltip: inApp
