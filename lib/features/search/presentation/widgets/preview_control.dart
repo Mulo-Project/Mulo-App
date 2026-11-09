@@ -167,8 +167,7 @@ class PreviewRowButton extends StatelessWidget {
   }
 }
 
-/// 소리가 나기까지 남은 시간을 보여 주는 작은 원: 호가 차오르고 가운데에 남은 초가 있다.
-/// 어림한 시간이 지나도 시작하지 않으면 마지막 1초에서 기다린다.
+/// 소리가 나기까지 남은 시간을 보여 주는 작은 원: 호가 차오르고 가운데에 지난 초가 있다.
 class PreviewLoadingRing extends StatelessWidget {
   const PreviewLoadingRing({super.key, required this.state, this.size = 28});
 
@@ -199,12 +198,13 @@ class PreviewLoadingRing extends StatelessWidget {
       builder: (context, x, _) {
         final t = x * horizon.inMilliseconds;
         final v = t / (t + k);
-        final left = ((total.inMilliseconds - t) / 1000).ceil().clamp(1, 99);
+        // 예상이 빗나가도 어긋나지 않게 남은 시간 대신 지난 시간을 센다.
+        final passed = (t / 1000).floor().clamp(0, 99);
         return CountdownRing(
           key: const ValueKey('preview-loading-ring'),
           value: v,
           size: size,
-          child: Text('$left', style: text?.copyWith(fontSize: 10)),
+          child: Text('$passed', style: text?.copyWith(fontSize: 10)),
         );
       },
     );
