@@ -183,7 +183,12 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
                 }
                 "current" -> result.success(current())
                 "cacheInfo" -> result.success(
-                    mapOf("usedBytes" to StreamCache.usedBytes(context), "limitBytes" to StreamCache.limitBytes(context)),
+                    mapOf(
+                        "usedBytes" to StreamCache.usedBytes(context),
+                        "limitBytes" to StreamCache.limitBytes(context),
+                        "savedBytes" to StreamCache.savedBytes(context),
+                        "freeBytes" to context.filesDir.usableSpace,
+                    ),
                 )
                 "setSaved" -> {
                     StreamCache.setSavedIds((call.argument<List<String>>("ids") ?: emptyList()).flatMap { it.split(",") })

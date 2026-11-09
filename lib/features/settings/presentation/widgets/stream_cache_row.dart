@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
+import '../../../../core/format/format_bytes.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../search/domain/entities/stream_cache_info.dart';
 import '../../../search/presentation/bloc/stream_cache_cubit.dart';
@@ -18,15 +19,6 @@ const streamCacheLimits = [
   1024 * _mb,
   2048 * _mb,
 ];
-
-/// 바이트를 "120 MB" · "1.5 GB"처럼 짧게.
-String formatBytes(int bytes) {
-  if (bytes >= 1024 * _mb) {
-    final gb = bytes / (1024 * _mb);
-    return '${gb == gb.roundToDouble() ? gb.round() : gb.toStringAsFixed(1)} GB';
-  }
-  return '${(bytes / _mb).round()} MB';
-}
 
 /// 스트리밍 임시 저장소: 사용량 · 용량 한도를 보여 주고, 누르면 한도를 고르거나 비우는 시트가 열린다.
 class StreamCacheRow extends StatelessWidget {

@@ -280,6 +280,8 @@
   "savedVideosClearAll": "전체 삭제",
   "savedVideosClearAllTitle": "저장한 음원을 모두 삭제할까요?",
   "savedVideosClearAllBody": "저장해 둔 음원이 모두 지워져요",
+  "savedVideosStorage": "저장 {used} · 남은 공간 {free}",
+  "@savedVideosStorage": {"placeholders": {"used": {"type": "String"}, "free": {"type": "String"}}},
   "savedVideosUsed": "{size} 사용 중",
   "@savedVideosUsed": {"placeholders": {"size": {"type": "String"}}},
   "savedVideosQualityTitle": "저장 화질",

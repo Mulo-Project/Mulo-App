@@ -249,6 +249,8 @@
   "savedVideosClearAll": "Delete all",
   "savedVideosClearAllTitle": "Delete all saved audio?",
   "savedVideosClearAllBody": "Everything you saved will be removed",
+  "savedVideosStorage": "Saved {used} · {free} free",
+  "@savedVideosStorage": {"placeholders": {"used": {"type": "String"}, "free": {"type": "String"}}},
   "savedVideosUsed": "{size} used",
   "@savedVideosUsed": {"placeholders": {"size": {"type": "String"}}},
   "savedVideosQualityTitle": "Save quality",

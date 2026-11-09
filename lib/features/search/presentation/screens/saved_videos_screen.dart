@@ -4,11 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
+import '../../../../core/di/injector.dart';
+import '../../../../core/format/format_bytes.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../domain/entities/saved_video.dart';
 import '../../domain/entities/video_quality.dart';
 import '../bloc/preview_cubit.dart';
 import '../bloc/saved_videos_cubit.dart';
+import '../bloc/stream_cache_cubit.dart';
 import '../widgets/preview_control.dart';
 import '../widgets/preview_video.dart';
 import '../widgets/preview_video_controls.dart';
@@ -36,7 +39,16 @@ class _SavedVideosScreenState extends State<SavedVideosScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => BlocProvider(
+    create: (_) => sl<StreamCacheCubit>()..load(),
+    // 저장 · 삭제 · 받기 끝남으로 목록이 바뀌면 용량을 다시 읽는다.
+    child: BlocListener<SavedVideosCubit, List<SavedVideo>>(
+      listener: (context, _) => context.read<StreamCacheCubit>().load(),
+      child: Builder(builder: _page),
+    ),
+  );
+
+  Widget _page(BuildContext context) {
     final l10n = context.l10n;
     final p = context.palette;
     final videos = context.watch<SavedVideosCubit>().state;
@@ -60,6 +72,7 @@ class _SavedVideosScreenState extends State<SavedVideosScreen> {
                     ),
                 ],
               ),
+              const _StorageLine(),
               Expanded(
                 child: videos.isEmpty
                     ? EmptyState(title: l10n.savedVideosEmpty)
@@ -99,6 +112,37 @@ class _SavedVideosScreenState extends State<SavedVideosScreen> {
                       ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 저장한 음원이 쓰는 용량과 기기에 남은 공간 (설정에서만이 아니라 여기서도 보인다).
+class _StorageLine extends StatelessWidget {
+  const _StorageLine();
+
+  @override
+  Widget build(BuildContext context) {
+    final info = context.watch<StreamCacheCubit>().state;
+    if (info.savedBytes == 0 && info.freeBytes == 0) {
+      return const SizedBox.shrink();
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs,
+      ),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          context.l10n.savedVideosStorage(
+            formatBytes(info.savedBytes),
+            formatBytes(info.freeBytes),
+          ),
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: context.palette.onSurfaceMuted,
           ),
         ),
       ),

@@ -243,6 +243,10 @@ object StreamCache {
     @Synchronized
     fun usedBytes(context: Context): Long = open(context)?.cacheSpace ?: dirSize(File(context.cacheDir, DIR))
 
+    /** 저장한 곡(보관 저장소)이 쓰는 크기 (바이트). */
+    @Synchronized
+    fun savedBytes(context: Context): Long = openSaved(context)?.cacheSpace ?: 0L
+
     /** 모두 지운다. */
     @Synchronized
     fun clear(context: Context) {

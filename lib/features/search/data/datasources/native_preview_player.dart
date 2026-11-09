@@ -78,6 +78,8 @@ class NativePreviewPlayer implements PreviewPlayer {
     return StreamCacheInfo(
       usedBytes: (m?['usedBytes'] as num?)?.toInt() ?? 0,
       limitBytes: (m?['limitBytes'] as num?)?.toInt() ?? 0,
+      savedBytes: (m?['savedBytes'] as num?)?.toInt() ?? 0,
+      freeBytes: (m?['freeBytes'] as num?)?.toInt() ?? 0,
     );
   }
 

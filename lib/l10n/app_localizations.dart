@@ -1454,6 +1454,12 @@ abstract class AppLocalizations {
   /// **'전체 삭제'**
   String get savedVideosClearAll;
 
+  /// No description provided for @savedVideosStorage.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 {used} · 남은 공간 {free}'**
+  String savedVideosStorage(String used, String free);
+
   /// No description provided for @savedVideosAudioOnly.
   ///
   /// In ko, this message translates to:
