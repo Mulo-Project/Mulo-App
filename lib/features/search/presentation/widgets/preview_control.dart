@@ -86,24 +86,35 @@ class PreviewButton extends StatelessWidget {
     );
     // 듣는 중에는 일시정지/이어 듣기와 멈추기를 따로 둔다 (한 버튼이 둘을 오가면 헷갈린다).
     if (status == PreviewStatus.playing) {
-      return Wrap(
-        alignment: WrapAlignment.center,
-        spacing: AppSpacing.sm,
-        runSpacing: AppSpacing.sm,
+      // 한 줄에 나란히 둔다 (좁으면 글자가 줄어든다).
+      return Row(
         children: [
-          PillButton(
-            key: const ValueKey('preview-pause-button'),
-            label: paused ? l10n.searchPreviewResume : l10n.searchPreviewPause,
-            icon: paused ? AppIcons.play : AppIcons.pause,
-            variant: PillVariant.tonal,
-            onPressed: cubit.togglePause,
+          Expanded(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: PillButton(
+                key: const ValueKey('preview-pause-button'),
+                label: paused
+                    ? l10n.searchPreviewResume
+                    : l10n.searchPreviewPause,
+                icon: paused ? AppIcons.play : AppIcons.pause,
+                variant: PillVariant.tonal,
+                onPressed: cubit.togglePause,
+              ),
+            ),
           ),
-          PillButton(
-            key: const ValueKey('preview-stop-button'),
-            label: l10n.searchPreviewStop,
-            icon: AppIcons.close,
-            variant: PillVariant.tonal,
-            onPressed: stop,
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: PillButton(
+                key: const ValueKey('preview-stop-button'),
+                label: l10n.searchPreviewStop,
+                icon: AppIcons.close,
+                variant: PillVariant.tonal,
+                onPressed: stop,
+              ),
+            ),
           ),
         ],
       );
