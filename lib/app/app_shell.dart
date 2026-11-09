@@ -504,7 +504,8 @@ class _PreviewMiniPlayer extends StatelessWidget {
               if (hit?.uploader case final u? when u.isNotEmpty) u,
             ].join(' · '),
       artwork: thumb == null ? null : CachedWebImage(thumb),
-      video: hit == null || hit.url.isEmpty || loading
+      // 영상이 있는 유튜브만 영상 자리를 넓게 둔다 (음원은 작은 커버만).
+      video: hit == null || !isYoutubeUrl(hit.url) || loading
           ? null
           : PreviewVideo(pageUrl: hit.url),
       progress: preview.fraction,
