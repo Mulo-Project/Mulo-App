@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/design/design.dart';
@@ -22,6 +23,7 @@ import '../bloc/video_quality_cubit.dart';
 import '../../domain/entities/video_quality.dart';
 import '../widgets/video_quality_sheet.dart';
 import '../widgets/audio_language_sheet.dart';
+import 'saved_videos_screen.dart' show savedVideosLocation;
 import '../widgets/preview_control.dart';
 import '../widgets/preview_video.dart';
 import '../widgets/preview_video_controls.dart';
@@ -432,7 +434,8 @@ class _SaveButton extends StatelessWidget {
       onPressed: () async {
         final messenger = ScaffoldMessenger.of(context);
         final failed = l10n.savedVideosFailed;
-        if (saved) return cubit.remove(hit.id);
+        // 저장된 곡이면 저장한 음원 화면으로 간다 (저장 해제는 거기서).
+        if (saved) return unawaited(context.push(savedVideosLocation));
         VideoQuality? quality;
         if (isYoutubeUrl(hit.url)) {
           quality = await pickSaveQuality(
