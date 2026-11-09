@@ -720,6 +720,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsStreamCacheCleared => 'Streaming cache cleared';
 
   @override
+  String get savedVideosTitle => 'Saved videos';
+
+  @override
+  String get savedVideosOpen => 'Saved';
+
+  @override
+  String get savedVideosEmpty => 'No saved videos';
+
+  @override
+  String get savedVideosAdd => 'Save';
+
+  @override
+  String get savedVideosAdded => 'Saved';
+
+  @override
+  String get savedVideosFailed => 'Couldn't save';
+
+  @override
+  String get savedVideosDownloading => 'Saving';
+
+  @override
+  String get savedVideosRemove => 'Remove';
+
+  @override
+  String savedVideosUsed(String size) {
+    return '$size used';
+  }
+
+  @override
   String get settingsPurgeHidden => 'Clear hidden song records';
 
   @override

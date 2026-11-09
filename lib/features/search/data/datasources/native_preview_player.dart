@@ -23,6 +23,7 @@ class NativePreviewPlayer implements PreviewPlayer {
   final _completed = StreamController<void>.broadcast();
   final _progress = StreamController<PreviewProgress>.broadcast();
   final _failures = StreamController<String>.broadcast();
+  final _saved = StreamController<({String id, bool ok})>.broadcast();
 
   Future<void> _onCall(MethodCall call) async {
     switch (call.method) {
@@ -41,6 +42,9 @@ class NativePreviewPlayer implements PreviewPlayer {
         );
       case 'failure':
         _failures.add(call.arguments as String? ?? '');
+      case 'saved':
+        final args = call.arguments as Map;
+        _saved.add((id: args['id'] as String, ok: args['ok'] as bool));
     }
   }
 
@@ -79,6 +83,25 @@ class NativePreviewPlayer implements PreviewPlayer {
 
   @override
   Future<void> clearCache() => _channel.invokeMethod<void>('clearCache');
+
+  @override
+  Future<void> setSavedStreams(List<String> streamIds) =>
+      _channel.invokeMethod<void>('setSaved', {'ids': streamIds});
+
+  @override
+  Future<String?> saveStream(String id, VideoStream stream) =>
+      _channel.invokeMethod<String>('saveStream', {
+        'id': id,
+        'url': stream.url,
+        'headers': stream.headers,
+      });
+
+  @override
+  Future<void> removeSavedStream(String id, String? streamId) => _channel
+      .invokeMethod<void>('removeSaved', {'id': id, 'streamId': streamId});
+
+  @override
+  Stream<({String id, bool ok})> watchSaved() => _saved.stream;
 
   @override
   Future<void> remember(MediaHit hit) =>

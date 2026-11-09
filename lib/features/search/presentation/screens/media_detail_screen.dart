@@ -16,6 +16,7 @@ import '../../domain/usecases/search_usecases.dart';
 import '../bloc/audio_language_cubit.dart';
 import '../bloc/media_detail_cubit.dart';
 import '../bloc/preview_cubit.dart';
+import '../bloc/saved_videos_cubit.dart';
 import '../widgets/audio_language_sheet.dart';
 import '../widgets/preview_control.dart';
 import '../widgets/preview_video.dart';
@@ -239,6 +240,8 @@ class _DetailViewState extends State<_DetailView> {
                 leading: AppBackButton(
                   onPressed: () => Navigator.of(context).pop(),
                 ),
+                // 유튜브 영상만 저장해 둘 수 있다 (소리 · 영상 주소를 앱 안에 받아 둔다).
+                actions: [if (youtube && !hit.isLive) _SaveButton(hit: hit)],
               ),
               // 받기 전 상세 화면은 목록 위에 얇은 막대로 읽는 중임을 알린다.
               LoadingBar(loading: state.loading),
@@ -399,6 +402,34 @@ class _DetailViewState extends State<_DetailView> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// 이 영상을 저장해 두거나 저장을 푼다 (저장하면 임시 저장소가 차도 지워지지 않고 바로 들을 수 있다).
+class _SaveButton extends StatelessWidget {
+  const _SaveButton({required this.hit});
+
+  final MediaHit hit;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final cubit = context.watch<SavedVideosCubit>();
+    final saved = cubit.contains(hit.id);
+    return PillButton(
+      key: const ValueKey('detail-save'),
+      label: saved ? l10n.savedVideosAdded : l10n.savedVideosAdd,
+      variant: saved ? PillVariant.accent : PillVariant.tonal,
+      compact: true,
+      onPressed: () async {
+        final messenger = ScaffoldMessenger.of(context);
+        final failed = l10n.savedVideosFailed;
+        if (saved) return cubit.remove(hit.id);
+        if (!await cubit.add(hit)) {
+          messenger.showSnackBar(SnackBar(content: Text(failed)));
+        }
+      },
     );
   }
 }

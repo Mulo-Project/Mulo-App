@@ -17,6 +17,7 @@ import '../features/playlists/presentation/screens/playlist_import_screen.dart';
 import '../features/playlists/presentation/screens/playlist_add_tracks_screen.dart';
 import '../features/playlists/presentation/screens/playlist_pick_screen.dart';
 import '../features/playlists/presentation/screens/playlists_screen.dart';
+import '../features/search/presentation/screens/saved_videos_screen.dart';
 import '../features/search/presentation/screens/search_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
 import '../features/equalizer/presentation/screens/equalizer_screen.dart';
@@ -190,6 +191,16 @@ GoRouter createRouter({String initialLocation = Routes.home}) => GoRouter(
                   initialQuery: state.uri.queryParameters['q'] ?? '',
                 ),
               ),
+              routes: [
+                GoRoute(
+                  path: 'saved',
+                  parentNavigatorKey: _rootKey,
+                  pageBuilder: (context, state) => NoTransitionPage(
+                    key: state.pageKey,
+                    child: const SavedVideosScreen(),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

@@ -704,6 +704,35 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsStreamCacheCleared => '임시 저장소를 비웠어요';
 
   @override
+  String get savedVideosTitle => '저장한 영상';
+
+  @override
+  String get savedVideosOpen => '저장한 영상';
+
+  @override
+  String get savedVideosEmpty => '저장한 영상이 없어요';
+
+  @override
+  String get savedVideosAdd => '저장';
+
+  @override
+  String get savedVideosAdded => '저장됨';
+
+  @override
+  String get savedVideosFailed => '저장하지 못했어요';
+
+  @override
+  String get savedVideosDownloading => '받는 중';
+
+  @override
+  String get savedVideosRemove => '저장 해제';
+
+  @override
+  String savedVideosUsed(String size) {
+    return '$size 사용 중';
+  }
+
+  @override
   String get settingsPurgeHidden => '숨긴 곡 기록 정리';
 
   @override

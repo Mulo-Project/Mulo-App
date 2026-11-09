@@ -23,7 +23,11 @@ import 'presentation/bloc/audio_language_cubit.dart';
 import 'presentation/bloc/preview_cubit.dart';
 import 'presentation/bloc/preview_video_cubit.dart';
 import 'presentation/bloc/search_cubit.dart';
+import 'presentation/bloc/saved_videos_cubit.dart';
 import 'presentation/bloc/stream_cache_cubit.dart';
+import 'data/repositories/prefs_saved_video_repository.dart';
+import 'domain/repositories/saved_video_repository.dart';
+import 'domain/usecases/saved_video_usecases.dart';
 import 'presentation/bloc/video_quality_cubit.dart';
 
 /// 검색 · 곡 정보 의존성. 로컬 yt-dlp(데스크톱 · Android full)를 먼저 시도하고, 없으면 서버.
@@ -82,6 +86,17 @@ void registerSearch(GetIt sl) {
     ..registerFactory(() => GetStreamCacheInfo(sl()))
     ..registerFactory(() => ClearStreamCache(sl()))
     ..registerFactory(() => StreamCacheCubit(sl(), sl()))
+    ..registerLazySingleton<SavedVideoRepository>(
+      PrefsSavedVideoRepository.new,
+    )
+    ..registerFactory(() => LoadSavedVideos(sl(), sl()))
+    ..registerFactory(() => SaveVideo(sl(), sl(), sl(), sl()))
+    ..registerFactory(() => RemoveSavedVideo(sl(), sl()))
+    ..registerFactory(() => MarkSavedVideoReady(sl()))
+    ..registerFactory(() => WatchSavedDone(sl()))
+    ..registerFactory(
+      () => SavedVideosCubit(sl(), sl(), sl(), sl(), sl()),
+    )
     ..registerFactory(
       () => PreviewCubit(
         sl(),

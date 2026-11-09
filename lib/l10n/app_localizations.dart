@@ -1400,6 +1400,60 @@ abstract class AppLocalizations {
   /// **'임시 저장소를 비웠어요'**
   String get settingsStreamCacheCleared;
 
+  /// No description provided for @savedVideosTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장한 영상'**
+  String get savedVideosTitle;
+
+  /// No description provided for @savedVideosOpen.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장한 영상'**
+  String get savedVideosOpen;
+
+  /// No description provided for @savedVideosEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장한 영상이 없어요'**
+  String get savedVideosEmpty;
+
+  /// No description provided for @savedVideosAdd.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장'**
+  String get savedVideosAdd;
+
+  /// No description provided for @savedVideosAdded.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장됨'**
+  String get savedVideosAdded;
+
+  /// No description provided for @savedVideosFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장하지 못했어요'**
+  String get savedVideosFailed;
+
+  /// No description provided for @savedVideosDownloading.
+  ///
+  /// In ko, this message translates to:
+  /// **'받는 중'**
+  String get savedVideosDownloading;
+
+  /// No description provided for @savedVideosRemove.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 해제'**
+  String get savedVideosRemove;
+
+  /// No description provided for @savedVideosUsed.
+  ///
+  /// In ko, this message translates to:
+  /// **'{size} 사용 중'**
+  String savedVideosUsed(String size);
+
   /// No description provided for @settingsPurgeHidden.
   ///
   /// In ko, this message translates to:

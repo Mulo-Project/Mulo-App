@@ -185,6 +185,31 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
                 "cacheInfo" -> result.success(
                     mapOf("usedBytes" to StreamCache.usedBytes(context), "limitBytes" to StreamCache.limitBytes(context)),
                 )
+                "setSaved" -> {
+                    StreamCache.setSavedIds(call.argument<List<String>>("ids") ?: emptyList())
+                    result.success(null)
+                }
+                "saveStream" -> {
+                    val id = call.argument<String>("id")
+                    val url = call.argument<String>("url")
+                    if (id == null || url == null) {
+                        result.error("bad_args", "id, url required", null)
+                        return@setMethodCallHandler
+                    }
+                    val headers = call.argument<Map<String, String>>("headers") ?: emptyMap()
+                    // 스트림 주소의 id(영상 id와 다르다)를 돌려준다: 이 값으로 보관 여부를 가르고 지운다.
+                    val streamId = Uri.parse(url).getQueryParameter("id")
+                    if (streamId != null) StreamCache.addSavedId(streamId)
+                    // 받는 일은 따로 돌고, 끝나면 Dart에 알린다.
+                    StreamCache.fillSaved(context, id, url, headers) { ok ->
+                        main.post { channel.invokeMethod("saved", mapOf("id" to id, "ok" to ok)) }
+                    }
+                    result.success(streamId)
+                }
+                "removeSaved" -> {
+                    StreamCache.removeSaved(context, call.argument<String>("id") ?: "", call.argument<String>("streamId"))
+                    result.success(null)
+                }
                 "clearCache" -> {
                     stop()
                     StreamCache.clear(context)
@@ -241,6 +266,9 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
                 releaseVideo()
                 muxedVideo = true
                 VideoSurfaceHub.setPreviewVideo(audio)
+                // 작은 창(PiP) 진입 조건 · 재생 버튼이 이 플레이어를 보게 한다 (빠뜨리면 PiP가 안 뜬다).
+                VideoSurfaceHub.previewIsPlaying = { player?.isPlaying == true }
+                VideoSurfaceHub.previewSetPlaying = { play -> if (play) player?.play() else player?.pause() }
             }
             return
         }

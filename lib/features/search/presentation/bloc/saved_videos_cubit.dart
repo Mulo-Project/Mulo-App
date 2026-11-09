@@ -1,0 +1,74 @@
+import 'dart:async';
+
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../../core/usecase/usecase.dart';
+import '../../domain/entities/media_info.dart';
+import '../../domain/entities/saved_video.dart';
+import '../../domain/usecases/saved_video_usecases.dart';
+
+/// 보관한 영상 목록과 담기 · 빼기. 앱 전체에서 하나만 쓴다 (상세 화면의 보관 버튼과 보관 페이지가 함께 본다).
+class SavedVideosCubit extends Cubit<List<SavedVideo>> {
+  SavedVideosCubit(
+    this._load,
+    this._save,
+    this._remove,
+    this._markReady,
+    WatchSavedDone watchDone,
+  ) : super(const []) {
+    _done = watchDone(const NoParams()).listen(_onDone);
+    unawaited(load());
+  }
+
+  final LoadSavedVideos _load;
+  final SaveVideo _save;
+  final RemoveSavedVideo _remove;
+  final MarkSavedVideoReady _markReady;
+  late final StreamSubscription<({String id, bool ok})> _done;
+
+  /// 보관을 시작했지만 주소를 읽는 중인 영상 id (버튼을 잠시 막는다).
+  final _busy = <String>{};
+
+  bool contains(String id) => state.any((v) => v.id == id);
+  bool isBusy(String id) => _busy.contains(id);
+
+  Future<void> load() async {
+    try {
+      final list = await _load(const NoParams());
+      if (!isClosed) emit(list);
+    } on Object {
+      // 읽지 못하면 빈 목록으로 둔다.
+    }
+  }
+
+  /// 보관에 담는다. 주소를 못 읽으면 false.
+  Future<bool> add(MediaHit hit) async {
+    if (!_busy.add(hit.id)) return true;
+    try {
+      final list = await _save(hit);
+      if (!isClosed) emit(list);
+      return true;
+    } on Object {
+      return false;
+    } finally {
+      _busy.remove(hit.id);
+    }
+  }
+
+  Future<void> remove(String id) async {
+    final list = await _remove(id);
+    if (!isClosed) emit(list);
+  }
+
+  Future<void> _onDone(({String id, bool ok}) e) async {
+    if (!e.ok || isClosed) return;
+    final list = await _markReady(e.id);
+    if (!isClosed) emit(list);
+  }
+
+  @override
+  Future<void> close() async {
+    await _done.cancel();
+    return super.close();
+  }
+}

@@ -82,7 +82,7 @@ class MainActivity : FlutterFragmentActivity() {
         val size = VideoSurfaceHub.pipSize() ?: return
         try {
             enterPictureInPictureMode(pipParams(size.first, size.second, VideoSurfaceHub.isPlaying()))
-        } catch (e: IllegalStateException) {
+        } catch (e: RuntimeException) {
             MuloLog.e(MuloLog.NATIVE, "PiP 진입 실패: ${e.message}", e)
         }
     }
@@ -125,7 +125,7 @@ class MainActivity : FlutterFragmentActivity() {
     @androidx.annotation.RequiresApi(Build.VERSION_CODES.O)
     private fun pipParams(width: Int, height: Int, playing: Boolean): PictureInPictureParams {
         // 가로세로 비율은 시스템 허용 범위(약 2.39:1 ~ 1:2.39) 안으로.
-        val ratio = (width.toDouble() / height).coerceIn(1.0 / 2.39, 2.39)
+        val ratio = (width.toDouble() / height).coerceIn(0.42, 2.38)
         val label = if (playing) "일시정지" else "재생"
         val action = RemoteAction(
             Icon.createWithResource(

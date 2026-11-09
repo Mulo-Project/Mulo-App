@@ -1697,6 +1697,32 @@ class FakePreviewPlayer implements PreviewPlayer {
   var cacheUsed = 0;
   int cacheClears = 0;
 
+  final savedStreams = <String>[];
+  final savedController =
+      StreamController<({String id, bool ok})>.broadcast();
+
+  @override
+  Future<void> setSavedStreams(List<String> streamIds) async {
+    savedStreams
+      ..clear()
+      ..addAll(streamIds);
+  }
+
+  @override
+  Future<String?> saveStream(String id, VideoStream stream) async {
+    final streamId = 'stream-$id';
+    savedStreams.add(streamId);
+    return streamId;
+  }
+
+  @override
+  Future<void> removeSavedStream(String id, String? streamId) async {
+    savedStreams.remove(streamId);
+  }
+
+  @override
+  Stream<({String id, bool ok})> watchSaved() => savedController.stream;
+
   @override
   Future<StreamCacheInfo> cacheInfo() async =>
       StreamCacheInfo(usedBytes: cacheUsed, limitBytes: cacheLimit);
