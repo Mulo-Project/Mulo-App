@@ -310,7 +310,7 @@ class LocalEngine implements DownloaderEngine {
         '--no-warnings',
         ...extra,
         url,
-      ], priority: 1);
+      ], priority: 1, latestOnly: 'video');
       final j = _decode(out);
       final streamUrl = parseText(j?['url']);
       if (j == null || streamUrl == null) {
@@ -337,7 +337,9 @@ class LocalEngine implements DownloaderEngine {
     try {
       return await read(const []);
     } on EngineException catch (first) {
-      if (first.failure != EngineFailure.failed) rethrow;
+      if (first.failure != EngineFailure.failed || first.message == 'superseded') {
+        rethrow;
+      }
       try {
         return await read(const [
           '--extractor-args',
@@ -482,8 +484,11 @@ class LocalEngine implements DownloaderEngine {
   /// 0 소리 주소(소리가 먼저 나게) → 1 영상 주소 → 2 곡 정보 · 소리 언어 목록 같은 나머지.
   static final _gate = _ExecGate();
 
-  Future<String> _exec(List<String> args, {int priority = 2}) =>
-      _gate.run(priority, () => _execNow(args));
+  Future<String> _exec(
+    List<String> args, {
+    int priority = 2,
+    String? latestOnly,
+  }) => _gate.run(priority, () => _execNow(args), latestOnly: latestOnly);
 
   Future<String> _execNow(List<String> args) async {
     final ({int exitCode, String stdout, String stderr}) r;
@@ -618,12 +623,27 @@ class LocalEngine implements DownloaderEngine {
 /// yt-dlp 호출을 한 번에 하나씩, 우선순위(작을수록 먼저)와 들어온 순서대로 돌린다.
 class _ExecGate {
   bool _running = false;
-  final _waiting = <({int priority, Completer<void> waiter})>[];
+  final _waiting =
+      <({int priority, Completer<void> waiter, String? group})>[];
 
-  Future<T> run<T>(int priority, Future<T> Function() task) async {
+  /// [latestOnly]가 같은 대기 중인 일은 가장 나중에 온 것만 남긴다
+  /// (예전 상세 화면을 위한 읽기가 줄을 서서 지금 필요한 읽기를 늦추지 않게).
+  Future<T> run<T>(
+    int priority,
+    Future<T> Function() task, {
+    String? latestOnly,
+  }) async {
     if (_running) {
+      if (latestOnly != null) {
+        for (final w in _waiting.where((w) => w.group == latestOnly).toList()) {
+          _waiting.remove(w);
+          w.waiter.completeError(
+            const EngineException(EngineFailure.failed, 'superseded'),
+          );
+        }
+      }
       final waiter = Completer<void>();
-      _waiting.add((priority: priority, waiter: waiter));
+      _waiting.add((priority: priority, waiter: waiter, group: latestOnly));
       await waiter.future;
     } else {
       _running = true;
