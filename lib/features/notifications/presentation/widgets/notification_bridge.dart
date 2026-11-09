@@ -140,10 +140,7 @@ class _NotificationBridgeState extends State<NotificationBridge>
     if (mounted) _pushPlayer();
   }
 
-  void _pushPlayer() {
-    if (context.read<NowPlayingCubit>().state.track == null) return;
-    widget.onOpenPlayer?.call();
-  }
+  void _pushPlayer() => widget.onOpenPlayer?.call();
 
   /// 시스템 설정에서 알림 권한을 바꾸고 돌아왔을 수 있다.
   @override

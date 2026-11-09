@@ -63,8 +63,21 @@ class _MusicAppState extends State<MusicApp> {
     initialLocation: widget.initialLocation,
   );
 
-  /// 재생 알림을 눌렀을 때: 현재 곡의 플레이어 화면을 연다 (이미 열려 있으면 그대로).
-  void _openPlayer() {
+  /// 재생 알림을 눌렀을 때: 미리 듣기 알림이면 그 영상의 상세 화면을, 아니면 현재 곡의 플레이어 화면을 연다
+  /// (플레이어가 이미 열려 있으면 그대로).
+  Future<void> _openPlayer() async {
+    final context = _router.routerDelegate.navigatorKey.currentContext;
+    if (context == null) return;
+    final preview = context.read<PreviewCubit>();
+    final nowPlaying = context.read<NowPlayingCubit>();
+    // 앱이 막 켜졌다면 알림에 떠 있던 미리 듣기를 아직 못 읽었을 수 있어 먼저 맞춘다.
+    await preview.syncWithPlayer();
+    final hit = preview.state.hit;
+    if (hit != null && preview.state.status != PreviewStatus.idle) {
+      _openDownload(hit);
+      return;
+    }
+    if (nowPlaying.state.track == null) return;
     if (_router.routerDelegate.currentConfiguration.uri.path != Routes.player) {
       _router.push(Routes.player);
     }
