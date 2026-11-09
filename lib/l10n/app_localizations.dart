@@ -1322,6 +1322,42 @@ abstract class AppLocalizations {
   /// **'데이터'**
   String get settingsData;
 
+  /// No description provided for @settingsStreamCache.
+  ///
+  /// In ko, this message translates to:
+  /// **'스트리밍 임시 저장'**
+  String get settingsStreamCache;
+
+  /// No description provided for @settingsStreamCacheDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'{used} 사용 중 · 한도 {limit}'**
+  String settingsStreamCacheDesc(String used, String limit);
+
+  /// No description provided for @settingsStreamCacheOff.
+  ///
+  /// In ko, this message translates to:
+  /// **'꺼짐'**
+  String get settingsStreamCacheOff;
+
+  /// No description provided for @settingsStreamCacheHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'받지 않고 들은 곡을 임시로 쌓아 두었다가, 다시 들을 때 데이터를 아껴요. 보관함에는 나타나지 않아요.'**
+  String get settingsStreamCacheHint;
+
+  /// No description provided for @settingsStreamCacheClear.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금 비우기'**
+  String get settingsStreamCacheClear;
+
+  /// No description provided for @settingsStreamCacheCleared.
+  ///
+  /// In ko, this message translates to:
+  /// **'임시 저장소를 비웠어요'**
+  String get settingsStreamCacheCleared;
+
   /// No description provided for @settingsPurgeHidden.
   ///
   /// In ko, this message translates to:

@@ -27,6 +27,7 @@ import io.flutter.plugin.common.MethodChannel
  * 네이티브 → Dart: `completed` · `progress`(position, duration, ms) · `failure`(까닭).
  * `play`는 소리를 낼 준비가 되면 성공으로 돌려주고, 열지 못하면 `failed` 오류로 돌려준다.
  */
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 class PreviewChannel(private val context: Context, messenger: BinaryMessenger) : NativeChannel(messenger, NAME) {
     private val main = Handler(Looper.getMainLooper())
 
@@ -144,6 +145,19 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
                     result.success(null)
                 }
                 "current" -> result.success(current())
+                "cacheInfo" -> result.success(
+                    mapOf("usedBytes" to StreamCache.usedBytes(context), "limitBytes" to StreamCache.limitBytes(context)),
+                )
+                "clearCache" -> {
+                    stop()
+                    StreamCache.clear(context)
+                    result.success(null)
+                }
+                "setCacheLimit" -> {
+                    stop()
+                    StreamCache.setLimitBytes(context, (call.arguments as Number).toLong())
+                    result.success(null)
+                }
                 else -> result.notImplemented()
             }
         }
@@ -157,7 +171,7 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
             .setDefaultRequestProperties(headers)
         agentFor(url)?.let { http.setUserAgent(it) }
         val created = ExoPlayer.Builder(context)
-            .setMediaSourceFactory(DefaultMediaSourceFactory(context).setDataSourceFactory(http))
+            .setMediaSourceFactory(DefaultMediaSourceFactory(context).setDataSourceFactory(StreamCache.wrap(context, http)))
             .setLoadControl(DefaultLoadControl())
             .setAudioAttributes(
                 AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).build(),
@@ -191,7 +205,7 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
             .setDefaultRequestProperties(headers)
         agentFor(url)?.let { http.setUserAgent(it) }
         val v = ExoPlayer.Builder(context)
-            .setMediaSourceFactory(DefaultMediaSourceFactory(context).setDataSourceFactory(http))
+            .setMediaSourceFactory(DefaultMediaSourceFactory(context).setDataSourceFactory(StreamCache.wrap(context, http)))
             // 소리는 다른 플레이어가 낸다: 오디오 포커스도 가져가지 않는다.
             .setAudioAttributes(AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).build(), false)
             .build()

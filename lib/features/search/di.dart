@@ -21,6 +21,7 @@ import 'presentation/bloc/audio_language_cubit.dart';
 import 'presentation/bloc/preview_cubit.dart';
 import 'presentation/bloc/preview_video_cubit.dart';
 import 'presentation/bloc/search_cubit.dart';
+import 'presentation/bloc/stream_cache_cubit.dart';
 
 /// 검색 · 곡 정보 의존성. 로컬 yt-dlp(데스크톱 · Android full)를 먼저 시도하고, 없으면 서버.
 void registerSearch(GetIt sl) {
@@ -69,6 +70,10 @@ void registerSearch(GetIt sl) {
     ..registerFactory(() => WatchPreviewCompleted(sl()))
     ..registerFactory(() => WatchPreviewProgress(sl()))
     ..registerFactory(() => WatchPreviewFailures(sl()))
+    ..registerFactory(() => GetStreamCacheInfo(sl()))
+    ..registerFactory(() => ClearStreamCache(sl()))
+    ..registerFactory(() => SetStreamCacheLimit(sl()))
+    ..registerFactory(() => StreamCacheCubit(sl(), sl(), sl()))
     ..registerFactory(
       () => PreviewCubit(
         sl(),

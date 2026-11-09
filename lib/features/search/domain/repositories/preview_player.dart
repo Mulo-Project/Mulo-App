@@ -2,6 +2,7 @@ import '../entities/audio_stream.dart';
 import '../entities/media_info.dart';
 import '../entities/preview_progress.dart';
 import '../entities/preview_snapshot.dart';
+import '../entities/stream_cache_info.dart';
 import '../entities/video_stream.dart';
 
 /// 미리 듣기 전용 플레이어. 메인 재생(대기열 · 미니 플레이어)과는 따로 움직이며 한 번에 한 곡만 낸다.
@@ -41,4 +42,13 @@ abstract interface class PreviewPlayer {
 
   /// 재생 위치가 바뀔 때마다 (재생 중에만).
   Stream<PreviewProgress> watchProgress();
+
+  /// 들은 스트리밍을 임시로 쌓아 두는 저장소의 사용량과 한도.
+  Future<StreamCacheInfo> cacheInfo();
+
+  /// 임시 저장소를 모두 비운다 (재생 중이던 미리 듣기는 멈춘다).
+  Future<void> clearCache();
+
+  /// 임시 저장소 용량 한도를 바꾼다 ([bytes]가 0이면 끈다). 재생 중이던 미리 듣기는 멈춘다.
+  Future<void> setCacheLimit(int bytes);
 }

@@ -7,6 +7,7 @@ import '../entities/subtitle_track.dart';
 import '../entities/video_stream.dart';
 import '../entities/preview_progress.dart';
 import '../entities/preview_snapshot.dart';
+import '../entities/stream_cache_info.dart';
 import '../entities/search_source.dart';
 import '../repositories/downloader_engine.dart';
 import '../repositories/link_opener.dart';
@@ -259,4 +260,34 @@ class WatchPreviewFailures implements StreamUseCase<String, NoParams> {
 
   @override
   Stream<String> call(NoParams params) => _player.watchFailures();
+}
+
+/// 스트리밍 임시 저장소의 사용량과 한도.
+class GetStreamCacheInfo implements UseCase<StreamCacheInfo, NoParams> {
+  const GetStreamCacheInfo(this._player);
+
+  final PreviewPlayer _player;
+
+  @override
+  Future<StreamCacheInfo> call(NoParams params) => _player.cacheInfo();
+}
+
+/// 스트리밍 임시 저장소 비우기.
+class ClearStreamCache implements UseCase<void, NoParams> {
+  const ClearStreamCache(this._player);
+
+  final PreviewPlayer _player;
+
+  @override
+  Future<void> call(NoParams params) => _player.clearCache();
+}
+
+/// 스트리밍 임시 저장소 용량 한도 바꾸기 (바이트, 0이면 끔).
+class SetStreamCacheLimit implements UseCase<void, int> {
+  const SetStreamCacheLimit(this._player);
+
+  final PreviewPlayer _player;
+
+  @override
+  Future<void> call(int bytes) => _player.setCacheLimit(bytes);
 }
