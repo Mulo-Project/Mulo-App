@@ -64,14 +64,14 @@ void registerSearch(GetIt sl) {
     ..registerFactory(() => OpenLink(sl()))
     ..registerLazySingleton<PreviewPlayer>(NativePreviewPlayer.new)
     ..registerLazySingleton(MediaHitMemo.new)
-    ..registerFactory(() => ResolveAudioStream(sl()))
+    ..registerFactory(() => ResolveAudioStream(sl(), sl()))
     ..registerLazySingleton<VideoQualityRepository>(
       PrefsVideoQualityRepository.new,
     )
     ..registerFactory(() => LoadVideoQuality(sl()))
     ..registerFactory(() => SaveVideoQuality(sl()))
     ..registerFactory(() => VideoQualityCubit(sl(), sl()))
-    ..registerFactory(() => ResolveVideoStream(sl(), sl()))
+    ..registerFactory(() => ResolveVideoStream(sl(), sl(), sl()))
     ..registerFactory(() => PlayPreviewVideo(sl()))
     ..registerFactory(() => PreviewVideoCubit(sl(), sl()))
     ..registerFactory(() => FetchAudioLanguages(sl()))

@@ -12,7 +12,9 @@ import '../entities/stream_cache_info.dart';
 import '../entities/search_source.dart';
 import '../repositories/downloader_engine.dart';
 import '../repositories/link_opener.dart';
+import '../entities/saved_video.dart';
 import '../repositories/preview_player.dart';
+import '../repositories/saved_video_repository.dart';
 import '../repositories/video_quality_repository.dart';
 
 class SearchParams {
@@ -118,26 +120,64 @@ class OpenLink implements UseCase<bool, String> {
 
 /// 곡 주소로 바로 들을 수 있는 오디오 스트림 주소 알아내기 (미리 듣기).
 class ResolveAudioStream implements UseCase<AudioStream, String> {
-  const ResolveAudioStream(this._engine);
+  const ResolveAudioStream(this._engine, [this._saved]);
 
   final DownloaderEngine _engine;
 
+  /// 저장한 곡이면 링크를 풀지 않고 저장할 때 받은 주소를 쓴다.
+  final SavedVideoRepository? _saved;
+
   @override
-  Future<AudioStream> call(String url, {String? audioLanguage}) =>
-      _engine.resolveAudioStream(url.trim(), audioLanguage: audioLanguage);
+  Future<AudioStream> call(String url, {String? audioLanguage}) async {
+    final page = url.trim();
+    if (audioLanguage == null) {
+      final audio = (await _savedReady(_saved, page))?.audioSource;
+      if (audio != null) {
+        return AudioStream(url: audio.url, headers: audio.headers);
+      }
+    }
+    return _engine.resolveAudioStream(page, audioLanguage: audioLanguage);
+  }
+}
+
+/// [page] 주소의 곡을 저장해 두었고 받기가 끝났으면 그 곡 (주소 정보가 없는 옛 저장분은 null).
+Future<SavedVideo?> _savedReady(SavedVideoRepository? repo, String page) async {
+  if (repo == null) return null;
+  try {
+    for (final v in await repo.load()) {
+      if (v.ready && v.sources.isNotEmpty && v.hit.url == page) return v;
+    }
+  } on Object {
+    // 읽지 못하면 저장하지 않은 곡처럼 링크를 푼다.
+  }
+  return null;
 }
 
 /// 곡 주소로 소리 없는 낮은 화질 영상 스트림 주소 알아내기 (영상 표시).
 class ResolveVideoStream implements UseCase<VideoStream, String> {
-  const ResolveVideoStream(this._engine, [this._quality]);
+  const ResolveVideoStream(this._engine, [this._quality, this._saved]);
 
   final DownloaderEngine _engine;
 
   /// 설정한 화질 (없으면 기본 화질).
   final VideoQualityRepository? _quality;
 
+  /// 저장한 곡이면 링크를 풀지 않고 저장할 때 받은 주소를 쓴다.
+  final SavedVideoRepository? _saved;
+
   @override
   Future<VideoStream> call(String url, {VideoQuality? quality}) async {
+    final saved = await _savedReady(_saved, url.trim());
+    if (saved != null) {
+      final video = saved.videoSource;
+      if (video != null && quality != null && quality == saved.quality) {
+        return video;
+      }
+      // 소리만 저장한 곡은 영상 주소를 따로 읽지 않는다 (소리를 저장한 데이터로 튼다).
+      if (video == null) {
+        throw const EngineException(EngineFailure.notFound, 'saved audio only');
+      }
+    }
     final q = quality ?? await _quality?.load() ?? VideoQuality.standard;
     return _engine.resolveVideoStream(url.trim(), maxHeight: q.maxHeight);
   }

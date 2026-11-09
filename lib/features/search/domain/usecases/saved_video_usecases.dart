@@ -74,7 +74,12 @@ class SaveVideo implements UseCase<List<SavedVideo>, SaveVideoParams> {
     List<VideoStream> targets,
   ) async {
     final streamId = await _player.saveStream(hit.id, targets);
-    final next = [...list, SavedVideo(hit: hit, streamId: streamId, quality: quality)];
+    final next = [...list, SavedVideo(
+        hit: hit,
+        streamId: streamId,
+        quality: quality,
+        sources: targets,
+      )];
     await _repo.save(next);
     await _player.setSavedStreams([
       for (final v in next)

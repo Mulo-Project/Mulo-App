@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/saved_video.dart';
 import '../../domain/entities/video_quality.dart';
+import '../../domain/entities/video_stream.dart';
 import '../../domain/repositories/saved_video_repository.dart';
 
 /// shared_preferences에 보관한 영상 목록을 JSON으로 저장한다 (깨진 항목은 건너뛴다).
@@ -34,6 +35,16 @@ class PrefsSavedVideoRepository implements SavedVideoRepository {
             quality: VideoQuality.values
                 .where((q) => q.name == m['quality'])
                 .firstOrNull,
+            sources: [
+              for (final s in (m['sources'] as List<dynamic>? ?? const []))
+                VideoStream(
+                  url: (s as Map<String, dynamic>)['url'] as String,
+                  headers: Map<String, String>.from(
+                    s['headers'] as Map? ?? const {},
+                  ),
+                  muxed: s['muxed'] as bool? ?? false,
+                ),
+            ],
           ),
         );
       } on Object {
@@ -57,6 +68,10 @@ class PrefsSavedVideoRepository implements SavedVideoRepository {
           'streamId': v.streamId,
           'ready': v.ready,
           'quality': v.quality?.name,
+          'sources': [
+            for (final s in v.sources)
+              {'url': s.url, 'headers': s.headers, 'muxed': s.muxed},
+          ],
         }),
     ]);
   }
