@@ -12,6 +12,8 @@ import androidx.media3.datasource.cache.CacheWriter
 import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
 import androidx.media3.datasource.cache.NoOpCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
+import androidx.media3.exoplayer.hls.offline.HlsDownloader
+import androidx.media3.common.MediaItem
 import java.io.File
 
 /**
@@ -91,9 +93,12 @@ object StreamCache {
     fun wrap(context: Context, upstream: DataSource.Factory): DataSource.Factory {
         val c = open(context) ?: return upstream
         val temp = cacheFactory(c, upstream)
-        val saved = openSaved(context)?.let { cacheFactory(it, upstream) } ?: return temp
+        val savedSimple = openSaved(context) ?: return temp
+        val saved = cacheFactory(savedSimple, upstream)
         // 보관한 영상은 보관 저장소로, 나머지는 임시 저장소로 보낸다.
-        return DataSource.Factory { RoutingDataSource(temp.createDataSource(), saved.createDataSource()) }
+        // 이미 보관 저장소에 데이터가 있는 주소(HLS 조각 등 id가 없는 곳)도 보관 저장소로 읽는다.
+        val inSaved = { uri: Uri -> savedSimple.getCachedSpans(keyOf(uri)).isNotEmpty() }
+        return DataSource.Factory { RoutingDataSource(temp.createDataSource(), saved.createDataSource(), inSaved) }
     }
 
     private fun cacheFactory(c: SimpleCache, upstream: DataSource.Factory) = CacheDataSource.Factory()
@@ -103,7 +108,11 @@ object StreamCache {
         .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
 
     /** 요청한 주소의 영상 id가 보관 목록에 있으면 [saved]로, 아니면 [temp]로 읽는다. */
-    private class RoutingDataSource(private val temp: DataSource, private val saved: DataSource) : DataSource {
+    private class RoutingDataSource(
+        private val temp: DataSource,
+        private val saved: DataSource,
+        private val inSavedCache: (Uri) -> Boolean,
+    ) : DataSource {
         private var active: DataSource? = null
 
         override fun addTransferListener(listener: TransferListener) {
@@ -114,7 +123,7 @@ object StreamCache {
         override fun open(dataSpec: DataSpec): Long {
             val id = dataSpec.uri.getQueryParameter("id")
             // 유튜브는 주소의 id로, id가 없는 곳(사운드클라우드 등)은 캐시 키로 보관 여부를 가른다.
-            val inSaved = (id != null && id in savedIds) || keyOf(dataSpec.uri) in savedIds
+            val inSaved = (id != null && id in savedIds) || keyOf(dataSpec.uri) in savedIds || inSavedCache(dataSpec.uri)
             val target = if (inSaved) saved else temp
             active = target
             return target.open(dataSpec)
@@ -145,6 +154,7 @@ object StreamCache {
     private class Fill {
         @Volatile var cancelled = false
         @Volatile var writer: CacheWriter? = null
+        @Volatile var hls: HlsDownloader? = null
     }
 
     /**
@@ -175,9 +185,18 @@ object StreamCache {
                     val http = androidx.media3.datasource.DefaultHttpDataSource.Factory()
                         .setAllowCrossProtocolRedirects(true)
                         .setDefaultRequestProperties(headers)
-                    val writer = CacheWriter(cacheFactory(c, http).createDataSource(), DataSpec(Uri.parse(url)), null, null)
-                    fill.writer = writer
-                    writer.cache()
+                    if (Uri.parse(url).path?.contains(".m3u8") == true) {
+                        // HLS(사운드클라우드 등)는 목록 파일 하나라서 CacheWriter로는 조각이 안 받아진다: 조각까지 모두 받는다.
+                        val before = c.keys.toSet()
+                        val downloader = HlsDownloader(MediaItem.fromUri(url), cacheFactory(c, http))
+                        fill.hls = downloader
+                        downloader.download(null)
+                        rememberKeys(context, id, c.keys - before)
+                    } else {
+                        val writer = CacheWriter(cacheFactory(c, http).createDataSource(), DataSpec(Uri.parse(url)), null, null)
+                        fill.writer = writer
+                        writer.cache()
+                    }
                 }
             } catch (e: Exception) {
                 MuloLog.e(MuloLog.NATIVE, "영상 보관 받기 실패", e)
@@ -190,12 +209,26 @@ object StreamCache {
         }, "mulo-save-stream").start()
     }
 
+    private fun keysFile(context: Context, id: String) =
+        File(File(context.filesDir, "saved_stream_keys").apply { mkdirs() }, id.replace(Regex("[^A-Za-z0-9_-]"), "_"))
+
+    /** HLS처럼 키가 여럿인 곡의 조각 키를 적어 둔다 (지울 때 쓴다). */
+    private fun rememberKeys(context: Context, id: String, keys: Collection<String>) {
+        try { keysFile(context, id).writeText(keys.joinToString("\n")) } catch (_: Exception) {}
+    }
+
     /** 보관 저장소에서 스트림 id([streamId]) 영상의 데이터를 지우고 받던 것도 멈춘다. [id]는 영상 id. */
     @Synchronized
     fun removeSaved(context: Context, id: String, streamId: String?) {
         fills.remove(id)?.let {
             it.cancelled = true
             it.writer?.cancel()
+            it.hls?.cancel()
+        }
+        // HLS로 받은 조각 키도 함께 지운다.
+        keysFile(context, id).takeIf { it.exists() }?.let { f ->
+            openSaved(context)?.let { c -> f.readLines().filter { it.isNotEmpty() }.forEach { k -> try { c.removeResource(k) } catch (_: Exception) {} } }
+            f.delete()
         }
         if (streamId == null) return
         val ids = streamId.split(",")
