@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/saved_video.dart';
+import '../../domain/entities/video_quality.dart';
 import '../../domain/repositories/saved_video_repository.dart';
 
 /// shared_preferences에 보관한 영상 목록을 JSON으로 저장한다 (깨진 항목은 건너뛴다).
@@ -30,6 +31,9 @@ class PrefsSavedVideoRepository implements SavedVideoRepository {
             ),
             streamId: m['streamId'] as String?,
             ready: m['ready'] as bool? ?? false,
+            quality: VideoQuality.values
+                .where((q) => q.name == m['quality'])
+                .firstOrNull,
           ),
         );
       } on Object {
@@ -52,6 +56,7 @@ class PrefsSavedVideoRepository implements SavedVideoRepository {
           'durationMs': v.hit.duration?.inMilliseconds,
           'streamId': v.streamId,
           'ready': v.ready,
+          'quality': v.quality?.name,
         }),
     ]);
   }

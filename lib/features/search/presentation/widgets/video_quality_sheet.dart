@@ -18,6 +18,53 @@ String videoQualityLabel(BuildContext context, VideoQuality quality) {
   };
 }
 
+/// 저장할 영상 화질을 고르는 시트. 고르면 그 화질을 돌려주고, 그냥 닫으면 null (저장하지 않는다).
+Future<VideoQuality?> pickSaveQuality(
+  BuildContext context, {
+  VideoQuality? initial,
+}) {
+  return showAppSheet<VideoQuality>(
+    context,
+    builder: (sheetContext) {
+      final l10n = sheetContext.l10n;
+      final p = sheetContext.palette;
+      final text = Theme.of(sheetContext).textTheme;
+      return SafeArea(
+        child: Padding(
+          padding: appSheetPadding,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AppSheetTitle(
+                l10n.savedVideosQualityTitle,
+                subtitle: l10n.savedVideosQualityHint,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              for (final quality in VideoQuality.values)
+                InkWell(
+                  key: ValueKey('save-quality-${quality.name}'),
+                  onTap: () => Navigator.of(sheetContext).pop(quality),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.sm + AppSpacing.xxs,
+                    ),
+                    child: Text(
+                      videoQualityLabel(sheetContext, quality),
+                      style: text.bodyLarge?.copyWith(
+                        color: quality == initial ? p.accent : p.onSurface,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
 /// "영상 화질" 시트: 고르면 바로 저장되고 다음 미리 듣기부터 적용된다.
 Future<void> showVideoQualitySheet(BuildContext context) {
   final cubit = context.read<VideoQualityCubit>();

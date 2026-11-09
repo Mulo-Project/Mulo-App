@@ -9,6 +9,7 @@ import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/preview_progress.dart';
 import '../../domain/entities/preview_snapshot.dart';
+import '../../domain/entities/video_quality.dart';
 import '../../domain/usecases/search_usecases.dart';
 
 enum PreviewStatus { idle, loading, playing }
@@ -147,7 +148,11 @@ class PreviewCubit extends Cubit<PreviewState> {
 
   /// [hit]을 미리 듣는다. 이미 듣는 중이면 멈춘다. [audioLanguage]는 고른 오디오 언어 (null이면 기본 음성).
   /// 시작하지 못했으면 까닭을, 잘 됐거나 중간에 취소됐으면 null을 돌려준다.
-  Future<EngineFailure?> toggle(MediaHit hit, {String? audioLanguage}) async {
+  Future<EngineFailure?> toggle(
+    MediaHit hit, {
+    String? audioLanguage,
+    VideoQuality? videoQuality,
+  }) async {
     if (state.isActive(hit.id)) {
       await stop();
       return null;
@@ -166,9 +171,9 @@ class PreviewCubit extends Cubit<PreviewState> {
         expectedLoad: _loadEstimate,
       ),
     );
-    _prefetchVideo(hit);
+    _prefetchVideo(hit, videoQuality);
     try {
-      final stream = await _streamFor(hit, audioLanguage)
+      final stream = await _streamFor(hit, audioLanguage, videoQuality)
           .timeout(
             _resolveTimeout,
             onTimeout: () => throw const EngineException(
@@ -224,10 +229,10 @@ class PreviewCubit extends Cubit<PreviewState> {
 
   /// 소리 주소를 읽는 동안 영상 주소도 함께 읽어 둔다. 영상 화면이 열릴 때 바로 쓰게 되어
   /// 소리와 영상이 처음부터 덜 어긋난다. 결과는 엔진이 기억하고, 실패는 영상 쪽에서 다시 다룬다.
-  void _prefetchVideo(MediaHit hit) {
+  void _prefetchVideo(MediaHit hit, [VideoQuality? quality]) {
     final resolve = resolveVideo;
     if (resolve == null || !_isYoutube(hit.url)) return;
-    unawaited(resolve(hit.url).then<void>((_) {}, onError: (Object _) {}));
+    unawaited(resolve(hit.url, quality: quality).then<void>((_) {}, onError: (Object _) {}));
   }
 
   /// 상세 화면이 열릴 때 소리·영상 주소를 미리 읽어 둔다.
@@ -241,11 +246,15 @@ class PreviewCubit extends Cubit<PreviewState> {
 
   /// 틀 주소. 유튜브는 소리가 같이 든 영상 형식이 있으면 그 주소 하나로 소리와 영상을 함께 튼다
   /// (오디오 언어를 고른 곡이나 그런 형식이 없는 곡은 소리 주소를 따로 읽는다).
-  Future<AudioStream> _streamFor(MediaHit hit, String? audioLanguage) async {
+  Future<AudioStream> _streamFor(
+    MediaHit hit,
+    String? audioLanguage,
+    VideoQuality? videoQuality,
+  ) async {
     final video = resolveVideo;
     if (video != null && audioLanguage == null && _isYoutube(hit.url)) {
       try {
-        final v = await video(hit.url);
+        final v = await video(hit.url, quality: videoQuality);
         if (v.muxed) return AudioStream(url: v.url, headers: v.headers);
       } on Object {
         // 영상 쪽이 안 되면 소리 주소로 간다.

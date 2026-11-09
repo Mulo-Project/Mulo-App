@@ -720,13 +720,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsStreamCacheCleared => 'Streaming cache cleared';
 
   @override
-  String get savedVideosTitle => 'Saved videos';
+  String get savedVideosTitle => 'Saved tracks';
 
   @override
   String get savedVideosOpen => 'Saved';
 
   @override
-  String get savedVideosEmpty => 'No saved videos';
+  String get savedVideosEmpty => 'No saved tracks';
 
   @override
   String get savedVideosAdd => 'Save';
@@ -747,6 +747,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String savedVideosUsed(String size) {
     return '$size used';
   }
+
+  @override
+  String get savedVideosQualityTitle => 'Save quality';
+
+  @override
+  String get savedVideosQualityHint => 'Saved at this quality';
+
+  @override
+  String get savedVideosPlay => 'Play';
+
+  @override
+  String get videoFullscreen => 'Fullscreen';
+
+  @override
+  String get videoFullscreenExit => 'Close';
+
+  @override
+  String get newVideosDetail => 'Details';
 
   @override
   String get settingsPurgeHidden => 'Clear hidden song records';

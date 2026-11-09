@@ -7,11 +7,13 @@ import '../../domain/entities/saved_video.dart';
 import '../bloc/preview_cubit.dart';
 import '../bloc/saved_videos_cubit.dart';
 import '../widgets/preview_control.dart';
+import '../widgets/video_quality_sheet.dart';
+import 'media_detail_screen.dart';
 
 /// 저장한 영상 화면 경로 (검색 탭 안).
 const savedVideosLocation = '/search/saved';
 
-/// 사용자가 골라 저장해 둔 스트리밍 영상 목록. 누르면 바로 듣고(영상도 함께), 저장 해제로 뺀다.
+/// 사용자가 골라 저장해 둔 음원(유튜브는 영상) 목록. 줄을 누르면 상세 화면, 오른쪽 버튼으로 바로 듣고 뺀다.
 /// 저장한 영상은 앱 안에 받아 두어 임시 저장소가 차도 지워지지 않는다.
 class SavedVideosScreen extends StatelessWidget {
   const SavedVideosScreen({super.key});
@@ -81,11 +83,13 @@ class _SavedTile extends StatelessWidget {
     final hit = video.hit;
     final sub = [
       if (hit.uploader.isNotEmpty) hit.uploader,
+      if (video.quality != null) videoQualityLabel(context, video.quality!),
       if (!video.ready) l10n.savedVideosDownloading,
     ].join(' · ');
 
     return InkWell(
-      onTap: () => togglePreview(context, hit),
+      // 줄을 누르면 상세 화면으로 간다 (듣기 · 영상 보기는 거기서도, 오른쪽 버튼으로도 된다).
+      onTap: () => showMediaDetail(context, hit),
       child: Padding(
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
@@ -116,10 +120,16 @@ class _SavedTile extends StatelessWidget {
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
-            PillButton(
-              label: l10n.savedVideosRemove,
-              variant: PillVariant.tonal,
-              compact: true,
+            CircleIconButton(
+              icon: active ? AppIcons.pause : AppIcons.play,
+              tooltip: l10n.savedVideosPlay,
+              size: AppSizes.rowButton,
+              onPressed: () => togglePreview(context, hit),
+            ),
+            CircleIconButton(
+              icon: AppIcons.delete,
+              tooltip: l10n.savedVideosRemove,
+              size: AppSizes.rowButton,
               onPressed: () =>
                   context.read<SavedVideosCubit>().remove(video.id),
             ),

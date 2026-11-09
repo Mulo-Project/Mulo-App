@@ -17,9 +17,13 @@ import '../bloc/audio_language_cubit.dart';
 import '../bloc/media_detail_cubit.dart';
 import '../bloc/preview_cubit.dart';
 import '../bloc/saved_videos_cubit.dart';
+import '../bloc/video_quality_cubit.dart';
+import '../../domain/entities/video_quality.dart';
+import '../widgets/video_quality_sheet.dart';
 import '../widgets/audio_language_sheet.dart';
 import '../widgets/preview_control.dart';
 import '../widgets/preview_video.dart';
+import '../../../player/presentation/widgets/fullscreen_video.dart';
 import '../widgets/video_category.dart';
 import '../widgets/youtube_embed.dart';
 
@@ -240,8 +244,8 @@ class _DetailViewState extends State<_DetailView> {
                 leading: AppBackButton(
                   onPressed: () => Navigator.of(context).pop(),
                 ),
-                // 유튜브 영상만 저장해 둘 수 있다 (소리 · 영상 주소를 앱 안에 받아 둔다).
-                actions: [if (youtube && !hit.isLive) _SaveButton(hit: hit)],
+                // 라이브가 아니면 저장해 둘 수 있다 (유튜브는 영상이라 화질을 고르고, 사운드클라우드 등은 음원만).
+                actions: [if (!hit.isLive) _SaveButton(hit: hit)],
               ),
               // 받기 전 상세 화면은 목록 위에 얇은 막대로 읽는 중임을 알린다.
               LoadingBar(loading: state.loading),
@@ -406,7 +410,8 @@ class _DetailViewState extends State<_DetailView> {
   }
 }
 
-/// 이 영상을 저장해 두거나 저장을 푼다 (저장하면 임시 저장소가 차도 지워지지 않고 바로 들을 수 있다).
+/// 이 곡을 저장해 두거나 저장을 푼다 (저장하면 임시 저장소가 차도 지워지지 않고 바로 들을 수 있다).
+/// 유튜브는 영상이라 저장할 때 화질을 고른다.
 class _SaveButton extends StatelessWidget {
   const _SaveButton({required this.hit});
 
@@ -426,7 +431,15 @@ class _SaveButton extends StatelessWidget {
         final messenger = ScaffoldMessenger.of(context);
         final failed = l10n.savedVideosFailed;
         if (saved) return cubit.remove(hit.id);
-        if (!await cubit.add(hit)) {
+        VideoQuality? quality;
+        if (isYoutubeUrl(hit.url)) {
+          quality = await pickSaveQuality(
+            context,
+            initial: context.read<VideoQualityCubit>().state,
+          );
+          if (quality == null) return;
+        }
+        if (!await cubit.add(hit, quality: quality)) {
           messenger.showSnackBar(SnackBar(content: Text(failed)));
         }
       },
@@ -552,8 +565,23 @@ class _PreviewVideoBoxState extends State<_PreviewVideoBox> {
     return Stack(
       fit: StackFit.expand,
       children: [
-        PreviewVideo(pageUrl: widget.hit.url),
+        PreviewVideo(
+          pageUrl: widget.hit.url,
+          quality: context.read<SavedVideosCubit>().qualityOf(widget.hit.id),
+        ),
         GestureDetector(behavior: HitTestBehavior.translucent, onTap: _reveal),
+        Positioned(
+          right: AppSpacing.xs,
+          bottom: AppSpacing.xs,
+          child: IgnorePointer(
+            ignoring: !show,
+            child: AnimatedOpacity(
+              opacity: show ? 1 : 0,
+              duration: AppMotion.fast,
+              child: const FullscreenVideoButton(),
+            ),
+          ),
+        ),
         Center(
           child: IgnorePointer(
             ignoring: !show,

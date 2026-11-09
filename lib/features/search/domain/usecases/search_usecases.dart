@@ -137,9 +137,9 @@ class ResolveVideoStream implements UseCase<VideoStream, String> {
   final VideoQualityRepository? _quality;
 
   @override
-  Future<VideoStream> call(String url) async {
-    final quality = await _quality?.load() ?? VideoQuality.standard;
-    return _engine.resolveVideoStream(url.trim(), maxHeight: quality.maxHeight);
+  Future<VideoStream> call(String url, {VideoQuality? quality}) async {
+    final q = quality ?? await _quality?.load() ?? VideoQuality.standard;
+    return _engine.resolveVideoStream(url.trim(), maxHeight: q.maxHeight);
   }
 }
 

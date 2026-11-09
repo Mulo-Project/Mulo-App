@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/saved_video.dart';
+import '../../domain/entities/video_quality.dart';
 import '../../domain/usecases/saved_video_usecases.dart';
 
 /// 보관한 영상 목록과 담기 · 빼기. 앱 전체에서 하나만 쓴다 (상세 화면의 보관 버튼과 보관 페이지가 함께 본다).
@@ -30,6 +31,10 @@ class SavedVideosCubit extends Cubit<List<SavedVideo>> {
   final _busy = <String>{};
 
   bool contains(String id) => state.any((v) => v.id == id);
+
+  /// 저장한 곡의 영상 화질 (저장하지 않았거나 음원이면 null).
+  VideoQuality? qualityOf(String id) =>
+      state.where((v) => v.id == id).firstOrNull?.quality;
   bool isBusy(String id) => _busy.contains(id);
 
   Future<void> load() async {
@@ -41,11 +46,11 @@ class SavedVideosCubit extends Cubit<List<SavedVideo>> {
     }
   }
 
-  /// 보관에 담는다. 주소를 못 읽으면 false.
-  Future<bool> add(MediaHit hit) async {
+  /// 저장한다 ([quality]는 유튜브 영상의 화질). 주소를 못 읽으면 false.
+  Future<bool> add(MediaHit hit, {VideoQuality? quality}) async {
     if (!_busy.add(hit.id)) return true;
     try {
-      final list = await _save(hit);
+      final list = await _save(SaveVideoParams(hit, quality: quality));
       if (!isClosed) emit(list);
       return true;
     } on Object {

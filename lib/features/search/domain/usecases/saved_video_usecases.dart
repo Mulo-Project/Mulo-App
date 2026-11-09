@@ -1,6 +1,7 @@
 import '../../../../core/usecase/usecase.dart';
 import '../entities/media_info.dart';
 import '../entities/saved_video.dart';
+import '../entities/video_quality.dart';
 import '../entities/video_stream.dart';
 import '../repositories/preview_player.dart';
 import '../repositories/saved_video_repository.dart';
@@ -24,9 +25,17 @@ class LoadSavedVideos implements UseCase<List<SavedVideo>, NoParams> {
   }
 }
 
-/// 영상을 보관한다: 소리 · 영상 주소를 읽어 보관 저장소에 받기 시작하고 목록에 더한다.
-/// 이미 보관한 영상이면 아무 일도 없다. 주소를 못 읽으면 던진다.
-class SaveVideo implements UseCase<List<SavedVideo>, MediaHit> {
+/// [SaveVideo]에 넘기는 값: 저장할 곡과 (유튜브 영상이면) 고른 화질. 화질이 null이면 음원만 저장한다.
+class SaveVideoParams {
+  const SaveVideoParams(this.hit, {this.quality});
+
+  final MediaHit hit;
+  final VideoQuality? quality;
+}
+
+/// 곡을 저장한다: 소리(유튜브는 고른 화질의 영상) 주소를 읽어 저장 저장소에 받기 시작하고 목록에 더한다.
+/// 이미 저장한 곡이면 아무 일도 없다. 주소를 못 읽으면 던진다.
+class SaveVideo implements UseCase<List<SavedVideo>, SaveVideoParams> {
   const SaveVideo(this._repo, this._player, this._resolveVideo, this._resolveAudio);
 
   final SavedVideoRepository _repo;
@@ -35,23 +44,27 @@ class SaveVideo implements UseCase<List<SavedVideo>, MediaHit> {
   final ResolveAudioStream _resolveAudio;
 
   @override
-  Future<List<SavedVideo>> call(MediaHit hit) async {
+  Future<List<SavedVideo>> call(SaveVideoParams params) async {
+    final hit = params.hit;
+    final quality = params.quality;
     final list = await _repo.load();
     if (list.any((v) => v.id == hit.id)) return list;
     // 미리 듣기가 트는 것과 같은 주소를 받는다: 소리가 든 영상 형식, 없으면 소리 주소.
     VideoStream? target;
-    try {
-      final v = await _resolveVideo(hit.url);
-      if (v.muxed) target = v;
-    } on Object {
-      // 영상 쪽이 안 되면 소리 주소로 간다.
+    if (quality != null) {
+      try {
+        final v = await _resolveVideo(hit.url, quality: quality);
+        if (v.muxed) target = v;
+      } on Object {
+        // 영상 쪽이 안 되면 소리 주소로 간다.
+      }
     }
     if (target == null) {
       final a = await _resolveAudio(hit.url);
       target = VideoStream(url: a.url, headers: a.headers);
     }
     final streamId = await _player.saveStream(hit.id, target);
-    final next = [...list, SavedVideo(hit: hit, streamId: streamId)];
+    final next = [...list, SavedVideo(hit: hit, streamId: streamId, quality: quality)];
     await _repo.save(next);
     await _player.setSavedStreams([
       for (final v in next)

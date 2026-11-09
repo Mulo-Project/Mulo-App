@@ -1403,19 +1403,19 @@ abstract class AppLocalizations {
   /// No description provided for @savedVideosTitle.
   ///
   /// In ko, this message translates to:
-  /// **'저장한 영상'**
+  /// **'저장한 음원'**
   String get savedVideosTitle;
 
   /// No description provided for @savedVideosOpen.
   ///
   /// In ko, this message translates to:
-  /// **'저장한 영상'**
+  /// **'저장한 음원'**
   String get savedVideosOpen;
 
   /// No description provided for @savedVideosEmpty.
   ///
   /// In ko, this message translates to:
-  /// **'저장한 영상이 없어요'**
+  /// **'저장한 음원이 없어요'**
   String get savedVideosEmpty;
 
   /// No description provided for @savedVideosAdd.
@@ -1453,6 +1453,42 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'{size} 사용 중'**
   String savedVideosUsed(String size);
+
+  /// No description provided for @savedVideosQualityTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 화질'**
+  String get savedVideosQualityTitle;
+
+  /// No description provided for @savedVideosQualityHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'고른 화질로 받아 둬요'**
+  String get savedVideosQualityHint;
+
+  /// No description provided for @savedVideosPlay.
+  ///
+  /// In ko, this message translates to:
+  /// **'듣기'**
+  String get savedVideosPlay;
+
+  /// No description provided for @videoFullscreen.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체 화면'**
+  String get videoFullscreen;
+
+  /// No description provided for @videoFullscreenExit.
+  ///
+  /// In ko, this message translates to:
+  /// **'닫기'**
+  String get videoFullscreenExit;
+
+  /// No description provided for @newVideosDetail.
+  ///
+  /// In ko, this message translates to:
+  /// **'상세 보기'**
+  String get newVideosDetail;
 
   /// No description provided for @settingsPurgeHidden.
   ///
