@@ -7,6 +7,7 @@ import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/preview_progress.dart';
 import '../../domain/entities/preview_snapshot.dart';
+import '../../domain/entities/video_stream.dart';
 import '../../domain/repositories/preview_player.dart';
 
 /// 미리 듣기 소리를 Android 네이티브(`PreviewChannel`, ExoPlayer)가 낸다 (D-093의 경계: 재생 엔진은 네이티브).
@@ -59,6 +60,12 @@ class NativePreviewPlayer implements PreviewPlayer {
     }
     throw first!;
   }
+
+  @override
+  Future<void> playVideo(VideoStream stream) => _channel.invokeMethod<void>(
+    'playVideo',
+    {'url': stream.url, 'headers': stream.headers},
+  );
 
   @override
   Future<void> remember(MediaHit hit) =>

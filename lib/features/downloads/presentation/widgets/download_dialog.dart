@@ -283,6 +283,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
         .status;
     final colors = context.read<CoverColorCubit>();
     final audioLanguage = context.read<AudioLanguageCubit>().state.selected;
+    final defaultFormat = context.read<DownloadPreferencesCubit>().state.format;
     final genre = _genre.text.trim();
     // 이 장르의 기본 색으로 저장하면 다음에 같은 장르를 받을 때 미리 채워진다.
     if (_saveAsGenreDefault && genre.isNotEmpty && color != null) {
@@ -303,9 +304,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
         cover: _cover,
         url: widget.url,
         // 설정의 기본 형식과 같으면 비워 두어, 나중에 기본 형식을 바꿔도 따라가게 한다.
-        format: _format == context.read<DownloadPreferencesCubit>().state.format
-            ? null
-            : _format,
+        format: _format == defaultFormat ? null : _format,
         importLyrics:
             _isYoutube &&
             lyrics != null &&

@@ -18,7 +18,6 @@ import '../../../player/presentation/bloc/playback_speed_cubit.dart';
 import '../../../player/presentation/widgets/player_style_sheet.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../../domain/entities/track.dart';
-import '../../domain/usecases/library_usecases.dart';
 import '../bloc/library_cubit.dart';
 
 enum _TrackAction {

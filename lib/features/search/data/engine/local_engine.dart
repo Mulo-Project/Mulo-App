@@ -9,6 +9,7 @@ import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/search_source.dart';
 import '../../domain/entities/subtitle_track.dart';
+import '../../domain/entities/video_stream.dart';
 import '../../domain/repositories/downloader_engine.dart';
 import 'audio_format_policy.dart';
 import 'json_fields.dart';
@@ -210,6 +211,14 @@ class LocalEngine implements DownloaderEngine {
     bool refresh = false,
     String? audioLanguage,
   }) async {
+    if (audioLanguage == null && !refresh) {
+      final pair = await _pair(url);
+      if (pair?.audio != null) return pair!.audio!;
+    }
+    return _readAudio(url, audioLanguage);
+  }
+
+  Future<AudioStream> _readAudio(String url, String? audioLanguage) async {
     // 오디오만 있는 형식 하나를 골라(macOS도 풀 수 있는 m4a 먼저) 주소만 읽는다.
     Future<AudioStream> read(List<String> extra) async {
       final out = await _exec([
@@ -245,6 +254,125 @@ class LocalEngine implements DownloaderEngine {
       if (first.failure != EngineFailure.failed) rethrow;
       // 기본 클라이언트로는 오디오 형식을 못 읽는 경우가 있다 (JS 실행기가 없는 환경 등).
       // 그런 환경에서도 주소를 주는 클라이언트로 한 번 더 시도하고, 그래도 안 되면 첫 오류를 알린다.
+      try {
+        return await read(const [
+          '--extractor-args',
+          'youtube:player_client=android_vr',
+        ]);
+      } on EngineException {
+        throw first;
+      }
+    }
+  }
+
+  /// 소리 없는 낮은 화질(360p 이하) 영상 하나의 주소만 읽는다. 미니 플레이어 · 플레이어에서 화면으로만 쓴다.
+  @override
+  Future<VideoStream> resolveVideoStream(String url) async {
+    final pair = await _pair(url);
+    if (pair?.video != null) return pair!.video!;
+    return _readVideo(url);
+  }
+
+  static const _videoSelector =
+      'bv[height<=360][vcodec^=avc1]/bv[height<=360]/bv[height<=480]/bv';
+
+  /// 소리와 영상 주소를 yt-dlp 한 번으로 함께 읽는다 (분석이 시간 대부분이라 따로 읽으면 두 배로 걸린다).
+  /// 같은 곡을 소리 · 영상이 잇따라 물으면 같은 결과를 나눠 쓴다. 한 번에 못 읽으면 null이라
+  /// 호출한 쪽이 예전처럼 하나씩 읽는다.
+  final _pairs =
+      <String, Future<({AudioStream? audio, VideoStream? video})?>>{};
+
+  Future<({AudioStream? audio, VideoStream? video})?> _pair(String url) {
+    final host = Uri.tryParse(url)?.host ?? '';
+    if (!host.contains('youtube.com') && host != 'youtu.be') {
+      return Future.value();
+    }
+    return _pairs.putIfAbsent(url, () {
+      unawaited(
+        Future<void>.delayed(
+          const Duration(seconds: 30),
+          () => _pairs.remove(url),
+        ),
+      );
+      return _readPair(url);
+    });
+  }
+
+  Future<({AudioStream? audio, VideoStream? video})?> _readPair(
+    String url,
+  ) async {
+    try {
+      final out = await _exec([
+        '-f',
+        '${ytDlpAudioSelector(null, null)},$_videoSelector',
+        '--no-playlist',
+        '--dump-single-json',
+        '--no-warnings',
+        url,
+      ]);
+      final j = _decode(out);
+      final picked = j?['requested_downloads'];
+      if (picked is! List) return null;
+      AudioStream? audio;
+      VideoStream? video;
+      for (final f in picked) {
+        if (f is! Map) continue;
+        final streamUrl = parseText(f['url']);
+        if (streamUrl == null) continue;
+        final headers = f['http_headers'];
+        final map = headers is Map
+            ? {
+                for (final e in headers.entries)
+                  if (e.key is String && e.value is String)
+                    e.key as String: e.value as String,
+              }
+            : const <String, String>{};
+        if (f['vcodec'] == 'none') {
+          audio ??= AudioStream(url: streamUrl, headers: map);
+        } else if (f['acodec'] == 'none') {
+          video ??= VideoStream(url: streamUrl, headers: map);
+        }
+      }
+      if (audio == null || video == null) return null;
+      return (audio: audio, video: video);
+    } on Object {
+      return null;
+    }
+  }
+
+  Future<VideoStream> _readVideo(String url) async {
+    Future<VideoStream> read(List<String> extra) async {
+      final out = await _exec([
+        '-f',
+        _videoSelector,
+        '--no-playlist',
+        '--dump-single-json',
+        '--no-warnings',
+        ...extra,
+        url,
+      ]);
+      final j = _decode(out);
+      final streamUrl = parseText(j?['url']);
+      if (j == null || streamUrl == null) {
+        throw const EngineException(EngineFailure.failed, 'bad response');
+      }
+      final headers = j['http_headers'];
+      return VideoStream(
+        url: streamUrl,
+        headers: headers is Map
+            ? {
+                for (final e in headers.entries)
+                  if (e.key is String && e.value is String)
+                    e.key as String: e.value as String,
+              }
+            : const {},
+      );
+    }
+
+    try {
+      return await read(const []);
+    } on EngineException catch (first) {
+      if (first.failure != EngineFailure.failed) rethrow;
       try {
         return await read(const [
           '--extractor-args',

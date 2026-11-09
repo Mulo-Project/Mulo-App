@@ -4,6 +4,7 @@ import '../entities/audio_stream.dart';
 import '../entities/engine_exception.dart';
 import '../entities/media_info.dart';
 import '../entities/subtitle_track.dart';
+import '../entities/video_stream.dart';
 import '../entities/preview_progress.dart';
 import '../entities/preview_snapshot.dart';
 import '../entities/search_source.dart';
@@ -123,6 +124,17 @@ class ResolveAudioStream implements UseCase<AudioStream, String> {
       _engine.resolveAudioStream(url.trim(), audioLanguage: audioLanguage);
 }
 
+/// 곡 주소로 소리 없는 낮은 화질 영상 스트림 주소 알아내기 (영상 표시).
+class ResolveVideoStream implements UseCase<VideoStream, String> {
+  const ResolveVideoStream(this._engine);
+
+  final DownloaderEngine _engine;
+
+  @override
+  Future<VideoStream> call(String url) =>
+      _engine.resolveVideoStream(url.trim());
+}
+
 /// 곡에 들어 있는 오디오 언어 트랙 목록 (여러 개일 때만 고를 수 있다). 못 읽으면 빈 목록.
 class FetchAudioLanguages implements UseCase<List<AudioLanguage>, String> {
   const FetchAudioLanguages(this._engine);
@@ -147,6 +159,16 @@ class PlayPreview implements UseCase<void, AudioStream> {
 
   @override
   Future<void> call(AudioStream stream) => _player.play(stream);
+}
+
+/// 미리 듣는 곡의 영상을 소리와 같은 시계로 틀기 (네이티브가 화면까지 맡는다).
+class PlayPreviewVideo implements UseCase<void, VideoStream> {
+  const PlayPreviewVideo(this._player);
+
+  final PreviewPlayer _player;
+
+  @override
+  Future<void> call(VideoStream stream) => _player.playVideo(stream);
 }
 
 /// 재생 중인 미리 듣기가 어느 곡인지 플레이어에 적어 두기.

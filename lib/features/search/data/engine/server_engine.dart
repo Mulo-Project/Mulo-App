@@ -8,6 +8,7 @@ import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/search_source.dart';
 import '../../domain/entities/subtitle_track.dart';
+import '../../domain/entities/video_stream.dart';
 import '../../domain/repositories/downloader_engine.dart';
 import 'json_fields.dart';
 
@@ -134,6 +135,10 @@ class ServerEngine implements DownloaderEngine {
     bool refresh = false,
     String? audioLanguage,
   }) async => throw const EngineException(EngineFailure.unavailable);
+
+  @override
+  Future<VideoStream> resolveVideoStream(String url) async =>
+      throw const EngineException(EngineFailure.unavailable);
 
   /// 서버 명세에 오디오 트랙 조회가 없어서 고를 수 있는 언어가 없다.
   @override

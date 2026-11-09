@@ -18,6 +18,7 @@ import '../bloc/media_detail_cubit.dart';
 import '../bloc/preview_cubit.dart';
 import '../widgets/audio_language_sheet.dart';
 import '../widgets/preview_control.dart';
+import '../widgets/preview_video.dart';
 import '../widgets/video_category.dart';
 import '../widgets/youtube_embed.dart';
 
@@ -80,9 +81,12 @@ class MediaDetailScreen extends StatelessWidget {
       ),
       // 유튜브 곡만 오디오 언어가 여럿일 수 있다.
       BlocProvider(
-        create: (_) {
+        create: (context) {
           final cubit = sl<AudioLanguageCubit>();
-          if (isYoutubeUrl(hit.url)) cubit.load(hit.url);
+          if (isYoutubeUrl(hit.url)) {
+            cubit.load(hit.url);
+            context.read<PreviewCubit>().prefetch(hit);
+          }
           return cubit;
         },
       ),
@@ -142,8 +146,19 @@ class _DetailViewState extends State<_DetailView> {
       isYoutubeUrl(hit.url) &&
       isYoutubeVideoId(hit.id);
 
-  /// 썸네일의 재생 버튼: 앱 안에서 틀 수 있으면 그 자리에서, 아니면 유튜브로 연다.
-  void _play(MediaHit hit) {
+  /// 썸네일의 재생 버튼: 앱 안에서 틀 수 있는 유튜브 영상은 미리 듣기(소리 + 영상)로 그 자리에서 튼다.
+  /// 그 화면을 나가면 미니 플레이어가 영상을 이어서 보여 준다.
+  /// 미리 듣기를 시작하지 못하면 앱 안 플레이어(웹뷰)로, 그것도 안 되면 유튜브로 연다.
+  Future<void> _play(MediaHit hit) async {
+    if (widget.inAppVideo && isYoutubeUrl(hit.url)) {
+      final started = await togglePreview(
+        context,
+        hit,
+        audioLanguage: context.read<AudioLanguageCubit>().state.selected,
+        announceFailure: false,
+      );
+      if (started || !mounted) return;
+    }
     if (!_canEmbed(hit)) return unawaited(_open(hit.url));
     // 앱 안 영상과 미리 듣기 소리가 겹치지 않게 미리 듣기는 멈춘다.
     _preview.stop();
@@ -235,7 +250,7 @@ class _DetailViewState extends State<_DetailView> {
                         hit: hit,
                         inApp: _canEmbed(hit),
                         audio: audio,
-                        onPlay: () => _play(hit),
+                        onPlay: () => unawaited(_play(hit)),
                       ),
                     if (_embedBlocked)
                       Padding(
@@ -404,6 +419,15 @@ class _Thumbnail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final thumb = hit.thumbnailUrl;
+    // 이 곡을 미리 듣는 중이면 이미지 자리에 소리 없는 영상을 보여 준다 (영상이 아닌 음원은 제외).
+    final previewing =
+        !audio &&
+        hit.url.isNotEmpty &&
+        context.select(
+          (PreviewCubit c) =>
+              c.state.isActive(hit.id) &&
+              c.state.status == PreviewStatus.playing,
+        );
     return LayoutBuilder(
       builder: (context, box) {
         // 넓은 화면(데스크톱)에서 너무 커지지 않게 높이를 제한하고 가운데에 둔다.
@@ -421,21 +445,97 @@ class _Thumbnail extends StatelessWidget {
                 radius: AppRadii.md,
                 tone: toneFor(hit.id),
               ),
-              CircleIconButton(
-                icon: AppIcons.play,
-                tooltip: inApp
-                    ? context.l10n.mediaDetailPlayInApp
-                    : audio
-                    ? context.l10n.mediaDetailListenOriginal
-                    : context.l10n.mediaDetailWatchYoutube,
-                emphasized: true,
-                size: AppSizes.circleButtonLarge,
-                onPressed: onPlay,
-              ),
+              if (previewing)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadii.md),
+                  child: SizedBox(
+                    width: width,
+                    height: width * 9 / 16,
+                    child: _PreviewVideoBox(hit: hit),
+                  ),
+                )
+              else
+                CircleIconButton(
+                  icon: AppIcons.play,
+                  tooltip: inApp
+                      ? context.l10n.mediaDetailPlayInApp
+                      : audio
+                      ? context.l10n.mediaDetailListenOriginal
+                      : context.l10n.mediaDetailWatchYoutube,
+                  emphasized: true,
+                  size: AppSizes.circleButtonLarge,
+                  onPressed: onPlay,
+                ),
             ],
           ),
         );
       },
+    );
+  }
+}
+
+/// 미리 듣는 영상. 누르면 재생 · 일시정지 아이콘 버튼이 잠시 떠서 누를 수 있고,
+/// 멈춰 있는 동안에는 계속 보인다.
+class _PreviewVideoBox extends StatefulWidget {
+  const _PreviewVideoBox({required this.hit});
+
+  final MediaHit hit;
+
+  @override
+  State<_PreviewVideoBox> createState() => _PreviewVideoBoxState();
+}
+
+class _PreviewVideoBoxState extends State<_PreviewVideoBox> {
+  static const _hideAfter = Duration(seconds: 2);
+  var _touched = false;
+  Timer? _timer;
+
+  void _reveal() {
+    setState(() => _touched = true);
+    _timer?.cancel();
+    _timer = Timer(_hideAfter, () {
+      if (mounted) setState(() => _touched = false);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final paused = context.select((PreviewCubit c) => c.state.paused);
+    final show = paused || _touched;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        PreviewVideo(pageUrl: widget.hit.url),
+        GestureDetector(behavior: HitTestBehavior.translucent, onTap: _reveal),
+        Center(
+          child: IgnorePointer(
+            ignoring: !show,
+            child: AnimatedOpacity(
+              opacity: show ? 1 : 0,
+              duration: AppMotion.fast,
+              child: CircleIconButton(
+                icon: paused ? AppIcons.play : AppIcons.pause,
+                tooltip: paused
+                    ? l10n.searchPreviewResume
+                    : l10n.searchPreviewPause,
+                emphasized: true,
+                size: AppSizes.circleButtonLarge,
+                onPressed: () {
+                  context.read<PreviewCubit>().togglePause();
+                  if (!paused) _reveal();
+                },
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

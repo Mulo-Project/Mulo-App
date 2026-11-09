@@ -181,12 +181,10 @@ class LyricsSyncCubit extends Cubit<LyricsSyncState> {
     var stamped = draft.stamp(position);
     // 앞쪽으로 당겨 찍어 그 앞의 싱크가 함께 내려왔다면, 바뀐 것 중 맨 앞 칸으로 포커스를 돌려 확인하게 한다.
     var focus = at + 1 < stamped.length ? at + 1 : at;
-    var redirected = false;
     for (var i = 0; i < at; i++) {
       if (stamped.times[i] != draft.times[i]) {
         stamped = stamped.moveTo(i);
         focus = i;
-        redirected = true;
         break;
       }
     }

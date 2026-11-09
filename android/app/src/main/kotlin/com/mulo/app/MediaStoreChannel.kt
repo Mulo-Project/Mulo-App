@@ -5,6 +5,7 @@ import android.app.RecoverableSecurityException
 import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
+import android.graphics.Bitmap
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaMetadataRetriever
@@ -14,6 +15,7 @@ import android.os.Environment
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
+import java.io.ByteArrayOutputStream
 import java.io.File
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
@@ -119,6 +121,16 @@ class MediaStoreChannel(
                 "queryAudio" -> io.execute {
                     try {
                         val rows = queryAudio()
+                        main.post { result.success(rows) }
+                    } catch (e: SecurityException) {
+                        main.post { result.error("permission", e.message, null) }
+                    } catch (e: Exception) {
+                        main.post { result.error("query_failed", e.message, null) }
+                    }
+                }
+                "queryVideo" -> io.execute {
+                    try {
+                        val rows = queryVideo()
                         main.post { result.success(rows) }
                     } catch (e: SecurityException) {
                         main.post { result.error("permission", e.message, null) }
@@ -273,10 +285,32 @@ class MediaStoreChannel(
         val retriever = MediaMetadataRetriever()
         try {
             retriever.setDataSource(context, uri)
-            return retriever.embeddedPicture
+            retriever.embeddedPicture?.let { return it }
+            // 영상 파일은 내장 커버가 없으니 앞쪽 한 장면을 커버로 쓴다.
+            if (context.contentResolver.getType(uri)?.startsWith("video/") == true) return videoFrame(retriever)
+            return null
         } finally {
             retriever.release()
         }
+    }
+
+    /** 영상 길이의 10%(최대 10초) 지점 장면을 긴 변 512px 이하 JPEG로. 못 읽으면 null. */
+    private fun videoFrame(retriever: MediaMetadataRetriever): ByteArray? {
+        val durationMs = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull() ?: 0L
+        val atUs = minOf(durationMs / 10, 10_000L) * 1000
+        val frame = retriever.getFrameAtTime(atUs, MediaMetadataRetriever.OPTION_CLOSEST_SYNC) ?: return null
+        val longSide = maxOf(frame.width, frame.height)
+        val scaled = if (longSide > 512) {
+            val ratio = 512f / longSide
+            Bitmap.createScaledBitmap(frame, (frame.width * ratio).toInt().coerceAtLeast(1), (frame.height * ratio).toInt().coerceAtLeast(1), true)
+        } else {
+            frame
+        }
+        val out = ByteArrayOutputStream()
+        scaled.compress(Bitmap.CompressFormat.JPEG, 85, out)
+        if (scaled !== frame) scaled.recycle()
+        frame.recycle()
+        return out.toByteArray()
     }
 
     private fun deleteAudio(uri: Uri, result: MethodChannel.Result) {
@@ -392,6 +426,50 @@ class MediaStoreChannel(
                     // 불러오는 폴더로 거르고 폴더별 곡 수를 세는 데 쓴다.
                     "folder" to c.getString(data)?.let { File(it).parent },
                     // 파일이 기기에 들어온 시각(밀리초). 추가일순 정렬에 쓴다.
+                    "addedAtMs" to c.getLong(dateAdded) * 1000,
+                )
+            }
+        }
+        return rows
+    }
+
+    /** 기기의 영상 파일. 보관함에서는 소리는 네이티브가, 화면은 Dart가 같은 파일로 보여 준다. */
+    private fun queryVideo(): List<Map<String, Any?>> {
+        val collection = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+        val projection = arrayOf(
+            MediaStore.Video.Media._ID,
+            MediaStore.Video.Media.TITLE,
+            MediaStore.Video.Media.ARTIST,
+            MediaStore.Video.Media.ALBUM,
+            MediaStore.Video.Media.DURATION,
+            MediaStore.Video.Media.DATA,
+            MediaStore.Video.Media.DATE_ADDED,
+        )
+        val rows = mutableListOf<Map<String, Any?>>()
+        context.contentResolver.query(
+            collection,
+            projection,
+            null,
+            null,
+            "${MediaStore.Video.Media.TITLE} ASC",
+        )?.use { c ->
+            val id = c.getColumnIndexOrThrow(MediaStore.Video.Media._ID)
+            val title = c.getColumnIndexOrThrow(MediaStore.Video.Media.TITLE)
+            val artist = c.getColumnIndexOrThrow(MediaStore.Video.Media.ARTIST)
+            val album = c.getColumnIndexOrThrow(MediaStore.Video.Media.ALBUM)
+            val duration = c.getColumnIndexOrThrow(MediaStore.Video.Media.DURATION)
+            val data = c.getColumnIndexOrThrow(MediaStore.Video.Media.DATA)
+            val dateAdded = c.getColumnIndexOrThrow(MediaStore.Video.Media.DATE_ADDED)
+            while (c.moveToNext()) {
+                val mediaId = c.getLong(id)
+                rows += mapOf(
+                    "id" to mediaId,
+                    "title" to c.getString(title),
+                    "artist" to c.getString(artist),
+                    "album" to c.getString(album),
+                    "durationMs" to c.getLong(duration),
+                    "uri" to ContentUris.withAppendedId(collection, mediaId).toString(),
+                    "folder" to c.getString(data)?.let { File(it).parent },
                     "addedAtMs" to c.getLong(dateAdded) * 1000,
                 )
             }

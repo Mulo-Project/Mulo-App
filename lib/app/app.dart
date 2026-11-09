@@ -27,6 +27,7 @@ import '../features/notifications/presentation/bloc/notification_settings_cubit.
 import '../features/notifications/presentation/bloc/notification_sync_cubit.dart';
 import '../features/notifications/presentation/widgets/notification_bridge.dart';
 import '../features/player/presentation/bloc/audio_output_cubit.dart';
+import '../features/player/presentation/bloc/video_surface_cubit.dart';
 import '../features/player/presentation/bloc/now_playing_cubit.dart';
 import '../features/player/presentation/bloc/output_behavior_cubit.dart';
 import '../features/player/presentation/bloc/mix_with_others_cubit.dart';
@@ -122,6 +123,7 @@ class _MusicAppState extends State<MusicApp> {
         BlocProvider(create: (_) => sl<EqualizerLibraryCubit>()..load()),
         BlocProvider(create: (_) => sl<PlayRecorderCubit>()),
         BlocProvider(create: (_) => sl<PreviewCubit>()),
+        BlocProvider(create: (_) => sl<VideoSurfaceCubit>()),
         BlocProvider(create: (_) => sl<DownloadQueueCubit>()..start()),
         BlocProvider(create: (_) => sl<DownloadSettingsCubit>()..load()),
         BlocProvider(create: (_) => sl<DownloadPreferencesCubit>()..load()),

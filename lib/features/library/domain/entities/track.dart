@@ -37,6 +37,16 @@ class Track {
   final String folder;
   final TrackSource source;
 
+  /// 영상 파일인가 (보관함에서 영상도 곡으로 불러온다). 소리는 네이티브가, 화면은 Dart가 같은 파일로 낸다.
+  bool get isVideo =>
+      id.startsWith(videoIdPrefix) ||
+      (id.startsWith('file:') && _videoExtensions.any(uri.toLowerCase().endsWith));
+
+  /// 기기에서 불러온 영상 곡의 id 앞머리.
+  static const videoIdPrefix = 'device-video:';
+
+  static const _videoExtensions = ['.mp4', '.mkv', '.webm', '.mov', '.m4v'];
+
   /// 편집한 정보를 반영한 새 곡 (id · 재생 주소 등은 그대로).
   Track withInfo(TrackInfo info) => Track(
     id: id,

@@ -124,6 +124,12 @@ object PlaybackHub {
             .setHandleAudioBecomingNoisy(PlaybackStore.pauseOnDisconnect(context))
             .setWakeMode(C.WAKE_MODE_LOCAL)
             .build()
+        // 영상 파일의 화면은 앱 화면이 붙어 있을 때만 해독한다 (평소에는 소리만).
+        // 같은 플레이어가 소리와 영상을 한 시계로 다룬다 ([VideoSurfaceHub]).
+        exo.trackSelectionParameters = exo.trackSelectionParameters.buildUpon()
+            .setTrackTypeDisabled(C.TRACK_TYPE_VIDEO, true)
+            .build()
+        VideoSurfaceHub.setMain(exo)
         exo.addListener(playerListener)
         exo.setPlaybackSpeed(PlaybackStore.speed(context))
         EqualizerEngine.attach(exo.audioSessionId)

@@ -142,8 +142,9 @@ void main() {
     await tester.tap(find.byType(AppBackButton));
     await tester.pumpAndSettle();
     expect(find.text('고친 제목'), findsOneWidget);
-    expect(find.text('둘째 곡'), findsOneWidget);
-    expect(find.text('첫 곡'), findsNothing);
+    // 목록은 최근에 담은 곡이 먼저라 맨 위(둘째 곡)를 고쳤다.
+    expect(find.text('첫 곡'), findsOneWidget);
+    expect(find.text('둘째 곡'), findsNothing);
   });
 
   testWidgets('삭제: 확인하면 음악 파일과 보관함 기록이 지워지고, 취소하면 그대로', (tester) async {

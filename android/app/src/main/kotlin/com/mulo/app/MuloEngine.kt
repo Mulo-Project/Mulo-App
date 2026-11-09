@@ -49,12 +49,14 @@ object MuloEngine {
         val transcoder = TranscoderChannel(app, messenger)
         val playback = PlaybackChannel(app, messenger)
         val preview = PreviewChannel(app, messenger)
+        val video = VideoChannel(app, messenger, created.renderer)
         val equalizer = EqualizerChannel(app, messenger)
         val subscriptions = SubscriptionChannel(app, messenger) { activity?.moveTaskToBack(true) }
         mediaStore = store
         channels = listOf(
             store::dispose, lyrics::dispose, lyricsOverlay::dispose, audioOutput::dispose, ytDlp::dispose,
-            transcoder::dispose, playback::dispose, preview::dispose, equalizer::dispose, subscriptions::dispose,
+            transcoder::dispose, playback::dispose, preview::dispose, video::dispose, equalizer::dispose,
+            subscriptions::dispose,
         )
         engine = created
         FlutterEngineCache.getInstance().put(CACHE_ID, created)

@@ -4,6 +4,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- 기기 음악 불러오기 (#11): Android 13+ -->
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <!-- 폴더 안의 영상 파일도 곡으로 불러온다: Android 13+ -->
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <!-- Android 12 이하 -->
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"

@@ -4,6 +4,7 @@ import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/search_source.dart';
 import '../../domain/entities/subtitle_track.dart';
+import '../../domain/entities/video_stream.dart';
 import '../../domain/repositories/downloader_engine.dart';
 import 'local_engine.dart';
 import 'server_engine.dart';
@@ -60,6 +61,10 @@ class RoutingDownloaderEngine implements DownloaderEngine {
   @override
   Future<ChannelInfo> fetchChannel(String url) async =>
       (await _pick()).fetchChannel(url);
+
+  @override
+  Future<VideoStream> resolveVideoStream(String url) async =>
+      (await _pick()).resolveVideoStream(url);
 
   @override
   Future<AudioStream> resolveAudioStream(

@@ -8,6 +8,7 @@ import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/search_source.dart';
 import '../../domain/entities/subtitle_track.dart';
+import '../../domain/entities/video_stream.dart';
 import '../../domain/repositories/downloader_engine.dart';
 
 /// 주소의 페이지 본문을 읽는다 (테스트에서 바꿔 끼운다). 못 읽으면 null.
@@ -112,6 +113,10 @@ class SoundcloudAvatarEngine implements DownloaderEngine {
     refresh: refresh,
     audioLanguage: audioLanguage,
   );
+
+  @override
+  Future<VideoStream> resolveVideoStream(String url) =>
+      _inner.resolveVideoStream(url);
 
   @override
   Future<List<AudioLanguage>> fetchAudioLanguages(String url) =>
