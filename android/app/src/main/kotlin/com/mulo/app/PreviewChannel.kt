@@ -87,6 +87,12 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
         }
     }
 
+    private fun isVideoDecoderError(error: PlaybackException) =
+        error.errorCode == PlaybackException.ERROR_CODE_DECODER_INIT_FAILED ||
+            error.errorCode == PlaybackException.ERROR_CODE_DECODING_FAILED ||
+            error.errorCode == PlaybackException.ERROR_CODE_DECODER_QUERY_FAILED ||
+            error.errorCode == PlaybackException.ERROR_CODE_DECODING_FORMAT_EXCEEDS_CAPABILITIES
+
     private val ticker = object : Runnable {
         override fun run() {
             val p = player ?: return
@@ -117,6 +123,18 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
 
         override fun onPlayerError(error: PlaybackException) {
             MuloLog.e(MuloLog.NATIVE, "미리 듣기 소리 오류: ${error.errorCodeName}", error)
+            val p = player
+            if (muxedVideo && p != null && isVideoDecoderError(error)) {
+                // 영상 해독만 실패했다: 영상을 끄고 소리는 이어서 재생한다.
+                muxedVideo = false
+                VideoSurfaceHub.setPreviewVideo(null)
+                p.trackSelectionParameters = p.trackSelectionParameters.buildUpon()
+                    .setTrackTypeDisabled(C.TRACK_TYPE_VIDEO, true)
+                    .build()
+                p.prepare()
+                p.play()
+                return
+            }
             val message = "${error.errorCodeName}: ${error.message ?: ""}"
             val waiting = pending
             if (waiting != null) {
