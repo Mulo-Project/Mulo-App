@@ -767,6 +767,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newVideosDetail => 'Details';
 
   @override
+  String get savedVideosConfirm => 'Add';
+
+  @override
   String get settingsPurgeHidden => 'Clear hidden song records';
 
   @override

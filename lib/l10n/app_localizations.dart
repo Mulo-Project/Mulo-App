@@ -1490,6 +1490,12 @@ abstract class AppLocalizations {
   /// **'상세 보기'**
   String get newVideosDetail;
 
+  /// No description provided for @savedVideosConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'담기'**
+  String get savedVideosConfirm;
+
   /// No description provided for @settingsPurgeHidden.
   ///
   /// In ko, this message translates to:

@@ -751,6 +751,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get newVideosDetail => '상세 보기';
 
   @override
+  String get savedVideosConfirm => '담기';
+
+  @override
   String get settingsPurgeHidden => '숨긴 곡 기록 정리';
 
   @override

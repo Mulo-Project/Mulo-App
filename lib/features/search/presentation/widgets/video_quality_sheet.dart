@@ -18,60 +18,85 @@ String videoQualityLabel(BuildContext context, VideoQuality quality) {
   };
 }
 
-/// 저장할 영상 화질을 고르는 시트. 고르면 그 화질을 돌려주고, 그냥 닫으면 null (저장하지 않는다).
+/// 저장할 영상 화질을 고르는 시트. 항목은 고르기만 하고, 아래 `담기`를 눌러야 그 화질을 돌려준다.
+/// 그냥 닫으면 null (저장하지 않는다).
 Future<VideoQuality?> pickSaveQuality(
   BuildContext context, {
   VideoQuality? initial,
 }) {
   return showAppSheet<VideoQuality>(
     context,
-    builder: (sheetContext) {
-      final l10n = sheetContext.l10n;
-      final p = sheetContext.palette;
-      final text = Theme.of(sheetContext).textTheme;
-      return SafeArea(
-        child: Padding(
-          padding: appSheetPadding,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AppSheetTitle(
-                l10n.savedVideosQualityTitle,
-                subtitle: l10n.savedVideosQualityHint,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              for (final quality in VideoQuality.values)
-                InkWell(
-                  key: ValueKey('save-quality-${quality.name}'),
-                  onTap: () => Navigator.of(sheetContext).pop(quality),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppSpacing.sm + AppSpacing.xxs,
-                    ),
-                    // 기존 화질 시트처럼 한 줄 전체를 눌리게 한다 (글자 폭만 눌리면 어색하다).
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            videoQualityLabel(sheetContext, quality),
-                            style: text.bodyLarge?.copyWith(
-                              color: quality == initial
-                                  ? p.accent
-                                  : p.onSurface,
-                            ),
+    builder: (_) => _SaveQualitySheet(initial: initial ?? VideoQuality.standard),
+  );
+}
+
+class _SaveQualitySheet extends StatefulWidget {
+  const _SaveQualitySheet({required this.initial});
+
+  final VideoQuality initial;
+
+  @override
+  State<_SaveQualitySheet> createState() => _SaveQualitySheetState();
+}
+
+class _SaveQualitySheetState extends State<_SaveQualitySheet> {
+  late VideoQuality _selected = widget.initial;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final p = context.palette;
+    final text = Theme.of(context).textTheme;
+    return SafeArea(
+      child: Padding(
+        padding: appSheetPadding,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AppSheetTitle(
+              l10n.savedVideosQualityTitle,
+              subtitle: l10n.savedVideosQualityHint,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            for (final quality in VideoQuality.values)
+              InkWell(
+                key: ValueKey('save-quality-${quality.name}'),
+                onTap: () => setState(() => _selected = quality),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: AppSpacing.sm + AppSpacing.xxs,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          videoQualityLabel(context, quality),
+                          style: text.bodyLarge?.copyWith(
+                            color: quality == _selected
+                                ? p.accent
+                                : p.onSurface,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-            ],
-          ),
+              ),
+            const SizedBox(height: AppSpacing.md),
+            SizedBox(
+              width: double.infinity,
+              child: PillButton(
+                key: const ValueKey('save-quality-confirm'),
+                label: l10n.savedVideosConfirm,
+                onPressed: () => Navigator.of(context).pop(_selected),
+              ),
+            ),
+          ],
         ),
-      );
-    },
-  );
+      ),
+    );
+  }
 }
 
 /// "영상 화질" 시트: 고르면 바로 저장되고 다음 미리 듣기부터 적용된다.

@@ -253,6 +253,7 @@
   "videoFullscreen": "Fullscreen",
   "videoFullscreenExit": "Close",
   "newVideosDetail": "Details",
+  "savedVideosConfirm": "Add",
   "settingsStreamCacheCleared": "Streaming cache cleared",
   "settingsPurgeHidden": "Clear hidden song records",
   "settingsPurgeHiddenDesc": "Records of {count} hidden songs from removed folders are kept",
