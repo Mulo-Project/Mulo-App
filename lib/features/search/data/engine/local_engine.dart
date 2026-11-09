@@ -234,7 +234,7 @@ class LocalEngine implements DownloaderEngine {
         '--no-warnings',
         ...extra,
         url,
-      ]);
+      ], urgent: true);
       final j = _decode(out);
       final streamUrl = parseText(j?['url']);
       if (j == null || streamUrl == null) {
@@ -308,7 +308,7 @@ class LocalEngine implements DownloaderEngine {
         '--no-warnings',
         ...extra,
         url,
-      ]);
+      ], urgent: true);
       final j = _decode(out);
       final streamUrl = parseText(j?['url']);
       if (j == null || streamUrl == null) {
@@ -474,7 +474,15 @@ class LocalEngine implements DownloaderEngine {
     return orig.isEmpty ? keys : orig;
   }
 
-  Future<String> _exec(List<String> args) async {
+  /// yt-dlp가 겹쳐 돌면 휴대폰에서 서로 느려진다 (영상 주소가 혼자면 4초, 겹치면 20초 넘게).
+  /// 미리 듣기에 바로 필요한 소리 · 영상 주소 읽기([urgent])는 바로 돌고,
+  /// 곡 정보 · 소리 언어 목록 같은 나머지는 급한 것이 없을 때 한 번에 하나씩만 돈다.
+  static final _gate = _ExecGate();
+
+  Future<String> _exec(List<String> args, {bool urgent = false}) =>
+      _gate.run(urgent, () => _execNow(args));
+
+  Future<String> _execNow(List<String> args) async {
     final ({int exitCode, String stdout, String stderr}) r;
     final clock = Stopwatch()..start();
     // 어떤 호출이 얼마나 걸리는지 보려고 형식 선택과 클라이언트만 요약해 적는다.
@@ -602,4 +610,42 @@ class LocalEngine implements DownloaderEngine {
   ];
   final a = choose(orig.isEmpty ? automatic : orig);
   return a == null ? null : (language: a, automatic: true);
+}
+
+/// 급한 yt-dlp 호출은 바로 돌리고, 급하지 않은 호출은 급한 것이 없을 때 한 번에 하나만 돌린다.
+class _ExecGate {
+  int _urgentRunning = 0;
+  bool _lowRunning = false;
+  final _low = <Completer<void>>[];
+
+  Future<T> run<T>(bool urgent, Future<T> Function() task) async {
+    if (urgent) {
+      _urgentRunning++;
+      try {
+        return await task();
+      } finally {
+        _urgentRunning--;
+        _drain();
+      }
+    }
+    if (_urgentRunning > 0 || _lowRunning || _low.isNotEmpty) {
+      final waiter = Completer<void>();
+      _low.add(waiter);
+      await waiter.future;
+    } else {
+      _lowRunning = true;
+    }
+    try {
+      return await task();
+    } finally {
+      _lowRunning = false;
+      _drain();
+    }
+  }
+
+  void _drain() {
+    if (_urgentRunning > 0 || _lowRunning || _low.isEmpty) return;
+    _lowRunning = true;
+    _low.removeAt(0).complete();
+  }
 }
