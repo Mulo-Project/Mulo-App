@@ -161,6 +161,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchLiveNoDownload => "Live streams can't be downloaded";
 
   @override
+  String get searchLiveNoPreview => "Live streams can't be previewed";
+
+  @override
   String get searchResultsTitle => 'Results';
 
   @override

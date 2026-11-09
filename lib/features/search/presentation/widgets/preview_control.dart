@@ -25,6 +25,16 @@ Future<bool> togglePreview(
   final preview = context.read<PreviewCubit>();
   final nowPlaying = context.read<NowPlayingCubit>();
 
+  // 라이브는 끝이 없거나 아직 시작 전이라 주소가 없다. 이미 듣는 중이면 멈추기만 한다.
+  if (hit.isLive && !preview.state.isActive(hit.id)) {
+    if (announceFailure) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(l10n.searchLiveNoPreview)));
+    }
+    return false;
+  }
+
   final failure = await preview.toggle(hit, audioLanguage: audioLanguage);
   if (failure != null) {
     if (!announceFailure) return false;

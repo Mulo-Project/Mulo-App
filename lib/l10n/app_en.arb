@@ -48,6 +48,7 @@
   "searchLoadMore": "Load more",
   "searchLive": "Live",
   "searchLiveNoDownload": "Live streams can't be downloaded",
+  "searchLiveNoPreview": "Live streams can't be previewed",
   "searchResultsTitle": "Results",
   "searchUrlCardLabel": "Found from URL",
   "searchPlaylistLabel": "Playlist",

@@ -598,7 +598,8 @@ class LocalEngine implements DownloaderEngine {
           if (!_keys(j['subtitles']).contains(k)) k,
       ],
       album: parseText(j['album']) ?? '',
-      isLive: _isLive(j),
+      // 검색 목록의 라이브 · 예정 방송은 길이가 없다 (유튜브 일반 영상은 길이가 있다).
+      isLive: _isLive(j) || (seconds == null && id.length == 11),
     );
   }
 }
