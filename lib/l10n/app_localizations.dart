@@ -1448,6 +1448,24 @@ abstract class AppLocalizations {
   /// **'저장 해제'**
   String get savedVideosRemove;
 
+  /// No description provided for @savedVideosClearAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체 삭제'**
+  String get savedVideosClearAll;
+
+  /// No description provided for @savedVideosClearAllTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장한 음원을 모두 삭제할까요?'**
+  String get savedVideosClearAllTitle;
+
+  /// No description provided for @savedVideosClearAllBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장해 둔 음원이 모두 지워져요'**
+  String get savedVideosClearAllBody;
+
   /// No description provided for @savedVideosUsed.
   ///
   /// In ko, this message translates to:

@@ -38,6 +38,14 @@ class SavedVideosScreen extends StatelessWidget {
               AppTopBar(
                 title: l10n.savedVideosTitle,
                 leading: const AppBackButton(),
+                actions: [
+                  if (videos.isNotEmpty)
+                    PlainButton(
+                      key: const ValueKey('saved-clear-all'),
+                      label: l10n.savedVideosClearAll,
+                      onPressed: () => _confirmClearAll(context),
+                    ),
+                ],
               ),
               Expanded(
                 child: videos.isEmpty
@@ -92,6 +100,19 @@ class SavedVideosScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<void> _confirmClearAll(BuildContext context) async {
+  final l10n = context.l10n;
+  final cubit = context.read<SavedVideosCubit>();
+  final ok = await showConfirmDialog(
+    context,
+    title: l10n.savedVideosClearAllTitle,
+    body: l10n.savedVideosClearAllBody,
+    confirmLabel: l10n.savedVideosClearAll,
+    cancelLabel: l10n.actionCancel,
+  );
+  if (ok) await cubit.removeAll();
 }
 
 /// 저장한 곡 한 줄. 영상(화질을 고른 것)은 위에 16:9 영상 영역, 아래에 번호 · 제목 · 정보 · 버튼을 둔 큰 타일이고,

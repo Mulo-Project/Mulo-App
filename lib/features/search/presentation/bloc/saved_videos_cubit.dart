@@ -65,6 +65,13 @@ class SavedVideosCubit extends Cubit<List<SavedVideo>> {
     if (!isClosed) emit(list);
   }
 
+  /// 저장한 곡을 모두 뺀다.
+  Future<void> removeAll() async {
+    for (final v in List.of(state)) {
+      await remove(v.id);
+    }
+  }
+
   Future<void> _onDone(({String id, bool ok}) e) async {
     if (!e.ok || isClosed) return;
     final list = await _markReady(e.id);

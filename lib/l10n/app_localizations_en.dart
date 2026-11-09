@@ -744,6 +744,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get savedVideosRemove => 'Remove';
 
   @override
+  String get savedVideosClearAll => 'Delete all';
+
+  @override
+  String get savedVideosClearAllTitle => 'Delete all saved audio?';
+
+  @override
+  String get savedVideosClearAllBody => 'Everything you saved will be removed';
+
+  @override
   String savedVideosUsed(String size) {
     return '$size used';
   }

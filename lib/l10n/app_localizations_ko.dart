@@ -728,6 +728,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get savedVideosRemove => '저장 해제';
 
   @override
+  String get savedVideosClearAll => '전체 삭제';
+
+  @override
+  String get savedVideosClearAllTitle => '저장한 음원을 모두 삭제할까요?';
+
+  @override
+  String get savedVideosClearAllBody => '저장해 둔 음원이 모두 지워져요';
+
+  @override
   String savedVideosUsed(String size) {
     return '$size 사용 중';
   }

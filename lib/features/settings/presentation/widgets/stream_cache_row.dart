@@ -96,26 +96,6 @@ class _StreamCacheSheet extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: AppSpacing.md),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: PillButton(
-                key: const ValueKey('stream-cache-clear'),
-                label: l10n.settingsStreamCacheClear,
-                variant: PillVariant.tonal,
-                compact: true,
-                onPressed: info.usedBytes == 0
-                    ? null
-                    : () async {
-                        final messenger = ScaffoldMessenger.of(context);
-                        final cleared = l10n.settingsStreamCacheCleared;
-                        await cubit.clear();
-                        messenger.showSnackBar(
-                          SnackBar(content: Text(cleared)),
-                        );
-                      },
-              ),
-            ),
           ],
         ),
       ),
