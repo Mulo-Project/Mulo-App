@@ -97,9 +97,10 @@ void registerSearch(GetIt sl) {
     ..registerFactory(() => SaveVideo(sl(), sl(), sl(), sl()))
     ..registerFactory(() => RemoveSavedVideo(sl(), sl()))
     ..registerFactory(() => MarkSavedVideoReady(sl()))
+    ..registerFactory(() => ResumeSavedVideos(sl(), sl(), sl(), sl()))
     ..registerFactory(() => WatchSavedDone(sl()))
     ..registerFactory(
-      () => SavedVideosCubit(sl(), sl(), sl(), sl(), sl()),
+      () => SavedVideosCubit(sl(), sl(), sl(), sl(), sl(), resume: sl()),
     )
     ..registerFactory(
       () => PreviewCubit(

@@ -15,16 +15,19 @@ class SavedVideosCubit extends Cubit<List<SavedVideo>> {
     this._save,
     this._remove,
     this._markReady,
-    WatchSavedDone watchDone,
-  ) : super(const []) {
+    WatchSavedDone watchDone, {
+    ResumeSavedVideos? resume,
+  }) : _resume = resume,
+       super(const []) {
     _done = watchDone(const NoParams()).listen(_onDone);
-    unawaited(load());
+    unawaited(load().then((_) => _resumeUnfinished()));
   }
 
   final LoadSavedVideos _load;
   final SaveVideo _save;
   final RemoveSavedVideo _remove;
   final MarkSavedVideoReady _markReady;
+  final ResumeSavedVideos? _resume;
   late final StreamSubscription<({String id, bool ok})> _done;
 
   /// 보관을 시작했지만 주소를 읽는 중인 영상 id (버튼을 잠시 막는다).
@@ -43,6 +46,18 @@ class SavedVideosCubit extends Cubit<List<SavedVideo>> {
       if (!isClosed) emit(list);
     } on Object {
       // 읽지 못하면 빈 목록으로 둔다.
+    }
+  }
+
+  /// 받다가 끊긴 곡을 이어 받는다. 실패해도 목록은 그대로다.
+  Future<void> _resumeUnfinished() async {
+    final resume = _resume;
+    if (resume == null || !state.any((v) => !v.ready)) return;
+    try {
+      final list = await resume(const NoParams());
+      if (!isClosed) emit(list);
+    } on Object {
+      // 못 이어 받으면 다음에 켤 때 다시 시도한다.
     }
   }
 

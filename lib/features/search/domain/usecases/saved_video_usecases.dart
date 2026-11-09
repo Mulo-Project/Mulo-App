@@ -52,18 +52,12 @@ class SaveVideo implements UseCase<List<SavedVideo>, SaveVideoParams> {
     // 미리 듣기가 트는 것과 같은 주소를 받는다. 유튜브는 고른 화질의 영상 주소:
     // 소리가 든 형식이면 그것 하나, 영상 전용이면 소리 주소도 함께 (플레이어가 따로 틀어 맞춘다).
     // 소리만 저장하는 곡(quality 없음)이나 영상이 안 읽히는 곡은 소리 주소 하나.
-    final targets = <VideoStream>[];
-    if (quality != null) {
-      try {
-        final v = await _resolveVideo(hit.url, quality: quality);
-        targets.add(v);
-        if (v.muxed) return await _finish(list, hit, quality, targets);
-      } on Object {
-        targets.clear();
-      }
-    }
-    final a = await _resolveAudio(hit.url);
-    targets.add(VideoStream(url: a.url, headers: a.headers));
+    final targets = await _resolveTargets(
+      _resolveVideo,
+      _resolveAudio,
+      hit,
+      quality,
+    );
     return _finish(list, hit, quality, targets);
   }
 
@@ -86,6 +80,78 @@ class SaveVideo implements UseCase<List<SavedVideo>, SaveVideoParams> {
         if (v.streamId != null) v.streamId!,
     ]);
     return next;
+  }
+}
+
+/// 저장할 주소들: 유튜브는 고른 화질의 영상 주소 (소리가 든 형식이면 그것 하나, 영상 전용이면 소리 주소도 함께),
+/// 소리만 저장하는 곡(quality 없음)이나 영상이 안 읽히는 곡은 소리 주소 하나.
+Future<List<VideoStream>> _resolveTargets(
+  ResolveVideoStream resolveVideo,
+  ResolveAudioStream resolveAudio,
+  MediaHit hit,
+  VideoQuality? quality,
+) async {
+  final targets = <VideoStream>[];
+  if (quality != null) {
+    try {
+      final v = await resolveVideo(hit.url, quality: quality);
+      targets.add(v);
+      if (v.muxed) return targets;
+    } on Object {
+      targets.clear();
+    }
+  }
+  final a = await resolveAudio(hit.url);
+  targets.add(VideoStream(url: a.url, headers: a.headers));
+  return targets;
+}
+
+/// 받다가 끊긴 저장분(앱이 꺼졌거나 네트워크가 끊긴 곡)을 이어 받는다 (앱을 켤 때 한 번).
+/// 주소를 새로 읽어 받기를 다시 시작하고, 이미 받은 부분은 건너뛴다. 한 곡이 실패해도 나머지는 계속한다.
+class ResumeSavedVideos implements UseCase<List<SavedVideo>, NoParams> {
+  const ResumeSavedVideos(
+    this._repo,
+    this._player,
+    this._resolveVideo,
+    this._resolveAudio,
+  );
+
+  final SavedVideoRepository _repo;
+  final PreviewPlayer _player;
+  final ResolveVideoStream _resolveVideo;
+  final ResolveAudioStream _resolveAudio;
+
+  @override
+  Future<List<SavedVideo>> call(NoParams params) async {
+    var list = await _repo.load();
+    for (final v in List.of(list)) {
+      if (v.ready) continue;
+      try {
+        final targets = await _resolveTargets(
+          _resolveVideo,
+          _resolveAudio,
+          v.hit,
+          v.quality,
+        );
+        final streamId = await _player.saveStream(v.hit.id, targets);
+        list = [
+          for (final x in await _repo.load())
+            x.id == v.id
+                ? SavedVideo(
+                    hit: x.hit,
+                    streamId: streamId,
+                    ready: x.ready,
+                    quality: x.quality,
+                    sources: targets,
+                  )
+                : x,
+        ];
+        await _repo.save(list);
+      } on Object {
+        continue;
+      }
+    }
+    return list;
   }
 }
 
