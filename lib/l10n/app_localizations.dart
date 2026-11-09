@@ -1556,6 +1556,12 @@ abstract class AppLocalizations {
   /// **'옵션'**
   String get videoOptions;
 
+  /// No description provided for @videoPip.
+  ///
+  /// In ko, this message translates to:
+  /// **'작은 화면으로 보기'**
+  String get videoPip;
+
   /// No description provided for @videoOptionsTitle.
   ///
   /// In ko, this message translates to:

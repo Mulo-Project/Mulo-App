@@ -333,6 +333,25 @@ class _VideoOptionsSheet extends StatelessWidget {
                 ),
               ),
             ),
+            // 작은 창(PiP): 눌러서 바로 영상을 작은 창으로 띄운다.
+            InkWell(
+              key: const ValueKey('video-option-pip'),
+              onTap: () {
+                Navigator.of(context).pop();
+                preview.enterPip();
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppSpacing.sm + AppSpacing.xxs,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(child: Text(l10n.videoPip, style: text.bodyLarge)),
+                    Icon(AppIcons.fullscreenExit, size: AppSizes.iconSm, color: context.palette.onSurface),
+                  ],
+                ),
+              ),
+            ),
             const SizedBox(height: AppSpacing.sm),
             Text(l10n.videoQualityTitle, style: text.titleSmall),
             const SizedBox(height: AppSpacing.sm),

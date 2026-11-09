@@ -786,6 +786,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get videoOptions => '옵션';
 
   @override
+  String get videoPip => '작은 화면으로 보기';
+
+  @override
   String get videoOptionsTitle => '영상 옵션';
 
   @override

@@ -49,6 +49,9 @@ abstract interface class PreviewPlayer {
   /// 임시 저장소 용량 한도를 바꾼다 (재생 중이던 미리 듣기는 멈춘다).
   Future<void> setCacheLimit(int bytes);
 
+  /// 영상을 작은 창(PiP)으로 띄운다. 영상이 안 나오는 중이거나 못 띄우면 false.
+  Future<bool> enterPip();
+
   /// 임시 저장소를 모두 비운다 (재생 중이던 미리 듣기는 멈춘다).
   Future<void> clearCache();
 

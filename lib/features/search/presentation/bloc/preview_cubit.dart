@@ -92,11 +92,21 @@ class PreviewCubit extends Cubit<PreviewState> {
     WatchPreviewProgress watchProgress,
     WatchPreviewFailures watchFailures, {
     this.resolveVideo,
+    this.enterPictureInPicture,
   }) : super(const PreviewState()) {
     unawaited(syncWithPlayer());
     _completed = watchCompleted(const NoParams()).listen((_) => _onCompleted());
     _progress = watchProgress(const NoParams()).listen(_onProgress);
     _failures = watchFailures(const NoParams()).listen(_onFailure);
+  }
+
+  /// 영상을 작은 창(PiP)으로 띄운다. 못 띄우면 false.
+  Future<bool> enterPip() async {
+    try {
+      return await enterPictureInPicture?.call(const NoParams()) ?? false;
+    } on Object {
+      return false;
+    }
   }
 
   /// 반복 재생: 켜면 끝까지 들었을 때 멈추지 않고 처음부터 다시 튼다 (한 곡 반복).
@@ -138,6 +148,7 @@ class PreviewCubit extends Cubit<PreviewState> {
 
   /// 영상 주소를 미리 읽어 두는 데 쓴다 (없으면 미리 읽지 않는다).
   final ResolveVideoStream? resolveVideo;
+  final EnterPictureInPicture? enterPictureInPicture;
   final PlayPreview _play;
   final RememberPreview _remember;
   final CurrentPreview _current;

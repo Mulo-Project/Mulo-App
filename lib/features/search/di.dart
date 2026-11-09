@@ -74,6 +74,7 @@ void registerSearch(GetIt sl) {
     ..registerFactory(() => ResolveVideoStream(sl(), sl(), sl()))
     ..registerFactory(() => PlayPreviewVideo(sl()))
     ..registerFactory(() => PreviewVideoCubit(sl(), sl()))
+    ..registerFactory(() => EnterPictureInPicture(sl()))
     ..registerFactory(() => FetchAudioLanguages(sl()))
     ..registerFactory(() => AudioLanguageCubit(sl()))
     ..registerFactory(() => PlayPreview(sl()))
@@ -116,6 +117,7 @@ void registerSearch(GetIt sl) {
         sl(),
         sl(),
         resolveVideo: sl(),
+        enterPictureInPicture: sl(),
       ),
     )
     ..registerFactory(() => SearchCubit(sl(), sl()));

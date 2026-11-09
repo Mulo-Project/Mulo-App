@@ -367,6 +367,16 @@ class GetStreamCacheInfo implements UseCase<StreamCacheInfo, NoParams> {
   Future<StreamCacheInfo> call(NoParams params) => _player.cacheInfo();
 }
 
+/// 영상을 작은 창(PiP)으로 띄우기. 못 띄우면 false.
+class EnterPictureInPicture implements UseCase<bool, NoParams> {
+  const EnterPictureInPicture(this._player);
+
+  final PreviewPlayer _player;
+
+  @override
+  Future<bool> call(NoParams params) => _player.enterPip();
+}
+
 /// 스트리밍 임시 저장소 용량 한도 바꾸기 (바이트).
 class SetStreamCacheLimit implements UseCase<void, int> {
   const SetStreamCacheLimit(this._player);

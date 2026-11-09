@@ -84,6 +84,10 @@ class NativePreviewPlayer implements PreviewPlayer {
   }
 
   @override
+  Future<bool> enterPip() async =>
+      await _channel.invokeMethod<bool>('enterPip') ?? false;
+
+  @override
   Future<void> setCacheLimit(int bytes) =>
       _channel.invokeMethod<void>('setCacheLimit', bytes);
 

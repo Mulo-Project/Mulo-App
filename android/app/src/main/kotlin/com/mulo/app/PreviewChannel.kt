@@ -182,6 +182,7 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
                     result.success(null)
                 }
                 "current" -> result.success(current())
+                "enterPip" -> result.success((MuloEngine.activity as? MainActivity)?.enterPip() ?: false)
                 "cacheInfo" -> result.success(
                     mapOf(
                         "usedBytes" to StreamCache.usedBytes(context),

@@ -78,17 +78,23 @@ class MainActivity : FlutterFragmentActivity() {
     // 영상이 나오는 중에 홈으로 나가면 영상을 작은 창(PiP)으로 띄운다 (Android 8+).
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || inPip()) return
+        enterPip()
+    }
+
+    /** 영상을 작은 창(PiP)으로 띄운다 (홈으로 나갈 때 · 영상 옵션의 버튼). 들어갔으면 true. */
+    fun enterPip(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O || inPip()) return false
         val size = VideoSurfaceHub.pipSize()
         if (size == null) {
             // 영상이 화면에 붙어 첫 화면이 그려졌고 소리가 나는 중이어야 한다: 어느 조건이 빠졌는지 남긴다.
             MuloLog.d(MuloLog.NATIVE, "PiP 안 감: ${VideoSurfaceHub.pipDebug()}")
-            return
+            return false
         }
-        try {
+        return try {
             enterPictureInPictureMode(pipParams(size.first, size.second, VideoSurfaceHub.isPlaying()))
         } catch (e: RuntimeException) {
             MuloLog.e(MuloLog.NATIVE, "PiP 진입 실패 (${VideoSurfaceHub.pipDebug()}): ${e.message}", e)
+            false
         }
     }
 

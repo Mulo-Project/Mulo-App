@@ -802,6 +802,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoOptions => 'Options';
 
   @override
+  String get videoPip => 'Picture-in-picture';
+
+  @override
   String get videoOptionsTitle => 'Video options';
 
   @override
