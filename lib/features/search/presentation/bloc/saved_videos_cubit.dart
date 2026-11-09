@@ -49,6 +49,12 @@ class SavedVideosCubit extends Cubit<List<SavedVideo>> {
     }
   }
 
+  Timer? _retry;
+  var _retryDelay = const Duration(seconds: 30);
+
+  /// 받다가 끊긴 곡을 지금 이어 받는다 (저장한 음원 화면을 열 때도 부른다).
+  Future<void> retry() => _resumeUnfinished();
+
   /// 받다가 끊긴 곡을 이어 받는다. 실패해도 목록은 그대로다.
   Future<void> _resumeUnfinished() async {
     final resume = _resume;
@@ -88,13 +94,24 @@ class SavedVideosCubit extends Cubit<List<SavedVideo>> {
   }
 
   Future<void> _onDone(({String id, bool ok}) e) async {
-    if (!e.ok || isClosed) return;
+    if (isClosed) return;
+    if (!e.ok) {
+      // 끊겼다: 잠시 뒤 다시 이어 받는다 (30초부터 늘려 가며 최대 5분 간격). 네트워크가 돌아오면 그때 이어진다.
+      _retry?.cancel();
+      _retry = Timer(_retryDelay, retry);
+      _retryDelay = Duration(
+        seconds: (_retryDelay.inSeconds * 2).clamp(30, 300),
+      );
+      return;
+    }
+    _retryDelay = const Duration(seconds: 30);
     final list = await _markReady(e.id);
     if (!isClosed) emit(list);
   }
 
   @override
   Future<void> close() async {
+    _retry?.cancel();
     await _done.cancel();
     return super.close();
   }

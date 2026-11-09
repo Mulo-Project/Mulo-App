@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -18,8 +20,20 @@ const savedVideosLocation = '/search/saved';
 
 /// 사용자가 골라 저장해 둔 음원(유튜브는 영상) 목록. 줄을 누르면 상세 화면, 오른쪽 버튼으로 바로 듣고 뺀다.
 /// 저장한 영상은 앱 안에 받아 두어 임시 저장소가 차도 지워지지 않는다.
-class SavedVideosScreen extends StatelessWidget {
+class SavedVideosScreen extends StatefulWidget {
   const SavedVideosScreen({super.key});
+
+  @override
+  State<SavedVideosScreen> createState() => _SavedVideosScreenState();
+}
+
+class _SavedVideosScreenState extends State<SavedVideosScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // 화면을 열 때 끊겼던 받기를 이어 받는다.
+    unawaited(context.read<SavedVideosCubit>().retry());
+  }
 
   @override
   Widget build(BuildContext context) {
