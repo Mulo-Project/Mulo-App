@@ -49,11 +49,20 @@ Future<VideoQuality?> pickSaveQuality(
                     padding: const EdgeInsets.symmetric(
                       vertical: AppSpacing.sm + AppSpacing.xxs,
                     ),
-                    child: Text(
-                      videoQualityLabel(sheetContext, quality),
-                      style: text.bodyLarge?.copyWith(
-                        color: quality == initial ? p.accent : p.onSurface,
-                      ),
+                    // 기존 화질 시트처럼 한 줄 전체를 눌리게 한다 (글자 폭만 눌리면 어색하다).
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            videoQualityLabel(sheetContext, quality),
+                            style: text.bodyLarge?.copyWith(
+                              color: quality == initial
+                                  ? p.accent
+                                  : p.onSurface,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
