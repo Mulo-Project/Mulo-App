@@ -224,6 +224,7 @@
   "settingsMixWithOthers": "다른 앱과 함께 재생",
   "videoQualityTitle": "영상 화질",
   "videoQualityHint": "미리 듣기 영상에 쓰여요. 높이면 선명하지만 데이터를 더 써요.",
+  "videoQualityLow": "144p",
   "videoQualityStandard": "360p · 기본",
   "videoQualityMedium": "480p",
   "videoQualityHigh": "720p",

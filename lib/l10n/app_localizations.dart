@@ -1154,6 +1154,12 @@ abstract class AppLocalizations {
   /// **'미리 듣기 영상에 쓰여요. 높이면 선명하지만 데이터를 더 써요.'**
   String get videoQualityHint;
 
+  /// No description provided for @videoQualityLow.
+  ///
+  /// In ko, this message translates to:
+  /// **'144p'**
+  String get videoQualityLow;
+
   /// No description provided for @videoQualityStandard.
   ///
   /// In ko, this message translates to:

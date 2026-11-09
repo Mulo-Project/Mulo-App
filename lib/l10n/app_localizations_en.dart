@@ -584,6 +584,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoQualityHint => 'Used for the preview video. Higher is sharper but uses more data.';
 
   @override
+  String get videoQualityLow => '144p';
+
+  @override
   String get videoQualityStandard => '360p · Default';
 
   @override

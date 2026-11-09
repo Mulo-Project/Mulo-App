@@ -570,6 +570,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get videoQualityHint => '미리 듣기 영상에 쓰여요. 높이면 선명하지만 데이터를 더 써요.';
 
   @override
+  String get videoQualityLow => '144p';
+
+  @override
   String get videoQualityStandard => '360p · 기본';
 
   @override
