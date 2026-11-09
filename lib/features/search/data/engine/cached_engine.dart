@@ -14,7 +14,7 @@ class CachedDownloaderEngine implements DownloaderEngine {
   CachedDownloaderEngine(
     this._inner, {
     this.ttl = const Duration(minutes: 15),
-    Duration? infoTtl,
+    this.infoTtl,
     this.maxEntries = 300,
     DateTime Function()? now,
   }) : _now = now ?? DateTime.now;

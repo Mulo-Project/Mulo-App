@@ -57,7 +57,7 @@ class SaveVideo implements UseCase<List<SavedVideo>, SaveVideoParams> {
       try {
         final v = await _resolveVideo(hit.url, quality: quality);
         targets.add(v);
-        if (v.muxed) return _finish(list, hit, quality, targets);
+        if (v.muxed) return await _finish(list, hit, quality, targets);
       } on Object {
         targets.clear();
       }
