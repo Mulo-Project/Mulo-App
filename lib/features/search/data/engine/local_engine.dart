@@ -234,7 +234,7 @@ class LocalEngine implements DownloaderEngine {
         '--no-warnings',
         ...extra,
         url,
-      ], urgent: true);
+      ], priority: 0);
       final j = _decode(out);
       final streamUrl = parseText(j?['url']);
       if (j == null || streamUrl == null) {
@@ -308,7 +308,7 @@ class LocalEngine implements DownloaderEngine {
         '--no-warnings',
         ...extra,
         url,
-      ], urgent: true);
+      ], priority: 1);
       final j = _decode(out);
       final streamUrl = parseText(j?['url']);
       if (j == null || streamUrl == null) {
@@ -474,13 +474,13 @@ class LocalEngine implements DownloaderEngine {
     return orig.isEmpty ? keys : orig;
   }
 
-  /// yt-dlp가 겹쳐 돌면 휴대폰에서 서로 느려진다 (영상 주소가 혼자면 4초, 겹치면 20초 넘게).
-  /// 미리 듣기에 바로 필요한 소리 · 영상 주소 읽기([urgent])는 바로 돌고,
-  /// 곡 정보 · 소리 언어 목록 같은 나머지는 급한 것이 없을 때 한 번에 하나씩만 돈다.
+  /// yt-dlp가 겹쳐 돌면 휴대폰에서 서로 느려진다 (혼자 4초인 것이 둘이 겹치면 16초 넘게 걸렸다).
+  /// 그래서 한 번에 하나씩만 돌리고, 기다리는 것은 [priority]가 작은 것부터 돈다:
+  /// 0 소리 주소(소리가 먼저 나게) → 1 영상 주소 → 2 곡 정보 · 소리 언어 목록 같은 나머지.
   static final _gate = _ExecGate();
 
-  Future<String> _exec(List<String> args, {bool urgent = false}) =>
-      _gate.run(urgent, () => _execNow(args));
+  Future<String> _exec(List<String> args, {int priority = 2}) =>
+      _gate.run(priority, () => _execNow(args));
 
   Future<String> _execNow(List<String> args) async {
     final ({int exitCode, String stdout, String stderr}) r;
@@ -612,40 +612,35 @@ class LocalEngine implements DownloaderEngine {
   return a == null ? null : (language: a, automatic: true);
 }
 
-/// 급한 yt-dlp 호출은 바로 돌리고, 급하지 않은 호출은 급한 것이 없을 때 한 번에 하나만 돌린다.
+/// yt-dlp 호출을 한 번에 하나씩, 우선순위(작을수록 먼저)와 들어온 순서대로 돌린다.
 class _ExecGate {
-  int _urgentRunning = 0;
-  bool _lowRunning = false;
-  final _low = <Completer<void>>[];
+  bool _running = false;
+  final _waiting = <({int priority, Completer<void> waiter})>[];
 
-  Future<T> run<T>(bool urgent, Future<T> Function() task) async {
-    if (urgent) {
-      _urgentRunning++;
-      try {
-        return await task();
-      } finally {
-        _urgentRunning--;
-        _drain();
-      }
-    }
-    if (_urgentRunning > 0 || _lowRunning || _low.isNotEmpty) {
+  Future<T> run<T>(int priority, Future<T> Function() task) async {
+    if (_running) {
       final waiter = Completer<void>();
-      _low.add(waiter);
+      _waiting.add((priority: priority, waiter: waiter));
       await waiter.future;
     } else {
-      _lowRunning = true;
+      _running = true;
     }
     try {
       return await task();
     } finally {
-      _lowRunning = false;
-      _drain();
+      _next();
     }
   }
 
-  void _drain() {
-    if (_urgentRunning > 0 || _lowRunning || _low.isEmpty) return;
-    _lowRunning = true;
-    _low.removeAt(0).complete();
+  void _next() {
+    if (_waiting.isEmpty) {
+      _running = false;
+      return;
+    }
+    var best = 0;
+    for (var i = 1; i < _waiting.length; i++) {
+      if (_waiting[i].priority < _waiting[best].priority) best = i;
+    }
+    _waiting.removeAt(best).waiter.complete();
   }
 }
