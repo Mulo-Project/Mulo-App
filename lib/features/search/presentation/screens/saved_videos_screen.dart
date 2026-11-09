@@ -7,6 +7,8 @@ import '../../domain/entities/saved_video.dart';
 import '../bloc/preview_cubit.dart';
 import '../bloc/saved_videos_cubit.dart';
 import '../widgets/preview_control.dart';
+import '../widgets/preview_video.dart';
+import '../widgets/preview_video_controls.dart';
 import '../widgets/video_quality_sheet.dart';
 import 'media_detail_screen.dart';
 
@@ -91,6 +93,8 @@ class SavedVideosScreen extends StatelessWidget {
   }
 }
 
+/// 저장한 곡 한 줄. 영상(화질을 고른 것)은 위에 16:9 영상 영역, 아래에 번호 · 제목 · 정보 · 버튼을 둔 큰 타일이고,
+/// 음원은 번호 · 제목 · 정보 · 버튼만 있는 낮은 줄이다.
 class _SavedTile extends StatelessWidget {
   const _SavedTile({
     required this.number,
@@ -109,20 +113,18 @@ class _SavedTile extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final p = context.palette;
     final hit = video.hit;
+    final isVideo = video.quality != null;
     final sub = [
       if (hit.uploader.isNotEmpty) hit.uploader,
-      if (video.quality != null) videoQualityLabel(context, video.quality!),
+      if (isVideo) videoQualityLabel(context, video.quality!),
       if (!video.ready) l10n.savedVideosDownloading,
     ].join(' · ');
 
-    return InkWell(
-      // 줄을 누르면 상세 화면으로 간다 (듣기 · 영상 보기는 거기서도, 오른쪽 버튼으로도 된다).
+    final info = InkWell(
+      // 정보 부분을 누르면 상세 화면으로 간다 (영상은 위 영역에서 바로 재생).
       onTap: () => showMediaDetail(context, hit),
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
-        ),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
         child: Row(
           children: [
             SizedBox(
@@ -132,20 +134,6 @@ class _SavedTile extends StatelessWidget {
                 style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
               ),
             ),
-            // 영상은 가로로 긴 16:9 썸네일을 같이 보여 준다 (음원은 글자만).
-            if (video.quality != null) ...[
-              ArtworkBox(
-                image: hit.thumbnailUrl == null
-                    ? null
-                    : NetworkImage(hit.thumbnailUrl!),
-                width: 80,
-                size: 45,
-                radius: AppRadii.sm,
-                tone: toneFor(hit.id),
-                icon: AppIcons.play,
-              ),
-              const SizedBox(width: AppSpacing.sm),
-            ],
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -154,9 +142,8 @@ class _SavedTile extends StatelessWidget {
                     hit.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: text.bodyMedium?.copyWith(
-                      color: active ? p.accent : null,
-                    ),
+                    style: (isVideo ? text.bodyLarge : text.bodyMedium)
+                        ?.copyWith(color: active ? p.accent : null),
                   ),
                   if (sub.isNotEmpty)
                     Text(
@@ -169,12 +156,14 @@ class _SavedTile extends StatelessWidget {
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
-            CircleIconButton(
-              icon: active ? AppIcons.pause : AppIcons.play,
-              tooltip: l10n.savedVideosPlay,
-              size: AppSizes.rowButton,
-              onPressed: () => togglePreview(context, hit),
-            ),
+            // 영상은 재생 버튼이 영상 영역에 있어서 음원만 오른쪽에 둔다.
+            if (!isVideo)
+              CircleIconButton(
+                icon: active ? AppIcons.pause : AppIcons.play,
+                tooltip: l10n.savedVideosPlay,
+                size: AppSizes.rowButton,
+                onPressed: () => togglePreview(context, hit),
+              ),
             CircleIconButton(
               icon: AppIcons.delete,
               tooltip: l10n.savedVideosRemove,
@@ -185,6 +174,85 @@ class _SavedTile extends StatelessWidget {
           ],
         ),
       ),
+    );
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        isVideo ? AppSpacing.md : 0,
+        AppSpacing.md,
+        0,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (isVideo) _VideoArea(video: video, active: active),
+          info,
+        ],
+      ),
+    );
+  }
+}
+
+/// 타일 위의 16:9 영상 영역: 평소엔 썸네일 + 재생 버튼, 재생하면 그 자리에서 영상이 나오고
+/// 한 번 누르면 컨트롤(탐색 · 10초 이동 · 전체 화면)이 뜬다.
+class _VideoArea extends StatelessWidget {
+  const _VideoArea({required this.video, required this.active});
+
+  final SavedVideo video;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    final hit = video.hit;
+    final status = context.select((PreviewCubit c) => c.state.status);
+    final playing = active && status == PreviewStatus.playing;
+    final loading = active && status == PreviewStatus.loading;
+    final thumb = hit.thumbnailUrl;
+    return LayoutBuilder(
+      builder: (context, box) {
+        final width = box.maxWidth;
+        return SizedBox(
+          width: width,
+          height: width * 9 / 16,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppRadii.md),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                ArtworkBox(
+                  image: thumb == null ? null : NetworkImage(thumb),
+                  size: width * 9 / 16,
+                  width: width,
+                  radius: 0,
+                  tone: toneFor(hit.id),
+                ),
+                if (playing) ...[
+                  PreviewVideo(pageUrl: hit.url, quality: video.quality),
+                  const PreviewVideoControls(),
+                ] else if (loading)
+                  Center(
+                    child: PreviewLoadingRing(
+                      state: context.read<PreviewCubit>().state,
+                      size: AppSizes.circleButton,
+                    ),
+                  )
+                else
+                  Center(
+                    child: CircleIconButton(
+                      key: ValueKey('saved-play-${hit.id}'),
+                      icon: AppIcons.play,
+                      tooltip: context.l10n.savedVideosPlay,
+                      emphasized: true,
+                      size: AppSizes.circleButtonLarge,
+                      onPressed: () => togglePreview(context, hit),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
