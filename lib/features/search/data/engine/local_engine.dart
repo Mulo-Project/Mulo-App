@@ -272,15 +272,14 @@ class LocalEngine implements DownloaderEngine {
 
   /// 소리 없는 낮은 화질(360p 이하) 영상 하나의 주소만 읽는다. 미니 플레이어 · 플레이어에서 화면으로만 쓴다.
   @override
-  Future<VideoStream> resolveVideoStream(String url) async {
-    return _readVideo(url);
-  }
+  Future<VideoStream> resolveVideoStream(String url, {int maxHeight = 360}) =>
+      _readVideo(url, maxHeight);
 
-  // 소리가 같이 든 형식(360p 안쪽)을 먼저 찾는다: 주소 하나로 소리와 영상을 한 플레이어가 틀어 싱크가 필요 없다.
+  // 소리가 같이 든 형식([height] 이하)을 먼저 찾는다: 주소 하나로 소리와 영상을 한 플레이어가 틀어 싱크가 필요 없다.
   // 없으면 영상만 있는 형식으로 간다.
-  static const _videoSelector =
-      'b[height<=360][vcodec^=avc1]/b[height<=360]/'
-      'bv[height<=360][vcodec^=avc1]/bv[height<=360]/bv[height<=480]/bv';
+  static String _videoSelector(int height) =>
+      'b[height<=$height][vcodec^=avc1]/b[height<=$height]/'
+      'bv[height<=$height][vcodec^=avc1]/bv[height<=$height]/bv[height<=480]/bv';
 
   /// 디버그 빌드에서 adb logcat(`flutter` 태그)으로도 보이게 찍는다.
   static void _timing(String message) {
@@ -292,20 +291,20 @@ class LocalEngine implements DownloaderEngine {
     developer.log(message, name: 'MuloSearch');
   }
 
-  Future<VideoStream> _readVideo(String url) async {
+  Future<VideoStream> _readVideo(String url, int height) async {
     final clock = Stopwatch()..start();
     try {
-      return await _readVideoInner(url);
+      return await _readVideoInner(url, height);
     } finally {
       _timing('영상만 읽기 ${clock.elapsedMilliseconds}ms');
     }
   }
 
-  Future<VideoStream> _readVideoInner(String url) async {
+  Future<VideoStream> _readVideoInner(String url, int height) async {
     Future<VideoStream> read(List<String> extra) async {
       final out = await _exec([
         '-f',
-        _videoSelector,
+        _videoSelector(height),
         '--no-playlist',
         '--dump-single-json',
         '--no-warnings',
