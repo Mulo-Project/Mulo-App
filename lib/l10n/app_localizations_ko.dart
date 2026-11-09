@@ -775,6 +775,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get videoRepeat => '반복 재생';
 
   @override
+  String get videoQualityAuto => '자동 (낮게 시작해 올림)';
+
+  @override
   String get settingsPurgeHidden => '숨긴 곡 기록 정리';
 
   @override

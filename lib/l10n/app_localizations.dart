@@ -1538,6 +1538,12 @@ abstract class AppLocalizations {
   /// **'반복 재생'**
   String get videoRepeat;
 
+  /// No description provided for @videoQualityAuto.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동 (낮게 시작해 올림)'**
+  String get videoQualityAuto;
+
   /// No description provided for @settingsPurgeHidden.
   ///
   /// In ko, this message translates to:

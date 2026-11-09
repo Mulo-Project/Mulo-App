@@ -106,6 +106,23 @@ class PreviewCubit extends Cubit<PreviewState> {
   /// 새 곡을 틀 때 되돌린다.
   final qualityOverride = ValueNotifier<VideoQuality?>(null);
 
+  /// 자동(점진) 화질: 켜면 360p로 빠르게 시작해 몇 초 뒤 [rampTarget] 화질로 영상만 바꿔 올린다.
+  /// 아직 앱을 껐다 켜면 꺼진다 (써 보고 정한다).
+  final autoQuality = ValueNotifier<bool>(false);
+  static const rampTarget = VideoQuality.high;
+  static const _rampDelay = Duration(seconds: 4);
+
+  void _rampLater(String hitId, int generation) {
+    unawaited(
+      Future<void>.delayed(_rampDelay, () {
+        if (isClosed || generation != _generation) return;
+        if (!autoQuality.value || !state.isActive(hitId)) return;
+        if (state.status != PreviewStatus.playing) return;
+        qualityOverride.value = rampTarget;
+      }),
+    );
+  }
+
   void _onCompleted() {
     if (isClosed) return;
     if (repeat.value && state.status == PreviewStatus.playing) {
@@ -177,6 +194,9 @@ class PreviewCubit extends Cubit<PreviewState> {
       return null;
     }
     final generation = ++_generation;
+    // 자동(점진)이면 낮은 화질로 먼저 시작한다 (저장한 곡은 저장한 화질 그대로).
+    final ramp = autoQuality.value && videoQuality == null;
+    if (ramp) videoQuality = VideoQuality.standard;
     qualityOverride.value = videoQuality;
     // 앞에 듣던 곡은 새 곡 주소를 알아내는 동안에도 바로 멈춘다.
     if (state.status != PreviewStatus.idle) unawaited(_stop(const NoParams()));
@@ -232,6 +252,7 @@ class PreviewCubit extends Cubit<PreviewState> {
       );
       // 앱이 꺼졌다 켜져도 어느 곡인지 알 수 있게 플레이어에 적어 둔다 (실패해도 듣는 데는 지장 없다).
       unawaited(_remember(hit).catchError((Object _) {}));
+      if (ramp) _rampLater(hit.id, generation);
       return null;
     } on EngineException catch (e) {
       if (generation != _generation || isClosed) return null;
@@ -402,6 +423,7 @@ class PreviewCubit extends Cubit<PreviewState> {
     await _progress.cancel();
     await _failures.cancel();
     repeat.dispose();
+    autoQuality.dispose();
     qualityOverride.dispose();
     await _stop(const NoParams());
     return super.close();

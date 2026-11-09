@@ -303,17 +303,45 @@ class _VideoOptionsSheet extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(l10n.videoQualityTitle, style: text.titleSmall),
-            ValueListenableBuilder<VideoQuality?>(
+            ValueListenableBuilder<bool>(
+              valueListenable: preview.autoQuality,
+              builder: (context, auto, _) => ValueListenableBuilder<VideoQuality?>(
               valueListenable: preview.qualityOverride,
               builder: (context, override, _) {
                 final current = override ?? settingsQuality;
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // 자동(점진): 360p로 빠르게 시작해 몇 초 뒤 높은 화질로 올린다 (다음 곡부터).
+                    InkWell(
+                      key: const ValueKey('video-option-quality-auto'),
+                      onTap: () {
+                        preview.autoQuality.value = true;
+                        Navigator.of(context).pop();
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AppSpacing.sm + AppSpacing.xxs,
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                l10n.videoQualityAuto,
+                                style: text.bodyLarge?.copyWith(
+                                  color: auto ? p.accent : p.onSurface,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                     for (final quality in VideoQuality.values)
                       InkWell(
                         key: ValueKey('video-option-quality-${quality.name}'),
                         onTap: () {
+                          preview.autoQuality.value = false;
                           preview.qualityOverride.value = quality;
                           Navigator.of(context).pop();
                         },
@@ -327,7 +355,7 @@ class _VideoOptionsSheet extends StatelessWidget {
                                 child: Text(
                                   videoQualityLabel(context, quality),
                                   style: text.bodyLarge?.copyWith(
-                                    color: quality == current
+                                    color: !auto && quality == current
                                         ? p.accent
                                         : p.onSurface,
                                   ),
@@ -340,6 +368,7 @@ class _VideoOptionsSheet extends StatelessWidget {
                   ],
                 );
               },
+            ),
             ),
           ],
         ),

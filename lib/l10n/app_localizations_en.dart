@@ -791,6 +791,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoRepeat => 'Repeat';
 
   @override
+  String get videoQualityAuto => 'Auto (start low, then up)';
+
+  @override
   String get settingsPurgeHidden => 'Clear hidden song records';
 
   @override

@@ -261,6 +261,7 @@
   "videoOptions": "Options",
   "videoOptionsTitle": "Video options",
   "videoRepeat": "Repeat",
+  "videoQualityAuto": "Auto (start low, then up)",
   "settingsStreamCacheCleared": "Streaming cache cleared",
   "settingsPurgeHidden": "Clear hidden song records",
   "settingsPurgeHiddenDesc": "Records of {count} hidden songs from removed folders are kept",

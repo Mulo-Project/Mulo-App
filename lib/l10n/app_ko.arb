@@ -292,6 +292,7 @@
   "videoOptions": "옵션",
   "videoOptionsTitle": "영상 옵션",
   "videoRepeat": "반복 재생",
+  "videoQualityAuto": "자동 (낮게 시작해 올림)",
   "settingsStreamCacheCleared": "임시 저장소를 비웠어요",
   "settingsPurgeHidden": "숨긴 곡 기록 정리",
   "settingsPurgeHiddenDesc": "폴더를 빼서 숨겨 둔 {count}곡의 기록이 남아 있어요",
