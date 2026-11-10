@@ -116,7 +116,9 @@ class YoutubeExplodeEngine implements DownloaderEngine {
           id,
           maxHeight,
         ).timeout(const Duration(seconds: 15));
-        _log('explode 영상 ${v == null ? '없음' : '읽음'} ${clock.elapsedMilliseconds}ms');
+        _log(
+          'explode 영상 ${v == null ? '없음' : '읽음'} ${clock.elapsedMilliseconds}ms',
+        );
         if (v != null) return v;
       } on Object catch (e) {
         _log('explode 영상 실패 ${clock.elapsedMilliseconds}ms: ${_oneLine(e)}');
@@ -135,10 +137,15 @@ class YoutubeExplodeEngine implements DownloaderEngine {
     final id = VideoId.parseVideoId(url);
     Object? explodeError;
     if (id != null) {
+      final clock = Stopwatch()..start();
       try {
         final stream = await _reader(id, language: audioLanguage);
+        _log(
+          'explode 소리 ${stream == null ? '없음' : '읽음'} ${clock.elapsedMilliseconds}ms',
+        );
         if (stream != null) return stream;
       } on Object catch (e) {
+        _log('explode 소리 실패 ${clock.elapsedMilliseconds}ms: ${_oneLine(e)}');
         // 이 라이브러리가 못 읽으면 안쪽 엔진으로 넘어간다.
         explodeError = e is EngineException ? e.message : e;
       }
@@ -301,7 +308,10 @@ Future<AudioStream?> _readWithExplode(
 
 /// 영상 주소 하나. visionOS 클라이언트가 소리가 든 형식을 주면 그것(한 플레이어로 틀 수 있다),
 /// 아니면 [maxHeight] 이하 mp4 영상 전용 형식 가운데 가장 큰 것. 못 읽는 주소(구간 403)는 거르고, 없으면 null.
-Future<VideoStream?> _readMuxedWithExplode(String videoId, int maxHeight) async {
+Future<VideoStream?> _readMuxedWithExplode(
+  String videoId,
+  int maxHeight,
+) async {
   final yt = YoutubeExplode();
   try {
     final StreamManifest manifest;
@@ -314,22 +324,26 @@ Future<VideoStream?> _readMuxedWithExplode(String videoId, int maxHeight) async 
       _log('explode 영상: visionOS 읽기 실패 ${_oneLine(e)}');
       return null;
     }
-    final muxed = manifest.muxed
-        .where((s) => s.videoResolution.height <= maxHeight)
-        .toList()
-      ..sort(
-        (a, b) => b.videoResolution.height.compareTo(a.videoResolution.height),
-      );
-    final only = manifest.videoOnly
-        .where(
-          (s) =>
-              s.container == StreamContainer.mp4 &&
-              s.videoResolution.height <= maxHeight,
-        )
-        .toList()
-      ..sort(
-        (a, b) => b.videoResolution.height.compareTo(a.videoResolution.height),
-      );
+    final muxed =
+        manifest.muxed
+            .where((s) => s.videoResolution.height <= maxHeight)
+            .toList()
+          ..sort(
+            (a, b) =>
+                b.videoResolution.height.compareTo(a.videoResolution.height),
+          );
+    final only =
+        manifest.videoOnly
+            .where(
+              (s) =>
+                  s.container == StreamContainer.mp4 &&
+                  s.videoResolution.height <= maxHeight,
+            )
+            .toList()
+          ..sort(
+            (a, b) =>
+                b.videoResolution.height.compareTo(a.videoResolution.height),
+          );
     // 소리 든 형식은 360p까지라, 고른 화질이 그보다 높아 더 큰 영상 전용 형식이 있으면 그쪽을 쓴다
     // (같거나 없으면 소리 든 형식: 한 플레이어로 바로 튼다).
     final StreamInfo? best;
