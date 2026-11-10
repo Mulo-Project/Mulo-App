@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router.dart';
+import '../../../../core/cache/cached_web_image.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/format/format_bytes.dart';
@@ -405,6 +406,16 @@ class _SavedTile extends StatelessWidget {
                 style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
               ),
             ),
+            // 음원 줄에는 썸네일을 작게 보인다 (영상은 아래 큰 영상 영역이 대신한다).
+            if (!isVideo) ...[
+              ArtworkBox(
+                size: 40,
+                image: hit.thumbnailUrl == null
+                    ? null
+                    : CachedWebImage(hit.thumbnailUrl!),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+            ],
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

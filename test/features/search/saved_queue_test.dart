@@ -6,6 +6,7 @@ import 'package:music_download_play_app/core/di/injector.dart';
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
 import 'package:music_download_play_app/features/search/domain/entities/saved_video.dart';
 import 'package:music_download_play_app/features/search/domain/repositories/saved_video_repository.dart';
+import 'package:music_download_play_app/features/covers/presentation/bloc/cover_cubit.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 import 'package:music_download_play_app/features/player/presentation/bloc/now_playing_cubit.dart';
 import 'package:music_download_play_app/features/search/domain/entities/video_stream.dart';
@@ -130,5 +131,30 @@ void main() {
     expect(rect.height, greaterThan(20));
     expect(rect.bottom, lessThanOrEqualTo(2340 / 3));
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('임시 저장한 곡의 썸네일이 곡 커버로 알려져 미니 플레이어 · 알림이 쓴다', (tester) async {
+    await setUpTestDependencies(
+      engine: FakeDownloaderEngine(),
+      previewPlayer: FakePreviewPlayer(),
+    );
+    await sl<SavedVideoRepository>().save([
+      _ready(
+        const MediaHit(
+          id: 'c',
+          title: 'Song C',
+          url: 'https://example.com/c',
+          thumbnailUrl: 'https://img.test/c.jpg',
+        ),
+      ),
+    ]);
+    await tester.pumpWidget(const MusicApp(initialLocation: '/search/saved'));
+    await tester.pumpAndSettle();
+
+    final covers = tester
+        .element(find.byType(Scaffold).first)
+        .read<CoverCubit>()
+        .state;
+    expect(covers[CoverKey.track('saved:c')]?.url, 'https://img.test/c.jpg');
   });
 }
