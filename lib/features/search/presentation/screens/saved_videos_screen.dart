@@ -252,23 +252,36 @@ class _QueueRow extends StatelessWidget {
       padding: AppSpacing.screen,
       child: Row(
         children: [
-          PillButton(
-            key: const ValueKey('saved-play-all'),
-            label: l10n.actionPlay,
-            icon: AppIcons.play,
-            compact: true,
-            onPressed: canPlay ? () => start(shuffled: false) : null,
+          // 좁은 화면에서는 알약 둘이 줄어들어 오른쪽 아이콘이 잘리지 않게 한다.
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    PillButton(
+                      key: const ValueKey('saved-play-all'),
+                      label: l10n.actionPlay,
+                      icon: AppIcons.play,
+                      compact: true,
+                      onPressed: canPlay ? () => start(shuffled: false) : null,
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    PillButton(
+                      key: const ValueKey('saved-shuffle'),
+                      label: l10n.actionShuffle,
+                      icon: AppIcons.shuffle,
+                      variant: PillVariant.tonal,
+                      compact: true,
+                      onPressed: canPlay ? () => start(shuffled: true) : null,
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
-          const SizedBox(width: AppSpacing.xs),
-          PillButton(
-            key: const ValueKey('saved-shuffle'),
-            label: l10n.actionShuffle,
-            icon: AppIcons.shuffle,
-            variant: PillVariant.tonal,
-            compact: true,
-            onPressed: canPlay ? () => start(shuffled: true) : null,
-          ),
-          const Spacer(),
           BlocBuilder<NowPlayingCubit, NowPlayingState>(
             buildWhen: (a, b) => a.repeat != b.repeat,
             builder: (context, s) => RowIconButton(

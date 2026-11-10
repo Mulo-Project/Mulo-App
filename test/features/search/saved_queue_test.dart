@@ -111,4 +111,24 @@ void main() {
     await settle(tester);
     expect(_player(tester).state.queue.map((t) => t.id), ['saved:a']);
   });
+
+  testWidgets('폰 크기에서도 상세 하단 조작부가 화면 안에 보인다', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2340);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+    await setUpTestDependencies(
+      engine: FakeDownloaderEngine(info: const VideoInfo(_b)),
+      previewPlayer: FakePreviewPlayer(),
+    );
+    await sl<SavedVideoRepository>().save([_ready(_a), _ready(_b)]);
+    await tester.pumpWidget(const MusicApp(initialLocation: '/search/saved'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Song B'));
+    await settle(tester);
+    final rect = tester.getRect(find.byKey(const ValueKey('queue-bar-play')));
+    expect(rect.height, greaterThan(20));
+    expect(rect.bottom, lessThanOrEqualTo(2340 / 3));
+    expect(tester.takeException(), isNull);
+  });
 }

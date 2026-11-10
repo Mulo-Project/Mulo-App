@@ -756,7 +756,7 @@ class PlayerControls extends StatelessWidget {
               children: [
                 ShuffleButton(data: data),
                 RepeatButton(data: data),
-                LoopRangeButton(data: data),
+                if (!savedMode) LoopRangeButton(data: data),
                 const Spacer(),
                 SleepTimerButton(data: data),
                 const EqualizerButton(),
