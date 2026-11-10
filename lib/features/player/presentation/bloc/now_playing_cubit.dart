@@ -854,11 +854,15 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     final current = state.track!;
     final queue = [...state.queue];
     queue.insert(to, queue.removeAt(from));
+    final moved = state.copyWith(queue: queue, index: queue.indexOf(current));
     if (_audio != null) {
+      // 끌어 놓은 자리를 바로 보여 준다 (엔진 응답을 기다리면 손을 뗄 때 목록이 옛 순서로 튄다).
+      // 엔진 결과가 오면 그 모습으로 맞춘다.
+      _emitFromEngine(moved);
       _command((a) => a.moveInQueue((from: from, to: to)));
       return;
     }
-    emit(state.copyWith(queue: queue, index: queue.indexOf(current)));
+    emit(moved);
   }
 
   /// 대기열을 모두 비운다. 재생 중인 곡도 멈추고 지워진다 (미니 플레이어는 사라진다).
