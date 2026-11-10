@@ -137,7 +137,10 @@ void main() {
           videoReader: (id, maxHeight) async => found,
         );
         const url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
-        expect((await engine.resolveVideoStream(url)).url, 'https://explode/video');
+        expect(
+          (await engine.resolveVideoStream(url)).url,
+          'https://explode/video',
+        );
         found = null;
         expect(
           (await engine.resolveVideoStream(url)).url,
@@ -290,6 +293,24 @@ void main() {
   });
 
   group('PreviewCubit', () {
+    test('듣다 소리가 끊기면 멈춘 채 남고, 다시 재생하면 주소를 새로 읽어 다시 튼다', () async {
+      final player = FakePreviewPlayer();
+      final cubit = _cubit(FakeDownloaderEngine(info: VideoInfo(_a)), player);
+      await cubit.toggle(_a);
+      expect(player.played, hasLength(1));
+
+      player.fail('network');
+      await Future<void>.delayed(Duration.zero);
+      expect(cubit.state.status, PreviewStatus.playing);
+      expect(cubit.state.paused, isTrue);
+      expect(cubit.state.error, isNull);
+
+      await cubit.togglePause();
+      expect(player.played, hasLength(2));
+      expect(cubit.state.paused, isFalse);
+      await cubit.close();
+    });
+
     test('재생 목록: 곡이 끝나면 다음 곡을 이어 틀고, 끝에서 멈춘다', () async {
       final player = FakePreviewPlayer();
       final cubit = _cubit(FakeDownloaderEngine(info: VideoInfo(_a)), player);
@@ -383,18 +404,6 @@ void main() {
       await cubit.syncWithPlayer();
       expect(cubit.state.status, PreviewStatus.playing);
       expect(cubit.state.paused, isTrue);
-      await cubit.close();
-    });
-
-    test('재생 중에 실패하면 멈추고 까닭을 알린다', () async {
-      final player = FakePreviewPlayer();
-      final cubit = _cubit(FakeDownloaderEngine(info: VideoInfo(_a)), player);
-      await cubit.toggle(_a);
-      expect(cubit.state.status, PreviewStatus.playing);
-      player.fail('Source error');
-      await Future<void>.delayed(Duration.zero);
-      expect(cubit.state.status, PreviewStatus.idle);
-      expect(cubit.state.error, 'Source error');
       await cubit.close();
     });
 
@@ -692,7 +701,10 @@ void main() {
       expect(player.playing, isTrue);
       expect(find.text('Stop preview'), findsOneWidget);
       // 일시정지와 멈추기는 따로 있다.
-      expect(find.byKey(const ValueKey('preview-pause-button')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('preview-pause-button')),
+        findsOneWidget,
+      );
       expect(find.byKey(const ValueKey('preview-stop-button')), findsOneWidget);
 
       // 다른 곳에서 잠시 멈춰 두면 상세 화면 버튼도 "이어 듣기"로 바뀌고, 누르면 이어 듣는다.
