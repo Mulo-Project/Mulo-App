@@ -73,9 +73,13 @@ class MediaDetailScreen extends StatelessWidget {
     required this.hit,
     @visibleForTesting this.inAppVideo,
     @visibleForTesting this.playerBuilder,
+    this.fromSaved = false,
   });
 
   final MediaHit hit;
+
+  /// 저장한 음원 화면에서 열었다: 아래에 재생 목록 조작부를 늘 붙인다 (검색의 받기용 타일에서 연 상세와 다르다).
+  final bool fromSaved;
 
   /// 앱 안 재생 가능 여부를 바꿔 쓴다 (테스트용, 기본은 플랫폼에 따른다).
   final bool? inAppVideo;
@@ -110,14 +114,20 @@ class MediaDetailScreen extends StatelessWidget {
     child: _DetailView(
       inAppVideo: inAppVideo ?? inAppVideoSupported,
       playerBuilder: playerBuilder,
+      fromSaved: fromSaved,
     ),
   );
 }
 
 class _DetailView extends StatefulWidget {
-  const _DetailView({required this.inAppVideo, this.playerBuilder});
+  const _DetailView({
+    required this.inAppVideo,
+    this.playerBuilder,
+    this.fromSaved = false,
+  });
 
   final bool inAppVideo;
+  final bool fromSaved;
   final Widget Function(String videoId, VoidCallback onFailed)? playerBuilder;
 
   @override
@@ -351,41 +361,46 @@ class _DetailViewState extends State<_DetailView> {
                   ],
                 ),
               ),
-              // 저장한 음원 목록으로 지금 듣는 곡의 상세면 재생 조작부를 아래에 고정한다.
-              ListenableBuilder(
-                listenable: Listenable.merge([
-                  _preview.queueItems,
-                  _preview.queuePos,
-                ]),
-                builder: (context, _) {
-                  final items = _preview.queueItems.value;
-                  final pos = _preview.queuePos.value;
-                  final current = pos < items.length ? items[pos].hit.id : null;
-                  if (current == hit.id) return const SavedQueueControls();
-                  // 저장한 곡인데 목록 재생 중이 아니면, 재생 버튼으로 이 곡부터 목록 재생을 시작한다.
-                  final saved = context.watch<SavedVideosCubit>().state;
-                  final at = saved.indexWhere((v) => v.id == hit.id);
-                  if (at < 0) return const SizedBox.shrink();
-                  // 저장한 곡을 한 곡만 듣는 중이면(저장한 음원 화면의 재생 버튼) 같은 조작부를 그대로 쓴다.
-                  final playing = context.watch<PreviewCubit>().state;
-                  if (playing.hitId == hit.id &&
-                      playing.status != PreviewStatus.idle) {
-                    return const SavedQueueControls();
-                  }
-                  return SavedQueueControls(
-                    onStart: () {
-                      final now = context.read<NowPlayingCubit>();
-                      if (now.state.isPlaying) now.togglePlay();
-                      unawaited(
-                        _preview.playQueue([
-                          for (final v in saved)
-                            PreviewQueueItem(v.hit, quality: v.quality),
-                        ], start: at),
-                      );
-                    },
-                  );
-                },
-              ),
+              // 저장한 음원 화면에서 연 상세는 재생 조작부를 아래에 늘 고정한다.
+              if (widget.fromSaved)
+                ListenableBuilder(
+                  listenable: Listenable.merge([
+                    _preview.queueItems,
+                    _preview.queuePos,
+                  ]),
+                  builder: (context, _) {
+                    final items = _preview.queueItems.value;
+                    final pos = _preview.queuePos.value;
+                    final current = pos < items.length
+                        ? items[pos].hit.id
+                        : null;
+                    if (current == hit.id) return const SavedQueueControls();
+                    // 저장한 곡인데 목록 재생 중이 아니면, 재생 버튼으로 이 곡부터 목록 재생을 시작한다.
+                    final saved = context.watch<SavedVideosCubit>().state;
+                    final at = saved.indexWhere((v) => v.id == hit.id);
+                    // 저장한 곡을 한 곡만 듣는 중이면(저장한 음원 화면의 재생 버튼) 같은 조작부를 그대로 쓴다.
+                    final playing = context.watch<PreviewCubit>().state;
+                    if (playing.hitId == hit.id &&
+                        playing.status != PreviewStatus.idle) {
+                      return const SavedQueueControls();
+                    }
+                    return SavedQueueControls(
+                      onStart: () {
+                        final now = context.read<NowPlayingCubit>();
+                        if (now.state.isPlaying) now.togglePlay();
+                        unawaited(
+                          // 저장 목록에서 이미 빠진 곡이면 이 곡 하나만 튼다.
+                          at < 0
+                              ? _preview.playQueue([PreviewQueueItem(hit)])
+                              : _preview.playQueue([
+                                  for (final v in saved)
+                                    PreviewQueueItem(v.hit, quality: v.quality),
+                                ], start: at),
+                        );
+                      },
+                    );
+                  },
+                ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.md,

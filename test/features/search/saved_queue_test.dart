@@ -38,9 +38,13 @@ void main() {
     expect(find.byKey(const ValueKey('queue-bar-play')), findsOneWidget);
     expect(find.byKey(const ValueKey('queue-bar-seek')), findsOneWidget);
 
+    expect(find.byKey(const ValueKey('a')), findsOneWidget); // 상세는 첫 곡
     await tester.tap(find.byKey(const ValueKey('queue-bar-next')));
     await settle(tester);
     expect(player.played.length, 2);
+    // 곡이 넘어가면 상세 화면도 다음 곡으로 따라간다.
+    expect(find.byKey(const ValueKey('b')), findsOneWidget);
+    expect(find.byKey(const ValueKey('a')), findsNothing);
 
     await tester.tap(find.byKey(const ValueKey('queue-bar-queue')));
     await settle(tester);

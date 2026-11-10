@@ -549,7 +549,7 @@ class _PreviewMiniPlayer extends StatelessWidget {
       onTap: hit == null || hit.url.isEmpty
           ? null
           : hasQueue
-          ? () => showSavedQueueDetail(context)
+          ? () => showSavedQueueDetail(context, hit)
           : () => showMediaDetail(context, hit),
       onPlayPause: loading ? null : cubit.togglePause,
       onQueue: hasQueue ? () => context.push(savedQueueLocation) : cubit.stop,

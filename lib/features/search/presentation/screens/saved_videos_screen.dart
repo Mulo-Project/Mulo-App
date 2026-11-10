@@ -18,7 +18,6 @@ import '../widgets/preview_control.dart';
 import '../widgets/preview_video.dart';
 import '../widgets/preview_video_controls.dart';
 import '../widgets/video_quality_sheet.dart';
-import 'media_detail_screen.dart';
 import 'saved_queue_detail_screen.dart' show showSavedQueueDetail;
 
 /// 저장한 영상 화면 경로 (검색 탭 안).
@@ -159,7 +158,7 @@ class _QueueRow extends StatelessWidget {
           ? Random().nextInt(videos.length)
           : 0;
       // 목록 화면(지금 곡의 상세 + 조작 줄)을 먼저 열고 틀기 시작한다.
-      unawaited(showSavedQueueDetail(context));
+      unawaited(showSavedQueueDetail(context, videos[start].hit));
       await preview.playQueue(_items, start: start, shuffled: shuffled);
     }
 
@@ -205,7 +204,17 @@ class _QueueRow extends StatelessWidget {
                       icon: AppIcons.queueOutline,
                       variant: PillVariant.tonal,
                       compact: true,
-                      onPressed: () => unawaited(showSavedQueueDetail(context)),
+                      onPressed: () {
+                        final items = preview.queueItems.value;
+                        if (items.isEmpty) return;
+                        final pos = preview.queuePos.value.clamp(
+                          0,
+                          items.length - 1,
+                        );
+                        unawaited(
+                          showSavedQueueDetail(context, items[pos].hit),
+                        );
+                      },
                     )
                   : const SizedBox.shrink(),
             ),
@@ -295,7 +304,7 @@ class _SavedTile extends StatelessWidget {
 
     final info = InkWell(
       // 정보 부분을 누르면 상세 화면으로 간다 (영상은 위 영역에서 바로 재생).
-      onTap: () => showMediaDetail(context, hit),
+      onTap: () => showSavedQueueDetail(context, hit),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
         child: Row(
