@@ -1,0 +1,206 @@
+package com.mulo.app
+
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.IOException
+import java.net.HttpURLConnection
+import java.net.URL
+
+/**
+ * 유튜브 곡 · 영상의 재생 주소를 네이티브에서 읽는다 (Dart의 youtube_explode_dart가 하던 일).
+ * 웹 페이지 없이 InnerTube `player` API를 클라이언트(visionOS → android_vr → android)별로 불러,
+ * 파일 가운데 구간을 실제로 요청해 보고(probe) 열리는 주소만 돌려준다. 외부 라이브러리 없이 HttpURLConnection · org.json만 쓴다.
+ * 앱이 백그라운드로 가도 Dart 엔진과 상관없이 돈다.
+ */
+object YoutubeResolver {
+    private const val PLAYER_URL = "https://www.youtube.com/youtubei/v1/player?prettyPrint=false"
+    private const val TAG = MuloLog.NATIVE
+
+    private const val VISIONOS_UA =
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 15_7_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15"
+    private const val ANDROID_VR_UA =
+        "com.google.android.apps.youtube.vr.oculus/1.62.27 (Linux; U; Android 12L; eureka-user Build/SQ3A.220605.009.A1) gzip"
+    private const val ANDROID_UA = "com.google.android.youtube/20.10.38 (Linux; U; Android 11) gzip"
+    private const val WEB_UA =
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.18 Safari/537.36"
+
+    private class Client(val name: String, val version: String, val userAgent: String, val client: JSONObject) {
+        fun payload(videoId: String): JSONObject = JSONObject()
+            .put("context", JSONObject().put("client", client))
+            .put("videoId", videoId)
+    }
+
+    private val visionOs = Client(
+        "VISIONOS", "1.02", VISIONOS_UA,
+        JSONObject()
+            .put("clientName", "VISIONOS").put("clientVersion", "1.02")
+            .put("deviceMake", "Apple").put("deviceModel", "RealityDevice17,1")
+            .put("userAgent", VISIONOS_UA).put("osName", "visionOS").put("osVersion", "26.5.23O471")
+            .put("hl", "en").put("timeZone", "UTC").put("utcOffsetMinutes", 0),
+    )
+    private val androidVr = Client(
+        "ANDROID_VR", "1.62.27", ANDROID_VR_UA,
+        JSONObject()
+            .put("clientName", "ANDROID_VR").put("clientVersion", "1.62.27")
+            .put("deviceModel", "Quest 3").put("osVersion", "12").put("osName", "Android")
+            .put("androidSdkVersion", "32").put("userAgent", ANDROID_VR_UA)
+            .put("hl", "en").put("timeZone", "UTC").put("utcOffsetMinutes", 0),
+    )
+    private val androidSdkless = Client(
+        "ANDROID", "20.10.38", ANDROID_UA,
+        JSONObject()
+            .put("clientName", "ANDROID").put("clientVersion", "20.10.38")
+            .put("userAgent", ANDROID_UA).put("hl", "en").put("timeZone", "UTC")
+            .put("utcOffsetMinutes", 0).put("osName", "Android").put("osVersion", "11"),
+    )
+    private val audioClients = listOf(visionOs, androidVr, androidSdkless)
+
+    /** 소리 주소. 못 읽으면 null, 모든 클라이언트가 실패하면 까닭을 담은 예외. */
+    fun audio(videoId: String, language: String?, preferWebm: Boolean): Map<String, Any?>? {
+        val errors = mutableListOf<String>()
+        var firstReadable: List<YtFormat>? = null
+        for (client in audioClients) {
+            val ordered = try {
+                YoutubeFormats.orderAudio(fetchFormats(client, videoId), preferWebm, language)
+            } catch (e: Exception) {
+                errors += oneLine(e.message ?: e.toString()); continue
+            }
+            if (ordered.isEmpty()) continue
+            if (firstReadable == null) firstReadable = ordered
+            if (canReadMiddle(ordered.first())) return audioMap(ordered)
+            errors += "${client.name}: 구간 403"
+        }
+        firstReadable?.let { return audioMap(it) }
+        if (errors.isNotEmpty()) throw IOException(errors.joinToString(" | "))
+        return null
+    }
+
+    /** 영상 주소 (visionOS만). 못 읽거나 쓸 형식이 없으면 null. */
+    fun video(videoId: String, maxHeight: Int): Map<String, Any?>? {
+        val all = try {
+            fetchFormats(visionOs, videoId)
+        } catch (e: Exception) {
+            MuloLog.d(TAG, "영상 visionOS 읽기 실패 ${oneLine(e.message ?: "")}")
+            return null
+        }
+        val (best, muxed) = YoutubeFormats.pickVideo(all, maxHeight) ?: return null
+        if (!canReadMiddle(best)) {
+            MuloLog.d(TAG, "영상 ${clientOf(best.url)} 구간 403")
+            return null
+        }
+        return mapOf("url" to best.url, "headers" to headers(best.url), "muxed" to muxed)
+    }
+
+    /** 언어 트랙이 둘 이상 든 클라이언트를 찾아 그 목록을. 없으면 빈 목록. */
+    fun languages(videoId: String): List<Map<String, Any?>> {
+        for (client in audioClients) {
+            val found = try {
+                YoutubeFormats.languages(fetchFormats(client, videoId))
+            } catch (e: Exception) {
+                continue
+            }
+            if (found.size > 1) {
+                return found.map { (id, name, isDefault) -> mapOf("id" to id, "name" to name, "isDefault" to isDefault) }
+            }
+        }
+        return emptyList()
+    }
+
+    private fun audioMap(ordered: List<YtFormat>): Map<String, Any?> = mapOf(
+        "url" to ordered.first().url,
+        "headers" to headers(ordered.first().url),
+        "fallbacks" to ordered.drop(1).take(3).map { mapOf("url" to it.url, "headers" to headers(it.url)) },
+    )
+
+    private fun clientOf(url: String): String? = Regex("[?&]c=([^&]+)").find(url)?.groupValues?.get(1)
+
+    /** 주소의 `c`(클라이언트) 값에 맞는 User-Agent. 이 주소를 받을 때 같이 보내야 한다. */
+    private fun headers(url: String): Map<String, String> = mapOf(
+        "user-agent" to when (clientOf(url)) {
+            "ANDROID" -> ANDROID_UA
+            "ANDROID_VR" -> ANDROID_VR_UA
+            "VISIONOS" -> VISIONOS_UA
+            else -> WEB_UA
+        },
+    )
+
+    private fun fetchFormats(client: Client, videoId: String): List<YtFormat> {
+        val conn = URL(PLAYER_URL).openConnection() as HttpURLConnection
+        try {
+            conn.requestMethod = "POST"
+            conn.connectTimeout = 6000
+            conn.readTimeout = 10000
+            conn.doOutput = true
+            conn.setRequestProperty("User-Agent", client.userAgent)
+            conn.setRequestProperty("X-Youtube-Client-Name", client.name)
+            conn.setRequestProperty("X-Youtube-Client-Version", client.version)
+            conn.setRequestProperty("Origin", "https://www.youtube.com")
+            conn.setRequestProperty("Sec-Fetch-Mode", "navigate")
+            conn.setRequestProperty("Content-Type", "application/json")
+            conn.outputStream.use { it.write(client.payload(videoId).toString().toByteArray()) }
+            val code = conn.responseCode
+            if (code != 200) throw IOException("${client.name}: HTTP $code")
+            val root = JSONObject(conn.inputStream.bufferedReader().use { it.readText() })
+            val status = root.optJSONObject("playabilityStatus")
+            if (status != null && status.optString("status") != "OK") {
+                throw IOException("${client.name}: ${status.optString("reason", status.optString("status"))}")
+            }
+            val data = root.optJSONObject("streamingData") ?: throw IOException("${client.name}: 스트림 없음")
+            return parse(data.optJSONArray("formats"), true) + parse(data.optJSONArray("adaptiveFormats"), false)
+        } finally {
+            conn.disconnect()
+        }
+    }
+
+    private fun parse(array: JSONArray?, muxed: Boolean): List<YtFormat> {
+        if (array == null) return emptyList()
+        val out = mutableListOf<YtFormat>()
+        for (i in 0 until array.length()) {
+            val o = array.optJSONObject(i) ?: continue
+            val url = o.optString("url")
+            if (url.isEmpty()) continue // signatureCipher 주소는 JS 풀이가 필요해 쓰지 않는다
+            val length = o.optString("contentLength").toLongOrNull()
+                ?: Regex("[?&]clen=(\\d+)").find(url)?.groupValues?.get(1)?.toLongOrNull()
+                ?: 0L
+            if (length <= 0) continue
+            val track = o.optJSONObject("audioTrack")
+            out += YtFormat(
+                itag = o.optInt("itag"),
+                url = url,
+                mime = o.optString("mimeType"),
+                bitrate = o.optLong("bitrate"),
+                height = o.optInt("height"),
+                contentLength = length,
+                muxed = muxed,
+                trackId = track?.optString("id")?.takeIf { it.isNotEmpty() },
+                trackName = track?.optString("displayName")?.takeIf { it.isNotEmpty() },
+                trackDefault = track?.optBoolean("audioIsDefault") ?: false,
+            )
+        }
+        return out
+    }
+
+    /** 파일 가운데 1KB를 실제로 요청해 열리는지 본다 (PO 토큰 없는 주소는 앞 일부만 주고 403이라 걸러낸다). 확인 자체가 안 되면 쓴다. */
+    private fun canReadMiddle(f: YtFormat): Boolean {
+        val conn = try {
+            URL(f.url).openConnection() as HttpURLConnection
+        } catch (e: Exception) {
+            return true
+        }
+        return try {
+            conn.connectTimeout = 6000
+            conn.readTimeout = 8000
+            headers(f.url).forEach { (k, v) -> conn.setRequestProperty(k, v) }
+            val from = if (f.contentLength > 4096) f.contentLength / 2 else 0
+            conn.setRequestProperty("Range", "bytes=$from-${from + 1023}")
+            val code = conn.responseCode
+            code == 206 || code == 200
+        } catch (e: Exception) {
+            true
+        } finally {
+            conn.disconnect()
+        }
+    }
+
+    private fun oneLine(s: String) = s.lines().map { it.trim() }.filter { it.isNotEmpty() }.joinToString(" / ")
+}

@@ -6,6 +6,7 @@ import '../../core/config/app_config.dart';
 import '../engine/data/android_yt_dlp.dart';
 import '../engine/data/yt_dlp_manager.dart';
 import 'data/datasources/native_preview_player.dart';
+import 'data/datasources/native_youtube_resolver.dart';
 import 'data/datasources/url_launcher_link_opener.dart';
 import 'data/engine/cached_engine.dart';
 import 'data/repositories/prefs_video_quality_repository.dart';
@@ -35,12 +36,17 @@ import 'presentation/bloc/video_quality_cubit.dart';
 
 /// 검색 · 곡 정보 의존성. 로컬 yt-dlp(데스크톱 · Android full)를 먼저 시도하고, 없으면 서버.
 void registerSearch(GetIt sl) {
+  final native = NativeYoutubeResolver();
   sl
     ..registerLazySingleton<DownloaderEngine>(
       () => CachedDownloaderEngine(
         infoTtl: const Duration(hours: 6),
         SoundcloudAvatarEngine(
           YoutubeExplodeEngine(
+            // Android는 네이티브가 주소를 읽고(앱이 백그라운드여도 끊기지 않는다), 그 밖의 OS는 Dart 라이브러리가 읽는다.
+            reader: Platform.isAndroid ? native.audio : null,
+            videoReader: Platform.isAndroid ? native.video : null,
+            languageReader: Platform.isAndroid ? native.languages : null,
             RoutingDownloaderEngine(
               local: Platform.isAndroid
                   ? LocalEngine(run: sl<AndroidYtDlp>().run)

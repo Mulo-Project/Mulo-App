@@ -995,3 +995,10 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 
 - D-161 (D-160을 대체): 임시 저장한 음원은 별도 미리 듣기 큐 없이 **메인 현재 재생 목록**(네이티브 큐, `NowPlayingCubit`)에 넣어 듣는다. 끝까지 받은 곡만 `Track(source: saved, id: 'saved:<영상 id>', uri: 받아 둔 음원 주소)`로 올리고, 영상 화질로 저장한 곡도 큐에서는 소리만 낸다(영상은 상세에서 온라인일 때 따로). 네이티브 `PlaybackHub`의 플레이어는 `DefaultDataSource(content/file) + StreamCache.wrap(http)`로 읽어 받아 둔 데이터를 오프라인에서도 쓴다. 이 곡들은 파일이 아니라서 **재생 기록 · 재생 횟수를 남기지 않는다**(`PlayRecorderCubit`이 `saved:` id를 무시). 다 받지 못한 곡은 큐에 못 넣고 예전처럼 한 곡만 미리 듣는다. `PreviewCubit`의 큐 · 반복 모드 · `/search/saved/queue` 화면 · 미니 플레이어/알림의 목록 분기는 지웠다.
 - D-161 추가: 임시 저장 타일에 일반 음원 타일처럼 ⋮ 메뉴(다음 재생 · 대기열에 추가 · 임시 저장에서 빼기)를 둔다. 타일 상세의 하단 조작부(`SavedQueueControls`)와 상세 화면(`SavedQueueDetailScreen`)은 메인 재생을 따라가고, 대기열 버튼은 메인 대기열 화면(`/queue`)을 연다.
+
+## D-160 · 2026-11-10 · 유튜브 재생 주소 읽기를 네이티브(Kotlin)로 옮긴다
+- 전: Dart(`youtube_explode_dart`)가 주소를 읽고 → 네이티브 플레이어 · 받기가 받고 → Dart가 화면을 그렸다. 앱이 백그라운드로 가면 Dart가 멈춰 읽기도 멈추고, 읽는 곳과 쓰는 곳이 갈라져 구조가 어색했다.
+- 후: Android는 `YoutubeResolver`(Kotlin)가 InnerTube `player` API를 직접 불러 읽는다 (채널 `music_app/youtube_resolve`: `audio` · `video` · `languages`). 클라이언트 순서·설정은 D-062 그대로(visionOS → android_vr → android, 영상은 visionOS만), 파일 가운데 1KB를 요청해 열리는 주소만 쓴다. 형식 고르기(선호 컨테이너 → 비트레이트, 소리 든 형식 vs 더 큰 영상 전용 mp4, 언어 트랙)는 `YoutubeFormats`(순수 함수, 단위 테스트).
+- 외부 구성요소를 더하지 않았다: `HttpURLConnection` · `org.json`(안드로이드 기본)만 쓴다. NewPipeExtractor는 GPLv3라 쓰지 않았다. 감소: Android에서는 시청 페이지를 읽지 않아 한 번 덜 요청한다.
+- 읽는 순서: **네이티브 → yt-dlp 기본 → yt-dlp android_vr**. `YoutubeExplodeEngine`은 같은 자리에서 읽기 함수만 네이티브 것으로 바꿨고(`NativeYoutubeResolver`), 화면 · cubit은 그대로다. 그 밖의 OS는 아직 Dart 라이브러리가 읽는다(재생목록 검색도 Dart 그대로).
+- 못 하는 것: `signatureCipher`(JS 풀이 필요) 주소는 쓰지 않는다 (전과 같음). 라이브는 형식이 없어 yt-dlp로 넘어간다.
