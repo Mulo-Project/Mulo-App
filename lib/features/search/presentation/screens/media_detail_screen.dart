@@ -191,10 +191,34 @@ class _DetailViewState extends State<_DetailView> {
       isYoutubeUrl(hit.url) &&
       isYoutubeVideoId(hit.id);
 
+  /// 저장한 음원 화면에서 연 상세에서 처음 재생: 메인 재생 대기열로 시작한다 (영상으로 저장한 곡은 영상으로 나온다).
+  Future<void> _startSaved(MediaHit hit) async {
+    final now = context.read<NowPlayingCubit>();
+    final saved = context.read<SavedVideosCubit>().state;
+    final at = saved.indexWhere((v) => v.id == hit.id);
+    final ready = at >= 0 && saved[at].ready;
+    // 두 소리가 겹치지 않게 미리 듣기는 멈추고, 메인 재생 대기열로 시작한다.
+    await _preview.stop();
+    if (!ready) {
+      // 아직 다 받지 못한 곡은 한 곡만 미리 듣기로 튼다.
+      unawaited(
+        _preview.toggle(hit, videoQuality: at < 0 ? null : saved[at].quality),
+      );
+      return;
+    }
+    final tracks = await savedTracksResolved(saved);
+    final index = tracks.indexWhere(
+      (t) => t.id == '${Track.savedIdPrefix}${hit.id}',
+    );
+    if (tracks.isEmpty) return;
+    now.playQueue(tracks, index: index < 0 ? 0 : index);
+  }
+
   /// 썸네일의 재생 버튼: 앱 안에서 틀 수 있는 유튜브 영상은 미리 듣기(소리 + 영상)로 그 자리에서 튼다.
   /// 그 화면을 나가면 미니 플레이어가 영상을 이어서 보여 준다.
   /// 미리 듣기를 시작하지 못하면 앱 안 플레이어(웹뷰)로, 그것도 안 되면 유튜브로 연다.
   Future<void> _play(MediaHit hit) async {
+    if (widget.fromSaved) return _startSaved(hit);
     if (widget.inAppVideo && isYoutubeUrl(hit.url)) {
       final started = await togglePreview(
         context,
@@ -385,36 +409,12 @@ class _DetailViewState extends State<_DetailView> {
                 Builder(
                   builder: (context) {
                     final now = context.watch<NowPlayingCubit>();
-                    final saved = context.watch<SavedVideosCubit>().state;
                     final current = now.state.track?.id ?? '';
                     // 메인 재생이 임시 저장한 음원을 듣는 중이면 이 곡이 아니어도 같은 조작부를 쓴다.
                     if (current.startsWith(Track.savedIdPrefix)) {
                       return const SavedQueueControls();
                     }
-                    final at = saved.indexWhere((v) => v.id == hit.id);
-                    final ready = at >= 0 && saved[at].ready;
-                    return SavedQueueControls(
-                      onStart: () async {
-                        // 두 소리가 겹치지 않게 미리 듣기는 멈추고, 메인 재생 대기열로 시작한다.
-                        await _preview.stop();
-                        if (!ready) {
-                          // 아직 다 받지 못한 곡은 한 곡만 미리 듣기로 튼다.
-                          unawaited(
-                            _preview.toggle(
-                              hit,
-                              videoQuality: at < 0 ? null : saved[at].quality,
-                            ),
-                          );
-                          return;
-                        }
-                        final tracks = await savedTracksResolved(saved);
-                        final index = tracks.indexWhere(
-                          (t) => t.id == '${Track.savedIdPrefix}${hit.id}',
-                        );
-                        if (tracks.isEmpty) return;
-                        now.playQueue(tracks, index: index < 0 ? 0 : index);
-                      },
-                    );
+                    return SavedQueueControls(onStart: () => _startSaved(hit));
                   },
                 ),
               Padding(
