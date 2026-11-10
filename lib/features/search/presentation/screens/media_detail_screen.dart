@@ -391,12 +391,12 @@ class _DetailViewState extends State<_DetailView> {
                       return const SavedQueueControls();
                     }
                     final at = saved.indexWhere((v) => v.id == hit.id);
-                    final track = at < 0 ? null : savedTrackOf(saved[at]);
+                    final ready = at >= 0 && saved[at].ready;
                     return SavedQueueControls(
                       onStart: () async {
                         // 두 소리가 겹치지 않게 미리 듣기는 멈추고, 메인 재생 대기열로 시작한다.
                         await _preview.stop();
-                        if (track == null) {
+                        if (!ready) {
                           // 아직 다 받지 못한 곡은 한 곡만 미리 듣기로 튼다.
                           unawaited(
                             _preview.toggle(
@@ -406,13 +406,12 @@ class _DetailViewState extends State<_DetailView> {
                           );
                           return;
                         }
-                        final tracks = <Track>[
-                          for (final v in saved) ?savedTrackOf(v),
-                        ];
-                        now.playQueue(
-                          tracks,
-                          index: tracks.indexWhere((t) => t.id == track.id),
+                        final tracks = await savedTracksResolved(saved);
+                        final index = tracks.indexWhere(
+                          (t) => t.id == '${Track.savedIdPrefix}${hit.id}',
                         );
+                        if (tracks.isEmpty) return;
+                        now.playQueue(tracks, index: index < 0 ? 0 : index);
                       },
                     );
                   },

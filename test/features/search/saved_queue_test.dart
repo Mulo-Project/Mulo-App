@@ -93,4 +93,20 @@ void main() {
     expect(player.played, hasLength(1));
     expect(_player(tester).state.queue, isEmpty);
   });
+
+  testWidgets('저장 주소가 없는 옛 저장분도 링크를 읽어 대기열에 넣는다', (tester) async {
+    await setUpTestDependencies(
+      engine: FakeDownloaderEngine(),
+      previewPlayer: FakePreviewPlayer(),
+    );
+    await sl<SavedVideoRepository>().save(const [
+      SavedVideo(hit: _a, ready: true),
+    ]);
+    await tester.pumpWidget(const MusicApp(initialLocation: '/search/saved'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('saved-play-all')));
+    await settle(tester);
+    expect(_player(tester).state.queue.map((t) => t.id), ['saved:a']);
+  });
 }

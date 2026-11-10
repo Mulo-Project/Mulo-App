@@ -155,10 +155,9 @@ Future<void> _playFrom(BuildContext context, SavedVideo video) async {
     nowPlaying.togglePlay();
     return;
   }
-  final tracks = <Track>[
-    for (final v in _ordered(context.read<SavedVideosCubit>().state))
-      ?savedTrackOf(v),
-  ];
+  final tracks = await savedTracksResolved(
+    _ordered(context.read<SavedVideosCubit>().state),
+  );
   final at = tracks.indexWhere((t) => t.id == id);
   if (at < 0) {
     // 아직 다 받지 못한 곡은 대기열에 못 넣는다: 한 곡만 미리 듣기로 튼다.
@@ -176,7 +175,8 @@ enum _SavedAction { playNext, addToQueue, remove }
 /// 임시 저장한 음원의 ⋮ 메뉴. 대기열에는 끝까지 받은 곡만 넣는다.
 Future<void> _showSavedMenu(BuildContext context, SavedVideo video) async {
   final l10n = context.l10n;
-  final track = savedTrackOf(video);
+  final track = await savedTrackResolved(video);
+  if (!context.mounted) return;
   final action = await showAppMenu<_SavedAction>(
     context,
     items: [
@@ -228,9 +228,10 @@ class _QueueRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final nowPlaying = context.read<NowPlayingCubit>();
-    final tracks = <Track>[for (final v in videos) ?savedTrackOf(v)];
+    final canPlay = videos.any((v) => v.ready);
     Future<void> start({required bool shuffled}) async {
-      if (tracks.isEmpty) return;
+      final tracks = await savedTracksResolved(videos);
+      if (tracks.isEmpty || !context.mounted) return;
       // 두 소리가 겹치지 않게 미리 듣기는 멈춘다.
       await context.read<PreviewCubit>().stop();
       if (shuffled) {
@@ -251,7 +252,7 @@ class _QueueRow extends StatelessWidget {
             label: l10n.actionPlay,
             icon: AppIcons.play,
             compact: true,
-            onPressed: tracks.isEmpty ? null : () => start(shuffled: false),
+            onPressed: canPlay ? () => start(shuffled: false) : null,
           ),
           const SizedBox(width: AppSpacing.xs),
           PillButton(
@@ -260,7 +261,7 @@ class _QueueRow extends StatelessWidget {
             icon: AppIcons.shuffle,
             variant: PillVariant.tonal,
             compact: true,
-            onPressed: tracks.isEmpty ? null : () => start(shuffled: true),
+            onPressed: canPlay ? () => start(shuffled: true) : null,
           ),
           const Spacer(),
           BlocBuilder<NowPlayingCubit, NowPlayingState>(
