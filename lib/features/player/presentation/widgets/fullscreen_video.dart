@@ -153,3 +153,23 @@ class NativeVideoWithFullscreen extends StatelessWidget {
     );
   }
 }
+
+/// 영상 화면([NativeVideo]) 자체를 누르면 전체 화면으로 키운다 (원형 커버처럼 모서리에 버튼을 둘 수 없는 자리).
+/// 전체 화면에는 [NativeVideoWithFullscreen]과 같은 영상 컨트롤이 뜬다.
+class NativeVideoTapFullscreen extends StatelessWidget {
+  const NativeVideoTapFullscreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      key: const ValueKey('video-tap-fullscreen'),
+      behavior: HitTestBehavior.opaque,
+      onTap: () => showFullscreenVideo(
+        context,
+        controls: (_) =>
+            const PreviewVideoControls(fullscreen: true, main: true),
+      ),
+      child: const NativeVideo(),
+    );
+  }
+}

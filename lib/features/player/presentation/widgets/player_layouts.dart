@@ -252,7 +252,7 @@ class ArcPlayer extends StatelessWidget {
                               art: art,
                               radius: _size(s),
                               video: data.track.isVideo
-                                  ? const NativeVideo()
+                                  ? const NativeVideoTapFullscreen()
                                   : null,
                             ),
                           ),
