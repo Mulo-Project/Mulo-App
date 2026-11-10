@@ -47,4 +47,31 @@ void main() {
     expect(find.text('Song A'), findsWidgets);
     expect(find.text('Song B'), findsWidgets);
   });
+
+  testWidgets('저장한 곡의 상세 화면에는 처음부터 재생 조작부가 있고, 재생을 누르면 목록 재생이 시작된다', (
+    tester,
+  ) async {
+    final player = FakePreviewPlayer();
+    await setUpTestDependencies(
+      engine: FakeDownloaderEngine(info: const VideoInfo(_b)),
+      previewPlayer: player,
+    );
+    // 아직 받는 중인 곡(ready=false)이어도 조작부는 보인다.
+    await sl<SavedVideoRepository>().save(const [
+      SavedVideo(hit: _a),
+      SavedVideo(hit: _b),
+    ]);
+    await tester.pumpWidget(const MusicApp(initialLocation: '/search/saved'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Song B'));
+    await settle(tester);
+    expect(find.byKey(const ValueKey('queue-bar-play')), findsOneWidget);
+    expect(player.played, isEmpty);
+
+    await tester.tap(find.byKey(const ValueKey('queue-bar-play')));
+    await settle(tester);
+    expect(player.playing, isTrue);
+    expect(player.played.single, contains('example.com/b'));
+  });
 }

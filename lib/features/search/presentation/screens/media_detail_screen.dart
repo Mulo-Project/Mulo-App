@@ -350,21 +350,9 @@ class _DetailViewState extends State<_DetailView> {
                   ],
                 ),
               ),
-              // 저장한 음원 목록으로 지금 듣는 곡의 상세면 재생 조작부를 아래에 고정한다.
-              ListenableBuilder(
-                listenable: Listenable.merge([
-                  _preview.queueItems,
-                  _preview.queuePos,
-                ]),
-                builder: (context, _) {
-                  final items = _preview.queueItems.value;
-                  final pos = _preview.queuePos.value;
-                  final current = pos < items.length ? items[pos].hit.id : null;
-                  return current == hit.id
-                      ? const SavedQueueControls()
-                      : const SizedBox.shrink();
-                },
-              ),
+              // 보관한 곡의 상세 화면이면 재생 조작부를 아래에 고정한다 (듣는 중이 아니면 재생이 목록 재생을 시작한다).
+              if (context.select((SavedVideosCubit c) => c.contains(hit.id)))
+                SavedQueueControls(hit: hit),
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.md,

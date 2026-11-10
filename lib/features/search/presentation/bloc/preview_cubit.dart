@@ -230,7 +230,7 @@ class PreviewCubit extends Cubit<PreviewState> {
     _rebuildOrder(first: start.clamp(0, items.length - 1));
     queueActive.value = true;
     _publish();
-    return _playAt(0);
+    return _playAt(_pos);
   }
 
   /// 순서를 만든다: 섞으면 [first]번 곡을 맨 앞에 두고 나머지를 섞는다.
