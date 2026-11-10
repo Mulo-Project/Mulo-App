@@ -16,8 +16,10 @@ import '../features/player/presentation/bloc/now_playing_cubit.dart';
 import '../features/player/presentation/widgets/native_video.dart';
 import '../features/player/presentation/widgets/player_sleep_timer.dart';
 import '../features/search/presentation/bloc/preview_cubit.dart';
-import '../features/search/presentation/screens/saved_queue_detail_screen.dart' show showSavedQueueDetail;
-import '../features/search/presentation/screens/saved_queue_screen.dart' show savedQueueLocation;
+import '../features/search/presentation/screens/saved_queue_detail_screen.dart'
+    show showSavedQueueDetail;
+import '../features/search/presentation/screens/saved_queue_screen.dart'
+    show savedQueueLocation;
 import '../core/cache/cached_web_image.dart';
 import '../features/downloads/presentation/bloc/download_queue_cubit.dart';
 import '../features/downloads/presentation/widgets/download_bar.dart';
@@ -493,11 +495,8 @@ class _PreviewMiniPlayer extends StatelessWidget {
     final cubit = context.read<PreviewCubit>();
     return ValueListenableBuilder<bool>(
       valueListenable: cubit.queueActive,
-      builder: (context, hasQueue, _) => _previewBar(
-        context,
-        cubit: cubit,
-        hasQueue: hasQueue,
-      ),
+      builder: (context, hasQueue, _) =>
+          _previewBar(context, cubit: cubit, hasQueue: hasQueue),
     );
   }
 
@@ -517,14 +516,8 @@ class _PreviewMiniPlayer extends StatelessWidget {
       artist: loading
           ? l10n.searchPreviewLoading
           : [
-              // 저장한 음원 목록이면 "저장한 음원 n/전체", 한 곡 미리 듣기면 "미리 듣기".
-              if (hasQueue)
-                l10n.notifSavedQueueLabel(
-                  '${cubit.queuePos.value + 1}',
-                  '${cubit.queueItems.value.length}',
-                )
-              else
-                l10n.searchPreview,
+              // 한 곡 미리 듣기면 "미리 듣기". 저장한 음원 목록은 일반 음원 미니 플레이어처럼 곡 정보만 보인다.
+              if (!hasQueue) l10n.searchPreview,
               if (hit?.uploader case final u? when u.isNotEmpty) u,
             ].join(' · '),
       artwork: thumb == null ? null : CachedWebImage(thumb),
@@ -543,6 +536,13 @@ class _PreviewMiniPlayer extends StatelessWidget {
       // 목록 재생 중에는 오른쪽 아이콘이 대기열 화면을 열고, 한 곡이면 멈춘다.
       queueLabel: hasQueue ? l10n.savedQueueOpen : l10n.searchPreviewStop,
       showSkip: hasQueue,
+      // 목록 순번은 시간 줄 오른쪽에 작게 (수면 타이머 표시 자리와 같다).
+      note: hasQueue
+          ? Text(
+              '${cubit.queuePos.value + 1}/${cubit.queueItems.value.length}',
+              style: Theme.of(context).textTheme.labelSmall,
+            )
+          : null,
       onPrevious: cubit.previous,
       onNext: cubit.next,
       queueIcon: hasQueue ? AppIcons.queueOutline : AppIcons.close,

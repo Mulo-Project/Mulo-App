@@ -136,6 +136,25 @@ List<SavedVideo> _ordered(List<SavedVideo> videos) => [
     if (v.quality != null) v,
 ];
 
+/// 저장한 음원 화면에서 곡 하나를 틀면 목록 재생으로 시작한다 (그 곡부터, 화면 순서대로).
+/// 이미 듣는 곡이면 일시정지 · 이어 듣기만 한다.
+Future<void> _playFrom(BuildContext context, SavedVideo video) async {
+  final preview = context.read<PreviewCubit>();
+  if (preview.state.isActive(video.id)) {
+    await preview.togglePause();
+    return;
+  }
+  final nowPlaying = context.read<NowPlayingCubit>();
+  // 두 소리가 겹치지 않게 메인 재생은 멈춘다.
+  if (nowPlaying.state.isPlaying) nowPlaying.togglePlay();
+  final items = [
+    for (final v in _ordered(context.read<SavedVideosCubit>().state))
+      PreviewQueueItem(v.hit, quality: v.quality),
+  ];
+  final at = items.indexWhere((i) => i.hit.id == video.id);
+  await preview.playQueue(items, start: at < 0 ? 0 : at);
+}
+
 /// 전체 재생 · 셔플 · 반복. 누르면 목록 전체를 차례로 듣는다.
 class _QueueRow extends StatelessWidget {
   const _QueueRow({required this.videos});
@@ -357,10 +376,11 @@ class _SavedTile extends StatelessWidget {
             // 영상은 재생 버튼이 영상 영역에 있어서 음원만 오른쪽에 둔다.
             if (!isVideo)
               CircleIconButton(
+                key: ValueKey('saved-row-play-${hit.id}'),
                 icon: active ? AppIcons.pause : AppIcons.play,
                 tooltip: l10n.savedVideosPlay,
                 size: AppSizes.rowButton,
-                onPressed: () => togglePreview(context, hit),
+                onPressed: () => unawaited(_playFrom(context, video)),
               ),
             if (!isVideo) const SizedBox(width: AppSpacing.sm),
             CircleIconButton(
@@ -452,7 +472,7 @@ class _VideoArea extends StatelessWidget {
                       tooltip: context.l10n.savedVideosPlay,
                       emphasized: true,
                       size: AppSizes.circleButtonLarge,
-                      onPressed: () => togglePreview(context, hit),
+                      onPressed: () => unawaited(_playFrom(context, video)),
                     ),
                   ),
               ],

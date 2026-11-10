@@ -12,6 +12,10 @@ import '../../domain/repositories/saved_video_repository.dart';
 class PrefsSavedVideoRepository implements SavedVideoRepository {
   static const _key = 'search.savedVideos';
 
+  static List<String> _strings(Object? raw) => [
+    for (final e in (raw as List<dynamic>? ?? const [])) e.toString(),
+  ];
+
   @override
   Future<List<SavedVideo>> load() async {
     final raw = (await SharedPreferences.getInstance()).getStringList(_key);
@@ -29,6 +33,17 @@ class PrefsSavedVideoRepository implements SavedVideoRepository {
               uploader: m['uploader'] as String? ?? '',
               thumbnailUrl: m['thumbnail'] as String?,
               duration: ms == null ? null : Duration(milliseconds: ms),
+              // 저장할 때 읽어 둔 상세 정보: 앱을 다시 켜거나 오프라인이어도 상세 화면에 그대로 보인다.
+              description: m['description'] as String? ?? '',
+              viewCount: m['viewCount'] as int?,
+              likeCount: m['likeCount'] as int?,
+              uploadedAt: DateTime.tryParse(m['uploadedAt'] as String? ?? ''),
+              categories: _strings(m['categories']),
+              channelUrl: m['channelUrl'] as String?,
+              subscriberCount: m['subscriberCount'] as int?,
+              channelThumbnailUrl: m['channelThumbnail'] as String?,
+              creators: _strings(m['creators']),
+              album: m['album'] as String? ?? '',
             ),
             streamId: m['streamId'] as String?,
             ready: m['ready'] as bool? ?? false,
@@ -65,6 +80,16 @@ class PrefsSavedVideoRepository implements SavedVideoRepository {
           'uploader': v.hit.uploader,
           'thumbnail': v.hit.thumbnailUrl,
           'durationMs': v.hit.duration?.inMilliseconds,
+          'description': v.hit.description,
+          'viewCount': v.hit.viewCount,
+          'likeCount': v.hit.likeCount,
+          'uploadedAt': v.hit.uploadedAt?.toIso8601String(),
+          'categories': v.hit.categories,
+          'channelUrl': v.hit.channelUrl,
+          'subscriberCount': v.hit.subscriberCount,
+          'channelThumbnail': v.hit.channelThumbnailUrl,
+          'creators': v.hit.creators,
+          'album': v.hit.album,
           'streamId': v.streamId,
           'ready': v.ready,
           'quality': v.quality?.name,

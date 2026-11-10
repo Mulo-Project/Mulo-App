@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/core/di/injector.dart';
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
 import 'package:music_download_play_app/features/search/domain/entities/saved_video.dart';
 import 'package:music_download_play_app/features/search/domain/repositories/saved_video_repository.dart';
+import 'package:music_download_play_app/features/search/presentation/bloc/preview_cubit.dart';
 
 import '../../helpers/fakes.dart';
 
@@ -52,7 +54,7 @@ void main() {
     expect(find.text('Song B'), findsWidgets);
   });
 
-  testWidgets('저장한 곡의 상세 화면에는 처음부터 재생 조작부가 있고, 재생을 누르면 목록 재생이 시작된다', (
+  testWidgets('저장한 곡 상세를 그냥 열면 재생 조작부가 없고, 목록에서 곡을 틀면 그 곡부터 목록 재생이 된다', (
     tester,
   ) async {
     final player = FakePreviewPlayer();
@@ -60,7 +62,6 @@ void main() {
       engine: FakeDownloaderEngine(info: const VideoInfo(_b)),
       previewPlayer: player,
     );
-    // 아직 받는 중인 곡(ready=false)이어도 조작부는 보인다.
     await sl<SavedVideoRepository>().save(const [
       SavedVideo(hit: _a),
       SavedVideo(hit: _b),
@@ -70,12 +71,19 @@ void main() {
 
     await tester.tap(find.text('Song B'));
     await settle(tester);
-    expect(find.byKey(const ValueKey('queue-bar-play')), findsOneWidget);
+    expect(find.byKey(const ValueKey('queue-bar-play')), findsNothing);
     expect(player.played, isEmpty);
-
-    await tester.tap(find.byKey(const ValueKey('queue-bar-play')));
+    await tester.pageBack();
     await settle(tester);
-    expect(player.playing, isTrue);
+
+    // 두 번째 곡의 재생 버튼: 그 곡부터 목록 재생이 시작된다.
+    await tester.tap(find.byKey(const ValueKey('saved-row-play-b')));
+    await settle(tester);
     expect(player.played.single, contains('example.com/b'));
+    final preview = tester
+        .element(find.byType(Scaffold).first)
+        .read<PreviewCubit>();
+    expect(preview.queueActive.value, isTrue);
+    expect(preview.queueItems.value, hasLength(2));
   });
 }
