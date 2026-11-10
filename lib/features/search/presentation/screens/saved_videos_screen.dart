@@ -334,10 +334,8 @@ class _StorageLine extends StatelessWidget {
         child: Text(
           context.l10n.savedVideosStorage(
             formatBytes(info.savedBytes),
-            // 남은 공간은 기기 전체가 아니라 정해 둔 임시 저장 공간(한도)에서 쓴 만큼을 뺀 값이다.
-            formatBytes(
-              (info.limitBytes - info.usedBytes).clamp(0, info.limitBytes),
-            ),
+            formatBytes(info.usedBytes),
+            formatBytes(info.limitBytes),
           ),
           style: Theme.of(context).textTheme.bodySmall
               ?.copyWith(color: context.palette.onSurfaceMuted),

@@ -27,6 +27,7 @@ import java.io.File
 object StreamCache {
     /** 임시 저장소 용량 한도 기본값 500 MB (설정에서 바꾼다). */
     private const val DEFAULT_LIMIT_BYTES = 500L * 1024 * 1024
+    private const val MIN_TEMP_BYTES = 32L * 1024 * 1024
     private const val PREFS = "mulo_stream_cache"
     private const val KEY_LIMIT = "limit"
 
@@ -42,6 +43,13 @@ object StreamCache {
     private var savedIds: Set<String> = emptySet()
     private val fills = HashMap<String, Fill>()
     private var dbProvider: StandaloneDatabaseProvider? = null
+
+    /**
+     * 듣기용 임시 캐시가 쓸 수 있는 크기: 전체 한도에서 저장한 음원이 쓰는 만큼을 뺀다 (저장분도 한도에 포함).
+     * 저장분이 한도를 채워도 듣기 캐시는 최소한은 쓴다. 저장소를 새로 열 때 적용된다.
+     */
+    private fun tempLimitBytes(context: Context): Long =
+        (limitBytes(context) - savedBytes(context)).coerceAtLeast(MIN_TEMP_BYTES)
 
     fun limitBytes(context: Context): Long =
         context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -61,7 +69,7 @@ object StreamCache {
         return try {
             val app = context.applicationContext
             val db = dbProvider ?: StandaloneDatabaseProvider(app).also { dbProvider = it }
-            SimpleCache(File(app.cacheDir, DIR), LeastRecentlyUsedCacheEvictor(limitBytes(app)), db).also { cache = it }
+            SimpleCache(File(app.cacheDir, DIR), LeastRecentlyUsedCacheEvictor(tempLimitBytes(app)), db).also { cache = it }
         } catch (e: Exception) {
             // 캐시를 못 열어도 재생은 되어야 한다.
             MuloLog.e(MuloLog.NATIVE, "스트리밍 캐시 열기 실패", e)

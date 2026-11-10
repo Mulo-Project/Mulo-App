@@ -21,6 +21,7 @@ import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../bloc/preview_cubit.dart';
 import '../saved_track.dart';
 import '../bloc/saved_videos_cubit.dart';
+import '../bloc/stream_cache_cubit.dart';
 import '../bloc/video_quality_cubit.dart';
 import '../../domain/entities/video_quality.dart';
 import '../widgets/video_quality_sheet.dart';
@@ -510,6 +511,12 @@ class _SaveButton extends StatelessWidget {
         final failed = l10n.savedVideosFailed;
         // 저장된 곡이면 저장한 음원 화면으로 간다 (저장 해제는 거기서).
         if (saved) return unawaited(context.push(savedVideosLocation));
+        // 저장한 곡이 정해 둔 용량을 다 채웠으면 새로 저장하지 않는다 (이미 저장한 곡은 그대로 둔다).
+        final cache = context.read<StreamCacheCubit>().state;
+        if (cache.enabled && cache.savedBytes >= cache.limitBytes) {
+          messenger.showSnackBar(SnackBar(content: Text(l10n.savedVideosFull)));
+          return;
+        }
         VideoQuality? quality;
         if (isYoutubeUrl(hit.url)) {
           final pick = await pickSaveQuality(

@@ -765,9 +765,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get savedVideosClearAllBody => 'Everything you saved will be removed';
 
   @override
-  String savedVideosStorage(String used, String free) {
-    return 'Saved $used · $free cache left';
+  String savedVideosStorage(String saved, String temp, String limit) {
+    return 'Saved $saved + listening cache $temp / limit $limit';
   }
+
+  @override
+  String get savedVideosFull =>
+      'Cache storage is full. Remove saved tracks or raise the limit in settings';
 
   @override
   String savedVideosUsed(String size) {

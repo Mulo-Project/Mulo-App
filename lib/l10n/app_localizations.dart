@@ -1481,8 +1481,14 @@ abstract class AppLocalizations {
   /// No description provided for @savedVideosStorage.
   ///
   /// In ko, this message translates to:
-  /// **'저장 {used} · 임시 공간 {free} 남음'**
-  String savedVideosStorage(String used, String free);
+  /// **'저장 {saved} + 듣기 캐시 {temp} / 한도 {limit}'**
+  String savedVideosStorage(String saved, String temp, String limit);
+
+  /// No description provided for @savedVideosFull.
+  ///
+  /// In ko, this message translates to:
+  /// **'임시 저장 공간이 가득 찼어요. 저장한 곡을 지우거나 설정에서 용량을 늘려 주세요'**
+  String get savedVideosFull;
 
   /// No description provided for @savedVideosUsed.
   ///

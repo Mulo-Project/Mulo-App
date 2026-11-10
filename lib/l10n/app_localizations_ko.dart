@@ -747,9 +747,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get savedVideosClearAllBody => '저장해 둔 음원이 모두 지워져요';
 
   @override
-  String savedVideosStorage(String used, String free) {
-    return '저장 $used · 임시 공간 $free 남음';
+  String savedVideosStorage(String saved, String temp, String limit) {
+    return '저장 $saved + 듣기 캐시 $temp / 한도 $limit';
   }
+
+  @override
+  String get savedVideosFull => '임시 저장 공간이 가득 찼어요. 저장한 곡을 지우거나 설정에서 용량을 늘려 주세요';
 
   @override
   String savedVideosUsed(String size) {
