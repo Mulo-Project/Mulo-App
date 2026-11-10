@@ -10,7 +10,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../downloads/presentation/widgets/download_dialog.dart';
-import '../../../library/domain/entities/track.dart' show formatDuration;
+import '../../../library/domain/entities/track.dart' show Track, formatDuration;
 import '../../../subscriptions/presentation/widgets/subscribe_button.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/usecases/search_usecases.dart';
@@ -19,6 +19,7 @@ import '../bloc/media_detail_cubit.dart';
 import '../bloc/media_hit_memo.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../bloc/preview_cubit.dart';
+import '../saved_track.dart';
 import '../bloc/saved_videos_cubit.dart';
 import '../bloc/video_quality_cubit.dart';
 import '../../domain/entities/video_quality.dart';
@@ -363,39 +364,37 @@ class _DetailViewState extends State<_DetailView> {
               ),
               // 저장한 음원 화면에서 연 상세는 재생 조작부를 아래에 늘 고정한다.
               if (widget.fromSaved)
-                ListenableBuilder(
-                  listenable: Listenable.merge([
-                    _preview.queueItems,
-                    _preview.queuePos,
-                  ]),
-                  builder: (context, _) {
-                    final items = _preview.queueItems.value;
-                    final pos = _preview.queuePos.value;
-                    final current = pos < items.length
-                        ? items[pos].hit.id
-                        : null;
-                    if (current == hit.id) return const SavedQueueControls();
-                    // 저장한 곡인데 목록 재생 중이 아니면, 재생 버튼으로 이 곡부터 목록 재생을 시작한다.
+                Builder(
+                  builder: (context) {
+                    final now = context.watch<NowPlayingCubit>();
                     final saved = context.watch<SavedVideosCubit>().state;
-                    final at = saved.indexWhere((v) => v.id == hit.id);
-                    // 저장한 곡을 한 곡만 듣는 중이면(저장한 음원 화면의 재생 버튼) 같은 조작부를 그대로 쓴다.
-                    final playing = context.watch<PreviewCubit>().state;
-                    if (playing.hitId == hit.id &&
-                        playing.status != PreviewStatus.idle) {
+                    final current = now.state.track?.id ?? '';
+                    // 메인 재생이 임시 저장한 음원을 듣는 중이면 이 곡이 아니어도 같은 조작부를 쓴다.
+                    if (current.startsWith(Track.savedIdPrefix)) {
                       return const SavedQueueControls();
                     }
+                    final at = saved.indexWhere((v) => v.id == hit.id);
+                    final track = at < 0 ? null : savedTrackOf(saved[at]);
                     return SavedQueueControls(
-                      onStart: () {
-                        final now = context.read<NowPlayingCubit>();
-                        if (now.state.isPlaying) now.togglePlay();
-                        unawaited(
-                          // 저장 목록에서 이미 빠진 곡이면 이 곡 하나만 튼다.
-                          at < 0
-                              ? _preview.playQueue([PreviewQueueItem(hit)])
-                              : _preview.playQueue([
-                                  for (final v in saved)
-                                    PreviewQueueItem(v.hit, quality: v.quality),
-                                ], start: at),
+                      onStart: () async {
+                        // 두 소리가 겹치지 않게 미리 듣기는 멈추고, 메인 재생 대기열로 시작한다.
+                        await _preview.stop();
+                        if (track == null) {
+                          // 아직 다 받지 못한 곡은 한 곡만 미리 듣기로 튼다.
+                          unawaited(
+                            _preview.toggle(
+                              hit,
+                              videoQuality: at < 0 ? null : saved[at].quality,
+                            ),
+                          );
+                          return;
+                        }
+                        final tracks = <Track>[
+                          for (final v in saved) ?savedTrackOf(v),
+                        ];
+                        now.playQueue(
+                          tracks,
+                          index: tracks.indexWhere((t) => t.id == track.id),
                         );
                       },
                     );

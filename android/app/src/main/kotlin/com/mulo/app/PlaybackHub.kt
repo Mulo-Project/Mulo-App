@@ -17,10 +17,13 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.audio.AudioProcessor
+import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.audio.AudioSink
 import androidx.media3.exoplayer.audio.DefaultAudioSink
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.MediaSession
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
@@ -115,7 +118,11 @@ object PlaybackHub {
                 .setAudioProcessors(arrayOf<AudioProcessor>(EqualizerEngine.reverbProcessor))
                 .build()
         }
+        // 파일(content://)은 그대로, 임시 저장한 음원(http)은 스트림 캐시를 거쳐 읽는다 (받아 둔 만큼은 네트워크 없이 튼다).
+        val streamHttp = DefaultHttpDataSource.Factory().setAllowCrossProtocolRedirects(true)
+        val sources = DefaultDataSource.Factory(context, StreamCache.wrap(context, streamHttp))
         exo = ExoPlayer.Builder(context, renderers)
+            .setMediaSourceFactory(DefaultMediaSourceFactory(context).setDataSourceFactory(sources))
             // 다른 앱이 소리를 가져가면(영상, 통화) 멈추고, 이어폰이 빠지면 멈춘다.
             .setAudioAttributes(
                 AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).build(),

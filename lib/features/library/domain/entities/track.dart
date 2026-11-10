@@ -1,7 +1,7 @@
 import 'track_info.dart';
 
 /// 곡이 어디서 왔는지.
-enum TrackSource { device, download }
+enum TrackSource { device, download, saved }
 
 /// 보관함의 곡 한 개 (같은 id면 같은 곡).
 class Track {
@@ -40,7 +40,14 @@ class Track {
   /// 영상 파일인가 (보관함에서 영상도 곡으로 불러온다). 소리는 네이티브가, 화면은 Dart가 같은 파일로 낸다.
   bool get isVideo =>
       id.startsWith(videoIdPrefix) ||
-      (id.startsWith('file:') && _videoExtensions.any(uri.toLowerCase().endsWith));
+      (id.startsWith('file:') &&
+          _videoExtensions.any(uri.toLowerCase().endsWith));
+
+  /// 임시 저장한 음원(캐시)인가. 파일이 아니라 받아 둔 스트림이라 재생 기록 · 재생 횟수를 남기지 않는다.
+  bool get isSaved => source == TrackSource.saved;
+
+  /// 임시 저장한 음원 곡의 id 앞머리 (뒤는 영상 id).
+  static const savedIdPrefix = 'saved:';
 
   /// 기기에서 불러온 영상 곡의 id 앞머리.
   static const videoIdPrefix = 'device-video:';

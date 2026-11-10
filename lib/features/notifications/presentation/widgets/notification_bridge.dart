@@ -246,9 +246,7 @@ class _NotificationBridgeState extends State<NotificationBridge>
             preview.seekTo(to.inMilliseconds / total.inMilliseconds);
           }
         case MediaCommandType.next:
-          preview.next();
         case MediaCommandType.previous:
-          preview.previous();
         case MediaCommandType.favorite:
         case MediaCommandType.shuffle:
           break;
@@ -383,10 +381,6 @@ class _NotificationBridgeState extends State<NotificationBridge>
               position: previewing.progress?.position ?? Duration.zero,
               duration: previewing.progress?.duration,
               paused: previewing.paused,
-              queueIndex: context.read<PreviewCubit>().queueActive.value
-                  ? context.read<PreviewCubit>().queuePos.value
-                  : null,
-              queueLength: context.read<PreviewCubit>().queueItems.value.length,
             )
           : null,
       coverColors: [for (final c in glow) c.toARGB32()],

@@ -1,17 +1,20 @@
 import 'dart:async';
-import 'dart:math' show Random;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/router.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/format/format_bytes.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../library/domain/entities/track.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/saved_video.dart';
 import '../../domain/entities/video_quality.dart';
 import '../bloc/preview_cubit.dart';
+import '../saved_track.dart';
 import '../bloc/saved_videos_cubit.dart';
 import '../bloc/stream_cache_cubit.dart';
 import '../widgets/preview_control.dart';
@@ -55,6 +58,8 @@ class _SavedVideosScreenState extends State<SavedVideosScreen> {
     final p = context.palette;
     final videos = context.watch<SavedVideosCubit>().state;
     final preview = context.watch<PreviewCubit>().state;
+    final playing = context.watch<NowPlayingCubit>().state;
+    final playingId = playing.isPlaying ? playing.track?.id : null;
 
     return Scaffold(
       backgroundColor: p.background,
@@ -114,7 +119,10 @@ class _SavedVideosScreenState extends State<SavedVideosScreen> {
                                 _SavedTile(
                                   number: i + 1,
                                   video: section.$2[i],
-                                  active: preview.isActive(section.$2[i].id),
+                                  active:
+                                      preview.isActive(section.$2[i].id) ||
+                                      playingId ==
+                                          '${Track.savedIdPrefix}${section.$2[i].id}',
                                 ),
                             ],
                         ],
@@ -139,46 +147,97 @@ List<SavedVideo> _ordered(List<SavedVideo> videos) => [
 /// 저장한 음원 화면에서 곡 하나를 틀면 목록 재생으로 시작한다 (그 곡부터, 화면 순서대로).
 /// 이미 듣는 곡이면 일시정지 · 이어 듣기만 한다.
 Future<void> _playFrom(BuildContext context, SavedVideo video) async {
+  final nowPlaying = context.read<NowPlayingCubit>();
   final preview = context.read<PreviewCubit>();
-  if (preview.state.isActive(video.id)) {
-    await preview.togglePause();
+  final id = '${Track.savedIdPrefix}${video.id}';
+  if (nowPlaying.state.track?.id == id) {
+    nowPlaying.togglePlay();
     return;
   }
-  final nowPlaying = context.read<NowPlayingCubit>();
-  // 두 소리가 겹치지 않게 메인 재생은 멈춘다.
-  if (nowPlaying.state.isPlaying) nowPlaying.togglePlay();
-  final items = [
+  final tracks = <Track>[
     for (final v in _ordered(context.read<SavedVideosCubit>().state))
-      PreviewQueueItem(v.hit, quality: v.quality),
+      ?savedTrackOf(v),
   ];
-  final at = items.indexWhere((i) => i.hit.id == video.id);
-  await preview.playQueue(items, start: at < 0 ? 0 : at);
+  final at = tracks.indexWhere((t) => t.id == id);
+  if (at < 0) {
+    // 아직 다 받지 못한 곡은 대기열에 못 넣는다: 한 곡만 미리 듣기로 튼다.
+    if (nowPlaying.state.isPlaying) nowPlaying.togglePlay();
+    await preview.toggle(video.hit, videoQuality: video.quality);
+    return;
+  }
+  // 두 소리가 겹치지 않게 미리 듣기는 멈추고, 메인 재생 대기열로 시작한다.
+  await preview.stop();
+  nowPlaying.playQueue(tracks, index: at);
 }
 
-/// 전체 재생 · 셔플 · 반복. 누르면 목록 전체를 차례로 듣는다.
+enum _SavedAction { playNext, addToQueue, remove }
+
+/// 임시 저장한 음원의 ⋮ 메뉴. 대기열에는 끝까지 받은 곡만 넣는다.
+Future<void> _showSavedMenu(BuildContext context, SavedVideo video) async {
+  final l10n = context.l10n;
+  final track = savedTrackOf(video);
+  final action = await showAppMenu<_SavedAction>(
+    context,
+    items: [
+      if (track != null) ...[
+        AppMenuItem(
+          value: _SavedAction.playNext,
+          icon: AppIcons.playlistPlay,
+          label: l10n.trackMenuPlayNext,
+        ),
+        AppMenuItem(
+          value: _SavedAction.addToQueue,
+          icon: AppIcons.queue,
+          label: l10n.trackMenuAddToQueue,
+        ),
+      ],
+      AppMenuItem(
+        value: _SavedAction.remove,
+        icon: AppIcons.delete,
+        label: l10n.savedVideosRemove,
+        destructive: true,
+        dividerBefore: track != null,
+      ),
+    ],
+  );
+  if (action == null || !context.mounted) return;
+  final nowPlaying = context.read<NowPlayingCubit>();
+  switch (action) {
+    case _SavedAction.playNext:
+      nowPlaying.playNext(track!);
+    case _SavedAction.addToQueue:
+      nowPlaying.addToQueue(track!);
+    case _SavedAction.remove:
+      final id = '${Track.savedIdPrefix}${video.id}';
+      final cubit = context.read<SavedVideosCubit>();
+      // 대기열에 있으면 함께 뺀다.
+      final queued = nowPlaying.state.queue.where((t) => t.id == id);
+      if (queued.isNotEmpty) nowPlaying.removeFromQueue(queued.first);
+      await cubit.remove(video.id);
+  }
+}
+
+/// 전체 재생 · 셔플 · 반복. 누르면 끝까지 받은 곡들을 메인 현재 재생 목록으로 차례로 듣는다.
 class _QueueRow extends StatelessWidget {
   const _QueueRow({required this.videos});
 
   final List<SavedVideo> videos;
 
-  List<PreviewQueueItem> get _items => [
-    for (final v in videos) PreviewQueueItem(v.hit, quality: v.quality),
-  ];
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final preview = context.read<PreviewCubit>();
     final nowPlaying = context.read<NowPlayingCubit>();
+    final tracks = <Track>[for (final v in videos) ?savedTrackOf(v)];
     Future<void> start({required bool shuffled}) async {
-      // 두 소리가 겹치지 않게 메인 재생은 멈춘다.
-      if (nowPlaying.state.isPlaying) nowPlaying.togglePlay();
-      final start = shuffled && videos.isNotEmpty
-          ? Random().nextInt(videos.length)
-          : 0;
-      // 목록 화면(지금 곡의 상세 + 조작 줄)을 먼저 열고 틀기 시작한다.
-      unawaited(showSavedQueueDetail(context, videos[start].hit));
-      await preview.playQueue(_items, start: start, shuffled: shuffled);
+      if (tracks.isEmpty) return;
+      // 두 소리가 겹치지 않게 미리 듣기는 멈춘다.
+      await context.read<PreviewCubit>().stop();
+      if (shuffled) {
+        nowPlaying.playShuffled(tracks);
+      } else {
+        nowPlaying.playQueue(tracks);
+      }
+      if (context.mounted) unawaited(context.push(Routes.player));
     }
 
     // 재생목록 화면처럼: 왼쪽에 재생 · 셔플(알약), 오른쪽 끝에 반복 · 대기열(작은 아이콘).
@@ -191,7 +250,7 @@ class _QueueRow extends StatelessWidget {
             label: l10n.actionPlay,
             icon: AppIcons.play,
             compact: true,
-            onPressed: () => start(shuffled: false),
+            onPressed: tracks.isEmpty ? null : () => start(shuffled: false),
           ),
           const SizedBox(width: AppSpacing.xs),
           PillButton(
@@ -200,42 +259,31 @@ class _QueueRow extends StatelessWidget {
             icon: AppIcons.shuffle,
             variant: PillVariant.tonal,
             compact: true,
-            onPressed: () => start(shuffled: true),
+            onPressed: tracks.isEmpty ? null : () => start(shuffled: true),
           ),
           const Spacer(),
-          ListenableBuilder(
-            listenable: preview.repeatListenable,
-            builder: (context, _) {
-              final mode = preview.repeatMode;
-              return RowIconButton(
-                key: const ValueKey('saved-loop'),
-                icon: mode == PlayerRepeatMode.one
-                    ? AppIcons.repeatOne
-                    : AppIcons.repeat,
-                tooltip: l10n.playerRepeat,
-                accent: mode != PlayerRepeatMode.off,
-                onPressed: preview.cycleRepeat,
-              );
-            },
+          BlocBuilder<NowPlayingCubit, NowPlayingState>(
+            buildWhen: (a, b) => a.repeat != b.repeat,
+            builder: (context, s) => RowIconButton(
+              key: const ValueKey('saved-loop'),
+              icon: s.repeat == PlayerRepeatMode.one
+                  ? AppIcons.repeatOne
+                  : AppIcons.repeat,
+              tooltip: l10n.playerRepeat,
+              accent: s.repeat != PlayerRepeatMode.off,
+              onPressed: nowPlaying.cycleRepeat,
+            ),
           ),
-          // 목록 재생 중이면 지금 대기열(현재 곡의 상세)을 연다.
-          ValueListenableBuilder<bool>(
-            valueListenable: preview.queueActive,
-            builder: (context, active, _) => RowIconButton(
+          // 지금 현재 재생 목록(대기열)을 연다.
+          BlocBuilder<NowPlayingCubit, NowPlayingState>(
+            buildWhen: (a, b) => a.queue.isEmpty != b.queue.isEmpty,
+            builder: (context, s) => RowIconButton(
               key: const ValueKey('saved-queue-open'),
               icon: AppIcons.queueOutline,
               tooltip: l10n.savedQueueOpen,
-              onPressed: !active
+              onPressed: s.queue.isEmpty
                   ? null
-                  : () {
-                      final items = preview.queueItems.value;
-                      if (items.isEmpty) return;
-                      final pos = preview.queuePos.value.clamp(
-                        0,
-                        items.length - 1,
-                      );
-                      unawaited(showSavedQueueDetail(context, items[pos].hit));
-                    },
+                  : () => unawaited(context.push(Routes.queue)),
             ),
           ),
         ],
@@ -383,12 +431,15 @@ class _SavedTile extends StatelessWidget {
                 onPressed: () => unawaited(_playFrom(context, video)),
               ),
             if (!isVideo) const SizedBox(width: AppSpacing.sm),
-            CircleIconButton(
-              icon: AppIcons.delete,
-              tooltip: l10n.savedVideosRemove,
-              size: AppSizes.rowButton,
-              onPressed: () =>
-                  context.read<SavedVideosCubit>().remove(video.id),
+            // 일반 음원 타일처럼 ⋮ 메뉴: 다음 재생 · 대기열에 추가 · 임시 저장에서 빼기.
+            Builder(
+              builder: (context) => CircleIconButton(
+                key: ValueKey('saved-more-${hit.id}'),
+                icon: AppIcons.more,
+                tooltip: context.l10n.trackMenuTitle,
+                size: AppSizes.rowButton,
+                onPressed: () => unawaited(_showSavedMenu(context, video)),
+              ),
             ),
           ],
         ),

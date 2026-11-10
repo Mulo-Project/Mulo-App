@@ -17,7 +17,6 @@ import '../features/playlists/presentation/screens/playlist_import_screen.dart';
 import '../features/playlists/presentation/screens/playlist_add_tracks_screen.dart';
 import '../features/playlists/presentation/screens/playlist_pick_screen.dart';
 import '../features/playlists/presentation/screens/playlists_screen.dart';
-import '../features/search/presentation/screens/saved_queue_screen.dart';
 import '../features/search/presentation/screens/saved_videos_screen.dart';
 import '../features/search/presentation/screens/search_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
@@ -200,16 +199,6 @@ GoRouter createRouter({String initialLocation = Routes.home}) => GoRouter(
                     key: state.pageKey,
                     child: const SavedVideosScreen(),
                   ),
-                  routes: [
-                    GoRoute(
-                      path: 'queue',
-                      parentNavigatorKey: _rootKey,
-                      pageBuilder: (context, state) => MaterialPage(
-                        key: state.pageKey,
-                        child: const SavedQueueScreen(),
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),
@@ -260,9 +249,8 @@ GoRouter createRouter({String initialLocation = Routes.home}) => GoRouter(
     GoRoute(
       path: Routes.trackInfo,
       parentNavigatorKey: _rootKey,
-      pageBuilder: (context, state) => MaterialPage(
-        child: TrackInfoScreen(track: state.extra! as Track),
-      ),
+      pageBuilder: (context, state) =>
+          MaterialPage(child: TrackInfoScreen(track: state.extra! as Track)),
     ),
     GoRoute(
       path: Routes.queue,
