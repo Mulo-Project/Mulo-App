@@ -1577,8 +1577,14 @@ abstract class AppLocalizations {
   /// No description provided for @videoQualityAuto.
   ///
   /// In ko, this message translates to:
-  /// **'자동 (낮게 시작해 올림)'**
+  /// **'자동'**
   String get videoQualityAuto;
+
+  /// No description provided for @videoQualityAutoHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'빠르게 시작한 뒤 화질을 높여요'**
+  String get videoQualityAutoHint;
 
   /// No description provided for @settingsStreamCacheLimitHint.
   ///

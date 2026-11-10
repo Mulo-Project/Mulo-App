@@ -364,7 +364,10 @@ class _VideoOptionsSheet extends StatelessWidget {
                     valueListenable: preview.qualityOverride,
                     builder: (context, override, _) {
                       final current = override ?? settingsQuality;
-                      return ChoiceChips(
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                      ChoiceChips(
                         items: [
                           // 자동: 360p로 빠르게 시작해 몇 초 뒤 높은 화질로 올린다 (다음 곡부터).
                           ChoiceChipItem(
@@ -388,6 +391,21 @@ class _VideoOptionsSheet extends StatelessWidget {
                                 preview.qualityOverride.value = quality;
                                 Navigator.of(context).pop();
                               },
+                            ),
+                        ],
+                      ),
+                          // 자동을 고른 상태면 뜻을 짧게 풀어 준다.
+                          if (auto)
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                top: AppSpacing.xs,
+                              ),
+                              child: Text(
+                                l10n.videoQualityAutoHint,
+                                style: text.bodySmall?.copyWith(
+                                  color: context.palette.onSurfaceMuted,
+                                ),
+                              ),
                             ),
                         ],
                       );

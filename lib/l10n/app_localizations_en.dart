@@ -811,7 +811,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoRepeat => 'Repeat';
 
   @override
-  String get videoQualityAuto => 'Auto (start low, then up)';
+  String get videoQualityAuto => 'Auto';
+
+  @override
+  String get videoQualityAutoHint => 'Starts fast, then raises the quality';
 
   @override
   String settingsStreamCacheLimitHint(String used) {

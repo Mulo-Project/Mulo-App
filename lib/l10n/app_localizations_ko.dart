@@ -795,7 +795,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get videoRepeat => '반복 재생';
 
   @override
-  String get videoQualityAuto => '자동 (낮게 시작해 올림)';
+  String get videoQualityAuto => '자동';
+
+  @override
+  String get videoQualityAutoHint => '빠르게 시작한 뒤 화질을 높여요';
 
   @override
   String settingsStreamCacheLimitHint(String used) {
