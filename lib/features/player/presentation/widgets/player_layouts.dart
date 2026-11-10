@@ -18,15 +18,21 @@ Widget _lyrics(PlayerLayoutData data) => Padding(
 );
 
 /// 가사 보기일 때 바탕 전체를 배경색으로 덮는 막 (커버 · 그라데이션이 가장자리에 비치지 않게).
-Widget _lyricsVeil(BuildContext context, bool show) => Positioned.fill(
-  child: IgnorePointer(
-    child: AnimatedOpacity(
-      opacity: show ? 1 : 0,
-      duration: AppMotion.slow,
-      child: ColoredBox(color: context.palette.background),
-    ),
-  ),
-);
+/// 영상 곡은 가사 뒤로 영상이 비쳐 움직이게 얇게 덮는다 (영상이 아니면 배경색으로 꽉 덮는다).
+Widget _lyricsVeil(BuildContext context, bool show, {bool video = false}) =>
+    Positioned.fill(
+      child: IgnorePointer(
+        child: AnimatedOpacity(
+          opacity: show ? 1 : 0,
+          duration: AppMotion.slow,
+          child: ColoredBox(
+            color: context.palette.background.withValues(
+              alpha: video ? .6 : 1,
+            ),
+          ),
+        ),
+      ),
+    );
 
 /// 네모: 큰 정사각 커버, 아래 진행 막대.
 class SquarePlayer extends StatelessWidget {
@@ -46,7 +52,7 @@ class SquarePlayer extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          _lyricsVeil(context, data.showLyrics),
+          _lyricsVeil(context, data.showLyrics, video: data.track.isVideo),
           SafeArea(
             child: Column(
               children: [
@@ -152,7 +158,7 @@ class FullBleedPlayer extends StatelessWidget {
                 ],
               ),
             ),
-            _lyricsVeil(context, data.showLyrics),
+            _lyricsVeil(context, data.showLyrics, video: data.track.isVideo),
             SafeArea(
               child: Column(
                 children: [
@@ -223,7 +229,7 @@ class ArcPlayer extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          _lyricsVeil(context, data.showLyrics),
+          _lyricsVeil(context, data.showLyrics, video: data.track.isVideo),
           SafeArea(
             child: Column(
               children: [
