@@ -279,6 +279,7 @@ class _QueueTile extends StatelessWidget {
           artwork: coverImageOf(context, key),
           active: active,
           number: number,
+          badge: track.isSaved ? AppIcons.download : null,
           horizontalPadding: AppSpacing.xs,
           trailing: selection != null
               ? selectionMark(context, selection!)
@@ -292,28 +293,6 @@ class _QueueTile extends StatelessWidget {
                           playing ? AppIcons.equalizer : AppIcons.pause,
                           size: AppSizes.iconSm,
                           color: p.accent,
-                        ),
-                      ),
-                    // 임시 저장한 음원(cache)은 작은 뱃지로 구분한다.
-                    if (track.isSaved)
-                      Padding(
-                        padding: const EdgeInsets.only(right: AppSpacing.xs),
-                        child: Tooltip(
-                          message: context.l10n.savedVideosTitle,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: p.accent.withValues(alpha: .16),
-                              borderRadius: BorderRadius.circular(AppSpacing.xxs),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(AppSpacing.xxs),
-                              child: Icon(
-                                AppIcons.download,
-                                size: 12,
-                                color: p.accent,
-                              ),
-                            ),
-                          ),
                         ),
                       ),
                     Text(formatDuration(track.duration), style: text.bodySmall),
