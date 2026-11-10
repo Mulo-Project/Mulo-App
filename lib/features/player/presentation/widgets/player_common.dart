@@ -526,16 +526,28 @@ class SkipButton extends StatelessWidget {
 
 /// 흰(테마 글자색) 원 재생 버튼.
 class SolidPlayButton extends StatelessWidget {
-  const SolidPlayButton({super.key, required this.data, this.size = 68});
+  const SolidPlayButton({
+    super.key,
+    required this.data,
+    this.size = 68,
+    this.onPressed,
+    this.playing,
+  });
 
   final PlayerLayoutData data;
   final double size;
+
+  /// 누를 때의 동작 (없으면 재생 · 일시정지). 임시 저장 곡 상세에서 아직 안 틀었을 때 "재생 시작"에 쓴다.
+  final VoidCallback? onPressed;
+
+  /// 재생 중 모양 (없으면 지금 재생 상태를 따른다).
+  final bool? playing;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final p = context.palette;
-    final playing = data.state.isPlaying;
+    final playing = this.playing ?? data.state.isPlaying;
     return Tooltip(
       message: playing ? l10n.actionPause : l10n.actionPlay,
       child: Material(
@@ -543,7 +555,7 @@ class SolidPlayButton extends StatelessWidget {
         shape: const CircleBorder(),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: data.vm.togglePlay,
+          onTap: onPressed ?? data.vm.togglePlay,
           child: SizedBox.square(
             dimension: size,
             child: Icon(
@@ -632,11 +644,16 @@ class PlayerControls extends StatelessWidget {
     required this.data,
     required this.play,
     this.seekBar = true,
+    this.savedMode = false,
   });
 
   final PlayerLayoutData data;
   final Widget play;
   final bool seekBar;
+
+  /// 임시 저장한 음원 상세에서 쓰는 모양: 제목 줄(제목 · 가사 · 좋아요)은 위 상세 화면이 대신하므로 빼고,
+  /// 싱크 · 좋아요처럼 파일 곡에서만 되는 버튼은 숨긴다. 대기열 버튼은 아래 줄로 옮긴다.
+  final bool savedMode;
 
   @override
   Widget build(BuildContext context) {
@@ -661,40 +678,45 @@ class PlayerControls extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // 제목은 위 한 줄에 혼자 두고(길면 흐른다), 버튼은 아티스트 줄 가운데에 맞춘다.
-          Align(
-            alignment: Alignment.centerLeft,
-            child: PlayerTitleText(track: data.track),
-          ),
-          const SizedBox(height: AppSpacing.xxs),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: PlayerSubtitleText(track: data.track, withAlbum: false),
-              ),
-              IconButtonTheme(
-                data: IconButtonThemeData(
-                  style: IconButton.styleFrom(
-                    iconSize: 20,
-                    padding: const EdgeInsets.all(AppSpacing.xs),
-                    visualDensity: VisualDensity.compact,
+          if (!savedMode) ...[
+            // 제목은 위 한 줄에 혼자 두고(길면 흐른다), 버튼은 아티스트 줄 가운데에 맞춘다.
+            Align(
+              alignment: Alignment.centerLeft,
+              child: PlayerTitleText(track: data.track),
+            ),
+            const SizedBox(height: AppSpacing.xxs),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: PlayerSubtitleText(
+                    track: data.track,
+                    withAlbum: false,
                   ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    LyricsToggleButton(data: data),
-                    const QueueButton(),
-                    PlayerLikeButton(trackId: data.track.id),
-                  ],
+                IconButtonTheme(
+                  data: IconButtonThemeData(
+                    style: IconButton.styleFrom(
+                      iconSize: 20,
+                      padding: const EdgeInsets.all(AppSpacing.xs),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      LyricsToggleButton(data: data),
+                      const QueueButton(),
+                      PlayerLikeButton(trackId: data.track.id),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
           if (seekBar) ...[
             // 제목 묶음 → 진행 막대 → 재생 조작 → 보조 조작 순으로 틈을 둔다.
-            const SizedBox(height: AppSpacing.sm),
+            if (!savedMode) const SizedBox(height: AppSpacing.sm),
             PositionBuilder(
               builder: (context, state) => PlayerSeekBar(
                 progress: state.progress,
@@ -738,6 +760,7 @@ class PlayerControls extends StatelessWidget {
                 const Spacer(),
                 SleepTimerButton(data: data),
                 const EqualizerButton(),
+                if (savedMode) const QueueButton(),
               ],
             ),
           ),
