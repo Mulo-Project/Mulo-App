@@ -16,6 +16,7 @@ import '../features/player/presentation/bloc/now_playing_cubit.dart';
 import '../features/player/presentation/widgets/native_video.dart';
 import '../features/player/presentation/widgets/player_sleep_timer.dart';
 import '../features/search/presentation/bloc/preview_cubit.dart';
+import '../features/search/presentation/bloc/saved_videos_cubit.dart';
 import '../features/search/presentation/screens/saved_queue_detail_screen.dart'
     show showSavedQueueDetail;
 import '../features/search/presentation/screens/saved_queue_screen.dart'
@@ -522,9 +523,17 @@ class _PreviewMiniPlayer extends StatelessWidget {
             ].join(' · '),
       artwork: thumb == null ? null : CachedWebImage(thumb),
       // 영상이 있는 유튜브만 영상 자리를 넓게 둔다 (음원은 작은 커버만).
-      video: hit == null || !isYoutubeUrl(hit.url) || loading
+      // 소리만 저장한 곡은 영상 자리 없이 일반 음원 미니 플레이어처럼 보인다 (영상은 상세 화면에서만).
+      video:
+          hit == null ||
+              !isYoutubeUrl(hit.url) ||
+              loading ||
+              context.read<SavedVideosCubit>().isAudioOnly(hit.id)
           ? null
-          : PreviewVideo(pageUrl: hit.url),
+          : PreviewVideo(
+              pageUrl: hit.url,
+              quality: context.read<SavedVideosCubit>().qualityOf(hit.id),
+            ),
       progress: preview.fraction,
       isPlaying: !preview.paused,
       playLabel: l10n.searchPreviewResume,

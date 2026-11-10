@@ -181,64 +181,64 @@ class _QueueRow extends StatelessWidget {
       await preview.playQueue(_items, start: start, shuffled: shuffled);
     }
 
+    // 재생목록 화면처럼: 왼쪽에 재생 · 셔플(알약), 오른쪽 끝에 반복 · 대기열(작은 아이콘).
     return Padding(
       padding: AppSpacing.screen,
-      child: ValueListenableBuilder<bool>(
-        valueListenable: preview.loop,
-        builder: (context, loop, _) => Wrap(
-          spacing: AppSpacing.xs,
-          runSpacing: AppSpacing.xs,
-          children: [
-            PillButton(
-              key: const ValueKey('saved-play-all'),
-              label: l10n.actionPlay,
-              icon: AppIcons.play,
-              compact: true,
-              onPressed: () => start(shuffled: false),
+      child: Row(
+        children: [
+          PillButton(
+            key: const ValueKey('saved-play-all'),
+            label: l10n.actionPlay,
+            icon: AppIcons.play,
+            compact: true,
+            onPressed: () => start(shuffled: false),
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          PillButton(
+            key: const ValueKey('saved-shuffle'),
+            label: l10n.actionShuffle,
+            icon: AppIcons.shuffle,
+            variant: PillVariant.tonal,
+            compact: true,
+            onPressed: () => start(shuffled: true),
+          ),
+          const Spacer(),
+          ListenableBuilder(
+            listenable: preview.repeatListenable,
+            builder: (context, _) {
+              final mode = preview.repeatMode;
+              return RowIconButton(
+                key: const ValueKey('saved-loop'),
+                icon: mode == PlayerRepeatMode.one
+                    ? AppIcons.repeatOne
+                    : AppIcons.repeat,
+                tooltip: l10n.playerRepeat,
+                accent: mode != PlayerRepeatMode.off,
+                onPressed: preview.cycleRepeat,
+              );
+            },
+          ),
+          // 목록 재생 중이면 지금 대기열(현재 곡의 상세)을 연다.
+          ValueListenableBuilder<bool>(
+            valueListenable: preview.queueActive,
+            builder: (context, active, _) => RowIconButton(
+              key: const ValueKey('saved-queue-open'),
+              icon: AppIcons.queueOutline,
+              tooltip: l10n.savedQueueOpen,
+              onPressed: !active
+                  ? null
+                  : () {
+                      final items = preview.queueItems.value;
+                      if (items.isEmpty) return;
+                      final pos = preview.queuePos.value.clamp(
+                        0,
+                        items.length - 1,
+                      );
+                      unawaited(showSavedQueueDetail(context, items[pos].hit));
+                    },
             ),
-            PillButton(
-              key: const ValueKey('saved-shuffle'),
-              label: l10n.actionShuffle,
-              icon: AppIcons.shuffle,
-              variant: PillVariant.tonal,
-              compact: true,
-              onPressed: () => start(shuffled: true),
-            ),
-            PillButton(
-              key: const ValueKey('saved-loop'),
-              label: l10n.savedVideosLoop,
-              icon: AppIcons.repeat,
-              variant: PillVariant.tonal,
-              selected: loop,
-              compact: true,
-              onPressed: () => preview.loop.value = !loop,
-            ),
-            // 목록 재생 중이면 지금 대기열을 연다.
-            ValueListenableBuilder<bool>(
-              valueListenable: preview.queueActive,
-              builder: (context, active, _) => active
-                  ? PillButton(
-                      key: const ValueKey('saved-queue-open'),
-                      label: l10n.savedQueueOpen,
-                      icon: AppIcons.queueOutline,
-                      variant: PillVariant.tonal,
-                      compact: true,
-                      onPressed: () {
-                        final items = preview.queueItems.value;
-                        if (items.isEmpty) return;
-                        final pos = preview.queuePos.value.clamp(
-                          0,
-                          items.length - 1,
-                        );
-                        unawaited(
-                          showSavedQueueDetail(context, items[pos].hit),
-                        );
-                      },
-                    )
-                  : const SizedBox.shrink(),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

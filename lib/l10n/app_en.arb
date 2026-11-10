@@ -237,7 +237,7 @@
   "settingsStreamCacheDesc": "{used} used · limit {limit}",
   "@settingsStreamCacheDesc": {"placeholders": {"used": {"type": "String"}, "limit": {"type": "String"}}},
   "settingsStreamCacheClear": "Clear now",
-  "savedVideosTitle": "Saved tracks",
+  "savedVideosTitle": "Cached tracks",
   "savedVideosOpen": "Saved",
   "savedVideosEmpty": "No saved tracks",
   "savedVideosAdd": "Save",

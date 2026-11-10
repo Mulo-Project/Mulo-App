@@ -25,13 +25,17 @@ class PreviewVideoCubit extends Cubit<PreviewVideoState> {
   final PlayPreviewVideo _play;
   var _generation = 0;
 
-  /// [quality]는 저장한 곡의 화질 (없으면 설정 화질).
-  Future<void> load(String pageUrl, {VideoQuality? quality}) async {
+  /// [quality]는 저장한 곡의 화질 (없으면 설정 화질). [online]이면 소리만 저장한 곡도 영상을 읽는다.
+  Future<void> load(
+    String pageUrl, {
+    VideoQuality? quality,
+    bool online = false,
+  }) async {
     final generation = ++_generation;
     emit(const PreviewVideoState());
     if (pageUrl.isEmpty) return;
     try {
-      final stream = await _resolve(pageUrl, quality: quality);
+      final stream = await _resolve(pageUrl, quality: quality, online: online);
       if (generation != _generation || isClosed) return;
       await _play(stream);
       if (generation != _generation || isClosed) return;

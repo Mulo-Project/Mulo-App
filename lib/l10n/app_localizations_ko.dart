@@ -701,7 +701,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsStreamCacheClear => '지금 비우기';
 
   @override
-  String get savedVideosTitle => '저장한 음원';
+  String get savedVideosTitle => '임시 저장한 음원';
 
   @override
   String get savedVideosOpen => '저장한 음원';

@@ -46,6 +46,10 @@ class SavedVideosCubit extends Cubit<List<SavedVideo>> {
   /// 저장한 곡의 영상 화질 (저장하지 않았거나 음원이면 null).
   VideoQuality? qualityOf(String id) =>
       state.where((v) => v.id == id).firstOrNull?.quality;
+  /// 소리만 저장한 곡인가 (영상 화질 없이 저장했다).
+  bool isAudioOnly(String id) =>
+      state.any((v) => v.id == id && v.quality == null);
+
   bool isBusy(String id) => _busy.contains(id);
 
   Future<void> load() async {

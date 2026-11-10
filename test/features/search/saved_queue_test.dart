@@ -54,7 +54,7 @@ void main() {
     expect(find.text('Song B'), findsWidgets);
   });
 
-  testWidgets('저장한 곡 상세를 그냥 열면 재생 조작부가 없고, 목록에서 곡을 틀면 그 곡부터 목록 재생이 된다', (
+  testWidgets('저장한 곡 상세를 열면 재생 조작부가 있고(재생 전에는 아직 안 틀린다), 목록에서 곡을 틀면 그 곡부터 목록 재생이 된다', (
     tester,
   ) async {
     final player = FakePreviewPlayer();
@@ -71,7 +71,7 @@ void main() {
 
     await tester.tap(find.text('Song B'));
     await settle(tester);
-    expect(find.byKey(const ValueKey('queue-bar-play')), findsNothing);
+    expect(find.byKey(const ValueKey('queue-bar-play')), findsOneWidget);
     expect(player.played, isEmpty);
     await tester.pageBack();
     await settle(tester);

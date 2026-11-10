@@ -608,6 +608,8 @@ class _PreviewVideoBox extends StatelessWidget {
             pageUrl: hit.url,
             quality:
                 override ?? context.read<SavedVideosCubit>().qualityOf(hit.id),
+            // 소리만 저장한 곡도 상세 화면에서는 오프라인이 아니면 영상을 같이 보여 준다.
+            online: true,
           ),
         ),
         const PreviewVideoControls(),

@@ -6,7 +6,6 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../player/presentation/screens/queue_screen.dart'
     show QueueHeader;
-import '../../../player/domain/entities/player_repeat_mode.dart';
 import '../bloc/preview_cubit.dart';
 
 /// 저장한 음원 대기열 경로 (저장한 음원 화면 안).
@@ -38,7 +37,7 @@ class SavedQueueScreen extends StatelessWidget {
                     preview.queueItems,
                     preview.queuePos,
                     preview.shuffle,
-                    preview.loop,
+                    preview.repeatListenable,
                   ]),
                   builder: (context, _) {
                     final items = preview.queueItems.value;
@@ -57,11 +56,8 @@ class SavedQueueScreen extends StatelessWidget {
                           count: items.length,
                           shuffle: preview.shuffle.value,
                           onShuffle: preview.toggleShuffle,
-                          repeat: preview.loop.value
-                              ? PlayerRepeatMode.all
-                              : PlayerRepeatMode.off,
-                          onRepeat: () =>
-                              preview.loop.value = !preview.loop.value,
+                          repeat: preview.repeatMode,
+                          onRepeat: preview.cycleRepeat,
                           onClear: () {
                             preview.stop();
                             Navigator.of(context).maybePop();

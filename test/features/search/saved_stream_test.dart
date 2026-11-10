@@ -118,5 +118,22 @@ void main() {
         throwsA(isA<EngineException>()),
       );
     });
+
+    test('소리만 저장한 곡도 online이면 링크를 풀어 영상을 읽는다', () async {
+      final engine = FakeDownloaderEngine();
+      final repo = _Repo([
+        const SavedVideo(
+          hit: _hit,
+          ready: true,
+          sources: [VideoStream(url: 'saved://audio')],
+        ),
+      ]);
+      final use = ResolveVideoStream(engine, null, repo);
+      // 기본: 소리만 저장한 곡은 영상을 따로 읽지 않는다.
+      await expectLater(use(_hit.url), throwsA(isA<EngineException>()));
+      // 상세 화면: 오프라인이 아니면 영상도 읽는다.
+      final video = await use(_hit.url, online: true);
+      expect(video.url, isNot('saved://audio'));
+    });
   });
 }

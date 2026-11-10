@@ -268,7 +268,7 @@
   "settingsStreamCacheDesc": "{used} 사용 중 · 한도 {limit}",
   "@settingsStreamCacheDesc": {"placeholders": {"used": {"type": "String"}, "limit": {"type": "String"}}},
   "settingsStreamCacheClear": "지금 비우기",
-  "savedVideosTitle": "저장한 음원",
+  "savedVideosTitle": "임시 저장한 음원",
   "savedVideosOpen": "저장한 음원",
   "savedVideosEmpty": "저장한 음원이 없어요",
   "savedVideosAdd": "저장",

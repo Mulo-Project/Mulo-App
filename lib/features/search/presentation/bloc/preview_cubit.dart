@@ -1,10 +1,11 @@
 import 'dart:async';
 
 import 'package:equatable/equatable.dart';
-import 'package:flutter/foundation.dart' show ValueNotifier;
+import 'package:flutter/foundation.dart' show Listenable, ValueNotifier;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/usecase/usecase.dart';
+import '../../../player/domain/entities/player_repeat_mode.dart';
 import '../../domain/entities/audio_stream.dart';
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
@@ -219,6 +220,28 @@ class PreviewCubit extends Cubit<PreviewState> {
 
   /// 목록 반복: 켜면 마지막 곡 뒤에 처음으로 돌아간다.
   final loop = ValueNotifier<bool>(false);
+
+  /// 반복 모드: 끔 → 목록 반복([loop]) → 한 곡 반복([repeat]). 메인 플레이어의 반복과 같은 순서다.
+  PlayerRepeatMode get repeatMode => repeat.value
+      ? PlayerRepeatMode.one
+      : loop.value
+      ? PlayerRepeatMode.all
+      : PlayerRepeatMode.off;
+
+  /// [repeatMode]가 바뀔 때 알린다.
+  Listenable get repeatListenable => Listenable.merge([repeat, loop]);
+
+  void cycleRepeat() {
+    switch (repeatMode) {
+      case PlayerRepeatMode.off:
+        loop.value = true;
+      case PlayerRepeatMode.all:
+        loop.value = false;
+        repeat.value = true;
+      case PlayerRepeatMode.one:
+        repeat.value = false;
+    }
+  }
 
   /// [items]를 차례로 튼다. [shuffled]면 섞어서 [start]번 곡이 맨 앞에 온다.
   Future<EngineFailure?> playQueue(

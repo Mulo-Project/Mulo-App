@@ -719,7 +719,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsStreamCacheClear => 'Clear now';
 
   @override
-  String get savedVideosTitle => 'Saved tracks';
+  String get savedVideosTitle => 'Cached tracks';
 
   @override
   String get savedVideosOpen => 'Saved';

@@ -1397,7 +1397,7 @@ abstract class AppLocalizations {
   /// No description provided for @savedVideosTitle.
   ///
   /// In ko, this message translates to:
-  /// **'저장한 음원'**
+  /// **'임시 저장한 음원'**
   String get savedVideosTitle;
 
   /// No description provided for @savedVideosOpen.

@@ -293,6 +293,31 @@ void main() {
   });
 
   group('PreviewCubit', () {
+    test('반복 모드: 끔 → 목록 반복 → 한 곡 반복 → 끔 순서로 돈다', () async {
+      final cubit = _cubit(FakeDownloaderEngine(), FakePreviewPlayer());
+      expect(cubit.repeatMode, PlayerRepeatMode.off);
+      cubit.cycleRepeat();
+      expect(cubit.repeatMode, PlayerRepeatMode.all);
+      cubit.cycleRepeat();
+      expect(cubit.repeatMode, PlayerRepeatMode.one);
+      cubit.cycleRepeat();
+      expect(cubit.repeatMode, PlayerRepeatMode.off);
+      await cubit.close();
+    });
+
+    test('한 곡 반복이면 목록에서도 끝난 곡을 처음부터 다시 튼다', () async {
+      final player = FakePreviewPlayer();
+      final cubit = _cubit(FakeDownloaderEngine(), player);
+      await cubit.playQueue(const [PreviewQueueItem(_a), PreviewQueueItem(_b)]);
+      cubit.cycleRepeat();
+      cubit.cycleRepeat(); // 한 곡 반복
+      player.complete();
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+      expect(cubit.state.hitId, 'a');
+      await cubit.close();
+    });
+
     test('듣다 소리가 끊기면 멈춘 채 남고, 다시 재생하면 주소를 새로 읽어 다시 튼다', () async {
       final player = FakePreviewPlayer();
       final cubit = _cubit(FakeDownloaderEngine(info: VideoInfo(_a)), player);
