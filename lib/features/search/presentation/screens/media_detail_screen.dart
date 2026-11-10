@@ -366,6 +366,12 @@ class _DetailViewState extends State<_DetailView> {
                   final saved = context.watch<SavedVideosCubit>().state;
                   final at = saved.indexWhere((v) => v.id == hit.id);
                   if (at < 0) return const SizedBox.shrink();
+                  // 저장한 곡을 한 곡만 듣는 중이면(저장한 음원 화면의 재생 버튼) 같은 조작부를 그대로 쓴다.
+                  final playing = context.watch<PreviewCubit>().state;
+                  if (playing.hitId == hit.id &&
+                      playing.status != PreviewStatus.idle) {
+                    return const SavedQueueControls();
+                  }
                   return SavedQueueControls(
                     onStart: () {
                       final now = context.read<NowPlayingCubit>();
