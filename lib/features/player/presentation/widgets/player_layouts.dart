@@ -40,6 +40,9 @@ class SquarePlayer extends StatelessWidget {
     final p = context.palette;
     return PlayerBackdrop(
       art: art,
+      // 영상 곡은 사각 커버 뒤에도 흐린 영상이 움직인다.
+      blurred: data.track.isVideo,
+      video: data.track.isVideo,
       child: Stack(
         fit: StackFit.expand,
         children: [
