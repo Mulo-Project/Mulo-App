@@ -496,6 +496,14 @@ class MemoryVideoQualityRepository implements VideoQualityRepository {
 
   @override
   Future<void> save(VideoQuality v) async => value = v;
+
+  bool auto = false;
+
+  @override
+  Future<bool> loadAuto() async => auto;
+
+  @override
+  Future<void> saveAuto(bool v) async => auto = v;
 }
 
 class MemoryMixWithOthersRepository implements MixWithOthersRepository {
@@ -1697,9 +1705,43 @@ class FakePreviewPlayer implements PreviewPlayer {
   var cacheUsed = 0;
   int cacheClears = 0;
 
+  final savedStreams = <String>[];
+  final savedController =
+      StreamController<({String id, bool ok})>.broadcast();
+
+  @override
+  Future<void> setSavedStreams(List<String> streamIds) async {
+    savedStreams
+      ..clear()
+      ..addAll(streamIds);
+  }
+
+  @override
+  Future<String?> saveStream(String id, List<VideoStream> streams) async {
+    final streamId = 'stream-$id';
+    savedStreams.add(streamId);
+    return streamId;
+  }
+
+  @override
+  Future<void> removeSavedStream(String id, String? streamId) async {
+    savedStreams.remove(streamId);
+  }
+
+  @override
+  Stream<({String id, bool ok})> watchSaved() => savedController.stream;
+
   @override
   Future<StreamCacheInfo> cacheInfo() async =>
       StreamCacheInfo(usedBytes: cacheUsed, limitBytes: cacheLimit);
+
+  @override
+  Future<bool> enterPip() async => false;
+
+  @override
+  Future<void> setCacheLimit(int bytes) async {
+    cacheLimit = bytes;
+  }
 
   @override
   Future<void> clearCache() async {

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/design/design.dart';
@@ -15,10 +16,17 @@ import '../../domain/entities/media_info.dart';
 import '../../domain/usecases/search_usecases.dart';
 import '../bloc/audio_language_cubit.dart';
 import '../bloc/media_detail_cubit.dart';
+import '../bloc/media_hit_memo.dart';
 import '../bloc/preview_cubit.dart';
+import '../bloc/saved_videos_cubit.dart';
+import '../bloc/video_quality_cubit.dart';
+import '../../domain/entities/video_quality.dart';
+import '../widgets/video_quality_sheet.dart';
 import '../widgets/audio_language_sheet.dart';
+import 'saved_videos_screen.dart' show savedVideosLocation;
 import '../widgets/preview_control.dart';
 import '../widgets/preview_video.dart';
+import '../widgets/preview_video_controls.dart';
 import '../widgets/video_category.dart';
 import '../widgets/youtube_embed.dart';
 
@@ -85,6 +93,7 @@ class MediaDetailScreen extends StatelessWidget {
           sl<FetchMediaInfo>(),
           sl<FetchChannelInfo>(),
           sl<OpenLink>(),
+          memo: sl<MediaHitMemo>(),
         )..load(),
       ),
       // 유튜브 곡만 오디오 언어가 여럿일 수 있다.
@@ -239,6 +248,8 @@ class _DetailViewState extends State<_DetailView> {
                 leading: AppBackButton(
                   onPressed: () => Navigator.of(context).pop(),
                 ),
+                // 라이브가 아니면 저장해 둘 수 있다 (유튜브는 영상이라 화질을 고르고, 사운드클라우드 등은 음원만).
+                actions: [if (!hit.isLive) _SaveButton(hit: hit)],
               ),
               // 받기 전 상세 화면은 목록 위에 얇은 막대로 읽는 중임을 알린다.
               LoadingBar(loading: state.loading),
@@ -403,6 +414,53 @@ class _DetailViewState extends State<_DetailView> {
   }
 }
 
+/// 이 곡을 저장해 두거나 저장을 푼다 (저장하면 임시 저장소가 차도 지워지지 않고 바로 들을 수 있다).
+/// 유튜브는 영상이라 저장할 때 화질을 고른다.
+class _SaveButton extends StatelessWidget {
+  const _SaveButton({required this.hit});
+
+  final MediaHit hit;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final cubit = context.watch<SavedVideosCubit>();
+    final saved = cubit.contains(hit.id);
+    // 목록에는 바로 들어가지만 데이터를 다 받기 전에는 "받는 중"으로 보여, 끝나기 전에 오프라인으로 틀지 않게 한다.
+    final downloading =
+        saved && cubit.state.any((v) => v.id == hit.id && !v.ready);
+    return PillButton(
+      key: const ValueKey('detail-save'),
+      label: downloading
+          ? l10n.savedVideosDownloading
+          : saved
+          ? l10n.savedVideosAdded
+          : l10n.savedVideosAdd,
+      variant: saved && !downloading ? PillVariant.accent : PillVariant.tonal,
+      busy: downloading,
+      compact: true,
+      onPressed: () async {
+        final messenger = ScaffoldMessenger.of(context);
+        final failed = l10n.savedVideosFailed;
+        // 저장된 곡이면 저장한 음원 화면으로 간다 (저장 해제는 거기서).
+        if (saved) return unawaited(context.push(savedVideosLocation));
+        VideoQuality? quality;
+        if (isYoutubeUrl(hit.url)) {
+          final pick = await pickSaveQuality(
+            context,
+            initial: context.read<VideoQualityCubit>().state,
+          );
+          if (pick == null) return;
+          quality = pick.quality;
+        }
+        if (!await cubit.add(hit, quality: quality)) {
+          messenger.showSnackBar(SnackBar(content: Text(failed)));
+        }
+      },
+    );
+  }
+}
+
 /// 썸네일 높이 상한.
 const _maxThumbHeight = 260.0;
 
@@ -483,67 +541,26 @@ class _Thumbnail extends StatelessWidget {
   }
 }
 
-/// 미리 듣는 영상. 누르면 재생 · 일시정지 아이콘 버튼이 잠시 떠서 누를 수 있고,
-/// 멈춰 있는 동안에는 계속 보인다.
-class _PreviewVideoBox extends StatefulWidget {
+/// 미리 듣는 영상 + 재생 컨트롤 (한 번 누르면 컨트롤, 두 번 누르면 10초 이동, 탐색 바, 전체 화면).
+class _PreviewVideoBox extends StatelessWidget {
   const _PreviewVideoBox({required this.hit});
 
   final MediaHit hit;
 
   @override
-  State<_PreviewVideoBox> createState() => _PreviewVideoBoxState();
-}
-
-class _PreviewVideoBoxState extends State<_PreviewVideoBox> {
-  static const _hideAfter = Duration(seconds: 2);
-  var _touched = false;
-  Timer? _timer;
-
-  void _reveal() {
-    setState(() => _touched = true);
-    _timer?.cancel();
-    _timer = Timer(_hideAfter, () {
-      if (mounted) setState(() => _touched = false);
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final paused = context.select((PreviewCubit c) => c.state.paused);
-    final show = paused || _touched;
     return Stack(
       fit: StackFit.expand,
       children: [
-        PreviewVideo(pageUrl: widget.hit.url),
-        GestureDetector(behavior: HitTestBehavior.translucent, onTap: _reveal),
-        Center(
-          child: IgnorePointer(
-            ignoring: !show,
-            child: AnimatedOpacity(
-              opacity: show ? 1 : 0,
-              duration: AppMotion.fast,
-              child: CircleIconButton(
-                icon: paused ? AppIcons.play : AppIcons.pause,
-                tooltip: paused
-                    ? l10n.searchPreviewResume
-                    : l10n.searchPreviewPause,
-                emphasized: true,
-                size: AppSizes.circleButtonLarge,
-                onPressed: () {
-                  context.read<PreviewCubit>().togglePause();
-                  if (!paused) _reveal();
-                },
-              ),
-            ),
+        // 옵션에서 화질을 바꾸면 그 화질로 영상만 다시 읽어 바꿔 끼운다 (소리는 이어진다).
+        ValueListenableBuilder<VideoQuality?>(
+          valueListenable: context.read<PreviewCubit>().qualityOverride,
+          builder: (context, override, _) => PreviewVideo(
+            pageUrl: hit.url,
+            quality: override ?? context.read<SavedVideosCubit>().qualityOf(hit.id),
           ),
         ),
+        const PreviewVideoControls(),
       ],
     );
   }

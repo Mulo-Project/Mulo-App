@@ -9,6 +9,7 @@ import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../bloc/audio_language_cubit.dart';
 import '../bloc/preview_cubit.dart';
+import '../bloc/saved_videos_cubit.dart';
 
 /// [hit] 미리 듣기를 시작하거나(이미 듣는 중이면) 멈춘다.
 /// 소리가 나기 시작하면 메인 재생은 멈추고, 시작하지 못하면 안내를 띄운다
@@ -35,7 +36,12 @@ Future<bool> togglePreview(
     return false;
   }
 
-  final failure = await preview.toggle(hit, audioLanguage: audioLanguage);
+  // 저장한 곡은 저장할 때 고른 화질로 읽어야 저장한 데이터를 그대로 쓴다.
+  final failure = await preview.toggle(
+    hit,
+    audioLanguage: audioLanguage,
+    videoQuality: context.read<SavedVideosCubit>().qualityOf(hit.id),
+  );
   if (failure != null) {
     if (!announceFailure) return false;
     // 까닭을 알 수 있게 엔진이 알려 준 마지막 줄을 덧붙인다.

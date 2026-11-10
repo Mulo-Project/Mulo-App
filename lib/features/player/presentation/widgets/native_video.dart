@@ -10,7 +10,10 @@ import '../bloc/video_surface_cubit.dart';
 /// 첫 화면이 그려지기 전에는 아무것도 그리지 않아서 뒤의 커버가 보이고, 그려지면 부드럽게 바뀐다.
 /// 같은 화면을 미니 플레이어 · 상세 화면 · 플레이어가 나눠 쓰므로 화면을 옮겨도 이어서 보인다.
 class NativeVideo extends StatefulWidget {
-  const NativeVideo({super.key});
+  const NativeVideo({super.key, this.fit = BoxFit.cover});
+
+  /// 화면을 채우는 방식. 기본은 꽉 채우고 넘치는 부분을 자른다 (전체 화면은 contain으로 잘림 없이).
+  final BoxFit fit;
 
   @override
   State<NativeVideo> createState() => _NativeVideoState();
@@ -44,7 +47,7 @@ class _NativeVideoState extends State<NativeVideo> {
           opacity: s.ready ? 1 : 0,
           duration: AppMotion.medium,
           child: FittedBox(
-            fit: BoxFit.cover,
+            fit: widget.fit,
             clipBehavior: Clip.hardEdge,
             child: SizedBox(
               width: s.width.toDouble(),

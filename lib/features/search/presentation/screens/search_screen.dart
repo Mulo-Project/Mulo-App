@@ -22,6 +22,7 @@ import '../../domain/entities/search_source.dart';
 import '../bloc/preview_cubit.dart';
 import '../bloc/search_cubit.dart';
 import 'media_detail_screen.dart';
+import 'saved_videos_screen.dart';
 import '../widgets/preview_control.dart';
 import '../widgets/search_source_menu.dart';
 
@@ -121,6 +122,15 @@ class _SearchScreenState extends State<SearchScreen> {
                   large: true,
                   title: l10n.navSearch,
                   subtitle: l10n.searchSubtitle,
+                  actions: [
+                    PillButton(
+                      key: const ValueKey('search-saved'),
+                      label: l10n.savedVideosOpen,
+                      variant: PillVariant.tonal,
+                      compact: true,
+                      onPressed: () => context.push(savedVideosLocation),
+                    ),
+                  ],
                 ),
               ]),
             ),

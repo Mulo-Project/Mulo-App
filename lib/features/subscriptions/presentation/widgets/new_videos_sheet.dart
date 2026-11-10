@@ -6,6 +6,8 @@ import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../domain/entities/feed_video.dart';
+import '../../../search/domain/entities/media_info.dart';
+import '../../../search/presentation/screens/media_detail_screen.dart';
 import '../bloc/new_videos_cubit.dart';
 
 var _open = false;
@@ -275,9 +277,33 @@ class _Row extends StatelessWidget {
         tone: toneFor(video.id),
         icon: AppIcons.download,
       ),
-      trailing: Icon(
-        selected ? AppIcons.checkCircle : AppIcons.radioOff,
-        color: selected ? p.accent : p.onSurfaceMuted,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // 줄을 누르면 받기 선택이라, 상세 화면은 따로 버튼으로 연다.
+          CircleIconButton(
+            key: ValueKey('new-video-detail-${video.id}'),
+            icon: AppIcons.chevronRight,
+            tooltip: context.l10n.newVideosDetail,
+            size: AppSizes.rowButton,
+            onPressed: () => showMediaDetail(
+              context,
+              MediaHit(
+                id: video.id,
+                title: video.title,
+                url: video.url,
+                uploader: video.author,
+                thumbnailUrl: video.thumbnailUrl,
+                viewCount: video.viewCount,
+                uploadedAt: video.publishedAt,
+              ),
+            ),
+          ),
+          Icon(
+            selected ? AppIcons.checkCircle : AppIcons.radioOff,
+            color: selected ? p.accent : p.onSurfaceMuted,
+          ),
+        ],
       ),
       onTap: onTap,
     );

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart' show ValueNotifier;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/usecase/usecase.dart';
@@ -9,6 +10,7 @@ import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/preview_progress.dart';
 import '../../domain/entities/preview_snapshot.dart';
+import '../../domain/entities/video_quality.dart';
 import '../../domain/usecases/search_usecases.dart';
 
 enum PreviewStatus { idle, loading, playing }
@@ -90,17 +92,78 @@ class PreviewCubit extends Cubit<PreviewState> {
     WatchPreviewProgress watchProgress,
     WatchPreviewFailures watchFailures, {
     this.resolveVideo,
+    this.enterPictureInPicture,
+    LoadAutoVideoQuality? loadAutoQuality,
+    SaveAutoVideoQuality? saveAutoQuality,
   }) : super(const PreviewState()) {
+    // 자동 화질은 설정이라 저장해 두고 앱을 켤 때 읽는다.
+    if (loadAutoQuality != null) {
+      unawaited(
+        loadAutoQuality(const NoParams()).then((v) {
+          if (!isClosed) autoQuality.value = v;
+        }, onError: (Object _) {}),
+      );
+    }
+    if (saveAutoQuality != null) {
+      autoQuality.addListener(() => unawaited(saveAutoQuality(autoQuality.value)));
+    }
     unawaited(syncWithPlayer());
-    _completed = watchCompleted(const NoParams()).listen((_) => stop());
+    _completed = watchCompleted(const NoParams()).listen((_) => _onCompleted());
     _progress = watchProgress(const NoParams()).listen(_onProgress);
     _failures = watchFailures(const NoParams()).listen(_onFailure);
+  }
+
+  /// 영상을 작은 창(PiP)으로 띄운다. 못 띄우면 false.
+  Future<bool> enterPip() async {
+    try {
+      return await enterPictureInPicture?.call(const NoParams()) ?? false;
+    } on Object {
+      return false;
+    }
+  }
+
+  /// 반복 재생: 켜면 끝까지 들었을 때 멈추지 않고 처음부터 다시 튼다 (한 곡 반복).
+  final repeat = ValueNotifier<bool>(false);
+
+  /// 영상 화질을 이 곡에서만 바꾼 값 (영상 컨트롤의 옵션). null이면 저장한 화질 · 설정 화질을 따른다.
+  /// 새 곡을 틀 때 되돌린다.
+  final qualityOverride = ValueNotifier<VideoQuality?>(null);
+
+  /// 자동(점진) 화질: 켜면 360p로 빠르게 시작해 몇 초 뒤 [rampTarget] 화질로 영상만 바꿔 올린다.
+  /// 설정의 영상 화질에서 고르고 저장된다 (영상 안의 옵션에는 없다: 거기서는 지금 화질만 바꾼다).
+  final autoQuality = ValueNotifier<bool>(false);
+  static const rampTarget = VideoQuality.high;
+  static const _rampDelay = Duration(seconds: 4);
+
+  void _rampLater(String hitId, int generation) {
+    unawaited(
+      Future<void>.delayed(_rampDelay, () {
+        if (isClosed || generation != _generation) return;
+        if (!autoQuality.value || !state.isActive(hitId)) return;
+        if (state.status != PreviewStatus.playing) return;
+        // 그 사이 직접 화질을 고른 곡은 그대로 둔다.
+        if (qualityOverride.value != VideoQuality.standard) return;
+        qualityOverride.value = rampTarget;
+      }),
+    );
+  }
+
+  void _onCompleted() {
+    if (isClosed) return;
+    if (repeat.value && state.status == PreviewStatus.playing) {
+      unawaited(
+        _seek(Duration.zero).then((_) => _resume(const NoParams()), onError: (Object _) {}),
+      );
+      return;
+    }
+    stop();
   }
 
   final ResolveAudioStream _resolve;
 
   /// 영상 주소를 미리 읽어 두는 데 쓴다 (없으면 미리 읽지 않는다).
   final ResolveVideoStream? resolveVideo;
+  final EnterPictureInPicture? enterPictureInPicture;
   final PlayPreview _play;
   final RememberPreview _remember;
   final CurrentPreview _current;
@@ -147,12 +210,20 @@ class PreviewCubit extends Cubit<PreviewState> {
 
   /// [hit]을 미리 듣는다. 이미 듣는 중이면 멈춘다. [audioLanguage]는 고른 오디오 언어 (null이면 기본 음성).
   /// 시작하지 못했으면 까닭을, 잘 됐거나 중간에 취소됐으면 null을 돌려준다.
-  Future<EngineFailure?> toggle(MediaHit hit, {String? audioLanguage}) async {
+  Future<EngineFailure?> toggle(
+    MediaHit hit, {
+    String? audioLanguage,
+    VideoQuality? videoQuality,
+  }) async {
     if (state.isActive(hit.id)) {
       await stop();
       return null;
     }
     final generation = ++_generation;
+    // 자동(점진)이면 낮은 화질로 먼저 시작한다 (저장한 곡은 저장한 화질 그대로).
+    final ramp = autoQuality.value && videoQuality == null;
+    if (ramp) videoQuality = VideoQuality.standard;
+    qualityOverride.value = videoQuality;
     // 앞에 듣던 곡은 새 곡 주소를 알아내는 동안에도 바로 멈춘다.
     if (state.status != PreviewStatus.idle) unawaited(_stop(const NoParams()));
     final startedAt = DateTime.now();
@@ -166,9 +237,9 @@ class PreviewCubit extends Cubit<PreviewState> {
         expectedLoad: _loadEstimate,
       ),
     );
-    _prefetchVideo(hit);
+    _prefetchVideo(hit, videoQuality);
     try {
-      final stream = await _streamFor(hit, audioLanguage)
+      final stream = await _streamFor(hit, audioLanguage, videoQuality)
           .timeout(
             _resolveTimeout,
             onTimeout: () => throw const EngineException(
@@ -207,6 +278,7 @@ class PreviewCubit extends Cubit<PreviewState> {
       );
       // 앱이 꺼졌다 켜져도 어느 곡인지 알 수 있게 플레이어에 적어 둔다 (실패해도 듣는 데는 지장 없다).
       unawaited(_remember(hit).catchError((Object _) {}));
+      if (ramp) _rampLater(hit.id, generation);
       return null;
     } on EngineException catch (e) {
       if (generation != _generation || isClosed) return null;
@@ -224,10 +296,10 @@ class PreviewCubit extends Cubit<PreviewState> {
 
   /// 소리 주소를 읽는 동안 영상 주소도 함께 읽어 둔다. 영상 화면이 열릴 때 바로 쓰게 되어
   /// 소리와 영상이 처음부터 덜 어긋난다. 결과는 엔진이 기억하고, 실패는 영상 쪽에서 다시 다룬다.
-  void _prefetchVideo(MediaHit hit) {
+  void _prefetchVideo(MediaHit hit, [VideoQuality? quality]) {
     final resolve = resolveVideo;
     if (resolve == null || !_isYoutube(hit.url)) return;
-    unawaited(resolve(hit.url).then<void>((_) {}, onError: (Object _) {}));
+    unawaited(resolve(hit.url, quality: quality).then<void>((_) {}, onError: (Object _) {}));
   }
 
   /// 상세 화면이 열릴 때 소리·영상 주소를 미리 읽어 둔다.
@@ -236,16 +308,21 @@ class PreviewCubit extends Cubit<PreviewState> {
   void prefetch(MediaHit hit) {
     if (!_isYoutube(hit.url)) return;
     // 소리와 영상이 함께 든 주소 하나만 읽는다 (yt-dlp를 겹쳐 돌리면 서로 느려진다).
-    _prefetchVideo(hit);
+    // 자동(점진)이면 시작할 화질(360p)로 읽어 둬야 누를 때 그 주소를 바로 쓴다.
+    _prefetchVideo(hit, autoQuality.value ? VideoQuality.standard : null);
   }
 
   /// 틀 주소. 유튜브는 소리가 같이 든 영상 형식이 있으면 그 주소 하나로 소리와 영상을 함께 튼다
   /// (오디오 언어를 고른 곡이나 그런 형식이 없는 곡은 소리 주소를 따로 읽는다).
-  Future<AudioStream> _streamFor(MediaHit hit, String? audioLanguage) async {
+  Future<AudioStream> _streamFor(
+    MediaHit hit,
+    String? audioLanguage,
+    VideoQuality? videoQuality,
+  ) async {
     final video = resolveVideo;
     if (video != null && audioLanguage == null && _isYoutube(hit.url)) {
       try {
-        final v = await video(hit.url);
+        final v = await video(hit.url, quality: videoQuality);
         if (v.muxed) return AudioStream(url: v.url, headers: v.headers);
       } on Object {
         // 영상 쪽이 안 되면 소리 주소로 간다.
@@ -332,6 +409,16 @@ class PreviewCubit extends Cubit<PreviewState> {
     await _seek(target);
   }
 
+  /// 지금 자리에서 [delta]만큼 앞(+) · 뒤(-)로 옮긴다 (처음 ~ 끝 사이로 맞춘다). 길이를 모르면 아무 일도 없다.
+  Future<void> seekBy(Duration delta) async {
+    final p = state.progress;
+    final d = p?.duration;
+    if (isClosed || state.status != PreviewStatus.playing) return;
+    if (p == null || d == null || d == Duration.zero) return;
+    final ms = (p.position + delta).inMilliseconds.clamp(0, d.inMilliseconds);
+    await seekTo(ms / d.inMilliseconds);
+  }
+
   /// 듣는 중이면 잠시 멈추고, 잠시 멈춘 상태면 이어서 듣는다.
   Future<void> togglePause() async {
     if (isClosed || state.status != PreviewStatus.playing) return;
@@ -362,6 +449,9 @@ class PreviewCubit extends Cubit<PreviewState> {
     await _completed.cancel();
     await _progress.cancel();
     await _failures.cancel();
+    repeat.dispose();
+    autoQuality.dispose();
+    qualityOverride.dispose();
     await _stop(const NoParams());
     return super.close();
   }

@@ -23,7 +23,12 @@ import 'presentation/bloc/audio_language_cubit.dart';
 import 'presentation/bloc/preview_cubit.dart';
 import 'presentation/bloc/preview_video_cubit.dart';
 import 'presentation/bloc/search_cubit.dart';
+import 'presentation/bloc/media_hit_memo.dart';
+import 'presentation/bloc/saved_videos_cubit.dart';
 import 'presentation/bloc/stream_cache_cubit.dart';
+import 'data/repositories/prefs_saved_video_repository.dart';
+import 'domain/repositories/saved_video_repository.dart';
+import 'domain/usecases/saved_video_usecases.dart';
 import 'presentation/bloc/video_quality_cubit.dart';
 
 /// 검색 · 곡 정보 의존성. 로컬 yt-dlp(데스크톱 · Android full)를 먼저 시도하고, 없으면 서버.
@@ -31,6 +36,7 @@ void registerSearch(GetIt sl) {
   sl
     ..registerLazySingleton<DownloaderEngine>(
       () => CachedDownloaderEngine(
+        infoTtl: const Duration(hours: 6),
         SoundcloudAvatarEngine(
           YoutubeExplodeEngine(
             RoutingDownloaderEngine(
@@ -57,16 +63,20 @@ void registerSearch(GetIt sl) {
     ..registerFactory(() => FetchChannelInfo(sl()))
     ..registerFactory(() => OpenLink(sl()))
     ..registerLazySingleton<PreviewPlayer>(NativePreviewPlayer.new)
-    ..registerFactory(() => ResolveAudioStream(sl()))
+    ..registerLazySingleton(MediaHitMemo.new)
+    ..registerFactory(() => ResolveAudioStream(sl(), sl()))
     ..registerLazySingleton<VideoQualityRepository>(
       PrefsVideoQualityRepository.new,
     )
+    ..registerFactory(() => LoadAutoVideoQuality(sl()))
+    ..registerFactory(() => SaveAutoVideoQuality(sl()))
     ..registerFactory(() => LoadVideoQuality(sl()))
     ..registerFactory(() => SaveVideoQuality(sl()))
     ..registerFactory(() => VideoQualityCubit(sl(), sl()))
-    ..registerFactory(() => ResolveVideoStream(sl(), sl()))
+    ..registerFactory(() => ResolveVideoStream(sl(), sl(), sl()))
     ..registerFactory(() => PlayPreviewVideo(sl()))
     ..registerFactory(() => PreviewVideoCubit(sl(), sl()))
+    ..registerFactory(() => EnterPictureInPicture(sl()))
     ..registerFactory(() => FetchAudioLanguages(sl()))
     ..registerFactory(() => AudioLanguageCubit(sl()))
     ..registerFactory(() => PlayPreview(sl()))
@@ -81,7 +91,20 @@ void registerSearch(GetIt sl) {
     ..registerFactory(() => WatchPreviewFailures(sl()))
     ..registerFactory(() => GetStreamCacheInfo(sl()))
     ..registerFactory(() => ClearStreamCache(sl()))
-    ..registerFactory(() => StreamCacheCubit(sl(), sl()))
+    ..registerFactory(() => SetStreamCacheLimit(sl()))
+    ..registerFactory(() => StreamCacheCubit(sl(), sl(), sl()))
+    ..registerLazySingleton<SavedVideoRepository>(
+      PrefsSavedVideoRepository.new,
+    )
+    ..registerFactory(() => LoadSavedVideos(sl(), sl()))
+    ..registerFactory(() => SaveVideo(sl(), sl(), sl(), sl()))
+    ..registerFactory(() => RemoveSavedVideo(sl(), sl()))
+    ..registerFactory(() => MarkSavedVideoReady(sl()))
+    ..registerFactory(() => ResumeSavedVideos(sl(), sl(), sl(), sl()))
+    ..registerFactory(() => WatchSavedDone(sl()))
+    ..registerFactory(
+      () => SavedVideosCubit(sl(), sl(), sl(), sl(), sl(), resume: sl()),
+    )
     ..registerFactory(
       () => PreviewCubit(
         sl(),
@@ -96,6 +119,9 @@ void registerSearch(GetIt sl) {
         sl(),
         sl(),
         resolveVideo: sl(),
+        enterPictureInPicture: sl(),
+        loadAutoQuality: sl(),
+        saveAutoQuality: sl(),
       ),
     )
     ..registerFactory(() => SearchCubit(sl(), sl()));

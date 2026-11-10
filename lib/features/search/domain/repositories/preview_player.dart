@@ -46,7 +46,25 @@ abstract interface class PreviewPlayer {
   /// 들은 스트리밍을 임시로 쌓아 두는 저장소의 사용량과 한도.
   Future<StreamCacheInfo> cacheInfo();
 
+  /// 임시 저장소 용량 한도를 바꾼다 (재생 중이던 미리 듣기는 멈춘다).
+  Future<void> setCacheLimit(int bytes);
+
+  /// 영상을 작은 창(PiP)으로 띄운다. 영상이 안 나오는 중이거나 못 띄우면 false.
+  Future<bool> enterPip();
+
   /// 임시 저장소를 모두 비운다 (재생 중이던 미리 듣기는 멈춘다).
   Future<void> clearCache();
 
+  /// 보관한 영상의 스트림 id 목록을 플레이어에 알린다 (이 영상은 임시 저장소가 아니라 보관 저장소에 쌓인다).
+  Future<void> setSavedStreams(List<String> streamIds);
+
+  /// [streams](소리가 든 영상 하나, 또는 영상 전용 + 소리 전용)를 통째로 보관 저장소에 받아 둔다. [id]는 영상 id.
+  /// 받는 건 따로 돌고 끝나면 [watchSaved]로 알린다. 보관 여부를 가르는 스트림 id를 돌려준다 (모르면 null).
+  Future<String?> saveStream(String id, List<VideoStream> streams);
+
+  /// 보관한 영상의 데이터를 지운다 (받던 중이면 멈춘다).
+  Future<void> removeSavedStream(String id, String? streamId);
+
+  /// 보관하려고 받던 영상이 끝났을 때 (영상 id, 성공 여부).
+  Stream<({String id, bool ok})> watchSaved();
 }

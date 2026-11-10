@@ -182,9 +182,56 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
                     result.success(null)
                 }
                 "current" -> result.success(current())
+                "enterPip" -> result.success((MuloEngine.activity as? MainActivity)?.enterPip() ?: false)
                 "cacheInfo" -> result.success(
-                    mapOf("usedBytes" to StreamCache.usedBytes(context), "limitBytes" to StreamCache.limitBytes(context)),
+                    mapOf(
+                        "usedBytes" to StreamCache.usedBytes(context),
+                        "limitBytes" to StreamCache.limitBytes(context),
+                        "savedBytes" to StreamCache.savedBytes(context),
+                        "freeBytes" to context.filesDir.usableSpace,
+                    ),
                 )
+                "setSaved" -> {
+                    StreamCache.setSavedIds((call.argument<List<String>>("ids") ?: emptyList()).flatMap { it.split(",") })
+                    result.success(null)
+                }
+                "saveStream" -> {
+                    val id = call.argument<String>("id")
+                    val streams = call.argument<List<Map<String, Any?>>>("streams")
+                    val targets = streams?.mapNotNull { m ->
+                        val url = m["url"] as? String ?: return@mapNotNull null
+                        @Suppress("UNCHECKED_CAST")
+                        url to ((m["headers"] as? Map<String, String>) ?: emptyMap())
+                    }
+                    if (id == null || targets.isNullOrEmpty()) {
+                        result.error("bad_args", "id, streams required", null)
+                        return@setMethodCallHandler
+                    }
+                    // 스트림 주소의 id(영상 id와 다르다)를 돌려준다: 이 값으로 보관 여부를 가르고 지운다.
+                    // 영상 전용 + 소리 전용이면 주소마다 id가 다를 수 있어 쉼표로 이어 돌려준다.
+                    // 주소에 id가 없는 곳(사운드클라우드 등)은 캐시 키를 id 대신 쓴다 (보관 여부 · 지우기가 같은 키로 맞는다).
+                    val ids = targets.map { t ->
+                        val u = Uri.parse(t.first)
+                        u.getQueryParameter("id") ?: StreamCache.keyOf(u)
+                    }.distinct()
+                    ids.forEach { StreamCache.addSavedId(it) }
+                    val streamId = if (ids.isEmpty()) null else ids.joinToString(",")
+                    // 받는 일은 따로 돌고, 끝나면 Dart에 알린다.
+                    StreamCache.fillSaved(context, id, targets) { ok ->
+                        main.post { channel.invokeMethod("saved", mapOf("id" to id, "ok" to ok)) }
+                    }
+                    result.success(streamId)
+                }
+                "removeSaved" -> {
+                    StreamCache.removeSaved(context, call.argument<String>("id") ?: "", call.argument<String>("streamId"))
+                    result.success(null)
+                }
+                "setCacheLimit" -> {
+                    // 열려 있는 저장소를 닫아야 해서 듣던 미리 듣기는 멈춘다.
+                    stop()
+                    StreamCache.setLimit(context, (call.arguments as Number).toLong())
+                    result.success(null)
+                }
                 "clearCache" -> {
                     stop()
                     StreamCache.clear(context)
@@ -241,6 +288,9 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
                 releaseVideo()
                 muxedVideo = true
                 VideoSurfaceHub.setPreviewVideo(audio)
+                // 작은 창(PiP) 진입 조건 · 재생 버튼이 이 플레이어를 보게 한다 (빠뜨리면 PiP가 안 뜬다).
+                VideoSurfaceHub.previewIsPlaying = { player?.isPlaying == true }
+                VideoSurfaceHub.previewSetPlaying = { play -> if (play) player?.play() else player?.pause() }
             }
             return
         }

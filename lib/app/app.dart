@@ -36,6 +36,7 @@ import '../features/player/presentation/bloc/playback_speed_cubit.dart';
 import '../features/player/presentation/bloc/player_style_cubit.dart';
 import '../features/playlists/presentation/bloc/playlists_cubit.dart';
 import '../features/search/presentation/bloc/preview_cubit.dart';
+import '../features/search/presentation/bloc/saved_videos_cubit.dart';
 import '../features/search/presentation/bloc/video_quality_cubit.dart';
 import '../features/search/domain/entities/media_info.dart';
 import '../features/search/presentation/screens/media_detail_screen.dart';
@@ -152,6 +153,7 @@ class _MusicAppState extends State<MusicApp> {
         BlocProvider(create: (_) => sl<EqualizerLibraryCubit>()..load()),
         BlocProvider(create: (_) => sl<PlayRecorderCubit>()),
         BlocProvider(create: (_) => sl<PreviewCubit>()),
+        BlocProvider(create: (_) => sl<SavedVideosCubit>()),
         BlocProvider(create: (_) => sl<VideoSurfaceCubit>()),
         BlocProvider(create: (_) => sl<DownloadQueueCubit>()..start()),
         BlocProvider(create: (_) => sl<DownloadSettingsCubit>()..load()),

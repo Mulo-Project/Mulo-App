@@ -720,6 +720,108 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsStreamCacheCleared => 'Streaming cache cleared';
 
   @override
+  String get savedVideosTitle => 'Saved tracks';
+
+  @override
+  String get savedVideosOpen => 'Saved';
+
+  @override
+  String get savedVideosEmpty => 'No saved tracks';
+
+  @override
+  String get savedVideosAdd => 'Save';
+
+  @override
+  String get savedVideosAdded => 'Saved';
+
+  @override
+  String get savedVideosFailed => 'Couldn't save';
+
+  @override
+  String get savedVideosDownloading => 'Saving';
+
+  @override
+  String get savedVideosRemove => 'Remove';
+
+  @override
+  String get savedVideosClearAll => 'Delete all';
+
+  @override
+  String savedVideosStorage(String used, String free) {
+    return 'Saved $used · $free free';
+  }
+
+  @override
+  String get savedVideosAudioOnly => 'Audio only';
+
+  @override
+  String get savedVideosClearAllTitle => 'Delete all saved audio?';
+
+  @override
+  String get savedVideosClearAllBody => 'Everything you saved will be removed';
+
+  @override
+  String savedVideosUsed(String size) {
+    return '$size used';
+  }
+
+  @override
+  String get savedVideosQualityTitle => 'Save quality';
+
+  @override
+  String get savedVideosQualityHint => 'Saved at this quality';
+
+  @override
+  String get savedVideosPlay => 'Play';
+
+  @override
+  String get videoFullscreen => 'Fullscreen';
+
+  @override
+  String get videoFullscreenExit => 'Exit fullscreen';
+
+  @override
+  String get newVideosDetail => 'Details';
+
+  @override
+  String get savedVideosConfirm => 'Add';
+
+  @override
+  String get videoBack10 => 'Back 10s';
+
+  @override
+  String get videoForward10 => 'Forward 10s';
+
+  @override
+  String get savedVideosSectionVideo => 'Videos';
+
+  @override
+  String get savedVideosSectionAudio => 'Audio';
+
+  @override
+  String get videoOptions => 'Options';
+
+  @override
+  String get videoPip => 'Picture-in-picture';
+
+  @override
+  String get videoOptionsTitle => 'Video options';
+
+  @override
+  String get videoRepeat => 'Repeat';
+
+  @override
+  String get videoQualityAuto => 'Auto';
+
+  @override
+  String get videoQualityAutoHint => 'Starts fast, then raises the quality';
+
+  @override
+  String settingsStreamCacheLimitHint(String used) {
+    return 'Oldest items are removed when full. Saved tracks are not counted. ($used used)';
+  }
+
+  @override
   String get settingsPurgeHidden => 'Clear hidden song records';
 
   @override

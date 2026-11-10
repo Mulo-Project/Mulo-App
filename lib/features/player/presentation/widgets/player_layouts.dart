@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../../core/design/design.dart';
+import 'fullscreen_video.dart';
 import 'native_video.dart';
 import 'player_common.dart';
 
@@ -74,7 +75,7 @@ class SquarePlayer extends StatelessWidget {
                                   child: PlayerCover(
                                     art: art,
                                     video: data.track.isVideo
-                                        ? const NativeVideo()
+                                        ? const _VideoWithFullscreen()
                                         : null,
                                   ),
                                 ),
@@ -125,7 +126,7 @@ class FullBleedPlayer extends StatelessWidget {
                     art: art,
                     radius: 0,
                     video: data.track.isVideo
-                        ? const NativeVideo()
+                        ? const _VideoWithFullscreen()
                         : null,
                   ),
                   // 위: 상단 버튼이 읽히게 살짝 어둡게, 아래: 배경으로 부드럽게.
@@ -264,6 +265,26 @@ class ArcPlayer extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// 플레이어 커버 자리의 영상 + 오른쪽 아래 전체 화면 버튼.
+class _VideoWithFullscreen extends StatelessWidget {
+  const _VideoWithFullscreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Stack(
+      fit: StackFit.expand,
+      children: [
+        NativeVideo(),
+        Positioned(
+          right: AppSpacing.xs,
+          bottom: AppSpacing.xs,
+          child: FullscreenVideoButton(),
+        ),
+      ],
     );
   }
 }

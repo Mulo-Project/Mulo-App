@@ -704,6 +704,108 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsStreamCacheCleared => '임시 저장소를 비웠어요';
 
   @override
+  String get savedVideosTitle => '저장한 음원';
+
+  @override
+  String get savedVideosOpen => '저장한 음원';
+
+  @override
+  String get savedVideosEmpty => '저장한 음원이 없어요';
+
+  @override
+  String get savedVideosAdd => '저장';
+
+  @override
+  String get savedVideosAdded => '저장됨';
+
+  @override
+  String get savedVideosFailed => '저장하지 못했어요';
+
+  @override
+  String get savedVideosDownloading => '받는 중';
+
+  @override
+  String get savedVideosRemove => '저장 해제';
+
+  @override
+  String get savedVideosClearAll => '전체 삭제';
+
+  @override
+  String savedVideosStorage(String used, String free) {
+    return '저장 $used · 남은 공간 $free';
+  }
+
+  @override
+  String get savedVideosAudioOnly => '소리만';
+
+  @override
+  String get savedVideosClearAllTitle => '저장한 음원을 모두 삭제할까요?';
+
+  @override
+  String get savedVideosClearAllBody => '저장해 둔 음원이 모두 지워져요';
+
+  @override
+  String savedVideosUsed(String size) {
+    return '$size 사용 중';
+  }
+
+  @override
+  String get savedVideosQualityTitle => '저장 화질';
+
+  @override
+  String get savedVideosQualityHint => '고른 화질로 받아 둬요';
+
+  @override
+  String get savedVideosPlay => '듣기';
+
+  @override
+  String get videoFullscreen => '전체 화면';
+
+  @override
+  String get videoFullscreenExit => '축소';
+
+  @override
+  String get newVideosDetail => '상세 보기';
+
+  @override
+  String get savedVideosConfirm => '담기';
+
+  @override
+  String get videoBack10 => '10초 뒤로';
+
+  @override
+  String get videoForward10 => '10초 앞으로';
+
+  @override
+  String get savedVideosSectionVideo => '영상';
+
+  @override
+  String get savedVideosSectionAudio => '음원';
+
+  @override
+  String get videoOptions => '옵션';
+
+  @override
+  String get videoPip => '작은 화면으로 보기';
+
+  @override
+  String get videoOptionsTitle => '영상 옵션';
+
+  @override
+  String get videoRepeat => '반복 재생';
+
+  @override
+  String get videoQualityAuto => '자동';
+
+  @override
+  String get videoQualityAutoHint => '빠르게 시작한 뒤 화질을 높여요';
+
+  @override
+  String settingsStreamCacheLimitHint(String used) {
+    return '넘으면 오래된 것부터 지워요. 저장한 음원은 포함되지 않아요. ($used 사용 중)';
+  }
+
+  @override
   String get settingsPurgeHidden => '숨긴 곡 기록 정리';
 
   @override

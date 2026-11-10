@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/core/di/injector.dart';
 import 'package:music_download_play_app/features/player/presentation/bloc/now_playing_cubit.dart';
 import 'package:music_download_play_app/features/search/presentation/bloc/preview_cubit.dart';
+import 'package:music_download_play_app/features/search/presentation/bloc/saved_videos_cubit.dart';
 import 'package:music_download_play_app/features/search/domain/entities/engine_exception.dart';
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
 import 'package:music_download_play_app/features/search/presentation/screens/media_detail_screen.dart';
@@ -72,6 +73,7 @@ void main() {
           home: MultiBlocProvider(
             providers: [
               BlocProvider(create: (_) => sl<PreviewCubit>()),
+              BlocProvider(create: (_) => sl<SavedVideosCubit>()),
               BlocProvider(create: (_) => sl<NowPlayingCubit>()),
             ],
             child: MediaDetailScreen(

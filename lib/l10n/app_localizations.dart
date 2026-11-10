@@ -1400,6 +1400,198 @@ abstract class AppLocalizations {
   /// **'임시 저장소를 비웠어요'**
   String get settingsStreamCacheCleared;
 
+  /// No description provided for @savedVideosTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장한 음원'**
+  String get savedVideosTitle;
+
+  /// No description provided for @savedVideosOpen.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장한 음원'**
+  String get savedVideosOpen;
+
+  /// No description provided for @savedVideosEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장한 음원이 없어요'**
+  String get savedVideosEmpty;
+
+  /// No description provided for @savedVideosAdd.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장'**
+  String get savedVideosAdd;
+
+  /// No description provided for @savedVideosAdded.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장됨'**
+  String get savedVideosAdded;
+
+  /// No description provided for @savedVideosFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장하지 못했어요'**
+  String get savedVideosFailed;
+
+  /// No description provided for @savedVideosDownloading.
+  ///
+  /// In ko, this message translates to:
+  /// **'받는 중'**
+  String get savedVideosDownloading;
+
+  /// No description provided for @savedVideosRemove.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 해제'**
+  String get savedVideosRemove;
+
+  /// No description provided for @savedVideosClearAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체 삭제'**
+  String get savedVideosClearAll;
+
+  /// No description provided for @savedVideosStorage.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 {used} · 남은 공간 {free}'**
+  String savedVideosStorage(String used, String free);
+
+  /// No description provided for @savedVideosAudioOnly.
+  ///
+  /// In ko, this message translates to:
+  /// **'소리만'**
+  String get savedVideosAudioOnly;
+
+  /// No description provided for @savedVideosClearAllTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장한 음원을 모두 삭제할까요?'**
+  String get savedVideosClearAllTitle;
+
+  /// No description provided for @savedVideosClearAllBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장해 둔 음원이 모두 지워져요'**
+  String get savedVideosClearAllBody;
+
+  /// No description provided for @savedVideosUsed.
+  ///
+  /// In ko, this message translates to:
+  /// **'{size} 사용 중'**
+  String savedVideosUsed(String size);
+
+  /// No description provided for @savedVideosQualityTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 화질'**
+  String get savedVideosQualityTitle;
+
+  /// No description provided for @savedVideosQualityHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'고른 화질로 받아 둬요'**
+  String get savedVideosQualityHint;
+
+  /// No description provided for @savedVideosPlay.
+  ///
+  /// In ko, this message translates to:
+  /// **'듣기'**
+  String get savedVideosPlay;
+
+  /// No description provided for @videoFullscreen.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체 화면'**
+  String get videoFullscreen;
+
+  /// No description provided for @videoFullscreenExit.
+  ///
+  /// In ko, this message translates to:
+  /// **'축소'**
+  String get videoFullscreenExit;
+
+  /// No description provided for @newVideosDetail.
+  ///
+  /// In ko, this message translates to:
+  /// **'상세 보기'**
+  String get newVideosDetail;
+
+  /// No description provided for @savedVideosConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'담기'**
+  String get savedVideosConfirm;
+
+  /// No description provided for @videoBack10.
+  ///
+  /// In ko, this message translates to:
+  /// **'10초 뒤로'**
+  String get videoBack10;
+
+  /// No description provided for @videoForward10.
+  ///
+  /// In ko, this message translates to:
+  /// **'10초 앞으로'**
+  String get videoForward10;
+
+  /// No description provided for @savedVideosSectionVideo.
+  ///
+  /// In ko, this message translates to:
+  /// **'영상'**
+  String get savedVideosSectionVideo;
+
+  /// No description provided for @savedVideosSectionAudio.
+  ///
+  /// In ko, this message translates to:
+  /// **'음원'**
+  String get savedVideosSectionAudio;
+
+  /// No description provided for @videoOptions.
+  ///
+  /// In ko, this message translates to:
+  /// **'옵션'**
+  String get videoOptions;
+
+  /// No description provided for @videoPip.
+  ///
+  /// In ko, this message translates to:
+  /// **'작은 화면으로 보기'**
+  String get videoPip;
+
+  /// No description provided for @videoOptionsTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'영상 옵션'**
+  String get videoOptionsTitle;
+
+  /// No description provided for @videoRepeat.
+  ///
+  /// In ko, this message translates to:
+  /// **'반복 재생'**
+  String get videoRepeat;
+
+  /// No description provided for @videoQualityAuto.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동'**
+  String get videoQualityAuto;
+
+  /// No description provided for @videoQualityAutoHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'빠르게 시작한 뒤 화질을 높여요'**
+  String get videoQualityAutoHint;
+
+  /// No description provided for @settingsStreamCacheLimitHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'넘으면 오래된 것부터 지워요. 저장한 음원은 포함되지 않아요. ({used} 사용 중)'**
+  String settingsStreamCacheLimitHint(String used);
+
   /// No description provided for @settingsPurgeHidden.
   ///
   /// In ko, this message translates to:

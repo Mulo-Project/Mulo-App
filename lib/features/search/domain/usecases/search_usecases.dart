@@ -12,7 +12,9 @@ import '../entities/stream_cache_info.dart';
 import '../entities/search_source.dart';
 import '../repositories/downloader_engine.dart';
 import '../repositories/link_opener.dart';
+import '../entities/saved_video.dart';
 import '../repositories/preview_player.dart';
+import '../repositories/saved_video_repository.dart';
 import '../repositories/video_quality_repository.dart';
 
 class SearchParams {
@@ -118,28 +120,95 @@ class OpenLink implements UseCase<bool, String> {
 
 /// 곡 주소로 바로 들을 수 있는 오디오 스트림 주소 알아내기 (미리 듣기).
 class ResolveAudioStream implements UseCase<AudioStream, String> {
-  const ResolveAudioStream(this._engine);
+  const ResolveAudioStream(this._engine, [this._saved]);
 
   final DownloaderEngine _engine;
 
+  /// 저장한 곡이면 링크를 풀지 않고 저장할 때 받은 주소를 쓴다.
+  final SavedVideoRepository? _saved;
+
   @override
-  Future<AudioStream> call(String url, {String? audioLanguage}) =>
-      _engine.resolveAudioStream(url.trim(), audioLanguage: audioLanguage);
+  Future<AudioStream> call(String url, {String? audioLanguage}) async {
+    final page = url.trim();
+    if (audioLanguage == null) {
+      final audio = (await _savedReady(_saved, page))?.audioSource;
+      if (audio != null) {
+        return AudioStream(url: audio.url, headers: audio.headers);
+      }
+    }
+    try {
+      return await _engine.resolveAudioStream(page, audioLanguage: audioLanguage);
+    } on Object {
+      // 링크를 못 풀었다 (오프라인 등): 받다 만 곡이라도 지금까지 받은 데이터만큼은 튼다.
+      final audio = audioLanguage == null
+          ? (await _savedReady(_saved, page, requireReady: false))?.audioSource
+          : null;
+      if (audio == null) rethrow;
+      return AudioStream(url: audio.url, headers: audio.headers);
+    }
+  }
+}
+
+/// [page] 주소의 곡을 저장해 두었고 받기가 끝났으면 그 곡 (주소 정보가 없는 옛 저장분은 null).
+Future<SavedVideo?> _savedReady(
+  SavedVideoRepository? repo,
+  String page, {
+  bool requireReady = true,
+}) async {
+  if (repo == null) return null;
+  try {
+    for (final v in await repo.load()) {
+      if ((v.ready || !requireReady) &&
+          v.sources.isNotEmpty &&
+          v.hit.url == page) {
+        return v;
+      }
+    }
+  } on Object {
+    // 읽지 못하면 저장하지 않은 곡처럼 링크를 푼다.
+  }
+  return null;
 }
 
 /// 곡 주소로 소리 없는 낮은 화질 영상 스트림 주소 알아내기 (영상 표시).
 class ResolveVideoStream implements UseCase<VideoStream, String> {
-  const ResolveVideoStream(this._engine, [this._quality]);
+  const ResolveVideoStream(this._engine, [this._quality, this._saved]);
 
   final DownloaderEngine _engine;
 
   /// 설정한 화질 (없으면 기본 화질).
   final VideoQualityRepository? _quality;
 
+  /// 저장한 곡이면 링크를 풀지 않고 저장할 때 받은 주소를 쓴다.
+  final SavedVideoRepository? _saved;
+
   @override
-  Future<VideoStream> call(String url) async {
-    final quality = await _quality?.load() ?? VideoQuality.standard;
-    return _engine.resolveVideoStream(url.trim(), maxHeight: quality.maxHeight);
+  Future<VideoStream> call(String url, {VideoQuality? quality}) async {
+    final saved = await _savedReady(_saved, url.trim());
+    if (saved != null) {
+      final video = saved.videoSource;
+      if (video != null && quality != null && quality == saved.quality) {
+        return video;
+      }
+      // 소리만 저장한 곡은 영상 주소를 따로 읽지 않는다 (소리를 저장한 데이터로 튼다).
+      if (video == null) {
+        throw const EngineException(EngineFailure.notFound, 'saved audio only');
+      }
+    }
+    final q = quality ?? await _quality?.load() ?? VideoQuality.standard;
+    try {
+      return await _engine.resolveVideoStream(url.trim(), maxHeight: q.maxHeight);
+    } on Object {
+      // 링크를 못 풀었다 (오프라인 등): 받다 만 영상이라도 받은 데이터만큼은 튼다.
+      final partial = await _savedReady(
+        _saved,
+        url.trim(),
+        requireReady: false,
+      );
+      final video = partial?.videoSource;
+      if (video == null || quality != partial?.quality) rethrow;
+      return video;
+    }
   }
 }
 
@@ -160,6 +229,25 @@ class SaveVideoQuality implements UseCase<void, VideoQuality> {
 
   @override
   Future<void> call(VideoQuality value) => _repo.save(value);
+}
+
+/// 자동 화질(낮게 시작해 높임) 설정 읽기 · 저장.
+class LoadAutoVideoQuality implements UseCase<bool, NoParams> {
+  const LoadAutoVideoQuality(this._repo);
+
+  final VideoQualityRepository _repo;
+
+  @override
+  Future<bool> call(NoParams _) => _repo.loadAuto();
+}
+
+class SaveAutoVideoQuality implements UseCase<void, bool> {
+  const SaveAutoVideoQuality(this._repo);
+
+  final VideoQualityRepository _repo;
+
+  @override
+  Future<void> call(bool value) => _repo.saveAuto(value);
 }
 
 /// 곡에 들어 있는 오디오 언어 트랙 목록 (여러 개일 때만 고를 수 있다). 못 읽으면 빈 목록.
@@ -296,6 +384,26 @@ class GetStreamCacheInfo implements UseCase<StreamCacheInfo, NoParams> {
 
   @override
   Future<StreamCacheInfo> call(NoParams params) => _player.cacheInfo();
+}
+
+/// 영상을 작은 창(PiP)으로 띄우기. 못 띄우면 false.
+class EnterPictureInPicture implements UseCase<bool, NoParams> {
+  const EnterPictureInPicture(this._player);
+
+  final PreviewPlayer _player;
+
+  @override
+  Future<bool> call(NoParams params) => _player.enterPip();
+}
+
+/// 스트리밍 임시 저장소 용량 한도 바꾸기 (바이트).
+class SetStreamCacheLimit implements UseCase<void, int> {
+  const SetStreamCacheLimit(this._player);
+
+  final PreviewPlayer _player;
+
+  @override
+  Future<void> call(int bytes) => _player.setCacheLimit(bytes);
 }
 
 /// 스트리밍 임시 저장소 비우기.

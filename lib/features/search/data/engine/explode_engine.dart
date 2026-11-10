@@ -320,23 +320,27 @@ Future<VideoStream?> _readMuxedWithExplode(String videoId, int maxHeight) async 
       ..sort(
         (a, b) => b.videoResolution.height.compareTo(a.videoResolution.height),
       );
+    final only = manifest.videoOnly
+        .where(
+          (s) =>
+              s.container == StreamContainer.mp4 &&
+              s.videoResolution.height <= maxHeight,
+        )
+        .toList()
+      ..sort(
+        (a, b) => b.videoResolution.height.compareTo(a.videoResolution.height),
+      );
+    // 소리 든 형식은 360p까지라, 고른 화질이 그보다 높아 더 큰 영상 전용 형식이 있으면 그쪽을 쓴다
+    // (같거나 없으면 소리 든 형식: 한 플레이어로 바로 튼다).
     final StreamInfo? best;
     var isMuxed = false;
-    if (muxed.isNotEmpty) {
+    if (muxed.isNotEmpty &&
+        (only.isEmpty ||
+            only.first.videoResolution.height <=
+                muxed.first.videoResolution.height)) {
       best = muxed.first;
       isMuxed = true;
     } else {
-      final only = manifest.videoOnly
-          .where(
-            (s) =>
-                s.container == StreamContainer.mp4 &&
-                s.videoResolution.height <= maxHeight,
-          )
-          .toList()
-        ..sort(
-          (a, b) =>
-              b.videoResolution.height.compareTo(a.videoResolution.height),
-        );
       best = only.isEmpty ? null : only.first;
     }
     if (best == null) {

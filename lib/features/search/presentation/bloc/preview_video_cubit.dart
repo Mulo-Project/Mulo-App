@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../domain/entities/video_quality.dart';
 import '../../domain/usecases/search_usecases.dart';
 
 class PreviewVideoState extends Equatable {
@@ -24,12 +25,13 @@ class PreviewVideoCubit extends Cubit<PreviewVideoState> {
   final PlayPreviewVideo _play;
   var _generation = 0;
 
-  Future<void> load(String pageUrl) async {
+  /// [quality]는 저장한 곡의 화질 (없으면 설정 화질).
+  Future<void> load(String pageUrl, {VideoQuality? quality}) async {
     final generation = ++_generation;
     emit(const PreviewVideoState());
     if (pageUrl.isEmpty) return;
     try {
-      final stream = await _resolve(pageUrl);
+      final stream = await _resolve(pageUrl, quality: quality);
       if (generation != _generation || isClosed) return;
       await _play(stream);
       if (generation != _generation || isClosed) return;
