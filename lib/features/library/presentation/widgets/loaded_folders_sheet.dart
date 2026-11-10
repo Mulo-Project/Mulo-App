@@ -14,6 +14,8 @@ import '../bloc/loaded_folders_cubit.dart';
 /// 음악을 불러오는 폴더 목록: 확인 · 추가 · 삭제 (바텀 시트).
 Future<void> showLoadedFoldersSheet(BuildContext context) {
   final cubit = context.read<LoadedFoldersCubit>();
+  // 열 때마다 폴더별 곡 수를 새로 센다 (설정 화면이 열려 있는 동안 곡이 바뀌었을 수 있다).
+  if (!cubit.state.busy) cubit.load();
   return showAppSheet<void>(
     context,
     isScrollControlled: true,
