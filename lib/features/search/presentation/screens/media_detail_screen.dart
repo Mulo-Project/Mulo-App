@@ -27,7 +27,6 @@ import '../widgets/video_quality_sheet.dart';
 import '../widgets/audio_language_sheet.dart';
 import 'saved_videos_screen.dart' show savedVideosLocation;
 import '../widgets/preview_control.dart';
-import '../widgets/saved_progress_label.dart';
 import '../widgets/saved_queue_controls.dart';
 import '../widgets/preview_video.dart';
 import '../widgets/preview_video_controls.dart';
@@ -477,34 +476,12 @@ class _SaveButton extends StatelessWidget {
     // 목록에는 바로 들어가지만 데이터를 다 받기 전에는 "받는 중"으로 보여, 끝나기 전에 오프라인으로 틀지 않게 한다.
     final downloading =
         saved && cubit.state.any((v) => v.id == hit.id && !v.ready);
-    return ListenableBuilder(
-      listenable: Listenable.merge([cubit.progress, cubit.eta]),
-      builder: (context, _) => _button(
-        context,
-        cubit: cubit,
-        saved: saved,
-        downloading: downloading,
-        savingLabel: savedProgressLabel(
-          context,
-          percent: cubit.progress.value[hit.id],
-          etaSeconds: cubit.eta.value[hit.id],
-        ),
-      ),
-    );
-  }
-
-  Widget _button(
-    BuildContext context, {
-    required SavedVideosCubit cubit,
-    required bool saved,
-    required bool downloading,
-    required String savingLabel,
-  }) {
     final l10n = context.l10n;
+    // 진행률 · 남은 시간은 저장한 음원 목록 줄에만 보인다 (버튼 글자 폭이 흔들리지 않게 "받는 중"만 둔다).
     return PillButton(
       key: const ValueKey('detail-save'),
       label: downloading
-          ? savingLabel
+          ? l10n.savedVideosDownloading
           : saved
           ? l10n.savedVideosAdded
           : l10n.savedVideosAdd,
