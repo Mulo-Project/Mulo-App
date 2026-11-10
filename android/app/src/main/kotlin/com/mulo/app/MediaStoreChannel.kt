@@ -425,6 +425,8 @@ class MediaStoreChannel(
                     "uri" to ContentUris.withAppendedId(collection, mediaId).toString(),
                     // 불러오는 폴더로 거르고 폴더별 곡 수를 세는 데 쓴다.
                     "folder" to c.getString(data)?.let { File(it).parent },
+                    // 같은 파일이 음악 · 영상 양쪽에 잡힐 때 한 곡으로 합치는 데 쓴다.
+                    "path" to c.getString(data),
                     // 파일이 기기에 들어온 시각(밀리초). 추가일순 정렬에 쓴다.
                     "addedAtMs" to c.getLong(dateAdded) * 1000,
                 )
@@ -470,6 +472,7 @@ class MediaStoreChannel(
                     "durationMs" to c.getLong(duration),
                     "uri" to ContentUris.withAppendedId(collection, mediaId).toString(),
                     "folder" to c.getString(data)?.let { File(it).parent },
+                    "path" to c.getString(data),
                     "addedAtMs" to c.getLong(dateAdded) * 1000,
                 )
             }
