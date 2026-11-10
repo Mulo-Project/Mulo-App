@@ -4,6 +4,7 @@ import '../entities/saved_video.dart';
 import '../entities/video_quality.dart';
 import '../entities/video_stream.dart';
 import '../repositories/preview_player.dart';
+import '../repositories/saved_detail_store.dart';
 import '../repositories/saved_video_repository.dart';
 import 'search_usecases.dart';
 
@@ -40,13 +41,15 @@ class SaveVideo implements UseCase<List<SavedVideo>, SaveVideoParams> {
     this._repo,
     this._player,
     this._resolveVideo,
-    this._resolveAudio,
-  );
+    this._resolveAudio, {
+    this.details,
+  });
 
   final SavedVideoRepository _repo;
   final PreviewPlayer _player;
   final ResolveVideoStream _resolveVideo;
   final ResolveAudioStream _resolveAudio;
+  final SavedDetailStore? details;
 
   @override
   Future<List<SavedVideo>> call(SaveVideoParams params) async {
@@ -73,6 +76,7 @@ class SaveVideo implements UseCase<List<SavedVideo>, SaveVideoParams> {
     List<VideoStream> targets,
   ) async {
     final streamId = await _player.saveStream(hit.id, targets);
+    await details?.write(hit);
     final next = [
       ...list,
       SavedVideo(
@@ -165,10 +169,11 @@ class ResumeSavedVideos implements UseCase<List<SavedVideo>, NoParams> {
 
 /// 보관에서 뺀다: 목록에서 지우고 받아 둔 데이터도 지운다.
 class RemoveSavedVideo implements UseCase<List<SavedVideo>, String> {
-  const RemoveSavedVideo(this._repo, this._player);
+  const RemoveSavedVideo(this._repo, this._player, {this.details});
 
   final SavedVideoRepository _repo;
   final PreviewPlayer _player;
+  final SavedDetailStore? details;
 
   @override
   Future<List<SavedVideo>> call(String id) async {
@@ -176,6 +181,7 @@ class RemoveSavedVideo implements UseCase<List<SavedVideo>, String> {
     final target = list.where((v) => v.id == id).firstOrNull;
     if (target == null) return list;
     await _player.removeSavedStream(id, target.streamId);
+    await details?.delete(id);
     final next = [
       for (final v in list)
         if (v.id != id) v,
