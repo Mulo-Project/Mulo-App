@@ -7,6 +7,7 @@ import '../entities/download_source.dart';
 import '../entities/tag_notice.dart';
 import '../repositories/download_queue_repository.dart';
 import '../repositories/download_settings_repository.dart';
+import '../repositories/video_save_repository.dart';
 
 /// 대기열 구독 (상세 기능: 다운로드 대기열 #7).
 class WatchDownloadQueue
@@ -211,4 +212,35 @@ class SaveDownloadFormat implements UseCase<void, AudioFormat> {
 
   @override
   Future<void> call(AudioFormat format) => _repo.saveFormat(format);
+}
+
+/// 영상 파일 저장을 쓸 수 있는지 (Android full 빌드만).
+class IsVideoSaveAvailable implements UseCase<bool, NoParams> {
+  const IsVideoSaveAvailable(this._repo);
+
+  final VideoSaveRepository _repo;
+
+  @override
+  Future<bool> call(NoParams params) => _repo.isAvailable();
+}
+
+/// 영상(소리 포함)을 mp4 파일로 저장한다. 성공하면 true, 못 받으면 false.
+/// 제목이나 원본 주소가 비어 있으면 받지 않는다.
+class SaveVideo implements UseCase<bool, VideoSaveRequest> {
+  const SaveVideo(this._repo);
+
+  final VideoSaveRepository _repo;
+
+  @override
+  Future<bool> call(VideoSaveRequest request) async {
+    if (request.url.trim().isEmpty || request.title.trim().isEmpty) {
+      return false;
+    }
+    try {
+      await _repo.save(request);
+      return true;
+    } on VideoSaveException {
+      return false;
+    }
+  }
 }

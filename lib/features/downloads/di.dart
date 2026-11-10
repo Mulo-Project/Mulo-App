@@ -4,6 +4,8 @@ import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 
+import '../engine/data/android_yt_dlp.dart';
+
 import 'data/datasources/audio_file_downloader.dart';
 import 'data/datasources/audio_transcoder.dart';
 import 'data/datasources/cover_tag_writer.dart';
@@ -12,6 +14,8 @@ import 'data/datasources/download_queue_store.dart';
 import 'data/datasources/downloaded_file_store.dart';
 import 'data/repositories/engine_download_queue_repository.dart';
 import 'data/repositories/prefs_download_settings_repository.dart';
+import 'data/repositories/yt_dlp_video_save_repository.dart';
+import 'domain/repositories/video_save_repository.dart';
 import 'domain/repositories/download_queue_repository.dart';
 import 'domain/repositories/download_settings_repository.dart';
 import 'domain/usecases/download_usecases.dart';
@@ -48,6 +52,18 @@ void registerDownloads(GetIt sl) {
         tempDir: _partsDirectory,
       ),
     )
+    ..registerLazySingleton<VideoSaveRepository>(
+      () => YtDlpVideoSaveRepository(
+        run: sl<AndroidYtDlp>().run,
+        available: sl<AndroidYtDlp>().isAvailable,
+        store: sl(),
+        tempDir: () => Directory(
+          '${Directory.systemTemp.path}${Platform.pathSeparator}mulo_video',
+        ).create(recursive: true),
+      ),
+    )
+    ..registerFactory(() => IsVideoSaveAvailable(sl()))
+    ..registerFactory(() => SaveVideo(sl()))
     ..registerLazySingleton<DownloadSettingsRepository>(
       PrefsDownloadSettingsRepository.new,
     )

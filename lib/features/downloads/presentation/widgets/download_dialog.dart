@@ -13,6 +13,7 @@ import '../../../covers/presentation/widgets/cover_entry.dart';
 import '../../domain/entities/download_options.dart';
 import '../../domain/entities/download_request.dart';
 import '../../domain/entities/download_source.dart';
+import '../../domain/repositories/video_save_repository.dart';
 import '../../../search/presentation/bloc/audio_language_cubit.dart';
 import '../../../search/presentation/widgets/audio_language_sheet.dart';
 import '../../domain/usecases/download_usecases.dart';
@@ -199,6 +200,9 @@ class _DownloadScreenState extends State<DownloadScreen> {
 
   late CoverArt? _cover = _defaultCover;
 
+  // 영상 파일(mp4)로 저장: 풀 빌드(Android)에서만 켜진다.
+  var _videoAvailable = false;
+
   Color? _genreColor() {
     final genre = _genre.text.trim();
     if (genre.isEmpty) return null;
@@ -212,6 +216,9 @@ class _DownloadScreenState extends State<DownloadScreen> {
   void initState() {
     super.initState();
     _format = context.read<DownloadPreferencesCubit>().state.format;
+    sl<IsVideoSaveAvailable>()(const NoParams()).then((ok) {
+      if (mounted && ok) setState(() => _videoAvailable = true);
+    });
     sl<GetSelectableFormats>()(const NoParams()).then((formats) {
       if (!mounted) return;
       setState(() {
@@ -263,6 +270,28 @@ class _DownloadScreenState extends State<DownloadScreen> {
       pickOther: settings.pickFolder,
     );
     if (path != null && mounted) setState(() => _savePath.text = path);
+  }
+
+  /// 이 곡을 영상 파일(mp4, 최대 1080p, 소리 포함)로 저장한다. 창은 닫고 뒤에서 받는다.
+  Future<void> _saveVideo() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
+    final save = sl<SaveVideo>();
+    final request = VideoSaveRequest(
+      url: widget.url,
+      title: _title.text.trim(),
+      artist: _artist.text.trim(),
+    );
+    Navigator.of(context).pop(false);
+    messenger.showSnackBar(SnackBar(content: Text(l10n.videoSaveStarted)));
+    final ok = await save(request);
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(ok ? l10n.videoSaveDone : l10n.videoSaveFailed),
+        ),
+      );
   }
 
   Future<void> _start() async {
@@ -481,6 +510,24 @@ class _DownloadScreenState extends State<DownloadScreen> {
                 ],
               ),
             ),
+            if (_videoAvailable)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.sm,
+                  AppSpacing.lg,
+                  0,
+                ),
+                child: ListenableBuilder(
+                  listenable: _title,
+                  builder: (_, _) => PillButton(
+                    label: l10n.videoSaveAction,
+                    icon: AppIcons.download,
+                    variant: PillVariant.tonal,
+                    onPressed: _title.text.trim().isEmpty ? null : _saveVideo,
+                  ),
+                ),
+              ),
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.lg,

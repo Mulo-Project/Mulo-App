@@ -50,10 +50,16 @@ class AndroidYtDlp {
   /// 데스크톱 `Process.run`과 같은 모양으로 실행한다 (`LocalEngine`이 같이 쓴다).
   /// 마지막 인자는 주소(또는 `ytsearch…:검색어`), 앞은 옵션이다.
   /// 실행할 수 없는 빌드면 [ProcessException]을 던진다.
+  ///
+  /// [timeout]은 이 실행이 끝나기를 기다리는 시간(기본은 검색 · 정보 읽기용으로 짧다).
+  /// [background]가 true면 다른 yt-dlp 실행 줄과 따로 돌려, 오래 걸려도 검색 · 주소 읽기를 막지 않는다
+  /// (영상 파일 받기용).
   Future<({int exitCode, String stdout, String stderr})> run(
     String executable,
-    List<String> args,
-  ) async {
+    List<String> args, {
+    Duration timeout = ytDlpTimeout,
+    bool background = false,
+  }) async {
     if (args.length == 1 && args.first == '--version') {
       final v = await version();
       if (v == null) throw ProcessException(executable, args);
@@ -67,8 +73,9 @@ class AndroidYtDlp {
             'url': args.last,
             'options': args.sublist(0, args.length - 1),
             'id': id,
+            'background': background,
           })
-          .timeout(ytDlpTimeout);
+          .timeout(timeout);
       return (
         exitCode: (r?['exitCode'] as num?)?.toInt() ?? 1,
         stdout: r?['stdout'] as String? ?? '',

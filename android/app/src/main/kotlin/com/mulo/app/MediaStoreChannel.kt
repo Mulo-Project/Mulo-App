@@ -146,6 +146,7 @@ class MediaStoreChannel(
                         relativePath = call.argument<String>("relativePath")!!,
                         title = call.argument<String>("title") ?: "",
                         artist = call.argument<String>("artist") ?: "",
+                        video = call.argument<Boolean>("video") ?: false,
                     )
                 }
                 "embeddedPicture" -> {
@@ -245,6 +246,7 @@ class MediaStoreChannel(
         relativePath: String,
         title: String,
         artist: String,
+        video: Boolean = false,
     ): String {
         val resolver = context.contentResolver
         val values = ContentValues().apply {
@@ -262,7 +264,12 @@ class MediaStoreChannel(
                 put(MediaStore.Audio.Media.DATA, File(dir, displayName).absolutePath)
             }
         }
-        val collection = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+        // 영상(mp4)은 영상 모음(Movies/…)에 넣는다. 칸 이름은 오디오와 같은 MediaColumns 값이다.
+        val collection = if (video) {
+            MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+        } else {
+            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+        }
         val uri = resolver.insert(collection, values)
             ?: throw IllegalStateException("MediaStore에 곡을 만들지 못했어요")
         try {

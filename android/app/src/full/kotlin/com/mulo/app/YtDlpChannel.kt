@@ -7,6 +7,7 @@ import com.yausername.youtubedl_android.YoutubeDLRequest
 import java.io.File
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
+import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 
 /**
@@ -16,6 +17,9 @@ import java.util.concurrent.Executors
  */
 class YtDlpChannel(private val context: Context, messenger: BinaryMessenger) : NativeChannel(messenger, NAME) {
     private val io = Executors.newSingleThreadExecutor()
+
+    // 영상 받기처럼 몇 분 걸리는 실행은 따로 돌려서, 검색 · 주소 읽기가 그 뒤에 줄 서지 않게 한다.
+    private val background = Executors.newCachedThreadPool()
 
     // 초기화(파이썬 풀기)는 처음 한 번만 걸린다.
     @Volatile private var ready = false
@@ -33,7 +37,8 @@ class YtDlpChannel(private val context: Context, messenger: BinaryMessenger) : N
                         return@setMethodCallHandler
                     }
                     val id = call.argument<String>("id")
-                    run(result) { execute(url, options, id) }
+                    val long = call.argument<Boolean>("background") ?: false
+                    run(result, if (long) background else io) { execute(url, options, id) }
                 }
                 // 시간 초과로 Dart가 포기한 실행을 끊는다 (실행 줄이 막혀 다음 요청이 밀리지 않게 io 밖에서).
                 "cancel" -> {
@@ -105,8 +110,12 @@ class YtDlpChannel(private val context: Context, messenger: BinaryMessenger) : N
         }
     }
 
-    private fun run(result: MethodChannel.Result, block: () -> Map<String, Any?>) =
-        runAsync(io, result, "ytdlp_failed") {
+    private fun run(
+        result: MethodChannel.Result,
+        executor: Executor = io,
+        block: () -> Map<String, Any?>,
+    ) =
+        runAsync(executor, result, "ytdlp_failed") {
             ensureInit()
             block()
         }
@@ -114,6 +123,7 @@ class YtDlpChannel(private val context: Context, messenger: BinaryMessenger) : N
     override fun dispose() {
         super.dispose()
         io.shutdown()
+        background.shutdown()
     }
 
     companion object {

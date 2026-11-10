@@ -56,7 +56,9 @@ class PlatformDownloadedFileStore implements DownloadedFileStore {
     required String artist,
   }) async {
     if (Platform.isAndroid) {
-      final relative = androidRelativePath(folder);
+      // 영상(mp4)은 `Movies/Mulo`, 음원은 받는 폴더(`Music/…`).
+      final isVideo = mime.startsWith('video/');
+      final relative = isVideo ? 'Movies/Mulo' : androidRelativePath(folder);
       final media = androidMediaType(extension, mime);
       final uri = await _channel.invokeMethod<String>('saveAudio', {
         'path': source.path,
@@ -65,6 +67,7 @@ class PlatformDownloadedFileStore implements DownloadedFileStore {
         'relativePath': relative,
         'title': title,
         'artist': artist,
+        'video': isVideo,
       });
       if (uri == null) throw const FileSystemException('저장 실패');
       await _deleteQuietly(source);

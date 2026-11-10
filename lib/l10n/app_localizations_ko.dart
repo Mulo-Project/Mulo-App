@@ -1689,6 +1689,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadAlreadyInQueue => '이미 받는 중이거나 대기 중인 곡이에요';
 
   @override
+  String get videoSaveAction => '영상으로 저장';
+
+  @override
+  String get videoSaveStarted => '영상을 받는 중이에요. 끝나면 알려 드릴게요';
+
+  @override
+  String get videoSaveDone => '영상을 저장했어요 (Movies/Mulo)';
+
+  @override
+  String get videoSaveFailed => '영상을 저장하지 못했어요';
+
+  @override
   String get homeTopGenre => '많이 들은 장르';
 
   @override
