@@ -15,7 +15,6 @@ import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/saved_video.dart';
 import '../../domain/entities/video_quality.dart';
 import '../bloc/preview_cubit.dart';
-import '../../../player/presentation/widgets/fullscreen_video.dart';
 import '../saved_track.dart';
 import '../widgets/saved_progress_label.dart';
 import '../bloc/saved_videos_cubit.dart';
@@ -536,7 +535,7 @@ class _VideoArea extends StatelessWidget {
                 ),
                 if (mainVideo)
                   // 메인 재생으로 듣는 중이면 네이티브가 소리와 같은 시계로 내는 영상을 그린다.
-                  const NativeVideoWithFullscreen()
+                  const MainVideoWithControls()
                 else if (playing) ...[
                   ValueListenableBuilder<VideoQuality?>(
                     valueListenable: context

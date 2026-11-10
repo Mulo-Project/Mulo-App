@@ -28,7 +28,6 @@ import '../widgets/video_quality_sheet.dart';
 import '../widgets/audio_language_sheet.dart';
 import 'saved_videos_screen.dart' show savedVideosLocation;
 import '../widgets/preview_control.dart';
-import '../../../player/presentation/widgets/fullscreen_video.dart';
 import '../widgets/saved_queue_controls.dart';
 import '../widgets/preview_video.dart';
 import '../widgets/preview_video_controls.dart';
@@ -596,7 +595,7 @@ class _Thumbnail extends StatelessWidget {
                   child: SizedBox(
                     width: width,
                     height: width * 9 / 16,
-                    child: const NativeVideoWithFullscreen(),
+                    child: const MainVideoWithControls(),
                   ),
                 )
               else if (previewing)
