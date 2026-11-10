@@ -25,6 +25,16 @@ typedef MuxedVideoReader = Future<VideoStream?> Function(
   int maxHeight,
 );
 
+/// 유튜브 키워드 검색의 [page]쪽(0부터)을 읽는 함수. 못 읽으면 null.
+typedef YoutubeSearchReader = Future<SearchPage?> Function(
+  String query,
+  int page,
+  int size,
+);
+
+/// 유튜브 채널 주소로 채널 이미지 · 구독자 수를 읽는 함수. 못 읽으면 null.
+typedef YoutubeChannelReader = Future<ChannelInfo?> Function(String url);
+
 /// 유튜브 곡의 오디오 언어 트랙 목록을 읽는 함수.
 typedef AudioLanguageReader = Future<List<AudioLanguage>> Function(
   String videoId,
@@ -41,7 +51,11 @@ class YoutubeExplodeEngine implements DownloaderEngine {
     AudioStreamReader? reader,
     AudioLanguageReader? languageReader,
     MuxedVideoReader? videoReader,
-  }) : _reader = reader ?? _readWithExplode,
+    YoutubeSearchReader? searchReader,
+    YoutubeChannelReader? channelReader,
+  }) : _searchReader = searchReader ?? _ExplodeSearch().read,
+       _channelReader = channelReader ?? _readChannelWithExplode,
+       _reader = reader ?? _readWithExplode,
        _videoReader = videoReader ?? _readMuxedWithExplode,
        _languageReader = languageReader ?? _readLanguagesWithExplode;
 
@@ -49,7 +63,11 @@ class YoutubeExplodeEngine implements DownloaderEngine {
   final AudioStreamReader _reader;
   final AudioLanguageReader _languageReader;
   final MuxedVideoReader _videoReader;
+  final YoutubeSearchReader _searchReader;
+  final YoutubeChannelReader _channelReader;
 
+  /// 유튜브 키워드 검색은 이 라이브러리가 먼저 한다 (yt-dlp는 폰에서 느리고, 다음 쪽을 부를 때마다
+  /// 앞쪽까지 처음부터 다시 받는다). 최신순 · 다른 사이트이거나 못 읽으면 안쪽 엔진(yt-dlp · 서버)이 한다.
   @override
   Future<SearchPage> search(
     String query, {
@@ -57,13 +75,33 @@ class YoutubeExplodeEngine implements DownloaderEngine {
     int page = 0,
     int size = 20,
     bool newest = false,
-  }) => _inner.search(
-    query,
-    source: source,
-    page: page,
-    size: size,
-    newest: newest,
-  );
+  }) async {
+    if (source == SearchSource.youtube && !newest) {
+      final clock = Stopwatch()..start();
+      try {
+        final found = await _searchReader(
+          query,
+          page,
+          size,
+        ).timeout(const Duration(seconds: 10));
+        _log(
+          'explode 검색 ${found == null ? '없음' : '${found.items.length}개'} '
+          '쪽$page ${clock.elapsedMilliseconds}ms',
+        );
+        if (found != null && found.items.isNotEmpty) return found;
+      } on Object catch (e) {
+        _log('explode 검색 실패 ${clock.elapsedMilliseconds}ms: ${_oneLine(e)}');
+        // 못 읽으면 안쪽 엔진으로 넘어간다.
+      }
+    }
+    return _inner.search(
+      query,
+      source: source,
+      page: page,
+      size: size,
+      newest: newest,
+    );
+  }
 
   /// 안쪽 엔진(yt-dlp · 서버)이 채널 이름까지 알려 주므로 먼저 묻고, 쓸 수 없거나
   /// 실패하면 이 라이브러리로 찾는다 (채널 이름은 모른다).
@@ -98,8 +136,22 @@ class YoutubeExplodeEngine implements DownloaderEngine {
   @override
   Future<MediaInfo> fetchInfo(String url) => _inner.fetchInfo(url);
 
+  /// 유튜브 채널은 이 라이브러리가 먼저 읽는다 (yt-dlp 호출은 한 번에 하나씩이라 곡 정보와 줄을 서지 않는다).
+  /// 못 읽으면 안쪽 엔진으로 넘긴다.
   @override
-  Future<ChannelInfo> fetchChannel(String url) => _inner.fetchChannel(url);
+  Future<ChannelInfo> fetchChannel(String url) async {
+    final clock = Stopwatch()..start();
+    try {
+      final info = await _channelReader(
+        url,
+      ).timeout(const Duration(seconds: 10));
+      _log('explode 채널 ${info == null ? '없음' : '읽음'} ${clock.elapsedMilliseconds}ms');
+      if (info != null) return info;
+    } on Object catch (e) {
+      _log('explode 채널 실패 ${clock.elapsedMilliseconds}ms: ${_oneLine(e)}');
+    }
+    return _inner.fetchChannel(url);
+  }
 
   @override
   Future<VideoStream> resolveVideoStream(
@@ -179,6 +231,141 @@ class YoutubeExplodeEngine implements DownloaderEngine {
     String url, {
     List<String> preferLanguages = const ['ko', 'en'],
   }) => _inner.fetchSubtitles(url, preferLanguages: preferLanguages);
+}
+
+/// 유튜브 키워드 검색. 같은 검색어의 다음 쪽은 앞에서 읽은 결과 뒤에서 이어 읽는다
+/// (매번 처음부터 다시 받지 않는다). 최근 검색 몇 개만 기억한다.
+class _ExplodeSearch {
+  final _sessions = <String, _SearchSession>{};
+
+  Future<SearchPage?> read(String query, int page, int size) {
+    var session = _sessions.remove(query);
+    session ??= _SearchSession(query);
+    _sessions[query] = session; // 가장 최근 것이 맨 뒤
+    while (_sessions.length > 3) {
+      _sessions.remove(_sessions.keys.first)?.close();
+    }
+    return session.page(page, size);
+  }
+}
+
+class _SearchSession {
+  _SearchSession(this.query);
+
+  final String query;
+  final _yt = YoutubeExplode();
+  final _all = <MediaHit>[];
+  final _seen = <String>{};
+  SearchList? _last;
+  var _started = false;
+  var _done = false;
+  Future<void> _busy = Future.value();
+
+  void close() => _yt.close();
+
+  /// 같은 검색의 요청이 겹쳐도 차례로 읽는다 (같은 쪽을 두 번 넘기지 않게).
+  Future<SearchPage?> page(int page, int size) {
+    final run = _busy.then((_) => _page(page, size));
+    _busy = run.then<void>((_) {}, onError: (Object _) {});
+    return run;
+  }
+
+  Future<SearchPage?> _page(int page, int size) async {
+    final want = (page + 1) * size;
+    while (_all.length < want && !_done) {
+      final SearchList? list;
+      if (!_started) {
+        list = await _yt.search.searchContent(
+          query,
+          filter: TypeFilters.video,
+        );
+        _started = true;
+      } else {
+        list = await _last?.nextPage();
+      }
+      if (list == null) {
+        _done = true;
+        break;
+      }
+      _last = list;
+      for (final r in list) {
+        if (r is! SearchVideo || !_seen.add(r.id.value)) continue;
+        _all.add(_hitOf(r));
+      }
+      if (list.isEmpty) _done = true;
+    }
+    final start = page * size;
+    final end = _all.length < want ? _all.length : want;
+    return SearchPage(
+      items: start >= end ? const [] : _all.sublist(start, end),
+      hasNext: _all.length > end || !_done,
+    );
+  }
+}
+
+/// 검색 결과 한 줄 → 목록 항목. 길이를 모르는 라이브 · 예정 방송은 [MediaHit.isLive].
+MediaHit _hitOf(SearchVideo r) {
+  final id = r.id.value;
+  final duration = _parseClock(r.duration);
+  return MediaHit(
+    id: id,
+    title: r.title,
+    url: 'https://www.youtube.com/watch?v=$id',
+    uploader: r.author,
+    duration: duration,
+    thumbnailUrl: r.thumbnails.isEmpty
+        ? 'https://i.ytimg.com/vi/$id/hqdefault.jpg'
+        : r.thumbnails.last.url.toString(),
+    channelUrl: r.channelId.isEmpty
+        ? null
+        : 'https://www.youtube.com/channel/${r.channelId}',
+    viewCount: r.isLive ? null : r.viewCount,
+    description: r.description,
+    isLive: r.isLive || duration == null,
+  );
+}
+
+/// `3:45` · `1:02:03` → 길이. 읽을 수 없으면 null.
+Duration? _parseClock(String text) {
+  final parts = text.trim().split(':');
+  if (text.trim().isEmpty || parts.length > 3) return null;
+  var seconds = 0;
+  for (final p in parts) {
+    final n = int.tryParse(p);
+    if (n == null) return null;
+    seconds = seconds * 60 + n;
+  }
+  return Duration(seconds: seconds);
+}
+
+/// 유튜브 채널 주소(`/channel/…` · `/@…` · `/user/…`)로 채널 이미지 · 구독자 수를 읽는다.
+/// 다른 모양의 주소이거나 유튜브가 아니면 null.
+Future<ChannelInfo?> _readChannelWithExplode(String url) async {
+  final uri = Uri.tryParse(url);
+  if (uri == null) return null;
+  final host = uri.host.toLowerCase();
+  if (host != 'youtube.com' && !host.endsWith('.youtube.com')) return null;
+  final segs = uri.pathSegments.where((s) => s.isNotEmpty).toList();
+  if (segs.isEmpty) return null;
+  final yt = YoutubeExplode();
+  try {
+    final Channel channel;
+    if (segs.first.startsWith('@')) {
+      channel = await yt.channels.getByHandle(segs.first);
+    } else if (segs.length >= 2 && segs.first == 'channel') {
+      channel = await yt.channels.get(segs[1]);
+    } else if (segs.length >= 2 && segs.first == 'user') {
+      channel = await yt.channels.getByUsername(segs[1]);
+    } else {
+      return null;
+    }
+    final logo = channel.logoUrl.isEmpty ? null : channel.logoUrl;
+    // 아무것도 못 읽었으면 안쪽 엔진에 맡긴다.
+    if (logo == null && channel.subscribersCount == null) return null;
+    return ChannelInfo(thumbnailUrl: logo, subscriberCount: channel.subscribersCount);
+  } finally {
+    yt.close();
+  }
 }
 
 /// 라이브러리의 재생목록 검색 (한 번에 20개라 필요한 만큼 다음 쪽을 넘겨 읽는다).

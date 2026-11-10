@@ -146,6 +146,47 @@ void main() {
       },
     );
 
+    test(
+      'YoutubeExplodeEngine: 유튜브 키워드 검색은 라이브러리가 먼저 읽고, 최신순 · 다른 사이트 · 실패는 안쪽 엔진으로 넘긴다',
+      () async {
+        final inner = FakeDownloaderEngine(
+          pages: const [
+            SearchPage(items: [_b], hasNext: false),
+          ],
+        );
+        var fail = false;
+        final engine = YoutubeExplodeEngine(
+          inner,
+          searchReader: (query, page, size) async {
+            if (fail) throw const EngineException(EngineFailure.failed);
+            return const SearchPage(items: [_a], hasNext: true);
+          },
+        );
+        expect((await engine.search('q')).items, [_a]);
+        expect(inner.searches, isEmpty);
+        // 최신순은 날짜 순 검색이 있는 yt-dlp가 한다.
+        expect((await engine.search('q', newest: true)).items, [_b]);
+        fail = true;
+        expect((await engine.search('q')).items, [_b]);
+        expect(inner.searches.length, 2);
+      },
+    );
+
+    test('YoutubeExplodeEngine: 채널 정보는 라이브러리가 먼저 읽고, 못 읽으면 안쪽 엔진에 묻는다', () async {
+      final inner = FakeDownloaderEngine(
+        channel: const ChannelInfo(subscriberCount: 1),
+      );
+      ChannelInfo? found = const ChannelInfo(subscriberCount: 99);
+      final engine = YoutubeExplodeEngine(
+        inner,
+        channelReader: (_) async => found,
+      );
+      const url = 'https://www.youtube.com/channel/UCabc';
+      expect((await engine.fetchChannel(url)).subscriberCount, 99);
+      found = null;
+      expect((await engine.fetchChannel(url)).subscriberCount, 1);
+    });
+
     test('YoutubeExplodeEngine: 고른 오디오 언어를 읽는 쪽에 넘긴다', () async {
       final inner = FakeDownloaderEngine();
       final languages = <String?>[];
