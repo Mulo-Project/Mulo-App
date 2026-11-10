@@ -120,6 +120,7 @@ class FullscreenVideoButton extends StatelessWidget {
           ? context.l10n.videoFullscreenExit
           : context.l10n.videoFullscreen,
       size: AppSizes.rowButton,
+      overlay: true,
       onPressed: exit
           ? () => Navigator.of(context).pop()
           : () => showFullscreenVideo(context, controls: controls),

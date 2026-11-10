@@ -160,12 +160,16 @@ class CircleIconButton extends StatelessWidget {
     this.emphasized = false,
     this.size = AppSizes.circleButton,
     this.onLongPress,
+    this.overlay = false,
   });
 
   final IconData icon;
   final String tooltip;
   final VoidCallback? onPressed;
   final bool emphasized;
+
+  /// 영상 위에 얹는 버튼: 유리 대신 어두운 면을 깔아 밝은 영상 위에서도 또렷하다.
+  final bool overlay;
   final double size;
 
   /// 길게 누르기. 주면 길게 눌러 툴팁을 띄우지 않는다 (마우스를 올리면 그대로 뜬다).
@@ -186,6 +190,13 @@ class CircleIconButton extends StatelessWidget {
     final button = emphasized
         ? Material(
             color: p.accent,
+            shape: const CircleBorder(),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(onTap: onPressed, child: glyph),
+          )
+        : overlay
+        ? Material(
+            color: p.scrim.withValues(alpha: .6),
             shape: const CircleBorder(),
             clipBehavior: Clip.antiAlias,
             child: InkWell(onTap: onPressed, child: glyph),

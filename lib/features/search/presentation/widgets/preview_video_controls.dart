@@ -137,6 +137,7 @@ class _PreviewVideoControlsState extends State<PreviewVideoControls> {
                       child: CircleIconButton(
                         key: const ValueKey('video-options'),
                         icon: AppIcons.more,
+                        overlay: true,
                         tooltip: l10n.videoOptions,
                         onPressed: () {
                           _reveal();
@@ -211,7 +212,7 @@ class _SkipButton extends StatelessWidget {
           height: AppSizes.circleButton,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: p.scrim.withValues(alpha: .45),
+            color: p.scrim.withValues(alpha: .6),
           ),
           child: Stack(
             alignment: Alignment.center,
