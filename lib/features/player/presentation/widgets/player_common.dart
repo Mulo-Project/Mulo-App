@@ -16,6 +16,7 @@ import '../../../lyrics/presentation/screens/lyrics_full_screen.dart';
 import '../../../lyrics/presentation/widgets/lyrics_view.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../bloc/now_playing_cubit.dart';
+import 'native_video.dart';
 import 'player_seek.dart';
 import 'player_sleep_timer.dart';
 
@@ -96,10 +97,14 @@ class PlayerBackdrop extends StatelessWidget {
     required this.art,
     required this.child,
     this.blurred = false,
+    this.video = false,
   });
 
   final PlayerArt art;
   final bool blurred;
+
+  /// 영상 곡이면 흐린 배경도 정지 커버 대신 움직이는 영상으로 깐다 (영상이 나오기 전에는 커버가 보인다).
+  final bool video;
   final Widget child;
 
   @override
@@ -110,10 +115,19 @@ class PlayerBackdrop extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         ColoredBox(color: p.background),
-        if (image != null) ...[
+        if (image != null || (blurred && video)) ...[
           ImageFiltered(
             imageFilter: ImageFilter.blur(sigmaX: 48, sigmaY: 48),
-            child: Image(image: image, fit: BoxFit.cover),
+            child: video
+                ? Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      if (image != null)
+                        Image(image: image, fit: BoxFit.cover),
+                      const NativeVideo(),
+                    ],
+                  )
+                : Image(image: image!, fit: BoxFit.cover),
           ),
           DecoratedBox(
             decoration: BoxDecoration(

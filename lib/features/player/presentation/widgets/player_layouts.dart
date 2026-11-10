@@ -217,6 +217,7 @@ class ArcPlayer extends StatelessWidget {
     return PlayerBackdrop(
       art: art,
       blurred: true,
+      video: data.track.isVideo,
       child: Stack(
         fit: StackFit.expand,
         children: [
