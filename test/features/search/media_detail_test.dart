@@ -292,6 +292,20 @@ void main() {
       expect(engine.infos, [_listHit.url]);
     });
 
+    test('저장해 둔 상세 정보가 있으면 로딩 없이 그대로 보여 주고 다시 읽지 않는다', () async {
+      final engine = FakeDownloaderEngine(info: VideoInfo(_fullHit));
+      final cubit = MediaDetailCubit(
+        _fullHit,
+        FetchMediaInfo(engine),
+        FetchChannelInfo(engine),
+        OpenLink(FakeLinkOpener()),
+      );
+      expect(cubit.state.hit.description, _fullHit.description);
+      await cubit.load();
+      expect(cubit.state.loading, isFalse);
+      expect(engine.infos, isEmpty);
+    });
+
     test('못 읽어도 알던 정보를 그대로 둔다', () async {
       final engine = FakeDownloaderEngine(
         error: const EngineException(EngineFailure.network),
