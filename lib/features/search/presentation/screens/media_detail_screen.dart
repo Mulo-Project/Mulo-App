@@ -511,7 +511,12 @@ class _SaveButton extends StatelessWidget {
         // 저장된 곡이면 저장한 음원 화면으로 간다 (저장 해제는 거기서).
         if (saved) return unawaited(context.push(savedVideosLocation));
         // 저장한 곡이 정해 둔 용량을 다 채웠으면 새로 저장하지 않는다 (이미 저장한 곡은 그대로 둔다).
-        final cache = context.read<StreamCacheCubit>().state;
+        // 이 화면 위에는 용량 상태가 없으므로 그때그때 읽는다 (못 읽으면 한도 0이라 막지 않는다).
+        final probe = sl<StreamCacheCubit>();
+        await probe.load();
+        final cache = probe.state;
+        unawaited(probe.close());
+        if (!context.mounted) return;
         if (cache.enabled &&
             cache.limitBytes > 0 &&
             cache.savedBytes >= cache.limitBytes) {
