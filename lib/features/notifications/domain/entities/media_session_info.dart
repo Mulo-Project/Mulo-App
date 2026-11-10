@@ -109,7 +109,13 @@ class PreviewNotice extends Equatable {
     this.duration,
     this.artUri,
     this.paused = false,
+    this.queueIndex,
+    this.queueLength = 0,
   });
+
+  /// 저장한 음원 재생 목록에서 듣는 중이면 지금 곡의 자리(0부터)와 곡 수. 한 곡 미리 듣기면 null.
+  final int? queueIndex;
+  final int queueLength;
 
   /// 잠시 멈춰 둔 상태.
   final bool paused;
@@ -122,6 +128,8 @@ class PreviewNotice extends Equatable {
 
   @override
   List<Object?> get props => [
+    queueIndex,
+    queueLength,
     title,
     uploader,
     artUri,

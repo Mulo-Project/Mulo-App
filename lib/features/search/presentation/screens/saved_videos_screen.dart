@@ -3,6 +3,7 @@ import 'dart:math' show Random;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
@@ -19,6 +20,7 @@ import '../widgets/preview_video.dart';
 import '../widgets/preview_video_controls.dart';
 import '../widgets/video_quality_sheet.dart';
 import 'media_detail_screen.dart';
+import 'saved_queue_screen.dart' show savedQueueLocation;
 
 /// 저장한 영상 화면 경로 (검색 탭 안).
 const savedVideosLocation = '/search/saved';
@@ -184,6 +186,20 @@ class _QueueRow extends StatelessWidget {
               compact: true,
               onPressed: () => preview.loop.value = !loop,
             ),
+            // 목록 재생 중이면 지금 대기열을 연다.
+            ValueListenableBuilder<bool>(
+              valueListenable: preview.queueActive,
+              builder: (context, active, _) => active
+                  ? PillButton(
+                      key: const ValueKey('saved-queue-open'),
+                      label: l10n.savedQueueOpen,
+                      icon: AppIcons.queueOutline,
+                      variant: PillVariant.tonal,
+                      compact: true,
+                      onPressed: () => context.push(savedQueueLocation),
+                    )
+                  : const SizedBox.shrink(),
+            ),
           ],
         ),
       ),
@@ -198,7 +214,7 @@ class _StorageLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final info = context.watch<StreamCacheCubit>().state;
-    if (info.savedBytes == 0 && info.freeBytes == 0) {
+    if (info.savedBytes == 0 && info.limitBytes == 0) {
       return const SizedBox.shrink();
     }
     return Padding(
@@ -211,7 +227,8 @@ class _StorageLine extends StatelessWidget {
         child: Text(
           context.l10n.savedVideosStorage(
             formatBytes(info.savedBytes),
-            formatBytes(info.freeBytes),
+            // 남은 공간은 기기 전체가 아니라 정해 둔 임시 저장 공간(한도)에서 쓴 만큼을 뺀 값이다.
+            formatBytes((info.limitBytes - info.usedBytes).clamp(0, info.limitBytes)),
           ),
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: context.palette.onSurfaceMuted,

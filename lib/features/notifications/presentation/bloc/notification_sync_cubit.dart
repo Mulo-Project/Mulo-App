@@ -273,17 +273,26 @@ class NotificationSyncCubit extends Cubit<void> {
     final next = preview != null
         ? MediaSessionInfo(
             title: hide ? l10n.notifHiddenTitle : preview.title,
-            artist: hide
-                ? '${l10n.notifHiddenNote} · ${l10n.notifPreviewLabel}'
-                : preview.uploader.isEmpty
-                ? l10n.notifPreviewLabel
-                : '${preview.uploader} · ${l10n.notifPreviewLabel}',
+            artist: () {
+              // 저장한 음원 목록에서 듣는 중이면 "미리 듣기" 대신 "저장한 음원 · 순번"을 쓴다.
+              final queue = preview.queueIndex;
+              final label = queue == null
+                  ? l10n.notifPreviewLabel
+                  : l10n.notifSavedQueueLabel(
+                      '${queue + 1}',
+                      '${preview.queueLength}',
+                    );
+              if (hide) return '${l10n.notifHiddenNote} · $label';
+              return preview.uploader.isEmpty
+                  ? label
+                  : '${preview.uploader} · $label';
+            }(),
             artUri: hide ? null : preview.artUri,
             duration: preview.duration ?? Duration.zero,
             position: preview.position,
             playing: !preview.paused,
-            hasPrevious: false,
-            hasNext: false,
+            hasPrevious: preview.queueIndex != null,
+            hasNext: preview.queueIndex != null,
             preview: true,
             coverColors: hide ? const [] : coverColors,
           )

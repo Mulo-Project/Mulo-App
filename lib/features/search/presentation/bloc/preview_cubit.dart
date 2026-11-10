@@ -165,6 +165,50 @@ class PreviewCubit extends Cubit<PreviewState> {
   List<int> _order = const [];
   int _pos = 0;
 
+  /// 재생 순서대로 늘어놓은 목록과 지금 곡의 자리 (재생 목록 화면이 본다).
+  final queueItems = ValueNotifier<List<PreviewQueueItem>>(const []);
+  final queuePos = ValueNotifier<int>(0);
+
+  void _publish() {
+    queueItems.value = [for (final i in _order) _queue[i]];
+    queuePos.value = _pos;
+  }
+
+  /// 재생 목록의 [pos]번째 곡으로 건너뛴다.
+  Future<void> jumpTo(int pos) async {
+    if (pos < 0 || pos >= _order.length) return;
+    await _playAt(pos);
+  }
+
+  /// 재생 순서에서 [from] 곡을 [to] 자리로 옮긴다 (ReorderableListView의 onReorderItem 규약).
+  void moveInQueue(int from, int to) {
+    if (from < 0 || from >= _order.length) return;
+    final current = _order[_pos];
+    final moved = _order.removeAt(from);
+    _order.insert(to.clamp(0, _order.length), moved);
+    _pos = _order.indexOf(current);
+    _publish();
+  }
+
+  /// 재생 순서의 [pos]번째 곡을 목록에서 뺀다. 듣던 곡이면 다음 곡으로 넘어가고, 마지막 곡이면 멈춘다.
+  Future<void> removeFromQueue(int pos) async {
+    if (pos < 0 || pos >= _order.length) return;
+    final removedCurrent = pos == _pos;
+    final index = _order[pos];
+    _order = List.of(_order)..removeAt(pos);
+    _queue = List.of(_queue)..removeAt(index);
+    _order = [for (final i in _order) i > index ? i - 1 : i];
+    if (_queue.isEmpty) return stop();
+    if (pos < _pos) _pos--;
+    if (removedCurrent) {
+      _pos = pos.clamp(0, _order.length - 1);
+      _publish();
+      await _playAt(_pos);
+      return;
+    }
+    _publish();
+  }
+
   /// 재생 목록이 있다 (미니 플레이어의 이전 · 다음 버튼을 보인다).
   final queueActive = ValueNotifier<bool>(false);
 
@@ -185,6 +229,7 @@ class PreviewCubit extends Cubit<PreviewState> {
     shuffle.value = shuffled;
     _rebuildOrder(first: start.clamp(0, items.length - 1));
     queueActive.value = true;
+    _publish();
     return _playAt(0);
   }
 
@@ -206,6 +251,7 @@ class PreviewCubit extends Cubit<PreviewState> {
     shuffle.value = !shuffle.value;
     if (_queue.isEmpty) return;
     _rebuildOrder(first: _order[_pos]);
+    _publish();
   }
 
   Future<EngineFailure?> _playAt(int pos) async {
@@ -213,6 +259,7 @@ class PreviewCubit extends Cubit<PreviewState> {
     EngineFailure? failure;
     for (var tried = 0; tried < _order.length; tried++) {
       _pos = (pos + tried) % _order.length;
+      queuePos.value = _pos;
       final item = _queue[_order[_pos]];
       if (item.hit.isLive) continue;
       failure = await toggle(
@@ -234,6 +281,7 @@ class PreviewCubit extends Cubit<PreviewState> {
     if (_pos + 1 >= _order.length) {
       if (!loop.value) return stop();
       if (shuffle.value) _order = List.of(_order)..shuffle(); // 한 바퀴마다 다시 섞는다.
+      _publish();
       await _playAt(0);
       return;
     }
@@ -257,6 +305,8 @@ class PreviewCubit extends Cubit<PreviewState> {
     _pos = 0;
     shuffle.value = false;
     queueActive.value = false;
+    queueItems.value = const [];
+    queuePos.value = 0;
   }
 
   void _onCompleted() {
@@ -570,6 +620,8 @@ class PreviewCubit extends Cubit<PreviewState> {
     await _failures.cancel();
     repeat.dispose();
     queueActive.dispose();
+    queueItems.dispose();
+    queuePos.dispose();
     shuffle.dispose();
     loop.dispose();
     autoQuality.dispose();

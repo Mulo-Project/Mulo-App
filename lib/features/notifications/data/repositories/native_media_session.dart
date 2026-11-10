@@ -146,6 +146,8 @@ class NativeMediaSession implements MediaSession {
       'favorite': info.favorite,
       'shuffle': info.shuffle,
       'preview': info.preview,
+      'previewHasPrevious': info.preview && info.hasPrevious,
+      'previewHasNext': info.preview && info.hasNext,
       'favoriteLabel': l10n.trackMenuFavorite,
       'unfavoriteLabel': l10n.trackMenuUnfavorite,
       'shuffleOnLabel': l10n.shuffleOn,

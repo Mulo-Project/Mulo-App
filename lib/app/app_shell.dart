@@ -16,6 +16,7 @@ import '../features/player/presentation/bloc/now_playing_cubit.dart';
 import '../features/player/presentation/widgets/native_video.dart';
 import '../features/player/presentation/widgets/player_sleep_timer.dart';
 import '../features/search/presentation/bloc/preview_cubit.dart';
+import '../features/search/presentation/screens/saved_queue_screen.dart' show savedQueueLocation;
 import '../core/cache/cached_web_image.dart';
 import '../features/downloads/presentation/bloc/download_queue_cubit.dart';
 import '../features/downloads/presentation/widgets/download_bar.dart';
@@ -515,7 +516,14 @@ class _PreviewMiniPlayer extends StatelessWidget {
       artist: loading
           ? l10n.searchPreviewLoading
           : [
-              l10n.searchPreview,
+              // 저장한 음원 목록이면 "저장한 음원 n/전체", 한 곡 미리 듣기면 "미리 듣기".
+              if (hasQueue)
+                l10n.notifSavedQueueLabel(
+                  '${cubit.queuePos.value + 1}',
+                  '${cubit.queueItems.value.length}',
+                )
+              else
+                l10n.searchPreview,
               if (hit?.uploader case final u? when u.isNotEmpty) u,
             ].join(' · '),
       artwork: thumb == null ? null : CachedWebImage(thumb),
@@ -531,16 +539,17 @@ class _PreviewMiniPlayer extends StatelessWidget {
       nextLabel: l10n.actionNext,
       positionText: formatDuration(preview.progress?.position ?? Duration.zero),
       durationText: duration == null ? '--:--' : formatDuration(duration),
-      queueLabel: l10n.searchPreviewStop,
+      // 목록 재생 중에는 오른쪽 아이콘이 대기열 화면을 열고, 한 곡이면 멈춘다.
+      queueLabel: hasQueue ? l10n.savedQueueOpen : l10n.searchPreviewStop,
       showSkip: hasQueue,
       onPrevious: cubit.previous,
       onNext: cubit.next,
-      queueIcon: AppIcons.close,
+      queueIcon: hasQueue ? AppIcons.queueOutline : AppIcons.close,
       onTap: hit == null || hit.url.isEmpty
           ? null
           : () => showMediaDetail(context, hit),
       onPlayPause: loading ? null : cubit.togglePause,
-      onQueue: cubit.stop,
+      onQueue: hasQueue ? () => context.push(savedQueueLocation) : cubit.stop,
     );
   }
 }

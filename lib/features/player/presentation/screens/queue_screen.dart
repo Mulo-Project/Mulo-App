@@ -84,7 +84,7 @@ class _QueueScreenState extends State<QueueScreen>
               ),
               // 곡 수 · 섞기 · 비우기 줄은 목록이 스크롤돼도 고정한다.
               if (queue.isNotEmpty)
-                _QueueHeader(
+                QueueHeader(
                   count: queue.length,
                   shuffle: shuffle,
                   onShuffle: vm.toggleShuffle,
@@ -149,15 +149,18 @@ class _QueueScreenState extends State<QueueScreen>
 }
 
 /// 맨 위 줄: 곡 수와 안내, 셔플 켜기/끄기 · 반복(플레이어의 셔플 · 반복과 같은 설정) · 대기열 비우기.
-class _QueueHeader extends StatelessWidget {
-  const _QueueHeader({
+class QueueHeader extends StatelessWidget {
+  const QueueHeader({
+    super.key,
     required this.count,
     required this.shuffle,
     required this.onShuffle,
     required this.repeat,
     required this.onRepeat,
     required this.onClear,
-    required this.onSelect,
+    this.hint,
+    this.onSelect,
+    this.showSelect = true,
   });
 
   final int count;
@@ -171,8 +174,14 @@ class _QueueHeader extends StatelessWidget {
   final VoidCallback onRepeat;
   final VoidCallback onClear;
 
+  /// 곡 수 밑 안내 문구 (기본은 순서 바꾸기 안내).
+  final String? hint;
+
   /// 여러 곡 선택 모드로 들어간다 (선택 모드 중에는 null).
   final VoidCallback? onSelect;
+
+  /// 여러 곡 선택 버튼을 보일지 (선택을 안 쓰는 목록은 끈다).
+  final bool showSelect;
 
   @override
   Widget build(BuildContext context) {
@@ -189,7 +198,7 @@ class _QueueHeader extends StatelessWidget {
               children: [
                 Text(l10n.songCount(count), style: text.titleMedium),
                 Text(
-                  l10n.queueReorderHint,
+                  hint ?? l10n.queueReorderHint,
                   style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
                 ),
               ],
@@ -209,11 +218,12 @@ class _QueueHeader extends StatelessWidget {
             accent: repeat != PlayerRepeatMode.off,
             onPressed: onRepeat,
           ),
-          RowIconButton(
-            icon: AppIcons.checkCircle,
-            tooltip: l10n.queueSelect,
-            onPressed: onSelect,
-          ),
+          if (showSelect)
+            RowIconButton(
+              icon: AppIcons.checkCircle,
+              tooltip: l10n.queueSelect,
+              onPressed: onSelect,
+            ),
           RowIconButton(
             icon: AppIcons.deleteAll,
             tooltip: l10n.queueClear,
