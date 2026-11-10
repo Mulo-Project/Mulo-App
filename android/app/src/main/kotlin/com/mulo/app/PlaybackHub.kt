@@ -812,6 +812,15 @@ object PlaybackHub {
         override fun onPlayerError(error: PlaybackException) {
             PlaybackStore.logStop(context, "error: ${error.errorCodeName} ${error.message}")
             MuloLog.e(MuloLog.PLAYBACK, "player error ${error.errorCodeName}: ${error.message} item=${exo.currentMediaItem?.mediaId}", error)
+            // 앱의 flutter 로그에도 남겨, 기기에서 원인을 바로 볼 수 있게 한다.
+            emit(mapOf(
+                "type" to "error",
+                "code" to error.errorCodeName,
+                "message" to (error.message ?: ""),
+                "cause" to (error.cause?.toString() ?: ""),
+                "id" to (exo.currentMediaItem?.mediaId ?: ""),
+                "uri" to (exo.currentMediaItem?.localConfiguration?.uri?.toString() ?: ""),
+            ))
             // 임시 저장한 영상 곡의 영상 쪽을 못 열었으면 소리만으로 다시 시도한다 (영상은 덤이다).
             val failed = exo.currentMediaItem
             if (failed?.mediaMetadata?.extras?.getString(MergingSourceFactory.VIDEO_URI).isNullOrEmpty().not()) {
