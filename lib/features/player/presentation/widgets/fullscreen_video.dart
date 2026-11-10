@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../search/presentation/widgets/preview_video_controls.dart';
 import 'native_video.dart';
 
 /// 영상을 전체 화면(시스템 막대 숨김)으로 연다. 기기를 돌리면 가로 · 세로로 따라 돈다. 뒤로 가기 · 닫기 버튼으로 돌아온다.
@@ -135,14 +136,18 @@ class NativeVideoWithFullscreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Stack(
+    return Stack(
       fit: StackFit.expand,
       children: [
-        NativeVideo(),
+        const NativeVideo(),
         Positioned(
           right: AppSpacing.xs,
           bottom: AppSpacing.xs,
-          child: FullscreenVideoButton(),
+          // 전체 화면으로 키우면 검색 미리보기와 같은 영상 컨트롤이 영상 위에 뜬다.
+          child: FullscreenVideoButton(
+            controls: (_) =>
+                const PreviewVideoControls(fullscreen: true, main: true),
+          ),
         ),
       ],
     );
