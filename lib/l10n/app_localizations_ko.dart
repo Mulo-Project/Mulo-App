@@ -722,6 +722,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get savedVideosDownloading => '받는 중';
 
   @override
+  String savedVideosEtaSeconds(int n) {
+    return '약 $n초 남음';
+  }
+
+  @override
+  String savedVideosEtaMinutes(int n) {
+    return '약 $n분 남음';
+  }
+
+  @override
   String get savedVideosRemove => '저장 해제';
 
   @override

@@ -740,6 +740,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get savedVideosDownloading => 'Saving';
 
   @override
+  String savedVideosEtaSeconds(int n) {
+    return 'about ${n}s left';
+  }
+
+  @override
+  String savedVideosEtaMinutes(int n) {
+    return 'about ${n}m left';
+  }
+
+  @override
   String get savedVideosRemove => 'Remove';
 
   @override

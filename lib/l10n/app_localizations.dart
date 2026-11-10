@@ -1436,6 +1436,18 @@ abstract class AppLocalizations {
   /// **'받는 중'**
   String get savedVideosDownloading;
 
+  /// No description provided for @savedVideosEtaSeconds.
+  ///
+  /// In ko, this message translates to:
+  /// **'약 {n}초 남음'**
+  String savedVideosEtaSeconds(int n);
+
+  /// No description provided for @savedVideosEtaMinutes.
+  ///
+  /// In ko, this message translates to:
+  /// **'약 {n}분 남음'**
+  String savedVideosEtaMinutes(int n);
+
   /// No description provided for @savedVideosRemove.
   ///
   /// In ko, this message translates to:

@@ -23,6 +23,7 @@ class SavedVideosCubit extends Cubit<List<SavedVideo>> {
     _done = watchDone(const NoParams()).listen(_onDone);
     _progressSub = watchProgress?.call(const NoParams()).listen((e) {
       progress.value = {...progress.value, e.id: e.percent};
+      _updateEta(e.id, e.percent);
     });
     unawaited(load().then((_) => _resumeUnfinished()));
   }
@@ -38,6 +39,18 @@ class SavedVideosCubit extends Cubit<List<SavedVideo>> {
   /// 받는 중인 곡의 진행률 0~100 (영상 id → %). 끝나면 지운다.
   final progress = ValueNotifier<Map<String, int>>(const {});
 
+  /// 받는 중인 곡의 남은 시간 어림 (영상 id → 초). 진행률이 조금 쌓인 뒤부터 나온다.
+  final eta = ValueNotifier<Map<String, int>>(const {});
+  final _startedAt = <String, DateTime>{};
+
+  void _updateEta(String id, int percent) {
+    final start = _startedAt.putIfAbsent(id, DateTime.now);
+    if (percent < 3 || percent >= 100) return;
+    final elapsed = DateTime.now().difference(start).inMilliseconds / 1000;
+    final left = (elapsed * (100 - percent) / percent).ceil();
+    eta.value = {...eta.value, id: left};
+  }
+
   /// 보관을 시작했지만 주소를 읽는 중인 영상 id (버튼을 잠시 막는다).
   final _busy = <String>{};
 
@@ -46,6 +59,7 @@ class SavedVideosCubit extends Cubit<List<SavedVideo>> {
   /// 저장한 곡의 영상 화질 (저장하지 않았거나 음원이면 null).
   VideoQuality? qualityOf(String id) =>
       state.where((v) => v.id == id).firstOrNull?.quality;
+
   /// 소리만 저장한 곡인가 (영상 화질 없이 저장했다).
   bool isAudioOnly(String id) =>
       state.any((v) => v.id == id && v.quality == null);
@@ -82,11 +96,21 @@ class SavedVideosCubit extends Cubit<List<SavedVideo>> {
   /// 저장한다 ([quality]는 유튜브 영상의 화질). 주소를 못 읽으면 false.
   Future<bool> add(MediaHit hit, {VideoQuality? quality}) async {
     if (!_busy.add(hit.id)) return true;
+    // 주소를 읽는 동안에도 바로 "받는 중"으로 보이게 목록에 먼저 넣어 둔다 (못 읽으면 도로 뺀다).
+    if (!contains(hit.id)) {
+      emit([...state, SavedVideo(hit: hit, quality: quality)]);
+    }
     try {
       final list = await _save(SaveVideoParams(hit, quality: quality));
       if (!isClosed) emit(list);
       return true;
     } on Object {
+      if (!isClosed) {
+        emit([
+          for (final v in state)
+            if (v.id != hit.id) v,
+        ]);
+      }
       return false;
     } finally {
       _busy.remove(hit.id);
@@ -107,6 +131,10 @@ class SavedVideosCubit extends Cubit<List<SavedVideo>> {
 
   Future<void> _onDone(({String id, bool ok}) e) async {
     if (isClosed) return;
+    _startedAt.remove(e.id);
+    if (eta.value.containsKey(e.id)) {
+      eta.value = {...eta.value}..remove(e.id);
+    }
     if (progress.value.containsKey(e.id)) {
       progress.value = {...progress.value}..remove(e.id);
     }
@@ -130,6 +158,7 @@ class SavedVideosCubit extends Cubit<List<SavedVideo>> {
     await _done.cancel();
     await _progressSub?.cancel();
     progress.dispose();
+    eta.dispose();
     return super.close();
   }
 }

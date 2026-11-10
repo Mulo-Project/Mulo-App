@@ -269,7 +269,12 @@ object StreamCache {
                     val before = c.keys.toSet()
                     val downloader = HlsDownloader(MediaItem.fromUri(url), cacheFactory(c, http))
                     fill.hls = downloader
-                    downloader.download(null)
+                    downloader.download { _, _, percent ->
+                        val pct = percent.toInt().coerceIn(0, 99)
+                        synchronized(fill) {
+                            if (pct != lastPercent) { lastPercent = pct; progress(pct) }
+                        }
+                    }
                     rememberKeys(context, id, c.keys - before)
                 }
             } catch (e: Exception) {

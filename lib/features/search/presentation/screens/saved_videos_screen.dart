@@ -12,6 +12,7 @@ import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/saved_video.dart';
 import '../../domain/entities/video_quality.dart';
 import '../bloc/preview_cubit.dart';
+import '../widgets/saved_progress_label.dart';
 import '../bloc/saved_videos_cubit.dart';
 import '../bloc/stream_cache_cubit.dart';
 import '../widgets/preview_control.dart';
@@ -312,13 +313,15 @@ class _SavedTile extends StatelessWidget {
     final hit = video.hit;
     final isVideo = video.quality != null;
     // 채널은 한 줄, 화질 · 받는 중 같은 부가 정보는 그 아래 한 줄 (한 줄에 몰면 뒤가 잘린다).
-    final percents = context.read<SavedVideosCubit>().progress;
-    String extraOf(Map<String, int> pct) => [
+    final saving = context.read<SavedVideosCubit>();
+    String extraOf() => [
       if (isVideo) videoQualityLabel(context, video.quality!),
       if (!video.ready)
-        pct[hit.id] == null
-            ? l10n.savedVideosDownloading
-            : '${l10n.savedVideosDownloading} ${pct[hit.id]}%',
+        savedProgressLabel(
+          context,
+          percent: saving.progress.value[hit.id],
+          etaSeconds: saving.eta.value[hit.id],
+        ),
     ].join(' · ');
 
     final info = InkWell(
@@ -353,10 +356,10 @@ class _SavedTile extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: text.bodySmall,
                     ),
-                  ValueListenableBuilder<Map<String, int>>(
-                    valueListenable: percents,
-                    builder: (_, pct, _) {
-                      final extra = extraOf(pct);
+                  ListenableBuilder(
+                    listenable: Listenable.merge([saving.progress, saving.eta]),
+                    builder: (_, _) {
+                      final extra = extraOf();
                       return extra.isEmpty
                           ? const SizedBox.shrink()
                           : Text(
