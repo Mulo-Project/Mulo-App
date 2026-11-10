@@ -294,16 +294,25 @@ class _QueueTile extends StatelessWidget {
                           color: p.accent,
                         ),
                       ),
-                    // 임시 저장한 음원(cache)은 일반 곡과 구분되게 작은 표시를 붙인다.
+                    // 임시 저장한 음원(cache)은 작은 뱃지로 구분한다.
                     if (track.isSaved)
                       Padding(
                         padding: const EdgeInsets.only(right: AppSpacing.xs),
                         child: Tooltip(
                           message: context.l10n.savedVideosTitle,
-                          child: Icon(
-                            AppIcons.download,
-                            size: AppSizes.iconSm,
-                            color: p.onSurfaceMuted,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: p.accent.withValues(alpha: .16),
+                              borderRadius: BorderRadius.circular(AppSpacing.xxs),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(AppSpacing.xxs),
+                              child: Icon(
+                                AppIcons.download,
+                                size: 12,
+                                color: p.accent,
+                              ),
+                            ),
                           ),
                         ),
                       ),
