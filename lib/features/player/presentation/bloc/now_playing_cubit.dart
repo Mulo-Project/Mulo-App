@@ -202,26 +202,25 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     NowPlayingState s, {
     Duration? position,
     bool shuffleNew = false,
-  }) =>
-      PlaybackSnapshot(
-        items: [
-          for (final t in s.queue)
-            PlaybackItem(
-              id: t.id,
-              uri: t.uri,
-              title: t.title,
-              artist: t.artist,
-              album: t.album,
-              duration: t.duration,
-              videoUri: t.videoUri,
-            ),
-        ],
-        index: s.index,
-        playing: s.isPlaying,
-        repeat: s.repeat,
-        position: position,
-        shuffleNew: shuffleNew,
-      );
+  }) => PlaybackSnapshot(
+    items: [
+      for (final t in s.queue)
+        PlaybackItem(
+          id: t.id,
+          uri: t.uri,
+          title: t.title,
+          artist: t.artist,
+          album: t.album,
+          duration: t.duration,
+          videoUri: t.videoUri,
+        ),
+    ],
+    index: s.index,
+    playing: s.isPlaying,
+    repeat: s.repeat,
+    position: position,
+    shuffleNew: shuffleNew,
+  );
 
   /// 엔진이 알려 준 것을 상태에 넣는다 (엔진을 다시 움직이지 않고, 보낸 것으로 친다).
   void _emitFromEngine(NowPlayingState next) {
@@ -435,7 +434,22 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     final queue = <Track>[];
     var index = 0;
     for (var i = 0; i < snapshot.items.length; i++) {
-      final track = find(snapshot.items[i].id);
+      final item = snapshot.items[i];
+      // 임시 저장한 음원은 보관함 곡이 아니라서 엔진이 쥔 정보(주소 · 제목)로 되살린다.
+      final track =
+          find(item.id) ??
+          (item.id.startsWith(Track.savedIdPrefix)
+              ? Track(
+                  id: item.id,
+                  title: item.title,
+                  artist: item.artist,
+                  album: item.album,
+                  duration: item.duration,
+                  addedAt: DateTime.fromMillisecondsSinceEpoch(0),
+                  uri: item.uri,
+                  source: TrackSource.saved,
+                )
+              : null);
       if (track == null) continue;
       if (i <= snapshot.index) index = queue.length;
       queue.add(track);

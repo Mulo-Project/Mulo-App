@@ -454,6 +454,30 @@ void main() {
       expect(engine.calls, isEmpty);
     });
 
+    test('보관함에 없는 임시 저장 음원도 엔진이 쥔 정보로 되살리고 엔진 대기열은 그대로 둔다', () async {
+      engine.restoreSnapshot = PlaybackSnapshot(
+        items: [
+          PlaybackItem(id: tracks.first.id, uri: tracks.first.uri, title: 'A'),
+          const PlaybackItem(
+            id: 'saved:x',
+            uri: 'https://example.com/x.m4a',
+            title: '임시 곡',
+            artist: '채널',
+          ),
+        ],
+        index: 1,
+        playing: true,
+        position: const Duration(seconds: 7),
+      );
+      await cubit.restore((id) => tracks.where((t) => t.id == id).firstOrNull);
+      await settle();
+      expect(cubit.state.queue.map((t) => t.id), [tracks.first.id, 'saved:x']);
+      expect(cubit.state.track?.isSaved, isTrue);
+      expect(cubit.state.track?.uri, 'https://example.com/x.m4a');
+      expect(cubit.state.track?.artist, '채널');
+      expect(engine.calls, isEmpty);
+    });
+
     test('셔플 여부도 되살리고 끄는 것은 엔진에 맡긴다', () async {
       engine.restoreSnapshot = fromEngine(
         extras: jsonEncode({'shuffle': true}),
