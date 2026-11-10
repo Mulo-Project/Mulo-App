@@ -93,7 +93,20 @@ class PreviewCubit extends Cubit<PreviewState> {
     WatchPreviewFailures watchFailures, {
     this.resolveVideo,
     this.enterPictureInPicture,
+    LoadAutoVideoQuality? loadAutoQuality,
+    SaveAutoVideoQuality? saveAutoQuality,
   }) : super(const PreviewState()) {
+    // 자동 화질은 설정이라 저장해 두고 앱을 켤 때 읽는다.
+    if (loadAutoQuality != null) {
+      unawaited(
+        loadAutoQuality(const NoParams()).then((v) {
+          if (!isClosed) autoQuality.value = v;
+        }, onError: (Object _) {}),
+      );
+    }
+    if (saveAutoQuality != null) {
+      autoQuality.addListener(() => unawaited(saveAutoQuality(autoQuality.value)));
+    }
     unawaited(syncWithPlayer());
     _completed = watchCompleted(const NoParams()).listen((_) => _onCompleted());
     _progress = watchProgress(const NoParams()).listen(_onProgress);
@@ -117,7 +130,7 @@ class PreviewCubit extends Cubit<PreviewState> {
   final qualityOverride = ValueNotifier<VideoQuality?>(null);
 
   /// 자동(점진) 화질: 켜면 360p로 빠르게 시작해 몇 초 뒤 [rampTarget] 화질로 영상만 바꿔 올린다.
-  /// 아직 앱을 껐다 켜면 꺼진다 (써 보고 정한다).
+  /// 설정의 영상 화질에서 고르고 저장된다 (영상 안의 옵션에는 없다: 거기서는 지금 화질만 바꾼다).
   final autoQuality = ValueNotifier<bool>(false);
   static const rampTarget = VideoQuality.high;
   static const _rampDelay = Duration(seconds: 4);
@@ -128,6 +141,8 @@ class PreviewCubit extends Cubit<PreviewState> {
         if (isClosed || generation != _generation) return;
         if (!autoQuality.value || !state.isActive(hitId)) return;
         if (state.status != PreviewStatus.playing) return;
+        // 그 사이 직접 화질을 고른 곡은 그대로 둔다.
+        if (qualityOverride.value != VideoQuality.standard) return;
         qualityOverride.value = rampTarget;
       }),
     );

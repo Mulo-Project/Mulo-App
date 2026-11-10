@@ -68,6 +68,8 @@ void registerSearch(GetIt sl) {
     ..registerLazySingleton<VideoQualityRepository>(
       PrefsVideoQualityRepository.new,
     )
+    ..registerFactory(() => LoadAutoVideoQuality(sl()))
+    ..registerFactory(() => SaveAutoVideoQuality(sl()))
     ..registerFactory(() => LoadVideoQuality(sl()))
     ..registerFactory(() => SaveVideoQuality(sl()))
     ..registerFactory(() => VideoQualityCubit(sl(), sl()))
@@ -118,6 +120,8 @@ void registerSearch(GetIt sl) {
         sl(),
         resolveVideo: sl(),
         enterPictureInPicture: sl(),
+        loadAutoQuality: sl(),
+        saveAutoQuality: sl(),
       ),
     )
     ..registerFactory(() => SearchCubit(sl(), sl()));

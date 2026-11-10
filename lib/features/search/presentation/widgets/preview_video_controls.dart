@@ -357,60 +357,25 @@ class _VideoOptionsSheet extends StatelessWidget {
             Text(l10n.videoQualityTitle, style: text.titleSmall),
             const SizedBox(height: AppSpacing.sm),
             // 화질은 가로로 스크롤되는 선택 버튼 줄이다 (시트가 길어지지 않는다).
-            ValueListenableBuilder<bool>(
-              valueListenable: preview.autoQuality,
-              builder: (context, auto, _) =>
-                  ValueListenableBuilder<VideoQuality?>(
-                    valueListenable: preview.qualityOverride,
-                    builder: (context, override, _) {
-                      final current = override ?? settingsQuality;
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                      ChoiceChips(
-                        items: [
-                          // 자동: 360p로 빠르게 시작해 몇 초 뒤 높은 화질로 올린다 (다음 곡부터).
-                          ChoiceChipItem(
-                            key: const ValueKey('video-option-quality-auto'),
-                            label: l10n.videoQualityAuto,
-                            selected: auto,
-                            onTap: () {
-                              preview.autoQuality.value = true;
-                              Navigator.of(context).pop();
-                            },
-                          ),
-                          for (final quality in VideoQuality.values)
-                            ChoiceChipItem(
-                              key: ValueKey(
-                                'video-option-quality-${quality.name}',
-                              ),
-                              label: videoQualityLabel(context, quality),
-                              selected: !auto && quality == current,
-                              onTap: () {
-                                preview.autoQuality.value = false;
-                                preview.qualityOverride.value = quality;
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                        ],
+            ValueListenableBuilder<VideoQuality?>(
+              valueListenable: preview.qualityOverride,
+              builder: (context, override, _) {
+                final current = override ?? settingsQuality;
+                return ChoiceChips(
+                  items: [
+                    for (final quality in VideoQuality.values)
+                      ChoiceChipItem(
+                        key: ValueKey('video-option-quality-${quality.name}'),
+                        label: videoQualityLabel(context, quality),
+                        selected: quality == current,
+                        onTap: () {
+                          preview.qualityOverride.value = quality;
+                          Navigator.of(context).pop();
+                        },
                       ),
-                          // 자동을 고른 상태면 뜻을 짧게 풀어 준다.
-                          if (auto)
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                top: AppSpacing.xs,
-                              ),
-                              child: Text(
-                                l10n.videoQualityAutoHint,
-                                style: text.bodySmall?.copyWith(
-                                  color: context.palette.onSurfaceMuted,
-                                ),
-                              ),
-                            ),
-                        ],
-                      );
-                    },
-                  ),
+                  ],
+                );
+              },
             ),
           ],
         ),

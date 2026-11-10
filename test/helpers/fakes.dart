@@ -496,6 +496,14 @@ class MemoryVideoQualityRepository implements VideoQualityRepository {
 
   @override
   Future<void> save(VideoQuality v) async => value = v;
+
+  bool auto = false;
+
+  @override
+  Future<bool> loadAuto() async => auto;
+
+  @override
+  Future<void> saveAuto(bool v) async => auto = v;
 }
 
 class MemoryMixWithOthersRepository implements MixWithOthersRepository {

@@ -16,6 +16,17 @@ class PrefsVideoQualityRepository implements VideoQualityRepository {
     );
   }
 
+  static const _autoKey = 'search.videoQualityAuto';
+
+  @override
+  Future<bool> loadAuto() async =>
+      (await SharedPreferences.getInstance()).getBool(_autoKey) ?? false;
+
+  @override
+  Future<void> saveAuto(bool value) async {
+    await (await SharedPreferences.getInstance()).setBool(_autoKey, value);
+  }
+
   @override
   Future<void> save(VideoQuality value) async {
     await (await SharedPreferences.getInstance()).setString(_key, value.name);

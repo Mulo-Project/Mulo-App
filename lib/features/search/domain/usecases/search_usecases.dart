@@ -231,6 +231,25 @@ class SaveVideoQuality implements UseCase<void, VideoQuality> {
   Future<void> call(VideoQuality value) => _repo.save(value);
 }
 
+/// 자동 화질(낮게 시작해 높임) 설정 읽기 · 저장.
+class LoadAutoVideoQuality implements UseCase<bool, NoParams> {
+  const LoadAutoVideoQuality(this._repo);
+
+  final VideoQualityRepository _repo;
+
+  @override
+  Future<bool> call(NoParams _) => _repo.loadAuto();
+}
+
+class SaveAutoVideoQuality implements UseCase<void, bool> {
+  const SaveAutoVideoQuality(this._repo);
+
+  final VideoQualityRepository _repo;
+
+  @override
+  Future<void> call(bool value) => _repo.saveAuto(value);
+}
+
 /// 곡에 들어 있는 오디오 언어 트랙 목록 (여러 개일 때만 고를 수 있다). 못 읽으면 빈 목록.
 class FetchAudioLanguages implements UseCase<List<AudioLanguage>, String> {
   const FetchAudioLanguages(this._engine);
