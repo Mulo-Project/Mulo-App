@@ -735,7 +735,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get savedVideosAdded => 'Saved';
 
   @override
-  String get savedVideosFailed => 'Couldn't save';
+  String get savedVideosFailed => 'Couldn\'t save';
 
   @override
   String get savedVideosDownloading => 'Saving';
