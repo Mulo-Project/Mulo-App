@@ -16,6 +16,7 @@ import '../features/player/presentation/bloc/now_playing_cubit.dart';
 import '../features/player/presentation/widgets/native_video.dart';
 import '../features/player/presentation/widgets/player_sleep_timer.dart';
 import '../features/search/presentation/bloc/preview_cubit.dart';
+import '../features/search/presentation/screens/saved_queue_detail_screen.dart' show showSavedQueueDetail;
 import '../features/search/presentation/screens/saved_queue_screen.dart' show savedQueueLocation;
 import '../core/cache/cached_web_image.dart';
 import '../features/downloads/presentation/bloc/download_queue_cubit.dart';
@@ -547,6 +548,8 @@ class _PreviewMiniPlayer extends StatelessWidget {
       queueIcon: hasQueue ? AppIcons.queueOutline : AppIcons.close,
       onTap: hit == null || hit.url.isEmpty
           ? null
+          : hasQueue
+          ? () => showSavedQueueDetail(context)
           : () => showMediaDetail(context, hit),
       onPlayPause: loading ? null : cubit.togglePause,
       onQueue: hasQueue ? () => context.push(savedQueueLocation) : cubit.stop,

@@ -20,6 +20,7 @@ import '../widgets/preview_video.dart';
 import '../widgets/preview_video_controls.dart';
 import '../widgets/video_quality_sheet.dart';
 import 'media_detail_screen.dart';
+import 'saved_queue_detail_screen.dart' show showSavedQueueDetail;
 import 'saved_queue_screen.dart' show savedQueueLocation;
 
 /// 저장한 영상 화면 경로 (검색 탭 안).
@@ -151,6 +152,8 @@ class _QueueRow extends StatelessWidget {
       final start = shuffled && videos.isNotEmpty
           ? Random().nextInt(videos.length)
           : 0;
+      // 목록 화면(지금 곡의 상세 + 조작 줄)을 먼저 열고 틀기 시작한다.
+      unawaited(showSavedQueueDetail(context));
       await preview.playQueue(_items, start: start, shuffled: shuffled);
     }
 
@@ -196,7 +199,7 @@ class _QueueRow extends StatelessWidget {
                       icon: AppIcons.queueOutline,
                       variant: PillVariant.tonal,
                       compact: true,
-                      onPressed: () => context.push(savedQueueLocation),
+                      onPressed: () => unawaited(showSavedQueueDetail(context)),
                     )
                   : const SizedBox.shrink(),
             ),
