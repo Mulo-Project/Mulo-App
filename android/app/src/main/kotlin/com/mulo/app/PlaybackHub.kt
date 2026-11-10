@@ -45,6 +45,7 @@ object PlaybackHub {
 
     private lateinit var context: Context
     private val main = Handler(Looper.getMainLooper())
+    private const val LOAD_REPLY_TIMEOUT_MS = 6000L
 
     lateinit var exo: ExoPlayer
         private set
@@ -275,6 +276,14 @@ object PlaybackHub {
             result.success(queueState())
         } else {
             pendingLoad = result
+            // 느린 곡(네트워크로 읽는 임시 저장 음원 등)이 준비될 때까지 앱의 다음 명령(대기열 추가 등)이 줄줄이 막히지
+            // 않도록, 일정 시간이 지나면 지금 대기열 모습으로 먼저 답한다 (곡은 준비되는 대로 이어서 나온다).
+            main.postDelayed({
+                if (pendingLoad === result) {
+                    pendingLoad = null
+                    result.success(queueState())
+                }
+            }, LOAD_REPLY_TIMEOUT_MS)
             exo.setMediaItems(mediaItems, index, positionMs ?: 0L)
             exo.playWhenReady = playing
             exo.prepare()
