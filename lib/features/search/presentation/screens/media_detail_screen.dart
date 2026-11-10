@@ -17,7 +17,6 @@ import '../../domain/usecases/search_usecases.dart';
 import '../bloc/audio_language_cubit.dart';
 import '../bloc/media_detail_cubit.dart';
 import '../bloc/media_hit_memo.dart';
-import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../bloc/preview_cubit.dart';
 import '../bloc/saved_videos_cubit.dart';
 import '../bloc/video_quality_cubit.dart';
@@ -361,29 +360,9 @@ class _DetailViewState extends State<_DetailView> {
                   final items = _preview.queueItems.value;
                   final pos = _preview.queuePos.value;
                   final current = pos < items.length ? items[pos].hit.id : null;
-                  if (current == hit.id) return const SavedQueueControls();
-                  // 저장한 곡인데 목록 재생 중이 아니면, 재생 버튼으로 이 곡부터 목록 재생을 시작한다.
-                  final saved = context.watch<SavedVideosCubit>().state;
-                  final at = saved.indexWhere((v) => v.id == hit.id);
-                  if (at < 0) return const SizedBox.shrink();
-                  // 저장한 곡을 한 곡만 듣는 중이면(저장한 음원 화면의 재생 버튼) 같은 조작부를 그대로 쓴다.
-                  final playing = context.watch<PreviewCubit>().state;
-                  if (playing.hitId == hit.id &&
-                      playing.status != PreviewStatus.idle) {
-                    return const SavedQueueControls();
-                  }
-                  return SavedQueueControls(
-                    onStart: () {
-                      final now = context.read<NowPlayingCubit>();
-                      if (now.state.isPlaying) now.togglePlay();
-                      unawaited(
-                        _preview.playQueue([
-                          for (final v in saved)
-                            PreviewQueueItem(v.hit, quality: v.quality),
-                        ], start: at),
-                      );
-                    },
-                  );
+                  return current == hit.id
+                      ? const SavedQueueControls()
+                      : const SizedBox.shrink();
                 },
               ),
               Padding(
