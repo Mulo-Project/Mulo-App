@@ -50,6 +50,8 @@ void main() {
     expect(state.queue.first.source, TrackSource.saved);
     expect(state.queue.first.uri, 'https://example.com/a.m4a');
     expect(state.isPlaying, isTrue);
+    // 재생 화면이 아니라 타일 상세 화면(하단 조작부)이 열린다.
+    expect(find.byKey(const ValueKey('queue-bar-play')), findsOneWidget);
   });
 
   testWidgets(

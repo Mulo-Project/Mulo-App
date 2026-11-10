@@ -239,7 +239,12 @@ class _QueueRow extends StatelessWidget {
       } else {
         nowPlaying.playQueue(tracks);
       }
-      if (context.mounted) unawaited(context.push(Routes.player));
+      // 곡 타일에서 들어갈 때와 같은 상세 화면(하단 조작부)을 연다.
+      final id = savedVideoIdOf(nowPlaying.state.track?.id ?? '');
+      final first = videos.where((v) => v.id == id);
+      if (first.isNotEmpty && context.mounted) {
+        unawaited(showSavedQueueDetail(context, first.first.hit));
+      }
     }
 
     // 재생목록 화면처럼: 왼쪽에 재생 · 셔플(알약), 오른쪽 끝에 반복 · 대기열(작은 아이콘).
