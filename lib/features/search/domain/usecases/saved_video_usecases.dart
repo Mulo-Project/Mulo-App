@@ -43,6 +43,7 @@ class SaveVideo implements UseCase<List<SavedVideo>, SaveVideoParams> {
     this._resolveVideo,
     this._resolveAudio, {
     this.details,
+    this.fetchInfo,
   });
 
   final SavedVideoRepository _repo;
@@ -51,12 +52,16 @@ class SaveVideo implements UseCase<List<SavedVideo>, SaveVideoParams> {
   final ResolveAudioStream _resolveAudio;
   final SavedDetailStore? details;
 
+  /// 상세 정보(설명 · 조회수 · 올린 날 · 채널)가 비어 있는 곡을 저장할 때 먼저 읽는다.
+  final FetchMediaInfo? fetchInfo;
+
   @override
   Future<List<SavedVideo>> call(SaveVideoParams params) async {
-    final hit = params.hit;
     final quality = params.quality;
     final list = await _repo.load();
-    if (list.any((v) => v.id == hit.id)) return list;
+    if (list.any((v) => v.id == params.hit.id)) return list;
+    // 상세 정보까지 읽어서 함께 저장한다 (못 읽으면 가진 정보만 저장한다).
+    final hit = await _withDetail(params.hit);
     // 미리 듣기가 트는 것과 같은 주소를 받는다. 유튜브는 고른 화질의 영상 주소:
     // 소리가 든 형식이면 그것 하나, 영상 전용이면 소리 주소도 함께 (플레이어가 따로 틀어 맞춘다).
     // 소리만 저장하는 곡(quality 없음)이나 영상이 안 읽히는 곡은 소리 주소 하나.
@@ -67,6 +72,22 @@ class SaveVideo implements UseCase<List<SavedVideo>, SaveVideoParams> {
       quality,
     );
     return _finish(list, hit, quality, targets);
+  }
+
+  Future<MediaHit> _withDetail(MediaHit hit) async {
+    final fetch = fetchInfo;
+    final known =
+        hit.viewCount != null &&
+        hit.uploadedAt != null &&
+        hit.channelUrl != null;
+    if (fetch == null || known) return hit;
+    try {
+      final info = await fetch(hit.url);
+      if (info is VideoInfo) return hit.filledFrom(info.hit);
+    } on Object {
+      // 상세를 못 읽어도 저장은 계속한다.
+    }
+    return hit;
   }
 
   Future<List<SavedVideo>> _finish(

@@ -37,4 +37,26 @@ void main() {
     expect(cubit.contains('s'), isFalse);
     await cubit.close();
   });
+
+  test('상세 정보가 빈 곡은 저장하기 전에 읽어서 함께 저장한다', () async {
+    final full = MediaHit(
+      id: 's',
+      title: 'SC',
+      url: 'https://soundcloud.com/a/b',
+      viewCount: 10,
+      uploadedAt: DateTime(2026, 1, 2),
+      channelUrl: 'https://soundcloud.com/a',
+      description: '설명',
+    );
+    await setUpTestDependencies(
+      engine: FakeDownloaderEngine(info: VideoInfo(full)),
+    );
+    final cubit = sl<SavedVideosCubit>();
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+    expect(await cubit.add(_hit), isTrue);
+    final saved = cubit.state.single.hit;
+    expect(saved.viewCount, 10);
+    expect(saved.description, '설명');
+    await cubit.close();
+  });
 }

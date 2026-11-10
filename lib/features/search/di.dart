@@ -99,7 +99,14 @@ void registerSearch(GetIt sl) {
     ..registerFactory(() => LoadSavedVideos(sl(), sl()))
     ..registerLazySingleton<SavedDetailStore>(FileSavedDetailStore.new)
     ..registerFactory(
-      () => SaveVideo(sl(), sl(), sl(), sl(), details: sl<SavedDetailStore>()),
+      () => SaveVideo(
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+        details: sl<SavedDetailStore>(),
+        fetchInfo: sl<FetchMediaInfo>(),
+      ),
     )
     ..registerFactory(
       () => RemoveSavedVideo(sl(), sl(), details: sl<SavedDetailStore>()),
