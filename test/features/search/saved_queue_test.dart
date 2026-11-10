@@ -9,6 +9,7 @@ import 'package:music_download_play_app/features/search/domain/repositories/save
 import 'package:music_download_play_app/features/covers/presentation/bloc/cover_cubit.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 import 'package:music_download_play_app/features/player/presentation/bloc/now_playing_cubit.dart';
+import 'package:music_download_play_app/features/search/domain/entities/video_quality.dart';
 import 'package:music_download_play_app/features/search/domain/entities/video_stream.dart';
 
 import '../../helpers/fakes.dart';
@@ -156,5 +157,33 @@ void main() {
         .read<CoverCubit>()
         .state;
     expect(covers[CoverKey.track('saved:c')]?.url, 'https://img.test/c.jpg');
+  });
+
+  testWidgets('영상으로 저장한 곡은 대기열 곡에 영상 정보(영상 전용 주소)가 붙는다', (tester) async {
+    await setUpTestDependencies(
+      engine: FakeDownloaderEngine(),
+      previewPlayer: FakePreviewPlayer(),
+    );
+    await sl<SavedVideoRepository>().save([
+      SavedVideo(
+        hit: _a,
+        ready: true,
+        quality: VideoQuality.standard,
+        sources: const [
+          VideoStream(url: 'https://example.com/a-video.mp4'),
+          VideoStream(url: 'https://example.com/a-audio.m4a'),
+        ],
+      ),
+    ]);
+    await tester.pumpWidget(const MusicApp(initialLocation: '/search/saved'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('saved-play-all')));
+    await settle(tester);
+    final t = _player(tester).state.queue.single;
+    expect(t.hasVideo, isTrue);
+    expect(t.isVideo, isTrue);
+    expect(t.uri, 'https://example.com/a-audio.m4a');
+    expect(t.videoUri, 'https://example.com/a-video.mp4');
   });
 }

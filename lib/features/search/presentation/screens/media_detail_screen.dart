@@ -27,6 +27,7 @@ import '../widgets/video_quality_sheet.dart';
 import '../widgets/audio_language_sheet.dart';
 import 'saved_videos_screen.dart' show savedVideosLocation;
 import '../widgets/preview_control.dart';
+import '../../../player/presentation/widgets/native_video.dart';
 import '../widgets/saved_queue_controls.dart';
 import '../widgets/preview_video.dart';
 import '../widgets/preview_video_controls.dart';
@@ -559,6 +560,11 @@ class _Thumbnail extends StatelessWidget {
               c.state.isActive(hit.id) &&
               c.state.status == PreviewStatus.playing,
         );
+    final mainVideo = context.select(
+      (NowPlayingCubit c) =>
+          c.state.track?.id == '${Track.savedIdPrefix}${hit.id}' &&
+          c.state.track!.hasVideo,
+    );
     return LayoutBuilder(
       builder: (context, box) {
         // 넓은 화면(데스크톱)에서 너무 커지지 않게 높이를 제한하고 가운데에 둔다.
@@ -576,7 +582,17 @@ class _Thumbnail extends StatelessWidget {
                 radius: AppRadii.md,
                 tone: toneFor(hit.id),
               ),
-              if (previewing)
+              if (mainVideo)
+                // 영상으로 저장한 곡을 메인 재생으로 듣는 중: 네이티브가 소리와 같은 시계로 내는 영상을 그린다.
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadii.md),
+                  child: SizedBox(
+                    width: width,
+                    height: width * 9 / 16,
+                    child: const NativeVideo(),
+                  ),
+                )
+              else if (previewing)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(AppRadii.md),
                   child: SizedBox(

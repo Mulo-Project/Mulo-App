@@ -56,6 +56,7 @@ class NativeAudioPlayerRepository implements AudioPlayerRepository {
     'artist': i.artist,
     'album': i.album,
     'durationMs': i.duration.inMilliseconds,
+    if (i.videoUri.isNotEmpty) 'videoUri': i.videoUri,
   };
 
   /// 네이티브가 돌려준 대기열 모습 (`ids` `index` `shuffle` `repeat`)을 읽는다. 없으면 null.

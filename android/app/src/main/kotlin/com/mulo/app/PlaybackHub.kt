@@ -122,7 +122,7 @@ object PlaybackHub {
         val streamHttp = DefaultHttpDataSource.Factory().setAllowCrossProtocolRedirects(true)
         val sources = DefaultDataSource.Factory(context, StreamCache.wrap(context, streamHttp))
         exo = ExoPlayer.Builder(context, renderers)
-            .setMediaSourceFactory(DefaultMediaSourceFactory(context).setDataSourceFactory(sources))
+            .setMediaSourceFactory(MergingSourceFactory(DefaultMediaSourceFactory(context).setDataSourceFactory(sources)))
             // 다른 앱이 소리를 가져가면(영상, 통화) 멈추고, 이어폰이 빠지면 멈춘다.
             .setAudioAttributes(
                 AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).build(),

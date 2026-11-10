@@ -12,6 +12,8 @@ Track _trackOf(SavedVideo v, String url) => Track(
   addedAt: DateTime.fromMillisecondsSinceEpoch(0),
   uri: url,
   source: TrackSource.saved,
+  hasVideo: v.quality != null && v.videoSource != null,
+  videoUri: v.sources.length >= 2 ? v.sources.first.url : '',
 );
 
 /// 임시 저장한 음원을 메인 재생 대기열에 넣을 곡으로 바꾼다 (끝까지 받은 곡만 쓴다).

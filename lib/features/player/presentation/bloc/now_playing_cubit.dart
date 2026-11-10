@@ -213,6 +213,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
               artist: t.artist,
               album: t.album,
               duration: t.duration,
+              videoUri: t.videoUri,
             ),
         ],
         index: s.index,
@@ -586,6 +587,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     artist: t.artist,
     album: t.album,
     duration: t.duration,
+    videoUri: t.videoUri,
   );
 
   /// [queue]의 [at]번 곡부터 재생을 시작한다. [shuffle]이면 엔진이 그 곡을 맨 앞에 두고 나머지를 섞는다.
