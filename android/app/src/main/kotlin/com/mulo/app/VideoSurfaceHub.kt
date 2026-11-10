@@ -75,10 +75,10 @@ object VideoSurfaceHub {
 
     /**
      * 작은 창(PiP)으로 보낼 만한 영상이 있으면 영상 크기(width, height), 없으면 null.
-     * 영상이 화면에 붙어 첫 화면이 그려졌고 소리가 나는 중일 때만.
+     * 영상이 화면에 붙어 첫 화면이 그려졌을 때만 (일시정지 중이어도 작은 창으로 보낸다: 창에는 재생 버튼이 뜬다).
      */
     fun pipSize(): Pair<Int, Int>? =
-        if (attached && firstFrame && width > 0 && height > 0 && isPlaying()) width to height else null
+        if (attached && firstFrame && width > 0 && height > 0) width to height else null
 
     /** PiP에 안 들어가는 까닭을 로그로 남기려고: 진입 조건 각각의 지금 값. */
     fun pipDebug(): String =
