@@ -803,6 +803,17 @@ object PlaybackHub {
         override fun onPlayerError(error: PlaybackException) {
             PlaybackStore.logStop(context, "error: ${error.errorCodeName} ${error.message}")
             MuloLog.e(MuloLog.PLAYBACK, "player error ${error.errorCodeName}: ${error.message} item=${exo.currentMediaItem?.mediaId}", error)
+            // 임시 저장한 영상 곡의 영상 쪽을 못 열었으면 소리만으로 다시 시도한다 (영상은 덤이다).
+            val failed = exo.currentMediaItem
+            if (failed?.mediaMetadata?.extras?.getString(MergingSourceFactory.VIDEO_URI).isNullOrEmpty().not()) {
+                val plain = failed!!.buildUpon()
+                    .setMediaMetadata(failed.mediaMetadata.buildUpon().setExtras(null).build())
+                    .build()
+                MuloLog.d(MuloLog.PLAYBACK, "video source failed, retry audio only id=${failed.mediaId}")
+                exo.replaceMediaItem(exo.currentMediaItemIndex, plain)
+                exo.prepare()
+                return
+            }
             val load = pendingLoad
             if (load != null) {
                 load.error("load_failed", error.message, null)
