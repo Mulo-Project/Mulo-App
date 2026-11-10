@@ -7,7 +7,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import 'native_video.dart';
 
-/// 영상을 전체 화면(가로, 시스템 막대 숨김)으로 연다. 뒤로 가기 · 닫기 버튼으로 돌아온다.
+/// 영상을 전체 화면(시스템 막대 숨김)으로 연다. 기기를 돌리면 가로 · 세로로 따라 돈다. 뒤로 가기 · 닫기 버튼으로 돌아온다.
 /// 영상은 같은 텍스처를 그대로 쓰므로 소리 · 위치가 끊기지 않는다.
 /// [controls]로 영상 위에 얹을 컨트롤을 넘긴다 (없으면 닫기 버튼만).
 Future<void> showFullscreenVideo(
@@ -16,6 +16,7 @@ Future<void> showFullscreenVideo(
 }) async {
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   await SystemChrome.setPreferredOrientations(const [
+    DeviceOrientation.portraitUp,
     DeviceOrientation.landscapeLeft,
     DeviceOrientation.landscapeRight,
   ]);
