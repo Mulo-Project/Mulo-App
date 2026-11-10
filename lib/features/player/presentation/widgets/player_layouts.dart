@@ -3,7 +3,9 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../../core/design/design.dart';
+import '../../../search/presentation/widgets/preview_video_controls.dart';
 import 'fullscreen_video.dart';
+import 'native_video.dart';
 import 'player_common.dart';
 
 /// 플레이어 모양 3가지 (카드 · 상자 없이 배경 위에 바로 놓는다).
@@ -133,28 +135,40 @@ class FullBleedPlayer extends StatelessWidget {
                   PlayerCover(
                     art: art,
                     radius: 0,
-                    video: data.track.isVideo
-                        ? const NativeVideoWithFullscreen()
-                        : null,
+                    video: data.track.isVideo ? const NativeVideo() : null,
                   ),
-                  // 위: 상단 버튼이 읽히게 살짝 어둡게, 아래: 배경으로 부드럽게.
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          p.scrim.withValues(alpha: .35),
-                          p.scrim.withValues(alpha: 0),
-                          p.background.withValues(alpha: 0),
-                          p.background.withValues(alpha: .45),
-                          p.background.withValues(alpha: .85),
-                          p.background,
-                        ],
-                        stops: const [0, .22, .45, .7, .88, 1],
+                  // 위: 상단 버튼이 읽히게 살짝 어둡게, 아래: 배경으로 부드럽게. 누름은 아래로 통과시킨다.
+                  IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            p.scrim.withValues(alpha: .35),
+                            p.scrim.withValues(alpha: 0),
+                            p.background.withValues(alpha: 0),
+                            p.background.withValues(alpha: .45),
+                            p.background.withValues(alpha: .85),
+                            p.background,
+                          ],
+                          stops: const [0, .22, .45, .7, .88, 1],
+                        ),
                       ),
                     ),
                   ),
+                  // 전체 화면 버튼은 그라데이션 위에 둔다 (아래로 흐려지는 막에 가려지지 않게 조금 위로).
+                  if (data.track.isVideo)
+                    Positioned(
+                      right: AppSpacing.md,
+                      bottom: c.maxHeight * .66 * .2,
+                      child: FullscreenVideoButton(
+                        controls: (_) => const PreviewVideoControls(
+                          fullscreen: true,
+                          main: true,
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
