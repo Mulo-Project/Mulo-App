@@ -38,31 +38,33 @@ import 'presentation/bloc/video_quality_cubit.dart';
 void registerSearch(GetIt sl) {
   final native = NativeYoutubeResolver();
   sl
-    ..registerLazySingleton<DownloaderEngine>(
-      () => CachedDownloaderEngine(
+    ..registerLazySingleton<DownloaderEngine>(() {
+      final routing = RoutingDownloaderEngine(
+        local: Platform.isAndroid
+            ? LocalEngine(run: sl<AndroidYtDlp>().run)
+            : Platform.isWindows || Platform.isLinux || Platform.isMacOS
+            ? LocalEngine(resolveExecutable: sl<YtDlpManager>().executablePath)
+            : null,
+        server: AppConfig.hasApiBaseUrl
+            ? ServerEngine(baseUrl: AppConfig.apiBaseUrl)
+            : null,
+      );
+      return CachedDownloaderEngine(
         infoTtl: const Duration(hours: 6),
         SoundcloudAvatarEngine(
-          YoutubeExplodeEngine(
-            // Android는 네이티브가 주소를 읽고(앱이 백그라운드여도 끊기지 않는다), 그 밖의 OS는 Dart 라이브러리가 읽는다.
-            reader: Platform.isAndroid ? native.audio : null,
-            videoReader: Platform.isAndroid ? native.video : null,
-            languageReader: Platform.isAndroid ? native.languages : null,
-            RoutingDownloaderEngine(
-              local: Platform.isAndroid
-                  ? LocalEngine(run: sl<AndroidYtDlp>().run)
-                  : Platform.isWindows || Platform.isLinux || Platform.isMacOS
-                  ? LocalEngine(
-                      resolveExecutable: sl<YtDlpManager>().executablePath,
-                    )
-                  : null,
-              server: AppConfig.hasApiBaseUrl
-                  ? ServerEngine(baseUrl: AppConfig.apiBaseUrl)
-                  : null,
-            ),
-          ),
+          // Android는 네이티브가 재생 주소를 먼저 읽는다 (앱이 백그라운드여도 끊기지 않는다, D-160).
+          // 그 밖의 OS는 안쪽 엔진(yt-dlp · 서버)이 읽는다.
+          Platform.isAndroid
+              ? YoutubeResolveEngine(
+                  routing,
+                  reader: native.audio,
+                  videoReader: native.video,
+                  languageReader: native.languages,
+                )
+              : routing,
         ),
-      ),
-    )
+      );
+    })
     ..registerLazySingleton<LinkOpener>(UrlLauncherLinkOpener.new)
     ..registerFactory(() => SearchTracks(sl()))
     ..registerFactory(() => FetchMediaInfo(sl()))

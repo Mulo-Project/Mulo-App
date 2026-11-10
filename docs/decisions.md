@@ -1000,5 +1000,5 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 - 전: Dart(`youtube_explode_dart`)가 주소를 읽고 → 네이티브 플레이어 · 받기가 받고 → Dart가 화면을 그렸다. 앱이 백그라운드로 가면 Dart가 멈춰 읽기도 멈추고, 읽는 곳과 쓰는 곳이 갈라져 구조가 어색했다.
 - 후: Android는 `YoutubeResolver`(Kotlin)가 InnerTube `player` API를 직접 불러 읽는다 (채널 `music_app/youtube_resolve`: `audio` · `video` · `languages`). 클라이언트 순서·설정은 D-062 그대로(visionOS → android_vr → android, 영상은 visionOS만), 파일 가운데 1KB를 요청해 열리는 주소만 쓴다. 형식 고르기(선호 컨테이너 → 비트레이트, 소리 든 형식 vs 더 큰 영상 전용 mp4, 언어 트랙)는 `YoutubeFormats`(순수 함수, 단위 테스트).
 - 외부 구성요소를 더하지 않았다: `HttpURLConnection` · `org.json`(안드로이드 기본)만 쓴다. NewPipeExtractor는 GPLv3라 쓰지 않았다. 감소: Android에서는 시청 페이지를 읽지 않아 한 번 덜 요청한다.
-- 읽는 순서: **네이티브 → yt-dlp 기본 → yt-dlp android_vr**. `YoutubeExplodeEngine`은 같은 자리에서 읽기 함수만 네이티브 것으로 바꿨고(`NativeYoutubeResolver`), 화면 · cubit은 그대로다. 그 밖의 OS는 아직 Dart 라이브러리가 읽는다(재생목록 검색도 Dart 그대로).
+- 읽는 순서: **네이티브 → yt-dlp 기본 → yt-dlp android_vr**. `YoutubeExplodeEngine`은 `YoutubeResolveEngine`(`youtube_resolve_engine.dart`)으로 이름을 바꾸고 읽기 함수를 필수로 받는다(`NativeYoutubeResolver`). 화면 · cubit은 그대로다. **Dart의 주소 읽기 코드(클라이언트 · 형식 고르기 · 구간 확인)는 모두 지웠다.** Android 밖의 OS는 안쪽 엔진(yt-dlp · 서버)이 읽는다 (Android 우선, iOS · Windows는 나중에). 재생목록 검색의 youtube_explode_dart 대체 경로만 남았다(주소 읽기가 아님).
 - 못 하는 것: `signatureCipher`(JS 풀이 필요) 주소는 쓰지 않는다 (전과 같음). 라이브는 형식이 없어 yt-dlp로 넘어간다.

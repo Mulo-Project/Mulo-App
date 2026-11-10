@@ -8,7 +8,7 @@ import '../engine/audio_format_policy.dart';
 
 /// 유튜브 재생 주소를 Android 네이티브(`YoutubeResolveChannel`)가 읽는다 (D-062의 읽기를 Dart에서 옮겼다).
 /// Dart는 videoId를 보내 결과만 받으므로, 앱이 백그라운드에 있어도 읽기가 끊기지 않는다.
-/// 못 읽으면 null(쓸 형식 없음) 또는 [EngineException]이고, 호출한 쪽(`YoutubeExplodeEngine`)이 yt-dlp로 넘어간다.
+/// 못 읽으면 null(쓸 형식 없음) 또는 [EngineException]이고, 호출한 쪽(`YoutubeResolveEngine`)이 yt-dlp로 넘어간다.
 class NativeYoutubeResolver {
   NativeYoutubeResolver({MethodChannel? channel})
     : _channel = channel ?? const MethodChannel('music_app/youtube_resolve');
