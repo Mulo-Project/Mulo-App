@@ -128,7 +128,11 @@ class ResolveAudioStream implements UseCase<AudioStream, String> {
   final SavedVideoRepository? _saved;
 
   @override
-  Future<AudioStream> call(String url, {String? audioLanguage}) async {
+  Future<AudioStream> call(
+    String url, {
+    String? audioLanguage,
+    bool refresh = false,
+  }) async {
     final page = url.trim();
     if (audioLanguage == null) {
       final audio = (await _savedReady(_saved, page))?.audioSource;
@@ -137,7 +141,11 @@ class ResolveAudioStream implements UseCase<AudioStream, String> {
       }
     }
     try {
-      return await _engine.resolveAudioStream(page, audioLanguage: audioLanguage);
+      return await _engine.resolveAudioStream(
+        page,
+        audioLanguage: audioLanguage,
+        refresh: refresh,
+      );
     } on Object {
       // 링크를 못 풀었다 (오프라인 등): 받다 만 곡이라도 지금까지 받은 데이터만큼은 튼다.
       final audio = audioLanguage == null
@@ -203,7 +211,10 @@ class ResolveVideoStream implements UseCase<VideoStream, String> {
     }
     final q = quality ?? await _quality?.load() ?? VideoQuality.standard;
     try {
-      return await _engine.resolveVideoStream(url.trim(), maxHeight: q.maxHeight);
+      return await _engine.resolveVideoStream(
+        url.trim(),
+        maxHeight: q.maxHeight,
+      );
     } on Object {
       // 링크를 못 풀었다 (오프라인 등): 받다 만 영상이라도 받은 데이터만큼은 튼다.
       final partial = await _savedReady(

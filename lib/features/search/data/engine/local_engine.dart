@@ -211,19 +211,27 @@ class LocalEngine implements DownloaderEngine {
     bool refresh = false,
     String? audioLanguage,
   }) async {
-    return _readAudio(url, audioLanguage);
+    return _readAudio(url, audioLanguage, retry: refresh);
   }
 
-  Future<AudioStream> _readAudio(String url, String? audioLanguage) async {
+  Future<AudioStream> _readAudio(
+    String url,
+    String? audioLanguage, {
+    bool retry = false,
+  }) async {
     final clock = Stopwatch()..start();
     try {
-      return await _readAudioInner(url, audioLanguage);
+      return await _readAudioInner(url, audioLanguage, retry: retry);
     } finally {
       _timing('소리만 읽기 ${clock.elapsedMilliseconds}ms');
     }
   }
 
-  Future<AudioStream> _readAudioInner(String url, String? audioLanguage) async {
+  Future<AudioStream> _readAudioInner(
+    String url,
+    String? audioLanguage, {
+    bool retry = false,
+  }) async {
     // 오디오만 있는 형식 하나를 골라(macOS도 풀 수 있는 m4a 먼저) 주소만 읽는다.
     Future<AudioStream> read(List<String> extra) async {
       final out = await _exec([
@@ -258,8 +266,10 @@ class LocalEngine implements DownloaderEngine {
     // android_vr 클라이언트는 `n`을 풀 필요가 없는 주소를 줘서 먼저 시도하고, 안 되면 기본 클라이언트로 간다.
     const noJs = ['--extractor-args', 'youtube:player_client=android_vr'];
     final youtube = _isYoutubeUrl(url);
-    final firstTry = youtube ? noJs : const <String>[];
-    final secondTry = youtube ? const <String>[] : noJs;
+    // 다시 읽는 경우(앞서 받은 주소가 안 먹혔다)는 반대 순서로 읽는다.
+    final vrFirst = youtube && !retry;
+    final firstTry = vrFirst ? noJs : const <String>[];
+    final secondTry = vrFirst ? const <String>[] : noJs;
     try {
       return await read(firstTry);
     } on EngineException catch (first) {

@@ -122,8 +122,9 @@ Future<List<VideoStream>> _resolveTargets(
   ResolveVideoStream resolveVideo,
   ResolveAudioStream resolveAudio,
   MediaHit hit,
-  VideoQuality? quality,
-) async {
+  VideoQuality? quality, {
+  bool retry = false,
+}) async {
   final targets = <VideoStream>[];
   if (quality != null) {
     try {
@@ -134,7 +135,8 @@ Future<List<VideoStream>> _resolveTargets(
       targets.clear();
     }
   }
-  final a = await resolveAudio(hit.url);
+  // 다시 받는 경우(앞서 받다 실패한 곡)는 주소를 새로, 다른 방식으로 읽는다.
+  final a = await resolveAudio(hit.url, refresh: retry);
   targets.add(VideoStream(url: a.url, headers: a.headers));
   return targets;
 }
@@ -165,6 +167,7 @@ class ResumeSavedVideos implements UseCase<List<SavedVideo>, NoParams> {
           _resolveAudio,
           v.hit,
           v.quality,
+          retry: true,
         );
         final streamId = await _player.saveStream(v.hit.id, targets);
         list = [
