@@ -2838,6 +2838,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifSavedDoneTitle => 'Saved';
 
   @override
+  String get notifSavedDoneNote => 'Ready to play from Saved';
+
+  @override
   String get notifSavedDoneHidden => 'A track finished saving';
 
   @override

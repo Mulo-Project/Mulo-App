@@ -28,9 +28,13 @@ class MediaDetailCubit extends Cubit<MediaDetailState> {
     this._fetchChannel,
     this._openLink, {
     MediaHitMemo? memo,
+    this.stored = false,
   }) : _memo = memo,
        _known = memo?.get(hit.url),
        super(MediaDetailState(hit: memo?.get(hit.url) ?? hit));
+
+  /// 앱에 저장해 둔 곡 정보다: 조회수 · 올린 날이 없는 곡(SoundCloud 등)이어도 다시 읽지 않는다.
+  final bool stored;
 
   /// 자세히 읽은 곡 정보를 기억해 두는 곳 (없으면 매번 읽는다).
   final MediaHitMemo? _memo;
@@ -49,7 +53,7 @@ class MediaDetailCubit extends Cubit<MediaDetailState> {
     // 전에 읽은 것이 있으면 처음부터 채워 보여 주고, 다시 읽지 않는다.
     if (_known != null) return;
     // 저장한 곡처럼 상세 정보가 이미 들어 있으면 로딩 없이 그대로 보여 준다 (채널 이미지만 비었으면 조용히 채운다).
-    if (_hasStoredDetail(state.hit)) {
+    if (stored || _hasStoredDetail(state.hit)) {
       if (_needsChannel(state.hit)) await _loadChannel();
       return;
     }

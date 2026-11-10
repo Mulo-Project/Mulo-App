@@ -83,7 +83,7 @@ class NotificationSyncCubit extends Cubit<void> {
           title: l10n.notifSavedDoneTitle,
           body: settings.hideSongInfo
               ? l10n.notifSavedDoneHidden
-              : _titleLine(v.hit.title, v.hit.uploader),
+              : '${_titleLine(v.hit.title, v.hit.uploader)}\n${l10n.notifSavedDoneNote}',
           failed: false,
           artUri: settings.hideSongInfo ? null : v.hit.thumbnailUrl,
         ),

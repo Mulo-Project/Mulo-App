@@ -5153,8 +5153,14 @@ abstract class AppLocalizations {
   /// No description provided for @notifSavedDoneTitle.
   ///
   /// In ko, this message translates to:
-  /// **'저장 완료'**
+  /// **'보관 완료'**
   String get notifSavedDoneTitle;
+
+  /// No description provided for @notifSavedDoneNote.
+  ///
+  /// In ko, this message translates to:
+  /// **'보관함에서 바로 들을 수 있어요'**
+  String get notifSavedDoneNote;
 
   /// No description provided for @notifSavedDoneHidden.
   ///

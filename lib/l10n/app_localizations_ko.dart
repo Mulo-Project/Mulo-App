@@ -2760,7 +2760,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get notifDownloadStopPreview => '중지';
 
   @override
-  String get notifSavedDoneTitle => '저장 완료';
+  String get notifSavedDoneTitle => '보관 완료';
+
+  @override
+  String get notifSavedDoneNote => '보관함에서 바로 들을 수 있어요';
 
   @override
   String get notifSavedDoneHidden => '음원 저장이 끝났어요';

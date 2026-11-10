@@ -89,15 +89,32 @@ class MediaDetailScreen extends StatelessWidget {
   final Widget Function(String videoId, VoidCallback onFailed)? playerBuilder;
 
   @override
-  Widget build(BuildContext context) => MultiBlocProvider(
+  Widget build(BuildContext context) {
+    // 저장한 곡이면 저장해 둔 상세 정보를 먼저 쓴다 (검색 목록에서 들어와도 다시 읽지 않는다).
+    MediaHit? savedHit;
+    try {
+      savedHit = context
+          .read<SavedVideosCubit>()
+          .state
+          .where((v) => v.id == hit.id)
+          .firstOrNull
+          ?.hit;
+    } on Object {
+      savedHit = null;
+    }
+    return _build(savedHit);
+  }
+
+  Widget _build(MediaHit? savedHit) => MultiBlocProvider(
     providers: [
       BlocProvider(
         create: (_) => MediaDetailCubit(
-          hit,
+          savedHit ?? hit,
           sl<FetchMediaInfo>(),
           sl<FetchChannelInfo>(),
           sl<OpenLink>(),
           memo: sl<MediaHitMemo>(),
+          stored: savedHit != null,
         )..load(),
       ),
       // 유튜브 곡만 오디오 언어가 여럿일 수 있다.
