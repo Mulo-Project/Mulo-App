@@ -82,7 +82,16 @@ class _SavedVideosScreenState extends State<SavedVideosScreen> {
                 ],
               ),
               const _StorageLine(),
-              if (videos.isNotEmpty) _QueueRow(videos: _ordered(videos)),
+              if (videos.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.only(
+                    top: AppSpacing.xs,
+                    bottom: AppSpacing.sm,
+                  ),
+                  child: _QueueRow(videos: _ordered(videos)),
+                ),
+                const AppDivider(),
+              ],
               Expanded(
                 child: videos.isEmpty
                     ? EmptyState(title: l10n.savedVideosEmpty)
@@ -111,9 +120,16 @@ class _SavedVideosScreenState extends State<SavedVideosScreen> {
                             ),
                           ])
                             if (section.$2.isNotEmpty) ...[
+                              // 구역 사이는 구분선과 넉넉한 틈으로 나눈다 (첫 구역은 위 구분선이 대신한다).
+                              if (section.$1 == l10n.savedVideosSectionVideo &&
+                                  videos.any((v) => v.quality == null)) ...[
+                                const SizedBox(height: AppSpacing.md),
+                                const AppDivider(),
+                              ],
                               Padding(
                                 padding: const EdgeInsets.only(
-                                  top: AppSpacing.sm,
+                                  top: AppSpacing.md,
+                                  bottom: AppSpacing.xxs,
                                 ),
                                 child: SectionTitle(section.$1),
                               ),
@@ -326,7 +342,7 @@ class _StorageLine extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
-        vertical: AppSpacing.xs,
+        vertical: AppSpacing.sm,
       ),
       child: Align(
         alignment: Alignment.centerLeft,
