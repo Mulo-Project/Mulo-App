@@ -5,6 +5,7 @@ import '../../../../core/usecase/usecase.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../../downloads/domain/entities/download_item.dart';
 import '../../../library/domain/entities/track.dart';
+import '../../../search/domain/entities/saved_video.dart';
 import '../../domain/entities/media_session_info.dart';
 import '../../domain/entities/notification_settings.dart';
 import '../../domain/repositories/download_notifier.dart';
@@ -57,6 +58,37 @@ class NotificationSyncCubit extends Cubit<void> {
     if (mapEquals(next, _queueArt)) return;
     _queueArt = next;
     await _actions.updateQueueArt(next);
+  }
+
+  // ── 저장한 음원 ──
+
+  var _savedReady = const <String, bool>{};
+
+  /// 저장한 음원 목록이 바뀔 때마다. 받는 중이던 곡이 다 받아지면 곡마다 한 번 완료를 알린다.
+  Future<void> syncSaved(
+    List<SavedVideo> videos,
+    NotificationSettings settings,
+    AppLocalizations l10n,
+  ) async {
+    final before = _savedReady;
+    _savedReady = {for (final v in videos) v.id: v.ready};
+    // 처음 읽을 때(앱을 켤 때)는 알리지 않는다: 받던 중이었다가 끝난 곡만.
+    if (!settings.downloadResult) return;
+    for (final v in videos) {
+      if (before[v.id] != false || !v.ready) continue;
+      await _ensurePermission();
+      await _actions.showResult(
+        DownloadResultNotice(
+          id: 'saved:${v.id}',
+          title: l10n.notifSavedDoneTitle,
+          body: settings.hideSongInfo
+              ? l10n.notifSavedDoneHidden
+              : _titleLine(v.hit.title, v.hit.uploader),
+          failed: false,
+          artUri: settings.hideSongInfo ? null : v.hit.thumbnailUrl,
+        ),
+      );
+    }
   }
 
   // ── 받기 ──

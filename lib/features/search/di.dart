@@ -93,17 +93,24 @@ void registerSearch(GetIt sl) {
     ..registerFactory(() => ClearStreamCache(sl()))
     ..registerFactory(() => SetStreamCacheLimit(sl()))
     ..registerFactory(() => StreamCacheCubit(sl(), sl(), sl()))
-    ..registerLazySingleton<SavedVideoRepository>(
-      PrefsSavedVideoRepository.new,
-    )
+    ..registerLazySingleton<SavedVideoRepository>(PrefsSavedVideoRepository.new)
     ..registerFactory(() => LoadSavedVideos(sl(), sl()))
     ..registerFactory(() => SaveVideo(sl(), sl(), sl(), sl()))
     ..registerFactory(() => RemoveSavedVideo(sl(), sl()))
     ..registerFactory(() => MarkSavedVideoReady(sl()))
     ..registerFactory(() => ResumeSavedVideos(sl(), sl(), sl(), sl()))
     ..registerFactory(() => WatchSavedDone(sl()))
+    ..registerFactory(() => WatchSavedProgress(sl()))
     ..registerFactory(
-      () => SavedVideosCubit(sl(), sl(), sl(), sl(), sl(), resume: sl()),
+      () => SavedVideosCubit(
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+        resume: sl(),
+        watchProgress: sl<WatchSavedProgress>(),
+      ),
     )
     ..registerFactory(
       () => PreviewCubit(

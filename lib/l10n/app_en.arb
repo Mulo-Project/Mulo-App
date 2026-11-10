@@ -978,6 +978,8 @@
   "notifDownloadPausePreview": "Pause",
   "notifDownloadResumePreview": "Resume",
   "notifDownloadStopPreview": "Stop",
+  "notifSavedDoneTitle": "Saved",
+  "notifSavedDoneHidden": "A track finished saving",
   "notifDownloadDoneTitle": "Download complete",
   "notifDownloadDoneHidden": "A song was added to your library",
   "notifDownloadFailedTitle": "Download failed",

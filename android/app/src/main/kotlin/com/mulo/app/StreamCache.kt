@@ -153,21 +153,44 @@ object StreamCache {
     /** 받는 중인 보관 한 건. 지우면 [cancelled]를 세우고 지금 받는 것도 멈춘다. */
     private class Fill {
         @Volatile var cancelled = false
-        @Volatile var writer: CacheWriter? = null
+        val writers: MutableSet<CacheWriter> = java.util.concurrent.ConcurrentHashMap.newKeySet()
         @Volatile var hls: HlsDownloader? = null
     }
 
+    /** 한 번에 받는 조각 수와 조각 크기. 한 줄로 받으면 유튜브가 속도를 깎아서, 나눠 동시에 받는다. */
+    private const val PARALLEL = 4
+    private const val CHUNK_BYTES = 4L * 1024 * 1024
+
+    /** 서버가 알려 주는 전체 크기. 모르면 -1. */
+    private fun contentLength(url: String, headers: Map<String, String>): Long {
+        val src = androidx.media3.datasource.DefaultHttpDataSource.Factory()
+            .setAllowCrossProtocolRedirects(true)
+            .setDefaultRequestProperties(headers)
+            .createDataSource()
+        return try {
+            val n = src.open(DataSpec(Uri.parse(url)))
+            if (n == androidx.media3.common.C.LENGTH_UNSET.toLong()) -1L else n
+        } catch (_: Exception) {
+            -1L
+        } finally {
+            try { src.close() } catch (_: Exception) {}
+        }
+    }
+
     /**
-     * [targets](주소 · 헤더, 영상 전용 + 소리 전용처럼 여럿일 수 있다)를 차례로 통째로 보관 저장소에 받아 둔다.
-     * 끝나면 [done]에 성공 여부. 이미 있는 부분은 건너뛴다. 같은 영상 id를 이미 받는 중이면 아무 일도 없다.
+     * [targets](주소 · 헤더, 영상 전용 + 소리 전용처럼 여럿일 수 있다)를 통째로 보관 저장소에 받아 둔다.
+     * 주소들은 동시에, 한 주소는 조각으로 나눠 동시에 받는다. 미리 듣기로 이미 임시 저장소에 쌓인 부분은 다시 받지 않고 거기서 옮긴다.
+     * 끝나면 [done]에 성공 여부, 받는 동안 [progress]에 0~100. 이미 있는 부분은 건너뛴다. 같은 영상 id를 이미 받는 중이면 아무 일도 없다.
      */
     fun fillSaved(
         context: Context,
         id: String,
         targets: List<Pair<String, Map<String, String>>>,
+        progress: (Int) -> Unit = {},
         done: (Boolean) -> Unit,
     ) {
         val c = openSaved(context) ?: return done(false)
+        val temp = open(context)
         val fill = Fill()
         synchronized(this) {
             if (fills.containsKey(id)) return
@@ -176,34 +199,87 @@ object StreamCache {
         Thread({
             var ok = true
             val startedAt = System.currentTimeMillis()
+            val pool = java.util.concurrent.Executors.newFixedThreadPool(PARALLEL)
             try {
+                // 한 요청: 위치 · 길이 조각 하나. 진행은 조각마다 받은 바이트를 모아 센다.
+                class Job(val factory: DataSource.Factory, val spec: DataSpec, val total: Long)
+                val jobs = ArrayList<Job>()
+                var total = 0L
+                var unknown = false
                 for ((url, headers) in targets) {
-                    if (fill.cancelled) {
-                        ok = false
-                        break
-                    }
+                    if (Uri.parse(url).path?.contains(".m3u8") == true) continue
                     val http = androidx.media3.datasource.DefaultHttpDataSource.Factory()
                         .setAllowCrossProtocolRedirects(true)
                         .setDefaultRequestProperties(headers)
-                    if (Uri.parse(url).path?.contains(".m3u8") == true) {
-                        // HLS(사운드클라우드 등)는 목록 파일 하나라서 CacheWriter로는 조각이 안 받아진다: 조각까지 모두 받는다.
-                        val before = c.keys.toSet()
-                        val downloader = HlsDownloader(MediaItem.fromUri(url), cacheFactory(c, http))
-                        fill.hls = downloader
-                        downloader.download(null)
-                        rememberKeys(context, id, c.keys - before)
+                    // 임시 저장소는 읽기만 한다 (미리 듣던 부분 재사용, 새로 받는 것을 거기에 또 쓰지 않는다).
+                    val upstream: DataSource.Factory = if (temp == null) http else CacheDataSource.Factory()
+                        .setCache(temp)
+                        .setUpstreamDataSourceFactory(http)
+                        .setCacheKeyFactory { spec -> keyOf(spec.uri) }
+                        .setCacheWriteDataSinkFactory(null)
+                        .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
+                    val factory = cacheFactory(c, upstream)
+                    val uri = Uri.parse(url)
+                    val len = contentLength(url, headers)
+                    if (len <= CHUNK_BYTES) {
+                        if (len < 0) unknown = true else total += len
+                        jobs.add(Job(factory, DataSpec(uri), len))
                     } else {
-                        val writer = CacheWriter(cacheFactory(c, http).createDataSource(), DataSpec(Uri.parse(url)), null, null)
-                        fill.writer = writer
-                        writer.cache()
+                        total += len
+                        var pos = 0L
+                        while (pos < len) {
+                            val n = minOf(CHUNK_BYTES, len - pos)
+                            jobs.add(Job(factory, DataSpec(uri, pos, n), n))
+                            pos += n
+                        }
                     }
+                }
+                val got = java.util.concurrent.atomic.AtomicLong(0)
+                var lastPercent = -1
+                val results = jobs.map { job ->
+                    pool.submit<Boolean> {
+                        if (fill.cancelled) return@submit false
+                        var seen = 0L
+                        val writer = CacheWriter(job.factory.createDataSource() as CacheDataSource, job.spec, null) { _, bytesCached, _ ->
+                            val add = bytesCached - seen
+                            seen = bytesCached
+                            val sum = got.addAndGet(add)
+                            if (!unknown && total > 0) {
+                                val pct = (sum * 100 / total).toInt().coerceIn(0, 99)
+                                synchronized(fill) {
+                                    if (pct != lastPercent) { lastPercent = pct; progress(pct) }
+                                }
+                            }
+                        }
+                        fill.writers.add(writer)
+                        try { writer.cache(); true } finally { fill.writers.remove(writer) }
+                    }
+                }
+                for (r in results) {
+                    try { if (!r.get()) ok = false } catch (e: Exception) { throw e.cause ?: e }
+                }
+                if (fill.cancelled) ok = false
+                // HLS(사운드클라우드 등)는 목록 파일 하나라서 CacheWriter로는 조각이 안 받아진다: 조각까지 모두 받는다.
+                for ((url, headers) in targets) {
+                    if (!ok) break
+                    if (Uri.parse(url).path?.contains(".m3u8") != true) continue
+                    val http = androidx.media3.datasource.DefaultHttpDataSource.Factory()
+                        .setAllowCrossProtocolRedirects(true)
+                        .setDefaultRequestProperties(headers)
+                    val before = c.keys.toSet()
+                    val downloader = HlsDownloader(MediaItem.fromUri(url), cacheFactory(c, http))
+                    fill.hls = downloader
+                    downloader.download(null)
+                    rememberKeys(context, id, c.keys - before)
                 }
             } catch (e: Exception) {
                 MuloLog.e(MuloLog.NATIVE, "영상 보관 받기 실패", e)
                 ok = false
             } finally {
+                pool.shutdownNow()
                 synchronized(this) { fills.remove(id) }
             }
+            if (ok) progress(100)
             MuloLog.d(MuloLog.NATIVE, "보관 받기 끝: ok=$ok ${System.currentTimeMillis() - startedAt}ms (주소 ${targets.size}개)")
             done(ok)
         }, "mulo-save-stream").start()
@@ -222,7 +298,7 @@ object StreamCache {
     fun removeSaved(context: Context, id: String, streamId: String?) {
         fills.remove(id)?.let {
             it.cancelled = true
-            it.writer?.cancel()
+            it.writers.forEach { w -> w.cancel() }
             it.hls?.cancel()
         }
         // HLS로 받은 조각 키도 함께 지운다.

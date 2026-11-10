@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show ValueNotifier;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/usecase/usecase.dart';
@@ -17,8 +18,12 @@ class SavedVideosCubit extends Cubit<List<SavedVideo>> {
     this._markReady,
     WatchSavedDone watchDone, {
     this.resume,
+    WatchSavedProgress? watchProgress,
   }) : super(const []) {
     _done = watchDone(const NoParams()).listen(_onDone);
+    _progressSub = watchProgress?.call(const NoParams()).listen((e) {
+      progress.value = {...progress.value, e.id: e.percent};
+    });
     unawaited(load().then((_) => _resumeUnfinished()));
   }
 
@@ -28,6 +33,10 @@ class SavedVideosCubit extends Cubit<List<SavedVideo>> {
   final MarkSavedVideoReady _markReady;
   final ResumeSavedVideos? resume;
   late final StreamSubscription<({String id, bool ok})> _done;
+  StreamSubscription<({String id, int percent})>? _progressSub;
+
+  /// 받는 중인 곡의 진행률 0~100 (영상 id → %). 끝나면 지운다.
+  final progress = ValueNotifier<Map<String, int>>(const {});
 
   /// 보관을 시작했지만 주소를 읽는 중인 영상 id (버튼을 잠시 막는다).
   final _busy = <String>{};
@@ -94,6 +103,9 @@ class SavedVideosCubit extends Cubit<List<SavedVideo>> {
 
   Future<void> _onDone(({String id, bool ok}) e) async {
     if (isClosed) return;
+    if (progress.value.containsKey(e.id)) {
+      progress.value = {...progress.value}..remove(e.id);
+    }
     if (!e.ok) {
       // 끊겼다: 잠시 뒤 다시 이어 받는다 (30초부터 늘려 가며 최대 5분 간격). 네트워크가 돌아오면 그때 이어진다.
       _retry?.cancel();
@@ -112,6 +124,8 @@ class SavedVideosCubit extends Cubit<List<SavedVideo>> {
   Future<void> close() async {
     _retry?.cancel();
     await _done.cancel();
+    await _progressSub?.cancel();
+    progress.dispose();
     return super.close();
   }
 }

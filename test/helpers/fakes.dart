@@ -1756,6 +1756,10 @@ class FakePreviewPlayer implements PreviewPlayer {
   Stream<({String id, bool ok})> watchSaved() => savedController.stream;
 
   @override
+  Stream<({String id, int percent})> watchSavedProgress() =>
+      const Stream.empty();
+
+  @override
   Future<StreamCacheInfo> cacheInfo() async =>
       StreamCacheInfo(usedBytes: cacheUsed, limitBytes: cacheLimit);
 
