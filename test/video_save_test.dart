@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:music_app/features/downloads/data/repositories/yt_dlp_video_save_repository.dart';
-import 'package:music_app/features/downloads/domain/repositories/video_save_repository.dart';
-import 'package:music_app/features/downloads/domain/usecases/download_usecases.dart';
+import 'package:music_download_play_app/features/downloads/data/repositories/yt_dlp_video_save_repository.dart';
+import 'package:music_download_play_app/features/downloads/domain/repositories/video_save_repository.dart';
+import 'package:music_download_play_app/features/downloads/domain/usecases/download_usecases.dart';
 
 class _Repo implements VideoSaveRepository {
   _Repo({this.fail = false});
