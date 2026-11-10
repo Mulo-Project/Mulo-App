@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/design/design.dart';
 import 'fullscreen_video.dart';
-import 'native_video.dart';
 import 'player_common.dart';
 
 /// 플레이어 모양 3가지 (카드 · 상자 없이 배경 위에 바로 놓는다).
