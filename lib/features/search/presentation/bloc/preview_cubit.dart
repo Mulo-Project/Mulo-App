@@ -15,6 +15,17 @@ import '../../domain/usecases/search_usecases.dart';
 
 enum PreviewStatus { idle, loading, playing }
 
+/// 미리 듣기 재생 목록의 곡 하나 ([quality]는 보관할 때 고른 영상 화질).
+class PreviewQueueItem extends Equatable {
+  const PreviewQueueItem(this.hit, {this.quality});
+
+  final MediaHit hit;
+  final VideoQuality? quality;
+
+  @override
+  List<Object?> get props => [hit, quality];
+}
+
 class PreviewState extends Equatable {
   const PreviewState({
     this.hitId,
@@ -148,8 +159,112 @@ class PreviewCubit extends Cubit<PreviewState> {
     );
   }
 
+  /// 재생 목록: 보관한 영상을 차례로 듣는다. 목록이 없으면 비어 있고, 한 곡만 듣는 보통 미리 듣기다.
+  /// 메인 재생(대기열)과는 별개로, 이 플레이어 안에서만 이어 튼다.
+  List<PreviewQueueItem> _queue = const [];
+  List<int> _order = const [];
+  int _pos = 0;
+
+  /// 재생 목록이 있다 (미니 플레이어의 이전 · 다음 버튼을 보인다).
+  final queueActive = ValueNotifier<bool>(false);
+
+  /// 섞어 듣기 (목록을 켠 채로도 바꿀 수 있다).
+  final shuffle = ValueNotifier<bool>(false);
+
+  /// 목록 반복: 켜면 마지막 곡 뒤에 처음으로 돌아간다.
+  final loop = ValueNotifier<bool>(false);
+
+  /// [items]를 차례로 튼다. [shuffled]면 섞어서 [start]번 곡이 맨 앞에 온다.
+  Future<EngineFailure?> playQueue(
+    List<PreviewQueueItem> items, {
+    int start = 0,
+    bool shuffled = false,
+  }) async {
+    if (items.isEmpty) return null;
+    _queue = List.of(items);
+    shuffle.value = shuffled;
+    _rebuildOrder(first: start.clamp(0, items.length - 1));
+    queueActive.value = true;
+    return _playAt(0);
+  }
+
+  /// 순서를 만든다: 섞으면 [first]번 곡을 맨 앞에 두고 나머지를 섞는다.
+  void _rebuildOrder({required int first}) {
+    final rest = [
+      for (var i = 0; i < _queue.length; i++)
+        if (i != first) i,
+    ];
+    if (shuffle.value) rest.shuffle();
+    _order = shuffle.value
+        ? [first, ...rest]
+        : List.generate(_queue.length, (i) => i);
+    _pos = shuffle.value ? 0 : first;
+  }
+
+  /// 섞기를 켜고 끈다. 듣는 곡은 그대로 두고 앞으로의 순서만 바꾼다.
+  void toggleShuffle() {
+    shuffle.value = !shuffle.value;
+    if (_queue.isEmpty) return;
+    _rebuildOrder(first: _order[_pos]);
+  }
+
+  Future<EngineFailure?> _playAt(int pos) async {
+    // 못 트는 곡(삭제 · 라이브 등)은 건너뛰고 다음 곡으로 간다. 한 바퀴 돌면 그만둔다.
+    EngineFailure? failure;
+    for (var tried = 0; tried < _order.length; tried++) {
+      _pos = (pos + tried) % _order.length;
+      final item = _queue[_order[_pos]];
+      if (item.hit.isLive) continue;
+      failure = await toggle(
+        item.hit,
+        videoQuality: item.quality,
+        keepQueue: true,
+        forceStart: true,
+      );
+      if (failure == null) return null;
+      if (isClosed || _queue.isEmpty) return failure;
+    }
+    clearQueue();
+    return failure;
+  }
+
+  /// 다음 곡. 끝이면 목록 반복일 때만 처음으로 돌아가고, 아니면 멈춘다.
+  Future<void> next() async {
+    if (_queue.isEmpty) return;
+    if (_pos + 1 >= _order.length) {
+      if (!loop.value) return stop();
+      if (shuffle.value) _order = List.of(_order)..shuffle(); // 한 바퀴마다 다시 섞는다.
+      await _playAt(0);
+      return;
+    }
+    await _playAt(_pos + 1);
+  }
+
+  /// 이전 곡. 3초 넘게 들었거나 첫 곡이면 지금 곡을 처음부터 다시 튼다.
+  Future<void> previous() async {
+    if (_queue.isEmpty) return;
+    final played = state.progress?.position ?? Duration.zero;
+    if (_pos == 0 || played > const Duration(seconds: 3)) {
+      await _seek(Duration.zero);
+      return;
+    }
+    await _playAt(_pos - 1);
+  }
+
+  void clearQueue() {
+    _queue = const [];
+    _order = const [];
+    _pos = 0;
+    shuffle.value = false;
+    queueActive.value = false;
+  }
+
   void _onCompleted() {
     if (isClosed) return;
+    if (!repeat.value && _queue.isNotEmpty && state.status == PreviewStatus.playing) {
+      unawaited(next());
+      return;
+    }
     if (repeat.value && state.status == PreviewStatus.playing) {
       unawaited(
         _seek(Duration.zero).then((_) => _resume(const NoParams()), onError: (Object _) {}),
@@ -214,8 +329,11 @@ class PreviewCubit extends Cubit<PreviewState> {
     MediaHit hit, {
     String? audioLanguage,
     VideoQuality? videoQuality,
+    bool keepQueue = false,
+    bool forceStart = false,
   }) async {
-    if (state.isActive(hit.id)) {
+    if (!keepQueue) clearQueue();
+    if (state.isActive(hit.id) && !forceStart) {
       await stop();
       return null;
     }
@@ -438,6 +556,7 @@ class PreviewCubit extends Cubit<PreviewState> {
 
   /// 미리 듣기를 멈춘다 (듣고 있지 않으면 아무 일도 없다).
   Future<void> stop() async {
+    clearQueue();
     _generation++;
     if (state.status == PreviewStatus.idle) return;
     if (!isClosed) emit(const PreviewState());
@@ -450,6 +569,9 @@ class PreviewCubit extends Cubit<PreviewState> {
     await _progress.cancel();
     await _failures.cancel();
     repeat.dispose();
+    queueActive.dispose();
+    shuffle.dispose();
+    loop.dispose();
     autoQuality.dispose();
     qualityOverride.dispose();
     await _stop(const NoParams());

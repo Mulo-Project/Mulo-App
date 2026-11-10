@@ -290,6 +290,50 @@ void main() {
   });
 
   group('PreviewCubit', () {
+    test('재생 목록: 곡이 끝나면 다음 곡을 이어 틀고, 끝에서 멈춘다', () async {
+      final player = FakePreviewPlayer();
+      final cubit = _cubit(FakeDownloaderEngine(info: VideoInfo(_a)), player);
+      await cubit.playQueue(const [PreviewQueueItem(_a), PreviewQueueItem(_b)]);
+      expect(cubit.state.hitId, 'a');
+      expect(cubit.queueActive.value, isTrue);
+
+      player.complete();
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+      expect(cubit.state.hitId, 'b');
+
+      player.complete();
+      await Future<void>.delayed(Duration.zero);
+      await Future<void>.delayed(Duration.zero);
+      expect(cubit.state.status, PreviewStatus.idle);
+      expect(cubit.queueActive.value, isFalse);
+      await cubit.close();
+    });
+
+    test('재생 목록: 반복을 켜면 끝에서 처음으로 돌아가고, 이전은 앞 곡으로 간다', () async {
+      final player = FakePreviewPlayer();
+      final cubit = _cubit(FakeDownloaderEngine(info: VideoInfo(_a)), player);
+      cubit.loop.value = true;
+      await cubit.playQueue(const [PreviewQueueItem(_a), PreviewQueueItem(_b)]);
+      await cubit.next();
+      expect(cubit.state.hitId, 'b');
+      await cubit.next(); // 끝 → 처음
+      expect(cubit.state.hitId, 'a');
+      await cubit.next();
+      await cubit.previous();
+      expect(cubit.state.hitId, 'a');
+      await cubit.close();
+    });
+
+    test('재생 목록: 한 곡을 따로 고르면 목록은 끝난다', () async {
+      final player = FakePreviewPlayer();
+      final cubit = _cubit(FakeDownloaderEngine(info: VideoInfo(_a)), player);
+      await cubit.playQueue(const [PreviewQueueItem(_a), PreviewQueueItem(_b)]);
+      await cubit.toggle(_b);
+      expect(cubit.queueActive.value, isFalse);
+      await cubit.close();
+    });
+
     test('듣기를 시작하면 플레이어에 곡을 적어 둔다', () async {
       final player = FakePreviewPlayer();
       final cubit = _cubit(FakeDownloaderEngine(info: VideoInfo(_a)), player);

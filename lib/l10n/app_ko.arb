@@ -286,6 +286,7 @@
   "@savedVideosUsed": {"placeholders": {"size": {"type": "String"}}},
   "savedVideosQualityTitle": "저장 화질",
   "savedVideosQualityHint": "고른 화질로 받아 둬요",
+  "savedVideosLoop": "반복",
   "savedVideosPlay": "듣기",
   "videoFullscreen": "전체 화면",
   "videoFullscreenExit": "축소",

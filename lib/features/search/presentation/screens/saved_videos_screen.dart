@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' show Random;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,6 +8,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/format/format_bytes.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/saved_video.dart';
 import '../../domain/entities/video_quality.dart';
 import '../bloc/preview_cubit.dart';
@@ -73,6 +75,7 @@ class _SavedVideosScreenState extends State<SavedVideosScreen> {
                 ],
               ),
               const _StorageLine(),
+              if (videos.isNotEmpty) _QueueRow(videos: _ordered(videos)),
               Expanded(
                 child: videos.isEmpty
                     ? EmptyState(title: l10n.savedVideosEmpty)
@@ -113,6 +116,75 @@ class _SavedVideosScreenState extends State<SavedVideosScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 화면에 보이는 순서(음원 먼저, 그 아래 영상)대로 늘어놓은 목록. 재생 목록도 이 순서를 따른다.
+List<SavedVideo> _ordered(List<SavedVideo> videos) => [
+  for (final v in videos) if (v.quality == null) v,
+  for (final v in videos) if (v.quality != null) v,
+];
+
+/// 전체 재생 · 셔플 · 반복. 누르면 목록 전체를 차례로 듣는다.
+class _QueueRow extends StatelessWidget {
+  const _QueueRow({required this.videos});
+
+  final List<SavedVideo> videos;
+
+  List<PreviewQueueItem> get _items => [
+    for (final v in videos) PreviewQueueItem(v.hit, quality: v.quality),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final preview = context.read<PreviewCubit>();
+    final nowPlaying = context.read<NowPlayingCubit>();
+    Future<void> start({required bool shuffled}) async {
+      // 두 소리가 겹치지 않게 메인 재생은 멈춘다.
+      if (nowPlaying.state.isPlaying) nowPlaying.togglePlay();
+      final start = shuffled && videos.isNotEmpty
+          ? Random().nextInt(videos.length)
+          : 0;
+      await preview.playQueue(_items, start: start, shuffled: shuffled);
+    }
+
+    return Padding(
+      padding: AppSpacing.screen,
+      child: ValueListenableBuilder<bool>(
+        valueListenable: preview.loop,
+        builder: (context, loop, _) => Wrap(
+          spacing: AppSpacing.xs,
+          runSpacing: AppSpacing.xs,
+          children: [
+            PillButton(
+              key: const ValueKey('saved-play-all'),
+              label: l10n.actionPlay,
+              icon: AppIcons.play,
+              compact: true,
+              onPressed: () => start(shuffled: false),
+            ),
+            PillButton(
+              key: const ValueKey('saved-shuffle'),
+              label: l10n.actionShuffle,
+              icon: AppIcons.shuffle,
+              variant: PillVariant.tonal,
+              compact: true,
+              onPressed: () => start(shuffled: true),
+            ),
+            PillButton(
+              key: const ValueKey('saved-loop'),
+              label: l10n.savedVideosLoop,
+              icon: AppIcons.repeat,
+              variant: PillVariant.tonal,
+              selected: loop,
+              compact: true,
+              onPressed: () => preview.loop.value = !loop,
+            ),
+          ],
         ),
       ),
     );

@@ -255,6 +255,7 @@
   "@savedVideosUsed": {"placeholders": {"size": {"type": "String"}}},
   "savedVideosQualityTitle": "Save quality",
   "savedVideosQualityHint": "Saved at this quality",
+  "savedVideosLoop": "Repeat",
   "savedVideosPlay": "Play",
   "videoFullscreen": "Fullscreen",
   "videoFullscreenExit": "Exit fullscreen",

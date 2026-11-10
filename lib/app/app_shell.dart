@@ -488,8 +488,23 @@ class _PreviewMiniPlayer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
     final cubit = context.read<PreviewCubit>();
+    return ValueListenableBuilder<bool>(
+      valueListenable: cubit.queueActive,
+      builder: (context, hasQueue, _) => _previewBar(
+        context,
+        cubit: cubit,
+        hasQueue: hasQueue,
+      ),
+    );
+  }
+
+  Widget _previewBar(
+    BuildContext context, {
+    required PreviewCubit cubit,
+    required bool hasQueue,
+  }) {
+    final l10n = context.l10n;
     final hit = preview.hit;
     final loading = preview.status == PreviewStatus.loading;
     final duration = preview.progress?.duration;
@@ -517,7 +532,9 @@ class _PreviewMiniPlayer extends StatelessWidget {
       positionText: formatDuration(preview.progress?.position ?? Duration.zero),
       durationText: duration == null ? '--:--' : formatDuration(duration),
       queueLabel: l10n.searchPreviewStop,
-      showSkip: false,
+      showSkip: hasQueue,
+      onPrevious: cubit.previous,
+      onNext: cubit.next,
       queueIcon: AppIcons.close,
       onTap: hit == null || hit.url.isEmpty
           ? null
