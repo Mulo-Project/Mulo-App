@@ -158,8 +158,13 @@ object StreamCache {
     }
 
     /** 한 번에 받는 조각 수와 조각 크기. 한 줄로 받으면 유튜브가 속도를 깎아서, 나눠 동시에 받는다. */
-    private const val PARALLEL = 4
-    private const val CHUNK_BYTES = 4L * 1024 * 1024
+    private const val PARALLEL = 8
+    private const val MIN_CHUNK_BYTES = 512L * 1024
+    private const val MAX_CHUNK_BYTES = 4L * 1024 * 1024
+
+    /** 파일 크기를 [PARALLEL]개쯤으로 나누되 조각은 512KB~4MB. 연결마다 속도가 깎여도 합쳐서 빨라지게 잘게 나눈다. */
+    private fun chunkSize(len: Long): Long =
+        ((len + PARALLEL - 1) / PARALLEL).coerceIn(MIN_CHUNK_BYTES, MAX_CHUNK_BYTES)
 
     /** 서버가 알려 주는 전체 크기. 모르면 -1. */
     private fun contentLength(url: String, headers: Map<String, String>): Long {
@@ -221,19 +226,21 @@ object StreamCache {
                     val factory = cacheFactory(c, upstream)
                     val uri = Uri.parse(url)
                     val len = contentLength(url, headers)
-                    if (len <= CHUNK_BYTES) {
+                    val chunk = chunkSize(len)
+                    if (len <= MIN_CHUNK_BYTES) {
                         if (len < 0) unknown = true else total += len
                         jobs.add(Job(factory, DataSpec(uri), len))
                     } else {
                         total += len
                         var pos = 0L
                         while (pos < len) {
-                            val n = minOf(CHUNK_BYTES, len - pos)
+                            val n = minOf(chunk, len - pos)
                             jobs.add(Job(factory, DataSpec(uri, pos, n), n))
                             pos += n
                         }
                     }
                 }
+                MuloLog.d(MuloLog.NATIVE, "보관 받기 시작: 전체 ${total}B 조각 ${jobs.size}개 (준비 ${System.currentTimeMillis() - startedAt}ms)")
                 val got = java.util.concurrent.atomic.AtomicLong(0)
                 var lastPercent = -1
                 val results = jobs.map { job ->
