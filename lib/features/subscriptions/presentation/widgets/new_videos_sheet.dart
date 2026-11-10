@@ -299,6 +299,8 @@ class _Row extends StatelessWidget {
               ),
             ),
           ),
+          // 상세 버튼과 선택 표시가 붙어 보이지 않게 틈을 둔다.
+          const SizedBox(width: AppSpacing.sm),
           Icon(
             selected ? AppIcons.checkCircle : AppIcons.radioOff,
             color: selected ? p.accent : p.onSurfaceMuted,
