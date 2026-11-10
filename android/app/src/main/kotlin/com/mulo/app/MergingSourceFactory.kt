@@ -30,7 +30,9 @@ internal class MergingSourceFactory(private val base: MediaSource.Factory) : Med
         val audio = base.createMediaSource(mediaItem)
         val video = mediaItem.mediaMetadata.extras?.getString(VIDEO_URI)
         if (video.isNullOrEmpty()) return audio
-        return MergingMediaSource(base.createMediaSource(MediaItem.fromUri(video)), audio)
+        // 합친 소스의 곡 정보(id · 제목 · 부가 정보)는 첫 소스의 MediaItem을 따른다. 소리 소스를 앞에 둬야
+        // 대기열의 id가 비지 않는다 (영상 소스를 앞에 두면 id가 ""가 되어 앱이 대기열 갱신을 무시한다).
+        return MergingMediaSource(audio, base.createMediaSource(MediaItem.fromUri(video)))
     }
 
     companion object {
