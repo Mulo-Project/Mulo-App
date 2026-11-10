@@ -158,13 +158,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchLive => 'Live';
 
   @override
-  String get searchLiveNoDownload => "Live streams can't be downloaded";
+  String get searchLiveNoDownload => 'Live streams can\'t be downloaded';
 
   @override
-  String get searchLiveNoPreview => "Live streams can't be previewed";
+  String get searchLiveNoPreview => 'Live streams can\'t be previewed';
 
   @override
-  String get searchPreviewUnplayable => "This video can't be played right now";
+  String get searchPreviewUnplayable => 'This video can\'t be played right now';
 
   @override
   String get searchResultsTitle => 'Results';
@@ -581,7 +581,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoQualityTitle => 'Video quality';
 
   @override
-  String get videoQualityHint => 'Used for the preview video. Higher is sharper but uses more data.';
+  String get videoQualityHint =>
+      'Used for the preview video. Higher is sharper but uses more data.';
 
   @override
   String get videoQualityLow => '144p';
@@ -605,7 +606,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsLyricsOverlay => 'Floating lyrics';
 
   @override
-  String get settingsLyricsOverlayDesc => 'Show lyrics over other apps. Stays on after you restart the app.';
+  String get settingsLyricsOverlayDesc =>
+      'Show lyrics over other apps. Stays on after you restart the app.';
 
   @override
   String get settingsMixWithOthersDesc =>
@@ -717,9 +719,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsStreamCacheClear => 'Clear now';
 
   @override
-  String get settingsStreamCacheCleared => 'Streaming cache cleared';
-
-  @override
   String get savedVideosTitle => 'Saved tracks';
 
   @override
@@ -744,21 +743,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get savedVideosRemove => 'Remove';
 
   @override
-  String get savedVideosClearAll => 'Delete all';
-
-  @override
-  String savedVideosStorage(String used, String free) {
-    return 'Saved $used · $free cache left';
-  }
-
-  @override
   String get savedVideosAudioOnly => 'Audio only';
+
+  @override
+  String get savedVideosClearAll => 'Delete all';
 
   @override
   String get savedVideosClearAllTitle => 'Delete all saved audio?';
 
   @override
   String get savedVideosClearAllBody => 'Everything you saved will be removed';
+
+  @override
+  String savedVideosStorage(String used, String free) {
+    return 'Saved $used · $free cache left';
+  }
 
   @override
   String savedVideosUsed(String size) {
@@ -772,9 +771,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get savedVideosQualityHint => 'Saved at this quality';
 
   @override
-  String get savedVideosLoop => 'Repeat';
-
-  @override
   String get savedQueueTitle => 'Saved audio queue';
 
   @override
@@ -784,6 +780,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String notifSavedQueueLabel(String n, String total) {
     return 'Saved audio $n/$total';
   }
+
+  @override
+  String get savedVideosLoop => 'Repeat';
 
   @override
   String get savedVideosPlay => 'Play';
@@ -813,10 +812,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get savedVideosSectionAudio => 'Audio';
 
   @override
-  String get videoOptions => 'Options';
+  String get videoPip => 'Picture-in-picture';
 
   @override
-  String get videoPip => 'Picture-in-picture';
+  String get videoOptions => 'Options';
 
   @override
   String get videoOptionsTitle => 'Video options';
@@ -834,6 +833,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String settingsStreamCacheLimitHint(String used) {
     return 'Oldest items are removed when full. Saved tracks are not counted. ($used used)';
   }
+
+  @override
+  String get settingsStreamCacheCleared => 'Streaming cache cleared';
 
   @override
   String get settingsPurgeHidden => 'Clear hidden song records';
@@ -865,14 +867,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get hiddenRecordsPurgeAll => 'Clear all';
-
-  @override
-  String hiddenRecordsPurgeOneTitle(String title) {
-    return 'Clear the record of \"$title\"?';
-  }
-
-  @override
   String hiddenRecordsPlays(int count) {
     return '$count plays';
   }
@@ -892,6 +886,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hiddenRecordsLyrics => 'lyrics copy';
+
+  @override
+  String get hiddenRecordsPurgeAll => 'Clear all';
+
+  @override
+  String hiddenRecordsPurgeOneTitle(String title) {
+    return 'Clear the record of \"$title\"?';
+  }
 
   @override
   String get settingsAbout => 'About';
@@ -1702,7 +1704,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get saveFolderTitle => 'Choose save location';
 
   @override
-  String get saveFolderFixedHint => 'Downloads always go to the checked folder. Uncheck all to use the last folder.';
+  String get saveFolderFixedHint =>
+      'Downloads always go to the checked folder. Uncheck all to use the last folder.';
 
   @override
   String get saveFolderEmpty => 'No loaded folders yet. Pick one yourself.';
@@ -1751,7 +1754,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistsEmpty => 'No playlists yet. Tap + above to make one.';
 
   @override
-  String get playlistsReorderHint => 'Press and hold a playlist, then drag to reorder.';
+  String get playlistsReorderHint =>
+      'Press and hold a playlist, then drag to reorder.';
 
   @override
   String get playlistNewTitle => 'New playlist';
@@ -1958,12 +1962,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackInfoSourceDownload => 'Downloaded';
 
   @override
-  String get trackInfoFolder => 'Folder';
-
-  @override
   String downloadTagFailed(String title) {
     return 'Could not save tags: $title';
   }
+
+  @override
+  String get trackInfoFolder => 'Folder';
 
   @override
   String get collectionMenuInfo => 'Info';
@@ -2075,7 +2079,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lyricsWebTitle => 'Search lyrics';
 
   @override
-  String get lyricsWebHint => 'Select lyrics and tap Add, then Import when done';
+  String get lyricsWebHint =>
+      'Select lyrics and tap Add, then Import when done';
 
   @override
   String get lyricsWebImport => 'Import';
@@ -2493,8 +2498,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistDetailEmptyFavorites => 'No liked songs yet';
 
   @override
-  String get playlistDetailEmptyBody =>
-      'Add songs with the button below.';
+  String get playlistDetailEmptyBody => 'Add songs with the button below.';
 
   @override
   String get playlistDetailEmptyFavoritesBody =>
@@ -2819,6 +2823,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifDownloadStopPreview => 'Stop';
+
+  @override
+  String get notifSavedDoneTitle => 'Saved';
+
+  @override
+  String get notifSavedDoneHidden => 'A track finished saving';
 
   @override
   String get notifDownloadDoneTitle => 'Download complete';

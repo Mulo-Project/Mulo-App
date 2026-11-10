@@ -67,4 +67,7 @@ abstract interface class PreviewPlayer {
 
   /// 보관하려고 받던 영상이 끝났을 때 (영상 id, 성공 여부).
   Stream<({String id, bool ok})> watchSaved();
+
+  /// 보관하려고 받는 영상의 진행률 (영상 id, 0~100).
+  Stream<({String id, int percent})> watchSavedProgress();
 }

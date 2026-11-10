@@ -36,7 +36,12 @@ class SaveVideoParams {
 /// 곡을 저장한다: 소리(유튜브는 고른 화질의 영상) 주소를 읽어 저장 저장소에 받기 시작하고 목록에 더한다.
 /// 이미 저장한 곡이면 아무 일도 없다. 주소를 못 읽으면 던진다.
 class SaveVideo implements UseCase<List<SavedVideo>, SaveVideoParams> {
-  const SaveVideo(this._repo, this._player, this._resolveVideo, this._resolveAudio);
+  const SaveVideo(
+    this._repo,
+    this._player,
+    this._resolveVideo,
+    this._resolveAudio,
+  );
 
   final SavedVideoRepository _repo;
   final PreviewPlayer _player;
@@ -68,12 +73,15 @@ class SaveVideo implements UseCase<List<SavedVideo>, SaveVideoParams> {
     List<VideoStream> targets,
   ) async {
     final streamId = await _player.saveStream(hit.id, targets);
-    final next = [...list, SavedVideo(
+    final next = [
+      ...list,
+      SavedVideo(
         hit: hit,
         streamId: streamId,
         quality: quality,
         sources: targets,
-      )];
+      ),
+    ];
     await _repo.save(next);
     await _player.setSavedStreams([
       for (final v in next)
@@ -190,11 +198,24 @@ class MarkSavedVideoReady implements UseCase<List<SavedVideo>, String> {
   @override
   Future<List<SavedVideo>> call(String id) async {
     final next = [
-      for (final v in await _repo.load()) v.id == id ? v.copyWith(ready: true) : v,
+      for (final v in await _repo.load())
+        v.id == id ? v.copyWith(ready: true) : v,
     ];
     await _repo.save(next);
     return next;
   }
+}
+
+/// 보관하려고 받는 영상의 진행률 (영상 id, 0~100).
+class WatchSavedProgress
+    implements StreamUseCase<({String id, int percent}), NoParams> {
+  const WatchSavedProgress(this._player);
+
+  final PreviewPlayer _player;
+
+  @override
+  Stream<({String id, int percent})> call(NoParams params) =>
+      _player.watchSavedProgress();
 }
 
 /// 보관하려고 받던 영상이 끝날 때마다 (영상 id, 성공 여부).

@@ -91,11 +91,17 @@ class _SavedVideosScreenState extends State<SavedVideosScreen> {
                           for (final section in [
                             (
                               l10n.savedVideosSectionAudio,
-                              [for (final v in videos) if (v.quality == null) v],
+                              [
+                                for (final v in videos)
+                                  if (v.quality == null) v,
+                              ],
                             ),
                             (
                               l10n.savedVideosSectionVideo,
-                              [for (final v in videos) if (v.quality != null) v],
+                              [
+                                for (final v in videos)
+                                  if (v.quality != null) v,
+                              ],
                             ),
                           ])
                             if (section.$2.isNotEmpty) ...[
@@ -125,8 +131,10 @@ class _SavedVideosScreenState extends State<SavedVideosScreen> {
 
 /// 화면에 보이는 순서(음원 먼저, 그 아래 영상)대로 늘어놓은 목록. 재생 목록도 이 순서를 따른다.
 List<SavedVideo> _ordered(List<SavedVideo> videos) => [
-  for (final v in videos) if (v.quality == null) v,
-  for (final v in videos) if (v.quality != null) v,
+  for (final v in videos)
+    if (v.quality == null) v,
+  for (final v in videos)
+    if (v.quality != null) v,
 ];
 
 /// 전체 재생 · 셔플 · 반복. 누르면 목록 전체를 차례로 듣는다.
@@ -229,11 +237,12 @@ class _StorageLine extends StatelessWidget {
           context.l10n.savedVideosStorage(
             formatBytes(info.savedBytes),
             // 남은 공간은 기기 전체가 아니라 정해 둔 임시 저장 공간(한도)에서 쓴 만큼을 뺀 값이다.
-            formatBytes((info.limitBytes - info.usedBytes).clamp(0, info.limitBytes)),
+            formatBytes(
+              (info.limitBytes - info.usedBytes).clamp(0, info.limitBytes),
+            ),
           ),
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: context.palette.onSurfaceMuted,
-          ),
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: context.palette.onSurfaceMuted),
         ),
       ),
     );
@@ -275,9 +284,13 @@ class _SavedTile extends StatelessWidget {
     final hit = video.hit;
     final isVideo = video.quality != null;
     // 채널은 한 줄, 화질 · 받는 중 같은 부가 정보는 그 아래 한 줄 (한 줄에 몰면 뒤가 잘린다).
-    final extra = [
+    final percents = context.read<SavedVideosCubit>().progress;
+    String extraOf(Map<String, int> pct) => [
       if (isVideo) videoQualityLabel(context, video.quality!),
-      if (!video.ready) l10n.savedVideosDownloading,
+      if (!video.ready)
+        pct[hit.id] == null
+            ? l10n.savedVideosDownloading
+            : '${l10n.savedVideosDownloading} ${pct[hit.id]}%',
     ].join(' · ');
 
     final info = InkWell(
@@ -312,13 +325,22 @@ class _SavedTile extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: text.bodySmall,
                     ),
-                  if (extra.isNotEmpty)
-                    Text(
-                      extra,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
-                    ),
+                  ValueListenableBuilder<Map<String, int>>(
+                    valueListenable: percents,
+                    builder: (_, pct, _) {
+                      final extra = extraOf(pct);
+                      return extra.isEmpty
+                          ? const SizedBox.shrink()
+                          : Text(
+                              extra,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: text.bodySmall?.copyWith(
+                                color: p.onSurfaceMuted,
+                              ),
+                            );
+                    },
+                  ),
                 ],
               ),
             ),
@@ -397,7 +419,9 @@ class _VideoArea extends StatelessWidget {
                 ),
                 if (playing) ...[
                   ValueListenableBuilder<VideoQuality?>(
-                    valueListenable: context.read<PreviewCubit>().qualityOverride,
+                    valueListenable: context
+                        .read<PreviewCubit>()
+                        .qualityOverride,
                     builder: (context, override, _) => PreviewVideo(
                       pageUrl: hit.url,
                       quality: override ?? video.quality,

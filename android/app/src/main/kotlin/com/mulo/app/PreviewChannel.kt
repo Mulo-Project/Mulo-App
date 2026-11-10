@@ -217,7 +217,12 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
                     ids.forEach { StreamCache.addSavedId(it) }
                     val streamId = if (ids.isEmpty()) null else ids.joinToString(",")
                     // 받는 일은 따로 돌고, 끝나면 Dart에 알린다.
-                    StreamCache.fillSaved(context, id, targets) { ok ->
+                    StreamCache.fillSaved(
+                        context,
+                        id,
+                        targets,
+                        progress = { pct -> main.post { channel.invokeMethod("savedProgress", mapOf("id" to id, "percent" to pct)) } },
+                    ) { ok ->
                         main.post { channel.invokeMethod("saved", mapOf("id" to id, "ok" to ok)) }
                     }
                     result.success(streamId)
