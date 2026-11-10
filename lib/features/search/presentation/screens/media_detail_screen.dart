@@ -512,7 +512,9 @@ class _SaveButton extends StatelessWidget {
         if (saved) return unawaited(context.push(savedVideosLocation));
         // 저장한 곡이 정해 둔 용량을 다 채웠으면 새로 저장하지 않는다 (이미 저장한 곡은 그대로 둔다).
         final cache = context.read<StreamCacheCubit>().state;
-        if (cache.enabled && cache.savedBytes >= cache.limitBytes) {
+        if (cache.enabled &&
+            cache.limitBytes > 0 &&
+            cache.savedBytes >= cache.limitBytes) {
           messenger.showSnackBar(SnackBar(content: Text(l10n.savedVideosFull)));
           return;
         }
