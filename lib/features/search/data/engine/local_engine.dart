@@ -253,30 +253,21 @@ class LocalEngine implements DownloaderEngine {
       );
     }
 
-    // 유튜브는 기본 클라이언트의 주소를 받을 때 JS 실행기가 필요하다 (주소의 `n` 값을 풀어야 한다).
-    // 휴대폰의 yt-dlp에는 JS 실행기가 없어서 풀지 못한 주소는 받는 속도가 약 50KB/s로 깎인다.
-    // android_vr 클라이언트는 `n`을 풀 필요가 없는 주소를 줘서 먼저 시도하고, 안 되면 기본 클라이언트로 간다.
-    const noJs = ['--extractor-args', 'youtube:player_client=android_vr'];
-    final youtube = _isYoutubeUrl(url);
-    final firstTry = youtube ? noJs : const <String>[];
-    final secondTry = youtube ? const <String>[] : noJs;
     try {
-      return await read(firstTry);
+      return await read(const []);
     } on EngineException catch (first) {
       if (first.failure != EngineFailure.failed) rethrow;
-      // 첫 클라이언트로 오디오 형식을 못 읽는 경우가 있다. 다른 클라이언트로 한 번 더 시도하고,
-      // 그래도 안 되면 첫 오류를 알린다.
+      // 기본 클라이언트로는 오디오 형식을 못 읽는 경우가 있다 (JS 실행기가 없는 환경 등).
+      // 그런 환경에서도 주소를 주는 클라이언트로 한 번 더 시도하고, 그래도 안 되면 첫 오류를 알린다.
       try {
-        return await read(secondTry);
+        return await read(const [
+          '--extractor-args',
+          'youtube:player_client=android_vr',
+        ]);
       } on EngineException {
         throw first;
       }
     }
-  }
-
-  static bool _isYoutubeUrl(String url) {
-    final host = Uri.tryParse(url)?.host ?? '';
-    return host.contains('youtube.com') || host == 'youtu.be';
   }
 
   /// 소리 없는 낮은 화질(360p 이하) 영상 하나의 주소만 읽는다. 미니 플레이어 · 플레이어에서 화면으로만 쓴다.
@@ -315,19 +306,15 @@ class LocalEngine implements DownloaderEngine {
 
   Future<VideoStream> _readVideoInner(String url, int height) async {
     Future<VideoStream> read(List<String> extra, {String? selector}) async {
-      final out = await _exec(
-        [
-          '-f',
-          selector ?? _videoSelector(height),
-          '--no-playlist',
-          '--dump-single-json',
-          '--no-warnings',
-          ...extra,
-          url,
-        ],
-        priority: 1,
-        latestOnly: 'video',
-      );
+      final out = await _exec([
+        '-f',
+        selector ?? _videoSelector(height),
+        '--no-playlist',
+        '--dump-single-json',
+        '--no-warnings',
+        ...extra,
+        url,
+      ], priority: 1, latestOnly: 'video');
       final j = _decode(out);
       final streamUrl = parseText(j?['url']);
       if (j == null || streamUrl == null) {
@@ -354,8 +341,7 @@ class LocalEngine implements DownloaderEngine {
     try {
       return await read(const []);
     } on EngineException catch (first) {
-      if (first.failure != EngineFailure.failed ||
-          first.message == 'superseded') {
+      if (first.failure != EngineFailure.failed || first.message == 'superseded') {
         rethrow;
       }
       try {
@@ -520,9 +506,7 @@ class LocalEngine implements DownloaderEngine {
     ].join(' ');
     try {
       r = await _run(await _resolve(), args);
-      _timing(
-        'yt-dlp ${clock.elapsedMilliseconds}ms 종료 ${r.exitCode} [$label]',
-      );
+      _timing('yt-dlp ${clock.elapsedMilliseconds}ms 종료 ${r.exitCode} [$label]');
     } on ProcessException {
       throw const EngineException(EngineFailure.unavailable, 'yt-dlp');
     } on TimeoutException {
@@ -644,7 +628,8 @@ class LocalEngine implements DownloaderEngine {
 /// yt-dlp 호출을 한 번에 하나씩, 우선순위(작을수록 먼저)와 들어온 순서대로 돌린다.
 class _ExecGate {
   bool _running = false;
-  final _waiting = <({int priority, Completer<void> waiter, String? group})>[];
+  final _waiting =
+      <({int priority, Completer<void> waiter, String? group})>[];
 
   /// [latestOnly]가 같은 대기 중인 일은 가장 나중에 온 것만 남긴다
   /// (예전 상세 화면을 위한 읽기가 줄을 서서 지금 필요한 읽기를 늦추지 않게).
