@@ -127,3 +127,23 @@ class FullscreenVideoButton extends StatelessWidget {
     );
   }
 }
+
+/// 영상 화면([NativeVideo]) + 오른쪽 아래 전체 화면 버튼. 메인 플레이어와 임시 저장 곡의 영상 자리가 함께 쓴다.
+class NativeVideoWithFullscreen extends StatelessWidget {
+  const NativeVideoWithFullscreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Stack(
+      fit: StackFit.expand,
+      children: [
+        NativeVideo(),
+        Positioned(
+          right: AppSpacing.xs,
+          bottom: AppSpacing.xs,
+          child: FullscreenVideoButton(),
+        ),
+      ],
+    );
+  }
+}
