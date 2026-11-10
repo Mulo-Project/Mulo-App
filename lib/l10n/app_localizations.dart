@@ -1457,7 +1457,7 @@ abstract class AppLocalizations {
   /// No description provided for @savedVideosStorage.
   ///
   /// In ko, this message translates to:
-  /// **'저장 {used} · 남은 공간 {free}'**
+  /// **'저장 {used} · 임시 공간 {free} 남음'**
   String savedVideosStorage(String used, String free);
 
   /// No description provided for @savedVideosAudioOnly.
@@ -1495,6 +1495,30 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'고른 화질로 받아 둬요'**
   String get savedVideosQualityHint;
+
+  /// No description provided for @savedVideosLoop.
+  ///
+  /// In ko, this message translates to:
+  /// **'반복'**
+  String get savedVideosLoop;
+
+  /// No description provided for @savedQueueTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장한 음원 대기열'**
+  String get savedQueueTitle;
+
+  /// No description provided for @savedQueueOpen.
+  ///
+  /// In ko, this message translates to:
+  /// **'대기열'**
+  String get savedQueueOpen;
+
+  /// No description provided for @notifSavedQueueLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장한 음원 {n}/{total}'**
+  String notifSavedQueueLabel(String n, String total);
 
   /// No description provided for @savedVideosPlay.
   ///

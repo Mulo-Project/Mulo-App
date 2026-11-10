@@ -732,7 +732,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String savedVideosStorage(String used, String free) {
-    return '저장 $used · 남은 공간 $free';
+    return '저장 $used · 임시 공간 $free 남음';
   }
 
   @override
@@ -754,6 +754,20 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get savedVideosQualityHint => '고른 화질로 받아 둬요';
+
+  @override
+  String get savedVideosLoop => '반복';
+
+  @override
+  String get savedQueueTitle => '저장한 음원 대기열';
+
+  @override
+  String get savedQueueOpen => '대기열';
+
+  @override
+  String notifSavedQueueLabel(String n, String total) {
+    return '저장한 음원 $n/$total';
+  }
 
   @override
   String get savedVideosPlay => '듣기';

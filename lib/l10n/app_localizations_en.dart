@@ -748,7 +748,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String savedVideosStorage(String used, String free) {
-    return 'Saved $used · $free free';
+    return 'Saved $used · $free cache left';
   }
 
   @override
@@ -770,6 +770,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get savedVideosQualityHint => 'Saved at this quality';
+
+  @override
+  String get savedVideosLoop => 'Repeat';
+
+  @override
+  String get savedQueueTitle => 'Saved audio queue';
+
+  @override
+  String get savedQueueOpen => 'Queue';
+
+  @override
+  String notifSavedQueueLabel(String n, String total) {
+    return 'Saved audio $n/$total';
+  }
 
   @override
   String get savedVideosPlay => 'Play';

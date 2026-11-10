@@ -3,7 +3,6 @@ import 'dart:math' show Random;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
@@ -21,7 +20,6 @@ import '../widgets/preview_video_controls.dart';
 import '../widgets/video_quality_sheet.dart';
 import 'media_detail_screen.dart';
 import 'saved_queue_detail_screen.dart' show showSavedQueueDetail;
-import 'saved_queue_screen.dart' show savedQueueLocation;
 
 /// 저장한 영상 화면 경로 (검색 탭 안).
 const savedVideosLocation = '/search/saved';

@@ -6,6 +6,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../player/presentation/screens/queue_screen.dart'
     show QueueHeader;
+import '../../../player/domain/entities/player_repeat_mode.dart';
 import '../bloc/preview_cubit.dart';
 
 /// 저장한 음원 대기열 경로 (저장한 음원 화면 안).
