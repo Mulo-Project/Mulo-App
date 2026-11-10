@@ -25,6 +25,7 @@ import '../widgets/video_quality_sheet.dart';
 import '../widgets/audio_language_sheet.dart';
 import 'saved_videos_screen.dart' show savedVideosLocation;
 import '../widgets/preview_control.dart';
+import '../widgets/saved_queue_controls.dart';
 import '../widgets/preview_video.dart';
 import '../widgets/preview_video_controls.dart';
 import '../widgets/video_category.dart';
@@ -37,10 +38,7 @@ String mediaDetailRouteName(String hitId) => 'media-detail:$hitId';
 /// 영상 보기와 채널 보기는 기기의 유튜브 앱(없으면 브라우저)으로 연다.
 /// 탭 틀 위로 덮어 열린다 ([showMediaDetail]).
 Future<void> showMediaDetail(BuildContext context, MediaHit hit) {
-  return Navigator.of(
-    context,
-    rootNavigator: true,
-  ).push<void>(
+  return Navigator.of(context, rootNavigator: true).push<void>(
     MaterialPageRoute(
       settings: RouteSettings(name: mediaDetailRouteName(hit.id)),
       builder: (_) => MediaDetailScreen(hit: hit),
@@ -352,6 +350,21 @@ class _DetailViewState extends State<_DetailView> {
                   ],
                 ),
               ),
+              // 저장한 음원 목록으로 지금 듣는 곡의 상세면 재생 조작부를 아래에 고정한다.
+              ListenableBuilder(
+                listenable: Listenable.merge([
+                  _preview.queueItems,
+                  _preview.queuePos,
+                ]),
+                builder: (context, _) {
+                  final items = _preview.queueItems.value;
+                  final pos = _preview.queuePos.value;
+                  final current = pos < items.length ? items[pos].hit.id : null;
+                  return current == hit.id
+                      ? const SavedQueueControls()
+                      : const SizedBox.shrink();
+                },
+              ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.md,
@@ -378,30 +391,30 @@ class _DetailViewState extends State<_DetailView> {
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
                       child: PillButton(
-                      key: const ValueKey('detail-download'),
-                      label: l10n.actionDownload,
-                      icon: AppIcons.download,
-                      // 실시간 스트리밍은 끝이 없어 받을 수 없다 (버튼을 비활성으로).
-                      onPressed: hit.isLive
-                          ? null
-                          : () => showDownloadDialog(
-                        context,
-                        title: hit.title,
-                        artist: hit.uploader,
-                        album: hit.album,
-                        duration: hit.duration,
-                        thumbnailUrl: hit.thumbnailUrl,
-                        url: hit.url,
-                        subtitleLangs: hit.subtitleLangs.isEmpty
+                        key: const ValueKey('detail-download'),
+                        label: l10n.actionDownload,
+                        icon: AppIcons.download,
+                        // 실시간 스트리밍은 끝이 없어 받을 수 없다 (버튼을 비활성으로).
+                        onPressed: hit.isLive
                             ? null
-                            : hit.subtitleLangs,
-                        autoSubtitleLangs: hit.autoSubtitleLangs,
-                        audioLanguage: context
-                            .read<AudioLanguageCubit>()
-                            .state
-                            .selected,
+                            : () => showDownloadDialog(
+                                context,
+                                title: hit.title,
+                                artist: hit.uploader,
+                                album: hit.album,
+                                duration: hit.duration,
+                                thumbnailUrl: hit.thumbnailUrl,
+                                url: hit.url,
+                                subtitleLangs: hit.subtitleLangs.isEmpty
+                                    ? null
+                                    : hit.subtitleLangs,
+                                autoSubtitleLangs: hit.autoSubtitleLangs,
+                                audioLanguage: context
+                                    .read<AudioLanguageCubit>()
+                                    .state
+                                    .selected,
+                              ),
                       ),
-                    ),
                     ),
                   ],
                 ),
@@ -557,7 +570,8 @@ class _PreviewVideoBox extends StatelessWidget {
           valueListenable: context.read<PreviewCubit>().qualityOverride,
           builder: (context, override, _) => PreviewVideo(
             pageUrl: hit.url,
-            quality: override ?? context.read<SavedVideosCubit>().qualityOf(hit.id),
+            quality:
+                override ?? context.read<SavedVideosCubit>().qualityOf(hit.id),
           ),
         ),
         const PreviewVideoControls(),
