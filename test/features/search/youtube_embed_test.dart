@@ -151,7 +151,7 @@ void main() {
       expect(find.byTooltip('Play in app'), findsNothing);
       // 음원이라 영상 문구가 아니라 "듣기" 문구가 나온다.
       expect(find.byTooltip('Watch on YouTube'), findsNothing);
-      await tester.tap(find.byTooltip('Listen on the original site').first);
+      await tester.tap(find.byKey(const ValueKey('detail-watch')));
       await tester.pumpAndSettle();
       expect(find.text('soundcloud.com'), findsOneWidget);
       expect(find.text('Open channel'), findsNothing);
