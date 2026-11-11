@@ -48,6 +48,8 @@ void main() {
       'url': 'ytsearch5:노래',
       'options': ['--flat-playlist', '--dump-json'],
       'id': seen!.arguments['id'],
+      'background': false,
+      'progress': false,
     });
     expect(r.stdout, 'out');
   });
