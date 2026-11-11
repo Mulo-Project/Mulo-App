@@ -282,7 +282,7 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
         agentFor(url)?.let { http.setUserAgent(it) }
         val created = ExoPlayer.Builder(context)
             .setMediaSourceFactory(DefaultMediaSourceFactory(context).setDataSourceFactory(StreamCache.wrap(context, http)))
-            .setLoadControl(DefaultLoadControl())
+            .setLoadControl(streamLoadControl())
             .setAudioAttributes(
                 AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).build(),
                 true,
@@ -349,6 +349,7 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
         agentFor(url)?.let { http.setUserAgent(it) }
         val v = ExoPlayer.Builder(context)
             .setMediaSourceFactory(DefaultMediaSourceFactory(context).setDataSourceFactory(StreamCache.wrap(context, http)))
+            .setLoadControl(streamLoadControl())
             // 소리는 다른 플레이어가 낸다: 오디오 포커스도 가져가지 않는다.
             .setAudioAttributes(AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).build(), false)
             .build()
@@ -545,6 +546,19 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
         started = false
         meta = null
     }
+
+    /**
+     * 스트리밍 버퍼 설정. 기본값은 이동한 뒤 2.5초(끊긴 뒤 5초) 쌓여야 틀어서 느린 연결에서 오래 멈춘다.
+     * 이동 · 끊김 뒤에는 조금만 쌓이면 바로 틀고(0.5초 · 1.5초), 재생 중에는 최대 90초까지 미리 받아 둔다.
+     */
+    private fun streamLoadControl() = DefaultLoadControl.Builder()
+        .setBufferDurationsMs(
+            /* minBufferMs = */ 30_000,
+            /* maxBufferMs = */ 90_000,
+            /* bufferForPlaybackMs = */ 500,
+            /* bufferForPlaybackAfterRebufferMs = */ 1_500,
+        )
+        .build()
 
     /** 주소를 만든 클라이언트(`c=`)와 같은 user-agent. 모르는 클라이언트면 null (기본값). */
     private fun agentFor(url: String): String? = when (Uri.parse(url).getQueryParameter("c")) {
