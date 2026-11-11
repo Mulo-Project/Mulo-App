@@ -360,6 +360,9 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
             : defaultVideoFolder();
         final video = _video;
         if (video == null) throw const DownloadFailed('영상 저장을 쓸 수 없어요');
+        // 가사(고친 글 또는 영상 자막)는 음원처럼 파일 태그와 앱에 같은 글로 저장한다.
+        final lyrics = await _lyricsFor(request);
+        if (token.isCancelled) throw const DownloadAborted();
         var shown = 0.0;
         final String uri;
         try {
@@ -370,6 +373,7 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
               artist: request.artist,
               album: request.album,
               genre: request.genre,
+              lyrics: lyrics,
               cover: request.cover,
               thumbnailUrl: request.thumbnailUrl,
               color: request.color,
@@ -400,7 +404,7 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
           id,
           request,
           SavedAudio(uri: uri, folder: ''),
-          null,
+          lyrics,
           remember: false,
         );
         _set(

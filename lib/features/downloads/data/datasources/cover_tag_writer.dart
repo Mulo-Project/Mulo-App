@@ -160,6 +160,7 @@ class CoverTagWriter {
     String? artist,
     String? album,
     String? genre,
+    String? lyrics,
     int? color,
   }) async {
     final f = ffmpeg;
@@ -182,6 +183,7 @@ class CoverTagWriter {
         artist: artist,
         album: album,
         genre: genre,
+        lyrics: lyrics,
         coverPng: png,
         extra: coverExtra(cover, thumbnailUrl, color),
       );

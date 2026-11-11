@@ -9,6 +9,7 @@ class VideoSaveRequest {
     this.artist = '',
     this.album = '',
     this.genre = '',
+    this.lyrics,
     this.cover,
     this.thumbnailUrl,
     this.color,
@@ -22,6 +23,9 @@ class VideoSaveRequest {
   final String artist;
   final String album;
   final String genre;
+
+  /// 파일 태그에 넣을 가사 글(.lrc 또는 일반 글). 없으면 null.
+  final String? lyrics;
 
   /// 파일 태그에 넣을 커버(mp4만). 없으면 [thumbnailUrl]을 쓴다.
   final CoverArt? cover;

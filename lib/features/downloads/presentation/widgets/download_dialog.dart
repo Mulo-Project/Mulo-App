@@ -320,7 +320,6 @@ class _DownloadScreenState extends State<DownloadScreen> {
         // 설정의 기본 형식과 같으면 비워 두어, 나중에 기본 형식을 바꿔도 따라가게 한다.
         format: _format == defaultFormat ? null : _format,
         importLyrics:
-            !_asVideo &&
             _isYoutube &&
             lyrics != null &&
             ((lyrics.importLyrics && subtitleStatus != SubtitleStatus.none) ||
@@ -329,7 +328,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
         lyricsSkipSounds: lyrics?.skipSounds ?? true,
         lyricsText: lyrics?.lyricsText,
         audioLanguage: audioLanguage,
-        // 영상으로 저장하면 음원 전용 설정(가사 · 오디오 형식 · 오디오 언어)은 쓰지 않는다.
+        // 영상으로 저장하면 음원 전용 설정(오디오 형식 · 오디오 언어)은 쓰지 않는다.
         videoFormat: _videoAvailable && _asVideo ? _videoFormat : null,
         videoHeight: _videoHeight,
       ),
@@ -533,7 +532,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
                       onTap: _pickPlaylists,
                     ),
                   ]),
-                  if (_isYoutube && !_asVideo)
+                  if (_isYoutube)
                     _section(context, l10n.downloadSectionLyrics, [
                       DownloadLyricsSection(
                         key: _lyricsKey,

@@ -92,6 +92,7 @@ class YtDlpVideoSaveRepository implements VideoSaveRepository {
         artist: request.artist,
         album: request.album,
         genre: request.genre,
+        lyrics: request.lyrics,
         color: request.color,
       );
       final saved = await store.save(

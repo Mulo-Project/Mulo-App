@@ -112,6 +112,7 @@ class FfmpegTagWriter {
     String? artist,
     String? album,
     String? genre,
+    String? lyrics,
     Uint8List? coverPng,
     Map<String, String> extra = const {},
   }) async {
@@ -121,6 +122,7 @@ class FfmpegTagWriter {
       if (_has(artist)) 'artist': artist!,
       if (_has(album)) 'album': album!,
       if (_has(genre)) 'genre': genre!,
+      if (_has(lyrics)) 'lyrics': lyrics!,
       ...extra,
     };
     lastError = null;
