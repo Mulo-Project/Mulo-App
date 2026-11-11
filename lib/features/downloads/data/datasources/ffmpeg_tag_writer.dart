@@ -46,11 +46,11 @@ class FfmpegTagWriter {
   }) async {
     final mp3 = extension.toLowerCase() == 'mp3';
     final entries = <String, String>{
-      if (title != null) 'TITLE': title,
-      if (artist != null) 'ARTIST': artist,
-      if (album != null) 'ALBUM': album,
-      if (genre != null) 'GENRE': genre,
-      if (lyrics != null) 'LYRICS': lyrics,
+      'TITLE': ?title,
+      'ARTIST': ?artist,
+      'ALBUM': ?album,
+      'GENRE': ?genre,
+      'LYRICS': ?lyrics,
       // 앱이 읽어 커버 편집 상태를 되살리는 사용자 정의 태그 (COVER_SOURCE 등). 다른 플레이어는 무시한다.
       ...extra,
       // mp3의 커버는 태그 값이 아니라 그림 파일로 따로 넘긴다.
@@ -118,11 +118,11 @@ class FfmpegTagWriter {
   }) async {
     final mp4 = extension.toLowerCase() == 'mp4';
     final entries = <String, String>{
-      if (title != null) 'title': title,
-      if (artist != null) 'artist': artist,
-      if (album != null) 'album': album,
-      if (genre != null) 'genre': genre,
-      if (lyrics != null) 'lyrics': lyrics,
+      'title': ?title,
+      'artist': ?artist,
+      'album': ?album,
+      'genre': ?genre,
+      'lyrics': ?lyrics,
       ...extra,
     };
     lastError = null;
