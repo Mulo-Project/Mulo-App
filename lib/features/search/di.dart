@@ -10,7 +10,7 @@ import 'data/datasources/native_youtube_resolver.dart';
 import 'data/datasources/url_launcher_link_opener.dart';
 import 'data/engine/cached_engine.dart';
 import 'data/repositories/prefs_video_quality_repository.dart';
-import 'data/engine/explode_engine.dart';
+import 'data/engine/youtube_resolve_engine.dart';
 import 'data/engine/local_engine.dart';
 import 'data/engine/routing_engine.dart';
 import 'data/engine/soundcloud_avatar_engine.dart';

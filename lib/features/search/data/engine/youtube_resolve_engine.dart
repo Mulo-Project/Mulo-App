@@ -35,17 +35,15 @@ typedef AudioLanguageReader = Future<List<AudioLanguage>> Function(
 class YoutubeResolveEngine implements DownloaderEngine {
   YoutubeResolveEngine(
     this._inner, {
-    required AudioStreamReader reader,
-    required AudioLanguageReader languageReader,
-    required MuxedVideoReader videoReader,
-  }) : _reader = reader,
-       _videoReader = videoReader,
-       _languageReader = languageReader;
+    required this.reader,
+    required this.languageReader,
+    required this.videoReader,
+  });
 
   final DownloaderEngine _inner;
-  final AudioStreamReader _reader;
-  final AudioLanguageReader _languageReader;
-  final MuxedVideoReader _videoReader;
+  final AudioStreamReader reader;
+  final AudioLanguageReader languageReader;
+  final MuxedVideoReader videoReader;
 
   @override
   Future<SearchPage> search(
@@ -109,7 +107,7 @@ class YoutubeResolveEngine implements DownloaderEngine {
     if (id != null) {
       final clock = Stopwatch()..start();
       try {
-        final v = await _videoReader(
+        final v = await videoReader(
           id,
           maxHeight,
         ).timeout(const Duration(seconds: 15));
@@ -136,7 +134,7 @@ class YoutubeResolveEngine implements DownloaderEngine {
     if (id != null) {
       final clock = Stopwatch()..start();
       try {
-        final stream = await _reader(id, language: audioLanguage);
+        final stream = await reader(id, language: audioLanguage);
         _log(
           '소리 읽기 ${stream == null ? '없음' : '읽음'} ${clock.elapsedMilliseconds}ms',
         );
@@ -169,7 +167,7 @@ class YoutubeResolveEngine implements DownloaderEngine {
     final id = VideoId.parseVideoId(url);
     if (id != null) {
       try {
-        final found = await _languageReader(id);
+        final found = await languageReader(id);
         if (found.length > 1) return found;
       } on Object {
         // 못 읽으면 안쪽 엔진으로 넘어간다.
