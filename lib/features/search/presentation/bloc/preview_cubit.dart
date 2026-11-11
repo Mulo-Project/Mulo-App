@@ -461,6 +461,18 @@ class PreviewCubit extends Cubit<PreviewState> {
     await _seek(target);
   }
 
+  /// 재생 위치를 [position] 자리로 옮긴다 (오디오 언어를 바꿔 다시 틀 때 듣던 자리부터 이어 듣는다).
+  /// 못 옮기면 처음부터 듣는다.
+  Future<void> seekToPosition(Duration position) async {
+    if (isClosed || state.status != PreviewStatus.playing) return;
+    if (position <= Duration.zero) return;
+    try {
+      await _seek(position);
+    } on Object {
+      // 위치를 못 옮기면 처음부터 듣는다.
+    }
+  }
+
   /// 지금 자리에서 [delta]만큼 앞(+) · 뒤(-)로 옮긴다 (처음 ~ 끝 사이로 맞춘다). 길이를 모르면 아무 일도 없다.
   Future<void> seekBy(Duration delta) async {
     final p = state.progress;

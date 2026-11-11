@@ -165,12 +165,14 @@ class _DetailViewState extends State<_DetailView> {
     _preview = context.read<PreviewCubit>();
   }
 
-  /// 듣는 중에 오디오 언어를 바꾸면 고른 언어로 처음부터 다시 듣는다.
+  /// 듣는 중에 오디오 언어를 바꾸면 고른 언어로, 듣던 자리부터 이어서 다시 튼다.
   Future<void> _restartPreview(MediaHit hit, String language) async {
     if (!_preview.state.isActive(hit.id)) return;
+    final position = _preview.state.progress?.position ?? Duration.zero;
     await _preview.stop();
     if (!mounted) return;
-    await togglePreview(context, hit, audioLanguage: language);
+    final ok = await togglePreview(context, hit, audioLanguage: language);
+    if (ok) await _preview.seekToPosition(position);
   }
 
   /// 앱 안에서 영상을 틀고 있는지 / 틀어 보려다 막혀서 유튜브로만 열 수 있는지.
