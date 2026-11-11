@@ -48,7 +48,10 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
                         result.error("bad_args", "input, meta, output, format required", null)
                         return@setMethodCallHandler
                     }
-                    runAsync(io, result, "tag_failed") { tag(input, meta, output, format, call.argument<String>("cover")) }
+                    runAsync(io, result, "tag_failed") {
+                        if (format == "mp3") tagMp3(input, meta, output, call.argument<String>("cover"))
+                        else tagOgg(input, meta, output)
+                    }
                 }
                 "tagVideo" -> {
                     val input = call.argument<String>("input")
@@ -59,7 +62,10 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
                         result.error("bad_args", "input, meta, output, format required", null)
                         return@setMethodCallHandler
                     }
-                    runAsync(io, result, "tag_failed") { tagVideo(input, meta, output, format, call.argument<String>("cover")) }
+                    runAsync(io, result, "tag_failed") {
+                        if (format == "mp4") tagMp4(input, meta, output, call.argument<String>("cover"))
+                        else tagWebm(input, meta, output)
+                    }
                 }
                 else -> result.notImplemented()
             }
@@ -95,97 +101,81 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
         }
     }
 
+    // 태그 쓰기: 형식마다 자기 함수가 자기 ffmpeg 인자를 만든다 (한 형식의 변경이 다른 형식에 새지 않게).
+    // 공통인 것은 ffmpeg를 돌리는 부분([runFfmpeg])과 태그 값을 `-metadata`로 바꾸는 부분([metadataArgs])뿐이다.
+    // 모두 소리 · 영상은 그대로(`-c copy`) 두고, 파일에 있던 태그는 두고 넘어온 칸만 덮어쓴다 (빈 값은 그 칸을 지운다).
+
     /**
-     * 소리는 그대로(`-c copy`) 두고 ffmetadata 파일의 태그만 새로 써서 [output]에 만든다.
-     * 전체 태그와 첫 오디오 스트림 태그 둘 다에 넣어, ogg 쓰기가 어느 쪽을 읽어도 같다.
+     * mp3: 그림이 있으면 첨부 그림(attached_pic)으로 붙이고, 없으면 파일에 있던 커버 그림을 그대로 둔다.
+     * 그림 종류를 "앞면 커버"로 적어 다른 플레이어도 커버로 읽게 하고, ID3는 v2.3으로 써서 다른 플레이어에서도 열리게 한다.
      */
-    private fun tag(input: String, meta: String, output: String, format: String, cover: String?): Boolean {
-        ensureInit()
-        val ffmpeg = File(context.applicationInfo.nativeLibraryDir, "libffmpeg.so")
-        if (!ffmpeg.exists()) return false
-        val out = File(output)
-        out.delete()
-        val args = mutableListOf(ffmpeg.absolutePath, "-nostdin", "-y", "-i", input)
+    private fun tagMp3(input: String, meta: String, output: String, cover: String?): Boolean {
+        val args = mutableListOf("-nostdin", "-y", "-i", input)
         if (cover != null) args += listOf("-i", cover)
         args += listOf("-map", "0:a")
-        // mp3 커버는 그림 입력을 첨부 그림(attached_pic)으로 붙인다.
-        // 그림 종류를 "앞면 커버"로 적어 다른 플레이어도 커버로 읽게 한다 (안 적으면 "기타" 그림이 된다).
         if (cover != null) {
             args += listOf(
                 "-map", "1:v", "-disposition:v:0", "attached_pic",
                 "-metadata:s:v", "title=Album cover", "-metadata:s:v", "comment=Cover (front)",
             )
-        } else if (format == "mp3") {
-            // 새 커버가 없으면 파일에 있던 커버(mp3의 첨부 그림)를 그대로 둔다.
-            // ogg(opus)는 그림이 스트림으로 읽혀도 ogg 출력에 넣지 못해 소리만 넘긴다.
+        } else {
             args += listOf("-map", "0:v?")
         }
-        // 기존 태그는 두고 넘어온 칸만 덮어쓴다 (빈 값은 그 칸을 지운다). ogg는 소리 스트림 태그에도 같이 쓴다.
+        args += metadataArgs(meta)
+        args += listOf("-c", "copy", "-id3v2_version", "3", "-f", "mp3", output)
+        return runFfmpeg(args, output)
+    }
+
+    /**
+     * opus · ogg: 소리 스트림만 넘긴다 (커버는 태그 값 METADATA_BLOCK_PICTURE로 meta에 들어 있다).
+     * 태그는 전체와 첫 소리 스트림 둘 다에 넣어, ogg 쓰기가 어느 쪽을 읽어도 같다.
+     */
+    private fun tagOgg(input: String, meta: String, output: String): Boolean {
+        val args = mutableListOf("-nostdin", "-y", "-i", input, "-map", "0:a")
         for ((key, value) in readFfmetadata(meta)) {
-            args += listOf("-metadata", "$key=$value")
-            if (format != "mp3") args += listOf("-metadata:s:a:0", "$key=$value")
+            args += listOf("-metadata", "$key=$value", "-metadata:s:a:0", "$key=$value")
         }
-        args += listOf("-c", "copy")
-        // 다른 플레이어에서도 열리도록 ID3는 v2.3으로 쓴다.
-        if (format == "mp3") args += listOf("-id3v2_version", "3")
-        args += listOf("-f", format, output)
-        val builder = ProcessBuilder(args)
+        args += listOf("-c", "copy", "-f", "ogg", output)
+        return runFfmpeg(args, output)
+    }
+
+    /** mp4 영상: 전체 스트림을 넘기고, 그림이 있으면 첨부 그림으로 더한다. genre 등 title · artist 밖의 칸도 쓰도록 한다. */
+    private fun tagMp4(input: String, meta: String, output: String, cover: String?): Boolean {
+        val args = mutableListOf("-nostdin", "-y", "-i", input)
+        if (cover != null) args += listOf("-i", cover)
+        args += listOf("-map", "0")
+        if (cover != null) args += listOf("-map", "1:v", "-disposition:v:1", "attached_pic")
+        args += metadataArgs(meta)
+        args += listOf("-c", "copy", "-movflags", "+use_metadata_tags", "-f", "mp4", output)
+        return runFfmpeg(args, output)
+    }
+
+    /** webm(Matroska) 영상: 첨부 그림을 쓰지 않아 글 태그만 쓴다. */
+    private fun tagWebm(input: String, meta: String, output: String): Boolean {
+        val args = mutableListOf("-nostdin", "-y", "-i", input, "-map", "0")
+        args += metadataArgs(meta)
+        args += listOf("-c", "copy", "-f", "webm", output)
+        return runFfmpeg(args, output)
+    }
+
+    /** ffmetadata 파일의 칸들을 전체 태그용 `-metadata 키=값` 인자로. */
+    private fun metadataArgs(meta: String): List<String> =
+        readFfmetadata(meta).flatMap { (key, value) -> listOf("-metadata", "$key=$value") }
+
+    /** [args]로 ffmpeg를 돌려 [output]을 만든다. 실패하면 마지막 출력을 담아 예외를 던지고 [output]을 지운다. */
+    private fun runFfmpeg(args: List<String>, output: String): Boolean {
+        ensureInit()
+        val ffmpeg = File(context.applicationInfo.nativeLibraryDir, "libffmpeg.so")
+        if (!ffmpeg.exists()) return false
+        val out = File(output)
+        out.delete()
+        val builder = ProcessBuilder(listOf(ffmpeg.absolutePath) + args)
         builder.environment()["LD_LIBRARY_PATH"] = libraryPath()
         builder.redirectErrorStream(true)
         val p = builder.start()
         process = p
         try {
             // 출력은 비우되 실패 원인을 알리려 마지막 부분만 남긴다.
-            val tail = StringBuilder()
-            p.inputStream.use { stream ->
-                val buffer = ByteArray(8192)
-                while (true) {
-                    val n = stream.read(buffer)
-                    if (n < 0) break
-                    tail.append(String(buffer, 0, n, Charsets.UTF_8))
-                    if (tail.length > 1200) tail.delete(0, tail.length - 800)
-                }
-            }
-            val code = p.waitFor()
-            if (code != 0) {
-                out.delete()
-                throw IllegalStateException("ffmpeg exit $code: ${tail.toString().trim().takeLast(400)}")
-            }
-            return true
-        } finally {
-            process = null
-        }
-    }
-
-    /**
-     * 영상 파일(mp4 · webm)의 소리 · 영상은 그대로(`-c copy`) 두고 ffmetadata의 태그만 새로 써서 [output]에 만든다.
-     * mp4는 [cover] 그림이 있으면 첨부 그림(attached_pic)으로 붙인다. webm(Matroska)은 첨부 그림을 쓰지 않는다.
-     */
-    private fun tagVideo(input: String, meta: String, output: String, format: String, cover: String?): Boolean {
-        ensureInit()
-        val ffmpeg = File(context.applicationInfo.nativeLibraryDir, "libffmpeg.so")
-        if (!ffmpeg.exists()) return false
-        val out = File(output)
-        out.delete()
-        val withCover = cover != null && format == "mp4"
-        val args = mutableListOf(ffmpeg.absolutePath, "-nostdin", "-y", "-i", input)
-        if (withCover) args += listOf("-i", cover!!)
-        args += listOf("-map", "0")
-        if (withCover) {
-            args += listOf("-map", "1:v", "-disposition:v:1", "attached_pic")
-        }
-        // 기존 태그는 두고 넘어온 칸만 덮어쓴다 (빈 값은 그 칸을 지운다).
-        for ((key, value) in readFfmetadata(meta)) args += listOf("-metadata", "$key=$value")
-        args += listOf("-c", "copy")
-        // mp4가 title · artist 밖의 칸(genre 등)도 쓰도록.
-        if (format == "mp4") args += listOf("-movflags", "+use_metadata_tags")
-        args += listOf("-f", format, output)
-        val builder = ProcessBuilder(args)
-        builder.environment()["LD_LIBRARY_PATH"] = libraryPath()
-        builder.redirectErrorStream(true)
-        val p = builder.start()
-        process = p
-        try {
             val tail = StringBuilder()
             p.inputStream.use { stream ->
                 val buffer = ByteArray(8192)
