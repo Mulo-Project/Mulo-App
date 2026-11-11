@@ -73,3 +73,4 @@
 - 남은 Dart 형식 표: `audio_file_downloader.dart` · `downloaded_file_store.dart` · `audio_transcoder.dart`의 mime ↔ 확장자, `yt_dlp_video_save_repository.dart`의 yt-dlp 포맷 선택식.
 - 태그 읽기 수정: 기본 칸(제목 · 아티스트 · 앨범 · 장르)은 안드로이드 `MediaMetadataRetriever`가 주소로 바로 읽고(복사 없음, lite도 됨), 앱 전용 `cover_*` 칸만 ffmpeg가 있을 때 파일을 복사해 읽는다 (안드로이드 API가 사용자 정의 칸을 못 읽는다).
 - 태그 읽기 다시 수정: 기본 칸과 앱 전용 `cover_*` 칸 모두 안드로이드 Media3 `MetadataRetriever`(`TagReader`)가 주소로 읽는다 (mp3 TXXX · Vorbis 코멘트 · mp4 mdta). 복사 · ffmpeg 없이, lite도 읽는다. ffmpeg는 쓰기에만 쓴다.
+- 커버: 파일에는 표준 칸에 이미지 자체를 넣고, 앱 전용 `COVER_SOURCE`(원본 주소) · `COVER_TRANSFORM`(확대 · 위치)은 더 이상 쓰지도 읽지도 않는다 (복원이 웹 주소로 이미지를 받느라 네트워크에 의존했다). 앱 전용 칸은 `COVER_COLOR`만 남긴다. 복원은 파일 안 그림을 먼저 채우고(`FillEmbeddedCovers`), 태그로 커버를 만들지 않는다. 이전 파일의 `COVER_SOURCE` 칸은 무시한다.

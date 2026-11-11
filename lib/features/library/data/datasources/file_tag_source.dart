@@ -29,7 +29,6 @@ class FileTagSource {
       case 'ok':
         final tags = parse(r.tags);
         _count(tags.isEmpty ? 'tag empty' : 'ok');
-        _count(tags.coverSource == null ? 'no cover tag' : 'cover tag');
         return tags;
       case 'unsupported':
         _count('unsupported');
@@ -40,17 +39,14 @@ class FileTagSource {
     }
   }
 
-  /// 읽은 태그(소문자 키)를 앱 값으로. 앱이 쓴 사용자 정의 칸(`COVER_*`)도 함께 읽는다.
+  /// 읽은 태그(소문자 키)를 앱 값으로. 앱이 쓴 사용자 정의 칸 `COVER_COLOR`도 읽는다 (커버 그림은 파일 안 그림을 쓴다).
   static FileTags parse(Map<String, String> tags) {
-    final extra = parseCoverExtra(tags);
     return FileTags(
       title: _clean(tags['title']),
       artist: _clean(tags['artist']),
       album: _clean(tags['album']),
       genre: _clean(tags['genre']),
-      coverSource: extra.source,
-      coverTransform: extra.transform,
-      coverColor: extra.color,
+      coverColor: parseCoverColor(tags),
     );
   }
 

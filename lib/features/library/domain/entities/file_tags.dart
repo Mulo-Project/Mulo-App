@@ -1,5 +1,3 @@
-import '../../../covers/domain/entities/cover_art.dart';
-
 /// 음원 파일 태그에서 읽은 곡 정보 (앱이 쓴 태그와 대칭). 없는 칸은 빈 문자열 · null.
 class FileTags {
   const FileTags({
@@ -7,8 +5,6 @@ class FileTags {
     this.artist = '',
     this.album = '',
     this.genre = '',
-    this.coverSource,
-    this.coverTransform = CoverTransform.identity,
     this.coverColor,
   });
 
@@ -20,12 +16,6 @@ class FileTags {
   final String album;
   final String genre;
 
-  /// `COVER_SOURCE`: 커버 원본 웹 주소.
-  final String? coverSource;
-
-  /// `COVER_TRANSFORM`: 확대 · 위치 · 각도.
-  final CoverTransform coverTransform;
-
   /// `COVER_COLOR`: ARGB 값.
   final int? coverColor;
 
@@ -34,6 +24,5 @@ class FileTags {
       artist.isEmpty &&
       album.isEmpty &&
       genre.isEmpty &&
-      coverSource == null &&
       coverColor == null;
 }

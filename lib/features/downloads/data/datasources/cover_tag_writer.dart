@@ -70,7 +70,7 @@ class CoverTagWriter {
         'genre': ?text(genre),
         'lyrics': ?text(lyrics),
         // 앱이 읽어 커버 편집 상태를 되살리는 사용자 정의 태그 (COVER_SOURCE 등). 다른 플레이어는 무시한다.
-        ...coverExtra(cover, thumbnailUrl, color),
+        ...coverExtra(color),
       };
       return await tags.write(
         target,
@@ -105,52 +105,22 @@ class CoverTagWriter {
   }
 }
 
-/// [coverExtra]로 쓴 사용자 정의 태그를 되읽는다 (키는 대소문자 구분 없이). 없거나 깨진 칸은 null · 기본값.
-({String? source, CoverTransform transform, int? color}) parseCoverExtra(
-  Map<String, String> tags,
-) {
-  String? get(String key) {
-    for (final e in tags.entries) {
-      if (e.key.toUpperCase() != key) continue;
-      // ID3 사용자 정의 칸은 값 앞에 눈에 안 보이는 글자(BOM · 제어 문자)가 붙어 올 수 있다.
-      final v = e.value.replaceAll(RegExp(r'^[\u0000-\u0020\uFEFF\uFFFE]+|[\u0000-\u0020\uFEFF\uFFFE]+$'), '');
-      if (v.isNotEmpty) return v;
-    }
-    return null;
+/// [coverExtra]로 쓴 `COVER_COLOR`를 되읽는다 (키는 대소문자 구분 없이). 없거나 깨졌으면 null.
+int? parseCoverColor(Map<String, String> tags) {
+  for (final e in tags.entries) {
+    if (e.key.toUpperCase() != 'COVER_COLOR') continue;
+    // ID3 사용자 정의 칸은 값 앞에 눈에 안 보이는 글자(BOM · 제어 문자)가 붙어 올 수 있다.
+    final v = e.value.replaceAll(
+      RegExp(r'^[\u0000-\u0020\uFEFF\uFFFE]+|[\u0000-\u0020\uFEFF\uFFFE]+$'),
+      '',
+    );
+    if (v.isNotEmpty) return int.tryParse(v, radix: 16);
   }
-
-  var transform = CoverTransform.identity;
-  final parts = get('COVER_TRANSFORM')?.split(',').map(double.tryParse);
-  if (parts != null && parts.length >= 3 && !parts.contains(null)) {
-    final v = parts.cast<double>().toList();
-    transform = CoverTransform(
-      scale: v[0],
-      dx: v[1],
-      dy: v[2],
-      rotation: v.length > 3 ? v[3] : 0,
-    ).clamped();
-  }
-  final hex = get('COVER_COLOR');
-  return (
-    source: get('COVER_SOURCE'),
-    transform: transform,
-    color: hex == null ? null : int.tryParse(hex, radix: 16),
-  );
+  return null;
 }
 
-/// 커버 편집 상태를 파일에 남기는 사용자 정의 태그: 원본 웹 주소 · 확대 · 위치 · 색.
-/// 앱이 파일만 읽어도 커버를 다시 잘라 보여 줄 수 있다. 값이 없으면 그 칸은 쓰지 않는다.
-Map<String, String> coverExtra(
-  CoverArt? cover,
-  String? thumbnailUrl,
-  int? color,
-) {
-  final url = cover?.url ?? (cover == null ? thumbnailUrl : null);
-  final t = cover?.transform ?? CoverTransform.identity;
-  return {
-    if (url != null && url.isNotEmpty) 'COVER_SOURCE': url,
-    if (!t.isIdentity)
-      'COVER_TRANSFORM': '${t.scale},${t.dx},${t.dy},${t.rotation}',
-    if (color != null) 'COVER_COLOR': color.toRadixString(16).padLeft(8, '0'),
-  };
-}
+/// 앱 전용으로 파일에 남기는 사용자 정의 태그: 커버에서 뽑은 색. 커버 그림은 표준 칸에 이미지로 들어가므로
+/// 원본 주소 · 확대 · 위치는 쓰지 않는다. 값이 없으면 그 칸은 쓰지 않는다.
+Map<String, String> coverExtra(int? color) => {
+  if (color != null) 'COVER_COLOR': color.toRadixString(16).padLeft(8, '0'),
+};

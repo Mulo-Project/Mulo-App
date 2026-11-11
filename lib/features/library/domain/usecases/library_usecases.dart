@@ -359,10 +359,6 @@ class RestoreFromFileTags implements UseCase<int, NoParams> {
       ),
     );
     final key = CoverKey.track(t.id);
-    final source = tags.coverSource;
-    if (source != null && !covers.containsKey(key)) {
-      await _covers.saveUrl(key, source, transform: tags.coverTransform);
-    }
     final color = tags.coverColor;
     if (color != null && !colors.containsKey(key)) {
       await _colors.save(key, color);
