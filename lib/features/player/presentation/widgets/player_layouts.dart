@@ -1,9 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../search/presentation/widgets/preview_video_controls.dart';
+import '../bloc/video_surface_cubit.dart';
 import 'fullscreen_video.dart';
 import 'native_video.dart';
 import 'player_common.dart';
@@ -12,6 +14,12 @@ import 'player_common.dart';
 /// 위쪽(커버 · 진행 표시)만 다르고, 하단 조작부는 모두 [PlayerControls] 하나를 쓴다.
 
 const _side = EdgeInsets.symmetric(horizontal: AppSpacing.lg);
+
+/// 지금 영상의 가로 / 세로 비율. 아직 크기를 모르면 16:9.
+double _videoAspect(BuildContext context) {
+  final s = context.watch<VideoSurfaceCubit>().state;
+  return s.width > 0 && s.height > 0 ? s.width / s.height : 16 / 9;
+}
 
 /// 가사 보기일 때 커버 자리를 채우는 가사.
 Widget _lyrics(PlayerLayoutData data) => Padding(
@@ -65,8 +73,11 @@ class SquarePlayer extends StatelessWidget {
                       : Padding(
                           padding: _side,
                           child: Center(
+                            // 영상 곡은 영상 비율 그대로 (잘리지 않게), 음원은 정사각형.
                             child: AspectRatio(
-                              aspectRatio: 1,
+                              aspectRatio: data.track.isVideo
+                                  ? _videoAspect(context)
+                                  : 1,
                               child: DecoratedBox(
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(
@@ -135,7 +146,9 @@ class FullBleedPlayer extends StatelessWidget {
                   PlayerCover(
                     art: art,
                     radius: 0,
-                    video: data.track.isVideo ? const NativeVideo() : null,
+                    video: data.track.isVideo
+                        ? const NativeVideo(fit: BoxFit.contain)
+                        : null,
                   ),
                   // 위: 상단 버튼이 읽히게 살짝 어둡게, 아래: 배경으로 부드럽게. 누름은 아래로 통과시킨다.
                   IgnorePointer(
@@ -274,7 +287,9 @@ class ArcPlayer extends StatelessWidget {
                               art: art,
                               radius: _size(s),
                               video: data.track.isVideo
-                                  ? const NativeVideoTapFullscreen()
+                                  ? const NativeVideoTapFullscreen(
+                                      fit: BoxFit.contain,
+                                    )
                                   : null,
                             ),
                           ),

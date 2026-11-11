@@ -55,3 +55,6 @@
 - 마이그레이션 13: 열을 더하고, 주소가 `content://media/external/video/…`인 기존 곡은 `video/*`로 한 번 채운다. 다운로드 폴더에 저장한 예전 영상은 알 수 없어 다시 저장해야 한다.
 - **`dart run build_runner build -d` 필요** (drift 생성 코드 `app_database.g.dart`를 이 환경에서 만들 수 없다).
 - 진단 로그: 받기 등록(`MuloDownload register …`, flutter), 영상 해독(`video refresh/size/first frame`, `tracks video=… mime=…`, `adb logcat -s MuloPlayback`), 플레이어 화면(`MuloPlayer track=… isVideo=…`).
+
+## 플레이어 테마별 영상 전체 보이기 (11-11)
+- 사각: 영상 곡은 정사각 대신 영상 비율 그대로(`VideoSurfaceCubit`의 크기, 모르면 16:9). 꽉 찬 이미지 · 둥근 진행 표시: `BoxFit.contain`으로 영상 전체가 보이고 남는 곳은 커버가 비친다. `NativeVideoWithFullscreen` · `NativeVideoTapFullscreen`에 `fit`을 더했다.
