@@ -320,7 +320,18 @@ class PlayerCover extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        cover,
+        // 영상 비율에 맞춰 남는 자리는 커버를 흐리게 깔아, 영상 가장자리가 자연스럽게 이어진다.
+        ClipRRect(
+          borderRadius: BorderRadius.circular(radius),
+          child: ImageFiltered(
+            imageFilter: ImageFilter.blur(
+              sigmaX: 24,
+              sigmaY: 24,
+              tileMode: TileMode.clamp,
+            ),
+            child: Transform.scale(scale: 1.2, child: cover),
+          ),
+        ),
         ClipRRect(borderRadius: BorderRadius.circular(radius), child: v),
       ],
     );

@@ -58,3 +58,4 @@
 
 ## 플레이어 테마별 영상 전체 보이기 (11-11)
 - 사각: 영상 곡은 정사각 대신 영상 비율 그대로(`VideoSurfaceCubit`의 크기, 모르면 16:9). 꽉 찬 이미지 · 둥근 진행 표시: `BoxFit.contain`으로 영상 전체가 보이고 남는 곳은 커버가 비친다. `NativeVideoWithFullscreen` · `NativeVideoTapFullscreen`에 `fit`을 더했다.
+- 영상 뒤에 깔리는 커버는 흐리게(blur 24, 1.2배 확대) 처리해 남는 자리가 영상과 자연스럽게 이어진다 (`PlayerCover`).
