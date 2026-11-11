@@ -56,8 +56,12 @@ class TrackTagSource {
         if (!File(uri).existsSync()) return TagWriteResult.unsupported;
         extension = _extensionOfPath(uri);
       }
+      final video = extension.toLowerCase() == 'mp4';
+      // 영상(mp4)은 글 태그 · 커버를 쓴다. 가사만 쓰는 호출은 기존 태그를 지울 수 있어 건너뛴다.
+      if (video && title.isEmpty) return TagWriteResult.unsupported;
       viaFfmpeg =
-          FfmpegTagWriter.extensions.contains(extension.toLowerCase()) &&
+          (video ||
+              FfmpegTagWriter.extensions.contains(extension.toLowerCase())) &&
           (_ffmpegAvailable ??= await _ffmpeg.available());
       // 못 쓰면: ffmpeg로 쓰는 곡은 실패, 그 밖은 쓰지 않는 곡(DB만).
       final fail = viaFfmpeg
@@ -68,17 +72,29 @@ class TrackTagSource {
           ? TagWriteResult.denied
           : TagWriteResult.unsupported;
 
-      Future<bool> embed(File file) => _writer.embed(
-        file,
-        extension: extension,
-        cover: cover,
-        color: color,
-        title: title,
-        artist: artist,
-        album: album,
-        genre: genre,
-        lyrics: lyrics,
-      );
+      Future<bool> embed(File file) => video
+          ? _writer.embedVideo(
+              file,
+              extension: extension,
+              cover: cover,
+              color: color,
+              title: title,
+              artist: artist,
+              album: album,
+              genre: genre,
+              lyrics: lyrics,
+            )
+          : _writer.embed(
+              file,
+              extension: extension,
+              cover: cover,
+              color: color,
+              title: title,
+              artist: artist,
+              album: album,
+              genre: genre,
+              lyrics: lyrics,
+            );
 
       debugPrint(
         'MuloTag write ext=$extension ffmpeg=$viaFfmpeg lyrics=${lyrics?.length} cover=${cover != null}',
@@ -125,7 +141,7 @@ class TrackTagSource {
       );
       final viaFfmpeg =
           ext != null &&
-          FfmpegTagWriter.extensions.contains(ext) &&
+          (ext == 'mp4' || FfmpegTagWriter.extensions.contains(ext)) &&
           (_ffmpegAvailable ??= await _ffmpeg.available());
       if (!viaFfmpeg) return true;
       final ok =
@@ -149,6 +165,7 @@ class TrackTagSource {
 
   static String? _extensionOfMime(String? mime) => switch (mime) {
     'audio/mpeg' || 'audio/mp3' => 'mp3',
+    'video/mp4' => 'mp4',
     'audio/mp4' || 'audio/x-m4a' || 'audio/m4a' || 'audio/aac' => 'm4a',
     'audio/ogg' || 'audio/opus' => 'opus',
     _ => null,

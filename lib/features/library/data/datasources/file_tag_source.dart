@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import '../../../downloads/data/datasources/cover_tag_writer.dart';
 import '../../domain/entities/file_tags.dart';
 
-/// 곡 파일([uri])의 태그를 읽는다 ([TrackTagSource]의 반대 방향). mp3(ID3)와 opus · ogg(Vorbis 코멘트)만 읽는다.
+/// 곡 파일([uri])의 태그를 읽는다 ([TrackTagSource]의 반대 방향). mp3(ID3) · opus · ogg(Vorbis 코멘트) · 영상 mp4(글 태그)만 읽는다.
 /// Android `content://`는 형식을 `music_app/media_store`의 `mimeType`으로 확인하고, 캐시로 복사해(`music_app/lyrics`의
 /// `copyToCache`) 읽은 뒤 바로 지운다. 데스크톱은 파일을 바로 읽는다.
 class FileTagSource {
@@ -17,7 +17,7 @@ class FileTagSource {
   final MethodChannel _media;
   final MethodChannel _copy;
 
-  static const _extensions = {'mp3', 'opus', 'ogg'};
+  static const _extensions = {'mp3', 'opus', 'ogg', 'mp4'};
 
   /// 임시 진단: 이번에 읽은 곡들의 결과를 종류별로 센다 ([takeSummary]로 꺼내며 비운다).
   static final _outcomes = <String, int>{};
@@ -82,7 +82,7 @@ class FileTagSource {
 
   /// mp3(`audio/mpeg`)와 ogg · opus 계열(`audio/ogg` · `application/ogg` · `audio/opus` 등)이면 읽는다.
   static bool _supportedMime(String? mime) =>
-      mime != null && RegExp(r'mpeg|mp3|ogg|opus').hasMatch(mime.toLowerCase());
+      mime != null && RegExp(r'mpeg|mp3|ogg|opus|video/mp4').hasMatch(mime.toLowerCase());
 
   /// 읽은 태그를 앱 값으로. 앱이 쓴 사용자 정의 칸(`COVER_*`)은 ID3의 TXXX · Vorbis 코멘트에서 읽는다.
   static FileTags parse(Object tag) {
@@ -108,6 +108,14 @@ class FileTagSource {
           coverSource: extra.source,
           coverTransform: extra.transform,
           coverColor: extra.color,
+        );
+      case Mp4Metadata():
+        // 영상(mp4)의 글 태그. 커버 편집 상태(COVER_*)는 mp4에 쓰지 않아 읽지 않는다.
+        return FileTags(
+          title: _clean(tag.title),
+          artist: _clean(tag.artist),
+          album: _clean(tag.album),
+          genre: _clean(tag.genre),
         );
       default:
         return FileTags.none;

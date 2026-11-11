@@ -34,3 +34,8 @@
 ## 상세 화면: 앱이 관리하는 재생 기록 (11-11)
 - 음원 · 영상 상세 화면에 재생 횟수 · 들은 시간 · 마지막 재생 행 추가 (재생 기록이 없으면 횟수 0회만).
 - `GetTrackPlayStats`(home 유스케이스) + `TrackPlayStats`, l10n `trackInfoPlayCount*` · `trackInfoListened` · `trackInfoLastPlayed`, 테스트 `test/track_play_stats_test.dart`.
+
+## mp4 영상도 파일 태그가 원본 (11-11)
+- 곡 정보를 고치면 mp4 영상은 파일 태그를 먼저 쓰고 DB를 바꾼다 (`TrackTagSource`가 `video/mp4`를 `embedVideo`로 쓴다. 가사만 쓰는 호출은 기존 태그를 지울 수 있어 영상은 건너뜀).
+- 기기에서 찾은 mp4 영상은 파일 태그(제목 · 아티스트 · 앨범 · 장르)를 읽어 DB를 되살린다 (`FileTagSource`가 `Mp4Metadata`를 읽음). mp4에는 `COVER_*` 칸을 쓰지 않아 커버 편집 상태는 복원하지 않는다.
+- webm은 해당 없음(앱 DB가 기준). 한계: 편집 시 mp4의 가사 태그가 비워질 수 있음(DB에는 남음).
