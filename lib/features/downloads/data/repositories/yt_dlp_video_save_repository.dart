@@ -83,7 +83,7 @@ class YtDlpVideoSaveRepository implements VideoSaveRepository {
       output = await _find(dir, stem, request.format.extension);
       if (output == null) throw const VideoSaveException('no output file');
       // 태그를 못 써도 영상은 그대로 저장한다.
-      await tags?.embedVideo(
+      await tags?.embed(
         output,
         extension: request.format.extension,
         cover: request.cover,

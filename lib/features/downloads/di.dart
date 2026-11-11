@@ -9,7 +9,6 @@ import '../engine/data/android_yt_dlp.dart';
 import 'data/datasources/audio_file_downloader.dart';
 import 'data/datasources/audio_transcoder.dart';
 import 'data/datasources/cover_tag_writer.dart';
-import 'data/datasources/ffmpeg_tag_writer.dart';
 import 'data/datasources/download_queue_store.dart';
 import 'data/datasources/downloaded_file_store.dart';
 import 'data/repositories/engine_download_queue_repository.dart';
@@ -45,7 +44,7 @@ void registerDownloads(GetIt sl) {
         colors: sl(),
         settings: sl(),
         transcoder: sl(),
-        coverTags: const CoverTagWriter(ffmpeg: FfmpegTagWriter()),
+        coverTags: const CoverTagWriter(),
         lyrics: sl(),
         video: sl(),
         queueStore: sl(),
@@ -58,7 +57,7 @@ void registerDownloads(GetIt sl) {
         run: sl<AndroidYtDlp>().run,
         available: sl<AndroidYtDlp>().isAvailable,
         store: sl(),
-        tags: const CoverTagWriter(ffmpeg: FfmpegTagWriter()),
+        tags: const CoverTagWriter(),
         tempDir: () => Directory(
           '${Directory.systemTemp.path}${Platform.pathSeparator}mulo_video',
         ).create(recursive: true),

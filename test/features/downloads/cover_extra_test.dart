@@ -1,19 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/features/covers/domain/entities/cover_art.dart';
 import 'package:music_download_play_app/features/downloads/data/datasources/cover_tag_writer.dart';
-import 'package:music_download_play_app/features/downloads/data/datasources/ffmpeg_tag_writer.dart';
 
 void main() {
   coverExtraTests();
-  test('ffmetadata: 특수문자는 앞에 역슬래시를 붙인다', () {
-    final text = FfmpegTagWriter.ffmetadata({
-      'TITLE': r'a=b;c#d\e',
-      'LYRICS': '[00:01.00]첫 줄\n둘째 줄',
-    });
-    expect(text.startsWith(';FFMETADATA1\n'), isTrue);
-    expect(text, contains('TITLE=${r'a\=b\;c\#d\\e'}\n'));
-    expect(text, contains('LYRICS=[00:01.00]첫 줄\\\n둘째 줄\n'));
-  });
 }
 
 void coverExtraTests() {

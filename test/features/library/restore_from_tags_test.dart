@@ -1,4 +1,3 @@
-import 'package:audio_metadata_reader/audio_metadata_reader.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/core/usecase/usecase.dart';
 import 'package:music_download_play_app/features/covers/domain/entities/cover_art.dart';
@@ -159,25 +158,21 @@ void main() {
       expect(bad.source, 'https://x');
     });
 
-    test('mp3(ID3) · opus(Vorbis) 태그를 앱 값으로 바꾼다', () {
-      final mp3 = Mp3Metadata()
-        ..songName = '제목'
-        ..leadPerformer = '가수'
-        ..album = '앨범'
-        ..genres = ['록']
-        ..customMetadata['COVER_SOURCE'] = 'https://img';
-      final a = FileTagSource.parse(mp3);
+    test('네이티브가 준 태그(소문자 키)를 앱 값으로 바꾼다', () {
+      final a = FileTagSource.parse({
+        'title': '제목',
+        'artist': '가수',
+        'album': '앨범',
+        'genre': '록',
+        'cover_source': 'https://img',
+        'cover_color': 'ff112233',
+      });
       expect([a.title, a.artist, a.album, a.genre], ['제목', '가수', '앨범', '록']);
       expect(a.coverSource, 'https://img');
-
-      final opus = VorbisMetadata()
-        ..title = ['T']
-        ..artist = ['A']
-        ..unknowns['COVER_COLOR'] = 'ff112233';
-      final b = FileTagSource.parse(opus);
-      expect([b.title, b.artist, b.album], ['T', 'A', '']);
-      expect(b.coverColor, 0xFF112233);
-      expect(FileTagSource.parse(VorbisMetadata()).isEmpty, isTrue);
+      expect(a.coverColor, 0xFF112233);
+      final b = FileTagSource.parse({'title': ' T '});
+      expect([b.title, b.artist, b.album], ['T', '', '']);
+      expect(FileTagSource.parse(const {}).isEmpty, isTrue);
     });
   });
 }

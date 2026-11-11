@@ -83,6 +83,63 @@ class MediaStoreChannel(
         }
     }
 
+    /** 곡 파일의 형식(mime). 알 수 없으면 null. */
+    fun mimeOf(uri: Uri): String? = try {
+        context.contentResolver.getType(uri)
+    } catch (e: Exception) {
+        null
+    }
+
+    /**
+     * 곡 파일에 쓸 수 있는지 먼저 확인한다 (내용은 건드리지 않는다).
+     * 쓸 수 없고 [ask]가 true면 수정 전에 시스템 동의 창을 띄운다.
+     */
+    fun ensureWrite(uri: Uri, ask: Boolean, result: MethodChannel.Result) {
+        io.execute {
+            var denied: SecurityException? = null
+            val ok = try {
+                context.contentResolver.openFileDescriptor(uri, "rw")?.use { true } ?: false
+            } catch (e: SecurityException) {
+                denied = e
+                false
+            } catch (e: Exception) {
+                false
+            }
+            main.post {
+                if (!ok && denied != null && ask) {
+                    requestWrite(uri, null, denied, result)
+                } else {
+                    result.success(ok)
+                }
+            }
+        }
+    }
+
+    /**
+     * 태그를 고친 임시 파일 [src]로 곡 파일을 덮어쓴다. 쓸 권한이 없으면 false.
+     * [ask]가 true면 (사용자가 직접 한 저장) 시스템 동의 창을 띄우고 허용 뒤 다시 쓴다.
+     */
+    fun overwriteAudio(uri: Uri, src: File, ask: Boolean, result: MethodChannel.Result) {
+        io.execute {
+            var denied: SecurityException? = null
+            val ok = try {
+                overwrite(uri, src)
+            } catch (e: SecurityException) {
+                denied = e
+                false
+            } catch (e: Exception) {
+                false
+            }
+            main.post {
+                if (!ok && denied != null && ask) {
+                    requestWrite(uri, src, denied, result)
+                } else {
+                    result.success(ok)
+                }
+            }
+        }
+    }
+
     /** 곡 파일의 크기(byte) · 형식(mime) · 비트레이트(bps) · 샘플레이트(Hz). 알 수 없는 값은 키를 뺀다. */
     private fun fileInfo(uri: Uri): Map<String, Any> {
         val out = mutableMapOf<String, Any>()
@@ -183,62 +240,18 @@ class MediaStoreChannel(
                         main.post { result.success(info) }
                     }
                 }
-                "mimeType" -> result.success(
-                    try {
-                        context.contentResolver.getType(Uri.parse(call.argument<String>("uri")))
-                    } catch (e: Exception) {
-                        null
-                    },
+                "mimeType" -> result.success(mimeOf(Uri.parse(call.argument<String>("uri"))))
+                "ensureWrite" -> ensureWrite(
+                    Uri.parse(call.argument<String>("uri")),
+                    call.argument<Boolean>("ask") ?: false,
+                    result,
                 )
-                "ensureWrite" -> {
-                    // 곡 파일에 쓸 수 있는지 먼저 확인한다 (내용은 건드리지 않는다).
-                    // 쓸 수 없고 ask가 true면 수정 전에 시스템 동의 창을 띄운다.
-                    val uri = Uri.parse(call.argument<String>("uri"))
-                    val ask = call.argument<Boolean>("ask") ?: false
-                    io.execute {
-                        var denied: SecurityException? = null
-                        val ok = try {
-                            context.contentResolver.openFileDescriptor(uri, "rw")?.use { true } ?: false
-                        } catch (e: SecurityException) {
-                            denied = e
-                            false
-                        } catch (e: Exception) {
-                            false
-                        }
-                        main.post {
-                            if (!ok && denied != null && ask) {
-                                requestWrite(uri, null, denied, result)
-                            } else {
-                                result.success(ok)
-                            }
-                        }
-                    }
-                }
-                "overwriteAudio" -> {
-                    // 태그를 고친 임시 파일로 곡 파일을 덮어쓴다. 쓸 권한이 없으면 false.
-                    // ask가 true면 (사용자가 직접 한 저장) 시스템 동의 창을 띄우고 허용 뒤 다시 쓴다.
-                    val uri = Uri.parse(call.argument<String>("uri"))
-                    val src = File(call.argument<String>("path")!!)
-                    val ask = call.argument<Boolean>("ask") ?: false
-                    io.execute {
-                        var denied: SecurityException? = null
-                        val ok = try {
-                            overwrite(uri, src)
-                        } catch (e: SecurityException) {
-                            denied = e
-                            false
-                        } catch (e: Exception) {
-                            false
-                        }
-                        main.post {
-                            if (!ok && denied != null && ask) {
-                                requestWrite(uri, src, denied, result)
-                            } else {
-                                result.success(ok)
-                            }
-                        }
-                    }
-                }
+                "overwriteAudio" -> overwriteAudio(
+                    Uri.parse(call.argument<String>("uri")),
+                    File(call.argument<String>("path")!!),
+                    call.argument<Boolean>("ask") ?: false,
+                    result,
+                )
                 "deleteAudio" -> deleteAudio(Uri.parse(call.argument<String>("uri")), result)
                 else -> result.notImplemented()
             }

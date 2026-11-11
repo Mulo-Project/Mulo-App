@@ -22,7 +22,7 @@ import '../../domain/repositories/video_save_repository.dart';
 import '../datasources/audio_file_downloader.dart';
 import '../datasources/audio_transcoder.dart';
 import '../datasources/cover_tag_writer.dart';
-import '../datasources/ffmpeg_tag_writer.dart';
+import '../datasources/native_tags.dart';
 import '../datasources/download_queue_store.dart';
 import '../datasources/downloaded_file_store.dart';
 
@@ -508,7 +508,7 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
             ok: tagged,
             detail: tagged
                 ? CoverTagWriter.lastCoverNote
-                : (FfmpegTagWriter.lastError ?? 'unsupported or nothing to write'),
+                : (NativeTags.lastError ?? 'unsupported or nothing to write'),
           ),
         );
       }

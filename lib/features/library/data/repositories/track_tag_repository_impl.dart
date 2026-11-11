@@ -4,7 +4,7 @@ import '../../../covers/domain/entities/cover_art.dart';
 import '../../domain/entities/file_tags.dart';
 import '../../domain/entities/track.dart';
 import '../../domain/repositories/track_tag_repository.dart';
-import '../../../downloads/data/datasources/ffmpeg_tag_writer.dart';
+import '../../../downloads/data/datasources/native_tags.dart';
 import '../datasources/file_tag_source.dart';
 import '../datasources/track_tag_source.dart';
 
@@ -26,7 +26,7 @@ class TrackTagRepositoryImpl implements TrackTagRepository {
       );
 
   @override
-  String? get lastFailure => FfmpegTagWriter.lastError;
+  String? get lastFailure => NativeTags.lastError;
 
   @override
   Future<TagWriteResult> writeLyrics(Track track, String lyrics) =>

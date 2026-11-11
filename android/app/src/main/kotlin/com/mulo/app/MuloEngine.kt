@@ -48,6 +48,7 @@ object MuloEngine {
         val ytDlp = YtDlpChannel(app, messenger)
         val youtubeResolve = YoutubeResolveChannel(app, messenger)
         val transcoder = TranscoderChannel(app, messenger)
+        val tags = TagChannel(app, messenger, store, transcoder)
         val playback = PlaybackChannel(app, messenger)
         val preview = PreviewChannel(app, messenger)
         val video = VideoChannel(app, messenger, created.renderer)
@@ -57,7 +58,7 @@ object MuloEngine {
         channels = listOf(
             store::dispose, lyrics::dispose, lyricsOverlay::dispose, audioOutput::dispose, ytDlp::dispose,
             transcoder::dispose, playback::dispose, preview::dispose, video::dispose, equalizer::dispose,
-            subscriptions::dispose, youtubeResolve::dispose,
+            subscriptions::dispose, youtubeResolve::dispose, tags::dispose,
         )
         engine = created
         FlutterEngineCache.getInstance().put(CACHE_ID, created)

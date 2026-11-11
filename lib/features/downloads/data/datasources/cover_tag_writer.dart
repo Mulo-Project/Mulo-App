@@ -1,35 +1,24 @@
 import 'dart:io';
-import 'dart:typed_data';
-import 'dart:ui' as ui;
-
-import 'package:audio_metadata_reader/audio_metadata_reader.dart';
 
 import '../../../../core/cache/cached_web_image.dart';
-import '../../../../core/cover/cover_paint.dart';
 import '../../../covers/domain/entities/cover_art.dart';
-import 'ffmpeg_tag_writer.dart';
+import 'native_tags.dart';
 
-/// 받은 음원 파일의 태그에 커버 이미지를 넣는다 (다른 음악 앱에서도 커버가 보이도록).
+/// 곡 파일의 태그에 제목 · 커버 등을 넣는다 (다른 음악 앱에서도 보이도록).
 ///
-/// 앱 안의 커버와 같게 고른 확대 · 위치대로 정사각형으로 잘라 [side]px PNG로 넣는다.
-/// 태그를 쓸 수 없는 형식(받은 그대로의 webm 등)이거나 이미지를 못 구하면 파일을 건드리지 않고 false.
+/// 이 클래스는 형식을 모른다: 커버 원본 이미지 파일을 구해(앱 이미지 캐시) 값과 함께 네이티브(`NativeTags`)에 넘길 뿐이고,
+/// 정사각형으로 자르기 · 형식 구분 · 태그 쓰기는 모두 네이티브가 한다.
 class CoverTagWriter {
-  const CoverTagWriter({this.side = 512, this.ffmpeg});
+  const CoverTagWriter({this.tags = const NativeTags()});
 
-  final int side;
+  final NativeTags tags;
 
-  /// opus · ogg · mp3 태그를 쓰는 ffmpeg 쓰기. 없으면 그 형식은 건드리지 않는다.
-  final FfmpegTagWriter? ffmpeg;
-
-  /// 마지막 embed에서 커버가 어떻게 됐는지 (진단용): 이미지를 못 구함 · 그림 만들기 실패 · 넣음.
+  /// 마지막 쓰기에서 커버 원본을 어떻게 구했는지 (진단용).
   static String lastCoverNote = '';
 
-  /// 태그에 커버를 쓸 수 있는 확장자. ffmpeg가 만든 mp3는 ID3 태그가 이미 있다.
-  /// (opus · ogg는 [ffmpeg]가 쓴다. webm은 쓰지 않는다. mp3도 ffmpeg가 되면 ffmpeg로 쓴다.)
-  static const extensions = {'mp3', 'm4a'};
-
+  /// [file]에 쓴다 (받은 파일). [extension]은 파일의 확장자 힌트. 썼으면 true, 아니면 false (파일은 그대로).
   Future<bool> embed(
-    File audio, {
+    File file, {
     required String extension,
     CoverArt? cover,
     String? thumbnailUrl,
@@ -39,156 +28,65 @@ class CoverTagWriter {
     String? genre,
     String? lyrics,
     int? color,
-  }) async {
-    // 유튜브 원본 오디오는 webm(Opus)이다: ffmpeg가 ogg(.opus)로 감싸 태그를 쓰고, 저장도 .opus로 한다.
-    lastCoverNote = '';
-    final raw = extension.toLowerCase();
-    final ext = raw == 'webm' || raw == 'weba' ? 'opus' : raw;
-    final viaFfmpeg =
-        ffmpeg != null && FfmpegTagWriter.extensions.contains(ext);
-    if (!extensions.contains(ext) && !viaFfmpeg) return false;
-    try {
-      // 커버를 못 구해도 글 정보(제목 · 아티스트 등)는 파일에 남긴다.
-      Uint8List? png;
-      final source = await _sourceFile(cover, thumbnailUrl);
-      if (source != null) {
-        png = await _squarePng(
-          await source.readAsBytes(),
-          cover?.transform ?? CoverTransform.identity,
-        );
-      }
-      lastCoverNote = source == null
-          ? 'cover: no image (path=${cover?.path != null}, url=${(cover?.url ?? thumbnailUrl) != null})'
-          : png == null
-          ? 'cover: png failed'
-          : 'cover: png ${png.length}B';
-      String? text(String? v) => v == null || v.trim().isEmpty ? null : v;
-      if (png == null &&
-          text(title) == null &&
-          text(artist) == null &&
-          text(album) == null &&
-          text(genre) == null &&
-          text(lyrics) == null) {
-        return false;
-      }
-      if (viaFfmpeg) {
-        final done = await ffmpeg!.write(
-          audio,
-          extension: ext,
-          title: title,
-          artist: artist,
-          album: album,
-          genre: genre,
-          lyrics: lyrics,
-          coverPng: png,
-          coverSide: side,
-          extra: coverExtra(cover, thumbnailUrl, color),
-        );
-        // mp3는 ffmpeg가 안 되는 기기(lite 등)에서 라이브러리로 쓴다. opus · ogg는 쓸 방법이 이것뿐이다.
-        if (done && ext == 'mp3' && text(lyrics) != null) {
-          _ensureStandardLyrics(audio, lyrics!, png);
-        }
-        if (done || !extensions.contains(ext)) return done;
-      }
-      updateMetadata(audio, (m) {
-        if (text(title) != null) m.setTitle(title);
-        if (text(artist) != null) m.setArtist(artist);
-        if (text(album) != null) m.setAlbum(album);
-        if (text(genre) != null) m.setGenres([genre!]);
-        if (text(lyrics) != null) m.setLyrics(lyrics);
-        if (png != null) {
-          m.setPictures([Picture(png, 'image/png', PictureType.coverFront)]);
-        }
-      });
-      return true;
-    } on Object catch (e) {
-      FfmpegTagWriter.lastError = '${FfmpegTagWriter.lastError ?? ''} lib: $e'.trim();
-      // 못 써도 받은 곡은 그대로 저장한다 (앱 안 커버는 DB에 따로 있다).
-      return false;
-    }
-  }
-
-  /// ffmpeg가 쓴 mp3 가사는 표준 가사 칸(USLT)이 아니라 사용자 정의 칸(TXXX)에 들어갈 수 있다.
-  /// 앱과 다른 플레이어가 읽는 표준 칸에 가사가 없으면 라이브러리로 한 번 더 써 준다.
-  /// 복사본에 써서 가사 · 제목 · 커버 수가 그대로일 때만 원본을 바꾼다 (아니면 원본은 그대로).
-  static void _ensureStandardLyrics(
-    File audio,
-    String lyrics,
-    Uint8List? png,
-  ) {
-    final copy = File('${audio.path}.uslt');
-    try {
-      final want = lyrics.trim();
-      final before = readMetadata(audio, getImage: true);
-      if (before.lyrics?.trim() == want) return;
-      audio.copySync(copy.path);
-      updateMetadata(copy, (m) {
-        m.setLyrics(lyrics);
-        // 라이브러리가 ffmpeg가 쓴 그림 칸을 못 읽어 지워 버려도 커버가 남도록 같은 그림을 다시 넣는다.
-        if (png != null) {
-          m.setPictures([Picture(png, 'image/png', PictureType.coverFront)]);
-        }
-      });
-      final after = readMetadata(copy, getImage: true);
-      final same =
-          after.lyrics?.trim() == want &&
-          after.title == before.title &&
-          after.artist == before.artist &&
-          (png != null
-              ? after.pictures.isNotEmpty
-              : after.pictures.length == before.pictures.length);
-      if (same) copy.renameSync(audio.path);
-    } on Object {
-      // 못 해도 ffmpeg가 쓴 원본은 그대로 둔다.
-    } finally {
-      try {
-        if (copy.existsSync()) copy.deleteSync();
-      } on FileSystemException {
-        // 임시 파일이라 못 지워도 그만.
-      }
-    }
-  }
-
-  /// 영상 파일(mp4 · webm)에 제목 · 아티스트 · 앨범 · 장르를 쓰고, mp4는 커버도 넣는다. 못 쓰면 false
-  /// (파일은 그대로, 영상은 태그 없이 저장된다). webm은 첨부 그림을 쓸 수 없어 글 태그만 쓴다.
-  Future<bool> embedVideo(
-    File video, {
-    required String extension,
-    CoverArt? cover,
-    String? thumbnailUrl,
-    String? title,
-    String? artist,
-    String? album,
-    String? genre,
-    String? lyrics,
-    int? color,
-  }) async {
-    final f = ffmpeg;
-    if (f == null) return false;
-    try {
-      // 커버는 형식을 가리지 않고 정사각형 PNG로 넘긴다 (형식별로 쓰는지 · 어떻게 넣는지는 네이티브가 정한다).
-      Uint8List? png;
-      final source = await _sourceFile(cover, thumbnailUrl);
-      if (source != null) {
-        png = await _squarePng(
-          await source.readAsBytes(),
-          cover?.transform ?? CoverTransform.identity,
-        );
-      }
-      return await f.write(
-        video,
+  }) async => await write(
+        file.path,
         extension: extension,
+        cover: cover,
+        thumbnailUrl: thumbnailUrl,
         title: title,
         artist: artist,
         album: album,
         genre: genre,
         lyrics: lyrics,
-        coverPng: png,
-        extra: coverExtra(cover, thumbnailUrl, color),
+        color: color,
+      ) ==
+      NativeTagStatus.written;
+
+  /// [target](`content://` 주소 또는 경로)에 쓰고 결과를 돌려준다. 값이 하나도 없으면 [NativeTagStatus.failed].
+  /// 커버를 못 구해도 글 정보는 쓴다. 빈 글은 쓰지 않는다.
+  Future<NativeTagStatus> write(
+    String target, {
+    String? extension,
+    CoverArt? cover,
+    String? thumbnailUrl,
+    String? title,
+    String? artist,
+    String? album,
+    String? genre,
+    String? lyrics,
+    int? color,
+    bool ask = false,
+  }) async {
+    try {
+      final source = await _sourceFile(cover, thumbnailUrl);
+      lastCoverNote = source == null
+          ? 'cover: no image (path=${cover?.path != null}, url=${(cover?.url ?? thumbnailUrl) != null})'
+          : 'cover: ${source.lengthSync()}B source';
+      String? text(String? v) => v == null || v.trim().isEmpty ? null : v;
+      final values = <String, String>{
+        'title': ?text(title),
+        'artist': ?text(artist),
+        'album': ?text(album),
+        'genre': ?text(genre),
+        'lyrics': ?text(lyrics),
+        // 앱이 읽어 커버 편집 상태를 되살리는 사용자 정의 태그 (COVER_SOURCE 등). 다른 플레이어는 무시한다.
+        ...coverExtra(cover, thumbnailUrl, color),
+      };
+      return await tags.write(
+        target,
+        extension: extension,
+        values: values,
+        cover: source == null
+            ? null
+            : (
+                path: source.path,
+                transform: cover?.transform ?? CoverTransform.identity,
+              ),
+        ask: ask,
       );
     } on Object catch (e) {
-      FfmpegTagWriter.lastError = 'video tag: $e';
-      return false;
+      NativeTags.lastError = '$e';
+      return NativeTagStatus.failed;
     }
   }
 
@@ -204,24 +102,6 @@ class CoverTagWriter {
     final url = cover?.url ?? thumbnailUrl;
     if (url == null || url.isEmpty) return null;
     return CachedWebImage.localCopy(url);
-  }
-
-  Future<Uint8List?> _squarePng(Uint8List bytes, CoverTransform t) async {
-    final codec = await ui.instantiateImageCodec(bytes);
-    final image = (await codec.getNextFrame()).image;
-    codec.dispose();
-    try {
-      final recorder = ui.PictureRecorder();
-      paintCover(ui.Canvas(recorder), side.toDouble(), image, t);
-      final picture = recorder.endRecording();
-      final out = await picture.toImage(side, side);
-      picture.dispose();
-      final data = await out.toByteData(format: ui.ImageByteFormat.png);
-      out.dispose();
-      return data?.buffer.asUint8List();
-    } finally {
-      image.dispose();
-    }
   }
 }
 

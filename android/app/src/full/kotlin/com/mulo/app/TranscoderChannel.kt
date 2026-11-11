@@ -41,26 +41,6 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
                     }
                     runAsync(io, result, "convert_failed") { convert(input, output, codec, bitrate, format) }
                 }
-                "tag" -> {
-                    val input = call.argument<String>("input")
-                    val meta = call.argument<String>("meta")
-                    val output = call.argument<String>("output")
-                    val format = call.argument<String>("format")
-                    if (input == null || meta == null || output == null || format == null) {
-                        result.error("bad_args", "input, meta, output, format required", null)
-                        return@setMethodCallHandler
-                    }
-                    val cover = call.argument<String>("cover")
-                    // 형식별 규칙은 형식마다 자기 함수에 있다 (아래 tagMp3 · tagOgg · tagMp4 · tagWebm).
-                    runAsync(io, result, "tag_failed") {
-                        when (format) {
-                            "mp3" -> tagMp3(input, meta, output, cover)
-                            "mp4" -> tagMp4(input, meta, output, cover)
-                            "webm" -> tagWebm(input, meta, output)
-                            else -> tagOgg(input, meta, output, cover)
-                        }
-                    }
-                }
                 else -> result.notImplemented()
             }
         }
@@ -95,13 +75,30 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
         }
     }
 
-    // 태그 쓰기: 앱(Dart)은 형식을 모르는 값(`title` `artist` `album` `genre` `lyrics` + 앱 전용 칸)과 커버 PNG만 넘기고,
+    // 태그: 앱(Dart)은 형식을 모른다. [TagChannel]이 [TagFormats]로 형식을 고르고, 이 파일의 형식별 함수를 부른다.
     // 형식마다 다른 것(키 이름 · 커버를 넣는 방식 · 커버를 쓰는지)은 아래 형식별 함수가 각자 정한다.
     // 한 형식의 변경이 다른 형식에 새지 않게 인자는 함수마다 따로 만들고, 공통은 [runFfmpeg] · [entriesOf]뿐이다.
     // 모두 소리 · 영상은 그대로(`-c copy`) 두고, 파일에 있던 태그는 두고 넘어온 칸만 덮어쓴다 (빈 값은 그 칸을 지운다).
 
+    fun isAvailable(): Boolean = true
+
+    /**
+     * [input]의 태그를 [values](기본 칸은 소문자 `title` `artist` `album` `genre` `lyrics`, 그 밖은 앱 전용 칸)와
+     * 커버 PNG [cover]로 고쳐 [output]에 쓴다. [format]은 [TagFormats]. 성공하면 true (실패하면 예외 또는 false).
+     */
+    fun tagFile(input: String, values: Map<String, String>, cover: String?, format: String, output: String): Boolean {
+        val entries = values.entries.map { it.key to it.value }
+        return when (format) {
+            TagFormats.MP3 -> tagMp3(input, entries, output, cover)
+            TagFormats.MP4 -> tagMp4(input, entries, output, cover)
+            TagFormats.WEBM -> tagWebm(input, entries, output)
+            TagFormats.M4A -> tagM4a(input, entries, output, cover)
+            else -> tagOgg(input, entries, output, cover)
+        }
+    }
+
     /** mp3: 대문자 키. 그림이 있으면 첨부 그림(attached_pic, "앞면 커버")으로 붙이고, 없으면 파일의 커버를 그대로 둔다. ID3 v2.3. */
-    private fun tagMp3(input: String, meta: String, output: String, cover: String?): Boolean {
+    private fun tagMp3(input: String, values: List<Pair<String, String>>, output: String, cover: String?): Boolean {
         val args = mutableListOf("-nostdin", "-y", "-i", input)
         if (cover != null) args += listOf("-i", cover)
         args += listOf("-map", "0:a")
@@ -113,7 +110,7 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
         } else {
             args += listOf("-map", "0:v?")
         }
-        for ((key, value) in entriesOf(meta, upper = true)) args += listOf("-metadata", "$key=$value")
+        for ((key, value) in entriesOf(values, upper = true)) args += listOf("-metadata", "$key=$value")
         args += listOf("-c", "copy", "-id3v2_version", "3", "-f", "mp3", output)
         return runFfmpeg(args, output)
     }
@@ -123,15 +120,15 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
      * 커버는 태그 값 `METADATA_BLOCK_PICTURE`(FLAC 그림 블록을 base64로)에 넣는다. 그림은 값이 커서 명령줄 인자로 넘길 수
      * 없어 ffmetadata 파일로 태그를 통째로 새로 쓴다 (커버를 새로 정하는 곳은 모든 칸을 함께 넘긴다).
      */
-    private fun tagOgg(input: String, meta: String, output: String, cover: String?): Boolean {
-        val entries = entriesOf(meta, upper = true)
+    private fun tagOgg(input: String, values: List<Pair<String, String>>, output: String, cover: String?): Boolean {
+        val entries = entriesOf(values, upper = true)
         if (cover == null) {
             val args = mutableListOf("-nostdin", "-y", "-i", input, "-map", "0:a")
             for ((key, value) in entries) args += listOf("-metadata", "$key=$value", "-metadata:s:a:0", "$key=$value")
             args += listOf("-c", "copy", "-f", "ogg", output)
             return runFfmpeg(args, output)
         }
-        val full = File("$meta.full")
+        val full = File("$output.full")
         try {
             val picture = Base64.encodeToString(pictureBlock(File(cover).readBytes()), Base64.NO_WRAP)
             full.writeText(ffmetadata(entries + ("METADATA_BLOCK_PICTURE" to picture)), Charsets.UTF_8)
@@ -146,29 +143,68 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
     }
 
     /** mp4 영상: 소문자 키. 전체 스트림을 넘기고, 그림이 있으면 첨부 그림으로 더한다. genre 등 title · artist 밖의 칸도 쓰게 한다. */
-    private fun tagMp4(input: String, meta: String, output: String, cover: String?): Boolean {
+    private fun tagMp4(input: String, values: List<Pair<String, String>>, output: String, cover: String?): Boolean {
         val args = mutableListOf("-nostdin", "-y", "-i", input)
         if (cover != null) args += listOf("-i", cover)
         args += listOf("-map", "0")
         if (cover != null) args += listOf("-map", "1:v", "-disposition:v:1", "attached_pic")
-        for ((key, value) in entriesOf(meta, upper = false)) args += listOf("-metadata", "$key=$value")
+        for ((key, value) in entriesOf(values, upper = false)) args += listOf("-metadata", "$key=$value")
         args += listOf("-c", "copy", "-movflags", "+use_metadata_tags", "-f", "mp4", output)
         return runFfmpeg(args, output)
     }
 
+    /** m4a 오디오(mp4 껍데기): 소문자 키, 소리만 넘기고 그림이 있으면 첨부 그림으로 붙인다. */
+    private fun tagM4a(input: String, values: List<Pair<String, String>>, output: String, cover: String?): Boolean {
+        val args = mutableListOf("-nostdin", "-y", "-i", input)
+        if (cover != null) args += listOf("-i", cover)
+        args += listOf("-map", "0:a")
+        if (cover != null) args += listOf("-map", "1:v", "-disposition:v:0", "attached_pic")
+        for ((key, value) in entriesOf(values, upper = false)) args += listOf("-metadata", "$key=$value")
+        args += listOf("-c", "copy", "-movflags", "+use_metadata_tags", "-f", "ipod", output)
+        return runFfmpeg(args, output)
+    }
+
     /** webm(Matroska) 영상: 소문자 키. 첨부 그림을 쓰지 않아 커버는 무시하고 글 태그만 쓴다. */
-    private fun tagWebm(input: String, meta: String, output: String): Boolean {
+    private fun tagWebm(input: String, values: List<Pair<String, String>>, output: String): Boolean {
         val args = mutableListOf("-nostdin", "-y", "-i", input, "-map", "0")
-        for ((key, value) in entriesOf(meta, upper = false)) args += listOf("-metadata", "$key=$value")
+        for ((key, value) in entriesOf(values, upper = false)) args += listOf("-metadata", "$key=$value")
         args += listOf("-c", "copy", "-f", "webm", output)
         return runFfmpeg(args, output)
     }
 
+    /**
+     * [path] 파일의 태그를 읽는다 (ffmpeg의 ffmetadata 덤프). 키는 모두 소문자.
+     * 전체 태그에 없으면(opus · ogg는 첫 소리 스트림에 있다) 첫 소리 스트림의 태그로 채운다.
+     */
+    fun readTags(path: String): Map<String, String> {
+        val tags = linkedMapOf<String, String>()
+        for (extra in listOf(emptyList(), listOf("-map_metadata:g", "0:s:a:0"))) {
+            val out = File("$path.meta.txt")
+            try {
+                val ok = try {
+                    runFfmpeg(listOf("-nostdin", "-y", "-i", path, "-map_metadata", "0") + extra + listOf("-f", "ffmetadata", out.absolutePath), out.absolutePath)
+                } catch (e: IllegalStateException) {
+                    false
+                }
+                if (ok && out.exists()) {
+                    for ((k, v) in readFfmetadata(out.absolutePath)) {
+                        if (k.startsWith("[") || v.isEmpty()) continue
+                        tags.putIfAbsent(k.lowercase(), v)
+                    }
+                }
+            } finally {
+                out.delete()
+            }
+            if (tags.containsKey("title") || tags.containsKey("artist")) break
+        }
+        return tags
+    }
+
     private val knownKeys = setOf("title", "artist", "album", "genre", "lyrics")
 
-    /** ffmetadata 파일의 칸들. 앱이 넘긴 기본 칸(소문자)은 형식의 키 이름(대문자 또는 소문자)으로, 그 밖의 앱 전용 칸은 그대로. */
-    private fun entriesOf(meta: String, upper: Boolean): List<Pair<String, String>> =
-        readFfmetadata(meta).map { (key, value) ->
+    /** 앱이 넘긴 기본 칸(소문자)은 형식의 키 이름(대문자 또는 소문자)으로, 그 밖의 앱 전용 칸은 그대로. */
+    private fun entriesOf(values: List<Pair<String, String>>, upper: Boolean): List<Pair<String, String>> =
+        values.map { (key, value) ->
             val lower = key.lowercase()
             (if (lower in knownKeys) (if (upper) lower.uppercase() else lower) else key) to value
         }
