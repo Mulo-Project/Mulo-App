@@ -59,6 +59,15 @@ class PreviewState extends Equatable {
     return (p.position.inMilliseconds / d.inMilliseconds).clamp(0.0, 1.0);
   }
 
+  /// 미리 받아 둔 비율 0 ~ 1 (길이를 모르면 0). 들은 비율보다 작지 않게 본다.
+  double get bufferedFraction {
+    final p = progress;
+    final d = p?.duration;
+    if (p == null || d == null || d == Duration.zero) return 0;
+    final b = p.buffered > p.position ? p.buffered : p.position;
+    return (b.inMilliseconds / d.inMilliseconds).clamp(0.0, 1.0);
+  }
+
   bool isActive(String id) => hitId == id && status != PreviewStatus.idle;
 
   @override

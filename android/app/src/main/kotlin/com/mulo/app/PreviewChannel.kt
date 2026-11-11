@@ -120,6 +120,7 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
                     "progress",
                     mapOf(
                         "position" to p.currentPosition,
+                        "buffered" to p.bufferedPosition,
                         "duration" to if (p.duration == C.TIME_UNSET) null else p.duration,
                     ),
                 )

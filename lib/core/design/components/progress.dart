@@ -102,10 +102,18 @@ class _RingPainter extends CustomPainter {
 
 /// 가로 진행 막대: 유리 트랙 + 강조 색 채움 + 끝에 은은한 빛.
 class ProgressLine extends StatelessWidget {
-  const ProgressLine({super.key, required this.value, this.height = 4});
+  const ProgressLine({
+    super.key,
+    required this.value,
+    this.height = 4,
+    this.buffered = 0,
+  });
 
   final double value;
   final double height;
+
+  /// 미리 받아 둔 비율 0 ~ 1. 트랙 위에 연하게 깔린다 (0이면 그리지 않는다).
+  final double buffered;
 
   @override
   Widget build(BuildContext context) {
@@ -124,6 +132,17 @@ class ProgressLine extends StatelessWidget {
               ),
             ),
           ),
+          if (buffered > 0)
+            FractionallySizedBox(
+              widthFactor: buffered.clamp(0.0, 1.0),
+              heightFactor: 1,
+              child: DecoratedBox(
+                decoration: ShapeDecoration(
+                  color: p.onSurface.withValues(alpha: .35),
+                  shape: const StadiumBorder(),
+                ),
+              ),
+            ),
           FractionallySizedBox(
             widthFactor: v,
             heightFactor: 1,

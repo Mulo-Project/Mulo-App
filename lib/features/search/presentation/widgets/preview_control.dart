@@ -256,10 +256,18 @@ class PreviewLoadingRing extends StatelessWidget {
 /// 끌고 있는 동안은 손가락 자리를 보여 주고, 손을 뗄 때 한 번만 실제로 옮긴다.
 /// 길이를 아직 모르면 옮기지 않는다.
 class PreviewSeekLine extends StatefulWidget {
-  const PreviewSeekLine({super.key, required this.fraction, this.height = 4});
+  const PreviewSeekLine({
+    super.key,
+    required this.fraction,
+    this.height = 4,
+    this.buffered = 0,
+  });
 
   final double fraction;
   final double height;
+
+  /// 미리 받아 둔 비율 0 ~ 1 (막대에 연하게).
+  final double buffered;
 
   @override
   State<PreviewSeekLine> createState() => _PreviewSeekLineState();
@@ -301,6 +309,7 @@ class _PreviewSeekLineState extends State<PreviewSeekLine> {
               child: ProgressLine(
                 value: _drag ?? widget.fraction,
                 height: widget.height,
+                buffered: widget.buffered,
               ),
             ),
           ),
@@ -338,7 +347,10 @@ class PreviewProgressBar extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        PreviewSeekLine(fraction: state.fraction),
+        PreviewSeekLine(
+          fraction: state.fraction,
+          buffered: state.bufferedFraction,
+        ),
         if (showTime) ...[
           const SizedBox(height: AppSpacing.xs),
           Row(
