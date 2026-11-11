@@ -579,8 +579,6 @@
   "downloadSubtitleNone": "This video has no subtitles.",
   "downloadSubtitleUnknown": "Couldn't check for subtitles. If on, we'll try again after downloading.",
   "downloadSubtitleLanguage": "Subtitle language",
-  "downloadSubtitleAuto": "Choose automatically",
-  "downloadSubtitleAutoHint": "Korean, then English, then the first one.",
   "downloadLyricsPreviewLoading": "Loading…",
   "downloadLyricsPreviewFailed": "Couldn't load the subtitles.",
   "downloadSubtitleEditHint": "You can edit the text, but not the timing. Sync it on the player after downloading.",

@@ -1,3 +1,5 @@
+import 'dart:ui' show PlatformDispatcher;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -32,8 +34,11 @@ class DownloadLyricsSection extends StatefulWidget {
 class DownloadLyricsSectionState extends State<DownloadLyricsSection> {
   var _importLyrics = false;
 
-  // 가져올 자막 언어. null이면 자동(한국어 → 영어 → 첫 언어).
+  // 사용자가 고른 자막 언어. 고르지 않았으면(null) 기본 언어([_defaultLanguage])를 쓴다.
   String? _lyricsLanguage;
+
+  // 기본 자막 언어: 기기(시스템) 언어와 맞는 자막, 없으면 첫 자막. 자막 목록이 바뀔 때마다 다시 정한다.
+  String? _defaultLanguage;
   var _skipSounds = true;
 
   // 가사 설정 페이지에서 직접 정한 가사 (파일 · 웹에서 불러오거나 쓴 글). 있으면 영상 자막 대신 이 글을 넣는다.
@@ -48,15 +53,15 @@ class DownloadLyricsSectionState extends State<DownloadLyricsSection> {
   /// 직접 정했거나 자막에서 적용한 가사 글 (없으면 null).
   String? get custom => _custom;
 
-  /// 고른 자막 언어 (null이면 자동).
-  String? get language => _lyricsLanguage;
+  /// 가져올 자막 언어: 고른 언어, 안 골랐으면 기본 언어 (자막 목록을 아직 모르면 null).
+  String? get language => _lyricsLanguage ?? _defaultLanguage;
 
   /// 자막의 효과음 줄을 건너뛰는가.
   bool get skipSounds => _skipSounds;
 
   /// 받기 요청에 실을 가사 글: 직접 정한 가사가 먼저, 없으면 고른 언어에서 고쳐 둔 글.
   String? get lyricsText =>
-      _custom ?? (_lyricsLanguage == null ? null : _edited[_lyricsLanguage]);
+      _custom ?? (language == null ? null : _edited[language]);
 
   @override
   Widget build(BuildContext context) =>
@@ -69,6 +74,7 @@ class DownloadLyricsSectionState extends State<DownloadLyricsSection> {
     final l10n = context.l10n;
     final p = context.palette;
     final text = Theme.of(context).textTheme;
+    _defaultLanguage = _systemDefault(sub.languages);
     final none = sub.status == SubtitleStatus.none;
     // 자막 확인이 끝나기 전에는 켜고 끌 수 없다 (있는지 알고 나서 고른다).
     final locked = none || sub.status == SubtitleStatus.checking;
@@ -205,6 +211,21 @@ class DownloadLyricsSectionState extends State<DownloadLyricsSection> {
     setState(() => _custom = text.trim().isEmpty ? null : text);
   }
 
+  /// 시스템 언어와 맞는 자막(코드가 같으면 먼저, 아니면 언어만 같은 것), 없으면 첫 자막.
+  static String? _systemDefault(List<String> languages) {
+    if (languages.isEmpty) return null;
+    final locale = PlatformDispatcher.instance.locale;
+    final tag = locale.toLanguageTag().toLowerCase();
+    final lang = locale.languageCode.toLowerCase();
+    String? byLanguage;
+    for (final l in languages) {
+      final code = l.toLowerCase().replaceAll('_', '-');
+      if (code == tag) return l;
+      if (byLanguage == null && code.split('-').first == lang) byLanguage = l;
+    }
+    return byLanguage ?? languages.first;
+  }
+
   void _pickLanguage(String? lang) {
     setState(() => _lyricsLanguage = lang);
   }
@@ -218,7 +239,7 @@ class DownloadLyricsSectionState extends State<DownloadLyricsSection> {
       title: name,
       kind: kind,
       skipSounds: _skipSounds,
-      selected: _lyricsLanguage == lang,
+      selected: language == lang,
       edited: _edited[lang],
       songTitle: widget.songTitle(),
       songArtist: widget.songArtist(),
@@ -247,12 +268,7 @@ class DownloadLyricsSectionState extends State<DownloadLyricsSection> {
   Widget _languageTable(BuildContext context, SubtitleAvailability sub) {
     final l10n = context.l10n;
     final korean = Localizations.localeOf(context).languageCode == 'ko';
-    final entries = <({String? lang, String name, String kind})>[
-      (
-        lang: null,
-        name: l10n.downloadSubtitleAuto,
-        kind: l10n.downloadSubtitleAutoHint,
-      ),
+    final entries = <({String lang, String name, String kind})>[
       for (final lang in sub.languages)
         (
           lang: lang,
@@ -266,7 +282,7 @@ class DownloadLyricsSectionState extends State<DownloadLyricsSection> {
       for (var i = 0; i < entries.length; i += _rowsPerColumn)
         entries.sublist(i, (i + _rowsPerColumn).clamp(0, entries.length)),
     ];
-    Widget column(List<({String? lang, String name, String kind})> rows) =>
+    Widget column(List<({String lang, String name, String kind})> rows) =>
         SizedBox(
           width: columns.length == 1 ? null : 260,
           child: OutlinedPanel(
@@ -282,17 +298,12 @@ class DownloadLyricsSectionState extends State<DownloadLyricsSection> {
                   _languageRow(
                     context,
                     language: r.name,
-                    kind:
-                        r.lang != null &&
-                            _lyricsLanguage == r.lang &&
-                            _custom != null
+                    kind: language == r.lang && _custom != null
                         ? '${r.kind} · ${l10n.downloadSubtitleApplied}'
                         : r.kind,
-                    selected: _lyricsLanguage == r.lang,
-                    openable: r.lang != null,
-                    onTap: () => r.lang == null
-                        ? _pickLanguage(null)
-                        : _openSubtitle(r.lang!, r.name, r.kind),
+                    selected: language == r.lang,
+                    openable: true,
+                    onTap: () => _openSubtitle(r.lang, r.name, r.kind),
                   ),
               ],
             ),

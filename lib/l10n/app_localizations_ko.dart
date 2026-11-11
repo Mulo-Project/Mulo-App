@@ -1554,12 +1554,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadSubtitleLanguage => '자막 언어';
 
   @override
-  String get downloadSubtitleAuto => '자동으로 고르기';
-
-  @override
-  String get downloadSubtitleAutoHint => '한국어 → 영어 → 첫 번째 자막 순으로 골라요.';
-
-  @override
   String get downloadLyricsPreviewLoading => '불러오는 중…';
 
   @override

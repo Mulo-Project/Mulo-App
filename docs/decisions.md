@@ -1007,3 +1007,5 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 - 외부 구성요소를 더하지 않았다: `HttpURLConnection` · `org.json`(안드로이드 기본)만 쓴다. NewPipeExtractor는 GPLv3라 쓰지 않았다. 감소: Android에서는 시청 페이지를 읽지 않아 한 번 덜 요청한다.
 - 읽는 순서: **네이티브 → yt-dlp 기본 → yt-dlp android_vr**. `YoutubeExplodeEngine`은 `YoutubeResolveEngine`(`youtube_resolve_engine.dart`)으로 이름을 바꾸고 읽기 함수를 필수로 받는다(`NativeYoutubeResolver`). 화면 · cubit은 그대로다. **Dart의 주소 읽기 코드(클라이언트 · 형식 고르기 · 구간 확인)는 모두 지웠다.** Android 밖의 OS는 안쪽 엔진(yt-dlp · 서버)이 읽는다 (Android 우선, iOS · Windows는 나중에). 재생목록 검색의 youtube_explode_dart 대체 경로만 남았다(주소 읽기가 아님).
 - 못 하는 것: `signatureCipher`(JS 풀이 필요) 주소는 쓰지 않는다 (전과 같음). 라이브는 형식이 없어 yt-dlp로 넘어간다.
+
+- D-162 추가: 받기 창의 가사 자막 언어 표에서 `자동으로 고르기` 줄을 없앴다. 아무것도 고르지 않았으면 기기(시스템) 언어와 맞는 자막(코드가 같으면 먼저, 아니면 언어만 같은 것)이 처음부터 골라져 있고, 맞는 게 없으면 첫 자막이다. 사용자가 다른 줄을 고르면 그 선택이 우선한다 (D-109 보강 3 · 4 · 6의 "자동으로 고르기" 줄은 이 결정으로 대체).
