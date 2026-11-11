@@ -310,7 +310,16 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
             return
         }
         if (videoUrl == url && videoPlayer != null && followMain == follow) return
-        releaseVideo()
+        // 영상 전용 플레이어를 다른 화질로 바꿔 끼울 때: 화면을 비우지 않고 이전 화면을 둔 채 새 영상으로 넘어간다.
+        val old = if (!muxedVideo && videoPlayer != null) videoPlayer else null
+        if (old != null) {
+            main.removeCallbacks(videoSync)
+            old.removeListener(videoListener)
+            videoPlayer = null
+            videoUrl = null
+        } else {
+            releaseVideo()
+        }
         followMain = follow
         val http = DefaultHttpDataSource.Factory()
             .setAllowCrossProtocolRedirects(true)
@@ -335,7 +344,8 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
         videoUrl = url
         videoStartPending = true
         videoSpeed = 1f
-        VideoSurfaceHub.setPreviewVideo(v)
+        VideoSurfaceHub.setPreviewVideo(v, keepFrame = old != null)
+        old?.release()
         if (follow) {
             VideoSurfaceHub.previewIsPlaying = { PlaybackHub.mainPlayerOrNull()?.isPlaying == true }
             VideoSurfaceHub.previewSetPlaying = { play -> if (play) PlaybackHub.play() else PlaybackHub.pause() }

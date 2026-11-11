@@ -35,9 +35,12 @@ class PreviewVideoCubit extends Cubit<PreviewVideoState> {
 
     /// 미리 듣기가 아니라 메인 재생 소리(임시 저장한 음원)에 맞춰 영상을 튼다 (스트림).
     bool followMain = false,
+
+    /// 화질만 바꿀 때: 지금 보이는 영상 화면을 그대로 두고 새 영상으로 바꿔 끼운다.
+    bool keepFrame = false,
   }) async {
     final generation = ++_generation;
-    emit(const PreviewVideoState());
+    if (!(keepFrame && state.started)) emit(const PreviewVideoState());
     if (pageUrl.isEmpty) return;
     try {
       final stream = await _resolve(pageUrl, quality: quality, online: online);
