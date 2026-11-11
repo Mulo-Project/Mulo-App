@@ -66,3 +66,4 @@
 - 곡 정보 · 가사 저장이 느린 까닭을 찾으려 `MuloTag time ext=… size=…B copy=…ms embed=…ms overwrite=…ms`를 남긴다 (`adb logcat -s flutter`). 복사 → ffmpeg → 덮어쓰기 각 단계 시간.
 - opus 태그 쓰기 실패 수정: 기존 태그 유지(`-metadata`)로 바꾸며 영상 스트림 유지(`-map 0:v?`)를 ogg에도 넣어 ffmpeg가 바로 실패했다. mp3에만 넣는다. 실패 시 `MuloTag ffmpeg error: …` 로그를 남긴다.
 - 태그 쓰기 Kotlin을 형식별로 분리: `tagMp3` · `tagOgg`(opus) · `tagMp4` · `tagWebm`이 각자 ffmpeg 인자를 만들고, 공통은 `runFfmpeg` · `metadataArgs`뿐이다 (`tag()` 하나의 `if (mp3)` 분기가 opus를 깨뜨린 것을 막으려고). Dart 쪽 `FfmpegTagWriter.write`의 mp3 / ogg 분기(커버 전달 방식)는 아직 한 함수에 남아 있다.
+- Dart 쪽도 형식별로 분리: `FfmpegFormatWriter` 인터페이스(`Mp3FormatWriter` · `OggFormatWriter` · `Mp4FormatWriter` · `WebmFormatWriter`)가 네이티브 호출 이름 · 형식 · 키 이름 · 커버 전달 방식을 각자 갖고, `FfmpegTagWriter._run`이 공통 실행(임시 파일 → ffmpeg → 바꿔치기)을 맡는다. `write` · `writeVideo`의 공개 모양은 그대로.

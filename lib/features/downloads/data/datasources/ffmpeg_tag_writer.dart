@@ -31,7 +31,8 @@ class FfmpegTagWriter {
     }
   }
 
-  /// 쓸 값이 하나도 없으면 false. 이미 있던 태그는 새 값으로 바뀐다 (빈 값은 건드리지 않는다).
+  /// 음원(mp3 · opus · ogg)에 태그를 쓴다. 쓸 값이 하나도 없으면 false. 이미 있던 태그는 두고 넘어온 칸만 바뀐다
+  /// (null은 건드리지 않고, 빈 문자열은 그 칸을 지운다). 형식별 규칙은 [FfmpegFormatWriter]가 갖는다.
   Future<bool> write(
     File audio, {
     required String extension,
@@ -43,67 +44,20 @@ class FfmpegTagWriter {
     Uint8List? coverPng,
     int coverSide = 512,
     Map<String, String> extra = const {},
-  }) async {
-    final mp3 = extension.toLowerCase() == 'mp3';
-    final entries = <String, String>{
-      'TITLE': ?title,
-      'ARTIST': ?artist,
-      'ALBUM': ?album,
-      'GENRE': ?genre,
-      'LYRICS': ?lyrics,
-      // 앱이 읽어 커버 편집 상태를 되살리는 사용자 정의 태그 (COVER_SOURCE 등). 다른 플레이어는 무시한다.
-      ...extra,
-      // mp3의 커버는 태그 값이 아니라 그림 파일로 따로 넘긴다.
-      if (coverPng != null && !mp3)
-        'METADATA_BLOCK_PICTURE': base64.encode(
-          pictureBlock(coverPng, coverSide, coverSide),
-        ),
-    };
-    lastError = null;
-    if (entries.isEmpty && (coverPng == null || !mp3)) return false;
-    final meta = File('${audio.path}.ffmeta');
-    final out = File('${audio.path}.tagged');
-    final art = File('${audio.path}.cover.png');
-    try {
-      await meta.writeAsString(ffmetadata(entries), flush: true);
-      if (mp3 && coverPng != null) {
-        await art.writeAsBytes(coverPng, flush: true);
-      }
-      final ok = await _channel.invokeMethod<bool>('tag', {
-        'input': audio.path,
-        'meta': meta.path,
-        'output': out.path,
-        'format': mp3 ? 'mp3' : 'ogg',
-        if (mp3 && coverPng != null) 'cover': art.path,
-      });
-      debugPrint('MuloTag ffmpeg tag ok=$ok');
-      if (ok != true || !await out.exists() || await out.length() == 0) {
-        lastError ??= 'ffmpeg ok=$ok';
-        debugPrint('MuloTag ffmpeg failed: $lastError');
-        return false;
-      }
-      await out.rename(audio.path);
-      return true;
-    } on PlatformException catch (e) {
-      lastError = e.message ?? e.code;
-      debugPrint('MuloTag ffmpeg error: $lastError');
-      return false;
-    } on MissingPluginException {
-      lastError = 'no ffmpeg plugin';
-      return false;
-    } on FileSystemException catch (e) {
-      lastError = 'file: ${e.message}';
-      return false;
-    } finally {
-      for (final f in [meta, out, art]) {
-        try {
-          if (f.existsSync()) f.deleteSync();
-        } on FileSystemException {
-          // 임시 파일이라 못 지워도 그만.
-        }
-      }
-    }
-  }
+  }) => _run(
+    audio,
+    FfmpegFormatWriter.forExtension(extension) ?? const OggFormatWriter(),
+    TagValues(
+      title: title,
+      artist: artist,
+      album: album,
+      genre: genre,
+      lyrics: lyrics,
+      coverPng: coverPng,
+      coverSide: coverSide,
+      extra: extra,
+    ),
+  );
 
   /// 영상 파일(mp4 · webm)에 태그를 쓴다 (영상 · 소리는 그대로). mp4는 [coverPng]를 첨부 그림으로 붙이고,
   /// webm은 첨부 그림을 쓸 수 없어 글 태그만 쓴다. 쓸 값이 없거나 못 쓰면 false (파일은 그대로).
@@ -117,40 +71,54 @@ class FfmpegTagWriter {
     String? lyrics,
     Uint8List? coverPng,
     Map<String, String> extra = const {},
-  }) async {
-    final mp4 = extension.toLowerCase() == 'mp4';
-    final entries = <String, String>{
-      'title': ?title,
-      'artist': ?artist,
-      'album': ?album,
-      'genre': ?genre,
-      'lyrics': ?lyrics,
-      ...extra,
-    };
+  }) => _run(
+    video,
+    FfmpegFormatWriter.forExtension(extension) ?? const WebmFormatWriter(),
+    TagValues(
+      title: title,
+      artist: artist,
+      album: album,
+      genre: genre,
+      lyrics: lyrics,
+      coverPng: coverPng,
+      extra: extra,
+    ),
+  );
+
+  /// 형식 [writer]의 규칙대로 [file]의 태그를 쓴다 (임시 파일 만들기 → ffmpeg → 바꿔치기). 형식마다 다른 것은 모두 [writer]에 있다.
+  Future<bool> _run(
+    File file,
+    FfmpegFormatWriter writer,
+    TagValues values,
+  ) async {
+    final entries = writer.entries(values);
+    final cover = writer.coverAsFile ? values.coverPng : null;
     lastError = null;
-    if (entries.isEmpty && (coverPng == null || !mp4)) return false;
-    final meta = File('${video.path}.ffmeta');
-    final out = File('${video.path}.tagged');
-    final art = File('${video.path}.cover.png');
+    if (entries.isEmpty && cover == null) return false;
+    final meta = File('${file.path}.ffmeta');
+    final out = File('${file.path}.tagged');
+    final art = File('${file.path}.cover.png');
     try {
       await meta.writeAsString(ffmetadata(entries), flush: true);
-      final withCover = mp4 && coverPng != null;
-      if (withCover) await art.writeAsBytes(coverPng, flush: true);
-      final ok = await _channel.invokeMethod<bool>('tagVideo', {
-        'input': video.path,
+      if (cover != null) await art.writeAsBytes(cover, flush: true);
+      final ok = await _channel.invokeMethod<bool>(writer.method, {
+        'input': file.path,
         'meta': meta.path,
         'output': out.path,
-        'format': mp4 ? 'mp4' : 'webm',
-        if (withCover) 'cover': art.path,
+        'format': writer.format,
+        if (cover != null) 'cover': art.path,
       });
+      debugPrint('MuloTag ffmpeg ${writer.format} ok=$ok');
       if (ok != true || !await out.exists() || await out.length() == 0) {
         lastError ??= 'ffmpeg ok=$ok';
+        debugPrint('MuloTag ffmpeg failed: $lastError');
         return false;
       }
-      await out.rename(video.path);
+      await out.rename(file.path);
       return true;
     } on PlatformException catch (e) {
       lastError = e.message ?? e.code;
+      debugPrint('MuloTag ffmpeg error: $lastError');
       return false;
     } on MissingPluginException {
       lastError = 'no ffmpeg plugin';
@@ -198,4 +166,155 @@ class FfmpegTagWriter {
     b.add(png);
     return b.toBytes();
   }
+}
+
+/// 쓸 태그 값 묶음. null은 그 칸을 건드리지 않는다는 뜻이다.
+class TagValues {
+  const TagValues({
+    this.title,
+    this.artist,
+    this.album,
+    this.genre,
+    this.lyrics,
+    this.coverPng,
+    this.coverSide = 512,
+    this.extra = const {},
+  });
+
+  final String? title;
+  final String? artist;
+  final String? album;
+  final String? genre;
+  final String? lyrics;
+  final Uint8List? coverPng;
+  final int coverSide;
+
+  /// 앱이 읽어 커버 편집 상태를 되살리는 사용자 정의 태그 (COVER_SOURCE 등). 다른 플레이어는 무시한다.
+  final Map<String, String> extra;
+}
+
+/// 형식 하나의 ffmpeg 태그 쓰기 규칙. 형식마다 구현이 따로 있어 한 형식의 규칙을 바꿔도 다른 형식에 영향이 없다.
+/// 실제 ffmpeg 인자는 네이티브(`TranscoderChannel`)의 같은 형식 함수가 만든다.
+abstract interface class FfmpegFormatWriter {
+  /// 네이티브 호출 이름: 음원 `tag`, 영상 `tagVideo`.
+  String get method;
+
+  /// 네이티브에 넘기는 형식 이름.
+  String get format;
+
+  /// 커버를 그림 파일로 따로 넘기는가 (아니면 태그 값 안에 넣거나 커버를 쓰지 않는다).
+  bool get coverAsFile;
+
+  /// 이 형식에 쓸 칸들 (키 이름 · 커버 표현이 형식마다 다르다).
+  Map<String, String> entries(TagValues values);
+
+  /// [extension]을 처리하는 형식 (없으면 null).
+  static FfmpegFormatWriter? forExtension(String extension) =>
+      switch (extension.toLowerCase()) {
+        'mp3' => const Mp3FormatWriter(),
+        'opus' || 'ogg' => const OggFormatWriter(),
+        'mp4' => const Mp4FormatWriter(),
+        'webm' => const WebmFormatWriter(),
+        _ => null,
+      };
+}
+
+/// mp3(ID3v2.3): 대문자 키, 커버는 첨부 그림 파일.
+class Mp3FormatWriter implements FfmpegFormatWriter {
+  const Mp3FormatWriter();
+
+  @override
+  String get method => 'tag';
+
+  @override
+  String get format => 'mp3';
+
+  @override
+  bool get coverAsFile => true;
+
+  @override
+  Map<String, String> entries(TagValues v) => {
+    'TITLE': ?v.title,
+    'ARTIST': ?v.artist,
+    'ALBUM': ?v.album,
+    'GENRE': ?v.genre,
+    'LYRICS': ?v.lyrics,
+    ...v.extra,
+  };
+}
+
+/// opus · ogg(Vorbis 코멘트): 대문자 키, 커버는 `METADATA_BLOCK_PICTURE` 태그 값.
+class OggFormatWriter implements FfmpegFormatWriter {
+  const OggFormatWriter();
+
+  @override
+  String get method => 'tag';
+
+  @override
+  String get format => 'ogg';
+
+  @override
+  bool get coverAsFile => false;
+
+  @override
+  Map<String, String> entries(TagValues v) => {
+    'TITLE': ?v.title,
+    'ARTIST': ?v.artist,
+    'ALBUM': ?v.album,
+    'GENRE': ?v.genre,
+    'LYRICS': ?v.lyrics,
+    ...v.extra,
+    if (v.coverPng != null)
+      'METADATA_BLOCK_PICTURE': base64.encode(
+        FfmpegTagWriter.pictureBlock(v.coverPng!, v.coverSide, v.coverSide),
+      ),
+  };
+}
+
+/// mp4 영상: 소문자 키, 커버는 첨부 그림 파일.
+class Mp4FormatWriter implements FfmpegFormatWriter {
+  const Mp4FormatWriter();
+
+  @override
+  String get method => 'tagVideo';
+
+  @override
+  String get format => 'mp4';
+
+  @override
+  bool get coverAsFile => true;
+
+  @override
+  Map<String, String> entries(TagValues v) => {
+    'title': ?v.title,
+    'artist': ?v.artist,
+    'album': ?v.album,
+    'genre': ?v.genre,
+    'lyrics': ?v.lyrics,
+    ...v.extra,
+  };
+}
+
+/// webm(Matroska) 영상: 소문자 키, 첨부 그림을 쓰지 않는다 (글 태그만).
+class WebmFormatWriter implements FfmpegFormatWriter {
+  const WebmFormatWriter();
+
+  @override
+  String get method => 'tagVideo';
+
+  @override
+  String get format => 'webm';
+
+  @override
+  bool get coverAsFile => false;
+
+  @override
+  Map<String, String> entries(TagValues v) => {
+    'title': ?v.title,
+    'artist': ?v.artist,
+    'album': ?v.album,
+    'genre': ?v.genre,
+    'lyrics': ?v.lyrics,
+    ...v.extra,
+  };
 }
