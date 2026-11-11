@@ -46,11 +46,11 @@ class FfmpegTagWriter {
   }) async {
     final mp3 = extension.toLowerCase() == 'mp3';
     final entries = <String, String>{
-      if (_has(title)) 'TITLE': title!,
-      if (_has(artist)) 'ARTIST': artist!,
-      if (_has(album)) 'ALBUM': album!,
-      if (_has(genre)) 'GENRE': genre!,
-      if (_has(lyrics)) 'LYRICS': lyrics!,
+      if (title != null) 'TITLE': title,
+      if (artist != null) 'ARTIST': artist,
+      if (album != null) 'ALBUM': album,
+      if (genre != null) 'GENRE': genre,
+      if (lyrics != null) 'LYRICS': lyrics,
       // 앱이 읽어 커버 편집 상태를 되살리는 사용자 정의 태그 (COVER_SOURCE 등). 다른 플레이어는 무시한다.
       ...extra,
       // mp3의 커버는 태그 값이 아니라 그림 파일로 따로 넘긴다.
@@ -118,11 +118,11 @@ class FfmpegTagWriter {
   }) async {
     final mp4 = extension.toLowerCase() == 'mp4';
     final entries = <String, String>{
-      if (_has(title)) 'title': title!,
-      if (_has(artist)) 'artist': artist!,
-      if (_has(album)) 'album': album!,
-      if (_has(genre)) 'genre': genre!,
-      if (_has(lyrics)) 'lyrics': lyrics!,
+      if (title != null) 'title': title,
+      if (artist != null) 'artist': artist,
+      if (album != null) 'album': album,
+      if (genre != null) 'genre': genre,
+      if (lyrics != null) 'lyrics': lyrics,
       ...extra,
     };
     lastError = null;
@@ -167,7 +167,6 @@ class FfmpegTagWriter {
     }
   }
 
-  static bool _has(String? v) => v != null && v.trim().isNotEmpty;
 
   /// ffmpeg가 읽는 ffmetadata 텍스트. `=` `;` `#` `\` 와 줄바꿈은 앞에 `\`를 붙인다.
   @visibleForTesting

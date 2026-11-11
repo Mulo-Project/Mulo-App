@@ -105,18 +105,26 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
         if (!ffmpeg.exists()) return false
         val out = File(output)
         out.delete()
-        val args = mutableListOf(ffmpeg.absolutePath, "-nostdin", "-y", "-i", input, "-i", meta)
+        val args = mutableListOf(ffmpeg.absolutePath, "-nostdin", "-y", "-i", input)
         if (cover != null) args += listOf("-i", cover)
         args += listOf("-map", "0:a")
         // mp3 커버는 그림 입력을 첨부 그림(attached_pic)으로 붙인다.
         // 그림 종류를 "앞면 커버"로 적어 다른 플레이어도 커버로 읽게 한다 (안 적으면 "기타" 그림이 된다).
         if (cover != null) {
             args += listOf(
-                "-map", "2:v", "-disposition:v:0", "attached_pic",
+                "-map", "1:v", "-disposition:v:0", "attached_pic",
                 "-metadata:s:v", "title=Album cover", "-metadata:s:v", "comment=Cover (front)",
             )
+        } else {
+            // 새 커버가 없으면 파일에 있던 커버를 그대로 둔다.
+            args += listOf("-map", "0:v?")
         }
-        args += listOf("-map_metadata", "1", "-map_metadata:s:a:0", "1:g", "-c", "copy")
+        // 기존 태그는 두고 넘어온 칸만 덮어쓴다 (빈 값은 그 칸을 지운다). ogg는 소리 스트림 태그에도 같이 쓴다.
+        for ((key, value) in readFfmetadata(meta)) {
+            args += listOf("-metadata", "$key=$value")
+            if (format != "mp3") args += listOf("-metadata:s:a:0", "$key=$value")
+        }
+        args += listOf("-c", "copy")
         // 다른 플레이어에서도 열리도록 ID3는 v2.3으로 쓴다.
         if (format == "mp3") args += listOf("-id3v2_version", "3")
         args += listOf("-f", format, output)
@@ -159,13 +167,15 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
         val out = File(output)
         out.delete()
         val withCover = cover != null && format == "mp4"
-        val args = mutableListOf(ffmpeg.absolutePath, "-nostdin", "-y", "-i", input, "-i", meta)
+        val args = mutableListOf(ffmpeg.absolutePath, "-nostdin", "-y", "-i", input)
         if (withCover) args += listOf("-i", cover!!)
         args += listOf("-map", "0")
         if (withCover) {
-            args += listOf("-map", "2:v", "-disposition:v:1", "attached_pic")
+            args += listOf("-map", "1:v", "-disposition:v:1", "attached_pic")
         }
-        args += listOf("-map_metadata", "1", "-c", "copy")
+        // 기존 태그는 두고 넘어온 칸만 덮어쓴다 (빈 값은 그 칸을 지운다).
+        for ((key, value) in readFfmetadata(meta)) args += listOf("-metadata", "$key=$value")
+        args += listOf("-c", "copy")
         // mp4가 title · artist 밖의 칸(genre 등)도 쓰도록.
         if (format == "mp4") args += listOf("-movflags", "+use_metadata_tags")
         args += listOf("-f", format, output)
@@ -194,6 +204,36 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
         } finally {
             process = null
         }
+    }
+
+    /** ffmetadata 파일(`;FFMETADATA1`, `키=값`, `\`로 `=` `;` `#` `\` 줄바꿈을 이스케이프)을 (키, 값) 목록으로 읽는다. */
+    private fun readFfmetadata(path: String): List<Pair<String, String>> {
+        val text = File(path).readText(Charsets.UTF_8)
+        val out = mutableListOf<Pair<String, String>>()
+        val key = StringBuilder()
+        val value = StringBuilder()
+        var inValue = false
+        var i = text.indexOf('\n') + 1 // 첫 줄(;FFMETADATA1)은 건너뛴다
+        while (i < text.length) {
+            val c = text[i]
+            when {
+                c == '\\' && i + 1 < text.length -> {
+                    (if (inValue) value else key).append(text[i + 1])
+                    i++
+                }
+                c == '=' && !inValue -> inValue = true
+                c == '\n' -> {
+                    if (key.isNotEmpty()) out += key.toString() to value.toString()
+                    key.clear()
+                    value.clear()
+                    inValue = false
+                }
+                else -> (if (inValue) value else key).append(c)
+            }
+            i++
+        }
+        if (key.isNotEmpty()) out += key.toString() to value.toString()
+        return out
     }
 
     /** ffmpeg 종료 코드가 0이면 true. */

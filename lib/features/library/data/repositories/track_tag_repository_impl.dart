@@ -34,10 +34,11 @@ class TrackTagRepositoryImpl implements TrackTagRepository {
       ? Future.value(TagWriteResult.unsupported)
       : _source.write(
           track.uri,
-          title: '',
-          artist: '',
-          album: '',
-          genre: '',
+          // null은 그 칸을 건드리지 않는다 (제목 · 아티스트 등 기존 태그를 그대로 둔다).
+          title: null,
+          artist: null,
+          album: null,
+          genre: null,
           lyrics: lyrics,
           // 쓰기 동의는 가사 편집 화면에 들어갈 때 이미 구했다 ([ensureWriteAccess]).
         );

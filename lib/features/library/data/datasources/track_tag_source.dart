@@ -30,10 +30,10 @@ class TrackTagSource {
 
   Future<TagWriteResult> write(
     String uri, {
-    required String title,
-    required String artist,
-    required String album,
-    required String genre,
+    required String? title,
+    required String? artist,
+    required String? album,
+    required String? genre,
     String? lyrics,
     CoverArt? cover,
     int? color,
@@ -57,8 +57,7 @@ class TrackTagSource {
         extension = _extensionOfPath(uri);
       }
       final video = extension.toLowerCase() == 'mp4';
-      // 영상(mp4)은 글 태그 · 커버를 쓴다. 가사만 쓰는 호출은 기존 태그를 지울 수 있어 건너뛴다.
-      if (video && title.isEmpty) return TagWriteResult.unsupported;
+      // 영상(mp4)은 글 태그 · 커버를 쓴다.
       viaFfmpeg =
           (video ||
               FfmpegTagWriter.extensions.contains(extension.toLowerCase())) &&
