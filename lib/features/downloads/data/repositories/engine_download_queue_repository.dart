@@ -15,6 +15,7 @@ import '../../domain/entities/download_source.dart';
 import '../../domain/entities/tag_notice.dart';
 import '../../domain/repositories/download_queue_repository.dart';
 import '../../domain/repositories/download_settings_repository.dart';
+import '../../domain/repositories/video_save_repository.dart';
 import '../datasources/audio_file_downloader.dart';
 import '../datasources/audio_transcoder.dart';
 import '../datasources/cover_tag_writer.dart';
@@ -44,6 +45,7 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
     required this._tempDir,
     this._coverTags,
     this._lyrics,
+    this._video,
     DateTime Function()? now,
   }) : _now = now ?? DateTime.now;
 
@@ -58,6 +60,12 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
   final AudioTranscoder _transcoder;
   final CoverTagWriter? _coverTags;
   final LyricsRepository? _lyrics;
+
+  /// 영상 파일 저장 (없으면 영상 선택은 무시한다).
+  final VideoSaveRepository? _video;
+
+  /// 이번 실행에서 영상을 이미 저장한 항목 (음원이 실패해 다시 받을 때 영상을 또 받지 않도록).
+  final _videoSaved = <String>{};
   final DownloadQueueStore _queueStore;
   final Future<Directory> Function() _tempDir;
   final DateTime Function() _now;
@@ -379,6 +387,30 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
       final dir = await _tempDir();
       await dir.create(recursive: true);
       temp = File(_partPath(dir, id));
+
+      // 영상도 저장하기로 했으면 음원보다 먼저 받는다 (실패하면 항목 전체가 실패해 다시 받아도 음원이 겹쳐 저장되지 않는다).
+      final video = _video;
+      final videoFormat = request.videoFormat;
+      if (video != null && videoFormat != null && _videoSaved.add(id)) {
+        _set(id, (e) => e.copyWith(processing: true), persist: false);
+        try {
+          await video.save(
+            VideoSaveRequest(
+              url: request.url,
+              title: request.title,
+              artist: request.artist,
+              maxHeight: request.videoHeight,
+              format: videoFormat,
+            ),
+          );
+        } on VideoSaveException catch (e) {
+          _videoSaved.remove(id);
+          throw DownloadFailed('영상을 저장하지 못했어요 (${e.message})');
+        }
+        if (token.isCancelled) throw const DownloadAborted();
+        _set(id, (e) => e.copyWith(), persist: false);
+      }
+
       var lastShown = 0.0;
       Future<DownloadedAudio> fetch({required bool refresh}) async {
         final stream = await _engine.resolveAudioStream(
@@ -511,6 +543,7 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
       };
       if (temp != null && !keep) await _deleteQuietly(temp);
       if (!keep) _partMime.remove(id);
+      if (!keep) _videoSaved.remove(id);
       if (converted != null) await _deleteQuietly(converted);
       _runningId = null;
       _token = null;

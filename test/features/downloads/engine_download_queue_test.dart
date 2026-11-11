@@ -11,6 +11,7 @@ import 'package:music_download_play_app/features/downloads/data/repositories/eng
 import 'package:music_download_play_app/features/downloads/domain/entities/download_item.dart';
 import 'package:music_download_play_app/features/downloads/domain/entities/download_options.dart';
 import 'package:music_download_play_app/features/downloads/domain/entities/download_request.dart';
+import 'package:music_download_play_app/features/downloads/domain/repositories/video_save_repository.dart';
 import 'package:music_download_play_app/features/downloads/domain/entities/download_source.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 import 'package:music_download_play_app/features/search/domain/entities/audio_stream.dart';
@@ -143,6 +144,22 @@ class _LangEngine extends FakeDownloaderEngine {
   }
 }
 
+class _FakeVideo implements VideoSaveRepository {
+  _FakeVideo({this.fail = false});
+
+  final bool fail;
+  final saved = <VideoSaveRequest>[];
+
+  @override
+  Future<bool> isAvailable() async => true;
+
+  @override
+  Future<void> save(VideoSaveRequest request) async {
+    if (fail) throw const VideoSaveException('boom');
+    saved.add(request);
+  }
+}
+
 void main() {
   late Directory tmp;
   late FakeLibraryRepository library;
@@ -184,6 +201,7 @@ void main() {
   EngineDownloadQueueRepository build(
     _FakeDownloader dl, {
     MemoryLyricsRepository? lyrics,
+    VideoSaveRepository? video,
   }) => EngineDownloadQueueRepository(
     engine: engine,
     downloader: dl,
@@ -197,6 +215,7 @@ void main() {
     queueStore: queueStore,
     tempDir: () async => tmp,
     lyrics: lyrics,
+    video: video,
   );
 
   /// 고정 시간만 기다리면 느린 PC에서 아직 끝나지 않은 채 확인하게 되므로,
@@ -248,6 +267,50 @@ void main() {
     expect(playlists.members['pl1'], {track.id});
     await until(() => tmp.listSync().isEmpty);
     expect(tmp.listSync(), isEmpty, reason: '임시 파일은 지운다');
+  });
+
+  group('영상도 함께 저장', () {
+    const withVideo = DownloadRequest(
+      title: 'Song',
+      url: 'https://youtu.be/abc',
+      videoFormat: VideoFormat.webm,
+      videoHeight: 720,
+    );
+
+    test('고른 형식 · 화질로 영상을 저장한 뒤 음원도 저장한다', () async {
+      final video = _FakeVideo();
+      final repo = build(_FakeDownloader(), video: video);
+      await repo.enqueue(withVideo);
+      await settled(
+        repo,
+        (l) => l.isNotEmpty && l.single.status == DownloadStatus.done,
+      );
+      expect(video.saved.single.maxHeight, 720);
+      expect(video.saved.single.format, VideoFormat.webm);
+      expect((await library.watchTracks().first), hasLength(1));
+    });
+
+    test('영상이 실패하면 항목이 실패하고 음원은 저장되지 않는다', () async {
+      final repo = build(_FakeDownloader(), video: _FakeVideo(fail: true));
+      await repo.enqueue(withVideo);
+      final items = await settled(
+        repo,
+        (l) => l.isNotEmpty && l.single.status == DownloadStatus.failed,
+      );
+      expect(items.single.error, contains('영상'));
+      expect(await library.watchTracks().first, isEmpty);
+    });
+
+    test('영상을 고르지 않으면 영상 저장을 부르지 않는다', () async {
+      final video = _FakeVideo();
+      final repo = build(_FakeDownloader(), video: video);
+      await repo.enqueue(request);
+      await settled(
+        repo,
+        (l) => l.isNotEmpty && l.single.status == DownloadStatus.done,
+      );
+      expect(video.saved, isEmpty);
+    });
   });
 
   group('자막 가사로 가져오기', () {

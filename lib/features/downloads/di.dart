@@ -47,6 +47,7 @@ void registerDownloads(GetIt sl) {
         transcoder: sl(),
         coverTags: const CoverTagWriter(ffmpeg: FfmpegTagWriter()),
         lyrics: sl(),
+        video: sl(),
         queueStore: sl(),
         // 받다 만 파일은 앱을 껐다 켜도 남아야 해서 캐시가 아닌 앱 전용 폴더에 둔다.
         tempDir: _partsDirectory,
@@ -63,7 +64,6 @@ void registerDownloads(GetIt sl) {
       ),
     )
     ..registerFactory(() => IsVideoSaveAvailable(sl()))
-    ..registerFactory(() => SaveVideoFile(sl()))
     ..registerLazySingleton<DownloadSettingsRepository>(
       PrefsDownloadSettingsRepository.new,
     )

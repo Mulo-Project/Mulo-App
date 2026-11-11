@@ -23,6 +23,8 @@ class DownloadRequest extends Equatable {
     this.lyricsSkipSounds = true,
     this.lyricsText,
     this.audioLanguage,
+    this.videoFormat,
+    this.videoHeight = 1080,
   });
 
   final String title;
@@ -71,6 +73,12 @@ class DownloadRequest extends Equatable {
   /// 받을 오디오 언어 코드 (다국어 음원에서 고른 것). null이면 영상의 기본 음성.
   final String? audioLanguage;
 
+  /// 음원과 함께 영상 파일(`Movies/Mulo`)도 저장할 형식. null이면 영상은 저장하지 않는다.
+  final VideoFormat? videoFormat;
+
+  /// 영상 화질 상한(세로 픽셀). [videoFormat]이 있을 때만 쓴다.
+  final int videoHeight;
+
   /// 문자열 앞뒤 공백을 지운 사본.
   DownloadRequest normalized() => DownloadRequest(
     title: title.trim(),
@@ -90,6 +98,8 @@ class DownloadRequest extends Equatable {
     lyricsSkipSounds: lyricsSkipSounds,
     lyricsText: lyricsText,
     audioLanguage: audioLanguage,
+    videoFormat: videoFormat,
+    videoHeight: videoHeight,
   );
 
   @override
@@ -111,5 +121,7 @@ class DownloadRequest extends Equatable {
     lyricsSkipSounds,
     lyricsText,
     audioLanguage,
+    videoFormat,
+    videoHeight,
   ];
 }

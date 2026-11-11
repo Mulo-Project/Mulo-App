@@ -13,7 +13,6 @@ import '../../../covers/presentation/widgets/cover_entry.dart';
 import '../../domain/entities/download_options.dart';
 import '../../domain/entities/download_request.dart';
 import '../../domain/entities/download_source.dart';
-import '../../domain/repositories/video_save_repository.dart';
 import '../../../search/presentation/bloc/audio_language_cubit.dart';
 import '../../../search/presentation/widgets/audio_language_sheet.dart';
 import '../../domain/usecases/download_usecases.dart';
@@ -202,6 +201,9 @@ class _DownloadScreenState extends State<DownloadScreen> {
 
   // 영상 파일(mp4)로 저장: 풀 빌드(Android)에서만 켜진다.
   var _videoAvailable = false;
+  var _saveVideoToo = false;
+  var _videoFormat = VideoFormat.mp4;
+  var _videoHeight = 1080;
 
   Color? _genreColor() {
     final genre = _genre.text.trim();
@@ -272,28 +274,6 @@ class _DownloadScreenState extends State<DownloadScreen> {
     if (path != null && mounted) setState(() => _savePath.text = path);
   }
 
-  /// 이 곡을 영상 파일(mp4, 최대 1080p, 소리 포함)로 저장한다. 창은 닫고 뒤에서 받는다.
-  Future<void> _saveVideo() async {
-    final messenger = ScaffoldMessenger.of(context);
-    final l10n = context.l10n;
-    final save = sl<SaveVideoFile>();
-    final request = VideoSaveRequest(
-      url: widget.url,
-      title: _title.text.trim(),
-      artist: _artist.text.trim(),
-    );
-    Navigator.of(context).pop(false);
-    messenger.showSnackBar(SnackBar(content: Text(l10n.videoSaveStarted)));
-    final ok = await save(request);
-    messenger
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(ok ? l10n.videoSaveDone : l10n.videoSaveFailed),
-        ),
-      );
-  }
-
   Future<void> _start() async {
     final queue = context.read<DownloadQueueCubit>();
     // 같은 곡이 이미 대기열에 있으면 또 넣지 않는다.
@@ -343,6 +323,8 @@ class _DownloadScreenState extends State<DownloadScreen> {
         lyricsSkipSounds: lyrics?.skipSounds ?? true,
         lyricsText: lyrics?.lyricsText,
         audioLanguage: audioLanguage,
+        videoFormat: _videoAvailable && _saveVideoToo ? _videoFormat : null,
+        videoHeight: _videoHeight,
       ),
     );
     if (ok && mounted) Navigator.of(context).pop(true);
@@ -484,6 +466,46 @@ class _DownloadScreenState extends State<DownloadScreen> {
                         onChanged: (f) => setState(() => _format = f),
                       ),
                     ],
+                    if (_videoAvailable) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      SettingRow(
+                        title: l10n.videoSaveToo,
+                        trailing: AppSwitch(
+                          value: _saveVideoToo,
+                          onChanged: (v) => setState(() => _saveVideoToo = v),
+                        ),
+                        onTap: () =>
+                            setState(() => _saveVideoToo = !_saveVideoToo),
+                      ),
+                      if (_saveVideoToo) ...[
+                        const SizedBox(height: AppSpacing.xxs),
+                        Text(
+                          l10n.videoSaveFormat.toUpperCase(),
+                          style: text.labelSmall,
+                        ),
+                        const SizedBox(height: AppSpacing.xxs),
+                        SegmentedPills<VideoFormat>(
+                          expand: true,
+                          values: VideoFormat.values,
+                          selected: _videoFormat,
+                          labelOf: (f) => f.name,
+                          onChanged: (f) => setState(() => _videoFormat = f),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          l10n.videoSaveQuality.toUpperCase(),
+                          style: text.labelSmall,
+                        ),
+                        const SizedBox(height: AppSpacing.xxs),
+                        SegmentedPills<int>(
+                          expand: true,
+                          values: videoHeights,
+                          selected: _videoHeight,
+                          labelOf: (h) => '${h}p',
+                          onChanged: (h) => setState(() => _videoHeight = h),
+                        ),
+                      ],
+                    ],
                     const AudioLanguageRow(),
                     const SizedBox(height: AppSpacing.md),
                     Text(
@@ -510,24 +532,6 @@ class _DownloadScreenState extends State<DownloadScreen> {
                 ],
               ),
             ),
-            if (_videoAvailable)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  AppSpacing.sm,
-                  AppSpacing.lg,
-                  0,
-                ),
-                child: ListenableBuilder(
-                  listenable: _title,
-                  builder: (_, _) => PillButton(
-                    label: l10n.videoSaveAction,
-                    icon: AppIcons.download,
-                    variant: PillVariant.tonal,
-                    onPressed: _title.text.trim().isEmpty ? null : _saveVideo,
-                  ),
-                ),
-              ),
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.lg,

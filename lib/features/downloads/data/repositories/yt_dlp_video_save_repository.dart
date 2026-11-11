@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import '../../domain/entities/download_options.dart';
 import '../../domain/repositories/video_save_repository.dart';
 import '../datasources/downloaded_file_store.dart';
 
@@ -31,11 +32,15 @@ class YtDlpVideoSaveRepository implements VideoSaveRepository {
   final Future<Directory> Function() tempDir;
   final Duration timeout;
 
-  /// 화질 상한 이하에서 H.264 영상 + AAC 소리를 먼저 찾는다(다시 인코딩 없이 mp4로 합쳐진다).
-  /// 없으면 아무 코덱, 그래도 없으면 영상 · 소리가 합쳐진 형식.
-  static String selector(int h) =>
-      'bv*[height<=$h][vcodec^=avc1]+ba[ext=m4a]/bv*[height<=$h]+ba/'
-      'b[height<=$h]/b';
+  /// 화질 상한 이하에서 가장 좋은 영상 + 소리 (영상 · 소리가 따로 오면 yt-dlp가 합친다).
+  /// mp4: H.264 + AAC를 먼저 찾아 다시 인코딩 없이 합친다. webm: VP9 + Opus 원본.
+  /// 못 찾으면 아무 코덱, 그래도 없으면 영상 · 소리가 합쳐진 형식.
+  static String selector(int h, [VideoFormat format = VideoFormat.mp4]) =>
+      format == VideoFormat.webm
+      ? 'bv*[height<=$h][ext=webm]+ba[ext=webm]/bv*[height<=$h]+ba/'
+            'b[height<=$h]/b'
+      : 'bv*[height<=$h][vcodec^=avc1]+ba[ext=m4a]/bv*[height<=$h]+ba/'
+            'b[height<=$h]/b';
 
   @override
   Future<bool> isAvailable() => available();
@@ -50,9 +55,9 @@ class YtDlpVideoSaveRepository implements VideoSaveRepository {
         'yt-dlp',
         [
           '-f',
-          selector(request.maxHeight),
+          selector(request.maxHeight, request.format),
           '--merge-output-format',
-          'mp4',
+          request.format.extension,
           '--no-playlist',
           '--no-warnings',
           '-o',
@@ -63,14 +68,14 @@ class YtDlpVideoSaveRepository implements VideoSaveRepository {
         background: true,
       );
       if (r.exitCode != 0) throw VideoSaveException(r.stderr.trim());
-      output = await _find(dir, stem);
+      output = await _find(dir, stem, request.format.extension);
       if (output == null) throw const VideoSaveException('no output file');
       await store.save(
         output,
         folder: 'Movies/Mulo',
         name: safeName(request.title),
-        extension: 'mp4',
-        mime: 'video/mp4',
+        extension: request.format.extension,
+        mime: request.format.mime,
         title: request.title,
         artist: request.artist,
       );
@@ -83,9 +88,9 @@ class YtDlpVideoSaveRepository implements VideoSaveRepository {
     }
   }
 
-  /// 합쳐진 mp4 (없거나 비었으면 null).
-  static Future<File?> _find(Directory dir, String stem) async {
-    final mp4 = File('${dir.path}${Platform.pathSeparator}$stem.mp4');
+  /// 합쳐진 영상 파일 (없거나 비었으면 null).
+  static Future<File?> _find(Directory dir, String stem, String ext) async {
+    final mp4 = File('${dir.path}${Platform.pathSeparator}$stem.$ext');
     return await mp4.exists() && await mp4.length() > 0 ? mp4 : null;
   }
 

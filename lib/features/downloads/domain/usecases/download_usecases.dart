@@ -223,24 +223,3 @@ class IsVideoSaveAvailable implements UseCase<bool, NoParams> {
   @override
   Future<bool> call(NoParams params) => _repo.isAvailable();
 }
-
-/// 영상(소리 포함)을 mp4 파일로 저장한다. 성공하면 true, 못 받으면 false.
-/// 제목이나 원본 주소가 비어 있으면 받지 않는다.
-class SaveVideoFile implements UseCase<bool, VideoSaveRequest> {
-  const SaveVideoFile(this._repo);
-
-  final VideoSaveRepository _repo;
-
-  @override
-  Future<bool> call(VideoSaveRequest request) async {
-    if (request.url.trim().isEmpty || request.title.trim().isEmpty) {
-      return false;
-    }
-    try {
-      await _repo.save(request);
-      return true;
-    } on VideoSaveException {
-      return false;
-    }
-  }
-}

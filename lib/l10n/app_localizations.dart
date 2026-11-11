@@ -3206,29 +3206,23 @@ abstract class AppLocalizations {
   /// **'이미 받는 중이거나 대기 중인 곡이에요'**
   String get downloadAlreadyInQueue;
 
-  /// No description provided for @videoSaveAction.
+  /// No description provided for @videoSaveToo.
   ///
   /// In ko, this message translates to:
-  /// **'영상으로 저장'**
-  String get videoSaveAction;
+  /// **'영상도 함께 저장 (Movies/Mulo)'**
+  String get videoSaveToo;
 
-  /// No description provided for @videoSaveStarted.
+  /// No description provided for @videoSaveFormat.
   ///
   /// In ko, this message translates to:
-  /// **'영상을 받는 중이에요. 끝나면 알려 드릴게요'**
-  String get videoSaveStarted;
+  /// **'영상 형식'**
+  String get videoSaveFormat;
 
-  /// No description provided for @videoSaveDone.
+  /// No description provided for @videoSaveQuality.
   ///
   /// In ko, this message translates to:
-  /// **'영상을 저장했어요 (Movies/Mulo)'**
-  String get videoSaveDone;
-
-  /// No description provided for @videoSaveFailed.
-  ///
-  /// In ko, this message translates to:
-  /// **'영상을 저장하지 못했어요'**
-  String get videoSaveFailed;
+  /// **'영상 화질'**
+  String get videoSaveQuality;
 
   /// No description provided for @homeTopGenre.
   ///
