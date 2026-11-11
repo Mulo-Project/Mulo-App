@@ -28,6 +28,9 @@ object StreamCache {
     /** 임시 저장소 용량 한도 기본값 500 MB (설정에서 바꾼다). */
     private const val DEFAULT_LIMIT_BYTES = 500L * 1024 * 1024
     private const val MIN_TEMP_BYTES = 32L * 1024 * 1024
+
+    /** 스트리밍 한 번에 요청하는 구간 크기 (소리는 2분쯤, 영상은 몇 초 분량). */
+    private const val STREAM_CHUNK_BYTES = 4L * 1024 * 1024
     private const val PREFS = "mulo_stream_cache"
     private const val KEY_LIMIT = "limit"
 
@@ -97,8 +100,10 @@ object StreamCache {
         cache = null
     }
 
-    /** [upstream]을 캐시로 감싼다. 캐시를 못 열면 [upstream] 그대로. */
-    fun wrap(context: Context, upstream: DataSource.Factory): DataSource.Factory {
+    /** [source]를 구간 요청으로 나누고 캐시로 감싼다. 캐시를 못 열면 구간 요청만. */
+    fun wrap(context: Context, source: DataSource.Factory): DataSource.Factory {
+        // 길게 한 번에 요청하면 유튜브가 속도를 깎아 재생 중 오래 멈춘다: 구간(Range)으로 나눠 요청한다.
+        val upstream = DataSource.Factory { ChunkedHttpDataSource(source.createDataSource(), STREAM_CHUNK_BYTES) }
         val c = open(context) ?: return upstream
         val temp = cacheFactory(c, upstream)
         val savedSimple = openSaved(context) ?: return temp
