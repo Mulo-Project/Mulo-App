@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
+import '../../../player/presentation/widgets/native_video.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../downloads/presentation/widgets/download_dialog.dart';
 import '../../../library/domain/entities/track.dart' show Track, formatDuration;
@@ -21,8 +22,11 @@ import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../bloc/preview_cubit.dart';
 import '../saved_track.dart';
 import '../bloc/saved_videos_cubit.dart';
+import '../bloc/stream_cache_cubit.dart';
+import '../main_stream_video.dart';
 import '../bloc/video_quality_cubit.dart';
 import '../../domain/entities/video_quality.dart';
+import '../widgets/saved_full_dialog.dart';
 import '../widgets/video_quality_sheet.dart';
 import '../widgets/audio_language_sheet.dart';
 import 'saved_videos_screen.dart' show savedVideosLocation;
@@ -89,15 +93,32 @@ class MediaDetailScreen extends StatelessWidget {
   final Widget Function(String videoId, VoidCallback onFailed)? playerBuilder;
 
   @override
-  Widget build(BuildContext context) => MultiBlocProvider(
+  Widget build(BuildContext context) {
+    // 저장한 곡이면 저장해 둔 상세 정보를 먼저 쓴다 (검색 목록에서 들어와도 다시 읽지 않는다).
+    MediaHit? savedHit;
+    try {
+      savedHit = context
+          .read<SavedVideosCubit>()
+          .state
+          .where((v) => v.id == hit.id)
+          .firstOrNull
+          ?.hit;
+    } on Object {
+      savedHit = null;
+    }
+    return _build(savedHit);
+  }
+
+  Widget _build(MediaHit? savedHit) => MultiBlocProvider(
     providers: [
       BlocProvider(
         create: (_) => MediaDetailCubit(
-          hit,
+          savedHit ?? hit,
           sl<FetchMediaInfo>(),
           sl<FetchChannelInfo>(),
           sl<OpenLink>(),
           memo: sl<MediaHitMemo>(),
+          stored: savedHit != null,
         )..load(),
       ),
       // 유튜브 곡만 오디오 언어가 여럿일 수 있다.
@@ -173,10 +194,34 @@ class _DetailViewState extends State<_DetailView> {
       isYoutubeUrl(hit.url) &&
       isYoutubeVideoId(hit.id);
 
+  /// 저장한 음원 화면에서 연 상세에서 처음 재생: 메인 재생 대기열로 시작한다 (영상으로 저장한 곡은 영상으로 나온다).
+  Future<void> _startSaved(MediaHit hit) async {
+    final now = context.read<NowPlayingCubit>();
+    final saved = context.read<SavedVideosCubit>().state;
+    final at = saved.indexWhere((v) => v.id == hit.id);
+    final ready = at >= 0 && saved[at].ready;
+    // 두 소리가 겹치지 않게 미리 듣기는 멈추고, 메인 재생 대기열로 시작한다.
+    await _preview.stop();
+    if (!ready) {
+      // 아직 다 받지 못한 곡은 한 곡만 미리 듣기로 튼다.
+      unawaited(
+        _preview.toggle(hit, videoQuality: at < 0 ? null : saved[at].quality),
+      );
+      return;
+    }
+    final tracks = await savedTracksResolved(saved);
+    final index = tracks.indexWhere(
+      (t) => t.id == '${Track.savedIdPrefix}${hit.id}',
+    );
+    if (tracks.isEmpty) return;
+    now.playQueue(tracks, index: index < 0 ? 0 : index);
+  }
+
   /// 썸네일의 재생 버튼: 앱 안에서 틀 수 있는 유튜브 영상은 미리 듣기(소리 + 영상)로 그 자리에서 튼다.
   /// 그 화면을 나가면 미니 플레이어가 영상을 이어서 보여 준다.
   /// 미리 듣기를 시작하지 못하면 앱 안 플레이어(웹뷰)로, 그것도 안 되면 유튜브로 연다.
   Future<void> _play(MediaHit hit) async {
+    if (widget.fromSaved) return _startSaved(hit);
     if (widget.inAppVideo && isYoutubeUrl(hit.url)) {
       final started = await togglePreview(
         context,
@@ -367,37 +412,12 @@ class _DetailViewState extends State<_DetailView> {
                 Builder(
                   builder: (context) {
                     final now = context.watch<NowPlayingCubit>();
-                    final saved = context.watch<SavedVideosCubit>().state;
                     final current = now.state.track?.id ?? '';
                     // 메인 재생이 임시 저장한 음원을 듣는 중이면 이 곡이 아니어도 같은 조작부를 쓴다.
                     if (current.startsWith(Track.savedIdPrefix)) {
                       return const SavedQueueControls();
                     }
-                    final at = saved.indexWhere((v) => v.id == hit.id);
-                    final track = at < 0 ? null : savedTrackOf(saved[at]);
-                    return SavedQueueControls(
-                      onStart: () async {
-                        // 두 소리가 겹치지 않게 미리 듣기는 멈추고, 메인 재생 대기열로 시작한다.
-                        await _preview.stop();
-                        if (track == null) {
-                          // 아직 다 받지 못한 곡은 한 곡만 미리 듣기로 튼다.
-                          unawaited(
-                            _preview.toggle(
-                              hit,
-                              videoQuality: at < 0 ? null : saved[at].quality,
-                            ),
-                          );
-                          return;
-                        }
-                        final tracks = <Track>[
-                          for (final v in saved) ?savedTrackOf(v),
-                        ];
-                        now.playQueue(
-                          tracks,
-                          index: tracks.indexWhere((t) => t.id == track.id),
-                        );
-                      },
-                    );
+                    return SavedQueueControls(onStart: () => _startSaved(hit));
                   },
                 ),
               Padding(
@@ -493,6 +513,27 @@ class _SaveButton extends StatelessWidget {
         final failed = l10n.savedVideosFailed;
         // 저장된 곡이면 저장한 음원 화면으로 간다 (저장 해제는 거기서).
         if (saved) return unawaited(context.push(savedVideosLocation));
+        // 저장한 곡이 정해 둔 용량을 다 채웠으면 새로 저장하지 않는다 (이미 저장한 곡은 그대로 둔다).
+        // 이 화면 위에는 용량 상태가 없으므로 그때그때 읽는다 (못 읽으면 한도 0이라 막지 않는다).
+        final probe = sl<StreamCacheCubit>();
+        await probe.load();
+        if (!context.mounted) {
+          unawaited(probe.close());
+          return;
+        }
+        var cache = probe.state;
+        if (cache.enabled &&
+            cache.limitBytes > 0 &&
+            cache.savedBytes >= cache.limitBytes) {
+          // 가득 찼으면 알리고 그 자리에서 한도를 고르게 한다. 한도를 늘려 자리가 생기면 이어서 저장한다.
+          await showSavedFullDialog(context, probe);
+          cache = probe.state;
+          unawaited(probe.close());
+          if (cache.savedBytes >= cache.limitBytes) return;
+        } else {
+          unawaited(probe.close());
+        }
+        if (!context.mounted) return;
         VideoQuality? quality;
         if (isYoutubeUrl(hit.url)) {
           final pick = await pickSaveQuality(
@@ -543,6 +584,20 @@ class _Thumbnail extends StatelessWidget {
               c.state.isActive(hit.id) &&
               c.state.status == PreviewStatus.playing,
         );
+    final mainVideo = context.select(
+      (NowPlayingCubit c) =>
+          c.state.track?.id == '${Track.savedIdPrefix}${hit.id}' &&
+          c.state.track!.hasVideo,
+    );
+    // 소리만 저장한 곡을 메인 재생으로 듣는 중: 영상은 스트림으로 읽어 메인 소리에 맞춰 보여 준다 (유튜브만).
+    final mainAudioOnly =
+        !audio &&
+        hit.url.isNotEmpty &&
+        context.select(
+          (NowPlayingCubit c) =>
+              c.state.track?.id == '${Track.savedIdPrefix}${hit.id}' &&
+              !c.state.track!.hasVideo,
+        );
     return LayoutBuilder(
       builder: (context, box) {
         // 넓은 화면(데스크톱)에서 너무 커지지 않게 높이를 제한하고 가운데에 둔다.
@@ -560,7 +615,20 @@ class _Thumbnail extends StatelessWidget {
                 radius: AppRadii.md,
                 tone: toneFor(hit.id),
               ),
-              if (previewing)
+              if (mainVideo)
+                // 영상으로 저장한 곡을 메인 재생으로 듣는 중: 네이티브가 소리와 같은 시계로 내는 영상을 그린다.
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadii.md),
+                  child: SizedBox(
+                    width: width,
+                    height: width * 9 / 16,
+                    child: const MainVideoWithControls(),
+                  ),
+                )
+              else if (mainAudioOnly)
+                // 소리만 저장한 곡은 자동으로 영상을 틀지 않는다: 사용자가 영상 재생을 누르면 그때 스트림으로 튼다.
+                _OnDemandVideo(hit: hit, width: width)
+              else if (previewing)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(AppRadii.md),
                   child: SizedBox(
@@ -583,6 +651,68 @@ class _Thumbnail extends StatelessWidget {
                   onPressed: onPlay,
                 ),
             ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// 소리만 저장한 곡의 영상: 처음에는 재생 버튼만 보이고, 누르면 영상을 스트림으로 읽어 메인 소리에 맞춰 보여 준다.
+class _OnDemandVideo extends StatefulWidget {
+  const _OnDemandVideo({required this.hit, required this.width});
+
+  final MediaHit hit;
+  final double width;
+
+  @override
+  State<_OnDemandVideo> createState() => _OnDemandVideoState();
+}
+
+class _OnDemandVideoState extends State<_OnDemandVideo> {
+  /// 이 화면에서 영상 읽기를 시작했다 (이미 켜져 있던 영상을 다시 열 때는 읽지 않고 화면만 붙인다).
+  var _loading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final trackId = '${Track.savedIdPrefix}${widget.hit.id}';
+    return ValueListenableBuilder<bool>(
+      valueListenable: mainStreamVideoOn,
+      builder: (context, on, _) {
+        final active = on && mainStreamVideoTrack.value == trackId;
+        if (!active) {
+          return CircleIconButton(
+            key: const ValueKey('detail-video-on'),
+            icon: AppIcons.play,
+            tooltip: context.l10n.mediaDetailPlayInApp,
+            emphasized: true,
+            size: AppSizes.circleButtonLarge,
+            onPressed: () {
+              mainStreamVideoTrack.value = trackId;
+              mainStreamVideoOn.value = true;
+              setState(() => _loading = true);
+            },
+          );
+        }
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(AppRadii.md),
+          child: SizedBox(
+            width: widget.width,
+            height: widget.width * 9 / 16,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                if (_loading)
+                  PreviewVideo(
+                    pageUrl: widget.hit.url,
+                    online: true,
+                    followMain: true,
+                  )
+                else
+                  const NativeVideo(),
+                const PreviewVideoControls(main: true),
+              ],
+            ),
           ),
         );
       },

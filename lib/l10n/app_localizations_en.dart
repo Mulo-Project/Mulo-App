@@ -765,9 +765,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get savedVideosClearAllBody => 'Everything you saved will be removed';
 
   @override
-  String savedVideosStorage(String used, String free) {
-    return 'Saved $used · $free cache left';
+  String savedVideosStorage(String saved, String temp, String limit) {
+    return 'Saved $saved + listening cache $temp / limit $limit';
   }
+
+  @override
+  String get savedVideosFull =>
+      'Cache storage is full. Remove saved tracks or raise the limit';
 
   @override
   String savedVideosUsed(String size) {
@@ -841,7 +845,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String settingsStreamCacheLimitHint(String used) {
-    return 'Oldest items are removed when full. Saved tracks are not counted. ($used used)';
+    return 'Saved tracks count too. When full, the oldest temporary cache is removed first. ($used used)';
   }
 
   @override
@@ -2836,6 +2840,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifSavedDoneTitle => 'Saved';
+
+  @override
+  String get notifSavedDoneNote => 'Ready to play from Saved';
 
   @override
   String get notifSavedDoneHidden => 'A track finished saving';

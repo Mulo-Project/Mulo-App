@@ -16,6 +16,9 @@ abstract interface class PreviewPlayer {
   /// 같은 영상이면 아무 일도 없다. 영상은 덤이라 못 열어도 소리에는 영향이 없다.
   Future<void> playVideo(VideoStream stream);
 
+  /// 메인 재생(임시 저장한 음원을 들을 때)의 소리에 맞춰 영상을 튼다 (스트림). [stream]이 null이면 그 영상을 멈춘다.
+  Future<void> playMainVideo(VideoStream? stream);
+
   /// 재생 위치를 [position]으로 옮긴다 (재생 중이 아니면 아무 일도 없다).
   Future<void> seek(Duration position);
 

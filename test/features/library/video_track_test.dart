@@ -39,6 +39,7 @@ void main() {
     final cubit = PreviewVideoCubit(
       ResolveVideoStream(FakeDownloaderEngine()),
       PlayPreviewVideo(player),
+      PlayMainVideo(player),
     );
     expect(cubit.state.started, isFalse);
     await cubit.load('https://example.com/a');

@@ -13,6 +13,8 @@ import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../library/domain/entities/track.dart' show formatDuration;
 import '../../../search/domain/entities/engine_exception.dart';
 import '../../../search/domain/entities/media_info.dart';
+import '../../../search/presentation/screens/media_detail_screen.dart'
+    show showMediaDetail;
 import '../bloc/playlist_import_cubit.dart';
 
 /// 유튜브 재생목록 가져오기 (상세 기능: 유튜브 재생목록 가져오기 #22).
@@ -198,11 +200,7 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
 }
 
 class _Body extends StatelessWidget {
-  const _Body({
-    required this.onRetry,
-    required this.onSignIn,
-    this.shortcuts,
-  });
+  const _Body({required this.onRetry, required this.onSignIn, this.shortcuts});
 
   final VoidCallback onRetry;
 
@@ -502,9 +500,23 @@ class _Row extends StatelessWidget {
       detail: hit.duration == null ? null : formatDuration(hit.duration!),
       tone: toneFor(hit.id),
       artwork: thumb == null ? null : NetworkImage(thumb),
-      trailing: Icon(
-        selected ? AppIcons.checkCircle : AppIcons.radioOff,
-        color: selected ? p.accent : p.onSurfaceMuted,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // 줄을 누르면 가져올 곡 선택이라, 영상 상세 화면은 따로 버튼으로 연다.
+          CircleIconButton(
+            key: ValueKey('import-video-detail-${hit.id}'),
+            icon: AppIcons.chevronRight,
+            tooltip: context.l10n.newVideosDetail,
+            size: AppSizes.rowButton,
+            onPressed: () => showMediaDetail(context, hit),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Icon(
+            selected ? AppIcons.checkCircle : AppIcons.radioOff,
+            color: selected ? p.accent : p.onSurfaceMuted,
+          ),
+        ],
       ),
       onTap: onTap,
     );

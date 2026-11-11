@@ -747,9 +747,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get savedVideosClearAllBody => '저장해 둔 음원이 모두 지워져요';
 
   @override
-  String savedVideosStorage(String used, String free) {
-    return '저장 $used · 임시 공간 $free 남음';
+  String savedVideosStorage(String saved, String temp, String limit) {
+    return '저장 $saved + 듣기 캐시 $temp / 한도 $limit';
   }
+
+  @override
+  String get savedVideosFull => '임시 저장 공간이 가득 찼어요. 저장한 곡을 지우거나 용량을 늘려 주세요';
 
   @override
   String savedVideosUsed(String size) {
@@ -823,7 +826,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String settingsStreamCacheLimitHint(String used) {
-    return '넘으면 오래된 것부터 지워요. 저장한 음원은 포함되지 않아요. ($used 사용 중)';
+    return '임시 저장한 음원도 함께 계산해요. 넘으면 오래된 임시 캐시부터 지워요. ($used 사용 중)';
   }
 
   @override
@@ -2760,7 +2763,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get notifDownloadStopPreview => '중지';
 
   @override
-  String get notifSavedDoneTitle => '저장 완료';
+  String get notifSavedDoneTitle => '보관 완료';
+
+  @override
+  String get notifSavedDoneNote => '보관함에서 바로 들을 수 있어요';
 
   @override
   String get notifSavedDoneHidden => '음원 저장이 끝났어요';

@@ -1481,8 +1481,14 @@ abstract class AppLocalizations {
   /// No description provided for @savedVideosStorage.
   ///
   /// In ko, this message translates to:
-  /// **'저장 {used} · 임시 공간 {free} 남음'**
-  String savedVideosStorage(String used, String free);
+  /// **'저장 {saved} + 듣기 캐시 {temp} / 한도 {limit}'**
+  String savedVideosStorage(String saved, String temp, String limit);
+
+  /// No description provided for @savedVideosFull.
+  ///
+  /// In ko, this message translates to:
+  /// **'임시 저장 공간이 가득 찼어요. 저장한 곡을 지우거나 용량을 늘려 주세요'**
+  String get savedVideosFull;
 
   /// No description provided for @savedVideosUsed.
   ///
@@ -1619,7 +1625,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsStreamCacheLimitHint.
   ///
   /// In ko, this message translates to:
-  /// **'넘으면 오래된 것부터 지워요. 저장한 음원은 포함되지 않아요. ({used} 사용 중)'**
+  /// **'임시 저장한 음원도 함께 계산해요. 넘으면 오래된 임시 캐시부터 지워요. ({used} 사용 중)'**
   String settingsStreamCacheLimitHint(String used);
 
   /// No description provided for @settingsStreamCacheCleared.
@@ -5153,8 +5159,14 @@ abstract class AppLocalizations {
   /// No description provided for @notifSavedDoneTitle.
   ///
   /// In ko, this message translates to:
-  /// **'저장 완료'**
+  /// **'보관 완료'**
   String get notifSavedDoneTitle;
+
+  /// No description provided for @notifSavedDoneNote.
+  ///
+  /// In ko, this message translates to:
+  /// **'보관함에서 바로 들을 수 있어요'**
+  String get notifSavedDoneNote;
 
   /// No description provided for @notifSavedDoneHidden.
   ///

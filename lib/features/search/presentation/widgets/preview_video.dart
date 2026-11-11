@@ -14,6 +14,7 @@ class PreviewVideo extends StatelessWidget {
     required this.pageUrl,
     this.quality,
     this.online = false,
+    this.followMain = false,
   });
 
   final String pageUrl;
@@ -24,11 +25,20 @@ class PreviewVideo extends StatelessWidget {
   /// 소리만 저장한 곡도 영상을 읽어 보인다 (상세 화면에서만. 못 읽으면 커버가 그대로 보인다).
   final bool online;
 
+  /// 메인 재생 소리(임시 저장한 음원)에 맞춰 영상을 튼다.
+  final bool followMain;
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      key: ValueKey('$pageUrl|${quality?.name}|$online'),
-      create: (_) => sl<PreviewVideoCubit>()..load(pageUrl, quality: quality, online: online),
+      key: ValueKey('$pageUrl|${quality?.name}|$online|$followMain'),
+      create: (_) => sl<PreviewVideoCubit>()
+        ..load(
+          pageUrl,
+          quality: quality,
+          online: online,
+          followMain: followMain,
+        ),
       child: const _PreviewVideoBody(),
     );
   }

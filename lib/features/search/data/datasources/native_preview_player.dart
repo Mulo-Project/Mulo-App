@@ -81,6 +81,15 @@ class NativePreviewPlayer implements PreviewPlayer {
   );
 
   @override
+  Future<void> playMainVideo(VideoStream? stream) => stream == null
+      ? _channel.invokeMethod<void>('stopVideo')
+      : _channel.invokeMethod<void>('playVideo', {
+          'url': stream.url,
+          'headers': stream.headers,
+          'followMain': true,
+        });
+
+  @override
   Future<StreamCacheInfo> cacheInfo() async {
     final m = await _channel.invokeMapMethod<String, dynamic>('cacheInfo');
     return StreamCacheInfo(

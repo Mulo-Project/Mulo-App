@@ -45,11 +45,15 @@ object PlaybackHub {
 
     private lateinit var context: Context
     private val main = Handler(Looper.getMainLooper())
+    private const val LOAD_REPLY_TIMEOUT_MS = 6000L
 
     lateinit var exo: ExoPlayer
         private set
     lateinit var sessionPlayer: SessionPlayer
         private set
+
+    /** 메인 플레이어. 아직 만들기 전이면 null (미리 듣기 영상이 메인 소리에 맞출 때 쓴다). */
+    fun mainPlayerOrNull(): ExoPlayer? = if (initialized) exo else null
 
     /** 미디어 세션. 알림을 지웠거나 재생을 끝낸 뒤에는 정리(release)되어 null이고, 다시 재생하면 새로 만든다. */
     var session: MediaSession? = null
@@ -122,7 +126,7 @@ object PlaybackHub {
         val streamHttp = DefaultHttpDataSource.Factory().setAllowCrossProtocolRedirects(true)
         val sources = DefaultDataSource.Factory(context, StreamCache.wrap(context, streamHttp))
         exo = ExoPlayer.Builder(context, renderers)
-            .setMediaSourceFactory(DefaultMediaSourceFactory(context).setDataSourceFactory(sources))
+            .setMediaSourceFactory(MergingSourceFactory(DefaultMediaSourceFactory(context).setDataSourceFactory(sources)))
             // 다른 앱이 소리를 가져가면(영상, 통화) 멈추고, 이어폰이 빠지면 멈춘다.
             .setAudioAttributes(
                 AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).build(),
@@ -275,6 +279,14 @@ object PlaybackHub {
             result.success(queueState())
         } else {
             pendingLoad = result
+            // 느린 곡(네트워크로 읽는 임시 저장 음원 등)이 준비될 때까지 앱의 다음 명령(대기열 추가 등)이 줄줄이 막히지
+            // 않도록, 일정 시간이 지나면 지금 대기열 모습으로 먼저 답한다 (곡은 준비되는 대로 이어서 나온다).
+            main.postDelayed({
+                if (pendingLoad === result) {
+                    pendingLoad = null
+                    result.success(queueState())
+                }
+            }, LOAD_REPLY_TIMEOUT_MS)
             exo.setMediaItems(mediaItems, index, positionMs ?: 0L)
             exo.playWhenReady = playing
             exo.prepare()
@@ -530,7 +542,7 @@ object PlaybackHub {
     /** 알림 버튼 모양을 다시 맞춘다 (좋아요 · 셔플은 앱이 있든 없든 같은 자리에 둔다). */
     private fun refreshLayout() {
         val info = sessionPlayer.info ?: return
-        session?.setCustomLayout(PlaybackButtons.layout(info, shuffleOn, favoriteOn(info)))
+        session?.setCustomLayout(PlaybackButtons.layout(info, shuffleOn, favoriteOn(info), favoriteShown()))
     }
 
     /** 좋아요 DB를 읽는 전용 스레드: 곡을 옮기는 순간 메인 스레드가 SQLite를 열며 막히지 않게 한다. */
@@ -538,6 +550,9 @@ object PlaybackHub {
 
     /** 마지막으로 DB에서 읽은 좋아요 값 (곡 id → 값). 읽는 동안 먼저 보여 줄 값이다. */
     private val favoriteCache = HashMap<String, Boolean>()
+
+    /** 임시 저장한 음원(`saved:`)은 좋아요를 둘 수 없어 알림에서 좋아요 버튼을 뺀다. */
+    private fun favoriteShown() = exo.currentMediaItem?.mediaId?.startsWith("saved:") != true
 
     /** 좋아요를 Dart가 처리할 수 있는지: Dart가 붙어 있고, 앱이 보낸 내용이 지금 재생 중인 곡의 것일 때. */
     private fun dartHandlesFavorite() = sink != null && !restoredFromStore && sessionPlayer.infoMatchesCurrent()
@@ -560,7 +575,7 @@ object PlaybackHub {
                 if (favoriteCache.put(id, value) == value) return@post
                 // 읽는 사이 곡이 바뀌었으면 건너뛴다 (그 곡의 읽기가 따로 있다).
                 if (exo.currentMediaItem?.mediaId == id && !dartHandlesFavorite()) {
-                    sessionPlayer.info?.let { session?.setCustomLayout(PlaybackButtons.layout(it, shuffleOn, value)) }
+                    sessionPlayer.info?.let { session?.setCustomLayout(PlaybackButtons.layout(it, shuffleOn, value, favoriteShown())) }
                 }
             }
         }
@@ -568,6 +583,7 @@ object PlaybackHub {
 
     /** 좋아요 버튼: Dart가 있으면 Dart에 맡기고(화면의 목록이 바로 바뀌게), 없으면 DB를 직접 바꾼다. */
     private fun toggleFavorite() {
+        if (!favoriteShown()) return
         if (dartHandlesFavorite()) {
             emitCommand("favorite", null)
             return
@@ -803,6 +819,26 @@ object PlaybackHub {
         override fun onPlayerError(error: PlaybackException) {
             PlaybackStore.logStop(context, "error: ${error.errorCodeName} ${error.message}")
             MuloLog.e(MuloLog.PLAYBACK, "player error ${error.errorCodeName}: ${error.message} item=${exo.currentMediaItem?.mediaId}", error)
+            // 앱의 flutter 로그에도 남겨, 기기에서 원인을 바로 볼 수 있게 한다.
+            emit(mapOf(
+                "type" to "error",
+                "code" to error.errorCodeName,
+                "message" to (error.message ?: ""),
+                "cause" to (error.cause?.toString() ?: ""),
+                "id" to (exo.currentMediaItem?.mediaId ?: ""),
+                "uri" to (exo.currentMediaItem?.localConfiguration?.uri?.toString() ?: ""),
+            ))
+            // 임시 저장한 영상 곡의 영상 쪽을 못 열었으면 소리만으로 다시 시도한다 (영상은 덤이다).
+            val failed = exo.currentMediaItem
+            if (failed?.mediaMetadata?.extras?.getString(MergingSourceFactory.VIDEO_URI).isNullOrEmpty().not()) {
+                val plain = failed!!.buildUpon()
+                    .setMediaMetadata(failed.mediaMetadata.buildUpon().setExtras(null).build())
+                    .build()
+                MuloLog.d(MuloLog.PLAYBACK, "video source failed, retry audio only id=${failed.mediaId}")
+                exo.replaceMediaItem(exo.currentMediaItemIndex, plain)
+                exo.prepare()
+                return
+            }
             val load = pendingLoad
             if (load != null) {
                 load.error("load_failed", error.message, null)

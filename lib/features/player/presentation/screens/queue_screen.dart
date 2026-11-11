@@ -279,6 +279,7 @@ class _QueueTile extends StatelessWidget {
           artwork: coverImageOf(context, key),
           active: active,
           number: number,
+          badge: track.isSaved ? AppIcons.download : null,
           horizontalPadding: AppSpacing.xs,
           trailing: selection != null
               ? selectionMark(context, selection!)
