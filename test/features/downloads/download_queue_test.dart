@@ -368,7 +368,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('download-import-lyrics')));
     await tester.pumpAndSettle();
 
-    // 자동 줄 + 언어 6개 = 7줄 → 5줄 칸 + 2줄 칸, 가로로 민다.
+    // 언어 6개 → 5줄 칸 + 1줄 칸, 가로로 민다.
     expect(
       find.descendant(
         of: inSheet(find.byType(SingleChildScrollView)),
