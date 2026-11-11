@@ -50,6 +50,8 @@
 - 영상으로 저장한 곡이 소리만 나오던 문제: `Track.isVideo`가 id 접두사 · 확장자 · `hasVideo`(DB에 저장 안 됨)로만 판단해, 받은 영상(id `download:…`, content:// 주소)이 영상으로 인식되지 않았다.
 - 영상 저장 곡의 id를 `download:video:<id>`로 하고 `isVideo`가 이 접두사를 영상으로 본다. 이미 저장해 둔 영상은 id가 달라 다시 저장해야 영상으로 재생된다.
 
-## 영상 재생 보강 + 로그 (11-11)
-- 이미 받아 둔 영상(id가 `download:…`)도 영상으로 재생되도록 `Track.isVideo`가 `content://media/external/video/` 주소도 영상으로 본다.
-- 진단 로그: 받기 등록(`MuloDownload register …`, flutter), 영상 해독(`video refresh/size/first frame`, `tracks video=… mime=…`, `adb logcat -s MuloPlayback`), 플레이어 화면(`MuloPlayer track=… isVideo=…`, 기존).
+## 영상 곡 표시를 DB에 저장 (11-11)
+- id · 주소로 영상 여부를 추측하던 것을 없애고, `tracks.video` 열(스키마 13)에 저장한다. 영상으로 받아 저장하면 `Track.hasVideo = true`로 등록하고 `isVideo`가 그 값을 쓴다 (기존 `device-video:` · 확장자 판단은 그대로).
+- 마이그레이션 13: 열을 더하고, 주소가 `content://media/external/video/…`인 기존 곡은 한 번 영상으로 표시한다. 다운로드 폴더에 저장한 예전 영상은 알 수 없어 다시 저장해야 한다.
+- **`dart run build_runner build -d` 필요** (drift 생성 코드 `app_database.g.dart`를 이 환경에서 만들 수 없다).
+- 진단 로그: 받기 등록(`MuloDownload register …`, flutter), 영상 해독(`video refresh/size/first frame`, `tracks video=… mime=…`, `adb logcat -s MuloPlayback`), 플레이어 화면(`MuloPlayer track=… isVideo=…`).

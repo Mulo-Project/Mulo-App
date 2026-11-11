@@ -39,7 +39,7 @@ class Track {
   final String folder;
   final TrackSource source;
 
-  /// 영상도 같이 나오는 임시 저장 곡 (영상으로 저장했다). 영상은 네이티브가 소리와 한 시계로 낸다.
+  /// 영상 파일인 곡 (영상으로 받아 저장했다 · 임시 저장 영상). DB에 저장된다. 영상은 네이티브가 소리와 한 시계로 낸다.
   final bool hasVideo;
 
   /// 영상 전용 주소 (소리와 따로 저장한 경우). 소리 주소가 영상까지 담고 있으면 빈 문자열.
@@ -49,9 +49,6 @@ class Track {
   bool get isVideo =>
       hasVideo ||
       id.startsWith(videoIdPrefix) ||
-      id.startsWith(downloadedVideoIdPrefix) ||
-      // 영상으로 받아 MediaStore 영상 모음에 저장한 곡 (예전에 받은 곡은 id로 알 수 없어 주소로 안다).
-      uri.startsWith('content://media/external/video/') ||
       (id.startsWith('file:') &&
           _videoExtensions.any(uri.toLowerCase().endsWith));
 
@@ -63,9 +60,6 @@ class Track {
 
   /// 기기에서 불러온 영상 곡의 id 앞머리.
   static const videoIdPrefix = 'device-video:';
-
-  /// 영상으로 받아 저장한 곡의 id 앞머리 (뒤는 받기 id). 이 곡은 영상 파일이라 영상으로 재생한다.
-  static const downloadedVideoIdPrefix = 'download:video:';
 
   static const _videoExtensions = ['.mp4', '.mkv', '.webm', '.mov', '.m4v'];
 

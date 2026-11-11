@@ -587,9 +587,7 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
     debugPrint(
       'MuloDownload register video=$video id=$id uri=${saved.uri} folder=${saved.folder}',
     );
-    final trackId = request.videoFormat != null
-        ? '${Track.downloadedVideoIdPrefix}$id'
-        : 'download:$id';
+    final trackId = 'download:$id';
     await _library.addTracks([
       Track(
         id: trackId,
@@ -602,6 +600,7 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
         uri: saved.uri,
         folder: saved.folder,
         source: TrackSource.download,
+        hasVideo: video,
       ),
     ]);
     if (request.playlistIds.isNotEmpty) {
