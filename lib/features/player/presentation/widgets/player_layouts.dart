@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../../core/design/design.dart';
-import 'fullscreen_video.dart';
 import 'pan_zoom_video.dart';
 import 'player_common.dart';
 
@@ -172,8 +171,8 @@ class FullBleedPlayer extends StatelessWidget {
                     child: data.showLyrics
                         ? _lyrics(data)
                         : data.track.isVideo
-                        // 영상 곡: 상단 버튼줄 밑부터 조작부 위까지 영상 전체가 딱 맞게 (잘리지 않게).
-                        ? const NativeVideoWithFullscreen(fit: BoxFit.contain)
+                        // 영상 곡: 상단 버튼줄 밑부터 조작부 위까지 영상이 꽉 차고, 끌어서 가려진 부분을 보고 확대 · 축소한다.
+                        ? const PanZoomVideo(fullscreenButton: true)
                         : const SizedBox.shrink(),
                   ),
                   PlayerControls(
