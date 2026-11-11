@@ -106,6 +106,9 @@ class ServerEngine implements DownloaderEngine {
   }
 
   @override
+  Future<MediaInfo> fetchFullInfo(String url) => fetchInfo(url);
+
+  @override
   Future<MediaInfo> fetchInfo(String url) async {
     final json = await _getJson('/info', {'url': url});
     if (json['type'] == 'playlist') {

@@ -1592,6 +1592,19 @@ class FakeDownloaderEngine implements DownloaderEngine {
     return found;
   }
 
+  /// [fetchFullInfo]를 부른 주소들 (돌려주는 정보는 [fetchInfo]와 같다).
+  final fullInfos = <String>[];
+
+  @override
+  Future<MediaInfo> fetchFullInfo(String url) async {
+    fullInfos.add(url);
+    final e = error;
+    if (e != null) throw e;
+    final found = infoByUrl[url] ?? info;
+    if (found == null) throw const EngineException(EngineFailure.notFound);
+    return found;
+  }
+
   /// [fetchSubtitles]가 돌려줄 자막 (없으면 자막 없음)과 받은 주소들.
   SubtitleTrack? subtitles;
   final subtitleUrls = <String>[];

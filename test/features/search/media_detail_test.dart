@@ -48,6 +48,36 @@ MediaDetailCubit _cubit(FakeDownloaderEngine e, FakeLinkOpener o) =>
     );
 
 void main() {
+  group('빠른 정보 뒤에 느린 정보 채우기', () {
+    test('좋아요 수는 화면을 띄운 뒤 전체 정보에서 채운다', () async {
+      final engine = FakeDownloaderEngine(info: VideoInfo(_fullHit));
+      final cubit = MediaDetailCubit(
+        _listHit,
+        FetchMediaInfo(engine),
+        FetchChannelInfo(engine),
+        OpenLink(FakeLinkOpener()),
+        fetchFull: FetchFullMediaInfo(engine),
+      );
+      await cubit.load();
+      expect(engine.infos, isNotEmpty);
+      expect(engine.fullInfos, [_listHit.url]);
+      expect(cubit.state.hit.likeCount, 4321);
+    });
+
+    test('전체 정보를 못 읽어도 빠른 정보는 그대로 남는다', () async {
+      final engine = _FullFailsEngine(VideoInfo(_fullHit));
+      final cubit = MediaDetailCubit(
+        _listHit,
+        FetchMediaInfo(engine),
+        FetchChannelInfo(engine),
+        OpenLink(FakeLinkOpener()),
+        fetchFull: FetchFullMediaInfo(engine),
+      );
+      await cubit.load();
+      expect(cubit.state.hit.viewCount, 12345);
+    });
+  });
+
   group('엔진 응답의 상세 정보', () {
     test('LocalEngine: 채널 주소 · 조회수 · 올린 날 · 설명을 읽는다', () async {
       final engine = LocalEngine(
@@ -629,4 +659,13 @@ void main() {
       expect(find.widgetWithText(TextField, 'Song'), findsOneWidget);
     });
   });
+}
+
+/// 전체 정보 읽기만 실패하는 엔진.
+class _FullFailsEngine extends FakeDownloaderEngine {
+  _FullFailsEngine(MediaInfo info) : super(info: info);
+
+  @override
+  Future<MediaInfo> fetchFullInfo(String url) async =>
+      throw const EngineException(EngineFailure.failed);
 }

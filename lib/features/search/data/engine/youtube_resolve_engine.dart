@@ -26,6 +26,12 @@ typedef AudioLanguageReader = Future<List<AudioLanguage>> Function(
   String videoId,
 );
 
+/// 유튜브 곡 하나의 정보를 읽는 함수.
+typedef YoutubeInfoReader = Future<VideoInfo> Function(String videoId);
+
+/// 유튜브 채널 주소로 채널 이미지 · 구독자 수를 읽는 함수.
+typedef YoutubeChannelInfoReader = Future<ChannelInfo> Function(String url);
+
 /// 유튜브 키워드 검색의 [page]쪽(0부터)을 읽는 함수.
 typedef YoutubeSearchReader = Future<SearchPage> Function(
   String query,
@@ -58,6 +64,8 @@ class YoutubeResolveEngine implements DownloaderEngine {
     this.searchReader,
     this.playlistReader,
     this.playlistSearchReader,
+    this.infoReader,
+    this.channelInfoReader,
     this.warmUpReader,
   });
 
@@ -70,6 +78,8 @@ class YoutubeResolveEngine implements DownloaderEngine {
   final YoutubeSearchReader? searchReader;
   final YoutubePlaylistReader? playlistReader;
   final YoutubePlaylistSearchReader? playlistSearchReader;
+  final YoutubeInfoReader? infoReader;
+  final YoutubeChannelInfoReader? channelInfoReader;
 
   /// 네이티브가 유튜브와 연결을 미리 열게 한다 (없으면 안쪽 엔진).
   final Future<void> Function()? warmUpReader;
@@ -144,7 +154,8 @@ class YoutubeResolveEngine implements DownloaderEngine {
     return _inner.searchPlaylists(query, page: page, size: size);
   }
 
-  /// 유튜브 재생목록 주소(`/playlist?list=…`)는 네이티브가 곡 목록을 먼저 읽는다. 곡 하나 · 다른 주소 · 실패는 안쪽 엔진.
+  /// 곡 정보는 네이티브가 먼저 읽는다 (빠르다). 유튜브 재생목록 주소(`/playlist?list=…`)는 곡 목록을 네이티브가 읽는다.
+  /// 다른 주소 · 실패는 안쪽 엔진. 좋아요 수 · 공동 작업자 같은 나머지는 [fetchFullInfo]가 채운다.
   @override
   Future<MediaInfo> fetchInfo(String url) async {
     final read = playlistReader;
@@ -159,11 +170,46 @@ class YoutubeResolveEngine implements DownloaderEngine {
         _log('재생목록 실패 ${clock.elapsedMilliseconds}ms: ${_oneLine(e)}');
       }
     }
+    final infoRead = infoReader;
+    final videoId = youtubeVideoIdOf(url);
+    // `watch?v=…&list=…`는 재생목록일 수 있어 안쪽 엔진이 읽는다.
+    if (infoRead != null &&
+        videoId != null &&
+        Uri.tryParse(url.trim())?.queryParameters.containsKey('list') != true) {
+      final clock = Stopwatch()..start();
+      try {
+        final info = await infoRead(videoId).timeout(const Duration(seconds: 15));
+        _log('곡 정보 ${clock.elapsedMilliseconds}ms');
+        return info;
+      } on Object catch (e) {
+        _log('곡 정보 실패 ${clock.elapsedMilliseconds}ms: ${_oneLine(e)}');
+      }
+    }
     return _inner.fetchInfo(url);
   }
 
+  /// 곡 정보 전체 (좋아요 수 · 공동 작업자 · 앨범까지). 안쪽 엔진(yt-dlp)이 읽어 느리다.
   @override
-  Future<ChannelInfo> fetchChannel(String url) => _inner.fetchChannel(url);
+  Future<MediaInfo> fetchFullInfo(String url) => _inner.fetchFullInfo(url);
+
+  /// 채널 이미지 · 구독자 수는 네이티브가 먼저 읽고, 못 읽으면 안쪽 엔진.
+  @override
+  Future<ChannelInfo> fetchChannel(String url) async {
+    final read = channelInfoReader;
+    if (read != null && url.contains('youtube.com')) {
+      final clock = Stopwatch()..start();
+      try {
+        final info = await read(url).timeout(const Duration(seconds: 15));
+        _log('채널 정보 ${clock.elapsedMilliseconds}ms');
+        if (info.thumbnailUrl != null || info.subscriberCount != null) {
+          return info;
+        }
+      } on Object catch (e) {
+        _log('채널 정보 실패 ${clock.elapsedMilliseconds}ms: ${_oneLine(e)}');
+      }
+    }
+    return _inner.fetchChannel(url);
+  }
 
   @override
   Future<VideoStream> resolveVideoStream(

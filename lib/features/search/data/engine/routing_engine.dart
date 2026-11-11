@@ -59,6 +59,10 @@ class RoutingDownloaderEngine implements DownloaderEngine {
       (await _pick()).fetchInfo(url);
 
   @override
+  Future<MediaInfo> fetchFullInfo(String url) async =>
+      (await _pick()).fetchFullInfo(url);
+
+  @override
   Future<ChannelInfo> fetchChannel(String url) async =>
       (await _pick()).fetchChannel(url);
 

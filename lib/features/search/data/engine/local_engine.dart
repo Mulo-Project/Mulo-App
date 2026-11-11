@@ -156,6 +156,9 @@ class LocalEngine implements DownloaderEngine {
       url == null ? null : Uri.tryParse(url)?.queryParameters['list'];
 
   @override
+  Future<MediaInfo> fetchFullInfo(String url) => fetchInfo(url);
+
+  @override
   Future<MediaInfo> fetchInfo(String url) async {
     final out = await _exec([
       '--flat-playlist',

@@ -104,6 +104,9 @@ class SoundcloudAvatarEngine implements DownloaderEngine {
   Future<MediaInfo> fetchInfo(String url) => _inner.fetchInfo(url);
 
   @override
+  Future<MediaInfo> fetchFullInfo(String url) => _inner.fetchFullInfo(url);
+
+  @override
   Future<AudioStream> resolveAudioStream(
     String url, {
     bool refresh = false,

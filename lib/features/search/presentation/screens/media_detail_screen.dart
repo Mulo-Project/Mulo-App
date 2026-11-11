@@ -119,6 +119,8 @@ class MediaDetailScreen extends StatelessWidget {
           sl<OpenLink>(),
           memo: sl<MediaHitMemo>(),
           stored: savedHit != null,
+          // 유튜브 곡은 빠른 정보를 먼저 보여 주고, 좋아요 수 · 공동 작업자는 뒤에서 채운다.
+          fetchFull: isYoutubeUrl(hit.url) ? sl<FetchFullMediaInfo>() : null,
         )..load(),
       ),
       // 유튜브 곡만 오디오 언어가 여럿일 수 있다.

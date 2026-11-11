@@ -26,8 +26,12 @@ abstract interface class DownloaderEngine {
     int size = 20,
   });
 
-  /// URL로 곡 또는 재생목록 정보를 가져온다.
+  /// URL로 곡 또는 재생목록 정보를 가져온다. 가능하면 빠른 방법(네이티브)으로 읽어, 좋아요 수 ·
+  /// 공동 작업자 · 앨범처럼 느리게 읽히는 정보는 비어 있을 수 있다 ([fetchFullInfo]가 채운다).
   Future<MediaInfo> fetchInfo(String url);
+
+  /// [fetchInfo]와 같지만 느리더라도 알 수 있는 정보를 모두 담는다 (상세 화면이 뒤에서 채운다).
+  Future<MediaInfo> fetchFullInfo(String url);
 
   /// 채널 주소로 채널 이미지 · 구독자 수를 가져온다. 알 수 없으면 [EngineException]
   /// (`unavailable` 포함)을 던진다.

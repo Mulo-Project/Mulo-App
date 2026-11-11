@@ -83,6 +83,50 @@ class NativeYoutubeResolver {
     );
   }
 
+  /// 곡 정보 (제목 · 채널 · 길이 · 조회수 · 설명 · 올린 날 · 분류 · 자막 언어). 좋아요 수 등은 없다.
+  Future<VideoInfo> videoInfo(String videoId) async {
+    final m = await _call('videoInfo', {'videoId': videoId});
+    if (m == null) throw const EngineException(EngineFailure.failed, 'empty');
+    final seconds = m['seconds'] as int?;
+    final channelId = m['channelId'] as String?;
+    final category = m['category'] as String?;
+    return VideoInfo(
+      MediaHit(
+        id: videoId,
+        title: m['title'] as String? ?? '',
+        url: 'https://www.youtube.com/watch?v=$videoId',
+        uploader: m['author'] as String? ?? '',
+        duration: seconds == null ? null : Duration(seconds: seconds),
+        thumbnailUrl: m['thumbnail'] as String?,
+        categories: category == null ? const [] : [category],
+        channelUrl: channelId == null
+            ? null
+            : 'https://www.youtube.com/channel/$channelId',
+        viewCount: (m['views'] as num?)?.toInt(),
+        uploadedAt: DateTime.tryParse(m['uploadDate'] as String? ?? ''),
+        description: m['description'] as String? ?? '',
+        subtitleLangs: _strings(m['subtitleLangs']),
+        autoSubtitleLangs: _strings(m['autoSubtitleLangs']),
+        isLive: m['isLive'] as bool? ?? false,
+      ),
+    );
+  }
+
+  /// 채널 주소로 채널 이미지 · 구독자 수.
+  Future<ChannelInfo> channelInfo(String channelUrl) async {
+    final m = await _call('channelInfo', {'url': channelUrl});
+    if (m == null) throw const EngineException(EngineFailure.failed, 'empty');
+    return ChannelInfo(
+      thumbnailUrl: m['thumbnail'] as String?,
+      subscriberCount: (m['subscriberCount'] as num?)?.toInt(),
+    );
+  }
+
+  List<String> _strings(Object? v) => [
+    for (final e in (v as List<Object?>? ?? const []))
+      if (e is String) e,
+  ];
+
   /// 키워드로 유튜브 재생목록 찾기 한 쪽.
   Future<PlaylistSearchPage> searchPlaylists(
     String query,

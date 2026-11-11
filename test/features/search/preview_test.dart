@@ -246,6 +246,43 @@ void main() {
       expect((await engine.searchPlaylists('q')).items.single.id, 'in');
     });
 
+    test(
+      'YoutubeResolveEngine: 곡 정보 · 채널 정보는 네이티브가 먼저 읽고, 재생목록이 낀 주소 · 실패는 안쪽 엔진으로 넘긴다',
+      () async {
+        final inner = FakeDownloaderEngine(
+          info: const VideoInfo(_b),
+          channel: const ChannelInfo(subscriberCount: 1),
+        );
+        var fail = false;
+        final engine = YoutubeResolveEngine(
+          inner,
+          reader: (id, {language}) async => null,
+          videoReader: (id, maxHeight) async => null,
+          languageReader: (_) async => const [],
+          infoReader: (id) async {
+            if (fail) throw const EngineException(EngineFailure.failed);
+            return const VideoInfo(_a);
+          },
+          channelInfoReader: (url) async =>
+              const ChannelInfo(subscriberCount: 99),
+        );
+        const url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+        expect(((await engine.fetchInfo(url)) as VideoInfo).hit, _a);
+        // 전체 정보는 늘 안쪽 엔진.
+        expect(((await engine.fetchFullInfo(url)) as VideoInfo).hit, _b);
+        expect(inner.infos, isEmpty);
+        // 재생목록이 낀 곡 주소는 안쪽 엔진.
+        await engine.fetchInfo('$url&list=PLabc');
+        expect(inner.infos, ['$url&list=PLabc']);
+        fail = true;
+        expect(((await engine.fetchInfo(url)) as VideoInfo).hit, _b);
+        expect(
+          (await engine.fetchChannel('https://www.youtube.com/@x')).subscriberCount,
+          99,
+        );
+      },
+    );
+
     test('youtubeVideoIdOf: 유튜브 주소에서 영상 id 11자를 꺼낸다', () {
       const id = 'dQw4w9WgXcQ';
       expect(youtubeVideoIdOf('https://www.youtube.com/watch?v=$id&t=3'), id);

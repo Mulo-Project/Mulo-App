@@ -87,6 +87,16 @@ class FetchMediaInfo implements UseCase<MediaInfo, String> {
   Future<MediaInfo> call(String url) => _engine.fetchInfo(url.trim());
 }
 
+/// 곡 정보 전체 (좋아요 수 · 공동 작업자 · 앨범까지, 느리다). 상세 화면이 먼저 보여 준 뒤 뒤에서 채운다.
+class FetchFullMediaInfo implements UseCase<MediaInfo, String> {
+  const FetchFullMediaInfo(this._engine);
+
+  final DownloaderEngine _engine;
+
+  @override
+  Future<MediaInfo> call(String url) => _engine.fetchFullInfo(url.trim());
+}
+
 class FetchSubtitlesParams {
   const FetchSubtitlesParams(this.url, [this.languages]);
 

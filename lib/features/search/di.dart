@@ -63,6 +63,8 @@ void registerSearch(GetIt sl) {
                   searchReader: native.search,
                   playlistReader: native.playlist,
                   playlistSearchReader: native.searchPlaylists,
+                  infoReader: native.videoInfo,
+                  channelInfoReader: native.channelInfo,
                   warmUpReader: native.warmUp,
                 )
               : routing,
@@ -73,6 +75,7 @@ void registerSearch(GetIt sl) {
     ..registerFactory(() => SearchTracks(sl()))
     ..registerFactory(() => WarmUpSearch(sl()))
     ..registerFactory(() => FetchMediaInfo(sl()))
+    ..registerFactory(() => FetchFullMediaInfo(sl()))
     ..registerFactory(() => FetchSubtitles(sl()))
     ..registerFactory(() => SearchPlaylists(sl()))
     ..registerFactory(() => FetchChannelInfo(sl()))

@@ -208,6 +208,13 @@ object YoutubeResolver {
     )
 
     private fun fetchFormats(client: Client, videoId: String): List<YtFormat> {
+        val root = playerRoot(client, videoId)
+        val data = root.optJSONObject("streamingData") ?: throw IOException("${client.name}: 스트림 없음")
+        return parse(data.optJSONArray("formats"), true) + parse(data.optJSONArray("adaptiveFormats"), false)
+    }
+
+    /** InnerTube `player` 응답 (재생 가능 상태가 OK가 아니면 예외). */
+    private fun playerRoot(client: Client, videoId: String): JSONObject {
         // 방문자 정보를 못 얻어도 그냥 시도한다.
         val sess = try {
             session(videoId)
@@ -239,11 +246,60 @@ object YoutubeResolver {
             if (status != null && status.optString("status") != "OK") {
                 throw IOException("${client.name}: ${status.optString("reason", status.optString("status"))}")
             }
-            val data = root.optJSONObject("streamingData") ?: throw IOException("${client.name}: 스트림 없음")
-            return parse(data.optJSONArray("formats"), true) + parse(data.optJSONArray("adaptiveFormats"), false)
+            return root
         } finally {
             conn.disconnect()
         }
+    }
+
+    /**
+     * 곡 정보(상세 화면): 제목 · 채널 · 길이 · 조회수 · 설명 · 올린 날 · 분류 · 자막 언어.
+     * `player` 응답의 videoDetails · microformat · captions에서 읽는다 (yt-dlp를 띄우지 않는다).
+     * 좋아요 수 · 구독자 수 · 공동 작업자 · 앨범은 이 응답에 없어 담지 않는다. 못 읽으면 예외.
+     */
+    fun info(videoId: String): Map<String, Any?> = timed("곡 정보") { infoInner(videoId) }!!
+
+    private fun infoInner(videoId: String): Map<String, Any?> {
+        val errors = mutableListOf<String>()
+        for (client in listOf(visionOs, androidVr)) {
+            val root = try {
+                playerRoot(client, videoId)
+            } catch (e: Exception) {
+                errors += oneLine(e.message ?: e.toString()); continue
+            }
+            val d = root.optJSONObject("videoDetails") ?: continue
+            val micro = root.optJSONObject("microformat")?.optJSONObject("playerMicroformatRenderer")
+            val thumbs = d.optJSONObject("thumbnail")?.optJSONArray("thumbnails")
+            val tracks = root.optJSONObject("captions")?.optJSONObject("playerCaptionsTracklistRenderer")
+                ?.optJSONArray("captionTracks")
+            val manual = LinkedHashSet<String>()
+            val auto = LinkedHashSet<String>()
+            if (tracks != null) {
+                for (i in 0 until tracks.length()) {
+                    val t = tracks.optJSONObject(i) ?: continue
+                    val lang = t.optString("languageCode").takeIf { it.isNotEmpty() } ?: continue
+                    if (t.optString("kind") == "asr") auto += lang else manual += lang
+                }
+            }
+            val live = d.optBoolean("isLive") || d.optBoolean("isUpcoming")
+            return mapOf(
+                "id" to videoId,
+                "title" to d.optString("title"),
+                "author" to d.optString("author"),
+                "channelId" to d.optString("channelId").takeIf { it.isNotEmpty() },
+                "description" to d.optString("shortDescription"),
+                "seconds" to d.optString("lengthSeconds").toIntOrNull(),
+                "views" to d.optString("viewCount").toLongOrNull(),
+                "isLive" to live,
+                "thumbnail" to thumbs?.let { if (it.length() == 0) null else it.optJSONObject(it.length() - 1)?.optString("url") },
+                "category" to micro?.optString("category")?.takeIf { it.isNotEmpty() },
+                "uploadDate" to (micro?.optString("uploadDate")?.takeIf { it.isNotEmpty() }
+                    ?: micro?.optString("publishDate")?.takeIf { it.isNotEmpty() }),
+                "subtitleLangs" to (manual + auto).toList(),
+                "autoSubtitleLangs" to auto.filter { it !in manual },
+            )
+        }
+        throw IOException(errors.joinToString(" | ").ifEmpty { "곡 정보 없음" })
     }
 
     private fun parse(array: JSONArray?, muxed: Boolean): List<YtFormat> {

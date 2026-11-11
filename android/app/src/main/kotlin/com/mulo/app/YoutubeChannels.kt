@@ -26,6 +26,13 @@ object YoutubeChannels {
         )
     }
 
+    /** 채널 주소로 채널 이미지 · 구독자 수 (상세 화면). 채널 id를 못 알아내면 예외. */
+    fun info(channelUrl: String): Map<String, Any?> {
+        val id = resolveChannelId(channelUrl) ?: throw IOException("채널 id 없음")
+        val d = details(id)
+        return mapOf("thumbnail" to d["logoUrl"], "subscriberCount" to d["subscriberCount"])
+    }
+
     /** 채널 주소에서 채널 id(`UC…`)를 알아낸다. 유튜브 주소가 아니거나 못 찾으면 null. */
     fun resolveChannelId(channelUrl: String): String? {
         val url = try {

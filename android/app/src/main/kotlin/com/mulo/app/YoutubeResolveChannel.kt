@@ -14,6 +14,7 @@ import java.util.concurrent.Executors
  * `search`(query · page · size → items · hasNext) · `playlist`(playlistId → title · items) ·
  * `searchPlaylists`(query · page · size → items · hasNext) · `searchChannels`(query → items) ·
  * `channelDetails`(channelId → bannerUrl · logoUrl · subscriberCount · description) ·
+ * `videoInfo`(videoId → 곡 정보) · `channelInfo`(url → thumbnail · subscriberCount) ·
  * `resolveChannelId`(url → id?) · `channelFeed`(channelId → 최근 영상들, [YoutubeChannels]).
  * 곡 항목은 id · title · uploader · seconds? · thumbnail? · channelId? · views? · isLive · description.
  * 실패하면 `resolve_failed` 오류에 까닭을 담는다.
@@ -27,6 +28,24 @@ class YoutubeResolveChannel(@Suppress("UNUSED_PARAMETER") context: Context, mess
             when (call.method) {
                 "warmUp" -> {
                     runAsync(io, result, ERROR) { YoutubeBrowser.warmUp(); null }
+                    return@setMethodCallHandler
+                }
+                "videoInfo" -> {
+                    val videoId = call.argument<String>("videoId")
+                    if (videoId == null) {
+                        result.error("bad_args", "videoId required", null)
+                        return@setMethodCallHandler
+                    }
+                    runAsync(io, result, ERROR) { YoutubeResolver.info(videoId) }
+                    return@setMethodCallHandler
+                }
+                "channelInfo" -> {
+                    val url = call.argument<String>("url")
+                    if (url == null) {
+                        result.error("bad_args", "url required", null)
+                        return@setMethodCallHandler
+                    }
+                    runAsync(io, result, ERROR) { YoutubeChannels.info(url) }
                     return@setMethodCallHandler
                 }
                 "searchPlaylists" -> {

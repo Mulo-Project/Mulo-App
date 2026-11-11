@@ -29,7 +29,9 @@ class MediaDetailCubit extends Cubit<MediaDetailState> {
     this._openLink, {
     MediaHitMemo? memo,
     this.stored = false,
+    FetchFullMediaInfo? fetchFull,
   }) : _memo = memo,
+       _fetchFull = fetchFull,
        _known = memo?.get(hit.url),
        super(MediaDetailState(hit: memo?.get(hit.url) ?? hit));
 
@@ -44,6 +46,9 @@ class MediaDetailCubit extends Cubit<MediaDetailState> {
   var _infoLoaded = false;
 
   final FetchMediaInfo _fetch;
+
+  /// 빠른 곡 정보 뒤에 좋아요 수 · 공동 작업자 같은 느리게 읽히는 정보를 채우는 읽기 (없으면 채우지 않는다).
+  final FetchFullMediaInfo? _fetchFull;
   final FetchChannelInfo _fetchChannel;
   final OpenLink _openLink;
 
@@ -62,8 +67,32 @@ class MediaDetailCubit extends Cubit<MediaDetailState> {
     await _loadInfo();
     // 곡 정보에서 비로소 채널 주소를 알게 된 경우.
     await (early ?? (_needsChannel(state.hit) ? _loadChannel() : null));
-    // 곡 정보를 잘 읽었으면 다음에 다시 열 때를 위해 기억한다.
-    if (_infoLoaded && !isClosed) _memo?.put(state.hit.url, state.hit);
+    // 곡 정보를 잘 읽었으면 다음에 다시 열 때를 위해 기억한다 (느린 나머지를 채울 거면 그 뒤에).
+    if (_infoLoaded && !isClosed && _fetchFull == null) {
+      _memo?.put(state.hit.url, state.hit);
+    }
+    // 느리게 읽히는 나머지(좋아요 수 · 공동 작업자 · 앨범)는 화면을 띄운 뒤 뒤에서 채운다.
+    if (_infoLoaded) await _loadFull();
+  }
+
+  Future<void> _loadFull() async {
+    final fetch = _fetchFull;
+    if (fetch == null) return;
+    try {
+      final info = await fetch(state.hit.url);
+      if (isClosed) return;
+      if (info is VideoInfo) {
+        emit(
+          MediaDetailState(
+            hit: state.hit.filledFrom(info.hit),
+            loading: state.loading,
+          ),
+        );
+      }
+    } on EngineException {
+      // 못 읽어도 빠르게 읽은 정보로 충분히 쓸 수 있다.
+    }
+    if (!isClosed) _memo?.put(state.hit.url, state.hit);
   }
 
   /// 앱에 저장해 둔 상세 정보(조회수 · 올린 날 · 채널)가 이미 있는지. 검색 목록 항목에는 없다.
