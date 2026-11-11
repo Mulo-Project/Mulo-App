@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:music_download_play_app/features/account/data/repositories/google_account_repository.dart';
 import 'package:music_download_play_app/features/account/domain/entities/google_account.dart';
 import 'package:music_download_play_app/features/account/domain/usecases/account_usecases.dart';
 import 'package:music_download_play_app/features/account/presentation/bloc/account_cubit.dart';
@@ -35,27 +34,6 @@ PlaylistImportCubit _importCubit(FakeAccountRepository repo) {
 }
 
 void main() {
-  test('YouTube API 재생목록 항목에서 이름 · 채널 · 곡 수 · 이미지를 읽는다', () {
-    final hit = parsePlaylist({
-      'id': 'PL1',
-      'snippet': {
-        'title': '운동',
-        'channelTitle': '나',
-        'thumbnails': {
-          'default': {'url': 'small'},
-          'medium': {'url': 'mid'},
-        },
-      },
-      'contentDetails': {'itemCount': 7},
-    });
-    expect(hit?.title, '운동');
-    expect(hit?.channel, '나');
-    expect(hit?.trackCount, 7);
-    expect(hit?.thumbnailUrl, 'mid');
-    expect(hit?.url, 'https://www.youtube.com/playlist?list=PL1');
-    expect(parsePlaylist({'snippet': {}}), isNull);
-  });
-
   group('AccountCubit', () {
     test('이전 로그인을 되살리고, 로그인 · 로그아웃을 바꾼다', () async {
       final repo = FakeAccountRepository(
@@ -130,25 +108,6 @@ void main() {
       expect(cubit.state.status, PlaylistImportStatus.failed);
       expect(cubit.state.accountFailure, AccountFailure.noChannel);
     });
-  });
-
-  test('구독 항목에서 채널 id · 이름 · 소개 · 이미지를 읽는다', () {
-    final hit = parseSubscription({
-      'snippet': {
-        'title': '채널',
-        'description': '소개',
-        'resourceId': {'kind': 'youtube#channel', 'channelId': 'UC1'},
-        'thumbnails': {
-          'default': {'url': 'small'},
-          'medium': {'url': 'mid'},
-        },
-      },
-    });
-    expect(hit?.id, 'UC1');
-    expect(hit?.name, '채널');
-    expect(hit?.description, '소개');
-    expect(hit?.thumbnailUrl, 'mid');
-    expect(parseSubscription({'snippet': {}}), isNull);
   });
 
   group('구독 채널의 재생목록 가져오기', () {

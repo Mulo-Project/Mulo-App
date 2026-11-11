@@ -67,6 +67,7 @@ dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
     // 네이티브 순수 규칙 단위 테스트 (MediaButtonPolicy).
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20240303") // 단위 테스트에서 안드로이드 org.json 대신 쓴다
     // 재생 엔진(ExoPlayer) · 미디어 세션 · 재생 알림 (PlaybackHub / MuloPlaybackService).
     implementation("androidx.media3:media3-exoplayer:1.7.1")
     implementation("androidx.media3:media3-session:1.7.1")
