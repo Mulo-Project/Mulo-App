@@ -50,6 +50,8 @@ class Track {
       hasVideo ||
       id.startsWith(videoIdPrefix) ||
       id.startsWith(downloadedVideoIdPrefix) ||
+      // 영상으로 받아 MediaStore 영상 모음에 저장한 곡 (예전에 받은 곡은 id로 알 수 없어 주소로 안다).
+      uri.startsWith('content://media/external/video/') ||
       (id.startsWith('file:') &&
           _videoExtensions.any(uri.toLowerCase().endsWith));
 

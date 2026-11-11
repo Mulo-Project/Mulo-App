@@ -49,3 +49,7 @@
 ## 영상으로 저장한 곡을 영상으로 재생 (11-11)
 - 영상으로 저장한 곡이 소리만 나오던 문제: `Track.isVideo`가 id 접두사 · 확장자 · `hasVideo`(DB에 저장 안 됨)로만 판단해, 받은 영상(id `download:…`, content:// 주소)이 영상으로 인식되지 않았다.
 - 영상 저장 곡의 id를 `download:video:<id>`로 하고 `isVideo`가 이 접두사를 영상으로 본다. 이미 저장해 둔 영상은 id가 달라 다시 저장해야 영상으로 재생된다.
+
+## 영상 재생 보강 + 로그 (11-11)
+- 이미 받아 둔 영상(id가 `download:…`)도 영상으로 재생되도록 `Track.isVideo`가 `content://media/external/video/` 주소도 영상으로 본다.
+- 진단 로그: 받기 등록(`MuloDownload register …`, flutter), 영상 해독(`video refresh/size/first frame`, `tracks video=… mime=…`, `adb logcat -s MuloPlayback`), 플레이어 화면(`MuloPlayer track=… isVideo=…`, 기존).

@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show debugPrint;
+
 import '../../../../core/config/default_video_folder.dart';
 import '../../../covers/domain/entities/cover_key.dart';
 import '../../../covers/domain/repositories/cover_repository.dart';
@@ -581,6 +583,10 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
     String? lyrics, {
     bool remember = true,
   }) async {
+    final video = request.videoFormat != null;
+    debugPrint(
+      'MuloDownload register video=$video id=$id uri=${saved.uri} folder=${saved.folder}',
+    );
     final trackId = request.videoFormat != null
         ? '${Track.downloadedVideoIdPrefix}$id'
         : 'download:$id';
