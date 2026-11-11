@@ -19,6 +19,7 @@ void registerHome(GetIt sl) {
     ..registerFactory(() => UpdatePlayListened(sl()))
     ..registerFactory(() => WatchHomeSummary(sl(), sl()))
     ..registerFactory(() => GetJoinDate(sl()))
+    ..registerFactory(() => GetTrackPlayStats(sl()))
     ..registerFactory(() => HomeBloc(sl(), sl()))
     ..registerFactory(() => PlayRecorderCubit(sl(), sl()));
 }

@@ -124,6 +124,10 @@ Map<String, dynamic> encodeDownloadRequest(DownloadRequest r) => {
   if (!r.lyricsSkipSounds) 'lyricsSkipSounds': false,
   'lyricsText': ?r.lyricsText,
   'audioLanguage': ?r.audioLanguage,
+  if (r.videoFormat case final v?) ...{
+    'videoFormat': v.name,
+    'videoHeight': r.videoHeight,
+  },
   if (r.cover case final art?)
     'cover': {
       'path': art.path,
@@ -154,6 +158,7 @@ DownloadRequest decodeDownloadRequest(Map<String, dynamic> m) {
     }
   }
   final format = m['format'] as String?;
+  final videoFormat = m['videoFormat'] as String?;
   final durationMs = m['durationMs'] as int?;
   return DownloadRequest(
     title: m['title'] as String? ?? '',
@@ -173,5 +178,9 @@ DownloadRequest decodeDownloadRequest(Map<String, dynamic> m) {
     lyricsSkipSounds: m['lyricsSkipSounds'] != false,
     lyricsText: m['lyricsText'] as String?,
     audioLanguage: m['audioLanguage'] as String?,
+    videoFormat: videoFormat == null
+        ? null
+        : VideoFormat.values.byName(videoFormat),
+    videoHeight: m['videoHeight'] as int? ?? 1080,
   );
 }

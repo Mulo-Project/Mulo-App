@@ -37,6 +37,9 @@ class NativePreviewPlayer implements PreviewPlayer {
         _progress.add(
           PreviewProgress(
             position: Duration(milliseconds: (args['position'] as num).toInt()),
+            buffered: Duration(
+              milliseconds: ((args['buffered'] as num?) ?? 0).toInt(),
+            ),
             duration: duration == null
                 ? null
                 : Duration(milliseconds: duration.toInt()),

@@ -4,7 +4,7 @@ import '../../../covers/domain/entities/cover_art.dart';
 import '../../domain/entities/file_tags.dart';
 import '../../domain/entities/track.dart';
 import '../../domain/repositories/track_tag_repository.dart';
-import '../../../downloads/data/datasources/ffmpeg_tag_writer.dart';
+import '../../../downloads/data/datasources/native_tags.dart';
 import '../datasources/file_tag_source.dart';
 import '../datasources/track_tag_source.dart';
 
@@ -26,7 +26,7 @@ class TrackTagRepositoryImpl implements TrackTagRepository {
       );
 
   @override
-  String? get lastFailure => FfmpegTagWriter.lastError;
+  String? get lastFailure => NativeTags.lastError;
 
   @override
   Future<TagWriteResult> writeLyrics(Track track, String lyrics) =>
@@ -34,10 +34,11 @@ class TrackTagRepositoryImpl implements TrackTagRepository {
       ? Future.value(TagWriteResult.unsupported)
       : _source.write(
           track.uri,
-          title: '',
-          artist: '',
-          album: '',
-          genre: '',
+          // null은 그 칸을 건드리지 않는다 (제목 · 아티스트 등 기존 태그를 그대로 둔다).
+          title: null,
+          artist: null,
+          album: null,
+          genre: null,
           lyrics: lyrics,
           // 쓰기 동의는 가사 편집 화면에 들어갈 때 이미 구했다 ([ensureWriteAccess]).
         );
@@ -87,7 +88,7 @@ class PrefsTagMigrationStore implements TagMigrationStore {
 }
 
 class PrefsTagRestoreStore implements TagRestoreStore {
-  static const _ids = _PrefsIdSet('library.tagRestoreDone2');
+  static const _ids = _PrefsIdSet('library.tagRestoreDone3');
 
   @override
   Future<Set<String>> loadDone() => _ids.load();

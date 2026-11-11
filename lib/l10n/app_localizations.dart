@@ -3206,6 +3206,36 @@ abstract class AppLocalizations {
   /// **'이미 받는 중이거나 대기 중인 곡이에요'**
   String get downloadAlreadyInQueue;
 
+  /// No description provided for @videoSaveType.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 유형'**
+  String get videoSaveType;
+
+  /// No description provided for @videoSaveTypeAudio.
+  ///
+  /// In ko, this message translates to:
+  /// **'음원'**
+  String get videoSaveTypeAudio;
+
+  /// No description provided for @videoSaveTypeVideo.
+  ///
+  /// In ko, this message translates to:
+  /// **'영상'**
+  String get videoSaveTypeVideo;
+
+  /// No description provided for @videoSaveFormat.
+  ///
+  /// In ko, this message translates to:
+  /// **'영상 형식'**
+  String get videoSaveFormat;
+
+  /// No description provided for @videoSaveQuality.
+  ///
+  /// In ko, this message translates to:
+  /// **'영상 화질'**
+  String get videoSaveQuality;
+
   /// No description provided for @homeTopGenre.
   ///
   /// In ko, this message translates to:
@@ -3590,6 +3620,18 @@ abstract class AppLocalizations {
   /// **'추가한 날'**
   String get trackInfoAdded;
 
+  /// No description provided for @trackInfoPlayCount.
+  String get trackInfoPlayCount;
+
+  /// No description provided for @trackInfoPlayCountValue.
+  String trackInfoPlayCountValue(int count);
+
+  /// No description provided for @trackInfoListened.
+  String get trackInfoListened;
+
+  /// No description provided for @trackInfoLastPlayed.
+  String get trackInfoLastPlayed;
+
   /// No description provided for @trackInfoSource.
   ///
   /// In ko, this message translates to:
@@ -3673,6 +3715,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'샘플레이트'**
   String get trackInfoSampleRate;
+
+  /// No description provided for @trackInfoResolution.
+  ///
+  /// In ko, this message translates to:
+  /// **'해상도'**
+  String get trackInfoResolution;
 
   /// No description provided for @trackInfoUrl.
   ///

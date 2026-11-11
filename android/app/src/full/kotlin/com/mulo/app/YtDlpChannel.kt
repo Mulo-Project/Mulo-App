@@ -1,12 +1,15 @@
 package com.mulo.app
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import com.yausername.youtubedl_android.YoutubeDL
 import com.yausername.youtubedl_android.YoutubeDLException
 import com.yausername.youtubedl_android.YoutubeDLRequest
 import java.io.File
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
+import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 
 /**
@@ -16,6 +19,9 @@ import java.util.concurrent.Executors
  */
 class YtDlpChannel(private val context: Context, messenger: BinaryMessenger) : NativeChannel(messenger, NAME) {
     private val io = Executors.newSingleThreadExecutor()
+
+    // 영상 받기처럼 몇 분 걸리는 실행은 따로 돌려서, 검색 · 주소 읽기가 그 뒤에 줄 서지 않게 한다.
+    private val background = Executors.newCachedThreadPool()
 
     // 초기화(파이썬 풀기)는 처음 한 번만 걸린다.
     @Volatile private var ready = false
@@ -33,7 +39,9 @@ class YtDlpChannel(private val context: Context, messenger: BinaryMessenger) : N
                         return@setMethodCallHandler
                     }
                     val id = call.argument<String>("id")
-                    run(result) { execute(url, options, id) }
+                    val long = call.argument<Boolean>("background") ?: false
+                    val progress = call.argument<Boolean>("progress") ?: false
+                    run(result, if (long) background else io) { execute(url, options, id, progress) }
                 }
                 // 시간 초과로 Dart가 포기한 실행을 끊는다 (실행 줄이 막혀 다음 요청이 밀리지 않게 io 밖에서).
                 "cancel" -> {
@@ -80,7 +88,9 @@ class YtDlpChannel(private val context: Context, messenger: BinaryMessenger) : N
         }
     }
 
-    private fun execute(url: String, options: List<String>, id: String?): Map<String, Any?> {
+    private val main = Handler(Looper.getMainLooper())
+
+    private fun execute(url: String, options: List<String>, id: String?, progress: Boolean = false): Map<String, Any?> {
         val request = YoutubeDLRequest(url)
         // "-f 값"처럼 값이 붙는 옵션은 짝으로 넘긴다. 하나씩 따로 넣으면 라이브러리가
         // 옵션을 키로 모아 순서가 뒤섞여 yt-dlp가 값을 주소로 읽을 수 있다.
@@ -97,7 +107,29 @@ class YtDlpChannel(private val context: Context, messenger: BinaryMessenger) : N
             }
         }
         return try {
-            val r = YoutubeDL.getInstance().execute(request, id)
+            val r = if (progress && id != null) {
+                // 영상 + 소리가 따로 오면 파일이 둘이라, "Destination:" 줄로 몇 번째 파일인지 세어
+                // 전체 진행률(0 ~ 1)로 합친다. 두 파일이면 영상이 대부분이라 영상 0.9 · 소리 0.1로 나눈다.
+                var total = 1
+                var index = 0
+                var last = -1.0
+                YoutubeDL.getInstance().execute(request, id) { percent, _, line ->
+                    Regex("Downloading (\\d+) format").find(line)?.let { total = it.groupValues[1].toInt().coerceAtLeast(1) }
+                    if (line.contains("Destination:")) index += 1
+                    val part = (percent / 100.0).coerceIn(0.0, 1.0)
+                    val n = index.coerceAtLeast(1)
+                    val overall = if (total >= 2) {
+                        if (n == 1) part * 0.9 else 0.9 + (part * 0.1)
+                    } else part
+                    val value = minOf(overall, 0.99)
+                    if (value - last >= 0.005) {
+                        last = value
+                        main.post { channel.invokeMethod("progress", mapOf("id" to id, "progress" to value)) }
+                    }
+                }
+            } else {
+                YoutubeDL.getInstance().execute(request, id)
+            }
             mapOf("exitCode" to r.exitCode, "stdout" to r.out, "stderr" to r.err)
         } catch (e: YoutubeDLException) {
             // yt-dlp가 0이 아닌 코드로 끝난 경우: 메시지에 stderr가 들어 있다.
@@ -105,8 +137,12 @@ class YtDlpChannel(private val context: Context, messenger: BinaryMessenger) : N
         }
     }
 
-    private fun run(result: MethodChannel.Result, block: () -> Map<String, Any?>) =
-        runAsync(io, result, "ytdlp_failed") {
+    private fun run(
+        result: MethodChannel.Result,
+        executor: Executor = io,
+        block: () -> Map<String, Any?>,
+    ) =
+        runAsync(executor, result, "ytdlp_failed") {
             ensureInit()
             block()
         }
@@ -114,6 +150,7 @@ class YtDlpChannel(private val context: Context, messenger: BinaryMessenger) : N
     override fun dispose() {
         super.dispose()
         io.shutdown()
+        background.shutdown()
     }
 
     companion object {

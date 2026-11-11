@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/design/design.dart';
-import 'package:music_download_play_app/features/downloads/domain/entities/download_source.dart';
 import 'package:music_download_play_app/features/downloads/domain/repositories/download_queue_repository.dart';
 import 'package:music_download_play_app/features/search/data/engine/local_engine.dart';
 import 'package:music_download_play_app/features/search/data/engine/server_engine.dart';
@@ -620,26 +619,13 @@ void main() {
       expect(find.widgetWithText(TextField, 'Song'), findsOneWidget);
     });
 
-    testWidgets('이미 받은 곡은 막지 않고 다시 받을지 묻는다', (tester) async {
-      final queue = MemoryDownloadQueue()
-        ..downloadedKeys.add(downloadSourceKey(_fullHit.url));
+    testWidgets('이미 받은 곡이어도 묻지 않고 받기 팝업이 열린다', (tester) async {
+      final queue = MemoryDownloadQueue();
       await openDetail(tester, downloads: queue);
 
       await tester.tap(find.byKey(const ValueKey('detail-download')));
       await tester.pumpAndSettle();
-      expect(find.text('Download again?'), findsOneWidget);
-      expect(find.widgetWithText(TextField, 'Song'), findsNothing);
-
-      // 취소하면 받기 팝업 없이 닫힌다.
-      await tester.tap(find.text('Cancel'));
-      await tester.pumpAndSettle();
-      expect(find.widgetWithText(TextField, 'Song'), findsNothing);
-
-      // 다시 받기를 고르면 받기 팝업이 열린다.
-      await tester.tap(find.byKey(const ValueKey('detail-download')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Download again'));
-      await tester.pumpAndSettle();
+      expect(find.text('Download again?'), findsNothing);
       expect(find.widgetWithText(TextField, 'Song'), findsOneWidget);
     });
   });

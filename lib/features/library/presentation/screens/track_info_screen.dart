@@ -10,6 +10,8 @@ import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../covers/presentation/widgets/cover_editor_page.dart';
 import '../../../covers/presentation/widgets/cover_hero.dart';
 import '../../../downloads/domain/usecases/download_usecases.dart';
+import '../../../home/domain/entities/home_summary.dart';
+import '../../../home/domain/usecases/home_usecases.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/track.dart';
 import '../../domain/entities/track_file_info.dart';
@@ -38,6 +40,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
 
   /// 음악 파일 정보 (크기 · 형식 · 비트레이트 · 샘플레이트). 읽기 전이거나 못 읽으면 null.
   TrackFileInfo? _file;
+  TrackPlayStats? _plays;
 
   late final _title = TextEditingController();
   late final _artist = TextEditingController();
@@ -59,6 +62,9 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
     sl<GetTrackSourceUrl>()(widget.track.id).then((url) {
       if (mounted) setState(() => _url = url);
     });
+    sl<GetTrackPlayStats>()(widget.track.id).then((s) {
+      if (mounted) setState(() => _plays = s);
+    });
     sl<GetTrackFileInfo>()(widget.track).then((info) {
       if (mounted) setState(() => _file = info);
     });
@@ -76,9 +82,12 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
     'audio/ogg' || 'application/ogg' || 'audio/opus' => 'Opus / Ogg',
     'audio/mp4' || 'audio/aac' || 'audio/x-m4a' => 'AAC / M4A',
     'audio/flac' || 'audio/x-flac' => 'FLAC',
+    'video/mp4' => 'MP4',
+    'video/webm' => 'WebM',
+    'video/x-matroska' => 'MKV',
     'audio/x-wav' || 'audio/wav' => 'WAV',
     null || '' => null,
-    final m => m.replaceFirst('audio/', '').toUpperCase(),
+    final m => m.replaceFirst(RegExp('^(audio|video)/'), '').toUpperCase(),
   };
 
   /// 커버 이미지를 이미지 페이지에서 고르고 · 맞추고 · 지운다.
@@ -215,6 +224,21 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
       row(l10n.trackInfoDuration, formatDuration(t.duration)),
       const AppDivider(),
       row(l10n.trackInfoAdded, _date(t.addedAt)),
+      if (_plays != null) ...[
+        const AppDivider(),
+        row(
+          l10n.trackInfoPlayCount,
+          l10n.trackInfoPlayCountValue(_plays!.count),
+        ),
+        if (_plays!.count > 0) ...[
+          const AppDivider(),
+          row(l10n.trackInfoListened, formatDuration(_plays!.listened)),
+          if (_plays!.lastAt != null) ...[
+            const AppDivider(),
+            row(l10n.trackInfoLastPlayed, _date(_plays!.lastAt!)),
+          ],
+        ],
+      ],
       const AppDivider(),
       row(
         l10n.trackInfoSource,
@@ -230,9 +254,12 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
         const AppDivider(),
         row(l10n.trackInfoFileSize, _size(_file!.sizeBytes!)),
       ],
-      if (_format(_file?.mime) != null) ...[
+      if (_format(_file?.mime ?? widget.track.mime) != null) ...[
         const AppDivider(),
-        row(l10n.trackInfoFormat, _format(_file!.mime)!),
+        row(
+          l10n.trackInfoFormat,
+          _format(_file?.mime ?? widget.track.mime)!,
+        ),
       ],
       if (_file?.bitrate != null) ...[
         const AppDivider(),
@@ -246,6 +273,13 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
         row(
           l10n.trackInfoSampleRate,
           '${(_file!.sampleRate! / 1000).toStringAsFixed(_file!.sampleRate! % 1000 == 0 ? 0 : 1)} kHz',
+        ),
+      ],
+      if (_file?.width != null && _file?.height != null) ...[
+        const AppDivider(),
+        row(
+          l10n.trackInfoResolution,
+          '${_file!.width} × ${_file!.height}',
         ),
       ],
       if (t.folder.isNotEmpty) ...[

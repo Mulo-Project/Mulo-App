@@ -222,6 +222,7 @@ class DriftLibraryRepository implements LibraryRepository {
     uri: r.uri,
     folder: r.folder,
     source: TrackSource.values.asNameMap()[r.source] ?? TrackSource.device,
+    mime: r.mime,
   );
 
   static TracksCompanion _toRow(Track t) => TracksCompanion.insert(
@@ -235,5 +236,6 @@ class DriftLibraryRepository implements LibraryRepository {
     folder: Value(t.folder),
     source: t.source.name,
     addedAt: t.addedAt,
+    mime: Value(t.mime),
   );
 }

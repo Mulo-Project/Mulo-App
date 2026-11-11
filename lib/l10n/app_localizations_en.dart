@@ -1755,6 +1755,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'This song is already downloading or queued';
 
   @override
+  String get videoSaveType => 'Save as';
+
+  @override
+  String get videoSaveTypeAudio => 'Audio';
+
+  @override
+  String get videoSaveTypeVideo => 'Video';
+
+  @override
+  String get videoSaveFormat => 'Video format';
+
+  @override
+  String get videoSaveQuality => 'Video quality';
+
+  @override
   String get homeTopGenre => 'Top genre';
 
   @override
@@ -1960,6 +1975,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackInfoAdded => 'Added';
 
   @override
+  String get trackInfoPlayCount => 'Plays';
+
+  @override
+  String trackInfoPlayCountValue(int count) {
+    return '$count';
+  }
+
+  @override
+  String get trackInfoListened => 'Listened';
+
+  @override
+  String get trackInfoLastPlayed => 'Last played';
+
+  @override
   String get trackInfoSource => 'Source';
 
   @override
@@ -2002,6 +2031,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trackInfoSampleRate => 'Sample rate';
+
+  @override
+  String get trackInfoResolution => 'Resolution';
 
   @override
   String get trackInfoUrl => 'Source link';

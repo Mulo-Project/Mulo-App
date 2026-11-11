@@ -132,14 +132,16 @@ class FullscreenVideoButton extends StatelessWidget {
 
 /// 영상 화면([NativeVideo]) + 오른쪽 아래 전체 화면 버튼. 메인 플레이어와 임시 저장 곡의 영상 자리가 함께 쓴다.
 class NativeVideoWithFullscreen extends StatelessWidget {
-  const NativeVideoWithFullscreen({super.key});
+  const NativeVideoWithFullscreen({super.key, this.fit = BoxFit.cover});
+
+  final BoxFit fit;
 
   @override
   Widget build(BuildContext context) {
     return Stack(
       fit: StackFit.expand,
       children: [
-        const NativeVideo(),
+        NativeVideo(fit: fit),
         Positioned(
           right: AppSpacing.xs,
           bottom: AppSpacing.xs,
@@ -157,7 +159,9 @@ class NativeVideoWithFullscreen extends StatelessWidget {
 /// 영상 화면([NativeVideo]) 자체를 누르면 전체 화면으로 키운다 (원형 커버처럼 모서리에 버튼을 둘 수 없는 자리).
 /// 전체 화면에는 [NativeVideoWithFullscreen]과 같은 영상 컨트롤이 뜬다.
 class NativeVideoTapFullscreen extends StatelessWidget {
-  const NativeVideoTapFullscreen({super.key});
+  const NativeVideoTapFullscreen({super.key, this.fit = BoxFit.cover});
+
+  final BoxFit fit;
 
   @override
   Widget build(BuildContext context) {
@@ -169,7 +173,7 @@ class NativeVideoTapFullscreen extends StatelessWidget {
         controls: (_) =>
             const PreviewVideoControls(fullscreen: true, main: true),
       ),
-      child: const NativeVideo(),
+      child: NativeVideo(fit: fit),
     );
   }
 }

@@ -7,6 +7,7 @@ import '../entities/download_source.dart';
 import '../entities/tag_notice.dart';
 import '../repositories/download_queue_repository.dart';
 import '../repositories/download_settings_repository.dart';
+import '../repositories/video_save_repository.dart';
 
 /// 대기열 구독 (상세 기능: 다운로드 대기열 #7).
 class WatchDownloadQueue
@@ -44,16 +45,6 @@ class FindExistingDownload implements UseCase<ExistingDownload, String> {
 
   @override
   Future<ExistingDownload> call(String url) => _repo.findExisting(url);
-}
-
-/// 이미 받은 곡들의 원본 주소 키 (받기 버튼을 "받음"으로 보이고 다시 받지 못하게).
-class WatchDownloadedKeys implements StreamUseCase<Set<String>, NoParams> {
-  const WatchDownloadedKeys(this._repo);
-
-  final DownloadQueueRepository _repo;
-
-  @override
-  Stream<Set<String>> call(NoParams params) => _repo.watchDownloadedKeys();
 }
 
 /// 받은 곡의 원본 주소 (곡 상세 정보에 보여 준다). 기록이 없으면 null.
@@ -211,4 +202,14 @@ class SaveDownloadFormat implements UseCase<void, AudioFormat> {
 
   @override
   Future<void> call(AudioFormat format) => _repo.saveFormat(format);
+}
+
+/// 영상 파일 저장을 쓸 수 있는지 (Android full 빌드만).
+class IsVideoSaveAvailable implements UseCase<bool, NoParams> {
+  const IsVideoSaveAvailable(this._repo);
+
+  final VideoSaveRepository _repo;
+
+  @override
+  Future<bool> call(NoParams params) => _repo.isAvailable();
 }

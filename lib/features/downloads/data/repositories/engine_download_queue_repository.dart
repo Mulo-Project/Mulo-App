@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show debugPrint;
+
+import '../../../../core/config/default_video_folder.dart';
 import '../../../covers/domain/entities/cover_key.dart';
 import '../../../covers/domain/repositories/cover_repository.dart';
 import '../../../library/domain/entities/track.dart';
@@ -15,10 +18,11 @@ import '../../domain/entities/download_source.dart';
 import '../../domain/entities/tag_notice.dart';
 import '../../domain/repositories/download_queue_repository.dart';
 import '../../domain/repositories/download_settings_repository.dart';
+import '../../domain/repositories/video_save_repository.dart';
 import '../datasources/audio_file_downloader.dart';
 import '../datasources/audio_transcoder.dart';
 import '../datasources/cover_tag_writer.dart';
-import '../datasources/ffmpeg_tag_writer.dart';
+import '../datasources/native_tags.dart';
 import '../datasources/download_queue_store.dart';
 import '../datasources/downloaded_file_store.dart';
 
@@ -44,6 +48,7 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
     required this._tempDir,
     this._coverTags,
     this._lyrics,
+    this._video,
     DateTime Function()? now,
   }) : _now = now ?? DateTime.now;
 
@@ -58,6 +63,9 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
   final AudioTranscoder _transcoder;
   final CoverTagWriter? _coverTags;
   final LyricsRepository? _lyrics;
+
+  /// 영상 파일 저장 (영상으로 저장할 때 쓴다).
+  final VideoSaveRepository? _video;
   final DownloadQueueStore _queueStore;
   final Future<Directory> Function() _tempDir;
   final DateTime Function() _now;
@@ -179,40 +187,6 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
 
   @override
   Stream<TagNotice> watchTagNotices() => _tagNotices.stream;
-
-  /// 받은 곡 키가 바뀌었음을 알린다 (곡을 만든 직후 · 원본 주소 기록 뒤).
-  final _keysChanged = StreamController<void>.broadcast();
-
-  @override
-  Stream<Set<String>> watchDownloadedKeys() {
-    late final StreamController<Set<String>> out;
-    StreamSubscription<Object?>? libSub;
-    StreamSubscription<void>? keySub;
-    var ids = <String>{};
-    void emit() {
-      if (out.isClosed) return;
-      out.add({
-        for (final e in _sources.entries)
-          if (ids.contains(e.value)) e.key,
-      });
-    }
-
-    out = StreamController<Set<String>>(
-      onListen: () async {
-        await _ensureLoaded();
-        libSub = _library.watchTracks().listen((tracks) {
-          ids = {for (final t in tracks) t.id};
-          emit();
-        });
-        keySub = _keysChanged.stream.listen((_) => emit());
-      },
-      onCancel: () async {
-        await libSub?.cancel();
-        await keySub?.cancel();
-      },
-    );
-    return out.stream;
-  }
 
   @override
   Future<void> enqueue(DownloadRequest request) async {
@@ -379,6 +353,74 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
       final dir = await _tempDir();
       await dir.create(recursive: true);
       temp = File(_partPath(dir, id));
+
+      // 영상으로 저장: 영상(소리 포함)만 받아 `Movies/Mulo`에 저장하고 끝난다 (보관함 곡은 만들지 않는다).
+      final videoFormat = request.videoFormat;
+      if (videoFormat != null) {
+        final videoFolder = request.savePath.isNotEmpty
+            ? request.savePath
+            : defaultVideoFolder();
+        final video = _video;
+        if (video == null) throw const DownloadFailed('영상 저장을 쓸 수 없어요');
+        // 가사(고친 글 또는 영상 자막)는 음원처럼 파일 태그와 앱에 같은 글로 저장한다.
+        final lyrics = await _lyricsFor(request);
+        if (token.isCancelled) throw const DownloadAborted();
+        var shown = 0.0;
+        final String uri;
+        try {
+          uri = await video.save(
+            VideoSaveRequest(
+              url: request.url,
+              title: request.title,
+              artist: request.artist,
+              album: request.album,
+              genre: request.genre,
+              lyrics: lyrics,
+              cover: request.cover,
+              thumbnailUrl: request.thumbnailUrl,
+              color: request.color,
+              maxHeight: request.videoHeight,
+              folder: videoFolder,
+              format: videoFormat,
+            ),
+            onProgress: (p) {
+              if (token.isCancelled || p - shown < _progressStep) return;
+              shown = p;
+              _set(
+                id,
+                (e) => e.status == DownloadStatus.downloading
+                    // 다 받으면(0.99) 합치기 · 저장이라 "처리 중"으로 보인다.
+                    ? e.copyWith(progress: p, processing: p >= 0.98)
+                    : e,
+                persist: false,
+              );
+            },
+          );
+        } on VideoSaveException catch (e) {
+          throw DownloadFailed('영상을 저장하지 못했어요 (${e.message})');
+        }
+        if (token.isCancelled) throw const DownloadAborted();
+        // 영상도 음원처럼 보관함 곡이다 (커버 · 색 · 재생목록은 앱이 따로 저장한다). 폴더는 저장한 위치를 적고
+        // (`Movies/…`는 `LoadedFolderRepository.videoFolders`라 불러오는 폴더가 아니어도 보인다),
+        // 같은 곡을 음원으로 또 받을 수 있게 원본 주소는 기억하지 않는다.
+        await _register(
+          id,
+          request,
+          SavedAudio(uri: uri, folder: videoFolder),
+          lyrics,
+          remember: false,
+        );
+        _set(
+          id,
+          (e) => e.copyWith(
+            status: DownloadStatus.done,
+            progress: 1,
+            savedFolder: videoFolder,
+          ),
+        );
+        return;
+      }
+
       var lastShown = 0.0;
       Future<DownloadedAudio> fetch({required bool refresh}) async {
         final stream = await _engine.resolveAudioStream(
@@ -466,7 +508,7 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
             ok: tagged,
             detail: tagged
                 ? CoverTagWriter.lastCoverNote
-                : (FfmpegTagWriter.lastError ?? 'unsupported or nothing to write'),
+                : (NativeTags.lastError ?? 'unsupported or nothing to write'),
           ),
         );
       }
@@ -538,8 +580,13 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
     String id,
     DownloadRequest request,
     SavedAudio saved,
-    String? lyrics,
-  ) async {
+    String? lyrics, {
+    bool remember = true,
+  }) async {
+    final video = request.videoFormat != null;
+    debugPrint(
+      'MuloDownload register video=$video id=$id uri=${saved.uri} folder=${saved.folder}',
+    );
     final trackId = 'download:$id';
     await _library.addTracks([
       Track(
@@ -553,6 +600,7 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
         uri: saved.uri,
         folder: saved.folder,
         source: TrackSource.download,
+        mime: request.videoFormat?.mime ?? '',
       ),
     ]);
     if (request.playlistIds.isNotEmpty) {
@@ -573,9 +621,10 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
     final color = request.color;
     if (color != null) await _colors.save(CoverKey.track(trackId), color);
     // 같은 원본 주소를 다시 받지 않도록 기억한다 (재생목록 가져오기가 건너뛴다).
-    _sources[downloadSourceKey(request.url)] = trackId;
-    _keysChanged.add(null);
-    await _queueStore.saveSources(_sources);
+    if (remember) {
+      _sources[downloadSourceKey(request.url)] = trackId;
+      await _queueStore.saveSources(_sources);
+    }
     if (lyrics != null) {
       try {
         await _lyrics?.save(trackId, lyrics);

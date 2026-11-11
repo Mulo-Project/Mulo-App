@@ -118,6 +118,16 @@ class $TracksTable extends Tracks with TableInfo<$TracksTable, TrackRow> {
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _mimeMeta = const VerificationMeta('mime');
+  @override
+  late final GeneratedColumn<String> mime = GeneratedColumn<String>(
+    'mime',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -131,6 +141,7 @@ class $TracksTable extends Tracks with TableInfo<$TracksTable, TrackRow> {
     source,
     addedAt,
     hidden,
+    mime,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -223,6 +234,12 @@ class $TracksTable extends Tracks with TableInfo<$TracksTable, TrackRow> {
         hidden.isAcceptableOrUnknown(data['hidden']!, _hiddenMeta),
       );
     }
+    if (data.containsKey('mime')) {
+      context.handle(
+        _mimeMeta,
+        mime.isAcceptableOrUnknown(data['mime']!, _mimeMeta),
+      );
+    }
     return context;
   }
 
@@ -276,6 +293,10 @@ class $TracksTable extends Tracks with TableInfo<$TracksTable, TrackRow> {
         DriftSqlType.bool,
         data['${effectivePrefix}hidden'],
       )!,
+      mime: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}mime'],
+      )!,
     );
   }
 
@@ -306,6 +327,10 @@ class TrackRow extends DataClass implements Insertable<TrackRow> {
   /// 불러오는 폴더를 빼서 숨긴 곡. 행과 재생 기록 · 좋아요 · 재생목록 · 커버는 남기고,
   /// 다시 불러오면 숨김만 푼다. 보관함에는 보이지 않는다.
   final bool hidden;
+
+  /// 파일 형식(MIME, 예: `video/mp4` · `video/webm`). 모르면 빈 문자열.
+  /// 영상 화면을 그릴지(`video/`로 시작하면 영상)와 상세 화면의 형식 이름에 쓴다.
+  final String mime;
   const TrackRow({
     required this.id,
     required this.title,
@@ -318,6 +343,7 @@ class TrackRow extends DataClass implements Insertable<TrackRow> {
     required this.source,
     required this.addedAt,
     required this.hidden,
+    required this.mime,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -333,6 +359,7 @@ class TrackRow extends DataClass implements Insertable<TrackRow> {
     map['source'] = Variable<String>(source);
     map['added_at'] = Variable<DateTime>(addedAt);
     map['hidden'] = Variable<bool>(hidden);
+    map['mime'] = Variable<String>(mime);
     return map;
   }
 
@@ -349,6 +376,7 @@ class TrackRow extends DataClass implements Insertable<TrackRow> {
       source: Value(source),
       addedAt: Value(addedAt),
       hidden: Value(hidden),
+      mime: Value(mime),
     );
   }
 
@@ -369,6 +397,7 @@ class TrackRow extends DataClass implements Insertable<TrackRow> {
       source: serializer.fromJson<String>(json['source']),
       addedAt: serializer.fromJson<DateTime>(json['addedAt']),
       hidden: serializer.fromJson<bool>(json['hidden']),
+      mime: serializer.fromJson<String>(json['mime']),
     );
   }
   @override
@@ -386,6 +415,7 @@ class TrackRow extends DataClass implements Insertable<TrackRow> {
       'source': serializer.toJson<String>(source),
       'addedAt': serializer.toJson<DateTime>(addedAt),
       'hidden': serializer.toJson<bool>(hidden),
+      'mime': serializer.toJson<String>(mime),
     };
   }
 
@@ -401,6 +431,7 @@ class TrackRow extends DataClass implements Insertable<TrackRow> {
     String? source,
     DateTime? addedAt,
     bool? hidden,
+    String? mime,
   }) => TrackRow(
     id: id ?? this.id,
     title: title ?? this.title,
@@ -413,6 +444,7 @@ class TrackRow extends DataClass implements Insertable<TrackRow> {
     source: source ?? this.source,
     addedAt: addedAt ?? this.addedAt,
     hidden: hidden ?? this.hidden,
+    mime: mime ?? this.mime,
   );
   TrackRow copyWithCompanion(TracksCompanion data) {
     return TrackRow(
@@ -429,6 +461,7 @@ class TrackRow extends DataClass implements Insertable<TrackRow> {
       source: data.source.present ? data.source.value : this.source,
       addedAt: data.addedAt.present ? data.addedAt.value : this.addedAt,
       hidden: data.hidden.present ? data.hidden.value : this.hidden,
+      mime: data.mime.present ? data.mime.value : this.mime,
     );
   }
 
@@ -445,7 +478,8 @@ class TrackRow extends DataClass implements Insertable<TrackRow> {
           ..write('folder: $folder, ')
           ..write('source: $source, ')
           ..write('addedAt: $addedAt, ')
-          ..write('hidden: $hidden')
+          ..write('hidden: $hidden, ')
+          ..write('mime: $mime')
           ..write(')'))
         .toString();
   }
@@ -463,6 +497,7 @@ class TrackRow extends DataClass implements Insertable<TrackRow> {
     source,
     addedAt,
     hidden,
+    mime,
   );
   @override
   bool operator ==(Object other) =>
@@ -478,7 +513,8 @@ class TrackRow extends DataClass implements Insertable<TrackRow> {
           other.folder == this.folder &&
           other.source == this.source &&
           other.addedAt == this.addedAt &&
-          other.hidden == this.hidden);
+          other.hidden == this.hidden &&
+          other.mime == this.mime);
 }
 
 class TracksCompanion extends UpdateCompanion<TrackRow> {
@@ -493,6 +529,7 @@ class TracksCompanion extends UpdateCompanion<TrackRow> {
   final Value<String> source;
   final Value<DateTime> addedAt;
   final Value<bool> hidden;
+  final Value<String> mime;
   final Value<int> rowid;
   const TracksCompanion({
     this.id = const Value.absent(),
@@ -506,6 +543,7 @@ class TracksCompanion extends UpdateCompanion<TrackRow> {
     this.source = const Value.absent(),
     this.addedAt = const Value.absent(),
     this.hidden = const Value.absent(),
+    this.mime = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   TracksCompanion.insert({
@@ -520,6 +558,7 @@ class TracksCompanion extends UpdateCompanion<TrackRow> {
     required String source,
     required DateTime addedAt,
     this.hidden = const Value.absent(),
+    this.mime = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        title = Value(title),
@@ -541,6 +580,7 @@ class TracksCompanion extends UpdateCompanion<TrackRow> {
     Expression<String>? source,
     Expression<DateTime>? addedAt,
     Expression<bool>? hidden,
+    Expression<String>? mime,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -555,6 +595,7 @@ class TracksCompanion extends UpdateCompanion<TrackRow> {
       if (source != null) 'source': source,
       if (addedAt != null) 'added_at': addedAt,
       if (hidden != null) 'hidden': hidden,
+      if (mime != null) 'mime': mime,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -571,6 +612,7 @@ class TracksCompanion extends UpdateCompanion<TrackRow> {
     Value<String>? source,
     Value<DateTime>? addedAt,
     Value<bool>? hidden,
+    Value<String>? mime,
     Value<int>? rowid,
   }) {
     return TracksCompanion(
@@ -585,6 +627,7 @@ class TracksCompanion extends UpdateCompanion<TrackRow> {
       source: source ?? this.source,
       addedAt: addedAt ?? this.addedAt,
       hidden: hidden ?? this.hidden,
+      mime: mime ?? this.mime,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -625,6 +668,9 @@ class TracksCompanion extends UpdateCompanion<TrackRow> {
     if (hidden.present) {
       map['hidden'] = Variable<bool>(hidden.value);
     }
+    if (mime.present) {
+      map['mime'] = Variable<String>(mime.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -645,6 +691,7 @@ class TracksCompanion extends UpdateCompanion<TrackRow> {
           ..write('source: $source, ')
           ..write('addedAt: $addedAt, ')
           ..write('hidden: $hidden, ')
+          ..write('mime: $mime, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2429,6 +2476,7 @@ typedef $$TracksTableCreateCompanionBuilder = TracksCompanion Function({
   required String source,
   required DateTime addedAt,
   Value<bool> hidden,
+  Value<String> mime,
   Value<int> rowid,
 });
 typedef $$TracksTableUpdateCompanionBuilder = TracksCompanion Function({
@@ -2443,6 +2491,7 @@ typedef $$TracksTableUpdateCompanionBuilder = TracksCompanion Function({
   Value<String> source,
   Value<DateTime> addedAt,
   Value<bool> hidden,
+  Value<String> mime,
   Value<int> rowid,
 });
 
@@ -2507,6 +2556,11 @@ class $$TracksTableFilterComposer
 
   ColumnFilters<bool> get hidden => $composableBuilder(
     column: $table.hidden,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get mime => $composableBuilder(
+    column: $table.mime,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -2574,6 +2628,11 @@ class $$TracksTableOrderingComposer
     column: $table.hidden,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get mime => $composableBuilder(
+    column: $table.mime,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$TracksTableAnnotationComposer
@@ -2619,6 +2678,9 @@ class $$TracksTableAnnotationComposer
 
   GeneratedColumn<bool> get hidden =>
       $composableBuilder(column: $table.hidden, builder: (column) => column);
+
+  GeneratedColumn<String> get mime =>
+      $composableBuilder(column: $table.mime, builder: (column) => column);
 }
 
 class $$TracksTableTableManager
@@ -2660,6 +2722,7 @@ class $$TracksTableTableManager
                 Value<String> source = const Value.absent(),
                 Value<DateTime> addedAt = const Value.absent(),
                 Value<bool> hidden = const Value.absent(),
+                Value<String> mime = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TracksCompanion(
                 id: id,
@@ -2673,6 +2736,7 @@ class $$TracksTableTableManager
                 source: source,
                 addedAt: addedAt,
                 hidden: hidden,
+                mime: mime,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -2688,6 +2752,7 @@ class $$TracksTableTableManager
                 required String source,
                 required DateTime addedAt,
                 Value<bool> hidden = const Value.absent(),
+                Value<String> mime = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TracksCompanion.insert(
                 id: id,
@@ -2701,6 +2766,7 @@ class $$TracksTableTableManager
                 source: source,
                 addedAt: addedAt,
                 hidden: hidden,
+                mime: mime,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

@@ -10,15 +10,9 @@ import '../../domain/entities/download_source.dart';
 import '../../domain/usecases/download_usecases.dart';
 
 class DownloadQueueState extends Equatable {
-  const DownloadQueueState({
-    this.items = const [],
-    this.downloadedKeys = const {},
-  });
+  const DownloadQueueState({this.items = const []});
 
   final List<DownloadItem> items;
-
-  /// 이미 받아 보관함에 있는 곡들의 원본 주소 키.
-  final Set<String> downloadedKeys;
 
   /// 카드에 보여 줄 곡: 지금 받는 곡, 없으면 일시정지한 첫 곡, 없으면 실패한 첫 곡 (다시 받기 버튼을 보이려고).
   DownloadItem? get current {
@@ -85,7 +79,7 @@ class DownloadQueueState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [items, downloadedKeys];
+  List<Object?> get props => [items];
 }
 
 /// 검색 탭의 다운로드 카드 · 대기열. 대기열 변경을 구독한다.
@@ -97,9 +91,8 @@ class DownloadQueueCubit extends Cubit<DownloadQueueState> {
     this._resume,
     this._retry,
     this._cancel,
-    this._cancelAll, [
-    this._watchDownloaded,
-  ]) : super(const DownloadQueueState());
+    this._cancelAll,
+  ) : super(const DownloadQueueState());
 
   final WatchDownloadQueue _watch;
   final EnqueueDownload _enqueue;
@@ -108,30 +101,14 @@ class DownloadQueueCubit extends Cubit<DownloadQueueState> {
   final RetryDownload _retry;
   final CancelDownload _cancel;
   final CancelAllDownloads _cancelAll;
-  final WatchDownloadedKeys? _watchDownloaded;
   StreamSubscription<List<DownloadItem>>? _sub;
-
-  StreamSubscription<Set<String>>? _keysSub;
 
   void start() {
     _sub?.cancel();
-    _keysSub?.cancel();
     _sub = _watch(const NoParams()).listen((items) {
-      emit(
-        DownloadQueueState(items: items, downloadedKeys: state.downloadedKeys),
-      );
-    });
-    // 곡을 받거나 지울 때마다 받은 곡 목록이 새로 온다 (지운 곡은 다시 받을 수 있다).
-    _keysSub = _watchDownloaded?.call(const NoParams()).listen((keys) {
-      if (!isClosed) {
-        emit(DownloadQueueState(items: state.items, downloadedKeys: keys));
-      }
+      emit(DownloadQueueState(items: items));
     });
   }
-
-  /// 이미 받아 보관함에 있는 곡인지.
-  bool isDownloaded(String url) =>
-      state.downloadedKeys.contains(downloadSourceKey(url));
 
   /// 같은 원본 주소의 곡이 이미 받는 중 · 대기 · 일시정지인지.
   bool isInQueue(String url) {
@@ -186,7 +163,6 @@ class DownloadQueueCubit extends Cubit<DownloadQueueState> {
   @override
   Future<void> close() async {
     await _sub?.cancel();
-    await _keysSub?.cancel();
     return super.close();
   }
 }

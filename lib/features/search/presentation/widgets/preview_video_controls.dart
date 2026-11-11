@@ -80,13 +80,14 @@ class _PreviewVideoControlsState extends State<PreviewVideoControls> {
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme.bodySmall
         ?.copyWith(color: context.palette.onSurface);
-    final (paused, position, duration, fraction) = widget.main
+    final (paused, position, duration, fraction, buffered) = widget.main
         ? context.select(
             (NowPlayingCubit c) => (
               !c.state.isPlaying,
               c.state.position,
               c.state.track?.duration,
               c.state.progress,
+              0.0,
             ),
           )
         : context.select(
@@ -95,6 +96,7 @@ class _PreviewVideoControlsState extends State<PreviewVideoControls> {
               c.state.progress?.position ?? Duration.zero,
               c.state.progress?.duration,
               c.state.fraction,
+              c.state.bufferedFraction,
             ),
           );
     final show = paused || _shown;
@@ -186,7 +188,12 @@ class _PreviewVideoControlsState extends State<PreviewVideoControls> {
                     children: [
                       Text(formatDuration(position), style: text),
                       const SizedBox(width: AppSpacing.sm),
-                      Expanded(child: PreviewSeekLine(fraction: fraction)),
+                      Expanded(
+                        child: PreviewSeekLine(
+                          fraction: fraction,
+                          buffered: buffered,
+                        ),
+                      ),
                       const SizedBox(width: AppSpacing.sm),
                       Text(
                         duration == null ? '' : formatDuration(duration),

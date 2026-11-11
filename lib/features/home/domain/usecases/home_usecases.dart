@@ -269,3 +269,25 @@ class GetJoinDate implements UseCase<DateTime, NoParams> {
   @override
   Future<DateTime> call(NoParams params) => _repo.joinedAt();
 }
+
+/// 곡 하나의 재생 횟수 · 들은 시간 · 마지막 재생.
+class GetTrackPlayStats implements UseCase<TrackPlayStats, String> {
+  const GetTrackPlayStats(this._plays);
+
+  final PlayHistoryRepository _plays;
+
+  @override
+  Future<TrackPlayStats> call(String trackId) async {
+    final all = await _plays.watchPlays().first;
+    var count = 0;
+    var listened = Duration.zero;
+    DateTime? last;
+    for (final p in all) {
+      if (p.trackId != trackId) continue;
+      count++;
+      listened += p.listened;
+      if (last == null || p.playedAt.isAfter(last)) last = p.playedAt;
+    }
+    return TrackPlayStats(count: count, listened: listened, lastAt: last);
+  }
+}

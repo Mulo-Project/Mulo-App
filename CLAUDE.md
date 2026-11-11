@@ -35,6 +35,7 @@
 - 다운로드는 `DownloaderEngine` 인터페이스 → `ServerEngine`(서버 모드) / `LocalEngine`(로컬 모드).
 - Android 빌드는 flavor `lite`(서버 모드만) / `full`(두 모드). 데스크톱은 빌드 하나에 설정으로 모드 선택.
 - 앱 로컬 DB는 drift(`lib/core/database/`, 스키마 바꾸면 `dart run build_runner build -d`), 설정값은 shared_preferences, 재생은 just_audio + audio_service. (Notion 기술 스택 기준)
+- **형식(mp3 · opus · mp4 · webm 등)별 처리는 네이티브에만 둔다.** Dart는 형식을 모르는 값(제목 · 아티스트 · 가사 · 커버 PNG 등)과 파일 경로를 네이티브 호출 하나로 넘기고, 형식마다 다른 규칙(키 이름 · 커버 넣는 방식 · ffmpeg 인자)은 네이티브의 형식별 함수가 각자 가진다. Dart에 형식별 분기 · 클래스 · 확장자 목록을 새로 만들지 않는다. 형식 하나의 변경이 다른 형식에 새지 않게 함수를 나눈다.
 - Android 네이티브 기능(MediaStore 등)은 Kotlin + MethodChannel(`music_app/<이름>`), 채널 클래스는 `android/app/src/main/kotlin/.../`에 하나씩.
 - 테마는 디자인 시스템(`lib/core/design/`)의 테마 소스로만 바꾼다 ([design-system.md](docs/design-system.md)).
 

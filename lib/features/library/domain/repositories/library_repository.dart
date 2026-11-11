@@ -67,6 +67,9 @@ abstract interface class LoadedFolderRepository {
   /// 기본 저장 위치. 항상 목록에 포함되고 지울 수 없다.
   String get defaultFolder;
 
+  /// 영상 저장 위치들 (Android `Movies` · `Download`). 불러오는 폴더가 아니어도 그 안의 영상 곡은 보관함에 보인다.
+  List<String> get videoFolders;
+
   /// 사용자가 추가한 폴더 (기본 저장 위치 제외).
   Future<List<String>> loadExtra();
 

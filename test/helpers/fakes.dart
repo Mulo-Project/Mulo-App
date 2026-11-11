@@ -183,6 +183,9 @@ class FakeTrackFiles implements TrackFileRepository {
 
 /// 메모리 불러오는 폴더 목록 (고르기는 [picked]를 그대로 돌려준다).
 class MemoryLoadedFolders implements LoadedFolderRepository {
+  @override
+  List<String> get videoFolders => const [];
+
   MemoryLoadedFolders({this.picked, List<String> extra = const []})
     : extra = [...extra];
 
@@ -683,9 +686,6 @@ class MemoryDownloadQueue implements DownloadQueueRepository {
     _changes.add([...items]);
   }
 
-  /// 이미 받은 곡의 원본 주소 키 (`downloadSourceKey`).
-  final downloadedKeys = <String>{};
-
   /// 받기 요청 기록.
   final requests = <DownloadRequest>[];
 
@@ -701,9 +701,6 @@ class MemoryDownloadQueue implements DownloadQueueRepository {
 
   @override
   Stream<TagNotice> watchTagNotices() => const Stream.empty();
-
-  @override
-  Stream<Set<String>> watchDownloadedKeys() => Stream.value(downloadedKeys);
 
   @override
   Stream<List<DownloadItem>> watchQueue() async* {

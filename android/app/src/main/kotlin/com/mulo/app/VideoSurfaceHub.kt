@@ -34,9 +34,22 @@ object VideoSurfaceHub {
     var emit: ((String, Map<String, Any?>) -> Unit)? = null
 
     private val playerListener = object : Player.Listener {
-        override fun onVideoSizeChanged(videoSize: VideoSize) = sizeChanged(videoSize)
+        override fun onVideoSizeChanged(videoSize: VideoSize) {
+            MuloLog.d(MuloLog.PLAYBACK, "video size ${videoSize.width}x${videoSize.height}")
+            sizeChanged(videoSize)
+        }
+
+        override fun onTracksChanged(tracks: androidx.media3.common.Tracks) {
+            val video = tracks.groups.filter { it.type == C.TRACK_TYPE_VIDEO }
+            MuloLog.d(
+                MuloLog.PLAYBACK,
+                "tracks video=${video.size} supported=${video.count { it.isSupported }} " +
+                    "mime=${video.firstOrNull()?.mediaTrackGroup?.getFormat(0)?.sampleMimeType}",
+            )
+        }
 
         override fun onRenderedFirstFrame() {
+            MuloLog.d(MuloLog.PLAYBACK, "video first frame")
             firstFrame = true
             emit?.invoke("ready", mapOf("value" to true))
         }
@@ -139,6 +152,10 @@ object VideoSurfaceHub {
         // 표면이 유효할 때만 영상 해독을 켠다 (표면 없이 켜면 해독기 초기화가 실패해 소리까지 멈춘다).
         val surface = producer?.surface
         val ready = surface != null && surface.isValid
+        MuloLog.d(
+            MuloLog.PLAYBACK,
+            "video refresh attached=$attached target=${target != null} surface=${surface != null} ready=$ready",
+        )
         mainPlayer?.let { setVideoDisabled(it, target !== it || !ready) }
         previewVideo?.let { setVideoDisabled(it, target !== it || !ready) }
         if (target != null && surface != null && ready) {

@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/design/design.dart';
 import '../../../search/presentation/widgets/preview_video_controls.dart';
 import 'fullscreen_video.dart';
-import 'native_video.dart';
+import 'pan_zoom_video.dart';
 import 'player_common.dart';
 
 /// 플레이어 모양 3가지 (카드 · 상자 없이 배경 위에 바로 놓는다).
@@ -84,8 +84,11 @@ class SquarePlayer extends StatelessWidget {
                                   tag: 'now-playing',
                                   child: PlayerCover(
                                     art: art,
+                                    // 영상 곡: 틀을 꽉 채우고 끌어서 가려진 부분을, 두 손가락으로 확대 · 축소.
                                     video: data.track.isVideo
-                                        ? const NativeVideoWithFullscreen()
+                                        ? const PanZoomVideo(
+                                            fullscreenButton: true,
+                                          )
                                         : null,
                                   ),
                                 ),
@@ -132,10 +135,12 @@ class FullBleedPlayer extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
+                  // 영상 곡: 커버와 같은 자리(화면 맨 위 버튼줄까지)를 영상이 꽉 채우고,
+                  // 끌어서 가려진 부분을 보고 확대 · 축소한다.
                   PlayerCover(
                     art: art,
                     radius: 0,
-                    video: data.track.isVideo ? const NativeVideo() : null,
+                    video: data.track.isVideo ? const PanZoomVideo() : null,
                   ),
                   // 위: 상단 버튼이 읽히게 살짝 어둡게, 아래: 배경으로 부드럽게. 누름은 아래로 통과시킨다.
                   IgnorePointer(
@@ -273,8 +278,9 @@ class ArcPlayer extends StatelessWidget {
                             child: PlayerCover(
                               art: art,
                               radius: _size(s),
+                              // 영상 곡: 원을 꽉 채우고 끌어서 가려진 부분을, 두 손가락으로 확대 · 축소.
                               video: data.track.isVideo
-                                  ? const NativeVideoTapFullscreen()
+                                  ? const PanZoomVideo(fullscreenOnTap: true)
                                   : null,
                             ),
                           ),

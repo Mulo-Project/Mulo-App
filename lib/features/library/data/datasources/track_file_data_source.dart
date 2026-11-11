@@ -55,6 +55,8 @@ class PlatformTrackFileDataSource implements TrackFileDataSource {
           mime: map['mime'] as String?,
           bitrate: (map['bitrate'] as num?)?.toInt(),
           sampleRate: (map['sampleRate'] as num?)?.toInt(),
+          width: (map['width'] as num?)?.toInt(),
+          height: (map['height'] as num?)?.toInt(),
         );
       } on PlatformException {
         return null;

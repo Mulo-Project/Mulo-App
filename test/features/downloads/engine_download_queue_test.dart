@@ -11,6 +11,7 @@ import 'package:music_download_play_app/features/downloads/data/repositories/eng
 import 'package:music_download_play_app/features/downloads/domain/entities/download_item.dart';
 import 'package:music_download_play_app/features/downloads/domain/entities/download_options.dart';
 import 'package:music_download_play_app/features/downloads/domain/entities/download_request.dart';
+import 'package:music_download_play_app/features/downloads/domain/repositories/video_save_repository.dart';
 import 'package:music_download_play_app/features/downloads/domain/entities/download_source.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 import 'package:music_download_play_app/features/search/domain/entities/audio_stream.dart';
@@ -143,6 +144,28 @@ class _LangEngine extends FakeDownloaderEngine {
   }
 }
 
+class _FakeVideo implements VideoSaveRepository {
+  _FakeVideo({this.fail = false});
+
+  final bool fail;
+  final saved = <VideoSaveRequest>[];
+
+  @override
+  Future<bool> isAvailable() async => true;
+
+  @override
+  Future<String> save(
+    VideoSaveRequest request, {
+    void Function(double progress)? onProgress,
+  }) async {
+    onProgress?.call(0.5);
+    if (fail) throw const VideoSaveException('boom');
+    onProgress?.call(0.99);
+    saved.add(request);
+    return 'content://video/1';
+  }
+}
+
 void main() {
   late Directory tmp;
   late FakeLibraryRepository library;
@@ -184,6 +207,7 @@ void main() {
   EngineDownloadQueueRepository build(
     _FakeDownloader dl, {
     MemoryLyricsRepository? lyrics,
+    VideoSaveRepository? video,
   }) => EngineDownloadQueueRepository(
     engine: engine,
     downloader: dl,
@@ -197,6 +221,7 @@ void main() {
     queueStore: queueStore,
     tempDir: () async => tmp,
     lyrics: lyrics,
+    video: video,
   );
 
   /// 고정 시간만 기다리면 느린 PC에서 아직 끝나지 않은 채 확인하게 되므로,
@@ -248,6 +273,57 @@ void main() {
     expect(playlists.members['pl1'], {track.id});
     await until(() => tmp.listSync().isEmpty);
     expect(tmp.listSync(), isEmpty, reason: '임시 파일은 지운다');
+  });
+
+  group('영상으로 저장', () {
+    const withVideo = DownloadRequest(
+      title: 'Song',
+      url: 'https://youtu.be/abc',
+      videoFormat: VideoFormat.webm,
+      videoHeight: 720,
+      savePath: '/storage/emulated/0/Movies/Mulo',
+    );
+
+    test('고른 형식 · 화질로 영상을 저장하고 보관함 곡으로 등록한다', () async {
+      final video = _FakeVideo();
+      final repo = build(_FakeDownloader(), video: video);
+      await repo.enqueue(withVideo);
+      final items = await settled(
+        repo,
+        (l) => l.isNotEmpty && l.single.status == DownloadStatus.done,
+      );
+      expect(video.saved.single.maxHeight, 720);
+      expect(video.saved.single.format, VideoFormat.webm);
+      expect(items.single.savedFolder, 'Movies/Mulo');
+      expect(engine.streams, isEmpty, reason: '음원은 받지 않는다');
+      final track = (await library.watchTracks().first).single;
+      expect(track.uri, 'content://video/1');
+      expect(track.folder, '/storage/emulated/0/Movies/Mulo');
+      expect(track.isVideo, isTrue, reason: '영상으로 저장한 곡은 영상으로 재생한다');
+      expect(track.mime, startsWith('video/'));
+    });
+
+    test('영상이 실패하면 항목이 실패 처리된다', () async {
+      final repo = build(_FakeDownloader(), video: _FakeVideo(fail: true));
+      await repo.enqueue(withVideo);
+      final items = await settled(
+        repo,
+        (l) => l.isNotEmpty && l.single.status == DownloadStatus.failed,
+      );
+      expect(items.single.error, contains('영상'));
+      expect(await library.watchTracks().first, isEmpty);
+    });
+
+    test('영상을 고르지 않으면 영상 저장을 부르지 않는다', () async {
+      final video = _FakeVideo();
+      final repo = build(_FakeDownloader(), video: video);
+      await repo.enqueue(request);
+      await settled(
+        repo,
+        (l) => l.isNotEmpty && l.single.status == DownloadStatus.done,
+      );
+      expect(video.saved, isEmpty);
+    });
   });
 
   group('자막 가사로 가져오기', () {
@@ -622,25 +698,5 @@ void main() {
       await repo.findExisting('https://youtu.be/abc'),
       ExistingDownload.none,
     );
-  });
-
-  test('받은 곡 키는 받으면 생기고, 보관함에서 지우면 사라진다', () async {
-    final repo = build(_FakeDownloader());
-    final seen = <Set<String>>[];
-    final sub = repo.watchDownloadedKeys().listen(seen.add);
-    await repo.enqueue(request);
-    final items = await settled(
-      repo,
-      (l) => l.isNotEmpty && l.single.status == DownloadStatus.done,
-    );
-    await until(() => seen.isNotEmpty && seen.last.length == 1);
-    expect(seen.last, {'youtube:abc'});
-
-    final id = (await library.watchTracks().first).single.id;
-    await library.delete(id);
-    await until(() => seen.last.isEmpty);
-    expect(seen.last, isEmpty);
-    expect(items.single.status, DownloadStatus.done);
-    await sub.cancel();
   });
 }

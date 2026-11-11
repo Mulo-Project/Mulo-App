@@ -11,9 +11,6 @@ abstract interface class DownloadQueueRepository {
   /// 같은 원본 주소의 곡을 이미 받았는지 · 받는 중인지 (재생목록 가져오기가 건너뛸 곡을 가린다).
   Future<ExistingDownload> findExisting(String url);
 
-  /// 이미 받아 보관함에 있는 곡들의 원본 주소 키 ([downloadSourceKey]). 곡을 받거나 지울 때마다 다시 흘려보낸다.
-  Stream<Set<String>> watchDownloadedKeys();
-
   /// 앱에서 받은 곡 [trackId]의 원본 주소. 기록이 없으면(기기에서 불러온 곡 등) null.
   Future<String?> sourceUrlOf(String trackId);
 

@@ -27,6 +27,10 @@ class Tracks extends Table {
   /// 다시 불러오면 숨김만 푼다. 보관함에는 보이지 않는다.
   BoolColumn get hidden => boolean().withDefault(const Constant(false))();
 
+  /// 파일 형식(MIME, 예: `video/mp4` · `video/webm`). 모르면 빈 문자열.
+  /// 영상 화면을 그릴지(`video/`로 시작하면 영상)와 상세 화면의 형식 이름에 쓴다.
+  TextColumn get mime => text().withDefault(const Constant(''))();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -136,7 +140,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'music_app'));
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   /// [table]에 [column]이 아직 없을 때만 더한다. 빌드를 번갈아 설치하는 등으로
   /// 열은 이미 있는데 버전만 낮아 업그레이드가 다시 도는 DB도 열리게 한다.
@@ -193,6 +197,13 @@ class AppDatabase extends _$AppDatabase {
       }
       // 폴더를 빼도 곡 기록을 남기도록 숨김 칸을 더한다.
       if (from < 12) await _addColumnIfMissing(m, tracks, tracks.hidden);
+      // 형식 칸을 더한다. 영상 모음(MediaStore 영상)에 있는 곡은 한 번 영상으로 표시한다.
+      if (from < 13) {
+        await _addColumnIfMissing(m, tracks, tracks.mime);
+        await customStatement(
+          "UPDATE tracks SET mime = 'video/*' WHERE uri LIKE 'content://media/external/video/%'",
+        );
+      }
     },
     beforeOpen: (details) async {
       if (details.hadUpgrade || !details.wasCreated) {

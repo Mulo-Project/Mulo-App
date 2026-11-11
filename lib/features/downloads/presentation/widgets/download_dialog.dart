@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
+import '../../../../core/config/default_video_folder.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../library/presentation/bloc/library_cubit.dart';
@@ -41,35 +42,12 @@ Future<bool> showDownloadDialog(
   String? audioLanguage,
 }) async {
   final queue = context.read<DownloadQueueCubit>();
-  // 이미 받았거나 받는 중인 곡은 팝업을 열지 않고 알린다.
+  // 이미 받는 중이거나 대기 중인 곡은 팝업을 열지 않고 알린다. (이미 받은 곡은 막지 않는다.)
   if (queue.isInQueue(url)) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(context.l10n.downloadAlreadyInQueue)),
     );
     return false;
-  }
-  // 이미 받은 곡은 막지 않고, 다시 받을지 먼저 묻는다.
-  if (queue.isDownloaded(url)) {
-    final again = await showDialog<bool>(
-      context: context,
-      useRootNavigator: true,
-      builder: (dialog) => AppDialog(
-        title: dialog.l10n.downloadAgainTitle,
-        body: dialog.l10n.downloadAgainBody,
-        actions: [
-          PillButton(
-            label: dialog.l10n.actionCancel,
-            variant: PillVariant.tonal,
-            onPressed: () => Navigator.of(dialog).pop(false),
-          ),
-          PillButton(
-            label: dialog.l10n.downloadAgainConfirm,
-            onPressed: () => Navigator.of(dialog).pop(true),
-          ),
-        ],
-      ),
-    );
-    if (again != true || !context.mounted) return false;
   }
   final playlists = context.read<PlaylistsCubit>();
   final settings = context.read<DownloadSettingsCubit>();
@@ -199,6 +177,14 @@ class _DownloadScreenState extends State<DownloadScreen> {
 
   late CoverArt? _cover = _defaultCover;
 
+  // 영상 파일(mp4)로 저장: 풀 빌드(Android)에서만 켜진다.
+  var _videoAvailable = false;
+  var _asVideo = false;
+  // 저장 유형을 바꾸면 폴더 칸도 그 유형의 폴더로 바뀐다 (음원은 음악 폴더, 영상은 `Movies/Mulo`).
+  var _otherPath = defaultVideoFolder();
+  var _videoFormat = VideoFormat.mp4;
+  var _videoHeight = 1080;
+
   Color? _genreColor() {
     final genre = _genre.text.trim();
     if (genre.isEmpty) return null;
@@ -212,6 +198,9 @@ class _DownloadScreenState extends State<DownloadScreen> {
   void initState() {
     super.initState();
     _format = context.read<DownloadPreferencesCubit>().state.format;
+    sl<IsVideoSaveAvailable>()(const NoParams()).then((ok) {
+      if (mounted && ok) setState(() => _videoAvailable = true);
+    });
     sl<GetSelectableFormats>()(const NoParams()).then((formats) {
       if (!mounted) return;
       setState(() {
@@ -224,7 +213,11 @@ class _DownloadScreenState extends State<DownloadScreen> {
     // 고정한 폴더가 없으면 마지막에 받은 폴더(없으면 앱 기본 폴더)로 채운다.
     if (_savePath.text.isEmpty) {
       context.read<DownloadSettingsCubit>().effectivePath().then((path) {
-        if (mounted && _savePath.text.isEmpty) {
+        if (!mounted) return;
+        if (_asVideo) {
+          // 그 사이 영상으로 바꿨으면 음원 폴더 자리([_otherPath])를 채운다.
+          if (_otherPath.isEmpty) setState(() => _otherPath = path);
+        } else if (_savePath.text.isEmpty) {
           setState(() => _savePath.text = path);
         }
       });
@@ -255,8 +248,29 @@ class _DownloadScreenState extends State<DownloadScreen> {
     });
   }
 
+  void _setAsVideo(bool video) {
+    if (video == _asVideo) return;
+    setState(() {
+      final here = _savePath.text;
+      _savePath.text = _otherPath;
+      _otherPath = here;
+      _asVideo = video;
+    });
+  }
+
   Future<void> _pickFolder() async {
     final settings = context.read<DownloadSettingsCubit>();
+    if (_asVideo) {
+      // 영상은 Movies · Download 중에서만 고른다 (MediaStore가 영상을 받아 주는 위치).
+      final path = await showSaveFolderSheet(
+        context,
+        current: _savePath.text,
+        pickOther: settings.pickFolder,
+        only: videoFolderPresets(),
+      );
+      if (path != null && mounted) setState(() => _savePath.text = path);
+      return;
+    }
     final path = await showSaveFolderSheet(
       context,
       current: _savePath.text,
@@ -314,6 +328,9 @@ class _DownloadScreenState extends State<DownloadScreen> {
         lyricsSkipSounds: lyrics?.skipSounds ?? true,
         lyricsText: lyrics?.lyricsText,
         audioLanguage: audioLanguage,
+        // 영상으로 저장하면 음원 전용 설정(오디오 형식 · 오디오 언어)은 쓰지 않는다.
+        videoFormat: _videoAvailable && _asVideo ? _videoFormat : null,
+        videoHeight: _videoHeight,
       ),
     );
     if (ok && mounted) Navigator.of(context).pop(true);
@@ -440,22 +457,68 @@ class _DownloadScreenState extends State<DownloadScreen> {
                         ),
                       ],
                     ),
-                    if (_formats.length > 1 && _format != null) ...[
+                    if (_videoAvailable) ...[
                       const SizedBox(height: AppSpacing.md),
                       Text(
-                        l10n.settingsFormat.toUpperCase(),
+                        l10n.videoSaveType.toUpperCase(),
                         style: text.labelSmall,
                       ),
                       const SizedBox(height: AppSpacing.xxs),
-                      SegmentedPills<AudioFormat>(
+                      SegmentedPills<bool>(
                         expand: true,
-                        values: _formats,
-                        selected: _format!,
-                        labelOf: (f) => f.name,
-                        onChanged: (f) => setState(() => _format = f),
+                        values: const [false, true],
+                        selected: _asVideo,
+                        labelOf: (v) => v
+                            ? l10n.videoSaveTypeVideo
+                            : l10n.videoSaveTypeAudio,
+                        onChanged: _setAsVideo,
                       ),
                     ],
-                    const AudioLanguageRow(),
+                    if (_asVideo) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      Text(
+                        l10n.videoSaveFormat.toUpperCase(),
+                        style: text.labelSmall,
+                      ),
+                      const SizedBox(height: AppSpacing.xxs),
+                      SegmentedPills<VideoFormat>(
+                        expand: true,
+                        values: VideoFormat.values,
+                        selected: _videoFormat,
+                        labelOf: (f) => f.name,
+                        onChanged: (f) => setState(() => _videoFormat = f),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Text(
+                        l10n.videoSaveQuality.toUpperCase(),
+                        style: text.labelSmall,
+                      ),
+                      const SizedBox(height: AppSpacing.xxs),
+                      SegmentedPills<int>(
+                        expand: true,
+                        values: videoHeights,
+                        selected: _videoHeight,
+                        labelOf: (h) => '${h}p',
+                        onChanged: (h) => setState(() => _videoHeight = h),
+                      ),
+                    ] else ...[
+                      if (_formats.length > 1 && _format != null) ...[
+                        const SizedBox(height: AppSpacing.md),
+                        Text(
+                          l10n.settingsFormat.toUpperCase(),
+                          style: text.labelSmall,
+                        ),
+                        const SizedBox(height: AppSpacing.xxs),
+                        SegmentedPills<AudioFormat>(
+                          expand: true,
+                          values: _formats,
+                          selected: _format!,
+                          labelOf: (f) => f.name,
+                          onChanged: (f) => setState(() => _format = f),
+                        ),
+                      ],
+                      const AudioLanguageRow(),
+                    ],
                     const SizedBox(height: AppSpacing.md),
                     Text(
                       l10n.downloadPlaylistsLabel.toUpperCase(),

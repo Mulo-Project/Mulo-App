@@ -1710,6 +1710,21 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadAlreadyInQueue => '이미 받는 중이거나 대기 중인 곡이에요';
 
   @override
+  String get videoSaveType => '저장 유형';
+
+  @override
+  String get videoSaveTypeAudio => '음원';
+
+  @override
+  String get videoSaveTypeVideo => '영상';
+
+  @override
+  String get videoSaveFormat => '영상 형식';
+
+  @override
+  String get videoSaveQuality => '영상 화질';
+
+  @override
   String get homeTopGenre => '많이 들은 장르';
 
   @override
@@ -1912,6 +1927,20 @@ class AppLocalizationsKo extends AppLocalizations {
   String get trackInfoAdded => '추가한 날';
 
   @override
+  String get trackInfoPlayCount => '재생 횟수';
+
+  @override
+  String trackInfoPlayCountValue(int count) {
+    return '$count회';
+  }
+
+  @override
+  String get trackInfoListened => '들은 시간';
+
+  @override
+  String get trackInfoLastPlayed => '마지막 재생';
+
+  @override
   String get trackInfoSource => '출처';
 
   @override
@@ -1954,6 +1983,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get trackInfoSampleRate => '샘플레이트';
+
+  @override
+  String get trackInfoResolution => '해상도';
 
   @override
   String get trackInfoUrl => '원본 주소';
