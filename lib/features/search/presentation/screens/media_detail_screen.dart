@@ -225,10 +225,15 @@ class _DetailViewState extends State<_DetailView> {
   Future<void> _play(MediaHit hit) async {
     if (widget.fromSaved) return _startSaved(hit);
     if (widget.inAppVideo && isYoutubeUrl(hit.url)) {
+      // 언어 목록을 아직 읽는 중이면 기다려, 시스템 언어 기본값이 빠지지 않게 한다.
+      final language = await context
+          .read<AudioLanguageCubit>()
+          .selectedWhenReady();
+      if (!mounted) return;
       final started = await togglePreview(
         context,
         hit,
-        audioLanguage: context.read<AudioLanguageCubit>().state.selected,
+        audioLanguage: language,
         announceFailure: false,
       );
       if (started || !mounted) return;

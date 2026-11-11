@@ -98,11 +98,14 @@ class PreviewButton extends StatelessWidget {
       (PreviewCubit c) => c.state.isActive(hit.id) && c.state.paused,
     );
     final cubit = context.read<PreviewCubit>();
-    void stop() => togglePreview(
-      context,
-      hit,
-      audioLanguage: context.read<AudioLanguageCubit>().state.selected,
-    );
+    // 언어 목록을 아직 읽는 중이면 기다려, 시스템 언어 기본값이 빠지지 않게 한다.
+    Future<void> stop() async {
+      final language = await context
+          .read<AudioLanguageCubit>()
+          .selectedWhenReady();
+      if (!context.mounted) return;
+      await togglePreview(context, hit, audioLanguage: language);
+    }
     // 듣는 중에는 일시정지/이어 듣기와 멈추기를 따로 둔다 (한 버튼이 둘을 오가면 헷갈린다).
     if (status == PreviewStatus.playing) {
       // 한 줄에 나란히 둔다 (좁으면 글자가 줄어든다).

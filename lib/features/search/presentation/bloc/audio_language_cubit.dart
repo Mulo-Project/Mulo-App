@@ -1,4 +1,7 @@
+import 'dart:async';
 import 'dart:ui' show Locale, PlatformDispatcher;
+
+import 'package:flutter/foundation.dart' show debugPrint;
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -59,17 +62,41 @@ class AudioLanguageCubit extends Cubit<AudioLanguageState> {
     return byLanguage.id;
   }
 
-  Future<void> load(String url, {String? selected}) async {
+  Future<void>? _loading;
+
+  /// 언어 목록을 다 읽을 때까지 (최대 [timeout]) 기다린 뒤 고른(기본) 언어를 돌려준다.
+  /// 목록을 읽기 전에 미리 듣기를 누르면 시스템 언어 기본값이 빠지므로, 시작 전에 이걸 쓴다.
+  Future<String?> selectedWhenReady({
+    Duration timeout = const Duration(seconds: 4),
+  }) async {
+    final loading = _loading;
+    if (loading != null) {
+      try {
+        await loading.timeout(timeout);
+      } on Object {
+        // 못 기다리면 지금 값으로 간다.
+      }
+    }
+    return state.selected;
+  }
+
+  Future<void> load(String url, {String? selected}) {
+    final f = _load(url, selected);
+    _loading = f;
+    return f;
+  }
+
+  Future<void> _load(String url, String? selected) async {
     final languages = await _fetch(url);
     if (isClosed) return;
-    emit(
-      AudioLanguageState(
-        languages: languages,
-        selected: languages.any((l) => l.id == selected)
-            ? selected
-            : _systemDefault(languages),
-      ),
+    final chosen = languages.any((l) => l.id == selected)
+        ? selected
+        : _systemDefault(languages);
+    debugPrint(
+      '[lang] 오디오 언어 ${languages.map((l) => l.id).join(',')} '
+      '시스템 ${_systemLocale().toLanguageTag()} → ${chosen ?? '기본 음성'}',
     );
+    emit(AudioLanguageState(languages: languages, selected: chosen));
   }
 
   void select(String id) {
