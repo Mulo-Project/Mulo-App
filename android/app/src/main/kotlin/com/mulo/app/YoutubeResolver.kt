@@ -56,7 +56,25 @@ object YoutubeResolver {
     private val audioClients = listOf(visionOs, androidVr, androidSdkless)
 
     /** 소리 주소. 못 읽으면 null, 모든 클라이언트가 실패하면 까닭을 담은 예외. */
-    fun audio(videoId: String, language: String?, preferWebm: Boolean): Map<String, Any?>? {
+    fun audio(videoId: String, language: String?, preferWebm: Boolean): Map<String, Any?>? =
+        timed("소리") { audioInner(videoId, language, preferWebm) }
+
+    fun video(videoId: String, maxHeight: Int): Map<String, Any?>? = timed("영상") { videoInner(videoId, maxHeight) }
+
+    /** 걸린 시간을 debug 로그로 남긴다 (`adb logcat -s MuloNative`, `주소 읽기 소리 1234ms 읽음`). */
+    private fun <T> timed(label: String, block: () -> T?): T? {
+        val start = System.currentTimeMillis()
+        try {
+            val r = block()
+            MuloLog.d(TAG, "주소 읽기 $label ${System.currentTimeMillis() - start}ms ${if (r == null) "없음" else "읽음"}")
+            return r
+        } catch (e: Exception) {
+            MuloLog.d(TAG, "주소 읽기 $label ${System.currentTimeMillis() - start}ms 실패 ${oneLine(e.message ?: "")}")
+            throw e
+        }
+    }
+
+    private fun audioInner(videoId: String, language: String?, preferWebm: Boolean): Map<String, Any?>? {
         val errors = mutableListOf<String>()
         var firstReadable: List<YtFormat>? = null
         for (client in audioClients) {
@@ -76,7 +94,7 @@ object YoutubeResolver {
     }
 
     /** 영상 주소 (visionOS만). 못 읽거나 쓸 형식이 없으면 null. */
-    fun video(videoId: String, maxHeight: Int): Map<String, Any?>? {
+    private fun videoInner(videoId: String, maxHeight: Int): Map<String, Any?>? {
         val all = try {
             fetchFormats(visionOs, videoId)
         } catch (e: Exception) {
