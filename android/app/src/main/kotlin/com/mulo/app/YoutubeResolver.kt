@@ -78,14 +78,18 @@ object YoutubeResolver {
         val errors = mutableListOf<String>()
         var firstReadable: List<YtFormat>? = null
         for (client in audioClients) {
+            val clock = System.currentTimeMillis()
             val ordered = try {
                 YoutubeFormats.orderAudio(fetchFormats(client, videoId), preferWebm, language)
             } catch (e: Exception) {
+                MuloLog.d(TAG, "소리 ${client.name} ${System.currentTimeMillis() - clock}ms 실패 ${oneLine(e.toString())}")
                 errors += oneLine(e.message ?: e.toString()); continue
             }
+            MuloLog.d(TAG, "소리 ${client.name} ${System.currentTimeMillis() - clock}ms 형식 ${ordered.size}개")
             if (ordered.isEmpty()) continue
             if (firstReadable == null) firstReadable = ordered
             if (canReadMiddle(ordered.first())) return audioMap(ordered)
+            MuloLog.d(TAG, "소리 ${client.name} 구간 확인 실패")
             errors += "${client.name}: 구간 403"
         }
         firstReadable?.let { return audioMap(it) }
@@ -98,10 +102,13 @@ object YoutubeResolver {
         val all = try {
             fetchFormats(visionOs, videoId)
         } catch (e: Exception) {
-            MuloLog.d(TAG, "영상 visionOS 읽기 실패 ${oneLine(e.message ?: "")}")
+            MuloLog.d(TAG, "영상 visionOS 읽기 실패 ${oneLine(e.toString())}")
             return null
         }
-        val (best, muxed) = YoutubeFormats.pickVideo(all, maxHeight) ?: return null
+        val (best, muxed) = YoutubeFormats.pickVideo(all, maxHeight) ?: run {
+            MuloLog.d(TAG, "영상 visionOS 쓸 형식 없음 (전체 ${all.size}개)")
+            return null
+        }
         if (!canReadMiddle(best)) {
             MuloLog.d(TAG, "영상 ${clientOf(best.url)} 구간 403")
             return null
@@ -180,7 +187,6 @@ object YoutubeResolver {
             val length = o.optString("contentLength").toLongOrNull()
                 ?: Regex("[?&]clen=(\\d+)").find(url)?.groupValues?.get(1)?.toLongOrNull()
                 ?: 0L
-            if (length <= 0) continue
             val track = o.optJSONObject("audioTrack")
             out += YtFormat(
                 itag = o.optInt("itag"),
@@ -209,6 +215,7 @@ object YoutubeResolver {
             conn.connectTimeout = 6000
             conn.readTimeout = 8000
             headers(f.url).forEach { (k, v) -> conn.setRequestProperty(k, v) }
+            // 길이를 모르는 형식은 처음 1KB로 확인한다.
             val from = if (f.contentLength > 4096) f.contentLength / 2 else 0
             conn.setRequestProperty("Range", "bytes=$from-${from + 1023}")
             val code = conn.responseCode
