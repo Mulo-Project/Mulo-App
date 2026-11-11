@@ -41,7 +41,11 @@ class WatchLibraryTracks implements StreamUseCase<List<Track>, NoParams> {
     }
 
     Future<void> reloadRoots() async {
-      roots = [_folders.defaultFolder, ...await _folders.loadExtra()];
+      roots = [
+        _folders.defaultFolder,
+        ..._folders.videoFolders,
+        ...await _folders.loadExtra(),
+      ];
       emit();
     }
 

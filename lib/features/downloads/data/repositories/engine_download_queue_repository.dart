@@ -398,12 +398,13 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
           throw DownloadFailed('영상을 저장하지 못했어요 (${e.message})');
         }
         if (token.isCancelled) throw const DownloadAborted();
-        // 영상도 음원처럼 보관함 곡이다 (커버 · 색 · 재생목록은 앱이 따로 저장한다). 폴더는 비워 두어
-        // `Movies/…`가 불러오는 폴더가 아니어도 보관함에 보이고, 같은 곡을 음원으로 또 받을 수 있게 원본 주소는 기억하지 않는다.
+        // 영상도 음원처럼 보관함 곡이다 (커버 · 색 · 재생목록은 앱이 따로 저장한다). 폴더는 저장한 위치를 적고
+        // (`Movies/…`는 `LoadedFolderRepository.videoFolders`라 불러오는 폴더가 아니어도 보인다),
+        // 같은 곡을 음원으로 또 받을 수 있게 원본 주소는 기억하지 않는다.
         await _register(
           id,
           request,
-          SavedAudio(uri: uri, folder: ''),
+          SavedAudio(uri: uri, folder: videoFolder),
           lyrics,
           remember: false,
         );

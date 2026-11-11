@@ -183,6 +183,9 @@ class FakeTrackFiles implements TrackFileRepository {
 
 /// 메모리 불러오는 폴더 목록 (고르기는 [picked]를 그대로 돌려준다).
 class MemoryLoadedFolders implements LoadedFolderRepository {
+  @override
+  List<String> get videoFolders => const [];
+
   MemoryLoadedFolders({this.picked, List<String> extra = const []})
     : extra = [...extra];
 

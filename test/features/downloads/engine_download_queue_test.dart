@@ -281,6 +281,7 @@ void main() {
       url: 'https://youtu.be/abc',
       videoFormat: VideoFormat.webm,
       videoHeight: 720,
+      savePath: '/storage/emulated/0/Movies/Mulo',
     );
 
     test('고른 형식 · 화질로 영상을 저장하고 보관함 곡으로 등록한다', () async {
@@ -297,7 +298,7 @@ void main() {
       expect(engine.streams, isEmpty, reason: '음원은 받지 않는다');
       final track = (await library.watchTracks().first).single;
       expect(track.uri, 'content://video/1');
-      expect(track.folder, isEmpty, reason: '불러오는 폴더 밖이어도 보이게 폴더는 비운다');
+      expect(track.folder, '/storage/emulated/0/Movies/Mulo');
     });
 
     test('영상이 실패하면 항목이 실패 처리된다', () async {
