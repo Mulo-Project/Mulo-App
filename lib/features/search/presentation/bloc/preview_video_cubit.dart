@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/video_quality.dart';
+import '../main_stream_video.dart';
 import '../../domain/usecases/search_usecases.dart';
 
 class PreviewVideoState extends Equatable {
@@ -52,6 +53,11 @@ class PreviewVideoCubit extends Cubit<PreviewVideoState> {
     } catch (e) {
       // 영상은 덤이다: 못 열면 커버를 그대로 두고, 까닭만 로그로 남긴다.
       debugPrint('[video] 영상을 못 열음 ($pageUrl): $e');
+      // 메인 소리를 따르던 영상을 못 열었으면(네트워크 없음 등) 영상 상태를 끄고 소리만 이어 듣는다.
+      if (followMain && generation == _generation) {
+        mainStreamVideoOn.value = false;
+        mainStreamVideoTrack.value = null;
+      }
     }
   }
 }
