@@ -53,9 +53,17 @@ class MediaStoreMusicDataSource implements DeviceMusicDataSource {
       // 파일이 기기에 들어온 날짜. 모르면 찾은 시각.
       addedAt: _fileDate(r['addedAtMs'], now),
     );
+    // 같은 파일(mp4 등)이 음악 · 영상 양쪽에 잡히면 영상으로 한 번만 센다.
+    final videoPaths = {
+      for (final r in videos)
+        if (r['path'] is String && (r['path']! as String).isNotEmpty)
+          r['path']! as String,
+    };
     return ScanFound([
       for (final r in rows)
-        if (_inAny(folders, r['folder'] as String?)) toTrack(r, 'device:'),
+        if (_inAny(folders, r['folder'] as String?) &&
+            !videoPaths.contains(r['path']))
+          toTrack(r, 'device:'),
       for (final r in videos)
         if (_inAny(folders, r['folder'] as String?))
           toTrack(r, Track.videoIdPrefix),

@@ -73,6 +73,21 @@ class CoverCubit extends Cubit<Map<String, CoverArt>> {
     await _setTransform(SetCoverTransformParams(key, transform));
   }
 
+  /// 저장하지 않는 임시 커버: [prefix]로 시작하는 키를 [art]로 통째로 바꾼다 (임시 저장한 음원의 썸네일처럼
+  /// 곡 파일이 아니라서 DB에 남기지 않고, 목록이 바뀌면 지운 곡의 것은 사라진다).
+  void syncTemporary(String prefix, Map<String, CoverArt> art) {
+    final next = {
+      for (final e in state.entries)
+        if (!e.key.startsWith(prefix)) e.key: e.value,
+      ...art,
+    };
+    if (next.length == state.length &&
+        next.entries.every((e) => state[e.key] == e.value)) {
+      return;
+    }
+    emit(next);
+  }
+
   Future<void> clear(String key) async {
     emit({...state}..remove(key));
     await _clear(key);

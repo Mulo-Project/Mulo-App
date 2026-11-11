@@ -487,7 +487,14 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
       await _register(id, request, saved, lyrics);
       // 고정한 폴더가 없을 때의 기준: 마지막에 받은 폴더.
       await _settings.saveLastSavePath(folder);
-      _set(id, (e) => e.copyWith(status: DownloadStatus.done, progress: 1));
+      _set(
+        id,
+        (e) => e.copyWith(
+          status: DownloadStatus.done,
+          progress: 1,
+          savedFolder: saved.folder,
+        ),
+      );
     } on DownloadAborted {
       // 취소(목록에서 이미 뺐다) 또는 일시정지(상태를 이미 바꿨다)다.
     } on EngineException catch (e) {

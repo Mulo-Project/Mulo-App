@@ -49,6 +49,8 @@ class PlayRecorderCubit extends Cubit<String?> {
     required Duration position,
     required bool isPlaying,
   }) {
+    // 임시 저장한 음원은 파일이 아니라서 기록하지 않는다 (재생 횟수는 실제 파일의 것).
+    if (trackId != null && trackId.startsWith('saved:')) trackId = null;
     final current = _session;
     if (current != null && current.trackId != trackId) {
       _pause(current);

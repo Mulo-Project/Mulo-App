@@ -31,6 +31,52 @@ void main() {
     expect(cubit.state.selected, 'ko');
   });
 
+  test('AudioLanguageCubit: 시스템 언어와 맞는 트랙이 기본으로 골라진다', () async {
+    final engine = FakeDownloaderEngine()..audioLanguages = _tracks;
+    final cubit = AudioLanguageCubit(
+      FetchAudioLanguages(engine),
+      systemLocale: () => const Locale('ko', 'KR'),
+    );
+    await cubit.load('https://x/v');
+    expect(cubit.state.selected, 'ko');
+    // 사용자가 고른 언어가 우선한다.
+    cubit.select('en');
+    expect(cubit.state.selected, 'en');
+  });
+
+  test('AudioLanguageCubit: 목록을 읽는 중이면 기다린 뒤 기본 언어를 돌려준다', () async {
+    final engine = FakeDownloaderEngine()..audioLanguages = _tracks;
+    final cubit = AudioLanguageCubit(
+      FetchAudioLanguages(engine),
+      systemLocale: () => const Locale('ko'),
+    );
+    final loading = cubit.load('https://x/v'); // 기다리지 않고 바로 묻는다.
+    expect(await cubit.selectedWhenReady(), 'ko');
+    await loading;
+  });
+
+  test('defaultAudioLanguageFor: 목록 타일에서도 같은 시스템 언어 기본값을 준다', () async {
+    final engine = FakeDownloaderEngine()..audioLanguages = _tracks;
+    final fetch = FetchAudioLanguages(engine);
+    expect(
+      await defaultAudioLanguageFor(
+        fetch,
+        'https://x/v',
+        locale: const Locale('ko'),
+      ),
+      'ko',
+    );
+    // 영상의 기본 음성이 이미 시스템 언어면 따로 고르지 않는다.
+    expect(
+      await defaultAudioLanguageFor(
+        fetch,
+        'https://x/v',
+        locale: const Locale('en'),
+      ),
+      isNull,
+    );
+  });
+
   test('AudioLanguageCubit: 트랙이 하나뿐이면 고를 수 없고, 모르는 언어 선택은 버린다', () async {
     final engine = FakeDownloaderEngine()
       ..audioLanguages = const [AudioLanguage(id: 'en', name: 'English')];

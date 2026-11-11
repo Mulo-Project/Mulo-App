@@ -248,7 +248,9 @@ class _MorphSeekState extends State<MorphSeek>
                       children: [
                         if (t < 1)
                           Positioned.fill(
+                            // 가사 보기로 넘어가는 중이 아니면 커버(영상)가 누름을 받는다 (영상을 눌러 전체 화면).
                             child: IgnorePointer(
+                              ignoring: t > 0,
                               child: Opacity(
                                 opacity: 1 - t,
                                 child: widget.cover(size, _extend),

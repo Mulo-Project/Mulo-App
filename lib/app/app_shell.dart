@@ -16,6 +16,13 @@ import '../features/player/presentation/bloc/now_playing_cubit.dart';
 import '../features/player/presentation/widgets/native_video.dart';
 import '../features/player/presentation/widgets/player_sleep_timer.dart';
 import '../features/search/presentation/bloc/preview_cubit.dart';
+import '../features/search/domain/entities/saved_video.dart';
+import '../features/search/presentation/bloc/saved_videos_cubit.dart';
+import '../features/search/presentation/saved_track.dart';
+import '../features/search/presentation/main_stream_video.dart';
+import '../features/search/presentation/widgets/saved_cover_sync.dart';
+import '../features/search/presentation/screens/saved_queue_detail_screen.dart'
+    show showSavedQueueDetail;
 import '../core/cache/cached_web_image.dart';
 import '../features/downloads/presentation/bloc/download_queue_cubit.dart';
 import '../features/downloads/presentation/widgets/download_bar.dart';
@@ -285,97 +292,102 @@ class _AppShellState extends State<AppShell> {
 
     // 내용이 유리 미니 플레이어 · 탭 바 뒤로 흘러가도록 extendBody.
     // 화면은 MediaQuery.paddingOf(context).bottom 만큼 아래 여백을 둔다.
-    return BlocListener<DownloadQueueCubit, DownloadQueueState>(
-      // 받을 곡이 모두 사라지면 다음 받기는 받기 줄로 다시 시작한다.
-      listenWhen: (a, b) => a.current != null && b.current == null,
-      listener: (context, _) {
-        _dockTimer?.cancel();
-        setState(() {
-          _downloadMinimized = false;
-          _floatShown = false;
-        });
-      },
-      child: BlocListener<NowPlayingCubit, NowPlayingState>(
-        listener: (context, s) =>
-            context.read<PlayRecorderCubit>().playbackChanged(
-              trackId: s.track?.id,
-              position: s.position,
-              isPlaying: s.isPlaying,
-            ),
+    return SavedCoverSync(
+      child: BlocListener<DownloadQueueCubit, DownloadQueueState>(
+        // 받을 곡이 모두 사라지면 다음 받기는 받기 줄로 다시 시작한다.
+        listenWhen: (a, b) => a.current != null && b.current == null,
+        listener: (context, _) {
+          _dockTimer?.cancel();
+          setState(() {
+            _downloadMinimized = false;
+            _floatShown = false;
+          });
+        },
         child: BlocListener<NowPlayingCubit, NowPlayingState>(
-          // 곡이 바뀌거나 재생을 시작 · 멈출 때 출력 기기를 다시 확인한다.
-          listenWhen: (a, b) =>
-              a.track?.id != b.track?.id || a.isPlaying != b.isPlaying,
-          listener: (context, _) => context.read<AudioOutputCubit>().refresh(),
+          listener: (context, s) =>
+              context.read<PlayRecorderCubit>().playbackChanged(
+                trackId: s.track?.id,
+                position: s.position,
+                isPlaying: s.isPlaying,
+              ),
           child: BlocListener<NowPlayingCubit, NowPlayingState>(
-            // 메인 재생이 시작되면 미리 듣기는 멈춘다 (두 소리가 겹치지 않게).
-            listenWhen: (a, b) => !a.isPlaying && b.isPlaying,
-            listener: (context, _) => context.read<PreviewCubit>().stop(),
-            child: BlocListener<PreviewCubit, PreviewState>(
-              // 미리 듣기가 재생 중에 막혔으면 까닭을 알린다.
-              listenWhen: (a, b) => b.error != null && a.error != b.error,
-              listener: (context, s) => ScaffoldMessenger.of(context)
-                  .showSnackBar(
-                    SnackBar(
-                      content: Text('${l10n.searchPreviewFailed}\n${s.error}'),
+            // 곡이 바뀌거나 재생을 시작 · 멈출 때 출력 기기를 다시 확인한다.
+            listenWhen: (a, b) =>
+                a.track?.id != b.track?.id || a.isPlaying != b.isPlaying,
+            listener: (context, _) =>
+                context.read<AudioOutputCubit>().refresh(),
+            child: BlocListener<NowPlayingCubit, NowPlayingState>(
+              // 메인 재생이 시작되면 미리 듣기는 멈춘다 (두 소리가 겹치지 않게).
+              listenWhen: (a, b) => !a.isPlaying && b.isPlaying,
+              listener: (context, _) => context.read<PreviewCubit>().stop(),
+              child: BlocListener<PreviewCubit, PreviewState>(
+                // 미리 듣기가 재생 중에 막혔으면 까닭을 알린다.
+                listenWhen: (a, b) => b.error != null && a.error != b.error,
+                listener: (context, s) => ScaffoldMessenger.of(context)
+                    .showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          '${l10n.searchPreviewFailed}\n${s.error}',
+                        ),
+                      ),
                     ),
+                child: Scaffold(
+                  backgroundColor: p.background,
+                  extendBody: true,
+                  body: Builder(builder: (context) => _body(context)),
+                  bottomNavigationBar: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (context.select((ThemeCubit c) => c.state.previewing))
+                        const ThemePreviewBar(),
+                      _ShellMiniPlayer(
+                        measureKey: _miniKey,
+                        floating: _miniFloating,
+                        gripping: _miniGripping,
+                        placeholderHeight: _miniHeight,
+                        onGripStart: _gripStart,
+                        onGripMove: _gripMove,
+                        onGripEnd: _gripEnd,
+                      ),
+                      AppBottomNav(
+                        currentIndex: shell.currentIndex,
+                        onSelected: (i) {
+                          shell.goBranch(
+                            i,
+                            initialLocation: i == shell.currentIndex,
+                          );
+                        },
+                        items: [
+                          AppNavItem(
+                            icon: AppIcons.libraryOutline,
+                            selectedIcon: AppIcons.library,
+                            label: l10n.navLibrary,
+                          ),
+                          AppNavItem(
+                            icon: AppIcons.queueOutline,
+                            selectedIcon: AppIcons.queue,
+                            label: l10n.navPlaylists,
+                          ),
+                          AppNavItem(
+                            icon: AppIcons.homeOutline,
+                            selectedIcon: AppIcons.home,
+                            label: l10n.navHome,
+                            highlighted: true,
+                          ),
+                          AppNavItem(
+                            icon: AppIcons.searchOutline,
+                            selectedIcon: AppIcons.search,
+                            label: l10n.navSearch,
+                          ),
+                          AppNavItem(
+                            icon: AppIcons.settingsOutline,
+                            selectedIcon: AppIcons.settings,
+                            label: l10n.navSettings,
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-              child: Scaffold(
-                backgroundColor: p.background,
-                extendBody: true,
-                body: Builder(builder: (context) => _body(context)),
-                bottomNavigationBar: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (context.select((ThemeCubit c) => c.state.previewing))
-                      const ThemePreviewBar(),
-                    _ShellMiniPlayer(
-                      measureKey: _miniKey,
-                      floating: _miniFloating,
-                      gripping: _miniGripping,
-                      placeholderHeight: _miniHeight,
-                      onGripStart: _gripStart,
-                      onGripMove: _gripMove,
-                      onGripEnd: _gripEnd,
-                    ),
-                    AppBottomNav(
-                      currentIndex: shell.currentIndex,
-                      onSelected: (i) {
-                        shell.goBranch(
-                          i,
-                          initialLocation: i == shell.currentIndex,
-                        );
-                      },
-                      items: [
-                        AppNavItem(
-                          icon: AppIcons.libraryOutline,
-                          selectedIcon: AppIcons.library,
-                          label: l10n.navLibrary,
-                        ),
-                        AppNavItem(
-                          icon: AppIcons.queueOutline,
-                          selectedIcon: AppIcons.queue,
-                          label: l10n.navPlaylists,
-                        ),
-                        AppNavItem(
-                          icon: AppIcons.homeOutline,
-                          selectedIcon: AppIcons.home,
-                          label: l10n.navHome,
-                          highlighted: true,
-                        ),
-                        AppNavItem(
-                          icon: AppIcons.searchOutline,
-                          selectedIcon: AppIcons.search,
-                          label: l10n.navSearch,
-                        ),
-                        AppNavItem(
-                          icon: AppIcons.settingsOutline,
-                          selectedIcon: AppIcons.settings,
-                          label: l10n.navSettings,
-                        ),
-                      ],
-                    ),
-                  ],
                 ),
               ),
             ),
@@ -438,7 +450,10 @@ class _ShellMiniPlayer extends StatelessWidget {
               key: measureKey,
               // 위치가 바뀔 때마다 띠만 다시 그리고 아래 화면까지 번지지 않게 한다.
               child: RepaintBoundary(
-                child: _bar(context, state, track, vm, l10n),
+                child: ValueListenableBuilder<bool>(
+                  valueListenable: mainStreamVideoOn,
+                  builder: (context, _, _) => _bar(context, state, track, vm, l10n),
+                ),
               ),
             ),
     );
@@ -457,7 +472,10 @@ class _ShellMiniPlayer extends StatelessWidget {
         title: track.title,
         artist: track.artist,
         artwork: coverImageOf(context, CoverKey.track(track.id)),
-        video: track.isVideo ? const NativeVideo() : null,
+        // 영상 곡이거나 스트림 영상이 켜져 있으면 미니 플레이어도 영상을 보여 준다 (곡을 따로 맞추지 않는다).
+        video: track.isVideo || mainStreamVideoOn.value
+            ? const NativeVideo()
+            : null,
         progress: state.progress,
         isPlaying: state.isPlaying,
         playLabel: l10n.actionPlay,
@@ -471,7 +489,18 @@ class _ShellMiniPlayer extends StatelessWidget {
         note: state.sleepEndsAt == null
             ? null
             : SleepRemainingBadge(endsAt: state.sleepEndsAt),
-        onTap: () => context.push(Routes.player),
+        onTap: () {
+          // 임시 저장한 음원은 재생 화면 대신 저장 타일의 상세 화면(하단 조작부)을 연다.
+          final id = savedVideoIdOf(track.id);
+          final saved = id == null
+              ? const <SavedVideo>[]
+              : context.read<SavedVideosCubit>().state.where((v) => v.id == id);
+          if (saved.isNotEmpty) {
+            unawaited(showSavedQueueDetail(context, saved.first.hit));
+          } else {
+            unawaited(context.push(Routes.player));
+          }
+        },
         onPlayPause: vm.togglePlay,
         onPrevious: vm.previous,
         onNext: vm.next,
@@ -488,8 +517,8 @@ class _PreviewMiniPlayer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
     final cubit = context.read<PreviewCubit>();
+    final l10n = context.l10n;
     final hit = preview.hit;
     final loading = preview.status == PreviewStatus.loading;
     final duration = preview.progress?.duration;
@@ -505,9 +534,17 @@ class _PreviewMiniPlayer extends StatelessWidget {
             ].join(' · '),
       artwork: thumb == null ? null : CachedWebImage(thumb),
       // 영상이 있는 유튜브만 영상 자리를 넓게 둔다 (음원은 작은 커버만).
-      video: hit == null || !isYoutubeUrl(hit.url) || loading
+      // 소리만 저장한 곡은 영상 자리 없이 일반 음원 미니 플레이어처럼 보인다 (영상은 상세 화면에서만).
+      video:
+          hit == null ||
+              !isYoutubeUrl(hit.url) ||
+              loading ||
+              context.read<SavedVideosCubit>().isAudioOnly(hit.id)
           ? null
-          : PreviewVideo(pageUrl: hit.url),
+          : PreviewVideo(
+              pageUrl: hit.url,
+              quality: context.read<SavedVideosCubit>().qualityOf(hit.id),
+            ),
       progress: preview.fraction,
       isPlaying: !preview.paused,
       playLabel: l10n.searchPreviewResume,
@@ -518,6 +555,8 @@ class _PreviewMiniPlayer extends StatelessWidget {
       durationText: duration == null ? '--:--' : formatDuration(duration),
       queueLabel: l10n.searchPreviewStop,
       showSkip: false,
+      onPrevious: () {},
+      onNext: () {},
       queueIcon: AppIcons.close,
       onTap: hit == null || hit.url.isEmpty
           ? null

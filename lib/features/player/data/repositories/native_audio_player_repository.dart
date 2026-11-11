@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show debugPrint;
+
 import '../../../../core/platform/native_playback_channel.dart';
 import '../../domain/entities/playback_snapshot.dart';
 import '../../domain/entities/player_repeat_mode.dart';
@@ -9,7 +11,17 @@ import '../../domain/repositories/audio_player_repository.dart';
 /// 앱이 꺼져도 다음 곡으로 이어지고, 앱을 다시 켜면 [restore]로 대기열을 돌려받는다.
 /// 다른 앱에 오디오 포커스를 뺏겨 멈추면 [watchPlaying]으로 알려 준다.
 class NativeAudioPlayerRepository implements AudioPlayerRepository {
-  NativeAudioPlayerRepository(this._channel);
+  NativeAudioPlayerRepository(this._channel) {
+    // 네이티브 재생 오류를 flutter 로그에도 남긴다 (곡이 갑자기 넘어가는 원인을 기기에서 바로 보려고).
+    _channel.events
+        .where((e) => e['type'] == 'error')
+        .listen(
+          (e) => debugPrint(
+            'MuloPlayback error ${e['code']} id=${e['id']} uri=${e['uri']} '
+            'message=${e['message']} cause=${e['cause']}',
+          ),
+        );
+  }
 
   final NativePlaybackChannel _channel;
 
@@ -56,6 +68,7 @@ class NativeAudioPlayerRepository implements AudioPlayerRepository {
     'artist': i.artist,
     'album': i.album,
     'durationMs': i.duration.inMilliseconds,
+    if (i.videoUri.isNotEmpty) 'videoUri': i.videoUri,
   };
 
   /// 네이티브가 돌려준 대기열 모습 (`ids` `index` `shuffle` `repeat`)을 읽는다. 없으면 null.

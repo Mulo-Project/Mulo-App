@@ -24,6 +24,8 @@ class NativePreviewPlayer implements PreviewPlayer {
   final _progress = StreamController<PreviewProgress>.broadcast();
   final _failures = StreamController<String>.broadcast();
   final _saved = StreamController<({String id, bool ok})>.broadcast();
+  final _savedProgress =
+      StreamController<({String id, int percent})>.broadcast();
 
   Future<void> _onCall(MethodCall call) async {
     switch (call.method) {
@@ -42,6 +44,12 @@ class NativePreviewPlayer implements PreviewPlayer {
         );
       case 'failure':
         _failures.add(call.arguments as String? ?? '');
+      case 'savedProgress':
+        final args = call.arguments as Map;
+        _savedProgress.add((
+          id: args['id'] as String,
+          percent: (args['percent'] as num).toInt(),
+        ));
       case 'saved':
         final args = call.arguments as Map;
         _saved.add((id: args['id'] as String, ok: args['ok'] as bool));
@@ -71,6 +79,15 @@ class NativePreviewPlayer implements PreviewPlayer {
     'playVideo',
     {'url': stream.url, 'headers': stream.headers},
   );
+
+  @override
+  Future<void> playMainVideo(VideoStream? stream) => stream == null
+      ? _channel.invokeMethod<void>('stopVideo')
+      : _channel.invokeMethod<void>('playVideo', {
+          'url': stream.url,
+          'headers': stream.headers,
+          'followMain': true,
+        });
 
   @override
   Future<StreamCacheInfo> cacheInfo() async {
@@ -113,6 +130,10 @@ class NativePreviewPlayer implements PreviewPlayer {
 
   @override
   Stream<({String id, bool ok})> watchSaved() => _saved.stream;
+
+  @override
+  Stream<({String id, int percent})> watchSavedProgress() =>
+      _savedProgress.stream;
 
   @override
   Future<void> remember(MediaHit hit) =>

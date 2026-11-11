@@ -1394,16 +1394,10 @@ abstract class AppLocalizations {
   /// **'지금 비우기'**
   String get settingsStreamCacheClear;
 
-  /// No description provided for @settingsStreamCacheCleared.
-  ///
-  /// In ko, this message translates to:
-  /// **'임시 저장소를 비웠어요'**
-  String get settingsStreamCacheCleared;
-
   /// No description provided for @savedVideosTitle.
   ///
   /// In ko, this message translates to:
-  /// **'저장한 음원'**
+  /// **'임시 저장한 음원'**
   String get savedVideosTitle;
 
   /// No description provided for @savedVideosOpen.
@@ -1442,29 +1436,35 @@ abstract class AppLocalizations {
   /// **'받는 중'**
   String get savedVideosDownloading;
 
+  /// No description provided for @savedVideosEtaSeconds.
+  ///
+  /// In ko, this message translates to:
+  /// **'약 {n}초 남음'**
+  String savedVideosEtaSeconds(int n);
+
+  /// No description provided for @savedVideosEtaMinutes.
+  ///
+  /// In ko, this message translates to:
+  /// **'약 {n}분 남음'**
+  String savedVideosEtaMinutes(int n);
+
   /// No description provided for @savedVideosRemove.
   ///
   /// In ko, this message translates to:
   /// **'저장 해제'**
   String get savedVideosRemove;
 
-  /// No description provided for @savedVideosClearAll.
-  ///
-  /// In ko, this message translates to:
-  /// **'전체 삭제'**
-  String get savedVideosClearAll;
-
-  /// No description provided for @savedVideosStorage.
-  ///
-  /// In ko, this message translates to:
-  /// **'저장 {used} · 남은 공간 {free}'**
-  String savedVideosStorage(String used, String free);
-
   /// No description provided for @savedVideosAudioOnly.
   ///
   /// In ko, this message translates to:
   /// **'소리만'**
   String get savedVideosAudioOnly;
+
+  /// No description provided for @savedVideosClearAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체 삭제'**
+  String get savedVideosClearAll;
 
   /// No description provided for @savedVideosClearAllTitle.
   ///
@@ -1477,6 +1477,18 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'저장해 둔 음원이 모두 지워져요'**
   String get savedVideosClearAllBody;
+
+  /// No description provided for @savedVideosStorage.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 {saved} + 듣기 캐시 {temp} / 한도 {limit}'**
+  String savedVideosStorage(String saved, String temp, String limit);
+
+  /// No description provided for @savedVideosFull.
+  ///
+  /// In ko, this message translates to:
+  /// **'임시 저장 공간이 가득 찼어요. 저장한 곡을 지우거나 용량을 늘려 주세요'**
+  String get savedVideosFull;
 
   /// No description provided for @savedVideosUsed.
   ///
@@ -1495,6 +1507,30 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'고른 화질로 받아 둬요'**
   String get savedVideosQualityHint;
+
+  /// No description provided for @savedQueueTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장한 음원 대기열'**
+  String get savedQueueTitle;
+
+  /// No description provided for @savedQueueOpen.
+  ///
+  /// In ko, this message translates to:
+  /// **'대기열'**
+  String get savedQueueOpen;
+
+  /// No description provided for @notifSavedQueueLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장한 음원 {n}/{total}'**
+  String notifSavedQueueLabel(String n, String total);
+
+  /// No description provided for @savedVideosLoop.
+  ///
+  /// In ko, this message translates to:
+  /// **'반복'**
+  String get savedVideosLoop;
 
   /// No description provided for @savedVideosPlay.
   ///
@@ -1550,17 +1586,17 @@ abstract class AppLocalizations {
   /// **'음원'**
   String get savedVideosSectionAudio;
 
-  /// No description provided for @videoOptions.
-  ///
-  /// In ko, this message translates to:
-  /// **'옵션'**
-  String get videoOptions;
-
   /// No description provided for @videoPip.
   ///
   /// In ko, this message translates to:
   /// **'작은 화면으로 보기'**
   String get videoPip;
+
+  /// No description provided for @videoOptions.
+  ///
+  /// In ko, this message translates to:
+  /// **'옵션'**
+  String get videoOptions;
 
   /// No description provided for @videoOptionsTitle.
   ///
@@ -1589,8 +1625,14 @@ abstract class AppLocalizations {
   /// No description provided for @settingsStreamCacheLimitHint.
   ///
   /// In ko, this message translates to:
-  /// **'넘으면 오래된 것부터 지워요. 저장한 음원은 포함되지 않아요. ({used} 사용 중)'**
+  /// **'임시 저장한 음원도 함께 계산해요. 넘으면 오래된 임시 캐시부터 지워요. ({used} 사용 중)'**
   String settingsStreamCacheLimitHint(String used);
+
+  /// No description provided for @settingsStreamCacheCleared.
+  ///
+  /// In ko, this message translates to:
+  /// **'임시 저장소를 비웠어요'**
+  String get settingsStreamCacheCleared;
 
   /// No description provided for @settingsPurgeHidden.
   ///
@@ -1634,18 +1676,6 @@ abstract class AppLocalizations {
   /// **'폴더를 빼서 숨겨 둔 {count}곡이에요. 기록을 지울 곡을 골라요.'**
   String hiddenRecordsHint(int count);
 
-  /// No description provided for @hiddenRecordsPurgeAll.
-  ///
-  /// In ko, this message translates to:
-  /// **'모두 지우기'**
-  String get hiddenRecordsPurgeAll;
-
-  /// No description provided for @hiddenRecordsPurgeOneTitle.
-  ///
-  /// In ko, this message translates to:
-  /// **'"{title}" 기록을 지울까요?'**
-  String hiddenRecordsPurgeOneTitle(String title);
-
   /// No description provided for @hiddenRecordsPlays.
   ///
   /// In ko, this message translates to:
@@ -1675,6 +1705,18 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'가사 사본'**
   String get hiddenRecordsLyrics;
+
+  /// No description provided for @hiddenRecordsPurgeAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'모두 지우기'**
+  String get hiddenRecordsPurgeAll;
+
+  /// No description provided for @hiddenRecordsPurgeOneTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'\"{title}\" 기록을 지울까요?'**
+  String hiddenRecordsPurgeOneTitle(String title);
 
   /// No description provided for @settingsAbout.
   ///
@@ -2876,18 +2918,6 @@ abstract class AppLocalizations {
   /// **'자막 언어'**
   String get downloadSubtitleLanguage;
 
-  /// No description provided for @downloadSubtitleAuto.
-  ///
-  /// In ko, this message translates to:
-  /// **'자동으로 고르기'**
-  String get downloadSubtitleAuto;
-
-  /// No description provided for @downloadSubtitleAutoHint.
-  ///
-  /// In ko, this message translates to:
-  /// **'한국어 → 영어 → 첫 번째 자막 순으로 골라요.'**
-  String get downloadSubtitleAutoHint;
-
   /// No description provided for @downloadLyricsPreviewLoading.
   ///
   /// In ko, this message translates to:
@@ -3602,17 +3632,17 @@ abstract class AppLocalizations {
   /// **'받은 곡'**
   String get trackInfoSourceDownload;
 
-  /// No description provided for @trackInfoFolder.
-  ///
-  /// In ko, this message translates to:
-  /// **'폴더'**
-  String get trackInfoFolder;
-
   /// No description provided for @downloadTagFailed.
   ///
   /// In ko, this message translates to:
   /// **'태그를 저장하지 못했어요: {title}'**
   String downloadTagFailed(String title);
+
+  /// No description provided for @trackInfoFolder.
+  ///
+  /// In ko, this message translates to:
+  /// **'폴더'**
+  String get trackInfoFolder;
 
   /// No description provided for @collectionMenuInfo.
   ///
@@ -3821,7 +3851,7 @@ abstract class AppLocalizations {
   /// No description provided for @lyricsWebHint.
   ///
   /// In ko, this message translates to:
-  /// **'가사를 길게 눌러 끌어서 고른 뒤 \'담기\'를 누르세요. 여러 번 담은 뒤 \'가져오기\'로 한꺼번에 넣어요.'**
+  /// **'가사를 끌어서 골라 \'담기\', 다 모았으면 \'가져오기\''**
   String get lyricsWebHint;
 
   /// No description provided for @lyricsWebImport.
@@ -4055,7 +4085,7 @@ abstract class AppLocalizations {
   /// No description provided for @lyricsMemoHint.
   ///
   /// In ko, this message translates to:
-  /// **'글을 고치거나 골라서 \"끼우기\"를 누르면 가사의 지금 줄 아래에 들어가요'**
+  /// **'골라서 \"끼우기\"를 누르면 지금 줄 아래에 들어가요'**
   String get lyricsMemoHint;
 
   /// No description provided for @lyricsMemoInsert.
@@ -4571,7 +4601,7 @@ abstract class AppLocalizations {
   /// No description provided for @playlistDetailEmptyBody.
   ///
   /// In ko, this message translates to:
-  /// **'곡 메뉴의 ‘재생목록에 추가’ 또는 아래 ‘곡 추가’로 담아 보세요.'**
+  /// **'아래 ‘곡 추가’로 담아 보세요.'**
   String get playlistDetailEmptyBody;
 
   /// No description provided for @playlistDetailEmptyFavoritesBody.
@@ -4847,7 +4877,7 @@ abstract class AppLocalizations {
   /// No description provided for @playlistImportNoChannelBody.
   ///
   /// In ko, this message translates to:
-  /// **'이 구글 계정에는 유튜브 채널이 없어서 내 재생목록을 불러올 수 없어요. 유튜브에서 채널을 만들거나, 재생목록 링크를 위 입력창에 붙여 넣어 가져와 보세요. (비공개 재생목록은 \"일부 공개\"로 바꿔야 해요)'**
+  /// **'이 구글 계정에는 유튜브 채널이 없어서 내 재생목록을 불러올 수 없어요. 재생목록 링크를 위 입력창에 붙여 넣어 보세요. 비공개 목록은 일부 공개로 바꿔야 해요.'**
   String get playlistImportNoChannelBody;
 
   /// No description provided for @searchPlaylistFind.
@@ -5137,6 +5167,36 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'중지'**
   String get notifDownloadStopPreview;
+
+  /// No description provided for @notifSavedDoneTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'보관 완료'**
+  String get notifSavedDoneTitle;
+
+  /// No description provided for @notifSavedDoneNote.
+  ///
+  /// In ko, this message translates to:
+  /// **'보관함에서 바로 들을 수 있어요'**
+  String get notifSavedDoneNote;
+
+  /// No description provided for @notifSaveLocation.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 위치: {where}'**
+  String notifSaveLocation(String where);
+
+  /// No description provided for @notifSaveLocationCache.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱 보관(캐시)'**
+  String get notifSaveLocationCache;
+
+  /// No description provided for @notifSavedDoneHidden.
+  ///
+  /// In ko, this message translates to:
+  /// **'음원 저장이 끝났어요'**
+  String get notifSavedDoneHidden;
 
   /// No description provided for @notifDownloadDoneTitle.
   ///

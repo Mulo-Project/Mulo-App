@@ -11,6 +11,7 @@ class PlaybackItem extends Equatable {
     this.artist = '',
     this.album = '',
     this.duration = Duration.zero,
+    this.videoUri = '',
   });
 
   final String id;
@@ -20,8 +21,19 @@ class PlaybackItem extends Equatable {
   final String album;
   final Duration duration;
 
+  /// 영상 전용 주소 (임시 저장한 영상 곡). 있으면 네이티브가 소리와 합쳐 한 시계로 튼다.
+  final String videoUri;
+
   @override
-  List<Object?> get props => [id, uri, title, artist, album, duration];
+  List<Object?> get props => [
+    id,
+    uri,
+    title,
+    artist,
+    album,
+    duration,
+    videoUri,
+  ];
 }
 
 /// 대기열 스냅샷: 앱(Dart)이 정한 순서의 목록 · 현재 위치 · 반복 모드.

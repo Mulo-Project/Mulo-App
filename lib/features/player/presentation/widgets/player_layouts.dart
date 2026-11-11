@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../../core/design/design.dart';
+import '../../../search/presentation/widgets/preview_video_controls.dart';
 import 'fullscreen_video.dart';
 import 'native_video.dart';
 import 'player_common.dart';
@@ -19,15 +20,21 @@ Widget _lyrics(PlayerLayoutData data) => Padding(
 );
 
 /// 가사 보기일 때 바탕 전체를 배경색으로 덮는 막 (커버 · 그라데이션이 가장자리에 비치지 않게).
-Widget _lyricsVeil(BuildContext context, bool show) => Positioned.fill(
-  child: IgnorePointer(
-    child: AnimatedOpacity(
-      opacity: show ? 1 : 0,
-      duration: AppMotion.slow,
-      child: ColoredBox(color: context.palette.background),
-    ),
-  ),
-);
+/// 영상 곡은 가사 뒤로 영상이 비쳐 움직이게 얇게 덮는다 (영상이 아니면 배경색으로 꽉 덮는다).
+Widget _lyricsVeil(BuildContext context, bool show, {bool video = false}) =>
+    Positioned.fill(
+      child: IgnorePointer(
+        child: AnimatedOpacity(
+          opacity: show ? 1 : 0,
+          duration: AppMotion.slow,
+          child: ColoredBox(
+            color: context.palette.background.withValues(
+              alpha: video ? .6 : 1,
+            ),
+          ),
+        ),
+      ),
+    );
 
 /// 네모: 큰 정사각 커버, 아래 진행 막대.
 class SquarePlayer extends StatelessWidget {
@@ -41,10 +48,13 @@ class SquarePlayer extends StatelessWidget {
     final p = context.palette;
     return PlayerBackdrop(
       art: art,
+      // 영상 곡은 사각 커버 뒤에도 흐린 영상이 움직인다.
+      blurred: data.track.isVideo,
+      video: data.track.isVideo,
       child: Stack(
         fit: StackFit.expand,
         children: [
-          _lyricsVeil(context, data.showLyrics),
+          _lyricsVeil(context, data.showLyrics, video: data.track.isVideo),
           SafeArea(
             child: Column(
               children: [
@@ -75,7 +85,7 @@ class SquarePlayer extends StatelessWidget {
                                   child: PlayerCover(
                                     art: art,
                                     video: data.track.isVideo
-                                        ? const _VideoWithFullscreen()
+                                        ? const NativeVideoWithFullscreen()
                                         : null,
                                   ),
                                 ),
@@ -125,32 +135,44 @@ class FullBleedPlayer extends StatelessWidget {
                   PlayerCover(
                     art: art,
                     radius: 0,
-                    video: data.track.isVideo
-                        ? const _VideoWithFullscreen()
-                        : null,
+                    video: data.track.isVideo ? const NativeVideo() : null,
                   ),
-                  // 위: 상단 버튼이 읽히게 살짝 어둡게, 아래: 배경으로 부드럽게.
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          p.scrim.withValues(alpha: .35),
-                          p.scrim.withValues(alpha: 0),
-                          p.background.withValues(alpha: 0),
-                          p.background.withValues(alpha: .45),
-                          p.background.withValues(alpha: .85),
-                          p.background,
-                        ],
-                        stops: const [0, .22, .45, .7, .88, 1],
+                  // 위: 상단 버튼이 읽히게 살짝 어둡게, 아래: 배경으로 부드럽게. 누름은 아래로 통과시킨다.
+                  IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            p.scrim.withValues(alpha: .35),
+                            p.scrim.withValues(alpha: 0),
+                            p.background.withValues(alpha: 0),
+                            p.background.withValues(alpha: .45),
+                            p.background.withValues(alpha: .85),
+                            p.background,
+                          ],
+                          stops: const [0, .22, .45, .7, .88, 1],
+                        ),
                       ),
                     ),
                   ),
+                  // 전체 화면 버튼은 그라데이션 위에 둔다 (아래로 흐려지는 막에 가려지지 않게 조금 위로).
+                  if (data.track.isVideo)
+                    Positioned(
+                      right: AppSpacing.md,
+                      bottom: c.maxHeight * .66 * .2,
+                      child: FullscreenVideoButton(
+                        controls: (_) => const PreviewVideoControls(
+                          fullscreen: true,
+                          main: true,
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
-            _lyricsVeil(context, data.showLyrics),
+            _lyricsVeil(context, data.showLyrics, video: data.track.isVideo),
             SafeArea(
               child: Column(
                 children: [
@@ -217,10 +239,11 @@ class ArcPlayer extends StatelessWidget {
     return PlayerBackdrop(
       art: art,
       blurred: true,
+      video: data.track.isVideo,
       child: Stack(
         fit: StackFit.expand,
         children: [
-          _lyricsVeil(context, data.showLyrics),
+          _lyricsVeil(context, data.showLyrics, video: data.track.isVideo),
           SafeArea(
             child: Column(
               children: [
@@ -250,7 +273,9 @@ class ArcPlayer extends StatelessWidget {
                             child: PlayerCover(
                               art: art,
                               radius: _size(s),
-                              video: data.track.isVideo ? const NativeVideo() : null,
+                              video: data.track.isVideo
+                                  ? const NativeVideoTapFullscreen()
+                                  : null,
                             ),
                           ),
                         ),
@@ -270,21 +295,3 @@ class ArcPlayer extends StatelessWidget {
 }
 
 /// 플레이어 커버 자리의 영상 + 오른쪽 아래 전체 화면 버튼.
-class _VideoWithFullscreen extends StatelessWidget {
-  const _VideoWithFullscreen();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Stack(
-      fit: StackFit.expand,
-      children: [
-        NativeVideo(),
-        Positioned(
-          right: AppSpacing.xs,
-          bottom: AppSpacing.xs,
-          child: FullscreenVideoButton(),
-        ),
-      ],
-    );
-  }
-}

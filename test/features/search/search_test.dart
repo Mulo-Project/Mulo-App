@@ -568,8 +568,8 @@ void main() {
       expect(engine.searches.single.$1, 'hello');
       expect(find.text('Found Song'), findsOneWidget);
       expect(find.textContaining('Some Artist'), findsOneWidget);
-      // 재생 시간은 채널 이름 옆에 보인다.
-      expect(find.textContaining('Some Artist · 3:05'), findsOneWidget);
+      // 재생 시간은 채널 이름 밑 줄에 따로 보인다.
+      expect(find.text('3:05'), findsOneWidget);
 
       await tester.tap(find.byTooltip('Download'));
       await tester.pumpAndSettle();
@@ -607,8 +607,8 @@ void main() {
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Chan · 3:05'), findsOneWidget);
-      expect(find.textContaining('Chan · 4:01'), findsOneWidget);
+      expect(find.text('3:05'), findsOneWidget);
+      expect(find.text('4:01'), findsOneWidget);
     });
 
     testWidgets('정렬 메뉴에서 최신순을 고르면 날짜 순으로 다시 찾는다', (tester) async {

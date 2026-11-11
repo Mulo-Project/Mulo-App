@@ -2,21 +2,28 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/router.dart';
+import '../../../../core/cache/cached_web_image.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/format/format_bytes.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../library/domain/entities/track.dart';
+import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/saved_video.dart';
 import '../../domain/entities/video_quality.dart';
 import '../bloc/preview_cubit.dart';
+import '../saved_track.dart';
+import '../widgets/saved_progress_label.dart';
 import '../bloc/saved_videos_cubit.dart';
 import '../bloc/stream_cache_cubit.dart';
 import '../widgets/preview_control.dart';
 import '../widgets/preview_video.dart';
 import '../widgets/preview_video_controls.dart';
 import '../widgets/video_quality_sheet.dart';
-import 'media_detail_screen.dart';
+import 'saved_queue_detail_screen.dart' show showSavedQueueDetail;
 
 /// 저장한 영상 화면 경로 (검색 탭 안).
 const savedVideosLocation = '/search/saved';
@@ -53,6 +60,8 @@ class _SavedVideosScreenState extends State<SavedVideosScreen> {
     final p = context.palette;
     final videos = context.watch<SavedVideosCubit>().state;
     final preview = context.watch<PreviewCubit>().state;
+    final playing = context.watch<NowPlayingCubit>().state;
+    final playingId = playing.isPlaying ? playing.track?.id : null;
 
     return Scaffold(
       backgroundColor: p.background,
@@ -73,6 +82,16 @@ class _SavedVideosScreenState extends State<SavedVideosScreen> {
                 ],
               ),
               const _StorageLine(),
+              if (videos.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.only(
+                    top: AppSpacing.xs,
+                    bottom: AppSpacing.sm,
+                  ),
+                  child: _QueueRow(videos: _ordered(videos)),
+                ),
+                const AppDivider(),
+              ],
               Expanded(
                 child: videos.isEmpty
                     ? EmptyState(title: l10n.savedVideosEmpty)
@@ -87,17 +106,30 @@ class _SavedVideosScreenState extends State<SavedVideosScreen> {
                           for (final section in [
                             (
                               l10n.savedVideosSectionAudio,
-                              [for (final v in videos) if (v.quality == null) v],
+                              [
+                                for (final v in videos)
+                                  if (v.quality == null) v,
+                              ],
                             ),
                             (
                               l10n.savedVideosSectionVideo,
-                              [for (final v in videos) if (v.quality != null) v],
+                              [
+                                for (final v in videos)
+                                  if (v.quality != null) v,
+                              ],
                             ),
                           ])
                             if (section.$2.isNotEmpty) ...[
+                              // 구역 사이는 구분선과 넉넉한 틈으로 나눈다 (첫 구역은 위 구분선이 대신한다).
+                              if (section.$1 == l10n.savedVideosSectionVideo &&
+                                  videos.any((v) => v.quality == null)) ...[
+                                const SizedBox(height: AppSpacing.md),
+                                const AppDivider(),
+                              ],
                               Padding(
                                 padding: const EdgeInsets.only(
-                                  top: AppSpacing.sm,
+                                  top: AppSpacing.md,
+                                  bottom: AppSpacing.xxs,
                                 ),
                                 child: SectionTitle(section.$1),
                               ),
@@ -105,7 +137,10 @@ class _SavedVideosScreenState extends State<SavedVideosScreen> {
                                 _SavedTile(
                                   number: i + 1,
                                   video: section.$2[i],
-                                  active: preview.isActive(section.$2[i].id),
+                                  active:
+                                      preview.isActive(section.$2[i].id) ||
+                                      playingId ==
+                                          '${Track.savedIdPrefix}${section.$2[i].id}',
                                 ),
                             ],
                         ],
@@ -119,6 +154,181 @@ class _SavedVideosScreenState extends State<SavedVideosScreen> {
   }
 }
 
+/// 화면에 보이는 순서(음원 먼저, 그 아래 영상)대로 늘어놓은 목록. 재생 목록도 이 순서를 따른다.
+List<SavedVideo> _ordered(List<SavedVideo> videos) => [
+  for (final v in videos)
+    if (v.quality == null) v,
+  for (final v in videos)
+    if (v.quality != null) v,
+];
+
+/// 저장한 음원 화면에서 곡 하나를 틀면 목록 재생으로 시작한다 (그 곡부터, 화면 순서대로).
+/// 이미 듣는 곡이면 일시정지 · 이어 듣기만 한다.
+Future<void> _playFrom(BuildContext context, SavedVideo video) async {
+  final nowPlaying = context.read<NowPlayingCubit>();
+  final preview = context.read<PreviewCubit>();
+  final id = '${Track.savedIdPrefix}${video.id}';
+  if (nowPlaying.state.track?.id == id) {
+    nowPlaying.togglePlay();
+    return;
+  }
+  final tracks = await savedTracksResolved(
+    _ordered(context.read<SavedVideosCubit>().state),
+  );
+  final at = tracks.indexWhere((t) => t.id == id);
+  if (at < 0) {
+    // 아직 다 받지 못한 곡은 대기열에 못 넣는다: 한 곡만 미리 듣기로 튼다.
+    if (nowPlaying.state.isPlaying) nowPlaying.togglePlay();
+    await preview.toggle(video.hit, videoQuality: video.quality);
+    return;
+  }
+  // 두 소리가 겹치지 않게 미리 듣기는 멈추고, 메인 재생 대기열로 시작한다.
+  await preview.stop();
+  nowPlaying.playQueue(tracks, index: at);
+}
+
+enum _SavedAction { playNext, addToQueue, remove }
+
+/// 임시 저장한 음원의 ⋮ 메뉴. 대기열에는 끝까지 받은 곡만 넣는다.
+Future<void> _showSavedMenu(BuildContext context, SavedVideo video) async {
+  final l10n = context.l10n;
+  final track = await savedTrackResolved(video);
+  if (!context.mounted) return;
+  final action = await showAppMenu<_SavedAction>(
+    context,
+    items: [
+      if (track != null) ...[
+        AppMenuItem(
+          value: _SavedAction.playNext,
+          icon: AppIcons.playlistPlay,
+          label: l10n.trackMenuPlayNext,
+        ),
+        AppMenuItem(
+          value: _SavedAction.addToQueue,
+          icon: AppIcons.queue,
+          label: l10n.trackMenuAddToQueue,
+        ),
+      ],
+      AppMenuItem(
+        value: _SavedAction.remove,
+        icon: AppIcons.delete,
+        label: l10n.savedVideosRemove,
+        destructive: true,
+        dividerBefore: track != null,
+      ),
+    ],
+  );
+  if (action == null || !context.mounted) return;
+  final nowPlaying = context.read<NowPlayingCubit>();
+  switch (action) {
+    case _SavedAction.playNext:
+      nowPlaying.playNext(track!);
+    case _SavedAction.addToQueue:
+      nowPlaying.addToQueue(track!);
+    case _SavedAction.remove:
+      final id = '${Track.savedIdPrefix}${video.id}';
+      final cubit = context.read<SavedVideosCubit>();
+      // 대기열에 있으면 함께 뺀다.
+      final queued = nowPlaying.state.queue.where((t) => t.id == id);
+      if (queued.isNotEmpty) nowPlaying.removeFromQueue(queued.first);
+      await cubit.remove(video.id);
+  }
+}
+
+/// 전체 재생 · 셔플 · 반복. 누르면 끝까지 받은 곡들을 메인 현재 재생 목록으로 차례로 듣는다.
+class _QueueRow extends StatelessWidget {
+  const _QueueRow({required this.videos});
+
+  final List<SavedVideo> videos;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final nowPlaying = context.read<NowPlayingCubit>();
+    final canPlay = videos.any((v) => v.ready);
+    Future<void> start({required bool shuffled}) async {
+      final tracks = await savedTracksResolved(videos);
+      if (tracks.isEmpty || !context.mounted) return;
+      // 두 소리가 겹치지 않게 미리 듣기는 멈춘다.
+      await context.read<PreviewCubit>().stop();
+      if (shuffled) {
+        nowPlaying.playShuffled(tracks);
+      } else {
+        nowPlaying.playQueue(tracks);
+      }
+      // 곡 타일에서 들어갈 때와 같은 상세 화면(하단 조작부)을 연다.
+      final id = savedVideoIdOf(nowPlaying.state.track?.id ?? '');
+      final first = videos.where((v) => v.id == id);
+      if (first.isNotEmpty && context.mounted) {
+        unawaited(showSavedQueueDetail(context, first.first.hit));
+      }
+    }
+
+    // 재생목록 화면처럼: 왼쪽에 재생 · 셔플(알약), 오른쪽 끝에 반복 · 대기열(작은 아이콘).
+    return Padding(
+      padding: AppSpacing.screen,
+      child: Row(
+        children: [
+          // 좁은 화면에서는 알약 둘이 줄어들어 오른쪽 아이콘이 잘리지 않게 한다.
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    PillButton(
+                      key: const ValueKey('saved-play-all'),
+                      label: l10n.actionPlay,
+                      icon: AppIcons.play,
+                      compact: true,
+                      onPressed: canPlay ? () => start(shuffled: false) : null,
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    PillButton(
+                      key: const ValueKey('saved-shuffle'),
+                      label: l10n.actionShuffle,
+                      icon: AppIcons.shuffle,
+                      variant: PillVariant.tonal,
+                      compact: true,
+                      onPressed: canPlay ? () => start(shuffled: true) : null,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          BlocBuilder<NowPlayingCubit, NowPlayingState>(
+            buildWhen: (a, b) => a.repeat != b.repeat,
+            builder: (context, s) => RowIconButton(
+              key: const ValueKey('saved-loop'),
+              icon: s.repeat == PlayerRepeatMode.one
+                  ? AppIcons.repeatOne
+                  : AppIcons.repeat,
+              tooltip: l10n.playerRepeat,
+              accent: s.repeat != PlayerRepeatMode.off,
+              onPressed: nowPlaying.cycleRepeat,
+            ),
+          ),
+          // 지금 현재 재생 목록(대기열)을 연다.
+          BlocBuilder<NowPlayingCubit, NowPlayingState>(
+            buildWhen: (a, b) => a.queue.isEmpty != b.queue.isEmpty,
+            builder: (context, s) => RowIconButton(
+              key: const ValueKey('saved-queue-open'),
+              icon: AppIcons.queueOutline,
+              tooltip: l10n.savedQueueOpen,
+              onPressed: s.queue.isEmpty
+                  ? null
+                  : () => unawaited(context.push(Routes.queue)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// 저장한 음원이 쓰는 용량과 기기에 남은 공간 (설정에서만이 아니라 여기서도 보인다).
 class _StorageLine extends StatelessWidget {
   const _StorageLine();
@@ -126,24 +336,24 @@ class _StorageLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final info = context.watch<StreamCacheCubit>().state;
-    if (info.savedBytes == 0 && info.freeBytes == 0) {
+    if (info.savedBytes == 0 && info.limitBytes == 0) {
       return const SizedBox.shrink();
     }
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
-        vertical: AppSpacing.xs,
+        vertical: AppSpacing.sm,
       ),
       child: Align(
         alignment: Alignment.centerLeft,
         child: Text(
           context.l10n.savedVideosStorage(
             formatBytes(info.savedBytes),
-            formatBytes(info.freeBytes),
+            formatBytes(info.usedBytes),
+            formatBytes(info.limitBytes),
           ),
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: context.palette.onSurfaceMuted,
-          ),
+          style: Theme.of(context).textTheme.bodySmall
+              ?.copyWith(color: context.palette.onSurfaceMuted),
         ),
       ),
     );
@@ -185,14 +395,20 @@ class _SavedTile extends StatelessWidget {
     final hit = video.hit;
     final isVideo = video.quality != null;
     // 채널은 한 줄, 화질 · 받는 중 같은 부가 정보는 그 아래 한 줄 (한 줄에 몰면 뒤가 잘린다).
-    final extra = [
+    final saving = context.read<SavedVideosCubit>();
+    String extraOf() => [
       if (isVideo) videoQualityLabel(context, video.quality!),
-      if (!video.ready) l10n.savedVideosDownloading,
+      if (!video.ready)
+        savedProgressLabel(
+          context,
+          percent: saving.progress.value[hit.id],
+          etaSeconds: saving.eta.value[hit.id],
+        ),
     ].join(' · ');
 
     final info = InkWell(
       // 정보 부분을 누르면 상세 화면으로 간다 (영상은 위 영역에서 바로 재생).
-      onTap: () => showMediaDetail(context, hit),
+      onTap: () => showSavedQueueDetail(context, hit),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
         child: Row(
@@ -204,6 +420,16 @@ class _SavedTile extends StatelessWidget {
                 style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
               ),
             ),
+            // 음원 줄에는 썸네일을 작게 보인다 (영상은 아래 큰 영상 영역이 대신한다).
+            if (!isVideo) ...[
+              ArtworkBox(
+                size: 40,
+                image: hit.thumbnailUrl == null
+                    ? null
+                    : CachedWebImage(hit.thumbnailUrl!),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+            ],
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,13 +448,22 @@ class _SavedTile extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: text.bodySmall,
                     ),
-                  if (extra.isNotEmpty)
-                    Text(
-                      extra,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
-                    ),
+                  ListenableBuilder(
+                    listenable: Listenable.merge([saving.progress, saving.eta]),
+                    builder: (_, _) {
+                      final extra = extraOf();
+                      return extra.isEmpty
+                          ? const SizedBox.shrink()
+                          : Text(
+                              extra,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: text.bodySmall?.copyWith(
+                                color: p.onSurfaceMuted,
+                              ),
+                            );
+                    },
+                  ),
                 ],
               ),
             ),
@@ -236,18 +471,22 @@ class _SavedTile extends StatelessWidget {
             // 영상은 재생 버튼이 영상 영역에 있어서 음원만 오른쪽에 둔다.
             if (!isVideo)
               CircleIconButton(
+                key: ValueKey('saved-row-play-${hit.id}'),
                 icon: active ? AppIcons.pause : AppIcons.play,
                 tooltip: l10n.savedVideosPlay,
                 size: AppSizes.rowButton,
-                onPressed: () => togglePreview(context, hit),
+                onPressed: () => unawaited(_playFrom(context, video)),
               ),
             if (!isVideo) const SizedBox(width: AppSpacing.sm),
-            CircleIconButton(
-              icon: AppIcons.delete,
-              tooltip: l10n.savedVideosRemove,
-              size: AppSizes.rowButton,
-              onPressed: () =>
-                  context.read<SavedVideosCubit>().remove(video.id),
+            // 일반 음원 타일처럼 ⋮ 메뉴: 다음 재생 · 대기열에 추가 · 임시 저장에서 빼기.
+            Builder(
+              builder: (context) => CircleIconButton(
+                key: ValueKey('saved-more-${hit.id}'),
+                icon: AppIcons.more,
+                tooltip: context.l10n.trackMenuTitle,
+                size: AppSizes.rowButton,
+                onPressed: () => unawaited(_showSavedMenu(context, video)),
+              ),
             ),
           ],
         ),
@@ -284,6 +523,11 @@ class _VideoArea extends StatelessWidget {
   Widget build(BuildContext context) {
     final hit = video.hit;
     final status = context.select((PreviewCubit c) => c.state.status);
+    final mainVideo = context.select(
+      (NowPlayingCubit c) =>
+          c.state.track?.id == '${Track.savedIdPrefix}${video.id}' &&
+          c.state.track!.hasVideo,
+    );
     final playing = active && status == PreviewStatus.playing;
     final loading = active && status == PreviewStatus.loading;
     final thumb = hit.thumbnailUrl;
@@ -305,9 +549,14 @@ class _VideoArea extends StatelessWidget {
                   radius: 0,
                   tone: toneFor(hit.id),
                 ),
-                if (playing) ...[
+                if (mainVideo)
+                  // 메인 재생으로 듣는 중이면 네이티브가 소리와 같은 시계로 내는 영상을 그린다.
+                  const MainVideoWithControls()
+                else if (playing) ...[
                   ValueListenableBuilder<VideoQuality?>(
-                    valueListenable: context.read<PreviewCubit>().qualityOverride,
+                    valueListenable: context
+                        .read<PreviewCubit>()
+                        .qualityOverride,
                     builder: (context, override, _) => PreviewVideo(
                       pageUrl: hit.url,
                       quality: override ?? video.quality,
@@ -329,7 +578,7 @@ class _VideoArea extends StatelessWidget {
                       tooltip: context.l10n.savedVideosPlay,
                       emphasized: true,
                       size: AppSizes.circleButtonLarge,
-                      onPressed: () => togglePreview(context, hit),
+                      onPressed: () => unawaited(_playFrom(context, video)),
                     ),
                   ),
               ],

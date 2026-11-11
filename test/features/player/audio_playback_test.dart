@@ -280,6 +280,39 @@ void main() {
     expect(cubit.state.index, 0);
   });
 
+  test('임시 저장 음원 목록을 듣는 중에도 일반 곡을 다음 재생 · 맨 뒤에 붙일 수 있다', () async {
+    final saved = [
+      for (final id in ['a', 'b'])
+        Track(
+          id: 'saved:$id',
+          title: id,
+          artist: '',
+          album: '',
+          duration: const Duration(minutes: 3),
+          addedAt: DateTime.fromMillisecondsSinceEpoch(0),
+          uri: 'https://example.com/$id.m4a',
+          source: TrackSource.saved,
+        ),
+    ];
+    cubit.playQueue(saved);
+    await settle();
+    cubit.addToQueue(tracks[0]);
+    await settle();
+    expect(cubit.state.queue.map((t) => t.id), [
+      'saved:a',
+      'saved:b',
+      tracks[0].id,
+    ]);
+    cubit.playNext(tracks[1]);
+    await settle();
+    expect(cubit.state.queue.map((t) => t.id), [
+      'saved:a',
+      tracks[1].id,
+      'saved:b',
+      tracks[0].id,
+    ]);
+  });
+
   test('듣던 곡을 빼면 다음 곡으로 넘어가고 엔진에는 빼기 명령만 간다', () async {
     cubit.playQueue(tracks);
     await settle();
@@ -451,6 +484,30 @@ void main() {
       expect(cubit.state.isPlaying, isTrue);
       expect(cubit.state.position, const Duration(seconds: 42));
       expect(cubit.state.repeat, PlayerRepeatMode.all);
+      expect(engine.calls, isEmpty);
+    });
+
+    test('보관함에 없는 임시 저장 음원도 엔진이 쥔 정보로 되살리고 엔진 대기열은 그대로 둔다', () async {
+      engine.restoreSnapshot = PlaybackSnapshot(
+        items: [
+          PlaybackItem(id: tracks.first.id, uri: tracks.first.uri, title: 'A'),
+          const PlaybackItem(
+            id: 'saved:x',
+            uri: 'https://example.com/x.m4a',
+            title: '임시 곡',
+            artist: '채널',
+          ),
+        ],
+        index: 1,
+        playing: true,
+        position: const Duration(seconds: 7),
+      );
+      await cubit.restore((id) => tracks.where((t) => t.id == id).firstOrNull);
+      await settle();
+      expect(cubit.state.queue.map((t) => t.id), [tracks.first.id, 'saved:x']);
+      expect(cubit.state.track?.isSaved, isTrue);
+      expect(cubit.state.track?.uri, 'https://example.com/x.m4a');
+      expect(cubit.state.track?.artist, '채널');
       expect(engine.calls, isEmpty);
     });
 

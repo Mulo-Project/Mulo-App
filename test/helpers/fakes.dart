@@ -70,6 +70,8 @@ import 'package:music_download_play_app/features/search/domain/entities/preview_
 import 'package:music_download_play_app/features/search/domain/entities/preview_snapshot.dart';
 import 'package:music_download_play_app/features/search/domain/entities/stream_cache_info.dart';
 import 'package:music_download_play_app/features/search/domain/entities/engine_exception.dart';
+import 'package:music_download_play_app/features/search/domain/entities/saved_video.dart';
+import 'package:music_download_play_app/features/search/domain/repositories/saved_video_repository.dart';
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
 import 'package:music_download_play_app/features/search/domain/entities/search_source.dart';
 import 'package:music_download_play_app/features/search/domain/entities/subtitle_track.dart';
@@ -993,6 +995,10 @@ Future<void> setUpTestDependencies({
     ..registerLazySingleton<VideoQualityRepository>(
       MemoryVideoQualityRepository.new,
     )
+    // 저장한 곡 목록은 shared_preferences 대신 메모리에 둔다 (테스트의 가짜 시계에서 플러그인 호출이 끝나지 않는다).
+    ..registerLazySingleton<SavedVideoRepository>(
+      MemorySavedVideoRepository.new,
+    )
     ..registerLazySingleton<PlaybackSpeedRepository>(
       MemoryPlaybackSpeedRepository.new,
     )
@@ -1065,6 +1071,17 @@ Future<void> setUpTestDependencies({
       () => playlists ?? MemoryPlaylistRepository(const [], tracks),
     );
   sl.allowReassignment = false;
+}
+
+/// 저장한 곡 목록을 메모리에 둔 가짜.
+class MemorySavedVideoRepository implements SavedVideoRepository {
+  List<SavedVideo> list = const [];
+
+  @override
+  Future<List<SavedVideo>> load() async => list;
+
+  @override
+  Future<void> save(List<SavedVideo> videos) async => list = videos;
 }
 
 /// 고정된 가입일.
@@ -1551,7 +1568,8 @@ class FakeDownloaderEngine implements DownloaderEngine {
   }) async {
     searches.add((query, source, page));
     newestFlags.add(newest);
-    if (error != null) throw error!;
+    final e = error;
+    if (e != null) throw e;
     return page < pages.length ? pages[page] : pages.last;
   }
 
@@ -1562,14 +1580,16 @@ class FakeDownloaderEngine implements DownloaderEngine {
     int size = 20,
   }) async {
     playlistSearches.add(query);
-    if (error != null) throw error!;
+    final e = error;
+    if (e != null) throw e;
     return playlistPage;
   }
 
   @override
   Future<MediaInfo> fetchInfo(String url) async {
     infos.add(url);
-    if (error != null) throw error!;
+    final e = error;
+    if (e != null) throw e;
     final found = infoByUrl[url] ?? info;
     if (found == null) throw const EngineException(EngineFailure.notFound);
     return found;
@@ -1597,7 +1617,10 @@ class FakeDownloaderEngine implements DownloaderEngine {
   }
 
   @override
-  Future<VideoStream> resolveVideoStream(String url, {int maxHeight = 360}) async {
+  Future<VideoStream> resolveVideoStream(
+    String url, {
+    int maxHeight = 360,
+  }) async {
     videoHeights.add(maxHeight);
     return VideoStream(url: 'https://video.test/$url', muxed: muxedVideo);
   }
@@ -1616,6 +1639,8 @@ class FakeDownloaderEngine implements DownloaderEngine {
     refreshFlags.add(refresh);
     audioLanguageArgs.add(audioLanguage);
     await streamGate;
+    final e = error;
+    if (e != null) throw e;
     final failure = streamFailure;
     if (failure != null) throw EngineException(failure);
     return AudioStream(url: 'https://stream.test/$url');
@@ -1706,8 +1731,7 @@ class FakePreviewPlayer implements PreviewPlayer {
   int cacheClears = 0;
 
   final savedStreams = <String>[];
-  final savedController =
-      StreamController<({String id, bool ok})>.broadcast();
+  final savedController = StreamController<({String id, bool ok})>.broadcast();
 
   @override
   Future<void> setSavedStreams(List<String> streamIds) async {
@@ -1730,6 +1754,10 @@ class FakePreviewPlayer implements PreviewPlayer {
 
   @override
   Stream<({String id, bool ok})> watchSaved() => savedController.stream;
+
+  @override
+  Stream<({String id, int percent})> watchSavedProgress() =>
+      const Stream.empty();
 
   @override
   Future<StreamCacheInfo> cacheInfo() async =>
@@ -1761,6 +1789,13 @@ class FakePreviewPlayer implements PreviewPlayer {
   @override
   Future<void> playVideo(VideoStream stream) async =>
       playedVideos.add(stream.url);
+
+  @override
+  Future<void> playMainVideo(VideoStream? stream) async {
+    if (stream != null) playedMainVideos.add(stream.url);
+  }
+
+  final playedMainVideos = <String>[];
 
   @override
   Future<void> remember(MediaHit hit) async => remembered.add(hit);

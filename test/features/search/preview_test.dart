@@ -12,7 +12,7 @@ import 'package:music_download_play_app/features/notifications/domain/repositori
 import 'package:music_download_play_app/features/player/presentation/bloc/now_playing_cubit.dart';
 import 'package:music_download_play_app/features/search/presentation/widgets/preview_control.dart';
 import 'package:music_download_play_app/features/search/data/engine/cached_engine.dart';
-import 'package:music_download_play_app/features/search/data/engine/explode_engine.dart';
+import 'package:music_download_play_app/features/search/data/engine/youtube_resolve_engine.dart';
 import 'package:music_download_play_app/features/search/data/engine/local_engine.dart';
 import 'package:music_download_play_app/features/search/data/engine/server_engine.dart';
 import 'package:music_download_play_app/features/search/domain/entities/audio_language.dart';
@@ -94,16 +94,18 @@ void main() {
     });
 
     test(
-      'YoutubeExplodeEngine: 유튜브 곡은 라이브러리가 읽은 주소를 쓰고, 못 읽으면 안쪽 엔진으로 넘긴다',
+      'YoutubeResolveEngine: 유튜브 곡은 네이티브가 읽은 주소를 쓰고, 못 읽으면 안쪽 엔진으로 넘긴다',
       () async {
         final inner = FakeDownloaderEngine();
         var fail = false;
-        final engine = YoutubeExplodeEngine(
+        final engine = YoutubeResolveEngine(
           inner,
           reader: (id, {language}) async {
             if (fail) throw const EngineException(EngineFailure.failed);
             return AudioStream(url: 'https://explode/$id');
           },
+          videoReader: (_, _) async => null,
+          languageReader: (_) async => const [],
         );
         const url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
         expect(
@@ -125,19 +127,24 @@ void main() {
     );
 
     test(
-      'YoutubeExplodeEngine: 소리가 든 영상 주소는 라이브러리가 먼저 읽고, 못 읽으면 안쪽 엔진으로 넘긴다',
+      'YoutubeResolveEngine: 소리가 든 영상 주소는 네이티브가 먼저 읽고, 못 읽으면 안쪽 엔진으로 넘긴다',
       () async {
         final inner = FakeDownloaderEngine();
         VideoStream? found = const VideoStream(
           url: 'https://explode/video',
           muxed: true,
         );
-        final engine = YoutubeExplodeEngine(
+        final engine = YoutubeResolveEngine(
           inner,
           videoReader: (id, maxHeight) async => found,
+          reader: (_, {language}) async => null,
+          languageReader: (_) async => const [],
         );
         const url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
-        expect((await engine.resolveVideoStream(url)).url, 'https://explode/video');
+        expect(
+          (await engine.resolveVideoStream(url)).url,
+          'https://explode/video',
+        );
         found = null;
         expect(
           (await engine.resolveVideoStream(url)).url,
@@ -146,15 +153,17 @@ void main() {
       },
     );
 
-    test('YoutubeExplodeEngine: 고른 오디오 언어를 읽는 쪽에 넘긴다', () async {
+    test('YoutubeResolveEngine: 고른 오디오 언어를 읽는 쪽에 넘긴다', () async {
       final inner = FakeDownloaderEngine();
       final languages = <String?>[];
-      final engine = YoutubeExplodeEngine(
+      final engine = YoutubeResolveEngine(
         inner,
         reader: (id, {language}) async {
           languages.add(language);
           return AudioStream(url: 'https://explode/$id');
         },
+        videoReader: (_, _) async => null,
+        languageReader: (_) async => const [],
       );
       const url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
       await engine.resolveAudioStream(url, audioLanguage: 'ko');
@@ -163,7 +172,7 @@ void main() {
     });
 
     test(
-      'YoutubeExplodeEngine: 오디오 언어 목록은 트랙이 둘 이상일 때만 쓰고 아니면 안쪽 엔진에 묻는다',
+      'YoutubeResolveEngine: 오디오 언어 목록은 트랙이 둘 이상일 때만 쓰고 아니면 안쪽 엔진에 묻는다',
       () async {
         final inner = FakeDownloaderEngine()
           ..audioLanguages = const [
@@ -174,9 +183,11 @@ void main() {
           AudioLanguage(id: 'ja', name: 'Japanese', isDefault: true),
           AudioLanguage(id: 'fr', name: 'French'),
         ];
-        final engine = YoutubeExplodeEngine(
+        final engine = YoutubeResolveEngine(
           inner,
           languageReader: (_) async => tracks,
+          reader: (_, {language}) async => null,
+          videoReader: (_, _) async => null,
         );
         const url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
         expect((await engine.fetchAudioLanguages(url)).map((e) => e.id), [
@@ -290,6 +301,24 @@ void main() {
   });
 
   group('PreviewCubit', () {
+    test('듣다 소리가 끊기면 멈춘 채 남고, 다시 재생하면 주소를 새로 읽어 다시 튼다', () async {
+      final player = FakePreviewPlayer();
+      final cubit = _cubit(FakeDownloaderEngine(info: VideoInfo(_a)), player);
+      await cubit.toggle(_a);
+      expect(player.played, hasLength(1));
+
+      player.fail('network');
+      await Future<void>.delayed(Duration.zero);
+      expect(cubit.state.status, PreviewStatus.playing);
+      expect(cubit.state.paused, isTrue);
+      expect(cubit.state.error, isNull);
+
+      await cubit.togglePause();
+      expect(player.played, hasLength(2));
+      expect(cubit.state.paused, isFalse);
+      await cubit.close();
+    });
+
     test('듣기를 시작하면 플레이어에 곡을 적어 둔다', () async {
       final player = FakePreviewPlayer();
       final cubit = _cubit(FakeDownloaderEngine(info: VideoInfo(_a)), player);
@@ -339,18 +368,6 @@ void main() {
       await cubit.syncWithPlayer();
       expect(cubit.state.status, PreviewStatus.playing);
       expect(cubit.state.paused, isTrue);
-      await cubit.close();
-    });
-
-    test('재생 중에 실패하면 멈추고 까닭을 알린다', () async {
-      final player = FakePreviewPlayer();
-      final cubit = _cubit(FakeDownloaderEngine(info: VideoInfo(_a)), player);
-      await cubit.toggle(_a);
-      expect(cubit.state.status, PreviewStatus.playing);
-      player.fail('Source error');
-      await Future<void>.delayed(Duration.zero);
-      expect(cubit.state.status, PreviewStatus.idle);
-      expect(cubit.state.error, 'Source error');
       await cubit.close();
     });
 
@@ -648,7 +665,10 @@ void main() {
       expect(player.playing, isTrue);
       expect(find.text('Stop preview'), findsOneWidget);
       // 일시정지와 멈추기는 따로 있다.
-      expect(find.byKey(const ValueKey('preview-pause-button')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('preview-pause-button')),
+        findsOneWidget,
+      );
       expect(find.byKey(const ValueKey('preview-stop-button')), findsOneWidget);
 
       // 다른 곳에서 잠시 멈춰 두면 상세 화면 버튼도 "이어 듣기"로 바뀌고, 누르면 이어 듣는다.
