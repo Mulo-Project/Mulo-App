@@ -30,7 +30,7 @@ typedef AudioLanguageReader = Future<List<AudioLanguage>> Function(
 
 /// 유튜브 곡의 재생 주소(소리 · 영상 · 오디오 언어)를 [reader] 등으로 먼저 읽는 엔진 덮개.
 ///
-/// 읽기는 Android 네이티브(`NativeYoutubeResolver`)가 한다 (D-160). 못 읽으면 안쪽 엔진(yt-dlp · 서버)으로 넘긴다.
+/// 읽기는 Android 네이티브(`NativeYoutubeResolver`)가 한다 (D-162). 못 읽으면 안쪽 엔진(yt-dlp · 서버)으로 넘긴다.
 /// 나머지(검색 · 곡 정보 · 채널)는 그대로 안쪽 엔진이 한다.
 class YoutubeResolveEngine implements DownloaderEngine {
   YoutubeResolveEngine(

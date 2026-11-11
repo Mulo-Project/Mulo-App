@@ -52,7 +52,7 @@ void registerSearch(GetIt sl) {
       return CachedDownloaderEngine(
         infoTtl: const Duration(hours: 6),
         SoundcloudAvatarEngine(
-          // Android는 네이티브가 재생 주소를 먼저 읽는다 (앱이 백그라운드여도 끊기지 않는다, D-160).
+          // Android는 네이티브가 재생 주소를 먼저 읽는다 (앱이 백그라운드여도 끊기지 않는다, D-162).
           // 그 밖의 OS는 안쪽 엔진(yt-dlp · 서버)이 읽는다.
           Platform.isAndroid
               ? YoutubeResolveEngine(
