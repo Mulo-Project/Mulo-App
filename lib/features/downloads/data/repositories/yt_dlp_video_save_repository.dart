@@ -3,6 +3,7 @@ import 'dart:io';
 import '../../../../core/config/default_video_folder.dart';
 import '../../domain/entities/download_options.dart';
 import '../../domain/repositories/video_save_repository.dart';
+import '../datasources/cover_tag_writer.dart';
 import '../datasources/downloaded_file_store.dart';
 
 /// yt-dlp 실행 하나 (Android 로컬 엔진의 `run`과 같은 모양).
@@ -25,6 +26,7 @@ class YtDlpVideoSaveRepository implements VideoSaveRepository {
     required this.available,
     required this.store,
     required this.tempDir,
+    this.tags,
     this.timeout = const Duration(minutes: 30),
   });
 
@@ -33,6 +35,9 @@ class YtDlpVideoSaveRepository implements VideoSaveRepository {
   final DownloadedFileStore store;
   final Future<Directory> Function() tempDir;
   final Duration timeout;
+
+  /// 받은 영상에 제목 · 아티스트 · 커버 태그를 쓴다 (없거나 못 쓰면 태그 없이 저장).
+  final CoverTagWriter? tags;
 
   /// 화질 상한 이하에서 가장 좋은 영상 + 소리 (영상 · 소리가 따로 오면 yt-dlp가 합친다).
   /// mp4: H.264 + AAC를 먼저 찾아 다시 인코딩 없이 합친다. webm: VP9 + Opus 원본.
@@ -77,6 +82,18 @@ class YtDlpVideoSaveRepository implements VideoSaveRepository {
       if (r.exitCode != 0) throw VideoSaveException(r.stderr.trim());
       output = await _find(dir, stem, request.format.extension);
       if (output == null) throw const VideoSaveException('no output file');
+      // 태그를 못 써도 영상은 그대로 저장한다.
+      await tags?.embedVideo(
+        output,
+        extension: request.format.extension,
+        cover: request.cover,
+        thumbnailUrl: request.thumbnailUrl,
+        title: request.title,
+        artist: request.artist,
+        album: request.album,
+        genre: request.genre,
+        color: request.color,
+      );
       await store.save(
         output,
         folder: request.folder.isEmpty ? defaultVideoFolder() : request.folder,

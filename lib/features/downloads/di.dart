@@ -58,6 +58,7 @@ void registerDownloads(GetIt sl) {
         run: sl<AndroidYtDlp>().run,
         available: sl<AndroidYtDlp>().isAvailable,
         store: sl(),
+        tags: const CoverTagWriter(ffmpeg: FfmpegTagWriter()),
         tempDir: () => Directory(
           '${Directory.systemTemp.path}${Platform.pathSeparator}mulo_video',
         ).create(recursive: true),

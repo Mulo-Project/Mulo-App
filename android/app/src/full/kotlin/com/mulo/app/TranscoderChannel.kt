@@ -50,6 +50,17 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
                     }
                     runAsync(io, result, "tag_failed") { tag(input, meta, output, format, call.argument<String>("cover")) }
                 }
+                "tagVideo" -> {
+                    val input = call.argument<String>("input")
+                    val meta = call.argument<String>("meta")
+                    val output = call.argument<String>("output")
+                    val format = call.argument<String>("format")
+                    if (input == null || meta == null || output == null || format == null) {
+                        result.error("bad_args", "input, meta, output, format required", null)
+                        return@setMethodCallHandler
+                    }
+                    runAsync(io, result, "tag_failed") { tagVideo(input, meta, output, format, call.argument<String>("cover")) }
+                }
                 else -> result.notImplemented()
             }
         }
@@ -116,6 +127,54 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
         process = p
         try {
             // 출력은 비우되 실패 원인을 알리려 마지막 부분만 남긴다.
+            val tail = StringBuilder()
+            p.inputStream.use { stream ->
+                val buffer = ByteArray(8192)
+                while (true) {
+                    val n = stream.read(buffer)
+                    if (n < 0) break
+                    tail.append(String(buffer, 0, n, Charsets.UTF_8))
+                    if (tail.length > 1200) tail.delete(0, tail.length - 800)
+                }
+            }
+            val code = p.waitFor()
+            if (code != 0) {
+                out.delete()
+                throw IllegalStateException("ffmpeg exit $code: ${tail.toString().trim().takeLast(400)}")
+            }
+            return true
+        } finally {
+            process = null
+        }
+    }
+
+    /**
+     * 영상 파일(mp4 · webm)의 소리 · 영상은 그대로(`-c copy`) 두고 ffmetadata의 태그만 새로 써서 [output]에 만든다.
+     * mp4는 [cover] 그림이 있으면 첨부 그림(attached_pic)으로 붙인다. webm(Matroska)은 첨부 그림을 쓰지 않는다.
+     */
+    private fun tagVideo(input: String, meta: String, output: String, format: String, cover: String?): Boolean {
+        ensureInit()
+        val ffmpeg = File(context.applicationInfo.nativeLibraryDir, "libffmpeg.so")
+        if (!ffmpeg.exists()) return false
+        val out = File(output)
+        out.delete()
+        val withCover = cover != null && format == "mp4"
+        val args = mutableListOf(ffmpeg.absolutePath, "-nostdin", "-y", "-i", input, "-i", meta)
+        if (withCover) args += listOf("-i", cover!!)
+        args += listOf("-map", "0")
+        if (withCover) {
+            args += listOf("-map", "2:v", "-disposition:v:1", "attached_pic")
+        }
+        args += listOf("-map_metadata", "1", "-c", "copy")
+        // mp4가 title · artist 밖의 칸(genre 등)도 쓰도록.
+        if (format == "mp4") args += listOf("-movflags", "+use_metadata_tags")
+        args += listOf("-f", format, output)
+        val builder = ProcessBuilder(args)
+        builder.environment()["LD_LIBRARY_PATH"] = libraryPath()
+        builder.redirectErrorStream(true)
+        val p = builder.start()
+        process = p
+        try {
             val tail = StringBuilder()
             p.inputStream.use { stream ->
                 val buffer = ByteArray(8192)

@@ -8,6 +8,9 @@
 - 받는 진행률: yt-dlp 진행 줄(`--newline`)을 네이티브가 읽어 `progress` 이벤트로 Dart에 보낸다. 영상 · 소리 두 파일이면 영상 0.9 · 소리 0.1로 합쳐 0~0.99로 보이고, 끝나면 합치기 · 저장이라 "처리 중"으로 보인다.
 - 오래 걸리는 yt-dlp 실행이 검색 · 주소 읽기를 막지 않게 네이티브 `YtDlpChannel.run`에 `background`(별도 실행 줄)를 추가했다. 타임아웃 30분.
 
+## 태그
+- 저장 전에 ffmpeg로 제목 · 아티스트 · 앨범 · 장르를 파일에 쓴다 (영상 · 소리는 `-c copy`로 그대로). **mp4**는 커버도 첨부 그림으로 넣고(앱 커버 편집 값 + 앱 전용 `COVER_*` 칸 포함), **webm**(Matroska)은 첨부 그림을 쓸 수 없어 글 태그만 쓴다. 태그를 못 써도 영상은 그대로 저장한다. 네이티브 `TranscoderChannel.tagVideo`.
+
 ## 변경
 - Dart: `VideoFormat` · `videoHeights`, `DownloadRequest.videoFormat` · `videoHeight`(대기열 저장에도 포함), `VideoSaveRepository`(domain) · `YtDlpVideoSaveRepository`(data), `IsVideoSaveAvailable`, 받기 페이지 스위치 · 선택, `AndroidYtDlp.run`에 `timeout` · `background`. 문구 3개(ARB + 생성 파일 손으로 맞춤).
 - 네이티브: `MediaStoreChannel.saveAudio`에 `video` 플래그, `YtDlpChannel` 백그라운드 실행 줄.

@@ -103,6 +103,68 @@ class FfmpegTagWriter {
     }
   }
 
+  /// 영상 파일(mp4 · webm)에 태그를 쓴다 (영상 · 소리는 그대로). mp4는 [coverPng]를 첨부 그림으로 붙이고,
+  /// webm은 첨부 그림을 쓸 수 없어 글 태그만 쓴다. 쓸 값이 없거나 못 쓰면 false (파일은 그대로).
+  Future<bool> writeVideo(
+    File video, {
+    required String extension,
+    String? title,
+    String? artist,
+    String? album,
+    String? genre,
+    Uint8List? coverPng,
+    Map<String, String> extra = const {},
+  }) async {
+    final mp4 = extension.toLowerCase() == 'mp4';
+    final entries = <String, String>{
+      if (_has(title)) 'title': title!,
+      if (_has(artist)) 'artist': artist!,
+      if (_has(album)) 'album': album!,
+      if (_has(genre)) 'genre': genre!,
+      ...extra,
+    };
+    lastError = null;
+    if (entries.isEmpty && (coverPng == null || !mp4)) return false;
+    final meta = File('${video.path}.ffmeta');
+    final out = File('${video.path}.tagged');
+    final art = File('${video.path}.cover.png');
+    try {
+      await meta.writeAsString(ffmetadata(entries), flush: true);
+      final withCover = mp4 && coverPng != null;
+      if (withCover) await art.writeAsBytes(coverPng, flush: true);
+      final ok = await _channel.invokeMethod<bool>('tagVideo', {
+        'input': video.path,
+        'meta': meta.path,
+        'output': out.path,
+        'format': mp4 ? 'mp4' : 'webm',
+        if (withCover) 'cover': art.path,
+      });
+      if (ok != true || !await out.exists() || await out.length() == 0) {
+        lastError ??= 'ffmpeg ok=$ok';
+        return false;
+      }
+      await out.rename(video.path);
+      return true;
+    } on PlatformException catch (e) {
+      lastError = e.message ?? e.code;
+      return false;
+    } on MissingPluginException {
+      lastError = 'no ffmpeg plugin';
+      return false;
+    } on FileSystemException catch (e) {
+      lastError = 'file: ${e.message}';
+      return false;
+    } finally {
+      for (final f in [meta, out, art]) {
+        try {
+          if (f.existsSync()) f.deleteSync();
+        } on FileSystemException {
+          // 임시 파일이라 못 지워도 그만.
+        }
+      }
+    }
+  }
+
   static bool _has(String? v) => v != null && v.trim().isNotEmpty;
 
   /// ffmpeg가 읽는 ffmetadata 텍스트. `=` `;` `#` `\` 와 줄바꿈은 앞에 `\`를 붙인다.

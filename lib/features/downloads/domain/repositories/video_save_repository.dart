@@ -1,3 +1,4 @@
+import '../../../covers/domain/entities/cover_art.dart';
 import '../entities/download_options.dart';
 
 /// 영상 파일로 저장하기 요청 (원본 주소와 파일에 붙일 이름).
@@ -6,6 +7,11 @@ class VideoSaveRequest {
     required this.url,
     required this.title,
     this.artist = '',
+    this.album = '',
+    this.genre = '',
+    this.cover,
+    this.thumbnailUrl,
+    this.color,
     this.maxHeight = 1080,
     this.folder = '',
     this.format = VideoFormat.mp4,
@@ -14,6 +20,15 @@ class VideoSaveRequest {
   final String url;
   final String title;
   final String artist;
+  final String album;
+  final String genre;
+
+  /// 파일 태그에 넣을 커버(mp4만). 없으면 [thumbnailUrl]을 쓴다.
+  final CoverArt? cover;
+  final String? thumbnailUrl;
+
+  /// 받은 영상의 커버 색(ARGB). 태그의 앱 전용 칸에 적는다.
+  final int? color;
 
   /// 화질 상한(세로 픽셀). 이 이하에서 가장 좋은 화질을 받는다.
   final int maxHeight;

@@ -149,6 +149,48 @@ class CoverTagWriter {
     }
   }
 
+  /// 영상 파일(mp4 · webm)에 제목 · 아티스트 · 앨범 · 장르(와 mp4는 커버)를 쓴다. 못 쓰면 false (파일은 그대로,
+  /// 영상은 태그 없이 저장된다). webm은 첨부 그림을 쓸 수 없어 커버는 mp4만 넣는다.
+  Future<bool> embedVideo(
+    File video, {
+    required String extension,
+    CoverArt? cover,
+    String? thumbnailUrl,
+    String? title,
+    String? artist,
+    String? album,
+    String? genre,
+    int? color,
+  }) async {
+    final f = ffmpeg;
+    if (f == null) return false;
+    try {
+      Uint8List? png;
+      if (extension.toLowerCase() == 'mp4') {
+        final source = await _sourceFile(cover, thumbnailUrl);
+        if (source != null) {
+          png = await _squarePng(
+            await source.readAsBytes(),
+            cover?.transform ?? CoverTransform.identity,
+          );
+        }
+      }
+      return await f.writeVideo(
+        video,
+        extension: extension,
+        title: title,
+        artist: artist,
+        album: album,
+        genre: genre,
+        coverPng: png,
+        extra: coverExtra(cover, thumbnailUrl, color),
+      );
+    } on Object catch (e) {
+      FfmpegTagWriter.lastError = 'video tag: $e';
+      return false;
+    }
+  }
+
   static Future<File?> _sourceFile(
     CoverArt? cover,
     String? thumbnailUrl,
