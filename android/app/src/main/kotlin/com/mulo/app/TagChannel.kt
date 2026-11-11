@@ -173,27 +173,54 @@ class TagChannel(
         }
     }
 
+    /** 안드로이드가 직접 읽는 기본 칸(제목 · 아티스트 · 앨범 · 장르). 파일을 복사하지 않고 주소로 바로 읽는다. 키는 소문자. */
+    private fun readStandard(uri: String): Map<String, String> {
+        val out = linkedMapOf<String, String>()
+        val retriever = android.media.MediaMetadataRetriever()
+        try {
+            if (isContent(uri)) retriever.setDataSource(context, Uri.parse(uri)) else retriever.setDataSource(uri)
+            val keys = mapOf(
+                "title" to android.media.MediaMetadataRetriever.METADATA_KEY_TITLE,
+                "artist" to android.media.MediaMetadataRetriever.METADATA_KEY_ARTIST,
+                "album" to android.media.MediaMetadataRetriever.METADATA_KEY_ALBUM,
+                "genre" to android.media.MediaMetadataRetriever.METADATA_KEY_GENRE,
+            )
+            for ((name, key) in keys) retriever.extractMetadata(key)?.takeIf { it.isNotBlank() }?.let { out[name] = it }
+        } finally {
+            retriever.release()
+        }
+        return out
+    }
+
+    /**
+     * 기본 칸은 안드로이드가 읽고(ffmpeg가 없는 lite도 된다), 앱 전용 칸(`cover_*`: 커버 원본 · 확대 · 색)은
+     * 안드로이드가 못 읽어서 ffmpeg가 있을 때만 파일을 읽어 채운다.
+     */
     private fun read(uri: String, extension: String?, result: MethodChannel.Result) {
         var temp: File? = null
         try {
-            val format = formatOf(uri, extension)
-            if (format == null || !transcoder.isAvailable()) {
+            if (formatOf(uri, extension) == null) {
                 done(result, mapOf("status" to "unsupported", "tags" to emptyMap<String, String>()))
                 return
             }
-            val path = if (isContent(uri)) {
-                temp = copyToCache(uri)
-                temp?.absolutePath
-            } else if (File(uri).exists()) {
-                uri
-            } else {
-                null
-            }
-            if (path == null) {
+            if (!isContent(uri) && !File(uri).exists()) {
                 done(result, mapOf("status" to "failed", "tags" to emptyMap<String, String>()))
                 return
             }
-            done(result, mapOf("status" to "ok", "tags" to transcoder.readTags(path)))
+            val tags = linkedMapOf<String, String>()
+            tags.putAll(readStandard(uri))
+            if (transcoder.isAvailable()) {
+                val path = if (isContent(uri)) {
+                    temp = copyToCache(uri)
+                    temp?.absolutePath
+                } else {
+                    uri
+                }
+                if (path != null) {
+                    for ((k, v) in transcoder.readTags(path)) if (k.startsWith("cover_")) tags[k] = v
+                }
+            }
+            done(result, mapOf("status" to "ok", "tags" to tags))
         } catch (e: Exception) {
             done(result, mapOf("status" to "failed", "error" to (e.message ?: e.toString()), "tags" to emptyMap<String, String>()))
         } finally {

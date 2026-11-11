@@ -71,3 +71,4 @@
 - Dart에서 삭제: `FfmpegTagWriter`(→ 얇은 `NativeTags`), `CoverTagWriter`의 형식 목록 · webm→opus 변경 · mp3/m4a 라이브러리 쓰기 · `embedVideo` · PNG 자르기, `TrackTagSource`의 mime→확장자 표 · 복사 · 덮어쓰기, `FileTagSource`의 확장자 · mime 검사 · `audio_metadata_reader` 읽기. 소리 webm은 확장자 `weba`(ogg로 감싸 씀), 영상은 `webm`으로 구분한다.
 - 달라진 점: lite 빌드는 ffmpeg가 없어 태그를 쓰지도 읽지도 않는다 (Android full만, 사용자 방침). mp3 가사는 ffmpeg가 TXXX 칸에 쓴다 (앱은 TXXX도 읽는다. 표준 USLT 칸으로 한 번 더 쓰던 Dart 후처리는 삭제).
 - 남은 Dart 형식 표: `audio_file_downloader.dart` · `downloaded_file_store.dart` · `audio_transcoder.dart`의 mime ↔ 확장자, `yt_dlp_video_save_repository.dart`의 yt-dlp 포맷 선택식.
+- 태그 읽기 수정: 기본 칸(제목 · 아티스트 · 앨범 · 장르)은 안드로이드 `MediaMetadataRetriever`가 주소로 바로 읽고(복사 없음, lite도 됨), 앱 전용 `cover_*` 칸만 ffmpeg가 있을 때 파일을 복사해 읽는다 (안드로이드 API가 사용자 정의 칸을 못 읽는다).
