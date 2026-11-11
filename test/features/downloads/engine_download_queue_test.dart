@@ -696,24 +696,4 @@ void main() {
       ExistingDownload.none,
     );
   });
-
-  test('받은 곡 키는 받으면 생기고, 보관함에서 지우면 사라진다', () async {
-    final repo = build(_FakeDownloader());
-    final seen = <Set<String>>[];
-    final sub = repo.watchDownloadedKeys().listen(seen.add);
-    await repo.enqueue(request);
-    final items = await settled(
-      repo,
-      (l) => l.isNotEmpty && l.single.status == DownloadStatus.done,
-    );
-    await until(() => seen.isNotEmpty && seen.last.length == 1);
-    expect(seen.last, {'youtube:abc'});
-
-    final id = (await library.watchTracks().first).single.id;
-    await library.delete(id);
-    await until(() => seen.last.isEmpty);
-    expect(seen.last, isEmpty);
-    expect(items.single.status, DownloadStatus.done);
-    await sub.cancel();
-  });
 }

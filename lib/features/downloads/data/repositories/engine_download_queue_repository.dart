@@ -186,40 +186,6 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
   @override
   Stream<TagNotice> watchTagNotices() => _tagNotices.stream;
 
-  /// 받은 곡 키가 바뀌었음을 알린다 (곡을 만든 직후 · 원본 주소 기록 뒤).
-  final _keysChanged = StreamController<void>.broadcast();
-
-  @override
-  Stream<Set<String>> watchDownloadedKeys() {
-    late final StreamController<Set<String>> out;
-    StreamSubscription<Object?>? libSub;
-    StreamSubscription<void>? keySub;
-    var ids = <String>{};
-    void emit() {
-      if (out.isClosed) return;
-      out.add({
-        for (final e in _sources.entries)
-          if (ids.contains(e.value)) e.key,
-      });
-    }
-
-    out = StreamController<Set<String>>(
-      onListen: () async {
-        await _ensureLoaded();
-        libSub = _library.watchTracks().listen((tracks) {
-          ids = {for (final t in tracks) t.id};
-          emit();
-        });
-        keySub = _keysChanged.stream.listen((_) => emit());
-      },
-      onCancel: () async {
-        await libSub?.cancel();
-        await keySub?.cancel();
-      },
-    );
-    return out.stream;
-  }
-
   @override
   Future<void> enqueue(DownloadRequest request) async {
     await _ensureLoaded();
@@ -645,7 +611,6 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
     // 같은 원본 주소를 다시 받지 않도록 기억한다 (재생목록 가져오기가 건너뛴다).
     if (remember) {
       _sources[downloadSourceKey(request.url)] = trackId;
-      _keysChanged.add(null);
       await _queueStore.saveSources(_sources);
     }
     if (lyrics != null) {

@@ -83,7 +83,6 @@ void registerDownloads(GetIt sl) {
     ..registerFactory(() => WatchDownloadQueue(sl()))
     ..registerFactory(() => EnqueueDownload(sl()))
     ..registerFactory(() => FindExistingDownload(sl()))
-    ..registerFactory(() => WatchDownloadedKeys(sl()))
     ..registerFactory(() => GetTrackSourceUrl(sl()))
     ..registerFactory(() => WatchTagNotices(sl()))
     ..registerFactory(() => PauseDownload(sl()))
@@ -92,7 +91,7 @@ void registerDownloads(GetIt sl) {
     ..registerFactory(() => CancelDownload(sl()))
     ..registerFactory(() => CancelAllDownloads(sl()))
     ..registerFactory(
-      () => DownloadQueueCubit(sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl()),
+      () => DownloadQueueCubit(sl(), sl(), sl(), sl(), sl(), sl(), sl()),
     );
 }
 

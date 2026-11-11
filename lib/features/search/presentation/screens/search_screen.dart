@@ -457,10 +457,9 @@ class _HitTile extends StatelessWidget {
     final subtitle = [
       if (hit.isLive) l10n.searchLive,
       if (hit.uploader.isNotEmpty) hit.uploader,
-      if (hit.downloaded) l10n.alreadyDownloaded,
     ].join(' · ');
     final thumb = hit.thumbnailUrl;
-    // 받기 버튼 아이콘은 이 곡의 받기 상태를 따른다 (받는 중 · 대기 · 받음).
+    // 받기 버튼 아이콘은 이 곡의 받기 상태를 따른다 (받는 중 · 대기).
     final key = downloadSourceKey(hit.url);
     final status = context.select<DownloadQueueCubit, DownloadStatus?>((c) {
       DownloadStatus? found;
@@ -480,12 +479,6 @@ class _HitTile extends StatelessWidget {
         AppIcons.hourglassEmpty,
         l10n.downloadStateQueued,
       ),
-      _
-          when hit.downloaded ||
-              context.select<DownloadQueueCubit, bool>(
-                (c) => c.isDownloaded(hit.url),
-              ) =>
-        (AppIcons.checkCircle, l10n.downloadStateDone),
       _ => (AppIcons.download, l10n.actionDownload),
     };
 
