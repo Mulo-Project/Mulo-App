@@ -7,7 +7,7 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.MetadataRetriever
 import androidx.media3.extractor.metadata.id3.TextInformationFrame
-import androidx.media3.extractor.metadata.mp4.MdtaMetadataEntry
+import androidx.media3.container.MdtaMetadataEntry
 import androidx.media3.extractor.metadata.vorbis.VorbisComment
 import java.util.concurrent.TimeUnit
 
