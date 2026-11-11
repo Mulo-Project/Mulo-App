@@ -320,16 +320,28 @@ class PlayerCover extends StatelessWidget {
     return Stack(
       fit: StackFit.expand,
       children: [
-        // 영상 비율에 맞춰 남는 자리는 커버를 흐리게 깔아, 영상 가장자리가 자연스럽게 이어진다.
+        // 영상 비율에 맞춰 남는 자리: 커버 색을 입힌 바탕 위에 살짝 흐린 커버를 투명하게 얹어,
+        // 영상 가장자리가 색으로 자연스럽게 이어진다 (너무 뿌옇지 않게).
         ClipRRect(
           borderRadius: BorderRadius.circular(radius),
-          child: ImageFiltered(
-            imageFilter: ImageFilter.blur(
-              sigmaX: 24,
-              sigmaY: 24,
-              tileMode: TileMode.clamp,
-            ),
-            child: Transform.scale(scale: 1.2, child: cover),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              ColoredBox(
+                color: (art.color ?? art.glow[1]).withValues(alpha: .45),
+              ),
+              Opacity(
+                opacity: .55,
+                child: ImageFiltered(
+                  imageFilter: ImageFilter.blur(
+                    sigmaX: 10,
+                    sigmaY: 10,
+                    tileMode: TileMode.clamp,
+                  ),
+                  child: Transform.scale(scale: 1.15, child: cover),
+                ),
+              ),
+            ],
           ),
         ),
         ClipRRect(borderRadius: BorderRadius.circular(radius), child: v),
