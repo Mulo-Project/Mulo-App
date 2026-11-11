@@ -51,7 +51,7 @@
 - 영상 저장 곡의 id를 `download:video:<id>`로 하고 `isVideo`가 이 접두사를 영상으로 본다. 이미 저장해 둔 영상은 id가 달라 다시 저장해야 영상으로 재생된다.
 
 ## 영상 곡 표시를 DB에 저장 (11-11)
-- id · 주소로 영상 여부를 추측하던 것을 없애고, `tracks.video` 열(스키마 13)에 저장한다. 영상으로 받아 저장하면 `Track.hasVideo = true`로 등록하고 `isVideo`가 그 값을 쓴다 (기존 `device-video:` · 확장자 판단은 그대로).
-- 마이그레이션 13: 열을 더하고, 주소가 `content://media/external/video/…`인 기존 곡은 한 번 영상으로 표시한다. 다운로드 폴더에 저장한 예전 영상은 알 수 없어 다시 저장해야 한다.
+- id · 주소로 영상 여부를 추측하던 것을 없애고, 파일 형식(MIME)을 `tracks.mime` 열(스키마 13)에 저장한다. 영상으로 받아 저장하면 `video/mp4` · `video/webm`을 넣고, `Track.isVideo`는 `mime`이 `video/`로 시작하는지 본다 (기존 `device-video:` · 확장자 판단은 그대로). 상세 화면의 형식 이름도 파일을 읽기 전에 이 값으로 보인다.
+- 마이그레이션 13: 열을 더하고, 주소가 `content://media/external/video/…`인 기존 곡은 `video/*`로 한 번 채운다. 다운로드 폴더에 저장한 예전 영상은 알 수 없어 다시 저장해야 한다.
 - **`dart run build_runner build -d` 필요** (drift 생성 코드 `app_database.g.dart`를 이 환경에서 만들 수 없다).
 - 진단 로그: 받기 등록(`MuloDownload register …`, flutter), 영상 해독(`video refresh/size/first frame`, `tracks video=… mime=…`, `adb logcat -s MuloPlayback`), 플레이어 화면(`MuloPlayer track=… isVideo=…`).

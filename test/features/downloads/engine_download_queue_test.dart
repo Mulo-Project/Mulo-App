@@ -300,6 +300,7 @@ void main() {
       expect(track.uri, 'content://video/1');
       expect(track.folder, '/storage/emulated/0/Movies/Mulo');
       expect(track.isVideo, isTrue, reason: '영상으로 저장한 곡은 영상으로 재생한다');
+      expect(track.mime, startsWith('video/'));
     });
 
     test('영상이 실패하면 항목이 실패 처리된다', () async {

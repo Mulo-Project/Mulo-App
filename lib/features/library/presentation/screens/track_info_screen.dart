@@ -254,9 +254,12 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
         const AppDivider(),
         row(l10n.trackInfoFileSize, _size(_file!.sizeBytes!)),
       ],
-      if (_format(_file?.mime) != null) ...[
+      if (_format(_file?.mime ?? widget.track.mime) != null) ...[
         const AppDivider(),
-        row(l10n.trackInfoFormat, _format(_file!.mime)!),
+        row(
+          l10n.trackInfoFormat,
+          _format(_file?.mime ?? widget.track.mime)!,
+        ),
       ],
       if (_file?.bitrate != null) ...[
         const AppDivider(),

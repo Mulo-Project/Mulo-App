@@ -39,7 +39,7 @@ void main() {
     expect(list.first.source, TrackSource.device);
   });
 
-  test('영상 곡 표시는 DB에 저장돼 다시 읽어도 영상이다', () async {
+  test('파일 형식은 DB에 저장돼 영상 곡은 다시 읽어도 영상이다', () async {
     await repo.addTracks([
       Track(
         id: 'v',
@@ -49,11 +49,12 @@ void main() {
         duration: const Duration(minutes: 1),
         uri: 'content://media/external/downloads/1',
         addedAt: DateTime(2026, 9, 1),
-        hasVideo: true,
+        mime: 'video/mp4',
       ),
       _t('a', 'u1', 2),
     ]);
     final list = {for (final t in await repo.watchTracks().first) t.id: t};
+    expect(list['v']!.mime, 'video/mp4');
     expect(list['v']!.isVideo, isTrue);
     expect(list['a']!.isVideo, isFalse);
   });

@@ -18,6 +18,7 @@ class Track {
     this.source = TrackSource.device,
     this.hasVideo = false,
     this.videoUri = '',
+    this.mime = '',
   });
 
   final String id;
@@ -39,8 +40,11 @@ class Track {
   final String folder;
   final TrackSource source;
 
-  /// 영상 파일인 곡 (영상으로 받아 저장했다 · 임시 저장 영상). DB에 저장된다. 영상은 네이티브가 소리와 한 시계로 낸다.
+  /// 영상도 같이 나오는 임시 저장 곡 (영상으로 저장했다). 영상은 네이티브가 소리와 한 시계로 낸다.
   final bool hasVideo;
+
+  /// 파일 형식(MIME, 예: `video/mp4`). DB에 저장된다. 모르면 빈 문자열.
+  final String mime;
 
   /// 영상 전용 주소 (소리와 따로 저장한 경우). 소리 주소가 영상까지 담고 있으면 빈 문자열.
   final String videoUri;
@@ -48,6 +52,7 @@ class Track {
   /// 영상 파일인가 (보관함에서 영상도 곡으로 불러온다). 소리는 네이티브가, 화면은 Dart가 같은 파일로 낸다.
   bool get isVideo =>
       hasVideo ||
+      mime.startsWith('video/') ||
       id.startsWith(videoIdPrefix) ||
       (id.startsWith('file:') &&
           _videoExtensions.any(uri.toLowerCase().endsWith));
@@ -77,6 +82,7 @@ class Track {
     source: source,
     hasVideo: hasVideo,
     videoUri: videoUri,
+    mime: mime,
   );
 
   @override

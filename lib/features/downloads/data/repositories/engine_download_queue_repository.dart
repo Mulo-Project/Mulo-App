@@ -600,7 +600,7 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
         uri: saved.uri,
         folder: saved.folder,
         source: TrackSource.download,
-        hasVideo: video,
+        mime: request.videoFormat?.mime ?? '',
       ),
     ]);
     if (request.playlistIds.isNotEmpty) {

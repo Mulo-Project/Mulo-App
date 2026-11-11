@@ -27,8 +27,9 @@ class Tracks extends Table {
   /// 다시 불러오면 숨김만 푼다. 보관함에는 보이지 않는다.
   BoolColumn get hidden => boolean().withDefault(const Constant(false))();
 
-  /// 영상 파일인 곡 (영상으로 받아 저장했거나 영상 모음에서 찾았다). 영상 화면을 그릴지 정한다.
-  BoolColumn get video => boolean().withDefault(const Constant(false))();
+  /// 파일 형식(MIME, 예: `video/mp4` · `video/webm`). 모르면 빈 문자열.
+  /// 영상 화면을 그릴지(`video/`로 시작하면 영상)와 상세 화면의 형식 이름에 쓴다.
+  TextColumn get mime => text().withDefault(const Constant(''))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -196,11 +197,11 @@ class AppDatabase extends _$AppDatabase {
       }
       // 폴더를 빼도 곡 기록을 남기도록 숨김 칸을 더한다.
       if (from < 12) await _addColumnIfMissing(m, tracks, tracks.hidden);
-      // 영상 칸을 더한다. 영상 모음(MediaStore 영상)에 있는 곡은 한 번 영상으로 표시한다.
+      // 형식 칸을 더한다. 영상 모음(MediaStore 영상)에 있는 곡은 한 번 영상으로 표시한다.
       if (from < 13) {
-        await _addColumnIfMissing(m, tracks, tracks.video);
+        await _addColumnIfMissing(m, tracks, tracks.mime);
         await customStatement(
-          "UPDATE tracks SET video = 1 WHERE uri LIKE 'content://media/external/video/%'",
+          "UPDATE tracks SET mime = 'video/*' WHERE uri LIKE 'content://media/external/video/%'",
         );
       }
     },
