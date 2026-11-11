@@ -215,15 +215,19 @@ object YoutubeResolver {
             return true
         }
         return try {
-            conn.connectTimeout = 6000
-            conn.readTimeout = 8000
+            // 확인이 막혀도 오래 붙들지 않는다 (시간 초과는 "확인 못 함"으로 쓴다).
+            conn.connectTimeout = 2500
+            conn.readTimeout = 2500
             headers(f.url).forEach { (k, v) -> conn.setRequestProperty(k, v) }
             // 길이를 모르는 형식은 처음 1KB로 확인한다.
             val from = if (f.contentLength > 4096) f.contentLength / 2 else 0
             conn.setRequestProperty("Range", "bytes=$from-${from + 1023}")
+            val clock = System.currentTimeMillis()
             val code = conn.responseCode
+            MuloLog.d(TAG, "구간 확인 ${clientOf(f.url)} $code ${System.currentTimeMillis() - clock}ms")
             code == 206 || code == 200
         } catch (e: Exception) {
+            MuloLog.d(TAG, "구간 확인 ${clientOf(f.url)} 응답 없음 ${oneLine(e.toString())}")
             true
         } finally {
             conn.disconnect()
