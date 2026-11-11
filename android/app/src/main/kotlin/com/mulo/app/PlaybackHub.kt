@@ -52,6 +52,9 @@ object PlaybackHub {
     lateinit var sessionPlayer: SessionPlayer
         private set
 
+    /** 메인 플레이어. 아직 만들기 전이면 null (미리 듣기 영상이 메인 소리에 맞출 때 쓴다). */
+    fun mainPlayerOrNull(): ExoPlayer? = if (initialized) exo else null
+
     /** 미디어 세션. 알림을 지웠거나 재생을 끝낸 뒤에는 정리(release)되어 null이고, 다시 재생하면 새로 만든다. */
     var session: MediaSession? = null
         private set

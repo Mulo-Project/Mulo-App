@@ -292,6 +292,16 @@ class PlayPreviewVideo implements UseCase<void, VideoStream> {
   Future<void> call(VideoStream stream) => _player.playVideo(stream);
 }
 
+/// 메인 재생 소리(임시 저장한 음원)에 맞춰 스트림 영상을 틀기. null이면 그 영상을 멈춘다.
+class PlayMainVideo implements UseCase<void, VideoStream?> {
+  const PlayMainVideo(this._player);
+
+  final PreviewPlayer _player;
+
+  @override
+  Future<void> call(VideoStream? stream) => _player.playMainVideo(stream);
+}
+
 /// 재생 중인 미리 듣기가 어느 곡인지 플레이어에 적어 두기.
 class RememberPreview implements UseCase<void, MediaHit> {
   const RememberPreview(this._player);

@@ -578,6 +578,15 @@ class _Thumbnail extends StatelessWidget {
           c.state.track?.id == '${Track.savedIdPrefix}${hit.id}' &&
           c.state.track!.hasVideo,
     );
+    // 소리만 저장한 곡을 메인 재생으로 듣는 중: 영상은 스트림으로 읽어 메인 소리에 맞춰 보여 준다 (유튜브만).
+    final mainAudioOnly =
+        !audio &&
+        hit.url.isNotEmpty &&
+        context.select(
+          (NowPlayingCubit c) =>
+              c.state.track?.id == '${Track.savedIdPrefix}${hit.id}' &&
+              !c.state.track!.hasVideo,
+        );
     return LayoutBuilder(
       builder: (context, box) {
         // 넓은 화면(데스크톱)에서 너무 커지지 않게 높이를 제한하고 가운데에 둔다.
@@ -603,6 +612,25 @@ class _Thumbnail extends StatelessWidget {
                     width: width,
                     height: width * 9 / 16,
                     child: const MainVideoWithControls(),
+                  ),
+                )
+              else if (mainAudioOnly)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadii.md),
+                  child: SizedBox(
+                    width: width,
+                    height: width * 9 / 16,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        PreviewVideo(
+                          pageUrl: hit.url,
+                          online: true,
+                          followMain: true,
+                        ),
+                        const PreviewVideoControls(main: true),
+                      ],
+                    ),
                   ),
                 )
               else if (previewing)

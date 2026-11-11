@@ -1791,6 +1791,13 @@ class FakePreviewPlayer implements PreviewPlayer {
       playedVideos.add(stream.url);
 
   @override
+  Future<void> playMainVideo(VideoStream? stream) async {
+    if (stream != null) playedMainVideos.add(stream.url);
+  }
+
+  final playedMainVideos = <String>[];
+
+  @override
   Future<void> remember(MediaHit hit) async => remembered.add(hit);
 
   @override

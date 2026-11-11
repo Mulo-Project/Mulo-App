@@ -60,10 +60,15 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
     private var videoSpeed = 1f
     private var lastHardSeek = 0L
 
+    /** 영상이 미리 듣기 소리가 아니라 메인 재생(임시 저장한 음원을 들을 때)의 시계를 따른다. */
+    private var followMain = false
+
+    private fun reference(): ExoPlayer? = if (followMain) PlaybackHub.mainPlayerOrNull() else player
+
     private val videoSync = object : Runnable {
         override fun run() {
             val v = videoPlayer ?: return
-            val a = player ?: return
+            val a = reference() ?: return
             syncVideo(v, a)
             main.postDelayed(this, SYNC_INTERVAL_MS)
         }
@@ -164,9 +169,14 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
                         result.error("bad_args", "url required", null)
                         return@setMethodCallHandler
                     }
-                    playVideo(url, call.argument<Map<String, String>>("headers") ?: emptyMap())
+                    playVideo(
+                        url,
+                        call.argument<Map<String, String>>("headers") ?: emptyMap(),
+                        follow = call.argument<Boolean>("followMain") == true,
+                    )
                     result.success(null)
                 }
+                "stopVideo" -> { releaseVideo(); result.success(null) }
                 "seek" -> {
                     val ms = (call.arguments as Number).toLong()
                     player?.seekTo(ms)
@@ -285,9 +295,9 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
         p.prepare()
     }
 
-    private fun playVideo(url: String, headers: Map<String, String>) {
-        val audio = player ?: return
-        if (url == playUrl) {
+    private fun playVideo(url: String, headers: Map<String, String>, follow: Boolean = false) {
+        val audio = (if (follow) PlaybackHub.mainPlayerOrNull() else player) ?: return
+        if (!follow && url == playUrl) {
             // 소리가 섞인 형식: 같은 플레이어가 소리와 영상을 한 시계로 튼다 (영상 전용 플레이어 · 맞추기 없음).
             if (!muxedVideo) {
                 releaseVideo()
@@ -299,8 +309,9 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
             }
             return
         }
-        if (videoUrl == url && videoPlayer != null) return
+        if (videoUrl == url && videoPlayer != null && followMain == follow) return
         releaseVideo()
+        followMain = follow
         val http = DefaultHttpDataSource.Factory()
             .setAllowCrossProtocolRedirects(true)
             .setDefaultRequestProperties(headers)
@@ -325,8 +336,13 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
         videoStartPending = true
         videoSpeed = 1f
         VideoSurfaceHub.setPreviewVideo(v)
-        VideoSurfaceHub.previewIsPlaying = { player?.isPlaying == true }
-        VideoSurfaceHub.previewSetPlaying = { play -> if (play) player?.play() else player?.pause() }
+        if (follow) {
+            VideoSurfaceHub.previewIsPlaying = { PlaybackHub.mainPlayerOrNull()?.isPlaying == true }
+            VideoSurfaceHub.previewSetPlaying = { play -> if (play) PlaybackHub.play() else PlaybackHub.pause() }
+        } else {
+            VideoSurfaceHub.previewIsPlaying = { player?.isPlaying == true }
+            VideoSurfaceHub.previewSetPlaying = { play -> if (play) player?.play() else player?.pause() }
+        }
         main.post(videoSync)
     }
 
@@ -388,6 +404,7 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
         videoUrl = null
         videoStartPending = false
         muxedVideo = false
+        followMain = false
     }
 
     /** 소리를 내고 있는(또는 잠시 멈춘) 미리 듣기. 없으면 null이고, 알림에 남은 미리 듣기는 치운다. */
