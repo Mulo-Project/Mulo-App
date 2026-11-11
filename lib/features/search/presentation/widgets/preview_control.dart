@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
+import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../library/domain/entities/track.dart' show formatDuration;
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
+import '../../domain/usecases/search_usecases.dart' show FetchAudioLanguages;
 import '../bloc/audio_language_cubit.dart';
 import '../bloc/preview_cubit.dart';
 import '../bloc/saved_videos_cubit.dart';
+import '../screens/media_detail_screen.dart' show isYoutubeUrl;
 
 /// [hit] 미리 듣기를 시작하거나(이미 듣는 중이면) 멈춘다.
 /// 소리가 나기 시작하면 메인 재생은 멈추고, 시작하지 못하면 안내를 띄운다
@@ -25,6 +28,19 @@ Future<bool> togglePreview(
   final messenger = ScaffoldMessenger.of(context);
   final preview = context.read<PreviewCubit>();
   final nowPlaying = context.read<NowPlayingCubit>();
+
+  // 언어를 정해 주지 않은 시작(목록 타일 등)도 상세 화면과 같은 시스템 언어 기본값을 쓴다.
+  if (audioLanguage == null &&
+      !preview.state.isActive(hit.id) &&
+      isYoutubeUrl(hit.url)) {
+    final fetch = sl.isRegistered<FetchAudioLanguages>()
+        ? sl<FetchAudioLanguages>()
+        : null;
+    if (fetch != null) {
+      audioLanguage = await defaultAudioLanguageFor(fetch, hit.url);
+      if (!context.mounted) return false;
+    }
+  }
 
   // 라이브는 끝이 없거나 아직 시작 전이라 주소가 없다. 이미 듣는 중이면 멈추기만 한다.
   if (hit.isLive && !preview.state.isActive(hit.id)) {
