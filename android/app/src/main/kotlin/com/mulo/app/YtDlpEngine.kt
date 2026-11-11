@@ -34,6 +34,7 @@ class YtDlpEngine(
     private val tempDir: () -> File,
     private val timeoutMs: Long = 60_000,
     private val saveTimeoutMs: Long = 30 * 60_000,
+    private val readPage: (String) -> String? = ::fetchPage,
 ) {
     private val gate = ExecGate()
     private val watchdog = Executors.newCachedThreadPool()
@@ -77,10 +78,29 @@ class YtDlpEngine(
         return YtDlpParsers.info(decode(out) ?: throw YtDlpException("failed", "bad response"))
     }
 
-    /** 채널 탭의 영상은 받지 않고(`--playlist-items 0`) 채널 자체 정보만 읽는다. */
+    /**
+     * 채널 정보. 채널 탭의 영상은 받지 않고(`--playlist-items 0`) 채널 자체 정보만 읽는다.
+     * SoundCloud는 yt-dlp 정보에 프로필 이미지가 없거나 이름이 달라 비는 일이 있어서, 비면 아티스트 페이지의
+     * `og:image`를 읽어 채운다 (yt-dlp가 못 읽어도 이미지는 읽어 본다).
+     */
     fun channel(url: String): Map<String, Any?> {
-        val out = exec(listOf("--flat-playlist", "--playlist-items", "0", "--dump-single-json", "--no-warnings", url))
-        return YtDlpParsers.channel(decode(out) ?: throw YtDlpException("failed", "bad response"))
+        var info: Map<String, Any?>? = null
+        var failure: YtDlpException? = null
+        try {
+            val out = exec(listOf("--flat-playlist", "--playlist-items", "0", "--dump-single-json", "--no-warnings", url))
+            info = YtDlpParsers.channel(decode(out) ?: throw YtDlpException("failed", "bad response"))
+        } catch (e: YtDlpException) {
+            if (!YtDlpParsers.isSoundcloud(url)) throw e
+            failure = e
+        }
+        if (info != null && info["thumbnail"] != null) return info
+        if (!YtDlpParsers.isSoundcloud(url)) return info!!
+        val avatar = readPage(url)?.let { YtDlpParsers.soundcloudAvatarFromHtml(it) }
+        if (avatar == null) {
+            if (info != null) return info
+            throw failure ?: YtDlpException("not_found", "no avatar")
+        }
+        return mapOf("thumbnail" to avatar, "subscriberCount" to info?.get("subscriberCount"))
     }
 
     /** 소리 주소. 기본 클라이언트로 못 읽으면 `android_vr`로 한 번 더 시도하고, 그래도 안 되면 첫 오류를 알린다. */
@@ -235,5 +255,33 @@ class YtDlpEngine(
 
     fun dispose() {
         watchdog.shutdownNow()
+    }
+}
+
+/** 주소의 페이지 머리말을 읽는다 (앞 200KB만). 못 읽으면 null. */
+internal fun fetchPage(url: String): String? {
+    val c = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+    return try {
+        c.connectTimeout = 8000
+        c.readTimeout = 10000
+        c.setRequestProperty(
+            "User-Agent",
+            "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Mobile Safari/537.36",
+        )
+        if (c.responseCode != 200) return null
+        val buf = java.io.ByteArrayOutputStream()
+        val chunk = ByteArray(8192)
+        c.inputStream.use { input ->
+            while (buf.size() <= 200 * 1024) {
+                val n = input.read(chunk)
+                if (n < 0) break
+                buf.write(chunk, 0, n)
+            }
+        }
+        buf.toString("UTF-8")
+    } catch (_: Exception) {
+        null
+    } finally {
+        c.disconnect()
     }
 }

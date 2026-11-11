@@ -154,6 +154,28 @@ object YtDlpParsers {
     fun channel(j: JSONObject): Map<String, Any?> =
         mapOf("thumbnail" to avatarUrl(j), "subscriberCount" to count(j, "channel_follower_count"))
 
+    /**
+     * SoundCloud 아티스트 페이지 머리말의 `og:image`(프로필 이미지) 주소 (없으면 null).
+     * 곡 썸네일은 곡 커버라서 아티스트 이미지가 아니므로 이 값을 쓴다. 작은 `-large`(100px) 대신 큰 이미지로 바꾼다.
+     */
+    fun soundcloudAvatarFromHtml(html: String): String? {
+        val isOgImage = Regex("(property|name)\\s*=\\s*[\"']og:image[\"']", RegexOption.IGNORE_CASE)
+        val content = Regex("content\\s*=\\s*[\"']([^\"']+)[\"']", RegexOption.IGNORE_CASE)
+        for (m in Regex("<meta\\b[^>]*>", RegexOption.IGNORE_CASE).findAll(html)) {
+            val tag = m.value
+            if (!isOgImage.containsMatchIn(tag)) continue
+            val c = content.find(tag)?.groupValues?.get(1) ?: continue
+            if (!c.startsWith("http")) continue
+            return c.replace("&amp;", "&").replaceFirst(Regex("-(large|t200x200|t300x300)\\."), "-t500x500.")
+        }
+        return null
+    }
+
+    fun isSoundcloud(url: String): Boolean {
+        val host = try { java.net.URI(url).host?.lowercase() ?: "" } catch (_: Exception) { "" }
+        return host == "soundcloud.com" || host.endsWith(".soundcloud.com")
+    }
+
     private fun headers(j: JSONObject): Map<String, String> {
         val h = j.optJSONObject("http_headers") ?: return emptyMap()
         val out = LinkedHashMap<String, String>()

@@ -12,7 +12,6 @@ import 'data/repositories/prefs_video_quality_repository.dart';
 import 'data/engine/youtube_resolve_engine.dart';
 import 'data/engine/yt_dlp_engine.dart';
 import 'data/engine/routing_engine.dart';
-import 'data/engine/soundcloud_avatar_engine.dart';
 import 'data/engine/server_engine.dart';
 import 'domain/repositories/downloader_engine.dart';
 import 'domain/repositories/link_opener.dart';
@@ -46,24 +45,22 @@ void registerSearch(GetIt sl) {
       );
       return CachedDownloaderEngine(
         infoTtl: const Duration(hours: 6),
-        SoundcloudAvatarEngine(
-          // Android는 네이티브가 재생 주소를 먼저 읽는다 (앱이 백그라운드여도 끊기지 않는다, D-162).
-          // 그 밖의 OS는 안쪽 엔진(yt-dlp · 서버)이 읽는다.
-          Platform.isAndroid
-              ? YoutubeResolveEngine(
-                  routing,
-                  reader: native.audio,
-                  videoReader: native.video,
-                  languageReader: native.languages,
-                  searchReader: native.search,
-                  playlistReader: native.playlist,
-                  playlistSearchReader: native.searchPlaylists,
-                  infoReader: native.videoInfo,
-                  channelInfoReader: native.channelInfo,
-                  warmUpReader: native.warmUp,
-                )
-              : routing,
-        ),
+        // Android는 네이티브가 재생 주소를 먼저 읽는다 (앱이 백그라운드여도 끊기지 않는다, D-162).
+        // 그 밖의 OS는 안쪽 엔진(yt-dlp · 서버)이 읽는다.
+        Platform.isAndroid
+            ? YoutubeResolveEngine(
+                routing,
+                reader: native.audio,
+                videoReader: native.video,
+                languageReader: native.languages,
+                searchReader: native.search,
+                playlistReader: native.playlist,
+                playlistSearchReader: native.searchPlaylists,
+                infoReader: native.videoInfo,
+                channelInfoReader: native.channelInfo,
+                warmUpReader: native.warmUp,
+              )
+            : routing,
       );
     })
     ..registerLazySingleton<LinkOpener>(UrlLauncherLinkOpener.new)

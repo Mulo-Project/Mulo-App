@@ -38,9 +38,11 @@
 - 데스크톱 삭제: `YtDlpManager`는 Android만, `LoopbackGoogleAuth`(OAuth 브라우저 로그인)와 `MULO_GOOGLE_DESKTOP_*` 빌드 값 삭제 (`AuthStore`는 `auth_store.dart`로 분리). `docs/google-login-setup.md` 갱신.
 - 테스트: Dart `LocalEngine` 테스트(7개 파일)는 Kotlin `YtDlpParsersTest` · `YtDlpEngineTest` · `ExecGateTest`로 옮기고, Dart는 `yt_dlp_engine_test.dart`(채널 값 전달 · 모델 담기 · 오류 코드 · Routing · 영상 저장)만.
 
+## SoundCloud 아바타도 네이티브로
+`SoundcloudAvatarEngine`(Dart가 아티스트 페이지 HTML을 받아 `og:image` 읽기)을 지웠다. 네이티브 `YtDlpEngine.channel`이 SoundCloud 주소에서 프로필 이미지가 비면(또는 yt-dlp가 실패해도) 페이지 앞 200KB를 읽어 채운다 (`YtDlpParsers.soundcloudAvatarFromHtml`). 서버 모드(서버 미배포)에서는 이 보충이 없다.
+
 ## 아직 Dart에 남은 것
 - 구글 로그인(Android `google_sign_in` 플러그인 + 토큰 보안 저장소): 이미 플러그인(네이티브)을 부르는 얇은 감싸기다. 네이티브로 다시 쓰려면 Credential Manager · Google Identity 의존성을 새로 넣어야 해서 별도 결정이 필요하다.
-- SoundCloud 아바타 페이지 읽기(`SoundcloudAvatarEngine`, 유튜브가 아님).
 
 ## 한계 / 후속
 - 이 환경에서는 YouTube에 연결할 수 없어 응답 모양은 기존 라이브러리 소스를 보고 맞췄다. 실기기 확인 필요.

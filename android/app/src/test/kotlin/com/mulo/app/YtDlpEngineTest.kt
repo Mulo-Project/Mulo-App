@@ -165,4 +165,34 @@ class YtDlpEngineTest {
         val bad = Fake { YtDlpRun(1, "", "no space") }
         assertEquals("failed", code { engine(bad).saveVideo("https://x", 720, "mp4", tmp.root, "s") {} })
     }
+
+    private val avatarPage = """<meta property="og:image" content="https://i1.sndcdn.com/avatars-000-abc-large.jpg">"""
+
+    @Test
+    fun soundcloudChannelFillsMissingAvatarFromPage() {
+        val r = Fake { ok("""{"channel_follower_count":12}""") }
+        val e = YtDlpEngine(r, { File(tmp.root, "sub") }, 5000, 5000, { avatarPage })
+        val c = e.channel("https://soundcloud.com/artist")
+        assertTrue((c["thumbnail"] as String).contains("t500x500"))
+        assertEquals(12L, c["subscriberCount"])
+    }
+
+    @Test
+    fun soundcloudAvatarIsReadEvenWhenYtDlpFails() {
+        val r = Fake { YtDlpRun(1, "", "boom") }
+        val e = YtDlpEngine(r, { File(tmp.root, "sub") }, 5000, 5000, { avatarPage })
+        assertTrue((e.channel("https://soundcloud.com/artist")["thumbnail"] as String).isNotEmpty())
+        val none = YtDlpEngine(r, { File(tmp.root, "sub") }, 5000, 5000, { null })
+        assertEquals("failed", code { none.channel("https://soundcloud.com/artist") })
+    }
+
+    @Test
+    fun otherSitesNeverReadThePage() {
+        val r = Fake { ok("""{"thumbnails":[{"id":"avatar_1","url":"a"}]}""") }
+        val e = YtDlpEngine(r, { File(tmp.root, "sub") }, 5000, 5000, { fail("페이지를 읽으면 안 된다"); null })
+        assertEquals("a", e.channel("https://www.youtube.com/@a")["thumbnail"])
+        val noAvatar = Fake { ok("""{"thumbnails":[]}""") }
+        val e2 = YtDlpEngine(noAvatar, { File(tmp.root, "sub") }, 5000, 5000, { fail("페이지를 읽으면 안 된다"); null })
+        assertNull(e2.channel("https://www.youtube.com/@a")["thumbnail"])
+    }
 }

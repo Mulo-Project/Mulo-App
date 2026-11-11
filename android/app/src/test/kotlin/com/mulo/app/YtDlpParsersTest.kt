@@ -163,4 +163,15 @@ class YtDlpParsersTest {
         assertTrue(YtDlpParsers.saveSelector(1080, "webm").contains("[ext=webm]"))
         assertTrue(YtDlpParsers.saveSelector(1080, "mp4").contains("[vcodec^=avc1]+ba[ext=m4a]"))
     }
+
+    @Test
+    fun soundcloudAvatarFromOgImage() {
+        val html = """<html><head><meta property="og:title" content="Artist">
+            <meta property="og:image" content="https://i1.sndcdn.com/avatars-000-abc-large.jpg?x=1&amp;y=2"></head></html>"""
+        assertEquals("https://i1.sndcdn.com/avatars-000-abc-t500x500.jpg?x=1&y=2", YtDlpParsers.soundcloudAvatarFromHtml(html))
+        assertNull(YtDlpParsers.soundcloudAvatarFromHtml("<html></html>"))
+        assertTrue(YtDlpParsers.isSoundcloud("https://soundcloud.com/artist"))
+        assertTrue(YtDlpParsers.isSoundcloud("https://m.soundcloud.com/artist"))
+        assertFalse(YtDlpParsers.isSoundcloud("https://www.youtube.com/@a"))
+    }
 }
