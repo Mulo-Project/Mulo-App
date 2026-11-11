@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../../domain/entities/audio_language.dart';
 import '../../domain/entities/audio_stream.dart';
 import '../../domain/entities/engine_exception.dart';
+import '../../domain/entities/media_info.dart';
 import '../../domain/entities/video_stream.dart';
 import '../engine/audio_format_policy.dart';
 
@@ -57,6 +58,57 @@ class NativeYoutubeResolver {
     } on PlatformException catch (e) {
       throw EngineException(EngineFailure.failed, e.message ?? e.code);
     }
+  }
+
+  /// 키워드 검색 한 쪽 (유튜브 동영상만). 같은 검색어의 다음 쪽은 네이티브가 이어 읽는다.
+  Future<SearchPage> search(String query, int page, int size) async {
+    final r = await _call('search', {
+      'query': query,
+      'page': page,
+      'size': size,
+    });
+    if (r == null) throw const EngineException(EngineFailure.failed, 'empty');
+    return SearchPage(
+      items: _hits(r['items']),
+      hasNext: r['hasNext'] as bool? ?? false,
+    );
+  }
+
+  /// 재생목록의 모든 곡.
+  Future<PlaylistInfo> playlist(String playlistId) async {
+    final r = await _call('playlist', {'playlistId': playlistId});
+    if (r == null) throw const EngineException(EngineFailure.failed, 'empty');
+    final entries = _hits(r['items']);
+    return PlaylistInfo(
+      title: r['title'] as String? ?? '',
+      entries: entries,
+      thumbnailUrl: entries.isEmpty ? null : entries.first.thumbnailUrl,
+    );
+  }
+
+  List<MediaHit> _hits(Object? items) => [
+    for (final m in (items as List<Object?>? ?? const []))
+      _hit(m! as Map<Object?, Object?>),
+  ];
+
+  MediaHit _hit(Map<Object?, Object?> m) {
+    final id = m['id'] as String;
+    final seconds = m['seconds'] as int?;
+    final channelId = m['channelId'] as String?;
+    return MediaHit(
+      id: id,
+      title: m['title'] as String? ?? '',
+      url: 'https://www.youtube.com/watch?v=$id',
+      uploader: m['uploader'] as String? ?? '',
+      duration: seconds == null ? null : Duration(seconds: seconds),
+      thumbnailUrl: m['thumbnail'] as String?,
+      channelUrl: channelId == null
+          ? null
+          : 'https://www.youtube.com/channel/$channelId',
+      viewCount: (m['views'] as num?)?.toInt(),
+      description: m['description'] as String? ?? '',
+      isLive: m['isLive'] as bool? ?? false,
+    );
   }
 
   Future<Map<Object?, Object?>?> _call(

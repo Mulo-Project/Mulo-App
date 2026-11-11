@@ -28,6 +28,18 @@ typedef AudioLanguageReader = Future<List<AudioLanguage>> Function(
   String videoId,
 );
 
+/// 유튜브 키워드 검색의 [page]쪽(0부터)을 읽는 함수.
+typedef YoutubeSearchReader = Future<SearchPage> Function(
+  String query,
+  int page,
+  int size,
+);
+
+/// 유튜브 재생목록 id로 곡 목록을 읽는 함수.
+typedef YoutubePlaylistReader = Future<PlaylistInfo> Function(
+  String playlistId,
+);
+
 /// 유튜브 곡의 재생 주소(소리 · 영상 · 오디오 언어)를 [reader] 등으로 먼저 읽는 엔진 덮개.
 ///
 /// 읽기는 Android 네이티브(`NativeYoutubeResolver`)가 한다 (D-162). 못 읽으면 안쪽 엔진(yt-dlp · 서버)으로 넘긴다.
@@ -38,6 +50,8 @@ class YoutubeResolveEngine implements DownloaderEngine {
     required this.reader,
     required this.languageReader,
     required this.videoReader,
+    this.searchReader,
+    this.playlistReader,
   });
 
   final DownloaderEngine _inner;
@@ -45,6 +59,11 @@ class YoutubeResolveEngine implements DownloaderEngine {
   final AudioLanguageReader languageReader;
   final MuxedVideoReader videoReader;
 
+  /// 네이티브 검색 · 재생목록 읽기 (없으면 안쪽 엔진이 한다).
+  final YoutubeSearchReader? searchReader;
+  final YoutubePlaylistReader? playlistReader;
+
+  /// 유튜브 키워드 검색은 네이티브가 먼저 읽는다. 최신순 · 다른 사이트이거나 못 읽으면 안쪽 엔진(yt-dlp · 서버).
   @override
   Future<SearchPage> search(
     String query, {
@@ -52,13 +71,31 @@ class YoutubeResolveEngine implements DownloaderEngine {
     int page = 0,
     int size = 20,
     bool newest = false,
-  }) => _inner.search(
-    query,
-    source: source,
-    page: page,
-    size: size,
-    newest: newest,
-  );
+  }) async {
+    final read = searchReader;
+    if (read != null && source == SearchSource.youtube && !newest) {
+      final clock = Stopwatch()..start();
+      try {
+        final found = await read(
+          query,
+          page,
+          size,
+        ).timeout(const Duration(seconds: 15));
+        _log('검색 쪽$page ${found.items.length}개 ${clock.elapsedMilliseconds}ms');
+        return found;
+      } on Object catch (e) {
+        _log('검색 실패 ${clock.elapsedMilliseconds}ms: ${_oneLine(e)}');
+        // 못 읽으면 안쪽 엔진으로 넘어간다.
+      }
+    }
+    return _inner.search(
+      query,
+      source: source,
+      page: page,
+      size: size,
+      newest: newest,
+    );
+  }
 
   /// 안쪽 엔진(yt-dlp · 서버)이 채널 이름까지 알려 주므로 먼저 묻고, 쓸 수 없거나
   /// 실패하면 이 라이브러리로 찾는다 (채널 이름은 모른다).
@@ -90,8 +127,23 @@ class YoutubeResolveEngine implements DownloaderEngine {
     }
   }
 
+  /// 유튜브 재생목록 주소(`/playlist?list=…`)는 네이티브가 곡 목록을 먼저 읽는다. 곡 하나 · 다른 주소 · 실패는 안쪽 엔진.
   @override
-  Future<MediaInfo> fetchInfo(String url) => _inner.fetchInfo(url);
+  Future<MediaInfo> fetchInfo(String url) async {
+    final read = playlistReader;
+    final listId = read == null ? null : youtubePlaylistIdOf(url);
+    if (read != null && listId != null) {
+      final clock = Stopwatch()..start();
+      try {
+        final info = await read(listId).timeout(const Duration(seconds: 60));
+        _log('재생목록 ${info.entries.length}곡 ${clock.elapsedMilliseconds}ms');
+        return info;
+      } on Object catch (e) {
+        _log('재생목록 실패 ${clock.elapsedMilliseconds}ms: ${_oneLine(e)}');
+      }
+    }
+    return _inner.fetchInfo(url);
+  }
 
   @override
   Future<ChannelInfo> fetchChannel(String url) => _inner.fetchChannel(url);
@@ -227,6 +279,18 @@ Future<PlaylistSearchPage> _playlistSearch(
   } finally {
     yt.close();
   }
+}
+
+/// 유튜브 재생목록 주소(`youtube.com/playlist?list=…`)의 목록 id. 곡 하나를 가리키는 주소(`watch?v=…&list=…`)나
+/// 유튜브가 아닌 주소는 null (그건 안쪽 엔진이 읽는다).
+String? youtubePlaylistIdOf(String url) {
+  final uri = Uri.tryParse(url.trim());
+  if (uri == null) return null;
+  final host = uri.host.toLowerCase();
+  if (host != 'youtube.com' && !host.endsWith('.youtube.com')) return null;
+  if (uri.path != '/playlist') return null;
+  final id = uri.queryParameters['list'];
+  return id == null || id.isEmpty ? null : id;
 }
 
 /// 디버그 빌드에서 adb logcat(`flutter` 태그)으로 보인다.
