@@ -60,6 +60,15 @@ class NativeYoutubeResolver {
     }
   }
 
+  /// 유튜브와 연결을 미리 열어 둔다 (이어지는 검색 요청이 재사용한다).
+  Future<void> warmUp() async {
+    try {
+      await _channel.invokeMethod<void>('warmUp');
+    } on PlatformException {
+      // 미리 열기는 실패해도 괜찮다.
+    }
+  }
+
   /// 키워드 검색 한 쪽 (유튜브 동영상만). 같은 검색어의 다음 쪽은 네이티브가 이어 읽는다.
   Future<SearchPage> search(String query, int page, int size) async {
     final r = await _call('search', {

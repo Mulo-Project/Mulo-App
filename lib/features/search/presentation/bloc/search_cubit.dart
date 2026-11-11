@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/usecase/usecase.dart';
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
 import '../../domain/entities/search_sort.dart';
@@ -128,7 +131,17 @@ class SearchState extends Equatable {
 /// 곡마다 상세 정보를 뒤에서 읽지 않는다 (느려진다). 목록에 있는 정보만으로
 /// 정렬하고, 상세는 곡을 열 때 읽는다.
 class SearchCubit extends Cubit<SearchState> {
-  SearchCubit(this._search, this._info) : super(const SearchState());
+  SearchCubit(this._search, this._info, {WarmUpSearch? warmUp})
+    : _warmUp = warmUp,
+      super(const SearchState());
+
+  final WarmUpSearch? _warmUp;
+
+  /// 검색 화면을 열 때: 검색에 쓸 연결을 미리 열어 둔다 (기다리지 않고, 실패해도 무시).
+  void warmUp() {
+    final warm = _warmUp;
+    if (warm != null) unawaited(warm(const NoParams()).catchError((Object _) {}));
+  }
 
   final SearchTracks _search;
   final FetchMediaInfo _info;

@@ -62,6 +62,7 @@ void registerSearch(GetIt sl) {
                   languageReader: native.languages,
                   searchReader: native.search,
                   playlistReader: native.playlist,
+                  warmUpReader: native.warmUp,
                 )
               : routing,
         ),
@@ -69,6 +70,7 @@ void registerSearch(GetIt sl) {
     })
     ..registerLazySingleton<LinkOpener>(UrlLauncherLinkOpener.new)
     ..registerFactory(() => SearchTracks(sl()))
+    ..registerFactory(() => WarmUpSearch(sl()))
     ..registerFactory(() => FetchMediaInfo(sl()))
     ..registerFactory(() => FetchSubtitles(sl()))
     ..registerFactory(() => SearchPlaylists(sl()))
@@ -156,5 +158,5 @@ void registerSearch(GetIt sl) {
         saveAutoQuality: sl(),
       ),
     )
-    ..registerFactory(() => SearchCubit(sl(), sl()));
+    ..registerFactory(() => SearchCubit(sl(), sl(), warmUp: sl()));
 }

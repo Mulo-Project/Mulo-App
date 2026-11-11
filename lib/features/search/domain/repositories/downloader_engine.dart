@@ -53,6 +53,10 @@ abstract interface class DownloaderEngine {
   /// (쓸 수 없는 엔진도 빈 목록).
   Future<List<AudioLanguage>> fetchAudioLanguages(String url);
 
+  /// 검색 · 곡 목록 요청에 쓸 연결을 미리 열어 둔다 (검색 화면을 열 때). 할 일이 없는 엔진은 아무것도 하지 않고,
+  /// 실패해도 예외를 던지지 않는다.
+  Future<void> warmUp();
+
   /// 곡의 자막 한 벌을 가져온다 (가사로 가져오기). 사람이 단 자막을 먼저 쓰고, 없으면 자동 자막,
   /// 언어는 [preferLanguages] 순서를 따른다. 자막이 없으면 null.
   Future<SubtitleTrack?> fetchSubtitles(

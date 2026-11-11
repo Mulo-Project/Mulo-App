@@ -12,6 +12,12 @@
 - Dart: `NativeYoutubeResolver.search/playlist`(MediaHit으로 변환), `YoutubeResolveEngine`이 유튜브 · 최신순 아님 검색과 `/playlist?list=` 주소를 먼저 네이티브에 묻고 실패하면 안쪽 엔진. 곡 하나 주소(`watch?v=…&list=…`)는 그대로 yt-dlp.
 - 패키지 · Manifest 변경 없음. 로그: `adb logcat -s MuloNative` (`검색 쪽N …ms`, `재생목록 N곡 …ms`), `adb logcat -s flutter` (`[MuloSearch] 검색 …`).
 
+## 추가 (속도)
+- 연결 미리 열기: 검색 화면을 열 때 `DownloaderEngine.warmUp()` → 네이티브 `YoutubeBrowser.warmUp()`(`www.youtube.com/generate_204` HEAD)이 DNS · TCP · TLS를 미리 해 둔다. 응답을 끝까지 읽고 `disconnect()`를 부르지 않아 연결이 풀로 돌아가 다음 요청이 재사용한다 (새 라이브러리 없이 Android HttpURLConnection의 연결 풀 사용).
+- 다음 쪽 미리 받기: 한 쪽을 돌려준 뒤 뒤에서 다음 쪽을 같은 검색 세션에 받아 둔다 (한 번에 하나, 실패는 무시하고 그 쪽을 부를 때 다시 읽는다).
+- 응답 필드 줄이기는 하지 않는다 (`prettyPrint=false`만).
+- 로그: `연결 미리 열기 …ms`, `다음 쪽 미리 받기 …ms`.
+
 ## 한계 / 후속
 - 이 환경에서는 YouTube에 연결할 수 없어 응답 모양은 기존 라이브러리 소스를 보고 맞췄다. 실기기 확인 필요.
 - 검색 결과에는 올린 날이 없다 (정렬 최신순은 기존 yt-dlp). 설명은 앞부분.

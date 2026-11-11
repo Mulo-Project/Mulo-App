@@ -92,6 +92,9 @@ class CachedDownloaderEngine implements DownloaderEngine {
       );
 
   @override
+  Future<void> warmUp() => _inner.warmUp();
+
+  @override
   Future<List<AudioLanguage>> fetchAudioLanguages(String url) =>
       _cached(_languages, url, () => _inner.fetchAudioLanguages(url), infoTtl);
 

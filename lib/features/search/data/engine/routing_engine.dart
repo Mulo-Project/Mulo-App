@@ -80,6 +80,15 @@ class RoutingDownloaderEngine implements DownloaderEngine {
   );
 
   @override
+  Future<void> warmUp() async {
+    try {
+      await (await _pick()).warmUp();
+    } on EngineException {
+      // 쓸 엔진이 없으면 미리 열 연결도 없다.
+    }
+  }
+
+  @override
   Future<List<AudioLanguage>> fetchAudioLanguages(String url) async =>
       (await _pick()).fetchAudioLanguages(url);
 

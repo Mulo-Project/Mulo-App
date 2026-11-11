@@ -1622,6 +1622,12 @@ class FakeDownloaderEngine implements DownloaderEngine {
     return VideoStream(url: 'https://video.test/$url', muxed: muxedVideo);
   }
 
+  /// [warmUp]을 부른 횟수.
+  var warmUps = 0;
+
+  @override
+  Future<void> warmUp() async => warmUps++;
+
   @override
   Future<List<AudioLanguage>> fetchAudioLanguages(String url) async =>
       audioLanguages;

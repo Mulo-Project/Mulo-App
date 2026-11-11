@@ -48,6 +48,7 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   void initState() {
     super.initState();
+    _cubit.warmUp();
     if (widget.initialQuery.trim().isNotEmpty) _submit();
   }
 

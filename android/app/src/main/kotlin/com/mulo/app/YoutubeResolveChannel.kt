@@ -22,6 +22,10 @@ class YoutubeResolveChannel(@Suppress("UNUSED_PARAMETER") context: Context, mess
     init {
         channel.setMethodCallHandler { call, result ->
             when (call.method) {
+                "warmUp" -> {
+                    runAsync(io, result, ERROR) { YoutubeBrowser.warmUp(); null }
+                    return@setMethodCallHandler
+                }
                 "search" -> {
                     val query = call.argument<String>("query")
                     if (query == null) {

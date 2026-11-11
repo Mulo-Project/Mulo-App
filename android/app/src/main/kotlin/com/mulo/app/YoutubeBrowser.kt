@@ -5,6 +5,8 @@ import org.json.JSONObject
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 /**
  * 유튜브 키워드 검색 · 재생목록 곡 목록을 네이티브에서 읽는다 (yt-dlp를 한 번 띄우는 것보다 훨씬 빠르다).
@@ -54,10 +56,35 @@ object YoutubeBrowser {
         var token: String? = null
         var started = false
         var done = false
+
+        @Volatile
+        var prefetching = false
     }
 
     private val sessions = object : LinkedHashMap<String, SearchSession>(8, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, SearchSession>?) = size > MAX_SESSIONS
+    }
+
+    /** 다음 쪽을 뒤에서 미리 받는 일꾼 (화면에 보이는 요청을 막지 않게 따로 둔다). */
+    private val prefetcher: ExecutorService = Executors.newSingleThreadExecutor()
+
+    /**
+     * 유튜브와 연결(DNS · TCP · TLS)을 미리 열어 둔다. 이어지는 검색 · 재생목록 요청이 열린 연결을 재사용한다
+     * (Android의 HttpURLConnection이 호스트별 연결 풀을 프로세스 안에서 같이 쓴다). 실패해도 상관없다.
+     */
+    fun warmUp() {
+        val start = System.currentTimeMillis()
+        val conn = URL("https://www.youtube.com/generate_204").openConnection() as HttpURLConnection
+        try {
+            conn.requestMethod = "HEAD"
+            conn.connectTimeout = 4000
+            conn.readTimeout = 4000
+            conn.setRequestProperty("User-Agent", WEB_UA)
+            val code = conn.responseCode
+            MuloLog.d(TAG, "연결 미리 열기 $code ${System.currentTimeMillis() - start}ms")
+        } finally {
+            conn.disconnect()
+        }
     }
 
     /** [page]쪽(0부터) [size]개. 반환: items · hasNext. */
@@ -67,30 +94,11 @@ object YoutubeBrowser {
         // 같은 검색의 요청이 겹쳐도 차례로 읽는다 (같은 continuation을 두 번 쓰지 않게).
         synchronized(session) {
             val want = (page + 1) * size
-            var requests = 0
+            val requests: Int
             try {
-                while (session.all.size < want && !session.done) {
-                    val body = JSONObject().put("context", JSONObject().put("client", WEB_CLIENT))
-                    if (!session.started) body.put("query", query).put("params", VIDEO_FILTER)
-                    else body.put("continuation", session.token)
-                    val root = post("search", body)
-                    requests++
-                    session.started = true
-                    var token: String? = null
-                    for (section in searchSections(root)) {
-                        section.optJSONObject("itemSectionRenderer")?.optJSONArray("contents")?.let { contents ->
-                            for (i in 0 until contents.length()) {
-                                val item = parseVideo(contents.optJSONObject(i)?.optJSONObject("videoRenderer")) ?: continue
-                                if (session.seen.add(item.id)) session.all += item
-                            }
-                        }
-                        continuationToken(section)?.let { token = it }
-                    }
-                    session.token = token
-                    if (token == null) session.done = true
-                }
+                requests = fill(session, want)
             } catch (e: Exception) {
-                // 앞에서 읽은 결과가 있어도 이 쪽을 못 채웠으면 알린다 (일부만 주면 다음 쪽 순서가 어긋난다).
+                // 일부만 주면 다음 쪽 순서가 어긋나므로 이 검색의 기억은 버린다.
                 synchronized(sessions) { sessions.remove(query) }
                 MuloLog.d(TAG, "검색 ${System.currentTimeMillis() - start}ms 실패 ${oneLine(e.toString())}")
                 throw e
@@ -100,7 +108,54 @@ object YoutubeBrowser {
             val items = if (from >= end) emptyList() else session.all.subList(from, end).map { it.toMap() }
             if (items.isEmpty() && page == 0) throw IOException("검색 결과를 읽지 못했다")
             MuloLog.d(TAG, "검색 쪽$page ${items.size}개 요청 ${requests}번 ${System.currentTimeMillis() - start}ms")
-            return mapOf("items" to items, "hasNext" to (session.all.size > end || !session.done))
+            val hasNext = session.all.size > end || !session.done
+            if (!session.done) prefetchNext(session, want + size)
+            return mapOf("items" to items, "hasNext" to hasNext)
+        }
+    }
+
+    /** 결과가 [want]개 될 때까지 이어 읽는다 (session 잠금 안에서 부른다). 요청 횟수를 돌려준다. */
+    private fun fill(session: SearchSession, want: Int): Int {
+        var requests = 0
+        while (session.all.size < want && !session.done) {
+            val body = JSONObject().put("context", JSONObject().put("client", WEB_CLIENT))
+            if (!session.started) body.put("query", session.query).put("params", VIDEO_FILTER)
+            else body.put("continuation", session.token)
+            val root = post("search", body)
+            requests++
+            session.started = true
+            var token: String? = null
+            for (section in searchSections(root)) {
+                section.optJSONObject("itemSectionRenderer")?.optJSONArray("contents")?.let { contents ->
+                    for (i in 0 until contents.length()) {
+                        val item = parseVideo(contents.optJSONObject(i)?.optJSONObject("videoRenderer")) ?: continue
+                        if (session.seen.add(item.id)) session.all += item
+                    }
+                }
+                continuationToken(section)?.let { token = it }
+            }
+            session.token = token
+            if (token == null) session.done = true
+        }
+        return requests
+    }
+
+    /** 다음 쪽을 뒤에서 미리 받아 둔다. 못 받아도 조용히 넘어가고, 그 쪽을 부를 때 다시 읽는다. */
+    private fun prefetchNext(session: SearchSession, want: Int) {
+        if (session.prefetching) return
+        session.prefetching = true
+        prefetcher.execute {
+            try {
+                synchronized(session) {
+                    val start = System.currentTimeMillis()
+                    val n = fill(session, want)
+                    if (n > 0) MuloLog.d(TAG, "다음 쪽 미리 받기 요청 ${n}번 ${System.currentTimeMillis() - start}ms")
+                }
+            } catch (e: Exception) {
+                MuloLog.d(TAG, "다음 쪽 미리 받기 실패 ${oneLine(e.toString())}")
+            } finally {
+                session.prefetching = false
+            }
         }
     }
 
@@ -279,6 +334,7 @@ object YoutubeBrowser {
 
     private fun post(action: String, body: JSONObject): JSONObject {
         val conn = URL("$API/$action?prettyPrint=false").openConnection() as HttpURLConnection
+        var ok = false
         try {
             conn.requestMethod = "POST"
             conn.connectTimeout = 6000
@@ -292,9 +348,12 @@ object YoutubeBrowser {
             conn.outputStream.use { it.write(body.toString().toByteArray()) }
             val code = conn.responseCode
             if (code != 200) throw IOException("$action: HTTP $code")
-            return JSONObject(conn.inputStream.bufferedReader().use { it.readText() })
+            // 응답을 끝까지 읽고 스트림을 닫으면 연결이 풀로 돌아가 다음 요청이 재사용한다 (disconnect는 연결을 끊는다).
+            val text = conn.inputStream.bufferedReader().use { it.readText() }
+            ok = true
+            return JSONObject(text)
         } finally {
-            conn.disconnect()
+            if (!ok) conn.disconnect()
         }
     }
 

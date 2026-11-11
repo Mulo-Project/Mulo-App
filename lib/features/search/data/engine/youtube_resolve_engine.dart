@@ -52,6 +52,7 @@ class YoutubeResolveEngine implements DownloaderEngine {
     required this.videoReader,
     this.searchReader,
     this.playlistReader,
+    this.warmUpReader,
   });
 
   final DownloaderEngine _inner;
@@ -62,6 +63,20 @@ class YoutubeResolveEngine implements DownloaderEngine {
   /// 네이티브 검색 · 재생목록 읽기 (없으면 안쪽 엔진이 한다).
   final YoutubeSearchReader? searchReader;
   final YoutubePlaylistReader? playlistReader;
+
+  /// 네이티브가 유튜브와 연결을 미리 열게 한다 (없으면 안쪽 엔진).
+  final Future<void> Function()? warmUpReader;
+
+  @override
+  Future<void> warmUp() async {
+    final warm = warmUpReader;
+    if (warm == null) return _inner.warmUp();
+    try {
+      await warm();
+    } on Object {
+      // 미리 열기는 실패해도 괜찮다.
+    }
+  }
 
   /// 유튜브 키워드 검색은 네이티브가 먼저 읽는다. 최신순 · 다른 사이트이거나 못 읽으면 안쪽 엔진(yt-dlp · 서버).
   @override

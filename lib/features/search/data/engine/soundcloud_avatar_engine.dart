@@ -121,6 +121,9 @@ class SoundcloudAvatarEngine implements DownloaderEngine {
   @override
   Future<List<AudioLanguage>> fetchAudioLanguages(String url) =>
       _inner.fetchAudioLanguages(url);
+
+  @override
+  Future<void> warmUp() => _inner.warmUp();
   @override
   Future<SubtitleTrack?> fetchSubtitles(
     String url, {

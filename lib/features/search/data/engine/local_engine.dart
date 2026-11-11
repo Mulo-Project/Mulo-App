@@ -355,6 +355,9 @@ class LocalEngine implements DownloaderEngine {
     }
   }
 
+  @override
+  Future<void> warmUp() async {}
+
   /// 형식 목록의 `language` · `format_note`에서 오디오 트랙을 읽는다. 하나뿐이면 빈 목록.
   @override
   Future<List<AudioLanguage>> fetchAudioLanguages(String url) async {

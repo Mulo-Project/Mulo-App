@@ -67,6 +67,16 @@ class SearchPlaylists
       _engine.searchPlaylists(p.query.trim(), page: p.page);
 }
 
+/// 검색 화면을 열 때 검색에 쓸 연결을 미리 열어 둔다 (첫 검색이 빨라진다).
+class WarmUpSearch implements UseCase<void, NoParams> {
+  const WarmUpSearch(this._engine);
+
+  final DownloaderEngine _engine;
+
+  @override
+  Future<void> call(NoParams params) => _engine.warmUp();
+}
+
 /// URL로 곡 · 재생목록 정보 불러오기 (상세 기능: URL로 곡 정보 불러오기 #1).
 class FetchMediaInfo implements UseCase<MediaInfo, String> {
   const FetchMediaInfo(this._engine);

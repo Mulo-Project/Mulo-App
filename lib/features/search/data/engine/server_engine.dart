@@ -140,6 +140,9 @@ class ServerEngine implements DownloaderEngine {
   Future<VideoStream> resolveVideoStream(String url, {int maxHeight = 360}) async =>
       throw const EngineException(EngineFailure.unavailable);
 
+  @override
+  Future<void> warmUp() async {}
+
   /// 서버 명세에 오디오 트랙 조회가 없어서 고를 수 있는 언어가 없다.
   @override
   Future<List<AudioLanguage>> fetchAudioLanguages(String url) async => const [];
