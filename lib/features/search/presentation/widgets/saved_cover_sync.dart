@@ -5,6 +5,7 @@ import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../library/domain/entities/track.dart';
 import '../../domain/entities/saved_video.dart';
 import '../bloc/saved_videos_cubit.dart';
+import '../main_stream_video.dart';
 
 /// 임시 저장한 음원의 썸네일을 곡 커버로 알려 준다: 미니 플레이어 · 곡 줄 · 알림이 파일 곡과 같은 경로로 그린다.
 /// DB에는 저장하지 않고(임시 커버), 저장 목록이 바뀔 때마다 맞춘다.
@@ -40,6 +41,7 @@ class _SavedCoverSyncState extends State<SavedCoverSync> {
   Widget build(BuildContext context) =>
       BlocListener<SavedVideosCubit, List<SavedVideo>>(
         listener: (_, videos) => _sync(videos),
-        child: widget.child,
+        // 스트림 영상을 켠 곡에서 다른 곡으로 넘어가면 영상을 멈춘다 (앱 전체 틀에서 한 번만).
+        child: MainStreamVideoGuard(child: widget.child),
       );
 }

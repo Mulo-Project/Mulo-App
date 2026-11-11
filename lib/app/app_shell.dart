@@ -19,6 +19,7 @@ import '../features/search/presentation/bloc/preview_cubit.dart';
 import '../features/search/domain/entities/saved_video.dart';
 import '../features/search/presentation/bloc/saved_videos_cubit.dart';
 import '../features/search/presentation/saved_track.dart';
+import '../features/search/presentation/main_stream_video.dart';
 import '../features/search/presentation/widgets/saved_cover_sync.dart';
 import '../features/search/presentation/screens/saved_queue_detail_screen.dart'
     show showSavedQueueDetail;
@@ -449,7 +450,10 @@ class _ShellMiniPlayer extends StatelessWidget {
               key: measureKey,
               // 위치가 바뀔 때마다 띠만 다시 그리고 아래 화면까지 번지지 않게 한다.
               child: RepaintBoundary(
-                child: _bar(context, state, track, vm, l10n),
+                child: ValueListenableBuilder<bool>(
+                  valueListenable: mainStreamVideoOn,
+                  builder: (context, _, _) => _bar(context, state, track, vm, l10n),
+                ),
               ),
             ),
     );
@@ -468,7 +472,10 @@ class _ShellMiniPlayer extends StatelessWidget {
         title: track.title,
         artist: track.artist,
         artwork: coverImageOf(context, CoverKey.track(track.id)),
-        video: track.isVideo ? const NativeVideo() : null,
+        // 영상 곡이거나 스트림 영상이 켜져 있으면 미니 플레이어도 영상을 보여 준다 (곡을 따로 맞추지 않는다).
+        video: track.isVideo || mainStreamVideoOn.value
+            ? const NativeVideo()
+            : null,
         progress: state.progress,
         isPlaying: state.isPlaying,
         playLabel: l10n.actionPlay,

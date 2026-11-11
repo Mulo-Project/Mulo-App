@@ -25,7 +25,6 @@ class PreviewVideoCubit extends Cubit<PreviewVideoState> {
   final PlayPreviewVideo _play;
   final PlayMainVideo _playMain;
   var _generation = 0;
-  var _followingMain = false;
 
   /// [quality]는 저장한 곡의 화질 (없으면 설정 화질). [online]이면 소리만 저장한 곡도 영상을 읽는다.
   Future<void> load(
@@ -43,7 +42,6 @@ class PreviewVideoCubit extends Cubit<PreviewVideoState> {
       final stream = await _resolve(pageUrl, quality: quality, online: online);
       if (generation != _generation || isClosed) return;
       if (followMain) {
-        _followingMain = true;
         await _playMain(stream);
       } else {
         await _play(stream);
@@ -55,15 +53,5 @@ class PreviewVideoCubit extends Cubit<PreviewVideoState> {
       // 영상은 덤이다: 못 열면 커버를 그대로 두고, 까닭만 로그로 남긴다.
       debugPrint('[video] 영상을 못 열음 ($pageUrl): $e');
     }
-  }
-
-  @override
-  Future<void> close() {
-    // 메인 소리를 따르던 영상은 화면이 사라지면 멈춘다 (미리 듣기 영상은 미리 듣기가 쥔다).
-    if (_followingMain) {
-      _followingMain = false;
-      _playMain(null).catchError((Object _) {});
-    }
-    return super.close();
   }
 }

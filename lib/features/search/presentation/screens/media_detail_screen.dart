@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
+import '../../../player/presentation/widgets/native_video.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../downloads/presentation/widgets/download_dialog.dart';
 import '../../../library/domain/entities/track.dart' show Track, formatDuration;
@@ -22,6 +23,7 @@ import '../bloc/preview_cubit.dart';
 import '../saved_track.dart';
 import '../bloc/saved_videos_cubit.dart';
 import '../bloc/stream_cache_cubit.dart';
+import '../main_stream_video.dart';
 import '../bloc/video_quality_cubit.dart';
 import '../../domain/entities/video_quality.dart';
 import '../widgets/video_quality_sheet.dart';
@@ -659,37 +661,52 @@ class _OnDemandVideo extends StatefulWidget {
 }
 
 class _OnDemandVideoState extends State<_OnDemandVideo> {
-  var _show = false;
+  /// 이 화면에서 영상 읽기를 시작했다 (이미 켜져 있던 영상을 다시 열 때는 읽지 않고 화면만 붙인다).
+  var _loading = false;
 
   @override
   Widget build(BuildContext context) {
-    if (!_show) {
-      return CircleIconButton(
-        key: const ValueKey('detail-video-on'),
-        icon: AppIcons.play,
-        tooltip: context.l10n.mediaDetailPlayInApp,
-        emphasized: true,
-        size: AppSizes.circleButtonLarge,
-        onPressed: () => setState(() => _show = true),
-      );
-    }
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppRadii.md),
-      child: SizedBox(
-        width: widget.width,
-        height: widget.width * 9 / 16,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            PreviewVideo(
-              pageUrl: widget.hit.url,
-              online: true,
-              followMain: true,
+    final trackId = '${Track.savedIdPrefix}${widget.hit.id}';
+    return ValueListenableBuilder<bool>(
+      valueListenable: mainStreamVideoOn,
+      builder: (context, on, _) {
+        final active = on && mainStreamVideoTrack.value == trackId;
+        if (!active) {
+          return CircleIconButton(
+            key: const ValueKey('detail-video-on'),
+            icon: AppIcons.play,
+            tooltip: context.l10n.mediaDetailPlayInApp,
+            emphasized: true,
+            size: AppSizes.circleButtonLarge,
+            onPressed: () {
+              mainStreamVideoTrack.value = trackId;
+              mainStreamVideoOn.value = true;
+              setState(() => _loading = true);
+            },
+          );
+        }
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(AppRadii.md),
+          child: SizedBox(
+            width: widget.width,
+            height: widget.width * 9 / 16,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                if (_loading)
+                  PreviewVideo(
+                    pageUrl: widget.hit.url,
+                    online: true,
+                    followMain: true,
+                  )
+                else
+                  const NativeVideo(),
+                const PreviewVideoControls(main: true),
+              ],
             ),
-            const PreviewVideoControls(main: true),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
