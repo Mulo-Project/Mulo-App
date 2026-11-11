@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../../core/design/design.dart';
+import '../../../search/presentation/widgets/preview_video_controls.dart';
+import 'fullscreen_video.dart';
 import 'pan_zoom_video.dart';
 import 'player_common.dart';
 
@@ -133,11 +135,12 @@ class FullBleedPlayer extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // 영상 곡: 윗부분은 색을 입힌 흐린 커버 배경이고, 영상은 아래 칸(상단 버튼줄 밑)에 맞춰 그린다.
+                  // 영상 곡: 커버와 같은 자리(화면 맨 위 버튼줄까지)를 영상이 꽉 채우고,
+                  // 끌어서 가려진 부분을 보고 확대 · 축소한다.
                   PlayerCover(
                     art: art,
                     radius: 0,
-                    softBackdrop: data.track.isVideo,
+                    video: data.track.isVideo ? const PanZoomVideo() : null,
                   ),
                   // 위: 상단 버튼이 읽히게 살짝 어둡게, 아래: 배경으로 부드럽게. 누름은 아래로 통과시킨다.
                   IgnorePointer(
@@ -159,6 +162,18 @@ class FullBleedPlayer extends StatelessWidget {
                       ),
                     ),
                   ),
+                  // 전체 화면 버튼은 그라데이션 위에 둔다 (아래로 흐려지는 막에 가려지지 않게 조금 위로).
+                  if (data.track.isVideo)
+                    Positioned(
+                      right: AppSpacing.md,
+                      bottom: c.maxHeight * .66 * .2,
+                      child: FullscreenVideoButton(
+                        controls: (_) => const PreviewVideoControls(
+                          fullscreen: true,
+                          main: true,
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -170,9 +185,6 @@ class FullBleedPlayer extends StatelessWidget {
                   Expanded(
                     child: data.showLyrics
                         ? _lyrics(data)
-                        : data.track.isVideo
-                        // 영상 곡: 상단 버튼줄 밑부터 조작부 위까지 영상이 꽉 차고, 끌어서 가려진 부분을 보고 확대 · 축소한다.
-                        ? const PanZoomVideo(fullscreenButton: true)
                         : const SizedBox.shrink(),
                   ),
                   PlayerControls(
