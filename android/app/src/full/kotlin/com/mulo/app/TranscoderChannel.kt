@@ -172,34 +172,6 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
         return runFfmpeg(args, output)
     }
 
-    /**
-     * [path] 파일의 태그를 읽는다 (ffmpeg의 ffmetadata 덤프). 키는 모두 소문자.
-     * 전체 태그에 없으면(opus · ogg는 첫 소리 스트림에 있다) 첫 소리 스트림의 태그로 채운다.
-     */
-    fun readTags(path: String): Map<String, String> {
-        val tags = linkedMapOf<String, String>()
-        for (extra in listOf(emptyList(), listOf("-map_metadata:g", "0:s:a:0"))) {
-            val out = File("$path.meta.txt")
-            try {
-                val ok = try {
-                    runFfmpeg(listOf("-nostdin", "-y", "-i", path, "-map_metadata", "0") + extra + listOf("-f", "ffmetadata", out.absolutePath), out.absolutePath)
-                } catch (e: IllegalStateException) {
-                    false
-                }
-                if (ok && out.exists()) {
-                    for ((k, v) in readFfmetadata(out.absolutePath)) {
-                        if (k.startsWith("[") || v.isEmpty()) continue
-                        tags.putIfAbsent(k.lowercase(), v)
-                    }
-                }
-            } finally {
-                out.delete()
-            }
-            if (tags.containsKey("title") || tags.containsKey("artist")) break
-        }
-        return tags
-    }
-
     private val knownKeys = setOf("title", "artist", "album", "genre", "lyrics")
 
     /** 앱이 넘긴 기본 칸(소문자)은 형식의 키 이름(대문자 또는 소문자)으로, 그 밖의 앱 전용 칸은 그대로. */
@@ -267,36 +239,6 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
         } finally {
             process = null
         }
-    }
-
-    /** ffmetadata 파일(`;FFMETADATA1`, `키=값`, `\`로 `=` `;` `#` `\` 줄바꿈을 이스케이프)을 (키, 값) 목록으로 읽는다. */
-    private fun readFfmetadata(path: String): List<Pair<String, String>> {
-        val text = File(path).readText(Charsets.UTF_8)
-        val out = mutableListOf<Pair<String, String>>()
-        val key = StringBuilder()
-        val value = StringBuilder()
-        var inValue = false
-        var i = text.indexOf('\n') + 1 // 첫 줄(;FFMETADATA1)은 건너뛴다
-        while (i < text.length) {
-            val c = text[i]
-            when {
-                c == '\\' && i + 1 < text.length -> {
-                    (if (inValue) value else key).append(text[i + 1])
-                    i++
-                }
-                c == '=' && !inValue -> inValue = true
-                c == '\n' -> {
-                    if (key.isNotEmpty()) out += key.toString() to value.toString()
-                    key.clear()
-                    value.clear()
-                    inValue = false
-                }
-                else -> (if (inValue) value else key).append(c)
-            }
-            i++
-        }
-        if (key.isNotEmpty()) out += key.toString() to value.toString()
-        return out
     }
 
     /** ffmpeg 종료 코드가 0이면 true. */

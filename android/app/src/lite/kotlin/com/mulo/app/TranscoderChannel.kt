@@ -11,14 +11,11 @@ class TranscoderChannel(@Suppress("UNUSED_PARAMETER") context: Context, messenge
         }
     }
 
-    // ffmpeg가 없어 태그를 읽지도 쓰지도 않는다 ([TagChannel]이 unsupported로 답한다).
+    // ffmpeg가 없어 태그를 쓰지 않는다 ([TagChannel]이 unsupported로 답한다).
     fun isAvailable(): Boolean = false
 
     @Suppress("UNUSED_PARAMETER")
     fun tagFile(input: String, values: Map<String, String>, cover: String?, format: String, output: String): Boolean = false
-
-    @Suppress("UNUSED_PARAMETER")
-    fun readTags(path: String): Map<String, String> = emptyMap()
 
     companion object {
         const val NAME = "music_app/transcoder"
