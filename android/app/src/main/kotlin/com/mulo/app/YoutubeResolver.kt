@@ -97,23 +97,26 @@ object YoutubeResolver {
         return null
     }
 
-    /** 영상 주소 (visionOS만). 못 읽거나 쓸 형식이 없으면 null. */
+    /** 영상 주소. visionOS(소리 든 형식을 줄 수 있다) → android_vr(영상 전용만, 둘 다 JS 풀이 없이 쓸 수 있는 주소) 순. 못 읽으면 null. */
     private fun videoInner(videoId: String, maxHeight: Int): Map<String, Any?>? {
-        val all = try {
-            fetchFormats(visionOs, videoId)
-        } catch (e: Exception) {
-            MuloLog.d(TAG, "영상 visionOS 읽기 실패 ${oneLine(e.toString())}")
-            return null
+        for (client in listOf(visionOs, androidVr)) {
+            val all = try {
+                fetchFormats(client, videoId)
+            } catch (e: Exception) {
+                MuloLog.d(TAG, "영상 ${client.name} 읽기 실패 ${oneLine(e.toString())}")
+                continue
+            }
+            val (best, muxed) = YoutubeFormats.pickVideo(all, maxHeight) ?: run {
+                MuloLog.d(TAG, "영상 ${client.name} 쓸 형식 없음 (전체 ${all.size}개)")
+                continue
+            }
+            if (!canReadMiddle(best)) {
+                MuloLog.d(TAG, "영상 ${client.name} 구간 확인 실패")
+                continue
+            }
+            return mapOf("url" to best.url, "headers" to headers(best.url), "muxed" to muxed)
         }
-        val (best, muxed) = YoutubeFormats.pickVideo(all, maxHeight) ?: run {
-            MuloLog.d(TAG, "영상 visionOS 쓸 형식 없음 (전체 ${all.size}개)")
-            return null
-        }
-        if (!canReadMiddle(best)) {
-            MuloLog.d(TAG, "영상 ${clientOf(best.url)} 구간 403")
-            return null
-        }
-        return mapOf("url" to best.url, "headers" to headers(best.url), "muxed" to muxed)
+        return null
     }
 
     /** 언어 트랙이 둘 이상 든 클라이언트를 찾아 그 목록을. 없으면 빈 목록. */
