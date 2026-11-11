@@ -88,7 +88,7 @@ class PrefsTagMigrationStore implements TagMigrationStore {
 }
 
 class PrefsTagRestoreStore implements TagRestoreStore {
-  static const _ids = _PrefsIdSet('library.tagRestoreDone2');
+  static const _ids = _PrefsIdSet('library.tagRestoreDone3');
 
   @override
   Future<Set<String>> loadDone() => _ids.load();
