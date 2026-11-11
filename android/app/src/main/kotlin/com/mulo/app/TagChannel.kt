@@ -89,17 +89,28 @@ class TagChannel(
             }
             if (ok) png.absolutePath else null
         }
+        val coverState = if (cover == null) "none" else if (coverPng != null) "ok(${png.length()}B)" else "failed"
+        MuloLog.d(MuloLog.NATIVE, "MuloTag write format=$format values=${values.keys} cover=$coverState")
         if (values.isEmpty() && coverPng == null) {
             png.delete()
             done(result, mapOf("status" to "failed", "error" to "nothing to write (cover=${cover != null})"))
             return
         }
         try {
-            writeWith(uri, values, coverPng, format, ask, result)
+            writeWith(uri, values, coverPng, format, ask, WithCover(result, coverState))
         } finally {
             // 내용 덮어쓰기(동의 창 포함)가 끝날 때까지 PNG는 필요 없다: 태그는 이미 써졌다.
             png.delete()
         }
+    }
+
+    /** 결과에 커버를 어떻게 처리했는지(`cover`)를 덧붙인다 (진단용). */
+    private class WithCover(private val inner: MethodChannel.Result, private val state: String) : MethodChannel.Result {
+        override fun success(value: Any?) =
+            inner.success(if (value is Map<*, *>) LinkedHashMap<Any?, Any?>(value).also { it["cover"] = state } else value)
+
+        override fun error(code: String, message: String?, details: Any?) = inner.error(code, message, details)
+        override fun notImplemented() = inner.notImplemented()
     }
 
     private fun writeWith(uri: String, values: Map<String, String>, cover: String?, format: String, ask: Boolean, result: MethodChannel.Result) {

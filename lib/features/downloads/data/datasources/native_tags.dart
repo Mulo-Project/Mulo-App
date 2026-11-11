@@ -66,7 +66,7 @@ class NativeTags {
       if (status == NativeTagStatus.failed) {
         lastError = (r?['error'] as String?) ?? 'unknown';
       }
-      debugPrint('MuloTag write ${status.name} ${lastError ?? ''}');
+      debugPrint('MuloTag write ${status.name} cover=${r?['cover']} ${lastError ?? ''}');
       return status;
     } on PlatformException catch (e) {
       lastError = e.message ?? e.code;
