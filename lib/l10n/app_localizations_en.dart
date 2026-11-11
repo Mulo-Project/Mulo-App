@@ -771,7 +771,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get savedVideosFull =>
-      'Cache storage is full. Remove saved tracks or raise the limit in settings';
+      'Cache storage is full. Remove saved tracks or raise the limit';
 
   @override
   String savedVideosUsed(String size) {

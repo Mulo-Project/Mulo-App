@@ -1487,7 +1487,7 @@ abstract class AppLocalizations {
   /// No description provided for @savedVideosFull.
   ///
   /// In ko, this message translates to:
-  /// **'임시 저장 공간이 가득 찼어요. 저장한 곡을 지우거나 설정에서 용량을 늘려 주세요'**
+  /// **'임시 저장 공간이 가득 찼어요. 저장한 곡을 지우거나 용량을 늘려 주세요'**
   String get savedVideosFull;
 
   /// No description provided for @savedVideosUsed.

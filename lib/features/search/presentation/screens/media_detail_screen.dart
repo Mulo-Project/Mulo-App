@@ -26,6 +26,7 @@ import '../bloc/stream_cache_cubit.dart';
 import '../main_stream_video.dart';
 import '../bloc/video_quality_cubit.dart';
 import '../../domain/entities/video_quality.dart';
+import '../widgets/saved_full_dialog.dart';
 import '../widgets/video_quality_sheet.dart';
 import '../widgets/audio_language_sheet.dart';
 import 'saved_videos_screen.dart' show savedVideosLocation;
@@ -516,15 +517,23 @@ class _SaveButton extends StatelessWidget {
         // 이 화면 위에는 용량 상태가 없으므로 그때그때 읽는다 (못 읽으면 한도 0이라 막지 않는다).
         final probe = sl<StreamCacheCubit>();
         await probe.load();
-        final cache = probe.state;
-        unawaited(probe.close());
-        if (!context.mounted) return;
+        if (!context.mounted) {
+          unawaited(probe.close());
+          return;
+        }
+        var cache = probe.state;
         if (cache.enabled &&
             cache.limitBytes > 0 &&
             cache.savedBytes >= cache.limitBytes) {
-          messenger.showSnackBar(SnackBar(content: Text(l10n.savedVideosFull)));
-          return;
+          // 가득 찼으면 알리고 그 자리에서 한도를 고르게 한다. 한도를 늘려 자리가 생기면 이어서 저장한다.
+          await showSavedFullDialog(context, probe);
+          cache = probe.state;
+          unawaited(probe.close());
+          if (cache.savedBytes >= cache.limitBytes) return;
+        } else {
+          unawaited(probe.close());
         }
+        if (!context.mounted) return;
         VideoQuality? quality;
         if (isYoutubeUrl(hit.url)) {
           final pick = await pickSaveQuality(

@@ -255,7 +255,7 @@
   "savedVideosClearAllBody": "Everything you saved will be removed",
   "savedVideosStorage": "Saved {saved} + listening cache {temp} / limit {limit}",
   "@savedVideosStorage": {"placeholders": {"saved": {"type": "String"}, "temp": {"type": "String"}, "limit": {"type": "String"}}},
-  "savedVideosFull": "Cache storage is full. Remove saved tracks or raise the limit in settings",
+  "savedVideosFull": "Cache storage is full. Remove saved tracks or raise the limit",
   "savedVideosUsed": "{size} used",
   "@savedVideosUsed": {"placeholders": {"size": {"type": "String"}}},
   "savedVideosQualityTitle": "Save quality",
