@@ -10,6 +10,8 @@ import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../covers/presentation/widgets/cover_editor_page.dart';
 import '../../../covers/presentation/widgets/cover_hero.dart';
 import '../../../downloads/domain/usecases/download_usecases.dart';
+import '../../../home/domain/entities/home_summary.dart';
+import '../../../home/domain/usecases/home_usecases.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/track.dart';
 import '../../domain/entities/track_file_info.dart';
@@ -38,6 +40,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
 
   /// 음악 파일 정보 (크기 · 형식 · 비트레이트 · 샘플레이트). 읽기 전이거나 못 읽으면 null.
   TrackFileInfo? _file;
+  TrackPlayStats? _plays;
 
   late final _title = TextEditingController();
   late final _artist = TextEditingController();
@@ -58,6 +61,9 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
     super.initState();
     sl<GetTrackSourceUrl>()(widget.track.id).then((url) {
       if (mounted) setState(() => _url = url);
+    });
+    sl<GetTrackPlayStats>()(widget.track.id).then((s) {
+      if (mounted) setState(() => _plays = s);
     });
     sl<GetTrackFileInfo>()(widget.track).then((info) {
       if (mounted) setState(() => _file = info);
@@ -218,6 +224,21 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
       row(l10n.trackInfoDuration, formatDuration(t.duration)),
       const AppDivider(),
       row(l10n.trackInfoAdded, _date(t.addedAt)),
+      if (_plays != null) ...[
+        const AppDivider(),
+        row(
+          l10n.trackInfoPlayCount,
+          l10n.trackInfoPlayCountValue(_plays!.count),
+        ),
+        if (_plays!.count > 0) ...[
+          const AppDivider(),
+          row(l10n.trackInfoListened, formatDuration(_plays!.listened)),
+          if (_plays!.lastAt != null) ...[
+            const AppDivider(),
+            row(l10n.trackInfoLastPlayed, _date(_plays!.lastAt!)),
+          ],
+        ],
+      ],
       const AppDivider(),
       row(
         l10n.trackInfoSource,

@@ -20,6 +20,22 @@ class PlayRecord extends Equatable {
   List<Object?> get props => [trackId, playedAt, listened];
 }
 
+/// 곡 하나의 재생 기록 요약 (상세 화면용).
+class TrackPlayStats extends Equatable {
+  const TrackPlayStats({
+    this.count = 0,
+    this.listened = Duration.zero,
+    this.lastAt,
+  });
+
+  final int count;
+  final Duration listened;
+  final DateTime? lastAt;
+
+  @override
+  List<Object?> get props => [count, listened, lastAt];
+}
+
 class TrackPlays extends Equatable {
   const TrackPlays(this.track, this.count);
 

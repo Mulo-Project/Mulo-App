@@ -30,3 +30,7 @@
 ## 확인 필요
 - PC: `dart format`, `flutter analyze`, `flutter test`, Android 빌드 (이 환경에서는 컴파일하지 못했다).
 - 기기: 저장 유형을 영상으로 받기 → `Movies/Mulo`에 영상, 보관함에 곡(썸네일 포함), 음원으로 받기는 기존과 같음. 화질 · 형식별 재생과 소리, 저장 중 검색 · 미리 듣기 정상, 실패(비행기 모드) 안내.
+
+## 상세 화면: 앱이 관리하는 재생 기록 (11-11)
+- 음원 · 영상 상세 화면에 재생 횟수 · 들은 시간 · 마지막 재생 행 추가 (재생 기록이 없으면 횟수 0회만).
+- `GetTrackPlayStats`(home 유스케이스) + `TrackPlayStats`, l10n `trackInfoPlayCount*` · `trackInfoListened` · `trackInfoLastPlayed`, 테스트 `test/track_play_stats_test.dart`.

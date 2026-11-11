@@ -1975,6 +1975,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackInfoAdded => 'Added';
 
   @override
+  String get trackInfoPlayCount => 'Plays';
+
+  @override
+  String trackInfoPlayCountValue(int count) {
+    return '$count';
+  }
+
+  @override
+  String get trackInfoListened => 'Listened';
+
+  @override
+  String get trackInfoLastPlayed => 'Last played';
+
+  @override
   String get trackInfoSource => 'Source';
 
   @override

@@ -3620,6 +3620,18 @@ abstract class AppLocalizations {
   /// **'추가한 날'**
   String get trackInfoAdded;
 
+  /// No description provided for @trackInfoPlayCount.
+  String get trackInfoPlayCount;
+
+  /// No description provided for @trackInfoPlayCountValue.
+  String trackInfoPlayCountValue(int count);
+
+  /// No description provided for @trackInfoListened.
+  String get trackInfoListened;
+
+  /// No description provided for @trackInfoLastPlayed.
+  String get trackInfoLastPlayed;
+
   /// No description provided for @trackInfoSource.
   ///
   /// In ko, this message translates to:

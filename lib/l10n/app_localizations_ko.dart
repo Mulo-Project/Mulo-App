@@ -1927,6 +1927,20 @@ class AppLocalizationsKo extends AppLocalizations {
   String get trackInfoAdded => '추가한 날';
 
   @override
+  String get trackInfoPlayCount => '재생 횟수';
+
+  @override
+  String trackInfoPlayCountValue(int count) {
+    return '$count회';
+  }
+
+  @override
+  String get trackInfoListened => '들은 시간';
+
+  @override
+  String get trackInfoLastPlayed => '마지막 재생';
+
+  @override
   String get trackInfoSource => '출처';
 
   @override
