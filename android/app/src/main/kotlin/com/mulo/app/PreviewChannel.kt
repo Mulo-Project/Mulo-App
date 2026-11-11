@@ -14,6 +14,7 @@ import androidx.media3.datasource.DefaultHttpDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.source.MergingMediaSource
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodChannel
 
@@ -52,8 +53,17 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
     /** 지금 소리 플레이어가 틀고 있는 주소. 영상 주소가 이것과 같으면 소리가 섞인 형식이라 영상도 이 플레이어가 튼다. */
     private var playUrl: String? = null
 
-    /** 소리 플레이어 자신이 영상 화면을 내고 있다 (소리가 섞인 형식, 싱크가 필요 없다). */
+    /** 소리 플레이어 자신이 영상 화면을 내고 있다 (소리가 섞인 형식 또는 합쳐 튼 영상, 싱크가 필요 없다). */
     private var muxedVideo = false
+
+    /** 소리 플레이어에 합쳐 놓은 영상 전용 주소 (한 플레이어 · 한 시계). 영상을 꺼도 합친 채 두어 다시 켤 때 끊기지 않는다. */
+    private var mergedVideoUrl: String? = null
+
+    /** 합친 영상의 해독이 실패해 꺼졌다 (같은 주소로 다시 켜지 않는다). */
+    private var mergedFailed = false
+
+    /** 지금 소리를 틀고 있는 주소의 요청 헤더 (영상을 합칠 때 소리 소스를 같은 헤더로 다시 만든다). */
+    private var playHeaders: Map<String, String> = emptyMap()
 
     /** 처음에는 소리보다 [START_AHEAD_MS] 앞 지점에서 멈춘 채 받아 두었다가, 소리가 거기 닿는 순간 튼다. */
     private var videoStartPending = false
@@ -136,6 +146,7 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
             if (muxedVideo && p != null && isVideoDecoderError(error)) {
                 // 영상 해독만 실패했다: 영상을 끄고 소리는 이어서 재생한다.
                 muxedVideo = false
+                if (mergedVideoUrl != null) mergedFailed = true
                 VideoSurfaceHub.setPreviewVideo(null)
                 p.trackSelectionParameters = p.trackSelectionParameters.buildUpon()
                     .setTrackTypeDisabled(C.TRACK_TYPE_VIDEO, true)
@@ -295,6 +306,7 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
         started = false
         val p = ensure(headers, url)
         playUrl = url
+        playHeaders = headers
         p.setMediaItem(MediaItem.fromUri(Uri.parse(url)))
         p.playWhenReady = true
         p.prepare()
@@ -312,6 +324,11 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
                 VideoSurfaceHub.previewIsPlaying = { player?.isPlaying == true }
                 VideoSurfaceHub.previewSetPlaying = { play -> if (play) player?.play() else player?.pause() }
             }
+            return
+        }
+        // 메인 시계를 따르는 경우가 아니면 소리 플레이어에 영상을 합쳐 한 시계로 튼다 (싱크를 맞출 필요가 없다).
+        if (!follow) {
+            mergeVideo(audio, url, headers)
             return
         }
         if (videoUrl == url && videoPlayer != null && followMain == follow) return
@@ -360,6 +377,55 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
             VideoSurfaceHub.previewSetPlaying = { play -> if (play) player?.play() else player?.pause() }
         }
         main.post(videoSync)
+    }
+
+    /**
+     * 영상 전용 주소를 소리 플레이어의 소스에 합친다 ([MergingMediaSource]). 소리와 영상이 한 플레이어의 한 시계로 돌아
+     * 이동 · 화질 전환에도 어긋나지 않는다. 합치는 순간 지금 위치에서 다시 준비하느라 소리가 잠깐 끊길 수 있다.
+     * 같은 영상이 이미 합쳐져 있으면 소스는 그대로 두고 화면만 다시 켠다.
+     */
+    private fun mergeVideo(a: ExoPlayer, url: String, headers: Map<String, String>) {
+        if (mergedVideoUrl == url) {
+            if (!muxedVideo && !mergedFailed) attachMerged(a)
+            return
+        }
+        val audioUrl = playUrl ?: return
+        val wasShowing = muxedVideo
+        // 영상 전용 플레이어가 따로 돌고 있었다면 치운다.
+        if (videoPlayer != null) releaseVideo()
+        fun sourceOf(u: String, h: Map<String, String>): androidx.media3.exoplayer.source.MediaSource {
+            val http = DefaultHttpDataSource.Factory()
+                .setAllowCrossProtocolRedirects(true)
+                .setDefaultRequestProperties(h)
+            agentFor(u)?.let { http.setUserAgent(it) }
+            return DefaultMediaSourceFactory(context)
+                .setDataSourceFactory(StreamCache.wrap(context, http))
+                .createMediaSource(MediaItem.fromUri(Uri.parse(u)))
+        }
+        val position = a.currentPosition
+        val merged = MergingMediaSource(sourceOf(audioUrl, playHeaders), sourceOf(url, headers))
+        mergedVideoUrl = url
+        mergedFailed = false
+        muxedVideo = true
+        // 화질을 바꿀 때는 이전 화면을 둔 채 새 영상의 첫 화면이 그려지면 바뀐다.
+        VideoSurfaceHub.setPreviewVideo(a, keepFrame = wasShowing)
+        hookPreview()
+        a.setMediaSource(merged, position)
+        a.prepare()
+        MuloLog.d(MuloLog.PLAYBACK, "미리 듣기 영상 합쳐 튼다 (위치 ${position}ms)")
+    }
+
+    /** 이미 합쳐 둔 영상의 화면을 다시 켠다. */
+    private fun attachMerged(a: ExoPlayer) {
+        muxedVideo = true
+        VideoSurfaceHub.setPreviewVideo(a)
+        hookPreview()
+    }
+
+    /** 작은 창(PiP) 진입 조건 · 재생 버튼이 소리 플레이어를 보게 한다 (빠뜨리면 PiP가 안 뜬다). */
+    private fun hookPreview() {
+        VideoSurfaceHub.previewIsPlaying = { player?.isPlaying == true }
+        VideoSurfaceHub.previewSetPlaying = { play -> if (play) player?.play() else player?.pause() }
     }
 
     /** 소리의 시계에 영상을 맞춘다. 되감지 않고 재생 속도를 아주 조금 바꿔 따라잡는다 (되감으면 끊겨 보인다). */
@@ -424,6 +490,14 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
 
     private fun releaseVideo() {
         main.removeCallbacks(videoSync)
+        // 합쳐 둔 영상은 소스는 두고 영상 해독만 끈다 (화면이 없는데 해독하지 않게).
+        if (muxedVideo && mergedVideoUrl != null) {
+            player?.let { p ->
+                p.trackSelectionParameters = p.trackSelectionParameters.buildUpon()
+                    .setTrackTypeDisabled(C.TRACK_TYPE_VIDEO, true)
+                    .build()
+            }
+        }
         VideoSurfaceHub.setPreviewVideo(null)
         VideoSurfaceHub.previewIsPlaying = null
         VideoSurfaceHub.previewSetPlaying = null
@@ -466,6 +540,8 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
         player?.release()
         player = null
         playUrl = null
+        mergedVideoUrl = null
+        mergedFailed = false
         started = false
         meta = null
     }
