@@ -539,7 +539,7 @@ object PlaybackHub {
     /** 알림 버튼 모양을 다시 맞춘다 (좋아요 · 셔플은 앱이 있든 없든 같은 자리에 둔다). */
     private fun refreshLayout() {
         val info = sessionPlayer.info ?: return
-        session?.setCustomLayout(PlaybackButtons.layout(info, shuffleOn, favoriteOn(info)))
+        session?.setCustomLayout(PlaybackButtons.layout(info, shuffleOn, favoriteOn(info), favoriteShown()))
     }
 
     /** 좋아요 DB를 읽는 전용 스레드: 곡을 옮기는 순간 메인 스레드가 SQLite를 열며 막히지 않게 한다. */
@@ -547,6 +547,9 @@ object PlaybackHub {
 
     /** 마지막으로 DB에서 읽은 좋아요 값 (곡 id → 값). 읽는 동안 먼저 보여 줄 값이다. */
     private val favoriteCache = HashMap<String, Boolean>()
+
+    /** 임시 저장한 음원(`saved:`)은 좋아요를 둘 수 없어 알림에서 좋아요 버튼을 뺀다. */
+    private fun favoriteShown() = exo.currentMediaItem?.mediaId?.startsWith("saved:") != true
 
     /** 좋아요를 Dart가 처리할 수 있는지: Dart가 붙어 있고, 앱이 보낸 내용이 지금 재생 중인 곡의 것일 때. */
     private fun dartHandlesFavorite() = sink != null && !restoredFromStore && sessionPlayer.infoMatchesCurrent()
@@ -569,7 +572,7 @@ object PlaybackHub {
                 if (favoriteCache.put(id, value) == value) return@post
                 // 읽는 사이 곡이 바뀌었으면 건너뛴다 (그 곡의 읽기가 따로 있다).
                 if (exo.currentMediaItem?.mediaId == id && !dartHandlesFavorite()) {
-                    sessionPlayer.info?.let { session?.setCustomLayout(PlaybackButtons.layout(it, shuffleOn, value)) }
+                    sessionPlayer.info?.let { session?.setCustomLayout(PlaybackButtons.layout(it, shuffleOn, value, favoriteShown())) }
                 }
             }
         }
@@ -577,6 +580,7 @@ object PlaybackHub {
 
     /** 좋아요 버튼: Dart가 있으면 Dart에 맡기고(화면의 목록이 바로 바뀌게), 없으면 DB를 직접 바꾼다. */
     private fun toggleFavorite() {
+        if (!favoriteShown()) return
         if (dartHandlesFavorite()) {
             emitCommand("favorite", null)
             return

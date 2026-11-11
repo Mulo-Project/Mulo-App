@@ -20,7 +20,12 @@ internal object PlaybackButtons {
      * [shuffled]는 셔플이 켜져 있는지, [favoriteOn]은 지금 곡이 좋아요인지(아이콘 · 이름을 정한다).
      * 재생 중인 알림은 일시정지한 뒤 밀어서 지울 수 있다.
      */
-    fun layout(info: SessionInfo, shuffled: Boolean, favoriteOn: Boolean): ImmutableList<CommandButton> {
+    fun layout(
+        info: SessionInfo,
+        shuffled: Boolean,
+        favoriteOn: Boolean,
+        favoriteShown: Boolean = true,
+    ): ImmutableList<CommandButton> {
         val closeButton = CommandButton.Builder(CommandButton.ICON_UNDEFINED)
             .setCustomIconResId(R.drawable.ic_notif_close)
             .setDisplayName(info.closeLabel)
@@ -39,6 +44,8 @@ internal object PlaybackButtons {
             .setDisplayName(if (favoriteOn) info.unfavoriteLabel else info.favoriteLabel)
             .setSessionCommand(favorite)
             .build()
+        // 임시 저장한 음원(cache)은 파일이 아니라 좋아요를 둘 수 없어 버튼을 뺀다.
+        if (!favoriteShown) return ImmutableList.of(shuffleButton)
         return ImmutableList.of(favoriteButton, shuffleButton)
     }
 }
