@@ -2778,17 +2778,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get notifDownloadDoneHidden => '곡이 보관함에 추가됐어요';
 
   @override
-  String notifSaveLocation(String path) {
-    return '저장 위치: $path';
-  }
-
-  @override
-  String get notifSaveLocationCache => '저장 위치: 앱 보관(캐시)';
-
-  @override
-  String get notifSaveLocationDefault => '저장 위치: 기본 폴더';
-
-  @override
   String get notifDownloadFailedTitle => '받기 실패';
 
   @override
