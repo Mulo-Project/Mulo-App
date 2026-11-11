@@ -60,3 +60,4 @@
 - 사각: 영상 곡은 정사각 대신 영상 비율 그대로(`VideoSurfaceCubit`의 크기, 모르면 16:9). 꽉 찬 이미지 · 둥근 진행 표시: `BoxFit.contain`으로 영상 전체가 보이고 남는 곳은 커버가 비친다. `NativeVideoWithFullscreen` · `NativeVideoTapFullscreen`에 `fit`을 더했다.
 - 영상 뒤에 깔리는 커버는 살짝 흐리게(blur 10, 투명도 .55) 하고 커버 색을 입힌 바탕(alpha .45) 위에 얹어 남는 자리가 영상과 자연스럽게 이어진다 (`PlayerCover`).
 - 둥근 진행 표시(`ArcPlayer`) 테마: 영상 곡은 원 대신 영상 비율의 둥근 사각형 틀을 따라 진행 선이 돈다 (`_frameSize` · `_framePath`, 아래 가운데가 열려 시간이 놓임). 세로 영상은 영역 높이에 맞춰 폭이 줄어든다.
+- 꽉 찬 이미지 테마: 영상 곡은 영상을 상단 버튼줄 밑 ~ 조작부 위 칸에 `contain`으로 딱 맞게 그리고(버튼줄과 겹치지 않음), 윗배경은 색을 입힌 흐린 커버(`PlayerCover.softBackdrop`)로 깐다.

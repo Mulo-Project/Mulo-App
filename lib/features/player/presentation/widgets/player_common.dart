@@ -284,6 +284,7 @@ class PlayerCover extends StatelessWidget {
     this.radius = AppRadii.lg,
     this.icon = true,
     this.video,
+    this.softBackdrop = false,
   });
 
   final PlayerArt art;
@@ -291,6 +292,9 @@ class PlayerCover extends StatelessWidget {
   /// 영상 곡이면 커버 위에 얹는 영상 화면.
   final Widget? video;
   final double radius;
+
+  /// 영상은 다른 곳에 따로 그리고, 커버는 색을 입힌 흐린 배경으로만 깐다.
+  final bool softBackdrop;
 
   /// 이미지가 없을 때 가운데 음표를 그릴지.
   final bool icon;
@@ -316,7 +320,7 @@ class PlayerCover extends StatelessWidget {
             ),
     );
     final v = video;
-    if (v == null) return cover;
+    if (v == null && !softBackdrop) return cover;
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -344,7 +348,8 @@ class PlayerCover extends StatelessWidget {
             ],
           ),
         ),
-        ClipRRect(borderRadius: BorderRadius.circular(radius), child: v),
+        if (v != null)
+          ClipRRect(borderRadius: BorderRadius.circular(radius), child: v),
       ],
     );
   }
