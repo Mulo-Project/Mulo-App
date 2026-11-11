@@ -83,7 +83,7 @@ class NotificationSyncCubit extends Cubit<void> {
           title: l10n.notifSavedDoneTitle,
           body: settings.hideSongInfo
               ? l10n.notifSavedDoneHidden
-              : '${_titleLine(v.hit.title, v.hit.uploader)}\n${l10n.notifSavedDoneNote}',
+              : '${_titleLine(v.hit.title, v.hit.uploader)}\n${l10n.notifSavedDoneNote}\n${l10n.notifSaveLocationCache}',
           failed: false,
           artUri: settings.hideSongInfo ? null : v.hit.thumbnailUrl,
         ),
@@ -121,7 +121,7 @@ class NotificationSyncCubit extends Cubit<void> {
               title: l10n.notifDownloadDoneTitle,
               body: hide
                   ? l10n.notifDownloadDoneHidden
-                  : _titleLine(i.title, i.artist),
+                  : '${_titleLine(i.title, i.artist)}\n${_locationLine(l10n, i.savePath)}',
               failed: false,
               artUri: hide ? null : i.thumbnailUrl,
             ),
@@ -253,6 +253,14 @@ class NotificationSyncCubit extends Cubit<void> {
     _progressShown = false;
     _lastProgress = null;
     await _actions.clearProgress(const NoParams());
+  }
+
+  /// 받은 곡을 어디에 저장했는지 (고른 폴더 · 없으면 기본 폴더).
+  String _locationLine(AppLocalizations l10n, String savePath) {
+    final path = savePath.trim();
+    return path.isEmpty
+        ? l10n.notifSaveLocationDefault
+        : l10n.notifSaveLocation(path);
   }
 
   String _titleLine(String title, String artist) =>

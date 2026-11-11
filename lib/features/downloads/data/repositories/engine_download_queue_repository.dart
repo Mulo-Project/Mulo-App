@@ -145,6 +145,7 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
     duration: request.duration,
     url: request.url,
     error: error,
+    savePath: request.savePath,
   );
 
   @override

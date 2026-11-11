@@ -2854,6 +2854,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifDownloadDoneHidden => 'A song was added to your library';
 
   @override
+  String notifSaveLocation(String path) {
+    return 'Saved to: $path';
+  }
+
+  @override
+  String get notifSaveLocationCache => 'Saved to: app cache';
+
+  @override
+  String get notifSaveLocationDefault => 'Saved to: default folder';
+
+  @override
   String get notifDownloadFailedTitle => 'Download failed';
 
   @override

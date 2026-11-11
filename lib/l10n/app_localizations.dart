@@ -5186,6 +5186,24 @@ abstract class AppLocalizations {
   /// **'곡이 보관함에 추가됐어요'**
   String get notifDownloadDoneHidden;
 
+  /// No description provided for @notifSaveLocation.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 위치: {path}'**
+  String notifSaveLocation(String path);
+
+  /// No description provided for @notifSaveLocationCache.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 위치: 앱 보관(캐시)'**
+  String get notifSaveLocationCache;
+
+  /// No description provided for @notifSaveLocationDefault.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 위치: 기본 폴더'**
+  String get notifSaveLocationDefault;
+
   /// No description provided for @notifDownloadFailedTitle.
   ///
   /// In ko, this message translates to:
