@@ -149,8 +149,8 @@ class CoverTagWriter {
     }
   }
 
-  /// 영상 파일(mp4 · webm)에 제목 · 아티스트 · 앨범 · 장르(와 mp4는 커버)를 쓴다. 못 쓰면 false (파일은 그대로,
-  /// 영상은 태그 없이 저장된다). webm은 첨부 그림을 쓸 수 없어 커버는 mp4만 넣는다.
+  /// mp4 영상 파일에 제목 · 아티스트 · 앨범 · 장르 · 커버를 쓴다. 못 쓰면 false (파일은 그대로, 영상은 태그 없이
+  /// 저장된다). webm은 쓰지 않는다: 첨부 그림을 못 넣고, 글 태그는 갤러리 · 플레이어가 읽지 못해 다시 감싸는 값어치가 없다.
   Future<bool> embedVideo(
     File video, {
     required String extension,
@@ -163,17 +163,15 @@ class CoverTagWriter {
     int? color,
   }) async {
     final f = ffmpeg;
-    if (f == null) return false;
+    if (f == null || extension.toLowerCase() != 'mp4') return false;
     try {
       Uint8List? png;
-      if (extension.toLowerCase() == 'mp4') {
-        final source = await _sourceFile(cover, thumbnailUrl);
-        if (source != null) {
-          png = await _squarePng(
-            await source.readAsBytes(),
-            cover?.transform ?? CoverTransform.identity,
-          );
-        }
+      final source = await _sourceFile(cover, thumbnailUrl);
+      if (source != null) {
+        png = await _squarePng(
+          await source.readAsBytes(),
+          cover?.transform ?? CoverTransform.identity,
+        );
       }
       return await f.writeVideo(
         video,
