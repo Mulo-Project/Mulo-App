@@ -5,7 +5,7 @@ import '../../domain/entities/file_tags.dart';
 /// 곡 파일([uri])의 태그를 읽는다 ([TrackTagSource]의 반대 방향). 형식 구분 · 복사 · 읽기는 네이티브가 하고
 /// (`music_app/tags`의 `read`), Dart는 돌아온 값(소문자 키)을 앱 값으로 옮길 뿐이다.
 class FileTagSource {
-  FileTagSource({NativeTags tags = const NativeTags()}) : _tags = tags;
+  FileTagSource([this._tags = const NativeTags()]);
 
   final NativeTags _tags;
 

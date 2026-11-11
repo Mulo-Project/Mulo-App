@@ -11,11 +11,10 @@ import '../../domain/repositories/track_tag_repository.dart';
 /// 결과로 "쓸 수 없는 곡"과 "쓰려다 실패"를 가른다 (네이티브가 알려 준다):
 /// 쓰지 않는 곡(모르는 형식 · ffmpeg 없음 · 파일 접근 불가)은 [TagWriteResult.unsupported].
 class TrackTagSource {
-  TrackTagSource({
-    CoverTagWriter writer = const CoverTagWriter(),
-    NativeTags tags = const NativeTags(),
-  }) : _writer = writer,
-       _tags = tags;
+  TrackTagSource([
+    this._writer = const CoverTagWriter(),
+    this._tags = const NativeTags(),
+  ]);
 
   final CoverTagWriter _writer;
   final NativeTags _tags;
