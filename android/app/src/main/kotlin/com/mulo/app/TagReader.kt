@@ -46,6 +46,7 @@ object TagReader {
             "album" to m.albumTitle,
             "genre" to m.genre,
         ).forEach { (k, v) -> v?.toString()?.takeIf { it.isNotBlank() }?.let { out[k] = it } }
+        MuloLog.d(MuloLog.NATIVE, "MuloTag read keys=${out.keys}")
         return out
     }
 }

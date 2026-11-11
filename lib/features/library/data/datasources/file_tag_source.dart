@@ -29,6 +29,7 @@ class FileTagSource {
       case 'ok':
         final tags = parse(r.tags);
         _count(tags.isEmpty ? 'tag empty' : 'ok');
+        _count(tags.coverSource == null ? 'no cover tag' : 'cover tag');
         return tags;
       case 'unsupported':
         _count('unsupported');
