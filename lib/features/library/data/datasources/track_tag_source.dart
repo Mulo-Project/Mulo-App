@@ -101,12 +101,24 @@ class TrackTagSource {
       if (!isContent) {
         return await embed(File(uri)) ? TagWriteResult.written : fail;
       }
+      // 단계별 시간 (느린 곳을 찾으려는 진단 로그): 복사 → ffmpeg → 덮어쓰기.
+      final watch = Stopwatch()..start();
       final temp = await _copy.invokeMethod<String>('copyToCache', uri);
+      final copyMs = watch.elapsedMilliseconds;
       if (temp == null) return denied;
       try {
+        final bytes = File(temp).existsSync() ? File(temp).lengthSync() : -1;
+        watch.reset();
         final embedded = await embed(File(temp));
+        final embedMs = watch.elapsedMilliseconds;
         debugPrint('MuloTag embed=$embedded');
-        if (!embedded) return fail;
+        if (!embedded) {
+          debugPrint(
+            'MuloTag time ext=$extension size=${bytes}B copy=${copyMs}ms embed=${embedMs}ms (failed)',
+          );
+          return fail;
+        }
+        watch.reset();
         final ok =
             await _media.invokeMethod<bool>('overwriteAudio', {
               'uri': uri,
@@ -116,6 +128,10 @@ class TrackTagSource {
             }) ??
             false;
         debugPrint('MuloTag overwrite=$ok');
+        debugPrint(
+          'MuloTag time ext=$extension size=${bytes}B copy=${copyMs}ms '
+          'embed=${embedMs}ms overwrite=${watch.elapsedMilliseconds}ms',
+        );
         return ok ? TagWriteResult.written : denied;
       } finally {
         try {
