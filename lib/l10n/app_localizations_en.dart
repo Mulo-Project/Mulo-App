@@ -845,7 +845,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String settingsStreamCacheLimitHint(String used) {
-    return 'Oldest items are removed when full. Saved tracks are not counted. ($used used)';
+    return 'Saved tracks count too. When full, the oldest temporary cache is removed first. ($used used)';
   }
 
   @override

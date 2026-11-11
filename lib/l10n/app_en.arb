@@ -280,7 +280,7 @@
   "videoRepeat": "Repeat",
   "videoQualityAuto": "Auto",
   "videoQualityAutoHint": "Starts fast, then raises the quality",
-  "settingsStreamCacheLimitHint": "Oldest items are removed when full. Saved tracks are not counted. ({used} used)",
+  "settingsStreamCacheLimitHint": "Saved tracks count too. When full, the oldest temporary cache is removed first. ({used} used)",
   "@settingsStreamCacheLimitHint": {"placeholders": {"used": {"type": "String"}}},
   "settingsStreamCacheCleared": "Streaming cache cleared",
   "settingsPurgeHidden": "Clear hidden song records",

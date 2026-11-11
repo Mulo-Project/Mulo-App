@@ -1625,7 +1625,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsStreamCacheLimitHint.
   ///
   /// In ko, this message translates to:
-  /// **'넘으면 오래된 것부터 지워요. 저장한 음원은 포함되지 않아요. ({used} 사용 중)'**
+  /// **'임시 저장한 음원도 함께 계산해요. 넘으면 오래된 임시 캐시부터 지워요. ({used} 사용 중)'**
   String settingsStreamCacheLimitHint(String used);
 
   /// No description provided for @settingsStreamCacheCleared.
