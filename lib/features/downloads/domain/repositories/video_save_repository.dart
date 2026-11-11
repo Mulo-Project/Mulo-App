@@ -56,7 +56,9 @@ abstract interface class VideoSaveRepository {
   /// 영상과 소리를 받아 mp4 한 파일로 합쳐 `Movies/Mulo`에 저장한다. 못 하면 [VideoSaveException].
   ///
   /// [onProgress]는 받는 진행률(0 ~ 1). 1에 닿은 뒤 합치기 · 저장이 이어질 수 있다.
-  Future<void> save(
+  ///
+  /// 저장한 영상의 재생 주소(Android `content://`)를 돌려준다.
+  Future<String> save(
     VideoSaveRequest request, {
     void Function(double progress)? onProgress,
   });

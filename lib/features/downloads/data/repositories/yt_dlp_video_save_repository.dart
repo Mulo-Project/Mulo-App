@@ -53,7 +53,7 @@ class YtDlpVideoSaveRepository implements VideoSaveRepository {
   Future<bool> isAvailable() => available();
 
   @override
-  Future<void> save(
+  Future<String> save(
     VideoSaveRequest request, {
     void Function(double progress)? onProgress,
   }) async {
@@ -94,7 +94,7 @@ class YtDlpVideoSaveRepository implements VideoSaveRepository {
         genre: request.genre,
         color: request.color,
       );
-      await store.save(
+      final saved = await store.save(
         output,
         folder: request.folder.isEmpty ? defaultVideoFolder() : request.folder,
         name: safeName(request.title),
@@ -103,6 +103,7 @@ class YtDlpVideoSaveRepository implements VideoSaveRepository {
         title: request.title,
         artist: request.artist,
       );
+      return saved.uri;
     } on VideoSaveException {
       rethrow;
     } on Object catch (e) {

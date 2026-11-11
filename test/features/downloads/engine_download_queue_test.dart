@@ -154,7 +154,7 @@ class _FakeVideo implements VideoSaveRepository {
   Future<bool> isAvailable() async => true;
 
   @override
-  Future<void> save(
+  Future<String> save(
     VideoSaveRequest request, {
     void Function(double progress)? onProgress,
   }) async {
@@ -162,6 +162,7 @@ class _FakeVideo implements VideoSaveRepository {
     if (fail) throw const VideoSaveException('boom');
     onProgress?.call(0.99);
     saved.add(request);
+    return 'content://video/1';
   }
 }
 
@@ -282,7 +283,7 @@ void main() {
       videoHeight: 720,
     );
 
-    test('고른 형식 · 화질로 영상만 저장하고 보관함 곡은 만들지 않는다', () async {
+    test('고른 형식 · 화질로 영상을 저장하고 보관함 곡으로 등록한다', () async {
       final video = _FakeVideo();
       final repo = build(_FakeDownloader(), video: video);
       await repo.enqueue(withVideo);
@@ -294,7 +295,9 @@ void main() {
       expect(video.saved.single.format, VideoFormat.webm);
       expect(items.single.savedFolder, 'Movies/Mulo');
       expect(engine.streams, isEmpty, reason: '음원은 받지 않는다');
-      expect(await library.watchTracks().first, isEmpty);
+      final track = (await library.watchTracks().first).single;
+      expect(track.uri, 'content://video/1');
+      expect(track.folder, isEmpty, reason: '불러오는 폴더 밖이어도 보이게 폴더는 비운다');
     });
 
     test('영상이 실패하면 항목이 실패 처리된다', () async {

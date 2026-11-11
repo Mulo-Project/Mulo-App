@@ -395,8 +395,9 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
         final video = _video;
         if (video == null) throw const DownloadFailed('영상 저장을 쓸 수 없어요');
         var shown = 0.0;
+        final String uri;
         try {
-          await video.save(
+          uri = await video.save(
             VideoSaveRequest(
               url: request.url,
               title: request.title,
@@ -427,6 +428,15 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
           throw DownloadFailed('영상을 저장하지 못했어요 (${e.message})');
         }
         if (token.isCancelled) throw const DownloadAborted();
+        // 영상도 음원처럼 보관함 곡이다 (커버 · 색 · 재생목록은 앱이 따로 저장한다). 폴더는 비워 두어
+        // `Movies/…`가 불러오는 폴더가 아니어도 보관함에 보이고, 같은 곡을 음원으로 또 받을 수 있게 원본 주소는 기억하지 않는다.
+        await _register(
+          id,
+          request,
+          SavedAudio(uri: uri, folder: ''),
+          null,
+          remember: false,
+        );
         _set(
           id,
           (e) => e.copyWith(
@@ -597,8 +607,9 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
     String id,
     DownloadRequest request,
     SavedAudio saved,
-    String? lyrics,
-  ) async {
+    String? lyrics, {
+    bool remember = true,
+  }) async {
     final trackId = 'download:$id';
     await _library.addTracks([
       Track(
@@ -632,9 +643,11 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
     final color = request.color;
     if (color != null) await _colors.save(CoverKey.track(trackId), color);
     // 같은 원본 주소를 다시 받지 않도록 기억한다 (재생목록 가져오기가 건너뛴다).
-    _sources[downloadSourceKey(request.url)] = trackId;
-    _keysChanged.add(null);
-    await _queueStore.saveSources(_sources);
+    if (remember) {
+      _sources[downloadSourceKey(request.url)] = trackId;
+      _keysChanged.add(null);
+      await _queueStore.saveSources(_sources);
+    }
     if (lyrics != null) {
       try {
         await _lyrics?.save(trackId, lyrics);

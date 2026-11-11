@@ -332,7 +332,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
         artist: _artist.text,
         album: _album.text.trim(),
         genre: _genre.text,
-        playlistIds: _asVideo ? const {} : _selected,
+        playlistIds: _selected,
         savePath: _savePath.text,
         duration: widget.duration,
         color: color?.toARGB32(),
@@ -352,7 +352,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
         lyricsSkipSounds: lyrics?.skipSounds ?? true,
         lyricsText: lyrics?.lyricsText,
         audioLanguage: audioLanguage,
-        // 영상으로 저장하면 음원 전용 설정(재생목록 · 가사 · 형식)은 쓰지 않는다.
+        // 영상으로 저장하면 음원 전용 설정(가사 · 오디오 형식 · 오디오 언어)은 쓰지 않는다.
         videoFormat: _videoAvailable && _asVideo ? _videoFormat : null,
         videoHeight: _videoHeight,
       ),
@@ -542,19 +542,19 @@ class _DownloadScreenState extends State<DownloadScreen> {
                         ),
                       ],
                       const AudioLanguageRow(),
-                      const SizedBox(height: AppSpacing.md),
-                      Text(
-                        l10n.downloadPlaylistsLabel.toUpperCase(),
-                        style: text.labelSmall,
-                      ),
-                      const SizedBox(height: AppSpacing.xxs),
-                      _PlaylistPickRow(
-                        summary: _selected.isEmpty
-                            ? l10n.downloadPlaylistsNone
-                            : l10n.downloadPlaylistsSelected(_selected.length),
-                        onTap: _pickPlaylists,
-                      ),
                     ],
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      l10n.downloadPlaylistsLabel.toUpperCase(),
+                      style: text.labelSmall,
+                    ),
+                    const SizedBox(height: AppSpacing.xxs),
+                    _PlaylistPickRow(
+                      summary: _selected.isEmpty
+                          ? l10n.downloadPlaylistsNone
+                          : l10n.downloadPlaylistsSelected(_selected.length),
+                      onTap: _pickPlaylists,
+                    ),
                   ]),
                   if (_isYoutube && !_asVideo)
                     _section(context, l10n.downloadSectionLyrics, [
