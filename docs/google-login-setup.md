@@ -6,7 +6,6 @@
 | 기기 | 필요한 값 | 만드는 클라이언트 |
 |---|---|---|
 | Android | `MULO_GOOGLE_SERVER_CLIENT_ID` | 웹 애플리케이션 (+ Android 클라이언트가 같은 프로젝트에 있어야 함) |
-| Windows · macOS · Linux | `MULO_GOOGLE_DESKTOP_CLIENT_ID`, `MULO_GOOGLE_DESKTOP_CLIENT_SECRET` | 데스크톱 앱 |
 
 ## 1. Google Cloud 프로젝트 만들기
 1. <https://console.cloud.google.com> 에 로그인 → 위쪽 프로젝트 선택 → **새 프로젝트** → 이름 `Mulo` → 만들기.
@@ -44,19 +43,10 @@ cd android; .\gradlew signingReport
 1. 같은 화면에서 OAuth 클라이언트 ID 만들기 → 유형 **웹 애플리케이션** → 이름 `Mulo Web` → 만들기 (리디렉션 URI는 비워도 된다).
 2. 나온 **클라이언트 ID**(`...apps.googleusercontent.com`)를 복사한다 → 이것이 `MULO_GOOGLE_SERVER_CLIENT_ID`.
 
-## 6. 데스크톱 클라이언트 → `MULO_GOOGLE_DESKTOP_CLIENT_ID` · `_SECRET`
-1. OAuth 클라이언트 ID 만들기 → 유형 **데스크톱 앱** → 이름 `Mulo Desktop` → 만들기.
-2. **클라이언트 ID**와 **클라이언트 보안 비밀**을 복사한다 (각각 `MULO_GOOGLE_DESKTOP_CLIENT_ID`, `MULO_GOOGLE_DESKTOP_CLIENT_SECRET`).
-   데스크톱 클라이언트도 비밀값을 요구하지만 앱에 들어가는 값이라 PKCE로 코드를 지킨다. 그래도 저장소에는 올리지 않는다.
-
-## 7. 실행할 때 값 넣기
+## 6. 실행할 때 값 넣기
 ### 터미널
 ```powershell
 flutter run --dart-define=MULO_GOOGLE_SERVER_CLIENT_ID=xxxx.apps.googleusercontent.com
-```
-데스크톱(Windows):
-```powershell
-flutter run -d windows --dart-define=MULO_GOOGLE_DESKTOP_CLIENT_ID=xxxx.apps.googleusercontent.com --dart-define=MULO_GOOGLE_DESKTOP_CLIENT_SECRET=GOCSPX-xxxx
 ```
 
 ### 파일로 한 번에 (권장)

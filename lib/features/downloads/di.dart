@@ -4,7 +4,7 @@ import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 
-import '../engine/data/android_yt_dlp.dart';
+import '../engine/data/native_yt_dlp.dart';
 
 import 'data/datasources/audio_file_downloader.dart';
 import 'data/datasources/audio_transcoder.dart';
@@ -54,8 +54,8 @@ void registerDownloads(GetIt sl) {
     )
     ..registerLazySingleton<VideoSaveRepository>(
       () => YtDlpVideoSaveRepository(
-        run: sl<AndroidYtDlp>().run,
-        available: sl<AndroidYtDlp>().isAvailable,
+        fetch: sl<NativeYtDlp>().saveVideo,
+        available: sl<NativeYtDlp>().isAvailable,
         store: sl(),
         tags: const CoverTagWriter(),
         tempDir: () => Directory(

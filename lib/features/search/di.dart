@@ -3,15 +3,14 @@ import 'dart:io';
 import 'package:get_it/get_it.dart';
 
 import '../../core/config/app_config.dart';
-import '../engine/data/android_yt_dlp.dart';
-import '../engine/data/yt_dlp_manager.dart';
+import '../engine/data/native_yt_dlp.dart';
 import 'data/datasources/native_preview_player.dart';
 import 'data/datasources/native_youtube_resolver.dart';
 import 'data/datasources/url_launcher_link_opener.dart';
 import 'data/engine/cached_engine.dart';
 import 'data/repositories/prefs_video_quality_repository.dart';
 import 'data/engine/youtube_resolve_engine.dart';
-import 'data/engine/local_engine.dart';
+import 'data/engine/yt_dlp_engine.dart';
 import 'data/engine/routing_engine.dart';
 import 'data/engine/soundcloud_avatar_engine.dart';
 import 'data/engine/server_engine.dart';
@@ -40,11 +39,7 @@ void registerSearch(GetIt sl) {
   sl
     ..registerLazySingleton<DownloaderEngine>(() {
       final routing = RoutingDownloaderEngine(
-        local: Platform.isAndroid
-            ? LocalEngine(run: sl<AndroidYtDlp>().run)
-            : Platform.isWindows || Platform.isLinux || Platform.isMacOS
-            ? LocalEngine(resolveExecutable: sl<YtDlpManager>().executablePath)
-            : null,
+        local: Platform.isAndroid ? YtDlpEngine(sl<NativeYtDlp>()) : null,
         server: AppConfig.hasApiBaseUrl
             ? ServerEngine(baseUrl: AppConfig.apiBaseUrl)
             : null,

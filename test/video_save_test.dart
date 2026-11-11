@@ -5,17 +5,6 @@ import 'package:music_download_play_app/features/downloads/domain/entities/downl
 import 'package:music_download_play_app/features/downloads/domain/entities/download_request.dart';
 
 void main() {
-  test('mp4 선택자는 상한 이하 H.264+AAC를 먼저 찾고 합쳐진 형식으로 끝난다', () {
-    final s = YtDlpVideoSaveRepository.selector(1080);
-    expect(s, startsWith('bv*[height<=1080][vcodec^=avc1]+ba[ext=m4a]'));
-    expect(s, endsWith('/b[height<=1080]/b'));
-  });
-
-  test('webm 선택자는 VP9+Opus 원본을 먼저 찾는다', () {
-    final s = YtDlpVideoSaveRepository.selector(720, VideoFormat.webm);
-    expect(s, startsWith('bv*[height<=720][ext=webm]+ba[ext=webm]'));
-  });
-
   test('파일 이름에서 못 쓰는 글자를 뺀다', () {
     expect(YtDlpVideoSaveRepository.safeName('a/b: c*?"<>|d'), 'a b c d');
     expect(YtDlpVideoSaveRepository.safeName('  '), 'video');

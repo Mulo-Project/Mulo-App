@@ -1,4 +1,3 @@
-import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter_test/flutter_test.dart';
@@ -7,7 +6,6 @@ import 'package:music_download_play_app/features/account/domain/usecases/account
 import 'package:music_download_play_app/features/downloads/domain/usecases/download_usecases.dart';
 import 'package:music_download_play_app/features/playlists/domain/usecases/playlist_usecases.dart';
 import 'package:music_download_play_app/features/playlists/presentation/bloc/playlist_import_cubit.dart';
-import 'package:music_download_play_app/features/search/data/engine/local_engine.dart';
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
 import 'package:music_download_play_app/features/search/domain/usecases/search_usecases.dart';
 
@@ -194,34 +192,4 @@ void _searchTests() {
     expect(cubit.state.status, PlaylistImportStatus.loaded);
   });
 
-  test('LocalEngine: 재생목록 검색 결과에서 이름 · 채널 · 곡 수를 읽는다', () async {
-    List<String>? args;
-    final engine = LocalEngine(
-      run: (_, a) async {
-        args = a;
-        return (
-          exitCode: 0,
-          stdout:
-              '${jsonEncode({
-                'id': 'PL1',
-                'title': 'T',
-                'url': 'https://www.youtube.com/playlist?list=PL1',
-                'uploader': 'U',
-                'playlist_count': 12,
-                'thumbnails': [
-                  {'url': 'th'},
-                ],
-              })}\n'
-              '${jsonEncode({'id': 'vid', 'title': 'video', 'url': 'https://www.youtube.com/watch?v=vid'})}\n',
-          stderr: '',
-        );
-      },
-    );
-    final page = await engine.searchPlaylists('q');
-    expect(args!.last, contains('sp=EgIQAw%253D%253D'));
-    expect(page.items, hasLength(1));
-    expect(page.items.single.channel, 'U');
-    expect(page.items.single.trackCount, 12);
-    expect(page.items.single.thumbnailUrl, 'th');
-  });
 }

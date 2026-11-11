@@ -27,16 +27,3 @@ DateTime? parseDate(Object? raw) {
 /// JSON의 문자열 칸 (비어 있으면 null).
 String? parseText(Object? raw) =>
     raw is String && raw.trim().isNotEmpty ? raw.trim() : null;
-
-/// yt-dlp 채널 정보의 `thumbnails` 중 채널 이미지(프로필)를 고른다 (없으면 null).
-/// 가로로 긴 배너는 건너뛰고, `avatar_uncropped`가 있으면 그것을 쓴다.
-String? avatarUrl(Object? raw) {
-  if (raw is! List) return null;
-  final avatars = [
-    for (final t in raw)
-      if (t is Map && t['url'] is String && '${t['id']}'.contains('avatar')) t,
-  ];
-  if (avatars.isEmpty) return null;
-  final uncropped = avatars.where((t) => t['id'] == 'avatar_uncropped');
-  return (uncropped.isEmpty ? avatars.last : uncropped.first)['url'] as String;
-}

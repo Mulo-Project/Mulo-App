@@ -3,7 +3,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../../../../core/config/app_config.dart';
 import '../../domain/entities/google_account.dart';
 import 'google_auth_source.dart';
-import 'loopback_google_auth.dart' show AuthStore, SecureAuthStore;
+import 'auth_store.dart';
 
 /// Android: `google_sign_in`(Credential Manager)로 로그인한다.
 class GoogleSignInAuthSource implements GoogleAuthSource {

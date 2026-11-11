@@ -55,47 +55,6 @@ class SubtitleTrack extends Equatable {
   List<Object?> get props => [language, automatic, cues];
 }
 
-/// 자막 파일(WebVTT)을 읽는다. 자동 자막은 앞 줄을 되풀이하며 이어지므로,
-/// 바로 앞 칸에 이미 나온 줄은 빼고 새로 생긴 줄만 남긴다. 태그(`<c>` · `<00:01.0>`)는 지운다.
-List<SubtitleCue> parseVtt(String vtt) {
-  final cues = <SubtitleCue>[];
-  var prev = <String>[];
-  final blocks = vtt.replaceAll('\r\n', '\n').split(RegExp(r'\n\s*\n'));
-  final time = RegExp(r'(?:(\d+):)?(\d{1,2}):(\d{2})[.,](\d{1,3})\s*-->');
-  for (final block in blocks) {
-    final lines = block.split('\n');
-    final i = lines.indexWhere(time.hasMatch);
-    if (i < 0) continue;
-    final m = time.firstMatch(lines[i])!;
-    final start = Duration(
-      hours: int.parse(m.group(1) ?? '0'),
-      minutes: int.parse(m.group(2)!),
-      seconds: int.parse(m.group(3)!),
-      milliseconds: int.parse(m.group(4)!.padRight(3, '0')),
-    );
-    final text = <String>[
-      for (final l in lines.skip(i + 1))
-        if (_clean(l).isNotEmpty) _clean(l),
-    ];
-    final fresh = [
-      for (final l in text)
-        if (!prev.contains(l)) l,
-    ];
-    prev = text;
-    if (fresh.isEmpty) continue;
-    cues.add(SubtitleCue(start, fresh.join(' ')));
-  }
-  return cues;
-}
-
-String _clean(String line) => line
-    .replaceAll(RegExp(r'<[^>]*>'), '')
-    .replaceAll('&nbsp;', ' ')
-    .replaceAll('&amp;', '&')
-    .replaceAll('&lt;', '<')
-    .replaceAll('&gt;', '>')
-    .trim();
-
 final _soundOnly = RegExp(r'^[\s♪♫♬♩\-–]*$');
 final _soundTag = RegExp(r'^[\[\(（【][^\]\)）】]*[\]\)）】]$');
 

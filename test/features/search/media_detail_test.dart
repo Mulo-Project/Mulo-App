@@ -6,7 +6,6 @@ import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/design/design.dart';
 import 'package:music_download_play_app/features/downloads/domain/repositories/download_queue_repository.dart';
-import 'package:music_download_play_app/features/search/data/engine/local_engine.dart';
 import 'package:music_download_play_app/features/search/data/engine/server_engine.dart';
 import 'package:music_download_play_app/features/search/domain/entities/engine_exception.dart';
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
@@ -79,108 +78,6 @@ void main() {
   });
 
   group('엔진 응답의 상세 정보', () {
-    test('LocalEngine: 채널 주소 · 조회수 · 올린 날 · 설명을 읽는다', () async {
-      final engine = LocalEngine(
-        run: (_, _) async => (
-          exitCode: 0,
-          stdout: jsonEncode({
-            'id': 'v',
-            'title': 'T',
-            'channel_url': 'https://www.youtube.com/@chan',
-            'view_count': 12345,
-            'upload_date': '20240131',
-            'description': '  hello  ',
-          }),
-          stderr: '',
-        ),
-      );
-      final hit = ((await engine.fetchInfo('https://x/v')) as VideoInfo).hit;
-      expect(hit.channelUrl, 'https://www.youtube.com/@chan');
-      expect(hit.viewCount, 12345);
-      expect(hit.uploadedAt, DateTime(2024, 1, 31));
-      expect(hit.description, 'hello');
-    });
-
-    test('LocalEngine: 곡 정보는 쓰지 않는 DASH · HLS를 건너뛰어 읽는다', () async {
-      List<String>? args;
-      final engine = LocalEngine(
-        run: (_, a) async {
-          args = a;
-          return (
-            exitCode: 0,
-            stdout: jsonEncode({'id': 'v', 'title': 'T'}),
-            stderr: '',
-          );
-        },
-      );
-      await engine.fetchInfo('https://x/v');
-      expect(
-        args,
-        containsAllInOrder([
-          '--extractor-args',
-          'youtube:skip=dash,hls,translated_subs',
-        ]),
-      );
-      expect(args!.last, 'https://x/v');
-    });
-
-    test('LocalEngine: 없는 칸은 비어 있다', () async {
-      final engine = LocalEngine(
-        run: (_, _) async => (
-          exitCode: 0,
-          stdout: jsonEncode({'id': 'v', 'title': 'T', 'upload_date': 'x'}),
-          stderr: '',
-        ),
-      );
-      final hit = ((await engine.fetchInfo('https://x/v')) as VideoInfo).hit;
-      expect(hit.channelUrl, isNull);
-      expect(hit.viewCount, isNull);
-      expect(hit.uploadedAt, isNull);
-      expect(hit.description, '');
-    });
-
-    test('LocalEngine: 좋아요 · 구독자 수를 읽는다', () async {
-      final engine = LocalEngine(
-        run: (_, _) async => (
-          exitCode: 0,
-          stdout: jsonEncode({
-            'id': 'v',
-            'title': 'T',
-            'like_count': 10,
-            'channel_follower_count': 2500,
-          }),
-          stderr: '',
-        ),
-      );
-      final hit = ((await engine.fetchInfo('https://x/v')) as VideoInfo).hit;
-      expect(hit.likeCount, 10);
-      expect(hit.subscriberCount, 2500);
-    });
-
-    test('LocalEngine.fetchChannel: 채널 이미지(배너 제외)와 구독자 수', () async {
-      List<String>? args;
-      final engine = LocalEngine(
-        run: (_, a) async {
-          args = a;
-          return (
-            exitCode: 0,
-            stdout: jsonEncode({
-              'channel_follower_count': 2500000,
-              'thumbnails': [
-                {'id': '0', 'url': 'https://img/banner.jpg'},
-                {'id': 'avatar_uncropped', 'url': 'https://img/avatar.jpg'},
-              ],
-            }),
-            stderr: '',
-          );
-        },
-      );
-      final channel = await engine.fetchChannel('https://www.youtube.com/@c');
-      expect(channel.thumbnailUrl, 'https://img/avatar.jpg');
-      expect(channel.subscriberCount, 2500000);
-      expect(args, containsAllInOrder(['--playlist-items', '0']));
-    });
-
     test('ServerEngine: 채널 조회는 없고 곡 정보의 구독자 · 이미지를 읽는다', () async {
       final engine = ServerEngine(
         baseUrl: 'https://s',
@@ -272,24 +169,6 @@ void main() {
         ),
       );
       expect(merged.uploader, 'Chan');
-    });
-
-    test('LocalEngine이 creators를 읽는다', () async {
-      final engine = LocalEngine(
-        run: (_, _) async => (
-          exitCode: 0,
-          stdout: jsonEncode({
-            'id': 'c',
-            'title': 'Collab',
-            'channel': 'Sauce +',
-            'channel_url': 'https://www.youtube.com/channel/UC2Ei',
-            'creators': ['Sauce +', ' ', 'William Osman 2'],
-          }),
-          stderr: '',
-        ),
-      );
-      final hit = ((await engine.fetchInfo('https://x/c')) as VideoInfo).hit;
-      expect(hit.creators, ['Sauce +', 'William Osman 2']);
     });
 
     test('상세는 대표 채널의 주소로 채널 정보를 읽고 이름도 대표 채널로 바뀐다', () async {

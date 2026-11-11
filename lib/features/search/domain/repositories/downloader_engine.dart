@@ -5,7 +5,7 @@ import '../entities/search_source.dart';
 import '../entities/subtitle_track.dart';
 import '../entities/video_stream.dart';
 
-/// 음원 사이트에서 찾고 받는 엔진 (서버 모드 `ServerEngine` / 로컬 모드 `LocalEngine`).
+/// 음원 사이트에서 찾고 받는 엔진 (서버 모드 `ServerEngine` / 로컬 모드 `YtDlpEngine`(네이티브 yt-dlp)).
 /// 지금은 검색 · 곡 정보만 있다. 받기는 다음 작업에서 더한다.
 ///
 /// 실패는 [EngineException]으로 던진다.

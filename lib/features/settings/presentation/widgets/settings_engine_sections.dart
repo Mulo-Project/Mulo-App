@@ -56,7 +56,7 @@ class SettingsServerSection extends StatelessWidget {
   }
 }
 
-/// 다운로드 엔진(yt-dlp) 줄: 설치 여부 · 버전, 설치 · 업데이트 버튼 (데스크톱 · Android full).
+/// 다운로드 엔진(yt-dlp) 줄: 설치 여부 · 버전, 설치 · 업데이트 버튼 (Android full).
 class SettingsEngineRow extends StatelessWidget {
   const SettingsEngineRow({super.key, required this.cubit});
 

@@ -28,9 +28,19 @@
 - `youtube_explode_dart` 의존성 제거 (pubspec). 영상 id 파싱은 작은 순수 함수 `youtubeVideoIdOf`.
 - Kotlin 테스트용 `org.json:json` testImplementation 추가 (build.gradle.kts).
 
+## yt-dlp 로컬 엔진도 네이티브로 (같은 PR, 사용자 "다 옮겨")
+결정 D-164: Android만 남기고 데스크톱용 Dart yt-dlp 엔진과 데스크톱 OAuth를 지운다.
+- 네이티브 `YtDlpEngine`(Kotlin, 채널 `music_app/ytdlp_engine`): 검색(다른 사이트 · 최신순 키) · 재생목록 검색 · 곡/재생목록 정보 · 채널 정보 · 소리/영상 주소(기본 → `android_vr` 재시도) · 오디오 언어 · 자막(언어 고르기 + VTT 읽기) · 영상 파일 저장(`saveVideo`).
+  - `YtDlpParsers`: yt-dlp JSON → 값, `-f` 선택자(미리 듣기 · 화면용 · 저장용 mp4/webm), 오류 가르기, 자막 언어 고르기, VTT 파싱. 모두 순수 함수.
+  - `ExecGate`: 한 번에 하나씩, 우선순위(소리 0 → 영상 1 → 나머지 2) · 같은 그룹의 새 요청이 오면 대기 중인 예전 요청이 빠진다 (예전 Dart `_ExecGate`와 같다). 60초 안에 안 끝나면 yt-dlp를 끊고 `timeout`. 영상 저장은 줄 밖에서 따로(30분 제한).
+  - 실행기 `YtDlpRunner`: full은 `YtDlpChannel`(youtubedl-android)이 구현, lite는 `available=false`. 예전 `music_app/ytdlp`의 `run`/`cancel`은 없앴다 (버전 · 업데이트 · 되돌리기만 남음).
+- Dart: `NativeYtDlp`(채널 호출 · 오류 코드 → `EngineFailure`)와 `YtDlpEngine`(받은 맵 → 모델)만 남았다. `LocalEngine` · `audio_format_policy`의 yt-dlp 선택자 · `parseVtt` · `avatarUrl` 삭제. `YtDlpVideoSaveRepository`는 `fetch`(네이티브 `saveVideo`)를 부르고, 형식별(mp4 · webm) 선택은 네이티브가 확장자로 가른다.
+- 데스크톱 삭제: `YtDlpManager`는 Android만, `LoopbackGoogleAuth`(OAuth 브라우저 로그인)와 `MULO_GOOGLE_DESKTOP_*` 빌드 값 삭제 (`AuthStore`는 `auth_store.dart`로 분리). `docs/google-login-setup.md` 갱신.
+- 테스트: Dart `LocalEngine` 테스트(7개 파일)는 Kotlin `YtDlpParsersTest` · `YtDlpEngineTest` · `ExecGateTest`로 옮기고, Dart는 `yt_dlp_engine_test.dart`(채널 값 전달 · 모델 담기 · 오류 코드 · Routing · 영상 저장)만.
+
 ## 아직 Dart에 남은 것
-- 구글 로그인 자체(Android `google_sign_in` 플러그인 · 데스크톱 `LoopbackGoogleAuth`의 OAuth 토큰 요청): 플러그인 · 데스크톱용이라 이번에는 그대로.
-- `LocalEngine`(yt-dlp 호출 · JSON 해석: 자막 · 오디오 언어 · 느린 곡 정보 · SoundCloud 등 다른 사이트)과 SoundCloud 아바타 페이지 읽기(`SoundcloudAvatarEngine`).
+- 구글 로그인(Android `google_sign_in` 플러그인 + 토큰 보안 저장소): 이미 플러그인(네이티브)을 부르는 얇은 감싸기다. 네이티브로 다시 쓰려면 Credential Manager · Google Identity 의존성을 새로 넣어야 해서 별도 결정이 필요하다.
+- SoundCloud 아바타 페이지 읽기(`SoundcloudAvatarEngine`, 유튜브가 아님).
 
 ## 한계 / 후속
 - 이 환경에서는 YouTube에 연결할 수 없어 응답 모양은 기존 라이브러리 소스를 보고 맞췄다. 실기기 확인 필요.
@@ -39,3 +49,4 @@
 ## 확인 필요
 - PC: `flutter pub get`(youtube_explode_dart 제거로 pubspec.lock 갱신), `flutter analyze`, `flutter test`, Android 빌드와 `./gradlew testDebugUnitTest`(Kotlin 컴파일 · 테스트는 이 환경에서 못 했다).
 - 기기: 검색 첫 쪽 · 다음 쪽 시간, 한글 검색어 결과, 재생목록 가져오기(곡 수가 yt-dlp와 같은지, 시간), 라이브 방송이 목록에 어떻게 나오는지.
+- 기기(yt-dlp 엔진): SoundCloud 검색 · 곡 정보, 자막 받기(가사), 오디오 언어 목록, 영상 mp4/webm 저장과 진행률, lite 빌드에서 서버로 넘어가는지. 로그 `adb logcat -s MuloNative` (`yt-dlp …ms 종료`).

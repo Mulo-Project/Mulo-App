@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart';
 import 'package:music_download_play_app/features/account/data/datasources/google_sign_in_auth_source.dart';
-import 'package:music_download_play_app/features/account/data/datasources/loopback_google_auth.dart';
+import 'package:music_download_play_app/features/account/data/datasources/auth_store.dart';
 
 class _MemoryStore implements AuthStore {
   final values = <String, String>{};

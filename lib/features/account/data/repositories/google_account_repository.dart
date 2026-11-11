@@ -6,13 +6,11 @@ import '../../../subscriptions/domain/entities/channel_hit.dart';
 import '../../domain/entities/google_account.dart';
 import '../datasources/google_auth_source.dart';
 import '../datasources/google_sign_in_auth_source.dart';
-import '../datasources/loopback_google_auth.dart';
 import '../datasources/native_google_api.dart';
 import '../../domain/repositories/account_repository.dart';
 
 /// 구글 로그인 + YouTube Data API v3 `playlists?mine=true` (읽기 전용). API 읽기는 네이티브([NativeGoogleApi])가 한다.
-/// 로그인 방식은 기기에 따라 다르다: Android는 `google_sign_in`, 데스크톱은 브라우저
-/// 로그인([LoopbackGoogleAuth]). 빌드에 해당 클라이언트 ID가 없으면 쓸 수 없다.
+/// 로그인은 Android의 `google_sign_in`이다. 빌드에 클라이언트 ID가 없으면 쓸 수 없다.
 class GoogleAccountRepository implements AccountRepository {
   GoogleAccountRepository({GoogleAuthSource? auth, NativeGoogleApi? api})
     : _auth = auth ?? _platformAuth(),
@@ -31,19 +29,13 @@ class GoogleAccountRepository implements AccountRepository {
     if (Platform.isAndroid) {
       return AppConfig.hasGoogleClient ? GoogleSignInAuthSource() : null;
     }
-    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-      return AppConfig.hasGoogleDesktopClient ? LoopbackGoogleAuth() : null;
-    }
     return null;
   }
 
   @override
   AccountSupport get support => _auth != null
       ? AccountSupport.available
-      : Platform.isAndroid ||
-            Platform.isWindows ||
-            Platform.isLinux ||
-            Platform.isMacOS
+      : Platform.isAndroid
       ? AccountSupport.notConfigured
       : AccountSupport.unsupportedPlatform;
 
