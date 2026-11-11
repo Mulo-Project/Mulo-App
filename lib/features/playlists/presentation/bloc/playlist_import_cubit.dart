@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -141,8 +143,18 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
     this._create,
     this._findExisting,
     this._addTracks,
-    this._channelPlaylists,
-  ) : super(const PlaylistImportState());
+    this._channelPlaylists, {
+    WarmUpSearch? warmUp,
+  }) : _warmUp = warmUp,
+       super(const PlaylistImportState());
+
+  final WarmUpSearch? _warmUp;
+
+  /// 가져오기 화면을 열 때: 목록 요청에 쓸 연결을 미리 열어 둔다 (기다리지 않고, 실패해도 무시).
+  void warmUp() {
+    final warm = _warmUp;
+    if (warm != null) unawaited(warm(const NoParams()).catchError((Object _) {}));
+  }
 
   final FetchMediaInfo _info;
   final SearchPlaylists _search;

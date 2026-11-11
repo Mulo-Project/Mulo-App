@@ -15,6 +15,7 @@
 ## 추가 (속도)
 - 연결 미리 열기: 검색 화면을 열 때 `DownloaderEngine.warmUp()` → 네이티브 `YoutubeBrowser.warmUp()`(`www.youtube.com/generate_204` HEAD)이 DNS · TCP · TLS를 미리 해 둔다. 응답을 끝까지 읽고 `disconnect()`를 부르지 않아 연결이 풀로 돌아가 다음 요청이 재사용한다 (새 라이브러리 없이 Android HttpURLConnection의 연결 풀 사용).
 - 다음 쪽 미리 받기: 한 쪽을 돌려준 뒤 뒤에서 다음 쪽을 같은 검색 세션에 받아 둔다 (한 번에 하나, 실패는 무시하고 그 쪽을 부를 때 다시 읽는다).
+- 가져오기 화면을 열 때도 같은 미리 열기를 부른다.
 - 응답 필드 줄이기는 하지 않는다 (`prettyPrint=false`만).
 - 로그: `연결 미리 열기 …ms`, `다음 쪽 미리 받기 …ms`.
 

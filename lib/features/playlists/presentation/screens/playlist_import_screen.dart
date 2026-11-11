@@ -37,6 +37,7 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
   @override
   void initState() {
     super.initState();
+    _cubit.warmUp();
     if (widget.initialUrl.trim().isNotEmpty) _load();
   }
 
