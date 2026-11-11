@@ -581,7 +581,9 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
     String? lyrics, {
     bool remember = true,
   }) async {
-    final trackId = 'download:$id';
+    final trackId = request.videoFormat != null
+        ? '${Track.downloadedVideoIdPrefix}$id'
+        : 'download:$id';
     await _library.addTracks([
       Track(
         id: trackId,

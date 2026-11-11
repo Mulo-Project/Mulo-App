@@ -49,6 +49,7 @@ class Track {
   bool get isVideo =>
       hasVideo ||
       id.startsWith(videoIdPrefix) ||
+      id.startsWith(downloadedVideoIdPrefix) ||
       (id.startsWith('file:') &&
           _videoExtensions.any(uri.toLowerCase().endsWith));
 
@@ -60,6 +61,9 @@ class Track {
 
   /// 기기에서 불러온 영상 곡의 id 앞머리.
   static const videoIdPrefix = 'device-video:';
+
+  /// 영상으로 받아 저장한 곡의 id 앞머리 (뒤는 받기 id). 이 곡은 영상 파일이라 영상으로 재생한다.
+  static const downloadedVideoIdPrefix = 'download:video:';
 
   static const _videoExtensions = ['.mp4', '.mkv', '.webm', '.mov', '.m4v'];
 
