@@ -57,6 +57,9 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
 
     /** 처음에는 소리보다 [START_AHEAD_MS] 앞 지점에서 멈춘 채 받아 두었다가, 소리가 거기 닿는 순간 튼다. */
     private var videoStartPending = false
+
+    /** 영상이 소리보다 앞선 지점에서 기다리는 길이. 영상이 제때 준비되지 못하면 늘려 다시 맞춘다. */
+    private var pendingLead = START_AHEAD_MS
     private var videoSpeed = 1f
     private var lastHardSeek = 0L
 
@@ -180,7 +183,9 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
                 "seek" -> {
                     val ms = (call.arguments as Number).toLong()
                     player?.seekTo(ms)
-                    videoPlayer?.seekTo(ms + SEEK_LEAD_MS)
+                    // 소리와 영상이 따로 받아서 준비되는 때가 달라, 그냥 옮기면 한쪽이 먼저 달려 어긋난다.
+                    // 영상은 소리보다 조금 앞에서 멈춘 채 받아 두었다가, 소리가 닿는 순간 함께 튼다 (처음 시작과 같은 방식).
+                    videoPlayer?.let { v -> if (!muxedVideo) restartVideoAt(v, ms, SEEK_PENDING_LEAD_MS) }
                     result.success(null)
                 }
                 "pause" -> { player?.pause(); result.success(null) }
@@ -343,6 +348,7 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
         videoPlayer = v
         videoUrl = url
         videoStartPending = true
+        pendingLead = START_AHEAD_MS
         videoSpeed = 1f
         VideoSurfaceHub.setPreviewVideo(v, keepFrame = old != null)
         old?.release()
@@ -369,8 +375,11 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
             if (v.playbackState != Player.STATE_READY) return
             val ahead = v.currentPosition - a.currentPosition
             if (ahead > START_TOLERANCE_MS) return // 소리가 아직 거기 닿지 않았다
-            // 이미 지났으면 지금 소리 자리로 옮겨 튼다.
-            if (ahead < -START_MISSED_MS) v.seekTo(a.currentPosition + SEEK_LEAD_MS)
+            if (ahead < -START_MISSED_MS) {
+                // 영상이 준비되는 사이 소리가 지나갔다: 더 앞에서 다시 받아 두고 기다린다 (바로 틀면 늘 뒤처진다).
+                restartVideoAt(v, a.currentPosition, (pendingLead * 2).coerceAtMost(MAX_PENDING_LEAD_MS))
+                return
+            }
             v.playWhenReady = true
             videoStartPending = false
             return
@@ -381,10 +390,10 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
         val drift = v.currentPosition - a.currentPosition
         val now = SystemClock.elapsedRealtime()
         if (kotlin.math.abs(drift) > HARD_SEEK_MS) {
+            // 크게 벌어졌다: 속도를 바꿔 따라가면 오래 걸리니, 소리가 닿을 때 함께 트는 방식으로 다시 맞춘다.
             if (now - lastHardSeek > HARD_SEEK_GAP_MS) {
                 lastHardSeek = now
-                setVideoSpeed(v, 1f)
-                v.seekTo(a.currentPosition + SEEK_LEAD_MS)
+                restartVideoAt(v, a.currentPosition, RESYNC_LEAD_MS)
             }
             return
         }
@@ -395,6 +404,16 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
         } else if (abs > ENGAGE_MS) {
             setVideoSpeed(v, if (drift > 0) SLOW_DOWN else CATCH_UP)
         }
+    }
+
+    /** 영상을 소리 위치 [audioMs]보다 [lead] 앞에서 멈춘 채 받아 두고, 소리가 닿으면 함께 틀도록 되돌린다. */
+    private fun restartVideoAt(v: ExoPlayer, audioMs: Long, lead: Long) {
+        pendingLead = lead
+        videoSpeed = 1f
+        v.setPlaybackSpeed(1f)
+        v.playWhenReady = false
+        v.seekTo(audioMs + lead)
+        videoStartPending = true
     }
 
     private fun setVideoSpeed(v: ExoPlayer, speed: Float) {
@@ -469,14 +488,16 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
 
         /** 영상 맞추기: 시작할 때 소리보다 앞 지점에서 기다리는 길이, 따라잡기 속도, 되감기 기준 (ms). */
         private const val START_AHEAD_MS = 1500L
-        private const val START_TOLERANCE_MS = 30L
+        private const val START_TOLERANCE_MS = 60L
         private const val START_MISSED_MS = 300L
-        private const val SEEK_LEAD_MS = 300L
         private const val SYNC_INTERVAL_MS = 40L
-        private const val ENGAGE_MS = 200L
-        private const val SETTLE_MS = 60L
-        private const val HARD_SEEK_MS = 2500L
-        private const val HARD_SEEK_GAP_MS = 3000L
+        private const val ENGAGE_MS = 100L
+        private const val SETTLE_MS = 40L
+        private const val HARD_SEEK_MS = 700L
+        private const val HARD_SEEK_GAP_MS = 1500L
+        private const val SEEK_PENDING_LEAD_MS = 700L
+        private const val RESYNC_LEAD_MS = 600L
+        private const val MAX_PENDING_LEAD_MS = 4000L
         private const val CATCH_UP = 1.06f
         private const val SLOW_DOWN = 0.94f
     }
