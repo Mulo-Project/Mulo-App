@@ -163,7 +163,6 @@ class DownloadQueueCubit extends Cubit<DownloadQueueState> {
   @override
   Future<void> close() async {
     await _sub?.cancel();
-    await _keysSub?.cancel();
     return super.close();
   }
 }

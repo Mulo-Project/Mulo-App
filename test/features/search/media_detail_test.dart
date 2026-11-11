@@ -5,7 +5,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
 import 'package:music_download_play_app/core/design/design.dart';
-import 'package:music_download_play_app/features/downloads/domain/entities/download_source.dart';
 import 'package:music_download_play_app/features/downloads/domain/repositories/download_queue_repository.dart';
 import 'package:music_download_play_app/features/search/data/engine/local_engine.dart';
 import 'package:music_download_play_app/features/search/data/engine/server_engine.dart';
