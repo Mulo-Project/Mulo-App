@@ -166,17 +166,16 @@ class CoverTagWriter {
     final f = ffmpeg;
     if (f == null) return false;
     try {
+      // 커버는 형식을 가리지 않고 정사각형 PNG로 넘긴다 (형식별로 쓰는지 · 어떻게 넣는지는 네이티브가 정한다).
       Uint8List? png;
-      if (extension.toLowerCase() == 'mp4') {
-        final source = await _sourceFile(cover, thumbnailUrl);
-        if (source != null) {
-          png = await _squarePng(
-            await source.readAsBytes(),
-            cover?.transform ?? CoverTransform.identity,
-          );
-        }
+      final source = await _sourceFile(cover, thumbnailUrl);
+      if (source != null) {
+        png = await _squarePng(
+          await source.readAsBytes(),
+          cover?.transform ?? CoverTransform.identity,
+        );
       }
-      return await f.writeVideo(
+      return await f.write(
         video,
         extension: extension,
         title: title,
