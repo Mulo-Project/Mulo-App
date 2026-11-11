@@ -7,7 +7,7 @@
 - 오래 걸리는 yt-dlp 실행이 검색 · 주소 읽기를 막지 않게, 네이티브 `YtDlpChannel`의 `run`에 `background`(별도 실행 줄)를 추가했다. 타임아웃은 30분.
 
 ## 변경
-- Dart: `VideoSaveRepository`(domain) · `YtDlpVideoSaveRepository`(data) · `SaveVideo` / `IsVideoSaveAvailable` 유스케이스, 받기 창 버튼, `AndroidYtDlp.run`에 `timeout` · `background`. 문구 4개(ARB + 생성 파일 손으로 맞춤).
+- Dart: `VideoSaveRepository`(domain) · `YtDlpVideoSaveRepository`(data) · `SaveVideoFile` / `IsVideoSaveAvailable` 유스케이스, 받기 창 버튼, `AndroidYtDlp.run`에 `timeout` · `background`. 문구 4개(ARB + 생성 파일 손으로 맞춤).
 - 네이티브: `MediaStoreChannel.saveAudio`에 `video` 플래그(영상 모음에 넣기), `YtDlpChannel` 백그라운드 실행 줄.
 - 패키지 · Manifest 변경 없음.
 

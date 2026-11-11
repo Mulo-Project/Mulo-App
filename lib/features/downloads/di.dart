@@ -63,7 +63,7 @@ void registerDownloads(GetIt sl) {
       ),
     )
     ..registerFactory(() => IsVideoSaveAvailable(sl()))
-    ..registerFactory(() => SaveVideo(sl()))
+    ..registerFactory(() => SaveVideoFile(sl()))
     ..registerLazySingleton<DownloadSettingsRepository>(
       PrefsDownloadSettingsRepository.new,
     )

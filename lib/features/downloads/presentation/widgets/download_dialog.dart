@@ -276,7 +276,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
   Future<void> _saveVideo() async {
     final messenger = ScaffoldMessenger.of(context);
     final l10n = context.l10n;
-    final save = sl<SaveVideo>();
+    final save = sl<SaveVideoFile>();
     final request = VideoSaveRequest(
       url: widget.url,
       title: _title.text.trim(),

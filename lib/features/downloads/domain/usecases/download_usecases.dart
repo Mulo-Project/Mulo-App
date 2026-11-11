@@ -226,8 +226,8 @@ class IsVideoSaveAvailable implements UseCase<bool, NoParams> {
 
 /// 영상(소리 포함)을 mp4 파일로 저장한다. 성공하면 true, 못 받으면 false.
 /// 제목이나 원본 주소가 비어 있으면 받지 않는다.
-class SaveVideo implements UseCase<bool, VideoSaveRequest> {
-  const SaveVideo(this._repo);
+class SaveVideoFile implements UseCase<bool, VideoSaveRequest> {
+  const SaveVideoFile(this._repo);
 
   final VideoSaveRepository _repo;
 

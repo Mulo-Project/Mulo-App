@@ -32,19 +32,19 @@ void main() {
     expect(YtDlpVideoSaveRepository.safeName('가' * 150).length, 100);
   });
 
-  test('SaveVideo: 비어 있으면 받지 않고, 실패는 false', () async {
+  test('SaveVideoFile: 비어 있으면 받지 않고, 실패는 false', () async {
     final repo = _Repo();
     expect(
-      await SaveVideo(repo)(const VideoSaveRequest(url: '', title: 't')),
+      await SaveVideoFile(repo)(const VideoSaveRequest(url: '', title: 't')),
       isFalse,
     );
     expect(repo.saved, isEmpty);
     expect(
-      await SaveVideo(repo)(const VideoSaveRequest(url: 'u', title: 't')),
+      await SaveVideoFile(repo)(const VideoSaveRequest(url: 'u', title: 't')),
       isTrue,
     );
     expect(
-      await SaveVideo(_Repo(fail: true))(
+      await SaveVideoFile(_Repo(fail: true))(
         const VideoSaveRequest(url: 'u', title: 't'),
       ),
       isFalse,
