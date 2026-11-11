@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import '../../../../core/config/default_video_folder.dart';
 import '../../domain/entities/download_options.dart';
 import '../../domain/repositories/video_save_repository.dart';
 import '../datasources/downloaded_file_store.dart';
@@ -11,6 +12,7 @@ typedef VideoRun =
       List<String> args, {
       Duration timeout,
       bool background,
+      void Function(double progress)? onProgress,
     });
 
 /// yt-dlp가 영상과 소리를 받아 mp4로 합치고(APK에 든 ffmpeg 사용), 그 파일을 `Movies/Mulo`에 저장한다.
@@ -46,7 +48,10 @@ class YtDlpVideoSaveRepository implements VideoSaveRepository {
   Future<bool> isAvailable() => available();
 
   @override
-  Future<void> save(VideoSaveRequest request) async {
+  Future<void> save(
+    VideoSaveRequest request, {
+    void Function(double progress)? onProgress,
+  }) async {
     final dir = await tempDir();
     final stem = 'video_${DateTime.now().microsecondsSinceEpoch}';
     File? output;
@@ -60,19 +65,21 @@ class YtDlpVideoSaveRepository implements VideoSaveRepository {
           request.format.extension,
           '--no-playlist',
           '--no-warnings',
+          '--newline',
           '-o',
           '${dir.path}${Platform.pathSeparator}$stem.%(ext)s',
           request.url,
         ],
         timeout: timeout,
         background: true,
+        onProgress: onProgress,
       );
       if (r.exitCode != 0) throw VideoSaveException(r.stderr.trim());
       output = await _find(dir, stem, request.format.extension);
       if (output == null) throw const VideoSaveException('no output file');
       await store.save(
         output,
-        folder: 'Movies/Mulo',
+        folder: request.folder.isEmpty ? defaultVideoFolder() : request.folder,
         name: safeName(request.title),
         extension: request.format.extension,
         mime: request.format.mime,

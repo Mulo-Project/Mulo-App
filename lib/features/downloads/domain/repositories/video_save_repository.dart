@@ -7,6 +7,7 @@ class VideoSaveRequest {
     required this.title,
     this.artist = '',
     this.maxHeight = 1080,
+    this.folder = '',
     this.format = VideoFormat.mp4,
   });
 
@@ -16,6 +17,9 @@ class VideoSaveRequest {
 
   /// 화질 상한(세로 픽셀). 이 이하에서 가장 좋은 화질을 받는다.
   final int maxHeight;
+
+  /// 저장할 폴더 (`Movies` · `Download` 등). 비면 앱 기본 `Movies/Mulo`.
+  final String folder;
   final VideoFormat format;
 }
 
@@ -35,5 +39,10 @@ abstract interface class VideoSaveRepository {
   Future<bool> isAvailable();
 
   /// 영상과 소리를 받아 mp4 한 파일로 합쳐 `Movies/Mulo`에 저장한다. 못 하면 [VideoSaveException].
-  Future<void> save(VideoSaveRequest request);
+  ///
+  /// [onProgress]는 받는 진행률(0 ~ 1). 1에 닿은 뒤 합치기 · 저장이 이어질 수 있다.
+  Future<void> save(
+    VideoSaveRequest request, {
+    void Function(double progress)? onProgress,
+  });
 }

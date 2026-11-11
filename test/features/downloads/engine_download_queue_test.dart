@@ -154,8 +154,13 @@ class _FakeVideo implements VideoSaveRepository {
   Future<bool> isAvailable() async => true;
 
   @override
-  Future<void> save(VideoSaveRequest request) async {
+  Future<void> save(
+    VideoSaveRequest request, {
+    void Function(double progress)? onProgress,
+  }) async {
+    onProgress?.call(0.5);
     if (fail) throw const VideoSaveException('boom');
+    onProgress?.call(0.99);
     saved.add(request);
   }
 }

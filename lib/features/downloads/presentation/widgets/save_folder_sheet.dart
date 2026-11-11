@@ -22,6 +22,7 @@ Future<String?> showSaveFolderSheet(
   required Future<String?> Function() pickOther,
   bool removable = false,
   Future<void> Function(String? path)? onFixedChanged,
+  List<String>? only,
 }) => showAppSheet<String>(
   context,
   isScrollControlled: true,
@@ -32,6 +33,7 @@ Future<String?> showSaveFolderSheet(
       pickOther: pickOther,
       removable: removable,
       onFixedChanged: onFixedChanged,
+      only: only,
     ),
   ),
 );
@@ -42,9 +44,13 @@ class _SaveFolderSheet extends StatefulWidget {
     required this.pickOther,
     required this.removable,
     this.onFixedChanged,
+    this.only,
   });
 
   final String current;
+
+  /// 주면 이 폴더들 중에서만 고른다 (영상 저장: Movies · Download). 직접 선택은 숨긴다.
+  final List<String>? only;
 
   /// 고정 모드의 변경 알림 (고정하면 경로, 풀면 null). 주면 고정 모드다.
   final Future<void> Function(String? path)? onFixedChanged;
@@ -73,7 +79,7 @@ class _SaveFolderSheetState extends State<_SaveFolderSheet> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final cubit = context.read<SaveLocationsCubit>();
-    final locations = context.watch<SaveLocationsCubit>().state;
+    final locations = widget.only ?? context.watch<SaveLocationsCubit>().state;
     final current = _fixedMode ? _fixed : widget.current;
     final removable = widget.removable;
     final pickOther = widget.pickOther;
@@ -137,6 +143,7 @@ class _SaveFolderSheetState extends State<_SaveFolderSheet> {
                         ],
                       ),
               ),
+              if (widget.only == null) ...[
               const SizedBox(height: AppSpacing.md),
               PillButton(
                 label: l10n.saveFolderPickOther,
@@ -156,6 +163,7 @@ class _SaveFolderSheetState extends State<_SaveFolderSheet> {
                   nav.pop(picked);
                 },
               ),
+              ],
             ],
           ),
         ),

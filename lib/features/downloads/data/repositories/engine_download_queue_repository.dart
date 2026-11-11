@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import '../../../../core/config/default_video_folder.dart';
 import '../../../covers/domain/entities/cover_key.dart';
 import '../../../covers/domain/repositories/cover_repository.dart';
 import '../../../library/domain/entities/track.dart';
@@ -388,9 +389,12 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
       // 영상으로 저장: 영상(소리 포함)만 받아 `Movies/Mulo`에 저장하고 끝난다 (보관함 곡은 만들지 않는다).
       final videoFormat = request.videoFormat;
       if (videoFormat != null) {
+        final videoFolder = request.savePath.isNotEmpty
+            ? request.savePath
+            : defaultVideoFolder();
         final video = _video;
         if (video == null) throw const DownloadFailed('영상 저장을 쓸 수 없어요');
-        _set(id, (e) => e.copyWith(processing: true), persist: false);
+        var shown = 0.0;
         try {
           await video.save(
             VideoSaveRequest(
@@ -398,8 +402,21 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
               title: request.title,
               artist: request.artist,
               maxHeight: request.videoHeight,
+              folder: videoFolder,
               format: videoFormat,
             ),
+            onProgress: (p) {
+              if (token.isCancelled || p - shown < _progressStep) return;
+              shown = p;
+              _set(
+                id,
+                (e) => e.status == DownloadStatus.downloading
+                    // 다 받으면(0.99) 합치기 · 저장이라 "처리 중"으로 보인다.
+                    ? e.copyWith(progress: p, processing: p >= 0.98)
+                    : e,
+                persist: false,
+              );
+            },
           );
         } on VideoSaveException catch (e) {
           throw DownloadFailed('영상을 저장하지 못했어요 (${e.message})');
@@ -410,7 +427,7 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
           (e) => e.copyWith(
             status: DownloadStatus.done,
             progress: 1,
-            savedFolder: 'Movies/Mulo',
+            savedFolder: videoFolder,
           ),
         );
         return;

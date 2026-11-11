@@ -35,6 +35,7 @@ abstract interface class DownloadedFileStore {
 class PlatformDownloadedFileStore implements DownloadedFileStore {
   static const _channel = MethodChannel('music_app/media_store');
   static const _androidRoot = '/storage/emulated/0/';
+  static const _videoDirs = {'Movies', 'DCIM', 'Pictures', 'Download'};
   static const _mediaDirs = {
     'Music',
     'Podcasts',
@@ -58,7 +59,9 @@ class PlatformDownloadedFileStore implements DownloadedFileStore {
     if (Platform.isAndroid) {
       // 영상(mp4)은 `Movies/Mulo`, 음원은 받는 폴더(`Music/…`).
       final isVideo = mime.startsWith('video/');
-      final relative = isVideo ? 'Movies/Mulo' : androidRelativePath(folder);
+      final relative = isVideo
+          ? androidVideoRelativePath(folder)
+          : androidRelativePath(folder);
       final media = androidMediaType(extension, mime);
       final uri = await _channel.invokeMethod<String>('saveAudio', {
         'path': source.path,
@@ -107,6 +110,21 @@ class PlatformDownloadedFileStore implements DownloadedFileStore {
       }
     }
     return 'Music/Mulo';
+  }
+
+  /// 영상 저장 폴더 → MediaStore 상대 경로. 영상이 들어갈 수 있는 `Movies` · `DCIM` · `Pictures` ·
+  /// `Download` 아래면 그대로, 그 밖이면 `Movies/Mulo`.
+  static String androidVideoRelativePath(String folder) {
+    final f = folder.replaceAll(r'\', '/');
+    if (f.startsWith(_androidRoot)) {
+      final rest = f
+          .substring(_androidRoot.length)
+          .replaceAll(RegExp(r'^/+|/+$'), '');
+      if (rest.isNotEmpty && _videoDirs.contains(rest.split('/').first)) {
+        return rest;
+      }
+    }
+    return 'Movies/Mulo';
   }
 
   static File _uniqueFile(Directory dir, String name, String ext) {

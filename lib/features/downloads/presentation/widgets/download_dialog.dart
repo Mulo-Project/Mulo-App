@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
+import '../../../../core/config/default_video_folder.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../library/presentation/bloc/library_cubit.dart';
@@ -202,6 +203,8 @@ class _DownloadScreenState extends State<DownloadScreen> {
   // 영상 파일(mp4)로 저장: 풀 빌드(Android)에서만 켜진다.
   var _videoAvailable = false;
   var _asVideo = false;
+  // 저장 유형을 바꾸면 폴더 칸도 그 유형의 폴더로 바뀐다 (음원은 음악 폴더, 영상은 `Movies/Mulo`).
+  var _otherPath = defaultVideoFolder();
   var _videoFormat = VideoFormat.mp4;
   var _videoHeight = 1080;
 
@@ -233,7 +236,11 @@ class _DownloadScreenState extends State<DownloadScreen> {
     // 고정한 폴더가 없으면 마지막에 받은 폴더(없으면 앱 기본 폴더)로 채운다.
     if (_savePath.text.isEmpty) {
       context.read<DownloadSettingsCubit>().effectivePath().then((path) {
-        if (mounted && _savePath.text.isEmpty) {
+        if (!mounted) return;
+        if (_asVideo) {
+          // 그 사이 영상으로 바꿨으면 음원 폴더 자리([_otherPath])를 채운다.
+          if (_otherPath.isEmpty) setState(() => _otherPath = path);
+        } else if (_savePath.text.isEmpty) {
           setState(() => _savePath.text = path);
         }
       });
@@ -264,8 +271,29 @@ class _DownloadScreenState extends State<DownloadScreen> {
     });
   }
 
+  void _setAsVideo(bool video) {
+    if (video == _asVideo) return;
+    setState(() {
+      final here = _savePath.text;
+      _savePath.text = _otherPath;
+      _otherPath = here;
+      _asVideo = video;
+    });
+  }
+
   Future<void> _pickFolder() async {
     final settings = context.read<DownloadSettingsCubit>();
+    if (_asVideo) {
+      // 영상은 Movies · Download 중에서만 고른다 (MediaStore가 영상을 받아 주는 위치).
+      final path = await showSaveFolderSheet(
+        context,
+        current: _savePath.text,
+        pickOther: settings.pickFolder,
+        only: videoFolderPresets(),
+      );
+      if (path != null && mounted) setState(() => _savePath.text = path);
+      return;
+    }
     final path = await showSaveFolderSheet(
       context,
       current: _savePath.text,
@@ -467,7 +495,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
                         labelOf: (v) => v
                             ? l10n.videoSaveTypeVideo
                             : l10n.videoSaveTypeAudio,
-                        onChanged: (v) => setState(() => _asVideo = v),
+                        onChanged: _setAsVideo,
                       ),
                     ],
                     if (_asVideo) ...[

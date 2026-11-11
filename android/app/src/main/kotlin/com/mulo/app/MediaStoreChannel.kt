@@ -249,11 +249,13 @@ class MediaStoreChannel(
         video: Boolean = false,
     ): String {
         val resolver = context.contentResolver
+        // 영상을 `Download/…`에 저장하면 다운로드 모음에 넣는다 (Android 10+). 이 모음에는 아티스트 칸이 없다.
+        val toDownloads = video && relativePath.startsWith("Download") && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
         val values = ContentValues().apply {
             put(MediaStore.Audio.Media.DISPLAY_NAME, displayName)
             put(MediaStore.Audio.Media.MIME_TYPE, mime)
             if (title.isNotEmpty()) put(MediaStore.Audio.Media.TITLE, title)
-            if (artist.isNotEmpty()) put(MediaStore.Audio.Media.ARTIST, artist)
+            if (artist.isNotEmpty() && !toDownloads) put(MediaStore.Audio.Media.ARTIST, artist)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 put(MediaStore.Audio.Media.RELATIVE_PATH, relativePath)
                 put(MediaStore.Audio.Media.IS_PENDING, 1)
@@ -265,7 +267,9 @@ class MediaStoreChannel(
             }
         }
         // 영상(mp4)은 영상 모음(Movies/…)에 넣는다. 칸 이름은 오디오와 같은 MediaColumns 값이다.
-        val collection = if (video) {
+        val collection = if (toDownloads) {
+            MediaStore.Downloads.EXTERNAL_CONTENT_URI
+        } else if (video) {
             MediaStore.Video.Media.EXTERNAL_CONTENT_URI
         } else {
             MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
