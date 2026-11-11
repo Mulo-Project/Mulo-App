@@ -1,23 +1,16 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
-import '../bloc/video_surface_cubit.dart';
 import 'fullscreen_video.dart';
+import 'pan_zoom_video.dart';
 import 'player_common.dart';
 
 /// 플레이어 모양 3가지 (카드 · 상자 없이 배경 위에 바로 놓는다).
 /// 위쪽(커버 · 진행 표시)만 다르고, 하단 조작부는 모두 [PlayerControls] 하나를 쓴다.
 
 const _side = EdgeInsets.symmetric(horizontal: AppSpacing.lg);
-
-/// 지금 영상의 가로 / 세로 비율. 아직 크기를 모르면 16:9.
-double _videoAspect(BuildContext context) {
-  final s = context.watch<VideoSurfaceCubit>().state;
-  return s.width > 0 && s.height > 0 ? s.width / s.height : 16 / 9;
-}
 
 /// 가사 보기일 때 커버 자리를 채우는 가사.
 Widget _lyrics(PlayerLayoutData data) => Padding(
@@ -71,11 +64,8 @@ class SquarePlayer extends StatelessWidget {
                       : Padding(
                           padding: _side,
                           child: Center(
-                            // 영상 곡은 영상 비율 그대로 (잘리지 않게), 음원은 정사각형.
                             child: AspectRatio(
-                              aspectRatio: data.track.isVideo
-                                  ? _videoAspect(context)
-                                  : 1,
+                              aspectRatio: 1,
                               child: DecoratedBox(
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(
@@ -93,8 +83,11 @@ class SquarePlayer extends StatelessWidget {
                                   tag: 'now-playing',
                                   child: PlayerCover(
                                     art: art,
+                                    // 영상 곡: 틀을 꽉 채우고 끌어서 가려진 부분을, 두 손가락으로 확대 · 축소.
                                     video: data.track.isVideo
-                                        ? const NativeVideoWithFullscreen()
+                                        ? const PanZoomVideo(
+                                            fullscreenButton: true,
+                                          )
                                         : null,
                                   ),
                                 ),
@@ -233,57 +226,10 @@ class ArcPlayer extends StatelessWidget {
     );
   }
 
-  /// 영상 곡: 진행 선과 영상 사이 간격.
-  static const _frameInset = AppSpacing.sm;
-
-  /// 영상 곡: 영상 틀 둘레(진행 선이 도는 길)의 크기. 영상 [aspect]에 맞추고 영역 안에 들어가게 한다.
-  static Size _frameSize(Size s, double aspect) {
-    const edge = _knob + 1;
-    const inset = _frameInset;
-    final maxW = s.width - AppSpacing.sm * 2 - edge * 2;
-    final maxH = s.height - 48 - edge * 2;
-    final w = math.min(maxW - inset * 2, (maxH - inset * 2) * aspect);
-    return Size(w + inset * 2, w / aspect + inset * 2);
-  }
-
-  /// 영상 곡: 영상 틀을 따라 도는 둥근 사각형 길. 호처럼 아래 가운데가 열려 있다 (시간이 놓이는 자리).
-  static Path _framePath(Size s, double aspect) {
-    final f = _frameSize(s, aspect);
-    final r = Rect.fromCenter(
-      center: s.center(Offset.zero),
-      width: f.width,
-      height: f.height,
-    );
-    final c = math.min(24.0, math.min(f.width, f.height) / 2);
-    // 아래 가운데 열린 자리: 현재 · 전체 시간이 양옆(가운데에서 76 ~ 112)에 놓이므로 그만큼 열어 둔다.
-    final g = math.min(124.0, f.width / 2 - c - 8);
-    final cx = r.center.dx;
-    const q = math.pi / 2;
-    return Path()
-      ..moveTo(cx - g, r.bottom)
-      ..lineTo(r.left + c, r.bottom)
-      ..arcTo(Rect.fromLTWH(r.left, r.bottom - 2 * c, 2 * c, 2 * c), q, q, false)
-      ..lineTo(r.left, r.top + c)
-      ..arcTo(Rect.fromLTWH(r.left, r.top, 2 * c, 2 * c), math.pi, q, false)
-      ..lineTo(r.right - c, r.top)
-      ..arcTo(Rect.fromLTWH(r.right - 2 * c, r.top, 2 * c, 2 * c), -q, q, false)
-      ..lineTo(r.right, r.bottom - c)
-      ..arcTo(
-        Rect.fromLTWH(r.right - 2 * c, r.bottom - 2 * c, 2 * c, 2 * c),
-        0,
-        q,
-        false,
-      )
-      ..lineTo(cx + g, r.bottom);
-  }
-
   @override
   Widget build(BuildContext context) {
     final art = PlayerArt.of(context, data.track);
     final p = context.palette;
-    final video = data.track.isVideo;
-    // 영상 곡은 원 대신 영상 틀(영상 비율)을 따라 진행 선이 돈다.
-    final aspect = video ? _videoAspect(context) : 1.0;
     return PlayerBackdrop(
       art: art,
       blurred: true,
@@ -304,36 +250,16 @@ class ArcPlayer extends StatelessWidget {
                       onSeekStart: data.vm.beginScrub,
                       onSeekEnd: data.vm.endScrub,
                       straight: data.showLyrics,
-                      pathOf: video
-                          ? (s, _) => _framePath(s, aspect)
-                          : _path,
+                      pathOf: _path,
                       track: p.onSurface.withValues(alpha: .2),
                       fill: p.onSurface,
                       position: state.position,
                       total: data.track.duration,
                       timeAt: (s, _) => Offset(
                         s.width / 2,
-                        video
-                            ? s.height / 2 + _frameSize(s, aspect).height / 2
-                            : s.height / 2 + (_size(s) / 2 - _knob - 1),
+                        s.height / 2 + (_size(s) / 2 - _knob - 1),
                       ),
-                      cover: (s, _) => video
-                          ? Center(
-                              child: SizedBox.fromSize(
-                                size: _frameSize(s, aspect),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(_frameInset),
-                                  child: PlayerCover(
-                                    art: art,
-                                    radius: AppRadii.lg,
-                                    video: const NativeVideoTapFullscreen(
-                                      fit: BoxFit.contain,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            )
-                          : Center(
+                      cover: (s, _) => Center(
                         child: SizedBox.square(
                           dimension: _size(s),
                           child: Padding(
@@ -341,6 +267,10 @@ class ArcPlayer extends StatelessWidget {
                             child: PlayerCover(
                               art: art,
                               radius: _size(s),
+                              // 영상 곡: 원을 꽉 채우고 끌어서 가려진 부분을, 두 손가락으로 확대 · 축소.
+                              video: data.track.isVideo
+                                  ? const PanZoomVideo(fullscreenOnTap: true)
+                                  : null,
                             ),
                           ),
                         ),
