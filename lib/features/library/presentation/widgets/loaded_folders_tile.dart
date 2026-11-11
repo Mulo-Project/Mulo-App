@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../bloc/library_cubit.dart';
 import '../bloc/loaded_folders_cubit.dart';
 import 'loaded_folders_sheet.dart';
 
@@ -14,7 +15,15 @@ class LoadedFoldersTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) => BlocProvider(
     create: (_) => sl<LoadedFoldersCubit>()..load(),
-    child: const _Tile(),
+    // 다운로드 · 삭제 · 스캔으로 보관함의 곡이 바뀌면 폴더별 곡 수를 다시 센다.
+    child: BlocListener<LibraryCubit, LibraryState>(
+      listenWhen: (a, b) => a.tracks != b.tracks,
+      listener: (context, _) {
+        final cubit = context.read<LoadedFoldersCubit>();
+        if (!cubit.state.busy) cubit.load();
+      },
+      child: const _Tile(),
+    ),
   );
 }
 

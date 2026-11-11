@@ -1,6 +1,7 @@
 package com.mulo.app
 
 import android.net.Uri
+import android.os.Bundle
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
@@ -27,6 +28,12 @@ internal object QueueMapping {
             .setAlbumTitle((map["album"] as? String)?.ifEmpty { null })
             .setDurationMs((map["durationMs"] as? Number)?.toLong()?.takeIf { it > 0 })
             .setArtworkUri((map["id"] as? String)?.let { artById[it] }?.let { Uri.parse(it) })
+            // 임시 저장한 영상은 영상 전용 주소를 같이 보낸다 ([MergingSourceFactory]가 소리와 합친다).
+            .setExtras(
+                (map["videoUri"] as? String)?.takeIf { it.isNotEmpty() }?.let {
+                    Bundle().apply { putString(MergingSourceFactory.VIDEO_URI, it) }
+                },
+            )
             .build()
         return MediaItem.Builder()
             .setMediaId(map["id"] as? String ?: "")

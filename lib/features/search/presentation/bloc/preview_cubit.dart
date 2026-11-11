@@ -105,7 +105,9 @@ class PreviewCubit extends Cubit<PreviewState> {
       );
     }
     if (saveAutoQuality != null) {
-      autoQuality.addListener(() => unawaited(saveAutoQuality(autoQuality.value)));
+      autoQuality.addListener(
+        () => unawaited(saveAutoQuality(autoQuality.value)),
+      );
     }
     unawaited(syncWithPlayer());
     _completed = watchCompleted(const NoParams()).listen((_) => _onCompleted());
@@ -152,7 +154,8 @@ class PreviewCubit extends Cubit<PreviewState> {
     if (isClosed) return;
     if (repeat.value && state.status == PreviewStatus.playing) {
       unawaited(
-        _seek(Duration.zero).then((_) => _resume(const NoParams()), onError: (Object _) {}),
+        _seek(Duration.zero)
+            .then((_) => _resume(const NoParams()), onError: (Object _) {}),
       );
       return;
     }
@@ -176,9 +179,52 @@ class PreviewCubit extends Cubit<PreviewState> {
   late final StreamSubscription<String> _failures;
 
   /// 재생 중에 실패하면 멈춘 상태로 돌리고 까닭을 [PreviewState.error]로 알린다.
+  /// 듣던 중 소리가 끊겨(네트워크 끊김 등) 멈춘 곡. 다시 재생하면 주소를 새로 읽어 이 위치부터 이어 튼다.
+  ({MediaHit hit, VideoQuality? quality, Duration position})? _interrupted;
+
   void _onFailure(String reason) {
     if (isClosed || state.status == PreviewStatus.idle) return;
+    final hit = state.hit;
+    if (state.status == PreviewStatus.playing && hit != null) {
+      // 듣던 곡이 끊겼다: 닫지 않고 멈춘 상태로 두어, 다시 재생을 누르면 이어 듣게 한다.
+      _interrupted = (
+        hit: hit,
+        quality: qualityOverride.value,
+        position: state.progress?.position ?? Duration.zero,
+      );
+      emit(
+        PreviewState(
+          hitId: hit.id,
+          hit: hit,
+          status: PreviewStatus.playing,
+          progress: state.progress,
+          title: state.title,
+          paused: true,
+        ),
+      );
+      return;
+    }
     emit(PreviewState(error: reason));
+  }
+
+  /// 끊겨서 멈춘 곡을 주소를 새로 읽어 멈춘 위치부터 다시 튼다.
+  Future<void> _resumeInterrupted() async {
+    final lost = _interrupted;
+    if (lost == null) return;
+    _interrupted = null;
+    final failure = await toggle(
+      lost.hit,
+      videoQuality: lost.quality,
+      forceStart: true,
+    );
+    if (failure != null || isClosed) return;
+    if (lost.position > Duration.zero) {
+      try {
+        await _seek(lost.position);
+      } on Object {
+        // 위치를 못 옮기면 처음부터 듣는다.
+      }
+    }
   }
 
   void _onProgress(PreviewProgress p) {
@@ -214,8 +260,10 @@ class PreviewCubit extends Cubit<PreviewState> {
     MediaHit hit, {
     String? audioLanguage,
     VideoQuality? videoQuality,
+    bool forceStart = false,
   }) async {
-    if (state.isActive(hit.id)) {
+    _interrupted = null;
+    if (state.isActive(hit.id) && !forceStart) {
       await stop();
       return null;
     }
@@ -239,14 +287,13 @@ class PreviewCubit extends Cubit<PreviewState> {
     );
     _prefetchVideo(hit, videoQuality);
     try {
-      final stream = await _streamFor(hit, audioLanguage, videoQuality)
-          .timeout(
-            _resolveTimeout,
-            onTimeout: () => throw const EngineException(
-              EngineFailure.timeout,
-              'resolve timeout (60s): 주소를 읽지 못함',
-            ),
-          );
+      final stream = await _streamFor(hit, audioLanguage, videoQuality).timeout(
+        _resolveTimeout,
+        onTimeout: () => throw const EngineException(
+          EngineFailure.timeout,
+          'resolve timeout (60s): 주소를 읽지 못함',
+        ),
+      );
       if (generation != _generation || isClosed) return null;
       await _play(stream).timeout(
         _playTimeout,
@@ -299,7 +346,12 @@ class PreviewCubit extends Cubit<PreviewState> {
   void _prefetchVideo(MediaHit hit, [VideoQuality? quality]) {
     final resolve = resolveVideo;
     if (resolve == null || !_isYoutube(hit.url)) return;
-    unawaited(resolve(hit.url, quality: quality).then<void>((_) {}, onError: (Object _) {}));
+    unawaited(
+      resolve(
+        hit.url,
+        quality: quality,
+      ).then<void>((_) {}, onError: (Object _) {}),
+    );
   }
 
   /// 상세 화면이 열릴 때 소리·영상 주소를 미리 읽어 둔다.
@@ -422,6 +474,7 @@ class PreviewCubit extends Cubit<PreviewState> {
   /// 듣는 중이면 잠시 멈추고, 잠시 멈춘 상태면 이어서 듣는다.
   Future<void> togglePause() async {
     if (isClosed || state.status != PreviewStatus.playing) return;
+    if (_interrupted != null) return _resumeInterrupted();
     final paused = !state.paused;
     emit(
       PreviewState(
@@ -438,6 +491,7 @@ class PreviewCubit extends Cubit<PreviewState> {
 
   /// 미리 듣기를 멈춘다 (듣고 있지 않으면 아무 일도 없다).
   Future<void> stop() async {
+    _interrupted = null;
     _generation++;
     if (state.status == PreviewStatus.idle) return;
     if (!isClosed) emit(const PreviewState());

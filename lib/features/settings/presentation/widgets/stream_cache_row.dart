@@ -31,7 +31,7 @@ class StreamCacheRow extends StatelessWidget {
       builder: (context, info) => SettingRow(
         title: l10n.settingsStreamCache,
         description: l10n.settingsStreamCacheDesc(
-          formatBytes(info.usedBytes),
+          formatBytes(info.usedBytes + info.savedBytes),
           formatBytes(info.limitBytes),
         ),
         trailing: const SettingsChevron(),
@@ -72,7 +72,7 @@ class _StreamCacheSheet extends StatelessWidget {
             AppSheetTitle(
               l10n.settingsStreamCache,
               subtitle: l10n.settingsStreamCacheLimitHint(
-                formatBytes(info.usedBytes),
+                formatBytes(info.usedBytes + info.savedBytes),
               ),
             ),
             const SizedBox(height: AppSpacing.md),

@@ -63,6 +63,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
     }
   }
 
+  String? _loggedTrackId;
+
   @override
   Widget build(BuildContext context) {
     final style = context.watch<PlayerStyleCubit>().state;
@@ -79,6 +81,13 @@ class _PlayerScreenState extends State<PlayerScreen> {
     PlayerStyle style,
   ) {
     final track = state.track;
+    if (track != null && track.id != _loggedTrackId) {
+      _loggedTrackId = track.id;
+      debugPrint(
+        'MuloPlayer track=${track.id} isVideo=${track.isVideo} '
+        'hasVideo=${track.hasVideo} style=$style uri=${track.uri}',
+      );
+    }
     if (track == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _closeIfEmpty());
     }

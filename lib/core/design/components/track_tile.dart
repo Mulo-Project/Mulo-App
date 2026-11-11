@@ -20,6 +20,7 @@ class TrackTile extends StatefulWidget {
     this.footer,
     this.active = false,
     this.number,
+    this.badge,
     this.onTap,
     this.onMenu,
     this.onLongPress,
@@ -49,6 +50,9 @@ class TrackTile extends StatefulWidget {
 
   /// 목록에서 몇 번째 곡인지 (있으면 커버 앞에 작은 숫자로).
   final int? number;
+
+  /// 커버 오른쪽 아래 모서리에 겹쳐 붙는 작은 표시 아이콘 (알림 배지처럼 줄 크기를 바꾸지 않는다).
+  final IconData? badge;
   final VoidCallback? onTap;
 
   /// 길게 누르기 · 데스크톱 오른쪽 클릭 (곡 메뉴 같은 보조 동작).
@@ -67,6 +71,34 @@ class TrackTile extends StatefulWidget {
 
 class _TrackTileState extends State<TrackTile> {
   Offset _lastPointer = Offset.zero;
+
+  /// [TrackTile.badge]가 있으면 커버 모서리에 겹쳐 붙인다 (밖으로 조금 나와도 레이아웃은 그대로).
+  Widget _withBadge(BuildContext context, Widget child) {
+    final icon = widget.badge;
+    if (icon == null) return child;
+    final p = context.palette;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        child,
+        Positioned(
+          right: -4,
+          bottom: -4,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: p.accent,
+              shape: BoxShape.circle,
+              border: Border.all(color: p.background, width: 2),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(3),
+              child: Icon(icon, size: 10, color: p.onAccent),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -106,13 +138,16 @@ class _TrackTileState extends State<TrackTile> {
                     ),
                   ),
                 ),
-              w.leading ??
-                  ArtworkBox(
-                    image: w.artwork,
-                    tone: w.tone,
-                    color: w.color,
-                    size: 52,
-                  ),
+              _withBadge(
+                context,
+                w.leading ??
+                    ArtworkBox(
+                      image: w.artwork,
+                      tone: w.tone,
+                      color: w.color,
+                      size: 52,
+                    ),
+              ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Column(

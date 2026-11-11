@@ -183,9 +183,15 @@ class ResolveVideoStream implements UseCase<VideoStream, String> {
   final SavedVideoRepository? _saved;
 
   @override
-  Future<VideoStream> call(String url, {VideoQuality? quality}) async {
+  Future<VideoStream> call(
+    String url, {
+    VideoQuality? quality,
+
+    /// 소리만 저장한 곡도 (오프라인이 아니면) 링크를 풀어 영상을 읽는다. 상세 화면에서 영상을 같이 볼 때만 켠다.
+    bool online = false,
+  }) async {
     final saved = await _savedReady(_saved, url.trim());
-    if (saved != null) {
+    if (saved != null && !(online && saved.videoSource == null)) {
       final video = saved.videoSource;
       if (video != null && quality != null && quality == saved.quality) {
         return video;
@@ -284,6 +290,16 @@ class PlayPreviewVideo implements UseCase<void, VideoStream> {
 
   @override
   Future<void> call(VideoStream stream) => _player.playVideo(stream);
+}
+
+/// 메인 재생 소리(임시 저장한 음원)에 맞춰 스트림 영상을 틀기. null이면 그 영상을 멈춘다.
+class PlayMainVideo implements UseCase<void, VideoStream?> {
+  const PlayMainVideo(this._player);
+
+  final PreviewPlayer _player;
+
+  @override
+  Future<void> call(VideoStream? stream) => _player.playMainVideo(stream);
 }
 
 /// 재생 중인 미리 듣기가 어느 곡인지 플레이어에 적어 두기.

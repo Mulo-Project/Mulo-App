@@ -26,6 +26,10 @@ class SessionInfo(map: Map<*, *>) {
     val favorite = map["favorite"] as? Boolean ?: false
     val shuffle = map["shuffle"] as? Boolean ?: false
     val preview = map["preview"] as? Boolean ?: false
+
+    /** 미리 듣기 재생 목록(저장한 음원)일 때 앞 · 뒤 곡이 있는지: 알림에 이전 · 다음 버튼을 단다. */
+    val previewHasPrevious = map["previewHasPrevious"] as? Boolean ?: false
+    val previewHasNext = map["previewHasNext"] as? Boolean ?: false
     val favoriteLabel = map["favoriteLabel"] as? String ?: ""
     val unfavoriteLabel = map["unfavoriteLabel"] as? String ?: ""
     val closeLabel = map["closeLabel"] as? String ?: ""
@@ -130,8 +134,8 @@ class SessionPlayer(
             .setDurationUs(if (durationMs == C.TIME_UNSET) C.TIME_UNSET else durationMs * 1000)
             .setIsSeekable(durationMs != C.TIME_UNSET)
             .build()
-        val hasPrevious = !preview && (exo.mediaItemCount > 1 || positionMs > 0)
-        val hasNext = !preview && exo.mediaItemCount > 1
+        val hasPrevious = if (preview) info.previewHasPrevious else (exo.mediaItemCount > 1 || positionMs > 0)
+        val hasNext = if (preview) info.previewHasNext else exo.mediaItemCount > 1
         val playlist = buildList {
             if (hasPrevious) add(placeholder("previous"))
             add(current)
@@ -193,9 +197,11 @@ class SessionPlayer(
 
     override fun handleSeek(mediaItemIndex: Int, positionMs: Long, seekCommand: Int): ListenableFuture<*> {
         when (seekCommand) {
-            Player.COMMAND_SEEK_TO_NEXT, Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM -> if (!previewing) skipNext()
+            Player.COMMAND_SEEK_TO_NEXT, Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM ->
+                if (previewing) onCommand("next", null) else skipNext()
             // 3초 넘게 들었으면 처음으로, 아니면 이전 곡 (첫 곡이면 마지막 곡).
-            Player.COMMAND_SEEK_TO_PREVIOUS, Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM -> if (!previewing) skipPrevious()
+            Player.COMMAND_SEEK_TO_PREVIOUS, Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM ->
+                if (previewing) onCommand("previous", null) else skipPrevious()
             else -> if (previewing) {
                 onCommand("seek", positionMs)
             } else if (exo.mediaItemCount > 0) {

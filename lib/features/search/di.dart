@@ -27,6 +27,8 @@ import 'presentation/bloc/media_hit_memo.dart';
 import 'presentation/bloc/saved_videos_cubit.dart';
 import 'presentation/bloc/stream_cache_cubit.dart';
 import 'data/repositories/prefs_saved_video_repository.dart';
+import 'data/repositories/file_saved_detail_store.dart';
+import 'domain/repositories/saved_detail_store.dart';
 import 'domain/repositories/saved_video_repository.dart';
 import 'domain/usecases/saved_video_usecases.dart';
 import 'presentation/bloc/video_quality_cubit.dart';
@@ -75,7 +77,8 @@ void registerSearch(GetIt sl) {
     ..registerFactory(() => VideoQualityCubit(sl(), sl()))
     ..registerFactory(() => ResolveVideoStream(sl(), sl(), sl()))
     ..registerFactory(() => PlayPreviewVideo(sl()))
-    ..registerFactory(() => PreviewVideoCubit(sl(), sl()))
+    ..registerFactory(() => PlayMainVideo(sl()))
+    ..registerFactory(() => PreviewVideoCubit(sl(), sl(), sl()))
     ..registerFactory(() => EnterPictureInPicture(sl()))
     ..registerFactory(() => FetchAudioLanguages(sl()))
     ..registerFactory(() => AudioLanguageCubit(sl()))
@@ -93,17 +96,36 @@ void registerSearch(GetIt sl) {
     ..registerFactory(() => ClearStreamCache(sl()))
     ..registerFactory(() => SetStreamCacheLimit(sl()))
     ..registerFactory(() => StreamCacheCubit(sl(), sl(), sl()))
-    ..registerLazySingleton<SavedVideoRepository>(
-      PrefsSavedVideoRepository.new,
-    )
+    ..registerLazySingleton<SavedVideoRepository>(PrefsSavedVideoRepository.new)
     ..registerFactory(() => LoadSavedVideos(sl(), sl()))
-    ..registerFactory(() => SaveVideo(sl(), sl(), sl(), sl()))
-    ..registerFactory(() => RemoveSavedVideo(sl(), sl()))
+    ..registerLazySingleton<SavedDetailStore>(FileSavedDetailStore.new)
+    ..registerFactory(
+      () => SaveVideo(
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+        details: sl<SavedDetailStore>(),
+        fetchInfo: sl<FetchMediaInfo>(),
+      ),
+    )
+    ..registerFactory(
+      () => RemoveSavedVideo(sl(), sl(), details: sl<SavedDetailStore>()),
+    )
     ..registerFactory(() => MarkSavedVideoReady(sl()))
     ..registerFactory(() => ResumeSavedVideos(sl(), sl(), sl(), sl()))
     ..registerFactory(() => WatchSavedDone(sl()))
+    ..registerFactory(() => WatchSavedProgress(sl()))
     ..registerFactory(
-      () => SavedVideosCubit(sl(), sl(), sl(), sl(), sl(), resume: sl()),
+      () => SavedVideosCubit(
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+        resume: sl(),
+        watchProgress: sl<WatchSavedProgress>(),
+      ),
     )
     ..registerFactory(
       () => PreviewCubit(

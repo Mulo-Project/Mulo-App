@@ -1,7 +1,7 @@
 import 'track_info.dart';
 
 /// 곡이 어디서 왔는지.
-enum TrackSource { device, download }
+enum TrackSource { device, download, saved }
 
 /// 보관함의 곡 한 개 (같은 id면 같은 곡).
 class Track {
@@ -16,6 +16,8 @@ class Track {
     this.uri = '',
     this.folder = '',
     this.source = TrackSource.device,
+    this.hasVideo = false,
+    this.videoUri = '',
   });
 
   final String id;
@@ -37,10 +39,24 @@ class Track {
   final String folder;
   final TrackSource source;
 
+  /// 영상도 같이 나오는 임시 저장 곡 (영상으로 저장했다). 영상은 네이티브가 소리와 한 시계로 낸다.
+  final bool hasVideo;
+
+  /// 영상 전용 주소 (소리와 따로 저장한 경우). 소리 주소가 영상까지 담고 있으면 빈 문자열.
+  final String videoUri;
+
   /// 영상 파일인가 (보관함에서 영상도 곡으로 불러온다). 소리는 네이티브가, 화면은 Dart가 같은 파일로 낸다.
   bool get isVideo =>
+      hasVideo ||
       id.startsWith(videoIdPrefix) ||
-      (id.startsWith('file:') && _videoExtensions.any(uri.toLowerCase().endsWith));
+      (id.startsWith('file:') &&
+          _videoExtensions.any(uri.toLowerCase().endsWith));
+
+  /// 임시 저장한 음원(캐시)인가. 파일이 아니라 받아 둔 스트림이라 재생 기록 · 재생 횟수를 남기지 않는다.
+  bool get isSaved => source == TrackSource.saved;
+
+  /// 임시 저장한 음원 곡의 id 앞머리 (뒤는 영상 id).
+  static const savedIdPrefix = 'saved:';
 
   /// 기기에서 불러온 영상 곡의 id 앞머리.
   static const videoIdPrefix = 'device-video:';
@@ -59,6 +75,8 @@ class Track {
     uri: uri,
     folder: folder,
     source: source,
+    hasVideo: hasVideo,
+    videoUri: videoUri,
   );
 
   @override

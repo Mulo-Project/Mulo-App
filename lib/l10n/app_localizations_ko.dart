@@ -591,11 +591,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsLyricsOverlay => '오버레이 가사';
 
   @override
-  String get settingsLyricsOverlayDesc => '다른 앱 위에 가사를 띄워요. 한 번 켜 두면 앱을 다시 켜도 유지돼요.';
+  String get settingsLyricsOverlayDesc =>
+      '다른 앱 위에 가사를 띄워요. 한 번 켜 두면 앱을 다시 켜도 유지돼요.';
 
   @override
-  String get settingsMixWithOthersDesc =>
-      '다른 앱 소리와 함께 재생해요. 소리가 겹칠 수 있어요.';
+  String get settingsMixWithOthersDesc => '다른 앱 소리와 함께 재생해요. 소리가 겹칠 수 있어요.';
 
   @override
   String get settingsPauseOnDisconnect => '기기가 끊기면 일시정지';
@@ -701,10 +701,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsStreamCacheClear => '지금 비우기';
 
   @override
-  String get settingsStreamCacheCleared => '임시 저장소를 비웠어요';
-
-  @override
-  String get savedVideosTitle => '저장한 음원';
+  String get savedVideosTitle => '임시 저장한 음원';
 
   @override
   String get savedVideosOpen => '저장한 음원';
@@ -725,24 +722,37 @@ class AppLocalizationsKo extends AppLocalizations {
   String get savedVideosDownloading => '받는 중';
 
   @override
-  String get savedVideosRemove => '저장 해제';
-
-  @override
-  String get savedVideosClearAll => '전체 삭제';
-
-  @override
-  String savedVideosStorage(String used, String free) {
-    return '저장 $used · 남은 공간 $free';
+  String savedVideosEtaSeconds(int n) {
+    return '약 $n초 남음';
   }
 
   @override
+  String savedVideosEtaMinutes(int n) {
+    return '약 $n분 남음';
+  }
+
+  @override
+  String get savedVideosRemove => '저장 해제';
+
+  @override
   String get savedVideosAudioOnly => '소리만';
+
+  @override
+  String get savedVideosClearAll => '전체 삭제';
 
   @override
   String get savedVideosClearAllTitle => '저장한 음원을 모두 삭제할까요?';
 
   @override
   String get savedVideosClearAllBody => '저장해 둔 음원이 모두 지워져요';
+
+  @override
+  String savedVideosStorage(String saved, String temp, String limit) {
+    return '저장 $saved + 듣기 캐시 $temp / 한도 $limit';
+  }
+
+  @override
+  String get savedVideosFull => '임시 저장 공간이 가득 찼어요. 저장한 곡을 지우거나 용량을 늘려 주세요';
 
   @override
   String savedVideosUsed(String size) {
@@ -754,6 +764,20 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get savedVideosQualityHint => '고른 화질로 받아 둬요';
+
+  @override
+  String get savedQueueTitle => '저장한 음원 대기열';
+
+  @override
+  String get savedQueueOpen => '대기열';
+
+  @override
+  String notifSavedQueueLabel(String n, String total) {
+    return '저장한 음원 $n/$total';
+  }
+
+  @override
+  String get savedVideosLoop => '반복';
 
   @override
   String get savedVideosPlay => '듣기';
@@ -783,10 +807,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get savedVideosSectionAudio => '음원';
 
   @override
-  String get videoOptions => '옵션';
+  String get videoPip => '작은 화면으로 보기';
 
   @override
-  String get videoPip => '작은 화면으로 보기';
+  String get videoOptions => '옵션';
 
   @override
   String get videoOptionsTitle => '영상 옵션';
@@ -802,8 +826,11 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String settingsStreamCacheLimitHint(String used) {
-    return '넘으면 오래된 것부터 지워요. 저장한 음원은 포함되지 않아요. ($used 사용 중)';
+    return '임시 저장한 음원도 함께 계산해요. 넘으면 오래된 임시 캐시부터 지워요. ($used 사용 중)';
   }
+
+  @override
+  String get settingsStreamCacheCleared => '임시 저장소를 비웠어요';
 
   @override
   String get settingsPurgeHidden => '숨긴 곡 기록 정리';
@@ -835,14 +862,6 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get hiddenRecordsPurgeAll => '모두 지우기';
-
-  @override
-  String hiddenRecordsPurgeOneTitle(String title) {
-    return '\"$title\" 기록을 지울까요?';
-  }
-
-  @override
   String hiddenRecordsPlays(int count) {
     return '$count회 재생';
   }
@@ -862,6 +881,14 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get hiddenRecordsLyrics => '가사 사본';
+
+  @override
+  String get hiddenRecordsPurgeAll => '모두 지우기';
+
+  @override
+  String hiddenRecordsPurgeOneTitle(String title) {
+    return '\"$title\" 기록을 지울까요?';
+  }
 
   @override
   String get settingsAbout => '정보';
@@ -1900,12 +1927,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get trackInfoSourceDownload => '받은 곡';
 
   @override
-  String get trackInfoFolder => '폴더';
-
-  @override
   String downloadTagFailed(String title) {
     return '태그를 저장하지 못했어요: $title';
   }
+
+  @override
+  String get trackInfoFolder => '폴더';
 
   @override
   String get collectionMenuInfo => '정보';
@@ -2423,8 +2450,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playlistDetailEmptyFavorites => '아직 좋아요한 곡이 없어요';
 
   @override
-  String get playlistDetailEmptyBody =>
-      '아래 ‘곡 추가’로 담아 보세요.';
+  String get playlistDetailEmptyBody => '아래 ‘곡 추가’로 담아 보세요.';
 
   @override
   String get playlistDetailEmptyFavoritesBody => '곡 메뉴에서 좋아요를 누르면 여기에 담겨요.';
@@ -2613,8 +2639,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsNotifyDownloadProgress => '받기 진행 알림';
 
   @override
-  String get settingsNotifyDownloadProgressDesc =>
-      '받는 동안 진행 상황을 알림창에 보여요.';
+  String get settingsNotifyDownloadProgressDesc => '받는 동안 진행 상황을 알림창에 보여요.';
 
   @override
   String get settingsNotifyDownloadResult => '받기 결과 알림';
@@ -2736,6 +2761,15 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get notifDownloadStopPreview => '중지';
+
+  @override
+  String get notifSavedDoneTitle => '보관 완료';
+
+  @override
+  String get notifSavedDoneNote => '보관함에서 바로 들을 수 있어요';
+
+  @override
+  String get notifSavedDoneHidden => '음원 저장이 끝났어요';
 
   @override
   String get notifDownloadDoneTitle => '받기 완료';

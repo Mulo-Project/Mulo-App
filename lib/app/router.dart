@@ -249,9 +249,8 @@ GoRouter createRouter({String initialLocation = Routes.home}) => GoRouter(
     GoRoute(
       path: Routes.trackInfo,
       parentNavigatorKey: _rootKey,
-      pageBuilder: (context, state) => MaterialPage(
-        child: TrackInfoScreen(track: state.extra! as Track),
-      ),
+      pageBuilder: (context, state) =>
+          MaterialPage(child: TrackInfoScreen(track: state.extra! as Track)),
     ),
     GoRoute(
       path: Routes.queue,

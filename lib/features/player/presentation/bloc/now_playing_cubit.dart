@@ -202,25 +202,25 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     NowPlayingState s, {
     Duration? position,
     bool shuffleNew = false,
-  }) =>
-      PlaybackSnapshot(
-        items: [
-          for (final t in s.queue)
-            PlaybackItem(
-              id: t.id,
-              uri: t.uri,
-              title: t.title,
-              artist: t.artist,
-              album: t.album,
-              duration: t.duration,
-            ),
-        ],
-        index: s.index,
-        playing: s.isPlaying,
-        repeat: s.repeat,
-        position: position,
-        shuffleNew: shuffleNew,
-      );
+  }) => PlaybackSnapshot(
+    items: [
+      for (final t in s.queue)
+        PlaybackItem(
+          id: t.id,
+          uri: t.uri,
+          title: t.title,
+          artist: t.artist,
+          album: t.album,
+          duration: t.duration,
+          videoUri: t.videoUri,
+        ),
+    ],
+    index: s.index,
+    playing: s.isPlaying,
+    repeat: s.repeat,
+    position: position,
+    shuffleNew: shuffleNew,
+  );
 
   /// 엔진이 알려 준 것을 상태에 넣는다 (엔진을 다시 움직이지 않고, 보낸 것으로 친다).
   void _emitFromEngine(NowPlayingState next) {
@@ -434,7 +434,22 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     final queue = <Track>[];
     var index = 0;
     for (var i = 0; i < snapshot.items.length; i++) {
-      final track = find(snapshot.items[i].id);
+      final item = snapshot.items[i];
+      // 임시 저장한 음원은 보관함 곡이 아니라서 엔진이 쥔 정보(주소 · 제목)로 되살린다.
+      final track =
+          find(item.id) ??
+          (item.id.startsWith(Track.savedIdPrefix)
+              ? Track(
+                  id: item.id,
+                  title: item.title,
+                  artist: item.artist,
+                  album: item.album,
+                  duration: item.duration,
+                  addedAt: DateTime.fromMillisecondsSinceEpoch(0),
+                  uri: item.uri,
+                  source: TrackSource.saved,
+                )
+              : null);
       if (track == null) continue;
       if (i <= snapshot.index) index = queue.length;
       queue.add(track);
@@ -586,6 +601,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     artist: t.artist,
     album: t.album,
     duration: t.duration,
+    videoUri: t.videoUri,
   );
 
   /// [queue]의 [at]번 곡부터 재생을 시작한다. [shuffle]이면 엔진이 그 곡을 맨 앞에 두고 나머지를 섞는다.
@@ -838,11 +854,15 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     final current = state.track!;
     final queue = [...state.queue];
     queue.insert(to, queue.removeAt(from));
+    final moved = state.copyWith(queue: queue, index: queue.indexOf(current));
     if (_audio != null) {
+      // 끌어 놓은 자리를 바로 보여 준다 (엔진 응답을 기다리면 손을 뗄 때 목록이 옛 순서로 튄다).
+      // 엔진 결과가 오면 그 모습으로 맞춘다.
+      _emitFromEngine(moved);
       _command((a) => a.moveInQueue((from: from, to: to)));
       return;
     }
-    emit(state.copyWith(queue: queue, index: queue.indexOf(current)));
+    emit(moved);
   }
 
   /// 대기열을 모두 비운다. 재생 중인 곡도 멈추고 지워진다 (미니 플레이어는 사라진다).

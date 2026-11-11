@@ -17,7 +17,9 @@ import '../../../playlists/presentation/bloc/playlists_cubit.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../../search/domain/entities/media_info.dart';
 import '../../../theme/presentation/bloc/theme_cubit.dart';
+import '../../../search/domain/entities/saved_video.dart';
 import '../../../search/presentation/bloc/preview_cubit.dart';
+import '../../../search/presentation/bloc/saved_videos_cubit.dart';
 import '../../domain/entities/media_session_info.dart';
 import '../../domain/repositories/download_notifier.dart';
 import '../bloc/notification_settings_cubit.dart';
@@ -342,6 +344,16 @@ class _NotificationBridgeState extends State<NotificationBridge>
     );
   }
 
+  void _syncSaved() {
+    final settings = context.read<NotificationSettingsCubit>().state;
+    if (!settings.loaded) return;
+    context.read<NotificationSyncCubit>().syncSaved(
+      context.read<SavedVideosCubit>().state,
+      settings.settings,
+      context.l10n,
+    );
+  }
+
   void _syncPlayback() {
     final settings = context.read<NotificationSettingsCubit>().state;
     if (!settings.loaded) return;
@@ -405,6 +417,9 @@ class _NotificationBridgeState extends State<NotificationBridge>
       ),
       BlocListener<DownloadQueueCubit, DownloadQueueState>(
         listener: (_, _) => _syncDownloads(),
+      ),
+      BlocListener<SavedVideosCubit, List<SavedVideo>>(
+        listener: (_, _) => _syncSaved(),
       ),
       BlocListener<NowPlayingCubit, NowPlayingState>(
         listener: (_, _) => _syncPlayback(),
