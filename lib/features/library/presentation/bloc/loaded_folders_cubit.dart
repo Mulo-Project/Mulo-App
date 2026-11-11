@@ -136,20 +136,7 @@ class LoadedFoldersCubit extends Cubit<LoadedFoldersState> {
     final outcome = await _import(const NoParams());
     var changed = false;
     if (!_cancelled) {
-      final restore = _restoreTags;
-      if (restore != null && outcome is ImportAdded) {
-        _stage(LoadStage.reading);
-        try {
-          changed |=
-              await restore.run(
-                onProgress: (d, t) => _stage(LoadStage.reading, d, t),
-                cancelled: () => _cancelled,
-              ) >
-              0;
-        } on Exception {
-          // 못 읽어도 폴더 바꾸기에는 영향이 없다 (곡마다 기록해 다음에 이어서).
-        }
-      }
+      // 파일 안 커버를 먼저 채우고, 태그의 웹 주소 커버는 그래도 커버가 없는 곡에만 쓴다 (네트워크 없이 보이도록).
       final fill = _fillCovers;
       if (fill != null && !_cancelled) {
         _stage(LoadStage.covers);
@@ -162,6 +149,20 @@ class LoadedFoldersCubit extends Cubit<LoadedFoldersState> {
               0;
         } on Exception {
           // 커버를 못 채워도 폴더 바꾸기에는 영향이 없다.
+        }
+      }
+      final restore = _restoreTags;
+      if (restore != null && outcome is ImportAdded) {
+        _stage(LoadStage.reading);
+        try {
+          changed |=
+              await restore.run(
+                onProgress: (d, t) => _stage(LoadStage.reading, d, t),
+                cancelled: () => _cancelled,
+              ) >
+              0;
+        } on Exception {
+          // 못 읽어도 폴더 바꾸기에는 영향이 없다 (곡마다 기록해 다음에 이어서).
         }
       }
     }
