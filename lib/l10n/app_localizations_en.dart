@@ -1755,7 +1755,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'This song is already downloading or queued';
 
   @override
-  String get videoSaveToo => 'Also save the video (Movies/Mulo)';
+  String get videoSaveType => 'Save as';
+
+  @override
+  String get videoSaveTypeAudio => 'Audio';
+
+  @override
+  String get videoSaveTypeVideo => 'Video';
 
   @override
   String get videoSaveFormat => 'Video format';

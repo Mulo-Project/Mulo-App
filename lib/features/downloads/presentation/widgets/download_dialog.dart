@@ -201,7 +201,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
 
   // 영상 파일(mp4)로 저장: 풀 빌드(Android)에서만 켜진다.
   var _videoAvailable = false;
-  var _saveVideoToo = false;
+  var _asVideo = false;
   var _videoFormat = VideoFormat.mp4;
   var _videoHeight = 1080;
 
@@ -304,7 +304,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
         artist: _artist.text,
         album: _album.text.trim(),
         genre: _genre.text,
-        playlistIds: _selected,
+        playlistIds: _asVideo ? const {} : _selected,
         savePath: _savePath.text,
         duration: widget.duration,
         color: color?.toARGB32(),
@@ -315,6 +315,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
         // 설정의 기본 형식과 같으면 비워 두어, 나중에 기본 형식을 바꿔도 따라가게 한다.
         format: _format == defaultFormat ? null : _format,
         importLyrics:
+            !_asVideo &&
             _isYoutube &&
             lyrics != null &&
             ((lyrics.importLyrics && subtitleStatus != SubtitleStatus.none) ||
@@ -323,7 +324,8 @@ class _DownloadScreenState extends State<DownloadScreen> {
         lyricsSkipSounds: lyrics?.skipSounds ?? true,
         lyricsText: lyrics?.lyricsText,
         audioLanguage: audioLanguage,
-        videoFormat: _videoAvailable && _saveVideoToo ? _videoFormat : null,
+        // 영상으로 저장하면 음원 전용 설정(재생목록 · 가사 · 형식)은 쓰지 않는다.
+        videoFormat: _videoAvailable && _asVideo ? _videoFormat : null,
         videoHeight: _videoHeight,
       ),
     );
@@ -451,76 +453,82 @@ class _DownloadScreenState extends State<DownloadScreen> {
                         ),
                       ],
                     ),
-                    if (_formats.length > 1 && _format != null) ...[
+                    if (_videoAvailable) ...[
                       const SizedBox(height: AppSpacing.md),
                       Text(
-                        l10n.settingsFormat.toUpperCase(),
+                        l10n.videoSaveType.toUpperCase(),
                         style: text.labelSmall,
                       ),
                       const SizedBox(height: AppSpacing.xxs),
-                      SegmentedPills<AudioFormat>(
+                      SegmentedPills<bool>(
                         expand: true,
-                        values: _formats,
-                        selected: _format!,
-                        labelOf: (f) => f.name,
-                        onChanged: (f) => setState(() => _format = f),
+                        values: const [false, true],
+                        selected: _asVideo,
+                        labelOf: (v) => v
+                            ? l10n.videoSaveTypeVideo
+                            : l10n.videoSaveTypeAudio,
+                        onChanged: (v) => setState(() => _asVideo = v),
                       ),
                     ],
-                    if (_videoAvailable) ...[
+                    if (_asVideo) ...[
                       const SizedBox(height: AppSpacing.md),
-                      SettingRow(
-                        title: l10n.videoSaveToo,
-                        trailing: AppSwitch(
-                          value: _saveVideoToo,
-                          onChanged: (v) => setState(() => _saveVideoToo = v),
-                        ),
-                        onTap: () =>
-                            setState(() => _saveVideoToo = !_saveVideoToo),
+                      Text(
+                        l10n.videoSaveFormat.toUpperCase(),
+                        style: text.labelSmall,
                       ),
-                      if (_saveVideoToo) ...[
-                        const SizedBox(height: AppSpacing.xxs),
+                      const SizedBox(height: AppSpacing.xxs),
+                      SegmentedPills<VideoFormat>(
+                        expand: true,
+                        values: VideoFormat.values,
+                        selected: _videoFormat,
+                        labelOf: (f) => f.name,
+                        onChanged: (f) => setState(() => _videoFormat = f),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Text(
+                        l10n.videoSaveQuality.toUpperCase(),
+                        style: text.labelSmall,
+                      ),
+                      const SizedBox(height: AppSpacing.xxs),
+                      SegmentedPills<int>(
+                        expand: true,
+                        values: videoHeights,
+                        selected: _videoHeight,
+                        labelOf: (h) => '${h}p',
+                        onChanged: (h) => setState(() => _videoHeight = h),
+                      ),
+                    ] else ...[
+                      if (_formats.length > 1 && _format != null) ...[
+                        const SizedBox(height: AppSpacing.md),
                         Text(
-                          l10n.videoSaveFormat.toUpperCase(),
+                          l10n.settingsFormat.toUpperCase(),
                           style: text.labelSmall,
                         ),
                         const SizedBox(height: AppSpacing.xxs),
-                        SegmentedPills<VideoFormat>(
+                        SegmentedPills<AudioFormat>(
                           expand: true,
-                          values: VideoFormat.values,
-                          selected: _videoFormat,
+                          values: _formats,
+                          selected: _format!,
                           labelOf: (f) => f.name,
-                          onChanged: (f) => setState(() => _videoFormat = f),
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        Text(
-                          l10n.videoSaveQuality.toUpperCase(),
-                          style: text.labelSmall,
-                        ),
-                        const SizedBox(height: AppSpacing.xxs),
-                        SegmentedPills<int>(
-                          expand: true,
-                          values: videoHeights,
-                          selected: _videoHeight,
-                          labelOf: (h) => '${h}p',
-                          onChanged: (h) => setState(() => _videoHeight = h),
+                          onChanged: (f) => setState(() => _format = f),
                         ),
                       ],
+                      const AudioLanguageRow(),
+                      const SizedBox(height: AppSpacing.md),
+                      Text(
+                        l10n.downloadPlaylistsLabel.toUpperCase(),
+                        style: text.labelSmall,
+                      ),
+                      const SizedBox(height: AppSpacing.xxs),
+                      _PlaylistPickRow(
+                        summary: _selected.isEmpty
+                            ? l10n.downloadPlaylistsNone
+                            : l10n.downloadPlaylistsSelected(_selected.length),
+                        onTap: _pickPlaylists,
+                      ),
                     ],
-                    const AudioLanguageRow(),
-                    const SizedBox(height: AppSpacing.md),
-                    Text(
-                      l10n.downloadPlaylistsLabel.toUpperCase(),
-                      style: text.labelSmall,
-                    ),
-                    const SizedBox(height: AppSpacing.xxs),
-                    _PlaylistPickRow(
-                      summary: _selected.isEmpty
-                          ? l10n.downloadPlaylistsNone
-                          : l10n.downloadPlaylistsSelected(_selected.length),
-                      onTap: _pickPlaylists,
-                    ),
                   ]),
-                  if (_isYoutube)
+                  if (_isYoutube && !_asVideo)
                     _section(context, l10n.downloadSectionLyrics, [
                       DownloadLyricsSection(
                         key: _lyricsKey,

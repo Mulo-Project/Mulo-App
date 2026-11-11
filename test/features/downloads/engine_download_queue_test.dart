@@ -269,7 +269,7 @@ void main() {
     expect(tmp.listSync(), isEmpty, reason: '임시 파일은 지운다');
   });
 
-  group('영상도 함께 저장', () {
+  group('영상으로 저장', () {
     const withVideo = DownloadRequest(
       title: 'Song',
       url: 'https://youtu.be/abc',
@@ -277,20 +277,22 @@ void main() {
       videoHeight: 720,
     );
 
-    test('고른 형식 · 화질로 영상을 저장한 뒤 음원도 저장한다', () async {
+    test('고른 형식 · 화질로 영상만 저장하고 보관함 곡은 만들지 않는다', () async {
       final video = _FakeVideo();
       final repo = build(_FakeDownloader(), video: video);
       await repo.enqueue(withVideo);
-      await settled(
+      final items = await settled(
         repo,
         (l) => l.isNotEmpty && l.single.status == DownloadStatus.done,
       );
       expect(video.saved.single.maxHeight, 720);
       expect(video.saved.single.format, VideoFormat.webm);
-      expect((await library.watchTracks().first), hasLength(1));
+      expect(items.single.savedFolder, 'Movies/Mulo');
+      expect(engine.streams, isEmpty, reason: '음원은 받지 않는다');
+      expect(await library.watchTracks().first, isEmpty);
     });
 
-    test('영상이 실패하면 항목이 실패하고 음원은 저장되지 않는다', () async {
+    test('영상이 실패하면 항목이 실패 처리된다', () async {
       final repo = build(_FakeDownloader(), video: _FakeVideo(fail: true));
       await repo.enqueue(withVideo);
       final items = await settled(

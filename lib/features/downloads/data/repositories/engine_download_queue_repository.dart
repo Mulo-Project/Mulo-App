@@ -61,11 +61,8 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
   final CoverTagWriter? _coverTags;
   final LyricsRepository? _lyrics;
 
-  /// 영상 파일 저장 (없으면 영상 선택은 무시한다).
+  /// 영상 파일 저장 (영상으로 저장할 때 쓴다).
   final VideoSaveRepository? _video;
-
-  /// 이번 실행에서 영상을 이미 저장한 항목 (음원이 실패해 다시 받을 때 영상을 또 받지 않도록).
-  final _videoSaved = <String>{};
   final DownloadQueueStore _queueStore;
   final Future<Directory> Function() _tempDir;
   final DateTime Function() _now;
@@ -388,10 +385,11 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
       await dir.create(recursive: true);
       temp = File(_partPath(dir, id));
 
-      // 영상도 저장하기로 했으면 음원보다 먼저 받는다 (실패하면 항목 전체가 실패해 다시 받아도 음원이 겹쳐 저장되지 않는다).
-      final video = _video;
+      // 영상으로 저장: 영상(소리 포함)만 받아 `Movies/Mulo`에 저장하고 끝난다 (보관함 곡은 만들지 않는다).
       final videoFormat = request.videoFormat;
-      if (video != null && videoFormat != null && _videoSaved.add(id)) {
+      if (videoFormat != null) {
+        final video = _video;
+        if (video == null) throw const DownloadFailed('영상 저장을 쓸 수 없어요');
         _set(id, (e) => e.copyWith(processing: true), persist: false);
         try {
           await video.save(
@@ -404,11 +402,18 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
             ),
           );
         } on VideoSaveException catch (e) {
-          _videoSaved.remove(id);
           throw DownloadFailed('영상을 저장하지 못했어요 (${e.message})');
         }
         if (token.isCancelled) throw const DownloadAborted();
-        _set(id, (e) => e.copyWith(), persist: false);
+        _set(
+          id,
+          (e) => e.copyWith(
+            status: DownloadStatus.done,
+            progress: 1,
+            savedFolder: 'Movies/Mulo',
+          ),
+        );
+        return;
       }
 
       var lastShown = 0.0;
@@ -543,7 +548,6 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
       };
       if (temp != null && !keep) await _deleteQuietly(temp);
       if (!keep) _partMime.remove(id);
-      if (!keep) _videoSaved.remove(id);
       if (converted != null) await _deleteQuietly(converted);
       _runningId = null;
       _token = null;

@@ -1710,7 +1710,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadAlreadyInQueue => '이미 받는 중이거나 대기 중인 곡이에요';
 
   @override
-  String get videoSaveToo => '영상도 함께 저장 (Movies/Mulo)';
+  String get videoSaveType => '저장 유형';
+
+  @override
+  String get videoSaveTypeAudio => '음원';
+
+  @override
+  String get videoSaveTypeVideo => '영상';
 
   @override
   String get videoSaveFormat => '영상 형식';
