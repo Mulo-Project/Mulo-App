@@ -985,6 +985,15 @@
   "notifDownloadStopPreview": "Stop",
   "notifSavedDoneTitle": "Saved",
   "notifSavedDoneNote": "Ready to play from Saved",
+  "notifSaveLocation": "Saved to: {where}",
+  "@notifSaveLocation": {
+    "placeholders": {
+      "where": {
+        "type": "String"
+      }
+    }
+  },
+  "notifSaveLocationCache": "App storage (cache)",
   "notifSavedDoneHidden": "A track finished saving",
   "notifDownloadDoneTitle": "Download complete",
   "notifDownloadDoneHidden": "A song was added to your library",

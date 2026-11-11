@@ -2769,6 +2769,14 @@ class AppLocalizationsKo extends AppLocalizations {
   String get notifSavedDoneNote => '보관함에서 바로 들을 수 있어요';
 
   @override
+  String notifSaveLocation(String where) {
+    return '저장 위치: $where';
+  }
+
+  @override
+  String get notifSaveLocationCache => '앱 보관(캐시)';
+
+  @override
   String get notifSavedDoneHidden => '음원 저장이 끝났어요';
 
   @override

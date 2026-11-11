@@ -2845,6 +2845,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifSavedDoneNote => 'Ready to play from Saved';
 
   @override
+  String notifSaveLocation(String where) {
+    return 'Saved to: $where';
+  }
+
+  @override
+  String get notifSaveLocationCache => 'App storage (cache)';
+
+  @override
   String get notifSavedDoneHidden => 'A track finished saving';
 
   @override

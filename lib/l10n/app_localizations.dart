@@ -5168,6 +5168,18 @@ abstract class AppLocalizations {
   /// **'보관함에서 바로 들을 수 있어요'**
   String get notifSavedDoneNote;
 
+  /// No description provided for @notifSaveLocation.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 위치: {where}'**
+  String notifSaveLocation(String where);
+
+  /// No description provided for @notifSaveLocationCache.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱 보관(캐시)'**
+  String get notifSaveLocationCache;
+
   /// No description provided for @notifSavedDoneHidden.
   ///
   /// In ko, this message translates to:

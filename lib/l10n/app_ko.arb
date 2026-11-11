@@ -1091,6 +1091,15 @@
   "notifDownloadStopPreview": "중지",
   "notifSavedDoneTitle": "보관 완료",
   "notifSavedDoneNote": "보관함에서 바로 들을 수 있어요",
+  "notifSaveLocation": "저장 위치: {where}",
+  "@notifSaveLocation": {
+    "placeholders": {
+      "where": {
+        "type": "String"
+      }
+    }
+  },
+  "notifSaveLocationCache": "앱 보관(캐시)",
   "notifSavedDoneHidden": "음원 저장이 끝났어요",
   "notifDownloadDoneTitle": "받기 완료",
   "notifDownloadDoneHidden": "곡이 보관함에 추가됐어요",

@@ -21,6 +21,7 @@ class DownloadItem extends Equatable {
     this.url = '',
     this.error = '',
     this.processing = false,
+    this.savedFolder = '',
   });
 
   final String id;
@@ -56,6 +57,9 @@ class DownloadItem extends Equatable {
   /// 내려받기는 끝나고 변환 · 태그 쓰기 · 저장을 하는 중 (진행률은 100%인 채로 한참 걸릴 수 있다).
   final bool processing;
 
+  /// 받기가 끝난 곡 파일이 저장된 폴더 (알림에 보인다). 아직 끝나지 않았으면 빈 문자열.
+  final String savedFolder;
+
   /// 아직 끝나지 않은 항목 (받는 중 · 대기 · 일시정지).
   bool get isActive =>
       status == DownloadStatus.downloading ||
@@ -67,6 +71,7 @@ class DownloadItem extends Equatable {
     double? progress,
     String? error,
     bool processing = false,
+    String? savedFolder,
   }) => DownloadItem(
     id: id,
     title: title,
@@ -82,6 +87,7 @@ class DownloadItem extends Equatable {
     url: url,
     error: error ?? this.error,
     processing: processing,
+    savedFolder: savedFolder ?? this.savedFolder,
   );
 
   @override
@@ -100,5 +106,6 @@ class DownloadItem extends Equatable {
     url,
     error,
     processing,
+    savedFolder,
   ];
 }
