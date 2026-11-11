@@ -79,12 +79,14 @@ class FfmpegTagWriter {
       debugPrint('MuloTag ffmpeg tag ok=$ok');
       if (ok != true || !await out.exists() || await out.length() == 0) {
         lastError ??= 'ffmpeg ok=$ok';
+        debugPrint('MuloTag ffmpeg failed: $lastError');
         return false;
       }
       await out.rename(audio.path);
       return true;
     } on PlatformException catch (e) {
       lastError = e.message ?? e.code;
+      debugPrint('MuloTag ffmpeg error: $lastError');
       return false;
     } on MissingPluginException {
       lastError = 'no ffmpeg plugin';

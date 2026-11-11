@@ -115,8 +115,9 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
                 "-map", "1:v", "-disposition:v:0", "attached_pic",
                 "-metadata:s:v", "title=Album cover", "-metadata:s:v", "comment=Cover (front)",
             )
-        } else {
-            // 새 커버가 없으면 파일에 있던 커버를 그대로 둔다.
+        } else if (format == "mp3") {
+            // 새 커버가 없으면 파일에 있던 커버(mp3의 첨부 그림)를 그대로 둔다.
+            // ogg(opus)는 그림이 스트림으로 읽혀도 ogg 출력에 넣지 못해 소리만 넘긴다.
             args += listOf("-map", "0:v?")
         }
         // 기존 태그는 두고 넘어온 칸만 덮어쓴다 (빈 값은 그 칸을 지운다). ogg는 소리 스트림 태그에도 같이 쓴다.
