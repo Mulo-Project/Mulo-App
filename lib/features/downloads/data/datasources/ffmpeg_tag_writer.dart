@@ -167,7 +167,6 @@ class FfmpegTagWriter {
     }
   }
 
-
   /// ffmpeg가 읽는 ffmetadata 텍스트. `=` `;` `#` `\` 와 줄바꿈은 앞에 `\`를 붙인다.
   @visibleForTesting
   static String ffmetadata(Map<String, String> entries) {
