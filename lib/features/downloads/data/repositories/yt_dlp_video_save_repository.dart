@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import '../../../../core/config/default_video_folder.dart';
-import '../../domain/entities/download_options.dart';
 import '../../domain/repositories/video_save_repository.dart';
 import '../datasources/cover_tag_writer.dart';
 import '../datasources/downloaded_file_store.dart';

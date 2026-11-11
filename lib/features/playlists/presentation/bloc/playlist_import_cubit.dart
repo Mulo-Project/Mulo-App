@@ -144,9 +144,8 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
     this._findExisting,
     this._addTracks,
     this._channelPlaylists, {
-    WarmUpSearch? warmUp,
-  }) : _warmUp = warmUp,
-       super(const PlaylistImportState());
+    this._warmUp,
+  }) : super(const PlaylistImportState());
 
   final WarmUpSearch? _warmUp;
 

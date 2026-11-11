@@ -4,20 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/features/search/data/engine/server_engine.dart';
 import 'package:music_download_play_app/features/search/domain/entities/subtitle_track.dart';
 
-const _vtt = '''WEBVTT
-Kind: captions
-
-00:00:01.000 --> 00:00:03.000
-첫 줄
-
-00:00:03.000 --> 00:00:05.000
-첫 줄
-<c>둘째</c> 줄
-
-00:01:05.500 --> 00:01:07.000
-&amp; 셋째
-''';
-
 void main() {
   group('자막 읽기', () {
     test('.lrc 글로 바꾼다 (빈 줄은 건너뜀)', () {

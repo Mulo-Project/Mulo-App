@@ -29,9 +29,8 @@ class MediaDetailCubit extends Cubit<MediaDetailState> {
     this._openLink, {
     MediaHitMemo? memo,
     this.stored = false,
-    FetchFullMediaInfo? fetchFull,
+    this._fetchFull,
   }) : _memo = memo,
-       _fetchFull = fetchFull,
        _known = memo?.get(hit.url),
        super(MediaDetailState(hit: memo?.get(hit.url) ?? hit));
 

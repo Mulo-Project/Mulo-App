@@ -131,9 +131,8 @@ class SearchState extends Equatable {
 /// 곡마다 상세 정보를 뒤에서 읽지 않는다 (느려진다). 목록에 있는 정보만으로
 /// 정렬하고, 상세는 곡을 열 때 읽는다.
 class SearchCubit extends Cubit<SearchState> {
-  SearchCubit(this._search, this._info, {WarmUpSearch? warmUp})
-    : _warmUp = warmUp,
-      super(const SearchState());
+  SearchCubit(this._search, this._info, {this._warmUp})
+    : super(const SearchState());
 
   final WarmUpSearch? _warmUp;
 
