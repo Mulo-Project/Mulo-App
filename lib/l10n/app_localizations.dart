@@ -2918,18 +2918,6 @@ abstract class AppLocalizations {
   /// **'자막 언어'**
   String get downloadSubtitleLanguage;
 
-  /// No description provided for @downloadSubtitleAuto.
-  ///
-  /// In ko, this message translates to:
-  /// **'자동으로 고르기'**
-  String get downloadSubtitleAuto;
-
-  /// No description provided for @downloadSubtitleAutoHint.
-  ///
-  /// In ko, this message translates to:
-  /// **'한국어 → 영어 → 첫 번째 자막 순으로 골라요.'**
-  String get downloadSubtitleAutoHint;
-
   /// No description provided for @downloadLyricsPreviewLoading.
   ///
   /// In ko, this message translates to:
@@ -5167,6 +5155,18 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'보관함에서 바로 들을 수 있어요'**
   String get notifSavedDoneNote;
+
+  /// No description provided for @notifSaveLocation.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 위치: {where}'**
+  String notifSaveLocation(String where);
+
+  /// No description provided for @notifSaveLocationCache.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱 보관(캐시)'**
+  String get notifSaveLocationCache;
 
   /// No description provided for @notifSavedDoneHidden.
   ///

@@ -1554,12 +1554,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadSubtitleLanguage => '자막 언어';
 
   @override
-  String get downloadSubtitleAuto => '자동으로 고르기';
-
-  @override
-  String get downloadSubtitleAutoHint => '한국어 → 영어 → 첫 번째 자막 순으로 골라요.';
-
-  @override
   String get downloadLyricsPreviewLoading => '불러오는 중…';
 
   @override
@@ -2767,6 +2761,14 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get notifSavedDoneNote => '보관함에서 바로 들을 수 있어요';
+
+  @override
+  String notifSaveLocation(String where) {
+    return '저장 위치: $where';
+  }
+
+  @override
+  String get notifSaveLocationCache => '앱 보관(캐시)';
 
   @override
   String get notifSavedDoneHidden => '음원 저장이 끝났어요';

@@ -165,12 +165,14 @@ class _DetailViewState extends State<_DetailView> {
     _preview = context.read<PreviewCubit>();
   }
 
-  /// 듣는 중에 오디오 언어를 바꾸면 고른 언어로 처음부터 다시 듣는다.
+  /// 듣는 중에 오디오 언어를 바꾸면 고른 언어로, 듣던 자리부터 이어서 다시 튼다.
   Future<void> _restartPreview(MediaHit hit, String language) async {
     if (!_preview.state.isActive(hit.id)) return;
+    final position = _preview.state.progress?.position ?? Duration.zero;
     await _preview.stop();
     if (!mounted) return;
-    await togglePreview(context, hit, audioLanguage: language);
+    final ok = await togglePreview(context, hit, audioLanguage: language);
+    if (ok) await _preview.seekToPosition(position);
   }
 
   /// 앱 안에서 영상을 틀고 있는지 / 틀어 보려다 막혀서 유튜브로만 열 수 있는지.
@@ -223,10 +225,15 @@ class _DetailViewState extends State<_DetailView> {
   Future<void> _play(MediaHit hit) async {
     if (widget.fromSaved) return _startSaved(hit);
     if (widget.inAppVideo && isYoutubeUrl(hit.url)) {
+      // 언어 목록을 아직 읽는 중이면 기다려, 시스템 언어 기본값이 빠지지 않게 한다.
+      final language = await context
+          .read<AudioLanguageCubit>()
+          .selectedWhenReady();
+      if (!mounted) return;
       final started = await togglePreview(
         context,
         hit,
-        audioLanguage: context.read<AudioLanguageCubit>().state.selected,
+        audioLanguage: language,
         announceFailure: false,
       );
       if (started || !mounted) return;

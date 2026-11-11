@@ -93,9 +93,10 @@ object VideoSurfaceHub {
         refresh()
     }
 
-    fun setPreviewVideo(player: ExoPlayer?) {
+    /** [keepFrame]: 영상 플레이어만 바꿔 끼운다 (화질 전환). 이전 화면을 그대로 두고 새 영상의 첫 화면이 그려지면 바뀐다. */
+    fun setPreviewVideo(player: ExoPlayer?, keepFrame: Boolean = false) {
         previewVideo = player
-        refresh()
+        refresh(keepFrame && player != null && bound != null)
     }
 
     fun shutdown() {
@@ -119,7 +120,7 @@ object VideoSurfaceHub {
             .build()
     }
 
-    private fun refresh() {
+    private fun refresh(keepFrame: Boolean = false) {
         val target = if (attached) (previewVideo ?: mainPlayer) else null
         if (bound !== target) {
             bound?.let {
@@ -127,11 +128,13 @@ object VideoSurfaceHub {
                 it.clearVideoSurface()
             }
             bound = target
-            firstFrame = false
-            width = 0
-            height = 0
             target?.addListener(playerListener)
-            emit?.invoke("ready", mapOf("value" to false))
+            if (!keepFrame) {
+                firstFrame = false
+                width = 0
+                height = 0
+                emit?.invoke("ready", mapOf("value" to false))
+            }
         }
         // 표면이 유효할 때만 영상 해독을 켠다 (표면 없이 켜면 해독기 초기화가 실패해 소리까지 멈춘다).
         val surface = producer?.surface

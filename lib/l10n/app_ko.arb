@@ -679,8 +679,6 @@
   "downloadSubtitleNone": "이 영상에는 자막이 없어요.",
   "downloadSubtitleUnknown": "자막을 확인하지 못했어요. 켜 두면 받은 뒤 다시 찾아봐요.",
   "downloadSubtitleLanguage": "자막 언어",
-  "downloadSubtitleAuto": "자동으로 고르기",
-  "downloadSubtitleAutoHint": "한국어 → 영어 → 첫 번째 자막 순으로 골라요.",
   "downloadLyricsPreviewLoading": "불러오는 중…",
   "downloadLyricsPreviewFailed": "자막을 불러오지 못했어요.",
   "downloadSubtitleEditHint": "글은 고칠 수 있지만 시간은 바꿀 수 없어요. 싱크는 받은 뒤 재생 화면에서 맞춰요.",
@@ -1091,6 +1089,15 @@
   "notifDownloadStopPreview": "중지",
   "notifSavedDoneTitle": "보관 완료",
   "notifSavedDoneNote": "보관함에서 바로 들을 수 있어요",
+  "notifSaveLocation": "저장 위치: {where}",
+  "@notifSaveLocation": {
+    "placeholders": {
+      "where": {
+        "type": "String"
+      }
+    }
+  },
+  "notifSaveLocationCache": "앱 보관(캐시)",
   "notifSavedDoneHidden": "음원 저장이 끝났어요",
   "notifDownloadDoneTitle": "받기 완료",
   "notifDownloadDoneHidden": "곡이 보관함에 추가됐어요",

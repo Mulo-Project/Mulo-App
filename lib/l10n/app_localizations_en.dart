@@ -1591,13 +1591,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadSubtitleLanguage => 'Subtitle language';
 
   @override
-  String get downloadSubtitleAuto => 'Choose automatically';
-
-  @override
-  String get downloadSubtitleAutoHint =>
-      'Korean, then English, then the first one.';
-
-  @override
   String get downloadLyricsPreviewLoading => 'Loading…';
 
   @override
@@ -2843,6 +2836,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifSavedDoneNote => 'Ready to play from Saved';
+
+  @override
+  String notifSaveLocation(String where) {
+    return 'Saved to: $where';
+  }
+
+  @override
+  String get notifSaveLocationCache => 'App storage (cache)';
 
   @override
   String get notifSavedDoneHidden => 'A track finished saving';

@@ -1000,3 +1000,12 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 - D-161 추가: 영상으로 저장한 곡은 메인 재생에서도 영상이 나온다. `Track.hasVideo` · `videoUri`(영상 전용 주소)를 `PlaybackItem.videoUri`로 네이티브에 보내고, `MergingSourceFactory`가 소리 소스와 영상 소스를 `MergingMediaSource`로 합쳐 한 플레이어가 한 시계로 튼다(소리 주소가 영상까지 담은 경우는 그대로). 화면은 `NativeVideo`가 그린다: 미니 플레이어 · 저장 화면의 영상 타일 · 상세 화면. 앱을 껐다 켜면 저장된 대기열에는 영상 전용 주소가 없어 소리만 이어진다(다시 틀면 영상 포함).
 - D-161 추가: 임시 저장 영상 자리는 미리 듣기 영상의 컨트롤(`PreviewVideoControls`, 탭하면 뜨는 10초 · 재생/멈춤 · 진행 막대 · 전체 화면 · 옵션)을 그대로 쓴다. `main: true`면 재생 · 위치 · 10초 이동을 메인 플레이어가 하고, 옵션에는 작은 창(PiP)만 둔다(반복은 재생 조작부, 화질은 저장할 때 정한다). 새 컨트롤을 만들지 않는다.
 - D-161 추가: 임시 저장 한도(설정의 250 MB ~ 2 GB)는 저장한 음원까지 포함한다. 화면은 "저장 X + 듣기 캐시 Y / 한도 Z", 저장분이 한도를 채우면 새 저장을 막고 안내한다(이미 저장한 곡은 지우지 않는다). 듣기 캐시의 LRU 한도는 한도에서 저장분을 뺀 값(최소 32 MB)이고 저장소를 새로 열 때 적용된다. D-159의 "저장 저장소는 한도에 포함되지 않는다"를 대체한다.
+
+## D-162 · 2026-11-10 · 유튜브 재생 주소 읽기를 네이티브(Kotlin)로 옮긴다
+- 전: Dart(`youtube_explode_dart`)가 주소를 읽고 → 네이티브 플레이어 · 받기가 받고 → Dart가 화면을 그렸다. 앱이 백그라운드로 가면 Dart가 멈춰 읽기도 멈추고, 읽는 곳과 쓰는 곳이 갈라져 구조가 어색했다.
+- 후: Android는 `YoutubeResolver`(Kotlin)가 InnerTube `player` API를 직접 불러 읽는다 (채널 `music_app/youtube_resolve`: `audio` · `video` · `languages`). 클라이언트 순서·설정은 D-062 그대로(visionOS → android_vr → android, 영상은 visionOS만), 파일 가운데 1KB를 요청해 열리는 주소만 쓴다. 형식 고르기(선호 컨테이너 → 비트레이트, 소리 든 형식 vs 더 큰 영상 전용 mp4, 언어 트랙)는 `YoutubeFormats`(순수 함수, 단위 테스트).
+- 외부 구성요소를 더하지 않았다: `HttpURLConnection` · `org.json`(안드로이드 기본)만 쓴다. NewPipeExtractor는 GPLv3라 쓰지 않았다. 감소: Android에서는 시청 페이지를 읽지 않아 한 번 덜 요청한다.
+- 읽는 순서: **네이티브 → yt-dlp 기본 → yt-dlp android_vr**. `YoutubeExplodeEngine`은 `YoutubeResolveEngine`(`youtube_resolve_engine.dart`)으로 이름을 바꾸고 읽기 함수를 필수로 받는다(`NativeYoutubeResolver`). 화면 · cubit은 그대로다. **Dart의 주소 읽기 코드(클라이언트 · 형식 고르기 · 구간 확인)는 모두 지웠다.** Android 밖의 OS는 안쪽 엔진(yt-dlp · 서버)이 읽는다 (Android 우선, iOS · Windows는 나중에). 재생목록 검색의 youtube_explode_dart 대체 경로만 남았다(주소 읽기가 아님).
+- 못 하는 것: `signatureCipher`(JS 풀이 필요) 주소는 쓰지 않는다 (전과 같음). 라이브는 형식이 없어 yt-dlp로 넘어간다.
+
+- D-162 추가: 받기 창의 가사 자막 언어 표에서 `자동으로 고르기` 줄을 없앴다. 아무것도 고르지 않았으면 기기(시스템) 언어와 맞는 자막(코드가 같으면 먼저, 아니면 언어만 같은 것)이 처음부터 골라져 있고, 맞는 게 없으면 첫 자막이다. 사용자가 다른 줄을 고르면 그 선택이 우선한다 (D-109 보강 3 · 4 · 6의 "자동으로 고르기" 줄은 이 결정으로 대체).

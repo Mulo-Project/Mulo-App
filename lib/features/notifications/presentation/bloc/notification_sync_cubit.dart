@@ -81,15 +81,26 @@ class NotificationSyncCubit extends Cubit<void> {
         DownloadResultNotice(
           id: 'saved:${v.id}',
           title: l10n.notifSavedDoneTitle,
-          body: settings.hideSongInfo
-              ? l10n.notifSavedDoneHidden
-              : '${_titleLine(v.hit.title, v.hit.uploader)}\n${l10n.notifSavedDoneNote}',
+          body: [
+            if (settings.hideSongInfo)
+              l10n.notifSavedDoneHidden
+            else ...[
+              _titleLine(v.hit.title, v.hit.uploader),
+              l10n.notifSavedDoneNote,
+            ],
+            // 임시 저장은 파일이 아니라 앱 캐시다 (받기 완료의 "저장 위치"와 구분된다).
+            l10n.notifSaveLocation(l10n.notifSaveLocationCache),
+          ].join('\n'),
           failed: false,
           artUri: settings.hideSongInfo ? null : v.hit.thumbnailUrl,
         ),
       );
     }
   }
+
+  /// 기기 저장소 루트(`/storage/emulated/0/`)는 떼고 보인다 (`Music/Mulo`).
+  static String _shortFolder(String folder) =>
+      folder.replaceFirst('/storage/emulated/0/', '');
 
   // ── 받기 ──
 
@@ -119,9 +130,13 @@ class NotificationSyncCubit extends Cubit<void> {
             DownloadResultNotice(
               id: i.id,
               title: l10n.notifDownloadDoneTitle,
-              body: hide
-                  ? l10n.notifDownloadDoneHidden
-                  : _titleLine(i.title, i.artist),
+              body: [
+                hide
+                    ? l10n.notifDownloadDoneHidden
+                    : _titleLine(i.title, i.artist),
+                if (i.savedFolder.isNotEmpty)
+                  l10n.notifSaveLocation(_shortFolder(i.savedFolder)),
+              ].join('\n'),
               failed: false,
               artUri: hide ? null : i.thumbnailUrl,
             ),

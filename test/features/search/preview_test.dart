@@ -12,7 +12,7 @@ import 'package:music_download_play_app/features/notifications/domain/repositori
 import 'package:music_download_play_app/features/player/presentation/bloc/now_playing_cubit.dart';
 import 'package:music_download_play_app/features/search/presentation/widgets/preview_control.dart';
 import 'package:music_download_play_app/features/search/data/engine/cached_engine.dart';
-import 'package:music_download_play_app/features/search/data/engine/explode_engine.dart';
+import 'package:music_download_play_app/features/search/data/engine/youtube_resolve_engine.dart';
 import 'package:music_download_play_app/features/search/data/engine/local_engine.dart';
 import 'package:music_download_play_app/features/search/data/engine/server_engine.dart';
 import 'package:music_download_play_app/features/search/domain/entities/audio_language.dart';
@@ -94,16 +94,18 @@ void main() {
     });
 
     test(
-      'YoutubeExplodeEngine: 유튜브 곡은 라이브러리가 읽은 주소를 쓰고, 못 읽으면 안쪽 엔진으로 넘긴다',
+      'YoutubeResolveEngine: 유튜브 곡은 네이티브가 읽은 주소를 쓰고, 못 읽으면 안쪽 엔진으로 넘긴다',
       () async {
         final inner = FakeDownloaderEngine();
         var fail = false;
-        final engine = YoutubeExplodeEngine(
+        final engine = YoutubeResolveEngine(
           inner,
           reader: (id, {language}) async {
             if (fail) throw const EngineException(EngineFailure.failed);
             return AudioStream(url: 'https://explode/$id');
           },
+          videoReader: (_, _) async => null,
+          languageReader: (_) async => const [],
         );
         const url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
         expect(
@@ -125,16 +127,18 @@ void main() {
     );
 
     test(
-      'YoutubeExplodeEngine: 소리가 든 영상 주소는 라이브러리가 먼저 읽고, 못 읽으면 안쪽 엔진으로 넘긴다',
+      'YoutubeResolveEngine: 소리가 든 영상 주소는 네이티브가 먼저 읽고, 못 읽으면 안쪽 엔진으로 넘긴다',
       () async {
         final inner = FakeDownloaderEngine();
         VideoStream? found = const VideoStream(
           url: 'https://explode/video',
           muxed: true,
         );
-        final engine = YoutubeExplodeEngine(
+        final engine = YoutubeResolveEngine(
           inner,
           videoReader: (id, maxHeight) async => found,
+          reader: (_, {language}) async => null,
+          languageReader: (_) async => const [],
         );
         const url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
         expect(
@@ -149,15 +153,17 @@ void main() {
       },
     );
 
-    test('YoutubeExplodeEngine: 고른 오디오 언어를 읽는 쪽에 넘긴다', () async {
+    test('YoutubeResolveEngine: 고른 오디오 언어를 읽는 쪽에 넘긴다', () async {
       final inner = FakeDownloaderEngine();
       final languages = <String?>[];
-      final engine = YoutubeExplodeEngine(
+      final engine = YoutubeResolveEngine(
         inner,
         reader: (id, {language}) async {
           languages.add(language);
           return AudioStream(url: 'https://explode/$id');
         },
+        videoReader: (_, _) async => null,
+        languageReader: (_) async => const [],
       );
       const url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
       await engine.resolveAudioStream(url, audioLanguage: 'ko');
@@ -166,7 +172,7 @@ void main() {
     });
 
     test(
-      'YoutubeExplodeEngine: 오디오 언어 목록은 트랙이 둘 이상일 때만 쓰고 아니면 안쪽 엔진에 묻는다',
+      'YoutubeResolveEngine: 오디오 언어 목록은 트랙이 둘 이상일 때만 쓰고 아니면 안쪽 엔진에 묻는다',
       () async {
         final inner = FakeDownloaderEngine()
           ..audioLanguages = const [
@@ -177,9 +183,11 @@ void main() {
           AudioLanguage(id: 'ja', name: 'Japanese', isDefault: true),
           AudioLanguage(id: 'fr', name: 'French'),
         ];
-        final engine = YoutubeExplodeEngine(
+        final engine = YoutubeResolveEngine(
           inner,
           languageReader: (_) async => tracks,
+          reader: (_, {language}) async => null,
+          videoReader: (_, _) async => null,
         );
         const url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
         expect((await engine.fetchAudioLanguages(url)).map((e) => e.id), [
