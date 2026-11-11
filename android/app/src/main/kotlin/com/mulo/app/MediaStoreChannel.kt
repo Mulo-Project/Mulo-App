@@ -101,10 +101,20 @@ class MediaStoreChannel(
         val extractor = MediaExtractor()
         try {
             extractor.setDataSource(context, uri, null)
-            if (extractor.trackCount > 0) {
-                val format = extractor.getTrackFormat(0)
-                if (format.containsKey(MediaFormat.KEY_SAMPLE_RATE)) {
+            // 영상 파일은 첫 트랙이 영상이라, 트랙을 돌며 소리의 샘플레이트와 영상의 크기를 따로 읽는다.
+            for (i in 0 until extractor.trackCount) {
+                val format = extractor.getTrackFormat(i)
+                val mime = format.getString(MediaFormat.KEY_MIME) ?: ""
+                if (mime.startsWith("audio/") && !out.containsKey("sampleRate") &&
+                    format.containsKey(MediaFormat.KEY_SAMPLE_RATE)
+                ) {
                     out["sampleRate"] = format.getInteger(MediaFormat.KEY_SAMPLE_RATE)
+                }
+                if (mime.startsWith("video/") && !out.containsKey("width") &&
+                    format.containsKey(MediaFormat.KEY_WIDTH) && format.containsKey(MediaFormat.KEY_HEIGHT)
+                ) {
+                    out["width"] = format.getInteger(MediaFormat.KEY_WIDTH)
+                    out["height"] = format.getInteger(MediaFormat.KEY_HEIGHT)
                 }
             }
         } catch (e: Exception) {

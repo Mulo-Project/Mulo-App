@@ -716,6 +716,7 @@
   "trackInfoFormat": "Format",
   "trackInfoBitrate": "Bitrate",
   "trackInfoSampleRate": "Sample rate",
+  "trackInfoResolution": "Resolution",
   "trackInfoUrl": "Source link",
   "trackInfoUrlCopied": "Link copied",
   "trackEditTagFailed": "Could not write the info to the music file, so nothing was changed. Try again later.",

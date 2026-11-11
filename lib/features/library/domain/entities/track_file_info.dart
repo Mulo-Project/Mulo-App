@@ -5,6 +5,8 @@ class TrackFileInfo {
     this.mime,
     this.bitrate,
     this.sampleRate,
+    this.width,
+    this.height,
   });
 
   /// 파일 크기(byte).
@@ -19,6 +21,15 @@ class TrackFileInfo {
   /// 샘플레이트(Hz).
   final int? sampleRate;
 
+  /// 영상의 가로 · 세로 픽셀 (음원은 null).
+  final int? width;
+  final int? height;
+
   bool get isEmpty =>
-      sizeBytes == null && mime == null && bitrate == null && sampleRate == null;
+      sizeBytes == null &&
+      mime == null &&
+      bitrate == null &&
+      sampleRate == null &&
+      width == null &&
+      height == null;
 }

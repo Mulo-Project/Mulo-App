@@ -76,9 +76,12 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
     'audio/ogg' || 'application/ogg' || 'audio/opus' => 'Opus / Ogg',
     'audio/mp4' || 'audio/aac' || 'audio/x-m4a' => 'AAC / M4A',
     'audio/flac' || 'audio/x-flac' => 'FLAC',
+    'video/mp4' => 'MP4',
+    'video/webm' => 'WebM',
+    'video/x-matroska' => 'MKV',
     'audio/x-wav' || 'audio/wav' => 'WAV',
     null || '' => null,
-    final m => m.replaceFirst('audio/', '').toUpperCase(),
+    final m => m.replaceFirst(RegExp('^(audio|video)/'), '').toUpperCase(),
   };
 
   /// 커버 이미지를 이미지 페이지에서 고르고 · 맞추고 · 지운다.
@@ -246,6 +249,13 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
         row(
           l10n.trackInfoSampleRate,
           '${(_file!.sampleRate! / 1000).toStringAsFixed(_file!.sampleRate! % 1000 == 0 ? 0 : 1)} kHz',
+        ),
+      ],
+      if (_file?.width != null && _file?.height != null) ...[
+        const AppDivider(),
+        row(
+          l10n.trackInfoResolution,
+          '${_file!.width} × ${_file!.height}',
         ),
       ],
       if (t.folder.isNotEmpty) ...[

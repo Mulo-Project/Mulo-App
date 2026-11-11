@@ -1971,6 +1971,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get trackInfoSampleRate => '샘플레이트';
 
   @override
+  String get trackInfoResolution => '해상도';
+
+  @override
   String get trackInfoUrl => '원본 주소';
 
   @override

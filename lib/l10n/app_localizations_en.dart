@@ -2019,6 +2019,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackInfoSampleRate => 'Sample rate';
 
   @override
+  String get trackInfoResolution => 'Resolution';
+
+  @override
   String get trackInfoUrl => 'Source link';
 
   @override

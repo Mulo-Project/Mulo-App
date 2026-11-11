@@ -62,7 +62,10 @@ class PlatformDownloadedFileStore implements DownloadedFileStore {
       final relative = isVideo
           ? androidVideoRelativePath(folder)
           : androidRelativePath(folder);
-      final media = androidMediaType(extension, mime);
+      // 영상은 받은 형식 그대로 등록한다 (webm을 ogg로 바꾸는 규칙은 음원 전용이다).
+      final media = isVideo
+          ? (extension: extension, mime: mime)
+          : androidMediaType(extension, mime);
       final uri = await _channel.invokeMethod<String>('saveAudio', {
         'path': source.path,
         'displayName': '$name.${media.extension}',

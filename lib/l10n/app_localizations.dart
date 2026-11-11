@@ -3704,6 +3704,12 @@ abstract class AppLocalizations {
   /// **'샘플레이트'**
   String get trackInfoSampleRate;
 
+  /// No description provided for @trackInfoResolution.
+  ///
+  /// In ko, this message translates to:
+  /// **'해상도'**
+  String get trackInfoResolution;
+
   /// No description provided for @trackInfoUrl.
   ///
   /// In ko, this message translates to:
