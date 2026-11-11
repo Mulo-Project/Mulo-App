@@ -245,10 +245,53 @@ class ArcPlayer extends StatelessWidget {
     );
   }
 
+  /// 영상 곡: 영상 틀 둘레(진행 선이 도는 길)의 크기. 영상 [aspect]에 맞추고 영역 안에 들어가게 한다.
+  static Size _frameSize(Size s, double aspect) {
+    const edge = _knob + 1;
+    const inset = AppSpacing.sm + 6;
+    final maxW = s.width - AppSpacing.lg * 2 - edge * 2;
+    final maxH = s.height - 48 - edge * 2;
+    final w = math.min(maxW - inset * 2, (maxH - inset * 2) * aspect);
+    return Size(w + inset * 2, w / aspect + inset * 2);
+  }
+
+  /// 영상 곡: 영상 틀을 따라 도는 둥근 사각형 길. 호처럼 아래 가운데가 열려 있다 (시간이 놓이는 자리).
+  static Path _framePath(Size s, double aspect) {
+    final f = _frameSize(s, aspect);
+    final r = Rect.fromCenter(
+      center: s.center(Offset.zero),
+      width: f.width,
+      height: f.height,
+    );
+    final c = math.min(24.0, math.min(f.width, f.height) / 2);
+    final g = f.width * .12;
+    final cx = r.center.dx;
+    const q = math.pi / 2;
+    return Path()
+      ..moveTo(cx - g, r.bottom)
+      ..lineTo(r.left + c, r.bottom)
+      ..arcTo(Rect.fromLTWH(r.left, r.bottom - 2 * c, 2 * c, 2 * c), q, q, false)
+      ..lineTo(r.left, r.top + c)
+      ..arcTo(Rect.fromLTWH(r.left, r.top, 2 * c, 2 * c), math.pi, q, false)
+      ..lineTo(r.right - c, r.top)
+      ..arcTo(Rect.fromLTWH(r.right - 2 * c, r.top, 2 * c, 2 * c), -q, q, false)
+      ..lineTo(r.right, r.bottom - c)
+      ..arcTo(
+        Rect.fromLTWH(r.right - 2 * c, r.bottom - 2 * c, 2 * c, 2 * c),
+        0,
+        q,
+        false,
+      )
+      ..lineTo(cx + g, r.bottom);
+  }
+
   @override
   Widget build(BuildContext context) {
     final art = PlayerArt.of(context, data.track);
     final p = context.palette;
+    final video = data.track.isVideo;
+    // 영상 곡은 원 대신 영상 틀(영상 비율)을 따라 진행 선이 돈다.
+    final aspect = video ? _videoAspect(context) : 1.0;
     return PlayerBackdrop(
       art: art,
       blurred: true,
@@ -269,16 +312,38 @@ class ArcPlayer extends StatelessWidget {
                       onSeekStart: data.vm.beginScrub,
                       onSeekEnd: data.vm.endScrub,
                       straight: data.showLyrics,
-                      pathOf: _path,
+                      pathOf: video
+                          ? (s, _) => _framePath(s, aspect)
+                          : _path,
                       track: p.onSurface.withValues(alpha: .2),
                       fill: p.onSurface,
                       position: state.position,
                       total: data.track.duration,
                       timeAt: (s, _) => Offset(
                         s.width / 2,
-                        s.height / 2 + (_size(s) / 2 - _knob - 1),
+                        video
+                            ? s.height / 2 + _frameSize(s, aspect).height / 2
+                            : s.height / 2 + (_size(s) / 2 - _knob - 1),
                       ),
-                      cover: (s, _) => Center(
+                      cover: (s, _) => video
+                          ? Center(
+                              child: SizedBox.fromSize(
+                                size: _frameSize(s, aspect),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(
+                                    AppSpacing.sm + 6,
+                                  ),
+                                  child: PlayerCover(
+                                    art: art,
+                                    radius: AppRadii.lg,
+                                    video: const NativeVideoTapFullscreen(
+                                      fit: BoxFit.contain,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            )
+                          : Center(
                         child: SizedBox.square(
                           dimension: _size(s),
                           child: Padding(
@@ -286,11 +351,6 @@ class ArcPlayer extends StatelessWidget {
                             child: PlayerCover(
                               art: art,
                               radius: _size(s),
-                              video: data.track.isVideo
-                                  ? const NativeVideoTapFullscreen(
-                                      fit: BoxFit.contain,
-                                    )
-                                  : null,
                             ),
                           ),
                         ),
