@@ -233,11 +233,14 @@ class ArcPlayer extends StatelessWidget {
     );
   }
 
+  /// 영상 곡: 진행 선과 영상 사이 간격.
+  static const _frameInset = AppSpacing.sm;
+
   /// 영상 곡: 영상 틀 둘레(진행 선이 도는 길)의 크기. 영상 [aspect]에 맞추고 영역 안에 들어가게 한다.
   static Size _frameSize(Size s, double aspect) {
     const edge = _knob + 1;
-    const inset = AppSpacing.sm + 6;
-    final maxW = s.width - AppSpacing.lg * 2 - edge * 2;
+    const inset = _frameInset;
+    final maxW = s.width - AppSpacing.sm * 2 - edge * 2;
     final maxH = s.height - 48 - edge * 2;
     final w = math.min(maxW - inset * 2, (maxH - inset * 2) * aspect);
     return Size(w + inset * 2, w / aspect + inset * 2);
@@ -319,9 +322,7 @@ class ArcPlayer extends StatelessWidget {
                               child: SizedBox.fromSize(
                                 size: _frameSize(s, aspect),
                                 child: Padding(
-                                  padding: const EdgeInsets.all(
-                                    AppSpacing.sm + 6,
-                                  ),
+                                  padding: const EdgeInsets.all(_frameInset),
                                   child: PlayerCover(
                                     art: art,
                                     radius: AppRadii.lg,
