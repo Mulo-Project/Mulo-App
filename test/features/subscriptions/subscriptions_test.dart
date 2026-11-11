@@ -1,9 +1,10 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/core/di/injector.dart';
 import 'package:music_download_play_app/features/downloads/domain/repositories/download_queue_repository.dart';
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/entities/channel_hit.dart';
-import 'package:music_download_play_app/features/subscriptions/data/datasources/youtube_feed_client.dart';
+import 'package:music_download_play_app/features/subscriptions/data/datasources/native_youtube_channels.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/entities/feed_video.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/entities/subscribed_channel.dart';
 import 'package:music_download_play_app/features/subscriptions/domain/repositories/background_checker.dart';
@@ -13,29 +14,6 @@ import 'package:music_download_play_app/features/subscriptions/presentation/bloc
 import 'package:music_download_play_app/features/subscriptions/presentation/bloc/subscriptions_cubit.dart';
 
 import '../../helpers/fakes.dart';
-
-const _feedXml = '''<?xml version="1.0" encoding="UTF-8"?>
-<feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns:media="http://search.yahoo.com/mrss/" xmlns="http://www.w3.org/2005/Atom">
- <title>Some Channel</title>
- <entry>
-  <id>yt:video:AAA11111111</id>
-  <yt:videoId>AAA11111111</yt:videoId>
-  <yt:channelId>UCaaaaaaaaaaaaaaaaaaaaaa</yt:channelId>
-  <title>Song &amp; Dance &#39;26</title>
-  <published>2026-10-11T10:00:00+00:00</published>
-  <author><name>Some Channel</name></author>
-  <media:group>
-   <media:thumbnail url="https://i.ytimg.com/vi/AAA11111111/hqdefault.jpg" width="480" height="360"/>
-   <media:community><media:statistics views="1234"/></media:community>
-  </media:group>
- </entry>
- <entry>
-  <yt:videoId>BBB22222222</yt:videoId>
-  <title>Older</title>
-  <published>2026-10-01T10:00:00+00:00</published>
- </entry>
- <entry><title>Broken, no id</title></entry>
-</feed>''';
 
 const _channelId = 'UCaaaaaaaaaaaaaaaaaaaaaa';
 final _t0 = DateTime.utc(2026, 10, 5);
@@ -77,34 +55,69 @@ class _CategoryEngine extends FakeDownloaderEngine {
 }
 
 void main() {
-  group('채널 피드 읽기', () {
-    test('RSS에서 영상 id · 제목 · 올린 시각 · 이미지 · 조회수를 읽는다', () {
-      final videos = parseFeed(_feedXml);
-      expect(videos.map((v) => v.id), ['AAA11111111', 'BBB22222222']);
-      final first = videos.first;
-      expect(first.title, "Song & Dance '26");
-      expect(first.publishedAt, DateTime.utc(2026, 10, 11, 10));
-      expect(first.author, 'Some Channel');
-      expect(first.thumbnailUrl, contains('AAA11111111'));
-      expect(first.viewCount, 1234);
-      expect(first.url, 'https://www.youtube.com/watch?v=AAA11111111');
+  group('네이티브 채널 읽기', () {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    const channel = MethodChannel('test/youtube_channels');
+    final calls = <MethodCall>[];
+
+    setUp(() {
+      calls.clear();
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            calls.add(call);
+            return switch (call.method) {
+              'channelFeed' => [
+                {
+                  'id': 'AAA11111111',
+                  'title': 'Song',
+                  'publishedMs': DateTime.utc(2026, 10, 11, 10)
+                      .millisecondsSinceEpoch,
+                  'author': 'Some Channel',
+                  'thumbnail': 'https://i.ytimg.com/vi/AAA11111111/hq.jpg',
+                  'views': 1234,
+                },
+              ],
+              'resolveChannelId' => _channelId,
+              'searchChannels' => [
+                {'id': _channelId, 'name': 'Some Channel', 'videoCount': 12},
+              ],
+              'channelDetails' => {
+                'bannerUrl': 'https://yt3.test/b',
+                'subscriberCount': 1910000,
+              },
+              _ => null,
+            };
+          });
     });
 
-    test('채널 주소 · 페이지에서 채널 id를 알아낸다', () async {
-      final client = YoutubeFeedClient(
-        get: (uri) async => (status: 200, body: '{"externalId":"$_channelId"}'),
-      );
-      expect(
-        await client.resolveChannelId(
-          'https://www.youtube.com/channel/$_channelId',
-        ),
-        _channelId,
-      );
-      expect(
-        await client.resolveChannelId('https://www.youtube.com/@handle'),
-        _channelId,
-      );
-      expect(await client.resolveChannelId('https://soundcloud.com/x'), isNull);
+    tearDown(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null);
+    });
+
+    test('채널 피드를 영상 모델로 바꾼다', () async {
+      final videos = await NativeYoutubeChannels(
+        channel: channel,
+      ).fetch(_channelId);
+      final first = videos.single;
+      expect(first.id, 'AAA11111111');
+      expect(first.publishedAt, DateTime.utc(2026, 10, 11, 10));
+      expect(first.author, 'Some Channel');
+      expect(first.viewCount, 1234);
+      expect(first.url, 'https://www.youtube.com/watch?v=AAA11111111');
+      expect(calls.single.arguments, {'channelId': _channelId});
+    });
+
+    test('채널 id · 검색 · 상세를 네이티브에 묻는다', () async {
+      final native = NativeYoutubeChannels(channel: channel);
+      expect(await native.resolveChannelId('https://youtube.com/@x'), _channelId);
+      final hit = (await native.search('lofi')).single;
+      expect(hit.id, _channelId);
+      expect(hit.videoCount, 12);
+      final details = await native.details(_channelId);
+      expect(details.bannerUrl, 'https://yt3.test/b');
+      expect(details.subscriberCount, 1910000);
+      expect(details.description, isNull);
     });
   });
 

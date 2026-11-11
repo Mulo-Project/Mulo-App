@@ -19,7 +19,12 @@ import java.util.concurrent.Executors
 object YoutubeBrowser {
     private const val TAG = MuloLog.NATIVE
     private const val API = "https://www.youtube.com/youtubei/v1"
-    private const val VIDEO_FILTER = "EgIQAQ==" // 검색 필터: 동영상만
+    /** 검색 종류와 유튜브 검색 필터(`sp`) 값. */
+    private enum class Kind(val filter: String) {
+        VIDEO("EgIQAQ=="),
+        CHANNEL("EgIQAg=="),
+        PLAYLIST("EgIQAw=="),
+    }
     private const val MAX_SESSIONS = 3
     private const val MAX_PLAYLIST_PAGES = 60 // 6000곡까지
 
@@ -50,8 +55,8 @@ object YoutubeBrowser {
         )
     }
 
-    private class SearchSession(val query: String) {
-        val all = ArrayList<Item>()
+    private class SearchSession(val kind: Kind, val query: String) {
+        val all = ArrayList<Map<String, Any?>>()
         val seen = HashSet<String>()
         var token: String? = null
         var started = false
@@ -87,10 +92,23 @@ object YoutubeBrowser {
         }
     }
 
-    /** [page]쪽(0부터) [size]개. 반환: items · hasNext. */
-    fun search(query: String, page: Int, size: Int): Map<String, Any?> {
+    /** 동영상 검색의 [page]쪽(0부터) [size]개. 반환: items · hasNext. */
+    fun search(query: String, page: Int, size: Int): Map<String, Any?> = searchPage(Kind.VIDEO, query, page, size)
+
+    /** 재생목록 검색. 항목: id · title · channel · thumbnail · trackCount?. */
+    fun searchPlaylists(query: String, page: Int, size: Int): Map<String, Any?> =
+        searchPage(Kind.PLAYLIST, query, page, size)
+
+    /** 채널 검색 (첫 쪽). 항목: id · name · description · thumbnail · videoCount?. */
+    fun searchChannels(query: String): List<Map<String, Any?>> {
+        @Suppress("UNCHECKED_CAST")
+        return searchPage(Kind.CHANNEL, query, 0, 30)["items"] as List<Map<String, Any?>>
+    }
+
+    private fun searchPage(kind: Kind, query: String, page: Int, size: Int): Map<String, Any?> {
         val start = System.currentTimeMillis()
-        val session = synchronized(sessions) { sessions.getOrPut(query) { SearchSession(query) } }
+        val key = "${kind.filter}|$query"
+        val session = synchronized(sessions) { sessions.getOrPut(key) { SearchSession(kind, query) } }
         // 같은 검색의 요청이 겹쳐도 차례로 읽는다 (같은 continuation을 두 번 쓰지 않게).
         synchronized(session) {
             val want = (page + 1) * size
@@ -99,15 +117,16 @@ object YoutubeBrowser {
                 requests = fill(session, want)
             } catch (e: Exception) {
                 // 일부만 주면 다음 쪽 순서가 어긋나므로 이 검색의 기억은 버린다.
-                synchronized(sessions) { sessions.remove(query) }
+                synchronized(sessions) { sessions.remove(key) }
                 MuloLog.d(TAG, "검색 ${System.currentTimeMillis() - start}ms 실패 ${oneLine(e.toString())}")
                 throw e
             }
             val from = page * size
             val end = minOf(session.all.size, want)
-            val items = if (from >= end) emptyList() else session.all.subList(from, end).map { it.toMap() }
-            if (items.isEmpty() && page == 0) throw IOException("검색 결과를 읽지 못했다")
-            MuloLog.d(TAG, "검색 쪽$page ${items.size}개 요청 ${requests}번 ${System.currentTimeMillis() - start}ms")
+            val items = if (from >= end) emptyList() else session.all.subList(from, end).toList()
+            // 동영상 검색이 첫 쪽부터 비면 응답 모양이 바뀐 것일 수 있어 알린다 (Dart가 yt-dlp로 넘어간다).
+            if (items.isEmpty() && page == 0 && kind == Kind.VIDEO) throw IOException("검색 결과를 읽지 못했다")
+            MuloLog.d(TAG, "검색 ${kind.name} 쪽$page ${items.size}개 요청 ${requests}번 ${System.currentTimeMillis() - start}ms")
             val hasNext = session.all.size > end || !session.done
             if (!session.done) prefetchNext(session, want + size)
             return mapOf("items" to items, "hasNext" to hasNext)
@@ -119,7 +138,7 @@ object YoutubeBrowser {
         var requests = 0
         while (session.all.size < want && !session.done) {
             val body = JSONObject().put("context", JSONObject().put("client", WEB_CLIENT))
-            if (!session.started) body.put("query", session.query).put("params", VIDEO_FILTER)
+            if (!session.started) body.put("query", session.query).put("params", session.kind.filter)
             else body.put("continuation", session.token)
             val root = post("search", body)
             requests++
@@ -128,8 +147,8 @@ object YoutubeBrowser {
             for (section in searchSections(root)) {
                 section.optJSONObject("itemSectionRenderer")?.optJSONArray("contents")?.let { contents ->
                     for (i in 0 until contents.length()) {
-                        val item = parseVideo(contents.optJSONObject(i)?.optJSONObject("videoRenderer")) ?: continue
-                        if (session.seen.add(item.id)) session.all += item
+                        val item = parseResult(session.kind, contents.optJSONObject(i)) ?: continue
+                        if (session.seen.add(item["id"] as String)) session.all += item
                     }
                 }
                 continuationToken(section)?.let { token = it }
@@ -247,6 +266,66 @@ object YoutubeBrowser {
         return null
     }
 
+    private fun parseResult(kind: Kind, o: JSONObject?): Map<String, Any?>? {
+        if (o == null) return null
+        return when (kind) {
+            Kind.VIDEO -> parseVideo(o.optJSONObject("videoRenderer"))?.toMap()
+            Kind.PLAYLIST -> parsePlaylistResult(o)
+            Kind.CHANNEL -> parseChannelResult(o.optJSONObject("channelRenderer"))
+        }
+    }
+
+    /** 재생목록 검색 결과 하나: 옛 `playlistRenderer`와 새 `lockupViewModel` 두 모양을 다 읽는다. */
+    private fun parsePlaylistResult(o: JSONObject): Map<String, Any?>? {
+        o.optJSONObject("playlistRenderer")?.let { r ->
+            val id = r.optString("playlistId").takeIf { it.isNotEmpty() } ?: return null
+            val thumbs = r.optJSONArray("thumbnails")?.optJSONObject(0)
+            return mapOf(
+                "id" to id,
+                "title" to runs(r.optJSONObject("title")),
+                "channel" to runs(r.optJSONObject("shortBylineText")),
+                "thumbnail" to lastThumbnail(thumbs),
+                "trackCount" to r.optString("videoCount").filter { it.isDigit() }.toIntOrNull(),
+            )
+        }
+        val v = o.optJSONObject("lockupViewModel") ?: return null
+        if (v.optString("contentType") != "LOCKUP_CONTENT_TYPE_PLAYLIST") return null
+        val id = v.optString("contentId").takeIf { it.isNotEmpty() } ?: return null
+        val meta = v.optJSONObject("metadata")?.optJSONObject("lockupMetadataViewModel")
+        val thumb = v.optJSONObject("contentImage")?.optJSONObject("collectionThumbnailViewModel")
+            ?.optJSONObject("primaryThumbnail")?.optJSONObject("thumbnailViewModel")
+        val sources = thumb?.optJSONObject("image")?.optJSONArray("sources")
+        val badge = thumb?.optJSONArray("overlays")?.optJSONObject(0)
+            ?.optJSONObject("thumbnailOverlayBadgeViewModel")?.optJSONArray("thumbnailBadges")?.optJSONObject(0)
+            ?.optJSONObject("thumbnailBadgeViewModel")?.optString("text")
+        val channel = meta?.optJSONObject("metadata")?.optJSONObject("contentMetadataViewModel")
+            ?.optJSONArray("metadataRows")?.optJSONObject(0)?.optJSONArray("metadataParts")?.optJSONObject(0)
+            ?.optJSONObject("text")?.optString("content") ?: ""
+        return mapOf(
+            "id" to id,
+            "title" to (meta?.optJSONObject("title")?.optString("content") ?: ""),
+            "channel" to channel,
+            "thumbnail" to sources?.let { a ->
+                if (a.length() == 0) null else a.optJSONObject(a.length() - 1)?.optString("url")?.takeIf { it.isNotEmpty() }
+            },
+            "trackCount" to badge?.filter { it.isDigit() }?.toIntOrNull(),
+        )
+    }
+
+    private fun parseChannelResult(r: JSONObject?): Map<String, Any?>? {
+        if (r == null) return null
+        val id = r.optString("channelId").takeIf { it.isNotEmpty() } ?: return null
+        val thumb = lastThumbnail(r.optJSONObject("thumbnail"))?.let { if (it.startsWith("//")) "https:$it" else it }
+        return mapOf(
+            "id" to id,
+            "name" to runs(r.optJSONObject("title")),
+            "description" to runs(r.optJSONObject("descriptionSnippet")),
+            "thumbnail" to thumb,
+            "videoCount" to r.optJSONObject("videoCountText")?.let { runs(it) }
+                ?.takeIf { !it.contains("subscriber", true) }?.filter { it.isDigit() }?.toIntOrNull(),
+        )
+    }
+
     private fun parseVideo(r: JSONObject?): Item? {
         if (r == null) return null
         val id = r.optString("videoId").takeIf { it.isNotEmpty() } ?: return null
@@ -332,7 +411,7 @@ object YoutubeBrowser {
         return out
     }
 
-    private fun post(action: String, body: JSONObject): JSONObject {
+    internal fun post(action: String, body: JSONObject): JSONObject {
         val conn = URL("$API/$action?prettyPrint=false").openConnection() as HttpURLConnection
         var ok = false
         try {

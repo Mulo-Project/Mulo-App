@@ -216,6 +216,46 @@ void main() {
       },
     );
 
+    test('YoutubeResolveEngine: 재생목록 검색은 네이티브가 먼저 읽고, 못 읽거나 비면 안쪽 엔진으로 넘긴다', () async {
+      final inner = FakeDownloaderEngine(
+        playlistPage: const PlaylistSearchPage(
+          items: [PlaylistHit(id: 'in', title: 'inner', url: 'u')],
+          hasNext: false,
+        ),
+      );
+      var mode = 0; // 0 읽음, 1 실패, 2 빈 결과
+      final engine = YoutubeResolveEngine(
+        inner,
+        reader: (id, {language}) async => null,
+        videoReader: (id, maxHeight) async => null,
+        languageReader: (_) async => const [],
+        playlistSearchReader: (query, page, size) async {
+          if (mode == 1) throw const EngineException(EngineFailure.failed);
+          return PlaylistSearchPage(
+            items: mode == 2
+                ? const []
+                : const [PlaylistHit(id: 'n', title: 'native', url: 'u')],
+            hasNext: false,
+          );
+        },
+      );
+      expect((await engine.searchPlaylists('q')).items.single.id, 'n');
+      mode = 1;
+      expect((await engine.searchPlaylists('q')).items.single.id, 'in');
+      mode = 2;
+      expect((await engine.searchPlaylists('q')).items.single.id, 'in');
+    });
+
+    test('youtubeVideoIdOf: 유튜브 주소에서 영상 id 11자를 꺼낸다', () {
+      const id = 'dQw4w9WgXcQ';
+      expect(youtubeVideoIdOf('https://www.youtube.com/watch?v=$id&t=3'), id);
+      expect(youtubeVideoIdOf('https://youtu.be/$id'), id);
+      expect(youtubeVideoIdOf('https://m.youtube.com/shorts/$id'), id);
+      expect(youtubeVideoIdOf('https://www.youtube.com/playlist?list=PL1'), isNull);
+      expect(youtubeVideoIdOf('https://soundcloud.com/a/b'), isNull);
+      expect(youtubeVideoIdOf('https://www.youtube.com/watch?v=short'), isNull);
+    });
+
     test('youtubePlaylistIdOf: 재생목록 주소에서만 목록 id를 꺼낸다', () {
       expect(
         youtubePlaylistIdOf('https://www.youtube.com/playlist?list=PLabc'),

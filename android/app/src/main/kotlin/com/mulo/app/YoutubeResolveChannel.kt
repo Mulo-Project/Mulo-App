@@ -11,7 +11,10 @@ import java.util.concurrent.Executors
  * Dart → 네이티브: `audio`(videoId · language? · preferWebm → url · headers · fallbacks, 없으면 null) ·
  * `video`(videoId · maxHeight → url · headers · muxed, 없으면 null) · `languages`(videoId → [id · name · isDefault]).
  * 같은 채널로 검색 · 재생목록 곡 목록도 읽는다 ([YoutubeBrowser]):
- * `search`(query · page · size → items · hasNext) · `playlist`(playlistId → title · items).
+ * `search`(query · page · size → items · hasNext) · `playlist`(playlistId → title · items) ·
+ * `searchPlaylists`(query · page · size → items · hasNext) · `searchChannels`(query → items) ·
+ * `channelDetails`(channelId → bannerUrl · logoUrl · subscriberCount · description) ·
+ * `resolveChannelId`(url → id?) · `channelFeed`(channelId → 최근 영상들, [YoutubeChannels]).
  * 곡 항목은 id · title · uploader · seconds? · thumbnail? · channelId? · views? · isLive · description.
  * 실패하면 `resolve_failed` 오류에 까닭을 담는다.
  */
@@ -24,6 +27,53 @@ class YoutubeResolveChannel(@Suppress("UNUSED_PARAMETER") context: Context, mess
             when (call.method) {
                 "warmUp" -> {
                     runAsync(io, result, ERROR) { YoutubeBrowser.warmUp(); null }
+                    return@setMethodCallHandler
+                }
+                "searchPlaylists" -> {
+                    val query = call.argument<String>("query")
+                    if (query == null) {
+                        result.error("bad_args", "query required", null)
+                        return@setMethodCallHandler
+                    }
+                    val page = call.argument<Int>("page") ?: 0
+                    val size = call.argument<Int>("size") ?: 20
+                    runAsync(io, result, ERROR) { YoutubeBrowser.searchPlaylists(query, page, size) }
+                    return@setMethodCallHandler
+                }
+                "searchChannels" -> {
+                    val query = call.argument<String>("query")
+                    if (query == null) {
+                        result.error("bad_args", "query required", null)
+                        return@setMethodCallHandler
+                    }
+                    runAsync(io, result, ERROR) { YoutubeBrowser.searchChannels(query) }
+                    return@setMethodCallHandler
+                }
+                "channelDetails" -> {
+                    val channelId = call.argument<String>("channelId")
+                    if (channelId == null) {
+                        result.error("bad_args", "channelId required", null)
+                        return@setMethodCallHandler
+                    }
+                    runAsync(io, result, ERROR) { YoutubeChannels.details(channelId) }
+                    return@setMethodCallHandler
+                }
+                "resolveChannelId" -> {
+                    val url = call.argument<String>("url")
+                    if (url == null) {
+                        result.error("bad_args", "url required", null)
+                        return@setMethodCallHandler
+                    }
+                    runAsync(io, result, ERROR) { YoutubeChannels.resolveChannelId(url) }
+                    return@setMethodCallHandler
+                }
+                "channelFeed" -> {
+                    val channelId = call.argument<String>("channelId")
+                    if (channelId == null) {
+                        result.error("bad_args", "channelId required", null)
+                        return@setMethodCallHandler
+                    }
+                    runAsync(io, result, ERROR) { YoutubeChannels.feed(channelId) }
                     return@setMethodCallHandler
                 }
                 "search" -> {

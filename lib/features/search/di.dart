@@ -62,6 +62,7 @@ void registerSearch(GetIt sl) {
                   languageReader: native.languages,
                   searchReader: native.search,
                   playlistReader: native.playlist,
+                  playlistSearchReader: native.searchPlaylists,
                   warmUpReader: native.warmUp,
                 )
               : routing,

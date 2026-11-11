@@ -3,8 +3,7 @@ import 'dart:io';
 import 'package:get_it/get_it.dart';
 
 import '../notifications/data/datasources/notification_texts.dart';
-import 'data/datasources/explode_channel_searcher.dart';
-import 'data/datasources/youtube_feed_client.dart';
+import 'data/datasources/native_youtube_channels.dart';
 import 'data/repositories/native_background_checker.dart';
 import 'data/repositories/prefs_subscription_repository.dart';
 import 'domain/repositories/background_checker.dart';
@@ -24,8 +23,9 @@ void registerSubscriptions(GetIt sl) {
     ..registerLazySingleton<SubscriptionRepository>(
       PrefsSubscriptionRepository.new,
     )
-    ..registerLazySingleton<ChannelFeed>(YoutubeFeedClient.new)
-    ..registerLazySingleton<ChannelSearcher>(ExplodeChannelSearcher.new)
+    ..registerLazySingleton(NativeYoutubeChannels.new)
+    ..registerLazySingleton<ChannelFeed>(() => sl<NativeYoutubeChannels>())
+    ..registerLazySingleton<ChannelSearcher>(() => sl<NativeYoutubeChannels>())
     ..registerLazySingleton<BackgroundChecker>(
       () => Platform.isAndroid
           ? NativeBackgroundChecker()

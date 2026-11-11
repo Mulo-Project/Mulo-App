@@ -83,6 +83,39 @@ class NativeYoutubeResolver {
     );
   }
 
+  /// 키워드로 유튜브 재생목록 찾기 한 쪽.
+  Future<PlaylistSearchPage> searchPlaylists(
+    String query,
+    int page,
+    int size,
+  ) async {
+    final r = await _call('searchPlaylists', {
+      'query': query,
+      'page': page,
+      'size': size,
+    });
+    if (r == null) throw const EngineException(EngineFailure.failed, 'empty');
+    return PlaylistSearchPage(
+      items: [
+        for (final m in (r['items'] as List<Object?>? ?? const []))
+          _playlistHit(m! as Map<Object?, Object?>),
+      ],
+      hasNext: r['hasNext'] as bool? ?? false,
+    );
+  }
+
+  PlaylistHit _playlistHit(Map<Object?, Object?> m) {
+    final id = m['id'] as String;
+    return PlaylistHit(
+      id: id,
+      title: m['title'] as String? ?? '',
+      url: 'https://www.youtube.com/playlist?list=$id',
+      channel: m['channel'] as String? ?? '',
+      thumbnailUrl: m['thumbnail'] as String?,
+      trackCount: (m['trackCount'] as num?)?.toInt(),
+    );
+  }
+
   /// 재생목록의 모든 곡.
   Future<PlaylistInfo> playlist(String playlistId) async {
     final r = await _call('playlist', {'playlistId': playlistId});

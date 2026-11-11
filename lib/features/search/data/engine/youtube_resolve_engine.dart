@@ -1,7 +1,5 @@
 import 'dart:async';
 
-import 'package:youtube_explode_dart/youtube_explode_dart.dart';
-
 import '../../domain/entities/audio_language.dart';
 import '../../domain/entities/audio_stream.dart';
 import '../../domain/entities/engine_exception.dart';
@@ -35,6 +33,13 @@ typedef YoutubeSearchReader = Future<SearchPage> Function(
   int size,
 );
 
+/// 유튜브 재생목록 검색의 [page]쪽(0부터)을 읽는 함수.
+typedef YoutubePlaylistSearchReader = Future<PlaylistSearchPage> Function(
+  String query,
+  int page,
+  int size,
+);
+
 /// 유튜브 재생목록 id로 곡 목록을 읽는 함수.
 typedef YoutubePlaylistReader = Future<PlaylistInfo> Function(
   String playlistId,
@@ -52,6 +57,7 @@ class YoutubeResolveEngine implements DownloaderEngine {
     required this.videoReader,
     this.searchReader,
     this.playlistReader,
+    this.playlistSearchReader,
     this.warmUpReader,
   });
 
@@ -63,6 +69,7 @@ class YoutubeResolveEngine implements DownloaderEngine {
   /// 네이티브 검색 · 재생목록 읽기 (없으면 안쪽 엔진이 한다).
   final YoutubeSearchReader? searchReader;
   final YoutubePlaylistReader? playlistReader;
+  final YoutubePlaylistSearchReader? playlistSearchReader;
 
   /// 네이티브가 유튜브와 연결을 미리 열게 한다 (없으면 안쪽 엔진).
   final Future<void> Function()? warmUpReader;
@@ -112,34 +119,29 @@ class YoutubeResolveEngine implements DownloaderEngine {
     );
   }
 
-  /// 안쪽 엔진(yt-dlp · 서버)이 채널 이름까지 알려 주므로 먼저 묻고, 쓸 수 없거나
-  /// 실패하면 이 라이브러리로 찾는다 (채널 이름은 모른다).
+  /// 재생목록 검색은 네이티브가 먼저 읽고, 못 읽으면 안쪽 엔진(yt-dlp · 서버)이 한다.
   @override
   Future<PlaylistSearchPage> searchPlaylists(
     String query, {
     int page = 0,
     int size = 20,
   }) async {
-    try {
-      return await _inner.searchPlaylists(query, page: page, size: size);
-    } on EngineException catch (e) {
-      if (e.failure == EngineFailure.network ||
-          e.failure == EngineFailure.timeout) {
-        rethrow;
-      }
+    final read = playlistSearchReader;
+    if (read != null) {
+      final clock = Stopwatch()..start();
       try {
-        // 이 라이브러리는 응답이 없으면 끝없이 기다리므로 시간을 둔다.
-        return await _playlistSearch(
+        final found = await read(
           query,
           page,
           size,
-        ).timeout(const Duration(seconds: 30));
-      } on TimeoutException {
-        throw const EngineException(EngineFailure.timeout, 'timeout');
-      } on Object {
-        throw e;
+        ).timeout(const Duration(seconds: 15));
+        _log('재생목록 검색 쪽$page ${found.items.length}개 ${clock.elapsedMilliseconds}ms');
+        if (found.items.isNotEmpty || page > 0) return found;
+      } on Object catch (e) {
+        _log('재생목록 검색 실패 ${clock.elapsedMilliseconds}ms: ${_oneLine(e)}');
       }
     }
+    return _inner.searchPlaylists(query, page: page, size: size);
   }
 
   /// 유튜브 재생목록 주소(`/playlist?list=…`)는 네이티브가 곡 목록을 먼저 읽는다. 곡 하나 · 다른 주소 · 실패는 안쪽 엔진.
@@ -170,7 +172,7 @@ class YoutubeResolveEngine implements DownloaderEngine {
   }) async {
     // 네이티브가 JS 풀이 없이 몇 초 안에 읽는다 (yt-dlp 기본 방식은 폰에서 20초쯤).
     // 소리가 든 형식을 못 읽으면 안쪽 엔진(yt-dlp)에 묻는다.
-    final id = VideoId.parseVideoId(url);
+    final id = youtubeVideoIdOf(url);
     if (id != null) {
       final clock = Stopwatch()..start();
       try {
@@ -196,7 +198,7 @@ class YoutubeResolveEngine implements DownloaderEngine {
     bool refresh = false,
     String? audioLanguage,
   }) async {
-    final id = VideoId.parseVideoId(url);
+    final id = youtubeVideoIdOf(url);
     Object? nativeError;
     if (id != null) {
       final clock = Stopwatch()..start();
@@ -231,7 +233,7 @@ class YoutubeResolveEngine implements DownloaderEngine {
   /// 네이티브가 먼저 읽고, 트랙이 없거나 못 읽으면 안쪽 엔진(yt-dlp)에 묻는다.
   @override
   Future<List<AudioLanguage>> fetchAudioLanguages(String url) async {
-    final id = VideoId.parseVideoId(url);
+    final id = youtubeVideoIdOf(url);
     if (id != null) {
       try {
         final found = await languageReader(id);
@@ -250,50 +252,24 @@ class YoutubeResolveEngine implements DownloaderEngine {
   }) => _inner.fetchSubtitles(url, preferLanguages: preferLanguages);
 }
 
-/// 라이브러리의 재생목록 검색 (한 번에 20개라 필요한 만큼 다음 쪽을 넘겨 읽는다).
-Future<PlaylistSearchPage> _playlistSearch(
-  String query,
-  int page,
-  int size,
-) async {
-  final yt = YoutubeExplode();
-  try {
-    var list = await yt.search.searchContent(
-      query,
-      filter: TypeFilters.playlist,
-    );
-    final all = <PlaylistHit>[];
-    final want = (page + 1) * size;
-    while (true) {
-      for (final r in list) {
-        if (r is! SearchPlaylist) continue;
-        final id = r.id.value;
-        all.add(
-          PlaylistHit(
-            id: id,
-            title: r.title,
-            url: 'https://www.youtube.com/playlist?list=$id',
-            thumbnailUrl: r.thumbnails.isEmpty
-                ? null
-                : r.thumbnails.last.url.toString(),
-            trackCount: r.videoCount,
-          ),
-        );
-      }
-      if (all.length >= want) break;
-      final next = await list.nextPage();
-      if (next == null) break;
-      list = next;
+/// 유튜브 주소(`watch?v=` · `youtu.be/` · `shorts/` · `embed/` · `live/`)에서 영상 id(11자). 아니면 null.
+String? youtubeVideoIdOf(String url) {
+  final uri = Uri.tryParse(url.trim());
+  if (uri == null) return null;
+  final host = uri.host.toLowerCase();
+  final segs = uri.pathSegments.where((s) => s.isNotEmpty).toList();
+  String? id;
+  if (host == 'youtu.be') {
+    id = segs.isEmpty ? null : segs.first;
+  } else if (host == 'youtube.com' || host.endsWith('.youtube.com')) {
+    if (segs.isNotEmpty && segs.first == 'watch') {
+      id = uri.queryParameters['v'];
+    } else if (segs.length >= 2 &&
+        const {'shorts', 'embed', 'live', 'v'}.contains(segs.first)) {
+      id = segs[1];
     }
-    final start = page * size;
-    final end = all.length < want ? all.length : want;
-    return PlaylistSearchPage(
-      items: start >= end ? const [] : all.sublist(start, end),
-      hasNext: all.length > want,
-    );
-  } finally {
-    yt.close();
   }
+  return id != null && RegExp(r'^[A-Za-z0-9_-]{11}$').hasMatch(id) ? id : null;
 }
 
 /// 유튜브 재생목록 주소(`youtube.com/playlist?list=…`)의 목록 id. 곡 하나를 가리키는 주소(`watch?v=…&list=…`)나
