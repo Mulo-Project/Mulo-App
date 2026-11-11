@@ -615,24 +615,8 @@ class _Thumbnail extends StatelessWidget {
                   ),
                 )
               else if (mainAudioOnly)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(AppRadii.md),
-                  child: SizedBox(
-                    width: width,
-                    height: width * 9 / 16,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        PreviewVideo(
-                          pageUrl: hit.url,
-                          online: true,
-                          followMain: true,
-                        ),
-                        const PreviewVideoControls(main: true),
-                      ],
-                    ),
-                  ),
-                )
+                // 소리만 저장한 곡은 자동으로 영상을 틀지 않는다: 사용자가 영상 재생을 누르면 그때 스트림으로 튼다.
+                _OnDemandVideo(hit: hit, width: width)
               else if (previewing)
                 ClipRRect(
                   borderRadius: BorderRadius.circular(AppRadii.md),
@@ -659,6 +643,53 @@ class _Thumbnail extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// 소리만 저장한 곡의 영상: 처음에는 재생 버튼만 보이고, 누르면 영상을 스트림으로 읽어 메인 소리에 맞춰 보여 준다.
+class _OnDemandVideo extends StatefulWidget {
+  const _OnDemandVideo({required this.hit, required this.width});
+
+  final MediaHit hit;
+  final double width;
+
+  @override
+  State<_OnDemandVideo> createState() => _OnDemandVideoState();
+}
+
+class _OnDemandVideoState extends State<_OnDemandVideo> {
+  var _show = false;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_show) {
+      return CircleIconButton(
+        key: const ValueKey('detail-video-on'),
+        icon: AppIcons.play,
+        tooltip: context.l10n.mediaDetailPlayInApp,
+        emphasized: true,
+        size: AppSizes.circleButtonLarge,
+        onPressed: () => setState(() => _show = true),
+      );
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppRadii.md),
+      child: SizedBox(
+        width: widget.width,
+        height: widget.width * 9 / 16,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            PreviewVideo(
+              pageUrl: widget.hit.url,
+              online: true,
+              followMain: true,
+            ),
+            const PreviewVideoControls(main: true),
+          ],
+        ),
+      ),
     );
   }
 }
