@@ -252,7 +252,8 @@ class ArcPlayer extends StatelessWidget {
       height: f.height,
     );
     final c = math.min(24.0, math.min(f.width, f.height) / 2);
-    final g = f.width * .12;
+    // 아래 가운데 열린 자리: 현재 · 전체 시간이 양옆(가운데에서 76 ~ 112)에 놓이므로 그만큼 열어 둔다.
+    final g = math.min(124.0, f.width / 2 - c - 8);
     final cx = r.center.dx;
     const q = math.pi / 2;
     return Path()
