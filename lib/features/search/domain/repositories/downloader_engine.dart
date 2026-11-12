@@ -5,7 +5,7 @@ import '../entities/search_source.dart';
 import '../entities/subtitle_track.dart';
 import '../entities/video_stream.dart';
 
-/// 음원 사이트에서 찾고 받는 엔진 (서버 모드 `ServerEngine` / 로컬 모드 `LocalEngine`).
+/// 음원 사이트에서 찾고 받는 엔진 (서버 모드 `ServerEngine` / 로컬 모드 `YtDlpEngine`(네이티브 yt-dlp)).
 /// 지금은 검색 · 곡 정보만 있다. 받기는 다음 작업에서 더한다.
 ///
 /// 실패는 [EngineException]으로 던진다.
@@ -26,8 +26,12 @@ abstract interface class DownloaderEngine {
     int size = 20,
   });
 
-  /// URL로 곡 또는 재생목록 정보를 가져온다.
+  /// URL로 곡 또는 재생목록 정보를 가져온다. 가능하면 빠른 방법(네이티브)으로 읽어, 좋아요 수 ·
+  /// 공동 작업자 · 앨범처럼 느리게 읽히는 정보는 비어 있을 수 있다 ([fetchFullInfo]가 채운다).
   Future<MediaInfo> fetchInfo(String url);
+
+  /// [fetchInfo]와 같지만 느리더라도 알 수 있는 정보를 모두 담는다 (상세 화면이 뒤에서 채운다).
+  Future<MediaInfo> fetchFullInfo(String url);
 
   /// 채널 주소로 채널 이미지 · 구독자 수를 가져온다. 알 수 없으면 [EngineException]
   /// (`unavailable` 포함)을 던진다.
@@ -52,6 +56,10 @@ abstract interface class DownloaderEngine {
   /// 곡에 들어 있는 오디오 언어 트랙들. 트랙이 하나뿐이거나 읽을 수 없으면 빈 목록
   /// (쓸 수 없는 엔진도 빈 목록).
   Future<List<AudioLanguage>> fetchAudioLanguages(String url);
+
+  /// 검색 · 곡 목록 요청에 쓸 연결을 미리 열어 둔다 (검색 화면을 열 때). 할 일이 없는 엔진은 아무것도 하지 않고,
+  /// 실패해도 예외를 던지지 않는다.
+  Future<void> warmUp();
 
   /// 곡의 자막 한 벌을 가져온다 (가사로 가져오기). 사람이 단 자막을 먼저 쓰고, 없으면 자동 자막,
   /// 언어는 [preferLanguages] 순서를 따른다. 자막이 없으면 null.

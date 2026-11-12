@@ -27,9 +27,19 @@ abstract class NativeChannel(messenger: BinaryMessenger, private val name: Strin
                 mainHandler.post { result.success(value) }
             } catch (e: Exception) {
                 MuloLog.e(MuloLog.NATIVE, "$name $errorCode 실패: ${e.message}", e)
-                mainHandler.post { result.error(errorCode, e.message, null) }
+                // 까닭을 구분해야 하는 일은 [CodedException]으로 자기 코드를 달아 던진다.
+                val code = (e as? CodedException)?.code ?: errorCode
+                mainHandler.post { result.error(code, e.message, null) }
             }
         }
+    }
+
+    /** 호출한 쪽(Dart)에 오류 코드를 따로 알려야 할 때 쓰는 예외. */
+    open class CodedException(val code: String, message: String) : Exception(message)
+
+    /** 메인 스레드에서 Dart로 호출을 보낸다 (진행 알림 등). */
+    protected fun notifyDart(method: String, args: Any?) {
+        mainHandler.post { channel.invokeMethod(method, args) }
     }
 
     open fun dispose() {

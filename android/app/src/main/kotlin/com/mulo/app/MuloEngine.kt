@@ -46,7 +46,9 @@ object MuloEngine {
         val lyricsOverlay = LyricsOverlayChannel(app, messenger)
         val audioOutput = AudioOutputChannel(app, messenger)
         val ytDlp = YtDlpChannel(app, messenger)
+        val ytDlpEngine = YtDlpEngineChannel(app, messenger, ytDlp)
         val youtubeResolve = YoutubeResolveChannel(app, messenger)
+        val googleApi = GoogleApiChannel(app, messenger)
         val transcoder = TranscoderChannel(app, messenger)
         val tags = TagChannel(app, messenger, store, transcoder)
         val playback = PlaybackChannel(app, messenger)
@@ -56,9 +58,9 @@ object MuloEngine {
         val subscriptions = SubscriptionChannel(app, messenger) { activity?.moveTaskToBack(true) }
         mediaStore = store
         channels = listOf(
-            store::dispose, lyrics::dispose, lyricsOverlay::dispose, audioOutput::dispose, ytDlp::dispose,
+            store::dispose, lyrics::dispose, lyricsOverlay::dispose, audioOutput::dispose, ytDlp::dispose, ytDlpEngine::dispose,
             transcoder::dispose, playback::dispose, preview::dispose, video::dispose, equalizer::dispose,
-            subscriptions::dispose, youtubeResolve::dispose, tags::dispose,
+            subscriptions::dispose, youtubeResolve::dispose, googleApi::dispose, tags::dispose,
         )
         engine = created
         FlutterEngineCache.getInstance().put(CACHE_ID, created)

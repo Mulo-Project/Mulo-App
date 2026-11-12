@@ -27,6 +27,7 @@ class CachedDownloaderEngine implements DownloaderEngine {
   final DateTime Function() _now;
 
   final _infos = <String, _Entry<MediaInfo>>{};
+  final _fullInfos = <String, _Entry<MediaInfo>>{};
   final _channels = <String, _Entry<ChannelInfo>>{};
   final _streams = <String, _Entry<AudioStream>>{};
   final _videoStreams = <String, _Entry<VideoStream>>{};
@@ -60,6 +61,10 @@ class CachedDownloaderEngine implements DownloaderEngine {
       _cached(_infos, url, () => _inner.fetchInfo(url), infoTtl);
 
   @override
+  Future<MediaInfo> fetchFullInfo(String url) =>
+      _cached(_fullInfos, url, () => _inner.fetchFullInfo(url), infoTtl);
+
+  @override
   Future<ChannelInfo> fetchChannel(String url) =>
       _cached(_channels, url, () => _inner.fetchChannel(url), infoTtl);
 
@@ -90,6 +95,9 @@ class CachedDownloaderEngine implements DownloaderEngine {
         '$url|$maxHeight',
         () => _inner.resolveVideoStream(url, maxHeight: maxHeight),
       );
+
+  @override
+  Future<void> warmUp() => _inner.warmUp();
 
   @override
   Future<List<AudioLanguage>> fetchAudioLanguages(String url) =>

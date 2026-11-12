@@ -6,16 +6,16 @@ import '../../domain/entities/search_source.dart';
 import '../../domain/entities/subtitle_track.dart';
 import '../../domain/entities/video_stream.dart';
 import '../../domain/repositories/downloader_engine.dart';
-import 'local_engine.dart';
+import 'yt_dlp_engine.dart';
 import 'server_engine.dart';
 
-/// 쓸 엔진을 고른다: 로컬 yt-dlp를 쓸 수 있으면(데스크톱) 로컬, 아니면 서버,
+/// 쓸 엔진을 고른다: 로컬 yt-dlp를 쓸 수 있으면(Android full) 로컬, 아니면 서버,
 /// 둘 다 없으면 [EngineFailure.unavailable].
 /// (설정에서 모드를 고르는 화면은 아직 없다.)
 class RoutingDownloaderEngine implements DownloaderEngine {
   RoutingDownloaderEngine({this.local, this.server});
 
-  final LocalEngine? local;
+  final YtDlpEngine? local;
   final ServerEngine? server;
   bool _localReady = false;
 
@@ -59,6 +59,10 @@ class RoutingDownloaderEngine implements DownloaderEngine {
       (await _pick()).fetchInfo(url);
 
   @override
+  Future<MediaInfo> fetchFullInfo(String url) async =>
+      (await _pick()).fetchFullInfo(url);
+
+  @override
   Future<ChannelInfo> fetchChannel(String url) async =>
       (await _pick()).fetchChannel(url);
 
@@ -78,6 +82,15 @@ class RoutingDownloaderEngine implements DownloaderEngine {
     refresh: refresh,
     audioLanguage: audioLanguage,
   );
+
+  @override
+  Future<void> warmUp() async {
+    try {
+      await (await _pick()).warmUp();
+    } on EngineException {
+      // 쓸 엔진이 없으면 미리 열 연결도 없다.
+    }
+  }
 
   @override
   Future<List<AudioLanguage>> fetchAudioLanguages(String url) async =>

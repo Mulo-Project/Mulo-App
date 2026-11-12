@@ -1,6 +1,7 @@
 import 'package:get_it/get_it.dart';
 
 import 'data/android_yt_dlp.dart';
+import 'data/native_yt_dlp.dart';
 import 'data/yt_dlp_manager.dart';
 import 'domain/repositories/engine_manager.dart';
 import 'domain/usecases/engine_usecases.dart';
@@ -10,6 +11,7 @@ import 'presentation/bloc/engine_cubit.dart';
 void registerEngine(GetIt sl) {
   sl
     ..registerLazySingleton<AndroidYtDlp>(AndroidYtDlp.new)
+    ..registerLazySingleton<NativeYtDlp>(NativeYtDlp.new)
     ..registerLazySingleton<YtDlpManager>(
       () => YtDlpManager(android: sl<AndroidYtDlp>()),
     )

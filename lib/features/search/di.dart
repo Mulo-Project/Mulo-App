@@ -3,17 +3,15 @@ import 'dart:io';
 import 'package:get_it/get_it.dart';
 
 import '../../core/config/app_config.dart';
-import '../engine/data/android_yt_dlp.dart';
-import '../engine/data/yt_dlp_manager.dart';
+import '../engine/data/native_yt_dlp.dart';
 import 'data/datasources/native_preview_player.dart';
 import 'data/datasources/native_youtube_resolver.dart';
 import 'data/datasources/url_launcher_link_opener.dart';
 import 'data/engine/cached_engine.dart';
 import 'data/repositories/prefs_video_quality_repository.dart';
 import 'data/engine/youtube_resolve_engine.dart';
-import 'data/engine/local_engine.dart';
+import 'data/engine/yt_dlp_engine.dart';
 import 'data/engine/routing_engine.dart';
-import 'data/engine/soundcloud_avatar_engine.dart';
 import 'data/engine/server_engine.dart';
 import 'domain/repositories/downloader_engine.dart';
 import 'domain/repositories/link_opener.dart';
@@ -40,34 +38,36 @@ void registerSearch(GetIt sl) {
   sl
     ..registerLazySingleton<DownloaderEngine>(() {
       final routing = RoutingDownloaderEngine(
-        local: Platform.isAndroid
-            ? LocalEngine(run: sl<AndroidYtDlp>().run)
-            : Platform.isWindows || Platform.isLinux || Platform.isMacOS
-            ? LocalEngine(resolveExecutable: sl<YtDlpManager>().executablePath)
-            : null,
+        local: Platform.isAndroid ? YtDlpEngine(sl<NativeYtDlp>()) : null,
         server: AppConfig.hasApiBaseUrl
             ? ServerEngine(baseUrl: AppConfig.apiBaseUrl)
             : null,
       );
       return CachedDownloaderEngine(
         infoTtl: const Duration(hours: 6),
-        SoundcloudAvatarEngine(
-          // Android는 네이티브가 재생 주소를 먼저 읽는다 (앱이 백그라운드여도 끊기지 않는다, D-162).
-          // 그 밖의 OS는 안쪽 엔진(yt-dlp · 서버)이 읽는다.
-          Platform.isAndroid
-              ? YoutubeResolveEngine(
-                  routing,
-                  reader: native.audio,
-                  videoReader: native.video,
-                  languageReader: native.languages,
-                )
-              : routing,
-        ),
+        // Android는 네이티브가 재생 주소를 먼저 읽는다 (앱이 백그라운드여도 끊기지 않는다, D-162).
+        // 그 밖의 OS는 안쪽 엔진(yt-dlp · 서버)이 읽는다.
+        Platform.isAndroid
+            ? YoutubeResolveEngine(
+                routing,
+                reader: native.audio,
+                videoReader: native.video,
+                languageReader: native.languages,
+                searchReader: native.search,
+                playlistReader: native.playlist,
+                playlistSearchReader: native.searchPlaylists,
+                infoReader: native.videoInfo,
+                channelInfoReader: native.channelInfo,
+                warmUpReader: native.warmUp,
+              )
+            : routing,
       );
     })
     ..registerLazySingleton<LinkOpener>(UrlLauncherLinkOpener.new)
     ..registerFactory(() => SearchTracks(sl()))
+    ..registerFactory(() => WarmUpSearch(sl()))
     ..registerFactory(() => FetchMediaInfo(sl()))
+    ..registerFactory(() => FetchFullMediaInfo(sl()))
     ..registerFactory(() => FetchSubtitles(sl()))
     ..registerFactory(() => SearchPlaylists(sl()))
     ..registerFactory(() => FetchChannelInfo(sl()))
@@ -154,5 +154,5 @@ void registerSearch(GetIt sl) {
         saveAutoQuality: sl(),
       ),
     )
-    ..registerFactory(() => SearchCubit(sl(), sl()));
+    ..registerFactory(() => SearchCubit(sl(), sl(), warmUp: sl()));
 }

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,7 +12,6 @@ import 'package:music_download_play_app/features/player/presentation/bloc/now_pl
 import 'package:music_download_play_app/features/search/presentation/widgets/preview_control.dart';
 import 'package:music_download_play_app/features/search/data/engine/cached_engine.dart';
 import 'package:music_download_play_app/features/search/data/engine/youtube_resolve_engine.dart';
-import 'package:music_download_play_app/features/search/data/engine/local_engine.dart';
 import 'package:music_download_play_app/features/search/data/engine/server_engine.dart';
 import 'package:music_download_play_app/features/search/domain/entities/audio_language.dart';
 import 'package:music_download_play_app/features/search/domain/entities/audio_stream.dart';
@@ -48,51 +46,6 @@ PreviewCubit _cubit(FakeDownloaderEngine e, FakePreviewPlayer p) =>
 
 void main() {
   group('엔진: 오디오 스트림 주소', () {
-    test('LocalEngine: 오디오 형식 하나를 골라 주소와 헤더를 읽는다', () async {
-      List<String>? args;
-      final engine = LocalEngine(
-        run: (_, a) async {
-          args = a;
-          return (
-            exitCode: 0,
-            stdout: jsonEncode({
-              'id': 'v',
-              'url': 'https://rr.googlevideo.com/audio',
-              'http_headers': {'User-Agent': 'ua', 'Ignored': 1},
-            }),
-            stderr: '',
-          );
-        },
-      );
-      final stream = await engine.resolveAudioStream('https://x/v');
-      expect(stream.url, 'https://rr.googlevideo.com/audio');
-      expect(stream.headers, {'User-Agent': 'ua'});
-      expect(args, contains('--no-playlist'));
-      expect(args![args!.indexOf('-f') + 1], contains('bestaudio'));
-      expect(args!.last, 'https://x/v');
-    });
-
-    test('LocalEngine: 기본으로 실패하면 다른 클라이언트로 한 번 더 읽는다', () async {
-      final calls = <List<String>>[];
-      final engine = LocalEngine(
-        run: (_, a) async {
-          calls.add(a);
-          if (calls.length == 1) {
-            return (exitCode: 1, stdout: '', stderr: 'format not available');
-          }
-          return (
-            exitCode: 0,
-            stdout: jsonEncode({'url': 'https://rr.googlevideo.com/audio'}),
-            stderr: '',
-          );
-        },
-      );
-      final stream = await engine.resolveAudioStream('https://x/v');
-      expect(stream.url, 'https://rr.googlevideo.com/audio');
-      expect(calls, hasLength(2));
-      expect(calls.last, contains('youtube:player_client=android_vr'));
-    });
-
     test(
       'YoutubeResolveEngine: 유튜브 곡은 네이티브가 읽은 주소를 쓰고, 못 읽으면 안쪽 엔진으로 넘긴다',
       () async {
@@ -153,6 +106,159 @@ void main() {
       },
     );
 
+    test(
+      'YoutubeResolveEngine: 유튜브 검색은 네이티브가 먼저 읽고, 최신순 · 실패는 안쪽 엔진으로 넘긴다',
+      () async {
+        final inner = FakeDownloaderEngine(
+          pages: const [
+            SearchPage(items: [_b], hasNext: false),
+          ],
+        );
+        var fail = false;
+        final engine = YoutubeResolveEngine(
+          inner,
+          reader: (id, {language}) async => null,
+          videoReader: (id, maxHeight) async => null,
+          languageReader: (_) async => const [],
+          searchReader: (query, page, size) async {
+            if (fail) throw const EngineException(EngineFailure.failed);
+            return const SearchPage(items: [_a], hasNext: true);
+          },
+        );
+        expect((await engine.search('q')).items, [_a]);
+        expect(inner.searches, isEmpty);
+        expect((await engine.search('q', newest: true)).items, [_b]);
+        fail = true;
+        expect((await engine.search('q')).items, [_b]);
+        expect(inner.searches.length, 2);
+      },
+    );
+
+    test(
+      'YoutubeResolveEngine: 재생목록 주소는 네이티브가 곡 목록을 먼저 읽고, 곡 하나 주소 · 실패는 안쪽 엔진으로 넘긴다',
+      () async {
+        final inner = FakeDownloaderEngine(
+          info: const VideoInfo(_b),
+        );
+        final ids = <String>[];
+        var fail = false;
+        final engine = YoutubeResolveEngine(
+          inner,
+          reader: (id, {language}) async => null,
+          videoReader: (id, maxHeight) async => null,
+          languageReader: (_) async => const [],
+          playlistReader: (id) async {
+            ids.add(id);
+            if (fail) throw const EngineException(EngineFailure.failed);
+            return const PlaylistInfo(title: 'L', entries: [_a]);
+          },
+        );
+        const list = 'https://www.youtube.com/playlist?list=PLabc';
+        expect(((await engine.fetchInfo(list)) as PlaylistInfo).entries, [_a]);
+        expect(ids, ['PLabc']);
+        // 곡 하나를 가리키는 주소는 목록으로 읽지 않는다.
+        expect(
+          await engine.fetchInfo(
+            'https://www.youtube.com/watch?v=dQw4w9WgXcQ&list=PLabc',
+          ),
+          isA<VideoInfo>(),
+        );
+        expect(ids.length, 1);
+        fail = true;
+        expect(await engine.fetchInfo(list), isA<VideoInfo>());
+      },
+    );
+
+    test('YoutubeResolveEngine: 재생목록 검색은 네이티브가 먼저 읽고, 못 읽거나 비면 안쪽 엔진으로 넘긴다', () async {
+      final inner = FakeDownloaderEngine(
+        playlistPage: const PlaylistSearchPage(
+          items: [PlaylistHit(id: 'in', title: 'inner', url: 'u')],
+          hasNext: false,
+        ),
+      );
+      var mode = 0; // 0 읽음, 1 실패, 2 빈 결과
+      final engine = YoutubeResolveEngine(
+        inner,
+        reader: (id, {language}) async => null,
+        videoReader: (id, maxHeight) async => null,
+        languageReader: (_) async => const [],
+        playlistSearchReader: (query, page, size) async {
+          if (mode == 1) throw const EngineException(EngineFailure.failed);
+          return PlaylistSearchPage(
+            items: mode == 2
+                ? const []
+                : const [PlaylistHit(id: 'n', title: 'native', url: 'u')],
+            hasNext: false,
+          );
+        },
+      );
+      expect((await engine.searchPlaylists('q')).items.single.id, 'n');
+      mode = 1;
+      expect((await engine.searchPlaylists('q')).items.single.id, 'in');
+      mode = 2;
+      expect((await engine.searchPlaylists('q')).items.single.id, 'in');
+    });
+
+    test(
+      'YoutubeResolveEngine: 곡 정보 · 채널 정보는 네이티브가 먼저 읽고, 재생목록이 낀 주소 · 실패는 안쪽 엔진으로 넘긴다',
+      () async {
+        final inner = FakeDownloaderEngine(
+          info: const VideoInfo(_b),
+          channel: const ChannelInfo(subscriberCount: 1),
+        );
+        var fail = false;
+        final engine = YoutubeResolveEngine(
+          inner,
+          reader: (id, {language}) async => null,
+          videoReader: (id, maxHeight) async => null,
+          languageReader: (_) async => const [],
+          infoReader: (id) async {
+            if (fail) throw const EngineException(EngineFailure.failed);
+            return const VideoInfo(_a);
+          },
+          channelInfoReader: (url) async =>
+              const ChannelInfo(subscriberCount: 99),
+        );
+        const url = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+        expect(((await engine.fetchInfo(url)) as VideoInfo).hit, _a);
+        // 전체 정보는 늘 안쪽 엔진.
+        expect(((await engine.fetchFullInfo(url)) as VideoInfo).hit, _b);
+        expect(inner.infos, isEmpty);
+        // 재생목록이 낀 곡 주소는 안쪽 엔진.
+        await engine.fetchInfo('$url&list=PLabc');
+        expect(inner.infos, ['$url&list=PLabc']);
+        fail = true;
+        expect(((await engine.fetchInfo(url)) as VideoInfo).hit, _b);
+        expect(
+          (await engine.fetchChannel('https://www.youtube.com/@x')).subscriberCount,
+          99,
+        );
+      },
+    );
+
+    test('youtubeVideoIdOf: 유튜브 주소에서 영상 id 11자를 꺼낸다', () {
+      const id = 'dQw4w9WgXcQ';
+      expect(youtubeVideoIdOf('https://www.youtube.com/watch?v=$id&t=3'), id);
+      expect(youtubeVideoIdOf('https://youtu.be/$id'), id);
+      expect(youtubeVideoIdOf('https://m.youtube.com/shorts/$id'), id);
+      expect(youtubeVideoIdOf('https://www.youtube.com/playlist?list=PL1'), isNull);
+      expect(youtubeVideoIdOf('https://soundcloud.com/a/b'), isNull);
+      expect(youtubeVideoIdOf('https://www.youtube.com/watch?v=short'), isNull);
+    });
+
+    test('youtubePlaylistIdOf: 재생목록 주소에서만 목록 id를 꺼낸다', () {
+      expect(
+        youtubePlaylistIdOf('https://www.youtube.com/playlist?list=PLabc'),
+        'PLabc',
+      );
+      expect(
+        youtubePlaylistIdOf('https://music.youtube.com/playlist?list=OLAK'),
+        'OLAK',
+      );
+      expect(youtubePlaylistIdOf('https://www.youtube.com/watch?v=x&list=PL'), isNull);
+      expect(youtubePlaylistIdOf('https://soundcloud.com/a/sets/b'), isNull);
+    });
+
     test('YoutubeResolveEngine: 고른 오디오 언어를 읽는 쪽에 넘긴다', () async {
       final inner = FakeDownloaderEngine();
       final languages = <String?>[];
@@ -202,47 +308,6 @@ void main() {
       },
     );
 
-    test('LocalEngine: 오디오 언어 목록은 형식의 language에서 읽고 고른 언어로 받는다', () async {
-      final calls = <List<String>>[];
-      final engine = LocalEngine(
-        run: (_, args) async {
-          calls.add(args);
-          return (
-            exitCode: 0,
-            stdout: jsonEncode({
-              'url': 'https://rr.googlevideo.com/audio',
-              'formats': [
-                {'vcodec': 'avc1', 'language': 'en'},
-                {
-                  'vcodec': 'none',
-                  'language': 'en-US',
-                  'format_note': 'English (US) original (default), medium',
-                },
-                {
-                  'vcodec': 'none',
-                  'language': 'ko',
-                  'format_note': 'Korean, medium',
-                },
-                {
-                  'vcodec': 'none',
-                  'language': 'ko',
-                  'format_note': 'Korean, low',
-                },
-              ],
-            }),
-            stderr: '',
-          );
-        },
-      );
-      final found = await engine.fetchAudioLanguages('https://x/v');
-      expect(found, const [
-        AudioLanguage(id: 'en-US', name: 'English (US)', isDefault: true),
-        AudioLanguage(id: 'ko', name: 'Korean'),
-      ]);
-      await engine.resolveAudioStream('https://x/v', audioLanguage: 'ko');
-      expect(calls.last, contains(startsWith('bestaudio[language=ko]')));
-    });
-
     test('CachedDownloaderEngine: 오디오 언어마다 따로 기억한다', () async {
       final inner = FakeDownloaderEngine();
       final engine = CachedDownloaderEngine(inner);
@@ -255,23 +320,6 @@ void main() {
     test('audioLanguageId: 트랙 번호를 떼고 언어 코드만 남긴다', () {
       expect(audioLanguageId('en-US.4'), 'en-US');
       expect(audioLanguageId('ko'), 'ko');
-    });
-
-    test('LocalEngine: 주소가 없으면 실패다', () async {
-      final engine = LocalEngine(
-        run: (_, _) async =>
-            (exitCode: 0, stdout: jsonEncode({'id': 'v'}), stderr: ''),
-      );
-      await expectLater(
-        engine.resolveAudioStream('https://x/v'),
-        throwsA(
-          isA<EngineException>().having(
-            (e) => e.failure,
-            'failure',
-            EngineFailure.failed,
-          ),
-        ),
-      );
     });
 
     test('ServerEngine: 스트림 주소 조회는 없어서 쓸 수 없다', () async {

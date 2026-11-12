@@ -37,6 +37,16 @@ void registerPlaylists(GetIt sl) {
     )
     ..registerFactory(() => PlaylistTracksCubit(sl()))
     ..registerFactory(
-      () => PlaylistImportCubit(sl(), sl(), sl(), sl(), sl(), sl(), sl(), sl()),
+      () => PlaylistImportCubit(
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+        sl(),
+        warmUp: sl(),
+      ),
     );
 }

@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -6,8 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
-import 'package:music_download_play_app/features/search/data/engine/local_engine.dart';
-import 'package:music_download_play_app/features/search/data/engine/routing_engine.dart';
 import 'package:music_download_play_app/features/search/data/engine/server_engine.dart';
 import 'package:music_download_play_app/features/search/domain/entities/engine_exception.dart';
 import 'package:music_download_play_app/features/search/domain/entities/media_info.dart';
@@ -381,157 +378,6 @@ void main() {
       );
       final info = await engine.fetchInfo('https://x/v');
       expect((info as VideoInfo).hit.categories, ['Gaming']);
-    });
-  });
-
-  group('LocalEngine', () {
-    String line(String id) => jsonEncode({
-      'id': id,
-      'title': 'T$id',
-      'uploader': 'U',
-      'duration': 100.0,
-      'url': 'https://www.youtube.com/watch?v=$id',
-    });
-
-    test('ytsearch로 (page+1)*size개를 받아 해당 쪽만 돌려준다', () async {
-      List<String>? args;
-      final engine = LocalEngine(
-        run: (exe, a) async {
-          args = a;
-          return (
-            exitCode: 0,
-            stdout: '${line('a')}\n${line('b')}\n${line('c')}\n',
-            stderr: '',
-          );
-        },
-      );
-      final page = await engine.search('노래', page: 1, size: 2);
-      expect(args!.last, 'ytsearch4:노래');
-      expect(page.items.map((h) => h.id), ['c']);
-      expect(page.hasNext, isFalse);
-
-      await engine.search('노래', source: SearchSource.soundcloud, size: 1);
-      expect(args!.last, 'scsearch1:노래');
-
-      await engine.search('노래', size: 3, newest: true);
-      expect(args!.last, 'ytsearchdate3:노래'); // 최신순은 날짜 순 검색
-      await engine.search(
-        '노래',
-        source: SearchSource.soundcloud,
-        size: 1,
-        newest: true,
-      );
-      expect(args!.last, 'scsearch1:노래'); // 날짜 순 검색이 없는 사이트는 그대로
-    });
-
-    test('yt-dlp가 시간 안에 끝나지 않으면 시간 초과로 알린다', () async {
-      final engine = LocalEngine(
-        run: (_, _) => throw TimeoutException('yt-dlp'),
-      );
-      await expectLater(
-        engine.search('노래'),
-        throwsA(
-          isA<EngineException>().having(
-            (e) => e.failure,
-            'failure',
-            EngineFailure.timeout,
-          ),
-        ),
-      );
-    });
-
-    test('재생목록 정보를 읽는다', () async {
-      final engine = LocalEngine(
-        run: (_, _) async => (
-          exitCode: 0,
-          stdout: jsonEncode({
-            '_type': 'playlist',
-            'title': 'L',
-            'entries': [jsonDecode(line('a'))],
-          }),
-          stderr: '',
-        ),
-      );
-      final info = await engine.fetchInfo('https://x/list');
-      expect(info, isA<PlaylistInfo>());
-      expect((info as PlaylistInfo).entries.single.title, 'Ta');
-    });
-
-    test('곡 하나를 읽으면 유튜브 분류(categories)가 담긴다', () async {
-      final engine = LocalEngine(
-        run: (_, _) async => (
-          exitCode: 0,
-          stdout: jsonEncode({
-            'id': 'v',
-            'title': 'T',
-            'categories': ['Music', ' ', 3],
-          }),
-          stderr: '',
-        ),
-      );
-      final info = await engine.fetchInfo('https://x/v');
-      expect((info as VideoInfo).hit.categories, ['Music']);
-    });
-
-    test('목록 검색 결과에는 분류가 없어 빈 목록이다', () async {
-      final engine = LocalEngine(
-        run: (_, _) async => (
-          exitCode: 0,
-          stdout: '${jsonEncode({'id': 'a', 'title': 'Ta'})}\n',
-          stderr: '',
-        ),
-      );
-      final page = await engine.search('q', size: 1);
-      expect(page.items.single.categories, isEmpty);
-    });
-
-    test('yt-dlp가 없으면 사용할 수 없다', () async {
-      final engine = LocalEngine(
-        run: (_, _) async => throw const ProcessException('yt-dlp', []),
-      );
-      expect(await engine.isAvailable(), isFalse);
-      await expectLater(
-        engine.search('q'),
-        throwsA(
-          isA<EngineException>().having(
-            (e) => e.failure,
-            'failure',
-            EngineFailure.unavailable,
-          ),
-        ),
-      );
-    });
-  });
-
-  group('RoutingDownloaderEngine', () {
-    test('로컬 yt-dlp가 있으면 로컬, 없으면 서버, 둘 다 없으면 unavailable', () async {
-      final noYtDlp = LocalEngine(
-        run: (_, _) async => (exitCode: 1, stdout: '', stderr: ''),
-      );
-      var serverCalls = 0;
-      final server = ServerEngine(
-        baseUrl: 'https://s',
-        get: (_, _) async {
-          serverCalls++;
-          return (status: 200, body: '{"items":[],"hasNext":false}');
-        },
-      );
-      await RoutingDownloaderEngine(local: noYtDlp, server: server).search('q');
-      expect(serverCalls, 1);
-
-      final withYtDlp = LocalEngine(
-        run: (_, _) async => (exitCode: 0, stdout: '', stderr: ''),
-      );
-      await RoutingDownloaderEngine(
-        local: withYtDlp,
-        server: server,
-      ).search('q');
-      expect(serverCalls, 1); // 서버는 부르지 않았다
-
-      await expectLater(
-        RoutingDownloaderEngine().search('q'),
-        throwsA(isA<EngineException>()),
-      );
     });
   });
 

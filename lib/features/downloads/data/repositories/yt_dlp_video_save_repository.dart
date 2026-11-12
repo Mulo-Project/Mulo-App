@@ -1,53 +1,40 @@
 import 'dart:io';
 
 import '../../../../core/config/default_video_folder.dart';
-import '../../domain/entities/download_options.dart';
 import '../../domain/repositories/video_save_repository.dart';
 import '../datasources/cover_tag_writer.dart';
 import '../datasources/downloaded_file_store.dart';
 
-/// yt-dlp 실행 하나 (Android 로컬 엔진의 `run`과 같은 모양).
-typedef VideoRun =
-    Future<({int exitCode, String stdout, String stderr})> Function(
-      String executable,
-      List<String> args, {
-      Duration timeout,
-      bool background,
+/// 영상(+소리) 하나를 받아 `<dir>/<stem>.<extension>`으로 합쳐 두는 일 (네이티브 yt-dlp 엔진, 못 받으면 예외).
+typedef VideoFetch =
+    Future<void> Function({
+      required String url,
+      required int maxHeight,
+      required String extension,
+      required String dir,
+      required String stem,
       void Function(double progress)? onProgress,
     });
 
-/// yt-dlp가 영상과 소리를 받아 mp4로 합치고(APK에 든 ffmpeg 사용), 그 파일을 `Movies/Mulo`에 저장한다.
+/// 네이티브 yt-dlp가 영상과 소리를 받아 합치고(APK에 든 ffmpeg 사용), 그 파일을 `Movies/Mulo`에 저장한다.
 ///
-/// 영상 · 소리가 따로 오는 스트림(720p 이상)은 yt-dlp가 합친다. 오래 걸리는 일이라
-/// 검색 · 주소 읽기와 같은 실행 줄을 쓰지 않는 `background`로 돌린다.
+/// 형식별 선택 · 합치기 인자는 네이티브가 가진다. 오래 걸리는 일이라 네이티브가 검색 · 주소 읽기와 같은 실행 줄을 쓰지 않는다.
 class YtDlpVideoSaveRepository implements VideoSaveRepository {
   YtDlpVideoSaveRepository({
-    required this.run,
+    required this.fetch,
     required this.available,
     required this.store,
     required this.tempDir,
     this.tags,
-    this.timeout = const Duration(minutes: 30),
   });
 
-  final VideoRun run;
+  final VideoFetch fetch;
   final Future<bool> Function() available;
   final DownloadedFileStore store;
   final Future<Directory> Function() tempDir;
-  final Duration timeout;
 
   /// 받은 영상에 제목 · 아티스트 · 커버 태그를 쓴다 (없거나 못 쓰면 태그 없이 저장).
   final CoverTagWriter? tags;
-
-  /// 화질 상한 이하에서 가장 좋은 영상 + 소리 (영상 · 소리가 따로 오면 yt-dlp가 합친다).
-  /// mp4: H.264 + AAC를 먼저 찾아 다시 인코딩 없이 합친다. webm: VP9 + Opus 원본.
-  /// 못 찾으면 아무 코덱, 그래도 없으면 영상 · 소리가 합쳐진 형식.
-  static String selector(int h, [VideoFormat format = VideoFormat.mp4]) =>
-      format == VideoFormat.webm
-      ? 'bv*[height<=$h][ext=webm]+ba[ext=webm]/bv*[height<=$h]+ba/'
-            'b[height<=$h]/b'
-      : 'bv*[height<=$h][vcodec^=avc1]+ba[ext=m4a]/bv*[height<=$h]+ba/'
-            'b[height<=$h]/b';
 
   @override
   Future<bool> isAvailable() => available();
@@ -61,25 +48,14 @@ class YtDlpVideoSaveRepository implements VideoSaveRepository {
     final stem = 'video_${DateTime.now().microsecondsSinceEpoch}';
     File? output;
     try {
-      final r = await run(
-        'yt-dlp',
-        [
-          '-f',
-          selector(request.maxHeight, request.format),
-          '--merge-output-format',
-          request.format.extension,
-          '--no-playlist',
-          '--no-warnings',
-          '--newline',
-          '-o',
-          '${dir.path}${Platform.pathSeparator}$stem.%(ext)s',
-          request.url,
-        ],
-        timeout: timeout,
-        background: true,
+      await fetch(
+        url: request.url,
+        maxHeight: request.maxHeight,
+        extension: request.format.extension,
+        dir: dir.path,
+        stem: stem,
         onProgress: onProgress,
       );
-      if (r.exitCode != 0) throw VideoSaveException(r.stderr.trim());
       output = await _find(dir, stem, request.format.extension);
       if (output == null) throw const VideoSaveException('no output file');
       // 태그를 못 써도 영상은 그대로 저장한다.

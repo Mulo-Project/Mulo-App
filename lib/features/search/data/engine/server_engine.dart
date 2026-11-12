@@ -106,6 +106,9 @@ class ServerEngine implements DownloaderEngine {
   }
 
   @override
+  Future<MediaInfo> fetchFullInfo(String url) => fetchInfo(url);
+
+  @override
   Future<MediaInfo> fetchInfo(String url) async {
     final json = await _getJson('/info', {'url': url});
     if (json['type'] == 'playlist') {
@@ -139,6 +142,9 @@ class ServerEngine implements DownloaderEngine {
   @override
   Future<VideoStream> resolveVideoStream(String url, {int maxHeight = 360}) async =>
       throw const EngineException(EngineFailure.unavailable);
+
+  @override
+  Future<void> warmUp() async {}
 
   /// 서버 명세에 오디오 트랙 조회가 없어서 고를 수 있는 언어가 없다.
   @override

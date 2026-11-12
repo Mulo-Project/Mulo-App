@@ -32,7 +32,7 @@
   - presentation: `bloc/`(Cubit · Bloc, 유스케이스만 부른다), `screens/`, `widgets/`. data를 직접 가져오지 않는다.
   - 연결: get_it(`core/di/injector.dart`의 `sl`), 기능마다 `di.dart`의 `registerXxx(sl)`. 앱 전체 bloc은 `app/app.dart`의 MultiBlocProvider(MaterialApp 위).
   - 테스트는 `test/helpers/fakes.dart`의 `setUpTestDependencies()`로 리포지토리만 가짜로 바꾼다. `test/architecture_test.dart`가 의존 규칙을 검사한다.
-- 다운로드는 `DownloaderEngine` 인터페이스 → `ServerEngine`(서버 모드) / `LocalEngine`(로컬 모드).
+- 다운로드는 `DownloaderEngine` 인터페이스 → `ServerEngine`(서버 모드) / `YtDlpEngine`(로컬 모드, 네이티브 yt-dlp `music_app/ytdlp_engine`).
 - Android 빌드는 flavor `lite`(서버 모드만) / `full`(두 모드). 데스크톱은 빌드 하나에 설정으로 모드 선택.
 - 앱 로컬 DB는 drift(`lib/core/database/`, 스키마 바꾸면 `dart run build_runner build -d`), 설정값은 shared_preferences, 재생은 just_audio + audio_service. (Notion 기술 스택 기준)
 - **형식(mp3 · opus · mp4 · webm 등)별 처리는 네이티브에만 둔다.** Dart는 형식을 모르는 값(제목 · 아티스트 · 가사 · 커버 PNG 등)과 파일 경로를 네이티브 호출 하나로 넘기고, 형식마다 다른 규칙(키 이름 · 커버 넣는 방식 · ffmpeg 인자)은 네이티브의 형식별 함수가 각자 가진다. Dart에 형식별 분기 · 클래스 · 확장자 목록을 새로 만들지 않는다. 형식 하나의 변경이 다른 형식에 새지 않게 함수를 나눈다.
