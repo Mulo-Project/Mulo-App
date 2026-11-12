@@ -294,7 +294,8 @@ void main() {
       );
       expect(video.saved.single.maxHeight, 720);
       expect(video.saved.single.format, VideoFormat.webm);
-      expect(items.single.savedFolder, 'Movies/Mulo');
+      // 저장한 폴더는 고른 경로 그대로 담고, 알림이 짧게 줄여 보여 준다.
+      expect(items.single.savedFolder, '/storage/emulated/0/Movies/Mulo');
       expect(engine.streams, isEmpty, reason: '음원은 받지 않는다');
       final track = (await library.watchTracks().first).single;
       expect(track.uri, 'content://video/1');
