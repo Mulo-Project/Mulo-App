@@ -65,11 +65,10 @@ class _DownloadCompletionListenerState
     if (!kDebugMode) return;
     _diagSub = DiagNotice.stream.listen((m) {
       if (!mounted) return;
-      ScaffoldMessenger.maybeOf(context)
-        ?..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(content: Text(m), duration: const Duration(seconds: 20)),
-        );
+      // 지금 떠 있는 안내(예: "N곡을 불러왔어요")를 지우지 않고 뒤에 줄 세운다.
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        SnackBar(content: Text(m), duration: const Duration(seconds: 20)),
+      );
     });
   }
 
