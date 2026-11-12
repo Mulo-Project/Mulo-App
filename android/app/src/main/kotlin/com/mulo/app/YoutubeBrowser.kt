@@ -199,15 +199,22 @@ object YoutubeBrowser {
                         ?: ""
                 }
                 token = null
-                val list = playlistItems(root)
-                for (i in 0 until list.length()) {
-                    val o = list.optJSONObject(i) ?: continue
+                // 응답 모양이 자주 바뀌어서 곡 · continuation을 위치와 무관하게 찾는다.
+                val nodes = ArrayList<JSONObject>()
+                collectPlaylistNodes(root, nodes)
+                var found = 0
+                for (o in nodes) {
                     val item = parsePlaylistVideo(o.optJSONObject("playlistVideoRenderer"))
+                        ?: parsePlaylistLockup(o.optJSONObject("lockupViewModel"))
                     if (item != null) {
+                        found++
                         if (seen.add(item.id)) items += item
-                    } else {
+                    } else if (o.has("continuationItemRenderer")) {
                         continuationToken(o)?.let { token = it }
                     }
+                }
+                if (found == 0 && items.isEmpty()) {
+                    MuloLog.d(TAG, "재생목록 곡 없음: 최상위 ${root.keys().asSequence().toList()} 노드 ${nodes.size}개 ${oneLine(root.toString().take(300))}")
                 }
             } while (token != null && pages < MAX_PLAYLIST_PAGES)
         } catch (e: Exception) {
@@ -231,32 +238,58 @@ object YoutubeBrowser {
         return array.toObjects()
     }
 
-    /** 재생목록 응답에서 곡 · continuation 항목 목록. */
-    private fun playlistItems(root: JSONObject): JSONArray {
-        val actions = root.optJSONArray("onResponseReceivedActions") ?: root.optJSONArray("onResponseReceivedCommands")
-        if (actions != null) {
-            for (i in 0 until actions.length()) {
-                val a = actions.optJSONObject(i) ?: continue
-                (a.optJSONObject("appendContinuationItemsAction") ?: a.optJSONObject("reloadContinuationItemsCommand"))
-                    ?.optJSONArray("continuationItems")?.let { return it }
-            }
-        }
-        val tabs = root.optJSONObject("contents")?.optJSONObject("twoColumnBrowseResultsRenderer")
-            ?.optJSONArray("tabs") ?: return JSONArray()
-        for (t in tabs.toObjects()) {
-            val sections = t.optJSONObject("tabRenderer")?.optJSONObject("content")
-                ?.optJSONObject("sectionListRenderer")?.optJSONArray("contents") ?: continue
-            for (s in sections.toObjects()) {
-                val contents = s.optJSONObject("itemSectionRenderer")?.optJSONArray("contents") ?: continue
-                for (c in contents.toObjects()) {
-                    c.optJSONObject("playlistVideoListRenderer")?.optJSONArray("contents")?.let { return it }
+    /** 응답 어디에 있든 재생목록 곡(`playlistVideoRenderer` · 영상 `lockupViewModel`)과 continuation 항목을 문서 순서대로 모은다. */
+    internal fun collectPlaylistNodes(node: Any?, out: MutableList<JSONObject>) {
+        when (node) {
+            is JSONObject -> {
+                val isLockupVideo = node.optJSONObject("lockupViewModel")?.optString("contentType") == "LOCKUP_CONTENT_TYPE_VIDEO"
+                if (node.has("playlistVideoRenderer") || isLockupVideo || node.has("continuationItemRenderer")) {
+                    out.add(node)
+                    return
                 }
+                for (k in node.keys()) collectPlaylistNodes(node.opt(k), out)
             }
+            is JSONArray -> for (i in 0 until node.length()) collectPlaylistNodes(node.opt(i), out)
         }
-        return JSONArray()
     }
 
-    private fun continuationToken(o: JSONObject): String? {
+    /** 새 모양의 재생목록 곡(`lockupViewModel`): 영상 id · 제목 · 채널 · 길이 · 이미지. */
+    internal fun parsePlaylistLockup(v: JSONObject?): Item? {
+        if (v == null || v.optString("contentType") != "LOCKUP_CONTENT_TYPE_VIDEO") return null
+        val id = v.optString("contentId").takeIf { it.isNotEmpty() } ?: return null
+        val meta = v.optJSONObject("metadata")?.optJSONObject("lockupMetadataViewModel")
+        val title = meta?.optJSONObject("title")?.optString("content") ?: ""
+        if (title.isEmpty() || title == "[Private video]" || title == "[Deleted video]") return null
+        val channel = meta?.optJSONObject("metadata")?.optJSONObject("contentMetadataViewModel")
+            ?.optJSONArray("metadataRows")?.optJSONObject(0)?.optJSONArray("metadataParts")?.optJSONObject(0)
+            ?.optJSONObject("text")?.optString("content") ?: ""
+        val image = v.optJSONObject("contentImage")?.optJSONObject("thumbnailViewModel")?.optJSONObject("image")
+            ?.optJSONArray("sources")
+        val thumb = image?.optJSONObject(image.length() - 1)?.optString("url")?.takeIf { it.isNotEmpty() }
+        var seconds: Int? = null
+        val overlays = v.optJSONObject("contentImage")?.optJSONObject("thumbnailViewModel")?.optJSONArray("overlays")
+        if (overlays != null) {
+            for (i in 0 until overlays.length()) {
+                val text = overlays.optJSONObject(i)?.optJSONObject("thumbnailBottomOverlayViewModel")
+                    ?.optJSONArray("badges")?.optJSONObject(0)?.optJSONObject("thumbnailBadgeViewModel")?.optString("text")
+                if (!text.isNullOrEmpty()) seconds = clockSeconds(text)
+            }
+        }
+        return Item(
+            id = id, title = title, uploader = channel, seconds = seconds,
+            thumbnail = thumb ?: "https://i.ytimg.com/vi/$id/hqdefault.jpg",
+            channelId = null, views = null, isLive = seconds == null || seconds == 0, description = "",
+        )
+    }
+
+    /** `3:45` · `1:02:03` → 초 (아니면 null). */
+    private fun clockSeconds(text: String): Int? {
+        val parts = text.trim().split(':').map { it.toIntOrNull() ?: return null }
+        if (parts.isEmpty() || parts.size > 3) return null
+        return parts.fold(0) { acc, n -> acc * 60 + n }
+    }
+
+    internal fun continuationToken(o: JSONObject): String? {
         val endpoint = o.optJSONObject("continuationItemRenderer")?.optJSONObject("continuationEndpoint") ?: return null
         endpoint.optJSONObject("continuationCommand")?.optString("token")?.takeIf { it.isNotEmpty() }?.let { return it }
         val cmds = endpoint.optJSONObject("commandExecutorCommand")?.optJSONArray("commands") ?: return null
@@ -352,7 +385,7 @@ object YoutubeBrowser {
         )
     }
 
-    private fun parsePlaylistVideo(r: JSONObject?): Item? {
+    internal fun parsePlaylistVideo(r: JSONObject?): Item? {
         if (r == null) return null
         val id = r.optString("videoId").takeIf { it.isNotEmpty() } ?: return null
         val title = runs(r.optJSONObject("title"))
