@@ -7,14 +7,17 @@ import androidx.media3.database.StandaloneDatabaseProvider
 import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.TransferListener
+import androidx.media3.datasource.cache.Cache
 import androidx.media3.datasource.cache.CacheDataSource
+import androidx.media3.datasource.cache.CacheEvictor
+import androidx.media3.datasource.cache.CacheSpan
 import androidx.media3.datasource.cache.CacheWriter
-import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
 import androidx.media3.datasource.cache.NoOpCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
 import androidx.media3.exoplayer.hls.offline.HlsDownloader
 import androidx.media3.common.MediaItem
 import java.io.File
+import java.util.TreeSet
 
 /**
  * 스트리밍(받지 않고 바로 듣기) 소리 · 영상의 임시 저장소. 들은 부분을 앱 캐시 폴더에 쌓아 두었다가
@@ -39,6 +42,7 @@ object StreamCache {
     private const val SAVED_DIR = "saved_streams"
 
     private var cache: SimpleCache? = null
+    private var tempEvictor: AdjustableLruEvictor? = null
     private var savedCache: SimpleCache? = null
 
     /** 보관한 영상 id. 이 영상의 데이터는 임시 저장소(LRU)가 아니라 보관 저장소에 쌓여 지워지지 않는다. */
@@ -58,12 +62,16 @@ object StreamCache {
         context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
             .getLong(KEY_LIMIT, DEFAULT_LIMIT_BYTES)
 
-    /** 한도를 바꾼다. 쌓인 것은 그대로 두고, 저장소를 닫아 다음에 새 한도로 열게 한다 (줄이면 쓰면서 오래된 것부터 정리된다). */
+    /**
+     * 한도를 바꾼다. 저장소를 닫지 않고 지금 쓰는 저장소에 새 한도를 바로 적용한다 (듣는 중인 플레이어가
+     * 닫힌 저장소를 읽다 끊기지 않게). 줄이면 오래 안 쓴 것부터 곧바로 정리한다.
+     */
     @Synchronized
     fun setLimit(context: Context, bytes: Long) {
-        context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            .edit().putLong(KEY_LIMIT, bytes).apply()
-        close()
+        val app = context.applicationContext
+        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putLong(KEY_LIMIT, bytes).apply()
+        val c = cache ?: return
+        tempEvictor?.setMax(c, tempLimitBytes(app))
     }
 
     @Synchronized
@@ -72,7 +80,11 @@ object StreamCache {
         return try {
             val app = context.applicationContext
             val db = dbProvider ?: StandaloneDatabaseProvider(app).also { dbProvider = it }
-            SimpleCache(File(app.cacheDir, DIR), LeastRecentlyUsedCacheEvictor(tempLimitBytes(app)), db).also { cache = it }
+            val evictor = AdjustableLruEvictor(tempLimitBytes(app))
+            SimpleCache(File(app.cacheDir, DIR), evictor, db).also {
+                cache = it
+                tempEvictor = evictor
+            }
         } catch (e: Exception) {
             // 캐시를 못 열어도 재생은 되어야 한다.
             MuloLog.e(MuloLog.NATIVE, "스트리밍 캐시 열기 실패", e)
@@ -94,10 +106,12 @@ object StreamCache {
         }
     }
 
+    /** 저장소를 닫는다. 듣는 중에는 부르지 않는다 (플레이어가 닫힌 저장소를 읽으면 끊긴다). */
     @Synchronized
     fun close() {
         try { cache?.release() } catch (_: Exception) {}
         cache = null
+        tempEvictor = null
     }
 
     /** [source]를 구간 요청으로 나누고 캐시로 감싼다. 캐시를 못 열면 구간 요청만. */
@@ -351,8 +365,15 @@ object StreamCache {
     /** 모두 지운다. */
     @Synchronized
     fun clear(context: Context) {
-        close()
-        File(context.cacheDir, DIR).deleteRecursively()
+        // 듣는 중인 플레이어가 쓰는 저장소를 닫지 않고 안의 것만 지운다.
+        val c = open(context)
+        if (c == null) {
+            File(context.cacheDir, DIR).deleteRecursively()
+            return
+        }
+        for (key in c.keys.toList()) {
+            try { c.removeResource(key) } catch (_: Exception) {}
+        }
     }
 
     /** googlevideo 주소는 `id` + `itag`(+`mime`)가 같은 내용을 가리킨다. 모르는 주소는 쿼리를 뺀 주소. */
@@ -365,4 +386,58 @@ object StreamCache {
 
     private fun dirSize(dir: File): Long =
         if (!dir.exists()) 0L else dir.walkTopDown().filter { it.isFile }.sumOf { it.length() }
+}
+
+/**
+ * 가장 오래 안 쓴 것부터 지우는 캐시 정리기. 기본 LRU 정리기와 같은 동작이지만 한도를 쓰는 중에 바꿀 수 있다
+ * (기본 것은 한도를 못 바꿔서, 바꾸려면 저장소를 닫아야 했고 듣던 소리가 끊겼다).
+ */
+@UnstableApi
+internal class AdjustableLruEvictor(@Volatile private var maxBytes: Long) : CacheEvictor {
+    private val lru = TreeSet<CacheSpan> { a, b ->
+        val diff = a.lastTouchTimestamp - b.lastTouchTimestamp
+        if (diff == 0L) a.compareTo(b) else if (diff < 0) -1 else 1
+    }
+    private var currentSize = 0L
+
+    override fun requiresCacheSpanTouches() = true
+
+    override fun onCacheInitialized() {}
+
+    override fun onStartFile(cache: Cache, key: String, position: Long, length: Long) {
+        if (length != androidx.media3.common.C.LENGTH_UNSET.toLong()) evict(cache, length)
+    }
+
+    override fun onSpanAdded(cache: Cache, span: CacheSpan) {
+        lru.add(span)
+        currentSize += span.length
+        evict(cache, 0)
+    }
+
+    override fun onSpanRemoved(cache: Cache, span: CacheSpan) {
+        lru.remove(span)
+        currentSize -= span.length
+    }
+
+    override fun onSpanTouched(cache: Cache, oldSpan: CacheSpan, newSpan: CacheSpan) {
+        onSpanRemoved(cache, oldSpan)
+        onSpanAdded(cache, newSpan)
+    }
+
+    /** 한도를 바꾸고 넘친 만큼 바로 정리한다. */
+    fun setMax(cache: Cache, bytes: Long) {
+        maxBytes = bytes
+        synchronized(cache) { evict(cache, 0) }
+    }
+
+    private fun evict(cache: Cache, requiredSpace: Long) {
+        while (currentSize + requiredSpace > maxBytes && lru.isNotEmpty()) {
+            try {
+                cache.removeSpan(lru.first())
+            } catch (_: Cache.CacheException) {
+                // 지우지 못하면 다음 기회에 다시 시도한다.
+                return
+            }
+        }
+    }
 }
