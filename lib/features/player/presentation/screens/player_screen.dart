@@ -5,7 +5,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/design.dart';
-import '../../../search/domain/entities/media_info.dart';
 import '../../../search/presentation/bloc/saved_videos_cubit.dart';
 import '../../../search/presentation/saved_track.dart';
 import '../../../search/presentation/screens/media_detail_screen.dart';
