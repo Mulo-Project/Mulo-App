@@ -6,6 +6,7 @@ import '../entities/media_info.dart';
 import '../entities/subtitle_track.dart';
 import '../entities/video_quality.dart';
 import '../entities/video_stream.dart';
+import '../entities/preview_page.dart';
 import '../entities/preview_progress.dart';
 import '../entities/preview_snapshot.dart';
 import '../entities/stream_cache_info.dart';
@@ -300,6 +301,47 @@ class PlayPreview implements UseCase<void, AudioStream> {
 
   @override
   Future<void> call(AudioStream stream) => _player.play(stream);
+}
+
+/// 미리 듣기 시작을 읽기부터 네이티브에 맡긴다. 앱은 네이티브가 모르는 것만 채운다:
+/// 저장한 곡의 받아 둔 소리 주소, 화질을 정하지 않았을 때의 설정 화질.
+/// 네이티브가 못 하면 false (호출한 쪽이 예전 경로로 넘어간다).
+class PlayPreviewPage implements UseCase<bool, PlayPreviewPageParams> {
+  const PlayPreviewPage(this._player, [this._saved, this._quality]);
+
+  final PreviewPlayer _player;
+  final SavedVideoRepository? _saved;
+  final VideoQualityRepository? _quality;
+
+  @override
+  Future<bool> call(PlayPreviewPageParams params) async {
+    final page = params.hit.url.trim();
+    AudioStream? saved;
+    if (params.audioLanguage == null) {
+      final audio = (await _savedReady(_saved, page))?.audioSource;
+      if (audio != null) {
+        saved = AudioStream(url: audio.url, headers: audio.headers);
+      }
+    }
+    final quality =
+        params.quality ?? await _quality?.load() ?? VideoQuality.standard;
+    return _player.playPage(
+      PreviewPage(
+        hit: params.hit,
+        audioLanguage: params.audioLanguage,
+        maxHeight: quality.maxHeight,
+        saved: saved,
+      ),
+    );
+  }
+}
+
+class PlayPreviewPageParams {
+  const PlayPreviewPageParams(this.hit, {this.audioLanguage, this.quality});
+
+  final MediaHit hit;
+  final String? audioLanguage;
+  final VideoQuality? quality;
 }
 
 /// 미리 듣는 곡의 영상을 소리와 같은 시계로 틀기 (네이티브가 화면까지 맡는다).

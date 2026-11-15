@@ -66,6 +66,7 @@ import 'package:music_download_play_app/features/search/domain/entities/audio_st
 import 'package:music_download_play_app/features/search/domain/entities/video_quality.dart';
 import 'package:music_download_play_app/features/search/domain/entities/video_stream.dart';
 import 'package:music_download_play_app/features/search/domain/repositories/video_quality_repository.dart';
+import 'package:music_download_play_app/features/search/domain/entities/preview_page.dart';
 import 'package:music_download_play_app/features/search/domain/entities/preview_progress.dart';
 import 'package:music_download_play_app/features/search/domain/entities/preview_snapshot.dart';
 import 'package:music_download_play_app/features/search/domain/entities/stream_cache_info.dart';
@@ -1740,6 +1741,10 @@ class FakePreviewPlayer implements PreviewPlayer {
     played.add(stream.url);
     playing = true;
   }
+
+  /// 네이티브가 읽기부터 맡는 경로는 쓰지 않는다 (엔진 라우팅 경로를 시험한다).
+  @override
+  Future<bool> playPage(PreviewPage page) async => false;
 
   /// 임시 저장소 가짜 상태.
   var cacheLimit = 500 * 1024 * 1024;

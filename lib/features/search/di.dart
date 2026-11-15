@@ -91,6 +91,13 @@ void registerSearch(GetIt sl) {
     ..registerFactory(() => FetchAudioLanguages(sl()))
     ..registerFactory(() => AudioLanguageCubit(sl()))
     ..registerFactory(() => PlayPreview(sl()))
+    ..registerFactory(
+      () => PlayPreviewPage(
+        sl(),
+        sl<SavedVideoRepository>(),
+        sl<VideoQualityRepository>(),
+      ),
+    )
     ..registerFactory(() => RememberPreview(sl()))
     ..registerFactory(() => CurrentPreview(sl()))
     ..registerFactory(() => SeekPreview(sl()))
@@ -160,6 +167,7 @@ void registerSearch(GetIt sl) {
         enterPictureInPicture: sl(),
         loadAutoQuality: sl(),
         saveAutoQuality: sl(),
+        playPage: sl<PlayPreviewPage>(),
       ),
     )
     ..registerFactory(() => SearchCubit(sl(), sl(), warmUp: sl()));

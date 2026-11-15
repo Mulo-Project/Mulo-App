@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import '../../domain/entities/audio_stream.dart';
 import '../../domain/entities/engine_exception.dart';
 import '../../domain/entities/media_info.dart';
+import '../../domain/entities/preview_page.dart';
 import '../../domain/entities/preview_progress.dart';
 import '../../domain/entities/preview_snapshot.dart';
 import '../../domain/entities/stream_cache_info.dart';
@@ -78,6 +79,29 @@ class NativePreviewPlayer implements PreviewPlayer {
       }
     }
     throw first!;
+  }
+
+  @override
+  Future<bool> playPage(PreviewPage page) async {
+    final saved = page.saved;
+    try {
+      await _channel.invokeMethod<void>('playPage', {
+        'url': page.hit.url,
+        'id': page.hit.id,
+        'title': page.hit.title,
+        'uploader': page.hit.uploader,
+        'thumbnail': page.hit.thumbnailUrl,
+        'audioLanguage': page.audioLanguage,
+        'maxHeight': page.maxHeight,
+        'saved': saved == null
+            ? null
+            : {'url': saved.url, 'headers': saved.headers},
+      });
+      return true;
+    } on PlatformException {
+      // 네이티브가 못 읽었거나 열지 못했다: 앱이 예전 경로로 넘어간다.
+      return false;
+    }
   }
 
   @override

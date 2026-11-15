@@ -1,5 +1,6 @@
 import '../entities/audio_stream.dart';
 import '../entities/media_info.dart';
+import '../entities/preview_page.dart';
 import '../entities/preview_progress.dart';
 import '../entities/preview_snapshot.dart';
 import '../entities/stream_cache_info.dart';
@@ -11,6 +12,10 @@ import '../entities/video_stream.dart';
 abstract interface class PreviewPlayer {
   /// [stream]을 불러와 재생을 시작한다. 이미 재생 중이면 바꿔 끼운다.
   Future<void> play(AudioStream stream);
+
+  /// 곡 주소로 읽기부터 재생까지 네이티브가 한다. 시작했으면 true, 네이티브가 못 읽거나 열지 못했으면
+  /// false (앱이 엔진 라우팅(yt-dlp · 서버)으로 주소를 읽어 [play]로 넘어간다).
+  Future<bool> playPage(PreviewPage page);
 
   /// 지금 재생 중인 미리 듣기의 영상을 소리와 같은 시계로 튼다 (화면은 영상 화면으로 나간다).
   /// 같은 영상이면 아무 일도 없다. 영상은 덤이라 못 열어도 소리에는 영향이 없다.

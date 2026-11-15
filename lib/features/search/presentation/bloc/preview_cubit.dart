@@ -106,7 +106,9 @@ class PreviewCubit extends Cubit<PreviewState> {
     WatchPreviewPaused? watchPaused,
     LoadAutoVideoQuality? loadAutoQuality,
     SaveAutoVideoQuality? saveAutoQuality,
-  }) : super(const PreviewState()) {
+    PlayPreviewPage? playPage,
+  }) : _playPage = playPage,
+       super(const PreviewState()) {
     // 자동 화질은 설정이라 저장해 두고 앱을 켤 때 읽는다.
     if (loadAutoQuality != null) {
       unawaited(
@@ -180,6 +182,9 @@ class PreviewCubit extends Cubit<PreviewState> {
   }
 
   final ResolveAudioStream _resolve;
+
+  /// 읽기부터 재생까지 네이티브에 맡기는 경로 (없으면 앱이 주소를 읽어 [_play]로 튼다).
+  final PlayPreviewPage? _playPage;
 
   /// 영상 주소를 미리 읽어 두는 데 쓴다 (없으면 미리 읽지 않는다).
   final ResolveVideoStream? resolveVideo;
@@ -318,23 +323,47 @@ class PreviewCubit extends Cubit<PreviewState> {
         expectedLoad: _loadEstimate,
       ),
     );
-    _prefetchVideo(hit, videoQuality);
     try {
-      final stream = await _streamFor(hit, audioLanguage, videoQuality).timeout(
-        _resolveTimeout,
-        onTimeout: () => throw const EngineException(
-          EngineFailure.timeout,
-          'resolve timeout (60s): 주소를 읽지 못함',
-        ),
-      );
-      if (generation != _generation || isClosed) return null;
-      await _play(stream).timeout(
-        _playTimeout,
-        onTimeout: () => throw EngineException(
-          EngineFailure.timeout,
-          'play timeout (30s): ${Uri.tryParse(stream.url)?.host} ${stream.url.contains('.m3u8') ? 'm3u8' : ''}',
-        ),
-      );
+      // 읽기부터 재생까지 네이티브가 먼저 한다 (앱이 백그라운드여도 끊기지 않는다). 못 하면 아래 예전 경로.
+      var started = false;
+      final page = _playPage;
+      if (page != null) {
+        try {
+          started = await page(
+            PlayPreviewPageParams(
+              hit,
+              audioLanguage: audioLanguage,
+              quality: videoQuality,
+            ),
+          ).timeout(_resolveTimeout + _playTimeout, onTimeout: () => false);
+        } on Object {
+          started = false;
+        }
+        if (generation != _generation || isClosed) {
+          if (state.status == PreviewStatus.idle) await _stop(const NoParams());
+          return null;
+        }
+      }
+      // 읽어 둔 주소는 네이티브가 기억하므로, 영상 화면용 미리 읽기는 소리가 난 뒤에 해도 빠르다.
+      if (!started || page == null) _prefetchVideo(hit, videoQuality);
+      if (!started) {
+        final stream = await _streamFor(hit, audioLanguage, videoQuality)
+            .timeout(
+              _resolveTimeout,
+              onTimeout: () => throw const EngineException(
+                EngineFailure.timeout,
+                'resolve timeout (60s): 주소를 읽지 못함',
+              ),
+            );
+        if (generation != _generation || isClosed) return null;
+        await _play(stream).timeout(
+          _playTimeout,
+          onTimeout: () => throw EngineException(
+            EngineFailure.timeout,
+            'play timeout (30s): ${Uri.tryParse(stream.url)?.host} ${stream.url.contains('.m3u8') ? 'm3u8' : ''}',
+          ),
+        );
+      }
       if (generation != _generation || isClosed) {
         // 불러오는 사이에 멈춤이 눌렸다면 늦게 시작된 소리를 끈다.
         // (다른 곡이 눌린 거라면 그 곡의 소리라서 그대로 둔다.)
@@ -358,6 +387,7 @@ class PreviewCubit extends Cubit<PreviewState> {
       );
       // 앱이 꺼졌다 켜져도 어느 곡인지 알 수 있게 플레이어에 적어 둔다 (실패해도 듣는 데는 지장 없다).
       unawaited(_remember(hit).catchError((Object _) {}));
+      if (started && page != null) _prefetchVideo(hit, videoQuality);
       if (ramp) _rampLater(hit.id, generation);
       return null;
     } on EngineException catch (e) {

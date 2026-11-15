@@ -5,6 +5,7 @@ import org.json.JSONObject
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * 유튜브 곡 · 영상의 재생 주소를 네이티브에서 읽는다 (Dart의 youtube_explode_dart가 하던 일).
@@ -108,11 +109,26 @@ object YoutubeResolver {
 
     private val audioClients = listOf(visionOs, androidVr, androidSdkless)
 
-    /** 소리 주소. 못 읽으면 null, 모든 클라이언트가 실패하면 까닭을 담은 예외. */
-    fun audio(videoId: String, language: String?, preferWebm: Boolean): Map<String, Any?>? =
-        timed("소리") { audioInner(videoId, language, preferWebm) }
+    /** 읽은 주소를 잠깐 기억한다: 미리 듣기가 읽은 주소를 영상 화면 · 미리 읽기가 다시 읽지 않게. 끊김 복구는 [fresh]로 건너뛴다. */
+    private val addressCache = ConcurrentHashMap<String, Pair<Long, Map<String, Any?>>>()
+    private const val ADDRESS_TTL_MS = 10 * 60 * 1000L
 
-    fun video(videoId: String, maxHeight: Int): Map<String, Any?>? = timed("영상") { videoInner(videoId, maxHeight) }
+    private fun cached(key: String, fresh: Boolean, load: () -> Map<String, Any?>?): Map<String, Any?>? {
+        val now = System.currentTimeMillis()
+        if (!fresh) {
+            addressCache[key]?.let { (at, value) -> if (now - at < ADDRESS_TTL_MS) return value }
+        }
+        val value = load()
+        if (value != null) addressCache[key] = now to value else addressCache.remove(key)
+        return value
+    }
+
+    /** 소리 주소. 못 읽으면 null, 모든 클라이언트가 실패하면 까닭을 담은 예외. */
+    fun audio(videoId: String, language: String?, preferWebm: Boolean, fresh: Boolean = false): Map<String, Any?>? =
+        cached("a|$videoId|$language|$preferWebm", fresh) { timed("소리") { audioInner(videoId, language, preferWebm) } }
+
+    fun video(videoId: String, maxHeight: Int, fresh: Boolean = false): Map<String, Any?>? =
+        cached("v|$videoId|$maxHeight", fresh) { timed("영상") { videoInner(videoId, maxHeight) } }
 
     /** 걸린 시간을 debug 로그로 남긴다 (`adb logcat -s MuloNative`, `주소 읽기 소리 1234ms 읽음`). */
     private fun <T> timed(label: String, block: () -> T?): T? {
