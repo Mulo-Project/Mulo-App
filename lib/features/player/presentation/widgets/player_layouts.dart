@@ -329,6 +329,18 @@ class SavedPlayer extends StatelessWidget {
         child: Column(
           children: [
             PlayerTopBar(track: data.track),
+            // 영상으로 저장한 곡이면 맨 위에 영상이 알아서 나온다 (일반 영상 곡과 같은 영상 화면 · 전체 화면 버튼).
+            if (data.track.isVideo)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                child: AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
+                    child: const PanZoomVideo(fullscreenButton: true),
+                  ),
+                ),
+              ),
             Expanded(
               child: Stack(
                 children: [
