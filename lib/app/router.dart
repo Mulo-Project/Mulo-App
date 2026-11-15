@@ -17,6 +17,7 @@ import '../features/playlists/presentation/screens/playlist_import_screen.dart';
 import '../features/playlists/presentation/screens/playlist_add_tracks_screen.dart';
 import '../features/playlists/presentation/screens/playlist_pick_screen.dart';
 import '../features/playlists/presentation/screens/playlists_screen.dart';
+import '../features/search/domain/entities/media_info.dart';
 import '../features/search/presentation/screens/saved_videos_screen.dart';
 import '../features/search/presentation/screens/search_screen.dart';
 import '../features/settings/presentation/screens/settings_screen.dart';
@@ -261,7 +262,8 @@ GoRouter createRouter({String initialLocation = Routes.home}) => GoRouter(
       path: Routes.player,
       parentNavigatorKey: _rootKey,
       pageBuilder: (context, state) => CustomTransitionPage(
-        child: const PlayerScreen(),
+        // 저장 타일에서 열었다면 그 곡을 먼저 보여 준다 (extra).
+        child: PlayerScreen(focus: state.extra as MediaHit?),
         transitionDuration: AppMotion.slow,
         reverseTransitionDuration: AppMotion.medium,
         transitionsBuilder: (context, animation, _, child) => SlideTransition(

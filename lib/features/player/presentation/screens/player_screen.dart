@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/design.dart';
+import '../../../search/domain/entities/media_info.dart';
 import '../../../search/presentation/bloc/saved_videos_cubit.dart';
 import '../../../search/presentation/saved_track.dart';
 import '../../../search/presentation/screens/saved_queue_detail_screen.dart';
@@ -16,7 +17,10 @@ import '../widgets/player_style_sheet.dart';
 /// 셔플·반복 #15, 재생 대기열 편집 #16 — 대기열은 보기 · 선택만).
 /// 모양은 더 보기 메뉴의 "플레이어 테마"로 고른다 ([PlayerStyle], D-039).
 class PlayerScreen extends StatefulWidget {
-  const PlayerScreen({super.key});
+  const PlayerScreen({super.key, this.focus});
+
+  /// 저장 타일에서 열었을 때 먼저 보여 줄 임시 저장 곡 (없으면 지금 재생 중인 곡을 따른다).
+  final MediaHit? focus;
 
   @override
   State<PlayerScreen> createState() => _PlayerScreenState();
@@ -25,6 +29,10 @@ class PlayerScreen extends StatefulWidget {
 class _PlayerScreenState extends State<PlayerScreen> {
   /// 커버 ↔ 가사 전환 (상세 기능: 가사).
   bool get _showLyrics => playerShowLyrics.value;
+
+  /// 타일에서 눌러 들어온 곡. 재생 곡이 일반 곡으로 넘어가면 놓는다.
+  late MediaHit? _focus = widget.focus;
+  String? _lastTrackId;
 
   @override
   void initState() {
@@ -98,6 +106,12 @@ class _PlayerScreenState extends State<PlayerScreen> {
     // 임시 저장한 음원이면 같은 플레이어 화면 안에서 썸네일 자리에 다운로드 상세를 보여 준다
     // (아래 조작부는 같은 위젯이라, 일반 곡 ↔ 임시 저장 곡이 넘어가도 화면을 닫고 여는 일이 없다).
     final savedId = track == null ? null : savedVideoIdOf(track.id);
+    if (_lastTrackId != null && track != null && track.id != _lastTrackId) {
+      if (savedId == null) _focus = null;
+    }
+    _lastTrackId = track?.id;
+    final focus = _focus;
+    if (focus != null) return SavedQueueDetailScreen(hit: focus);
     if (savedId != null) {
       final match = context.watch<SavedVideosCubit>().state.where(
         (v) => v.id == savedId,
