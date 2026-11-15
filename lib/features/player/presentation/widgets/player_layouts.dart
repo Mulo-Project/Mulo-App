@@ -326,15 +326,20 @@ class SavedPlayer extends StatelessWidget {
       blurred: false,
       video: false,
       child: SafeArea(
-        child: Column(
+        child: LayoutBuilder(
+          builder: (context, box) => Column(
           children: [
             PlayerTopBar(track: data.track),
             // 영상으로 저장한 곡이면 맨 위에 영상이 알아서 나온다 (일반 영상 곡과 같은 영상 화면 · 전체 화면 버튼).
+            // 가로로 눕히거나 화면이 낮으면 높이를 화면의 3할까지만 쓴다 (아래 조작부가 밀려 넘치지 않게).
             if (data.track.isVideo)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                child: AspectRatio(
-                  aspectRatio: 16 / 9,
+                child: SizedBox(
+                  height: math.min(
+                    (box.maxWidth - AppSpacing.md * 2) * 9 / 16,
+                    box.maxHeight * .3,
+                  ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(AppRadii.sm),
                     child: const PanZoomVideo(fullscreenButton: true),
@@ -365,6 +370,7 @@ class SavedPlayer extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.xs),
           ],
+          ),
         ),
       ),
     );
