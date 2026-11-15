@@ -3,6 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/design.dart';
+import '../../../search/presentation/bloc/saved_videos_cubit.dart';
+import '../../../search/presentation/saved_track.dart';
+import '../../../search/presentation/screens/saved_queue_detail_screen.dart';
 import '../bloc/now_playing_cubit.dart';
 import '../bloc/player_style_cubit.dart';
 import '../widgets/player_common.dart';
@@ -92,6 +95,15 @@ class _PlayerScreenState extends State<PlayerScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) => _closeIfEmpty());
     }
 
+    // 임시 저장한 음원이면 같은 플레이어 화면 안에서 썸네일 자리에 다운로드 상세를 보여 준다
+    // (아래 조작부는 같은 위젯이라, 일반 곡 ↔ 임시 저장 곡이 넘어가도 화면을 닫고 여는 일이 없다).
+    final savedId = track == null ? null : savedVideoIdOf(track.id);
+    if (savedId != null) {
+      final match = context.watch<SavedVideosCubit>().state.where(
+        (v) => v.id == savedId,
+      );
+      if (match.isNotEmpty) return SavedQueueDetailScreen(hit: match.first.hit);
+    }
     return Scaffold(
       backgroundColor: context.palette.background,
       body: track == null

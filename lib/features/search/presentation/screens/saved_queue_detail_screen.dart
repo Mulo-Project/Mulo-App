@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../app/router.dart';
 import '../../../../core/design/design.dart';
 import '../../domain/entities/media_info.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
@@ -54,12 +58,27 @@ class _SavedQueueDetailScreenState extends State<SavedQueueDetailScreen> {
       );
       if (match.isNotEmpty) _hit = match.first.hit;
     }
-    return Scaffold(
-      backgroundColor: context.palette.background,
-      body: MediaDetailScreen(
-        key: ValueKey(_hit.id),
-        hit: _hit,
-        fromSaved: true,
+    return BlocListener<NowPlayingCubit, NowPlayingState>(
+      // 일반 곡으로 넘어갔다: 저장 타일에서 연 이 화면을 닫고 플레이어 화면으로 간다
+      // (플레이어 화면 안에서 넘어갈 때는 그 화면이 스스로 모양을 바꾼다).
+      listenWhen: (a, b) =>
+          a.track?.id != b.track?.id &&
+          b.track != null &&
+          savedVideoIdOf(b.track!.id) == null,
+      listener: (context, _) {
+        final route = ModalRoute.of(context);
+        if (route?.settings.name != 'saved-queue-detail') return;
+        final router = GoRouter.of(context);
+        Navigator.of(context).pop();
+        unawaited(router.push(Routes.player));
+      },
+      child: Scaffold(
+        backgroundColor: context.palette.background,
+        body: MediaDetailScreen(
+          key: ValueKey(_hit.id),
+          hit: _hit,
+          fromSaved: true,
+        ),
       ),
     );
   }
