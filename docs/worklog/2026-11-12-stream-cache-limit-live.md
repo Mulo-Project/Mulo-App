@@ -52,3 +52,8 @@
 - 가운데(다운로드 영역)의 썸네일은 눌림을 막지 않는다: 지금 메인 재생 중인 임시 저장 곡이라 영상 곡은 메인 영상(컨트롤 포함), 소리만 저장한 곡은 영상 재생 버튼이 그대로 동작한다. 미리 듣기 영역만 뺐다.
 - 영상 저장(`saveVideo`)이 403(Forbidden)으로 실패하던 문제: 주소 읽기와 같이 기본 클라이언트로 실패하면 `android_vr`로 한 번 더 받는다 (`withFallback`). 테스트 `saveVideoRetriesWithAndroidVrOnForbidden` 추가.
 - 테스트: 옛 저장 상세(`queue-bar-play`) · 문구("Watch on YouTube")를 기대하던 `saved_queue_test` · `saved_button_sync_test` · `youtube_embed_test`를 새 구조(재생 화면 + `saved-expand`)에 맞췄다.
+
+## 영상 저장: 네이티브 주소로 먼저 받기 (yt-dlp 403 대응)
+- yt-dlp 영상 저장이 받는 단계에서 403이 나 android_vr 재시도도 실패했다. 재생이 쓰는 `YoutubeResolver`가 읽은 주소(구간 확인 통과)를 같은 헤더로 4MB씩 받고, 영상+소리 두 파일이면 ffmpeg로 이어 붙이는 `NativeVideoSaver`를 추가했다 (mp4만, full 빌드만 합치기 가능).
+- 이 방법을 쓸 수 없거나 실패하면 기존 yt-dlp(+android_vr)로 넘어간다. `MuloNative` 로그: `영상 저장 네이티브 …ms 완료` 또는 `실패, yt-dlp로: …`.
+- 디버그 빌드에서는 영상 저장 실패 사유를 snackbar(DiagNotice)로 보인다.

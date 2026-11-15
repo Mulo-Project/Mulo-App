@@ -174,6 +174,37 @@ object YoutubeResolver {
         return null
     }
 
+    /** 저장할 영상 (소리가 든 형식이면 [audio]는 null). */
+    class SaveSources(val video: YtFormat, val audio: YtFormat?)
+
+    /**
+     * 영상 저장용 주소: 영상(+없으면 mp4 소리)을 구간 확인까지 통과한 클라이언트에서 고른다. 못 찾으면 null.
+     * 받을 때는 [headersFor]의 헤더를 같이 보낸다.
+     */
+    fun saveSources(videoId: String, maxHeight: Int): SaveSources? = timed("저장용") {
+        var found: SaveSources? = null
+        for (client in listOf(visionOs, androidVr)) {
+            val all = try {
+                fetchFormats(client, videoId)
+            } catch (e: Exception) {
+                MuloLog.d(TAG, "저장용 ${client.name} 읽기 실패 ${oneLine(e.toString())}")
+                continue
+            }
+            val (best, muxed) = YoutubeFormats.pickVideo(all, maxHeight) ?: continue
+            if (!canReadMiddle(best)) continue
+            if (muxed) { found = SaveSources(best, null); break }
+            val audio = YoutubeFormats.orderAudio(all, false, null).firstOrNull { it.container == "mp4" } ?: continue
+            if (!canReadMiddle(audio)) continue
+            found = SaveSources(best, audio)
+            break
+        }
+        if (found == null) session = null
+        found
+    }
+
+    /** 이 주소를 받을 때 같이 보낼 헤더. */
+    fun headersFor(url: String): Map<String, String> = headers(url)
+
     /** 언어 트랙이 둘 이상 든 클라이언트를 찾아 그 목록을. 없으면 빈 목록. */
     fun languages(videoId: String): List<Map<String, Any?>> {
         for (client in audioClients) {
