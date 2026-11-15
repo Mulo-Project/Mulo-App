@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
+import '../../../player/presentation/bloc/video_surface_cubit.dart';
 import '../../../player/presentation/widgets/native_video.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../downloads/presentation/widgets/download_dialog.dart';
@@ -812,6 +813,15 @@ class _OnDemandVideoState extends State<_OnDemandVideo> {
                   )
                 else
                   const NativeVideo(),
+                // 영상을 읽고 첫 화면이 나오기까지 기다리는 동안 "불러오는 중"을 보여, 멈춘 것으로 오해하지 않게 한다.
+                BlocBuilder<VideoSurfaceCubit, VideoSurfaceState>(
+                  buildWhen: (a, b) => a.ready != b.ready,
+                  builder: (context, surface) => surface.ready
+                      ? const SizedBox.shrink()
+                      : const IgnorePointer(
+                          child: Center(child: LoadingIndicator()),
+                        ),
+                ),
                 const PreviewVideoControls(main: true),
               ],
             ),
