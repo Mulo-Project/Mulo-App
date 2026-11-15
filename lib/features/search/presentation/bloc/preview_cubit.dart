@@ -106,9 +106,8 @@ class PreviewCubit extends Cubit<PreviewState> {
     WatchPreviewPaused? watchPaused,
     LoadAutoVideoQuality? loadAutoQuality,
     SaveAutoVideoQuality? saveAutoQuality,
-    PlayPreviewPage? playPage,
-  }) : _playPage = playPage,
-       super(const PreviewState()) {
+    this.playPage,
+  }) : super(const PreviewState()) {
     // 자동 화질은 설정이라 저장해 두고 앱을 켤 때 읽는다.
     if (loadAutoQuality != null) {
       unawaited(
@@ -184,7 +183,7 @@ class PreviewCubit extends Cubit<PreviewState> {
   final ResolveAudioStream _resolve;
 
   /// 읽기부터 재생까지 네이티브에 맡기는 경로 (없으면 앱이 주소를 읽어 [_play]로 튼다).
-  final PlayPreviewPage? _playPage;
+  final PlayPreviewPage? playPage;
 
   /// 영상 주소를 미리 읽어 두는 데 쓴다 (없으면 미리 읽지 않는다).
   final ResolveVideoStream? resolveVideo;
@@ -326,7 +325,7 @@ class PreviewCubit extends Cubit<PreviewState> {
     try {
       // 읽기부터 재생까지 네이티브가 먼저 한다 (앱이 백그라운드여도 끊기지 않는다). 못 하면 아래 예전 경로.
       var started = false;
-      final page = _playPage;
+      final page = playPage;
       if (page != null) {
         try {
           started = await page(
