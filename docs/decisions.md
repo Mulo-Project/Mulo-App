@@ -1025,5 +1025,5 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 ## D-165 · 2026-11-15 · 앱 아이콘: M + 재생 + 음표 마크, adaptive icon (Android)
 - 마크: M 윗선 · 재생 삼각형 · 음표를 한 글자로 합친 모양. 어두운 원 가장자리에 보라 · 파랑 · 청록 · 초록 · 라임 · 주황 · 분홍 빛이 번지고, 음표는 원 밖으로 나와 외곽선이 그 둘레를 따라간다.
 - 원본은 `assets/icon/app_icon.png`(색, 투명 배경 1024), `assets/icon/app_icon_mono.png`(단색 마크). Android 리소스는 `python3 tool/gen_android_icon.py`로 만든다 (새 패키지 없음, 생성물은 커밋).
-- adaptive icon: 배경은 색 `ic_launcher_background`(#08050F), 앞면 `ic_launcher_foreground`, 테마 아이콘(Android 13+) `ic_launcher_monochrome`. 옛 기기용 `ic_launcher.png`도 같은 마크. 원형 · 둥근 사각형 마스크에서 음표가 일부 잘릴 수 있어 마크를 안전 영역 쪽으로 줄여 놓았다.
+- adaptive icon: 배경은 사각형 전체를 아이콘 색 번짐으로 채운 이미지 `ic_launcher_background`(원본 `assets/icon/app_icon_background.png`), 앞면 `ic_launcher_foreground`(광택 원 + 마크), 테마 아이콘(Android 13+) `ic_launcher_monochrome`. 옛 기기용 `ic_launcher.png`는 배경 + 앞면을 합쳐 둥근 사각형으로 자른 것. 원형 · 둥근 사각형 마스크에서 음표가 일부 잘릴 수 있어 마크를 안전 영역 쪽으로 줄여 놓았다.
 - iOS · Windows 아이콘은 Android 이후에 같은 원본으로 만든다 (지금은 Android만).
