@@ -285,11 +285,8 @@ class _DetailViewState extends State<_DetailView> {
 }
 
 /// 영상 · 썸네일 조각 (눌러서 재생, 임시 저장한 곡이면 저장한 영상 · 스트리밍 영상).
-/// [maxHeight]를 주면 그 높이 안에 들어가게 줄여, 낮은 화면에서도 아래가 밀리거나 넘치지 않게 한다.
 class MediaDetailMedia extends StatelessWidget {
-  const MediaDetailMedia({super.key, this.maxHeight});
-
-  final double? maxHeight;
+  const MediaDetailMedia({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -299,28 +296,19 @@ class MediaDetailMedia extends StatelessWidget {
     final p = context.palette;
     final hit = context.watch<MediaDetailCubit>().state.hit;
     final audio = !isYoutubeUrl(hit.url);
-    final pinH = maxHeight;
     final mediaChildren = <Widget>[
                     if (view._playing && view._canEmbed(hit))
-                      Center(
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxWidth: pinH == null ? double.infinity : pinH * 16 / 9,
-                          ),
-                          child: (view.widget.playerBuilder ??
-                              (id, onFailed) => YoutubeEmbedPlayer(
-                                key: ValueKey('embed-$id'),
-                                videoId: id,
-                                onFailed: (_) => onFailed(),
-                              ))(hit.id, view._onEmbedFailed),
-                        ),
-                      )
+                      (view.widget.playerBuilder ??
+                          (id, onFailed) => YoutubeEmbedPlayer(
+                            key: ValueKey('embed-$id'),
+                            videoId: id,
+                            onFailed: (_) => onFailed(),
+                          ))(hit.id, view._onEmbedFailed)
                     else
                       _Thumbnail(
                         hit: hit,
                         inApp: view._canEmbed(hit),
                         audio: audio,
-                        maxHeight: pinH,
                         onPlay: () => unawaited(view._play(hit)),
                       ),
                     if (view._embedBlocked)
@@ -357,18 +345,11 @@ class MediaDetailInfo extends StatelessWidget {
     super.key,
     this.header,
     this.showPreview = false,
-    this.controller,
-    this.bottomInset = 0,
   });
 
   final Widget? header;
   final bool showPreview;
 
-  /// 시트 안에서 쓸 때 시트의 스크롤 컨트롤러 (끌어올리기와 목록 스크롤이 이어지게).
-  final ScrollController? controller;
-
-  /// 목록 맨 아래에 비워 둘 높이 (그 위에 겹쳐 뜨는 버튼에 마지막 줄이 가리지 않게).
-  final double bottomInset;
 
   @override
   Widget build(BuildContext context) {
@@ -430,11 +411,7 @@ class MediaDetailInfo extends StatelessWidget {
     ];
 
     return ListView(
-      controller: controller,
-                  padding: AppSpacing.screen.copyWith(
-                    top: AppSpacing.sm,
-                    bottom: bottomInset,
-                  ),
+                  padding: AppSpacing.screen.copyWith(top: AppSpacing.sm),
                   children: [
                     ?header,
                     const SizedBox(height: AppSpacing.sm),
@@ -676,13 +653,9 @@ class _Thumbnail extends StatelessWidget {
     required this.onPlay,
     this.inApp = false,
     this.audio = false,
-    this.maxHeight,
   });
 
   final MediaHit hit;
-
-  /// 고정해서 쓸 때의 높이 상한 (없으면 [_maxThumbHeight]).
-  final double? maxHeight;
 
   /// 음원(영상이 아님): 정사각형 커버로 보여 준다.
   final bool audio;
@@ -720,14 +693,9 @@ class _Thumbnail extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, box) {
         // 넓은 화면(데스크톱)에서 너무 커지지 않게 높이를 제한하고 가운데에 둔다.
-        final cap = math.min(maxHeight ?? _maxThumbHeight, _maxThumbHeight);
-        // 음원(정사각 커버)을 고정할 때는 영상 칸(16:9)과 같은 높이로 줄여, 고정 영역이 영상 곡보다 커지지 않게 한다.
         final width = audio
-            ? math.min(
-                maxHeight == null ? box.maxWidth : box.maxWidth * 9 / 16,
-                cap,
-              )
-            : math.min(box.maxWidth, cap * 16 / 9);
+            ? math.min(box.maxWidth, _maxThumbHeight)
+            : math.min(box.maxWidth, _maxThumbHeight * 16 / 9);
         return Center(
           child: Stack(
             alignment: Alignment.center,
