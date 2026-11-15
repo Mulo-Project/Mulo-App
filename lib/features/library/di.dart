@@ -36,9 +36,7 @@ void registerLibrary(GetIt sl) {
     )
     ..registerLazySingleton<EmbeddedCoverRepository>(
       () => EmbeddedCoverRepositoryImpl(
-        EmbeddedCoverSource(
-          Platform.isAndroid ? MediaStorePictureReader() : FilePictureReader(),
-        ),
+        EmbeddedCoverSource(MediaStorePictureReader()),
       ),
     )
     ..registerLazySingleton<TrackTagRepository>(

@@ -315,6 +315,7 @@ class MediaStoreChannel(
     }
 
     /** 음악 파일에 내장된 커버 이미지(ID3 APIC · m4a covr · FLAC picture 등)의 원본 바이트. 없으면 null. */
+    @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
     private fun embeddedPicture(uri: Uri): ByteArray? {
         val retriever = MediaMetadataRetriever()
         try {
@@ -322,7 +323,8 @@ class MediaStoreChannel(
             retriever.embeddedPicture?.let { return it }
             // 영상 파일은 내장 커버가 없으니 앞쪽 한 장면을 커버로 쓴다.
             if (context.contentResolver.getType(uri)?.startsWith("video/") == true) return videoFrame(retriever)
-            return null
+            // opus · ogg · webm처럼 retriever가 못 읽는 형식은 Media3가 태그의 그림 칸을 푼다 (형식 처리는 모두 네이티브).
+            return TagReader.picture(context, uri.toString())
         } finally {
             retriever.release()
         }

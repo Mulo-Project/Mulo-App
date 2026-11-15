@@ -57,3 +57,6 @@
 - yt-dlp 영상 저장이 받는 단계에서 403이 나 android_vr 재시도도 실패했다. 재생이 쓰는 `YoutubeResolver`가 읽은 주소(구간 확인 통과)를 같은 헤더로 4MB씩 받고, 영상+소리 두 파일이면 ffmpeg로 이어 붙이는 `NativeVideoSaver`를 추가했다 (mp4만, full 빌드만 합치기 가능).
 - 이 방법을 쓸 수 없거나 실패하면 기존 yt-dlp(+android_vr)로 넘어간다. `MuloNative` 로그: `영상 저장 네이티브 …ms 완료` 또는 `실패, yt-dlp로: …`.
 - 디버그 빌드에서는 영상 저장 실패 사유를 snackbar(DiagNotice)로 보인다.
+
+## 내장 커버 읽기를 네이티브로 모음
+- opus · ogg · webm 내장 커버를 Dart(`audio_metadata_reader` + `METADATA_BLOCK_PICTURE` 직접 풀기, 캐시 복사)로 읽던 경로를 없앴다. `MediaStoreChannel.embeddedPicture`가 `MediaMetadataRetriever` → (영상은 장면) → `TagReader.picture`(Media3가 형식별 그림 칸을 풀어 준다) 순으로 읽고, Dart `MediaStorePictureReader`는 바이트만 받는다. 데스크톱용 `FilePictureReader`와 `vorbis_picture_test.dart`를 지웠다 (Android만 다룬다).
