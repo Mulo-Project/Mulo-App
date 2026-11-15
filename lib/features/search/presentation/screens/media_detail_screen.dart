@@ -415,7 +415,21 @@ class _DetailViewState extends State<_DetailView> {
         children: [
           Padding(
             padding: AppSpacing.screen.copyWith(top: AppSpacing.sm, bottom: 0),
-            child: Column(children: mediaChildren),
+            // 화면이 낮으면 높이의 3할까지만 쓰고 비율대로 줄인다 (아래 조작부가 밀려 넘치지 않게).
+            child: LayoutBuilder(
+              builder: (context, box) => ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.sizeOf(context).height * .3,
+                ),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: SizedBox(
+                    width: math.min(box.maxWidth, _maxThumbHeight * 16 / 9),
+                    child: Column(children: mediaChildren),
+                  ),
+                ),
+              ),
+            ),
           ),
           Expanded(child: listView),
         ],
