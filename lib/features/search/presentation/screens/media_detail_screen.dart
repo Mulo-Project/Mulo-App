@@ -286,14 +286,11 @@ class _DetailViewState extends State<_DetailView> {
                             onFailed: (_) => onFailed(),
                           ))(hit.id, _onEmbedFailed)
                     else
-                      IgnorePointer(
-                        ignoring: widget.embedded,
-                        child: _Thumbnail(
+                      _Thumbnail(
                         hit: hit,
                         inApp: _canEmbed(hit),
                         audio: audio,
                         onPlay: () => unawaited(_play(hit)),
-                      ),
                       ),
                     if (_embedBlocked)
                       Padding(
