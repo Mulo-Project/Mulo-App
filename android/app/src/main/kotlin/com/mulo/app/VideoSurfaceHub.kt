@@ -133,12 +133,14 @@ object VideoSurfaceHub {
         emit = null
     }
 
-    private fun setVideoDisabled(player: ExoPlayer, disabled: Boolean) {
+    /** 영상 해독을 켜거나 끈다. 바뀌었으면 true. */
+    private fun setVideoDisabled(player: ExoPlayer, disabled: Boolean): Boolean {
         val params = player.trackSelectionParameters
-        if (params.disabledTrackTypes.contains(C.TRACK_TYPE_VIDEO) == disabled) return
+        if (params.disabledTrackTypes.contains(C.TRACK_TYPE_VIDEO) == disabled) return false
         player.trackSelectionParameters = params.buildUpon()
             .setTrackTypeDisabled(C.TRACK_TYPE_VIDEO, disabled)
             .build()
+        return true
     }
 
     private fun refresh(keepFrame: Boolean = false) {
@@ -164,11 +166,15 @@ object VideoSurfaceHub {
             MuloLog.PLAYBACK,
             "video refresh attached=$attached target=${target != null} surface=${surface != null} ready=$ready",
         )
-        mainPlayer?.let { setVideoDisabled(it, target !== it || !ready) }
+        val mainChanged = mainPlayer?.let { setVideoDisabled(it, target !== it || !ready) } ?: false
+        val mainTurnedOn = mainChanged && target === mainPlayer && ready
         previewVideo?.let { setVideoDisabled(it, target !== it || !ready) }
         if (target != null && surface != null && ready) {
             target.setVideoSurface(surface)
             sizeChanged(target.videoSize)
+            // 소리가 이미 나는 중에 영상 해독을 늦게 켜면 첫 화면이 안 그려져 멈춘 듯 보인다:
+            // 지금 위치로 한 번 다시 맞춰 영상이 바로 따라오게 한다.
+            if (mainTurnedOn && !firstFrame) target.seekTo(target.currentPosition)
         }
     }
 
