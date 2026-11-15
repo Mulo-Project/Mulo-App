@@ -49,7 +49,7 @@ internal object PlaybackButtons {
         if (!favoriteShown) {
             val blank = CommandButton.Builder(CommandButton.ICON_UNDEFINED)
                 .setCustomIconResId(R.drawable.ic_notif_blank)
-                .setDisplayName("")
+                .setDisplayName(" ")
                 .setSessionCommand(favorite)
                 .build()
             return ImmutableList.of(blank, shuffleButton)
