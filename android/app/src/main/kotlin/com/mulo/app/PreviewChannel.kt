@@ -173,6 +173,8 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
                 p.play()
                 return
             }
+            // 듣던 중 네트워크가 끊겼거나 주소가 만료됐다: 앱을 거치지 않고 네이티브가 주소를 새로 읽어 이어 튼다.
+            if (started && recoverStream(error)) return
             val message = "${error.errorCodeName}: ${error.message ?: ""}"
             val waiting = pending
             if (waiting != null) {
@@ -319,7 +321,63 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
         return created
     }
 
+    /** 이번 곡에서 끊김을 스스로 이은 횟수 (새 곡을 틀면 0). */
+    private var recoveries = 0
+    private var recovering = false
+
+    /**
+     * 듣던 소리가 끊겼을 때(네트워크 · 주소 만료) 유튜브 곡이면 네이티브가 주소를 새로 읽어 끊긴 위치부터 이어 튼다.
+     * 영상을 함께 보는 중이거나 읽지 못하면 false/`failure`로 앱에 알려, 앱이 멈춘 상태로 두고 다시 재생을 받는다.
+     * 시작했으면 true (결과는 비동기로 이어 틀거나 `failure`로 알린다).
+     */
+    private fun recoverStream(error: PlaybackException): Boolean {
+        val p = player ?: return false
+        val id = (meta?.get("url") as? String)?.let { NativeVideoSaver.youtubeIdOf(it) } ?: return false
+        if (recovering || recoveries >= MAX_RECOVERIES) return false
+        if (muxedVideo || mergedVideoUrl != null || videoPlayer != null) return false
+        val recoverable = error.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED ||
+            error.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT ||
+            error.errorCode == PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS ||
+            error.errorCode == PlaybackException.ERROR_CODE_IO_UNSPECIFIED
+        if (!recoverable) return false
+        recovering = true
+        recoveries++
+        val position = p.currentPosition
+        val keptMeta = meta
+        val message = "${error.errorCodeName}: ${error.message ?: ""}"
+        MuloLog.d(MuloLog.PLAYBACK, "미리 듣기 끊김: 주소를 새로 읽어 이어 틀기 시작 (${position}ms, ${recoveries}번째)")
+        Thread {
+            val fresh = try {
+                YoutubeResolver.audio(id, null, false)
+            } catch (e: Exception) {
+                null
+            }
+            main.post {
+                recovering = false
+                // 그 사이 멈추거나 다른 곡으로 바뀌었으면 손대지 않는다.
+                if (player !== p) return@post
+                val url = fresh?.get("url") as? String
+                if (url == null) {
+                    channel.invokeMethod("failure", message)
+                    return@post
+                }
+                @Suppress("UNCHECKED_CAST")
+                val headers = fresh["headers"] as? Map<String, String> ?: emptyMap()
+                val q = ensure(headers, url)
+                playUrl = url
+                playHeaders = headers
+                meta = keptMeta
+                q.setMediaItem(MediaItem.fromUri(Uri.parse(url)), position)
+                q.playWhenReady = true
+                q.prepare()
+                MuloLog.d(MuloLog.PLAYBACK, "미리 듣기 끊김: 새 주소로 이어 틀기 (${position}ms)")
+            }
+        }.start()
+        return true
+    }
+
     private fun play(url: String, headers: Map<String, String>, result: MethodChannel.Result) {
+        recoveries = 0
         // 진행 중이던 호출은 새 곡으로 바뀌었으니 조용히 닫는다.
         pending?.success(null)
         pending = result
@@ -597,6 +655,9 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
 
     companion object {
         const val NAME = "music_app/preview"
+
+        /** 한 곡에서 끊김을 스스로 잇는 최대 횟수 (그 뒤로는 앱에 알려 멈춘 상태로 둔다). */
+        private const val MAX_RECOVERIES = 2
 
         /** 영상 맞추기: 시작할 때 소리보다 앞 지점에서 기다리는 길이, 따라잡기 속도, 되감기 기준 (ms). */
         private const val START_AHEAD_MS = 1500L

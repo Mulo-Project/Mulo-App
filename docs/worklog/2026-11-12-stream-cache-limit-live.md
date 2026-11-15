@@ -27,7 +27,13 @@
 - 알림의 재생 · 일시정지 · 닫기: `SessionPlayer` → `PlaybackHub.previewControl` / `previewStop` → `PreviewChannel`이 직접 처리.
 - 한 곡 반복: `setRepeat`로 값만 알리고, 곡이 끝나면 네이티브가 처음부터 다시 튼다 (`STATE_ENDED`). 앱이 응답하지 않아도 돈다.
 - 멈춤 상태: 네이티브 `onPlayWhenReadyChanged`가 `paused` 이벤트를 보내고, `PreviewCubit`은 그 값을 화면에 반영만 한다 (`WatchPreviewPaused`).
-- 2단계(주소 읽기 · hit 소유 · 끊김 복구)는 Dart의 엔진 라우팅(저장한 곡 주소 조회 · 화질 설정 · yt-dlp 대체 경로)과 얽혀 있어 아직 Dart에 남는다.
+- 2단계(끊김 복구): 듣던 중 네트워크가 끊기거나 주소가 만료돼 소리가 멈추면(`IO_NETWORK_*` · `BAD_HTTP_STATUS`) `PreviewChannel.recoverStream`이
+  앱을 거치지 않고 네이티브 `YoutubeResolver.audio`로 주소를 새로 읽어 끊긴 위치부터 이어 튼다 (한 곡당 최대 2번, 유튜브 · 소리만 듣는 중).
+  못 읽거나 영상을 함께 보는 중이면 예전처럼 `failure`로 앱에 알린다 (앱이 멈춘 상태로 두고 다시 재생 때 이어 튼다).
+  곡 정보(hit)는 `remember`로 이미 네이티브가 쥐고 있어 따로 옮기지 않았다.
+  남은 것: 처음 재생할 때의 주소 읽기는 아직 Dart 엔진 라우팅(저장한 곡 주소 조회 · 화질 설정 · yt-dlp 대체 경로 · 오디오 언어)을 거친다.
+  끊김 복구는 오디오 언어를 고른 곡이어도 기본 음성으로 이어 튼다 (언어를 네이티브에 알리지 않아서).
+  기기 확인: 듣는 중 비행기 모드를 켰다 끄거나 주소 만료 뒤에 `MuloPlayback`의 `미리 듣기 끊김` 로그와 이어 듣기.
 
 ## 추가: 실기기 확인에서 나온 수정
 - 캐시 크기를 바꾸면 미리 듣기가 꺼지던 문제: `StreamCache.setLimit`은 고쳤지만 `PreviewChannel`의 `setCacheLimit`이 먼저 `stop()`을 불러 소리를 끄고 있었다. 그 `stop()`을 뺐다.
