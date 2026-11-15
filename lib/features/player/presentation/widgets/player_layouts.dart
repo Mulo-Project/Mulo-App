@@ -328,7 +328,7 @@ class SavedPlayer extends StatelessWidget {
       child: SafeArea(
         child: Column(
           children: [
-            PlayerTopBar(track: data.track, showMore: false),
+            PlayerTopBar(track: data.track),
             Expanded(
               child: Stack(
                 children: [

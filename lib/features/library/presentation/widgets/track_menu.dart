@@ -84,6 +84,8 @@ Future<void> showTrackMenu(
 }) async {
   final l10n = context.l10n;
   final favorite = context.read<PlaylistsCubit>().isFavorite(track.id);
+  // 임시로 저장한 곡(보관함에 없는 곡)은 재생 화면의 설정(스타일 · 속도)만 되고, 보관함 기능은 뺀다.
+  final temporary = track.id.startsWith(Track.savedIdPrefix);
   final action = await showAppMenu<_TrackAction>(
     context,
     globalPosition: globalPosition,
@@ -101,7 +103,7 @@ Future<void> showTrackMenu(
           label:
               '${l10n.playerSpeedTitle} · ${speedLabel(l10n, context.read<PlaybackSpeedCubit>().state)}',
         ),
-      if (inPlayer && defaultTargetPlatform == TargetPlatform.android)
+      if (inPlayer && !temporary && defaultTargetPlatform == TargetPlatform.android)
         AppMenuItem(
           value: _TrackAction.lyricsOverlay,
           icon: AppIcons.lyrics,
@@ -109,64 +111,66 @@ Future<void> showTrackMenu(
               ? l10n.lyricsOverlayOff
               : l10n.lyricsOverlayOn,
         ),
-      // 지금 재생 중인 곡의 메뉴(재생 화면)에서는 "다음 재생" · "대기열에 추가"를 뺀다.
-      if (!inPlayer)
-        AppMenuItem(
-          value: _TrackAction.playNext,
-          icon: AppIcons.playlistPlay,
-          label: l10n.trackMenuPlayNext,
-        ),
-      if (!inQueue && !inPlayer)
-        AppMenuItem(
-          value: _TrackAction.addToQueue,
-          icon: AppIcons.queue,
-          label: l10n.trackMenuAddToQueue,
-        ),
-      AppMenuItem(
-        value: _TrackAction.addToPlaylist,
-        dividerBefore: inPlayer,
-        icon: AppIcons.playlistAdd,
-        label: l10n.trackMenuAddToPlaylist,
-      ),
-      AppMenuItem(
-        value: _TrackAction.favorite,
-        icon: favorite ? AppIcons.favorite : AppIcons.favoriteOutline,
-        label: favorite ? l10n.trackMenuUnfavorite : l10n.trackMenuFavorite,
-      ),
-      AppMenuItem(
-        value: _TrackAction.editInfo,
-        icon: AppIcons.edit,
-        label: l10n.trackMenuEditInfo,
-      ),
-      if (playlistId == null && !inQueue)
-        AppMenuItem(
-          value: _TrackAction.delete,
-          icon: AppIcons.delete,
-          label: l10n.trackMenuDelete,
-          destructive: true,
-          dividerBefore: true,
-        )
-      else ...[
-        if (inQueue)
+      if (!temporary) ...[
+        // 지금 재생 중인 곡의 메뉴(재생 화면)에서는 "다음 재생" · "대기열에 추가"를 뺀다.
+        if (!inPlayer)
           AppMenuItem(
-            value: _TrackAction.removeFromQueue,
-            icon: AppIcons.playlistRemove,
-            label: l10n.trackMenuRemoveFromQueue,
-            dividerBefore: true,
-          )
-        else
+            value: _TrackAction.playNext,
+            icon: AppIcons.playlistPlay,
+            label: l10n.trackMenuPlayNext,
+          ),
+        if (!inQueue && !inPlayer)
           AppMenuItem(
-            value: _TrackAction.removeFromPlaylist,
-            icon: AppIcons.playlistRemove,
-            label: l10n.trackMenuRemoveFromPlaylist,
-            dividerBefore: true,
+            value: _TrackAction.addToQueue,
+            icon: AppIcons.queue,
+            label: l10n.trackMenuAddToQueue,
           ),
         AppMenuItem(
-          value: _TrackAction.deleteFile,
-          icon: AppIcons.delete,
-          label: l10n.trackMenuDeleteFile,
-          destructive: true,
+          value: _TrackAction.addToPlaylist,
+          dividerBefore: inPlayer,
+          icon: AppIcons.playlistAdd,
+          label: l10n.trackMenuAddToPlaylist,
         ),
+        AppMenuItem(
+          value: _TrackAction.favorite,
+          icon: favorite ? AppIcons.favorite : AppIcons.favoriteOutline,
+          label: favorite ? l10n.trackMenuUnfavorite : l10n.trackMenuFavorite,
+        ),
+        AppMenuItem(
+          value: _TrackAction.editInfo,
+          icon: AppIcons.edit,
+          label: l10n.trackMenuEditInfo,
+        ),
+        if (playlistId == null && !inQueue)
+          AppMenuItem(
+            value: _TrackAction.delete,
+            icon: AppIcons.delete,
+            label: l10n.trackMenuDelete,
+            destructive: true,
+            dividerBefore: true,
+          )
+        else ...[
+          if (inQueue)
+            AppMenuItem(
+              value: _TrackAction.removeFromQueue,
+              icon: AppIcons.playlistRemove,
+              label: l10n.trackMenuRemoveFromQueue,
+              dividerBefore: true,
+            )
+          else
+            AppMenuItem(
+              value: _TrackAction.removeFromPlaylist,
+              icon: AppIcons.playlistRemove,
+              label: l10n.trackMenuRemoveFromPlaylist,
+              dividerBefore: true,
+            ),
+          AppMenuItem(
+            value: _TrackAction.deleteFile,
+            icon: AppIcons.delete,
+            label: l10n.trackMenuDeleteFile,
+            destructive: true,
+          ),
+        ],
       ],
     ],
   );
