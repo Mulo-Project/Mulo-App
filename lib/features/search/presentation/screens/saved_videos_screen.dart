@@ -23,7 +23,7 @@ import '../widgets/preview_control.dart';
 import '../widgets/preview_video.dart';
 import '../widgets/preview_video_controls.dart';
 import '../widgets/video_quality_sheet.dart';
-import 'saved_queue_detail_screen.dart' show showSavedQueueDetail;
+import 'media_detail_screen.dart' show showMediaDetail;
 
 /// 저장한 영상 화면 경로 (검색 탭 안).
 const savedVideosLocation = '/search/saved';
@@ -256,12 +256,8 @@ class _QueueRow extends StatelessWidget {
       } else {
         nowPlaying.playQueue(tracks);
       }
-      // 곡 타일에서 들어갈 때와 같은 상세 화면(하단 조작부)을 연다.
-      final id = savedVideoIdOf(nowPlaying.state.track?.id ?? '');
-      final first = videos.where((v) => v.id == id);
-      if (first.isNotEmpty && context.mounted) {
-        unawaited(showSavedQueueDetail(context, first.first.hit));
-      }
+      // 재생 화면(플레이어)을 연다.
+      if (context.mounted) unawaited(context.push(Routes.player));
     }
 
     // 재생목록 화면처럼: 왼쪽에 재생 · 셔플(알약), 오른쪽 끝에 반복 · 대기열(작은 아이콘).
@@ -408,7 +404,7 @@ class _SavedTile extends StatelessWidget {
 
     final info = InkWell(
       // 정보 부분을 누르면 상세 화면으로 간다 (영상은 위 영역에서 바로 재생).
-      onTap: () => showSavedQueueDetail(context, hit),
+      onTap: () => showMediaDetail(context, hit),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
         child: Row(

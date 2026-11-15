@@ -698,16 +698,12 @@ class PlayerControls extends StatelessWidget {
     required this.data,
     required this.play,
     this.seekBar = true,
-    this.savedMode = false,
   });
 
   final PlayerLayoutData data;
   final Widget play;
   final bool seekBar;
 
-  /// 임시 저장한 음원 상세에서 쓰는 모양: 제목 줄(제목 · 가사 · 좋아요)은 위 상세 화면이 대신하므로 빼고,
-  /// 싱크 · 좋아요처럼 파일 곡에서만 되는 버튼은 숨긴다. 대기열 버튼은 아래 줄로 옮긴다.
-  final bool savedMode;
 
   @override
   Widget build(BuildContext context) {
@@ -732,7 +728,7 @@ class PlayerControls extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (!savedMode) ...[
+          ...[
             // 제목은 위 한 줄에 혼자 두고(길면 흐른다), 버튼은 아티스트 줄 가운데에 맞춘다.
             Align(
               alignment: Alignment.centerLeft,
@@ -770,7 +766,7 @@ class PlayerControls extends StatelessWidget {
           ],
           if (seekBar) ...[
             // 제목 묶음 → 진행 막대 → 재생 조작 → 보조 조작 순으로 틈을 둔다.
-            if (!savedMode) const SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.sm),
             PositionBuilder(
               builder: (context, state) => PlayerSeekBar(
                 progress: state.progress,
@@ -814,7 +810,6 @@ class PlayerControls extends StatelessWidget {
                 const Spacer(),
                 SleepTimerButton(data: data),
                 const EqualizerButton(),
-                if (savedMode) const QueueButton(),
               ],
             ),
           ),

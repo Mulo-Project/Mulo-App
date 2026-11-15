@@ -20,7 +20,6 @@ import '../bloc/media_detail_cubit.dart';
 import '../bloc/media_hit_memo.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../bloc/preview_cubit.dart';
-import '../saved_track.dart';
 import '../bloc/saved_videos_cubit.dart';
 import '../bloc/stream_cache_cubit.dart';
 import '../main_stream_video.dart';
@@ -31,7 +30,6 @@ import '../widgets/video_quality_sheet.dart';
 import '../widgets/audio_language_sheet.dart';
 import 'saved_videos_screen.dart' show savedVideosLocation;
 import '../widgets/preview_control.dart';
-import '../widgets/saved_queue_controls.dart';
 import '../widgets/preview_video.dart';
 import '../widgets/preview_video_controls.dart';
 import '../widgets/video_category.dart';
@@ -78,14 +76,10 @@ class MediaDetailScreen extends StatelessWidget {
     required this.hit,
     @visibleForTesting this.inAppVideo,
     @visibleForTesting this.playerBuilder,
-    this.fromSaved = false,
   });
 
   final MediaHit hit;
 
-
-  /// 저장한 음원 화면에서 열었다: 아래에 재생 목록 조작부를 늘 붙인다 (검색의 받기용 타일에서 연 상세와 다르다).
-  final bool fromSaved;
 
   /// 앱 안 재생 가능 여부를 바꿔 쓴다 (테스트용, 기본은 플랫폼에 따른다).
   final bool? inAppVideo;
@@ -139,7 +133,6 @@ class MediaDetailScreen extends StatelessWidget {
     child: _DetailView(
       inAppVideo: inAppVideo ?? inAppVideoSupported,
       playerBuilder: playerBuilder,
-      fromSaved: fromSaved,
     ),
   );
 }
@@ -148,11 +141,9 @@ class _DetailView extends StatefulWidget {
   const _DetailView({
     required this.inAppVideo,
     this.playerBuilder,
-    this.fromSaved = false,
   });
 
   final bool inAppVideo;
-  final bool fromSaved;
   final Widget Function(String videoId, VoidCallback onFailed)? playerBuilder;
 
   @override
@@ -199,43 +190,10 @@ class _DetailViewState extends State<_DetailView> {
       isYoutubeUrl(hit.url) &&
       isYoutubeVideoId(hit.id);
 
-  /// 저장한 음원 화면에서 연 상세에서 처음 재생: 메인 재생 대기열로 시작한다 (영상으로 저장한 곡은 영상으로 나온다).
-  Future<void> _startSaved(MediaHit hit) async {
-    final now = context.read<NowPlayingCubit>();
-    final saved = context.read<SavedVideosCubit>().state;
-    final at = saved.indexWhere((v) => v.id == hit.id);
-    final ready = at >= 0 && saved[at].ready;
-    // 두 소리가 겹치지 않게 미리 듣기는 멈추고, 메인 재생 대기열로 시작한다.
-    await _preview.stop();
-    // 이미 메인 대기열에 있는 곡이면 대기열을 바꾸지 않고 그 곡으로 건너뛴다 (재생 목록이 다른 임시 음원으로 갈아치워지지 않게).
-    final inQueue = now.state.queue.indexWhere(
-      (t) => t.id == '${Track.savedIdPrefix}${hit.id}',
-    );
-    if (ready && inQueue >= 0) {
-      now.jumpTo(inQueue);
-      if (!now.state.isPlaying) now.togglePlay();
-      return;
-    }
-    if (!ready) {
-      // 아직 다 받지 못한 곡은 한 곡만 미리 듣기로 튼다.
-      unawaited(
-        _preview.toggle(hit, videoQuality: at < 0 ? null : saved[at].quality),
-      );
-      return;
-    }
-    final tracks = await savedTracksResolved(saved);
-    final index = tracks.indexWhere(
-      (t) => t.id == '${Track.savedIdPrefix}${hit.id}',
-    );
-    if (tracks.isEmpty) return;
-    now.playQueue(tracks, index: index < 0 ? 0 : index);
-  }
-
   /// 썸네일의 재생 버튼: 앱 안에서 틀 수 있는 유튜브 영상은 미리 듣기(소리 + 영상)로 그 자리에서 튼다.
   /// 그 화면을 나가면 미니 플레이어가 영상을 이어서 보여 준다.
   /// 미리 듣기를 시작하지 못하면 앱 안 플레이어(웹뷰)로, 그것도 안 되면 유튜브로 연다.
   Future<void> _play(MediaHit hit) async {
-    if (widget.fromSaved) return _startSaved(hit);
     if (widget.inAppVideo && isYoutubeUrl(hit.url)) {
       // 언어 목록을 아직 읽는 중이면 기다려, 시스템 언어 기본값이 빠지지 않게 한다.
       final language = await context
@@ -374,15 +332,10 @@ class _DetailViewState extends State<_DetailView> {
           child: Column(
             children: [
               AppTopBar(
-                title: widget.fromSaved ? l10n.playerNowPlaying : l10n.mediaDetailTitle,
-                // 저장 상세는 플레이어 화면의 맨 위 줄과 같은 모양이다 (일반 곡과 넘어갈 때 화면이 들썩이지 않게).
-                leading: widget.fromSaved
-                    ? CircleIconButton(
-                        icon: AppIcons.chevronDown,
-                        tooltip: l10n.actionBack,
-                        onPressed: () => Navigator.of(context).pop(),
-                      )
-                    : AppBackButton(onPressed: () => Navigator.of(context).pop()),
+                title: l10n.mediaDetailTitle,
+                leading: AppBackButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
                 // 라이브가 아니면 저장해 둘 수 있다 (유튜브는 영상이라 화질을 고르고, 사운드클라우드 등은 음원만).
                 actions: [if (!hit.isLive) _SaveButton(hit: hit)],
               ),
@@ -487,22 +440,8 @@ class _DetailViewState extends State<_DetailView> {
                   ],
                 ),
               ),
-              // 재생 · 받기 버튼은 아래에 고정한다 (저장 상세에서는 공통 조작부 바로 위).
-              if (widget.fromSaved) actionRow,
-              // 저장한 음원 화면에서 연 상세는 재생 조작부를 아래에 늘 고정한다.
-              if (widget.fromSaved)
-                Builder(
-                  builder: (context) {
-                    final now = context.watch<NowPlayingCubit>();
-                    final current = now.state.track?.id ?? '';
-                    // 메인 재생이 임시 저장한 음원을 듣는 중이면 이 곡이 아니어도 같은 조작부를 쓴다.
-                    if (current.startsWith(Track.savedIdPrefix)) {
-                      return const SavedQueueControls();
-                    }
-                    return SavedQueueControls(onStart: () => _startSaved(hit));
-                  },
-                ),
-              if (!widget.fromSaved) actionRow,
+              // 재생 · 받기 버튼은 아래에 고정한다.
+              actionRow,
             ],
           ),
         ),
