@@ -353,10 +353,18 @@ class MediaDetailMedia extends StatelessWidget {
 /// 정보 조각: 제목 · 채널 · 정보 · 설명 목록 (스크롤). [header]는 목록 맨 위에 같이 스크롤되는 자리.
 /// [showPreview]면 미리 듣기 구역도 보인다.
 class MediaDetailInfo extends StatelessWidget {
-  const MediaDetailInfo({super.key, this.header, this.showPreview = false});
+  const MediaDetailInfo({
+    super.key,
+    this.header,
+    this.showPreview = false,
+    this.controller,
+  });
 
   final Widget? header;
   final bool showPreview;
+
+  /// 시트 안에서 쓸 때 시트의 스크롤 컨트롤러 (끌어올리기와 목록 스크롤이 이어지게).
+  final ScrollController? controller;
 
   @override
   Widget build(BuildContext context) {
@@ -418,6 +426,7 @@ class MediaDetailInfo extends StatelessWidget {
     ];
 
     return ListView(
+      controller: controller,
                   padding: AppSpacing.screen.copyWith(top: AppSpacing.sm),
                   children: [
                     ?header,

@@ -175,19 +175,67 @@ class _PlayerScreenState extends State<PlayerScreen> {
   };
 }
 
-/// 임시 저장한 곡 플레이어의 가운데: 영상 · 썸네일(커버)을 위에 고정하고 정보 목록만 스크롤한다.
-/// 음원(SoundCloud 등)의 정사각 커버는 영상 칸과 같은 높이로 줄여, 스크롤 영역이 좁아지지 않게 한다.
+/// 임시 저장한 곡 플레이어의 가운데: 일반 곡처럼 썸네일 · 영상만 크게 보이고,
+/// 정보 목록은 아래에 살짝 보이는 시트로 두어 위로 끌어올릴 때만 펼친다 (스크롤 영역이 좁아지지 않게).
 class _SavedDetailPanel extends StatelessWidget {
   const _SavedDetailPanel();
 
+  /// 접었을 때 시트가 보이는 높이 (패널 높이의 비율).
+  static const _peek = .14;
+
   @override
-  Widget build(BuildContext context) => Column(
-    children: [
-      Padding(
-        padding: AppSpacing.screen.copyWith(top: AppSpacing.sm, bottom: 0),
-        child: const MediaDetailMedia(pinned: true),
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return LayoutBuilder(
+      builder: (context, box) => Stack(
+        children: [
+          Positioned.fill(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: box.maxHeight * _peek),
+              child: const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                  child: MediaDetailMedia(),
+                ),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: DraggableScrollableSheet(
+              initialChildSize: _peek,
+              minChildSize: _peek,
+              maxChildSize: .92,
+              snap: true,
+              builder: (context, controller) => GlassSurface(
+                solid: true,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(AppRadii.sheet),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSpacing.sm,
+                      ),
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: p.outline,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    Expanded(child: MediaDetailInfo(controller: controller)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
-      const Expanded(child: MediaDetailInfo()),
-    ],
-  );
+    );
+  }
 }
