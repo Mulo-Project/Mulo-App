@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -6,7 +8,7 @@ import '../../../../core/design/design.dart';
 import '../../../search/domain/entities/media_info.dart';
 import '../../../search/presentation/bloc/saved_videos_cubit.dart';
 import '../../../search/presentation/saved_track.dart';
-import '../../../search/presentation/screens/saved_queue_detail_screen.dart';
+import '../../../search/presentation/screens/media_detail_screen.dart';
 import '../bloc/now_playing_cubit.dart';
 import '../bloc/player_style_cubit.dart';
 import '../widgets/player_common.dart';
@@ -17,10 +19,7 @@ import '../widgets/player_style_sheet.dart';
 /// 셔플·반복 #15, 재생 대기열 편집 #16 — 대기열은 보기 · 선택만).
 /// 모양은 더 보기 메뉴의 "플레이어 테마"로 고른다 ([PlayerStyle], D-039).
 class PlayerScreen extends StatefulWidget {
-  const PlayerScreen({super.key, this.focus});
-
-  /// 저장 타일에서 열었을 때 먼저 보여 줄 임시 저장 곡 (없으면 지금 재생 중인 곡을 따른다).
-  final MediaHit? focus;
+  const PlayerScreen({super.key});
 
   @override
   State<PlayerScreen> createState() => _PlayerScreenState();
@@ -29,13 +28,6 @@ class PlayerScreen extends StatefulWidget {
 class _PlayerScreenState extends State<PlayerScreen> {
   /// 커버 ↔ 가사 전환 (상세 기능: 가사).
   bool get _showLyrics => playerShowLyrics.value;
-
-  /// 타일에서 눌러 들어온 곡. 재생 곡이 일반 곡으로 넘어가면 놓는다.
-  late MediaHit? _focus = widget.focus;
-
-  /// 임시 저장 곡의 다운로드 상세를 보이는 중 (타일에서 눌러 왔으면 처음부터).
-  late bool _download = widget.focus != null;
-  String? _lastTrackId;
 
   @override
   void initState() {
@@ -106,42 +98,27 @@ class _PlayerScreenState extends State<PlayerScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) => _closeIfEmpty());
     }
 
-    // 임시 저장한 음원이면 같은 화면 안에서 커버 ↔ 다운로드 상세를 오간다 (가사 보기와 같은 방식).
-    // 커버(썸네일)를 누르면 다운로드 상세로, 상세의 맨 위 버튼으로 다시 플레이어 모양으로 돌아온다.
-    // 아래 조작부는 두 모양 모두 같은 위젯이다.
+    // 임시 저장한 음원이면 썸네일 자리를 "다운로드 영역"으로 삼는다: 누르면 조작부 없이 다운로드 페이지 자체로 이동한다.
+    // 레이아웃과 아래 조작부는 일반 곡과 같은 위젯이라 곡이 넘어가도 화면이 바뀌지 않는다.
     final savedId = track == null ? null : savedVideoIdOf(track.id);
-    if (_lastTrackId != null && track != null && track.id != _lastTrackId) {
-      // 곡이 넘어가면 플레이어 모양으로 되돌린다 (일반 곡이면 타일에서 눌러 온 곡도 놓는다).
-      _download = false;
-      if (savedId == null) _focus = null;
-    }
-    _lastTrackId = track?.id;
-    final focus = _focus;
-    MediaHit? savedHit;
-    if (focus != null) {
-      savedHit = focus;
-    } else if (savedId != null) {
-      savedHit = context
-          .watch<SavedVideosCubit>()
-          .state
-          .where((v) => v.id == savedId)
-          .firstOrNull
-          ?.hit;
-    }
-    if (savedHit != null && (_download || focus != null)) {
-      return SavedQueueDetailScreen(
-        hit: savedHit,
-        onShowPlayer: track == null
-            ? null
-            : () => setState(() {
-                _download = false;
-                _focus = null;
-              }),
-      );
-    }
+    final savedHit = savedId == null
+        ? null
+        : context
+              .watch<SavedVideosCubit>()
+              .state
+              .where((v) => v.id == savedId)
+              .firstOrNull
+              ?.hit;
     final onCoverTap = savedHit == null
         ? null
-        : () => setState(() => _download = true);
+        : () => unawaited(
+            Navigator.of(context, rootNavigator: true).push<void>(
+              MaterialPageRoute(
+                settings: RouteSettings(name: mediaDetailRouteName(savedHit.id)),
+                builder: (_) => MediaDetailScreen(hit: savedHit),
+              ),
+            ),
+          );
     return Scaffold(
       backgroundColor: context.palette.background,
       body: track == null
