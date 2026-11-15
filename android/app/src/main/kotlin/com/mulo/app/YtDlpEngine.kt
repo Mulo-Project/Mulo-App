@@ -190,15 +190,18 @@ class YtDlpEngine(
      */
     fun saveVideo(url: String, maxHeight: Int, extension: String, dir: File, stem: String, onProgress: (Double) -> Unit) {
         if (!runner.available) throw YtDlpException("unavailable", "yt-dlp")
-        val id = nextId()
-        val args = listOf(
-            "-f", YtDlpParsers.saveSelector(maxHeight, extension),
-            "--merge-output-format", extension,
-            "--no-playlist", "--no-warnings", "--newline",
-            "-o", File(dir, "$stem.%(ext)s").path, url,
-        )
-        val r = runWithTimeout(id, saveTimeoutMs) { runner.run(args, id, onProgress) }
-        if (r.exitCode != 0) throw YtDlpException("failed", r.stderr.trim())
+        // 기본 클라이언트로 받다가 403(Forbidden) 같은 오류가 나면 `android_vr`로 한 번 더 시도한다 (주소 읽기와 같은 순서).
+        withFallback { extra ->
+            val id = nextId()
+            val args = listOf(
+                "-f", YtDlpParsers.saveSelector(maxHeight, extension),
+                "--merge-output-format", extension,
+                "--no-playlist", "--no-warnings", "--newline",
+                "-o", File(dir, "$stem.%(ext)s").path,
+            ) + extra + url
+            val r = runWithTimeout(id, saveTimeoutMs) { runner.run(args, id, onProgress) }
+            if (r.exitCode != 0) throw YtDlpException(YtDlpParsers.failureCode(r.stderr.trim()), r.stderr.trim())
+        }
     }
 
     private fun decode(s: String): JSONObject? {

@@ -50,3 +50,4 @@
 - 정정: 임시 저장 곡의 가운데는 썸네일이 아니라 다운로드 페이지 내용이다 (`SavedPlayer`가 `MediaDetailScreen(embedded: true)`를 끼운다). 오른쪽 위 확장 버튼(`saved-expand`)을 누르면 다운로드 페이지 자체로 이동한다. 커버 누름(`onCoverTap`)은 걷어냈다.
 - 설정의 영상 화질 시트가 낮은 화면 · 큰 글자에서 넘치던 문제: 내용을 `SingleChildScrollView`로 감싸고 `isScrollControlled` · `useSafeArea`로 열도록 했다 (저장 화질 시트와 같은 방식).
 - 가운데(다운로드 영역)의 썸네일은 눌림을 막지 않는다: 지금 메인 재생 중인 임시 저장 곡이라 영상 곡은 메인 영상(컨트롤 포함), 소리만 저장한 곡은 영상 재생 버튼이 그대로 동작한다. 미리 듣기 영역만 뺐다.
+- 영상 저장(`saveVideo`)이 403(Forbidden)으로 실패하던 문제: 주소 읽기와 같이 기본 클라이언트로 실패하면 `android_vr`로 한 번 더 받는다 (`withFallback`). 테스트 `saveVideoRetriesWithAndroidVrOnForbidden` 추가.

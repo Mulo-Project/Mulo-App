@@ -166,6 +166,18 @@ class YtDlpEngineTest {
         assertEquals("failed", code { engine(bad).saveVideo("https://x", 720, "mp4", tmp.root, "s") {} })
     }
 
+    @Test
+    fun saveVideoRetriesWithAndroidVrOnForbidden() {
+        val r = Fake { args ->
+            if (args.contains("youtube:player_client=android_vr")) ok("")
+            else YtDlpRun(1, "", "ERROR: unable to download video data: HTTP Error 403: Forbidden")
+        }
+        engine(r).saveVideo("https://youtu.be/x", 720, "mp4", tmp.root, "s") {}
+        assertEquals(2, r.calls.size)
+        assertEquals("https://youtu.be/x", r.calls.last().last())
+        assertTrue(r.calls.last().contains("youtube:player_client=android_vr"))
+    }
+
     private val avatarPage = """<meta property="og:image" content="https://i1.sndcdn.com/avatars-000-abc-large.jpg">"""
 
     @Test
