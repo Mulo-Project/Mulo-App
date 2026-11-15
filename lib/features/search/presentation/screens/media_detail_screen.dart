@@ -81,6 +81,8 @@ class MediaDetailScreen extends StatelessWidget {
 
   final MediaHit hit;
 
+  /// 플레이어 화면 가운데에 끼워 넣는 모양: 화면 틀(맨 위 줄 · 아래 버튼) 없이 내용 목록만 그린다 (임시 저장 곡의 다운로드 영역).
+  final bool embedded;
 
   /// 앱 안 재생 가능 여부를 바꿔 쓴다 (테스트용, 기본은 플랫폼에 따른다).
   final bool? inAppVideo;
