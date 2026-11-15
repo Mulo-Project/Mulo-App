@@ -310,6 +310,62 @@ class _DetailViewState extends State<_DetailView> {
         ),
     ];
 
+    final actionRow =
+        Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.xs,
+                  AppSpacing.md,
+                  AppSpacing.md,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: PillButton(
+                        key: const ValueKey('detail-watch'),
+                        label: youtube
+                            ? l10n.mediaDetailWatchYoutube
+                            : isSoundcloudUrl(hit.url)
+                            ? l10n.mediaDetailListenSoundcloud
+                            : l10n.mediaDetailListenOriginal,
+                        icon: AppIcons.play,
+                        // 이 앱의 주 동작은 받기라서 원본 열기는 보조(tonal)로 둔다.
+                        variant: PillVariant.tonal,
+                        onPressed: () => _open(hit.url),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: PillButton(
+                        key: const ValueKey('detail-download'),
+                        label: l10n.actionDownload,
+                        icon: AppIcons.download,
+                        // 실시간 스트리밍은 끝이 없어 받을 수 없다 (버튼을 비활성으로).
+                        onPressed: hit.isLive
+                            ? null
+                            : () => showDownloadDialog(
+                                context,
+                                title: hit.title,
+                                artist: hit.uploader,
+                                album: hit.album,
+                                duration: hit.duration,
+                                thumbnailUrl: hit.thumbnailUrl,
+                                url: hit.url,
+                                subtitleLangs: hit.subtitleLangs.isEmpty
+                                    ? null
+                                    : hit.subtitleLangs,
+                                autoSubtitleLangs: hit.autoSubtitleLangs,
+                                audioLanguage: context
+                                    .read<AudioLanguageCubit>()
+                                    .state
+                                    .selected,
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+
     return Scaffold(
       backgroundColor: p.background,
       body: AppBackground(
@@ -317,10 +373,15 @@ class _DetailViewState extends State<_DetailView> {
           child: Column(
             children: [
               AppTopBar(
-                title: l10n.mediaDetailTitle,
-                leading: AppBackButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
+                title: widget.fromSaved ? l10n.playerNowPlaying : l10n.mediaDetailTitle,
+                // 저장 상세는 플레이어 화면의 맨 위 줄과 같은 모양이다 (일반 곡과 넘어갈 때 화면이 들썩이지 않게).
+                leading: widget.fromSaved
+                    ? CircleIconButton(
+                        icon: AppIcons.chevronDown,
+                        tooltip: l10n.actionBack,
+                        onPressed: () => Navigator.of(context).pop(),
+                      )
+                    : AppBackButton(onPressed: () => Navigator.of(context).pop()),
                 // 라이브가 아니면 저장해 둘 수 있다 (유튜브는 영상이라 화질을 고르고, 사운드클라우드 등은 음원만).
                 actions: [if (!hit.isLive) _SaveButton(hit: hit)],
               ),
@@ -422,6 +483,7 @@ class _DetailViewState extends State<_DetailView> {
                         ],
                       ),
                     const SizedBox(height: AppSpacing.md),
+                    if (widget.fromSaved) actionRow,
                   ],
                 ),
               ),
@@ -438,60 +500,8 @@ class _DetailViewState extends State<_DetailView> {
                     return SavedQueueControls(onStart: () => _startSaved(hit));
                   },
                 ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  AppSpacing.xs,
-                  AppSpacing.md,
-                  AppSpacing.md,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: PillButton(
-                        key: const ValueKey('detail-watch'),
-                        label: youtube
-                            ? l10n.mediaDetailWatchYoutube
-                            : isSoundcloudUrl(hit.url)
-                            ? l10n.mediaDetailListenSoundcloud
-                            : l10n.mediaDetailListenOriginal,
-                        icon: AppIcons.play,
-                        // 이 앱의 주 동작은 받기라서 원본 열기는 보조(tonal)로 둔다.
-                        variant: PillVariant.tonal,
-                        onPressed: () => _open(hit.url),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Expanded(
-                      child: PillButton(
-                        key: const ValueKey('detail-download'),
-                        label: l10n.actionDownload,
-                        icon: AppIcons.download,
-                        // 실시간 스트리밍은 끝이 없어 받을 수 없다 (버튼을 비활성으로).
-                        onPressed: hit.isLive
-                            ? null
-                            : () => showDownloadDialog(
-                                context,
-                                title: hit.title,
-                                artist: hit.uploader,
-                                album: hit.album,
-                                duration: hit.duration,
-                                thumbnailUrl: hit.thumbnailUrl,
-                                url: hit.url,
-                                subtitleLangs: hit.subtitleLangs.isEmpty
-                                    ? null
-                                    : hit.subtitleLangs,
-                                autoSubtitleLangs: hit.autoSubtitleLangs,
-                                audioLanguage: context
-                                    .read<AudioLanguageCubit>()
-                                    .state
-                                    .selected,
-                              ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              // 받기 · 원본 열기 버튼: 저장 상세(플레이어 화면 안)에서는 위 목록 끝으로 올려 아래에는 공통 조작부만 둔다.
+              if (!widget.fromSaved) actionRow,
             ],
           ),
         ),
