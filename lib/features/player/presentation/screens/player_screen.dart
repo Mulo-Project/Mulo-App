@@ -160,7 +160,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
           hit: savedHit,
           embedded: true,
           // 영상으로 저장한 곡은 위에 영상이 나오므로 정보 영역의 썸네일 · 영상 칸은 뺀다.
-          hideMedia: data.track.isVideo,
+          hideMedia: true,
         ),
         expandTooltip: context.l10n.mediaDetailTitle,
         onExpand: () => unawaited(showMediaDetail(context, savedHit)),
