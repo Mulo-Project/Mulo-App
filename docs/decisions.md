@@ -1021,3 +1021,9 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 - 지금은 Android만 개발하므로 데스크톱용 Dart yt-dlp 실행(`Process`)과 데스크톱 OAuth(`LoopbackGoogleAuth`)를 지웠다. 데스크톱을 만들 때 다시 설계한다.
 - 구글 로그인은 `google_sign_in` 플러그인 감싸기로 남긴다 (네이티브 재작성은 새 의존성이 필요해 따로 정한다).
 - D-165 추가: 임시 저장 곡도 재생 화면은 플레이어 화면(`Routes.player`) 하나다. 일반 곡과 같은 틀(맨 위 줄 · 아래 조작부)에 가운데만 다운로드 페이지 내용(`MediaDetailScreen(embedded: true)`)을 보여 주고(`SavedPlayer`), 오른쪽 위 확장 버튼을 누르면 다운로드 페이지 자체(`showMediaDetail`)로 이동한다. 저장 타일은 그 곡부터 틀고 재생 화면을 연다(받는 중인 곡만 다운로드 페이지). `SavedQueueDetailScreen` · `SavedQueueControls` · `PlayerControls.savedMode` · `MediaDetailScreen.fromSaved`는 없앴다 (D-160 · D-161의 해당 부분을 대체). 재생 · 받기 버튼은 다운로드 페이지 아래에 고정한다.
+
+## D-165 · 2026-11-15 · 앱 아이콘: M + 재생 + 음표 마크, adaptive icon (Android)
+- 마크: M 윗선 · 재생 삼각형 · 음표를 한 글자로 합친 모양. 어두운 원 가장자리에 보라 · 파랑 · 청록 · 초록 · 라임 · 주황 · 분홍 빛이 번지고, 음표는 원 밖으로 나와 외곽선이 그 둘레를 따라간다.
+- 원본은 `assets/icon/app_icon.png`(색, 투명 배경 1024), `assets/icon/app_icon_mono.png`(단색 마크). Android 리소스는 `python3 tool/gen_android_icon.py`로 만든다 (새 패키지 없음, 생성물은 커밋).
+- adaptive icon: 배경은 사각형 전체를 아이콘 색 번짐으로 채운 이미지 `ic_launcher_background`(원본 `assets/icon/app_icon_background.png`), 앞면 `ic_launcher_foreground`(광택 원 + 마크), 테마 아이콘(Android 13+) `ic_launcher_monochrome`. 옛 기기용 `ic_launcher.png`는 배경 + 앞면을 합쳐 둥근 사각형으로 자른 것. 원형 · 둥근 사각형 마스크에서 음표가 일부 잘릴 수 있어 마크를 안전 영역 쪽으로 줄여 놓았다.
+- iOS · Windows 아이콘은 Android 이후에 같은 원본으로 만든다 (지금은 Android만).
