@@ -60,7 +60,12 @@ class YtDlpVideoSaveRepository implements VideoSaveRepository {
         onProgress: onProgress,
       );
       output = await _find(dir, stem, request.format.extension);
-      if (output == null) throw const VideoSaveException('no output file');
+      if (output == null) {
+        // 어떤 파일이 남았는지 함께 알린다 (합치는 형식이 안 맞으면 yt-dlp가 mkv 같은 다른 확장자로 만든다).
+        throw VideoSaveException(
+          'no output file (want ${request.format.extension}, found: ${await _leftovers(dir, stem)})',
+        );
+      }
       // 태그를 못 써도 영상은 그대로 저장한다.
       await tags?.embed(
         output,
@@ -104,6 +109,20 @@ class YtDlpVideoSaveRepository implements VideoSaveRepository {
   static Future<File?> _find(Directory dir, String stem, String ext) async {
     final mp4 = File('${dir.path}${Platform.pathSeparator}$stem.$ext');
     return await mp4.exists() && await mp4.length() > 0 ? mp4 : null;
+  }
+
+  /// [stem]으로 시작하는 파일 이름들 (실패 원인을 보이려고).
+  static Future<String> _leftovers(Directory dir, String stem) async {
+    try {
+      final names = [
+        await for (final e in dir.list())
+          if (e is File && e.uri.pathSegments.last.startsWith(stem))
+            '${e.uri.pathSegments.last.substring(stem.length)}(${await e.length()}B)',
+      ];
+      return names.isEmpty ? 'none' : names.join(', ');
+    } on Object {
+      return '?';
+    }
   }
 
   /// 받다 만 조각 · 합치기 전 파일을 지운다.
