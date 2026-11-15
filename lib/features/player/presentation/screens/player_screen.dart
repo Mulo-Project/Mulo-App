@@ -159,7 +159,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
           key: ValueKey(savedHit.id),
           hit: savedHit,
           embedded: true,
-          // 영상으로 저장한 곡은 위에 영상이 나오므로 정보 영역의 썸네일 · 영상 칸은 뺀다.
+          // 영상 · 썸네일 칸을 정보 영역 위에 고정한다 (영상 저장 곡은 이 칸이 영상 화면이 된다).
           pinMedia: true,
         ),
         expandTooltip: context.l10n.mediaDetailTitle,

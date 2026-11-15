@@ -625,7 +625,7 @@ class _Thumbnail extends StatelessWidget {
     final mainVideo = context.select(
       (NowPlayingCubit c) =>
           c.state.track?.id == '${Track.savedIdPrefix}${hit.id}' &&
-          c.state.track!.hasVideo,
+          c.state.track!.isVideo,
     );
     // 소리만 저장한 곡을 메인 재생으로 듣는 중: 영상은 스트림으로 읽어 메인 소리에 맞춰 보여 준다 (유튜브만).
     final mainAudioOnly =
@@ -634,7 +634,7 @@ class _Thumbnail extends StatelessWidget {
         context.select(
           (NowPlayingCubit c) =>
               c.state.track?.id == '${Track.savedIdPrefix}${hit.id}' &&
-              !c.state.track!.hasVideo,
+              !c.state.track!.isVideo,
         );
     return LayoutBuilder(
       builder: (context, box) {
