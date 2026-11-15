@@ -187,6 +187,21 @@ Future<void> _playFrom(BuildContext context, SavedVideo video) async {
   nowPlaying.playQueue(tracks, index: at);
 }
 
+/// 타일을 눌렀다: 재생 화면을 연다 (끝까지 받은 곡이면 그 곡부터 틀고, 못 틀면 다운로드 페이지).
+Future<void> _openPlayerFor(BuildContext context, SavedVideo video) async {
+  final nowPlaying = context.read<NowPlayingCubit>();
+  final id = '${Track.savedIdPrefix}${video.id}';
+  if (video.ready && nowPlaying.state.track?.id != id) {
+    await _playFrom(context, video);
+  }
+  if (!context.mounted) return;
+  if (nowPlaying.state.track?.id == id) {
+    unawaited(context.push(Routes.player));
+  } else {
+    unawaited(showMediaDetail(context, video.hit));
+  }
+}
+
 enum _SavedAction { playNext, addToQueue, remove }
 
 /// 임시 저장한 음원의 ⋮ 메뉴. 대기열에는 끝까지 받은 곡만 넣는다.
@@ -403,8 +418,9 @@ class _SavedTile extends StatelessWidget {
     ].join(' · ');
 
     final info = InkWell(
-      // 정보 부분을 누르면 상세 화면으로 간다 (영상은 위 영역에서 바로 재생).
-      onTap: () => showMediaDetail(context, hit),
+      // 정보 부분을 누르면 재생 화면을 연다: 끝까지 받은 곡은 그 곡부터 목록 재생을 시작한다 (이미 듣는 중이면 그대로 연다).
+      // 아직 받는 중인 곡은 대기열에 못 넣으니 다운로드 페이지를 연다. 재생 화면의 썸네일을 누르면 다운로드 페이지로 간다.
+      onTap: () => unawaited(_openPlayerFor(context, video)),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
         child: Row(
