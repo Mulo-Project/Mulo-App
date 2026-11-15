@@ -32,6 +32,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   /// 타일에서 눌러 들어온 곡. 재생 곡이 일반 곡으로 넘어가면 놓는다.
   late MediaHit? _focus = widget.focus;
+
+  /// 임시 저장 곡의 다운로드 상세를 보이는 중 (타일에서 눌러 왔으면 처음부터).
+  late bool _download = widget.focus != null;
   String? _lastTrackId;
 
   @override
@@ -103,21 +106,42 @@ class _PlayerScreenState extends State<PlayerScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) => _closeIfEmpty());
     }
 
-    // 임시 저장한 음원이면 같은 플레이어 화면 안에서 썸네일 자리에 다운로드 상세를 보여 준다
-    // (아래 조작부는 같은 위젯이라, 일반 곡 ↔ 임시 저장 곡이 넘어가도 화면을 닫고 여는 일이 없다).
+    // 임시 저장한 음원이면 같은 화면 안에서 커버 ↔ 다운로드 상세를 오간다 (가사 보기와 같은 방식).
+    // 커버(썸네일)를 누르면 다운로드 상세로, 상세의 맨 위 버튼으로 다시 플레이어 모양으로 돌아온다.
+    // 아래 조작부는 두 모양 모두 같은 위젯이다.
     final savedId = track == null ? null : savedVideoIdOf(track.id);
     if (_lastTrackId != null && track != null && track.id != _lastTrackId) {
+      // 곡이 넘어가면 플레이어 모양으로 되돌린다 (일반 곡이면 타일에서 눌러 온 곡도 놓는다).
+      _download = false;
       if (savedId == null) _focus = null;
     }
     _lastTrackId = track?.id;
     final focus = _focus;
-    if (focus != null) return SavedQueueDetailScreen(hit: focus);
-    if (savedId != null) {
-      final match = context.watch<SavedVideosCubit>().state.where(
-        (v) => v.id == savedId,
-      );
-      if (match.isNotEmpty) return SavedQueueDetailScreen(hit: match.first.hit);
+    MediaHit? savedHit;
+    if (focus != null) {
+      savedHit = focus;
+    } else if (savedId != null) {
+      savedHit = context
+          .watch<SavedVideosCubit>()
+          .state
+          .where((v) => v.id == savedId)
+          .firstOrNull
+          ?.hit;
     }
+    if (savedHit != null && (_download || focus != null)) {
+      return SavedQueueDetailScreen(
+        hit: savedHit,
+        onShowPlayer: track == null
+            ? null
+            : () => setState(() {
+                _download = false;
+                _focus = null;
+              }),
+      );
+    }
+    final onCoverTap = savedHit == null
+        ? null
+        : () => setState(() => _download = true);
     return Scaffold(
       backgroundColor: context.palette.background,
       body: track == null
@@ -132,6 +156,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   showLyrics: _showLyrics,
                   onToggleLyrics: () =>
                       playerShowLyrics.value = !playerShowLyrics.value,
+                  onCoverTap: onCoverTap,
                 ),
               ),
             ),

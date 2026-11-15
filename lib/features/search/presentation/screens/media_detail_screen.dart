@@ -79,9 +79,13 @@ class MediaDetailScreen extends StatelessWidget {
     @visibleForTesting this.inAppVideo,
     @visibleForTesting this.playerBuilder,
     this.fromSaved = false,
+    this.onShowPlayer,
   });
 
   final MediaHit hit;
+
+  /// 저장 상세를 플레이어 화면 안에서 보일 때, 커버 모양으로 돌아가는 버튼의 동작.
+  final VoidCallback? onShowPlayer;
 
   /// 저장한 음원 화면에서 열었다: 아래에 재생 목록 조작부를 늘 붙인다 (검색의 받기용 타일에서 연 상세와 다르다).
   final bool fromSaved;
@@ -139,6 +143,7 @@ class MediaDetailScreen extends StatelessWidget {
       inAppVideo: inAppVideo ?? inAppVideoSupported,
       playerBuilder: playerBuilder,
       fromSaved: fromSaved,
+      onShowPlayer: onShowPlayer,
     ),
   );
 }
@@ -148,10 +153,12 @@ class _DetailView extends StatefulWidget {
     required this.inAppVideo,
     this.playerBuilder,
     this.fromSaved = false,
+    this.onShowPlayer,
   });
 
   final bool inAppVideo;
   final bool fromSaved;
+  final VoidCallback? onShowPlayer;
   final Widget Function(String videoId, VoidCallback onFailed)? playerBuilder;
 
   @override
@@ -383,7 +390,15 @@ class _DetailViewState extends State<_DetailView> {
                       )
                     : AppBackButton(onPressed: () => Navigator.of(context).pop()),
                 // 라이브가 아니면 저장해 둘 수 있다 (유튜브는 영상이라 화질을 고르고, 사운드클라우드 등은 음원만).
-                actions: [if (!hit.isLive) _SaveButton(hit: hit)],
+                actions: [
+                  if (widget.onShowPlayer != null)
+                    CircleIconButton(
+                      icon: AppIcons.musicNote,
+                      tooltip: l10n.playerNowPlaying,
+                      onPressed: widget.onShowPlayer,
+                    ),
+                  if (!hit.isLive) _SaveButton(hit: hit),
+                ],
               ),
               // 받기 전 상세 화면은 목록 위에 얇은 막대로 읽는 중임을 알린다.
               LoadingBar(loading: state.loading),
@@ -483,10 +498,11 @@ class _DetailViewState extends State<_DetailView> {
                         ],
                       ),
                     const SizedBox(height: AppSpacing.md),
-                    if (widget.fromSaved) actionRow,
                   ],
                 ),
               ),
+              // 재생 · 받기 버튼은 아래에 고정한다 (저장 상세에서는 공통 조작부 바로 위).
+              if (widget.fromSaved) actionRow,
               // 저장한 음원 화면에서 연 상세는 재생 조작부를 아래에 늘 고정한다.
               if (widget.fromSaved)
                 Builder(
@@ -500,7 +516,6 @@ class _DetailViewState extends State<_DetailView> {
                     return SavedQueueControls(onStart: () => _startSaved(hit));
                   },
                 ),
-              // 받기 · 원본 열기 버튼: 저장 상세(플레이어 화면 안)에서는 위 목록 끝으로 올려 아래에는 공통 조작부만 둔다.
               if (!widget.fromSaved) actionRow,
             ],
           ),

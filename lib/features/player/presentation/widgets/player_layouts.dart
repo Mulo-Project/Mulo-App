@@ -84,6 +84,7 @@ class SquarePlayer extends StatelessWidget {
                                   tag: 'now-playing',
                                   child: PlayerCover(
                                     art: art,
+                                    onTap: data.onCoverTap,
                                     // 영상 곡: 틀을 꽉 채우고 끌어서 가려진 부분을, 두 손가락으로 확대 · 축소.
                                     video: data.track.isVideo
                                         ? const PanZoomVideo(
@@ -139,6 +140,7 @@ class FullBleedPlayer extends StatelessWidget {
                   // 끌어서 가려진 부분을 보고 확대 · 축소한다.
                   PlayerCover(
                     art: art,
+                    onTap: data.onCoverTap,
                     radius: 0,
                     video: data.track.isVideo ? const PanZoomVideo() : null,
                   ),
@@ -277,6 +279,7 @@ class ArcPlayer extends StatelessWidget {
                             padding: EdgeInsets.all(_size(s) * .09),
                             child: PlayerCover(
                               art: art,
+                              onTap: data.onCoverTap,
                               radius: _size(s),
                               // 영상 곡: 원을 꽉 채우고 끌어서 가려진 부분을, 두 손가락으로 확대 · 축소.
                               video: data.track.isVideo

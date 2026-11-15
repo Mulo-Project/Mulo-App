@@ -32,6 +32,7 @@ class PlayerLayoutData {
     required this.vm,
     required this.showLyrics,
     required this.onToggleLyrics,
+    this.onCoverTap,
   });
 
   final Track track;
@@ -39,6 +40,9 @@ class PlayerLayoutData {
   final NowPlayingCubit vm;
   final bool showLyrics;
   final VoidCallback onToggleLyrics;
+
+  /// 커버(영상이 아닌 곡)를 눌렀을 때. 임시 저장 곡이면 다운로드 상세로 바꾼다 (없으면 누름 없음).
+  final VoidCallback? onCoverTap;
 }
 
 /// 재생 위치(와 곡)가 바뀔 때만 다시 그리는 구역. 위치는 1초에 여러 번 바뀌므로 진행 막대 · 시간처럼
@@ -284,9 +288,13 @@ class PlayerCover extends StatelessWidget {
     this.radius = AppRadii.lg,
     this.icon = true,
     this.video,
+    this.onTap,
   });
 
   final PlayerArt art;
+
+  /// 커버를 눌렀을 때 (영상이 얹힌 커버는 영상 제스처가 먼저라 쓰지 않는다).
+  final VoidCallback? onTap;
 
   /// 영상 곡이면 커버 위에 얹는 영상 화면.
   final Widget? video;
@@ -316,7 +324,16 @@ class PlayerCover extends StatelessWidget {
             ),
     );
     final v = video;
-    if (v == null) return cover;
+    if (v == null) {
+      final tap = onTap;
+      return tap == null
+          ? cover
+          : GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: tap,
+              child: cover,
+            );
+    }
     return Stack(
       fit: StackFit.expand,
       children: [

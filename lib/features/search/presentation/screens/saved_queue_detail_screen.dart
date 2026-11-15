@@ -16,7 +16,10 @@ Future<void> showSavedQueueDetail(BuildContext context, MediaHit hit) =>
     context.push<void>(Routes.player, extra: hit);
 
 class SavedQueueDetailScreen extends StatefulWidget {
-  const SavedQueueDetailScreen({super.key, required this.hit});
+  const SavedQueueDetailScreen({super.key, required this.hit, this.onShowPlayer});
+
+  /// 위 줄의 버튼으로 다시 플레이어 모양(커버)으로 돌아간다 (재생 중인 곡이 있을 때만).
+  final VoidCallback? onShowPlayer;
 
   /// 처음 보여 줄 곡 (목록이 재생되기 전에도, 끝난 뒤에도 마지막으로 본 곡을 그대로 둔다).
   final MediaHit hit;
@@ -45,6 +48,7 @@ class _SavedQueueDetailScreenState extends State<SavedQueueDetailScreen> {
         key: ValueKey(_hit.id),
         hit: _hit,
         fromSaved: true,
+        onShowPlayer: widget.onShowPlayer,
       ),
     );
   }
