@@ -104,6 +104,9 @@ object PlaybackHub {
     /** 알림을 눌러 앱이 새로 켜졌는데 Dart가 아직 받아 가지 않은 요청. */
     private var openPlayerRequested = false
 
+    /** 미리 듣기 소리를 직접 켜고 끈다 (알림 버튼이 앱을 거치지 않고 바로 동작하게). [PreviewChannel]이 단다. */
+    @Volatile var previewControl: ((Boolean) -> Unit)? = null
+
     fun init(appContext: Context) {
         if (initialized) return
         initialized = true

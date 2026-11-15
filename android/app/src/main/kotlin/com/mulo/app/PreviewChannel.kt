@@ -168,6 +168,7 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
     }
 
     init {
+        PlaybackHub.previewControl = { play -> player?.let { if (play) it.play() else it.pause() } }
         channel.setMethodCallHandler { call, result ->
             when (call.method) {
                 "play" -> {
@@ -570,6 +571,7 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
     }
 
     override fun dispose() {
+        PlaybackHub.previewControl = null
         stop()
         super.dispose()
     }

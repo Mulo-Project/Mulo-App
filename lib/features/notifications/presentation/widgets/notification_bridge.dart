@@ -251,6 +251,11 @@ class _NotificationBridgeState extends State<NotificationBridge>
         case MediaCommandType.shuffle:
           break;
       }
+      // 네이티브가 이미 소리를 켜고 껐다: 앱의 상태가 어긋나 있어도 실제 상태로 맞춘다.
+      if (command.type == MediaCommandType.play ||
+          command.type == MediaCommandType.pause) {
+        unawaited(preview.syncWithPlayer());
+      }
       return;
     }
     final player = context.read<NowPlayingCubit>();

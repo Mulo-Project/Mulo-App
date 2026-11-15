@@ -39,6 +39,7 @@ import '../features/search/presentation/bloc/preview_cubit.dart';
 import '../features/search/presentation/bloc/saved_videos_cubit.dart';
 import '../features/search/presentation/bloc/video_quality_cubit.dart';
 import '../features/search/domain/entities/media_info.dart';
+import '../features/search/presentation/saved_track.dart';
 import '../features/search/presentation/screens/media_detail_screen.dart';
 import '../features/security/presentation/bloc/app_lock_cubit.dart';
 import '../features/security/presentation/widgets/lock_gate.dart';
@@ -79,7 +80,22 @@ class _MusicAppState extends State<MusicApp> {
       _openDownload(hit);
       return;
     }
-    if (nowPlaying.state.track == null) return;
+    final track = nowPlaying.state.track;
+    if (track == null) return;
+    // 임시 저장한 음원(saved:)을 메인 재생으로 듣는 중이면 플레이어 화면이 아니라 그 영상의 상세 화면을 연다.
+    final savedId = savedVideoIdOf(track.id);
+    if (savedId != null) {
+      final videos = context.read<SavedVideosCubit>();
+      // 앱이 막 켜졌다면 저장한 목록을 아직 못 읽었을 수 있어 잠시 기다린다.
+      for (var i = 0; i < 10 && videos.state.isEmpty; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 150));
+      }
+      final saved = videos.state.where((v) => v.id == savedId).firstOrNull;
+      if (saved != null) {
+        _openDownload(saved.hit);
+        return;
+      }
+    }
     if (_router.routerDelegate.currentConfiguration.uri.path != Routes.player) {
       _router.push(Routes.player);
     }
