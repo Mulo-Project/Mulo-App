@@ -116,6 +116,7 @@ void registerSearch(GetIt sl) {
         sl(),
         sl(),
         details: sl<SavedDetailStore>(),
+        fetchInfo: sl<FetchMediaInfo>(),
       ),
     )
     ..registerFactory(
