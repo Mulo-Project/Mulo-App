@@ -346,7 +346,7 @@ class MediaDetailMedia extends StatelessWidget {
                         ),
                       ),
     ];
-    return Column(children: mediaChildren);
+    return Column(mainAxisSize: MainAxisSize.min, children: mediaChildren);
   }
 }
 
