@@ -1364,16 +1364,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get mediaDetailTitle => '상세 정보';
 
   @override
-  String get mediaDetailWatchYoutube => '유튜브에서 보기';
+  String get mediaDetailWatchYoutube => '재생';
 
   @override
   String get mediaDetailOpenOriginal => '원본 페이지 열기';
 
   @override
-  String get mediaDetailListenOriginal => '원본 사이트에서 듣기';
+  String get mediaDetailListenOriginal => '재생';
 
   @override
-  String get mediaDetailListenSoundcloud => 'SoundCloud에서 듣기';
+  String get mediaDetailListenSoundcloud => '재생';
 
   @override
   String get mediaDetailOpenArtist => '아티스트 보기';

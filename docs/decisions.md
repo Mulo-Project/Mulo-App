@@ -1020,4 +1020,4 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 - 형식(mp4 · webm)별 `-f` 선택 · 합치기 인자는 네이티브 `YtDlpParsers`가 확장자로 가른다. Dart에는 형식 분기가 없다.
 - 지금은 Android만 개발하므로 데스크톱용 Dart yt-dlp 실행(`Process`)과 데스크톱 OAuth(`LoopbackGoogleAuth`)를 지웠다. 데스크톱을 만들 때 다시 설계한다.
 - 구글 로그인은 `google_sign_in` 플러그인 감싸기로 남긴다 (네이티브 재작성은 새 의존성이 필요해 따로 정한다).
-
+- D-165 추가: 임시 저장 곡도 재생 화면은 플레이어 화면(`Routes.player`) 하나다. 일반 곡과 같은 틀(맨 위 줄 · 아래 조작부)에 가운데만 다운로드 페이지 내용(`MediaDetailScreen(embedded: true)`)을 보여 주고(`SavedPlayer`), 오른쪽 위 확장 버튼을 누르면 다운로드 페이지 자체(`showMediaDetail`)로 이동한다. 저장 타일은 그 곡부터 틀고 재생 화면을 연다(받는 중인 곡만 다운로드 페이지). `SavedQueueDetailScreen` · `SavedQueueControls` · `PlayerControls.savedMode` · `MediaDetailScreen.fromSaved`는 없앴다 (D-160 · D-161의 해당 부분을 대체). 재생 · 받기 버튼은 다운로드 페이지 아래에 고정한다.

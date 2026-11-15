@@ -16,13 +16,9 @@ import '../features/player/presentation/bloc/now_playing_cubit.dart';
 import '../features/player/presentation/widgets/native_video.dart';
 import '../features/player/presentation/widgets/player_sleep_timer.dart';
 import '../features/search/presentation/bloc/preview_cubit.dart';
-import '../features/search/domain/entities/saved_video.dart';
 import '../features/search/presentation/bloc/saved_videos_cubit.dart';
-import '../features/search/presentation/saved_track.dart';
 import '../features/search/presentation/main_stream_video.dart';
 import '../features/search/presentation/widgets/saved_cover_sync.dart';
-import '../features/search/presentation/screens/saved_queue_detail_screen.dart'
-    show showSavedQueueDetail;
 import '../core/cache/cached_web_image.dart';
 import '../features/downloads/presentation/bloc/download_queue_cubit.dart';
 import '../features/downloads/presentation/widgets/download_bar.dart';
@@ -489,18 +485,8 @@ class _ShellMiniPlayer extends StatelessWidget {
         note: state.sleepEndsAt == null
             ? null
             : SleepRemainingBadge(endsAt: state.sleepEndsAt),
-        onTap: () {
-          // 임시 저장한 음원은 재생 화면 대신 저장 타일의 상세 화면(하단 조작부)을 연다.
-          final id = savedVideoIdOf(track.id);
-          final saved = id == null
-              ? const <SavedVideo>[]
-              : context.read<SavedVideosCubit>().state.where((v) => v.id == id);
-          if (saved.isNotEmpty) {
-            unawaited(showSavedQueueDetail(context, saved.first.hit));
-          } else {
-            unawaited(context.push(Routes.player));
-          }
-        },
+        // 임시 저장한 음원도 같은 플레이어 화면이 썸네일 자리에 다운로드 상세를 보여 준다.
+        onTap: () => unawaited(context.push(Routes.player)),
         onPlayPause: vm.togglePlay,
         onPrevious: vm.previous,
         onNext: vm.next,

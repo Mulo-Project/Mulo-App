@@ -91,6 +91,13 @@ void registerSearch(GetIt sl) {
     ..registerFactory(() => FetchAudioLanguages(sl()))
     ..registerFactory(() => AudioLanguageCubit(sl()))
     ..registerFactory(() => PlayPreview(sl()))
+    ..registerFactory(
+      () => PlayPreviewPage(
+        sl(),
+        sl<SavedVideoRepository>(),
+        sl<VideoQualityRepository>(),
+      ),
+    )
     ..registerFactory(() => RememberPreview(sl()))
     ..registerFactory(() => CurrentPreview(sl()))
     ..registerFactory(() => SeekPreview(sl()))
@@ -100,6 +107,8 @@ void registerSearch(GetIt sl) {
     ..registerFactory(() => WatchPreviewCompleted(sl()))
     ..registerFactory(() => WatchPreviewProgress(sl()))
     ..registerFactory(() => WatchPreviewFailures(sl()))
+    ..registerFactory(() => SetPreviewRepeat(sl()))
+    ..registerFactory(() => WatchPreviewPaused(sl()))
     ..registerFactory(() => GetStreamCacheInfo(sl()))
     ..registerFactory(() => ClearStreamCache(sl()))
     ..registerFactory(() => SetStreamCacheLimit(sl()))
@@ -120,6 +129,9 @@ void registerSearch(GetIt sl) {
     ..registerFactory(
       () => RemoveSavedVideo(sl(), sl(), details: sl<SavedDetailStore>()),
     )
+    ..registerFactory(
+      () => UpdateSavedVideoDetail(sl(), details: sl<SavedDetailStore>()),
+    )
     ..registerFactory(() => MarkSavedVideoReady(sl()))
     ..registerFactory(() => ResumeSavedVideos(sl(), sl(), sl(), sl()))
     ..registerFactory(() => WatchSavedDone(sl()))
@@ -133,6 +145,7 @@ void registerSearch(GetIt sl) {
         sl(),
         resume: sl(),
         watchProgress: sl<WatchSavedProgress>(),
+        detailUpdater: sl<UpdateSavedVideoDetail>(),
       ),
     )
     ..registerFactory(
@@ -148,10 +161,13 @@ void registerSearch(GetIt sl) {
         sl(),
         sl(),
         sl(),
+        setRepeat: sl(),
+        watchPaused: sl(),
         resolveVideo: sl(),
         enterPictureInPicture: sl(),
         loadAutoQuality: sl(),
         saveAutoQuality: sl(),
+        playPage: sl<PlayPreviewPage>(),
       ),
     )
     ..registerFactory(() => SearchCubit(sl(), sl(), warmUp: sl()));

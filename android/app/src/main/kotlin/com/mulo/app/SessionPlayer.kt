@@ -178,6 +178,8 @@ class SessionPlayer(
 
     override fun handleSetPlayWhenReady(playWhenReady: Boolean): ListenableFuture<*> {
         if (previewing) {
+            // 소리는 네이티브가 바로 켜고 끈다: 앱 쪽 상태가 어긋나 있거나 앱이 응답하지 않아도 버튼이 동작한다.
+            PlaybackHub.previewControl?.invoke(playWhenReady)
             onCommand(if (playWhenReady) "play" else "pause", null)
         } else if (exo.mediaItemCount > 0) {
             if (playWhenReady && exo.playbackState == Player.STATE_ENDED) exo.seekTo(0)
@@ -190,7 +192,7 @@ class SessionPlayer(
 
     override fun handleStop(): ListenableFuture<*> {
         // 알림을 밀어서 지우거나 정지 버튼을 눌렀다: 재생을 멈추고 세션을 정리한다.
-        if (!previewing) PlaybackHub.endSessionSoon()
+        if (!previewing) PlaybackHub.endSessionSoon() else PlaybackHub.previewStop?.invoke()
         onCommand("stop", null)
         return Futures.immediateVoidFuture()
     }

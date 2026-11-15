@@ -112,6 +112,18 @@ class MediaHit extends Equatable {
     isLive: isLive || full.isLive,
   );
 
+  /// 새로 읽은 [full]로 갱신한 사본: 비어 있던 칸을 채우고, 바뀌는 값(조회수 · 좋아요 수 · 구독자 수 등)은 새 값으로 덮는다.
+  /// 새로 읽은 쪽에 없는 값(null)은 알던 값을 그대로 둔다.
+  MediaHit refreshedFrom(MediaHit full) => filledFrom(full)._copy(
+    duration: full.duration,
+    thumbnailUrl: full.thumbnailUrl,
+    viewCount: full.viewCount,
+    uploadedAt: full.uploadedAt,
+    likeCount: full.likeCount,
+    subscriberCount: full.subscriberCount,
+    channelThumbnailUrl: full.channelThumbnailUrl,
+  );
+
   /// 채널 정보를 채운 사본.
   MediaHit withChannel(ChannelInfo channel) => _copy(
     subscriberCount: channel.subscriberCount,

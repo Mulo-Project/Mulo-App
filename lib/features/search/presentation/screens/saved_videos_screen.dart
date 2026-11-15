@@ -23,7 +23,7 @@ import '../widgets/preview_control.dart';
 import '../widgets/preview_video.dart';
 import '../widgets/preview_video_controls.dart';
 import '../widgets/video_quality_sheet.dart';
-import 'saved_queue_detail_screen.dart' show showSavedQueueDetail;
+import 'media_detail_screen.dart' show showMediaDetail;
 
 /// 저장한 영상 화면 경로 (검색 탭 안).
 const savedVideosLocation = '/search/saved';
@@ -187,6 +187,21 @@ Future<void> _playFrom(BuildContext context, SavedVideo video) async {
   nowPlaying.playQueue(tracks, index: at);
 }
 
+/// 타일을 눌렀다: 재생 화면을 연다 (끝까지 받은 곡이면 그 곡부터 틀고, 못 틀면 다운로드 페이지).
+Future<void> _openPlayerFor(BuildContext context, SavedVideo video) async {
+  final nowPlaying = context.read<NowPlayingCubit>();
+  final id = '${Track.savedIdPrefix}${video.id}';
+  if (video.ready && nowPlaying.state.track?.id != id) {
+    await _playFrom(context, video);
+  }
+  if (!context.mounted) return;
+  if (nowPlaying.state.track?.id == id) {
+    unawaited(context.push(Routes.player));
+  } else {
+    unawaited(showMediaDetail(context, video.hit));
+  }
+}
+
 enum _SavedAction { playNext, addToQueue, remove }
 
 /// 임시 저장한 음원의 ⋮ 메뉴. 대기열에는 끝까지 받은 곡만 넣는다.
@@ -256,12 +271,8 @@ class _QueueRow extends StatelessWidget {
       } else {
         nowPlaying.playQueue(tracks);
       }
-      // 곡 타일에서 들어갈 때와 같은 상세 화면(하단 조작부)을 연다.
-      final id = savedVideoIdOf(nowPlaying.state.track?.id ?? '');
-      final first = videos.where((v) => v.id == id);
-      if (first.isNotEmpty && context.mounted) {
-        unawaited(showSavedQueueDetail(context, first.first.hit));
-      }
+      // 재생 화면(플레이어)을 연다.
+      if (context.mounted) unawaited(context.push(Routes.player));
     }
 
     // 재생목록 화면처럼: 왼쪽에 재생 · 셔플(알약), 오른쪽 끝에 반복 · 대기열(작은 아이콘).
@@ -407,8 +418,9 @@ class _SavedTile extends StatelessWidget {
     ].join(' · ');
 
     final info = InkWell(
-      // 정보 부분을 누르면 상세 화면으로 간다 (영상은 위 영역에서 바로 재생).
-      onTap: () => showSavedQueueDetail(context, hit),
+      // 정보 부분을 누르면 재생 화면을 연다: 끝까지 받은 곡은 그 곡부터 목록 재생을 시작한다 (이미 듣는 중이면 그대로 연다).
+      // 아직 받는 중인 곡은 대기열에 못 넣으니 다운로드 페이지를 연다. 재생 화면의 썸네일을 누르면 다운로드 페이지로 간다.
+      onTap: () => unawaited(_openPlayerFor(context, video)),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
         child: Row(

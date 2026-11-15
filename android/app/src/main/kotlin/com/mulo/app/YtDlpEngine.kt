@@ -35,6 +35,8 @@ class YtDlpEngine(
     private val timeoutMs: Long = 60_000,
     private val saveTimeoutMs: Long = 30 * 60_000,
     private val readPage: (String) -> String? = ::fetchPage,
+    /** 영상 저장을 yt-dlp보다 먼저 시도하는 쪽 ([NativeVideoSaver.save]). 못 하면 false를 돌려주거나 예외를 던진다. */
+    private val nativeSave: ((String, Int, String, File, String, (Double) -> Unit) -> Boolean)? = null,
 ) {
     private val gate = ExecGate()
     private val watchdog = Executors.newCachedThreadPool()
@@ -190,15 +192,31 @@ class YtDlpEngine(
      */
     fun saveVideo(url: String, maxHeight: Int, extension: String, dir: File, stem: String, onProgress: (Double) -> Unit) {
         if (!runner.available) throw YtDlpException("unavailable", "yt-dlp")
-        val id = nextId()
-        val args = listOf(
-            "-f", YtDlpParsers.saveSelector(maxHeight, extension),
-            "--merge-output-format", extension,
-            "--no-playlist", "--no-warnings", "--newline",
-            "-o", File(dir, "$stem.%(ext)s").path, url,
-        )
-        val r = runWithTimeout(id, saveTimeoutMs) { runner.run(args, id, onProgress) }
-        if (r.exitCode != 0) throw YtDlpException("failed", r.stderr.trim())
+        // 네이티브 resolver의 주소로 먼저 받는다 (yt-dlp는 받는 단계에서 403이 나는 일이 있다). 안 되면 아래 yt-dlp로 넘어간다.
+        if (nativeSave != null) {
+            val start = System.currentTimeMillis()
+            try {
+                if (nativeSave.invoke(url, maxHeight, extension, dir, stem, onProgress)) {
+                    MuloLog.d(MuloLog.NATIVE, "영상 저장 네이티브 ${System.currentTimeMillis() - start}ms 완료")
+                    return
+                }
+                MuloLog.d(MuloLog.NATIVE, "영상 저장 네이티브 안 씀($extension, 주소 · 형식이 맞지 않거나 읽을 주소 없음), yt-dlp로")
+            } catch (e: Exception) {
+                MuloLog.d(MuloLog.NATIVE, "영상 저장 네이티브 실패, yt-dlp로: ${e.message}")
+            }
+        }
+        // 기본 클라이언트로 받다가 403(Forbidden) 같은 오류가 나면 `android_vr`로 한 번 더 시도한다 (주소 읽기와 같은 순서).
+        withFallback { extra ->
+            val id = nextId()
+            val args = listOf(
+                "-f", YtDlpParsers.saveSelector(maxHeight, extension),
+                "--merge-output-format", extension,
+                "--no-playlist", "--no-warnings", "--newline",
+                "-o", File(dir, "$stem.%(ext)s").path,
+            ) + extra + url
+            val r = runWithTimeout(id, saveTimeoutMs) { runner.run(args, id, onProgress) }
+            if (r.exitCode != 0) throw YtDlpException(YtDlpParsers.failureCode(r.stderr.trim()), r.stderr.trim())
+        }
     }
 
     private fun decode(s: String): JSONObject? {

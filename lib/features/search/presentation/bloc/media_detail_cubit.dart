@@ -7,7 +7,11 @@ import '../../domain/usecases/search_usecases.dart';
 import 'media_hit_memo.dart';
 
 class MediaDetailState extends Equatable {
-  const MediaDetailState({required this.hit, this.loading = false});
+  const MediaDetailState({
+    required this.hit,
+    this.loading = false,
+    this.pending = false,
+  });
 
   /// 지금까지 알아낸 곡 정보. 자세히 읽는 동안에도 목록에서 알던 만큼은 보인다.
   final MediaHit hit;
@@ -15,8 +19,11 @@ class MediaDetailState extends Equatable {
   /// 채널 · 조회수 같은 나머지 정보를 읽는 중인지.
   final bool loading;
 
+  /// 좋아요 수 · 공동 작업자처럼 느리게 읽히는 나머지를 아직 읽는 중인지 (화면은 그 칸을 비워 두지 않고 "읽는 중"으로 보인다).
+  final bool pending;
+
   @override
-  List<Object?> get props => [hit, loading];
+  List<Object?> get props => [hit, loading, pending];
 }
 
 /// 검색 결과 하나의 상세 보기. 목록 항목에 없는 정보(채널 주소 · 조회수 · 올린 날 · 설명)를
@@ -30,6 +37,7 @@ class MediaDetailCubit extends Cubit<MediaDetailState> {
     MediaHitMemo? memo,
     this.stored = false,
     this._fetchFull,
+    this.onLoaded,
   }) : _memo = memo,
        _known = memo?.get(hit.url),
        super(MediaDetailState(hit: memo?.get(hit.url) ?? hit));
@@ -51,17 +59,18 @@ class MediaDetailCubit extends Cubit<MediaDetailState> {
   final FetchChannelInfo _fetchChannel;
   final OpenLink _openLink;
 
+  /// 곡 정보를 다 읽은 뒤 부른다 (저장한 곡이면 읽은 상세 정보를 저장해 두려고).
+  final Future<void> Function(MediaHit hit)? onLoaded;
+
   /// 곡 정보와 채널 정보를 따로 동시에 읽고, 읽히는 대로 화면에 채운다.
   /// 채널 주소를 이미 알면(검색 목록에 있다) 곡 정보를 기다리지 않고 바로 읽는다.
   Future<void> load() async {
     // 전에 읽은 것이 있으면 처음부터 채워 보여 주고, 다시 읽지 않는다.
     if (_known != null) return;
-    // 저장한 곡처럼 상세 정보가 이미 들어 있으면 로딩 없이 그대로 보여 준다 (채널 이미지만 비었으면 조용히 채운다).
-    if (stored || _hasStoredDetail(state.hit)) {
-      if (_needsChannel(state.hit)) await _loadChannel();
-      return;
-    }
-    emit(MediaDetailState(hit: state.hit, loading: true));
+    // 저장한 곡처럼 상세 정보가 이미 들어 있으면 그대로 먼저 보여 주고(로딩 표시 없이),
+    // 뒤에서 조용히 새로 읽어 바뀐 값만 갱신한다 (못 읽으면 저장된 값 그대로).
+    final quiet = stored || _hasStoredDetail(state.hit);
+    if (!quiet) emit(MediaDetailState(hit: state.hit, loading: true));
     final early = _needsChannel(state.hit) ? _loadChannel() : null;
     await _loadInfo();
     // 곡 정보에서 비로소 채널 주소를 알게 된 경우.
@@ -72,24 +81,35 @@ class MediaDetailCubit extends Cubit<MediaDetailState> {
     }
     // 느리게 읽히는 나머지(좋아요 수 · 공동 작업자 · 앨범)는 화면을 띄운 뒤 뒤에서 채운다.
     if (_infoLoaded) await _loadFull();
+    if (_infoLoaded && !isClosed) {
+      try {
+        await onLoaded?.call(state.hit);
+      } on Object {
+        // 저장해 두지 못해도 화면은 그대로 쓴다.
+      }
+    }
   }
 
   Future<void> _loadFull() async {
     final fetch = _fetchFull;
     if (fetch == null) return;
+    emit(MediaDetailState(hit: state.hit, loading: state.loading, pending: true));
     try {
       final info = await fetch(state.hit.url);
       if (isClosed) return;
       if (info is VideoInfo) {
         emit(
           MediaDetailState(
-            hit: state.hit.filledFrom(info.hit),
+            hit: state.hit.refreshedFrom(info.hit),
             loading: state.loading,
           ),
         );
       }
     } on EngineException {
       // 못 읽어도 빠르게 읽은 정보로 충분히 쓸 수 있다.
+    }
+    if (!isClosed && state.pending) {
+      emit(MediaDetailState(hit: state.hit, loading: state.loading));
     }
     if (!isClosed) _memo?.put(state.hit.url, state.hit);
   }
@@ -111,7 +131,7 @@ class MediaDetailCubit extends Cubit<MediaDetailState> {
       emit(
         MediaDetailState(
           hit: switch (info) {
-            VideoInfo(hit: final full) => state.hit.filledFrom(full),
+            VideoInfo(hit: final full) => state.hit.refreshedFrom(full),
             PlaylistInfo() => state.hit,
           },
         ),

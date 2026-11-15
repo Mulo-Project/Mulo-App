@@ -46,10 +46,10 @@ object MuloEngine {
         val lyricsOverlay = LyricsOverlayChannel(app, messenger)
         val audioOutput = AudioOutputChannel(app, messenger)
         val ytDlp = YtDlpChannel(app, messenger)
-        val ytDlpEngine = YtDlpEngineChannel(app, messenger, ytDlp)
+        val transcoder = TranscoderChannel(app, messenger)
+        val ytDlpEngine = YtDlpEngineChannel(app, messenger, ytDlp, transcoder::mux)
         val youtubeResolve = YoutubeResolveChannel(app, messenger)
         val googleApi = GoogleApiChannel(app, messenger)
-        val transcoder = TranscoderChannel(app, messenger)
         val tags = TagChannel(app, messenger, store, transcoder)
         val playback = PlaybackChannel(app, messenger)
         val preview = PreviewChannel(app, messenger)
@@ -84,6 +84,7 @@ object MuloEngine {
         channels = emptyList()
         mediaStore = null
         // 미리 듣기 소리는 엔진과 함께 끝나므로 알림에 남은 미리 듣기도 치운다.
+        MuloLog.d(MuloLog.PLAYBACK, "엔진 정리: 미리듣기알림=${PlaybackHub.isPreviewing}")
         if (PlaybackHub.isPreviewing) PlaybackHub.setSession(null)
         current.destroy()
     }

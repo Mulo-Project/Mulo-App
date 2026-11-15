@@ -45,13 +45,12 @@ internal object PlaybackButtons {
             .setSessionCommand(favorite)
             .build()
         // 임시 저장한 음원(cache)은 파일이 아니라 좋아요를 둘 수 없다. 셔플이 좋아요 자리로 밀려 헷갈리지 않게,
-        // 좋아요 자리에는 눌리지 않는 빈 버튼을 두고 셔플은 늘 오른쪽에 둔다.
+        // 좋아요 자리에는 눌러도 아무 일 없는 빈 버튼을 둔다(꺼 두면 알림이 그리지 않아 셔플이 왼쪽으로 밀린다). 셔플은 늘 오른쪽에 둔다.
         if (!favoriteShown) {
             val blank = CommandButton.Builder(CommandButton.ICON_UNDEFINED)
                 .setCustomIconResId(R.drawable.ic_notif_blank)
-                .setDisplayName("")
+                .setDisplayName(" ")
                 .setSessionCommand(favorite)
-                .setEnabled(false)
                 .build()
             return ImmutableList.of(blank, shuffleButton)
         }

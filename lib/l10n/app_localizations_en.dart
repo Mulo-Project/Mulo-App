@@ -1391,16 +1391,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mediaDetailTitle => 'Details';
 
   @override
-  String get mediaDetailWatchYoutube => 'Watch on YouTube';
+  String get mediaDetailWatchYoutube => 'Play';
 
   @override
   String get mediaDetailOpenOriginal => 'Open original page';
 
   @override
-  String get mediaDetailListenOriginal => 'Listen on the original site';
+  String get mediaDetailListenOriginal => 'Play';
 
   @override
-  String get mediaDetailListenSoundcloud => 'Listen on SoundCloud';
+  String get mediaDetailListenSoundcloud => 'Play';
 
   @override
   String get mediaDetailOpenArtist => 'View artist';

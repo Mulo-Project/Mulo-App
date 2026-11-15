@@ -17,6 +17,8 @@ import io.flutter.view.TextureRegistry
  * 모든 호출은 메인 스레드.
  */
 object VideoSurfaceHub {
+    private const val DEFAULT_WIDTH = 1280
+    private const val DEFAULT_HEIGHT = 720
     private var producer: TextureRegistry.SurfaceProducer? = null
     private var attached = false
     private var mainPlayer: ExoPlayer? = null
@@ -41,6 +43,10 @@ object VideoSurfaceHub {
 
         override fun onTracksChanged(tracks: androidx.media3.common.Tracks) {
             val video = tracks.groups.filter { it.type == C.TRACK_TYPE_VIDEO }
+            // 해독기가 켜지기 전에 표면 크기를 영상 크기로 맞춘다 (크기 0인 표면으로 켜면 초기화가 실패한다).
+            video.firstOrNull()?.mediaTrackGroup?.getFormat(0)?.let { f ->
+                if (f.width > 0 && f.height > 0) producer?.setSize(f.width, f.height)
+            }
             MuloLog.d(
                 MuloLog.PLAYBACK,
                 "tracks video=${video.size} supported=${video.count { it.isSupported }} " +
@@ -64,6 +70,8 @@ object VideoSurfaceHub {
                     bound?.clearVideoSurface()
                 }
             })
+            // 영상 크기를 알기 전에도 표면이 0x0이 아니게 기본 크기를 준다 (처음 영상에서 해독기 초기화 실패를 막는다).
+            it.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT)
             producer = it
         }
         attached = true
@@ -125,12 +133,14 @@ object VideoSurfaceHub {
         emit = null
     }
 
-    private fun setVideoDisabled(player: ExoPlayer, disabled: Boolean) {
+    /** 영상 해독을 켜거나 끈다. 바뀌었으면 true. */
+    private fun setVideoDisabled(player: ExoPlayer, disabled: Boolean): Boolean {
         val params = player.trackSelectionParameters
-        if (params.disabledTrackTypes.contains(C.TRACK_TYPE_VIDEO) == disabled) return
+        if (params.disabledTrackTypes.contains(C.TRACK_TYPE_VIDEO) == disabled) return false
         player.trackSelectionParameters = params.buildUpon()
             .setTrackTypeDisabled(C.TRACK_TYPE_VIDEO, disabled)
             .build()
+        return true
     }
 
     private fun refresh(keepFrame: Boolean = false) {
@@ -156,11 +166,15 @@ object VideoSurfaceHub {
             MuloLog.PLAYBACK,
             "video refresh attached=$attached target=${target != null} surface=${surface != null} ready=$ready",
         )
-        mainPlayer?.let { setVideoDisabled(it, target !== it || !ready) }
+        val mainChanged = mainPlayer?.let { setVideoDisabled(it, target !== it || !ready) } ?: false
+        val mainTurnedOn = mainChanged && target === mainPlayer && ready
         previewVideo?.let { setVideoDisabled(it, target !== it || !ready) }
         if (target != null && surface != null && ready) {
             target.setVideoSurface(surface)
             sizeChanged(target.videoSize)
+            // 소리가 이미 나는 중에 영상 해독을 늦게 켜면 첫 화면이 안 그려져 멈춘 듯 보인다:
+            // 지금 위치로 한 번 다시 맞춰 영상이 바로 따라오게 한다.
+            if (mainTurnedOn && !firstFrame) target.seekTo(target.currentPosition)
         }
     }
 

@@ -15,6 +15,9 @@ class TranscoderChannel(@Suppress("UNUSED_PARAMETER") context: Context, messenge
     fun isAvailable(): Boolean = false
 
     @Suppress("UNUSED_PARAMETER")
+    fun mux(video: java.io.File, audio: java.io.File?, output: java.io.File): Boolean = false
+
+    @Suppress("UNUSED_PARAMETER")
     fun tagFile(input: String, values: Map<String, String>, cover: String?, format: String, output: String): Boolean = false
 
     companion object {

@@ -277,7 +277,7 @@ class ArcPlayer extends StatelessWidget {
                             padding: EdgeInsets.all(_size(s) * .09),
                             child: PlayerCover(
                               art: art,
-                              radius: _size(s),
+                                        radius: _size(s),
                               // 영상 곡: 원을 꽉 채우고 끌어서 가려진 부분을, 두 손가락으로 확대 · 축소.
                               video: data.track.isVideo
                                   ? const PanZoomVideo(fullscreenOnTap: true)
@@ -301,3 +301,62 @@ class ArcPlayer extends StatelessWidget {
 }
 
 /// 플레이어 커버 자리의 영상 + 오른쪽 아래 전체 화면 버튼.
+
+/// 임시 저장한 곡: 일반 곡과 같은 틀(맨 위 줄 · 아래 조작부)에 가운데만 다운로드 페이지 내용을 보여 준다.
+/// [panel]은 그 내용이고, [onExpand]는 오른쪽 위 확장 버튼(다운로드 페이지 자체로 이동)이다.
+class SavedPlayer extends StatelessWidget {
+  const SavedPlayer({
+    super.key,
+    required this.data,
+    required this.panel,
+    required this.onExpand,
+    required this.expandTooltip,
+  });
+
+  final PlayerLayoutData data;
+  final Widget panel;
+  final VoidCallback onExpand;
+  final String expandTooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    final art = PlayerArt.of(context, data.track);
+    return PlayerBackdrop(
+      art: art,
+      blurred: false,
+      video: false,
+      child: SafeArea(
+        child: Column(
+          children: [
+            PlayerTopBar(track: data.track),
+            // 영상 · 썸네일은 상세 화면([panel])이 맨 위에 고정해 보여 준다 (영상 저장 곡 · 소리만 저장한 곡 모두 같은 화면을 쓴다).
+            Expanded(child: panel),
+            // 표시 영역(정보) 아래 줄: 다운로드 상세로 가는 확장 버튼.
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.xs,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  CircleIconButton(
+                    key: const ValueKey('saved-expand'),
+                    icon: AppIcons.expandOut,
+                    tooltip: expandTooltip,
+                    onPressed: onExpand,
+                  ),
+                ],
+              ),
+            ),
+            PlayerControls(
+              data: data,
+              play: SolidPlayButton(data: data, size: 72),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+          ],
+        ),
+      ),
+    );
+  }
+}

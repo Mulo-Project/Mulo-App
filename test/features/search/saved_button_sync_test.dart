@@ -36,7 +36,10 @@ void main() {
     await tester.pumpWidget(const MusicApp(initialLocation: '/search/saved'));
     await tester.pumpAndSettle();
 
+    // 타일을 누르면 재생 화면이 열리고, 가운데 확장 버튼으로 다운로드 페이지 자체로 간다.
     await tester.tap(find.text('Song A'));
+    await settle(tester);
+    await tester.tap(find.byKey(const ValueKey('saved-expand')));
     await settle(tester);
     final save = find.byKey(const ValueKey('detail-save'));
     expect(save, findsOneWidget);

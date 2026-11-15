@@ -5,6 +5,7 @@ import org.json.JSONObject
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * 유튜브 곡 · 영상의 재생 주소를 네이티브에서 읽는다 (Dart의 youtube_explode_dart가 하던 일).
@@ -108,11 +109,26 @@ object YoutubeResolver {
 
     private val audioClients = listOf(visionOs, androidVr, androidSdkless)
 
-    /** 소리 주소. 못 읽으면 null, 모든 클라이언트가 실패하면 까닭을 담은 예외. */
-    fun audio(videoId: String, language: String?, preferWebm: Boolean): Map<String, Any?>? =
-        timed("소리") { audioInner(videoId, language, preferWebm) }
+    /** 읽은 주소를 잠깐 기억한다: 미리 듣기가 읽은 주소를 영상 화면 · 미리 읽기가 다시 읽지 않게. 끊김 복구는 [fresh]로 건너뛴다. */
+    private val addressCache = ConcurrentHashMap<String, Pair<Long, Map<String, Any?>>>()
+    private const val ADDRESS_TTL_MS = 10 * 60 * 1000L
 
-    fun video(videoId: String, maxHeight: Int): Map<String, Any?>? = timed("영상") { videoInner(videoId, maxHeight) }
+    private fun cached(key: String, fresh: Boolean, load: () -> Map<String, Any?>?): Map<String, Any?>? {
+        val now = System.currentTimeMillis()
+        if (!fresh) {
+            addressCache[key]?.let { (at, value) -> if (now - at < ADDRESS_TTL_MS) return value }
+        }
+        val value = load()
+        if (value != null) addressCache[key] = now to value else addressCache.remove(key)
+        return value
+    }
+
+    /** 소리 주소. 못 읽으면 null, 모든 클라이언트가 실패하면 까닭을 담은 예외. */
+    fun audio(videoId: String, language: String?, preferWebm: Boolean, fresh: Boolean = false): Map<String, Any?>? =
+        cached("a|$videoId|$language|$preferWebm", fresh) { timed("소리") { audioInner(videoId, language, preferWebm) } }
+
+    fun video(videoId: String, maxHeight: Int, fresh: Boolean = false): Map<String, Any?>? =
+        cached("v|$videoId|$maxHeight", fresh) { timed("영상") { videoInner(videoId, maxHeight) } }
 
     /** 걸린 시간을 debug 로그로 남긴다 (`adb logcat -s MuloNative`, `주소 읽기 소리 1234ms 읽음`). */
     private fun <T> timed(label: String, block: () -> T?): T? {
@@ -173,6 +189,38 @@ object YoutubeResolver {
         session = null
         return null
     }
+
+    /** 저장할 영상 (소리가 든 형식이면 [audio]는 null). */
+    class SaveSources(val video: YtFormat, val audio: YtFormat?)
+
+    /**
+     * 영상 저장용 주소: 영상(+없으면 같은 형식의 소리)을 구간 확인까지 통과한 클라이언트에서 고른다. 못 찾으면 null.
+     * [container]는 저장할 파일 형식(mp4 · webm): 같은 형식의 영상 · 소리를 골라 다시 인코딩 없이 합칠 수 있게 한다.
+     * 받을 때는 [headersFor]의 헤더를 같이 보낸다.
+     */
+    fun saveSources(videoId: String, maxHeight: Int, container: String = "mp4"): SaveSources? = timed("저장용") {
+        var found: SaveSources? = null
+        for (client in listOf(visionOs, androidVr)) {
+            val all = try {
+                fetchFormats(client, videoId)
+            } catch (e: Exception) {
+                MuloLog.d(TAG, "저장용 ${client.name} 읽기 실패 ${oneLine(e.toString())}")
+                continue
+            }
+            val (best, muxed) = YoutubeFormats.pickVideo(all, maxHeight, container) ?: continue
+            if (!canReadMiddle(best)) continue
+            if (muxed) { found = SaveSources(best, null); break }
+            val audio = YoutubeFormats.orderAudio(all, container == "webm", null).firstOrNull { it.container == container } ?: continue
+            if (!canReadMiddle(audio)) continue
+            found = SaveSources(best, audio)
+            break
+        }
+        if (found == null) session = null
+        found
+    }
+
+    /** 이 주소를 받을 때 같이 보낼 헤더. */
+    fun headersFor(url: String): Map<String, String> = headers(url)
 
     /** 언어 트랙이 둘 이상 든 클라이언트를 찾아 그 목록을. 없으면 빈 목록. */
     fun languages(videoId: String): List<Map<String, Any?>> {

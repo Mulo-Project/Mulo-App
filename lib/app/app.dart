@@ -79,7 +79,8 @@ class _MusicAppState extends State<MusicApp> {
       _openDownload(hit);
       return;
     }
-    if (nowPlaying.state.track == null) return;
+    final track = nowPlaying.state.track;
+    if (track == null) return;
     if (_router.routerDelegate.currentConfiguration.uri.path != Routes.player) {
       _router.push(Routes.player);
     }

@@ -18,6 +18,21 @@ import java.util.concurrent.TimeUnit
  */
 @UnstableApi
 object TagReader {
+    /**
+     * 파일에 내장된 커버 이미지의 원본 바이트. `MediaMetadataRetriever`가 못 읽는 형식(opus · ogg · webm)도
+     * Media3가 형식마다 그림 칸(ID3 APIC · Vorbis METADATA_BLOCK_PICTURE · FLAC picture 등)을 알아서 풀어 준다. 없으면 null.
+     */
+    fun picture(context: Context, uri: String): ByteArray? {
+        val item = MediaItem.fromUri(if (uri.startsWith("content://")) Uri.parse(uri) else Uri.fromFile(java.io.File(uri)))
+        val groups = MetadataRetriever.retrieveMetadata(context, item).get(15, TimeUnit.SECONDS)
+        val standard = MediaMetadata.Builder()
+        for (g in 0 until groups.length) {
+            val metadata = groups.get(g).getFormat(0).metadata ?: continue
+            for (i in 0 until metadata.length()) metadata.get(i).populateMediaMetadata(standard)
+        }
+        return standard.build().artworkData?.takeIf { it.isNotEmpty() }
+    }
+
     fun read(context: Context, uri: String): Map<String, String> {
         val item = MediaItem.fromUri(if (uri.startsWith("content://")) Uri.parse(uri) else Uri.fromFile(java.io.File(uri)))
         val groups = MetadataRetriever.retrieveMetadata(context, item).get(15, TimeUnit.SECONDS)

@@ -82,6 +82,18 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
 
     fun isAvailable(): Boolean = true
 
+    /** 영상 [video]와 소리 [audio](없을 수 있다)를 다시 인코딩 없이 [output] 확장자의 형식(mp4 · webm) 하나로 합친다. 실패하면 예외. */
+    fun mux(video: File, audio: File?, output: File): Boolean {
+        val args = mutableListOf("-nostdin", "-y", "-i", video.absolutePath)
+        if (audio != null) args += listOf("-i", audio.absolutePath)
+        args += listOf("-map", "0:v:0")
+        if (audio != null) args += listOf("-map", "1:a:0")
+        args += listOf("-c", "copy")
+        args += if (output.extension == "webm") listOf("-f", "webm") else listOf("-movflags", "+faststart", "-f", "mp4")
+        args += output.absolutePath
+        return runFfmpeg(args, output.absolutePath)
+    }
+
     /**
      * [input]의 태그를 [values](기본 칸은 소문자 `title` `artist` `album` `genre` `lyrics`, 그 밖은 앱 전용 칸)와
      * 커버 PNG [cover]로 고쳐 [output]에 쓴다. [format]은 [TagFormats]. 성공하면 true (실패하면 예외 또는 false).

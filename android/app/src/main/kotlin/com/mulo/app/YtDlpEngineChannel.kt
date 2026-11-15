@@ -17,10 +17,20 @@ import java.util.concurrent.Executors
  * `saveVideo`(url · maxHeight · extension · dir · stem · id? → null, 진행률은 `progress`(id · progress)로 알린다).
  * 실패하면 오류 코드가 `unavailable` · `network` · `timeout` · `not_found` · `failed` 중 하나다.
  */
-class YtDlpEngineChannel(context: Context, messenger: BinaryMessenger, runner: YtDlpRunner) :
-    NativeChannel(messenger, NAME) {
+class YtDlpEngineChannel(
+    context: Context,
+    messenger: BinaryMessenger,
+    runner: YtDlpRunner,
+    /** 영상 · 소리 파일을 mp4 하나로 합친다 (네이티브 저장용). lite는 항상 false. */
+    mux: (File, File?, File) -> Boolean = { _, _, _ -> false },
+) : NativeChannel(messenger, NAME) {
     private val io: ExecutorService = Executors.newCachedThreadPool()
-    private val engine = YtDlpEngine(runner, { File(context.cacheDir, "sub_${System.nanoTime()}") })
+    private val saver = NativeVideoSaver({ File(context.cacheDir, "save") }, mux)
+    private val engine = YtDlpEngine(
+        runner,
+        { File(context.cacheDir, "sub_${System.nanoTime()}") },
+        nativeSave = saver::save,
+    )
 
     init {
         channel.setMethodCallHandler { call, result ->

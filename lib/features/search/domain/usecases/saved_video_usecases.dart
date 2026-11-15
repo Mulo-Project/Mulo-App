@@ -255,3 +255,21 @@ class WatchSavedDone
   @override
   Stream<({String id, bool ok})> call(NoParams params) => _player.watchSaved();
 }
+
+/// 저장한 곡의 상세 정보(좋아요 수 · 공동 작업자 등)를 나중에 읽은 대로 저장해 둔다. 저장하지 않은 곡이면 아무 일도 없다.
+class UpdateSavedVideoDetail implements UseCase<void, MediaHit> {
+  const UpdateSavedVideoDetail(this._repo, {this.details});
+
+  final SavedVideoRepository _repo;
+  final SavedDetailStore? details;
+
+  @override
+  Future<void> call(MediaHit hit) async {
+    final list = await _repo.load();
+    if (!list.any((v) => v.id == hit.id)) return;
+    await _repo.save([
+      for (final v in list) v.id == hit.id ? v.copyWith(hit: hit) : v,
+    ]);
+    await details?.write(hit);
+  }
+}

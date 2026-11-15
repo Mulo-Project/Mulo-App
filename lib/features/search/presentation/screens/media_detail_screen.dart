@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
+import '../../../player/presentation/bloc/video_surface_cubit.dart';
 import '../../../player/presentation/widgets/native_video.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../downloads/presentation/widgets/download_dialog.dart';
@@ -20,7 +21,6 @@ import '../bloc/media_detail_cubit.dart';
 import '../bloc/media_hit_memo.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../bloc/preview_cubit.dart';
-import '../saved_track.dart';
 import '../bloc/saved_videos_cubit.dart';
 import '../bloc/stream_cache_cubit.dart';
 import '../main_stream_video.dart';
@@ -31,7 +31,6 @@ import '../widgets/video_quality_sheet.dart';
 import '../widgets/audio_language_sheet.dart';
 import 'saved_videos_screen.dart' show savedVideosLocation;
 import '../widgets/preview_control.dart';
-import '../widgets/saved_queue_controls.dart';
 import '../widgets/preview_video.dart';
 import '../widgets/preview_video_controls.dart';
 import '../widgets/video_category.dart';
@@ -72,19 +71,16 @@ String siteNameOf(String url) {
   return host.startsWith('www.') ? host.substring(4) : host;
 }
 
+/// 곡 상세 화면 한 쪽: 영상 · 썸네일, 정보 목록, 아래 재생 · 받기 버튼을 한 스크롤로 조합한다.
 class MediaDetailScreen extends StatelessWidget {
   const MediaDetailScreen({
     super.key,
     required this.hit,
     @visibleForTesting this.inAppVideo,
     @visibleForTesting this.playerBuilder,
-    this.fromSaved = false,
   });
 
   final MediaHit hit;
-
-  /// 저장한 음원 화면에서 열었다: 아래에 재생 목록 조작부를 늘 붙인다 (검색의 받기용 타일에서 연 상세와 다르다).
-  final bool fromSaved;
 
   /// 앱 안 재생 가능 여부를 바꿔 쓴다 (테스트용, 기본은 플랫폼에 따른다).
   final bool? inAppVideo;
@@ -93,23 +89,49 @@ class MediaDetailScreen extends StatelessWidget {
   final Widget Function(String videoId, VoidCallback onFailed)? playerBuilder;
 
   @override
+  Widget build(BuildContext context) => MediaDetailScope(
+    hit: hit,
+    inAppVideo: inAppVideo,
+    playerBuilder: playerBuilder,
+    builder: (_) => const _DetailPage(),
+  );
+}
+
+/// 상세 화면의 조각들이 함께 쓰는 바탕: 곡 정보 · 오디오 언어 cubit과 영상 재생 상태를 만들어
+/// 아래의 [MediaDetailMedia] · [MediaDetailInfo]에 나눠 준다.
+/// 화면마다 조각을 원하는 대로 조합한다 (상세 화면은 한 스크롤, 플레이어는 영상만 위에 고정).
+class MediaDetailScope extends StatelessWidget {
+  const MediaDetailScope({
+    super.key,
+    required this.hit,
+    required this.builder,
+    @visibleForTesting this.inAppVideo,
+    @visibleForTesting this.playerBuilder,
+  });
+
+  final MediaHit hit;
+
+  /// 이 바탕 아래에서 조각들을 조합해 그린다.
+  final WidgetBuilder builder;
+  final bool? inAppVideo;
+  final Widget Function(String videoId, VoidCallback onFailed)? playerBuilder;
+
+  @override
   Widget build(BuildContext context) {
     // 저장한 곡이면 저장해 둔 상세 정보를 먼저 쓴다 (검색 목록에서 들어와도 다시 읽지 않는다).
     MediaHit? savedHit;
+    SavedVideosCubit? saved;
     try {
-      savedHit = context
-          .read<SavedVideosCubit>()
-          .state
-          .where((v) => v.id == hit.id)
-          .firstOrNull
-          ?.hit;
+      saved = context.read<SavedVideosCubit>();
+      savedHit = saved.state.where((v) => v.id == hit.id).firstOrNull?.hit;
     } on Object {
       savedHit = null;
     }
-    return _build(savedHit);
+    return _build(savedHit, saved);
   }
 
-  Widget _build(MediaHit? savedHit) => MultiBlocProvider(
+  Widget _build(MediaHit? savedHit, SavedVideosCubit? saved) =>
+      MultiBlocProvider(
     providers: [
       BlocProvider(
         create: (_) => MediaDetailCubit(
@@ -121,6 +143,10 @@ class MediaDetailScreen extends StatelessWidget {
           stored: savedHit != null,
           // 유튜브 곡은 빠른 정보를 먼저 보여 주고, 좋아요 수 · 공동 작업자는 뒤에서 채운다.
           fetchFull: isYoutubeUrl(hit.url) ? sl<FetchFullMediaInfo>() : null,
+          // 저장한 곡이면 나중에 읽힌 상세 정보도 저장해 두어, 다음에 열 때 기다리지 않는다.
+          onLoaded: saved == null || savedHit == null
+              ? null
+              : (h) => saved.updateDetail(h),
         )..load(),
       ),
       // 유튜브 곡만 오디오 언어가 여럿일 수 있다.
@@ -138,7 +164,7 @@ class MediaDetailScreen extends StatelessWidget {
     child: _DetailView(
       inAppVideo: inAppVideo ?? inAppVideoSupported,
       playerBuilder: playerBuilder,
-      fromSaved: fromSaved,
+      content: builder,
     ),
   );
 }
@@ -146,16 +172,37 @@ class MediaDetailScreen extends StatelessWidget {
 class _DetailView extends StatefulWidget {
   const _DetailView({
     required this.inAppVideo,
+    required this.content,
     this.playerBuilder,
-    this.fromSaved = false,
   });
 
   final bool inAppVideo;
-  final bool fromSaved;
+  final WidgetBuilder content;
   final Widget Function(String videoId, VoidCallback onFailed)? playerBuilder;
 
   @override
   State<_DetailView> createState() => _DetailViewState();
+}
+
+/// 조각들이 [_DetailViewState]의 재생 · 열기 동작과 상태를 쓰게 내려 준다.
+class _DetailScope extends InheritedWidget {
+  const _DetailScope({
+    required this.view,
+    required this.playing,
+    required this.blocked,
+    required super.child,
+  });
+
+  final _DetailViewState view;
+  final bool playing;
+  final bool blocked;
+
+  static _DetailViewState of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_DetailScope>()!.view;
+
+  @override
+  bool updateShouldNotify(_DetailScope old) =>
+      playing != old.playing || blocked != old.blocked;
 }
 
 class _DetailViewState extends State<_DetailView> {
@@ -198,34 +245,10 @@ class _DetailViewState extends State<_DetailView> {
       isYoutubeUrl(hit.url) &&
       isYoutubeVideoId(hit.id);
 
-  /// 저장한 음원 화면에서 연 상세에서 처음 재생: 메인 재생 대기열로 시작한다 (영상으로 저장한 곡은 영상으로 나온다).
-  Future<void> _startSaved(MediaHit hit) async {
-    final now = context.read<NowPlayingCubit>();
-    final saved = context.read<SavedVideosCubit>().state;
-    final at = saved.indexWhere((v) => v.id == hit.id);
-    final ready = at >= 0 && saved[at].ready;
-    // 두 소리가 겹치지 않게 미리 듣기는 멈추고, 메인 재생 대기열로 시작한다.
-    await _preview.stop();
-    if (!ready) {
-      // 아직 다 받지 못한 곡은 한 곡만 미리 듣기로 튼다.
-      unawaited(
-        _preview.toggle(hit, videoQuality: at < 0 ? null : saved[at].quality),
-      );
-      return;
-    }
-    final tracks = await savedTracksResolved(saved);
-    final index = tracks.indexWhere(
-      (t) => t.id == '${Track.savedIdPrefix}${hit.id}',
-    );
-    if (tracks.isEmpty) return;
-    now.playQueue(tracks, index: index < 0 ? 0 : index);
-  }
-
   /// 썸네일의 재생 버튼: 앱 안에서 틀 수 있는 유튜브 영상은 미리 듣기(소리 + 영상)로 그 자리에서 튼다.
   /// 그 화면을 나가면 미니 플레이어가 영상을 이어서 보여 준다.
   /// 미리 듣기를 시작하지 못하면 앱 안 플레이어(웹뷰)로, 그것도 안 되면 유튜브로 연다.
   Future<void> _play(MediaHit hit) async {
-    if (widget.fromSaved) return _startSaved(hit);
     if (widget.inAppVideo && isYoutubeUrl(hit.url)) {
       // 언어 목록을 아직 읽는 중이면 기다려, 시스템 언어 기본값이 빠지지 않게 한다.
       final language = await context
@@ -253,89 +276,42 @@ class _DetailViewState extends State<_DetailView> {
   });
 
   @override
+  Widget build(BuildContext context) => _DetailScope(
+    view: this,
+    playing: _playing,
+    blocked: _embedBlocked,
+    child: Builder(builder: widget.content),
+  );
+}
+
+/// 영상 · 썸네일 조각 (눌러서 재생, 임시 저장한 곡이면 저장한 영상 · 스트리밍 영상).
+class MediaDetailMedia extends StatelessWidget {
+  const MediaDetailMedia({super.key});
+
+  @override
   Widget build(BuildContext context) {
+    final view = _DetailScope.of(context);
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
     final p = context.palette;
-    final state = context.watch<MediaDetailCubit>().state;
-    final hit = state.hit;
-    final locale = Localizations.localeOf(context).toString();
-    final youtube = isYoutubeUrl(hit.url);
-    // 유튜브가 아닌 곳(SoundCloud 등)은 영상이 아니라 음원이다: 커버 · 아티스트 · 재생수로 보여 준다.
-    final audio = !youtube;
-    final site = youtube ? '' : siteNameOf(hit.url);
-
-    final views = hit.viewCount;
-    final uploaded = hit.uploadedAt;
-    final rows = <(String, String)>[
-      if (!youtube && site.isNotEmpty) (l10n.mediaDetailSite, site),
-      if (hit.duration != null)
-        (l10n.mediaDetailDuration, formatDuration(hit.duration!)),
-      if (views != null)
-        (
-          audio ? l10n.mediaDetailPlays : l10n.mediaDetailViews,
-          l10n.mediaDetailViewCount(
-            NumberFormat.compact(locale: locale).format(views),
-          ),
-        ),
-      if (hit.likeCount != null)
-        (
-          l10n.mediaDetailLikes,
-          NumberFormat.compact(locale: locale).format(hit.likeCount),
-        ),
-      if (uploaded != null)
-        (
-          l10n.mediaDetailUploaded,
-          MaterialLocalizations.of(context).formatCompactDate(uploaded),
-        ),
-      if (hit.creators.length > 1)
-        (
-          l10n.mediaDetailCollaborators,
-          // 대표 채널은 위 채널 줄에 있어서 나머지 공동 작업자만 적는다.
-          hit.creators.where((c) => c != hit.uploader).join(' · '),
-        ),
-      if (hit.categories.isNotEmpty)
-        (
-          audio ? l10n.mediaDetailGenre : l10n.mediaDetailCategory,
-          hit.categories.map((c) => categoryLabel(l10n, c)).join(' · '),
-        ),
-    ];
-
-    return Scaffold(
-      backgroundColor: p.background,
-      body: AppBackground(
-        child: SafeArea(
-          child: Column(
-            children: [
-              AppTopBar(
-                title: l10n.mediaDetailTitle,
-                leading: AppBackButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-                // 라이브가 아니면 저장해 둘 수 있다 (유튜브는 영상이라 화질을 고르고, 사운드클라우드 등은 음원만).
-                actions: [if (!hit.isLive) _SaveButton(hit: hit)],
-              ),
-              // 받기 전 상세 화면은 목록 위에 얇은 막대로 읽는 중임을 알린다.
-              LoadingBar(loading: state.loading),
-              Expanded(
-                child: ListView(
-                  padding: AppSpacing.screen.copyWith(top: AppSpacing.sm),
-                  children: [
-                    if (_playing && _canEmbed(hit))
-                      (widget.playerBuilder ??
+    final hit = context.watch<MediaDetailCubit>().state.hit;
+    final audio = !isYoutubeUrl(hit.url);
+    final mediaChildren = <Widget>[
+                    if (view._playing && view._canEmbed(hit))
+                      (view.widget.playerBuilder ??
                           (id, onFailed) => YoutubeEmbedPlayer(
                             key: ValueKey('embed-$id'),
                             videoId: id,
                             onFailed: (_) => onFailed(),
-                          ))(hit.id, _onEmbedFailed)
+                          ))(hit.id, view._onEmbedFailed)
                     else
                       _Thumbnail(
                         hit: hit,
-                        inApp: _canEmbed(hit),
+                        inApp: view._canEmbed(hit),
                         audio: audio,
-                        onPlay: () => unawaited(_play(hit)),
+                        onPlay: () => unawaited(view._play(hit)),
                       ),
-                    if (_embedBlocked)
+                    if (view._embedBlocked)
                       Padding(
                         padding: const EdgeInsets.only(top: AppSpacing.sm),
                         child: Row(
@@ -357,14 +333,96 @@ class _DetailViewState extends State<_DetailView> {
                           ],
                         ),
                       ),
+    ];
+    return Column(mainAxisSize: MainAxisSize.min, children: mediaChildren);
+  }
+}
+
+/// 정보 조각: 제목 · 채널 · 정보 · 설명 목록 (스크롤). [header]는 목록 맨 위에 같이 스크롤되는 자리.
+/// [showPreview]면 미리 듣기 구역도 보인다.
+class MediaDetailInfo extends StatelessWidget {
+  const MediaDetailInfo({
+    super.key,
+    this.header,
+    this.showPreview = false,
+  });
+
+  final Widget? header;
+  final bool showPreview;
+
+
+  @override
+  Widget build(BuildContext context) {
+    final view = _DetailScope.of(context);
+    final l10n = context.l10n;
+    final text = Theme.of(context).textTheme;
+    final p = context.palette;
+    final state = context.watch<MediaDetailCubit>().state;
+    final hit = state.hit;
+    final locale = Localizations.localeOf(context).toString();
+    final youtube = isYoutubeUrl(hit.url);
+    // 유튜브가 아닌 곳(SoundCloud 등)은 영상이 아니라 음원이다: 커버 · 아티스트 · 재생수로 보여 준다.
+    final audio = !youtube;
+    final site = youtube ? '' : siteNameOf(hit.url);
+
+    final views = hit.viewCount;
+    final uploaded = hit.uploadedAt;
+    // 아직 읽는 중이면 칸을 지우지 않고 "…"로 둔다 (곧 채워진다는 걸 알 수 있게).
+    final waiting = state.loading || state.pending;
+    const dots = '…';
+    final rows = <(String, String)>[
+      if (!youtube && site.isNotEmpty) (l10n.mediaDetailSite, site),
+      if (hit.duration != null)
+        (l10n.mediaDetailDuration, formatDuration(hit.duration!)),
+      if (views != null)
+        (
+          audio ? l10n.mediaDetailPlays : l10n.mediaDetailViews,
+          l10n.mediaDetailViewCount(
+            NumberFormat.compact(locale: locale).format(views),
+          ),
+        )
+      else if (waiting)
+        (audio ? l10n.mediaDetailPlays : l10n.mediaDetailViews, dots),
+      if (hit.likeCount != null)
+        (
+          l10n.mediaDetailLikes,
+          NumberFormat.compact(locale: locale).format(hit.likeCount),
+        )
+      else if (youtube && waiting)
+        (l10n.mediaDetailLikes, dots),
+      if (uploaded != null)
+        (
+          l10n.mediaDetailUploaded,
+          MaterialLocalizations.of(context).formatCompactDate(uploaded),
+        )
+      else if (waiting)
+        (l10n.mediaDetailUploaded, dots),
+      if (hit.creators.length > 1)
+        (
+          l10n.mediaDetailCollaborators,
+          // 대표 채널은 위 채널 줄에 있어서 나머지 공동 작업자만 적는다.
+          hit.creators.where((c) => c != hit.uploader).join(' · '),
+        ),
+      if (hit.categories.isNotEmpty)
+        (
+          audio ? l10n.mediaDetailGenre : l10n.mediaDetailCategory,
+          hit.categories.map((c) => categoryLabel(l10n, c)).join(' · '),
+        ),
+    ];
+
+    return ListView(
+                  padding: AppSpacing.screen.copyWith(top: AppSpacing.sm),
+                  children: [
+                    ?header,
                     const SizedBox(height: AppSpacing.sm),
+                    if (showPreview)
                     SectionBlock(
                       title: l10n.mediaDetailSectionPreview,
                       children: [
                         Center(child: PreviewButton(hit: hit)),
                         PreviewProgressBar(hitId: hit.id, showTime: true),
                         AudioLanguageRow(
-                          onChanged: (id) => _restartPreview(hit, id),
+                          onChanged: (id) => view._restartPreview(hit, id),
                         ),
                       ],
                     ),
@@ -387,7 +445,7 @@ class _DetailViewState extends State<_DetailView> {
                               ),
                         onOpen: hit.channelUrl == null
                             ? null
-                            : () => _open(hit.channelUrl!),
+                            : () => view._open(hit.channelUrl!),
                       ),
                     ],
                     if (rows.isNotEmpty)
@@ -414,22 +472,25 @@ class _DetailViewState extends State<_DetailView> {
                       ),
                     const SizedBox(height: AppSpacing.md),
                   ],
-                ),
-              ),
-              // 저장한 음원 화면에서 연 상세는 재생 조작부를 아래에 늘 고정한다.
-              if (widget.fromSaved)
-                Builder(
-                  builder: (context) {
-                    final now = context.watch<NowPlayingCubit>();
-                    final current = now.state.track?.id ?? '';
-                    // 메인 재생이 임시 저장한 음원을 듣는 중이면 이 곡이 아니어도 같은 조작부를 쓴다.
-                    if (current.startsWith(Track.savedIdPrefix)) {
-                      return const SavedQueueControls();
-                    }
-                    return SavedQueueControls(onStart: () => _startSaved(hit));
-                  },
-                ),
-              Padding(
+                );
+  }
+}
+
+/// 상세 화면 틀: 맨 위 줄 · 한 스크롤(영상 + 정보) · 아래 재생 / 받기 버튼.
+class _DetailPage extends StatelessWidget {
+  const _DetailPage();
+
+  @override
+  Widget build(BuildContext context) {
+    final view = _DetailScope.of(context);
+    final l10n = context.l10n;
+    final p = context.palette;
+    final state = context.watch<MediaDetailCubit>().state;
+    final hit = state.hit;
+    final youtube = isYoutubeUrl(hit.url);
+
+    final actionRow =
+        Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.md,
                   AppSpacing.xs,
@@ -449,7 +510,7 @@ class _DetailViewState extends State<_DetailView> {
                         icon: AppIcons.play,
                         // 이 앱의 주 동작은 받기라서 원본 열기는 보조(tonal)로 둔다.
                         variant: PillVariant.tonal,
-                        onPressed: () => _open(hit.url),
+                        onPressed: () => view._open(hit.url),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
@@ -482,7 +543,29 @@ class _DetailViewState extends State<_DetailView> {
                     ),
                   ],
                 ),
+              );
+
+    return Scaffold(
+      backgroundColor: p.background,
+      body: AppBackground(
+        child: SafeArea(
+          child: Column(
+            children: [
+              AppTopBar(
+                title: l10n.mediaDetailTitle,
+                leading: AppBackButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+                // 라이브가 아니면 저장해 둘 수 있다 (유튜브는 영상이라 화질을 고르고, 사운드클라우드 등은 음원만).
+                actions: [if (!hit.isLive) _SaveButton(hit: hit)],
               ),
+              // 받기 전 상세 화면은 목록 위에 얇은 막대로 읽는 중임을 알린다.
+              LoadingBar(loading: state.loading),
+              const Expanded(
+                child: MediaDetailInfo(header: MediaDetailMedia(), showPreview: true),
+              ),
+              // 재생 · 받기 버튼은 아래에 고정한다.
+              actionRow,
             ],
           ),
         ),
@@ -596,7 +679,7 @@ class _Thumbnail extends StatelessWidget {
     final mainVideo = context.select(
       (NowPlayingCubit c) =>
           c.state.track?.id == '${Track.savedIdPrefix}${hit.id}' &&
-          c.state.track!.hasVideo,
+          c.state.track!.isVideo,
     );
     // 소리만 저장한 곡을 메인 재생으로 듣는 중: 영상은 스트림으로 읽어 메인 소리에 맞춰 보여 준다 (유튜브만).
     final mainAudioOnly =
@@ -605,7 +688,7 @@ class _Thumbnail extends StatelessWidget {
         context.select(
           (NowPlayingCubit c) =>
               c.state.track?.id == '${Track.savedIdPrefix}${hit.id}' &&
-              !c.state.track!.hasVideo,
+              !c.state.track!.isVideo,
         );
     return LayoutBuilder(
       builder: (context, box) {
@@ -697,8 +780,7 @@ class _OnDemandVideoState extends State<_OnDemandVideo> {
             emphasized: true,
             size: AppSizes.circleButtonLarge,
             onPressed: () {
-              mainStreamVideoTrack.value = trackId;
-              mainStreamVideoOn.value = true;
+              startMainStreamVideo(trackId);
               setState(() => _loading = true);
             },
           );
@@ -719,6 +801,15 @@ class _OnDemandVideoState extends State<_OnDemandVideo> {
                   )
                 else
                   const NativeVideo(),
+                // 영상을 읽고 첫 화면이 나오기까지 기다리는 동안 "불러오는 중"을 보여, 멈춘 것으로 오해하지 않게 한다.
+                BlocBuilder<VideoSurfaceCubit, VideoSurfaceState>(
+                  buildWhen: (a, b) => a.ready != b.ready,
+                  builder: (context, surface) => surface.ready
+                      ? const SizedBox.shrink()
+                      : const IgnorePointer(
+                          child: Center(child: LoadingIndicator()),
+                        ),
+                ),
                 const PreviewVideoControls(main: true),
               ],
             ),

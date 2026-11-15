@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:music_download_play_app/core/design/design.dart';
 import 'package:music_download_play_app/core/di/injector.dart';
 import 'package:music_download_play_app/features/player/presentation/bloc/now_playing_cubit.dart';
 import 'package:music_download_play_app/features/search/presentation/bloc/preview_cubit.dart';
@@ -119,7 +120,7 @@ void main() {
       expect(find.byTooltip('Play in app'), findsNothing);
 
       // 이제 재생 버튼도 유튜브로 연다.
-      await tester.tap(find.byTooltip('Watch on YouTube').first);
+      await tester.tap(find.byTooltip('Play').first);
       await tester.pumpAndSettle();
       expect(opener.opened, [_yt.url]);
     });
@@ -134,7 +135,7 @@ void main() {
 
     testWidgets('앱 안 재생을 못 하는 플랫폼이면 재생 버튼이 유튜브로 연다', (tester) async {
       await open(tester, inApp: false);
-      await tester.tap(find.byTooltip('Watch on YouTube').first);
+      await tester.tap(find.byTooltip('Play').first);
       await tester.pumpAndSettle();
       expect(opener.opened, [_yt.url]);
       expect(find.text('PLAYER'), findsNothing);
@@ -150,13 +151,13 @@ void main() {
       await open(tester, hit: web);
       expect(find.byTooltip('Play in app'), findsNothing);
       // 음원이라 영상 문구가 아니라 "듣기" 문구가 나온다.
-      expect(find.byTooltip('Watch on YouTube'), findsNothing);
+      expect(find.byTooltip('Play'), findsNothing);
       await tester.tap(find.byKey(const ValueKey('detail-watch')));
       await tester.pumpAndSettle();
       expect(find.text('soundcloud.com'), findsOneWidget);
       expect(find.text('Open channel'), findsNothing);
       expect(opener.opened, [web.url]);
-      expect(find.text('Listen on SoundCloud'), findsOneWidget);
+      expect(find.widgetWithText(PillButton, 'Play'), findsOneWidget);
     });
   });
 }

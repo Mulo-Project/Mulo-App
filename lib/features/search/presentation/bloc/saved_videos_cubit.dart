@@ -19,6 +19,7 @@ class SavedVideosCubit extends Cubit<List<SavedVideo>> {
     WatchSavedDone watchDone, {
     this.resume,
     WatchSavedProgress? watchProgress,
+    this.detailUpdater,
   }) : super(const []) {
     _done = watchDone(const NoParams()).listen(_onDone);
     _progressSub = watchProgress?.call(const NoParams()).listen((e) {
@@ -33,6 +34,7 @@ class SavedVideosCubit extends Cubit<List<SavedVideo>> {
   final RemoveSavedVideo _remove;
   final MarkSavedVideoReady _markReady;
   final ResumeSavedVideos? resume;
+  final UpdateSavedVideoDetail? detailUpdater;
   late final StreamSubscription<({String id, bool ok})> _done;
   StreamSubscription<({String id, int percent})>? _progressSub;
 
@@ -115,6 +117,16 @@ class SavedVideosCubit extends Cubit<List<SavedVideo>> {
     } finally {
       _busy.remove(hit.id);
     }
+  }
+
+  /// 저장한 곡의 상세 정보를 읽은 대로 갱신해 저장해 둔다 (좋아요 수 · 공동 작업자 등이 나중에 읽혀서).
+  Future<void> updateDetail(MediaHit hit) async {
+    final current = state.where((v) => v.id == hit.id).firstOrNull;
+    if (current == null || current.hit == hit) return;
+    emit([
+      for (final v in state) v.id == hit.id ? v.copyWith(hit: hit) : v,
+    ]);
+    await detailUpdater?.call(hit);
   }
 
   Future<void> remove(String id) async {
