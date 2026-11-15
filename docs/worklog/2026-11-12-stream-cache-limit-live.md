@@ -51,3 +51,4 @@
 - 설정의 영상 화질 시트가 낮은 화면 · 큰 글자에서 넘치던 문제: 내용을 `SingleChildScrollView`로 감싸고 `isScrollControlled` · `useSafeArea`로 열도록 했다 (저장 화질 시트와 같은 방식).
 - 가운데(다운로드 영역)의 썸네일은 눌림을 막지 않는다: 지금 메인 재생 중인 임시 저장 곡이라 영상 곡은 메인 영상(컨트롤 포함), 소리만 저장한 곡은 영상 재생 버튼이 그대로 동작한다. 미리 듣기 영역만 뺐다.
 - 영상 저장(`saveVideo`)이 403(Forbidden)으로 실패하던 문제: 주소 읽기와 같이 기본 클라이언트로 실패하면 `android_vr`로 한 번 더 받는다 (`withFallback`). 테스트 `saveVideoRetriesWithAndroidVrOnForbidden` 추가.
+- 테스트: 옛 저장 상세(`queue-bar-play`) · 문구("Watch on YouTube")를 기대하던 `saved_queue_test` · `saved_button_sync_test` · `youtube_embed_test`를 새 구조(재생 화면 + `saved-expand`)에 맞췄다.

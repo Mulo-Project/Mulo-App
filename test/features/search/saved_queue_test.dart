@@ -9,6 +9,7 @@ import 'package:music_download_play_app/features/search/domain/repositories/save
 import 'package:music_download_play_app/features/covers/presentation/bloc/cover_cubit.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 import 'package:music_download_play_app/features/player/presentation/bloc/now_playing_cubit.dart';
+import 'package:music_download_play_app/features/player/presentation/widgets/player_common.dart';
 import 'package:music_download_play_app/features/search/domain/entities/video_quality.dart';
 import 'package:music_download_play_app/features/search/domain/entities/video_stream.dart';
 
@@ -52,35 +53,32 @@ void main() {
     expect(state.queue.first.source, TrackSource.saved);
     expect(state.queue.first.uri, 'https://example.com/a.m4a');
     expect(state.isPlaying, isTrue);
-    // 재생 화면이 아니라 타일 상세 화면(하단 조작부)이 열린다.
-    expect(find.byKey(const ValueKey('queue-bar-play')), findsOneWidget);
+    // 재생 화면(가운데에 다운로드 페이지 내용, 확장 버튼)이 열린다.
+    expect(find.byKey(const ValueKey('saved-expand')), findsOneWidget);
   });
 
-  testWidgets(
-    '저장한 곡 상세를 열면 재생 조작부가 있고(재생 전에는 아직 안 틀린다), 목록에서 곡을 틀면 그 곡부터 재생된다',
-    (tester) async {
-      await setUpTestDependencies(
-        engine: FakeDownloaderEngine(info: const VideoInfo(_b)),
-        previewPlayer: FakePreviewPlayer(),
-      );
-      await sl<SavedVideoRepository>().save([_ready(_a), _ready(_b)]);
-      await tester.pumpWidget(const MusicApp(initialLocation: '/search/saved'));
-      await tester.pumpAndSettle();
+  testWidgets('저장 타일을 누르면 그 곡부터 목록 재생을 시작하고 재생 화면이 열린다', (tester) async {
+    await setUpTestDependencies(
+      engine: FakeDownloaderEngine(info: const VideoInfo(_b)),
+      previewPlayer: FakePreviewPlayer(),
+    );
+    await sl<SavedVideoRepository>().save([_ready(_a), _ready(_b)]);
+    await tester.pumpWidget(const MusicApp(initialLocation: '/search/saved'));
+    await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Song B'));
-      await settle(tester);
-      expect(find.byKey(const ValueKey('queue-bar-play')), findsOneWidget);
-      expect(_player(tester).state.queue, isEmpty);
-      await tester.pageBack();
-      await settle(tester);
+    await tester.tap(find.text('Song B'));
+    await settle(tester);
+    expect(find.byKey(const ValueKey('saved-expand')), findsOneWidget);
+    final state = _player(tester).state;
+    expect(state.queue, hasLength(2));
+    expect(state.track?.id, 'saved:b');
+    await tester.pageBack();
+    await settle(tester);
 
-      await tester.tap(find.byKey(const ValueKey('saved-row-play-b')));
-      await settle(tester);
-      final state = _player(tester).state;
-      expect(state.queue, hasLength(2));
-      expect(state.track?.id, 'saved:b');
-    },
-  );
+    await tester.tap(find.byKey(const ValueKey('saved-row-play-a')));
+    await settle(tester);
+    expect(_player(tester).state.track?.id, 'saved:a');
+  });
 
   testWidgets('아직 다 받지 못한 곡은 대기열에 넣지 않고 한 곡만 미리 듣기로 튼다', (tester) async {
     final player = FakePreviewPlayer();
@@ -114,7 +112,7 @@ void main() {
     expect(_player(tester).state.queue.map((t) => t.id), ['saved:a']);
   });
 
-  testWidgets('폰 크기에서도 상세 하단 조작부가 화면 안에 보인다', (tester) async {
+  testWidgets('폰 크기에서도 재생 화면 하단 조작부가 화면 안에 보인다', (tester) async {
     tester.view.physicalSize = const Size(1080, 2340);
     tester.view.devicePixelRatio = 3;
     addTearDown(tester.view.reset);
@@ -128,7 +126,7 @@ void main() {
 
     await tester.tap(find.text('Song B'));
     await settle(tester);
-    final rect = tester.getRect(find.byKey(const ValueKey('queue-bar-play')));
+    final rect = tester.getRect(find.byType(SolidPlayButton));
     expect(rect.height, greaterThan(20));
     expect(rect.bottom, lessThanOrEqualTo(2340 / 3));
     expect(tester.takeException(), isNull);
