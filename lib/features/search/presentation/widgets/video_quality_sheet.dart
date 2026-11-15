@@ -101,6 +101,8 @@ Future<void> showVideoQualitySheet(BuildContext context) {
   final cubit = context.read<VideoQualityCubit>();
   return showAppSheet<void>(
     context,
+    isScrollControlled: true,
+    useSafeArea: true,
     builder: (_) => BlocProvider.value(
       value: cubit,
       child: const _VideoQualitySheet(),
@@ -119,8 +121,9 @@ class _VideoQualitySheet extends StatelessWidget {
     final current = context.watch<VideoQualityCubit>().state;
     final preview = context.read<PreviewCubit>();
     final auto = preview.autoQuality.value;
+    // 항목이 많아 낮은 화면 · 큰 글자에서는 넘치므로 스크롤되게 한다.
     return SafeArea(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: appSheetPadding,
         child: Column(
           mainAxisSize: MainAxisSize.min,

@@ -48,3 +48,4 @@
 - 정리: 다운로드 상세에 붙어 있던 재생 조작 위젯(`SavedQueueDetailScreen` · `SavedQueueControls` · `savedMode` · `fromSaved` · `_startSaved`)을 모두 지웠다. 저장 타일은 다운로드 페이지(`showMediaDetail`)를 열고, 전체 재생 · 셔플은 플레이어 화면(`Routes.player`)을 연다 (D-165).
 - 저장 타일의 정보 부분을 누르면 재생 화면(`Routes.player`)이 열린다: 끝까지 받은 곡은 그 곡부터 목록 재생을 시작하고(이미 듣는 중이면 그대로), 아직 받는 중인 곡은 다운로드 페이지를 연다. 다운로드 페이지는 재생 화면의 썸네일에서 들어간다.
 - 정정: 임시 저장 곡의 가운데는 썸네일이 아니라 다운로드 페이지 내용이다 (`SavedPlayer`가 `MediaDetailScreen(embedded: true)`를 끼운다). 오른쪽 위 확장 버튼(`saved-expand`)을 누르면 다운로드 페이지 자체로 이동한다. 커버 누름(`onCoverTap`)은 걷어냈다.
+- 설정의 영상 화질 시트가 낮은 화면 · 큰 글자에서 넘치던 문제: 내용을 `SingleChildScrollView`로 감싸고 `isScrollControlled` · `useSafeArea`로 열도록 했다 (저장 화질 시트와 같은 방식).
