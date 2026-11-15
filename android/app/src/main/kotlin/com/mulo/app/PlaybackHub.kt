@@ -107,6 +107,9 @@ object PlaybackHub {
     /** 미리 듣기 소리를 직접 켜고 끈다 (알림 버튼이 앱을 거치지 않고 바로 동작하게). [PreviewChannel]이 단다. */
     @Volatile var previewControl: ((Boolean) -> Unit)? = null
 
+    /** 미리 듣기를 직접 끝낸다 (알림 닫기 버튼). [PreviewChannel]이 단다. */
+    @Volatile var previewStop: (() -> Unit)? = null
+
     fun init(appContext: Context) {
         if (initialized) return
         initialized = true
@@ -943,7 +946,7 @@ object PlaybackHub {
                 PlaybackButtons.ACTION_SHUFFLE -> toggleShuffle()
                 // 닫기(X): 재생을 멈추고 알림을 치운다 (미리 듣기면 Dart가 미리 듣기를 끝낸다).
                 PlaybackButtons.ACTION_CLOSE -> {
-                    if (sessionPlayer.info?.preview != true) endSessionSoon()
+                    if (sessionPlayer.info?.preview != true) endSessionSoon() else previewStop?.invoke()
                     emitCommand("stop", null)
                 }
             }

@@ -192,7 +192,7 @@ class SessionPlayer(
 
     override fun handleStop(): ListenableFuture<*> {
         // 알림을 밀어서 지우거나 정지 버튼을 눌렀다: 재생을 멈추고 세션을 정리한다.
-        if (!previewing) PlaybackHub.endSessionSoon()
+        if (!previewing) PlaybackHub.endSessionSoon() else PlaybackHub.previewStop?.invoke()
         onCommand("stop", null)
         return Futures.immediateVoidFuture()
     }
