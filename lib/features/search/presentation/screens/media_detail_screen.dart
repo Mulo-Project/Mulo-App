@@ -419,7 +419,7 @@ class MediaDetailInfo extends StatelessWidget {
     return ListView(
                   padding: AppSpacing.screen.copyWith(top: AppSpacing.sm),
                   children: [
-                    if (header != null) header!,
+                    ?header,
                     const SizedBox(height: AppSpacing.sm),
                     if (showPreview)
                     SectionBlock(
