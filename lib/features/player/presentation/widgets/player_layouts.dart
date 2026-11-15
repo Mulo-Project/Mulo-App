@@ -311,14 +311,10 @@ class SavedPlayer extends StatelessWidget {
     required this.panel,
     required this.onExpand,
     required this.expandTooltip,
-    this.belowExpand,
   });
 
   final PlayerLayoutData data;
   final Widget panel;
-
-  /// 확장 버튼 줄 바로 아래 (아래 조작부 위)에 놓을 것.
-  final Widget? belowExpand;
   final VoidCallback onExpand;
   final String expandTooltip;
 
@@ -335,7 +331,7 @@ class SavedPlayer extends StatelessWidget {
             PlayerTopBar(track: data.track),
             // 영상 · 썸네일은 상세 화면([panel])이 맨 위에 고정해 보여 준다 (영상 저장 곡 · 소리만 저장한 곡 모두 같은 화면을 쓴다).
             Expanded(child: panel),
-            // 표시 영역(정보) 아래 줄: 영상이 위에 고정돼 있어 "위"가 모호하므로 확장 버튼은 영역 아래에 둔다.
+            // 표시 영역(정보) 아래 줄: 다운로드 상세로 가는 확장 버튼.
             Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.md,
@@ -353,7 +349,6 @@ class SavedPlayer extends StatelessWidget {
                 ],
               ),
             ),
-            ?belowExpand,
             PlayerControls(
               data: data,
               play: SolidPlayButton(data: data, size: 72),

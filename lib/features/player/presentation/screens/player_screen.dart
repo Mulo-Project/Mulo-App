@@ -153,10 +153,15 @@ class _PlayerScreenState extends State<PlayerScreen> {
     MediaHit? savedHit,
   }) {
     if (savedHit != null) {
-      return _SavedPlayerHost(
-        key: ValueKey(savedHit.id),
+      return SavedPlayer(
         data: data,
-        hit: savedHit,
+        // 상세 화면 조각을 조합한다: 영상 · 썸네일이 정보 목록 맨 위에서 같이 스크롤된다.
+        panel: MediaDetailScope(
+          key: ValueKey(savedHit.id),
+          hit: savedHit,
+          builder: (_) =>
+              const MediaDetailInfo(header: MediaDetailMedia()),
+        ),
         expandTooltip: context.l10n.mediaDetailTitle,
         onExpand: () => unawaited(showMediaDetail(context, savedHit)),
       );
@@ -169,127 +174,4 @@ class _PlayerScreenState extends State<PlayerScreen> {
     PlayerStyle.fullBleed => FullBleedPlayer(data: data),
     PlayerStyle.arc => ArcPlayer(data: data),
   };
-}
-
-/// 임시 저장한 곡 플레이어: 정보를 펼쳤는지를 쥐고, 가운데 내용([_SavedDetailPanel])과 그 아래 펼치기 줄을 이어 준다.
-class _SavedPlayerHost extends StatefulWidget {
-  const _SavedPlayerHost({
-    super.key,
-    required this.data,
-    required this.hit,
-    required this.expandTooltip,
-    required this.onExpand,
-  });
-
-  final PlayerLayoutData data;
-  final MediaHit hit;
-  final String expandTooltip;
-  final VoidCallback onExpand;
-
-  @override
-  State<_SavedPlayerHost> createState() => _SavedPlayerHostState();
-}
-
-class _SavedPlayerHostState extends State<_SavedPlayerHost> {
-  var _open = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return SavedPlayer(
-      data: widget.data,
-      // 상세 화면 조각을 조합한다: 처음엔 영상 · 썸네일만, 펼치면 정보와 한 스크롤.
-      panel: MediaDetailScope(
-        hit: widget.hit,
-        builder: (_) => _SavedDetailPanel(open: _open),
-      ),
-      expandTooltip: widget.expandTooltip,
-      onExpand: widget.onExpand,
-      // 다운로드 상세로 가는 확장 버튼 바로 아래에 둔다.
-      belowExpand: _InfoToggleTile(
-        open: _open,
-        onTap: () => setState(() => _open = !_open),
-      ),
-    );
-  }
-}
-
-/// 가운데 내용: 처음에는 일반 곡처럼 썸네일 · 영상만 크게 보이고, 펼치면 고정이 풀려 영상 · 썸네일과 정보가 한 스크롤이 된다.
-class _SavedDetailPanel extends StatelessWidget {
-  const _SavedDetailPanel({required this.open});
-
-  final bool open;
-
-  /// 펼쳤을 때 목록 끝이 아래 줄 쪽으로 서서히 사라지는 높이.
-  static const _fade = 32.0;
-
-  @override
-  Widget build(BuildContext context) {
-    final p = context.palette;
-    if (!open) {
-      // 낮은 화면에서도 영상 · 썸네일이 넘치지 않게 남은 높이에 맞춘다.
-      return LayoutBuilder(
-        builder: (context, box) => Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: MediaDetailMedia(maxHeight: box.maxHeight),
-          ),
-        ),
-      );
-    }
-    // 어떤 배경과도 어울리도록 바탕색을 깔지 않고, 내용이 아래로 서서히 사라지게 한다.
-    return ShaderMask(
-      blendMode: BlendMode.dstIn,
-      shaderCallback: (rect) => LinearGradient(
-        begin: Alignment.topCenter,
-        end: Alignment.bottomCenter,
-        colors: [
-          p.background,
-          p.background,
-          p.background.withValues(alpha: 0),
-        ],
-        stops: [0, (1 - _fade / rect.height).clamp(0, 1), 1],
-      ).createShader(rect),
-      child: const MediaDetailInfo(
-        header: MediaDetailMedia(),
-        bottomInset: _fade,
-      ),
-    );
-  }
-}
-
-/// 정보 펼치기 줄: 가로로 꽉 차는 눌림 영역에 가운데 화살표 + "정보".
-class _InfoToggleTile extends StatelessWidget {
-  const _InfoToggleTile({required this.open, required this.onTap});
-
-  final bool open;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final p = context.palette;
-    final text = Theme.of(context).textTheme;
-    return GestureDetector(
-      key: const ValueKey('saved-info-toggle'),
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: SizedBox(
-        height: 44,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              open ? AppIcons.chevronUp : AppIcons.chevronDown,
-              size: AppSizes.iconSm,
-              color: p.onSurfaceMuted,
-            ),
-            const SizedBox(width: AppSpacing.xs),
-            Text(
-              context.l10n.mediaDetailSectionInfo,
-              style: text.labelLarge?.copyWith(color: p.onSurfaceMuted),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
