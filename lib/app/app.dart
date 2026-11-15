@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -41,6 +43,7 @@ import '../features/search/presentation/bloc/video_quality_cubit.dart';
 import '../features/search/domain/entities/media_info.dart';
 import '../features/search/presentation/saved_track.dart';
 import '../features/search/presentation/screens/media_detail_screen.dart';
+import '../features/search/presentation/screens/saved_queue_detail_screen.dart';
 import '../features/security/presentation/bloc/app_lock_cubit.dart';
 import '../features/security/presentation/widgets/lock_gate.dart';
 import '../features/subscriptions/presentation/widgets/new_videos_launcher.dart';
@@ -82,23 +85,39 @@ class _MusicAppState extends State<MusicApp> {
     }
     final track = nowPlaying.state.track;
     if (track == null) return;
-    // 임시 저장한 음원(saved:)을 메인 재생으로 듣는 중이면 플레이어 화면이 아니라 그 영상의 상세 화면을 연다.
-    final savedId = savedVideoIdOf(track.id);
-    if (savedId != null) {
-      final videos = context.read<SavedVideosCubit>();
-      // 앱이 막 켜졌다면 저장한 목록을 아직 못 읽었을 수 있어 잠시 기다린다.
-      for (var i = 0; i < 10 && videos.state.isEmpty; i++) {
-        await Future<void>.delayed(const Duration(milliseconds: 150));
-      }
-      final saved = videos.state.where((v) => v.id == savedId).firstOrNull;
-      if (saved != null) {
-        _openDownload(saved.hit);
-        return;
-      }
-    }
+    // 임시 저장한 음원(saved:)을 메인 재생으로 듣는 중이면 플레이어 화면이 아니라 저장 상세 화면을 연다
+    // (미니 플레이어를 눌렀을 때와 같다).
+    if (await _openSavedDetailOf(track.id)) return;
     if (_router.routerDelegate.currentConfiguration.uri.path != Routes.player) {
       _router.push(Routes.player);
     }
+  }
+
+  /// 대기열 곡 [trackId]가 임시 저장한 음원이면 그 저장 상세 화면을 열고 true. 아니면 false.
+  /// 앱이 막 켜졌다면 저장한 목록을 아직 못 읽었을 수 있어 잠시 기다린다.
+  Future<bool> _openSavedDetailOf(String trackId) async {
+    final savedId = savedVideoIdOf(trackId);
+    final navigator = _router.routerDelegate.navigatorKey.currentState;
+    final context = _router.routerDelegate.navigatorKey.currentContext;
+    if (savedId == null || navigator == null || context == null) return false;
+    final videos = context.read<SavedVideosCubit>();
+    for (var i = 0; i < 10 && videos.state.isEmpty; i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+    }
+    final saved = videos.state.where((v) => v.id == savedId).firstOrNull;
+    if (saved == null || !navigator.mounted) return false;
+    unawaited(pushSavedQueueDetail(navigator, saved.hit));
+    return true;
+  }
+
+  /// 플레이어 화면이 열린 채 곡이 임시 저장한 음원으로 넘어갔다: 플레이어 화면을 닫고 그 곡의 저장 상세로 간다.
+  void _followToSavedDetail(String trackId) {
+    if (_router.routerDelegate.currentConfiguration.uri.path != Routes.player) {
+      return;
+    }
+    if (savedVideoIdOf(trackId) == null) return;
+    _router.pop();
+    unawaited(_openSavedDetailOf(trackId));
   }
 
   /// 받기 알림을 눌렀을 때: 그 곡의 상세 화면을 맨 위에 연다.
@@ -216,7 +235,13 @@ class _MusicAppState extends State<MusicApp> {
               value: dark
                   ? SystemUiOverlayStyle.light
                   : SystemUiOverlayStyle.dark,
-              child: NotificationBridge(
+              child: BlocListener<NowPlayingCubit, NowPlayingState>(
+                listenWhen: (a, b) => a.track?.id != b.track?.id,
+                listener: (_, s) {
+                  final id = s.track?.id;
+                  if (id != null) _followToSavedDetail(id);
+                },
+                child: NotificationBridge(
                 onOpenPlayer: _openPlayer,
                 onOpenDownload: _openDownload,
                 child: LyricsOverlayBridge(
@@ -229,6 +254,7 @@ class _MusicAppState extends State<MusicApp> {
                     ),
                   ),
                 ),
+              ),
               ),
             );
           },

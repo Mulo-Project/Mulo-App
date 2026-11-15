@@ -279,8 +279,7 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
                     result.success(null)
                 }
                 "setCacheLimit" -> {
-                    // 열려 있는 저장소를 닫아야 해서 듣던 미리 듣기는 멈춘다.
-                    stop()
+                    // 열린 저장소는 닫지 않고 한도만 바꾼다 ([StreamCache.setLimit]): 듣던 미리 듣기는 그대로 이어진다.
                     StreamCache.setLimit(context, (call.arguments as Number).toLong())
                     result.success(null)
                 }

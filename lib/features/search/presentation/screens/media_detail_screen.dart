@@ -206,6 +206,15 @@ class _DetailViewState extends State<_DetailView> {
     final ready = at >= 0 && saved[at].ready;
     // 두 소리가 겹치지 않게 미리 듣기는 멈추고, 메인 재생 대기열로 시작한다.
     await _preview.stop();
+    // 이미 메인 대기열에 있는 곡이면 대기열을 바꾸지 않고 그 곡으로 건너뛴다 (재생 목록이 다른 임시 음원으로 갈아치워지지 않게).
+    final inQueue = now.state.queue.indexWhere(
+      (t) => t.id == '${Track.savedIdPrefix}${hit.id}',
+    );
+    if (ready && inQueue >= 0) {
+      now.jumpTo(inQueue);
+      if (!now.state.isPlaying) now.togglePlay();
+      return;
+    }
     if (!ready) {
       // 아직 다 받지 못한 곡은 한 곡만 미리 듣기로 튼다.
       unawaited(
