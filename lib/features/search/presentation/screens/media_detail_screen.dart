@@ -358,6 +358,7 @@ class MediaDetailInfo extends StatelessWidget {
     this.header,
     this.showPreview = false,
     this.controller,
+    this.bottomInset = 0,
   });
 
   final Widget? header;
@@ -365,6 +366,9 @@ class MediaDetailInfo extends StatelessWidget {
 
   /// 시트 안에서 쓸 때 시트의 스크롤 컨트롤러 (끌어올리기와 목록 스크롤이 이어지게).
   final ScrollController? controller;
+
+  /// 목록 맨 아래에 비워 둘 높이 (그 위에 겹쳐 뜨는 버튼에 마지막 줄이 가리지 않게).
+  final double bottomInset;
 
   @override
   Widget build(BuildContext context) {
@@ -427,7 +431,10 @@ class MediaDetailInfo extends StatelessWidget {
 
     return ListView(
       controller: controller,
-                  padding: AppSpacing.screen.copyWith(top: AppSpacing.sm),
+                  padding: AppSpacing.screen.copyWith(
+                    top: AppSpacing.sm,
+                    bottom: bottomInset,
+                  ),
                   children: [
                     ?header,
                     const SizedBox(height: AppSpacing.sm),

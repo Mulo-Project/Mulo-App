@@ -187,35 +187,91 @@ class _SavedDetailPanel extends StatefulWidget {
 class _SavedDetailPanelState extends State<_SavedDetailPanel> {
   var _open = false;
 
+  /// 아래 펼치기 줄의 높이 (펼쳤을 때 목록 끝이 가리지 않게 비워 둔다).
+  static const _tileHeight = 64.0;
+
   @override
   Widget build(BuildContext context) {
-    final label = context.l10n.mediaDetailSectionInfo;
-    return Column(
+    return Stack(
       children: [
-        Expanded(
+        Positioned.fill(
           child: _open
-              ? const MediaDetailInfo(header: MediaDetailMedia())
-              : const Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                    child: MediaDetailMedia(),
+              ? const MediaDetailInfo(
+                  header: MediaDetailMedia(),
+                  bottomInset: _tileHeight,
+                )
+              : const Padding(
+                  padding: EdgeInsets.only(bottom: _tileHeight),
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                      child: MediaDetailMedia(),
+                    ),
                   ),
                 ),
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-          child: Row(
-            children: [
-              CircleIconButton(
-                key: const ValueKey('saved-info-toggle'),
-                icon: _open ? AppIcons.chevronUp : AppIcons.chevronDown,
-                tooltip: label,
-                onPressed: () => setState(() => _open = !_open),
-              ),
-            ],
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: _InfoToggleTile(
+            open: _open,
+            height: _tileHeight,
+            onTap: () => setState(() => _open = !_open),
           ),
         ),
       ],
+    );
+  }
+}
+
+/// 영역 맨 아래에 가로로 꽉 차는 펼치기 줄: 위로 갈수록 투명해지는 그라데이션 바탕에 가운데 화살표 + "정보".
+class _InfoToggleTile extends StatelessWidget {
+  const _InfoToggleTile({
+    required this.open,
+    required this.height,
+    required this.onTap,
+  });
+
+  final bool open;
+  final double height;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final text = Theme.of(context).textTheme;
+    return GestureDetector(
+      key: const ValueKey('saved-info-toggle'),
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        height: height,
+        alignment: Alignment.bottomCenter,
+        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [p.background.withValues(alpha: 0), p.background],
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              open ? AppIcons.chevronUp : AppIcons.chevronDown,
+              size: AppSizes.iconSm,
+              color: p.onSurfaceMuted,
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Text(
+              context.l10n.mediaDetailSectionInfo,
+              style: text.labelLarge?.copyWith(color: p.onSurfaceMuted),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
