@@ -192,20 +192,36 @@ class _SavedDetailPanelState extends State<_SavedDetailPanel> {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Stack(
       children: [
         Positioned.fill(
           child: _open
-              ? const MediaDetailInfo(
-                  header: MediaDetailMedia(),
-                  bottomInset: _tileHeight,
+              // 펼치면 영상 · 썸네일과 정보가 한 스크롤: 맨 아래 줄 위로 내용이 서서히 사라져 어떤 배경과도 어울린다.
+              ? ShaderMask(
+                  blendMode: BlendMode.dstIn,
+                  shaderCallback: (rect) => LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [p.background, p.background, p.background.withValues(alpha: 0)],
+                    stops: [0, 1 - _tileHeight / rect.height, 1],
+                  ).createShader(rect),
+                  child: const MediaDetailInfo(
+                    header: MediaDetailMedia(),
+                    bottomInset: _tileHeight,
+                  ),
                 )
-              : const Padding(
-                  padding: EdgeInsets.only(bottom: _tileHeight),
-                  child: Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                      child: MediaDetailMedia(),
+              : Padding(
+                  padding: const EdgeInsets.only(bottom: _tileHeight),
+                  child: LayoutBuilder(
+                    // 낮은 화면에서도 영상 · 썸네일이 넘치지 않게 남은 높이에 맞춘다.
+                    builder: (context, box) => Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                        ),
+                        child: MediaDetailMedia(maxHeight: box.maxHeight),
+                      ),
                     ),
                   ),
                 ),
@@ -225,7 +241,7 @@ class _SavedDetailPanelState extends State<_SavedDetailPanel> {
   }
 }
 
-/// 영역 맨 아래에 가로로 꽉 차는 펼치기 줄: 위로 갈수록 투명해지는 그라데이션 바탕에 가운데 화살표 + "정보".
+/// 영역 맨 아래에 가로로 꽉 차는 펼치기 줄: 가운데 화살표 + "정보" (바탕은 없고, 위의 내용이 줄 쪽으로 서서히 사라진다).
 class _InfoToggleTile extends StatelessWidget {
   const _InfoToggleTile({
     required this.open,
@@ -249,13 +265,6 @@ class _InfoToggleTile extends StatelessWidget {
         height: height,
         alignment: Alignment.bottomCenter,
         padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [p.background.withValues(alpha: 0), p.background],
-          ),
-        ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [

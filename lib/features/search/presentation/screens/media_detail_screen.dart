@@ -285,11 +285,11 @@ class _DetailViewState extends State<_DetailView> {
 }
 
 /// 영상 · 썸네일 조각 (눌러서 재생, 임시 저장한 곡이면 저장한 영상 · 스트리밍 영상).
-/// [pinned]면 화면이 낮아도 아래가 밀리지 않게 높이를 화면의 3할까지만 쓴다.
+/// [maxHeight]를 주면 그 높이 안에 들어가게 줄여, 낮은 화면에서도 아래가 밀리거나 넘치지 않게 한다.
 class MediaDetailMedia extends StatelessWidget {
-  const MediaDetailMedia({super.key, this.pinned = false});
+  const MediaDetailMedia({super.key, this.maxHeight});
 
-  final bool pinned;
+  final double? maxHeight;
 
   @override
   Widget build(BuildContext context) {
@@ -299,7 +299,7 @@ class MediaDetailMedia extends StatelessWidget {
     final p = context.palette;
     final hit = context.watch<MediaDetailCubit>().state.hit;
     final audio = !isYoutubeUrl(hit.url);
-    final pinH = pinned ? MediaQuery.sizeOf(context).height * .3 : null;
+    final pinH = maxHeight;
     final mediaChildren = <Widget>[
                     if (view._playing && view._canEmbed(hit))
                       Center(
