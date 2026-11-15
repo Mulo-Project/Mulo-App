@@ -791,8 +791,7 @@ class _OnDemandVideoState extends State<_OnDemandVideo> {
             emphasized: true,
             size: AppSizes.circleButtonLarge,
             onPressed: () {
-              mainStreamVideoTrack.value = trackId;
-              mainStreamVideoOn.value = true;
+              startMainStreamVideo(trackId);
               setState(() => _loading = true);
             },
           );
