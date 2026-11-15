@@ -67,13 +67,10 @@ class MediaDetailCubit extends Cubit<MediaDetailState> {
   Future<void> load() async {
     // 전에 읽은 것이 있으면 처음부터 채워 보여 주고, 다시 읽지 않는다.
     if (_known != null) return;
-    // 저장한 곡이라도 검색 목록에서 저장돼 길이 · 조회수만 있으면 그대로 두지 않고 읽는다.
-    // 상세 정보가 이미 다 들어 있으면 로딩 없이 그대로 보여 준다 (채널 이미지만 비었으면 조용히 채운다).
-    if (_hasStoredDetail(state.hit)) {
-      if (_needsChannel(state.hit)) await _loadChannel();
-      return;
-    }
-    emit(MediaDetailState(hit: state.hit, loading: true));
+    // 저장한 곡처럼 상세 정보가 이미 들어 있으면 그대로 먼저 보여 주고(로딩 표시 없이),
+    // 뒤에서 조용히 새로 읽어 바뀐 값만 갱신한다 (못 읽으면 저장된 값 그대로).
+    final quiet = stored || _hasStoredDetail(state.hit);
+    if (!quiet) emit(MediaDetailState(hit: state.hit, loading: true));
     final early = _needsChannel(state.hit) ? _loadChannel() : null;
     await _loadInfo();
     // 곡 정보에서 비로소 채널 주소를 알게 된 경우.
@@ -103,7 +100,7 @@ class MediaDetailCubit extends Cubit<MediaDetailState> {
       if (info is VideoInfo) {
         emit(
           MediaDetailState(
-            hit: state.hit.filledFrom(info.hit),
+            hit: state.hit.refreshedFrom(info.hit),
             loading: state.loading,
           ),
         );
@@ -134,7 +131,7 @@ class MediaDetailCubit extends Cubit<MediaDetailState> {
       emit(
         MediaDetailState(
           hit: switch (info) {
-            VideoInfo(hit: final full) => state.hit.filledFrom(full),
+            VideoInfo(hit: final full) => state.hit.refreshedFrom(full),
             PlaylistInfo() => state.hit,
           },
         ),

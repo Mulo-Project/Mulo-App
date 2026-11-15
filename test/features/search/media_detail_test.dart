@@ -200,7 +200,7 @@ void main() {
       expect(engine.infos, [_listHit.url]);
     });
 
-    test('저장해 둔 상세 정보가 있으면 로딩 없이 그대로 보여 주고 다시 읽지 않는다', () async {
+    test('저장해 둔 상세 정보는 로딩 표시 없이 먼저 보여 주고, 뒤에서 읽어 바뀐 값으로 갱신한다', () async {
       final engine = FakeDownloaderEngine(info: VideoInfo(_fullHit));
       final cubit = MediaDetailCubit(
         _fullHit,
@@ -209,9 +209,13 @@ void main() {
         OpenLink(FakeLinkOpener()),
       );
       expect(cubit.state.hit.description, _fullHit.description);
+      final loadings = <bool>[];
+      final sub = cubit.stream.listen((s) => loadings.add(s.loading));
       await cubit.load();
+      await sub.cancel();
       expect(cubit.state.loading, isFalse);
-      expect(engine.infos, isEmpty);
+      expect(loadings, everyElement(isFalse)); // 로딩 표시는 한 번도 안 뜬다
+      expect(engine.infos, [_fullHit.url]); // 뒤에서 새로 읽는다
     });
 
     test('못 읽어도 알던 정보를 그대로 둔다', () async {
