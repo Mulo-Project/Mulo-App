@@ -332,22 +332,23 @@ class SavedPlayer extends StatelessWidget {
             PlayerTopBar(track: data.track),
             // 영상으로 저장한 곡이면 맨 위에 영상이 알아서 나온다 (일반 영상 곡과 같은 영상 화면 · 전체 화면 버튼).
             // 가로로 눕히거나 화면이 낮으면 높이를 화면의 3할까지만 쓴다 (아래 조작부가 밀려 넘치지 않게).
-            // 소리만 저장한 곡도 같은 자리 · 같은 높이에 썸네일을 고정해 모양을 통일한다.
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: SizedBox(
-                height: math.min(
-                  (box.maxWidth - AppSpacing.md * 2) * 9 / 16,
-                  box.maxHeight * .3,
+            // 영상으로 저장한 곡이면 맨 위에 영상이 고정된다 (일반 영상 곡과 같은 영상 화면 · 전체 화면 버튼).
+            // 소리만 저장한 곡은 상세 화면 자체의 썸네일(눌러서 스트리밍 영상)이 [panel] 안 맨 위에 고정된다.
+            // 가로로 눕히거나 화면이 낮으면 높이를 화면의 3할까지만 쓴다 (아래 조작부가 밀려 넘치지 않게).
+            if (data.track.isVideo)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                child: SizedBox(
+                  height: math.min(
+                    (box.maxWidth - AppSpacing.md * 2) * 9 / 16,
+                    box.maxHeight * .3,
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(AppRadii.sm),
+                    child: const PanZoomVideo(fullscreenButton: true),
+                  ),
                 ),
-                child: data.track.isVideo
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(AppRadii.sm),
-                        child: const PanZoomVideo(fullscreenButton: true),
-                      )
-                    : PlayerCover(art: art, radius: AppRadii.sm),
               ),
-            ),
             Expanded(child: panel),
             // 표시 영역(정보) 아래 줄: 영상이 위에 고정돼 있어 "위"가 모호하므로 확장 버튼은 영역 아래에 둔다.
             Padding(

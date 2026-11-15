@@ -78,6 +78,7 @@ class MediaDetailScreen extends StatelessWidget {
     @visibleForTesting this.playerBuilder,
     this.embedded = false,
     this.hideMedia = false,
+    this.pinMedia = false,
   });
 
   final MediaHit hit;
@@ -87,6 +88,9 @@ class MediaDetailScreen extends StatelessWidget {
 
   /// 위에 이미 영상이 나와 있어서 이 화면의 썸네일 · 영상 칸은 뺀다 (영상이 두 개 보이지 않게).
   final bool hideMedia;
+
+  /// 영상 · 썸네일을 목록 위에 고정한다 (임시 저장한 소리 곡도 눌러서 스트리밍 영상을 볼 수 있게).
+  final bool pinMedia;
 
   /// 앱 안 재생 가능 여부를 바꿔 쓴다 (테스트용, 기본은 플랫폼에 따른다).
   final bool? inAppVideo;
@@ -144,6 +148,7 @@ class MediaDetailScreen extends StatelessWidget {
       playerBuilder: playerBuilder,
       embedded: embedded,
       hideMedia: hideMedia,
+      pinMedia: pinMedia,
     ),
   );
 }
@@ -154,6 +159,7 @@ class _DetailView extends StatefulWidget {
     this.playerBuilder,
     this.embedded = false,
     this.hideMedia = false,
+    this.pinMedia = false,
   });
 
   final bool inAppVideo;
@@ -161,6 +167,9 @@ class _DetailView extends StatefulWidget {
 
   /// 위에 이미 영상이 나와 있어서 이 화면의 썸네일 · 영상 칸은 뺀다 (영상이 두 개 보이지 않게).
   final bool hideMedia;
+
+  /// 영상 · 썸네일을 목록 위에 고정한다 (임시 저장한 소리 곡도 눌러서 스트리밍 영상을 볼 수 있게).
+  final bool pinMedia;
   final Widget Function(String videoId, VoidCallback onFailed)? playerBuilder;
 
   @override
@@ -295,9 +304,7 @@ class _DetailViewState extends State<_DetailView> {
         ),
     ];
 
-    final listView = ListView(
-                  padding: AppSpacing.screen.copyWith(top: AppSpacing.sm),
-                  children: [
+    final mediaChildren = <Widget>[
                     if (widget.hideMedia)
                       const SizedBox.shrink()
                     else if (_playing && _canEmbed(hit))
@@ -336,6 +343,12 @@ class _DetailViewState extends State<_DetailView> {
                           ],
                         ),
                       ),
+    ];
+
+    final listView = ListView(
+                  padding: AppSpacing.screen.copyWith(top: AppSpacing.sm),
+                  children: [
+                    if (!widget.pinMedia) ...mediaChildren,
                     const SizedBox(height: AppSpacing.sm),
                     if (!widget.embedded)
                     SectionBlock(
@@ -396,6 +409,18 @@ class _DetailViewState extends State<_DetailView> {
                   ],
                 );
 
+    if (widget.embedded && widget.pinMedia) {
+      // 영상 · 썸네일(눌러서 스트리밍 재생)을 스크롤하지 않는 맨 위에 고정한다.
+      return Column(
+        children: [
+          Padding(
+            padding: AppSpacing.screen.copyWith(top: AppSpacing.sm, bottom: 0),
+            child: Column(children: mediaChildren),
+          ),
+          Expanded(child: listView),
+        ],
+      );
+    }
     if (widget.embedded) return listView;
 
     final actionRow =
