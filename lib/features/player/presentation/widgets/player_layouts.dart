@@ -346,24 +346,25 @@ class SavedPlayer extends StatelessWidget {
                   ),
                 ),
               ),
-            Expanded(
-              child: Stack(
+            Expanded(child: panel),
+            // 표시 영역(정보) 아래 줄: 영상이 위에 고정돼 있어 "위"가 모호하므로 확장 버튼은 영역 아래에 둔다.
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.xs,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  panel,
-                  Positioned(
-                    top: AppSpacing.xs,
-                    right: AppSpacing.md,
-                    child: CircleIconButton(
-                      key: const ValueKey('saved-expand'),
-                      icon: AppIcons.expandOut,
-                      tooltip: expandTooltip,
-                      onPressed: onExpand,
-                    ),
+                  CircleIconButton(
+                    key: const ValueKey('saved-expand'),
+                    icon: AppIcons.expandOut,
+                    tooltip: expandTooltip,
+                    onPressed: onExpand,
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: AppSpacing.md),
             PlayerControls(
               data: data,
               play: SolidPlayButton(data: data, size: 72),
