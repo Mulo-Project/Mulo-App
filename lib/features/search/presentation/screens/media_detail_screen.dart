@@ -705,8 +705,12 @@ class _Thumbnail extends StatelessWidget {
       builder: (context, box) {
         // 넓은 화면(데스크톱)에서 너무 커지지 않게 높이를 제한하고 가운데에 둔다.
         final cap = math.min(maxHeight ?? _maxThumbHeight, _maxThumbHeight);
+        // 음원(정사각 커버)을 고정할 때는 영상 칸(16:9)과 같은 높이로 줄여, 고정 영역이 영상 곡보다 커지지 않게 한다.
         final width = audio
-            ? math.min(box.maxWidth, cap)
+            ? math.min(
+                maxHeight == null ? box.maxWidth : box.maxWidth * 9 / 16,
+                cap,
+              )
             : math.min(box.maxWidth, cap * 16 / 9);
         return Center(
           child: Stack(
