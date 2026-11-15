@@ -19,9 +19,8 @@ class SavedVideosCubit extends Cubit<List<SavedVideo>> {
     WatchSavedDone watchDone, {
     this.resume,
     WatchSavedProgress? watchProgress,
-    UpdateSavedVideoDetail? updateDetail,
-  }) : _updateDetail = updateDetail,
-       super(const []) {
+    this.detailUpdater,
+  }) : super(const []) {
     _done = watchDone(const NoParams()).listen(_onDone);
     _progressSub = watchProgress?.call(const NoParams()).listen((e) {
       progress.value = {...progress.value, e.id: e.percent};
@@ -35,7 +34,7 @@ class SavedVideosCubit extends Cubit<List<SavedVideo>> {
   final RemoveSavedVideo _remove;
   final MarkSavedVideoReady _markReady;
   final ResumeSavedVideos? resume;
-  final UpdateSavedVideoDetail? _updateDetail;
+  final UpdateSavedVideoDetail? detailUpdater;
   late final StreamSubscription<({String id, bool ok})> _done;
   StreamSubscription<({String id, int percent})>? _progressSub;
 
@@ -127,7 +126,7 @@ class SavedVideosCubit extends Cubit<List<SavedVideo>> {
     emit([
       for (final v in state) v.id == hit.id ? v.copyWith(hit: hit) : v,
     ]);
-    await _updateDetail?.call(hit);
+    await detailUpdater?.call(hit);
   }
 
   Future<void> remove(String id) async {

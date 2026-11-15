@@ -138,7 +138,7 @@ void registerSearch(GetIt sl) {
         sl(),
         resume: sl(),
         watchProgress: sl<WatchSavedProgress>(),
-        updateDetail: sl<UpdateSavedVideoDetail>(),
+        detailUpdater: sl<UpdateSavedVideoDetail>(),
       ),
     )
     ..registerFactory(
