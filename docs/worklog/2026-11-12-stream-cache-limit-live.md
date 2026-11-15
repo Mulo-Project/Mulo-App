@@ -21,3 +21,10 @@
 - 알림을 눌러 앱을 열 때: 임시 저장한 음원(`saved:`)을 메인 재생으로 듣는 중이면 플레이어 화면 대신 그 영상의 상세 화면을 연다
   (`lib/app/app.dart` `_openPlayer`).
 - 알림 버튼 점검: 이전/다음/좋아요/셔플/닫기는 네이티브가 직접 처리하는 경로를 읽어 확인했고 결함은 위 하나였다 (실기기 확인 필요).
+
+## 추가: 미리 듣기 상태를 네이티브로 (1단계)
+- 방향: Flutter는 UI, 재생과 그 상태는 네이티브. 미리 듣기는 소리만 네이티브였고 상태(멈춤 · 반복)는 Dart가 쥐어 알림 버튼이 Dart를 거쳤다.
+- 알림의 재생 · 일시정지 · 닫기: `SessionPlayer` → `PlaybackHub.previewControl` / `previewStop` → `PreviewChannel`이 직접 처리.
+- 한 곡 반복: `setRepeat`로 값만 알리고, 곡이 끝나면 네이티브가 처음부터 다시 튼다 (`STATE_ENDED`). 앱이 응답하지 않아도 돈다.
+- 멈춤 상태: 네이티브 `onPlayWhenReadyChanged`가 `paused` 이벤트를 보내고, `PreviewCubit`은 그 값을 화면에 반영만 한다 (`WatchPreviewPaused`).
+- 2단계(주소 읽기 · hit 소유 · 끊김 복구)는 Dart의 엔진 라우팅(저장한 곡 주소 조회 · 화질 설정 · yt-dlp 대체 경로)과 얽혀 있어 아직 Dart에 남는다.
