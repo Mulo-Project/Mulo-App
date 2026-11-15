@@ -122,6 +122,9 @@ void registerSearch(GetIt sl) {
     ..registerFactory(
       () => RemoveSavedVideo(sl(), sl(), details: sl<SavedDetailStore>()),
     )
+    ..registerFactory(
+      () => UpdateSavedVideoDetail(sl(), details: sl<SavedDetailStore>()),
+    )
     ..registerFactory(() => MarkSavedVideoReady(sl()))
     ..registerFactory(() => ResumeSavedVideos(sl(), sl(), sl(), sl()))
     ..registerFactory(() => WatchSavedDone(sl()))
@@ -135,6 +138,7 @@ void registerSearch(GetIt sl) {
         sl(),
         resume: sl(),
         watchProgress: sl<WatchSavedProgress>(),
+        updateDetail: sl<UpdateSavedVideoDetail>(),
       ),
     )
     ..registerFactory(

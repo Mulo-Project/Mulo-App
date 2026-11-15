@@ -39,8 +39,9 @@ class SavedVideo extends Equatable {
 
   String get id => hit.id;
 
-  SavedVideo copyWith({String? streamId, bool? ready}) => SavedVideo(
-    hit: hit,
+  SavedVideo copyWith({MediaHit? hit, String? streamId, bool? ready}) =>
+      SavedVideo(
+    hit: hit ?? this.hit,
     streamId: streamId ?? this.streamId,
     ready: ready ?? this.ready,
     quality: quality,

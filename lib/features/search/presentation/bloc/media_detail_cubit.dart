@@ -7,7 +7,11 @@ import '../../domain/usecases/search_usecases.dart';
 import 'media_hit_memo.dart';
 
 class MediaDetailState extends Equatable {
-  const MediaDetailState({required this.hit, this.loading = false});
+  const MediaDetailState({
+    required this.hit,
+    this.loading = false,
+    this.pending = false,
+  });
 
   /// 지금까지 알아낸 곡 정보. 자세히 읽는 동안에도 목록에서 알던 만큼은 보인다.
   final MediaHit hit;
@@ -15,8 +19,11 @@ class MediaDetailState extends Equatable {
   /// 채널 · 조회수 같은 나머지 정보를 읽는 중인지.
   final bool loading;
 
+  /// 좋아요 수 · 공동 작업자처럼 느리게 읽히는 나머지를 아직 읽는 중인지 (화면은 그 칸을 비워 두지 않고 "읽는 중"으로 보인다).
+  final bool pending;
+
   @override
-  List<Object?> get props => [hit, loading];
+  List<Object?> get props => [hit, loading, pending];
 }
 
 /// 검색 결과 하나의 상세 보기. 목록 항목에 없는 정보(채널 주소 · 조회수 · 올린 날 · 설명)를
@@ -30,6 +37,7 @@ class MediaDetailCubit extends Cubit<MediaDetailState> {
     MediaHitMemo? memo,
     this.stored = false,
     this._fetchFull,
+    this.onLoaded,
   }) : _memo = memo,
        _known = memo?.get(hit.url),
        super(MediaDetailState(hit: memo?.get(hit.url) ?? hit));
@@ -50,6 +58,9 @@ class MediaDetailCubit extends Cubit<MediaDetailState> {
   final FetchFullMediaInfo? _fetchFull;
   final FetchChannelInfo _fetchChannel;
   final OpenLink _openLink;
+
+  /// 곡 정보를 다 읽은 뒤 부른다 (저장한 곡이면 읽은 상세 정보를 저장해 두려고).
+  final Future<void> Function(MediaHit hit)? onLoaded;
 
   /// 곡 정보와 채널 정보를 따로 동시에 읽고, 읽히는 대로 화면에 채운다.
   /// 채널 주소를 이미 알면(검색 목록에 있다) 곡 정보를 기다리지 않고 바로 읽는다.
@@ -73,11 +84,19 @@ class MediaDetailCubit extends Cubit<MediaDetailState> {
     }
     // 느리게 읽히는 나머지(좋아요 수 · 공동 작업자 · 앨범)는 화면을 띄운 뒤 뒤에서 채운다.
     if (_infoLoaded) await _loadFull();
+    if (_infoLoaded && !isClosed) {
+      try {
+        await onLoaded?.call(state.hit);
+      } on Object {
+        // 저장해 두지 못해도 화면은 그대로 쓴다.
+      }
+    }
   }
 
   Future<void> _loadFull() async {
     final fetch = _fetchFull;
     if (fetch == null) return;
+    emit(MediaDetailState(hit: state.hit, loading: state.loading, pending: true));
     try {
       final info = await fetch(state.hit.url);
       if (isClosed) return;
@@ -91,6 +110,9 @@ class MediaDetailCubit extends Cubit<MediaDetailState> {
       }
     } on EngineException {
       // 못 읽어도 빠르게 읽은 정보로 충분히 쓸 수 있다.
+    }
+    if (!isClosed && state.pending) {
+      emit(MediaDetailState(hit: state.hit, loading: state.loading));
     }
     if (!isClosed) _memo?.put(state.hit.url, state.hit);
   }

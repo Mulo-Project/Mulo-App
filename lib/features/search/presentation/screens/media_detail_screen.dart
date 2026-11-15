@@ -94,20 +94,18 @@ class MediaDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // 저장한 곡이면 저장해 둔 상세 정보를 먼저 쓴다 (검색 목록에서 들어와도 다시 읽지 않는다).
     MediaHit? savedHit;
+    SavedVideosCubit? saved;
     try {
-      savedHit = context
-          .read<SavedVideosCubit>()
-          .state
-          .where((v) => v.id == hit.id)
-          .firstOrNull
-          ?.hit;
+      saved = context.read<SavedVideosCubit>();
+      savedHit = saved.state.where((v) => v.id == hit.id).firstOrNull?.hit;
     } on Object {
       savedHit = null;
     }
-    return _build(savedHit);
+    return _build(savedHit, saved);
   }
 
-  Widget _build(MediaHit? savedHit) => MultiBlocProvider(
+  Widget _build(MediaHit? savedHit, SavedVideosCubit? saved) =>
+      MultiBlocProvider(
     providers: [
       BlocProvider(
         create: (_) => MediaDetailCubit(
@@ -119,6 +117,10 @@ class MediaDetailScreen extends StatelessWidget {
           stored: savedHit != null,
           // 유튜브 곡은 빠른 정보를 먼저 보여 주고, 좋아요 수 · 공동 작업자는 뒤에서 채운다.
           fetchFull: isYoutubeUrl(hit.url) ? sl<FetchFullMediaInfo>() : null,
+          // 저장한 곡이면 나중에 읽힌 상세 정보도 저장해 두어, 다음에 열 때 기다리지 않는다.
+          onLoaded: saved == null || savedHit == null
+              ? null
+              : (h) => saved.updateDetail(h),
         )..load(),
       ),
       // 유튜브 곡만 오디오 언어가 여럿일 수 있다.
@@ -241,6 +243,9 @@ class _DetailViewState extends State<_DetailView> {
 
     final views = hit.viewCount;
     final uploaded = hit.uploadedAt;
+    // 아직 읽는 중이면 칸을 지우지 않고 "…"로 둔다 (곧 채워진다는 걸 알 수 있게).
+    final waiting = state.loading || state.pending;
+    const dots = '…';
     final rows = <(String, String)>[
       if (!youtube && site.isNotEmpty) (l10n.mediaDetailSite, site),
       if (hit.duration != null)
@@ -251,17 +256,23 @@ class _DetailViewState extends State<_DetailView> {
           l10n.mediaDetailViewCount(
             NumberFormat.compact(locale: locale).format(views),
           ),
-        ),
+        )
+      else if (waiting)
+        (audio ? l10n.mediaDetailPlays : l10n.mediaDetailViews, dots),
       if (hit.likeCount != null)
         (
           l10n.mediaDetailLikes,
           NumberFormat.compact(locale: locale).format(hit.likeCount),
-        ),
+        )
+      else if (youtube && waiting)
+        (l10n.mediaDetailLikes, dots),
       if (uploaded != null)
         (
           l10n.mediaDetailUploaded,
           MaterialLocalizations.of(context).formatCompactDate(uploaded),
-        ),
+        )
+      else if (waiting)
+        (l10n.mediaDetailUploaded, dots),
       if (hit.creators.length > 1)
         (
           l10n.mediaDetailCollaborators,
