@@ -200,6 +200,7 @@ class YtDlpEngine(
                     MuloLog.d(MuloLog.NATIVE, "영상 저장 네이티브 ${System.currentTimeMillis() - start}ms 완료")
                     return
                 }
+                MuloLog.d(MuloLog.NATIVE, "영상 저장 네이티브 안 씀($extension, 주소 · 형식이 맞지 않거나 읽을 주소 없음), yt-dlp로")
             } catch (e: Exception) {
                 MuloLog.d(MuloLog.NATIVE, "영상 저장 네이티브 실패, yt-dlp로: ${e.message}")
             }
