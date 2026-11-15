@@ -311,10 +311,14 @@ class SavedPlayer extends StatelessWidget {
     required this.panel,
     required this.onExpand,
     required this.expandTooltip,
+    this.belowExpand,
   });
 
   final PlayerLayoutData data;
   final Widget panel;
+
+  /// 확장 버튼 줄 바로 아래 (아래 조작부 위)에 놓을 것.
+  final Widget? belowExpand;
   final VoidCallback onExpand;
   final String expandTooltip;
 
@@ -349,6 +353,7 @@ class SavedPlayer extends StatelessWidget {
                 ],
               ),
             ),
+            ?belowExpand,
             PlayerControls(
               data: data,
               play: SolidPlayButton(data: data, size: 72),

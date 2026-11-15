@@ -153,14 +153,10 @@ class _PlayerScreenState extends State<PlayerScreen> {
     MediaHit? savedHit,
   }) {
     if (savedHit != null) {
-      return SavedPlayer(
+      return _SavedPlayerHost(
+        key: ValueKey(savedHit.id),
         data: data,
-        // 상세 화면 조각을 조합한다: 영상 · 썸네일은 위에 고정하고 정보만 스크롤한다.
-        panel: MediaDetailScope(
-          key: ValueKey(savedHit.id),
-          hit: savedHit,
-          builder: (_) => const _SavedDetailPanel(),
-        ),
+        hit: savedHit,
         expandTooltip: context.l10n.mediaDetailTitle,
         onExpand: () => unawaited(showMediaDetail(context, savedHit)),
       );
@@ -175,82 +171,97 @@ class _PlayerScreenState extends State<PlayerScreen> {
   };
 }
 
-/// 임시 저장한 곡 플레이어의 가운데: 처음에는 일반 곡처럼 썸네일 · 영상만 크게 보인다.
-/// 정보 펼치기 버튼을 누르면 고정이 풀려 영상 · 썸네일과 정보가 한 스크롤로 이어지고, 다시 누르면 접는다.
-class _SavedDetailPanel extends StatefulWidget {
-  const _SavedDetailPanel();
+/// 임시 저장한 곡 플레이어: 정보를 펼쳤는지를 쥐고, 가운데 내용([_SavedDetailPanel])과 그 아래 펼치기 줄을 이어 준다.
+class _SavedPlayerHost extends StatefulWidget {
+  const _SavedPlayerHost({
+    super.key,
+    required this.data,
+    required this.hit,
+    required this.expandTooltip,
+    required this.onExpand,
+  });
+
+  final PlayerLayoutData data;
+  final MediaHit hit;
+  final String expandTooltip;
+  final VoidCallback onExpand;
 
   @override
-  State<_SavedDetailPanel> createState() => _SavedDetailPanelState();
+  State<_SavedPlayerHost> createState() => _SavedPlayerHostState();
 }
 
-class _SavedDetailPanelState extends State<_SavedDetailPanel> {
+class _SavedPlayerHostState extends State<_SavedPlayerHost> {
   var _open = false;
-
-  /// 아래 펼치기 줄의 높이 (펼쳤을 때 목록 끝이 가리지 않게 비워 둔다).
-  static const _tileHeight = 64.0;
 
   @override
   Widget build(BuildContext context) {
-    final p = context.palette;
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: _open
-              // 펼치면 영상 · 썸네일과 정보가 한 스크롤: 맨 아래 줄 위로 내용이 서서히 사라져 어떤 배경과도 어울린다.
-              ? ShaderMask(
-                  blendMode: BlendMode.dstIn,
-                  shaderCallback: (rect) => LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [p.background, p.background, p.background.withValues(alpha: 0)],
-                    stops: [0, 1 - _tileHeight / rect.height, 1],
-                  ).createShader(rect),
-                  child: const MediaDetailInfo(
-                    header: MediaDetailMedia(),
-                    bottomInset: _tileHeight,
-                  ),
-                )
-              : Padding(
-                  padding: const EdgeInsets.only(bottom: _tileHeight),
-                  child: LayoutBuilder(
-                    // 낮은 화면에서도 영상 · 썸네일이 넘치지 않게 남은 높이에 맞춘다.
-                    builder: (context, box) => Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.md,
-                        ),
-                        child: MediaDetailMedia(maxHeight: box.maxHeight),
-                      ),
-                    ),
-                  ),
-                ),
-        ),
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: _InfoToggleTile(
-            open: _open,
-            height: _tileHeight,
-            onTap: () => setState(() => _open = !_open),
-          ),
-        ),
-      ],
+    return SavedPlayer(
+      data: widget.data,
+      // 상세 화면 조각을 조합한다: 처음엔 영상 · 썸네일만, 펼치면 정보와 한 스크롤.
+      panel: MediaDetailScope(
+        hit: widget.hit,
+        builder: (_) => _SavedDetailPanel(open: _open),
+      ),
+      expandTooltip: widget.expandTooltip,
+      onExpand: widget.onExpand,
+      // 다운로드 상세로 가는 확장 버튼 바로 아래에 둔다.
+      belowExpand: _InfoToggleTile(
+        open: _open,
+        onTap: () => setState(() => _open = !_open),
+      ),
     );
   }
 }
 
-/// 영역 맨 아래에 가로로 꽉 차는 펼치기 줄: 가운데 화살표 + "정보" (바탕은 없고, 위의 내용이 줄 쪽으로 서서히 사라진다).
-class _InfoToggleTile extends StatelessWidget {
-  const _InfoToggleTile({
-    required this.open,
-    required this.height,
-    required this.onTap,
-  });
+/// 가운데 내용: 처음에는 일반 곡처럼 썸네일 · 영상만 크게 보이고, 펼치면 고정이 풀려 영상 · 썸네일과 정보가 한 스크롤이 된다.
+class _SavedDetailPanel extends StatelessWidget {
+  const _SavedDetailPanel({required this.open});
 
   final bool open;
-  final double height;
+
+  /// 펼쳤을 때 목록 끝이 아래 줄 쪽으로 서서히 사라지는 높이.
+  static const _fade = 32.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    if (!open) {
+      // 낮은 화면에서도 영상 · 썸네일이 넘치지 않게 남은 높이에 맞춘다.
+      return LayoutBuilder(
+        builder: (context, box) => Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            child: MediaDetailMedia(maxHeight: box.maxHeight),
+          ),
+        ),
+      );
+    }
+    // 어떤 배경과도 어울리도록 바탕색을 깔지 않고, 내용이 아래로 서서히 사라지게 한다.
+    return ShaderMask(
+      blendMode: BlendMode.dstIn,
+      shaderCallback: (rect) => LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          p.background,
+          p.background,
+          p.background.withValues(alpha: 0),
+        ],
+        stops: [0, (1 - _fade / rect.height).clamp(0, 1), 1],
+      ).createShader(rect),
+      child: const MediaDetailInfo(
+        header: MediaDetailMedia(),
+        bottomInset: _fade,
+      ),
+    );
+  }
+}
+
+/// 정보 펼치기 줄: 가로로 꽉 차는 눌림 영역에 가운데 화살표 + "정보".
+class _InfoToggleTile extends StatelessWidget {
+  const _InfoToggleTile({required this.open, required this.onTap});
+
+  final bool open;
   final VoidCallback onTap;
 
   @override
@@ -261,12 +272,10 @@ class _InfoToggleTile extends StatelessWidget {
       key: const ValueKey('saved-info-toggle'),
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: Container(
-        height: height,
-        alignment: Alignment.bottomCenter,
-        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: SizedBox(
+        height: 44,
         child: Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               open ? AppIcons.chevronUp : AppIcons.chevronDown,
