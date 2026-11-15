@@ -34,6 +34,9 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
 
     private var player: ExoPlayer? = null
 
+    /** 한 곡 반복 ([setRepeat]). 곡이 끝나면 앱을 거치지 않고 네이티브가 처음부터 다시 튼다. */
+    @Volatile private var repeat = false
+
     /** 아직 준비 중인 `play` 호출. 다른 호출로 끊기면 조용히 성공으로 닫는다. */
     private var pending: MethodChannel.Result? = null
 
@@ -137,8 +140,22 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
                     pending?.success(null)
                     pending = null
                 }
-                Player.STATE_ENDED -> channel.invokeMethod("completed", null)
+                Player.STATE_ENDED -> {
+                    val p = player
+                    // 한 곡 반복: 앱을 거치지 않고 처음부터 다시 튼다.
+                    if (repeat && p != null) {
+                        p.seekTo(0)
+                        p.play()
+                    } else {
+                        channel.invokeMethod("completed", null)
+                    }
+                }
             }
+        }
+
+        // 알림 · 이어폰 · 앱 어디서든 멈추거나 이어지면 화면에 알린다 (상태는 네이티브가 쥔다).
+        override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+            if (started) channel.invokeMethod("paused", !playWhenReady)
         }
 
         override fun onPlayerError(error: PlaybackException) {
@@ -202,6 +219,7 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
                     videoPlayer?.let { v -> if (!muxedVideo) restartVideoAt(v, ms, SEEK_PENDING_LEAD_MS) }
                     result.success(null)
                 }
+                "setRepeat" -> { repeat = call.arguments as? Boolean ?: false; result.success(null) }
                 "pause" -> { player?.pause(); result.success(null) }
                 "resume" -> { player?.play(); result.success(null) }
                 "stop" -> { stop(); result.success(null) }

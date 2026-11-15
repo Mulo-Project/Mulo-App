@@ -37,6 +37,12 @@ abstract interface class PreviewPlayer {
   /// 플레이어가 지금 내고 있는 미리 듣기. 소리를 내는 게 없으면 null.
   Future<PreviewSnapshot?> current();
 
+  /// 한 곡 반복: 켜면 네이티브가 끝에서 멈추지 않고 처음부터 다시 튼다 (앱이 응답하지 않아도 돈다).
+  Future<void> setRepeat(bool on);
+
+  /// 소리가 멈추거나 이어질 때마다 (알림 · 이어폰 · 앱 어디서 눌렀든). true면 멈춤. 네이티브가 쥔 상태를 화면에 알린다.
+  Stream<bool> watchPaused();
+
   /// 끝까지 재생했을 때마다 한 번씩.
   Stream<void> watchCompleted();
 

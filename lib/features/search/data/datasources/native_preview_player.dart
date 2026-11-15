@@ -23,6 +23,7 @@ class NativePreviewPlayer implements PreviewPlayer {
   final _completed = StreamController<void>.broadcast();
   final _progress = StreamController<PreviewProgress>.broadcast();
   final _failures = StreamController<String>.broadcast();
+  final _paused = StreamController<bool>.broadcast();
   final _saved = StreamController<({String id, bool ok})>.broadcast();
   final _savedProgress =
       StreamController<({String id, int percent})>.broadcast();
@@ -45,6 +46,8 @@ class NativePreviewPlayer implements PreviewPlayer {
                 : Duration(milliseconds: duration.toInt()),
           ),
         );
+      case 'paused':
+        _paused.add(call.arguments as bool? ?? false);
       case 'failure':
         _failures.add(call.arguments as String? ?? '');
       case 'savedProgress':
@@ -181,6 +184,12 @@ class NativePreviewPlayer implements PreviewPlayer {
 
   @override
   Future<void> stop() => _channel.invokeMethod<void>('stop');
+
+  @override
+  Future<void> setRepeat(bool on) => _channel.invokeMethod<void>('setRepeat', on);
+
+  @override
+  Stream<bool> watchPaused() => _paused.stream;
 
   @override
   Stream<void> watchCompleted() => _completed.stream;

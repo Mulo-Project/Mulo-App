@@ -102,6 +102,8 @@ class PreviewCubit extends Cubit<PreviewState> {
     WatchPreviewFailures watchFailures, {
     this.resolveVideo,
     this.enterPictureInPicture,
+    SetPreviewRepeat? setRepeat,
+    WatchPreviewPaused? watchPaused,
     LoadAutoVideoQuality? loadAutoQuality,
     SaveAutoVideoQuality? saveAutoQuality,
   }) : super(const PreviewState()) {
@@ -118,6 +120,12 @@ class PreviewCubit extends Cubit<PreviewState> {
         () => unawaited(saveAutoQuality(autoQuality.value)),
       );
     }
+    // 한 곡 반복은 네이티브가 돈다: 켜고 끈 값을 알리기만 한다.
+    if (setRepeat != null) {
+      repeat.addListener(() => unawaited(setRepeat(repeat.value)));
+    }
+    // 소리가 멈추고 이어지는 상태는 네이티브가 쥔다 (알림 · 이어폰에서 눌러도 화면이 따라간다).
+    _pausedSub = watchPaused?.call(const NoParams()).listen(_onNativePaused);
     unawaited(syncWithPlayer());
     _completed = watchCompleted(const NoParams()).listen((_) => _onCompleted());
     _progress = watchProgress(const NoParams()).listen(_onProgress);
@@ -186,6 +194,22 @@ class PreviewCubit extends Cubit<PreviewState> {
   late final StreamSubscription<void> _completed;
   late final StreamSubscription<PreviewProgress> _progress;
   late final StreamSubscription<String> _failures;
+  StreamSubscription<bool>? _pausedSub;
+
+  void _onNativePaused(bool paused) {
+    if (isClosed || state.status != PreviewStatus.playing) return;
+    if (_interrupted != null || state.paused == paused) return;
+    emit(
+      PreviewState(
+        hitId: state.hitId,
+        hit: state.hit,
+        status: state.status,
+        progress: state.progress,
+        title: state.title,
+        paused: paused,
+      ),
+    );
+  }
 
   /// 재생 중에 실패하면 멈춘 상태로 돌리고 까닭을 [PreviewState.error]로 알린다.
   /// 듣던 중 소리가 끊겨(네트워크 끊김 등) 멈춘 곡. 다시 재생하면 주소를 새로 읽어 이 위치부터 이어 튼다.
@@ -524,6 +548,7 @@ class PreviewCubit extends Cubit<PreviewState> {
     await _completed.cancel();
     await _progress.cancel();
     await _failures.cancel();
+    await _pausedSub?.cancel();
     repeat.dispose();
     autoQuality.dispose();
     qualityOverride.dispose();

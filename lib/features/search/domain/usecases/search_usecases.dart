@@ -402,6 +402,26 @@ class WatchPreviewProgress implements StreamUseCase<PreviewProgress, NoParams> {
   Stream<PreviewProgress> call(NoParams params) => _player.watchProgress();
 }
 
+/// 미리 듣기 한 곡 반복을 켜고 끈다 (네이티브가 돈다).
+class SetPreviewRepeat implements UseCase<void, bool> {
+  const SetPreviewRepeat(this._player);
+
+  final PreviewPlayer _player;
+
+  @override
+  Future<void> call(bool on) => _player.setRepeat(on);
+}
+
+/// 미리 듣기 소리가 멈추거나 이어질 때 (true면 멈춤).
+class WatchPreviewPaused implements StreamUseCase<bool, NoParams> {
+  const WatchPreviewPaused(this._player);
+
+  final PreviewPlayer _player;
+
+  @override
+  Stream<bool> call(NoParams params) => _player.watchPaused();
+}
+
 /// 미리 듣기가 재생 중에 실패했을 때 그 까닭.
 class WatchPreviewFailures implements StreamUseCase<String, NoParams> {
   const WatchPreviewFailures(this._player);

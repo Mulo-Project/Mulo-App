@@ -100,6 +100,8 @@ void registerSearch(GetIt sl) {
     ..registerFactory(() => WatchPreviewCompleted(sl()))
     ..registerFactory(() => WatchPreviewProgress(sl()))
     ..registerFactory(() => WatchPreviewFailures(sl()))
+    ..registerFactory(() => SetPreviewRepeat(sl()))
+    ..registerFactory(() => WatchPreviewPaused(sl()))
     ..registerFactory(() => GetStreamCacheInfo(sl()))
     ..registerFactory(() => ClearStreamCache(sl()))
     ..registerFactory(() => SetStreamCacheLimit(sl()))
@@ -148,6 +150,8 @@ void registerSearch(GetIt sl) {
         sl(),
         sl(),
         sl(),
+        setRepeat: sl(),
+        watchPaused: sl(),
         resolveVideo: sl(),
         enterPictureInPicture: sl(),
         loadAutoQuality: sl(),

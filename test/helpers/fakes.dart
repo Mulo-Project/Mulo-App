@@ -1855,6 +1855,12 @@ class FakePreviewPlayer implements PreviewPlayer {
   Stream<String> watchFailures() => _failures.stream;
 
   @override
+  Future<void> setRepeat(bool on) async {}
+
+  @override
+  Stream<bool> watchPaused() => const Stream.empty();
+
+  @override
   Stream<PreviewProgress> watchProgress() => _progress.stream;
 }
 
