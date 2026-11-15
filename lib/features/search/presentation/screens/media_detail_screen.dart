@@ -304,21 +304,31 @@ class _DetailViewState extends State<_DetailView> {
         ),
     ];
 
+    // 고정할 때는 화면이 낮아도 아래 조작부가 밀리지 않게 높이를 화면의 3할까지만 쓴다.
+    final pinH = widget.pinMedia ? MediaQuery.sizeOf(context).height * .3 : null;
     final mediaChildren = <Widget>[
                     if (widget.hideMedia)
                       const SizedBox.shrink()
                     else if (_playing && _canEmbed(hit))
-                      (widget.playerBuilder ??
-                          (id, onFailed) => YoutubeEmbedPlayer(
-                            key: ValueKey('embed-$id'),
-                            videoId: id,
-                            onFailed: (_) => onFailed(),
-                          ))(hit.id, _onEmbedFailed)
+                      Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: pinH == null ? double.infinity : pinH * 16 / 9,
+                          ),
+                          child: (widget.playerBuilder ??
+                              (id, onFailed) => YoutubeEmbedPlayer(
+                                key: ValueKey('embed-$id'),
+                                videoId: id,
+                                onFailed: (_) => onFailed(),
+                              ))(hit.id, _onEmbedFailed),
+                        ),
+                      )
                     else
                       _Thumbnail(
                         hit: hit,
                         inApp: _canEmbed(hit),
                         audio: audio,
+                        maxHeight: pinH,
                         onPlay: () => unawaited(_play(hit)),
                       ),
                     if (_embedBlocked)
@@ -415,21 +425,7 @@ class _DetailViewState extends State<_DetailView> {
         children: [
           Padding(
             padding: AppSpacing.screen.copyWith(top: AppSpacing.sm, bottom: 0),
-            // 화면이 낮으면 높이의 3할까지만 쓰고 비율대로 줄인다 (아래 조작부가 밀려 넘치지 않게).
-            child: LayoutBuilder(
-              builder: (context, box) => ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.sizeOf(context).height * .3,
-                ),
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: SizedBox(
-                    width: math.min(box.maxWidth, _maxThumbHeight * 16 / 9),
-                    child: Column(children: mediaChildren),
-                  ),
-                ),
-              ),
-            ),
+            child: Column(children: mediaChildren),
           ),
           Expanded(child: listView),
         ],
@@ -599,9 +595,13 @@ class _Thumbnail extends StatelessWidget {
     required this.onPlay,
     this.inApp = false,
     this.audio = false,
+    this.maxHeight,
   });
 
   final MediaHit hit;
+
+  /// 고정해서 쓸 때의 높이 상한 (없으면 [_maxThumbHeight]).
+  final double? maxHeight;
 
   /// 음원(영상이 아님): 정사각형 커버로 보여 준다.
   final bool audio;
@@ -639,9 +639,10 @@ class _Thumbnail extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, box) {
         // 넓은 화면(데스크톱)에서 너무 커지지 않게 높이를 제한하고 가운데에 둔다.
+        final cap = math.min(maxHeight ?? _maxThumbHeight, _maxThumbHeight);
         final width = audio
-            ? math.min(box.maxWidth, _maxThumbHeight)
-            : math.min(box.maxWidth, _maxThumbHeight * 16 / 9);
+            ? math.min(box.maxWidth, cap)
+            : math.min(box.maxWidth, cap * 16 / 9);
         return Center(
           child: Stack(
             alignment: Alignment.center,
