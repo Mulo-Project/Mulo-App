@@ -70,32 +70,49 @@ String siteNameOf(String url) {
   return host.startsWith('www.') ? host.substring(4) : host;
 }
 
+/// 곡 상세 화면 한 쪽: 영상 · 썸네일, 정보 목록, 아래 재생 · 받기 버튼을 한 스크롤로 조합한다.
 class MediaDetailScreen extends StatelessWidget {
   const MediaDetailScreen({
     super.key,
     required this.hit,
     @visibleForTesting this.inAppVideo,
     @visibleForTesting this.playerBuilder,
-    this.embedded = false,
-    this.hideMedia = false,
-    this.pinMedia = false,
   });
 
   final MediaHit hit;
-
-  /// 플레이어 화면 가운데에 끼워 넣는 모양: 화면 틀(맨 위 줄 · 아래 버튼) 없이 내용 목록만 그린다 (임시 저장 곡의 다운로드 영역).
-  final bool embedded;
-
-  /// 위에 이미 영상이 나와 있어서 이 화면의 썸네일 · 영상 칸은 뺀다 (영상이 두 개 보이지 않게).
-  final bool hideMedia;
-
-  /// 영상 · 썸네일을 목록 위에 고정한다 (임시 저장한 소리 곡도 눌러서 스트리밍 영상을 볼 수 있게).
-  final bool pinMedia;
 
   /// 앱 안 재생 가능 여부를 바꿔 쓴다 (테스트용, 기본은 플랫폼에 따른다).
   final bool? inAppVideo;
 
   /// 앱 안 플레이어를 바꿔 쓴다 (테스트용, 기본은 [YoutubeEmbedPlayer]).
+  final Widget Function(String videoId, VoidCallback onFailed)? playerBuilder;
+
+  @override
+  Widget build(BuildContext context) => MediaDetailScope(
+    hit: hit,
+    inAppVideo: inAppVideo,
+    playerBuilder: playerBuilder,
+    builder: (_) => const _DetailPage(),
+  );
+}
+
+/// 상세 화면의 조각들이 함께 쓰는 바탕: 곡 정보 · 오디오 언어 cubit과 영상 재생 상태를 만들어
+/// 아래의 [MediaDetailMedia] · [MediaDetailInfo]에 나눠 준다.
+/// 화면마다 조각을 원하는 대로 조합한다 (상세 화면은 한 스크롤, 플레이어는 영상만 위에 고정).
+class MediaDetailScope extends StatelessWidget {
+  const MediaDetailScope({
+    super.key,
+    required this.hit,
+    required this.builder,
+    @visibleForTesting this.inAppVideo,
+    @visibleForTesting this.playerBuilder,
+  });
+
+  final MediaHit hit;
+
+  /// 이 바탕 아래에서 조각들을 조합해 그린다.
+  final WidgetBuilder builder;
+  final bool? inAppVideo;
   final Widget Function(String videoId, VoidCallback onFailed)? playerBuilder;
 
   @override
@@ -146,9 +163,7 @@ class MediaDetailScreen extends StatelessWidget {
     child: _DetailView(
       inAppVideo: inAppVideo ?? inAppVideoSupported,
       playerBuilder: playerBuilder,
-      embedded: embedded,
-      hideMedia: hideMedia,
-      pinMedia: pinMedia,
+      content: builder,
     ),
   );
 }
@@ -156,24 +171,37 @@ class MediaDetailScreen extends StatelessWidget {
 class _DetailView extends StatefulWidget {
   const _DetailView({
     required this.inAppVideo,
+    required this.content,
     this.playerBuilder,
-    this.embedded = false,
-    this.hideMedia = false,
-    this.pinMedia = false,
   });
 
   final bool inAppVideo;
-  final bool embedded;
-
-  /// 위에 이미 영상이 나와 있어서 이 화면의 썸네일 · 영상 칸은 뺀다 (영상이 두 개 보이지 않게).
-  final bool hideMedia;
-
-  /// 영상 · 썸네일을 목록 위에 고정한다 (임시 저장한 소리 곡도 눌러서 스트리밍 영상을 볼 수 있게).
-  final bool pinMedia;
+  final WidgetBuilder content;
   final Widget Function(String videoId, VoidCallback onFailed)? playerBuilder;
 
   @override
   State<_DetailView> createState() => _DetailViewState();
+}
+
+/// 조각들이 [_DetailViewState]의 재생 · 열기 동작과 상태를 쓰게 내려 준다.
+class _DetailScope extends InheritedWidget {
+  const _DetailScope({
+    required this.view,
+    required this.playing,
+    required this.blocked,
+    required super.child,
+  });
+
+  final _DetailViewState view;
+  final bool playing;
+  final bool blocked;
+
+  static _DetailViewState of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<_DetailScope>()!.view;
+
+  @override
+  bool updateShouldNotify(_DetailScope old) =>
+      playing != old.playing || blocked != old.blocked;
 }
 
 class _DetailViewState extends State<_DetailView> {
@@ -247,7 +275,91 @@ class _DetailViewState extends State<_DetailView> {
   });
 
   @override
+  Widget build(BuildContext context) => _DetailScope(
+    view: this,
+    playing: _playing,
+    blocked: _embedBlocked,
+    child: Builder(builder: widget.content),
+  );
+}
+
+/// 영상 · 썸네일 조각 (눌러서 재생, 임시 저장한 곡이면 저장한 영상 · 스트리밍 영상).
+/// [pinned]면 화면이 낮아도 아래가 밀리지 않게 높이를 화면의 3할까지만 쓴다.
+class MediaDetailMedia extends StatelessWidget {
+  const MediaDetailMedia({super.key, this.pinned = false});
+
+  final bool pinned;
+
+  @override
   Widget build(BuildContext context) {
+    final view = _DetailScope.of(context);
+    final l10n = context.l10n;
+    final text = Theme.of(context).textTheme;
+    final p = context.palette;
+    final hit = context.watch<MediaDetailCubit>().state.hit;
+    final audio = !isYoutubeUrl(hit.url);
+    final pinH = pinned ? MediaQuery.sizeOf(context).height * .3 : null;
+    final mediaChildren = <Widget>[
+                    if (view._playing && view._canEmbed(hit))
+                      Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: pinH == null ? double.infinity : pinH * 16 / 9,
+                          ),
+                          child: (view.widget.playerBuilder ??
+                              (id, onFailed) => YoutubeEmbedPlayer(
+                                key: ValueKey('embed-$id'),
+                                videoId: id,
+                                onFailed: (_) => onFailed(),
+                              ))(hit.id, view._onEmbedFailed),
+                        ),
+                      )
+                    else
+                      _Thumbnail(
+                        hit: hit,
+                        inApp: view._canEmbed(hit),
+                        audio: audio,
+                        maxHeight: pinH,
+                        onPlay: () => unawaited(view._play(hit)),
+                      ),
+                    if (view._embedBlocked)
+                      Padding(
+                        padding: const EdgeInsets.only(top: AppSpacing.sm),
+                        child: Row(
+                          key: const ValueKey('detail-embed-blocked'),
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              AppIcons.info,
+                              size: AppSizes.iconSm,
+                              color: p.onSurfaceMuted,
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            Expanded(
+                              child: Text(
+                                l10n.mediaDetailEmbedBlocked,
+                                style: text.bodySmall,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+    ];
+    return Column(children: mediaChildren);
+  }
+}
+
+/// 정보 조각: 제목 · 채널 · 정보 · 설명 목록 (스크롤). [header]는 목록 맨 위에 같이 스크롤되는 자리.
+/// [showPreview]면 미리 듣기 구역도 보인다.
+class MediaDetailInfo extends StatelessWidget {
+  const MediaDetailInfo({super.key, this.header, this.showPreview = false});
+
+  final Widget? header;
+  final bool showPreview;
+
+  @override
+  Widget build(BuildContext context) {
+    final view = _DetailScope.of(context);
     final l10n = context.l10n;
     final text = Theme.of(context).textTheme;
     final p = context.palette;
@@ -304,70 +416,19 @@ class _DetailViewState extends State<_DetailView> {
         ),
     ];
 
-    // 고정할 때는 화면이 낮아도 아래 조작부가 밀리지 않게 높이를 화면의 3할까지만 쓴다.
-    final pinH = widget.pinMedia ? MediaQuery.sizeOf(context).height * .3 : null;
-    final mediaChildren = <Widget>[
-                    if (widget.hideMedia)
-                      const SizedBox.shrink()
-                    else if (_playing && _canEmbed(hit))
-                      Center(
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            maxWidth: pinH == null ? double.infinity : pinH * 16 / 9,
-                          ),
-                          child: (widget.playerBuilder ??
-                              (id, onFailed) => YoutubeEmbedPlayer(
-                                key: ValueKey('embed-$id'),
-                                videoId: id,
-                                onFailed: (_) => onFailed(),
-                              ))(hit.id, _onEmbedFailed),
-                        ),
-                      )
-                    else
-                      _Thumbnail(
-                        hit: hit,
-                        inApp: _canEmbed(hit),
-                        audio: audio,
-                        maxHeight: pinH,
-                        onPlay: () => unawaited(_play(hit)),
-                      ),
-                    if (_embedBlocked)
-                      Padding(
-                        padding: const EdgeInsets.only(top: AppSpacing.sm),
-                        child: Row(
-                          key: const ValueKey('detail-embed-blocked'),
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(
-                              AppIcons.info,
-                              size: AppSizes.iconSm,
-                              color: p.onSurfaceMuted,
-                            ),
-                            const SizedBox(width: AppSpacing.xs),
-                            Expanded(
-                              child: Text(
-                                l10n.mediaDetailEmbedBlocked,
-                                style: text.bodySmall,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-    ];
-
-    final listView = ListView(
+    return ListView(
                   padding: AppSpacing.screen.copyWith(top: AppSpacing.sm),
                   children: [
-                    if (!widget.pinMedia) ...mediaChildren,
+                    if (header != null) header!,
                     const SizedBox(height: AppSpacing.sm),
-                    if (!widget.embedded)
+                    if (showPreview)
                     SectionBlock(
                       title: l10n.mediaDetailSectionPreview,
                       children: [
                         Center(child: PreviewButton(hit: hit)),
                         PreviewProgressBar(hitId: hit.id, showTime: true),
                         AudioLanguageRow(
-                          onChanged: (id) => _restartPreview(hit, id),
+                          onChanged: (id) => view._restartPreview(hit, id),
                         ),
                       ],
                     ),
@@ -390,7 +451,7 @@ class _DetailViewState extends State<_DetailView> {
                               ),
                         onOpen: hit.channelUrl == null
                             ? null
-                            : () => _open(hit.channelUrl!),
+                            : () => view._open(hit.channelUrl!),
                       ),
                     ],
                     if (rows.isNotEmpty)
@@ -418,20 +479,21 @@ class _DetailViewState extends State<_DetailView> {
                     const SizedBox(height: AppSpacing.md),
                   ],
                 );
+  }
+}
 
-    if (widget.embedded && widget.pinMedia) {
-      // 영상 · 썸네일(눌러서 스트리밍 재생)을 스크롤하지 않는 맨 위에 고정한다.
-      return Column(
-        children: [
-          Padding(
-            padding: AppSpacing.screen.copyWith(top: AppSpacing.sm, bottom: 0),
-            child: Column(children: mediaChildren),
-          ),
-          Expanded(child: listView),
-        ],
-      );
-    }
-    if (widget.embedded) return listView;
+/// 상세 화면 틀: 맨 위 줄 · 한 스크롤(영상 + 정보) · 아래 재생 / 받기 버튼.
+class _DetailPage extends StatelessWidget {
+  const _DetailPage();
+
+  @override
+  Widget build(BuildContext context) {
+    final view = _DetailScope.of(context);
+    final l10n = context.l10n;
+    final p = context.palette;
+    final state = context.watch<MediaDetailCubit>().state;
+    final hit = state.hit;
+    final youtube = isYoutubeUrl(hit.url);
 
     final actionRow =
         Padding(
@@ -454,7 +516,7 @@ class _DetailViewState extends State<_DetailView> {
                         icon: AppIcons.play,
                         // 이 앱의 주 동작은 받기라서 원본 열기는 보조(tonal)로 둔다.
                         variant: PillVariant.tonal,
-                        onPressed: () => _open(hit.url),
+                        onPressed: () => view._open(hit.url),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
@@ -505,7 +567,9 @@ class _DetailViewState extends State<_DetailView> {
               ),
               // 받기 전 상세 화면은 목록 위에 얇은 막대로 읽는 중임을 알린다.
               LoadingBar(loading: state.loading),
-              Expanded(child: listView),
+              const Expanded(
+                child: MediaDetailInfo(header: MediaDetailMedia(), showPreview: true),
+              ),
               // 재생 · 받기 버튼은 아래에 고정한다.
               actionRow,
             ],

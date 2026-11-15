@@ -155,12 +155,11 @@ class _PlayerScreenState extends State<PlayerScreen> {
     if (savedHit != null) {
       return SavedPlayer(
         data: data,
-        panel: MediaDetailScreen(
+        // 상세 화면 조각을 조합한다: 영상 · 썸네일은 위에 고정하고 정보만 스크롤한다.
+        panel: MediaDetailScope(
           key: ValueKey(savedHit.id),
           hit: savedHit,
-          embedded: true,
-          // 영상 · 썸네일 칸을 정보 영역 위에 고정한다 (영상 저장 곡은 이 칸이 영상 화면이 된다).
-          pinMedia: true,
+          builder: (_) => const _SavedDetailPanel(),
         ),
         expandTooltip: context.l10n.mediaDetailTitle,
         onExpand: () => unawaited(showMediaDetail(context, savedHit)),
@@ -174,4 +173,20 @@ class _PlayerScreenState extends State<PlayerScreen> {
     PlayerStyle.fullBleed => FullBleedPlayer(data: data),
     PlayerStyle.arc => ArcPlayer(data: data),
   };
+}
+
+/// 임시 저장한 곡 플레이어의 가운데: 영상 · 썸네일 고정 + 정보 목록.
+class _SavedDetailPanel extends StatelessWidget {
+  const _SavedDetailPanel();
+
+  @override
+  Widget build(BuildContext context) => Column(
+    children: [
+      Padding(
+        padding: AppSpacing.screen.copyWith(top: AppSpacing.sm, bottom: 0),
+        child: const MediaDetailMedia(pinned: true),
+      ),
+      const Expanded(child: MediaDetailInfo()),
+    ],
+  );
 }
