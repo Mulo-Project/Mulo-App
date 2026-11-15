@@ -194,10 +194,11 @@ object YoutubeResolver {
     class SaveSources(val video: YtFormat, val audio: YtFormat?)
 
     /**
-     * 영상 저장용 주소: 영상(+없으면 mp4 소리)을 구간 확인까지 통과한 클라이언트에서 고른다. 못 찾으면 null.
+     * 영상 저장용 주소: 영상(+없으면 같은 형식의 소리)을 구간 확인까지 통과한 클라이언트에서 고른다. 못 찾으면 null.
+     * [container]는 저장할 파일 형식(mp4 · webm): 같은 형식의 영상 · 소리를 골라 다시 인코딩 없이 합칠 수 있게 한다.
      * 받을 때는 [headersFor]의 헤더를 같이 보낸다.
      */
-    fun saveSources(videoId: String, maxHeight: Int): SaveSources? = timed("저장용") {
+    fun saveSources(videoId: String, maxHeight: Int, container: String = "mp4"): SaveSources? = timed("저장용") {
         var found: SaveSources? = null
         for (client in listOf(visionOs, androidVr)) {
             val all = try {
@@ -206,10 +207,10 @@ object YoutubeResolver {
                 MuloLog.d(TAG, "저장용 ${client.name} 읽기 실패 ${oneLine(e.toString())}")
                 continue
             }
-            val (best, muxed) = YoutubeFormats.pickVideo(all, maxHeight) ?: continue
+            val (best, muxed) = YoutubeFormats.pickVideo(all, maxHeight, container) ?: continue
             if (!canReadMiddle(best)) continue
             if (muxed) { found = SaveSources(best, null); break }
-            val audio = YoutubeFormats.orderAudio(all, false, null).firstOrNull { it.container == "mp4" } ?: continue
+            val audio = YoutubeFormats.orderAudio(all, container == "webm", null).firstOrNull { it.container == container } ?: continue
             if (!canReadMiddle(audio)) continue
             found = SaveSources(best, audio)
             break

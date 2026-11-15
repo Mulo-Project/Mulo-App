@@ -69,3 +69,9 @@
 
 ## 내장 커버 읽기를 네이티브로 모음
 - opus · ogg · webm 내장 커버를 Dart(`audio_metadata_reader` + `METADATA_BLOCK_PICTURE` 직접 풀기, 캐시 복사)로 읽던 경로를 없앴다. `MediaStoreChannel.embeddedPicture`가 `MediaMetadataRetriever` → (영상은 장면) → `TagReader.picture`(Media3가 형식별 그림 칸을 풀어 준다) 순으로 읽고, Dart `MediaStorePictureReader`는 바이트만 받는다. 데스크톱용 `FilePictureReader`와 `vorbis_picture_test.dart`를 지웠다 (Android만 다룬다).
+
+## 추가: webm 영상 저장도 네이티브로
+- 네이티브 영상 저장이 mp4만 하던 것을 webm까지 넓혔다. 저장할 파일 형식에 맞춰 같은 형식의 영상 전용(`YoutubeFormats.pickVideo(…, container)`)과
+  소리(webm이면 opus)를 골라(`YoutubeResolver.saveSources(…, container)`) 받아 `TranscoderChannel.mux`가 출력 확장자대로(`-f webm` / `-f mp4`) 다시 인코딩 없이 합친다.
+  webm은 소리가 든 형식이 없어 늘 영상 + 소리 두 파일이다. 그 밖의 형식(mkv 등)과 유튜브가 아닌 주소는 그대로 yt-dlp.
+- 기기 확인: webm으로 영상 저장 → `MuloNative`에 `영상 저장 네이티브 …ms 완료`, 저장한 webm 재생.

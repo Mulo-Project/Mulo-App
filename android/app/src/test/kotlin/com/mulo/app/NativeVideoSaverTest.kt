@@ -22,16 +22,25 @@ class NativeVideoSaverTest {
     }
 
     @Test
-    fun leavesNonMp4AndNonYoutubeToYtDlp() {
-        val saver = NativeVideoSaver({ tmp.root }, { _, _, _ -> true }, { _, _ -> error("읽으면 안 된다") })
-        assertFalse(saver.save("https://youtu.be/dQw4w9WgXcQ", 720, "webm", tmp.root, "s") {})
+    fun leavesOtherFormatsAndNonYoutubeToYtDlp() {
+        val saver = NativeVideoSaver({ tmp.root }, { _, _, _ -> true }, { _, _, _ -> error("읽으면 안 된다") })
+        assertFalse(saver.save("https://youtu.be/dQw4w9WgXcQ", 720, "mkv", tmp.root, "s") {})
         assertFalse(saver.save("https://soundcloud.com/a/b", 720, "mp4", tmp.root, "s") {})
     }
 
     @Test
     fun fallsBackWhenNoSourcesFound() {
-        val saver = NativeVideoSaver({ tmp.root }, { _, _, _ -> true }, { _, _ -> null })
+        val saver = NativeVideoSaver({ tmp.root }, { _, _, _ -> true }, { _, _, _ -> null })
         assertFalse(saver.save("https://youtu.be/dQw4w9WgXcQ", 720, "mp4", File(tmp.root, "out"), "s") {})
         assertTrue(File(tmp.root, "out").listFiles().isNullOrEmpty())
+    }
+
+    @Test
+    fun asksForTheSameContainerAsTheSavedFile() {
+        val asked = mutableListOf<String>()
+        val saver = NativeVideoSaver({ tmp.root }, { _, _, _ -> true }, { _, _, container -> asked += container; null })
+        saver.save("https://youtu.be/dQw4w9WgXcQ", 720, "webm", File(tmp.root, "out"), "s") {}
+        saver.save("https://youtu.be/dQw4w9WgXcQ", 720, "mp4", File(tmp.root, "out"), "s") {}
+        assertEquals(listOf("webm", "mp4"), asked)
     }
 }

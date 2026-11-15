@@ -65,6 +65,16 @@ class YoutubeFormatsTest {
     }
 
     @Test
+    fun webmSavePicksWebmVideoOnlyAndNeverMuxed() {
+        val webm = "video/webm; codecs=\"vp9\""
+        val all = listOf(video(1, 360, true), video(2, 720, false), video(3, 720, false, webm), video(4, 1080, false, webm))
+        val (best, muxed) = YoutubeFormats.pickVideo(all, 720, "webm")!!
+        assertEquals(3, best.itag)
+        assertFalse(muxed)
+        assertNull(YoutubeFormats.pickVideo(listOf(video(1, 360, true)), 720, "webm"))
+    }
+
+    @Test
     fun languagesDedupeByIdKeepingOrder() {
         val all = listOf(
             audio(1, "audio/webm", 1, "ko.4", true),

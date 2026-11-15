@@ -41,14 +41,19 @@ object YoutubeFormats {
     }
 
     /**
-     * 영상 하나. 소리 든 형식이 [maxHeight] 이하에 있고 더 큰 영상 전용 mp4가 없으면 소리 든 형식(한 플레이어로 튼다),
-     * 아니면 [maxHeight] 이하 mp4 영상 전용 가운데 가장 큰 것. 없으면 null.
+     * 영상 하나. 소리 든 형식이 [maxHeight] 이하에 있고 더 큰 영상 전용 [container] 형식이 없으면 소리 든 형식(한 플레이어로 튼다),
+     * 아니면 [maxHeight] 이하 [container] 영상 전용 가운데 가장 큰 것. 없으면 null.
+     * 소리 든 형식은 늘 mp4라서, [container]가 mp4가 아니면(webm 저장) 영상 전용만 고른다.
      * 돌려주는 두 번째 값은 소리 든 형식인지.
      */
-    fun pickVideo(all: List<YtFormat>, maxHeight: Int): Pair<YtFormat, Boolean>? {
-        val muxed = all.filter { it.muxed && it.isVideo && it.height <= maxHeight }.sortedByDescending { it.height }
+    fun pickVideo(all: List<YtFormat>, maxHeight: Int, container: String = "mp4"): Pair<YtFormat, Boolean>? {
+        val muxed = if (container == "mp4") {
+            all.filter { it.muxed && it.isVideo && it.height <= maxHeight }.sortedByDescending { it.height }
+        } else {
+            emptyList()
+        }
         val only = all
-            .filter { !it.muxed && it.isVideo && it.container == "mp4" && it.height <= maxHeight }
+            .filter { !it.muxed && it.isVideo && it.container == container && it.height <= maxHeight }
             .sortedByDescending { it.height }
         return if (muxed.isNotEmpty() && (only.isEmpty() || only.first().height <= muxed.first().height)) {
             muxed.first() to true

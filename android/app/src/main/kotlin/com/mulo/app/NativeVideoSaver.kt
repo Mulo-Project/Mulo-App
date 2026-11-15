@@ -14,24 +14,25 @@ class NativeVideoSaver(
     private val tempDir: () -> File,
     /** 영상 · 소리(없을 수 있다) · 출력 파일을 하나로 합친다. 못 하면 false (lite는 ffmpeg가 없다). */
     private val mux: (video: File, audio: File?, output: File) -> Boolean,
-    private val sources: (videoId: String, maxHeight: Int) -> YoutubeResolver.SaveSources? = YoutubeResolver::saveSources,
+    private val sources: (videoId: String, maxHeight: Int, container: String) -> YoutubeResolver.SaveSources? = YoutubeResolver::saveSources,
 ) {
     /** 저장했으면 true. 이 방법을 쓸 수 없는 주소 · 형식이면 false. 받다가 실패하면 예외 (둘 다 yt-dlp로 넘어간다). */
     fun save(url: String, maxHeight: Int, extension: String, dir: File, stem: String, onProgress: (Double) -> Unit): Boolean {
-        if (extension != "mp4") return false // webm은 형식 조합이 달라 yt-dlp가 한다
+        // mp4 · webm만: 같은 형식의 영상 + 소리를 받아 다시 인코딩 없이 합친다 (그 밖의 형식은 yt-dlp가 한다).
+        if (extension != "mp4" && extension != "webm") return false
         val id = youtubeIdOf(url) ?: return false
-        val picked = sources(id, maxHeight) ?: return false
+        val picked = sources(id, maxHeight, extension) ?: return false
         val work = File(tempDir(), "save_${System.nanoTime()}")
         try {
             work.mkdirs()
             val total = (picked.video.contentLength + (picked.audio?.contentLength ?: 0L)).coerceAtLeast(1L)
             var done = 0L
             val report = { n: Long -> done += n; onProgress((done.toDouble() / total * 0.95).coerceAtMost(0.95)) }
-            val video = File(work, "v.mp4")
+            val video = File(work, "v.$extension")
             download(picked.video, video, report)
-            val audio = picked.audio?.let { File(work, "a.m4a").also { f -> download(it, f, report) } }
+            val audio = picked.audio?.let { File(work, if (extension == "webm") "a.webm" else "a.m4a").also { f -> download(it, f, report) } }
             dir.mkdirs()
-            val out = File(dir, "$stem.mp4")
+            val out = File(dir, "$stem.$extension")
             if (!mux(video, audio, out) || out.length() == 0L) {
                 out.delete()
                 throw IOException("합치기 실패")
