@@ -5,8 +5,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/design.dart';
+import '../../../../core/l10n/l10n.dart';
 import '../../../search/presentation/bloc/saved_videos_cubit.dart';
 import '../../../search/presentation/saved_track.dart';
+import '../../../search/domain/entities/media_info.dart';
 import '../../../search/presentation/screens/media_detail_screen.dart';
 import '../bloc/now_playing_cubit.dart';
 import '../bloc/player_style_cubit.dart';
@@ -97,8 +99,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) => _closeIfEmpty());
     }
 
-    // 임시 저장한 음원이면 썸네일 자리를 "다운로드 영역"으로 삼는다: 누르면 조작부 없이 다운로드 페이지 자체로 이동한다.
-    // 레이아웃과 아래 조작부는 일반 곡과 같은 위젯이라 곡이 넘어가도 화면이 바뀌지 않는다.
+    // 임시 저장한 음원이면 가운데에 다운로드 페이지 내용을 보여 주고, 확장 버튼으로 다운로드 페이지 자체로 간다.
+    // 틀(맨 위 줄)과 아래 조작부는 일반 곡과 같은 위젯이라 곡이 넘어가도 화면이 바뀌지 않는다.
     final savedId = track == null ? null : savedVideoIdOf(track.id);
     final savedHit = savedId == null
         ? null
@@ -108,16 +110,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
               .where((v) => v.id == savedId)
               .firstOrNull
               ?.hit;
-    final onCoverTap = savedHit == null
-        ? null
-        : () => unawaited(
-            Navigator.of(context, rootNavigator: true).push<void>(
-              MaterialPageRoute(
-                settings: RouteSettings(name: mediaDetailRouteName(savedHit.id)),
-                builder: (_) => MediaDetailScreen(hit: savedHit),
-              ),
-            ),
-          );
     return Scaffold(
       backgroundColor: context.palette.background,
       body: track == null
@@ -132,8 +124,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   showLyrics: _showLyrics,
                   onToggleLyrics: () =>
                       playerShowLyrics.value = !playerShowLyrics.value,
-                  onCoverTap: onCoverTap,
                 ),
+                savedHit: savedHit,
               ),
             ),
     );
@@ -155,7 +147,27 @@ class _PlayerScreenState extends State<PlayerScreen> {
     ),
   );
 
-  Widget _layout(PlayerStyle style, PlayerLayoutData data) => switch (style) {
+  Widget _layout(
+    PlayerStyle style,
+    PlayerLayoutData data, {
+    MediaHit? savedHit,
+  }) {
+    if (savedHit != null) {
+      return SavedPlayer(
+        data: data,
+        panel: MediaDetailScreen(
+          key: ValueKey(savedHit.id),
+          hit: savedHit,
+          embedded: true,
+        ),
+        expandTooltip: context.l10n.mediaDetailTitle,
+        onExpand: () => unawaited(showMediaDetail(context, savedHit)),
+      );
+    }
+    return _styled(style, data);
+  }
+
+  Widget _styled(PlayerStyle style, PlayerLayoutData data) => switch (style) {
     PlayerStyle.square => SquarePlayer(data: data),
     PlayerStyle.fullBleed => FullBleedPlayer(data: data),
     PlayerStyle.arc => ArcPlayer(data: data),

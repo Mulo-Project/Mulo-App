@@ -76,6 +76,7 @@ class MediaDetailScreen extends StatelessWidget {
     required this.hit,
     @visibleForTesting this.inAppVideo,
     @visibleForTesting this.playerBuilder,
+    this.embedded = false,
   });
 
   final MediaHit hit;
@@ -133,6 +134,7 @@ class MediaDetailScreen extends StatelessWidget {
     child: _DetailView(
       inAppVideo: inAppVideo ?? inAppVideoSupported,
       playerBuilder: playerBuilder,
+      embedded: embedded,
     ),
   );
 }
@@ -141,9 +143,11 @@ class _DetailView extends StatefulWidget {
   const _DetailView({
     required this.inAppVideo,
     this.playerBuilder,
+    this.embedded = false,
   });
 
   final bool inAppVideo;
+  final bool embedded;
   final Widget Function(String videoId, VoidCallback onFailed)? playerBuilder;
 
   @override
@@ -269,6 +273,110 @@ class _DetailViewState extends State<_DetailView> {
         ),
     ];
 
+    final listView = ListView(
+                  padding: AppSpacing.screen.copyWith(top: AppSpacing.sm),
+                  children: [
+                    if (_playing && _canEmbed(hit))
+                      (widget.playerBuilder ??
+                          (id, onFailed) => YoutubeEmbedPlayer(
+                            key: ValueKey('embed-$id'),
+                            videoId: id,
+                            onFailed: (_) => onFailed(),
+                          ))(hit.id, _onEmbedFailed)
+                    else
+                      IgnorePointer(
+                        ignoring: widget.embedded,
+                        child: _Thumbnail(
+                        hit: hit,
+                        inApp: _canEmbed(hit),
+                        audio: audio,
+                        onPlay: () => unawaited(_play(hit)),
+                      ),
+                      ),
+                    if (_embedBlocked)
+                      Padding(
+                        padding: const EdgeInsets.only(top: AppSpacing.sm),
+                        child: Row(
+                          key: const ValueKey('detail-embed-blocked'),
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              AppIcons.info,
+                              size: AppSizes.iconSm,
+                              color: p.onSurfaceMuted,
+                            ),
+                            const SizedBox(width: AppSpacing.xs),
+                            Expanded(
+                              child: Text(
+                                l10n.mediaDetailEmbedBlocked,
+                                style: text.bodySmall,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: AppSpacing.sm),
+                    if (!widget.embedded)
+                    SectionBlock(
+                      title: l10n.mediaDetailSectionPreview,
+                      children: [
+                        Center(child: PreviewButton(hit: hit)),
+                        PreviewProgressBar(hitId: hit.id, showTime: true),
+                        AudioLanguageRow(
+                          onChanged: (id) => _restartPreview(hit, id),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Divider(height: 1, color: p.outline),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(hit.title, style: text.titleLarge),
+                    if (hit.uploader.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      _ChannelRow(
+                        hit: hit,
+                        audio: audio,
+                        subscribers: hit.subscriberCount == null
+                            ? null
+                            : (audio
+                                  ? l10n.mediaDetailFollowers
+                                  : l10n.mediaDetailSubscribers)(
+                                NumberFormat.compact(locale: locale)
+                                    .format(hit.subscriberCount),
+                              ),
+                        onOpen: hit.channelUrl == null
+                            ? null
+                            : () => _open(hit.channelUrl!),
+                      ),
+                    ],
+                    if (rows.isNotEmpty)
+                      SectionBlock(
+                        title: l10n.mediaDetailSectionInfo,
+                        children: [
+                          for (var i = 0; i < rows.length; i++) ...[
+                            if (i > 0) Divider(height: 1, color: p.outline),
+                            _InfoRow(label: rows[i].$1, value: rows[i].$2),
+                          ],
+                        ],
+                      ),
+                    if (hit.description.isNotEmpty)
+                      SectionBlock(
+                        title: l10n.mediaDetailDescription,
+                        children: [
+                          ExpandableText(
+                            hit.description,
+                            toggleKey: const ValueKey(
+                              'detail-description-toggle',
+                            ),
+                          ),
+                        ],
+                      ),
+                    const SizedBox(height: AppSpacing.md),
+                  ],
+                );
+
+    if (widget.embedded) return listView;
+
     final actionRow =
         Padding(
                 padding: const EdgeInsets.fromLTRB(
@@ -341,105 +449,7 @@ class _DetailViewState extends State<_DetailView> {
               ),
               // 받기 전 상세 화면은 목록 위에 얇은 막대로 읽는 중임을 알린다.
               LoadingBar(loading: state.loading),
-              Expanded(
-                child: ListView(
-                  padding: AppSpacing.screen.copyWith(top: AppSpacing.sm),
-                  children: [
-                    if (_playing && _canEmbed(hit))
-                      (widget.playerBuilder ??
-                          (id, onFailed) => YoutubeEmbedPlayer(
-                            key: ValueKey('embed-$id'),
-                            videoId: id,
-                            onFailed: (_) => onFailed(),
-                          ))(hit.id, _onEmbedFailed)
-                    else
-                      _Thumbnail(
-                        hit: hit,
-                        inApp: _canEmbed(hit),
-                        audio: audio,
-                        onPlay: () => unawaited(_play(hit)),
-                      ),
-                    if (_embedBlocked)
-                      Padding(
-                        padding: const EdgeInsets.only(top: AppSpacing.sm),
-                        child: Row(
-                          key: const ValueKey('detail-embed-blocked'),
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(
-                              AppIcons.info,
-                              size: AppSizes.iconSm,
-                              color: p.onSurfaceMuted,
-                            ),
-                            const SizedBox(width: AppSpacing.xs),
-                            Expanded(
-                              child: Text(
-                                l10n.mediaDetailEmbedBlocked,
-                                style: text.bodySmall,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    const SizedBox(height: AppSpacing.sm),
-                    SectionBlock(
-                      title: l10n.mediaDetailSectionPreview,
-                      children: [
-                        Center(child: PreviewButton(hit: hit)),
-                        PreviewProgressBar(hitId: hit.id, showTime: true),
-                        AudioLanguageRow(
-                          onChanged: (id) => _restartPreview(hit, id),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Divider(height: 1, color: p.outline),
-                    const SizedBox(height: AppSpacing.md),
-                    Text(hit.title, style: text.titleLarge),
-                    if (hit.uploader.isNotEmpty) ...[
-                      const SizedBox(height: AppSpacing.md),
-                      _ChannelRow(
-                        hit: hit,
-                        audio: audio,
-                        subscribers: hit.subscriberCount == null
-                            ? null
-                            : (audio
-                                  ? l10n.mediaDetailFollowers
-                                  : l10n.mediaDetailSubscribers)(
-                                NumberFormat.compact(locale: locale)
-                                    .format(hit.subscriberCount),
-                              ),
-                        onOpen: hit.channelUrl == null
-                            ? null
-                            : () => _open(hit.channelUrl!),
-                      ),
-                    ],
-                    if (rows.isNotEmpty)
-                      SectionBlock(
-                        title: l10n.mediaDetailSectionInfo,
-                        children: [
-                          for (var i = 0; i < rows.length; i++) ...[
-                            if (i > 0) Divider(height: 1, color: p.outline),
-                            _InfoRow(label: rows[i].$1, value: rows[i].$2),
-                          ],
-                        ],
-                      ),
-                    if (hit.description.isNotEmpty)
-                      SectionBlock(
-                        title: l10n.mediaDetailDescription,
-                        children: [
-                          ExpandableText(
-                            hit.description,
-                            toggleKey: const ValueKey(
-                              'detail-description-toggle',
-                            ),
-                          ),
-                        ],
-                      ),
-                    const SizedBox(height: AppSpacing.md),
-                  ],
-                ),
-              ),
+              Expanded(child: listView),
               // 재생 · 받기 버튼은 아래에 고정한다.
               actionRow,
             ],
