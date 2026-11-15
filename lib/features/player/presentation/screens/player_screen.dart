@@ -175,67 +175,47 @@ class _PlayerScreenState extends State<PlayerScreen> {
   };
 }
 
-/// 임시 저장한 곡 플레이어의 가운데: 일반 곡처럼 썸네일 · 영상만 크게 보이고,
-/// 정보 목록은 아래에 살짝 보이는 시트로 두어 위로 끌어올릴 때만 펼친다 (스크롤 영역이 좁아지지 않게).
-class _SavedDetailPanel extends StatelessWidget {
+/// 임시 저장한 곡 플레이어의 가운데: 처음에는 일반 곡처럼 썸네일 · 영상만 크게 보인다.
+/// 정보 펼치기 버튼을 누르면 고정이 풀려 영상 · 썸네일과 정보가 한 스크롤로 이어지고, 다시 누르면 접는다.
+class _SavedDetailPanel extends StatefulWidget {
   const _SavedDetailPanel();
 
-  /// 접었을 때 시트가 보이는 높이 (패널 높이의 비율).
-  static const _peek = .14;
+  @override
+  State<_SavedDetailPanel> createState() => _SavedDetailPanelState();
+}
+
+class _SavedDetailPanelState extends State<_SavedDetailPanel> {
+  var _open = false;
 
   @override
   Widget build(BuildContext context) {
-    final p = context.palette;
-    return LayoutBuilder(
-      builder: (context, box) => Stack(
-        children: [
-          Positioned.fill(
-            child: Padding(
-              padding: EdgeInsets.only(bottom: box.maxHeight * _peek),
-              child: const Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                  child: MediaDetailMedia(),
-                ),
-              ),
-            ),
-          ),
-          Positioned.fill(
-            child: DraggableScrollableSheet(
-              initialChildSize: _peek,
-              minChildSize: _peek,
-              maxChildSize: .92,
-              snap: true,
-              builder: (context, controller) => GlassSurface(
-                solid: true,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(AppRadii.sheet),
+    final label = context.l10n.mediaDetailSectionInfo;
+    return Column(
+      children: [
+        Expanded(
+          child: _open
+              ? const MediaDetailInfo(header: MediaDetailMedia())
+              : const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                    child: MediaDetailMedia(),
                   ),
                 ),
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: AppSpacing.sm,
-                      ),
-                      child: Container(
-                        width: 36,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: p.outline,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                    Expanded(child: MediaDetailInfo(controller: controller)),
-                  ],
-                ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          child: Row(
+            children: [
+              CircleIconButton(
+                key: const ValueKey('saved-info-toggle'),
+                icon: _open ? AppIcons.chevronUp : AppIcons.chevronDown,
+                tooltip: label,
+                onPressed: () => setState(() => _open = !_open),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
