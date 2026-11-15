@@ -77,12 +77,16 @@ class MediaDetailScreen extends StatelessWidget {
     @visibleForTesting this.inAppVideo,
     @visibleForTesting this.playerBuilder,
     this.embedded = false,
+    this.hideMedia = false,
   });
 
   final MediaHit hit;
 
   /// 플레이어 화면 가운데에 끼워 넣는 모양: 화면 틀(맨 위 줄 · 아래 버튼) 없이 내용 목록만 그린다 (임시 저장 곡의 다운로드 영역).
   final bool embedded;
+
+  /// 위에 이미 영상이 나와 있어서 이 화면의 썸네일 · 영상 칸은 뺀다 (영상이 두 개 보이지 않게).
+  final bool hideMedia;
 
   /// 앱 안 재생 가능 여부를 바꿔 쓴다 (테스트용, 기본은 플랫폼에 따른다).
   final bool? inAppVideo;
@@ -139,6 +143,7 @@ class MediaDetailScreen extends StatelessWidget {
       inAppVideo: inAppVideo ?? inAppVideoSupported,
       playerBuilder: playerBuilder,
       embedded: embedded,
+      hideMedia: hideMedia,
     ),
   );
 }
@@ -148,10 +153,14 @@ class _DetailView extends StatefulWidget {
     required this.inAppVideo,
     this.playerBuilder,
     this.embedded = false,
+    this.hideMedia = false,
   });
 
   final bool inAppVideo;
   final bool embedded;
+
+  /// 위에 이미 영상이 나와 있어서 이 화면의 썸네일 · 영상 칸은 뺀다 (영상이 두 개 보이지 않게).
+  final bool hideMedia;
   final Widget Function(String videoId, VoidCallback onFailed)? playerBuilder;
 
   @override
@@ -289,7 +298,9 @@ class _DetailViewState extends State<_DetailView> {
     final listView = ListView(
                   padding: AppSpacing.screen.copyWith(top: AppSpacing.sm),
                   children: [
-                    if (_playing && _canEmbed(hit))
+                    if (widget.hideMedia)
+                      const SizedBox.shrink()
+                    else if (_playing && _canEmbed(hit))
                       (widget.playerBuilder ??
                           (id, onFailed) => YoutubeEmbedPlayer(
                             key: ValueKey('embed-$id'),
