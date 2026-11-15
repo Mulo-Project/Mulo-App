@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../search/presentation/bloc/media_detail_cubit.dart';
 import '../../../search/presentation/bloc/saved_videos_cubit.dart';
 import '../../../search/presentation/saved_track.dart';
 import '../../../search/domain/entities/media_info.dart';
@@ -175,18 +176,26 @@ class _PlayerScreenState extends State<PlayerScreen> {
   };
 }
 
-/// 임시 저장한 곡 플레이어의 가운데: 영상 · 썸네일 고정 + 정보 목록.
+/// 임시 저장한 곡 플레이어의 가운데: 정보 목록, 그리고 영상 · 썸네일.
+/// 유튜브 곡은 영상이 있어 영상 · 썸네일을 위에 고정한다. SoundCloud 같은 음원은 정사각 커버뿐이라
+/// 고정하면 스크롤 영역만 좁아지므로, 커버를 목록 맨 위에 두어 같이 스크롤되게 한다.
 class _SavedDetailPanel extends StatelessWidget {
   const _SavedDetailPanel();
 
   @override
-  Widget build(BuildContext context) => Column(
-    children: [
-      Padding(
-        padding: AppSpacing.screen.copyWith(top: AppSpacing.sm, bottom: 0),
-        child: const MediaDetailMedia(pinned: true),
-      ),
-      const Expanded(child: MediaDetailInfo()),
-    ],
-  );
+  Widget build(BuildContext context) {
+    final url = context.select((MediaDetailCubit c) => c.state.hit.url);
+    if (!isYoutubeUrl(url)) {
+      return const MediaDetailInfo(header: MediaDetailMedia());
+    }
+    return Column(
+      children: [
+        Padding(
+          padding: AppSpacing.screen.copyWith(top: AppSpacing.sm, bottom: 0),
+          child: const MediaDetailMedia(pinned: true),
+        ),
+        const Expanded(child: MediaDetailInfo()),
+      ],
+    );
+  }
 }
