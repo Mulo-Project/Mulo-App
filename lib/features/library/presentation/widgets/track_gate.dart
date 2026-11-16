@@ -48,10 +48,12 @@ class TrackGate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final access = _mediaAccess(context);
+    final t = track;
     final allowed =
         access == null ||
-        access.state ||
-        !(isDeviceFile ?? track!.uri.startsWith('content://'));
+        (t != null
+            ? access.state.playable(t.id, t.uri)
+            : access.state.allowed || !isDeviceFile!);
     final loading = context.read<NowPlayingCubit>().loading;
     return ValueListenableBuilder<bool>(
       valueListenable: loading,

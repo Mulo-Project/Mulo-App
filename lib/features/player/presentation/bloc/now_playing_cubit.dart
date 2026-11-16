@@ -162,6 +162,13 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   /// 엔진이 곡을 여는 중이다. 이 사이에 다른 곡을 누르면 영상 디코더를 못 잡아 둘 다 실패하므로 누름을 무시한다.
   final ValueNotifier<bool> loading = ValueNotifier<bool>(false);
 
+  /// 이 곡을 재생할 수 있는가 (권한이 없거나 열기에 실패한 곡은 대기열에 넣지 않는다). 앱이 연결한다.
+  bool Function(Track track) playable = _alwaysPlayable;
+  static bool _alwaysPlayable(Track _) => true;
+
+  /// 곡을 열다 실패했을 때 (앱이 열기 실패 기록에 남긴다).
+  void Function(String id)? onUnplayable;
+
   /// 엔진이 지금 쥐고 있다고 보는 대기열 (목록 · 반복 · extras만 비교한다).
   var _pushed = const PlaybackSnapshot(items: [], index: 0, playing: false);
 
@@ -347,6 +354,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
           if (position > Duration.zero) await a.seek(position);
         } on Object catch (e) {
           debugPrint('MuloPlayback skipTo failed: $e (index=$index)');
+          if (current != null) onUnplayable?.call(current.id);
           if (!isClosed && state.index == index) {
             emit(state.copyWith(isPlaying: false, position: Duration.zero));
           }
@@ -383,6 +391,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
       if (result != null) _applyQueue(result);
     } on Object catch (e) {
       debugPrint('MuloPlayback setQueue failed: $e (track=${current.id})');
+      onUnplayable?.call(current.id);
       if (!isClosed && state.track?.id == current.id) {
         emit(state.copyWith(isPlaying: false, position: Duration.zero));
       }
@@ -574,6 +583,14 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   void playQueue(List<Track> queue, {int index = 0}) {
     if (queue.isEmpty) return;
     if (loading.value) return;
+    // 열 수 없는 곡은 빼고, 누른 곡이 열 수 없으면 아무것도 하지 않는다 (곡 줄이 권한을 묻는다).
+    final tapped = queue[index.clamp(0, queue.length - 1)];
+    if (!playable(tapped)) return;
+    final ok = queue.where(playable).toList();
+    if (ok.length != queue.length) {
+      playQueue(ok, index: ok.indexOf(tapped));
+      return;
+    }
     final at = index.clamp(0, queue.length - 1);
     if (_audio != null) {
       // 엔진이 있으면 섞는 일은 엔진이 한다: 섞기 전 순서로 보내고 셔플로 시작하게 한다.
@@ -630,6 +647,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   /// 지금 곡 바로 뒤에 끼운다. 대기열이 비어 있으면 이 곡을 바로 재생한다.
   /// 이미 대기열에 있는 곡이면 그 자리를 옮긴다 (지금 재생 중인 곡이면 그대로).
   void playNext(Track track) {
+    if (!playable(track)) return;
     if (state.queue.isEmpty) return playQueue([track]);
     if (state.track == track) return;
     final current = state.track!;
@@ -651,6 +669,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   /// 대기열 맨 뒤에 붙인다. 대기열이 비어 있으면 이 곡을 바로 재생한다.
   /// 이미 대기열에 있는 곡이면 건너뛴다.
   void addToQueue(Track track) {
+    if (!playable(track)) return;
     if (state.queue.isEmpty) return playQueue([track]);
     if (state.queue.contains(track)) return;
     if (_audio != null) {

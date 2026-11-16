@@ -137,7 +137,14 @@ class _MusicAppState extends State<MusicApp> {
           create: (_) => sl<LibraryImportCubit>()..embedTagsInBackground(),
         ),
         BlocProvider(create: (_) => sl<MediaAccessCubit>()..refresh()),
-        BlocProvider(create: (_) => sl<NowPlayingCubit>()),
+        BlocProvider(
+          create: (context) {
+            final access = context.read<MediaAccessCubit>();
+            return sl<NowPlayingCubit>()
+              ..playable = ((t) => access.state.playable(t.id, t.uri))
+              ..onUnplayable = access.markFailed;
+          },
+        ),
         BlocProvider(
           create: (_) => sl<AudioOutputCubit>()
             ..refresh()
