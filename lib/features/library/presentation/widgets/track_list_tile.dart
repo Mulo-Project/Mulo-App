@@ -5,9 +5,9 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
-import '../../../permissions/presentation/bloc/media_access_cubit.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/track.dart';
+import 'track_gate.dart';
 import 'track_menu.dart';
 
 /// 모르는 아티스트 · 앨범 · 장르는 안내 문구로.
@@ -87,18 +87,14 @@ class TrackListTile extends StatelessWidget {
     final isCurrent = context.select(
       (NowPlayingCubit c) => c.state.track?.id == track.id,
     );
-    // 기기 파일(content://) 곡은 미디어 권한이 없으면 열 수 없다.
-    final access = _mediaAccess(context);
-    final mediaAllowed =
-        access == null || access.state || !track.uri.startsWith('content://');
     final t = track;
     final sel = selection;
     final picking = sel != null && sel.active;
-    return ValueListenableBuilder<bool>(
-      valueListenable: vm.loading,
-      builder: (context, loading, _) => TrackTile(
-        enabled: !loading,
-        unavailable: !mediaAllowed,
+    return TrackGate(
+      track: t,
+      builder: (context, gate) => TrackTile(
+        enabled: gate.enabled,
+        unavailable: gate.unavailable,
       title: t.title,
       subtitle: showAlbum
           ? '${artistOf(l10n, t)} · ${albumOf(l10n, t)}'
@@ -120,14 +116,7 @@ class TrackListTile extends StatelessWidget {
                 TrackMoreButton(track: t, playlistId: playlistId),
               ],
             ),
-      onTap: picking
-            ? sel.onToggle
-            : mediaAllowed
-            ? () => vm.playQueue(queue, index: index)
-            : () async {
-                // 권한이 없으면 요청 창(막혔으면 설정)을 띄우고, 허용되면 바로 재생한다.
-                if (await access!.ask()) vm.playQueue(queue, index: index);
-              },
+      onTap: picking ? sel.onToggle : gate.tap(() => vm.playQueue(queue, index: index)),
       // 선택을 지원하는 목록에서는 길게 누르기가 선택 모드 진입이고, 메뉴는 ⋮로만 연다.
       onLongPress: sel?.onToggle,
       onMenu: sel != null
@@ -143,11 +132,3 @@ class TrackListTile extends StatelessWidget {
   }
 }
 
-/// 앱 전체 미디어 권한 상태 (제공되지 않은 화면이면 null).
-MediaAccessCubit? _mediaAccess(BuildContext context) {
-  try {
-    return context.watch<MediaAccessCubit>();
-  } on Object {
-    return null;
-  }
-}

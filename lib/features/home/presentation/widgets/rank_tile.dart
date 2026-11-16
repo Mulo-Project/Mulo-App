@@ -4,6 +4,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
+import '../../../library/presentation/widgets/track_gate.dart';
 import '../../../library/presentation/widgets/track_list_tile.dart'
     show TrackSelection, selectionMark;
 import '../../../library/presentation/widgets/track_menu.dart';
@@ -32,7 +33,11 @@ class RankTile extends StatelessWidget {
     final t = item.track;
     final sel = selection;
     final picking = sel != null && sel.active;
-    return TrackTile(
+    return TrackGate(
+      track: t,
+      builder: (context, gate) => TrackTile(
+      enabled: gate.enabled,
+      unavailable: gate.unavailable,
       title: t.title,
       subtitle: t.artist.isEmpty ? l10n.unknownArtist : t.artist,
       leading: Row(
@@ -65,11 +70,12 @@ class RankTile extends StatelessWidget {
                 TrackMoreButton(track: t),
               ],
             ),
-      onTap: picking ? sel.onToggle : onTap,
+      onTap: picking ? sel.onToggle : gate.tap(onTap),
       onLongPress: sel?.onToggle,
       onMenu: sel != null
           ? null
           : (pos) => showTrackMenu(context, t, globalPosition: pos),
+      ),
     );
   }
 }

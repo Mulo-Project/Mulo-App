@@ -4,6 +4,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
+import '../../../library/presentation/widgets/track_gate.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/home_summary.dart';
 import 'home_parts.dart';
@@ -124,7 +125,11 @@ class _RecommendSectionState extends State<RecommendSection> {
                       for (var j = 0; j < shown.length; j++)
                         SizedBox(
                           height: _rowHeight,
-                          child: TrackTile(
+                          child: TrackGate(
+                            track: shown[j],
+                            builder: (context, gate) => TrackTile(
+                            enabled: gate.enabled,
+                            unavailable: gate.unavailable,
                             title: shown[j].title,
                             subtitle: shown[j].artist.isEmpty
                                 ? l10n.unknownArtist
@@ -138,7 +143,10 @@ class _RecommendSectionState extends State<RecommendSection> {
                               context,
                               CoverKey.track(shown[j].id),
                             ),
-                            onTap: () => player.playQueue(pl.tracks, index: j),
+                            onTap: gate.tap(
+                              () => player.playQueue(pl.tracks, index: j),
+                            ),
+                            ),
                           ),
                         ),
                     ],

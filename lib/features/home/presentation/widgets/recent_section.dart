@@ -4,6 +4,7 @@ import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
+import '../../../library/presentation/widgets/track_gate.dart';
 import '../../../library/presentation/widgets/track_list_tile.dart'
     show TrackSelection, selectionMark;
 import '../../../library/domain/entities/track.dart';
@@ -105,7 +106,11 @@ class RecentSection extends StatelessWidget {
   ) {
     final sel = selectionFor?.call(recent[i]);
     final picking = sel != null && sel.active;
-    return TrackTile(
+    return TrackGate(
+      track: recent[i],
+      builder: (context, gate) => TrackTile(
+      enabled: gate.enabled,
+      unavailable: gate.unavailable,
       title: recent[i].title,
       subtitle: recent[i].artist.isEmpty
           ? l10n.unknownArtist
@@ -116,11 +121,14 @@ class RecentSection extends StatelessWidget {
       trailing: picking
           ? selectionMark(context, sel)
           : TrackMoreButton(track: recent[i]),
-      onTap: picking ? sel.onToggle : () => player.playQueue(recent, index: i),
+      onTap: picking
+          ? sel.onToggle
+          : gate.tap(() => player.playQueue(recent, index: i)),
       onLongPress: sel?.onToggle,
       onMenu: sel != null
           ? null
           : (pos) => showTrackMenu(context, recent[i], globalPosition: pos),
+      ),
     );
   }
 }
