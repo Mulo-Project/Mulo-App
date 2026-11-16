@@ -179,6 +179,12 @@ class _DownloadScreenState extends State<DownloadScreen> {
 
   // 영상 파일(mp4)로 저장: 풀 빌드(Android)에서만 켜진다.
   var _videoAvailable = false;
+  // SoundCloud는 소리만 있는 사이트라 영상으로 저장하는 칸을 보이지 않는다.
+  bool get _hasVideo {
+    final host = Uri.tryParse(widget.url)?.host.toLowerCase() ?? '';
+    return host != 'soundcloud.com' && !host.endsWith('.soundcloud.com');
+  }
+
   var _asVideo = false;
   // 저장 유형을 바꾸면 폴더 칸도 그 유형의 폴더로 바뀐다 (음원은 음악 폴더, 영상은 `Movies/Mulo`).
   var _otherPath = defaultVideoFolder();
@@ -329,7 +335,9 @@ class _DownloadScreenState extends State<DownloadScreen> {
         lyricsText: lyrics?.lyricsText,
         audioLanguage: audioLanguage,
         // 영상으로 저장하면 음원 전용 설정(오디오 형식 · 오디오 언어)은 쓰지 않는다.
-        videoFormat: _videoAvailable && _asVideo ? _videoFormat : null,
+        videoFormat: _videoAvailable && _hasVideo && _asVideo
+            ? _videoFormat
+            : null,
         videoHeight: _videoHeight,
       ),
     );
@@ -457,7 +465,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
                         ),
                       ],
                     ),
-                    if (_videoAvailable) ...[
+                    if (_videoAvailable && _hasVideo) ...[
                       const SizedBox(height: AppSpacing.md),
                       Text(
                         l10n.videoSaveType.toUpperCase(),
@@ -474,7 +482,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
                         onChanged: _setAsVideo,
                       ),
                     ],
-                    if (_asVideo) ...[
+                    if (_asVideo && _hasVideo) ...[
                       const SizedBox(height: AppSpacing.md),
                       Text(
                         l10n.videoSaveFormat.toUpperCase(),
