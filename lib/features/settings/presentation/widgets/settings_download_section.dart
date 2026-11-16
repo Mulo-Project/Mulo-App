@@ -14,7 +14,6 @@ import '../../../engine/presentation/bloc/engine_cubit.dart';
 import '../../../library/presentation/widgets/loaded_folders_tile.dart';
 
 import 'settings_common.dart';
-import 'settings_engine_sections.dart';
 
 /// 다운로드 묶음: 저장 위치 · 불러오는 폴더 · 엔진 · 포맷.
 class SettingsDownloadSection extends StatefulWidget {
@@ -66,7 +65,6 @@ class _SettingsDownloadSectionState extends State<SettingsDownloadSection> {
           },
         ),
         const LoadedFoldersTile(),
-        SettingsEngineRow(cubit: widget.engine),
         if (_formats.isNotEmpty)
           SettingRow(
             title: l10n.settingsFormat,

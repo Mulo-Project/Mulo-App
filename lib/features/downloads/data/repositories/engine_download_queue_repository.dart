@@ -49,10 +49,14 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
     this._coverTags,
     this._lyrics,
     this._video,
+    this._onEngineError,
     DateTime Function()? now,
   }) : _now = now ?? DateTime.now;
 
   final DownloaderEngine _engine;
+
+  /// 엔진이 받기를 못 해서 낸 오류 문구를 알린다 (버전이 오래된 경우 엔진 쪽이 알아서 업데이트한다).
+  final void Function(String message)? _onEngineError;
   final AudioFileDownloader _downloader;
   final DownloadedFileStore _store;
   final LibraryRepository _library;
@@ -540,6 +544,7 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
     } on DownloadAborted {
       // 취소(목록에서 이미 뺐다) 또는 일시정지(상태를 이미 바꿨다)다.
     } on EngineException catch (e) {
+      _onEngineError?.call(e.message);
       _fail(id, _engineMessage(e));
     } on DownloadFailed catch (e) {
       _fail(id, e.message);

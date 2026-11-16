@@ -18,6 +18,7 @@ import '../features/downloads/presentation/bloc/download_queue_cubit.dart';
 import '../features/downloads/presentation/widgets/download_completion_listener.dart';
 import '../features/downloads/presentation/bloc/download_preferences_cubit.dart';
 import '../features/downloads/presentation/bloc/download_settings_cubit.dart';
+import '../features/engine/presentation/widgets/engine_notice_listener.dart';
 import '../features/equalizer/presentation/bloc/equalizer_cubit.dart';
 import '../features/equalizer/presentation/bloc/equalizer_library_cubit.dart';
 import '../features/home/presentation/bloc/play_recorder_cubit.dart';
@@ -207,9 +208,11 @@ class _MusicAppState extends State<MusicApp> {
                 child: LyricsOverlayBridge(
                   child: MoodThemeFollower(
                     child: DownloadCompletionListener(
-                      child: NewVideosLauncher(
-                        onOpen: _openNewVideos,
-                        child: _PipSwitcher(child: LockGate(child: child!)),
+                      child: EngineNoticeListener(
+                        child: NewVideosLauncher(
+                          onOpen: _openNewVideos,
+                          child: _PipSwitcher(child: LockGate(child: child!)),
+                        ),
                       ),
                     ),
                   ),

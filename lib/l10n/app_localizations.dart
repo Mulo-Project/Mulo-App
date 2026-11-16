@@ -902,6 +902,12 @@ abstract class AppLocalizations {
   /// **'지우지 못했어요. 잠시 후 다시 시도해 주세요.'**
   String get settingsEngineRevertFailed;
 
+  /// No description provided for @downloadEngineOutdated.
+  ///
+  /// In ko, this message translates to:
+  /// **'받기 엔진이 오래돼서 받지 못했어요. 업데이트하고 있으니 잠시 뒤 다시 받아 주세요.'**
+  String get downloadEngineOutdated;
+
   /// No description provided for @settingsEngineBundled.
   ///
   /// In ko, this message translates to:

@@ -31,29 +31,6 @@ void main() {
     expect(cubit.state.status!.installed, isFalse);
   });
 
-  testWidgets('설정: 엔진 줄에서 설치를 누르면 설치된 버전이 보인다', (tester) async {
-    final manager = FakeEngineManager();
-    await setUpTestDependencies(engineManager: manager);
-    await tester.pumpWidget(const MusicApp(initialLocation: Routes.settings));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Download engine'), findsOneWidget);
-    await tester.tap(find.text('Install'));
-    await tester.pumpAndSettle();
-    expect(manager.installs, 1);
-    expect(find.text('yt-dlp 2026.01.01'), findsOneWidget);
-    expect(find.text('Update'), findsOneWidget);
-  });
-
-  testWidgets('설정: 설치할 수 없는 기기(Android)에서는 엔진 줄이 없다', (tester) async {
-    await setUpTestDependencies(
-      engineManager: FakeEngineManager(supported: false),
-    );
-    await tester.pumpWidget(const MusicApp(initialLocation: Routes.settings));
-    await tester.pumpAndSettle();
-    expect(find.text('Download engine'), findsNothing);
-  });
-
   testWidgets('설정: 로컬 엔진을 쓸 수 있으면 다운로드 모드가 로컬로 보인다', (tester) async {
     await setUpTestDependencies(
       engineManager: FakeEngineManager(installed: true),

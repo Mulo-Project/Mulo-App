@@ -444,6 +444,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not remove it. Please try again in a moment.';
 
   @override
+  String get downloadEngineOutdated =>
+      'The download engine is out of date, so the download failed. It is updating now. Please try again in a moment.';
+
+  @override
   String get settingsEngineBundled => 'Built-in yt-dlp';
 
   @override

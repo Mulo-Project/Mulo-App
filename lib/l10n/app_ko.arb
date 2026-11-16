@@ -809,6 +809,7 @@
   "trackInfoSource": "출처",
   "trackInfoSourceDevice": "외부",
   "trackInfoSourceDownload": "받은 곡",
+  "downloadEngineOutdated": "받기 엔진이 오래돼서 받지 못했어요. 업데이트하고 있으니 잠시 뒤 다시 받아 주세요.",
   "downloadTagFailed": "태그를 저장하지 못했어요: {title}",
   "@downloadTagFailed": {"placeholders": {"title": {"type": "String"}}},
   "trackInfoFolder": "폴더",

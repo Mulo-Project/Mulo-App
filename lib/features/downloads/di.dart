@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 
+import '../engine/data/engine_updater.dart';
 import '../engine/data/native_yt_dlp.dart';
 
 import 'data/datasources/audio_file_downloader.dart';
@@ -48,6 +49,7 @@ void registerDownloads(GetIt sl) {
         lyrics: sl(),
         video: sl(),
         queueStore: sl(),
+        onEngineError: sl<EngineUpdater>().onDownloadFailed,
         // 받다 만 파일은 앱을 껐다 켜도 남아야 해서 캐시가 아닌 앱 전용 폴더에 둔다.
         tempDir: _partsDirectory,
       ),
