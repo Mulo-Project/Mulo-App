@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/design/design.dart';
-import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
-import '../../../engine/presentation/bloc/engine_cubit.dart';
 import '../../../equalizer/presentation/widgets/device_equalizer_section.dart';
 import '../../../permissions/presentation/widgets/permissions_section.dart';
 import '../../../subscriptions/presentation/widgets/subscriptions_section.dart';
@@ -12,14 +10,12 @@ import '../widgets/settings_about_section.dart';
 import '../widgets/settings_account_section.dart';
 import '../widgets/settings_data_section.dart';
 import '../widgets/settings_download_section.dart';
-import '../widgets/settings_engine_sections.dart';
 import '../widgets/settings_notification_section.dart';
 import '../widgets/settings_playback_section.dart';
 import '../widgets/settings_security_section.dart';
 import '../widgets/settings_theme_section.dart';
 
 export '../widgets/settings_common.dart' show presetLabel;
-export '../widgets/settings_engine_sections.dart' show DownloadMode;
 
 /// 설정 (상세 기능: 서버 연결·모드 선택 #31, 저장 위치 #23, 기본 포맷 #24,
 /// 다운로드 엔진 업데이트 #25, 알림 곡 정보 숨기기 #32 + 테마 D-005).
@@ -32,8 +28,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  late final EngineCubit _engine = sl<EngineCubit>()..load();
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -54,9 +48,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // 묶음마다 자기가 쓰는 값만 지켜보므로, 한 값이 바뀌어도 그 묶음만 다시 그려진다.
           Column(
             children: [
-              SettingsServerSection(cubit: _engine),
-              gap,
-              SettingsDownloadSection(engine: _engine),
+              const SettingsDownloadSection(),
               gap,
               const SettingsAccountSection(),
               gap,

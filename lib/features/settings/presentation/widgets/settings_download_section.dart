@@ -10,16 +10,13 @@ import '../../../downloads/domain/usecases/download_usecases.dart';
 import '../../../downloads/presentation/bloc/download_preferences_cubit.dart';
 import '../../../downloads/presentation/bloc/download_settings_cubit.dart';
 import '../../../downloads/presentation/widgets/save_folder_sheet.dart';
-import '../../../engine/presentation/bloc/engine_cubit.dart';
 import '../../../library/presentation/widgets/loaded_folders_tile.dart';
 
 import 'settings_common.dart';
 
-/// 다운로드 묶음: 저장 위치 · 불러오는 폴더 · 엔진 · 포맷.
+/// 다운로드 묶음: 저장 위치 · 불러오는 폴더 · 포맷.
 class SettingsDownloadSection extends StatefulWidget {
-  const SettingsDownloadSection({super.key, required this.engine});
-
-  final EngineCubit engine;
+  const SettingsDownloadSection({super.key});
 
   @override
   State<SettingsDownloadSection> createState() =>
