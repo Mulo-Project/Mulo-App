@@ -167,6 +167,9 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   /// 엔진이 여는 중인 곡의 id (없으면 null). 이 사이에 다른 곡을 누르면 영상 디코더를 못 잡아 둘 다 실패하므로 누름을 무시한다.
   final ValueNotifier<String?> loading = ValueNotifier<String?>(null);
 
+  /// 수면 타이머가 끝나 재생을 멈출 때마다 1씩 늘어난다 (화면이 snackbar로 알린다).
+  final ValueNotifier<int> sleepEnded = ValueNotifier<int>(0);
+
   /// 이 곡을 재생할 수 있는가 (권한이 없거나 열기에 실패한 곡은 대기열에 넣지 않는다). 앱이 연결한다.
   bool Function(Track track) playable = _alwaysPlayable;
   static bool _alwaysPlayable(Track _) => true;
@@ -555,6 +558,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     if (minutes != null) {
       _sleep = Timer(Duration(minutes: minutes), () {
         _sleep = null;
+        sleepEnded.value++;
         emit(
           state.copyWith(
             isPlaying: false,
@@ -578,6 +582,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   Future<void> close() {
     _sleep?.cancel();
     loading.dispose();
+    sleepEnded.dispose();
     for (final s in _subs) {
       s.cancel();
     }

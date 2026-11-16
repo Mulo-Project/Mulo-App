@@ -662,6 +662,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playerSleepTimerCleared => '수면 타이머를 껐어요';
 
   @override
+  String get playerSleepTimerEnded => '수면 타이머로 재생을 멈췄어요';
+
+  @override
   String get playerEqualizer => '이퀄라이저';
 
   @override

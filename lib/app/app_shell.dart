@@ -52,6 +52,22 @@ class _AppShellState extends State<AppShell> {
   var _floatShown = false;
   Timer? _dockTimer;
 
+  late final NowPlayingCubit _player = context.read<NowPlayingCubit>();
+
+  @override
+  void initState() {
+    super.initState();
+    _player.sleepEnded.addListener(_onSleepEnded);
+  }
+
+  /// 수면 타이머가 재생을 멈췄다고 알린다.
+  void _onSleepEnded() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(context.l10n.playerSleepTimerEnded)),
+    );
+  }
+
   void _minimizeDownloads() {
     _dockTimer?.cancel();
     setState(() => _downloadMinimized = true);
@@ -140,6 +156,7 @@ class _AppShellState extends State<AppShell> {
 
   @override
   void dispose() {
+    _player.sleepEnded.removeListener(_onSleepEnded);
     _dockTimer?.cancel();
     _measureTimer?.cancel();
     _floatPos.dispose();

@@ -1322,6 +1322,12 @@ abstract class AppLocalizations {
   /// **'수면 타이머를 껐어요'**
   String get playerSleepTimerCleared;
 
+  /// No description provided for @playerSleepTimerEnded.
+  ///
+  /// In ko, this message translates to:
+  /// **'수면 타이머로 재생을 멈췄어요'**
+  String get playerSleepTimerEnded;
+
   /// No description provided for @playerEqualizer.
   ///
   /// In ko, this message translates to:

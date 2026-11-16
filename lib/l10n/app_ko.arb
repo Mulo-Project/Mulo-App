@@ -255,6 +255,7 @@
   "playerSleepTimerUnitMinute": "분",
   "playerSleepTimerStart": "시작",
   "playerSleepTimerCleared": "수면 타이머를 껐어요",
+  "playerSleepTimerEnded": "수면 타이머로 재생을 멈췄어요",
   "playerEqualizer": "이퀄라이저",
   "playerLyrics": "가사",
   "playerRewind10": "10초 뒤로",

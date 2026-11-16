@@ -224,6 +224,7 @@
   "playerSleepTimerUnitMinute": "m",
   "playerSleepTimerStart": "Start",
   "playerSleepTimerCleared": "Sleep timer is off",
+  "playerSleepTimerEnded": "Playback stopped by the sleep timer",
   "playerEqualizer": "Equalizer",
   "playerLyrics": "Lyrics",
   "playerRewind10": "Back 10 seconds",

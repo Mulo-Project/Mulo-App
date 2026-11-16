@@ -680,6 +680,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerSleepTimerCleared => 'Sleep timer is off';
 
   @override
+  String get playerSleepTimerEnded => 'Playback stopped by the sleep timer';
+
+  @override
   String get playerEqualizer => 'Equalizer';
 
   @override
