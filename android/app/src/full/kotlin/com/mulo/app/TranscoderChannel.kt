@@ -180,7 +180,11 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
         }
         val args = mutableListOf("-nostdin", "-y", "-i", input, "-map", "0")
         for ((key, value) in entriesOf(values, upper = false)) args += listOf("-metadata", "$key=$value")
-        args += listOf("-c", "copy", "-movflags", "+use_metadata_tags", "-f", "mp4", output)
+        // +use_metadata_tags(mdta)는 표준 칸(앨범 · 아티스트 등)을 mdta로만 써서 다른 플레이어 · MediaStore가 못 읽는다.
+        // 앱 전용 칸이 없는 글 수정(여러 곡 한꺼번에 등)은 표준 칸(ilst)으로 쓴다.
+        val appOnly = values.any { it.first.lowercase() !in knownKeys }
+        if (appOnly) args += listOf("-movflags", "+use_metadata_tags")
+        args += listOf("-c", "copy", "-f", "mp4", output)
         return runFfmpeg(args, output)
     }
 
