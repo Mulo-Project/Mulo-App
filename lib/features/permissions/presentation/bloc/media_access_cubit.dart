@@ -50,8 +50,13 @@ class MediaAccessCubit extends Cubit<MediaAccessState>
       return true;
     }
     if (level == PermissionLevel.denied) {
+      final watch = Stopwatch()..start();
       final next = await _request(AppPermission.audio);
       _setAllowed(next == PermissionLevel.granted);
+      // 요청 창이 뜨지 않고 바로 막힘으로 돌아오면(두 번 거절한 뒤) 시스템 설정을 연다.
+      if (next == PermissionLevel.blocked && watch.elapsedMilliseconds < 400) {
+        await _openSettings(const NoParams());
+      }
       return next == PermissionLevel.granted;
     }
     await _openSettings(const NoParams());

@@ -2734,6 +2734,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Blocked. Tap to turn it on in system settings.';
 
   @override
+  String get permDeniedNotice => 'Permission not granted. Tap again to allow it.';
+
+  @override
+  String get permBlockedNotice =>
+      'The request is blocked. Tap again to open system settings.';
+
+  @override
   String get settingsNotifications => 'Notifications';
 
   @override
