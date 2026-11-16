@@ -135,6 +135,9 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
     private fun tagOgg(input: String, values: List<Pair<String, String>>, output: String, cover: String?): Boolean {
         val entries = entriesOf(values, upper = true)
         if (cover == null) {
+            // 글만 고쳐도 파일에 이미 있는 커버(소리만 넘기면 버려진다)를 지키려고, 있으면 꺼내 태그와 함께 다시 쓴다.
+            val kept = keepOggPicture(input, entries, output)
+            if (kept != null) return kept
             val args = mutableListOf("-nostdin", "-y", "-i", input, "-map", "0:a")
             for ((key, value) in entries) args += listOf("-metadata", "$key=$value", "-metadata:s:a:0", "$key=$value")
             args += listOf("-c", "copy", "-f", "ogg", output)
@@ -150,6 +153,48 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
             )
             return runFfmpeg(args, output)
         } finally {
+            full.delete()
+        }
+    }
+
+    /**
+     * 커버가 있는 ogg · opus의 글만 고칠 때: 파일의 그림(PNG)을 꺼내고, 기존 태그에 [entries]를 덮어 쓴 태그와
+     * 그림을 함께 써 커버를 지킨다. 그림이 없거나 PNG가 아니면 null (호출한 쪽이 글만 쓴다).
+     */
+    private fun keepOggPicture(input: String, entries: List<Pair<String, String>>, output: String): Boolean? {
+        val pic = File("$output.pic")
+        val dump = File("$output.dump")
+        val full = File("$output.full")
+        try {
+            try {
+                runFfmpeg(listOf("-nostdin", "-y", "-i", input, "-map", "0:v:0", "-c", "copy", "-frames:v", "1", "-f", "image2", pic.absolutePath), pic.absolutePath)
+                val bytes = pic.readBytes()
+                if (bytes.size < 24 || bytes[1] != 'P'.code.toByte() || bytes[2] != 'N'.code.toByte() || bytes[3] != 'G'.code.toByte()) return null
+            } catch (e: Exception) {
+                return null
+            }
+            runFfmpeg(listOf("-nostdin", "-y", "-i", input, "-map_metadata:g", "0:s:a:0", "-vn", "-an", "-f", "ffmetadata", dump.absolutePath), dump.absolutePath)
+            val replaced = entries.map { it.first.uppercase() }.toSet() + "METADATA_BLOCK_PICTURE"
+            // 기존 칸(ffmetadata 형식 그대로)에서 덮어 쓸 칸만 빼고 남긴다.
+            val old = dump.readLines(Charsets.UTF_8)
+                .takeWhile { !it.startsWith("[") }
+                .filter { line -> line.isNotBlank() && !line.startsWith(";") && !line.startsWith("#") }
+                .filter { line -> line.substringBefore('=').uppercase() !in replaced }
+            val picture = Base64.encodeToString(pictureBlock(pic.readBytes()), Base64.NO_WRAP)
+            full.writeText(
+                ffmetadata(entries + ("METADATA_BLOCK_PICTURE" to picture)) + old.joinToString("\n", postfix = "\n"),
+                Charsets.UTF_8,
+            )
+            return runFfmpeg(
+                listOf(
+                    "-nostdin", "-y", "-i", input, "-i", full.absolutePath, "-map", "0:a",
+                    "-map_metadata", "1", "-map_metadata:s:a:0", "1:g", "-c", "copy", "-f", "ogg", output,
+                ),
+                output,
+            )
+        } finally {
+            pic.delete()
+            dump.delete()
             full.delete()
         }
     }
