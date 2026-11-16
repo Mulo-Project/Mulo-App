@@ -158,8 +158,13 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
     private fun tagMp4(input: String, values: List<Pair<String, String>>, output: String, cover: String?): Boolean {
         val args = mutableListOf("-nostdin", "-y", "-i", input)
         if (cover != null) args += listOf("-i", cover)
-        args += listOf("-map", "0")
-        if (cover != null) args += listOf("-map", "1:v", "-disposition:v:1", "attached_pic")
+        if (cover == null) {
+            args += listOf("-map", "0") // 새 그림이 없으면 파일의 커버를 그대로 둔다.
+        } else {
+            // 이미 붙어 있던 커버(첨부 그림)는 새 그림으로 바꾼다. 전부(-map 0) 가져오면 옛 커버가 v:1을 차지해
+            // 새 그림이 첨부 그림이 되지 못한다. 대문자 V는 첨부 그림이 아닌 영상만 고른다.
+            args += listOf("-map", "0:V", "-map", "0:a?", "-map", "1:v", "-disposition:v:1", "attached_pic")
+        }
         for ((key, value) in entriesOf(values, upper = false)) args += listOf("-metadata", "$key=$value")
         args += listOf("-c", "copy", "-movflags", "+use_metadata_tags", "-f", "mp4", output)
         return runFfmpeg(args, output)
