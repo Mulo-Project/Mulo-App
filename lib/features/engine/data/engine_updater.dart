@@ -16,11 +16,8 @@ import 'android_yt_dlp.dart';
 /// - 실패해도 앱 안에 들어 있는 yt-dlp를 계속 쓰고, 사용자 화면에는 아무것도 띄우지 않는다.
 /// - 로컬 엔진이 없는 빌드(lite)와 Android 밖에서는 아무것도 하지 않는다.
 class EngineUpdater implements EngineNotices {
-  EngineUpdater({
-    required AndroidYtDlp android,
-    DateTime Function()? now,
-  }) : _android = android,
-       _now = now ?? DateTime.now;
+  EngineUpdater({required this._android, DateTime Function()? now})
+    : _now = now ?? DateTime.now;
 
   /// 받기가 실패해서 하는 업데이트를 이 간격 안에서는 다시 하지 않는다 (같은 실패의 반복 방지).
   static const failureRetryGap = Duration(hours: 1);
