@@ -362,7 +362,6 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
           if (position > Duration.zero) await a.seek(position);
         } on Object catch (e) {
           debugPrint('MuloPlayback skipTo failed: $e (index=$index)');
-          if (current != null) onUnplayable?.call(current.id);
           if (!isClosed && state.index == index) {
             emit(state.copyWith(isPlaying: false, position: Duration.zero));
           }
@@ -399,7 +398,6 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
       if (result != null) _applyQueue(result);
     } on Object catch (e) {
       debugPrint('MuloPlayback setQueue failed: $e (track=${current.id})');
-      onUnplayable?.call(current.id);
       if (!isClosed && state.track?.id == current.id) {
         emit(state.copyWith(isPlaying: false, position: Duration.zero));
       }
