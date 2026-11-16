@@ -149,7 +149,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
       genre: _genre.text,
     );
     setState(() => _saving = true);
-    final result = await library.updateInfo(_track.id, info);
+    final result = await library.saveInfo(_track, info);
     if (!mounted) return;
     setState(() => _saving = false);
     if (result == UpdateInfoResult.tagWriteFailed) {

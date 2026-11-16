@@ -63,6 +63,13 @@ class LibraryCubit extends Cubit<LibraryState> {
   Future<UpdateInfoResult> updateInfo(String trackId, TrackInfo info) =>
       _updateInfo(UpdateTrackInfoParams(trackId, info));
 
+  /// 곡 하나를 사용자가 직접 고칠 때: 파일에 쓸 동의를 먼저 구해(이미 있으면 창 없이) 태그가 파일에 쓰이게 한 뒤 저장한다.
+  /// 동의 없이 부르면 쓰기가 `denied`로 끝나 기록(DB)만 바뀌고, 데이터를 지운 뒤 다시 불러오면 옛 값으로 돌아온다.
+  Future<UpdateInfoResult> saveInfo(Track track, TrackInfo info) async {
+    await _ensureWrite?.call([track]);
+    return updateInfo(track.id, info);
+  }
+
   /// 아티스트 · 앨범 · 장르의 이름을 바꾼다: [kind] 묶음 [from]에 속한 모든 곡의 그 정보를 [to]로 고친다.
   /// 이미 있는 이름이면 그 묶음과 합쳐진다. 곡마다 순서대로 (파일 태그 → 기록) 고치므로 한 곡이 끝날 때마다
   /// [onProgress]로 (끝낸 수, 전체 수)를 알린다. 바뀐 곡 수와, 태그 쓰기 실패로 못 바꾼 곡 수를 돌려준다.
