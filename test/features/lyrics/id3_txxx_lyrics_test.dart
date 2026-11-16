@@ -45,6 +45,16 @@ void main() {
     expect(Id3TxxxLyrics.parse(_tag([other, txxx], version: 4)), '가사');
   });
 
+  test('ffmpeg가 쓰는 TXXX 설명 USLT도 가사로 읽는다', () {
+    const lyrics = '[00:01.00]가나다';
+    final txxx = _frame('TXXX', [
+      1,
+      ..._utf16le('USLT'), 0, 0,
+      ..._utf16le(lyrics), 0, 0,
+    ]);
+    expect(Id3TxxxLyrics.parse(_tag([txxx])), lyrics);
+  });
+
   test('가사가 없거나 ID3가 아니면 null', () {
     expect(Id3TxxxLyrics.parse(_tag([_frame('TIT2', [0, 0x74])])), isNull);
     expect(Id3TxxxLyrics.parse(Uint8List.fromList(List.filled(20, 1))), isNull);

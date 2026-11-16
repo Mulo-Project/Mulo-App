@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-/// mp3 ID3v2 태그의 사용자 정의 칸(TXXX) 중 설명이 `LYRICS`인 가사를 꺼낸다.
+/// mp3 ID3v2 태그의 사용자 정의 칸(TXXX) 중 설명이 `LYRICS` 또는 `USLT`인 가사를 꺼낸다.
 ///
 /// ffmpeg가 `LYRICS` 키를 표준 가사 칸(USLT)이 아닌 TXXX로 쓴 파일을 읽기 위한 대비다
 /// (`audio_metadata_reader`는 USLT만 읽는다). ID3v2.3 · 2.4를 지원하고, 없거나 깨졌으면 null.
@@ -49,7 +49,9 @@ class Id3TxxxLyrics {
     final enc = b[0];
     final wide = enc == 1 || enc == 2;
     final (description, next) = _readTerminated(b, 1, wide, enc);
-    if (description.trim().toUpperCase() != 'LYRICS') return null;
+    // ffmpeg는 `LYRICS` 키를 설명이 `USLT`인 TXXX로 쓴다 (예전 · 다른 도구는 `LYRICS`로 쓴다).
+    final name = description.trim().toUpperCase();
+    if (name != 'LYRICS' && name != 'USLT') return null;
     final value = _decode(b.sublist(next), enc).replaceAll('\u0000', '').trim();
     return value.isEmpty ? null : value;
   }
