@@ -165,7 +165,9 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
             val args = mutableListOf("-nostdin", "-y", "-i", input, "-i", cover)
             args += listOf("-map", "0:V", "-map", "0:a?", "-map", "1:v", "-disposition:v:1", "attached_pic")
             for ((key, value) in entriesOf(values, upper = false)) args += listOf("-metadata", "$key=$value")
-            args += listOf("-c", "copy", "-movflags", "+use_metadata_tags", "-f", "ipod", output)
+            // +use_metadata_tags(mdta 칸)를 쓰면 ffmpeg가 커버 atom(covr)을 쓰지 않는 것으로 보여, 그림이 있을 때는 빼고
+            // 표준 칸(제목 · 아티스트 · 앨범 · 장르 · 가사)만 쓴다. 앱 전용 칸(COVER_COLOR)은 이때 파일에 남지 않는다.
+            args += listOf("-c", "copy", "-f", "ipod", output)
             try {
                 if (runFfmpeg(args, output)) {
                     MuloLog.d(MuloLog.NATIVE, "MuloTag mp4 cover: ipod 껍데기로 씀")
