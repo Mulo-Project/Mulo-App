@@ -164,8 +164,8 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   /// 아직 끝나지 않은 엔진 작업 수. 작업 중에 오는 재생 · 곡 넘김 신호는 우리가 시킨 것이라 상태에 넣지 않는다.
   var _pending = 0;
 
-  /// 엔진이 곡을 여는 중이다. 이 사이에 다른 곡을 누르면 영상 디코더를 못 잡아 둘 다 실패하므로 누름을 무시한다.
-  final ValueNotifier<bool> loading = ValueNotifier<bool>(false);
+  /// 엔진이 여는 중인 곡의 id (없으면 null). 이 사이에 다른 곡을 누르면 영상 디코더를 못 잡아 둘 다 실패하므로 누름을 무시한다.
+  final ValueNotifier<String?> loading = ValueNotifier<String?>(null);
 
   /// 이 곡을 재생할 수 있는가 (권한이 없거나 열기에 실패한 곡은 대기열에 넣지 않는다). 앱이 연결한다.
   bool Function(Track track) playable = _alwaysPlayable;
@@ -390,7 +390,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     final current = snapshot.current;
     if (current == null || state.track?.id != current.id) return; // 그새 바뀜
     if (isClosed) return;
-    loading.value = true;
+    loading.value = current.id;
     try {
       if (current.uri.isEmpty) throw StateError('empty uri');
       final result = await a.setQueue(snapshot);
@@ -590,7 +590,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
 
   void playQueue(List<Track> queue, {int index = 0}) {
     if (queue.isEmpty) return;
-    if (loading.value) return;
+    if (loading.value != null) return;
     // 열 수 없는 곡은 빼고, 누른 곡이 열 수 없으면 아무것도 하지 않는다 (곡 줄이 권한을 묻는다).
     final tapped = queue[index.clamp(0, queue.length - 1)];
     if (!playable(tapped)) return;

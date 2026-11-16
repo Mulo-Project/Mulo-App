@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/usecase/usecase.dart';
@@ -103,6 +104,7 @@ class AppLockCubit extends Cubit<AppLockState> {
     final available = await _isBiometricAvailable(const NoParams());
     if (isClosed) return;
     _savedBiometric = saved.biometricEnabled;
+    debugPrint('MuloLock 시작 enabled=${saved.enabled}');
     emit(
       state.copyWith(
         loaded: true,
@@ -133,13 +135,20 @@ class AppLockCubit extends Cubit<AppLockState> {
   static const relockAfter = Duration(seconds: 10);
 
   /// 앱이 백그라운드로 갔다.
-  void appLeft() => _leftAt ??= _now();
+  void appLeft() {
+    _leftAt ??= _now();
+    debugPrint('MuloLock 앱 벗어남 enabled=${state.enabled} locked=${state.locked}');
+  }
 
   /// 앱이 다시 앞으로 왔다 (알림을 눌러 돌아온 경우 포함).
   /// 잠금이 켜져 있고 [relockAfter] 넘게 비웠으면 잠금 화면을 먼저 띄운다.
   void appReturned() {
     final left = _leftAt;
     _leftAt = null;
+    debugPrint(
+      'MuloLock 앱 돌아옴 left=${left == null ? '없음' : '${_now().difference(left).inSeconds}초 전'} '
+      'loaded=${state.loaded} enabled=${state.enabled} locked=${state.locked}',
+    );
     if (left == null || !state.loaded || !state.enabled || state.locked) return;
     if (_now().difference(left) >= relockAfter) {
       emit(state.copyWith(locked: true));

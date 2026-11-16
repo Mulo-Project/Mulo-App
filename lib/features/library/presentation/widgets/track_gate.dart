@@ -11,13 +11,18 @@ import '../../domain/entities/track.dart';
 class TrackGateState {
   const TrackGateState({
     required this.enabled,
+    required this.busy,
     required this.unavailable,
     required MediaAccessCubit? access,
     required BuildContext context,
   }) : _access = access,
        _context = context;
 
+  /// 이 줄이 지금 여는 중인 곡이면 false (흐리게 보이고 눌리지 않는다).
   final bool enabled;
+
+  /// 다른 곡을 여는 중이라 이 줄의 누름만 막는다 (줄 모양은 그대로).
+  final bool busy;
   final bool unavailable;
   final MediaAccessCubit? _access;
   final BuildContext _context;
@@ -25,7 +30,7 @@ class TrackGateState {
   /// [play]를 곡 줄의 onTap으로 쓸 형태로 바꾼다. 권한이 없으면 요청 창(막혔으면 설정)을 먼저 띄우고,
   /// 허용되면 [play]를 실행한다.
   VoidCallback? tap(VoidCallback? play) {
-    if (play == null) return null;
+    if (play == null || busy) return null;
     if (!unavailable) return play;
     return () async {
       final level = await _access!.ask();
@@ -79,12 +84,13 @@ class TrackGate extends StatelessWidget {
             ? access.state.playable(t.id, t.uri)
             : access.state.allowed || !isDeviceFile!);
     final loading = context.read<NowPlayingCubit>().loading;
-    return ValueListenableBuilder<bool>(
+    return ValueListenableBuilder<String?>(
       valueListenable: loading,
-      builder: (context, busy, _) => builder(
+      builder: (context, loadingId, _) => builder(
         context,
         TrackGateState(
-          enabled: !busy,
+          enabled: loadingId == null || loadingId != track?.id,
+          busy: loadingId != null,
           unavailable: !allowed,
           access: access,
           context: context,
