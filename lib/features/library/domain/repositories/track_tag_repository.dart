@@ -37,6 +37,9 @@ abstract interface class TrackTagRepository {
   /// 쓰지 않는 곡이거나 쓸 수 있으면 true, 거절하면 false.
   Future<bool> ensureWriteAccess(Track track);
 
+  /// [tracks] 파일에 쓸 동의를 시스템 창 한 번으로 구한다 (다중 선택 수정). 이미 쓸 수 있으면 창 없이 true.
+  Future<bool> ensureWriteAccessAll(List<Track> tracks);
+
   /// 마지막 쓰기가 실패한 이유 (진단용 짧은 글). 없으면 null.
   String? get lastFailure;
 }

@@ -910,6 +910,9 @@ class FakeTrackTagRepository implements TrackTagRepository {
   @override
   Future<bool> ensureWriteAccess(Track track) async => true;
 
+  @override
+  Future<bool> ensureWriteAccessAll(List<Track> tracks) async => true;
+
   /// 가사 태그에 쓰라고 한 글 (곡 id → 글).
   final lyricsWritten = <String, String>{};
 

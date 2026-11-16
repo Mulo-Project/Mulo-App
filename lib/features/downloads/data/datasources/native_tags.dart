@@ -98,6 +98,21 @@ class NativeTags {
     }
   }
 
+  /// 여러 곡 파일에 쓸 동의를 시스템 창 한 번으로 구한다. 이미 쓸 수 있으면 창 없이 true.
+  /// 거절하거나 구할 수 없으면 false.
+  Future<bool> ensureAll(List<String> uris) async {
+    try {
+      final r = await _channel.invokeMapMethod<String, Object?>('ensureAll', {
+        'uris': uris,
+      });
+      return (r?['ok'] as bool?) ?? true;
+    } on PlatformException {
+      return true;
+    } on MissingPluginException {
+      return true;
+    }
+  }
+
   /// 곡 파일에 쓸 수 있는지 확인하고, 못 쓰면 [ask]일 때 시스템 동의 창을 띄운다.
   /// 파일에 쓰지 않는 곡은 물을 것이 없어 true.
   Future<bool> ensure(String uri, {bool ask = true}) async {

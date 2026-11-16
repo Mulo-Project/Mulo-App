@@ -51,6 +51,10 @@ class TrackTagRepositoryImpl implements TrackTagRepository {
   @override
   Future<bool> ensureWriteAccess(Track track) =>
       _source.ensureWriteAccess(track.uri);
+
+  @override
+  Future<bool> ensureWriteAccessAll(List<Track> tracks) =>
+      _source.ensureWriteAccessAll([for (final t in tracks) t.uri]);
 }
 
 class FileTagRepositoryImpl implements FileTagRepository {

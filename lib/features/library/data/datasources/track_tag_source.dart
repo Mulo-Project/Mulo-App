@@ -54,4 +54,6 @@ class TrackTagSource {
 
   /// 곡 파일에 쓸 수 있는지 확인하고, 못 쓰면 시스템 동의 창을 띄운다 (가사 편집 화면에 들어갈 때).
   Future<bool> ensureWriteAccess(String uri) => _tags.ensure(uri);
+
+  Future<bool> ensureWriteAccessAll(List<String> uris) => _tags.ensureAll(uris);
 }

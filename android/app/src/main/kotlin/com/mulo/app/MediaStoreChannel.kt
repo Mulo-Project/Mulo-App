@@ -115,6 +115,46 @@ class MediaStoreChannel(
         }
     }
 
+    /** 여러 곡의 쓰기 동의 창 결과를 기다리는 요청 (동시에 하나만). */
+    private var pendingBulk: MethodChannel.Result? = null
+
+    /**
+     * 여러 곡에 쓸 수 있는지 확인하고, 못 쓰는 곡이 있으면 시스템 동의 창을 한 번만 띄워 한꺼번에 구한다 (Android 11+).
+     * 전부 쓸 수 있으면 true, 거절하거나 창을 못 띄우면 false. Android 10은 곡마다 창이 필요해 한꺼번에 구하지 못한다.
+     */
+    fun ensureWriteAll(uris: List<Uri>, result: MethodChannel.Result) {
+        io.execute {
+            val needs = uris.filter { uri ->
+                try {
+                    context.contentResolver.openFileDescriptor(uri, "rw")?.use { false } ?: false
+                } catch (e: SecurityException) {
+                    true
+                } catch (e: Exception) {
+                    false
+                }
+            }
+            main.post {
+                if (needs.isEmpty()) {
+                    result.success(true)
+                    return@post
+                }
+                val host = activity()
+                if (pendingBulk != null || host == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+                    result.success(false)
+                    return@post
+                }
+                try {
+                    val sender = MediaStore.createWriteRequest(context.contentResolver, needs).intentSender
+                    pendingBulk = result
+                    host.startIntentSenderForResult(sender, REQUEST_WRITE_BULK, null, 0, 0, 0)
+                } catch (e: Exception) {
+                    pendingBulk = null
+                    result.success(false)
+                }
+            }
+        }
+    }
+
     /**
      * 태그를 고친 임시 파일 [src]로 곡 파일을 덮어쓴다. 쓸 권한이 없으면 false.
      * [ask]가 true면 (사용자가 직접 한 저장) 시스템 동의 창을 띄우고 허용 뒤 다시 쓴다.
@@ -385,6 +425,12 @@ class MediaStoreChannel(
 
     /** MainActivity.onActivityResult에서 부른다. 이 채널의 요청이면 true. */
     fun onActivityResult(requestCode: Int, resultCode: Int): Boolean {
+        if (requestCode == REQUEST_WRITE_BULK) {
+            val pending = pendingBulk ?: return true
+            pendingBulk = null
+            pending.success(resultCode == Activity.RESULT_OK)
+            return true
+        }
         if (requestCode == REQUEST_WRITE) {
             val pending = pendingWrite ?: return true
             pendingWrite = null
@@ -525,5 +571,6 @@ class MediaStoreChannel(
         const val NAME = "music_app/media_store"
         private const val REQUEST_DELETE = 4101
         private const val REQUEST_WRITE = 4102
+        private const val REQUEST_WRITE_BULK = 4103
     }
 }

@@ -27,6 +27,9 @@ class _Tags implements TrackTagRepository {
   @override
   Future<bool> ensureWriteAccess(Track track) async => true;
 
+  @override
+  Future<bool> ensureWriteAccessAll(List<Track> tracks) async => true;
+
   final written = <String>[];
   String? lastTitle;
   CoverArt? lastCover;

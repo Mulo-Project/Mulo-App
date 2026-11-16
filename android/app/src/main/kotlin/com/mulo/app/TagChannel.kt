@@ -26,6 +26,22 @@ class TagChannel(
 
     init {
         channel.setMethodCallHandler { call, result ->
+            if (call.method == "ensureAll") {
+                // 여러 곡의 쓰기 동의를 시스템 창 한 번으로 구한다 (다중 선택 수정).
+                val uris = (call.argument<List<String>>("uris") ?: emptyList()).filter { isContent(it) }
+                if (uris.isEmpty()) {
+                    done(result, mapOf("ok" to true))
+                } else {
+                    android.os.Handler(android.os.Looper.getMainLooper()).post {
+                        store.ensureWriteAll(uris.map { Uri.parse(it) }, object : MethodChannel.Result {
+                            override fun success(value: Any?) = result.success(mapOf("ok" to (value == true)))
+                            override fun error(code: String, message: String?, details: Any?) = result.success(mapOf("ok" to true))
+                            override fun notImplemented() = result.success(mapOf("ok" to true))
+                        })
+                    }
+                }
+                return@setMethodCallHandler
+            }
             val uri = call.argument<String>("uri")
             if (uri.isNullOrEmpty()) {
                 result.error("bad_args", "uri required", null)
