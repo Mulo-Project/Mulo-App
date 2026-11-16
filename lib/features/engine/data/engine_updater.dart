@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show debugPrint;
+
+import '../../../core/diagnostics/diag_notice.dart';
 import '../domain/entities/engine_notice.dart';
 import '../domain/repositories/engine_notices.dart';
 import 'android_yt_dlp.dart';
@@ -53,6 +56,7 @@ class EngineUpdater implements EngineNotices {
   /// 받기가 [message]로 실패했을 때 부른다. 버전 때문이면 알리고 업데이트한다.
   Future<void> onDownloadFailed(String message) async {
     if (!looksOutdated(message)) return;
+    _log('받기가 버전 때문에 실패 → 알림 + 업데이트: ${message.split('\n').first}');
     _notices.add(EngineNotice.outdated);
     final last = _lastFailureUpdate;
     if (last != null && _now().difference(last) < failureRetryGap) return;
@@ -63,13 +67,23 @@ class EngineUpdater implements EngineNotices {
   Future<void> _update() async {
     if (_running) return;
     _running = true;
+    final watch = Stopwatch()..start();
     try {
       if (!await _android.isAvailable()) return;
-      await _android.update();
-    } on Object {
+      _log('업데이트 확인 시작');
+      final version = await _android.update();
+      _log('업데이트 확인 끝 version=$version ${watch.elapsedMilliseconds}ms');
+    } on Object catch (e) {
       // 인터넷이 없거나 받지 못했다. 번들 yt-dlp를 계속 쓴다.
+      _log('업데이트 실패(번들 yt-dlp 사용): $e ${watch.elapsedMilliseconds}ms');
     } finally {
       _running = false;
     }
+  }
+
+  /// 로그(`adb logcat -s flutter`의 `MuloEngine`)와, 디버그 빌드에서는 snackbar로 보인다.
+  void _log(String message) {
+    debugPrint('MuloEngine $message');
+    DiagNotice.post('[engine] $message');
   }
 }
