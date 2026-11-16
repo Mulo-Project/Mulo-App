@@ -82,11 +82,12 @@ class ImportDeviceMusic implements UseCase<ImportOutcome, NoParams> {
   @override
   Future<ImportOutcome> call(NoParams _) async {
     try {
-      // 영상 폴더(`Movies/Mulo` 등)도 찾는다. 앱 데이터를 지우면 보관함 목록이 비는데, 보관함은 이 폴더들을
-      // 항상 보여 주면서(위 목록) 찾을 때는 빼 놓아 받아 둔 영상이 돌아오지 않았다.
+      // 영상 기본 폴더(`Movies/Mulo`)도 찾는다. 앱 데이터를 지우면 보관함 목록이 비는데, 받아 둔 영상이 이 폴더에 있다.
+      // 영상 기본 폴더가 없는 기기는 빈 문자열이라 뺀다.
+      final video = _folders.defaultVideoFolder;
       final folders = [
         _folders.defaultFolder,
-        ..._folders.videoFolders,
+        if (video.isNotEmpty) video,
         ...await _folders.loadExtra(),
       ];
       return switch (await _device.scan(folders)) {

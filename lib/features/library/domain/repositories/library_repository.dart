@@ -67,6 +67,9 @@ abstract interface class LoadedFolderRepository {
   /// 기본 저장 위치. 항상 목록에 포함되고 지울 수 없다.
   String get defaultFolder;
 
+  /// 영상 기본 저장 위치 (Android `Movies/Mulo`, 앱이 처음 깔릴 때 만드는 폴더). 불러오기가 항상 읽는다. 영상 저장을 못 하는 기기는 빈 문자열.
+  String get defaultVideoFolder;
+
   /// 영상 저장 위치들 (Android `Movies` · `Download`). 불러오는 폴더가 아니어도 그 안의 영상 곡은 보관함에 보인다.
   List<String> get videoFolders;
 
