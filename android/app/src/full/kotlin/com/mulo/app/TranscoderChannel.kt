@@ -41,9 +41,42 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
                     }
                     runAsync(io, result, "convert_failed") { convert(input, output, codec, bitrate, format) }
                 }
+                "fetchStream" -> {
+                    val url = call.argument<String>("url")
+                    val output = call.argument<String>("output")
+                    if (url == null || output == null) {
+                        result.error("bad_args", "url, output required", null)
+                        return@setMethodCallHandler
+                    }
+                    val headers = call.argument<Map<String, String>>("headers") ?: emptyMap()
+                    val codec = call.argument<String>("codec")
+                    runAsync(io, result, "fetch_failed") { fetchStream(url, headers, codec, output) }
+                }
                 else -> result.notImplemented()
             }
         }
+    }
+
+    /**
+     * HLS(m3u8 목록) 소리 스트림을 조각까지 받아 다시 인코딩 없이 [output] 하나로 합친다 (사운드클라우드 등).
+     * 담는 형식은 소리의 코덱([codec], yt-dlp가 알려 준 이름)으로 여기서 정한다: aac는 m4a, mp3는 mp3, opus · vorbis는 ogg.
+     * 모르는 코덱은 mka(Matroska)에 담는다. 돌려주는 값은 `extension` · `mime`. 실패하면 예외.
+     */
+    fun fetchStream(url: String, headers: Map<String, String>, codec: String?, output: String): Map<String, String> {
+        val c = codec?.lowercase() ?: ""
+        val (format, extension, mime) = when {
+            c.startsWith("mp4a") || c == "aac" -> Triple("ipod", "m4a", "audio/mp4")
+            c.startsWith("mp3") || c == "mpeg" -> Triple("mp3", "mp3", "audio/mpeg")
+            c.startsWith("opus") || c.startsWith("vorbis") -> Triple("ogg", "opus", "audio/ogg")
+            else -> Triple("matroska", "mka", "audio/x-matroska")
+        }
+        val args = mutableListOf("-nostdin", "-y")
+        if (headers.isNotEmpty()) {
+            args += listOf("-headers", headers.entries.joinToString("") { "${it.key}: ${it.value}\r\n" })
+        }
+        args += listOf("-i", url, "-vn", "-c", "copy", "-f", format, output)
+        runFfmpeg(args, output)
+        return mapOf("extension" to extension, "mime" to mime)
     }
 
     /**

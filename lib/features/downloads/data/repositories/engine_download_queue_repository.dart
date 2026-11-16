@@ -433,6 +433,16 @@ class EngineDownloadQueueRepository implements DownloadQueueRepository {
           audioLanguage: request.audioLanguage,
         );
         if (token.isCancelled) throw const DownloadAborted();
+        if (stream.hls) {
+          // HLS(사운드클라우드 등)는 목록 파일이라 그대로 받으면 안 된다: 조각을 받아 합친다 (크기를 몰라 진행률은 없다).
+          _set(id, (e) => e.copyWith(processing: true), persist: false);
+          final merged = await _transcoder.fetchStream(stream, temp!);
+          if (token.isCancelled) throw const DownloadAborted();
+          if (merged == null) {
+            throw const DownloadFailed('스트림을 합치지 못했어요 (HLS)');
+          }
+          return merged;
+        }
         return _downloader.download(
           stream,
           temp!,

@@ -78,7 +78,12 @@ class YtDlpEngine implements DownloaderEngine {
     String? audioLanguage,
   }) async {
     final r = await _native.audio(url, audioLanguage);
-    return AudioStream(url: r['url']! as String, headers: _headers(r));
+    return AudioStream(
+      url: r['url']! as String,
+      headers: _headers(r),
+      hls: _bool(r['hls']),
+      codec: r['codec'] as String?,
+    );
   }
 
   @override

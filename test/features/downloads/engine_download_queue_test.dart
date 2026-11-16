@@ -107,6 +107,10 @@ class _FakeTranscoder implements AudioTranscoder {
   }
 
   @override
+  Future<DownloadedAudio?> fetchStream(AudioStream stream, File target) async =>
+      null;
+
+  @override
   Future<void> cancel() async {}
 }
 

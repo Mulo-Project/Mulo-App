@@ -109,6 +109,10 @@ class YtDlpParsersTest {
         assertEquals("https://a", a["url"])
         assertEquals(mapOf("User-Agent" to "x"), a["headers"])
         assertNull(YtDlpParsers.audio(j("""{"id":"x"}""")))
+        val hls = YtDlpParsers.audio(j("""{"url":"https://a/x.m3u8","protocol":"m3u8_native","acodec":"mp4a.40.2"}"""))!!
+        assertEquals(true, hls["hls"])
+        assertEquals("mp4a.40.2", hls["codec"])
+        assertEquals(false, a["hls"])
         assertTrue(YtDlpParsers.video(j("""{"url":"u","vcodec":"avc1","acodec":"mp4a"}"""))!!["muxed"] as Boolean)
         assertFalse(YtDlpParsers.video(j("""{"url":"u","vcodec":"avc1","acodec":"none"}"""))!!["muxed"] as Boolean)
     }

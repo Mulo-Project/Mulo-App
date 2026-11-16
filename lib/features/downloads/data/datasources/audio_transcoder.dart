@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 
 import '../../domain/entities/download_options.dart';
+import '../../../search/domain/entities/audio_stream.dart';
 import 'audio_file_downloader.dart';
 
 /// 받은 오디오를 다른 형식으로 바꾼다.
@@ -19,6 +20,9 @@ abstract interface class AudioTranscoder {
     TranscodePlan plan,
     File target,
   );
+
+  /// HLS(m3u8) 소리 스트림을 조각까지 받아 [target] 하나로 합친다. 못 하면 null (형식은 네이티브가 코덱으로 정한다).
+  Future<DownloadedAudio?> fetchStream(AudioStream stream, File target);
 
   /// 돌고 있는 변환을 멈춘다.
   Future<void> cancel();
@@ -92,6 +96,30 @@ class PlatformAudioTranscoder implements AudioTranscoder {
         return null;
       }
       return DownloadedAudio(target, plan.extension, plan.mime);
+    } on PlatformException {
+      return null;
+    }
+  }
+
+  @override
+  Future<DownloadedAudio?> fetchStream(AudioStream stream, File target) async {
+    if (!await isAvailable()) return null;
+    try {
+      final r = await _channel.invokeMapMethod<String, Object?>('fetchStream', {
+        'url': stream.url,
+        'headers': stream.headers,
+        'codec': stream.codec,
+        'output': target.path,
+      });
+      final extension = r?['extension'] as String?;
+      final mime = r?['mime'] as String?;
+      if (extension == null ||
+          mime == null ||
+          !await target.exists() ||
+          await target.length() == 0) {
+        return null;
+      }
+      return DownloadedAudio(target, extension, mime);
     } on PlatformException {
       return null;
     }
