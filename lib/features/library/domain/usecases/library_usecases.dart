@@ -408,6 +408,16 @@ class RestoreFromFileTags implements UseCase<int, NoParams> {
 
 /// 곡을 지운다: 음악 파일을 지우고, 보관함 · 재생목록 · 기록에서도 뺀다.
 /// 파일을 못 지우면 아무것도 바꾸지 않고 false.
+/// 파일이 없어 열지 못한 곡을 숨긴다 (재생 횟수 · 재생목록 소속 같은 기록은 남고, 파일이 다시 나타나면 스캔이 숨김을 푼다).
+class HideMissingTrack implements UseCase<void, String> {
+  const HideMissingTrack(this._library);
+
+  final LibraryRepository _library;
+
+  @override
+  Future<void> call(String trackId) => _library.hide(trackId);
+}
+
 class DeleteTrack implements UseCase<bool, Track> {
   const DeleteTrack(this._library, this._files);
 

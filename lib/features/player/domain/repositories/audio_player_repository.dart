@@ -24,6 +24,9 @@ abstract interface class AudioPlayerRepository {
   /// 앱이 켜져 있는 중에 알림을 눌러 플레이어 화면을 열라는 요청.
   Stream<void> watchOpenPlayer();
 
+  /// 파일이 없어 열지 못한 곡의 id (권한 · 디코더 문제는 알리지 않는다).
+  Stream<String> watchMissing();
+
   // 대기열을 바꾸는 명령([setQueue] · [playNext] · [addToQueue] · [removeFromQueue] · [moveInQueue] ·
   // [setShuffle] · [setRepeat])은 끝나면 엔진의 대기열 모습을 돌려준다. 앱은 그것을 그대로 비춘다.
   // 알 수 없으면 null.

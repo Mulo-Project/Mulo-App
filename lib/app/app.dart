@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,6 +12,7 @@ import '../core/l10n/l10n.dart';
 import '../features/account/presentation/bloc/account_cubit.dart';
 import '../features/covers/presentation/bloc/cover_color_cubit.dart';
 import '../features/covers/presentation/bloc/cover_cubit.dart';
+import '../features/library/domain/usecases/library_usecases.dart';
 import '../features/lyrics/presentation/bloc/lyrics_cubit.dart';
 import '../features/lyrics/presentation/bloc/lyrics_overlay_cubit.dart';
 import '../features/lyrics/presentation/bloc/lyrics_settings_cubit.dart';
@@ -142,7 +145,8 @@ class _MusicAppState extends State<MusicApp> {
             final access = context.read<MediaAccessCubit>();
             return sl<NowPlayingCubit>()
               ..playable = ((t) => access.state.playable(t.id, t.uri))
-              ..onUnplayable = access.markFailed;
+              ..onUnplayable = access.markFailed
+              ..onMissing = (id) => unawaited(sl<HideMissingTrack>()(id));
           },
         ),
         BlocProvider(

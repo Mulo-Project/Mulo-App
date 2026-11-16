@@ -128,6 +128,11 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
       audio.watchEnded(const NoParams()).listen((_) => _onEnded()),
       audio.watchPlaying(const NoParams()).listen(_onEnginePlaying),
       audio.watchQueue(const NoParams()).listen(_onEngineQueue),
+      if (audio.watchMissing != null)
+        audio.watchMissing!(const NoParams()).listen((id) {
+          onUnplayable?.call(id);
+          onMissing?.call(id);
+        }),
     ];
   }
 
@@ -165,6 +170,9 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   /// 이 곡을 재생할 수 있는가 (권한이 없거나 열기에 실패한 곡은 대기열에 넣지 않는다). 앱이 연결한다.
   bool Function(Track track) playable = _alwaysPlayable;
   static bool _alwaysPlayable(Track _) => true;
+
+  /// 파일이 없어 곡을 열지 못했을 때 (앱이 그 곡을 숨긴다).
+  void Function(String id)? onMissing;
 
   /// 곡을 열다 실패했을 때 (앱이 열기 실패 기록에 남긴다).
   void Function(String id)? onUnplayable;

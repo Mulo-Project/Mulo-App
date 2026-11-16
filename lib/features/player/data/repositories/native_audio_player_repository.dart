@@ -54,6 +54,11 @@ class NativeAudioPlayerRepository implements AudioPlayerRepository {
       .map((e) => e['value'] == true);
 
   @override
+  Stream<String> watchMissing() => _channel.events
+      .where((e) => e['type'] == 'error' && e['missing'] == true)
+      .map((e) => '${e['id']}');
+
+  @override
   Stream<void> watchOpenPlayer() =>
       _channel.events.where((e) => e['type'] == 'openPlayer');
 

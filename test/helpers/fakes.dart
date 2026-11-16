@@ -1351,6 +1351,9 @@ class FakeAudioPlayer implements AudioPlayerRepository {
   @override
   Stream<void> watchOpenPlayer() => _openPlayer.stream;
 
+  @override
+  Stream<String> watchMissing() => const Stream.empty();
+
   Future<void> _setQueue(PlaybackSnapshot s) async {
     final current = s.current;
     calls.add('queue:${current?.uri}');

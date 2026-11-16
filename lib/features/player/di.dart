@@ -51,6 +51,7 @@ void registerPlayer(GetIt sl) {
         watchEnded: WatchAudioEnded(sl()),
         watchPlaying: WatchAudioPlaying(sl()),
         watchOpenPlayer: WatchOpenPlayer(sl()),
+        watchMissing: WatchMissingTrack(sl()),
         watchQueue: WatchAudioQueue(sl()),
         playNext: PlayAudioNext(sl()),
         addToQueue: AddAudioToQueue(sl()),

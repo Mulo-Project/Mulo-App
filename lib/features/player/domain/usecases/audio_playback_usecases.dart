@@ -36,6 +36,14 @@ class WatchAudioPlaying implements StreamUseCase<bool, NoParams> {
   Stream<bool> call(NoParams params) => _repo.watchPlaying();
 }
 
+class WatchMissingTrack implements StreamUseCase<String, NoParams> {
+  const WatchMissingTrack(this._repo);
+  final AudioPlayerRepository _repo;
+
+  @override
+  Stream<String> call(NoParams params) => _repo.watchMissing();
+}
+
 class WatchOpenPlayer implements StreamUseCase<void, NoParams> {
   const WatchOpenPlayer(this._repo);
   final AudioPlayerRepository _repo;
@@ -195,6 +203,7 @@ class AudioPlayback {
     required this.setLoop,
     required this.restore,
     required this.takeOpenPlayerRequest,
+    this.watchMissing,
   });
 
   final WatchAudioPosition watchPosition;
@@ -202,6 +211,7 @@ class AudioPlayback {
   final WatchAudioEnded watchEnded;
   final WatchAudioPlaying watchPlaying;
   final WatchOpenPlayer watchOpenPlayer;
+  final WatchMissingTrack? watchMissing;
   final WatchAudioQueue watchQueue;
   final PlayAudioNext playNext;
   final AddAudioToQueue addToQueue;
