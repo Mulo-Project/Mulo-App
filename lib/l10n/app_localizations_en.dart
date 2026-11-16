@@ -658,6 +658,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerSleepTimerOff => 'Turn off timer';
 
   @override
+  String get settingsFormatOriginal => 'Original';
+
+  @override
+  String downloadFormatOriginal(String format) {
+    return 'Original ($format)';
+  }
+
+  @override
   String playerSleepTimerMinutes(int minutes) {
     return 'Stop in $minutes min';
   }

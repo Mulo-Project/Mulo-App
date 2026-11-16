@@ -69,7 +69,9 @@ class _SettingsDownloadSectionState extends State<SettingsDownloadSection> {
               expand: true,
               values: _formats,
               selected: prefs.format,
-              labelOf: (f) => f.name,
+              // opus는 변환 없이 받은 원본 그대로 저장한다 (사이트마다 원본 형식이 다르다).
+              labelOf: (f) =>
+                  f == AudioFormat.opus ? l10n.settingsFormatOriginal : f.name,
               onChanged: context.read<DownloadPreferencesCubit>().setFormat,
             ),
           ),

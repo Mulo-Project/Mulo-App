@@ -180,6 +180,9 @@ class _DownloadScreenState extends State<DownloadScreen> {
   // 영상 파일(mp4)로 저장: 풀 빌드(Android)에서만 켜진다.
   var _videoAvailable = false;
   // SoundCloud는 소리만 있는 사이트라 영상으로 저장하는 칸을 보이지 않는다.
+  // 변환하지 않을 때 저장될 형식 이름 (표시용): 사운드클라우드는 AAC(m4a), 그 밖(유튜브)은 opus.
+  String get _originalName => _hasVideo ? 'opus' : 'm4a';
+
   bool get _hasVideo {
     final host = Uri.tryParse(widget.url)?.host.toLowerCase() ?? '';
     return host != 'soundcloud.com' && !host.endsWith('.soundcloud.com');
@@ -521,7 +524,10 @@ class _DownloadScreenState extends State<DownloadScreen> {
                           expand: true,
                           values: _formats,
                           selected: _format!,
-                          labelOf: (f) => f.name,
+                          // opus는 변환 없이 받은 원본 그대로: 이 곡의 원본 형식을 함께 보인다.
+                          labelOf: (f) => f == AudioFormat.opus
+                              ? l10n.downloadFormatOriginal(_originalName)
+                              : f.name,
                           onChanged: (f) => setState(() => _format = f),
                         ),
                       ],

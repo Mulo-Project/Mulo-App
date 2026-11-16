@@ -152,6 +152,9 @@
   "loadedFoldersAddedToPlaylists": "{songs}곡을 {count}개 재생목록에 담았어요",
   "@loadedFoldersAddedToPlaylists": {"placeholders": {"songs": {"type": "int"}, "count": {"type": "int"}}},
   "settingsFormat": "기본 포맷",
+  "settingsFormatOriginal": "원본 그대로",
+  "downloadFormatOriginal": "원본 ({format})",
+  "@downloadFormatOriginal": {"placeholders": {"format": {"type": "String"}}},
   "settingsEngine": "다운로드 엔진",
   "settingsEngineVersion": "현재 {current} · 최신 {latest}",
   "@settingsEngineVersion": {

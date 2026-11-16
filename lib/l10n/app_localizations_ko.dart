@@ -640,6 +640,14 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playerSleepTimerOff => '타이머 끄기';
 
   @override
+  String get settingsFormatOriginal => '원본 그대로';
+
+  @override
+  String downloadFormatOriginal(String format) {
+    return '원본 ($format)';
+  }
+
+  @override
   String playerSleepTimerMinutes(int minutes) {
     return '$minutes분 뒤 멈춤';
   }

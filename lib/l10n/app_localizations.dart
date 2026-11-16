@@ -1286,6 +1286,18 @@ abstract class AppLocalizations {
   /// **'타이머 끄기'**
   String get playerSleepTimerOff;
 
+  /// No description provided for @settingsFormatOriginal.
+  ///
+  /// In ko, this message translates to:
+  /// **'원본 그대로'**
+  String get settingsFormatOriginal;
+
+  /// No description provided for @downloadFormatOriginal.
+  ///
+  /// In ko, this message translates to:
+  /// **'원본 ({format})'**
+  String downloadFormatOriginal(String format);
+
   /// No description provided for @playerSleepTimerMinutes.
   ///
   /// In ko, this message translates to:
