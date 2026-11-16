@@ -35,6 +35,7 @@ import '../features/player/presentation/bloc/output_behavior_cubit.dart';
 import '../features/player/presentation/bloc/mix_with_others_cubit.dart';
 import '../features/player/presentation/bloc/playback_speed_cubit.dart';
 import '../features/player/presentation/bloc/player_style_cubit.dart';
+import '../features/permissions/presentation/bloc/media_access_cubit.dart';
 import '../features/playlists/presentation/bloc/playlists_cubit.dart';
 import '../features/search/presentation/bloc/preview_cubit.dart';
 import '../features/search/presentation/bloc/saved_videos_cubit.dart';
@@ -135,6 +136,7 @@ class _MusicAppState extends State<MusicApp> {
         BlocProvider(
           create: (_) => sl<LibraryImportCubit>()..embedTagsInBackground(),
         ),
+        BlocProvider(create: (_) => sl<MediaAccessCubit>()..refresh()),
         BlocProvider(create: (_) => sl<NowPlayingCubit>()),
         BlocProvider(
           create: (_) => sl<AudioOutputCubit>()

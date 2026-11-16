@@ -23,6 +23,7 @@ class TrackTile extends StatefulWidget {
     this.badge,
     this.onTap,
     this.enabled = true,
+    this.unavailable = false,
     this.onMenu,
     this.onLongPress,
     this.horizontalPadding = AppSpacing.md,
@@ -58,6 +59,9 @@ class TrackTile extends StatefulWidget {
 
   /// false면 흐리게 보이고 눌리지 않는다 (곡을 여는 중).
   final bool enabled;
+
+  /// true면 흐리게만 보이고 누르는 것은 그대로 받는다 (예: 권한이 없어 열 수 없는 곡을 눌러 권한을 묻는다).
+  final bool unavailable;
 
   /// 길게 누르기 · 데스크톱 오른쪽 클릭 (곡 메뉴 같은 보조 동작).
   /// 눌린 화면 좌표를 넘기므로 팝업 메뉴를 그 자리에 띄울 수 있다.
@@ -106,7 +110,7 @@ class _TrackTileState extends State<TrackTile> {
 
   @override
   Widget build(BuildContext context) => Opacity(
-    opacity: widget.enabled ? 1 : .45,
+    opacity: widget.enabled && !widget.unavailable ? 1 : .45,
     child: IgnorePointer(ignoring: !widget.enabled, child: _row(context)),
   );
 
