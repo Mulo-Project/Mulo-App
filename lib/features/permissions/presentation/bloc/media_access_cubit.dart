@@ -6,6 +6,8 @@ import '../../../../core/usecase/usecase.dart';
 import '../../domain/entities/app_permission.dart';
 import '../../domain/usecases/permission_usecases.dart';
 
+export '../../domain/entities/app_permission.dart';
+
 class MediaAccessState extends Equatable {
   const MediaAccessState({this.allowed = true, this.failed = const {}});
 
@@ -41,27 +43,22 @@ class MediaAccessCubit extends Cubit<MediaAccessState>
   final RequestAppPermission _request;
   final OpenPermissionSettings _openSettings;
 
-  /// 곡을 열려는데 권한이 없을 때: 요청 창을 띄울 수 있으면 띄우고, 막혔으면 시스템 설정을 연다.
-  /// 허용으로 바뀌면 true.
-  Future<bool> ask() async {
+  /// 곡을 열려는데 권한이 없을 때: 요청 창을 띄울 수 있으면 띄우고 결과를 돌려준다.
+  /// 두 번 거절해 막혔으면 창이 뜨지 않으니 [PermissionLevel.blocked]를 돌려주고, 안내는 부르는 쪽이 한다
+  /// (시스템 설정을 마음대로 열지 않는다).
+  Future<PermissionLevel> ask() async {
     final level = await _level(AppPermission.audio);
-    if (level == PermissionLevel.granted) {
-      _setAllowed(true);
-      return true;
+    if (level != PermissionLevel.denied) {
+      _setAllowed(level == PermissionLevel.granted);
+      return level;
     }
-    if (level == PermissionLevel.denied) {
-      final watch = Stopwatch()..start();
-      final next = await _request(AppPermission.audio);
-      _setAllowed(next == PermissionLevel.granted);
-      // 요청 창이 뜨지 않고 바로 막힘으로 돌아오면(두 번 거절한 뒤) 시스템 설정을 연다.
-      if (next == PermissionLevel.blocked && watch.elapsedMilliseconds < 400) {
-        await _openSettings(const NoParams());
-      }
-      return next == PermissionLevel.granted;
-    }
-    await _openSettings(const NoParams());
-    return false;
+    final next = await _request(AppPermission.audio);
+    _setAllowed(next == PermissionLevel.granted);
+    return next;
   }
+
+  /// 시스템 앱 설정을 연다 (막힌 권한을 사용자가 직접 켜게).
+  Future<void> openSettings() => _openSettings(const NoParams());
 
   Future<void> refresh() async {
     if (!_supported().contains(AppPermission.audio)) {

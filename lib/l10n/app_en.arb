@@ -953,6 +953,8 @@
   "permOverlayDesc": "Used to show lyrics over other apps while you use them.",
   "permBlockedDesc": "Blocked. Tap to turn it on in system settings.",
   "permDeniedNotice": "Permission not granted. Tap again to allow it.",
+  "permMediaBlockedNotice": "Music and video access is off, so this can’t play. Allow it in settings.",
+  "permOpenSettings": "Open settings",
   "permBlockedNotice": "The request is blocked. Tap again to open system settings.",
   "settingsNotifications": "Notifications",
   "settingsNotifyDownloadProgress": "Download progress",

@@ -4976,6 +4976,18 @@ abstract class AppLocalizations {
   /// **'권한 요청이 막혔어요. 다시 누르면 휴대폰 설정이 열려요.'**
   String get permBlockedNotice;
 
+  /// No description provided for @permMediaBlockedNotice.
+  ///
+  /// In ko, this message translates to:
+  /// **'음악·영상 권한이 없어 재생할 수 없어요. 설정에서 허용해 주세요.'**
+  String get permMediaBlockedNotice;
+
+  /// No description provided for @permOpenSettings.
+  ///
+  /// In ko, this message translates to:
+  /// **'설정 열기'**
+  String get permOpenSettings;
+
   /// No description provided for @settingsNotifications.
   ///
   /// In ko, this message translates to:

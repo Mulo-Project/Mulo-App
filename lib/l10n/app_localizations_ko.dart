@@ -2666,6 +2666,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get permDeniedNotice => '권한이 허용되지 않았어요. 다시 눌러 허용해 주세요.';
 
   @override
+  String get permMediaBlockedNotice => '음악·영상 권한이 없어 재생할 수 없어요. 설정에서 허용해 주세요.';
+
+  @override
+  String get permOpenSettings => '설정 열기';
+
+  @override
   String get permBlockedNotice => '권한 요청이 막혔어요. 다시 누르면 휴대폰 설정이 열려요.';
 
   @override

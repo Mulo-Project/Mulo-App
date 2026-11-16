@@ -2737,6 +2737,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permDeniedNotice => 'Permission not granted. Tap again to allow it.';
 
   @override
+  String get permMediaBlockedNotice =>
+      'Music and video access is off, so this can’t play. Allow it in settings.';
+
+  @override
+  String get permOpenSettings => 'Open settings';
+
+  @override
   String get permBlockedNotice =>
       'The request is blocked. Tap again to open system settings.';
 

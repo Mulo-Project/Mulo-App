@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/l10n/l10n.dart';
 import '../../../permissions/presentation/bloc/media_access_cubit.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/track.dart';
@@ -12,11 +13,14 @@ class TrackGateState {
     required this.enabled,
     required this.unavailable,
     required MediaAccessCubit? access,
-  }) : _access = access;
+    required BuildContext context,
+  }) : _access = access,
+       _context = context;
 
   final bool enabled;
   final bool unavailable;
   final MediaAccessCubit? _access;
+  final BuildContext _context;
 
   /// [play]를 곡 줄의 onTap으로 쓸 형태로 바꾼다. 권한이 없으면 요청 창(막혔으면 설정)을 먼저 띄우고,
   /// 허용되면 [play]를 실행한다.
@@ -24,7 +28,27 @@ class TrackGateState {
     if (play == null) return null;
     if (!unavailable) return play;
     return () async {
-      if (await _access!.ask()) play();
+      final level = await _access!.ask();
+      if (level == PermissionLevel.granted) return play();
+      if (!_context.mounted) return;
+      final l10n = _context.l10n;
+      final blocked = level == PermissionLevel.blocked;
+      // 두 번 거절해 요청 창을 못 띄우면 설정 화면을 갑자기 열지 않고, 안내와 함께 "설정 열기"를 보인다.
+      ScaffoldMessenger.of(_context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(
+              blocked ? l10n.permMediaBlockedNotice : l10n.permDeniedNotice,
+            ),
+            action: blocked
+                ? SnackBarAction(
+                    label: l10n.permOpenSettings,
+                    onPressed: _access.openSettings,
+                  )
+                : null,
+          ),
+        );
     };
   }
 }
@@ -59,7 +83,12 @@ class TrackGate extends StatelessWidget {
       valueListenable: loading,
       builder: (context, busy, _) => builder(
         context,
-        TrackGateState(enabled: !busy, unavailable: !allowed, access: access),
+        TrackGateState(
+          enabled: !busy,
+          unavailable: !allowed,
+          access: access,
+          context: context,
+        ),
       ),
     );
   }
