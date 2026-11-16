@@ -31,16 +31,27 @@ class TrackGateState {
 
 /// 곡 줄을 [TrackGateState]와 함께 그린다 (보관함 · 홈 · 재생목록 등 곡 줄마다 같이 쓴다).
 class TrackGate extends StatelessWidget {
-  const TrackGate({super.key, required this.track, required this.builder});
+  const TrackGate({super.key, required Track this.track, required this.builder})
+    : isDeviceFile = null;
 
-  final Track track;
+  /// 곡 전체가 없고 id만 아는 줄 (재생목록 대표 곡). 기기 파일이면 [isDeviceFile]을 true로 넘긴다.
+  const TrackGate.byFlag({
+    super.key,
+    required bool this.isDeviceFile,
+    required this.builder,
+  }) : track = null;
+
+  final Track? track;
+  final bool? isDeviceFile;
   final Widget Function(BuildContext context, TrackGateState gate) builder;
 
   @override
   Widget build(BuildContext context) {
     final access = _mediaAccess(context);
     final allowed =
-        access == null || access.state || !track.uri.startsWith('content://');
+        access == null ||
+        access.state ||
+        !(isDeviceFile ?? track!.uri.startsWith('content://'));
     final loading = context.read<NowPlayingCubit>().loading;
     return ValueListenableBuilder<bool>(
       valueListenable: loading,
