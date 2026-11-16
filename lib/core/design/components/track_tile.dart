@@ -22,6 +22,7 @@ class TrackTile extends StatefulWidget {
     this.number,
     this.badge,
     this.onTap,
+    this.enabled = true,
     this.onMenu,
     this.onLongPress,
     this.horizontalPadding = AppSpacing.md,
@@ -54,6 +55,9 @@ class TrackTile extends StatefulWidget {
   /// 커버 오른쪽 아래 모서리에 겹쳐 붙는 작은 표시 아이콘 (알림 배지처럼 줄 크기를 바꾸지 않는다).
   final IconData? badge;
   final VoidCallback? onTap;
+
+  /// false면 흐리게 보이고 눌리지 않는다 (곡을 여는 중).
+  final bool enabled;
 
   /// 길게 누르기 · 데스크톱 오른쪽 클릭 (곡 메뉴 같은 보조 동작).
   /// 눌린 화면 좌표를 넘기므로 팝업 메뉴를 그 자리에 띄울 수 있다.
@@ -101,7 +105,12 @@ class _TrackTileState extends State<TrackTile> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => Opacity(
+    opacity: widget.enabled ? 1 : .45,
+    child: IgnorePointer(ignoring: !widget.enabled, child: _row(context)),
+  );
+
+  Widget _row(BuildContext context) {
     final p = context.palette;
     final text = Theme.of(context).textTheme;
     final w = widget;

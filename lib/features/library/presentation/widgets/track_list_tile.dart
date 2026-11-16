@@ -89,7 +89,10 @@ class TrackListTile extends StatelessWidget {
     final t = track;
     final sel = selection;
     final picking = sel != null && sel.active;
-    return TrackTile(
+    return ValueListenableBuilder<bool>(
+      valueListenable: vm.loading,
+      builder: (context, loading, _) => TrackTile(
+        enabled: !loading,
       title: t.title,
       subtitle: showAlbum
           ? '${artistOf(l10n, t)} · ${albumOf(l10n, t)}'
@@ -122,6 +125,7 @@ class TrackListTile extends StatelessWidget {
               globalPosition: pos,
               playlistId: playlistId,
             ),
+      ),
     );
   }
 }

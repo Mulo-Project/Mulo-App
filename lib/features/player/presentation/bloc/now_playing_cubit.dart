@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:equatable/equatable.dart';
-import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:flutter/foundation.dart' show ValueNotifier, debugPrint;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/usecase/usecase.dart';
@@ -160,7 +160,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   var _pending = 0;
 
   /// 엔진이 곡을 여는 중이다. 이 사이에 다른 곡을 누르면 영상 디코더를 못 잡아 둘 다 실패하므로 누름을 무시한다.
-  var _loading = false;
+  final ValueNotifier<bool> loading = ValueNotifier<bool>(false);
 
   /// 엔진이 지금 쥐고 있다고 보는 대기열 (목록 · 반복 · extras만 비교한다).
   var _pushed = const PlaybackSnapshot(items: [], index: 0, playing: false);
@@ -373,7 +373,8 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   Future<void> _push(AudioPlayback a, PlaybackSnapshot snapshot) async {
     final current = snapshot.current;
     if (current == null || state.track?.id != current.id) return; // 그새 바뀜
-    _loading = true;
+    if (isClosed) return;
+    loading.value = true;
     try {
       if (current.uri.isEmpty) throw StateError('empty uri');
       final result = await a.setQueue(snapshot);
@@ -386,7 +387,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
         emit(state.copyWith(isPlaying: false, position: Duration.zero));
       }
     } finally {
-      _loading = false;
+      if (!isClosed) loading.value = false;
     }
   }
 
@@ -561,6 +562,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   @override
   Future<void> close() {
     _sleep?.cancel();
+    loading.dispose();
     for (final s in _subs) {
       s.cancel();
     }
@@ -571,7 +573,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
 
   void playQueue(List<Track> queue, {int index = 0}) {
     if (queue.isEmpty) return;
-    if (_loading) return;
+    if (loading.value) return;
     final at = index.clamp(0, queue.length - 1);
     if (_audio != null) {
       // 엔진이 있으면 섞는 일은 엔진이 한다: 섞기 전 순서로 보내고 셔플로 시작하게 한다.
