@@ -902,12 +902,6 @@ abstract class AppLocalizations {
   /// **'지우지 못했어요. 잠시 후 다시 시도해 주세요.'**
   String get settingsEngineRevertFailed;
 
-  /// No description provided for @downloadEngineOutdated.
-  ///
-  /// In ko, this message translates to:
-  /// **'받기 엔진이 오래돼서 받지 못했어요. 업데이트하고 있으니 잠시 뒤 다시 받아 주세요.'**
-  String get downloadEngineOutdated;
-
   /// No description provided for @settingsEngineBundled.
   ///
   /// In ko, this message translates to:
@@ -2609,7 +2603,7 @@ abstract class AppLocalizations {
   /// No description provided for @mediaDetailWatchYoutube.
   ///
   /// In ko, this message translates to:
-  /// **'유튜브에서 보기'**
+  /// **'재생'**
   String get mediaDetailWatchYoutube;
 
   /// No description provided for @mediaDetailOpenOriginal.
@@ -2621,13 +2615,13 @@ abstract class AppLocalizations {
   /// No description provided for @mediaDetailListenOriginal.
   ///
   /// In ko, this message translates to:
-  /// **'원본 사이트에서 듣기'**
+  /// **'재생'**
   String get mediaDetailListenOriginal;
 
   /// No description provided for @mediaDetailListenSoundcloud.
   ///
   /// In ko, this message translates to:
-  /// **'SoundCloud에서 듣기'**
+  /// **'재생'**
   String get mediaDetailListenSoundcloud;
 
   /// No description provided for @mediaDetailOpenArtist.
@@ -3627,15 +3621,27 @@ abstract class AppLocalizations {
   String get trackInfoAdded;
 
   /// No description provided for @trackInfoPlayCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생 횟수'**
   String get trackInfoPlayCount;
 
   /// No description provided for @trackInfoPlayCountValue.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}회'**
   String trackInfoPlayCountValue(int count);
 
   /// No description provided for @trackInfoListened.
+  ///
+  /// In ko, this message translates to:
+  /// **'들은 시간'**
   String get trackInfoListened;
 
   /// No description provided for @trackInfoLastPlayed.
+  ///
+  /// In ko, this message translates to:
+  /// **'마지막 재생'**
   String get trackInfoLastPlayed;
 
   /// No description provided for @trackInfoSource.
@@ -3655,6 +3661,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'받은 곡'**
   String get trackInfoSourceDownload;
+
+  /// No description provided for @downloadEngineOutdated.
+  ///
+  /// In ko, this message translates to:
+  /// **'받기 엔진이 오래돼서 받지 못했어요. 업데이트하고 있으니 잠시 뒤 다시 받아 주세요.'**
+  String get downloadEngineOutdated;
 
   /// No description provided for @downloadTagFailed.
   ///
