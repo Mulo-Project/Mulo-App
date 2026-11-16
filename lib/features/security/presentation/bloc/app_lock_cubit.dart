@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -76,7 +78,12 @@ class AppLockCubit extends Cubit<AppLockState> {
     required this._isBiometricAvailable,
     required this._authenticateBiometric,
     this._now = DateTime.now,
-  }) : super(const AppLockState());
+    WatchAppRelaunch? watchRelaunch,
+  }) : super(const AppLockState()) {
+    _relaunchSub = watchRelaunch?.call(const NoParams()).listen((_) => relaunched());
+  }
+
+  StreamSubscription<void>? _relaunchSub;
 
   /// 이만큼 이어서 틀리면 [cooldown] 동안 입력을 멈춘다.
   static const maxAttempts = 5;
@@ -134,6 +141,12 @@ class AppLockCubit extends Cubit<AppLockState> {
   /// 파일 선택창 · 권한 창을 다녀올 때마다 잠기지 않게 하는 여유다.
   static const relockAfter = Duration(seconds: 10);
 
+  @override
+  Future<void> close() {
+    _relaunchSub?.cancel();
+    return super.close();
+  }
+
   /// 앱이 백그라운드로 갔다.
   void appLeft() {
     _leftAt ??= _now();
@@ -153,6 +166,14 @@ class AppLockCubit extends Cubit<AppLockState> {
     if (_now().difference(left) >= relockAfter) {
       emit(state.copyWith(locked: true));
     }
+  }
+
+  /// 화면을 밀어 닫았다가 다시 켰다 (엔진이 살아 있어 앱 상태가 그대로다). 비운 시간과 상관없이 바로 잠근다.
+  void relaunched() {
+    debugPrint('MuloLock 다시 켬 loaded=${state.loaded} enabled=${state.enabled} locked=${state.locked}');
+    _leftAt = null;
+    if (!state.loaded || !state.enabled || state.locked) return;
+    emit(state.copyWith(locked: true));
   }
 
   bool get inCooldown {

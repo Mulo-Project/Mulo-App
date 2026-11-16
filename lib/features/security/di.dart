@@ -1,8 +1,10 @@
 import 'package:get_it/get_it.dart';
 
+import 'data/datasources/app_session_channel.dart';
 import 'data/datasources/local_biometric_authenticator.dart';
 import 'data/repositories/secure_app_lock_repository.dart';
 import 'domain/repositories/app_lock_repository.dart';
+import 'domain/repositories/app_session_repository.dart';
 import 'domain/usecases/app_lock_usecases.dart';
 import 'presentation/bloc/app_lock_cubit.dart';
 
@@ -14,6 +16,8 @@ void registerSecurity(GetIt sl) {
     ..registerLazySingleton<BiometricAuthenticator>(
       LocalBiometricAuthenticator.new,
     )
+    ..registerLazySingleton<AppSessionRepository>(AppSessionChannel.new)
+    ..registerFactory(() => WatchAppRelaunch(sl()))
     ..registerFactory(() => LoadAppLock(sl()))
     ..registerFactory(() => EnableAppLock(sl()))
     ..registerFactory(() => DisableAppLock(sl()))
@@ -32,6 +36,7 @@ void registerSecurity(GetIt sl) {
         setBiometric: sl(),
         isBiometricAvailable: sl(),
         authenticateBiometric: sl(),
+        watchRelaunch: sl(),
       ),
     );
 }
