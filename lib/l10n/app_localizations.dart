@@ -1064,18 +1064,6 @@ abstract class AppLocalizations {
   /// **'PIN을 입력하세요.'**
   String get lockHint;
 
-  /// No description provided for @settingsBackgroundDownload.
-  ///
-  /// In ko, this message translates to:
-  /// **'백그라운드 받기'**
-  String get settingsBackgroundDownload;
-
-  /// No description provided for @settingsBackgroundDownloadDesc.
-  ///
-  /// In ko, this message translates to:
-  /// **'앱이 뒤로 가거나 닫혀도 받기를 이어 가요. 켜 두면 받는 동안 알림이 계속 떠 있어요.'**
-  String get settingsBackgroundDownloadDesc;
-
   /// No description provided for @settingsHideNotification.
   ///
   /// In ko, this message translates to:

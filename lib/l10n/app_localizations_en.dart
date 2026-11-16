@@ -534,13 +534,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lockHint => 'Enter your PIN.';
 
   @override
-  String get settingsBackgroundDownload => 'Background downloads';
-
-  @override
-  String get settingsBackgroundDownloadDesc =>
-      'Keeps downloading when the app is in the background or closed. A notification stays up while downloading.';
-
-  @override
   String get settingsHideNotification => 'Hide song info in notification';
 
   @override
@@ -2755,7 +2748,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsNotifyDownloadProgressDesc =>
-      'Shows progress in the notification shade. Downloads keep going when the app is in the background.';
+      'Shows progress in the notification shade. Downloads keep going when the app is in the background or closed.';
 
   @override
   String get settingsNotifyDownloadResult => 'Download results';

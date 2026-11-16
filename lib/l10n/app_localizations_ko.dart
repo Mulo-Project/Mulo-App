@@ -522,13 +522,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lockHint => 'PIN을 입력하세요.';
 
   @override
-  String get settingsBackgroundDownload => '백그라운드 받기';
-
-  @override
-  String get settingsBackgroundDownloadDesc =>
-      '앱이 뒤로 가거나 닫혀도 받기를 이어 가요. 켜 두면 받는 동안 알림이 계속 떠 있어요.';
-
-  @override
   String get settingsHideNotification => '알림에 곡 정보 숨기기';
 
   @override
@@ -2681,7 +2674,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsNotifyDownloadProgress => '받기 진행 알림';
 
   @override
-  String get settingsNotifyDownloadProgressDesc => '받는 동안 진행 상황을 알림창에 보여요.';
+  String get settingsNotifyDownloadProgressDesc => '받는 동안 진행 상황을 알림창에 보여요. 켜 두면 앱이 뒤로 가거나 닫혀도 받기를 이어 가요.';
 
   @override
   String get settingsNotifyDownloadResult => '받기 결과 알림';

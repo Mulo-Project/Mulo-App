@@ -81,7 +81,7 @@ void main() {
     );
     await cubit.syncDownloads(
       [item('1', DownloadStatus.downloading, .2)],
-      on.copyWith(downloadProgress: false, backgroundDownload: false),
+      on.copyWith(backgroundDownload: false),
       l10n,
     );
     expect(notifier.calls.last, 'clear');
@@ -159,27 +159,13 @@ void main() {
     expect(notifier.shown.last['artUri'], isNull);
   });
 
-  test('백그라운드 받기 설정이 앞에 붙들기를 정하고, 진행 알림이 꺼져도 붙든다', () async {
+  test('받기 진행 알림을 켜면 알림과 함께 앞에 붙들고, 끄면 둘 다 없다', () async {
     final downloading = [item('1', DownloadStatus.downloading, .2)];
     await cubit.syncDownloads(downloading, on, l10n);
     expect(notifier.shown.last['foreground'], isTrue);
     await cubit.syncDownloads(
-      downloading,
-      on.copyWith(backgroundDownload: false),
-      l10n,
-    );
-    expect(notifier.shown.last['foreground'], isFalse);
-    // 진행 알림은 껐지만 백그라운드 받기는 켠 경우: 서비스에 필요한 알림만 남는다.
-    await cubit.syncDownloads(
-      [item('1', DownloadStatus.downloading, .3)],
-      on.copyWith(downloadProgress: false),
-      l10n,
-    );
-    expect(notifier.shown.last['foreground'], isTrue);
-    // 둘 다 끄면 알림도 서비스도 없다.
-    await cubit.syncDownloads(
       [item('1', DownloadStatus.downloading, .4)],
-      on.copyWith(downloadProgress: false, backgroundDownload: false),
+      on.copyWith(backgroundDownload: false),
       l10n,
     );
     expect(notifier.calls.last, 'clear');

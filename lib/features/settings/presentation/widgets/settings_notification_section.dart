@@ -28,19 +28,11 @@ class SettingsNotificationSection extends StatelessWidget {
             ),
           ),
         SettingRow(
-          title: l10n.settingsBackgroundDownload,
-          description: l10n.settingsBackgroundDownloadDesc,
-          trailing: AppSwitch(
-            value: notify.settings.backgroundDownload,
-            onChanged: notifyCtrl.setBackgroundDownload,
-          ),
-        ),
-        SettingRow(
           title: l10n.settingsNotifyDownloadProgress,
           description: l10n.settingsNotifyDownloadProgressDesc,
           trailing: AppSwitch(
-            value: notify.settings.downloadProgress,
-            onChanged: notifyCtrl.setDownloadProgress,
+            value: notify.settings.backgroundDownload,
+            onChanged: notifyCtrl.setBackgroundDownload,
           ),
         ),
         SettingRow(

@@ -185,7 +185,7 @@ class NotificationSyncCubit extends Cubit<void> {
     }
 
     final keepAlive = settings.backgroundDownload;
-    if (!(settings.downloadProgress || keepAlive) ||
+    if (!keepAlive ||
         (current == null && active.isEmpty)) {
       await _clearProgress();
       return;

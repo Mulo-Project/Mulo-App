@@ -1027,3 +1027,8 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 - 원본은 `assets/icon/app_icon.png`(색, 투명 배경 1024), `assets/icon/app_icon_mono.png`(단색 마크). Android 리소스는 `python3 tool/gen_android_icon.py`로 만든다 (새 패키지 없음, 생성물은 커밋).
 - adaptive icon: 배경은 사각형 전체를 아이콘 색 번짐으로 채운 이미지 `ic_launcher_background`(원본 `assets/icon/app_icon_background.png`), 앞면 `ic_launcher_foreground`(광택 원 + 마크), 테마 아이콘(Android 13+) `ic_launcher_monochrome`. 옛 기기용 `ic_launcher.png`는 배경 + 앞면을 합쳐 둥근 사각형으로 자른 것. 원형 · 둥근 사각형 마스크에서 음표가 일부 잘릴 수 있어 마크를 안전 영역 쪽으로 줄여 놓았다.
 - iOS · Windows 아이콘은 Android 이후에 같은 원본으로 만든다 (지금은 Android만).
+
+## D-166 · 2026-11-17 · 백그라운드 받기와 받기 진행 알림을 한 설정으로 합친다
+- 포그라운드 서비스가 알림 없이는 못 돌기 때문에 두 설정은 따로 의미가 없었다. 설정 이름은 "받기 진행 알림" 하나다.
+- 켜면 받는 동안 진행 알림을 보이고 앱이 뒤로 가거나 닫혀도 받기를 이어 간다(포그라운드 서비스). 끄면 알림 없이 앱이 화면에 있는 동안에만 받는다.
+- 저장 키는 `notification.backgroundDownload`를 그대로 쓰고, `notification.downloadProgress`는 더 읽지 않는다.
