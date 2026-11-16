@@ -82,7 +82,13 @@ class ImportDeviceMusic implements UseCase<ImportOutcome, NoParams> {
   @override
   Future<ImportOutcome> call(NoParams _) async {
     try {
-      final folders = [_folders.defaultFolder, ...await _folders.loadExtra()];
+      // 영상 폴더(`Movies/Mulo` 등)도 찾는다. 앱 데이터를 지우면 보관함 목록이 비는데, 보관함은 이 폴더들을
+      // 항상 보여 주면서(위 목록) 찾을 때는 빼 놓아 받아 둔 영상이 돌아오지 않았다.
+      final folders = [
+        _folders.defaultFolder,
+        ..._folders.videoFolders,
+        ...await _folders.loadExtra(),
+      ];
       return switch (await _device.scan(folders)) {
         ScanCancelled() => const ImportCancelled(),
         ScanPermissionDenied() => const ImportDenied(),
