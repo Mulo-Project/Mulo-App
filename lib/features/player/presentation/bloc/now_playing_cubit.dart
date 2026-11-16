@@ -404,7 +404,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
         emit(state.copyWith(isPlaying: false, position: Duration.zero));
       }
     } finally {
-      if (!isClosed) loading.value = false;
+      if (!isClosed) loading.value = null;
     }
   }
 

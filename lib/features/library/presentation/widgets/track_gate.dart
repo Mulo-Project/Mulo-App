@@ -13,10 +13,9 @@ class TrackGateState {
     required this.enabled,
     required this.busy,
     required this.unavailable,
-    required MediaAccessCubit? access,
-    required BuildContext context,
-  }) : _access = access,
-       _context = context;
+    required this._access,
+    required this._context,
+  });
 
   /// 이 줄이 지금 여는 중인 곡이면 false (흐리게 보이고 눌리지 않는다).
   final bool enabled;
