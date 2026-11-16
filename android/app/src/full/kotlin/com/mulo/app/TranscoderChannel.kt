@@ -154,17 +154,21 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
         }
     }
 
-    /** mp4 영상: 소문자 키. 전체 스트림을 넘기고, 그림이 있으면 첨부 그림으로 더한다. genre 등 title · artist 밖의 칸도 쓰게 한다. */
+    /**
+     * mp4 영상: 소문자 키. 그림이 없으면 전체 스트림을 그대로 둔다.
+     * 그림이 있으면 ipod 껍데기로 첨부 그림(covr)을 쓴다. 일반 mp4 껍데기는 그림을 별도 영상 트랙으로 넣어
+     * 플레이어가 영상을 못 고르거나 그림이 파일 커버로 읽히지 않는다. ipod이 코덱(vp9·av1 등)을 거부하면
+     * 영상을 해치지 않으려고 그림 없이 글 태그만 쓴다.
+     */
     private fun tagMp4(input: String, values: List<Pair<String, String>>, output: String, cover: String?): Boolean {
-        val args = mutableListOf("-nostdin", "-y", "-i", input)
-        if (cover != null) args += listOf("-i", cover)
-        if (cover == null) {
-            args += listOf("-map", "0") // 새 그림이 없으면 파일의 커버를 그대로 둔다.
-        } else {
-            // 이미 붙어 있던 커버(첨부 그림)는 새 그림으로 바꾼다. 전부(-map 0) 가져오면 옛 커버가 v:1을 차지해
-            // 새 그림이 첨부 그림이 되지 못한다. 대문자 V는 첨부 그림이 아닌 영상만 고른다.
+        if (cover != null) {
+            val args = mutableListOf("-nostdin", "-y", "-i", input, "-i", cover)
             args += listOf("-map", "0:V", "-map", "0:a?", "-map", "1:v", "-disposition:v:1", "attached_pic")
+            for ((key, value) in entriesOf(values, upper = false)) args += listOf("-metadata", "$key=$value")
+            args += listOf("-c", "copy", "-movflags", "+use_metadata_tags", "-f", "ipod", output)
+            if (runFfmpeg(args, output)) return true
         }
+        val args = mutableListOf("-nostdin", "-y", "-i", input, "-map", "0")
         for ((key, value) in entriesOf(values, upper = false)) args += listOf("-metadata", "$key=$value")
         args += listOf("-c", "copy", "-movflags", "+use_metadata_tags", "-f", "mp4", output)
         return runFfmpeg(args, output)
