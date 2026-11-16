@@ -1053,6 +1053,8 @@
   "permOverlay": "다른 앱 위에 표시",
   "permOverlayDesc": "다른 앱을 쓰는 동안 화면 위에 가사를 띄우는 데 써요.",
   "permBlockedDesc": "요청이 막혀 있어요. 눌러서 휴대폰 설정에서 켜 주세요.",
+  "permDeniedNotice": "권한이 허용되지 않았어요. 다시 눌러 허용해 주세요.",
+  "permBlockedNotice": "권한 요청이 막혔어요. 다시 누르면 휴대폰 설정이 열려요.",
   "settingsNotifications": "알림",
   "settingsNotifyDownloadProgress": "받기 진행 알림",
   "settingsNotifyDownloadProgressDesc": "받는 동안 진행 상황을 알림창에 보여요.",

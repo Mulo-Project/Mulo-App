@@ -952,6 +952,8 @@
   "permOverlay": "Display over other apps",
   "permOverlayDesc": "Used to show lyrics over other apps while you use them.",
   "permBlockedDesc": "Blocked. Tap to turn it on in system settings.",
+  "permDeniedNotice": "Permission not granted. Tap again to allow it.",
+  "permBlockedNotice": "The request is blocked. Tap again to open system settings.",
   "settingsNotifications": "Notifications",
   "settingsNotifyDownloadProgress": "Download progress",
   "settingsNotifyDownloadProgressDesc": "Shows progress in the notification shade. Downloads keep going when the app is in the background.",

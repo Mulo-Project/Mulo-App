@@ -2663,6 +2663,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get permBlockedDesc => '요청이 막혀 있어요. 눌러서 휴대폰 설정에서 켜 주세요.';
 
   @override
+  String get permDeniedNotice => '권한이 허용되지 않았어요. 다시 눌러 허용해 주세요.';
+
+  @override
+  String get permBlockedNotice => '권한 요청이 막혔어요. 다시 누르면 휴대폰 설정이 열려요.';
+
+  @override
   String get settingsNotifications => '알림';
 
   @override

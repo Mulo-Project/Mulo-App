@@ -4964,6 +4964,18 @@ abstract class AppLocalizations {
   /// **'요청이 막혀 있어요. 눌러서 휴대폰 설정에서 켜 주세요.'**
   String get permBlockedDesc;
 
+  /// No description provided for @permDeniedNotice.
+  ///
+  /// In ko, this message translates to:
+  /// **'권한이 허용되지 않았어요. 다시 눌러 허용해 주세요.'**
+  String get permDeniedNotice;
+
+  /// No description provided for @permBlockedNotice.
+  ///
+  /// In ko, this message translates to:
+  /// **'권한 요청이 막혔어요. 다시 누르면 휴대폰 설정이 열려요.'**
+  String get permBlockedNotice;
+
   /// No description provided for @settingsNotifications.
   ///
   /// In ko, this message translates to:

@@ -41,16 +41,19 @@ class PermissionsCubit extends Cubit<PermissionsState> {
   }
 
   /// 토글을 눌렀을 때. 요청할 수 있으면 요청 창, 아니면 (이미 허용했거나 막힘) 시스템 설정을 연다.
-  Future<void> toggle(AppPermission permission) async {
+  /// 요청 창을 띄웠으면 그 결과를 돌려준다 (허용이 아니면 화면이 안내를 보인다). 설정을 열었으면 null.
+  Future<PermissionLevel?> toggle(AppPermission permission) async {
     final current = state.levels[permission];
-    if (current == null) return;
+    if (current == null) return null;
     if (current == PermissionLevel.denied) {
       final next = await _request(permission);
-      if (isClosed) return;
+      if (isClosed) return next;
       emit(PermissionsState(levels: {...state.levels, permission: next}));
+      return next;
     } else {
       // 허용한 권한은 앱 안에서 거둘 수 없고, 막힌 권한은 요청 창이 뜨지 않는다.
       await _openSettings(const NoParams());
+      return null;
     }
   }
 }
