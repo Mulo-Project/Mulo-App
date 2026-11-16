@@ -166,7 +166,15 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
             args += listOf("-map", "0:V", "-map", "0:a?", "-map", "1:v", "-disposition:v:1", "attached_pic")
             for ((key, value) in entriesOf(values, upper = false)) args += listOf("-metadata", "$key=$value")
             args += listOf("-c", "copy", "-movflags", "+use_metadata_tags", "-f", "ipod", output)
-            if (runFfmpeg(args, output)) return true
+            try {
+                if (runFfmpeg(args, output)) {
+                    MuloLog.d(MuloLog.NATIVE, "MuloTag mp4 cover: ipod 껍데기로 씀")
+                    return true
+                }
+            } catch (e: Exception) {
+                // 코덱을 ipod이 거부하면 그림 없이 글 태그만 쓴다.
+                MuloLog.d(MuloLog.NATIVE, "MuloTag mp4 cover: ipod 실패, 그림 없이 씀 (${e.message?.takeLast(200)})")
+            }
         }
         val args = mutableListOf("-nostdin", "-y", "-i", input, "-map", "0")
         for ((key, value) in entriesOf(values, upper = false)) args += listOf("-metadata", "$key=$value")
