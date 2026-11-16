@@ -159,6 +159,9 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   /// 아직 끝나지 않은 엔진 작업 수. 작업 중에 오는 재생 · 곡 넘김 신호는 우리가 시킨 것이라 상태에 넣지 않는다.
   var _pending = 0;
 
+  /// 엔진이 곡을 여는 중이다. 이 사이에 다른 곡을 누르면 영상 디코더를 못 잡아 둘 다 실패하므로 누름을 무시한다.
+  var _loading = false;
+
   /// 엔진이 지금 쥐고 있다고 보는 대기열 (목록 · 반복 · extras만 비교한다).
   var _pushed = const PlaybackSnapshot(items: [], index: 0, playing: false);
 
@@ -370,6 +373,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   Future<void> _push(AudioPlayback a, PlaybackSnapshot snapshot) async {
     final current = snapshot.current;
     if (current == null || state.track?.id != current.id) return; // 그새 바뀜
+    _loading = true;
     try {
       if (current.uri.isEmpty) throw StateError('empty uri');
       final result = await a.setQueue(snapshot);
@@ -381,6 +385,8 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
       if (!isClosed && state.track?.id == current.id) {
         emit(state.copyWith(isPlaying: false, position: Duration.zero));
       }
+    } finally {
+      _loading = false;
     }
   }
 
@@ -565,6 +571,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
 
   void playQueue(List<Track> queue, {int index = 0}) {
     if (queue.isEmpty) return;
+    if (_loading) return;
     final at = index.clamp(0, queue.length - 1);
     if (_audio != null) {
       // 엔진이 있으면 섞는 일은 엔진이 한다: 섞기 전 순서로 보내고 셔플로 시작하게 한다.
