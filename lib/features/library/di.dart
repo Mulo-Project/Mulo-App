@@ -62,6 +62,7 @@ void registerLibrary(GetIt sl) {
     ..registerFactory(() => WatchLibraryTracks(sl(), sl()))
     ..registerFactory(() => UpdateTrackInfo(sl(), sl()))
     ..registerFactory(() => EmbedTagsIntoFiles(sl(), sl(), sl(), sl(), sl()))
+    ..registerFactory(() => EmbedTrackCover(sl(), sl(), sl(), sl()))
     ..registerFactory(() => RestoreFromFileTags(sl(), sl(), sl(), sl(), sl()))
     ..registerFactory(() => DeleteTrack(sl(), sl()))
     ..registerFactory(() => GetTrackFileInfo(sl()))

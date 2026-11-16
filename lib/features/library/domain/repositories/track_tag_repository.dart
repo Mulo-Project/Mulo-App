@@ -21,8 +21,13 @@ enum TagWriteResult {
 /// 곡 파일의 태그에 정보를 쓴다 (파일이 곡 정보의 원본이 되도록).
 abstract interface class TrackTagRepository {
   /// [track]의 제목 · 아티스트 · 앨범 · 장르(와 [cover])를 파일 태그에 쓴다.
-  /// 실패해도 파일은 그대로 둔다.
-  Future<TagWriteResult> write(Track track, {CoverArt? cover, int? color});
+  /// 실패해도 파일은 그대로 둔다. [interactive]면 사용자가 직접 한 저장이라, 쓸 권한이 없을 때 시스템 동의 창을 띄운다.
+  Future<TagWriteResult> write(
+    Track track, {
+    CoverArt? cover,
+    int? color,
+    bool interactive = false,
+  });
 
   /// [track] 파일의 가사 태그에 [lyrics] 글(싱크 가사면 `.lrc` 원문)을 쓴다. 다른 태그는 건드리지 않는다.
   /// 비어 있으면 쓰지 않는다 (이미 파일에 있는 가사는 지워지지 않는다).

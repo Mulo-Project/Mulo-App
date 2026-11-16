@@ -240,6 +240,39 @@ class UpdateTrackInfo
   }
 }
 
+/// 곡에 붙인 커버(웹 이미지 · 기기 사진, 확대 · 위치 포함)를 곡 파일의 태그에 쓴다.
+/// 커버를 고르거나 고친 뒤에 부른다: 앱 DB에만 있으면 앱 데이터를 지운 뒤 처음 받을 때의 썸네일로 돌아간다.
+/// 커버가 없으면 쓸 것이 없어 [TagWriteResult.unsupported]. 사용자가 직접 한 일이라 쓸 권한이 없으면 동의 창을 띄운다.
+class EmbedTrackCover implements UseCase<TagWriteResult, String> {
+  const EmbedTrackCover(this._library, this._covers, this._colors, this._tags);
+
+  final LibraryRepository _library;
+  final CoverRepository _covers;
+  final CoverColorRepository _colors;
+  final TrackTagRepository _tags;
+
+  @override
+  Future<TagWriteResult> call(String trackId) async {
+    final tracks = await _library.watchTracks().first;
+    final track = tracks.where((t) => t.id == trackId).firstOrNull;
+    if (track == null || track.uri.isEmpty) return TagWriteResult.unsupported;
+    final key = CoverKey.track(trackId);
+    final cover = (await _covers.loadAll())[key];
+    if (cover == null) return TagWriteResult.unsupported;
+    final color = (await _colors.loadAll())[key];
+    try {
+      return await _tags.write(
+        track,
+        cover: cover,
+        color: color,
+        interactive: true,
+      );
+    } on Object {
+      return TagWriteResult.failed;
+    }
+  }
+}
+
 /// 받아 둔 곡의 파일 태그에 정보를 한꺼번에 쓴다 (기존 파일 이관). 앱이 뜬 뒤 뒤에서 돈다.
 /// 곡마다 끝낸 id를 기록해 중간에 꺼져도 이어서 하고, 쓸 수 없는 파일은 다시 시도하지 않는다.
 /// 이번에 태그를 쓴 곡 수를 돌려준다.

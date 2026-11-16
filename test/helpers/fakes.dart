@@ -901,6 +901,7 @@ class FakeTrackTagRepository implements TrackTagRepository {
     Track track, {
     CoverArt? cover,
     int? color,
+    bool interactive = false,
   }) async => result;
 
   @override

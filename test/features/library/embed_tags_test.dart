@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/core/usecase/usecase.dart';
 import 'package:music_download_play_app/features/covers/domain/entities/cover_art.dart';
+import 'package:music_download_play_app/features/covers/domain/entities/cover_key.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track_info.dart';
 import 'package:music_download_play_app/features/library/domain/repositories/track_tag_repository.dart';
@@ -28,6 +29,8 @@ class _Tags implements TrackTagRepository {
 
   final written = <String>[];
   String? lastTitle;
+  CoverArt? lastCover;
+  bool? lastInteractive;
   TagWriteResult result = TagWriteResult.written;
 
   @override
@@ -35,9 +38,12 @@ class _Tags implements TrackTagRepository {
     Track track, {
     CoverArt? cover,
     int? color,
+    bool interactive = false,
   }) async {
     written.add(track.id);
     lastTitle = track.title;
+    lastCover = cover;
+    lastInteractive = interactive;
     return result;
   }
 
@@ -95,6 +101,45 @@ void main() {
     );
     expect(await useCase(const NoParams()), 0);
     expect(done.done, {'d1'});
+  });
+
+  group('EmbedTrackCover: 고른 커버를 곡 파일 태그에 쓴다', () {
+    test('웹 커버와 확대 · 위치를 그대로 넘기고, 사용자가 한 저장이라 동의 창을 허용한다', () async {
+      final covers = MemoryCoverRepository();
+      const transform = CoverTransform(scale: 1.5, dx: .1);
+      await covers.saveUrl(
+        CoverKey.track('d1'),
+        'https://example.com/a.jpg',
+        transform: transform,
+      );
+      final tags = _Tags();
+      final useCase = EmbedTrackCover(
+        FakeLibraryRepository([_track('d1', TrackSource.download)]),
+        covers,
+        MemoryCoverColorRepository(),
+        tags,
+      );
+
+      expect(await useCase('d1'), TagWriteResult.written);
+      expect(tags.written, ['d1']);
+      expect(
+        tags.lastCover,
+        const CoverArt.web('https://example.com/a.jpg', transform: transform),
+      );
+      expect(tags.lastInteractive, isTrue);
+    });
+
+    test('커버가 없으면 쓰지 않는다', () async {
+      final tags = _Tags();
+      final useCase = EmbedTrackCover(
+        FakeLibraryRepository([_track('d1', TrackSource.download)]),
+        MemoryCoverRepository(),
+        MemoryCoverColorRepository(),
+        tags,
+      );
+      expect(await useCase('d1'), TagWriteResult.unsupported);
+      expect(tags.written, isEmpty);
+    });
   });
 
   group('UpdateTrackInfo: 태그를 먼저 쓰고 DB에 저장', () {
