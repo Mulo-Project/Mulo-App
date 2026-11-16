@@ -437,10 +437,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsEngineRevertFailed => '지우지 못했어요. 잠시 후 다시 시도해 주세요.';
 
   @override
-  String get downloadEngineOutdated =>
-      '받기 엔진이 오래돼서 받지 못했어요. 업데이트하고 있으니 잠시 뒤 다시 받아 주세요.';
-
-  @override
   String get settingsEngineBundled => '앱에 들어 있는 yt-dlp';
 
   @override
@@ -1952,6 +1948,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get trackInfoSourceDownload => '받은 곡';
+
+  @override
+  String get downloadEngineOutdated =>
+      '받기 엔진이 오래돼서 받지 못했어요. 업데이트하고 있으니 잠시 뒤 다시 받아 주세요.';
 
   @override
   String downloadTagFailed(String title) {
