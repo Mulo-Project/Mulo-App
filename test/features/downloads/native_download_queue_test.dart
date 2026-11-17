@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:music_download_play_app/features/downloads/data/repositories/native_download_queue_repository.dart';
 import 'package:music_download_play_app/features/downloads/domain/entities/download_item.dart';
 import 'package:music_download_play_app/features/downloads/domain/entities/download_options.dart';
@@ -43,7 +42,6 @@ void main() {
   }
 
   setUp(() {
-    SharedPreferences.setMockInitialValues({});
     settings = MemoryDownloadSettings();
     calls = [];
     snapshot = [];

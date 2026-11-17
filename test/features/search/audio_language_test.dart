@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/core/design/design.dart';
-import 'package:music_download_play_app/features/downloads/data/datasources/download_queue_store.dart';
+import 'package:music_download_play_app/features/downloads/data/datasources/download_request_codec.dart';
 import 'package:music_download_play_app/features/downloads/domain/entities/download_request.dart';
 import 'package:music_download_play_app/features/search/domain/entities/audio_language.dart';
 import 'package:music_download_play_app/features/search/domain/usecases/search_usecases.dart';
@@ -86,13 +86,13 @@ void main() {
     expect(cubit.state.choosable, isFalse);
   });
 
-  test('받기 요청의 오디오 언어는 대기열에 저장했다가 그대로 읽는다', () {
+  test('받기 요청의 오디오 언어는 있을 때만 네이티브에 넘긴다', () {
     const request = DownloadRequest(
       title: 't',
       url: 'https://x/v',
       audioLanguage: 'ko',
     );
-    expect(decodeDownloadRequest(encodeDownloadRequest(request)), request);
+    expect(encodeDownloadRequest(request)['audioLanguage'], 'ko');
     expect(
       encodeDownloadRequest(
         const DownloadRequest(title: 't', url: 'https://x/v'),

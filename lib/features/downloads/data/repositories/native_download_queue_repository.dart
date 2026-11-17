@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/config/default_video_folder.dart';
 import '../../../covers/domain/entities/cover_art.dart';
@@ -12,7 +11,7 @@ import '../../domain/entities/download_source.dart';
 import '../../domain/entities/tag_notice.dart';
 import '../../domain/repositories/download_queue_repository.dart';
 import '../../domain/repositories/download_settings_repository.dart';
-import '../datasources/download_queue_store.dart';
+import '../datasources/download_request_codec.dart';
 
 /// 받기 큐 저장소 (Android): 받기 큐 · 이어받기 · 변환 · 태그 · 저장 · 보관함 등록은 모두 네이티브(`music_app/downloads`,
 /// Kotlin `DownloadEngine`)가 한다. 여기서는 요청을 넘기고 네이티브가 알려 주는 상태를 그리는 데 쓴다.
@@ -48,18 +47,6 @@ class NativeDownloadQueueRepository implements DownloadQueueRepository {
   Future<void> _ensureReady() => _ready ??= _init();
 
   Future<void> _init() async {
-    // 옛 버전(Dart 큐)이 shared_preferences에 남긴 대기열을 네이티브가 한 번 가져간다.
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await _channel.invokeMethod<void>('importLegacy', {
-        'queue': prefs.getString('download.queue'),
-        'sources': prefs.getString('download.sources'),
-      });
-    } on PlatformException {
-      // 가져오기는 덤이다.
-    } on MissingPluginException {
-      // 네이티브가 없는 빌드(데스크톱 등)는 받기를 쓸 수 없다.
-    }
     try {
       await _openLibrary();
       await _channel.invokeMethod<void>('dbReady');

@@ -142,8 +142,15 @@ class DownloadEngine(
         }
     }
 
-    /** 앱의 옛 저장(shared_preferences)에서 한 번 가져온다. 이미 네이티브 기록이 있으면 아무것도 하지 않는다. */
-    fun importLegacy(queueJson: String?, sourcesJson: String?) {
+    /**
+     * 옛 버전(Dart 큐)이 shared_preferences(`FlutterSharedPreferences`)에 남긴 대기열 · 받은 곡 기록을 한 번 가져온다.
+     * 이미 네이티브 기록이 있으면 아무것도 하지 않고, 가져온 뒤에는 옛 기록을 지운다.
+     */
+    private fun importLegacy() {
+        val legacy = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+        val queueJson = legacy.getString("flutter.download.queue", null)
+        val sourcesJson = legacy.getString("flutter.download.sources", null)
+        if (queueJson == null && sourcesJson == null) return
         synchronized(lock) {
             if (queueFile.exists() || sourcesFile.exists()) return
             try {
@@ -171,6 +178,7 @@ class DownloadEngine(
                 MuloLog.e(MuloLog.NATIVE, "옛 받기 기록 가져오기 실패: ${e.message}", e)
             }
         }
+        legacy.edit().remove("flutter.download.queue").remove("flutter.download.sources").apply()
         persist()
         persistSources()
         emitQueue()
@@ -188,6 +196,8 @@ class DownloadEngine(
 
     /** 보관함 DB를 Dart가 연 뒤 부른다: 맡겨 둔 등록이 있으면 쓰고, 썼으면 Dart가 목록을 다시 읽게 알린다. */
     fun dbReady() {
+        // 앱이 처음 열릴 때 옛 Dart 큐의 기록이 있으면 한 번 가져온다 (Dart는 관여하지 않는다).
+        importLegacy()
         saver.execute { if (pending.flush() > 0) emit("libraryChanged", null) }
     }
 

@@ -9,7 +9,7 @@ import org.json.JSONObject
  *
  * Dart → 네이티브: `enqueue`(request JSON 글 → id) · `pause` · `resume` · `retry` · `cancel`(id) · `cancelAll`(playlistId? → 뺀 곡 수) ·
  * `snapshot`(→ 대기열 목록) · `findExisting`(url → trackId? · inQueue) · `sourceUrlOf`(trackId → url?) ·
- * `configure`(알림 글 · 설정 JSON 글) · `setPreviewing`(id?) · `dbReady`(앱이 DB를 열었다) · `importLegacy`(queue? · sources?).
+ * `configure`(알림 글 · 설정 JSON 글) · `setPreviewing`(id?) · `dbReady`(앱이 DB를 열었다. 옛 Dart 큐 기록 이전도 이때 네이티브가 한다).
  * 네이티브 → Dart: `queue`(목록) · `tagNotice`(title · extension · ok · detail) · `saved`(폴더) · `engineError`(글) · `libraryChanged`.
  */
 class DownloadChannel(
@@ -39,10 +39,6 @@ class DownloadChannel(
                     "configure" -> { engine.configure(JSONObject(call.argument<String>("config") ?: "{}")); result.success(null) }
                     "setPreviewing" -> { engine.previewingId = call.argument<String>("id"); result.success(null) }
                     "dbReady" -> { engine.dbReady(); result.success(null) }
-                    "importLegacy" -> {
-                        engine.importLegacy(call.argument<String>("queue"), call.argument<String>("sources"))
-                        result.success(null)
-                    }
                     else -> result.notImplemented()
                 }
             } catch (e: Exception) {
