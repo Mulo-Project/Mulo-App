@@ -100,7 +100,6 @@ class ShowDownloadProgress implements UseCase<void, DownloadProgressNotice> {
     stopLabel: params.stopLabel,
     openId: params.openId,
     artUri: params.artUri,
-    retryLabel: params.retryLabel,
   );
 }
 
@@ -145,6 +144,7 @@ class ShowDownloadResult implements UseCase<void, DownloadResultNotice> {
     body: params.body,
     failed: params.failed,
     artUri: params.artUri,
+    retryLabel: params.retryLabel,
   );
 }
 
