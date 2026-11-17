@@ -25,6 +25,7 @@ object YoutubeBrowser {
         CHANNEL("EgIQAg=="),
         PLAYLIST("EgIQAw=="),
     }
+    private const val NEWEST_VIDEO_PARAMS = "CAISAhAB"
     private const val MAX_SESSIONS = 3
     private const val MAX_PLAYLIST_PAGES = 60 // 6000곡까지
 
@@ -55,7 +56,7 @@ object YoutubeBrowser {
         )
     }
 
-    private class SearchSession(val kind: Kind, val query: String) {
+    private class SearchSession(val kind: Kind, val query: String, val params: String) {
         val all = ArrayList<Map<String, Any?>>()
         val seen = HashSet<String>()
         var token: String? = null
@@ -95,6 +96,10 @@ object YoutubeBrowser {
     /** 동영상 검색의 [page]쪽(0부터) [size]개. 반환: items · hasNext. */
     fun search(query: String, page: Int, size: Int): Map<String, Any?> = searchPage(Kind.VIDEO, query, page, size)
 
+    /** 동영상 검색을 올린 날짜 순(최신순)으로. 유튜브 검색 필터 `정렬 = 업로드 날짜 + 유형 = 동영상`(protobuf `08 02 12 02 10 01`)을 쓴다. */
+    fun searchNewest(query: String, page: Int, size: Int): Map<String, Any?> =
+        searchPage(Kind.VIDEO, query, page, size, NEWEST_VIDEO_PARAMS)
+
     /** 재생목록 검색. 항목: id · title · channel · thumbnail · trackCount?. */
     fun searchPlaylists(query: String, page: Int, size: Int): Map<String, Any?> =
         searchPage(Kind.PLAYLIST, query, page, size)
@@ -105,10 +110,10 @@ object YoutubeBrowser {
         return searchPage(Kind.CHANNEL, query, 0, 30)["items"] as List<Map<String, Any?>>
     }
 
-    private fun searchPage(kind: Kind, query: String, page: Int, size: Int): Map<String, Any?> {
+    private fun searchPage(kind: Kind, query: String, page: Int, size: Int, params: String = kind.filter): Map<String, Any?> {
         val start = System.currentTimeMillis()
-        val key = "${kind.filter}|$query"
-        val session = synchronized(sessions) { sessions.getOrPut(key) { SearchSession(kind, query) } }
+        val key = "$params|$query"
+        val session = synchronized(sessions) { sessions.getOrPut(key) { SearchSession(kind, query, params) } }
         // 같은 검색의 요청이 겹쳐도 차례로 읽는다 (같은 continuation을 두 번 쓰지 않게).
         synchronized(session) {
             val want = (page + 1) * size
@@ -138,7 +143,7 @@ object YoutubeBrowser {
         var requests = 0
         while (session.all.size < want && !session.done) {
             val body = JSONObject().put("context", JSONObject().put("client", WEB_CLIENT))
-            if (!session.started) body.put("query", session.query).put("params", session.kind.filter)
+            if (!session.started) body.put("query", session.query).put("params", session.params)
             else body.put("continuation", session.token)
             val root = post("search", body)
             requests++

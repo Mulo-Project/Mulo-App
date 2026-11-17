@@ -17,9 +17,9 @@ class YtDlpManager implements EngineManager {
     if (!Platform.isAndroid || !await _android.isAvailable()) {
       return const EngineStatus(supported: false);
     }
-    // 버전은 업데이트한 뒤에만 있다. 없으면 APK에 들어 있는 yt-dlp를 쓰는 중이다 (항상 쓸 수 있다).
-    final version = await _android.version();
-    return EngineStatus(installed: true, version: version, managed: true);
+    // yt-dlp는 APK에 들어 있어 항상 쓸 수 있다. 버전을 읽으면 yt-dlp를 켜야 해서
+    // 화면을 열 때마다 하지 않는다 (검색 · 설정은 켜지 않고도 열려야 한다).
+    return const EngineStatus(installed: true, managed: true);
   }
 
   @override

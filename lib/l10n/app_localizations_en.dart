@@ -534,13 +534,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lockHint => 'Enter your PIN.';
 
   @override
-  String get settingsBackgroundDownload => 'Background downloads';
-
-  @override
-  String get settingsBackgroundDownloadDesc =>
-      'Keeps downloading when the app is in the background or closed. A notification stays up while downloading.';
-
-  @override
   String get settingsHideNotification => 'Hide song info in notification';
 
   @override
@@ -665,6 +658,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerSleepTimerOff => 'Turn off timer';
 
   @override
+  String get settingsFormatOriginal => 'Original';
+
+  @override
+  String downloadFormatOriginal(String format) {
+    return 'Original ($format)';
+  }
+
+  @override
   String playerSleepTimerMinutes(int minutes) {
     return 'Stop in $minutes min';
   }
@@ -685,6 +686,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playerSleepTimerCleared => 'Sleep timer is off';
+
+  @override
+  String get playerSleepTimerEnded => 'Playback stopped by the sleep timer';
 
   @override
   String get playerEqualizer => 'Equalizer';
@@ -1998,6 +2002,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trackInfoSourceDownload => 'Downloaded';
 
   @override
+  String get downloadEngineOutdated =>
+      'The download engine is out of date, so the download failed. It is updating now. Please try again in a moment.';
+
+  @override
   String downloadTagFailed(String title) {
     return 'Could not save tags: $title';
   }
@@ -2730,6 +2738,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Blocked. Tap to turn it on in system settings.';
 
   @override
+  String get permDeniedNotice => 'Permission not granted. Tap again to allow it.';
+
+  @override
+  String get permMediaBlockedNotice =>
+      'Music and video access is off, so this can’t play. Allow it in settings.';
+
+  @override
+  String get permOpenSettings => 'Open settings';
+
+  @override
+  String get permBlockedNotice =>
+      'The request is blocked. Tap again to open system settings.';
+
+  @override
   String get settingsNotifications => 'Notifications';
 
   @override
@@ -2737,7 +2759,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsNotifyDownloadProgressDesc =>
-      'Shows progress in the notification shade. Downloads keep going when the app is in the background.';
+      'Shows progress in the notification shade. Downloads keep going when the app is in the background or closed.';
 
   @override
   String get settingsNotifyDownloadResult => 'Download results';
@@ -2888,6 +2910,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifDownloadFailedTitle => 'Download failed';
+
+  @override
+  String get notifDownloadRetry => 'Retry';
 
   @override
   String get notifDownloadFailedHidden => 'A song could not be downloaded';

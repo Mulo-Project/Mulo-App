@@ -46,6 +46,27 @@ class YtDlpEngine(
 
     private fun nextId(): String = synchronized(this) { "engine${seq++}" }
 
+    // 받기처럼 나중에 끊을 일은 이름표를 달아 두고, 이름표로 돌고 있는 yt-dlp를 끊는다 (일시정지 · 취소).
+    private val tagOfThread = ThreadLocal<String?>()
+    private val activeByTag = java.util.concurrent.ConcurrentHashMap<String, MutableSet<String>>()
+
+    /** [block] 안에서 도는 yt-dlp 실행에 [tag]를 단다. */
+    fun <T> tagged(tag: String, block: () -> T): T {
+        tagOfThread.set(tag)
+        try {
+            return block()
+        } finally {
+            tagOfThread.remove()
+        }
+    }
+
+    /** [tag]를 단 yt-dlp 실행을 모두 끊는다. */
+    fun cancelTagged(tag: String) {
+        val ids = activeByTag[tag]?.toList() ?: return
+        ids.forEach { runner.cancel(it) }
+        MuloLog.d(MuloLog.NATIVE, "yt-dlp 끊음 $tag (${ids.size}개)")
+    }
+
     /** 사이트 검색은 쪽 개념이 없어서 (page+1)*size개를 받아 해당 쪽만 자른다. [prefix]는 `ytsearch` 같은 검색 키. */
     fun search(prefix: String, query: String, page: Int, size: Int): Map<String, Any?> {
         val want = (page + 1) * size
@@ -201,6 +222,9 @@ class YtDlpEngine(
                     return
                 }
                 MuloLog.d(MuloLog.NATIVE, "영상 저장 네이티브 안 씀($extension, 주소 · 형식이 맞지 않거나 읽을 주소 없음), yt-dlp로")
+            } catch (e: java.util.concurrent.CancellationException) {
+                // 일시정지 · 취소: yt-dlp로 넘어가지 않고 그대로 멈춘다.
+                throw e
             } catch (e: Exception) {
                 MuloLog.d(MuloLog.NATIVE, "영상 저장 네이티브 실패, yt-dlp로: ${e.message}")
             }
@@ -208,13 +232,22 @@ class YtDlpEngine(
         // 기본 클라이언트로 받다가 403(Forbidden) 같은 오류가 나면 `android_vr`로 한 번 더 시도한다 (주소 읽기와 같은 순서).
         withFallback { extra ->
             val id = nextId()
+            val tag = tagOfThread.get()
+            if (tag != null) activeByTag.getOrPut(tag) { java.util.concurrent.ConcurrentHashMap.newKeySet() }.add(id)
             val args = listOf(
                 "-f", YtDlpParsers.saveSelector(maxHeight, extension),
                 "--merge-output-format", extension,
                 "--no-playlist", "--no-warnings", "--newline",
+                // 인터넷이 끊겼다 돌아와도(와이파이 · 데이터 전환) 포기하지 않는다: 쉬는 시간을 2 · 4 · 8 · 16초, 이후 20초씩으로 늘리며
+                // 다시 시도한다 (모두 약 5분).
+                "--retries", "20", "--fragment-retries", "20", "--extractor-retries", "10", "--retry-sleep", "exp=2:20",
                 "-o", File(dir, "$stem.%(ext)s").path,
             ) + extra + url
-            val r = runWithTimeout(id, saveTimeoutMs) { runner.run(args, id, onProgress) }
+            val r = try {
+                runWithTimeout(id, saveTimeoutMs) { runner.run(args, id, onProgress) }
+            } finally {
+                if (tag != null) activeByTag[tag]?.remove(id)
+            }
             if (r.exitCode != 0) throw YtDlpException(YtDlpParsers.failureCode(r.stderr.trim()), r.stderr.trim())
         }
     }
@@ -244,8 +277,14 @@ class YtDlpEngine(
     private fun execNow(args: List<String>, label: String): String {
         if (!runner.available) throw YtDlpException("unavailable", "yt-dlp")
         val id = nextId()
+        val tag = tagOfThread.get()
+        if (tag != null) activeByTag.getOrPut(tag) { java.util.concurrent.ConcurrentHashMap.newKeySet() }.add(id)
         val start = System.currentTimeMillis()
-        val r = runWithTimeout(id, timeoutMs) { runner.run(args, id) }
+        val r = try {
+            runWithTimeout(id, timeoutMs) { runner.run(args, id) }
+        } finally {
+            if (tag != null) activeByTag[tag]?.remove(id)
+        }
         MuloLog.d(MuloLog.NATIVE, "yt-dlp ${System.currentTimeMillis() - start}ms 종료 ${r.exitCode} [$label]")
         if (r.exitCode != 0) {
             val err = r.stderr.trim()

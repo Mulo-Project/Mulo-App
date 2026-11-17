@@ -26,7 +26,8 @@ class YtDlpEngineChannel(
 ) : NativeChannel(messenger, NAME) {
     private val io: ExecutorService = Executors.newCachedThreadPool()
     private val saver = NativeVideoSaver({ File(context.cacheDir, "save") }, mux)
-    private val engine = YtDlpEngine(
+    /** 받기 큐([DownloadEngine])도 같은 엔진을 쓴다. */
+    val engine = YtDlpEngine(
         runner,
         { File(context.cacheDir, "sub_${System.nanoTime()}") },
         nativeSave = saver::save,

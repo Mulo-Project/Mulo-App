@@ -186,7 +186,13 @@ object YtDlpParsers {
     /** 소리 주소 하나 (주소가 없으면 null). */
     fun audio(j: JSONObject): Map<String, Any?>? {
         val url = text(j, "url") ?: return null
-        return mapOf("url" to url, "headers" to headers(j))
+        // HLS(`m3u8`) 주소는 목록 파일이라 그대로 받으면 안 되고 조각까지 받아 합쳐야 한다 (사운드클라우드 등).
+        return mapOf(
+            "url" to url,
+            "headers" to headers(j),
+            "hls" to (text(j, "protocol")?.contains("m3u8") == true),
+            "codec" to text(j, "acodec"),
+        )
     }
 
     /** 영상 주소 하나. 소리가 같이 든 형식이면 `muxed`. */
@@ -229,7 +235,9 @@ object YtDlpParsers {
     /** yt-dlp 오류 글에서 실패 까닭을 고른다 (Dart `EngineFailure` 이름). */
     fun failureCode(stderr: String): String = when {
         stderr.contains("Unsupported URL") -> "not_found"
-        stderr.contains("Unable to download") || stderr.contains("getaddrinfo") -> "network"
+        stderr.contains("Unable to download") || stderr.contains("getaddrinfo") ||
+            stderr.contains("Unable to resolve host") || stderr.contains("Network is unreachable") ||
+            stderr.contains("No address associated") || stderr.contains("[Errno 7]") -> "network"
         else -> "failed"
     }
 

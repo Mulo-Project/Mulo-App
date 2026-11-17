@@ -23,7 +23,10 @@ class MainActivity : FlutterFragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         MuloEngine.activity = this
+        // 엔진이 이미 있었는데 화면이 새로 열렸다면(설정 변경으로 다시 만든 것이 아니라) 밀어 닫았다 다시 켠 것이다.
+        val relaunch = MuloEngine.isAlive() && savedInstanceState == null
         super.onCreate(savedInstanceState)
+        if (relaunch) MuloEngine.notifyRelaunched()
         handleIntent(intent)
     }
 

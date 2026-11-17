@@ -56,6 +56,8 @@ class LibraryImportCubit extends Cubit<LibraryImportState> {
     );
     final outcome = await _import(const NoParams());
     if (isClosed) return;
+    // 새로 찾은 곡은 태그를 다 읽을 때까지 "정보 읽는 중"으로 표시한다 (커버 채우기가 길어도 그 사이 눌리지 않게).
+    if (outcome is ImportAdded) await _restoreTags?.markPending();
     emit(
       LibraryImportState(
         outcome: outcome,
@@ -67,6 +69,7 @@ class LibraryImportCubit extends Cubit<LibraryImportState> {
     // 파일 안 커버를 먼저 채우고, 태그의 웹 주소 커버는 그래도 커버가 없는 곡에만 쓴다 (네트워크 없이 보이도록).
     await _fillEmbeddedCovers();
     if (outcome is ImportAdded) await _restoreFromTags();
+    _restoreTags?.clearPending();
   }
 
   /// 파일 태그를 읽어 곡 정보 · 커버 편집 상태를 DB에 되살린다 (파일이 원본). 곡 목록은 DB 스트림이 갱신한다.

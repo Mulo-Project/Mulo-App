@@ -522,13 +522,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get lockHint => 'PIN을 입력하세요.';
 
   @override
-  String get settingsBackgroundDownload => '백그라운드 받기';
-
-  @override
-  String get settingsBackgroundDownloadDesc =>
-      '앱이 뒤로 가거나 닫혀도 받기를 이어 가요. 켜 두면 받는 동안 알림이 계속 떠 있어요.';
-
-  @override
   String get settingsHideNotification => '알림에 곡 정보 숨기기';
 
   @override
@@ -647,6 +640,14 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playerSleepTimerOff => '타이머 끄기';
 
   @override
+  String get settingsFormatOriginal => '원본 그대로';
+
+  @override
+  String downloadFormatOriginal(String format) {
+    return '원본 ($format)';
+  }
+
+  @override
   String playerSleepTimerMinutes(int minutes) {
     return '$minutes분 뒤 멈춤';
   }
@@ -667,6 +668,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get playerSleepTimerCleared => '수면 타이머를 껐어요';
+
+  @override
+  String get playerSleepTimerEnded => '수면 타이머로 재생을 멈췄어요';
 
   @override
   String get playerEqualizer => '이퀄라이저';
@@ -1950,6 +1954,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get trackInfoSourceDownload => '받은 곡';
 
   @override
+  String get downloadEngineOutdated =>
+      '받기 엔진이 오래돼서 받지 못했어요. 업데이트하고 있으니 잠시 뒤 다시 받아 주세요.';
+
+  @override
   String downloadTagFailed(String title) {
     return '태그를 저장하지 못했어요: $title';
   }
@@ -2659,13 +2667,25 @@ class AppLocalizationsKo extends AppLocalizations {
   String get permBlockedDesc => '요청이 막혀 있어요. 눌러서 휴대폰 설정에서 켜 주세요.';
 
   @override
+  String get permDeniedNotice => '권한이 허용되지 않았어요. 다시 눌러 허용해 주세요.';
+
+  @override
+  String get permMediaBlockedNotice => '음악·영상 권한이 없어 재생할 수 없어요. 설정에서 허용해 주세요.';
+
+  @override
+  String get permOpenSettings => '설정 열기';
+
+  @override
+  String get permBlockedNotice => '권한 요청이 막혔어요. 다시 누르면 휴대폰 설정이 열려요.';
+
+  @override
   String get settingsNotifications => '알림';
 
   @override
   String get settingsNotifyDownloadProgress => '받기 진행 알림';
 
   @override
-  String get settingsNotifyDownloadProgressDesc => '받는 동안 진행 상황을 알림창에 보여요.';
+  String get settingsNotifyDownloadProgressDesc => '받는 동안 진행 상황을 알림창에 보여요. 켜 두면 앱이 뒤로 가거나 닫혀도 받기를 이어 가요.';
 
   @override
   String get settingsNotifyDownloadResult => '받기 결과 알림';
@@ -2813,6 +2833,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get notifDownloadFailedTitle => '받기 실패';
+
+  @override
+  String get notifDownloadRetry => '다시 시도';
 
   @override
   String get notifDownloadFailedHidden => '곡을 받지 못했어요';

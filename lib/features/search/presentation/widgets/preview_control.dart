@@ -29,19 +29,6 @@ Future<bool> togglePreview(
   final preview = context.read<PreviewCubit>();
   final nowPlaying = context.read<NowPlayingCubit>();
 
-  // 언어를 정해 주지 않은 시작(목록 타일 등)도 상세 화면과 같은 시스템 언어 기본값을 쓴다.
-  if (audioLanguage == null &&
-      !preview.state.isActive(hit.id) &&
-      isYoutubeUrl(hit.url)) {
-    final fetch = sl.isRegistered<FetchAudioLanguages>()
-        ? sl<FetchAudioLanguages>()
-        : null;
-    if (fetch != null) {
-      audioLanguage = await defaultAudioLanguageFor(fetch, hit.url);
-      if (!context.mounted) return false;
-    }
-  }
-
   // 라이브는 끝이 없거나 아직 시작 전이라 주소가 없다. 이미 듣는 중이면 멈추기만 한다.
   if (hit.isLive && !preview.state.isActive(hit.id)) {
     if (announceFailure) {
@@ -57,6 +44,11 @@ Future<bool> togglePreview(
     hit,
     audioLanguage: audioLanguage,
     videoQuality: context.read<SavedVideosCubit>().qualityOf(hit.id),
+    // 언어를 정해 주지 않은 시작(목록 타일 등)도 상세 화면과 같은 시스템 언어 기본값을 쓴다 (로딩을 띄운 뒤에 읽는다).
+    defaultLanguage:
+        isYoutubeUrl(hit.url) && sl.isRegistered<FetchAudioLanguages>()
+        ? () => defaultAudioLanguageFor(sl<FetchAudioLanguages>(), hit.url)
+        : null,
   );
   if (failure != null) {
     if (!announceFailure) return false;

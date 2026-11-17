@@ -14,8 +14,12 @@ class TrackTagRepositoryImpl implements TrackTagRepository {
   final TrackTagSource _source;
 
   @override
-  Future<TagWriteResult> write(Track track, {CoverArt? cover, int? color}) =>
-      _source.write(
+  Future<TagWriteResult> write(
+    Track track, {
+    CoverArt? cover,
+    int? color,
+    bool interactive = false,
+  }) => _source.write(
         track.uri,
         title: track.title,
         artist: track.artist,
@@ -23,6 +27,7 @@ class TrackTagRepositoryImpl implements TrackTagRepository {
         genre: track.genre,
         cover: cover,
         color: color,
+        interactive: interactive,
       );
 
   @override
@@ -46,6 +51,10 @@ class TrackTagRepositoryImpl implements TrackTagRepository {
   @override
   Future<bool> ensureWriteAccess(Track track) =>
       _source.ensureWriteAccess(track.uri);
+
+  @override
+  Future<bool> ensureWriteAccessAll(List<Track> tracks) =>
+      _source.ensureWriteAccessAll([for (final t in tracks) t.uri]);
 }
 
 class FileTagRepositoryImpl implements FileTagRepository {

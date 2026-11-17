@@ -56,9 +56,27 @@ class NativeYoutubeResolver {
           ),
       ];
     } on PlatformException catch (e) {
-      throw EngineException(EngineFailure.failed, e.message ?? e.code);
+      final message = e.message ?? e.code;
+      throw EngineException(
+        // 인터넷이 끊기거나 전환되면(이름 확인 실패 · 연결 안 됨) 네트워크 오류로 알린다 (받기는 다시 시도하면 이어 받는다).
+        _isNetworkMessage(message)
+            ? EngineFailure.network
+            : EngineFailure.failed,
+        message,
+      );
     }
   }
+
+  static final _networkMessage = RegExp(
+    'Unable to resolve host|No address associated|UnknownHost|'
+    'Network is unreachable|Failed to connect|ConnectException|'
+    'SocketException|Connection reset|Software caused connection abort|'
+    'connection abort',
+    caseSensitive: false,
+  );
+
+  static bool _isNetworkMessage(String message) =>
+      _networkMessage.hasMatch(message);
 
   /// 유튜브와 연결을 미리 열어 둔다 (이어지는 검색 요청이 재사용한다).
   Future<void> warmUp() async {
@@ -70,11 +88,24 @@ class NativeYoutubeResolver {
   }
 
   /// 키워드 검색 한 쪽 (유튜브 동영상만). 같은 검색어의 다음 쪽은 네이티브가 이어 읽는다.
-  Future<SearchPage> search(String query, int page, int size) async {
+  Future<SearchPage> search(String query, int page, int size) =>
+      _search(query, page, size, newest: false);
+
+  /// [search]와 같지만 올린 날짜 순(최신순)이다.
+  Future<SearchPage> searchNewest(String query, int page, int size) =>
+      _search(query, page, size, newest: true);
+
+  Future<SearchPage> _search(
+    String query,
+    int page,
+    int size, {
+    required bool newest,
+  }) async {
     final r = await _call('search', {
       'query': query,
       'page': page,
       'size': size,
+      if (newest) 'newest': true,
     });
     if (r == null) throw const EngineException(EngineFailure.failed, 'empty');
     return SearchPage(

@@ -78,6 +78,31 @@ void main() {
       expect(done.done, {'a'});
     });
 
+    test('읽는 동안 태그를 못 읽은 곡을 "정보 읽는 중"으로 표시하고, 끝나면 모두 치운다', () async {
+      final library = FakeLibraryRepository([
+        _track('a'),
+        _track('b'),
+        _track('d', source: TrackSource.download),
+      ]);
+      final pending = PendingTagTracks();
+      final useCase = RestoreFromFileTags(
+        library,
+        MemoryCoverRepository(),
+        MemoryCoverColorRepository(),
+        _Reader({
+          'content://a': const FileTags(title: 'A'),
+          'content://b': const FileTags(title: 'B'),
+        }),
+        _Done(),
+        pending,
+      );
+
+      await useCase.markPending();
+      expect(pending.ids, {'a', 'b'});
+      await useCase(const NoParams());
+      expect(pending.ids, isEmpty);
+    });
+
     test('받은 곡 · 이미 한 곡은 읽지 않고, 앱 안의 커버 · 색은 덮지 않는다', () async {
       final library = FakeLibraryRepository([
         _track('a'),
@@ -134,8 +159,7 @@ void main() {
         'artist': '가수',
         'album': '앨범',
         'genre': '록',
-        'cover_color': 'ff112233',
-      });
+      }, 0xFF112233);
       expect([a.title, a.artist, a.album, a.genre], ['제목', '가수', '앨범', '록']);
       expect(a.coverColor, 0xFF112233);
       final b = FileTagSource.parse({'title': ' T '});

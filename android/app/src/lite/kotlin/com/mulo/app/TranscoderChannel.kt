@@ -14,11 +14,20 @@ class TranscoderChannel(@Suppress("UNUSED_PARAMETER") context: Context, messenge
     // ffmpeg가 없어 태그를 쓰지 않는다 ([TagChannel]이 unsupported로 답한다).
     fun isAvailable(): Boolean = false
 
+    fun cancelProcess() {}
+
+    @Suppress("UNUSED_PARAMETER")
+    fun convertAudio(input: String, output: String, codec: String, bitrate: Int, format: String): Boolean = false
+
     @Suppress("UNUSED_PARAMETER")
     fun mux(video: java.io.File, audio: java.io.File?, output: java.io.File): Boolean = false
 
     @Suppress("UNUSED_PARAMETER")
     fun tagFile(input: String, values: Map<String, String>, cover: String?, format: String, output: String): Boolean = false
+
+    @Suppress("UNUSED_PARAMETER")
+    fun fetchStream(url: String, headers: Map<String, String>, codec: String?, output: String): Map<String, String> =
+        throw UnsupportedOperationException("lite build has no ffmpeg")
 
     companion object {
         const val NAME = "music_app/transcoder"

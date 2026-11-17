@@ -20,6 +20,13 @@ class LoadLoadedFolders implements UseCase<List<LoadedFolder>, NoParams> {
         trackCount: countTracksIn(_folders.defaultFolder, tracks),
         isDefault: true,
       ),
+      // 영상 기본 저장 위치(`Movies/Mulo`)도 기본 폴더로 보인다 (삭제 불가). 영상 폴더가 없는 기기는 뺀다.
+      if (_folders.defaultVideoFolder.isNotEmpty)
+        LoadedFolder(
+          path: _folders.defaultVideoFolder,
+          trackCount: countTracksIn(_folders.defaultVideoFolder, tracks),
+          isDefault: true,
+        ),
       for (final path in extra)
         LoadedFolder(path: path, trackCount: countTracksIn(path, tracks)),
     ];

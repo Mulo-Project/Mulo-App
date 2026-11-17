@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:equatable/equatable.dart';
-import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:flutter/foundation.dart' show ValueNotifier, debugPrint;
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/usecase/usecase.dart';
@@ -128,6 +128,11 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
       audio.watchEnded(const NoParams()).listen((_) => _onEnded()),
       audio.watchPlaying(const NoParams()).listen(_onEnginePlaying),
       audio.watchQueue(const NoParams()).listen(_onEngineQueue),
+      if (audio.watchMissing != null)
+        audio.watchMissing!(const NoParams()).listen((id) {
+          onUnplayable?.call(id);
+          onMissing?.call(id);
+        }),
     ];
   }
 
@@ -158,6 +163,22 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
 
   /// 아직 끝나지 않은 엔진 작업 수. 작업 중에 오는 재생 · 곡 넘김 신호는 우리가 시킨 것이라 상태에 넣지 않는다.
   var _pending = 0;
+
+  /// 엔진이 여는 중인 곡의 id (없으면 null). 이 사이에 다른 곡을 누르면 영상 디코더를 못 잡아 둘 다 실패하므로 누름을 무시한다.
+  final ValueNotifier<String?> loading = ValueNotifier<String?>(null);
+
+  /// 수면 타이머가 끝나 재생을 멈출 때마다 1씩 늘어난다 (화면이 snackbar로 알린다).
+  final ValueNotifier<int> sleepEnded = ValueNotifier<int>(0);
+
+  /// 이 곡을 재생할 수 있는가 (권한이 없거나 열기에 실패한 곡은 대기열에 넣지 않는다). 앱이 연결한다.
+  bool Function(Track track) playable = _alwaysPlayable;
+  static bool _alwaysPlayable(Track _) => true;
+
+  /// 파일이 없어 곡을 열지 못했을 때 (앱이 그 곡을 숨긴다).
+  void Function(String id)? onMissing;
+
+  /// 곡을 열다 실패했을 때 (앱이 열기 실패 기록에 남긴다).
+  void Function(String id)? onUnplayable;
 
   /// 엔진이 지금 쥐고 있다고 보는 대기열 (목록 · 반복 · extras만 비교한다).
   var _pushed = const PlaybackSnapshot(items: [], index: 0, playing: false);
@@ -370,6 +391,8 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   Future<void> _push(AudioPlayback a, PlaybackSnapshot snapshot) async {
     final current = snapshot.current;
     if (current == null || state.track?.id != current.id) return; // 그새 바뀜
+    if (isClosed) return;
+    loading.value = current.id;
     try {
       if (current.uri.isEmpty) throw StateError('empty uri');
       final result = await a.setQueue(snapshot);
@@ -381,6 +404,8 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
       if (!isClosed && state.track?.id == current.id) {
         emit(state.copyWith(isPlaying: false, position: Duration.zero));
       }
+    } finally {
+      if (!isClosed) loading.value = null;
     }
   }
 
@@ -533,6 +558,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     if (minutes != null) {
       _sleep = Timer(Duration(minutes: minutes), () {
         _sleep = null;
+        sleepEnded.value++;
         emit(
           state.copyWith(
             isPlaying: false,
@@ -555,6 +581,8 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   @override
   Future<void> close() {
     _sleep?.cancel();
+    loading.dispose();
+    sleepEnded.dispose();
     for (final s in _subs) {
       s.cancel();
     }
@@ -565,6 +593,15 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
 
   void playQueue(List<Track> queue, {int index = 0}) {
     if (queue.isEmpty) return;
+    if (loading.value != null) return;
+    // 열 수 없는 곡은 빼고, 누른 곡이 열 수 없으면 아무것도 하지 않는다 (곡 줄이 권한을 묻는다).
+    final tapped = queue[index.clamp(0, queue.length - 1)];
+    if (!playable(tapped)) return;
+    final ok = queue.where(playable).toList();
+    if (ok.length != queue.length) {
+      playQueue(ok, index: ok.indexOf(tapped));
+      return;
+    }
     final at = index.clamp(0, queue.length - 1);
     if (_audio != null) {
       // 엔진이 있으면 섞는 일은 엔진이 한다: 섞기 전 순서로 보내고 셔플로 시작하게 한다.
@@ -621,6 +658,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   /// 지금 곡 바로 뒤에 끼운다. 대기열이 비어 있으면 이 곡을 바로 재생한다.
   /// 이미 대기열에 있는 곡이면 그 자리를 옮긴다 (지금 재생 중인 곡이면 그대로).
   void playNext(Track track) {
+    if (!playable(track)) return;
     if (state.queue.isEmpty) return playQueue([track]);
     if (state.track == track) return;
     final current = state.track!;
@@ -642,6 +680,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   /// 대기열 맨 뒤에 붙인다. 대기열이 비어 있으면 이 곡을 바로 재생한다.
   /// 이미 대기열에 있는 곡이면 건너뛴다.
   void addToQueue(Track track) {
+    if (!playable(track)) return;
     if (state.queue.isEmpty) return playQueue([track]);
     if (state.queue.contains(track)) return;
     if (_audio != null) {

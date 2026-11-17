@@ -1064,18 +1064,6 @@ abstract class AppLocalizations {
   /// **'PIN을 입력하세요.'**
   String get lockHint;
 
-  /// No description provided for @settingsBackgroundDownload.
-  ///
-  /// In ko, this message translates to:
-  /// **'백그라운드 받기'**
-  String get settingsBackgroundDownload;
-
-  /// No description provided for @settingsBackgroundDownloadDesc.
-  ///
-  /// In ko, this message translates to:
-  /// **'앱이 뒤로 가거나 닫혀도 받기를 이어 가요. 켜 두면 받는 동안 알림이 계속 떠 있어요.'**
-  String get settingsBackgroundDownloadDesc;
-
   /// No description provided for @settingsHideNotification.
   ///
   /// In ko, this message translates to:
@@ -1298,6 +1286,18 @@ abstract class AppLocalizations {
   /// **'타이머 끄기'**
   String get playerSleepTimerOff;
 
+  /// No description provided for @settingsFormatOriginal.
+  ///
+  /// In ko, this message translates to:
+  /// **'원본 그대로'**
+  String get settingsFormatOriginal;
+
+  /// No description provided for @downloadFormatOriginal.
+  ///
+  /// In ko, this message translates to:
+  /// **'원본 ({format})'**
+  String downloadFormatOriginal(String format);
+
   /// No description provided for @playerSleepTimerMinutes.
   ///
   /// In ko, this message translates to:
@@ -1333,6 +1333,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'수면 타이머를 껐어요'**
   String get playerSleepTimerCleared;
+
+  /// No description provided for @playerSleepTimerEnded.
+  ///
+  /// In ko, this message translates to:
+  /// **'수면 타이머로 재생을 멈췄어요'**
+  String get playerSleepTimerEnded;
 
   /// No description provided for @playerEqualizer.
   ///
@@ -2603,7 +2609,7 @@ abstract class AppLocalizations {
   /// No description provided for @mediaDetailWatchYoutube.
   ///
   /// In ko, this message translates to:
-  /// **'유튜브에서 보기'**
+  /// **'재생'**
   String get mediaDetailWatchYoutube;
 
   /// No description provided for @mediaDetailOpenOriginal.
@@ -2615,13 +2621,13 @@ abstract class AppLocalizations {
   /// No description provided for @mediaDetailListenOriginal.
   ///
   /// In ko, this message translates to:
-  /// **'원본 사이트에서 듣기'**
+  /// **'재생'**
   String get mediaDetailListenOriginal;
 
   /// No description provided for @mediaDetailListenSoundcloud.
   ///
   /// In ko, this message translates to:
-  /// **'SoundCloud에서 듣기'**
+  /// **'재생'**
   String get mediaDetailListenSoundcloud;
 
   /// No description provided for @mediaDetailOpenArtist.
@@ -3621,15 +3627,27 @@ abstract class AppLocalizations {
   String get trackInfoAdded;
 
   /// No description provided for @trackInfoPlayCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'재생 횟수'**
   String get trackInfoPlayCount;
 
   /// No description provided for @trackInfoPlayCountValue.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}회'**
   String trackInfoPlayCountValue(int count);
 
   /// No description provided for @trackInfoListened.
+  ///
+  /// In ko, this message translates to:
+  /// **'들은 시간'**
   String get trackInfoListened;
 
   /// No description provided for @trackInfoLastPlayed.
+  ///
+  /// In ko, this message translates to:
+  /// **'마지막 재생'**
   String get trackInfoLastPlayed;
 
   /// No description provided for @trackInfoSource.
@@ -3649,6 +3667,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'받은 곡'**
   String get trackInfoSourceDownload;
+
+  /// No description provided for @downloadEngineOutdated.
+  ///
+  /// In ko, this message translates to:
+  /// **'받기 엔진이 오래돼서 받지 못했어요. 업데이트하고 있으니 잠시 뒤 다시 받아 주세요.'**
+  String get downloadEngineOutdated;
 
   /// No description provided for @downloadTagFailed.
   ///
@@ -4958,6 +4982,30 @@ abstract class AppLocalizations {
   /// **'요청이 막혀 있어요. 눌러서 휴대폰 설정에서 켜 주세요.'**
   String get permBlockedDesc;
 
+  /// No description provided for @permDeniedNotice.
+  ///
+  /// In ko, this message translates to:
+  /// **'권한이 허용되지 않았어요. 다시 눌러 허용해 주세요.'**
+  String get permDeniedNotice;
+
+  /// No description provided for @permBlockedNotice.
+  ///
+  /// In ko, this message translates to:
+  /// **'권한 요청이 막혔어요. 다시 누르면 휴대폰 설정이 열려요.'**
+  String get permBlockedNotice;
+
+  /// No description provided for @permMediaBlockedNotice.
+  ///
+  /// In ko, this message translates to:
+  /// **'음악·영상 권한이 없어 재생할 수 없어요. 설정에서 허용해 주세요.'**
+  String get permMediaBlockedNotice;
+
+  /// No description provided for @permOpenSettings.
+  ///
+  /// In ko, this message translates to:
+  /// **'설정 열기'**
+  String get permOpenSettings;
+
   /// No description provided for @settingsNotifications.
   ///
   /// In ko, this message translates to:
@@ -5239,6 +5287,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'받기 실패'**
   String get notifDownloadFailedTitle;
+
+  /// No description provided for @notifDownloadRetry.
+  ///
+  /// In ko, this message translates to:
+  /// **'다시 시도'**
+  String get notifDownloadRetry;
 
   /// No description provided for @notifDownloadFailedHidden.
   ///

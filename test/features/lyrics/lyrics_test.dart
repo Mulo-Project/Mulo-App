@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:flutter/services.dart';
+
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
@@ -23,24 +25,6 @@ class _FakeEmbedded implements EmbeddedLyricsSource {
     reads.add(trackUri);
     return text;
   }
-}
-
-/// 가사 프레임(USLT) 하나만 든 최소 ID3v2.3 파일.
-List<int> _id3WithLyrics(String lyrics) {
-  final body = [0, ...'eng'.codeUnits, 0, ...lyrics.codeUnits];
-  final frame = [...'USLT'.codeUnits, 0, 0, 0, body.length, 0, 0, ...body];
-  return [
-    ...'ID3'.codeUnits,
-    3,
-    0,
-    0,
-    0,
-    0,
-    frame.length >> 7,
-    frame.length & 0x7f,
-    ...frame,
-    ...List.filled(512, 0),
-  ];
 }
 
 void main() {
@@ -164,21 +148,33 @@ void main() {
   });
 
   group('TagLyricsSource', () {
-    late Directory dir;
-    setUp(() async => dir = await Directory.systemTemp.createTemp('tag'));
-    tearDown(() => dir.delete(recursive: true));
+    late MethodChannel channel;
+    String? reply;
+    final calls = <Object?>[];
 
-    test('mp3 ID3 태그의 가사를 읽는다', () async {
-      final f = File('${dir.path}/a.mp3')
-        ..writeAsBytesSync(_id3WithLyrics('[00:01.00]hello'));
-      expect(await TagLyricsSource().read(f.path), '[00:01.00]hello');
+    setUp(() {
+      channel = const MethodChannel('test/lyrics');
+      calls.clear();
+      reply = null;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            calls.add(call.arguments);
+            return reply;
+          });
     });
 
-    test('태그가 없거나 읽을 수 없는 파일은 null', () async {
-      final f = File('${dir.path}/b.mp3')..writeAsBytesSync([1, 2, 3, 4]);
-      expect(await TagLyricsSource().read(f.path), isNull);
-      expect(await TagLyricsSource().read('${dir.path}/없음.mp3'), isNull);
-      expect(await TagLyricsSource().read(''), isNull);
+    test('곡 주소를 네이티브에 넘기고 돌려받은 글을 쓴다', () async {
+      reply = ' [00:01.00]hello \n';
+      final text = await TagLyricsSource(channel: channel).read('/a.mp3');
+      expect(text, '[00:01.00]hello');
+      expect(calls, ['/a.mp3']);
+    });
+
+    test('네이티브가 가사 없음(null · 빈 글)이거나 주소가 비면 null', () async {
+      expect(await TagLyricsSource(channel: channel).read('/b.mp3'), isNull);
+      reply = '  ';
+      expect(await TagLyricsSource(channel: channel).read('/b.mp3'), isNull);
+      expect(await TagLyricsSource(channel: channel).read(''), isNull);
     });
   });
 

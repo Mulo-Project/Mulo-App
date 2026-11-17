@@ -5,6 +5,7 @@ import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../library/domain/entities/track.dart';
+import '../../../library/presentation/widgets/track_gate.dart';
 import '../../../library/presentation/widgets/track_list_tile.dart'
     show TrackSelection, selectionMark;
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
@@ -183,7 +184,11 @@ class _TopPlayedSectionState extends State<TopPlayedSection> {
     final player = widget.player;
     final sel = widget.selectionFor?.call(listed[i]);
     final picking = sel != null && sel.active;
-    return TrackTile(
+    return TrackGate(
+      track: listed[i],
+      builder: (context, gate) => TrackTile(
+      enabled: gate.enabled,
+      unavailable: gate.unavailable,
       title: listed[i].title,
       subtitle: listed[i].artist.isEmpty
           ? l10n.unknownArtist
@@ -216,8 +221,11 @@ class _TopPlayedSectionState extends State<TopPlayedSection> {
               l10n.playCount(counts[listed[i].id] ?? 0),
               style: text.bodySmall,
             ),
-      onTap: picking ? sel.onToggle : () => player.playQueue(listed, index: i),
+      onTap: picking
+          ? sel.onToggle
+          : gate.tap(() => player.playQueue(listed, index: i)),
       onLongPress: sel?.onToggle,
+      ),
     );
   }
 }

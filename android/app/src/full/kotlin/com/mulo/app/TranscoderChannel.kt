@@ -41,9 +41,42 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
                     }
                     runAsync(io, result, "convert_failed") { convert(input, output, codec, bitrate, format) }
                 }
+                "fetchStream" -> {
+                    val url = call.argument<String>("url")
+                    val output = call.argument<String>("output")
+                    if (url == null || output == null) {
+                        result.error("bad_args", "url, output required", null)
+                        return@setMethodCallHandler
+                    }
+                    val headers = call.argument<Map<String, String>>("headers") ?: emptyMap()
+                    val codec = call.argument<String>("codec")
+                    runAsync(io, result, "fetch_failed") { fetchStream(url, headers, codec, output) }
+                }
                 else -> result.notImplemented()
             }
         }
+    }
+
+    /**
+     * HLS(m3u8 목록) 소리 스트림을 조각까지 받아 다시 인코딩 없이 [output] 하나로 합친다 (사운드클라우드 등).
+     * 담는 형식은 소리의 코덱([codec], yt-dlp가 알려 준 이름)으로 여기서 정한다: aac는 m4a, mp3는 mp3, opus · vorbis는 ogg.
+     * 모르는 코덱은 mka(Matroska)에 담는다. 돌려주는 값은 `extension` · `mime`. 실패하면 예외.
+     */
+    fun fetchStream(url: String, headers: Map<String, String>, codec: String?, output: String): Map<String, String> {
+        val c = codec?.lowercase() ?: ""
+        val (format, extension, mime) = when {
+            c.startsWith("mp4a") || c == "aac" -> Triple("ipod", "m4a", "audio/mp4")
+            c.startsWith("mp3") || c == "mpeg" -> Triple("mp3", "mp3", "audio/mpeg")
+            c.startsWith("opus") || c.startsWith("vorbis") -> Triple("ogg", "opus", "audio/ogg")
+            else -> Triple("matroska", "mka", "audio/x-matroska")
+        }
+        val args = mutableListOf("-nostdin", "-y")
+        if (headers.isNotEmpty()) {
+            args += listOf("-headers", headers.entries.joinToString("") { "${it.key}: ${it.value}\r\n" })
+        }
+        args += listOf("-i", url, "-vn", "-c", "copy", "-f", format, output)
+        runFfmpeg(args, output)
+        return mapOf("extension" to extension, "mime" to mime)
     }
 
     /**
@@ -81,6 +114,15 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
     // 모두 소리 · 영상은 그대로(`-c copy`) 두고, 파일에 있던 태그는 두고 넘어온 칸만 덮어쓴다 (빈 값은 그 칸을 지운다).
 
     fun isAvailable(): Boolean = true
+
+    /** 진행 중인 ffmpeg(변환 · 합치기)를 멈춘다. */
+    fun cancelProcess() {
+        process?.destroy()
+    }
+
+    /** 받은 오디오를 [codec] · [bitrate]로 바꿔 [output]에 쓴다 ([format]은 `mp3` 또는 `ogg`). 받기 큐가 직접 부른다. */
+    fun convertAudio(input: String, output: String, codec: String, bitrate: Int, format: String): Boolean =
+        convert(input, output, codec, bitrate, format)
 
     /** 영상 [video]와 소리 [audio](없을 수 있다)를 다시 인코딩 없이 [output] 확장자의 형식(mp4 · webm) 하나로 합친다. 실패하면 예외. */
     fun mux(video: File, audio: File?, output: File): Boolean {
@@ -135,6 +177,9 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
     private fun tagOgg(input: String, values: List<Pair<String, String>>, output: String, cover: String?): Boolean {
         val entries = entriesOf(values, upper = true)
         if (cover == null) {
+            // 글만 고쳐도 파일에 이미 있는 커버(소리만 넘기면 버려진다)를 지키려고, 있으면 꺼내 태그와 함께 다시 쓴다.
+            val kept = keepOggPicture(input, entries, output)
+            if (kept != null) return kept
             val args = mutableListOf("-nostdin", "-y", "-i", input, "-map", "0:a")
             for ((key, value) in entries) args += listOf("-metadata", "$key=$value", "-metadata:s:a:0", "$key=$value")
             args += listOf("-c", "copy", "-f", "ogg", output)
@@ -154,25 +199,98 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
         }
     }
 
-    /** mp4 영상: 소문자 키. 전체 스트림을 넘기고, 그림이 있으면 첨부 그림으로 더한다. genre 등 title · artist 밖의 칸도 쓰게 한다. */
+    /**
+     * 커버가 있는 ogg · opus의 글만 고칠 때: 파일의 그림(PNG)을 꺼내고, 기존 태그에 [entries]를 덮어 쓴 태그와
+     * 그림을 함께 써 커버를 지킨다. 그림이 없거나 PNG가 아니면 null (호출한 쪽이 글만 쓴다).
+     */
+    private fun keepOggPicture(input: String, entries: List<Pair<String, String>>, output: String): Boolean? {
+        val pic = File("$output.pic")
+        val dump = File("$output.dump")
+        val full = File("$output.full")
+        try {
+            try {
+                runFfmpeg(listOf("-nostdin", "-y", "-i", input, "-map", "0:v:0", "-c", "copy", "-frames:v", "1", "-f", "image2", pic.absolutePath), pic.absolutePath)
+                val bytes = pic.readBytes()
+                if (bytes.size < 24 || bytes[1] != 'P'.code.toByte() || bytes[2] != 'N'.code.toByte() || bytes[3] != 'G'.code.toByte()) return null
+            } catch (e: Exception) {
+                return null
+            }
+            runFfmpeg(listOf("-nostdin", "-y", "-i", input, "-map_metadata:g", "0:s:a:0", "-vn", "-an", "-f", "ffmetadata", dump.absolutePath), dump.absolutePath)
+            val replaced = entries.map { it.first.uppercase() }.toSet() + "METADATA_BLOCK_PICTURE"
+            // 기존 칸(ffmetadata 형식 그대로)에서 덮어 쓸 칸만 빼고 남긴다.
+            val old = dump.readLines(Charsets.UTF_8)
+                .takeWhile { !it.startsWith("[") }
+                .filter { line -> line.isNotBlank() && !line.startsWith(";") && !line.startsWith("#") }
+                .filter { line -> line.substringBefore('=').uppercase() !in replaced }
+            val picture = Base64.encodeToString(pictureBlock(pic.readBytes()), Base64.NO_WRAP)
+            full.writeText(
+                ffmetadata(entries + ("METADATA_BLOCK_PICTURE" to picture)) + old.joinToString("\n", postfix = "\n"),
+                Charsets.UTF_8,
+            )
+            return runFfmpeg(
+                listOf(
+                    "-nostdin", "-y", "-i", input, "-i", full.absolutePath, "-map", "0:a",
+                    "-map_metadata", "1", "-map_metadata:s:a:0", "1:g", "-c", "copy", "-f", "ogg", output,
+                ),
+                output,
+            )
+        } finally {
+            pic.delete()
+            dump.delete()
+            full.delete()
+        }
+    }
+
+    /**
+     * mp4 영상: 소문자 키. 그림이 없으면 전체 스트림을 그대로 둔다.
+     * 그림이 있으면 ipod 껍데기로 첨부 그림(covr)을 쓴다. 일반 mp4 껍데기는 그림을 별도 영상 트랙으로 넣어
+     * 플레이어가 영상을 못 고르거나 그림이 파일 커버로 읽히지 않는다. ipod이 코덱(vp9·av1 등)을 거부하면
+     * 영상을 해치지 않으려고 그림 없이 글 태그만 쓴다.
+     */
     private fun tagMp4(input: String, values: List<Pair<String, String>>, output: String, cover: String?): Boolean {
-        val args = mutableListOf("-nostdin", "-y", "-i", input)
-        if (cover != null) args += listOf("-i", cover)
-        args += listOf("-map", "0")
-        if (cover != null) args += listOf("-map", "1:v", "-disposition:v:1", "attached_pic")
+        if (cover != null) {
+            val args = mutableListOf("-nostdin", "-y", "-i", input, "-i", cover)
+            args += listOf("-map", "0:V", "-map", "0:a?", "-map", "1:v", "-disposition:v:1", "attached_pic")
+            for ((key, value) in entriesOf(values, upper = false)) args += listOf("-metadata", "$key=$value")
+            // +use_metadata_tags(mdta 칸)를 쓰면 ffmpeg가 커버 atom(covr)을 쓰지 않는 것으로 보여, 그림이 있을 때는 빼고
+            // 표준 칸(제목 · 아티스트 · 앨범 · 장르 · 가사)만 쓴다. 앱 전용 칸(COVER_COLOR)은 이때 파일에 남지 않는다.
+            args += listOf("-c", "copy", "-f", "ipod", output)
+            try {
+                if (runFfmpeg(args, output)) {
+                    MuloLog.d(MuloLog.NATIVE, "MuloTag mp4 cover: ipod 껍데기로 씀")
+                    return true
+                }
+            } catch (e: Exception) {
+                // 코덱을 ipod이 거부하면 그림 없이 글 태그만 쓴다.
+                MuloLog.d(MuloLog.NATIVE, "MuloTag mp4 cover: ipod 실패, 그림 없이 씀 (${e.message?.takeLast(200)})")
+            }
+        }
+        val args = mutableListOf("-nostdin", "-y", "-i", input, "-map", "0")
         for ((key, value) in entriesOf(values, upper = false)) args += listOf("-metadata", "$key=$value")
-        args += listOf("-c", "copy", "-movflags", "+use_metadata_tags", "-f", "mp4", output)
+        // +use_metadata_tags(mdta)는 표준 칸(앨범 · 아티스트 등)을 mdta로만 써서 다른 플레이어 · MediaStore가 못 읽는다.
+        // 앱 전용 칸이 없는 글 수정(여러 곡 한꺼번에 등)은 표준 칸(ilst)으로 쓴다.
+        val appOnly = values.any { it.first.lowercase() !in knownKeys }
+        if (appOnly) args += listOf("-movflags", "+use_metadata_tags")
+        args += listOf("-c", "copy", "-f", "mp4", output)
         return runFfmpeg(args, output)
     }
 
-    /** m4a 오디오(mp4 껍데기): 소문자 키, 소리만 넘기고 그림이 있으면 첨부 그림으로 붙인다. */
+    /**
+     * m4a 오디오(mp4 껍데기): 소문자 키. 그림이 있으면 첨부 그림(covr)으로 붙이고, 없으면 파일에 있던 그림을 그대로 둔다
+     * (소리만 넘기면 글만 고쳐도 커버가 사라진다). +use_metadata_tags(mdta)는 그림(covr)을 쓰지 않고 표준 칸도 mdta로만 써서
+     * 쓰지 않는다: 표준 칸(ilst)으로 쓰므로 앱 전용 칸은 파일에 남지 않는다.
+     */
     private fun tagM4a(input: String, values: List<Pair<String, String>>, output: String, cover: String?): Boolean {
         val args = mutableListOf("-nostdin", "-y", "-i", input)
         if (cover != null) args += listOf("-i", cover)
         args += listOf("-map", "0:a")
-        if (cover != null) args += listOf("-map", "1:v", "-disposition:v:0", "attached_pic")
+        if (cover != null) {
+            args += listOf("-map", "1:v", "-disposition:v:0", "attached_pic")
+        } else {
+            args += listOf("-map", "0:v?", "-disposition:v:0", "attached_pic")
+        }
         for ((key, value) in entriesOf(values, upper = false)) args += listOf("-metadata", "$key=$value")
-        args += listOf("-c", "copy", "-movflags", "+use_metadata_tags", "-f", "ipod", output)
+        args += listOf("-c", "copy", "-f", "ipod", output)
         return runFfmpeg(args, output)
     }
 

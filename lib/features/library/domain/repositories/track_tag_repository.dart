@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../../covers/domain/entities/cover_art.dart';
 import '../entities/file_tags.dart';
 import '../entities/track.dart';
@@ -21,8 +23,13 @@ enum TagWriteResult {
 /// 곡 파일의 태그에 정보를 쓴다 (파일이 곡 정보의 원본이 되도록).
 abstract interface class TrackTagRepository {
   /// [track]의 제목 · 아티스트 · 앨범 · 장르(와 [cover])를 파일 태그에 쓴다.
-  /// 실패해도 파일은 그대로 둔다.
-  Future<TagWriteResult> write(Track track, {CoverArt? cover, int? color});
+  /// 실패해도 파일은 그대로 둔다. [interactive]면 사용자가 직접 한 저장이라, 쓸 권한이 없을 때 시스템 동의 창을 띄운다.
+  Future<TagWriteResult> write(
+    Track track, {
+    CoverArt? cover,
+    int? color,
+    bool interactive = false,
+  });
 
   /// [track] 파일의 가사 태그에 [lyrics] 글(싱크 가사면 `.lrc` 원문)을 쓴다. 다른 태그는 건드리지 않는다.
   /// 비어 있으면 쓰지 않는다 (이미 파일에 있는 가사는 지워지지 않는다).
@@ -31,6 +38,9 @@ abstract interface class TrackTagRepository {
   /// [track] 파일에 쓸 수 있는지 확인하고, 못 쓰면 시스템 동의를 구한다 (가사 편집 화면에 들어갈 때).
   /// 쓰지 않는 곡이거나 쓸 수 있으면 true, 거절하면 false.
   Future<bool> ensureWriteAccess(Track track);
+
+  /// [tracks] 파일에 쓸 동의를 시스템 창 한 번으로 구한다 (다중 선택 수정). 이미 쓸 수 있으면 창 없이 true.
+  Future<bool> ensureWriteAccessAll(List<Track> tracks);
 
   /// 마지막 쓰기가 실패한 이유 (진단용 짧은 글). 없으면 null.
   String? get lastFailure;
@@ -44,6 +54,34 @@ abstract interface class FileTagRepository {
 
   /// 임시 진단: 지금까지 읽은 결과를 종류별로 센 한 줄 (꺼내면 비운다). 없으면 빈 문자열.
   String takeSummary();
+}
+
+/// 새로 찾은 곡 중 파일 태그를 아직 읽지 못한 곡 id (처음 불러오는 동안만 있다). 곡 정보(제목 · 커버 등)가 다 채워지기 전에는
+/// 곡 줄을 흐리게 하고 누르지 못하게 하는 데 쓴다. 앱 전체에서 하나를 같이 쓴다.
+class PendingTagTracks {
+  final _controller = StreamController<Set<String>>.broadcast();
+  var _ids = <String>{};
+
+  Set<String> get ids => _ids;
+
+  Stream<Set<String>> get changes => _controller.stream;
+
+  void set(Set<String> ids) {
+    _ids = ids;
+    _controller.add(_ids);
+  }
+
+  void remove(String id) {
+    if (!_ids.contains(id)) return;
+    _ids = {..._ids}..remove(id);
+    _controller.add(_ids);
+  }
+
+  void clear() {
+    if (_ids.isEmpty) return;
+    _ids = <String>{};
+    _controller.add(_ids);
+  }
 }
 
 /// 이미 태그를 읽어 DB를 채운 곡 id 기록 (곡마다 한 번만, 이어서 하려고).

@@ -73,6 +73,10 @@ class _CoverWebBrowserState extends State<CoverWebBrowser> {
   bool _loading = true;
   bool _canGoBack = false;
 
+  /// 고른 이미지를 이미 돌려줬는지. 한 번 눌러도 JS 채널 · 이동 요청 · 주소 변경이 연달아 와서
+  /// 그대로 두면 pop이 여러 번 일어나 뒤의 화면까지 닫혀 검은 화면이 남는다.
+  bool _picked = false;
+
   @override
   void initState() {
     super.initState();
@@ -122,9 +126,10 @@ class _CoverWebBrowserState extends State<CoverWebBrowser> {
 
   /// 눌러 고른 이미지를 돌려주며 닫는다. 확대 · 위치는 부른 편집 화면에서 맞춘다.
   void _pick(String url) {
-    if (!mounted) return;
+    if (!mounted || _picked) return;
     final uri = Uri.tryParse(url);
     if (uri == null || !uri.hasAuthority) return;
+    _picked = true;
     Navigator.of(context).pop(CoverArt.web(url));
   }
 

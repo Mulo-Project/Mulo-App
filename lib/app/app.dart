@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,6 +12,7 @@ import '../core/l10n/l10n.dart';
 import '../features/account/presentation/bloc/account_cubit.dart';
 import '../features/covers/presentation/bloc/cover_color_cubit.dart';
 import '../features/covers/presentation/bloc/cover_cubit.dart';
+import '../features/library/domain/usecases/library_usecases.dart';
 import '../features/lyrics/presentation/bloc/lyrics_cubit.dart';
 import '../features/lyrics/presentation/bloc/lyrics_overlay_cubit.dart';
 import '../features/lyrics/presentation/bloc/lyrics_settings_cubit.dart';
@@ -18,6 +21,7 @@ import '../features/downloads/presentation/bloc/download_queue_cubit.dart';
 import '../features/downloads/presentation/widgets/download_completion_listener.dart';
 import '../features/downloads/presentation/bloc/download_preferences_cubit.dart';
 import '../features/downloads/presentation/bloc/download_settings_cubit.dart';
+import '../features/engine/presentation/widgets/engine_notice_listener.dart';
 import '../features/equalizer/presentation/bloc/equalizer_cubit.dart';
 import '../features/equalizer/presentation/bloc/equalizer_library_cubit.dart';
 import '../features/home/presentation/bloc/play_recorder_cubit.dart';
@@ -34,6 +38,7 @@ import '../features/player/presentation/bloc/output_behavior_cubit.dart';
 import '../features/player/presentation/bloc/mix_with_others_cubit.dart';
 import '../features/player/presentation/bloc/playback_speed_cubit.dart';
 import '../features/player/presentation/bloc/player_style_cubit.dart';
+import '../features/permissions/presentation/bloc/media_access_cubit.dart';
 import '../features/playlists/presentation/bloc/playlists_cubit.dart';
 import '../features/search/presentation/bloc/preview_cubit.dart';
 import '../features/search/presentation/bloc/saved_videos_cubit.dart';
@@ -134,7 +139,16 @@ class _MusicAppState extends State<MusicApp> {
         BlocProvider(
           create: (_) => sl<LibraryImportCubit>()..embedTagsInBackground(),
         ),
-        BlocProvider(create: (_) => sl<NowPlayingCubit>()),
+        BlocProvider(create: (_) => sl<MediaAccessCubit>()..refresh()),
+        BlocProvider(
+          create: (context) {
+            final access = context.read<MediaAccessCubit>();
+            return sl<NowPlayingCubit>()
+              ..playable = ((t) => access.state.playable(t.id, t.uri))
+              ..onUnplayable = access.markFailed
+              ..onMissing = (id) => unawaited(sl<HideMissingTrack>()(id));
+          },
+        ),
         BlocProvider(
           create: (_) => sl<AudioOutputCubit>()
             ..refresh()
@@ -207,9 +221,11 @@ class _MusicAppState extends State<MusicApp> {
                 child: LyricsOverlayBridge(
                   child: MoodThemeFollower(
                     child: DownloadCompletionListener(
-                      child: NewVideosLauncher(
-                        onOpen: _openNewVideos,
-                        child: _PipSwitcher(child: LockGate(child: child!)),
+                      child: EngineNoticeListener(
+                        child: NewVideosLauncher(
+                          onOpen: _openNewVideos,
+                          child: _PipSwitcher(child: LockGate(child: child!)),
+                        ),
                       ),
                     ),
                   ),

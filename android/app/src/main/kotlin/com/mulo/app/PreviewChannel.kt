@@ -187,7 +187,7 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
     }
 
     init {
-        PlaybackHub.previewStop = { stop() }
+        PlaybackHub.previewStop = { stopFromNotification() }
         PlaybackHub.previewControl = { play -> player?.let { if (play) it.play() else it.pause() } }
         channel.setMethodCallHandler { call, result ->
             when (call.method) {
@@ -702,6 +702,76 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
         followMain = false
     }
 
+    /**
+     * 받기 알림의 "미리 듣기" 버튼: Dart를 거치지 않고 네이티브가 [streams]로 주소를 읽어 바로 튼다 (앱이 꺼져 있어도 된다).
+     * 메인 재생은 멈추고, 시작되면 화면이 따라가도록 `changed`를 알린다.
+     */
+    fun startFromNotification(
+        id: String,
+        title: String,
+        url: String,
+        uploader: String,
+        thumbnail: String?,
+        streams: () -> List<Pair<String, Map<String, String>>>?,
+    ) {
+        val token = ++pageToken
+        val info = mapOf("id" to id, "title" to title, "url" to url, "uploader" to uploader, "thumbnail" to thumbnail)
+        Thread {
+            val picked = try {
+                streams()
+            } catch (e: Exception) {
+                MuloLog.d(MuloLog.NATIVE, "알림 미리 듣기 주소 읽기 실패: ${e.message}")
+                null
+            }
+            main.post {
+                if (token != pageToken || picked.isNullOrEmpty()) return@post
+                PlaybackHub.pause()
+                playCandidates(picked, 0, info, object : MethodChannel.Result {
+                    override fun success(value: Any?) {
+                        MuloEngine.downloads?.previewingId = id
+                        // 화면(Dart)이 없어도 미디어 알림에 미리 듣기 곡과 닫기 버튼이 뜨도록 세션을 직접 올린다.
+                        // 화면이 있으면 `changed` 뒤 Dart가 같은 세션을 다시 보내 덮어쓴다.
+                        val close = DownloadNotifications.lastProgress?.get("stopLabel") as? String ?: "Close"
+                        PlaybackHub.setSession(
+                            mapOf(
+                                "trackId" to id,
+                                "title" to title,
+                                "artist" to uploader,
+                                "artUri" to thumbnail,
+                                "durationMs" to (player?.duration?.takeIf { it != C.TIME_UNSET } ?: 0L),
+                                "positionMs" to 0L,
+                                "playing" to true,
+                                "preview" to true,
+                                "closeLabel" to close,
+                            ),
+                        )
+                        channel.invokeMethod("changed", null)
+                    }
+
+                    override fun error(code: String, message: String?, details: Any?) {
+                        channel.invokeMethod("changed", null)
+                    }
+
+                    override fun notImplemented() {}
+                }, token)
+            }
+        }.start()
+    }
+
+    /** 받기 알림의 "일시정지 · 이어 듣기" 버튼. 화면에는 `paused` 이벤트로 알려진다. */
+    fun togglePauseFromNotification() {
+        player?.let { if (it.playWhenReady) it.pause() else it.play() }
+    }
+
+    /** 받기 알림의 "미리 듣기 중지" 버튼. */
+    fun stopFromNotification() {
+        stop()
+        // 화면(Dart)이 없으면 아무도 미리 듣기 알림 · 세션 내용을 치워 주지 않는다: 남아 있으면 이어폰 · 블루투스 버튼이
+        // 이미 끝난 미리 듣기로 가서 메인 재생이 반응하지 않는다. 치우면 버튼은 대기열의 곡으로 이어진다 ([PlaybackHub.prepareForButton]).
+        if (PlaybackHub.isPreviewing) PlaybackHub.setSession(null)
+        channel.invokeMethod("changed", null)
+    }
+
     /** 소리를 내고 있는(또는 잠시 멈춘) 미리 듣기. 없으면 null이고, 알림에 남은 미리 듣기는 치운다. */
     private fun current(): Map<String, Any?>? {
         val p = player
@@ -737,6 +807,8 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
         mergedFailed = false
         started = false
         meta = null
+        // 받기 알림의 미리 듣기 버튼 모양을 되돌린다.
+        MuloEngine.downloads?.previewingId = null
     }
 
     /**

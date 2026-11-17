@@ -4,7 +4,6 @@ import 'dart:ui' show Color, Locale;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/core/design/design.dart';
 import 'package:music_download_play_app/core/di/injector.dart';
-import 'package:music_download_play_app/features/downloads/domain/entities/download_item.dart';
 import 'package:music_download_play_app/features/library/domain/entities/library_sort.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 import 'package:music_download_play_app/features/notifications/domain/entities/notification_settings.dart';
@@ -160,23 +159,6 @@ void main() {
       expect(session.updates, hasLength(2));
       expect(session.updates.first!.artist, '곡 정보 숨김 · 1/5번째 곡');
       expect(session.updates.last!.artist, '곡 정보 숨김 · 2/5번째 곡');
-    });
-
-    test('받는 중 알림은 지금 받는 곡의 id를 실어 누르면 그 곡 상세로 간다', () async {
-      await cubit.syncDownloads(
-        [
-          const DownloadItem(
-            id: 'a',
-            title: '곡a',
-            artist: '가수',
-            status: DownloadStatus.downloading,
-            progress: .3,
-          ),
-        ],
-        const NotificationSettings(),
-        l10n,
-      );
-      expect(notifier.shown.last['openId'], 'a');
     });
 
     test('알림 누름은 열려 있을 때는 스트림으로, 새로 켜졌을 때는 한 번 가져간다', () async {

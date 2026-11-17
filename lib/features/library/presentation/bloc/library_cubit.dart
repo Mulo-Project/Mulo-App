@@ -32,12 +32,19 @@ class LibraryState extends Equatable {
 
 /// 보관함 곡 목록. DB 변경을 구독한다.
 class LibraryCubit extends Cubit<LibraryState> {
-  LibraryCubit(this._watch, this._updateInfo, this._delete)
-    : super(const LibraryState());
+  LibraryCubit(
+    this._watch,
+    this._updateInfo,
+    this._delete, [
+    this._ensureWrite,
+  ]) : super(const LibraryState());
 
   final WatchLibraryTracks _watch;
   final UpdateTrackInfo _updateInfo;
   final DeleteTrack _delete;
+
+  /// 여러 곡 수정 전에 파일 쓰기 동의를 한 번에 구한다 (없으면 곡마다 구하지 않고 DB만 고친다).
+  final EnsureTracksWriteAccess? _ensureWrite;
   StreamSubscription<List<Track>>? _sub;
 
   void start() {
@@ -56,6 +63,13 @@ class LibraryCubit extends Cubit<LibraryState> {
   Future<UpdateInfoResult> updateInfo(String trackId, TrackInfo info) =>
       _updateInfo(UpdateTrackInfoParams(trackId, info));
 
+  /// 곡 하나를 사용자가 직접 고칠 때: 파일에 쓸 동의를 먼저 구해(이미 있으면 창 없이) 태그가 파일에 쓰이게 한 뒤 저장한다.
+  /// 동의 없이 부르면 쓰기가 `denied`로 끝나 기록(DB)만 바뀌고, 데이터를 지운 뒤 다시 불러오면 옛 값으로 돌아온다.
+  Future<UpdateInfoResult> saveInfo(Track track, TrackInfo info) async {
+    await _ensureWrite?.call([track]);
+    return updateInfo(track.id, info);
+  }
+
   /// 아티스트 · 앨범 · 장르의 이름을 바꾼다: [kind] 묶음 [from]에 속한 모든 곡의 그 정보를 [to]로 고친다.
   /// 이미 있는 이름이면 그 묶음과 합쳐진다. 곡마다 순서대로 (파일 태그 → 기록) 고치므로 한 곡이 끝날 때마다
   /// [onProgress]로 (끝낸 수, 전체 수)를 알린다. 바뀐 곡 수와, 태그 쓰기 실패로 못 바꾼 곡 수를 돌려준다.
@@ -67,12 +81,9 @@ class LibraryCubit extends Cubit<LibraryState> {
   }) async {
     final name = to.trim();
     if (name == from) return (changed: 0, failed: 0);
-    return _renameAll(
-      state.tracks.where((t) => kind.contains(t, from)).toList(),
-      kind,
-      name,
-      onProgress,
-    );
+    final tracks = state.tracks.where((t) => kind.contains(t, from)).toList();
+    await _ensureWrite?.call(tracks);
+    return _renameAll(tracks, kind, name, onProgress);
   }
 
   /// 고른 곡들([ids])의 [kind] 정보(아티스트 · 앨범 · 장르)를 모두 [to]로 지정한다. 제목은 건드리지 않는다.
@@ -82,12 +93,12 @@ class LibraryCubit extends Cubit<LibraryState> {
     TrackGroupKind kind,
     String to, {
     void Function(int done, int total)? onProgress,
-  }) => _renameAll(
-    state.tracks.where((t) => ids.contains(t.id)).toList(),
-    kind,
-    to.trim(),
-    onProgress,
-  );
+  }) async {
+    final tracks = state.tracks.where((t) => ids.contains(t.id)).toList();
+    // 다중 선택은 곡마다 동의 창을 띄우지 않으니, 먼저 한 번에 구해 태그가 파일에 쓰이게 한다 (거절해도 계속한다).
+    await _ensureWrite?.call(tracks);
+    return _renameAll(tracks, kind, to.trim(), onProgress);
+  }
 
   Future<({int changed, int failed})> _renameAll(
     List<Track> tracks,

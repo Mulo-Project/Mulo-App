@@ -31,29 +31,35 @@ class NativeTags {
   /// 마지막 태그 쓰기가 실패한 이유 (진단용). 성공하거나 새로 시작하면 비운다.
   static String? lastError;
 
-  /// [target]의 태그를 쓴다. [values]는 `title` `artist` `album` `genre` `lyrics`와 앱 전용 칸이고,
-  /// 이미 있던 태그는 두고 넘어온 칸만 바뀐다. [cover]는 원본 이미지 파일과 고른 확대 · 위치 · 각도다
-  /// (정사각형으로 자르는 것도 네이티브가 한다). [extension]은 경로 파일의 확장자 힌트다.
+  /// [target]의 태그를 쓴다. [values]는 `title` `artist` `album` `genre` `lyrics` 칸이고 값이 null이거나 비면 그 칸은 건드리지 않는다
+  /// (이미 있던 태그는 두고 넘어온 칸만 바뀐다). [color]는 커버 색(ARGB)이다 (앱 전용 칸은 네이티브가 쓴다).
+  /// [cover]의 파일 · 주소(없으면 [thumbnailUrl])와 고른 확대 · 위치 · 각도를 넘기면, 이미지 받기 · 정사각형으로 자르기 · 태그에 넣기는
+  /// 네이티브가 한다. [extension]은 경로 파일의 확장자 힌트다.
   Future<NativeTagStatus> write(
     String target, {
-    Map<String, String> values = const {},
-    ({String path, CoverTransform transform})? cover,
+    Map<String, String?> values = const {},
+    int? color,
+    CoverArt? cover,
+    String? thumbnailUrl,
     String? extension,
     bool ask = false,
   }) async {
     lastError = null;
     try {
+      final coverUrl = cover?.url ?? thumbnailUrl;
       final r = await _channel.invokeMapMethod<String, Object?>('write', {
         'uri': target,
         'extension': extension,
         'values': values,
-        if (cover != null)
+        'color': color,
+        if (cover?.path != null || coverUrl != null)
           'cover': {
-            'path': cover.path,
-            'scale': cover.transform.scale,
-            'dx': cover.transform.dx,
-            'dy': cover.transform.dy,
-            'rotation': cover.transform.rotation,
+            'path': cover?.path,
+            'url': coverUrl,
+            'scale': (cover?.transform ?? CoverTransform.identity).scale,
+            'dx': (cover?.transform ?? CoverTransform.identity).dx,
+            'dy': (cover?.transform ?? CoverTransform.identity).dy,
+            'rotation': (cover?.transform ?? CoverTransform.identity).rotation,
           },
         'ask': ask,
       });
@@ -77,8 +83,8 @@ class NativeTags {
     }
   }
 
-  /// [target]의 태그를 읽는다. `status`는 `ok` · `unsupported` · `failed`, 키는 소문자.
-  Future<({String status, Map<String, String> tags})> read(
+  /// [target]의 태그를 읽는다. `status`는 `ok` · `unsupported` · `failed`, 키는 소문자. `color`는 앱이 쓴 커버 색(ARGB, 없으면 null).
+  Future<({String status, Map<String, String> tags, int? color})> read(
     String target, {
     String? extension,
   }) async {
@@ -90,11 +96,30 @@ class NativeTags {
       final tags = (r?['tags'] as Map?)?.map(
         (k, v) => MapEntry('$k', '$v'),
       );
-      return (status: (r?['status'] as String?) ?? 'failed', tags: tags ?? {});
+      return (
+        status: (r?['status'] as String?) ?? 'failed',
+        tags: tags ?? {},
+        color: (r?['color'] as num?)?.toInt(),
+      );
     } on PlatformException {
-      return (status: 'failed', tags: <String, String>{});
+      return (status: 'failed', tags: <String, String>{}, color: null);
     } on MissingPluginException {
-      return (status: 'unsupported', tags: <String, String>{});
+      return (status: 'unsupported', tags: <String, String>{}, color: null);
+    }
+  }
+
+  /// 여러 곡 파일에 쓸 동의를 시스템 창 한 번으로 구한다. 이미 쓸 수 있으면 창 없이 true.
+  /// 거절하거나 구할 수 없으면 false.
+  Future<bool> ensureAll(List<String> uris) async {
+    try {
+      final r = await _channel.invokeMapMethod<String, Object?>('ensureAll', {
+        'uris': uris,
+      });
+      return (r?['ok'] as bool?) ?? true;
+    } on PlatformException {
+      return true;
+    } on MissingPluginException {
+      return true;
     }
   }
 

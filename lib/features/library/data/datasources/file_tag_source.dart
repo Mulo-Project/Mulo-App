@@ -1,4 +1,3 @@
-import '../../../downloads/data/datasources/cover_tag_writer.dart';
 import '../../../downloads/data/datasources/native_tags.dart';
 import '../../domain/entities/file_tags.dart';
 
@@ -27,7 +26,7 @@ class FileTagSource {
     final r = await _tags.read(uri);
     switch (r.status) {
       case 'ok':
-        final tags = parse(r.tags);
+        final tags = parse(r.tags, r.color);
         _count(tags.isEmpty ? 'tag empty' : 'ok');
         return tags;
       case 'unsupported':
@@ -39,14 +38,14 @@ class FileTagSource {
     }
   }
 
-  /// 읽은 태그(소문자 키)를 앱 값으로. 앱이 쓴 사용자 정의 칸 `COVER_COLOR`도 읽는다 (커버 그림은 파일 안 그림을 쓴다).
-  static FileTags parse(Map<String, String> tags) {
+  /// 읽은 태그(소문자 키)를 앱 값으로. [color]는 네이티브가 `COVER_COLOR` 칸에서 읽은 커버 색이다 (커버 그림은 파일 안 그림을 쓴다).
+  static FileTags parse(Map<String, String> tags, [int? color]) {
     return FileTags(
       title: _clean(tags['title']),
       artist: _clean(tags['artist']),
       album: _clean(tags['album']),
       genre: _clean(tags['genre']),
-      coverColor: parseCoverColor(tags),
+      coverColor: color,
     );
   }
 

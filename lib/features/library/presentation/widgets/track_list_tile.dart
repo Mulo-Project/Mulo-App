@@ -7,6 +7,7 @@ import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/track.dart';
+import 'track_gate.dart';
 import 'track_menu.dart';
 
 /// 모르는 아티스트 · 앨범 · 장르는 안내 문구로.
@@ -89,7 +90,11 @@ class TrackListTile extends StatelessWidget {
     final t = track;
     final sel = selection;
     final picking = sel != null && sel.active;
-    return TrackTile(
+    return TrackGate(
+      track: t,
+      builder: (context, gate) => TrackTile(
+        enabled: gate.enabled,
+        unavailable: gate.unavailable,
       title: t.title,
       subtitle: showAlbum
           ? '${artistOf(l10n, t)} · ${albumOf(l10n, t)}'
@@ -111,7 +116,7 @@ class TrackListTile extends StatelessWidget {
                 TrackMoreButton(track: t, playlistId: playlistId),
               ],
             ),
-      onTap: picking ? sel.onToggle : () => vm.playQueue(queue, index: index),
+      onTap: picking ? sel.onToggle : gate.tap(() => vm.playQueue(queue, index: index)),
       // 선택을 지원하는 목록에서는 길게 누르기가 선택 모드 진입이고, 메뉴는 ⋮로만 연다.
       onLongPress: sel?.onToggle,
       onMenu: sel != null
@@ -122,6 +127,8 @@ class TrackListTile extends StatelessWidget {
               globalPosition: pos,
               playlistId: playlistId,
             ),
+      ),
     );
   }
 }
+

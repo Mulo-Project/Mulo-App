@@ -14,13 +14,16 @@ class DownloadQueueState extends Equatable {
 
   final List<DownloadItem> items;
 
-  /// 카드에 보여 줄 곡: 지금 받는 곡, 없으면 일시정지한 첫 곡, 없으면 실패한 첫 곡 (다시 받기 버튼을 보이려고).
+  /// 카드에 보여 줄 곡: 지금 받는 곡, 없으면 일시정지한 첫 곡, 없으면 시작을 기다리는 첫 곡, 없으면 실패한 첫 곡 (다시 받기 버튼을 보이려고).
   DownloadItem? get current {
     for (final i in items) {
       if (i.status == DownloadStatus.downloading) return i;
     }
     for (final i in items) {
       if (i.status == DownloadStatus.paused) return i;
+    }
+    for (final i in items) {
+      if (i.status == DownloadStatus.queued) return i;
     }
     for (final i in items) {
       if (i.status == DownloadStatus.failed) return i;

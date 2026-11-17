@@ -54,13 +54,29 @@ class _PermissionsSectionState extends State<PermissionsSection>
                   description: _description(l10n, entry.key, entry.value),
                   trailing: AppSwitch(
                     value: entry.value == PermissionLevel.granted,
-                    onChanged: (_) => _cubit.toggle(entry.key),
+                    onChanged: (_) => _toggle(entry.key),
                   ),
                 ),
             ],
           ),
         );
       },
+    );
+  }
+
+  /// 토글: 요청 창 결과가 허용이 아니면 스낵바로 알린다. 두 번 거절해 막히면 다음 누름이 시스템 설정을 연다.
+  Future<void> _toggle(AppPermission permission) async {
+    final result = await _cubit.toggle(permission);
+    if (!mounted || result == null || result == PermissionLevel.granted) return;
+    final l10n = context.l10n;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          result == PermissionLevel.blocked
+              ? l10n.permBlockedNotice
+              : l10n.permDeniedNotice,
+        ),
+      ),
     );
   }
 

@@ -7,6 +7,8 @@ class AudioStream extends Equatable {
     required this.url,
     this.headers = const {},
     this.fallbacks = const [],
+    this.hls = false,
+    this.codec,
   });
 
   final String url;
@@ -17,6 +19,12 @@ class AudioStream extends Equatable {
   /// 이 주소가 안 열릴 때 차례로 써 볼 다른 형식의 주소 (미리 듣기는 형식을 가리지 않고 틀기 위함).
   final List<AudioStream> fallbacks;
 
+  /// 주소가 HLS(m3u8) 목록이다: 파일 하나가 아니라 조각을 모아 합쳐야 받을 수 있다 (사운드클라우드 등).
+  final bool hls;
+
+  /// 소리 코덱 이름(yt-dlp가 알려 준 값, 모르면 null). HLS를 합칠 때 네이티브가 담을 형식을 고르는 데 쓴다.
+  final String? codec;
+
   @override
-  List<Object?> get props => [url, headers, fallbacks];
+  List<Object?> get props => [url, headers, fallbacks, hls, codec];
 }

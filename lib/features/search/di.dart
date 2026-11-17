@@ -54,6 +54,7 @@ void registerSearch(GetIt sl) {
                 videoReader: native.video,
                 languageReader: native.languages,
                 searchReader: native.search,
+                newestSearchReader: native.searchNewest,
                 playlistReader: native.playlist,
                 playlistSearchReader: native.searchPlaylists,
                 infoReader: native.videoInfo,
@@ -109,6 +110,7 @@ void registerSearch(GetIt sl) {
     ..registerFactory(() => WatchPreviewFailures(sl()))
     ..registerFactory(() => SetPreviewRepeat(sl()))
     ..registerFactory(() => WatchPreviewPaused(sl()))
+    ..registerFactory(() => WatchPreviewChanged(sl()))
     ..registerFactory(() => GetStreamCacheInfo(sl()))
     ..registerFactory(() => ClearStreamCache(sl()))
     ..registerFactory(() => SetStreamCacheLimit(sl()))
@@ -163,6 +165,7 @@ void registerSearch(GetIt sl) {
         sl(),
         setRepeat: sl(),
         watchPaused: sl(),
+        watchChanged: sl(),
         resolveVideo: sl(),
         enterPictureInPicture: sl(),
         loadAutoQuality: sl(),

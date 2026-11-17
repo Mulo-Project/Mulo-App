@@ -62,13 +62,18 @@ void registerLibrary(GetIt sl) {
     ..registerFactory(() => WatchLibraryTracks(sl(), sl()))
     ..registerFactory(() => UpdateTrackInfo(sl(), sl()))
     ..registerFactory(() => EmbedTagsIntoFiles(sl(), sl(), sl(), sl(), sl()))
-    ..registerFactory(() => RestoreFromFileTags(sl(), sl(), sl(), sl(), sl()))
+    ..registerFactory(() => EmbedTrackCover(sl(), sl(), sl(), sl()))
+    ..registerLazySingleton(PendingTagTracks.new)
+    ..registerFactory(
+      () => RestoreFromFileTags(sl(), sl(), sl(), sl(), sl(), sl()),
+    )
     ..registerFactory(() => DeleteTrack(sl(), sl()))
     ..registerFactory(() => GetTrackFileInfo(sl()))
     ..registerFactory(() => ImportDeviceMusic(sl(), sl(), sl()))
     ..registerFactory(() => LoadLoadedFolders(sl(), sl()))
     ..registerFactory(() => AddLoadedFolder(sl()))
     ..registerFactory(() => RemoveLoadedFolder(sl(), sl()))
+    ..registerFactory(() => HideMissingTrack(sl()))
     ..registerFactory(() => ListHiddenTracks(sl()))
     ..registerFactory(() => PurgeHiddenTracks(sl()))
     ..registerFactory(() => HiddenRecordsCubit(sl(), sl()))
@@ -79,7 +84,8 @@ void registerLibrary(GetIt sl) {
     ..registerFactory(() => AddSaveLocation(sl()))
     ..registerFactory(() => RemoveSaveLocation(sl()))
     ..registerFactory(() => SaveLocationsCubit(sl(), sl(), sl()))
-    ..registerFactory(() => LibraryCubit(sl(), sl(), sl()))
+    ..registerFactory(() => EnsureTracksWriteAccess(sl()))
+    ..registerFactory(() => LibraryCubit(sl(), sl(), sl(), sl()))
     ..registerFactory(() => FillEmbeddedCovers(sl(), sl(), sl()))
     ..registerFactory(() => LibraryImportCubit(sl(), sl(), sl(), sl()));
 }

@@ -220,6 +220,12 @@ class SessionPlayer(
         if (count == 0) return
         val next = exo.currentMediaItemIndex + 1
         exo.seekTo(if (next < count) next else 0, 0L)
+        reviveIfIdle()
+    }
+
+    /** 곡을 못 열어 멈춘(IDLE) 상태에서 알림 버튼으로 곡을 옮기면 다시 준비해야 재생이 이어진다. */
+    private fun reviveIfIdle() {
+        if (exo.playbackState == Player.STATE_IDLE) exo.prepare()
     }
 
     private fun skipPrevious() {
@@ -231,5 +237,6 @@ class SessionPlayer(
             index == 0 -> exo.seekTo(count - 1, 0L)
             else -> exo.seekTo(index - 1, 0L)
         }
+        reviveIfIdle()
     }
 }

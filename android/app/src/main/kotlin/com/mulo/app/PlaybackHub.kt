@@ -828,6 +828,8 @@ object PlaybackHub {
             // 앱의 flutter 로그에도 남겨, 기기에서 원인을 바로 볼 수 있게 한다.
             emit(mapOf(
                 "type" to "error",
+                // 파일이 없어 못 연 곡이면 앱이 그 곡을 숨긴다 (권한 · 디코더 문제는 파일이 있으니 해당이 없다).
+                "missing" to (error.errorCode == PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND),
                 "code" to error.errorCodeName,
                 "message" to (error.message ?: ""),
                 "cause" to (error.cause?.toString() ?: ""),

@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart' show debugPrint;
 
 import '../../../covers/domain/entities/cover_art.dart';
-import '../../../downloads/data/datasources/cover_tag_writer.dart';
 import '../../../downloads/data/datasources/native_tags.dart';
 import '../../domain/repositories/track_tag_repository.dart';
 
@@ -11,12 +10,8 @@ import '../../domain/repositories/track_tag_repository.dart';
 /// 결과로 "쓸 수 없는 곡"과 "쓰려다 실패"를 가른다 (네이티브가 알려 준다):
 /// 쓰지 않는 곡(모르는 형식 · ffmpeg 없음 · 파일 접근 불가)은 [TagWriteResult.unsupported].
 class TrackTagSource {
-  TrackTagSource([
-    this._writer = const CoverTagWriter(),
-    this._tags = const NativeTags(),
-  ]);
+  TrackTagSource([this._tags = const NativeTags()]);
 
-  final CoverTagWriter _writer;
   final NativeTags _tags;
 
   Future<TagWriteResult> write(
@@ -31,15 +26,17 @@ class TrackTagSource {
     bool interactive = false,
   }) async {
     if (uri.isEmpty) return TagWriteResult.unsupported;
-    final status = await _writer.write(
+    final status = await _tags.write(
       uri,
+      values: {
+        'title': title,
+        'artist': artist,
+        'album': album,
+        'genre': genre,
+        'lyrics': lyrics,
+      },
       cover: cover,
       color: color,
-      title: title,
-      artist: artist,
-      album: album,
-      genre: genre,
-      lyrics: lyrics,
       // 사용자가 직접 한 저장이면 쓸 권한이 없을 때 시스템 동의 창을 띄운다.
       ask: interactive,
     );
@@ -54,4 +51,6 @@ class TrackTagSource {
 
   /// 곡 파일에 쓸 수 있는지 확인하고, 못 쓰면 시스템 동의 창을 띄운다 (가사 편집 화면에 들어갈 때).
   Future<bool> ensureWriteAccess(String uri) => _tags.ensure(uri);
+
+  Future<bool> ensureWriteAccessAll(List<String> uris) => _tags.ensureAll(uris);
 }

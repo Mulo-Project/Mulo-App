@@ -185,6 +185,9 @@ class FakeTrackFiles implements TrackFileRepository {
 /// 메모리 불러오는 폴더 목록 (고르기는 [picked]를 그대로 돌려준다).
 class MemoryLoadedFolders implements LoadedFolderRepository {
   @override
+  String get defaultVideoFolder => '';
+
+  @override
   List<String> get videoFolders => const [];
 
   MemoryLoadedFolders({this.picked, List<String> extra = const []})
@@ -898,6 +901,7 @@ class FakeTrackTagRepository implements TrackTagRepository {
     Track track, {
     CoverArt? cover,
     int? color,
+    bool interactive = false,
   }) async => result;
 
   @override
@@ -905,6 +909,9 @@ class FakeTrackTagRepository implements TrackTagRepository {
 
   @override
   Future<bool> ensureWriteAccess(Track track) async => true;
+
+  @override
+  Future<bool> ensureWriteAccessAll(List<Track> tracks) async => true;
 
   /// 가사 태그에 쓰라고 한 글 (곡 id → 글).
   final lyricsWritten = <String, String>{};
@@ -1346,6 +1353,9 @@ class FakeAudioPlayer implements AudioPlayerRepository {
 
   @override
   Stream<void> watchOpenPlayer() => _openPlayer.stream;
+
+  @override
+  Stream<String> watchMissing() => const Stream.empty();
 
   Future<void> _setQueue(PlaybackSnapshot s) async {
     final current = s.current;
@@ -1866,6 +1876,9 @@ class FakePreviewPlayer implements PreviewPlayer {
   Stream<bool> watchPaused() => const Stream.empty();
 
   @override
+  Stream<void> watchChanged() => const Stream.empty();
+
+  @override
   Stream<PreviewProgress> watchProgress() => _progress.stream;
 }
 
@@ -1890,21 +1903,12 @@ class MemoryNotificationSettings implements NotificationSettingsRepository {
   Future<void> openSystemSettings() async {}
 }
 
-/// 받기 알림 기록 ('progress:제목:42', 'clear', 'done:id', 'failed:id').
+/// 받기 알림 기록 ('done:id', 'failed:id'). 받기 큐 알림은 네이티브가 띄우므로 글과 설정만 기록한다.
 class FakeDownloadNotifier implements DownloadNotifier {
   final calls = <String>[];
 
   /// 결과 알림에 담긴 곡 이미지 (알림 id → 주소).
   final resultArt = <String, String?>{};
-
-  /// 마지막 진행 알림의 내용 (제목 · 본문 · 머리말 · 앞에 붙들기 · 미리 듣기 버튼).
-  final shown = <Map<String, Object?>>[];
-  final _actions = StreamController<DownloadNotificationAction>.broadcast();
-
-  void press(DownloadNotificationAction a) => _actions.add(a);
-
-  @override
-  Stream<DownloadNotificationAction> watchActions() => _actions.stream;
 
   final _opens = StreamController<String>.broadcast();
 
@@ -1924,39 +1928,16 @@ class FakeDownloadNotifier implements DownloadNotifier {
     return id;
   }
 
-  @override
-  Future<void> showProgress({
-    required String title,
-    required String body,
-    int? percent,
-    bool foreground = true,
-    String? subText,
-    String? previewLabel,
-    String? cancelLabel,
-    String? holdLabel,
-    String? pauseLabel,
-    String? stopLabel,
-    String? openId,
-    String? artUri,
-  }) async {
-    shown.add({
-      'title': title,
-      'body': body,
-      'subText': subText,
-      'foreground': foreground,
-      'preview': previewLabel,
-      'cancel': cancelLabel,
-      'hold': holdLabel,
-      'pause': pauseLabel,
-      'stop': stopLabel,
-      'openId': openId,
-      'artUri': artUri,
-    });
-    calls.add('progress:$title:$percent');
-  }
+  /// 네이티브에 넘긴 받기 알림 설정 (마지막 것).
+  Map<String, Object?>? downloadConfig;
+  String? previewing;
 
   @override
-  Future<void> clearProgress() async => calls.add('clear');
+  Future<void> configureDownloads(Map<String, Object?> config) async =>
+      downloadConfig = config;
+
+  @override
+  Future<void> setDownloadPreviewing(String? id) async => previewing = id;
 
   @override
   Future<void> showResult({

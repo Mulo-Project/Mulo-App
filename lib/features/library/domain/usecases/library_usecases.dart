@@ -82,7 +82,14 @@ class ImportDeviceMusic implements UseCase<ImportOutcome, NoParams> {
   @override
   Future<ImportOutcome> call(NoParams _) async {
     try {
-      final folders = [_folders.defaultFolder, ...await _folders.loadExtra()];
+      // 영상 기본 폴더(`Movies/Mulo`)도 찾는다. 앱 데이터를 지우면 보관함 목록이 비는데, 받아 둔 영상이 이 폴더에 있다.
+      // 영상 기본 폴더가 없는 기기는 빈 문자열이라 뺀다.
+      final video = _folders.defaultVideoFolder;
+      final folders = [
+        _folders.defaultFolder,
+        if (video.isNotEmpty) video,
+        ...await _folders.loadExtra(),
+      ];
       return switch (await _device.scan(folders)) {
         ScanCancelled() => const ImportCancelled(),
         ScanPermissionDenied() => const ImportDenied(),
@@ -233,6 +240,39 @@ class UpdateTrackInfo
   }
 }
 
+/// 곡에 붙인 커버(웹 이미지 · 기기 사진, 확대 · 위치 포함)를 곡 파일의 태그에 쓴다.
+/// 커버를 고르거나 고친 뒤에 부른다: 앱 DB에만 있으면 앱 데이터를 지운 뒤 처음 받을 때의 썸네일로 돌아간다.
+/// 커버가 없으면 쓸 것이 없어 [TagWriteResult.unsupported]. 사용자가 직접 한 일이라 쓸 권한이 없으면 동의 창을 띄운다.
+class EmbedTrackCover implements UseCase<TagWriteResult, String> {
+  const EmbedTrackCover(this._library, this._covers, this._colors, this._tags);
+
+  final LibraryRepository _library;
+  final CoverRepository _covers;
+  final CoverColorRepository _colors;
+  final TrackTagRepository _tags;
+
+  @override
+  Future<TagWriteResult> call(String trackId) async {
+    final tracks = await _library.watchTracks().first;
+    final track = tracks.where((t) => t.id == trackId).firstOrNull;
+    if (track == null || track.uri.isEmpty) return TagWriteResult.unsupported;
+    final key = CoverKey.track(trackId);
+    final cover = (await _covers.loadAll())[key];
+    if (cover == null) return TagWriteResult.unsupported;
+    final color = (await _colors.loadAll())[key];
+    try {
+      return await _tags.write(
+        track,
+        cover: cover,
+        color: color,
+        interactive: true,
+      );
+    } on Object {
+      return TagWriteResult.failed;
+    }
+  }
+}
+
 /// 받아 둔 곡의 파일 태그에 정보를 한꺼번에 쓴다 (기존 파일 이관). 앱이 뜬 뒤 뒤에서 돈다.
 /// 곡마다 끝낸 id를 기록해 중간에 꺼져도 이어서 하고, 쓸 수 없는 파일은 다시 시도하지 않는다.
 /// 이번에 태그를 쓴 곡 수를 돌려준다.
@@ -288,17 +328,37 @@ class RestoreFromFileTags implements UseCase<int, NoParams> {
     this._covers,
     this._colors,
     this._tags,
-    this._done,
-  );
+    this._done, [
+    this._pending,
+  ]);
 
   final LibraryRepository _library;
   final CoverRepository _covers;
   final CoverColorRepository _colors;
   final FileTagRepository _tags;
   final TagRestoreStore _done;
+  final PendingTagTracks? _pending;
 
   @override
   Future<int> call(NoParams _) => run();
+
+  /// 읽기가 멈췄거나 끝났을 때 "정보 읽는 중" 표시를 모두 치운다 (읽기가 안 도는데 표시가 남지 않게).
+  void clearPending() => _pending?.clear();
+
+  /// 태그를 아직 안 읽은 기기 곡을 "정보 읽는 중"으로 표시한다 (읽기를 시작하기 전, 새로 찾은 직후에 부른다).
+  Future<void> markPending() async {
+    final pending = _pending;
+    if (pending == null) return;
+    final tracks = await _library.watchTracks().first;
+    final done = await _done.loadDone();
+    pending.set({
+      for (final t in tracks)
+        if (t.source == TrackSource.device &&
+            t.uri.isNotEmpty &&
+            !done.contains(t.id))
+          t.id,
+    });
+  }
 
   /// [onProgress]로 (끝낸 곡 수, 읽을 곡 수)를 알리며 되살린다.
   Future<int> run({
@@ -317,6 +377,7 @@ class RestoreFromFileTags implements UseCase<int, NoParams> {
           t,
     ];
     var restored = 0;
+    _pending?.set({for (final t in todo) t.id});
     onProgress?.call(0, todo.length);
     for (final (i, t) in todo.indexed) {
       if (cancelled?.call() ?? false) break;
@@ -331,8 +392,11 @@ class RestoreFromFileTags implements UseCase<int, NoParams> {
       } on Exception {
         // 한 곡이 실패해도 나머지는 계속한다 (기록하지 않아 다음에 다시 시도).
       }
+      // 읽었든 못 읽었든 이 곡은 더 기다리지 않는다 (못 읽은 곡은 다음에 다시 시도하되 지금 재생은 막지 않는다).
+      _pending?.remove(t.id);
       onProgress?.call(i + 1, todo.length);
     }
+    _pending?.clear();
     // 임시 진단: 읽은 결과를 디버그 빌드가 snackbar로 보여 준다.
     final summary = _tags.takeSummary();
     if (todo.isNotEmpty) {
@@ -368,6 +432,26 @@ class RestoreFromFileTags implements UseCase<int, NoParams> {
 
 /// 곡을 지운다: 음악 파일을 지우고, 보관함 · 재생목록 · 기록에서도 뺀다.
 /// 파일을 못 지우면 아무것도 바꾸지 않고 false.
+/// 여러 곡의 파일 쓰기 동의를 시스템 창 한 번으로 구한다 (다중 선택 수정). 이미 쓸 수 있으면 창 없이 true.
+class EnsureTracksWriteAccess implements UseCase<bool, List<Track>> {
+  const EnsureTracksWriteAccess(this._tags);
+
+  final TrackTagRepository _tags;
+
+  @override
+  Future<bool> call(List<Track> tracks) => _tags.ensureWriteAccessAll(tracks);
+}
+
+/// 파일이 없어 열지 못한 곡을 숨긴다 (재생 횟수 · 재생목록 소속 같은 기록은 남고, 파일이 다시 나타나면 스캔이 숨김을 푼다).
+class HideMissingTrack implements UseCase<void, String> {
+  const HideMissingTrack(this._library);
+
+  final LibraryRepository _library;
+
+  @override
+  Future<void> call(String trackId) => _library.hide(trackId);
+}
+
 class DeleteTrack implements UseCase<bool, Track> {
   const DeleteTrack(this._library, this._files);
 

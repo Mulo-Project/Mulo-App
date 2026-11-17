@@ -103,7 +103,10 @@ class YoutubeResolveChannel(@Suppress("UNUSED_PARAMETER") context: Context, mess
                     }
                     val page = call.argument<Int>("page") ?: 0
                     val size = call.argument<Int>("size") ?: 20
-                    runAsync(io, result, ERROR) { YoutubeBrowser.search(query, page, size) }
+                    val newest = call.argument<Boolean>("newest") ?: false
+                    runAsync(io, result, ERROR) {
+                        if (newest) YoutubeBrowser.searchNewest(query, page, size) else YoutubeBrowser.search(query, page, size)
+                    }
                     return@setMethodCallHandler
                 }
                 "playlist" -> {

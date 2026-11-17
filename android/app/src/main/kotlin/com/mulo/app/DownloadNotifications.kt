@@ -28,7 +28,10 @@ object DownloadNotifications {
         "stopPreview" to "com.mulo.app.download.STOP_PREVIEW",
         "toggleHold" to "com.mulo.app.download.TOGGLE_HOLD",
         "cancel" to "com.mulo.app.download.CANCEL",
+        "retry" to "com.mulo.app.download.RETRY",
     )
+    /** 실패 알림의 "다시 시도" 버튼이 수신기에 싣는 받기 항목 id. */
+    const val EXTRA_RETRY_ID = "retryId"
 
     /** 서비스가 알림을 다시 만들 때 쓰는, 마지막으로 받은 진행 알림 내용. */
     @Volatile
@@ -143,8 +146,26 @@ object DownloadNotifications {
         (a["color"] as? Number)?.let { b.setColor(it.toInt()) }
         NotificationArt.get(a["artUri"] as? String) { showResult(context, a) }?.let { b.setLargeIcon(it) }
         launchIntent(context, a["openId"] as? String)?.let { b.setContentIntent(it) }
+        val retryLabel = a["retryLabel"] as? String
+        val retryId = a["id"] as? String
+        if (failed && retryLabel != null && !retryId.isNullOrEmpty()) {
+            // 항목마다 요청 코드와 extra가 달라야 알림마다 자기 항목을 다시 받는다.
+            // 받기는 네이티브(DownloadEngine)가 하므로 앱이 꺼져 있어도 수신기가 바로 다시 받는다.
+            val intent = Intent(ACTIONS.getValue("retry"))
+                .setComponent(ComponentName(context, DownloadActionReceiver::class.java))
+                .putExtra(EXTRA_RETRY_ID, retryId)
+            val pi = PendingIntent.getBroadcast(context, id, intent, NotificationSupport.PENDING_FLAGS)
+            NotificationSupport.addAction(b, retryLabel, pi)
+        }
         synchronized(resultIds) { resultIds.add(id) }
         manager(context).notify(id, b.build())
+    }
+
+    /** 받기 항목 하나의 결과(실패 · 완료) 알림을 치운다. */
+    fun clearResult(context: Context, itemId: String) {
+        val id = RESULT_ID_BASE + (itemId.hashCode() and 0xFFFFF)
+        manager(context).cancel(id)
+        synchronized(resultIds) { resultIds.remove(id) }
     }
 
     fun clearResults(context: Context) {

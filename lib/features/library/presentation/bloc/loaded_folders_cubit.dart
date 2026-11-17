@@ -134,6 +134,7 @@ class LoadedFoldersCubit extends Cubit<LoadedFoldersState> {
     _stage(LoadStage.scanning);
     await load();
     final outcome = await _import(const NoParams());
+    if (outcome is ImportAdded) await _restoreTags?.markPending();
     var changed = false;
     if (!_cancelled) {
       // 파일 안 커버를 먼저 채우고, 태그의 웹 주소 커버는 그래도 커버가 없는 곡에만 쓴다 (네트워크 없이 보이도록).
@@ -166,6 +167,7 @@ class LoadedFoldersCubit extends Cubit<LoadedFoldersState> {
         }
       }
     }
+    _restoreTags?.clearPending();
     if (isClosed) return;
     if (_cancelled && onCancelled != null) await onCancelled();
     final folders = await _load(const NoParams());

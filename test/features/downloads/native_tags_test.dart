@@ -26,10 +26,11 @@ void main() {
     reply((_) => {'status': 'written'});
     final status = await const NativeTags().write(
       'content://a/1',
-      values: {'title': '제목', 'lyrics': '가사'},
-      cover: (
-        path: '/img.jpg',
-        transform: const CoverTransform(scale: 2, dx: .1),
+      values: {'title': '제목', 'lyrics': '가사', 'album': null},
+      color: 0xFF112233,
+      cover: const CoverArt.file(
+        '/img.jpg',
+        transform: CoverTransform(scale: 2, dx: .1),
       ),
       ask: true,
     );
@@ -37,7 +38,8 @@ void main() {
     expect(calls.single.method, 'write');
     final args = calls.single.arguments as Map;
     expect(args['uri'], 'content://a/1');
-    expect(args['values'], {'title': '제목', 'lyrics': '가사'});
+    expect(args['values'], {'title': '제목', 'lyrics': '가사', 'album': null});
+    expect(args['color'], 0xFF112233);
     expect((args['cover'] as Map)['path'], '/img.jpg');
     expect((args['cover'] as Map)['scale'], 2.0);
     expect(args['ask'], true);
@@ -63,6 +65,7 @@ void main() {
         return {
           'status': 'ok',
           'tags': {'title': 'T'},
+          'color': 0xFF112233,
         };
       }
       return {'ok': false};
@@ -70,6 +73,7 @@ void main() {
     final r = await const NativeTags().read('/a.opus');
     expect(r.status, 'ok');
     expect(r.tags, {'title': 'T'});
+    expect(r.color, 0xFF112233);
     expect(await const NativeTags().ensure('content://a/1'), isFalse);
   });
 }

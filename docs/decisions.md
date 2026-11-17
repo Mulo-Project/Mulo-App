@@ -1027,3 +1027,14 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 - 원본은 `assets/icon/app_icon.png`(색, 투명 배경 1024), `assets/icon/app_icon_mono.png`(단색 마크). Android 리소스는 `python3 tool/gen_android_icon.py`로 만든다 (새 패키지 없음, 생성물은 커밋).
 - adaptive icon: 배경은 사각형 전체를 아이콘 색 번짐으로 채운 이미지 `ic_launcher_background`(원본 `assets/icon/app_icon_background.png`), 앞면 `ic_launcher_foreground`(광택 원 + 마크), 테마 아이콘(Android 13+) `ic_launcher_monochrome`. 옛 기기용 `ic_launcher.png`는 배경 + 앞면을 합쳐 둥근 사각형으로 자른 것. 원형 · 둥근 사각형 마스크에서 음표가 일부 잘릴 수 있어 마크를 안전 영역 쪽으로 줄여 놓았다.
 - iOS · Windows 아이콘은 Android 이후에 같은 원본으로 만든다 (지금은 Android만).
+
+## D-166 · 2026-11-17 · 백그라운드 받기와 받기 진행 알림을 한 설정으로 합친다
+- 포그라운드 서비스가 알림 없이는 못 돌기 때문에 두 설정은 따로 의미가 없었다. 설정 이름은 "받기 진행 알림" 하나다.
+- 켜면 받는 동안 진행 알림을 보이고 앱이 뒤로 가거나 닫혀도 받기를 이어 간다(포그라운드 서비스). 끄면 알림 없이 앱이 화면에 있는 동안에만 받는다.
+- 저장 키는 `notification.backgroundDownload`를 그대로 쓰고, `notification.downloadProgress`는 더 읽지 않는다.
+
+## D-167 · 2026-11-17 · 받기 큐 실행과 보관함 등록을 네이티브(Kotlin)로 옮긴다 (D-091 마지막 줄 대체)
+- 전: 받기 큐(대기열 · 이어받기 · 변환 호출 · 태그 호출 · 저장 호출 · 보관함 등록)를 Dart(`EngineDownloadQueueRepository`)가 돌렸다. 앱 프로세스가 죽으면 받기가 멈추고, 실패 알림의 "다시 시도"도 앱 화면을 한 번 거쳐야 했다.
+- 후(목표): 실질적인 기능은 네이티브가 하고 Dart는 요청을 넘기고 상태를 그리기만 한다. 앱이 꺼져 있어도 포그라운드 서비스가 받기 · 재시도를 끝까지 한다.
+- DB(수정 2026-11-17): 보관함 DB와 그 상태는 Dart(drift)가 쥔다. 네이티브는 받기 · 변환 · 태그 · 파일 저장 · 커버 사본 · 가사 파일까지 하고, 곡 하나를 보관함에 넣는 데 필요한 값 전부를 `registered` 이벤트로 Dart에 넘긴다. Dart(`DriftDownloadRegistrar`)가 drift로 쓰고 `ack`로 알린다. `ack`가 올 때까지 네이티브는 값을 `pending_register.json`에 맡겨 두었다가 Dart가 준비되면(`dbReady`) 다시 넘긴다 (앱이 꺼져 있는 사이 받은 곡도 다음에 등록된다). 네이티브가 DB 파일에 직접 쓰던 방식(WAL · busy timeout · "바뀐 표" 알림)은 목록 갱신이 어긋나서 버렸다.
+- 단계(한 PR 안에서): ① 네이티브 받기 큐 저장과 서비스에서의 재시도(실패 → 파일 저장까지) ② 보관함 등록(DB 쓰기 + 알림) ③ 재생목록 · 커버 · 색 · 가사 사본 ④ Dart 큐 코드 제거와 화면 연결. 형식별 처리는 기존 규칙대로 네이티브의 형식별 함수가 가진다 (Dart에 분기를 만들지 않는다).

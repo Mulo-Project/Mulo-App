@@ -464,6 +464,16 @@ class WatchPreviewPaused implements StreamUseCase<bool, NoParams> {
   Stream<bool> call(NoParams params) => _player.watchPaused();
 }
 
+/// 네이티브가 스스로 미리 듣기를 시작하거나 멈췄을 때 (받기 알림의 버튼 등).
+class WatchPreviewChanged implements StreamUseCase<void, NoParams> {
+  const WatchPreviewChanged(this._player);
+
+  final PreviewPlayer _player;
+
+  @override
+  Stream<void> call(NoParams params) => _player.watchChanged();
+}
+
 /// 미리 듣기가 재생 중에 실패했을 때 그 까닭.
 class WatchPreviewFailures implements StreamUseCase<String, NoParams> {
   const WatchPreviewFailures(this._player);

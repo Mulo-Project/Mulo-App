@@ -16,6 +16,7 @@ import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../../library/presentation/widgets/play_shuffle_row.dart';
 import '../../../library/presentation/widgets/lazy_track_list.dart';
 import '../../../library/presentation/widgets/library_selection.dart';
+import '../../../library/presentation/widgets/track_gate.dart';
 import '../../../library/presentation/widgets/track_list_tile.dart';
 import '../bloc/playlist_tracks_cubit.dart';
 import '../bloc/playlists_cubit.dart';
@@ -251,7 +252,11 @@ class _FeaturedRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SectionTitle(l10n.playlistFeaturedTitle),
-        TrackTile(
+        TrackGate.byFlag(
+          isDeviceFile: t.id.startsWith('device'),
+          builder: (context, gate) => TrackTile(
+          enabled: gate.enabled,
+          unavailable: gate.unavailable,
           title: t.title,
           subtitle: [
             if (t.artist.isNotEmpty) t.artist,
@@ -260,7 +265,7 @@ class _FeaturedRow extends StatelessWidget {
           tone: toneFor(t.id),
           artwork: coverImageOf(context, CoverKey.track(t.id)),
           color: coverColorOf(context, CoverKey.track(t.id)),
-          onTap: () => _play(context),
+          onTap: gate.tap(() => _play(context)),
           // 이 곡이 재생 중이면 일시정지 아이콘, 아니면 재생 아이콘.
           trailing: BlocBuilder<NowPlayingCubit, NowPlayingState>(
             buildWhen: (a, b) =>
@@ -275,13 +280,14 @@ class _FeaturedRow extends StatelessWidget {
                     : l10n.playlistFeaturedPreview,
                 onPressed: current
                     ? context.read<NowPlayingCubit>().togglePlay
-                    : () => _play(context),
+                    : gate.tap(() => _play(context)),
                 icon: Icon(
                   playing ? AppIcons.pauseCircle : AppIcons.playCircle,
                   color: p.accent,
                 ),
               );
             },
+          ),
           ),
         ),
       ],

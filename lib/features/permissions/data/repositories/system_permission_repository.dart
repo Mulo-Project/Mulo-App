@@ -11,21 +11,44 @@ class SystemPermissionRepository implements PermissionRepository {
   List<AppPermission> get supported =>
       Platform.isAndroid ? AppPermission.values : const [];
 
-  /// 음악 파일은 Android 13+는 audio, 12 이하는 storage 권한이다. 기기에 맞는 쪽만 실제로 뜬다.
+  /// 음악 · 영상 파일은 Android 13+는 audio · videos, 12 이하는 storage 권한이다. 기기에 맞는 쪽만 실제로 뜬다.
   List<Permission> _of(AppPermission p) => switch (p) {
     AppPermission.notifications => [Permission.notification],
-    AppPermission.audio => [Permission.audio, Permission.storage],
+    AppPermission.audio => [
+      Permission.audio,
+      Permission.videos,
+      Permission.storage,
+    ],
     AppPermission.overlay => [Permission.systemAlertWindow],
   };
 
   @override
-  Future<PermissionLevel> status(AppPermission permission) async =>
-      _combine([for (final p in _of(permission)) await p.status]);
+  Future<PermissionLevel> status(AppPermission permission) async => _level(
+    permission,
+    {for (final p in _of(permission)) p: await p.status},
+  );
 
   @override
   Future<PermissionLevel> request(AppPermission permission) async {
     final statuses = await _of(permission).request();
-    return _combine(statuses.values);
+    return _level(permission, statuses);
+  }
+
+  /// 음악 · 영상은 둘 다 허용해야 허용이다 (영상만 거부하면 저장한 영상이 열리지 않는다).
+  /// Android 12 이하는 storage 하나가 둘을 다 덮는다.
+  static PermissionLevel _level(
+    AppPermission permission,
+    Map<Permission, PermissionStatus> statuses,
+  ) {
+    if (permission != AppPermission.audio) return _combine(statuses.values);
+    bool ok(Permission p) =>
+        statuses[p]?.isGranted == true || statuses[p]?.isLimited == true;
+    if (ok(Permission.storage) || (ok(Permission.audio) && ok(Permission.videos))) {
+      return PermissionLevel.granted;
+    }
+    return statuses.values.any((s) => s.isPermanentlyDenied)
+        ? PermissionLevel.blocked
+        : PermissionLevel.denied;
   }
 
   @override

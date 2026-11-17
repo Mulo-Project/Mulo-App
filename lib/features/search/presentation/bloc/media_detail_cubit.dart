@@ -80,7 +80,7 @@ class MediaDetailCubit extends Cubit<MediaDetailState> {
       _memo?.put(state.hit.url, state.hit);
     }
     // 느리게 읽히는 나머지(좋아요 수 · 공동 작업자 · 앨범)는 화면을 띄운 뒤 뒤에서 채운다.
-    if (_infoLoaded) await _loadFull();
+    if (_infoLoaded && !isClosed) await _loadFull();
     if (_infoLoaded && !isClosed) {
       try {
         await onLoaded?.call(state.hit);

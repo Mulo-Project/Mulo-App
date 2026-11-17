@@ -1,6 +1,7 @@
 import '../../../../core/usecase/usecase.dart';
 import '../entities/app_lock_settings.dart';
 import '../repositories/app_lock_repository.dart';
+import '../repositories/app_session_repository.dart';
 
 class LoadAppLock implements UseCase<AppLockSettings, NoParams> {
   const LoadAppLock(this._repo);
@@ -85,4 +86,14 @@ class AuthenticateBiometric implements UseCase<bool, String> {
   /// 인자는 인증 창에 보일 안내 문구.
   @override
   Future<bool> call(String reason) => _auth.authenticate(reason);
+}
+
+/// 앱 화면이 새로 열렸는지 (밀어 닫았다 다시 켬).
+class WatchAppRelaunch implements StreamUseCase<void, NoParams> {
+  const WatchAppRelaunch(this._repo);
+
+  final AppSessionRepository _repo;
+
+  @override
+  Stream<void> call(NoParams _) => _repo.watchRelaunch();
 }

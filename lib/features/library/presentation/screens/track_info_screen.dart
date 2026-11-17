@@ -16,6 +16,7 @@ import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/track.dart';
 import '../../domain/entities/track_file_info.dart';
 import '../../domain/entities/track_info.dart';
+import '../../domain/repositories/track_tag_repository.dart';
 import '../../domain/usecases/library_usecases.dart';
 import '../bloc/library_cubit.dart';
 
@@ -105,6 +106,18 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
       await covers.clear(key);
     } else if (result.art != null) {
       await covers.setArt(key, result.art!);
+      await _embedCover();
+    }
+  }
+
+  /// 고른 커버를 곡 파일 태그에도 쓴다 (앱 데이터를 지운 뒤 불러와도 그 커버가 그대로 돌아오게).
+  Future<void> _embedCover() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final failed = context.l10n.downloadTagFailed(_track.title);
+    final result = await sl<EmbedTrackCover>()(_track.id);
+    if (!mounted) return;
+    if (result == TagWriteResult.failed || result == TagWriteResult.denied) {
+      messenger.showSnackBar(SnackBar(content: Text(failed)));
     }
   }
 
@@ -136,7 +149,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
       genre: _genre.text,
     );
     setState(() => _saving = true);
-    final result = await library.updateInfo(_track.id, info);
+    final result = await library.saveInfo(_track, info);
     if (!mounted) return;
     setState(() => _saving = false);
     if (result == UpdateInfoResult.tagWriteFailed) {
