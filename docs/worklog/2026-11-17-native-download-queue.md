@@ -32,3 +32,8 @@
 - 옛 Dart 큐 기록 이전: 네이티브 `DownloadEngine.importLegacy`가 `dbReady` 때 shared_preferences 파일에서 직접 읽어 한 번 가져오고 옛 키를 지운다. Dart의 `DownloadQueueStore` · `importLegacy` 호출은 삭제했다 (받기 요청 JSON 만들기만 `download_request_codec.dart`에 남음).
 - 남김: drift 보관함 DB(스키마 주인).
 
+## 수정: 보관함 DB는 Dart가 쥔다 (같은 PR)
+
+- 네이티브의 SQLite 직접 쓰기(`AppDb.open/register`)와 WAL 설정을 지웠다. 네이티브는 곡 값을 `registered` 이벤트로 넘기고(`AppDb.Registration`), Dart `DriftDownloadRegistrar`가 drift로 등록한 뒤 `ack`한다. 못 넘긴 값은 `pending_register.json`에 남았다가 `dbReady` 때 다시 넘어간다.
+- 목록은 drift 스트림이라 Dart가 쓰면 자동으로 갱신된다 (`markTablesUpdated` 불필요).
+

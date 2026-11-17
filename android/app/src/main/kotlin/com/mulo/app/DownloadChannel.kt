@@ -12,8 +12,8 @@ import org.json.JSONObject
  *
  * Dart → 네이티브: `enqueue`(request JSON 글 → id) · `pause` · `resume` · `retry` · `cancel`(id) · `cancelAll`(playlistId? → 뺀 곡 수) ·
  * `snapshot`(→ 대기열 목록) · `findExisting`(url → trackId? · inQueue) · `sourceUrlOf`(trackId → url?) ·
- * `configure`(알림 글 · 설정 JSON 글) · `setPreviewing`(id?) · `dbReady`(앱이 DB를 열었다. 옛 Dart 큐 기록 이전도 이때 네이티브가 한다).
- * 네이티브 → Dart (EventChannel `music_app/downloads/events`, {event, data}): `queue`(목록, 듣기 시작할 때 먼저 한 번) · `tagNotice`(title · extension · ok · detail) · `saved`(폴더) · `engineError`(글) · `libraryChanged`.
+ * `configure`(알림 글 · 설정 JSON 글) · `setPreviewing`(id?) · `dbReady`(Dart가 이벤트를 받을 준비가 됐다: 옛 Dart 큐 기록 이전 · 못 넘긴 등록 다시 넘김) · `ack`(trackId: Dart가 보관함에 등록했다).
+ * 네이티브 → Dart (EventChannel `music_app/downloads/events`, {event, data}): `queue`(목록, 듣기 시작할 때 먼저 한 번) · `tagNotice`(title · extension · ok · detail) · `saved`(폴더) · `engineError`(글) · `registered`(보관함에 넣을 곡 값: Dart가 drift에 쓰고 `ack`).
  */
 class DownloadChannel(
     context: Context,
@@ -70,6 +70,7 @@ class DownloadChannel(
                     "configure" -> { engine.configure(JSONObject(call.argument<String>("config") ?: "{}")); result.success(null) }
                     "setPreviewing" -> { engine.previewingId = call.argument<String>("id"); result.success(null) }
                     "dbReady" -> { engine.dbReady(); result.success(null) }
+                    "ack" -> { call.argument<String>("trackId")?.let(engine::ack); result.success(null) }
                     else -> result.notImplemented()
                 }
             } catch (e: Exception) {

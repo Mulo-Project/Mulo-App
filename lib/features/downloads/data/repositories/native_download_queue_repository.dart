@@ -20,9 +20,8 @@ import '../datasources/download_request_codec.dart';
 class NativeDownloadQueueRepository implements DownloadQueueRepository {
   NativeDownloadQueueRepository({
     required this._settings,
-    required this._openLibrary,
+    required this._register,
     this._onEngineError,
-    this._onLibraryChanged,
     MethodChannel? channel,
     EventChannel? events,
   }) : _channel = channel ?? const MethodChannel('music_app/downloads'),
@@ -37,14 +36,11 @@ class NativeDownloadQueueRepository implements DownloadQueueRepository {
   StreamSubscription<Object?>? _eventsSub;
   final DownloadSettingsRepository _settings;
 
-  /// 보관함 DB를 연다 (네이티브가 그 파일에 쓰기 전에, 최신 스키마가 되도록 Dart가 먼저 한 번 연다).
-  final Future<void> Function() _openLibrary;
+  /// 네이티브가 받아서 저장한 곡을 보관함 DB에 넣는다 (DB는 Dart가 쥔다). 끝나면 네이티브에 `ack`로 알린다.
+  final Future<void> Function(Map<String, Object?> registration) _register;
 
   /// 엔진이 받기를 못 해서 낸 오류 문구를 알린다 (버전이 오래된 경우 엔진 쪽이 알아서 업데이트한다).
   final void Function(String message)? _onEngineError;
-
-  /// 네이티브가 보관함 DB에 곡을 썼다: 목록 스트림이 다시 읽도록 표를 알린다.
-  final void Function()? _onLibraryChanged;
 
   final _changes = StreamController<List<DownloadItem>>.broadcast();
   final _tagNotices = StreamController<TagNotice>.broadcast();
@@ -58,18 +54,11 @@ class NativeDownloadQueueRepository implements DownloadQueueRepository {
       _onEvent,
       onError: (Object e) => debugPrint('MuloDownload events error: $e'),
     );
-    // 보관함 DB 열기는 받기 큐(목록 · 요청)를 막지 않도록 따로 돌린다. 못 열어도 네이티브가 등록을 맡겨 두었다가 다음에 쓴다.
-    unawaited(_openDatabase());
-    await _refresh();
-  }
-
-  Future<void> _openDatabase() async {
     try {
-      // 네이티브가 그 파일에 쓰기 전에, 최신 스키마가 되도록 Dart가 먼저 한 번 연다 (옛 대기열 이전도 이때 네이티브가 한다).
-      await _openLibrary().timeout(const Duration(seconds: 15));
+      // 이벤트를 받을 준비가 됐다: 네이티브가 옛 대기열을 가져오고, 아직 등록 못 한 곡을 다시 넘긴다.
       await _channel.invokeMethod<void>('dbReady');
     } on Object catch (e) {
-      debugPrint('MuloDownload db open failed: $e');
+      debugPrint('MuloDownload ready failed: $e');
     }
     await _refresh();
   }
@@ -95,20 +84,8 @@ class NativeDownloadQueueRepository implements DownloadQueueRepository {
       debugPrint('MuloDownload queue parse failed: $e\n$s');
       return;
     }
-    // 곡이 새로 "받음"이 되면 네이티브는 이미 보관함 DB에 써 두었다: 목록이 다시 읽도록 알린다
-    // (`libraryChanged` 이벤트와 별개로, 대기열 상태만 받아도 보관함이 갱신되게).
-    final done = {
-      for (final i in _items)
-        if (i.status == DownloadStatus.done) i.id,
-    };
-    final fresh = _seenDone != null && done.difference(_seenDone!).isNotEmpty;
-    _seenDone = done;
     _changes.add(_items);
-    if (fresh) _onLibraryChanged?.call();
   }
-
-  /// 지금까지 본 "받음" 항목 id (처음 받아 온 상태는 새 것으로 치지 않는다).
-  Set<String>? _seenDone;
 
   void _onEvent(Object? event) {
     if (event is! Map) return;
@@ -137,8 +114,20 @@ class NativeDownloadQueueRepository implements DownloadQueueRepository {
       case 'engineError':
         final message = data;
         if (message is String) _onEngineError?.call(message);
-      case 'libraryChanged':
-        _onLibraryChanged?.call();
+      case 'registered':
+        unawaited(_registerAndAck(Map<String, Object?>.from(data! as Map)));
+    }
+  }
+
+  Future<void> _registerAndAck(Map<String, Object?> registration) async {
+    try {
+      await _register(registration);
+      await _channel.invokeMethod<void>('ack', {
+        'trackId': registration['trackId'],
+      });
+    } on Object catch (e) {
+      // 등록하지 못하면 네이티브가 맡아 둔 채로 두었다가 다음에 다시 넘긴다.
+      debugPrint('MuloDownload register failed: $e');
     }
   }
 

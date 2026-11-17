@@ -17,15 +17,13 @@ void main() {
   late MemoryDownloadSettings settings;
   late List<MethodCall> calls;
   late List<Map<String, Object?>> snapshot;
-  var opened = 0;
-  var libraryChanged = 0;
+  final registered = <Map<String, Object?>>[];
   final errors = <String>[];
 
   NativeDownloadQueueRepository make() => NativeDownloadQueueRepository(
     settings: settings,
-    openLibrary: () async => opened++,
+    register: (r) async => registered.add(r),
     onEngineError: errors.add,
-    onLibraryChanged: () => libraryChanged++,
     channel: channel,
     events: events,
   );
@@ -47,8 +45,7 @@ void main() {
     settings = MemoryDownloadSettings();
     calls = [];
     snapshot = [];
-    opened = 0;
-    libraryChanged = 0;
+    registered.clear();
     errors.clear();
     sink = null;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -85,7 +82,7 @@ void main() {
         .setMockMethodCallHandler(channel, null);
   });
 
-  test('처음 쓸 때 보관함 DB를 열고 네이티브에 알리며 지금 대기열을 받아 온다', () async {
+  test('처음 쓸 때 네이티브에 준비됐다고 알리며 지금 대기열을 받아 온다', () async {
     snapshot = [
       {
         'id': 'd1',
@@ -98,9 +95,7 @@ void main() {
       },
     ];
     final items = await make().watchQueue().first;
-    // DB 열기는 목록을 막지 않게 따로 돈다: 잠시 기다린 뒤 확인한다.
     await Future<void>.delayed(const Duration(milliseconds: 50));
-    expect(opened, 1);
     expect(calls.map((c) => c.method), containsAllInOrder(['dbReady', 'snapshot']));
     expect(items.single.status, DownloadStatus.downloading);
     expect(items.single.progress, 0.5);
@@ -169,7 +164,7 @@ void main() {
     expect(await repo.sourceUrlOf('download:d0'), 'https://youtu.be/x');
   });
 
-  test('태그 결과 · 마지막 저장 폴더 · 엔진 오류 · 보관함 변경을 받는다', () async {
+  test('태그 결과 · 마지막 저장 폴더 · 엔진 오류를 받는다', () async {
     final repo = make();
     await repo.watchQueue().first;
     final notices = <String>[];
@@ -177,29 +172,24 @@ void main() {
     await fromNative('tagNotice', {'title': '곡', 'extension': 'opus', 'ok': false, 'detail': 'x'});
     await fromNative('saved', '/music/Mulo');
     await fromNative('engineError', 'Unable to extract');
-    await fromNative('libraryChanged', null);
     await Future<void>.delayed(Duration.zero);
     expect(notices, ['곡:false']);
     expect(settings.last, '/music/Mulo');
     expect(errors, ['Unable to extract']);
-    expect(libraryChanged, 1);
     await sub.cancel();
   });
 
-  test('곡이 새로 받음이 되면 이벤트 없이도 보관함 갱신을 알린다', () async {
+  test('네이티브가 넘긴 곡을 보관함에 등록하고 끝났다고 알린다', () async {
     final repo = make();
     await repo.watchQueue().first;
-    await fromNative('queue', [
-      {'id': 'd1', 'title': '곡', 'artist': '', 'status': 'downloading'},
-    ]);
-    expect(libraryChanged, 0);
-    await fromNative('queue', [
-      {'id': 'd1', 'title': '곡', 'artist': '', 'status': 'done'},
-    ]);
-    expect(libraryChanged, 1);
-    await fromNative('queue', [
-      {'id': 'd1', 'title': '곡', 'artist': '', 'status': 'done'},
-    ]);
-    expect(libraryChanged, 1, reason: '같은 항목은 다시 알리지 않는다');
+    await fromNative('registered', {
+      'trackId': 'download:d1',
+      'title': '곡',
+      'uri': 'content://m/1',
+    });
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+    expect(registered.single['trackId'], 'download:d1');
+    final ack = calls.lastWhere((c) => c.method == 'ack');
+    expect((ack.arguments as Map)['trackId'], 'download:d1');
   });
 }

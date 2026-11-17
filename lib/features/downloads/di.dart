@@ -4,10 +4,10 @@ import '../../core/database/app_database.dart';
 import '../engine/data/engine_updater.dart';
 import '../engine/data/native_yt_dlp.dart';
 
+import 'data/datasources/drift_download_registrar.dart';
 import 'data/repositories/native_download_queue_repository.dart';
 import 'data/repositories/prefs_download_settings_repository.dart';
 import 'data/repositories/native_video_save_repository.dart';
-import '../library/domain/repositories/library_repository.dart';
 import 'domain/repositories/video_save_repository.dart';
 import 'domain/repositories/download_queue_repository.dart';
 import 'domain/repositories/download_settings_repository.dart';
@@ -22,21 +22,11 @@ import 'presentation/bloc/download_settings_cubit.dart';
 void registerDownloads(GetIt sl) {
   sl
     ..registerLazySingleton<DownloadQueueRepository>(
-      // 받기 큐 · 이어받기 · 변환 · 태그 · 저장 · 보관함 등록은 네이티브가 한다 (D-167).
+      // 받기 큐 · 이어받기 · 변환 · 태그 · 저장은 네이티브가 하고, 보관함 DB(drift)는 Dart가 쥐어 네이티브가 넘긴 곡을 등록한다.
       () => NativeDownloadQueueRepository(
         settings: sl(),
-        openLibrary: () => sl<LibraryRepository>().watchTracks().first,
+        register: DriftDownloadRegistrar(sl<AppDatabase>()).register,
         onEngineError: sl<EngineUpdater>().onDownloadFailed,
-        onLibraryChanged: () {
-          final db = sl<AppDatabase>();
-          db.markTablesUpdated([
-            db.tracks,
-            db.playlistTracks,
-            db.covers,
-            db.coverColors,
-            db.lyricsFiles,
-          ]);
-        },
       ),
     )
     ..registerLazySingleton<VideoSaveRepository>(

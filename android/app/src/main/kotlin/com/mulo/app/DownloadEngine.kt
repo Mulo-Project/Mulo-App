@@ -23,7 +23,7 @@ class DownloadEngine(
     private val transcoder: TranscoderChannel,
     private val store: MediaStoreChannel,
     private val tags: TagChannel,
-    /** Dart로 알린다 (`queue` · `tagNotice` · `saved` · `engineError` · `libraryChanged`). 메인 스레드로 보낸다. */
+    /** Dart로 알린다 (`queue` · `tagNotice` · `saved` · `engineError` · `registered`). 메인 스레드로 보낸다. */
     private val emit: (String, Any?) -> Unit,
 ) {
     private class Item(
@@ -198,7 +198,8 @@ class DownloadEngine(
     fun dbReady() {
         // 앱이 처음 열릴 때 옛 Dart 큐의 기록이 있으면 한 번 가져온다 (Dart는 관여하지 않는다).
         importLegacy()
-        saver.execute { if (pending.flush() > 0) emit("libraryChanged", null) }
+        // 아직 Dart가 등록하지 못한 곡을 다시 넘긴다 (앱이 꺼져 있는 사이 받은 곡 등).
+        saver.execute { pending.all().forEach { emit("registered", toDartMap(it)) } }
     }
 
     /** JSON의 null 값을 뺀다 (`optString`이 null을 "null" 글자로 읽는 것을 막는다). */
@@ -367,6 +368,18 @@ class DownloadEngine(
         when (val v = o.get(k)) {
             JSONObject.NULL -> null
             is JSONObject -> toMap(v)
+            else -> v
+        }
+    }
+
+    /** Dart가 곡을 보관함에 등록했다. 맡겨 둔 것에서 뺀다. */
+    fun ack(trackId: String) = pending.remove(trackId)
+
+    private fun toDartMap(o: JSONObject): Map<String, Any?> = o.keys().asSequence().associateWith { k ->
+        when (val v = o.get(k)) {
+            JSONObject.NULL -> null
+            is JSONObject -> toDartMap(v)
+            is JSONArray -> List(v.length()) { v.get(it) }
             else -> v
         }
     }
@@ -1033,20 +1046,10 @@ class DownloadEngine(
             if (request.has("color") && !request.isNull("color")) request.optLong("color") else null,
             lyricsPath,
         )
-        val db = AppDb.open(context)
-        if (db == null) {
-            // 앱 DB를 아직 못 쓴다(앱을 한 번도 안 켰거나 스키마가 낮다): 맡겨 두었다가 앱이 열 때 등록한다.
-            MuloLog.d(MuloLog.NATIVE, "보관함 등록을 맡겨 둠 (DB 못 엶): $trackId")
-            pending.add(reg)
-        } else {
-            try {
-                AppDb.register(db, reg)
-            } finally {
-                db.close()
-            }
-            MuloLog.d(MuloLog.NATIVE, "보관함에 등록함: $trackId")
-            emit("libraryChanged", null)
-        }
+        // 보관함 DB는 Dart가 쥔다: 맡겨 두고 넘기면 Dart가 등록한 뒤 `ack`로 알려 준다.
+        pending.add(reg)
+        MuloLog.d(MuloLog.NATIVE, "보관함 등록을 Dart에 넘김: $trackId")
+        emit("registered", toDartMap(reg.toJson()))
         if (remember) {
             synchronized(lock) { sources[sourceKey(request.optString("url"))] = trackId }
             persistSources()
