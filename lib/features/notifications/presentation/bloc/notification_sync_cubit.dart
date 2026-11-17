@@ -20,10 +20,6 @@ class NotificationSyncCubit extends Cubit<void> {
   /// 알림 · 잠금화면에서 누른 조작.
   Stream<MediaCommand> get commands => _actions.watchCommands(const NoParams());
 
-  /// 받기 알림에서 누른 조작.
-  Stream<DownloadNotificationAction> get downloadActions =>
-      _actions.watchDownloadActions(const NoParams());
-
   /// 받기 알림 본문을 눌러 열라는 요청 (받기 항목 id).
   Stream<String> get downloadOpens =>
       _actions.watchDownloadOpens(const NoParams());

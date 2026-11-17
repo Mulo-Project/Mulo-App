@@ -20,6 +20,6 @@ class DownloadActionReceiver : BroadcastReceiver() {
         val downloads = MuloEngine.downloads
         if (downloads != null && downloads.onAction(key)) return
         // 받아 줄 엔진이 없으면(프로세스가 죽었다 되살아난 경우 등) 버튼이 먹지 않는 낡은 알림이므로 치운다.
-        if (!DownloadNotificationPlugin.dispatch(key)) DownloadNotifications.clearProgress(context)
+        DownloadNotifications.clearProgress(context)
     }
 }

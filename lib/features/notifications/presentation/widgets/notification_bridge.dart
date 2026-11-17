@@ -58,7 +58,6 @@ class _NotificationBridgeState extends State<NotificationBridge>
   var _splash = true;
   var _openPending = false;
   late final Future<void> _boot = _checkLaunch();
-  StreamSubscription<DownloadNotificationAction>? _downloadActions;
   StreamSubscription<String>? _downloadOpens;
 
   @override
@@ -74,10 +73,6 @@ class _NotificationBridgeState extends State<NotificationBridge>
     _boot.then((_) {
       if (mounted && context.read<LibraryCubit>().state.loaded) _restore();
     });
-    _downloadActions = context
-        .read<NotificationSyncCubit>()
-        .downloadActions
-        .listen(_onDownloadAction);
     final sync = context.read<NotificationSyncCubit>();
     _downloadOpens = sync.downloadOpens.listen((id) => _openDownload(id));
     // 받기 알림을 눌러 앱이 새로 켜졌다면 그 곡의 상세 화면으로 간다.
@@ -91,7 +86,6 @@ class _NotificationBridgeState extends State<NotificationBridge>
     WidgetsBinding.instance.removeObserver(this);
     _commands?.cancel();
     _openRequests?.cancel();
-    _downloadActions?.cancel();
     _downloadOpens?.cancel();
     super.dispose();
   }
@@ -174,46 +168,6 @@ class _NotificationBridgeState extends State<NotificationBridge>
       return;
     }
     widget.onOpenDownload?.call(mediaHitOfDownload(item));
-  }
-
-  /// 받기 알림의 버튼. 미리 듣기: 지금 받는 곡을 받지 않고 바로 듣는다 (받기는 그대로 이어진다).
-  /// 이미 듣는 중이면 그대로 둔다.
-  void _onDownloadAction(DownloadNotificationAction action) {
-    // 알림이 보이는 곡: 받는 중 → 대기 → (모두 일시정지면) 일시정지된 곡.
-    final active = context
-        .read<DownloadQueueCubit>()
-        .state
-        .items
-        .where((i) => i.isActive)
-        .toList();
-    final current =
-        active.where((i) => i.status != DownloadStatus.paused).firstOrNull ??
-        active.firstOrNull;
-    if (current == null) return;
-    // 취소 · 일시정지/이어받기 버튼은 네이티브(DownloadEngine)가 앱 없이 바로 처리한다. 여기는 미리 듣기 버튼만 온다.
-    final preview = context.read<PreviewCubit>();
-    if (action == DownloadNotificationAction.pausePreview) {
-      if (preview.state.isActive(current.id)) preview.togglePause();
-      return;
-    }
-    if (action == DownloadNotificationAction.stopPreview) {
-      if (preview.state.isActive(current.id)) preview.stop();
-      return;
-    }
-    if (preview.state.isActive(current.id)) return;
-    // 메인 재생과 겹치지 않게 재생 중이면 멈춘다.
-    final player = context.read<NowPlayingCubit>();
-    if (player.state.isPlaying) player.togglePlay();
-    preview.toggle(
-      MediaHit(
-        id: current.id,
-        title: current.title,
-        url: current.url,
-        uploader: current.artist,
-        duration: current.duration,
-        thumbnailUrl: current.thumbnailUrl,
-      ),
-    );
   }
 
   void _onCommand(MediaCommand command) {

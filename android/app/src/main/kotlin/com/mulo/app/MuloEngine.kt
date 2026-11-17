@@ -29,6 +29,10 @@ object MuloEngine {
     var mediaStore: MediaStoreChannel? = null
         private set
 
+    /** 미리 듣기 소리 (받기 알림의 미리 듣기 버튼이 앱 화면 없이 바로 부른다). */
+    var preview: PreviewChannel? = null
+        private set
+
     /** 받기 큐(네이티브). 알림 버튼 수신기가 앱 화면 없이 바로 부른다. */
     var downloads: DownloadEngine? = null
         private set
@@ -72,6 +76,7 @@ object MuloEngine {
         val subscriptions = SubscriptionChannel(app, messenger) { activity?.moveTaskToBack(true) }
         val downloadChannel = DownloadChannel(app, messenger, ytDlpEngine.engine, transcoder, store, tags)
         downloads = downloadChannel.engine
+        this.preview = preview
         mediaStore = store
         appSession = io.flutter.plugin.common.MethodChannel(messenger, "music_app/app_session")
         channels = listOf(
@@ -101,6 +106,7 @@ object MuloEngine {
         channels = emptyList()
         mediaStore = null
         downloads = null
+        preview = null
         appSession = null
         // 미리 듣기 소리는 엔진과 함께 끝나므로 알림에 남은 미리 듣기도 치운다.
         MuloLog.d(MuloLog.PLAYBACK, "엔진 정리: 미리듣기알림=${PlaybackHub.isPreviewing}")

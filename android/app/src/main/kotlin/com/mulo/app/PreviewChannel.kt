@@ -702,6 +702,57 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
         followMain = false
     }
 
+    /**
+     * 받기 알림의 "미리 듣기" 버튼: Dart를 거치지 않고 네이티브가 [streams]로 주소를 읽어 바로 튼다 (앱이 꺼져 있어도 된다).
+     * 메인 재생은 멈추고, 시작되면 화면이 따라가도록 `changed`를 알린다.
+     */
+    fun startFromNotification(
+        id: String,
+        title: String,
+        url: String,
+        uploader: String,
+        thumbnail: String?,
+        streams: () -> List<Pair<String, Map<String, String>>>?,
+    ) {
+        val token = ++pageToken
+        val info = mapOf("id" to id, "title" to title, "url" to url, "uploader" to uploader, "thumbnail" to thumbnail)
+        Thread {
+            val picked = try {
+                streams()
+            } catch (e: Exception) {
+                MuloLog.d(MuloLog.NATIVE, "알림 미리 듣기 주소 읽기 실패: ${e.message}")
+                null
+            }
+            main.post {
+                if (token != pageToken || picked.isNullOrEmpty()) return@post
+                PlaybackHub.pause()
+                playCandidates(picked, 0, info, object : MethodChannel.Result {
+                    override fun success(value: Any?) {
+                        MuloEngine.downloads?.previewingId = id
+                        channel.invokeMethod("changed", null)
+                    }
+
+                    override fun error(code: String, message: String?, details: Any?) {
+                        channel.invokeMethod("changed", null)
+                    }
+
+                    override fun notImplemented() {}
+                }, token)
+            }
+        }.start()
+    }
+
+    /** 받기 알림의 "일시정지 · 이어 듣기" 버튼. 화면에는 `paused` 이벤트로 알려진다. */
+    fun togglePauseFromNotification() {
+        player?.let { if (it.playWhenReady) it.pause() else it.play() }
+    }
+
+    /** 받기 알림의 "미리 듣기 중지" 버튼. */
+    fun stopFromNotification() {
+        stop()
+        channel.invokeMethod("changed", null)
+    }
+
     /** 소리를 내고 있는(또는 잠시 멈춘) 미리 듣기. 없으면 null이고, 알림에 남은 미리 듣기는 치운다. */
     private fun current(): Map<String, Any?>? {
         val p = player
@@ -737,6 +788,8 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
         mergedFailed = false
         started = false
         meta = null
+        // 받기 알림의 미리 듣기 버튼 모양을 되돌린다.
+        MuloEngine.downloads?.previewingId = null
     }
 
     /**

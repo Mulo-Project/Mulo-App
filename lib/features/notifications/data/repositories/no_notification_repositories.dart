@@ -5,9 +5,6 @@ import '../../domain/repositories/media_session.dart';
 /// 알림창이 없는 OS (Windows · Linux · macOS)용: 아무것도 띄우지 않는다.
 class NoDownloadNotifier implements DownloadNotifier {
   @override
-  Stream<DownloadNotificationAction> watchActions() => const Stream.empty();
-
-  @override
   Stream<String> watchOpenRequests() => const Stream.empty();
 
   @override

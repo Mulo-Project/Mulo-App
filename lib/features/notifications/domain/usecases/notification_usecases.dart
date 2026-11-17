@@ -104,16 +104,6 @@ class ClearDownloadResults implements UseCase<void, NoParams> {
   Future<void> call(NoParams params) => _notifier.clearResults();
 }
 
-class WatchDownloadActions
-    implements StreamUseCase<DownloadNotificationAction, NoParams> {
-  const WatchDownloadActions(this._notifier);
-  final DownloadNotifier _notifier;
-
-  @override
-  Stream<DownloadNotificationAction> call(NoParams params) =>
-      _notifier.watchActions();
-}
-
 class WatchDownloadOpens implements StreamUseCase<String, NoParams> {
   const WatchDownloadOpens(this._notifier);
   final DownloadNotifier _notifier;
@@ -163,7 +153,6 @@ class NotificationActions {
     required this.showResult,
     required this.clearResults,
     required this.watchCommands,
-    required this.watchDownloadActions,
     required this.watchDownloadOpens,
     required this.takeDownloadOpen,
     required this.updateSession,
@@ -177,7 +166,6 @@ class NotificationActions {
   final ShowDownloadResult showResult;
   final ClearDownloadResults clearResults;
   final WatchMediaCommands watchCommands;
-  final WatchDownloadActions watchDownloadActions;
   final WatchDownloadOpens watchDownloadOpens;
   final TakeDownloadOpen takeDownloadOpen;
   final UpdateMediaSession updateSession;

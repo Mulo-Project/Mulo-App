@@ -48,6 +48,9 @@ abstract interface class PreviewPlayer {
   /// 소리가 멈추거나 이어질 때마다 (알림 · 이어폰 · 앱 어디서 눌렀든). true면 멈춤. 네이티브가 쥔 상태를 화면에 알린다.
   Stream<bool> watchPaused();
 
+  /// 네이티브가 스스로 미리 듣기를 시작하거나 멈췄을 때 (받기 알림의 버튼 등). 화면이 [current]로 다시 읽는다.
+  Stream<void> watchChanged();
+
   /// 끝까지 재생했을 때마다 한 번씩.
   Stream<void> watchCompleted();
 

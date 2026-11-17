@@ -7,11 +7,7 @@ import '../../../../core/design/tokens/app_palette.dart';
 import '../../domain/repositories/download_notifier.dart';
 import '../datasources/notification_texts.dart';
 
-/// Android 알림창에 받기 진행 · 결과를 띄운다. 알림 · 포그라운드 서비스 · 버튼 수신은 네이티브(Kotlin,
-/// `music_app/download_notification`)가 맡고, 여기서는 내용을 넘기고 버튼 누름을 받는다.
-/// 버튼은 앱 화면을 열지 않고 살아 있는 엔진으로 바로 전달된다.
-/// 받는 중 알림은 [showProgress]의 `foreground`가 true일 때 포그라운드 서비스(dataSync)로 띄워
-/// 앱이 뒤로 가거나 닫혀도 받기가 이어지게 한다. 알림의 미리 듣기 버튼은 [watchActions]로 알린다.
+/// 받기 알림(진행 · 결과 · 버튼)은 네이티브가 띄우고 처리한다 (앱이 꺼져 있어도 동작). 여기서는 알림 글과 설정을 넘기고, 본문을 눌러 열라는 요청과 저장한 음원 완료 알림만 맡는다.
 class LocalDownloadNotifier implements DownloadNotifier {
   LocalDownloadNotifier({MethodChannel? channel})
     : _channel =
@@ -21,11 +17,7 @@ class LocalDownloadNotifier implements DownloadNotifier {
 
   final MethodChannel _channel;
   Future<void>? _init;
-  final _actions = StreamController<DownloadNotificationAction>.broadcast();
   final _opens = StreamController<String>.broadcast();
-
-  @override
-  Stream<DownloadNotificationAction> watchActions() => _actions.stream;
 
   @override
   Stream<String> watchOpenRequests() => _opens.stream;
@@ -47,16 +39,6 @@ class LocalDownloadNotifier implements DownloadNotifier {
       if (id != null) _opens.add(id);
       return;
     }
-    if (call.method != 'action') return;
-    final action = switch (call.arguments) {
-      'preview' => DownloadNotificationAction.preview,
-      'pausePreview' => DownloadNotificationAction.pausePreview,
-      'stopPreview' => DownloadNotificationAction.stopPreview,
-      'toggleHold' => DownloadNotificationAction.toggleHold,
-      'cancel' => DownloadNotificationAction.cancel,
-      _ => null,
-    };
-    if (action != null) _actions.add(action);
   }
 
   Future<void> _ensureInit() => _init ??= () {

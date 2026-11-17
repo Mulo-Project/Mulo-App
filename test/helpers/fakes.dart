@@ -1876,6 +1876,9 @@ class FakePreviewPlayer implements PreviewPlayer {
   Stream<bool> watchPaused() => const Stream.empty();
 
   @override
+  Stream<void> watchChanged() => const Stream.empty();
+
+  @override
   Stream<PreviewProgress> watchProgress() => _progress.stream;
 }
 
@@ -1906,13 +1909,6 @@ class FakeDownloadNotifier implements DownloadNotifier {
 
   /// 결과 알림에 담긴 곡 이미지 (알림 id → 주소).
   final resultArt = <String, String?>{};
-
-  final _actions = StreamController<DownloadNotificationAction>.broadcast();
-
-  void press(DownloadNotificationAction a) => _actions.add(a);
-
-  @override
-  Stream<DownloadNotificationAction> watchActions() => _actions.stream;
 
   final _opens = StreamController<String>.broadcast();
 

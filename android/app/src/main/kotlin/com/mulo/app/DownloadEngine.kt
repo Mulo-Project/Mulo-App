@@ -299,16 +299,41 @@ class DownloadEngine(
 
     fun snapshot(): List<Map<String, Any?>> = synchronized(lock) { items.map { toMap(it) } }
 
-    /** 알림 버튼(취소 · 일시정지/이어받기)을 앱 없이 바로 처리한다. 처리했으면 true. */
+    /** 알림 버튼(취소 · 일시정지/이어받기 · 미리 듣기 · 미리 듣기 일시정지/중지)을 앱 없이 바로 처리한다. 처리했으면 true. */
     fun onAction(key: String): Boolean {
-        if (key != "cancel" && key != "toggleHold") return false
+        if (key == "stopPreview") {
+            MuloEngine.preview?.stopFromNotification()
+            return true
+        }
         val current = synchronized(lock) {
             val active = items.filter { it.active() }
             active.firstOrNull { it.status != PAUSED } ?: active.firstOrNull()
         } ?: return true
-        if (key == "cancel") cancel(current.id)
-        else if (current.status == PAUSED) resume(current.id) else pause(current.id)
+        when (key) {
+            "cancel" -> cancel(current.id)
+            "toggleHold" -> if (current.status == PAUSED) resume(current.id) else pause(current.id)
+            "pausePreview" -> if (previewingId == current.id) MuloEngine.preview?.togglePauseFromNotification()
+            "preview" -> {
+                if (previewingId == current.id) return true
+                val r = current.request
+                MuloEngine.preview?.startFromNotification(
+                    current.id, r.optString("title"), r.optString("url"), r.optString("artist"),
+                    r.optString("thumbnailUrl").ifEmpty { null },
+                ) { previewStreams(r.optString("url")) }
+            }
+            else -> return false
+        }
         return true
+    }
+
+    /** 미리 듣기로 틀 소리 주소들 (읽은 주소, 안 열리면 대체 형식 순). 못 읽으면 null. */
+    private fun previewStreams(url: String): List<Pair<String, Map<String, String>>>? {
+        val s = try {
+            resolveAudio(url, null, false)
+        } catch (e: Exception) {
+            return null
+        }
+        return listOf(s.url to s.headers) + s.fallbacks
     }
 
     // ── 상태 알림 ──

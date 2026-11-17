@@ -104,6 +104,7 @@ class PreviewCubit extends Cubit<PreviewState> {
     this.enterPictureInPicture,
     SetPreviewRepeat? setRepeat,
     WatchPreviewPaused? watchPaused,
+    WatchPreviewChanged? watchChanged,
     LoadAutoVideoQuality? loadAutoQuality,
     SaveAutoVideoQuality? saveAutoQuality,
     this.playPage,
@@ -127,6 +128,10 @@ class PreviewCubit extends Cubit<PreviewState> {
     }
     // 소리가 멈추고 이어지는 상태는 네이티브가 쥔다 (알림 · 이어폰에서 눌러도 화면이 따라간다).
     _pausedSub = watchPaused?.call(const NoParams()).listen(_onNativePaused);
+    // 받기 알림의 미리듣기 · 멈춤 버튼은 네이티브가 직접 처리하므로, 바뀌었다는 알림이 오면 네이티브 상태를 다시 읽는다.
+    _changedSub = watchChanged
+        ?.call(const NoParams())
+        .listen((_) => unawaited(syncWithPlayer()));
     unawaited(syncWithPlayer());
     _completed = watchCompleted(const NoParams()).listen((_) => _onCompleted());
     _progress = watchProgress(const NoParams()).listen(_onProgress);
@@ -199,6 +204,7 @@ class PreviewCubit extends Cubit<PreviewState> {
   late final StreamSubscription<PreviewProgress> _progress;
   late final StreamSubscription<String> _failures;
   StreamSubscription<bool>? _pausedSub;
+  StreamSubscription<void>? _changedSub;
 
   void _onNativePaused(bool paused) {
     if (isClosed || state.status != PreviewStatus.playing) return;
@@ -578,6 +584,7 @@ class PreviewCubit extends Cubit<PreviewState> {
     await _progress.cancel();
     await _failures.cancel();
     await _pausedSub?.cancel();
+    await _changedSub?.cancel();
     repeat.dispose();
     autoQuality.dispose();
     qualityOverride.dispose();
