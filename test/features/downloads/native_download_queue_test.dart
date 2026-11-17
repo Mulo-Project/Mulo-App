@@ -85,6 +85,8 @@ void main() {
       },
     ];
     final items = await make().watchQueue().first;
+    // DB 열기는 목록을 막지 않게 따로 돈다: 잠시 기다린 뒤 확인한다.
+    await Future<void>.delayed(const Duration(milliseconds: 50));
     expect(opened, 1);
     expect(calls.map((c) => c.method), containsAllInOrder(['dbReady', 'snapshot']));
     expect(items.single.status, DownloadStatus.downloading);

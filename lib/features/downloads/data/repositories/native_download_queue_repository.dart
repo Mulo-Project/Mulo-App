@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter/services.dart';
 
 import '../../../../core/config/default_video_folder.dart';
@@ -47,11 +48,18 @@ class NativeDownloadQueueRepository implements DownloadQueueRepository {
   Future<void> _ensureReady() => _ready ??= _init();
 
   Future<void> _init() async {
+    // 보관함 DB 열기는 받기 큐(목록 · 요청)를 막지 않도록 따로 돌린다. 못 열어도 네이티브가 등록을 맡겨 두었다가 다음에 쓴다.
+    unawaited(_openDatabase());
+    await _refresh();
+  }
+
+  Future<void> _openDatabase() async {
     try {
-      await _openLibrary();
+      // 네이티브가 그 파일에 쓰기 전에, 최신 스키마가 되도록 Dart가 먼저 한 번 연다 (옛 대기열 이전도 이때 네이티브가 한다).
+      await _openLibrary().timeout(const Duration(seconds: 15));
       await _channel.invokeMethod<void>('dbReady');
-    } on Object {
-      // DB를 못 열면 네이티브가 등록을 맡겨 두었다가 다음에 쓴다.
+    } on Object catch (e) {
+      debugPrint('MuloDownload db open failed: $e');
     }
     await _refresh();
   }
@@ -68,7 +76,15 @@ class NativeDownloadQueueRepository implements DownloadQueueRepository {
   }
 
   void _setItems(List<Object?> raw) {
-    _items = [for (final e in raw) _itemOf(Map<Object?, Object?>.from(e! as Map))];
+    try {
+      _items = [
+        for (final e in raw) _itemOf(Map<Object?, Object?>.from(e! as Map)),
+      ];
+    } on Object catch (e, s) {
+      // 모양이 어긋난 항목 하나가 상태 전달 전체를 막지 않도록 남기고 넘어간다.
+      debugPrint('MuloDownload queue parse failed: $e\n$s');
+      return;
+    }
     _changes.add(_items);
   }
 

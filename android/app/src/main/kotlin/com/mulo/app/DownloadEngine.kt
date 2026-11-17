@@ -375,6 +375,7 @@ class DownloadEngine(
 
     /** 상태가 바뀌었다 (저장 + 화면 + 알림). */
     private fun changed() {
+        MuloLog.d(MuloLog.NATIVE, "받기 상태 ${synchronized(lock) { items.joinToString { "${it.id}:${it.status}" } }}")
         persist()
         emitQueue()
         updateNotifications()
@@ -785,7 +786,11 @@ class DownloadEngine(
         try {
             while (total == null || offset < total) {
                 checkAbort()
-                val chunk = requestChunk(url, headers, offset, offset + CHUNK - 1)
+                val chunk = requestChunk(url, headers, offset, offset + CHUNK - 1) { pos, known ->
+                    // 조각을 받는 중에도 진행률을 알린다 (한 곡이 한 조각이어도 0에서 100으로 뛰지 않게).
+                    val t = known ?: total
+                    if (t != null && t > 0) onProgress((pos.toDouble() / t).coerceIn(0.0, 0.999))
+                }
                 if (mime == null) mime = chunk.mime
                 total = chunk.total ?: (offset + chunk.bytes.size)
                 if (chunk.bytes.isEmpty()) {
@@ -825,7 +830,8 @@ class DownloadEngine(
         return Downloaded(target, extensionFor(m), m)
     }
 
-    private fun requestChunk(url: String, headers: Map<String, String>, from: Long, to: Long): Chunk {
+    /** [onRead]: 지금까지 받은 위치(파일 기준)와, 응답에서 알게 된 전체 크기(모르면 null). */
+    private fun requestChunk(url: String, headers: Map<String, String>, from: Long, to: Long, onRead: (Long, Long?) -> Unit): Chunk {
         var last: Exception? = null
         for (attempt in 0..RETRIES_PER_CHUNK) {
             checkAbort()
@@ -844,6 +850,11 @@ class DownloadEngine(
                     if (status == 403 || status == 404 || status == 410) throw Failed("HTTP $status (구간 $from)")
                     throw IOException("HTTP $status")
                 }
+                val range = conn.getHeaderField("Content-Range")
+                val totalFromRange = range?.substringAfterLast('/')?.toLongOrNull()
+                val length = conn.contentLengthLong
+                val knownTotal = if (status == 206) totalFromRange else if (length > 0) length else null
+                val base = if (status == 206) from else 0L
                 val buf = ByteArrayOutputStream()
                 conn.inputStream.use { input ->
                     val b = ByteArray(64 * 1024)
@@ -852,11 +863,9 @@ class DownloadEngine(
                         val n = input.read(b)
                         if (n < 0) break
                         buf.write(b, 0, n)
+                        onRead(base + buf.size(), knownTotal)
                     }
                 }
-                val range = conn.getHeaderField("Content-Range")
-                val totalFromRange = range?.substringAfterLast('/')?.toLongOrNull()
-                val length = conn.contentLengthLong
                 return Chunk(
                     buf.toByteArray(),
                     if (status == 206) totalFromRange else if (length > 0) length else null,

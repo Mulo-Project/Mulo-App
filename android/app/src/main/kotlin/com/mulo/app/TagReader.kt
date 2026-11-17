@@ -45,7 +45,9 @@ object TagReader {
                 entry.populateMediaMetadata(standard)
                 when (entry) {
                     is TextInformationFrame ->
-                        if (entry.id == "TXXX") entry.description?.let { d ->
+                        // mp4 · m4a의 가사 칸(©lyr)은 Media3가 id `USLT`인 글 칸으로 준다.
+                        if (entry.id == "USLT") entry.values.firstOrNull()?.takeIf { it.isNotBlank() }?.let { out.putIfAbsent("lyrics", it) }
+                        else if (entry.id == "TXXX") entry.description?.let { d ->
                             // ffmpeg는 가사(LYRICS)를 설명이 USLT인 TXXX로 쓴다.
                             val key = d.lowercase().let { k -> if (k == "uslt") "lyrics" else k }
                             entry.values.firstOrNull()?.let { out.putIfAbsent(key, it) }
