@@ -273,7 +273,11 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
         args += listOf("-map", "0:a")
         if (cover != null) args += listOf("-map", "1:v", "-disposition:v:0", "attached_pic")
         for ((key, value) in entriesOf(values, upper = false)) args += listOf("-metadata", "$key=$value")
-        args += listOf("-c", "copy", "-movflags", "+use_metadata_tags", "-f", "ipod", output)
+        // +use_metadata_tags(mdta)를 쓰면 ffmpeg가 그림(covr)을 쓰지 않고 표준 칸도 mdta로만 써 다른 플레이어가 못 읽는다.
+        // 그래서 그림이 있거나 앱 전용 칸이 없으면 표준 칸(ilst)으로 쓴다 (그림이 있을 때 앱 전용 칸은 파일에 남지 않는다).
+        val appOnly = values.any { it.first.lowercase() !in knownKeys }
+        if (cover == null && appOnly) args += listOf("-movflags", "+use_metadata_tags")
+        args += listOf("-c", "copy", "-f", "ipod", output)
         return runFfmpeg(args, output)
     }
 
