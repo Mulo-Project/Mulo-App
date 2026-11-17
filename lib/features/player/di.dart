@@ -55,6 +55,7 @@ void registerPlayer(GetIt sl) {
         watchQueue: WatchAudioQueue(sl()),
         playNext: PlayAudioNext(sl()),
         addToQueue: AddAudioToQueue(sl()),
+        playAllNext: PlayAllAudioNext(sl()),
         addAllToQueue: AddAllAudioToQueue(sl()),
         removeFromQueue: RemoveAudioFromQueue(sl()),
         moveInQueue: MoveAudioInQueue(sl()),

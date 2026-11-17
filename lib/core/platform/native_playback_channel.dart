@@ -35,6 +35,13 @@ class NativePlaybackChannel {
   Future<Map<Object?, Object?>?> addToQueue(Map<String, Object?> item) =>
       _method.invokeMapMethod<Object?, Object?>('addToQueue', item);
 
+  /// 곡 여러 개를 지금 곡 바로 뒤에 주어진 순서대로 끼운다 (이미 있으면 그 자리를 옮긴다).
+  Future<Map<Object?, Object?>?> playAllNext(
+    List<Map<String, Object?>> items,
+  ) => _method.invokeMapMethod<Object?, Object?>('playAllNext', {
+    'items': items,
+  });
+
   /// 곡 여러 개를 대기열 맨 뒤에 한 번에 붙인다 (이미 있는 곡은 건너뛴다).
   Future<Map<Object?, Object?>?> addAllToQueue(
     List<Map<String, Object?>> items,

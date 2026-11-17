@@ -1259,6 +1259,15 @@ class FakeAudioPlayer implements AudioPlayerRepository {
   }
 
   @override
+  Future<PlaybackQueueChange?> playAllNext(List<PlaybackItem> items) async {
+    // 주어진 순서대로 지금 곡 바로 뒤에 끼운다 (앞에서부터 차례로 끼우면 마지막 것이 맨 앞에 가므로 뒤에서부터).
+    for (final item in items.reversed) {
+      await _playNext(item);
+    }
+    return _state();
+  }
+
+  @override
   Future<PlaybackQueueChange?> addAllToQueue(List<PlaybackItem> items) async {
     for (final item in items) {
       await _addToQueue(item);

@@ -323,6 +323,30 @@ object PlaybackHub {
         queueEdited()
     }
 
+    /**
+     * 곡 여러 개를 지금 곡 바로 뒤에 주어진 순서대로 끼운다. 이미 대기열에 있는 곡은 그 자리를 옮기고, 지금 곡은 건너뛴다.
+     * 대기열 알림은 한 번만 보낸다.
+     */
+    fun playAllNext(items: List<*>) {
+        if (exo.mediaItemCount == 0) return
+        val currentId = exo.currentMediaItem?.mediaId
+        var insertAt = exo.currentMediaItemIndex + 1
+        for (map in items) {
+            val item = QueueMapping.mediaItemOf(map as Map<*, *>, artById)
+            if (item.mediaId == currentId) continue
+            val existing = indexOfId(item.mediaId)
+            if (existing >= 0) {
+                exo.removeMediaItem(existing)
+                // 지금 곡보다 앞에서 뺐으면 끼울 자리도 한 칸 당겨진다.
+                if (existing < insertAt) insertAt--
+            }
+            exo.addMediaItem(insertAt, item)
+            insertAt++
+        }
+        MuloLog.d(MuloLog.PLAYBACK, "playAllNext ${items.size}곡")
+        queueEdited()
+    }
+
     /** 곡 여러 개를 대기열 맨 뒤에 한 번에 붙인다 (이미 있는 곡은 건너뛴다). 대기열 알림은 한 번만 보낸다. */
     fun addAllToQueue(items: List<*>) {
         if (exo.mediaItemCount == 0) return

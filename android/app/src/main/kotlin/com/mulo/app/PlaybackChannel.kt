@@ -33,6 +33,7 @@ class PlaybackChannel(context: Context, messenger: BinaryMessenger) {
             "setQueueArt" -> { PlaybackHub.setQueueArt(call.arguments as Map<*, *>); result.success(null) }
             "playNext" -> { PlaybackHub.playNext(call.arguments as Map<*, *>); result.success(PlaybackHub.queueState()) }
             "addToQueue" -> { PlaybackHub.addToQueue(call.arguments as Map<*, *>); result.success(PlaybackHub.queueState()) }
+            "playAllNext" -> { PlaybackHub.playAllNext((call.arguments as Map<*, *>)["items"] as List<*>); result.success(PlaybackHub.queueState()) }
             "addAllToQueue" -> { PlaybackHub.addAllToQueue((call.arguments as Map<*, *>)["items"] as List<*>); result.success(PlaybackHub.queueState()) }
             "removeFromQueue" -> { PlaybackHub.removeFromQueue(call.arguments as String); result.success(PlaybackHub.queueState()) }
             "moveInQueue" -> {
