@@ -133,7 +133,11 @@ class LoadedFoldersCubit extends Cubit<LoadedFoldersState> {
     _cancelled = false;
     _stage(LoadStage.scanning);
     await load();
-    final outcome = await _import(const NoParams());
+    // 찾는 동안 취소하면 곡을 DB에 넣지 않는다 (넣은 것이 없으니 되돌릴 것도 없다).
+    final outcome = await _import(
+      const NoParams(),
+      cancelled: () => _cancelled,
+    );
     if (outcome is ImportAdded) await _restoreTags?.markPending();
     var changed = false;
     if (!_cancelled) {

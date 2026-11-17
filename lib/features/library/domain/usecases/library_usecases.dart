@@ -79,8 +79,9 @@ class ImportDeviceMusic implements UseCase<ImportOutcome, NoParams> {
   final LibraryRepository _library;
   final LoadedFolderRepository _folders;
 
+  /// [cancelled]가 true가 되면 찾은 곡을 보관함에 넣지 않고 [ImportCancelled]로 끝낸다 (찾는 동안 취소하면 DB에는 아무것도 안 들어간다).
   @override
-  Future<ImportOutcome> call(NoParams _) async {
+  Future<ImportOutcome> call(NoParams _, {bool Function()? cancelled}) async {
     try {
       // 영상 기본 폴더(`Movies/Mulo`)도 찾는다. 앱 데이터를 지우면 보관함 목록이 비는데, 받아 둔 영상이 이 폴더에 있다.
       // 영상 기본 폴더가 없는 기기는 빈 문자열이라 뺀다.
@@ -90,7 +91,9 @@ class ImportDeviceMusic implements UseCase<ImportOutcome, NoParams> {
         if (video.isNotEmpty) video,
         ...await _folders.loadExtra(),
       ];
-      return switch (await _device.scan(folders)) {
+      final scan = await _device.scan(folders);
+      if (cancelled?.call() ?? false) return const ImportCancelled();
+      return switch (scan) {
         ScanCancelled() => const ImportCancelled(),
         ScanPermissionDenied() => const ImportDenied(),
         ScanFound(:final tracks) => ImportAdded(
