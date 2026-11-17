@@ -304,6 +304,7 @@ class PreviewCubit extends Cubit<PreviewState> {
     String? audioLanguage,
     VideoQuality? videoQuality,
     bool forceStart = false,
+    Future<String?> Function()? defaultLanguage,
   }) async {
     _interrupted = null;
     if (state.isActive(hit.id) && !forceStart) {
@@ -329,6 +330,15 @@ class PreviewCubit extends Cubit<PreviewState> {
       ),
     );
     try {
+      // 기본 오디오 언어는 로딩을 띄운 뒤에 알아낸다 (누르자마자 반응하도록).
+      if (audioLanguage == null && defaultLanguage != null) {
+        try {
+          audioLanguage = await defaultLanguage();
+        } on Object {
+          audioLanguage = null;
+        }
+        if (generation != _generation || isClosed) return null;
+      }
       // 읽기부터 재생까지 네이티브가 먼저 한다 (앱이 백그라운드여도 끊기지 않는다). 못 하면 아래 예전 경로.
       var started = false;
       final page = playPage;
