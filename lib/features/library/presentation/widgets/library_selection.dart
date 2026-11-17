@@ -100,8 +100,9 @@ Future<SelectionAction?> showSelectionActionSheet(
     context,
     builder: (sheet) {
       void pick(SelectionAction a) => Navigator.of(sheet).pop(a);
+      // 항목이 많아 시트 높이(화면의 9/16)를 넘으면 잘려 보이지 않으므로 스크롤되게 한다.
       return SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: appSheetPadding,
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -326,11 +327,19 @@ mixin TrackPicker<T extends StatefulWidget> on State<T> {
 
   void clearPicked() => setState(picked.clear);
 
-  /// 고른 곡 id (목록에서 사라진 곡은 뺀다).
+  /// 고른 곡 id (목록에서 사라진 곡은 뺀다). [all]에 같은 곡이 여러 번 있어도(홈은 구역마다 곡이 겹친다) 한 번만 센다.
   List<String> pickedIds(List<Track> all) => [
-    for (final t in all)
-      if (picked.contains(t.id)) t.id,
+    for (final t in pickedTracks(all)) t.id,
   ];
+
+  /// 고른 곡 (목록 순서, 같은 곡은 한 번만).
+  List<Track> pickedTracks(List<Track> all) {
+    final seen = <String>{};
+    return [
+      for (final t in all)
+        if (picked.contains(t.id) && seen.add(t.id)) t,
+    ];
+  }
 
   bool allPicked(List<Track> shown) =>
       shown.isNotEmpty && shown.every((t) => picked.contains(t.id));
@@ -414,17 +423,11 @@ mixin TrackPicker<T extends StatefulWidget> on State<T> {
         setState(() => picked.addAll(shown.map((t) => t.id)));
       case SelectionAction.playNext:
         // 고른 곡들이 목록에 보이는 순서대로 지금 곡 바로 뒤에 들어간다.
-        context.read<NowPlayingCubit>().playAllNext([
-          for (final t in all)
-            if (picked.contains(t.id)) t,
-        ]);
+        context.read<NowPlayingCubit>().playAllNext(pickedTracks(all));
         clearPicked();
       case SelectionAction.addToQueue:
         // 고른 순서가 아니라 목록에 보이는 순서대로 붙는다.
-        context.read<NowPlayingCubit>().addAllToQueue([
-          for (final t in all)
-            if (picked.contains(t.id)) t,
-        ]);
+        context.read<NowPlayingCubit>().addAllToQueue(pickedTracks(all));
         clearPicked();
       case SelectionAction.addToPlaylist:
         await context.push(Routes.playlistPick, extra: ids);
