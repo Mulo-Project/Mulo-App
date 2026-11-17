@@ -28,6 +28,7 @@ class NowPlayingState extends Equatable {
     this.sleepEndsAt,
     this.loopStart,
     this.loopEnd,
+    this.infoRevision = 0,
   });
 
   final List<Track> queue;
@@ -46,6 +47,10 @@ class NowPlayingState extends Equatable {
   /// 구간 반복의 시작 · 끝 (현재 곡 안). 시작만 있으면 끝을 정하는 중이고, 둘 다 있으면 그 구간만 반복한다.
   final Duration? loopStart;
   final Duration? loopEnd;
+
+  /// 대기열 곡의 정보(제목 등)가 바뀔 때마다 올라간다. 곡은 id만으로 같다고 보기 때문에,
+  /// 정보만 바뀐 상태도 새 상태로 알려지게 한다.
+  final int infoRevision;
 
   /// 구간 반복이 걸려 있는지 (시작과 끝이 모두 정해짐).
   bool get looping => loopStart != null && loopEnd != null;
@@ -68,6 +73,7 @@ class NowPlayingState extends Equatable {
     Object? sleepEndsAt = _keep,
     Object? loopStart = _keep,
     Object? loopEnd = _keep,
+    int? infoRevision,
   }) => NowPlayingState(
     queue: queue ?? this.queue,
     index: index ?? this.index,
@@ -85,6 +91,7 @@ class NowPlayingState extends Equatable {
         ? this.loopStart
         : loopStart as Duration?,
     loopEnd: identical(loopEnd, _keep) ? this.loopEnd : loopEnd as Duration?,
+    infoRevision: infoRevision ?? this.infoRevision,
   );
 
   @override
@@ -99,6 +106,7 @@ class NowPlayingState extends Equatable {
     sleepEndsAt,
     loopStart,
     loopEnd,
+    infoRevision,
   ];
 }
 
@@ -756,6 +764,7 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     emit(
       state.copyWith(
         queue: [for (final t in state.queue) t == track ? track : t],
+        infoRevision: state.infoRevision + 1,
       ),
     );
   }
@@ -779,7 +788,11 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
         queue.add(t);
       }
     }
-    if (changed) emit(state.copyWith(queue: queue));
+    if (changed) {
+      emit(
+        state.copyWith(queue: queue, infoRevision: state.infoRevision + 1),
+      );
+    }
   }
 
   /// 보관함에서 사라진 곡들([ids])을 대기열에서 뺀다 (재생 중인 곡이면 다음 곡으로 넘어간다).
