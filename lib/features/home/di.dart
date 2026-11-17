@@ -1,6 +1,6 @@
 import 'package:get_it/get_it.dart';
 
-import 'data/repositories/drift_play_history_repository.dart';
+import 'data/repositories/native_play_history_repository.dart';
 import 'data/repositories/prefs_join_date_repository.dart';
 import 'domain/repositories/join_date_repository.dart';
 import 'domain/repositories/play_history_repository.dart';
@@ -12,7 +12,7 @@ import 'presentation/bloc/play_recorder_cubit.dart';
 void registerHome(GetIt sl) {
   sl
     ..registerLazySingleton<PlayHistoryRepository>(
-      () => DriftPlayHistoryRepository(sl()),
+      () => NativePlayHistoryRepository(sl()),
     )
     ..registerLazySingleton<JoinDateRepository>(PrefsJoinDateRepository.new)
     ..registerFactory(() => RecordPlay(sl()))

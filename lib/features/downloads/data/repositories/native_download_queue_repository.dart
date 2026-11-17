@@ -14,13 +14,12 @@ import '../../domain/repositories/download_queue_repository.dart';
 import '../../domain/repositories/download_settings_repository.dart';
 import '../datasources/download_request_codec.dart';
 
-/// 받기 큐 저장소 (Android): 받기 큐 · 이어받기 · 변환 · 태그 · 저장 · 보관함 등록은 모두 네이티브(`music_app/downloads`,
+/// 받기 큐 저장소 (Android): 받기 큐 · 이어받기 · 변환 · 태그 · 저장 · 보관함 등록(DB 쓰기)은 모두 네이티브(`music_app/downloads`,
 /// Kotlin `DownloadEngine`)가 한다. 여기서는 요청을 넘기고 네이티브가 알려 주는 상태를 그리는 데 쓴다.
 /// 앱이 꺼져 있어도 받기는 네이티브(포그라운드 서비스)가 이어 가고, 앱을 켜면 지금 상태를 받아 온다.
 class NativeDownloadQueueRepository implements DownloadQueueRepository {
   NativeDownloadQueueRepository({
     required this._settings,
-    required this._register,
     this._onEngineError,
     MethodChannel? channel,
     EventChannel? events,
@@ -30,14 +29,11 @@ class NativeDownloadQueueRepository implements DownloadQueueRepository {
 
   final MethodChannel _channel;
 
-  /// 네이티브 → Dart 상태 흐름 (`queue` · `tagNotice` · `saved` · `engineError` · `libraryChanged`).
+  /// 네이티브 → Dart 상태 흐름 (`queue` · `tagNotice` · `saved` · `engineError`).
   /// 듣기 시작하면 네이티브가 지금 대기열을 먼저 보내 준다.
   final EventChannel _events;
   StreamSubscription<Object?>? _eventsSub;
   final DownloadSettingsRepository _settings;
-
-  /// 네이티브가 받아서 저장한 곡을 보관함 DB에 넣는다 (DB는 Dart가 쥔다). 끝나면 네이티브에 `ack`로 알린다.
-  final Future<void> Function(Map<String, Object?> registration) _register;
 
   /// 엔진이 받기를 못 해서 낸 오류 문구를 알린다 (버전이 오래된 경우 엔진 쪽이 알아서 업데이트한다).
   final void Function(String message)? _onEngineError;
@@ -55,7 +51,7 @@ class NativeDownloadQueueRepository implements DownloadQueueRepository {
       onError: (Object e) => debugPrint('MuloDownload events error: $e'),
     );
     try {
-      // 이벤트를 받을 준비가 됐다: 네이티브가 옛 대기열을 가져오고, 아직 등록 못 한 곡을 다시 넘긴다.
+      // 이벤트를 받을 준비가 됐다: 네이티브가 옛 대기열을 가져오고, 옛 방식으로 남은 등록을 정리한다.
       await _channel.invokeMethod<void>('dbReady');
     } on Object catch (e) {
       debugPrint('MuloDownload ready failed: $e');
@@ -114,20 +110,6 @@ class NativeDownloadQueueRepository implements DownloadQueueRepository {
       case 'engineError':
         final message = data;
         if (message is String) _onEngineError?.call(message);
-      case 'registered':
-        unawaited(_registerAndAck(Map<String, Object?>.from(data! as Map)));
-    }
-  }
-
-  Future<void> _registerAndAck(Map<String, Object?> registration) async {
-    try {
-      await _register(registration);
-      await _channel.invokeMethod<void>('ack', {
-        'trackId': registration['trackId'],
-      });
-    } on Object catch (e) {
-      // 등록하지 못하면 네이티브가 맡아 둔 채로 두었다가 다음에 다시 넘긴다.
-      debugPrint('MuloDownload register failed: $e');
     }
   }
 

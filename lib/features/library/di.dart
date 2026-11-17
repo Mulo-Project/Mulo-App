@@ -7,7 +7,7 @@ import 'data/datasources/embedded_cover_source.dart';
 import 'data/datasources/file_tag_source.dart';
 import 'data/repositories/embedded_cover_repository_impl.dart';
 import 'data/repositories/device_music_repository_impl.dart';
-import 'data/repositories/drift_library_repository.dart';
+import 'data/repositories/native_library_repository.dart';
 import 'data/datasources/track_file_data_source.dart';
 import 'data/repositories/prefs_loaded_folder_repository.dart';
 import 'data/repositories/track_file_repository_impl.dart';
@@ -48,7 +48,7 @@ void registerLibrary(GetIt sl) {
     )
     ..registerLazySingleton<TagRestoreStore>(PrefsTagRestoreStore.new)
     ..registerLazySingleton<LibraryRepository>(
-      () => DriftLibraryRepository(sl()),
+      () => NativeLibraryRepository(sl()),
     )
     ..registerLazySingleton<TrackFileDataSource>(
       PlatformTrackFileDataSource.new,

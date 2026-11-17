@@ -11,6 +11,12 @@
 - 시험 목록은 `release-device-test-checklist.md`(프로젝트 공유 폴더 notes) 14개 섹션. 실패한 항목과 로그가 오면 이 PR 하나에서만 고친다 (PR을 쪼개지 않는다).
 - 로그나 오류로 원인이 확인된 것만 고친다. 수정마다 건드린 곳과 안 건드린 곳을 남긴다.
 
+- 섹션 1 · 2 통과 (release 앱 켜짐 · 엔진 업데이트 · 받기 · 알림 · 앱 잠금).
+- 사용자 요청으로 앱 DB를 Dart(drift)에서 네이티브(Kotlin)로 옮겼다 (D-168). 이 PR 하나에 담는다.
+  - 새: `MuloDb.kt` · `LibraryDb.kt` · `DbChannel.kt`(`music_app/db`), Dart `lib/core/database/native_db.dart` · `Native*Repository`.
+  - 바꿈: `FavoriteStore.kt`(LibraryDb 사용) · `DownloadEngine.kt`(곡을 DB에 직접 등록, `registered`/`ack` 제거) · `MuloEngine.kt`(채널 등록) · DI · pubspec(drift 제거) · 문서.
+  - 안 건드림: 도메인 인터페이스 · 유스케이스 · 화면 · 재생 · 태그 · 받기 큐 동작.
+
 ## 확인
 섹션 1(release 전용)부터:
 - 빌드: `flutter build apk --release --flavor full --split-per-abi --dart-define-from-file=dart_defines.local.json`
