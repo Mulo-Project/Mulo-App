@@ -1259,6 +1259,14 @@ class FakeAudioPlayer implements AudioPlayerRepository {
   }
 
   @override
+  Future<PlaybackQueueChange?> addAllToQueue(List<PlaybackItem> items) async {
+    for (final item in items) {
+      await _addToQueue(item);
+    }
+    return _state();
+  }
+
+  @override
   Future<PlaybackQueueChange?> removeFromQueue(String id) async {
     await _removeFromQueue(id);
     return _state();

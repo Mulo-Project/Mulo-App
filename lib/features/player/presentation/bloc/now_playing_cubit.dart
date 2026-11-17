@@ -691,6 +691,30 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     emit(state.copyWith(queue: [...state.queue, track]));
   }
 
+  /// 곡 여러 개를 대기열 맨 뒤에 한 번에 붙인다. 대기열이 비어 있으면 이 곡들을 바로 재생한다.
+  /// 이미 대기열에 있는 곡은 건너뛴다.
+  void addAllToQueue(List<Track> tracks) {
+    final ok = [
+      for (final t in tracks)
+        if (playable(t)) t,
+    ];
+    if (ok.isEmpty) return;
+    if (state.queue.isEmpty) return playQueue(ok);
+    final fresh = [
+      for (final t in ok)
+        if (!state.queue.contains(t)) t,
+    ];
+    if (fresh.isEmpty) return;
+    if (_audio != null) {
+      for (final t in fresh) {
+        _tracks[t.id] = t;
+      }
+      _command((a) => a.addAllToQueue([for (final t in fresh) _itemOf(t)]));
+      return;
+    }
+    emit(state.copyWith(queue: [...state.queue, ...fresh]));
+  }
+
   /// 곡 정보가 바뀌었을 때 대기열의 같은 곡을 새 정보로 바꾼다.
   void updateTrack(Track track) {
     if (!state.queue.contains(track)) return;

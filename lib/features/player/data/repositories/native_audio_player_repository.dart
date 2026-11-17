@@ -100,6 +100,10 @@ class NativeAudioPlayerRepository implements AudioPlayerRepository {
       _queueOf(await _channel.addToQueue(_itemMap(item)));
 
   @override
+  Future<PlaybackQueueChange?> addAllToQueue(List<PlaybackItem> items) async =>
+      _queueOf(await _channel.addAllToQueue([for (final i in items) _itemMap(i)]));
+
+  @override
   Future<PlaybackQueueChange?> removeFromQueue(String id) async =>
       _queueOf(await _channel.removeFromQueue(id));
 

@@ -16,6 +16,7 @@ import 'rename_progress.dart';
 /// 선택 모드에서 고를 수 있는 일괄 작업.
 enum SelectionAction {
   selectAll,
+  addToQueue,
   addToPlaylist,
   removeFromPlaylist,
   removeFromQueue,
@@ -112,6 +113,12 @@ Future<SelectionAction?> showSelectionActionSheet(
                   icon: AppIcons.checkCircle,
                   label: l10n.newVideosSelectAll,
                   onTap: () => pick(SelectionAction.selectAll),
+                ),
+              if (!inQueue)
+                MenuRow(
+                  icon: AppIcons.queue,
+                  label: l10n.trackMenuAddToQueue,
+                  onTap: () => pick(SelectionAction.addToQueue),
                 ),
               MenuRow(
                 icon: AppIcons.playlistAdd,
@@ -398,6 +405,13 @@ mixin TrackPicker<T extends StatefulWidget> on State<T> {
     switch (action) {
       case SelectionAction.selectAll:
         setState(() => picked.addAll(shown.map((t) => t.id)));
+      case SelectionAction.addToQueue:
+        // 고른 순서가 아니라 목록에 보이는 순서대로 붙는다.
+        context.read<NowPlayingCubit>().addAllToQueue([
+          for (final t in all)
+            if (picked.contains(t.id)) t,
+        ]);
+        clearPicked();
       case SelectionAction.addToPlaylist:
         await context.push(Routes.playlistPick, extra: ids);
       case SelectionAction.removeFromPlaylist:

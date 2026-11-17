@@ -76,6 +76,16 @@ class AddAudioToQueue implements UseCase<PlaybackQueueChange?, PlaybackItem> {
   Future<PlaybackQueueChange?> call(PlaybackItem item) => _repo.addToQueue(item);
 }
 
+class AddAllAudioToQueue
+    implements UseCase<PlaybackQueueChange?, List<PlaybackItem>> {
+  const AddAllAudioToQueue(this._repo);
+  final AudioPlayerRepository _repo;
+
+  @override
+  Future<PlaybackQueueChange?> call(List<PlaybackItem> items) =>
+      _repo.addAllToQueue(items);
+}
+
 class RemoveAudioFromQueue implements UseCase<PlaybackQueueChange?, String> {
   const RemoveAudioFromQueue(this._repo);
   final AudioPlayerRepository _repo;
@@ -191,6 +201,7 @@ class AudioPlayback {
     required this.watchQueue,
     required this.playNext,
     required this.addToQueue,
+    required this.addAllToQueue,
     required this.removeFromQueue,
     required this.moveInQueue,
     required this.setShuffle,
@@ -215,6 +226,7 @@ class AudioPlayback {
   final WatchAudioQueue watchQueue;
   final PlayAudioNext playNext;
   final AddAudioToQueue addToQueue;
+  final AddAllAudioToQueue addAllToQueue;
   final RemoveAudioFromQueue removeFromQueue;
   final MoveAudioInQueue moveInQueue;
   final SetAudioShuffle setShuffle;

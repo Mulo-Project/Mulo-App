@@ -323,6 +323,20 @@ object PlaybackHub {
         queueEdited()
     }
 
+    /** 곡 여러 개를 대기열 맨 뒤에 한 번에 붙인다 (이미 있는 곡은 건너뛴다). 대기열 알림은 한 번만 보낸다. */
+    fun addAllToQueue(items: List<*>) {
+        if (exo.mediaItemCount == 0) return
+        var added = 0
+        for (map in items) {
+            val item = QueueMapping.mediaItemOf(map as Map<*, *>, artById)
+            if (indexOfId(item.mediaId) >= 0) continue
+            exo.addMediaItem(item)
+            added++
+        }
+        MuloLog.d(MuloLog.PLAYBACK, "addAllToQueue ${items.size}곡 중 ${added}곡 추가")
+        if (added > 0) queueEdited()
+    }
+
     /**
      * 곡 하나를 뺀다. 지금 곡을 빼면 다음 곡(마지막 곡이었으면 새 마지막 곡)으로 처음부터 넘어가고 재생 상태는 그대로다.
      * 대기열이 비면 멈추고 비운다.
