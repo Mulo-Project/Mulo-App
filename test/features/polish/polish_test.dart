@@ -4,7 +4,6 @@ import 'dart:ui' show Color, Locale;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/core/design/design.dart';
 import 'package:music_download_play_app/core/di/injector.dart';
-import 'package:music_download_play_app/features/downloads/domain/entities/download_item.dart';
 import 'package:music_download_play_app/features/library/domain/entities/library_sort.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 import 'package:music_download_play_app/features/notifications/domain/entities/notification_settings.dart';

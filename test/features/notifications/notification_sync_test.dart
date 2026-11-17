@@ -69,6 +69,31 @@ void main() {
     expect(notifier.previewing, isNull);
   });
 
+  final track = Track(
+    id: 't',
+    title: '노래',
+    artist: '가수',
+    album: '',
+    duration: const Duration(minutes: 3),
+    addedAt: DateTime(2026),
+  );
+
+  Future<void> play(
+    NotificationSettings s, {
+    Duration? at,
+    bool playing = true,
+  }) => cubit.syncPlayback(
+    track: track,
+    isPlaying: playing,
+    position: at ?? Duration.zero,
+    hasPrevious: true,
+    hasNext: true,
+    artUri: 'https://example.com/c.jpg',
+    settings: s,
+    l10n: l10n,
+    now: DateTime(2026),
+  );
+
   test('재생 알림은 위치가 흘러가는 동안 다시 보내지 않고 이동하면 보낸다', () async {
     await play(on);
     await play(on, at: const Duration(milliseconds: 500));

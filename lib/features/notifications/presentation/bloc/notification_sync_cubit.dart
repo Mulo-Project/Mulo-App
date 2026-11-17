@@ -7,7 +7,6 @@ import '../../../library/domain/entities/track.dart';
 import '../../../search/domain/entities/saved_video.dart';
 import '../../domain/entities/media_session_info.dart';
 import '../../domain/entities/notification_settings.dart';
-import '../../domain/repositories/download_notifier.dart';
 import '../../domain/usecases/notification_usecases.dart';
 
 /// 앱 상태(받기 대기열 · 재생 상태)를 알림창에 옮긴다. 화면이 없고 상태도 없다:
@@ -147,6 +146,9 @@ class NotificationSyncCubit extends Cubit<void> {
 
   /// 받기가 시작될 때 알림 권한을 한 번 묻는다 (네이티브가 알림을 띄우기 전에).
   Future<void> ensureDownloadPermission() => _ensurePermission();
+
+  String _titleLine(String title, String artist) =>
+      artist.isEmpty ? title : '$title · $artist';
 
   // ── 재생 ──
 

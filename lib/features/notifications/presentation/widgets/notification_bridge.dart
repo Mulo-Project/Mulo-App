@@ -10,7 +10,6 @@ import '../../../../core/l10n/l10n.dart';
 import '../../../covers/presentation/bloc/cover_color_cubit.dart';
 import '../../../covers/presentation/bloc/cover_cubit.dart';
 import '../../../library/presentation/bloc/library_cubit.dart';
-import '../../../downloads/domain/entities/download_item.dart';
 import '../../../downloads/presentation/bloc/download_queue_cubit.dart';
 import '../../../downloads/presentation/widgets/download_bar.dart';
 import '../../../playlists/presentation/bloc/playlists_cubit.dart';
@@ -21,7 +20,6 @@ import '../../../search/domain/entities/saved_video.dart';
 import '../../../search/presentation/bloc/preview_cubit.dart';
 import '../../../search/presentation/bloc/saved_videos_cubit.dart';
 import '../../domain/entities/media_session_info.dart';
-import '../../domain/repositories/download_notifier.dart';
 import '../bloc/notification_settings_cubit.dart';
 import '../bloc/notification_sync_cubit.dart';
 
