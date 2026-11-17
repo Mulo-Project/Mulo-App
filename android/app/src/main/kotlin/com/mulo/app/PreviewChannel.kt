@@ -750,6 +750,9 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
     /** 받기 알림의 "미리 듣기 중지" 버튼. */
     fun stopFromNotification() {
         stop()
+        // 화면(Dart)이 없으면 아무도 미리 듣기 알림 · 세션 내용을 치워 주지 않는다: 남아 있으면 이어폰 · 블루투스 버튼이
+        // 이미 끝난 미리 듣기로 가서 메인 재생이 반응하지 않는다. 치우면 버튼은 대기열의 곡으로 이어진다 ([PlaybackHub.prepareForButton]).
+        if (PlaybackHub.isPreviewing) PlaybackHub.setSession(null)
         channel.invokeMethod("changed", null)
     }
 
