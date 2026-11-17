@@ -760,6 +760,28 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     );
   }
 
+  /// 보관함의 곡 정보가 바뀌었으면 대기열의 같은 곡도 새 정보로 맞춘다 (어느 화면에서 고쳤든 같은 길).
+  void syncTracks(Iterable<Track> library) {
+    if (state.queue.isEmpty) return;
+    final byId = {for (final t in library) t.id: t};
+    var changed = false;
+    final queue = <Track>[];
+    for (final t in state.queue) {
+      final fresh = byId[t.id];
+      if (fresh != null &&
+          (fresh.title != t.title ||
+              fresh.artist != t.artist ||
+              fresh.album != t.album ||
+              fresh.genre != t.genre)) {
+        queue.add(fresh);
+        changed = true;
+      } else {
+        queue.add(t);
+      }
+    }
+    if (changed) emit(state.copyWith(queue: queue));
+  }
+
   /// 보관함에서 사라진 곡들([ids])을 대기열에서 뺀다 (재생 중인 곡이면 다음 곡으로 넘어간다).
   void removeFromQueueByIds(Set<String> ids) {
     if (ids.isEmpty) return;

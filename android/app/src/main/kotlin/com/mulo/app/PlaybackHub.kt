@@ -522,6 +522,25 @@ object PlaybackHub {
         persistQueue()
     }
 
+    /**
+     * 곡 정보(제목 · 아티스트 · 앨범)가 바뀌었을 때 대기열의 그 곡 정보를 맞춘다. 메인 스레드에서 부른다.
+     * 지금 듣는 곡은 바꾸지 않는다 (듣던 항목을 바꿔 끼우면 재생이 처음부터 다시 시작한다. 그 곡의 알림 정보는 앱이 [setSession]으로 보낸다).
+     */
+    fun updateQueueInfo(id: String, title: String, artist: String, album: String) {
+        if (!initialized) return
+        val i = indexOfId(id)
+        if (i < 0 || i == exo.currentMediaItemIndex) return
+        val item = exo.getMediaItemAt(i)
+        val old = item.mediaMetadata
+        val newArtist = artist.ifEmpty { null }
+        val newAlbum = album.ifEmpty { null }
+        if (old.title?.toString() == title && old.artist?.toString() == newArtist && old.albumTitle?.toString() == newAlbum) return
+        val metadata = old.buildUpon().setTitle(title).setArtist(newArtist).setAlbumTitle(newAlbum).build()
+        exo.replaceMediaItem(i, item.buildUpon().setMediaMetadata(metadata).build())
+        persistQueue()
+        sessionPlayer.refresh()
+    }
+
     /** 지금 쥐고 있는 대기열 스냅샷 (앱을 다시 켰을 때 복원용). 곡이 없으면 null. */
     fun getState(): Map<String, Any?>? {
         if (!initialized || exo.mediaItemCount == 0) return null

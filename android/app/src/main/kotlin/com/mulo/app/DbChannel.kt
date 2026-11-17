@@ -63,7 +63,18 @@ class DbChannel(
                     "discardImport" -> lib.discardImport()
                     "workingTracks" -> lib.workingTracks()
                     "addTracks" -> lib.addTracks(call.argument<List<Map<String, Any?>>>("tracks") ?: emptyList())
-                    "updateInfo" -> lib.updateInfo(str("id"), str("title"), str("artist"), str("album"), str("genre"))
+                    "updateInfo" -> {
+                        val saved = lib.updateInfo(str("id"), str("title"), str("artist"), str("album"), str("genre"))
+                        // 대기열에 있는 곡이면 재생 엔진의 곡 정보도 같이 맞춘다 (플레이어는 메인 스레드에서만 만진다).
+                        if (saved) {
+                            val id = str("id")
+                            val title = str("title")
+                            val artist = str("artist")
+                            val album = str("album")
+                            main.post { PlaybackHub.updateQueueInfo(id, title, artist, album) }
+                        }
+                        saved
+                    }
                     "hide" -> { lib.hide(str("id")); null }
                     "hideMany" -> { lib.hideMany(strs("ids")); null }
                     "hiddenCount" -> lib.hiddenCount()
