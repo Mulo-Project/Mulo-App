@@ -81,6 +81,8 @@ class DownloadEngine(
     private val batch = HashSet<String>()
 
     init {
+        // 어느 빌드가 돌고 있는지 로그로 알 수 있게 한다 (고칠 때마다 표식을 올린다).
+        MuloLog.d(MuloLog.NATIVE, "받기 엔진 시작 (표식 R5: 일시정지 yt-dlp 끊기)")
         load()
         schedule()
     }
