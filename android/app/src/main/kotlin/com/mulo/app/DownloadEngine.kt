@@ -47,6 +47,9 @@ class DownloadEngine(
     private val sources = LinkedHashMap<String, String>()
     private val worker = Executors.newSingleThreadExecutor()
     private val saver = Executors.newSingleThreadExecutor()
+    // init의 schedule()이 바로 일을 시작하므로, 받기가 쓰는 값은 모두 init보다 위에서 만든다.
+    private val resolver = Executors.newCachedThreadPool()
+    private val watchdog = java.util.concurrent.Executors.newSingleThreadScheduledExecutor()
     private val pending = AppDb.Pending(context)
     private val queueFile = File(context.filesDir, "download_queue.json")
     private val sourcesFile = File(context.filesDir, "download_sources.json")
@@ -550,6 +553,14 @@ class DownloadEngine(
         val id = item.id
         val request = item.request
         MuloLog.d(MuloLog.NATIVE, "받기 시작 $id")
+        // 받기가 15초가 지나도 진행이 없으면 받는 스레드가 어디서 멈췄는지 남긴다.
+        val runner = Thread.currentThread()
+        watchdog.schedule({
+            if (runningId == id && item.progress == 0.0) {
+                val where = runner.stackTrace.take(14).joinToString("\n") { "  at $it" }
+                MuloLog.d(MuloLog.NATIVE, "받기 15초째 진행 없음 $id (${runner.state})\n$where")
+            }
+        }, 15, java.util.concurrent.TimeUnit.SECONDS)
         abort = null
         runningId = id
         synchronized(lock) { item.status = DOWNLOADING; item.processing = false }
@@ -743,8 +754,6 @@ class DownloadEngine(
     )
 
     /** 네이티브(유튜브) → yt-dlp 순으로 소리 주소를 읽는다. */
-    private val resolver = Executors.newCachedThreadPool()
-
     /**
      * 주소 읽기가 멈춰도 받기 줄 전체가 막히지 않게, 따로 돌리고 기다린다: 일시정지 · 취소는 0.3초 안에 먹고,
      * 60초가 지나도 못 읽으면 실패로 처리한다 (다시 시도할 수 있다).
@@ -1163,6 +1172,7 @@ class DownloadEngine(
         abort = "cancel"
         worker.shutdownNow()
         resolver.shutdownNow()
+        watchdog.shutdownNow()
         saver.shutdownNow()
     }
 
