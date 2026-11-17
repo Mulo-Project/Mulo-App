@@ -266,6 +266,8 @@ class DownloadEngine(
             it.status = QUEUED
             it.error = ""
         }
+        // 다시 받기 시작하면 그 항목의 실패 알림은 치운다.
+        DownloadNotifications.clearResult(context, id)
         changed()
         schedule()
     }

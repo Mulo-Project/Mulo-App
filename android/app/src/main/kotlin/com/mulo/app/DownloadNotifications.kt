@@ -161,6 +161,13 @@ object DownloadNotifications {
         manager(context).notify(id, b.build())
     }
 
+    /** 받기 항목 하나의 결과(실패 · 완료) 알림을 치운다. */
+    fun clearResult(context: Context, itemId: String) {
+        val id = RESULT_ID_BASE + (itemId.hashCode() and 0xFFFFF)
+        manager(context).cancel(id)
+        synchronized(resultIds) { resultIds.remove(id) }
+    }
+
     fun clearResults(context: Context) {
         val nm = manager(context)
         synchronized(resultIds) {
