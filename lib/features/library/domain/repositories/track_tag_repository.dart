@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../../covers/domain/entities/cover_art.dart';
 import '../entities/file_tags.dart';
 import '../entities/track.dart';
@@ -52,6 +54,34 @@ abstract interface class FileTagRepository {
 
   /// 임시 진단: 지금까지 읽은 결과를 종류별로 센 한 줄 (꺼내면 비운다). 없으면 빈 문자열.
   String takeSummary();
+}
+
+/// 새로 찾은 곡 중 파일 태그를 아직 읽지 못한 곡 id (처음 불러오는 동안만 있다). 곡 정보(제목 · 커버 등)가 다 채워지기 전에는
+/// 곡 줄을 흐리게 하고 누르지 못하게 하는 데 쓴다. 앱 전체에서 하나를 같이 쓴다.
+class PendingTagTracks {
+  final _controller = StreamController<Set<String>>.broadcast();
+  var _ids = <String>{};
+
+  Set<String> get ids => _ids;
+
+  Stream<Set<String>> get changes => _controller.stream;
+
+  void set(Set<String> ids) {
+    _ids = ids;
+    _controller.add(_ids);
+  }
+
+  void remove(String id) {
+    if (!_ids.contains(id)) return;
+    _ids = {..._ids}..remove(id);
+    _controller.add(_ids);
+  }
+
+  void clear() {
+    if (_ids.isEmpty) return;
+    _ids = <String>{};
+    _controller.add(_ids);
+  }
 }
 
 /// 이미 태그를 읽어 DB를 채운 곡 id 기록 (곡마다 한 번만, 이어서 하려고).

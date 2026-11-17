@@ -328,17 +328,37 @@ class RestoreFromFileTags implements UseCase<int, NoParams> {
     this._covers,
     this._colors,
     this._tags,
-    this._done,
-  );
+    this._done, [
+    this._pending,
+  ]);
 
   final LibraryRepository _library;
   final CoverRepository _covers;
   final CoverColorRepository _colors;
   final FileTagRepository _tags;
   final TagRestoreStore _done;
+  final PendingTagTracks? _pending;
 
   @override
   Future<int> call(NoParams _) => run();
+
+  /// 읽기가 멈췄거나 끝났을 때 "정보 읽는 중" 표시를 모두 치운다 (읽기가 안 도는데 표시가 남지 않게).
+  void clearPending() => _pending?.clear();
+
+  /// 태그를 아직 안 읽은 기기 곡을 "정보 읽는 중"으로 표시한다 (읽기를 시작하기 전, 새로 찾은 직후에 부른다).
+  Future<void> markPending() async {
+    final pending = _pending;
+    if (pending == null) return;
+    final tracks = await _library.watchTracks().first;
+    final done = await _done.loadDone();
+    pending.set({
+      for (final t in tracks)
+        if (t.source == TrackSource.device &&
+            t.uri.isNotEmpty &&
+            !done.contains(t.id))
+          t.id,
+    });
+  }
 
   /// [onProgress]로 (끝낸 곡 수, 읽을 곡 수)를 알리며 되살린다.
   Future<int> run({
@@ -357,6 +377,7 @@ class RestoreFromFileTags implements UseCase<int, NoParams> {
           t,
     ];
     var restored = 0;
+    _pending?.set({for (final t in todo) t.id});
     onProgress?.call(0, todo.length);
     for (final (i, t) in todo.indexed) {
       if (cancelled?.call() ?? false) break;
@@ -371,8 +392,11 @@ class RestoreFromFileTags implements UseCase<int, NoParams> {
       } on Exception {
         // 한 곡이 실패해도 나머지는 계속한다 (기록하지 않아 다음에 다시 시도).
       }
+      // 읽었든 못 읽었든 이 곡은 더 기다리지 않는다 (못 읽은 곡은 다음에 다시 시도하되 지금 재생은 막지 않는다).
+      _pending?.remove(t.id);
       onProgress?.call(i + 1, todo.length);
     }
+    _pending?.clear();
     // 임시 진단: 읽은 결과를 디버그 빌드가 snackbar로 보여 준다.
     final summary = _tags.takeSummary();
     if (todo.isNotEmpty) {

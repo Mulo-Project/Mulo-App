@@ -63,7 +63,10 @@ void registerLibrary(GetIt sl) {
     ..registerFactory(() => UpdateTrackInfo(sl(), sl()))
     ..registerFactory(() => EmbedTagsIntoFiles(sl(), sl(), sl(), sl(), sl()))
     ..registerFactory(() => EmbedTrackCover(sl(), sl(), sl(), sl()))
-    ..registerFactory(() => RestoreFromFileTags(sl(), sl(), sl(), sl(), sl()))
+    ..registerLazySingleton(PendingTagTracks.new)
+    ..registerFactory(
+      () => RestoreFromFileTags(sl(), sl(), sl(), sl(), sl(), sl()),
+    )
     ..registerFactory(() => DeleteTrack(sl(), sl()))
     ..registerFactory(() => GetTrackFileInfo(sl()))
     ..registerFactory(() => ImportDeviceMusic(sl(), sl(), sl()))
