@@ -212,8 +212,9 @@ class YtDlpEngine(
                 "-f", YtDlpParsers.saveSelector(maxHeight, extension),
                 "--merge-output-format", extension,
                 "--no-playlist", "--no-warnings", "--newline",
-                // 인터넷이 잠깐 끊겼다 돌아와도(와이파이 · 데이터 전환) 포기하지 않고 3초씩 쉬며 다시 시도한다.
-                "--retries", "10", "--fragment-retries", "10", "--extractor-retries", "5", "--retry-sleep", "3",
+                // 인터넷이 끊겼다 돌아와도(와이파이 · 데이터 전환) 포기하지 않는다: 쉬는 시간을 2 · 4 · 8 · 16초, 이후 20초씩으로 늘리며
+                // 다시 시도한다 (모두 약 5분).
+                "--retries", "20", "--fragment-retries", "20", "--extractor-retries", "10", "--retry-sleep", "exp=2:20",
                 "-o", File(dir, "$stem.%(ext)s").path,
             ) + extra + url
             val r = runWithTimeout(id, saveTimeoutMs) { runner.run(args, id, onProgress) }

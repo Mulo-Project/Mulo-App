@@ -236,7 +236,8 @@ object YtDlpParsers {
     fun failureCode(stderr: String): String = when {
         stderr.contains("Unsupported URL") -> "not_found"
         stderr.contains("Unable to download") || stderr.contains("getaddrinfo") ||
-            stderr.contains("Unable to resolve host") || stderr.contains("Network is unreachable") -> "network"
+            stderr.contains("Unable to resolve host") || stderr.contains("Network is unreachable") ||
+            stderr.contains("No address associated") || stderr.contains("[Errno 7]") -> "network"
         else -> "failed"
     }
 
