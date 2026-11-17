@@ -56,9 +56,27 @@ class NativeYoutubeResolver {
           ),
       ];
     } on PlatformException catch (e) {
-      throw EngineException(EngineFailure.failed, e.message ?? e.code);
+      final message = e.message ?? e.code;
+      throw EngineException(
+        // 인터넷이 끊기거나 전환되면(이름 확인 실패 · 연결 안 됨) 네트워크 오류로 알린다 (받기는 다시 시도하면 이어 받는다).
+        _isNetworkMessage(message)
+            ? EngineFailure.network
+            : EngineFailure.failed,
+        message,
+      );
     }
   }
+
+  static final _networkMessage = RegExp(
+    'Unable to resolve host|No address associated|UnknownHost|'
+    'Network is unreachable|Failed to connect|ConnectException|'
+    'SocketException|Connection reset|Software caused connection abort|'
+    'connection abort',
+    caseSensitive: false,
+  );
+
+  static bool _isNetworkMessage(String message) =>
+      _networkMessage.hasMatch(message);
 
   /// 유튜브와 연결을 미리 열어 둔다 (이어지는 검색 요청이 재사용한다).
   Future<void> warmUp() async {

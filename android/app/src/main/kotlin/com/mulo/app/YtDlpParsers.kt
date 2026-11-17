@@ -235,7 +235,8 @@ object YtDlpParsers {
     /** yt-dlp 오류 글에서 실패 까닭을 고른다 (Dart `EngineFailure` 이름). */
     fun failureCode(stderr: String): String = when {
         stderr.contains("Unsupported URL") -> "not_found"
-        stderr.contains("Unable to download") || stderr.contains("getaddrinfo") -> "network"
+        stderr.contains("Unable to download") || stderr.contains("getaddrinfo") ||
+            stderr.contains("Unable to resolve host") || stderr.contains("Network is unreachable") -> "network"
         else -> "failed"
     }
 
