@@ -159,6 +159,13 @@ class FakeLibraryRepository implements LibraryRepository {
   }
 
   @override
+  Future<void> hideMany(Iterable<String> trackIds) async {
+    final ids = trackIds.toSet();
+    _tracks.removeWhere((t) => ids.contains(t.id));
+    _changes.add(_sorted);
+  }
+
+  @override
   Future<void> delete(String trackId) async {
     _tracks.removeWhere((t) => t.id == trackId);
     _changes.add(_sorted);

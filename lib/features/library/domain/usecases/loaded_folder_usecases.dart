@@ -164,17 +164,26 @@ class RemoveLoadedFolder implements UseCase<Set<String>?, String> {
     await _folders.saveExtra(kept);
     final remaining = [_folders.defaultFolder, ...kept];
     final tracks = await _library.watchTracks().first;
+    final targets = [
+      for (final t in tracks)
+        if (isInsideFolder(t.folder, target) &&
+            !remaining.any((f) => isInsideFolder(t.folder, f)))
+          t.id,
+    ];
+    // 곡마다 따로 숨기면 그때마다 보관함 목록이 다시 읽혀 느리다: 묶음으로 숨기고, 묶음 사이에서 취소를 본다.
+    const batch = 200;
     final removed = <String>{};
-    for (final t in tracks) {
+    for (var i = 0; i < targets.length; i += batch) {
       if (cancelled?.call() ?? false) {
         await _folders.saveExtra(extra);
         return removed;
       }
-      if (isInsideFolder(t.folder, target) &&
-          !remaining.any((f) => isInsideFolder(t.folder, f))) {
-        await _library.hide(t.id);
-        removed.add(t.id);
-      }
+      final chunk = targets.sublist(
+        i,
+        i + batch > targets.length ? targets.length : i + batch,
+      );
+      await _library.hideMany(chunk);
+      removed.addAll(chunk);
     }
     return removed;
   }

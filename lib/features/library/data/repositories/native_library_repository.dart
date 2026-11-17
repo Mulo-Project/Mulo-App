@@ -41,6 +41,13 @@ class NativeLibraryRepository implements LibraryRepository {
   Future<void> hide(String trackId) => _db.call<void>('hide', {'id': trackId});
 
   @override
+  Future<void> hideMany(Iterable<String> trackIds) {
+    final ids = trackIds.toList();
+    if (ids.isEmpty) return Future.value();
+    return _db.call<void>('hideMany', {'ids': ids});
+  }
+
+  @override
   Future<int> hiddenCount() async => (await _db.call<int>('hiddenCount')) ?? 0;
 
   @override

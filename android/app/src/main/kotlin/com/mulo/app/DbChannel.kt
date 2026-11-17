@@ -53,6 +53,7 @@ class DbChannel(
                     "addTracks" -> lib.addTracks(call.argument<List<Map<String, Any?>>>("tracks") ?: emptyList())
                     "updateInfo" -> lib.updateInfo(str("id"), str("title"), str("artist"), str("album"), str("genre"))
                     "hide" -> { lib.hide(str("id")); null }
+                    "hideMany" -> { lib.hideMany(strs("ids")); null }
                     "hiddenCount" -> lib.hiddenCount()
                     "hiddenTracks" -> lib.hiddenTracks()
                     "purgeHidden" -> lib.purgeHidden(call.argument<List<String>>("ids"))

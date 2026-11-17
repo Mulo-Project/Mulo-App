@@ -93,6 +93,15 @@ class LibraryDb(private val context: Context) {
         }
     }
 
+    /** 곡 여러 개를 한 번에 숨긴다 (한 번의 쓰기 · 한 번의 바뀜 알림). */
+    fun hideMany(ids: List<String>) {
+        if (ids.isEmpty()) return
+        MuloDb.write(context, MuloDb.TRACKS) { d ->
+            val v = ContentValues().apply { put("hidden", 1) }
+            for (id in ids) d.update("tracks", v, "id = ?", arrayOf(id))
+        }
+    }
+
     fun hiddenCount(): Int =
         db.rawQuery("SELECT COUNT(*) FROM tracks WHERE hidden = 1", null).use { if (it.moveToFirst()) it.getInt(0) else 0 }
 

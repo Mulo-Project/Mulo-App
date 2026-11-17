@@ -19,6 +19,9 @@ abstract interface class LibraryRepository {
   /// 같은 곡을 다시 [addTracks]로 찾으면 숨김이 풀린다.
   Future<void> hide(String trackId);
 
+  /// 곡 여러 개를 한 번에 숨긴다 (폴더를 뺄 때). 곡마다 따로 숨기면 그때마다 목록이 다시 읽혀 느리다.
+  Future<void> hideMany(Iterable<String> trackIds);
+
   /// 숨긴 곡(폴더를 빼서 남겨 둔 곡)의 수.
   Future<int> hiddenCount();
 
