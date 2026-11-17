@@ -2835,6 +2835,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get notifDownloadFailedTitle => '받기 실패';
 
   @override
+  String get notifDownloadRetry => '다시 시도';
+
+  @override
   String get notifDownloadFailedHidden => '곡을 받지 못했어요';
 
   @override

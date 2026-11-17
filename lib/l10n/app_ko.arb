@@ -1120,6 +1120,7 @@
   "notifDownloadDoneTitle": "받기 완료",
   "notifDownloadDoneHidden": "곡이 보관함에 추가됐어요",
   "notifDownloadFailedTitle": "받기 실패",
+  "notifDownloadRetry": "다시 시도",
   "notifDownloadFailedHidden": "곡을 받지 못했어요",
   "@notifDownloadPausedBody": {"placeholders": {"percent": {"type": "int"}}},
   "@notifDownloadProgressBody": {"placeholders": {"percent": {"type": "int"}}},

@@ -1916,6 +1916,9 @@ class FakeDownloadNotifier implements DownloadNotifier {
   @override
   Stream<DownloadNotificationAction> watchActions() => _actions.stream;
 
+  @override
+  Stream<String> watchRetries() => const Stream.empty();
+
   final _opens = StreamController<String>.broadcast();
 
   /// 알림 본문을 눌러 앱이 이미 떠 있는 채로 열린 것처럼 한다.
@@ -1975,6 +1978,7 @@ class FakeDownloadNotifier implements DownloadNotifier {
     required String body,
     required bool failed,
     String? artUri,
+    String? retryLabel,
   }) async {
     resultArt[id] = artUri;
     calls.add('${failed ? 'failed' : 'done'}:$id');

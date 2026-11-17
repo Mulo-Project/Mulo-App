@@ -59,6 +59,7 @@ class _NotificationBridgeState extends State<NotificationBridge>
   var _openPending = false;
   late final Future<void> _boot = _checkLaunch();
   StreamSubscription<DownloadNotificationAction>? _downloadActions;
+  StreamSubscription<String>? _downloadRetries;
   StreamSubscription<String>? _downloadOpens;
 
   @override
@@ -80,6 +81,10 @@ class _NotificationBridgeState extends State<NotificationBridge>
         .listen(_onDownloadAction);
     final sync = context.read<NotificationSyncCubit>();
     _downloadOpens = sync.downloadOpens.listen((id) => _openDownload(id));
+    // 실패 알림의 "다시 시도": 그 받기를 다시 시작한다 (받아 둔 만큼은 이어 받는다).
+    _downloadRetries = sync.downloadRetries.listen(
+      (id) => context.read<DownloadQueueCubit>().retry(id),
+    );
     // 받기 알림을 눌러 앱이 새로 켜졌다면 그 곡의 상세 화면으로 간다.
     sync.takeDownloadOpen().then((id) {
       if (id != null && mounted) _openDownload(id);
@@ -93,6 +98,7 @@ class _NotificationBridgeState extends State<NotificationBridge>
     _openRequests?.cancel();
     _downloadActions?.cancel();
     _downloadOpens?.cancel();
+    _downloadRetries?.cancel();
     super.dispose();
   }
 

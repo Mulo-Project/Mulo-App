@@ -8,6 +8,9 @@ class NoDownloadNotifier implements DownloadNotifier {
   Stream<DownloadNotificationAction> watchActions() => const Stream.empty();
 
   @override
+  Stream<String> watchRetries() => const Stream.empty();
+
+  @override
   Stream<String> watchOpenRequests() => const Stream.empty();
 
   @override
@@ -39,6 +42,7 @@ class NoDownloadNotifier implements DownloadNotifier {
     required String body,
     required bool failed,
     String? artUri,
+    String? retryLabel,
   }) async {}
 
   @override

@@ -100,6 +100,7 @@ class ShowDownloadProgress implements UseCase<void, DownloadProgressNotice> {
     stopLabel: params.stopLabel,
     openId: params.openId,
     artUri: params.artUri,
+    retryLabel: params.retryLabel,
   );
 }
 
@@ -118,6 +119,7 @@ class DownloadResultNotice {
     required this.body,
     required this.failed,
     this.artUri,
+    this.retryLabel,
   });
 
   final String id;
@@ -127,6 +129,9 @@ class DownloadResultNotice {
 
   /// 알림의 큰 아이콘 자리에 보일 곡 이미지 (웹 주소 또는 파일 경로).
   final String? artUri;
+
+  /// 실패 알림에 "다시 시도" 버튼을 넣을 때의 글자 (없으면 버튼이 없다). 누르면 [id]의 받기를 다시 시작한다.
+  final String? retryLabel;
 }
 
 class ShowDownloadResult implements UseCase<void, DownloadResultNotice> {
@@ -159,6 +164,14 @@ class WatchDownloadActions
   @override
   Stream<DownloadNotificationAction> call(NoParams params) =>
       _notifier.watchActions();
+}
+
+class WatchDownloadRetries implements StreamUseCase<String, NoParams> {
+  const WatchDownloadRetries(this._notifier);
+  final DownloadNotifier _notifier;
+
+  @override
+  Stream<String> call(NoParams params) => _notifier.watchRetries();
 }
 
 class WatchDownloadOpens implements StreamUseCase<String, NoParams> {
@@ -212,6 +225,7 @@ class NotificationActions {
     required this.watchCommands,
     required this.watchDownloadActions,
     required this.watchDownloadOpens,
+    required this.watchDownloadRetries,
     required this.takeDownloadOpen,
     required this.updateSession,
     required this.updateQueueArt,
@@ -226,6 +240,7 @@ class NotificationActions {
   final WatchMediaCommands watchCommands;
   final WatchDownloadActions watchDownloadActions;
   final WatchDownloadOpens watchDownloadOpens;
+  final WatchDownloadRetries watchDownloadRetries;
   final TakeDownloadOpen takeDownloadOpen;
   final UpdateMediaSession updateSession;
   final UpdateMediaQueueArt updateQueueArt;

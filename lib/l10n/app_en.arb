@@ -1013,6 +1013,7 @@
   "notifDownloadDoneTitle": "Download complete",
   "notifDownloadDoneHidden": "A song was added to your library",
   "notifDownloadFailedTitle": "Download failed",
+  "notifDownloadRetry": "Retry",
   "notifDownloadFailedHidden": "A song could not be downloaded",
   "@notifDownloadPausedBody": {"placeholders": {"percent": {"type": "int"}}},
   "@notifDownloadProgressBody": {"placeholders": {"percent": {"type": "int"}}},

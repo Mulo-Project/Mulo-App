@@ -8,6 +8,12 @@ import android.content.Intent
 class DownloadActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val key = DownloadNotifications.ACTIONS.entries.firstOrNull { it.value == intent.action }?.key ?: return
+        if (key == "retry") {
+            val id = intent.getStringExtra(DownloadNotifications.EXTRA_RETRY_ID) ?: return
+            // 받아 줄 엔진이 없으면 알림을 남겨 둔다 (앱을 켜고 다시 누르거나 본문을 눌러 연다).
+            DownloadNotificationPlugin.dispatchRetry(id)
+            return
+        }
         // 받아 줄 엔진이 없으면(프로세스가 죽었다 되살아난 경우 등) 버튼이 먹지 않는 낡은 알림이므로 치운다.
         if (!DownloadNotificationPlugin.dispatch(key)) DownloadNotifications.clearProgress(context)
     }

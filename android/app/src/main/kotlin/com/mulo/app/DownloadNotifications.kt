@@ -28,7 +28,9 @@ object DownloadNotifications {
         "stopPreview" to "com.mulo.app.download.STOP_PREVIEW",
         "toggleHold" to "com.mulo.app.download.TOGGLE_HOLD",
         "cancel" to "com.mulo.app.download.CANCEL",
+        "retry" to "com.mulo.app.download.RETRY",
     )
+    const val EXTRA_RETRY_ID = "retryId"
 
     /** 서비스가 알림을 다시 만들 때 쓰는, 마지막으로 받은 진행 알림 내용. */
     @Volatile
@@ -143,6 +145,16 @@ object DownloadNotifications {
         (a["color"] as? Number)?.let { b.setColor(it.toInt()) }
         NotificationArt.get(a["artUri"] as? String) { showResult(context, a) }?.let { b.setLargeIcon(it) }
         launchIntent(context, a["openId"] as? String)?.let { b.setContentIntent(it) }
+        val retryLabel = a["retryLabel"] as? String
+        val retryId = a["id"] as? String
+        if (failed && retryLabel != null && !retryId.isNullOrEmpty()) {
+            // 항목마다 요청 코드와 extra가 달라야 알림마다 자기 항목을 다시 받는다.
+            val intent = Intent(ACTIONS.getValue("retry"))
+                .setComponent(ComponentName(context, DownloadActionReceiver::class.java))
+                .putExtra(EXTRA_RETRY_ID, retryId)
+            val pi = PendingIntent.getBroadcast(context, id, intent, NotificationSupport.PENDING_FLAGS)
+            NotificationSupport.addAction(b, retryLabel, pi)
+        }
         synchronized(resultIds) { resultIds.add(id) }
         manager(context).notify(id, b.build())
     }

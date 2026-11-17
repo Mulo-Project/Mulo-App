@@ -26,6 +26,11 @@ class LocalDownloadNotifier implements DownloadNotifier {
   @override
   Stream<DownloadNotificationAction> watchActions() => _actions.stream;
 
+  final _retries = StreamController<String>.broadcast();
+
+  @override
+  Stream<String> watchRetries() => _retries.stream;
+
   @override
   Stream<String> watchOpenRequests() => _opens.stream;
 
@@ -44,6 +49,11 @@ class LocalDownloadNotifier implements DownloadNotifier {
     if (call.method == 'open') {
       final id = await takeOpenRequest();
       if (id != null) _opens.add(id);
+      return;
+    }
+    if (call.method == 'retry') {
+      final id = call.arguments;
+      if (id is String && id.isNotEmpty) _retries.add(id);
       return;
     }
     if (call.method != 'action') return;
@@ -122,12 +132,14 @@ class LocalDownloadNotifier implements DownloadNotifier {
     required String body,
     required bool failed,
     String? artUri,
+    String? retryLabel,
   }) => _call('showResult', {
     'id': id,
     'openId': id,
     'title': title,
     'body': body,
     'failed': failed,
+    'retryLabel': retryLabel,
     'artUri': artUri,
     'color': AppPalette.violet.toARGB32(),
   });

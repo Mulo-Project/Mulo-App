@@ -80,6 +80,13 @@ class DownloadNotificationPlugin : FlutterPlugin, MethodChannel.MethodCallHandle
             main.post { active?.invokeMethod("open", null) }
         }
 
+        /** 실패 알림의 "다시 시도": 받기 항목 id를 Dart로 보낸다. */
+        fun dispatchRetry(id: String): Boolean {
+            if (active == null) return false
+            main.post { active?.invokeMethod("retry", id) }
+            return true
+        }
+
         /** 알림 버튼 누름을 Dart로 보낸다. 받아 줄 엔진이 없으면 false (호출한 쪽이 낡은 알림을 치운다). */
         fun dispatch(action: String): Boolean {
             if (active == null) return false

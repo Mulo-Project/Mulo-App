@@ -39,6 +39,7 @@ void registerNotifications(GetIt sl) {
         watchCommands: WatchMediaCommands(sl()),
         watchDownloadActions: WatchDownloadActions(sl()),
         watchDownloadOpens: WatchDownloadOpens(sl()),
+        watchDownloadRetries: WatchDownloadRetries(sl()),
         takeDownloadOpen: TakeDownloadOpen(sl()),
         updateSession: UpdateMediaSession(sl()),
         updateQueueArt: UpdateMediaQueueArt(sl()),

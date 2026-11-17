@@ -5288,6 +5288,12 @@ abstract class AppLocalizations {
   /// **'받기 실패'**
   String get notifDownloadFailedTitle;
 
+  /// No description provided for @notifDownloadRetry.
+  ///
+  /// In ko, this message translates to:
+  /// **'다시 시도'**
+  String get notifDownloadRetry;
+
   /// No description provided for @notifDownloadFailedHidden.
   ///
   /// In ko, this message translates to:

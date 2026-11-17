@@ -21,6 +21,9 @@ abstract interface class DownloadNotifier {
   /// 알림에서 누른 조작.
   Stream<DownloadNotificationAction> watchActions();
 
+  /// 실패 알림의 "다시 시도" 버튼 누름 (받기 항목 id).
+  Stream<String> watchRetries();
+
   /// 알림 본문을 눌러 열라는 요청: 그 받기 항목의 id.
   /// 앱이 이미 떠 있을 때 들어온다. 새로 켜진 경우는 [takeOpenRequest]로 받는다.
   Stream<String> watchOpenRequests();
@@ -58,6 +61,7 @@ abstract interface class DownloadNotifier {
     required String body,
     required bool failed,
     String? artUri,
+    String? retryLabel,
   });
 
   /// 받기 결과 알림을 모두 치운다.

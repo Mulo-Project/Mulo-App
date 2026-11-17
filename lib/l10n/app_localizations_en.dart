@@ -2912,6 +2912,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifDownloadFailedTitle => 'Download failed';
 
   @override
+  String get notifDownloadRetry => 'Retry';
+
+  @override
   String get notifDownloadFailedHidden => 'A song could not be downloaded';
 
   @override

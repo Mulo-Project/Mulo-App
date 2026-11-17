@@ -25,6 +25,10 @@ class NotificationSyncCubit extends Cubit<void> {
   Stream<DownloadNotificationAction> get downloadActions =>
       _actions.watchDownloadActions(const NoParams());
 
+  /// 받기 실패 알림의 "다시 시도" 버튼 (받기 항목 id).
+  Stream<String> get downloadRetries =>
+      _actions.watchDownloadRetries(const NoParams());
+
   /// 받기 알림 본문을 눌러 열라는 요청 (받기 항목 id).
   Stream<String> get downloadOpens =>
       _actions.watchDownloadOpens(const NoParams());
@@ -152,6 +156,7 @@ class NotificationSyncCubit extends Cubit<void> {
                   : [i.title, if (i.error.isNotEmpty) i.error].join('\n'),
               failed: true,
               artUri: hide ? null : i.thumbnailUrl,
+              retryLabel: l10n.notifDownloadRetry,
             ),
           );
         }
