@@ -320,6 +320,7 @@ class DownloadEngine(
             val active = items.filter { it.active() }
             active.firstOrNull { it.status != PAUSED } ?: active.firstOrNull()
         } ?: return true
+        MuloLog.d(MuloLog.NATIVE, "받기 알림 버튼 $key → ${current.id} (${current.status})")
         when (key) {
             "cancel" -> cancel(current.id)
             "toggleHold" -> if (current.status == PAUSED) resume(current.id) else pause(current.id)

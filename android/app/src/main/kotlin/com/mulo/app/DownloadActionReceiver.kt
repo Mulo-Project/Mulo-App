@@ -17,7 +17,10 @@ class DownloadActionReceiver : BroadcastReceiver() {
             MuloEngine.downloads?.retry(id)
             return
         }
+        // 엔진이 정리됐어도(앱이 꺼진 채 일시정지해 두는 동안 등) 버튼이 먹도록 엔진을 먼저 켠다. 대기열은 파일에서 되살아난다.
+        MuloEngine.obtain(context)
         val downloads = MuloEngine.downloads
+        if (downloads == null) MuloLog.d(MuloLog.NATIVE, "받기 알림 버튼 $key: 받기 엔진이 없음")
         if (downloads != null && downloads.onAction(key)) return
         // 받아 줄 엔진이 없으면(프로세스가 죽었다 되살아난 경우 등) 버튼이 먹지 않는 낡은 알림이므로 치운다.
         DownloadNotifications.clearProgress(context)
