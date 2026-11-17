@@ -102,6 +102,7 @@ class NativeDownloadQueueRepository implements DownloadQueueRepository {
     if (event is! Map) return;
     final name = event['event'];
     final data = event['data'];
+    if (name != 'queue') debugPrint('MuloDownload event $name');
     switch (name) {
       case 'queue':
         _setItems(data as List<Object?>);

@@ -31,7 +31,15 @@ class DownloadChannel(
     private var sink: EventChannel.EventSink? = null
 
     val engine = DownloadEngine(context, ytdlp, transcoder, store, tags) { event, data ->
-        main.post { sink?.success(mapOf("event" to event, "data" to data)) }
+        main.post {
+            val s = sink
+            if (s == null) {
+                // 듣는 쪽(Dart)이 없다: 상태는 Dart가 듣기 시작할 때 다시 받는다.
+                if (event != "queue") MuloLog.d(MuloLog.NATIVE, "받기 이벤트를 받을 화면이 없음: $event")
+            } else {
+                s.success(mapOf("event" to event, "data" to data))
+            }
+        }
     }
 
     init {
