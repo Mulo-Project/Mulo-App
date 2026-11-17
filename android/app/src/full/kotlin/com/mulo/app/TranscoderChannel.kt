@@ -266,17 +266,21 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
         return runFfmpeg(args, output)
     }
 
-    /** m4a 오디오(mp4 껍데기): 소문자 키, 소리만 넘기고 그림이 있으면 첨부 그림으로 붙인다. */
+    /**
+     * m4a 오디오(mp4 껍데기): 소문자 키. 그림이 있으면 첨부 그림(covr)으로 붙이고, 없으면 파일에 있던 그림을 그대로 둔다
+     * (소리만 넘기면 글만 고쳐도 커버가 사라진다). +use_metadata_tags(mdta)는 그림(covr)을 쓰지 않고 표준 칸도 mdta로만 써서
+     * 쓰지 않는다: 표준 칸(ilst)으로 쓰므로 앱 전용 칸은 파일에 남지 않는다.
+     */
     private fun tagM4a(input: String, values: List<Pair<String, String>>, output: String, cover: String?): Boolean {
         val args = mutableListOf("-nostdin", "-y", "-i", input)
         if (cover != null) args += listOf("-i", cover)
         args += listOf("-map", "0:a")
-        if (cover != null) args += listOf("-map", "1:v", "-disposition:v:0", "attached_pic")
+        if (cover != null) {
+            args += listOf("-map", "1:v", "-disposition:v:0", "attached_pic")
+        } else {
+            args += listOf("-map", "0:v?", "-disposition:v:0", "attached_pic")
+        }
         for ((key, value) in entriesOf(values, upper = false)) args += listOf("-metadata", "$key=$value")
-        // +use_metadata_tags(mdta)를 쓰면 ffmpeg가 그림(covr)을 쓰지 않고 표준 칸도 mdta로만 써 다른 플레이어가 못 읽는다.
-        // 그래서 그림이 있거나 앱 전용 칸이 없으면 표준 칸(ilst)으로 쓴다 (그림이 있을 때 앱 전용 칸은 파일에 남지 않는다).
-        val appOnly = values.any { it.first.lowercase() !in knownKeys }
-        if (cover == null && appOnly) args += listOf("-movflags", "+use_metadata_tags")
         args += listOf("-c", "copy", "-f", "ipod", output)
         return runFfmpeg(args, output)
     }
