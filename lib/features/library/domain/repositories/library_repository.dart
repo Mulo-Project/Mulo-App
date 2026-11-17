@@ -31,7 +31,8 @@ abstract interface class LibraryRepository {
   /// 숨긴 곡의 행과 재생 기록 · 재생목록 소속 · 커버 · 커버 색 · 가사 연결을 지운다
   /// (앱 폴더에 복사한 커버 · 가사 파일도). [ids]를 주면 그 중 숨긴 곡만, 없으면 모두.
   /// 보이는 곡은 [ids]에 있어도 건드리지 않는다. 지운 곡 수를 돌려준다.
-  Future<int> purgeHidden({Set<String>? ids});
+  /// [emptyOnly]면 남은 기록(재생 · 재생목록 · 커버 · 가사)이 하나도 없는 숨긴 곡만 지운다.
+  Future<int> purgeHidden({Set<String>? ids, bool emptyOnly = false});
 
   /// 곡을 보관함에서 지운다. 재생목록 · 재생 기록 · 커버 기록도 함께 지운다 (음악 파일은 [TrackFileRepository]).
   Future<void> delete(String trackId);

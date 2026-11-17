@@ -133,7 +133,7 @@ class LibraryDb(private val context: Context) {
      * 숨긴 곡의 행과 재생 기록 · 재생목록 소속 · 커버 · 커버 색 · 가사 연결을 지운다 (앱 폴더에 복사한 커버 · 가사 파일도).
      * [ids]가 있으면 그 중 숨긴 곡만, null이면 모두. 보이는 곡은 건드리지 않는다. 지운 곡 수를 돌려준다.
      */
-    fun purgeHidden(ids: List<String>?): Int {
+    fun purgeHidden(ids: List<String>?, emptyOnly: Boolean = false): Int {
         if (ids != null && ids.isEmpty()) return 0
         val files = mutableListOf<String>()
         var purged = 0
@@ -143,7 +143,7 @@ class LibraryDb(private val context: Context) {
         ) { d ->
             val target = d.rawQuery("SELECT id FROM tracks WHERE hidden = 1", null).use { c ->
                 buildList { while (c.moveToNext()) add(c.getString(0)) }
-            }.filter { ids == null || it in ids }
+            }.filter { ids == null || it in ids }.filter { !emptyOnly || !hasRecords(d, it) }
             for (id in target) {
                 val key = "track:$id"
                 d.rawQuery("SELECT path FROM covers WHERE key = ?", arrayOf(key)).use { c ->
@@ -163,6 +163,15 @@ class LibraryDb(private val context: Context) {
         }
         files.forEach(::deleteQuietly)
         return purged
+    }
+
+    /** 곡에 남은 기록(재생 · 재생목록 · 커버 · 가사)이 하나라도 있는지. */
+    private fun hasRecords(d: SQLiteDatabase, id: String): Boolean {
+        fun has(sql: String, arg: String) = d.rawQuery("$sql LIMIT 1", arrayOf(arg)).use { it.moveToFirst() }
+        return has("SELECT 1 FROM plays WHERE track_id = ?", id) ||
+            has("SELECT 1 FROM playlist_tracks WHERE track_id = ?", id) ||
+            has("SELECT 1 FROM covers WHERE key = ?", "track:$id") ||
+            has("SELECT 1 FROM lyrics_files WHERE track_id = ?", id)
     }
 
     /** 곡을 보관함에서 지운다. 재생목록 · 재생 기록 · 커버 기록도 함께 지운다 (음악 파일은 건드리지 않는다). */

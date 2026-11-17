@@ -94,7 +94,7 @@ class LoadedFoldersCubit extends Cubit<LoadedFoldersState> {
           : () async {
               // 취소하면 방금 등록한 폴더를 목록에서 빼고, 거기서 불러온 곡도 보관함에서 지운다.
               _stage(LoadStage.removing);
-              await _remove(added.first);
+              await _remove(added.first, purgeEmpty: true);
             },
     );
     return !_cancelled;

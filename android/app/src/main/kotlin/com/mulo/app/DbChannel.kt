@@ -56,7 +56,7 @@ class DbChannel(
                     "hideMany" -> { lib.hideMany(strs("ids")); null }
                     "hiddenCount" -> lib.hiddenCount()
                     "hiddenTracks" -> lib.hiddenTracks()
-                    "purgeHidden" -> lib.purgeHidden(call.argument<List<String>>("ids"))
+                    "purgeHidden" -> lib.purgeHidden(call.argument<List<String>>("ids"), call.argument<Boolean>("emptyOnly") ?: false)
                     "deleteTrack" -> { lib.deleteTrack(str("id")); null }
                     // 커버 · 색
                     "covers" -> lib.covers()

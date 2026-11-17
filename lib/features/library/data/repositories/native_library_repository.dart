@@ -69,9 +69,10 @@ class NativeLibraryRepository implements LibraryRepository {
   }
 
   @override
-  Future<int> purgeHidden({Set<String>? ids}) async =>
+  Future<int> purgeHidden({Set<String>? ids, bool emptyOnly = false}) async =>
       (await _db.call<int>('purgeHidden', {
         'ids': ids?.toList(),
+        'emptyOnly': emptyOnly,
       })) ??
       0;
 

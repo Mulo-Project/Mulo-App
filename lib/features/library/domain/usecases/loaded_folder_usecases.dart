@@ -148,11 +148,17 @@ class PurgeHiddenTracks implements UseCase<int, Set<String>?> {
 class RemoveLoadedFolder implements UseCase<Set<String>?, String> {
   const RemoveLoadedFolder(this._folders, this._library);
 
+  // [purgeEmpty]: 폴더를 방금 더하다 취소한 경우. 숨긴 곡 중 남은 기록이 없는 곡은 숨긴 기록에도 남기지 않고 지운다.
+
   final LoadedFolderRepository _folders;
   final LibraryRepository _library;
 
   @override
-  Future<Set<String>?> call(String path, {bool Function()? cancelled}) async {
+  Future<Set<String>?> call(
+    String path, {
+    bool Function()? cancelled,
+    bool purgeEmpty = false,
+  }) async {
     final target = normalizeFolderPath(path);
     if (target == normalizeFolderPath(_folders.defaultFolder)) return null;
     final extra = await _folders.loadExtra();
@@ -184,6 +190,9 @@ class RemoveLoadedFolder implements UseCase<Set<String>?, String> {
       );
       await _library.hideMany(chunk);
       removed.addAll(chunk);
+    }
+    if (purgeEmpty && removed.isNotEmpty) {
+      await _library.purgeHidden(ids: removed, emptyOnly: true);
     }
     return removed;
   }
