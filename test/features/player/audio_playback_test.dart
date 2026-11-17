@@ -30,6 +30,7 @@ void main() {
       playNext: PlayAudioNext(engine),
       addToQueue: AddAudioToQueue(engine),
       removeFromQueue: RemoveAudioFromQueue(engine),
+      removeAllFromQueue: RemoveAllAudioFromQueue(engine),
       moveInQueue: MoveAudioInQueue(engine),
       setShuffle: SetAudioShuffle(engine),
       setRepeat: SetAudioRepeat(engine),

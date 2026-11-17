@@ -367,20 +367,40 @@ object PlaybackHub {
      */
     fun removeFromQueue(id: String) {
         MuloLog.d(MuloLog.PLAYBACK, "removeFromQueue id=$id")
+        if (removeOne(id)) removalDone()
+    }
+
+    /** 곡 여러 개를 한 번에 뺀다. 저장 · 세션 · 대기열 알림은 끝에 한 번만 한다. */
+    fun removeAllFromQueue(ids: List<*>) {
+        var removed = 0
+        for (id in ids) if (removeOne(id as String)) removed++
+        MuloLog.d(MuloLog.PLAYBACK, "removeAllFromQueue ${ids.size}곡 중 ${removed}곡 뺌")
+        if (removed > 0) removalDone()
+    }
+
+    /** 알림 없이 곡 하나만 뺀다. 뺐으면 true. */
+    private fun removeOne(id: String): Boolean {
         val i = indexOfId(id)
-        if (i < 0) return
+        if (i < 0) return false
         if (exo.mediaItemCount == 1) {
             extras = ""
             exo.stop()
             exo.clearMediaItems()
-            persistQueue()
-            emitQueue()
-            return
+            return true
         }
         // 마지막 곡을 지금 듣는 중이면 먼저 이전 곡으로 옮긴다 (그냥 빼면 ExoPlayer가 재생을 끝내 버린다).
         if (i == exo.currentMediaItemIndex && i == exo.mediaItemCount - 1) exo.seekTo(i - 1, 0L)
         exo.removeMediaItem(i)
-        queueEdited()
+        return true
+    }
+
+    private fun removalDone() {
+        if (exo.mediaItemCount == 0) {
+            persistQueue()
+            emitQueue()
+        } else {
+            queueEdited()
+        }
     }
 
     /** [from]번 곡을 [to] 자리로 옮긴다 ([to]는 옮긴 뒤의 자리). 듣던 곡은 그대로 이어서 재생한다. */

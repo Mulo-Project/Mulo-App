@@ -58,6 +58,7 @@ void registerPlayer(GetIt sl) {
         playAllNext: PlayAllAudioNext(sl()),
         addAllToQueue: AddAllAudioToQueue(sl()),
         removeFromQueue: RemoveAudioFromQueue(sl()),
+        removeAllFromQueue: RemoveAllAudioFromQueue(sl()),
         moveInQueue: MoveAudioInQueue(sl()),
         setShuffle: SetAudioShuffle(sl()),
         setRepeat: SetAudioRepeat(sl()),

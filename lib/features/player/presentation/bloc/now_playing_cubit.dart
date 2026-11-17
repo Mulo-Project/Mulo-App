@@ -763,8 +763,23 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
   /// 보관함에서 사라진 곡들([ids])을 대기열에서 뺀다 (재생 중인 곡이면 다음 곡으로 넘어간다).
   void removeFromQueueByIds(Set<String> ids) {
     if (ids.isEmpty) return;
-    for (final t in [...state.queue]) {
-      if (ids.contains(t.id)) removeFromQueue(t);
+    final targets = [
+      for (final t in state.queue)
+        if (ids.contains(t.id)) t,
+    ];
+    if (targets.isEmpty) return;
+    if (_audio != null) {
+      // 네이티브에 한 번에 보낸다 (대기열 알림도 한 번). 대기열이 통째로 비는 경우만 마지막 곡을 따로 뺀다.
+      final all = targets.length == state.queue.length;
+      final batch = all ? targets.sublist(0, targets.length - 1) : targets;
+      if (batch.isNotEmpty) {
+        _command((a) => a.removeAllFromQueue([for (final t in batch) t.id]));
+      }
+      if (all) removeFromQueue(targets.last);
+      return;
+    }
+    for (final t in targets) {
+      removeFromQueue(t);
     }
   }
 

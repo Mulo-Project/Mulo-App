@@ -51,6 +51,9 @@ abstract interface class AudioPlayerRepository {
   /// 마지막 한 곡이면 대기열이 비고 멈춘다.
   Future<PlaybackQueueChange?> removeFromQueue(String id);
 
+  /// 곡 여러 개를 한 번에 뺀다 (대기열 알림은 한 번).
+  Future<PlaybackQueueChange?> removeAllFromQueue(List<String> ids);
+
   /// [from]번 곡을 [to] 자리로 옮긴다 ([to]는 옮긴 뒤의 자리). 듣던 곡은 그대로 이어서 재생한다.
   Future<PlaybackQueueChange?> moveInQueue(int from, int to);
 

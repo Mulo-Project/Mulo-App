@@ -53,6 +53,12 @@ class NativePlaybackChannel {
   Future<Map<Object?, Object?>?> removeFromQueue(String id) =>
       _method.invokeMapMethod<Object?, Object?>('removeFromQueue', id);
 
+  /// 곡 여러 개를 한 번에 뺀다 (대기열 알림은 한 번만 온다).
+  Future<Map<Object?, Object?>?> removeAllFromQueue(List<String> ids) =>
+      _method.invokeMapMethod<Object?, Object?>('removeAllFromQueue', {
+        'ids': ids,
+      });
+
   /// [from]번 곡을 [to] 자리로 옮긴다 ([to]는 옮긴 뒤의 자리).
   Future<Map<Object?, Object?>?> moveInQueue(int from, int to) => _method
       .invokeMapMethod<Object?, Object?>('moveInQueue', {'from': from, 'to': to});
