@@ -1,7 +1,10 @@
 package com.mulo.app
 
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import io.flutter.plugin.common.BinaryMessenger
+import io.flutter.plugin.common.EventChannel
 import org.json.JSONObject
 
 /**
@@ -10,7 +13,7 @@ import org.json.JSONObject
  * Dart → 네이티브: `enqueue`(request JSON 글 → id) · `pause` · `resume` · `retry` · `cancel`(id) · `cancelAll`(playlistId? → 뺀 곡 수) ·
  * `snapshot`(→ 대기열 목록) · `findExisting`(url → trackId? · inQueue) · `sourceUrlOf`(trackId → url?) ·
  * `configure`(알림 글 · 설정 JSON 글) · `setPreviewing`(id?) · `dbReady`(앱이 DB를 열었다. 옛 Dart 큐 기록 이전도 이때 네이티브가 한다).
- * 네이티브 → Dart: `queue`(목록) · `tagNotice`(title · extension · ok · detail) · `saved`(폴더) · `engineError`(글) · `libraryChanged`.
+ * 네이티브 → Dart (EventChannel `music_app/downloads/events`, {event, data}): `queue`(목록, 듣기 시작할 때 먼저 한 번) · `tagNotice`(title · extension · ok · detail) · `saved`(폴더) · `engineError`(글) · `libraryChanged`.
  */
 class DownloadChannel(
     context: Context,
@@ -20,9 +23,29 @@ class DownloadChannel(
     store: MediaStoreChannel,
     tags: TagChannel,
 ) : NativeChannel(messenger, NAME) {
-    val engine = DownloadEngine(context, ytdlp, transcoder, store, tags) { method, args -> notifyDart(method, args) }
+    /** 네이티브 → Dart 상태 흐름 (`music_app/downloads/events`). 듣는 쪽이 없으면(앱이 꺼져 있으면) 보내지 않는다. */
+    private val events = EventChannel(messenger, EVENTS)
+    private val main = Handler(Looper.getMainLooper())
+
+    @Volatile
+    private var sink: EventChannel.EventSink? = null
+
+    val engine = DownloadEngine(context, ytdlp, transcoder, store, tags) { event, data ->
+        main.post { sink?.success(mapOf("event" to event, "data" to data)) }
+    }
 
     init {
+        events.setStreamHandler(object : EventChannel.StreamHandler {
+            override fun onListen(arguments: Any?, s: EventChannel.EventSink) {
+                sink = s
+                // 듣기 시작하면 지금 대기열부터 보낸다 (그 전에 바뀐 것을 놓치지 않게).
+                s.success(mapOf("event" to "queue", "data" to engine.snapshot()))
+            }
+
+            override fun onCancel(arguments: Any?) {
+                sink = null
+            }
+        })
         channel.setMethodCallHandler { call, result ->
             fun id(): String? = call.argument<String>("id")
             try {
@@ -48,11 +71,14 @@ class DownloadChannel(
     }
 
     override fun dispose() {
+        events.setStreamHandler(null)
+        sink = null
         engine.dispose()
         super.dispose()
     }
 
     companion object {
         const val NAME = "music_app/downloads"
+        const val EVENTS = "music_app/downloads/events"
     }
 }

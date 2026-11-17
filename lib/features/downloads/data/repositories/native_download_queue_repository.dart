@@ -24,11 +24,17 @@ class NativeDownloadQueueRepository implements DownloadQueueRepository {
     this._onEngineError,
     this._onLibraryChanged,
     MethodChannel? channel,
-  }) : _channel = channel ?? const MethodChannel('music_app/downloads') {
-    _channel.setMethodCallHandler(_onCall);
-  }
+    EventChannel? events,
+  }) : _channel = channel ?? const MethodChannel('music_app/downloads'),
+       _events =
+           events ?? const EventChannel('music_app/downloads/events');
 
   final MethodChannel _channel;
+
+  /// 네이티브 → Dart 상태 흐름 (`queue` · `tagNotice` · `saved` · `engineError` · `libraryChanged`).
+  /// 듣기 시작하면 네이티브가 지금 대기열을 먼저 보내 준다.
+  final EventChannel _events;
+  StreamSubscription<Object?>? _eventsSub;
   final DownloadSettingsRepository _settings;
 
   /// 보관함 DB를 연다 (네이티브가 그 파일에 쓰기 전에, 최신 스키마가 되도록 Dart가 먼저 한 번 연다).
@@ -48,6 +54,10 @@ class NativeDownloadQueueRepository implements DownloadQueueRepository {
   Future<void> _ensureReady() => _ready ??= _init();
 
   Future<void> _init() async {
+    _eventsSub ??= _events.receiveBroadcastStream().listen(
+      _onEvent,
+      onError: (Object e) => debugPrint('MuloDownload events error: $e'),
+    );
     // 보관함 DB 열기는 받기 큐(목록 · 요청)를 막지 않도록 따로 돌린다. 못 열어도 네이티브가 등록을 맡겨 두었다가 다음에 쓴다.
     unawaited(_openDatabase());
     await _refresh();
@@ -88,12 +98,15 @@ class NativeDownloadQueueRepository implements DownloadQueueRepository {
     _changes.add(_items);
   }
 
-  Future<void> _onCall(MethodCall call) async {
-    switch (call.method) {
+  void _onEvent(Object? event) {
+    if (event is! Map) return;
+    final name = event['event'];
+    final data = event['data'];
+    switch (name) {
       case 'queue':
-        _setItems(call.arguments as List<Object?>);
+        _setItems(data as List<Object?>);
       case 'tagNotice':
-        final m = Map<Object?, Object?>.from(call.arguments as Map);
+        final m = Map<Object?, Object?>.from(data as Map);
         _tagNotices.add(
           TagNotice(
             title: m['title'] as String? ?? '',
@@ -104,12 +117,12 @@ class NativeDownloadQueueRepository implements DownloadQueueRepository {
         );
       case 'saved':
         // 고정한 폴더가 없을 때의 기준: 마지막에 받은 폴더.
-        final folder = call.arguments;
+        final folder = data;
         if (folder is String && folder.isNotEmpty) {
           unawaited(_settings.saveLastSavePath(folder));
         }
       case 'engineError':
-        final message = call.arguments;
+        final message = data;
         if (message is String) _onEngineError?.call(message);
       case 'libraryChanged':
         _onLibraryChanged?.call();

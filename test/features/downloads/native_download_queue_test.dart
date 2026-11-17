@@ -27,18 +27,20 @@ void main() {
     onEngineError: errors.add,
     onLibraryChanged: () => libraryChanged++,
     channel: channel,
+    events: events,
   );
 
-  /// 네이티브가 Dart로 보내는 호출을 흉내 낸다.
-  Future<void> fromNative(String method, Object? args) async {
-    await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .handlePlatformMessage(
-          channel.name,
-          const StandardMethodCodec().encodeMethodCall(
-            MethodCall(method, args),
-          ),
-          (_) {},
-        );
+  const events = EventChannel('music_app/downloads/events');
+  MockStreamHandlerEventSink? sink;
+
+  /// 네이티브가 Dart로 보내는 상태를 흉내 낸다 (이벤트 채널).
+  Future<void> fromNative(String event, Object? data) async {
+    // 듣기 시작이 네이티브에 닿을 때까지 잠시 기다린다.
+    for (var i = 0; i < 20 && sink == null; i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+    }
+    sink!.success({'event': event, 'data': data});
+    await Future<void>.delayed(Duration.zero);
   }
 
   setUp(() {
@@ -48,6 +50,15 @@ void main() {
     opened = 0;
     libraryChanged = 0;
     errors.clear();
+    sink = null;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockStreamHandler(
+          events,
+          MockStreamHandler.inline(
+            onListen: (_, s) => sink = s,
+            onCancel: (_) => sink = null,
+          ),
+        );
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (call) async {
           calls.add(call);
@@ -68,6 +79,8 @@ void main() {
   });
 
   tearDown(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockStreamHandler(events, null);
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, null);
   });
