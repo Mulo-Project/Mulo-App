@@ -517,7 +517,10 @@ class DownloadEngine(
     // ── 실행 ──
 
     private fun schedule() {
-        if (pumping) return
+        if (pumping) {
+            MuloLog.d(MuloLog.NATIVE, "받기 순서 대기: 앞 작업이 아직 끝나지 않음 (running=$runningId)")
+            return
+        }
         pumping = true
         worker.execute {
             try {
@@ -541,6 +544,7 @@ class DownloadEngine(
     private fun run(item: Item) {
         val id = item.id
         val request = item.request
+        MuloLog.d(MuloLog.NATIVE, "받기 시작 $id")
         abort = null
         runningId = id
         synchronized(lock) { item.status = DOWNLOADING; item.processing = false }
