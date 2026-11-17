@@ -743,7 +743,35 @@ class DownloadEngine(
     )
 
     /** 네이티브(유튜브) → yt-dlp 순으로 소리 주소를 읽는다. */
+    private val resolver = Executors.newCachedThreadPool()
+
+    /**
+     * 주소 읽기가 멈춰도 받기 줄 전체가 막히지 않게, 따로 돌리고 기다린다: 일시정지 · 취소는 0.3초 안에 먹고,
+     * 60초가 지나도 못 읽으면 실패로 처리한다 (다시 시도할 수 있다).
+     */
     private fun resolveAudio(url: String, language: String?, refresh: Boolean): Stream {
+        val task = resolver.submit<Stream> { resolveAudioNow(url, language, refresh) }
+        val limit = System.currentTimeMillis() + RESOLVE_LIMIT_MS
+        while (true) {
+            if (abort != null) {
+                task.cancel(true)
+                throw Aborted()
+            }
+            try {
+                return task.get(300, java.util.concurrent.TimeUnit.MILLISECONDS)
+            } catch (_: java.util.concurrent.TimeoutException) {
+                if (System.currentTimeMillis() > limit) {
+                    task.cancel(true)
+                    MuloLog.d(MuloLog.NATIVE, "받기 주소 읽기 시간 초과 ${RESOLVE_LIMIT_MS}ms")
+                    throw Failed("응답이 너무 오래 걸려요")
+                }
+            } catch (e: java.util.concurrent.ExecutionException) {
+                throw e.cause ?: e
+            }
+        }
+    }
+
+    private fun resolveAudioNow(url: String, language: String?, refresh: Boolean): Stream {
         val clock = System.currentTimeMillis()
         val id = NativeVideoSaver.youtubeIdOf(url)
         var nativeError: String? = null
@@ -1134,6 +1162,7 @@ class DownloadEngine(
     fun dispose() {
         abort = "cancel"
         worker.shutdownNow()
+        resolver.shutdownNow()
         saver.shutdownNow()
     }
 
@@ -1145,6 +1174,7 @@ class DownloadEngine(
         const val DONE = "done"
 
         private const val PROGRESS_STEP = 0.01
+        private const val RESOLVE_LIMIT_MS = 60_000L
         private const val CHUNK = 10L * 1024 * 1024
         private const val RETRIES_PER_CHUNK = 6
         private const val ROOT = "/storage/emulated/0/"
