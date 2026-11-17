@@ -115,6 +115,15 @@ class TranscoderChannel(private val context: Context, messenger: BinaryMessenger
 
     fun isAvailable(): Boolean = true
 
+    /** 진행 중인 ffmpeg(변환 · 합치기)를 멈춘다. */
+    fun cancelProcess() {
+        process?.destroy()
+    }
+
+    /** 받은 오디오를 [codec] · [bitrate]로 바꿔 [output]에 쓴다 ([format]은 `mp3` 또는 `ogg`). 받기 큐가 직접 부른다. */
+    fun convertAudio(input: String, output: String, codec: String, bitrate: Int, format: String): Boolean =
+        convert(input, output, codec, bitrate, format)
+
     /** 영상 [video]와 소리 [audio](없을 수 있다)를 다시 인코딩 없이 [output] 확장자의 형식(mp4 · webm) 하나로 합친다. 실패하면 예외. */
     fun mux(video: File, audio: File?, output: File): Boolean {
         val args = mutableListOf("-nostdin", "-y", "-i", video.absolutePath)

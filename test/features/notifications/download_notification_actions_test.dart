@@ -10,7 +10,7 @@ import 'package:music_download_play_app/features/search/presentation/bloc/previe
 
 import '../../helpers/fakes.dart';
 
-/// 받기 알림의 "취소" · "미리 듣기" 버튼이 앱까지 이어지는지 (알림 → 앱의 받기 대기열 · 미리 듣기).
+/// 받기 알림의 "미리 듣기" 버튼이 앱까지 이어지는지 (알림 → 앱의 받기 대기열 · 미리 듣기).
 void main() {
   Future<(MemoryDownloadQueue, FakeDownloadNotifier)> boot(
     WidgetTester tester, [
@@ -37,13 +37,6 @@ void main() {
     return (queue, sl<DownloadNotifier>() as FakeDownloadNotifier);
   }
 
-  testWidgets('알림의 취소 버튼은 지금 받는 곡을 취소한다', (tester) async {
-    final (queue, notifier) = await boot(tester);
-    notifier.press(DownloadNotificationAction.cancel);
-    await tester.pumpAndSettle();
-    expect(queue.controls, contains('cancel:d1'));
-  });
-
   testWidgets('알림의 미리 듣기 버튼은 지금 받는 곡을 받지 않고 바로 듣는다', (tester) async {
     final (_, notifier) = await boot(tester);
     // 앱이 쓰는 미리 듣기 (sl에서 새로 만든 것이 아니라 화면 트리의 것).
@@ -64,13 +57,6 @@ void main() {
     expect(preview.state.isActive('d1'), isFalse);
   });
 
-  testWidgets('받기가 일시정지 중이어도 알림의 취소 버튼이 동작한다', (tester) async {
-    final (queue, notifier) = await boot(tester, DownloadStatus.paused);
-    notifier.press(DownloadNotificationAction.cancel);
-    await tester.pumpAndSettle();
-    expect(queue.controls, contains('cancel:d1'));
-  });
-
   testWidgets('받기가 일시정지 중이어도 알림의 미리 듣기 버튼이 동작한다', (tester) async {
     final (_, notifier) = await boot(tester, DownloadStatus.paused);
     final preview = BlocProvider.of<PreviewCubit>(
@@ -80,19 +66,5 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     expect(preview.state.isActive('d1'), isTrue);
-  });
-
-  testWidgets('알림의 일시정지 버튼은 받는 곡의 받기를 멈춘다', (tester) async {
-    final (queue, notifier) = await boot(tester);
-    notifier.press(DownloadNotificationAction.toggleHold);
-    await tester.pumpAndSettle();
-    expect(queue.controls, contains('pause:d1'));
-  });
-
-  testWidgets('알림의 이어받기 버튼은 일시정지된 곡을 이어 받는다', (tester) async {
-    final (queue, notifier) = await boot(tester, DownloadStatus.paused);
-    notifier.press(DownloadNotificationAction.toggleHold);
-    await tester.pumpAndSettle();
-    expect(queue.controls, contains('resume:d1'));
   });
 }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/services.dart';
 
@@ -26,26 +27,6 @@ class LocalDownloadNotifier implements DownloadNotifier {
   @override
   Stream<DownloadNotificationAction> watchActions() => _actions.stream;
 
-  final _retries = StreamController<String>.broadcast();
-
-  @override
-  Stream<String> watchRetries() {
-    // 앱이 꺼져 있다가 "다시 시도"로 켜진 경우: 구독이 붙은 뒤 맡겨 둔 요청을 가져온다.
-    Future<void>.delayed(Duration.zero, _drainRetry);
-    return _retries.stream;
-  }
-
-  Future<void> _drainRetry() async {
-    try {
-      final id = await _channel.invokeMethod<String>('takeRetry');
-      if (id != null && id.isNotEmpty) _retries.add(id);
-    } on PlatformException {
-      return;
-    } on MissingPluginException {
-      return;
-    }
-  }
-
   @override
   Stream<String> watchOpenRequests() => _opens.stream;
 
@@ -64,10 +45,6 @@ class LocalDownloadNotifier implements DownloadNotifier {
     if (call.method == 'open') {
       final id = await takeOpenRequest();
       if (id != null) _opens.add(id);
-      return;
-    }
-    if (call.method == 'retry') {
-      await _drainRetry();
       return;
     }
     if (call.method != 'action') return;
@@ -103,40 +80,38 @@ class LocalDownloadNotifier implements DownloadNotifier {
     }
   }
 
-  @override
-  Future<void> showProgress({
-    required String title,
-    required String body,
-    int? percent,
-    bool foreground = true,
-    String? subText,
-    String? previewLabel,
-    String? cancelLabel,
-    String? holdLabel,
-    String? pauseLabel,
-    String? stopLabel,
-    String? openId,
-    String? artUri,
-  }) => _call('showProgress', {
-    'title': title,
-    'body': body,
-    'percent': percent,
-    'foreground': foreground,
-    'subText': subText,
-    'previewLabel': previewLabel,
-    'cancelLabel': cancelLabel,
-    'holdLabel': holdLabel,
-    'pauseLabel': pauseLabel,
-    'stopLabel': stopLabel,
-    'openId': openId,
-    'artUri': artUri,
-    'color': AppPalette.violet.toARGB32(),
-  });
+  /// 받기 큐는 네이티브가 쥐고 있어서 글과 설정은 그쪽 채널로 보낸다.
+  static const _downloads = MethodChannel('music_app/downloads');
 
   @override
-  Future<void> clearProgress() async {
-    if (_init == null) return;
-    await _call('clearProgress');
+  Future<void> configureDownloads(Map<String, Object?> config) async {
+    final l10n = systemL10n();
+    try {
+      await _downloads.invokeMethod<void>('configure', {
+        'config': jsonEncode({
+          ...config,
+          'progressChannel': l10n.notifChannelDownloadProgress,
+          'doneChannel': l10n.notifChannelDownloadDone,
+          'failedChannel': l10n.notifChannelDownloadFailed,
+          'color': AppPalette.violet.toARGB32(),
+        }),
+      });
+    } on PlatformException {
+      // 알림은 부가 기능이다.
+    } on MissingPluginException {
+      // 알림은 부가 기능이다.
+    }
+  }
+
+  @override
+  Future<void> setDownloadPreviewing(String? id) async {
+    try {
+      await _downloads.invokeMethod<void>('setPreviewing', {'id': id});
+    } on PlatformException {
+      // 알림은 부가 기능이다.
+    } on MissingPluginException {
+      // 알림은 부가 기능이다.
+    }
   }
 
   @override
@@ -146,14 +121,12 @@ class LocalDownloadNotifier implements DownloadNotifier {
     required String body,
     required bool failed,
     String? artUri,
-    String? retryLabel,
   }) => _call('showResult', {
     'id': id,
     'openId': id,
     'title': title,
     'body': body,
     'failed': failed,
-    'retryLabel': retryLabel,
     'artUri': artUri,
     'color': AppPalette.violet.toARGB32(),
   });

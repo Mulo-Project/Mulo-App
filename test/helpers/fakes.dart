@@ -1900,24 +1900,19 @@ class MemoryNotificationSettings implements NotificationSettingsRepository {
   Future<void> openSystemSettings() async {}
 }
 
-/// 받기 알림 기록 ('progress:제목:42', 'clear', 'done:id', 'failed:id').
+/// 받기 알림 기록 ('done:id', 'failed:id'). 받기 큐 알림은 네이티브가 띄우므로 글과 설정만 기록한다.
 class FakeDownloadNotifier implements DownloadNotifier {
   final calls = <String>[];
 
   /// 결과 알림에 담긴 곡 이미지 (알림 id → 주소).
   final resultArt = <String, String?>{};
 
-  /// 마지막 진행 알림의 내용 (제목 · 본문 · 머리말 · 앞에 붙들기 · 미리 듣기 버튼).
-  final shown = <Map<String, Object?>>[];
   final _actions = StreamController<DownloadNotificationAction>.broadcast();
 
   void press(DownloadNotificationAction a) => _actions.add(a);
 
   @override
   Stream<DownloadNotificationAction> watchActions() => _actions.stream;
-
-  @override
-  Stream<String> watchRetries() => const Stream.empty();
 
   final _opens = StreamController<String>.broadcast();
 
@@ -1937,39 +1932,16 @@ class FakeDownloadNotifier implements DownloadNotifier {
     return id;
   }
 
-  @override
-  Future<void> showProgress({
-    required String title,
-    required String body,
-    int? percent,
-    bool foreground = true,
-    String? subText,
-    String? previewLabel,
-    String? cancelLabel,
-    String? holdLabel,
-    String? pauseLabel,
-    String? stopLabel,
-    String? openId,
-    String? artUri,
-  }) async {
-    shown.add({
-      'title': title,
-      'body': body,
-      'subText': subText,
-      'foreground': foreground,
-      'preview': previewLabel,
-      'cancel': cancelLabel,
-      'hold': holdLabel,
-      'pause': pauseLabel,
-      'stop': stopLabel,
-      'openId': openId,
-      'artUri': artUri,
-    });
-    calls.add('progress:$title:$percent');
-  }
+  /// 네이티브에 넘긴 받기 알림 설정 (마지막 것).
+  Map<String, Object?>? downloadConfig;
+  String? previewing;
 
   @override
-  Future<void> clearProgress() async => calls.add('clear');
+  Future<void> configureDownloads(Map<String, Object?> config) async =>
+      downloadConfig = config;
+
+  @override
+  Future<void> setDownloadPreviewing(String? id) async => previewing = id;
 
   @override
   Future<void> showResult({
@@ -1978,7 +1950,6 @@ class FakeDownloadNotifier implements DownloadNotifier {
     required String body,
     required bool failed,
     String? artUri,
-    String? retryLabel,
   }) async {
     resultArt[id] = artUri;
     calls.add('${failed ? 'failed' : 'done'}:$id');

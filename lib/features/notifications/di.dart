@@ -32,14 +32,13 @@ void registerNotifications(GetIt sl) {
     ..registerFactory(() => OpenNotificationSystemSettings(sl()))
     ..registerFactory(
       () => NotificationActions(
-        showProgress: ShowDownloadProgress(sl()),
-        clearProgress: ClearDownloadProgress(sl()),
+        configureDownloads: ConfigureDownloadNotifications(sl()),
+        setDownloadPreviewing: SetDownloadPreviewing(sl()),
         showResult: ShowDownloadResult(sl()),
         clearResults: ClearDownloadResults(sl()),
         watchCommands: WatchMediaCommands(sl()),
         watchDownloadActions: WatchDownloadActions(sl()),
         watchDownloadOpens: WatchDownloadOpens(sl()),
-        watchDownloadRetries: WatchDownloadRetries(sl()),
         takeDownloadOpen: TakeDownloadOpen(sl()),
         updateSession: UpdateMediaSession(sl()),
         updateQueueArt: UpdateMediaQueueArt(sl()),

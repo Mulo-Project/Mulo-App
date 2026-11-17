@@ -137,7 +137,19 @@ const backfillListenedSql =
 class AppDatabase extends _$AppDatabase {
   /// 테스트는 [executor]에 메모리 DB를 넣는다.
   AppDatabase([QueryExecutor? executor])
-    : super(executor ?? driftDatabase(name: 'music_app'));
+    : super(
+        executor ??
+            driftDatabase(
+              name: 'music_app',
+              // 받기(네이티브)도 같은 파일에 곡을 쓰므로 둘이 같이 열 수 있게 WAL로 두고, 잠겨 있으면 잠시 기다린다 (D-167).
+              native: DriftNativeOptions(
+                setup: (db) {
+                  db.execute('PRAGMA journal_mode = WAL');
+                  db.execute('PRAGMA busy_timeout = 8000');
+                },
+              ),
+            ),
+      );
 
   @override
   int get schemaVersion => 13;

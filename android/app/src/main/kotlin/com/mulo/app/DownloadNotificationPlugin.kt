@@ -50,11 +50,6 @@ class DownloadNotificationPlugin : FlutterPlugin, MethodChannel.MethodCallHandle
                 }
                 "showResult" -> DownloadNotifications.showResult(ctx, args)
                 "clearResults" -> DownloadNotifications.clearResults(ctx)
-                "takeRetry" -> {
-                    val id = pendingRetry
-                    pendingRetry = null
-                    return result.success(id)
-                }
                 "takeOpen" -> {
                     val id = pendingOpen
                     pendingOpen = null
@@ -83,15 +78,6 @@ class DownloadNotificationPlugin : FlutterPlugin, MethodChannel.MethodCallHandle
         fun requestOpen(id: String) {
             pendingOpen = id
             main.post { active?.invokeMethod("open", null) }
-        }
-
-        /** 실패 알림의 "다시 시도" 누름: id를 맡겨 두고 Dart에 알린다 (엔진이 아직 없으면 Dart가 켜질 때 가져간다). */
-        @Volatile
-        private var pendingRetry: String? = null
-
-        fun requestRetry(id: String) {
-            pendingRetry = id
-            main.post { active?.invokeMethod("retry", null) }
         }
 
         /** 알림 버튼 누름을 Dart로 보낸다. 받아 줄 엔진이 없으면 false (호출한 쪽이 낡은 알림을 치운다). */

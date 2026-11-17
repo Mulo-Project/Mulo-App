@@ -62,6 +62,32 @@ class TagChannel(
         }
     }
 
+    /**
+     * [write]를 호출한 스레드에서 끝날 때까지 기다려 결과(`status` · `error?` · `cover`)를 돌려준다 (받기 큐가 쓴다: 이미 일하는 스레드에서 부른다).
+     * 메인 스레드에서 부르면 안 된다.
+     */
+    fun writeBlocking(uri: String, extension: String?, values: Map<String, String>, cover: Map<String, Any>?, ask: Boolean): Map<String, Any?> {
+        val latch = java.util.concurrent.CountDownLatch(1)
+        var out: Map<String, Any?> = mapOf("status" to "failed", "error" to "no result")
+        write(uri, extension, values, cover, ask, object : MethodChannel.Result {
+            override fun success(value: Any?) {
+                if (value is Map<*, *>) out = value.entries.associate { it.key.toString() to it.value }
+                latch.countDown()
+            }
+
+            override fun error(code: String, message: String?, details: Any?) {
+                out = mapOf("status" to "failed", "error" to (message ?: code))
+                latch.countDown()
+            }
+
+            override fun notImplemented() {
+                latch.countDown()
+            }
+        })
+        latch.await(10, java.util.concurrent.TimeUnit.MINUTES)
+        return out
+    }
+
     private fun isContent(uri: String) = uri.startsWith("content://")
 
     /** 형식을 정한다. `content://`는 파일의 mime으로, 경로는 넘어온 확장자(없으면 경로의 확장자)로. */

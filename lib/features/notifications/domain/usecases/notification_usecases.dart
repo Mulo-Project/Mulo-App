@@ -46,69 +46,22 @@ class OpenNotificationSystemSettings implements UseCase<void, NoParams> {
   Future<void> call(NoParams params) => _repo.openSystemSettings();
 }
 
-class DownloadProgressNotice {
-  const DownloadProgressNotice({
-    required this.title,
-    required this.body,
-    this.percent,
-    this.foreground = true,
-    this.subText,
-    this.previewLabel,
-    this.cancelLabel,
-    this.holdLabel,
-    this.pauseLabel,
-    this.stopLabel,
-    this.openId,
-    this.artUri,
-  });
-
-  final String title;
-  final String body;
-  final int? percent;
-  final bool foreground;
-  final String? subText;
-  final String? previewLabel;
-  final String? cancelLabel;
-
-  /// 받기 일시정지 · 이어받기 버튼의 글자.
-  final String? holdLabel;
-  final String? pauseLabel;
-  final String? stopLabel;
-
-  /// 알림을 누르면 상세 화면을 열 받기 항목의 id.
-  final String? openId;
-
-  /// 알림의 큰 아이콘 자리에 보일 곡 이미지 (웹 주소 또는 파일 경로).
-  final String? artUri;
-}
-
-class ShowDownloadProgress implements UseCase<void, DownloadProgressNotice> {
-  const ShowDownloadProgress(this._notifier);
+class ConfigureDownloadNotifications
+    implements UseCase<void, Map<String, Object?>> {
+  const ConfigureDownloadNotifications(this._notifier);
   final DownloadNotifier _notifier;
 
   @override
-  Future<void> call(DownloadProgressNotice params) => _notifier.showProgress(
-    title: params.title,
-    body: params.body,
-    percent: params.percent,
-    foreground: params.foreground,
-    subText: params.subText,
-    previewLabel: params.previewLabel,
-    cancelLabel: params.cancelLabel,
-    holdLabel: params.holdLabel,
-    pauseLabel: params.pauseLabel,
-    stopLabel: params.stopLabel,
-    openId: params.openId,
-    artUri: params.artUri,
-  );
+  Future<void> call(Map<String, Object?> params) =>
+      _notifier.configureDownloads(params);
 }
 
-class ClearDownloadProgress implements UseCase<void, NoParams> {
-  const ClearDownloadProgress(this._notifier);
+class SetDownloadPreviewing implements UseCase<void, String?> {
+  const SetDownloadPreviewing(this._notifier);
   final DownloadNotifier _notifier;
 
   @override
-  Future<void> call(NoParams params) => _notifier.clearProgress();
+  Future<void> call(String? params) => _notifier.setDownloadPreviewing(params);
 }
 
 class DownloadResultNotice {
@@ -118,7 +71,6 @@ class DownloadResultNotice {
     required this.body,
     required this.failed,
     this.artUri,
-    this.retryLabel,
   });
 
   final String id;
@@ -128,9 +80,6 @@ class DownloadResultNotice {
 
   /// 알림의 큰 아이콘 자리에 보일 곡 이미지 (웹 주소 또는 파일 경로).
   final String? artUri;
-
-  /// 실패 알림에 "다시 시도" 버튼을 넣을 때의 글자 (없으면 버튼이 없다). 누르면 [id]의 받기를 다시 시작한다.
-  final String? retryLabel;
 }
 
 class ShowDownloadResult implements UseCase<void, DownloadResultNotice> {
@@ -144,7 +93,6 @@ class ShowDownloadResult implements UseCase<void, DownloadResultNotice> {
     body: params.body,
     failed: params.failed,
     artUri: params.artUri,
-    retryLabel: params.retryLabel,
   );
 }
 
@@ -164,14 +112,6 @@ class WatchDownloadActions
   @override
   Stream<DownloadNotificationAction> call(NoParams params) =>
       _notifier.watchActions();
-}
-
-class WatchDownloadRetries implements StreamUseCase<String, NoParams> {
-  const WatchDownloadRetries(this._notifier);
-  final DownloadNotifier _notifier;
-
-  @override
-  Stream<String> call(NoParams params) => _notifier.watchRetries();
 }
 
 class WatchDownloadOpens implements StreamUseCase<String, NoParams> {
@@ -218,14 +158,13 @@ class UpdateMediaQueueArt implements UseCase<void, Map<String, String>> {
 /// 알림 유스케이스 묶음 (알림 동기화 Cubit이 한 번에 받는다).
 class NotificationActions {
   const NotificationActions({
-    required this.showProgress,
-    required this.clearProgress,
+    required this.configureDownloads,
+    required this.setDownloadPreviewing,
     required this.showResult,
     required this.clearResults,
     required this.watchCommands,
     required this.watchDownloadActions,
     required this.watchDownloadOpens,
-    required this.watchDownloadRetries,
     required this.takeDownloadOpen,
     required this.updateSession,
     required this.updateQueueArt,
@@ -233,14 +172,13 @@ class NotificationActions {
     required this.requestPermission,
   });
 
-  final ShowDownloadProgress showProgress;
-  final ClearDownloadProgress clearProgress;
+  final ConfigureDownloadNotifications configureDownloads;
+  final SetDownloadPreviewing setDownloadPreviewing;
   final ShowDownloadResult showResult;
   final ClearDownloadResults clearResults;
   final WatchMediaCommands watchCommands;
   final WatchDownloadActions watchDownloadActions;
   final WatchDownloadOpens watchDownloadOpens;
-  final WatchDownloadRetries watchDownloadRetries;
   final TakeDownloadOpen takeDownloadOpen;
   final UpdateMediaSession updateSession;
   final UpdateMediaQueueArt updateQueueArt;

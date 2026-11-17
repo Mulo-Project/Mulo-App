@@ -59,7 +59,6 @@ class _NotificationBridgeState extends State<NotificationBridge>
   var _openPending = false;
   late final Future<void> _boot = _checkLaunch();
   StreamSubscription<DownloadNotificationAction>? _downloadActions;
-  StreamSubscription<String>? _downloadRetries;
   StreamSubscription<String>? _downloadOpens;
 
   @override
@@ -81,9 +80,6 @@ class _NotificationBridgeState extends State<NotificationBridge>
         .listen(_onDownloadAction);
     final sync = context.read<NotificationSyncCubit>();
     _downloadOpens = sync.downloadOpens.listen((id) => _openDownload(id));
-    // 실패 알림의 "다시 시도": 그 받기를 다시 시작한다 (받아 둔 만큼은 이어 받는다).
-    final queue = context.read<DownloadQueueCubit>();
-    _downloadRetries = sync.downloadRetries.listen(queue.retry);
     // 받기 알림을 눌러 앱이 새로 켜졌다면 그 곡의 상세 화면으로 간다.
     sync.takeDownloadOpen().then((id) {
       if (id != null && mounted) _openDownload(id);
@@ -97,7 +93,6 @@ class _NotificationBridgeState extends State<NotificationBridge>
     _openRequests?.cancel();
     _downloadActions?.cancel();
     _downloadOpens?.cancel();
-    _downloadRetries?.cancel();
     super.dispose();
   }
 
@@ -182,7 +177,7 @@ class _NotificationBridgeState extends State<NotificationBridge>
   }
 
   /// 받기 알림의 버튼. 미리 듣기: 지금 받는 곡을 받지 않고 바로 듣는다 (받기는 그대로 이어진다).
-  /// 이미 듣는 중이면 그대로 둔다. 취소: 지금 받는 곡을 대기열에서 뺀다.
+  /// 이미 듣는 중이면 그대로 둔다.
   void _onDownloadAction(DownloadNotificationAction action) {
     // 알림이 보이는 곡: 받는 중 → 대기 → (모두 일시정지면) 일시정지된 곡.
     final active = context
@@ -195,19 +190,7 @@ class _NotificationBridgeState extends State<NotificationBridge>
         active.where((i) => i.status != DownloadStatus.paused).firstOrNull ??
         active.firstOrNull;
     if (current == null) return;
-    if (action == DownloadNotificationAction.cancel) {
-      context.read<DownloadQueueCubit>().cancel(current.id);
-      return;
-    }
-    if (action == DownloadNotificationAction.toggleHold) {
-      final queue = context.read<DownloadQueueCubit>();
-      if (current.status == DownloadStatus.paused) {
-        queue.resume(current.id);
-      } else {
-        queue.pause(current.id);
-      }
-      return;
-    }
+    // 취소 · 일시정지/이어받기 버튼은 네이티브(DownloadEngine)가 앱 없이 바로 처리한다. 여기는 미리 듣기 버튼만 온다.
     final preview = context.read<PreviewCubit>();
     if (action == DownloadNotificationAction.pausePreview) {
       if (preview.state.isActive(current.id)) preview.togglePause();
@@ -346,12 +329,13 @@ class _NotificationBridgeState extends State<NotificationBridge>
   void _syncDownloads() {
     final settings = context.read<NotificationSettingsCubit>().state;
     if (!settings.loaded) return;
-    context.read<NotificationSyncCubit>().syncDownloads(
-      context.read<DownloadQueueCubit>().state.items,
-      settings.settings,
-      context.l10n,
-      previewingId: _previewing?.hitId,
-    );
+    final sync = context.read<NotificationSyncCubit>();
+    // 받기 알림은 네이티브가 띄운다: 글과 설정, 미리 듣는 곡만 넘긴다.
+    sync.syncDownloadConfig(settings.settings, context.l10n);
+    sync.syncDownloadPreviewing(_previewing?.hitId);
+    if (context.read<DownloadQueueCubit>().state.items.any((i) => i.isActive)) {
+      sync.ensureDownloadPermission();
+    }
   }
 
   void _syncSaved() {

@@ -8,32 +8,16 @@ class NoDownloadNotifier implements DownloadNotifier {
   Stream<DownloadNotificationAction> watchActions() => const Stream.empty();
 
   @override
-  Stream<String> watchRetries() => const Stream.empty();
-
-  @override
   Stream<String> watchOpenRequests() => const Stream.empty();
 
   @override
   Future<String?> takeOpenRequest() async => null;
 
   @override
-  Future<void> showProgress({
-    required String title,
-    required String body,
-    int? percent,
-    bool foreground = true,
-    String? subText,
-    String? previewLabel,
-    String? cancelLabel,
-    String? holdLabel,
-    String? pauseLabel,
-    String? stopLabel,
-    String? openId,
-    String? artUri,
-  }) async {}
+  Future<void> configureDownloads(Map<String, Object?> config) async {}
 
   @override
-  Future<void> clearProgress() async {}
+  Future<void> setDownloadPreviewing(String? id) async {}
 
   @override
   Future<void> showResult({
@@ -42,7 +26,6 @@ class NoDownloadNotifier implements DownloadNotifier {
     required String body,
     required bool failed,
     String? artUri,
-    String? retryLabel,
   }) async {}
 
   @override

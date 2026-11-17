@@ -302,7 +302,7 @@ class MediaStoreChannel(
      * 받아 둔 임시 파일을 MediaStore의 음악 폴더(`Music/Mulo` 등)로 저장하고 content:// 주소를 돌려준다.
      * 다 쓸 때까지 IS_PENDING으로 숨겨 두어 반쪽 파일이 목록에 뜨지 않게 한다.
      */
-    private fun saveAudio(
+    fun saveAudio(
         path: String,
         displayName: String,
         mime: String,

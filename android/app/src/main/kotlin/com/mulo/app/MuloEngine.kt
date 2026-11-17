@@ -29,6 +29,10 @@ object MuloEngine {
     var mediaStore: MediaStoreChannel? = null
         private set
 
+    /** 받기 큐(네이티브). 알림 버튼 수신기가 앱 화면 없이 바로 부른다. */
+    var downloads: DownloadEngine? = null
+        private set
+
     /** 엔진이 이미 떠 있는가 (화면이 새로 열릴 때, 엔진이 화면보다 오래 살아 있었는지 알려고). */
     fun isAlive() = engine != null
 
@@ -40,7 +44,7 @@ object MuloEngine {
     }
 
     /** 화면 없이도 엔진을 살려 둬야 하는지: 받기 서비스가 붙들고 있거나 미리 듣기가 알림에 떠 있을 때. */
-    private fun needed() = DownloadForegroundService.wanted || PlaybackHub.isPreviewing
+    private fun needed() = DownloadForegroundService.wanted || PlaybackHub.isPreviewing || (downloads?.isBusy() == true)
 
     fun obtain(context: Context): FlutterEngine {
         engine?.let { return it }
@@ -66,12 +70,14 @@ object MuloEngine {
         val video = VideoChannel(app, messenger, created.renderer)
         val equalizer = EqualizerChannel(app, messenger)
         val subscriptions = SubscriptionChannel(app, messenger) { activity?.moveTaskToBack(true) }
+        val downloadChannel = DownloadChannel(app, messenger, ytDlpEngine.engine, transcoder, store, tags)
+        downloads = downloadChannel.engine
         mediaStore = store
         appSession = io.flutter.plugin.common.MethodChannel(messenger, "music_app/app_session")
         channels = listOf(
             store::dispose, lyrics::dispose, lyricsOverlay::dispose, audioOutput::dispose, ytDlp::dispose, ytDlpEngine::dispose,
             transcoder::dispose, playback::dispose, preview::dispose, video::dispose, equalizer::dispose,
-            subscriptions::dispose, youtubeResolve::dispose, googleApi::dispose, tags::dispose,
+            subscriptions::dispose, youtubeResolve::dispose, googleApi::dispose, tags::dispose, downloadChannel::dispose,
         )
         engine = created
         FlutterEngineCache.getInstance().put(CACHE_ID, created)
@@ -94,6 +100,7 @@ object MuloEngine {
         channels.forEach { it() }
         channels = emptyList()
         mediaStore = null
+        downloads = null
         appSession = null
         // 미리 듣기 소리는 엔진과 함께 끝나므로 알림에 남은 미리 듣기도 치운다.
         MuloLog.d(MuloLog.PLAYBACK, "엔진 정리: 미리듣기알림=${PlaybackHub.isPreviewing}")

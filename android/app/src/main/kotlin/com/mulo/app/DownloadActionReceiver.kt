@@ -4,10 +4,21 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 
-/** 받기 알림의 버튼(미리듣기 · 일시정지 · 중지 · 취소)을 받아 Dart로 넘긴다. 앱 화면은 열지 않는다. */
+/**
+ * 받기 알림의 버튼을 받는다. 받기는 네이티브([DownloadEngine])가 하므로 취소 · 일시정지/이어받기 · 다시 시도는 앱 화면이나 Dart 없이
+ * 여기서 바로 처리한다 (앱이 꺼져 있으면 엔진을 먼저 켠다). 미리듣기 버튼만 Dart가 처리한다.
+ */
 class DownloadActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val key = DownloadNotifications.ACTIONS.entries.firstOrNull { it.value == intent.action }?.key ?: return
+        if (key == "retry") {
+            val id = intent.getStringExtra(DownloadNotifications.EXTRA_RETRY_ID) ?: return
+            MuloEngine.obtain(context)
+            MuloEngine.downloads?.retry(id)
+            return
+        }
+        val downloads = MuloEngine.downloads
+        if (downloads != null && downloads.onAction(key)) return
         // 받아 줄 엔진이 없으면(프로세스가 죽었다 되살아난 경우 등) 버튼이 먹지 않는 낡은 알림이므로 치운다.
         if (!DownloadNotificationPlugin.dispatch(key)) DownloadNotifications.clearProgress(context)
     }
