@@ -46,6 +46,27 @@ class YtDlpEngine(
 
     private fun nextId(): String = synchronized(this) { "engine${seq++}" }
 
+    // 받기처럼 나중에 끊을 일은 이름표를 달아 두고, 이름표로 돌고 있는 yt-dlp를 끊는다 (일시정지 · 취소).
+    private val tagOfThread = ThreadLocal<String?>()
+    private val activeByTag = java.util.concurrent.ConcurrentHashMap<String, MutableSet<String>>()
+
+    /** [block] 안에서 도는 yt-dlp 실행에 [tag]를 단다. */
+    fun <T> tagged(tag: String, block: () -> T): T {
+        tagOfThread.set(tag)
+        try {
+            return block()
+        } finally {
+            tagOfThread.remove()
+        }
+    }
+
+    /** [tag]를 단 yt-dlp 실행을 모두 끊는다. */
+    fun cancelTagged(tag: String) {
+        val ids = activeByTag[tag]?.toList() ?: return
+        ids.forEach { runner.cancel(it) }
+        MuloLog.d(MuloLog.NATIVE, "yt-dlp 끊음 $tag (${ids.size}개)")
+    }
+
     /** 사이트 검색은 쪽 개념이 없어서 (page+1)*size개를 받아 해당 쪽만 자른다. [prefix]는 `ytsearch` 같은 검색 키. */
     fun search(prefix: String, query: String, page: Int, size: Int): Map<String, Any?> {
         val want = (page + 1) * size
@@ -247,8 +268,14 @@ class YtDlpEngine(
     private fun execNow(args: List<String>, label: String): String {
         if (!runner.available) throw YtDlpException("unavailable", "yt-dlp")
         val id = nextId()
+        val tag = tagOfThread.get()
+        if (tag != null) activeByTag.getOrPut(tag) { java.util.concurrent.ConcurrentHashMap.newKeySet() }.add(id)
         val start = System.currentTimeMillis()
-        val r = runWithTimeout(id, timeoutMs) { runner.run(args, id) }
+        val r = try {
+            runWithTimeout(id, timeoutMs) { runner.run(args, id) }
+        } finally {
+            if (tag != null) activeByTag[tag]?.remove(id)
+        }
         MuloLog.d(MuloLog.NATIVE, "yt-dlp ${System.currentTimeMillis() - start}ms 종료 ${r.exitCode} [$label]")
         if (r.exitCode != 0) {
             val err = r.stderr.trim()

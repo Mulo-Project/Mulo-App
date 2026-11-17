@@ -239,6 +239,7 @@ class DownloadEngine(
         }
         if (running && runningId == id) {
             abort = "pause"
+            ytdlp.cancelTagged(id)
             transcoder.cancelProcess()
         }
         changed()
@@ -283,6 +284,7 @@ class DownloadEngine(
         }
         if (removed.status == DOWNLOADING && runningId == id) {
             abort = "cancel"
+            ytdlp.cancelTagged(id)
             transcoder.cancelProcess()
         } else {
             deletePart(id)
@@ -759,11 +761,13 @@ class DownloadEngine(
      * 60초가 지나도 못 읽으면 실패로 처리한다 (다시 시도할 수 있다).
      */
     private fun resolveAudio(url: String, language: String?, refresh: Boolean): Stream {
-        val task = resolver.submit<Stream> { resolveAudioNow(url, language, refresh) }
+        val tag = runningId
+        val task = resolver.submit<Stream> { resolveAudioNow(url, language, refresh, tag) }
         val limit = System.currentTimeMillis() + RESOLVE_LIMIT_MS
         while (true) {
             if (abort != null) {
                 task.cancel(true)
+                tag?.let { ytdlp.cancelTagged(it) }
                 throw Aborted()
             }
             try {
@@ -775,12 +779,14 @@ class DownloadEngine(
                     throw Failed("응답이 너무 오래 걸려요")
                 }
             } catch (e: java.util.concurrent.ExecutionException) {
+                // 일시정지 · 취소로 yt-dlp가 끊겨 난 오류는 실패가 아니다.
+                if (abort != null) throw Aborted()
                 throw e.cause ?: e
             }
         }
     }
 
-    private fun resolveAudioNow(url: String, language: String?, refresh: Boolean): Stream {
+    private fun resolveAudioNow(url: String, language: String?, refresh: Boolean, tag: String?): Stream {
         val clock = System.currentTimeMillis()
         val id = NativeVideoSaver.youtubeIdOf(url)
         var nativeError: String? = null
@@ -797,7 +803,7 @@ class DownloadEngine(
             }
         }
         try {
-            val r = toStream(ytdlp.audio(url, language))
+            val r = toStream(if (tag == null) ytdlp.audio(url, language) else ytdlp.tagged(tag) { ytdlp.audio(url, language) })
             MuloLog.d(MuloLog.NATIVE, "받기 주소 읽기(yt-dlp) ${System.currentTimeMillis() - clock}ms")
             return r
         } catch (e: YtDlpException) {
