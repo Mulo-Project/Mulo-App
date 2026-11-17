@@ -29,6 +29,8 @@ void main() {
       watchQueue: WatchAudioQueue(engine),
       playNext: PlayAudioNext(engine),
       addToQueue: AddAudioToQueue(engine),
+      playAllNext: PlayAllAudioNext(engine),
+      addAllToQueue: AddAllAudioToQueue(engine),
       removeFromQueue: RemoveAudioFromQueue(engine),
       removeAllFromQueue: RemoveAllAudioFromQueue(engine),
       moveInQueue: MoveAudioInQueue(engine),
