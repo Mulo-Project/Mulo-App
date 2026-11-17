@@ -59,6 +59,7 @@ class DownloadEngine(
     @Volatile private var pumping = false
     @Volatile private var abort: String? = null
     @Volatile private var runningId: String? = null
+    @Volatile private var activeConn: HttpURLConnection? = null
     private var seq = 0
 
     /** 알림을 만들 때 쓰는 글과 설정 (Dart가 [configure]로 넘긴다, 앱이 꺼져 있어도 쓰도록 저장해 둔다). */
@@ -82,7 +83,7 @@ class DownloadEngine(
 
     init {
         // 어느 빌드가 돌고 있는지 로그로 알 수 있게 한다 (고칠 때마다 표식을 올린다).
-        MuloLog.d(MuloLog.NATIVE, "받기 엔진 시작 (표식 R5: 일시정지 yt-dlp 끊기)")
+        MuloLog.d(MuloLog.NATIVE, "받기 엔진 시작 (표식 R6: 일시정지가 연결과 yt-dlp를 바로 끊음)")
         load()
         schedule()
     }
@@ -241,10 +242,17 @@ class DownloadEngine(
         }
         if (running && runningId == id) {
             abort = "pause"
+            dropConnection()
             ytdlp.cancelTagged(id)
             transcoder.cancelProcess()
         }
         changed()
+    }
+
+    /** 받는 중인 연결을 끊어, 응답을 기다리며 막힌 읽기를 바로 풀어 준다 (알림 버튼은 메인 스레드라 따로 끊는다). */
+    private fun dropConnection() {
+        val c = activeConn ?: return
+        Thread { try { c.disconnect() } catch (_: Exception) {} }.start()
     }
 
     fun resume(id: String) {
@@ -286,6 +294,7 @@ class DownloadEngine(
         }
         if (removed.status == DOWNLOADING && runningId == id) {
             abort = "cancel"
+            dropConnection()
             ytdlp.cancelTagged(id)
             transcoder.cancelProcess()
         } else {
@@ -920,6 +929,9 @@ class DownloadEngine(
                     headers.forEach { (k, v) -> setRequestProperty(k, v) }
                     setRequestProperty("Range", "bytes=$from-$to")
                 }
+                activeConn = conn
+                // 일시정지 · 취소가 연결을 기다리는 동안(최대 20초)에 눌렸으면 기다리지 않고 바로 끊는다.
+                checkAbort()
                 val status = conn.responseCode
                 if (status == 416 && from > 0) return Chunk(ByteArray(0), from, false, null) // 받아 둔 만큼이 이미 전체다.
                 if (status != 206 && status != 200) {
@@ -958,6 +970,7 @@ class DownloadEngine(
                 // 인터넷이 끊겼다 돌아오는 동안(와이파이 · 데이터 전환) 기다리며 다시 시도한다: 1 · 2 · 4 · 8초, 이후 8초씩.
                 sleepChecked(if (attempt < 3) 1000L shl attempt else 8000L)
             } finally {
+                if (activeConn === conn) activeConn = null
                 conn?.disconnect()
             }
         }
