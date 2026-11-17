@@ -187,7 +187,7 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
     }
 
     init {
-        PlaybackHub.previewStop = { stop() }
+        PlaybackHub.previewStop = { stopFromNotification() }
         PlaybackHub.previewControl = { play -> player?.let { if (play) it.play() else it.pause() } }
         channel.setMethodCallHandler { call, result ->
             when (call.method) {
@@ -729,6 +729,22 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
                 playCandidates(picked, 0, info, object : MethodChannel.Result {
                     override fun success(value: Any?) {
                         MuloEngine.downloads?.previewingId = id
+                        // 화면(Dart)이 없어도 미디어 알림에 미리 듣기 곡과 닫기 버튼이 뜨도록 세션을 직접 올린다.
+                        // 화면이 있으면 `changed` 뒤 Dart가 같은 세션을 다시 보내 덮어쓴다.
+                        val close = DownloadNotifications.lastProgress?.get("stopLabel") as? String ?: "Close"
+                        PlaybackHub.setSession(
+                            mapOf(
+                                "trackId" to id,
+                                "title" to title,
+                                "artist" to uploader,
+                                "artUri" to thumbnail,
+                                "durationMs" to (player?.duration?.takeIf { it != C.TIME_UNSET } ?: 0L),
+                                "positionMs" to 0L,
+                                "playing" to true,
+                                "preview" to true,
+                                "closeLabel" to close,
+                            ),
+                        )
                         channel.invokeMethod("changed", null)
                     }
 
