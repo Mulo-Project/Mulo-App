@@ -62,6 +62,7 @@ class YoutubeResolveEngine implements DownloaderEngine {
     required this.languageReader,
     required this.videoReader,
     this.searchReader,
+    this.newestSearchReader,
     this.playlistReader,
     this.playlistSearchReader,
     this.infoReader,
@@ -76,6 +77,9 @@ class YoutubeResolveEngine implements DownloaderEngine {
 
   /// 네이티브 검색 · 재생목록 읽기 (없으면 안쪽 엔진이 한다).
   final YoutubeSearchReader? searchReader;
+
+  /// 최신순(올린 날짜 순) 키워드 검색 읽기. yt-dlp의 `ytsearchdate`는 새 버전에서 없어져 네이티브가 먼저 읽는다.
+  final YoutubeSearchReader? newestSearchReader;
   final YoutubePlaylistReader? playlistReader;
   final YoutubePlaylistSearchReader? playlistSearchReader;
   final YoutubeInfoReader? infoReader;
@@ -95,7 +99,7 @@ class YoutubeResolveEngine implements DownloaderEngine {
     }
   }
 
-  /// 유튜브 키워드 검색은 네이티브가 먼저 읽는다. 최신순 · 다른 사이트이거나 못 읽으면 안쪽 엔진(yt-dlp · 서버).
+  /// 유튜브 키워드 검색은 네이티브가 먼저 읽는다. 다른 사이트이거나 못 읽으면 안쪽 엔진(yt-dlp · 서버).
   @override
   Future<SearchPage> search(
     String query, {
@@ -104,8 +108,8 @@ class YoutubeResolveEngine implements DownloaderEngine {
     int size = 20,
     bool newest = false,
   }) async {
-    final read = searchReader;
-    if (read != null && source == SearchSource.youtube && !newest) {
+    final read = newest ? newestSearchReader : searchReader;
+    if (read != null && source == SearchSource.youtube) {
       final clock = Stopwatch()..start();
       try {
         final found = await read(

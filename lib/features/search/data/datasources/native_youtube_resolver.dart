@@ -70,11 +70,24 @@ class NativeYoutubeResolver {
   }
 
   /// 키워드 검색 한 쪽 (유튜브 동영상만). 같은 검색어의 다음 쪽은 네이티브가 이어 읽는다.
-  Future<SearchPage> search(String query, int page, int size) async {
+  Future<SearchPage> search(String query, int page, int size) =>
+      _search(query, page, size, newest: false);
+
+  /// [search]와 같지만 올린 날짜 순(최신순)이다.
+  Future<SearchPage> searchNewest(String query, int page, int size) =>
+      _search(query, page, size, newest: true);
+
+  Future<SearchPage> _search(
+    String query,
+    int page,
+    int size, {
+    required bool newest,
+  }) async {
     final r = await _call('search', {
       'query': query,
       'page': page,
       'size': size,
+      if (newest) 'newest': true,
     });
     if (r == null) throw const EngineException(EngineFailure.failed, 'empty');
     return SearchPage(

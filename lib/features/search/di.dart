@@ -54,6 +54,7 @@ void registerSearch(GetIt sl) {
                 videoReader: native.video,
                 languageReader: native.languages,
                 searchReader: native.search,
+                newestSearchReader: native.searchNewest,
                 playlistReader: native.playlist,
                 playlistSearchReader: native.searchPlaylists,
                 infoReader: native.videoInfo,
