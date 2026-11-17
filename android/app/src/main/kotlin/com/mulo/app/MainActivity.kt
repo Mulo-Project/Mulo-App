@@ -41,6 +41,11 @@ class MainActivity : FlutterFragmentActivity() {
         if (intent?.action == DownloadNotifications.ACTION_OPEN_DOWNLOAD) {
             intent.getStringExtra(DownloadNotifications.EXTRA_OPEN_ID)?.let { DownloadNotificationPlugin.requestOpen(it) }
         }
+        if (intent?.action == DownloadNotifications.ACTION_RETRY_DOWNLOAD) {
+            intent.getStringExtra(DownloadNotifications.EXTRA_RETRY_ID)?.let { DownloadNotificationPlugin.requestRetry(it) }
+            // 앱이 뒤에 있었다면 받기를 다시 시작한 뒤 화면은 다시 뒤로 보낸다.
+            if (!resumed) android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ moveTaskToBack(true) }, 600)
+        }
         if (intent?.action == NewVideoNotifications.ACTION_OPEN) SubscriptionChannel.requestOpen()
         if (intent?.action == NewVideoNotifications.ACTION_DOWNLOAD) {
             intent.getStringExtra("videoId")?.let { videoId ->

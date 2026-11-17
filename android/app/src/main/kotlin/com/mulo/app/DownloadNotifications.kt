@@ -28,8 +28,9 @@ object DownloadNotifications {
         "stopPreview" to "com.mulo.app.download.STOP_PREVIEW",
         "toggleHold" to "com.mulo.app.download.TOGGLE_HOLD",
         "cancel" to "com.mulo.app.download.CANCEL",
-        "retry" to "com.mulo.app.download.RETRY",
     )
+    /** 실패 알림의 "다시 시도"를 눌러 앱을 열 때 인텐트에 싣는 값. 앱이 꺼져 있어도 켜서 받기를 다시 시작한다. */
+    const val ACTION_RETRY_DOWNLOAD = "com.mulo.app.download.RETRY"
     const val EXTRA_RETRY_ID = "retryId"
 
     /** 서비스가 알림을 다시 만들 때 쓰는, 마지막으로 받은 진행 알림 내용. */
@@ -149,11 +150,14 @@ object DownloadNotifications {
         val retryId = a["id"] as? String
         if (failed && retryLabel != null && !retryId.isNullOrEmpty()) {
             // 항목마다 요청 코드와 extra가 달라야 알림마다 자기 항목을 다시 받는다.
-            val intent = Intent(ACTIONS.getValue("retry"))
-                .setComponent(ComponentName(context, DownloadActionReceiver::class.java))
-                .putExtra(EXTRA_RETRY_ID, retryId)
-            val pi = PendingIntent.getBroadcast(context, id, intent, NotificationSupport.PENDING_FLAGS)
-            NotificationSupport.addAction(b, retryLabel, pi)
+            // 앱이 꺼져 있어도 되도록 브로드캐스트가 아니라 화면(MainActivity)으로 보낸다. 화면은 곧 뒤로 물러난다.
+            val launch = context.packageManager.getLaunchIntentForPackage(context.packageName)
+            if (launch != null) {
+                launch.action = ACTION_RETRY_DOWNLOAD
+                launch.putExtra(EXTRA_RETRY_ID, retryId)
+                val pi = PendingIntent.getActivity(context, id, launch, NotificationSupport.PENDING_FLAGS)
+                NotificationSupport.addAction(b, retryLabel, pi)
+            }
         }
         synchronized(resultIds) { resultIds.add(id) }
         manager(context).notify(id, b.build())

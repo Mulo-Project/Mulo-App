@@ -29,7 +29,22 @@ class LocalDownloadNotifier implements DownloadNotifier {
   final _retries = StreamController<String>.broadcast();
 
   @override
-  Stream<String> watchRetries() => _retries.stream;
+  Stream<String> watchRetries() {
+    // 앱이 꺼져 있다가 "다시 시도"로 켜진 경우: 구독이 붙은 뒤 맡겨 둔 요청을 가져온다.
+    Future<void>.delayed(Duration.zero, _drainRetry);
+    return _retries.stream;
+  }
+
+  Future<void> _drainRetry() async {
+    try {
+      final id = await _channel.invokeMethod<String>('takeRetry');
+      if (id != null && id.isNotEmpty) _retries.add(id);
+    } on PlatformException {
+      return;
+    } on MissingPluginException {
+      return;
+    }
+  }
 
   @override
   Stream<String> watchOpenRequests() => _opens.stream;
@@ -52,8 +67,7 @@ class LocalDownloadNotifier implements DownloadNotifier {
       return;
     }
     if (call.method == 'retry') {
-      final id = call.arguments;
-      if (id is String && id.isNotEmpty) _retries.add(id);
+      await _drainRetry();
       return;
     }
     if (call.method != 'action') return;
