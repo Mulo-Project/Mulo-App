@@ -250,15 +250,11 @@ class _DetailViewState extends State<_DetailView> {
   /// 미리 듣기를 시작하지 못하면 앱 안 플레이어(웹뷰)로, 그것도 안 되면 유튜브로 연다.
   Future<void> _play(MediaHit hit) async {
     if (widget.inAppVideo && isYoutubeUrl(hit.url)) {
-      // 언어 목록을 아직 읽는 중이면 기다려, 시스템 언어 기본값이 빠지지 않게 한다.
-      final language = await context
-          .read<AudioLanguageCubit>()
-          .selectedWhenReady();
-      if (!mounted) return;
+      // 언어 목록을 아직 읽는 중이면 기다려, 시스템 언어 기본값이 빠지지 않게 한다 (로딩을 띄운 뒤에 기다린다).
       final started = await togglePreview(
         context,
         hit,
-        audioLanguage: language,
+        languageWhenReady: context.read<AudioLanguageCubit>().selectedWhenReady,
         announceFailure: false,
       );
       if (started || !mounted) return;
