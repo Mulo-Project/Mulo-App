@@ -759,9 +759,9 @@ object PlaybackHub {
         get() = QueueShuffle.isOn(extras)
 
     /**
-     * 셔플 중 대기열을 한 바퀴 다 돌아 첫 곡으로 넘어왔으면 나머지 곡을 새로 섞는다 (같은 순서로 다시 돌지 않게).
+     * 셔플 중 대기열을 한 바퀴 다 돌아 첫 곡으로 넘어왔으면 전체를 새로 섞는다 (같은 순서로 다시 돌지 않게).
      * 앱이 붙어 있든 아니든 네이티브가 한다 (순서는 네이티브가 쥐고, 앱에는 `queue` 이벤트로 알린다).
-     * 지금 곡(첫 곡)은 끊기지 않게 그대로 두고, 방금 들은 곡이 바로 다음에 오지 않게 한다.
+     * 새 바퀴는 방금 끝낸 곡 · 막 시작한 곡이 아닌 곡으로 시작하고, 방금 들은 곡이 바로 다음에 오지 않게 한다.
      * 섞기 전 순서(extras의 original)는 그대로라 앱을 다시 열어 셔플을 끄면 원래 순서로 돌아간다.
      */
     private fun reshuffleAfterLap(previousId: String?) {
@@ -771,10 +771,11 @@ object PlaybackHub {
         if (wrapped) MuloLog.d(MuloLog.PLAYBACK, "lap wrapped count=$count shuffleOn=$shuffleOn repeat=${exo.repeatMode}")
         if (previousId == null || count < 3 || !shuffleOn) return
         if (!wrapped) return
-        val rest = QueueShuffle.reshuffledRest((0 until count).map { exo.getMediaItemAt(it) }, previousId)
-        exo.removeMediaItems(1, count)
-        exo.addMediaItems(rest)
+        val mixed = QueueShuffle.reshuffledLap((0 until count).map { exo.getMediaItemAt(it) }, previousId)
+        // 새 바퀴의 첫 곡이 바뀌므로 목록을 통째로 바꿔 첫 곡부터 다시 시작한다 (재생 · 일시정지 상태는 그대로).
+        exo.setMediaItems(mixed, 0, 0L)
         persistQueue()
+        sessionPlayer.refresh()
         emitQueue()
     }
 
