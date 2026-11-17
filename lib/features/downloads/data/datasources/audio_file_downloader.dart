@@ -64,7 +64,7 @@ abstract interface class AudioFileDownloader {
 class HttpAudioFileDownloader implements AudioFileDownloader {
   HttpAudioFileDownloader({
     this.chunkSize = 10 * 1024 * 1024,
-    this.retriesPerChunk = 2,
+    this.retriesPerChunk = 6,
   });
 
   final int chunkSize;
@@ -231,7 +231,10 @@ class HttpAudioFileDownloader implements AudioFileDownloader {
         rethrow;
       } on Object catch (e) {
         last = e;
-        await Future<void>.delayed(Duration(milliseconds: 400 * (attempt + 1)));
+        // 인터넷이 끊겼다 돌아오는 동안(와이파이 · 데이터 전환) 기다리며 다시 시도한다: 1 · 2 · 4 · 8초, 이후 8초씩 (모두 약 30초).
+        await Future<void>.delayed(
+          Duration(seconds: attempt < 3 ? 1 << attempt : 8),
+        );
       }
     }
     throw DownloadFailed('$last');
