@@ -14,6 +14,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   const channel = MethodChannel('music_app/downloads');
+  const events = EventChannel('music_app/downloads/events');
   late MemoryDownloadSettings settings;
   late List<MethodCall> calls;
   late List<Map<String, Object?>> snapshot;
@@ -28,7 +29,6 @@ void main() {
     events: events,
   );
 
-  const events = EventChannel('music_app/downloads/events');
   MockStreamHandlerEventSink? sink;
 
   /// 네이티브가 Dart로 보내는 상태를 흉내 낸다 (이벤트 채널).
