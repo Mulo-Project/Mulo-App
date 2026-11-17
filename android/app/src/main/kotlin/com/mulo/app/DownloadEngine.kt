@@ -83,7 +83,7 @@ class DownloadEngine(
 
     init {
         // 어느 빌드가 돌고 있는지 로그로 알 수 있게 한다 (고칠 때마다 표식을 올린다).
-        MuloLog.d(MuloLog.NATIVE, "받기 엔진 시작 (표식 R9: 영상 받기도 일시정지가 바로 먹고 이어받음)")
+        MuloLog.d(MuloLog.NATIVE, "받기 엔진 시작 (표식 R10: 영상 받기 일시정지 때 앱이 꺼지던 것 수정)")
         load()
         schedule()
     }
@@ -723,10 +723,15 @@ class DownloadEngine(
         var keepWork = false
         try {
             val tag = runningId
+            val runner = Thread.currentThread()
             val save = {
                 ytdlp.saveVideo(request.optString("url"), request.optInt("videoHeight", 1080), extension, dir, stem) { p ->
                     // 일시정지 · 취소는 받는 중에도 바로 먹는다 (조각을 받을 때마다 확인한다).
-                    if (abort != null) throw java.util.concurrent.CancellationException("받기 중단")
+                    // 받는 스레드에서만 던진다: yt-dlp 쪽 스레드에서 던지면 잡을 곳이 없어 앱이 꺼진다 (yt-dlp는 cancelTagged로 끊는다).
+                    if (abort != null) {
+                        if (Thread.currentThread() === runner) throw java.util.concurrent.CancellationException("받기 중단")
+                        return@saveVideo
+                    }
                     if (p - shown >= PROGRESS_STEP) {
                         shown = p
                         synchronized(lock) {
