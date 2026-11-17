@@ -212,6 +212,8 @@ class YtDlpEngine(
                 "-f", YtDlpParsers.saveSelector(maxHeight, extension),
                 "--merge-output-format", extension,
                 "--no-playlist", "--no-warnings", "--newline",
+                // 인터넷이 잠깐 끊겼다 돌아와도(와이파이 · 데이터 전환) 포기하지 않고 3초씩 쉬며 다시 시도한다.
+                "--retries", "10", "--fragment-retries", "10", "--extractor-retries", "5", "--retry-sleep", "3",
                 "-o", File(dir, "$stem.%(ext)s").path,
             ) + extra + url
             val r = runWithTimeout(id, saveTimeoutMs) { runner.run(args, id, onProgress) }
