@@ -744,18 +744,27 @@ class DownloadEngine(
 
     /** 네이티브(유튜브) → yt-dlp 순으로 소리 주소를 읽는다. */
     private fun resolveAudio(url: String, language: String?, refresh: Boolean): Stream {
+        val clock = System.currentTimeMillis()
         val id = NativeVideoSaver.youtubeIdOf(url)
         var nativeError: String? = null
         if (id != null) {
             try {
-                YoutubeResolver.audio(id, language, true, refresh)?.let { return toStream(it) }
+                YoutubeResolver.audio(id, language, true, refresh)?.let {
+                    MuloLog.d(MuloLog.NATIVE, "받기 주소 읽기(네이티브) ${System.currentTimeMillis() - clock}ms")
+                    return toStream(it)
+                }
+                MuloLog.d(MuloLog.NATIVE, "받기 주소 읽기(네이티브) 결과 없음 ${System.currentTimeMillis() - clock}ms")
             } catch (e: Exception) {
                 nativeError = e.message
+                MuloLog.d(MuloLog.NATIVE, "받기 주소 읽기(네이티브) 실패 ${System.currentTimeMillis() - clock}ms: ${e.message}")
             }
         }
         try {
-            return toStream(ytdlp.audio(url, language))
+            val r = toStream(ytdlp.audio(url, language))
+            MuloLog.d(MuloLog.NATIVE, "받기 주소 읽기(yt-dlp) ${System.currentTimeMillis() - clock}ms")
+            return r
         } catch (e: YtDlpException) {
+            MuloLog.d(MuloLog.NATIVE, "받기 주소 읽기(yt-dlp) 실패 ${System.currentTimeMillis() - clock}ms: ${e.message}")
             if (nativeError == null) throw e
             throw YtDlpException(e.code, "네이티브: $nativeError | ${e.message}")
         }
