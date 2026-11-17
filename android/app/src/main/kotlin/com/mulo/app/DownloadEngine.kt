@@ -83,7 +83,7 @@ class DownloadEngine(
 
     init {
         // 어느 빌드가 돌고 있는지 로그로 알 수 있게 한다 (고칠 때마다 표식을 올린다).
-        MuloLog.d(MuloLog.NATIVE, "받기 엔진 시작 (표식 R6: 일시정지가 연결과 yt-dlp를 바로 끊음)")
+        MuloLog.d(MuloLog.NATIVE, "받기 엔진 시작 (표식 R8: 영상 받기도 일시정지가 바로 먹음)")
         load()
         schedule()
     }
@@ -718,14 +718,27 @@ class DownloadEngine(
         val stem = "video_${System.nanoTime()}"
         var shown = 0.0
         try {
-            ytdlp.saveVideo(request.optString("url"), request.optInt("videoHeight", 1080), extension, dir, stem) { p ->
-                if (abort == null && p - shown >= PROGRESS_STEP) {
-                    shown = p
-                    synchronized(lock) {
-                        if (item.status == DOWNLOADING) { item.progress = p; item.processing = p >= 0.98 }
+            val tag = runningId
+            val save = {
+                ytdlp.saveVideo(request.optString("url"), request.optInt("videoHeight", 1080), extension, dir, stem) { p ->
+                    // 일시정지 · 취소는 받는 중에도 바로 먹는다 (조각을 받을 때마다 확인한다).
+                    if (abort != null) throw java.util.concurrent.CancellationException("받기 중단")
+                    if (p - shown >= PROGRESS_STEP) {
+                        shown = p
+                        synchronized(lock) {
+                            if (item.status == DOWNLOADING) { item.progress = p; item.processing = p >= 0.98 }
+                        }
+                        progressed()
                     }
-                    progressed()
                 }
+            }
+            try {
+                if (tag == null) save() else ytdlp.tagged(tag) { save() }
+            } catch (e: java.util.concurrent.CancellationException) {
+                throw Aborted()
+            } catch (e: YtDlpException) {
+                if (abort != null) throw Aborted()
+                throw e
             }
             checkAbort()
             val out = File(dir, "$stem.$extension")
@@ -1009,11 +1022,43 @@ class DownloadEngine(
         return try {
             val language = request.optString("lyricsLanguage", "")
             val prefer = if (language.isEmpty()) listOf("ko", "en") else listOf(language)
+            // 가사 읽기는 yt-dlp를 두 번 돌려 20초 넘게 걸릴 수 있다: 따로 돌리고, 일시정지 · 취소는 바로 먹고,
+            // 너무 오래 걸리면 가사 없이 저장한다.
+            val tag = runningId
+            val url = request.optString("url")
+            val task = resolver.submit<Map<String, Any?>?> {
+                if (tag == null) ytdlp.subtitles(url, prefer) else ytdlp.tagged(tag) { ytdlp.subtitles(url, prefer) }
+            }
+            val limit = System.currentTimeMillis() + LYRICS_LIMIT_MS
+            var found: Map<String, Any?>? = null
+            while (true) {
+                if (abort != null) {
+                    task.cancel(true)
+                    tag?.let { ytdlp.cancelTagged(it) }
+                    throw Aborted()
+                }
+                try {
+                    found = task.get(300, java.util.concurrent.TimeUnit.MILLISECONDS)
+                    break
+                } catch (_: java.util.concurrent.TimeoutException) {
+                    if (System.currentTimeMillis() > limit) {
+                        task.cancel(true)
+                        tag?.let { ytdlp.cancelTagged(it) }
+                        MuloLog.d(MuloLog.NATIVE, "받기 가사 읽기 시간 초과: 가사 없이 저장")
+                        return null
+                    }
+                } catch (e: java.util.concurrent.ExecutionException) {
+                    if (abort != null) throw Aborted()
+                    throw e.cause ?: e
+                }
+            }
             @Suppress("UNCHECKED_CAST")
-            val track = ytdlp.subtitles(request.optString("url"), prefer) ?: return null
+            val track = found ?: return null
             @Suppress("UNCHECKED_CAST")
             val lrc = SubtitleLrc.toLrc(track["cues"] as List<Map<String, Any?>>, request.optBoolean("lyricsSkipSounds", true))
             lrc.ifEmpty { null }
+        } catch (e: Aborted) {
+            throw e
         } catch (e: Exception) {
             null
         }
@@ -1206,6 +1251,7 @@ class DownloadEngine(
 
         private const val PROGRESS_STEP = 0.01
         private const val RESOLVE_LIMIT_MS = 60_000L
+        private const val LYRICS_LIMIT_MS = 30_000L
         private const val CHUNK = 10L * 1024 * 1024
         private const val RETRIES_PER_CHUNK = 6
         private const val ROOT = "/storage/emulated/0/"

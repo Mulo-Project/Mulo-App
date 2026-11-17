@@ -222,6 +222,9 @@ class YtDlpEngine(
                     return
                 }
                 MuloLog.d(MuloLog.NATIVE, "영상 저장 네이티브 안 씀($extension, 주소 · 형식이 맞지 않거나 읽을 주소 없음), yt-dlp로")
+            } catch (e: java.util.concurrent.CancellationException) {
+                // 일시정지 · 취소: yt-dlp로 넘어가지 않고 그대로 멈춘다.
+                throw e
             } catch (e: Exception) {
                 MuloLog.d(MuloLog.NATIVE, "영상 저장 네이티브 실패, yt-dlp로: ${e.message}")
             }
@@ -229,6 +232,8 @@ class YtDlpEngine(
         // 기본 클라이언트로 받다가 403(Forbidden) 같은 오류가 나면 `android_vr`로 한 번 더 시도한다 (주소 읽기와 같은 순서).
         withFallback { extra ->
             val id = nextId()
+            val tag = tagOfThread.get()
+            if (tag != null) activeByTag.getOrPut(tag) { java.util.concurrent.ConcurrentHashMap.newKeySet() }.add(id)
             val args = listOf(
                 "-f", YtDlpParsers.saveSelector(maxHeight, extension),
                 "--merge-output-format", extension,
@@ -238,7 +243,11 @@ class YtDlpEngine(
                 "--retries", "20", "--fragment-retries", "20", "--extractor-retries", "10", "--retry-sleep", "exp=2:20",
                 "-o", File(dir, "$stem.%(ext)s").path,
             ) + extra + url
-            val r = runWithTimeout(id, saveTimeoutMs) { runner.run(args, id, onProgress) }
+            val r = try {
+                runWithTimeout(id, saveTimeoutMs) { runner.run(args, id, onProgress) }
+            } finally {
+                if (tag != null) activeByTag[tag]?.remove(id)
+            }
             if (r.exitCode != 0) throw YtDlpException(YtDlpParsers.failureCode(r.stderr.trim()), r.stderr.trim())
         }
     }
