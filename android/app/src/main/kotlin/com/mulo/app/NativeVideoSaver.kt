@@ -22,15 +22,20 @@ class NativeVideoSaver(
         if (extension != "mp4" && extension != "webm") return false
         val id = youtubeIdOf(url) ?: return false
         val picked = sources(id, maxHeight, extension) ?: return false
-        val work = File(tempDir(), "save_${System.nanoTime()}")
+        // 같은 항목이 다시 오면 받아 둔 부분부터 이어 받도록 이름을 고정한다 (지우는 것은 부른 쪽이 정한다).
+        val work = File(dir, "${stem}_work")
+        var finished = false
         try {
             work.mkdirs()
             val total = (picked.video.contentLength + (picked.audio?.contentLength ?: 0L)).coerceAtLeast(1L)
             var done = 0L
             val report = { n: Long -> done += n; onProgress((done.toDouble() / total * 0.95).coerceAtMost(0.95)) }
-            val video = File(work, "v.$extension")
+            // 파일 이름에 크기를 넣어, 다른 형식을 고르게 되면 받아 둔 부분을 이어 붙이지 않는다.
+            val video = File(work, "v_${picked.video.contentLength}.$extension")
             download(picked.video, video, report)
-            val audio = picked.audio?.let { File(work, if (extension == "webm") "a.webm" else "a.m4a").also { f -> download(it, f, report) } }
+            val audio = picked.audio?.let {
+                File(work, "a_${it.contentLength}." + (if (extension == "webm") "webm" else "m4a")).also { f -> download(it, f, report) }
+            }
             dir.mkdirs()
             val out = File(dir, "$stem.$extension")
             if (!mux(video, audio, out) || out.length() == 0L) {
@@ -38,9 +43,10 @@ class NativeVideoSaver(
                 throw IOException("합치기 실패")
             }
             onProgress(1.0)
+            finished = true
             return true
         } finally {
-            work.deleteRecursively()
+            if (finished) work.deleteRecursively()
         }
     }
 
@@ -63,8 +69,15 @@ object StreamDownloader {
 
     fun download(url: String, headers: Map<String, String>, length: Long, dest: File, onBytes: (Long) -> Unit) {
         dest.parentFile?.mkdirs()
-        dest.outputStream().buffered().use { out ->
-            var pos = 0L
+        // 받아 둔 부분이 있으면 거기서 이어 받는다 (크기가 안 맞으면 처음부터).
+        var existing = if (dest.exists()) dest.length() else 0L
+        if (existing > length) {
+            dest.delete()
+            existing = 0L
+        }
+        if (existing > 0) onBytes(existing)
+        java.io.FileOutputStream(dest, existing > 0).buffered().use { out ->
+            var pos = existing
             val buffer = ByteArray(64 * 1024)
             while (pos < length) {
                 val end = minOf(pos + CHUNK, length) - 1

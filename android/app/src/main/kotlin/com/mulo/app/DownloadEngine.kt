@@ -83,7 +83,7 @@ class DownloadEngine(
 
     init {
         // 어느 빌드가 돌고 있는지 로그로 알 수 있게 한다 (고칠 때마다 표식을 올린다).
-        MuloLog.d(MuloLog.NATIVE, "받기 엔진 시작 (표식 R8: 영상 받기도 일시정지가 바로 먹음)")
+        MuloLog.d(MuloLog.NATIVE, "받기 엔진 시작 (표식 R9: 영상 받기도 일시정지가 바로 먹고 이어받음)")
         load()
         schedule()
     }
@@ -702,6 +702,8 @@ class DownloadEngine(
 
     private fun deletePart(id: String) {
         File(partsDir, "$id.part").delete()
+        // 영상 받기가 남겨 둔 조각 폴더도 치운다.
+        File(context.cacheDir, "mulo_video").listFiles { f -> f.name.startsWith("video_$id") }?.forEach { it.deleteRecursively() }
     }
 
     // ── 영상 저장 ──
@@ -715,8 +717,10 @@ class DownloadEngine(
         val lyrics = lyricsFor(request)
         checkAbort()
         val dir = File(context.cacheDir, "mulo_video").also { it.mkdirs() }
-        val stem = "video_${System.nanoTime()}"
+        // 항목마다 이름을 고정해, 일시정지 · 실패 뒤 이어받을 때 받아 둔 부분을 쓴다.
+        val stem = "video_${item.id}"
         var shown = 0.0
+        var keepWork = false
         try {
             val tag = runningId
             val save = {
@@ -735,9 +739,17 @@ class DownloadEngine(
             try {
                 if (tag == null) save() else ytdlp.tagged(tag) { save() }
             } catch (e: java.util.concurrent.CancellationException) {
+                keepWork = abort == "pause"
                 throw Aborted()
             } catch (e: YtDlpException) {
-                if (abort != null) throw Aborted()
+                if (abort != null) {
+                    keepWork = abort == "pause"
+                    throw Aborted()
+                }
+                keepWork = true
+                throw e
+            } catch (e: Exception) {
+                keepWork = true
                 throw e
             }
             checkAbort()
@@ -752,7 +764,14 @@ class DownloadEngine(
             }
             changed()
         } finally {
-            dir.listFiles { f -> f.name.startsWith(stem) }?.forEach { it.delete() }
+            // 받아 둔 조각 폴더는 일시정지 · 실패일 때만 남기고(이어받기), 합친 파일 등은 항상 치운다.
+            dir.listFiles { f -> f.name.startsWith(stem) }?.forEach {
+                if (it.name == "${stem}_work") {
+                    if (!keepWork) it.deleteRecursively()
+                } else {
+                    it.delete()
+                }
+            }
         }
     }
 
