@@ -185,4 +185,21 @@ void main() {
     expect(libraryChanged, 1);
     await sub.cancel();
   });
+
+  test('곡이 새로 받음이 되면 이벤트 없이도 보관함 갱신을 알린다', () async {
+    final repo = make();
+    await repo.watchQueue().first;
+    await fromNative('queue', [
+      {'id': 'd1', 'title': '곡', 'artist': '', 'status': 'downloading'},
+    ]);
+    expect(libraryChanged, 0);
+    await fromNative('queue', [
+      {'id': 'd1', 'title': '곡', 'artist': '', 'status': 'done'},
+    ]);
+    expect(libraryChanged, 1);
+    await fromNative('queue', [
+      {'id': 'd1', 'title': '곡', 'artist': '', 'status': 'done'},
+    ]);
+    expect(libraryChanged, 1, reason: '같은 항목은 다시 알리지 않는다');
+  });
 }

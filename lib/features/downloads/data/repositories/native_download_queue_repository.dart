@@ -95,8 +95,20 @@ class NativeDownloadQueueRepository implements DownloadQueueRepository {
       debugPrint('MuloDownload queue parse failed: $e\n$s');
       return;
     }
+    // 곡이 새로 "받음"이 되면 네이티브는 이미 보관함 DB에 써 두었다: 목록이 다시 읽도록 알린다
+    // (`libraryChanged` 이벤트와 별개로, 대기열 상태만 받아도 보관함이 갱신되게).
+    final done = {
+      for (final i in _items)
+        if (i.status == DownloadStatus.done) i.id,
+    };
+    final fresh = _seenDone != null && done.difference(_seenDone!).isNotEmpty;
+    _seenDone = done;
     _changes.add(_items);
+    if (fresh) _onLibraryChanged?.call();
   }
+
+  /// 지금까지 본 "받음" 항목 id (처음 받아 온 상태는 새 것으로 치지 않는다).
+  Set<String>? _seenDone;
 
   void _onEvent(Object? event) {
     if (event is! Map) return;
