@@ -27,6 +27,28 @@ class NativeLibraryRepository implements LibraryRepository {
   }
 
   @override
+  Future<int> stageTracks(List<Track> tracks) async =>
+      (await _db.call<int>('stageTracks', {
+        'tracks': [for (final t in tracks) trackToMap(t)],
+      })) ??
+      0;
+
+  @override
+  Future<int> commitStaged() async =>
+      (await _db.call<int>('commitImport')) ?? 0;
+
+  @override
+  Future<List<String>> discardStaged() async {
+    final ids = await _db.call<List<Object?>>('discardImport');
+    return [for (final id in ids ?? const <Object?>[]) id! as String];
+  }
+
+  @override
+  Future<List<Track>> workingTracks() async => [
+    for (final r in await _db.list('workingTracks')) trackFromMap(r),
+  ];
+
+  @override
   Future<bool> updateInfo(String trackId, TrackInfo info) async =>
       (await _db.call<bool>('updateInfo', {
         'id': trackId,

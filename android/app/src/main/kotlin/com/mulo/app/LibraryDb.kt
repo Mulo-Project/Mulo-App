@@ -41,26 +41,108 @@ class LibraryDb(private val context: Context) {
         MuloDb.write(context, MuloDb.TRACKS) { d ->
             val before = visibleCount(d)
             for (t in items) {
-                val uri = t["uri"] as String
-                val source = t["source"] as String
-                val folder = (t["folder"] as? String) ?: ""
-                val addedAt = (t["addedAtSec"] as Number).toLong()
                 d.insertWithOnConflict("tracks", null, trackValues(t), SQLiteDatabase.CONFLICT_IGNORE)
-                // 폴더를 빼서 숨겨 둔 곡은 다시 찾으면 숨김만 푼다 (기록은 그대로).
-                d.execSQL("UPDATE tracks SET hidden = 0 WHERE uri = ? AND hidden = 1", arrayOf(uri))
-                // 기기에서 불러온 곡은 다시 찾을 때마다 파일 날짜로 추가일을 맞춘다.
-                if (source == "device") {
-                    d.execSQL("UPDATE tracks SET added_at = ? WHERE uri = ? AND source = 'device'", arrayOf<Any>(addedAt, uri))
-                }
-                // 폴더 칸이 생기기 전에 넣은 곡은 다시 찾을 때 폴더를 채운다.
-                if (folder.isNotEmpty()) {
-                    d.execSQL("UPDATE tracks SET folder = ? WHERE uri = ? AND folder = ''", arrayOf(folder, uri))
-                }
+                refreshFound(d, t)
             }
             added = (visibleCount(d) - before).toInt()
         }
         return added
     }
+
+    /** 이미 있던 곡을 다시 찾았을 때 맞출 것: 숨김 풀기 · 파일 날짜 · 폴더. */
+    private fun refreshFound(d: SQLiteDatabase, t: Map<String, Any?>) {
+        val uri = t["uri"] as String
+        val folder = (t["folder"] as? String) ?: ""
+        // 폴더를 빼서 숨겨 둔 곡은 다시 찾으면 숨김만 푼다 (기록은 그대로).
+        d.execSQL("UPDATE tracks SET hidden = 0 WHERE uri = ? AND hidden = 1", arrayOf(uri))
+        // 기기에서 불러온 곡은 다시 찾을 때마다 파일 날짜로 추가일을 맞춘다.
+        if (t["source"] == "device") {
+            val addedAt = (t["addedAtSec"] as Number).toLong()
+            d.execSQL("UPDATE tracks SET added_at = ? WHERE uri = ? AND source = 'device'", arrayOf<Any>(addedAt, uri))
+        }
+        // 폴더 칸이 생기기 전에 넣은 곡은 다시 찾을 때 폴더를 채운다.
+        if (folder.isNotEmpty()) {
+            d.execSQL("UPDATE tracks SET folder = ? WHERE uri = ? AND folder = ''", arrayOf(folder, uri))
+        }
+    }
+
+    // ---------------- 불러오기 (찾은 곡을 끝날 때까지 보이지 않게 두었다가 한 번에 넣는다) ----------------
+
+    /** [stageTracks]로 둔 곡들 (끝낼 때 [commitImport]가 숨김 풀기 · 날짜 · 폴더를 맞춘다). */
+    private var staged: List<Map<String, Any?>> = emptyList()
+
+    /**
+     * 찾은 곡을 "불러오는 중"(hidden = 2)으로 넣는다. 화면에는 보이지 않고, 끝내면 [commitImport]로 한꺼번에 보이게 하고
+     * 취소하면 [discardImport]로 흔적 없이 지운다. 이미 있는 곡은 건드리지 않는다.
+     * 끝나면 새로 보이게 될 곡 수(새 곡 + 숨겨 두었다 다시 찾은 곡)를 돌려준다.
+     */
+    fun stageTracks(items: List<Map<String, Any?>>): Int {
+        discardImport()
+        var count = 0
+        MuloDb.write(context) { d ->
+            for (t in items) {
+                val state = d.rawQuery("SELECT hidden FROM tracks WHERE uri = ?", arrayOf(t["uri"] as String)).use { c ->
+                    if (c.moveToFirst()) c.getInt(0) else null
+                }
+                when (state) {
+                    null -> {
+                        val v = trackValues(t).apply { put("hidden", 2) }
+                        if (d.insertWithOnConflict("tracks", null, v, SQLiteDatabase.CONFLICT_IGNORE) != -1L) count++
+                    }
+                    1 -> count++
+                    else -> {}
+                }
+            }
+        }
+        staged = items
+        return count
+    }
+
+    /** 불러오는 중인 곡을 보이게 하고 다시 찾은 곡의 숨김 · 날짜 · 폴더를 맞춘다. 새로 보이게 된 수를 돌려준다. */
+    fun commitImport(): Int {
+        var added = 0
+        MuloDb.write(context, MuloDb.TRACKS) { d ->
+            val before = visibleCount(d)
+            d.execSQL("UPDATE tracks SET hidden = 0 WHERE hidden = 2")
+            for (t in staged) refreshFound(d, t)
+            added = (visibleCount(d) - before).toInt()
+        }
+        staged = emptyList()
+        return added
+    }
+
+    /** 불러오는 중인 곡과 그 곡에 붙인 커버 · 색 · 가사 연결을 지운다 (앱 폴더에 복사한 파일도). 지운 곡 id를 돌려준다. */
+    fun discardImport(): List<String> {
+        val files = mutableListOf<String>()
+        var ids = emptyList<String>()
+        MuloDb.write(context, MuloDb.TRACKS, MuloDb.COVERS, MuloDb.COVER_COLORS, MuloDb.LYRICS_FILES) { d ->
+            ids = d.rawQuery("SELECT id FROM tracks WHERE hidden = 2", null).use { c ->
+                buildList { while (c.moveToNext()) add(c.getString(0)) }
+            }
+            for (id in ids) {
+                val key = "track:$id"
+                d.rawQuery("SELECT path FROM covers WHERE key = ?", arrayOf(key)).use { c ->
+                    if (c.moveToFirst() && c.getString(0).isNotEmpty()) files.add(c.getString(0))
+                }
+                d.rawQuery("SELECT path FROM lyrics_files WHERE track_id = ?", arrayOf(id)).use { c ->
+                    if (c.moveToFirst()) files.add(c.getString(0))
+                }
+                d.delete("covers", "key = ?", arrayOf(key))
+                d.delete("cover_colors", "key = ?", arrayOf(key))
+                d.delete("lyrics_files", "track_id = ?", arrayOf(id))
+                d.delete("tracks", "id = ?", arrayOf(id))
+            }
+        }
+        files.forEach(::deleteQuietly)
+        staged = emptyList()
+        return ids
+    }
+
+    /** 보이는 곡 + 불러오는 중인 곡 (불러오는 단계가 태그 · 커버를 채울 곡들). 추가일 최신순. */
+    fun workingTracks(): List<Map<String, Any?>> =
+        db.rawQuery("SELECT * FROM tracks WHERE hidden IN (0, 2) ORDER BY added_at DESC", null).use { c ->
+            buildList { while (c.moveToNext()) add(trackMap(c)) }
+        }
 
     private fun trackValues(t: Map<String, Any?>) = ContentValues().apply {
         put("id", t["id"] as String)

@@ -89,6 +89,7 @@ class LoadedFoldersCubit extends Cubit<LoadedFoldersState> {
         if (!known.contains(f.path)) f.path,
     ];
     await _rescan(
+      stage: true,
       onCancelled: added.isEmpty
           ? null
           : () async {
@@ -129,7 +130,11 @@ class LoadedFoldersCubit extends Cubit<LoadedFoldersState> {
     }
   }
 
-  Future<void> _rescan({Future<void> Function()? onCancelled}) async {
+  /// [stage]면 찾은 곡을 끝까지 "불러오는 중"으로 두었다가 끝나면 한꺼번에 보이게 하고, 취소하면 흔적 없이 지운다.
+  Future<void> _rescan({
+    bool stage = false,
+    Future<void> Function()? onCancelled,
+  }) async {
     _cancelled = false;
     _stage(LoadStage.scanning);
     await load();
@@ -137,6 +142,7 @@ class LoadedFoldersCubit extends Cubit<LoadedFoldersState> {
     final outcome = await _import(
       const NoParams(),
       cancelled: () => _cancelled,
+      stage: stage,
     );
     if (outcome is ImportAdded) await _restoreTags?.markPending();
     var changed = false;
@@ -172,6 +178,16 @@ class LoadedFoldersCubit extends Cubit<LoadedFoldersState> {
       }
     }
     _restoreTags?.clearPending();
+    if (stage) {
+      if (_cancelled) {
+        // 취소: 불러오는 중이던 곡은 DB에서 흔적 없이 지운다.
+        final ids = await _import.discardStaged();
+        await _restoreTags?.forget(ids);
+      } else {
+        await _import.commitStaged();
+        changed = true;
+      }
+    }
     if (isClosed) return;
     if (_cancelled && onCancelled != null) await onCancelled();
     final folders = await _load(const NoParams());

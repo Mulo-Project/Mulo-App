@@ -1047,3 +1047,9 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 - 받기 엔진은 곡을 DB에 직접 등록한다. `registered` 이벤트 · `ack`는 없앴고, 옛 방식으로 남은 `pending_register.json`은 앱이 켜질 때 한 번 DB에 넣고 비운다.
 - drift · drift_flutter · drift_dev · build_runner를 pubspec에서 뺐다. DB 스키마를 바꾸면 `MuloDb.VERSION`과 `upgrade`를 고친다.
 - 시험은 기기에서 한다 (Kotlin DB 코드는 단위 시험이 없다): 덮어 설치 뒤 데이터 유지 · 보관함 · 재생목록 · 즐겨찾기 · 받기 등록 · 재생 기록.
+
+## D-169 · 2026-11-18 · 폴더 불러오기는 끝날 때까지 곡을 보이지 않게 두었다가 한 번에 넣는다
+- 폴더를 더하다 취소하면 DB에 아무것도 남지 않아야 한다. 전에는 찾은 곡을 바로 넣고 취소하면 숨겨서 되돌려, 숨긴 기록에 남고 정리가 느렸다.
+- 네이티브 `LibraryDb`: `stageTracks`(새 곡을 `hidden = 2` "불러오는 중"으로 넣는다, 화면 · 재생목록 · 통계 어디에도 안 보임) · `commitImport`(보이게 하고 다시 찾은 곡의 숨김 · 날짜 · 폴더를 맞춘다) · `discardImport`(불러오는 중인 곡과 붙인 커버 · 색 · 가사 파일까지 지운다) · `workingTracks`(보이는 곡 + 불러오는 중인 곡). 앱이 불러오는 도중 꺼졌으면 다음 시작 때 남은 `hidden = 2`를 지운다.
+- Dart: `ImportDeviceMusic(stage: true)` → 커버 채우기 · 태그 읽기(둘 다 `workingTracks` 기준) → 끝나면 `commitStaged`, 취소하면 `discardStaged` + 태그 "읽음" 기록 지우기(`forget`).
+- 불러오기 버튼과 폴더 빼기는 전과 같다 (바로 넣기 · 숨기기).

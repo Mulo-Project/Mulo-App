@@ -17,6 +17,9 @@
   - 바꿈: `FavoriteStore.kt`(LibraryDb 사용) · `DownloadEngine.kt`(곡을 DB에 직접 등록, `registered`/`ack` 제거) · `MuloEngine.kt`(채널 등록) · DI · pubspec(drift 제거) · 문서.
   - 안 건드림: 도메인 인터페이스 · 유스케이스 · 화면 · 재생 · 태그 · 받기 큐 동작.
 
+- 폴더 빼기: 곡을 200개씩 묶어 숨긴다 (곡마다 목록을 다시 읽던 것을 고침).
+- 폴더 더하기 취소: 찾은 곡을 끝날 때까지 "불러오는 중"(`hidden = 2`)으로 두었다가 한 번에 보이게 하고, 취소하면 흔적 없이 지운다 (D-169).
+
 ## 확인
 섹션 1(release 전용)부터:
 - 빌드: `flutter build apk --release --flavor full --split-per-abi --dart-define-from-file=dart_defines.local.json`

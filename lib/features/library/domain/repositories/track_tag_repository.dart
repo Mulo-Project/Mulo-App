@@ -88,6 +88,9 @@ class PendingTagTracks {
 abstract interface class TagRestoreStore {
   Future<Set<String>> loadDone();
   Future<void> markDone(Iterable<String> trackIds);
+
+  /// 기록을 지운다 (불러오기를 취소해 곡을 지웠을 때, 다시 불러오면 처음부터 읽도록).
+  Future<void> forget(Iterable<String> trackIds);
 }
 
 /// 이미 태그를 쓴 곡 id 기록 (기존 파일 이관을 이어서 하려고).

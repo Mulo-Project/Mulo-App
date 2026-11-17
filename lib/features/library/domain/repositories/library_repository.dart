@@ -12,6 +12,19 @@ abstract interface class LibraryRepository {
   /// 곡을 추가한다. 같은 재생 주소(uri)가 이미 있으면 건너뛴다. 새로 추가된 수를 돌려준다.
   Future<int> addTracks(List<Track> tracks);
 
+  /// 찾은 곡을 "불러오는 중"으로 넣는다 (화면에는 보이지 않는다). 끝나면 [commitStaged], 취소하면 [discardStaged].
+  /// 새로 보이게 될 곡 수를 돌려준다.
+  Future<int> stageTracks(List<Track> tracks);
+
+  /// 불러오는 중인 곡을 보이게 한다. 새로 보이게 된 수를 돌려준다.
+  Future<int> commitStaged();
+
+  /// 불러오는 중인 곡을 (붙인 커버 · 색 · 가사와 함께) 흔적 없이 지운다. 지운 곡 id를 돌려준다.
+  Future<List<String>> discardStaged();
+
+  /// 보이는 곡 + 불러오는 중인 곡 (태그 · 커버를 채울 곡들).
+  Future<List<Track>> workingTracks();
+
   /// 곡의 제목 · 아티스트 · 앨범 · 장르를 바꾼다. 곡이 없으면 false.
   Future<bool> updateInfo(String trackId, TrackInfo info);
 

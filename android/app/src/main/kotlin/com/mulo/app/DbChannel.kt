@@ -32,6 +32,14 @@ class DbChannel(
 
     init {
         MuloDb.addListener(listener)
+        // 앱이 불러오는 도중에 꺼졌다면 남은 "불러오는 중" 곡은 지운다 (끝나지 않은 불러오기는 저장하지 않는다).
+        io.execute {
+            try {
+                lib.discardImport()
+            } catch (e: Exception) {
+                MuloLog.e(MuloLog.NATIVE, "남은 불러오기 정리 실패: ${e.message}", e)
+            }
+        }
         changes.setStreamHandler(object : EventChannel.StreamHandler {
             override fun onListen(arguments: Any?, s: EventChannel.EventSink) {
                 sink = s
@@ -50,6 +58,10 @@ class DbChannel(
                 when (call.method) {
                     // 곡
                     "tracks" -> lib.tracks()
+                    "stageTracks" -> lib.stageTracks(call.argument<List<Map<String, Any?>>>("tracks") ?: emptyList())
+                    "commitImport" -> lib.commitImport()
+                    "discardImport" -> lib.discardImport()
+                    "workingTracks" -> lib.workingTracks()
                     "addTracks" -> lib.addTracks(call.argument<List<Map<String, Any?>>>("tracks") ?: emptyList())
                     "updateInfo" -> lib.updateInfo(str("id"), str("title"), str("artist"), str("album"), str("genre"))
                     "hide" -> { lib.hide(str("id")); null }

@@ -122,6 +122,36 @@ class FakeLibraryRepository implements LibraryRepository {
     return added.length;
   }
 
+  final _staged = <Track>[];
+
+  @override
+  Future<int> stageTracks(List<Track> tracks) async {
+    final uris = _tracks.map((t) => t.uri).toSet();
+    _staged
+      ..clear()
+      ..addAll(tracks.where((t) => uris.add(t.uri)));
+    return _staged.length;
+  }
+
+  @override
+  Future<int> commitStaged() async {
+    final n = _staged.length;
+    _tracks.addAll(_staged);
+    _staged.clear();
+    _changes.add(_sorted);
+    return n;
+  }
+
+  @override
+  Future<List<String>> discardStaged() async {
+    final ids = [for (final t in _staged) t.id];
+    _staged.clear();
+    return ids;
+  }
+
+  @override
+  Future<List<Track>> workingTracks() async => [..._sorted, ..._staged];
+
   @override
   Future<bool> updateInfo(String trackId, TrackInfo info) async {
     final i = _tracks.indexWhere((t) => t.id == trackId);
