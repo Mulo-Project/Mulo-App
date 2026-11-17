@@ -183,8 +183,17 @@ class MediaStoreChannel(
     /** 곡 파일의 크기(byte) · 형식(mime) · 비트레이트(bps) · 샘플레이트(Hz). 알 수 없는 값은 키를 뺀다. */
     private fun fileInfo(uri: Uri): Map<String, Any> {
         val out = mutableMapOf<String, Any>()
-        context.contentResolver.openFileDescriptor(uri, "r")?.use { out["size"] = it.statSize }
-        context.contentResolver.getType(uri)?.let { out["mime"] = it }
+        // 값마다 따로 읽는다: 하나가 막혀도(권한 등) 나머지는 보여 준다.
+        try {
+            context.contentResolver.openFileDescriptor(uri, "r")?.use { out["size"] = it.statSize }
+        } catch (e: Exception) {
+            MuloLog.e(MuloLog.NATIVE, "파일 크기 읽기 실패 $uri: ${e.message}", e)
+        }
+        try {
+            context.contentResolver.getType(uri)?.let { out["mime"] = it }
+        } catch (e: Exception) {
+            MuloLog.e(MuloLog.NATIVE, "파일 형식 읽기 실패 $uri: ${e.message}", e)
+        }
         val retriever = MediaMetadataRetriever()
         try {
             retriever.setDataSource(context, uri)
