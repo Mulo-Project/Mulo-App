@@ -255,8 +255,11 @@ class DownloadEngine(
 
     fun retry(id: String) {
         synchronized(lock) {
-            val it = items.firstOrNull { x -> x.id == id } ?: return
-            if (it.status != FAILED) return
+            val it = items.firstOrNull { x -> x.id == id }
+            if (it == null || it.status != FAILED) {
+                MuloLog.d(MuloLog.NATIVE, "다시 시도 못 함 $id: ${it?.status ?: "목록에 없음"}")
+                return
+            }
             items.remove(it)
             items.add(it)
             // 실패 전에 받아 둔 만큼이 있으면 이어 받는다.

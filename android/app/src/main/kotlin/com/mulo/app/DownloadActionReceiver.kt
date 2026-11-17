@@ -10,10 +10,13 @@ import android.content.Intent
  */
 class DownloadActionReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        MuloLog.init(context.applicationContext)
+        MuloLog.d(MuloLog.NATIVE, "받기 알림 수신기 호출: ${intent.action}")
         val key = DownloadNotifications.ACTIONS.entries.firstOrNull { it.value == intent.action }?.key ?: return
         if (key == "retry") {
             val id = intent.getStringExtra(DownloadNotifications.EXTRA_RETRY_ID) ?: return
             MuloEngine.obtain(context)
+            MuloLog.d(MuloLog.NATIVE, "받기 다시 시도 요청 $id (엔진=${MuloEngine.downloads != null})")
             MuloEngine.downloads?.retry(id)
             return
         }
