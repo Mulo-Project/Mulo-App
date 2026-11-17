@@ -211,10 +211,17 @@ object PlaybackHub {
             PlaybackStore.clear(context)
             return
         }
-        val items = (0 until exo.mediaItemCount).map { QueueMapping.storedItemOf(exo.getMediaItemAt(it)) }
+        val items = (0 until exo.mediaItemCount).map { storedWithPending(exo.getMediaItemAt(it)) }
         PlaybackStore.saveQueue(context, items, extras)
         persistPosition()
         syncResumable()
+    }
+
+    /** 저장할 곡 정보. 지금 곡의 미뤄 둔 새 정보가 있으면 그것으로 쓴다. */
+    private fun storedWithPending(item: MediaItem): StoredItem {
+        val stored = QueueMapping.storedItemOf(item)
+        val p = pendingInfo[item.mediaId] ?: return stored
+        return StoredItem(stored.id, stored.uri, p.first, p.second, p.third, stored.durationMs, stored.art)
     }
 
     private fun persistPosition() {
@@ -522,14 +529,30 @@ object PlaybackHub {
         persistQueue()
     }
 
+    /** 지금 듣는 곡의 바뀐 정보: 항목을 바꿔 끼우면 재생이 다시 시작되므로, 다른 곡으로 넘어간 뒤에 맞춘다. */
+    private val pendingInfo = mutableMapOf<String, Triple<String, String, String>>()
+
     /**
      * 곡 정보(제목 · 아티스트 · 앨범)가 바뀌었을 때 대기열의 그 곡 정보를 맞춘다. 메인 스레드에서 부른다.
-     * 지금 듣는 곡은 바꾸지 않는다 (듣던 항목을 바꿔 끼우면 재생이 처음부터 다시 시작한다. 그 곡의 알림 정보는 앱이 [setSession]으로 보낸다).
+     * 지금 듣는 곡은 항목을 바꿔 끼우지 않는다 (듣던 항목을 바꾸면 재생이 처음부터 다시 시작한다). 대신 저장하는 값에는
+     * 바로 반영하고, 엔진 항목은 다른 곡으로 넘어갈 때 맞춘다. 그 곡의 알림 정보는 앱이 [setSession]으로 보낸다.
      */
     fun updateQueueInfo(id: String, title: String, artist: String, album: String) {
         if (!initialized) return
         val i = indexOfId(id)
-        if (i < 0 || i == exo.currentMediaItemIndex) return
+        if (i < 0) return
+        if (i == exo.currentMediaItemIndex) {
+            pendingInfo[id] = Triple(title, artist, album)
+            persistQueue()
+            return
+        }
+        pendingInfo.remove(id)
+        applyInfo(i, title, artist, album)
+        persistQueue()
+        sessionPlayer.refresh()
+    }
+
+    private fun applyInfo(i: Int, title: String, artist: String, album: String) {
         val item = exo.getMediaItemAt(i)
         val old = item.mediaMetadata
         val newArtist = artist.ifEmpty { null }
@@ -537,8 +560,15 @@ object PlaybackHub {
         if (old.title?.toString() == title && old.artist?.toString() == newArtist && old.albumTitle?.toString() == newAlbum) return
         val metadata = old.buildUpon().setTitle(title).setArtist(newArtist).setAlbumTitle(newAlbum).build()
         exo.replaceMediaItem(i, item.buildUpon().setMediaMetadata(metadata).build())
+    }
+
+    /** 다른 곡으로 넘어가 더는 지금 곡이 아니게 된 곡에, 미뤄 둔 정보를 맞춘다. */
+    private fun applyPendingInfo(previousId: String?) {
+        val info = previousId?.let { pendingInfo.remove(it) } ?: return
+        val i = indexOfId(previousId)
+        if (i < 0 || i == exo.currentMediaItemIndex) return
+        applyInfo(i, info.first, info.second, info.third)
         persistQueue()
-        sessionPlayer.refresh()
     }
 
     /** 지금 쥐고 있는 대기열 스냅샷 (앱을 다시 켰을 때 복원용). 곡이 없으면 null. */
@@ -827,6 +857,7 @@ object PlaybackHub {
             // 다른 곡으로 넘어가면 구간 반복은 풀린다 (앱도 곡이 바뀌면 스스로 푼다).
             if (previousId != lastMediaId) setLoop(null, null)
             if (reason != Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) reshuffleAfterLap(previousId)
+            applyPendingInfo(previousId)
             persistPosition()
             // 현재 곡이 바뀌었으니 좋아요 버튼 모양을 다시 맞춘다 (앱이 모르는 곡이면 숨긴다).
             refreshLayout()
