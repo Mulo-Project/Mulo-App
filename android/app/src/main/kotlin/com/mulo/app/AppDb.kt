@@ -22,10 +22,14 @@ object AppDb {
     /** 쓸 수 있으면 열린 DB, 아니면 null. 쓴 뒤 [SQLiteDatabase.close]는 부르는 쪽이 한다. */
     fun open(context: Context): SQLiteDatabase? {
         val f = file(context)
-        if (!f.exists()) return null
+        if (!f.exists()) {
+            MuloLog.d(MuloLog.NATIVE, "DB 파일 없음: ${f.path}")
+            return null
+        }
         return try {
             val db = SQLiteDatabase.openDatabase(f.path, null, SQLiteDatabase.OPEN_READWRITE)
             if (db.version < MIN_VERSION) {
+                MuloLog.d(MuloLog.NATIVE, "DB 버전이 낮아 쓰지 않음: ${db.version} < $MIN_VERSION")
                 db.close()
                 return null
             }

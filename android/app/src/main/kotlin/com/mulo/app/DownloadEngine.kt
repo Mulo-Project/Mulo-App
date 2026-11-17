@@ -1036,6 +1036,7 @@ class DownloadEngine(
         val db = AppDb.open(context)
         if (db == null) {
             // 앱 DB를 아직 못 쓴다(앱을 한 번도 안 켰거나 스키마가 낮다): 맡겨 두었다가 앱이 열 때 등록한다.
+            MuloLog.d(MuloLog.NATIVE, "보관함 등록을 맡겨 둠 (DB 못 엶): $trackId")
             pending.add(reg)
         } else {
             try {
@@ -1043,6 +1044,7 @@ class DownloadEngine(
             } finally {
                 db.close()
             }
+            MuloLog.d(MuloLog.NATIVE, "보관함에 등록함: $trackId")
             emit("libraryChanged", null)
         }
         if (remember) {
