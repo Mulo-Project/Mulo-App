@@ -23,3 +23,11 @@
 ## 남은 일 · 질문
 - 영상 저장 시 `VideoSaveRepository.save`(Dart)와 `DownloadedFileStore` 일부는 이제 받기에 쓰이지 않는다 (정리 대상).
 - 데스크톱(Windows 등)에서는 네이티브 받기가 없어 받기를 쓸 수 없다 (Android 우선).
+
+## 추가 정리: 남은 Dart 기능을 네이티브로 (같은 PR)
+
+- 영상 저장 Dart 경로(`YtDlpVideoSaveRepository`), 파일 저장(`DownloadedFileStore`), 태그 쓰기 도우미(`CoverTagWriter`), `NativeYtDlp.saveVideo`를 지웠다. 받기 큐(`DownloadEngine`)가 이미 같은 일을 한다. `VideoSaveRepository`는 지원 여부(`isAvailable`)만 남았다.
+- 태그 쓰기: Dart는 값(null 가능) · 커버 파일/주소 · 커버 색만 `music_app/tags`의 `write`에 넘긴다. 빈 칸 거르기, `COVER_COLOR` 만들기, 커버 이미지 받기는 `TagChannel`이 한다. `read`는 커버 색(`color`)까지 해석해 돌려준다.
+- 가사 읽기: `music_app/lyrics`의 `read`(uri → 글)로 바꿨다. mp3는 `Id3Lyrics`(USLT · TXXX, Kotlin), 그 밖의 형식은 `TagReader`의 `lyrics` 칸. Dart의 ID3 바이트 파서(`Id3TxxxLyrics`)와 `audio_metadata_reader` 가사 읽기를 없앴다.
+- 남김: `DownloadQueueStore`(옛 대기열을 네이티브로 한 번 넘기는 이전용), drift 보관함 DB(스키마 주인).
+

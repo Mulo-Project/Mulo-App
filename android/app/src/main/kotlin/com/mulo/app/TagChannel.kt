@@ -12,8 +12,9 @@ import java.util.concurrent.Executors
  * 커버 이미지 경로 · 확대 · 위치 · 각도)과 파일 하나(`content://` 주소 또는 경로)만 넘기고, 형식 구분 · 복사 · 태그 쓰기 · 덮어쓰기 · 동의 창은 여기서 한다.
  * 형식마다 다른 규칙은 [TagFormats]가 고른 형식의 함수([TranscoderChannel])가 각자 가진다.
  *
- * - `write`: {uri, extension?, values, cover?: {path, scale, dx, dy, rotation}, ask} → {status: written|failed|denied|unsupported, error?}
- * - `read`: {uri, extension?} → {status: ok|unsupported|failed, tags}  (키는 소문자, 안드로이드 Media3가 읽는다)
+ * - `write`: {uri, extension?, values(값이 null · 빈 글이면 그 칸은 건드리지 않는다), color?(커버 색 ARGB → 앱 전용 칸), cover?: {path? | url?, scale, dx, dy, rotation}, ask}
+ *   → {status: written|failed|denied|unsupported, error?}. 커버가 주소면 여기서 받는다.
+ * - `read`: {uri, extension?} → {status: ok|unsupported|failed, tags, color?}  (키는 소문자, 안드로이드 Media3가 읽는다. color는 앱 전용 칸의 커버 색)
  * - `ensure`: {uri, ask} → Boolean (쓸 수 없는 곡이면 물을 것이 없어 true)
  */
 class TagChannel(
@@ -50,7 +51,7 @@ class TagChannel(
             val extension = call.argument<String>("extension")
             when (call.method) {
                 "write" -> {
-                    val values = call.argument<Map<String, String>>("values") ?: emptyMap()
+                    val values = shapeValues(call.argument<Map<String, String?>>("values"), (call.argument<Number>("color"))?.toLong())
                     val cover = call.argument<Map<String, Any>>("cover")
                     val ask = call.argument<Boolean>("ask") ?: false
                     io.execute { write(uri, extension, values, cover, ask, result) }
@@ -88,6 +89,28 @@ class TagChannel(
         return out
     }
 
+    /** 커버 원본을 주소에서 받는다 (못 받으면 null: 커버 없이 글만 쓴다). */
+    private fun fetchCover(url: String): File? = try {
+        val out = File(context.cacheDir, "tag_cover_src_${System.nanoTime()}")
+        val conn = (java.net.URL(url).openConnection() as java.net.HttpURLConnection).apply {
+            connectTimeout = 15_000
+            readTimeout = 30_000
+        }
+        try {
+            if (conn.responseCode !in 200..299) {
+                null
+            } else {
+                conn.inputStream.use { i -> out.outputStream().use { o -> i.copyTo(o) } }
+                out.takeIf { it.length() > 0 } ?: run { out.delete(); null }
+            }
+        } finally {
+            conn.disconnect()
+        }
+    } catch (e: Exception) {
+        MuloLog.d(MuloLog.NATIVE, "MuloTag cover fetch failed: ${e.message}")
+        null
+    }
+
     private fun isContent(uri: String) = uri.startsWith("content://")
 
     /** 형식을 정한다. `content://`는 파일의 mime으로, 경로는 넘어온 확장자(없으면 경로의 확장자)로. */
@@ -123,12 +146,16 @@ class TagChannel(
         val png = File(context.cacheDir, "tag_cover_${System.nanoTime()}.png")
         val coverPng = cover?.let { c ->
             fun num(key: String, fallback: Double) = (c[key] as? Number)?.toDouble() ?: fallback
-            val path = c["path"] as? String
+            // 파일이 없으면 주소에서 받는다 (이미지 캐시는 Dart가 아니라 여기서 쓰고 지운다).
+            var fetched: File? = null
+            val path = (c["path"] as? String)?.takeIf { it.isNotEmpty() && File(it).exists() }
+                ?: (c["url"] as? String)?.takeIf { it.isNotEmpty() }?.let { u -> fetchCover(u).also { fetched = it } }?.absolutePath
             val ok = path != null && try {
                 CoverRender.render(path, num("scale", 1.0), num("dx", 0.0), num("dy", 0.0), num("rotation", 0.0), 512, png)
             } catch (e: Exception) {
                 false
             }
+            fetched?.delete()
             if (ok) png.absolutePath else null
         }
         val coverState = if (cover == null) "none" else if (coverPng != null) "ok(${png.length()}B)" else "failed"
@@ -238,7 +265,8 @@ class TagChannel(
                 done(result, mapOf("status" to "failed", "tags" to emptyMap<String, String>()))
                 return
             }
-            done(result, mapOf("status" to "ok", "tags" to TagReader.read(context, uri)))
+            val tags = TagReader.read(context, uri)
+            done(result, mapOf("status" to "ok", "tags" to tags, "color" to parseCoverColor(tags)))
         } catch (e: Exception) {
             done(result, mapOf("status" to "failed", "error" to (e.message ?: e.toString()), "tags" to emptyMap<String, String>()))
         }
@@ -271,5 +299,24 @@ class TagChannel(
 
     companion object {
         const val NAME = "music_app/tags"
+
+        /** 값이 없거나 빈 글인 칸은 빼고, 커버 색이 있으면 앱 전용 칸(`COVER_COLOR`)으로 더한다. */
+        fun shapeValues(values: Map<String, String?>?, color: Long?): Map<String, String> {
+            val out = linkedMapOf<String, String>()
+            values?.forEach { (k, v) -> if (v != null && v.isNotBlank()) out[k] = v }
+            if (color != null) out["COVER_COLOR"] = java.lang.Long.toHexString(color and 0xFFFFFFFFL).padStart(8, '0')
+            return out
+        }
+
+        /** [shapeValues]가 쓴 `COVER_COLOR`를 되읽는다 (키는 대소문자 구분 없이). 없거나 깨졌으면 null. */
+        fun parseCoverColor(tags: Map<String, String>): Long? {
+            for ((k, value) in tags) {
+                if (!k.equals("COVER_COLOR", ignoreCase = true)) continue
+                // ID3 사용자 정의 칸은 값 앞뒤에 눈에 안 보이는 글자(BOM · 제어 문자)가 붙어 올 수 있다.
+                val v = value.trim { it <= ' ' || it == '\uFEFF' || it == '\uFFFE' }
+                if (v.isNotEmpty()) return v.toLongOrNull(16)
+            }
+            return null
+        }
     }
 }

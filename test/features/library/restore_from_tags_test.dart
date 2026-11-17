@@ -159,8 +159,7 @@ void main() {
         'artist': '가수',
         'album': '앨범',
         'genre': '록',
-        'cover_color': 'ff112233',
-      });
+      }, 0xFF112233);
       expect([a.title, a.artist, a.album, a.genre], ['제목', '가수', '앨범', '록']);
       expect(a.coverColor, 0xFF112233);
       final b = FileTagSource.parse({'title': ' T '});
