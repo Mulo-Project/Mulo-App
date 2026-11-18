@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -137,7 +138,7 @@ void main() {
     final request = jsonDecode((call.arguments as Map)['request'] as String) as Map;
     expect(request['videoFormat'], 'mp4');
     expect(request['resolvedFolder'], contains('Movies'));
-  });
+  }, skip: !Platform.isAndroid ? '기본 영상 폴더(Movies/Mulo)는 Android에서만 정해진다' : false);
 
   test('일시정지 · 이어받기 · 다시 시도 · 취소는 항목 id만 네이티브에 넘긴다', () async {
     final repo = make();
