@@ -27,6 +27,7 @@ class _FakeEmbedded implements EmbeddedLyricsSource {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   group('Lyrics.parse', () {
     test('빈 글은 가사가 아니다', () {
       expect(Lyrics.parse(''), isNull);

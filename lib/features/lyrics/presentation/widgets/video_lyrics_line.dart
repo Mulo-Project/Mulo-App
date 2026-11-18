@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
-import '../../domain/entities/lyrics.dart';
 import '../bloc/lyrics_cubit.dart';
 import '../bloc/lyrics_settings_cubit.dart';
 
