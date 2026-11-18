@@ -300,10 +300,8 @@ class _DownloadScreenState extends State<DownloadScreen> {
     }
     final color = _color;
     final lyrics = _lyricsKey.currentState;
-    final subtitleStatus = context
-        .read<SubtitleAvailabilityCubit>()
-        .state
-        .status;
+    final subtitle = context.read<SubtitleAvailabilityCubit>().state;
+    final subtitleStatus = subtitle.status;
     final colors = context.read<CoverColorCubit>();
     final audioLanguage = context.read<AudioLanguageCubit>().state.selected;
     final defaultFormat = context.read<DownloadPreferencesCubit>().state.format;
@@ -331,7 +329,11 @@ class _DownloadScreenState extends State<DownloadScreen> {
         importLyrics:
             _isYoutube &&
             lyrics != null &&
-            ((lyrics.importLyrics && subtitleStatus != SubtitleStatus.none) ||
+            // 자막 언어 목록이 있으면 사용자가 언어를 골랐을 때만 가져온다 (기본으로 고르지 않는다).
+            // 목록을 읽지 못한 경우는 켜 두면 네이티브가 기본 언어(ko · en)로 읽는다.
+            ((lyrics.importLyrics &&
+                    (lyrics.language != null || subtitle.languages.isEmpty()) &&
+                    subtitleStatus != SubtitleStatus.none) ||
                 lyrics.custom != null),
         lyricsLanguage: lyrics?.language,
         lyricsSkipSounds: lyrics?.skipSounds ?? true,
