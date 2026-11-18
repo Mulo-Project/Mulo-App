@@ -332,7 +332,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
             // 자막 언어 목록이 있으면 사용자가 언어를 골랐을 때만 가져온다 (기본으로 고르지 않는다).
             // 목록을 읽지 못한 경우는 켜 두면 네이티브가 기본 언어(ko · en)로 읽는다.
             ((lyrics.importLyrics &&
-                    (lyrics.language != null || subtitle.languages.isEmpty()) &&
+                    (lyrics.language != null || subtitle.languages.isEmpty) &&
                     subtitleStatus != SubtitleStatus.none) ||
                 lyrics.custom != null),
         lyricsLanguage: lyrics?.language,
