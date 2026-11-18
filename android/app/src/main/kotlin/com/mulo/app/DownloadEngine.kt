@@ -79,6 +79,7 @@ class DownloadEngine(
 
     private var lastStatuses = HashMap<String, String>()
     private var progressShown = false
+    private var shownId: String? = null
     private var lastProgressKey: String? = null
     private val batch = HashSet<String>()
 
@@ -475,6 +476,8 @@ class DownloadEngine(
         val active = snap.filter { it.active() }
         var current = snap.firstOrNull { it.status == DOWNLOADING }
         if (current == null && !progressShown) current = snap.firstOrNull { it.status == QUEUED }
+        // 방금 이어받기를 눌러 대기로 돌아온 항목: 받기가 다시 시작되기 전에도 알림이 바로 "받는 중" 버튼으로 바뀌게 한다.
+        if (current == null) current = snap.firstOrNull { it.id == shownId && it.status == QUEUED }
         val allPaused = active.isNotEmpty() && active.all { it.status == PAUSED }
         if (current == null && allPaused) current = active.first()
         if (active.isEmpty()) batch.clear() else batch.addAll(active.map { it.id })
@@ -513,6 +516,7 @@ class DownloadEngine(
         val key = "$title|$body|$subText|$overallPercent|$preview|$stop|$hold|${cur.id}|$art"
         if (progressShown && key == lastProgressKey) return
         progressShown = true
+        shownId = cur.id
         lastProgressKey = key
         val args = mapOf(
             "title" to title, "body" to body, "percent" to overallPercent, "foreground" to true, "subText" to subText,
@@ -527,6 +531,7 @@ class DownloadEngine(
     private fun clearProgress() {
         if (!progressShown) return
         progressShown = false
+        shownId = null
         lastProgressKey = null
         DownloadNotifications.lastProgress = null
         DownloadForegroundService.stop(context)
