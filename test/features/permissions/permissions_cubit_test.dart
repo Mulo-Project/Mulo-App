@@ -12,6 +12,7 @@ void main() {
   setUp(() async {
     await setUpTestDependencies();
     repo = sl<PermissionRepository>() as FakePermissionRepository;
+    repo.levels[AppPermission.audio] = PermissionLevel.denied;
     cubit = sl<PermissionsCubit>();
     await cubit.refresh();
   });

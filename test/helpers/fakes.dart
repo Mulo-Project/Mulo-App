@@ -2045,6 +2045,8 @@ class FakeMediaSession implements MediaSession {
 class FakePermissionRepository implements PermissionRepository {
   final levels = <AppPermission, PermissionLevel>{
     for (final p in AppPermission.values) p: PermissionLevel.denied,
+    // 음악 파일 접근은 허용된 채로 시작한다 (아니면 content:// 곡을 재생 불가로 본다).
+    AppPermission.audio: PermissionLevel.granted,
   };
   int openedSettings = 0;
 
