@@ -38,3 +38,13 @@ class SaveLyricsCoverBackground implements UseCase<void, bool> {
   @override
   Future<void> call(bool on) => _repo.saveCoverBackground(on);
 }
+
+/// 영상 하단에 가사를 보여 줄지 저장한다.
+class SaveLyricsVideoLyrics implements UseCase<void, bool> {
+  const SaveLyricsVideoLyrics(this._repo);
+
+  final LyricsSettingsRepository _repo;
+
+  @override
+  Future<void> call(bool on) => _repo.saveVideoLyrics(on);
+}

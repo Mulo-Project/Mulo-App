@@ -1616,6 +1616,12 @@ abstract class AppLocalizations {
   /// **'반복 재생'**
   String get videoRepeat;
 
+  /// No description provided for @videoLyrics.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사 표시'**
+  String get videoLyrics;
+
   /// No description provided for @videoQualityAuto.
   ///
   /// In ko, this message translates to:

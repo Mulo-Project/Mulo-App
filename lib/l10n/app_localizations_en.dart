@@ -842,6 +842,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoRepeat => 'Repeat';
 
   @override
+  String get videoLyrics => 'Show lyrics';
+
+  @override
   String get videoQualityAuto => 'Auto';
 
   @override

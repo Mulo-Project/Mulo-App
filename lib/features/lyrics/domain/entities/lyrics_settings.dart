@@ -16,6 +16,7 @@ class LyricsSettings extends Equatable {
     this.theme = LyricsTheme.list,
     this.coverBackground = false,
     this.overlay = false,
+    this.videoLyrics = false,
   });
 
   /// 지금을 누를 때 반응 시간만큼 앞당겨 찍는 기본값 (밀리초).
@@ -32,6 +33,9 @@ class LyricsSettings extends Equatable {
   /// 앱을 벗어나도 다른 앱 위에 지금 줄을 띄운다 (Android, 싱크 가사가 있는 곡).
   final bool overlay;
 
+  /// 영상을 볼 때 영상 하단에 싱크 가사를 보여 준다 (싱크 가사가 있는 곡).
+  final bool videoLyrics;
+
   Duration get latency => Duration(milliseconds: latencyMs);
 
   LyricsSettings copyWith({
@@ -39,13 +43,15 @@ class LyricsSettings extends Equatable {
     LyricsTheme? theme,
     bool? coverBackground,
     bool? overlay,
+    bool? videoLyrics,
   }) => LyricsSettings(
     latencyMs: (latencyMs ?? this.latencyMs).clamp(0, maxLatencyMs),
     theme: theme ?? this.theme,
     coverBackground: coverBackground ?? this.coverBackground,
     overlay: overlay ?? this.overlay,
+    videoLyrics: videoLyrics ?? this.videoLyrics,
   );
 
   @override
-  List<Object?> get props => [latencyMs, theme, coverBackground, overlay];
+  List<Object?> get props => [latencyMs, theme, coverBackground, overlay, videoLyrics];
 }

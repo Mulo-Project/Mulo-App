@@ -6,6 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../library/domain/entities/track.dart' show formatDuration;
+import '../../../lyrics/presentation/bloc/lyrics_settings_cubit.dart';
+import '../../../lyrics/presentation/widgets/video_lyrics_line.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../../player/presentation/widgets/fullscreen_video.dart';
 import '../../../player/presentation/widgets/native_video.dart';
@@ -378,6 +380,35 @@ class _VideoOptionsSheet extends StatelessWidget {
                   ),
                 ),
               ),
+            // 영상 하단에 싱크 가사 보이기 (메인 재생의 영상, 싱크 가사가 있는 곡).
+            if (main)
+              BlocBuilder<LyricsSettingsCubit, LyricsSettings>(
+                buildWhen: (a, b) => a.videoLyrics != b.videoLyrics,
+                builder: (context, settings) => InkWell(
+                  key: const ValueKey('video-option-lyrics'),
+                  onTap: () => context.read<LyricsSettingsCubit>().setVideoLyrics(
+                    !settings.videoLyrics,
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.sm + AppSpacing.xxs,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(l10n.videoLyrics, style: text.bodyLarge),
+                        ),
+                        AppSwitch(
+                          value: settings.videoLyrics,
+                          onChanged: (v) => context
+                              .read<LyricsSettingsCubit>()
+                              .setVideoLyrics(v),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             // 작은 창(PiP): 눌러서 바로 영상을 작은 창으로 띄운다.
             InkWell(
               key: const ValueKey('video-option-pip'),
@@ -442,7 +473,8 @@ class MainVideoWithControls extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Stack(
       fit: StackFit.expand,
-      children: [NativeVideo(), PreviewVideoControls(main: true)],
+      // 가사는 영상 위, 컨트롤 아래에 깔린다 (터치는 컨트롤로 넘어간다).
+      children: [NativeVideo(), VideoLyricsLine(), PreviewVideoControls(main: true)],
     );
   }
 }

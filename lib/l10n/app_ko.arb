@@ -311,6 +311,7 @@
   "videoOptions": "옵션",
   "videoOptionsTitle": "영상 옵션",
   "videoRepeat": "반복 재생",
+  "videoLyrics": "가사 표시",
   "videoQualityAuto": "자동",
   "videoQualityAutoHint": "빠르게 시작한 뒤 화질을 높여요",
   "settingsStreamCacheLimitHint": "임시 저장한 음원도 함께 계산해요. 넘으면 오래된 임시 캐시부터 지워요. ({used} 사용 중)",

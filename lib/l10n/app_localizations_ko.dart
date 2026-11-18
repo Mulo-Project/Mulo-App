@@ -823,6 +823,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get videoRepeat => '반복 재생';
 
   @override
+  String get videoLyrics => '가사 표시';
+
+  @override
   String get videoQualityAuto => '자동';
 
   @override

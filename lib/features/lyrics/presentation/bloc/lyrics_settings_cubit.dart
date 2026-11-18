@@ -15,6 +15,7 @@ class LyricsSettingsCubit extends Cubit<LyricsSettings> {
     required SaveLyricsTheme saveLyricsTheme,
     required SaveLyricsCoverBackground saveCoverBackground,
     required this._saveOverlay,
+    required this._saveVideoLyrics,
   }) : _load = loadSettings,
        _saveLatency = saveStampLatency,
        _saveTheme = saveLyricsTheme,
@@ -26,6 +27,7 @@ class LyricsSettingsCubit extends Cubit<LyricsSettings> {
   final SaveLyricsTheme _saveTheme;
   final SaveLyricsCoverBackground _saveCover;
   final SaveLyricsOverlaySetting _saveOverlay;
+  final SaveLyricsVideoLyrics _saveVideoLyrics;
 
   Future<void> load() async {
     final settings = await _load(const NoParams());
@@ -57,5 +59,12 @@ class LyricsSettingsCubit extends Cubit<LyricsSettings> {
     if (on == state.overlay) return;
     emit(state.copyWith(overlay: on));
     await _saveOverlay(on);
+  }
+
+  /// 영상 하단 가사를 켜고 끈다.
+  Future<void> setVideoLyrics(bool on) async {
+    if (on == state.videoLyrics) return;
+    emit(state.copyWith(videoLyrics: on));
+    await _saveVideoLyrics(on);
   }
 }

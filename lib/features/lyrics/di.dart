@@ -46,6 +46,7 @@ void registerLyrics(GetIt sl) {
     ..registerFactory(() => SaveStampLatency(sl()))
     ..registerFactory(() => SaveLyricsTheme(sl()))
     ..registerFactory(() => SaveLyricsCoverBackground(sl()))
+    ..registerFactory(() => SaveLyricsVideoLyrics(sl()))
     ..registerFactory(
       () => LyricsSettingsCubit(
         loadSettings: sl(),
@@ -53,6 +54,7 @@ void registerLyrics(GetIt sl) {
         saveLyricsTheme: sl(),
         saveCoverBackground: sl(),
         saveOverlay: sl(),
+        saveVideoLyrics: sl(),
       ),
     )
     ..registerLazySingleton<LyricsOverlay>(
