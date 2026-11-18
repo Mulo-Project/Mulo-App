@@ -30,8 +30,13 @@ class DownloadLyricsSection extends StatefulWidget {
   State<DownloadLyricsSection> createState() => DownloadLyricsSectionState();
 }
 
-class DownloadLyricsSectionState extends State<DownloadLyricsSection> {
+class DownloadLyricsSectionState extends State<DownloadLyricsSection>
+    with AutomaticKeepAliveClientMixin {
   var _importLyrics = false;
+
+  // 목록 위쪽(커버 · 이미지 화면)으로 스크롤해도 이 칸의 선택이 사라지지 않게 유지한다.
+  @override
+  bool get wantKeepAlive => true;
 
   // 사용자가 직접 고른 자막 언어. 고르지 않았으면 null (기본으로 골라 두지 않는다).
   String? _lyricsLanguage;
@@ -60,10 +65,12 @@ class DownloadLyricsSectionState extends State<DownloadLyricsSection> {
       _custom ?? (language == null ? null : _edited[language]);
 
   @override
-  Widget build(BuildContext context) =>
-      BlocBuilder<SubtitleAvailabilityCubit, SubtitleAvailability>(
-        builder: _lyricsSection,
-      );
+  Widget build(BuildContext context) {
+    super.build(context);
+    return BlocBuilder<SubtitleAvailabilityCubit, SubtitleAvailability>(
+      builder: _lyricsSection,
+    );
+  }
 
   /// 자막이 있는지(확인 중 · 있음 · 없음 · 모름) 보여 주고, 가져올지 · 어떤 언어로 가져올지 정한다.
   Widget _lyricsSection(BuildContext context, SubtitleAvailability sub) {
