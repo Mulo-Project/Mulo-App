@@ -587,6 +587,7 @@
   "downloadSubtitleEditHint": "You can edit the text, but not the timing. Sync it on the player after downloading.",
   "downloadSubtitleUseEdited": "Use this subtitle",
   "downloadSubtitleApplied": "applied",
+  "downloadSubtitleDeselect": "Deselect subtitle",
   "downloadLyricsRetry": "Try again",
   "downloadSubtitleUse": "Use this subtitle",
   "downloadSubtitleInUse": "Currently selected",

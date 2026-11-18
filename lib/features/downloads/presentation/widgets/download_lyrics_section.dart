@@ -113,6 +113,20 @@ class DownloadLyricsSectionState extends State<DownloadLyricsSection> {
           Text(l10n.downloadSubtitleLanguage, style: text.labelSmall),
           const SizedBox(height: AppSpacing.xs),
           _languageTable(context, sub),
+          // 고른 자막을 취소한다 (적용한 가사도 함께 지운다).
+          if (_lyricsLanguage != null)
+            Align(
+              alignment: Alignment.centerRight,
+              child: PlainButton(
+                key: const ValueKey('download-subtitle-deselect'),
+                label: l10n.downloadSubtitleDeselect,
+                onPressed: () => setState(() {
+                  _lyricsLanguage = null;
+                  _custom = null;
+                  _edited.clear();
+                }),
+              ),
+            ),
         ],
         if (on) ...[
           const SizedBox(height: AppSpacing.sm),

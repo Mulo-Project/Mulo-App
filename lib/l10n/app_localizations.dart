@@ -2960,6 +2960,12 @@ abstract class AppLocalizations {
   /// **'가사에 적용'**
   String get downloadSubtitleApplied;
 
+  /// No description provided for @downloadSubtitleDeselect.
+  ///
+  /// In ko, this message translates to:
+  /// **'자막 선택 해제'**
+  String get downloadSubtitleDeselect;
+
   /// No description provided for @downloadLyricsRetry.
   ///
   /// In ko, this message translates to:
