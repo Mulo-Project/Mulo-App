@@ -494,6 +494,8 @@ class PreviewCubit extends Cubit<PreviewState> {
       return;
     }
     if (state.status == PreviewStatus.playing && state.hitId == snap.hit.id) {
+      // 끊겨서 멈춘 곡은 사용자가 다시 재생을 누를 때까지 멈춘 상태로 둔다 (엔진 상태가 어떻든 화면이 "재생 중"으로 돌아가지 않게).
+      if (_interrupted != null) return;
       if (state.paused != snap.paused) {
         emit(
           PreviewState(

@@ -181,6 +181,8 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
                 pending = null
                 waiting.error("failed", message, null)
             } else if (started) {
+                // 끊겨서 못 이었다: 네이티브도 멈춘 상태로 맞춘다 (재생 중으로 남으면 앱이 상태를 읽을 때 "재생 중"으로 되돌려 버린다).
+                player?.pause()
                 channel.invokeMethod("failure", message)
             }
         }
