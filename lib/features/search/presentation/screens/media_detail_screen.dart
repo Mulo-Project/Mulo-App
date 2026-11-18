@@ -838,6 +838,18 @@ class _PreviewVideoBox extends StatelessWidget {
             online: true,
           ),
         ),
+        // 미리 듣기를 준비하거나 영상 첫 화면을 기다리는 동안 "불러오는 중"을 보여 준다.
+        BlocBuilder<VideoSurfaceCubit, VideoSurfaceState>(
+          buildWhen: (a, b) => a.ready != b.ready,
+          builder: (context, surface) {
+            final preparing = context.select(
+              (PreviewCubit c) => c.state.status == PreviewStatus.loading,
+            );
+            return surface.ready && !preparing
+                ? const SizedBox.shrink()
+                : const IgnorePointer(child: Center(child: LoadingIndicator()));
+          },
+        ),
         const PreviewVideoControls(),
       ],
     );
