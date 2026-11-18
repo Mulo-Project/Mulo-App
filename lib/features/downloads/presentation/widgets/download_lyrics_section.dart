@@ -120,20 +120,6 @@ class DownloadLyricsSectionState extends State<DownloadLyricsSection>
           Text(l10n.downloadSubtitleLanguage, style: text.labelSmall),
           const SizedBox(height: AppSpacing.xs),
           _languageTable(context, sub),
-          // 고른 자막을 취소한다 (적용한 가사도 함께 지운다).
-          if (_lyricsLanguage != null)
-            Align(
-              alignment: Alignment.centerRight,
-              child: PlainButton(
-                key: const ValueKey('download-subtitle-deselect'),
-                label: l10n.downloadSubtitleDeselect,
-                onPressed: () => setState(() {
-                  _lyricsLanguage = null;
-                  _custom = null;
-                  _edited.clear();
-                }),
-              ),
-            ),
         ],
         if (on) ...[
           const SizedBox(height: AppSpacing.sm),
@@ -246,6 +232,15 @@ class DownloadLyricsSectionState extends State<DownloadLyricsSection>
       songArtist: widget.songArtist(),
     );
     if (use == null || !mounted) return;
+    // 상세 화면에서 "적용 취소": 고른 자막과 적용한 가사를 함께 지운다.
+    if (use.cancel) {
+      setState(() {
+        _lyricsLanguage = null;
+        _custom = null;
+        _edited.clear();
+      });
+      return;
+    }
     // 이 자막의 가사를 "가사 설정"의 가사로 적용한다 (이미 직접 정한 가사가 있으면 덮어써도 되는지 먼저 묻는다).
     // 가사 설정 페이지를 다시 열면 이 가사가 들어 있어 이어서 고칠 수 있다.
     if (!await _confirmOverwriteCustom()) return;

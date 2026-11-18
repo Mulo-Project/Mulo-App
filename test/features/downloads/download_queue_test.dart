@@ -427,6 +427,42 @@ void main() {
     expect(queue.requests.single.lyricsText, '[00:01.00]hello world');
   });
 
+  testWidgets('받기 페이지: 적용한 자막을 다시 열면 버튼이 적용 취소가 되고, 누르면 적용이 풀린다', (tester) async {
+    final engine =
+        FakeDownloaderEngine(
+          info: const VideoInfo(
+            MediaHit(
+              id: 'abc',
+              title: 'Song',
+              url: 'https://youtu.be/abc',
+              subtitleLangs: ['en'],
+            ),
+          ),
+        )..subtitles = const SubtitleTrack(
+          language: 'en',
+          cues: [SubtitleCue(Duration(seconds: 1), 'hello world')],
+        );
+    await openLyricsPage(tester, engine);
+    await tester.tap(find.byKey(const ValueKey('download-import-lyrics')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('영어'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('영어'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('subtitle-detail-use')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('가사에 적용'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('영어'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('영어'));
+    await tester.pumpAndSettle();
+    expect(find.text('적용 취소'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('subtitle-detail-use')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('가사에 적용'), findsNothing);
+  });
+
   testWidgets('받기 페이지: 상세에서 파일로 가사를 불러오면 그 글이 받기 요청에 실린다', (tester) async {
     final engine =
         FakeDownloaderEngine(

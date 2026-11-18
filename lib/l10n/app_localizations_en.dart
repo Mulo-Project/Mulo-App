@@ -1614,7 +1614,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadSubtitleApplied => 'applied';
 
   @override
-  String get downloadSubtitleDeselect => 'Deselect subtitle';
+  String get downloadSubtitleCancel => 'Cancel applying';
 
   @override
   String get downloadLyricsRetry => 'Try again';

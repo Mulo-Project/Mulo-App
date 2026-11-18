@@ -1577,7 +1577,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadSubtitleApplied => '가사에 적용';
 
   @override
-  String get downloadSubtitleDeselect => '자막 선택 해제';
+  String get downloadSubtitleCancel => '적용 취소';
 
   @override
   String get downloadLyricsRetry => '다시 불러오기';

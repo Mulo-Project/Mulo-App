@@ -15,9 +15,13 @@ import '../bloc/subtitle_preview_cubit.dart';
 /// [text]는 그 자막의 가사(.lrc 글)로, 페이지에서 글을 고쳤다면 고친 글이다.
 /// 받기 창이 이 글을 "가사 설정"의 가사로 적용한다.
 class SubtitleChoice {
-  const SubtitleChoice(this.text);
+  const SubtitleChoice(this.text) : cancel = false;
+
+  /// 이미 적용한 자막을 취소한다.
+  const SubtitleChoice.cancel() : text = '', cancel = true;
 
   final String text;
+  final bool cancel;
 }
 
 /// 자막 한 벌의 전체 가사를 받기 전에 훑어보고 글을 고치는 페이지를 연다.
@@ -98,15 +102,28 @@ class _SubtitleDetailScreenState extends State<SubtitleDetailScreen> {
   String? _base;
   var _synced = false;
 
+  /// 이미 적용돼 있는 가사 (적용한 자막을 다시 열었을 때). 이것과 같으면 "적용 취소"를 보인다.
+  String? _applied;
+
   @override
   void initState() {
     super.initState();
     final edited = widget.edited;
-    if (edited != null) _fill(edited);
+    if (edited != null) {
+      _fill(edited);
+      if (widget.selected) _applied = _text.compose();
+    }
+    // 글을 고치면 "적용 취소"가 "이 자막 사용"으로 바뀌어야 하므로 다시 그린다.
+    _text.addListener(_onEdit);
+  }
+
+  void _onEdit() {
+    if (widget.selected && mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    _text.removeListener(_onEdit);
     _text.dispose();
     super.dispose();
   }
@@ -173,6 +190,9 @@ class _SubtitleDetailScreenState extends State<SubtitleDetailScreen> {
         } else if (_base == null) {
           body = LoadingState(label: l10n.downloadLyricsPreviewLoading);
         }
+        // 이미 적용한 자막이고 글을 안 고쳤으면 버튼이 "적용 취소"가 된다.
+        final cancelApplied =
+            widget.selected && _applied != null && _text.compose() == _applied;
         return LyricsEditScaffold(
           title: widget.title,
           subtitle: widget.kind,
@@ -193,12 +213,17 @@ class _SubtitleDetailScreenState extends State<SubtitleDetailScreen> {
           ),
           body: body,
           primaryKey: const ValueKey('subtitle-detail-use'),
-          primaryLabel: l10n.downloadSubtitleUse,
+          primaryLabel: cancelApplied
+              ? l10n.downloadSubtitleCancel
+              : l10n.downloadSubtitleUse,
           // 자막(또는 불러온 글)이 아직 없으면 고를 수 없다 (불러오는 중 · 못 읽음).
           onPrimary: _base == null
               ? null
-              : () =>
-                    Navigator.of(context).pop(SubtitleChoice(_text.compose())),
+              : () => Navigator.of(context).pop(
+                  cancelApplied
+                      ? const SubtitleChoice.cancel()
+                      : SubtitleChoice(_text.compose()),
+                ),
           leadingIcon: AppIcons.back,
         );
       },
