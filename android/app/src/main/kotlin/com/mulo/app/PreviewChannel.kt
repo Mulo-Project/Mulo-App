@@ -224,7 +224,12 @@ class PreviewChannel(private val context: Context, messenger: BinaryMessenger) :
                 }
                 "setRepeat" -> { repeat = call.arguments as? Boolean ?: false; result.success(null) }
                 "pause" -> { player?.pause(); result.success(null) }
-                "resume" -> { player?.play(); result.success(null) }
+                "resume" -> {
+                    // 오류 · 끝난 뒤처럼 준비가 풀린 상태면 다시 준비한 뒤 튼다 (그냥 play만 하면 소리가 안 난다).
+                    player?.let { if (it.playbackState == Player.STATE_IDLE && it.mediaItemCount > 0) it.prepare() }
+                    player?.play()
+                    result.success(null)
+                }
                 "stop" -> { stop(); result.success(null) }
                 "remember" -> {
                     @Suppress("UNCHECKED_CAST")
