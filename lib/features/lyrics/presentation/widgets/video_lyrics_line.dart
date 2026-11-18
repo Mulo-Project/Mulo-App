@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
+import '../../domain/entities/lyrics.dart';
 import '../bloc/lyrics_cubit.dart';
 import '../bloc/lyrics_settings_cubit.dart';
 
@@ -40,8 +41,6 @@ class _VideoLyricsBodyState extends State<_VideoLyricsBody> {
 
   @override
   Widget build(BuildContext context) {
-    final p = context.palette;
-    final text = Theme.of(context).textTheme;
     return BlocListener<NowPlayingCubit, NowPlayingState>(
       // 곡이 바뀌면 새 곡의 가사를 불러온다.
       listenWhen: (a, b) => a.track?.id != b.track?.id,
@@ -53,53 +52,70 @@ class _VideoLyricsBodyState extends State<_VideoLyricsBody> {
             (NowPlayingCubit c) => c.state.position,
           );
           final state = context.watch<LyricsCubit>().state;
-          final lyrics = state.lyrics;
-          if (track == null ||
-              state.trackId != track.id ||
-              lyrics == null ||
-              !lyrics.isSynced) {
+          if (track == null || state.trackId != track.id) {
             return const SizedBox.shrink();
           }
-          final index = lyrics.currentLine(position);
-          if (index < 0) return const SizedBox.shrink();
-          // 같은 시간으로 묶인 줄은 한 덩어리로 보여 준다.
-          final (first, last) = lyrics.groupAt(index);
-          final line = [
-            for (var i = first; i <= last; i++) lyrics.lines[i].text,
-          ].where((t) => t.trim().isNotEmpty).join('\n');
-          if (line.isEmpty) return const SizedBox.shrink();
-          return IgnorePointer(
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: Padding(
-                // 아래 재생 막대(시간 · 진행선)와 겹치지 않게 띄운다.
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  0,
-                  AppSpacing.md,
-                  AppSpacing.xl + AppSpacing.md,
-                ),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: p.scrim.withValues(alpha: .55),
-                    borderRadius: BorderRadius.circular(AppRadii.sm),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                      vertical: AppSpacing.xs,
-                    ),
-                    child: Text(
-                      line,
-                      textAlign: TextAlign.center,
-                      style: text.titleSmall?.copyWith(color: AppPalette.white),
-                    ),
-                  ),
-                ),
+          return VideoLyricsText(lyrics: state.lyrics, position: position);
+        },
+      ),
+    );
+  }
+}
+
+/// [lyrics]의 [position] 줄을 영상 하단에 그린다. 싱크 가사가 아니거나 줄이 없으면 아무것도 안 그린다.
+class VideoLyricsText extends StatelessWidget {
+  const VideoLyricsText({
+    super.key,
+    required this.lyrics,
+    required this.position,
+  });
+
+  final Lyrics? lyrics;
+  final Duration position;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final text = Theme.of(context).textTheme;
+    final lyrics = this.lyrics;
+    if (lyrics == null || !lyrics.isSynced) return const SizedBox.shrink();
+    final index = lyrics.currentLine(position);
+    if (index < 0) return const SizedBox.shrink();
+    // 같은 시간으로 묶인 줄은 한 덩어리로 보여 준다.
+    final (first, last) = lyrics.groupAt(index);
+    final line = [
+      for (var i = first; i <= last; i++) lyrics.lines[i].text,
+    ].where((t) => t.trim().isNotEmpty).join('\n');
+    if (line.isEmpty) return const SizedBox.shrink();
+    return IgnorePointer(
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: Padding(
+          // 아래 재생 막대(시간 · 진행선)와 겹치지 않게 띄운다.
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            0,
+            AppSpacing.md,
+            AppSpacing.xl + AppSpacing.md,
+          ),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: p.scrim.withValues(alpha: .55),
+              borderRadius: BorderRadius.circular(AppRadii.sm),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: AppSpacing.xs,
+              ),
+              child: Text(
+                line,
+                textAlign: TextAlign.center,
+                style: text.titleSmall?.copyWith(color: AppPalette.white),
               ),
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
   }
