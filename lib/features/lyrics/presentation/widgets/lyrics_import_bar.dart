@@ -197,7 +197,7 @@ class _LyricsImportBarState extends State<LyricsImportBar> {
               AppSpacing.md,
               AppSpacing.xxs,
               AppSpacing.xs,
-              AppSpacing.md,
+              AppSpacing.sm,
             ),
             child: Row(
               children: [
@@ -264,7 +264,7 @@ class _LyricsImportBarState extends State<LyricsImportBar> {
                     AppSpacing.md,
                     0,
                     AppSpacing.md,
-                    AppSpacing.md,
+                    AppSpacing.sm,
                   ),
                   child: const AppDivider(),
                 ),
