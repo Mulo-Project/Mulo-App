@@ -479,6 +479,7 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
       }
       final ok = await _enqueue(
         _requestFor(hit, made.id),
+      );
       if (ok) queued++;
     }
     if (already.isNotEmpty) {
