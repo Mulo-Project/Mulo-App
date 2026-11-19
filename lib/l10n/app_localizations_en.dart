@@ -1897,6 +1897,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadPlaylistsPickTitle => 'Choose playlists';
 
   @override
+  String get playlistImportTrackSettings => 'Settings for this song';
+
+  @override
+  String get playlistImportTrackReset => 'Use common settings';
+
+  @override
+  String get playlistImportTrackCustom => 'Custom';
+
+  @override
+  String get playlistImportCommonTitle => 'Common download settings';
+
+  @override
+  String get playlistImportArtistFromChannel => 'Uploader channel if empty';
+
+  @override
+  String get downloadApply => 'Apply';
+
+  @override
+  String get playlistImportCommonDefault => 'Settings defaults';
+
+  @override
   String get downloadPlaylistsDone => 'Done';
 
   @override

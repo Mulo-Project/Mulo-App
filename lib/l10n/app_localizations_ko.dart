@@ -1851,6 +1851,27 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadPlaylistsPickTitle => '재생목록 선택';
 
   @override
+  String get playlistImportTrackSettings => '이 곡만 따로 설정';
+
+  @override
+  String get playlistImportTrackReset => '공통 설정으로';
+
+  @override
+  String get playlistImportTrackCustom => '따로 설정함';
+
+  @override
+  String get playlistImportCommonTitle => '공통 받기 설정';
+
+  @override
+  String get playlistImportArtistFromChannel => '비워 두면 올린 채널';
+
+  @override
+  String get downloadApply => '적용';
+
+  @override
+  String get playlistImportCommonDefault => '설정의 기본값';
+
+  @override
   String get downloadPlaylistsDone => '선택 완료';
 
   @override

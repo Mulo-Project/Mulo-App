@@ -3470,6 +3470,48 @@ abstract class AppLocalizations {
   /// **'재생목록 선택'**
   String get downloadPlaylistsPickTitle;
 
+  /// No description provided for @playlistImportTrackSettings.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 곡만 따로 설정'**
+  String get playlistImportTrackSettings;
+
+  /// No description provided for @playlistImportTrackReset.
+  ///
+  /// In ko, this message translates to:
+  /// **'공통 설정으로'**
+  String get playlistImportTrackReset;
+
+  /// No description provided for @playlistImportTrackCustom.
+  ///
+  /// In ko, this message translates to:
+  /// **'따로 설정함'**
+  String get playlistImportTrackCustom;
+
+  /// No description provided for @playlistImportCommonTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'공통 받기 설정'**
+  String get playlistImportCommonTitle;
+
+  /// No description provided for @playlistImportArtistFromChannel.
+  ///
+  /// In ko, this message translates to:
+  /// **'비워 두면 올린 채널'**
+  String get playlistImportArtistFromChannel;
+
+  /// No description provided for @downloadApply.
+  ///
+  /// In ko, this message translates to:
+  /// **'적용'**
+  String get downloadApply;
+
+  /// No description provided for @playlistImportCommonDefault.
+  ///
+  /// In ko, this message translates to:
+  /// **'설정의 기본값'**
+  String get playlistImportCommonDefault;
+
   /// No description provided for @downloadPlaylistsDone.
   ///
   /// In ko, this message translates to:

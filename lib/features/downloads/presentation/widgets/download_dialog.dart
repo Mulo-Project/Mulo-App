@@ -49,12 +49,103 @@ Future<bool> showDownloadDialog(
     );
     return false;
   }
+  final started = await _pushDownloadScreen<bool>(
+    context,
+    mode: DownloadScreenMode.enqueue,
+    title: title,
+    artist: artist,
+    album: album,
+    genre: genre,
+    duration: duration,
+    thumbnailUrl: thumbnailUrl,
+    url: url,
+    subtitleLangs: subtitleLangs,
+    autoSubtitleLangs: autoSubtitleLangs,
+    audioLanguage: audioLanguage,
+  );
+  return started ?? false;
+}
+
+/// 곡 받기 창을 "받지 않고 설정만 고르는" 모드로 연다 (재생목록 가져오기의 곡별 설정).
+/// [preset]이 있으면 그 값으로 채워 열고([canReset]이면 "공통 설정으로" 버튼도 보인다), 적용하면 설정을 담은 요청을, 공통 설정으로 되돌리면
+/// [DownloadSettingsReset]을, 닫으면 null을 돌려준다.
+Future<Object?> showTrackDownloadSettings(
+  BuildContext context, {
+  required String title,
+  String artist = '',
+  String album = '',
+  String genre = '',
+  Duration? duration,
+  String? thumbnailUrl,
+  required String url,
+  List<String>? subtitleLangs,
+  List<String> autoSubtitleLangs = const [],
+  DownloadRequest? preset,
+  bool canReset = false,
+}) => _pushDownloadScreen<Object>(
+  context,
+  canReset: canReset,
+  mode: DownloadScreenMode.collectTrack,
+  title: title,
+  artist: artist,
+  album: album,
+  genre: genre,
+  duration: duration,
+  thumbnailUrl: thumbnailUrl,
+  url: url,
+  subtitleLangs: subtitleLangs,
+  autoSubtitleLangs: autoSubtitleLangs,
+  preset: preset,
+);
+
+/// 곡 받기 창을 "공통 설정" 모드로 연다: 곡 하나에 묶이는 칸(제목 · 이미지 · 앨범 · 재생목록 · 가사)은 숨기고,
+/// 아티스트 · 장르 · 색 · 저장 유형 · 형식 · 폴더만 고른다. 적용하면 그 값을 담은 요청을 돌려준다.
+Future<DownloadRequest?> showCommonDownloadSettings(
+  BuildContext context, {
+  DownloadRequest? preset,
+}) async {
+  final result = await _pushDownloadScreen<Object>(
+    context,
+    mode: DownloadScreenMode.collectCommon,
+    title: '',
+    url: '',
+    preset: preset,
+  );
+  return result is DownloadRequest ? result : null;
+}
+
+/// [showTrackDownloadSettings]에서 "공통 설정으로"를 눌렀을 때 돌려주는 표시.
+class DownloadSettingsReset {
+  const DownloadSettingsReset();
+}
+
+/// 곡 받기 창이 하는 일: 대기열에 넣기, 곡 하나의 설정만 돌려주기, 여러 곡이 함께 쓸 공통 설정만 돌려주기.
+enum DownloadScreenMode { enqueue, collectTrack, collectCommon }
+
+Future<T?> _pushDownloadScreen<T extends Object>(
+  BuildContext context, {
+  required DownloadScreenMode mode,
+  required String title,
+  String artist = '',
+  String album = '',
+  String genre = '',
+  Duration? duration,
+  String? thumbnailUrl,
+  required String url,
+  List<String>? subtitleLangs,
+  List<String> autoSubtitleLangs = const [],
+  String? audioLanguage,
+  DownloadRequest? preset,
+  bool canReset = false,
+}) {
+  final queue = context.read<DownloadQueueCubit>();
   final playlists = context.read<PlaylistsCubit>();
   final settings = context.read<DownloadSettingsCubit>();
   final library = context.read<LibraryCubit>();
   final colors = context.read<CoverColorCubit>();
   final covers = context.read<CoverCubit>();
-  final started = await Navigator.of(context, rootNavigator: true).push<bool>(
+  final common = mode == DownloadScreenMode.collectCommon;
+  return Navigator.of(context, rootNavigator: true).push<T>(
     MaterialPageRoute(
       builder: (_) => MultiBlocProvider(
         providers: [
@@ -67,22 +158,30 @@ Future<bool> showDownloadDialog(
           BlocProvider(
             create: (_) {
               final cubit = sl<AudioLanguageCubit>();
-              if (downloadSourceKey(url).startsWith('youtube:')) {
+              if (!common && downloadSourceKey(url).startsWith('youtube:')) {
                 cubit.load(url, selected: audioLanguage);
               }
               return cubit;
             },
           ),
           BlocProvider(
-            create: (_) => sl<SubtitleAvailabilityCubit>()
-              ..load(
-                url,
-                known: subtitleLangs,
-                knownAutomatic: autoSubtitleLangs,
-              ),
+            create: (_) {
+              final cubit = sl<SubtitleAvailabilityCubit>();
+              if (!common) {
+                cubit.load(
+                  url,
+                  known: subtitleLangs,
+                  knownAutomatic: autoSubtitleLangs,
+                );
+              }
+              return cubit;
+            },
           ),
         ],
         child: DownloadScreen(
+          mode: mode,
+          preset: preset,
+          canReset: canReset,
           title: title,
           artist: artist,
           album: album,
@@ -95,7 +194,6 @@ Future<bool> showDownloadDialog(
       ),
     ),
   );
-  return started ?? false;
 }
 
 class DownloadScreen extends StatefulWidget {
@@ -109,7 +207,18 @@ class DownloadScreen extends StatefulWidget {
     this.duration,
     this.thumbnailUrl,
     this.subtitleLangs,
+    this.mode = DownloadScreenMode.enqueue,
+    this.preset,
+    this.canReset = false,
   });
+
+  final DownloadScreenMode mode;
+
+  /// 곡별 설정 모드에서 "공통 설정으로" 버튼을 보일지 (이미 따로 정한 곡일 때).
+  final bool canReset;
+
+  /// 이미 정해 둔 설정. 있으면 이 값으로 채워 연다 (곡별 · 공통 설정 모드).
+  final DownloadRequest? preset;
 
   /// 영상에 달린 자막 언어. null이면 아직 모른다 (유튜브면 "있으면" 가져오기로 묻는다).
   final List<String>? subtitleLangs;
@@ -189,6 +298,8 @@ class _DownloadScreenState extends State<DownloadScreen> {
   }
 
   var _asVideo = false;
+  bool get _common => widget.mode == DownloadScreenMode.collectCommon;
+  bool get _collect => widget.mode != DownloadScreenMode.enqueue;
   // 저장 유형을 바꾸면 폴더 칸도 그 유형의 폴더로 바뀐다 (음원은 음악 폴더, 영상은 `Movies/Mulo`).
   var _otherPath = defaultVideoFolder();
   var _videoFormat = VideoFormat.mp4;
@@ -207,6 +318,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
   void initState() {
     super.initState();
     _format = context.read<DownloadPreferencesCubit>().state.format;
+    _applyPreset();
     sl<IsVideoSaveAvailable>()(const NoParams()).then((ok) {
       if (mounted && ok) setState(() => _videoAvailable = true);
     });
@@ -230,6 +342,33 @@ class _DownloadScreenState extends State<DownloadScreen> {
           setState(() => _savePath.text = path);
         }
       });
+    }
+  }
+
+  /// [DownloadScreen.preset]의 값으로 형식 · 저장 유형 · 폴더 · 색 · 이미지 · 재생목록을 채운다.
+  void _applyPreset() {
+    final preset = widget.preset;
+    if (preset == null) return;
+    _format = preset.format ?? _format;
+    if (preset.color != null) {
+      _picked = Color(preset.color!);
+      _pickedSet = true;
+    }
+    if (!_common) {
+      _cover = preset.cover ?? _defaultCover;
+      _selected.addAll(preset.playlistIds);
+    }
+    if (preset.videoFormat != null) {
+      _asVideo = true;
+      _videoFormat = preset.videoFormat!;
+      _videoHeight = preset.videoHeight;
+      // 폴더 칸은 영상 폴더, 음원 폴더는 반대 칸([_otherPath])에 둔다.
+      _otherPath = _savePath.text;
+      _savePath.text = preset.savePath.isEmpty
+          ? defaultVideoFolder()
+          : preset.savePath;
+    } else if (preset.savePath.isNotEmpty) {
+      _savePath.text = preset.savePath;
     }
   }
 
@@ -291,7 +430,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
   Future<void> _start() async {
     final queue = context.read<DownloadQueueCubit>();
     // 같은 곡이 이미 대기열에 있으면 또 넣지 않는다.
-    if (queue.isInQueue(widget.url)) {
+    if (!_collect && queue.isInQueue(widget.url)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.l10n.downloadAlreadyInQueue)),
       );
@@ -310,8 +449,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
     if (_saveAsGenreDefault && genre.isNotEmpty && color != null) {
       await colors.setColor(CoverKey.genre(genre), color);
     }
-    final ok = await queue.enqueue(
-      DownloadRequest(
+    final request = DownloadRequest(
         title: _title.text,
         artist: _artist.text,
         album: _album.text.trim(),
@@ -344,8 +482,13 @@ class _DownloadScreenState extends State<DownloadScreen> {
             ? _videoFormat
             : null,
         videoHeight: _videoHeight,
-      ),
-    );
+      );
+    // 설정만 고르는 모드는 받지 않고 고른 값을 돌려준다.
+    if (_collect) {
+      if (mounted) Navigator.of(context).pop(request.normalized());
+      return;
+    }
+    final ok = await queue.enqueue(request);
     if (ok && mounted) Navigator.of(context).pop(true);
   }
 
@@ -364,7 +507,13 @@ class _DownloadScreenState extends State<DownloadScreen> {
         child: Column(
           children: [
             AppTopBar(
-              title: l10n.downloadDialogTitle,
+              title: switch (widget.mode) {
+                DownloadScreenMode.enqueue => l10n.downloadDialogTitle,
+                DownloadScreenMode.collectTrack =>
+                  l10n.playlistImportTrackSettings,
+                DownloadScreenMode.collectCommon =>
+                  l10n.playlistImportCommonTitle,
+              },
               leading: CircleIconButton(
                 icon: AppIcons.back,
                 tooltip: l10n.actionCancel,
@@ -384,29 +533,38 @@ class _DownloadScreenState extends State<DownloadScreen> {
                     first: true,
                     title: l10n.downloadSectionInfo,
                     children: [
-                      CoverEntry(
-                        image: _cover == null ? null : imageOfCoverArt(_cover!),
-                        label: l10n.downloadFieldCover,
-                        onTap: _changeCover,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      AppTextField(
-                        label: l10n.downloadFieldTitle,
-                        controller: _title,
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
+                      if (!_common) ...[
+                        CoverEntry(
+                          image: _cover == null
+                              ? null
+                              : imageOfCoverArt(_cover!),
+                          label: l10n.downloadFieldCover,
+                          onTap: _changeCover,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        AppTextField(
+                          label: l10n.downloadFieldTitle,
+                          controller: _title,
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                      ],
                       AppTextField(
                         label: l10n.downloadFieldArtist,
                         controller: _artist,
-                        hint: l10n.unknownArtist,
+                        // 공통 설정에서 비워 두면 곡마다 올린 채널 이름을 쓴다.
+                        hint: _common
+                            ? l10n.playlistImportArtistFromChannel
+                            : l10n.unknownArtist,
                       ),
                       const SizedBox(height: AppSpacing.sm),
-                      AppTextField(
-                        label: l10n.downloadFieldAlbum,
-                        controller: _album,
-                        hint: l10n.unknownAlbum,
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
+                      if (!_common) ...[
+                        AppTextField(
+                          label: l10n.downloadFieldAlbum,
+                          controller: _album,
+                          hint: l10n.unknownAlbum,
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                      ],
                       AppTextField(
                         label: l10n.downloadFieldGenre,
                         controller: _genre,
@@ -533,20 +691,22 @@ class _DownloadScreenState extends State<DownloadScreen> {
                           onChanged: (f) => setState(() => _format = f),
                         ),
                       ],
-                      const AudioLanguageRow(),
+                      if (!_common) const AudioLanguageRow(),
                     ],
-                    const SizedBox(height: AppSpacing.md),
-                    Text(
-                      l10n.downloadPlaylistsLabel.toUpperCase(),
-                      style: text.labelSmall,
-                    ),
-                    const SizedBox(height: AppSpacing.xxs),
-                    _PlaylistPickRow(
-                      summary: _selected.isEmpty
-                          ? l10n.downloadPlaylistsNone
-                          : l10n.downloadPlaylistsSelected(_selected.length),
-                      onTap: _pickPlaylists,
-                    ),
+                    if (!_common) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      Text(
+                        l10n.downloadPlaylistsLabel.toUpperCase(),
+                        style: text.labelSmall,
+                      ),
+                      const SizedBox(height: AppSpacing.xxs),
+                      _PlaylistPickRow(
+                        summary: _selected.isEmpty
+                            ? l10n.downloadPlaylistsNone
+                            : l10n.downloadPlaylistsSelected(_selected.length),
+                        onTap: _pickPlaylists,
+                      ),
+                    ],
                   ]),
                   if (_isYoutube)
                     _section(context, l10n.downloadSectionLyrics, [
@@ -576,15 +736,32 @@ class _DownloadScreenState extends State<DownloadScreen> {
                       onPressed: () => Navigator.of(context).pop(false),
                     ),
                   ),
+                  if (widget.mode == DownloadScreenMode.collectTrack &&
+                      widget.canReset) ...[
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: PillButton(
+                        label: l10n.playlistImportTrackReset,
+                        variant: PillVariant.tonal,
+                        onPressed: () => Navigator.of(
+                          context,
+                        ).pop(const DownloadSettingsReset()),
+                      ),
+                    ),
+                  ],
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     flex: 2,
                     child: ListenableBuilder(
                       listenable: _title,
                       builder: (_, _) => PillButton(
-                        label: l10n.actionDownload,
-                        icon: AppIcons.download,
-                        onPressed: _title.text.trim().isEmpty ? null : _start,
+                        label: _collect
+                            ? l10n.downloadApply
+                            : l10n.actionDownload,
+                        icon: _collect ? null : AppIcons.download,
+                        onPressed: !_common && _title.text.trim().isEmpty
+                            ? null
+                            : _start,
                       ),
                     ),
                   ),
