@@ -18,6 +18,10 @@ import '../../../search/presentation/screens/media_detail_screen.dart'
     show showMediaDetail;
 import '../../../downloads/presentation/bloc/download_settings_cubit.dart';
 import '../../../downloads/presentation/widgets/save_folder_sheet.dart';
+import '../../../downloads/domain/entities/download_options.dart';
+import '../../../downloads/domain/usecases/download_usecases.dart';
+import '../../../downloads/presentation/bloc/download_preferences_cubit.dart';
+import '../../../../core/usecase/usecase.dart';
 import '../bloc/playlist_import_cubit.dart';
 
 /// 유튜브 재생목록 가져오기 (상세 기능: 유튜브 재생목록 가져오기 #22).
@@ -40,12 +44,24 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
   /// 이번에 받을 폴더. 처음에는 설정의 저장 위치(고정 → 마지막에 받은 폴더 → 앱 기본 폴더).
   final _folder = ValueNotifier<String>('');
 
+  /// 이번에 받을 음원 형식과 고를 수 있는 형식들 (기기 정책이 허용한 것만). 처음에는 설정의 기본 형식.
+  final _format = ValueNotifier<AudioFormat?>(null);
+  final _formats = ValueNotifier<List<AudioFormat>>(const []);
+
   @override
   void initState() {
     super.initState();
     _cubit.warmUp();
     context.read<DownloadSettingsCubit>().effectivePath().then((path) {
       if (mounted && _folder.value.isEmpty) _folder.value = path;
+    });
+    _format.value = context.read<DownloadPreferencesCubit>().state.format;
+    sl<GetSelectableFormats>()(const NoParams()).then((formats) {
+      if (!mounted) return;
+      _formats.value = formats;
+      if (!formats.contains(_format.value) && formats.isNotEmpty) {
+        _format.value = formats.first;
+      }
     });
     if (widget.initialUrl.trim().isNotEmpty) _load();
   }
@@ -54,6 +70,8 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
   void dispose() {
     _controller.dispose();
     _folder.dispose();
+    _format.dispose();
+    _formats.dispose();
     _cubit.close();
     super.dispose();
   }
@@ -101,7 +119,13 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
     final messenger = ScaffoldMessenger.of(context);
     final router = GoRouter.of(context);
     setState(() => _starting = true);
-    final result = await _cubit.start(savePath: _folder.value);
+    // 설정의 기본 형식과 같으면 비워 두어, 나중에 기본 형식을 바꿔도 따라가게 한다.
+    final defaultFormat = context.read<DownloadPreferencesCubit>().state.format;
+    final format = _format.value;
+    final result = await _cubit.start(
+      savePath: _folder.value,
+      format: format == defaultFormat ? null : format,
+    );
     if (result == null) {
       if (mounted) setState(() => _starting = false);
       return;
@@ -211,6 +235,8 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
                         starting: _starting,
                         onStart: _start,
                         folder: _folder,
+                        format: _format,
+                        formats: _formats,
                         onPickFolder: _pickFolder,
                       ),
                     ],
@@ -554,12 +580,16 @@ class _Footer extends StatelessWidget {
     required this.starting,
     required this.onStart,
     required this.folder,
+    required this.format,
+    required this.formats,
     required this.onPickFolder,
   });
 
   final bool starting;
   final VoidCallback onStart;
   final ValueListenable<String> folder;
+  final ValueNotifier<AudioFormat?> format;
+  final ValueListenable<List<AudioFormat>> formats;
   final VoidCallback onPickFolder;
 
   @override
@@ -581,6 +611,31 @@ class _Footer extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // 받을 형식: 고를 수 있는 형식이 둘 이상일 때만 (곡 받기 창과 같다).
+          ValueListenableBuilder<List<AudioFormat>>(
+            valueListenable: formats,
+            builder: (context, list, _) => ValueListenableBuilder<AudioFormat?>(
+              valueListenable: format,
+              builder: (context, current, _) {
+                if (list.length < 2 || current == null) {
+                  return const SizedBox.shrink();
+                }
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                  child: SegmentedPills<AudioFormat>(
+                    expand: true,
+                    values: list,
+                    selected: current,
+                    // opus는 변환 없이 받은 원본 그대로 (유튜브 원본 형식).
+                    labelOf: (f) => f == AudioFormat.opus
+                        ? l10n.downloadFormatOriginal('opus')
+                        : f.name,
+                    onChanged: (f) => format.value = f,
+                  ),
+                );
+              },
+            ),
+          ),
           // 받을 폴더: 누르면 곡 받기 창과 같은 폴더 고르기가 열린다.
           ValueListenableBuilder<String>(
             valueListenable: folder,

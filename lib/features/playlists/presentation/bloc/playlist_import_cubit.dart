@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../account/domain/entities/google_account.dart';
 import '../../../account/domain/usecases/account_usecases.dart';
 import '../../../../core/usecase/usecase.dart';
+import '../../../downloads/domain/entities/download_options.dart';
 import '../../../downloads/domain/entities/download_request.dart';
 import '../../../downloads/domain/usecases/download_usecases.dart';
 import '../../../search/domain/entities/engine_exception.dart';
@@ -406,7 +407,11 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
   /// 고른 곡을 받기 대기열에 넣고 재생목록을 만든다. 고른 곡이 없으면 null.
   /// 받는 곡은 받기가 끝나면 이 재생목록에 담긴다.
   /// [savePath]가 비어 있지 않으면 받는 곡 모두 그 폴더에 저장한다 (비면 설정의 저장 위치).
-  Future<PlaylistImportResult?> start({String savePath = ''}) async {
+  /// [format]이 null이면 설정의 기본 형식으로 받는다.
+  Future<PlaylistImportResult?> start({
+    String savePath = '',
+    AudioFormat? format,
+  }) async {
     final picked = state.selectedEntries;
     if (picked.isEmpty) return null;
     final made = await _create(state.title.isEmpty ? '?' : state.title);
@@ -428,6 +433,7 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
           artist: hit.uploader,
           playlistIds: {made.id},
           savePath: savePath,
+          format: format,
           duration: hit.duration,
           thumbnailUrl: hit.thumbnailUrl,
           url: hit.url,
