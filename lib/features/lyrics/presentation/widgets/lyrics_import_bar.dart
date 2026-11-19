@@ -197,7 +197,7 @@ class _LyricsImportBarState extends State<LyricsImportBar> {
               AppSpacing.md,
               AppSpacing.xxs,
               AppSpacing.xs,
-              0,
+              AppSpacing.sm,
             ),
             child: Row(
               children: [
@@ -260,8 +260,11 @@ class _LyricsImportBarState extends State<LyricsImportBar> {
                 ]),
                 // 머리와 글 사이의 가는 선.
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md,
+                    0,
+                    AppSpacing.md,
+                    AppSpacing.sm,
                   ),
                   child: const AppDivider(),
                 ),
