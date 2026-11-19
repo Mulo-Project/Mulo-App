@@ -405,7 +405,8 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
 
   /// 고른 곡을 받기 대기열에 넣고 재생목록을 만든다. 고른 곡이 없으면 null.
   /// 받는 곡은 받기가 끝나면 이 재생목록에 담긴다.
-  Future<PlaylistImportResult?> start() async {
+  /// [savePath]가 비어 있지 않으면 받는 곡 모두 그 폴더에 저장한다 (비면 설정의 저장 위치).
+  Future<PlaylistImportResult?> start({String savePath = ''}) async {
     final picked = state.selectedEntries;
     if (picked.isEmpty) return null;
     final made = await _create(state.title.isEmpty ? '?' : state.title);
@@ -426,6 +427,7 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
           title: hit.title,
           artist: hit.uploader,
           playlistIds: {made.id},
+          savePath: savePath,
           duration: hit.duration,
           thumbnailUrl: hit.thumbnailUrl,
           url: hit.url,

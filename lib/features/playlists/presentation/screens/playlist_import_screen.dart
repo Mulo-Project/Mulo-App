@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -15,6 +16,8 @@ import '../../../search/domain/entities/engine_exception.dart';
 import '../../../search/domain/entities/media_info.dart';
 import '../../../search/presentation/screens/media_detail_screen.dart'
     show showMediaDetail;
+import '../../../downloads/presentation/bloc/download_settings_cubit.dart';
+import '../../../downloads/presentation/widgets/save_folder_sheet.dart';
 import '../bloc/playlist_import_cubit.dart';
 
 /// 유튜브 재생목록 가져오기 (상세 기능: 유튜브 재생목록 가져오기 #22).
@@ -34,16 +37,23 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
   late final PlaylistImportCubit _cubit = sl<PlaylistImportCubit>();
   var _starting = false;
 
+  /// 이번에 받을 폴더. 처음에는 설정의 저장 위치(고정 → 마지막에 받은 폴더 → 앱 기본 폴더).
+  final _folder = ValueNotifier<String>('');
+
   @override
   void initState() {
     super.initState();
     _cubit.warmUp();
+    context.read<DownloadSettingsCubit>().effectivePath().then((path) {
+      if (mounted && _folder.value.isEmpty) _folder.value = path;
+    });
     if (widget.initialUrl.trim().isNotEmpty) _load();
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _folder.dispose();
     _cubit.close();
     super.dispose();
   }
@@ -74,6 +84,16 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
     await open();
   }
 
+  Future<void> _pickFolder() async {
+    final settings = context.read<DownloadSettingsCubit>();
+    final path = await showSaveFolderSheet(
+      context,
+      current: _folder.value,
+      pickOther: settings.pickFolder,
+    );
+    if (path != null && mounted) _folder.value = path;
+  }
+
   Future<void> _start() async {
     if (_starting) return;
     final l10n = context.l10n;
@@ -81,7 +101,7 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
     final messenger = ScaffoldMessenger.of(context);
     final router = GoRouter.of(context);
     setState(() => _starting = true);
-    final result = await _cubit.start();
+    final result = await _cubit.start(savePath: _folder.value);
     if (result == null) {
       if (mounted) setState(() => _starting = false);
       return;
@@ -187,7 +207,12 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
                           shortcuts: viewing ? null : _shortcuts(l10n),
                         ),
                       ),
-                      _Footer(starting: _starting, onStart: _start),
+                      _Footer(
+                        starting: _starting,
+                        onStart: _start,
+                        folder: _folder,
+                        onPickFolder: _pickFolder,
+                      ),
                     ],
                   ),
                 ),
@@ -525,10 +550,17 @@ class _Row extends StatelessWidget {
 }
 
 class _Footer extends StatelessWidget {
-  const _Footer({required this.starting, required this.onStart});
+  const _Footer({
+    required this.starting,
+    required this.onStart,
+    required this.folder,
+    required this.onPickFolder,
+  });
 
   final bool starting;
   final VoidCallback onStart;
+  final ValueListenable<String> folder;
+  final VoidCallback onPickFolder;
 
   @override
   Widget build(BuildContext context) {
@@ -545,13 +577,32 @@ class _Footer extends StatelessWidget {
         AppSpacing.md,
         AppSpacing.md,
       ),
-      child: SizedBox(
-        width: double.infinity,
-        child: PillButton(
-          label: l10n.playlistImportStart(count),
-          icon: AppIcons.download,
-          onPressed: count == 0 || starting ? null : onStart,
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 받을 폴더: 누르면 곡 받기 창과 같은 폴더 고르기가 열린다.
+          ValueListenableBuilder<String>(
+            valueListenable: folder,
+            builder: (context, path, _) => SettingRow(
+              key: const ValueKey('playlist-import-folder'),
+              title: l10n.settingsSavePath,
+              description: path,
+              trailing: Icon(
+                AppIcons.chevronRight,
+                size: AppSizes.iconSm,
+                color: context.palette.onSurfaceMuted,
+              ),
+              onTap: onPickFolder,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          PillButton(
+            label: l10n.playlistImportStart(count),
+            icon: AppIcons.download,
+            onPressed: count == 0 || starting ? null : onStart,
+          ),
+        ],
       ),
     );
   }
