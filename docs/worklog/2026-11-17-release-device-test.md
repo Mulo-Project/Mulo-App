@@ -20,6 +20,13 @@
 - 폴더 빼기: 곡을 200개씩 묶어 숨긴다 (곡마다 목록을 다시 읽던 것을 고침).
 - 폴더 더하기 취소: 찾은 곡을 끝날 때까지 "불러오는 중"(`hidden = 2`)으로 두었다가 한 번에 보이게 하고, 취소하면 흔적 없이 지운다 (D-169).
 
+### 이 PR에서 추가로 고친 것 (2026-11-19 기준)
+- 대기열: 여러 곡 일괄 제거, 곡 정보 수정이 대기열 · 알림에 반영, 셔플 한 바퀴에서 처음 곡이 고정되던 것 수정.
+- 미리 듣기: 즉시 로딩 표시, 네트워크 끊김 복구, 영상 로딩 표시. 알림 seek 제한.
+- 자막 · 가사: 자막 네이티브 우선 읽기, 자막 기본 선택 제거 + 상세 화면 "적용 취소", 영상 하단 가사 표시(로컬 · 미리 듣기), 받기 창 가사 선택 유지, 자막 상세로 이동할 때 끊김 완화(읽기 · 채우기를 화면이 열린 뒤로).
+- 받기: 새 재생목록 이름만 적고 완료해도 생성, 다운로드 알림 이어받기 버튼 갱신. 웹 이미지 검색 지역 고정.
+- 테스트 정비: 전체 통과(+657, skip 41).
+
 ## 확인
 섹션 1(release 전용)부터:
 - 빌드: `flutter build apk --release --flavor full --split-per-abi --dart-define-from-file=dart_defines.local.json`
@@ -27,5 +34,8 @@
 - 로그: `adb logcat -c` 뒤 `adb logcat -s MuloPlayback MuloNative MuloTag flutter AndroidRuntime`
 - 볼 것: 앱이 켜진다 · `ClassNotFoundException` / `NoSuchMethodError` / `NoSuchMethodException` / `JsonMappingException` / `FATAL EXCEPTION` 없음 · 검색 · 설정 탭이 열린다 · 받기 한 곡이 된다 · 알림 · 잠금화면 컨트롤이 뜬다.
 
+- 섹션 1~7(검색 · 미리 듣기 · 받기까지) 실기기 확인 완료 (2026-11-19).
+
 ## 남은 일 · 질문
 - 체크리스트 0번(debug 키 서명, 어댑티브 아이콘, 공유 메뉴 intent, network_security_config, Google 로그인 dart-define)은 시험하면서 필요한 것만 고친다.
+- 체크리스트 8번 이후 실기기 확인.
