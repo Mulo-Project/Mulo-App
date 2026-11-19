@@ -41,13 +41,8 @@ Future<SubtitleChoice?> showSubtitleDetail(
 }) => Navigator.of(context, rootNavigator: true).push<SubtitleChoice>(
   MaterialPageRoute(
     builder: (_) => BlocProvider(
-      create: (_) {
-        final cubit = sl<SubtitlePreviewCubit>();
-        if (edited == null) {
-          cubit.load(url, language: language, skipSounds: skipSounds);
-        }
-        return cubit;
-      },
+      // 자막은 화면이 다 열린 뒤에 읽기 시작한다 (화면이 넘어가는 동안 무거운 일을 하지 않는다).
+      create: (_) => sl<SubtitlePreviewCubit>(),
       child: SubtitleDetailScreen(
         url: url,
         language: language,
@@ -108,13 +103,51 @@ class _SubtitleDetailScreenState extends State<SubtitleDetailScreen> {
   @override
   void initState() {
     super.initState();
+    // 글을 고치면 "적용 취소"가 "이 자막 사용"으로 바뀌어야 하므로 다시 그린다.
+    _text.addListener(_onEdit);
+  }
+
+  Animation<double>? _route;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started || _route != null) return;
+    final animation = ModalRoute.of(context)?.animation;
+    if (animation == null || animation.isCompleted) {
+      _begin();
+    } else {
+      // 화면이 넘어가는 동안은 비워 두고, 다 열린 뒤에 글을 채우거나 자막을 읽는다 (넘어갈 때 끊기지 않게).
+      _route = animation..addStatusListener(_onRouteStatus);
+    }
+  }
+
+  void _onRouteStatus(AnimationStatus status) {
+    if (status != AnimationStatus.completed) return;
+    _route?.removeStatusListener(_onRouteStatus);
+    _route = null;
+    if (!mounted) return;
+    _begin();
+    setState(() {});
+  }
+
+  var _started = false;
+
+  /// 처음 한 번: 고쳐 둔 글이 있으면 채우고, 없으면 자막을 읽어 온다.
+  void _begin() {
+    if (_started) return;
+    _started = true;
     final edited = widget.edited;
     if (edited != null) {
       _fill(edited);
       if (widget.selected) _applied = _text.compose();
+    } else {
+      context.read<SubtitlePreviewCubit>().load(
+        widget.url,
+        language: widget.language,
+        skipSounds: widget.skipSounds,
+      );
     }
-    // 글을 고치면 "적용 취소"가 "이 자막 사용"으로 바뀌어야 하므로 다시 그린다.
-    _text.addListener(_onEdit);
   }
 
   void _onEdit() {
@@ -123,6 +156,7 @@ class _SubtitleDetailScreenState extends State<SubtitleDetailScreen> {
 
   @override
   void dispose() {
+    _route?.removeStatusListener(_onRouteStatus);
     _text.removeListener(_onEdit);
     _text.dispose();
     super.dispose();
