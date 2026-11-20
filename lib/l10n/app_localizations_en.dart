@@ -3371,12 +3371,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String selectDeleteBody(int count) {
-    return 'Delete the music files of $count selected songs from this device? They will also be removed from your library and playlists. This can't be undone.';
+    return 'Delete the music files of $count selected songs from this device? They will also be removed from your library and playlists. This can\'t be undone.';
   }
 
   @override
   String selectDeleteFailed(int count) {
-    return 'Couldn't delete $count songs. Check permissions and try again.';
+    return 'Couldn\'t delete $count songs. Check permissions and try again.';
   }
 
   @override
