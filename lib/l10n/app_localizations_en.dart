@@ -294,6 +294,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSubtitle => 'Preferences';
 
   @override
+  String get settingsSearchHint => 'Search settings';
+
+  @override
   String get settingsServer => 'Server';
 
   @override

@@ -292,6 +292,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsSubtitle => '앱 설정';
 
   @override
+  String get settingsSearchHint => '설정에서 찾기';
+
+  @override
   String get settingsServer => '서버';
 
   @override

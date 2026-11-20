@@ -644,6 +644,12 @@ abstract class AppLocalizations {
   /// **'앱 설정'**
   String get settingsSubtitle;
 
+  /// No description provided for @settingsSearchHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'설정에서 찾기'**
+  String get settingsSearchHint;
+
   /// No description provided for @settingsServer.
   ///
   /// In ko, this message translates to:

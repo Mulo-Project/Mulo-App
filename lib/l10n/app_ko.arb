@@ -112,6 +112,7 @@
   "playlistsNew": "새 재생목록",
   "playlistsImport": "유튜브 재생목록 가져오기",
   "settingsSubtitle": "앱 설정",
+  "settingsSearchHint": "설정에서 찾기",
   "settingsServer": "서버",
   "settingsConnection": "연결 상태",
   "settingsDisconnected": "연결 안 됨",

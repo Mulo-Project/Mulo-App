@@ -47,6 +47,7 @@ class _SettingsDownloadSectionState extends State<SettingsDownloadSection> {
     final prefs = context.watch<DownloadPreferencesCubit>().state;
     return SectionCard(
       title: l10n.settingsDownload,
+      initiallyExpanded: true,
       children: [
         SettingRow(
           title: l10n.settingsSavePath,

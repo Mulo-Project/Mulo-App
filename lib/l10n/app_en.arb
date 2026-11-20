@@ -91,6 +91,7 @@
   "playlistsNew": "New playlist",
   "playlistsImport": "Import YouTube playlist",
   "settingsSubtitle": "Preferences",
+  "settingsSearchHint": "Search settings",
   "settingsServer": "Server",
   "settingsConnection": "Connection",
   "settingsDisconnected": "Disconnected",
