@@ -38,10 +38,10 @@
 - 로그: `adb logcat -c` 뒤 `adb logcat -s MuloPlayback MuloNative MuloTag flutter AndroidRuntime`
 - 볼 것: 앱이 켜진다 · `ClassNotFoundException` / `NoSuchMethodError` / `NoSuchMethodException` / `JsonMappingException` / `FATAL EXCEPTION` 없음 · 검색 · 설정 탭이 열린다 · 받기 한 곡이 된다 · 알림 · 잠금화면 컨트롤이 뜬다.
 
-- 섹션 1~10(홈까지) 실기기 확인 완료 (2026-11-20).
+- 섹션 1~10, 12(이퀄라이저) 실기기 확인 완료 (2026-11-20). 11번(구독)은 보류.
 - 체크리스트 8번 "가사 LRU 캐시 동작"은 오프라인 대비가 아니라 속도용 메모리 캐시다 (한 번 읽은 곡의 가사를 DB · 파일 · 태그에서 다시 읽지 않는다. 가사 자체는 기기에 저장돼 있어 오프라인에서도 보인다).
 
 ## 남은 일 · 질문
 - 체크리스트 0번(debug 키 서명, 어댑티브 아이콘, 공유 메뉴 intent, network_security_config, Google 로그인 dart-define)은 시험하면서 필요한 것만 고친다.
 - 체크리스트 11번(구독): 구독 채널에 새 영상이 올라온 뒤 확인 (보류).
-- 체크리스트 12번 이후 실기기 확인.
+- 체크리스트 13번(설정) 이후 실기기 확인.
