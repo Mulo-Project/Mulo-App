@@ -99,6 +99,7 @@ MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부�
 | `AppTextField` | app_text_field.dart | 라벨이 위에 붙은 둥근 입력칸 (폼). 글자는 세로 가운데. `maxLines`를 주면 여러 줄 |
 | `SectionBlock` | section_card.dart | 긴 화면의 구역: 위 옅은 구분선 + 작은 제목(카드 면 없음). 영상 상세 · 받기 페이지 |
 | `SectionCard` · `SettingRow` | section_card.dart | 설정 묶음(제목 + 구분선, 카드 면 없음) · 한 줄 |
+| `ColorEntry` · `showColorPickerSheet` · `ColorBackdrop` | color_picker.dart | 색 칸(견본 + 값, 누르면 바텀 시트) · 채도·명도 영역 + 색상 막대 + HEX 입력 + 기본 견본 + 자동/적용 시트 · 고른 색을 화면 뒤 위쪽에 그라데이션으로 까는 배경 |
 | `SegmentedPills` · `StatusPill` | segmented_pills.dart | 하나 고르기 알약 묶음 · 상태 알약 |
 | `AppDropdown` | app_dropdown.dart | 알약 드롭다운 (정렬 기준 고르기). 선택값 · 목록 · 문구는 밖에서 받음 |
 | `AppFilterButton` | app_filter_button.dart | 정렬 줄에 `AppDropdown`과 나란히 놓는 알약 버튼 (같은 높이 44 · 같은 면). 보관함 · 검색 정렬은 둘 다 `AppDropdown` |

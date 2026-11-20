@@ -3428,12 +3428,6 @@ abstract class AppLocalizations {
   /// **'자동'**
   String get playlistColorAuto;
 
-  /// No description provided for @colorCustom.
-  ///
-  /// In ko, this message translates to:
-  /// **'색상 직접 고르기'**
-  String get colorCustom;
-
   /// No description provided for @colorOption.
   ///
   /// In ko, this message translates to:

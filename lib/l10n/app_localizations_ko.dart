@@ -1824,9 +1824,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playlistColorAuto => '자동';
 
   @override
-  String get colorCustom => '색상 직접 고르기';
-
-  @override
   String colorOption(int n) {
     return '색 $n';
   }

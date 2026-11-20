@@ -218,8 +218,11 @@ void main() {
     final fields = inSheet(find.byType(TextField));
     await tester.enterText(fields.at(3), '발라드');
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.bySemanticsLabel('색 3'));
+    await tester.ensureVisible(find.text('색'));
+    await tester.tap(find.text('색'));
+    await tester.pumpAndSettle();
     await tester.tap(find.bySemanticsLabel('색 3'));
+    await tester.tap(find.byKey(const ValueKey('color-apply')));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.textContaining('기본 색으로 저장'));
     await tester.tap(find.textContaining('기본 색으로 저장'));
@@ -228,7 +231,7 @@ void main() {
     await tester.tap(inSheet(find.text('받기')));
     await tester.pumpAndSettle();
 
-    final red = ColorPicker.presets[2].toARGB32();
+    final red = colorPresets[2].toARGB32();
     expect(queue.requests.single.color, red);
     expect(colors.saved['genre:발라드'], red);
   });

@@ -670,7 +670,6 @@
   "artistNotFound": "Artist not found",
   "playlistMenuColor": "Card color",
   "playlistColorAuto": "Auto",
-  "colorCustom": "Pick a custom hue",
   "colorOption": "Color {n}",
   "playlistSummaryEmpty": "Empty",
   "downloadColorSaveForGenre": "Save as the default color for '{genre}'",

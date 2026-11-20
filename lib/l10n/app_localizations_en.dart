@@ -1870,9 +1870,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistColorAuto => 'Auto';
 
   @override
-  String get colorCustom => 'Pick a custom hue';
-
-  @override
   String colorOption(int n) {
     return 'Color $n';
   }

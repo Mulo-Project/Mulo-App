@@ -175,11 +175,16 @@ void main() {
     await tester.tap(find.text('정보'));
     await tester.pumpAndSettle();
     expect(find.text('색'), findsOneWidget);
-    await tester.tap(find.bySemanticsLabel('색 7'));
+    await tester.tap(find.text('색'));
     await tester.pumpAndSettle();
-    expect(colors.saved['playlist:pl1'], ColorPicker.presets[6].toARGB32());
+    await tester.tap(find.bySemanticsLabel('색 7'));
+    await tester.tap(find.byKey(const ValueKey('color-apply')));
+    await tester.pumpAndSettle();
+    expect(colors.saved['playlist:pl1'], colorPresets[6].toARGB32());
 
-    await tester.tap(find.bySemanticsLabel('자동'));
+    await tester.tap(find.text('색'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('color-auto')));
     await tester.pumpAndSettle();
     expect(colors.saved.containsKey('playlist:pl1'), isFalse);
   });
@@ -298,12 +303,15 @@ void main() {
     await tester.tap(find.text('새 재생목록')); // ＋ 메뉴의 첫 항목
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(EditableText), '새 목록');
+    await tester.tap(find.text('색'));
+    await tester.pumpAndSettle();
     await tester.tap(find.bySemanticsLabel('색 10'));
-    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('color-apply')));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('만들기'));
     await tester.pumpAndSettle();
     expect(find.text('새 목록'), findsOneWidget);
-    expect(colors.saved['playlist:pl3'], ColorPicker.presets[9].toARGB32());
+    expect(colors.saved['playlist:pl3'], colorPresets[9].toARGB32());
   });
 
   testWidgets('새 재생목록을 만들 때 이미지를 고르면 커버로 저장된다', (tester) async {

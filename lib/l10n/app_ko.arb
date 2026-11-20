@@ -770,7 +770,6 @@
   "artistNotFound": "아티스트를 찾을 수 없어요",
   "playlistMenuColor": "카드 색",
   "playlistColorAuto": "자동",
-  "colorCustom": "색상 직접 고르기",
   "colorOption": "색 {n}",
   "playlistSummaryEmpty": "비어 있어요",
   "downloadColorSaveForGenre": "'{genre}' 장르의 기본 색으로 저장",

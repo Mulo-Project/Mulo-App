@@ -510,7 +510,11 @@ class _DownloadScreenState extends State<DownloadScreen> {
 
     return Scaffold(
       backgroundColor: p.background,
-      body: SafeArea(
+      body: ListenableBuilder(
+        listenable: _genre,
+        builder: (context, child) =>
+            ColorBackdrop(color: _color, child: child!),
+        child: SafeArea(
         child: Column(
           children: [
             AppTopBar(
@@ -578,43 +582,43 @@ class _DownloadScreenState extends State<DownloadScreen> {
                         controller: _genre,
                         label: l10n.downloadGenreExisting,
                       ),
+                      const SizedBox(height: AppSpacing.sm),
+                      ListenableBuilder(
+                        listenable: _genre,
+                        builder: (_, _) => Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ColorEntry(
+                              title: l10n.decorateColor,
+                              selected: _color,
+                              autoLabel: l10n.playlistColorAuto,
+                              applyLabel: l10n.downloadApply,
+                              optionLabel: l10n.colorOption,
+                              onChanged: (c) => setState(() {
+                                _picked = c;
+                                _pickedSet = true;
+                              }),
+                            ),
+                            if (_genre.text.trim().isNotEmpty && _color != null)
+                              SettingRow(
+                                title: l10n.downloadColorSaveForGenre(
+                                  _genre.text.trim(),
+                                ),
+                                trailing: AppSwitch(
+                                  value: _saveAsGenreDefault,
+                                  onChanged: (v) =>
+                                      setState(() => _saveAsGenreDefault = v),
+                                ),
+                                onTap: () => setState(
+                                  () => _saveAsGenreDefault =
+                                      !_saveAsGenreDefault,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
-                  _section(context, l10n.decorateColor, [
-                    ListenableBuilder(
-                      listenable: _genre,
-                      builder: (_, _) => Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ColorPicker(
-                            selected: _color,
-                            autoLabel: l10n.playlistColorAuto,
-                            customLabel: l10n.colorCustom,
-                            optionLabel: l10n.colorOption,
-                            onChanged: (c) => setState(() {
-                              _picked = c;
-                              _pickedSet = true;
-                            }),
-                          ),
-                          if (_genre.text.trim().isNotEmpty && _color != null)
-                            SettingRow(
-                              title: l10n.downloadColorSaveForGenre(
-                                _genre.text.trim(),
-                              ),
-                              trailing: AppSwitch(
-                                value: _saveAsGenreDefault,
-                                onChanged: (v) =>
-                                    setState(() => _saveAsGenreDefault = v),
-                              ),
-                              onTap: () => setState(
-                                () =>
-                                    _saveAsGenreDefault = !_saveAsGenreDefault,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ]),
                   _section(context, l10n.downloadSectionSave, [
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
@@ -774,6 +778,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
               ),
             ),
           ],
+        ),
         ),
       ),
     );
