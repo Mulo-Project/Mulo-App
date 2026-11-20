@@ -202,7 +202,7 @@ void main() {
     await tester.pumpAndSettle();
     await _pickFromDeviceAndApply(tester);
     expect(covers.saved['playlist:pl1'], CoverArt.file(path));
-    expect(find.bySemanticsLabel('색 1'), findsOneWidget);
+    expect(find.text('색'), findsOneWidget);
 
     // 줄을 다시 누르면 지금 이미지를 불러온 채 이미지 페이지가 열리고, 기본으로 되돌릴 때는 확인을 묻는다.
     await tester.tap(find.byType(CoverHero));
@@ -326,7 +326,7 @@ void main() {
     await tester.pumpAndSettle();
     await _pickFromDeviceAndApply(tester);
     // 이미지를 골라도 색 고르기는 그대로 있다 (이미지를 지웠을 때 쓰인다).
-    expect(find.bySemanticsLabel('색 1'), findsOneWidget);
+    expect(find.text('색'), findsOneWidget);
     await tester.tap(find.text('만들기'));
     await tester.pumpAndSettle();
     expect(covers.saved['playlist:pl3'], CoverArt.file(path));
