@@ -671,6 +671,8 @@
   "playlistMenuColor": "Card color",
   "playlistColorAuto": "Auto",
   "colorOption": "Color {n}",
+  "colorClear": "Clear color",
+  "colorFromCover": "From cover",
   "playlistSummaryEmpty": "Empty",
   "downloadColorSaveForGenre": "Save as the default color for '{genre}'",
   "downloadPlaylistsNone": "None",

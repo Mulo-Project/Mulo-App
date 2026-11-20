@@ -1875,6 +1875,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get colorClear => 'Clear color';
+
+  @override
+  String get colorFromCover => 'From cover';
+
+  @override
   String get playlistSummaryEmpty => 'Empty';
 
   @override

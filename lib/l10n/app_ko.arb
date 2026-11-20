@@ -771,6 +771,8 @@
   "playlistMenuColor": "카드 색",
   "playlistColorAuto": "자동",
   "colorOption": "색 {n}",
+  "colorClear": "색 지우기",
+  "colorFromCover": "커버에서 뽑은 색",
   "playlistSummaryEmpty": "비어 있어요",
   "downloadColorSaveForGenre": "'{genre}' 장르의 기본 색으로 저장",
   "downloadPlaylistsNone": "선택 안 함",

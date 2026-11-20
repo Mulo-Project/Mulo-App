@@ -592,6 +592,9 @@ class _DownloadScreenState extends State<DownloadScreen> {
                               title: l10n.decorateColor,
                               selected: _color,
                               autoLabel: l10n.playlistColorAuto,
+                              clearLabel: l10n.colorClear,
+                              coverLabel: l10n.colorFromCover,
+                              cover: _cover == null ? null : imageOfCoverArt(_cover!),
                               applyLabel: l10n.downloadApply,
                               optionLabel: l10n.colorOption,
                               onChanged: (c) => setState(() {

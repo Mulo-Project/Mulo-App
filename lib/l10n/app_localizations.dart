@@ -3434,6 +3434,18 @@ abstract class AppLocalizations {
   /// **'색 {n}'**
   String colorOption(int n);
 
+  /// No description provided for @colorClear.
+  ///
+  /// In ko, this message translates to:
+  /// **'색 지우기'**
+  String get colorClear;
+
+  /// No description provided for @colorFromCover.
+  ///
+  /// In ko, this message translates to:
+  /// **'커버에서 뽑은 색'**
+  String get colorFromCover;
+
   /// No description provided for @playlistSummaryEmpty.
   ///
   /// In ko, this message translates to:

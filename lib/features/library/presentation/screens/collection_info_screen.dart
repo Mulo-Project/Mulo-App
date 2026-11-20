@@ -205,6 +205,9 @@ class _CollectionInfoScreenState extends State<CollectionInfoScreen> {
                         title: l10n.decorateColor,
                         selected: color,
                         autoLabel: l10n.playlistColorAuto,
+                        clearLabel: l10n.colorClear,
+                        coverLabel: l10n.colorFromCover,
+                        cover: coverImageOf(context, key),
                         applyLabel: l10n.downloadApply,
                         optionLabel: l10n.colorOption,
                         onChanged: (c) => c == null

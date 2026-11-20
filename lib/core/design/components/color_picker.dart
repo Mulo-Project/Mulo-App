@@ -24,15 +24,29 @@ class ColorEntry extends StatelessWidget {
     required this.selected,
     required this.onChanged,
     required this.autoLabel,
+    required this.clearLabel,
     required this.applyLabel,
+    this.coverLabel,
+    this.cover,
     this.optionLabel,
   });
 
   final String title;
   final Color? selected;
   final ValueChanged<Color?> onChanged;
+
+  /// 색을 안 정했을 때 칸에 보이는 글 (예: "자동").
   final String autoLabel;
+
+  /// 시트의 "색 지우기" 버튼 글.
+  final String clearLabel;
   final String applyLabel;
+
+  /// [cover]에서 뽑은 색 후보 줄의 제목. [cover]가 없으면 후보 줄은 없다.
+  final String? coverLabel;
+
+  /// 이 항목의 커버 이미지. 있으면 시트에서 이 이미지의 색을 후보로 보여 준다.
+  final ImageProvider? cover;
 
   /// 견본의 접근성 라벨 (예: "색 3"). 없으면 번호만.
   final String Function(int index)? optionLabel;
@@ -72,8 +86,10 @@ class ColorEntry extends StatelessWidget {
           context,
           title: title,
           initial: color,
-          autoLabel: autoLabel,
+          clearLabel: clearLabel,
           applyLabel: applyLabel,
+          coverLabel: coverLabel,
+          cover: cover,
           optionLabel: optionLabel,
         );
         if (pick != null) onChanged(pick.color);
@@ -92,8 +108,10 @@ Future<ColorPick?> showColorPickerSheet(
   BuildContext context, {
   required String title,
   required Color? initial,
-  required String autoLabel,
+  required String clearLabel,
   required String applyLabel,
+  String? coverLabel,
+  ImageProvider? cover,
   String Function(int index)? optionLabel,
 }) => showAppSheet<ColorPick>(
   context,
@@ -102,8 +120,10 @@ Future<ColorPick?> showColorPickerSheet(
   builder: (sheet) => _ColorSheet(
     title: title,
     initial: initial,
-    autoLabel: autoLabel,
+    clearLabel: clearLabel,
     applyLabel: applyLabel,
+    coverLabel: coverLabel,
+    cover: cover,
     optionLabel: optionLabel,
   ),
 );
@@ -128,15 +148,19 @@ class _ColorSheet extends StatefulWidget {
   const _ColorSheet({
     required this.title,
     required this.initial,
-    required this.autoLabel,
+    required this.clearLabel,
     required this.applyLabel,
+    required this.coverLabel,
+    required this.cover,
     required this.optionLabel,
   });
 
   final String title;
   final Color? initial;
-  final String autoLabel;
+  final String clearLabel;
   final String applyLabel;
+  final String? coverLabel;
+  final ImageProvider? cover;
   final String Function(int index)? optionLabel;
 
   @override
@@ -148,6 +172,34 @@ class _ColorSheetState extends State<_ColorSheet> {
   late final _hex = TextEditingController(text: colorHex(_hsv.toColor()));
 
   Color get _color => _hsv.toColor();
+
+  /// 커버 이미지에서 뽑은 색 후보 (뽑는 중이거나 못 뽑으면 비어 있다).
+  List<Color> _fromCover = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _extractCover();
+  }
+
+  /// 분위기 따라가기와 같은 추출기(Material Color Utilities)로 커버의 주색을 뽑는다.
+  /// 큰 이미지는 줄여서 읽는다. 못 뽑으면 후보 줄을 보이지 않는다.
+  Future<void> _extractCover() async {
+    final cover = widget.cover;
+    if (cover == null) return;
+    try {
+      final scheme = await ColorScheme.fromImageProvider(
+        provider: ResizeImage(cover, width: 128),
+      );
+      final found = <Color>[];
+      for (final c in [scheme.primary, scheme.secondary]) {
+        if (!found.any((f) => f.toARGB32() == c.toARGB32())) found.add(c);
+      }
+      if (mounted) setState(() => _fromCover = found);
+    } catch (_) {
+      // 후보 없이 직접 고를 수 있다.
+    }
+  }
 
   @override
   void dispose() {
@@ -240,6 +292,24 @@ class _ColorSheetState extends State<_ColorSheet> {
                 ],
               ),
             ),
+            if (_fromCover.isNotEmpty && widget.coverLabel != null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                children: [
+                  Text(widget.coverLabel!, style: text.labelMedium),
+                  const SizedBox(width: AppSpacing.sm),
+                  for (final c in _fromCover) ...[
+                    _Swatch(
+                      label: widget.coverLabel!,
+                      color: c,
+                      selected: c.toARGB32() == color.toARGB32(),
+                      onTap: () => _set(HSVColor.fromColor(c)),
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                  ],
+                ],
+              ),
+            ],
             const SizedBox(height: AppSpacing.sm),
             _ValueBox(
               label: 'HEX',
@@ -303,11 +373,13 @@ class _ColorSheetState extends State<_ColorSheet> {
                 Expanded(
                   child: PillButton(
                     key: const ValueKey('color-auto'),
-                    label: widget.autoLabel,
-                    icon: AppIcons.refresh,
+                    label: widget.clearLabel,
+                    icon: AppIcons.close,
                     variant: PillVariant.tonal,
-                    onPressed: () =>
-                        Navigator.of(context).pop(const ColorPick(null)),
+                    // 정해 둔 색이 없으면 지울 것이 없다.
+                    onPressed: widget.initial == null
+                        ? null
+                        : () => Navigator.of(context).pop(const ColorPick(null)),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),

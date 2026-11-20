@@ -1829,6 +1829,12 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get colorClear => '색 지우기';
+
+  @override
+  String get colorFromCover => '커버에서 뽑은 색';
+
+  @override
   String get playlistSummaryEmpty => '비어 있어요';
 
   @override
