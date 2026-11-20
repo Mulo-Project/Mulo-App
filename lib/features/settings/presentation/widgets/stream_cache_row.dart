@@ -18,7 +18,14 @@ const streamCacheLimits = [
   500 * _mb,
   1024 * _mb,
   2048 * _mb,
+  streamCacheUnlimited,
 ];
+
+/// 한도 이름: 무제한이면 "무제한", 아니면 용량.
+String streamCacheLimitLabel(AppLocalizations l10n, int limit) =>
+    limit >= streamCacheUnlimited
+        ? l10n.settingsStreamCacheUnlimited
+        : formatBytes(limit);
 
 /// 스트리밍 임시 저장소: 사용량 · 용량 한도를 보여 주고, 누르면 한도를 고르거나 비우는 시트가 열린다.
 class StreamCacheRow extends StatelessWidget {
@@ -32,7 +39,7 @@ class StreamCacheRow extends StatelessWidget {
         title: l10n.settingsStreamCache,
         description: l10n.settingsStreamCacheDesc(
           formatBytes(info.usedBytes + info.savedBytes),
-          formatBytes(info.limitBytes),
+          streamCacheLimitLabel(l10n, info.limitBytes),
         ),
         trailing: const SettingsChevron(),
         onTap: () => _showSheet(context),
@@ -71,9 +78,13 @@ class _StreamCacheSheet extends StatelessWidget {
           children: [
             AppSheetTitle(
               l10n.settingsStreamCache,
-              subtitle: l10n.settingsStreamCacheLimitHint(
-                formatBytes(info.usedBytes + info.savedBytes),
-              ),
+              subtitle: info.unlimited
+                  ? l10n.settingsStreamCacheUnlimitedHint(
+                      formatBytes(info.usedBytes + info.savedBytes),
+                    )
+                  : l10n.settingsStreamCacheLimitHint(
+                      formatBytes(info.usedBytes + info.savedBytes),
+                    ),
             ),
             const SizedBox(height: AppSpacing.md),
             // 용량은 가로로 스크롤되는 선택 버튼 줄이다.
@@ -82,7 +93,7 @@ class _StreamCacheSheet extends StatelessWidget {
                 for (final limit in streamCacheLimits)
                   ChoiceChipItem(
                     key: ValueKey('stream-cache-limit-$limit'),
-                    label: formatBytes(limit),
+                    label: streamCacheLimitLabel(l10n, limit),
                     selected: info.limitBytes == limit,
                     onTap: () => cubit.setLimit(limit),
                   ),

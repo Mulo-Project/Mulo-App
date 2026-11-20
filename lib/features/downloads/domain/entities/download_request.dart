@@ -79,6 +79,29 @@ class DownloadRequest extends Equatable {
   /// 영상 화질 상한(세로 픽셀). [videoFormat]이 있을 때만 쓴다.
   final int videoHeight;
 
+  /// 담을 재생목록만 바꾼 사본.
+  DownloadRequest withPlaylistIds(Set<String> ids) => DownloadRequest(
+    title: title,
+    artist: artist,
+    album: album,
+    genre: genre,
+    playlistIds: ids,
+    format: format,
+    savePath: savePath,
+    duration: duration,
+    color: color,
+    thumbnailUrl: thumbnailUrl,
+    cover: cover,
+    url: url,
+    importLyrics: importLyrics,
+    lyricsLanguage: lyricsLanguage,
+    lyricsSkipSounds: lyricsSkipSounds,
+    lyricsText: lyricsText,
+    audioLanguage: audioLanguage,
+    videoFormat: videoFormat,
+    videoHeight: videoHeight,
+  );
+
   /// 문자열 앞뒤 공백을 지운 사본.
   DownloadRequest normalized() => DownloadRequest(
     title: title.trim(),

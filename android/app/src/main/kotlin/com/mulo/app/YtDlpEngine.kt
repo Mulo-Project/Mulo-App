@@ -180,6 +180,14 @@ class YtDlpEngine(
 
     /** 어떤 자막이 있는지 먼저 읽고, 고른 언어 한 벌만 받는다 (모든 언어를 받지 않으려고). 쓸 자막이 없으면 null. */
     fun subtitles(url: String, prefer: List<String>): Map<String, Any?>? {
+        // 유튜브면 네이티브가 먼저 읽는다 (파이썬을 띄우지 않아 빠르다). 못 읽으면 아래 yt-dlp로 넘어간다.
+        NativeVideoSaver.youtubeIdOf(url)?.let { id ->
+            try {
+                YoutubeResolver.subtitles(id, prefer)?.let { return it }
+            } catch (e: Exception) {
+                MuloLog.d(MuloLog.NATIVE, "네이티브 자막 실패: yt-dlp로 넘어감 ${e.message}")
+            }
+        }
         val j = decode(exec(listOf("--dump-single-json", "--no-playlist", "--no-warnings", "--skip-download", url)))
             ?: throw YtDlpException("failed", "bad response")
         val (language, automatic) = YtDlpParsers.pickSubtitleLanguage(

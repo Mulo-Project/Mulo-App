@@ -11,6 +11,8 @@ import '../../../../core/di/injector.dart';
 import '../../../../core/format/format_bytes.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../library/domain/entities/track.dart';
+import '../../../settings/presentation/widgets/stream_cache_row.dart'
+    show streamCacheLimitLabel;
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
 import '../../domain/entities/saved_video.dart';
 import '../../domain/entities/video_quality.dart';
@@ -361,7 +363,7 @@ class _StorageLine extends StatelessWidget {
           context.l10n.savedVideosStorage(
             formatBytes(info.savedBytes),
             formatBytes(info.usedBytes),
-            formatBytes(info.limitBytes),
+            streamCacheLimitLabel(context.l10n, info.limitBytes),
           ),
           style: Theme.of(context).textTheme.bodySmall
               ?.copyWith(color: context.palette.onSurfaceMuted),

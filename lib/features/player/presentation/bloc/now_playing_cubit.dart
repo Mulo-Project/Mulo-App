@@ -28,6 +28,7 @@ class NowPlayingState extends Equatable {
     this.sleepEndsAt,
     this.loopStart,
     this.loopEnd,
+    this.infoRevision = 0,
   });
 
   final List<Track> queue;
@@ -46,6 +47,10 @@ class NowPlayingState extends Equatable {
   /// 구간 반복의 시작 · 끝 (현재 곡 안). 시작만 있으면 끝을 정하는 중이고, 둘 다 있으면 그 구간만 반복한다.
   final Duration? loopStart;
   final Duration? loopEnd;
+
+  /// 대기열 곡의 정보(제목 등)가 바뀔 때마다 올라간다. 곡은 id만으로 같다고 보기 때문에,
+  /// 정보만 바뀐 상태도 새 상태로 알려지게 한다.
+  final int infoRevision;
 
   /// 구간 반복이 걸려 있는지 (시작과 끝이 모두 정해짐).
   bool get looping => loopStart != null && loopEnd != null;
@@ -68,6 +73,7 @@ class NowPlayingState extends Equatable {
     Object? sleepEndsAt = _keep,
     Object? loopStart = _keep,
     Object? loopEnd = _keep,
+    int? infoRevision,
   }) => NowPlayingState(
     queue: queue ?? this.queue,
     index: index ?? this.index,
@@ -85,6 +91,7 @@ class NowPlayingState extends Equatable {
         ? this.loopStart
         : loopStart as Duration?,
     loopEnd: identical(loopEnd, _keep) ? this.loopEnd : loopEnd as Duration?,
+    infoRevision: infoRevision ?? this.infoRevision,
   );
 
   @override
@@ -99,6 +106,7 @@ class NowPlayingState extends Equatable {
     sleepEndsAt,
     loopStart,
     loopEnd,
+    infoRevision,
   ];
 }
 
@@ -691,21 +699,122 @@ class NowPlayingCubit extends Cubit<NowPlayingState> {
     emit(state.copyWith(queue: [...state.queue, track]));
   }
 
+  /// 곡 여러 개를 지금 곡 바로 뒤에 주어진 순서대로 끼운다. 대기열이 비어 있으면 이 곡들을 바로 재생한다.
+  /// 이미 대기열에 있는 곡은 그 자리를 옮긴다 (지금 곡은 그대로).
+  void playAllNext(List<Track> tracks) {
+    final ok = [
+      for (final t in tracks)
+        if (playable(t)) t,
+    ];
+    if (ok.isEmpty) return;
+    if (state.queue.isEmpty) return playQueue(ok);
+    final current = state.track!;
+    final moving = [
+      for (final t in ok)
+        if (t != current) t,
+    ];
+    if (moving.isEmpty) return;
+    if (_audio != null) {
+      for (final t in moving) {
+        _tracks[t.id] = t;
+      }
+      _command((a) => a.playAllNext([for (final t in moving) _itemOf(t)]));
+      return;
+    }
+    final rest = [
+      for (final t in state.queue)
+        if (!moving.contains(t)) t,
+    ];
+    final at = rest.indexOf(current) + 1;
+    emit(
+      state.copyWith(
+        queue: [...rest.take(at), ...moving, ...rest.skip(at)],
+        index: at - 1,
+      ),
+    );
+  }
+
+  /// 곡 여러 개를 대기열 맨 뒤에 한 번에 붙인다. 대기열이 비어 있으면 이 곡들을 바로 재생한다.
+  /// 이미 대기열에 있는 곡은 건너뛴다.
+  void addAllToQueue(List<Track> tracks) {
+    final ok = [
+      for (final t in tracks)
+        if (playable(t)) t,
+    ];
+    if (ok.isEmpty) return;
+    if (state.queue.isEmpty) return playQueue(ok);
+    final fresh = [
+      for (final t in ok)
+        if (!state.queue.contains(t)) t,
+    ];
+    if (fresh.isEmpty) return;
+    if (_audio != null) {
+      for (final t in fresh) {
+        _tracks[t.id] = t;
+      }
+      _command((a) => a.addAllToQueue([for (final t in fresh) _itemOf(t)]));
+      return;
+    }
+    emit(state.copyWith(queue: [...state.queue, ...fresh]));
+  }
+
   /// 곡 정보가 바뀌었을 때 대기열의 같은 곡을 새 정보로 바꾼다.
   void updateTrack(Track track) {
     if (!state.queue.contains(track)) return;
     emit(
       state.copyWith(
         queue: [for (final t in state.queue) t == track ? track : t],
+        infoRevision: state.infoRevision + 1,
       ),
     );
+  }
+
+  /// 보관함의 곡 정보가 바뀌었으면 대기열의 같은 곡도 새 정보로 맞춘다 (어느 화면에서 고쳤든 같은 길).
+  void syncTracks(Iterable<Track> library) {
+    if (state.queue.isEmpty) return;
+    final byId = {for (final t in library) t.id: t};
+    var changed = false;
+    final queue = <Track>[];
+    for (final t in state.queue) {
+      final fresh = byId[t.id];
+      if (fresh != null &&
+          (fresh.title != t.title ||
+              fresh.artist != t.artist ||
+              fresh.album != t.album ||
+              fresh.genre != t.genre)) {
+        queue.add(fresh);
+        changed = true;
+      } else {
+        queue.add(t);
+      }
+    }
+    if (changed) {
+      emit(
+        state.copyWith(queue: queue, infoRevision: state.infoRevision + 1),
+      );
+    }
   }
 
   /// 보관함에서 사라진 곡들([ids])을 대기열에서 뺀다 (재생 중인 곡이면 다음 곡으로 넘어간다).
   void removeFromQueueByIds(Set<String> ids) {
     if (ids.isEmpty) return;
-    for (final t in [...state.queue]) {
-      if (ids.contains(t.id)) removeFromQueue(t);
+    final targets = [
+      for (final t in state.queue)
+        if (ids.contains(t.id)) t,
+    ];
+    if (targets.isEmpty) return;
+    if (_audio != null) {
+      // 네이티브에 한 번에 보낸다 (대기열 알림도 한 번). 대기열이 통째로 비는 경우만 마지막 곡을 따로 뺀다.
+      final all = targets.length == state.queue.length;
+      final batch = all ? targets.sublist(0, targets.length - 1) : targets;
+      if (batch.isNotEmpty) {
+        _command((a) => a.removeAllFromQueue([for (final t in batch) t.id]));
+      }
+      if (all) removeFromQueue(targets.last);
+      return;
+    }
+    for (final t in targets) {
+      removeFromQueue(t);
     }
   }
 

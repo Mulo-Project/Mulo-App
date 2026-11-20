@@ -105,7 +105,8 @@ void main() {
     final settings = MemoryDownloadSettings()
       ..formats = const [AudioFormat.opus, AudioFormat.mp3];
     await pump(tester, Routes.settings, settings: settings, height: 7000);
-    expect(find.text('opus'), findsOneWidget);
+    // opus는 "원본 그대로"로 보인다.
+    expect(find.text('원본 그대로'), findsOneWidget);
     expect(find.text('mp3'), findsOneWidget);
     expect(find.text('m4a'), findsNothing);
   });

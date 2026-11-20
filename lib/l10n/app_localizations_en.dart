@@ -294,6 +294,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSubtitle => 'Preferences';
 
   @override
+  String get settingsSearchHint => 'Search settings';
+
+  @override
   String get settingsServer => 'Server';
 
   @override
@@ -397,6 +400,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsFormat => 'Default format';
+
+  @override
+  String get settingsFormatOriginal => 'Original';
+
+  @override
+  String get settingsAudioFormat => 'Default sound format';
+
+  @override
+  String get settingsVideoFormat => 'Default video format';
+
+  @override
+  String get settingsVideoQuality => 'Default video quality';
+
+  @override
+  String downloadFormatOriginal(String format) {
+    return 'Original ($format)';
+  }
 
   @override
   String get settingsEngine => 'Download engine';
@@ -658,14 +678,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playerSleepTimerOff => 'Turn off timer';
 
   @override
-  String get settingsFormatOriginal => 'Original';
-
-  @override
-  String downloadFormatOriginal(String format) {
-    return 'Original ($format)';
-  }
-
-  @override
   String playerSleepTimerMinutes(int minutes) {
     return 'Stop in $minutes min';
   }
@@ -842,6 +854,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get videoRepeat => 'Repeat';
 
   @override
+  String get videoLyrics => 'Show lyrics';
+
+  @override
   String get videoQualityAuto => 'Auto';
 
   @override
@@ -850,6 +865,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String settingsStreamCacheLimitHint(String used) {
     return 'Saved tracks count too. When full, the oldest temporary cache is removed first. ($used used)';
+  }
+
+  @override
+  String get settingsStreamCacheUnlimited => 'Unlimited';
+
+  @override
+  String settingsStreamCacheUnlimitedHint(String used) {
+    return 'No limit: it keeps growing until you clear it. If the device runs low on space, the system clears temporary files first. ($used used)';
   }
 
   @override
@@ -881,7 +904,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String hiddenRecordsHint(int count) {
-    return '$count hidden songs from removed folders. Pick the ones to clear.';
+    return '$count hidden songs from removed folders. These records live only in the app, so clearing them keeps your music files.';
   }
 
   @override
@@ -1611,6 +1634,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get downloadSubtitleApplied => 'applied';
 
   @override
+  String get downloadSubtitleCancel => 'Cancel applying';
+
+  @override
   String get downloadLyricsRetry => 'Try again';
 
   @override
@@ -1864,12 +1890,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playlistColorAuto => 'Auto';
 
   @override
-  String get colorCustom => 'Pick a custom hue';
-
-  @override
   String colorOption(int n) {
     return 'Color $n';
   }
+
+  @override
+  String get colorClear => 'Clear color';
+
+  @override
+  String get colorFromCover => 'From cover';
 
   @override
   String get playlistSummaryEmpty => 'Empty';
@@ -1889,6 +1918,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get downloadPlaylistsPickTitle => 'Choose playlists';
+
+  @override
+  String get playlistImportTrackSettings => 'Settings for this song';
+
+  @override
+  String get playlistImportTrackReset => 'Use common settings';
+
+  @override
+  String get playlistImportTrackCustom => 'Custom';
+
+  @override
+  String get playlistImportCommonTitle => 'Common download settings';
+
+  @override
+  String get playlistImportArtistFromChannel => 'Uploader channel if empty';
+
+  @override
+  String get downloadApply => 'Apply';
+
+  @override
+  String get playlistImportCommonDefault => 'Settings defaults';
 
   @override
   String get downloadPlaylistsDone => 'Done';
@@ -2738,7 +2788,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Blocked. Tap to turn it on in system settings.';
 
   @override
-  String get permDeniedNotice => 'Permission not granted. Tap again to allow it.';
+  String get permDeniedNotice =>
+      'Permission not granted. Tap again to allow it.';
 
   @override
   String get permMediaBlockedNotice =>
@@ -3171,7 +3222,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get equalizerMyPresets => 'My presets';
 
   @override
-  String get equalizerMyPresetsHint => 'Long-press to delete';
+  String get equalizerMyPresetsHint =>
+      'Long-press for overwrite, rename or delete';
+
+  @override
+  String get equalizerPresetOverwrite => 'Overwrite with current values';
+
+  @override
+  String get equalizerPresetRename => 'Rename';
 
   @override
   String get equalizerPresetSaveNew => 'Save current';
@@ -3337,6 +3395,19 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String selectCount(int count) {
     return '$count selected';
+  }
+
+  @override
+  String get selectDelete => 'Delete';
+
+  @override
+  String selectDeleteBody(int count) {
+    return 'Delete the music files of $count selected songs from this device? They will also be removed from your library and playlists. This can\'t be undone.';
+  }
+
+  @override
+  String selectDeleteFailed(int count) {
+    return 'Couldn\'t delete $count songs. Check permissions and try again.';
   }
 
   @override

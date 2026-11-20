@@ -20,6 +20,14 @@ Future<void> _pumpApp(
   addTearDown(tester.platformDispatcher.clearLocalesTestValue);
   await tester.pumpWidget(MusicApp(initialLocation: at));
   await tester.pumpAndSettle();
+  // 잠금이 켜져 있으면 PIN을 푼 뒤에 [_openSecurity]로 펼친다.
+  if (at == Routes.settings && lock?.pin == null) await _openSecurity(tester);
+}
+
+/// 설정 묶음은 접혀 있어서, 보안 묶음을 펼친다.
+Future<void> _openSecurity(WidgetTester tester) async {
+  await tester.tap(find.text('보안'));
+  await tester.pumpAndSettle();
 }
 
 Future<void> _type(WidgetTester tester, String digits) async {
@@ -128,6 +136,7 @@ void main() {
     await _pumpApp(tester, lock: lock);
     await _type(tester, '1234');
     await _submit(tester);
+    await _openSecurity(tester);
 
     await tester.tap(find.text('PIN 바꾸기'));
     await tester.pumpAndSettle();
@@ -156,6 +165,7 @@ void main() {
     await _pumpApp(tester, lock: lock, biometric: bio);
     // 잠금 화면은 생체 인증으로 풀린다 (1회).
     expect(bio.calls, 1);
+    await _openSecurity(tester);
 
     // 바꾸기: 화면을 열면 생체 인증이 한 번 더 불려 새 PIN 단계로 넘어간다.
     await tester.tap(find.text('PIN 바꾸기'));
@@ -178,6 +188,7 @@ void main() {
     await _pumpApp(tester, lock: lock);
     await _type(tester, '1234');
     await _submit(tester);
+    await _openSecurity(tester);
 
     await tester.tap(find.byType(AppSwitch).first);
     await tester.pumpAndSettle();

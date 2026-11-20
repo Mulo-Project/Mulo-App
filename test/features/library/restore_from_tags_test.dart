@@ -46,6 +46,10 @@ class _Done implements TagRestoreStore {
   @override
   Future<void> markDone(Iterable<String> trackIds) async =>
       done.addAll(trackIds);
+
+  @override
+  Future<void> forget(Iterable<String> trackIds) async =>
+      done.removeAll(trackIds);
 }
 
 void main() {

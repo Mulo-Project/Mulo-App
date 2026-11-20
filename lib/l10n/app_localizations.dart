@@ -644,6 +644,12 @@ abstract class AppLocalizations {
   /// **'앱 설정'**
   String get settingsSubtitle;
 
+  /// No description provided for @settingsSearchHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'설정에서 찾기'**
+  String get settingsSearchHint;
+
   /// No description provided for @settingsServer.
   ///
   /// In ko, this message translates to:
@@ -823,6 +829,36 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'기본 포맷'**
   String get settingsFormat;
+
+  /// No description provided for @settingsFormatOriginal.
+  ///
+  /// In ko, this message translates to:
+  /// **'원본 그대로'**
+  String get settingsFormatOriginal;
+
+  /// No description provided for @settingsAudioFormat.
+  ///
+  /// In ko, this message translates to:
+  /// **'소리 기본 포맷'**
+  String get settingsAudioFormat;
+
+  /// No description provided for @settingsVideoFormat.
+  ///
+  /// In ko, this message translates to:
+  /// **'영상 기본 형식'**
+  String get settingsVideoFormat;
+
+  /// No description provided for @settingsVideoQuality.
+  ///
+  /// In ko, this message translates to:
+  /// **'영상 기본 화질'**
+  String get settingsVideoQuality;
+
+  /// No description provided for @downloadFormatOriginal.
+  ///
+  /// In ko, this message translates to:
+  /// **'원본 ({format})'**
+  String downloadFormatOriginal(String format);
 
   /// No description provided for @settingsEngine.
   ///
@@ -1286,18 +1322,6 @@ abstract class AppLocalizations {
   /// **'타이머 끄기'**
   String get playerSleepTimerOff;
 
-  /// No description provided for @settingsFormatOriginal.
-  ///
-  /// In ko, this message translates to:
-  /// **'원본 그대로'**
-  String get settingsFormatOriginal;
-
-  /// No description provided for @downloadFormatOriginal.
-  ///
-  /// In ko, this message translates to:
-  /// **'원본 ({format})'**
-  String downloadFormatOriginal(String format);
-
   /// No description provided for @playerSleepTimerMinutes.
   ///
   /// In ko, this message translates to:
@@ -1616,6 +1640,12 @@ abstract class AppLocalizations {
   /// **'반복 재생'**
   String get videoRepeat;
 
+  /// No description provided for @videoLyrics.
+  ///
+  /// In ko, this message translates to:
+  /// **'가사 표시'**
+  String get videoLyrics;
+
   /// No description provided for @videoQualityAuto.
   ///
   /// In ko, this message translates to:
@@ -1633,6 +1663,18 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'임시 저장한 음원도 함께 계산해요. 넘으면 오래된 임시 캐시부터 지워요. ({used} 사용 중)'**
   String settingsStreamCacheLimitHint(String used);
+
+  /// No description provided for @settingsStreamCacheUnlimited.
+  ///
+  /// In ko, this message translates to:
+  /// **'무제한'**
+  String get settingsStreamCacheUnlimited;
+
+  /// No description provided for @settingsStreamCacheUnlimitedHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'한도 없이 직접 비우기 전까지 계속 쌓여요. 기기 공간이 부족하면 시스템이 임시 파일부터 정리해요. ({used} 사용 중)'**
+  String settingsStreamCacheUnlimitedHint(String used);
 
   /// No description provided for @settingsStreamCacheCleared.
   ///
@@ -1679,7 +1721,7 @@ abstract class AppLocalizations {
   /// No description provided for @hiddenRecordsHint.
   ///
   /// In ko, this message translates to:
-  /// **'폴더를 빼서 숨겨 둔 {count}곡이에요. 기록을 지울 곡을 골라요.'**
+  /// **'폴더를 빼서 숨겨 둔 {count}곡이에요. 앱에만 저장된 기록이라 지워도 음원 파일은 그대로예요.'**
   String hiddenRecordsHint(int count);
 
   /// No description provided for @hiddenRecordsPlays.
@@ -2954,6 +2996,12 @@ abstract class AppLocalizations {
   /// **'가사에 적용'**
   String get downloadSubtitleApplied;
 
+  /// No description provided for @downloadSubtitleCancel.
+  ///
+  /// In ko, this message translates to:
+  /// **'적용 취소'**
+  String get downloadSubtitleCancel;
+
   /// No description provided for @downloadLyricsRetry.
   ///
   /// In ko, this message translates to:
@@ -3416,17 +3464,23 @@ abstract class AppLocalizations {
   /// **'자동'**
   String get playlistColorAuto;
 
-  /// No description provided for @colorCustom.
-  ///
-  /// In ko, this message translates to:
-  /// **'색상 직접 고르기'**
-  String get colorCustom;
-
   /// No description provided for @colorOption.
   ///
   /// In ko, this message translates to:
   /// **'색 {n}'**
   String colorOption(int n);
+
+  /// No description provided for @colorClear.
+  ///
+  /// In ko, this message translates to:
+  /// **'색 지우기'**
+  String get colorClear;
+
+  /// No description provided for @colorFromCover.
+  ///
+  /// In ko, this message translates to:
+  /// **'커버에서 뽑은 색'**
+  String get colorFromCover;
 
   /// No description provided for @playlistSummaryEmpty.
   ///
@@ -3457,6 +3511,48 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'재생목록 선택'**
   String get downloadPlaylistsPickTitle;
+
+  /// No description provided for @playlistImportTrackSettings.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 곡만 따로 설정'**
+  String get playlistImportTrackSettings;
+
+  /// No description provided for @playlistImportTrackReset.
+  ///
+  /// In ko, this message translates to:
+  /// **'공통 설정으로'**
+  String get playlistImportTrackReset;
+
+  /// No description provided for @playlistImportTrackCustom.
+  ///
+  /// In ko, this message translates to:
+  /// **'따로 설정함'**
+  String get playlistImportTrackCustom;
+
+  /// No description provided for @playlistImportCommonTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'공통 받기 설정'**
+  String get playlistImportCommonTitle;
+
+  /// No description provided for @playlistImportArtistFromChannel.
+  ///
+  /// In ko, this message translates to:
+  /// **'비워 두면 올린 채널'**
+  String get playlistImportArtistFromChannel;
+
+  /// No description provided for @downloadApply.
+  ///
+  /// In ko, this message translates to:
+  /// **'적용'**
+  String get downloadApply;
+
+  /// No description provided for @playlistImportCommonDefault.
+  ///
+  /// In ko, this message translates to:
+  /// **'설정의 기본값'**
+  String get playlistImportCommonDefault;
 
   /// No description provided for @downloadPlaylistsDone.
   ///
@@ -4988,12 +5084,6 @@ abstract class AppLocalizations {
   /// **'권한이 허용되지 않았어요. 다시 눌러 허용해 주세요.'**
   String get permDeniedNotice;
 
-  /// No description provided for @permBlockedNotice.
-  ///
-  /// In ko, this message translates to:
-  /// **'권한 요청이 막혔어요. 다시 누르면 휴대폰 설정이 열려요.'**
-  String get permBlockedNotice;
-
   /// No description provided for @permMediaBlockedNotice.
   ///
   /// In ko, this message translates to:
@@ -5005,6 +5095,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'설정 열기'**
   String get permOpenSettings;
+
+  /// No description provided for @permBlockedNotice.
+  ///
+  /// In ko, this message translates to:
+  /// **'권한 요청이 막혔어요. 다시 누르면 휴대폰 설정이 열려요.'**
+  String get permBlockedNotice;
 
   /// No description provided for @settingsNotifications.
   ///
@@ -5021,7 +5117,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsNotifyDownloadProgressDesc.
   ///
   /// In ko, this message translates to:
-  /// **'받는 동안 진행 상황을 알림창에 보여요.'**
+  /// **'받는 동안 진행 상황을 알림창에 보여요. 켜 두면 앱이 뒤로 가거나 닫혀도 받기를 이어 가요.'**
   String get settingsNotifyDownloadProgressDesc;
 
   /// No description provided for @settingsNotifyDownloadResult.
@@ -5735,8 +5831,20 @@ abstract class AppLocalizations {
   /// No description provided for @equalizerMyPresetsHint.
   ///
   /// In ko, this message translates to:
-  /// **'길게 누르면 지워요'**
+  /// **'길게 누르면 덮어쓰기 · 이름 바꾸기 · 지우기 메뉴가 열려요'**
   String get equalizerMyPresetsHint;
+
+  /// No description provided for @equalizerPresetOverwrite.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금 값으로 덮어쓰기'**
+  String get equalizerPresetOverwrite;
+
+  /// No description provided for @equalizerPresetRename.
+  ///
+  /// In ko, this message translates to:
+  /// **'이름 바꾸기'**
+  String get equalizerPresetRename;
 
   /// No description provided for @equalizerPresetSaveNew.
   ///
@@ -6049,6 +6157,24 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'{count}곡 선택'**
   String selectCount(int count);
+
+  /// No description provided for @selectDelete.
+  ///
+  /// In ko, this message translates to:
+  /// **'삭제'**
+  String get selectDelete;
+
+  /// No description provided for @selectDeleteBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'고른 {count}곡의 음악 파일을 기기에서 지울까요? 보관함과 재생목록에서도 빠지고, 되돌릴 수 없어요.'**
+  String selectDeleteBody(int count);
+
+  /// No description provided for @selectDeleteFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}곡은 지우지 못했어요. 권한을 확인한 뒤 다시 시도해 주세요.'**
+  String selectDeleteFailed(int count);
 
   /// No description provided for @selectClose.
   ///

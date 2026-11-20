@@ -35,7 +35,7 @@
 | 보관함 | 곡 · 앨범 · 아티스트 · 장르, 재생목록, 커버 꾸미기. **파일 태그가 원본** |
 | 홈 · 설정 | 청취 통계, 테마 · 다크 모드, 앱 잠금(PIN · 생체 인증) |
 
-**쓰는 기술 한 줄 요약**: 화면은 Flutter(flutter_bloc · get_it · drift), 재생 · 유튜브 주소 읽기 · 태그 쓰기는 Kotlin 네이티브, 받기와 변환은 자체 구현 + yt-dlp · ffmpeg(full 빌드).
+**쓰는 기술 한 줄 요약**: 화면은 Flutter(flutter_bloc · get_it), 재생 · 유튜브 주소 읽기 · 태그 쓰기는 Kotlin 네이티브, 받기와 변환은 자체 구현 + yt-dlp · ffmpeg(full 빌드).
 
 ---
 
@@ -48,7 +48,7 @@
 | 하는 일 | 쓰는 것 |
 |---|---|
 | 화면 · 상태 | Flutter, flutter_bloc(Cubit/Bloc), go_router, get_it |
-| 로컬 DB | drift(SQLite). 곡 · 커버 · 가사 · 재생 기록 · 재생목록 등 |
+| 로컬 DB | SQLite (Kotlin 네이티브가 관리). 곡 · 커버 · 가사 · 재생 기록 · 재생목록 등 |
 | 설정값 | shared_preferences (보안 값은 flutter_secure_storage) |
 | 재생 (Android) | Media3 ExoPlayer 1.7.1 + media3-session, HLS · DASH 지원. Kotlin `PlaybackHub` · `MuloPlaybackService` |
 | 재생 (그 밖의 OS) | just_audio 기반으로 같은 약속을 흉내 냄 (지금은 Android가 목표) |
@@ -156,7 +156,7 @@
 
 ## 11. 데이터 · 개인정보
 
-- 곡 · 재생 기록 · 재생목록은 모두 기기 안 DB(drift)에 있습니다. 서버로 보내지 않습니다 (서버 모드는 아직 없음).
+- 곡 · 재생 기록 · 재생목록은 모두 기기 안 DB(SQLite)에 있습니다. 서버로 보내지 않습니다 (서버 모드는 아직 없음).
 - 구글 로그인 정보는 기기의 보안 저장소(flutter_secure_storage)에만 저장되고, 읽기 범위는 `youtube.readonly`입니다.
 - 저장소에는 음원 파일 · 저작권 있는 곡 주소 · API 키 · 비밀값을 넣지 않습니다.
 
@@ -195,7 +195,6 @@ flutter run --dart-define-from-file=dart_defines.local.json
 flutter analyze
 flutter test
 flutter gen-l10n        # 문구(ARB) 수정 뒤
-dart run build_runner build -d   # DB 스키마 수정 뒤
 ```
 
 ## 구조
@@ -205,7 +204,7 @@ dart run build_runner build -d   # DB 스키마 수정 뒤
 ```
 lib/
   app/        앱 진입, 라우터(go_router), 탭 틀
-  core/       DI(get_it), 디자인 시스템, 로컬 DB(drift), 공통 유틸
+  core/       DI(get_it), 디자인 시스템, 로컬 DB 채널, 공통 유틸
   features/<기능>/
     domain/       entities · repositories · usecases (순수 Dart)
     data/         datasources · repositories
@@ -217,7 +216,7 @@ docs/         규칙 · 설계 결정 · 작업 기록
 
 - **Flutter는 화면만**: 재생 엔진 · 대기열 · 셔플 · 반복 · 영상 · 파일 태그 · 유튜브 주소 해석은 네이티브가 맡고, Dart는 명령을 보내고 결과를 비춥니다 ([docs/native-playback.md](docs/native-playback.md)).
 - 의존 방향은 presentation → domain ← data 이고 `test/architecture_test.dart`가 검사합니다.
-- 상태: flutter_bloc · 의존성: get_it · 로컬 DB: drift · 설정값: shared_preferences
+- 상태: flutter_bloc · 의존성: get_it · 로컬 DB: SQLite(네이티브) · 설정값: shared_preferences
 
 ## 문서
 

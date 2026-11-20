@@ -31,6 +31,8 @@ class PlaylistImportState extends Equatable {
     this.channel = '',
     this.accountFailure,
     this.accountDetail = '',
+    this.overrides = const {},
+    this.common,
   });
 
   final PlaylistImportStatus status;
@@ -70,6 +72,13 @@ class PlaylistImportState extends Equatable {
   /// 내 재생목록 읽기 실패의 자세한 까닭 (구글 응답 · 예외, 진단용).
   final String accountDetail;
 
+  /// 곡별로 따로 정한 받기 설정 (곡 id → 값). 없는 곡은 [common]을 따른다.
+  final Map<String, DownloadRequest> overrides;
+
+  /// 따로 정하지 않은 곡이 함께 쓰는 받기 설정 (아티스트 · 장르 · 색 · 저장 유형 · 형식 · 폴더).
+  /// 제목 · 이미지 같은 곡 정보는 쓰지 않는다. null이면 설정의 기본값.
+  final DownloadRequest? common;
+
   bool get allSelected =>
       entries.isNotEmpty && selected.length == entries.length;
 
@@ -79,7 +88,11 @@ class PlaylistImportState extends Equatable {
       if (selected.contains(e.id)) e,
   ];
 
-  PlaylistImportState copyWith({Set<String>? selected}) => PlaylistImportState(
+  PlaylistImportState copyWith({
+    Set<String>? selected,
+    Map<String, DownloadRequest>? overrides,
+    DownloadRequest? common,
+  }) => PlaylistImportState(
     status: status,
     title: title,
     thumbnailUrl: thumbnailUrl,
@@ -91,6 +104,8 @@ class PlaylistImportState extends Equatable {
     query: query,
     mine: mine,
     channel: channel,
+    overrides: overrides ?? this.overrides,
+    common: common ?? this.common,
   );
 
   @override
@@ -108,6 +123,8 @@ class PlaylistImportState extends Equatable {
     channel,
     accountFailure,
     accountDetail,
+    overrides,
+    common,
   ];
 }
 
@@ -396,6 +413,21 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
     emit(state.copyWith(selected: next));
   }
 
+  /// 공통 받기 설정을 바꾼다.
+  void setCommon(DownloadRequest value) =>
+      emit(state.copyWith(common: value));
+
+  /// [id] 곡만 따로 정한 설정. null이면 공통 설정으로 돌아간다.
+  void setOverride(String id, DownloadRequest? value) {
+    final next = {...state.overrides};
+    if (value == null) {
+      next.remove(id);
+    } else {
+      next[id] = value;
+    }
+    emit(state.copyWith(overrides: next));
+  }
+
   /// 모두 골랐으면 모두 해제하고, 아니면 모두 고른다.
   void toggleAll() => emit(
     state.copyWith(
@@ -403,8 +435,33 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
     ),
   );
 
+  DownloadRequest _requestFor(MediaHit hit, String playlistId) {
+    final own = state.overrides[hit.id];
+    if (own != null) {
+      return own.withPlaylistIds({...own.playlistIds, playlistId});
+    }
+    final c = state.common;
+    return DownloadRequest(
+      title: hit.title,
+      // 공통 아티스트를 비워 두면 곡마다 올린 채널 이름을 쓴다.
+      artist: (c?.artist ?? '').isNotEmpty ? c!.artist : hit.uploader,
+      album: c?.album ?? '',
+      genre: c?.genre ?? '',
+      color: c?.color,
+      playlistIds: {playlistId},
+      savePath: c?.savePath ?? '',
+      format: c?.format,
+      videoFormat: c?.videoFormat,
+      videoHeight: c?.videoHeight ?? 1080,
+      duration: hit.duration,
+      thumbnailUrl: hit.thumbnailUrl,
+      url: hit.url,
+    );
+  }
+
   /// 고른 곡을 받기 대기열에 넣고 재생목록을 만든다. 고른 곡이 없으면 null.
   /// 받는 곡은 받기가 끝나면 이 재생목록에 담긴다.
+  /// 곡별로 따로 정한 설정이 있으면 그것으로, 없으면 공통 설정([PlaylistImportState.common])으로 받는다.
   Future<PlaylistImportResult?> start() async {
     final picked = state.selectedEntries;
     if (picked.isEmpty) return null;
@@ -422,14 +479,7 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
         continue;
       }
       final ok = await _enqueue(
-        DownloadRequest(
-          title: hit.title,
-          artist: hit.uploader,
-          playlistIds: {made.id},
-          duration: hit.duration,
-          thumbnailUrl: hit.thumbnailUrl,
-          url: hit.url,
-        ),
+        _requestFor(hit, made.id),
       );
       if (ok) queued++;
     }

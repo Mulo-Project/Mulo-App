@@ -26,15 +26,15 @@
 
 ## 아키텍처
 - Flutter: **클린 아키텍처 + BLoC**(flutter_bloc), feature-first (D-019).
-  - 의존 방향: presentation → domain ← data. **domain은 순수 Dart** (Flutter · 플러그인 · drift import 금지, equatable만 허용).
+  - 의존 방향: presentation → domain ← data. **domain은 순수 Dart** (Flutter · 플러그인 import 금지, equatable만 허용).
   - domain: `entities/`(앱 모델 · 열거형), `repositories/`(인터페이스), `usecases/`(동작 하나 = 클래스 하나, `call()`, `core/usecase/usecase.dart`).
-  - data: `datasources/`(플러그인 · MethodChannel · 파일), `repositories/`(도메인 인터페이스 구현, drift 등).
+  - data: `datasources/`(플러그인 · MethodChannel · 파일), `repositories/`(도메인 인터페이스 구현).
   - presentation: `bloc/`(Cubit · Bloc, 유스케이스만 부른다), `screens/`, `widgets/`. data를 직접 가져오지 않는다.
   - 연결: get_it(`core/di/injector.dart`의 `sl`), 기능마다 `di.dart`의 `registerXxx(sl)`. 앱 전체 bloc은 `app/app.dart`의 MultiBlocProvider(MaterialApp 위).
   - 테스트는 `test/helpers/fakes.dart`의 `setUpTestDependencies()`로 리포지토리만 가짜로 바꾼다. `test/architecture_test.dart`가 의존 규칙을 검사한다.
 - 다운로드는 `DownloaderEngine` 인터페이스 → `ServerEngine`(서버 모드) / `YtDlpEngine`(로컬 모드, 네이티브 yt-dlp `music_app/ytdlp_engine`).
 - Android 빌드는 flavor `lite`(서버 모드만) / `full`(두 모드). 데스크톱은 빌드 하나에 설정으로 모드 선택.
-- 앱 로컬 DB는 drift(`lib/core/database/`, 스키마 바꾸면 `dart run build_runner build -d`), 설정값은 shared_preferences, 재생은 just_audio + audio_service. (Notion 기술 스택 기준)
+- 앱 로컬 DB(SQLite `music_app.sqlite`)는 **네이티브(Kotlin `MuloDb` · `LibraryDb`)가 쥔다** (D-168). 스키마 · 마이그레이션 · 읽기 쓰기 규칙은 Kotlin에 있고 Dart는 `lib/core/database/native_db.dart`로 채널 `music_app/db`를 부를 뿐이다(목록은 `music_app/db/changes` 알림으로 다시 읽는다). 스키마를 바꾸면 `MuloDb.VERSION`과 `upgrade`를 고친다. 설정값은 shared_preferences.
 - **형식(mp3 · opus · mp4 · webm 등)별 처리는 네이티브에만 둔다.** Dart는 형식을 모르는 값(제목 · 아티스트 · 가사 · 커버 PNG 등)과 파일 경로를 네이티브 호출 하나로 넘기고, 형식마다 다른 규칙(키 이름 · 커버 넣는 방식 · ffmpeg 인자)은 네이티브의 형식별 함수가 각자 가진다. Dart에 형식별 분기 · 클래스 · 확장자 목록을 새로 만들지 않는다. 형식 하나의 변경이 다른 형식에 새지 않게 함수를 나눈다.
 - Android 네이티브 기능(MediaStore 등)은 Kotlin + MethodChannel(`music_app/<이름>`), 채널 클래스는 `android/app/src/main/kotlin/.../`에 하나씩.
 - 테마는 디자인 시스템(`lib/core/design/`)의 테마 소스로만 바꾼다 ([design-system.md](docs/design-system.md)).
@@ -46,7 +46,7 @@ lib/
   core/
     di/           # get_it 등록 (injector.dart)
     usecase/      # 유스케이스 공통 규약
-    database/     # drift DB
+    database/     # 네이티브 DB 채널 (native_db.dart)
     design/       # 디자인 시스템: 토큰, 테마 소스, 공통 컴포넌트(유리)
     l10n/         # context.l10n
   features/<기능>/

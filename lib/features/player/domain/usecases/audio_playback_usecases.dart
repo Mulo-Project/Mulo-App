@@ -76,12 +76,42 @@ class AddAudioToQueue implements UseCase<PlaybackQueueChange?, PlaybackItem> {
   Future<PlaybackQueueChange?> call(PlaybackItem item) => _repo.addToQueue(item);
 }
 
+class PlayAllAudioNext
+    implements UseCase<PlaybackQueueChange?, List<PlaybackItem>> {
+  const PlayAllAudioNext(this._repo);
+  final AudioPlayerRepository _repo;
+
+  @override
+  Future<PlaybackQueueChange?> call(List<PlaybackItem> items) =>
+      _repo.playAllNext(items);
+}
+
+class AddAllAudioToQueue
+    implements UseCase<PlaybackQueueChange?, List<PlaybackItem>> {
+  const AddAllAudioToQueue(this._repo);
+  final AudioPlayerRepository _repo;
+
+  @override
+  Future<PlaybackQueueChange?> call(List<PlaybackItem> items) =>
+      _repo.addAllToQueue(items);
+}
+
 class RemoveAudioFromQueue implements UseCase<PlaybackQueueChange?, String> {
   const RemoveAudioFromQueue(this._repo);
   final AudioPlayerRepository _repo;
 
   @override
   Future<PlaybackQueueChange?> call(String id) => _repo.removeFromQueue(id);
+}
+
+class RemoveAllAudioFromQueue
+    implements UseCase<PlaybackQueueChange?, List<String>> {
+  const RemoveAllAudioFromQueue(this._repo);
+  final AudioPlayerRepository _repo;
+
+  @override
+  Future<PlaybackQueueChange?> call(List<String> ids) =>
+      _repo.removeAllFromQueue(ids);
 }
 
 /// 대기열 순서 옮기기: [from]번 곡을 [to] 자리로.
@@ -191,7 +221,10 @@ class AudioPlayback {
     required this.watchQueue,
     required this.playNext,
     required this.addToQueue,
+    required this.playAllNext,
+    required this.addAllToQueue,
     required this.removeFromQueue,
+    required this.removeAllFromQueue,
     required this.moveInQueue,
     required this.setShuffle,
     required this.setRepeat,
@@ -215,7 +248,10 @@ class AudioPlayback {
   final WatchAudioQueue watchQueue;
   final PlayAudioNext playNext;
   final AddAudioToQueue addToQueue;
+  final PlayAllAudioNext playAllNext;
+  final AddAllAudioToQueue addAllToQueue;
   final RemoveAudioFromQueue removeFromQueue;
+  final RemoveAllAudioFromQueue removeAllFromQueue;
   final MoveAudioInQueue moveInQueue;
   final SetAudioShuffle setShuffle;
   final SetAudioRepeat setRepeat;

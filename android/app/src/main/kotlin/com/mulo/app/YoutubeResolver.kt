@@ -350,6 +350,81 @@ object YoutubeResolver {
         throw IOException(errors.joinToString(" | ").ifEmpty { "곡 정보 없음" })
     }
 
+    /**
+     * 영상 자막을 yt-dlp 없이 읽는다: `player` 응답의 `captionTracks`에서 [prefer]에 맞는 언어를 골라 그 자막 주소를
+     * json3로 받아 줄(`ms` · `text`)로 바꾼다. 쓸 자막이 없거나 주소가 빈 응답이면(유튜브가 인증값을 요구하는 경우)
+     * null을 돌려주고, 부른 쪽이 yt-dlp로 넘어간다. 결과는 yt-dlp 경로와 같은 모양 (language · automatic · cues).
+     */
+    fun subtitles(videoId: String, prefer: List<String>): Map<String, Any?>? {
+        val start = System.currentTimeMillis()
+        var reason = "자막 없음"
+        for (client in listOf(androidVr, visionOs)) {
+            try {
+                val root = playerRoot(client, videoId)
+                val tracks = root.optJSONObject("captions")?.optJSONObject("playerCaptionsTracklistRenderer")
+                    ?.optJSONArray("captionTracks") ?: continue
+                val manual = ArrayList<String>()
+                val auto = ArrayList<String>()
+                for (i in 0 until tracks.length()) {
+                    val t = tracks.optJSONObject(i) ?: continue
+                    val lang = t.optString("languageCode").takeIf { it.isNotEmpty() } ?: continue
+                    if (t.optString("kind") == "asr") auto += lang else manual += lang
+                }
+                val (language, automatic) = YtDlpParsers.pickSubtitleLanguage(manual, auto, prefer) ?: continue
+                var baseUrl: String? = null
+                for (i in 0 until tracks.length()) {
+                    val t = tracks.optJSONObject(i) ?: continue
+                    if (t.optString("languageCode") == language && (t.optString("kind") == "asr") == automatic) {
+                        baseUrl = t.optString("baseUrl").takeIf { it.isNotEmpty() }
+                        break
+                    }
+                }
+                if (baseUrl == null) continue
+                val cues = fetchCaptionCues(client, baseUrl)
+                if (cues.isEmpty()) {
+                    reason = "${client.name}: 빈 자막 응답"
+                    continue
+                }
+                MuloLog.d(TAG, "주소 읽기 자막 ${System.currentTimeMillis() - start}ms 읽음 ${client.name} ${cues.size}줄")
+                return mapOf("language" to language, "automatic" to automatic, "cues" to cues)
+            } catch (e: Exception) {
+                reason = oneLine(e.message ?: e.toString())
+            }
+        }
+        MuloLog.d(TAG, "주소 읽기 자막 ${System.currentTimeMillis() - start}ms 없음 ($reason): yt-dlp로 넘어감")
+        return null
+    }
+
+    /** 자막 주소를 json3로 받아 줄로 바꾼다. 빈 응답 · 형식이 다르면 빈 목록. */
+    private fun fetchCaptionCues(client: Client, baseUrl: String): List<Map<String, Any?>> {
+        val url = if (baseUrl.contains("fmt=")) baseUrl.replace(Regex("fmt=[^&]*"), "fmt=json3") else "$baseUrl&fmt=json3"
+        val sess = session
+        val conn = URL(url).openConnection() as HttpURLConnection
+        try {
+            conn.connectTimeout = 5000
+            conn.readTimeout = 8000
+            conn.setRequestProperty("User-Agent", client.userAgent)
+            if (sess != null) conn.setRequestProperty("Cookie", sess.cookie)
+            if (conn.responseCode != 200) throw IOException("자막 HTTP ${conn.responseCode}")
+            val body = conn.inputStream.bufferedReader().use { it.readText() }
+            if (body.isBlank()) return emptyList()
+            val events = JSONObject(body).optJSONArray("events") ?: return emptyList()
+            val cues = ArrayList<Map<String, Any?>>()
+            for (i in 0 until events.length()) {
+                val e = events.optJSONObject(i) ?: continue
+                val segs = e.optJSONArray("segs") ?: continue
+                val text = StringBuilder()
+                for (j in 0 until segs.length()) text.append(segs.optJSONObject(j)?.optString("utf8") ?: "")
+                val line = text.toString().replace('\n', ' ').trim()
+                if (line.isEmpty()) continue
+                cues += mapOf("ms" to e.optLong("tStartMs"), "text" to line)
+            }
+            return cues
+        } finally {
+            conn.disconnect()
+        }
+    }
+
     private fun parse(array: JSONArray?, muxed: Boolean): List<YtFormat> {
         if (array == null) return emptyList()
         val out = mutableListOf<YtFormat>()

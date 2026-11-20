@@ -171,7 +171,7 @@ class _LyricsImportBarState extends State<LyricsImportBar> {
     final wanted = _top ?? (size.height - safeBottom - height - 96);
     final top = wanted.clamp(safeTop, maxTop);
 
-    // 머리: 끌어서 옮긴다. 제목 · 끼우기 · 숨기기.
+    // 머리: 위쪽 가운데 손잡이를 잡고 끌어 옮긴다. 아래 줄에 제목 · 끼우기 · 숨기기.
     Widget handle(List<Widget> actions) => GestureDetector(
       key: ValueKey('${widget.keyPrefix}-memo-handle'),
       behavior: HitTestBehavior.opaque,
@@ -179,25 +179,38 @@ class _LyricsImportBarState extends State<LyricsImportBar> {
         _top = (top + d.delta.dy).clamp(safeTop, maxTop);
         _entry?.markNeedsBuild();
       },
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.md,
-          AppSpacing.xxs,
-          AppSpacing.xxs,
-          0,
-        ),
-        child: Row(
-          children: [
-            Icon(
-              AppIcons.dragHandle,
-              size: AppSizes.iconSm,
-              color: p.onSurfaceMuted,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.xs),
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: p.onSurfaceMuted.withValues(alpha: .5),
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-            const SizedBox(width: AppSpacing.xs),
-            Expanded(child: Text(l10n.lyricsMemoTitle, style: text.titleSmall)),
-            ...actions,
-          ],
-        ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.xxs,
+              AppSpacing.xs,
+              AppSpacing.sm,
+            ),
+            child: Row(
+              children: [
+                Icon(AppIcons.edit, size: AppSizes.iconSm, color: p.accent),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  child: Text(l10n.lyricsMemoTitle, style: text.titleSmall),
+                ),
+                ...actions,
+              ],
+            ),
+          ),
+        ],
       ),
     );
 
@@ -206,87 +219,113 @@ class _LyricsImportBarState extends State<LyricsImportBar> {
       right: AppSpacing.md,
       top: top,
       height: height,
-      child: Material(
-        color: p.surfaceHigh,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
+      // 떠서 끌리는 면이라 뒤를 흐리지 않는 불투명 유리(solid)에 부드러운 그림자로 띄운다.
+      child: DecoratedBox(
+        decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(AppRadii.md),
-          side: BorderSide(color: p.outline),
+          boxShadow: [
+            BoxShadow(
+              color: p.scrim.withValues(alpha: .35),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+            ),
+          ],
         ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            handle([
-              PlainButton(
-                key: ValueKey('${widget.keyPrefix}-memo-insert'),
-                label: l10n.lyricsMemoInsert,
-                icon: AppIcons.add,
-                accent: true,
-                onPressed: _insertFromMemo,
-              ),
-              RowIconButton(
-                key: ValueKey('${widget.keyPrefix}-memo-close'),
-                icon: AppIcons.close,
-                tooltip: l10n.lyricsMemoHide,
-                onPressed: () => _setShape(_MemoShape.hidden),
-              ),
-            ]),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Text(
-                l10n.lyricsMemoHint,
-                style: text.bodySmall?.copyWith(color: p.onSurfaceMuted),
-              ),
-            ),
-            // 메모 글: 쓰고 · 고치고 · 고르고 · 복사할 수 있다. 커서가 있는 줄은 색으로 보인다.
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md,
-                  AppSpacing.xs,
-                  AppSpacing.md,
-                  AppSpacing.xs,
-                ),
-                child: TextField(
-                  key: ValueKey('${widget.keyPrefix}-memo-field'),
-                  controller: _memo,
-                  style: text.bodyMedium,
-                  maxLines: null,
-                  expands: true,
-                  textAlignVertical: TextAlignVertical.top,
-                  keyboardType: TextInputType.multiline,
-                  decoration: const InputDecoration(
-                    isCollapsed: true,
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.zero,
+        child: GlassSurface(
+          solid: true,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadii.md),
+          ),
+          // 입력칸이 잉크를 그릴 바탕만 둔다 (색은 유리가 낸다).
+          child: Material(
+            type: MaterialType.transparency,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                handle([
+                  PillButton(
+                    key: ValueKey('${widget.keyPrefix}-memo-insert'),
+                    label: l10n.lyricsMemoInsert,
+                    icon: AppIcons.add,
+                    compact: true,
+                    variant: PillVariant.tonal,
+                    onPressed: _insertFromMemo,
                   ),
+                  RowIconButton(
+                    key: ValueKey('${widget.keyPrefix}-memo-close'),
+                    icon: AppIcons.close,
+                    tooltip: l10n.lyricsMemoHide,
+                    onPressed: () => _setShape(_MemoShape.hidden),
+                  ),
+                ]),
+                // 머리와 글 사이의 가는 선.
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.md,
+                    0,
+                    AppSpacing.md,
+                    AppSpacing.sm,
+                  ),
+                  child: const AppDivider(),
                 ),
-              ),
-            ),
-            // 아래 가장자리: 끌어서 메모 영역을 키우고 줄인다.
-            GestureDetector(
-              key: ValueKey('${widget.keyPrefix}-memo-resize'),
-              behavior: HitTestBehavior.opaque,
-              onVerticalDragUpdate: (d) {
-                _height = (height + d.delta.dy).clamp(_minHeight, maxHeight);
-                _entry?.markNeedsBuild();
-              },
-              child: SizedBox(
-                height: 18,
-                child: Center(
-                  child: Container(
-                    width: 36,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: p.onSurfaceMuted.withValues(alpha: .5),
-                      borderRadius: BorderRadius.circular(2),
+                // 메모 글: 쓰고 · 고치고 · 고르고 · 복사할 수 있다. 커서가 있는 줄은 색으로 보인다.
+                // 사용 안내는 비었을 때 입력칸 안의 힌트로 보인다 (자리를 따로 차지하지 않는다).
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.md,
+                      0,
+                      AppSpacing.md,
+                      AppSpacing.xs,
+                    ),
+                    child: TextField(
+                      key: ValueKey('${widget.keyPrefix}-memo-field'),
+                      controller: _memo,
+                      style: text.bodyMedium,
+                      maxLines: null,
+                      expands: true,
+                      textAlignVertical: TextAlignVertical.top,
+                      keyboardType: TextInputType.multiline,
+                      decoration: InputDecoration(
+                        isCollapsed: true,
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
+                        hintText: l10n.lyricsMemoHint,
+                        hintStyle: text.bodySmall?.copyWith(
+                          color: p.onSurfaceMuted,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
+                // 아래 가장자리: 끌어서 메모 영역을 키우고 줄인다.
+                GestureDetector(
+                  key: ValueKey('${widget.keyPrefix}-memo-resize'),
+                  behavior: HitTestBehavior.opaque,
+                  onVerticalDragUpdate: (d) {
+                    _height = (height + d.delta.dy).clamp(
+                      _minHeight,
+                      maxHeight,
+                    );
+                    _entry?.markNeedsBuild();
+                  },
+                  child: SizedBox(
+                    height: 18,
+                    child: Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: p.onSurfaceMuted.withValues(alpha: .5),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

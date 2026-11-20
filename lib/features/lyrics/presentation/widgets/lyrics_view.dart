@@ -197,10 +197,79 @@ class _LyricsViewState extends State<LyricsView> {
             ),
           // 글자 대비를 위해 어둡게 덮는다.
           ColoredBox(color: p.background.withValues(alpha: .1)),
+          // 이미지가 영역에서 뚝 잘려 보이지 않게 네 가장자리를 배경색으로 희미하게 번지게 한다.
+          ..._edgeFade(p.background),
           content,
         ],
       ),
     );
+  }
+
+  /// 가장자리 네 곳을 [color]에서 투명으로 옅게 이어 주는 띠 (한 번 그리는 그라데이션이라 가볍다).
+  List<Widget> _edgeFade(Color color) {
+    const size = AppSpacing.xl + AppSpacing.md;
+    Widget strip({
+      required Alignment from,
+      required Alignment to,
+      double? top,
+      double? bottom,
+      double? left,
+      double? right,
+      double? width,
+      double? height,
+    }) => Positioned(
+      top: top,
+      bottom: bottom,
+      left: left,
+      right: right,
+      width: width,
+      height: height,
+      child: IgnorePointer(
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: from,
+              end: to,
+              colors: [color, color.withValues(alpha: 0)],
+            ),
+          ),
+        ),
+      ),
+    );
+    return [
+      strip(
+        from: Alignment.topCenter,
+        to: Alignment.bottomCenter,
+        top: 0,
+        left: 0,
+        right: 0,
+        height: size,
+      ),
+      strip(
+        from: Alignment.bottomCenter,
+        to: Alignment.topCenter,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: size,
+      ),
+      strip(
+        from: Alignment.centerLeft,
+        to: Alignment.centerRight,
+        top: 0,
+        bottom: 0,
+        left: 0,
+        width: size,
+      ),
+      strip(
+        from: Alignment.centerRight,
+        to: Alignment.centerLeft,
+        top: 0,
+        bottom: 0,
+        right: 0,
+        width: size,
+      ),
+    ];
   }
 
   /// 커버 배경이 켜져 있으면 현재 강조된 줄 주위에만 배경색 번짐을 깔아 글자가 묻히지 않게 한다.

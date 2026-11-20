@@ -22,6 +22,7 @@ Future<bool> togglePreview(
   BuildContext context,
   MediaHit hit, {
   String? audioLanguage,
+  Future<String?> Function()? languageWhenReady,
   bool announceFailure = true,
 }) async {
   final l10n = context.l10n;
@@ -45,10 +46,15 @@ Future<bool> togglePreview(
     audioLanguage: audioLanguage,
     videoQuality: context.read<SavedVideosCubit>().qualityOf(hit.id),
     // 언어를 정해 주지 않은 시작(목록 타일 등)도 상세 화면과 같은 시스템 언어 기본값을 쓴다 (로딩을 띄운 뒤에 읽는다).
-    defaultLanguage:
-        isYoutubeUrl(hit.url) && sl.isRegistered<FetchAudioLanguages>()
-        ? () => defaultAudioLanguageFor(sl<FetchAudioLanguages>(), hit.url)
-        : null,
+    // [languageWhenReady]는 고른 언어를 아직 읽는 중일 때 기다리는 함수다. 로딩을 띄운 뒤에 기다리게 넘긴다 (누르자마자 반응하도록).
+    defaultLanguage: () async {
+      final chosen = await languageWhenReady?.call();
+      if (chosen != null) return chosen;
+      if (isYoutubeUrl(hit.url) && sl.isRegistered<FetchAudioLanguages>()) {
+        return defaultAudioLanguageFor(sl<FetchAudioLanguages>(), hit.url);
+      }
+      return null;
+    },
   );
   if (failure != null) {
     if (!announceFailure) return false;
@@ -107,13 +113,11 @@ class PreviewButton extends StatelessWidget {
     );
     final cubit = context.read<PreviewCubit>();
     // 언어 목록을 아직 읽는 중이면 기다려, 시스템 언어 기본값이 빠지지 않게 한다.
-    Future<void> stop() async {
-      final language = await context
-          .read<AudioLanguageCubit>()
-          .selectedWhenReady();
-      if (!context.mounted) return;
-      await togglePreview(context, hit, audioLanguage: language);
-    }
+    Future<void> stop() => togglePreview(
+      context,
+      hit,
+      languageWhenReady: context.read<AudioLanguageCubit>().selectedWhenReady,
+    );
     // 듣는 중에는 일시정지/이어 듣기와 멈추기를 따로 둔다 (한 버튼이 둘을 오가면 헷갈린다).
     if (status == PreviewStatus.playing) {
       // 한 줄에 나란히 둔다 (좁으면 글자가 줄어든다).

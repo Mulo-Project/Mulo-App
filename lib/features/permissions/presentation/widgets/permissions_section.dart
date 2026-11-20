@@ -43,22 +43,19 @@ class _PermissionsSectionState extends State<PermissionsSection>
       bloc: _cubit,
       builder: (context, state) {
         if (state.levels.isEmpty) return const SizedBox.shrink();
-        return Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.lg),
-          child: SectionCard(
-            title: l10n.settingsPermissions,
-            children: [
-              for (final entry in state.levels.entries)
-                SettingRow(
-                  title: _title(l10n, entry.key),
-                  description: _description(l10n, entry.key, entry.value),
-                  trailing: AppSwitch(
-                    value: entry.value == PermissionLevel.granted,
-                    onChanged: (_) => _toggle(entry.key),
-                  ),
+        return SectionCard(
+          title: l10n.settingsPermissions,
+          children: [
+            for (final entry in state.levels.entries)
+              SettingRow(
+                title: _title(l10n, entry.key),
+                description: _description(l10n, entry.key, entry.value),
+                trailing: AppSwitch(
+                  value: entry.value == PermissionLevel.granted,
+                  onChanged: (_) => _toggle(entry.key),
                 ),
-            ],
-          ),
+              ),
+          ],
         );
       },
     );

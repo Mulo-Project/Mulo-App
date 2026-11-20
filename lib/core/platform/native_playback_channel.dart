@@ -35,9 +35,29 @@ class NativePlaybackChannel {
   Future<Map<Object?, Object?>?> addToQueue(Map<String, Object?> item) =>
       _method.invokeMapMethod<Object?, Object?>('addToQueue', item);
 
+  /// 곡 여러 개를 지금 곡 바로 뒤에 주어진 순서대로 끼운다 (이미 있으면 그 자리를 옮긴다).
+  Future<Map<Object?, Object?>?> playAllNext(
+    List<Map<String, Object?>> items,
+  ) => _method.invokeMapMethod<Object?, Object?>('playAllNext', {
+    'items': items,
+  });
+
+  /// 곡 여러 개를 대기열 맨 뒤에 한 번에 붙인다 (이미 있는 곡은 건너뛴다).
+  Future<Map<Object?, Object?>?> addAllToQueue(
+    List<Map<String, Object?>> items,
+  ) => _method.invokeMapMethod<Object?, Object?>('addAllToQueue', {
+    'items': items,
+  });
+
   /// 곡 하나를 뺀다. 지금 곡이면 다음 곡(마지막이었으면 새 마지막 곡)으로 처음부터 넘어간다.
   Future<Map<Object?, Object?>?> removeFromQueue(String id) =>
       _method.invokeMapMethod<Object?, Object?>('removeFromQueue', id);
+
+  /// 곡 여러 개를 한 번에 뺀다 (대기열 알림은 한 번만 온다).
+  Future<Map<Object?, Object?>?> removeAllFromQueue(List<String> ids) =>
+      _method.invokeMapMethod<Object?, Object?>('removeAllFromQueue', {
+        'ids': ids,
+      });
 
   /// [from]번 곡을 [to] 자리로 옮긴다 ([to]는 옮긴 뒤의 자리).
   Future<Map<Object?, Object?>?> moveInQueue(int from, int to) => _method

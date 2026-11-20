@@ -122,6 +122,36 @@ class FakeLibraryRepository implements LibraryRepository {
     return added.length;
   }
 
+  final _staged = <Track>[];
+
+  @override
+  Future<int> stageTracks(List<Track> tracks) async {
+    final uris = _tracks.map((t) => t.uri).toSet();
+    _staged
+      ..clear()
+      ..addAll(tracks.where((t) => uris.add(t.uri)));
+    return _staged.length;
+  }
+
+  @override
+  Future<int> commitStaged() async {
+    final n = _staged.length;
+    _tracks.addAll(_staged);
+    _staged.clear();
+    _changes.add(_sorted);
+    return n;
+  }
+
+  @override
+  Future<List<String>> discardStaged() async {
+    final ids = [for (final t in _staged) t.id];
+    _staged.clear();
+    return ids;
+  }
+
+  @override
+  Future<List<Track>> workingTracks() async => [..._sorted, ..._staged];
+
   @override
   Future<bool> updateInfo(String trackId, TrackInfo info) async {
     final i = _tracks.indexWhere((t) => t.id == trackId);
@@ -150,11 +180,19 @@ class FakeLibraryRepository implements LibraryRepository {
   Future<List<HiddenTrack>> hiddenTracks() async => const [];
 
   @override
-  Future<int> purgeHidden({Set<String>? ids}) async => 0;
+  Future<int> purgeHidden({Set<String>? ids, bool emptyOnly = false}) async =>
+      0;
 
   @override
   Future<void> hide(String trackId) async {
     _tracks.removeWhere((t) => t.id == trackId);
+    _changes.add(_sorted);
+  }
+
+  @override
+  Future<void> hideMany(Iterable<String> trackIds) async {
+    final ids = trackIds.toSet();
+    _tracks.removeWhere((t) => ids.contains(t.id));
     _changes.add(_sorted);
   }
 
@@ -176,6 +214,13 @@ class FakeTrackFiles implements TrackFileRepository {
   Future<bool> deleteFile(Track track) async {
     if (succeeds) deleted.add(track.id);
     return succeeds;
+  }
+
+  @override
+  Future<Set<String>> deleteFiles(List<Track> tracks) async {
+    if (!succeeds) return {};
+    deleted.addAll(tracks.map((t) => t.id));
+    return {for (final t in tracks) t.id};
   }
 
   @override
@@ -338,6 +383,21 @@ class MemoryDownloadSettings implements DownloadSettingsRepository {
   @override
   Future<void> saveFormat(AudioFormat value) async => format = value;
 
+  VideoFormat videoFormat = VideoFormat.mp4;
+  int videoHeight = 1080;
+
+  @override
+  Future<VideoFormat> loadVideoFormat() async => videoFormat;
+
+  @override
+  Future<void> saveVideoFormat(VideoFormat value) async => videoFormat = value;
+
+  @override
+  Future<int> loadVideoHeight() async => videoHeight;
+
+  @override
+  Future<void> saveVideoHeight(int value) async => videoHeight = value;
+
   @override
   Future<String?> pickFolder() async => picked;
 }
@@ -483,6 +543,10 @@ class MemoryLyricsSettingsRepository implements LyricsSettingsRepository {
   @override
   Future<void> saveOverlay(bool on) async =>
       settings = settings.copyWith(overlay: on);
+
+  @override
+  Future<void> saveVideoLyrics(bool on) async =>
+      settings = settings.copyWith(videoLyrics: on);
 }
 
 class MemoryPlayerStyleRepository implements PlayerStyleRepository {
@@ -1221,8 +1285,33 @@ class FakeAudioPlayer implements AudioPlayerRepository {
   }
 
   @override
+  Future<PlaybackQueueChange?> playAllNext(List<PlaybackItem> items) async {
+    // 주어진 순서대로 지금 곡 바로 뒤에 끼운다 (앞에서부터 차례로 끼우면 마지막 것이 맨 앞에 가므로 뒤에서부터).
+    for (final item in items.reversed) {
+      await _playNext(item);
+    }
+    return _state();
+  }
+
+  @override
+  Future<PlaybackQueueChange?> addAllToQueue(List<PlaybackItem> items) async {
+    for (final item in items) {
+      await _addToQueue(item);
+    }
+    return _state();
+  }
+
+  @override
   Future<PlaybackQueueChange?> removeFromQueue(String id) async {
     await _removeFromQueue(id);
+    return _state();
+  }
+
+  @override
+  Future<PlaybackQueueChange?> removeAllFromQueue(List<String> ids) async {
+    for (final id in ids) {
+      await _removeFromQueue(id);
+    }
     return _state();
   }
 
@@ -1978,6 +2067,8 @@ class FakeMediaSession implements MediaSession {
 class FakePermissionRepository implements PermissionRepository {
   final levels = <AppPermission, PermissionLevel>{
     for (final p in AppPermission.values) p: PermissionLevel.denied,
+    // 음악 파일 접근은 허용된 채로 시작한다 (아니면 content:// 곡을 재생 불가로 본다).
+    AppPermission.audio: PermissionLevel.granted,
   };
   int openedSettings = 0;
 

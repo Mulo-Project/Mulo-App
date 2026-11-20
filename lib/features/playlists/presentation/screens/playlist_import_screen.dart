@@ -15,6 +15,8 @@ import '../../../search/domain/entities/engine_exception.dart';
 import '../../../search/domain/entities/media_info.dart';
 import '../../../search/presentation/screens/media_detail_screen.dart'
     show showMediaDetail;
+import '../../../downloads/domain/entities/download_request.dart';
+import '../../../downloads/presentation/widgets/download_dialog.dart';
 import '../bloc/playlist_import_cubit.dart';
 
 /// 유튜브 재생목록 가져오기 (상세 기능: 유튜브 재생목록 가져오기 #22).
@@ -72,6 +74,43 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
     }
 
     await open();
+  }
+
+  /// 따로 정하지 않은 곡이 함께 쓸 받기 설정을 곡 받기 창으로 고른다.
+  Future<void> _openCommon() async {
+    final picked = await showCommonDownloadSettings(
+      context,
+      preset: _cubit.state.common,
+    );
+    if (picked != null) _cubit.setCommon(picked);
+  }
+
+  /// 곡 하나만의 받기 설정을 곡 받기 창으로 고른다. 처음에는 공통 설정으로 채워 열린다.
+  Future<void> _openTrack(MediaHit hit) async {
+    final own = _cubit.state.overrides[hit.id];
+    final common = _cubit.state.common;
+    final base = own ?? common;
+    final result = await showTrackDownloadSettings(
+      context,
+      title: own?.title ?? hit.title,
+      artist:
+          own?.artist ??
+          ((common?.artist ?? '').isNotEmpty ? common!.artist : hit.uploader),
+      album: own?.album ?? common?.album ?? '',
+      genre: base?.genre ?? '',
+      duration: hit.duration,
+      thumbnailUrl: hit.thumbnailUrl,
+      url: hit.url,
+      subtitleLangs: hit.subtitleLangs.isEmpty ? null : hit.subtitleLangs,
+      autoSubtitleLangs: hit.autoSubtitleLangs,
+      preset: base,
+      canReset: own != null,
+    );
+    if (result is DownloadRequest) {
+      _cubit.setOverride(hit.id, result);
+    } else if (result is DownloadSettingsReset) {
+      _cubit.setOverride(hit.id, null);
+    }
   }
 
   Future<void> _start() async {
@@ -185,9 +224,14 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
                           onSignIn: () => _reopen(),
                           // 내 재생목록 · 채널 버튼은 검색창과 달리 목록과 함께 스크롤된다.
                           shortcuts: viewing ? null : _shortcuts(l10n),
+                          onTrackSettings: _openTrack,
                         ),
                       ),
-                      _Footer(starting: _starting, onStart: _start),
+                      _Footer(
+                        starting: _starting,
+                        onStart: _start,
+                        onOpenCommon: _openCommon,
+                      ),
                     ],
                   ),
                 ),
@@ -201,9 +245,17 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
 }
 
 class _Body extends StatelessWidget {
-  const _Body({required this.onRetry, required this.onSignIn, this.shortcuts});
+  const _Body({
+    required this.onRetry,
+    required this.onSignIn,
+    required this.onTrackSettings,
+    this.shortcuts,
+  });
 
   final VoidCallback onRetry;
+
+  /// 곡 하나의 받기 설정을 따로 고르는 창을 연다.
+  final void Function(MediaHit hit) onTrackSettings;
 
   /// 목록 위에 함께 스크롤되는 버튼들 (없으면 곡 목록을 열어 보는 중).
   final Widget? shortcuts;
@@ -362,15 +414,16 @@ class _Body extends StatelessWidget {
             l10n.playlistImportNoTracksBody,
           );
         }
-        return _Tracks(state: state);
+        return _Tracks(state: state, onTrackSettings: onTrackSettings);
     }
   }
 }
 
 class _Tracks extends StatelessWidget {
-  const _Tracks({required this.state});
+  const _Tracks({required this.state, required this.onTrackSettings});
 
   final PlaylistImportState state;
+  final void Function(MediaHit hit) onTrackSettings;
 
   @override
   Widget build(BuildContext context) {
@@ -450,6 +503,8 @@ class _Tracks extends StatelessWidget {
           _Row(
             hit: hit,
             selected: state.selected.contains(hit.id),
+            custom: state.overrides.containsKey(hit.id),
+            onSettings: () => onTrackSettings(hit),
             onTap: () => cubit.toggle(hit.id),
           ),
       ],
@@ -485,10 +540,20 @@ class _ResultRow extends StatelessWidget {
 }
 
 class _Row extends StatelessWidget {
-  const _Row({required this.hit, required this.selected, required this.onTap});
+  const _Row({
+    required this.hit,
+    required this.selected,
+    required this.custom,
+    required this.onSettings,
+    required this.onTap,
+  });
 
   final MediaHit hit;
   final bool selected;
+
+  /// 이 곡만 따로 받기 설정을 했는지.
+  final bool custom;
+  final VoidCallback onSettings;
   final VoidCallback onTap;
 
   @override
@@ -497,14 +562,27 @@ class _Row extends StatelessWidget {
     final thumb = hit.thumbnailUrl;
     return TrackTile(
       title: hit.title,
-      subtitle: hit.uploader,
+      subtitle: custom
+          ? [
+              if (hit.uploader.isNotEmpty) hit.uploader,
+              context.l10n.playlistImportTrackCustom,
+            ].join(' · ')
+          : hit.uploader,
       detail: hit.duration == null ? null : formatDuration(hit.duration!),
       tone: toneFor(hit.id),
       artwork: thumb == null ? null : NetworkImage(thumb),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // 줄을 누르면 가져올 곡 선택이라, 영상 상세 화면은 따로 버튼으로 연다.
+          // 줄을 누르면 가져올 곡 선택이라, 곡별 받기 설정 · 영상 상세 화면은 따로 버튼으로 연다.
+          CircleIconButton(
+            key: ValueKey('import-track-settings-${hit.id}'),
+            icon: custom ? AppIcons.tune : AppIcons.tuneOutline,
+            tooltip: context.l10n.playlistImportTrackSettings,
+            size: AppSizes.rowButton,
+            onPressed: onSettings,
+          ),
+          const SizedBox(width: AppSpacing.xs),
           CircleIconButton(
             key: ValueKey('import-video-detail-${hit.id}'),
             icon: AppIcons.chevronRight,
@@ -525,10 +603,35 @@ class _Row extends StatelessWidget {
 }
 
 class _Footer extends StatelessWidget {
-  const _Footer({required this.starting, required this.onStart});
+  const _Footer({
+    required this.starting,
+    required this.onStart,
+    required this.onOpenCommon,
+  });
 
   final bool starting;
   final VoidCallback onStart;
+
+  /// 공통 받기 설정 창을 연다.
+  final VoidCallback onOpenCommon;
+
+  /// 공통 설정을 한 줄로: 저장 유형 · 형식 · 장르 · 아티스트 (정하지 않은 칸은 뺀다).
+  String _summary(AppLocalizations l10n, DownloadRequest? c) {
+    if (c == null) return l10n.playlistImportCommonDefault;
+    final video = c.videoFormat;
+    return [
+      if (video != null) ...[
+        l10n.videoSaveTypeVideo,
+        video.name,
+        '${c.videoHeight}p',
+      ] else ...[
+        if (c.format != null) c.format!.name,
+      ],
+      if (c.genre.isNotEmpty) c.genre,
+      if (c.album.isNotEmpty) c.album,
+      if (c.artist.isNotEmpty) c.artist,
+    ].join(' · ');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -538,6 +641,7 @@ class _Footer extends StatelessWidget {
       return const SizedBox.shrink();
     }
     final count = state.selected.length;
+    final summary = _summary(l10n, state.common);
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.md,
@@ -545,13 +649,31 @@ class _Footer extends StatelessWidget {
         AppSpacing.md,
         AppSpacing.md,
       ),
-      child: SizedBox(
-        width: double.infinity,
-        child: PillButton(
-          label: l10n.playlistImportStart(count),
-          icon: AppIcons.download,
-          onPressed: count == 0 || starting ? null : onStart,
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // 받을 곳 · 형식 · 아티스트 · 장르: 곡 받기 창과 같은 화면에서 정한다 (따로 정하지 않은 곡에 쓰인다).
+          SettingRow(
+            key: const ValueKey('playlist-import-common'),
+            title: l10n.playlistImportCommonTitle,
+            description: summary.isEmpty
+                ? l10n.playlistImportCommonDefault
+                : summary,
+            trailing: Icon(
+              AppIcons.chevronRight,
+              size: AppSizes.iconSm,
+              color: context.palette.onSurfaceMuted,
+            ),
+            onTap: onOpenCommon,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          PillButton(
+            label: l10n.playlistImportStart(count),
+            icon: AppIcons.download,
+            onPressed: count == 0 || starting ? null : onStart,
+          ),
+        ],
       ),
     );
   }

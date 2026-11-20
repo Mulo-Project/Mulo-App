@@ -23,7 +23,7 @@ class DownloadEngine(
     private val transcoder: TranscoderChannel,
     private val store: MediaStoreChannel,
     private val tags: TagChannel,
-    /** Dart로 알린다 (`queue` · `tagNotice` · `saved` · `engineError` · `registered`). 메인 스레드로 보낸다. */
+    /** Dart로 알린다 (`queue` · `tagNotice` · `saved` · `engineError`). 메인 스레드로 보낸다. */
     private val emit: (String, Any?) -> Unit,
 ) {
     private class Item(
@@ -51,6 +51,7 @@ class DownloadEngine(
     private val resolver = Executors.newCachedThreadPool()
     private val watchdog = java.util.concurrent.Executors.newSingleThreadScheduledExecutor()
     private val pending = AppDb.Pending(context)
+    private val db = LibraryDb(context)
     private val queueFile = File(context.filesDir, "download_queue.json")
     private val sourcesFile = File(context.filesDir, "download_sources.json")
     private val partsDir = File(context.filesDir, "download_parts")
@@ -78,6 +79,7 @@ class DownloadEngine(
 
     private var lastStatuses = HashMap<String, String>()
     private var progressShown = false
+    private var shownId: String? = null
     private var lastProgressKey: String? = null
     private val batch = HashSet<String>()
 
@@ -204,8 +206,17 @@ class DownloadEngine(
     fun dbReady() {
         // 앱이 처음 열릴 때 옛 Dart 큐의 기록이 있으면 한 번 가져온다 (Dart는 관여하지 않는다).
         importLegacy()
-        // 아직 Dart가 등록하지 못한 곡을 다시 넘긴다 (앱이 꺼져 있는 사이 받은 곡 등).
-        saver.execute { pending.all().forEach { emit("registered", toDartMap(it)) } }
+        // 옛 방식(Dart가 등록하던 때)에 남은 등록이 있으면 DB에 넣고 비운다.
+        saver.execute {
+            pending.all().forEach {
+                try {
+                    db.register(AppDb.Registration.fromJson(it))
+                    pending.remove(it.optString("trackId"))
+                } catch (e: Exception) {
+                    MuloLog.e(MuloLog.NATIVE, "남은 보관함 등록 실패: ${it.optString("trackId")}: ${e.message}", e)
+                }
+            }
+        }
     }
 
     /** JSON의 null 값을 뺀다 (`optString`이 null을 "null" 글자로 읽는 것을 막는다). */
@@ -394,18 +405,6 @@ class DownloadEngine(
         }
     }
 
-    /** Dart가 곡을 보관함에 등록했다. 맡겨 둔 것에서 뺀다. */
-    fun ack(trackId: String) = pending.remove(trackId)
-
-    private fun toDartMap(o: JSONObject): Map<String, Any?> = o.keys().asSequence().associateWith { k ->
-        when (val v = o.get(k)) {
-            JSONObject.NULL -> null
-            is JSONObject -> toDartMap(v)
-            is JSONArray -> List(v.length()) { v.get(it) }
-            else -> v
-        }
-    }
-
     private fun emitQueue() = emit("queue", snapshot())
 
     /** 상태가 바뀌었다 (저장 + 화면 + 알림). */
@@ -477,6 +476,8 @@ class DownloadEngine(
         val active = snap.filter { it.active() }
         var current = snap.firstOrNull { it.status == DOWNLOADING }
         if (current == null && !progressShown) current = snap.firstOrNull { it.status == QUEUED }
+        // 방금 이어받기를 눌러 대기로 돌아온 항목: 받기가 다시 시작되기 전에도 알림이 바로 "받는 중" 버튼으로 바뀌게 한다.
+        if (current == null) current = snap.firstOrNull { it.id == shownId && it.status == QUEUED }
         val allPaused = active.isNotEmpty() && active.all { it.status == PAUSED }
         if (current == null && allPaused) current = active.first()
         if (active.isEmpty()) batch.clear() else batch.addAll(active.map { it.id })
@@ -515,6 +516,7 @@ class DownloadEngine(
         val key = "$title|$body|$subText|$overallPercent|$preview|$stop|$hold|${cur.id}|$art"
         if (progressShown && key == lastProgressKey) return
         progressShown = true
+        shownId = cur.id
         lastProgressKey = key
         val args = mapOf(
             "title" to title, "body" to body, "percent" to overallPercent, "foreground" to true, "subText" to subText,
@@ -529,6 +531,7 @@ class DownloadEngine(
     private fun clearProgress() {
         if (!progressShown) return
         progressShown = false
+        shownId = null
         lastProgressKey = null
         DownloadNotifications.lastProgress = null
         DownloadForegroundService.stop(context)
@@ -1192,10 +1195,9 @@ class DownloadEngine(
             if (request.has("color") && !request.isNull("color")) request.optLong("color") else null,
             lyricsPath,
         )
-        // 보관함 DB는 Dart가 쥔다: 맡겨 두고 넘기면 Dart가 등록한 뒤 `ack`로 알려 준다.
-        pending.add(reg)
-        MuloLog.d(MuloLog.NATIVE, "보관함 등록을 Dart에 넘김: $trackId")
-        emit("registered", toDartMap(reg.toJson()))
+        // 보관함 DB는 네이티브가 쥔다: 바로 넣으면 화면은 DB 바뀜 알림으로 목록을 다시 읽는다.
+        db.register(reg)
+        MuloLog.d(MuloLog.NATIVE, "보관함에 등록: $trackId")
         if (remember) {
             synchronized(lock) { sources[sourceKey(request.optString("url"))] = trackId }
             persistSources()

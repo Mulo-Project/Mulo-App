@@ -79,8 +79,15 @@ class ImportDeviceMusic implements UseCase<ImportOutcome, NoParams> {
   final LibraryRepository _library;
   final LoadedFolderRepository _folders;
 
+  /// [cancelled]가 true가 되면 찾은 곡을 보관함에 넣지 않고 [ImportCancelled]로 끝낸다 (찾는 동안 취소하면 DB에는 아무것도 안 들어간다).
+  /// [stage]면 곡을 바로 보이게 하지 않고 "불러오는 중"으로 둔다: 태그 · 커버를 다 채운 뒤 [commitStaged]로 한꺼번에
+  /// 보이게 하고, 중간에 취소하면 [discardStaged]로 흔적 없이 지운다.
   @override
-  Future<ImportOutcome> call(NoParams _) async {
+  Future<ImportOutcome> call(
+    NoParams _, {
+    bool Function()? cancelled,
+    bool stage = false,
+  }) async {
     try {
       // 영상 기본 폴더(`Movies/Mulo`)도 찾는다. 앱 데이터를 지우면 보관함 목록이 비는데, 받아 둔 영상이 이 폴더에 있다.
       // 영상 기본 폴더가 없는 기기는 빈 문자열이라 뺀다.
@@ -90,17 +97,27 @@ class ImportDeviceMusic implements UseCase<ImportOutcome, NoParams> {
         if (video.isNotEmpty) video,
         ...await _folders.loadExtra(),
       ];
-      return switch (await _device.scan(folders)) {
+      final scan = await _device.scan(folders);
+      if (cancelled?.call() ?? false) return const ImportCancelled();
+      return switch (scan) {
         ScanCancelled() => const ImportCancelled(),
         ScanPermissionDenied() => const ImportDenied(),
         ScanFound(:final tracks) => ImportAdded(
-          await _library.addTracks(tracks),
+          stage
+              ? await _library.stageTracks(tracks)
+              : await _library.addTracks(tracks),
         ),
       };
     } on Exception {
       return const ImportFailed();
     }
   }
+
+  /// [stage]로 둔 곡을 보이게 한다.
+  Future<int> commitStaged() => _library.commitStaged();
+
+  /// [stage]로 둔 곡을 (붙인 커버 · 색 · 가사와 함께) 지운다. 지운 곡 id를 돌려준다.
+  Future<List<String>> discardStaged() => _library.discardStaged();
 }
 
 /// 커버가 없는 곡(기기에서 불러온 곡 · 앱에서 받은 곡)에 파일 내장 커버를 붙인다. 새로 붙인 수를 돌려준다.
@@ -130,7 +147,7 @@ class FillEmbeddedCovers implements UseCase<int, NoParams> {
     void Function(int done, int total)? onProgress,
     bool Function()? cancelled,
   }) async {
-    final tracks = await _library.watchTracks().first;
+    final tracks = await _library.workingTracks();
     final have = await _covers.loadAll();
     final todo = [
       for (final t in tracks)
@@ -293,7 +310,7 @@ class EmbedTagsIntoFiles implements UseCase<int, NoParams> {
 
   @override
   Future<int> call(NoParams _) async {
-    final tracks = await _library.watchTracks().first;
+    final tracks = await _library.workingTracks();
     final done = await _done.loadDone();
     final covers = await _covers.loadAll();
     final colors = await _colors.loadAll();
@@ -342,6 +359,9 @@ class RestoreFromFileTags implements UseCase<int, NoParams> {
   @override
   Future<int> call(NoParams _) => run();
 
+  /// 불러오기를 취소해 곡을 지웠을 때, 그 곡들의 "읽음" 기록도 지운다 (다시 불러오면 처음부터 읽는다).
+  Future<void> forget(Iterable<String> trackIds) => _done.forget(trackIds);
+
   /// 읽기가 멈췄거나 끝났을 때 "정보 읽는 중" 표시를 모두 치운다 (읽기가 안 도는데 표시가 남지 않게).
   void clearPending() => _pending?.clear();
 
@@ -349,7 +369,7 @@ class RestoreFromFileTags implements UseCase<int, NoParams> {
   Future<void> markPending() async {
     final pending = _pending;
     if (pending == null) return;
-    final tracks = await _library.watchTracks().first;
+    final tracks = await _library.workingTracks();
     final done = await _done.loadDone();
     pending.set({
       for (final t in tracks)
@@ -463,6 +483,23 @@ class DeleteTrack implements UseCase<bool, Track> {
     if (!await _files.deleteFile(track)) return false;
     await _library.delete(track.id);
     return true;
+  }
+}
+
+/// 여러 곡의 음악 파일과 보관함 기록을 지운다. 파일을 지운 곡의 id 모음을 돌려준다 (못 지운 곡은 기록을 둔다).
+class DeleteTracks implements UseCase<Set<String>, List<Track>> {
+  const DeleteTracks(this._library, this._files);
+
+  final LibraryRepository _library;
+  final TrackFileRepository _files;
+
+  @override
+  Future<Set<String>> call(List<Track> tracks) async {
+    final deleted = await _files.deleteFiles(tracks);
+    for (final id in deleted) {
+      await _library.delete(id);
+    }
+    return deleted;
   }
 }
 
