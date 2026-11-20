@@ -332,7 +332,8 @@ class _DownloadScreenState extends State<DownloadScreen> {
       });
     });
     // 고정한 폴더가 없으면 마지막에 받은 폴더(없으면 앱 기본 폴더)로 채운다.
-    if (_savePath.text.isEmpty) {
+    // (영상 설정으로 열렸으면 비어 있는 쪽은 음원 폴더 자리다.)
+    if (_asVideo ? _otherPath.isEmpty : _savePath.text.isEmpty) {
       context.read<DownloadSettingsCubit>().effectivePath().then((path) {
         if (!mounted) return;
         if (_asVideo) {
