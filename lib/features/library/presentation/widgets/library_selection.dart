@@ -5,6 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../covers/presentation/bloc/cover_color_cubit.dart';
+import '../../../covers/presentation/bloc/cover_cubit.dart';
+import '../../../lyrics/presentation/bloc/lyrics_cubit.dart';
 import '../../domain/entities/track.dart';
 import '../../domain/entities/track_group.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
@@ -24,6 +27,7 @@ enum SelectionAction {
   album,
   artist,
   genre,
+  delete,
 }
 
 /// 보관함 선택 모드 하단 막대: 닫기 · 선택 수 · "작업" 버튼.
@@ -161,6 +165,11 @@ Future<SelectionAction?> showSelectionActionSheet(
                   label: l10n.selectAssignGenre,
                   onTap: () => pick(SelectionAction.genre),
                 ),
+                MenuRow(
+                  icon: AppIcons.delete,
+                  label: l10n.selectDelete,
+                  onTap: () => pick(SelectionAction.delete),
+                ),
               ],
             ],
           ),
@@ -168,6 +177,58 @@ Future<SelectionAction?> showSelectionActionSheet(
       );
     },
   );
+}
+
+/// 고른 곡의 음악 파일과 보관함 기록을 한 번에 지운다 (확인을 받은 뒤).
+/// 지운 곡이 하나라도 있으면 true. 못 지운 곡(권한 거절 등)은 기록을 그대로 두고 개수를 알린다.
+Future<bool> deleteSelection(BuildContext context, List<Track> tracks) async {
+  if (tracks.isEmpty) return false;
+  final l10n = context.l10n;
+  final library = context.read<LibraryCubit>();
+  final player = context.read<NowPlayingCubit>();
+  final covers = context.read<CoverCubit>();
+  final colors = context.read<CoverColorCubit>();
+  final lyrics = context.read<LyricsCubit>();
+  final messenger = ScaffoldMessenger.of(context);
+  final ok = await showDialog<bool>(
+    context: context,
+    useRootNavigator: true,
+    builder: (dialog) => AppDialog(
+      title: l10n.trackDeleteTitle,
+      body: l10n.selectDeleteBody(tracks.length),
+      actions: [
+        PillButton(
+          label: l10n.actionCancel,
+          variant: PillVariant.tonal,
+          onPressed: () => Navigator.of(dialog).pop(false),
+        ),
+        PillButton(
+          label: l10n.trackDeleteConfirm,
+          icon: AppIcons.delete,
+          onPressed: () => Navigator.of(dialog).pop(true),
+        ),
+      ],
+    ),
+  );
+  if (ok != true) return false;
+  var failed = 0;
+  for (final track in tracks) {
+    // 파일부터 지운다. 못 지우면 기록은 그대로 둔다.
+    if (!await library.delete(track)) {
+      failed++;
+      continue;
+    }
+    await covers.clear(CoverKey.track(track.id));
+    await colors.clear(CoverKey.track(track.id));
+    await lyrics.clear(track.id);
+    player.removeFromQueue(track);
+  }
+  if (failed > 0) {
+    messenger.showSnackBar(
+      SnackBar(content: Text(l10n.selectDeleteFailed(failed))),
+    );
+  }
+  return failed < tracks.length;
 }
 
 /// 고른 곡 [ids]에 앨범 · 아티스트 · 장르([kind])를 한 번에 지정한다.
@@ -455,6 +516,9 @@ mixin TrackPicker<T extends StatefulWidget> on State<T> {
           initial: initialAssignValue(all, kind),
         );
         if (done && mounted) clearPicked();
+      case SelectionAction.delete:
+        final deleted = await deleteSelection(context, pickedTracks(all));
+        if (deleted && mounted) clearPicked();
     }
   }
 }

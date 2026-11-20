@@ -6104,6 +6104,24 @@ abstract class AppLocalizations {
   /// **'{count}곡 선택'**
   String selectCount(int count);
 
+  /// No description provided for @selectDelete.
+  ///
+  /// In ko, this message translates to:
+  /// **'삭제'**
+  String get selectDelete;
+
+  /// No description provided for @selectDeleteBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'고른 {count}곡의 음악 파일을 기기에서 지울까요? 보관함과 재생목록에서도 빠지고, 되돌릴 수 없어요.'**
+  String selectDeleteBody(int count);
+
+  /// No description provided for @selectDeleteFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}곡은 지우지 못했어요. 권한을 확인한 뒤 다시 시도해 주세요.'**
+  String selectDeleteFailed(int count);
+
   /// No description provided for @selectClose.
   ///
   /// In ko, this message translates to:

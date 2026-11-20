@@ -3279,6 +3279,19 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get selectDelete => '삭제';
+
+  @override
+  String selectDeleteBody(int count) {
+    return '고른 $count곡의 음악 파일을 기기에서 지울까요? 보관함과 재생목록에서도 빠지고, 되돌릴 수 없어요.';
+  }
+
+  @override
+  String selectDeleteFailed(int count) {
+    return '$count곡은 지우지 못했어요. 권한을 확인한 뒤 다시 시도해 주세요.';
+  }
+
+  @override
   String get selectClose => '선택 끝내기';
 
   @override
