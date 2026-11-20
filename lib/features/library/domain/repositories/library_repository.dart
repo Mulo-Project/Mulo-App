@@ -57,6 +57,9 @@ abstract interface class TrackFileRepository {
   /// 못 지우면(권한 거절 · 사용자가 취소 등) false.
   Future<bool> deleteFile(Track track);
 
+  /// 여러 곡의 음악 파일을 지운다 (삭제 동의 창은 한 번만). 지운 곡의 id 모음을 돌려준다.
+  Future<Set<String>> deleteFiles(List<Track> tracks);
+
   /// 음악 파일의 크기 · 형식 · 비트레이트 · 샘플레이트. 읽을 수 없으면 null.
   Future<TrackFileInfo?> fileInfo(Track track);
 }

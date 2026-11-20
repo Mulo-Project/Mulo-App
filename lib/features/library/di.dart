@@ -68,6 +68,7 @@ void registerLibrary(GetIt sl) {
       () => RestoreFromFileTags(sl(), sl(), sl(), sl(), sl(), sl()),
     )
     ..registerFactory(() => DeleteTrack(sl(), sl()))
+    ..registerFactory(() => DeleteTracks(sl(), sl()))
     ..registerFactory(() => GetTrackFileInfo(sl()))
     ..registerFactory(() => ImportDeviceMusic(sl(), sl(), sl()))
     ..registerFactory(() => LoadLoadedFolders(sl(), sl()))
@@ -85,7 +86,7 @@ void registerLibrary(GetIt sl) {
     ..registerFactory(() => RemoveSaveLocation(sl()))
     ..registerFactory(() => SaveLocationsCubit(sl(), sl(), sl()))
     ..registerFactory(() => EnsureTracksWriteAccess(sl()))
-    ..registerFactory(() => LibraryCubit(sl(), sl(), sl(), sl()))
+    ..registerFactory(() => LibraryCubit(sl(), sl(), sl(), sl(), sl<DeleteTracks>()))
     ..registerFactory(() => FillEmbeddedCovers(sl(), sl(), sl()))
     ..registerFactory(() => LibraryImportCubit(sl(), sl(), sl(), sl()));
 }

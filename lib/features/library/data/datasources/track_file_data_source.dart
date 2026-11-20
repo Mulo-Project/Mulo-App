@@ -9,6 +9,10 @@ abstract interface class TrackFileDataSource {
   /// [uri]의 파일을 지운다. 이미 없으면 true, 못 지우면 false.
   Future<bool> delete(String uri);
 
+  /// [uris]의 파일들을 지운다. 시스템 동의 창이 필요하면 한 번만 띄운다.
+  /// 지운 것(이미 없던 것 포함)의 uri 모음을 돌려준다.
+  Future<Set<String>> deleteAll(List<String> uris);
+
   /// [uri]의 파일 크기 · 형식 · 비트레이트 · 샘플레이트. 읽을 수 없으면 null.
   Future<TrackFileInfo?> info(String uri);
 }
@@ -38,6 +42,36 @@ class PlatformTrackFileDataSource implements TrackFileDataSource {
     } on FileSystemException {
       return false;
     }
+  }
+
+  @override
+  Future<Set<String>> deleteAll(List<String> uris) async {
+    final done = <String>{};
+    final content = [
+      for (final u in uris)
+        if (u.startsWith('content://')) u,
+    ];
+    // 파일 경로나 빈 주소는 하나씩 지운다.
+    for (final u in uris) {
+      if (!u.startsWith('content://') && await delete(u)) done.add(u);
+    }
+    if (content.isEmpty) return done;
+    try {
+      final deleted = await _channel.invokeListMethod<String>('deleteAudios', {
+        'uris': content,
+      });
+      // null이면 이 기기는 한꺼번에 지울 수 없다 (Android 10 이하): 한 곡씩 지운다.
+      if (deleted == null) {
+        for (final u in content) {
+          if (await delete(u)) done.add(u);
+        }
+      } else {
+        done.addAll(deleted);
+      }
+    } on PlatformException {
+      // 못 지운 곡은 그대로 둔다.
+    }
+    return done;
   }
 
   @override

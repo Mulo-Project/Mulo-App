@@ -486,6 +486,23 @@ class DeleteTrack implements UseCase<bool, Track> {
   }
 }
 
+/// 여러 곡의 음악 파일과 보관함 기록을 지운다. 파일을 지운 곡의 id 모음을 돌려준다 (못 지운 곡은 기록을 둔다).
+class DeleteTracks implements UseCase<Set<String>, List<Track>> {
+  const DeleteTracks(this._library, this._files);
+
+  final LibraryRepository _library;
+  final TrackFileRepository _files;
+
+  @override
+  Future<Set<String>> call(List<Track> tracks) async {
+    final deleted = await _files.deleteFiles(tracks);
+    for (final id in deleted) {
+      await _library.delete(id);
+    }
+    return deleted;
+  }
+}
+
 /// 곡의 음악 파일 정보 (크기 · 형식 · 비트레이트 · 샘플레이트). 읽을 수 없으면 null.
 class GetTrackFileInfo implements UseCase<TrackFileInfo?, Track> {
   const GetTrackFileInfo(this._files);

@@ -211,18 +211,16 @@ Future<bool> deleteSelection(BuildContext context, List<Track> tracks) async {
     ),
   );
   if (ok != true) return false;
-  var failed = 0;
+  // 파일부터 한꺼번에 지운다 (삭제 동의 창은 한 번만). 못 지운 곡은 기록을 그대로 둔다.
+  final deleted = await library.deleteAll(tracks);
   for (final track in tracks) {
-    // 파일부터 지운다. 못 지우면 기록은 그대로 둔다.
-    if (!await library.delete(track)) {
-      failed++;
-      continue;
-    }
+    if (!deleted.contains(track.id)) continue;
     await covers.clear(CoverKey.track(track.id));
     await colors.clear(CoverKey.track(track.id));
     await lyrics.clear(track.id);
     player.removeFromQueue(track);
   }
+  final failed = tracks.length - deleted.length;
   if (failed > 0) {
     messenger.showSnackBar(
       SnackBar(content: Text(l10n.selectDeleteFailed(failed))),

@@ -45,6 +45,15 @@ class MediaStoreChannel(
 
     private var pendingDelete: PendingDelete? = null
 
+    /** 여러 곡 삭제 동의 창 결과를 기다리는 요청: 이미 지운 곡([done])과 동의로 지워질 곡([asked]). */
+    private class PendingDeleteBulk(
+        val done: List<String>,
+        val asked: List<String>,
+        val result: MethodChannel.Result,
+    )
+
+    private var pendingDeleteBulk: PendingDeleteBulk? = null
+
     /** 쓰기 동의 창 결과를 기다리는 요청 (동시에 하나만). */
     private class PendingWrite(val uri: Uri, val src: File?, val result: MethodChannel.Result)
 
@@ -302,6 +311,10 @@ class MediaStoreChannel(
                     result,
                 )
                 "deleteAudio" -> deleteAudio(Uri.parse(call.argument<String>("uri")), result)
+                "deleteAudios" -> deleteAudios(
+                    (call.argument<List<String>>("uris") ?: emptyList()).map { Uri.parse(it) },
+                    result,
+                )
                 else -> result.notImplemented()
             }
         }
@@ -432,8 +445,61 @@ class MediaStoreChannel(
         }
     }
 
+    /**
+     * 여러 곡 파일을 지운다. 앱이 지울 수 있는 것은 바로 지우고, 권한이 없는 나머지는 시스템 삭제 동의 창을
+     * 한 번만 띄워 한꺼번에 지운다 (Android 11+). 지운 곡의 uri 목록을 돌려준다.
+     * Android 10 이하는 곡마다 창이 필요해 한꺼번에 못 하므로 null을 돌려주고, 부른 쪽이 한 곡씩 지운다.
+     */
+    private fun deleteAudios(uris: List<Uri>, result: MethodChannel.Result) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+            result.success(null)
+            return
+        }
+        if (pendingDelete != null || pendingDeleteBulk != null) {
+            result.error("busy", "다른 삭제를 기다리는 중이에요", null)
+            return
+        }
+        io.execute {
+            val done = mutableListOf<String>()
+            val needs = mutableListOf<Uri>()
+            for (uri in uris) {
+                try {
+                    // 이미 없으면 0행이라도 지운 것으로 본다.
+                    context.contentResolver.delete(uri, null, null)
+                    done.add(uri.toString())
+                } catch (e: SecurityException) {
+                    needs.add(uri)
+                } catch (e: Exception) {
+                    // 이 곡은 못 지운 것으로 두고 나머지를 계속한다.
+                }
+            }
+            main.post {
+                val host = activity()
+                if (needs.isEmpty() || host == null) {
+                    result.success(done)
+                    return@post
+                }
+                try {
+                    val sender = MediaStore.createDeleteRequest(context.contentResolver, needs).intentSender
+                    pendingDeleteBulk = PendingDeleteBulk(done, needs.map { it.toString() }, result)
+                    host.startIntentSenderForResult(sender, REQUEST_DELETE_BULK, null, 0, 0, 0)
+                } catch (e: Exception) {
+                    pendingDeleteBulk = null
+                    result.success(done)
+                }
+            }
+        }
+    }
+
     /** MainActivity.onActivityResult에서 부른다. 이 채널의 요청이면 true. */
     fun onActivityResult(requestCode: Int, resultCode: Int): Boolean {
+        if (requestCode == REQUEST_DELETE_BULK) {
+            val pending = pendingDeleteBulk ?: return true
+            pendingDeleteBulk = null
+            // 동의하면 시스템이 모두 지운다. 거절하면 먼저 지운 곡만 지운 것이다.
+            pending.result.success(if (resultCode == Activity.RESULT_OK) pending.done + pending.asked else pending.done)
+            return true
+        }
         if (requestCode == REQUEST_WRITE_BULK) {
             val pending = pendingBulk ?: return true
             pendingBulk = null
@@ -581,5 +647,6 @@ class MediaStoreChannel(
         private const val REQUEST_DELETE = 4101
         private const val REQUEST_WRITE = 4102
         private const val REQUEST_WRITE_BULK = 4103
+        private const val REQUEST_DELETE_BULK = 4104
     }
 }

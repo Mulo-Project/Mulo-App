@@ -217,6 +217,13 @@ class FakeTrackFiles implements TrackFileRepository {
   }
 
   @override
+  Future<Set<String>> deleteFiles(List<Track> tracks) async {
+    if (!succeeds) return {};
+    deleted.addAll(tracks.map((t) => t.id));
+    return {for (final t in tracks) t.id};
+  }
+
+  @override
   Future<TrackFileInfo?> fileInfo(Track track) async => null;
 }
 
