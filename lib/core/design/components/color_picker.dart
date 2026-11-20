@@ -371,10 +371,10 @@ class _ColorSheetState extends State<_ColorSheet> {
             Row(
               children: [
                 Expanded(
+                  flex: 3,
                   child: PillButton(
                     key: const ValueKey('color-auto'),
                     label: widget.clearLabel,
-                    icon: AppIcons.close,
                     variant: PillVariant.tonal,
                     // 정해 둔 색이 없으면 지울 것이 없다.
                     onPressed: widget.initial == null
