@@ -354,7 +354,12 @@ class _DownloadScreenState extends State<DownloadScreen> {
       _picked = Color(preset.color!);
       _pickedSet = true;
     }
-    if (_common) _album.text = preset.album;
+    if (_common) {
+      // 공통 설정은 곡 정보를 따로 받지 않아, 지난번에 정한 값을 칸에 채워 연다.
+      _artist.text = preset.artist;
+      _album.text = preset.album;
+      _genre.text = preset.genre;
+    }
     if (!_common) {
       _cover = preset.cover ?? _defaultCover;
       _selected.addAll(preset.playlistIds);
