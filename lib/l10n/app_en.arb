@@ -302,7 +302,7 @@
   "@settingsPurgeHiddenBody": {"placeholders": {"count": {"type": "int"}}},
   "settingsPurgeHiddenDone": "Cleared records of {count} songs",
   "@settingsPurgeHiddenDone": {"placeholders": {"count": {"type": "int"}}},
-  "hiddenRecordsHint": "{count} hidden songs from removed folders. Pick the ones to clear.",
+  "hiddenRecordsHint": "{count} hidden songs from removed folders. These records live only in the app, so clearing them keeps your music files.",
   "@hiddenRecordsHint": {"placeholders": {"count": {"type": "int"}}},
   "hiddenRecordsPlays": "{count} plays",
   "@hiddenRecordsPlays": {"placeholders": {"count": {"type": "int"}}},

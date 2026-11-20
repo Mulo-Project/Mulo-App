@@ -1721,7 +1721,7 @@ abstract class AppLocalizations {
   /// No description provided for @hiddenRecordsHint.
   ///
   /// In ko, this message translates to:
-  /// **'폴더를 빼서 숨겨 둔 {count}곡이에요. 기록을 지울 곡을 골라요.'**
+  /// **'폴더를 빼서 숨겨 둔 {count}곡이에요. 앱에만 저장된 기록이라 지워도 음원 파일은 그대로예요.'**
   String hiddenRecordsHint(int count);
 
   /// No description provided for @hiddenRecordsPlays.

@@ -904,7 +904,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String hiddenRecordsHint(int count) {
-    return '$count hidden songs from removed folders. Pick the ones to clear.';
+    return '$count hidden songs from removed folders. These records live only in the app, so clearing them keeps your music files.';
   }
 
   @override

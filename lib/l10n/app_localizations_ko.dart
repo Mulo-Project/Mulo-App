@@ -885,7 +885,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String hiddenRecordsHint(int count) {
-    return '폴더를 빼서 숨겨 둔 $count곡이에요. 기록을 지울 곡을 골라요.';
+    return '폴더를 빼서 숨겨 둔 $count곡이에요. 앱에만 저장된 기록이라 지워도 음원 파일은 그대로예요.';
   }
 
   @override
