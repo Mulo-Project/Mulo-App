@@ -3117,7 +3117,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get equalizerMyPresets => '내 프리셋';
 
   @override
-  String get equalizerMyPresetsHint => '길게 누르면 지워요';
+  String get equalizerMyPresetsHint => '길게 누르면 덮어쓰기 · 이름 바꾸기 · 지우기 메뉴가 열려요';
+
+  @override
+  String get equalizerPresetOverwrite => '지금 값으로 덮어쓰기';
+
+  @override
+  String get equalizerPresetRename => '이름 바꾸기';
 
   @override
   String get equalizerPresetSaveNew => '지금 값 저장';
