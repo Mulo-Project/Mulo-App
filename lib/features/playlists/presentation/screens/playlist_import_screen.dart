@@ -96,7 +96,7 @@ class _PlaylistImportScreenState extends State<PlaylistImportScreen> {
       artist:
           own?.artist ??
           ((common?.artist ?? '').isNotEmpty ? common!.artist : hit.uploader),
-      album: own?.album ?? '',
+      album: own?.album ?? common?.album ?? '',
       genre: base?.genre ?? '',
       duration: hit.duration,
       thumbnailUrl: hit.thumbnailUrl,
@@ -627,6 +627,7 @@ class _Footer extends StatelessWidget {
         if (c.format != null) c.format!.name,
       ],
       if (c.genre.isNotEmpty) c.genre,
+      if (c.album.isNotEmpty) c.album,
       if (c.artist.isNotEmpty) c.artist,
     ].join(' · ');
   }

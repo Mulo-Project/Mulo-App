@@ -354,6 +354,7 @@ class _DownloadScreenState extends State<DownloadScreen> {
       _picked = Color(preset.color!);
       _pickedSet = true;
     }
+    if (_common) _album.text = preset.album;
     if (!_common) {
       _cover = preset.cover ?? _defaultCover;
       _selected.addAll(preset.playlistIds);
@@ -557,14 +558,12 @@ class _DownloadScreenState extends State<DownloadScreen> {
                             : l10n.unknownArtist,
                       ),
                       const SizedBox(height: AppSpacing.sm),
-                      if (!_common) ...[
-                        AppTextField(
-                          label: l10n.downloadFieldAlbum,
-                          controller: _album,
-                          hint: l10n.unknownAlbum,
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                      ],
+                      AppTextField(
+                        label: l10n.downloadFieldAlbum,
+                        controller: _album,
+                        hint: l10n.unknownAlbum,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
                       AppTextField(
                         label: l10n.downloadFieldGenre,
                         controller: _genre,

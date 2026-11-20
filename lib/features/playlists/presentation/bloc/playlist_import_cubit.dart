@@ -445,6 +445,7 @@ class PlaylistImportCubit extends Cubit<PlaylistImportState> {
       title: hit.title,
       // 공통 아티스트를 비워 두면 곡마다 올린 채널 이름을 쓴다.
       artist: (c?.artist ?? '').isNotEmpty ? c!.artist : hit.uploader,
+      album: c?.album ?? '',
       genre: c?.genre ?? '',
       color: c?.color,
       playlistIds: {playlistId},
