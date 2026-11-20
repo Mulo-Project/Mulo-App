@@ -824,6 +824,18 @@ abstract class AppLocalizations {
   /// **'기본 포맷'**
   String get settingsFormat;
 
+  /// No description provided for @settingsFormatOriginal.
+  ///
+  /// In ko, this message translates to:
+  /// **'원본 그대로'**
+  String get settingsFormatOriginal;
+
+  /// No description provided for @downloadFormatOriginal.
+  ///
+  /// In ko, this message translates to:
+  /// **'원본 ({format})'**
+  String downloadFormatOriginal(String format);
+
   /// No description provided for @settingsEngine.
   ///
   /// In ko, this message translates to:
@@ -1285,18 +1297,6 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'타이머 끄기'**
   String get playerSleepTimerOff;
-
-  /// No description provided for @settingsFormatOriginal.
-  ///
-  /// In ko, this message translates to:
-  /// **'원본 그대로'**
-  String get settingsFormatOriginal;
-
-  /// No description provided for @downloadFormatOriginal.
-  ///
-  /// In ko, this message translates to:
-  /// **'원본 ({format})'**
-  String downloadFormatOriginal(String format);
 
   /// No description provided for @playerSleepTimerMinutes.
   ///
@@ -5042,12 +5042,6 @@ abstract class AppLocalizations {
   /// **'권한이 허용되지 않았어요. 다시 눌러 허용해 주세요.'**
   String get permDeniedNotice;
 
-  /// No description provided for @permBlockedNotice.
-  ///
-  /// In ko, this message translates to:
-  /// **'권한 요청이 막혔어요. 다시 누르면 휴대폰 설정이 열려요.'**
-  String get permBlockedNotice;
-
   /// No description provided for @permMediaBlockedNotice.
   ///
   /// In ko, this message translates to:
@@ -5059,6 +5053,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'설정 열기'**
   String get permOpenSettings;
+
+  /// No description provided for @permBlockedNotice.
+  ///
+  /// In ko, this message translates to:
+  /// **'권한 요청이 막혔어요. 다시 누르면 휴대폰 설정이 열려요.'**
+  String get permBlockedNotice;
 
   /// No description provided for @settingsNotifications.
   ///
@@ -5075,7 +5075,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsNotifyDownloadProgressDesc.
   ///
   /// In ko, this message translates to:
-  /// **'받는 동안 진행 상황을 알림창에 보여요.'**
+  /// **'받는 동안 진행 상황을 알림창에 보여요. 켜 두면 앱이 뒤로 가거나 닫혀도 받기를 이어 가요.'**
   String get settingsNotifyDownloadProgressDesc;
 
   /// No description provided for @settingsNotifyDownloadResult.

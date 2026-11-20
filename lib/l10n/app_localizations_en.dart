@@ -399,6 +399,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsFormat => 'Default format';
 
   @override
+  String get settingsFormatOriginal => 'Original';
+
+  @override
+  String downloadFormatOriginal(String format) {
+    return 'Original ($format)';
+  }
+
+  @override
   String get settingsEngine => 'Download engine';
 
   @override
@@ -656,14 +664,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get playerSleepTimerOff => 'Turn off timer';
-
-  @override
-  String get settingsFormatOriginal => 'Original';
-
-  @override
-  String downloadFormatOriginal(String format) {
-    return 'Original ($format)';
-  }
 
   @override
   String playerSleepTimerMinutes(int minutes) {
@@ -2765,7 +2765,8 @@ class AppLocalizationsEn extends AppLocalizations {
       'Blocked. Tap to turn it on in system settings.';
 
   @override
-  String get permDeniedNotice => 'Permission not granted. Tap again to allow it.';
+  String get permDeniedNotice =>
+      'Permission not granted. Tap again to allow it.';
 
   @override
   String get permMediaBlockedNotice =>

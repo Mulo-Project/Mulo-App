@@ -394,6 +394,14 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsFormat => '기본 포맷';
 
   @override
+  String get settingsFormatOriginal => '원본 그대로';
+
+  @override
+  String downloadFormatOriginal(String format) {
+    return '원본 ($format)';
+  }
+
+  @override
   String get settingsEngine => '다운로드 엔진';
 
   @override
@@ -638,14 +646,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get playerSleepTimerOff => '타이머 끄기';
-
-  @override
-  String get settingsFormatOriginal => '원본 그대로';
-
-  @override
-  String downloadFormatOriginal(String format) {
-    return '원본 ($format)';
-  }
 
   @override
   String playerSleepTimerMinutes(int minutes) {
@@ -2712,7 +2712,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsNotifyDownloadProgress => '받기 진행 알림';
 
   @override
-  String get settingsNotifyDownloadProgressDesc => '받는 동안 진행 상황을 알림창에 보여요. 켜 두면 앱이 뒤로 가거나 닫혀도 받기를 이어 가요.';
+  String get settingsNotifyDownloadProgressDesc =>
+      '받는 동안 진행 상황을 알림창에 보여요. 켜 두면 앱이 뒤로 가거나 닫혀도 받기를 이어 가요.';
 
   @override
   String get settingsNotifyDownloadResult => '받기 결과 알림';
