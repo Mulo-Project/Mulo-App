@@ -582,6 +582,7 @@ class _Row extends StatelessWidget {
             size: AppSizes.rowButton,
             onPressed: onSettings,
           ),
+          const SizedBox(width: AppSpacing.xs),
           CircleIconButton(
             key: ValueKey('import-video-detail-${hit.id}'),
             icon: AppIcons.chevronRight,
