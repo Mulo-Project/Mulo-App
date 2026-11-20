@@ -5798,10 +5798,6 @@ abstract class AppLocalizations {
   /// **'길게 누르면 덮어쓰기 · 이름 바꾸기 · 지우기 메뉴가 열려요'**
   String get equalizerMyPresetsHint;
 
-  /// No description provided for @equalizerPresetSaveNew.
-  ///
-  /// In ko, this message translates to:
-  /// **'지금 값 저장'**
   /// No description provided for @equalizerPresetOverwrite.
   ///
   /// In ko, this message translates to:
@@ -5814,6 +5810,10 @@ abstract class AppLocalizations {
   /// **'이름 바꾸기'**
   String get equalizerPresetRename;
 
+  /// No description provided for @equalizerPresetSaveNew.
+  ///
+  /// In ko, this message translates to:
+  /// **'지금 값 저장'**
   String get equalizerPresetSaveNew;
 
   /// No description provided for @equalizerPresetNameTitle.

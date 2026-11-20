@@ -3202,7 +3202,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get equalizerMyPresets => 'My presets';
 
   @override
-  String get equalizerMyPresetsHint => 'Long-press for overwrite, rename or delete';
+  String get equalizerMyPresetsHint =>
+      'Long-press for overwrite, rename or delete';
 
   @override
   String get equalizerPresetOverwrite => 'Overwrite with current values';
