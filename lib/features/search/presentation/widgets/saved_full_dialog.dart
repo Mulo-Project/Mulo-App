@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/design/design.dart';
-import '../../../../core/format/format_bytes.dart';
 import '../../../../core/l10n/l10n.dart';
 import '../../../settings/presentation/widgets/stream_cache_row.dart'
-    show streamCacheLimits;
+    show streamCacheLimits, streamCacheLimitLabel;
 import '../bloc/stream_cache_cubit.dart';
 import 'video_quality_sheet.dart' show ChoiceChipItem, ChoiceChips;
 
@@ -43,7 +42,7 @@ class _SavedFullDialog extends StatelessWidget {
           for (final limit in streamCacheLimits)
             ChoiceChipItem(
               key: ValueKey('saved-full-limit-$limit'),
-              label: formatBytes(limit),
+              label: streamCacheLimitLabel(l10n, limit),
               selected: info.limitBytes == limit,
               onTap: () async {
                 final navigator = Navigator.of(context);

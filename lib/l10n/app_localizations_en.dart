@@ -868,6 +868,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get settingsStreamCacheUnlimited => 'Unlimited';
+
+  @override
+  String settingsStreamCacheUnlimitedHint(String used) {
+    return 'No limit: it keeps growing until you clear it. If the device runs low on space, the system clears temporary files first. ($used used)';
+  }
+
+  @override
   String get settingsStreamCacheCleared => 'Streaming cache cleared';
 
   @override

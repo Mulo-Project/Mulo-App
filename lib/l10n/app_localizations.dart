@@ -1664,6 +1664,18 @@ abstract class AppLocalizations {
   /// **'임시 저장한 음원도 함께 계산해요. 넘으면 오래된 임시 캐시부터 지워요. ({used} 사용 중)'**
   String settingsStreamCacheLimitHint(String used);
 
+  /// No description provided for @settingsStreamCacheUnlimited.
+  ///
+  /// In ko, this message translates to:
+  /// **'무제한'**
+  String get settingsStreamCacheUnlimited;
+
+  /// No description provided for @settingsStreamCacheUnlimitedHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'한도 없이 직접 비우기 전까지 계속 쌓여요. 기기 공간이 부족하면 시스템이 임시 파일부터 정리해요. ({used} 사용 중)'**
+  String settingsStreamCacheUnlimitedHint(String used);
+
   /// No description provided for @settingsStreamCacheCleared.
   ///
   /// In ko, this message translates to:

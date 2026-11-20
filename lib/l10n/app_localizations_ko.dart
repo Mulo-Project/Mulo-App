@@ -849,6 +849,14 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get settingsStreamCacheUnlimited => '무제한';
+
+  @override
+  String settingsStreamCacheUnlimitedHint(String used) {
+    return '한도 없이 직접 비우기 전까지 계속 쌓여요. 기기 공간이 부족하면 시스템이 임시 파일부터 정리해요. ($used 사용 중)';
+  }
+
+  @override
   String get settingsStreamCacheCleared => '임시 저장소를 비웠어요';
 
   @override
