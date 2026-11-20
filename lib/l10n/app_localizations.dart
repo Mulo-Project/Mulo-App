@@ -830,6 +830,24 @@ abstract class AppLocalizations {
   /// **'원본 그대로'**
   String get settingsFormatOriginal;
 
+  /// No description provided for @settingsAudioFormat.
+  ///
+  /// In ko, this message translates to:
+  /// **'소리 기본 포맷'**
+  String get settingsAudioFormat;
+
+  /// No description provided for @settingsVideoFormat.
+  ///
+  /// In ko, this message translates to:
+  /// **'영상 기본 형식'**
+  String get settingsVideoFormat;
+
+  /// No description provided for @settingsVideoQuality.
+  ///
+  /// In ko, this message translates to:
+  /// **'영상 기본 화질'**
+  String get settingsVideoQuality;
+
   /// No description provided for @downloadFormatOriginal.
   ///
   /// In ko, this message translates to:

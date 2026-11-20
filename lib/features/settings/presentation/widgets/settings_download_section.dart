@@ -26,10 +26,14 @@ class SettingsDownloadSection extends StatefulWidget {
 class _SettingsDownloadSectionState extends State<SettingsDownloadSection> {
   /// 이 기기에서 고를 수 있는 저장 형식 (OS별 정책, 불러오기 전엔 비어 있다).
   List<AudioFormat> _formats = const [];
+  var _videoAvailable = false;
 
   @override
   void initState() {
     super.initState();
+    sl<IsVideoSaveAvailable>()(const NoParams()).then((ok) {
+      if (mounted && ok) setState(() => _videoAvailable = true);
+    });
     sl<GetSelectableFormats>()(const NoParams()).then((formats) {
       if (!mounted) return;
       setState(() => _formats = formats);
@@ -64,7 +68,7 @@ class _SettingsDownloadSectionState extends State<SettingsDownloadSection> {
         const LoadedFoldersTile(),
         if (_formats.isNotEmpty)
           SettingRow(
-            title: l10n.settingsFormat,
+            title: l10n.settingsAudioFormat,
             below: SegmentedPills<AudioFormat>(
               expand: true,
               values: _formats,
@@ -75,6 +79,29 @@ class _SettingsDownloadSectionState extends State<SettingsDownloadSection> {
               onChanged: context.read<DownloadPreferencesCubit>().setFormat,
             ),
           ),
+        // 영상 저장은 Android full 빌드만 쓸 수 있다.
+        if (_videoAvailable) ...[
+          SettingRow(
+            title: l10n.settingsVideoFormat,
+            below: SegmentedPills<VideoFormat>(
+              expand: true,
+              values: VideoFormat.values,
+              selected: prefs.videoFormat,
+              labelOf: (f) => f.name,
+              onChanged: context.read<DownloadPreferencesCubit>().setVideoFormat,
+            ),
+          ),
+          SettingRow(
+            title: l10n.settingsVideoQuality,
+            below: SegmentedPills<int>(
+              expand: true,
+              values: videoHeights,
+              selected: prefs.videoHeight,
+              labelOf: (h) => '${h}p',
+              onChanged: context.read<DownloadPreferencesCubit>().setVideoHeight,
+            ),
+          ),
+        ],
       ],
     );
   }

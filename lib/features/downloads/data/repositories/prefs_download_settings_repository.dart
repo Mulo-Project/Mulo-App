@@ -60,6 +60,35 @@ class PrefsDownloadSettingsRepository implements DownloadSettingsRepository {
         format.name,
       );
 
+  static const _videoFormatKey = 'download.videoFormat';
+  static const _videoHeightKey = 'download.videoHeight';
+
+  @override
+  Future<VideoFormat> loadVideoFormat() async {
+    final name = (await SharedPreferences.getInstance()).getString(
+      _videoFormatKey,
+    );
+    return VideoFormat.values.where((f) => f.name == name).firstOrNull ??
+        VideoFormat.mp4;
+  }
+
+  @override
+  Future<void> saveVideoFormat(VideoFormat format) async =>
+      (await SharedPreferences.getInstance()).setString(
+        _videoFormatKey,
+        format.name,
+      );
+
+  @override
+  Future<int> loadVideoHeight() async {
+    final h = (await SharedPreferences.getInstance()).getInt(_videoHeightKey);
+    return h != null && videoHeights.contains(h) ? h : 1080;
+  }
+
+  @override
+  Future<void> saveVideoHeight(int height) async =>
+      (await SharedPreferences.getInstance()).setInt(_videoHeightKey, height);
+
   @override
   Future<String?> pickFolder() => FilePicker.getDirectoryPath();
 }

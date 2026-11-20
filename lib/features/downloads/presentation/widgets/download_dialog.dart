@@ -317,7 +317,10 @@ class _DownloadScreenState extends State<DownloadScreen> {
   @override
   void initState() {
     super.initState();
-    _format = context.read<DownloadPreferencesCubit>().state.format;
+    final prefs = context.read<DownloadPreferencesCubit>().state;
+    _format = prefs.format;
+    _videoFormat = prefs.videoFormat;
+    _videoHeight = prefs.videoHeight;
     _applyPreset();
     sl<IsVideoSaveAvailable>()(const NoParams()).then((ok) {
       if (mounted && ok) setState(() => _videoAvailable = true);

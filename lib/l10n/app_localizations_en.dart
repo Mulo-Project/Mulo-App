@@ -402,6 +402,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsFormatOriginal => 'Original';
 
   @override
+  String get settingsAudioFormat => 'Default sound format';
+
+  @override
+  String get settingsVideoFormat => 'Default video format';
+
+  @override
+  String get settingsVideoQuality => 'Default video quality';
+
+  @override
   String downloadFormatOriginal(String format) {
     return 'Original ($format)';
   }

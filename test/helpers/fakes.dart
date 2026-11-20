@@ -383,6 +383,21 @@ class MemoryDownloadSettings implements DownloadSettingsRepository {
   @override
   Future<void> saveFormat(AudioFormat value) async => format = value;
 
+  VideoFormat videoFormat = VideoFormat.mp4;
+  int videoHeight = 1080;
+
+  @override
+  Future<VideoFormat> loadVideoFormat() async => videoFormat;
+
+  @override
+  Future<void> saveVideoFormat(VideoFormat value) async => videoFormat = value;
+
+  @override
+  Future<int> loadVideoHeight() async => videoHeight;
+
+  @override
+  Future<void> saveVideoHeight(int value) async => videoHeight = value;
+
   @override
   Future<String?> pickFolder() async => picked;
 }

@@ -397,6 +397,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsFormatOriginal => '원본 그대로';
 
   @override
+  String get settingsAudioFormat => '소리 기본 포맷';
+
+  @override
+  String get settingsVideoFormat => '영상 기본 형식';
+
+  @override
+  String get settingsVideoQuality => '영상 기본 화질';
+
+  @override
   String downloadFormatOriginal(String format) {
     return '원본 ($format)';
   }
