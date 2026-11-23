@@ -26,7 +26,9 @@
 ## 키스토어 만들기 (한 번만)
 ```bash
 keytool -genkeypair -v -keystore mulo-release.jks -alias mulo -keyalg RSA -keysize 2048 -validity 36500
-base64 -w0 mulo-release.jks      # macOS: base64 -i mulo-release.jks | tr -d '\n'   Windows PowerShell: [Convert]::ToBase64String([IO.File]::ReadAllBytes("mulo-release.jks"))
+# Windows PowerShell (결과를 클립보드에 복사)
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("mulo-release.jks")) | Set-Clipboard
+# macOS / Linux: base64 -i mulo-release.jks | tr -d '\n'
 keytool -list -v -keystore mulo-release.jks -alias mulo   # SHA-1 확인
 ```
 - 키스토어 파일과 비밀번호는 **반드시 따로 백업**한다. 잃으면 같은 앱으로 업데이트할 수 없다.
