@@ -2711,6 +2711,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get permOverlay => '다른 앱 위에 표시';
 
   @override
+  String get permBattery => '백그라운드 재생 유지';
+
+  @override
+  String get permBatteryDesc => '일시정지로 오래 두어도 재생 알림이 먹히도록, 배터리 최적화에서 이 앱을 빼요.';
+
+  @override
   String get permOverlayDesc => '다른 앱을 쓰는 동안 화면 위에 가사를 띄우는 데 써요.';
 
   @override

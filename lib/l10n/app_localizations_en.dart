@@ -2780,6 +2780,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get permOverlay => 'Display over other apps';
 
   @override
+  String get permBattery => 'Keep playback in background';
+
+  @override
+  String get permBatteryDesc =>
+      'Excludes this app from battery optimization so the playback notification keeps working after a long pause.';
+
+  @override
   String get permOverlayDesc =>
       'Used to show lyrics over other apps while you use them.';
 

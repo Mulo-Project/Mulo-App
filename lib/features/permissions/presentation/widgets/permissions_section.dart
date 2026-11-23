@@ -81,6 +81,7 @@ class _PermissionsSectionState extends State<PermissionsSection>
     AppPermission.notifications => l10n.permNotifications,
     AppPermission.audio => l10n.permAudio,
     AppPermission.overlay => l10n.permOverlay,
+    AppPermission.battery => l10n.permBattery,
   };
 
   String _description(
@@ -93,6 +94,7 @@ class _PermissionsSectionState extends State<PermissionsSection>
       AppPermission.notifications => l10n.permNotificationsDesc,
       AppPermission.audio => l10n.permAudioDesc,
       AppPermission.overlay => l10n.permOverlayDesc,
+      AppPermission.battery => l10n.permBatteryDesc,
     };
   }
 }

@@ -1071,6 +1071,8 @@
   "permAudioDesc": "기기에 있는 음악을 불러오는 데 써요.",
   "permOverlay": "다른 앱 위에 표시",
   "permOverlayDesc": "다른 앱을 쓰는 동안 화면 위에 가사를 띄우는 데 써요.",
+  "permBattery": "백그라운드 재생 유지",
+  "permBatteryDesc": "일시정지로 오래 두어도 재생 알림이 먹히도록, 배터리 최적화에서 이 앱을 빼요.",
   "permBlockedDesc": "요청이 막혀 있어요. 눌러서 휴대폰 설정에서 켜 주세요.",
   "permDeniedNotice": "권한이 허용되지 않았어요. 다시 눌러 허용해 주세요.",
   "permMediaBlockedNotice": "음악·영상 권한이 없어 재생할 수 없어요. 설정에서 허용해 주세요.",

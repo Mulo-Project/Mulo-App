@@ -5066,6 +5066,18 @@ abstract class AppLocalizations {
   /// **'다른 앱 위에 표시'**
   String get permOverlay;
 
+  /// No description provided for @permBattery.
+  ///
+  /// In ko, this message translates to:
+  /// **'백그라운드 재생 유지'**
+  String get permBattery;
+
+  /// No description provided for @permBatteryDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'일시정지로 오래 두어도 재생 알림이 먹히도록, 배터리 최적화에서 이 앱을 빼요.'**
+  String get permBatteryDesc;
+
   /// No description provided for @permOverlayDesc.
   ///
   /// In ko, this message translates to:

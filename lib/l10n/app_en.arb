@@ -970,6 +970,8 @@
   "permAudioDesc": "Used to load music stored on this device.",
   "permOverlay": "Display over other apps",
   "permOverlayDesc": "Used to show lyrics over other apps while you use them.",
+  "permBattery": "Keep playback in background",
+  "permBatteryDesc": "Excludes this app from battery optimization so the playback notification keeps working after a long pause.",
   "permBlockedDesc": "Blocked. Tap to turn it on in system settings.",
   "permDeniedNotice": "Permission not granted. Tap again to allow it.",
   "permMediaBlockedNotice": "Music and video access is off, so this can’t play. Allow it in settings.",
