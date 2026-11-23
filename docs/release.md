@@ -31,6 +31,7 @@ keytool -genkeypair -v -keystore mulo-release.jks -alias mulo -keyalg RSA -keysi
 # macOS / Linux: base64 -i mulo-release.jks | tr -d '\n'
 keytool -list -v -keystore mulo-release.jks -alias mulo   # SHA-1 확인
 ```
+- 한국어 Windows의 keytool은 확인 질문(`[아니오]:`)에 `yes`를 못 알아듣고 같은 질문을 되풀이한다. **`y`**(또는 `예`)를 입력한다.
 - 키스토어 파일과 비밀번호는 **반드시 따로 백업**한다. 잃으면 같은 앱으로 업데이트할 수 없다.
 - 저장소에 올리지 않는다 (`*.jks` · `key.properties`는 gitignore).
 - **구글 로그인**: 구글 클라우드 콘솔의 Android OAuth 클라이언트(패키지 `com.mulo.app`)에 위 **release 키의 SHA-1**을 추가해야 배포 APK에서 로그인이 된다.
