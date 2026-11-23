@@ -1,8 +1,26 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+// 릴리스 서명 값: android/key.properties(로컬, git 제외) 또는 환경 변수(CI). docs/release.md
+// 키: storeFile, storePassword, keyAlias, keyPassword / 환경 변수: MULO_KEYSTORE_FILE, MULO_KEYSTORE_PASSWORD, MULO_KEY_ALIAS, MULO_KEY_PASSWORD
+val keyProps = Properties().apply {
+    val f = rootProject.file("key.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+fun signingValue(prop: String, env: String): String? =
+    keyProps.getProperty(prop)?.takeIf { it.isNotBlank() } ?: System.getenv(env)?.takeIf { it.isNotBlank() }
+val releaseStoreFile = signingValue("storeFile", "MULO_KEYSTORE_FILE")
+val releaseStorePassword = signingValue("storePassword", "MULO_KEYSTORE_PASSWORD")
+val releaseKeyAlias = signingValue("keyAlias", "MULO_KEY_ALIAS")
+val releaseKeyPassword = signingValue("keyPassword", "MULO_KEY_PASSWORD")
+val hasReleaseSigning = listOf(releaseStoreFile, releaseStorePassword, releaseKeyAlias, releaseKeyPassword).all { it != null }
+// 배포 빌드(CI)는 키가 없으면 debug 키로 몰래 서명하지 않고 실패시킨다.
+val requireReleaseSigning = System.getenv("MULO_REQUIRE_RELEASE_SIGNING") == "true"
 
 android {
     namespace = "com.mulo.app"
@@ -44,11 +62,28 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = rootProject.file(releaseStoreFile!!).takeIf { it.exists() } ?: file(releaseStoreFile)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            } else {
+                if (requireReleaseSigning) {
+                    throw GradleException("릴리스 서명 키가 없습니다 (MULO_KEYSTORE_* 환경 변수 또는 android/key.properties). docs/release.md")
+                }
+                // 키가 없는 로컬 빌드는 `flutter run --release`가 되도록 debug 키로 서명한다 (배포 금지).
+                signingConfig = signingConfigs.getByName("debug")
+            }
             // 용량: 코드 · 리소스를 줄인다. ABI 분할은 빌드 명령(`--split-per-abi`)으로 한다.
             isMinifyEnabled = true
             isShrinkResources = true

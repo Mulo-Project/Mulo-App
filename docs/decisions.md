@@ -1038,3 +1038,9 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 - 후(목표): 실질적인 기능은 네이티브가 하고 Dart는 요청을 넘기고 상태를 그리기만 한다. 앱이 꺼져 있어도 포그라운드 서비스가 받기 · 재시도를 끝까지 한다.
 - DB(수정 2026-11-17): 보관함 DB와 그 상태는 Dart(drift)가 쥔다. 네이티브는 받기 · 변환 · 태그 · 파일 저장 · 커버 사본 · 가사 파일까지 하고, 곡 하나를 보관함에 넣는 데 필요한 값 전부를 `registered` 이벤트로 Dart에 넘긴다. Dart(`DriftDownloadRegistrar`)가 drift로 쓰고 `ack`로 알린다. `ack`가 올 때까지 네이티브는 값을 `pending_register.json`에 맡겨 두었다가 Dart가 준비되면(`dbReady`) 다시 넘긴다 (앱이 꺼져 있는 사이 받은 곡도 다음에 등록된다). 네이티브가 DB 파일에 직접 쓰던 방식(WAL · busy timeout · "바뀐 표" 알림)은 목록 갱신이 어긋나서 버렸다.
 - 단계(한 PR 안에서): ① 네이티브 받기 큐 저장과 서비스에서의 재시도(실패 → 파일 저장까지) ② 보관함 등록(DB 쓰기 + 알림) ③ 재생목록 · 커버 · 색 · 가사 사본 ④ Dart 큐 코드 제거와 화면 연결. 형식별 처리는 기존 규칙대로 네이티브의 형식별 함수가 가진다 (Dart에 분기를 만들지 않는다).
+
+## D-168 · 2026-11-23 · CI(GitHub Actions)와 태그 배포(GitHub Release APK)
+- CI(`ci.yml`): PR · develop/main push마다 analyze · test, debug APK 빌드(arm64만), 네이티브 단위 테스트. 비밀값 없이 돈다.
+- CD(`release.yml`): `v*` 태그 push → CI 재사용 → 태그와 pubspec 버전 일치 확인 → 서명 release APK(`--flavor full --split-per-abi`, D-056 용량 결정) → SHA256SUMS와 함께 GitHub Release.
+- 서명: release 빌드가 debug 키 대신 `MULO_KEYSTORE_*` 환경 변수 또는 `android/key.properties`를 쓴다. 배포 빌드는 키가 없거나 debug 인증서면 실패한다. 비밀값은 GitHub Secrets (`docs/release.md`).
+- 기존 설치본은 debug 키라 release 키로는 업데이트 설치가 안 된다 (한 번 지우고 설치).
