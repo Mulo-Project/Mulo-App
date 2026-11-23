@@ -132,7 +132,9 @@ class _CollectionInfoScreenState extends State<CollectionInfoScreen> {
     return Scaffold(
       backgroundColor: p.background,
       body: AppBackground(
-        child: SafeArea(
+        child: ColorBackdrop(
+          color: color,
+          child: SafeArea(
           child: Column(
             children: [
               AppTopBar(
@@ -199,12 +201,14 @@ class _CollectionInfoScreenState extends State<CollectionInfoScreen> {
                       const AppDivider(),
                       const SizedBox(height: AppSpacing.md),
                       // 이미지가 없을 때 쓰이는 커버 색.
-                      SectionTitle(l10n.decorateColor, padded: false),
-                      const SizedBox(height: AppSpacing.xs),
-                      ColorPicker(
+                      ColorEntry(
+                        title: l10n.decorateColor,
                         selected: color,
                         autoLabel: l10n.playlistColorAuto,
-                        customLabel: l10n.colorCustom,
+                        clearLabel: l10n.colorClear,
+                        coverLabel: l10n.colorFromCover,
+                        cover: coverImageOf(context, key),
+                        applyLabel: l10n.downloadApply,
                         optionLabel: l10n.colorOption,
                         onChanged: (c) => c == null
                             ? colors.clear(key)
@@ -233,6 +237,7 @@ class _CollectionInfoScreenState extends State<CollectionInfoScreen> {
                 ),
             ],
           ),
+        ),
         ),
       ),
     );

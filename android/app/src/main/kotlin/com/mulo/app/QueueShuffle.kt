@@ -20,13 +20,17 @@ internal object QueueShuffle {
     }
 
     /**
-     * 한 바퀴를 돈 뒤 첫 곡을 뺀 나머지를 새로 섞는다. 방금 들은 곡([previousId])이 바로 다음에 오지 않게 한다.
-     * [items]는 대기열 전체이고 첫 곡은 그대로 둔다.
+     * 한 바퀴를 돈 뒤 대기열 전체를 새로 섞는다. 새 바퀴의 첫 곡은 방금 끝낸 곡([previousId])도, 이번에 막 시작한 곡(지금 첫 곡)도
+     * 아닌 곡으로 하고, 방금 들은 곡이 둘째로 오지도 않게 한다 (바퀴마다 같은 곡으로 시작하지 않도록).
+     * [items]는 대기열 전체이고 3곡 이상이어야 한다.
      */
-    fun reshuffledRest(items: List<MediaItem>, previousId: String): List<MediaItem> {
-        val rest = items.drop(1).shuffled().toMutableList()
-        if (rest.first().mediaId == previousId) rest.add(rest.removeAt(0))
-        return rest
+    fun reshuffledLap(items: List<MediaItem>, previousId: String): List<MediaItem> {
+        val oldFirstId = items.first().mediaId
+        val mixed = items.shuffled().toMutableList()
+        val first = mixed.indexOfFirst { it.mediaId != previousId && it.mediaId != oldFirstId }
+        if (first > 0) mixed.add(0, mixed.removeAt(first))
+        if (mixed.size > 2 && mixed[1].mediaId == previousId) mixed.add(mixed.removeAt(1))
+        return mixed
     }
 
     /**

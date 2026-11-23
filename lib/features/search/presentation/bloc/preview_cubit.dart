@@ -268,6 +268,13 @@ class PreviewCubit extends Cubit<PreviewState> {
         // 위치를 못 옮기면 처음부터 듣는다.
       }
     }
+    // 화면은 "재생 중"인데 소리가 안 나는 어긋남을 막는다: 위치를 옮긴 뒤 한 번 더 재생을 건다.
+    if (isClosed || state.status != PreviewStatus.playing) return;
+    try {
+      await _resume(const NoParams());
+    } on Object {
+      // 이미 재생 중이면 상관없다.
+    }
   }
 
   void _onProgress(PreviewProgress p) {
@@ -487,6 +494,8 @@ class PreviewCubit extends Cubit<PreviewState> {
       return;
     }
     if (state.status == PreviewStatus.playing && state.hitId == snap.hit.id) {
+      // 끊겨서 멈춘 곡은 사용자가 다시 재생을 누를 때까지 멈춘 상태로 둔다 (엔진 상태가 어떻든 화면이 "재생 중"으로 돌아가지 않게).
+      if (_interrupted != null) return;
       if (state.paused != snap.paused) {
         emit(
           PreviewState(

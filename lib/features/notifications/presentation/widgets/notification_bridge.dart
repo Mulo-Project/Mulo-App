@@ -361,6 +361,12 @@ class _NotificationBridgeState extends State<NotificationBridge>
         listenWhen: (a, b) => !a.loaded && b.loaded,
         listener: (_, _) => _restore(),
       ),
+      BlocListener<LibraryCubit, LibraryState>(
+        // 곡 정보를 고치면(어느 화면에서든) 대기열의 같은 곡도 새 정보로 맞춘다.
+        listenWhen: (a, b) => a.revision != b.revision,
+        listener: (context, s) =>
+            context.read<NowPlayingCubit>().syncTracks(s.tracks),
+      ),
       BlocListener<DownloadQueueCubit, DownloadQueueState>(
         listener: (_, _) => _syncDownloads(),
       ),

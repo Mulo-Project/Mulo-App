@@ -211,10 +211,17 @@ object PlaybackHub {
             PlaybackStore.clear(context)
             return
         }
-        val items = (0 until exo.mediaItemCount).map { QueueMapping.storedItemOf(exo.getMediaItemAt(it)) }
+        val items = (0 until exo.mediaItemCount).map { storedWithPending(exo.getMediaItemAt(it)) }
         PlaybackStore.saveQueue(context, items, extras)
         persistPosition()
         syncResumable()
+    }
+
+    /** 저장할 곡 정보. 지금 곡의 미뤄 둔 새 정보가 있으면 그것으로 쓴다. */
+    private fun storedWithPending(item: MediaItem): StoredItem {
+        val stored = QueueMapping.storedItemOf(item)
+        val p = pendingInfo[item.mediaId] ?: return stored
+        return StoredItem(stored.id, stored.uri, p.first, p.second, p.third, stored.durationMs, stored.art)
     }
 
     private fun persistPosition() {
@@ -324,25 +331,83 @@ object PlaybackHub {
     }
 
     /**
+     * 곡 여러 개를 지금 곡 바로 뒤에 주어진 순서대로 끼운다. 이미 대기열에 있는 곡은 그 자리를 옮기고, 지금 곡은 건너뛴다.
+     * 대기열 알림은 한 번만 보낸다.
+     */
+    fun playAllNext(items: List<*>) {
+        if (exo.mediaItemCount == 0) return
+        val currentId = exo.currentMediaItem?.mediaId
+        var insertAt = exo.currentMediaItemIndex + 1
+        for (map in items) {
+            val item = QueueMapping.mediaItemOf(map as Map<*, *>, artById)
+            if (item.mediaId == currentId) continue
+            val existing = indexOfId(item.mediaId)
+            if (existing >= 0) {
+                exo.removeMediaItem(existing)
+                // 지금 곡보다 앞에서 뺐으면 끼울 자리도 한 칸 당겨진다.
+                if (existing < insertAt) insertAt--
+            }
+            exo.addMediaItem(insertAt, item)
+            insertAt++
+        }
+        MuloLog.d(MuloLog.PLAYBACK, "playAllNext ${items.size}곡")
+        queueEdited()
+    }
+
+    /** 곡 여러 개를 대기열 맨 뒤에 한 번에 붙인다 (이미 있는 곡은 건너뛴다). 대기열 알림은 한 번만 보낸다. */
+    fun addAllToQueue(items: List<*>) {
+        if (exo.mediaItemCount == 0) return
+        var added = 0
+        for (map in items) {
+            val item = QueueMapping.mediaItemOf(map as Map<*, *>, artById)
+            if (indexOfId(item.mediaId) >= 0) continue
+            exo.addMediaItem(item)
+            added++
+        }
+        MuloLog.d(MuloLog.PLAYBACK, "addAllToQueue ${items.size}곡 중 ${added}곡 추가")
+        if (added > 0) queueEdited()
+    }
+
+    /**
      * 곡 하나를 뺀다. 지금 곡을 빼면 다음 곡(마지막 곡이었으면 새 마지막 곡)으로 처음부터 넘어가고 재생 상태는 그대로다.
      * 대기열이 비면 멈추고 비운다.
      */
     fun removeFromQueue(id: String) {
         MuloLog.d(MuloLog.PLAYBACK, "removeFromQueue id=$id")
+        if (removeOne(id)) removalDone()
+    }
+
+    /** 곡 여러 개를 한 번에 뺀다. 저장 · 세션 · 대기열 알림은 끝에 한 번만 한다. */
+    fun removeAllFromQueue(ids: List<*>) {
+        var removed = 0
+        for (id in ids) if (removeOne(id as String)) removed++
+        MuloLog.d(MuloLog.PLAYBACK, "removeAllFromQueue ${ids.size}곡 중 ${removed}곡 뺌")
+        if (removed > 0) removalDone()
+    }
+
+    /** 알림 없이 곡 하나만 뺀다. 뺐으면 true. */
+    private fun removeOne(id: String): Boolean {
         val i = indexOfId(id)
-        if (i < 0) return
+        if (i < 0) return false
         if (exo.mediaItemCount == 1) {
             extras = ""
             exo.stop()
             exo.clearMediaItems()
-            persistQueue()
-            emitQueue()
-            return
+            return true
         }
         // 마지막 곡을 지금 듣는 중이면 먼저 이전 곡으로 옮긴다 (그냥 빼면 ExoPlayer가 재생을 끝내 버린다).
         if (i == exo.currentMediaItemIndex && i == exo.mediaItemCount - 1) exo.seekTo(i - 1, 0L)
         exo.removeMediaItem(i)
-        queueEdited()
+        return true
+    }
+
+    private fun removalDone() {
+        if (exo.mediaItemCount == 0) {
+            persistQueue()
+            emitQueue()
+        } else {
+            queueEdited()
+        }
     }
 
     /** [from]번 곡을 [to] 자리로 옮긴다 ([to]는 옮긴 뒤의 자리). 듣던 곡은 그대로 이어서 재생한다. */
@@ -461,6 +526,48 @@ object PlaybackHub {
             val metadata = item.mediaMetadata.buildUpon().setArtworkUri(art).build()
             exo.replaceMediaItem(i, item.buildUpon().setMediaMetadata(metadata).build())
         }
+        persistQueue()
+    }
+
+    /** 지금 듣는 곡의 바뀐 정보: 항목을 바꿔 끼우면 재생이 다시 시작되므로, 다른 곡으로 넘어간 뒤에 맞춘다. */
+    private val pendingInfo = mutableMapOf<String, Triple<String, String, String>>()
+
+    /**
+     * 곡 정보(제목 · 아티스트 · 앨범)가 바뀌었을 때 대기열의 그 곡 정보를 맞춘다. 메인 스레드에서 부른다.
+     * 지금 듣는 곡은 항목을 바꿔 끼우지 않는다 (듣던 항목을 바꾸면 재생이 처음부터 다시 시작한다). 대신 저장하는 값에는
+     * 바로 반영하고, 엔진 항목은 다른 곡으로 넘어갈 때 맞춘다. 그 곡의 알림 정보는 앱이 [setSession]으로 보낸다.
+     */
+    fun updateQueueInfo(id: String, title: String, artist: String, album: String) {
+        if (!initialized) return
+        val i = indexOfId(id)
+        if (i < 0) return
+        if (i == exo.currentMediaItemIndex) {
+            pendingInfo[id] = Triple(title, artist, album)
+            persistQueue()
+            return
+        }
+        pendingInfo.remove(id)
+        applyInfo(i, title, artist, album)
+        persistQueue()
+        sessionPlayer.refresh()
+    }
+
+    private fun applyInfo(i: Int, title: String, artist: String, album: String) {
+        val item = exo.getMediaItemAt(i)
+        val old = item.mediaMetadata
+        val newArtist = artist.ifEmpty { null }
+        val newAlbum = album.ifEmpty { null }
+        if (old.title?.toString() == title && old.artist?.toString() == newArtist && old.albumTitle?.toString() == newAlbum) return
+        val metadata = old.buildUpon().setTitle(title).setArtist(newArtist).setAlbumTitle(newAlbum).build()
+        exo.replaceMediaItem(i, item.buildUpon().setMediaMetadata(metadata).build())
+    }
+
+    /** 다른 곡으로 넘어가 더는 지금 곡이 아니게 된 곡에, 미뤄 둔 정보를 맞춘다. */
+    private fun applyPendingInfo(previousId: String?) {
+        val info = previousId?.let { pendingInfo.remove(it) } ?: return
+        val i = indexOfId(previousId)
+        if (i < 0 || i == exo.currentMediaItemIndex) return
+        applyInfo(i, info.first, info.second, info.third)
         persistQueue()
     }
 
@@ -652,9 +759,9 @@ object PlaybackHub {
         get() = QueueShuffle.isOn(extras)
 
     /**
-     * 셔플 중 대기열을 한 바퀴 다 돌아 첫 곡으로 넘어왔으면 나머지 곡을 새로 섞는다 (같은 순서로 다시 돌지 않게).
+     * 셔플 중 대기열을 한 바퀴 다 돌아 첫 곡으로 넘어왔으면 전체를 새로 섞는다 (같은 순서로 다시 돌지 않게).
      * 앱이 붙어 있든 아니든 네이티브가 한다 (순서는 네이티브가 쥐고, 앱에는 `queue` 이벤트로 알린다).
-     * 지금 곡(첫 곡)은 끊기지 않게 그대로 두고, 방금 들은 곡이 바로 다음에 오지 않게 한다.
+     * 새 바퀴는 방금 끝낸 곡 · 막 시작한 곡이 아닌 곡으로 시작하고, 방금 들은 곡이 바로 다음에 오지 않게 한다.
      * 섞기 전 순서(extras의 original)는 그대로라 앱을 다시 열어 셔플을 끄면 원래 순서로 돌아간다.
      */
     private fun reshuffleAfterLap(previousId: String?) {
@@ -664,10 +771,11 @@ object PlaybackHub {
         if (wrapped) MuloLog.d(MuloLog.PLAYBACK, "lap wrapped count=$count shuffleOn=$shuffleOn repeat=${exo.repeatMode}")
         if (previousId == null || count < 3 || !shuffleOn) return
         if (!wrapped) return
-        val rest = QueueShuffle.reshuffledRest((0 until count).map { exo.getMediaItemAt(it) }, previousId)
-        exo.removeMediaItems(1, count)
-        exo.addMediaItems(rest)
+        val mixed = QueueShuffle.reshuffledLap((0 until count).map { exo.getMediaItemAt(it) }, previousId)
+        // 새 바퀴의 첫 곡이 바뀌므로 목록을 통째로 바꿔 첫 곡부터 다시 시작한다 (재생 · 일시정지 상태는 그대로).
+        exo.setMediaItems(mixed, 0, 0L)
         persistQueue()
+        sessionPlayer.refresh()
         emitQueue()
     }
 
@@ -750,6 +858,7 @@ object PlaybackHub {
             // 다른 곡으로 넘어가면 구간 반복은 풀린다 (앱도 곡이 바뀌면 스스로 푼다).
             if (previousId != lastMediaId) setLoop(null, null)
             if (reason != Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) reshuffleAfterLap(previousId)
+            applyPendingInfo(previousId)
             persistPosition()
             // 현재 곡이 바뀌었으니 좋아요 버튼 모양을 다시 맞춘다 (앱이 모르는 곡이면 숨긴다).
             refreshLayout()

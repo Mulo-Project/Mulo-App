@@ -28,9 +28,7 @@ class DeviceEqualizerSection extends StatelessWidget {
       for (final d in lib.devices)
         if (d.kind != 'speaker') d,
     ];
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
-      child: SectionCard(
+    return SectionCard(
         title: l10n.equalizerDevicesTitle,
         children: [
           if (devices.isEmpty)
@@ -70,7 +68,6 @@ class DeviceEqualizerSection extends StatelessWidget {
               ),
             ),
         ],
-      ),
     );
   }
 

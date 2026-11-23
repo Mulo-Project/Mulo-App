@@ -9,6 +9,7 @@ import 'helpers/test_data.dart';
 import 'package:music_download_play_app/features/library/domain/entities/import_result.dart';
 import 'package:music_download_play_app/features/home/presentation/screens/home_screen.dart';
 import 'package:music_download_play_app/app/theme_preview_bar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'helpers/fakes.dart';
 
@@ -217,6 +218,8 @@ void main() {
   });
 
   testWidgets('빈 보관함: 불러오기 버튼으로 기기 음악을 추가한다', (tester) async {
+    // 새로 찾은 곡의 태그 읽기 기록이 SharedPreferences를 거친다 (가짜 값이 없으면 기다리다 끝나지 않는다).
+    SharedPreferences.setMockInitialValues({});
     final device = FakeDeviceMusic(ScanFound(TestData.tracks.take(3).toList()));
     await _pumpApp(tester, setUp: () => setUpTestDependencies(device: device));
     expect(find.text('아직 음악이 없어요'), findsOneWidget);

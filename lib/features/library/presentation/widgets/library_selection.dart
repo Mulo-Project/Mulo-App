@@ -5,6 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../covers/presentation/bloc/cover_color_cubit.dart';
+import '../../../covers/presentation/bloc/cover_cubit.dart';
+import '../../../lyrics/presentation/bloc/lyrics_cubit.dart';
 import '../../domain/entities/track.dart';
 import '../../domain/entities/track_group.dart';
 import '../../../player/presentation/bloc/now_playing_cubit.dart';
@@ -16,12 +19,15 @@ import 'rename_progress.dart';
 /// 선택 모드에서 고를 수 있는 일괄 작업.
 enum SelectionAction {
   selectAll,
+  playNext,
+  addToQueue,
   addToPlaylist,
   removeFromPlaylist,
   removeFromQueue,
   album,
   artist,
   genre,
+  delete,
 }
 
 /// 보관함 선택 모드 하단 막대: 닫기 · 선택 수 · "작업" 버튼.
@@ -98,8 +104,9 @@ Future<SelectionAction?> showSelectionActionSheet(
     context,
     builder: (sheet) {
       void pick(SelectionAction a) => Navigator.of(sheet).pop(a);
+      // 항목이 많아 시트 높이(화면의 9/16)를 넘으면 잘려 보이지 않으므로 스크롤되게 한다.
       return SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: appSheetPadding,
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -112,6 +119,18 @@ Future<SelectionAction?> showSelectionActionSheet(
                   icon: AppIcons.checkCircle,
                   label: l10n.newVideosSelectAll,
                   onTap: () => pick(SelectionAction.selectAll),
+                ),
+              if (!inQueue)
+                MenuRow(
+                  icon: AppIcons.playlistPlay,
+                  label: l10n.trackMenuPlayNext,
+                  onTap: () => pick(SelectionAction.playNext),
+                ),
+              if (!inQueue)
+                MenuRow(
+                  icon: AppIcons.queue,
+                  label: l10n.trackMenuAddToQueue,
+                  onTap: () => pick(SelectionAction.addToQueue),
                 ),
               MenuRow(
                 icon: AppIcons.playlistAdd,
@@ -146,6 +165,11 @@ Future<SelectionAction?> showSelectionActionSheet(
                   label: l10n.selectAssignGenre,
                   onTap: () => pick(SelectionAction.genre),
                 ),
+                MenuRow(
+                  icon: AppIcons.delete,
+                  label: l10n.selectDelete,
+                  onTap: () => pick(SelectionAction.delete),
+                ),
               ],
             ],
           ),
@@ -153,6 +177,56 @@ Future<SelectionAction?> showSelectionActionSheet(
       );
     },
   );
+}
+
+/// 고른 곡의 음악 파일과 보관함 기록을 한 번에 지운다 (확인을 받은 뒤).
+/// 지운 곡이 하나라도 있으면 true. 못 지운 곡(권한 거절 등)은 기록을 그대로 두고 개수를 알린다.
+Future<bool> deleteSelection(BuildContext context, List<Track> tracks) async {
+  if (tracks.isEmpty) return false;
+  final l10n = context.l10n;
+  final library = context.read<LibraryCubit>();
+  final player = context.read<NowPlayingCubit>();
+  final covers = context.read<CoverCubit>();
+  final colors = context.read<CoverColorCubit>();
+  final lyrics = context.read<LyricsCubit>();
+  final messenger = ScaffoldMessenger.of(context);
+  final ok = await showDialog<bool>(
+    context: context,
+    useRootNavigator: true,
+    builder: (dialog) => AppDialog(
+      title: l10n.trackDeleteTitle,
+      body: l10n.selectDeleteBody(tracks.length),
+      actions: [
+        PillButton(
+          label: l10n.actionCancel,
+          variant: PillVariant.tonal,
+          onPressed: () => Navigator.of(dialog).pop(false),
+        ),
+        PillButton(
+          label: l10n.trackDeleteConfirm,
+          icon: AppIcons.delete,
+          onPressed: () => Navigator.of(dialog).pop(true),
+        ),
+      ],
+    ),
+  );
+  if (ok != true) return false;
+  // 파일부터 한꺼번에 지운다 (삭제 동의 창은 한 번만). 못 지운 곡은 기록을 그대로 둔다.
+  final deleted = await library.deleteAll(tracks);
+  for (final track in tracks) {
+    if (!deleted.contains(track.id)) continue;
+    await covers.clear(CoverKey.track(track.id));
+    await colors.clear(CoverKey.track(track.id));
+    await lyrics.clear(track.id);
+    player.removeFromQueue(track);
+  }
+  final failed = tracks.length - deleted.length;
+  if (failed > 0) {
+    messenger.showSnackBar(
+      SnackBar(content: Text(l10n.selectDeleteFailed(failed))),
+    );
+  }
+  return failed < tracks.length;
 }
 
 /// 고른 곡 [ids]에 앨범 · 아티스트 · 장르([kind])를 한 번에 지정한다.
@@ -312,11 +386,19 @@ mixin TrackPicker<T extends StatefulWidget> on State<T> {
 
   void clearPicked() => setState(picked.clear);
 
-  /// 고른 곡 id (목록에서 사라진 곡은 뺀다).
+  /// 고른 곡 id (목록에서 사라진 곡은 뺀다). [all]에 같은 곡이 여러 번 있어도(홈은 구역마다 곡이 겹친다) 한 번만 센다.
   List<String> pickedIds(List<Track> all) => [
-    for (final t in all)
-      if (picked.contains(t.id)) t.id,
+    for (final t in pickedTracks(all)) t.id,
   ];
+
+  /// 고른 곡 (목록 순서, 같은 곡은 한 번만).
+  List<Track> pickedTracks(List<Track> all) {
+    final seen = <String>{};
+    return [
+      for (final t in all)
+        if (picked.contains(t.id) && seen.add(t.id)) t,
+    ];
+  }
 
   bool allPicked(List<Track> shown) =>
       shown.isNotEmpty && shown.every((t) => picked.contains(t.id));
@@ -398,6 +480,14 @@ mixin TrackPicker<T extends StatefulWidget> on State<T> {
     switch (action) {
       case SelectionAction.selectAll:
         setState(() => picked.addAll(shown.map((t) => t.id)));
+      case SelectionAction.playNext:
+        // 고른 곡들이 목록에 보이는 순서대로 지금 곡 바로 뒤에 들어간다.
+        context.read<NowPlayingCubit>().playAllNext(pickedTracks(all));
+        clearPicked();
+      case SelectionAction.addToQueue:
+        // 고른 순서가 아니라 목록에 보이는 순서대로 붙는다.
+        context.read<NowPlayingCubit>().addAllToQueue(pickedTracks(all));
+        clearPicked();
       case SelectionAction.addToPlaylist:
         await context.push(Routes.playlistPick, extra: ids);
       case SelectionAction.removeFromPlaylist:
@@ -424,6 +514,9 @@ mixin TrackPicker<T extends StatefulWidget> on State<T> {
           initial: initialAssignValue(all, kind),
         );
         if (done && mounted) clearPicked();
+      case SelectionAction.delete:
+        final deleted = await deleteSelection(context, pickedTracks(all));
+        if (deleted && mounted) clearPicked();
     }
   }
 }

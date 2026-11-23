@@ -41,9 +41,18 @@ abstract interface class AudioPlayerRepository {
   /// 대기열 맨 뒤에 붙인다. 이미 있는 곡이면 건너뛴다.
   Future<PlaybackQueueChange?> addToQueue(PlaybackItem item);
 
+  /// 곡 여러 개를 지금 곡 바로 뒤에 주어진 순서대로 끼운다. 이미 대기열에 있는 곡은 그 자리를 옮긴다 (지금 곡은 건너뜀).
+  Future<PlaybackQueueChange?> playAllNext(List<PlaybackItem> items);
+
+  /// 곡 여러 개를 대기열 맨 뒤에 한 번에 붙인다. 이미 있는 곡은 건너뛴다.
+  Future<PlaybackQueueChange?> addAllToQueue(List<PlaybackItem> items);
+
   /// 곡 하나를 뺀다. 지금 곡이면 다음 곡(마지막이었으면 새 마지막 곡)으로 처음부터 넘어가고 재생 상태는 그대로다.
   /// 마지막 한 곡이면 대기열이 비고 멈춘다.
   Future<PlaybackQueueChange?> removeFromQueue(String id);
+
+  /// 곡 여러 개를 한 번에 뺀다 (대기열 알림은 한 번).
+  Future<PlaybackQueueChange?> removeAllFromQueue(List<String> ids);
 
   /// [from]번 곡을 [to] 자리로 옮긴다 ([to]는 옮긴 뒤의 자리). 듣던 곡은 그대로 이어서 재생한다.
   Future<PlaybackQueueChange?> moveInQueue(int from, int to);

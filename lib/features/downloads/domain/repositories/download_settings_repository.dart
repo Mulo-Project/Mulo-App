@@ -25,6 +25,16 @@ abstract interface class DownloadSettingsRepository {
 
   Future<void> saveFormat(AudioFormat format);
 
+  /// 기본 영상 저장 형식 (설정). 없으면 mp4.
+  Future<VideoFormat> loadVideoFormat();
+
+  Future<void> saveVideoFormat(VideoFormat format);
+
+  /// 기본 영상 화질 (세로 픽셀 상한). 없으면 1080.
+  Future<int> loadVideoHeight();
+
+  Future<void> saveVideoHeight(int height);
+
   /// 폴더 선택기. 고른 폴더 경로, 취소하면 null.
   Future<String?> pickFolder();
 }

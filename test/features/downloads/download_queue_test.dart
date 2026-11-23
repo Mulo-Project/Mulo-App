@@ -218,8 +218,11 @@ void main() {
     final fields = inSheet(find.byType(TextField));
     await tester.enterText(fields.at(3), '발라드');
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.bySemanticsLabel('색 3'));
+    await tester.ensureVisible(find.text('색'));
+    await tester.tap(find.text('색'));
+    await tester.pumpAndSettle();
     await tester.tap(find.bySemanticsLabel('색 3'));
+    await tester.tap(find.byKey(const ValueKey('color-apply')));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.textContaining('기본 색으로 저장'));
     await tester.tap(find.textContaining('기본 색으로 저장'));
@@ -228,7 +231,7 @@ void main() {
     await tester.tap(inSheet(find.text('받기')));
     await tester.pumpAndSettle();
 
-    final red = ColorPicker.presets[2].toARGB32();
+    final red = colorPresets[2].toARGB32();
     expect(queue.requests.single.color, red);
     expect(colors.saved['genre:발라드'], red);
   });
@@ -425,6 +428,42 @@ void main() {
     await tester.pumpAndSettle();
     expect(queue.requests.single.lyricsLanguage, 'en');
     expect(queue.requests.single.lyricsText, '[00:01.00]hello world');
+  });
+
+  testWidgets('받기 페이지: 적용한 자막을 다시 열면 버튼이 적용 취소가 되고, 누르면 적용이 풀린다', (tester) async {
+    final engine =
+        FakeDownloaderEngine(
+          info: const VideoInfo(
+            MediaHit(
+              id: 'abc',
+              title: 'Song',
+              url: 'https://youtu.be/abc',
+              subtitleLangs: ['en'],
+            ),
+          ),
+        )..subtitles = const SubtitleTrack(
+          language: 'en',
+          cues: [SubtitleCue(Duration(seconds: 1), 'hello world')],
+        );
+    await openLyricsPage(tester, engine);
+    await tester.tap(find.byKey(const ValueKey('download-import-lyrics')));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('영어'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('영어'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('subtitle-detail-use')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('가사에 적용'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('영어'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('영어'));
+    await tester.pumpAndSettle();
+    expect(find.text('적용 취소'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('subtitle-detail-use')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('가사에 적용'), findsNothing);
   });
 
   testWidgets('받기 페이지: 상세에서 파일로 가사를 불러오면 그 글이 받기 요청에 실린다', (tester) async {

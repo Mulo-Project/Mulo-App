@@ -74,6 +74,7 @@ object MuloEngine {
         val video = VideoChannel(app, messenger, created.renderer)
         val equalizer = EqualizerChannel(app, messenger)
         val subscriptions = SubscriptionChannel(app, messenger) { activity?.moveTaskToBack(true) }
+        val db = DbChannel(app, messenger)
         val downloadChannel = DownloadChannel(app, messenger, ytDlpEngine.engine, transcoder, store, tags)
         downloads = downloadChannel.engine
         this.preview = preview
@@ -82,7 +83,7 @@ object MuloEngine {
         channels = listOf(
             store::dispose, lyrics::dispose, lyricsOverlay::dispose, audioOutput::dispose, ytDlp::dispose, ytDlpEngine::dispose,
             transcoder::dispose, playback::dispose, preview::dispose, video::dispose, equalizer::dispose,
-            subscriptions::dispose, youtubeResolve::dispose, googleApi::dispose, tags::dispose, downloadChannel::dispose,
+            subscriptions::dispose, youtubeResolve::dispose, googleApi::dispose, tags::dispose, downloadChannel::dispose, db::dispose,
         )
         engine = created
         FlutterEngineCache.getInstance().put(CACHE_ID, created)

@@ -12,5 +12,14 @@ class TrackFileRepositoryImpl implements TrackFileRepository {
   Future<bool> deleteFile(Track track) => _source.delete(track.uri);
 
   @override
+  Future<Set<String>> deleteFiles(List<Track> tracks) async {
+    final deleted = await _source.deleteAll([for (final t in tracks) t.uri]);
+    return {
+      for (final t in tracks)
+        if (deleted.contains(t.uri)) t.id,
+    };
+  }
+
+  @override
   Future<TrackFileInfo?> fileInfo(Track track) => _source.info(track.uri);
 }

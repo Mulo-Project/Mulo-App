@@ -148,11 +148,17 @@ class PurgeHiddenTracks implements UseCase<int, Set<String>?> {
 class RemoveLoadedFolder implements UseCase<Set<String>?, String> {
   const RemoveLoadedFolder(this._folders, this._library);
 
+  // [purgeEmpty]: 폴더를 방금 더하다 취소한 경우. 숨긴 곡 중 남은 기록이 없는 곡은 숨긴 기록에도 남기지 않고 지운다.
+
   final LoadedFolderRepository _folders;
   final LibraryRepository _library;
 
   @override
-  Future<Set<String>?> call(String path, {bool Function()? cancelled}) async {
+  Future<Set<String>?> call(
+    String path, {
+    bool Function()? cancelled,
+    bool purgeEmpty = false,
+  }) async {
     final target = normalizeFolderPath(path);
     if (target == normalizeFolderPath(_folders.defaultFolder)) return null;
     final extra = await _folders.loadExtra();
@@ -164,17 +170,29 @@ class RemoveLoadedFolder implements UseCase<Set<String>?, String> {
     await _folders.saveExtra(kept);
     final remaining = [_folders.defaultFolder, ...kept];
     final tracks = await _library.watchTracks().first;
+    final targets = [
+      for (final t in tracks)
+        if (isInsideFolder(t.folder, target) &&
+            !remaining.any((f) => isInsideFolder(t.folder, f)))
+          t.id,
+    ];
+    // 곡마다 따로 숨기면 그때마다 보관함 목록이 다시 읽혀 느리다: 묶음으로 숨기고, 묶음 사이에서 취소를 본다.
+    const batch = 200;
     final removed = <String>{};
-    for (final t in tracks) {
+    for (var i = 0; i < targets.length; i += batch) {
       if (cancelled?.call() ?? false) {
         await _folders.saveExtra(extra);
         return removed;
       }
-      if (isInsideFolder(t.folder, target) &&
-          !remaining.any((f) => isInsideFolder(t.folder, f))) {
-        await _library.hide(t.id);
-        removed.add(t.id);
-      }
+      final chunk = targets.sublist(
+        i,
+        i + batch > targets.length ? targets.length : i + batch,
+      );
+      await _library.hideMany(chunk);
+      removed.addAll(chunk);
+    }
+    if (purgeEmpty && removed.isNotEmpty) {
+      await _library.purgeHidden(ids: removed, emptyOnly: true);
     }
     return removed;
   }

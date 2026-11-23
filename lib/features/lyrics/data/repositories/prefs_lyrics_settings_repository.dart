@@ -9,6 +9,7 @@ class PrefsLyricsSettingsRepository implements LyricsSettingsRepository {
   static const _themeKey = 'lyrics.theme';
   static const _coverKey = 'lyrics.coverBackground';
   static const _overlayKey = 'lyrics.overlay';
+  static const _videoLyricsKey = 'lyrics.videoLyrics';
 
   @override
   Future<LyricsSettings> load() async {
@@ -21,6 +22,7 @@ class PrefsLyricsSettingsRepository implements LyricsSettingsRepository {
           LyricsTheme.list,
       coverBackground: prefs.getBool(_coverKey) ?? false,
       overlay: prefs.getBool(_overlayKey) ?? false,
+      videoLyrics: prefs.getBool(_videoLyricsKey) ?? false,
     );
   }
 
@@ -39,4 +41,8 @@ class PrefsLyricsSettingsRepository implements LyricsSettingsRepository {
   @override
   Future<void> saveOverlay(bool on) async =>
       (await SharedPreferences.getInstance()).setBool(_overlayKey, on);
+
+  @override
+  Future<void> saveVideoLyrics(bool on) async =>
+      (await SharedPreferences.getInstance()).setBool(_videoLyricsKey, on);
 }

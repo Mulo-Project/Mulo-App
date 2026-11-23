@@ -7,7 +7,7 @@ import 'data/datasources/tag_lyrics_source.dart';
 import 'data/repositories/cached_lyrics_repository.dart';
 import 'data/repositories/native_lyrics_overlay.dart';
 import 'data/repositories/prefs_lyrics_settings_repository.dart';
-import 'data/repositories/drift_lyrics_repository.dart';
+import 'data/repositories/native_lyrics_repository.dart';
 import 'domain/repositories/lyrics_overlay.dart';
 import 'domain/repositories/lyrics_repository.dart';
 import 'domain/repositories/lyrics_settings_repository.dart';
@@ -21,7 +21,7 @@ import 'presentation/bloc/lyrics_settings_cubit.dart';
 void registerLyrics(GetIt sl) {
   sl
     ..registerLazySingleton<LyricsRepository>(
-      () => CachedLyricsRepository(DriftLyricsRepository(sl(), sl())),
+      () => CachedLyricsRepository(NativeLyricsRepository(sl(), sl())),
     )
     ..registerLazySingleton<EmbeddedLyricsSource>(TagLyricsSource.new)
     ..registerLazySingleton<LyricsFileSource>(FilePickerLyricsSource.new)
@@ -46,6 +46,7 @@ void registerLyrics(GetIt sl) {
     ..registerFactory(() => SaveStampLatency(sl()))
     ..registerFactory(() => SaveLyricsTheme(sl()))
     ..registerFactory(() => SaveLyricsCoverBackground(sl()))
+    ..registerFactory(() => SaveLyricsVideoLyrics(sl()))
     ..registerFactory(
       () => LyricsSettingsCubit(
         loadSettings: sl(),
@@ -53,6 +54,7 @@ void registerLyrics(GetIt sl) {
         saveLyricsTheme: sl(),
         saveCoverBackground: sl(),
         saveOverlay: sl(),
+        saveVideoLyrics: sl(),
       ),
     )
     ..registerLazySingleton<LyricsOverlay>(

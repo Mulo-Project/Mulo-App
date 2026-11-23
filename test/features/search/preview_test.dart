@@ -25,6 +25,7 @@ import 'package:music_download_play_app/features/search/presentation/screens/med
 
 import '../../helpers/fakes.dart';
 import '../../helpers/test_data.dart';
+import 'package:music_download_play_app/features/player/presentation/bloc/video_surface_cubit.dart';
 
 const _a = MediaHit(id: 'a', title: 'Song A', url: 'https://example.com/a');
 const _b = MediaHit(id: 'b', title: 'Song B', url: 'https://example.com/b');
@@ -43,6 +44,17 @@ PreviewCubit _cubit(FakeDownloaderEngine e, FakePreviewPlayer p) =>
       WatchPreviewProgress(p),
       WatchPreviewFailures(p),
     );
+
+/// 상세 화면의 영상은 첫 화면이 그려질 때까지 "불러오는 중" 원이 계속 돌아 pumpAndSettle이 끝나지 않는다.
+/// 화면이 열린 뒤 첫 화면이 그려진 것으로 처리하고 가라앉힌다.
+Future<void> settleDetail(WidgetTester tester) async {
+  await tester.pump(const Duration(milliseconds: 500));
+  final surface = tester
+      .element(find.byType(MaterialApp))
+      .read<VideoSurfaceCubit>();
+  surface.emit(surface.state.copyWith(ready: true));
+  await tester.pumpAndSettle();
+}
 
 void main() {
   group('엔진: 오디오 스트림 주소', () {
@@ -650,7 +662,7 @@ void main() {
       expect(find.byType(ProgressLine), findsNWidgets(2));
 
       await tester.tap(find.text('Song').first);
-      await tester.pumpAndSettle();
+      await settleDetail(tester);
       player.progress(const Duration(seconds: 30), const Duration(minutes: 2));
       await tester.pump();
       expect(find.byKey(const ValueKey('preview-position')), findsOneWidget);
@@ -672,7 +684,7 @@ void main() {
       await tester.tap(
         find.descendant(of: bar, matching: find.byType(Text)).first,
       );
-      await tester.pumpAndSettle();
+      await settleDetail(tester);
       expect(find.byType(MediaDetailScreen), findsOneWidget);
     });
 
@@ -709,7 +721,7 @@ void main() {
           matching: find.text('Preview'),
         ),
       );
-      await tester.pumpAndSettle();
+      await settleDetail(tester);
       expect(player.playing, isTrue);
       expect(find.text('Stop preview'), findsOneWidget);
       // 일시정지와 멈추기는 따로 있다.

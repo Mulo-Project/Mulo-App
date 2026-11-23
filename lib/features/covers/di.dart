@@ -1,8 +1,8 @@
 import 'package:get_it/get_it.dart';
 
 import 'data/datasources/file_picker_image_source.dart';
-import 'data/repositories/drift_cover_color_repository.dart';
-import 'data/repositories/drift_cover_repository.dart';
+import 'data/repositories/native_cover_color_repository.dart';
+import 'data/repositories/native_cover_repository.dart';
 import 'domain/repositories/cover_repository.dart';
 import 'domain/usecases/cover_usecases.dart';
 import 'presentation/bloc/cover_color_cubit.dart';
@@ -11,9 +11,9 @@ import 'presentation/bloc/cover_web_cubit.dart';
 
 void registerCovers(GetIt sl) {
   sl
-    ..registerLazySingleton<CoverRepository>(() => DriftCoverRepository(sl()))
+    ..registerLazySingleton<CoverRepository>(() => NativeCoverRepository(sl()))
     ..registerLazySingleton<CoverColorRepository>(
-      () => DriftCoverColorRepository(sl()),
+      () => NativeCoverColorRepository(sl()),
     )
     ..registerLazySingleton<CoverImageSource>(FilePickerImageSource.new)
     ..registerFactory(() => LoadCovers(sl()))

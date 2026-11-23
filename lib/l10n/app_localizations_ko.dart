@@ -292,6 +292,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsSubtitle => '앱 설정';
 
   @override
+  String get settingsSearchHint => '설정에서 찾기';
+
+  @override
   String get settingsServer => '서버';
 
   @override
@@ -392,6 +395,23 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsFormat => '기본 포맷';
+
+  @override
+  String get settingsFormatOriginal => '원본 그대로';
+
+  @override
+  String get settingsAudioFormat => '소리 기본 포맷';
+
+  @override
+  String get settingsVideoFormat => '영상 기본 형식';
+
+  @override
+  String get settingsVideoQuality => '영상 기본 화질';
+
+  @override
+  String downloadFormatOriginal(String format) {
+    return '원본 ($format)';
+  }
 
   @override
   String get settingsEngine => '다운로드 엔진';
@@ -640,14 +660,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playerSleepTimerOff => '타이머 끄기';
 
   @override
-  String get settingsFormatOriginal => '원본 그대로';
-
-  @override
-  String downloadFormatOriginal(String format) {
-    return '원본 ($format)';
-  }
-
-  @override
   String playerSleepTimerMinutes(int minutes) {
     return '$minutes분 뒤 멈춤';
   }
@@ -823,6 +835,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get videoRepeat => '반복 재생';
 
   @override
+  String get videoLyrics => '가사 표시';
+
+  @override
   String get videoQualityAuto => '자동';
 
   @override
@@ -831,6 +846,14 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String settingsStreamCacheLimitHint(String used) {
     return '임시 저장한 음원도 함께 계산해요. 넘으면 오래된 임시 캐시부터 지워요. ($used 사용 중)';
+  }
+
+  @override
+  String get settingsStreamCacheUnlimited => '무제한';
+
+  @override
+  String settingsStreamCacheUnlimitedHint(String used) {
+    return '한도 없이 직접 비우기 전까지 계속 쌓여요. 기기 공간이 부족하면 시스템이 임시 파일부터 정리해요. ($used 사용 중)';
   }
 
   @override
@@ -862,7 +885,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String hiddenRecordsHint(int count) {
-    return '폴더를 빼서 숨겨 둔 $count곡이에요. 기록을 지울 곡을 골라요.';
+    return '폴더를 빼서 숨겨 둔 $count곡이에요. 앱에만 저장된 기록이라 지워도 음원 파일은 그대로예요.';
   }
 
   @override
@@ -899,6 +922,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsVersion => '버전';
+
+  @override
+  String get settingsLicenses => '오픈소스 라이선스';
 
   @override
   String get comingSoon => '준비 중';
@@ -1574,6 +1600,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get downloadSubtitleApplied => '가사에 적용';
 
   @override
+  String get downloadSubtitleCancel => '적용 취소';
+
+  @override
   String get downloadLyricsRetry => '다시 불러오기';
 
   @override
@@ -1818,12 +1847,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get playlistColorAuto => '자동';
 
   @override
-  String get colorCustom => '색상 직접 고르기';
-
-  @override
   String colorOption(int n) {
     return '색 $n';
   }
+
+  @override
+  String get colorClear => '색 지우기';
+
+  @override
+  String get colorFromCover => '커버에서 뽑은 색';
 
   @override
   String get playlistSummaryEmpty => '비어 있어요';
@@ -1843,6 +1875,27 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get downloadPlaylistsPickTitle => '재생목록 선택';
+
+  @override
+  String get playlistImportTrackSettings => '이 곡만 따로 설정';
+
+  @override
+  String get playlistImportTrackReset => '공통 설정으로';
+
+  @override
+  String get playlistImportTrackCustom => '따로 설정함';
+
+  @override
+  String get playlistImportCommonTitle => '공통 받기 설정';
+
+  @override
+  String get playlistImportArtistFromChannel => '비워 두면 올린 채널';
+
+  @override
+  String get downloadApply => '적용';
+
+  @override
+  String get playlistImportCommonDefault => '설정의 기본값';
 
   @override
   String get downloadPlaylistsDone => '선택 완료';
@@ -2661,6 +2714,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get permOverlay => '다른 앱 위에 표시';
 
   @override
+  String get permBattery => '백그라운드 재생 유지';
+
+  @override
+  String get permBatteryDesc => '일시정지로 오래 두어도 재생 알림이 먹히도록, 배터리 최적화에서 이 앱을 빼요.';
+
+  @override
   String get permOverlayDesc => '다른 앱을 쓰는 동안 화면 위에 가사를 띄우는 데 써요.';
 
   @override
@@ -2685,7 +2744,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsNotifyDownloadProgress => '받기 진행 알림';
 
   @override
-  String get settingsNotifyDownloadProgressDesc => '받는 동안 진행 상황을 알림창에 보여요. 켜 두면 앱이 뒤로 가거나 닫혀도 받기를 이어 가요.';
+  String get settingsNotifyDownloadProgressDesc =>
+      '받는 동안 진행 상황을 알림창에 보여요. 켜 두면 앱이 뒤로 가거나 닫혀도 받기를 이어 가요.';
 
   @override
   String get settingsNotifyDownloadResult => '받기 결과 알림';
@@ -2960,6 +3020,15 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get settingsQuickDownload => '바로 받기 형식';
+
+  @override
+  String get settingsQuickDownloadAudioDesc => '알림의 "바로 받기"를 음원으로 받아요. 형식은 다운로드 설정의 소리 기본 포맷을 따라요.';
+
+  @override
+  String get settingsQuickDownloadVideoDesc => '알림의 "바로 받기"를 영상으로 받아요. 형식 · 화질은 다운로드 설정의 영상 기본값을 따르고, 영상 폴더에 저장해요.';
+
+  @override
   String get settingsCheckWifiOnly => '와이파이에서만 확인';
 
   @override
@@ -3086,7 +3155,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get equalizerMyPresets => '내 프리셋';
 
   @override
-  String get equalizerMyPresetsHint => '길게 누르면 지워요';
+  String get equalizerMyPresetsHint => '길게 누르면 덮어쓰기 · 이름 바꾸기 · 지우기 메뉴가 열려요';
+
+  @override
+  String get equalizerPresetOverwrite => '지금 값으로 덮어쓰기';
+
+  @override
+  String get equalizerPresetRename => '이름 바꾸기';
 
   @override
   String get equalizerPresetSaveNew => '지금 값 저장';
@@ -3252,6 +3327,19 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get selectDelete => '삭제';
+
+  @override
+  String selectDeleteBody(int count) {
+    return '고른 $count곡의 음악 파일을 기기에서 지울까요? 보관함과 재생목록에서도 빠지고, 되돌릴 수 없어요.';
+  }
+
+  @override
+  String selectDeleteFailed(int count) {
+    return '$count곡은 지우지 못했어요. 권한을 확인한 뒤 다시 시도해 주세요.';
+  }
+
+  @override
   String get selectClose => '선택 끝내기';
 
   @override
@@ -3333,7 +3421,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get channelImportTitle => '내 구독 채널';
 
   @override
-  String get channelImportHint => '구독할 채널을 눌러 골라요. 고른 채널만 추가돼요.';
+  String get channelImportHint => '구독 버튼을 눌러 채널을 추가해요.';
 
   @override
   String get channelImportAlready => '구독 중';

@@ -37,6 +37,7 @@ class LibraryCubit extends Cubit<LibraryState> {
     this._updateInfo,
     this._delete, [
     this._ensureWrite,
+    this._deleteMany,
   ]) : super(const LibraryState());
 
   final WatchLibraryTracks _watch;
@@ -45,6 +46,9 @@ class LibraryCubit extends Cubit<LibraryState> {
 
   /// 여러 곡 수정 전에 파일 쓰기 동의를 한 번에 구한다 (없으면 곡마다 구하지 않고 DB만 고친다).
   final EnsureTracksWriteAccess? _ensureWrite;
+
+  /// 여러 곡을 지울 때 삭제 동의를 한 번에 구한다 (없으면 한 곡씩 지운다).
+  final DeleteTracks? _deleteMany;
   StreamSubscription<List<Track>>? _sub;
 
   void start() {
@@ -120,6 +124,16 @@ class LibraryCubit extends Cubit<LibraryState> {
 
   /// 음악 파일과 보관함 기록을 지운다. 파일을 못 지우면 false (기록은 그대로).
   Future<bool> delete(Track track) => _delete(track);
+
+  /// 여러 곡의 음악 파일과 보관함 기록을 지운다. 지운 곡의 id 모음을 돌려준다 (못 지운 곡은 그대로).
+  Future<Set<String>> deleteAll(List<Track> tracks) async {
+    final many = _deleteMany;
+    if (many != null) return many(tracks);
+    return {
+      for (final t in tracks)
+        if (await _delete(t)) t.id,
+    };
+  }
 
   @override
   Future<void> close() async {

@@ -1,7 +1,9 @@
 package com.mulo.app
 
 import android.net.Uri
+import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -11,6 +13,9 @@ import androidx.media3.common.SimpleBasePlayer
 import androidx.media3.exoplayer.ExoPlayer
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
+
+/** 알림 슬라이더 시크를 실제로 적용하는 최소 간격. */
+private const val SEEK_INTERVAL_MS = 150L
 
 /** Dart가 보내 준, 알림 · 잠금화면에 보여 줄 내용. */
 class SessionInfo(map: Map<*, *>) {
@@ -204,14 +209,33 @@ class SessionPlayer(
             // 3초 넘게 들었으면 처음으로, 아니면 이전 곡 (첫 곡이면 마지막 곡).
             Player.COMMAND_SEEK_TO_PREVIOUS, Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM ->
                 if (previewing) onCommand("previous", null) else skipPrevious()
-            else -> if (previewing) {
-                onCommand("seek", positionMs)
-            } else if (exo.mediaItemCount > 0) {
-                exo.seekTo(positionMs)
-                onCommand("seek", positionMs)
-            }
+            else -> seekThrottled(positionMs)
         }
         return Futures.immediateVoidFuture()
+    }
+
+    // 알림 슬라이더를 끄는 동안 시스템이 시크를 연달아 보낸다. 매번 하면 버벅이므로 [SEEK_INTERVAL_MS]마다 한 번만 하고,
+    // 마지막 위치는 반드시 따라붙어 적용한다.
+    private val seekHandler = Handler(Looper.getMainLooper())
+    private var lastSeekAt = 0L
+    private var pendingSeekMs = 0L
+    private val applyPendingSeek = Runnable { applySeek(pendingSeekMs) }
+
+    private fun seekThrottled(positionMs: Long) {
+        pendingSeekMs = positionMs
+        val wait = lastSeekAt + SEEK_INTERVAL_MS - SystemClock.elapsedRealtime()
+        seekHandler.removeCallbacks(applyPendingSeek)
+        if (wait <= 0) applySeek(positionMs) else seekHandler.postDelayed(applyPendingSeek, wait)
+    }
+
+    private fun applySeek(positionMs: Long) {
+        lastSeekAt = SystemClock.elapsedRealtime()
+        if (previewing) {
+            onCommand("seek", positionMs)
+        } else if (exo.mediaItemCount > 0) {
+            exo.seekTo(positionMs)
+            onCommand("seek", positionMs)
+        }
     }
 
     /** 다음 곡. 마지막 곡이면 반복 설정과 상관없이 처음으로 돌아간다 (앱의 다음 버튼과 같다). */

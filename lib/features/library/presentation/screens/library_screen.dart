@@ -19,7 +19,7 @@ import '../widgets/track_list_tile.dart';
 enum LibraryTab { songs, artists, albums, genres }
 
 /// 보관함 (상세 기능: 곡 목록 보기 #10, 정렬·검색 #12, 기기 음악 불러오기 #11).
-/// 곡은 보관함 DB(drift)에서 읽는다.
+/// 곡은 보관함 DB(네이티브)에서 읽는다.
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key});
 

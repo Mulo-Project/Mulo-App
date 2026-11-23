@@ -1,9 +1,4 @@
-import 'package:drift/drift.dart' show Value;
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:music_download_play_app/core/database/app_database.dart';
-import 'package:music_download_play_app/features/home/data/repositories/drift_play_history_repository.dart';
-import 'package:music_download_play_app/features/home/domain/entities/home_summary.dart';
 import 'package:music_download_play_app/features/home/domain/usecases/home_usecases.dart';
 import 'package:music_download_play_app/features/home/presentation/bloc/play_recorder_cubit.dart';
 
@@ -127,66 +122,5 @@ void main() {
     tick(null, 0, playing: false);
     await settle();
     expect(history.plays, isEmpty);
-  });
-
-  group('Drift', () {
-    late AppDatabase db;
-    late DriftPlayHistoryRepository repo;
-
-    setUp(() {
-      db = AppDatabase(NativeDatabase.memory());
-      repo = DriftPlayHistoryRepository(db);
-    });
-
-    tearDown(() => db.close());
-
-    test('들은 시간을 기록하고 갱신한다', () async {
-      final id = await repo.recordPlay(
-        PlayRecord(trackId: 'a', playedAt: DateTime(2026, 10, 1)),
-      );
-      await repo.updateListened(id, _s(42));
-
-      final plays = await repo.watchPlays().first;
-      expect(plays.single.listened, _s(42));
-    });
-
-    test('옛 기록(들은 시간 0)은 곡 길이로 한 번 채운다 (v8 보정)', () async {
-      await db
-          .into(db.tracks)
-          .insert(
-            TracksCompanion.insert(
-              id: 'a',
-              title: 'A',
-              artist: '',
-              album: '',
-              durationMs: 180000,
-              uri: 'u:a',
-              source: 'device',
-              addedAt: DateTime(2026, 9, 1),
-            ),
-          );
-      await db
-          .into(db.plays)
-          .insert(
-            PlaysCompanion.insert(
-              trackId: 'a',
-              playedAt: DateTime(2026, 10, 1),
-            ),
-          );
-      await db
-          .into(db.plays)
-          .insert(
-            PlaysCompanion.insert(
-              trackId: 'a',
-              playedAt: DateTime(2026, 10, 2),
-              listenedMs: const Value(5000),
-            ),
-          );
-
-      await db.customStatement(backfillListenedSql);
-
-      final plays = await repo.watchPlays().first; // 최근 순
-      expect(plays.map((p) => p.listened), [_s(5), _s(180)]);
-    });
   });
 }

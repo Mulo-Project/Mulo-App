@@ -2,15 +2,12 @@ import 'package:music_download_play_app/core/design/icons/app_icons.dart';
 
 import 'dart:io';
 
-import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/app/app.dart';
 import 'package:music_download_play_app/app/router.dart';
-import 'package:music_download_play_app/core/database/app_database.dart';
 import 'package:music_download_play_app/core/usecase/usecase.dart';
 import 'package:music_download_play_app/features/library/data/datasources/device_music_data_sources.dart';
-import 'package:music_download_play_app/features/library/data/repositories/drift_library_repository.dart';
 import 'package:music_download_play_app/features/library/domain/entities/import_result.dart';
 import 'package:music_download_play_app/features/library/domain/entities/loaded_folder.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
@@ -230,15 +227,6 @@ void main() {
         normalizeFolderPath('${dir.path}/a/sub'),
       ]),
     );
-  });
-
-  test('DB: 폴더를 저장하고, 폴더 칸이 비어 있던 곡은 다시 찾을 때 채운다', () async {
-    final db = AppDatabase(NativeDatabase.memory());
-    addTearDown(db.close);
-    final repo = DriftLibraryRepository(db);
-    await repo.addTracks([_t('a', '', uri: '/m/a.mp3')]);
-    expect(await repo.addTracks([_t('a', '/m', uri: '/m/a.mp3')]), 0);
-    expect((await repo.watchTracks().first).single.folder, '/m');
   });
 
   testWidgets('설정: 타일 부제에 폴더 수, 누르면 바텀 시트에 폴더와 곡 수', (tester) async {

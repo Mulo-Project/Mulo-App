@@ -6,7 +6,7 @@
 - 브랜치: `chore/ci-cd-github-actions-release`
 
 ## 한 일
-- `.github/workflows/ci.yml`, `release.yml` 추가. 절차 · Secrets 목록은 [docs/release.md](../release.md), 결정 D-168.
+- `.github/workflows/ci.yml`, `release.yml` 추가. 절차 · Secrets 목록은 [docs/release.md](../release.md), 결정 D-170.
 - `android/app/build.gradle.kts`: release 서명 설정(env / `key.properties`), CI 배포는 키가 없으면 실패.
 
 ## 바꾼 설정

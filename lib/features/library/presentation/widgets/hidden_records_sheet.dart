@@ -6,7 +6,7 @@ import '../../../../core/l10n/l10n.dart';
 import '../../domain/entities/hidden_track.dart';
 import '../bloc/hidden_records_cubit.dart';
 
-/// 숨긴 곡 기록 목록: 곡마다 지우기 · 모두 지우기 (바텀 시트).
+/// 숨긴 곡 기록 목록: 곡 이름 + 지우면 사라지는 앱 기록 요약, 곡마다 지우기 · 모두 지우기 (바텀 시트).
 Future<void> showHiddenRecordsSheet(BuildContext context) {
   final cubit = context.read<HiddenRecordsCubit>();
   return showAppSheet<void>(
@@ -155,13 +155,6 @@ class _HiddenRow extends StatelessWidget {
                 Text(
                   track.track.title,
                   style: text.titleSmall,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: AppSpacing.hair),
-                Text(
-                  track.track.artist,
-                  style: text.bodySmall,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),

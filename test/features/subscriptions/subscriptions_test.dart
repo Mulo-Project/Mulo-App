@@ -285,6 +285,22 @@ void main() {
       expect(cubit.state.selected, isEmpty);
     });
 
+    test('고른 영상은 채널 묶음과 함께 나오고, 선택을 해제하면 비워진다', () async {
+      final cubit = await boot(
+        channels: [_channel()],
+        feeds: {_channelId: fresh},
+      );
+      await cubit.check();
+      cubit.toggle('v1');
+      final picked = cubit.selectedVideos;
+      expect(picked.length, 1);
+      expect(picked.single.$2.id, 'v1');
+      expect(picked.single.$1.channel.id, _channelId);
+
+      cubit.clearSelection();
+      expect(cubit.selectedVideos, isEmpty);
+    });
+
     test('분류 조건: 맞지 않는 분류는 숨기고 분류를 모르는 영상은 보여 준다', () async {
       final cubit = await boot(
         channels: [

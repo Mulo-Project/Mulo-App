@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/services.dart';
 
-import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_download_play_app/features/library/domain/entities/track.dart';
 import 'package:music_download_play_app/features/library/domain/repositories/track_tag_repository.dart';
@@ -10,8 +9,8 @@ import 'package:music_download_play_app/features/lyrics/domain/usecases/lyrics_u
 
 import '../../helpers/fakes.dart';
 
-import 'package:music_download_play_app/core/database/app_database.dart';
-import 'package:music_download_play_app/features/lyrics/data/repositories/drift_lyrics_repository.dart';
+import 'package:music_download_play_app/core/database/native_db.dart';
+import 'package:music_download_play_app/features/lyrics/data/repositories/native_lyrics_repository.dart';
 import 'package:music_download_play_app/features/lyrics/data/datasources/tag_lyrics_source.dart';
 import 'package:music_download_play_app/features/lyrics/domain/entities/lyrics.dart';
 import 'package:music_download_play_app/features/lyrics/domain/repositories/lyrics_repository.dart';
@@ -28,6 +27,7 @@ class _FakeEmbedded implements EmbeddedLyricsSource {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   group('Lyrics.parse', () {
     test('빈 글은 가사가 아니다', () {
       expect(Lyrics.parse(''), isNull);
@@ -84,20 +84,49 @@ void main() {
     });
   });
 
-  group('DriftLyricsRepository', () {
-    late AppDatabase db;
+  group('NativeLyricsRepository', () {
     late Directory base;
-    late DriftLyricsRepository repo;
+    late NativeLyricsRepository repo;
     late _FakeEmbedded embedded;
+
+    /// 네이티브 DB 대신 경로만 기억하는 가짜 채널 (실제 저장과 옛 파일 정리는 네이티브가 한다).
+    final paths = <String, String>{};
+    const channel = MethodChannel('test/db');
 
     setUp(() async {
       embedded = _FakeEmbedded();
-      db = AppDatabase(NativeDatabase.memory());
+      paths.clear();
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+            final args = call.arguments as Map<Object?, Object?>;
+            final id = args['trackId']! as String;
+            switch (call.method) {
+              case 'lyricsPath':
+                return paths[id];
+              case 'saveLyricsPath':
+                final old = paths[id];
+                paths[id] = args['path']! as String;
+                if (old != null && old != paths[id]) {
+                  final f = File(old);
+                  if (f.existsSync()) f.deleteSync();
+                }
+              case 'removeLyrics':
+                final old = paths.remove(id);
+                if (old != null) {
+                  final f = File(old);
+                  if (f.existsSync()) f.deleteSync();
+                }
+            }
+            return null;
+          });
       base = await Directory.systemTemp.createTemp('lyrics');
-      repo = DriftLyricsRepository(db, embedded, baseDir: () async => base);
+      repo = NativeLyricsRepository(
+        NativeDb(channel: channel),
+        embedded,
+        baseDir: () async => base,
+      );
     });
     tearDown(() async {
-      await db.close();
       await base.delete(recursive: true);
     });
 

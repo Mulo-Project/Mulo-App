@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../downloads/presentation/widgets/download_dialog.dart';
 import '../../domain/entities/feed_video.dart';
 import '../../../search/domain/entities/media_info.dart';
 import '../../../search/presentation/screens/media_detail_screen.dart';
@@ -52,7 +53,24 @@ class _NewVideosSheetState extends State<_NewVideosSheet> {
   Future<void> _start() async {
     final messenger = ScaffoldMessenger.of(context);
     final l10n = context.l10n;
-    final queued = await _cubit.startSelected();
+    final picked = _cubit.selectedVideos;
+    if (picked.isEmpty) return;
+    // 하나만 고르면 곡 받기 창을 열고, 여러 개면 공통 받기 설정을 먼저 고른다.
+    if (picked.length == 1) {
+      final (group, video) = picked.first;
+      final started = await showDownloadDialog(
+        context,
+        title: video.title,
+        artist: video.author.isNotEmpty ? video.author : group.channel.name,
+        thumbnailUrl: video.thumbnailUrl,
+        url: video.url,
+      );
+      if (started) _cubit.clearSelection();
+      return;
+    }
+    final common = await showCommonDownloadSettings(context);
+    if (common == null || !mounted) return;
+    final queued = await _cubit.startSelected(common: common);
     messenger.showSnackBar(
       SnackBar(
         content: Text(

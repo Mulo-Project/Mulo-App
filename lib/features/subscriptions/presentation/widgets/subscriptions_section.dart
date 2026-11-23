@@ -9,6 +9,8 @@ import '../../../../app/router.dart';
 import '../../../../core/design/design.dart';
 import '../../../../core/di/injector.dart';
 import '../../../../core/l10n/l10n.dart';
+import '../../../../core/usecase/usecase.dart';
+import '../../../downloads/domain/usecases/download_usecases.dart';
 import '../../domain/entities/background_status.dart';
 import '../../domain/entities/subscription_settings.dart';
 import '../bloc/subscriptions_cubit.dart';
@@ -25,6 +27,17 @@ class SubscriptionsSection extends StatefulWidget {
 class _SubscriptionsSectionState extends State<SubscriptionsSection> {
   late final SubscriptionsCubit _cubit = sl<SubscriptionsCubit>()
     ..load().then((_) => _cubit.refreshStatus());
+
+  /// 영상으로 받을 수 있는 빌드인지 (Android full).
+  var _videoAvailable = false;
+
+  @override
+  void initState() {
+    super.initState();
+    sl<IsVideoSaveAvailable>()(const NoParams()).then((ok) {
+      if (mounted && ok) setState(() => _videoAvailable = true);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +64,24 @@ class _SubscriptionsSectionState extends State<SubscriptionsSection> {
                 onChanged: _cubit.setCheckOnLaunch,
               ),
             ),
+            if (Platform.isAndroid && _videoAvailable)
+              SettingRow(
+                title: l10n.settingsQuickDownload,
+                description: s.quickAsVideo
+                    ? l10n.settingsQuickDownloadVideoDesc
+                    : l10n.settingsQuickDownloadAudioDesc,
+                below: Padding(
+                  padding: const EdgeInsets.only(top: AppSpacing.xs),
+                  child: SegmentedPills<bool>(
+                    values: const [false, true],
+                    selected: s.quickAsVideo,
+                    labelOf: (v) =>
+                        v ? l10n.videoSaveTypeVideo : l10n.videoSaveTypeAudio,
+                    onChanged: _cubit.setQuickAsVideo,
+                    expand: true,
+                  ),
+                ),
+              ),
             if (Platform.isAndroid) ...[
               SettingRow(
                 title: l10n.settingsBackgroundCheck,
