@@ -42,6 +42,32 @@ void main() {
     expect(closed, 1);
   });
 
+  testWidgets('썸네일이 있으면 아이콘 대신 썸네일을 둔다', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildAppTheme(AppPalette.defaultDark),
+        locale: const Locale('ko'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: Stack(
+            children: [
+              NewVideosBanner(
+                count: 2,
+                thumbnails: const ['a', 'b'],
+                onOpen: () {},
+                onClose: () {},
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byIcon(AppIcons.download), findsNothing);
+    expect(find.byType(Image), findsNWidgets(2));
+  });
+
   testWidgets('새 영상이 없으면 안내 줄은 아무것도 그리지 않는다', (tester) async {
     await tester.pumpWidget(_host(count: null));
     await tester.pumpAndSettle();
