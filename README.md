@@ -172,6 +172,8 @@ flutter run                          # full 빌드 (기본)
 flutter build apk --flavor full      # 배포용 APK
 ```
 
+배포(CI · 서명 · GitHub Release)는 [docs/release.md](docs/release.md)를 봅니다.
+
 ### 빌드 종류 (Android flavor)
 | flavor | 내용 |
 |---|---|

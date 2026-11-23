@@ -1053,3 +1053,9 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 - 네이티브 `LibraryDb`: `stageTracks`(새 곡을 `hidden = 2` "불러오는 중"으로 넣는다, 화면 · 재생목록 · 통계 어디에도 안 보임) · `commitImport`(보이게 하고 다시 찾은 곡의 숨김 · 날짜 · 폴더를 맞춘다) · `discardImport`(불러오는 중인 곡과 붙인 커버 · 색 · 가사 파일까지 지운다) · `workingTracks`(보이는 곡 + 불러오는 중인 곡). 앱이 불러오는 도중 꺼졌으면 다음 시작 때 남은 `hidden = 2`를 지운다.
 - Dart: `ImportDeviceMusic(stage: true)` → 커버 채우기 · 태그 읽기(둘 다 `workingTracks` 기준) → 끝나면 `commitStaged`, 취소하면 `discardStaged` + 태그 "읽음" 기록 지우기(`forget`).
 - 불러오기 버튼과 폴더 빼기는 전과 같다 (바로 넣기 · 숨기기).
+
+## D-170 · 2026-11-23 · CI(GitHub Actions)와 태그 배포(GitHub Release APK)
+- CI(`ci.yml`): PR · develop/main push마다 analyze · test, debug APK 빌드(arm64만), 네이티브 단위 테스트. 비밀값 없이 돈다.
+- CD(`release.yml`): `v*` 태그 push → CI 재사용 → 태그와 pubspec 버전 일치 확인 → 서명 release APK(`--flavor full --split-per-abi`, D-056 용량 결정) → SHA256SUMS와 함께 GitHub Release.
+- 서명: release 빌드가 debug 키 대신 `MULO_KEYSTORE_*` 환경 변수 또는 `android/key.properties`를 쓴다. 배포 빌드는 키가 없거나 debug 인증서면 실패한다. 비밀값은 GitHub Secrets (`docs/release.md`).
+- 기존 설치본은 debug 키라 release 키로는 업데이트 설치가 안 된다 (한 번 지우고 설치).

@@ -1,0 +1,57 @@
+name: CI
+
+# PR마다 분석 · 테스트 · Android 빌드 확인. release.yml이 태그 배포 전에 같은 검사를 다시 부른다.
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+  workflow_call:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: analyze · test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.x # 개발 PC의 Flutter와 맞춘다. 올릴 때 docs/release.md 확인
+          cache: true
+      - run: flutter --version
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+
+  android:
+    name: Android 빌드 확인 (debug)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.x # 개발 PC의 Flutter와 맞춘다. 올릴 때 docs/release.md 확인
+          cache: true
+      - run: flutter pub get
+      # 비밀값 없이 빌드된다 (구글 로그인 버튼만 꺼진 상태). arm64만 빌드해 시간을 줄인다.
+      - run: flutter build apk --debug --flavor full --target-platform android-arm64
+      - name: 네이티브 단위 테스트
+        working-directory: android
+        run: ./gradlew :app:testFullDebugUnitTest --no-daemon
