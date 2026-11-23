@@ -150,6 +150,8 @@ object YoutubeResolver {
             val clock = System.currentTimeMillis()
             val ordered = try {
                 YoutubeFormats.orderAudio(fetchFormats(client, videoId), preferWebm, language)
+            } catch (e: LiveVideoException) {
+                throw e
             } catch (e: Exception) {
                 MuloLog.d(TAG, "소리 ${client.name} ${System.currentTimeMillis() - clock}ms 실패 ${oneLine(e.toString())}")
                 errors += oneLine(e.message ?: e.toString()); continue
@@ -172,6 +174,8 @@ object YoutubeResolver {
         for (client in listOf(visionOs, androidVr)) {
             val all = try {
                 fetchFormats(client, videoId)
+            } catch (e: LiveVideoException) {
+                throw e
             } catch (e: Exception) {
                 MuloLog.d(TAG, "영상 ${client.name} 읽기 실패 ${oneLine(e.toString())}")
                 continue
@@ -203,6 +207,8 @@ object YoutubeResolver {
         for (client in listOf(visionOs, androidVr)) {
             val all = try {
                 fetchFormats(client, videoId)
+            } catch (e: LiveVideoException) {
+                throw e
             } catch (e: Exception) {
                 MuloLog.d(TAG, "저장용 ${client.name} 읽기 실패 ${oneLine(e.toString())}")
                 continue
@@ -255,8 +261,15 @@ object YoutubeResolver {
         },
     )
 
+    /** 라이브 중이거나 예정인 영상 (받을 수 없다). 다른 클라이언트나 yt-dlp로 넘어가지 않고 그대로 알린다. */
+    class LiveVideoException : IOException("실시간 영상은 받을 수 없어요")
+
     private fun fetchFormats(client: Client, videoId: String): List<YtFormat> {
         val root = playerRoot(client, videoId)
+        val details = root.optJSONObject("videoDetails")
+        if (details != null && (details.optBoolean("isLive") || details.optBoolean("isUpcoming") ||
+                details.optString("lengthSeconds") == "0")
+        ) throw LiveVideoException()
         val data = root.optJSONObject("streamingData") ?: throw IOException("${client.name}: 스트림 없음")
         return parse(data.optJSONArray("formats"), true) + parse(data.optJSONArray("adaptiveFormats"), false)
     }

@@ -848,6 +848,8 @@ class DownloadEngine(
                     return toStream(it)
                 }
                 MuloLog.d(MuloLog.NATIVE, "받기 주소 읽기(네이티브) 결과 없음 ${System.currentTimeMillis() - clock}ms")
+            } catch (e: YoutubeResolver.LiveVideoException) {
+                throw Failed(e.message ?: "실시간 영상은 받을 수 없어요")
             } catch (e: Exception) {
                 nativeError = e.message
                 MuloLog.d(MuloLog.NATIVE, "받기 주소 읽기(네이티브) 실패 ${System.currentTimeMillis() - clock}ms: ${e.message}")

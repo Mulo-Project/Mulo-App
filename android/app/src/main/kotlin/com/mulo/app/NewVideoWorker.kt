@@ -35,7 +35,8 @@ class NewVideoWorker(context: Context, params: WorkerParameters) : CoroutineWork
             }
             // 앱에서 이미 본 시각과 이미 알린 시각 중 늦은 쪽 이후만 새 영상이다.
             val since = maxOf(c.baselineMs, SubscriptionStore.notifiedUntil(applicationContext, c.id))
-            val fresh = videos.filter { it.publishedMs > since }
+            // 라이브 중이거나 예정인 영상은 알리지 않는다 (받을 수 없다). 끝나 길이가 생기면 다음 주기에 새 영상으로 알린다.
+            val fresh = videos.filter { it.publishedMs > since }.filterNot { YoutubeChannels.notDownloadable(it.id) }
             if (fresh.isEmpty()) continue
             latest[c.id] = fresh.maxOf { it.publishedMs }
             // 분류를 거르는 채널은 새 영상마다 분류를 읽어 조건에 맞는 것만 남긴다 (읽지 못하면 남긴다).
