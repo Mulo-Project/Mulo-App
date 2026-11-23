@@ -287,6 +287,8 @@ class NewVideosCubit extends Cubit<NewVideosState> {
             format: common?.format,
             videoFormat: common?.videoFormat,
             videoHeight: common?.videoHeight ?? 1080,
+            audioLanguage:
+                common?.audioLanguage ?? DownloadRequest.systemAudioLanguage,
             thumbnailUrl: v.thumbnailUrl,
             url: v.url,
             savePath: g.channel.savePath.isNotEmpty
@@ -326,6 +328,7 @@ class NewVideosCubit extends Cubit<NewVideosState> {
           thumbnailUrl: request.thumbnailUrl,
           url: request.url,
           savePath: asVideo ? '' : channel?.savePath ?? '',
+          audioLanguage: DownloadRequest.systemAudioLanguage,
           videoFormat: asVideo ? prefs?.videoFormat ?? VideoFormat.mp4 : null,
           videoHeight: prefs?.videoHeight ?? 1080,
         ),

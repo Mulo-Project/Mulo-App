@@ -149,7 +149,13 @@ object YoutubeResolver {
         for (client in audioClients) {
             val clock = System.currentTimeMillis()
             val ordered = try {
-                YoutubeFormats.orderAudio(fetchFormats(client, videoId), preferWebm, language)
+                val all = fetchFormats(client, videoId)
+                val wanted = if (language == YoutubeFormats.SYSTEM_LANGUAGE) {
+                    YoutubeFormats.systemLanguage(YoutubeFormats.languages(all), java.util.Locale.getDefault())
+                } else {
+                    language
+                }
+                YoutubeFormats.orderAudio(all, preferWebm, wanted)
             } catch (e: LiveVideoException) {
                 throw e
             } catch (e: Exception) {

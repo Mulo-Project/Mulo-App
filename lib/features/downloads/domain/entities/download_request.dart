@@ -70,6 +70,10 @@ class DownloadRequest extends Equatable {
   /// 받기 전에 글을 고친 가사(.lrc 글). 있으면 자막을 다시 읽지 않고 이것을 저장한다.
   final String? lyricsText;
 
+  /// [audioLanguage]에 이 값을 넣으면 받을 때 네이티브가 기기(시스템) 언어에 맞는 음성을 고른다
+  /// (곡 받기 창을 거치지 않는 구독 받기용. 맞는 음성이 없으면 기본 음성).
+  static const systemAudioLanguage = '@system';
+
   /// 받을 오디오 언어 코드 (다국어 음원에서 고른 것). null이면 영상의 기본 음성.
   final String? audioLanguage;
 

@@ -72,4 +72,28 @@ object YoutubeFormats {
         }
         return byId.values.toList()
     }
+
+    /** 받기 요청의 `audioLanguage`가 이 값이면 기기(시스템) 언어에 맞는 트랙을 고른다 (사용자가 따로 고르지 않은 받기). */
+    const val SYSTEM_LANGUAGE = "@system"
+
+    /**
+     * 고르지 않았을 때의 오디오 언어: 기기 언어 · 국가와 맞는 트랙. 영상의 기본 음성이 이미 맞거나 맞는 트랙이 없으면 null (기본 음성).
+     * 국가까지 맞는 트랙(`en-US`)을 먼저, 없으면 언어만 맞는 트랙. 앱의 목록 · 상세 화면과 같은 규칙이다.
+     */
+    fun systemLanguage(languages: List<Triple<String, String, Boolean>>, locale: java.util.Locale): String? {
+        if (languages.size < 2) return null
+        val lang = locale.language.lowercase()
+        val country = locale.country.uppercase().ifEmpty { null }
+        var byLanguage: Triple<String, String, Boolean>? = null
+        for (l in languages) {
+            val parts = l.first.split('-', '_')
+            if (parts.first().lowercase() != lang) continue
+            if (country != null && parts.size > 1 && parts[1].uppercase() == country) {
+                return if (l.third) null else l.first
+            }
+            if (byLanguage == null) byLanguage = l
+        }
+        if (byLanguage == null || byLanguage.third) return null
+        return byLanguage.first
+    }
 }

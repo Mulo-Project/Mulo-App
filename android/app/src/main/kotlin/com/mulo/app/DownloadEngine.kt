@@ -840,6 +840,8 @@ class DownloadEngine(
     private fun resolveAudioNow(url: String, language: String?, refresh: Boolean, tag: String?): Stream {
         val clock = System.currentTimeMillis()
         val id = NativeVideoSaver.youtubeIdOf(url)
+        // yt-dlp는 "시스템 언어" 표시를 모르므로 기본 음성으로 받는다.
+        val ytdlpLanguage = language?.takeIf { it != YoutubeFormats.SYSTEM_LANGUAGE }
         var nativeError: String? = null
         if (id != null) {
             try {
@@ -856,7 +858,7 @@ class DownloadEngine(
             }
         }
         try {
-            val r = toStream(if (tag == null) ytdlp.audio(url, language) else ytdlp.tagged(tag) { ytdlp.audio(url, language) })
+            val r = toStream(if (tag == null) ytdlp.audio(url, ytdlpLanguage) else ytdlp.tagged(tag) { ytdlp.audio(url, ytdlpLanguage) })
             MuloLog.d(MuloLog.NATIVE, "받기 주소 읽기(yt-dlp) ${System.currentTimeMillis() - clock}ms")
             return r
         } catch (e: YtDlpException) {
