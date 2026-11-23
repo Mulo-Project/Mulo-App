@@ -1175,6 +1175,25 @@ class DownloadEngine(
         return uri to "/storage/emulated/0/$relative"
     }
 
+    /**
+     * 곡 길이(ms). 요청에 길이가 있으면(0보다 크면) 그것을, 없으면(구독 새 영상처럼 목록에 길이가 없는 경우)
+     * 저장한 파일에서 읽는다. 읽지 못하면 0.
+     */
+    private fun durationFor(request: JSONObject, uri: String): Long {
+        val given = if (request.has("durationMs") && !request.isNull("durationMs")) request.optLong("durationMs") else 0L
+        if (given > 0) return given
+        val retriever = android.media.MediaMetadataRetriever()
+        return try {
+            retriever.setDataSource(context, android.net.Uri.parse(uri))
+            retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLongOrNull() ?: 0L
+        } catch (e: Exception) {
+            MuloLog.d(MuloLog.NATIVE, "파일에서 길이 읽기 실패: ${e.message}")
+            0L
+        } finally {
+            runCatching { retriever.release() }
+        }
+    }
+
     private fun register(item: Item, request: JSONObject, uri: String, folder: String, lyrics: String?, remember: Boolean, video: Boolean) {
         val trackId = "download:${item.id}"
         val cover = request.optJSONObject("cover")
@@ -1191,7 +1210,7 @@ class DownloadEngine(
         val lyricsPath = lyrics?.let { saveLyrics(trackId, it) }
         val reg = AppDb.Registration(
             trackId, request.optString("title"), request.optString("artist"), request.optString("album"),
-            request.optString("genre"), if (request.has("durationMs") && !request.isNull("durationMs")) request.optLong("durationMs") else 0L,
+            request.optString("genre"), durationFor(request, uri),
             uri, folder, if (video) (if (request.optString("videoFormat") == "webm") "video/webm" else "video/mp4") else "",
             System.currentTimeMillis() / 1000, playlistIdsOf(request).toList(), coverJson,
             if (request.has("color") && !request.isNull("color")) request.optLong("color") else null,
