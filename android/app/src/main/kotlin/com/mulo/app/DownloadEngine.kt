@@ -684,7 +684,10 @@ class DownloadEngine(
         }
     }
 
-    private fun fail(item: Item, message: String) {
+    private fun fail(item: Item, rawMessage: String) {
+        // 저장공간이 부족하면 시스템 영문 문구 대신 안내 문구를 보인다 (원문은 로그에 남긴다).
+        val message = DownloadErrors.friendly(rawMessage)
+        if (message != rawMessage) MuloLog.d(MuloLog.NATIVE, "받기 실패 원문: $rawMessage")
         synchronized(lock) {
             if (items.none { it.id == item.id }) return
             item.status = FAILED
