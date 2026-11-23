@@ -1059,3 +1059,7 @@ D-069의 "남은 일" 네 가지를 끝낸다 (D-069의 변환 없음 · 이어�
 - CD(`release.yml`): `v*` 태그 push → CI 재사용 → 태그와 pubspec 버전 일치 확인 → 서명 release APK(`--flavor full --split-per-abi`, D-056 용량 결정) → SHA256SUMS와 함께 GitHub Release.
 - 서명: release 빌드가 debug 키 대신 `MULO_KEYSTORE_*` 환경 변수 또는 `android/key.properties`를 쓴다. 배포 빌드는 키가 없거나 debug 인증서면 실패한다. 비밀값은 GitHub Secrets (`docs/release.md`).
 - 기존 설치본은 debug 키라 release 키로는 업데이트 설치가 안 된다 (한 번 지우고 설치).
+
+## D-171 · 2026-11-24 · 배포 APK는 기본(64비트)과 구형폰(32비트) 두 개만, 이름은 단순하게
+- 설치하는 사람이 파일을 고르기 어려웠다 (`arm64-v8a` · `armeabi-v7a` · `x86_64`). 기본 파일 `Mulo-v<버전>.apk`(arm64)와 `Mulo-v<버전>-32bit.apk`(armv7)만 올리고, 에뮬레이터용 x86_64는 올리지 않는다.
+- Release 설명에 어떤 파일을 받는지 한국어로 적는다. 통합 APK(약 188MB)는 용량 때문에 만들지 않는다 (D-056).

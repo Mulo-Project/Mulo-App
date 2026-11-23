@@ -81,8 +81,14 @@ jobs:
             out="$("$apksigner" verify --print-certs "$f")"
             echo "$out"
             if echo "$out" | grep -qi "Android Debug"; then echo "::error::debug 키로 서명됐습니다"; exit 1; fi
-            cp "$f" "dist/Mulo-${GITHUB_REF_NAME}-${abi}.apk"
+            # 설치하는 사람이 고르기 쉽게 이름을 단순하게 한다: 기본(64비트) · 구형(32비트). x86_64는 에뮬레이터용이라 올리지 않는다.
+            case "$abi" in
+              arm64-v8a)   cp "$f" "dist/Mulo-${GITHUB_REF_NAME}.apk" ;;
+              armeabi-v7a) cp "$f" "dist/Mulo-${GITHUB_REF_NAME}-32bit.apk" ;;
+              *) echo "올리지 않음: $abi" ;;
+            esac
           done
+          [ -f "dist/Mulo-${GITHUB_REF_NAME}.apk" ] || { echo "::error::arm64 APK가 없습니다"; exit 1; }
           ls -lh dist
           (cd dist && sha256sum *.apk > SHA256SUMS.txt && cat SHA256SUMS.txt)
 
@@ -93,5 +99,13 @@ jobs:
         run: |
           flags=""
           [ "$PRERELEASE" = "true" ] && flags="--prerelease"
+          cat > "$RUNNER_TEMP/notes.md" <<'NOTES'
+          ## 어떤 파일을 받나요?
+          - **`Mulo-v….apk` (이름에 아무 표시 없는 파일)**: 대부분의 폰(2017년 이후 갤럭시 · 픽셀 등)에 맞는 기본 파일입니다. 이것을 받으세요.
+          - **`…-32bit.apk`**: 위 파일이 설치되지 않는 아주 오래된 폰(32비트)에서만 쓰세요.
+          - `SHA256SUMS.txt`는 파일 확인용이라 설치하지 않습니다.
+          - 이전 버전에서 업데이트하면 그대로 덮어 설치됩니다. 처음 설치할 때는 "출처를 알 수 없는 앱" 허용이 필요할 수 있습니다.
+
+          NOTES
           gh release create "$GITHUB_REF_NAME" dist/* \
-            --title "Mulo ${GITHUB_REF_NAME}" --generate-notes $flags
+            --title "Mulo ${GITHUB_REF_NAME}" --notes-file "$RUNNER_TEMP/notes.md" --generate-notes $flags
