@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart' show LicenseEntryWithLineBreaks;
+import 'package:flutter/foundation.dart'
+    show LicenseEntryWithLineBreaks, LicenseRegistry;
 import 'package:flutter/material.dart';
 
 import '../../../../core/app_info.dart';
