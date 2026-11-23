@@ -50,6 +50,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: 3.47.x # 개발 PC의 Flutter와 맞춘다. 올릴 때 docs/release.md 확인
           cache: true
       - run: flutter pub get
 

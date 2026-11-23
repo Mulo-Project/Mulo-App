@@ -26,6 +26,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: 3.47.x # 개발 PC의 Flutter와 맞춘다. 올릴 때 docs/release.md 확인
           cache: true
       - run: flutter --version
       - run: flutter pub get
@@ -46,6 +47,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          flutter-version: 3.47.x # 개발 PC의 Flutter와 맞춘다. 올릴 때 docs/release.md 확인
           cache: true
       - run: flutter pub get
       # 비밀값 없이 빌드된다 (구글 로그인 버튼만 꺼진 상태). arm64만 빌드해 시간을 줄인다.

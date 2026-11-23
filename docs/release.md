@@ -14,6 +14,9 @@
 3. Actions의 **Release**가 끝나면 Releases에 `Mulo-v1.0.1-arm64-v8a.apk` 등이 올라온다. 휴대폰은 거의 `arm64-v8a`.
 - 태그(`v1.0.1`)와 pubspec 이름 부분(`1.0.1`)이 다르면 실패한다. `v1.0.1-beta1`처럼 `-`가 있으면 pre-release.
 
+## Flutter 버전
+CI는 `3.47.x`로 고정했다 (`ci.yml` · `release.yml`의 `flutter-version`). 최신 stable(3.50)은 `package:flutter/material.dart` 사용을 deprecated로 보고해 `flutter analyze`가 실패했다. PC의 Flutter를 올리면 두 파일의 값도 같이 올린다.
+
 ## GitHub Secrets (Settings → Secrets and variables → Actions)
 | 이름 | 내용 |
 |---|---|
