@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/usecase/usecase.dart';
+import '../../../downloads/domain/entities/download_options.dart';
 import '../../../downloads/domain/entities/download_request.dart';
 import '../../../downloads/domain/usecases/download_usecases.dart';
 import '../../../search/domain/entities/media_info.dart';
@@ -135,6 +136,7 @@ class NewVideosCubit extends Cubit<NewVideosState> {
     this._moveToBack, [
     this._loadSeen,
     this._saveSeen,
+    this._loadPrefs,
   ]) : super(const NewVideosState());
 
   final SubscriptionsCubit _subs;
@@ -146,6 +148,7 @@ class NewVideosCubit extends Cubit<NewVideosState> {
   final MoveAppToBack _moveToBack;
   final LoadSeenNewVideos? _loadSeen;
   final SaveSeenNewVideos? _saveSeen;
+  final LoadDownloadPreferences? _loadPrefs;
 
   int _generation = 0;
 
@@ -310,6 +313,10 @@ class NewVideosCubit extends Cubit<NewVideosState> {
         .firstOrNull;
     var queued = false;
     if (!(await _findExisting(request.url)).exists) {
+      // 설정에서 영상으로 받기로 했으면 다운로드 설정의 영상 기본 형식 · 화질로 받는다.
+      // 채널에 정한 폴더는 음원 폴더일 수 있어, 영상은 영상 폴더로 받는다 (폴더를 비워 둔다).
+      final asVideo = _subs.state.settings.quickAsVideo;
+      final prefs = asVideo ? await _loadPrefs?.call(const NoParams()) : null;
       queued = await _enqueue(
         DownloadRequest(
           title: request.title,
@@ -318,7 +325,9 @@ class NewVideosCubit extends Cubit<NewVideosState> {
               : channel?.name ?? '',
           thumbnailUrl: request.thumbnailUrl,
           url: request.url,
-          savePath: channel?.savePath ?? '',
+          savePath: asVideo ? '' : channel?.savePath ?? '',
+          videoFormat: asVideo ? prefs?.videoFormat ?? VideoFormat.mp4 : null,
+          videoHeight: prefs?.videoHeight ?? 1080,
         ),
       );
     }

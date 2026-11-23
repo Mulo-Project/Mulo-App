@@ -3017,6 +3017,15 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get settingsQuickDownload => '바로 받기 형식';
+
+  @override
+  String get settingsQuickDownloadAudioDesc => '알림의 "바로 받기"를 음원으로 받아요. 형식은 다운로드 설정의 소리 기본 포맷을 따라요.';
+
+  @override
+  String get settingsQuickDownloadVideoDesc => '알림의 "바로 받기"를 영상으로 받아요. 형식 · 화질은 다운로드 설정의 영상 기본값을 따르고, 영상 폴더에 저장해요.';
+
+  @override
   String get settingsCheckWifiOnly => '와이파이에서만 확인';
 
   @override

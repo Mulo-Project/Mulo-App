@@ -3099,6 +3099,15 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get settingsQuickDownload => 'Quick download type';
+
+  @override
+  String get settingsQuickDownloadAudioDesc => '"Download now" from a notification saves audio, using the default sound format in download settings.';
+
+  @override
+  String get settingsQuickDownloadVideoDesc => '"Download now" from a notification saves video, using the default video format and quality in download settings, into the video folder.';
+
+  @override
   String get settingsCheckWifiOnly => 'Check on Wi-Fi only';
 
   @override

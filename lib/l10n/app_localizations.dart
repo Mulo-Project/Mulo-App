@@ -5618,6 +5618,24 @@ abstract class AppLocalizations {
   /// **'{count}시간'**
   String settingsCheckIntervalHours(int count);
 
+  /// No description provided for @settingsQuickDownload.
+  ///
+  /// In ko, this message translates to:
+  /// **'바로 받기 형식'**
+  String get settingsQuickDownload;
+
+  /// No description provided for @settingsQuickDownloadAudioDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'알림의 "바로 받기"를 음원으로 받아요. 형식은 다운로드 설정의 소리 기본 포맷을 따라요.'**
+  String get settingsQuickDownloadAudioDesc;
+
+  /// No description provided for @settingsQuickDownloadVideoDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'알림의 "바로 받기"를 영상으로 받아요. 형식 · 화질은 다운로드 설정의 영상 기본값을 따르고, 영상 폴더에 저장해요.'**
+  String get settingsQuickDownloadVideoDesc;
+
   /// No description provided for @settingsCheckWifiOnly.
   ///
   /// In ko, this message translates to:

@@ -14,6 +14,7 @@ class PrefsSubscriptionRepository implements SubscriptionRepository {
   static const _backgroundKey = 'subscriptions.background';
   static const _intervalKey = 'subscriptions.intervalHours';
   static const _wifiKey = 'subscriptions.wifiOnly';
+  static const _quickVideoKey = 'subscriptions.quickAsVideo';
   static const _seenKey = 'subscriptions.seenVideos';
 
   @override
@@ -51,6 +52,7 @@ class PrefsSubscriptionRepository implements SubscriptionRepository {
           ? interval
           : 3,
       wifiOnly: prefs.getBool(_wifiKey) ?? true,
+      quickAsVideo: prefs.getBool(_quickVideoKey) ?? false,
     );
   }
 
@@ -61,6 +63,7 @@ class PrefsSubscriptionRepository implements SubscriptionRepository {
     await prefs.setBool(_backgroundKey, s.background);
     await prefs.setInt(_intervalKey, s.intervalHours);
     await prefs.setBool(_wifiKey, s.wifiOnly);
+    await prefs.setBool(_quickVideoKey, s.quickAsVideo);
   }
 
   @override
