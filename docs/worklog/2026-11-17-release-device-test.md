@@ -31,6 +31,10 @@
 - l10n: 생성 파일(`app_localizations*.dart`)을 gen-l10n 출력 기준으로 정리 (빌드할 때마다 수정 상태가 되어 pull이 막히던 것 해결).
 - 테스트 정비: 전체 통과(+657, skip 41).
 
+### 안 쓰는 패키지 정리 (2026-11-24)
+- `audio_metadata_reader` · `cupertino_icons`를 pubspec에서 뺐다. `lib` · `test` · 네이티브 어디에서도 가져다 쓰지 않는다 (태그 읽기 · 쓰기는 네이티브로 옮겨졌고, 아이콘은 `AppIcons`). `pubspec.lock`은 `flutter pub get`으로 갱신한다.
+- docs의 예전 결정 · 작업 기록에 남은 `audio_metadata_reader` 언급은 당시 기록이라 그대로 둔다.
+
 ## 확인
 섹션 1(release 전용)부터:
 - 빌드: `flutter build apk --release --flavor full --split-per-abi --dart-define-from-file=dart_defines.local.json`
