@@ -6347,7 +6347,7 @@ abstract class AppLocalizations {
   /// No description provided for @channelImportHint.
   ///
   /// In ko, this message translates to:
-  /// **'구독할 채널을 눌러 골라요. 고른 채널만 추가돼요.'**
+  /// **'구독 버튼을 눌러 채널을 추가해요.'**
   String get channelImportHint;
 
   /// No description provided for @channelImportAlready.

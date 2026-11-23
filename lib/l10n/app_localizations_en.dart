@@ -3509,7 +3509,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get channelImportHint =>
-      'Tap channels to pick them. Only the channels you pick are added, nothing is imported all at once.';
+      'Tap Subscribe to add a channel.';
 
   @override
   String get channelImportAlready => 'Subscribed';

@@ -9,7 +9,6 @@ import '../../helpers/fakes.dart';
 void main() {
   const a = ChannelHit(id: 'UCa', name: 'A');
   const b = ChannelHit(id: 'UCb', name: 'B');
-  const c = ChannelHit(id: 'UCc', name: 'C');
   const me = GoogleAccount(id: 'u', email: 'a@b.c');
 
   MySubscriptionsCubit cubit(FakeAccountRepository repo) =>
@@ -29,30 +28,5 @@ void main() {
     await cubit0.load();
     expect(cubit0.state.status, MySubscriptionsStatus.failed);
     expect(cubit0.state.failure, AccountFailure.unauthorized);
-  });
-
-  test('채널을 눌러 고르고 풀며, 이미 구독한 채널은 골라낸 목록에서 뺀다', () async {
-    final cubit0 = cubit(
-      FakeAccountRepository(account: me, subscriptions: [a, b, c]),
-    );
-    await cubit0.load();
-    cubit0
-      ..toggle('UCa')
-      ..toggle('UCb')
-      ..toggle('UCa');
-    expect(cubit0.state.picked, {'UCb'});
-    expect(cubit0.pickedChannels({'UCb'}), isEmpty);
-    expect(cubit0.pickedChannels({}), [b]);
-  });
-
-  test('새 채널 모두 선택은 이미 구독한 채널을 고르지 않는다', () async {
-    final cubit0 = cubit(
-      FakeAccountRepository(account: me, subscriptions: [a, b, c]),
-    );
-    await cubit0.load();
-    cubit0.pickAllNew({'UCb'});
-    expect(cubit0.state.picked, {'UCa', 'UCc'});
-    cubit0.clearPicked();
-    expect(cubit0.state.picked, isEmpty);
   });
 }

@@ -1209,7 +1209,7 @@
   "channelPlaylistsUploads": "All uploads",
   "channelImportOpen": "Pick channels from my YouTube subscriptions",
   "channelImportTitle": "My subscribed channels",
-  "channelImportHint": "Tap channels to pick them. Only the channels you pick are added, nothing is imported all at once.",
+  "channelImportHint": "Tap Subscribe to add a channel.",
   "channelImportAlready": "Subscribed",
   "channelImportLoading": "Loading subscriptions… {count} so far",
   "@channelImportLoading": {"placeholders": {"count": {"type": "int"}}},

@@ -1323,7 +1323,7 @@
   "channelPlaylistsUploads": "업로드한 영상 전체",
   "channelImportOpen": "내 YouTube 구독에서 채널 고르기",
   "channelImportTitle": "내 구독 채널",
-  "channelImportHint": "구독할 채널을 눌러 골라요. 고른 채널만 추가돼요.",
+  "channelImportHint": "구독 버튼을 눌러 채널을 추가해요.",
   "channelImportAlready": "구독 중",
   "channelImportLoading": "구독 채널 {count}개 불러오는 중…",
   "@channelImportLoading": {"placeholders": {"count": {"type": "int"}}},
