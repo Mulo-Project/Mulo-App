@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:get_it/get_it.dart';
 
+import '../downloads/domain/usecases/download_usecases.dart';
+
 import '../notifications/data/datasources/notification_texts.dart';
 import 'data/datasources/native_youtube_channels.dart';
 import 'data/repositories/native_background_checker.dart';
@@ -78,6 +80,7 @@ void registerSubscriptions(GetIt sl) {
         sl(),
         sl<LoadSeenNewVideos>(),
         sl<SaveSeenNewVideos>(),
+        sl<LoadDownloadPreferences>(),
       ),
     );
 }

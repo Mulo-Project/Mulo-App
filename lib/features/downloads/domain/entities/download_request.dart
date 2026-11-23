@@ -70,6 +70,10 @@ class DownloadRequest extends Equatable {
   /// 받기 전에 글을 고친 가사(.lrc 글). 있으면 자막을 다시 읽지 않고 이것을 저장한다.
   final String? lyricsText;
 
+  /// [audioLanguage]에 이 값을 넣으면 받을 때 네이티브가 기기(시스템) 언어에 맞는 음성을 고른다
+  /// (곡 받기 창을 거치지 않는 구독 받기용. 맞는 음성이 없으면 기본 음성).
+  static const systemAudioLanguage = '@system';
+
   /// 받을 오디오 언어 코드 (다국어 음원에서 고른 것). null이면 영상의 기본 음성.
   final String? audioLanguage;
 
@@ -78,6 +82,29 @@ class DownloadRequest extends Equatable {
 
   /// 영상 화질 상한(세로 픽셀). [videoFormat]이 있을 때만 쓴다.
   final int videoHeight;
+
+  /// 담을 재생목록만 바꾼 사본.
+  DownloadRequest withPlaylistIds(Set<String> ids) => DownloadRequest(
+    title: title,
+    artist: artist,
+    album: album,
+    genre: genre,
+    playlistIds: ids,
+    format: format,
+    savePath: savePath,
+    duration: duration,
+    color: color,
+    thumbnailUrl: thumbnailUrl,
+    cover: cover,
+    url: url,
+    importLyrics: importLyrics,
+    lyricsLanguage: lyricsLanguage,
+    lyricsSkipSounds: lyricsSkipSounds,
+    lyricsText: lyricsText,
+    audioLanguage: audioLanguage,
+    videoFormat: videoFormat,
+    videoHeight: videoHeight,
+  );
 
   /// 문자열 앞뒤 공백을 지운 사본.
   DownloadRequest normalized() => DownloadRequest(

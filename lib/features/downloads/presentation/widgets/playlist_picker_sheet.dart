@@ -52,6 +52,13 @@ class _PlaylistPickerState extends State<_PlaylistPicker> {
     });
   }
 
+  /// 완료: 새 재생목록 칸에 이름만 적고 + 를 안 눌렀어도 그 이름으로 만들어 함께 담는다.
+  Future<void> _done() async {
+    if (_newPlaylist.text.trim().isNotEmpty) await _create();
+    if (!mounted) return;
+    Navigator.of(context).pop(_selected);
+  }
+
   void _toggle(String id) => setState(() {
     _selected.contains(id) ? _selected.remove(id) : _selected.add(id);
   });
@@ -132,7 +139,7 @@ class _PlaylistPickerState extends State<_PlaylistPicker> {
                 const SizedBox(height: AppSpacing.md),
                 PillButton(
                   label: l10n.downloadPlaylistsDone,
-                  onPressed: () => Navigator.of(context).pop(_selected),
+                  onPressed: _done,
                 ),
               ],
             ),

@@ -86,6 +86,20 @@ class EqualizerLibraryCubit extends Cubit<EqualizerLibraryState> {
     await refresh();
   }
 
+  /// [id] 프리셋의 이름과 값을 고친다 (이 프리셋을 지정한 기기의 값도 함께 바뀐다).
+  Future<void> update(
+    String id,
+    String name,
+    EqualizerSettings settings,
+  ) async {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return;
+    await _saveUse(
+      EqualizerUserPreset(id: id, name: trimmed, settings: settings),
+    );
+    await refresh();
+  }
+
   Future<void> delete(String id) async {
     await _deleteUse(id);
     await refresh();

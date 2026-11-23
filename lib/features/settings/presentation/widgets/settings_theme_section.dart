@@ -26,6 +26,7 @@ class SettingsThemeSection extends StatelessWidget {
     final themeCtrl = context.read<ThemeCubit>();
     return SectionCard(
       title: l10n.settingsTheme,
+      initiallyExpanded: true,
       children: [
         SettingRow(
           title: l10n.settingsThemePreview,

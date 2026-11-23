@@ -79,6 +79,12 @@ class _PrefsIdSet {
       ((await SharedPreferences.getInstance()).getStringList(_key) ?? const [])
           .toSet();
 
+  Future<void> remove(Iterable<String> ids) async {
+    final prefs = await SharedPreferences.getInstance();
+    final all = {...?prefs.getStringList(_key)}..removeAll(ids);
+    await prefs.setStringList(_key, all.toList());
+  }
+
   Future<void> add(Iterable<String> ids) async {
     final prefs = await SharedPreferences.getInstance();
     final all = {...?prefs.getStringList(_key), ...ids};
@@ -104,4 +110,7 @@ class PrefsTagRestoreStore implements TagRestoreStore {
 
   @override
   Future<void> markDone(Iterable<String> trackIds) => _ids.add(trackIds);
+
+  @override
+  Future<void> forget(Iterable<String> trackIds) => _ids.remove(trackIds);
 }

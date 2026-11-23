@@ -51,17 +51,59 @@ object YoutubeChannels {
         return YoutubeChannelParsers.channelIdFromPage(getText(url.toString(), cookie = "CONSENT=YES+1; SOCS=CAI"))
     }
 
-    /** 채널 RSS의 최근 영상들: id · title · publishedMs · author · thumbnail? · views?. */
+    /** 영상이 아직 받을 수 없는지(라이브 · 예정)를 읽은 결과의 기억: id → (읽은 때, 받을 수 없음). */
+    private val liveCache = java.util.concurrent.ConcurrentHashMap<String, Pair<Long, Boolean>>()
+    private const val LIVE_RECHECK_MS = 3 * 60_000L
+    private const val NORMAL_KEEP_MS = 24 * 3_600_000L
+    private const val LIVE_CHECK_WINDOW_MS = 7 * 24 * 3_600_000L
+
+    /**
+     * 영상이 아직 받을 수 없는 상태(라이브 중 · 예정 · 길이 없음)인지 영상 정보 한 번으로 읽는다.
+     * 읽지 못하면 막지 않는다(false). 일반 영상은 오래, 라이브는 짧게 기억한다 (방송이 끝나면 길이가 생긴다).
+     */
+    fun notDownloadable(videoId: String): Boolean {
+        val now = System.currentTimeMillis()
+        liveCache[videoId]?.let { (at, blocked) ->
+            if (now - at < (if (blocked) LIVE_RECHECK_MS else NORMAL_KEEP_MS)) return blocked
+        }
+        val blocked = try {
+            val info = YoutubeResolver.info(videoId)
+            val seconds = info["seconds"] as? Int
+            (info["isLive"] as? Boolean ?: false) || seconds == null || seconds == 0
+        } catch (e: Exception) {
+            MuloLog.d(TAG, "라이브 확인 실패 $videoId: ${e.message}")
+            return false
+        }
+        liveCache[videoId] = now to blocked
+        return blocked
+    }
+
+    /**
+     * 채널 RSS의 최근 영상들: id · title · publishedMs · author · thumbnail? · views?.
+     * 라이브 중이거나 예정인(길이가 없는) 영상은 뺀다. RSS에는 그 구분이 없어 최근 영상만 영상 정보로 확인한다.
+     */
     fun feed(channelId: String): List<Map<String, Any?>> {
         val start = System.currentTimeMillis()
         val xml = getText("https://www.youtube.com/feeds/videos.xml?channel_id=$channelId")
-        val videos = YoutubeChannelParsers.feed(xml).map { v ->
+        val all = YoutubeChannelParsers.feed(xml)
+        val recent = all.filter { start - it.publishedMs < LIVE_CHECK_WINDOW_MS }
+        val blocked: Set<String> = if (recent.isEmpty()) emptySet() else {
+            val pool = java.util.concurrent.Executors.newFixedThreadPool(minOf(4, recent.size))
+            try {
+                recent.map { v -> v.id to pool.submit<Boolean> { notDownloadable(v.id) } }
+                    .filter { (_, f) -> runCatching { f.get() }.getOrDefault(false) }
+                    .map { it.first }.toSet()
+            } finally {
+                pool.shutdown()
+            }
+        }
+        val videos = all.filter { it.id !in blocked }.map { v ->
             mapOf(
                 "id" to v.id, "title" to v.title, "publishedMs" to v.publishedMs,
                 "author" to v.author, "thumbnail" to v.thumbnail, "views" to v.views,
             )
         }
-        MuloLog.d(TAG, "채널 피드 ${videos.size}개 ${System.currentTimeMillis() - start}ms")
+        MuloLog.d(TAG, "채널 피드 ${videos.size}개 (라이브·예정 ${blocked.size}개 뺌) ${System.currentTimeMillis() - start}ms")
         return videos
     }
 

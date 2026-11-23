@@ -1,6 +1,9 @@
 import 'package:equatable/equatable.dart';
 
-/// 스트리밍(받지 않고 듣기) 임시 저장소의 사용량과 한도. 한도 0은 끈 상태.
+/// 한도를 두지 않는 값 (네이티브 Long 최댓값). 직접 비우기 전까지 계속 쌓인다.
+const streamCacheUnlimited = 0x7fffffffffffffff;
+
+/// 스트리밍(받지 않고 듣기) 임시 저장소의 사용량과 한도. 한도 0은 끈 상태, [streamCacheUnlimited]는 무제한.
 class StreamCacheInfo extends Equatable {
   const StreamCacheInfo({
     required this.usedBytes,
@@ -19,6 +22,8 @@ class StreamCacheInfo extends Equatable {
   final int freeBytes;
 
   bool get enabled => limitBytes > 0;
+
+  bool get unlimited => limitBytes >= streamCacheUnlimited;
 
   @override
   List<Object?> get props => [usedBytes, limitBytes, savedBytes, freeBytes];

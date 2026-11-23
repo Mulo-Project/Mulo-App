@@ -50,12 +50,14 @@ class CoverSettingsSection extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           const AppDivider(),
           const SizedBox(height: AppSpacing.md),
-          SectionTitle(l10n.decorateColor, padded: false),
-          const SizedBox(height: AppSpacing.xs),
-          ColorPicker(
+          ColorEntry(
+            title: l10n.decorateColor,
             selected: color,
             autoLabel: l10n.playlistColorAuto,
-            customLabel: l10n.colorCustom,
+            clearLabel: l10n.colorClear,
+            coverLabel: l10n.colorFromCover,
+            cover: image,
+            applyLabel: l10n.downloadApply,
             optionLabel: l10n.colorOption,
             onChanged: onColorChanged,
           ),

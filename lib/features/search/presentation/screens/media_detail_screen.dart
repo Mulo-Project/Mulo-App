@@ -250,15 +250,11 @@ class _DetailViewState extends State<_DetailView> {
   /// 미리 듣기를 시작하지 못하면 앱 안 플레이어(웹뷰)로, 그것도 안 되면 유튜브로 연다.
   Future<void> _play(MediaHit hit) async {
     if (widget.inAppVideo && isYoutubeUrl(hit.url)) {
-      // 언어 목록을 아직 읽는 중이면 기다려, 시스템 언어 기본값이 빠지지 않게 한다.
-      final language = await context
-          .read<AudioLanguageCubit>()
-          .selectedWhenReady();
-      if (!mounted) return;
+      // 언어 목록을 아직 읽는 중이면 기다려, 시스템 언어 기본값이 빠지지 않게 한다 (로딩을 띄운 뒤에 기다린다).
       final started = await togglePreview(
         context,
         hit,
-        audioLanguage: language,
+        languageWhenReady: context.read<AudioLanguageCubit>().selectedWhenReady,
         announceFailure: false,
       );
       if (started || !mounted) return;
@@ -841,6 +837,18 @@ class _PreviewVideoBox extends StatelessWidget {
             // 소리만 저장한 곡도 상세 화면에서는 오프라인이 아니면 영상을 같이 보여 준다.
             online: true,
           ),
+        ),
+        // 미리 듣기를 준비하거나 영상 첫 화면을 기다리는 동안 "불러오는 중"을 보여 준다.
+        BlocBuilder<VideoSurfaceCubit, VideoSurfaceState>(
+          buildWhen: (a, b) => a.ready != b.ready,
+          builder: (context, surface) {
+            final preparing = context.select(
+              (PreviewCubit c) => c.state.status == PreviewStatus.loading,
+            );
+            return surface.ready && !preparing
+                ? const SizedBox.shrink()
+                : const IgnorePointer(child: Center(child: LoadingIndicator()));
+          },
         ),
         const PreviewVideoControls(),
       ],

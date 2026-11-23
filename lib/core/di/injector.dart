@@ -16,17 +16,15 @@ import '../../features/search/di.dart';
 import '../../features/security/di.dart';
 import '../../features/subscriptions/di.dart';
 import '../../features/theme/di.dart';
-import '../database/app_database.dart';
+import '../database/native_db.dart';
 
 /// 앱 전체 서비스 찾기 (get_it). 기능마다 `di.dart`의 register 함수로 등록한다.
 final sl = GetIt.instance;
 
 /// 앱 시작 때 한 번. 테스트는 [GetIt.reset] 후 가짜를 등록한다 (test/helpers).
-void configureDependencies({AppDatabase? database}) {
-  sl.registerLazySingleton<AppDatabase>(
-    () => database ?? AppDatabase(),
-    dispose: (db) => db.close(),
-  );
+void configureDependencies({NativeDb? database}) {
+  // 앱 DB는 네이티브가 쥔다 (Dart는 채널로 부르기만 한다).
+  sl.registerLazySingleton<NativeDb>(() => database ?? NativeDb());
   registerTheme(sl);
   registerSecurity(sl);
   registerAccount(sl);

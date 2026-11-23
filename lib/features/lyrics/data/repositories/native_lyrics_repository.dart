@@ -2,20 +2,20 @@ import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
 
-import '../../../../core/database/app_database.dart';
+import '../../../../core/database/native_db.dart';
 import '../../domain/entities/lyrics.dart';
 import '../../domain/repositories/lyrics_repository.dart';
 import '../datasources/file_picker_lyrics_source.dart';
 
-/// 가사를 앱 지원 폴더(`lyrics/`)에 파일로 두고 경로를 DB에 저장한다.
-class DriftLyricsRepository implements LyricsRepository {
-  DriftLyricsRepository(
+/// 가사를 앱 지원 폴더(`lyrics/`)에 파일로 두고 경로를 네이티브 DB에 저장한다.
+class NativeLyricsRepository implements LyricsRepository {
+  NativeLyricsRepository(
     this._db,
     this._embedded, {
     Future<Directory> Function()? baseDir,
   }) : _baseDir = baseDir ?? getApplicationSupportDirectory;
 
-  final AppDatabase _db;
+  final NativeDb _db;
   final EmbeddedLyricsSource _embedded;
   final Future<Directory> Function() _baseDir;
 
@@ -50,29 +50,20 @@ class DriftLyricsRepository implements LyricsRepository {
     final file = File('${dir.path}/$safeId.$ext');
     await file.writeAsString(lyrics.raw);
 
-    final old = await _pathOf(trackId);
-    await _db
-        .into(_db.lyricsFiles)
-        .insertOnConflictUpdate(
-          LyricsFilesCompanion.insert(trackId: trackId, path: file.path),
-        );
-    // 싱크 ↔ 일반 글로 바뀌면 확장자가 달라 옛 파일이 남는다.
-    if (old != null && old != file.path) await _deleteQuietly(old);
+    // 싱크 ↔ 일반 글로 바뀌어 경로가 달라지면 네이티브가 옛 파일을 지운다.
+    await _db.call<void>('saveLyricsPath', {
+      'trackId': trackId,
+      'path': file.path,
+    });
     return lyrics;
   }
 
   @override
-  Future<void> remove(String trackId) async {
-    final old = await _pathOf(trackId);
-    await (_db.delete(
-      _db.lyricsFiles,
-    )..where((l) => l.trackId.equals(trackId))).go();
-    if (old != null) await _deleteQuietly(old);
-  }
+  Future<void> remove(String trackId) =>
+      _db.call<void>('removeLyrics', {'trackId': trackId});
 
-  Future<String?> _pathOf(String trackId) async => (await (_db.select(
-    _db.lyricsFiles,
-  )..where((l) => l.trackId.equals(trackId))).getSingleOrNull())?.path;
+  Future<String?> _pathOf(String trackId) =>
+      _db.call<String>('lyricsPath', {'trackId': trackId});
 
   /// 음원 파일 옆의 같은 이름 `.lrc` 경로. 파일 경로가 아니면(content:// 등) null.
   static String? _siblingLrc(String uri) {
@@ -96,14 +87,6 @@ class DriftLyricsRepository implements LyricsRepository {
       return decodeLyricsBytes(await File(path).readAsBytes());
     } on FileSystemException {
       return null;
-    }
-  }
-
-  static Future<void> _deleteQuietly(String path) async {
-    try {
-      await File(path).delete();
-    } on FileSystemException {
-      // 이미 없으면 그만.
     }
   }
 }

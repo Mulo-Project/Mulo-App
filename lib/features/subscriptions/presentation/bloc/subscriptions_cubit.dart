@@ -208,6 +208,9 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
   Future<void> setWifiOnly(bool value) =>
       _setSettings(state.settings.copyWith(wifiOnly: value));
 
+  Future<void> setQuickAsVideo(bool value) =>
+      _setSettings(state.settings.copyWith(quickAsVideo: value));
+
   /// 진단 정보를 다시 읽는다 (설정 화면을 열 때).
   Future<void> refreshStatus() async {
     final status = await _getStatus(const NoParams());

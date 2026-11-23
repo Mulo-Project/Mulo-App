@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -52,6 +53,15 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
               final s = state.settings;
               final on = s.enabled;
               final cubit = _cubit;
+              // 내 프리셋 중 지금 소리와 같은 것 (눌러서 고른 프리셋을 표시한다).
+              final userMatch = info == null
+                  ? null
+                  : context
+                        .watch<EqualizerLibraryCubit>()
+                        .state
+                        .presets
+                        .where((u) => _sameSound(u.settings.fitTo(info), s))
+                        .firstOrNull;
 
               Widget gap([double h = AppSpacing.lg]) => SizedBox(height: h);
               Widget divider() => Padding(
@@ -121,7 +131,9 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
                                         PillButton(
                                           compact: true,
                                           variant: PillVariant.tonal,
-                                          selected: s.preset == preset,
+                                          selected:
+                                              userMatch == null &&
+                                              s.preset == preset,
                                           label: _presetLabel(l10n, preset),
                                           onPressed: on
                                               ? () => cubit.selectPreset(preset)
@@ -147,13 +159,17 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
                                         children: [
                                           for (final preset in lib.presets)
                                             GestureDetector(
-                                              onLongPress: () => _confirmDelete(
-                                                context,
-                                                preset,
-                                              ),
+                                              onLongPress: () =>
+                                                  _presetMenu(
+                                                    context,
+                                                    preset,
+                                                    state.settings,
+                                                  ),
                                               child: PillButton(
                                                 compact: true,
                                                 variant: PillVariant.tonal,
+                                                selected:
+                                                    userMatch?.id == preset.id,
                                                 label: preset.name,
                                                 onPressed: on
                                                     ? () =>
@@ -397,6 +413,69 @@ Future<void> _askName(BuildContext context, EqualizerSettings settings) async {
   if (name != null) await library.saveNew(name, settings);
 }
 
+/// 내 프리셋 길게 누르기 메뉴: 지금 값으로 덮어쓰기 · 이름 바꾸기 · 지우기.
+Future<void> _presetMenu(
+  BuildContext context,
+  EqualizerUserPreset preset,
+  EqualizerSettings current,
+) async {
+  final library = context.read<EqualizerLibraryCubit>();
+  final l10n = context.l10n;
+  final action = await showAppSheet<String>(
+    context,
+    builder: (sheet) => SafeArea(
+      child: Padding(
+        padding: appSheetPadding,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppSheetTitle(preset.name),
+            const SizedBox(height: AppSpacing.xs),
+            MenuRow(
+              icon: AppIcons.check,
+              label: l10n.equalizerPresetOverwrite,
+              onTap: () => Navigator.of(sheet).pop('overwrite'),
+            ),
+            MenuRow(
+              icon: AppIcons.edit,
+              label: l10n.equalizerPresetRename,
+              onTap: () => Navigator.of(sheet).pop('rename'),
+            ),
+            MenuRow(
+              icon: AppIcons.delete,
+              label: l10n.equalizerPresetDeleteTitle,
+              destructive: true,
+              onTap: () => Navigator.of(sheet).pop('delete'),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+  if (!context.mounted) return;
+  switch (action) {
+    case 'overwrite':
+      await library.update(preset.id, preset.name, current);
+    case 'rename':
+      final name = await showDialog<String>(
+        context: context,
+        builder: (_) => _NameDialog(initial: preset.name),
+      );
+      if (name != null) await library.update(preset.id, name, preset.settings);
+    case 'delete':
+      await _confirmDelete(context, preset);
+  }
+}
+
+/// 소리를 정하는 값이 같은가 (켜짐 · 프리셋 이름표는 비교하지 않는다).
+bool _sameSound(EqualizerSettings a, EqualizerSettings b) =>
+    listEquals(a.levels, b.levels) &&
+    a.bassBoost == b.bassBoost &&
+    a.virtualizer == b.virtualizer &&
+    a.reverb == b.reverb &&
+    a.limiter == b.limiter;
+
 Future<void> _confirmDelete(
   BuildContext context,
   EqualizerUserPreset preset,
@@ -428,14 +507,17 @@ Future<void> _confirmDelete(
 }
 
 class _NameDialog extends StatefulWidget {
-  const _NameDialog();
+  const _NameDialog({this.initial = ''});
+
+  /// 이름 바꾸기일 때 처음 채울 이름.
+  final String initial;
 
   @override
   State<_NameDialog> createState() => _NameDialogState();
 }
 
 class _NameDialogState extends State<_NameDialog> {
-  final _name = TextEditingController();
+  late final _name = TextEditingController(text: widget.initial);
 
   @override
   void dispose() {

@@ -28,10 +28,18 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  // 묶음 접힘 · 검색어. 화면이 살아 있는 동안 유지된다.
+  final _layout = SectionLayoutController();
+
+  @override
+  void dispose() {
+    _layout.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    const gap = SizedBox(height: AppSpacing.lg);
     return SafeArea(
       bottom: false,
       child: ListView(
@@ -44,30 +52,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: l10n.navSettings,
             subtitle: l10n.settingsSubtitle,
           ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              0,
+              AppSpacing.md,
+              AppSpacing.sm,
+            ),
+            child: AppSearchField(
+              key: const ValueKey('settings-search'),
+              hint: l10n.settingsSearchHint,
+              clearTooltip: l10n.actionClear,
+              height: 44,
+              onChanged: _layout.setQuery,
+            ),
+          ),
           // 묶음 안 줄이 이미 좌우 [AppSpacing.md]를 두므로 바깥 여백 없이 상단 제목과 왼쪽 선을 맞춘다.
           // 묶음마다 자기가 쓰는 값만 지켜보므로, 한 값이 바뀌어도 그 묶음만 다시 그려진다.
-          Column(
-            children: [
-              const SettingsDownloadSection(),
-              gap,
-              const SettingsAccountSection(),
-              gap,
-              const SettingsSecuritySection(),
-              gap,
-              const SettingsNotificationSection(),
-              gap,
-              const SettingsPlaybackSection(),
-              gap,
-              const DeviceEqualizerSection(),
-              const SubscriptionsSection(),
-              gap,
-              const PermissionsSection(),
-              const SettingsThemeSection(),
-              gap,
-              const SettingsDataSection(),
-              gap,
-              const SettingsAboutSection(),
-            ],
+          // 묶음 사이 간격과 접기 · 검색 걸러내기는 [SectionCard]가 [SectionLayoutScope]로 처리한다.
+          SectionLayoutScope(
+            controller: _layout,
+            child: const Column(
+              children: [
+                SettingsDownloadSection(),
+                SettingsAccountSection(),
+                SettingsSecuritySection(),
+                SettingsNotificationSection(),
+                SettingsPlaybackSection(),
+                DeviceEqualizerSection(),
+                SubscriptionsSection(),
+                PermissionsSection(),
+                SettingsThemeSection(),
+                SettingsDataSection(),
+                SettingsAboutSection(),
+              ],
+            ),
           ),
         ],
       ),

@@ -190,8 +190,31 @@ class LoadDownloadPreferences
   final DownloadSettingsRepository _repo;
 
   @override
-  Future<DownloadPreferences> call(NoParams _) async =>
-      DownloadPreferences(format: await _repo.loadFormat());
+  Future<DownloadPreferences> call(NoParams _) async => DownloadPreferences(
+    format: await _repo.loadFormat(),
+    videoFormat: await _repo.loadVideoFormat(),
+    videoHeight: await _repo.loadVideoHeight(),
+  );
+}
+
+/// 기본 영상 저장 형식 정하기.
+class SaveDownloadVideoFormat implements UseCase<void, VideoFormat> {
+  const SaveDownloadVideoFormat(this._repo);
+
+  final DownloadSettingsRepository _repo;
+
+  @override
+  Future<void> call(VideoFormat format) => _repo.saveVideoFormat(format);
+}
+
+/// 기본 영상 화질 정하기.
+class SaveDownloadVideoHeight implements UseCase<void, int> {
+  const SaveDownloadVideoHeight(this._repo);
+
+  final DownloadSettingsRepository _repo;
+
+  @override
+  Future<void> call(int height) => _repo.saveVideoHeight(height);
 }
 
 /// 기본 저장 형식 정하기.

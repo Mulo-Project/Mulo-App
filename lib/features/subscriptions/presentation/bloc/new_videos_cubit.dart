@@ -4,6 +4,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/usecase/usecase.dart';
+import '../../../downloads/domain/entities/download_options.dart';
 import '../../../downloads/domain/entities/download_request.dart';
 import '../../../downloads/domain/usecases/download_usecases.dart';
 import '../../../search/domain/entities/media_info.dart';
@@ -135,6 +136,7 @@ class NewVideosCubit extends Cubit<NewVideosState> {
     this._moveToBack, [
     this._loadSeen,
     this._saveSeen,
+    this._loadPrefs,
   ]) : super(const NewVideosState());
 
   final SubscriptionsCubit _subs;
@@ -146,6 +148,7 @@ class NewVideosCubit extends Cubit<NewVideosState> {
   final MoveAppToBack _moveToBack;
   final LoadSeenNewVideos? _loadSeen;
   final SaveSeenNewVideos? _saveSeen;
+  final LoadDownloadPreferences? _loadPrefs;
 
   int _generation = 0;
 
@@ -252,8 +255,20 @@ class NewVideosCubit extends Cubit<NewVideosState> {
     );
   }
 
+  /// 지금 고른 영상 (보이는 순서대로, 채널 묶음과 함께).
+  List<(NewVideosGroup, FeedVideo)> get selectedVideos => [
+    for (final g in state.groups)
+      for (final v in g.videos)
+        if (state.selected.contains(v.id)) (g, v),
+  ];
+
+  /// 고른 영상을 모두 해제한다.
+  void clearSelection() => emit(state.copyWith(selected: {}));
+
   /// 고른 영상을 받기 대기열에 넣는다 (이미 받았거나 받는 중인 곡은 건너뛴다). 넣은 곡 수를 돌려준다.
-  Future<int> startSelected() async {
+  /// [common]이 있으면 그 공통 설정(형식 · 장르 · 앨범 · 색 · 저장 유형 · 아티스트)으로 받는다.
+  /// 저장 위치는 채널에 따로 정한 폴더가 있으면 그것이 먼저고, 없으면 공통 설정의 폴더다.
+  Future<int> startSelected({DownloadRequest? common}) async {
     var queued = 0;
     for (final g in state.groups) {
       for (final v in g.videos) {
@@ -262,10 +277,23 @@ class NewVideosCubit extends Cubit<NewVideosState> {
         final ok = await _enqueue(
           DownloadRequest(
             title: v.title,
-            artist: v.author.isNotEmpty ? v.author : g.channel.name,
+            // 공통 아티스트를 비워 두면 올린 채널 이름을 쓴다.
+            artist: (common?.artist ?? '').isNotEmpty
+                ? common!.artist
+                : (v.author.isNotEmpty ? v.author : g.channel.name),
+            album: common?.album ?? '',
+            genre: common?.genre ?? '',
+            color: common?.color,
+            format: common?.format,
+            videoFormat: common?.videoFormat,
+            videoHeight: common?.videoHeight ?? 1080,
+            audioLanguage:
+                common?.audioLanguage ?? DownloadRequest.systemAudioLanguage,
             thumbnailUrl: v.thumbnailUrl,
             url: v.url,
-            savePath: g.channel.savePath,
+            savePath: g.channel.savePath.isNotEmpty
+                ? g.channel.savePath
+                : (common?.savePath ?? ''),
           ),
         );
         if (ok) queued++;
@@ -287,6 +315,10 @@ class NewVideosCubit extends Cubit<NewVideosState> {
         .firstOrNull;
     var queued = false;
     if (!(await _findExisting(request.url)).exists) {
+      // 설정에서 영상으로 받기로 했으면 다운로드 설정의 영상 기본 형식 · 화질로 받는다.
+      // 채널에 정한 폴더는 음원 폴더일 수 있어, 영상은 영상 폴더로 받는다 (폴더를 비워 둔다).
+      final asVideo = _subs.state.settings.quickAsVideo;
+      final prefs = asVideo ? await _loadPrefs?.call(const NoParams()) : null;
       queued = await _enqueue(
         DownloadRequest(
           title: request.title,
@@ -295,7 +327,10 @@ class NewVideosCubit extends Cubit<NewVideosState> {
               : channel?.name ?? '',
           thumbnailUrl: request.thumbnailUrl,
           url: request.url,
-          savePath: channel?.savePath ?? '',
+          savePath: asVideo ? '' : channel?.savePath ?? '',
+          audioLanguage: DownloadRequest.systemAudioLanguage,
+          videoFormat: asVideo ? prefs?.videoFormat ?? VideoFormat.mp4 : null,
+          videoHeight: prefs?.videoHeight ?? 1080,
         ),
       );
     }

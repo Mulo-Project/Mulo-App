@@ -79,7 +79,6 @@ MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부�
 | `ArtworkBox` · `toneFor()` | artwork_box.dart | 커버 자리 (이미지 · 사용자 색이 없으면 무채색 `GlowTone.neutral` 그라데이션 + 아이콘; `toneFor()`는 이제 항상 무채색). `width`를 주면 직사각형, `color`를 주면 사용자가 고른 색(`glowFromColor`)으로. 이미지는 칸 크기의 2배(화면 배율 포함) 안으로 줄여 디코딩한다 (`ResizeImage`) |
 | `YoutubeMark` | youtube_mark.dart | 유튜브 표시 (직접 그린 빨간 원 + 흰 링 + 흰 재생 삼각형, YouTube Music 모양, 테마와 무관) |
 | `SoundcloudMark` | soundcloud_mark.dart | 사운드클라우드 표시 (주황 둥근 사각형 + 검정 파형 막대 + 구름, 테마와 무관) |
-| `ColorPicker` | color_picker.dart | 커버 색 고르기 (자동 · 견본 12 · 색상 막대). 사용자가 고르는 색이라 견본은 테마 토큰이 아니라 고정 색 (토큰 규칙의 예외) |
 | `TrackTile` | track_tile.dart | 곡 한 줄 (커버 · 제목 · 부제 · 오른쪽 · 아래 줄). `onMenu(Offset)`: 길게 누르기 · 오른쪽 클릭 (눌린 좌표를 넘겨 팝업 메뉴를 그 자리에) |
 | `MenuRow` | menu_row.dart | 메뉴 시트의 한 줄 (아이콘 + 글자, 삭제는 `destructive` 경고 색). 면 · 테두리 없이 줄만, 가로 여백 없이 시트 제목과 왼쪽 선을 맞춘다 |
 | `showAppSheet` · `AppSheetTitle` · `appSheetPadding` | app_sheet.dart | 공통 바텀 시트 (손잡이 · 윗모서리 `AppRadii.sheet` · 최상위 내비게이터), 시트 제목(titleLarge + 작은 부제), 안쪽 여백 |
@@ -98,7 +97,8 @@ MaterialApp `themeAnimationDuration`(700ms) 동안 `AppThemeTokens.lerp`로 부�
 | `PinPad` | pin_pad.dart | PIN 입력 판 (입력 자리 점 + 숫자 키패드, 0 왼쪽 칸에 생체 버튼). 입력값은 밖에서 들고 있음 |
 | `AppTextField` | app_text_field.dart | 라벨이 위에 붙은 둥근 입력칸 (폼). 글자는 세로 가운데. `maxLines`를 주면 여러 줄 |
 | `SectionBlock` | section_card.dart | 긴 화면의 구역: 위 옅은 구분선 + 작은 제목(카드 면 없음). 영상 상세 · 받기 페이지 |
-| `SectionCard` · `SettingRow` | section_card.dart | 설정 묶음(제목 + 구분선, 카드 면 없음) · 한 줄 |
+| `SectionCard` · `SettingRow` | section_card.dart | 설정 묶음(제목 + 구분선, 카드 면 없음) · 한 줄. `SectionLayoutScope` 안에서는 제목을 눌러 접고 펴며, 검색어로 제목 · 줄 제목 · 설명이 맞는 줄만 남긴다 |
+| `ColorEntry` · `showColorPickerSheet` · `ColorBackdrop` | color_picker.dart | 색 칸(견본 + 값, 누르면 바텀 시트) · 채도·명도 영역 + 색상 막대 + HEX 입력 + 기본 견본 + 자동/적용 시트 · 고른 색을 화면 뒤 위쪽에 그라데이션으로 까는 배경 |
 | `SegmentedPills` · `StatusPill` | segmented_pills.dart | 하나 고르기 알약 묶음 · 상태 알약 |
 | `AppDropdown` | app_dropdown.dart | 알약 드롭다운 (정렬 기준 고르기). 선택값 · 목록 · 문구는 밖에서 받음 |
 | `AppFilterButton` | app_filter_button.dart | 정렬 줄에 `AppDropdown`과 나란히 놓는 알약 버튼 (같은 높이 44 · 같은 면). 보관함 · 검색 정렬은 둘 다 `AppDropdown` |

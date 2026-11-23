@@ -20,6 +20,7 @@ class SystemPermissionRepository implements PermissionRepository {
       Permission.storage,
     ],
     AppPermission.overlay => [Permission.systemAlertWindow],
+    AppPermission.battery => [Permission.ignoreBatteryOptimizations],
   };
 
   @override

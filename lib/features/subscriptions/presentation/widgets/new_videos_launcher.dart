@@ -38,6 +38,9 @@ class _NewVideosLauncherState extends State<NewVideosLauncher> {
 
   /// 위 안내 줄에 보이는 새 영상 수 (없으면 줄이 없다).
   int? _bannerCount;
+
+  /// 안내 줄에 겹쳐 보이는 새 영상 썸네일 (최대 3개).
+  List<String> _bannerThumbs = const [];
   Timer? _bannerTimer;
 
   @override
@@ -96,7 +99,15 @@ class _NewVideosLauncherState extends State<NewVideosLauncher> {
     }
     _announced = true;
     // 이미 안내했거나 본 영상은 목록에 남아 있어도 다시 알리지 않는다.
-    setState(() => _bannerCount = state.unseenCount);
+    setState(() {
+      _bannerCount = state.unseenCount;
+      _bannerThumbs = [
+        for (final g in state.groups)
+          for (final v in g.videos)
+            if (!state.seen.contains(v.id) && v.thumbnailUrl != null)
+              v.thumbnailUrl!,
+      ].take(3).toList();
+    });
     _bannerTimer?.cancel();
     _bannerTimer = Timer(const Duration(seconds: 8), _hideBanner);
   }
@@ -127,6 +138,7 @@ class _NewVideosLauncherState extends State<NewVideosLauncher> {
               top: 0,
               child: NewVideosBanner(
                 count: _bannerCount,
+                thumbnails: _bannerThumbs,
                 onOpen: _openFromBanner,
                 onClose: _hideBanner,
               ),
@@ -136,17 +148,22 @@ class _NewVideosLauncherState extends State<NewVideosLauncher> {
       );
 }
 
-/// 화면 위에서 내려오는 새 영상 안내 줄: 아이콘 · "구독 채널에 새 영상이 N개 있어요" · 보기 · 닫기.
-/// 흐림 없는 단색 면이라 스크롤하는 화면 위에 떠 있어도 가볍다. 없으면 아무것도 그리지 않는다.
+/// 화면 위에서 내려오는 새 영상 안내 줄: 겹친 썸네일 · "구독 채널에 새 영상이 N개 있어요" · 보기 · 닫기.
+/// 테두리 없는 흐림 없는 단색 면이라 스크롤하는 화면 위에 떠 있어도 가볍다. 썸네일이 없으면 아이콘을 둔다.
+/// 없으면 아무것도 그리지 않는다.
 class NewVideosBanner extends StatelessWidget {
   const NewVideosBanner({
     super.key,
     required this.count,
+    this.thumbnails = const [],
     required this.onOpen,
     required this.onClose,
   });
 
   final int? count;
+
+  /// 겹쳐 보일 썸네일 주소 (앞의 3개만 쓴다).
+  final List<String> thumbnails;
   final VoidCallback onOpen;
   final VoidCallback onClose;
 
@@ -177,7 +194,6 @@ class NewVideosBanner extends StatelessWidget {
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppRadii.sm),
-            side: BorderSide(color: p.accent.withValues(alpha: .5)),
           ),
           child: Padding(
             padding: const EdgeInsets.only(
@@ -188,7 +204,14 @@ class NewVideosBanner extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(AppIcons.download, size: AppSizes.iconMd, color: p.accent),
+                if (thumbnails.isEmpty)
+                  Icon(
+                    AppIcons.download,
+                    size: AppSizes.iconMd,
+                    color: p.accent,
+                  )
+                else
+                  _Thumbs(urls: thumbnails.take(3).toList()),
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
@@ -218,6 +241,49 @@ class NewVideosBanner extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// 새 영상 썸네일을 조금씩 겹쳐 놓은 모양 (이미지를 못 읽으면 단색 면).
+class _Thumbs extends StatelessWidget {
+  const _Thumbs({required this.urls});
+
+  final List<String> urls;
+
+  static const double _size = 40;
+  static const double _step = 22;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return SizedBox(
+      width: _size + _step * (urls.length - 1),
+      height: _size,
+      child: Stack(
+        children: [
+          // 뒤에 있는 것부터 그려, 앞(왼쪽) 썸네일이 위에 온다.
+          for (var i = urls.length - 1; i >= 0; i--)
+            Positioned(
+              left: _step * i,
+              child: Container(
+                width: _size,
+                height: _size,
+                decoration: BoxDecoration(
+                  color: p.surface,
+                  borderRadius: BorderRadius.circular(AppRadii.sm),
+                  border: Border.all(color: p.surfaceHigh, width: 2),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Image.network(
+                  urls[i],
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

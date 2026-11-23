@@ -89,12 +89,13 @@ class LoadedFoldersCubit extends Cubit<LoadedFoldersState> {
         if (!known.contains(f.path)) f.path,
     ];
     await _rescan(
+      stage: true,
       onCancelled: added.isEmpty
           ? null
           : () async {
               // 취소하면 방금 등록한 폴더를 목록에서 빼고, 거기서 불러온 곡도 보관함에서 지운다.
               _stage(LoadStage.removing);
-              await _remove(added.first);
+              await _remove(added.first, purgeEmpty: true);
             },
     );
     return !_cancelled;
@@ -129,11 +130,20 @@ class LoadedFoldersCubit extends Cubit<LoadedFoldersState> {
     }
   }
 
-  Future<void> _rescan({Future<void> Function()? onCancelled}) async {
+  /// [stage]면 찾은 곡을 끝까지 "불러오는 중"으로 두었다가 끝나면 한꺼번에 보이게 하고, 취소하면 흔적 없이 지운다.
+  Future<void> _rescan({
+    bool stage = false,
+    Future<void> Function()? onCancelled,
+  }) async {
     _cancelled = false;
     _stage(LoadStage.scanning);
     await load();
-    final outcome = await _import(const NoParams());
+    // 찾는 동안 취소하면 곡을 DB에 넣지 않는다 (넣은 것이 없으니 되돌릴 것도 없다).
+    final outcome = await _import(
+      const NoParams(),
+      cancelled: () => _cancelled,
+      stage: stage,
+    );
     if (outcome is ImportAdded) await _restoreTags?.markPending();
     var changed = false;
     if (!_cancelled) {
@@ -168,6 +178,16 @@ class LoadedFoldersCubit extends Cubit<LoadedFoldersState> {
       }
     }
     _restoreTags?.clearPending();
+    if (stage) {
+      if (_cancelled) {
+        // 취소: 불러오는 중이던 곡은 DB에서 흔적 없이 지운다.
+        final ids = await _import.discardStaged();
+        await _restoreTags?.forget(ids);
+      } else {
+        await _import.commitStaged();
+        changed = true;
+      }
+    }
     if (isClosed) return;
     if (_cancelled && onCancelled != null) await onCancelled();
     final folders = await _load(const NoParams());

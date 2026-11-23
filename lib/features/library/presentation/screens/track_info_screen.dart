@@ -181,6 +181,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
 
     final art = context.select<CoverCubit, CoverArt?>((c) => c.state[key]);
     final colors = context.read<CoverColorCubit>();
+    final color = coverColorOf(context, key);
 
     Widget row(String label, String value, {VoidCallback? onTap}) => InkWell(
       onTap: onTap,
@@ -303,12 +304,14 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
       const AppDivider(),
       const SizedBox(height: AppSpacing.md),
       // 이미지가 없을 때 쓰이는 커버 색.
-      SectionTitle(l10n.decorateColor, padded: false),
-      const SizedBox(height: AppSpacing.xs),
-      ColorPicker(
-        selected: coverColorOf(context, key),
+      ColorEntry(
+        title: l10n.decorateColor,
+        selected: color,
         autoLabel: l10n.playlistColorAuto,
-        customLabel: l10n.colorCustom,
+        clearLabel: l10n.colorClear,
+        coverLabel: l10n.colorFromCover,
+        cover: coverImageOf(context, key),
+        applyLabel: l10n.downloadApply,
         optionLabel: l10n.colorOption,
         onChanged: (c) =>
             c == null ? colors.clear(key) : colors.setColor(key, c),
@@ -318,7 +321,9 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
     return Scaffold(
       backgroundColor: p.background,
       body: AppBackground(
-        child: SafeArea(
+        child: ColorBackdrop(
+          color: color,
+          child: SafeArea(
           child: Column(
             children: [
               AppTopBar(
@@ -367,6 +372,7 @@ class _TrackInfoScreenState extends State<TrackInfoScreen> {
                 ),
             ],
           ),
+        ),
         ),
       ),
     );

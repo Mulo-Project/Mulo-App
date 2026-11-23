@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -18,12 +19,10 @@ void main() {
   late MemoryDownloadSettings settings;
   late List<MethodCall> calls;
   late List<Map<String, Object?>> snapshot;
-  final registered = <Map<String, Object?>>[];
   final errors = <String>[];
 
   NativeDownloadQueueRepository make() => NativeDownloadQueueRepository(
     settings: settings,
-    register: (r) async => registered.add(r),
     onEngineError: errors.add,
     channel: channel,
     events: events,
@@ -45,7 +44,6 @@ void main() {
     settings = MemoryDownloadSettings();
     calls = [];
     snapshot = [];
-    registered.clear();
     errors.clear();
     sink = null;
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -140,7 +138,7 @@ void main() {
     final request = jsonDecode((call.arguments as Map)['request'] as String) as Map;
     expect(request['videoFormat'], 'mp4');
     expect(request['resolvedFolder'], contains('Movies'));
-  });
+  }, skip: !Platform.isAndroid ? '기본 영상 폴더(Movies/Mulo)는 Android에서만 정해진다' : false);
 
   test('일시정지 · 이어받기 · 다시 시도 · 취소는 항목 id만 네이티브에 넘긴다', () async {
     final repo = make();
@@ -177,19 +175,5 @@ void main() {
     expect(settings.last, '/music/Mulo');
     expect(errors, ['Unable to extract']);
     await sub.cancel();
-  });
-
-  test('네이티브가 넘긴 곡을 보관함에 등록하고 끝났다고 알린다', () async {
-    final repo = make();
-    await repo.watchQueue().first;
-    await fromNative('registered', {
-      'trackId': 'download:d1',
-      'title': '곡',
-      'uri': 'content://m/1',
-    });
-    await Future<void>.delayed(const Duration(milliseconds: 10));
-    expect(registered.single['trackId'], 'download:d1');
-    final ack = calls.lastWhere((c) => c.method == 'ack');
-    expect((ack.arguments as Map)['trackId'], 'download:d1');
   });
 }

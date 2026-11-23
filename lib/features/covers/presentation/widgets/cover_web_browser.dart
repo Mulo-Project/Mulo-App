@@ -11,9 +11,36 @@ import '../bloc/cover_cubit.dart';
 /// (데스크톱은 검색어 · 주소 입력 화면을 쓴다).
 bool get coverWebBrowserSupported => Platform.isAndroid;
 
+/// 영상 제목에 붙는 꾸밈 (`[MV]`, `(Official Video)`, `| 4K`, `#태그` 등)을 뺀 검색어.
+/// 그대로 검색하면 제목 전체가 한 덩어리로 걸려 엉뚱한 이미지가 나오기 쉽다. 다 지워져 비면 원래 글을 쓴다.
+String coverSearchQuery(String raw) {
+  var q = raw
+      .replaceAll(RegExp(r'[\[\(（【][^\]\)）】]*[\]\)）】]'), ' ')
+      .replaceAll(RegExp(r'[|｜].*$'), ' ')
+      .replaceAll(RegExp(r'#\S+'), ' ')
+      .replaceAll(
+        RegExp(
+          r'\b(official|music video|mv|m/v|audio|lyrics?|lyric video|visualizer|hd|4k)\b',
+          caseSensitive: false,
+        ),
+        ' ',
+      )
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .trim();
+  if (q.isEmpty) q = raw.trim();
+  return q;
+}
+
+/// Bing이 지역 · 언어를 IP나 쿠키로 정하지 않고 항상 같게 하도록 고정하는 값.
+/// (처음 열 때와 다시 열 때 결과가 달라지는 일을 막는다.)
+const _bingMarket = {'setmkt': 'ko-KR', 'setlang': 'ko-KR', 'cc': 'KR'};
+
 /// 이름으로 이미지 검색 주소.
-Uri coverSearchUri(String query) =>
-    Uri.https('www.bing.com', '/images/search', {'q': query});
+Uri coverSearchUri(String query) => Uri.https(
+  'www.bing.com',
+  '/images/search',
+  {'q': coverSearchQuery(query), ..._bingMarket},
+);
 
 /// 이미지를 누르면 원본 주소를 앱으로 보내는 스크립트. 검색 결과 링크에 실린 원본 주소를 우선하고,
 /// 없으면 눌린 큰 이미지(80px 이상)의 주소를 쓴다. 눌림은 웹 쪽 동작으로 새지 않게 막는다.
@@ -102,7 +129,8 @@ class _CoverWebBrowserState extends State<CoverWebBrowser> {
                 : originalImageUrlOf(change.url!);
             if (url != null) _pick(url);
           },
-          onPageStarted: (_) {
+          onPageStarted: (url) {
+            debugPrint('MuloCoverWeb page started: $url');
             if (mounted) setState(() => _loading = true);
           },
           onPageFinished: (_) async {
@@ -120,7 +148,9 @@ class _CoverWebBrowserState extends State<CoverWebBrowser> {
     // 웹 페이지가 자기 검색창을 주므로 앱은 따로 검색칸을 두지 않고, 처음 검색어로만 연다.
     final q = widget.initialQuery.trim();
     _web.loadRequest(
-      q.isNotEmpty ? coverSearchUri(q) : Uri.https('www.bing.com', '/images'),
+      q.isNotEmpty
+          ? coverSearchUri(q)
+          : Uri.https('www.bing.com', '/images', _bingMarket),
     );
   }
 

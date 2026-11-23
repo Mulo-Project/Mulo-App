@@ -12,12 +12,28 @@ abstract interface class LibraryRepository {
   /// 곡을 추가한다. 같은 재생 주소(uri)가 이미 있으면 건너뛴다. 새로 추가된 수를 돌려준다.
   Future<int> addTracks(List<Track> tracks);
 
+  /// 찾은 곡을 "불러오는 중"으로 넣는다 (화면에는 보이지 않는다). 끝나면 [commitStaged], 취소하면 [discardStaged].
+  /// 새로 보이게 될 곡 수를 돌려준다.
+  Future<int> stageTracks(List<Track> tracks);
+
+  /// 불러오는 중인 곡을 보이게 한다. 새로 보이게 된 수를 돌려준다.
+  Future<int> commitStaged();
+
+  /// 불러오는 중인 곡을 (붙인 커버 · 색 · 가사와 함께) 흔적 없이 지운다. 지운 곡 id를 돌려준다.
+  Future<List<String>> discardStaged();
+
+  /// 보이는 곡 + 불러오는 중인 곡 (태그 · 커버를 채울 곡들).
+  Future<List<Track>> workingTracks();
+
   /// 곡의 제목 · 아티스트 · 앨범 · 장르를 바꾼다. 곡이 없으면 false.
   Future<bool> updateInfo(String trackId, TrackInfo info);
 
   /// 곡을 보관함에서 숨긴다 (불러오는 폴더를 뺄 때). 재생 기록 · 재생목록 · 커버는 남기고,
   /// 같은 곡을 다시 [addTracks]로 찾으면 숨김이 풀린다.
   Future<void> hide(String trackId);
+
+  /// 곡 여러 개를 한 번에 숨긴다 (폴더를 뺄 때). 곡마다 따로 숨기면 그때마다 목록이 다시 읽혀 느리다.
+  Future<void> hideMany(Iterable<String> trackIds);
 
   /// 숨긴 곡(폴더를 빼서 남겨 둔 곡)의 수.
   Future<int> hiddenCount();
@@ -28,7 +44,8 @@ abstract interface class LibraryRepository {
   /// 숨긴 곡의 행과 재생 기록 · 재생목록 소속 · 커버 · 커버 색 · 가사 연결을 지운다
   /// (앱 폴더에 복사한 커버 · 가사 파일도). [ids]를 주면 그 중 숨긴 곡만, 없으면 모두.
   /// 보이는 곡은 [ids]에 있어도 건드리지 않는다. 지운 곡 수를 돌려준다.
-  Future<int> purgeHidden({Set<String>? ids});
+  /// [emptyOnly]면 남은 기록(재생 · 재생목록 · 커버 · 가사)이 하나도 없는 숨긴 곡만 지운다.
+  Future<int> purgeHidden({Set<String>? ids, bool emptyOnly = false});
 
   /// 곡을 보관함에서 지운다. 재생목록 · 재생 기록 · 커버 기록도 함께 지운다 (음악 파일은 [TrackFileRepository]).
   Future<void> delete(String trackId);
@@ -39,6 +56,9 @@ abstract interface class TrackFileRepository {
   /// 음악 파일을 지운다. 이미 없으면 지운 것으로 본다.
   /// 못 지우면(권한 거절 · 사용자가 취소 등) false.
   Future<bool> deleteFile(Track track);
+
+  /// 여러 곡의 음악 파일을 지운다 (삭제 동의 창은 한 번만). 지운 곡의 id 모음을 돌려준다.
+  Future<Set<String>> deleteFiles(List<Track> tracks);
 
   /// 음악 파일의 크기 · 형식 · 비트레이트 · 샘플레이트. 읽을 수 없으면 null.
   Future<TrackFileInfo?> fileInfo(Track track);
