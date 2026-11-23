@@ -1,0 +1,116 @@
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../covers/domain/entities/cover_art.dart';
+import '../../domain/entities/file_tags.dart';
+import '../../domain/entities/track.dart';
+import '../../domain/repositories/track_tag_repository.dart';
+import '../../../downloads/data/datasources/native_tags.dart';
+import '../datasources/file_tag_source.dart';
+import '../datasources/track_tag_source.dart';
+
+class TrackTagRepositoryImpl implements TrackTagRepository {
+  const TrackTagRepositoryImpl(this._source);
+
+  final TrackTagSource _source;
+
+  @override
+  Future<TagWriteResult> write(
+    Track track, {
+    CoverArt? cover,
+    int? color,
+    bool interactive = false,
+  }) => _source.write(
+        track.uri,
+        title: track.title,
+        artist: track.artist,
+        album: track.album,
+        genre: track.genre,
+        cover: cover,
+        color: color,
+        interactive: interactive,
+      );
+
+  @override
+  String? get lastFailure => NativeTags.lastError;
+
+  @override
+  Future<TagWriteResult> writeLyrics(Track track, String lyrics) =>
+      lyrics.trim().isEmpty
+      ? Future.value(TagWriteResult.unsupported)
+      : _source.write(
+          track.uri,
+          // null은 그 칸을 건드리지 않는다 (제목 · 아티스트 등 기존 태그를 그대로 둔다).
+          title: null,
+          artist: null,
+          album: null,
+          genre: null,
+          lyrics: lyrics,
+          // 쓰기 동의는 가사 편집 화면에 들어갈 때 이미 구했다 ([ensureWriteAccess]).
+        );
+
+  @override
+  Future<bool> ensureWriteAccess(Track track) =>
+      _source.ensureWriteAccess(track.uri);
+
+  @override
+  Future<bool> ensureWriteAccessAll(List<Track> tracks) =>
+      _source.ensureWriteAccessAll([for (final t in tracks) t.uri]);
+}
+
+class FileTagRepositoryImpl implements FileTagRepository {
+  const FileTagRepositoryImpl(this._source);
+
+  final FileTagSource _source;
+
+  @override
+  Future<FileTags?> read(Track track) => _source.read(track.uri);
+
+  @override
+  String takeSummary() => FileTagSource.takeSummary();
+}
+
+/// 곡 id 목록을 shared_preferences에 기록한다 (태그 이관 · 복원이 키만 다르다).
+class _PrefsIdSet {
+  const _PrefsIdSet(this._key);
+
+  final String _key;
+
+  Future<Set<String>> load() async =>
+      ((await SharedPreferences.getInstance()).getStringList(_key) ?? const [])
+          .toSet();
+
+  Future<void> remove(Iterable<String> ids) async {
+    final prefs = await SharedPreferences.getInstance();
+    final all = {...?prefs.getStringList(_key)}..removeAll(ids);
+    await prefs.setStringList(_key, all.toList());
+  }
+
+  Future<void> add(Iterable<String> ids) async {
+    final prefs = await SharedPreferences.getInstance();
+    final all = {...?prefs.getStringList(_key), ...ids};
+    await prefs.setStringList(_key, all.toList());
+  }
+}
+
+class PrefsTagMigrationStore implements TagMigrationStore {
+  static const _ids = _PrefsIdSet('library.tagMigrationDone');
+
+  @override
+  Future<Set<String>> loadDone() => _ids.load();
+
+  @override
+  Future<void> markDone(Iterable<String> trackIds) => _ids.add(trackIds);
+}
+
+class PrefsTagRestoreStore implements TagRestoreStore {
+  static const _ids = _PrefsIdSet('library.tagRestoreDone3');
+
+  @override
+  Future<Set<String>> loadDone() => _ids.load();
+
+  @override
+  Future<void> markDone(Iterable<String> trackIds) => _ids.add(trackIds);
+
+  @override
+  Future<void> forget(Iterable<String> trackIds) => _ids.remove(trackIds);
+}

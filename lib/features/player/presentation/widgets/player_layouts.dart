@@ -1,0 +1,362 @@
+import 'dart:math' as math;
+
+import 'package:flutter/material.dart';
+
+import '../../../../core/design/design.dart';
+import '../../../search/presentation/widgets/preview_video_controls.dart';
+import 'fullscreen_video.dart';
+import 'pan_zoom_video.dart';
+import 'player_common.dart';
+
+/// 플레이어 모양 3가지 (카드 · 상자 없이 배경 위에 바로 놓는다).
+/// 위쪽(커버 · 진행 표시)만 다르고, 하단 조작부는 모두 [PlayerControls] 하나를 쓴다.
+
+const _side = EdgeInsets.symmetric(horizontal: AppSpacing.lg);
+
+/// 가사 보기일 때 커버 자리를 채우는 가사.
+Widget _lyrics(PlayerLayoutData data) => Padding(
+  padding: _side,
+  child: PlayerLyricsPane(track: data.track),
+);
+
+/// 가사 보기일 때 바탕 전체를 배경색으로 덮는 막 (커버 · 그라데이션이 가장자리에 비치지 않게).
+/// 영상 곡은 가사 뒤로 영상이 비쳐 움직이게 얇게 덮는다 (영상이 아니면 배경색으로 꽉 덮는다).
+Widget _lyricsVeil(BuildContext context, bool show, {bool video = false}) =>
+    Positioned.fill(
+      child: IgnorePointer(
+        child: AnimatedOpacity(
+          opacity: show ? 1 : 0,
+          duration: AppMotion.slow,
+          child: ColoredBox(
+            color: context.palette.background.withValues(
+              alpha: video ? .6 : 1,
+            ),
+          ),
+        ),
+      ),
+    );
+
+/// 네모: 큰 정사각 커버, 아래 진행 막대.
+class SquarePlayer extends StatelessWidget {
+  const SquarePlayer({super.key, required this.data});
+
+  final PlayerLayoutData data;
+
+  @override
+  Widget build(BuildContext context) {
+    final art = PlayerArt.of(context, data.track);
+    final p = context.palette;
+    return PlayerBackdrop(
+      art: art,
+      // 영상 곡은 사각 커버 뒤에도 흐린 영상이 움직인다.
+      blurred: data.track.isVideo,
+      video: data.track.isVideo,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          _lyricsVeil(context, data.showLyrics, video: data.track.isVideo),
+          SafeArea(
+            child: Column(
+              children: [
+                PlayerTopBar(track: data.track),
+                Expanded(
+                  child: data.showLyrics
+                      ? _lyrics(data)
+                      : Padding(
+                          padding: _side,
+                          child: Center(
+                            child: AspectRatio(
+                              aspectRatio: 1,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(
+                                    AppRadii.lg,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: p.scrim.withValues(alpha: .35),
+                                      blurRadius: 40,
+                                      offset: const Offset(0, 18),
+                                    ),
+                                  ],
+                                ),
+                                child: Hero(
+                                  tag: 'now-playing',
+                                  child: PlayerCover(
+                                    art: art,
+                                    // 영상 곡: 틀을 꽉 채우고 끌어서 가려진 부분을, 두 손가락으로 확대 · 축소.
+                                    video: data.track.isVideo
+                                        ? const PanZoomVideo(
+                                            fullscreenButton: true,
+                                          )
+                                        : null,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                PlayerControls(
+                  data: data,
+                  play: SolidPlayButton(data: data, size: 72),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 꽉 찬 이미지: 커버가 위쪽을 채우고 배경으로 스며든다.
+class FullBleedPlayer extends StatelessWidget {
+  const FullBleedPlayer({super.key, required this.data});
+
+  final PlayerLayoutData data;
+
+  @override
+  Widget build(BuildContext context) {
+    final art = PlayerArt.of(context, data.track);
+    final p = context.palette;
+    return ColoredBox(
+      color: p.background,
+      child: LayoutBuilder(
+        builder: (context, c) => Stack(
+          children: [
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 0,
+              height: c.maxHeight * .66,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // 영상 곡: 커버와 같은 자리(화면 맨 위 버튼줄까지)를 영상이 꽉 채우고,
+                  // 끌어서 가려진 부분을 보고 확대 · 축소한다.
+                  PlayerCover(
+                    art: art,
+                    radius: 0,
+                    video: data.track.isVideo ? const PanZoomVideo() : null,
+                  ),
+                  // 위: 상단 버튼이 읽히게 살짝 어둡게, 아래: 배경으로 부드럽게. 누름은 아래로 통과시킨다.
+                  IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            p.scrim.withValues(alpha: .35),
+                            p.scrim.withValues(alpha: 0),
+                            p.background.withValues(alpha: 0),
+                            p.background.withValues(alpha: .45),
+                            p.background.withValues(alpha: .85),
+                            p.background,
+                          ],
+                          stops: const [0, .22, .45, .7, .88, 1],
+                        ),
+                      ),
+                    ),
+                  ),
+                  // 전체 화면 버튼은 그라데이션 위에 둔다 (아래로 흐려지는 막에 가려지지 않게 조금 위로).
+                  if (data.track.isVideo)
+                    Positioned(
+                      right: AppSpacing.md,
+                      bottom: c.maxHeight * .66 * .2,
+                      child: FullscreenVideoButton(
+                        controls: (_) => const PreviewVideoControls(
+                          fullscreen: true,
+                          main: true,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            _lyricsVeil(context, data.showLyrics, video: data.track.isVideo),
+            SafeArea(
+              child: Column(
+                children: [
+                  PlayerTopBar(track: data.track),
+                  Expanded(
+                    child: data.showLyrics
+                        ? _lyrics(data)
+                        : const SizedBox.shrink(),
+                  ),
+                  PlayerControls(
+                    data: data,
+                    play: SolidPlayButton(data: data, size: 72),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 호의 하단: 진행 막대는 커버 쪽에 있고, 조작부는 [PlayerControls] 하나.
+Widget _imageSeekControls(PlayerLayoutData data, Widget play) => Column(
+  mainAxisSize: MainAxisSize.min,
+  children: [
+    const SizedBox(height: AppSpacing.sm),
+    PlayerControls(data: data, play: play, seekBar: false),
+    const SizedBox(height: AppSpacing.xs),
+  ],
+);
+
+/// 호: 흐린 커버 배경, 커버를 감싸는 곡선 진행 막대.
+/// 가사 보기로 바꾸면 곡선이 곧은 막대로 펴진다.
+class ArcPlayer extends StatelessWidget {
+  const ArcPlayer({super.key, required this.data});
+
+  final PlayerLayoutData data;
+
+  /// 아래쪽이 열린 정도 (라디안).
+  static const _gap = math.pi * 4 / 9;
+  static const _sweep = 2 * math.pi - _gap;
+  static const _start = math.pi / 2 + _gap / 2;
+  static const _knob = 8.0;
+
+  static double _size(Size s) =>
+      math.min(s.width - AppSpacing.lg * 2, s.height);
+
+  static Path _path(Size s, double extend) {
+    final radius = _size(s) / 2 - _knob - 1;
+    return Path()..addArc(
+      Rect.fromCircle(center: s.center(Offset.zero), radius: radius),
+      _start,
+      _sweep,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final art = PlayerArt.of(context, data.track);
+    final p = context.palette;
+    return PlayerBackdrop(
+      art: art,
+      blurred: true,
+      video: data.track.isVideo,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          _lyricsVeil(context, data.showLyrics, video: data.track.isVideo),
+          SafeArea(
+            child: Column(
+              children: [
+                PlayerTopBar(track: data.track),
+                Expanded(
+                  child: PositionBuilder(
+                    builder: (context, state) => MorphSeek(
+                      progress: state.progress,
+                      onSeek: data.vm.seekFraction,
+                      onSeekStart: data.vm.beginScrub,
+                      onSeekEnd: data.vm.endScrub,
+                      straight: data.showLyrics,
+                      pathOf: _path,
+                      track: p.onSurface.withValues(alpha: .2),
+                      fill: p.onSurface,
+                      position: state.position,
+                      total: data.track.duration,
+                      timeAt: (s, _) => Offset(
+                        s.width / 2,
+                        s.height / 2 + (_size(s) / 2 - _knob - 1),
+                      ),
+                      cover: (s, _) => Center(
+                        child: SizedBox.square(
+                          dimension: _size(s),
+                          child: Padding(
+                            padding: EdgeInsets.all(_size(s) * .09),
+                            child: PlayerCover(
+                              art: art,
+                                        radius: _size(s),
+                              // 영상 곡: 원을 꽉 채우고 끌어서 가려진 부분을, 두 손가락으로 확대 · 축소.
+                              video: data.track.isVideo
+                                  ? const PanZoomVideo(fullscreenOnTap: true)
+                                  : null,
+                            ),
+                          ),
+                        ),
+                      ),
+                      lyrics: _lyrics(data),
+                    ),
+                  ),
+                ),
+                _imageSeekControls(data, SolidPlayButton(data: data, size: 72)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 플레이어 커버 자리의 영상 + 오른쪽 아래 전체 화면 버튼.
+
+/// 임시 저장한 곡: 일반 곡과 같은 틀(맨 위 줄 · 아래 조작부)에 가운데만 다운로드 페이지 내용을 보여 준다.
+/// [panel]은 그 내용이고, [onExpand]는 오른쪽 위 확장 버튼(다운로드 페이지 자체로 이동)이다.
+class SavedPlayer extends StatelessWidget {
+  const SavedPlayer({
+    super.key,
+    required this.data,
+    required this.panel,
+    required this.onExpand,
+    required this.expandTooltip,
+  });
+
+  final PlayerLayoutData data;
+  final Widget panel;
+  final VoidCallback onExpand;
+  final String expandTooltip;
+
+  @override
+  Widget build(BuildContext context) {
+    final art = PlayerArt.of(context, data.track);
+    return PlayerBackdrop(
+      art: art,
+      blurred: false,
+      video: false,
+      child: SafeArea(
+        child: Column(
+          children: [
+            PlayerTopBar(track: data.track),
+            // 영상 · 썸네일은 상세 화면([panel])이 맨 위에 고정해 보여 준다 (영상 저장 곡 · 소리만 저장한 곡 모두 같은 화면을 쓴다).
+            Expanded(child: panel),
+            // 표시 영역(정보) 아래 줄: 다운로드 상세로 가는 확장 버튼.
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.xs,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  CircleIconButton(
+                    key: const ValueKey('saved-expand'),
+                    icon: AppIcons.expandOut,
+                    tooltip: expandTooltip,
+                    onPressed: onExpand,
+                  ),
+                ],
+              ),
+            ),
+            PlayerControls(
+              data: data,
+              play: SolidPlayButton(data: data, size: 72),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+          ],
+        ),
+      ),
+    );
+  }
+}

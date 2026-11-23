@@ -1,0 +1,382 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../../core/design/design.dart';
+import '../../../../core/di/injector.dart';
+import '../../../../core/l10n/l10n.dart';
+import '../../../library/domain/entities/track.dart' show formatDuration;
+import '../../../player/presentation/bloc/now_playing_cubit.dart';
+import '../../domain/entities/engine_exception.dart';
+import '../../domain/entities/media_info.dart';
+import '../../domain/usecases/search_usecases.dart' show FetchAudioLanguages;
+import '../bloc/audio_language_cubit.dart';
+import '../bloc/preview_cubit.dart';
+import '../bloc/saved_videos_cubit.dart';
+import '../screens/media_detail_screen.dart' show isYoutubeUrl;
+
+/// [hit] 미리 듣기를 시작하거나(이미 듣는 중이면) 멈춘다.
+/// 소리가 나기 시작하면 메인 재생은 멈추고, 시작하지 못하면 안내를 띄운다
+/// ([announceFailure]가 false면 안내 없이 false만 돌려준다).
+/// 시작하지 못했으면 false, 잘 됐거나 멈췄으면 true.
+Future<bool> togglePreview(
+  BuildContext context,
+  MediaHit hit, {
+  String? audioLanguage,
+  Future<String?> Function()? languageWhenReady,
+  bool announceFailure = true,
+}) async {
+  final l10n = context.l10n;
+  final messenger = ScaffoldMessenger.of(context);
+  final preview = context.read<PreviewCubit>();
+  final nowPlaying = context.read<NowPlayingCubit>();
+
+  // 라이브는 끝이 없거나 아직 시작 전이라 주소가 없다. 이미 듣는 중이면 멈추기만 한다.
+  if (hit.isLive && !preview.state.isActive(hit.id)) {
+    if (announceFailure) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(l10n.searchLiveNoPreview)));
+    }
+    return false;
+  }
+
+  // 저장한 곡은 저장할 때 고른 화질로 읽어야 저장한 데이터를 그대로 쓴다.
+  final failure = await preview.toggle(
+    hit,
+    audioLanguage: audioLanguage,
+    videoQuality: context.read<SavedVideosCubit>().qualityOf(hit.id),
+    // 언어를 정해 주지 않은 시작(목록 타일 등)도 상세 화면과 같은 시스템 언어 기본값을 쓴다 (로딩을 띄운 뒤에 읽는다).
+    // [languageWhenReady]는 고른 언어를 아직 읽는 중일 때 기다리는 함수다. 로딩을 띄운 뒤에 기다리게 넘긴다 (누르자마자 반응하도록).
+    defaultLanguage: () async {
+      final chosen = await languageWhenReady?.call();
+      if (chosen != null) return chosen;
+      if (isYoutubeUrl(hit.url) && sl.isRegistered<FetchAudioLanguages>()) {
+        return defaultAudioLanguageFor(sl<FetchAudioLanguages>(), hit.url);
+      }
+      return null;
+    },
+  );
+  if (failure != null) {
+    if (!announceFailure) return false;
+    // 까닭을 알 수 있게 엔진이 알려 준 마지막 줄을 덧붙인다.
+    final detail = preview.lastFailureDetail
+        .split('\n')
+        .map((l) => l.trim())
+        .lastWhere((l) => l.isNotEmpty, orElse: () => '');
+    final unplayable =
+        detail.contains('Offline') || detail.contains('unplayable');
+    final message = switch (failure) {
+      _ when unplayable => l10n.searchPreviewUnplayable,
+      EngineFailure.unavailable => l10n.searchPreviewUnavailable,
+      EngineFailure.network => l10n.searchNetworkBody,
+      EngineFailure.timeout => l10n.stateTimeoutBody,
+      EngineFailure.notFound => l10n.searchNotFoundBody,
+      _ => l10n.searchPreviewFailed,
+    };
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          detail.isEmpty || unplayable || failure == EngineFailure.unavailable
+              ? message
+              : '$message\n${detail.length > 400 ? detail.substring(0, 400) : detail}',
+        ),
+      ),
+    );
+    return false;
+  }
+  // 두 소리가 겹치지 않게 메인 재생은 미리 듣기가 시작될 때 멈춘다.
+  final state = preview.state;
+  if (state.isActive(hit.id) &&
+      state.status == PreviewStatus.playing &&
+      nowPlaying.state.isPlaying) {
+    nowPlaying.togglePlay();
+  }
+  return true;
+}
+
+/// 상세 화면의 미리 듣기 버튼. 준비 중이거나 듣는 중이면 누를 때 멈춘다.
+class PreviewButton extends StatelessWidget {
+  const PreviewButton({super.key, required this.hit});
+
+  final MediaHit hit;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final status = context.select(
+      (PreviewCubit c) =>
+          c.state.isActive(hit.id) ? c.state.status : PreviewStatus.idle,
+    );
+    // 미니 플레이어에서 잠시 멈춰 둔 상태면 "이어 듣기"로 보이고, 누르면 이어서 듣는다.
+    final paused = context.select(
+      (PreviewCubit c) => c.state.isActive(hit.id) && c.state.paused,
+    );
+    final cubit = context.read<PreviewCubit>();
+    // 언어 목록을 아직 읽는 중이면 기다려, 시스템 언어 기본값이 빠지지 않게 한다.
+    Future<void> stop() => togglePreview(
+      context,
+      hit,
+      languageWhenReady: context.read<AudioLanguageCubit>().selectedWhenReady,
+    );
+    // 듣는 중에는 일시정지/이어 듣기와 멈추기를 따로 둔다 (한 버튼이 둘을 오가면 헷갈린다).
+    if (status == PreviewStatus.playing) {
+      // 한 줄에 나란히 둔다 (좁으면 글자가 줄어든다).
+      return Row(
+        children: [
+          Expanded(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: PillButton(
+                key: const ValueKey('preview-pause-button'),
+                label: paused
+                    ? l10n.searchPreviewResume
+                    : l10n.searchPreviewPause,
+                icon: paused ? AppIcons.play : AppIcons.pause,
+                variant: PillVariant.tonal,
+                onPressed: cubit.togglePause,
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: PillButton(
+                key: const ValueKey('preview-stop-button'),
+                label: l10n.searchPreviewStop,
+                icon: AppIcons.close,
+                variant: PillVariant.tonal,
+                onPressed: stop,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+    return PillButton(
+      label: status == PreviewStatus.loading
+          ? l10n.searchPreviewLoading
+          : l10n.searchPreview,
+      icon: status == PreviewStatus.loading
+          ? AppIcons.hourglassTop
+          : AppIcons.headphones,
+      variant: PillVariant.tonal,
+      busy: status == PreviewStatus.loading,
+      onPressed: stop,
+    );
+  }
+}
+
+/// 검색 결과 줄 오른쪽의 미리 듣기 버튼 (면 없는 작은 아이콘 버튼).
+/// 누르면 미리 듣고, 준비 중이거나 듣는 중이면 강조 색으로 바뀌어 누를 때 멈춘다.
+class PreviewRowButton extends StatelessWidget {
+  const PreviewRowButton({super.key, required this.hit});
+
+  final MediaHit hit;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final state = context.select(
+      (PreviewCubit c) => c.state.isActive(hit.id) ? c.state : null,
+    );
+    final status = state?.status ?? PreviewStatus.idle;
+    return RowIconButton(
+      key: const ValueKey('preview-row-button'),
+      icon: switch (status) {
+        PreviewStatus.idle => AppIcons.headphones,
+        PreviewStatus.loading => AppIcons.hourglassTop,
+        PreviewStatus.playing => AppIcons.pause,
+      },
+      tooltip: switch (status) {
+        PreviewStatus.idle => l10n.searchPreview,
+        PreviewStatus.loading => l10n.searchPreviewLoading,
+        PreviewStatus.playing => l10n.searchPreviewStop,
+      },
+      accent: status != PreviewStatus.idle,
+      busy: status == PreviewStatus.loading,
+      busyChild: state == null ? null : PreviewLoadingRing(state: state),
+      onPressed: () => togglePreview(context, hit),
+    );
+  }
+}
+
+/// 소리가 나기까지 남은 시간을 보여 주는 작은 원: 호가 차오르고 가운데에 남은 초가 있고, 예상을 넘기면 넘긴 초가 +로 올라간다.
+class PreviewLoadingRing extends StatelessWidget {
+  const PreviewLoadingRing({super.key, required this.state, this.size = 28});
+
+  final PreviewState state;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final started = state.loadStartedAt;
+    final total = state.expectedLoad;
+    if (started == null || total <= Duration.zero) {
+      return SizedBox.square(dimension: size);
+    }
+    final elapsed = DateTime.now().difference(started);
+    // 짐작한 시간([total])에 90%쯤 차고, 그 뒤에도 멈추지 않고 점점 느려지며 계속 차오른다
+    // (가득 찼는데 안 나거나 끝에서 딱 멈춘 것처럼 보이지 않게). 소리가 나면 끝난다.
+    const horizon = Duration(minutes: 2);
+    final k = total.inMilliseconds / 9;
+    final begin = (elapsed.inMilliseconds / horizon.inMilliseconds).clamp(
+      0.0,
+      1.0,
+    );
+    final text = Theme.of(context).textTheme.labelSmall;
+    return TweenAnimationBuilder<double>(
+      key: ValueKey(started),
+      tween: Tween(begin: begin, end: 1),
+      duration: horizon * (1 - begin),
+      builder: (context, x, _) {
+        final t = x * horizon.inMilliseconds;
+        final v = t / (t + k);
+        // 예상 시간까지는 남은 초를 세고, 넘기면 넘긴 초를 +로 센다 (1에서 멈춰 보이지 않게).
+        final over = t - total.inMilliseconds;
+        final label = over <= 0
+            ? '${((-over) / 1000).ceil().clamp(1, 99)}'
+            : '+${(over / 1000).floor().clamp(0, 99)}';
+        return CountdownRing(
+          key: const ValueKey('preview-loading-ring'),
+          value: v,
+          size: size,
+          child: Text(label, style: text?.copyWith(fontSize: 10)),
+        );
+      },
+    );
+  }
+}
+
+/// 눌러서 · 끌어서 옮길 수 있는 미리 듣기 진행 막대.
+/// 끌고 있는 동안은 손가락 자리를 보여 주고, 손을 뗄 때 한 번만 실제로 옮긴다.
+/// 길이를 아직 모르면 옮기지 않는다.
+class PreviewSeekLine extends StatefulWidget {
+  const PreviewSeekLine({
+    super.key,
+    required this.fraction,
+    this.height = 4,
+    this.buffered = 0,
+  });
+
+  final double fraction;
+  final double height;
+
+  /// 미리 받아 둔 비율 0 ~ 1 (막대에 연하게).
+  final double buffered;
+
+  @override
+  State<PreviewSeekLine> createState() => _PreviewSeekLineState();
+}
+
+class _PreviewSeekLineState extends State<PreviewSeekLine> {
+  double? _drag;
+
+  double _at(double dx, double width) =>
+      width <= 0 ? 0 : (dx / width).clamp(0.0, 1.0);
+
+  void _commit() {
+    final v = _drag;
+    setState(() => _drag = null);
+    if (v != null) context.read<PreviewCubit>().seekTo(v);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, c) {
+        final w = c.maxWidth;
+        return GestureDetector(
+          key: const ValueKey('preview-seek'),
+          behavior: HitTestBehavior.opaque,
+          onTapDown: (d) => setState(() => _drag = _at(d.localPosition.dx, w)),
+          onTapUp: (_) => _commit(),
+          onTapCancel: () => setState(() => _drag = null),
+          onHorizontalDragStart: (d) =>
+              setState(() => _drag = _at(d.localPosition.dx, w)),
+          onHorizontalDragUpdate: (d) =>
+              setState(() => _drag = _at(d.localPosition.dx, w)),
+          onHorizontalDragEnd: (_) => _commit(),
+          onHorizontalDragCancel: () => setState(() => _drag = null),
+          // 누를 자리를 넉넉히 (막대는 얇아서).
+          child: SizedBox(
+            height: widget.height + 16,
+            child: Center(
+              child: ProgressLine(
+                value: _drag ?? widget.fraction,
+                height: widget.height,
+                buffered: widget.buffered,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// 미리 듣는 곡의 재생 진행도: 얼마나 들었는지 막대 + 시간.
+/// 이 곡을 듣고 있지 않으면 아무것도 그리지 않는다. [showTime]이면 막대 아래에 시간도 보인다.
+class PreviewProgressBar extends StatelessWidget {
+  const PreviewProgressBar({
+    super.key,
+    required this.hitId,
+    this.showTime = false,
+  });
+
+  final String hitId;
+  final bool showTime;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = context.select(
+      (PreviewCubit c) => c.state.isActive(hitId) ? c.state : null,
+    );
+    if (state == null || state.status != PreviewStatus.playing) {
+      return const SizedBox.shrink();
+    }
+    final text = Theme.of(context).textTheme.bodySmall;
+    final progress = state.progress;
+    final duration = progress?.duration;
+    final bar = Column(
+      key: const ValueKey('preview-progress'),
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        PreviewSeekLine(
+          fraction: state.fraction,
+          buffered: state.bufferedFraction,
+        ),
+        if (showTime) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                formatDuration(progress?.position ?? Duration.zero),
+                key: const ValueKey('preview-position'),
+                style: text,
+              ),
+              Text(
+                duration == null ? '--:--' : formatDuration(duration),
+                key: const ValueKey('preview-duration'),
+                style: text,
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+    return showTime
+        ? Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.xs,
+              AppSpacing.sm,
+              AppSpacing.xs,
+              0,
+            ),
+            child: bar,
+          )
+        : bar;
+  }
+}

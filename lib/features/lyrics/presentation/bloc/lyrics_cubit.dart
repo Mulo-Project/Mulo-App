@@ -1,0 +1,75 @@
+import 'package:equatable/equatable.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../../core/usecase/usecase.dart';
+import '../../../library/domain/entities/track.dart';
+import '../../domain/entities/lyrics.dart';
+import '../../domain/usecases/lyrics_usecases.dart';
+
+export '../../domain/entities/lyrics.dart';
+
+/// 지금 보고 있는 곡([trackId])의 가사. [lyrics]가 null이고 [loading]이 아니면 가사 없음.
+class LyricsState extends Equatable {
+  const LyricsState({this.trackId, this.lyrics, this.loading = false});
+
+  final String? trackId;
+  final Lyrics? lyrics;
+  final bool loading;
+
+  @override
+  List<Object?> get props => [trackId, lyrics, loading];
+}
+
+/// 플레이어가 보여 줄 가사를 불러오고, 곡 메뉴의 가사 설정을 저장한다.
+class LyricsCubit extends Cubit<LyricsState> {
+  LyricsCubit({
+    required this._load,
+    required this._save,
+    required this._ensureAccess,
+    required this._clear,
+    required this._pickFile,
+  }) : super(const LyricsState());
+
+  final LoadLyrics _load;
+  final SaveLyrics _save;
+  final EnsureLyricsFileAccess _ensureAccess;
+  final ClearLyrics _clear;
+  final PickLyricsFile _pickFile;
+
+  /// [track]의 가사를 보여 줄 대상으로 불러온다. 이미 그 곡이면 다시 읽지 않는다.
+  Future<void> show(Track track) async {
+    if (state.trackId == track.id) return;
+    emit(LyricsState(trackId: track.id, loading: true));
+    final lyrics = await _load(LoadLyricsParams(track.id, track.uri));
+    if (isClosed || state.trackId != track.id) return;
+    emit(LyricsState(trackId: track.id, lyrics: lyrics));
+  }
+
+  /// 저장된 가사(없으면 음원 옆 `.lrc`)의 원문. 편집 화면의 처음 글.
+  Future<String> currentText(Track track) async =>
+      (await _load(LoadLyricsParams(track.id, track.uri)))?.raw ?? '';
+
+  /// 가사 편집 화면에 들어갈 때 곡 파일에 쓸 동의를 먼저 구한다 (필요한 곡만 시스템 창이 뜬다).
+  Future<bool> askFileAccess(Track track) => _ensureAccess(track);
+
+  /// 가사 파일을 골라 글을 읽어 온다. 취소하면 null.
+  Future<String?> pickFile() => _pickFile(const NoParams());
+
+  /// [text]를 [track] 곡의 가사로 저장한다 (비면 지움). 음원 파일의 가사 태그에도 쓴다.
+  /// 앱에 저장하면 **바로** 화면에 반영하고, 그 뒤 음원 파일 태그 쓰기가 끝나면 결과를 돌려준다
+  /// (쓰려 하지 않았으면 null). 파일 쓰기는 오래 걸려 화면 반영을 막지 않는다.
+  Future<LyricsTagOutcome?> save(Track track, String text) async {
+    final saved = await _save(SaveLyricsParams(track, text));
+    if (!isClosed && state.trackId == track.id) {
+      emit(LyricsState(trackId: track.id, lyrics: saved.lyrics));
+    }
+    return saved.tag;
+  }
+
+  Future<void> clear(String trackId) async {
+    await _clear(trackId);
+    if (!isClosed && state.trackId == trackId) {
+      emit(LyricsState(trackId: trackId));
+    }
+  }
+}

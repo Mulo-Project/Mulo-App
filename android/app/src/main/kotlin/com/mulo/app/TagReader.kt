@@ -1,0 +1,73 @@
+package com.mulo.app
+
+import android.content.Context
+import android.net.Uri
+import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.MetadataRetriever
+import androidx.media3.extractor.metadata.id3.TextInformationFrame
+import androidx.media3.container.MdtaMetadataEntry
+import androidx.media3.extractor.metadata.vorbis.VorbisComment
+import java.util.concurrent.TimeUnit
+
+/**
+ * 곡 파일의 태그를 안드로이드(Media3)가 직접 읽는다. 파일을 복사하지 않고 주소로 바로 읽고, ffmpeg가 없는 빌드도 된다.
+ * 기본 칸(제목 · 아티스트 · 앨범 · 장르)은 형식마다 Media3가 알아서 옮기고, 사용자 정의 칸(앱 전용 `COVER_*`)은
+ * mp3의 TXXX · opus · ogg의 Vorbis 코멘트 · mp4의 mdta 칸에서 꺼낸다. 키는 모두 소문자.
+ */
+@UnstableApi
+object TagReader {
+    /**
+     * 파일에 내장된 커버 이미지의 원본 바이트. `MediaMetadataRetriever`가 못 읽는 형식(opus · ogg · webm)도
+     * Media3가 형식마다 그림 칸(ID3 APIC · Vorbis METADATA_BLOCK_PICTURE · FLAC picture 등)을 알아서 풀어 준다. 없으면 null.
+     */
+    fun picture(context: Context, uri: String): ByteArray? {
+        val item = MediaItem.fromUri(if (uri.startsWith("content://")) Uri.parse(uri) else Uri.fromFile(java.io.File(uri)))
+        val groups = MetadataRetriever.retrieveMetadata(context, item).get(15, TimeUnit.SECONDS)
+        val standard = MediaMetadata.Builder()
+        for (g in 0 until groups.length) {
+            val metadata = groups.get(g).getFormat(0).metadata ?: continue
+            for (i in 0 until metadata.length()) metadata.get(i).populateMediaMetadata(standard)
+        }
+        return standard.build().artworkData?.takeIf { it.isNotEmpty() }
+    }
+
+    fun read(context: Context, uri: String): Map<String, String> {
+        val item = MediaItem.fromUri(if (uri.startsWith("content://")) Uri.parse(uri) else Uri.fromFile(java.io.File(uri)))
+        val groups = MetadataRetriever.retrieveMetadata(context, item).get(15, TimeUnit.SECONDS)
+        val out = linkedMapOf<String, String>()
+        val standard = MediaMetadata.Builder()
+        for (g in 0 until groups.length) {
+            val metadata = groups.get(g).getFormat(0).metadata ?: continue
+            for (i in 0 until metadata.length()) {
+                val entry = metadata.get(i)
+                entry.populateMediaMetadata(standard)
+                when (entry) {
+                    is TextInformationFrame ->
+                        // mp4 · m4a의 가사 칸(©lyr)은 Media3가 id `USLT`인 글 칸으로 준다.
+                        if (entry.id == "USLT") entry.values.firstOrNull()?.takeIf { it.isNotBlank() }?.let { out.putIfAbsent("lyrics", it) }
+                        else if (entry.id == "TXXX") entry.description?.let { d ->
+                            // ffmpeg는 가사(LYRICS)를 설명이 USLT인 TXXX로 쓴다.
+                            val key = d.lowercase().let { k -> if (k == "uslt") "lyrics" else k }
+                            entry.values.firstOrNull()?.let { out.putIfAbsent(key, it) }
+                        }
+                    is VorbisComment -> out.putIfAbsent(entry.key.lowercase(), entry.value)
+                    is MdtaMetadataEntry -> if (entry.typeIndicator == MdtaMetadataEntry.TYPE_INDICATOR_STRING) {
+                        out.putIfAbsent(entry.key.lowercase().substringAfterLast('.'), String(entry.value, Charsets.UTF_8))
+                    }
+                    else -> {}
+                }
+            }
+        }
+        val m = standard.build()
+        mapOf(
+            "title" to m.title,
+            "artist" to m.artist,
+            "album" to m.albumTitle,
+            "genre" to m.genre,
+        ).forEach { (k, v) -> v?.toString()?.takeIf { it.isNotBlank() }?.let { out[k] = it } }
+        MuloLog.d(MuloLog.NATIVE, "MuloTag read keys=${out.keys}")
+        return out
+    }
+}

@@ -1,0 +1,119 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../../../core/usecase/usecase.dart';
+import '../../domain/entities/lyrics.dart';
+import '../../domain/usecases/lyrics_overlay_usecases.dart';
+
+/// 떠 있는 가사 창에 지금 곡의 가사를 올리고 내린다. 화면이 없고 상태도 없다:
+/// 바뀐 것(켜짐 · 곡 · 가사)만 골라 네이티브에 보낸다.
+class LyricsOverlayCubit extends Cubit<void> {
+  LyricsOverlayCubit({
+    required this._canDraw,
+    required this._openPermission,
+    required this._show,
+    required this._hide,
+    required this._watchClosed,
+    required this._setViewShown,
+  }) : super(null);
+
+  final CanDrawLyricsOverlay _canDraw;
+  final OpenLyricsOverlayPermission _openPermission;
+  final ShowLyricsOverlay _show;
+  final HideLyricsOverlay _hide;
+  final WatchLyricsOverlayClosed _watchClosed;
+  final SetLyricsViewShown _setViewShown;
+
+  /// 앱 안 플레이어에서 가사를 보고 있는지 (보는 동안은 떠 있는 창을 숨긴다).
+  /// 가사 보기가 겹쳐 열릴 수 있어서(플레이어 + 가사만 보기) 개수를 세고, 하나라도 떠 있으면 true.
+  Future<void> setLyricsViewShown(bool shown) {
+    _views = (_views + (shown ? 1 : -1)).clamp(0, 99);
+    return _setViewShown(_views > 0);
+  }
+
+  var _views = 0;
+
+  /// 창의 닫기(✕)를 눌렀다 (설정을 끄라는 뜻).
+  Stream<void> get closed => _watchClosed(const NoParams());
+
+  /// 권한이 있으면 true. 없으면 시스템 설정을 열고 false (돌아와서 다시 켜면 된다).
+  Future<bool> ensurePermission() async {
+    if (await _canDraw(const NoParams())) return true;
+    await _openPermission(const NoParams());
+    return false;
+  }
+
+  String? _sent;
+
+  /// [trackId]의 [lyrics]를 올린다. 꺼져 있으면 내린다. 싱크 가사가 없으면 창은 두고
+  /// [emptyLabel](예: "가사가 없어요")만 보여 준다 ([emptyLabel]이 비면 내린다).
+  /// 싱크 없이 글 가사만 있고 [emptyLabel]이 있으면, 줄을 시간 없이(0) 보내 늘려서 볼 수 있게 한다
+  /// (줄과 [emptyLabel]이 함께 가면 네이티브는 일반 글 가사로 본다). 같은 내용은 다시 보내지 않는다.
+  Future<void> sync({
+    required bool enabled,
+    required String? trackId,
+    required Lyrics? lyrics,
+    String hideLabel = '',
+    String offLabel = '',
+    int accent = 0xFFFFFFFF,
+    String emptyLabel = '',
+  }) async {
+    final synced = lyrics != null && lyrics.isSynced;
+    final showLines = enabled && trackId != null && synced;
+    // 싱크는 없지만 글 가사는 있다: 줄을 시간 없이 보내 늘려서 볼 수 있게 한다 ([emptyLabel]도 함께 보내
+    // 줄어든 모양에서는 안내 글이 보인다).
+    final plainLines = !synced && lyrics != null && emptyLabel.isNotEmpty
+        ? [
+            for (final t in lyrics.plain.split('\n'))
+              if (t.trim().isNotEmpty) LyricLine(Duration.zero, t.trim()),
+          ]
+        : const <LyricLine>[];
+    final showPlain = enabled && trackId != null && plainLines.isNotEmpty;
+    final showEmpty =
+        enabled &&
+        trackId != null &&
+        !synced &&
+        !showPlain &&
+        emptyLabel.isNotEmpty;
+    final key = showLines
+        ? '$trackId|${lyrics.raw.hashCode}'
+        : showPlain
+        ? '$trackId|plain|${lyrics!.raw.hashCode}'
+        : showEmpty
+        ? '$trackId|empty|$emptyLabel'
+        : null;
+    if (key == _sent) return;
+    _sent = key;
+    if (key == null) {
+      await _hide(const NoParams());
+      return;
+    }
+    await _show(
+      ShowLyricsOverlayParams(
+        trackId!,
+        showLines
+            ? _merged(lyrics.lines)
+            : showPlain
+            ? plainLines
+            : const [],
+        hideLabel: hideLabel,
+        offLabel: offLabel,
+        accent: accent,
+        emptyLabel: showLines ? '' : emptyLabel,
+      ),
+    );
+  }
+
+  /// 같은 시간으로 묶인 줄(싱크 화면에서 한 칸으로 묶은 줄)은 한 줄로 합친다.
+  static List<LyricLine> _merged(List<LyricLine> lines) {
+    final out = <LyricLine>[];
+    for (final l in lines) {
+      if (out.isNotEmpty && out.last.time == l.time) {
+        final text = [out.last.text, l.text].where((t) => t.isNotEmpty);
+        out[out.length - 1] = LyricLine(l.time, text.join('\n'));
+      } else {
+        out.add(l);
+      }
+    }
+    return out;
+  }
+}

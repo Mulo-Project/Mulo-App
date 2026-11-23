@@ -1,0 +1,175 @@
+import '../../../../core/usecase/usecase.dart';
+import '../entities/media_session_info.dart';
+import '../entities/notification_settings.dart';
+import '../repositories/download_notifier.dart';
+import '../repositories/media_session.dart';
+import '../repositories/notification_settings_repository.dart';
+
+class LoadNotificationSettings
+    implements UseCase<NotificationSettings, NoParams> {
+  const LoadNotificationSettings(this._repo);
+  final NotificationSettingsRepository _repo;
+
+  @override
+  Future<NotificationSettings> call(NoParams params) => _repo.load();
+}
+
+class SaveNotificationSettings implements UseCase<void, NotificationSettings> {
+  const SaveNotificationSettings(this._repo);
+  final NotificationSettingsRepository _repo;
+
+  @override
+  Future<void> call(NotificationSettings params) => _repo.save(params);
+}
+
+class IsNotificationPermissionGranted implements UseCase<bool, NoParams> {
+  const IsNotificationPermissionGranted(this._repo);
+  final NotificationSettingsRepository _repo;
+
+  @override
+  Future<bool> call(NoParams params) => _repo.isPermissionGranted();
+}
+
+class RequestNotificationPermission implements UseCase<bool, NoParams> {
+  const RequestNotificationPermission(this._repo);
+  final NotificationSettingsRepository _repo;
+
+  @override
+  Future<bool> call(NoParams params) => _repo.requestPermission();
+}
+
+class OpenNotificationSystemSettings implements UseCase<void, NoParams> {
+  const OpenNotificationSystemSettings(this._repo);
+  final NotificationSettingsRepository _repo;
+
+  @override
+  Future<void> call(NoParams params) => _repo.openSystemSettings();
+}
+
+class ConfigureDownloadNotifications
+    implements UseCase<void, Map<String, Object?>> {
+  const ConfigureDownloadNotifications(this._notifier);
+  final DownloadNotifier _notifier;
+
+  @override
+  Future<void> call(Map<String, Object?> params) =>
+      _notifier.configureDownloads(params);
+}
+
+class SetDownloadPreviewing implements UseCase<void, String?> {
+  const SetDownloadPreviewing(this._notifier);
+  final DownloadNotifier _notifier;
+
+  @override
+  Future<void> call(String? params) => _notifier.setDownloadPreviewing(params);
+}
+
+class DownloadResultNotice {
+  const DownloadResultNotice({
+    required this.id,
+    required this.title,
+    required this.body,
+    required this.failed,
+    this.artUri,
+  });
+
+  final String id;
+  final String title;
+  final String body;
+  final bool failed;
+
+  /// 알림의 큰 아이콘 자리에 보일 곡 이미지 (웹 주소 또는 파일 경로).
+  final String? artUri;
+}
+
+class ShowDownloadResult implements UseCase<void, DownloadResultNotice> {
+  const ShowDownloadResult(this._notifier);
+  final DownloadNotifier _notifier;
+
+  @override
+  Future<void> call(DownloadResultNotice params) => _notifier.showResult(
+    id: params.id,
+    title: params.title,
+    body: params.body,
+    failed: params.failed,
+    artUri: params.artUri,
+  );
+}
+
+class ClearDownloadResults implements UseCase<void, NoParams> {
+  const ClearDownloadResults(this._notifier);
+  final DownloadNotifier _notifier;
+
+  @override
+  Future<void> call(NoParams params) => _notifier.clearResults();
+}
+
+class WatchDownloadOpens implements StreamUseCase<String, NoParams> {
+  const WatchDownloadOpens(this._notifier);
+  final DownloadNotifier _notifier;
+
+  @override
+  Stream<String> call(NoParams params) => _notifier.watchOpenRequests();
+}
+
+class TakeDownloadOpen implements UseCase<String?, NoParams> {
+  const TakeDownloadOpen(this._notifier);
+  final DownloadNotifier _notifier;
+
+  @override
+  Future<String?> call(NoParams params) => _notifier.takeOpenRequest();
+}
+
+class WatchMediaCommands implements StreamUseCase<MediaCommand, NoParams> {
+  const WatchMediaCommands(this._session);
+  final MediaSession _session;
+
+  @override
+  Stream<MediaCommand> call(NoParams params) => _session.watchCommands();
+}
+
+class UpdateMediaSession implements UseCase<void, MediaSessionInfo?> {
+  const UpdateMediaSession(this._session);
+  final MediaSession _session;
+
+  @override
+  Future<void> call(MediaSessionInfo? params) => _session.update(params);
+}
+
+class UpdateMediaQueueArt implements UseCase<void, Map<String, String>> {
+  const UpdateMediaQueueArt(this._session);
+  final MediaSession _session;
+
+  @override
+  Future<void> call(Map<String, String> params) =>
+      _session.updateQueueArt(params);
+}
+
+/// 알림 유스케이스 묶음 (알림 동기화 Cubit이 한 번에 받는다).
+class NotificationActions {
+  const NotificationActions({
+    required this.configureDownloads,
+    required this.setDownloadPreviewing,
+    required this.showResult,
+    required this.clearResults,
+    required this.watchCommands,
+    required this.watchDownloadOpens,
+    required this.takeDownloadOpen,
+    required this.updateSession,
+    required this.updateQueueArt,
+    required this.isPermissionGranted,
+    required this.requestPermission,
+  });
+
+  final ConfigureDownloadNotifications configureDownloads;
+  final SetDownloadPreviewing setDownloadPreviewing;
+  final ShowDownloadResult showResult;
+  final ClearDownloadResults clearResults;
+  final WatchMediaCommands watchCommands;
+  final WatchDownloadOpens watchDownloadOpens;
+  final TakeDownloadOpen takeDownloadOpen;
+  final UpdateMediaSession updateSession;
+  final UpdateMediaQueueArt updateQueueArt;
+  final IsNotificationPermissionGranted isPermissionGranted;
+  final RequestNotificationPermission requestPermission;
+}

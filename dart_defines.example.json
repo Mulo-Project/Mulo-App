@@ -1,0 +1,5 @@
+{
+  "MULO_GOOGLE_SERVER_CLIENT_ID": "여기에-웹-클라이언트-ID.apps.googleusercontent.com",
+  "MULO_GOOGLE_DESKTOP_CLIENT_ID": "여기에-데스크톱-클라이언트-ID.apps.googleusercontent.com",
+  "MULO_GOOGLE_DESKTOP_CLIENT_SECRET": "여기에-데스크톱-클라이언트-보안-비밀"
+}
