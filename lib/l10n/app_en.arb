@@ -317,6 +317,7 @@
   "@hiddenRecordsPurgeOneTitle": {"placeholders": {"title": {"type": "String"}}},
   "settingsAbout": "About",
   "settingsVersion": "Version",
+  "settingsLicenses": "Open-source licenses",
   "comingSoon": "Coming soon",
   "playerNowPlaying": "Now playing",
   "playerQueue": "Up next",

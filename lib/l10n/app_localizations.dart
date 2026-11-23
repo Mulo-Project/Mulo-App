@@ -1778,6 +1778,12 @@ abstract class AppLocalizations {
   /// **'버전'**
   String get settingsVersion;
 
+  /// No description provided for @settingsLicenses.
+  ///
+  /// In ko, this message translates to:
+  /// **'오픈소스 라이선스'**
+  String get settingsLicenses;
+
   /// No description provided for @comingSoon.
   ///
   /// In ko, this message translates to:

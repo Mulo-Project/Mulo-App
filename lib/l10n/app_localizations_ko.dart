@@ -924,6 +924,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsVersion => '버전';
 
   @override
+  String get settingsLicenses => '오픈소스 라이선스';
+
+  @override
   String get comingSoon => '준비 중';
 
   @override

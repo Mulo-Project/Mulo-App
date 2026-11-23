@@ -943,6 +943,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsVersion => 'Version';
 
   @override
+  String get settingsLicenses => 'Open-source licenses';
+
+  @override
   String get comingSoon => 'Coming soon';
 
   @override
