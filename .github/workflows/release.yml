@@ -30,15 +30,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: 태그와 pubspec 버전 확인
+      - name: 태그에서 버전 계산
         id: ver
         run: |
+          # 태그만 올리면 된다: v1.0.1 → 버전 이름 1.0.1, 버전 번호(versionCode)는 Actions 실행 번호(항상 커진다).
           tag="${GITHUB_REF_NAME}"
-          name="$(sed -n 's/^version: *\([0-9][0-9.]*\)\(+.*\)\{0,1\}$/\1/p' pubspec.yaml | head -n1)"
-          if [ "${tag%%-*}" != "v${name}" ]; then
-            echo "::error::태그 ${tag} 와 pubspec.yaml version(${name})이 다릅니다. 둘을 맞춘 뒤 태그를 다시 만드세요."
+          if ! echo "$tag" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$'; then
+            echo "::error::태그 형식이 맞지 않습니다: ${tag} (예: v1.0.1, v1.0.1-rc1)"
             exit 1
           fi
+          name="${tag#v}"; name="${name%%-*}"
+          echo "name=${name}" >> "$GITHUB_OUTPUT"
+          echo "number=${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
           pre=false; case "$tag" in *-*) pre=true;; esac
           echo "prerelease=${pre}" >> "$GITHUB_OUTPUT"
 
@@ -70,6 +73,7 @@ jobs:
       - name: release APK 빌드 (arm64 · armv7 · x86_64 분할)
         run: |
           flutter build apk --release --flavor full --split-per-abi \
+            --build-name="${{ steps.ver.outputs.name }}" --build-number="${{ steps.ver.outputs.number }}" \
             --dart-define-from-file="$RUNNER_TEMP/dart_defines.json"
 
       - name: 서명 확인 (debug 키면 실패)
