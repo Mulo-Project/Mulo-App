@@ -70,9 +70,9 @@ jobs:
           python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$RUNNER_TEMP/dart_defines.json"
           echo "MULO_KEYSTORE_FILE=$RUNNER_TEMP/mulo-release.jks" >> "$GITHUB_ENV"
 
-      - name: release APK 빌드 (arm64 · armv7 · x86_64 분할)
+      - name: release APK 빌드 (arm64)
         run: |
-          flutter build apk --release --flavor full --split-per-abi \
+          flutter build apk --release --flavor full --split-per-abi --target-platform android-arm64 \
             --build-name="${{ steps.ver.outputs.name }}" --build-number="${{ steps.ver.outputs.number }}" \
             --dart-define-from-file="$RUNNER_TEMP/dart_defines.json"
 
@@ -80,21 +80,15 @@ jobs:
         run: |
           apksigner="$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -n1)"
           mkdir -p dist
-          for f in build/app/outputs/flutter-apk/app-*-full-release.apk; do
-            abi="$(basename "$f" | sed 's/^app-\(.*\)-full-release\.apk$/\1/')"
-            out="$("$apksigner" verify --print-certs "$f")"
-            echo "$out"
-            if echo "$out" | grep -qi "Android Debug"; then echo "::error::debug 키로 서명됐습니다"; exit 1; fi
-            # 설치하는 사람이 고르기 쉽게 이름을 단순하게 한다: 기본(64비트) · 구형(32비트). x86_64는 에뮬레이터용이라 올리지 않는다.
-            case "$abi" in
-              arm64-v8a)   cp "$f" "dist/Mulo-${GITHUB_REF_NAME}.apk" ;;
-              armeabi-v7a) cp "$f" "dist/Mulo-${GITHUB_REF_NAME}-32bit.apk" ;;
-              *) echo "올리지 않음: $abi" ;;
-            esac
-          done
-          [ -f "dist/Mulo-${GITHUB_REF_NAME}.apk" ] || { echo "::error::arm64 APK가 없습니다"; exit 1; }
+          # 사용자가 받을 파일은 하나: dist/Mulo.apk (64비트 arm64, 요즘 폰 거의 전부). 32비트 · x86_64는 올리지 않는다.
+          f="build/app/outputs/flutter-apk/app-arm64-v8a-full-release.apk"
+          [ -f "$f" ] || { echo "::error::arm64 APK가 없습니다: $f"; exit 1; }
+          out="$("$apksigner" verify --print-certs "$f")"
+          echo "$out"
+          if echo "$out" | grep -qi "Android Debug"; then echo "::error::debug 키로 서명됐습니다"; exit 1; fi
+          cp "$f" dist/Mulo.apk
           ls -lh dist
-          (cd dist && sha256sum *.apk > SHA256SUMS.txt && cat SHA256SUMS.txt)
+          sha256sum dist/Mulo.apk | tee "$RUNNER_TEMP/sha256.txt"
 
       - name: GitHub Release 만들기
         env:
@@ -103,13 +97,15 @@ jobs:
         run: |
           flags=""
           [ "$PRERELEASE" = "true" ] && flags="--prerelease"
-          cat > "$RUNNER_TEMP/notes.md" <<'NOTES'
-          ## 어떤 파일을 받나요?
-          - **`Mulo-v….apk` (이름에 아무 표시 없는 파일)**: 대부분의 폰(2017년 이후 갤럭시 · 픽셀 등)에 맞는 기본 파일입니다. 이것을 받으세요.
-          - **`…-32bit.apk`**: 위 파일이 설치되지 않는 아주 오래된 폰(32비트)에서만 쓰세요.
-          - `SHA256SUMS.txt`는 파일 확인용이라 설치하지 않습니다.
-          - 이전 버전에서 업데이트하면 그대로 덮어 설치됩니다. 처음 설치할 때는 "출처를 알 수 없는 앱" 허용이 필요할 수 있습니다.
+          sha="$(cut -d' ' -f1 "$RUNNER_TEMP/sha256.txt")"
+          cat > "$RUNNER_TEMP/notes.md" <<NOTES
+          ## 설치 방법
+          아래 **Assets**의 \`Mulo.apk\` 하나를 받아 설치하세요.
+          - 처음 설치할 때는 "출처를 알 수 없는 앱" 허용이 필요할 수 있습니다.
+          - 이전 버전이 있으면 그대로 덮어 설치(업데이트)됩니다.
+          - 64비트 폰(2017년 이후 갤럭시 · 픽셀 등 거의 모든 폰)용입니다.
+          - 파일 확인용 SHA-256: \`${sha}\`
 
           NOTES
-          gh release create "$GITHUB_REF_NAME" dist/* \
+          gh release create "$GITHUB_REF_NAME" dist/Mulo.apk \
             --title "Mulo ${GITHUB_REF_NAME}" --notes-file "$RUNNER_TEMP/notes.md" --generate-notes $flags

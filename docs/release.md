@@ -6,13 +6,13 @@
 | 언제 | 무엇 | 파일 |
 |---|---|---|
 | PR · `develop`/`main` push | `flutter analyze` · `flutter test` · debug APK 빌드 · 네이티브 단위 테스트 | `.github/workflows/ci.yml` |
-| `v*` 태그 push | 위 검사 → 서명된 release APK(64비트 기본 · 32비트 구형폰) → GitHub Release | `.github/workflows/release.yml` |
+| `v*` 태그 push | 위 검사 → 서명된 release APK 하나(`Mulo.apk`, arm64) → GitHub Release | `.github/workflows/release.yml` |
 
 ## 릴리스 내기
 태그만 올리면 된다. `pubspec.yaml`의 version은 올리지 않아도 된다 (D-172).
 1. 합칠 코드가 `develop`(또는 `main`)에 있는지 확인한다.
 2. 태그를 만들어 올린다: `git tag v1.0.1 && git push origin v1.0.1`
-3. Actions의 **Release**가 끝나면 Releases에 `Mulo-v1.0.1.apk`(64비트, 기본)와 `Mulo-v1.0.1-32bit.apk`가 올라온다. x86_64(에뮬레이터용)는 올리지 않는다. Release 설명에 어떤 파일을 받는지 적힌다.
+3. Actions의 **Release**가 끝나면 Releases에 **`Mulo.apk` 하나**가 올라온다 (64비트 arm64, 요즘 폰 거의 전부). 32비트 · x86_64용은 올리지 않는다. Release 설명에 설치 방법과 SHA-256이 적힌다.
 - 버전 이름은 태그에서(`v1.0.1` → `1.0.1`), 버전 번호(versionCode)는 Actions 실행 번호로 자동으로 정해져 항상 커진다. 그래서 이전 배포본 위에 업데이트로 설치된다.
 - 태그는 `v숫자.숫자.숫자` 형식이어야 한다. `v1.0.1-beta1`처럼 `-`가 있으면 pre-release.
 - PC에서 직접 빌드한 앱은 `pubspec.yaml`의 값을 쓴다 (배포본과 다를 수 있다).
