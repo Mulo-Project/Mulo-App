@@ -7,7 +7,7 @@
 - 상세 기능: 공통 작업 (재생 알림 · 포그라운드 서비스)
 
 ## 한 일
-- 원인과 고침은 [D-172](../decisions.md). `MuloPlaybackService.onDestroy`에서 세션을 서비스에서 떼고, 버튼을 받고도 끝내는 경로에서 포그라운드 약속(`startForeground`)을 지킨다.
+- 원인과 고침은 [D-173](../decisions.md). `MuloPlaybackService.onDestroy`에서 세션을 서비스에서 떼고, 버튼을 받고도 끝내는 경로에서 포그라운드 약속(`startForeground`)을 지킨다.
 
 ## 바꾼 설정
 - 없음 (Manifest · Gradle 변경 없음).

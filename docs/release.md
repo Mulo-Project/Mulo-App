@@ -9,10 +9,13 @@
 | `v*` 태그 push | 위 검사 → 서명된 release APK(64비트 기본 · 32비트 구형폰) → GitHub Release | `.github/workflows/release.yml` |
 
 ## 릴리스 내기
-1. `pubspec.yaml`의 `version`을 올린다 (예: `1.0.1+2`). `+` 뒤 숫자(versionCode)는 매번 올려야 업데이트 설치가 된다.
-2. `main`에 합친 뒤 태그를 만든다: `git tag v1.0.1 && git push origin v1.0.1`
+태그만 올리면 된다. `pubspec.yaml`의 version은 올리지 않아도 된다 (D-172).
+1. 합칠 코드가 `develop`(또는 `main`)에 있는지 확인한다.
+2. 태그를 만들어 올린다: `git tag v1.0.1 && git push origin v1.0.1`
 3. Actions의 **Release**가 끝나면 Releases에 `Mulo-v1.0.1.apk`(64비트, 기본)와 `Mulo-v1.0.1-32bit.apk`가 올라온다. x86_64(에뮬레이터용)는 올리지 않는다. Release 설명에 어떤 파일을 받는지 적힌다.
-- 태그(`v1.0.1`)와 pubspec 이름 부분(`1.0.1`)이 다르면 실패한다. `v1.0.1-beta1`처럼 `-`가 있으면 pre-release.
+- 버전 이름은 태그에서(`v1.0.1` → `1.0.1`), 버전 번호(versionCode)는 Actions 실행 번호로 자동으로 정해져 항상 커진다. 그래서 이전 배포본 위에 업데이트로 설치된다.
+- 태그는 `v숫자.숫자.숫자` 형식이어야 한다. `v1.0.1-beta1`처럼 `-`가 있으면 pre-release.
+- PC에서 직접 빌드한 앱은 `pubspec.yaml`의 값을 쓴다 (배포본과 다를 수 있다).
 
 ## Flutter 버전
 CI는 `3.47.x`로 고정했다 (`ci.yml` · `release.yml`의 `flutter-version`). 최신 stable(3.50)은 `package:flutter/material.dart` 사용을 deprecated로 보고해 `flutter analyze`가 실패했다. PC의 Flutter를 올리면 두 파일의 값도 같이 올린다.
